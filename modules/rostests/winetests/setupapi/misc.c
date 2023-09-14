@@ -63,9 +63,9 @@ static void create_file(const char *name, const char *data)
     BOOL ret;
 
     file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failed to create %s, error %u.\n", name, GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "Failed to create %s, error %lu.\n", name, GetLastError());
     ret = WriteFile(file, data, strlen(data), &size, NULL);
-    ok(ret && size == strlen(data), "Failed to write %s, error %u.\n", name, GetLastError());
+    ok(ret && size == strlen(data), "Failed to write %s, error %lu.\n", name, GetLastError());
     CloseHandle(file);
 }
 
@@ -109,24 +109,24 @@ static void test_original_file_name(LPCSTR original, LPCSTR dest)
     }
 
     hinf = SetupOpenInfFileA(dest, NULL, INF_STYLE_WIN4, NULL);
-    ok(hinf != NULL, "SetupOpenInfFileA failed with error %d\n", GetLastError());
+    ok(hinf != NULL, "SetupOpenInfFileA failed with error %ld\n", GetLastError());
 
     res = SetupGetInfInformationA(hinf, INFINFO_INF_SPEC_IS_HINF, NULL, 0, &size);
-    ok(res, "SetupGetInfInformation failed with error %d\n", GetLastError());
+    ok(res, "SetupGetInfInformation failed with error %ld\n", GetLastError());
 
     pspii = HeapAlloc(GetProcessHeap(), 0, size);
 
     res = SetupGetInfInformationA(hinf, INFINFO_INF_SPEC_IS_HINF, pspii, size, NULL);
-    ok(res, "SetupGetInfInformation failed with error %d\n", GetLastError());
+    ok(res, "SetupGetInfInformation failed with error %ld\n", GetLastError());
 
     spofi.cbSize = 0;
     res = pSetupQueryInfOriginalFileInformationA(pspii, 0, NULL, &spofi);
     ok(!res && GetLastError() == ERROR_INVALID_USER_BUFFER,
-        "SetupQueryInfOriginalFileInformationA should have failed with ERROR_INVALID_USER_BUFFER instead of %d\n", GetLastError());
+        "SetupQueryInfOriginalFileInformationA should have failed with ERROR_INVALID_USER_BUFFER instead of %ld\n", GetLastError());
 
     spofi.cbSize = sizeof(spofi);
     res = pSetupQueryInfOriginalFileInformationA(pspii, 0, NULL, &spofi);
-    ok(res, "SetupQueryInfOriginalFileInformationA failed with error %d\n", GetLastError());
+    ok(res, "SetupQueryInfOriginalFileInformationA failed with error %ld\n", GetLastError());
     ok(!spofi.OriginalCatalogName[0], "spofi.OriginalCatalogName should have been \"\" instead of \"%s\"\n", spofi.OriginalCatalogName);
     ok(!strcmp(original, spofi.OriginalInfName), "spofi.OriginalInfName of %s didn't match real original name %s\n", spofi.OriginalInfName, original);
 
@@ -157,7 +157,7 @@ static void test_SetupCopyOEMInf(void)
     res = SetupCopyOEMInfA(NULL, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* try empty SourceInfFileName */
     SetLastError(0xdeadbeef);
@@ -165,14 +165,14 @@ static void test_SetupCopyOEMInf(void)
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
        GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
-       "Unexpected error : %d\n", GetLastError());
+       "Unexpected error : %ld\n", GetLastError());
 
     /* try a relative nonexistent SourceInfFileName */
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA("nonexistent", NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+       "Expected ERROR_FILE_NOT_FOUND, got %ld\n", GetLastError());
 
     /* try an absolute nonexistent SourceInfFileName */
     strcpy(path, CURR_DIR);
@@ -181,7 +181,7 @@ static void test_SetupCopyOEMInf(void)
     res = SetupCopyOEMInfA(path, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+       "Expected ERROR_FILE_NOT_FOUND, got %ld\n", GetLastError());
 
     get_temp_filename(tmpfile);
     create_file(tmpfile, inf_data1);
@@ -201,7 +201,7 @@ static void test_SetupCopyOEMInf(void)
        return;
     }
 
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %ld\n", GetLastError());
     ok(file_exists(tmpfile), "Expected tmpfile to exist\n");
 
     /* try SP_COPY_REPLACEONLY, dest does not exist */
@@ -209,7 +209,7 @@ static void test_SetupCopyOEMInf(void)
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+       "Expected ERROR_FILE_NOT_FOUND, got %ld\n", GetLastError());
     ok(file_exists(tmpfile), "Expected source inf to exist\n");
 
     /* Test a successful call. */
@@ -225,7 +225,7 @@ static void test_SetupCopyOEMInf(void)
         return;
     }
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(dest), "Expected dest file to exist.\n");
     ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
@@ -235,7 +235,7 @@ static void test_SetupCopyOEMInf(void)
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(dest), "Expected dest file to exist.\n");
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
@@ -244,7 +244,7 @@ static void test_SetupCopyOEMInf(void)
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(dest), "Expected dest file to exist.\n");
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
@@ -254,13 +254,13 @@ static void test_SetupCopyOEMInf(void)
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_NOOVERWRITE, dest, sizeof(dest), NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_EXISTS,
-       "Expected ERROR_FILE_EXISTS, got %d\n", GetLastError());
+       "Expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, NULL, 0, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist.\n");
     ok(file_exists(orig_dest), "Expected dest file to exist.\n");
 
@@ -270,39 +270,39 @@ static void test_SetupCopyOEMInf(void)
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, 5, &size, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-       "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+       "Expected ERROR_INSUFFICIENT_BUFFER, got %ld\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist\n");
     ok(file_exists(orig_dest), "Expected dest inf to exist\n");
     ok(!strcmp(dest, "aaa"), "Expected dest to be unchanged\n");
-    ok(size == strlen(orig_dest) + 1, "Got %d.\n", size);
+    ok(size == strlen(orig_dest) + 1, "Got %ld.\n", size);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), &size, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
-    ok(size == strlen(dest) + 1, "Got %d.\n", size);
+    ok(size == strlen(dest) + 1, "Got %ld.\n", size);
 
     test_original_file_name(strrchr(path, '\\') + 1, dest);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, &filepart);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
     ok(filepart == strrchr(dest, '\\') + 1, "Got unexpected file part %s.\n", filepart);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_DELETESOURCE, NULL, 0, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(!file_exists(path), "Expected source inf to not exist\n");
 
     strcpy(pnf, dest);
     *(strrchr(pnf, '.') + 1) = 'p';
 
     res = SetupUninstallOEMInfA(strrchr(dest, '\\') + 1, 0, NULL);
-    ok(res, "Failed to uninstall '%s', error %u.\n", dest, GetLastError());
+    ok(res, "Failed to uninstall '%s', error %lu.\n", dest, GetLastError());
     todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
     DeleteFileA(dest);
     ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
@@ -311,7 +311,7 @@ static void test_SetupCopyOEMInf(void)
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
     strcpy(orig_dest, dest);
 
@@ -319,12 +319,12 @@ static void test_SetupCopyOEMInf(void)
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
     ok(strcmp(dest, orig_dest), "Expected INF files to be copied to different paths.\n");
 
     res = SetupUninstallOEMInfA(strrchr(dest, '\\') + 1, 0, NULL);
-    ok(res, "Failed to uninstall '%s', error %u.\n", dest, GetLastError());
+    ok(res, "Failed to uninstall '%s', error %lu.\n", dest, GetLastError());
     todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
     DeleteFileA(dest);
     strcpy(pnf, dest);
@@ -332,7 +332,7 @@ static void test_SetupCopyOEMInf(void)
     todo_wine ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
 
     res = SetupUninstallOEMInfA(strrchr(orig_dest, '\\') + 1, 0, NULL);
-    ok(res, "Failed to uninstall '%s', error %u.\n", orig_dest, GetLastError());
+    ok(res, "Failed to uninstall '%s', error %lu.\n", orig_dest, GetLastError());
     todo_wine ok(!file_exists(orig_dest), "Expected inf '%s' to not exist\n", dest);
     DeleteFileA(orig_dest);
     strcpy(pnf, dest);
@@ -343,19 +343,19 @@ static void test_SetupCopyOEMInf(void)
     strcat(orig_dest, "\\inf\\");
     strcat(orig_dest, tmpfile);
     res = CopyFileA(tmpfile, orig_dest, TRUE);
-    ok(res, "Failed to copy file, error %u.\n", GetLastError());
+    ok(res, "Failed to copy file, error %lu.\n", GetLastError());
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(!strcasecmp(dest, orig_dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     /* Since it wasn't actually installed, SetupUninstallOEMInf would fail here. */
     res = DeleteFileA(dest);
-    ok(res, "Failed to delete '%s', error %u.\n", tmpfile, GetLastError());
+    ok(res, "Failed to delete '%s', error %lu.\n", tmpfile, GetLastError());
 
     res = DeleteFileA(tmpfile);
-    ok(res, "Failed to delete '%s', error %u.\n", tmpfile, GetLastError());
+    ok(res, "Failed to delete '%s', error %lu.\n", tmpfile, GetLastError());
 }
 
 static void create_source_file(LPSTR filename, const BYTE *data, DWORD size)
@@ -472,8 +472,8 @@ static void test_SetupGetFileCompressionInfo(void)
     ret = SetupGetFileCompressionInfoA(source, &name, &source_size, &target_size, &type);
     ok(!ret, "SetupGetFileCompressionInfo failed unexpectedly\n");
     ok(name && !lstrcmpA(name, source), "got %s, expected %s\n", name, source);
-    ok(source_size == sizeof(uncompressed), "got %d\n", source_size);
-    ok(target_size == sizeof(uncompressed), "got %d\n", target_size);
+    ok(source_size == sizeof(uncompressed), "got %ld\n", source_size);
+    ok(target_size == sizeof(uncompressed), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_NONE, "got %d, expected FILE_COMPRESSION_NONE\n", type);
 
     MyFree(name);
@@ -498,16 +498,16 @@ static void test_SetupGetFileCompressionInfoEx(void)
 
     ret = pSetupGetFileCompressionInfoExA(source, NULL, 0, &required_len, NULL, NULL, NULL);
     ok(!ret, "SetupGetFileCompressionInfoEx succeeded unexpectedly\n");
-    ok(required_len == lstrlenA(source) + 1, "got %d, expected %d\n", required_len, lstrlenA(source) + 1);
+    ok(required_len == lstrlenA(source) + 1, "got %ld, expected %d\n", required_len, lstrlenA(source) + 1);
 
     create_source_file(source, comp_lzx, sizeof(comp_lzx));
 
     ret = pSetupGetFileCompressionInfoExA(source, name, sizeof(name), &required_len, &source_size, &target_size, &type);
     ok(ret, "SetupGetFileCompressionInfoEx failed unexpectedly: %d\n", ret);
     ok(!lstrcmpA(name, source), "got %s, expected %s\n", name, source);
-    ok(required_len == lstrlenA(source) + 1, "got %d, expected %d\n", required_len, lstrlenA(source) + 1);
-    ok(source_size == sizeof(comp_lzx), "got %d\n", source_size);
-    ok(target_size == sizeof(uncompressed), "got %d\n", target_size);
+    ok(required_len == lstrlenA(source) + 1, "got %ld, expected %d\n", required_len, lstrlenA(source) + 1);
+    ok(source_size == sizeof(comp_lzx), "got %ld\n", source_size);
+    ok(target_size == sizeof(uncompressed), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_WINLZA, "got %d, expected FILE_COMPRESSION_WINLZA\n", type);
     DeleteFileA(source);
 
@@ -516,9 +516,9 @@ static void test_SetupGetFileCompressionInfoEx(void)
     ret = pSetupGetFileCompressionInfoExA(source, name, sizeof(name), &required_len, &source_size, &target_size, &type);
     ok(ret, "SetupGetFileCompressionInfoEx failed unexpectedly: %d\n", ret);
     ok(!lstrcmpA(name, source), "got %s, expected %s\n", name, source);
-    ok(required_len == lstrlenA(source) + 1, "got %d, expected %d\n", required_len, lstrlenA(source) + 1);
-    ok(source_size == sizeof(comp_zip), "got %d\n", source_size);
-    ok(target_size == sizeof(comp_zip), "got %d\n", target_size);
+    ok(required_len == lstrlenA(source) + 1, "got %ld, expected %d\n", required_len, lstrlenA(source) + 1);
+    ok(source_size == sizeof(comp_zip), "got %ld\n", source_size);
+    ok(target_size == sizeof(comp_zip), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_NONE, "got %d, expected FILE_COMPRESSION_NONE\n", type);
     DeleteFileA(source);
 
@@ -527,9 +527,9 @@ static void test_SetupGetFileCompressionInfoEx(void)
     ret = pSetupGetFileCompressionInfoExA(source, name, sizeof(name), &required_len, &source_size, &target_size, &type);
     ok(ret, "SetupGetFileCompressionInfoEx failed unexpectedly: %d\n", ret);
     ok(!lstrcmpA(name, source), "got %s, expected %s\n", name, source);
-    ok(required_len == lstrlenA(source) + 1, "got %d, expected %d\n", required_len, lstrlenA(source) + 1);
-    ok(source_size == sizeof(comp_cab_lzx), "got %d\n", source_size);
-    ok(target_size == sizeof(uncompressed), "got %d\n", target_size);
+    ok(required_len == lstrlenA(source) + 1, "got %ld, expected %d\n", required_len, lstrlenA(source) + 1);
+    ok(source_size == sizeof(comp_cab_lzx), "got %ld\n", source_size);
+    ok(target_size == sizeof(uncompressed), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_MSZIP, "got %d, expected FILE_COMPRESSION_MSZIP\n", type);
     DeleteFileA(source);
 
@@ -538,9 +538,9 @@ static void test_SetupGetFileCompressionInfoEx(void)
     ret = pSetupGetFileCompressionInfoExA(source, name, sizeof(name), &required_len, &source_size, &target_size, &type);
     ok(ret, "SetupGetFileCompressionInfoEx failed unexpectedly: %d\n", ret);
     ok(!lstrcmpA(name, source), "got %s, expected %s\n", name, source);
-    ok(required_len == lstrlenA(source) + 1, "got %d, expected %d\n", required_len, lstrlenA(source) + 1);
-    ok(source_size == sizeof(comp_cab_zip), "got %d\n", source_size);
-    ok(target_size == sizeof(uncompressed), "got %d\n", target_size);
+    ok(required_len == lstrlenA(source) + 1, "got %ld, expected %d\n", required_len, lstrlenA(source) + 1);
+    ok(source_size == sizeof(comp_cab_zip), "got %ld\n", source_size);
+    ok(target_size == sizeof(uncompressed), "got %ld\n", target_size);
     ok(type == FILE_COMPRESSION_MSZIP, "got %d, expected FILE_COMPRESSION_MSZIP\n", type);
     DeleteFileA(source);
 }
@@ -599,7 +599,7 @@ static void test_SetupDecompressOrCopyFile(void)
                                          invalid_parameters[i].target,
                                          invalid_parameters[i].type);
         ok(ret == ERROR_INVALID_PARAMETER,
-           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %u\n",
+           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %lu\n",
            i, ret);
 
         /* try an invalid compression type */
@@ -608,7 +608,7 @@ static void test_SetupDecompressOrCopyFile(void)
                                          invalid_parameters[i].target,
                                          invalid_parameters[i].type);
         ok(ret == ERROR_INVALID_PARAMETER,
-           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %u\n",
+           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %lu\n",
            i, ret);
     }
 
@@ -621,23 +621,23 @@ static void test_SetupDecompressOrCopyFile(void)
     /* no compression tests */
 
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, uncompressed, sizeof(uncompressed)), "incorrect target file\n");
 
     /* try overwriting existing file */
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     DeleteFileA(target);
 
     type = FILE_COMPRESSION_NONE;
     ret = SetupDecompressOrCopyFileA(source, target, &type);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, uncompressed, sizeof(uncompressed)), "incorrect target file\n");
     DeleteFileA(target);
 
     type = FILE_COMPRESSION_WINLZA;
     ret = SetupDecompressOrCopyFileA(source, target, &type);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, uncompressed, sizeof(uncompressed)), "incorrect target file\n");
     DeleteFileA(target);
 
@@ -646,7 +646,7 @@ static void test_SetupDecompressOrCopyFile(void)
     create_source_file(source, comp_lzx, sizeof(comp_lzx));
 
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     DeleteFileA(target);
 
     /* zip compression tests */
@@ -654,7 +654,7 @@ static void test_SetupDecompressOrCopyFile(void)
     create_source_file(source, comp_zip, sizeof(comp_zip));
 
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, comp_zip, sizeof(comp_zip)), "incorrect target file\n");
     DeleteFileA(target);
 
@@ -666,23 +666,23 @@ static void test_SetupDecompressOrCopyFile(void)
     lstrcpyA(p + 1, "wine");
 
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, uncompressed, sizeof(uncompressed)), "incorrect target file\n");
 
     /* try overwriting existing file */
     ret = SetupDecompressOrCopyFileA(source, target, NULL);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
 
     /* try zip compression */
     type = FILE_COMPRESSION_MSZIP;
     ret = SetupDecompressOrCopyFileA(source, target, &type);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, uncompressed, sizeof(uncompressed)), "incorrect target file\n");
 
     /* try no compression */
     type = FILE_COMPRESSION_NONE;
     ret = SetupDecompressOrCopyFileA(source, target, &type);
-    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
+    ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %ld\n", ret);
     ok(compare_file_data(target, comp_cab_zip, sizeof(comp_cab_zip)), "incorrect target file\n");
 
     /* Show that SetupDecompressOrCopyFileA simply extracts the first file it
@@ -700,7 +700,7 @@ static void test_SetupDecompressOrCopyFile(void)
         lstrcpyA(p + 1, zip_multi_tests[i].filename);
 
         ret = SetupDecompressOrCopyFileA(source, target, NULL);
-        ok(!ret, "[%d] SetupDecompressOrCopyFile failed unexpectedly: %d\n", i, ret);
+        ok(!ret, "[%d] SetupDecompressOrCopyFile failed unexpectedly: %ld\n", i, ret);
         ok(compare_file_data(target, zip_multi_tests[i].expected_buffer, zip_multi_tests[i].buffer_size),
            "[%d] incorrect target file\n", i);
         DeleteFileA(target);
@@ -716,14 +716,14 @@ static void test_SetupUninstallOEMInf(void)
     SetLastError(0xdeadbeef);
     ret = SetupUninstallOEMInfA(NULL, 0, NULL);
     ok(!ret, "Expected failure\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupUninstallOEMInfA("", 0, NULL);
     todo_wine
     {
     ok(!ret, "Expected failure\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08x\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08lx\n", GetLastError());
     }
 
     SetLastError(0xdeadbeef);
@@ -731,7 +731,7 @@ static void test_SetupUninstallOEMInf(void)
     todo_wine
     {
     ok(!ret, "Expected failure\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08x\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %08lx\n", GetLastError());
     }
 }
 
@@ -757,7 +757,7 @@ static void test_defaultcallback(void)
     ctxt = SetupInitDefaultQueueCallbackEx(owner, progress, WM_USER, 0, NULL);
     ok(ctxt != NULL, "got %p\n", ctxt);
 
-    ok(ctxt->magic == magic || broken(ctxt->magic != magic) /* win2000 */, "got magic 0x%08x\n", ctxt->magic);
+    ok(ctxt->magic == magic || broken(ctxt->magic != magic) /* win2000 */, "got magic 0x%08lx\n", ctxt->magic);
     if (ctxt->magic == magic)
     {
         ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
@@ -773,7 +773,7 @@ static void test_defaultcallback(void)
     }
 
     ctxt = SetupInitDefaultQueueCallback(owner);
-    ok(ctxt->magic == magic, "got magic 0x%08x\n", ctxt->magic);
+    ok(ctxt->magic == magic, "got magic 0x%08lx\n", ctxt->magic);
     ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
     ok(ctxt->progress == NULL, "got %p, expected %p\n", ctxt->progress, progress);
     ok(ctxt->message == 0, "got %d\n", ctxt->message);
@@ -789,7 +789,7 @@ static void test_SetupLogError(void)
     ret = SetupLogErrorA("Test without opening\r\n", LogSevInformation);
     error = GetLastError();
     ok(!ret, "SetupLogError succeeded\n");
-    ok(error == ERROR_FILE_INVALID, "got wrong error: %d\n", error);
+    ok(error == ERROR_FILE_INVALID, "got wrong error: %ld\n", error);
 
     SetLastError(0xdeadbeef);
     ret = SetupOpenLog(FALSE);
@@ -798,24 +798,24 @@ static void test_SetupLogError(void)
         skip("SetupOpenLog() failed on insufficient permissions\n");
         return;
     }
-    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+    ok(ret, "SetupOpenLog failed, error %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupLogErrorA("Test with wrong log severity\r\n", LogSevMaximum);
     error = GetLastError();
     ok(!ret, "SetupLogError succeeded\n");
-    ok(error == 0xdeadbeef, "got wrong error: %d\n", error);
+    ok(error == 0xdeadbeef, "got wrong error: %ld\n", error);
     ret = SetupLogErrorA("Test without EOL", LogSevInformation);
     ok(ret, "SetupLogError failed\n");
 
     SetLastError(0xdeadbeef);
     ret = SetupLogErrorA(NULL, LogSevInformation);
     ok(ret || broken(!ret && GetLastError() == ERROR_INVALID_PARAMETER /* Win Vista+ */),
-        "SetupLogError failed: %08x\n", GetLastError());
+        "SetupLogError failed: %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupOpenLog(FALSE);
-    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+    ok(ret, "SetupOpenLog failed, error %ld\n", GetLastError());
 
     SetupCloseLog();
 }
@@ -839,14 +839,14 @@ static void _check_device_interface(int line, const char *instance_id, const GUI
     devinfo = SetupDiGetClassDevsA(guid, instance_id, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
     ret = SetupDiEnumDeviceInfo(devinfo, 0, &device_data);
     ok_(__FILE__, line)(ret || broken(!ret) /* <= Win7 */,
-                        "SetupDiEnumDeviceInfo failed, error %u.\n", GetLastError());
+                        "SetupDiEnumDeviceInfo failed, error %lu.\n", GetLastError());
     if (!ret)
     {
         SetupDiDestroyDeviceInfoList(devinfo);
         return;
     }
     ret = SetupDiEnumDeviceInterfaces(devinfo, &device_data, guid, 0, &iface_data);
-    ok_(__FILE__, line)(ret, "SetupDiEnumDeviceInterfaces failed, error %u.\n", GetLastError());
+    ok_(__FILE__, line)(ret, "SetupDiEnumDeviceInterfaces failed, error %lu.\n", GetLastError());
     ok_(__FILE__, line)(IsEqualGUID(&iface_data.InterfaceClassGuid, guid),
                         "Expected guid %s, got %s.\n", wine_dbgstr_guid(guid),
                         wine_dbgstr_guid(&iface_data.InterfaceClassGuid));
@@ -865,14 +865,14 @@ static void test_device_interfaces(void)
 
     /* GPUs */
     devinfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_DISPLAY, NULL, NULL, DIGCF_PRESENT);
-    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %u.\n", GetLastError());
+    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %lu.\n", GetLastError());
     while ((ret = SetupDiEnumDeviceInfo(devinfo, device_idx, &device_data)))
     {
         ret = SetupDiGetDeviceInstanceIdA(devinfo, &device_data, instance_id,
                                           ARRAY_SIZE(instance_id), &size);
-        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %u.\n", GetLastError());
+        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %lu.\n", GetLastError());
 
-        winetest_push_context("GPU %d", device_idx);
+        winetest_push_context("GPU %ld", device_idx);
 
         check_device_interface(instance_id, &GUID_DEVINTERFACE_DISPLAY_ADAPTER);
         check_device_interface(instance_id, &GUID_DISPLAY_DEVICE_ARRIVAL);
@@ -881,21 +881,21 @@ static void test_device_interfaces(void)
         ++device_idx;
     }
     error = GetLastError();
-    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %u.\n", ERROR_NO_MORE_ITEMS, error);
+    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %lu.\n", ERROR_NO_MORE_ITEMS, error);
     ok(device_idx > 0, "Expected at least one GPU.\n");
     SetupDiDestroyDeviceInfoList(devinfo);
 
     /* Monitors */
     device_idx = 0;
     devinfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_MONITOR, L"DISPLAY", NULL, DIGCF_PRESENT);
-    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %u.\n", GetLastError());
+    ok(devinfo != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsW failed, error %lu.\n", GetLastError());
     while ((ret = SetupDiEnumDeviceInfo(devinfo, device_idx, &device_data)))
     {
         ret = SetupDiGetDeviceInstanceIdA(devinfo, &device_data, instance_id,
                                           ARRAY_SIZE(instance_id), &size);
-        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %u.\n", GetLastError());
+        ok(ret, "SetupDiGetDeviceInstanceIdA failed, error %lu.\n", GetLastError());
 
-        winetest_push_context("Monitor %d", device_idx);
+        winetest_push_context("Monitor %ld", device_idx);
 
         check_device_interface(instance_id, &GUID_DEVINTERFACE_MONITOR);
 
@@ -903,7 +903,7 @@ static void test_device_interfaces(void)
         ++device_idx;
     }
     error = GetLastError();
-    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %u.\n", ERROR_NO_MORE_ITEMS, error);
+    ok(error == ERROR_NO_MORE_ITEMS, "Expected error %u, got %lu.\n", ERROR_NO_MORE_ITEMS, error);
     ok(device_idx > 0 || broken(device_idx == 0) /* w7u_2qxl TestBot */,
        "Expected at least one monitor.\n");
     SetupDiDestroyDeviceInfoList(devinfo);

@@ -42,13 +42,13 @@ static void test_SetupPromptForDiskA(void)
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, sizeof(buffer) - 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == strlen(path) + 1, "Expect length %u, got %u\n", lstrlenA(path) + 1, length);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
     ok(!strcmp(path, buffer), "Expected path %s, got %s\n", debugstr_a(path), debugstr_a(buffer));
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, NULL, 0, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %d\n", ret);
-    ok(length == strlen(path) + 1, "Expect length %u, got %u\n", lstrlenA(path) + 1, length);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, 1, &length);
@@ -61,7 +61,7 @@ static void test_SetupPromptForDiskA(void)
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, strlen(path) + 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == strlen(path) + 1, "Expect length %u, got %u\n", lstrlenA(path) + 1, length);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
     ok(!strcmp(path, buffer), "Expected path %s, got %s\n", debugstr_a(path), debugstr_a(buffer));
 }
 
@@ -77,13 +77,13 @@ static void test_SetupPromptForDiskW(void)
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, ARRAY_SIZE(buffer) - 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == lstrlenW(path) + 1, "Expect length %u, got %u\n", lstrlenW(path) + 1, length);
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
     ok(!lstrcmpW(path, buffer), "Expected path %s, got %s\n", debugstr_w(path), debugstr_w(buffer));
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, NULL, 0, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %d\n", ret);
-    ok(length == lstrlenW(path) + 1, "Expect length %u, got %u\n", lstrlenW(path) + 1, length);
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, 1, &length);
@@ -96,7 +96,7 @@ static void test_SetupPromptForDiskW(void)
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, lstrlenW(path) + 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == lstrlenW(path) + 1, "Expect length %u, got %u\n", lstrlenW(path) + 1, length);
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
     ok(!lstrcmpW(path, buffer), "Expected path %s, got %s\n", debugstr_w(path), debugstr_w(buffer));
 }
 
