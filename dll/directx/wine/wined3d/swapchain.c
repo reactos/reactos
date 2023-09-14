@@ -372,9 +372,9 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
 }
 
 static void swapchain_gl_set_swap_interval(struct wined3d_swapchain *swapchain,
-        struct wined3d_context *context, unsigned int swap_interval)
+        struct wined3d_context_gl *context_gl, unsigned int swap_interval)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     swap_interval = swap_interval <= 4 ? swap_interval : 1;
     if (swapchain->swap_interval == swap_interval)
@@ -388,7 +388,7 @@ static void swapchain_gl_set_swap_interval(struct wined3d_swapchain *swapchain,
     if (!GL_EXTCALL(wglSwapIntervalEXT(swap_interval)))
     {
         ERR("Failed to set swap interval %u for context %p, last error %#x.\n",
-                swap_interval, context, GetLastError());
+                swap_interval, context_gl, GetLastError());
     }
 }
 
@@ -463,7 +463,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
 
     gl_info = context->gl_info;
 
-    swapchain_gl_set_swap_interval(swapchain, context, swap_interval);
+    swapchain_gl_set_swap_interval(swapchain, context_gl, swap_interval);
 
     if ((logo_texture = swapchain->device->logo_texture))
     {
