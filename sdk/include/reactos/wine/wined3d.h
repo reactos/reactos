@@ -26,10 +26,6 @@
 #ifndef __WINE_WINED3D_H
 #define __WINE_WINED3D_H
 
-#ifndef __WINE_WINE_PORT_H
-# error You must include wine/port.h to use this header
-#endif
-
 #include "wine/list.h"
 
 DEFINE_GUID(IID_IWineD3DDevice, 0xd56e2a4c, 0x5127, 0x8437, 0x65, 0x8a, 0x98, 0xc5, 0xbb, 0x78, 0x94, 0x98);
@@ -2790,7 +2786,7 @@ HRESULT __cdecl wined3d_extract_shader_input_signature_from_dxbc(struct wined3d_
 /* Return the integer base-2 logarithm of x. Undefined for x == 0. */
 static inline unsigned int wined3d_log2i(unsigned int x)
 {
-#ifdef HAVE___BUILTIN_CLZ
+#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
     return __builtin_clz(x) ^ 0x1f;
 #else
     static const unsigned int l[] =
@@ -2820,7 +2816,13 @@ static inline unsigned int wined3d_log2i(unsigned int x)
 
 static inline int wined3d_bit_scan(unsigned int *x)
 {
-    int bit_offset = ffs(*x) - 1;
+    int bit_offset;
+#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
+    bit_offset = __builtin_ffs(*x) - 1;
+#else
+    for (bit_offset = 0; bit_offset < 32; bit_offset++)
+        if (*x & (1u << bit_offset)) break;
+#endif
     *x ^= 1u << bit_offset;
     return bit_offset;
 }
