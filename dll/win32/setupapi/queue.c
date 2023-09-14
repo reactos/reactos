@@ -1561,7 +1561,7 @@ static BOOL queue_copy_file( const WCHAR *source, const WCHAR *dest,
     if (op->dst_path && !create_full_pathW(op->dst_path))
         return FALSE;
 
-    if (do_file_copyW(source, dest, op->style, handler, context))
+    if (do_file_copyW(source, dest, op->style, handler, context) || GetLastError() == ERROR_SUCCESS)
         return TRUE;
 
     /* try to extract it from the cabinet file */

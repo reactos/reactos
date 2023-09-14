@@ -1468,6 +1468,16 @@ static void test_need_media(void)
     ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
     ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
 
+    got_need_media = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", "File One", NULL,
+            "dst", NULL, SP_COPY_WARNIFSKIP | SP_COPY_REPLACEONLY);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    run_queue(queue, need_media_cb);
+    ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
+    ok(!file_exists("dst/one.txt"), "Destination file should exist.\n");
+
     /* Test with a subdirectory. */
 
     got_need_media = 0;
