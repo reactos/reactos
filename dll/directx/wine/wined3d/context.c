@@ -783,18 +783,18 @@ static void context_apply_fbo_state(struct wined3d_context *context, GLenum targ
 }
 
 /* Context activation is done by the caller. */
-void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target,
+void wined3d_context_gl_apply_fbo_state_blit(struct wined3d_context_gl *context_gl, GLenum target,
         struct wined3d_resource *rt, unsigned int rt_sub_resource_idx,
         struct wined3d_resource *ds, unsigned int ds_sub_resource_idx, DWORD location)
 {
     struct wined3d_rendertarget_info ds_info = {{0}};
 
-    memset(context->blit_targets, 0, sizeof(context->blit_targets));
+    memset(context_gl->c.blit_targets, 0, sizeof(context_gl->c.blit_targets));
     if (rt)
     {
-        context->blit_targets[0].resource = rt;
-        context->blit_targets[0].sub_resource_idx = rt_sub_resource_idx;
-        context->blit_targets[0].layer_count = 1;
+        context_gl->c.blit_targets[0].resource = rt;
+        context_gl->c.blit_targets[0].sub_resource_idx = rt_sub_resource_idx;
+        context_gl->c.blit_targets[0].layer_count = 1;
     }
 
     if (ds)
@@ -804,7 +804,7 @@ void context_apply_fbo_state_blit(struct wined3d_context *context, GLenum target
         ds_info.layer_count = 1;
     }
 
-    context_apply_fbo_state(context, target, context->blit_targets, &ds_info, location, location);
+    context_apply_fbo_state(&context_gl->c, target, context_gl->c.blit_targets, &ds_info, location, location);
 }
 
 /* Context activation is done by the caller. */
@@ -2759,7 +2759,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
         {
             wined3d_texture_load(rt, context, FALSE);
 
-            context_apply_fbo_state_blit(context, GL_FRAMEBUFFER, &rt->resource,
+            wined3d_context_gl_apply_fbo_state_blit(context_gl, GL_FRAMEBUFFER, &rt->resource,
                     context->current_rt.sub_resource_idx, NULL, 0, rt->resource.draw_binding);
             if (rt->resource.format->id != WINED3DFMT_NULL)
                 rt_mask = 1;

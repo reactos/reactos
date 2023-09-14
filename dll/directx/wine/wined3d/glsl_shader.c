@@ -12983,6 +12983,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
 {
     struct wined3d_texture_gl *src_texture_gl = wined3d_texture_gl(src_texture);
     struct wined3d_texture_gl *dst_texture_gl = wined3d_texture_gl(dst_texture);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct wined3d_device *device = dst_texture->resource.device;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *staging_texture = NULL;
@@ -13075,7 +13076,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
         wined3d_texture_load(src_texture, context, FALSE);
     }
 
-    wined3d_context_gl_apply_blit_state(wined3d_context_gl(context), device);
+    wined3d_context_gl_apply_blit_state(context_gl, device);
 
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {
@@ -13098,7 +13099,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
             TRACE("Destination texture %p is offscreen.\n", dst_texture);
             buffer = GL_COLOR_ATTACHMENT0;
         }
-        context_apply_fbo_state_blit(context, GL_DRAW_FRAMEBUFFER,
+        wined3d_context_gl_apply_fbo_state_blit(context_gl, GL_DRAW_FRAMEBUFFER,
                 &dst_texture->resource, dst_sub_resource_idx, NULL, 0, dst_location);
         context_set_draw_buffer(context, buffer);
         context_check_fbo_status(context, GL_DRAW_FRAMEBUFFER);
