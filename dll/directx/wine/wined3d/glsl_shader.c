@@ -951,6 +951,7 @@ static void shader_glsl_init_transform_feedback(const struct wined3d_context *co
     {
         FIXME("No varyings to record, disabling transform feedback.\n");
         shader->u.gs.so_desc.element_count = 0;
+        string_buffer_release(&priv->string_buffers, buffer);
         return;
     }
 
