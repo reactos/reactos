@@ -1,0 +1,47 @@
+diff a/dll/directx/wine/wined3d/glsl_shader.c b/dll/directx/wine/wined3d/glsl_shader.c	(rejected hunks)
+@@ -155,6 +155,7 @@ struct glsl_vs_program
+     GLint uniform_i_locations[WINED3D_MAX_CONSTS_I];
+     GLint uniform_b_locations[WINED3D_MAX_CONSTS_B];
+     GLint pos_fixup_location;
++    GLint base_vertex_id_location;
+ 
+     GLint modelview_matrix_location[MAX_VERTEX_BLENDS];
+     GLint projection_matrix_location;
+@@ -1775,22 +1776,21 @@ static void shader_glsl_load_color_key_constant(const struct glsl_ps_program *ps
+ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context *context,
+         const struct wined3d_state *state)
+ {
+-    const struct glsl_context_data *ctx_data = context->shader_backend_data;
+     const struct wined3d_shader *vshader = state->shader[WINED3D_SHADER_TYPE_VERTEX];
+     const struct wined3d_shader *pshader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
++    const struct glsl_context_data *ctx_data = context->shader_backend_data;
++    struct glsl_shader_prog_link *prog = ctx_data->glsl_program;
+     const struct wined3d_gl_info *gl_info = context->gl_info;
+-    struct shader_glsl_priv *priv = shader_priv;
+     float position_fixup[4 * WINED3D_MAX_VIEWPORTS];
++    struct shader_glsl_priv *priv = shader_priv;
++    unsigned int constant_version;
+     DWORD update_mask;
+-
+-    struct glsl_shader_prog_link *prog = ctx_data->glsl_program;
+-    UINT constant_version;
+     int i;
+ 
+-    if (!prog) {
+-        /* No GLSL program set - nothing to do. */
++    /* No GLSL program set - nothing to do. */
++    if (!prog)
+         return;
+-    }
++
+     constant_version = prog->constant_version;
+     update_mask = context->constant_update_mask & prog->constant_update_mask;
+ 
+@@ -10123,6 +10129,7 @@ static void shader_glsl_init_vs_uniform_locations(const struct wined3d_gl_info *
+     }
+ 
+     vs->pos_fixup_location = GL_EXTCALL(glGetUniformLocation(program_id, "pos_fixup"));
++    vs->base_vertex_id_location = GL_EXTCALL(glGetUniformLocation(program_id, "base_vertex_id"));
+ 
+     for (i = 0; i < MAX_VERTEX_BLENDS; ++i)
+     {
