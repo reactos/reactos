@@ -1241,7 +1241,7 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
     {
         WARN("Failed to make GL context %p current on device context %p, last error %#x.\n",
                 context_gl->gl_ctx, context_gl->dc, GetLastError());
-        context_gl->c.valid = 0;
+        context_gl->valid = 0;
         WARN("Trying fallback to the backup window.\n");
 
         /* FIXME: If the context is destroyed it's no longer associated with
@@ -1280,7 +1280,7 @@ static BOOL wined3d_context_gl_set_gl_context(struct wined3d_context_gl *context
             return FALSE;
         }
 
-        context_gl->c.valid = 1;
+        context_gl->valid = 1;
     }
     context_gl->needs_set = 0;
 
@@ -1315,12 +1315,12 @@ static void wined3d_context_gl_update_window(struct wined3d_context_gl *context_
     context_gl->dc_is_private = FALSE;
     context_gl->dc_has_format = FALSE;
     context_gl->needs_set = 1;
-    context_gl->c.valid = 1;
+    context_gl->valid = 1;
 
     if (!(context_gl->dc = GetDCEx(context_gl->window, 0, DCX_USESTYLE | DCX_CACHE)))
     {
         ERR("Failed to get a device context for window %p.\n", context_gl->window);
-        context_gl->c.valid = 0;
+        context_gl->valid = 0;
     }
 }
 
@@ -1346,10 +1346,10 @@ static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 
     if (restore_ctx == context_gl->gl_ctx)
         restore_ctx = NULL;
-    else if (context_gl->c.valid)
+    else if (context_gl->valid)
         wined3d_context_gl_set_gl_context(context_gl);
 
-    if (context_gl->c.valid)
+    if (context_gl->valid)
     {
         if (context_gl->dummy_arbfp_prog)
             GL_EXTCALL(glDeleteProgramsARB(1, &context_gl->dummy_arbfp_prog));
@@ -1408,7 +1408,7 @@ static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
     LIST_FOR_EACH_ENTRY(pipeline_statistics_query, &context_gl->pipeline_statistics_queries,
             struct wined3d_pipeline_statistics_query, entry)
     {
-        if (context_gl->c.valid)
+        if (context_gl->valid)
             GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(pipeline_statistics_query->u.id), pipeline_statistics_query->u.id));
         pipeline_statistics_query->context_gl = NULL;
     }
@@ -1416,21 +1416,21 @@ static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
     LIST_FOR_EACH_ENTRY(so_statistics_query, &context_gl->so_statistics_queries,
             struct wined3d_so_statistics_query, entry)
     {
-        if (context_gl->c.valid)
+        if (context_gl->valid)
             GL_EXTCALL(glDeleteQueries(ARRAY_SIZE(so_statistics_query->u.id), so_statistics_query->u.id));
         so_statistics_query->context_gl = NULL;
     }
 
     LIST_FOR_EACH_ENTRY(timestamp_query, &context_gl->timestamp_queries, struct wined3d_timestamp_query, entry)
     {
-        if (context_gl->c.valid)
+        if (context_gl->valid)
             GL_EXTCALL(glDeleteQueries(1, &timestamp_query->id));
         timestamp_query->context_gl = NULL;
     }
 
     LIST_FOR_EACH_ENTRY(fence, &context_gl->fences, struct wined3d_fence, entry)
     {
-        if (context_gl->c.valid)
+        if (context_gl->valid)
         {
             if (gl_info->supported[ARB_SYNC])
             {
@@ -1451,21 +1451,21 @@ static void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl)
 
     LIST_FOR_EACH_ENTRY(occlusion_query, &context_gl->occlusion_queries, struct wined3d_occlusion_query, entry)
     {
-        if (context_gl->c.valid)
+        if (context_gl->valid)
             GL_EXTCALL(glDeleteQueries(1, &occlusion_query->id));
         occlusion_query->context_gl = NULL;
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context_gl->fbo_destroy_list, struct fbo_entry, entry)
     {
-        if (!context_gl->c.valid)
+        if (!context_gl->valid)
             entry->id = 0;
         wined3d_context_gl_destroy_fbo_entry(context_gl, entry);
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context_gl->fbo_list, struct fbo_entry, entry)
     {
-        if (!context_gl->c.valid)
+        if (!context_gl->valid)
             entry->id = 0;
         wined3d_context_gl_destroy_fbo_entry(context_gl, entry);
     }
@@ -1539,7 +1539,7 @@ BOOL context_set_current(struct wined3d_context *ctx)
     {
         struct wined3d_context_gl *context_gl = wined3d_context_gl(ctx);
 
-        if (!ctx->valid)
+        if (!context_gl->valid)
         {
             ERR("Trying to make invalid context %p current\n", ctx);
             return FALSE;
@@ -2129,7 +2129,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     context->render_offscreen = wined3d_resource_is_offscreen(target);
     context_gl->draw_buffers_mask = context_generate_rt_mask(GL_BACK);
-    context->valid = 1;
+    context_gl->valid = 1;
 
     context_gl->gl_ctx = ctx;
     context_gl->dc_has_format = TRUE;
@@ -4183,7 +4183,7 @@ static void wined3d_context_gl_activate(struct wined3d_context_gl *context_gl,
     wined3d_context_gl_enter(context_gl);
     wined3d_context_gl_update_window(context_gl);
     context_setup_target(&context_gl->c, texture, sub_resource_idx);
-    if (!context_gl->c.valid)
+    if (!context_gl->valid)
         return;
 
     if (&context_gl->c != context_get_current())
@@ -4287,33 +4287,31 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
 {
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context_gl *context_gl;
-    struct wined3d_context *context;
 
-    context = context_acquire(device, NULL, 0);
-    if (!context->valid)
+    context_gl = wined3d_context_gl(context_acquire(device, NULL, 0));
+    if (!context_gl->valid)
     {
-        context_release(context);
+        context_release(&context_gl->c);
         WARN("Invalid context, skipping dispatch.\n");
         return;
     }
-    context_gl = wined3d_context_gl(context);
-    gl_info = context->gl_info;
+    gl_info = context_gl->c.gl_info;
 
     if (!gl_info->supported[ARB_COMPUTE_SHADER])
     {
-        context_release(context);
+        context_release(&context_gl->c);
         FIXME("OpenGL implementation does not support compute shaders.\n");
         return;
     }
 
     if (parameters->indirect)
-        wined3d_buffer_load(parameters->u.indirect.buffer, context, state);
+        wined3d_buffer_load(parameters->u.indirect.buffer, &context_gl->c, state);
 
     wined3d_context_gl_apply_compute_state(context_gl, device, state);
 
     if (!state->shader[WINED3D_SHADER_TYPE_COMPUTE])
     {
-        context_release(context);
+        context_release(&context_gl->c);
         WARN("No compute shader bound, skipping dispatch.\n");
         return;
     }
@@ -4337,7 +4335,7 @@ void dispatch_compute(struct wined3d_device *device, const struct wined3d_state 
     GL_EXTCALL(glMemoryBarrier(GL_ALL_BARRIER_BITS));
     checkGLcall("glMemoryBarrier");
 
-    context_release(context);
+    context_release(&context_gl->c);
 }
 
 /* Context activation is done by the caller. */
@@ -4815,13 +4813,13 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         context = context_acquire(device, wined3d_texture_from_resource(rtv->resource), rtv->sub_resource_idx);
     else
         context = context_acquire(device, NULL, 0);
-    if (!context->valid)
+    context_gl = wined3d_context_gl(context);
+    if (!context_gl->valid)
     {
         context_release(context);
         WARN("Invalid context, skipping draw.\n");
         return;
     }
-    context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
 
     if (!use_transform_feedback(state))

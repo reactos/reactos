@@ -1011,12 +1011,12 @@ void wined3d_cs_emit_draw_indirect(struct wined3d_cs *cs, GLenum primitive_type,
 
 static void wined3d_cs_exec_flush(struct wined3d_cs *cs, const void *data)
 {
-    struct wined3d_context *context;
+    struct wined3d_context_gl *context_gl;
 
-    context = context_acquire(cs->device, NULL, 0);
-    if (context->valid)
-        context->gl_info->gl_ops.gl.p_glFlush();
-    context_release(context);
+    context_gl = wined3d_context_gl(context_acquire(cs->device, NULL, 0));
+    if (context_gl->valid)
+        context_gl->c.gl_info->gl_ops.gl.p_glFlush();
+    context_release(&context_gl->c);
 }
 
 void wined3d_cs_emit_flush(struct wined3d_cs *cs)

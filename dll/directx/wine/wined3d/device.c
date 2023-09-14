@@ -306,7 +306,7 @@ void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, c
     if (dsv && dsv->resource->type != WINED3D_RTYPE_BUFFER)
         depth_stencil = texture_from_resource(dsv->resource);
 
-    if (!context->valid)
+    if (!context_gl->valid)
     {
         context_release(context);
         WARN("Invalid context, skipping clear.\n");

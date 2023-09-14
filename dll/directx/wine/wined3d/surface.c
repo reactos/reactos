@@ -225,14 +225,14 @@ static void texture2d_blt_fbo(struct wined3d_device *device, struct wined3d_cont
     else
         restore_texture = NULL;
 
-    if (!context->valid)
+    context_gl = wined3d_context_gl(context);
+    if (!context_gl->valid)
     {
         context_release(context);
         WARN("Invalid context, skipping blit.\n");
         return;
     }
 
-    context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
 
     if (src_location == WINED3D_LOCATION_DRAWABLE)

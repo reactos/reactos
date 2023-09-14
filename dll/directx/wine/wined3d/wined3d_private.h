@@ -1910,40 +1910,39 @@ struct wined3d_context
     DWORD                   tid;    /* Thread ID which owns this context at the moment */
 
     /* Stores some information about the context state for optimization */
-    DWORD render_offscreen : 1;
-    DWORD last_was_rhw : 1;             /* true iff last draw_primitive was in xyzrhw mode */
+    DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
+    DWORD update_shader_resource_bindings : 1;
+    DWORD update_compute_shader_resource_bindings : 1;
+    DWORD update_unordered_access_view_bindings : 1;
+    DWORD update_compute_unordered_access_view_bindings : 1;
     DWORD last_swizzle_map : 16; /* MAX_ATTRIBS, 16 */
+    DWORD last_was_rhw : 1; /* True iff last draw_primitive was in xyzrhw mode. */
     DWORD last_was_pshader : 1;
     DWORD last_was_vshader : 1;
     DWORD last_was_diffuse : 1;
     DWORD last_was_specular : 1;
     DWORD last_was_normal : 1;
-    DWORD namedArraysLoaded : 1;
+
     DWORD last_was_ffp_blit : 1;
     DWORD last_was_blit : 1;
     DWORD last_was_ckey : 1;
-    DWORD fog_coord : 1;
-    DWORD current : 1;
-    DWORD destroyed : 1;
-    DWORD destroy_delayed : 1;
-    DWORD valid : 1;
-
+    DWORD namedArraysLoaded : 1;
     DWORD texShaderBumpMap : 8;         /* WINED3D_MAX_TEXTURES, 8 */
     DWORD lastWasPow2Texture : 8;       /* WINED3D_MAX_TEXTURES, 8 */
     DWORD fixed_function_usage_map : 8; /* WINED3D_MAX_TEXTURES, 8 */
     DWORD lowest_disabled_stage : 4;    /* Max WINED3D_MAX_TEXTURES, 8 */
+
     DWORD use_immediate_mode_draw : 1;
     DWORD uses_uavs : 1;
     DWORD transform_feedback_active : 1;
     DWORD transform_feedback_paused : 1;
-
-    DWORD update_shader_resource_bindings : 1;
-    DWORD update_compute_shader_resource_bindings : 1;
-    DWORD update_unordered_access_view_bindings : 1;
-    DWORD update_compute_unordered_access_view_bindings : 1;
-    DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
+    DWORD fog_coord : 1;
+    DWORD render_offscreen : 1;
+    DWORD current : 1;
+    DWORD destroyed : 1;
+    DWORD destroy_delayed : 1;
     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
-    DWORD padding : 14;
+    DWORD padding : 15;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
@@ -1982,7 +1981,8 @@ struct wined3d_context_gl
     uint32_t rebind_fbo : 1;
     uint32_t untracked_material_count : 2; /* Max value 2 */
     uint32_t needs_set : 1;
-    uint32_t padding : 24;
+    uint32_t valid : 1;
+    uint32_t padding : 23;
 
     uint32_t default_attrib_value_set;
 

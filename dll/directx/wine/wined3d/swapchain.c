@@ -439,13 +439,13 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     BOOL render_to_fbo;
 
     context = context_acquire(swapchain->device, back_buffer, 0);
-    if (!context->valid)
+    context_gl = wined3d_context_gl(context);
+    if (!context_gl->valid)
     {
         context_release(context);
         WARN("Invalid context, skipping present.\n");
         return;
     }
-    context_gl = wined3d_context_gl(context);
 
     gl_info = context->gl_info;
 
