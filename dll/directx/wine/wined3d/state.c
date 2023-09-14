@@ -4125,13 +4125,10 @@ static void viewport_miscpart_cc(struct wined3d_context *context,
 
     for (i = 0; i < state->viewport_count; ++i)
     {
-        vp[i].x += pixel_center_offset;
-        vp[i].y += pixel_center_offset;
-
         depth_ranges[i * 2]     = vp[i].min_z;
         depth_ranges[i * 2 + 1] = vp[i].max_z;
 
-        viewports[i * 4    ] = vp[i].x + pixel_center_offset;
+        viewports[i * 4] = vp[i].x + pixel_center_offset;
         viewports[i * 4 + 1] = vp[i].y + pixel_center_offset;
         viewports[i * 4 + 2] = vp[i].width;
         viewports[i * 4 + 3] = vp[i].height;
