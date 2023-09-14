@@ -805,11 +805,12 @@ static void append_transform_feedback_skip_components(const char **varyings,
     }
 }
 
-static void shader_glsl_generate_transform_feedback_varyings(const struct wined3d_stream_output_desc *so_desc,
+static BOOL shader_glsl_generate_transform_feedback_varyings(const struct wined3d_stream_output_desc *so_desc,
         struct wined3d_string_buffer *buffer, const char **varyings, unsigned int *varying_count,
         char *strings, unsigned int *strings_length, GLenum buffer_mode)
 {
     unsigned int i, buffer_idx, count, length, highest_output_slot, stride;
+    BOOL have_varyings_to_record = FALSE;
 
     count = length = 0;
     highest_output_slot = 0;
@@ -859,6 +860,8 @@ static void shader_glsl_generate_transform_feedback_varyings(const struct wined3
                 string_buffer_sprintf(buffer, "shader_in_out.reg%u", e->register_idx);
                 append_transform_feedback_varying(varyings, &count, &strings, &length, buffer);
             }
+
+            have_varyings_to_record = TRUE;
         }
 
         if (buffer_idx < so_desc->buffer_stride_count
@@ -883,10 +886,12 @@ static void shader_glsl_generate_transform_feedback_varyings(const struct wined3
         *varying_count = count;
     if (strings_length)
         *strings_length = length;
+
+    return have_varyings_to_record;
 }
 
 static void shader_glsl_init_transform_feedback(const struct wined3d_context *context,
-        struct shader_glsl_priv *priv, GLuint program_id, const struct wined3d_shader *shader)
+        struct shader_glsl_priv *priv, GLuint program_id, struct wined3d_shader *shader)
 {
     const struct wined3d_stream_output_desc *so_desc = &shader->u.gs.so_desc;
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -942,7 +947,12 @@ static void shader_glsl_init_transform_feedback(const struct wined3d_context *co
 
     buffer = string_buffer_get(&priv->string_buffers);
 
-    shader_glsl_generate_transform_feedback_varyings(so_desc, buffer, NULL, &count, NULL, &length, mode);
+    if (!shader_glsl_generate_transform_feedback_varyings(so_desc, buffer, NULL, &count, NULL, &length, mode))
+    {
+        FIXME("No varyings to record, disabling transform feedback.\n");
+        shader->u.gs.so_desc.element_count = 0;
+        return;
+    }
 
     if (!(varyings = heap_calloc(count, sizeof(*varyings))))
     {
