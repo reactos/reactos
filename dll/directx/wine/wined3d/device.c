@@ -4198,7 +4198,7 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
 
         wined3d_box_set(&dst_box, dst_x, 0, dst_x + (src_box->right - src_box->left), 1, 0, 1);
     }
-    else if (dst_resource->type == WINED3D_RTYPE_TEXTURE_2D)
+    else
     {
         struct wined3d_texture *dst_texture = texture_from_resource(dst_resource);
         struct wined3d_texture *src_texture = texture_from_resource(src_resource);
@@ -4244,16 +4244,18 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
 
         if (!src_box)
         {
-            unsigned int src_w, src_h, dst_w, dst_h, dst_level;
+            unsigned int src_w, src_h, src_d, dst_w, dst_h, dst_d, dst_level;
 
             src_w = wined3d_texture_get_level_width(src_texture, src_level);
             src_h = wined3d_texture_get_level_height(src_texture, src_level);
+            src_d = wined3d_texture_get_level_depth(src_texture, src_level);
 
             dst_level = dst_sub_resource_idx % dst_texture->level_count;
             dst_w = wined3d_texture_get_level_width(dst_texture, dst_level) - dst_x;
             dst_h = wined3d_texture_get_level_height(dst_texture, dst_level) - dst_y;
+            dst_d = wined3d_texture_get_level_depth(dst_texture, dst_level) - dst_z;
 
-            wined3d_box_set(&b, 0, 0, min(src_w, dst_w), min(src_h, dst_h), 0, 1);
+            wined3d_box_set(&b, 0, 0, min(src_w, dst_w), min(src_h, dst_h), 0, min(src_d, dst_d));
             src_box = &b;
         }
         else if (FAILED(wined3d_texture_check_box_dimensions(src_texture, src_level, src_box)))
@@ -4263,18 +4265,13 @@ HRESULT CDECL wined3d_device_copy_sub_resource_region(struct wined3d_device *dev
         }
 
         wined3d_box_set(&dst_box, dst_x, dst_y, dst_x + (src_box->right - src_box->left),
-                dst_y + (src_box->bottom - src_box->top), 0, 1);
+                dst_y + (src_box->bottom - src_box->top), dst_z, dst_z + (src_box->back - src_box->front));
         if (FAILED(wined3d_texture_check_box_dimensions(dst_texture,
                 dst_sub_resource_idx % dst_texture->level_count, &dst_box)))
         {
             WARN("Invalid destination box %s.\n", debug_box(&dst_box));
             return WINED3DERR_INVALIDCALL;
         }
-    }
-    else
-    {
-        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(dst_resource->type));
-        return WINED3DERR_INVALIDCALL;
     }
 
     wined3d_cs_emit_blt_sub_resource(device->cs, dst_resource, dst_sub_resource_idx, &dst_box,
