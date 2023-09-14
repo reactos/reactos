@@ -2319,7 +2319,7 @@ static void test_get_actual_section(void)
 
 static void test_driver_list(void)
 {
-    char inf_dir[MAX_PATH], inf_path[MAX_PATH], inf_path2[MAX_PATH];
+    char inf_dir[MAX_PATH], inf_path[MAX_PATH + 10], inf_path2[MAX_PATH + 10];
     static const char hardware_id[] = "bogus_hardware_id\0";
     static const char compat_id[] = "bogus_compat_id\0";
     SP_DEVINSTALL_PARAMS_A params = {sizeof(params)};
