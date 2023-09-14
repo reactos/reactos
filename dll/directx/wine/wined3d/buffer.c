@@ -898,7 +898,7 @@ static void buffer_mark_used(struct wined3d_buffer *buffer)
 void wined3d_buffer_load(struct wined3d_buffer *buffer, struct wined3d_context *context,
         const struct wined3d_state *state)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
     BOOL decl_changed = FALSE;
 
     TRACE("buffer %p.\n", buffer);
@@ -932,9 +932,9 @@ void wined3d_buffer_load(struct wined3d_buffer *buffer, struct wined3d_context *
 
         if (!use_vs(state))
         {
-            if (!gl_info->supported[ARB_VERTEX_ARRAY_BGRA] && !context->d3d_info->ffp_generic_attributes)
+            if (!d3d_info->vertex_bgra && !d3d_info->ffp_generic_attributes)
                 fixup_flags |= WINED3D_BUFFER_FIXUP_D3DCOLOR;
-            if (!context->d3d_info->xyzrhw)
+            if (!d3d_info->xyzrhw)
                 fixup_flags |= WINED3D_BUFFER_FIXUP_XYZRHW;
         }
 
