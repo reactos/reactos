@@ -39,7 +39,7 @@ static void light_update(struct d3d_light *light)
     if (!light->active_viewport || !light->active_viewport->active_device) return;
     device = light->active_viewport->active_device;
 
-    IDirect3DDevice7_SetLight(&device->IDirect3DDevice7_iface, light->dwLightIndex, &light->light7);
+    IDirect3DDevice7_SetLight(&device->IDirect3DDevice7_iface, light->active_light_index, &light->light7);
 }
 
 /*****************************************************************************
@@ -61,7 +61,7 @@ void light_activate(struct d3d_light *light)
 
     light_update(light);
     if (light->light.dwFlags & D3DLIGHT_ACTIVE)
-        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, TRUE);
+        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->active_light_index, TRUE);
 }
 
 /*****************************************************************************
@@ -83,7 +83,7 @@ void light_deactivate(struct d3d_light *light)
 
     device = light->active_viewport->active_device;
     if (light->light.dwFlags & D3DLIGHT_ACTIVE)
-        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, FALSE);
+        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->active_light_index, FALSE);
 }
 
 static inline struct d3d_light *impl_from_IDirect3DLight(IDirect3DLight *iface)

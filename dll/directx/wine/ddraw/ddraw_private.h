@@ -67,6 +67,8 @@ struct FvfToDecl
         | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART \
         | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT)
 
+#define DDRAW_MAX_ACTIVE_LIGHTS 8
+
 enum ddraw_device_state
 {
     DDRAW_DEVICE_STATE_OK,
@@ -447,7 +449,7 @@ struct d3d_light
     D3DLIGHT2 light;
     D3DLIGHT7 light7;
 
-    DWORD dwLightIndex;
+    DWORD active_light_index;
 
     struct list entry;
 };
@@ -501,7 +503,7 @@ struct d3d_viewport
     /* If this viewport is active for one device, put the device here */
     struct d3d_device *active_device;
 
-    DWORD                     num_lights;
+    DWORD                     active_lights_count;
     DWORD                     map_lights;
 
     enum ddraw_viewport_version version;
