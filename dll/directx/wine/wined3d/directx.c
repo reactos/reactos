@@ -1861,22 +1861,29 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
 static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_gl_info *gl_info,
         const struct shader_caps *shader_caps, const struct fragment_caps *fragment_caps)
 {
+    unsigned int shader_model;
+
+    shader_model = min(shader_caps->vs_version, shader_caps->ps_version);
+    shader_model = min(shader_model, max(shader_caps->gs_version, 3));
+    shader_model = min(shader_model, max(shader_caps->hs_version, 4));
+    shader_model = min(shader_model, max(shader_caps->ds_version, 4));
+
     if (gl_info->supported[WINED3D_GL_VERSION_3_2] && gl_info->supported[ARB_SAMPLER_OBJECTS])
     {
-        if (shader_caps->vs_version >= 5
+        if (shader_model >= 5
                 && gl_info->supported[ARB_DRAW_INDIRECT]
                 && gl_info->supported[ARB_TEXTURE_COMPRESSION_BPTC])
             return WINED3D_FEATURE_LEVEL_11;
 
-        if (shader_caps->vs_version == 4)
+        if (shader_model == 4)
             return WINED3D_FEATURE_LEVEL_10;
     }
 
-    if (shader_caps->vs_version == 3)
+    if (shader_model == 3)
         return WINED3D_FEATURE_LEVEL_9_SM3;
-    if (shader_caps->vs_version == 2)
+    if (shader_model == 2)
         return WINED3D_FEATURE_LEVEL_9_SM2;
-    if (shader_caps->vs_version == 1)
+    if (shader_model == 1)
         return WINED3D_FEATURE_LEVEL_8;
 
     if (fragment_caps->TextureOpCaps & WINED3DTEXOPCAPS_DOTPRODUCT3)
