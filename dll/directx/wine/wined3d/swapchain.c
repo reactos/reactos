@@ -726,25 +726,6 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
     *quality = 0;
 }
 
-static void wined3d_swapchain_cs_init(void *object)
-{
-    struct wined3d_swapchain *swapchain = object;
-    struct wined3d_context *context;
-
-    if (!(context = context_acquire(swapchain->device, swapchain->front_buffer, 0)))
-    {
-        WARN("Failed to acquire context.\n");
-        return;
-    }
-
-    if (wined3d_settings.offscreen_rendering_mode != ORM_FBO
-            && (!swapchain->desc.enable_auto_depth_stencil
-            || swapchain->desc.auto_depth_stencil_format != swapchain->ds_format->id))
-        FIXME("Add OpenGL context recreation support.\n");
-
-    context_release(context);
-}
-
 void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain, const struct wined3d_device *device)
 {
     /* Subtract 1 for the implicit OpenGL latency. */
@@ -896,25 +877,6 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
         else
         {
             swapchain->d3d_mode = swapchain->original_mode;
-        }
-    }
-
-    if (!(device->wined3d->flags & WINED3D_NO3D))
-    {
-        if (!(swapchain->context = heap_alloc(sizeof(*swapchain->context))))
-        {
-            ERR("Failed to create the context array.\n");
-            hr = E_OUTOFMEMORY;
-            goto err;
-        }
-
-        wined3d_cs_init_object(device->cs, wined3d_swapchain_cs_init, swapchain);
-        wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
-
-        if (!swapchain->num_contexts)
-        {
-            hr = WINED3DERR_NOTAVAILABLE;
-            goto err;
         }
     }
 

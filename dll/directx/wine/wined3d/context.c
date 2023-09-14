@@ -4215,14 +4215,12 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
 {
     struct wined3d_context *current_context = context_get_current();
     struct wined3d_context *context;
-    BOOL swapchain_texture;
 
     TRACE("device %p, texture %p, sub_resource_idx %u.\n", device, texture, sub_resource_idx);
 
     if (current_context && current_context->destroyed)
         current_context = NULL;
 
-    swapchain_texture = texture && texture->swapchain;
     if (!texture)
     {
         if (current_context
@@ -4248,7 +4246,7 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
     {
         context = current_context;
     }
-    else if (swapchain_texture)
+    else if (texture && !wined3d_resource_is_offscreen(&texture->resource))
     {
         TRACE("Rendering onscreen.\n");
 
