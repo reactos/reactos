@@ -176,6 +176,7 @@ static void texture2d_blt_fbo(const struct wined3d_device *device, struct wined3
 
         default:
             FIXME("Unsupported filter mode %s (%#x).\n", debug_d3dtexturefiltertype(filter), filter);
+            /* fall through */
         case WINED3D_TEXF_NONE:
         case WINED3D_TEXF_POINT:
             gl_filter = GL_NEAREST;
