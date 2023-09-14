@@ -324,7 +324,7 @@ static UINT CALLBACK simple_callbackA(void *context, UINT message, UINT_PTR para
 
         GetTempPathA(ARRAY_SIZE(temp), temp);
         ok(!strcmp(info->CabinetPath, temp), "Got path %s.\n", debugstr_a(info->CabinetPath));
-        todo_wine ok(!info->CabinetFile[0], "Got file %s.\n", debugstr_a(info->CabinetFile));
+        ok(!info->CabinetFile[0], "Got file %s.\n", debugstr_a(info->CabinetFile));
         ok(!info->DiskName[0], "Got disk name %s.\n", debugstr_a(info->DiskName));
         ok(!info->SetId, "Got set ID %#x.\n", info->SetId);
         ok(!info->CabinetNumber, "Got cabinet number %u.\n", info->CabinetNumber);
@@ -432,7 +432,7 @@ static UINT CALLBACK simple_callbackW(void *context, UINT message, UINT_PTR para
 
         GetTempPathW(ARRAY_SIZE(temp), temp);
         ok(!wcscmp(info->CabinetPath, temp), "Got path %s.\n", debugstr_w(info->CabinetPath));
-        todo_wine ok(!info->CabinetFile[0], "Got file %s.\n", debugstr_w(info->CabinetFile));
+        ok(!info->CabinetFile[0], "Got file %s.\n", debugstr_w(info->CabinetFile));
         ok(!info->DiskName[0], "Got disk name %s.\n", debugstr_w(info->DiskName));
         ok(!info->SetId, "Got set ID %#x.\n", info->SetId);
         ok(!info->CabinetNumber, "Got cabinet number %u.\n", info->CabinetNumber);
