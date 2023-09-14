@@ -1174,6 +1174,9 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
                     device->adapter->ordinal, &swapchain->d3d_mode)))
                 ERR("Failed to set display mode.\n");
         }
+
+        if (swapchain == device->swapchains[0])
+            device->device_parent->ops->activate(device->device_parent, TRUE);
     }
     else
     {
@@ -1182,6 +1185,17 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
             ERR("Failed to set display mode.\n");
 
         swapchain->reapply_mode = TRUE;
+
+        /* Some DDraw apps (Deus Ex: GOTY, and presumably all UT 1 based games) destroy the device
+         * during window minimization. Do our housekeeping now, as the device may not exist after
+         * the ShowWindow call.
+         *
+         * In d3d9, the device is marked lost after the window is minimized. If we find an app
+         * that needs this behavior (e.g. because it calls TestCooperativeLevel in the window proc)
+         * we'll have to control this via a create flag. Note that the device and swapchain are not
+         * safe to access after the ShowWindow call. */
+        if (swapchain == device->swapchains[0])
+            device->device_parent->ops->activate(device->device_parent, FALSE);
 
         if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES)
                 && IsWindowVisible(swapchain->device_window))

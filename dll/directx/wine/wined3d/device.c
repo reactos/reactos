@@ -5359,8 +5359,6 @@ LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL 
 
         for (i = 0; i < device->swapchain_count; i++)
             wined3d_swapchain_activate(device->swapchains[i], wparam);
-
-        device->device_parent->ops->activate(device->device_parent, wparam);
     }
     else if (message == WM_SYSCOMMAND)
     {
