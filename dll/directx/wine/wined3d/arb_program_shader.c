@@ -4659,7 +4659,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
         GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, priv->current_vprogram_id));
         checkGLcall("glBindProgramARB(GL_VERTEX_PROGRAM_ARB, priv->current_vprogram_id);");
 
-        priv->vertex_pipe->vp_enable(gl_info, FALSE);
+        priv->vertex_pipe->vp_enable(context, FALSE);
 
         /* Enable OpenGL vertex programs */
         gl_info->gl_ops.gl.p_glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -4690,7 +4690,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
             gl_info->gl_ops.gl.p_glDisable(GL_VERTEX_PROGRAM_ARB);
             checkGLcall("glDisable(GL_VERTEX_PROGRAM_ARB)");
         }
-        priv->vertex_pipe->vp_enable(gl_info, TRUE);
+        priv->vertex_pipe->vp_enable(context, TRUE);
     }
 }
 
@@ -4720,7 +4720,7 @@ static void shader_arb_disable(void *shader_priv, struct wined3d_context *contex
         gl_info->gl_ops.gl.p_glDisable(GL_VERTEX_PROGRAM_ARB);
         checkGLcall("glDisable(GL_VERTEX_PROGRAM_ARB)");
     }
-    priv->vertex_pipe->vp_enable(gl_info, FALSE);
+    priv->vertex_pipe->vp_enable(context, FALSE);
 
     if (gl_info->supported[ARB_COLOR_BUFFER_FLOAT] && priv->last_vs_color_unclamp)
     {

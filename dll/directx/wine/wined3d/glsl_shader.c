@@ -10553,7 +10553,7 @@ static void shader_glsl_select(void *shader_priv, struct wined3d_context *contex
     GLenum current_vertex_color_clamp;
     GLuint program_id, prev_id;
 
-    priv->vertex_pipe->vp_enable(gl_info, !use_vs(state));
+    priv->vertex_pipe->vp_enable(context, !use_vs(state));
     priv->fragment_pipe->enable_extension(gl_info, !use_ps(state));
 
     prev_id = ctx_data->glsl_program ? ctx_data->glsl_program->id : 0;
@@ -10655,7 +10655,7 @@ static void shader_glsl_disable(void *shader_priv, struct wined3d_context *conte
     GL_EXTCALL(glUseProgram(0));
     checkGLcall("glUseProgram");
 
-    priv->vertex_pipe->vp_enable(gl_info, FALSE);
+    priv->vertex_pipe->vp_enable(context, FALSE);
     priv->fragment_pipe->enable_extension(gl_info, FALSE);
 
     if (needs_legacy_glsl_syntax(gl_info) && gl_info->supported[ARB_COLOR_BUFFER_FLOAT])
@@ -11399,7 +11399,7 @@ const struct wined3d_shader_backend_ops glsl_shader_backend =
     shader_glsl_has_ffp_proj_control,
 };
 
-static void glsl_vertex_pipe_vp_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
+static void glsl_vertex_pipe_vp_enable(const struct wined3d_context *context, BOOL enable) {}
 
 static void glsl_vertex_pipe_vp_get_caps(const struct wined3d_adapter *adapter, struct wined3d_vertex_caps *caps)
 {

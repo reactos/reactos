@@ -5220,6 +5220,7 @@ static const struct wined3d_state_entry_template ffp_fragmentstate_template[] = 
 
 /* Context activation is done by the caller. */
 static void ffp_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
+static void ffp_pipe_enable(const struct wined3d_context *context, BOOL enable) {}
 
 static void *ffp_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
 {
@@ -5258,7 +5259,7 @@ static DWORD vp_ffp_get_emul_mask(const struct wined3d_gl_info *gl_info)
 
 const struct wined3d_vertex_pipe_ops ffp_vertex_pipe =
 {
-    ffp_enable,
+    ffp_pipe_enable,
     vp_ffp_get_caps,
     vp_ffp_get_emul_mask,
     ffp_alloc,
@@ -5342,6 +5343,7 @@ const struct fragment_pipeline ffp_fragment_pipeline = {
 };
 
 static void none_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
+static void none_pipe_enable(const struct wined3d_context *context, BOOL enable) {}
 
 static void *none_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
 {
@@ -5362,7 +5364,7 @@ static DWORD vp_none_get_emul_mask(const struct wined3d_gl_info *gl_info)
 
 const struct wined3d_vertex_pipe_ops none_vertex_pipe =
 {
-    none_enable,
+    none_pipe_enable,
     vp_none_get_caps,
     vp_none_get_emul_mask,
     none_alloc,

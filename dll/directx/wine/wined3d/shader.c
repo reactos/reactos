@@ -3188,7 +3188,7 @@ static void shader_none_select(void *shader_priv, struct wined3d_context *contex
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_none_priv *priv = shader_priv;
 
-    priv->vertex_pipe->vp_enable(gl_info, !use_vs(state));
+    priv->vertex_pipe->vp_enable(context, !use_vs(state));
     priv->fragment_pipe->enable_extension(gl_info, !use_ps(state));
 }
 
@@ -3198,7 +3198,7 @@ static void shader_none_disable(void *shader_priv, struct wined3d_context *conte
     struct shader_none_priv *priv = shader_priv;
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
-    priv->vertex_pipe->vp_enable(gl_info, FALSE);
+    priv->vertex_pipe->vp_enable(context, FALSE);
     priv->fragment_pipe->enable_extension(gl_info, FALSE);
 
     context->shader_update_mask = (1u << WINED3D_SHADER_TYPE_PIXEL)
