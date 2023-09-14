@@ -9362,13 +9362,13 @@ static void shader_glsl_ffp_fragment_op(struct wined3d_string_buffer *buffer, un
 
 /* Context activation is done by the caller. */
 static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *priv,
-        const struct ffp_frag_settings *settings, const struct wined3d_context *context)
+        const struct ffp_frag_settings *settings, const struct wined3d_context_gl *context_gl)
 {
     struct wined3d_string_buffer *tex_reg_name = string_buffer_get(&priv->string_buffers);
     enum wined3d_cmp_func alpha_test_func = settings->alpha_test_func + 1;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
     BYTE lum_map = 0, bump_map = 0, tex_map = 0, tss_const_map = 0;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const BOOL legacy_syntax = needs_legacy_glsl_syntax(gl_info);
     BOOL tempreg_used = FALSE, tfactor_used = FALSE;
     UINT lowest_disabled_stage;
@@ -9497,7 +9497,7 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct shader_glsl_priv *
         if (sampler_type)
         {
             if (shader_glsl_use_layout_binding_qualifier(gl_info))
-                shader_glsl_append_sampler_binding_qualifier(buffer, context, NULL, stage);
+                shader_glsl_append_sampler_binding_qualifier(buffer, &context_gl->c, NULL, stage);
             shader_addline(buffer, "uniform sampler%s ps_sampler%u;\n", sampler_type, stage);
         }
 
@@ -9795,6 +9795,7 @@ static struct glsl_ffp_vertex_shader *shader_glsl_find_ffp_vertex_shader(struct 
 static struct glsl_ffp_fragment_shader *shader_glsl_find_ffp_fragment_shader(struct shader_glsl_priv *priv,
         const struct ffp_frag_settings *args, const struct wined3d_context *context)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_ffp_fragment_shader *glsl_desc;
     const struct ffp_frag_desc *desc;
 
@@ -9805,7 +9806,7 @@ static struct glsl_ffp_fragment_shader *shader_glsl_find_ffp_fragment_shader(str
         return NULL;
 
     glsl_desc->entry.settings = *args;
-    glsl_desc->id = shader_glsl_generate_ffp_fragment_shader(priv, args, context);
+    glsl_desc->id = shader_glsl_generate_ffp_fragment_shader(priv, args, context_gl);
     list_init(&glsl_desc->linked_programs);
     add_ffp_frag_shader(&priv->ffp_fragment_shaders, &glsl_desc->entry);
 
