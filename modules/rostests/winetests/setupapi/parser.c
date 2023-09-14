@@ -370,6 +370,9 @@ static const struct
  { C("ab\032=cd"),            "ab",            { "ab" } },
  /* nulls */
  { C("abcd=ef\x0gh"),         "abcd",          { "ef gh" } },
+ { C("foo=%bar%\n[Strings]\nbar=bbb\0\n"), "foo", { "bbb" } },
+ { C("foo=%bar%\n[Strings]\nbar=bbb \0\n"), "foo", { "bbb" } },
+ { C("foo=%bar%\n[Strings]\nbar=aaa\0bbb \0\n"), "foo", { "aaa bbb" } },
  /* multiple sections with same name */
  { C("[Test2]\nab\n[Test]\nee=ff\n"),  "ee",    { "ff" } },
  /* string substitution */
@@ -470,12 +473,12 @@ static void test_key_names(void)
                 ok( err == 0, "line %u: bad error %u\n", i, err );
                 if (key_names[i].fields[index])
                 {
-                    if (i == 49)
+                    if (i == 52)
                         ok( !strcmp( field, key_names[i].fields[index] ) ||
                             !strcmp( field, A1200), /* Vista, W2K8 */
                             "line %u: bad field %s/%s\n",
                             i, field, key_names[i].fields[index] );
-                    else if (i == 52)
+                    else if (i == 55)
                         ok( !strcmp( field, key_names[i].fields[index] ) ||
                             !strcmp( field, A4096), /* Win10 >= 1709 */
                             "line %u: bad field %s/%s\n",
