@@ -3999,7 +3999,7 @@ const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *ad
     {
         FIXME("Can't find format %s (%#x) in the format lookup table.\n",
                 debug_d3dformat(format_id), format_id);
-        return &adapter->formats[get_format_idx(WINED3DFMT_UNKNOWN)];
+        return get_format_internal(adapter, WINED3DFMT_UNKNOWN);
     }
 
     format = &adapter->formats[idx];
@@ -4014,7 +4014,7 @@ const struct wined3d_format *wined3d_get_format(const struct wined3d_adapter *ad
 
         FIXME("Cannot find depth/stencil typeless format %s (%#x).\n",
                 debug_d3dformat(format_id), format_id);
-        return &adapter->formats[get_format_idx(WINED3DFMT_UNKNOWN)];
+        return get_format_internal(adapter, WINED3DFMT_UNKNOWN);
     }
 
     return format;
