@@ -1712,7 +1712,8 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, DWORD co
                 shader_record_sample(reg_maps, ins.src[2].reg.idx[0].offset,
                         ins.src[3].reg.idx[0].offset, reg_maps->sampler_map.count);
             }
-            else if (ins.handler_idx == WINED3DSIH_BUFINFO && ins.src[0].reg.type == WINED3DSPR_RESOURCE)
+            else if ((ins.handler_idx == WINED3DSIH_BUFINFO && ins.src[0].reg.type == WINED3DSPR_RESOURCE)
+                    || ins.handler_idx == WINED3DSIH_SAMPLE_INFO)
             {
                 shader_record_sample(reg_maps, ins.src[0].reg.idx[0].offset,
                         WINED3D_SAMPLER_DEFAULT, reg_maps->sampler_map.count);

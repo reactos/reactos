@@ -5778,6 +5778,45 @@ static void shader_glsl_resinfo(const struct wined3d_shader_instruction *ins)
     shader_addline(buffer, ")%s);\n", dst_swizzle);
 }
 
+static void shader_glsl_sample_info(const struct wined3d_shader_instruction *ins)
+{
+    const struct wined3d_shader_reg_maps *reg_maps = ins->ctx->reg_maps;
+    const struct wined3d_gl_info *gl_info = ins->ctx->gl_info;
+    struct wined3d_string_buffer *buffer = ins->ctx->buffer;
+    enum wined3d_shader_resource_type resource_type;
+    enum wined3d_data_type dst_data_type;
+    unsigned int resource_idx, bind_idx;
+    char dst_swizzle[6];
+    DWORD write_mask;
+
+    if (!gl_info->supported[ARB_SHADER_TEXTURE_IMAGE_SAMPLES])
+    {
+        FIXME("textureSamples() is not supported.\n");
+        return;
+    }
+
+    dst_data_type = ins->dst[0].reg.data_type;
+    if (ins->flags == WINED3DSI_SAMPLE_INFO_UINT)
+        dst_data_type = WINED3D_DATA_UINT;
+    else if (ins->flags)
+        FIXME("Unhandled flags %#x.\n", ins->flags);
+
+    resource_idx = ins->src[0].reg.idx[0].offset;
+    resource_type = reg_maps->resource_info[resource_idx].type;
+    if (resource_type >= ARRAY_SIZE(resource_type_info))
+    {
+        ERR("Unexpected resource type %#x.\n", resource_type);
+        return;
+    }
+    bind_idx = shader_glsl_find_sampler(&reg_maps->sampler_map, resource_idx, WINED3D_SAMPLER_DEFAULT);
+
+    write_mask = shader_glsl_append_dst_ext(buffer, ins, &ins->dst[0], dst_data_type);
+    shader_glsl_get_swizzle(&ins->src[0], FALSE, write_mask, dst_swizzle);
+    shader_addline(buffer, "%s(textureSamples(%s_sampler%u), 0, 0, 0)%s);\n",
+            dst_data_type == WINED3D_DATA_UINT ? "uvec4" : "vec4",
+            shader_glsl_get_prefix(reg_maps->shader_version.type), bind_idx, dst_swizzle);
+}
+
 static void shader_glsl_ld(const struct wined3d_shader_instruction *ins)
 {
     const struct wined3d_shader_reg_maps *reg_maps = ins->ctx->reg_maps;
@@ -7272,6 +7311,8 @@ static void shader_glsl_enable_extensions(struct wined3d_string_buffer *buffer,
         shader_addline(buffer, "#extension GL_ARB_shader_image_size : enable\n");
     if (gl_info->supported[ARB_SHADER_STORAGE_BUFFER_OBJECT])
         shader_addline(buffer, "#extension GL_ARB_shader_storage_buffer_object : enable\n");
+    if (gl_info->supported[ARB_SHADER_TEXTURE_IMAGE_SAMPLES])
+        shader_addline(buffer, "#extension GL_ARB_shader_texture_image_samples : enable\n");
     if (gl_info->supported[ARB_SHADING_LANGUAGE_420PACK])
         shader_addline(buffer, "#extension GL_ARB_shading_language_420pack : enable\n");
     if (gl_info->supported[ARB_SHADING_LANGUAGE_PACKING])
@@ -11118,7 +11159,7 @@ static const SHADER_HANDLER shader_glsl_instruction_handler_table[WINED3DSIH_TAB
     /* WINED3DSIH_SAMPLE_C                         */ shader_glsl_sample_c,
     /* WINED3DSIH_SAMPLE_C_LZ                      */ shader_glsl_sample_c,
     /* WINED3DSIH_SAMPLE_GRAD                      */ shader_glsl_sample,
-    /* WINED3DSIH_SAMPLE_INFO                      */ NULL,
+    /* WINED3DSIH_SAMPLE_INFO                      */ shader_glsl_sample_info,
     /* WINED3DSIH_SAMPLE_LOD                       */ shader_glsl_sample,
     /* WINED3DSIH_SAMPLE_POS                       */ NULL,
     /* WINED3DSIH_SETP                             */ NULL,
