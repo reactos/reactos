@@ -1437,7 +1437,6 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
 
             if (previous && (previous->width != view->width || previous->height != view->height))
                 have_identical_size = FALSE;
-            previous = view;
         }
 
         if (have_identical_size)

@@ -10021,7 +10021,6 @@ static HRESULT shader_glsl_compile_compute_shader(struct shader_glsl_priv *priv,
         return E_OUTOFMEMORY;
     }
     shader_data = shader->backend_data;
-    gl_shaders = shader_data->gl_shaders.cs;
 
     if (!(shader_data->gl_shaders.cs = heap_alloc(sizeof(*gl_shaders))))
     {
