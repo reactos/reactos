@@ -6018,6 +6018,13 @@ static HRESULT d3d_device7_CreateStateBlock(IDirect3DDevice7 *iface,
 
     wined3d_mutex_lock();
 
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to apply a stateblock while recording, returning D3DERR_INBEGINSTATEBLOCK.\n");
+        return D3DERR_INBEGINSTATEBLOCK;
+    }
+
     /* The D3DSTATEBLOCKTYPE enum is fine here. */
     hr = wined3d_stateblock_create(device->wined3d_device, type, &wined3d_sb);
     if (FAILED(hr))
