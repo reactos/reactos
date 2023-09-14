@@ -792,8 +792,7 @@ static struct wined3d_texture *surface_convert_format(struct wined3d_texture *sr
     desc.height = wined3d_texture_get_level_height(src_texture, texture_level);
     desc.depth = 1;
     desc.size = 0;
-    if (FAILED(wined3d_texture_create(device, &desc, 1, 1,
-            WINED3D_TEXTURE_CREATE_MAPPABLE | WINED3D_TEXTURE_CREATE_DISCARD,
+    if (FAILED(wined3d_texture_create(device, &desc, 1, 1, WINED3D_TEXTURE_CREATE_DISCARD,
             NULL, NULL, &wined3d_null_parent_ops, &dst_texture)))
     {
         ERR("Failed to create a destination texture for conversion.\n");
