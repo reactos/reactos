@@ -4458,13 +4458,13 @@ HRESULT CDECL wined3d_device_clear_rendertarget_view(struct wined3d_device *devi
         return WINED3D_OK;
 
     resource = view->resource;
-    if (resource->type != WINED3D_RTYPE_TEXTURE_1D && resource->type != WINED3D_RTYPE_TEXTURE_2D)
+    if (resource->type == WINED3D_RTYPE_BUFFER)
     {
         FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(resource->type));
         return WINED3DERR_INVALIDCALL;
     }
 
-    if (view->layer_count > 1)
+    if (view->layer_count != max(1, resource->depth >> view->desc.u.texture.level_idx))
     {
         FIXME("Layered clears not implemented.\n");
         return WINED3DERR_INVALIDCALL;
