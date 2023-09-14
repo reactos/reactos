@@ -782,9 +782,9 @@ static void test_register_device_info(void)
     RegOpenKeyA(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Enum\\ROOT\\LEGACY_BOGUS\\0000", &hkey);
     size = sizeof(phantom);
     ls = RegQueryValueExA(hkey, "Phantom", NULL, &type, (BYTE *)&phantom, &size);
-    todo_wine ok(ls == ERROR_SUCCESS, "Got wrong error code %#x\n", ls);
-    todo_wine ok(phantom == 1, "Got wrong phantom value %d\n", phantom);
-    todo_wine ok(type == REG_DWORD, "Got wrong phantom type %#x\n", type);
+    ok(ls == ERROR_SUCCESS, "Got wrong error code %#x\n", ls);
+    ok(phantom == 1, "Got wrong phantom value %d\n", phantom);
+    ok(type == REG_DWORD, "Got wrong phantom type %#x\n", type);
     ok(size == sizeof(phantom), "Got wrong phantom size %d\n", size);
     ret = SetupDiRegisterDeviceInfo(set, &device, 0, NULL, NULL, NULL);
     ok(ret, "Failed to register device, error %#x.\n", GetLastError());
