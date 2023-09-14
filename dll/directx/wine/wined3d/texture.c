@@ -2528,6 +2528,44 @@ static BOOL wined3d_texture_load_drawable(struct wined3d_texture *texture,
     return TRUE;
 }
 
+static BOOL wined3d_texture_load_renderbuffer(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, DWORD dst_location)
+{
+    unsigned int level = sub_resource_idx % texture->level_count;
+    const RECT rect = {0, 0,
+            wined3d_texture_get_level_width(texture, level),
+            wined3d_texture_get_level_height(texture, level)};
+    struct wined3d_texture_sub_resource *sub_resource;
+    DWORD src_location, locations;
+
+    sub_resource = &texture->sub_resources[sub_resource_idx];
+    locations = sub_resource->locations;
+    if (texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
+    {
+        FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
+                wined3d_debug_location(locations));
+        return FALSE;
+    }
+
+    if (locations & WINED3D_LOCATION_RB_MULTISAMPLE)
+        src_location = WINED3D_LOCATION_RB_MULTISAMPLE;
+    else if (locations & WINED3D_LOCATION_RB_RESOLVED)
+        src_location = WINED3D_LOCATION_RB_RESOLVED;
+    else if (locations & WINED3D_LOCATION_TEXTURE_SRGB)
+        src_location = WINED3D_LOCATION_TEXTURE_SRGB;
+    else if (locations & WINED3D_LOCATION_TEXTURE_RGB)
+        src_location = WINED3D_LOCATION_TEXTURE_RGB;
+    else if (locations & WINED3D_LOCATION_DRAWABLE)
+        src_location = WINED3D_LOCATION_DRAWABLE;
+    else /* texture2d_blt_fbo() will load the source location if necessary. */
+        src_location = WINED3D_LOCATION_TEXTURE_RGB;
+
+    texture2d_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT, texture,
+            sub_resource_idx, src_location, &rect, texture, sub_resource_idx, dst_location, &rect);
+
+    return TRUE;
+}
+
 static BOOL wined3d_texture_gl_load_texture(struct wined3d_texture_gl *texture_gl,
         unsigned int sub_resource_idx, struct wined3d_context_gl *context_gl, BOOL srgb)
 {
@@ -2702,7 +2740,7 @@ static BOOL wined3d_texture_gl_load_location(struct wined3d_texture *texture,
 
         case WINED3D_LOCATION_RB_RESOLVED:
         case WINED3D_LOCATION_RB_MULTISAMPLE:
-            return texture2d_load_renderbuffer(texture, sub_resource_idx, context, location);
+            return wined3d_texture_load_renderbuffer(texture, sub_resource_idx, context, location);
 
         case WINED3D_LOCATION_TEXTURE_RGB:
         case WINED3D_LOCATION_TEXTURE_SRGB:

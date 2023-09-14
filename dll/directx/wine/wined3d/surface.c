@@ -1575,45 +1575,6 @@ static HRESULT wined3d_texture_blt_special(struct wined3d_texture *dst_texture, 
 }
 
 /* Context activation is done by the caller. */
-BOOL texture2d_load_renderbuffer(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        struct wined3d_context *context, DWORD dst_location)
-{
-    unsigned int level = sub_resource_idx % texture->level_count;
-    const RECT rect = {0, 0,
-            wined3d_texture_get_level_width(texture, level),
-            wined3d_texture_get_level_height(texture, level)};
-    struct wined3d_texture_sub_resource *sub_resource;
-    DWORD src_location, locations;
-
-    sub_resource = &texture->sub_resources[sub_resource_idx];
-    locations = sub_resource->locations;
-    if (texture->resource.bind_flags & WINED3D_BIND_DEPTH_STENCIL)
-    {
-        FIXME("Unimplemented copy from %s for depth/stencil buffers.\n",
-                wined3d_debug_location(locations));
-        return FALSE;
-    }
-
-    if (locations & WINED3D_LOCATION_RB_MULTISAMPLE)
-        src_location = WINED3D_LOCATION_RB_MULTISAMPLE;
-    else if (locations & WINED3D_LOCATION_RB_RESOLVED)
-        src_location = WINED3D_LOCATION_RB_RESOLVED;
-    else if (locations & WINED3D_LOCATION_TEXTURE_SRGB)
-        src_location = WINED3D_LOCATION_TEXTURE_SRGB;
-    else if (locations & WINED3D_LOCATION_TEXTURE_RGB)
-        src_location = WINED3D_LOCATION_TEXTURE_RGB;
-    else if (locations & WINED3D_LOCATION_DRAWABLE)
-        src_location = WINED3D_LOCATION_DRAWABLE;
-    else /* texture2d_blt_fbo() will load the source location if necessary. */
-        src_location = WINED3D_LOCATION_TEXTURE_RGB;
-
-    texture2d_blt_fbo(texture->resource.device, context, WINED3D_TEXF_POINT, texture,
-            sub_resource_idx, src_location, &rect, texture, sub_resource_idx, dst_location, &rect);
-
-    return TRUE;
-}
-
-/* Context activation is done by the caller. */
 static void fbo_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
 {
     struct wined3d_blitter *next;
