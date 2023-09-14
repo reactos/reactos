@@ -691,11 +691,14 @@ void wined3d_swapchain_set_swap_interval(struct wined3d_swapchain *swapchain,
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
 
+    swap_interval = swap_interval <= 4 ? swap_interval : 1;
+    if (swapchain->swap_interval == swap_interval)
+        return;
+
+    swapchain->swap_interval = swap_interval;
+
     context = context_acquire(swapchain->device, swapchain->front_buffer, 0);
     gl_info = context->gl_info;
-
-    swap_interval = swap_interval <= 4 ? swap_interval : 1;
-    swapchain->swap_interval = swap_interval;
 
     if (gl_info->supported[WGL_EXT_SWAP_CONTROL])
     {
@@ -747,8 +750,6 @@ static void wined3d_swapchain_cs_init(void *object)
         FIXME("Add OpenGL context recreation support.\n");
 
     context_release(swapchain->context[0]);
-
-    wined3d_swapchain_set_swap_interval(swapchain, WINED3D_SWAP_INTERVAL_DEFAULT);
 }
 
 static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
@@ -759,9 +760,9 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     BOOL displaymode_set = FALSE;
     DWORD texture_flags = 0;
     RECT client_rect;
+    unsigned int i;
     HWND window;
     HRESULT hr;
-    UINT i;
 
     if (desc->backbuffer_count > 1)
     {
@@ -787,6 +788,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     swapchain->ref = 1;
     swapchain->win_handle = window;
     swapchain->device_window = window;
+    swapchain->swap_interval = WINED3D_SWAP_INTERVAL_DEFAULT;
 
     if (FAILED(hr = wined3d_get_adapter_display_mode(device->wined3d,
             adapter->ordinal, &swapchain->original_mode, NULL)))
