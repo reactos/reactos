@@ -362,9 +362,9 @@ static void test_device_info(void)
 
     set = SetupDiCreateDeviceInfoList(&guid, NULL);
     ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
-    todo_wine ok(!ret, "Expect failure\n");
-    todo_wine ok(GetLastError() == ERROR_DEVINST_ALREADY_EXISTS, "Got error %#x\n", GetLastError());
-    todo_wine check_device_info(set, 0, NULL, NULL);
+    ok(!ret, "Expect failure\n");
+    ok(GetLastError() == ERROR_DEVINST_ALREADY_EXISTS, "Got error %#x\n", GetLastError());
+    check_device_info(set, 0, NULL, NULL);
     SetupDiDestroyDeviceInfoList(set);
 
     set = SetupDiGetClassDevsA(&guid, NULL, NULL, 0);
