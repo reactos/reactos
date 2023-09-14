@@ -2507,6 +2507,7 @@ enum wined3d_pci_device
     CARD_INTEL_IP580_2              = 0x193b,
     CARD_INTEL_IPP580_1             = 0x193a,
     CARD_INTEL_IPP580_2             = 0x193d,
+    CARD_INTEL_HD630                = 0x5912,
 };
 
 struct wined3d_fbo_ops

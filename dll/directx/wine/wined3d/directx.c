@@ -1519,6 +1519,7 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_INTEL,      CARD_INTEL_IP580_2,             "Intel(R) Iris(TM) Pro Graphics 580",                        DRIVER_INTEL_HD4000,  2048},
     {HW_VENDOR_INTEL,      CARD_INTEL_IPP580_1,            "Intel(R) Iris(TM) Pro Graphics P580",                       DRIVER_INTEL_HD4000,  2048},
     {HW_VENDOR_INTEL,      CARD_INTEL_IPP580_2,            "Intel(R) Iris(TM) Pro Graphics P580",                       DRIVER_INTEL_HD4000,  2048},
+    {HW_VENDOR_INTEL,      CARD_INTEL_HD630,               "Intel(R) HD Graphics 630",                                  DRIVER_INTEL_HD4000,  3072},
 };
 
 static const struct driver_version_information *get_driver_version_info(enum wined3d_display_driver driver,
