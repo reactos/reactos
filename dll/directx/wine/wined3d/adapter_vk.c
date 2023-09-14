@@ -1105,6 +1105,17 @@ static void adapter_vk_init_driver_info(struct wined3d_adapter *adapter,
     wined3d_driver_info_init(&adapter->driver_info, gpu_description, vram_bytes, sysmem_bytes);
 }
 
+static void wined3d_adapter_vk_init_d3d_info(struct wined3d_adapter *adapter, uint32_t wined3d_creation_flags)
+{
+    struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
+
+    d3d_info->wined3d_creation_flags = wined3d_creation_flags;
+
+    d3d_info->texture_swizzle = TRUE;
+
+    d3d_info->multisample_draw_location = WINED3D_LOCATION_TEXTURE_RGB;
+}
+
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
         unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
@@ -1156,8 +1167,7 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
 
-    adapter->d3d_info.wined3d_creation_flags = wined3d_creation_flags;
-    adapter->d3d_info.texture_swizzle = TRUE;
+    wined3d_adapter_vk_init_d3d_info(adapter, wined3d_creation_flags);
 
     return TRUE;
 
