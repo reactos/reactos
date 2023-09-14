@@ -1151,6 +1151,8 @@ static HRESULT wined3d_unordered_access_view_init(struct wined3d_unordered_acces
     view->parent = parent;
     view->parent_ops = parent_ops;
 
+    if (!(resource->bind_flags & WINED3D_BIND_UNORDERED_ACCESS))
+        return E_INVALIDARG;
     if (!(view->format = validate_resource_view(desc, resource, TRUE, FALSE)))
         return E_INVALIDARG;
     view->desc = *desc;
