@@ -3700,8 +3700,7 @@ static HRESULT shader_copy_signatures_from_shader_desc(struct wined3d_shader *sh
 }
 
 static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        const struct wined3d_shader_desc *desc, DWORD float_const_count, enum wined3d_shader_type type,
-        void *parent, const struct wined3d_parent_ops *parent_ops)
+        const struct wined3d_shader_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     size_t byte_code_size;
     HRESULT hr;
@@ -3765,26 +3764,6 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         }
         memcpy(shader->function, desc->byte_code, byte_code_size);
         shader->functionLength = byte_code_size;
-
-        if (FAILED(hr = shader_set_function(shader, device, type, float_const_count)))
-        {
-            WARN("Failed to set function, hr %#x.\n", hr);
-            shader_cleanup(shader);
-            return hr;
-        }
-    }
-    else
-    {
-        shader->reg_maps.shader_version.type = type;
-        shader->reg_maps.shader_version.major = 4;
-        shader->reg_maps.shader_version.minor = 0;
-        shader_set_limits(shader);
-
-        if (FAILED(hr = shader_scan_output_signature(shader)))
-        {
-            shader_cleanup(shader);
-            return hr;
-        }
     }
 
     return hr;
@@ -3797,9 +3776,15 @@ static HRESULT vertex_shader_init(struct wined3d_shader *shader, struct wined3d_
     unsigned int i;
     HRESULT hr;
 
-    if (FAILED(hr = shader_init(shader, device, desc, device->adapter->d3d_info.limits.vs_uniform_count,
-            WINED3D_SHADER_TYPE_VERTEX, parent, parent_ops)))
+    if (FAILED(hr = shader_init(shader, device, desc, parent, parent_ops)))
         return hr;
+
+    if (FAILED(hr = shader_set_function(shader, device,
+            WINED3D_SHADER_TYPE_VERTEX, device->adapter->d3d_info.limits.vs_uniform_count)))
+    {
+        shader_cleanup(shader);
+        return hr;
+    }
 
     for (i = 0; i < shader->input_signature.element_count; ++i)
     {
@@ -3845,9 +3830,31 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         }
     }
 
-    if (FAILED(hr = shader_init(shader, device, &shader_desc, 0,
-            WINED3D_SHADER_TYPE_GEOMETRY, parent, parent_ops)))
+    if (FAILED(hr = shader_init(shader, device, &shader_desc, parent, parent_ops)))
         return hr;
+
+    if (shader_desc.byte_code)
+    {
+        if (FAILED(hr = shader_set_function(shader, device, WINED3D_SHADER_TYPE_GEOMETRY, 0)))
+        {
+            WARN("Failed to set function, hr %#x.\n", hr);
+            shader_cleanup(shader);
+            return hr;
+        }
+    }
+    else
+    {
+        shader->reg_maps.shader_version.type = WINED3D_SHADER_TYPE_GEOMETRY;
+        shader->reg_maps.shader_version.major = 4;
+        shader->reg_maps.shader_version.minor = 0;
+        shader_set_limits(shader);
+
+        if (FAILED(hr = shader_scan_output_signature(shader)))
+        {
+            shader_cleanup(shader);
+            return hr;
+        }
+    }
 
     if (so_desc)
     {
@@ -4154,9 +4161,15 @@ static HRESULT pixel_shader_init(struct wined3d_shader *shader, struct wined3d_d
     unsigned int i, highest_reg_used = 0, num_regs_used = 0;
     HRESULT hr;
 
-    if (FAILED(hr = shader_init(shader, device, desc, device->adapter->d3d_info.limits.ps_uniform_count,
-            WINED3D_SHADER_TYPE_PIXEL, parent, parent_ops)))
+    if (FAILED(hr = shader_init(shader, device, desc, parent, parent_ops)))
         return hr;
+
+    if (FAILED(hr = shader_set_function(shader, device,
+            WINED3D_SHADER_TYPE_PIXEL, device->adapter->d3d_info.limits.ps_uniform_count)))
+    {
+        shader_cleanup(shader);
+        return hr;
+    }
 
     for (i = 0; i < MAX_REG_INPUT; ++i)
     {
@@ -4248,9 +4261,16 @@ HRESULT CDECL wined3d_shader_create_cs(struct wined3d_device *device, const stru
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = shader_init(object, device, desc, 0, WINED3D_SHADER_TYPE_COMPUTE, parent, parent_ops)))
+    if (FAILED(hr = shader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize compute shader, hr %#x.\n", hr);
+        heap_free(object);
+        return hr;
+    }
+
+    if (FAILED(hr = shader_set_function(object, device, WINED3D_SHADER_TYPE_COMPUTE, 0)))
+    {
+        shader_cleanup(object);
         heap_free(object);
         return hr;
     }
@@ -4278,9 +4298,16 @@ HRESULT CDECL wined3d_shader_create_ds(struct wined3d_device *device, const stru
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = shader_init(object, device, desc, 0, WINED3D_SHADER_TYPE_DOMAIN, parent, parent_ops)))
+    if (FAILED(hr = shader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize domain shader, hr %#x.\n", hr);
+        heap_free(object);
+        return hr;
+    }
+
+    if (FAILED(hr = shader_set_function(object, device, WINED3D_SHADER_TYPE_DOMAIN, 0)))
+    {
+        shader_cleanup(object);
         heap_free(object);
         return hr;
     }
@@ -4339,9 +4366,16 @@ HRESULT CDECL wined3d_shader_create_hs(struct wined3d_device *device, const stru
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = shader_init(object, device, desc, 0, WINED3D_SHADER_TYPE_HULL, parent, parent_ops)))
+    if (FAILED(hr = shader_init(object, device, desc, parent, parent_ops)))
     {
         WARN("Failed to initialize hull shader, hr %#x.\n", hr);
+        heap_free(object);
+        return hr;
+    }
+
+    if (FAILED(hr = shader_set_function(object, device, WINED3D_SHADER_TYPE_HULL, 0)))
+    {
+        shader_cleanup(object);
         heap_free(object);
         return hr;
     }
