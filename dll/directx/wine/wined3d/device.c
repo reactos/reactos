@@ -4333,10 +4333,10 @@ void CDECL wined3d_device_resolve_sub_resource(struct wined3d_device *device,
     if (wined3d_format_is_typeless(dst_resource->format)
             || wined3d_format_is_typeless(src_resource->format))
     {
-        FIXME("Unhandled multisample resolve, dst_format %s, src_format %s, format %s.\n",
+        FIXME("Multisample resolve is not fully supported for typeless formats "
+                "(dst_format %s, src_format %s, format %s).\n",
                 debug_d3dformat(dst_resource->format->id), debug_d3dformat(src_resource->format->id),
                 debug_d3dformat(format_id));
-        return;
     }
     if (dst_resource->type != WINED3D_RTYPE_TEXTURE_2D)
     {
