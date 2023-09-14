@@ -3337,6 +3337,7 @@ static void transform_texture(struct wined3d_context *context, const struct wine
 static void tex_coordindex(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     static const GLfloat s_plane[] = { 1.0f, 0.0f, 0.0f, 0.0f };
     static const GLfloat t_plane[] = { 0.0f, 1.0f, 0.0f, 0.0f };
     static const GLfloat r_plane[] = { 0.0f, 0.0f, 1.0f, 0.0f };
@@ -3505,7 +3506,7 @@ static void tex_coordindex(struct wined3d_context *context, const struct wined3d
         GLuint curVBO = gl_info->supported[ARB_VERTEX_BUFFER_OBJECT] ? ~0U : 0;
 
         context_unload_tex_coords(context);
-        context_load_tex_coords(context, &context->stream_info, &curVBO, state);
+        wined3d_context_gl_load_tex_coords(context_gl, &context->stream_info, &curVBO, state);
     }
 }
 

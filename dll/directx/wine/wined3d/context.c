@@ -5036,19 +5036,19 @@ void context_unload_tex_coords(const struct wined3d_context *context)
     }
 }
 
-void context_load_tex_coords(const struct wined3d_context *context, const struct wined3d_stream_info *si,
-        GLuint *current_bo, const struct wined3d_state *state)
+void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context_gl,
+        const struct wined3d_stream_info *si, GLuint *current_bo, const struct wined3d_state *state)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const struct wined3d_format_gl *format_gl;
     unsigned int mapped_stage = 0;
     unsigned int texture_idx;
 
-    for (texture_idx = 0; texture_idx < context->d3d_info->limits.ffp_blend_stages; ++texture_idx)
+    for (texture_idx = 0; texture_idx < context_gl->c.d3d_info->limits.ffp_blend_stages; ++texture_idx)
     {
         unsigned int coord_idx = state->texture_states[texture_idx][WINED3D_TSS_TEXCOORD_INDEX];
 
-        if ((mapped_stage = context->tex_unit_map[texture_idx]) == WINED3D_UNMAPPED_STAGE)
+        if ((mapped_stage = context_gl->c.tex_unit_map[texture_idx]) == WINED3D_UNMAPPED_STAGE)
             continue;
 
         if (mapped_stage >= gl_info->limits.texture_coords)
@@ -5116,6 +5116,7 @@ static void context_unload_vertex_data(struct wined3d_context *context)
 static void context_load_vertex_data(struct wined3d_context *context,
         const struct wined3d_stream_info *si, const struct wined3d_state *state)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_stream_info_element *e;
     const struct wined3d_format_gl *format_gl;
@@ -5305,7 +5306,7 @@ static void context_load_vertex_data(struct wined3d_context *context,
     }
 
     /* Texture coordinates */
-    context_load_tex_coords(context, si, &current_bo, state);
+    wined3d_context_gl_load_tex_coords(context_gl, si, &current_bo, state);
 }
 
 static void context_unload_numbered_array(struct wined3d_context *context, unsigned int i)
