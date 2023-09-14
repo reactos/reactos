@@ -52,7 +52,7 @@ static void test_SetupCreateDiskSpaceListA(void)
        "Expected SetupCreateDiskSpaceListA to return NULL, got %p\n", ret);
     if (!ret)
         ok(GetLastError() == ERROR_INVALID_PARAMETER,
-           "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+           "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
            GetLastError());
     else
         ok(SetupDestroyDiskSpaceList(ret), "Expected SetupDestroyDiskSpaceList to succeed\n");
@@ -63,7 +63,7 @@ static void test_SetupCreateDiskSpaceListA(void)
        "Expected SetupCreateDiskSpaceListA to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win9x/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -72,7 +72,7 @@ static void test_SetupCreateDiskSpaceListA(void)
        "Expected SetupCreateDiskSpaceListA to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win9x/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -81,7 +81,7 @@ static void test_SetupCreateDiskSpaceListA(void)
        "Expected SetupCreateDiskSpaceListA to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win9x/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 }
 
@@ -113,7 +113,7 @@ static void test_SetupCreateDiskSpaceListW(void)
        "Expected SetupCreateDiskSpaceListW to return NULL, got %p\n", ret);
     if (!ret)
         ok(GetLastError() == ERROR_INVALID_PARAMETER,
-           "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+           "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
            GetLastError());
     else
         ok(SetupDestroyDiskSpaceList(ret), "Expected SetupDestroyDiskSpaceList to succeed\n");
@@ -124,7 +124,7 @@ static void test_SetupCreateDiskSpaceListW(void)
        "Expected SetupCreateDiskSpaceListW to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -133,7 +133,7 @@ static void test_SetupCreateDiskSpaceListW(void)
        "Expected SetupCreateDiskSpaceListW to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -142,7 +142,7 @@ static void test_SetupCreateDiskSpaceListW(void)
        "Expected SetupCreateDiskSpaceListW to return NULL, got %p\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        broken(GetLastError() == 0xdeadbeef), /* NT4/Win2k */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 }
 
@@ -154,25 +154,25 @@ static void test_SetupDuplicateDiskSpaceListA(void)
     duplicate = SetupDuplicateDiskSpaceListA(NULL, NULL, 0, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(NULL, (void *)0xdeadbeef, 0, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(NULL, NULL, 0xdeadbeef, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-      "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+      "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(NULL, NULL, 0, ~0U);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
     ok(handle != NULL,
@@ -188,25 +188,25 @@ static void test_SetupDuplicateDiskSpaceListA(void)
     duplicate = SetupDuplicateDiskSpaceListA(handle, (void *)0xdeadbeef, 0, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(handle, NULL, 0xdeadbeef, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(handle, NULL, 0, SPDSL_IGNORE_DISK);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListA(handle, NULL, 0, ~0U);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     duplicate = SetupDuplicateDiskSpaceListA(handle, NULL, 0, 0);
     ok(duplicate != NULL, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
@@ -230,25 +230,25 @@ static void test_SetupDuplicateDiskSpaceListW(void)
     }
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(NULL, (void *)0xdeadbeef, 0, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(NULL, NULL, 0xdeadbeef, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(NULL, NULL, 0, ~0U);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     handle = SetupCreateDiskSpaceListW(NULL, 0, 0);
     ok(handle != NULL,
@@ -264,25 +264,25 @@ static void test_SetupDuplicateDiskSpaceListW(void)
     duplicate = SetupDuplicateDiskSpaceListW(handle, (void *)0xdeadbeef, 0, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(handle, NULL, 0xdeadbeef, 0);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(handle, NULL, 0, SPDSL_IGNORE_DISK);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     duplicate = SetupDuplicateDiskSpaceListW(handle, NULL, 0, ~0U);
     ok(!duplicate, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
     duplicate = SetupDuplicateDiskSpaceListW(handle, NULL, 0, 0);
     ok(duplicate != NULL, "Expected SetupDuplicateDiskSpaceList to return NULL, got %p\n", duplicate);
@@ -303,7 +303,7 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ret = SetupQuerySpaceRequiredOnDriveA(NULL, NULL, NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -312,14 +312,14 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-    "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+    "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
     GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupQuerySpaceRequiredOnDriveA(NULL, "", NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -328,7 +328,7 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
@@ -340,7 +340,7 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_INVALID_DRIVE, /* Win9x */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -350,14 +350,14 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_INVALID_DRIVE, /* Win9x */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupQuerySpaceRequiredOnDriveA(handle, "", NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DRIVE,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -366,7 +366,7 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_DRIVE,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     ok(SetupDestroyDiskSpaceList(handle),
@@ -390,7 +390,7 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     }
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -399,14 +399,14 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupQuerySpaceRequiredOnDriveW(NULL, emptyW, NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -415,7 +415,7 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n",
        GetLastError());
 
     handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
@@ -427,7 +427,7 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_INVALID_DRIVE, /* NT4/Win2k/XP/Win2k3 */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -437,14 +437,14 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER ||
        GetLastError() == ERROR_INVALID_DRIVE, /* NT4/Win2k/XP/Win2k3 */
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = SetupQuerySpaceRequiredOnDriveW(handle, emptyW, NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DRIVE,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -453,7 +453,7 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveW to return FALSE, got %d\n", ret);
     ok(space == 0xdeadbeef, "Expected output space parameter to be untouched\n");
     ok(GetLastError() == ERROR_INVALID_DRIVE,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %u\n",
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
 
     ok(SetupDestroyDiskSpaceList(handle),

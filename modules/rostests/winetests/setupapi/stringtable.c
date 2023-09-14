@@ -88,15 +88,15 @@ static void test_StringTableAddString(void)
 
     retval=pStringTableAddString(table,String,0);
     ok(retval!=-1,"Failed to add String to String Table\n");    
-    ok(hstring==retval,"string handle %x != String handle %x in String Table\n", hstring, retval);        
+    ok(hstring==retval,"string handle %lx != String handle %lx in String Table\n", hstring, retval);
     
     hfoo=pStringTableAddString(table,foo,0);
     ok(hfoo!=-1,"Failed to add foo to String Table\n");        
-    ok(hfoo!=hstring,"foo and string share the same ID %x in String Table\n", hfoo);            
+    ok(hfoo!=hstring,"foo and string share the same ID %lx in String Table\n", hfoo);
     
     /* case sensitive */    
     hString=pStringTableAddString(table,String,ST_CASE_SENSITIVE_COMPARE);
-    ok(hstring!=hString,"String handle and string share same ID %x in Table\n", hstring);        
+    ok(hstring!=hString,"String handle and string share same ID %lx in Table\n", hstring);
 
     pStringTableDestroy(table);
 }
@@ -116,15 +116,15 @@ static void test_StringTableAddStringEx(void)
 
     retval = pStringTableAddStringEx(table, String, 0, NULL, 0);
     ok(retval != -1, "Failed to add String to String Table\n");
-    ok(hstring == retval, "string handle %x != String handle %x in String Table\n", hstring, retval);
+    ok(hstring == retval, "string handle %lx != String handle %lx in String Table\n", hstring, retval);
 
     hfoo = pStringTableAddStringEx(table, foo, 0, NULL, 0);
     ok(hfoo != -1, "Failed to add foo to String Table\n");
-    ok(hfoo != hstring, "foo and string share the same ID %x in String Table\n", hfoo);
+    ok(hfoo != hstring, "foo and string share the same ID %lx in String Table\n", hfoo);
 
     /* case sensitive */
     hString = pStringTableAddStringEx(table, String, ST_CASE_SENSITIVE_COMPARE, NULL, 0);
-    ok(hstring != hString, "String handle and string share same ID %x in Table\n", hstring);
+    ok(hstring != hString, "String handle and string share same ID %lx in Table\n", hstring);
 
     pStringTableDestroy(table);
 
@@ -134,19 +134,19 @@ static void test_StringTableAddStringEx(void)
 
     extra = 10;
     hstring = pStringTableAddStringEx(table, string, 0, &extra, 4);
-    ok(hstring != -1, "failed to add string, %d\n", hstring);
+    ok(hstring != -1, "failed to add string, %ld\n", hstring);
 
     extra = 0;
     ret = pStringTableGetExtraData(table, hstring, &extra, 4);
-    ok(ret && extra == 10, "got %d, extra %d\n", ret, extra);
+    ok(ret && extra == 10, "got %d, extra %ld\n", ret, extra);
 
     extra = 11;
     hstring = pStringTableAddStringEx(table, string, 0, &extra, 4);
-    ok(hstring != -1, "failed to add string, %d\n", hstring);
+    ok(hstring != -1, "failed to add string, %ld\n", hstring);
 
     extra = 0;
     ret = pStringTableGetExtraData(table, hstring, &extra, 4);
-    ok(ret && extra == 10, "got %d, extra %d\n", ret, extra);
+    ok(ret && extra == 10, "got %d, extra %ld\n", ret, extra);
 
     pStringTableDestroy(table);
 }
@@ -189,7 +189,7 @@ static void test_StringTableLookUpString(void)
     retval=pStringTableLookUpString(table,string,0);
     ok(retval!=-1,"Failed find string in String Table 1\n");
     ok(retval==hstring,
-        "Lookup for string (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for string (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hstring);    
 
     retval=pStringTableLookUpString(table2,string,0);
@@ -204,7 +204,7 @@ static void test_StringTableLookUpString(void)
     retval=pStringTableLookUpString(table,foo,0);
     ok(retval!=-1,"Failed find foo in String Table 1\n");    
     ok(retval==hfoo,
-        "Lookup for foo (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for foo (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hfoo);        
     
     retval=pStringTableLookUpString(table2,foo,0);
@@ -215,7 +215,7 @@ static void test_StringTableLookUpString(void)
     retval2=pStringTableLookUpString(table,String,ST_CASE_SENSITIVE_COMPARE);    
     ok(retval!=retval2,"Lookup of string equals String in Table 1\n");
     ok(retval==hString,
-        "Lookup for String (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for String (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hString);
 
     pStringTableDestroy(table);
@@ -248,7 +248,7 @@ static void test_StringTableLookUpStringEx(void)
     retval = pStringTableLookUpStringEx(table, string, 0, NULL, 0);
     ok(retval != ~0u, "Failed find string in String Table 1\n");
     ok(retval == hstring,
-        "Lookup for string (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for string (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hstring);
 
     retval = pStringTableLookUpStringEx(table2, string, 0, NULL, 0);
@@ -263,7 +263,7 @@ static void test_StringTableLookUpStringEx(void)
     retval=pStringTableLookUpStringEx(table, foo, 0, NULL, 0);
     ok(retval != ~0u, "Failed find foo in String Table 1\n");
     ok(retval == hfoo,
-        "Lookup for foo (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for foo (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hfoo);
 
     retval = pStringTableLookUpStringEx(table2, foo, 0, NULL, 0);
@@ -274,7 +274,7 @@ static void test_StringTableLookUpStringEx(void)
     retval2 = pStringTableLookUpStringEx(table, String, ST_CASE_SENSITIVE_COMPARE, NULL, 0);
     ok(retval != retval2, "Lookup of string equals String in Table 1\n");
     ok(retval == hString,
-        "Lookup for String (%x) does not match previous handle (%x) in String Table 1\n",
+        "Lookup for String (%lx) does not match previous handle (%lx) in String Table 1\n",
         retval, hString);
 
     pStringTableDestroy(table);
@@ -319,10 +319,10 @@ static void test_StringTableStringFromId(void)
 
     /* correct */
     id2 = pStringTableLookUpString(table, string, 0);
-    ok(id2 == id, "got %d and %d\n", id2, id);
+    ok(id2 == id, "got %ld and %ld\n", id2, id);
 
     string2 = pStringTableStringFromId(table, id2);
-    ok(string2 != NULL, "failed to lookup string %d\n", id2);
+    ok(string2 != NULL, "failed to lookup string %ld\n", id2);
     ok(!lstrcmpiW(string, string2), "got %s, expected %s\n", wine_dbgstr_w(string2), wine_dbgstr_w(string));
 
     pStringTableDestroy(table);
@@ -348,14 +348,14 @@ static void test_stringtable_layout(void)
     ptr = (struct stringtable*)table;
     ok(ptr->data != NULL, "got %p\n", ptr->data);
     /* first data offset is right after bucket area */
-    ok(ptr->nextoffset == 509*sizeof(DWORD), "got %d\n", ptr->nextoffset);
-    ok(ptr->allocated != 0, "got %d\n", ptr->allocated);
+    ok(ptr->nextoffset == 509*sizeof(DWORD), "got %ld\n", ptr->nextoffset);
+    ok(ptr->allocated != 0, "got %ld\n", ptr->allocated);
 todo_wine {
-    ok(ptr->unk[0] != 0, "got %lx\n", ptr->unk[0]);
-    ok(ptr->unk[1] != 0, "got %lx\n", ptr->unk[1]);
+    ok(ptr->unk[0] != 0, "got %Ix\n", ptr->unk[0]);
+    ok(ptr->unk[1] != 0, "got %Ix\n", ptr->unk[1]);
 }
-    ok(ptr->max_extra_size == 0, "got %d\n", ptr->max_extra_size);
-    ok(ptr->lcid == GetThreadLocale(), "got %x, thread lcid %x\n", ptr->lcid, GetThreadLocale());
+    ok(ptr->max_extra_size == 0, "got %ld\n", ptr->max_extra_size);
+    ok(ptr->lcid == GetThreadLocale(), "got %lx, thread lcid %lx\n", ptr->lcid, GetThreadLocale());
 
     pStringTableDestroy(table);
 }

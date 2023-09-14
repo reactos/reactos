@@ -5,6 +5,7 @@ add_definitions(
     -Dstrncasecmp=_strnicmp
 )
 
+remove_definitions(-D__ROS_LONG64__)
 remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(coinst.dll coinst.spec)

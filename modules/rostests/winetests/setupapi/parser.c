@@ -164,13 +164,13 @@ static void test_invalid_files(void)
         err_line = 0xdeadbeef;
         hinf = test_file_contents( invalid_files[i].data, invalid_files[i].data_size, &err_line );
         err = GetLastError();
-        trace( "hinf=%p err=0x%x line=%d\n", hinf, err, err_line );
+        trace( "hinf=%p err=0x%lx line=%d\n", hinf, err, err_line );
         if (invalid_files[i].error)  /* should fail */
         {
             ok( hinf == INVALID_HANDLE_VALUE, "file %u: Open succeeded\n", i );
             todo_wine_if (invalid_files[i].todo)
             {
-                ok( err == invalid_files[i].error, "file %u: Bad error %u/%u\n",
+                ok( err == invalid_files[i].error, "file %u: Bad error %lu/%lu\n",
                     i, err, invalid_files[i].error );
                 ok( err_line == invalid_files[i].err_line, "file %u: Bad error line %d/%d\n",
                     i, err_line, invalid_files[i].err_line );
@@ -181,7 +181,7 @@ static void test_invalid_files(void)
             todo_wine_if (invalid_files[i].todo)
             {
                 ok( hinf != INVALID_HANDLE_VALUE, "file %u: Open failed\n", i );
-                ok( err == 0, "file %u: Error code set to %u\n", i, err );
+                ok( err == 0, "file %u: Error code set to %lu\n", i, err );
             }
         }
         SetupCloseInfFile( hinf );
@@ -240,23 +240,23 @@ static void test_section_names(void)
     {
         SetLastError( 0xdeadbeef );
         hinf = test_file_contents( section_names[i].data, strlen(section_names[i].data), &err_line );
-        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
+        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %lu\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
         ret = SetupGetLineCountA( hinf, section_names[i].section );
         err = GetLastError();
-        trace( "hinf=%p ret=%d err=0x%x\n", hinf, ret, err );
+        trace( "hinf=%p ret=%ld err=0x%lx\n", hinf, ret, err );
         if (ret != -1)
         {
             ok( !section_names[i].error, "line %u: section name %s found\n",
                 i, section_names[i].section );
-            ok( !err, "line %u: bad error code %u\n", i, err );
+            ok( !err, "line %u: bad error code %lu\n", i, err );
         }
         else
         {
             ok( section_names[i].error, "line %u: section name %s not found\n",
                 i, section_names[i].section );
-            ok( err == section_names[i].error, "line %u: bad error %u/%u\n",
+            ok( err == section_names[i].error, "line %u: bad error %lu/%lu\n",
                 i, err, section_names[i].error );
         }
         SetupCloseInfFile( hinf );
@@ -299,7 +299,7 @@ static void test_enum_sections(void)
 
         SetLastError( 0xdeadbeef );
         ret = pSetupEnumInfSectionsA( hinf, index, buffer, sizeof(buffer), &len );
-        ok( ret, "SetupEnumInfSectionsA failed err %u\n", GetLastError() );
+        ok( ret, "SetupEnumInfSectionsA failed err %lu\n", GetLastError() );
         ok( len == 3 || len == 8, "wrong len %u\n", len );
         ok( !lstrcmpiA( buffer, "version" ) || !lstrcmpiA( buffer, "s1" ) ||
             !lstrcmpiA( buffer, "s2" ) || !lstrcmpiA( buffer, "s3" ) || !lstrcmpiA( buffer, "strings" ),
@@ -408,12 +408,12 @@ static const char *check_key( INFCONTEXT *context, const char *wanted )
     if (!key)
     {
         ok( !wanted, "missing key %s\n", wanted );
-        ok( err == 0 || err == ERROR_INVALID_PARAMETER, "last error set to %u\n", err );
+        ok( err == 0 || err == ERROR_INVALID_PARAMETER, "last error set to %lu\n", err );
     }
     else
     {
         ok( !strcmp( key, wanted ), "bad key %s/%s\n", key, wanted );
-        ok( err == 0, "last error set to %u\n", err );
+        ok( err == 0, "last error set to %lu\n", err );
     }
     return key;
 }
@@ -439,7 +439,7 @@ static void test_key_names(void)
         data_size += key_names[i].data_size;
         SetLastError( 0xdeadbeef );
         hinf = test_file_contents( buffer, data_size, &err_line );
-        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
+        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %lu\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
         ret = SetupFindFirstLineA( hinf, "Test", key_names[i].key, &context );
@@ -449,11 +449,11 @@ static void test_key_names(void)
         {
             ret = SetupFindFirstLineA( hinf, "Test", "%foo%", &context );
             ok(!ret, "SetupFindFirstLine() should not match unsubstituted keys\n");
-            ok(GetLastError() == ERROR_LINE_NOT_FOUND, "got wrong error %u\n", GetLastError());
+            ok(GetLastError() == ERROR_LINE_NOT_FOUND, "got wrong error %lu\n", GetLastError());
         }
 
         ret = SetupFindFirstLineA( hinf, "Test", 0, &context );
-        ok(ret, "SetupFindFirstLineA failed: le=%u\n", GetLastError());
+        ok(ret, "SetupFindFirstLineA failed: le=%lu\n", GetLastError());
         if (!ret)
         {
             SetupCloseInfFile( hinf );
@@ -469,7 +469,7 @@ static void test_key_names(void)
             err = GetLastError();
             if (field)
             {
-                ok( err == 0, "line %u: bad error %u\n", i, err );
+                ok( err == 0, "line %u: bad error %lu\n", i, err );
                 if (key_names[i].fields[index])
                 {
                     if (i == 52)
@@ -499,7 +499,7 @@ static void test_key_names(void)
             else
             {
                 ok( err == 0 || err == ERROR_INVALID_PARAMETER,
-                    "line %u: bad error %u\n", i, err );
+                    "line %u: bad error %lu\n", i, err );
                 if (key_names[i].fields[index])
                     ok( 0, "line %u: missing field %s\n", i, key_names[i].fields[index] );
             }
@@ -523,13 +523,13 @@ static void test_close_inf_file(void)
     SetupCloseInfFile(NULL);
     ok(GetLastError() == 0xdeadbeef ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Win9x, WinMe */
-        "Expected 0xdeadbeef, got %u\n", GetLastError());
+        "Expected 0xdeadbeef, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     SetupCloseInfFile(INVALID_HANDLE_VALUE);
     ok(GetLastError() == 0xdeadbeef ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Win9x, WinMe */
-        "Expected 0xdeadbeef, got %u\n", GetLastError());
+        "Expected 0xdeadbeef, got %lu\n", GetLastError());
 }
 
 static const char *contents = "[Version]\n"
@@ -610,7 +610,7 @@ static void test_pSetupGetField(void)
         fieldW = pSetupGetFieldW( &context, 4 );
         ok( fieldW == NULL, "Expected NULL, got %p\n", fieldW );
         ok( GetLastError() == ERROR_INVALID_PARAMETER,
-            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+            "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError() );
     }
     else
     {
@@ -623,7 +623,7 @@ static void test_pSetupGetField(void)
         fieldA = pSetupGetFieldA( &context, 4 );
         ok( fieldA == NULL, "Expected NULL, got %p\n", fieldA );
         ok( GetLastError() == ERROR_INVALID_PARAMETER,
-            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+            "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError() );
     }
 
     SetupCloseInfFile( hinf );
@@ -677,13 +677,13 @@ static void test_SetupGetIntField(void)
             ok( retb, "%u: Expected success\n", i );
             ok( GetLastError() == ERROR_SUCCESS ||
                 GetLastError() == 0xdeadbeef /* win9x, NT4 */,
-                "%u: Expected ERROR_SUCCESS or 0xdeadbeef, got %u\n", i, GetLastError() );
+                "%u: Expected ERROR_SUCCESS or 0xdeadbeef, got %lu\n", i, GetLastError() );
         }
         else
         {
             ok( !retb, "%u: Expected failure\n", i );
             ok( GetLastError() == keys[i].err,
-                "%u: Expected %d, got %u\n", i, keys[i].err, GetLastError() );
+                "%u: Expected %ld, got %lu\n", i, keys[i].err, GetLastError() );
         }
         ok( intfield == keys[i].value, "%u: Expected %d, got %d\n", i, keys[i].value, intfield );
 
@@ -716,91 +716,91 @@ static void test_GLE(void)
     retb = SetupFindFirstLineA( hinf, "ImNotThere", NULL, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "ImNotThere", "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", NULL, &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", "Keyname1", &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindNextMatchLineA( &context, "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindNextMatchLineA( &context, "Keyname2", &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retl = SetupGetLineCountA( hinf, "ImNotThere");
-    ok(retl == -1, "Expected -1, got %d\n", retl);
+    ok(retl == -1, "Expected -1, got %ld\n", retl);
     ok(GetLastError() == ERROR_SECTION_NOT_FOUND,
-        "Expected ERROR_SECTION_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_SECTION_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retl = SetupGetLineCountA( hinf, "Sectionname");
-    ok(retl == 2, "Expected 2, got %d\n", retl);
+    ok(retl == 2, "Expected 2, got %ld\n", retl);
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "ImNotThere", "ImNotThere", buf, bufsize, &retsize);
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "Sectionname", "ImNotThere", buf, bufsize, &retsize);
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "Sectionname", "Keyname1", buf, bufsize, &retsize);
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "ImNotThere", 1, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "Sectionname", 1, &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "Sectionname", 3, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetupCloseInfFile( hinf );
 }
