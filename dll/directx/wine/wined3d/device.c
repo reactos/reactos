@@ -1331,15 +1331,14 @@ void CDECL wined3d_device_set_stream_output(struct wined3d_device *device, UINT 
         return;
     }
 
-    stream = &device->update_state->stream_output[idx];
+    stream = &device->state.stream_output[idx];
     prev_buffer = stream->buffer;
 
     if (buffer)
         wined3d_buffer_incref(buffer);
     stream->buffer = buffer;
     stream->offset = offset;
-    if (!device->recording)
-        wined3d_cs_emit_set_stream_output(device->cs, idx, buffer, offset);
+    wined3d_cs_emit_set_stream_output(device->cs, idx, buffer, offset);
     if (prev_buffer)
         wined3d_buffer_decref(prev_buffer);
 }
