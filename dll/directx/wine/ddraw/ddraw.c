@@ -4158,12 +4158,8 @@ static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fd
         fdr->dwSize != sizeof(D3DFINDDEVICERESULT2) && fdr->dwSize != sizeof(D3DFINDDEVICERESULT)))
         return DDERR_INVALIDPARAMS;
 
-    if ((fds->dwFlags & D3DFDS_COLORMODEL)
-            && fds->dcmColorModel != D3DCOLOR_RGB)
-    {
-        WARN("Trying to request a non-RGB D3D color model. Not supported.\n");
-        return DDERR_INVALIDPARAMS; /* No real idea what to return here :-) */
-    }
+    if (fds->dwFlags & D3DFDS_COLORMODEL)
+        WARN("Ignoring colour model %#x.\n", fds->dcmColorModel);
 
     if (fds->dwFlags & D3DFDS_GUID)
     {
