@@ -433,6 +433,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     const struct wined3d_fb_state *fb = &swapchain->device->cs->fb;
     struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_texture *logo_texture;
     struct wined3d_context *context;
     BOOL render_to_fbo;
@@ -444,6 +445,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         WARN("Invalid context, skipping present.\n");
         return;
     }
+    context_gl = wined3d_context_gl(context);
 
     gl_info = context->gl_info;
 
@@ -486,7 +488,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
                     WINED3D_BLT_ALPHA_TEST, NULL, WINED3D_TEXF_POINT);
     }
 
-    TRACE("Presenting HDC %p.\n", context->hdc);
+    TRACE("Presenting DC %p.\n", context_gl->dc);
 
     if (!(render_to_fbo = swapchain->render_to_fbo)
             && (src_rect->left || src_rect->top
@@ -527,7 +529,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         gl_info->gl_ops.gl.p_glFinish();
 
     /* call wglSwapBuffers through the gl table to avoid confusing the Steam overlay */
-    gl_info->gl_ops.wgl.p_wglSwapBuffers(context->hdc);
+    gl_info->gl_ops.wgl.p_wglSwapBuffers(context_gl->dc);
 
     wined3d_swapchain_gl_rotate(swapchain, context);
 

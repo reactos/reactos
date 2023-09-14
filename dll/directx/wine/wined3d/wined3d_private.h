@@ -1933,8 +1933,7 @@ struct wined3d_context
     DWORD lowest_disabled_stage : 4;    /* Max WINED3D_MAX_TEXTURES, 8 */
     DWORD use_immediate_mode_draw : 1;
     DWORD needs_set : 1;
-    DWORD hdc_is_private : 1;
-    DWORD hdc_has_format : 1;           /* only meaningful if hdc_is_private */
+    DWORD num_untracked_materials : 2;  /* Max value 2 */
 
     DWORD update_shader_resource_bindings : 1;
     DWORD update_compute_shader_resource_bindings : 1;
@@ -1946,8 +1945,7 @@ struct wined3d_context
     DWORD transform_feedback_paused : 1;
     DWORD shader_update_mask : 6; /* WINED3D_SHADER_TYPE_COUNT, 6 */
     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
-    DWORD num_untracked_materials : 2;  /* Max value 2 */
-    DWORD padding : 9;
+    DWORD padding : 11;
 
     DWORD constant_update_mask;
     DWORD numbered_array_mask;
@@ -1959,17 +1957,7 @@ struct wined3d_context
 
     UINT instance_count;
 
-    /* The actual opengl context */
     UINT level;
-    HGLRC restore_ctx;
-    HDC restore_dc;
-    int restore_pf;
-    HWND restore_pf_win;
-    HGLRC                   glCtx;
-    HWND                    win_handle;
-    HDC                     hdc;
-    int pixel_format;
-    GLint                   aux_buffers;
 
     void *shader_backend_data;
     void *fragment_pipe_data;
@@ -1993,14 +1981,27 @@ struct wined3d_context_gl
 {
     struct wined3d_context c;
 
+    uint32_t dc_is_private : 1;
+    uint32_t dc_has_format : 1; /* Only meaningful for private DCs. */
     uint32_t fog_enabled : 1;
     uint32_t diffuse_attrib_to_1 : 1;
     uint32_t rebind_fbo : 1;
-    uint32_t padding : 29;
+    uint32_t padding : 27;
 
     uint32_t default_attrib_value_set;
 
     GLenum *texture_type;
+
+    /* The WGL context. */
+    HGLRC restore_ctx;
+    HDC restore_dc;
+    int restore_pf;
+    HWND restore_pf_win;
+    HGLRC gl_ctx;
+    HDC dc;
+    int pixel_format;
+    HWND window;
+    GLint aux_buffers;
 
     /* FBOs. */
     unsigned int fbo_entry_count;

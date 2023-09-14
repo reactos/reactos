@@ -13015,7 +13015,7 @@ static DWORD glsl_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_bli
     if (dst_location == WINED3D_LOCATION_DRAWABLE)
     {
         d = *dst_rect;
-        wined3d_texture_translate_drawable_coords(dst_texture, context->win_handle, &d);
+        wined3d_texture_translate_drawable_coords(dst_texture, context_gl->window, &d);
         dst_rect = &d;
     }
 
