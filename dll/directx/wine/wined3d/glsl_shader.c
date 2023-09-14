@@ -2387,12 +2387,20 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
                 image_type = "imageBuffer";
                 break;
 
+            case WINED3D_SHADER_RESOURCE_TEXTURE_1D:
+                image_type = "image1D";
+                break;
+
             case WINED3D_SHADER_RESOURCE_TEXTURE_2D:
                 image_type = "image2D";
                 break;
 
             case WINED3D_SHADER_RESOURCE_TEXTURE_3D:
                 image_type = "image3D";
+                break;
+
+            case WINED3D_SHADER_RESOURCE_TEXTURE_1DARRAY:
+                image_type = "image1DArray";
                 break;
 
             case WINED3D_SHADER_RESOURCE_TEXTURE_2DARRAY:
