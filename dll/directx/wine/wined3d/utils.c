@@ -5773,14 +5773,27 @@ DWORD wined3d_format_convert_from_float(const struct wined3d_format *format, con
         {WINED3DFMT_X8D24_UNORM,       {  16777215.0, 0.0, 0.0, 0.0}, {0, 0, 0, 0}},
         {WINED3DFMT_D32_UNORM,         {4294967295.0, 0.0, 0.0, 0.0}, {0, 0, 0, 0}},
     };
+    enum wined3d_format_id format_id = format->id;
+    struct wined3d_color colour_srgb;
     unsigned int i;
     DWORD ret;
 
-    TRACE("Converting color %s to format %s.\n", debug_color(color), debug_d3dformat(format->id));
+    TRACE("Converting colour %s to format %s.\n", debug_color(color), debug_d3dformat(format_id));
+
+    for (i = 0; i < ARRAY_SIZE(format_srgb_info); ++i)
+    {
+        if (format_id != format_srgb_info[i].srgb_format_id)
+            continue;
+
+        wined3d_colour_srgb_from_linear(&colour_srgb, color);
+        format_id = format_srgb_info[i].base_format_id;
+        color = &colour_srgb;
+        break;
+    }
 
     for (i = 0; i < ARRAY_SIZE(float_conv); ++i)
     {
-        if (format->id != float_conv[i].format_id)
+        if (format_id != float_conv[i].format_id)
             continue;
 
         ret = ((DWORD)((color->r * float_conv[i].mul.x) + 0.5f)) << float_conv[i].shift.x;
@@ -5795,7 +5808,7 @@ DWORD wined3d_format_convert_from_float(const struct wined3d_format *format, con
 
     for (i = 0; i < ARRAY_SIZE(double_conv); ++i)
     {
-        if (format->id != double_conv[i].format_id)
+        if (format_id != double_conv[i].format_id)
             continue;
 
         ret = ((DWORD)((color->r * double_conv[i].mul.x) + 0.5)) << double_conv[i].shift.x;
@@ -5808,7 +5821,7 @@ DWORD wined3d_format_convert_from_float(const struct wined3d_format *format, con
         return ret;
     }
 
-    FIXME("Conversion for format %s not implemented.\n", debug_d3dformat(format->id));
+    FIXME("Conversion for format %s not implemented.\n", debug_d3dformat(format_id));
 
     return 0;
 }
