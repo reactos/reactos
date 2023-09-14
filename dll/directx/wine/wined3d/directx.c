@@ -2169,7 +2169,8 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, unsigned int adapte
         const enum wined3d_feature_level *feature_levels, unsigned int feature_level_count,
         struct wined3d_device_parent *device_parent, struct wined3d_device **device)
 {
-    struct wined3d_device_gl *device_gl;
+    const struct wined3d_adapter *adapter;
+    struct wined3d_device *object;
     HRESULT hr;
 
     TRACE("wined3d %p, adapter_idx %u, device_type %#x, focus_window %p, flags %#x, "
@@ -2180,20 +2181,14 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, unsigned int adapte
     if (adapter_idx >= wined3d->adapter_count)
         return WINED3DERR_INVALIDCALL;
 
-    if (!(device_gl = heap_alloc_zero(sizeof(*device_gl))))
-        return E_OUTOFMEMORY;
-
-    if (FAILED(hr = device_init(&device_gl->d, wined3d, adapter_idx,
+    adapter = wined3d->adapters[adapter_idx];
+    if (FAILED(hr = adapter->adapter_ops->adapter_create_device(wined3d, adapter,
             device_type, focus_window, flags, surface_alignment,
-            feature_levels, feature_level_count, device_parent)))
-    {
-        WARN("Failed to initialize device, hr %#x.\n", hr);
-        heap_free(device_gl);
+            feature_levels, feature_level_count, device_parent, &object)))
         return hr;
-    }
 
-    TRACE("Created device %p.\n", device_gl);
-    *device = &device_gl->d;
+    TRACE("Created device %p.\n", object);
+    *device = object;
 
     device_parent->ops->wined3d_device_created(device_parent, *device);
 
@@ -2204,6 +2199,35 @@ static void adapter_no3d_destroy(struct wined3d_adapter *adapter)
 {
     wined3d_adapter_cleanup(adapter);
     heap_free(adapter);
+}
+
+static HRESULT adapter_no3d_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
+        enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
+        const enum wined3d_feature_level *levels, unsigned int level_count,
+        struct wined3d_device_parent *device_parent, struct wined3d_device **device)
+{
+    struct wined3d_device *object;
+    HRESULT hr;
+
+    if (!(object = heap_alloc_zero(sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_device_init(object, wined3d, adapter->ordinal, device_type,
+            focus_window, flags, surface_alignment, levels, level_count, device_parent)))
+    {
+        WARN("Failed to initialize device, hr %#x.\n", hr);
+        heap_free(object);
+        return hr;
+    }
+
+    *device = object;
+    return WINED3D_OK;
+}
+
+static void adapter_no3d_destroy_device(struct wined3d_device *device)
+{
+    wined3d_device_cleanup(device);
+    heap_free(device);
 }
 
 static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context,
@@ -2226,6 +2250,8 @@ static BOOL adapter_no3d_check_format(const struct wined3d_adapter *adapter,
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
+    adapter_no3d_create_device,
+    adapter_no3d_destroy_device,
     wined3d_adapter_no3d_create_context,
     adapter_no3d_get_wined3d_caps,
     adapter_no3d_check_format,

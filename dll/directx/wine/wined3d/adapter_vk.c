@@ -24,6 +24,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
+struct wined3d_device_vk
+{
+    struct wined3d_device d;
+};
+
+static inline struct wined3d_device_vk *wined3d_device_vk(struct wined3d_device *device)
+{
+    return CONTAINING_RECORD(device, struct wined3d_device_vk, d);
+}
+
 static inline const struct wined3d_adapter_vk *wined3d_adapter_vk_const(const struct wined3d_adapter *adapter)
 {
     return CONTAINING_RECORD(adapter, struct wined3d_adapter_vk, a);
@@ -94,6 +104,36 @@ static void adapter_vk_destroy(struct wined3d_adapter *adapter)
     wined3d_unload_vulkan(vk_info);
     wined3d_adapter_cleanup(&adapter_vk->a);
     heap_free(adapter_vk);
+}
+
+static HRESULT adapter_vk_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
+        enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
+        const enum wined3d_feature_level *levels, unsigned int level_count,
+        struct wined3d_device_parent *device_parent, struct wined3d_device **device)
+{
+    struct wined3d_device_vk *device_vk;
+    HRESULT hr;
+
+    if (!(device_vk = heap_alloc_zero(sizeof(*device_vk))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_device_init(&device_vk->d, wined3d, adapter->ordinal, device_type,
+            focus_window, flags, surface_alignment, levels, level_count, device_parent)))
+    {
+        WARN("Failed to initialize device, hr %#x.\n", hr);
+        heap_free(device_vk);
+        return hr;
+    }
+
+    return WINED3D_OK;
+}
+
+static void adapter_vk_destroy_device(struct wined3d_device *device)
+{
+    struct wined3d_device_vk *device_vk = wined3d_device_vk(device);
+
+    wined3d_device_cleanup(device);
+    heap_free(device_vk);
 }
 
 static BOOL adapter_vk_create_context(struct wined3d_context *context,
@@ -210,6 +250,8 @@ static BOOL adapter_vk_check_format(const struct wined3d_adapter *adapter,
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
+    adapter_vk_create_device,
+    adapter_vk_destroy_device,
     adapter_vk_create_context,
     adapter_vk_get_wined3d_caps,
     adapter_vk_check_format,

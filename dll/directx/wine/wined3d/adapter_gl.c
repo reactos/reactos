@@ -4246,6 +4246,37 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter_gl *adapter_gl, 
     }
 }
 
+static HRESULT adapter_gl_create_device(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
+        enum wined3d_device_type device_type, HWND focus_window, unsigned int flags, BYTE surface_alignment,
+        const enum wined3d_feature_level *levels, unsigned int level_count,
+        struct wined3d_device_parent *device_parent, struct wined3d_device **device)
+{
+    struct wined3d_device_gl *device_gl;
+    HRESULT hr;
+
+    if (!(device_gl = heap_alloc_zero(sizeof(*device_gl))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_device_init(&device_gl->d, wined3d, adapter->ordinal, device_type,
+            focus_window, flags, surface_alignment, levels, level_count, device_parent)))
+    {
+        WARN("Failed to initialize device, hr %#x.\n", hr);
+        heap_free(device_gl);
+        return hr;
+    }
+
+    *device = &device_gl->d;
+    return WINED3D_OK;
+}
+
+static void adapter_gl_destroy_device(struct wined3d_device *device)
+{
+    struct wined3d_device_gl *device_gl = wined3d_device_gl(device);
+
+    wined3d_device_cleanup(&device_gl->d);
+    heap_free(device_gl);
+}
+
 static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, struct wined3d_caps *caps)
 {
     const struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
@@ -4516,6 +4547,8 @@ static void adapter_gl_destroy(struct wined3d_adapter *adapter)
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     adapter_gl_destroy,
+    adapter_gl_create_device,
+    adapter_gl_destroy_device,
     wined3d_adapter_gl_create_context,
     adapter_gl_get_wined3d_caps,
     adapter_gl_check_format,

@@ -474,6 +474,54 @@ static void device_leftover_sampler(struct wine_rb_entry *entry, void *context)
     ERR("Leftover sampler %p.\n", sampler);
 }
 
+void wined3d_device_cleanup(struct wined3d_device *device)
+{
+    unsigned int i;
+
+    if (device->swapchain_count)
+        wined3d_device_uninit_3d(device);
+
+    wined3d_stateblock_state_cleanup(&device->stateblock_state);
+
+    wined3d_cs_destroy(device->cs);
+
+    if (device->recording && wined3d_stateblock_decref(device->recording))
+        ERR("Something's still holding the recording stateblock.\n");
+    device->recording = NULL;
+
+    state_cleanup(&device->state);
+
+    for (i = 0; i < ARRAY_SIZE(device->multistate_funcs); ++i)
+    {
+        heap_free(device->multistate_funcs[i]);
+        device->multistate_funcs[i] = NULL;
+    }
+
+    if (!list_empty(&device->resources))
+    {
+        struct wined3d_resource *resource;
+
+        ERR("Device released with resources still bound.\n");
+
+        LIST_FOR_EACH_ENTRY(resource, &device->resources, struct wined3d_resource, resource_list_entry)
+        {
+            ERR("Leftover resource %p with type %s (%#x).\n",
+                    resource, debug_d3dresourcetype(resource->type), resource->type);
+        }
+    }
+
+    if (device->contexts)
+        ERR("Context array not freed!\n");
+    if (device->hardwareCursor)
+        DestroyCursor(device->hardwareCursor);
+    device->hardwareCursor = 0;
+
+    wine_rb_destroy(&device->samplers, device_leftover_sampler, NULL);
+
+    wined3d_decref(device->wined3d);
+    device->wined3d = NULL;
+}
+
 ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
 {
     ULONG refcount = InterlockedDecrement(&device->ref);
@@ -482,52 +530,8 @@ ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
 
     if (!refcount)
     {
-        UINT i;
-
-        if (device->swapchain_count)
-            wined3d_device_uninit_3d(device);
-
-        wined3d_stateblock_state_cleanup(&device->stateblock_state);
-
-        wined3d_cs_destroy(device->cs);
-
-        if (device->recording && wined3d_stateblock_decref(device->recording))
-            ERR("Something's still holding the recording stateblock.\n");
-        device->recording = NULL;
-
-        state_cleanup(&device->state);
-
-        for (i = 0; i < ARRAY_SIZE(device->multistate_funcs); ++i)
-        {
-            heap_free(device->multistate_funcs[i]);
-            device->multistate_funcs[i] = NULL;
-        }
-
-        if (!list_empty(&device->resources))
-        {
-            struct wined3d_resource *resource;
-
-            ERR("Device released with resources still bound.\n");
-
-            LIST_FOR_EACH_ENTRY(resource, &device->resources, struct wined3d_resource, resource_list_entry)
-            {
-                ERR("Leftover resource %p with type %s (%#x).\n",
-                        resource, debug_d3dresourcetype(resource->type), resource->type);
-            }
-        }
-
-        if (device->contexts)
-            ERR("Context array not freed!\n");
-        if (device->hardwareCursor)
-            DestroyCursor(device->hardwareCursor);
-        device->hardwareCursor = 0;
-
-        wine_rb_destroy(&device->samplers, device_leftover_sampler, NULL);
-
-        wined3d_decref(device->wined3d);
-        device->wined3d = NULL;
-        heap_free(wined3d_device_gl(device));
-        TRACE("Freed device %p.\n", device);
+        device->adapter->adapter_ops->adapter_destroy_device(device);
+        TRACE("Destroyed device %p.\n", device);
     }
 
     return refcount;
@@ -5286,8 +5290,8 @@ static BOOL wined3d_select_feature_level(const struct wined3d_adapter *adapter,
     return FALSE;
 }
 
-HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
-        UINT adapter_idx, enum wined3d_device_type device_type, HWND focus_window, DWORD flags,
+HRESULT wined3d_device_init(struct wined3d_device *device, struct wined3d *wined3d,
+        unsigned int adapter_idx, enum wined3d_device_type device_type, HWND focus_window, unsigned int flags,
         BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
         struct wined3d_device_parent *device_parent)
 {

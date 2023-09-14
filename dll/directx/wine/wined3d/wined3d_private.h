@@ -2700,6 +2700,11 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
 struct wined3d_adapter_ops
 {
     void (*adapter_destroy)(struct wined3d_adapter *adapter);
+    HRESULT (*adapter_create_device)(struct wined3d *wined3d, const struct wined3d_adapter *adapter,
+            enum wined3d_device_type device_type, HWND focus_window, unsigned int flags,
+            BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
+            struct wined3d_device_parent *device_parent, struct wined3d_device **device);
+    void (*adapter_destroy_device)(struct wined3d_device *device);
     BOOL (*adapter_create_context)(struct wined3d_context *context,
             struct wined3d_texture *target, const struct wined3d_format *ds_format);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
@@ -3199,13 +3204,14 @@ struct wined3d_device
     UINT context_count;
 };
 
+void wined3d_device_cleanup(struct wined3d_device *device) DECLSPEC_HIDDEN;
 void device_clear_render_targets(struct wined3d_device *device, UINT rt_count, const struct wined3d_fb_state *fb,
         UINT rect_count, const RECT *rects, const RECT *draw_rect, DWORD flags,
         const struct wined3d_color *color, float depth, DWORD stencil) DECLSPEC_HIDDEN;
 BOOL device_context_add(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
 void device_context_remove(struct wined3d_device *device, struct wined3d_context *context) DECLSPEC_HIDDEN;
-HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
-        UINT adapter_idx, enum wined3d_device_type device_type, HWND focus_window, DWORD flags,
+HRESULT wined3d_device_init(struct wined3d_device *device, struct wined3d *wined3d,
+        unsigned int adapter_idx, enum wined3d_device_type device_type, HWND focus_window, unsigned int flags,
         BYTE surface_alignment, const enum wined3d_feature_level *levels, unsigned int level_count,
         struct wined3d_device_parent *device_parent) DECLSPEC_HIDDEN;
 LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL unicode,
