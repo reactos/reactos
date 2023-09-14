@@ -4352,7 +4352,23 @@ static void indexbuffer(struct wined3d_context *context, const struct wined3d_st
     }
 }
 
-static void frontface(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+static void depth_clip(const struct wined3d_rasterizer_state *r, const struct wined3d_gl_info *gl_info)
+{
+    if (!gl_info->supported[ARB_DEPTH_CLAMP])
+    {
+        if (r && !r->desc.depth_clip)
+            FIXME("Depth clamp not supported by this GL implementation.\n");
+        return;
+    }
+
+    if (r && !r->desc.depth_clip)
+        gl_info->gl_ops.gl.p_glEnable(GL_DEPTH_CLAMP);
+    else
+        gl_info->gl_ops.gl.p_glDisable(GL_DEPTH_CLAMP);
+    checkGLcall("depth clip");
+}
+
+static void rasterizer(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLenum mode;
@@ -4363,9 +4379,10 @@ static void frontface(struct wined3d_context *context, const struct wined3d_stat
 
     gl_info->gl_ops.gl.p_glFrontFace(mode);
     checkGLcall("glFrontFace");
+    depth_clip(state->rasterizer_state, gl_info);
 }
 
-static void frontface_cc(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+static void rasterizer_cc(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLenum mode;
@@ -4374,6 +4391,7 @@ static void frontface_cc(struct wined3d_context *context, const struct wined3d_s
 
     gl_info->gl_ops.gl.p_glFrontFace(mode);
     checkGLcall("glFrontFace");
+    depth_clip(state->rasterizer_state, gl_info);
 }
 
 static void psorigin_w(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4543,8 +4561,8 @@ const struct StateEntryTemplate misc_state_template[] =
     { STATE_BLEND,                                        { STATE_BLEND,                                        state_blend_object  }, WINED3D_GL_EXT_NONE             },
     { STATE_STREAMSRC,                                    { STATE_STREAMSRC,                                    streamsrc           }, WINED3D_GL_EXT_NONE             },
     { STATE_VDECL,                                        { STATE_VDECL,                                        vdecl_miscpart      }, WINED3D_GL_EXT_NONE             },
-    { STATE_FRONTFACE,                                    { STATE_FRONTFACE,                                    frontface_cc        }, ARB_CLIP_CONTROL                },
-    { STATE_FRONTFACE,                                    { STATE_FRONTFACE,                                    frontface           }, WINED3D_GL_EXT_NONE             },
+    { STATE_RASTERIZER,                                   { STATE_RASTERIZER,                                   rasterizer_cc       }, ARB_CLIP_CONTROL                },
+    { STATE_RASTERIZER,                                   { STATE_RASTERIZER,                                   rasterizer          }, WINED3D_GL_EXT_NONE             },
     { STATE_SCISSORRECT,                                  { STATE_SCISSORRECT,                                  scissorrect         }, WINED3D_GL_EXT_NONE             },
     { STATE_POINTSPRITECOORDORIGIN,                       { STATE_POINTSPRITECOORDORIGIN,                       state_nop           }, ARB_CLIP_CONTROL                },
     { STATE_POINTSPRITECOORDORIGIN,                       { STATE_POINTSPRITECOORDORIGIN,                       psorigin            }, WINED3D_GL_VERSION_2_0          },
@@ -5494,7 +5512,7 @@ static void validate_state_table(struct StateEntry *state_table)
         STATE_VIEWPORT,
         STATE_LIGHT_TYPE,
         STATE_SCISSORRECT,
-        STATE_FRONTFACE,
+        STATE_RASTERIZER,
         STATE_POINTSPRITECOORDORIGIN,
         STATE_BASEVERTEXINDEX,
         STATE_FRAMEBUFFER,

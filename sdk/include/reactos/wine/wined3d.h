@@ -2011,6 +2011,7 @@ struct wined3d_blend_state_desc
 struct wined3d_rasterizer_state_desc
 {
     BOOL front_ccw;
+    BOOL depth_clip;
 };
 
 struct wined3d_sampler_desc

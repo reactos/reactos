@@ -2666,7 +2666,7 @@ static void context_set_render_offscreen(struct wined3d_context *context, BOOL o
     context_invalidate_state(context, STATE_SCISSORRECT);
     if (!context->gl_info->supported[ARB_CLIP_CONTROL])
     {
-        context_invalidate_state(context, STATE_FRONTFACE);
+        context_invalidate_state(context, STATE_RASTERIZER);
         context_invalidate_state(context, STATE_POINTSPRITECOORDORIGIN);
         context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
     }
