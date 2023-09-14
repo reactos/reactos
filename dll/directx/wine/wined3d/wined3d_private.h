@@ -2796,6 +2796,10 @@ struct wined3d_adapter_ops
             const struct wined3d_sub_resource_data *data, void *parent, const struct wined3d_parent_ops *parent_ops,
             struct wined3d_buffer **buffer);
     void (*adapter_destroy_buffer)(struct wined3d_buffer *buffer);
+    HRESULT (*adapter_create_texture)(struct wined3d_device *device, const struct wined3d_resource_desc *desc,
+            unsigned int layer_count, unsigned int level_count, uint32_t flags, void *parent,
+            const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture);
+    void (*adapter_destroy_texture)(struct wined3d_texture *texture);
     HRESULT (*adapter_create_rendertarget_view)(const struct wined3d_view_desc *desc,
             struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
             struct wined3d_rendertarget_view **view);
@@ -3593,6 +3597,16 @@ struct wined3d_texture
     } *sub_resources;
 };
 
+static inline void *wined3d_texture_allocate_object_memory(SIZE_T s, SIZE_T level_count, SIZE_T layer_count)
+{
+    struct wined3d_texture *t;
+
+    if (level_count > ((~(SIZE_T)0 - s) / sizeof(*t->sub_resources)) / layer_count)
+        return NULL;
+
+    return heap_alloc_zero(s + level_count * layer_count * sizeof(*t->sub_resources));
+}
+
 static inline struct wined3d_texture *texture_from_resource(struct wined3d_resource *resource)
 {
     return CONTAINING_RECORD(resource, struct wined3d_texture, resource);
@@ -3655,6 +3669,7 @@ void texture2d_read_from_framebuffer(struct wined3d_texture *texture, unsigned i
 
 HRESULT wined3d_texture_check_box_dimensions(const struct wined3d_texture *texture,
         unsigned int level, const struct wined3d_box *box) DECLSPEC_HIDDEN;
+void wined3d_texture_cleanup(struct wined3d_texture *texture) DECLSPEC_HIDDEN;
 void wined3d_texture_download_from_texture(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
         struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx) DECLSPEC_HIDDEN;
 GLenum wined3d_texture_get_gl_buffer(const struct wined3d_texture *texture) DECLSPEC_HIDDEN;
@@ -3671,6 +3686,7 @@ BOOL wined3d_texture_prepare_location(struct wined3d_texture *texture, unsigned 
 void wined3d_texture_set_map_binding(struct wined3d_texture *texture, DWORD map_binding) DECLSPEC_HIDDEN;
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
+void wined3d_texture_sub_resources_destroyed(struct wined3d_texture *texture) DECLSPEC_HIDDEN;
 void wined3d_texture_translate_drawable_coords(const struct wined3d_texture *texture,
         HWND window, RECT *rect) DECLSPEC_HIDDEN;
 void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
@@ -3682,6 +3698,10 @@ void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, un
         unsigned int src_sub_resource_idx, const struct wined3d_box *src_box) DECLSPEC_HIDDEN;
 void wined3d_texture_validate_location(struct wined3d_texture *texture,
         unsigned int sub_resource_idx, DWORD location) DECLSPEC_HIDDEN;
+
+HRESULT wined3d_texture_no3d_init(struct wined3d_texture *texture_no3d, struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_fixup_desc fixup) DECLSPEC_HIDDEN;
 
@@ -3751,11 +3771,29 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context_gl *context_gl, BOOL srgb) DECLSPEC_HIDDEN;
 void wined3d_texture_gl_bind_and_dirtify(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context_gl *context_gl, BOOL srgb) DECLSPEC_HIDDEN;
+HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 void wined3d_texture_gl_prepare_texture(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context_gl *context_gl, BOOL srgb) DECLSPEC_HIDDEN;
 void wined3d_texture_gl_set_compatible_renderbuffer(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context_gl *context_gl, unsigned int level,
         const struct wined3d_rendertarget_info *rt) DECLSPEC_HIDDEN;
+void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture_gl) DECLSPEC_HIDDEN;
+
+struct wined3d_texture_vk
+{
+    struct wined3d_texture t;
+};
+
+static inline struct wined3d_texture_vk *wined3d_texture_vk(struct wined3d_texture *texture)
+{
+    return CONTAINING_RECORD(texture, struct wined3d_texture_vk, t);
+}
+
+HRESULT wined3d_texture_vk_init(struct wined3d_texture_vk *texture_vk, struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
 
 struct wined3d_renderbuffer_entry
 {

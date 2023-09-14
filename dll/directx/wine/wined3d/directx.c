@@ -2428,6 +2428,57 @@ static void adapter_no3d_destroy_buffer(struct wined3d_buffer *buffer)
         wined3d_device_decref(device);
 }
 
+static HRESULT adapter_no3d_create_texture(struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
+{
+    struct wined3d_texture *texture_no3d;
+    HRESULT hr;
+
+    TRACE("device %p, desc %p, layer_count %u, level_count %u, flags %#x, parent %p, parent_ops %p, texture %p.\n",
+            device, desc, layer_count, level_count, flags, parent, parent_ops, texture);
+
+    if (!(texture_no3d = wined3d_texture_allocate_object_memory(sizeof(*texture_no3d), level_count, layer_count)))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = wined3d_texture_no3d_init(texture_no3d, device, desc,
+            layer_count, level_count, flags, parent, parent_ops)))
+    {
+        WARN("Failed to initialise texture, hr %#x.\n", hr);
+        heap_free(texture_no3d);
+        return hr;
+    }
+
+    TRACE("Created texture %p.\n", texture_no3d);
+    *texture = texture_no3d;
+
+    return hr;
+}
+
+static void adapter_no3d_destroy_texture(struct wined3d_texture *texture)
+{
+    struct wined3d_device *device = texture->resource.device;
+    unsigned int swapchain_count = device->swapchain_count;
+
+    TRACE("texture %p.\n", texture);
+
+    /* Take a reference to the device, in case releasing the texture would
+     * cause the device to be destroyed. However, swapchain resources don't
+     * take a reference to the device, and we wouldn't want to increment the
+     * refcount on a device that's in the process of being destroyed. */
+    if (swapchain_count)
+        wined3d_device_incref(device);
+
+    wined3d_texture_sub_resources_destroyed(texture);
+    texture->resource.parent_ops->wined3d_object_destroyed(texture->resource.parent);
+
+    wined3d_texture_cleanup(texture);
+    wined3d_cs_destroy_object(device->cs, heap_free, texture);
+
+    if (swapchain_count)
+        wined3d_device_decref(device);
+}
+
 static HRESULT adapter_no3d_create_rendertarget_view(const struct wined3d_view_desc *desc,
         struct wined3d_resource *resource, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_rendertarget_view **view)
@@ -2518,6 +2569,8 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy_swapchain,
     adapter_no3d_create_buffer,
     adapter_no3d_destroy_buffer,
+    adapter_no3d_create_texture,
+    adapter_no3d_destroy_texture,
     adapter_no3d_create_rendertarget_view,
     adapter_no3d_destroy_rendertarget_view,
     adapter_no3d_create_shader_resource_view,

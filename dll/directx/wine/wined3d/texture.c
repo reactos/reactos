@@ -32,6 +32,7 @@ WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 static const uint32_t wined3d_texture_sysmem_locations = WINED3D_LOCATION_SYSMEM
         | WINED3D_LOCATION_USER_MEMORY | WINED3D_LOCATION_BUFFER;
+static const struct wined3d_texture_ops texture_gl_ops;
 
 struct wined3d_texture_idx
 {
@@ -633,7 +634,7 @@ static void wined3d_texture_gl_allocate_immutable_storage(struct wined3d_texture
     checkGLcall("allocate immutable storage");
 }
 
-static void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture_gl)
+void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture_gl)
 {
     struct wined3d_device *device = texture_gl->t.resource.device;
     const struct wined3d_gl_info *gl_info = NULL;
@@ -678,7 +679,7 @@ static void wined3d_texture_gl_unload_texture(struct wined3d_texture_gl *texture
     resource_unload(&texture_gl->t.resource);
 }
 
-static void wined3d_texture_sub_resources_destroyed(struct wined3d_texture *texture)
+void wined3d_texture_sub_resources_destroyed(struct wined3d_texture *texture)
 {
     unsigned int sub_count = texture->level_count * texture->layer_count;
     struct wined3d_texture_sub_resource *sub_resource;
@@ -819,97 +820,6 @@ static void wined3d_texture_destroy_dc(void *object)
 
     if (context)
         context_release(context);
-}
-
-static void wined3d_texture_cleanup(struct wined3d_texture *texture)
-{
-    unsigned int sub_count = texture->level_count * texture->layer_count;
-    struct wined3d_device *device = texture->resource.device;
-    const struct wined3d_gl_info *gl_info = NULL;
-    struct wined3d_context *context = NULL;
-    struct wined3d_dc_info *dc_info;
-    GLuint buffer_object;
-    unsigned int i;
-
-    TRACE("texture %p.\n", texture);
-
-    for (i = 0; i < sub_count; ++i)
-    {
-        if (!(buffer_object = texture->sub_resources[i].buffer_object))
-            continue;
-
-        TRACE("Deleting buffer object %u.\n", buffer_object);
-
-        /* We may not be able to get a context in wined3d_texture_cleanup() in
-         * general, but if a buffer object was previously created we can. */
-        if (!context)
-        {
-            context = context_acquire(device, NULL, 0);
-            gl_info = wined3d_context_gl(context)->gl_info;
-        }
-
-        GL_EXTCALL(glDeleteBuffers(1, &buffer_object));
-    }
-
-    if (context)
-        context_release(context);
-
-    if ((dc_info = texture->dc_info))
-    {
-        for (i = 0; i < sub_count; ++i)
-        {
-            if (dc_info[i].dc)
-            {
-                struct wined3d_texture_idx texture_idx = {texture, i};
-
-                wined3d_texture_destroy_dc(&texture_idx);
-            }
-        }
-        heap_free(dc_info);
-    }
-
-    if (texture->overlay_info)
-    {
-        for (i = 0; i < sub_count; ++i)
-        {
-            struct wined3d_overlay_info *info = &texture->overlay_info[i];
-            struct wined3d_overlay_info *overlay, *cur;
-
-            list_remove(&info->entry);
-            LIST_FOR_EACH_ENTRY_SAFE(overlay, cur, &info->overlays, struct wined3d_overlay_info, entry)
-            {
-                list_remove(&overlay->entry);
-            }
-        }
-        heap_free(texture->overlay_info);
-    }
-}
-
-static void wined3d_texture_gl_cleanup(struct wined3d_texture_gl *texture_gl)
-{
-    struct wined3d_device *device = texture_gl->t.resource.device;
-    struct wined3d_renderbuffer_entry *entry, *entry2;
-    const struct wined3d_gl_info *gl_info;
-    struct wined3d_context *context;
-
-    if (!list_empty(&texture_gl->renderbuffers))
-    {
-        context = context_acquire(device, NULL, 0);
-        gl_info = wined3d_context_gl(context)->gl_info;
-
-        LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &texture_gl->renderbuffers, struct wined3d_renderbuffer_entry, entry)
-        {
-            TRACE("Deleting renderbuffer %u.\n", entry->id);
-            context_gl_resource_released(device, entry->id, TRUE);
-            gl_info->fbo_ops.glDeleteRenderbuffers(1, &entry->id);
-            heap_free(entry);
-        }
-
-        context_release(context);
-    }
-
-    wined3d_texture_cleanup(&texture_gl->t);
-    wined3d_texture_gl_unload_texture(texture_gl);
 }
 
 void wined3d_texture_set_swapchain(struct wined3d_texture *texture, struct wined3d_swapchain *swapchain)
@@ -1201,20 +1111,83 @@ ULONG CDECL wined3d_texture_incref(struct wined3d_texture *texture)
     return refcount;
 }
 
+static void wined3d_texture_destroy_object(void *object)
+{
+    const struct wined3d_gl_info *gl_info = NULL;
+    struct wined3d_texture *texture = object;
+    struct wined3d_context *context = NULL;
+    struct wined3d_dc_info *dc_info;
+    unsigned int sub_count;
+    GLuint buffer_object;
+    unsigned int i;
+
+    TRACE("texture %p.\n", texture);
+
+    sub_count = texture->level_count * texture->layer_count;
+    for (i = 0; i < sub_count; ++i)
+    {
+        if (!(buffer_object = texture->sub_resources[i].buffer_object))
+            continue;
+
+        TRACE("Deleting buffer object %u.\n", buffer_object);
+
+        /* We may not be able to get a context in
+         * wined3d_texture_destroy_object() in general, but if a buffer object
+         * was previously created we can. */
+        if (!context)
+        {
+            context = context_acquire(texture->resource.device, NULL, 0);
+            gl_info = wined3d_context_gl(context)->gl_info;
+        }
+
+        GL_EXTCALL(glDeleteBuffers(1, &buffer_object));
+    }
+
+    if (context)
+        context_release(context);
+
+    if ((dc_info = texture->dc_info))
+    {
+        for (i = 0; i < sub_count; ++i)
+        {
+            if (dc_info[i].dc)
+            {
+                struct wined3d_texture_idx texture_idx = {texture, i};
+
+                wined3d_texture_destroy_dc(&texture_idx);
+            }
+        }
+        heap_free(dc_info);
+    }
+
+    if (texture->overlay_info)
+    {
+        for (i = 0; i < sub_count; ++i)
+        {
+            struct wined3d_overlay_info *info = &texture->overlay_info[i];
+            struct wined3d_overlay_info *overlay, *cur;
+
+            list_remove(&info->entry);
+            LIST_FOR_EACH_ENTRY_SAFE(overlay, cur, &info->overlays, struct wined3d_overlay_info, entry)
+            {
+                list_remove(&overlay->entry);
+            }
+        }
+        heap_free(texture->overlay_info);
+    }
+}
+
+void wined3d_texture_cleanup(struct wined3d_texture *texture)
+{
+    resource_cleanup(&texture->resource);
+    wined3d_cs_destroy_object(texture->resource.device->cs, wined3d_texture_destroy_object, texture);
+}
+
 static void wined3d_texture_cleanup_sync(struct wined3d_texture *texture)
 {
     wined3d_texture_sub_resources_destroyed(texture);
-    resource_cleanup(&texture->resource);
-    wined3d_resource_wait_idle(&texture->resource);
     wined3d_texture_cleanup(texture);
-}
-
-static void wined3d_texture_destroy_object(void *object)
-{
-    struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(object);
-
-    wined3d_texture_gl_cleanup(texture_gl);
-    heap_free(texture_gl);
+    wined3d_resource_wait_idle(&texture->resource);
 }
 
 ULONG CDECL wined3d_texture_decref(struct wined3d_texture *texture)
@@ -1234,13 +1207,10 @@ ULONG CDECL wined3d_texture_decref(struct wined3d_texture *texture)
         /* Wait for the texture to become idle if it's using user memory,
          * since the application is allowed to free that memory once the
          * texture is destroyed. Note that this implies that
-         * wined3d_texture_destroy_object() can't access that memory either. */
+         * the destroy handler can't access that memory either. */
         if (texture->user_memory)
             wined3d_resource_wait_idle(&texture->resource);
-        wined3d_texture_sub_resources_destroyed(texture);
-        texture->resource.parent_ops->wined3d_object_destroyed(texture->resource.parent);
-        resource_cleanup(&texture->resource);
-        wined3d_cs_destroy_object(texture->resource.device->cs, wined3d_texture_destroy_object, texture);
+        texture->resource.device->adapter->adapter_ops->adapter_destroy_texture(texture);
     }
 
     return refcount;
@@ -1636,10 +1606,13 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     sub_resource->size = texture->slice_pitch;
     sub_resource->locations = WINED3D_LOCATION_DISCARDED;
 
-    if (multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
-        wined3d_texture_gl(texture)->target = GL_TEXTURE_2D_MULTISAMPLE;
-    else
-        wined3d_texture_gl(texture)->target = GL_TEXTURE_2D;
+    if (texture->texture_ops == &texture_gl_ops)
+    {
+        if (multisample_type && gl_info->supported[ARB_TEXTURE_MULTISAMPLE])
+            wined3d_texture_gl(texture)->target = GL_TEXTURE_2D_MULTISAMPLE;
+        else
+            wined3d_texture_gl(texture)->target = GL_TEXTURE_2D;
+    }
 
     if (((width & (width - 1)) || (height & (height - 1))) && !d3d_info->texture_npot
             && !d3d_info->texture_npot_conditional)
@@ -3642,27 +3615,17 @@ HRESULT CDECL wined3d_texture_get_sub_resource_desc(const struct wined3d_texture
     return WINED3D_OK;
 }
 
-static void *wined3d_texture_allocate_object_memory(SIZE_T s, SIZE_T level_count, SIZE_T layer_count)
-{
-    struct wined3d_texture *t;
-
-    if (level_count > ((~(SIZE_T)0 - s) / sizeof(*t->sub_resources)) / layer_count)
-        return NULL;
-
-    return heap_alloc_zero(s + level_count * layer_count * sizeof(*t->sub_resources));
-}
-
-static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, struct wined3d_device *device,
+HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, struct wined3d_device *device,
         const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
-        DWORD flags, void *parent, const struct wined3d_parent_ops *parent_ops, void *sub_resources)
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     HRESULT hr;
 
-    TRACE("texture_gl %p, device %p, desc %p, layer_count %u, level_count %u, "
-            "flags %#x, parent %p, parent_ops %p, sub_resources %p.\n",
-            texture_gl, device, desc, layer_count, level_count,
-            flags, parent, parent_ops, sub_resources);
+    TRACE("texture_gl %p, device %p, desc %p, layer_count %u, "
+            "level_count %u, flags %#x, parent %p, parent_ops %p.\n",
+            texture_gl, device, desc, layer_count,
+            level_count, flags, parent, parent_ops);
 
     if (!(desc->usage & WINED3DUSAGE_LEGACY_CUBEMAP) && layer_count > 1
             && !gl_info->supported[EXT_TEXTURE_ARRAY])
@@ -3718,7 +3681,7 @@ static HRESULT wined3d_texture_gl_init(struct wined3d_texture_gl *texture_gl, st
     list_init(&texture_gl->renderbuffers);
 
     if (FAILED(hr = wined3d_texture_init(&texture_gl->t, desc, layer_count, level_count,
-            flags, device, parent, parent_ops, sub_resources, &texture_gl_ops)))
+            flags, device, parent, parent_ops, &texture_gl[1], &texture_gl_ops)))
         return hr;
 
     if (texture_gl->t.resource.gl_type == WINED3D_GL_RES_TYPE_TEX_RECT)
@@ -3732,7 +3695,6 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_texture **texture)
 {
     unsigned int sub_count = level_count * layer_count;
-    struct wined3d_texture_gl *object;
     unsigned int i;
     HRESULT hr;
 
@@ -3790,16 +3752,9 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
         }
     }
 
-    if (!(object = wined3d_texture_allocate_object_memory(sizeof(*object), level_count, layer_count)))
-        return E_OUTOFMEMORY;
-
-    if (FAILED(hr = wined3d_texture_gl_init(object, device, desc, layer_count,
-            level_count, flags, parent, parent_ops, &object[1])))
-    {
-        WARN("Failed to initialize texture, returning %#x.\n", hr);
-        heap_free(object);
+    if (FAILED(hr = device->adapter->adapter_ops->adapter_create_texture(device, desc,
+            layer_count, level_count, flags, parent, parent_ops, texture)))
         return hr;
-    }
 
     /* FIXME: We'd like to avoid ever allocating system memory for the texture
      * in this case. */
@@ -3809,14 +3764,13 @@ HRESULT CDECL wined3d_texture_create(struct wined3d_device *device, const struct
 
         for (i = 0; i < sub_count; ++i)
         {
-            wined3d_texture_get_level_box(&object->t, i % object->t.level_count, &box);
-            wined3d_cs_emit_update_sub_resource(device->cs, &object->t.resource,
+            wined3d_texture_get_level_box(*texture, i % (*texture)->level_count, &box);
+            wined3d_cs_emit_update_sub_resource(device->cs, &(*texture)->resource,
                     i, &box, data[i].data, data[i].row_pitch, data[i].slice_pitch);
         }
     }
 
-    TRACE("Created texture %p.\n", object);
-    *texture = &object->t;
+    TRACE("Created texture %p.\n", *texture);
 
     return WINED3D_OK;
 }
@@ -3992,4 +3946,102 @@ void wined3d_texture_download_from_texture(struct wined3d_texture *dst_texture, 
 
     wined3d_texture_validate_location(dst_texture, dst_sub_resource_idx, dst_location);
     wined3d_texture_invalidate_location(dst_texture, dst_sub_resource_idx, ~dst_location);
+}
+
+static void wined3d_texture_no3d_upload_data(struct wined3d_context *context,
+        const struct wined3d_const_bo_address *src_bo_addr, const struct wined3d_format *src_format,
+        const struct wined3d_box *src_box, unsigned int src_row_pitch, unsigned int src_slice_pitch,
+        struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, unsigned int dst_location,
+        unsigned int dst_x, unsigned int dst_y, unsigned int dst_z)
+{
+    FIXME("Not implemented.\n");
+}
+
+static void wined3d_texture_no3d_download_data(struct wined3d_context *context,
+        struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, unsigned int src_location,
+        const struct wined3d_box *src_box, const struct wined3d_bo_address *dst_bo_addr,
+        const struct wined3d_format *dst_format, unsigned int dst_x, unsigned int dst_y, unsigned int dst_z,
+        unsigned int dst_row_pitch, unsigned int dst_slice_pitch)
+{
+    FIXME("Not implemented.\n");
+}
+
+static BOOL wined3d_texture_no3d_load_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, DWORD location)
+{
+    TRACE("texture %p, sub_resource_idx %u, context %p, location %s.\n",
+            texture, sub_resource_idx, context, wined3d_debug_location(location));
+
+    if (location == WINED3D_LOCATION_USER_MEMORY || location == WINED3D_LOCATION_SYSMEM)
+        return TRUE;
+
+    ERR("Unhandled location %s.\n", wined3d_debug_location(location));
+
+    return FALSE;
+}
+
+static const struct wined3d_texture_ops wined3d_texture_no3d_ops =
+{
+    wined3d_texture_no3d_load_location,
+    wined3d_texture_no3d_upload_data,
+    wined3d_texture_no3d_download_data,
+};
+
+HRESULT wined3d_texture_no3d_init(struct wined3d_texture *texture_no3d, struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("texture_no3d %p, device %p, desc %p, layer_count %u, "
+            "level_count %u, flags %#x, parent %p, parent_ops %p.\n",
+            texture_no3d, device, desc, layer_count,
+            level_count, flags, parent, parent_ops);
+
+    return wined3d_texture_init(texture_no3d, desc, layer_count, level_count,
+            flags, device, parent, parent_ops, &texture_no3d[1], &wined3d_texture_no3d_ops);
+}
+
+static void wined3d_texture_vk_upload_data(struct wined3d_context *context,
+        const struct wined3d_const_bo_address *src_bo_addr, const struct wined3d_format *src_format,
+        const struct wined3d_box *src_box, unsigned int src_row_pitch, unsigned int src_slice_pitch,
+        struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx, unsigned int dst_location,
+        unsigned int dst_x, unsigned int dst_y, unsigned int dst_z)
+{
+    FIXME("Not implemented.\n");
+}
+
+static void wined3d_texture_vk_download_data(struct wined3d_context *context,
+        struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, unsigned int src_location,
+        const struct wined3d_box *src_box, const struct wined3d_bo_address *dst_bo_addr,
+        const struct wined3d_format *dst_format, unsigned int dst_x, unsigned int dst_y, unsigned int dst_z,
+        unsigned int dst_row_pitch, unsigned int dst_slice_pitch)
+{
+    FIXME("Not implemented.\n");
+}
+
+static BOOL wined3d_texture_vk_load_location(struct wined3d_texture *texture,
+        unsigned int sub_resource_idx, struct wined3d_context *context, DWORD location)
+{
+    FIXME("Not implemented.\n");
+
+    return FALSE;
+}
+
+static const struct wined3d_texture_ops wined3d_texture_vk_ops =
+{
+    wined3d_texture_vk_load_location,
+    wined3d_texture_vk_upload_data,
+    wined3d_texture_vk_download_data,
+};
+
+HRESULT wined3d_texture_vk_init(struct wined3d_texture_vk *texture_vk, struct wined3d_device *device,
+        const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+        uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    TRACE("texture_vk %p, device %p, desc %p, layer_count %u, "
+            "level_count %u, flags %#x, parent %p, parent_ops %p.\n",
+            texture_vk, device, desc, layer_count,
+            level_count, flags, parent, parent_ops);
+
+    return wined3d_texture_init(&texture_vk->t, desc, layer_count, level_count,
+            flags, device, parent, parent_ops, &texture_vk[1], &wined3d_texture_vk_ops);
 }
