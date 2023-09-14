@@ -11015,8 +11015,6 @@ static void shader_glsl_init_context_state(struct wined3d_context *context)
 static unsigned int shader_glsl_get_shader_model(const struct wined3d_gl_info *gl_info)
 {
     BOOL shader_model_4 = gl_info->glsl_version >= MAKEDWORD_VERSION(1, 50)
-            && gl_info->supported[WINED3D_GL_VERSION_3_2]
-            && gl_info->supported[ARB_SAMPLER_OBJECTS]
             && gl_info->supported[ARB_SHADER_BIT_ENCODING]
             && gl_info->supported[ARB_TEXTURE_SWIZZLE];
 
@@ -11024,14 +11022,12 @@ static unsigned int shader_glsl_get_shader_model(const struct wined3d_gl_info *g
             && gl_info->supported[ARB_COMPUTE_SHADER]
             && gl_info->supported[ARB_CULL_DISTANCE]
             && gl_info->supported[ARB_DERIVATIVE_CONTROL]
-            && gl_info->supported[ARB_DRAW_INDIRECT]
             && gl_info->supported[ARB_GPU_SHADER5]
             && gl_info->supported[ARB_SHADER_ATOMIC_COUNTERS]
             && gl_info->supported[ARB_SHADER_IMAGE_LOAD_STORE]
             && gl_info->supported[ARB_SHADER_IMAGE_SIZE]
             && gl_info->supported[ARB_SHADING_LANGUAGE_PACKING]
             && gl_info->supported[ARB_TESSELLATION_SHADER]
-            && gl_info->supported[ARB_TEXTURE_COMPRESSION_BPTC]
             && gl_info->supported[ARB_TEXTURE_GATHER]
             && gl_info->supported[ARB_TRANSFORM_FEEDBACK3])
         return 5;

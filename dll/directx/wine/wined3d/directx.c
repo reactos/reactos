@@ -1858,13 +1858,20 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
     return HW_VENDOR_NVIDIA;
 }
 
-static enum wined3d_feature_level feature_level_from_caps(const struct shader_caps *shader_caps,
-        const struct fragment_caps *fragment_caps)
+static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_gl_info *gl_info,
+        const struct shader_caps *shader_caps, const struct fragment_caps *fragment_caps)
 {
-    if (shader_caps->vs_version >= 5)
-        return WINED3D_FEATURE_LEVEL_11;
-    if (shader_caps->vs_version == 4)
-        return WINED3D_FEATURE_LEVEL_10;
+    if (gl_info->supported[WINED3D_GL_VERSION_3_2] && gl_info->supported[ARB_SAMPLER_OBJECTS])
+    {
+        if (shader_caps->vs_version >= 5
+                && gl_info->supported[ARB_DRAW_INDIRECT]
+                && gl_info->supported[ARB_TEXTURE_COMPRESSION_BPTC])
+            return WINED3D_FEATURE_LEVEL_11;
+
+        if (shader_caps->vs_version == 4)
+            return WINED3D_FEATURE_LEVEL_10;
+    }
+
     if (shader_caps->vs_version == 3)
         return WINED3D_FEATURE_LEVEL_9_SM3;
     if (shader_caps->vs_version == 2)
@@ -4328,7 +4335,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
     d3d_info->shader_color_key = fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY;
     d3d_info->wined3d_creation_flags = wined3d_creation_flags;
-    d3d_info->feature_level = feature_level_from_caps(&shader_caps, &fragment_caps);
+    d3d_info->feature_level = feature_level_from_caps(gl_info, &shader_caps, &fragment_caps);
 
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 
