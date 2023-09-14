@@ -3964,17 +3964,27 @@ static void init_format_depth_bias_scale(struct wined3d_adapter *adapter,
     }
 }
 
-/* Context activation is done by the caller. */
-BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, struct wined3d_caps_gl_ctx *ctx)
+BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter)
 {
-    struct wined3d_gl_info *gl_info = &adapter->gl_info;
-
     if (!init_format_base_info(adapter)) return FALSE;
     if (!init_format_block_info(adapter)) goto fail;
     if (!init_format_decompress_info(adapter)) goto fail;
 
-    if (!ctx) /* WINED3D_NO3D */
-        return TRUE;
+    return TRUE;
+
+fail:
+    heap_free(adapter->formats);
+    adapter->formats = NULL;
+    return FALSE;
+}
+
+/* Context activation is done by the caller. */
+BOOL wined3d_adapter_gl_init_format_info(struct wined3d_adapter *adapter, struct wined3d_caps_gl_ctx *ctx)
+{
+    struct wined3d_gl_info *gl_info = &adapter->gl_info;
+
+    if (!wined3d_adapter_init_format_info(adapter))
+        return FALSE;
 
     if (!init_format_texture_info(adapter, gl_info)) goto fail;
     if (!init_format_vertex_info(adapter, gl_info)) goto fail;
