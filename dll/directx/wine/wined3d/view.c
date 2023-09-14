@@ -1109,6 +1109,7 @@ void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_
         struct wined3d_buffer *buffer, unsigned int offset, struct wined3d_context *context)
 {
     struct wined3d_unordered_access_view_gl *view_gl = wined3d_unordered_access_view_gl(view);
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct wined3d_bo_address dst, src;
     DWORD dst_location;
 
@@ -1121,7 +1122,7 @@ void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_
     src.buffer_object = view_gl->counter_bo;
     src.addr = NULL;
 
-    context_copy_bo_address(context, &dst, wined3d_buffer_gl(buffer)->buffer_type_hint,
+    wined3d_context_gl_copy_bo_address(context_gl, &dst, wined3d_buffer_gl(buffer)->buffer_type_hint,
             &src, GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint));
 
     wined3d_buffer_invalidate_location(buffer, ~dst_location);
