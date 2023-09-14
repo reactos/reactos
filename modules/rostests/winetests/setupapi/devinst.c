@@ -1452,6 +1452,7 @@ static void test_register_device_iface(void)
      'E','n','u','m','\\','R','o','o','t','\\',
      'L','E','G','A','C','Y','_','B','O','G','U','S',0};
     SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)};
+    SP_DEVINFO_DATA device2 = {sizeof(device2)};
     SP_DEVINFO_DATA device = {sizeof(device)};
     HDEVINFO set, set2;
     BOOL ret;
@@ -1491,11 +1492,40 @@ static void test_register_device_iface(void)
     check_device_iface(set2, NULL, &guid, 1, 0, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\deleted");
     check_device_iface(set2, NULL, &guid, 2, 0, NULL);
 
+    ret = SetupDiEnumDeviceInfo(set2, 0, &device2);
+    ok(ret, "Failed to enumerate devices, error %#x.\n", GetLastError());
+    ret = SetupDiCreateDeviceInterfaceA(set2, &device2, &guid, "second", 0, NULL);
+    ok(ret, "Failed to create interface, error %#x.\n", GetLastError());
+
     ret = SetupDiRemoveDevice(set, &device);
     ok(ret, "Failed to remove device, error %#x.\n", GetLastError());
 
+    check_device_iface(set, NULL, &guid, 0, SPINT_REMOVED, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set, NULL, &guid, 1, SPINT_REMOVED, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\removed");
+    check_device_iface(set, NULL, &guid, 2, 0, NULL);
+
+    check_device_iface(set2, NULL, &guid, 0, 0, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}");
+    check_device_iface(set2, NULL, &guid, 1, 0, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\deleted");
+    check_device_iface(set2, NULL, &guid, 2, 0, "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\second");
+    check_device_iface(set2, NULL, &guid, 3, 0, NULL);
+
     SetupDiDestroyDeviceInfoList(set);
     SetupDiDestroyDeviceInfoList(set2);
+
+    /* make sure all interface keys are deleted when a device is removed */
+
+    set = SetupDiGetClassDevsA(&guid, NULL, 0, DIGCF_DEVICEINTERFACE);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+
+    ret = SetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#x.\n", GetLastError());
+
+    set2 = SetupDiGetClassDevsA(&guid, NULL, 0, DIGCF_DEVICEINTERFACE);
+    ok(set2 != INVALID_HANDLE_VALUE, "Failed to create device list, error %#x.\n", GetLastError());
+    check_device_iface(set2, NULL, &guid, 0, 0, NULL);
+    SetupDiDestroyDeviceInfoList(set2);
+
+    SetupDiDestroyDeviceInfoList(set);
 }
 
 static void test_registry_property_a(void)
