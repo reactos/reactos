@@ -4366,6 +4366,7 @@ extern enum wined3d_format_id pixelformat_for_depth(DWORD depth) DECLSPEC_HIDDEN
 #define WINED3DFMT_FLAG_BLOCKS_NO_VERIFY            0x00100000
 #define WINED3DFMT_FLAG_INTEGER                     0x00200000
 #define WINED3DFMT_FLAG_GEN_MIPMAP                  0x00400000
+#define WINED3DFMT_FLAG_NORMALISED                  0x00800000
 
 struct wined3d_rational
 {
@@ -4405,7 +4406,6 @@ struct wined3d_format
     GLint component_count;
     GLenum gl_vtx_type;
     GLint gl_vtx_format;
-    GLboolean gl_normalized;
 
     GLint glInternal;
     GLint glGammaInternal;

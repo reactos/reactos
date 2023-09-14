@@ -5489,6 +5489,8 @@ static void context_load_numbered_arrays(struct wined3d_context *context,
 
         if (element->stride)
         {
+            DWORD format_flags = element->format->flags[WINED3D_GL_RES_TYPE_BUFFER];
+
             if (current_bo != element->data.buffer_object)
             {
                 GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, element->data.buffer_object));
@@ -5499,8 +5501,7 @@ static void context_load_numbered_arrays(struct wined3d_context *context,
              * pointer. vb can point to a user pointer data blob. In that case
              * current_bo will be 0. If there is a vertex buffer but no vbo we
              * won't be load converted attributes anyway. */
-            if (vs && vs->reg_maps.shader_version.major >= 4
-                    && (element->format->flags[WINED3D_GL_RES_TYPE_BUFFER] & WINED3DFMT_FLAG_INTEGER))
+            if (vs && vs->reg_maps.shader_version.major >= 4 && (format_flags & WINED3DFMT_FLAG_INTEGER))
             {
                 GL_EXTCALL(glVertexAttribIPointer(i, element->format->gl_vtx_format, element->format->gl_vtx_type,
                         element->stride, element->data.addr + state->load_base_vertex_index * element->stride));
@@ -5508,7 +5509,7 @@ static void context_load_numbered_arrays(struct wined3d_context *context,
             else
             {
                 GL_EXTCALL(glVertexAttribPointer(i, element->format->gl_vtx_format, element->format->gl_vtx_type,
-                        element->format->gl_normalized, element->stride,
+                        !!(format_flags & WINED3DFMT_FLAG_NORMALISED), element->stride,
                         element->data.addr + state->load_base_vertex_index * element->stride));
             }
 
