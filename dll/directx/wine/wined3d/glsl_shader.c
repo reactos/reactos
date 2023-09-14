@@ -7518,17 +7518,16 @@ static void shader_glsl_generate_ps_epilogue(const struct wined3d_gl_info *gl_in
 }
 
 /* Context activation is done by the caller. */
-static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context,
+static GLuint shader_glsl_generate_fragment_shader(const struct wined3d_context_gl *context_gl,
         struct wined3d_string_buffer *buffer, struct wined3d_string_buffer_list *string_buffers,
-        const struct wined3d_shader *shader,
-        const struct ps_compile_args *args, struct ps_np2fixup_info *np2fixup_info)
+        const struct wined3d_shader *shader, const struct ps_compile_args *args,
+        struct ps_np2fixup_info *np2fixup_info)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
     const struct wined3d_shader_version *version = &reg_maps->shader_version;
-    const char *prefix = shader_glsl_get_prefix(version->type);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     const BOOL legacy_syntax = needs_legacy_glsl_syntax(gl_info);
+    const char *prefix = shader_glsl_get_prefix(version->type);
     unsigned int i, extra_constants_needed = 0;
     struct shader_glsl_ctx_priv priv_ctx;
     GLuint shader_id;
@@ -7683,7 +7682,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
         {
             if (gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS])
             {
-                if (context->d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
+                if (context_gl->c.d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
                     shader_addline(buffer, "layout(%spixel_center_integer) in vec4 gl_FragCoord;\n",
                             args->render_offscreen ? "" : "origin_upper_left, ");
                 else if (!args->render_offscreen)
@@ -7765,7 +7764,7 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
     {
         if (gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS])
             shader_addline(buffer, "vpos = gl_FragCoord;\n");
-        else if (context->d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
+        else if (context_gl->c.d3d_info->wined3d_creation_flags & WINED3D_PIXEL_CENTER_INTEGER)
             shader_addline(buffer,
                     "vpos = floor(vec4(0, ycorrection[0], 0, 0) + gl_FragCoord * vec4(1, ycorrection[1], 1, 1));\n");
         else
@@ -8384,6 +8383,7 @@ static GLuint find_glsl_pshader(const struct wined3d_context *context,
         struct wined3d_shader *shader,
         const struct ps_compile_args *args, const struct ps_np2fixup_info **np2fixup_info)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_ps_compiled_shader *gl_shaders, *new_array;
     struct glsl_shader_private *shader_data;
     struct ps_np2fixup_info *np2fixup;
@@ -8448,7 +8448,7 @@ static GLuint find_glsl_pshader(const struct wined3d_context *context,
     pixelshader_update_resource_types(shader, args->tex_types);
 
     string_buffer_clear(buffer);
-    ret = shader_glsl_generate_pshader(context, buffer, string_buffers, shader, args, np2fixup);
+    ret = shader_glsl_generate_fragment_shader(context_gl, buffer, string_buffers, shader, args, np2fixup);
     gl_shaders[shader_data->num_gl_shaders++].id = ret;
 
     return ret;
