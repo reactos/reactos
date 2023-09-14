@@ -1407,18 +1407,28 @@ static const char *shader_arb_get_modifier(const struct wined3d_shader_instructi
 static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD sampler_idx,
         const char *dst_str, const char *coord_reg, WORD flags, const char *dsx, const char *dsy)
 {
-    enum wined3d_shader_resource_type resource_type = ins->ctx->reg_maps->resource_info[sampler_idx].type;
-    struct wined3d_string_buffer *buffer = ins->ctx->buffer;
-    const char *tex_type;
-    BOOL np2_fixup = FALSE;
-    struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
-    const char *mod;
     BOOL pshader = shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type);
-    const char *tex_dst = dst_str;
+    struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
+    struct wined3d_string_buffer *buffer = ins->ctx->buffer;
+    enum wined3d_shader_resource_type resource_type;
     struct color_fixup_masks masks;
+    const char *tex_dst = dst_str;
+    BOOL np2_fixup = FALSE;
+    const char *tex_type;
+    const char *mod;
 
-    /* D3D vertex shader sampler IDs are vertex samplers(0-3), not global d3d samplers */
-    if(!pshader) sampler_idx += WINED3D_MAX_FRAGMENT_SAMPLERS;
+    if (pshader)
+    {
+        resource_type = pixelshader_get_resource_type(ins->ctx->reg_maps, sampler_idx,
+                priv->cur_ps_args->super.tex_types);
+    }
+    else
+    {
+        resource_type = ins->ctx->reg_maps->resource_info[sampler_idx].type;
+
+        /* D3D vertex shader sampler IDs are vertex samplers(0-3), not global d3d samplers */
+        sampler_idx += WINED3D_MAX_FRAGMENT_SAMPLERS;
+    }
 
     switch (resource_type)
     {
@@ -1432,7 +1442,8 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
                 tex_type = "RECT";
             else
                 tex_type = "2D";
-            if (shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type))
+
+            if (pshader)
             {
                 if (priv->cur_np2fixup_info->super.active & (1u << sampler_idx))
                 {
@@ -4296,8 +4307,6 @@ static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_context_gl
     }
 
     shader_data->gl_shaders[shader_data->num_gl_shaders].args = *args;
-
-    pixelshader_update_resource_types(shader, args->super.tex_types);
 
     if (!string_buffer_init(&buffer))
     {

@@ -4202,35 +4202,27 @@ static HRESULT pixel_shader_init(struct wined3d_shader *shader, struct wined3d_d
     return WINED3D_OK;
 }
 
-void pixelshader_update_resource_types(struct wined3d_shader *shader, WORD tex_types)
+enum wined3d_shader_resource_type pixelshader_get_resource_type(const struct wined3d_shader_reg_maps *reg_maps,
+        unsigned int resource_idx, WORD tex_types)
 {
-    struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
-    struct wined3d_shader_resource_info *resource_info = reg_maps->resource_info;
-    unsigned int i;
-
-    if (reg_maps->shader_version.major != 1) return;
-
-    for (i = 0; i < shader->limits->sampler; ++i)
+    static enum wined3d_shader_resource_type shader_resource_type_from_shader_tex_types[] =
     {
-        /* We don't sample from this sampler. */
-        if (!resource_info[i].type)
-            continue;
+        WINED3D_SHADER_RESOURCE_TEXTURE_2D,     /* WINED3D_SHADER_TEX_2D     */
+        WINED3D_SHADER_RESOURCE_TEXTURE_3D,     /* WINED3D_SHADER_TEX_3D     */
+        WINED3D_SHADER_RESOURCE_TEXTURE_CUBE,   /* WINED3D_SHADER_TEX_CUBE   */
+    };
 
-        switch ((tex_types >> i * WINED3D_PSARGS_TEXTYPE_SHIFT) & WINED3D_PSARGS_TEXTYPE_MASK)
-        {
-            case WINED3D_SHADER_TEX_2D:
-                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_2D;
-                break;
+    unsigned int idx;
 
-            case WINED3D_SHADER_TEX_3D:
-                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_3D;
-                break;
+    if (reg_maps->shader_version.major != 1)
+        return reg_maps->resource_info[resource_idx].type;
 
-            case WINED3D_SHADER_TEX_CUBE:
-                resource_info[i].type = WINED3D_SHADER_RESOURCE_TEXTURE_CUBE;
-                break;
-        }
-    }
+    if (!reg_maps->resource_info[resource_idx].type)
+        return 0;
+
+    idx = (tex_types >> resource_idx * WINED3D_PSARGS_TEXTYPE_SHIFT) & WINED3D_PSARGS_TEXTYPE_MASK;
+    assert(idx < ARRAY_SIZE(shader_resource_type_from_shader_tex_types));
+    return shader_resource_type_from_shader_tex_types[idx];
 }
 
 HRESULT CDECL wined3d_shader_create_cs(struct wined3d_device *device, const struct wined3d_shader_desc *desc,
