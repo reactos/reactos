@@ -2465,6 +2465,7 @@ static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, 
 
     d3d_info->wined3d_creation_flags = wined3d_creation_flags;
     d3d_info->texture_npot = TRUE;
+    d3d_info->feature_level = WINED3D_FEATURE_LEVEL_5;
 }
 
 static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter, DWORD wined3d_creation_flags)
