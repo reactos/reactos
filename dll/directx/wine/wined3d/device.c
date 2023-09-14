@@ -3503,6 +3503,9 @@ static float wined3d_calculate_fog_factor(float fog_coord, const struct lights_s
             return expf(-fog_coord * ls->fog_density);
         case WINED3D_FOG_EXP2:
             return expf(-fog_coord * fog_coord * ls->fog_density * ls->fog_density);
+        default:
+            ERR("Unhandled fog mode %#x.\n", ls->fog_mode);
+            return 0.0f;
     }
 }
 
