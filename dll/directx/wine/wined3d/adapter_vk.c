@@ -802,6 +802,12 @@ static void adapter_vk_flush_context(struct wined3d_context *context)
     TRACE("context %p.\n", context);
 }
 
+void adapter_vk_clear_uav(struct wined3d_context *context,
+        struct wined3d_unordered_access_view *view, const struct wined3d_uvec4 *clear_value)
+{
+    FIXME("context %p, view %p, clear_value %s.\n", context, view, debug_uvec4(clear_value));
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -832,6 +838,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_create_query,
     adapter_vk_destroy_query,
     adapter_vk_flush_context,
+    adapter_vk_clear_uav,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)

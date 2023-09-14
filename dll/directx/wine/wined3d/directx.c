@@ -2607,6 +2607,12 @@ static void adapter_no3d_flush_context(struct wined3d_context *context)
     TRACE("context %p.\n", context);
 }
 
+void adapter_no3d_clear_uav(struct wined3d_context *context,
+        struct wined3d_unordered_access_view *view, const struct wined3d_uvec4 *clear_value)
+{
+    ERR("context %p, view %p, clear_value %s.\n", context, view, debug_uvec4(clear_value));
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2637,6 +2643,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_create_query,
     adapter_no3d_destroy_query,
     adapter_no3d_flush_context,
+    adapter_no3d_clear_uav,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

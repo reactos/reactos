@@ -1008,17 +1008,16 @@ void wined3d_unordered_access_view_invalidate_location(struct wined3d_unordered_
     wined3d_view_invalidate_location(view->resource, &view->desc, location);
 }
 
-void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_view *view,
-        const struct wined3d_uvec4 *clear_value, struct wined3d_context *context)
+void wined3d_unordered_access_view_gl_clear_uint(struct wined3d_unordered_access_view_gl *view_gl,
+        const struct wined3d_uvec4 *clear_value, struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context_gl->gl_info;
     const struct wined3d_format_gl *format;
     struct wined3d_buffer_gl *buffer_gl;
     struct wined3d_resource *resource;
     unsigned int offset, size;
 
-    resource = view->resource;
+    resource = view_gl->v.resource;
     if (resource->type != WINED3D_RTYPE_BUFFER)
     {
         FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(resource->type));
@@ -1031,7 +1030,7 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
         return;
     }
 
-    format = wined3d_format_gl(view->format);
+    format = wined3d_format_gl(view_gl->v.format);
     if (format->f.id != WINED3DFMT_R32_UINT && format->f.id != WINED3DFMT_R32_SINT
             && format->f.id != WINED3DFMT_R32G32B32A32_UINT
             && format->f.id != WINED3DFMT_R32G32B32A32_SINT)
@@ -1041,10 +1040,10 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
     }
 
     buffer_gl = wined3d_buffer_gl(buffer_from_resource(resource));
-    wined3d_buffer_load_location(&buffer_gl->b, context, WINED3D_LOCATION_BUFFER);
-    wined3d_unordered_access_view_invalidate_location(view, ~WINED3D_LOCATION_BUFFER);
+    wined3d_buffer_load_location(&buffer_gl->b, &context_gl->c, WINED3D_LOCATION_BUFFER);
+    wined3d_unordered_access_view_invalidate_location(&view_gl->v, ~WINED3D_LOCATION_BUFFER);
 
-    get_buffer_view_range(&buffer_gl->b, &view->desc, &format->f, &offset, &size);
+    get_buffer_view_range(&buffer_gl->b, &view_gl->v.desc, &format->f, &offset, &size);
     wined3d_context_gl_bind_bo(context_gl, buffer_gl->buffer_type_hint, buffer_gl->b.buffer_object);
     GL_EXTCALL(glClearBufferSubData(buffer_gl->buffer_type_hint, format->internal,
             offset, size, format->format, format->type, clear_value));

@@ -2475,7 +2475,7 @@ static void wined3d_cs_exec_clear_unordered_access_view(struct wined3d_cs *cs, c
     struct wined3d_context *context;
 
     context = context_acquire(cs->device, NULL, 0);
-    wined3d_unordered_access_view_clear_uint(view, &op->clear_value, context);
+    cs->device->adapter->adapter_ops->adapter_clear_uav(context, view, &op->clear_value);
     context_release(context);
 
     wined3d_resource_release(view->resource);

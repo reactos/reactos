@@ -5073,6 +5073,15 @@ static void adapter_gl_flush_context(struct wined3d_context *context)
         context_gl->gl_info->gl_ops.gl.p_glFlush();
 }
 
+void adapter_gl_clear_uav(struct wined3d_context *context,
+        struct wined3d_unordered_access_view *view, const struct wined3d_uvec4 *clear_value)
+{
+    TRACE("context %p, view %p, clear_value %s.\n", context, view, debug_uvec4(clear_value));
+
+    wined3d_unordered_access_view_gl_clear_uint(wined3d_unordered_access_view_gl(view),
+            clear_value, wined3d_context_gl(context));
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     adapter_gl_destroy,
@@ -5103,6 +5112,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_create_query,
     adapter_gl_destroy_query,
     adapter_gl_flush_context,
+    adapter_gl_clear_uav,
 };
 
 static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_gl, uint32_t wined3d_creation_flags)

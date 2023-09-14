@@ -2859,6 +2859,8 @@ struct wined3d_adapter_ops
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query);
     void (*adapter_destroy_query)(struct wined3d_query *query);
     void (*adapter_flush_context)(struct wined3d_context *context);
+    void (*adapter_clear_uav)(struct wined3d_context *context,
+            struct wined3d_unordered_access_view *view, const struct wined3d_uvec4 *clear_value);
 };
 
 /* The adapter structure */
@@ -4426,8 +4428,6 @@ struct wined3d_unordered_access_view
 };
 
 void wined3d_unordered_access_view_cleanup(struct wined3d_unordered_access_view *view) DECLSPEC_HIDDEN;
-void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_view *view,
-        const struct wined3d_uvec4 *clear_value, struct wined3d_context *context) DECLSPEC_HIDDEN;
 void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_view *view,
         struct wined3d_buffer *buffer, unsigned int offset, struct wined3d_context *context) DECLSPEC_HIDDEN;
 void wined3d_unordered_access_view_invalidate_location(struct wined3d_unordered_access_view *view,
@@ -4448,6 +4448,8 @@ static inline struct wined3d_unordered_access_view_gl *wined3d_unordered_access_
     return CONTAINING_RECORD(view, struct wined3d_unordered_access_view_gl, v);
 }
 
+void wined3d_unordered_access_view_gl_clear_uint(struct wined3d_unordered_access_view_gl *view_gl,
+        const struct wined3d_uvec4 *clear_value, struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 HRESULT wined3d_unordered_access_view_gl_init(struct wined3d_unordered_access_view_gl *view_gl,
         const struct wined3d_view_desc *desc, struct wined3d_resource *resource,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;
