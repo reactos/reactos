@@ -2448,6 +2448,7 @@ enum wined3d_pci_device
     CARD_NVIDIA_GEFORCE_GTX1080     = 0x1b80,
     CARD_NVIDIA_GEFORCE_GTX1080TI   = 0x1b06,
     CARD_NVIDIA_TITANX_PASCAL       = 0x1b00,
+    CARD_NVIDIA_TITANV              = 0x1d81,
 
     CARD_VMWARE_SVGA3D              = 0x0405,
 
