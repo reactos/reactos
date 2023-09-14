@@ -4410,39 +4410,25 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH ddraw_surface1_BltFast(IDirectDrawSurfac
             src_impl ? &src_impl->IDirectDrawSurface7_iface : NULL, src_rect, flags);
 }
 
-/*****************************************************************************
- * IDirectDrawSurface7::GetClipper
- *
- * Returns the IDirectDrawClipper interface of the clipper assigned to this
- * surface
- *
- * Params:
- *  Clipper: Address to store the interface pointer at
- *
- * Returns:
- *  DD_OK on success
- *  DDERR_INVALIDPARAMS if Clipper is NULL
- *  DDERR_NOCLIPPERATTACHED if there's no clipper attached
- *
- *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_GetClipper(IDirectDrawSurface7 *iface, IDirectDrawClipper **Clipper)
+static HRESULT WINAPI ddraw_surface7_GetClipper(IDirectDrawSurface7 *iface, IDirectDrawClipper **clipper)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
 
-    TRACE("iface %p, clipper %p.\n", iface, Clipper);
+    TRACE("iface %p, clipper %p.\n", iface, clipper);
 
-    if (!Clipper)
+    if (!clipper)
         return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
     if (!surface->clipper)
     {
         wined3d_mutex_unlock();
+        *clipper = NULL;
         return DDERR_NOCLIPPERATTACHED;
     }
 
-    *Clipper = &surface->clipper->IDirectDrawClipper_iface;
-    IDirectDrawClipper_AddRef(*Clipper);
+    *clipper = &surface->clipper->IDirectDrawClipper_iface;
+    IDirectDrawClipper_AddRef(*clipper);
     wined3d_mutex_unlock();
 
     return DD_OK;
