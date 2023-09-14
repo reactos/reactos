@@ -2853,7 +2853,7 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
     }
 
     gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_max);
-    gl_info->limits.texture_size = gl_max;
+    d3d_info->limits.texture_size = gl_max;
     TRACE("Maximum texture size support - max texture size %d.\n", gl_max);
 
     gl_info->gl_ops.gl.p_glGetFloatv(gl_info->supported[WINED3D_GL_LEGACY_CONTEXT]
@@ -3143,8 +3143,8 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info, struct 
     }
     else
     {
-        gl_info->limits.framebuffer_width = gl_info->limits.texture_size;
-        gl_info->limits.framebuffer_height = gl_info->limits.texture_size;
+        gl_info->limits.framebuffer_width = d3d_info->limits.texture_size;
+        gl_info->limits.framebuffer_height = d3d_info->limits.texture_size;
     }
 
     gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL] =

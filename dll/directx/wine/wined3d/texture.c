@@ -2879,7 +2879,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     texture->pow2_width = pow2_width;
     texture->pow2_height = pow2_height;
 
-    if ((pow2_width > gl_info->limits.texture_size || pow2_height > gl_info->limits.texture_size)
+    if ((pow2_width > d3d_info->limits.texture_size || pow2_height > d3d_info->limits.texture_size)
             && (desc->usage & WINED3DUSAGE_TEXTURE))
     {
         /* One of four options:

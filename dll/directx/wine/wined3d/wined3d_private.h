@@ -166,6 +166,7 @@ struct wined3d_d3d_limits
 
     unsigned int max_rt_count;
     unsigned int max_clip_distances;
+    unsigned int texture_size;
     float pointsize_max;
 };
 
@@ -2550,7 +2551,6 @@ struct wined3d_gl_limits
     unsigned int combined_samplers;
     UINT general_combiners;
     UINT user_clip_distances;
-    UINT texture_size;
     UINT texture3d_size;
     UINT anisotropy;
     float shininess;

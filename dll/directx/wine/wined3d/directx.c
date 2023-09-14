@@ -2136,8 +2136,8 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
      * idea how generating the smoothing alpha values works; the result is different
      */
 
-    caps->MaxTextureWidth = gl_info->limits.texture_size;
-    caps->MaxTextureHeight = gl_info->limits.texture_size;
+    caps->MaxTextureWidth = d3d_info->limits.texture_size;
+    caps->MaxTextureHeight = d3d_info->limits.texture_size;
 
     if (gl_info->supported[EXT_TEXTURE3D])
         caps->MaxVolumeExtent = gl_info->limits.texture3d_size;
@@ -2145,7 +2145,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
         caps->MaxVolumeExtent = 0;
 
     caps->MaxTextureRepeat = 32768;
-    caps->MaxTextureAspectRatio = gl_info->limits.texture_size;
+    caps->MaxTextureAspectRatio = d3d_info->limits.texture_size;
     caps->MaxVertexW = 1.0f;
 
     caps->GuardBandLeft = 0.0f;
