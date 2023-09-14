@@ -1065,9 +1065,13 @@ static void test_install_files_queue(void)
 {
     static const char inf_data[] = "[Version]\n"
             "Signature=\"$Chicago$\"\n"
+
             "[DefaultInstall]\n"
-            "CopyFiles=files_section\n"
-            "[files_section]\n"
+            "CopyFiles=copy_section\n"
+            "DelFiles=delete_section\n"
+            "RenFiles=rename_section\n"
+
+            "[copy_section]\n"
             "one.txt\n"
             "two.txt\n"
             "three.txt\n"
@@ -1076,11 +1080,19 @@ static void test_install_files_queue(void)
             "six.txt\n"
             "seven.txt\n"
             "eight.txt\n"
+
+            "[delete_section]\n"
+            "nine.txt\n"
+
+            "[rename_section]\n"
+            "eleven.txt,ten.txt\n"
+
             "[SourceDisksNames]\n"
             "1=heis\n"
             "2=duo,,,alpha\n"
             "3=treis,treis.cab\n"
             "4=tessares,tessares.cab,,alpha\n"
+
             "[SourceDisksFiles]\n"
             "one.txt=1\n"
             "two.txt=1,beta\n"
@@ -1090,8 +1102,11 @@ static void test_install_files_queue(void)
             "six.txt=3,beta\n"
             "seven.txt=4\n"
             "eight.txt=4,beta\n"
+
             "[DestinationDirs]\n"
-            "files_section=40000,dst\n";
+            "copy_section=40000,dst\n"
+            "delete_section=40000,dst\n"
+            "rename_section=40000,dst\n";
 
     char path[MAX_PATH + 9];
     HSPFILEQ queue;
@@ -1116,12 +1131,17 @@ static void test_install_files_queue(void)
     ret = SetupSetDirectoryIdA(hinf, 40000, CURR_DIR);
     ok(ret, "Failed to set directory ID, error %u.\n", GetLastError());
 
+    ret = CreateDirectoryA("dst", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+
     create_file("src/one.txt");
     create_file("src/beta/two.txt");
     create_file("src/alpha/three.txt");
     create_file("src/alpha/beta/four.txt");
     create_cab_file("src/treis.cab", "src\\beta\\five.txt\0six.txt\0");
     create_cab_file("src/alpha/tessares.cab", "seven.txt\0eight.txt\0");
+    create_file("dst/nine.txt");
+    create_file("dst/ten.txt");
 
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
@@ -1147,6 +1167,9 @@ static void test_install_files_queue(void)
     ok(delete_file("dst/six.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/seven.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/eight.txt"), "Destination file should exist.\n");
+    todo_wine ok(!delete_file("dst/nine.txt"), "Destination file should not exist.\n");
+    todo_wine ok(!delete_file("dst/ten.txt"), "Destination file should not exist.\n");
+    todo_wine ok(delete_file("dst/eleven.txt"), "Destination file should exist.\n");
 
     SetupTermDefaultQueueCallback(context);
     ret = SetupCloseFileQueue(queue);
