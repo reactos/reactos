@@ -1990,7 +1990,10 @@ static void wined3d_cs_exec_query_issue(struct wined3d_cs *cs, const void *data)
 
     if (poll && list_empty(&query->poll_list_entry))
     {
-        list_add_tail(&cs->query_poll_list, &query->poll_list_entry);
+        if (query->buffer_object)
+            InterlockedIncrement(&query->counter_retrieved);
+        else
+            list_add_tail(&cs->query_poll_list, &query->poll_list_entry);
         return;
     }
 

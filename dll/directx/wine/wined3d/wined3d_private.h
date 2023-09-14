@@ -1738,6 +1738,9 @@ struct wined3d_query
 
     LONG counter_main, counter_retrieved;
     struct list poll_list_entry;
+
+    GLuint buffer_object;
+    UINT64 *map_ptr;
 };
 
 struct wined3d_event_query
