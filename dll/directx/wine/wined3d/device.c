@@ -535,8 +535,6 @@ void wined3d_device_cleanup(struct wined3d_device *device)
         ERR("Something's still holding the recording stateblock.\n");
     device->recording = NULL;
 
-    state_cleanup(&device->state);
-
     for (i = 0; i < ARRAY_SIZE(device->multistate_funcs); ++i)
     {
         heap_free(device->multistate_funcs[i]);
@@ -1141,7 +1139,7 @@ void wined3d_device_uninit_3d(struct wined3d_device *device)
         wined3d_texture_decref(texture);
     }
 
-    state_unbind_resources(&device->state);
+    state_cleanup(&device->state);
     for (i = 0; i < device->adapter->d3d_info.limits.max_rt_count; ++i)
     {
         wined3d_device_set_rendertarget_view(device, i, NULL, FALSE);
