@@ -3971,9 +3971,10 @@ BOOL wined3d_adapter_init_format_info(struct wined3d_adapter *adapter, struct wi
     apply_format_fixups(adapter, gl_info);
     init_format_fbo_compat_info(adapter, ctx);
     init_format_filter_info(adapter, gl_info);
-    if (!init_typeless_formats(adapter)) goto fail;
     init_format_gen_mipmap_info(adapter, gl_info);
     init_format_depth_bias_scale(adapter, ctx);
+
+    if (!init_typeless_formats(adapter)) goto fail;
 
     return TRUE;
 
