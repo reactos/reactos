@@ -4232,7 +4232,7 @@ struct wined3d_swapchain_state
     LONG exstyle;
 };
 
-void wined3d_window_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
+void wined3d_swapchain_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
         HWND window, const RECT *window_rect) DECLSPEC_HIDDEN;
 HRESULT wined3d_swapchain_state_setup_fullscreen(struct wined3d_swapchain_state *state,
         HWND window, unsigned int w, unsigned int h) DECLSPEC_HIDDEN;

@@ -89,14 +89,14 @@ static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
 
             if (swapchain->state.desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
             {
-                wined3d_window_state_restore_from_fullscreen(&swapchain->state,
+                wined3d_swapchain_state_restore_from_fullscreen(&swapchain->state,
                         swapchain->device_window, &swapchain->original_window_rect);
                 wined3d_device_release_focus_window(swapchain->device);
             }
         }
         else
         {
-            wined3d_window_state_restore_from_fullscreen(&swapchain->state, swapchain->device_window, NULL);
+            wined3d_swapchain_state_restore_from_fullscreen(&swapchain->state, swapchain->device_window, NULL);
         }
     }
 
@@ -1459,7 +1459,7 @@ HRESULT wined3d_swapchain_state_setup_fullscreen(struct wined3d_swapchain_state 
     return WINED3D_OK;
 }
 
-void wined3d_window_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
+void wined3d_swapchain_state_restore_from_fullscreen(struct wined3d_swapchain_state *state,
         HWND window, const RECT *window_rect)
 {
     unsigned int window_pos_flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE;
@@ -1591,7 +1591,7 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
         RECT *window_rect = NULL;
         if (state->desc.flags & WINED3D_SWAPCHAIN_RESTORE_WINDOW_RECT)
             window_rect = &swapchain->original_window_rect;
-        wined3d_window_state_restore_from_fullscreen(state, swapchain->device_window, window_rect);
+        wined3d_swapchain_state_restore_from_fullscreen(state, swapchain->device_window, window_rect);
     }
 
     state->desc.windowed = swapchain_desc->windowed;
