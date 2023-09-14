@@ -78,6 +78,7 @@ struct wined3d_fragment_pipe_ops;
 struct wined3d_adapter;
 struct wined3d_context;
 struct wined3d_state;
+struct wined3d_swapchain_gl;
 struct wined3d_texture_gl;
 struct wined3d_vertex_pipe_ops;
 
@@ -2117,7 +2118,7 @@ GLenum wined3d_context_gl_get_offscreen_gl_buffer(const struct wined3d_context_g
 const unsigned int *wined3d_context_gl_get_tex_unit_mapping(const struct wined3d_context_gl *context_gl,
         const struct wined3d_shader_version *shader_version, unsigned int *base, unsigned int *count) DECLSPEC_HIDDEN;
 HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
-        struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
+        struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
 void wined3d_context_gl_load_tex_coords(const struct wined3d_context_gl *context_gl,
         const struct wined3d_stream_info *si, GLuint *current_bo, const struct wined3d_state *state) DECLSPEC_HIDDEN;
 void *wined3d_context_gl_map_bo_address(struct wined3d_context_gl *context_gl,
@@ -4448,17 +4449,12 @@ struct wined3d_swapchain
 
     LONG prev_time, frames;   /* Performance tracking */
 
-    struct wined3d_context **context;
-    unsigned int num_contexts;
-
     struct wined3d_swapchain_state state;
     HWND win_handle;
 };
 
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate) DECLSPEC_HIDDEN;
 void wined3d_swapchain_cleanup(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
-struct wined3d_context *swapchain_get_context(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
-void swapchain_destroy_contexts(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
 void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain,
         const struct wined3d_device *device) DECLSPEC_HIDDEN;
@@ -4471,6 +4467,10 @@ struct wined3d_swapchain_gl
 {
     struct wined3d_swapchain s;
 
+    struct wined3d_context_gl **contexts;
+    SIZE_T contexts_size;
+    SIZE_T context_count;
+
     HDC backup_dc;
     HWND backup_wnd;
 };
@@ -4481,7 +4481,9 @@ static inline struct wined3d_swapchain_gl *wined3d_swapchain_gl(struct wined3d_s
 }
 
 void wined3d_swapchain_gl_cleanup(struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
+void wined3d_swapchain_gl_destroy_contexts(struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
 HDC wined3d_swapchain_gl_get_backup_dc(struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
+struct wined3d_context_gl *wined3d_swapchain_gl_get_context(struct wined3d_swapchain_gl *swapchain_gl) DECLSPEC_HIDDEN;
 HRESULT wined3d_swapchain_gl_init(struct wined3d_swapchain_gl *swapchain_gl,
         struct wined3d_device *device, struct wined3d_swapchain_desc *desc,
         void *parent, const struct wined3d_parent_ops *parent_ops) DECLSPEC_HIDDEN;

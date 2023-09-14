@@ -1935,7 +1935,7 @@ HRESULT wined3d_context_no3d_init(struct wined3d_context *context_no3d, struct w
     return WINED3D_OK;
 }
 
-HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wined3d_swapchain *swapchain)
+HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wined3d_swapchain_gl *swapchain_gl)
 {
     const struct wined3d_format *color_format, *ds_format;
     struct wined3d_context *context = &context_gl->c;
@@ -1947,9 +1947,9 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     HGLRC ctx, share_ctx;
     unsigned int i;
 
-    TRACE("context_gl %p, swapchain %p.\n", context_gl, swapchain);
+    TRACE("context_gl %p, swapchain %p.\n", context_gl, swapchain_gl);
 
-    wined3d_context_init(&context_gl->c, swapchain);
+    wined3d_context_init(&context_gl->c, &swapchain_gl->s);
 
     device = context->device;
     gl_info = &device->adapter->gl_info;
@@ -1968,7 +1968,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
 
     if (!context_gl->dc)
     {
-        if (!(context_gl->dc = wined3d_swapchain_gl_get_backup_dc(wined3d_swapchain_gl(context->swapchain))))
+        if (!(context_gl->dc = wined3d_swapchain_gl_get_backup_dc(swapchain_gl)))
         {
             ERR("Failed to retrieve a device context.\n");
             return E_FAIL;
@@ -2056,7 +2056,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
             color_format = wined3d_get_format(device->adapter, WINED3DFMT_B8G8R8A8_UNORM, target_bind_flags);
 
         /* Try to find a pixel format which matches our requirements. */
-        if (!swapchain->ds_format)
+        if (!swapchain_gl->s.ds_format)
         {
             for (i = 0; i < ARRAY_SIZE(ds_formats); ++i)
             {
@@ -2064,7 +2064,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
                 if ((context_gl->pixel_format = context_choose_pixel_format(device,
                         context_gl->dc, color_format, ds_format, TRUE)))
                 {
-                    swapchain->ds_format = ds_format;
+                    swapchain_gl->s.ds_format = ds_format;
                     break;
                 }
 
@@ -2075,7 +2075,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
         else
         {
             context_gl->pixel_format = context_choose_pixel_format(device,
-                    context_gl->dc, color_format, swapchain->ds_format, TRUE);
+                    context_gl->dc, color_format, swapchain_gl->s.ds_format, TRUE);
         }
     }
     else
@@ -4242,7 +4242,7 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
     {
         TRACE("Rendering onscreen.\n");
 
-        if (!(context_gl = wined3d_context_gl(swapchain_get_context(texture->swapchain))))
+        if (!(context_gl = wined3d_swapchain_gl_get_context(wined3d_swapchain_gl(texture->swapchain))))
             return NULL;
     }
     else
@@ -4253,7 +4253,7 @@ struct wined3d_context *wined3d_context_gl_acquire(const struct wined3d_device *
          * context for the primary swapchain. */
         if (current_context && current_context->c.device == device)
             context_gl = current_context;
-        else if (!(context_gl = wined3d_context_gl(swapchain_get_context(device->swapchains[0]))))
+        else if (!(context_gl = wined3d_swapchain_gl_get_context(wined3d_swapchain_gl(device->swapchains[0]))))
             return NULL;
     }
 

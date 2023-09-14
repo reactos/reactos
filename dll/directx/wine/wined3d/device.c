@@ -961,6 +961,7 @@ static void device_init_swapchain_state(struct wined3d_device *device, struct wi
 void wined3d_device_delete_opengl_contexts_cs(void *object)
 {
     struct wined3d_resource *resource, *cursor;
+    struct wined3d_swapchain_gl *swapchain_gl;
     struct wined3d_device *device = object;
     struct wined3d_context_gl *context_gl;
     struct wined3d_device_gl *device_gl;
@@ -990,8 +991,8 @@ void wined3d_device_delete_opengl_contexts_cs(void *object)
 
     while (device->context_count)
     {
-        if (device->contexts[0]->swapchain)
-            swapchain_destroy_contexts(device->contexts[0]->swapchain);
+        if ((swapchain_gl = wined3d_swapchain_gl(device->contexts[0]->swapchain)))
+            wined3d_swapchain_gl_destroy_contexts(swapchain_gl);
         else
             wined3d_context_gl_destroy(wined3d_context_gl(device->contexts[0]));
     }
