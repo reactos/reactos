@@ -748,7 +748,7 @@ static void wined3d_swapchain_cs_init(void *object)
     for (i = 0; i < ARRAY_SIZE(formats); ++i)
     {
         swapchain->ds_format = wined3d_get_format(adapter, formats[i], WINED3D_BIND_DEPTH_STENCIL);
-        if ((swapchain->context[0] = context_create(swapchain, swapchain->front_buffer, swapchain->ds_format)))
+        if ((swapchain->context[0] = context_create(swapchain, swapchain->ds_format)))
             break;
         TRACE("Depth stencil format %s is not supported, trying next format.\n", debug_d3dformat(formats[i]));
     }
@@ -1094,7 +1094,7 @@ static struct wined3d_context *swapchain_create_context(struct wined3d_swapchain
 
     TRACE("Creating a new context for swapchain %p, thread %u.\n", swapchain, GetCurrentThreadId());
 
-    if (!(ctx = context_create(swapchain, swapchain->front_buffer, swapchain->ds_format)))
+    if (!(ctx = context_create(swapchain, swapchain->ds_format)))
     {
         ERR("Failed to create a new context for the swapchain\n");
         return NULL;

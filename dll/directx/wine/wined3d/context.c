@@ -1966,9 +1966,9 @@ static BOOL wined3d_context_init(struct wined3d_context *context, struct wined3d
     return TRUE;
 }
 
-struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
-        struct wined3d_texture *target, const struct wined3d_format *ds_format)
+struct wined3d_context *context_create(struct wined3d_swapchain *swapchain, const struct wined3d_format *ds_format)
 {
+    struct wined3d_texture *target = swapchain->front_buffer;
     struct wined3d_device *device = swapchain->device;
     struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
