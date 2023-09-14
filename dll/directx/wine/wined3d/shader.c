@@ -4032,6 +4032,9 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
                         && resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_3D
                         && !(texture->resource.usage & WINED3DUSAGE_LEGACY_CUBEMAP))
                     tex_type = WINED3D_SHADER_TEX_2D;
+                else if (texture->resource.type == WINED3D_RTYPE_TEXTURE_3D
+                        && resource_type == WINED3D_SHADER_RESOURCE_TEXTURE_2D)
+                    tex_type = WINED3D_SHADER_TEX_3D;
             }
             args->tex_types |= tex_type << i * WINED3D_PSARGS_TEXTYPE_SHIFT;
         }
