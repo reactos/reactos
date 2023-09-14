@@ -870,13 +870,6 @@ enum wined3d_display_rotation
     WINED3D_DISPLAY_ROTATION_270            = 4,
 };
 
-enum wined3d_shader_byte_code_format
-{
-    WINED3D_SHADER_BYTE_CODE_FORMAT_SM1     = 0,
-    WINED3D_SHADER_BYTE_CODE_FORMAT_SM4     = 1,
-    WINED3D_SHADER_BYTE_CODE_FORMAT_DXBC    = 2,
-};
-
 enum wined3d_shader_type
 {
     WINED3D_SHADER_TYPE_PIXEL,
@@ -2087,10 +2080,6 @@ struct wined3d_shader_desc
 {
     const DWORD *byte_code;
     size_t byte_code_size;
-    enum wined3d_shader_byte_code_format format;
-    struct wined3d_shader_signature input_signature;
-    struct wined3d_shader_signature output_signature;
-    struct wined3d_shader_signature patch_constant_signature;
 };
 
 struct wined3d_stream_output_element

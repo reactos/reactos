@@ -3150,7 +3150,6 @@ static void shader_cleanup(struct wined3d_shader *shader)
     heap_free(shader->patch_constant_signature.elements);
     heap_free(shader->output_signature.elements);
     heap_free(shader->input_signature.elements);
-    heap_free(shader->signature_strings);
     shader->device->shader_backend->shader_destroy(shader);
     shader_cleanup_reg_maps(&shader->reg_maps);
     heap_free(shader->byte_code);
@@ -3598,107 +3597,12 @@ BOOL vshader_get_input(const struct wined3d_shader *shader,
     return FALSE;
 }
 
-static HRESULT shader_signature_calculate_strings_length(const struct wined3d_shader_signature *signature,
-        SIZE_T *total)
-{
-    struct wined3d_shader_signature_element *e;
-    unsigned int i;
-    SIZE_T len;
-
-    for (i = 0; i < signature->element_count; ++i)
-    {
-        e = &signature->elements[i];
-        len = strlen(e->semantic_name);
-        if (len >= ~(SIZE_T)0 - *total)
-            return E_OUTOFMEMORY;
-
-        *total += len + 1;
-    }
-    return WINED3D_OK;
-}
-
-static HRESULT shader_signature_copy(struct wined3d_shader_signature *dst,
-        const struct wined3d_shader_signature *src, char **signature_strings)
-{
-    struct wined3d_shader_signature_element *e;
-    unsigned int i;
-    SIZE_T len;
-    char *ptr;
-
-    if (!src->element_count)
-        return WINED3D_OK;
-
-    ptr = *signature_strings;
-
-    dst->element_count = src->element_count;
-    if (!(dst->elements = heap_calloc(dst->element_count, sizeof(*dst->elements))))
-        return E_OUTOFMEMORY;
-
-    for (i = 0; i < src->element_count; ++i)
-    {
-        e = &src->elements[i];
-        dst->elements[i] = *e;
-
-        len = strlen(e->semantic_name);
-        memcpy(ptr, e->semantic_name, len + 1);
-        dst->elements[i].semantic_name = ptr;
-        ptr += len + 1;
-    }
-
-    *signature_strings = ptr;
-
-    return WINED3D_OK;
-}
-
-static HRESULT shader_copy_signatures_from_shader_desc(struct wined3d_shader *shader,
-        const struct wined3d_shader_desc *desc)
-{
-    SIZE_T total;
-    HRESULT hr;
-    char *ptr;
-
-    total = 0;
-    if (FAILED(hr = shader_signature_calculate_strings_length(&desc->input_signature, &total)))
-        return hr;
-    if (FAILED(hr = shader_signature_calculate_strings_length(&desc->output_signature, &total)))
-        return hr;
-    if (FAILED(hr = shader_signature_calculate_strings_length(&desc->patch_constant_signature, &total)))
-        return hr;
-    if (total && !(shader->signature_strings = heap_alloc(total)))
-        return E_OUTOFMEMORY;
-    ptr = shader->signature_strings;
-
-    if (FAILED(hr = shader_signature_copy(&shader->input_signature, &desc->input_signature, &ptr)))
-    {
-        heap_free(shader->signature_strings);
-        return hr;
-    }
-    if (FAILED(hr = shader_signature_copy(&shader->output_signature, &desc->output_signature, &ptr)))
-    {
-        heap_free(shader->input_signature.elements);
-        heap_free(shader->signature_strings);
-        return hr;
-    }
-    if (FAILED(hr = shader_signature_copy(&shader->patch_constant_signature, &desc->patch_constant_signature, &ptr)))
-    {
-        heap_free(shader->output_signature.elements);
-        heap_free(shader->input_signature.elements);
-        heap_free(shader->signature_strings);
-        return hr;
-    }
-
-    return S_OK;
-}
-
 static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
         const struct wined3d_shader_desc *desc, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    enum wined3d_shader_byte_code_format format;
-    unsigned int max_version;
     HRESULT hr;
 
-    TRACE("byte_code %p, byte_code_size %#lx, format %#x.\n",
-            desc->byte_code, (long)desc->byte_code_size, desc->format);
+    TRACE("byte_code %p, byte_code_size %#lx.\n", desc->byte_code, (long)desc->byte_code_size);
 
     if (!desc->byte_code)
         return WINED3DERR_INVALIDCALL;
@@ -3716,9 +3620,52 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
     list_init(&shader->reg_maps.indexable_temps);
     list_init(&shader->shader_list_entry);
 
-    format = desc->format;
-    if (format == WINED3D_SHADER_BYTE_CODE_FORMAT_DXBC)
+    if (desc->byte_code_size == ~(size_t)0)
     {
+        struct wined3d_shader_version shader_version;
+        const struct wined3d_shader_frontend *fe;
+        struct wined3d_shader_instruction ins;
+        const DWORD *ptr;
+        void *fe_data;
+
+        if (!(shader->frontend = shader_select_frontend(WINED3D_SHADER_BYTE_CODE_FORMAT_SM1)))
+        {
+            FIXME("Unable to find frontend for shader.\n");
+            hr = WINED3DERR_INVALIDCALL;
+            goto fail;
+        }
+
+        fe = shader->frontend;
+        if (!(fe_data = fe->shader_init(desc->byte_code, desc->byte_code_size, &shader->output_signature)))
+        {
+            WARN("Failed to initialise frontend data.\n");
+            hr = WINED3DERR_INVALIDCALL;
+            goto fail;
+        }
+
+        fe->shader_read_header(fe_data, &ptr, &shader_version);
+        while (!fe->shader_is_end(fe_data, &ptr))
+            fe->shader_read_instruction(fe_data, &ptr, &ins);
+
+        fe->shader_free(fe_data);
+
+        shader->byte_code_size = (ptr - desc->byte_code) * sizeof(*ptr);
+
+        if (!(shader->byte_code = heap_alloc(shader->byte_code_size)))
+        {
+            hr = E_OUTOFMEMORY;
+            goto fail;
+        }
+        memcpy(shader->byte_code, desc->byte_code, shader->byte_code_size);
+
+        shader->function = shader->byte_code;
+        shader->functionLength = shader->byte_code_size;
+    }
+    else
+    {
+        enum wined3d_shader_byte_code_format format;
+        unsigned int max_version;
+
         if (!(shader->byte_code = heap_alloc(desc->byte_code_size)))
         {
             hr = E_OUTOFMEMORY;
@@ -3730,60 +3677,16 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         max_version = shader_max_version_from_feature_level(device->feature_level);
         if (FAILED(hr = shader_extract_from_dxbc(shader, max_version, &format)))
             goto fail;
-    }
-    else if (FAILED(hr = shader_copy_signatures_from_shader_desc(shader, desc)))
-    {
-        goto fail;
-    }
 
-    if (!(shader->frontend = shader_select_frontend(format)))
-    {
-        FIXME("Unable to find frontend for shader.\n");
-        hr = WINED3DERR_INVALIDCALL;
-        goto fail;
-    }
-
-    if (!shader->byte_code)
-    {
-        size_t byte_code_size = desc->byte_code_size;
-
-        if (byte_code_size == ~(size_t)0)
+        if (!(shader->frontend = shader_select_frontend(format)))
         {
-            const struct wined3d_shader_frontend *fe = shader->frontend;
-            struct wined3d_shader_version shader_version;
-            struct wined3d_shader_instruction ins;
-            const DWORD *ptr;
-            void *fe_data;
-
-            if (!(fe_data = fe->shader_init(desc->byte_code, byte_code_size, &shader->output_signature)))
-            {
-                WARN("Failed to initialise frontend data.\n");
-                hr = WINED3DERR_INVALIDCALL;
-                goto fail;
-            }
-
-            fe->shader_read_header(fe_data, &ptr, &shader_version);
-            while (!fe->shader_is_end(fe_data, &ptr))
-                fe->shader_read_instruction(fe_data, &ptr, &ins);
-
-            fe->shader_free(fe_data);
-
-            byte_code_size = (ptr - desc->byte_code) * sizeof(*ptr);
-        }
-
-        if (!(shader->byte_code = heap_alloc(byte_code_size)))
-        {
-            hr = E_OUTOFMEMORY;
+            FIXME("Unable to find frontend for shader.\n");
+            hr = WINED3DERR_INVALIDCALL;
             goto fail;
         }
-        memcpy(shader->byte_code, desc->byte_code, byte_code_size);
-        shader->byte_code_size = byte_code_size;
-
-        shader->function = shader->byte_code;
-        shader->functionLength = shader->byte_code_size;
     }
 
-    return hr;
+    return WINED3D_OK;
 
 fail:
     shader_cleanup(shader);
