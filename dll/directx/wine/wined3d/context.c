@@ -540,17 +540,16 @@ static struct fbo_entry *context_create_fbo_entry(const struct wined3d_context *
 }
 
 /* Context activation is done by the caller. */
-static void context_reuse_fbo_entry(struct wined3d_context *context, GLenum target,
+static void wined3d_context_gl_reuse_fbo_entry(struct wined3d_context_gl *context_gl, GLenum target,
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location, struct fbo_entry *entry)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     wined3d_context_gl_bind_fbo(context_gl, target, entry->id);
     context_clean_fbo_attachments(gl_info, target);
 
-    context_generate_fbo_key(context, &entry->key, render_targets, depth_stencil, color_location, ds_location);
+    context_generate_fbo_key(&context_gl->c, &entry->key, render_targets, depth_stencil, color_location, ds_location);
     entry->flags = 0;
     if (depth_stencil->resource)
     {
@@ -579,6 +578,7 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
         const struct wined3d_rendertarget_info *render_targets, const struct wined3d_rendertarget_info *depth_stencil,
         DWORD color_location, DWORD ds_location)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     static const struct wined3d_rendertarget_info ds_null = {{0}};
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_texture *rt_texture, *ds_texture;
@@ -695,7 +695,8 @@ static struct fbo_entry *context_find_fbo_entry(struct wined3d_context *context,
     else
     {
         entry = LIST_ENTRY(list_tail(&context->fbo_list), struct fbo_entry, entry);
-        context_reuse_fbo_entry(context, target, render_targets, depth_stencil, color_location, ds_location, entry);
+        wined3d_context_gl_reuse_fbo_entry(context_gl, target, render_targets,
+                depth_stencil, color_location, ds_location, entry);
         list_remove(&entry->entry);
         list_add_head(&context->fbo_list, &entry->entry);
     }
