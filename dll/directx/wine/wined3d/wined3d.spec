@@ -261,6 +261,7 @@
 @ cdecl wined3d_stateblock_decref(ptr)
 @ cdecl wined3d_stateblock_incref(ptr)
 @ cdecl wined3d_stateblock_set_vs_consts_f(ptr long long ptr)
+@ cdecl wined3d_stateblock_set_vs_consts_i(ptr long long ptr)
 
 @ cdecl wined3d_strictdrawing_set(long)
 
