@@ -2204,8 +2204,12 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
         unsigned int rt_count, const struct wined3d_fb_state *fb, unsigned int rect_count, const RECT *clear_rects,
         const RECT *draw_rect, DWORD flags, const struct wined3d_color *colour, float depth, DWORD stencil)
 {
+    BOOL have_previous_rect = FALSE, have_identical_size = TRUE;
     struct wined3d_rendertarget_view *view;
+    struct wined3d_fb_state tmp_fb;
+    unsigned int next_rt_count = 0;
     struct wined3d_blitter *next;
+    RECT previous_rect, rect;
     DWORD next_flags = 0;
     unsigned int i;
 
@@ -2223,6 +2227,8 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
             {
                 next_flags |= WINED3DCLEAR_TARGET;
                 flags &= ~WINED3DCLEAR_TARGET;
+                next_rt_count = rt_count;
+                rt_count = 0;
                 break;
             }
 
@@ -2241,11 +2247,60 @@ static void ffp_blitter_clear(struct wined3d_blitter *blitter, struct wined3d_de
     }
 
     if (flags)
-        device_clear_render_targets(device, flags & WINED3DCLEAR_TARGET ? rt_count : 0, fb, rect_count,
-                clear_rects, draw_rect, flags, colour, depth, stencil);
+    {
+        for (i = 0; i < rt_count; ++i)
+        {
+            if (!(view = fb->render_targets[i]))
+                continue;
+
+            SetRect(&rect, 0, 0, view->width, view->height);
+            IntersectRect(&rect, draw_rect, &rect);
+            if (have_previous_rect && !EqualRect(&previous_rect, &rect))
+                have_identical_size = FALSE;
+            previous_rect = rect;
+            have_previous_rect = TRUE;
+        }
+        if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
+        {
+            view = fb->depth_stencil;
+
+            SetRect(&rect, 0, 0, view->width, view->height);
+            IntersectRect(&rect, draw_rect, &rect);
+            if (have_previous_rect && !EqualRect(&previous_rect, &rect))
+                have_identical_size = FALSE;
+            previous_rect = rect;
+            have_previous_rect = TRUE;
+        }
+
+        if (have_identical_size)
+        {
+            device_clear_render_targets(device, rt_count, fb, rect_count,
+                    clear_rects, draw_rect, flags, colour, depth, stencil);
+        }
+        else
+        {
+            for (i = 0; i < rt_count; ++i)
+            {
+                if (!(view = fb->render_targets[i]))
+                    continue;
+
+                tmp_fb.render_targets[0] = view;
+                tmp_fb.depth_stencil = NULL;
+                device_clear_render_targets(device, 1, &tmp_fb, rect_count,
+                        clear_rects, draw_rect, WINED3DCLEAR_TARGET, colour, depth, stencil);
+            }
+            if (flags & (WINED3DCLEAR_ZBUFFER | WINED3DCLEAR_STENCIL))
+            {
+                tmp_fb.render_targets[0] = NULL;
+                tmp_fb.depth_stencil = fb->depth_stencil;
+                device_clear_render_targets(device, 0, &tmp_fb, rect_count,
+                        clear_rects, draw_rect, flags & ~WINED3DCLEAR_TARGET, colour, depth, stencil);
+            }
+        }
+    }
 
     if (next_flags && (next = blitter->next))
-        next->ops->blitter_clear(next, device, next_flags & WINED3DCLEAR_TARGET ? rt_count : 0, fb, rect_count,
+        next->ops->blitter_clear(next, device, next_rt_count, fb, rect_count,
                 clear_rects, draw_rect, next_flags, colour, depth, stencil);
 }
 
