@@ -245,6 +245,9 @@ static ULONG WINAPI d3d_device_inner_Release(IUnknown *iface)
 
         wined3d_device_set_rendertarget_view(This->wined3d_device, 0, NULL, FALSE);
 
+        if (This->recording)
+            wined3d_stateblock_decref(This->recording);
+
         /* Release the wined3d device. This won't destroy it. */
         if (!wined3d_device_decref(This->wined3d_device))
             ERR("The wined3d device (%p) was destroyed unexpectedly.\n", This->wined3d_device);
@@ -5604,6 +5607,7 @@ static HRESULT WINAPI d3d_device7_GetLight_FPUPreserve(IDirect3DDevice7 *iface, 
 static HRESULT d3d_device7_BeginStateBlock(IDirect3DDevice7 *iface)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    struct wined3d_stateblock *stateblock;
     HRESULT hr;
 
     TRACE("iface %p.\n", iface);
@@ -5615,8 +5619,8 @@ static HRESULT d3d_device7_BeginStateBlock(IDirect3DDevice7 *iface)
         WARN("Trying to begin a stateblock while recording, returning D3DERR_INBEGINSTATEBLOCK.\n");
         return D3DERR_INBEGINSTATEBLOCK;
     }
-    if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device)))
-        device->recording = TRUE;
+    if (SUCCEEDED(hr = wined3d_device_begin_stateblock(device->wined3d_device, &stateblock)))
+        device->recording = stateblock;
     wined3d_mutex_unlock();
 
     return hr_ddraw_from_wined3d(hr);
@@ -5674,7 +5678,7 @@ static HRESULT d3d_device7_EndStateBlock(IDirect3DDevice7 *iface, DWORD *statebl
         WARN("Trying to end a stateblock, but no stateblock is being recorded.\n");
         return D3DERR_NOTINBEGINSTATEBLOCK;
     }
-    hr = wined3d_device_end_stateblock(device->wined3d_device, &wined3d_sb);
+    hr = wined3d_device_end_stateblock(device->wined3d_device);
     if (FAILED(hr))
     {
         WARN("Failed to end stateblock, hr %#x.\n", hr);
@@ -5682,7 +5686,8 @@ static HRESULT d3d_device7_EndStateBlock(IDirect3DDevice7 *iface, DWORD *statebl
         *stateblock = 0;
         return hr_ddraw_from_wined3d(hr);
     }
-    device->recording = FALSE;
+    wined3d_sb = device->recording;
+    device->recording = NULL;
 
     h = ddraw_allocate_handle(&device->handle_table, wined3d_sb, DDRAW_HANDLE_STATEBLOCK);
     if (h == DDRAW_INVALID_HANDLE)

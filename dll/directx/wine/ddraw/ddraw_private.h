@@ -353,7 +353,7 @@ struct d3d_device
 
     struct wined3d_vec4 user_clip_planes[D3DMAXUSERCLIPPLANES];
 
-    BOOL recording;
+    struct wined3d_stateblock *recording;
 };
 
 HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
