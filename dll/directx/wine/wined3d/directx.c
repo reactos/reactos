@@ -1474,41 +1474,9 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
     return FALSE;
 }
 
-static BOOL wined3d_check_surface_capability(const struct wined3d_format *format, BOOL no3d)
+static BOOL wined3d_check_surface_capability(const struct wined3d_format *format)
 {
-    if (no3d)
-    {
-        switch (format->id)
-        {
-            case WINED3DFMT_B8G8R8_UNORM:
-                TRACE("[FAILED] - Not enumerated on Windows.\n");
-                return FALSE;
-            case WINED3DFMT_B8G8R8A8_UNORM:
-            case WINED3DFMT_B8G8R8X8_UNORM:
-            case WINED3DFMT_B5G6R5_UNORM:
-            case WINED3DFMT_B5G5R5X1_UNORM:
-            case WINED3DFMT_B5G5R5A1_UNORM:
-            case WINED3DFMT_B4G4R4A4_UNORM:
-            case WINED3DFMT_B2G3R3_UNORM:
-            case WINED3DFMT_A8_UNORM:
-            case WINED3DFMT_B2G3R3A8_UNORM:
-            case WINED3DFMT_B4G4R4X4_UNORM:
-            case WINED3DFMT_R10G10B10A2_UNORM:
-            case WINED3DFMT_R8G8B8A8_UNORM:
-            case WINED3DFMT_R8G8B8X8_UNORM:
-            case WINED3DFMT_R16G16_UNORM:
-            case WINED3DFMT_B10G10R10A2_UNORM:
-            case WINED3DFMT_R16G16B16A16_UNORM:
-            case WINED3DFMT_P8_UINT:
-                TRACE("[OK]\n");
-                return TRUE;
-            default:
-                TRACE("[FAILED] - Not available on GDI surfaces.\n");
-                return FALSE;
-        }
-    }
-
-    if (format->glInternal)
+    if ((format->flags[WINED3D_GL_RES_TYPE_TEX_2D] | format->flags[WINED3D_GL_RES_TYPE_RB]) & WINED3DFMT_FLAG_BLIT)
     {
         TRACE("[OK]\n");
         return TRUE;
@@ -1589,7 +1557,7 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                 allowed_usage |= WINED3DUSAGE_QUERY_SRGBWRITE;
             if (!(usage & WINED3DUSAGE_TEXTURE))
             {
-                if (!wined3d_check_surface_capability(format, wined3d->flags & WINED3D_NO3D))
+                if (!wined3d_check_surface_capability(format))
                 {
                     TRACE("[FAILED] - Not supported for plain surfaces.\n");
                     return WINED3DERR_NOTAVAILABLE;
@@ -2490,7 +2458,7 @@ static BOOL wined3d_adapter_no3d_init(struct wined3d_adapter *adapter)
     adapter->vram_bytes_used = 0;
     TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
-    if (!wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format)))
+    if (!wined3d_adapter_no3d_init_format_info(adapter))
         return FALSE;
 
     adapter->vertex_pipe = &none_vertex_pipe;

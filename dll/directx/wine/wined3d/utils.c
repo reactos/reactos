@@ -3175,23 +3175,23 @@ static BOOL init_format_texture_info(struct wined3d_adapter *adapter, struct win
         format->height_scale.numerator = 1;
         format->height_scale.denominator = 1;
 
-        format->flags[WINED3D_GL_RES_TYPE_TEX_1D] |= format_texture_info[i].flags;
-        format->flags[WINED3D_GL_RES_TYPE_TEX_2D] |= format_texture_info[i].flags;
-        format->flags[WINED3D_GL_RES_TYPE_BUFFER] |= format_texture_info[i].flags;
+        format->flags[WINED3D_GL_RES_TYPE_TEX_1D] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
+        format->flags[WINED3D_GL_RES_TYPE_TEX_2D] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
+        format->flags[WINED3D_GL_RES_TYPE_BUFFER] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
 
         /* GL_ARB_depth_texture does not support 3D textures. It also says "cube textures are
          * problematic", but doesn't explicitly mandate that an error is generated. */
         if (gl_info->supported[EXT_TEXTURE3D]
                 && !(format_texture_info[i].flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
-            format->flags[WINED3D_GL_RES_TYPE_TEX_3D] |= format_texture_info[i].flags;
+            format->flags[WINED3D_GL_RES_TYPE_TEX_3D] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
 
         if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
-            format->flags[WINED3D_GL_RES_TYPE_TEX_CUBE] |= format_texture_info[i].flags;
+            format->flags[WINED3D_GL_RES_TYPE_TEX_CUBE] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
 
         if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
-            format->flags[WINED3D_GL_RES_TYPE_TEX_RECT] |= format_texture_info[i].flags;
+            format->flags[WINED3D_GL_RES_TYPE_TEX_RECT] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
 
-        format->flags[WINED3D_GL_RES_TYPE_RB] |= format_texture_info[i].flags;
+        format->flags[WINED3D_GL_RES_TYPE_RB] |= format_texture_info[i].flags | WINED3DFMT_FLAG_BLIT;
         format->flags[WINED3D_GL_RES_TYPE_RB] &= ~WINED3DFMT_FLAG_TEXTURE;
 
         if (format->glGammaInternal != format->glInternal
@@ -3561,9 +3561,11 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
             && (!gl_info->supported[ARB_FRAGMENT_SHADER] || !gl_info->supported[ARB_VERTEX_SHADER])))
     {
         format = get_format_internal(adapter, WINED3DFMT_YUY2);
+        format_clear_flag(format, WINED3DFMT_FLAG_BLIT);
         format->glInternal = 0;
 
         format = get_format_internal(adapter, WINED3DFMT_UYVY);
+        format_clear_flag(format, WINED3DFMT_FLAG_BLIT);
         format->glInternal = 0;
     }
 
@@ -3585,9 +3587,11 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
     else
     {
         format = get_format_internal(adapter, WINED3DFMT_YV12);
+        format_clear_flag(format, WINED3DFMT_FLAG_BLIT);
         format->glInternal = 0;
 
         format = get_format_internal(adapter, WINED3DFMT_NV12);
+        format_clear_flag(format, WINED3DFMT_FLAG_BLIT);
         format->glInternal = 0;
     }
 
@@ -3994,6 +3998,47 @@ fail:
     heap_free(adapter->formats);
     adapter->formats = NULL;
     return FALSE;
+}
+
+BOOL wined3d_adapter_no3d_init_format_info(struct wined3d_adapter *adapter)
+{
+    struct wined3d_format *format;
+    unsigned int i;
+
+    static const enum wined3d_format_id blit_formats[] =
+    {
+        WINED3DFMT_B8G8R8A8_UNORM,
+        WINED3DFMT_B8G8R8X8_UNORM,
+        WINED3DFMT_B5G6R5_UNORM,
+        WINED3DFMT_B5G5R5X1_UNORM,
+        WINED3DFMT_B5G5R5A1_UNORM,
+        WINED3DFMT_B4G4R4A4_UNORM,
+        WINED3DFMT_B2G3R3_UNORM,
+        WINED3DFMT_A8_UNORM,
+        WINED3DFMT_B2G3R3A8_UNORM,
+        WINED3DFMT_B4G4R4X4_UNORM,
+        WINED3DFMT_R10G10B10A2_UNORM,
+        WINED3DFMT_R8G8B8A8_UNORM,
+        WINED3DFMT_R8G8B8X8_UNORM,
+        WINED3DFMT_R16G16_UNORM,
+        WINED3DFMT_B10G10R10A2_UNORM,
+        WINED3DFMT_R16G16B16A16_UNORM,
+        WINED3DFMT_P8_UINT,
+    };
+
+    if (!wined3d_adapter_init_format_info(adapter, sizeof(struct wined3d_format)))
+        return FALSE;
+
+    for (i = 0; i < ARRAY_SIZE(blit_formats); ++i)
+    {
+        if (!(format = get_format_internal(adapter, blit_formats[i])))
+            return FALSE;
+
+        format->flags[WINED3D_GL_RES_TYPE_TEX_2D] |= WINED3DFMT_FLAG_BLIT;
+        format->flags[WINED3D_GL_RES_TYPE_RB] |= WINED3DFMT_FLAG_BLIT;
+    }
+
+    return TRUE;
 }
 
 /* Context activation is done by the caller. */
