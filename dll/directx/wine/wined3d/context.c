@@ -375,9 +375,9 @@ static void context_dump_fbo_attachment(const struct wined3d_gl_info *gl_info, G
 }
 
 /* Context activation is done by the caller. */
-void context_check_fbo_status(const struct wined3d_context *context, GLenum target)
+void wined3d_context_gl_check_fbo_status(const struct wined3d_context_gl *context_gl, GLenum target)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     GLenum status;
 
     if (!FIXME_ON(d3d))
@@ -394,7 +394,7 @@ void context_check_fbo_status(const struct wined3d_context *context, GLenum targ
 
         FIXME("FBO status %s (%#x).\n", debug_fbostatus(status), status);
 
-        if (!context->current_fbo)
+        if (!context_gl->c.current_fbo)
         {
             ERR("FBO 0 is incomplete, driver bug?\n");
             return;
@@ -2787,9 +2787,7 @@ void wined3d_context_gl_apply_blit_state(struct wined3d_context_gl *context_gl, 
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-    {
-        context_check_fbo_status(context, GL_FRAMEBUFFER);
-    }
+        wined3d_context_gl_check_fbo_status(context_gl, GL_FRAMEBUFFER);
     context_invalidate_state(context, STATE_FRAMEBUFFER);
 
     context_get_rt_size(context, &rt_size);
@@ -3097,9 +3095,7 @@ BOOL wined3d_context_gl_apply_clear_state(struct wined3d_context_gl *context_gl,
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-    {
-        context_check_fbo_status(&context_gl->c, GL_FRAMEBUFFER);
-    }
+        wined3d_context_gl_check_fbo_status(context_gl, GL_FRAMEBUFFER);
 
     context_gl->c.last_was_blit = FALSE;
     context_gl->c.last_was_ffp_blit = FALSE;
@@ -4021,9 +4017,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-    {
-        context_check_fbo_status(context, GL_FRAMEBUFFER);
-    }
+        wined3d_context_gl_check_fbo_status(context_gl, GL_FRAMEBUFFER);
 
     context->numDirtyEntries = 0; /* This makes the whole list clean */
     context->last_was_blit = FALSE;
