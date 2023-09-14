@@ -1633,11 +1633,11 @@ void context_restore(struct wined3d_context *context, struct wined3d_texture *te
     context_release(context);
 }
 
-static void context_enter(struct wined3d_context *context)
+static void wined3d_context_gl_enter(struct wined3d_context_gl *context_gl)
 {
-    TRACE("Entering context %p, level %u.\n", context, context->level + 1);
+    TRACE("Entering context %p, level %u.\n", context_gl, context_gl->c.level + 1);
 
-    if (!context->level++)
+    if (!context_gl->c.level++)
     {
         const struct wined3d_context *current_context = context_get_current();
         HGLRC current_gl = wglGetCurrentContext();
@@ -1646,13 +1646,13 @@ static void context_enter(struct wined3d_context *context)
         {
             TRACE("Another GL context (%p on device context %p) is already current.\n",
                     current_gl, wglGetCurrentDC());
-            context->restore_ctx = current_gl;
-            context->restore_dc = wglGetCurrentDC();
-            context->needs_set = 1;
+            context_gl->c.restore_ctx = current_gl;
+            context_gl->c.restore_dc = wglGetCurrentDC();
+            context_gl->c.needs_set = 1;
         }
-        else if (!context->needs_set && !(context->hdc_is_private && context->hdc_has_format)
-                    && context->pixel_format != context->gl_info->gl_ops.wgl.p_wglGetPixelFormat(context->hdc))
-            context->needs_set = 1;
+        else if (!context_gl->c.needs_set && !(context_gl->c.hdc_is_private && context_gl->c.hdc_has_format)
+                && context_gl->c.pixel_format != context_gl->c.gl_info->gl_ops.wgl.p_wglGetPixelFormat(context_gl->c.hdc))
+            context_gl->c.needs_set = 1;
     }
 }
 
@@ -2113,7 +2113,7 @@ HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl, struct wi
     if (!context->pixel_format)
         return E_FAIL;
 
-    context_enter(context);
+    wined3d_context_gl_enter(context_gl);
 
     if (!wined3d_context_gl_set_pixel_format(context_gl))
     {
@@ -4217,7 +4217,7 @@ static void context_activate(struct wined3d_context *context,
 {
     struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
 
-    context_enter(context);
+    wined3d_context_gl_enter(context_gl);
     wined3d_context_gl_update_window(context_gl);
     context_setup_target(context, texture, sub_resource_idx);
     if (!context->valid)
