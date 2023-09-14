@@ -419,15 +419,6 @@ static const struct wined3d_shader_frontend *shader_select_frontend(enum wined3d
     }
 }
 
-static enum wined3d_shader_type shader_get_shader_type(const struct wined3d_shader_desc *desc)
-{
-    if (desc->format == WINED3D_SHADER_BYTE_CODE_FORMAT_SM4)
-        return wined3d_get_sm4_shader_type(desc->byte_code, desc->byte_code_size);
-
-    FIXME("Could not get shader type for byte code format %#x.\n", desc->format);
-    return WINED3D_SHADER_TYPE_INVALID;
-}
-
 void string_buffer_clear(struct wined3d_string_buffer *buffer)
 {
     buffer->buffer[0] = '\0';
@@ -3755,16 +3746,13 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         byte_code_size = (ptr - desc->byte_code) * sizeof(*ptr);
     }
 
-    if (desc->byte_code && byte_code_size)
+    if (!(shader->function = heap_alloc(byte_code_size)))
     {
-        if (!(shader->function = heap_alloc(byte_code_size)))
-        {
-            shader_cleanup(shader);
-            return E_OUTOFMEMORY;
-        }
-        memcpy(shader->function, desc->byte_code, byte_code_size);
-        shader->functionLength = byte_code_size;
+        shader_cleanup(shader);
+        return E_OUTOFMEMORY;
     }
+    memcpy(shader->function, desc->byte_code, byte_code_size);
+    shader->functionLength = byte_code_size;
 
     return hr;
 }
@@ -3804,43 +3792,69 @@ static HRESULT vertex_shader_init(struct wined3d_shader *shader, struct wined3d_
     return WINED3D_OK;
 }
 
+static HRESULT geometry_shader_init_stream_output(struct wined3d_shader *shader,
+        const struct wined3d_stream_output_desc *so_desc)
+{
+    const struct wined3d_shader_frontend *fe = shader->frontend;
+    struct wined3d_stream_output_element *elements;
+    struct wined3d_shader_version shader_version;
+    const DWORD *ptr;
+    void *fe_data;
+
+    if (!so_desc)
+        return WINED3D_OK;
+
+    if (!(fe_data = fe->shader_init(shader->function, shader->functionLength, &shader->output_signature)))
+    {
+        WARN("Failed to initialise frontend data.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+    fe->shader_read_header(fe_data, &ptr, &shader_version);
+    fe->shader_free(fe_data);
+
+    switch (shader_version.type)
+    {
+        case WINED3D_SHADER_TYPE_VERTEX:
+            heap_free(shader->function);
+            shader->function = NULL;
+            shader->functionLength = 0;
+            break;
+        case WINED3D_SHADER_TYPE_DOMAIN:
+            FIXME("Stream output not supported for %s.\n", debug_shader_type(shader_version.type));
+            return E_NOTIMPL;
+        case WINED3D_SHADER_TYPE_GEOMETRY:
+            break;
+        default:
+            WARN("Wrong shader type %s.\n", debug_shader_type(shader_version.type));
+            return E_INVALIDARG;
+    }
+
+    if (!(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
+        return E_OUTOFMEMORY;
+
+    shader->u.gs.so_desc = *so_desc;
+    shader->u.gs.so_desc.elements = elements;
+    memcpy(elements, so_desc->elements, so_desc->element_count * sizeof(*elements));
+
+    return WINED3D_OK;
+}
+
 static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
         const struct wined3d_shader_desc *desc, const struct wined3d_stream_output_desc *so_desc,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    struct wined3d_shader_desc shader_desc = *desc;
-    struct wined3d_stream_output_element *elements;
-    enum wined3d_shader_type shader_type;
     HRESULT hr;
 
-    if (so_desc)
-    {
-        shader_type = shader_get_shader_type(desc);
-        switch (shader_type)
-        {
-            case WINED3D_SHADER_TYPE_VERTEX:
-                shader_desc.byte_code = NULL;
-                shader_desc.byte_code_size = 0;
-                break;
-            case WINED3D_SHADER_TYPE_DOMAIN:
-                FIXME("Stream output not supported for %s.\n", debug_shader_type(shader_type));
-                return E_NOTIMPL;
-            default:
-                break;
-        }
-    }
-
-    if (FAILED(hr = shader_init(shader, device, &shader_desc, parent, parent_ops)))
+    if (FAILED(hr = shader_init(shader, device, desc, parent, parent_ops)))
         return hr;
 
-    if (shader_desc.byte_code)
+    if (FAILED(hr = geometry_shader_init_stream_output(shader, so_desc)))
+        goto fail;
+
+    if (shader->function)
     {
         if (FAILED(hr = shader_set_function(shader, device, WINED3D_SHADER_TYPE_GEOMETRY, 0)))
-        {
-            WARN("Failed to set function, hr %#x.\n", hr);
-            shader_cleanup(shader);
-            return hr;
-        }
+            goto fail;
     }
     else
     {
@@ -3850,26 +3864,14 @@ static HRESULT geometry_shader_init(struct wined3d_shader *shader, struct wined3
         shader_set_limits(shader);
 
         if (FAILED(hr = shader_scan_output_signature(shader)))
-        {
-            shader_cleanup(shader);
-            return hr;
-        }
-    }
-
-    if (so_desc)
-    {
-        if (!(elements = heap_calloc(so_desc->element_count, sizeof(*elements))))
-        {
-            shader_cleanup(shader);
-            return E_OUTOFMEMORY;
-        }
-
-        shader->u.gs.so_desc = *so_desc;
-        shader->u.gs.so_desc.elements = elements;
-        memcpy(elements, so_desc->elements, so_desc->element_count * sizeof(*elements));
+            goto fail;
     }
 
     return WINED3D_OK;
+
+fail:
+    shader_cleanup(shader);
+    return hr;
 }
 
 void find_ds_compile_args(const struct wined3d_state *state, const struct wined3d_shader *shader,

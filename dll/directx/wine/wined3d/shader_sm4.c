@@ -1222,7 +1222,7 @@ static enum wined3d_data_type map_data_type(char t)
     }
 }
 
-enum wined3d_shader_type wined3d_get_sm4_shader_type(const DWORD *byte_code, size_t byte_code_size)
+static enum wined3d_shader_type wined3d_get_sm4_shader_type(const DWORD *byte_code, size_t byte_code_size)
 {
     DWORD shader_type;
 
