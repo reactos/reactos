@@ -1468,7 +1468,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
     static const WCHAR CopyFiles[] = {'C','o','p','y','F','i','l','e','s',0};
 
     BOOL ret, absolute = (root && *root && !(style & SP_COPY_SOURCE_ABSOLUTE));
-    WCHAR *buffer, *p, *inf_source = NULL;
+    WCHAR *buffer, *p, *inf_source = NULL, dest_path[MAX_PATH];
     unsigned int len;
 
     TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
@@ -1476,8 +1476,11 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
 
     if (in_use) FIXME("no file in use support\n");
 
+    dest_path[0] = 0;
+
     if (hinf)
     {
+        WCHAR *dest_dir;
         INFCONTEXT ctx;
 
         if (!inf_context)
@@ -1497,6 +1500,13 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
             return FALSE;
         }
         source = inf_source;
+
+        if ((dest_dir = get_destination_dir( hinf, NULL )))
+        {
+            strcpyW( dest_path, dest_dir );
+            strcatW( dest_path, backslashW );
+            heap_free( dest_dir );
+        }
     }
     else if (!source)
     {
@@ -1523,7 +1533,9 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
     while (*source == '\\') source++;
     strcpyW( p, source );
 
-    ret = do_file_copyW( buffer, dest, style, handler, context );
+    strcatW( dest_path, dest );
+
+    ret = do_file_copyW( buffer, dest_path, style, handler, context );
 
     HeapFree( GetProcessHeap(), 0, inf_source );
     HeapFree( GetProcessHeap(), 0, buffer );

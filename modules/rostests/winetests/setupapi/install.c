@@ -1364,11 +1364,11 @@ static void test_install_file(void)
     ret = SetupInstallFileA(hinf, &infctx, "one.txt", "src", "one.txt", 0, NULL, NULL);
     ok(ret, "Expected success.\n");
     ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
-    todo_wine ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
 
     SetLastError(0xdeadbeef);
     ret = SetupInstallFileA(hinf, &infctx, "one.txt", "src", "one.txt", SP_COPY_REPLACEONLY, NULL, NULL);
-    todo_wine ok(!ret, "Expected failure.\n");
+    ok(!ret, "Expected failure.\n");
     todo_wine ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
     ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
 
@@ -1394,7 +1394,7 @@ static void test_install_file(void)
     ret = SetupInstallFileA(hinf, &infctx, "three.txt", "src/alpha", "three.txt", 0, NULL, NULL);
     ok(ret, "Expected success.\n");
     ok(GetLastError() == ERROR_SUCCESS, "Got unexpected error %#x.\n", GetLastError());
-    todo_wine ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
+    ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
 
     SetupCloseInfFile(hinf);
     delete_file("src/one.txt");
