@@ -4018,13 +4018,13 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     {
         /* In SM4+ we use dcl_sampler in order to determine if we should use shadow sampler. */
         args->shadow = 0;
-        for (i = 0 ; i < MAX_FRAGMENT_SAMPLERS; ++i)
+        for (i = 0 ; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
             args->color_fixup[i] = COLOR_FIXUP_IDENTITY;
         args->np2_fixup = 0;
     }
     else
     {
-        for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
+        for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
         {
             if (!shader->reg_maps.resource_info[i].type)
                 continue;

@@ -2027,12 +2027,12 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         unsigned int base, count;
 
         wined3d_gl_limits_get_texture_unit_range(&gl_info->limits, WINED3D_SHADER_TYPE_PIXEL, &base, &count);
-        if (base + MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
+        if (base + WINED3D_MAX_FRAGMENT_SAMPLERS > ARRAY_SIZE(context->rev_tex_unit_map))
         {
             ERR("Unexpected texture unit base index %u.\n", base);
             return FALSE;
         }
-        for (i = 0; i < min(count, MAX_FRAGMENT_SAMPLERS); ++i)
+        for (i = 0; i < min(count, WINED3D_MAX_FRAGMENT_SAMPLERS); ++i)
         {
             context->tex_unit_map[i] = base + i;
             context->rev_tex_unit_map[base + i] = i;
@@ -2046,8 +2046,8 @@ BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,
         }
         for (i = 0; i < min(count, MAX_VERTEX_SAMPLERS); ++i)
         {
-            context->tex_unit_map[MAX_FRAGMENT_SAMPLERS + i] = base + i;
-            context->rev_tex_unit_map[base + i] = MAX_FRAGMENT_SAMPLERS + i;
+            context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + i] = base + i;
+            context->rev_tex_unit_map[base + i] = WINED3D_MAX_FRAGMENT_SAMPLERS + i;
         }
     }
 
@@ -2367,10 +2367,10 @@ const DWORD *context_get_tex_unit_mapping(const struct wined3d_context *context,
     {
         case WINED3D_SHADER_TYPE_PIXEL:
             *base = 0;
-            *count = MAX_FRAGMENT_SAMPLERS;
+            *count = WINED3D_MAX_FRAGMENT_SAMPLERS;
             break;
         case WINED3D_SHADER_TYPE_VERTEX:
-            *base = MAX_FRAGMENT_SAMPLERS;
+            *base = WINED3D_MAX_FRAGMENT_SAMPLERS;
             *count = MAX_VERTEX_SAMPLERS;
             break;
         default:
@@ -3375,7 +3375,7 @@ static void context_map_psamplers(struct wined3d_context *context, const struct 
             state->shader[WINED3D_SHADER_TYPE_PIXEL]->reg_maps.resource_info;
     unsigned int i;
 
-    for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
+    for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
     {
         if (resource_info[i].type && context->tex_unit_map[i] != i)
         {
@@ -3396,7 +3396,7 @@ static BOOL context_unit_free_for_vs(const struct wined3d_context *context,
     if (current_mapping == WINED3D_UNMAPPED_STAGE)
         return TRUE;
 
-    if (current_mapping < MAX_FRAGMENT_SAMPLERS)
+    if (current_mapping < WINED3D_MAX_FRAGMENT_SAMPLERS)
     {
         /* Used by a fragment sampler */
 
@@ -3430,7 +3430,7 @@ static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, cons
 
     for (i = 0; i < MAX_VERTEX_SAMPLERS; ++i)
     {
-        DWORD vsampler_idx = i + MAX_FRAGMENT_SAMPLERS;
+        DWORD vsampler_idx = i + WINED3D_MAX_FRAGMENT_SAMPLERS;
         if (vs_resource_info[i].type)
         {
             while (start >= 0)
@@ -3744,13 +3744,13 @@ static void context_preload_textures(struct wined3d_context *context, const stru
         for (i = 0; i < MAX_VERTEX_SAMPLERS; ++i)
         {
             if (state->shader[WINED3D_SHADER_TYPE_VERTEX]->reg_maps.resource_info[i].type)
-                context_preload_texture(context, state, MAX_FRAGMENT_SAMPLERS + i);
+                context_preload_texture(context, state, WINED3D_MAX_FRAGMENT_SAMPLERS + i);
         }
     }
 
     if (use_ps(state))
     {
-        for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
+        for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
         {
             if (state->shader[WINED3D_SHADER_TYPE_PIXEL]->reg_maps.resource_info[i].type)
                 context_preload_texture(context, state, i);

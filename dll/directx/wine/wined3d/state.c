@@ -3350,7 +3350,7 @@ static void tex_coordindex(struct wined3d_context *context, const struct wined3d
         return;
     }
 
-    if (mapped_stage >= min(gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL], MAX_FRAGMENT_SAMPLERS))
+    if (mapped_stage >= min(gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL], WINED3D_MAX_FRAGMENT_SAMPLERS))
     {
         WARN("stage %u not mapped to a valid texture unit (%u)\n", stage, mapped_stage);
         return;
@@ -3695,7 +3695,7 @@ void apply_pixelshader(struct wined3d_context *context, const struct wined3d_sta
             /* Former draw without a pixel shader, some samplers may be
              * disabled because of WINED3D_TSS_COLOR_OP = WINED3DTOP_DISABLE
              * make sure to enable them. */
-            for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
+            for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
             {
                 if (!isStateDirty(context, STATE_SAMPLER(i)))
                     sampler(context, state, STATE_SAMPLER(i));

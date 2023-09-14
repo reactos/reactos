@@ -2126,7 +2126,7 @@ void CDECL wined3d_device_set_sampler_state(struct wined3d_device *device,
             device, sampler_idx, debug_d3dsamplerstate(state), value);
 
     if (sampler_idx >= WINED3DVERTEXTEXTURESAMPLER0 && sampler_idx <= WINED3DVERTEXTEXTURESAMPLER3)
-        sampler_idx -= (WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS);
+        sampler_idx -= (WINED3DVERTEXTEXTURESAMPLER0 - WINED3D_MAX_FRAGMENT_SAMPLERS);
 
     if (sampler_idx >= ARRAY_SIZE(device->state.sampler_states))
     {
@@ -2161,7 +2161,7 @@ DWORD CDECL wined3d_device_get_sampler_state(const struct wined3d_device *device
             device, sampler_idx, debug_d3dsamplerstate(state));
 
     if (sampler_idx >= WINED3DVERTEXTEXTURESAMPLER0 && sampler_idx <= WINED3DVERTEXTEXTURESAMPLER3)
-        sampler_idx -= (WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS);
+        sampler_idx -= (WINED3DVERTEXTEXTURESAMPLER0 - WINED3D_MAX_FRAGMENT_SAMPLERS);
 
     if (sampler_idx >= ARRAY_SIZE(device->state.sampler_states))
     {
@@ -3543,7 +3543,7 @@ HRESULT CDECL wined3d_device_set_texture(struct wined3d_device *device,
     TRACE("device %p, stage %u, texture %p.\n", device, stage, texture);
 
     if (stage >= WINED3DVERTEXTEXTURESAMPLER0 && stage <= WINED3DVERTEXTEXTURESAMPLER3)
-        stage -= (WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS);
+        stage -= (WINED3DVERTEXTEXTURESAMPLER0 - WINED3D_MAX_FRAGMENT_SAMPLERS);
 
     /* Windows accepts overflowing this array... we do not. */
     if (stage >= ARRAY_SIZE(device->state.textures))
@@ -3590,7 +3590,7 @@ struct wined3d_texture * CDECL wined3d_device_get_texture(const struct wined3d_d
     TRACE("device %p, stage %u.\n", device, stage);
 
     if (stage >= WINED3DVERTEXTEXTURESAMPLER0 && stage <= WINED3DVERTEXTEXTURESAMPLER3)
-        stage -= (WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS);
+        stage -= (WINED3DVERTEXTEXTURESAMPLER0 - WINED3D_MAX_FRAGMENT_SAMPLERS);
 
     if (stage >= ARRAY_SIZE(device->state.textures))
     {

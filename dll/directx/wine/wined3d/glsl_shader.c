@@ -1244,7 +1244,7 @@ static void shader_glsl_load_np2fixup_constants(const struct glsl_ps_program *ps
     {
         float sx, sy;
     }
-    np2fixup_constants[MAX_FRAGMENT_SAMPLERS];
+    np2fixup_constants[WINED3D_MAX_FRAGMENT_SAMPLERS];
     UINT fixup = ps->np2_fixup_info->active;
     UINT i;
 

@@ -1137,7 +1137,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         DWORD value = stateblock->stateblock_state.sampler_states[stage][sampler_state];
 
         state->sampler_states[stage][sampler_state] = value;
-        if (stage >= MAX_FRAGMENT_SAMPLERS) stage += WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS;
+        if (stage >= WINED3D_MAX_FRAGMENT_SAMPLERS) stage += WINED3DVERTEXTEXTURESAMPLER0 - WINED3D_MAX_FRAGMENT_SAMPLERS;
         wined3d_device_set_sampler_state(device, stage, sampler_state, value);
     }
 
@@ -1237,7 +1237,7 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 
         if (!(map & 1)) continue;
 
-        stage = i < MAX_FRAGMENT_SAMPLERS ? i : WINED3DVERTEXTEXTURESAMPLER0 + i - MAX_FRAGMENT_SAMPLERS;
+        stage = i < WINED3D_MAX_FRAGMENT_SAMPLERS ? i : WINED3DVERTEXTEXTURESAMPLER0 + i - WINED3D_MAX_FRAGMENT_SAMPLERS;
         if (stateblock->stateblock_state.textures[i])
             wined3d_texture_incref(stateblock->stateblock_state.textures[i]);
         if (state->textures[i])

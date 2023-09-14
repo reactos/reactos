@@ -497,7 +497,7 @@ static unsigned int shader_arb_load_constants_f(const struct wined3d_shader *sha
 static void shader_arb_load_np2fixup_constants(const struct arb_ps_np2fixup_info *fixup,
         const struct wined3d_gl_info *gl_info, const struct wined3d_state *state)
 {
-    GLfloat np2fixup_constants[4 * MAX_FRAGMENT_SAMPLERS];
+    GLfloat np2fixup_constants[4 * WINED3D_MAX_FRAGMENT_SAMPLERS];
     WORD active = fixup->super.active;
     UINT i;
 
@@ -1421,7 +1421,7 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
     struct color_fixup_masks masks;
 
     /* D3D vertex shader sampler IDs are vertex samplers(0-3), not global d3d samplers */
-    if(!pshader) sampler_idx += MAX_FRAGMENT_SAMPLERS;
+    if(!pshader) sampler_idx += WINED3D_MAX_FRAGMENT_SAMPLERS;
 
     switch (resource_type)
     {
@@ -1465,9 +1465,9 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
     else mod = "";
 
     /* Fragment samplers always have indentity mapping */
-    if(sampler_idx >= MAX_FRAGMENT_SAMPLERS)
+    if(sampler_idx >= WINED3D_MAX_FRAGMENT_SAMPLERS)
     {
-        sampler_idx = priv->cur_vs_args->vertex.samplers[sampler_idx - MAX_FRAGMENT_SAMPLERS];
+        sampler_idx = priv->cur_vs_args->vertex.samplers[sampler_idx - WINED3D_MAX_FRAGMENT_SAMPLERS];
     }
 
     if (pshader)
@@ -3749,7 +3749,7 @@ static GLuint shader_arb_generate_pshader(const struct wined3d_shader *shader,
 
     /* Load constants to fixup NP2 texcoords if there are still free constants left:
      * Constants (texture dimensions) for the NP2 fixup are loaded as local program parameters. This will consume
-     * at most 8 (MAX_FRAGMENT_SAMPLERS / 2) parameters, which is highly unlikely, since the application had to
+     * at most 8 (WINED3D_MAX_FRAGMENT_SAMPLERS / 2) parameters, which is highly unlikely, since the application had to
      * use 16 NP2 textures at the same time. In case that we run out of constants the fixup is simply not
      * applied / activated. This will probably result in wrong rendering of the texture, but will save us from
      * shader compilation errors and the subsequent errors when drawing with this shader. */
@@ -3763,7 +3763,7 @@ static GLuint shader_arb_generate_pshader(const struct wined3d_shader *shader,
         fixup->offset = next_local;
         fixup->super.active = 0;
 
-        for (i = 0; i < MAX_FRAGMENT_SAMPLERS; ++i)
+        for (i = 0; i < WINED3D_MAX_FRAGMENT_SAMPLERS; ++i)
         {
             if (!(map & (1u << i)))
                 continue;
@@ -4518,9 +4518,9 @@ static void find_arb_vs_compile_args(const struct wined3d_state *state,
             args->clip.boolclip.bools |= (1u << i);
     }
 
-    args->vertex.samplers[0] = context->tex_unit_map[MAX_FRAGMENT_SAMPLERS + 0];
-    args->vertex.samplers[1] = context->tex_unit_map[MAX_FRAGMENT_SAMPLERS + 1];
-    args->vertex.samplers[2] = context->tex_unit_map[MAX_FRAGMENT_SAMPLERS + 2];
+    args->vertex.samplers[0] = context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + 0];
+    args->vertex.samplers[1] = context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + 1];
+    args->vertex.samplers[2] = context->tex_unit_map[WINED3D_MAX_FRAGMENT_SAMPLERS + 2];
     args->vertex.samplers[3] = 0;
 
     /* Skip if unused or local */

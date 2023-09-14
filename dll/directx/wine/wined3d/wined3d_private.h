@@ -260,9 +260,9 @@ static inline enum complex_fixup get_complex_fixup(struct color_fixup_desc fixup
 /* Device caps */
 #define WINED3D_MAX_STREAMS         16
 #define WINED3D_MAX_TEXTURES        8
-#define MAX_FRAGMENT_SAMPLERS       16
+#define WINED3D_MAX_FRAGMENT_SAMPLERS 16
 #define MAX_VERTEX_SAMPLERS         4
-#define MAX_COMBINED_SAMPLERS       (MAX_FRAGMENT_SAMPLERS + MAX_VERTEX_SAMPLERS)
+#define MAX_COMBINED_SAMPLERS       (WINED3D_MAX_FRAGMENT_SAMPLERS + MAX_VERTEX_SAMPLERS)
 #define MAX_ACTIVE_LIGHTS           8
 #define MAX_CLIP_DISTANCES          8
 #define MAX_CONSTANT_BUFFERS        15
@@ -1351,7 +1351,7 @@ enum wined3d_shader_tex_types
 
 struct ps_compile_args
 {
-    struct color_fixup_desc     color_fixup[MAX_FRAGMENT_SAMPLERS];
+    struct color_fixup_desc     color_fixup[WINED3D_MAX_FRAGMENT_SAMPLERS];
     enum wined3d_vertex_processing_mode vp_mode;
     enum wined3d_ffp_ps_fog_mode fog;
     WORD                        tex_transform; /* ps 1.0-1.3, 4 textures */
@@ -1361,7 +1361,7 @@ struct ps_compile_args
        D3D9 has a limit of 16 samplers and the fixup is superfluous
        in D3D10 (unconditional NP2 support mandatory). */
     WORD                        np2_fixup;
-    WORD shadow; /* MAX_FRAGMENT_SAMPLERS, 16 */
+    WORD shadow; /* WINED3D_MAX_FRAGMENT_SAMPLERS, 16 */
     WORD texcoords_initialized; /* WINED3D_MAX_TEXTURES, 8 */
     DWORD pointsprite : 1;
     DWORD flatshading : 1;
@@ -4471,7 +4471,7 @@ void get_fog_start_end(const struct wined3d_context *context, const struct wined
  *
  * This structure is shared between the GLSL and the ARB backend.*/
 struct ps_np2fixup_info {
-    unsigned char     idx[MAX_FRAGMENT_SAMPLERS]; /* indices to the real constant */
+    unsigned char     idx[WINED3D_MAX_FRAGMENT_SAMPLERS]; /* indices to the real constant */
     WORD              active; /* bitfield indicating if we can apply the fixup */
     WORD              num_consts;
 };
