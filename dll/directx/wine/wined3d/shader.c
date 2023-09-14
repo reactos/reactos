@@ -3656,31 +3656,12 @@ static unsigned int shader_max_version_from_feature_level(enum wined3d_feature_l
     }
 }
 
-static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
-        const struct wined3d_shader_desc *desc, DWORD float_const_count, enum wined3d_shader_type type,
-        void *parent, const struct wined3d_parent_ops *parent_ops)
+static HRESULT shader_copy_signatures_from_shader_desc(struct wined3d_shader *shader,
+        const struct wined3d_shader_desc *desc)
 {
-    unsigned int max_version;
-    size_t byte_code_size;
     SIZE_T total;
     HRESULT hr;
     char *ptr;
-
-    TRACE("byte_code %p, byte_code_size %#lx, format %#x.\n",
-            desc->byte_code, (long)desc->byte_code_size, desc->format);
-
-    max_version = shader_max_version_from_feature_level(device->feature_level);
-
-    if (!(shader->frontend = shader_select_frontend(desc->format)))
-    {
-        FIXME("Unable to find frontend for shader.\n");
-        return WINED3DERR_INVALIDCALL;
-    }
-
-    shader->ref = 1;
-    shader->device = device;
-    shader->parent = parent;
-    shader->parent_ops = parent_ops;
 
     total = 0;
     if (FAILED(hr = shader_signature_calculate_strings_length(&desc->input_signature, &total)))
@@ -3711,6 +3692,36 @@ static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device 
         heap_free(shader->signature_strings);
         return hr;
     }
+
+    return S_OK;
+}
+
+static HRESULT shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
+        const struct wined3d_shader_desc *desc, DWORD float_const_count, enum wined3d_shader_type type,
+        void *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    unsigned int max_version;
+    size_t byte_code_size;
+    HRESULT hr;
+
+    TRACE("byte_code %p, byte_code_size %#lx, format %#x.\n",
+            desc->byte_code, (long)desc->byte_code_size, desc->format);
+
+    max_version = shader_max_version_from_feature_level(device->feature_level);
+
+    if (!(shader->frontend = shader_select_frontend(desc->format)))
+    {
+        FIXME("Unable to find frontend for shader.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+
+    shader->ref = 1;
+    shader->device = device;
+    shader->parent = parent;
+    shader->parent_ops = parent_ops;
+
+    if (FAILED(hr = shader_copy_signatures_from_shader_desc(shader, desc)))
+        return hr;
 
     list_init(&shader->linked_programs);
     list_init(&shader->constantsF);
