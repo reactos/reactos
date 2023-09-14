@@ -674,6 +674,8 @@ void wined3d_cs_emit_clear_rendertarget_view(struct wined3d_cs *cs, struct wined
     wined3d_resource_acquire(view->resource);
 
     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
+    if (flags & WINED3DCLEAR_SYNCHRONOUS)
+        cs->ops->finish(cs, WINED3D_CS_QUEUE_DEFAULT);
 }
 
 static void acquire_shader_resources(const struct wined3d_state *state, unsigned int shader_mask)
