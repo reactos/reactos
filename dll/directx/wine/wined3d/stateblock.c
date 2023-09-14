@@ -732,9 +732,9 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
         unsigned int idx = stateblock->contained_vs_consts_b[i];
 
         TRACE("Setting vs_consts_b[%u] to %s.\n",
-                idx, src_state->vs_consts_b[idx] ? "TRUE" : "FALSE");
+                idx, state->vs_consts_b[idx] ? "TRUE" : "FALSE");
 
-        stateblock->state.vs_consts_b[idx] = src_state->vs_consts_b[idx];
+        stateblock->stateblock_state.vs_consts_b[idx] = state->vs_consts_b[idx];
     }
 
     /* Pixel shader float constants. */
@@ -1025,8 +1025,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     }
     for (i = 0; i < stateblock->num_contained_vs_consts_b; ++i)
     {
+        state->vs_consts_b[i] = stateblock->stateblock_state.vs_consts_b[i];
         wined3d_device_set_vs_consts_b(device, stateblock->contained_vs_consts_b[i],
-                1, &stateblock->state.vs_consts_b[stateblock->contained_vs_consts_b[i]]);
+                1, &stateblock->stateblock_state.vs_consts_b[stateblock->contained_vs_consts_b[i]]);
     }
 
     apply_lights(device, &stateblock->state);
