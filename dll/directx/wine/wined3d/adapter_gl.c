@@ -1256,10 +1256,14 @@ static enum wined3d_feature_level feature_level_from_caps(const struct wined3d_g
         if (shader_model >= 5
                 && gl_info->supported[ARB_DRAW_INDIRECT]
                 && gl_info->supported[ARB_TEXTURE_COMPRESSION_BPTC])
-            return WINED3D_FEATURE_LEVEL_11;
+            return WINED3D_FEATURE_LEVEL_11_1;
 
         if (shader_model >= 4)
+        {
+            if (gl_info->supported[ARB_TEXTURE_CUBE_MAP_ARRAY])
+                return WINED3D_FEATURE_LEVEL_10_1;
             return WINED3D_FEATURE_LEVEL_10;
+        }
     }
 
     if (shader_model >= 3)
