@@ -45,27 +45,19 @@ static CHAR CURR_DIR[MAX_PATH];
  */
 
 static BOOL (WINAPI *pSetupGetFileCompressionInfoExA)(PCSTR, PSTR, DWORD, PDWORD, PDWORD, PDWORD, PUINT);
-static BOOL (WINAPI *pSetupCopyOEMInfA)(PCSTR, PCSTR, DWORD, DWORD, PSTR, DWORD, PDWORD, PSTR *);
 static BOOL (WINAPI *pSetupQueryInfOriginalFileInformationA)(PSP_INF_INFORMATION, UINT, PSP_ALTPLATFORM_INFO, PSP_ORIGINAL_FILE_INFO_A);
-static BOOL (WINAPI *pSetupUninstallOEMInfA)(PCSTR, DWORD, PVOID);
 
-static void create_inf_file(LPCSTR filename)
+static void create_file(const char *name, const char *data)
 {
-    DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
-                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE file;
+    DWORD size;
+    BOOL ret;
 
-    static const char data[] =
-        "[Version]\n"
-        "Signature=\"$Chicago$\"\n"
-        "AdvancedINF=2.5\n"
-        "[DefaultInstall]\n"
-        "RegisterOCXs=RegisterOCXsSection\n"
-        "[RegisterOCXsSection]\n"
-        "%%11%%\\ole32.dll\n";
-
-    WriteFile(hf, data, sizeof(data) - 1, &dwNumberOfBytesWritten, NULL);
-    CloseHandle(hf);
+    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failed to create %s, error %u.\n", name, GetLastError());
+    ret = WriteFile(file, data, strlen(data), &size, NULL);
+    ok(ret && size == strlen(data), "Failed to write %s, error %u.\n", name, GetLastError());
+    CloseHandle(file);
 }
 
 static void get_temp_filename(LPSTR path)
@@ -84,19 +76,13 @@ static BOOL file_exists(LPSTR path)
     return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
 }
 
-static BOOL check_format(LPSTR path, LPSTR inf)
+static BOOL is_in_inf_dir(const char *path)
 {
-    CHAR check[MAX_PATH];
-    BOOL res;
+    char expect[MAX_PATH];
 
-    static const CHAR format[] = "\\INF\\oem";
-
-    GetWindowsDirectoryA(check, MAX_PATH);
-    strcat(check, format);
-    res = CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, check, -1, path, strlen(check)) == CSTR_EQUAL &&
-          path[strlen(check)] != '\\';
-
-    return (!inf) ? res : res && (inf == path + strlen(check) - 3);
+    GetWindowsDirectoryA(expect, sizeof(expect));
+    strcat(expect, "\\inf\\");
+    return !strncasecmp(path, expect, strrchr(path, '\\') - path);
 }
 
 static void test_original_file_name(LPCSTR original, LPCSTR dest)
@@ -143,32 +129,39 @@ static void test_original_file_name(LPCSTR original, LPCSTR dest)
 
 static void test_SetupCopyOEMInf(void)
 {
-    CHAR toolong[MAX_PATH * 2];
-    CHAR path[MAX_PATH], dest[MAX_PATH];
-    CHAR tmpfile[MAX_PATH], dest_save[MAX_PATH];
-    LPSTR inf = NULL;
+    char path[MAX_PATH * 2], dest[MAX_PATH], tmpfile[MAX_PATH], orig_dest[MAX_PATH];
+    char *filepart, pnf[MAX_PATH];
     DWORD size;
     BOOL res;
 
+    static const char inf_data1[] =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"\n"
+        "; This is a WINE test INF file\n";
+
+    static const char inf_data2[] =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"\n"
+        "; This is another WINE test INF file\n";
+
     /* try NULL SourceInfFileName */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(NULL, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(NULL, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* try empty SourceInfFileName */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA("", NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA("", NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       GetLastError() == ERROR_BAD_PATHNAME || /* Win98 */
        GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
        "Unexpected error : %d\n", GetLastError());
 
     /* try a relative nonexistent SourceInfFileName */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA("nonexistent", NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA("nonexistent", NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
@@ -177,30 +170,18 @@ static void test_SetupCopyOEMInf(void)
     strcpy(path, CURR_DIR);
     strcat(path, "\\nonexistent");
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
-    /* try a long SourceInfFileName */
-    memset(toolong, 'a', MAX_PATH * 2);
-    toolong[MAX_PATH * 2 - 1] = '\0';
-    SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(toolong, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
-    ok(res == FALSE, "Expected FALSE, got %d\n", res);
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       GetLastError() == ERROR_FILENAME_EXCED_RANGE, /* Win98 */
-       "Expected ERROR_FILE_NOT_FOUND or ERROR_FILENAME_EXCED_RANGE, got %d\n", GetLastError());
-
     get_temp_filename(tmpfile);
-    create_inf_file(tmpfile);
+    create_file(tmpfile, inf_data1);
 
     /* try a relative SourceInfFileName */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(tmpfile, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
-    ok(res == FALSE ||
-       broken(res == TRUE), /* Win98 */
-       "Expected FALSE, got %d\n", res);
+    res = SetupCopyOEMInfA(tmpfile, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    ok(res == FALSE, "Expected FALSE, got %d\n", res);
     if (GetLastError() == ERROR_WRONG_INF_TYPE || GetLastError() == ERROR_UNSUPPORTED_TYPE /* Win7 */)
     {
        /* FIXME:
@@ -212,152 +193,169 @@ static void test_SetupCopyOEMInf(void)
        return;
     }
 
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-       broken(GetLastError() == ERROR_SUCCESS), /* Win98 */
-       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
     ok(file_exists(tmpfile), "Expected tmpfile to exist\n");
 
     /* try SP_COPY_REPLACEONLY, dest does not exist */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND,
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
     ok(file_exists(tmpfile), "Expected source inf to exist\n");
 
-    /* try an absolute SourceInfFileName, without DestinationInfFileName */
+    /* Test a successful call. */
     strcpy(path, CURR_DIR);
     strcat(path, "\\");
     strcat(path, tmpfile);
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
     if (!res && GetLastError() == ERROR_ACCESS_DENIED)
     {
         skip("SetupCopyOEMInfA() failed on insufficient permissions\n");
+        DeleteFileA(tmpfile);
         return;
     }
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(file_exists(path), "Expected source inf to exist\n");
+    ok(file_exists(path), "Expected source inf to exist.\n");
+    ok(file_exists(dest), "Expected dest file to exist.\n");
+    ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
+    strcpy(orig_dest, dest);
+
+    /* Existing INF files are checked for a match. */
+    SetLastError(0xdeadbeef);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(file_exists(path), "Expected source inf to exist.\n");
+    ok(file_exists(dest), "Expected dest file to exist.\n");
+todo_wine
+    ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     /* try SP_COPY_REPLACEONLY, dest exists */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_REPLACEONLY, dest, sizeof(dest), NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(file_exists(path), "Expected source inf to exist\n");
+    ok(file_exists(path), "Expected source inf to exist.\n");
+    ok(file_exists(dest), "Expected dest file to exist.\n");
+todo_wine
+    ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
-    /* try SP_COPY_NOOVERWRITE */
+    strcpy(dest, "aaa");
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_NOOVERWRITE, dest, sizeof(dest), NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_EXISTS,
        "Expected ERROR_FILE_EXISTS, got %d\n", GetLastError());
+todo_wine
+    ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
-    /* get the DestinationInfFileName */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, NULL, 0, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(strlen(dest) != 0, "Expected a non-zero length string\n");
-    ok(file_exists(dest), "Expected destination inf to exist\n");
-    ok(check_format(dest, NULL), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
-    ok(file_exists(path), "Expected source inf to exist\n");
+    ok(file_exists(path), "Expected source inf to exist.\n");
+    ok(file_exists(orig_dest), "Expected dest file to exist.\n");
 
-    strcpy(dest_save, dest);
-    DeleteFileA(dest_save);
-
-    /* get the DestinationInfFileName, DestinationInfFileNameSize is too small
-     *   - inf is still copied
-     */
     strcpy(dest, "aaa");
     size = 0;
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, 5, &size, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, 5, &size, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist\n");
-    ok(file_exists(dest_save), "Expected dest inf to exist\n");
+    ok(file_exists(orig_dest), "Expected dest inf to exist\n");
     ok(!strcmp(dest, "aaa"), "Expected dest to be unchanged\n");
-    ok(size == strlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+todo_wine
+    ok(size == strlen(orig_dest) + 1, "Expected size %d, got %d.\n", strlen(orig_dest) + 1, size);
 
-    /* get the DestinationInfFileName and DestinationInfFileNameSize */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, &size, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), &size, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(lstrlenA(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlenA(dest), size);
-    ok(file_exists(dest), "Expected destination inf to exist\n");
-    ok(check_format(dest, NULL), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
-    ok(file_exists(path), "Expected source inf to exist\n");
-    ok(size == lstrlenA(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+todo_wine
+    ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
+    ok(size == strlen(dest) + 1, "Expected size %d, got %d.\n", strlen(dest) + 1, size);
 
     test_original_file_name(strrchr(path, '\\') + 1, dest);
 
-    /* get the DestinationInfFileName, DestinationInfFileNameSize, and DestinationInfFileNameComponent */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, &size, &inf);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, &filepart);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(lstrlenA(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlenA(dest), size);
-    ok(file_exists(dest), "Expected destination inf to exist\n");
-    ok((inf && inf[0] != 0) ||
-       broken(!inf), /* Win98 */
-       "Expected inf to point to the filename\n");
-    ok(check_format(dest, inf), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
-    ok(file_exists(path), "Expected source inf to exist\n");
-    ok(size == lstrlenA(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+todo_wine
+    ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
+    ok(filepart == strrchr(dest, '\\') + 1, "Got unexpected file part %s.\n", filepart);
 
-    /* try SP_COPY_DELETESOURCE */
     SetLastError(0xdeadbeef);
-    res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_DELETESOURCE, NULL, 0, NULL, NULL);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, SP_COPY_DELETESOURCE, NULL, 0, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(!file_exists(path), "Expected source inf to not exist\n");
 
-    if (pSetupUninstallOEMInfA)
-    {
-        char pnf[MAX_PATH];
-        char *pnffile;
-        char *destfile = strrchr(dest, '\\') + 1;
+    strcpy(pnf, dest);
+    *(strrchr(pnf, '.') + 1) = 'p';
 
-        strcpy(pnf, dest);
-        *(strrchr(pnf, '.') + 1) = 'p';
-        pnffile = strrchr(pnf, '\\') + 1;
+    res = SetupUninstallOEMInfA(strrchr(dest, '\\') + 1, 0, NULL);
+    ok(res, "Failed to uninstall '%s', error %u.\n", dest, GetLastError());
+    todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
+    DeleteFileA(dest);
+    ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
 
-        SetLastError(0xdeadbeef);
-        res = pSetupUninstallOEMInfA(destfile, 0, NULL);
-        if(!res)
-            res = pSetupUninstallOEMInfA(pnffile, 0, NULL);
-        ok(res, "Failed to uninstall '%s'/'%s' : %d\n", destfile,
-           pnffile, GetLastError());
-        todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
-        if(file_exists(dest))
-        {
-            SetLastError(0xdeadbeef);
-            res = DeleteFileA(dest);
-            ok(res, "Failed to delete file '%s' : %d\n", dest, GetLastError());
-        }
-        ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
-        if(file_exists(pnf))
-        {
-            SetLastError(0xdeadbeef);
-            res = DeleteFileA(pnf);
-            ok(res, "Failed to delete file '%s' : %d\n", pnf, GetLastError());
-        }
-    }
-    else
-    {
-        /* Win9x/WinMe */
-        SetLastError(0xdeadbeef);
-        res = DeleteFileA(dest);
-        ok(res, "Failed to delete file '%s' : %d\n", dest, GetLastError());
+    create_file(tmpfile, inf_data1);
+    SetLastError(0xdeadbeef);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
+    strcpy(orig_dest, dest);
 
-        /* On WinMe we also need to remove the .pnf file */
-        *(strrchr(dest, '.') + 1) = 'p';
-        DeleteFileA(dest);
-    }
+    create_file(tmpfile, inf_data2);
+    SetLastError(0xdeadbeef);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(is_in_inf_dir(dest), "Got unexpected path '%s'.\n", dest);
+    ok(strcmp(dest, orig_dest), "Expected INF files to be copied to differnet paths.\n");
+
+    res = SetupUninstallOEMInfA(strrchr(dest, '\\') + 1, 0, NULL);
+    ok(res, "Failed to uninstall '%s', error %u.\n", dest, GetLastError());
+    todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
+    DeleteFileA(dest);
+    strcpy(pnf, dest);
+    *(strrchr(pnf, '.') + 1) = 'p';
+    ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
+
+    res = SetupUninstallOEMInfA(strrchr(orig_dest, '\\') + 1, 0, NULL);
+    ok(res, "Failed to uninstall '%s', error %u.\n", orig_dest, GetLastError());
+    todo_wine ok(!file_exists(orig_dest), "Expected inf '%s' to not exist\n", dest);
+    DeleteFileA(orig_dest);
+    strcpy(pnf, dest);
+    *(strrchr(pnf, '.') + 1) = 'p';
+    ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
+
+    GetWindowsDirectoryA(orig_dest, sizeof(orig_dest));
+    strcat(orig_dest, "\\inf\\");
+    strcat(orig_dest, tmpfile);
+    res = CopyFileA(tmpfile, orig_dest, TRUE);
+todo_wine
+    ok(res, "Failed to copy file, error %u.\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), NULL, NULL);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+todo_wine
+    ok(!strcasecmp(dest, orig_dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
+
+    /* Since it wasn't actually installed, SetupUninstallOEMInf would fail here. */
+    res = DeleteFileA(dest);
+    ok(res, "Failed to delete '%s', error %u.\n", tmpfile, GetLastError());
+
+    res = DeleteFileA(tmpfile);
+    ok(res, "Failed to delete '%s', error %u.\n", tmpfile, GetLastError());
 }
 
 static void create_source_file(LPSTR filename, const BYTE *data, DWORD size)
@@ -716,12 +714,12 @@ static void test_SetupUninstallOEMInf(void)
     BOOL ret;
 
     SetLastError(0xdeadbeef);
-    ret = pSetupUninstallOEMInfA(NULL, 0, NULL);
+    ret = SetupUninstallOEMInfA(NULL, 0, NULL);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pSetupUninstallOEMInfA("", 0, NULL);
+    ret = SetupUninstallOEMInfA("", 0, NULL);
     todo_wine
     {
     ok(!ret, "Expected failure\n");
@@ -729,7 +727,7 @@ static void test_SetupUninstallOEMInf(void)
     }
 
     SetLastError(0xdeadbeef);
-    ret = pSetupUninstallOEMInfA("nonexistent.inf", 0, NULL);
+    ret = SetupUninstallOEMInfA("nonexistent.inf", 0, NULL);
     todo_wine
     {
     ok(!ret, "Expected failure\n");
@@ -835,17 +833,11 @@ START_TEST(misc)
     HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
 
     pSetupGetFileCompressionInfoExA = (void*)GetProcAddress(hsetupapi, "SetupGetFileCompressionInfoExA");
-    pSetupCopyOEMInfA = (void*)GetProcAddress(hsetupapi, "SetupCopyOEMInfA");
     pSetupQueryInfOriginalFileInformationA = (void*)GetProcAddress(hsetupapi, "SetupQueryInfOriginalFileInformationA");
-    pSetupUninstallOEMInfA = (void*)GetProcAddress(hsetupapi, "SetupUninstallOEMInfA");
 
     GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 
-    if (pSetupCopyOEMInfA)
-        test_SetupCopyOEMInf();
-    else
-        win_skip("SetupCopyOEMInfA is not available\n");
-
+    test_SetupCopyOEMInf();
     test_SetupGetFileCompressionInfo();
 
     if (pSetupGetFileCompressionInfoExA)
@@ -854,14 +846,8 @@ START_TEST(misc)
         win_skip("SetupGetFileCompressionInfoExA is not available\n");
 
     test_SetupDecompressOrCopyFile();
-
-    if (pSetupUninstallOEMInfA)
-        test_SetupUninstallOEMInf();
-    else
-        win_skip("SetupUninstallOEMInfA is not available\n");
-
+    test_SetupUninstallOEMInf();
     test_defaultcallback();
-
     test_SetupLogError();
     test_CM_Get_Version();
 }
