@@ -712,9 +712,13 @@ static HRESULT WINAPI d3d_device1_Execute(IDirect3DDevice *iface,
     if(!buffer)
         return DDERR_INVALIDPARAMS;
 
+    if (FAILED(hr = IDirect3DDevice3_SetCurrentViewport
+            (&device->IDirect3DDevice3_iface, &viewport_impl->IDirect3DViewport3_iface)))
+        return hr;
+
     /* Execute... */
     wined3d_mutex_lock();
-    hr = d3d_execute_buffer_execute(buffer, device, viewport_impl);
+    hr = d3d_execute_buffer_execute(buffer, device);
     wined3d_mutex_unlock();
 
     return hr;

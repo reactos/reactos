@@ -557,7 +557,7 @@ struct d3d_execute_buffer *unsafe_impl_from_IDirect3DExecuteBuffer(IDirect3DExec
 
 /* The execute function */
 HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *execute_buffer,
-        struct d3d_device *device, struct d3d_viewport *viewport) DECLSPEC_HIDDEN;
+        struct d3d_device *device) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * IDirect3DVertexBuffer
