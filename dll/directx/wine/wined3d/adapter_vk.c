@@ -24,12 +24,63 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
+#ifdef USE_WIN32_VULKAN
+static BOOL wined3d_load_vulkan(struct wined3d_vk_info *vk_info)
+{
+    struct vulkan_ops *vk_ops = &vk_info->vk_ops;
+
+    if (!(vk_info->vulkan_lib = LoadLibraryA("vulkan-1.dll")))
+    {
+        WARN("Failed to load vulkan-1.dll.\n");
+        return FALSE;
+    }
+
+    vk_ops->vkGetInstanceProcAddr = (void *)GetProcAddress(vk_info->vulkan_lib, "vkGetInstanceProcAddr");
+    if (!vk_ops->vkGetInstanceProcAddr)
+    {
+        FreeLibrary(vk_info->vulkan_lib);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void wined3d_unload_vulkan(struct wined3d_vk_info *vk_info)
+{
+    if (vk_info->vulkan_lib)
+    {
+        FreeLibrary(vk_info->vulkan_lib);
+        vk_info->vulkan_lib = NULL;
+    }
+}
+#else
+static BOOL wined3d_load_vulkan(struct wined3d_vk_info *vk_info)
+{
+    struct vulkan_ops *vk_ops = &vk_info->vk_ops;
+    const struct vulkan_funcs *vk_funcs;
+    HDC dc;
+
+    dc = GetDC(0);
+    vk_funcs = __wine_get_vulkan_driver(dc, WINE_VULKAN_DRIVER_VERSION);
+    ReleaseDC(0, dc);
+
+    if (!vk_funcs)
+        return FALSE;
+
+    vk_ops->vkGetInstanceProcAddr = (void *)vk_funcs->p_vkGetInstanceProcAddr;
+    return TRUE;
+}
+
+static void wined3d_unload_vulkan(struct wined3d_vk_info *vk_info) {}
+#endif
+
 static void adapter_vk_destroy(struct wined3d_adapter *adapter)
 {
     struct wined3d_adapter_vk *adapter_vk = wined3d_adapter_vk(adapter);
-    const struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
+    struct wined3d_vk_info *vk_info = &adapter_vk->vk_info;
 
     VK_CALL(vkDestroyInstance(vk_info->instance, NULL));
+    wined3d_unload_vulkan(vk_info);
     wined3d_adapter_cleanup(&adapter_vk->a);
     heap_free(adapter_vk);
 }
@@ -62,25 +113,17 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
 {
     struct vulkan_ops *vk_ops = &vk_info->vk_ops;
-    const struct vulkan_funcs *vk_funcs;
+    VkInstance instance = VK_NULL_HANDLE;
     VkInstanceCreateInfo instance_info;
-    VkInstance instance;
     VkResult vr;
-    HDC dc;
 
-    dc = GetDC(0);
-    vk_funcs = __wine_get_vulkan_driver(dc, WINE_VULKAN_DRIVER_VERSION);
-    ReleaseDC(0, dc);
-
-    if (!vk_funcs)
+    if (!wined3d_load_vulkan(vk_info))
         return FALSE;
-
-    vk_ops->vkGetInstanceProcAddr = (void *)vk_funcs->p_vkGetInstanceProcAddr;
 
     if (!(vk_ops->vkCreateInstance = (void *)VK_CALL(vkGetInstanceProcAddr(NULL, "vkCreateInstance"))))
     {
         ERR("Could not get 'vkCreateInstance'.\n");
-        return FALSE;
+        goto fail;
     }
 
     memset(&instance_info, 0, sizeof(instance_info));
@@ -88,7 +131,7 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
     if ((vr = VK_CALL(vkCreateInstance(&instance_info, NULL, &instance))) < 0)
     {
         WARN("Failed to create Vulkan instance, vr %d.\n", vr);
-        return FALSE;
+        goto fail;
     }
 
     TRACE("Created Vulkan instance %p.\n", instance);
@@ -97,8 +140,7 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
     if (!(vk_ops->name = (void *)VK_CALL(vkGetInstanceProcAddr(instance, #name)))) \
     { \
         WARN("Could not get instance proc addr for '" #name "'.\n"); \
-        vk_funcs->p_vkDestroyInstance(instance, NULL); \
-        return FALSE; \
+        goto fail; \
     }
 #define VK_INSTANCE_PFN     LOAD_INSTANCE_PFN
 #define VK_DEVICE_PFN       LOAD_INSTANCE_PFN
@@ -110,6 +152,12 @@ static BOOL wined3d_init_vulkan(struct wined3d_vk_info *vk_info)
     vk_info->instance = instance;
 
     return TRUE;
+
+fail:
+    if (vk_ops->vkDestroyInstance)
+        VK_CALL(vkDestroyInstance(instance, NULL));
+    wined3d_unload_vulkan(vk_info);
+    return FALSE;
 }
 
 static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
@@ -134,12 +182,12 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
     if (!(gpu_description = wined3d_get_gpu_description(HW_VENDOR_AMD, CARD_AMD_RADEON_RX_VEGA)))
     {
         ERR("Failed to get GPU description.\n");
-        goto fail;
+        goto fail_vulkan;
     }
     wined3d_driver_info_init(&adapter->driver_info, gpu_description, wined3d_settings.emulated_textureram);
 
     if (!wined3d_adapter_vk_init_format_info(adapter))
-        goto fail;
+        goto fail_vulkan;
 
     adapter->vertex_pipe = &none_vertex_pipe;
     adapter->fragment_pipe = &none_fragment_pipe;
@@ -150,9 +198,10 @@ static BOOL wined3d_adapter_vk_init(struct wined3d_adapter_vk *adapter_vk,
 
     return TRUE;
 
+fail_vulkan:
+    VK_CALL(vkDestroyInstance(vk_info->instance, NULL));
+    wined3d_unload_vulkan(vk_info);
 fail:
-    if (vk_info->vk_ops.vkDestroyInstance)
-        VK_CALL(vkDestroyInstance(vk_info->instance, NULL));
     wined3d_adapter_cleanup(adapter);
     return FALSE;
 }

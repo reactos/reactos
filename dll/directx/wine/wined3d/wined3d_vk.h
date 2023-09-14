@@ -20,7 +20,9 @@
 #define __WINE_WINED3D_VK_H
 
 #define VK_NO_PROTOTYPES
+#ifndef USE_WIN32_VULKAN
 #define WINE_VK_HOST
+#endif
 #include "wine/vulkan.h"
 
 #define VK_INSTANCE_FUNCS() \
@@ -179,6 +181,10 @@ struct wined3d_vk_info
 {
     VkInstance instance;
     struct vulkan_ops vk_ops;
+
+#ifdef USE_WIN32_VULKAN
+    HMODULE vulkan_lib;
+#endif
 };
 
 #define VK_CALL(f) (vk_info->vk_ops.f)
