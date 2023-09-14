@@ -3294,6 +3294,10 @@ static void init_transformed_lights(struct lights_settings *ls,
                     ++ls->directional_light_count;
                     break;
 
+                case WINED3D_LIGHT_POINT:
+                    ++ls->point_light_count;
+                    break;
+
                 default:
                     FIXME("Unhandled light type %#x.\n", light_info->OriginalParms.type);
                     continue;
@@ -3315,6 +3319,26 @@ static void init_transformed_lights(struct lights_settings *ls,
         wined3d_vec4_transform(&vec4, &light_info->direction, &state->transforms[WINED3D_TS_VIEW]);
         light->direction = *(struct wined3d_vec3 *)&vec4;
         wined3d_vec3_normalise(&light->direction);
+
+        light->diffuse = light_info->OriginalParms.diffuse;
+        light->ambient = light_info->OriginalParms.ambient;
+        light->specular = light_info->OriginalParms.specular;
+        ++index;
+    }
+
+    for (i = 0; i < light_count; ++i)
+    {
+        light_info = lights[i];
+        if (light_info->OriginalParms.type != WINED3D_LIGHT_POINT)
+            continue;
+
+        light = &ls->lights[index];
+
+        wined3d_vec4_transform(&light->position, &light_info->position, &state->transforms[WINED3D_TS_VIEW]);
+        light->range = light_info->OriginalParms.range;
+        light->c_att = light_info->OriginalParms.attenuation0;
+        light->l_att = light_info->OriginalParms.attenuation1;
+        light->q_att = light_info->OriginalParms.attenuation2;
 
         light->diffuse = light_info->OriginalParms.diffuse;
         light->ambient = light_info->OriginalParms.ambient;
@@ -3355,7 +3379,9 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
     struct wined3d_vec3 normal_transformed = {0.0f};
     struct wined3d_vec4 position_transformed;
     const struct light_transformed *light;
+    struct wined3d_vec3 dir, dst;
     unsigned int i, index;
+    float att;
 
     wined3d_vec4_transform(&position_transformed, position, &ls->modelview_matrix);
     position_transformed_normalised = *(const struct wined3d_vec3 *)&position_transformed;
@@ -3382,6 +3408,41 @@ static void compute_light(struct wined3d_color *ambient, struct wined3d_color *d
         if (normal)
             update_light_diffuse_specular(diffuse, specular, &light->direction, 1.0f, material_shininess,
                     &normal_transformed, &position_transformed_normalised, light, ls);
+    }
+
+    for (i = 0; i < ls->point_light_count; ++i, ++index)
+    {
+        light = &ls->lights[index];
+        dir.x = light->position.x - position_transformed.x;
+        dir.y = light->position.y - position_transformed.y;
+        dir.z = light->position.z - position_transformed.z;
+
+        dst.z = wined3d_vec3_dot(&dir, &dir);
+        dst.y = sqrtf(dst.z);
+        dst.x = 1.0f;
+        if (ls->legacy_lighting)
+        {
+            dst.y = (light->range - dst.y) / light->range;
+            if (!(dst.y > 0.0f))
+                continue;
+            dst.z = dst.y * dst.y;
+        }
+        else
+        {
+            if (!(dst.y <= light->range))
+                continue;
+        }
+        att = dst.x * light->c_att + dst.y * light->l_att + dst.z * light->q_att;
+        if (!ls->legacy_lighting)
+            att = 1.0f / att;
+
+        wined3d_color_rgb_mul_add(ambient, &light->ambient, att);
+        if (normal)
+        {
+            wined3d_vec3_normalise(&dir);
+            update_light_diffuse_specular(diffuse, specular, &dir, att, material_shininess,
+                    &normal_transformed, &position_transformed_normalised, light, ls);
+        }
     }
 }
 
