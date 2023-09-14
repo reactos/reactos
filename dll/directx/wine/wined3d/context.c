@@ -2528,22 +2528,20 @@ void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint nam
     GL_EXTCALL(glBindBuffer(binding, name));
 }
 
-void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint name)
+void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl, GLenum target, GLuint name)
 {
-    const struct wined3d_dummy_textures *textures = &wined3d_device_gl(context->device)->dummy_textures;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    DWORD unit = context->active_texture;
-    DWORD old_texture_type = context->texture_type[unit];
+    const struct wined3d_dummy_textures *textures = &wined3d_device_gl(context_gl->c.device)->dummy_textures;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
+    GLenum old_texture_type;
+    unsigned int unit;
 
     if (name)
-    {
         gl_info->gl_ops.gl.p_glBindTexture(target, name);
-    }
     else
-    {
         target = GL_NONE;
-    }
 
+    unit = context_gl->c.active_texture;
+    old_texture_type = context_gl->c.texture_type[unit];
     if (old_texture_type != target)
     {
         switch (old_texture_type)
@@ -2588,7 +2586,7 @@ void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint
                 ERR("Unexpected texture target %#x.\n", old_texture_type);
         }
 
-        context->texture_type[unit] = target;
+        context_gl->c.texture_type[unit] = target;
     }
 
     checkGLcall("bind texture");
@@ -5558,6 +5556,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
         enum wined3d_texture_filter_type filter)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_blt_info info;
     unsigned int level, w, h, i;
@@ -5572,7 +5571,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     texture2d_get_blt_info(texture_gl, sub_resource_idx, src_rect, &info);
 
     level = sub_resource_idx % texture_gl->t.level_count;
-    context_bind_texture(context, info.bind_target, texture_gl->texture_rgb.name);
+    wined3d_context_gl_bind_texture(context_gl, info.bind_target, texture_gl->texture_rgb.name);
     apply_texture_blit_state(gl_info, &texture_gl->texture_rgb, info.bind_target, level, filter);
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
 
@@ -5635,7 +5634,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
     checkGLcall("draw");
 
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture_gl->t.level_count - 1);
-    context_bind_texture(context, info.bind_target, 0);
+    wined3d_context_gl_bind_texture(context_gl, info.bind_target, 0);
 }
 
 /* Context activation is done by the caller. */
@@ -5643,6 +5642,7 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
         unsigned int sub_resource_idx, const RECT *src_rect, const RECT *dst_rect,
         enum wined3d_texture_filter_type filter)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_blt_info info;
     unsigned int level;
@@ -5653,7 +5653,7 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
     checkGLcall("glEnable(bind_target)");
 
     level = sub_resource_idx % texture_gl->t.level_count;
-    context_bind_texture(context, info.bind_target, texture_gl->texture_rgb.name);
+    wined3d_context_gl_bind_texture(context_gl, info.bind_target, texture_gl->texture_rgb.name);
     apply_texture_blit_state(gl_info, &texture_gl->texture_rgb, info.bind_target, level, filter);
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, level);
     gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -5675,5 +5675,5 @@ void context_draw_textured_quad(struct wined3d_context *context, struct wined3d_
     gl_info->gl_ops.gl.p_glEnd();
 
     gl_info->gl_ops.gl.p_glTexParameteri(info.bind_target, GL_TEXTURE_MAX_LEVEL, texture_gl->t.level_count - 1);
-    context_bind_texture(context, info.bind_target, 0);
+    wined3d_context_gl_bind_texture(context_gl, info.bind_target, 0);
 }

@@ -3618,6 +3618,7 @@ static void wined3d_sampler_desc_from_sampler_states(struct wined3d_sampler_desc
  * texture states. */
 static void sampler(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     DWORD sampler_idx = state_id - STATE_SAMPLER(0);
     DWORD mapped_stage = context->tex_unit_map[sampler_idx];
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -3675,7 +3676,7 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
     }
     else
     {
-        context_bind_texture(context, GL_NONE, 0);
+        wined3d_context_gl_bind_texture(context_gl, GL_NONE, 0);
         if (gl_info->supported[ARB_SAMPLER_OBJECTS])
         {
             GL_EXTCALL(glBindSampler(mapped_stage, 0));

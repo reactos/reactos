@@ -2053,6 +2053,8 @@ static inline struct wined3d_context_gl *wined3d_context_gl(struct wined3d_conte
     return CONTAINING_RECORD(context, struct wined3d_context_gl, c);
 }
 
+void wined3d_context_gl_bind_texture(struct wined3d_context_gl *context_gl,
+        GLenum target, GLuint name) DECLSPEC_HIDDEN;
 void wined3d_context_gl_cleanup(struct wined3d_context_gl *context_gl) DECLSPEC_HIDDEN;
 HRESULT wined3d_context_gl_init(struct wined3d_context_gl *context_gl,
         struct wined3d_swapchain *swapchain) DECLSPEC_HIDDEN;
@@ -2212,7 +2214,6 @@ void context_active_texture(struct wined3d_context *context, const struct wined3
         unsigned int unit) DECLSPEC_HIDDEN;
 void context_bind_bo(struct wined3d_context *context, GLenum binding, GLuint name) DECLSPEC_HIDDEN;
 void context_bind_dummy_textures(const struct wined3d_context *context) DECLSPEC_HIDDEN;
-void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint name) DECLSPEC_HIDDEN;
 void context_check_fbo_status(const struct wined3d_context *context, GLenum target) DECLSPEC_HIDDEN;
 void context_copy_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *dst, GLenum dst_binding,

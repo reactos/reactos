@@ -928,6 +928,7 @@ void wined3d_gl_texture_swizzle_from_color_fixup(GLint swizzle[4], struct color_
 void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
         struct wined3d_context *context, BOOL srgb)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_format *format = texture_gl->t.resource.format;
     const struct color_fixup_desc fixup = format->color_fixup;
     const struct wined3d_gl_info *gl_info = context->gl_info;
@@ -950,7 +951,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
 
     if (gl_tex->name)
     {
-        context_bind_texture(context, target, gl_tex->name);
+        wined3d_context_gl_bind_texture(context_gl, target, gl_tex->name);
         return;
     }
 
@@ -986,7 +987,7 @@ void wined3d_texture_gl_bind(struct wined3d_texture_gl *texture_gl,
     gl_tex->base_level = 0;
     wined3d_texture_set_dirty(&texture_gl->t);
 
-    context_bind_texture(context, target, gl_tex->name);
+    wined3d_context_gl_bind_texture(context_gl, target, gl_tex->name);
 
     /* For a new texture we have to set the texture levels after binding the
      * texture. Beware that texture rectangles do not support mipmapping, but
