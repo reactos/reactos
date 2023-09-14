@@ -2494,10 +2494,74 @@ static void wined3d_texture_gl_upload_data(struct wined3d_context *context,
             src_box, src_bo_addr, src_row_pitch, src_slice_pitch, dst_x, dst_y, dst_z, srgb);
 }
 
+static void wined3d_texture_gl_download_data(struct wined3d_context *context,
+        struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx, unsigned int src_location,
+        const struct wined3d_box *src_box, const struct wined3d_bo_address *dst_bo_addr,
+        const struct wined3d_format *dst_format, unsigned int dst_x, unsigned int dst_y, unsigned int dst_z,
+        unsigned int dst_row_pitch, unsigned int dst_slice_pitch)
+{
+    unsigned int src_level, src_width, src_height, src_depth;
+    unsigned int src_row_pitch, src_slice_pitch;
+    BOOL srgb = FALSE;
+
+    TRACE("context %p, src_texture %p, src_sub_resource_idx %u, src_location %s, src_box %s, dst_bo_addr %s, "
+            "dst_format %s, dst_x %u, dst_y %u, dst_z %u, dst_row_pitch %u, dst_slice_pitch %u.\n",
+            context, src_texture, src_sub_resource_idx, wined3d_debug_location(src_location),
+            debug_box(src_box), debug_bo_address(dst_bo_addr), debug_d3dformat(dst_format->id),
+            dst_x, dst_y, dst_z, dst_row_pitch, dst_slice_pitch);
+
+    if (src_location == WINED3D_LOCATION_TEXTURE_SRGB)
+    {
+        srgb = TRUE;
+    }
+    else if (src_location != WINED3D_LOCATION_TEXTURE_RGB)
+    {
+        FIXME("Unhandled location %s.\n", wined3d_debug_location(src_location));
+        return;
+    }
+
+    src_level = src_sub_resource_idx % src_texture->level_count;
+    src_width = wined3d_texture_get_level_width(src_texture, src_level);
+    src_height = wined3d_texture_get_level_height(src_texture, src_level);
+    src_depth = wined3d_texture_get_level_depth(src_texture, src_level);
+    if (src_box->left || src_box->top || src_box->right != src_width || src_box->bottom != src_height
+            || src_box->front || src_box->back != src_depth)
+    {
+        FIXME("Unhandled source box %s.\n", debug_box(src_box));
+        return;
+    }
+
+    if (dst_x || dst_y || dst_z)
+    {
+        FIXME("Unhandled destination (%u, %u, %u).\n", dst_x, dst_y, dst_z);
+        return;
+    }
+
+    if (dst_format->id != src_texture->resource.format->id)
+    {
+        FIXME("Unhandled format conversion (%s -> %s).\n",
+                debug_d3dformat(src_texture->resource.format->id),
+                debug_d3dformat(dst_format->id));
+        return;
+    }
+
+    wined3d_texture_get_pitch(src_texture, src_level, &src_row_pitch, &src_slice_pitch);
+    if (src_row_pitch != dst_row_pitch || src_slice_pitch != dst_slice_pitch)
+    {
+        FIXME("Unhandled destination pitches %u/%u (source pitches %u/%u).\n",
+                dst_row_pitch, dst_slice_pitch, src_row_pitch, src_slice_pitch);
+        return;
+    }
+
+    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(src_texture), wined3d_context_gl(context), srgb);
+    wined3d_texture_download_data(src_texture, src_sub_resource_idx, context, dst_bo_addr);
+}
+
 static const struct wined3d_texture_ops texture2d_ops =
 {
     texture2d_load_location,
     wined3d_texture_gl_upload_data,
+    wined3d_texture_gl_download_data,
 };
 
 struct wined3d_texture * __cdecl wined3d_texture_from_resource(struct wined3d_resource *resource)
@@ -2881,6 +2945,7 @@ static const struct wined3d_texture_ops texture1d_ops =
 {
     texture1d_load_location,
     wined3d_texture_gl_upload_data,
+    wined3d_texture_gl_download_data,
 };
 
 static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_resource_desc *desc,
@@ -3297,6 +3362,7 @@ static const struct wined3d_texture_ops texture3d_ops =
 {
     texture3d_load_location,
     wined3d_texture_gl_upload_data,
+    wined3d_texture_gl_download_data,
 };
 
 HRESULT CDECL wined3d_texture_blt(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
@@ -3870,17 +3936,30 @@ void wined3d_texture_upload_from_texture(struct wined3d_texture *dst_texture, un
 void wined3d_texture_download_from_texture(struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
         struct wined3d_texture *src_texture, unsigned int src_sub_resource_idx)
 {
+    unsigned int src_level, dst_level, dst_row_pitch, dst_slice_pitch;
+    unsigned int dst_location = dst_texture->resource.map_binding;
     struct wined3d_context *context;
     struct wined3d_bo_address data;
-    DWORD dst_location = dst_texture->resource.map_binding;
+    struct wined3d_box src_box;
+    unsigned int src_location;
 
     context = context_acquire(src_texture->resource.device, NULL, 0);
 
     wined3d_texture_prepare_location(dst_texture, dst_sub_resource_idx, context, dst_location);
     wined3d_texture_get_memory(dst_texture, dst_sub_resource_idx, &data, dst_location);
-    wined3d_texture_gl_bind_and_dirtify(wined3d_texture_gl(src_texture), wined3d_context_gl(context),
-            !(src_texture->sub_resources[src_sub_resource_idx].locations & WINED3D_LOCATION_TEXTURE_RGB));
-    wined3d_texture_download_data(src_texture, src_sub_resource_idx, context, &data);
+
+    if (src_texture->sub_resources[src_sub_resource_idx].locations & WINED3D_LOCATION_TEXTURE_RGB)
+        src_location = WINED3D_LOCATION_TEXTURE_RGB;
+    else
+        src_location = WINED3D_LOCATION_TEXTURE_SRGB;
+    src_level = src_sub_resource_idx % src_texture->level_count;
+    wined3d_texture_get_level_box(src_texture, src_level, &src_box);
+
+    dst_level = dst_sub_resource_idx % dst_texture->level_count;
+    wined3d_texture_get_pitch(dst_texture, dst_level, &dst_row_pitch, &dst_slice_pitch);
+
+    src_texture->texture_ops->texture_download_data(context, src_texture, src_sub_resource_idx, src_location,
+            &src_box, &data, dst_texture->resource.format, 0, 0, 0, dst_row_pitch, dst_slice_pitch);
 
     context_release(context);
 

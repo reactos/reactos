@@ -3427,6 +3427,11 @@ struct wined3d_texture_ops
             const struct wined3d_format *src_format, const struct wined3d_box *src_box, unsigned int src_row_pitch,
             unsigned int src_slice_pitch, struct wined3d_texture *dst_texture, unsigned int dst_sub_resource_idx,
             unsigned int dst_location, unsigned int dst_x, unsigned int dst_y, unsigned int dst_z);
+    void (*texture_download_data)(struct wined3d_context *context, struct wined3d_texture *src_texture,
+            unsigned int src_sub_resource_idx, unsigned int src_location, const struct wined3d_box *src_box,
+            const struct wined3d_bo_address *dst_bo_addr, const struct wined3d_format *dst_format,
+            unsigned int dst_x, unsigned int dst_y, unsigned int dst_z,
+            unsigned int dst_row_pitch, unsigned int dst_slice_pitch);
 };
 
 #define WINED3D_TEXTURE_COND_NP2            0x00000001
