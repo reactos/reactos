@@ -8109,14 +8109,13 @@ static void shader_glsl_generate_ds_epilogue(const struct wined3d_gl_info *gl_in
         shader_glsl_fixup_position(buffer, FALSE);
 }
 
-static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context *context,
+static GLuint shader_glsl_generate_domain_shader(const struct wined3d_context_gl *context_gl,
         struct shader_glsl_priv *priv, const struct wined3d_shader *shader, const struct ds_compile_args *args)
 {
-    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct wined3d_string_buffer_list *string_buffers = &priv->string_buffers;
     const struct wined3d_shader_reg_maps *reg_maps = &shader->reg_maps;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_string_buffer *buffer = &priv->shader_buffer;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct shader_glsl_ctx_priv priv_ctx;
     GLuint shader_id;
 
@@ -8587,6 +8586,7 @@ static GLuint find_glsl_hull_shader(const struct wined3d_context *context,
 static GLuint find_glsl_domain_shader(const struct wined3d_context *context,
         struct shader_glsl_priv *priv, struct wined3d_shader *shader, const struct ds_compile_args *args)
 {
+    const struct wined3d_context_gl *context_gl = wined3d_context_gl_const(context);
     struct glsl_ds_compiled_shader *gl_shaders, *new_array;
     struct glsl_shader_private *shader_data;
     unsigned int i, new_size;
@@ -8632,7 +8632,7 @@ static GLuint find_glsl_domain_shader(const struct wined3d_context *context,
     gl_shaders = new_array;
 
     string_buffer_clear(&priv->shader_buffer);
-    ret = shader_glsl_generate_domain_shader(context, priv, shader, args);
+    ret = shader_glsl_generate_domain_shader(context_gl, priv, shader, args);
     gl_shaders[shader_data->num_gl_shaders].args = *args;
     gl_shaders[shader_data->num_gl_shaders++].id = ret;
 
