@@ -1969,7 +1969,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
 
     adapter->shader_backend->shader_get_caps(adapter, &shader_caps);
     adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
-    adapter->vertex_pipe->vp_get_caps(gl_info, &vertex_caps);
+    adapter->vertex_pipe->vp_get_caps(adapter, &vertex_caps);
 
     /* Add shader misc caps. Only some of them belong to the shader parts of the pipeline */
     caps->PrimitiveMiscCaps |= fragment_caps.PrimitiveMiscCaps;
