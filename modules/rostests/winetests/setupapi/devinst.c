@@ -2070,12 +2070,6 @@ static void test_get_actual_section(void)
     ok(size == 9, "Got size %u.\n", size);
 
     extptr = section;
-    ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, ARRAY_SIZE(section), NULL, &extptr);
-    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
-    ok(!strcasecmp(section, "section1"), "Got unexpected section %s.\n", section);
-    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
-
-    extptr = section;
     ret = SetupDiGetActualSectionToInstallA(hinf, "section2", section, ARRAY_SIZE(section), NULL, &extptr);
     ok(ret, "Failed to get section, error %#x.\n", GetLastError());
     ok(!strcasecmp(section, "section2.NT"), "Got unexpected section %s.\n", section);
@@ -2106,24 +2100,6 @@ static void test_get_actual_section(void)
     ok(extptr == section + 8, "Got extension %s.\n", extptr);
 
     extptr = section;
-    ret = SetupDiGetActualSectionToInstallA(hinf, "section7", section, ARRAY_SIZE(section), NULL, &extptr);
-    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
-    ok(!strcasecmp(section, "section7"), "Got unexpected section %s.\n", section);
-    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
-
-    extptr = section;
-    ret = SetupDiGetActualSectionToInstallA(hinf, "section8", section, ARRAY_SIZE(section), NULL, &extptr);
-    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
-    ok(!strcasecmp(section, "section8"), "Got unexpected section %s.\n", section);
-    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
-
-    extptr = section;
-    ret = SetupDiGetActualSectionToInstallA(hinf, "nonexistent", section, ARRAY_SIZE(section), NULL, &extptr);
-    ok(ret, "Failed to get section, error %#x.\n", GetLastError());
-    ok(!strcasecmp(section, "nonexistent"), "Got unexpected section %s.\n", section);
-    ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
-
-    extptr = section;
     ret = SetupDiGetActualSectionToInstallA(hinf, "section9", section, ARRAY_SIZE(section), NULL, &extptr);
     ok(ret, "Failed to get section, error %#x.\n", GetLastError());
     ok(!strcasecmp(section, "section9.NT" MYEXT), "Got unexpected section %s.\n", section);
@@ -2131,7 +2107,31 @@ static void test_get_actual_section(void)
 
     if (0)
     {
-        /* For some reason, this call hangs on Windows 10 1809. */
+        /* For some reason, these calls hang on Windows 10 1809+. */
+        extptr = section;
+        ret = SetupDiGetActualSectionToInstallA(hinf, "section1", section, ARRAY_SIZE(section), NULL, &extptr);
+        ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+        ok(!strcasecmp(section, "section1"), "Got unexpected section %s.\n", section);
+        ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+        extptr = section;
+        ret = SetupDiGetActualSectionToInstallA(hinf, "section7", section, ARRAY_SIZE(section), NULL, &extptr);
+        ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+        ok(!strcasecmp(section, "section7"), "Got unexpected section %s.\n", section);
+        ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+        extptr = section;
+        ret = SetupDiGetActualSectionToInstallA(hinf, "section8", section, ARRAY_SIZE(section), NULL, &extptr);
+        ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+        ok(!strcasecmp(section, "section8"), "Got unexpected section %s.\n", section);
+        ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
+        extptr = section;
+        ret = SetupDiGetActualSectionToInstallA(hinf, "nonexistent", section, ARRAY_SIZE(section), NULL, &extptr);
+        ok(ret, "Failed to get section, error %#x.\n", GetLastError());
+        ok(!strcasecmp(section, "nonexistent"), "Got unexpected section %s.\n", section);
+        ok(!extptr || !*extptr /* Windows 10 1809 */, "Got extension %s.\n", extptr);
+
         extptr = section;
         ret = SetupDiGetActualSectionToInstallA(hinf, "section10", section, ARRAY_SIZE(section), NULL, &extptr);
         ok(ret, "Failed to get section, error %#x.\n", GetLastError());
