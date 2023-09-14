@@ -43,6 +43,7 @@ static void swapchain_cleanup(struct wined3d_swapchain *swapchain)
 
     TRACE("Destroying swapchain %p.\n", swapchain);
 
+    wined3d_unhook_swapchain(swapchain);
     wined3d_swapchain_set_gamma_ramp(swapchain, 0, &swapchain->orig_gamma);
 
     /* Release the swapchain's draw buffers. Make sure swapchain->back_buffers[0]
@@ -125,7 +126,6 @@ ULONG CDECL wined3d_swapchain_decref(struct wined3d_swapchain *swapchain)
         device = swapchain->device;
         if (device->swapchain_count && device->swapchains[0] == swapchain)
             wined3d_device_uninit_3d(device);
-        wined3d_unhook_swapchain(swapchain);
         wined3d_cs_finish(device->cs, WINED3D_CS_QUEUE_DEFAULT);
 
         swapchain_cleanup(swapchain);
