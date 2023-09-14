@@ -2476,6 +2476,7 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_resource *src_resource, *dst_resource;
+    struct wined3d_texture *staging_texture = NULL;
     struct wined3d_color_key old_blt_key;
     struct wined3d_device *device;
     struct wined3d_blitter *next;
@@ -2500,10 +2501,48 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     old_color_key_flags = src_texture->async.color_key_flags;
     wined3d_texture_set_color_key(src_texture, WINED3D_CKEY_SRC_BLT, color_key);
 
-    /* Make sure the surface is up-to-date. This should probably use
-     * surface_load_location() and worry about the destination surface too,
-     * unless we're overwriting it completely. */
-    wined3d_texture_load(src_texture, context, FALSE);
+    if (!(src_texture->resource.access & WINED3D_RESOURCE_ACCESS_GPU))
+    {
+        struct wined3d_resource_desc desc;
+        struct wined3d_box upload_box;
+        unsigned int src_level;
+        HRESULT hr;
+
+        TRACE("Source texture is not GPU accessible, creating a staging texture.\n");
+
+        src_level = src_sub_resource_idx % src_texture->level_count;
+        desc.resource_type = WINED3D_RTYPE_TEXTURE_2D;
+        desc.format = src_texture->resource.format->id;
+        desc.multisample_type = src_texture->resource.multisample_type;
+        desc.multisample_quality = src_texture->resource.multisample_quality;
+        desc.usage = WINED3DUSAGE_PRIVATE;
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU;
+        desc.width = wined3d_texture_get_level_width(src_texture, src_level);
+        desc.height = wined3d_texture_get_level_height(src_texture, src_level);
+        desc.depth = 1;
+        desc.size = 0;
+
+        if (FAILED(hr = wined3d_texture_create(device, &desc, 1, 1, 0,
+                NULL, NULL, &wined3d_null_parent_ops, &staging_texture)))
+        {
+            ERR("Failed to create staging texture, hr %#x.\n", hr);
+            return dst_location;
+        }
+
+        wined3d_box_set(&upload_box, 0, 0, desc.width, desc.height, 0, desc.depth);
+        wined3d_texture_upload_from_texture(staging_texture, 0, 0, 0, 0,
+                src_texture, src_sub_resource_idx, &upload_box);
+
+        src_texture = staging_texture;
+        src_sub_resource_idx = 0;
+    }
+    else
+    {
+        /* Make sure the surface is up-to-date. This should probably use
+         * surface_load_location() and worry about the destination surface
+         * too, unless we're overwriting it completely. */
+        wined3d_texture_load(src_texture, context, FALSE);
+    }
 
     context_apply_ffp_blit_state(context, device);
 
@@ -2584,6 +2623,9 @@ static DWORD ffp_blitter_blit(struct wined3d_blitter *blitter, enum wined3d_blit
     /* Restore the color key parameters */
     wined3d_texture_set_color_key(src_texture, WINED3D_CKEY_SRC_BLT,
             (old_color_key_flags & WINED3D_CKEY_SRC_BLT) ? &old_blt_key : NULL);
+
+    if (staging_texture)
+        wined3d_texture_decref(staging_texture);
 
     return dst_location;
 }
