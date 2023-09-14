@@ -113,6 +113,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_shader_storage_buffer_object", ARB_SHADER_STORAGE_BUFFER_OBJECT},
     {"GL_ARB_shader_texture_image_samples", ARB_SHADER_TEXTURE_IMAGE_SAMPLES},
     {"GL_ARB_shader_texture_lod",           ARB_SHADER_TEXTURE_LOD        },
+    {"GL_ARB_shader_viewport_layer_array",  ARB_SHADER_VIEWPORT_LAYER_ARRAY},
     {"GL_ARB_shading_language_100",         ARB_SHADING_LANGUAGE_100      },
     {"GL_ARB_shading_language_420pack",     ARB_SHADING_LANGUAGE_420PACK  },
     {"GL_ARB_shading_language_packing",     ARB_SHADING_LANGUAGE_PACKING  },

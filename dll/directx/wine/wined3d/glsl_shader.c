@@ -7883,6 +7883,8 @@ static GLuint shader_glsl_generate_vshader(const struct wined3d_context *context
         shader_addline(buffer, "#extension GL_ARB_draw_instanced : enable\n");
     if (shader_glsl_use_explicit_attrib_location(gl_info))
         shader_addline(buffer, "#extension GL_ARB_explicit_attrib_location : enable\n");
+    if (gl_info->supported[ARB_SHADER_VIEWPORT_LAYER_ARRAY])
+        shader_addline(buffer, "#extension GL_ARB_shader_viewport_layer_array : enable\n");
 
     /* Base Declarations */
     shader_generate_glsl_declarations(context, buffer, shader, reg_maps, &priv_ctx);
