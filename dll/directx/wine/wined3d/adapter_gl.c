@@ -204,6 +204,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_texture_snorm",                EXT_TEXTURE_SNORM             },
     {"GL_EXT_texture_sRGB",                 EXT_TEXTURE_SRGB              },
     {"GL_EXT_texture_sRGB_decode",          EXT_TEXTURE_SRGB_DECODE       },
+    {"GL_EXT_texture_swizzle",              ARB_TEXTURE_SWIZZLE           },
     {"GL_EXT_vertex_array_bgra",            EXT_VERTEX_ARRAY_BGRA         },
 
     /* NV */
