@@ -2291,8 +2291,10 @@ static void test_rename(void)
     ok(delete_file("a/six.txt"), "File should exist.\n");
     SetupCloseFileQueue(queue);
 
-    ok(delete_file("a/"), "Failed to delete directory, error %lu.\n", GetLastError());
-    ok(delete_file("b/"), "Failed to delete directory, error %lu.\n", GetLastError());
+    ret = delete_file("a/");
+    ok(ret, "Failed to delete directory, error %lu.\n", GetLastError());
+    ret = delete_file("b/");
+    ok(ret, "Failed to delete directory, error %lu.\n", GetLastError());
 }
 
 static WCHAR service_name[] = L"Wine Test Service";
