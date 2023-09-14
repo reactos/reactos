@@ -1181,6 +1181,7 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
 {
     struct wined3d_device *device = swapchain->device;
     HWND window = swapchain->state.device_window;
+    unsigned int screensaver_active;
     BOOL focus_messages, filter;
 
     /* This code is not protected by the wined3d mutex, so it may run while
@@ -1193,6 +1194,10 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
 
     if (activate)
     {
+        SystemParametersInfoW(SPI_GETSCREENSAVEACTIVE, 0, &screensaver_active, 0);
+        if ((device->restore_screensaver = !!screensaver_active))
+            SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, FALSE, NULL, 0);
+
         if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES))
         {
             /* The d3d versions do not agree on the exact messages here. D3d8 restores
@@ -1218,6 +1223,12 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
     }
     else
     {
+        if (device->restore_screensaver)
+        {
+            SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, TRUE, NULL, 0);
+            device->restore_screensaver = FALSE;
+        }
+
         if (FAILED(wined3d_set_adapter_display_mode(device->wined3d,
                 device->adapter->ordinal, NULL)))
             ERR("Failed to set display mode.\n");
