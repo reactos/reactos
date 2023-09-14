@@ -2686,6 +2686,7 @@ void wined3d_driver_info_init(struct wined3d_driver_info *driver_info,
 
 struct wined3d_adapter_ops
 {
+    void (*adapter_destroy)(struct wined3d_adapter *adapter);
     BOOL (*adapter_create_context)(struct wined3d_context *context,
             struct wined3d_texture *target, const struct wined3d_format *ds_format);
     void (*adapter_get_wined3d_caps)(const struct wined3d_adapter *adapter, struct wined3d_caps *caps);
@@ -2710,8 +2711,6 @@ struct wined3d_adapter
     LUID luid;
 
     WCHAR device_name[CCHDEVICENAME]; /* for use with e.g. ChangeDisplaySettings() */
-    unsigned int cfg_count;
-    struct wined3d_pixel_format *cfgs;
 
     void *formats;
     size_t format_size;
@@ -2723,11 +2722,25 @@ struct wined3d_adapter
 };
 
 BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, unsigned int ordinal) DECLSPEC_HIDDEN;
+void wined3d_adapter_cleanup(struct wined3d_adapter *adapter) DECLSPEC_HIDDEN;
 
 struct wined3d_adapter_gl
 {
     struct wined3d_adapter a;
+
+    struct wined3d_pixel_format *pixel_formats;
+    unsigned int pixel_format_count;
 };
+
+static inline struct wined3d_adapter_gl *wined3d_adapter_gl(struct wined3d_adapter *adapter)
+{
+    return CONTAINING_RECORD(adapter, struct wined3d_adapter_gl, a);
+}
+
+static inline const struct wined3d_adapter_gl *wined3d_adapter_gl_const(const struct wined3d_adapter *adapter)
+{
+    return CONTAINING_RECORD(adapter, struct wined3d_adapter_gl, a);
+}
 
 struct wined3d_adapter *wined3d_adapter_gl_create(unsigned int ordinal, unsigned int wined3d_creation_flags) DECLSPEC_HIDDEN;
 BOOL wined3d_adapter_gl_create_context(struct wined3d_context *context,

@@ -1652,7 +1652,7 @@ static int context_choose_pixel_format(const struct wined3d_device *device, HDC 
         const struct wined3d_format *color_format, const struct wined3d_format *ds_format,
         BOOL auxBuffers)
 {
-    unsigned int cfg_count = device->adapter->cfg_count;
+    unsigned int cfg_count = wined3d_adapter_gl(device->adapter)->pixel_format_count;
     unsigned int current_value;
     PIXELFORMATDESCRIPTOR pfd;
     int iPixelFormat = 0;
@@ -1665,7 +1665,7 @@ static int context_choose_pixel_format(const struct wined3d_device *device, HDC 
     current_value = 0;
     for (i = 0; i < cfg_count; ++i)
     {
-        const struct wined3d_pixel_format *cfg = &device->adapter->cfgs[i];
+        const struct wined3d_pixel_format *cfg = &wined3d_adapter_gl(device->adapter)->pixel_formats[i];
         unsigned int value;
 
         /* For now only accept RGBA formats. Perhaps some day we will

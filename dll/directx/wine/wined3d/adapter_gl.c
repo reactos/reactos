@@ -4119,9 +4119,9 @@ static void wined3d_adapter_init_ffp_attrib_ops(struct wined3d_adapter *adapter)
     }
 }
 
-static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc)
+static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter_gl *adapter_gl, HDC dc)
 {
-    const struct wined3d_gl_info *gl_info = &adapter->gl_info;
+    const struct wined3d_gl_info *gl_info = &adapter_gl->a.gl_info;
     int i;
 
     if (gl_info->supported[WGL_ARB_PIXEL_FORMAT])
@@ -4135,7 +4135,7 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         attribute = WGL_NUMBER_PIXEL_FORMATS_ARB;
         GL_EXTCALL(wglGetPixelFormatAttribivARB(dc, 0, 0, 1, &attribute, &cfg_count));
 
-        adapter->cfgs = heap_calloc(cfg_count, sizeof(*adapter->cfgs));
+        adapter_gl->pixel_formats = heap_calloc(cfg_count, sizeof(*adapter_gl->pixel_formats));
         attribs[attrib_count++] = WGL_RED_BITS_ARB;
         attribs[attrib_count++] = WGL_GREEN_BITS_ARB;
         attribs[attrib_count++] = WGL_BLUE_BITS_ARB;
@@ -4148,9 +4148,9 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         attribs[attrib_count++] = WGL_DOUBLE_BUFFER_ARB;
         attribs[attrib_count++] = WGL_AUX_BUFFERS_ARB;
 
-        for (i = 0, adapter->cfg_count = 0; i < cfg_count; ++i)
+        for (i = 0, adapter_gl->pixel_format_count = 0; i < cfg_count; ++i)
         {
-            struct wined3d_pixel_format *cfg = &adapter->cfgs[adapter->cfg_count];
+            struct wined3d_pixel_format *cfg = &adapter_gl->pixel_formats[adapter_gl->pixel_format_count];
             int format_id = i + 1;
 
             if (!GL_EXTCALL(wglGetPixelFormatAttribivARB(dc, format_id, 0, attrib_count, attribs, values)))
@@ -4192,7 +4192,7 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
                     cfg->redSize, cfg->greenSize, cfg->blueSize, cfg->alphaSize,
                     cfg->depthSize, cfg->stencilSize, cfg->numSamples, cfg->windowDrawable);
 
-            ++adapter->cfg_count;
+            ++adapter_gl->pixel_format_count;
         }
     }
     else
@@ -4200,11 +4200,11 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         int cfg_count;
 
         cfg_count = DescribePixelFormat(dc, 0, 0, 0);
-        adapter->cfgs = heap_calloc(cfg_count, sizeof(*adapter->cfgs));
+        adapter_gl->pixel_formats = heap_calloc(cfg_count, sizeof(*adapter_gl->pixel_formats));
 
-        for (i = 0, adapter->cfg_count = 0; i < cfg_count; ++i)
+        for (i = 0, adapter_gl->pixel_format_count = 0; i < cfg_count; ++i)
         {
-            struct wined3d_pixel_format *cfg = &adapter->cfgs[adapter->cfg_count];
+            struct wined3d_pixel_format *cfg = &adapter_gl->pixel_formats[adapter_gl->pixel_format_count];
             PIXELFORMATDESCRIPTOR pfd;
             int format_id = i + 1;
 
@@ -4241,7 +4241,7 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
                     cfg->redSize, cfg->greenSize, cfg->blueSize, cfg->alphaSize,
                     cfg->depthSize, cfg->stencilSize, cfg->windowDrawable);
 
-            ++adapter->cfg_count;
+            ++adapter_gl->pixel_format_count;
         }
     }
 }
@@ -4439,6 +4439,7 @@ static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
         const struct wined3d_format *adapter_format, const struct wined3d_format *rt_format,
         const struct wined3d_format *ds_format)
 {
+    const struct wined3d_adapter_gl *adapter_gl = wined3d_adapter_gl_const(adapter);
     unsigned int i;
 
     if (wined3d_settings.offscreen_rendering_mode != ORM_BACKBUFFER)
@@ -4459,9 +4460,9 @@ static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
         }
     }
 
-    for (i = 0; i < adapter->cfg_count; ++i)
+    for (i = 0; i < adapter_gl->pixel_format_count; ++i)
     {
-        const struct wined3d_pixel_format *cfg = &adapter->cfgs[i];
+        const struct wined3d_pixel_format *cfg = &adapter_gl->pixel_formats[i];
 
         /* Check if there is a WGL pixel format matching the requirements, the format should also be window
          * drawable (not offscreen; e.g. Nvidia offers R5G6B5 for pbuffers even when X is running at 24bit) */
@@ -4480,8 +4481,18 @@ static BOOL adapter_gl_check_format(const struct wined3d_adapter *adapter,
     return FALSE;
 }
 
+static void adapter_gl_destroy(struct wined3d_adapter *adapter)
+{
+    struct wined3d_adapter_gl *adapter_gl = wined3d_adapter_gl(adapter);
+
+    heap_free(adapter_gl->pixel_formats);
+    wined3d_adapter_cleanup(adapter);
+    heap_free(adapter_gl);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
+    adapter_gl_destroy,
     wined3d_adapter_gl_create_context,
     adapter_gl_get_wined3d_caps,
     adapter_gl_check_format,
@@ -4498,6 +4509,7 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,
     };
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
     struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
+    struct wined3d_adapter_gl *adapter_gl;
     unsigned int i;
 
     TRACE("adapter %p, ordinal %u, wined3d_creation_flags %#x.\n",
@@ -4505,6 +4517,8 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,
 
     if (!wined3d_adapter_init(adapter, ordinal))
         return FALSE;
+
+    adapter_gl = wined3d_adapter_gl(adapter);
 
     /* Dynamically load all GL core functions */
 #ifdef USE_WIN32_OPENGL
@@ -4571,14 +4585,14 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,
         ERR_(winediag)("You are using the backbuffer for offscreen rendering. "
                 "This is unsupported, and will be removed in a future version.\n");
 
-    wined3d_adapter_init_fb_cfgs(adapter, caps_gl_ctx.dc);
+    wined3d_adapter_init_fb_cfgs(adapter_gl, caps_gl_ctx.dc);
     /* We haven't found any suitable formats. This should only happen in
      * case of GDI software rendering, which is pretty useless anyway. */
-    if (!adapter->cfg_count)
+    if (!adapter_gl->pixel_format_count)
     {
         WARN("No suitable pixel formats found.\n");
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        heap_free(adapter->cfgs);
+        heap_free(adapter_gl->pixel_formats);
         return FALSE;
     }
 
@@ -4586,7 +4600,7 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter *adapter,
     {
         ERR("Failed to initialize GL format info.\n");
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        heap_free(adapter->cfgs);
+        heap_free(adapter_gl->pixel_formats);
         return FALSE;
     }
 

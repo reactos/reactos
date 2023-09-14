@@ -71,12 +71,9 @@ UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount)
     return adapter->vram_bytes_used;
 }
 
-static void wined3d_adapter_cleanup(struct wined3d_adapter *adapter)
+void wined3d_adapter_cleanup(struct wined3d_adapter *adapter)
 {
     heap_free(adapter->formats);
-    heap_free(adapter->cfgs);
-
-    heap_free(adapter);
 }
 
 ULONG CDECL wined3d_incref(struct wined3d *wined3d)
@@ -100,7 +97,9 @@ ULONG CDECL wined3d_decref(struct wined3d *wined3d)
 
         for (i = 0; i < wined3d->adapter_count; ++i)
         {
-            wined3d_adapter_cleanup(wined3d->adapters[i]);
+            struct wined3d_adapter *adapter = wined3d->adapters[i];
+
+            adapter->adapter_ops->adapter_destroy(adapter);
         }
         heap_free(wined3d);
     }
@@ -2213,6 +2212,12 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, unsigned int adapte
     return WINED3D_OK;
 }
 
+static void adapter_no3d_destroy(struct wined3d_adapter *adapter)
+{
+    wined3d_adapter_cleanup(adapter);
+    heap_free(adapter);
+}
+
 static BOOL wined3d_adapter_no3d_create_context(struct wined3d_context *context,
         struct wined3d_texture *target, const struct wined3d_format *ds_format)
 {
@@ -2232,6 +2237,7 @@ static BOOL adapter_no3d_check_format(const struct wined3d_adapter *adapter,
 
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
+    adapter_no3d_destroy,
     wined3d_adapter_no3d_create_context,
     adapter_no3d_get_wined3d_caps,
     adapter_no3d_check_format,
