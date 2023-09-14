@@ -2018,31 +2018,27 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                           WINED3DPTEXTURECAPS_PROJECTED          |
                           WINED3DPTEXTURECAPS_PERSPECTIVE;
 
-    if (!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO])
+    if (!d3d_info->texture_npot)
     {
         caps->TextureCaps |= WINED3DPTEXTURECAPS_POW2;
-        if (gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT] || gl_info->supported[ARB_TEXTURE_RECTANGLE])
+        if (d3d_info->texture_npot_conditional)
             caps->TextureCaps |= WINED3DPTEXTURECAPS_NONPOW2CONDITIONAL;
     }
 
     if (gl_info->supported[EXT_TEXTURE3D])
     {
-        caps->TextureCaps  |=  WINED3DPTEXTURECAPS_VOLUMEMAP      |
-                               WINED3DPTEXTURECAPS_MIPVOLUMEMAP;
-        if (!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO])
-        {
+        caps->TextureCaps |= WINED3DPTEXTURECAPS_VOLUMEMAP
+                | WINED3DPTEXTURECAPS_MIPVOLUMEMAP;
+        if (!d3d_info->texture_npot)
             caps->TextureCaps |= WINED3DPTEXTURECAPS_VOLUMEMAP_POW2;
-        }
     }
 
     if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
     {
-        caps->TextureCaps  |= WINED3DPTEXTURECAPS_CUBEMAP     |
-                              WINED3DPTEXTURECAPS_MIPCUBEMAP;
-        if (!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO])
-        {
+        caps->TextureCaps |= WINED3DPTEXTURECAPS_CUBEMAP
+                | WINED3DPTEXTURECAPS_MIPCUBEMAP;
+        if (!d3d_info->texture_npot)
             caps->TextureCaps |= WINED3DPTEXTURECAPS_CUBEMAP_POW2;
-        }
     }
 
     caps->TextureFilterCaps =  WINED3DPTFILTERCAPS_MAGFLINEAR       |

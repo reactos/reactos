@@ -1665,6 +1665,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
         UINT multisample_quality, void *mem, UINT pitch)
 {
     struct wined3d_texture_sub_resource *sub_resource;
+    const struct wined3d_d3d_info *d3d_info;
     const struct wined3d_gl_info *gl_info;
     const struct wined3d_format *format;
     struct wined3d_device *device;
@@ -1678,6 +1679,7 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
 
     device = texture->resource.device;
     gl_info = &device->adapter->gl_info;
+    d3d_info = &device->adapter->d3d_info;
     format = wined3d_get_format(device->adapter, format_id, texture->resource.usage);
     resource_size = wined3d_format_calculate_size(format, device->surface_alignment, width, height, 1);
 
@@ -1758,8 +1760,8 @@ HRESULT CDECL wined3d_texture_update_desc(struct wined3d_texture *texture, UINT 
     else
         texture->target = GL_TEXTURE_2D;
 
-    if ((!is_power_of_two(width) || !is_power_of_two(height)) && !gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO]
-            && !gl_info->supported[ARB_TEXTURE_RECTANGLE] && !gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
+    if (((width & (width - 1)) || (height & (height - 1))) && !d3d_info->texture_npot
+            && !d3d_info->texture_npot_conditional)
     {
         texture->flags |= WINED3D_TEXTURE_COND_NP2_EMULATED;
         texture->pow2_width = texture->pow2_height = 1;
@@ -2762,6 +2764,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         unsigned int layer_count, unsigned int level_count, DWORD flags, struct wined3d_device *device,
         void *parent, const struct wined3d_parent_ops *parent_ops, const struct wined3d_texture_ops *texture_ops)
 {
+    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
     struct wined3d_device_parent *device_parent = device->device_parent;
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     unsigned int sub_count, i, j, size, offset = 0;
@@ -2829,7 +2832,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
     pow2_width = desc->width;
     pow2_height = desc->height;
     if (((desc->width & (desc->width - 1)) || (desc->height & (desc->height - 1)) || (desc->depth & (desc->depth - 1)))
-            && !gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO])
+            && !d3d_info->texture_npot)
     {
         /* level_count == 0 returns an error as well. */
         if (level_count != 1 || layer_count != 1 || desc->resource_type == WINED3D_RTYPE_TEXTURE_3D)
@@ -2845,8 +2848,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
         }
         texture->flags |= WINED3D_TEXTURE_COND_NP2;
 
-        if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D && !gl_info->supported[ARB_TEXTURE_RECTANGLE]
-                && !gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
+        if (desc->resource_type != WINED3D_RTYPE_TEXTURE_3D && !d3d_info->texture_npot_conditional)
         {
             /* TODO: Add support for non-power-of-two compressed textures. */
             if (format->flags[WINED3D_GL_RES_TYPE_TEX_2D]

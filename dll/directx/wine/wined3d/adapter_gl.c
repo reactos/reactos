@@ -3664,7 +3664,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     d3d_info->limits.vs_uniform_count = shader_caps.vs_uniform_count;
     d3d_info->limits.ps_uniform_count = shader_caps.ps_uniform_count;
     d3d_info->limits.varying_count = shader_caps.varying_count;
-    d3d_info->shader_double_precision = shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION;
+    d3d_info->shader_double_precision = !!(shader_caps.wined3d_caps & WINED3D_SHADER_CAP_DOUBLE_PRECISION);
 
     adapter->vertex_pipe->vp_get_caps(gl_info, &vertex_caps);
     d3d_info->xyzrhw = vertex_caps.xyzrhw;
@@ -3676,9 +3676,13 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     adapter->fragment_pipe->get_caps(gl_info, &fragment_caps);
     d3d_info->limits.ffp_blend_stages = fragment_caps.MaxTextureBlendStages;
     d3d_info->limits.ffp_textures = fragment_caps.MaxSimultaneousTextures;
-    d3d_info->shader_color_key = fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY;
+    d3d_info->shader_color_key = !!(fragment_caps.wined3d_caps & WINED3D_FRAGMENT_CAP_COLOR_KEY);
     d3d_info->wined3d_creation_flags = wined3d_creation_flags;
     d3d_info->feature_level = feature_level_from_caps(gl_info, &shader_caps, &fragment_caps);
+
+    d3d_info->texture_npot = !!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO];
+    d3d_info->texture_npot_conditional = gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT]
+            || gl_info->supported[ARB_TEXTURE_RECTANGLE];
 
     TRACE("Max texture stages: %u.\n", d3d_info->limits.ffp_blend_stages);
 

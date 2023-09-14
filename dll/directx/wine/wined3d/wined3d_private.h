@@ -187,15 +187,16 @@ struct wined3d_d3d_info
 {
     struct wined3d_d3d_limits limits;
     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
-    BOOL xyzrhw;
-    BOOL emulated_flatshading;
-    BOOL ffp_generic_attributes;
-    BOOL vs_clipping;
-    BOOL shader_color_key;
     DWORD valid_rt_mask;
-    DWORD valid_dual_rt_mask;
     DWORD wined3d_creation_flags;
-    BOOL shader_double_precision;
+    unsigned int xyzrhw : 1;
+    unsigned int emulated_flatshading : 1;
+    unsigned int ffp_generic_attributes : 1;
+    unsigned int vs_clipping : 1;
+    unsigned int shader_color_key : 1;
+    unsigned int shader_double_precision : 1;
+    unsigned int texture_npot : 1;
+    unsigned int texture_npot_conditional : 1;
     enum wined3d_feature_level feature_level;
 };
 
