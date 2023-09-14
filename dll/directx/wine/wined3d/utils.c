@@ -5493,9 +5493,8 @@ void get_projection_matrix(const struct wined3d_context *context, const struct w
 }
 
 /* Setup this textures matrix according to the texture flags. */
-static void compute_texture_matrix(const struct wined3d_gl_info *gl_info, const struct wined3d_matrix *matrix,
-        DWORD flags, BOOL calculated_coords, BOOL transformed, enum wined3d_format_id format_id,
-        BOOL ffp_proj_control, struct wined3d_matrix *out_matrix)
+static void compute_texture_matrix(const struct wined3d_matrix *matrix, uint32_t flags, BOOL calculated_coords,
+        BOOL transformed, enum wined3d_format_id format_id, BOOL ffp_proj_control, struct wined3d_matrix *out_matrix)
 {
     struct wined3d_matrix mat;
 
@@ -5609,13 +5608,12 @@ void get_texture_matrix(const struct wined3d_context *context, const struct wine
         unsigned int tex, struct wined3d_matrix *mat)
 {
     const struct wined3d_device *device = context->device;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL generated = (state->texture_states[tex][WINED3D_TSS_TEXCOORD_INDEX] & 0xffff0000)
             != WINED3DTSS_TCI_PASSTHRU;
     unsigned int coord_idx = min(state->texture_states[tex][WINED3D_TSS_TEXCOORD_INDEX & 0x0000ffff],
             WINED3D_MAX_TEXTURES - 1);
 
-    compute_texture_matrix(gl_info, &state->transforms[WINED3D_TS_TEXTURE0 + tex],
+    compute_texture_matrix(&state->transforms[WINED3D_TS_TEXTURE0 + tex],
             state->texture_states[tex][WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS],
             generated, context->last_was_rhw,
             context->stream_info.use_map & (1u << (WINED3D_FFP_TEXCOORD0 + coord_idx))
