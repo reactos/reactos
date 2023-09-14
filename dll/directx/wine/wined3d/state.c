@@ -694,7 +694,7 @@ void state_alpha_test(struct wined3d_context *context, const struct wined3d_stat
     }
     else
     {
-        ref = ((float)state->render_states[WINED3D_RS_ALPHAREF]) / 255.0f;
+        ref = wined3d_alpha_ref(state);
         glParm = wined3d_gl_compare_func(state->render_states[WINED3D_RS_ALPHAFUNC]);
     }
     if (glParm)

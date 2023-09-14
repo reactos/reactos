@@ -1735,7 +1735,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
 
     if (update_mask & WINED3D_SHADER_CONST_PS_ALPHA_TEST)
     {
-        float ref = state->render_states[WINED3D_RS_ALPHAREF] / 255.0f;
+        float ref = wined3d_alpha_ref(state);
 
         GL_EXTCALL(glUniform1f(prog->ps.alpha_test_ref_location, ref));
         checkGLcall("alpha test emulation uniform");
@@ -12076,7 +12076,7 @@ static void glsl_fragment_pipe_alpha_test_func(struct wined3d_context *context,
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLint func = wined3d_gl_compare_func(state->render_states[WINED3D_RS_ALPHAFUNC]);
-    float ref = state->render_states[WINED3D_RS_ALPHAREF] / 255.0f;
+    float ref = wined3d_alpha_ref(state);
 
     if (func)
     {
