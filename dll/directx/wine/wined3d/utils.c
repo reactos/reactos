@@ -4464,6 +4464,27 @@ const char *wined3d_debug_resource_access(DWORD access)
     return wine_dbg_sprintf("%s", buffer.str);
 }
 
+const char *wined3d_debug_bind_flags(DWORD bind_flags)
+{
+    struct debug_buffer buffer;
+
+    init_debug_buffer(&buffer, "0");
+#define BIND_FLAG_TO_STR(x) if (bind_flags & x) { debug_append(&buffer, #x, " | "); bind_flags &= ~x; }
+    BIND_FLAG_TO_STR(WINED3D_BIND_VERTEX_BUFFER);
+    BIND_FLAG_TO_STR(WINED3D_BIND_INDEX_BUFFER);
+    BIND_FLAG_TO_STR(WINED3D_BIND_CONSTANT_BUFFER);
+    BIND_FLAG_TO_STR(WINED3D_BIND_SHADER_RESOURCE);
+    BIND_FLAG_TO_STR(WINED3D_BIND_STREAM_OUTPUT);
+    BIND_FLAG_TO_STR(WINED3D_BIND_RENDER_TARGET);
+    BIND_FLAG_TO_STR(WINED3D_BIND_DEPTH_STENCIL);
+    BIND_FLAG_TO_STR(WINED3D_BIND_UNORDERED_ACCESS);
+#undef BIND_FLAG_TO_STR
+    if (bind_flags)
+        FIXME("Unrecognised bind flag(s) %#x.\n", bind_flags);
+
+    return wine_dbg_sprintf("%s", buffer.str);
+}
+
 const char *debug_d3dusage(DWORD usage)
 {
     struct debug_buffer buffer;

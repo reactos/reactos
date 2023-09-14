@@ -1464,8 +1464,11 @@ HRESULT CDECL wined3d_buffer_create(struct wined3d_device *device, const struct 
     struct wined3d_buffer *object;
     HRESULT hr;
 
-    TRACE("device %p, desc %p, data %p, parent %p, parent_ops %p, buffer %p.\n",
-            device, desc, data, parent, parent_ops, buffer);
+    TRACE("device %p, desc byte_width %u, usage %s, bind_flags %s, access %s, data %p, parent %p, "
+            "parent_ops %p, buffer %p.\n",
+            device, desc->byte_width, debug_d3dusage(desc->usage),
+            wined3d_debug_bind_flags(desc->bind_flags), wined3d_debug_resource_access(desc->access),
+            data, parent, parent_ops, buffer);
 
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
