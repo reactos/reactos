@@ -839,17 +839,11 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.scissorRect
-            && (src_state->scissor_rect_count != stateblock->state.scissor_rect_count
-            || memcmp(src_state->scissor_rects, stateblock->state.scissor_rects,
-                       src_state->scissor_rect_count * sizeof(*stateblock->state.scissor_rects))))
+            && memcmp(&state->scissor_rect, &stateblock->stateblock_state.scissor_rect, sizeof(state->scissor_rect)))
     {
-        TRACE("Updating scissor rects.\n");
+        TRACE("Updating scissor rect.\n");
 
-        if ((stateblock->state.scissor_rect_count = src_state->scissor_rect_count))
-            memcpy(stateblock->state.scissor_rects, src_state->scissor_rects,
-                    src_state->scissor_rect_count * sizeof(*src_state->scissor_rects));
-        else
-            SetRectEmpty(stateblock->state.scissor_rects);
+        stateblock->stateblock_state.scissor_rect = state->scissor_rect;
     }
 
     if (stateblock->changed.blend_state
@@ -1134,8 +1128,11 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     }
 
     if (stateblock->changed.scissorRect)
-        wined3d_device_set_scissor_rects(device, stateblock->state.scissor_rect_count,
-                stateblock->state.scissor_rects);
+    {
+        state->scissor_rect = stateblock->stateblock_state.scissor_rect;
+
+        wined3d_device_set_scissor_rects(device, 1, &stateblock->stateblock_state.scissor_rect);
+    }
 
     if (stateblock->changed.blend_state)
         wined3d_device_set_blend_state(device, stateblock->state.blend_state, &stateblock->state.blend_factor);

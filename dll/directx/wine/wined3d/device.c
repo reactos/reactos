@@ -2150,27 +2150,27 @@ void CDECL wined3d_device_set_scissor_rects(struct wined3d_device *device, unsig
         TRACE("%u: %s\n", i, wine_dbgstr_rect(&rects[i]));
     }
 
-    if (device->recording)
-        device->recording->changed.scissorRect = TRUE;
+    if (rect_count)
+        device->update_stateblock_state->scissor_rect = rects[0];
 
-    if (device->update_state->scissor_rect_count == rect_count
-            && !memcmp(device->update_state->scissor_rects, rects, rect_count * sizeof(*rects)))
+    if (device->recording)
+    {
+        device->recording->changed.scissorRect = TRUE;
+        return;
+    }
+
+    if (device->state.scissor_rect_count == rect_count
+            && !memcmp(device->state.scissor_rects, rects, rect_count * sizeof(*rects)))
     {
         TRACE("App is setting the old scissor rectangles over, nothing to do.\n");
         return;
     }
 
     if (rect_count)
-        memcpy(device->update_state->scissor_rects, rects, rect_count * sizeof(*rects));
+        memcpy(device->state.scissor_rects, rects, rect_count * sizeof(*rects));
     else
-        memset(device->update_state->scissor_rects, 0, sizeof(device->update_state->scissor_rects));
-    device->update_state->scissor_rect_count = rect_count;
-
-    if (device->recording)
-    {
-        TRACE("Recording... not performing anything.\n");
-        return;
-    }
+        memset(device->state.scissor_rects, 0, sizeof(device->state.scissor_rects));
+    device->state.scissor_rect_count = rect_count;
 
     wined3d_cs_emit_set_scissor_rects(device->cs, rect_count, rects);
 }
@@ -4546,6 +4546,7 @@ HRESULT CDECL wined3d_device_set_rendertarget_view(struct wined3d_device *device
         SetRect(&state->scissor_rects[0], 0, 0, view->width, view->height);
         state->scissor_rect_count = 1;
         wined3d_cs_emit_set_scissor_rects(device->cs, 1, state->scissor_rects);
+        device->stateblock_state.scissor_rect = state->scissor_rects[0];
     }
 
     prev = device->fb.render_targets[view_idx];
