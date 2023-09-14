@@ -947,7 +947,7 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     }
 
     /* Swapchains share the depth/stencil buffer, so only create a single depthstencil surface. */
-    if (desc->enable_auto_depth_stencil && !(device->wined3d->flags & WINED3D_NO3D))
+    if (desc->enable_auto_depth_stencil)
     {
         TRACE("Creating depth/stencil buffer.\n");
         if (!device->auto_depth_stencil_view)
