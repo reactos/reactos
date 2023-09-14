@@ -297,7 +297,9 @@ static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     const VkPhysicalDeviceLimits *limits = &adapter_vk->device_limits;
     BOOL sampler_anisotropy = limits->maxSamplerAnisotropy > 1.0f;
 
-    caps->ddraw_caps.dds_caps |= WINEDDSCAPS_3DDEVICE
+    caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
+            | WINEDDSCAPS_FRONTBUFFER
+            | WINEDDSCAPS_3DDEVICE
             | WINEDDSCAPS_VIDEOMEMORY;
     caps->ddraw_caps.caps |= WINEDDCAPS_3D;
 

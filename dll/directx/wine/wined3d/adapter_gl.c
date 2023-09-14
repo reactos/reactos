@@ -4371,7 +4371,9 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     const struct wined3d_d3d_info *d3d_info = &adapter->d3d_info;
     const struct wined3d_gl_info *gl_info = &adapter->gl_info;
 
-    caps->ddraw_caps.dds_caps |= WINEDDSCAPS_3DDEVICE
+    caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
+            | WINEDDSCAPS_FRONTBUFFER
+            | WINEDDSCAPS_3DDEVICE
             | WINEDDSCAPS_VIDEOMEMORY;
     caps->ddraw_caps.caps |= WINEDDCAPS_3D;
 
