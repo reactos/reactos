@@ -767,10 +767,11 @@ void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     for (i = 0; i < stateblock->num_contained_ps_consts_b; ++i)
     {
         unsigned int idx = stateblock->contained_ps_consts_b[i];
-        TRACE("Setting ps_consts_b[%u] to %s.\n",
-                idx, src_state->ps_consts_b[idx] ? "TRUE" : "FALSE");
 
-        stateblock->state.ps_consts_b[idx] = src_state->ps_consts_b[idx];
+        TRACE("Setting ps_consts_b[%u] to %s.\n",
+                idx, state->ps_consts_b[idx] ? "TRUE" : "FALSE");
+
+        stateblock->stateblock_state.ps_consts_b[idx] = state->ps_consts_b[idx];
     }
 
     /* Others + Render & Texture */
@@ -1062,8 +1063,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     }
     for (i = 0; i < stateblock->num_contained_ps_consts_b; ++i)
     {
+        state->ps_consts_b[i] = stateblock->stateblock_state.ps_consts_b[i];
         wined3d_device_set_ps_consts_b(device, stateblock->contained_ps_consts_b[i],
-                1, &stateblock->state.ps_consts_b[stateblock->contained_ps_consts_b[i]]);
+                1, &stateblock->stateblock_state.ps_consts_b[stateblock->contained_ps_consts_b[i]]);
     }
 
     /* Render states. */

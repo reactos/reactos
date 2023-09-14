@@ -3014,6 +3014,7 @@ struct wined3d_stateblock_state
     struct wined3d_shader *ps;
     struct wined3d_vec4 ps_consts_f[WINED3D_MAX_PS_CONSTS_F];
     struct wined3d_ivec4 ps_consts_i[WINED3D_MAX_CONSTS_I];
+    BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
 };
 
 struct wined3d_device
