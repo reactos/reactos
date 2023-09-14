@@ -2582,6 +2582,11 @@ static void adapter_no3d_destroy_query(struct wined3d_query *query)
     TRACE("query %p.\n", query);
 }
 
+static void adapter_no3d_flush_context(struct wined3d_context *context)
+{
+    TRACE("context %p.\n", context);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
 {
     adapter_no3d_destroy,
@@ -2609,6 +2614,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_no3d_ops =
     adapter_no3d_destroy_sampler,
     adapter_no3d_create_query,
     adapter_no3d_destroy_query,
+    adapter_no3d_flush_context,
 };
 
 static void wined3d_adapter_no3d_init_d3d_info(struct wined3d_adapter *adapter, unsigned int wined3d_creation_flags)

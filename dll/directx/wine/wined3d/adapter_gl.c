@@ -5105,6 +5105,16 @@ static void adapter_gl_destroy_query(struct wined3d_query *query)
     wined3d_cs_destroy_object(query->device->cs, wined3d_query_gl_destroy_object, query);
 }
 
+static void adapter_gl_flush_context(struct wined3d_context *context)
+{
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+
+    TRACE("context_gl %p.\n", context_gl);
+
+    if (context_gl->valid)
+        context_gl->gl_info->gl_ops.gl.p_glFlush();
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
 {
     adapter_gl_destroy,
@@ -5132,6 +5142,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_gl_ops =
     adapter_gl_destroy_sampler,
     adapter_gl_create_query,
     adapter_gl_destroy_query,
+    adapter_gl_flush_context,
 };
 
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,

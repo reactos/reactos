@@ -2824,6 +2824,7 @@ struct wined3d_adapter_ops
     HRESULT (*adapter_create_query)(struct wined3d_device *device, enum wined3d_query_type type,
             void *parent, const struct wined3d_parent_ops *parent_ops, struct wined3d_query **query);
     void (*adapter_destroy_query)(struct wined3d_query *query);
+    void (*adapter_flush_context)(struct wined3d_context *context);
 };
 
 /* The adapter structure */

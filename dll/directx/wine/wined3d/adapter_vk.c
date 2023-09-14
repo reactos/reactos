@@ -773,6 +773,11 @@ static void adapter_vk_destroy_query(struct wined3d_query *query)
     TRACE("query %p.\n", query);
 }
 
+static void adapter_vk_flush_context(struct wined3d_context *context)
+{
+    TRACE("context %p.\n", context);
+}
+
 static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
 {
     adapter_vk_destroy,
@@ -800,6 +805,7 @@ static const struct wined3d_adapter_ops wined3d_adapter_vk_ops =
     adapter_vk_destroy_sampler,
     adapter_vk_create_query,
     adapter_vk_destroy_query,
+    adapter_vk_flush_context,
 };
 
 static unsigned int wined3d_get_wine_vk_version(void)
