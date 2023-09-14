@@ -2297,6 +2297,105 @@ static void test_rename(void)
     ok(ret, "Failed to delete directory, error %lu.\n", GetLastError());
 }
 
+static void test_append_reg(void)
+{
+    static const char inf_data[] = "[Version]\n"
+            "Signature=\"$Chicago$\"\n"
+            "[DefaultInstall]\n"
+            "AddReg=reg_section\n"
+            "[reg_section]\n"
+            "HKCU,Software\\winetest_setupapi,value,0x10008,\"data\"\n";
+
+    void *context = SetupInitDefaultQueueCallbackEx(NULL, INVALID_HANDLE_VALUE, 0, 0, 0);
+    char path[MAX_PATH];
+    DWORD type, size;
+    char value[20];
+    HINF hinf;
+    BOOL ret;
+    HKEY key;
+    LONG l;
+
+    create_inf_file("test.inf", inf_data);
+    sprintf(path, "%s\\test.inf", CURR_DIR);
+    hinf = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+    ok(hinf != INVALID_HANDLE_VALUE, "Failed to open INF file, error %#lx.\n", GetLastError());
+
+    /* Key doesn't exist yet. */
+
+    RegDeleteKeyA(HKEY_CURRENT_USER, "winetest_setupapi");
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGISTRY,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#lx.\n", GetLastError());
+
+    l = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\winetest_setupapi", &key);
+    ok(!l, "Got error %lu.\n", l);
+    size = sizeof(value);
+    l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
+    todo_wine ok(!l, "Got error %lu.\n", l);
+    if (!l)
+    {
+        ok(type == REG_MULTI_SZ, "Got type %#lx.\n", type);
+        ok(size == sizeof("data\0"), "Got size %lu.\n", size);
+        ok(!memcmp(value, "data\0", size), "Got data %s.\n", debugstr_an(value, size));
+    }
+
+    /* Key exists and already has a value. */
+
+    l = RegSetValueExA(key, "value", 0, REG_MULTI_SZ, (const BYTE *)"foo\0bar\0", sizeof("foo\0bar\0"));
+    ok(!l, "Got error %lu.\n", l);
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGISTRY,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#lx.\n", GetLastError());
+
+    size = sizeof(value);
+    l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
+    ok(!l, "Got error %lu.\n", l);
+    ok(type == REG_MULTI_SZ, "Got type %#lx.\n", type);
+    ok(size == sizeof("foo\0bar\0data\0"), "Got size %lu.\n", size);
+    ok(!memcmp(value, "foo\0bar\0data\0", size), "Got data %s.\n", debugstr_an(value, size));
+
+    /* Key exists and already has the value to be added. */
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGISTRY,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    ok(ret, "Failed to install, error %#lx.\n", GetLastError());
+
+    size = sizeof(value);
+    l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
+    ok(!l, "Got error %lu.\n", l);
+    ok(type == REG_MULTI_SZ, "Got type %#lx.\n", type);
+    ok(size == sizeof("foo\0bar\0data\0"), "Got size %lu.\n", size);
+    ok(!memcmp(value, "foo\0bar\0data\0", size), "Got data %s.\n", debugstr_an(value, size));
+
+    /* Key exists and already has a value of the wrong type. */
+
+    l = RegSetValueExA(key, "value", 0, REG_SZ, (const BYTE *)"string", sizeof("string"));
+    ok(!l, "Got error %lu.\n", l);
+
+    ret = SetupInstallFromInfSectionA(NULL, hinf, "DefaultInstall", SPINST_REGISTRY,
+            NULL, "C:\\", 0, SetupDefaultQueueCallbackA, context, NULL, NULL);
+    todo_wine ok(!ret, "Expected failure.\n");
+    todo_wine ok(GetLastError() == ERROR_INVALID_DATA, "Got error %#lx.\n", GetLastError());
+
+    size = sizeof(value);
+    l = RegQueryValueExA(key, "value", NULL, &type, (BYTE *)value, &size);
+    ok(!l, "Got error %lu.\n", l);
+    ok(type == REG_SZ, "Got type %#lx.\n", type);
+    ok(size == sizeof("string"), "Got size %lu.\n", size);
+    ok(!memcmp(value, "string", size), "Got data %s.\n", debugstr_an(value, size));
+
+    RegCloseKey(key);
+
+    l = RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\winetest_setupapi");
+    ok(!l, "Got error %lu.\n", l);
+
+    SetupCloseInfFile(hinf);
+    ret = DeleteFileA("test.inf");
+    ok(ret, "Failed to delete INF file, error %lu.\n", GetLastError());
+}
+
 static WCHAR service_name[] = L"Wine Test Service";
 static SERVICE_STATUS_HANDLE service_handle;
 static HANDLE stop_event;
@@ -2406,6 +2505,7 @@ START_TEST(install)
     test_start_copy();
     test_register_dlls();
     test_rename();
+    test_append_reg();
 
     UnhookWindowsHookEx(hhook);
 
