@@ -581,3 +581,12 @@ void wined3d_resource_update_draw_binding(struct wined3d_resource *resource)
         resource->draw_binding = WINED3D_LOCATION_TEXTURE_RGB;
     }
 }
+
+const struct wined3d_format *wined3d_resource_get_decompress_format(struct wined3d_resource *resource,
+        const struct wined3d_context *context)
+{
+    if (resource->format_flags & (WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE)
+            && !(context->d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL))
+        return wined3d_get_format(context->gl_info, WINED3DFMT_B8G8R8A8_UNORM_SRGB, resource->usage);
+    return wined3d_get_format(context->gl_info, WINED3DFMT_B8G8R8A8_UNORM, resource->usage);
+}

@@ -1878,7 +1878,13 @@ void wined3d_texture_prepare_texture(struct wined3d_texture *texture, struct win
     if (texture->flags & alloc_flag)
         return;
 
-    if (format->conv_byte_count)
+    if (texture->resource.format_flags & WINED3DFMT_FLAG_DECOMPRESS)
+    {
+        TRACE("WINED3DFMT_FLAG_DECOMPRESS set.\n");
+        texture->flags |= WINED3D_TEXTURE_CONVERTED;
+        format = wined3d_resource_get_decompress_format(&texture->resource, context);
+    }
+    else if (format->conv_byte_count)
     {
         texture->flags |= WINED3D_TEXTURE_CONVERTED;
     }
@@ -2051,6 +2057,7 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
     void *converted_mem = NULL;
     struct wined3d_format f;
     unsigned int level;
+    BOOL decompress;
     GLenum target;
 
     TRACE("texture %p, sub_resource_idx %u, context %p, format %s, src_box %s, data {%#x:%p}, "
@@ -2102,20 +2109,31 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
         bo.addr += src_box->left * format->byte_count;
     }
 
-    if (format->upload)
+    decompress = texture->resource.format_flags & WINED3DFMT_FLAG_DECOMPRESS;
+    if (format->upload || decompress)
     {
+        const struct wined3d_format *compressed_format = format;
         unsigned int dst_row_pitch, dst_slice_pitch;
         void *src_mem;
 
-        if (texture->resource.format_flags & WINED3DFMT_FLAG_BLOCKS)
-            ERR("Converting a block-based format.\n");
+        if (decompress)
+        {
+            format = wined3d_resource_get_decompress_format(&texture->resource, context);
+        }
+        else
+        {
+            if (texture->resource.format_flags & WINED3DFMT_FLAG_BLOCKS)
+                ERR("Converting a block-based format.\n");
 
-        f = *format;
-        f.byte_count = format->conv_byte_count;
-        format = &f;
+            f = *format;
+            f.byte_count = format->conv_byte_count;
+            format = &f;
+        }
 
         wined3d_format_calculate_pitch(format, 1, update_w, update_h, &dst_row_pitch, &dst_slice_pitch);
 
+        /* Note that uploading 3D textures may require quite some address
+         * space; it may make sense to upload them per-slice instead. */
         if (!(converted_mem = heap_calloc(update_d, dst_slice_pitch)))
         {
             ERR("Failed to allocate upload buffer.\n");
@@ -2124,8 +2142,12 @@ void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int s
 
         src_mem = context_map_bo_address(context, &bo, src_slice_pitch,
                 GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ);
-        format->upload(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
-                dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
+        if (decompress)
+            compressed_format->decompress(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
+                    dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
+        else
+            format->upload(src_mem, converted_mem, src_row_pitch, src_slice_pitch,
+                    dst_row_pitch, dst_slice_pitch, update_w, update_h, update_d);
         context_unmap_bo_address(context, &bo, GL_PIXEL_UNPACK_BUFFER);
 
         bo.buffer_object = 0;
