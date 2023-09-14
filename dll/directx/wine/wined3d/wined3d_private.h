@@ -3132,7 +3132,7 @@ struct gl_texture
 struct wined3d_texture_ops
 {
     void (*texture_upload_data)(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-            const struct wined3d_context *context, const struct wined3d_format *format,
+            struct wined3d_context *context, const struct wined3d_format *format,
             const struct wined3d_box *src_box, const struct wined3d_const_bo_address *data, unsigned int row_pitch,
             unsigned int slice_pitch, unsigned int dst_x, unsigned int dst_y, unsigned int dst_z, BOOL srgb);
     BOOL (*texture_load_location)(struct wined3d_texture *texture, unsigned int sub_resource_idx,
@@ -3346,7 +3346,7 @@ void wined3d_texture_set_swapchain(struct wined3d_texture *texture,
 void wined3d_texture_translate_drawable_coords(const struct wined3d_texture *texture,
         HWND window, RECT *rect) DECLSPEC_HIDDEN;
 void wined3d_texture_upload_data(struct wined3d_texture *texture, unsigned int sub_resource_idx,
-        const struct wined3d_context *context, const struct wined3d_format *format, const struct wined3d_box *src_box,
+        struct wined3d_context *context, const struct wined3d_format *format, const struct wined3d_box *src_box,
         const struct wined3d_const_bo_address *data, unsigned int row_pitch, unsigned int slice_pitch,
         unsigned int dst_x, unsigned int dst_y, unsigned int dst_z, BOOL srgb) DECLSPEC_HIDDEN;
 void wined3d_texture_validate_location(struct wined3d_texture *texture,

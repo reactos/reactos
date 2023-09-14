@@ -2139,9 +2139,9 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     struct wined3d_device *device = texture->resource.device;
     const struct wined3d_color_key_conversion *conversion;
     struct wined3d_texture_sub_resource *sub_resource;
+    const struct wined3d_format *format;
     struct wined3d_bo_address data;
     BYTE *src_mem, *dst_mem = NULL;
-    struct wined3d_format format;
     struct wined3d_box src_box;
     BOOL depth;
 
@@ -2232,9 +2232,9 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     wined3d_texture_bind_and_dirtify(texture, context, srgb);
     wined3d_texture_get_pitch(texture, level, &src_row_pitch, &src_slice_pitch);
 
-    format = *texture->resource.format;
+    format = texture->resource.format;
     if ((conversion = wined3d_format_get_color_key_conversion(texture, TRUE)))
-        format = *wined3d_get_format(gl_info, conversion->dst_format, texture->resource.usage);
+        format = wined3d_get_format(gl_info, conversion->dst_format, texture->resource.usage);
 
     /* Don't use PBOs for converted surfaces. During PBO conversion we look at
      * WINED3D_TEXTURE_CONVERTED but it isn't set (yet) in all cases it is
@@ -2248,35 +2248,12 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
     }
 
     wined3d_texture_get_memory(texture, sub_resource_idx, &data, sub_resource->locations);
-    if (format.conv_byte_count)
-    {
-        /* This code is entered for texture formats which need a fixup. */
-        format.byte_count = format.conv_byte_count;
-        wined3d_format_calculate_pitch(&format, 1, width, height, &dst_row_pitch, &dst_slice_pitch);
-
-        src_mem = context_map_bo_address(context, &data, src_slice_pitch,
-                GL_PIXEL_UNPACK_BUFFER, WINED3D_MAP_READ);
-        if (!(dst_mem = heap_alloc(dst_slice_pitch)))
-        {
-            ERR("Out of memory (%u).\n", dst_slice_pitch);
-            context_release(context);
-            return FALSE;
-        }
-        format.upload(src_mem, dst_mem, src_row_pitch, src_slice_pitch,
-                dst_row_pitch, dst_slice_pitch, width, height, 1);
-        src_row_pitch = dst_row_pitch;
-        src_slice_pitch = dst_slice_pitch;
-        context_unmap_bo_address(context, &data, GL_PIXEL_UNPACK_BUFFER);
-
-        data.buffer_object = 0;
-        data.addr = dst_mem;
-    }
-    else if (conversion)
+    if (conversion)
     {
         /* This code is only entered for color keying fixups */
         struct wined3d_palette *palette = NULL;
 
-        wined3d_format_calculate_pitch(&format, device->surface_alignment,
+        wined3d_format_calculate_pitch(format, device->surface_alignment,
                 width, height, &dst_row_pitch, &dst_slice_pitch);
 
         src_mem = context_map_bo_address(context, &data, src_slice_pitch,
@@ -2299,7 +2276,7 @@ BOOL texture2d_load_texture(struct wined3d_texture *texture, unsigned int sub_re
         data.addr = dst_mem;
     }
 
-    wined3d_texture_upload_data(texture, sub_resource_idx, context, &format, &src_box,
+    wined3d_texture_upload_data(texture, sub_resource_idx, context, format, &src_box,
             wined3d_const_bo_address(&data), src_row_pitch, src_slice_pitch, 0, 0, 0, srgb);
 
     heap_free(dst_mem);
