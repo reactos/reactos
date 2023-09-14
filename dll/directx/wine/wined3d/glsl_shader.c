@@ -1308,18 +1308,18 @@ static void transpose_matrix(struct wined3d_matrix *out, const struct wined3d_ma
     *out = temp;
 }
 
-static void shader_glsl_ffp_vertex_normalmatrix_uniform(const struct wined3d_context *context,
+static void shader_glsl_ffp_vertex_normalmatrix_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_matrix mv;
     float mat[3 * 3];
 
     if (prog->vs.normal_matrix_location == -1)
         return;
 
-    get_modelview_matrix(context, state, 0, &mv);
-    compute_normal_matrix(mat, context->d3d_info->wined3d_creation_flags & WINED3D_LEGACY_FFP_LIGHTING, &mv);
+    get_modelview_matrix(&context_gl->c, state, 0, &mv);
+    compute_normal_matrix(mat, context_gl->c.d3d_info->wined3d_creation_flags & WINED3D_LEGACY_FFP_LIGHTING, &mv);
 
     GL_EXTCALL(glUniformMatrix3fv(prog->vs.normal_matrix_location, 1, FALSE, mat));
     checkGLcall("glUniformMatrix3fv");
@@ -1516,6 +1516,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     const struct wined3d_shader *vshader = state->shader[WINED3D_SHADER_TYPE_VERTEX];
     const struct wined3d_shader *pshader = state->shader[WINED3D_SHADER_TYPE_PIXEL];
     const struct glsl_context_data *ctx_data = context->shader_backend_data;
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     struct glsl_shader_prog_link *prog = ctx_data->glsl_program;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     float position_fixup[4 * WINED3D_MAX_VIEWPORTS];
@@ -1580,7 +1581,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
         GL_EXTCALL(glUniformMatrix4fv(prog->vs.modelview_matrix_location[0], 1, FALSE, &mat._11));
         checkGLcall("glUniformMatrix4fv");
 
-        shader_glsl_ffp_vertex_normalmatrix_uniform(context, state, prog);
+        shader_glsl_ffp_vertex_normalmatrix_uniform(context_gl, state, prog);
     }
 
     if (update_mask & WINED3D_SHADER_CONST_FFP_VERTEXBLEND)
