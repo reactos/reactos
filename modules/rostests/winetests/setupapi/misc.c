@@ -246,7 +246,6 @@ static void test_SetupCopyOEMInf(void)
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
     ok(GetLastError() == ERROR_FILE_EXISTS,
        "Expected ERROR_FILE_EXISTS, got %d\n", GetLastError());
-todo_wine
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
 
     SetLastError(0xdeadbeef);
