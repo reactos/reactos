@@ -4552,7 +4552,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl,
     else
         gl_info->gl_ops.gl.p_glNormal3f(0.0f, 0.0f, 0.0f);
 
-    untracked_material_count = context_gl->c.num_untracked_materials;
+    untracked_material_count = context_gl->untracked_material_count;
     if (si->use_map & (1u << WINED3D_FFP_DIFFUSE))
     {
         element = &si->elements[WINED3D_FFP_DIFFUSE];
@@ -4665,7 +4665,7 @@ static void draw_primitive_immediate_mode(struct wined3d_context_gl *context_gl,
                 for (i = 0; i < untracked_material_count; ++i)
                 {
                     gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK,
-                            context_gl->c.untracked_materials[i], &color.r);
+                            context_gl->untracked_materials[i], &color.r);
                 }
             }
         }
@@ -4794,6 +4794,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
     struct wined3d_stream_info si_emulated;
     struct wined3d_fence *ib_fence = NULL;
     const struct wined3d_gl_info *gl_info;
+    struct wined3d_context_gl *context_gl;
     struct wined3d_context *context;
     unsigned int i, idx_size = 0;
     const void *idx_data = NULL;
@@ -4820,6 +4821,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
         WARN("Invalid context, skipping draw.\n");
         return;
     }
+    context_gl = wined3d_context_gl(context);
     gl_info = context->gl_info;
 
     if (!use_transform_feedback(state))
@@ -4898,7 +4900,7 @@ void draw_primitive(struct wined3d_device *device, const struct wined3d_state *s
 
     if (!use_vs(state))
     {
-        if (!stream_info->position_transformed && context->num_untracked_materials
+        if (!stream_info->position_transformed && context_gl->untracked_material_count
                 && state->render_states[WINED3D_RS_LIGHTING])
         {
             static BOOL warned;
