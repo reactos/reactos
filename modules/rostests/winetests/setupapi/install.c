@@ -609,13 +609,26 @@ static void test_install_svc_from(void)
     /* TODO: Test the Flags */
 }
 
-static void test_driver_install(void)
+static void test_service_install(const char *executable, const char *argument)
 {
-    HANDLE handle;
+    struct
+    {
+        const char *add_service_flags;
+        const char *service_type;
+        const char *start_type;
+        DWORD expect_start_error;
+    } tests[] =
+    {
+        {.add_service_flags = "", .service_type = "1", .start_type = "4", .expect_start_error = ERROR_SERVICE_DISABLED},
+        {.add_service_flags = "", .service_type = "0x10", .start_type = "2", .expect_start_error = 0},
+        {.add_service_flags = "0x800", .service_type = "0x10", .start_type = "2", .expect_start_error = ERROR_SERVICE_ALREADY_RUNNING},
+    };
+
     SC_HANDLE scm_handle, svc_handle;
+    SERVICE_STATUS status;
     BOOL ret;
     char path[MAX_PATH + 9], windir[MAX_PATH], driver[MAX_PATH];
-    DWORD attrs;
+    DWORD i, attrs;
     /* Minimal stuff needed */
     static const char *inf =
         "[Version]\n"
@@ -625,14 +638,15 @@ static void test_driver_install(void)
         "[DefaultInstall]\n"
         "CopyFiles=Winetest.DriverFiles\n"
         "[DefaultInstall.Services]\n"
-        "AddService=Winetest,,Winetest.Service\n"
+        "AddService=Winetest,%s,Winetest.Service\n"
         "[Winetest.Service]\n"
-        "ServiceBinary=%12%\\winetest.sys\n"
-        "ServiceType=1\n"
-        "StartType=4\n"
+        "ServiceBinary=%%12%%\\winetest.sys %s service\n"
+        "ServiceType=%s\n"
+        "StartType=%s\n"
         "ErrorControl=1\n"
         "[Winetest.DriverFiles]\n"
         "winetest.sys";
+    char buffer[1024];
 
     /* Bail out if we don't have enough rights */
     SetLastError(0xdeadbeef);
@@ -649,36 +663,70 @@ static void test_driver_install(void)
     lstrcpyA(driver, windir);
     lstrcatA(driver, "\\system32\\drivers\\winetest.sys");
 
-    /* Create a dummy driver file */
-    handle = CreateFileA("winetest.sys", GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    CloseHandle(handle);
+    ret = CopyFileA(executable, "winetest.sys", TRUE);
+    ok(ret, "CopyFileA failed, error %u\n", GetLastError());
 
-    create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
-    run_cmdline("DefaultInstall", 128, path);
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        winetest_push_context("%u", i);
 
-    /* Driver should have been installed */
-    attrs = GetFileAttributesA(driver);
-    ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected driver to exist\n");
+        sprintf(buffer, inf, tests[i].add_service_flags, argument, tests[i].service_type, tests[i].start_type);
+        create_inf_file(inffile, buffer);
+        sprintf(path, "%s\\%s", CURR_DIR, inffile);
+        run_cmdline("DefaultInstall", 128, path);
 
-    scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
+        /* Driver should have been installed */
+        attrs = GetFileAttributesA(driver);
+        ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected driver to exist\n");
 
-    /* Open the service to see if it's really there */
-    svc_handle = OpenServiceA(scm_handle, "Winetest", DELETE);
-    ok(svc_handle != NULL, "Service was not created\n");
+        scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
 
-    SetLastError(0xdeadbeef);
-    ret = DeleteService(svc_handle);
-    ok(ret, "Service could not be deleted : %d\n", GetLastError());
+        /* Open the service to see if it's really there */
+        svc_handle = OpenServiceA(scm_handle, "Winetest", SERVICE_START|SERVICE_STOP|SERVICE_QUERY_STATUS|DELETE);
+        ok(svc_handle != NULL, "Service was not created\n");
 
-    CloseServiceHandle(svc_handle);
-    CloseServiceHandle(scm_handle);
+        ret = StartServiceA(svc_handle, 0, NULL);
+        if (!tests[i].expect_start_error)
+            ok(ret, "StartServiceA failed, error %u\n", GetLastError());
+        else
+        {
+            ok(!ret, "StartServiceA succeeded\n");
+            ok(GetLastError() == tests[i].expect_start_error, "got error %u\n", GetLastError());
+        }
 
-    /* File cleanup */
-    DeleteFileA(inffile);
+        ret = QueryServiceStatus(svc_handle, &status);
+        ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        while (status.dwCurrentState == SERVICE_START_PENDING)
+        {
+            Sleep(100);
+            ret = QueryServiceStatus(svc_handle, &status);
+            ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        }
+
+        ret = ControlService(svc_handle, SERVICE_CONTROL_STOP, &status);
+        while (status.dwCurrentState == SERVICE_STOP_PENDING)
+        {
+            Sleep(100);
+            ret = QueryServiceStatus(svc_handle, &status);
+            ok(ret, "QueryServiceStatus failed: %u\n", GetLastError());
+        }
+        ok(status.dwCurrentState == SERVICE_STOPPED, "expected SERVICE_STOPPED, got %d\n", status.dwCurrentState);
+
+        SetLastError(0xdeadbeef);
+        ret = DeleteService(svc_handle);
+        ok(ret, "Service could not be deleted : %d\n", GetLastError());
+
+        CloseServiceHandle(svc_handle);
+        CloseServiceHandle(scm_handle);
+
+        /* File cleanup */
+        DeleteFileA(inffile);
+        DeleteFileA(driver);
+
+        winetest_pop_context();
+    }
+
     DeleteFileA("winetest.sys");
-    DeleteFileA(driver);
 }
 
 static void test_profile_items(void)
@@ -1017,9 +1065,13 @@ static void test_install_files_queue(void)
 {
     static const char inf_data[] = "[Version]\n"
             "Signature=\"$Chicago$\"\n"
+
             "[DefaultInstall]\n"
-            "CopyFiles=files_section\n"
-            "[files_section]\n"
+            "CopyFiles=copy_section\n"
+            "DelFiles=delete_section\n"
+            "RenFiles=rename_section\n"
+
+            "[copy_section]\n"
             "one.txt\n"
             "two.txt\n"
             "three.txt\n"
@@ -1028,11 +1080,19 @@ static void test_install_files_queue(void)
             "six.txt\n"
             "seven.txt\n"
             "eight.txt\n"
+
+            "[delete_section]\n"
+            "nine.txt\n"
+
+            "[rename_section]\n"
+            "eleven.txt,ten.txt\n"
+
             "[SourceDisksNames]\n"
             "1=heis\n"
             "2=duo,,,alpha\n"
             "3=treis,treis.cab\n"
             "4=tessares,tessares.cab,,alpha\n"
+
             "[SourceDisksFiles]\n"
             "one.txt=1\n"
             "two.txt=1,beta\n"
@@ -1042,8 +1102,11 @@ static void test_install_files_queue(void)
             "six.txt=3,beta\n"
             "seven.txt=4\n"
             "eight.txt=4,beta\n"
+
             "[DestinationDirs]\n"
-            "files_section=40000,dst\n";
+            "copy_section=40000,dst\n"
+            "delete_section=40000,dst\n"
+            "rename_section=40000,dst\n";
 
     char path[MAX_PATH + 9];
     HSPFILEQ queue;
@@ -1068,12 +1131,17 @@ static void test_install_files_queue(void)
     ret = SetupSetDirectoryIdA(hinf, 40000, CURR_DIR);
     ok(ret, "Failed to set directory ID, error %u.\n", GetLastError());
 
+    ret = CreateDirectoryA("dst", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+
     create_file("src/one.txt");
     create_file("src/beta/two.txt");
     create_file("src/alpha/three.txt");
     create_file("src/alpha/beta/four.txt");
     create_cab_file("src/treis.cab", "src\\beta\\five.txt\0six.txt\0");
     create_cab_file("src/alpha/tessares.cab", "seven.txt\0eight.txt\0");
+    create_file("dst/nine.txt");
+    create_file("dst/ten.txt");
 
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
@@ -1099,6 +1167,9 @@ static void test_install_files_queue(void)
     ok(delete_file("dst/six.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/seven.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/eight.txt"), "Destination file should exist.\n");
+    ok(!delete_file("dst/nine.txt"), "Destination file should not exist.\n");
+    ok(!delete_file("dst/ten.txt"), "Destination file should not exist.\n");
+    ok(delete_file("dst/eleven.txt"), "Destination file should exist.\n");
 
     SetupTermDefaultQueueCallback(context);
     ret = SetupCloseFileQueue(queue);
@@ -1120,7 +1191,7 @@ static void test_install_files_queue(void)
     ok(ret, "Failed to delete INF file, error %u.\n", GetLastError());
 }
 
-static unsigned int got_need_media, got_copy_error;
+static unsigned int got_need_media, got_copy_error, got_start_copy;
 static unsigned int testmode;
 
 static UINT WINAPI need_media_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
@@ -1332,6 +1403,7 @@ static UINT WINAPI need_media_newpath_cb(void *context, UINT message, UINT_PTR p
         else
             return FILEOP_SKIP;
     }
+    else if (message == SPFILENOTIFY_STARTCOPY) got_start_copy++;
 
     return SetupDefaultQueueCallbackA(context, message, param1, param2);
 }
@@ -1901,7 +1973,7 @@ static void test_need_media(void)
     ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
 
     testmode = 6;
-    got_need_media = got_copy_error = 0;
+    got_need_media = got_copy_error = got_start_copy = 0;
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     copy_params.QueueHandle = queue;
@@ -1915,9 +1987,10 @@ static void test_need_media(void)
     run_queue(queue, need_media_newpath_cb);
     ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
     ok(!got_copy_error, "Got %u copy errors.\n", got_copy_error);
-    ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    if (got_start_copy) ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+    else ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
 
-    got_need_media = got_copy_error = 0;
+    got_need_media = got_copy_error = got_start_copy = 0;
     queue = SetupOpenFileQueue();
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     copy_params.LayoutInf = hinf;
@@ -1928,7 +2001,8 @@ static void test_need_media(void)
         run_queue(queue, need_media_newpath_cb);
         ok(got_need_media == 1, "Got %u callbacks.\n", got_need_media);
         ok(!got_copy_error, "Got %u copy errors.\n", got_copy_error);
-        ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+        if (got_start_copy) ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
+        else ok(!file_exists("dst/one.txt"), "Destination file should not exist.\n");
     }
     else
         SetupCloseFileQueue(queue);
@@ -1963,7 +2037,7 @@ static void test_close_queue(void)
     SetupTermDefaultQueueCallback(context);
 }
 
-static unsigned int got_start_copy, start_copy_ret;
+static unsigned int start_copy_ret;
 
 static UINT WINAPI start_copy_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
 {
@@ -2003,12 +2077,14 @@ static void test_start_copy(void)
     ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "src", NULL, "one.txt", NULL, NULL, "dst", NULL, 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "two.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     ret = SetupQueueCopyA(queue, "src", NULL, "three.txt", NULL, NULL, "dst", NULL, 0);
     ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
     run_queue(queue, start_copy_cb);
-    ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
+    todo_wine ok(got_start_copy == 3, "Got %u callbacks.\n", got_start_copy);
     ok(delete_file("dst/one.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/two.txt"), "Destination file should exist.\n");
     ok(delete_file("dst/three.txt"), "Destination file should exist.\n");
@@ -2129,11 +2205,179 @@ static void test_register_dlls(void)
     ok(ret, "Failed to delete test DLL, error %u.\n", GetLastError());
 }
 
+static unsigned int start_rename_ret, got_start_rename;
+
+static UINT WINAPI start_rename_cb(void *context, UINT message, UINT_PTR param1, UINT_PTR param2)
+{
+    if (winetest_debug > 1) trace("%p, %#x, %#Ix, %#Ix\n", context, message, param1, param2);
+
+    if (message == SPFILENOTIFY_STARTRENAME)
+    {
+        const FILEPATHS_A *paths = (const FILEPATHS_A *)param1;
+
+        ++got_start_rename;
+
+        if (strstr(paths->Source, "three.txt"))
+        {
+            SetLastError(0xdeadf00d);
+            return start_rename_ret;
+        }
+    }
+
+    return SetupDefaultQueueCallbackA(context, message, param1, param2);
+}
+
+static void test_rename(void)
+{
+    HSPFILEQ queue;
+    BOOL ret;
+
+    ret = CreateDirectoryA("a", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+    ret = CreateDirectoryA("b", NULL);
+    ok(ret, "Failed to create test directory, error %u.\n", GetLastError());
+
+    create_file("a/one.txt");
+    create_file("b/three.txt");
+    create_file("a/five.txt");
+    create_file("b/six.txt");
+    start_rename_ret = FILEOP_DOIT;
+    got_start_rename = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueCopyA(queue, "b", NULL, "one.txt", NULL, NULL, "b", "two.txt", 0);
+    ok(ret, "Failed to queue copy, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "a", "one.txt", "b", "one.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "b", "three.txt", NULL, "four.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "b", "six.txt", "b", "seven.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "a", "five.txt", "b", "six.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    run_queue(queue, start_rename_cb);
+    ok(got_start_rename == 4, "Got %u callbacks.\n", got_start_rename);
+    ok(!delete_file("a/one.txt"), "File should not exist.\n");
+    ok(!delete_file("a/five.txt"), "File should not exist.\n");
+    ok(delete_file("b/one.txt"), "File should exist.\n");
+    ok(delete_file("b/two.txt"), "File should exist.\n");
+    ok(!delete_file("b/three.txt"), "File should not exist.\n");
+    ok(delete_file("b/four.txt"), "File should exist.\n");
+    ok(!delete_file("b/five.txt"), "File should not exist.\n");
+    ok(delete_file("b/six.txt"), "File should exist.\n");
+    ok(delete_file("b/seven.txt"), "File should exist.\n");
+    SetupCloseFileQueue(queue);
+
+    create_file("a/one.txt");
+    create_file("a/three.txt");
+    create_file("a/five.txt");
+    start_rename_ret = FILEOP_SKIP;
+    got_start_rename = 0;
+    queue = SetupOpenFileQueue();
+    ok(queue != INVALID_HANDLE_VALUE, "Failed to open queue, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "a", "one.txt", "a", "two.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "a", "three.txt", "a", "four.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    ret = SetupQueueRenameA(queue, "a", "five.txt", "a", "six.txt");
+    ok(ret, "Failed to queue rename, error %#x.\n", GetLastError());
+    run_queue(queue, start_rename_cb);
+    ok(got_start_rename == 3, "Got %u callbacks.\n", got_start_rename);
+    ok(!delete_file("a/one.txt"), "File should not exist.\n");
+    ok(delete_file("a/two.txt"), "File should exist.\n");
+    ok(delete_file("a/three.txt"), "File should exist.\n");
+    ok(!delete_file("a/four.txt"), "File should not exist.\n");
+    ok(!delete_file("a/five.txt"), "File should not exist.\n");
+    ok(delete_file("a/six.txt"), "File should exist.\n");
+    SetupCloseFileQueue(queue);
+
+    ok(delete_file("a/"), "Failed to delete directory, error %u.\n", GetLastError());
+    ok(delete_file("b/"), "Failed to delete directory, error %u.\n", GetLastError());
+}
+
+static WCHAR service_name[] = L"Wine Test Service";
+static SERVICE_STATUS_HANDLE service_handle;
+static HANDLE stop_event;
+
+static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_data, LPVOID context )
+{
+    SERVICE_STATUS status;
+
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 0;
+
+    switch(ctrl)
+    {
+    case SERVICE_CONTROL_STOP:
+    case SERVICE_CONTROL_SHUTDOWN:
+        trace( "shutting down\n" );
+        status.dwCurrentState     = SERVICE_STOP_PENDING;
+        status.dwControlsAccepted = 0;
+        SetServiceStatus( service_handle, &status );
+        SetEvent( stop_event );
+        return NO_ERROR;
+    default:
+        trace( "got service ctrl %x\n", ctrl );
+        status.dwCurrentState = SERVICE_RUNNING;
+        SetServiceStatus( service_handle, &status );
+        return NO_ERROR;
+    }
+}
+
+static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
+{
+    SERVICE_STATUS status;
+
+    trace( "starting service\n" );
+
+    stop_event = CreateEventW( NULL, TRUE, FALSE, NULL );
+
+    service_handle = RegisterServiceCtrlHandlerExW( L"Wine Test Service", service_handler, NULL );
+    if (!service_handle)
+        return;
+
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwCurrentState            = SERVICE_RUNNING;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 10000;
+    SetServiceStatus( service_handle, &status );
+
+    WaitForSingleObject( stop_event, INFINITE );
+
+    status.dwCurrentState     = SERVICE_STOPPED;
+    status.dwControlsAccepted = 0;
+    SetServiceStatus( service_handle, &status );
+    trace( "service stopped\n" );
+}
+
 START_TEST(install)
 {
-    char temp_path[MAX_PATH], prev_path[MAX_PATH];
+    char temp_path[MAX_PATH], prev_path[MAX_PATH], path[MAX_PATH];
+    char **argv;
     DWORD len;
+    int argc;
 
+    argc = winetest_get_mainargs(&argv);
+    if (argc > 2 && !strcmp( argv[2], "service" ))
+    {
+        static const SERVICE_TABLE_ENTRYW service_table[] =
+        {
+            { service_name, ServiceMain },
+            { NULL, NULL }
+        };
+
+        StartServiceCtrlDispatcherW( service_table );
+        return;
+    }
+
+    GetFullPathNameA(argv[0], ARRAY_SIZE(path), path, NULL);
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPathA(MAX_PATH, temp_path);
     SetCurrentDirectoryA(temp_path);
@@ -2151,7 +2395,7 @@ START_TEST(install)
     test_registry();
     test_install_from();
     test_install_svc_from();
-    test_driver_install();
+    test_service_install(path, argv[1]);
     test_dirid();
     test_install_files_queue();
     test_need_media();
@@ -2159,6 +2403,7 @@ START_TEST(install)
     test_install_file();
     test_start_copy();
     test_register_dlls();
+    test_rename();
 
     UnhookWindowsHookEx(hhook);
 

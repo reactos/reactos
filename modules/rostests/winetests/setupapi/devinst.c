@@ -125,7 +125,7 @@ static void test_open_class_key(void)
     SetLastError(0xdeadbeef);
     class_key = SetupDiOpenClassRegKeyExA(&guid, KEY_ALL_ACCESS, DIOCR_INSTALLER, NULL, NULL);
     ok(class_key == INVALID_HANDLE_VALUE, "Expected failure.\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_CLASS, "Got unexpected error %#x.\n", GetLastError());
 
     root_key = SetupDiOpenClassRegKey(NULL, KEY_ALL_ACCESS);
@@ -1029,6 +1029,18 @@ static void test_register_device_info(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+static void check_all_lower_case(int line, const char* str)
+{
+    const char *cur;
+
+    for (cur = str; *cur; cur++)
+    {
+        BOOL is_lower = (tolower(*cur) == *cur);
+        ok_(__FILE__, line)(is_lower, "Expected device path to be all lowercase but got %s.\n", str);
+        if (!is_lower) break;
+    }
+}
+
 static void check_device_iface_(int line, HDEVINFO set, SP_DEVINFO_DATA *device,
         const GUID *class, int index, DWORD flags, const char *path)
 {
@@ -1050,6 +1062,7 @@ static void check_device_iface_(int line, HDEVINFO set, SP_DEVINFO_DATA *device,
         ret = SetupDiGetDeviceInterfaceDetailA(set, &iface, detail, sizeof(buffer), NULL, NULL);
         ok_(__FILE__, line)(ret, "Failed to get interface detail, error %#x.\n", GetLastError());
         ok_(__FILE__, line)(!strcasecmp(detail->DevicePath, path), "Got unexpected path %s.\n", detail->DevicePath);
+        check_all_lower_case(line, detail->DevicePath);
     }
     else
     {
@@ -1558,7 +1571,7 @@ static void test_registry_property_a(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiSetDeviceRegistryPropertyA(set, &device, -1, NULL, 0);
     ok(!ret, "Expected failure.\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_REG_PROPERTY, "Got unexpected error %#x.\n", GetLastError());
 
     ret = SetupDiSetDeviceRegistryPropertyA(set, &device, SPDRP_FRIENDLYNAME, NULL, 0);
@@ -1583,7 +1596,7 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = SetupDiGetDeviceRegistryPropertyA(set, &device, -1, NULL, NULL, 0, NULL);
     ok(!ret, "Expected failure.\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_REG_PROPERTY, "Got unexpected error %#x.\n", GetLastError());
 
     ret = SetupDiGetDeviceRegistryPropertyA(set, &device, SPDRP_FRIENDLYNAME, NULL, NULL, sizeof("Bogus"), NULL);
@@ -1718,7 +1731,7 @@ static void test_registry_property_w(void)
     SetLastError(0xdeadbeef);
     ret = SetupDiSetDeviceRegistryPropertyW(set, &device, -1, NULL, 0);
     ok(!ret, "Expected failure.\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_REG_PROPERTY, "Got unexpected error %#x.\n", GetLastError());
 
     ret = SetupDiSetDeviceRegistryPropertyW(set, &device, SPDRP_FRIENDLYNAME, NULL, 0);
@@ -1743,7 +1756,7 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = SetupDiGetDeviceRegistryPropertyW(set, &device, -1, NULL, NULL, 0, NULL);
     ok(!ret, "Expected failure.\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_REG_PROPERTY, "Got unexpected error %#x.\n", GetLastError());
 
     ret = SetupDiGetDeviceRegistryPropertyW(set, &device, SPDRP_FRIENDLYNAME, NULL, NULL, sizeof(buf), NULL);
