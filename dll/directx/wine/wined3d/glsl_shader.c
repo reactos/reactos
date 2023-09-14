@@ -1341,10 +1341,10 @@ static void shader_glsl_ffp_vertex_texmatrix_uniform(const struct wined3d_contex
     checkGLcall("glUniformMatrix4fv");
 }
 
-static void shader_glsl_ffp_vertex_material_uniform(const struct wined3d_context *context,
+static void shader_glsl_ffp_vertex_material_uniform(const struct wined3d_context_gl *context_gl,
         const struct wined3d_state *state, struct glsl_shader_prog_link *prog)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
 
     if (state->render_states[WINED3D_RS_SPECULARENABLE])
     {
@@ -1615,7 +1615,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     }
 
     if (update_mask & WINED3D_SHADER_CONST_FFP_MATERIAL)
-        shader_glsl_ffp_vertex_material_uniform(context, state, prog);
+        shader_glsl_ffp_vertex_material_uniform(context_gl, state, prog);
 
     if (update_mask & WINED3D_SHADER_CONST_FFP_LIGHTS)
     {
