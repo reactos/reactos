@@ -4792,6 +4792,16 @@ void CDECL wined3d_device_evict_managed_resources(struct wined3d_device *device)
     }
 }
 
+static void update_swapchain_flags(struct wined3d_texture *texture)
+{
+    unsigned int flags = texture->swapchain->desc.flags;
+
+    if (flags & WINED3D_SWAPCHAIN_GDI_COMPATIBLE)
+        texture->flags |= WINED3D_TEXTURE_GET_DC;
+    else
+        texture->flags &= ~WINED3D_TEXTURE_GET_DC;
+}
+
 HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         const struct wined3d_swapchain_desc *swapchain_desc, const struct wined3d_display_mode *mode,
         wined3d_device_reset_cb callback, BOOL reset_state)
@@ -4875,7 +4885,6 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     swapchain->desc.swap_effect = swapchain_desc->swap_effect;
     swapchain->desc.enable_auto_depth_stencil = swapchain_desc->enable_auto_depth_stencil;
     swapchain->desc.auto_depth_stencil_format = swapchain_desc->auto_depth_stencil_format;
-    swapchain->desc.flags = swapchain_desc->flags;
     swapchain->desc.refresh_rate = swapchain_desc->refresh_rate;
     swapchain->desc.auto_restore_display_mode = swapchain_desc->auto_restore_display_mode;
 
@@ -4920,6 +4929,17 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
             swapchain_desc->backbuffer_width, swapchain_desc->backbuffer_height, swapchain_desc->backbuffer_format,
             swapchain_desc->multisample_type, swapchain_desc->multisample_quality)))
         return hr;
+
+    if (swapchain_desc->flags != swapchain->desc.flags)
+    {
+        swapchain->desc.flags = swapchain_desc->flags;
+
+        update_swapchain_flags(swapchain->front_buffer);
+        for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
+        {
+            update_swapchain_flags(swapchain->back_buffers[i]);
+        }
+    }
 
     if (device->auto_depth_stencil_view)
     {
