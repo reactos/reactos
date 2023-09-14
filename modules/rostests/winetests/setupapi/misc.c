@@ -265,14 +265,14 @@ static void test_SetupCopyOEMInf(void)
     ok(file_exists(path), "Expected source inf to exist\n");
     ok(file_exists(orig_dest), "Expected dest inf to exist\n");
     ok(!strcmp(dest, "aaa"), "Expected dest to be unchanged\n");
-    ok(size == strlen(orig_dest) + 1, "Expected size %d, got %d.\n", strlen(orig_dest) + 1, size);
+    ok(size == strlen(orig_dest) + 1, "Got %d.\n", size);
 
     SetLastError(0xdeadbeef);
     res = SetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, sizeof(dest), &size, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(!strcmp(orig_dest, dest), "Expected '%s', got '%s'.\n", orig_dest, dest);
-    ok(size == strlen(dest) + 1, "Expected size %d, got %d.\n", strlen(dest) + 1, size);
+    ok(size == strlen(dest) + 1, "Got %d.\n", size);
 
     test_original_file_name(strrchr(path, '\\') + 1, dest);
 
