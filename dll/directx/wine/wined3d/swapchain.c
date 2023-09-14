@@ -1144,13 +1144,15 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
 {
     struct wined3d_device *device = swapchain->device;
     BOOL filter_messages = device->filter_messages;
+    BOOL focus_messages = device->wined3d->flags & WINED3D_FOCUS_MESSAGES;
 
     /* This code is not protected by the wined3d mutex, so it may run while
      * wined3d_device_reset is active. Testing on Windows shows that changing
      * focus during resets and resetting during focus change events causes
      * the application to crash with an invalid memory access. */
 
-    device->filter_messages = !(device->wined3d->flags & WINED3D_FOCUS_MESSAGES);
+    if (!focus_messages)
+        device->filter_messages = 1;
 
     if (activate)
     {
@@ -1202,7 +1204,8 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
             ShowWindow(swapchain->device_window, SW_MINIMIZE);
     }
 
-    device->filter_messages = filter_messages;
+    if (!focus_messages)
+        device->filter_messages = filter_messages;
 }
 
 HRESULT CDECL wined3d_swapchain_resize_buffers(struct wined3d_swapchain *swapchain, unsigned int buffer_count,
