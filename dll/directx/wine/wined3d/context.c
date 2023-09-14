@@ -5315,14 +5315,14 @@ static void wined3d_context_gl_unload_numbered_array(struct wined3d_context_gl *
     context_gl->c.numbered_array_mask &= ~(1u << i);
 }
 
-static void context_unload_numbered_arrays(struct wined3d_context *context)
+static void wined3d_context_gl_unload_numbered_arrays(struct wined3d_context_gl *context_gl)
 {
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
+    uint32_t mask = context_gl->c.numbered_array_mask;
     unsigned int i;
 
-    while (context->numbered_array_mask)
+    while (mask)
     {
-        i = wined3d_bit_scan(&context->numbered_array_mask);
+        i = wined3d_bit_scan(&mask);
         wined3d_context_gl_unload_numbered_array(context_gl, i);
     }
 }
@@ -5555,7 +5555,7 @@ void wined3d_context_gl_update_stream_sources(struct wined3d_context_gl *context
     }
 
     TRACE("Loading named arrays.\n");
-    context_unload_numbered_arrays(&context_gl->c);
+    wined3d_context_gl_unload_numbered_arrays(context_gl);
     wined3d_context_gl_load_vertex_data(context_gl, &context_gl->c.stream_info, state);
     context_gl->c.namedArraysLoaded = TRUE;
 }
@@ -5635,7 +5635,7 @@ void context_draw_shaded_quad(struct wined3d_context *context, struct wined3d_te
         GL_EXTCALL(glBindBuffer(GL_ARRAY_BUFFER, context_gl->blit_vbo));
 
         wined3d_context_gl_unload_vertex_data(context_gl);
-        context_unload_numbered_arrays(context);
+        wined3d_context_gl_unload_numbered_arrays(context_gl);
 
         GL_EXTCALL(glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STREAM_DRAW));
         GL_EXTCALL(glVertexAttribPointer(0, 2, GL_FLOAT, FALSE, sizeof(*quad), NULL));
