@@ -1157,16 +1157,16 @@ void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain)
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate)
 {
     struct wined3d_device *device = swapchain->device;
-    BOOL filter_messages = device->filter_messages;
-    BOOL focus_messages = device->wined3d->flags & WINED3D_FOCUS_MESSAGES;
+    HWND window = swapchain->device_window;
+    BOOL focus_messages, filter;
 
     /* This code is not protected by the wined3d mutex, so it may run while
      * wined3d_device_reset is active. Testing on Windows shows that changing
      * focus during resets and resetting during focus change events causes
      * the application to crash with an invalid memory access. */
 
-    if (!focus_messages)
-        device->filter_messages = 1;
+    if (!(focus_messages = device->wined3d->flags & WINED3D_FOCUS_MESSAGES))
+        filter = wined3d_filter_messages(window, TRUE);
 
     if (activate)
     {
@@ -1179,9 +1179,8 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
              *
              * Guild Wars 1 wants a WINDOWPOSCHANGED message on the device window to
              * resume drawing after a focus loss. */
-            SetWindowPos(swapchain->device_window, NULL, 0, 0,
-                    swapchain->desc.backbuffer_width, swapchain->desc.backbuffer_height,
-                    SWP_NOACTIVATE | SWP_NOZORDER);
+            SetWindowPos(window, NULL, 0, 0, swapchain->desc.backbuffer_width,
+                    swapchain->desc.backbuffer_height, SWP_NOACTIVATE | SWP_NOZORDER);
         }
 
         if (device->wined3d->flags & WINED3D_RESTORE_MODE_ON_ACTIVATE)
@@ -1213,13 +1212,12 @@ void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activa
         if (swapchain == device->swapchains[0])
             device->device_parent->ops->activate(device->device_parent, FALSE);
 
-        if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES)
-                && IsWindowVisible(swapchain->device_window))
-            ShowWindow(swapchain->device_window, SW_MINIMIZE);
+        if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES) && IsWindowVisible(window))
+            ShowWindow(window, SW_MINIMIZE);
     }
 
     if (!focus_messages)
-        device->filter_messages = filter_messages;
+        wined3d_filter_messages(window, filter);
 }
 
 HRESULT CDECL wined3d_swapchain_resize_buffers(struct wined3d_swapchain *swapchain, unsigned int buffer_count,
@@ -1463,14 +1461,14 @@ HRESULT CDECL wined3d_swapchain_set_fullscreen(struct wined3d_swapchain *swapcha
         }
         else
         {
+            HWND window = swapchain->device_window;
+            BOOL filter;
+
             /* Fullscreen -> fullscreen mode change */
-            BOOL filter_messages = device->filter_messages;
-            device->filter_messages = TRUE;
-
-            MoveWindow(swapchain->device_window, 0, 0, width, height, TRUE);
-            ShowWindow(swapchain->device_window, SW_SHOW);
-
-            device->filter_messages = filter_messages;
+            filter = wined3d_filter_messages(window, TRUE);
+            MoveWindow(window, 0, 0, width, height, TRUE);
+            ShowWindow(window, SW_SHOW);
+            wined3d_filter_messages(window, filter);
         }
         swapchain->d3d_mode = actual_mode;
     }

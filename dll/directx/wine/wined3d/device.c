@@ -929,8 +929,8 @@ static LONG fullscreen_exstyle(LONG exstyle)
 HRESULT wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
         HWND window, unsigned int w, unsigned int h)
 {
-    BOOL filter_messages;
     LONG style, exstyle;
+    BOOL filter;
 
     TRACE("Setting up window %p for fullscreen mode.\n", window);
 
@@ -955,14 +955,13 @@ HRESULT wined3d_device_setup_fullscreen_window(struct wined3d_device *device,
     TRACE("Old style was %08x, %08x, setting to %08x, %08x.\n",
             device->style, device->exStyle, style, exstyle);
 
-    filter_messages = device->filter_messages;
-    device->filter_messages = TRUE;
+    filter = wined3d_filter_messages(window, TRUE);
 
     SetWindowLongW(window, GWL_STYLE, style);
     SetWindowLongW(window, GWL_EXSTYLE, exstyle);
     SetWindowPos(window, HWND_TOPMOST, 0, 0, w, h, SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
 
-    device->filter_messages = filter_messages;
+    wined3d_filter_messages(window, filter);
 
     return WINED3D_OK;
 }
@@ -971,9 +970,9 @@ void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
         HWND window, const RECT *window_rect)
 {
     unsigned int window_pos_flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE;
-    BOOL filter_messages;
     LONG style, exstyle;
     RECT rect = {0};
+    BOOL filter;
 
     if (!device->style && !device->exStyle)
         return;
@@ -993,8 +992,7 @@ void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
     TRACE("Restoring window style of window %p to %08x, %08x.\n",
             window, device->style, device->exStyle);
 
-    filter_messages = device->filter_messages;
-    device->filter_messages = TRUE;
+    filter = wined3d_filter_messages(window, TRUE);
 
     /* Only restore the style if the application didn't modify it during the
      * fullscreen phase. Some applications change it before calling Reset()
@@ -1013,7 +1011,7 @@ void wined3d_device_restore_fullscreen_window(struct wined3d_device *device,
     SetWindowPos(window, 0, rect.left, rect.top,
             rect.right - rect.left, rect.bottom - rect.top, window_pos_flags);
 
-    device->filter_messages = filter_messages;
+    wined3d_filter_messages(window, filter);
 
     /* Delete the old values. */
     device->style = 0;
@@ -6009,16 +6007,6 @@ void device_invalidate_state(const struct wined3d_device *device, DWORD state)
 LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL unicode,
         UINT message, WPARAM wparam, LPARAM lparam, WNDPROC proc)
 {
-    if (device->filter_messages && message != WM_DISPLAYCHANGE)
-    {
-        TRACE("Filtering message: window %p, message %#x, wparam %#lx, lparam %#lx.\n",
-                window, message, wparam, lparam);
-        if (unicode)
-            return DefWindowProcW(window, message, wparam, lparam);
-        else
-            return DefWindowProcA(window, message, wparam, lparam);
-    }
-
     if (message == WM_DESTROY)
     {
         TRACE("unregister window %p.\n", window);
