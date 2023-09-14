@@ -1807,6 +1807,10 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
                     return hr;
                 reg_maps->cull_distance_mask |= mask;
             }
+            else if (e->sysval_semantic == WINED3D_SV_VIEWPORT_ARRAY_INDEX)
+            {
+                reg_maps->viewport_array = 1;
+            }
         }
     }
     else if (reg_maps->output_registers)

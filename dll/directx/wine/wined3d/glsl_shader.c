@@ -4908,11 +4908,11 @@ static void shader_glsl_else(const struct wined3d_shader_instruction *ins)
 static void shader_glsl_emit(const struct wined3d_shader_instruction *ins)
 {
     unsigned int stream = ins->handler_idx == WINED3DSIH_EMIT ? 0 : ins->src[0].reg.idx[0].offset;
+    const struct wined3d_shader_reg_maps *reg_maps = ins->ctx->reg_maps;
 
-    shader_addline(ins->ctx->buffer, "gl_ViewportIndex = 0;\n");
     shader_addline(ins->ctx->buffer, "setup_gs_output(gs_out);\n");
     if (!ins->ctx->gl_info->supported[ARB_CLIP_CONTROL])
-        shader_glsl_fixup_position(ins->ctx->buffer, TRUE);
+        shader_glsl_fixup_position(ins->ctx->buffer, reg_maps->viewport_array);
 
     if (!stream)
         shader_addline(ins->ctx->buffer, "EmitVertex();\n");
@@ -8018,7 +8018,12 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
     shader_addline(buffer, "in shader_in_out { vec4 reg[%u]; } shader_in[];\n", shader->limits->packed_input);
 
     if (!gl_info->supported[ARB_CLIP_CONTROL])
-        shader_addline(buffer, "uniform vec4 pos_fixup[%u];\n", WINED3D_MAX_VIEWPORTS);
+    {
+        shader_addline(buffer, "uniform vec4 pos_fixup");
+        if (reg_maps->viewport_array)
+            shader_addline(buffer, "[%u]", WINED3D_MAX_VIEWPORTS);
+        shader_addline(buffer, ";\n");
+    }
 
     if (is_rasterization_disabled(shader))
     {
@@ -8048,10 +8053,7 @@ static GLuint shader_glsl_generate_geometry_shader(const struct wined3d_context 
             }
             shader_addline(buffer, "setup_gs_output(gs_out);\n");
             if (!gl_info->supported[ARB_CLIP_CONTROL])
-            {
-                shader_addline(buffer, "gl_ViewportIndex = 0;\n");
-                shader_glsl_fixup_position(buffer, TRUE);
-            }
+                shader_glsl_fixup_position(buffer, FALSE);
             shader_addline(buffer, "EmitVertex();\n");
         }
     }
