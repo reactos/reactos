@@ -1,0 +1,127 @@
+diff --git a/dll/directx/wine/ddraw/ddraw.c b/dll/directx/wine/ddraw/ddraw.c
+index 165200e..68e9286 100644
+--- a/dll/directx/wine/ddraw/ddraw.c
++++ b/dll/directx/wine/ddraw/ddraw.c
+@@ -3224,49 +3224,97 @@ static HRESULT WINAPI ddraw7_EnumSurfaces(IDirectDraw7 *iface, DWORD Flags,
+ {
+     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
+     struct ddraw_surface *surf;
+-    BOOL all, nomatch;
+-    DDSURFACEDESC2 desc;
+-    struct list *entry, *entry2;
++    DWORD match_flags = Flags & (DDENUMSURFACES_ALL | DDENUMSURFACES_NOMATCH | DDENUMSURFACES_MATCH);
+ 
+     TRACE("iface %p, flags %#x, surface_desc %p, context %p, callback %p.\n",
+             iface, Flags, DDSD, Context, Callback);
+ 
+-    all = Flags & DDENUMSURFACES_ALL;
+-    nomatch = Flags & DDENUMSURFACES_NOMATCH;
+-
+     if (!Callback)
+         return DDERR_INVALIDPARAMS;
+ 
+-    if (!all && !DDSD)
+-        return DDERR_INVALIDPARAMS;
++    if (Flags & DDENUMSURFACES_CANBECREATED)
++    {
++         IDirectDrawSurface7 *surface;
++         DDSURFACEDESC2 testdesc;
++         HRESULT hr;
+ 
+-    wined3d_mutex_lock();
++        if (match_flags != DDENUMSURFACES_MATCH)
++            return DDERR_INVALIDPARAMS;
+ 
+-    /* Use the _SAFE enumeration, the app may destroy enumerated surfaces */
+-    LIST_FOR_EACH_SAFE(entry, entry2, &ddraw->surface_list)
+-    {
+-        surf = LIST_ENTRY(entry, struct ddraw_surface, surface_list_entry);
++        if (!DDSD)
++            return DDERR_INVALIDPARAMS;
+ 
+-        if (!surf->iface_count)
++        memcpy(&testdesc, DDSD, sizeof(testdesc));
++        if (!(testdesc.dwFlags & DDSD_WIDTH))
+         {
+-            WARN("Not enumerating surface %p because it doesn't have any references.\n", surf);
+-            continue;
++            testdesc.dwFlags |= DDSD_WIDTH;
++            testdesc.dwWidth = 512;
++        }
++        if (!(testdesc.dwFlags & DDSD_HEIGHT))
++        {
++            testdesc.dwFlags |= DDSD_HEIGHT;
++            testdesc.dwHeight = 512;
+         }
+ 
+-        if (all || (nomatch != ddraw_match_surface_desc(DDSD, &surf->surface_desc)))
++        hr = IDirectDraw7_CreateSurface(iface, &testdesc, &surface, NULL);
++        if (SUCCEEDED(hr))
++        {
++            surf = unsafe_impl_from_IDirectDrawSurface7(surface);
++            Callback(NULL, &surf->surface_desc, Context);
++            IDirectDrawSurface7_Release(surface);
++        }
++        else
++            ERR("Failed to create surface, hr %#x.\n", hr);
++    }
++    else if (Flags & DDENUMSURFACES_DOESEXIST)
++    {
++        BOOL all, nomatch;
++        DDSURFACEDESC2 desc;
++        struct list *entry, *entry2;
++
++        /* a combination of match flags is not allowed */
++        if (match_flags != 0 &&
++                match_flags != DDENUMSURFACES_ALL &&
++                match_flags != DDENUMSURFACES_MATCH &&
++                match_flags != DDENUMSURFACES_NOMATCH)
++            return DDERR_INVALIDPARAMS;
++
++        all = (Flags & DDENUMSURFACES_ALL) != 0;
++        nomatch = (Flags & DDENUMSURFACES_NOMATCH) != 0;
++
++        if (!all && !DDSD)
++            return DDERR_INVALIDPARAMS;
++
++        wined3d_mutex_lock();
++
++        /* Use the _SAFE enumeration, the app may destroy enumerated surfaces */
++        LIST_FOR_EACH_SAFE(entry, entry2, &ddraw->surface_list)
+         {
+-            TRACE("Enumerating surface %p.\n", surf);
+-            desc = surf->surface_desc;
+-            IDirectDrawSurface7_AddRef(&surf->IDirectDrawSurface7_iface);
+-            if (Callback(&surf->IDirectDrawSurface7_iface, &desc, Context) != DDENUMRET_OK)
++            surf = LIST_ENTRY(entry, struct ddraw_surface, surface_list_entry);
++
++            if (!surf->iface_count)
+             {
+-                wined3d_mutex_unlock();
+-                return DD_OK;
++                WARN("Not enumerating surface %p because it doesn't have any references.\n", surf);
++                continue;
++            }
++
++            if (all || (nomatch != ddraw_match_surface_desc(DDSD, &surf->surface_desc)))
++            {
++                TRACE("Enumerating surface %p.\n", surf);
++                desc = surf->surface_desc;
++                IDirectDrawSurface7_AddRef(&surf->IDirectDrawSurface7_iface);
++                if (Callback(&surf->IDirectDrawSurface7_iface, &desc, Context) != DDENUMRET_OK)
++                {
++                    wined3d_mutex_unlock();
++                    return DD_OK;
++                }
+             }
+         }
+-    }
+ 
+-    wined3d_mutex_unlock();
++        wined3d_mutex_unlock();
++    }
++    else
++        return DDERR_INVALIDPARAMS;
+ 
+     return DD_OK;
+ }
