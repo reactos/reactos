@@ -37,10 +37,10 @@ static BOOL wined3d_query_buffer_is_valid(struct wined3d_query *query)
     return query->map_ptr[0] == query->map_ptr[1];
 }
 
-static void wined3d_query_create_buffer_object(struct wined3d_context *context, struct wined3d_query *query)
+static void wined3d_query_create_buffer_object(struct wined3d_context_gl *context_gl, struct wined3d_query *query)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     const GLuint map_flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     GLuint buffer_object;
 
     GL_EXTCALL(glGenBuffers(1, &buffer_object));
@@ -75,6 +75,7 @@ static void wined3d_query_destroy_buffer_object(struct wined3d_context *context,
  * instead of from the csmt-thread. */
 static BOOL wined3d_query_buffer_queue_result(struct wined3d_context *context, struct wined3d_query *query, GLuint id)
 {
+    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLsync tmp_sync;
 
@@ -96,7 +97,7 @@ static BOOL wined3d_query_buffer_queue_result(struct wined3d_context *context, s
     }
 
     if (!query->buffer_object)
-        wined3d_query_create_buffer_object(context, query);
+        wined3d_query_create_buffer_object(context_gl, query);
 
     GL_EXTCALL(glBindBuffer(GL_QUERY_BUFFER, query->buffer_object));
     /* Read the same value twice. We know we have the result if map_ptr[0] == map_ptr[1]. */
