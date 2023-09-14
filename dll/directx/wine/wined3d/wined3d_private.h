@@ -3827,9 +3827,8 @@ struct wined3d_buffer
 {
     struct wined3d_resource resource;
 
-    struct wined3d_buffer_desc desc;
-
     unsigned int bind_flags;
+    unsigned int structure_byte_stride;
     DWORD flags;
     DWORD locations;
     void *map_ptr;

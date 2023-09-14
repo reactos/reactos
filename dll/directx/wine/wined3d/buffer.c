@@ -1302,7 +1302,7 @@ static HRESULT buffer_resource_sub_resource_map(struct wined3d_resource *resourc
         offset = size = 0;
     }
 
-    map_desc->row_pitch = map_desc->slice_pitch = buffer_gl->b.desc.byte_width;
+    map_desc->row_pitch = map_desc->slice_pitch = resource->size;
     return wined3d_buffer_gl_map(buffer_gl, offset, size, (BYTE **)&map_desc->data, flags);
 }
 
@@ -1404,8 +1404,8 @@ static HRESULT wined3d_buffer_init(struct wined3d_buffer *buffer, struct wined3d
         WARN("Failed to initialize resource, hr %#x.\n", hr);
         return hr;
     }
-    buffer->desc = *desc;
     buffer->bind_flags = desc->bind_flags;
+    buffer->structure_byte_stride = desc->structure_byte_stride;
     buffer->locations = data ? WINED3D_LOCATION_DISCARDED : WINED3D_LOCATION_SYSMEM;
 
     TRACE("buffer %p, size %#x, usage %#x, format %s, memory @ %p.\n",

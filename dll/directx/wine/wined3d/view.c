@@ -115,7 +115,7 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
         struct wined3d_buffer *buffer = buffer_from_resource(resource);
         unsigned int buffer_size, element_size;
 
-        if (buffer->desc.structure_byte_stride)
+        if (buffer->structure_byte_stride)
         {
             if (desc->format_id != WINED3DFMT_UNKNOWN)
             {
@@ -124,7 +124,7 @@ static const struct wined3d_format *validate_resource_view(const struct wined3d_
             }
 
             format = wined3d_get_format(adapter, WINED3DFMT_R32_UINT, resource->usage);
-            element_size = buffer->desc.structure_byte_stride;
+            element_size = buffer->structure_byte_stride;
         }
         else
         {
@@ -298,8 +298,8 @@ static void get_buffer_view_range(const struct wined3d_buffer *buffer,
 {
     if (desc->format_id == WINED3DFMT_UNKNOWN)
     {
-        *offset = desc->u.buffer.start_idx * buffer->desc.structure_byte_stride;
-        *size = desc->u.buffer.count * buffer->desc.structure_byte_stride;
+        *offset = desc->u.buffer.start_idx * buffer->structure_byte_stride;
+        *size = desc->u.buffer.count * buffer->structure_byte_stride;
     }
     else
     {
