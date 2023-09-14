@@ -1,0 +1,38 @@
+diff --git a/dll/directx/wine/wined3d/adapter_gl.c b/dll/directx/wine/wined3d/adapter_gl.c
+index 06fbc51..54423fb 100644
+--- a/dll/directx/wine/wined3d/adapter_gl.c
++++ b/dll/directx/wine/wined3d/adapter_gl.c
+@@ -4327,6 +4327,7 @@ static void adapter_gl_get_wined3d_caps(const struct wined3d_adapter *adapter, s
+     const struct wined3d_gl_info *gl_info = &adapter->gl_info;
+ 
+     caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
++            | WINEDDSCAPS_FLIP
+             | WINEDDSCAPS_COMPLEX
+             | WINEDDSCAPS_FRONTBUFFER
+             | WINEDDSCAPS_3DDEVICE
+diff --git a/dll/directx/wine/wined3d/adapter_vk.c b/dll/directx/wine/wined3d/adapter_vk.c
+index 21163a2..4b88769 100644
+--- a/dll/directx/wine/wined3d/adapter_vk.c
++++ b/dll/directx/wine/wined3d/adapter_vk.c
+@@ -298,6 +298,7 @@ static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, s
+     BOOL sampler_anisotropy = limits->maxSamplerAnisotropy > 1.0f;
+ 
+     caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
++            | WINEDDSCAPS_FLIP
+             | WINEDDSCAPS_COMPLEX
+             | WINEDDSCAPS_FRONTBUFFER
+             | WINEDDSCAPS_3DDEVICE
+diff --git a/dll/directx/wine/wined3d/directx.c b/dll/directx/wine/wined3d/directx.c
+index f366b8c..ddab690 100644
+--- a/dll/directx/wine/wined3d/directx.c
++++ b/dll/directx/wine/wined3d/directx.c
+@@ -2196,8 +2196,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, unsigned in
+     caps->ddraw_caps.ssb_color_key_caps = ckey_caps;
+     caps->ddraw_caps.ssb_fx_caps = fx_caps;
+ 
+-    caps->ddraw_caps.dds_caps = WINEDDSCAPS_FLIP
+-            | WINEDDSCAPS_OFFSCREENPLAIN
++    caps->ddraw_caps.dds_caps = WINEDDSCAPS_OFFSCREENPLAIN
+             | WINEDDSCAPS_PALETTE
+             | WINEDDSCAPS_PRIMARYSURFACE
+             | WINEDDSCAPS_TEXTURE

@@ -298,6 +298,7 @@ static void adapter_vk_get_wined3d_caps(const struct wined3d_adapter *adapter, s
     BOOL sampler_anisotropy = limits->maxSamplerAnisotropy > 1.0f;
 
     caps->ddraw_caps.dds_caps |= WINEDDSCAPS_BACKBUFFER
+            | WINEDDSCAPS_FLIP
             | WINEDDSCAPS_COMPLEX
             | WINEDDSCAPS_FRONTBUFFER
             | WINEDDSCAPS_3DDEVICE
