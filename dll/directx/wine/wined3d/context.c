@@ -3391,13 +3391,13 @@ static BOOL context_unit_free_for_vs(const struct wined3d_context *context,
     return TRUE;
 }
 
-static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, const struct wined3d_state *state)
+static void wined3d_context_gl_map_vsamplers(struct wined3d_context_gl *context_gl,
+        BOOL ps, const struct wined3d_state *state)
 {
     const struct wined3d_shader_resource_info *vs_resource_info =
             state->shader[WINED3D_SHADER_TYPE_VERTEX]->reg_maps.resource_info;
-    struct wined3d_context_gl *context_gl = wined3d_context_gl(context);
     const struct wined3d_shader_resource_info *ps_resource_info = NULL;
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     int start = min(WINED3D_MAX_COMBINED_SAMPLERS, gl_info->limits.graphics_samplers) - 1;
     int i;
 
@@ -3414,12 +3414,12 @@ static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, cons
         {
             while (start >= 0)
             {
-                if (context_unit_free_for_vs(context, ps_resource_info, start))
+                if (context_unit_free_for_vs(&context_gl->c, ps_resource_info, start))
                 {
-                    if (context->tex_unit_map[vsampler_idx] != start)
+                    if (context_gl->c.tex_unit_map[vsampler_idx] != start)
                     {
                         wined3d_context_gl_map_stage(context_gl, vsampler_idx, start);
-                        context_invalidate_state(context, STATE_SAMPLER(vsampler_idx));
+                        context_invalidate_state(&context_gl->c, STATE_SAMPLER(vsampler_idx));
                     }
 
                     --start;
@@ -3428,7 +3428,7 @@ static void context_map_vsamplers(struct wined3d_context *context, BOOL ps, cons
 
                 --start;
             }
-            if (context->tex_unit_map[vsampler_idx] == WINED3D_UNMAPPED_STAGE)
+            if (context_gl->c.tex_unit_map[vsampler_idx] == WINED3D_UNMAPPED_STAGE)
                 WARN("Couldn't find a free texture unit for vertex sampler %u.\n", i);
         }
     }
@@ -3458,7 +3458,7 @@ static void context_update_tex_unit_map(struct wined3d_context *context, const s
         wined3d_context_gl_map_fixed_function_samplers(context_gl, state);
 
     if (vs)
-        context_map_vsamplers(context, ps, state);
+        wined3d_context_gl_map_vsamplers(context_gl, ps, state);
 }
 
 /* Context activation is done by the caller. */
