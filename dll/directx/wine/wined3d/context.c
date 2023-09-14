@@ -3842,10 +3842,10 @@ static void context_load_unordered_access_resources(struct wined3d_context *cont
     }
 }
 
-static void context_bind_unordered_access_views(struct wined3d_context *context,
+static void wined3d_context_gl_bind_unordered_access_views(struct wined3d_context_gl *context_gl,
         const struct wined3d_shader *shader, struct wined3d_unordered_access_view * const *views)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info = context_gl->c.gl_info;
     struct wined3d_unordered_access_view_gl *view_gl;
     const struct wined3d_format_gl *format_gl;
     GLuint texture_name;
@@ -3874,7 +3874,7 @@ static void context_bind_unordered_access_views(struct wined3d_context *context,
         else if (view_gl->v.resource->type != WINED3D_RTYPE_BUFFER)
         {
             struct wined3d_texture_gl *texture_gl = wined3d_texture_gl(texture_from_resource(view_gl->v.resource));
-            texture_name = wined3d_texture_gl_get_texture_name(texture_gl, context, FALSE);
+            texture_name = wined3d_texture_gl_get_texture_name(texture_gl, &context_gl->c, FALSE);
             level = view_gl->v.desc.u.texture.level_idx;
         }
         else
@@ -4002,7 +4002,7 @@ static BOOL context_apply_draw_state(struct wined3d_context *context,
 
     if (context->update_unordered_access_view_bindings)
     {
-        context_bind_unordered_access_views(context,
+        wined3d_context_gl_bind_unordered_access_views(context_gl,
                 state->shader[WINED3D_SHADER_TYPE_PIXEL],
                 state->unordered_access_view[WINED3D_PIPELINE_GRAPHICS]);
         context->update_unordered_access_view_bindings = 0;
@@ -4059,7 +4059,7 @@ static void wined3d_context_gl_apply_compute_state(struct wined3d_context_gl *co
 
     if (context_gl->c.update_compute_unordered_access_view_bindings)
     {
-        context_bind_unordered_access_views(&context_gl->c,
+        wined3d_context_gl_bind_unordered_access_views(context_gl,
                 state->shader[WINED3D_SHADER_TYPE_COMPUTE],
                 state->unordered_access_view[WINED3D_PIPELINE_COMPUTE]);
         context_gl->c.update_compute_unordered_access_view_bindings = 0;
