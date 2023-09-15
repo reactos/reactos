@@ -137,7 +137,8 @@ class wine_sync:
         if in_staging:
             # see if we already applied this patch
             patch_file_name = f'{staging_patch_index:04}-{string_to_valid_file_name(wine_commit.message.splitlines()[0])}.diff'
-            patch_path = os.path.join(self.reactos_src, self.staged_patch_dir, patch_file_name)
+            patch_dir = os.path.join(self.reactos_src, self.staged_patch_dir)
+            patch_path = os.path.join(patch_dir, patch_file_name)
             if os.path.isfile(patch_path):
                 print(f'Skipping patch as {patch_path} already exists')
                 return True, ''
@@ -234,8 +235,8 @@ class wine_sync:
         else:
             # Add the staging patch
             # do not save the wine commit ID in <module>.cfg, as it's a local one for staging patches
-            if not os.path.isdir(os.path.join(self.reactos_src, self.staged_patch_dir)):
-                os.mkdir(os.path.join(self.reactos_src, self.staged_patch_dir))
+            if not os.path.isdir(patch_dir):
+                os.mkdir(patch_dir)
             with open(patch_path, 'w') as file_output:
                 file_output.write(complete_patch)
             self.reactos_index.add(posixpath.join(self.staged_patch_dir, patch_file_name))
@@ -264,11 +265,12 @@ class wine_sync:
                     f'You can see the details of the wine commit here:\n' \
                     f'    https://source.winehq.org/git/wine.git/commit/{str(wine_commit.id)}\n'
             else:
+                patch_file_path = posixpath.join(self.staged_patch_dir, patch_file_name)
                 warning_message += f'\n' \
                     f'Do not forget to run\n' \
-                    f'    git diff HEAD^ \':(exclude)sdk/tools/winesync/{patch_file_name}\' > sdk/tools/winesync/{patch_file_name}\n' \
+                    f'    git diff HEAD^ \':(exclude){patch_file_path}\' > {patch_file_path}\n' \
                     f'after your correction and then\n' \
-                    f'    git add sdk/tools/winesync/{patch_file_name}\n' \
+                    f'    git add {patch_file_path}\n' \
                     f'before running "git commit --amend"'
 
         return True, warning_message
