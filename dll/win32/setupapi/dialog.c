@@ -60,7 +60,7 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
             args[1] = (DWORD_PTR)unknown;
         }
         FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                       format, 0, 0, message, ARRAY_SIZE(message), (__ms_va_list*)args);
+                       format, 0, 0, message, ARRAY_SIZE(message), (va_list *)args);
         SetDlgItemTextW(hwnd, IDC_FILENEEDED, message);
 
         LoadStringW(SETUPAPI_hInstance, IDS_INFO, message, ARRAY_SIZE(message));
