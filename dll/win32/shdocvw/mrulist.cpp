@@ -1000,7 +1000,7 @@ class CMruPidlList
 {
 protected:
     LPBYTE m_pbNodeSlots = NULL;    // The node slots
-    DWORD m_cNodeSlots = 0;         // The number of the node slots
+    DWORD m_cNodeSlots = 0;         // The capacity of the node slots
     HANDLE m_hMutex = NULL;         // The mutex (for sync)
 
     BOOL _LoadNodeSlots();
@@ -1079,7 +1079,7 @@ void CMruPidlList::_SaveNodeSlots()
 
 HRESULT CMruPidlList::_InitNodeSlots()
 {
-    m_pbNodeSlots = (BYTE *)LocalAlloc(LPTR, m_cSlotRooms);
+    m_pbNodeSlots = (BYTE*)LocalAlloc(LPTR, m_cSlotRooms * sizeof(BYTE));
     if (!m_pbNodeSlots)
         return E_OUTOFMEMORY;
 
