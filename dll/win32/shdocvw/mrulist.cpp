@@ -1000,7 +1000,7 @@ class CMruPidlList
 {
 protected:
     LPBYTE m_pbNodeSlots = NULL;    // The node slots
-    DWORD m_cNodeSlots = 0;         // The capacity of the node slots
+    DWORD m_cMaxNodeSlots = 0;      // The upper bound of the node slot index
     HANDLE m_hMutex = NULL;         // The mutex (for sync)
 
     BOOL _LoadNodeSlots();
@@ -1067,7 +1067,7 @@ BOOL CMruPidlList::_LoadNodeSlots()
     DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
     if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbNodeSlots, &cbNodeSlots) != ERROR_SUCCESS)
         return FALSE;
-    m_cNodeSlots = cbNodeSlots;
+    m_cMaxNodeSlots = m_cSlotRooms;
     return TRUE;
 }
 
@@ -1097,15 +1097,15 @@ HRESULT CMruPidlList::GetEmptySlot(UINT *pnNodeSlot)
     if (!_LoadNodeSlots())
         return E_FAIL;
 
-    if (m_cNodeSlots < m_cSlotRooms)
+    if (m_cMaxNodeSlots < m_cSlotRooms)
     {
-        m_pbNodeSlots[m_cNodeSlots] = SLOT_SET;
-        *pnNodeSlot = ++m_cNodeSlots;
+        m_pbNodeSlots[m_cMaxNodeSlots] = SLOT_SET;
+        *pnNodeSlot = ++m_cMaxNodeSlots;
         _SaveNodeSlots();
         return S_OK;
     }
 
-    for (UINT iNodeSlot = 0; iNodeSlot < m_cNodeSlots; ++iNodeSlot)
+    for (UINT iNodeSlot = 0; iNodeSlot < m_cMaxNodeSlots; ++iNodeSlot)
     {
         if (m_pbNodeSlots[iNodeSlot] & SLOT_SET)
             continue;
