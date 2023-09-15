@@ -999,7 +999,7 @@ class CMruPidlList
     , public IMruPidlList
 {
 protected:
-    LPBYTE m_pbNodeSlots = NULL;    // The node slots
+    LPBYTE m_pbNodeSlots = NULL;    // The node slots (contains SLOT_... flags)
     DWORD m_cMaxNodeSlots = 0;      // The upper bound of the node slot index
     HANDLE m_hMutex = NULL;         // The mutex (for sync)
 
