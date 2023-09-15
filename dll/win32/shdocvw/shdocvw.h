@@ -61,6 +61,7 @@ static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_r
 
 #ifdef __REACTOS__
 EXTERN_C HRESULT CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
+EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
 EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv);
 #endif
 

@@ -105,6 +105,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
     {
         return CMruLongList_CreateInstance(0, ppv, 0);
     }
+    else if (IsEqualGUID(riid, &IID_IMruPidlList))
+    {
+        return CMruPidlList_CreateInstance(0, ppv, 0);
+    }
 #endif
 
     /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */

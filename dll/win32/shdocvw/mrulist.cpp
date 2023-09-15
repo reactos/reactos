@@ -24,6 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+class CSafeMutex;
 class CMruBase;
     class CMruShortList;
     class CMruLongList;
@@ -57,6 +58,35 @@ BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
 #define COMPARE_BY_IEILISEQUAL  0x3
 #define COMPARE_BY_MASK         0xF
 
+class CSafeMutex
+{
+protected:
+    HANDLE m_hMutex;
+
+public:
+    CSafeMutex() : m_hMutex(NULL)
+    {
+    }
+    ~CSafeMutex()
+    {
+        if (m_hMutex)
+        {
+            ::ReleaseMutex(m_hMutex);
+            m_hMutex = NULL;
+        }
+    }
+
+    HRESULT Enter(HANDLE hMutex)
+    {
+        DWORD wait = ::WaitForSingleObject(hMutex, 500);
+        if (wait != WAIT_OBJECT_0)
+            return E_FAIL;
+
+        m_hMutex = hMutex;
+        return S_OK;
+    }
+};
+
 class CMruBase
     : public IMruDataList
 {
@@ -72,7 +102,7 @@ protected:
     SLOTITEMDATA *  m_pSlots        = NULL;     // Slot data
 
     HRESULT _LoadItem(UINT iSlot);
-    HRESULT _AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData);
+    HRESULT _AddItem(UINT iSlot, LPCVOID pvData, DWORD cbData);
     HRESULT _GetItem(UINT iSlot, SLOTITEMDATA **ppItem);
     void _DeleteItem(UINT iSlot);
 
@@ -96,9 +126,9 @@ public:
     STDMETHODIMP InitData(UINT cCapacity, UINT flags, HKEY hKey,
                           LPCWSTR pszSubKey OPTIONAL,
                           SLOTCOMPARE fnCompare OPTIONAL) override;
-    STDMETHODIMP AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
-    STDMETHODIMP FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot) override;
-    STDMETHODIMP GetData(UINT iSlot, BYTE *pbData, DWORD cbData) override;
+    STDMETHODIMP AddData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
+    STDMETHODIMP FindData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
+    STDMETHODIMP GetData(UINT iSlot, LPVOID pvData, DWORD cbData) override;
     STDMETHODIMP QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData) override;
     STDMETHODIMP Delete(UINT iSlot) override;
 
@@ -241,14 +271,14 @@ void CMruBase::_CheckUsedSlots()
     m_bChecked = TRUE;
 }
 
-HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
+HRESULT CMruBase::_AddItem(UINT iSlot, LPCVOID pvData, DWORD cbData)
 {
     SLOTITEMDATA *pItem = &m_pSlots[iSlot];
 
     WCHAR szBuff[12];
     _SlotString(iSlot, szBuff, _countof(szBuff));
 
-    if (SHSetValueW(m_hKey, NULL, szBuff, REG_BINARY, pbData, cbData) != ERROR_SUCCESS)
+    if (SHSetValueW(m_hKey, NULL, szBuff, REG_BINARY, pvData, cbData) != ERROR_SUCCESS)
         return E_OUTOFMEMORY;
 
     if (cbData >= pItem->cbData || !pItem->pvData)
@@ -262,7 +292,7 @@ HRESULT CMruBase::_AddItem(UINT iSlot, const BYTE *pbData, DWORD cbData)
 
     pItem->cbData = cbData;
     pItem->dwFlags = (SLOT_LOADED | SLOT_SET);
-    CopyMemory(pItem->pvData, pbData, cbData);
+    CopyMemory(pItem->pvData, pvData, cbData);
     return S_OK;
 }
 
@@ -293,14 +323,14 @@ CMruBase::InitData(
     return _InitSlots();
 }
 
-STDMETHODIMP CMruBase::AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
+STDMETHODIMP CMruBase::AddData(LPCVOID pvData, DWORD cbData, UINT *piSlot)
 {
     UINT iSlot;
-    HRESULT hr = FindData(pbData, cbData, &iSlot);
+    HRESULT hr = FindData(pvData, cbData, &iSlot);
     if (FAILED(hr))
     {
         iSlot = _UpdateSlots(m_cSlots);
-        hr = _AddItem(iSlot, pbData, cbData);
+        hr = _AddItem(iSlot, pvData, cbData);
         if (FAILED(hr))
             return hr;
     }
@@ -316,14 +346,14 @@ STDMETHODIMP CMruBase::AddData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
     return hr;
 }
 
-STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
+STDMETHODIMP CMruBase::FindData(LPCVOID pvData, DWORD cbData, UINT *piSlot)
 {
     if (m_cSlots <= 0)
         return E_FAIL;
 
     UINT iSlot = 0;
     SLOTITEMDATA *pItem;
-    while (FAILED(_GetItem(iSlot, &pItem)) || !_IsEqual(pItem, pbData, cbData))
+    while (FAILED(_GetItem(iSlot, &pItem)) || !_IsEqual(pItem, pvData, cbData))
     {
         if (++iSlot >= m_cSlots)
             return E_FAIL;
@@ -333,7 +363,7 @@ STDMETHODIMP CMruBase::FindData(const BYTE *pbData, DWORD cbData, UINT *piSlot)
     return S_OK;
 }
 
-STDMETHODIMP CMruBase::GetData(UINT iSlot, BYTE *pbData, DWORD cbData)
+STDMETHODIMP CMruBase::GetData(UINT iSlot, LPVOID pvData, DWORD cbData)
 {
     SLOTITEMDATA *pItem;
     HRESULT hr = _GetItem(iSlot, &pItem);
@@ -343,7 +373,7 @@ STDMETHODIMP CMruBase::GetData(UINT iSlot, BYTE *pbData, DWORD cbData)
     if (cbData < pItem->cbData)
         return 0x8007007A; // FIXME: Magic number
 
-    CopyMemory(pbData, pItem->pvData, pItem->cbData);
+    CopyMemory(pvData, pItem->pvData, pItem->cbData);
     return hr;
 }
 
@@ -694,7 +724,7 @@ void CMruLongList::_ImportShortList()
             if (FAILED(hr))
                 break;
 
-            _AddItem(iSlot, (const BYTE*)pItem->pvData, pItem->cbData);
+            _AddItem(iSlot, pItem->pvData, pItem->cbData);
             pShortList->_DeleteItem(iSlot);
 
             m_puSlotData[m_cSlots++] = iSlot;
@@ -751,10 +781,10 @@ public:
 
     HRESULT BindToSlot(UINT iSlot, IShellFolder **ppSF);
     HRESULT GetNode(BOOL bAdd, LPCITEMIDLIST pidl, CMruNode **pNewNode);
-    HRESULT GetNodeSlot(UINT *piSlot);
-    HRESULT SetNodeSlot(UINT iSlot);
+    HRESULT GetNodeSlot(UINT *pnNodeSlot);
+    HRESULT SetNodeSlot(UINT nNodeSlot);
 
-    HRESULT RemoveLeast(UINT *piSlot);
+    HRESULT RemoveLeast(UINT *pnNodeSlot);
     HRESULT Clear(CMruPidlList *pList);
 };
 
@@ -793,10 +823,10 @@ HRESULT CMruNode::_CreateNode(UINT iSlot, CMruNode **ppNewNode)
     if (!pNewNode)
         return E_OUTOFMEMORY;
 
-    WCHAR szBuff[12];
-    _SlotString(iSlot, szBuff, _countof(szBuff));
+    WCHAR szSubKey[12];
+    _SlotString(iSlot, szSubKey, _countof(szSubKey));
 
-    HRESULT hr = pNewNode->InitData(m_cSlotRooms, 0, m_hKey, szBuff, NULL);
+    HRESULT hr = pNewNode->InitData(m_cSlotRooms, 0, m_hKey, szSubKey, NULL);
     if (FAILED(hr))
         pNewNode->Release();
     else
@@ -876,19 +906,19 @@ BOOL CMruNode::_IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData)
                                       (LPCITEMIDLIST)pvData) == 0;
 }
 
-HRESULT CMruNode::GetNodeSlot(UINT *piSlot)
+HRESULT CMruNode::GetNodeSlot(UINT *pnNodeSlot)
 {
     DWORD dwData, cbData = sizeof(dwData);
-    DWORD error = SHGetValueW(m_hKey, NULL, L"NodeSlot", NULL, &dwData, (piSlot ? &cbData : NULL));
+    DWORD error = SHGetValueW(m_hKey, NULL, L"NodeSlot", NULL, &dwData, (pnNodeSlot ? &cbData : NULL));
     if (error != ERROR_SUCCESS)
         return E_FAIL;
-    *piSlot = (UINT)dwData;
+    *pnNodeSlot = (UINT)dwData;
     return S_OK;
 }
 
-HRESULT CMruNode::SetNodeSlot(UINT iSlot)
+HRESULT CMruNode::SetNodeSlot(UINT nNodeSlot)
 {
-    DWORD dwData = iSlot;
+    DWORD dwData = nNodeSlot;
     if (SHSetValueW(m_hKey, NULL, L"NodeSlot", REG_DWORD, &dwData, sizeof(dwData)) != ERROR_SUCCESS)
         return E_FAIL;
     return S_OK;
@@ -896,7 +926,7 @@ HRESULT CMruNode::SetNodeSlot(UINT iSlot)
 
 HRESULT CMruNode::_AddPidl(UINT iSlot, LPCITEMIDLIST pidl)
 {
-    return CMruBase::_AddItem(iSlot, (const BYTE*)pidl, sizeof(WORD) + pidl->mkid.cb);
+    return CMruBase::_AddItem(iSlot, pidl, sizeof(WORD) + pidl->mkid.cb);
 }
 
 DWORD CMruNode::_DeleteValue(LPCWSTR pszValue)
@@ -907,7 +937,7 @@ DWORD CMruNode::_DeleteValue(LPCWSTR pszValue)
 
 HRESULT CMruNode::_FindPidl(LPCITEMIDLIST pidl, UINT *piSlot)
 {
-    return FindData((const BYTE *)pidl, sizeof(WORD) + pidl->mkid.cb, piSlot);
+    return FindData(pidl, sizeof(WORD) + pidl->mkid.cb, piSlot);
 }
 
 HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *piSlot)
@@ -933,11 +963,11 @@ HRESULT CMruNode::_GetPidlSlot(LPCITEMIDLIST pidl, BOOL bAdd, UINT *piSlot)
     return hr;
 }
 
-HRESULT CMruNode::RemoveLeast(UINT *piSlot)
+HRESULT CMruNode::RemoveLeast(UINT *pnNodeSlot)
 {
     if (!m_cSlots)
     {
-        CMruNode::GetNodeSlot(piSlot);
+        GetNodeSlot(pnNodeSlot);
         return S_FALSE;
     }
 
@@ -947,10 +977,10 @@ HRESULT CMruNode::RemoveLeast(UINT *piSlot)
         return hr;
 
     CMruNode *pNode;
-    hr = CMruNode::_CreateNode(uSlot, &pNode);
+    hr = _CreateNode(uSlot, &pNode);
     if (SUCCEEDED(hr))
     {
-        hr = pNode->RemoveLeast(piSlot);
+        hr = pNode->RemoveLeast(pnNodeSlot);
         pNode->Release();
     }
 
@@ -965,42 +995,24 @@ HRESULT CMruNode::RemoveLeast(UINT *piSlot)
 }
 
 class CMruPidlList
-    : public IMruPidlList
-    , public CMruNode
+    : public CMruNode
+    , public IMruPidlList
 {
 protected:
-    LPBYTE m_pbSlots = NULL;        // The data
-    DWORD m_cbSlots = 0;            // The data size
+    LPBYTE m_pbNodeSlots = NULL;    // The node slots
+    DWORD m_cNodeSlots = 0;         // The number of the node slots
     HANDLE m_hMutex = NULL;         // The mutex (for sync)
 
-    BOOL _LoadNodeSlots()
-    {
-        DWORD cbSlots = m_cbSlots;
-        if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbSlots, &cbSlots) != ERROR_SUCCESS)
-            return FALSE;
-        m_cbSlots = cbSlots;
-        return TRUE;
-    }
-
-    void _SaveNodeSlots()
-    {
-        SHSetValueW(m_hKey, NULL, L"NodeSlots", REG_BINARY, m_pbSlots, m_cbSlots);
-    }
+    BOOL _LoadNodeSlots();
+    void _SaveNodeSlots();
+    HRESULT _InitNodeSlots();
 
 public:
-    CMruPidlList()
-    {
-    }
+    CMruPidlList() { }
+    ~CMruPidlList() override;
 
-    virtual ~CMruPidlList()
-    {
-        m_pbSlots = (LPBYTE)::LocalFree(m_pbSlots);
-        if (m_hMutex)
-        {
-            ::CloseHandle(m_hMutex);
-            m_hMutex = NULL;
-        }
-    }
+    HRESULT GetEmptySlot(UINT *pnNodeSlot);
+    void EmptyNodeSlot(UINT nNodeSlot);
 
     // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
@@ -1014,17 +1026,25 @@ public:
     }
 
     // IMruPidlList methods
-    STDMETHODIMP InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszName) override;
-    STDMETHODIMP UsePidl(LPCITEMIDLIST pidl, UINT *puSlots) override;
+    STDMETHODIMP InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszSubKey) override;
+    STDMETHODIMP UsePidl(LPCITEMIDLIST pidl, UINT *pnNodeSlot) override;
     STDMETHODIMP QueryPidl(
         LPCITEMIDLIST pidl,
         UINT cSlots,
-        UINT *puSlots,
-        UINT *pcSlots) override;
+        UINT *pnNodeSlots,
+        UINT *pcNodeSlots) override;
     STDMETHODIMP PruneKids(LPCITEMIDLIST pidl) override;
-
-    void EmptyNodeSlot(UINT iSlot);
 };
+
+CMruPidlList::~CMruPidlList()
+{
+    m_pbNodeSlots = (LPBYTE)::LocalFree(m_pbNodeSlots);
+    if (m_hMutex)
+    {
+        ::CloseHandle(m_hMutex);
+        m_hMutex = NULL;
+    }
+}
 
 STDMETHODIMP CMruPidlList::QueryInterface(REFIID riid, void **ppvObj)
 {
@@ -1042,32 +1062,182 @@ STDMETHODIMP CMruPidlList::QueryInterface(REFIID riid, void **ppvObj)
     return E_NOINTERFACE;
 }
 
-STDMETHODIMP CMruPidlList::InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszName)
+BOOL CMruPidlList::_LoadNodeSlots()
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
+    if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbNodeSlots, &cbNodeSlots) != ERROR_SUCCESS)
+        return FALSE;
+    m_cNodeSlots = cbNodeSlots;
+    return TRUE;
 }
 
-STDMETHODIMP CMruPidlList::UsePidl(LPCITEMIDLIST pidl, UINT *puSlots)
+void CMruPidlList::_SaveNodeSlots()
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
+    SHSetValueW(m_hKey, NULL, L"NodeSlots", REG_BINARY, m_pbNodeSlots, cbNodeSlots);
+}
+
+HRESULT CMruPidlList::_InitNodeSlots()
+{
+    m_pbNodeSlots = (BYTE *)LocalAlloc(LPTR, m_cSlotRooms);
+    if (!m_pbNodeSlots)
+        return E_OUTOFMEMORY;
+
+    _LoadNodeSlots();
+    m_bNeedSave = TRUE;
+    _SaveNodeSlots();
+
+    return S_OK;
+}
+
+HRESULT CMruPidlList::GetEmptySlot(UINT *pnNodeSlot)
+{
+    *pnNodeSlot = 0;
+
+    if (!_LoadNodeSlots())
+        return E_FAIL;
+
+    if (m_cNodeSlots < m_cSlotRooms)
+    {
+        m_pbNodeSlots[m_cNodeSlots] = SLOT_SET;
+        *pnNodeSlot = ++m_cNodeSlots;
+        _SaveNodeSlots();
+        return S_OK;
+    }
+
+    for (UINT iNodeSlot = 0; iNodeSlot < m_cNodeSlots; ++iNodeSlot)
+    {
+        if (m_pbNodeSlots[iNodeSlot] & SLOT_SET)
+            continue;
+
+        m_pbNodeSlots[iNodeSlot] = SLOT_SET;
+        *pnNodeSlot = iNodeSlot + 1; // nNodeSlot is 1-base
+        _SaveNodeSlots();
+        return S_OK;
+    }
+
+    HRESULT hr = E_FAIL;
+    if (SUCCEEDED(RemoveLeast(pnNodeSlot)) && *pnNodeSlot)
+        hr = S_OK;
+
+    _SaveNodeSlots();
+    return hr;
+}
+
+STDMETHODIMP CMruPidlList::InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszSubKey)
+{
+    HRESULT hr = InitData(cMRUSize, 0, hKey, pszSubKey, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    hr = _InitNodeSlots();
+    if (FAILED(hr))
+        return hr;
+
+    m_hMutex = ::CreateMutexW(NULL, FALSE, L"Shell.CMruPidlList");
+    if (!m_hMutex)
+        hr = HRESULT_FROM_WIN32(GetLastError());
+
+    return hr;
+}
+
+STDMETHODIMP CMruPidlList::UsePidl(LPCITEMIDLIST pidl, UINT *pnNodeSlot)
+{
+    CSafeMutex mutex;
+    HRESULT hr = mutex.Enter(m_hMutex);
+    if (FAILED(hr))
+        return hr;
+
+    *pnNodeSlot = 0;
+
+    CMruNode *pNode;
+    hr = GetNode(TRUE, pidl, &pNode);
+    if (FAILED(hr))
+        return hr;
+
+    hr = pNode->GetNodeSlot(pnNodeSlot);
+    if (FAILED(hr))
+    {
+        hr = GetEmptySlot(pnNodeSlot);
+        if (SUCCEEDED(hr))
+        {
+            hr = pNode->SetNodeSlot(*pnNodeSlot);
+        }
+    }
+
+    pNode->Release();
+    return hr;
 }
 
 STDMETHODIMP CMruPidlList::QueryPidl(
     LPCITEMIDLIST pidl,
     UINT cSlots,
-    UINT *puSlots,
-    UINT *pcSlots)
+    UINT *pnNodeSlots,
+    UINT *pcNodeSlots)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    CSafeMutex mutex;
+    HRESULT hr = mutex.Enter(m_hMutex);
+    if (FAILED(hr))
+        return hr;
+
+    *pcNodeSlots = 0;
+
+    CMruNode *pNode;
+    hr = GetNode(FALSE, pidl, &pNode);
+    if (FAILED(hr))
+        return hr;
+
+    while (pNode && *pcNodeSlots < cSlots)
+    {
+        CMruNode *pParent = pNode->GetParent();
+        if (SUCCEEDED(pNode->GetNodeSlot(&pnNodeSlots[*pcNodeSlots])))
+            ++(*pcNodeSlots);
+        else if (hr == S_OK && !*pcNodeSlots)
+            hr = S_FALSE;
+
+        pNode->Release();
+        pNode = pParent;
+    }
+
+    if (pNode)
+        pNode->Release();
+
+    if (SUCCEEDED(hr) && !*pcNodeSlots)
+        hr = E_FAIL;
+
+    return hr;
 }
 
 STDMETHODIMP CMruPidlList::PruneKids(LPCITEMIDLIST pidl)
 {
-    FIXME("Stub\n");
-    return E_NOTIMPL;
+    CSafeMutex mutex;
+    HRESULT hr = mutex.Enter(m_hMutex);
+    if (FAILED(hr))
+        return hr;
+
+    if (!_LoadNodeSlots())
+        return hr;
+
+    CMruNode *pNode;
+    hr = GetNode(FALSE, pidl, &pNode);
+    if (FAILED(hr))
+        return hr;
+
+    if (hr == S_OK)
+        hr = pNode->Clear(this);
+    else
+        hr = E_FAIL;
+
+    pNode->Release();
+
+    _SaveNodeSlots();
+    return hr;
+}
+
+void CMruPidlList::EmptyNodeSlot(UINT nNodeSlot)
+{
+    m_pbNodeSlots[nNodeSlot - 1] = 0; // nNodeSlot is 1-base
+    m_bNeedSave = TRUE;
 }
 
 EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3)
@@ -1091,29 +1261,27 @@ EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
     return S_OK;
 }
 
-void CMruPidlList::EmptyNodeSlot(UINT iSlot)
-{
-    m_pbSlots[iSlot - 1] = 0;
-    m_bNeedSave = TRUE;
-}
-
 HRESULT CMruNode::Clear(CMruPidlList *pList)
 {
-    UINT uSlot;
+    UINT uSlot, nNodeSlot;
+    HRESULT hr;
+
     while (SUCCEEDED(_GetSlot(0, &uSlot)))
     {
         CMruNode *pNode;
-        if (SUCCEEDED(CMruNode::_CreateNode(uSlot, &pNode)))
+        hr = _CreateNode(uSlot, &pNode);
+        if (SUCCEEDED(hr))
         {
-            UINT iSlot;
-            if (SUCCEEDED(pNode->GetNodeSlot(&iSlot)))
-                pList->EmptyNodeSlot(iSlot);
+            hr = pNode->GetNodeSlot(&nNodeSlot);
+            if (SUCCEEDED(hr))
+                pList->EmptyNodeSlot(nNodeSlot);
 
             pNode->Clear(pList);
             pNode->Release();
         }
         Delete(0);
     }
+
     return S_OK;
 }
 
