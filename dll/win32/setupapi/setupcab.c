@@ -16,11 +16,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- *
- * Many useful traces are commented in code, uncomment them if you have
- * trouble and run with WINEDEBUG=+setupapi
- * 
  */
 
 #include "setupapi_private.h"
@@ -42,8 +37,6 @@ typedef struct {
   CHAR most_recent_target[MAX_PATH];
 } SC_HSC_A, *PSC_HSC_A;
 
-/* FDICreate callbacks */
-
 static void * CDECL sc_cb_alloc(ULONG cb)
 {
   return HeapAlloc(GetProcessHeap(), 0, cb);
@@ -58,10 +51,7 @@ static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
 {
   DWORD creation = 0, sharing = 0;
   int ioflag = 0;
-  INT_PTR ret = 0;
   SECURITY_ATTRIBUTES sa;
-
-  /* TRACE("(pszFile == %s, oflag == %d, pmode == %d)\n", debugstr_a(pszFile), oflag, pmode); */
 
   switch(oflag & (_O_RDONLY | _O_WRONLY | _O_RDWR)) {
   case _O_RDONLY:
@@ -85,7 +75,7 @@ static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
       creation = CREATE_ALWAYS;
     else
       creation = OPEN_ALWAYS;
-  } else  /* no _O_CREAT */ {
+  } else {
     if (oflag & _O_TRUNC)
       creation = TRUNCATE_EXISTING;
     else
@@ -111,89 +101,51 @@ static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
       return -1;
   }
 
-  if (oflag & ~(_O_BINARY | _O_TRUNC | _O_EXCL | _O_CREAT | _O_RDWR | _O_WRONLY | _O_NOINHERIT))
-    WARN("unsupported oflag 0x%04x\n",oflag);
-
   sa.nLength              = sizeof( SECURITY_ATTRIBUTES );
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle       = !(ioflag & _O_NOINHERIT);
 
-  ret = (INT_PTR) CreateFileA(pszFile, ioflag, sharing, &sa, creation, FILE_ATTRIBUTE_NORMAL, NULL);
-
-  /* TRACE("<-- %d\n", ret); */
-
-  return ret;
+  return (INT_PTR) CreateFileA(pszFile, ioflag, sharing, &sa, creation, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
 static UINT CDECL sc_cb_read(INT_PTR hf, void *pv, UINT cb)
 {
-  DWORD num_read;
-  BOOL rslt;
+    DWORD num_read;
 
-  /* TRACE("(hf == %d, pv == ^%p, cb == %u)\n", hf, pv, cb); */
-
-  rslt = ReadFile((HANDLE) hf, pv, cb, &num_read, NULL);
-
-
-  /* eof and failure both give "-1" return */
-  if ((! rslt) || ((cb > 0) && (num_read == 0))) {
-    /* TRACE("<-- -1\n"); */
-    return -1;
-  }
-
-  /* TRACE("<-- %lu\n", num_read); */
-  return num_read;
+    if (!ReadFile((HANDLE)hf, pv, cb, &num_read, NULL))
+        return -1;
+    return num_read;
 }
 
 static UINT CDECL sc_cb_write(INT_PTR hf, void *pv, UINT cb)
 {
-  DWORD num_written;
-  /* BOOL rv; */
+    DWORD num_written;
 
-  /* TRACE("(hf == %d, pv == ^%p, cb == %u)\n", hf, pv, cb); */
-
-  if ( /* (rv = */ WriteFile((HANDLE) hf, pv, cb, &num_written, NULL) /* ) */
-       && (num_written == cb)) {
-    /* TRACE("<-- %lu\n", num_written); */
+    if (!WriteFile((HANDLE)hf, pv, cb, &num_written, NULL))
+        return -1;
     return num_written;
-  } else {
-    /* TRACE("rv == %d, num_written == %lu, cb == %u\n", rv, num_written,cb); */
-    /* TRACE("<-- -1\n"); */
-    return -1;
-  }
 }
 
 static int CDECL sc_cb_close(INT_PTR hf)
 {
-  /* TRACE("(hf == %d)\n", hf); */
-
-  if (CloseHandle((HANDLE) hf))
+    if (!CloseHandle((HANDLE)hf))
+        return -1;
     return 0;
-  else
-    return -1;
 }
 
 static LONG CDECL sc_cb_lseek(INT_PTR hf, LONG dist, int seektype)
 {
-  DWORD ret;
+    DWORD ret;
 
-  /* TRACE("(hf == %d, dist == %ld, seektype == %d)\n", hf, dist, seektype); */
+    if (seektype < 0 || seektype > 2)
+        return -1;
 
-  if (seektype < 0 || seektype > 2)
-    return -1;
-
-  if (((ret = SetFilePointer((HANDLE) hf, dist, NULL, seektype)) != INVALID_SET_FILE_POINTER) || !GetLastError()) {
-    /* TRACE("<-- %lu\n", ret); */
+    if (((ret = SetFilePointer((HANDLE)hf, dist, NULL, seektype)) == INVALID_SET_FILE_POINTER) && GetLastError())
+        return -1;
     return ret;
-  } else {
-    /* TRACE("<-- -1\n"); */
-    return -1;
-  }
 }
 
 #define SIZEOF_MYSTERIO (MAX_PATH*3)
-
-/* FDICopy callbacks */
 
 static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 {
@@ -207,8 +159,6 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
 
   memset(mysterio, 0, SIZEOF_MYSTERIO);
 
-  TRACE("(fdint == %d, pfdin == ^%p)\n", fdint, pfdin);
-
   if (pfdin && pfdin->pv && (((PSC_HSC_A) pfdin->pv)->magic == SC_HSC_A_MAGIC))
     phsc = pfdin->pv;
   else {
@@ -218,13 +168,8 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
 
   switch (fdint) {
   case fdintCABINET_INFO:
-    TRACE("Cabinet info notification\n");
-    /* TRACE("  Cabinet name: %s\n", debugstr_a(pfdin->psz1));
-    TRACE("  Cabinet disk: %s\n", debugstr_a(pfdin->psz2));
-    TRACE("  Cabinet path: %s\n", debugstr_a(pfdin->psz3));
-    TRACE("  Cabinet Set#: %d\n", pfdin->setID);
-    TRACE("  Cabinet Cab#: %d\n", pfdin->iCabinet); */
-    WARN("SPFILENOTIFY_CABINETINFO undocumented: guess implementation.\n");
+    TRACE("New cabinet, path %s, set %u, number %u, next disk %s.\n",
+            debugstr_a(pfdin->psz3), pfdin->setID, pfdin->iCabinet, debugstr_a(pfdin->psz2));
     ci.CabinetFile = phsc->most_recent_cabinet_name;
     ci.CabinetPath = pfdin->psz3;
     ci.DiskName = pfdin->psz2;
@@ -233,16 +178,10 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     phsc->msghandler(phsc->context, SPFILENOTIFY_CABINETINFO, (UINT_PTR) &ci, 0);
     return 0;
   case fdintPARTIAL_FILE:
-    TRACE("Partial file notification\n");
-    /* TRACE("  Partial file name: %s\n", debugstr_a(pfdin->psz1)); */
     return 0;
   case fdintCOPY_FILE:
-    TRACE("Copy file notification\n");
-    TRACE("  File name: %s\n", debugstr_a(pfdin->psz1));
-    /* TRACE("  File size: %ld\n", pfdin->cb);
-    TRACE("  File date: %u\n", pfdin->date);
-    TRACE("  File time: %u\n", pfdin->time);
-    TRACE("  File attr: %u\n", pfdin->attribs); */
+    TRACE("Copy file %s, length %d, date %#x, time %#x, attributes %#x.\n",
+            debugstr_a(pfdin->psz1), pfdin->cb, pfdin->date, pfdin->time, pfdin->attribs);
     fici.NameInCabinet = pfdin->psz1;
     fici.FileSize = pfdin->cb;
     fici.Win32Error = 0;
@@ -253,31 +192,26 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     err = phsc->msghandler(phsc->context, SPFILENOTIFY_FILEINCABINET,
                            (UINT_PTR)&fici, (UINT_PTR)pfdin->psz1);
     if (err == FILEOP_DOIT) {
-      TRACE("  Callback specified filename: %s\n", debugstr_a(fici.FullTargetName));
+      TRACE("Callback specified filename: %s\n", debugstr_a(fici.FullTargetName));
       if (!fici.FullTargetName[0]) {
-        WARN("  Empty return string causing abort.\n");
+        WARN("Empty return string causing abort.\n");
         SetLastError(ERROR_PATH_NOT_FOUND);
         return -1;
       }
       strcpy( phsc->most_recent_target, fici.FullTargetName );
       return sc_cb_open(fici.FullTargetName, _O_BINARY | _O_CREAT | _O_WRONLY,  _S_IREAD | _S_IWRITE);
     } else {
-      TRACE("  Callback skipped file.\n");
+      TRACE("Callback skipped file.\n");
       return 0;
     }
   case fdintCLOSE_FILE_INFO:
-    TRACE("Close file notification\n");
-    /* TRACE("  File name: %s\n", debugstr_a(pfdin->psz1));
-    TRACE("  Exec file? %s\n", (pfdin->cb) ? "Yes" : "No");
-    TRACE("  File hndl: %d\n", pfdin->hf); */
+    TRACE("File extracted.\n");
     fp.Source = phsc->most_recent_cabinet_name;
     fp.Target = phsc->most_recent_target;
     fp.Win32Error = 0;
     fp.Flags = 0;
-    /* the following should be a fixme -- but it occurs too many times */
-    WARN("Should set file date/time/attribs (and execute files?)\n");
-    if (sc_cb_close(pfdin->hf))
-      WARN("_close failed.\n");
+    /* FIXME: set file time and attributes */
+    sc_cb_close(pfdin->hf);
     err = phsc->msghandler(phsc->context, SPFILENOTIFY_FILEEXTRACTED, (UINT_PTR)&fp, 0);
     if (err) {
       SetLastError(err);
@@ -285,18 +219,14 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     } else
       return TRUE;
   case fdintNEXT_CABINET:
-    TRACE("Next cabinet notification\n");
-    /* TRACE("  Cabinet name: %s\n", debugstr_a(pfdin->psz1));
-    TRACE("  Cabinet disk: %s\n", debugstr_a(pfdin->psz2));
-    TRACE("  Cabinet path: %s\n", debugstr_a(pfdin->psz3));
-    TRACE("  Cabinet Set#: %d\n", pfdin->setID);
-    TRACE("  Cabinet Cab#: %d\n", pfdin->iCabinet); */
+    TRACE("Need new cabinet, path %s, file %s, disk %s, set %u, number %u.\n",
+            debugstr_a(pfdin->psz3), debugstr_a(pfdin->psz1),
+            debugstr_a(pfdin->psz2), pfdin->setID, pfdin->iCabinet);
     ci.CabinetFile = pfdin->psz1;
     ci.CabinetPath = pfdin->psz3;
     ci.DiskName = pfdin->psz2;
     ci.SetId = pfdin->setID;
     ci.CabinetNumber = pfdin->iCabinet;
-    /* remember the new cabinet name */
     strcpy(phsc->most_recent_cabinet_name, pfdin->psz1);
     err = phsc->msghandler(phsc->context, SPFILENOTIFY_NEEDNEWCABINET, (UINT_PTR)&ci, (UINT_PTR)mysterio);
     if (err) {
