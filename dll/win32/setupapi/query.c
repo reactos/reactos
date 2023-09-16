@@ -753,7 +753,7 @@ BOOL WINAPI SetupGetInfDriverStoreLocationA(
     PCSTR LocaleName, PSTR ReturnBuffer, DWORD ReturnBufferSize,
     PDWORD RequiredSize)
 {
-    FIXME("stub: %s %p %s %p %u %p\n", debugstr_a(FileName), AlternativePlatformInfo, debugstr_a(LocaleName), ReturnBuffer, ReturnBufferSize, RequiredSize);
+    FIXME("stub: %s %p %s %p %lu %p\n", debugstr_a(FileName), AlternativePlatformInfo, debugstr_a(LocaleName), ReturnBuffer, ReturnBufferSize, RequiredSize);
 
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
