@@ -742,3 +742,21 @@ BOOL WINAPI SetupQueryInfOriginalFileInformationW(
 
     return TRUE;
 }
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+
+/***********************************************************************
+ *      SetupGetInfDriverStoreLocationW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupGetInfDriverStoreLocationW(
+    PCWSTR FileName, PSP_ALTPLATFORM_INFO AlternativePlatformInfo,
+    PCWSTR LocaleName, PWSTR ReturnBuffer, DWORD ReturnBufferSize,
+    PDWORD RequiredSize)
+{
+    FIXME("stub: %s %p %s %p %u %p\n", debugstr_w(FileName), AlternativePlatformInfo, debugstr_w(LocaleName), ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
