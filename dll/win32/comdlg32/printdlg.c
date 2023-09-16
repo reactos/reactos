@@ -3452,7 +3452,7 @@ static BOOL pagesetup_wm_command(HWND hDlg, WPARAM wParam, LPARAM lParam, pagese
 #ifdef __REACTOS__
             if (pagesetup_change_printer(name, data))
             {
-                ERR("pagesetup_change_printer failed.\n");
+                ERR("pagesetup_change_printer failed\n");
                 return FALSE;
             }
 #else
@@ -3935,7 +3935,7 @@ static BOOL pagesetup_common(pagesetup_data *data)
 #ifdef __REACTOS__
         if (!pagesetup_change_printer(def, data))
         {
-            ERR("pagesetup_change_printer failed.\n");
+            ERR("pagesetup_change_printer failed\n");
             return FALSE;
         }
 #else
