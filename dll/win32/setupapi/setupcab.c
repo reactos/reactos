@@ -22,6 +22,8 @@
 
 #include <fcntl.h>
 #include <share.h>
+#include <sys/stat.h>
+
 #include <fdi.h>
 
 HINSTANCE SETUPAPI_hInstance = NULL;
