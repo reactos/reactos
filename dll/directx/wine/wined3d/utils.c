@@ -2421,7 +2421,14 @@ static void draw_test_quad(struct wined3d_caps_gl_ctx *ctx, const struct wined3d
 
     if (!ctx->test_program_id)
     {
+#ifdef __REACTOS__
+        /* workaround CORE-15408 crash for many 3D applications.
+           VBoxDisp with enabled 3D acceleration only supports OpenGL 2.1 (GLSL 120).
+           Wine must not use shaders for OpenGL 3.2 (GLSL 150). */
+        BOOL use_glsl_150 = FALSE;
+#else
         BOOL use_glsl_150 = gl_info->glsl_version >= MAKEDWORD_VERSION(1, 50);
+#endif
 
         ctx->test_program_id = GL_EXTCALL(glCreateProgram());
 
