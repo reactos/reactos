@@ -2784,6 +2784,8 @@ int CDECL fclose(FILE* file)
 {
   int r, flag;
 
+  if (!MSVCRT_CHECK_PMT(file != NULL)) return EOF;
+
   _lock_file(file);
   flag = file->_flag;
   free(file->_tmpfname);
