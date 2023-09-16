@@ -6962,7 +6962,7 @@ BOOL invert_matrix(struct wined3d_matrix *out, const struct wined3d_matrix *m)
 }
 
 /* Taken and adapted from Mesa. */
-static BOOL invert_matrix_3d(struct wined3d_matrix *out, const struct wined3d_matrix *in)
+BOOL invert_matrix_3d(struct wined3d_matrix *out, const struct wined3d_matrix *in)
 {
     float pos, neg, t, det;
     struct wined3d_matrix temp;

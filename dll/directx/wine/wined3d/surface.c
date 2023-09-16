@@ -681,7 +681,8 @@ static void convert_x8r8g8b8_dxt5(const BYTE *src, BYTE *dst,
 {
     wined3d_dxt5_encode(src, dst, pitch_in, pitch_out, WINED3DFMT_B8G8R8X8_UNORM, w, h);
 }
-
+#ifdef __REACTOS__
+#else
 static void convert_x8r8g8b8_l8(const BYTE *src, BYTE *dst,
         DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h)
 {
@@ -700,6 +701,7 @@ static void convert_x8r8g8b8_l8(const BYTE *src, BYTE *dst,
         }
     }
 }
+#endif
 
 struct d3dfmt_converter_desc
 {

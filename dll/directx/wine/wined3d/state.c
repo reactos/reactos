@@ -1594,6 +1594,8 @@ static void state_colorwrite_i(struct wined3d_context *context, const struct win
     set_color_mask(gl_info, index, state->render_states[state_id]);
 }
 
+#ifdef __REACTOS__
+#else
 static void state_colorwrite1(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     set_color_mask(wined3d_context_gl(context)->gl_info, 1, state->render_states[WINED3D_RS_COLORWRITEENABLE1]);
@@ -1608,6 +1610,7 @@ static void state_colorwrite3(struct wined3d_context *context, const struct wine
 {
     set_color_mask(wined3d_context_gl(context)->gl_info, 3, state->render_states[WINED3D_RS_COLORWRITEENABLE3]);
 }
+#endif
 
 static void state_localviewer(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {

@@ -1894,7 +1894,7 @@ static HRESULT parse_dxbc(const char *data, SIZE_T data_size,
     return hr;
 }
 
-static const char *shader_get_string(const char *data, size_t data_size, DWORD offset)
+const char *shader_get_string(const char *data, size_t data_size, DWORD offset)
 {
     size_t len, max_len;
 
@@ -1908,7 +1908,7 @@ static const char *shader_get_string(const char *data, size_t data_size, DWORD o
 
 #ifdef __REACTOS__
     len = strlen(data + offset);
-#else`
+#else
     len = strnlen(data + offset, max_len);
 #endif
 

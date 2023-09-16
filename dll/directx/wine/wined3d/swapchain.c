@@ -177,7 +177,10 @@ HRESULT CDECL wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
         unsigned int swap_interval, DWORD flags)
 {
+#ifdef __REACTOS__
+#else
     static DWORD notified_flags = 0;
+#endif
     RECT s, d;
 
     TRACE("swapchain %p, src_rect %s, dst_rect %s, dst_window_override %p, swap_interval %u, flags %#x.\n",
