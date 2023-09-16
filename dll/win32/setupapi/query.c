@@ -774,3 +774,21 @@ BOOL WINAPI SetupGetInfDriverStoreLocationW(
 }
 
 #endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+
+BOOL WINAPI SetupQueryInfVersionInformationA(SP_INF_INFORMATION *info, UINT index, const char *key, char *buff,
+    DWORD size, DWORD *req_size)
+{
+    FIXME("info %p, index %d, key %s, buff %p, size %ld, req_size %p stub!\n", info, index, debugstr_a(key), buff,
+        size, req_size);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+BOOL WINAPI SetupQueryInfVersionInformationW(SP_INF_INFORMATION *info, UINT index, const WCHAR *key, WCHAR *buff,
+    DWORD size, DWORD *req_size)
+{
+    FIXME("info %p, index %d, key %s, buff %p, size %ld, req_size %p stub!\n", info, index, debugstr_w(key), buff,
+        size, req_size);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
