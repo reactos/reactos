@@ -176,7 +176,7 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     fici.DosAttribs = pfdin->attribs;
     memset(fici.FullTargetName, 0, MAX_PATH);
     err = phsc->msghandler(phsc->context, SPFILENOTIFY_FILEINCABINET,
-                           (UINT_PTR)&fici, (UINT_PTR)pfdin->psz1);
+                           (UINT_PTR)&fici, (UINT_PTR)phsc->last_cab);
     if (err == FILEOP_DOIT) {
       TRACE("Callback specified filename: %s\n", debugstr_a(fici.FullTargetName));
       if (!fici.FullTargetName[0]) {
