@@ -28,7 +28,6 @@ HINSTANCE SETUPAPI_hInstance = NULL;
 OSVERSIONINFOEXW OsVersionInfo;
 
 typedef struct {
-  HFDI hfdi;
   PSP_FILE_CALLBACK_A msghandler;
   PVOID context;
   CHAR most_recent_cabinet_name[MAX_PATH];
@@ -241,6 +240,7 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
   ERF erf;
   CHAR pszCabinet[MAX_PATH], pszCabPath[MAX_PATH], *p = NULL;
   DWORD fpnsize;
+  HFDI hfdi;
   BOOL ret;
 
   TRACE("(CabinetFile == %s, Reserved == %u, MsgHandler == ^%p, Context == ^%p)\n",
@@ -279,14 +279,14 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
 
   my_hsc.msghandler = MsgHandler;
   my_hsc.context = Context;
-  my_hsc.hfdi = FDICreate( sc_cb_alloc, sc_cb_free, sc_cb_open, sc_cb_read,
-                           sc_cb_write, sc_cb_close, sc_cb_lseek, cpuUNKNOWN, &erf );
+  hfdi = FDICreate(sc_cb_alloc, sc_cb_free, sc_cb_open, sc_cb_read,
+        sc_cb_write, sc_cb_close, sc_cb_lseek, cpuUNKNOWN, &erf);
 
-  if (!my_hsc.hfdi) return FALSE;
+  if (!hfdi) return FALSE;
 
-  ret = FDICopy(my_hsc.hfdi, pszCabinet, pszCabPath, 0, sc_FNNOTIFY_A, NULL, &my_hsc);
+  ret = FDICopy(hfdi, pszCabinet, pszCabPath, 0, sc_FNNOTIFY_A, NULL, &my_hsc);
 
-  FDIDestroy(my_hsc.hfdi);
+  FDIDestroy(hfdi);
   return ret;
 }
 
