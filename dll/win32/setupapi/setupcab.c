@@ -27,9 +27,7 @@
 HINSTANCE SETUPAPI_hInstance = NULL;
 OSVERSIONINFOEXW OsVersionInfo;
 
-#define SC_HSC_A_MAGIC 0xACABFEED
 typedef struct {
-  UINT magic;
   HFDI hfdi;
   PSP_FILE_CALLBACK_A msghandler;
   PVOID context;
@@ -63,9 +61,6 @@ static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
   case _O_RDWR:
     ioflag |= GENERIC_READ | GENERIC_WRITE;
     break;
-  case _O_WRONLY | _O_RDWR: /* hmmm.. */
-    ERR("_O_WRONLY & _O_RDWR in oflag?\n");
-    return -1;
   }
 
   if (oflag & _O_CREAT) {
@@ -96,9 +91,6 @@ static INT_PTR CDECL sc_cb_open(char *pszFile, int oflag, int pmode)
     case _SH_DENYNO:
       sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
       break;
-    default:
-      ERR("<-- -1 (Unhandled pmode 0x%x)\n", pmode);
-      return -1;
   }
 
   sa.nLength              = sizeof( SECURITY_ATTRIBUTES );
@@ -150,7 +142,7 @@ static LONG CDECL sc_cb_lseek(INT_PTR hf, LONG dist, int seektype)
 static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 {
   FILE_IN_CABINET_INFO_A fici;
-  PSC_HSC_A phsc;
+  PSC_HSC_A phsc = pfdin->pv;
   CABINET_INFO_A ci;
   FILEPATHS_A fp;
   UINT err;
@@ -158,13 +150,6 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
   CHAR mysterio[SIZEOF_MYSTERIO]; /* how big? undocumented! probably 256... */
 
   memset(mysterio, 0, SIZEOF_MYSTERIO);
-
-  if (pfdin && pfdin->pv && (((PSC_HSC_A) pfdin->pv)->magic == SC_HSC_A_MAGIC))
-    phsc = pfdin->pv;
-  else {
-    ERR("pv %p is not an SC_HSC_A.\n", (pfdin) ? pfdin->pv : NULL);
-    return -1;
-  }
 
   switch (fdint) {
   case fdintCABINET_INFO:
@@ -292,7 +277,6 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
   /* remember the cabinet name */
   strcpy(my_hsc.most_recent_cabinet_name, pszCabinet);
 
-  my_hsc.magic = SC_HSC_A_MAGIC;
   my_hsc.msghandler = MsgHandler;
   my_hsc.context = Context;
   my_hsc.hfdi = FDICreate( sc_cb_alloc, sc_cb_free, sc_cb_open, sc_cb_read,
