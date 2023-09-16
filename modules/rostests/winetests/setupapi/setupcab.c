@@ -367,7 +367,7 @@ static UINT CALLBACK simple_callbackA(void *context, UINT message, UINT_PTR para
         GetTempPathA(ARRAY_SIZE(temp), temp);
         ok(index < ARRAY_SIZE(expected_files), "%u: Got unexpected file.\n", index);
         snprintf(path, ARRAY_SIZE(path), "%s/./testcab.cab", temp);
-        todo_wine ok(!strcmp(info->Source, path), "%u: Got source %s.\n", index, debugstr_a(info->Source));
+        ok(!strcmp(info->Source, path), "%u: Got source %s.\n", index, debugstr_a(info->Source));
         snprintf(path, ARRAY_SIZE(path), "%s\\%s", temp, expected_files[index].nameA);
         ok(!strcmp(info->Target, path), "%u: Got target %s.\n", index, debugstr_a(info->Target));
         ok(!info->Win32Error, "%u: Got error %u.\n", index, info->Win32Error);
@@ -475,7 +475,7 @@ static UINT CALLBACK simple_callbackW(void *context, UINT message, UINT_PTR para
         GetTempPathW(ARRAY_SIZE(temp), temp);
         ok(index < ARRAY_SIZE(expected_files), "%u: Got unexpected file.\n", index);
         swprintf(path, ARRAY_SIZE(path), L"%s/./testcab.cab", temp);
-        todo_wine ok(!wcscmp(info->Source, path), "%u: Got source %s.\n", index, debugstr_w(info->Source));
+        ok(!wcscmp(info->Source, path), "%u: Got source %s.\n", index, debugstr_w(info->Source));
         swprintf(path, ARRAY_SIZE(path), L"%s\\%s", temp, expected_files[index].nameW);
         ok(!wcscmp(info->Target, path), "%u: Got target %s.\n", index, debugstr_w(info->Target));
         ok(!info->Win32Error, "%u: Got error %u.\n", index, info->Win32Error);

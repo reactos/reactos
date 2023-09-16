@@ -27,11 +27,13 @@
 HINSTANCE SETUPAPI_hInstance = NULL;
 OSVERSIONINFOEXW OsVersionInfo;
 
-typedef struct {
-  PSP_FILE_CALLBACK_A msghandler;
-  PVOID context;
-  CHAR most_recent_cabinet_name[MAX_PATH];
-  CHAR most_recent_target[MAX_PATH];
+typedef struct
+{
+    PSP_FILE_CALLBACK_A msghandler;
+    void *context;
+    char cab_path[MAX_PATH];
+    char last_cab[MAX_PATH];
+    char most_recent_target[MAX_PATH];
 } SC_HSC_A, *PSC_HSC_A;
 
 static void * CDECL sc_cb_alloc(ULONG cb)
@@ -190,7 +192,7 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     }
   case fdintCLOSE_FILE_INFO:
     TRACE("File extracted.\n");
-    fp.Source = phsc->most_recent_cabinet_name;
+    fp.Source = phsc->last_cab;
     fp.Target = phsc->most_recent_target;
     fp.Win32Error = 0;
     fp.Flags = 0;
@@ -211,7 +213,7 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     ci.DiskName = pfdin->psz2;
     ci.SetId = pfdin->setID;
     ci.CabinetNumber = pfdin->iCabinet;
-    strcpy(phsc->most_recent_cabinet_name, pfdin->psz1);
+    sprintf(phsc->last_cab, "%s%s", phsc->cab_path, ci.CabinetFile);
     err = phsc->msghandler(phsc->context, SPFILENOTIFY_NEEDNEWCABINET, (UINT_PTR)&ci, (UINT_PTR)mysterio);
     if (err) {
       SetLastError(err);
@@ -232,62 +234,75 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
 /***********************************************************************
  *		SetupIterateCabinetA (SETUPAPI.@)
  */
-BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
-                                 PSP_FILE_CALLBACK_A MsgHandler, PVOID Context)
+BOOL WINAPI SetupIterateCabinetA(const char *file, DWORD reserved,
+                                 PSP_FILE_CALLBACK_A callback, void *context)
 {
 
-  SC_HSC_A my_hsc;
-  ERF erf;
-  CHAR pszCabinet[MAX_PATH], pszCabPath[MAX_PATH], *p = NULL;
-  DWORD fpnsize;
-  HFDI hfdi;
-  BOOL ret;
+    SC_HSC_A my_hsc;
+    ERF erf;
+    CHAR pszCabinet[MAX_PATH], pszCabPath[MAX_PATH], *filepart = NULL;
+    size_t path_size = 0;
+    const char *p;
+    DWORD fpnsize;
+    HFDI hfdi;
+    BOOL ret;
 
-  TRACE("(CabinetFile == %s, Reserved == %u, MsgHandler == ^%p, Context == ^%p)\n",
-        debugstr_a(CabinetFile), Reserved, MsgHandler, Context);
+    TRACE("file %s, reserved %#x, callback %p, context %p.\n",
+            debugstr_a(file), reserved, callback, context);
 
-  if (!CabinetFile)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if (!file)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  fpnsize = strlen(CabinetFile);
-  if (fpnsize >= MAX_PATH) {
-    SetLastError(ERROR_BAD_PATHNAME);
-    return FALSE;
-  }
+    if (strlen(file) >= MAX_PATH)
+    {
+        SetLastError(ERROR_BAD_PATHNAME);
+        return FALSE;
+    }
 
-  fpnsize = GetFullPathNameA(CabinetFile, MAX_PATH, pszCabPath, &p);
-  if (fpnsize > MAX_PATH) {
-    SetLastError(ERROR_BAD_PATHNAME);
-    return FALSE;
-  }
+    fpnsize = GetFullPathNameA(file, MAX_PATH, pszCabPath, &filepart);
+    if (fpnsize > MAX_PATH)
+    {
+        SetLastError(ERROR_BAD_PATHNAME);
+        return FALSE;
+    }
 
-  if (p) {
-    strcpy(pszCabinet, p);
-    *p = '\0';
-  } else {
-    strcpy(pszCabinet, CabinetFile);
-    pszCabPath[0] = '\0';
-  }
+    if (filepart)
+    {
+        strcpy(pszCabinet, filepart);
+        *filepart = '\0';
+    }
+    else
+    {
+        strcpy(pszCabinet, file);
+        pszCabPath[0] = '\0';
+    }
 
-  TRACE("path: %s, cabfile: %s\n", debugstr_a(pszCabPath), debugstr_a(pszCabinet));
+    for (p = file; *p; ++p)
+    {
+        if (*p == '/' || *p == '\\')
+            path_size = p - file;
+    }
+    memcpy(my_hsc.cab_path, file, path_size);
+    my_hsc.cab_path[path_size] = 0;
 
-  /* remember the cabinet name */
-  strcpy(my_hsc.most_recent_cabinet_name, pszCabinet);
+    TRACE("path: %s, cabfile: %s\n", debugstr_a(pszCabPath), debugstr_a(pszCabinet));
 
-  my_hsc.msghandler = MsgHandler;
-  my_hsc.context = Context;
-  hfdi = FDICreate(sc_cb_alloc, sc_cb_free, sc_cb_open, sc_cb_read,
-        sc_cb_write, sc_cb_close, sc_cb_lseek, cpuUNKNOWN, &erf);
+    strcpy(my_hsc.last_cab, file);
 
-  if (!hfdi) return FALSE;
+    my_hsc.msghandler = callback;
+    my_hsc.context = context;
+    hfdi = FDICreate(sc_cb_alloc, sc_cb_free, sc_cb_open, sc_cb_read,
+            sc_cb_write, sc_cb_close, sc_cb_lseek, cpuUNKNOWN, &erf);
 
-  ret = FDICopy(hfdi, pszCabinet, pszCabPath, 0, sc_FNNOTIFY_A, NULL, &my_hsc);
+    if (!hfdi) return FALSE;
 
-  FDIDestroy(hfdi);
-  return ret;
+    ret = FDICopy(hfdi, pszCabinet, pszCabPath, 0, sc_FNNOTIFY_A, NULL, &my_hsc);
+
+    FDIDestroy(hfdi);
+    return ret;
 }
 
 struct iterate_wtoa_ctx
