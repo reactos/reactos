@@ -27,7 +27,7 @@ static const WCHAR source_disks_names_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','x','8','6',0};
 static const WCHAR source_disks_files_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','x','8','6',0};
-#elif defined(__x86_64)
+#elif defined(__x86_64__)
 static const WCHAR source_disks_names_platform[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','a','m','d','6','4',0};
 static const WCHAR source_disks_files_platform[] =
