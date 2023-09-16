@@ -477,8 +477,8 @@
 @ stdcall SetupQueryInfFileInformationW(ptr long wstr long ptr)
 @ stdcall SetupQueryInfOriginalFileInformationA(ptr long ptr ptr)
 @ stdcall SetupQueryInfOriginalFileInformationW(ptr long ptr ptr)
-@ stub SetupQueryInfVersionInformationA
-@ stub SetupQueryInfVersionInformationW
+@ stdcall SetupQueryInfVersionInformationA(ptr long str ptr long ptr)
+@ stdcall SetupQueryInfVersionInformationW(ptr long wstr ptr long ptr)
 @ stub SetupQuerySourceListA
 @ stub SetupQuerySourceListW
 @ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
