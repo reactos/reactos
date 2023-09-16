@@ -350,7 +350,7 @@ static UINT CALLBACK simple_callbackA(void *context, UINT message, UINT_PTR para
 
         GetTempPathA(ARRAY_SIZE(temp), temp);
         snprintf(path, ARRAY_SIZE(path), "%s/./testcab.cab", temp);
-        todo_wine ok(!strcmp((const char *)param2, path), "%u: Got file name %s.\n",
+        ok(!strcmp((const char *)param2, path), "%u: Got file name %s.\n",
                 index, debugstr_a((const char *)param2));
 
         snprintf(info->FullTargetName, ARRAY_SIZE(info->FullTargetName),
@@ -458,7 +458,7 @@ static UINT CALLBACK simple_callbackW(void *context, UINT message, UINT_PTR para
 
         GetTempPathW(ARRAY_SIZE(temp), temp);
         swprintf(path, ARRAY_SIZE(path), L"%s/./testcab.cab", temp);
-        todo_wine ok(!wcscmp((const WCHAR *)param2, path), "%u: Got file name %s.\n",
+        ok(!wcscmp((const WCHAR *)param2, path), "%u: Got file name %s.\n",
                 index, debugstr_w((const WCHAR *)param2));
 
         swprintf(info->FullTargetName, ARRAY_SIZE(info->FullTargetName),
