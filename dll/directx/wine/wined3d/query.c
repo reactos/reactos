@@ -1360,6 +1360,8 @@ static const struct wined3d_query_ops statistics_query_ops =
     wined3d_statistics_query_ops_destroy,
 };
 
+#ifdef __REACTOS__
+#else
 static HRESULT wined3d_statistics_query_create(struct wined3d_device *device,
         enum wined3d_query_type type, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_query **query)
@@ -1380,6 +1382,7 @@ static HRESULT wined3d_statistics_query_create(struct wined3d_device *device,
 
     return WINED3D_OK;
 }
+#endif
 
 static void wined3d_overflow_query_ops_destroy(struct wined3d_query *query)
 {
