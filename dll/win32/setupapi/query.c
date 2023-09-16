@@ -20,6 +20,27 @@
 
 #include "setupapi_private.h"
 
+#ifdef __WINESRC__
+
+#ifdef __i386__
+static const WCHAR source_disks_names_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','x','8','6',0};
+static const WCHAR source_disks_files_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','x','8','6',0};
+#elif defined(__x86_64)
+static const WCHAR source_disks_names_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s','.','a','m','d','6','4',0};
+static const WCHAR source_disks_files_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s','.','a','m','d','6','4',0};
+#else  /* FIXME: other platforms */
+static const WCHAR source_disks_names_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
+static const WCHAR source_disks_files_platform[] =
+    {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s',0};
+#endif
+
+#endif // __WINESRC__
+
 static const WCHAR source_disks_names[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
 static const WCHAR source_disks_files[] =
@@ -332,15 +353,22 @@ BOOL WINAPI SetupGetSourceFileLocationA( HINF hinf, PINFCONTEXT context, PCSTR f
 
 static LPWSTR get_source_id( HINF hinf, PINFCONTEXT context, PCWSTR filename )
 {
+#ifndef __WINESRC__
     WCHAR Section[MAX_PATH];
+#endif
     DWORD size;
     LPWSTR source_id;
 
-    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_files, Section, MAX_PATH, NULL, NULL))
+#ifndef __WINESRC__
+    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_files, Section, ARRAY_SIZE(Section), NULL, NULL))
         return NULL;
 
     if (!SetupFindFirstLineW( hinf, Section, filename, context ) &&
         !SetupFindFirstLineW( hinf, source_disks_files, filename, context ))
+#else
+    if (!SetupFindFirstLineW( hinf, source_disks_files_platform, filename, context ) &&
+        !SetupFindFirstLineW( hinf, source_disks_files, filename, context ))
+#endif // !__WINESRC__
         return NULL;
 
     if (!SetupGetStringFieldW( context, 1, NULL, 0, &size ))
@@ -355,7 +383,8 @@ static LPWSTR get_source_id( HINF hinf, PINFCONTEXT context, PCWSTR filename )
         return NULL;
     }
 
-    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_names, Section, MAX_PATH, NULL, NULL))
+#ifndef __WINESRC__
+    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_names, Section, ARRAY_SIZE(Section), NULL, NULL))
     {
         HeapFree( GetProcessHeap(), 0, source_id );
         return NULL;
@@ -363,6 +392,10 @@ static LPWSTR get_source_id( HINF hinf, PINFCONTEXT context, PCWSTR filename )
 
     if (!SetupFindFirstLineW( hinf, Section, source_id, context ) &&
         !SetupFindFirstLineW( hinf, source_disks_names, source_id, context ))
+#else
+    if (!SetupFindFirstLineW( hinf, source_disks_names_platform, source_id, context ) &&
+        !SetupFindFirstLineW( hinf, source_disks_names, source_id, context ))
+#endif // !__WINESRC__
     {
         HeapFree( GetProcessHeap(), 0, source_id );
         return NULL;
@@ -464,7 +497,9 @@ BOOL WINAPI SetupGetSourceInfoA( HINF hinf, UINT source_id, UINT info,
 BOOL WINAPI SetupGetSourceInfoW( HINF hinf, UINT source_id, UINT info,
                                  PWSTR buffer, DWORD buffer_size, LPDWORD required_size )
 {
+#ifndef __WINESRC__
     WCHAR Section[MAX_PATH];
+#endif
     INFCONTEXT ctx;
     WCHAR source_id_str[11];
     static const WCHAR fmt[] = {'%','d',0};
@@ -475,11 +510,16 @@ BOOL WINAPI SetupGetSourceInfoW( HINF hinf, UINT source_id, UINT info,
 
     sprintfW( source_id_str, fmt, source_id );
 
-    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_names, Section, MAX_PATH, NULL, NULL))
+#ifndef __WINESRC__
+    if (!SetupDiGetActualSectionToInstallW(hinf, source_disks_names, Section, ARRAY_SIZE(Section), NULL, NULL))
         return FALSE;
 
     if (!SetupFindFirstLineW( hinf, Section, source_id_str, &ctx ) &&
         !SetupFindFirstLineW( hinf, source_disks_names, source_id_str, &ctx ))
+#else
+    if (!SetupFindFirstLineW( hinf, source_disks_names_platform, source_id_str, &ctx ) &&
+        !SetupFindFirstLineW( hinf, source_disks_names, source_id_str, &ctx ))
+#endif // !__WINESRC__
         return FALSE;
 
     switch (info)
