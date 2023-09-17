@@ -88,8 +88,7 @@ DisplayImageList(HWND hwnd,
     return TRUE;
 }
 
-
-BOOL CALLBACK
+INT_PTR CALLBACK
 DlgProc(HWND hwnd,
         UINT message,
         WPARAM wParam,
@@ -142,5 +141,5 @@ WinMain(HINSTANCE hThisInstance,
     return DialogBox(hThisInstance,
                      MAKEINTRESOURCE(IDD_IMGLST),
                      NULL,
-                     (DLGPROC)DlgProc);
+                     DlgProc);
 }
