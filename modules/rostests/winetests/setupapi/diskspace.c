@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -28,6 +29,16 @@
 #include "setupapi.h"
 
 #include "wine/test.h"
+
+static inline const char* debugstr_longlong(ULONGLONG ll)
+{
+    static char string[17];
+    if (sizeof(ll) > sizeof(unsigned long) && ll >> 32)
+        sprintf(string, "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll);
+    else
+        sprintf(string, "%lx", (unsigned long)ll);
+    return string;
+}
 
 static void test_SetupCreateDiskSpaceListA(void)
 {
@@ -293,11 +304,31 @@ static void test_SetupDuplicateDiskSpaceListW(void)
     ok(SetupDestroyDiskSpaceList(handle), "Expected SetupDestroyDiskSpaceList to succeed\n");
 }
 
+static LONGLONG get_file_size(char *path)
+{
+    HANDLE file;
+    LARGE_INTEGER size;
+
+    file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE) return 0;
+
+    if (!GetFileSizeEx(file, &size))
+        size.QuadPart = 0;
+
+    CloseHandle(file);
+    return size.QuadPart;
+}
+
 static void test_SetupQuerySpaceRequiredOnDriveA(void)
 {
     BOOL ret;
     HDSKSPC handle;
     LONGLONG space;
+    char windir[MAX_PATH];
+    char drive[3];
+    char tmp[MAX_PATH];
+    LONGLONG size;
 
     SetLastError(0xdeadbeef);
     ret = SetupQuerySpaceRequiredOnDriveA(NULL, NULL, NULL, NULL, 0);
@@ -357,7 +388,7 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ret = SetupQuerySpaceRequiredOnDriveA(handle, "", NULL, NULL, 0);
     ok(!ret, "Expected SetupQuerySpaceRequiredOnDriveA to return FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_DRIVE,
-       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
+       "Expected GetLastError() to return ERROR_INVALID_DRIVE, got %lu\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -368,6 +399,97 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     ok(GetLastError() == ERROR_INVALID_DRIVE,
        "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n",
        GetLastError());
+
+    GetWindowsDirectoryA(windir, MAX_PATH);
+    drive[0] = windir[0]; drive[1] = windir[1]; drive[2] = 0;
+
+    snprintf(tmp, MAX_PATH, "%c:\\wine-test-should-not-exist.txt", drive[0]);
+    ret = SetupAddToDiskSpaceListA(handle, tmp, 0x100000, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    space = 0;
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0x100000, "Expected 0x100000 as required space, got %s\n", debugstr_longlong(space));
+
+    /* adding the same file again doesn't sum up the size */
+    ret = SetupAddToDiskSpaceListA(handle, tmp, 0x200000, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    space = 0;
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0x200000, "Expected 0x200000 as required space, got %s\n", debugstr_longlong(space));
+
+    /* the device doesn't need to exist */
+    snprintf(tmp, MAX_PATH, "F:\\wine-test-should-not-exist.txt");
+    ret = SetupAddToDiskSpaceListA(handle, tmp, 0x200000, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, "F:", &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0x200000, "Expected 0x100000 as required space, got %s\n", debugstr_longlong(space));
+
+    ok(SetupDestroyDiskSpaceList(handle),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+    handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
+    ok(handle != NULL,
+       "Expected SetupCreateDiskSpaceListA to return a valid handle, got NULL\n");
+
+    /* the real size is subtracted unless SPDSL_IGNORE_DISK is specified */
+    snprintf(tmp, MAX_PATH, "%s\\regedit.exe", windir);
+
+    size = get_file_size(tmp);
+    ret = SetupAddToDiskSpaceListA(handle, tmp, size, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+    space = 0;
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0 || broken(space == -0x5000) || broken(space == -0x7000),
+       "Expected 0x0 as required space, got %s\n", debugstr_longlong(space));
+
+    ret = SetupAddToDiskSpaceListA(handle, tmp, size + 0x100000, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0x100000 || broken(space == 0xf9000) || broken(space == 0xfb000),
+       "Expected 0x100000 as required space, got %s\n", debugstr_longlong(space));
+
+    ret = SetupAddToDiskSpaceListA(handle, tmp, size - 0x1000, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == -0x1000 || broken(space == -0x6000) || broken(space == -0x8000),
+       "Expected -0x1000 as required space, got %s\n", debugstr_longlong(space));
+
+    ok(SetupDestroyDiskSpaceList(handle),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+    handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
+    ok(handle != NULL,
+       "Expected SetupCreateDiskSpaceListA to return a valid handle, got NULL\n");
+
+    ret = SetupAddToDiskSpaceListA(handle, tmp, size, FILEOP_DELETE, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+    space = 0;
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space <= -size, "Expected space <= -size, got %s\n", debugstr_longlong(space));
+
+    ok(SetupDestroyDiskSpaceList(handle),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+    handle = SetupCreateDiskSpaceListA(NULL, 0, SPDSL_IGNORE_DISK);
+    ok(handle != NULL,
+       "Expected SetupCreateDiskSpaceListA to return a valid handle, got NULL\n");
+
+    ret = SetupAddToDiskSpaceListA(handle, tmp, size, FILEOP_DELETE, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+    space = 0;
+    ret = SetupQuerySpaceRequiredOnDriveA(handle, drive, &space, NULL, 0);
+    ok(ret, "Expected SetupQuerySpaceRequiredOnDriveA to succeed\n");
+    ok(space == 0, "Expected size = 0, got %s\n", debugstr_longlong(space));
 
     ok(SetupDestroyDiskSpaceList(handle),
        "Expected SetupDestroyDiskSpaceList to succeed\n");
@@ -460,6 +582,40 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
        "Expected SetupDestroyDiskSpaceList to succeed\n");
 }
 
+static void test_SetupAddToDiskSpaceListA(void)
+{
+    HDSKSPC handle;
+    BOOL ret;
+
+    ret = SetupAddToDiskSpaceListA(NULL, "C:\\some-file.dat", 0, FILEOP_COPY, 0, 0);
+    ok(!ret, "Expected SetupAddToDiskSpaceListA to return FALSE, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE,
+       "Expected GetLastError() to return ERROR_INVALID_HANDLE, got %lu\n", GetLastError());
+
+    handle = SetupCreateDiskSpaceListA(NULL, 0, 0);
+    ok(handle != NULL,"Expected SetupCreateDiskSpaceListA to return a valid handle\n");
+
+    ret = SetupAddToDiskSpaceListA(handle, NULL, 0, FILEOP_COPY, 0, 0);
+    ok(ret || broken(!ret) /* >= Vista */, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    ret = SetupAddToDiskSpaceListA(handle, "C:\\some-file.dat", -20, FILEOP_COPY, 0, 0);
+    ok(ret, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    ret = SetupAddToDiskSpaceListA(handle, "C:\\some-file.dat", 0, FILEOP_RENAME, 0, 0);
+    ok(!ret, "Expected SetupAddToDiskSpaceListA to return FALSE\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected GetLastError() to return ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+
+    ret = SetupAddToDiskSpaceListA(handle, NULL, 0, FILEOP_RENAME, 0, 0);
+    ok(ret || broken(!ret) /* >= Vista */, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    ret = SetupAddToDiskSpaceListA(NULL, NULL, 0, FILEOP_RENAME, 0, 0);
+    ok(ret || broken(!ret) /* >= Vista */, "Expected SetupAddToDiskSpaceListA to succeed\n");
+
+    ok(SetupDestroyDiskSpaceList(handle),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+}
+
 START_TEST(diskspace)
 {
     test_SetupCreateDiskSpaceListA();
@@ -468,4 +624,5 @@ START_TEST(diskspace)
     test_SetupDuplicateDiskSpaceListW();
     test_SetupQuerySpaceRequiredOnDriveA();
     test_SetupQuerySpaceRequiredOnDriveW();
+    test_SetupAddToDiskSpaceListA();
 }
