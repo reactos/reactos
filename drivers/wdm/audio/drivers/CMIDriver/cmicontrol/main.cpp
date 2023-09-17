@@ -804,7 +804,7 @@ void printUsage()
 
 void deleteDriverFiles() {
 	TCHAR SysDir[MAX_PATH];
-	unsigned int len;
+	size_t len;
 	if (GetSystemDirectory(SysDir, sizeof(SysDir))==0) {
 		PrintLastError("GetSystemDirectory()");
 		return;
