@@ -418,7 +418,7 @@ static void get_source_info( HINF hinf, const WCHAR *src_file, SP_FILE_COPY_PARA
  *
  * Retrieve the destination dir for a given section.
  */
-static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
+WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
 {
     INFCONTEXT context;
     WCHAR systemdir[MAX_PATH], *dir;
