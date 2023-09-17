@@ -714,7 +714,7 @@ LRESULT CALLBACK ScreenSaverProc(
         DeleteObject(hBrushDead);
         ReleaseDC(hWnd, hDC);
         break;
-    default:          // Passes it on if unproccessed
+    default:          // Passes it on if unprocessed
         return DefScreenSaverProc(hWnd, message, wParam, lParam);
     }
     return 0;
