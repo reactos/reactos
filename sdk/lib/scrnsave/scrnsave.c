@@ -1,11 +1,10 @@
 /*
- * PROJECT:         ReactOS Screen Saver Library
- * LICENSE:         GPL v2 or any later version
- * FILE:            lib/sdk/scrnsave/scrnsave.c
- * PURPOSE:         Library for writing screen savers, compatible with
- *                  MS' scrnsave.lib without Win9x support.
- * PROGRAMMERS:     Anders Norlander <anorland@hem2.passagen.se>
- *                  Colin Finck <mail@colinfinck.de>
+ * PROJECT:     ReactOS Screen Saver Library
+ * LICENSE:     GPL v2 or any later version
+ * PURPOSE:     Library for writing screen savers, compatible with
+ *              MS' scrnsave.lib without Win9x support.
+ * COPYRIGHT:   Anders Norlander <anorland@hem2.passagen.se>
+ *              Colin Finck <mail@colinfinck.de>
  */
 
 #include <stdarg.h>
@@ -171,7 +170,7 @@ static int LaunchConfig(HWND hParent)
         return -1;
 
     return DialogBox(hMainInstance, MAKEINTRESOURCE(DLG_SCRNSAVECONFIGURE),
-                     hParent, (DLGPROC)ScreenSaverConfigureDialog);
+                     hParent, ScreenSaverConfigureDialog);
 }
 
 static int LaunchScreenSaver(HWND hParent)
