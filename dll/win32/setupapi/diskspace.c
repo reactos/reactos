@@ -360,6 +360,12 @@ BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
 
         list_add_tail(&list->files, &file->entry);
     }
+    else if (operation == FILEOP_DELETE)
+    {
+        /* delete operations for added files are ignored */
+        ret = TRUE;
+        goto done;
+    }
 
     file->operation = operation;
     if (operation == FILEOP_COPY)
