@@ -216,10 +216,10 @@
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
-@ stdcall SetupAddInstallSectionToDiskSpaceListA(long long long str ptr long)
-@ stub SetupAddInstallSectionToDiskSpaceListW
-@ stdcall -stub SetupAddSectionToDiskSpaceListA(long long long str long ptr long)
-@ stub SetupAddSectionToDiskSpaceListW
+@ stdcall SetupAddInstallSectionToDiskSpaceListA(ptr ptr ptr str ptr long)
+@ stdcall SetupAddInstallSectionToDiskSpaceListW(ptr ptr ptr wstr ptr long)
+@ stdcall SetupAddSectionToDiskSpaceListA(ptr ptr ptr str long ptr long)
+@ stdcall SetupAddSectionToDiskSpaceListW(ptr ptr ptr wstr long ptr long)
 @ stdcall SetupAddToDiskSpaceListA(long str int64 long ptr long)
 @ stdcall SetupAddToDiskSpaceListW(long wstr int64 long ptr long)
 @ stdcall SetupAddToSourceListA(long str)
@@ -469,8 +469,8 @@
 @ stdcall SetupPromptForDiskA(ptr str str str str str long ptr long ptr)
 @ stdcall SetupPromptForDiskW(ptr wstr wstr wstr wstr wstr long ptr long ptr)
 @ stdcall SetupPromptReboot(ptr ptr long)
-@ stdcall -stub SetupQueryDrivesInDiskSpaceListA(ptr ptr long ptr)
-@ stub SetupQueryDrivesInDiskSpaceListW
+@ stdcall SetupQueryDrivesInDiskSpaceListA(ptr ptr long ptr)
+@ stdcall SetupQueryDrivesInDiskSpaceListW(ptr ptr long ptr)
 @ stub SetupQueryFileLogA
 @ stub SetupQueryFileLogW
 @ stdcall SetupQueryInfFileInformationA(ptr long str long ptr)
