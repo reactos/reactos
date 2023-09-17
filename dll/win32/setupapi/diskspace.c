@@ -36,7 +36,21 @@ struct space_list
     UINT flags;
 };
 
+static LONGLONG get_file_size(WCHAR *path)
+{
+    HANDLE file;
+    LARGE_INTEGER size;
 
+    file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE) return 0;
+
+    if (!GetFileSizeEx(file, &size))
+        size.QuadPart = 0;
+
+    CloseHandle(file);
+    return size.QuadPart;
+}
 
 /***********************************************************************
  *      SetupCreateDiskSpaceListW  (SETUPAPI.@)
@@ -268,25 +282,128 @@ BOOL WINAPI SetupDestroyDiskSpaceList(HDSKSPC diskspace)
 }
 
 /***********************************************************************
-*		SetupAddToDiskSpaceListA  (SETUPAPI.@)
-*/
-BOOL WINAPI SetupAddToDiskSpaceListA(HDSKSPC diskspace, PCSTR targetfile,
-                                    LONGLONG filesize, UINT operation,
-                                    PVOID reserved1, UINT reserved2)
-{
-    FIXME(": stub\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-/***********************************************************************
 *		SetupAddToDiskSpaceListW  (SETUPAPI.@)
 */
 BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
                                     LONGLONG filesize, UINT operation,
                                     PVOID reserved1, UINT reserved2)
 {
-    FIXME(": stub\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    struct space_list *list = diskspace;
+    struct file_entry *file;
+    WCHAR *fullpathW;
+    BOOL ret = FALSE;
+    DWORD size;
+
+    TRACE("(%p, %s, %s, %u, %p, %u)\n", diskspace, debugstr_w(targetfile),
+          wine_dbgstr_longlong(filesize), operation, reserved1, reserved2);
+
+    if (!targetfile)
+        return TRUE;
+
+    if (!diskspace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (operation != FILEOP_COPY && operation != FILEOP_DELETE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    size = GetFullPathNameW(targetfile, 0, NULL, NULL);
+    if (!size)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    size = (size+1) * sizeof(WCHAR);
+    fullpathW = HeapAlloc(GetProcessHeap(), 0, size);
+
+    if (!GetFullPathNameW(targetfile, size, fullpathW, NULL))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+
+    if (fullpathW[1] != ':' && fullpathW[2] != '\\')
+    {
+        FIXME("UNC paths not yet supported\n");
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto done;
+    }
+
+    LIST_FOR_EACH_ENTRY(file, &list->files, struct file_entry, entry)
+    {
+        if (!lstrcmpiW(file->path, fullpathW))
+            break;
+    }
+
+    if (&file->entry == &list->files)
+    {
+        file = HeapAlloc(GetProcessHeap(), 0, sizeof(*file));
+        if (!file)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto done;
+        }
+
+        file->path = wcsdup(fullpathW);
+        if (!file->path)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            HeapFree(GetProcessHeap(), 0, file);
+            goto done;
+        }
+
+        list_add_tail(&list->files, &file->entry);
+    }
+
+    file->operation = operation;
+    if (operation == FILEOP_COPY)
+        file->size = filesize;
+    else
+        file->size = 0;
+
+    if (!(list->flags & SPDSL_IGNORE_DISK))
+        file->size -= get_file_size(fullpathW);
+
+    ret = TRUE;
+
+done:
+    HeapFree(GetProcessHeap(), 0, fullpathW);
+    return ret;
+}
+
+/***********************************************************************
+*       SetupAddToDiskSpaceListA  (SETUPAPI.@)
+*/
+BOOL WINAPI SetupAddToDiskSpaceListA(HDSKSPC diskspace, PCSTR targetfile,
+                                    LONGLONG filesize, UINT operation,
+                                    PVOID reserved1, UINT reserved2)
+{
+    LPWSTR targetfileW = NULL;
+    DWORD len;
+    BOOL ret;
+
+    if (targetfile)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, targetfile, -1, NULL, 0);
+
+        targetfileW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!targetfileW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, targetfile, -1, targetfileW, len);
+    }
+
+    ret = SetupAddToDiskSpaceListW(diskspace, targetfileW, filesize,
+                                   operation, reserved1, reserved2);
+    if (targetfileW) HeapFree(GetProcessHeap(), 0, targetfileW);
+    return ret;
 }
