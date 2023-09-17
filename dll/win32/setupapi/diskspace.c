@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdlib.h>
 #include "setupapi_private.h"
 #include "wine/list.h"
 
@@ -50,6 +51,23 @@ static LONGLONG get_file_size(WCHAR *path)
 
     CloseHandle(file);
     return size.QuadPart;
+}
+
+static BOOL get_size_from_inf(HINF layoutinf, WCHAR *filename, LONGLONG *size)
+{
+    static const WCHAR SourceDisksFiles[]  = {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s',0};
+    INFCONTEXT context;
+    WCHAR buffer[20];
+
+    if (!SetupFindFirstLineW(layoutinf, SourceDisksFiles, filename, &context))
+        return FALSE;
+
+    if (!SetupGetStringFieldW(&context, 3, buffer, sizeof(buffer), NULL))
+        return FALSE;
+
+    /* FIXME: is there a atollW ? */
+    *size = wcstol(buffer, NULL, 10);
+    return TRUE;
 }
 
 /***********************************************************************
@@ -149,6 +167,117 @@ error:
 HDSKSPC WINAPI SetupDuplicateDiskSpaceListA(HDSKSPC DiskSpace, PVOID Reserved1, DWORD Reserved2, UINT Flags)
 {
     return SetupDuplicateDiskSpaceListW(DiskSpace, Reserved1, Reserved2, Flags);
+}
+
+/***********************************************************************
+ *      SetupAddSectionToDiskSpaceListW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupAddSectionToDiskSpaceListW(HDSKSPC diskspace, HINF hinf, HINF hlist,
+                                            PCWSTR section, UINT operation, PVOID reserved1,
+                                            UINT reserved2)
+{
+    static const WCHAR sepW[] = {'\\',0};
+    WCHAR dest[MAX_PATH], src[MAX_PATH], *dest_dir, *full_path;
+    INFCONTEXT context;
+    BOOL ret = FALSE;
+
+    TRACE("(%p, %p, %p, %s, %u, %p, %u)\n", diskspace, hinf, hlist, debugstr_w(section),
+                                            operation, reserved1, reserved2);
+
+    if (!diskspace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (!section)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!hlist) hlist = hinf;
+
+    if (!SetupFindFirstLineW(hlist, section, NULL, &context))
+    {
+        SetLastError(ERROR_SECTION_NOT_FOUND);
+        return FALSE;
+    }
+
+    dest_dir = get_destination_dir(hinf, section);
+    if (!dest_dir)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    do
+    {
+        LONGLONG filesize;
+        int path_size;
+        BOOL tmp_ret;
+
+        if (!SetupGetStringFieldW(&context, 1, dest, sizeof(dest) / sizeof(WCHAR), NULL))
+            goto end;
+        if (!SetupGetStringFieldW(&context, 2, src, sizeof(src) / sizeof(WCHAR), NULL))
+            *src = 0;
+        if (!get_size_from_inf(hinf, src[0] ? src : dest, &filesize))
+            goto end;
+
+        path_size = lstrlenW(dest_dir) + lstrlenW(dest) + 2;
+        full_path = HeapAlloc(GetProcessHeap(), 0, path_size * sizeof(WCHAR));
+        if (!full_path)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto end;
+        }
+
+        lstrcpyW(full_path, dest_dir);
+        lstrcatW(full_path, sepW);
+        lstrcatW(full_path, dest);
+
+        tmp_ret = SetupAddToDiskSpaceListW(diskspace, full_path, filesize, operation, 0, 0);
+        HeapFree(GetProcessHeap(), 0, full_path);
+        if (!tmp_ret) goto end;
+    }
+    while (SetupFindNextLine(&context, &context));
+
+    ret = TRUE;
+
+end:
+    HeapFree(GetProcessHeap(), 0, dest_dir);
+    return ret;
+}
+
+/***********************************************************************
+ *      SetupAddSectionToDiskSpaceListA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupAddSectionToDiskSpaceListA(HDSKSPC diskspace, HINF hinf, HINF hlist,
+                                            PCSTR section, UINT operation, PVOID reserved1,
+                                            UINT reserved2)
+{
+    LPWSTR sectionW = NULL;
+    DWORD len;
+    BOOL ret;
+
+    if (section)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, section, -1, NULL, 0);
+
+        sectionW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!sectionW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, section, -1, sectionW, len);
+    }
+
+    ret = SetupAddSectionToDiskSpaceListW(diskspace, hinf, hlist, sectionW, operation,
+                                          reserved1, reserved2);
+    if (sectionW) HeapFree(GetProcessHeap(), 0, sectionW);
+    return ret;
 }
 
 /***********************************************************************

@@ -30,6 +30,8 @@
 
 #include "wine/test.h"
 
+#define STD_HEADER "[Version]\r\nSignature=\"$CHICAGO$\"\r\n"
+
 static inline const char* debugstr_longlong(ULONGLONG ll)
 {
     static char string[17];
@@ -38,6 +40,18 @@ static inline const char* debugstr_longlong(ULONGLONG ll)
     else
         sprintf(string, "%lx", (unsigned long)ll);
     return string;
+}
+
+/* create a new file with specified contents and open it */
+static HINF inf_open_file_content(const char * tmpfilename, const char *data, UINT *err_line)
+{
+    DWORD res;
+    HANDLE handle = CreateFileA(tmpfilename, GENERIC_READ|GENERIC_WRITE,
+                                FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, 0);
+    if (handle == INVALID_HANDLE_VALUE) return 0;
+    if (!WriteFile( handle, data, strlen(data), &res, NULL )) trace( "write error\n" );
+    CloseHandle( handle );
+    return SetupOpenInfFileA( tmpfilename, 0, INF_STYLE_WIN4, err_line );
 }
 
 static void test_SetupCreateDiskSpaceListA(void)
@@ -741,6 +755,184 @@ static void test_SetupQueryDrivesInDiskSpaceListA(void)
     ret = SetupQueryDrivesInDiskSpaceListA(handle, buffer, sizeof(buffer), NULL);
     ok(ret, "Expected SetupQueryDrivesInDiskSpaceListA to succeed\n");
     ok(!memcmp("f:\0g:\0x:\0\0", buffer, 10), "Device list does not match\n");
+
+    ok(SetupDestroyDiskSpaceList(handle),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+}
+
+struct device_usage
+{
+    const char *dev;
+    LONGLONG usage;
+};
+
+struct section
+{
+    const char *name;
+    UINT fileop;
+    BOOL result;
+    DWORD error_code;
+};
+
+static const struct
+{
+    const char *data;
+    struct section sections[2];
+    const char *devices;
+    int device_length;
+    struct device_usage usage[2];
+}
+section_test[] =
+{
+    /* 0 */
+    {STD_HEADER "[a]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {NULL, 0, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 1 */
+    {STD_HEADER "[a]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", FILEOP_DELETE, TRUE, 0}, {NULL, 0, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 0}, {NULL, 0}}},
+    /* 2 */
+    {STD_HEADER "[a]\ntest,,,\n\r\n",
+     {{"a", FILEOP_COPY, FALSE, ERROR_LINE_NOT_FOUND}, {NULL, 0, TRUE, 0}},
+     "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 3 */
+    {STD_HEADER "[a]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\n[DestinationDirs]\nDefaultDestDir=-1,F:\\test\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {NULL, 0, TRUE, 0}},
+     "f:\00", sizeof("f:\00"), {{"f:", 4096}, {NULL, 0}}},
+    /* 4 */
+    {STD_HEADER "[a]\ntest,test2,,\n[SourceDisksFiles]\ntest2=1,,4096\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {NULL, 0, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 5 */
+    {STD_HEADER "[a]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"b", FILEOP_COPY, FALSE, ERROR_SECTION_NOT_FOUND}, {NULL, 0, TRUE, 0}},
+     "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 6 */
+    {STD_HEADER "[a]\ntest,,,\n[b]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {"b", FILEOP_COPY, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 7 */
+    {STD_HEADER "[a]\ntest,,,\n[b]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\n[DestinationDirs]\nb=-1,F:\\test\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {"b", FILEOP_COPY, TRUE, 0}},
+     "c:\00f:\00", sizeof("c:\00f:\00"), {{"c:", 4096}, {"f:", 4096}}},
+    /* 8 */
+    {STD_HEADER "[a]\ntest,test1,,\n[b]\ntest,test2,,\n[SourceDisksFiles]\ntest1=1,,4096\ntest2=1,,8192\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {"b", FILEOP_COPY, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 8192}, {NULL, 0}}},
+    /* 9 */
+    {STD_HEADER "[a]\ntest1,test,,\n[b]\ntest2,test,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", FILEOP_COPY, TRUE, 0}, {"b", FILEOP_COPY, TRUE, 0}},
+     "c:\00", sizeof("c:\00"), {{"c:", 8192}, {NULL, 0}}},
+};
+
+static void test_SetupAddSectionToDiskSpaceListA(void)
+{
+    char tmp[MAX_PATH];
+    char tmpfilename[MAX_PATH];
+    char buffer[MAX_PATH];
+    HDSKSPC diskspace;
+    UINT err_line;
+    LONGLONG space;
+    BOOL ret;
+    int i, j;
+    HINF inf;
+
+    if (!GetTempPathA(MAX_PATH, tmp))
+    {
+        win_skip("GetTempPath failed with error %lu\n", GetLastError());
+        return;
+    }
+
+    if (!GetTempFileNameA(tmp, "inftest", 0, tmpfilename))
+    {
+        win_skip("GetTempFileNameA failed with error %lu\n", GetLastError());
+        return;
+    }
+
+    inf = inf_open_file_content(tmpfilename, STD_HEADER "[a]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n", &err_line);
+    ok(!!inf, "Failed to open inf file (%lu, line %d)\n", GetLastError(), err_line);
+
+    diskspace = SetupCreateDiskSpaceListA(NULL, 0, SPDSL_IGNORE_DISK);
+    ok(diskspace != NULL,"Expected SetupCreateDiskSpaceListA to return a valid handle\n");
+
+    ret = SetupAddSectionToDiskSpaceListA(diskspace, NULL, NULL, "a", FILEOP_COPY, 0, 0);
+    ok(!ret, "Expected SetupAddSectionToDiskSpaceListA to fail\n");
+    ok(GetLastError() == ERROR_SECTION_NOT_FOUND, "Expected ERROR_SECTION_NOT_FOUND as error, got %lu\n",
+       GetLastError());
+
+    ret = SetupAddSectionToDiskSpaceListA(NULL, inf, NULL, "a", FILEOP_COPY, 0, 0);
+    ok(!ret, "Expected SetupAddSectionToDiskSpaceListA to fail\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE as error, got %lu\n",
+       GetLastError());
+
+    ret = SetupAddSectionToDiskSpaceListA(NULL, inf, NULL, "b", FILEOP_COPY, 0, 0);
+    ok(!ret, "Expected SetupAddSectionToDiskSpaceListA to fail\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE as error, got %lu\n",
+       GetLastError());
+
+    ret = SetupAddSectionToDiskSpaceListA(diskspace, inf, NULL, "a", 0, 0, 0);
+    ok(ret, "Expected SetupAddSectionToDiskSpaceListA to succeed (%lu)\n", GetLastError());
+
+    ok(SetupDestroyDiskSpaceList(diskspace),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+    for (i = 0; i < sizeof(section_test) / sizeof(section_test[0]); i++)
+    {
+        err_line = 0;
+
+        inf = inf_open_file_content(tmpfilename, section_test[i].data, &err_line);
+        ok(!!inf, "test %d: Failed to open inf file (%lu, line %d)\n", i, GetLastError(), err_line);
+        if (!inf) continue;
+
+        diskspace = SetupCreateDiskSpaceListA(NULL, 0, SPDSL_IGNORE_DISK);
+        ok(diskspace != NULL, "Expected SetupCreateDiskSpaceListA to return a valid handle\n");
+
+        for (j = 0; j < 2; j++)
+        {
+            const struct section *section = &section_test[i].sections[j];
+            if (!section->name)
+                continue;
+
+            SetLastError(0xdeadbeef);
+            ret = SetupAddSectionToDiskSpaceListA(diskspace, inf, NULL, section->name, section->fileop, 0, 0);
+            if (section->result)
+                ok(ret, "test %d: Expected adding section %d to succeed (%lu)\n", i, j, GetLastError());
+            else
+            {
+                ok(!ret, "test %d: Expected adding section %d to fail\n", i, j);
+                ok(GetLastError() == section->error_code, "test %d: Expected %lu as error, got %lu\n",
+                   i, section->error_code, GetLastError());
+            }
+        }
+
+        memset(buffer, 0x0, sizeof(buffer));
+        ret = SetupQueryDrivesInDiskSpaceListA(diskspace, buffer, sizeof(buffer), NULL);
+        ok(ret, "test %d: Expected SetupQueryDrivesInDiskSpaceListA to succeed (%lu)\n", i, GetLastError());
+        ok(!memcmp(section_test[i].devices, buffer, section_test[i].device_length),
+           "test %d: Device list (%s) does not match\n", i, buffer);
+
+        for (j = 0; j < 2; j++)
+        {
+            const struct device_usage *usage = &section_test[i].usage[j];
+            if (!usage->dev)
+                continue;
+
+            space = 0;
+            ret = SetupQuerySpaceRequiredOnDriveA(diskspace, usage->dev, &space, NULL, 0);
+            ok(ret, "test %d: Expected SetupQuerySpaceRequiredOnDriveA to succeed for device %s (%lu)\n",
+               i, usage->dev, GetLastError());
+            ok(space == usage->usage, "test %d: Expected size %lu for device %s, got %lu\n",
+               i, (DWORD)usage->usage, usage->dev, (DWORD)space);
+        }
+
+        ok(SetupDestroyDiskSpaceList(diskspace),
+           "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+        SetupCloseInfFile(inf);
+    }
+
+    DeleteFileA(tmpfilename);
 }
 
 START_TEST(diskspace)
@@ -753,4 +945,5 @@ START_TEST(diskspace)
     test_SetupQuerySpaceRequiredOnDriveW();
     test_SetupAddToDiskSpaceListA();
     test_SetupQueryDrivesInDiskSpaceListA();
+    test_SetupAddSectionToDiskSpaceListA();
 }
