@@ -935,6 +935,175 @@ static void test_SetupAddSectionToDiskSpaceListA(void)
     DeleteFileA(tmpfilename);
 }
 
+struct section_i
+{
+    const char *name;
+    BOOL result;
+    DWORD error_code;
+};
+
+static const struct
+{
+    const char *data;
+    struct section_i sections[2];
+    const char *devices;
+    int device_length;
+    struct device_usage usage[2];
+}
+section_test_i[] =
+{
+    /* 0 */
+    {STD_HEADER "[a.Install]\nCopyFiles=a.CopyFiles\n"
+                "[a.CopyFiles]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a.Install", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 1 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles\n"
+                "[a.CopyFiles]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 2 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles\nCopyFiles=a.CopyFiles2\n"
+                "[a.CopyFiles]\ntest,,,\n[a.CopyFiles2]\ntest2,,,\n"
+                "[SourceDisksFiles]\ntest=1,,4096\ntest2=1,,4096\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 8192}, {NULL, 0}}},
+    /* 3 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles,a.CopyFiles2\n"
+                "[a.CopyFiles]\ntest,,,\n[a.CopyFiles2]\ntest2,,,\n"
+                "[SourceDisksFiles]\ntest=1,,4096\ntest2=1,,4096\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 8192}, {NULL, 0}}},
+    /* 4 */
+    {STD_HEADER "[a]\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 5 */
+    {STD_HEADER "[a]\nDelFiles=a.DelFiles\n"
+                "[a.nDelFiles]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 6 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles\nDelFiles=a.DelFiles\n"
+                "[a.CopyFiles]\ntest,,,\n[a.DelFiles]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 7 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles\n[b]\nDelFiles=b.DelFiles\n"
+                "[a.CopyFiles]\ntest,,,\n[b.DelFiles]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n",
+     {{"a", TRUE, 0}, {"b", TRUE, 0}}, "c:\00", sizeof("c:\00"), {{"c:", 4096}, {NULL, 0}}},
+    /* 7 */
+    {STD_HEADER "[a]\nCopyFiles=\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 8 */
+    {STD_HEADER "[a]\nCopyFiles=something\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "", sizeof(""), {{NULL, 0}, {NULL, 0}}},
+    /* 9 */
+    {STD_HEADER "[a]\nCopyFiles=a.CopyFiles,b.CopyFiles\n[a.CopyFiles]\ntest,,,\n[b.CopyFiles]\ntest,,,\n"
+                "[SourceDisksFiles]\ntest=1,,4096\n[DestinationDirs]\nb.CopyFiles=-1,F:\\test\r\n",
+     {{"a", TRUE, 0}, {NULL, TRUE, 0}}, "c:\00f:\00", sizeof("c:\00f:\00"), {{"c:", 4096}, {"f:", 4096}}},
+};
+
+static void test_SetupAddInstallSectionToDiskSpaceListA(void)
+{
+    char tmp[MAX_PATH];
+    char tmpfilename[MAX_PATH];
+    char buffer[MAX_PATH];
+    HDSKSPC diskspace;
+    LONGLONG space;
+    UINT err_line;
+    BOOL ret;
+    int i, j;
+    HINF inf;
+
+    if (!GetTempPathA(MAX_PATH, tmp))
+    {
+        win_skip("GetTempPath failed with error %ld\n", GetLastError());
+        return;
+    }
+
+    if (!GetTempFileNameA(tmp, "inftest", 0, tmpfilename))
+    {
+        win_skip("GetTempFileNameA failed with error %ld\n", GetLastError());
+        return;
+    }
+
+    inf = inf_open_file_content(tmpfilename, STD_HEADER "[a]\nCopyFiles=b\n[b]\ntest,,,\n[SourceDisksFiles]\ntest=1,,4096\r\n", &err_line);
+    ok(!!inf, "Failed to open inf file (%ld, line %u)\n", GetLastError(), err_line);
+
+    diskspace = SetupCreateDiskSpaceListA(NULL, 0, SPDSL_IGNORE_DISK);
+    ok(diskspace != NULL,"Expected SetupCreateDiskSpaceListA to return a valid handle\n");
+
+    ret = SetupAddInstallSectionToDiskSpaceListA(diskspace, NULL, NULL, "a", 0, 0);
+    ok(ret, "Expected SetupAddInstallSectionToDiskSpaceListA to succeed\n");
+
+    ret = SetupAddInstallSectionToDiskSpaceListA(NULL, inf, NULL, "a", 0, 0);
+    ok(!ret, "Expected SetupAddInstallSectionToDiskSpaceListA to fail\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE as error, got %lu\n",
+       GetLastError());
+
+    ret = SetupAddInstallSectionToDiskSpaceListA(diskspace, inf, NULL, NULL, 0, 0);
+    ok(!ret || broken(ret), "Expected SetupAddSectionToDiskSpaceListA to fail\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER || broken(ret),
+       "Expected ERROR_INVALID_PARAMETER as error, got %lu\n", GetLastError());
+
+    ret = SetupAddInstallSectionToDiskSpaceListA(diskspace, inf, NULL, "", 0, 0);
+    ok(ret, "Expected SetupAddInstallSectionToDiskSpaceListA to succeed (%lu)\n", GetLastError());
+
+    ok(SetupDestroyDiskSpaceList(diskspace),
+       "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+    for (i = 0; i < sizeof(section_test_i) / sizeof(section_test_i[0]); i++)
+    {
+        err_line = 0;
+
+        inf = inf_open_file_content(tmpfilename, section_test_i[i].data, &err_line);
+        ok(!!inf, "test %u: Failed to open inf file (%lu, line %u)\n", i, GetLastError(), err_line);
+        if (!inf) continue;
+
+        diskspace = SetupCreateDiskSpaceListA(NULL, 0, SPDSL_IGNORE_DISK);
+        ok(diskspace != NULL,"Expected SetupCreateDiskSpaceListA to return a valid handle\n");
+
+        for (j = 0; j < 2; j++)
+        {
+            const struct section_i *section = &section_test_i[i].sections[j];
+            if (!section->name)
+                continue;
+
+            SetLastError(0xdeadbeef);
+            ret = SetupAddInstallSectionToDiskSpaceListA(diskspace, inf, NULL, section->name, 0, 0);
+            if (section->result)
+                ok(ret, "test %d: Expected adding section %d to succeed (%lu)\n", i, j, GetLastError());
+            else
+            {
+                ok(!ret, "test %d: Expected adding section %d to fail\n", i, j);
+                ok(GetLastError() == section->error_code, "test %d: Expected %lu as error, got %lu\n",
+                   i, section->error_code, GetLastError());
+            }
+        }
+
+        memset(buffer, 0x0, sizeof(buffer));
+        ret = SetupQueryDrivesInDiskSpaceListA(diskspace, buffer, sizeof(buffer), NULL);
+        ok(ret, "test %d: Expected SetupQueryDrivesInDiskSpaceListA to succeed (%lu)\n", i, GetLastError());
+        ok(!memcmp(section_test_i[i].devices, buffer, section_test_i[i].device_length),
+           "test %d: Device list (%s) does not match\n", i, buffer);
+
+        for (j = 0; j < 2; j++)
+        {
+            const struct device_usage *usage = &section_test_i[i].usage[j];
+            if (!usage->dev)
+                continue;
+
+            space = 0;
+            ret = SetupQuerySpaceRequiredOnDriveA(diskspace, usage->dev, &space, NULL, 0);
+            ok(ret, "test %d: Expected SetupQuerySpaceRequiredOnDriveA to succeed for device %s (%lu)\n",
+               i, usage->dev, GetLastError());
+            ok(space == usage->usage, "test %d: Expected size %lu for device %s, got %lu\n",
+               i, (DWORD)usage->usage, usage->dev, (DWORD)space);
+        }
+
+        ok(SetupDestroyDiskSpaceList(diskspace),
+           "Expected SetupDestroyDiskSpaceList to succeed\n");
+
+        SetupCloseInfFile(inf);
+    }
+
+    DeleteFileA(tmpfilename);
+}
+
 START_TEST(diskspace)
 {
     test_SetupCreateDiskSpaceListA();
@@ -946,4 +1115,5 @@ START_TEST(diskspace)
     test_SetupAddToDiskSpaceListA();
     test_SetupQueryDrivesInDiskSpaceListA();
     test_SetupAddSectionToDiskSpaceListA();
+    test_SetupAddInstallSectionToDiskSpaceListA();
 }

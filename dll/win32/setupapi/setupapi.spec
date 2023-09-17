@@ -216,8 +216,8 @@
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
-@ stdcall SetupAddInstallSectionToDiskSpaceListA(long long long str ptr long)
-@ stub SetupAddInstallSectionToDiskSpaceListW
+@ stdcall SetupAddInstallSectionToDiskSpaceListA(ptr ptr ptr str ptr long)
+@ stdcall SetupAddInstallSectionToDiskSpaceListW(ptr ptr ptr wstr ptr long)
 @ stdcall SetupAddSectionToDiskSpaceListA(ptr ptr ptr str long ptr long)
 @ stdcall SetupAddSectionToDiskSpaceListW(ptr ptr ptr wstr long ptr long)
 @ stdcall SetupAddToDiskSpaceListA(long str int64 long ptr long)
