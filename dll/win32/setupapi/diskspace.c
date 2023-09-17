@@ -281,14 +281,93 @@ BOOL WINAPI SetupAddSectionToDiskSpaceListA(HDSKSPC diskspace, HINF hinf, HINF h
 }
 
 /***********************************************************************
- *		SetupAddInstallSectionToDiskSpaceListA  (SETUPAPI.@)
+ *      SetupAddInstallSectionToDiskSpaceListW  (SETUPAPI.@)
  */
-BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace,
-                        HINF InfHandle, HINF LayoutInfHandle,
-                        LPCSTR SectionName, PVOID Reserved1, UINT Reserved2)
+BOOL WINAPI SetupAddInstallSectionToDiskSpaceListW(HDSKSPC diskspace,
+                        HINF inf, HINF layoutinf, LPCWSTR section,
+                        PVOID reserved1, UINT reserved2)
 {
-    FIXME ("Stub\n");
+    static const WCHAR CopyFiles[]  = {'C','o','p','y','F','i','l','e','s',0};
+    static const WCHAR DelFiles[]   = {'D','e','l','F','i','l','e','s',0};
+    WCHAR section_name[MAX_PATH];
+    INFCONTEXT context;
+    BOOL ret;
+    int i;
+
+    TRACE("(%p, %p, %p, %s, %p, %u)\n", diskspace, inf, layoutinf, debugstr_w(section),
+                                        reserved1, reserved2);
+
+    if (!diskspace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (!section)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!inf) return TRUE;
+    if (!layoutinf) layoutinf = inf;
+
+    ret = SetupFindFirstLineW(inf, section, CopyFiles, &context);
+    while (ret)
+    {
+        for (i = 1;; i++)
+        {
+            if (!SetupGetStringFieldW(&context, i, section_name, sizeof(section_name) / sizeof(WCHAR), NULL))
+                break;
+            SetupAddSectionToDiskSpaceListW(diskspace, layoutinf, inf, section_name, FILEOP_COPY, 0, 0);
+        }
+        ret = SetupFindNextLine(&context, &context);
+    }
+
+    ret = SetupFindFirstLineW(inf, section, DelFiles, &context);
+    while (ret)
+    {
+        for (i = 1;; i++)
+        {
+            if (!SetupGetStringFieldW(&context, i, section_name, sizeof(section_name) / sizeof(WCHAR), NULL))
+                break;
+            SetupAddSectionToDiskSpaceListW(diskspace, layoutinf, inf, section_name, FILEOP_DELETE, 0, 0);
+        }
+        ret = SetupFindNextLine(&context, &context);
+    }
+
     return TRUE;
+}
+
+/***********************************************************************
+ *      SetupAddInstallSectionToDiskSpaceListA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC diskspace,
+                        HINF inf, HINF layoutinf, LPCSTR section,
+                        PVOID reserved1, UINT reserved2)
+{
+    LPWSTR sectionW = NULL;
+    DWORD len;
+    BOOL ret;
+
+    if (section)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, section, -1, NULL, 0);
+
+        sectionW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!sectionW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, section, -1, sectionW, len);
+    }
+
+    ret = SetupAddInstallSectionToDiskSpaceListW(diskspace, inf, layoutinf,
+                                                 sectionW, reserved1, reserved2);
+    if (sectionW) HeapFree(GetProcessHeap(), 0, sectionW);
+    return ret;
 }
 
 /***********************************************************************
