@@ -750,16 +750,21 @@ InstallExt2BootCode(
     ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2FirstDataBlock = ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->Ext2FirstDataBlock;
     ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerGroup = ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->Ext2InodesPerGroup;
     ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerBlock = ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->Ext2InodesPerBlock;
-    //DPRINT("bootsup: NewBootSector %ld\n", sizeof(*NewBootSector));
-    DPRINT("bootsup: StartSector %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2VolumeStartSector);
-    DPRINT("bootsup: BlockSizeInBytes %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2BlockSizeInBytes);
-    DPRINT("bootsup: BlockSize %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2BlockSize);
-    DPRINT("bootsup: PointersPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2PointersPerBlock);
-    DPRINT("bootsup: GroupDescPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2GroupDescPerBlock);
-    DPRINT("bootsup: FirstDataBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2FirstDataBlock);
-    DPRINT("bootsup: InodesPerGroup %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerGroup);
-    DPRINT("bootsup: InodesPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerBlock);
-    DPRINT("bootsup: BootSectorMagic %x\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootSectorMagic);
+    // ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootSectorMagic will be 0xAA55;
+
+
+    DPRINT1("bootsup: NewBootSector %ld\n", sizeof((PEXT2_BOOTSECTOR)NewBootSector.BootCode));
+    // bootsup: BootDrive 80h
+    DPRINT1("bootsup: BootDrive %02X\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootDrive);
+    DPRINT1("bootsup: BootPartition %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootPartition);
+    DPRINT1("bootsup: BlockSizeInBytes %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2BlockSizeInBytes);
+    DPRINT1("bootsup: BlockSize %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2BlockSize);
+    DPRINT1("bootsup: PointersPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2PointersPerBlock);
+    DPRINT1("bootsup: GroupDescPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2GroupDescPerBlock);
+    DPRINT1("bootsup: FirstDataBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2FirstDataBlock);
+    DPRINT1("bootsup: InodesPerGroup %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerGroup);
+    DPRINT1("bootsup: InodesPerBlock %ld\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->Ext2InodesPerBlock);
+    DPRINT1("bootsup: BootSectorMagic %x\n", ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootSectorMagic);
 
 
     /* Free the original bootsector */
@@ -773,29 +778,10 @@ InstallExt2BootCode(
                          NULL,
                          &IoStatusBlock,
                          NewBootSector.BootCode,
-                         FAT32_BOOTSECTOR_SIZE,
+                         NewBootSector.Length,
                          &FileOffset,
                          NULL);
-#if 0
 
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        FreeBootCode(&NewBootSector);
-        return Status;
-    }
-       /* Write sector 1 */
-    FileOffset.QuadPart = SECTORSIZE;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         sizeof(EXT2_BOOTSECTOR),
-                         &FileOffset,
-                         NULL);
-#endif
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
