@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Partially synced with Wine Staging 2.2 */
+/* Partially synced with Wine Staging 8.15 */
 
 #include "setupapi_private.h"
 
