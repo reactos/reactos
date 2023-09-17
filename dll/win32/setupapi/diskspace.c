@@ -407,3 +407,88 @@ BOOL WINAPI SetupAddToDiskSpaceListA(HDSKSPC diskspace, PCSTR targetfile,
     if (targetfileW) HeapFree(GetProcessHeap(), 0, targetfileW);
     return ret;
 }
+
+/***********************************************************************
+ *      SetupQueryDrivesInDiskSpaceListW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupQueryDrivesInDiskSpaceListW(HDSKSPC diskspace, PWSTR buffer, DWORD size, PDWORD required_size)
+{
+    struct space_list *list = diskspace;
+    struct file_entry *file;
+    DWORD cur_size = 1;
+    BOOL used[26];
+
+    TRACE("(%p, %p, %ld, %p)\n", diskspace, buffer, size, required_size);
+
+    if (!diskspace)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    memset(&used, 0, sizeof(used));
+    LIST_FOR_EACH_ENTRY(file, &list->files, struct file_entry, entry)
+    {
+        int device;
+
+        /* UNC paths are not yet supported by this function */
+        if (towlower(file->path[0]) < 'a' || towlower(file->path[0]) > 'z' || file->path[1] != ':')
+            continue;
+
+        device = towlower(file->path[0]) - 'a';
+        if (used[device]) continue;
+
+        cur_size += 3;
+
+        if (buffer)
+        {
+            if (cur_size > size)
+            {
+                if (required_size) *required_size = cur_size;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+            *buffer++ = towlower(file->path[0]);
+            *buffer++ = ':';
+            *buffer++ = 0;
+        }
+
+        used[device] = TRUE;
+    }
+
+    if (buffer && size) *buffer = 0;
+    if (required_size)  *required_size = cur_size;
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupQueryDrivesInDiskSpaceListA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupQueryDrivesInDiskSpaceListA(HDSKSPC diskspace, PSTR buffer, DWORD size, PDWORD required_size)
+{
+    WCHAR *bufferW = NULL;
+    BOOL ret;
+    int i;
+
+    if (buffer && size)
+    {
+        bufferW = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+        if (!bufferW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
+
+    ret = SetupQueryDrivesInDiskSpaceListW(diskspace, bufferW ? bufferW : (WCHAR *)buffer,
+                                           size, required_size);
+
+    if (bufferW)
+    {
+        for (i = 0; i < size; i++)
+            buffer[i] = bufferW[i];
+        HeapFree(GetProcessHeap(), 0, bufferW);
+    }
+
+    return ret;
+}
