@@ -1,9 +1,7 @@
 /*
  *  ReactOS About Dialog Box
  *
- *  about.c
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ *  Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,7 +39,7 @@
 extern HINSTANCE hInst;
 
 
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;
     TCHAR   strLicense[0x1000];
@@ -64,6 +62,6 @@ LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 void ShowAboutBox(HWND hWnd)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutDialogWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDialogWndProc);
 }
 

@@ -1,9 +1,7 @@
 /*
  *  ReactOS Standard Dialog Application Template
  *
- *  dialog.c
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ *  Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,9 +41,9 @@ HWND      hPage2;
 HWND      hPage3;
 
 LRESULT CreateMemoryDialog(HINSTANCE, HWND hwndOwner, LPSTR lpszMessage);
-LRESULT CALLBACK PageWndProc1(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK PageWndProc2(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK PageWndProc3(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageWndProc1(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageWndProc2(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageWndProc3(HWND, UINT, WPARAM, LPARAM);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,9 +62,9 @@ static BOOL OnCreate(HWND hWnd, LONG lData)
 
     // Create tab pages
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-    hPage1 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE1), hWnd, (DLGPROC)PageWndProc1);
-    hPage2 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE2), hWnd, (DLGPROC)PageWndProc2);
-    hPage3 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE3), hWnd, (DLGPROC)PageWndProc3);
+    hPage1 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE1), hWnd, PageWndProc1);
+    hPage2 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE2), hWnd, PageWndProc2);
+    hPage3 = CreateDialog(hInst, MAKEINTRESOURCE(IDD_PAGE3), hWnd, PageWndProc3);
 
     // Insert tabs
     _tcscpy(szTemp, _T("Page One"));
@@ -117,7 +115,7 @@ void OnTabWndSelChange(void)
     }
 }
 
-LRESULT CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int idctrl;
     LPNMHDR pnmh;
@@ -181,7 +179,6 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPSTR     lpCmdLine,
@@ -193,7 +190,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     DialogData instData = { NULL, 34 };
 
     hInst = hInstance;
-    instData.hWnd = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_TABBED_DIALOG), NULL, (DLGPROC)DlgProc, (LPARAM)&instData);
+    instData.hWnd = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_TABBED_DIALOG), NULL, DlgProc, (LPARAM)&instData);
     ShowWindow(instData.hWnd, SW_SHOW);
     hAccel = LoadAccelerators(hInst, (LPCTSTR)IDR_ACCELERATOR);
     while (GetMessage(&msg, NULL, 0, 0)) {
@@ -204,8 +201,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     }
 #else
     hInst = hInstance;
-    DialogBox(hInst, (LPCTSTR)IDD_TABBED_DIALOG, NULL, (DLGPROC)DlgProc);
+    DialogBox(hInst, (LPCTSTR)IDD_TABBED_DIALOG, NULL, DlgProc);
     //CreateMemoryDialog(hInst, GetDesktopWindow(), "CreateMemoryDialog");
 #endif
-	return 0;
+    return 0;
 }
