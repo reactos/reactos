@@ -550,7 +550,10 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    }
    else
    {
-      Wnd->InternalPos.NormalRect = Rect;
+      /* Lie about the snap */
+      if (!IntIsWindowSnapped(Wnd) ||
+          RECTL_bIsEmptyRect(&Wnd->InternalPos.NormalRect))
+         Wnd->InternalPos.NormalRect = Rect;
    }
 }
 
@@ -2488,6 +2491,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
          case SW_MAXIMIZE:
             {
                //ERR("MinMaximize Maximize\n");
+               IntSetSnapEdge(Wnd, HTNOWHERE); /* Mark as not snapped (for Win+Left,Up,Down) */
                if ((Wnd->style & WS_MAXIMIZE) && (Wnd->style & WS_VISIBLE))
                {
                   SwpFlags = SWP_NOSIZE | SWP_NOMOVE;
@@ -2535,7 +2539,10 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                   }
                   else
                   {
+                     UINT edge = IntGetWindowSnapEdge(Wnd);
                      *NewPos = wpl.rcNormalPosition;
+                     if (edge && ShowFlag != SW_SHOWDEFAULT)
+                        co_IntCalculateSnapPosition(Wnd, edge, NewPos);
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -3876,6 +3883,139 @@ CLEANUP:
    TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
+}
+
+/* Windows 10 (1903?)
+BOOL APIENTRY
+NtUserIsWindowArranged(HWND hWnd)
+{
+    PWND pwnd = UserGetWindowObject(hWnd);
+    return pwnd && IntIsWindowSnapped(pwnd);
+}
+*/
+
+UINT FASTCALL
+IntGetWindowSnapEdge(PWND Wnd)
+{
+    if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDLEFT) return HTLEFT;
+    if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDRIGHT) return HTRIGHT;
+    return 0;
+}
+
+VOID FASTCALL
+co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos)
+{
+    POINT maxs, mint, maxt;
+    UINT width, height;
+    UserSystemParametersInfo(SPI_GETWORKAREA, 0, Pos, 0); /* FIXME: MultiMon of PWND */
+
+    co_WinPosGetMinMaxInfo(Wnd, &maxs, NULL, &mint, &maxt);
+    width = Pos->right - Pos->left;
+    width = min(min(max(width / 2, mint.x), maxt.x), width);
+    height = Pos->bottom - Pos->top;
+    height = min(max(height, mint.y), maxt.y);
+
+    switch(Edge)
+    {
+    case HTTOP: /* Maximized (Calculate RECT snap preview for SC_MOVE) */
+        height = min(Pos->bottom - Pos->top, maxs.y);
+        break; 
+    case HTLEFT:
+        Pos->right = width;
+        break;
+    case HTRIGHT:
+        Pos->left = Pos->right - width;
+        break;
+    default:
+        ERR("Unexpected snap edge %#x\n", Edge);
+    }
+    Pos->bottom = Pos->top + height;
+}
+
+VOID FASTCALL
+co_IntSnapWindow(PWND Wnd, UINT Edge)
+{
+    RECT newPos;
+    UINT wasSnapped = IntIsWindowSnapped(Wnd);
+    UINT normal = !(Wnd->style & (WS_MAXIMIZE|WS_MINIMIZE));
+    USER_REFERENCE_ENTRY ref;
+    BOOL hasRef = FALSE;
+
+    if (Edge == HTTOP)
+    {
+        co_IntSendMessage(UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+        return;
+    }
+    else if (Edge)
+    {
+        UserRefObjectCo(Wnd, &ref), ++hasRef;
+        co_IntCalculateSnapPosition(Wnd, Edge, &newPos);
+        IntSetSnapInfo(Wnd, Edge, (wasSnapped || !normal) ? NULL : &Wnd->rcWindow);
+    }
+    else if (wasSnapped)
+    {
+        if (!normal)
+        {
+            IntSetSnapEdge(Wnd, HTNOWHERE);
+            return;
+        }
+        newPos = Wnd->InternalPos.NormalRect;
+        IntSetSnapInfo(Wnd, HTNOWHERE, NULL);
+    }
+    else
+    {
+        return; /* Already unsnapped, do nothing */
+    }
+
+    TRACE("WindowSnap: %d->%d\n", IntGetWindowSnapEdge(Wnd), Edge);
+    co_WinPosSetWindowPos(Wnd, NULL,
+                          newPos.left,
+                          newPos.top,
+                          newPos.right - newPos.left,
+                          newPos.bottom - newPos.top,
+                          0);
+    if (hasRef) UserDerefObjectCo(Wnd);
+}
+
+VOID FASTCALL
+IntSetSnapEdge(PWND Wnd, UINT Edge)
+{
+    UINT styleMask = WS_EX2_VERTICALLYMAXIMIZEDLEFT|WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
+    UINT style = 0;
+    switch(Edge)
+    {
+    case HTNOWHERE:
+        style = 0;
+        break;
+    case HTTOP: /* Maximize throws away the snap */
+        style = 0;
+        break;
+    case HTLEFT:
+        style = WS_EX2_VERTICALLYMAXIMIZEDLEFT;
+        break;
+    case HTRIGHT:
+        style = WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
+        break;
+    default:
+        ERR("Unexpected snap edge %#x\n", Edge);
+    }
+    Wnd->ExStyle2 = (Wnd->ExStyle2 & ~styleMask) | style;
+}
+
+VOID FASTCALL
+IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos)
+{
+    RECT r;
+    IntSetSnapEdge(Wnd, Edge);
+    if (!Edge)
+    {
+        RECTL_vSetEmptyRect(&r);
+        Pos = (Wnd->style & WS_MINIMIZE) ? NULL : &r;
+    }
+    if (Pos)
+    {
+        Wnd->InternalPos.NormalRect = *Pos;
+    }
 }
 
 /* EOF */

@@ -136,6 +136,18 @@ NC_GetSysPopupPos(PWND Wnd, RECT *Rect)
     }
 }
 
+static UINT
+IsSnapActivationPoint(PWND Wnd, POINT pt)
+{
+    RECT wa;
+    UserSystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0); /* FIXME: MultiMon of PWND */
+
+    if (pt.x <= wa.left) return HTLEFT;
+    if (pt.x >= wa.right-1) return HTRIGHT;
+    if (pt.y <= wa.top) return HTTOP; /* Maximize */
+    return 0;
+}
+
 LONG FASTCALL
 DefWndStartSizeMove(PWND Wnd, WPARAM wParam, POINT *capturePoint)
 {
@@ -239,13 +251,15 @@ VOID FASTCALL
 DefWndDoSizeMove(PWND pwnd, WORD wParam)
 {
    MSG msg;
-   RECT sizingRect, mouseRect, origRect, unmodRect;
+   RECT sizingRect, mouseRect, origRect, unmodRect, snapPreviewRect;
+   RECT *frameRect = &sizingRect;
    HDC hdc;
    LONG hittest = (LONG)(wParam & 0x0f);
    PCURICON_OBJECT DragCursor = NULL, OldCursor = NULL;
    POINT minTrack, maxTrack;
    POINT capturePoint, pt;
    ULONG Style, ExStyle;
+   UINT orgSnap = IntGetWindowSnapEdge(pwnd), snap = orgSnap;
    BOOL thickframe;
    BOOL iconic;
    BOOL moved = FALSE;
@@ -262,6 +276,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    iconic = (Style & WS_MINIMIZE) != 0;
 
    if (((Style & WS_MAXIMIZE) && syscommand != SC_MOVE) || !IntIsWindowVisible(pwnd)) return;
+   if ((Style & (WS_MAXIMIZE|WS_CHILD)) == WS_MAXIMIZE) orgSnap = snap = HTTOP;
 
    thickframe = UserHasThickFrameStyle(Style, ExStyle) && !iconic;
 
@@ -285,6 +300,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
    else  /* SC_SIZE */
    {
+      RECTL_vSetEmptyRect(&pwnd->InternalPos.NormalRect); /* CORE-19160 */
       if (!thickframe) return;
       if (hittest && (syscommand != SC_MOUSEMENU))
       {
@@ -400,56 +416,19 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       }
       else if (g_bWindowSnapEnabled && msg.message == WM_LBUTTONUP)
       { // If WindowSnapEnabled: Decide whether to snap before exiting
-         DWORD ExStyleTB, StyleTB;
-         BOOL IsTaskBar;
-
-         // We want to forbid snapping operations on the TaskBar
-         // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
-         ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
-         StyleTB = (Style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-         IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
-                     && (ExStyleTB == WS_EX_TOOLWINDOW);
-         TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", ExStyleTB, StyleTB, IsTaskBar);
-
-         // check for snapping if was moved by caption
-         if (!IsTaskBar && hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
+         if (hittest == HTCAPTION && thickframe && /* Check for snapping if was moved by caption */
+             IntIsSnapAllowedForWindow(pwnd) && (ExStyle & WS_EX_MDICHILD) == 0)
          {
-            RECT snapRect;
-            BOOL doSideSnap = FALSE;
-            UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
-
-            // snap to left
-            if (pt.x <= snapRect.left)
+            UINT wasSnap = IntIsWindowSnapped(pwnd); /* Need the live snap state, not orgSnap nor maximized state */
+            UINT snapTo = iconic ? FALSE : IsSnapActivationPoint(pwnd, pt);
+            if (snapTo)
             {
-               snapRect.right = (snapRect.right - snapRect.left) / 2 + snapRect.left;
-               doSideSnap = TRUE;
-            }
-            // snap to right
-            if (pt.x >= snapRect.right-1)
-            {
-               snapRect.left = (snapRect.right - snapRect.left) / 2 + snapRect.left;
-               doSideSnap = TRUE;
-            }
-
-            if (doSideSnap)
-            {
-               co_WinPosSetWindowPos(pwnd,
-                                     NULL,
-                                     snapRect.left,
-                                     snapRect.top,
-                                     snapRect.right - snapRect.left,
-                                     snapRect.bottom - snapRect.top,
-                                     SWP_NOACTIVATE);
-               pwnd->InternalPos.NormalRect = origRect;
-            }
-            else
-            {
-               // maximize if on dragged to top
-               if (pt.y <= snapRect.top)
-               {
-                  co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-                  pwnd->InternalPos.NormalRect = origRect;
-               }
+                if (DragFullWindows)
+                {
+                    co_IntSnapWindow(pwnd, snapTo);
+                    if (!wasSnap) pwnd->InternalPos.NormalRect = origRect;
+                }
+                snap = snapTo;
             }
          }
          break;
@@ -494,41 +473,66 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
              UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  }
 
-	  if (msg.message == WM_KEYDOWN) UserSetCursorPos(pt.x, pt.y, 0, 0, FALSE);
-	  else
-	  {
-	      RECT newRect = unmodRect;
+      if (msg.message == WM_KEYDOWN)
+      {
+          UserSetCursorPos(pt.x, pt.y, 0, 0, FALSE);
+      }
+      else
+      {
+          RECT newRect = unmodRect;
 
-	      if (!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
+          if (!iconic && !DragFullWindows)
+          {
+              UserDrawMovingFrame(hdc, frameRect, thickframe);
+              frameRect = &sizingRect;
+          }
           if (hittest == HTCAPTION)
           {
               /* Restore window size if it is snapped */
-              if (!RECTL_bIsEmptyRect(&pwnd->InternalPos.NormalRect) &&
-                  !IntEqualRect(&pwnd->InternalPos.NormalRect, &pwnd->rcWindow))
+              RECT *r = &newRect;
+              LONG width, height, capcy, snapTo;
+              if (snap && syscommand == SC_MOVE && !iconic &&
+                  !RECTL_bIsEmptyRect(&pwnd->InternalPos.NormalRect))
               {
-                  UserSetCursorPos(max(0, pwnd->InternalPos.NormalRect.left) + pt.x, pwnd->InternalPos.NormalRect.top + pt.y, 0, 0, FALSE);
+                  *r = pwnd->InternalPos.NormalRect;
+                  origRect = *r; /* Save normal size - it required when window unsnapped from one side and snapped to another holding mouse down */
 
-                  /* Save normal size - it required when window unsnapped from one side and snapped to another holding mouse down */
-                  origRect = pwnd->InternalPos.NormalRect;
+                  /* Try to position the center of the caption where the mouse is horizontally */
+                  capcy = UserGetSystemMetrics((ExStyle & WS_EX_TOPMOST) ? SM_CYSMCAPTION : SM_CYCAPTION); /* No border, close enough */
+                  width = r->right - r->left, height = r->bottom - r->top;
+                  r->left = pt.x - width / 2, r->right = r->left + width;
+                  r->top = mouseRect.top, r->bottom = r->top + height;
+                  if (r->left < mouseRect.left)
+                      r->left = mouseRect.left, r->right = r->left + width;
+                  if ((pwnd->ExStyle & WS_EX_LAYOUTRTL) && r->right > mouseRect.right)
+                      r->left = mouseRect.right - width, r->right = r->left + width;
+                  UserSetCursorPos(pt.x, r->top + capcy / 2, 0, 0, FALSE);
+                  snap = FALSE;
+                  dx = dy = 0; /* Don't offset this move */
+                  if (DragFullWindows)
+                  {
+                      IntSetStyle(pwnd, 0, WS_MAXIMIZE);
+                      IntSetSnapEdge(pwnd, HTNOWHERE);
 
-                  /* Restore from maximized state */
-                  if (Style & WS_MAXIMIZE)
-                  {
-                      co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_RESTORE, 0);
+                      /* Have to move and size it now because we don't want SWP_NOSIZE */
+                      co_WinPosSetWindowPos(pwnd, NULL, r->left, r->top, width, height, SWP_NOACTIVATE);
                   }
-                  /* Restore snapped to left/right place */
-                  else
-                  {
-                      co_WinPosSetWindowPos(pwnd,
-                                            NULL,
-                                            pwnd->InternalPos.NormalRect.left,
-                                            pwnd->InternalPos.NormalRect.top,
-                                            pwnd->InternalPos.NormalRect.right - pwnd->InternalPos.NormalRect.left,
-                                            pwnd->InternalPos.NormalRect.bottom - pwnd->InternalPos.NormalRect.top,
-                                            0);
-                  }
-                  RECTL_vSetEmptyRect(&pwnd->InternalPos.NormalRect);
-                  continue;
+              }
+              else if (!snap && syscommand == SC_MOVE && !iconic)
+              {
+                if ((snapTo = IsSnapActivationPoint(pwnd, pt)) != 0)
+                {
+                   co_IntCalculateSnapPosition(pwnd, snapTo, &snapPreviewRect);
+                   if (DragFullWindows)
+                   {
+                      /* TODO: Show preview of snap */
+                   }
+                   else
+                   {
+                      UserDrawMovingFrame(hdc, frameRect = &snapPreviewRect, thickframe);
+                      continue;
+                   }
+                }
               }
 
               /* regular window moving */
@@ -538,6 +542,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 	      else if (ON_RIGHT_BORDER(hittest)) newRect.right += dx;
 	      if (ON_TOP_BORDER(hittest)) newRect.top += dy;
 	      else if (ON_BOTTOM_BORDER(hittest)) newRect.bottom += dy;
+
 	      capturePoint = pt;
 
               //
@@ -629,8 +634,12 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
        */
       if (OldCursor) UserDereferenceObject(OldCursor);
    }
-   else if ( moved && !DragFullWindows )
-      UserDrawMovingFrame( hdc, &sizingRect, thickframe );
+   else
+   {
+      UINT eraseFinalFrame = moved && !DragFullWindows;
+      if (eraseFinalFrame)
+         UserDrawMovingFrame(hdc, frameRect, thickframe);
+   }
 
    UserReleaseDC(NULL, hdc, FALSE);
 
@@ -654,35 +663,43 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    /* window moved or resized */
    if (moved)
    {
+      UINT forceSizing = !iconic && hittest == HTCAPTION && (!!orgSnap != !!snap);
+      UINT swp = (!forceSizing && hittest == HTCAPTION) ? SWP_NOSIZE : 0;
+
       /* if the moving/resizing isn't canceled call SetWindowPos
        * with the new position or the new size of the window
        */
       if (!((msg.message == WM_KEYDOWN) && (msg.wParam == VK_ESCAPE)) )
       {
-	  /* NOTE: SWP_NOACTIVATE prevents document window activation in Word 6 */
-	  if (!DragFullWindows || iconic )
-	  {
-	    co_WinPosSetWindowPos( pwnd,
-	                           0,
-	                           sizingRect.left,
-	                           sizingRect.top,
-			           sizingRect.right - sizingRect.left,
-			           sizingRect.bottom - sizingRect.top,
-			          ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
-          }
+         /* NOTE: SWP_NOACTIVATE prevents document window activation in Word 6 */
+         if (!DragFullWindows || iconic)
+         {
+            if (snap)
+            {
+               co_IntSnapWindow(pwnd, snap);
+            }
+            else
+            {
+               if (orgSnap && !snap)
+               {
+                  IntSetStyle(pwnd, 0, WS_MAXIMIZE);
+                  IntSetSnapInfo(pwnd, HTNOWHERE, NULL);
+               }
+               co_WinPosSetWindowPos(pwnd, 0, sizingRect.left, sizingRect.top,
+                                     sizingRect.right - sizingRect.left,
+                                     sizingRect.bottom - sizingRect.top, swp);
+            }
+         }
       }
       else
-      { /* restore previous size/position */
-	if ( DragFullWindows )
-	{
-	  co_WinPosSetWindowPos( pwnd,
-	                         0,
-	                         origRect.left,
-	                         origRect.top,
-			         origRect.right - origRect.left,
-			         origRect.bottom - origRect.top,
-			        ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
-        }
+      {
+         /* restore previous size/position */
+         if (orgSnap)
+            co_IntSnapWindow(pwnd, orgSnap);
+         else if (DragFullWindows)
+            co_WinPosSetWindowPos(pwnd, 0, origRect.left, origRect.top,
+                                  origRect.right - origRect.left,
+                                  origRect.bottom - origRect.top, swp);
       }
    }
 

@@ -71,3 +71,32 @@ BOOL FASTCALL IntClientToScreen(PWND,LPPOINT);
 BOOL FASTCALL IntGetWindowRect(PWND,RECTL*);
 BOOL UserHasWindowEdge(DWORD,DWORD);
 VOID UserGetWindowBorders(DWORD,DWORD,SIZE*,BOOL);
+
+UINT FASTCALL IntGetWindowSnapEdge(PWND Wnd);
+VOID FASTCALL co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos);
+VOID FASTCALL co_IntSnapWindow(PWND Wnd, UINT Edge);
+VOID FASTCALL IntSetSnapEdge(PWND Wnd, UINT Edge);
+VOID FASTCALL IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos);
+
+FORCEINLINE VOID
+co_IntUnsnapWindow(PWND w)
+{
+    co_IntSnapWindow(w, 0);
+}
+
+FORCEINLINE UINT
+IntIsWindowSnapped(PWND w)
+{
+    return w->ExStyle2 & (WS_EX2_VERTICALLYMAXIMIZEDLEFT|WS_EX2_VERTICALLYMAXIMIZEDRIGHT);
+}
+
+FORCEINLINE BOOLEAN
+IntIsSnapAllowedForWindow(PWND w)
+{
+    /* We want to forbid snapping operations on the TaskBar and on child windows */
+    /* We use a heuristic for detecting the TaskBar by its typical Style & ExStyle */
+    UINT tbws = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+    UINT tbes = WS_EX_TOOLWINDOW;
+    BOOL istb = (w->style & tbws) == tbws && (w->ExStyle & (tbes|WS_EX_APPWINDOW)) == tbes;
+    return !(w->style & WS_CHILD) && !istb;
+}
