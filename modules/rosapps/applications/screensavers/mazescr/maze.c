@@ -632,7 +632,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     return TRUE;
 }
 
-BOOL WINAPI AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
+INT_PTR WINAPI AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
     switch(message){
     case WM_COMMAND:
@@ -684,7 +684,6 @@ LRESULT CALLBACK ScreenSaverProc(
 
             start_timer(hWnd, solve_delay);
             break;
-
         case 3:
             if (!solve_maze(hWnd))
             {
@@ -696,7 +695,6 @@ LRESULT CALLBACK ScreenSaverProc(
                 start_timer(hWnd, post_solve_delay);
             }
             break;
-
         default:
             initialize_maze();
 
@@ -711,13 +709,11 @@ LRESULT CALLBACK ScreenSaverProc(
             break;
         }
         break;
-
     case WM_DESTROY:  // message: window being destroyed
         DeleteObject(hBrushLiving);
         DeleteObject(hBrushDead);
         ReleaseDC(hWnd, hDC);
         break;
-
     default:          // Passes it on if unproccessed
         return DefScreenSaverProc(hWnd, message, wParam, lParam);
     }
@@ -757,7 +753,7 @@ BOOL WINAPI ScreenSaverConfigureDialog(HWND hWnd, UINT message, WPARAM wparam, L
                     EndDialog(hWnd, TRUE);
                     break;
                 case IDABOUT:
-                    DialogBox(hMainInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hWnd, (DLGPROC)AboutProc);
+                    DialogBox(hMainInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hWnd, AboutProc);
                     break;
             }
         case WM_HSCROLL:
