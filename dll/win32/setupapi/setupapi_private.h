@@ -33,7 +33,6 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winreg.h>
-#include <winspool.h>
 #include <wincon.h>
 
 #include <commdlg.h>
