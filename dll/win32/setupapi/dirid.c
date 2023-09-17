@@ -20,6 +20,8 @@
 
 #include "setupapi_private.h"
 
+#include <winspool.h>
+
 #define MAX_SYSTEM_DIRID DIRID_PRINTPROCESSOR
 #define MIN_CSIDL_DIRID 0x4000
 #define MAX_CSIDL_DIRID 0x403f
