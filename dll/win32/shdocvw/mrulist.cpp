@@ -34,6 +34,7 @@ class CMruClassFactory;
 
 extern "C" void __cxa_pure_virtual(void)
 {
+    ERR("__cxa_pure_virtual\n");
     ::DebugBreak();
 }
 
@@ -129,7 +130,7 @@ public:
     STDMETHODIMP AddData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP FindData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP GetData(UINT iSlot, LPVOID pvData, DWORD cbData) override;
-    STDMETHODIMP QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData) override;
+    STDMETHODIMP QueryInfo(UINT iSlot, UINT *piGotSlot, DWORD *pcbData) override;
     STDMETHODIMP Delete(UINT iSlot) override;
 
     // Non-standard methods
@@ -172,8 +173,7 @@ CMruBase::~CMruBase()
             m_pSlots[iSlot].pvData = ::LocalFree(m_pSlots[iSlot].pvData);
         }
 
-        ::LocalFree(m_pSlots);
-        m_pSlots = NULL;
+        m_pSlots = (SLOTITEMDATA*)::LocalFree(m_pSlots);
     }
 
     ::InterlockedDecrement(&SHDOCVW_refCount);
@@ -371,21 +371,21 @@ STDMETHODIMP CMruBase::GetData(UINT iSlot, LPVOID pvData, DWORD cbData)
         return hr;
 
     if (cbData < pItem->cbData)
-        return 0x8007007A; // FIXME: Magic number
+        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 
     CopyMemory(pvData, pItem->pvData, pItem->cbData);
     return hr;
 }
 
-STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData)
+STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *piGotSlot, DWORD *pcbData)
 {
     UINT iGotSlot;
     HRESULT hr = _GetSlot(iSlot, &iGotSlot);
     if (FAILED(hr))
         return hr;
 
-    if (puSlot)
-        *puSlot = iGotSlot;
+    if (piGotSlot)
+        *piGotSlot = iGotSlot;
 
     if (pcbData)
     {
@@ -604,11 +604,7 @@ public:
 
     ~CMruLongList() override
     {
-        if (m_puSlotData)
-        {
-            ::LocalFree(m_puSlotData);
-            m_puSlotData = NULL;
-        }
+        m_puSlotData = (UINT*)::LocalFree(m_puSlotData);
     }
 };
 
@@ -1067,13 +1063,13 @@ BOOL CMruPidlList::_LoadNodeSlots()
     DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
     if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbNodeSlots, &cbNodeSlots) != ERROR_SUCCESS)
         return FALSE;
-    m_cMaxNodeSlots = m_cSlotRooms;
+    m_cMaxNodeSlots = cbNodeSlots / sizeof(BYTE);
     return TRUE;
 }
 
 void CMruPidlList::_SaveNodeSlots()
 {
-    DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
+    DWORD cbNodeSlots = m_cMaxNodeSlots * sizeof(BYTE);
     SHSetValueW(m_hKey, NULL, L"NodeSlots", REG_BINARY, m_pbNodeSlots, cbNodeSlots);
 }
 
@@ -1126,34 +1122,53 @@ HRESULT CMruPidlList::GetEmptySlot(UINT *pnNodeSlot)
 
 STDMETHODIMP CMruPidlList::InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszSubKey)
 {
+    TRACE("%p -> %u %p %s\n", this, cMRUSize, hKey, debugstr_w(pszSubKey));
+
     HRESULT hr = InitData(cMRUSize, 0, hKey, pszSubKey, NULL);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     hr = _InitNodeSlots();
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     m_hMutex = ::CreateMutexW(NULL, FALSE, L"Shell.CMruPidlList");
     if (!m_hMutex)
+    {
         hr = HRESULT_FROM_WIN32(GetLastError());
+        ERR("0x%08lX\n", hr);
+    }
 
     return hr;
 }
 
 STDMETHODIMP CMruPidlList::UsePidl(LPCITEMIDLIST pidl, UINT *pnNodeSlot)
 {
+    TRACE("%p -> %p %p\n", this, pidl, pnNodeSlot);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     *pnNodeSlot = 0;
 
     CMruNode *pNode;
     hr = GetNode(TRUE, pidl, &pNode);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     hr = pNode->GetNodeSlot(pnNodeSlot);
     if (FAILED(hr))
@@ -1175,17 +1190,25 @@ STDMETHODIMP CMruPidlList::QueryPidl(
     UINT *pnNodeSlots,
     UINT *pcNodeSlots)
 {
+    TRACE("%p -> %p %u %p %p\n", this, pidl, cSlots, pnNodeSlots, pcNodeSlots);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     *pcNodeSlots = 0;
 
     CMruNode *pNode;
     hr = GetNode(FALSE, pidl, &pNode);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     while (pNode && *pcNodeSlots < cSlots)
     {
@@ -1210,10 +1233,15 @@ STDMETHODIMP CMruPidlList::QueryPidl(
 
 STDMETHODIMP CMruPidlList::PruneKids(LPCITEMIDLIST pidl)
 {
+    TRACE("%p -> %p\n", this, pidl);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     if (!_LoadNodeSlots())
         return hr;

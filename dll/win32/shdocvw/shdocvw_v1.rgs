@@ -203,6 +203,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
         }
+        '{42AEDC87-2188-41FD-B9A3-0C966FEABEC1}' = s 'MruPidlList'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
     }
     'Shell.Explorer.1' = s 'Microsoft Web Browser Version 1'
     {

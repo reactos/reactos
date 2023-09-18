@@ -19,10 +19,11 @@
 #include <pseh/pseh2.h>
 
 #define SUBKEY0 L"Software\\MRUListTest"
+#define SUBSUBKEY0 L"Software\\MRUListTest\\0"
 #define TEXT0 L"This is a test."
 #define TEXT1 L"ReactOS rocks!"
 
-static void MRUList_List0(void)
+static void MRUList_DataList_0(void)
 {
     HRESULT hr;
     IMruDataList *pList = NULL;
@@ -64,27 +65,35 @@ static void MRUList_List0(void)
     pList->Release();
 }
 
-static void MRUList_List0_Check(void)
+static INT MRUList_Check(LPCWSTR pszSubKey, LPCWSTR pszValueName, LPCVOID pvData, DWORD cbData)
 {
     BYTE abData[512];
-    DWORD cbData, dwType;
+    LONG error;
+    DWORD dwSize = cbData;
 
-    cbData = sizeof(abData);
-    LONG error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, L"MRUListEx", &dwType, abData, &cbData);
-    ok_long(error, ERROR_SUCCESS);
-    ok_long(dwType, REG_BINARY);
-#if 1
-    ok_int(memcmp(abData, "\x01\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF", 12), 0);
-#else
-    for (DWORD i = 0; i < cbData; ++i)
+    error = SHGetValueW(HKEY_CURRENT_USER, pszSubKey, pszValueName, NULL, abData, &dwSize);
+    if (error != ERROR_SUCCESS)
+        return -999;
+
+#if 0
+    printf("dwSize: %ld\n", dwSize);
+    for (DWORD i = 0; i < dwSize; ++i)
     {
         printf("%02X ", abData[i]);
     }
     printf("\n");
 #endif
+
+    if (dwSize != cbData)
+        return +999;
+
+    if (!pvData)
+        return TRUE;
+
+    return memcmp(abData, pvData, cbData) == 0;
 }
 
-static void MRUList_List1(void)
+static void MRUList_DataList_1(void)
 {
     HRESULT hr;
     IMruDataList *pList = NULL;
@@ -119,27 +128,7 @@ static void MRUList_List1(void)
     pList->Release();
 }
 
-static void MRUList_List1_Check(void)
-{
-    BYTE abData[512];
-    DWORD cbData, dwType;
-
-    cbData = sizeof(abData);
-    LONG error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, L"MRUListEx", &dwType, abData, &cbData);
-    ok_long(error, ERROR_SUCCESS);
-    ok_long(dwType, REG_BINARY);
-#if 1
-    ok_int(memcmp(abData, "\x01\x00\x00\x00\xFF\xFF\xFF\xFF", 8), 0);
-#else
-    for (DWORD i = 0; i < cbData; ++i)
-    {
-        printf("%02X ", abData[i]);
-    }
-    printf("\n");
-#endif
-}
-
-static void MRUList_List2(void)
+static void MRUList_DataList_2(void)
 {
     HRESULT hr;
     IMruDataList *pList = NULL;
@@ -172,27 +161,7 @@ static void MRUList_List2(void)
     pList->Release();
 }
 
-static void MRUList_List2_Check(void)
-{
-    BYTE abData[512];
-    DWORD cbData, dwType;
-
-    cbData = sizeof(abData);
-    LONG error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, L"MRUListEx", &dwType, abData, &cbData);
-    ok_long(error, ERROR_SUCCESS);
-    ok_long(dwType, REG_BINARY);
-#if 1
-    ok_int(memcmp(abData, "\x00\x00\x00\x00\x01\x00\x00\x00\xFF\xFF\xFF\xFF", 12), 0);
-#else
-    for (DWORD i = 0; i < cbData; ++i)
-    {
-        printf("%02X ", abData[i]);
-    }
-    printf("\n");
-#endif
-}
-
-static void MRUList_List(void)
+static void MRUList_DataList(void)
 {
     if (IsWindowsVistaOrGreater())
     {
@@ -209,11 +178,11 @@ static void MRUList_List(void)
     error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, NULL, NULL, NULL, NULL);
     ok_long(error, ERROR_SUCCESS);
 
-    MRUList_List0();
-    MRUList_List0_Check();
+    MRUList_DataList_0();
+    ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x01\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF", 12), TRUE);
 
-    MRUList_List1();
-    MRUList_List1_Check();
+    MRUList_DataList_1();
+    ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x01\x00\x00\x00\xFF\xFF\xFF\xFF", 8), TRUE);
 
     error = SHDeleteValueW(HKEY_CURRENT_USER, SUBKEY0, L"MRUList");
     ok_long(error, ERROR_FILE_NOT_FOUND);
@@ -227,8 +196,8 @@ static void MRUList_List(void)
     error = SHSetValueW(HKEY_CURRENT_USER, SUBKEY0, L"b", REG_BINARY, L"XYZ", 4 * sizeof(WCHAR));
     ok_long(error, ERROR_SUCCESS);
 
-    MRUList_List2();
-    MRUList_List2_Check();
+    MRUList_DataList_2();
+    ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x00\x00\x00\x00\x01\x00\x00\x00\xFF\xFF\xFF\xFF", 12), TRUE);
 
     error = SHDeleteValueW(HKEY_CURRENT_USER, SUBKEY0, L"MRUList");
     ok_long(error, ERROR_FILE_NOT_FOUND);
@@ -238,12 +207,139 @@ static void MRUList_List(void)
     SHDeleteKeyW(HKEY_CURRENT_USER, SUBKEY0);
 }
 
+static void MRUList_PidlList_0(void)
+{
+    HRESULT hr;
+    IMruPidlList *pList = NULL;
+
+    hr = CoCreateInstance(CLSID_MruPidlList, NULL, CLSCTX_INPROC_SERVER,
+                          IID_IMruPidlList, (LPVOID*)&pList);
+    ok_hex(hr, S_OK);
+    if (pList == NULL)
+    {
+        skip("pList was NULL\n");
+        return;
+    }
+
+    LONG error;
+
+    error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, NULL, NULL, NULL, NULL);
+    ok_long(error, ERROR_FILE_NOT_FOUND);
+
+    hr = pList->InitList(32, HKEY_CURRENT_USER, SUBKEY0);
+    ok_hex(hr, S_OK);
+
+    error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, NULL, NULL, NULL, NULL);
+    ok_long(error, ERROR_FILE_NOT_FOUND);
+
+    LPITEMIDLIST pidl1, pidl2;
+    SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl1);
+    SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl2);
+
+    UINT uNodeSlot1 = 0xDEADFACE;
+    hr = pList->UsePidl(pidl1, &uNodeSlot1);
+    ok_hex(uNodeSlot1, 1);
+
+    // "NodeSlot" value
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlot", "\x01\x00\x00\x00", 4), TRUE);
+
+    // "NodeSlots" value (Not "NodeSlot")
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlots", "\x02", 1), TRUE);
+
+    UINT uNodeSlot2 = 0xDEADFACE;
+    hr = pList->UsePidl(pidl2, &uNodeSlot2);
+    ok_hex(uNodeSlot2, 2);
+
+    // "0" value
+    ok_int(MRUList_Check(SUBKEY0, L"0", NULL, 22), TRUE);
+
+    // "MRUListEx" value
+    ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x00\x00\x00\x00\xFF\xFF\xFF\xFF", 8), TRUE);
+
+    // "NodeSlot" value
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlot", "\x01\x00\x00\x00", 4), TRUE);
+
+    // "NodeSlots" value
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlots", "\x02\x02", 2), TRUE);
+
+    // SUBSUBKEY0: "MRUListEx" value
+    ok_int(MRUList_Check(SUBSUBKEY0, L"MRUListEx", "\xFF\xFF\xFF\xFF", 4), TRUE);
+
+    // SUBSUBKEY0: "NodeSlot" value
+    ok_int(MRUList_Check(SUBSUBKEY0, L"NodeSlot", "\x02\x00\x00\x00", 4), TRUE);
+
+    // QueryPidl
+    UINT anNodeSlot[2], cNodeSlots;
+    FillMemory(anNodeSlot, sizeof(anNodeSlot), 0xCC);
+    cNodeSlots = 0xDEAD;
+    hr = pList->QueryPidl(pidl1, _countof(anNodeSlot), anNodeSlot, &cNodeSlots);
+    ok_long(hr, S_OK);
+    ok_int(anNodeSlot[0], 1);
+    ok_int(anNodeSlot[1], 0xCCCCCCCC);
+    ok_int(cNodeSlots, 1);
+
+    hr = pList->PruneKids(pidl1);
+
+    // "MRUListEx" value
+    ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x00\x00\x00\x00\xFF\xFF\xFF\xFF", 8), TRUE);
+
+    // "NodeSlot" value
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlot", "\x01\x00\x00\x00", 4), TRUE);
+
+    // "NodeSlots" value
+    ok_int(MRUList_Check(SUBKEY0, L"NodeSlots", "\x02\x00", 2), TRUE);
+
+    FillMemory(anNodeSlot, sizeof(anNodeSlot), 0xCC);
+    cNodeSlots = 0xBEEF;
+    hr = pList->QueryPidl(pidl1, 0, anNodeSlot, &cNodeSlots);
+    ok_long(hr, E_FAIL);
+    ok_int(anNodeSlot[0], 0xCCCCCCCC);
+    ok_int(anNodeSlot[1], 0xCCCCCCCC);
+    ok_int(cNodeSlots, 0);
+
+    FillMemory(anNodeSlot, sizeof(anNodeSlot), 0xCC);
+    cNodeSlots = 0xDEAD;
+    hr = pList->QueryPidl(pidl1, _countof(anNodeSlot), anNodeSlot, &cNodeSlots);
+    ok_long(hr, S_OK);
+    ok_int(anNodeSlot[0], 1);
+    ok_int(anNodeSlot[1], 0xCCCCCCCC);
+    ok_int(cNodeSlots, 1);
+
+    FillMemory(anNodeSlot, sizeof(anNodeSlot), 0xCC);
+    cNodeSlots = 0xDEAD;
+    hr = pList->QueryPidl(pidl2, _countof(anNodeSlot), anNodeSlot, &cNodeSlots);
+    ok_long(hr, S_FALSE);
+    ok_int(anNodeSlot[0], 1);
+    ok_int(anNodeSlot[1], 0xCCCCCCCC);
+    ok_int(cNodeSlots, 1);
+
+    pList->Release();
+    ILFree(pidl1);
+    ILFree(pidl2);
+}
+
+static void MRUList_PidlList(void)
+{
+    if (IsWindowsVistaOrGreater())
+    {
+        skip("Vista+ doesn't support CLSID_MruPidlList\n");
+        return;
+    }
+
+    SHDeleteKeyW(HKEY_CURRENT_USER, SUBKEY0);
+
+    MRUList_PidlList_0();
+
+    SHDeleteKeyW(HKEY_CURRENT_USER, SUBKEY0);
+}
+
 START_TEST(MRUList)
 {
     HRESULT hr = CoInitialize(NULL);
     ok_hex(hr, S_OK);
 
-    MRUList_List();
+    MRUList_DataList();
+    MRUList_PidlList();
 
     if (SUCCEEDED(hr))
         CoUninitialize();
