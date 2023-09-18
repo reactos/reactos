@@ -1063,13 +1063,13 @@ BOOL CMruPidlList::_LoadNodeSlots()
     DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
     if (SHGetValueW(m_hKey, NULL, L"NodeSlots", NULL, m_pbNodeSlots, &cbNodeSlots) != ERROR_SUCCESS)
         return FALSE;
-    m_cMaxNodeSlots = m_cSlotRooms;
+    m_cMaxNodeSlots = cbNodeSlots / sizeof(BYTE);
     return TRUE;
 }
 
 void CMruPidlList::_SaveNodeSlots()
 {
-    DWORD cbNodeSlots = m_cSlotRooms * sizeof(BYTE);
+    DWORD cbNodeSlots = m_cMaxNodeSlots * sizeof(BYTE);
     SHSetValueW(m_hKey, NULL, L"NodeSlots", REG_BINARY, m_pbNodeSlots, cbNodeSlots);
 }
 
