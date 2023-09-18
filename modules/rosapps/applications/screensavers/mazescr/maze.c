@@ -632,7 +632,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     return TRUE;
 }
 
-INT_PTR WINAPI AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
+INT_PTR CALLBACK AboutProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
     switch(message){
     case WM_COMMAND:
