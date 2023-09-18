@@ -20,10 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
+
+static DWORD d3dpresentationinterval_from_wined3dswapinterval(enum wined3d_swap_interval interval)
+{
+    switch (interval)
+    {
+        case WINED3D_SWAP_INTERVAL_IMMEDIATE:
+            return D3DPRESENT_INTERVAL_IMMEDIATE;
+        case WINED3D_SWAP_INTERVAL_ONE:
+            return D3DPRESENT_INTERVAL_ONE;
+        case WINED3D_SWAP_INTERVAL_TWO:
+            return D3DPRESENT_INTERVAL_TWO;
+        case WINED3D_SWAP_INTERVAL_THREE:
+            return D3DPRESENT_INTERVAL_THREE;
+        case WINED3D_SWAP_INTERVAL_FOUR:
+            return D3DPRESENT_INTERVAL_FOUR;
+        default:
+            ERR("Invalid swap interval %#x.\n", interval);
+        case WINED3D_SWAP_INTERVAL_DEFAULT:
+            return D3DPRESENT_INTERVAL_DEFAULT;
+    }
+}
 
 static inline struct d3d9_swapchain *impl_from_IDirect3DSwapChain9Ex(IDirect3DSwapChain9Ex *iface)
 {
@@ -79,9 +99,7 @@ static ULONG WINAPI d3d9_swapchain_AddRef(IDirect3DSwapChain9Ex *iface)
         if (swapchain->parent_device)
             IDirect3DDevice9Ex_AddRef(swapchain->parent_device);
 
-        wined3d_mutex_lock();
         wined3d_swapchain_incref(swapchain->wined3d_swapchain);
-        wined3d_mutex_unlock();
     }
 
     return refcount;
@@ -105,9 +123,7 @@ static ULONG WINAPI d3d9_swapchain_Release(IDirect3DSwapChain9Ex *iface)
     {
         IDirect3DDevice9Ex *parent_device = swapchain->parent_device;
 
-        wined3d_mutex_lock();
         wined3d_swapchain_decref(swapchain->wined3d_swapchain);
-        wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
         if (parent_device)
@@ -123,7 +139,6 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_swapchain_Present(IDirect3DSwapChai
 {
     struct d3d9_swapchain *swapchain = impl_from_IDirect3DSwapChain9Ex(iface);
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(swapchain->parent_device);
-    HRESULT hr;
 
     TRACE("iface %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p, flags %#x.\n",
             iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect),
@@ -135,12 +150,8 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_swapchain_Present(IDirect3DSwapChai
     if (dirty_region)
         FIXME("Ignoring dirty_region %p.\n", dirty_region);
 
-    wined3d_mutex_lock();
-    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
-            src_rect, dst_rect, dst_window_override, 0, flags);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return wined3d_swapchain_present(swapchain->wined3d_swapchain,
+            src_rect, dst_rect, dst_window_override, swapchain->swap_interval, flags);
 }
 
 static HRESULT WINAPI d3d9_swapchain_GetFrontBufferData(IDirect3DSwapChain9Ex *iface, IDirect3DSurface9 *surface)
@@ -251,13 +262,15 @@ static HRESULT WINAPI d3d9_swapchain_GetPresentParameters(IDirect3DSwapChain9Ex 
 {
     struct d3d9_swapchain *swapchain = impl_from_IDirect3DSwapChain9Ex(iface);
     struct wined3d_swapchain_desc desc;
+    DWORD presentation_interval;
 
     TRACE("iface %p, parameters %p.\n", iface, parameters);
 
     wined3d_mutex_lock();
     wined3d_swapchain_get_desc(swapchain->wined3d_swapchain, &desc);
+    presentation_interval = d3dpresentationinterval_from_wined3dswapinterval(swapchain->swap_interval);
     wined3d_mutex_unlock();
-    present_parameters_from_wined3d_swapchain_desc(parameters, &desc);
+    present_parameters_from_wined3d_swapchain_desc(parameters, &desc, presentation_interval);
 
     return D3D_OK;
 }
@@ -344,19 +357,16 @@ static const struct wined3d_parent_ops d3d9_swapchain_wined3d_parent_ops =
 };
 
 static HRESULT swapchain_init(struct d3d9_swapchain *swapchain, struct d3d9_device *device,
-        struct wined3d_swapchain_desc *desc)
+        struct wined3d_swapchain_desc *desc, unsigned int swap_interval)
 {
     HRESULT hr;
 
     swapchain->refcount = 1;
     swapchain->IDirect3DSwapChain9Ex_iface.lpVtbl = &d3d9_swapchain_vtbl;
+    swapchain->swap_interval = swap_interval;
 
-    wined3d_mutex_lock();
-    hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
-            &d3d9_swapchain_wined3d_parent_ops, &swapchain->wined3d_swapchain);
-    wined3d_mutex_unlock();
-
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
+            &d3d9_swapchain_wined3d_parent_ops, &swapchain->wined3d_swapchain)))
     {
         WARN("Failed to create wined3d swapchain, hr %#x.\n", hr);
         return hr;
@@ -369,7 +379,7 @@ static HRESULT swapchain_init(struct d3d9_swapchain *swapchain, struct d3d9_devi
 }
 
 HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapchain_desc *desc,
-        struct d3d9_swapchain **swapchain)
+        unsigned int swap_interval, struct d3d9_swapchain **swapchain)
 {
     struct d3d9_swapchain *object;
     HRESULT hr;
@@ -377,7 +387,7 @@ HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapcha
     if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    if (FAILED(hr = swapchain_init(object, device, desc)))
+    if (FAILED(hr = swapchain_init(object, device, desc, swap_interval)))
     {
         WARN("Failed to initialize swapchain, hr %#x.\n", hr);
         heap_free(object);

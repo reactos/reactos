@@ -21,7 +21,6 @@
  *
  */
 
-#include "config.h"
 #include "initguid.h"
 #include "d3d9_private.h"
 

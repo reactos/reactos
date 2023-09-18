@@ -1,0 +1,92 @@
+diff --git a/dll/directx/wine/wined3d/surface.c b/dll/directx/wine/wined3d/surface.c
+index 6988d9d6961..52dfb95b38e 100644
+--- a/dll/directx/wine/wined3d/surface.c
++++ b/dll/directx/wine/wined3d/surface.c
+@@ -682,6 +682,25 @@ static void convert_x8r8g8b8_dxt5(const BYTE *src, BYTE *dst,
+     wined3d_dxt5_encode(src, dst, pitch_in, pitch_out, WINED3DFMT_B8G8R8X8_UNORM, w, h);
+ }
+ 
++static void convert_x8r8g8b8_l8(const BYTE *src, BYTE *dst,
++        DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h)
++{
++    unsigned int x, y;
++
++    TRACE("Converting %ux%u pixels, pitches %u %u.\n", w, h, pitch_in, pitch_out);
++
++    for (y = 0; y < h; ++y)
++    {
++        const DWORD *src_line = (const DWORD *)(src + y * pitch_in);
++        BYTE *dst_line = (BYTE *)(dst + y * pitch_out);
++
++        for (x = 0; x < w; ++x)
++        {
++            dst_line[x] = src_line[x] & 0x000000ff;
++        }
++    }
++}
++
+ struct d3dfmt_converter_desc
+ {
+     enum wined3d_format_id from, to;
+diff --git a/dll/directx/wine/wined3d/wined3d_private.h b/dll/directx/wine/wined3d/wined3d_private.h
+index 5083f09f440..1da43bb706d 100644
+--- a/dll/directx/wine/wined3d/wined3d_private.h
++++ b/dll/directx/wine/wined3d/wined3d_private.h
+@@ -5276,6 +5276,13 @@ static inline void wined3d_not_from_cs(struct wined3d_cs *cs)
+ BOOL wined3d_dxtn_init(void) DECLSPEC_HIDDEN;
+ void wined3d_dxtn_free(void) DECLSPEC_HIDDEN;
+ 
++static inline BOOL is_indexed_vertex_blending(const struct wined3d_context *context,
++        const struct wined3d_state *state)
++{
++    return state->render_states[WINED3D_RS_INDEXEDVERTEXBLENDENABLE]
++            && (context->stream_info.use_map & (1 << WINED3D_FFP_BLENDINDICES));
++}
++
+ static inline enum wined3d_material_color_source validate_material_colour_source(WORD use_map,
+         enum wined3d_material_color_source source)
+ {
+diff --git a/sdk/tools/winesync/wined3d_staging/0016-wined3d__Implement_WINED3DFMT_B8G8R8X8_UNORM_to_WINED3DFMT_L8_UNORM_conversion.diff b/sdk/tools/winesync/wined3d_staging/0016-wined3d__Implement_WINED3DFMT_B8G8R8X8_UNORM_to_WINED3DFMT_L8_UNORM_conversion.diff
+new file mode 100644
+index 00000000000..1246998041c
+--- /dev/null
++++ b/sdk/tools/winesync/wined3d_staging/0016-wined3d__Implement_WINED3DFMT_B8G8R8X8_UNORM_to_WINED3DFMT_L8_UNORM_conversion.diff
+@@ -0,0 +1,38 @@
++diff --git a/dll/directx/wine/wined3d/surface.c b/dll/directx/wine/wined3d/surface.c
++index 1beb98e..981d6bf 100644
++--- a/dll/directx/wine/wined3d/surface.c
+++++ b/dll/directx/wine/wined3d/surface.c
++@@ -563,6 +563,25 @@ static void convert_yuy2_r5g6b5(const BYTE *src, BYTE *dst,
++     }
++ }
++ 
+++static void convert_x8r8g8b8_l8(const BYTE *src, BYTE *dst,
+++        DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h)
+++{
+++    unsigned int x, y;
+++
+++    TRACE("Converting %ux%u pixels, pitches %u %u.\n", w, h, pitch_in, pitch_out);
+++
+++    for (y = 0; y < h; ++y)
+++    {
+++        const DWORD *src_line = (const DWORD *)(src + y * pitch_in);
+++        BYTE *dst_line = (BYTE *)(dst + y * pitch_out);
+++
+++        for (x = 0; x < w; ++x)
+++        {
+++            dst_line[x] = src_line[x] & 0x000000ff;
+++        }
+++    }
+++}
+++
++ struct d3dfmt_converter_desc
++ {
++     enum wined3d_format_id from, to;
++@@ -577,6 +596,7 @@ static const struct d3dfmt_converter_desc converters[] =
++     {WINED3DFMT_B8G8R8X8_UNORM, WINED3DFMT_B8G8R8A8_UNORM,  convert_a8r8g8b8_x8r8g8b8},
++     {WINED3DFMT_YUY2,           WINED3DFMT_B8G8R8X8_UNORM,  convert_yuy2_x8r8g8b8},
++     {WINED3DFMT_YUY2,           WINED3DFMT_B5G6R5_UNORM,    convert_yuy2_r5g6b5},
+++    {WINED3DFMT_B8G8R8X8_UNORM, WINED3DFMT_L8_UNORM,        convert_x8r8g8b8_l8},
++ };
++ 
++ static inline const struct d3dfmt_converter_desc *find_converter(enum wined3d_format_id from,

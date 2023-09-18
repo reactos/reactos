@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <math.h>
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
@@ -57,6 +58,7 @@ struct FvfToDecl
 #define DDRAW_NO3D              0x00000008
 #define DDRAW_SCL_DDRAW1        0x00000010
 #define DDRAW_SCL_RECURSIVE     0x00000020
+#define DDRAW_SWAPPED           0x00000040
 #define DDRAW_GDI_FLIP          0x00000040
 
 #define DDRAW_STRIDE_ALIGNMENT  8
@@ -65,6 +67,8 @@ struct FvfToDecl
         | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER \
         | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART \
         | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT)
+
+#define DDRAW_MAX_ACTIVE_LIGHTS 32
 
 enum ddraw_device_state
 {
@@ -97,6 +101,7 @@ struct ddraw
     struct ddraw_surface *primary;
     RECT primary_lock;
     struct wined3d_texture *wined3d_frontbuffer;
+    struct wined3d_texture *gdi_surface;
     struct wined3d_swapchain *wined3d_swapchain;
     HWND swapchain_window;
 
@@ -218,7 +223,7 @@ void ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
         struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
-        const RECT *rect, BOOL read) DECLSPEC_HIDDEN;
+        const RECT *rect, BOOL read, unsigned int swap_interval) DECLSPEC_HIDDEN;
 
 static inline struct ddraw_surface *impl_from_IDirect3DTexture(IDirect3DTexture *iface)
 {
@@ -325,6 +330,7 @@ struct d3d_device
 
     /* Required to keep track which of two available texture blending modes in d3ddevice3 is used */
     BOOL legacyTextureBlending;
+    D3DTEXTUREBLEND texture_map_blend;
 
     D3DMATRIX legacy_projection;
     D3DMATRIX legacy_clipspace;
@@ -346,6 +352,8 @@ struct d3d_device
     D3DMATRIXHANDLE          world, proj, view;
 
     struct wined3d_vec4 user_clip_planes[D3DMAXUSERCLIPPLANES];
+
+    struct wined3d_stateblock *recording;
 };
 
 HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
@@ -391,6 +399,7 @@ struct ddraw_clipper
 
 HRESULT ddraw_clipper_init(struct ddraw_clipper *clipper) DECLSPEC_HIDDEN;
 struct ddraw_clipper *unsafe_impl_from_IDirectDrawClipper(IDirectDrawClipper *iface) DECLSPEC_HIDDEN;
+BOOL ddraw_clipper_is_valid(const struct ddraw_clipper *clipper) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * IDirectDrawPalette implementation structure
@@ -442,7 +451,7 @@ struct d3d_light
     D3DLIGHT2 light;
     D3DLIGHT7 light7;
 
-    DWORD dwLightIndex;
+    DWORD active_light_index;
 
     struct list entry;
 };
@@ -475,6 +484,13 @@ struct d3d_material
 void material_activate(struct d3d_material *material) DECLSPEC_HIDDEN;
 struct d3d_material *d3d_material_create(struct ddraw *ddraw) DECLSPEC_HIDDEN;
 
+enum ddraw_viewport_version
+{
+    DDRAW_VIEWPORT_VERSION_NONE,
+    DDRAW_VIEWPORT_VERSION_1,
+    DDRAW_VIEWPORT_VERSION_2,
+};
+
 /*****************************************************************************
  * IDirect3DViewport - Wraps to D3D7
  *****************************************************************************/
@@ -489,10 +505,10 @@ struct d3d_viewport
     /* If this viewport is active for one device, put the device here */
     struct d3d_device *active_device;
 
-    DWORD                     num_lights;
+    DWORD                     active_lights_count;
     DWORD                     map_lights;
 
-    int                       use_vp2;
+    enum ddraw_viewport_version version;
 
     union
     {
@@ -511,6 +527,7 @@ struct d3d_viewport *unsafe_impl_from_IDirect3DViewport(IDirect3DViewport *iface
 
 /* Helper functions */
 void viewport_activate(struct d3d_viewport *viewport, BOOL ignore_lights) DECLSPEC_HIDDEN;
+void viewport_deactivate(struct d3d_viewport *viewport) DECLSPEC_HIDDEN;
 void d3d_viewport_init(struct d3d_viewport *viewport, struct ddraw *ddraw) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
@@ -544,7 +561,7 @@ struct d3d_execute_buffer *unsafe_impl_from_IDirect3DExecuteBuffer(IDirect3DExec
 
 /* The execute function */
 HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *execute_buffer,
-        struct d3d_device *device, struct d3d_viewport *viewport) DECLSPEC_HIDDEN;
+        struct d3d_device *device) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * IDirect3DVertexBuffer
@@ -647,5 +664,8 @@ struct member_info
 #define DD_STRUCT_COPY_BYSIZE(to,from) DD_STRUCT_COPY_BYSIZE_(to,from,(to)->dwSize,(from)->dwSize)
 
 HRESULT hr_ddraw_from_wined3d(HRESULT hr) DECLSPEC_HIDDEN;
+
+void viewport_alloc_active_light_index(struct d3d_light *light) DECLSPEC_HIDDEN;
+void viewport_free_active_light_index(struct d3d_light *light) DECLSPEC_HIDDEN;
 
 #endif

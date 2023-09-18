@@ -2,6 +2,7 @@
 
 import sys
 import os
+import posixpath
 import string
 import argparse
 import subprocess
@@ -35,7 +36,7 @@ class wine_sync:
             self.reactos_src = input('Please enter the path to the reactos git tree: ')
             self.wine_src = input('Please enter the path to the wine git tree: ')
             self.wine_staging_src = input('Please enter the path to the wine-staging git tree: ')
-            config['repos'] = { 'reactos' : self.reactos_src,
+            config['repos'] = { 'reactos': self.reactos_src,
                                 'wine': self.wine_src,
                                 'wine-staging': self.wine_staging_src }
             with open('winesync.cfg', 'w') as file_output:
@@ -44,6 +45,9 @@ class wine_sync:
         self.wine_repo = pygit2.Repository(self.wine_src)
         self.wine_staging_repo = pygit2.Repository(self.wine_staging_src)
         self.reactos_repo = pygit2.Repository(self.reactos_src)
+
+        # the standard author signature we will use
+        self.winesync_author_signature = pygit2.Signature('winesync', 'ros-dev@reactos.org')
 
         # read the index from the reactos tree
         self.reactos_index = self.reactos_repo.index
@@ -54,45 +58,58 @@ class wine_sync:
         with open(module + '.cfg', 'r') as file_input:
             self.module_cfg = yaml.safe_load(file_input)
 
-        self.staged_patch_dir = os.path.join('sdk', 'tools', 'winesync', self.module + '_staging')
+        self.staged_patch_dir = posixpath.join('sdk', 'tools', 'winesync', self.module + '_staging')
 
     def create_or_checkout_wine_branch(self, wine_tag, wine_staging_tag):
-        wine_branch_name = 'winesync-' + wine_tag + '-' + wine_staging_tag
+        # build the wine branch name
+        wine_branch_name = 'winesync-' + wine_tag
+        if wine_staging_tag:
+            wine_branch_name += '-' + wine_staging_tag
+
         branch = self.wine_repo.lookup_branch(wine_branch_name)
         if branch is None:
             # get our target commits
             wine_target_commit = self.wine_repo.revparse_single(wine_tag)
             if isinstance(wine_target_commit, pygit2.Tag):
                 wine_target_commit = wine_target_commit.target
+            if isinstance(wine_target_commit, pygit2.Commit):
+                wine_target_commit = wine_target_commit.id
 
-            wine_staging_target_commit = self.wine_staging_repo.revparse_single(wine_staging_tag)
-            if isinstance(wine_staging_target_commit, pygit2.Tag):
-                wine_staging_target_commit = wine_staging_target_commit.target
+            # do the same for the wine-staging tree
+            if wine_staging_tag:
+                wine_staging_target_commit = self.wine_staging_repo.revparse_single(wine_staging_tag)
+                if isinstance(wine_staging_target_commit, pygit2.Tag):
+                    wine_staging_target_commit = wine_staging_target_commit.target
+                if isinstance(wine_staging_target_commit, pygit2.Commit):
+                    wine_staging_target_commit = wine_staging_target_commit.id
 
             self.wine_repo.branches.local.create(wine_branch_name, self.wine_repo.revparse_single('HEAD'))
             self.wine_repo.checkout(self.wine_repo.lookup_branch(wine_branch_name))
             self.wine_repo.reset(wine_target_commit, pygit2.GIT_RESET_HARD)
 
             # do the same for the wine-staging tree
-            self.wine_staging_repo.branches.local.create(wine_branch_name, self.wine_staging_repo.revparse_single('HEAD'))
-            self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch(wine_branch_name))
-            self.wine_staging_repo.reset(wine_staging_target_commit, pygit2.GIT_RESET_HARD)
+            if wine_staging_tag:
+                self.wine_staging_repo.branches.local.create(wine_branch_name, self.wine_staging_repo.revparse_single('HEAD'))
+                self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch(wine_branch_name))
+                self.wine_staging_repo.reset(wine_staging_target_commit, pygit2.GIT_RESET_HARD)
 
-            # run the wine-staging script
-            subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am'])
+                # run the wine-staging script
+                if subprocess.call(['python', self.wine_staging_src + '/staging/patchinstall.py', 'DESTDIR=' + self.wine_src, '--all', '--backend=git-am', '--no-autoconf']):
+                    # the new script failed (it doesn't exist?), try the old one
+                    subprocess.call(['bash', '-c', self.wine_staging_src + '/patches/patchinstall.sh DESTDIR=' + self.wine_src + ' --all --backend=git-am --no-autoconf'])
 
-            # delete the branch we created
-            self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch('master'))
-            self.wine_staging_repo.branches.delete(wine_branch_name)
+                # delete the branch we created
+                self.wine_staging_repo.checkout(self.wine_staging_repo.lookup_branch('master'))
+                self.wine_staging_repo.branches.delete(wine_branch_name)
         else:
             self.wine_repo.checkout(self.wine_repo.lookup_branch(wine_branch_name))
 
         return wine_branch_name
 
-    # helper function for resolving wine tree path to reactos one
-    # Note : it doesn't care about the fact that the file actually exists or not
+    # Helper function for resolving wine tree path to reactos one
+    # Note: it doesn't care about the fact that the file actually exists or not
     def wine_to_reactos_path(self, wine_path):
-        if wine_path in self.module_cfg['files']:
+        if self.module_cfg['files'] and (wine_path in self.module_cfg['files']):
             # we have a direct mapping
             return self.module_cfg['files'][wine_path]
 
@@ -100,13 +117,10 @@ class wine_sync:
             # root files should have a direct mapping
             return None
 
-        if self.module_cfg['directories'] is None:
-            return None
-
         wine_dir, wine_file = os.path.split(wine_path)
-        if wine_dir in self.module_cfg['directories']:
+        if self.module_cfg['directories'] and (wine_dir in self.module_cfg['directories']):
             # we have a mapping for the directory
-            return os.path.join(self.module_cfg['directories'][wine_dir], wine_file)
+            return posixpath.join(self.module_cfg['directories'][wine_dir], wine_file)
 
         # no match
         return None
@@ -133,7 +147,7 @@ class wine_sync:
                 # check if we should care
                 new_reactos_path = self.wine_to_reactos_path(delta.new_file.path)
                 if not new_reactos_path is None:
-                    warning_message += 'file ' + delta.new_file.path + ' is added to the wine tree !\n'
+                    warning_message += 'file ' + delta.new_file.path + ' is added to the wine tree!\n'
                     old_reactos_path = '/dev/null'
                 else:
                     old_reactos_path = None
@@ -141,12 +155,12 @@ class wine_sync:
                 # check if we should care
                 old_reactos_path = self.wine_to_reactos_path(delta.old_file.path)
                 if not old_reactos_path is None:
-                    warning_message += 'file ' + delta.old_file.path + ' is removed from the wine tree !\n'
+                    warning_message += 'file ' + delta.old_file.path + ' is removed from the wine tree!\n'
                     new_reactos_path = '/dev/null'
                 else:
                     new_reactos_path = None
             elif delta.new_file.path.endswith('Makefile.in'):
-                warning_message += 'file ' + delta.new_file.path + ' was modified !\n'
+                warning_message += 'file ' + delta.new_file.path + ' was modified!\n'
                 # no need to warn that those are ignored, we just did.
                 continue
             else:
@@ -210,7 +224,7 @@ class wine_sync:
         print('Applied patches from wine commit ' + str(wine_commit.id))
 
         if ignored_files:
-            warning_message += 'WARNING : some files were ignored: ' + ' '.join(ignored_files) + '\n'
+            warning_message += 'WARNING: some files were ignored: ' + ' '.join(ignored_files) + '\n'
 
         if not in_staging:
             self.module_cfg['tags']['wine'] = str(wine_commit.id)
@@ -224,7 +238,7 @@ class wine_sync:
                 os.mkdir(os.path.join(self.reactos_src, self.staged_patch_dir))
             with open(patch_path, 'w') as file_output:
                 file_output.write(complete_patch)
-            self.reactos_index.add(os.path.join(self.staged_patch_dir, patch_file_name))
+            self.reactos_index.add(posixpath.join(self.staged_patch_dir, patch_file_name))
 
         self.reactos_index.write()
 
@@ -234,8 +248,9 @@ class wine_sync:
         else:
             commit_msg += f'wine commit id {str(wine_commit.id)} by {wine_commit.author.name} <{wine_commit.author.email}>'
 
-        self.reactos_repo.create_commit('HEAD',
-            pygit2.Signature('winesync', 'ros-dev@reactos.org'),
+        self.reactos_repo.create_commit(
+            'HEAD',
+            self.winesync_author_signature,
             self.reactos_repo.default_signature,
             commit_msg,
             self.reactos_index.write_tree(),
@@ -260,7 +275,7 @@ class wine_sync:
 
     def revert_staged_patchset(self):
         # revert all of this in one commit
-        staged_patch_dir_path = os.path.join(self.reactos_src, self.staged_patch_dir)
+        staged_patch_dir_path = posixpath.join(self.reactos_src, self.staged_patch_dir)
         if not os.path.isdir(staged_patch_dir_path):
             return True
 
@@ -275,26 +290,31 @@ class wine_sync:
 
             with open(patch_path, 'rb') as patch_file:
                 try:
-                    subprocess.run(['git', '-C', self.reactos_src, 'apply', '-R', '--reject'], stdin=patch_file, check=True)
+                    subprocess.run(['git', '-C', self.reactos_src, 'apply', '-R', '--ignore-whitespace', '--reject'], stdin=patch_file, check=True)
                 except subprocess.CalledProcessError as err:
                     print(f'Error while reverting patch {patch_file_name}')
                     print('Please check, remove the offending patch with git rm, and relaunch this script')
                     return False
 
-            self.reactos_index.remove(os.path.join(self.staged_patch_dir, patch_file_name))
+            self.reactos_index.remove(posixpath.join(self.staged_patch_dir, patch_file_name))
             self.reactos_index.write()
             os.remove(patch_path)
 
         if not has_patches:
             return True
 
-        self.reactos_index.add_all([f for f in self.module_cfg['files'].values()])
-        self.reactos_index.add_all([f'{d}/*.*' for d in self.module_cfg['directories'].values()])
+        # Note: these path lists may be empty or None, in which case
+        # we should not call index.add_all(), otherwise we would add
+        # any untracked file present in the repository.
+        if self.module_cfg['files']:
+            self.reactos_index.add_all([f for f in self.module_cfg['files'].values()])
+        if self.module_cfg['directories']:
+            self.reactos_index.add_all([f'{d}/*.*' for d in self.module_cfg['directories'].values()])
         self.reactos_index.write()
 
         self.reactos_repo.create_commit(
             'HEAD',
-            self.reactos_repo.default_signature,
+            self.winesync_author_signature,
             self.reactos_repo.default_signature,
             f'[WINESYNC]: revert wine-staging patchset for {self.module}',
             self.reactos_index.write_tree(),
@@ -306,16 +326,18 @@ class wine_sync:
         wine_target_commit = self.wine_repo.revparse_single(wine_tag)
         if isinstance(wine_target_commit, pygit2.Tag):
             wine_target_commit = wine_target_commit.target
+        if isinstance(wine_target_commit, pygit2.Commit):
+            wine_target_commit = wine_target_commit.id
         # print(f'wine target commit is {wine_target_commit}')
 
         # get the wine commit id where we left
         in_staging = False
         wine_last_sync = self.wine_repo.revparse_single(self.module_cfg['tags']['wine'])
-        if (isinstance(wine_last_sync, pygit2.Tag)):
+        if isinstance(wine_last_sync, pygit2.Tag):
             if not self.revert_staged_patchset():
                 return
             wine_last_sync = wine_last_sync.target
-        if (isinstance(wine_last_sync, pygit2.Commit)):
+        if isinstance(wine_last_sync, pygit2.Commit):
             wine_last_sync = wine_last_sync.id
 
         # create a branch to keep things clean
@@ -358,7 +380,7 @@ class wine_sync:
             self.reactos_index.write()
             self.reactos_repo.create_commit(
                 'HEAD',
-                self.reactos_repo.default_signature,
+                self.winesync_author_signature,
                 self.reactos_repo.default_signature,
                 f'[WINESYNC]: {self.module} is now in sync with wine-staging {wine_tag}',
                 self.reactos_index.write_tree(),
@@ -368,9 +390,9 @@ class wine_sync:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('module', help='The module you want to sync. <module>.cfg must exist in the current directory')
-    parser.add_argument('wine_tag', help='The wine tag or commit id to sync to')
-    parser.add_argument('wine_staging_tag', help='The wine staging tag or commit id to pick wine staged patches from')
+    parser.add_argument('module', help='The module you want to sync. <module>.cfg must exist in the current directory.')
+    parser.add_argument('wine_tag', help='The wine tag or commit id to sync to.')
+    parser.add_argument('wine_staging_tag', nargs='?', default=None, help='The optional wine staging tag or commit id to pick wine staged patches from.')
 
     args = parser.parse_args()
 

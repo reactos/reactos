@@ -1,0 +1,989 @@
+/*
+ * Copyright 2016 Nikolay Sivov for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "dwrite_2.idl";
+
+interface IDWriteFontFaceReference;
+interface IDWriteFontFaceReference1;
+interface IDWriteFontFace3;
+interface IDWriteFontSet;
+interface IDWriteFontDownloadQueue;
+interface IDWriteFontFace5;
+interface IDWriteFontList2;
+
+cpp_quote("#ifndef _WINGDI_")
+/* already defined in wingdi.h but needed for WIDL */
+typedef struct FONTSIGNATURE FONTSIGNATURE;
+cpp_quote("#endif /* _WINGDI_ */")
+
+typedef enum DWRITE_LOCALITY
+{
+    DWRITE_LOCALITY_REMOTE,
+    DWRITE_LOCALITY_PARTIAL,
+    DWRITE_LOCALITY_LOCAL
+} DWRITE_LOCALITY;
+
+typedef enum DWRITE_RENDERING_MODE1
+{
+    DWRITE_RENDERING_MODE1_DEFAULT,
+    DWRITE_RENDERING_MODE1_ALIASED,
+    DWRITE_RENDERING_MODE1_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE1_GDI_NATURAL,
+    DWRITE_RENDERING_MODE1_NATURAL,
+    DWRITE_RENDERING_MODE1_NATURAL_SYMMETRIC,
+    DWRITE_RENDERING_MODE1_OUTLINE,
+    DWRITE_RENDERING_MODE1_NATURAL_SYMMETRIC_DOWNSAMPLED
+} DWRITE_RENDERING_MODE1;
+
+typedef enum DWRITE_FONT_PROPERTY_ID
+{
+    DWRITE_FONT_PROPERTY_ID_NONE,
+    DWRITE_FONT_PROPERTY_ID_FAMILY_NAME,
+    DWRITE_FONT_PROPERTY_ID_PREFERRED_FAMILY_NAME,
+    DWRITE_FONT_PROPERTY_ID_FACE_NAME,
+    DWRITE_FONT_PROPERTY_ID_FULL_NAME,
+    DWRITE_FONT_PROPERTY_ID_WIN32_FAMILY_NAME,
+    DWRITE_FONT_PROPERTY_ID_POSTSCRIPT_NAME,
+    DWRITE_FONT_PROPERTY_ID_DESIGN_SCRIPT_LANGUAGE_TAG,
+    DWRITE_FONT_PROPERTY_ID_SUPPORTED_SCRIPT_LANGUAGE_TAG,
+    DWRITE_FONT_PROPERTY_ID_SEMANTIC_TAG,
+    DWRITE_FONT_PROPERTY_ID_WEIGHT,
+    DWRITE_FONT_PROPERTY_ID_STRETCH,
+    DWRITE_FONT_PROPERTY_ID_STYLE,
+    DWRITE_FONT_PROPERTY_ID_TOTAL
+} DWRITE_FONT_PROPERTY_ID;
+
+typedef struct DWRITE_FONT_PROPERTY
+{
+    DWRITE_FONT_PROPERTY_ID propertyId;
+    WCHAR const *propertyValue;
+    WCHAR const *localeName;
+} DWRITE_FONT_PROPERTY;
+
+typedef enum DWRITE_FONT_AXIS_TAG
+{
+    DWRITE_FONT_AXIS_TAG_WEIGHT       = 0x74686777, /* 'wght' */
+    DWRITE_FONT_AXIS_TAG_WIDTH        = 0x68746477, /* 'wdth' */
+    DWRITE_FONT_AXIS_TAG_SLANT        = 0x746e6c73, /* 'slnt' */
+    DWRITE_FONT_AXIS_TAG_OPTICAL_SIZE = 0x7a73706f, /* 'opsz' */
+    DWRITE_FONT_AXIS_TAG_ITALIC       = 0x6c617469, /* 'ital' */
+} DWRITE_FONT_AXIS_TAG;
+
+typedef enum DWRITE_FONT_SOURCE_TYPE
+{
+    DWRITE_FONT_SOURCE_TYPE_UNKNOWN,
+    DWRITE_FONT_SOURCE_TYPE_PER_MACHINE,
+    DWRITE_FONT_SOURCE_TYPE_PER_USER,
+    DWRITE_FONT_SOURCE_TYPE_APPX_PACKAGE,
+    DWRITE_FONT_SOURCE_TYPE_REMOTE_FONT_PROVIDER
+} DWRITE_FONT_SOURCE_TYPE;
+
+typedef struct DWRITE_FONT_AXIS_VALUE
+{
+    DWRITE_FONT_AXIS_TAG axisTag;
+    FLOAT value;
+} DWRITE_FONT_AXIS_VALUE;
+
+typedef struct DWRITE_FONT_AXIS_RANGE
+{
+    DWRITE_FONT_AXIS_TAG axisTag;
+    FLOAT minValue;
+    FLOAT maxValue;
+} DWRITE_FONT_AXIS_RANGE;
+
+typedef enum DWRITE_AUTOMATIC_FONT_AXES
+{
+    DWRITE_AUTOMATIC_FONT_AXES_NONE,
+    DWRITE_AUTOMATIC_FONT_AXES_OPTICAL_SIZE,
+} DWRITE_AUTOMATIC_FONT_AXES;
+
+typedef enum DWRITE_FONT_AXIS_ATTRIBUTES
+{
+    DWRITE_FONT_AXIS_ATTRIBUTES_NONE,
+    DWRITE_FONT_AXIS_ATTRIBUTES_VARIABLE,
+    DWRITE_FONT_AXIS_ATTRIBUTES_HIDDEN,
+} DWRITE_FONT_AXIS_ATTRIBUTES;
+
+typedef enum DWRITE_FONT_FAMILY_MODEL
+{
+    DWRITE_FONT_FAMILY_MODEL_TYPOGRAPHIC,
+    DWRITE_FONT_FAMILY_MODEL_WEIGHT_STRETCH_STYLE,
+} DWRITE_FONT_FAMILY_MODEL;
+
+[
+    local,
+    object,
+    uuid(b06fe5b9-43ec-4393-881b-dbe4dc72fda7)
+]
+interface IDWriteFontDownloadListener : IUnknown
+{
+    void DownloadCompleted(IDWriteFontDownloadQueue *queue, IUnknown *context, HRESULT result);
+}
+
+[
+    local,
+    object,
+    uuid(b71e6052-5aea-4fa3-832e-f60d431f7e91)
+]
+interface IDWriteFontDownloadQueue : IUnknown
+{
+    HRESULT AddListener(IDWriteFontDownloadListener *listener, UINT32 *token);
+    HRESULT RemoveListener(UINT32 token);
+    BOOL IsEmpty();
+    HRESULT BeginDownload(IUnknown *context);
+    HRESULT CancelDownload();
+    UINT64 GetGenerationCount();
+}
+
+[
+    local,
+    object,
+    uuid(b7924baa-391b-412a-8c5c-e44cc2d867dc)
+]
+interface IDWriteRenderingParams3 : IDWriteRenderingParams2
+{
+    DWRITE_RENDERING_MODE1 GetRenderingMode1();
+}
+
+[
+    local,
+    object,
+    uuid(cfee3140-1257-47ca-8b85-31bfcf3f2d0e)
+]
+interface IDWriteStringList : IUnknown
+{
+    UINT32 GetCount();
+    HRESULT GetLocaleNameLength(UINT32 index, UINT32 *length);
+    HRESULT GetLocaleName(UINT32 index, WCHAR *name, UINT32 size);
+    HRESULT GetStringLength(UINT32 index, UINT32 *length);
+    HRESULT GetString(UINT32 index, WCHAR *string, UINT32 size);
+}
+
+[
+    local,
+    object,
+    uuid(53585141-d9f8-4095-8321-d73cf6bd116b)
+]
+interface IDWriteFontSet : IUnknown
+{
+    UINT32 GetFontCount();
+    HRESULT GetFontFaceReference(UINT32 index, IDWriteFontFaceReference **reference);
+    HRESULT FindFontFaceReference(IDWriteFontFaceReference *reference,
+        UINT32 *index, BOOL *exists);
+    HRESULT FindFontFace(IDWriteFontFace *fontface, UINT32 *index, BOOL *exists);
+    HRESULT GetPropertyValues__(DWRITE_FONT_PROPERTY_ID id, IDWriteStringList **values);
+    HRESULT GetPropertyValues_(DWRITE_FONT_PROPERTY_ID id,
+        WCHAR const *preferred_locales, IDWriteStringList **values);
+    HRESULT GetPropertyValues(UINT32 index, DWRITE_FONT_PROPERTY_ID id, BOOL *exists,
+        IDWriteLocalizedStrings **values);
+    HRESULT GetPropertyOccurrenceCount(DWRITE_FONT_PROPERTY const *property, UINT32 *count);
+    HRESULT GetMatchingFonts_(WCHAR const *family, DWRITE_FONT_WEIGHT weight, DWRITE_FONT_STRETCH stretch,
+        DWRITE_FONT_STYLE style, IDWriteFontSet **fontset);
+    HRESULT GetMatchingFonts(DWRITE_FONT_PROPERTY const *props, UINT32 count, IDWriteFontSet **fontset);
+}
+
+[
+    local,
+    object,
+    uuid(1f803a76-6871-48e8-987f-b975551c50f2)
+]
+interface IDWriteFontResource : IUnknown
+{
+    HRESULT GetFontFile(IDWriteFontFile **fontfile);
+    UINT32 GetFontFaceIndex();
+    UINT32 GetFontAxisCount();
+    HRESULT GetDefaultFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE const *values,
+        UINT32 num_values);
+    HRESULT GetFontAxisRanges(
+        DWRITE_FONT_AXIS_RANGE const *ranges,
+        UINT32 num_ranges);
+    DWRITE_FONT_AXIS_ATTRIBUTES GetFontAxisAttributes(
+        UINT32 axis);
+    HRESULT GetAxisNames(
+        UINT32 axis,
+        IDWriteLocalizedStrings **names);
+    UINT32 GetAxisValueNameCount(
+        UINT32 axis);
+    HRESULT GetAxisValueNames(
+        UINT32 axis,
+        UINT32 axis_value,
+        DWRITE_FONT_AXIS_RANGE *axis_range,
+        IDWriteLocalizedStrings **names);
+    BOOL HasVariations();
+    HRESULT CreateFontFace(
+        DWRITE_FONT_SIMULATIONS simulations,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        IDWriteFontFace5 **fontface);
+    HRESULT CreateFontFaceReference(
+        DWRITE_FONT_SIMULATIONS simulations,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        IDWriteFontFaceReference1 **reference);
+}
+
+[
+    local,
+    object,
+    uuid(7e9fda85-6c92-4053-bc47-7ae3530db4d3)
+]
+interface IDWriteFontSet1 : IDWriteFontSet
+{
+    HRESULT GetMatchingFonts(
+        DWRITE_FONT_PROPERTY const *property,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        IDWriteFontSet1 **fontset);
+    HRESULT GetFirstFontResources(IDWriteFontSet1 **fontset);
+    HRESULT GetFilteredFonts__(
+        UINT32 const *indices,
+        UINT32 num_indices,
+        IDWriteFontSet1 **fontset);
+    HRESULT GetFilteredFonts_(
+        DWRITE_FONT_AXIS_RANGE const *axis_ranges,
+        UINT32 num_ranges,
+        BOOL select_any_range,
+        IDWriteFontSet1 **fontset);
+    HRESULT GetFilteredFonts(
+        DWRITE_FONT_PROPERTY const *props,
+        UINT32 num_properties,
+        BOOL select_any_property,
+        IDWriteFontSet1 **fontset);
+    HRESULT GetFilteredFontIndices_(
+        DWRITE_FONT_AXIS_RANGE const *ranges,
+        UINT32 num_ranges,
+        BOOL select_any_range,
+        UINT32 *indices,
+        UINT32 num_indices,
+        UINT32 *actual_num_indices);
+    HRESULT GetFilteredFontIndices(
+        DWRITE_FONT_PROPERTY const *props,
+        UINT32 num_properties,
+        BOOL select_any_range,
+        UINT32 *indices,
+        UINT32 num_indices,
+        UINT32 *actual_num_indices);
+    HRESULT GetFontAxisRanges_(
+        UINT32 font_index,
+        DWRITE_FONT_AXIS_RANGE *axis_ranges,
+        UINT32 num_ranges,
+        UINT32 *actual_num_ranges);
+    HRESULT GetFontAxisRanges(
+        DWRITE_FONT_AXIS_RANGE *axis_ranges,
+        UINT32 num_ranges,
+        UINT32 *actual_num_ranges);
+    HRESULT GetFontFaceReference(
+        UINT32 index,
+        IDWriteFontFaceReference1 **reference);
+    HRESULT CreateFontResource(
+        UINT32 index,
+        IDWriteFontResource **resource);
+    HRESULT CreateFontFace(
+        UINT32 index,
+        IDWriteFontFace5 **fontface);
+    DWRITE_LOCALITY GetFontLocality(UINT32 index);
+}
+
+[
+    local,
+    object,
+    uuid(29748ed6-8c9c-4a6a-be0b-d912e8538944)
+]
+interface IDWriteFont3 : IDWriteFont2
+{
+    HRESULT CreateFontFace(IDWriteFontFace3 **fontface);
+    BOOL Equals(IDWriteFont *font);
+    HRESULT GetFontFaceReference(IDWriteFontFaceReference **reference);
+    BOOL HasCharacter(UINT32 character);
+    DWRITE_LOCALITY GetLocality();
+}
+
+[
+    local,
+    object,
+    uuid(da20d8ef-812a-4c43-9802-62ec4abd7adf)
+]
+interface IDWriteFontFamily1 : IDWriteFontFamily
+{
+    DWRITE_LOCALITY GetFontLocality(UINT32 index);
+    HRESULT GetFont(UINT32 index, IDWriteFont3 **font);
+    HRESULT GetFontFaceReference(UINT32 index, IDWriteFontFaceReference **reference);
+}
+
+[
+    local,
+    object,
+    uuid(3ed49e77-a398-4261-b9cf-c126c2131ef3)
+]
+interface IDWriteFontFamily2 : IDWriteFontFamily1
+{
+    HRESULT GetMatchingFonts(
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        IDWriteFontList2 **fontlist);
+    HRESULT GetFontSet(IDWriteFontSet1 **fontset);
+}
+
+[
+    local,
+    object,
+    uuid(53585141-d9f8-4095-8321-d73cf6bd116c)
+]
+interface IDWriteFontCollection1 : IDWriteFontCollection
+{
+    HRESULT GetFontSet(IDWriteFontSet **fontset);
+    HRESULT GetFontFamily(UINT32 index, IDWriteFontFamily1 **family);
+}
+
+[
+    local,
+    object,
+    uuid(514039c6-4617-4064-bf8b-92ea83e506e0)
+]
+interface IDWriteFontCollection2 : IDWriteFontCollection1
+{
+    HRESULT GetFontFamily(
+        UINT32 index,
+        IDWriteFontFamily2 **family);
+    HRESULT GetMatchingFonts(
+        const WCHAR *familyname,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        IDWriteFontList2 **fontlist);
+    DWRITE_FONT_FAMILY_MODEL GetFontFamilyModel();
+    HRESULT GetFontSet(IDWriteFontSet1 **fontset);
+}
+
+[
+    local,
+    object,
+    uuid(a4d055a6-f9e3-4e25-93b7-9e309f3af8e9)
+]
+interface IDWriteFontCollection3 : IDWriteFontCollection2
+{
+    HANDLE GetExpirationEvent();
+}
+
+[
+    local,
+    object,
+    uuid(5e7fa7ca-dde3-424c-89f0-9fcd6fed58cd)
+]
+interface IDWriteFontFaceReference : IUnknown
+{
+    HRESULT CreateFontFace(IDWriteFontFace3 **fontface);
+    HRESULT CreateFontFaceWithSimulations(DWRITE_FONT_SIMULATIONS simulations,
+        IDWriteFontFace3 **fontface);
+    BOOL Equals(IDWriteFontFaceReference *reference);
+    UINT32 GetFontFaceIndex();
+    DWRITE_FONT_SIMULATIONS GetSimulations();
+    HRESULT GetFontFile(IDWriteFontFile **fontfile);
+    UINT64 GetLocalFileSize();
+    UINT64 GetFileSize();
+    HRESULT GetFileTime(FILETIME *writetime);
+    DWRITE_LOCALITY GetLocality();
+    HRESULT EnqueueFontDownloadRequest();
+    HRESULT EnqueueCharacterDownloadRequest(WCHAR const *chars, UINT32 count);
+    HRESULT EnqueueGlyphDownloadRequest(UINT16 const *glyphs, UINT32 count);
+    HRESULT EnqueueFileFragmentDownloadRequest(UINT64 offset, UINT64 size);
+}
+
+[
+    local,
+    object,
+    uuid(c081fe77-2fd1-41ac-a5a3-34983c4ba61a)
+]
+interface IDWriteFontFaceReference1 : IDWriteFontFaceReference
+{
+    HRESULT CreateFontFace(IDWriteFontFace5 **fontface);
+    UINT32 GetFontAxisValueCount();
+    HRESULT GetFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE *values,
+        UINT32 num_values);
+}
+
+[
+    local,
+    object,
+    uuid(da20d8ef-812a-4c43-9802-62ec4abd7ade)
+]
+interface IDWriteFontList1 : IDWriteFontList
+{
+    DWRITE_LOCALITY GetFontLocality(UINT32 index);
+    HRESULT GetFont(UINT32 index, IDWriteFont3 **font);
+    HRESULT GetFontFaceReference(UINT32 index, IDWriteFontFaceReference **reference);
+}
+
+[
+    local,
+    object,
+    uuid(c0763a34-77af-445a-b735-08c37b0a5bf5)
+]
+interface IDWriteFontList2 : IDWriteFontList1
+{
+    HRESULT GetFontSet(IDWriteFontSet1 **fontset);
+}
+
+[
+    local,
+    object,
+    uuid(dc7ead19-e54c-43af-b2da-4e2b79ba3f7f)
+]
+interface IDWriteFontSet2 : IDWriteFontSet1
+{
+    HANDLE GetExpirationEvent();
+}
+
+[
+    local,
+    object,
+    uuid(7c073ef2-a7f4-4045-8c32-8ab8ae640f90)
+]
+interface IDWriteFontSet3 : IDWriteFontSet2
+{
+    DWRITE_FONT_SOURCE_TYPE GetFontSourceType(UINT32 index);
+    UINT32 GetFontSourceNameLength(UINT32 index);
+    HRESULT GetFontSourceName(UINT32 index, WCHAR *buffer, UINT32 buffer_size);
+}
+
+[
+    local,
+    object,
+    uuid(d37d7598-09be-4222-a236-2081341cc1f2)
+]
+interface IDWriteFontFace3 : IDWriteFontFace2
+{
+    HRESULT GetFontFaceReference(IDWriteFontFaceReference **reference);
+    void GetPanose(DWRITE_PANOSE *panose);
+    DWRITE_FONT_WEIGHT GetWeight();
+    DWRITE_FONT_STRETCH GetStretch();
+    DWRITE_FONT_STYLE GetStyle();
+    HRESULT GetFamilyNames(IDWriteLocalizedStrings **names);
+    HRESULT GetFaceNames(IDWriteLocalizedStrings **names);
+    HRESULT GetInformationalStrings(DWRITE_INFORMATIONAL_STRING_ID stringid,
+        IDWriteLocalizedStrings **strings,
+        BOOL *exists);
+    BOOL HasCharacter(UINT32 character);
+    HRESULT GetRecommendedRenderingMode(
+        FLOAT emsize,
+        FLOAT dpi_x,
+        FLOAT dpi_y,
+        DWRITE_MATRIX const *transform,
+        BOOL is_sideways,
+        DWRITE_OUTLINE_THRESHOLD threshold,
+        DWRITE_MEASURING_MODE measuring_mode,
+        IDWriteRenderingParams *params,
+        DWRITE_RENDERING_MODE1 *rendering_mode,
+        DWRITE_GRID_FIT_MODE *gridfit_mode);
+    BOOL IsCharacterLocal(UINT32 character);
+    BOOL IsGlyphLocal(UINT16 glyph);
+    HRESULT AreCharactersLocal(WCHAR const *characters,
+        UINT32 count, BOOL enqueue_if_not, BOOL *are_local);
+    HRESULT AreGlyphsLocal(UINT16 const *glyphs, UINT32 count,
+        BOOL enqueue_if_not, BOOL *are_local);
+}
+
+
+typedef struct DWRITE_LINE_METRICS1
+{
+    UINT32 length;
+    UINT32 trailingWhitespaceLength;
+    UINT32 newlineLength;
+    FLOAT height;
+    FLOAT baseline;
+    BOOL isTrimmed;
+    FLOAT leadingBefore;
+    FLOAT leadingAfter;
+} DWRITE_LINE_METRICS1;
+
+typedef enum DWRITE_FONT_LINE_GAP_USAGE
+{
+    DWRITE_FONT_LINE_GAP_USAGE_DEFAULT,
+    DWRITE_FONT_LINE_GAP_USAGE_DISABLED,
+    DWRITE_FONT_LINE_GAP_USAGE_ENABLED
+} DWRITE_FONT_LINE_GAP_USAGE;
+
+typedef struct DWRITE_LINE_SPACING
+{
+    DWRITE_LINE_SPACING_METHOD method;
+    FLOAT height;
+    FLOAT baseline;
+    FLOAT leadingBefore;
+    DWRITE_FONT_LINE_GAP_USAGE fontLineGapUsage;
+} DWRITE_LINE_SPACING;
+
+[
+    local,
+    object,
+    uuid(f67e0edd-9e3d-4ecc-8c32-4183253dfe70)
+]
+interface IDWriteTextFormat2 : IDWriteTextFormat1
+{
+    HRESULT SetLineSpacing(DWRITE_LINE_SPACING const *spacing);
+    HRESULT GetLineSpacing(DWRITE_LINE_SPACING *spacing);
+}
+
+[
+    local,
+    object,
+    uuid(6d3b5641-e550-430d-a85b-b7bf48a93427)
+]
+interface IDWriteTextFormat3 : IDWriteTextFormat2
+{
+    HRESULT SetFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values);
+    UINT32 GetFontAxisValueCount();
+    HRESULT GetFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values);
+    DWRITE_AUTOMATIC_FONT_AXES GetAutomaticFontAxes();
+    HRESULT SetAutomaticFontAxes(DWRITE_AUTOMATIC_FONT_AXES axes);
+}
+
+[
+    local,
+    object,
+    uuid(07ddcd52-020e-4de8-ac33-6c953d83f92d)
+]
+interface IDWriteTextLayout3 : IDWriteTextLayout2
+{
+    HRESULT InvalidateLayout();
+    HRESULT SetLineSpacing(DWRITE_LINE_SPACING const *spacing);
+    HRESULT GetLineSpacing(DWRITE_LINE_SPACING *spacing);
+    HRESULT GetLineMetrics(DWRITE_LINE_METRICS1 *metrics, UINT32 max_count, UINT32 *count);
+}
+
+[
+    local,
+    object,
+    uuid(05a9bf42-223f-4441-b5fb-8263685f55e9)
+]
+interface IDWriteTextLayout4 : IDWriteTextLayout3
+{
+    HRESULT SetFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        DWRITE_TEXT_RANGE range);
+    UINT32 GetFontAxisValueCount(UINT32 pos);
+    HRESULT GetFontAxisValues(
+        UINT32 pos,
+        DWRITE_FONT_AXIS_VALUE *values,
+        UINT32 num_values,
+        DWRITE_TEXT_RANGE *range);
+    DWRITE_AUTOMATIC_FONT_AXES GetAutomaticFontAxes();
+    HRESULT SetAutomaticFontAxes(DWRITE_AUTOMATIC_FONT_AXES axes);
+}
+
+[
+    local,
+    object,
+    uuid(2397599d-dd0d-4681-bd6a-f4f31eaade77)
+]
+interface IDWriteFontFallback1 : IDWriteFontFallback
+{
+    HRESULT MapCharacters(
+        IDWriteTextAnalysisSource *source,
+        UINT32 pos,
+        UINT32 length,
+        IDWriteFontCollection *base_collection,
+        const WCHAR *familyname,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        UINT32 *mapped_length,
+        FLOAT *scale,
+        IDWriteFontFace5 **fontface);
+}
+
+[
+    local,
+    object,
+    uuid(4556be70-3abd-4f70-90be-421780a6f515)
+]
+interface IDWriteGdiInterop1 : IDWriteGdiInterop
+{
+    HRESULT CreateFontFromLOGFONT(LOGFONTW const *logfont,
+        IDWriteFontCollection *collection,
+        IDWriteFont **font);
+
+    /* GetFontSignature() methods are listed in reversed order to make
+       resulting vtable order compatible. */
+    HRESULT GetFontSignature_(IDWriteFontFace *fontface, FONTSIGNATURE *fontsig);
+    HRESULT GetFontSignature(IDWriteFont *font, FONTSIGNATURE *fontsig);
+    HRESULT GetMatchingFontsByLOGFONT(LOGFONTW const *logfont,
+        IDWriteFontSet *fontset,
+        IDWriteFontSet **subset);
+}
+
+[
+    local,
+    object,
+    uuid(2f642afe-9c68-4f40-b8be-457401afcb3d)
+]
+interface IDWriteFontSetBuilder : IUnknown
+{
+    HRESULT AddFontFaceReference_(IDWriteFontFaceReference *ref,
+        DWRITE_FONT_PROPERTY const *props,
+        UINT32 prop_count);
+    HRESULT AddFontFaceReference(IDWriteFontFaceReference *ref);
+    HRESULT AddFontSet(IDWriteFontSet *fontset);
+    HRESULT CreateFontSet(IDWriteFontSet **fontset);
+}
+
+[
+    local,
+    object,
+    uuid(3ff7715f-3cdc-4dc6-9b72-ec5621dccafd)
+]
+interface IDWriteFontSetBuilder1 : IDWriteFontSetBuilder
+{
+    HRESULT AddFontFile(IDWriteFontFile *file);
+}
+
+[
+    local,
+    object,
+    uuid(ee5ba612-b131-463c-8f4f-3189b9401e45)
+]
+interface IDWriteFontSetBuilder2 : IDWriteFontSetBuilder1
+{
+    HRESULT AddFont(
+        IDWriteFontFile *fontfile,
+        UINT32 face_index,
+        DWRITE_FONT_SIMULATIONS simulations,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_values,
+        DWRITE_FONT_AXIS_RANGE const *axis_ranges,
+        UINT32 num_ranges,
+        DWRITE_FONT_PROPERTY const *props,
+        UINT32 num_properties);
+    HRESULT AddFontFile(const WCHAR *filepath);
+}
+
+[
+    local,
+    object,
+    uuid(9a1b41c3-d3bb-466a-87fc-fe67556a3b65)
+]
+interface IDWriteFactory3 : IDWriteFactory2
+{
+    HRESULT CreateGlyphRunAnalysis(
+        DWRITE_GLYPH_RUN const *run,
+        DWRITE_MATRIX const *transform,
+        DWRITE_RENDERING_MODE1 rendering_mode,
+        DWRITE_MEASURING_MODE measuring_mode,
+        DWRITE_GRID_FIT_MODE gridfit_mode,
+        DWRITE_TEXT_ANTIALIAS_MODE antialias_mode,
+        FLOAT origin_x,
+        FLOAT origin_y,
+        IDWriteGlyphRunAnalysis **analysis);
+
+    HRESULT CreateCustomRenderingParams(
+        FLOAT gamma,
+        FLOAT enhanced_contrast,
+        FLOAT grayscale_enhanced_contrast,
+        FLOAT cleartype_level,
+        DWRITE_PIXEL_GEOMETRY pixel_geometry,
+        DWRITE_RENDERING_MODE1 rendering_mode,
+        DWRITE_GRID_FIT_MODE gridfit_mode,
+        IDWriteRenderingParams3 **params);
+
+    /* CreateFontFaceReference methods are listed in reversed order to make
+       resulting vtable order compatible. */
+    HRESULT CreateFontFaceReference_(
+        IDWriteFontFile *file,
+        UINT32 index,
+        DWRITE_FONT_SIMULATIONS simulations,
+        IDWriteFontFaceReference **reference);
+
+    HRESULT CreateFontFaceReference(
+        WCHAR const *path,
+        FILETIME const *writetime,
+        UINT32 index,
+        DWRITE_FONT_SIMULATIONS simulations,
+        IDWriteFontFaceReference **reference);
+
+    HRESULT GetSystemFontSet(IDWriteFontSet **fontset);
+    HRESULT CreateFontSetBuilder(IDWriteFontSetBuilder **builder);
+    HRESULT CreateFontCollectionFromFontSet(
+        IDWriteFontSet *fontset,
+        IDWriteFontCollection1 **collection);
+
+    HRESULT GetSystemFontCollection(
+        BOOL include_downloadable,
+        IDWriteFontCollection1 **collection,
+        BOOL check_for_updates);
+
+    HRESULT GetFontDownloadQueue(IDWriteFontDownloadQueue **queue);
+}
+
+typedef struct DWRITE_GLYPH_IMAGE_DATA
+{
+    void const *imageData;
+    UINT32 imageDataSize;
+    UINT32 uniqueDataId;
+    UINT32 pixelsPerEm;
+    D2D1_SIZE_U pixelSize;
+    D2D1_POINT_2L horizontalLeftOrigin;
+    D2D1_POINT_2L horizontalRightOrigin;
+    D2D1_POINT_2L verticalTopOrigin;
+    D2D1_POINT_2L verticalBottomOrigin;
+} DWRITE_GLYPH_IMAGE_DATA;
+
+[
+    local,
+    object,
+    uuid(27f2a904-4eb8-441d-9678-0563f53e3e2f)
+]
+interface IDWriteFontFace4 : IDWriteFontFace3
+{
+    HRESULT GetGlyphImageFormats_(
+        UINT16 glyph,
+        UINT32 ppem_first,
+        UINT32 ppem_last,
+        DWRITE_GLYPH_IMAGE_FORMATS *formats);
+    DWRITE_GLYPH_IMAGE_FORMATS GetGlyphImageFormats();
+    HRESULT GetGlyphImageData(
+        UINT16 glyph,
+        UINT32 ppem,
+        DWRITE_GLYPH_IMAGE_FORMATS format,
+        DWRITE_GLYPH_IMAGE_DATA *data,
+        void **context);
+    void ReleaseGlyphImageData(void *context);
+}
+
+[
+    local,
+    object,
+    uuid(98eff3a5-b667-479a-b145-e2fa5b9fdc29)
+]
+interface IDWriteFontFace5 : IDWriteFontFace4
+{
+    UINT32 GetFontAxisValueCount();
+    HRESULT GetFontAxisValues(
+        DWRITE_FONT_AXIS_VALUE *values,
+        UINT32 value_count);
+    BOOL HasVariations();
+    HRESULT GetFontResource(IDWriteFontResource **resource);
+    BOOL Equals(IDWriteFontFace *fontface);
+}
+
+typedef struct DWRITE_COLOR_GLYPH_RUN1
+{
+    DWRITE_GLYPH_RUN glyphRun;
+    DWRITE_GLYPH_RUN_DESCRIPTION *glyphRunDescription;
+    FLOAT baselineOriginX;
+    FLOAT baselineOriginY;
+    DWRITE_COLOR_F runColor;
+    UINT16 paletteIndex;
+    DWRITE_GLYPH_IMAGE_FORMATS glyphImageFormat;
+    DWRITE_MEASURING_MODE measuringMode;
+} DWRITE_COLOR_GLYPH_RUN1;
+
+[
+    local,
+    object,
+    uuid(7c5f86da-c7a1-4f05-b8e1-55a179fe5a35)
+]
+interface IDWriteColorGlyphRunEnumerator1 : IDWriteColorGlyphRunEnumerator
+{
+    HRESULT GetCurrentRun(
+        DWRITE_COLOR_GLYPH_RUN1 const **run);
+}
+
+[
+    local,
+    object,
+    uuid(4b0b5bd3-0797-4549-8ac5-fe915cc53856)
+]
+interface IDWriteFactory4 : IDWriteFactory3
+{
+    HRESULT TranslateColorGlyphRun(
+        D2D1_POINT_2F baseline_origin,
+        DWRITE_GLYPH_RUN const *run,
+        DWRITE_GLYPH_RUN_DESCRIPTION const *run_desc,
+        DWRITE_GLYPH_IMAGE_FORMATS desired_formats,
+        DWRITE_MEASURING_MODE measuring_mode,
+        DWRITE_MATRIX const *transform,
+        UINT32 palette,
+        IDWriteColorGlyphRunEnumerator1 **layers);
+
+    HRESULT ComputeGlyphOrigins_(
+        DWRITE_GLYPH_RUN const *run,
+        D2D1_POINT_2F baseline_origin,
+        D2D1_POINT_2F *origins);
+
+    HRESULT ComputeGlyphOrigins(
+        DWRITE_GLYPH_RUN const *run,
+        DWRITE_MEASURING_MODE measuring_mode,
+        D2D1_POINT_2F baseline_origin,
+        DWRITE_MATRIX const *transform,
+        D2D1_POINT_2F *origins);
+}
+
+[
+    local,
+    object,
+    uuid(ce25f8fd-863b-4d13-9651-c1f88dc73fe2)
+]
+interface IDWriteAsyncResult : IUnknown
+{
+    HANDLE GetWaitHandle();
+    HRESULT GetResult();
+}
+
+typedef struct DWRITE_FILE_FRAGMENT
+{
+    UINT64 fileOffset;
+    UINT64 fragmentSize;
+} DWRITE_FILE_FRAGMENT;
+
+[
+    local,
+    object,
+    uuid(4db3757a-2c72-4ed9-b2b6-1ababe1aff9c)
+]
+interface IDWriteRemoteFontFileStream : IDWriteFontFileStream
+{
+    HRESULT GetLocalFileSize(UINT64 *size);
+    HRESULT GetFileFragmentLocality(UINT64 offset, UINT64 size, BOOL *is_local, UINT64 *partial_size);
+    DWRITE_LOCALITY GetLocality();
+    HRESULT BeginDownload(
+        GUID const *operation_id,
+        DWRITE_FILE_FRAGMENT const *fragments,
+        UINT32 fragment_count,
+        IDWriteAsyncResult **async_result);
+}
+
+typedef enum DWRITE_CONTAINER_TYPE
+{
+    DWRITE_CONTAINER_TYPE_UNKNOWN,
+    DWRITE_CONTAINER_TYPE_WOFF,
+    DWRITE_CONTAINER_TYPE_WOFF2,
+} DWRITE_CONTAINER_TYPE;
+
+[
+    local,
+    object,
+    uuid(68648c83-6ede-46c0-ab46-20083a887fde)
+]
+interface IDWriteRemoteFontFileLoader : IDWriteFontFileLoader
+{
+    HRESULT CreateRemoteStreamFromKey(void const *key, UINT32 key_size, IDWriteRemoteFontFileStream **stream);
+    HRESULT GetLocalityFromKey(void const *key, UINT32 key_size, DWRITE_LOCALITY *locality);
+    HRESULT CreateFontFileReferenceFromUrl(
+        IDWriteFactory *factory,
+        WCHAR const *base_url,
+        WCHAR const *file_url,
+        IDWriteFontFile **fontfile);
+}
+
+[
+    local,
+    object,
+    uuid(dc102f47-a12d-4b1c-822d-9e117e33043f)
+]
+interface IDWriteInMemoryFontFileLoader : IDWriteFontFileLoader
+{
+    HRESULT CreateInMemoryFontFileReference(
+        IDWriteFactory *factory,
+        void const *data,
+        UINT32 data_size,
+        IUnknown *owner,
+        IDWriteFontFile **fontfile);
+    UINT32 GetFileCount();
+}
+
+[
+    local,
+    object,
+    uuid(958db99a-be2a-4f09-af7d-65189803d1d3)
+]
+interface IDWriteFactory5 : IDWriteFactory4
+{
+    HRESULT CreateFontSetBuilder(IDWriteFontSetBuilder1 **fontset_builder);
+    HRESULT CreateInMemoryFontFileLoader(IDWriteFontFileLoader **loader);
+    HRESULT CreateHttpFontFileLoader(
+        WCHAR const *referrer_url,
+        WCHAR const *extra_headers,
+        IDWriteRemoteFontFileLoader **loader);
+    DWRITE_CONTAINER_TYPE AnalyzeContainerType(void const *data, UINT32 data_size);
+    HRESULT UnpackFontFile(
+        DWRITE_CONTAINER_TYPE container_type,
+        void const *data,
+        UINT32 data_size,
+        IDWriteFontFileStream **stream);
+}
+
+[
+    local,
+    object,
+    uuid(f3744d80-21f7-42eb-b35d-995bc72fc223)
+]
+interface IDWriteFactory6 : IDWriteFactory5
+{
+    HRESULT CreateFontFaceReference(
+        IDWriteFontFile *file,
+        UINT32 face_index,
+        DWRITE_FONT_SIMULATIONS simulations,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_axis,
+        IDWriteFontFaceReference1 **face_ref);
+    HRESULT CreateFontResource(
+        IDWriteFontFile *file,
+        UINT32 face_index,
+        IDWriteFontResource **resource);
+    HRESULT GetSystemFontSet(
+        BOOL include_downloadable,
+        IDWriteFontSet1 **fontset);
+    HRESULT GetSystemFontCollection(
+        BOOL include_downloadable,
+        DWRITE_FONT_FAMILY_MODEL family_model,
+        IDWriteFontCollection2 **collection);
+    HRESULT CreateFontCollectionFromFontSet(
+        IDWriteFontSet *fontset,
+        DWRITE_FONT_FAMILY_MODEL family_model,
+        IDWriteFontCollection2 **collection);
+    HRESULT CreateFontSetBuilder(
+        IDWriteFontSetBuilder2 **builder);
+    HRESULT CreateTextFormat(
+        const WCHAR *familyname,
+        IDWriteFontCollection *collection,
+        DWRITE_FONT_AXIS_VALUE const *axis_values,
+        UINT32 num_axis,
+        FLOAT fontsize,
+        const WCHAR *localename,
+        IDWriteTextFormat3 **format);
+}
+
+[
+    local,
+    object,
+    uuid(35d0e0b3-9076-4d2e-a016-a91b568a06b4)
+]
+interface IDWriteFactory7 : IDWriteFactory6
+{
+    HRESULT GetSystemFontSet(
+        BOOL include_downloadable,
+        IDWriteFontSet2 **fontset);
+    HRESULT GetSystemFontCollection(
+        BOOL include_downloadable,
+        DWRITE_FONT_FAMILY_MODEL family_model,
+        IDWriteFontCollection3 **collection);
+}

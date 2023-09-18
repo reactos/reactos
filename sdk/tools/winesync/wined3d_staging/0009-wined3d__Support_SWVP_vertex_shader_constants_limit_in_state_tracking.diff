@@ -1,0 +1,146 @@
+diff --git a/dll/directx/wine/wined3d/device.c b/dll/directx/wine/wined3d/device.c
+index ac720b9..33e2951 100644
+--- a/dll/directx/wine/wined3d/device.c
++++ b/dll/directx/wine/wined3d/device.c
+@@ -2450,13 +2450,17 @@ HRESULT CDECL wined3d_device_set_vs_consts_f(struct wined3d_device *device,
+         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants)
+ {
+     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
++    unsigned int constants_count;
+     unsigned int i;
+ 
+     TRACE("device %p, start_idx %u, count %u, constants %p.\n",
+             device, start_idx, count, constants);
+ 
+-    if (!constants || start_idx >= d3d_info->limits.vs_uniform_count
+-            || count > d3d_info->limits.vs_uniform_count - start_idx)
++    constants_count = device->create_parms.flags
++            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
++            ? d3d_info->limits.vs_uniform_count_swvp : d3d_info->limits.vs_uniform_count;
++    if (!constants || start_idx >= constants_count
++            || count > constants_count - start_idx)
+         return WINED3DERR_INVALIDCALL;
+ 
+     memcpy(&device->update_stateblock_state->vs_consts_f[start_idx], constants, count * sizeof(*constants));
+@@ -2483,12 +2487,16 @@ HRESULT CDECL wined3d_device_get_vs_consts_f(const struct wined3d_device *device
+         unsigned int start_idx, unsigned int count, struct wined3d_vec4 *constants)
+ {
+     const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
++    unsigned int constants_count;
+ 
+     TRACE("device %p, start_idx %u, count %u, constants %p.\n",
+             device, start_idx, count, constants);
+ 
+-    if (!constants || start_idx >= d3d_info->limits.vs_uniform_count
+-            || count > d3d_info->limits.vs_uniform_count - start_idx)
++    constants_count = device->create_parms.flags
++            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
++            ? d3d_info->limits.vs_uniform_count_swvp : d3d_info->limits.vs_uniform_count;
++    if (!constants || start_idx >= constants_count
++            || count > constants_count - start_idx)
+         return WINED3DERR_INVALIDCALL;
+ 
+     memcpy(constants, &device->state.vs_consts_f[start_idx], count * sizeof(*constants));
+diff --git a/dll/directx/wine/wined3d/glsl_shader.c b/dll/directx/wine/wined3d/glsl_shader.c
+index c9612c8..050d94c 100644
+--- a/dll/directx/wine/wined3d/glsl_shader.c
++++ b/dll/directx/wine/wined3d/glsl_shader.c
+@@ -1911,7 +1911,7 @@ static void shader_glsl_update_float_vertex_constants(struct wined3d_device *dev
+     if (priv->consts_ubo)
+         return;
+ 
+-    for (i = start; i < count + start; ++i)
++    for (i = start; i < min(WINED3D_MAX_VS_CONSTS_F, count + start); ++i)
+     {
+         update_heap_entry(heap, i, priv->next_constant_version);
+     }
+diff --git a/dll/directx/wine/wined3d/stateblock.c b/dll/directx/wine/wined3d/stateblock.c
+index a960932..172b46b 100644
+--- a/dll/directx/wine/wined3d/stateblock.c
++++ b/dll/directx/wine/wined3d/stateblock.c
+@@ -312,7 +312,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
+         }
+     }
+ 
+-    for (i = 0; i < d3d_info->limits.vs_uniform_count; ++i)
++    for (i = 0; i < d3d_info->limits.vs_uniform_count_swvp; ++i)
+     {
+         if (stateblock->changed.vs_consts_f[i])
+         {
+@@ -1289,10 +1289,17 @@ void CDECL wined3d_stateblock_set_vertex_shader(struct wined3d_stateblock *state
+ HRESULT CDECL wined3d_stateblock_set_vs_consts_f(struct wined3d_stateblock *stateblock,
+         unsigned int start_idx, unsigned int count, const struct wined3d_vec4 *constants)
+ {
++    const struct wined3d_d3d_info *d3d_info = &stateblock->device->adapter->d3d_info;
++    unsigned int constants_count;
++
+     TRACE("stateblock %p, start_idx %u, count %u, constants %p.\n",
+             stateblock, start_idx, count, constants);
+ 
+-    if (!constants || start_idx >= WINED3D_MAX_VS_CONSTS_F || count > WINED3D_MAX_VS_CONSTS_F - start_idx)
++    constants_count = stateblock->device->create_parms.flags
++            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
++            ? d3d_info->limits.vs_uniform_count_swvp : d3d_info->limits.vs_uniform_count;
++
++    if (!constants || start_idx >= constants_count || count > constants_count - start_idx)
+         return WINED3DERR_INVALIDCALL;
+ 
+     memcpy(&stateblock->stateblock_state.vs_consts_f[start_idx], constants, count * sizeof(*constants));
+@@ -1758,7 +1765,7 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
+             stateblock_init_lights(stateblock->stateblock_state.light_state.light_map,
+                     device->stateblock_state.light_state.light_map);
+             stateblock_savedstates_set_all(&stateblock->changed,
+-                    d3d_info->limits.vs_uniform_count, d3d_info->limits.ps_uniform_count);
++                    d3d_info->limits.vs_uniform_count_swvp, d3d_info->limits.ps_uniform_count);
+             break;
+ 
+         case WINED3D_SBT_PIXEL_STATE:
+@@ -1770,7 +1777,7 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
+             stateblock_init_lights(stateblock->stateblock_state.light_state.light_map,
+                     device->stateblock_state.light_state.light_map);
+             stateblock_savedstates_set_vertex(&stateblock->changed,
+-                    d3d_info->limits.vs_uniform_count);
++                    d3d_info->limits.vs_uniform_count_swvp);
+             break;
+ 
+         default:
+diff --git a/dll/directx/wine/wined3d/wined3d_private.h b/dll/directx/wine/wined3d/wined3d_private.h
+index 6a7dc4f..efe41f8 100644
+--- a/dll/directx/wine/wined3d/wined3d_private.h
++++ b/dll/directx/wine/wined3d/wined3d_private.h
+@@ -3167,7 +3167,7 @@ struct wined3d_state
+ 
+     BOOL vs_consts_b[WINED3D_MAX_CONSTS_B];
+     struct wined3d_ivec4 vs_consts_i[WINED3D_MAX_CONSTS_I];
+-    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
++    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
+ 
+     BOOL ps_consts_b[WINED3D_MAX_CONSTS_B];
+     struct wined3d_ivec4 ps_consts_i[WINED3D_MAX_CONSTS_I];
+@@ -3239,7 +3239,7 @@ struct wined3d_stateblock_state
+     int base_vertex_index;
+ 
+     struct wined3d_shader *vs;
+-    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
++    struct wined3d_vec4 vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
+     struct wined3d_ivec4 vs_consts_i[WINED3D_MAX_CONSTS_I];
+     BOOL vs_consts_b[WINED3D_MAX_CONSTS_B];
+ 
+@@ -3938,7 +3938,7 @@ struct wined3d_saved_states
+     BOOL ps_consts_f[WINED3D_MAX_PS_CONSTS_F];
+     WORD vertexShaderConstantsB;                /* WINED3D_MAX_CONSTS_B, 16 */
+     WORD vertexShaderConstantsI;                /* WINED3D_MAX_CONSTS_I, 16 */
+-    BOOL vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
++    BOOL vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
+     DWORD textures : 20;                        /* WINED3D_MAX_COMBINED_SAMPLERS, 20 */
+     DWORD indices : 1;
+     DWORD material : 1;
+@@ -3975,7 +3975,7 @@ struct wined3d_stateblock
+     unsigned int              num_contained_vs_consts_i;
+     DWORD                     contained_vs_consts_b[WINED3D_MAX_CONSTS_B];
+     unsigned int              num_contained_vs_consts_b;
+-    DWORD                     contained_vs_consts_f[WINED3D_MAX_VS_CONSTS_F];
++    DWORD                     contained_vs_consts_f[WINED3D_MAX_VS_CONSTS_F_SWVP];
+     unsigned int              num_contained_vs_consts_f;
+     DWORD                     contained_ps_consts_i[WINED3D_MAX_CONSTS_I];
+     unsigned int              num_contained_ps_consts_i;

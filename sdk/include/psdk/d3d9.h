@@ -69,8 +69,10 @@
 #define D3DPRESENT_DONOTWAIT                    1L
 #define D3DPRESENT_LINEAR_CONTENT               2L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
+#define D3DPRESENT_BACK_BUFFERS_MAX_EX          30L
 #define D3DSGR_NO_CALIBRATION                   0x00000000L
 #define D3DSGR_CALIBRATE                        0x00000001L
+#define D3DCURSOR_IMMEDIATE_UPDATE              0x00000001L
 
 #define _FACD3D  0x876
 #define MAKE_D3DHRESULT( code )                 MAKE_HRESULT( 1, _FACD3D, code )
@@ -292,7 +294,8 @@ DECLARE_INTERFACE_(IDirect3D9Ex,IDirect3D9)
     STDMETHOD_(UINT, GetAdapterModeCountEx)(THIS_ UINT adapter_idx, const D3DDISPLAYMODEFILTER *filter) PURE;
     STDMETHOD(EnumAdapterModesEx)(THIS_ UINT adapter_idx, const D3DDISPLAYMODEFILTER *filter,
             UINT mode_idx, D3DDISPLAYMODEEX *mode) PURE;
-    STDMETHOD(GetAdapterDisplayModeEx)(THIS_ UINT Adapter, D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation);
+    STDMETHOD(GetAdapterDisplayModeEx)(THIS_ UINT adapter_idx,
+            D3DDISPLAYMODEEX *mode, D3DDISPLAYROTATION *rotation) PURE;
     STDMETHOD(CreateDeviceEx)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode, struct IDirect3DDevice9Ex **ppReturnedDeviceInterface) PURE;
     STDMETHOD(GetAdapterLUID)(THIS_ UINT Adatper, LUID *pLUID) PURE;
 };

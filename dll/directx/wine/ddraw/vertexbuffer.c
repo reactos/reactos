@@ -17,9 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
@@ -119,8 +116,6 @@ static HRESULT d3d_vertex_buffer_create_wined3d_buffer(struct d3d_vertex_buffer 
 
     desc.byte_width = buffer->size;
     desc.usage = WINED3DUSAGE_STATICDECL;
-    if (buffer->Caps & D3DVBCAPS_WRITEONLY)
-        desc.usage |= WINED3DUSAGE_WRITEONLY;
     if (dynamic)
         desc.usage |= WINED3DUSAGE_DYNAMIC;
     desc.bind_flags = WINED3D_BIND_VERTEX_BUFFER;
@@ -262,7 +257,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_ProcessVertices(IDirect3DVertexBuffer7 
     struct d3d_device *device_impl = dst_buffer_impl->version == 7
             ? unsafe_impl_from_IDirect3DDevice7(device)
             : unsafe_impl_from_IDirect3DDevice3((IDirect3DDevice3 *)device);
-    BOOL oldClip, doClip;
+    BOOL old_clip, do_clip, old_lighting, do_lighting;
     HRESULT hr;
 
     TRACE("iface %p, vertex_op %#x, dst_idx %u, count %u, src_buffer %p, src_idx %u, device %p, flags %#x.\n",
@@ -287,10 +282,20 @@ static HRESULT WINAPI d3d_vertex_buffer7_ProcessVertices(IDirect3DVertexBuffer7 
      * render states instead. Set the render states according to
      * the vertex ops
      */
-    doClip = !!(vertex_op & D3DVOP_CLIP);
-    oldClip = wined3d_device_get_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING);
-    if (doClip != oldClip)
-        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, doClip);
+    do_clip = !!(vertex_op & D3DVOP_CLIP);
+    old_clip = !!wined3d_device_get_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING);
+    if (do_clip != old_clip)
+        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, do_clip);
+
+    old_lighting = !!wined3d_device_get_render_state(device_impl->wined3d_device, WINED3D_RS_LIGHTING);
+    if (dst_buffer_impl->version == 3)
+        do_lighting = device_impl->material && (src_buffer_impl->fvf & D3DFVF_NORMAL)
+                && (vertex_op & D3DVOP_LIGHT);
+    else
+        do_lighting = old_lighting && (vertex_op & D3DVOP_LIGHT);
+
+    if (do_lighting != old_lighting)
+        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_LIGHTING, do_lighting);
 
     wined3d_device_set_stream_source(device_impl->wined3d_device,
             0, src_buffer_impl->wined3d_buffer, 0, get_flexible_vertex_size(src_buffer_impl->fvf));
@@ -299,8 +304,10 @@ static HRESULT WINAPI d3d_vertex_buffer7_ProcessVertices(IDirect3DVertexBuffer7 
             count, dst_buffer_impl->wined3d_buffer, NULL, flags, dst_buffer_impl->fvf);
 
     /* Restore the states if needed */
-    if (doClip != oldClip)
-        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, oldClip);
+    if (do_clip != old_clip)
+        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, old_clip);
+    if (do_lighting != old_lighting)
+        wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_LIGHTING, old_lighting);
 
     wined3d_mutex_unlock();
 

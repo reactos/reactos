@@ -16,9 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
@@ -176,7 +173,7 @@ static HRESULT WINAPI ddraw_palette_SetEntries(IDirectDrawPalette *iface,
     hr = wined3d_palette_set_entries(palette->wined3d_palette, flags, start, count, entries);
 
     if (SUCCEEDED(hr) && palette->flags & DDPCAPS_PRIMARYSURFACE)
-        ddraw_surface_update_frontbuffer(palette->ddraw->primary, NULL, FALSE);
+        ddraw_surface_update_frontbuffer(palette->ddraw->primary, NULL, FALSE, 0);
 
     wined3d_mutex_unlock();
 
@@ -218,7 +215,7 @@ static HRESULT WINAPI ddraw_palette_GetEntries(IDirectDrawPalette *iface,
     return hr;
 }
 
-static const struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
+static struct IDirectDrawPaletteVtbl ddraw_palette_vtbl =
 {
     /*** IUnknown ***/
     ddraw_palette_QueryInterface,

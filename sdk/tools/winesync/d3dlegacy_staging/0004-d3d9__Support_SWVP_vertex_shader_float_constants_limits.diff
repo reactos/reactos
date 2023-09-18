@@ -1,0 +1,130 @@
+diff --git a/dll/directx/wine/d3d9/d3d9_private.h b/dll/directx/wine/d3d9/d3d9_private.h
+index 03e2aa7..03d804a 100644
+--- a/dll/directx/wine/d3d9/d3d9_private.h
++++ b/dll/directx/wine/d3d9/d3d9_private.h
+@@ -40,6 +40,7 @@
+ #include "wine/wined3d.h"
+ 
+ #define D3D9_MAX_VERTEX_SHADER_CONSTANTF 256
++#define D3D9_MAX_VERTEX_SHADER_CONSTANTF_SWVP 8192
+ #define D3D9_MAX_TEXTURE_UNITS 20
+ #define D3D9_MAX_STREAMS 16
+ 
+@@ -56,7 +57,7 @@ enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_H
+ unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags, unsigned int usage) DECLSPEC_HIDDEN;
+ void present_parameters_from_wined3d_swapchain_desc(D3DPRESENT_PARAMETERS *present_parameters,
+         const struct wined3d_swapchain_desc *swapchain_desc, DWORD presentation_interval) DECLSPEC_HIDDEN;
+-void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps) DECLSPEC_HIDDEN;
++void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps, DWORD flags) DECLSPEC_HIDDEN;
+ 
+ struct d3d9
+ {
+diff --git a/dll/directx/wine/d3d9/device.c b/dll/directx/wine/d3d9/device.c
+index 3d16812..c7bbb9e 100644
+--- a/dll/directx/wine/d3d9/device.c
++++ b/dll/directx/wine/d3d9/device.c
+@@ -360,7 +360,7 @@ static BOOL wined3d_swapchain_desc_from_present_parameters(struct wined3d_swapch
+     return TRUE;
+ }
+ 
+-void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps)
++void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d_caps, DWORD creation_flags)
+ {
+     static const DWORD ps_minor_version[] = {0, 4, 0, 0};
+     static const DWORD vs_minor_version[] = {0, 1, 0, 0};
+@@ -498,7 +498,10 @@ void d3dcaps_from_wined3dcaps(D3DCAPS9 *caps, const struct wined3d_caps *wined3d
+         D3DPTEXTURECAPS_MIPMAP         | D3DPTEXTURECAPS_MIPVOLUMEMAP  | D3DPTEXTURECAPS_MIPCUBEMAP      |
+         D3DPTEXTURECAPS_CUBEMAP_POW2   | D3DPTEXTURECAPS_VOLUMEMAP_POW2| D3DPTEXTURECAPS_NOPROJECTEDBUMPENV;
+ 
+-    caps->MaxVertexShaderConst = min(D3D9_MAX_VERTEX_SHADER_CONSTANTF, caps->MaxVertexShaderConst);
++    if (creation_flags & WINED3DCREATE_SOFTWARE_VERTEXPROCESSING)
++        caps->MaxVertexShaderConst = min(D3D9_MAX_VERTEX_SHADER_CONSTANTF_SWVP, caps->MaxVertexShaderConst);
++    else
++        caps->MaxVertexShaderConst = min(D3D9_MAX_VERTEX_SHADER_CONSTANTF, caps->MaxVertexShaderConst);
+     caps->NumSimultaneousRTs = min(D3D_MAX_SIMULTANEOUS_RENDERTARGETS, caps->NumSimultaneousRTs);
+ 
+     if (caps->PixelShaderVersion > 3)
+@@ -684,6 +687,7 @@ static HRESULT WINAPI d3d9_device_GetDirect3D(IDirect3DDevice9Ex *iface, IDirect
+ static HRESULT WINAPI d3d9_device_GetDeviceCaps(IDirect3DDevice9Ex *iface, D3DCAPS9 *caps)
+ {
+     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
++    struct wined3d_device_creation_parameters creation_parameters;
+     struct wined3d_caps wined3d_caps;
+     HRESULT hr;
+ 
+@@ -692,13 +696,15 @@ static HRESULT WINAPI d3d9_device_GetDeviceCaps(IDirect3DDevice9Ex *iface, D3DCA
+     if (!caps)
+         return D3DERR_INVALIDCALL;
+ 
++    wined3d_device_get_creation_parameters(device->wined3d_device, &creation_parameters);
++
+     memset(caps, 0, sizeof(*caps));
+ 
+     wined3d_mutex_lock();
+     hr = wined3d_device_get_device_caps(device->wined3d_device, &wined3d_caps);
+     wined3d_mutex_unlock();
+ 
+-    d3dcaps_from_wined3dcaps(caps, &wined3d_caps);
++    d3dcaps_from_wined3dcaps(caps, &wined3d_caps, creation_parameters.flags);
+ 
+     return hr;
+ }
+@@ -3471,14 +3477,20 @@ static HRESULT WINAPI d3d9_device_SetVertexShaderConstantF(IDirect3DDevice9Ex *i
+         UINT reg_idx, const float *data, UINT count)
+ {
+     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
++    struct wined3d_device_creation_parameters creation_parameters;
++    unsigned int max_constants;
+     HRESULT hr;
+ 
+     TRACE("iface %p, reg_idx %u, data %p, count %u.\n", iface, reg_idx, data, count);
+ 
+-    if (reg_idx + count > D3D9_MAX_VERTEX_SHADER_CONSTANTF)
++    wined3d_device_get_creation_parameters(device->wined3d_device, &creation_parameters);
++    max_constants = creation_parameters.flags
++            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
++            ? D3D9_MAX_VERTEX_SHADER_CONSTANTF_SWVP : D3D9_MAX_VERTEX_SHADER_CONSTANTF;
++    if (reg_idx + count > max_constants)
+     {
+         WARN("Trying to access %u constants, but d3d9 only supports %u\n",
+-             reg_idx + count, D3D9_MAX_VERTEX_SHADER_CONSTANTF);
++             reg_idx + count, max_constants);
+         return D3DERR_INVALIDCALL;
+     }
+ 
+@@ -3499,14 +3511,20 @@ static HRESULT WINAPI d3d9_device_GetVertexShaderConstantF(IDirect3DDevice9Ex *i
+         UINT reg_idx, float *data, UINT count)
+ {
+     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
++    struct wined3d_device_creation_parameters creation_parameters;
++    unsigned int max_constants;
+     HRESULT hr;
+ 
+     TRACE("iface %p, reg_idx %u, data %p, count %u.\n", iface, reg_idx, data, count);
+ 
+-    if (reg_idx + count > D3D9_MAX_VERTEX_SHADER_CONSTANTF)
++    wined3d_device_get_creation_parameters(device->wined3d_device, &creation_parameters);
++    max_constants = creation_parameters.flags
++            & (WINED3DCREATE_SOFTWARE_VERTEXPROCESSING | WINED3DCREATE_MIXED_VERTEXPROCESSING)
++            ? D3D9_MAX_VERTEX_SHADER_CONSTANTF_SWVP : D3D9_MAX_VERTEX_SHADER_CONSTANTF;
++    if (reg_idx + count > max_constants)
+     {
+         WARN("Trying to access %u constants, but d3d9 only supports %u\n",
+-             reg_idx + count, D3D9_MAX_VERTEX_SHADER_CONSTANTF);
++             reg_idx + count, max_constants);
+         return D3DERR_INVALIDCALL;
+     }
+ 
+diff --git a/dll/directx/wine/d3d9/directx.c b/dll/directx/wine/d3d9/directx.c
+index f42c5ea..da80033 100644
+--- a/dll/directx/wine/d3d9/directx.c
++++ b/dll/directx/wine/d3d9/directx.c
+@@ -370,7 +370,7 @@ static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DD
+     hr = wined3d_get_device_caps(d3d9->wined3d, adapter, device_type, &wined3d_caps);
+     wined3d_mutex_unlock();
+ 
+-    d3dcaps_from_wined3dcaps(caps, &wined3d_caps);
++    d3dcaps_from_wined3dcaps(caps, &wined3d_caps, 0);
+ 
+     return hr;
+ }

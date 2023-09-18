@@ -1,0 +1,14 @@
+diff --git a/dll/directx/wine/ddraw/ddraw.c b/dll/directx/wine/ddraw/ddraw.c
+index 46bfbd2..165200e 100644
+--- a/dll/directx/wine/ddraw/ddraw.c
++++ b/dll/directx/wine/ddraw/ddraw.c
+@@ -3237,6 +3237,9 @@ static HRESULT WINAPI ddraw7_EnumSurfaces(IDirectDraw7 *iface, DWORD Flags,
+     if (!Callback)
+         return DDERR_INVALIDPARAMS;
+ 
++    if (!all && !DDSD)
++        return DDERR_INVALIDPARAMS;
++
+     wined3d_mutex_lock();
+ 
+     /* Use the _SAFE enumeration, the app may destroy enumerated surfaces */

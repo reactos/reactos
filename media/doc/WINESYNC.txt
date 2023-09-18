@@ -22,13 +22,13 @@ sdk/tools/wpp                   # Synced to WineStaging-2.9
 The following libraries are shared with Wine.
 
 dll/directx/wine/amstream       # Synced to WineStaging-3.9
-dll/directx/wine/d3d8           # Synced to WineStaging-3.3
-dll/directx/wine/d3d9           # Synced to WineStaging-3.3
+dll/directx/wine/d3d8           # Synced to WineStaging-4.18
+dll/directx/wine/d3d9           # Synced to WineStaging-4.18
 dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-4.18
 dll/directx/wine/d3drm          # Synced to WineStaging-4.18
 dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-6.0-rc5
 dll/directx/wine/d3dxof         # Synced to WineStaging-4.18
-dll/directx/wine/ddraw          # Synced to WineStaging-3.3
+dll/directx/wine/ddraw          # Synced to WineStaging-4.18
 dll/directx/wine/devenum        # Synced to WineStaging-4.18
 dll/directx/wine/dinput         # Synced to WineStaging-4.18
 dll/directx/wine/dinput8        # Synced to WineStaging-4.18
@@ -42,7 +42,7 @@ dll/directx/wine/msdmo          # Synced to WineStaging-4.18
 dll/directx/wine/qcap           # Synced to WineStaging-3.3
 dll/directx/wine/qedit          # Synced to WineStaging-3.17
 dll/directx/wine/quartz         # Synced to WineStaging-3.9
-dll/directx/wine/wined3d        # Synced to WineStaging-3.3
+dll/directx/wine/wined3d        # Synced to WineStaging-4.18
 
 dll/win32/activeds            # Synced to WineStaging-4.18
 dll/win32/actxprxy            # Synced to WineStaging-3.3

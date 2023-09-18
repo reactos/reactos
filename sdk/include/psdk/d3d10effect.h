@@ -832,6 +832,8 @@ HRESULT WINAPI D3D10CompileEffectFromMemory(void *data, SIZE_T data_size, const 
         ID3D10Blob **effect, ID3D10Blob **errors);
 HRESULT WINAPI D3D10CreateEffectFromMemory(void *data, SIZE_T data_size, UINT flags,
         ID3D10Device *device, ID3D10EffectPool *effect_pool, ID3D10Effect **effect);
+HRESULT WINAPI D3D10CreateEffectPoolFromMemory(void *data, SIZE_T data_size, UINT fx_flags,
+        ID3D10Device *device, ID3D10EffectPool **effect_pool);
 HRESULT WINAPI D3D10CreateStateBlock(ID3D10Device *device,
         D3D10_STATE_BLOCK_MASK *mask, ID3D10StateBlock **stateblock);
 

@@ -17,9 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
@@ -39,7 +36,7 @@ static void light_update(struct d3d_light *light)
     if (!light->active_viewport || !light->active_viewport->active_device) return;
     device = light->active_viewport->active_device;
 
-    IDirect3DDevice7_SetLight(&device->IDirect3DDevice7_iface, light->dwLightIndex, &light->light7);
+    IDirect3DDevice7_SetLight(&device->IDirect3DDevice7_iface, light->active_light_index, &light->light7);
 }
 
 /*****************************************************************************
@@ -54,14 +51,16 @@ void light_activate(struct d3d_light *light)
 
     TRACE("light %p.\n", light);
 
-    if (!light->active_viewport || !light->active_viewport->active_device) return;
+    if (!light->active_viewport || !light->active_viewport->active_device
+            || light->active_viewport->active_device->current_viewport != light->active_viewport)
+        return;
     device = light->active_viewport->active_device;
 
-    light_update(light);
-    if (!(light->light.dwFlags & D3DLIGHT_ACTIVE))
+    if (light->light.dwFlags & D3DLIGHT_ACTIVE)
     {
-        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, TRUE);
-        light->light.dwFlags |= D3DLIGHT_ACTIVE;
+        viewport_alloc_active_light_index(light);
+        light_update(light);
+        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->active_light_index, TRUE);
     }
 }
 
@@ -78,13 +77,18 @@ void light_deactivate(struct d3d_light *light)
 
     TRACE("light %p.\n", light);
 
-    if (!light->active_viewport || !light->active_viewport->active_device) return;
-    device = light->active_viewport->active_device;
-
-    if (light->light.dwFlags & D3DLIGHT_ACTIVE)
+    if (!light->active_viewport || !light->active_viewport->active_device
+            || light->active_viewport->active_device->current_viewport != light->active_viewport)
     {
-        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->dwLightIndex, FALSE);
-        light->light.dwFlags &= ~D3DLIGHT_ACTIVE;
+        assert(!light->active_light_index);
+        return;
+    }
+
+    device = light->active_viewport->active_device;
+    if (light->active_light_index)
+    {
+        IDirect3DDevice7_LightEnable(&device->IDirect3DDevice7_iface, light->active_light_index, FALSE);
+        viewport_free_active_light_index(light);
     }
 }
 
@@ -182,7 +186,7 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
         light7->dcvSpecular = zero_value;
     else
         light7->dcvSpecular = data->dcvColor;
-    light7->dcvAmbient = data->dcvColor;
+    light7->dcvAmbient = zero_value;
     light7->dvPosition = data->dvPosition;
     light7->dvDirection = data->dvDirection;
     light7->dvRange = data->dvRange;
@@ -195,13 +199,12 @@ static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
 
     wined3d_mutex_lock();
     memcpy(&light->light, data, sizeof(*data));
-    if (!(light->light.dwFlags & D3DLIGHT_ACTIVE) && flags & D3DLIGHT_ACTIVE)
-        light_activate(light);
-    else if (light->light.dwFlags & D3DLIGHT_ACTIVE && !(flags & D3DLIGHT_ACTIVE))
+
+    if (!(flags & D3DLIGHT_ACTIVE))
         light_deactivate(light);
-    else if (flags & D3DLIGHT_ACTIVE)
-        light_update(light);
+
     light->light.dwFlags = flags;
+    light_activate(light);
     wined3d_mutex_unlock();
 
     return D3D_OK;

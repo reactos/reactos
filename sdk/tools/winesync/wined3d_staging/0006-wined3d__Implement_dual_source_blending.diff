@@ -1,0 +1,236 @@
+diff --git a/dll/directx/wine/wined3d/adapter_gl.c b/dll/directx/wine/wined3d/adapter_gl.c
+index afd6a40..1fb325b 100644
+--- a/dll/directx/wine/wined3d/adapter_gl.c
++++ b/dll/directx/wine/wined3d/adapter_gl.c
+@@ -2981,6 +2981,12 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
+         gl_info->limits.buffers = min(MAX_RENDER_TARGET_VIEWS, gl_max);
+         TRACE("Max draw buffers: %u.\n", gl_max);
+     }
++    if (gl_info->supported[ARB_BLEND_FUNC_EXTENDED])
++    {
++        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_DUAL_SOURCE_DRAW_BUFFERS, &gl_max);
++        gl_info->limits.dual_buffers = gl_max;
++        TRACE("Max dual source draw buffers: %u.\n", gl_max);
++    }
+     if (gl_info->supported[ARB_MULTITEXTURE])
+     {
+         if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
+@@ -5150,6 +5156,7 @@ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_
+     struct fragment_caps fragment_caps;
+     struct shader_caps shader_caps;
+     GLfloat f[2];
++    int i;
+ 
+     adapter_gl->a.shader_backend->shader_get_caps(&adapter_gl->a, &shader_caps);
+     adapter_gl->a.vertex_pipe->vp_get_caps(&adapter_gl->a, &vertex_caps);
+@@ -5170,6 +5177,10 @@ static void wined3d_adapter_gl_init_d3d_info(struct wined3d_adapter_gl *adapter_
+     d3d_info->limits.ffp_vertex_blend_matrices = vertex_caps.max_vertex_blend_matrices;
+     d3d_info->limits.active_light_count = vertex_caps.max_active_lights;
+ 
++    d3d_info->valid_dual_rt_mask = 0;
++    for (i = 0; i < gl_info->limits.dual_buffers; ++i)
++        d3d_info->valid_dual_rt_mask |= (1u << i);
++
+     d3d_info->limits.max_rt_count = gl_info->limits.buffers;
+     d3d_info->limits.max_clip_distances = gl_info->limits.user_clip_distances;
+     d3d_info->limits.texture_size = gl_info->limits.texture_size;
+diff --git a/dll/directx/wine/wined3d/context.c b/dll/directx/wine/wined3d/context.c
+index 9cd6a6e..9001d60 100644
+--- a/dll/directx/wine/wined3d/context.c
++++ b/dll/directx/wine/wined3d/context.c
+@@ -3142,10 +3142,23 @@ static uint32_t find_draw_buffers_mask(const struct wined3d_context_gl *context_
+     else if (!context_gl->c.render_offscreen)
+         return context_generate_rt_mask_from_resource(rts[0]->resource);
+ 
++    /* If we attach more buffers than supported in dual blend mode, the NVIDIA
++     * driver generates the following error:
++     *      GL_INVALID_OPERATION error generated. State(s) are invalid: blend.
++     * DX11 does not treat this configuration as invalid, so disable the unused ones.
++     */
+     rt_mask = ps ? ps->reg_maps.rt_mask : 1;
+-    rt_mask &= (1u << gl_info->limits.buffers) - 1;
++
++    if (wined3d_dualblend_enabled(state, gl_info) && ps)
++    {
++        const struct wined3d_d3d_info *d3d_info = &ps->device->adapter->d3d_info;
++        rt_mask &= d3d_info->valid_dual_rt_mask;
++    }
++    else
++        rt_mask &= (1u << gl_info->limits.buffers) - 1;
+ 
+     mask = rt_mask;
++    i = 0;
+     while (mask)
+     {
+         i = wined3d_bit_scan(&mask);
+diff --git a/dll/directx/wine/wined3d/glsl_shader.c b/dll/directx/wine/wined3d/glsl_shader.c
+index 0e0977e..d45c131 100644
+--- a/dll/directx/wine/wined3d/glsl_shader.c
++++ b/dll/directx/wine/wined3d/glsl_shader.c
+@@ -2820,6 +2820,7 @@ static void shader_glsl_get_register_name(const struct wined3d_shader_register *
+             break;
+ 
+         case WINED3DSPR_COLOROUT:
++            /* FIXME: should check dual_buffers when dual blending is enabled */
+             if (reg->idx[0].offset >= gl_info->limits.buffers)
+                 WARN("Write to render target %u, only %d supported.\n",
+                         reg->idx[0].offset, gl_info->limits.buffers);
+@@ -7735,7 +7736,10 @@ static GLuint shader_glsl_generate_fragment_shader(const struct wined3d_context_
+     {
+         const struct wined3d_shader_signature *output_signature = &shader->output_signature;
+ 
+-        shader_addline(buffer, "vec4 ps_out[%u];\n", gl_info->limits.buffers);
++        if (args->dual_source_blend)
++            shader_addline(buffer, "vec4 ps_out[%u];\n", gl_info->limits.dual_buffers * 2);
++        else
++            shader_addline(buffer, "vec4 ps_out[%u];\n", gl_info->limits.buffers);
+         if (output_signature->element_count)
+         {
+             for (i = 0; i < output_signature->element_count; ++i)
+@@ -7750,7 +7754,12 @@ static GLuint shader_glsl_generate_fragment_shader(const struct wined3d_context_
+                     continue;
+                 }
+                 if (shader_glsl_use_explicit_attrib_location(gl_info))
+-                    shader_addline(buffer, "layout(location = %u) ", output->semantic_idx);
++                {
++                    if (args->dual_source_blend)
++                        shader_addline(buffer, "layout(location = %u, index = %u) ", output->semantic_idx / 2, output->semantic_idx % 2);
++                    else
++                        shader_addline(buffer, "layout(location = %u) ", output->semantic_idx);
++                }
+                 shader_addline(buffer, "out %s4 color_out%u;\n",
+                         component_type_info[output->component_type].glsl_vector_type, output->semantic_idx);
+             }
+@@ -7763,7 +7772,12 @@ static GLuint shader_glsl_generate_fragment_shader(const struct wined3d_context_
+             {
+                 i = wined3d_bit_scan(&mask);
+                 if (shader_glsl_use_explicit_attrib_location(gl_info))
+-                    shader_addline(buffer, "layout(location = %u) ", i);
++                {
++                    if (args->dual_source_blend)
++                        shader_addline(buffer, "layout(location = %u, index = %u) ", i / 2, i % 2);
++                    else
++                        shader_addline(buffer, "layout(location = %u) ", i);
++                }
+                 shader_addline(buffer, "out vec4 color_out%u;\n", i);
+             }
+         }
+diff --git a/dll/directx/wine/wined3d/shader.c b/dll/directx/wine/wined3d/shader.c
+index 3b9a96a..5c96d3b 100644
+--- a/dll/directx/wine/wined3d/shader.c
++++ b/dll/directx/wine/wined3d/shader.c
+@@ -4168,6 +4168,8 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
+         if (rtv && rtv->format->id == WINED3DFMT_A8_UNORM && !is_identity_fixup(rtv->format->color_fixup))
+             args->rt_alpha_swizzle |= 1u << i;
+     }
++
++    args->dual_source_blend = wined3d_dualblend_enabled(state, gl_info);
+ }
+ 
+ static HRESULT pixel_shader_init(struct wined3d_shader *shader, struct wined3d_device *device,
+diff --git a/dll/directx/wine/wined3d/state.c b/dll/directx/wine/wined3d/state.c
+index 4bc371b..2f90fd5 100644
+--- a/dll/directx/wine/wined3d/state.c
++++ b/dll/directx/wine/wined3d/state.c
+@@ -533,12 +533,14 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
+     const struct wined3d_format *rt_format;
+     GLenum src_blend, dst_blend;
+     unsigned int rt_fmt_flags;
++    BOOL enable_dual_blend;
+     BOOL enable_blend;
+ 
+     enable_blend = state->fb->render_targets[0] && state->render_states[WINED3D_RS_ALPHABLENDENABLE];
+-    if (enable_blend)
++    enable_dual_blend = wined3d_dualblend_enabled(state, gl_info);
++
++    if (enable_blend && !enable_dual_blend)
+     {
+-        rt_format = state->fb->render_targets[0]->format;
+         rt_fmt_flags = state->fb->render_targets[0]->format_flags;
+ 
+         /* Disable blending in all cases even without pixelshaders.
+@@ -548,6 +550,13 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
+             enable_blend = FALSE;
+     }
+ 
++    /* Dual state blending changes the assignment of the output variables */
++    if (context->last_was_dual_blend != enable_dual_blend)
++    {
++        context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_PIXEL;
++        context->last_was_dual_blend = enable_dual_blend;
++    }
++
+     if (!enable_blend)
+     {
+         gl_info->gl_ops.gl.p_glDisable(GL_BLEND);
+@@ -558,6 +567,7 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
+     gl_info->gl_ops.gl.p_glEnable(GL_BLEND);
+     checkGLcall("glEnable(GL_BLEND)");
+ 
++    rt_format = state->fb->render_targets[0]->format;
+     gl_blend_from_d3d(&src_blend, &dst_blend,
+             state->render_states[WINED3D_RS_SRCBLEND],
+             state->render_states[WINED3D_RS_DESTBLEND], rt_format);
+diff --git a/dll/directx/wine/wined3d/wined3d_private.h b/dll/directx/wine/wined3d/wined3d_private.h
+index 0efff6d..361a594 100644
+--- a/dll/directx/wine/wined3d/wined3d_private.h
++++ b/dll/directx/wine/wined3d/wined3d_private.h
+@@ -199,6 +199,7 @@ struct wined3d_d3d_info
+ {
+     struct wined3d_d3d_limits limits;
+     struct wined3d_ffp_attrib_ops ffp_attrib_ops;
++    DWORD valid_dual_rt_mask;
+     uint32_t wined3d_creation_flags;
+     uint32_t xyzrhw : 1;
+     uint32_t emulated_flatshading : 1;
+@@ -1397,7 +1398,8 @@ struct ps_compile_args
+     DWORD alpha_test_func : 3;
+     DWORD render_offscreen : 1;
+     DWORD rt_alpha_swizzle : 8; /* MAX_RENDER_TARGET_VIEWS, 8 */
+-    DWORD padding : 18;
++    DWORD dual_source_blend : 1;
++    DWORD padding : 17;
+ };
+ 
+ enum fog_src_type
+@@ -1969,7 +1971,8 @@ struct wined3d_context
+     DWORD destroyed : 1;
+     DWORD destroy_delayed : 1;
+     DWORD clip_distance_mask : 8; /* WINED3D_MAX_CLIP_DISTANCES, 8 */
+-    DWORD padding : 15;
++    DWORD last_was_dual_blend : 1;
++    DWORD padding : 14;
+ 
+     DWORD constant_update_mask;
+     DWORD numbered_array_mask;
+@@ -2681,6 +2684,7 @@ struct wined3d_fbo_ops
+ struct wined3d_gl_limits
+ {
+     UINT buffers;
++    UINT dual_buffers;
+     UINT lights;
+     UINT textures;
+     UINT texture_coords;
+@@ -3185,6 +3189,22 @@ struct wined3d_state
+     struct wined3d_rasterizer_state *rasterizer_state;
+ };
+ 
++static inline BOOL wined3d_dualblend_enabled(const struct wined3d_state *state, const struct wined3d_gl_info *gl_info)
++{
++    if (!state->fb->render_targets[0]) return FALSE;
++    if (!state->render_states[WINED3D_RS_ALPHABLENDENABLE]) return FALSE;
++    if (!gl_info->supported[ARB_BLEND_FUNC_EXTENDED]) return FALSE;
++
++#define IS_DUAL_SOURCE_BLEND(x) ((x) >= WINED3D_BLEND_SRC1COLOR && (x) <= WINED3D_BLEND_INVSRC1ALPHA)
++    if (IS_DUAL_SOURCE_BLEND(state->render_states[WINED3D_RS_SRCBLEND]))  return TRUE;
++    if (IS_DUAL_SOURCE_BLEND(state->render_states[WINED3D_RS_DESTBLEND])) return TRUE;
++    if (IS_DUAL_SOURCE_BLEND(state->render_states[WINED3D_RS_SRCBLENDALPHA]))  return TRUE;
++    if (IS_DUAL_SOURCE_BLEND(state->render_states[WINED3D_RS_DESTBLENDALPHA])) return TRUE;
++#undef IS_DUAL_SOURCE_BLEND
++
++    return FALSE;
++}
++
+ struct wined3d_dummy_textures
+ {
+     GLuint tex_1d;

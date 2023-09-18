@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -95,10 +94,18 @@ static HRESULT WINAPI d3d9_stateblock_GetDevice(IDirect3DStateBlock9 *iface, IDi
 static HRESULT WINAPI d3d9_stateblock_Capture(IDirect3DStateBlock9 *iface)
 {
     struct d3d9_stateblock *stateblock = impl_from_IDirect3DStateBlock9(iface);
+    struct d3d9_device *device;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
+    device = impl_from_IDirect3DDevice9Ex(stateblock->parent_device);
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to capture stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     wined3d_stateblock_capture(stateblock->wined3d_stateblock);
     wined3d_mutex_unlock();
 
@@ -108,11 +115,51 @@ static HRESULT WINAPI d3d9_stateblock_Capture(IDirect3DStateBlock9 *iface)
 static HRESULT WINAPI d3d9_stateblock_Apply(IDirect3DStateBlock9 *iface)
 {
     struct d3d9_stateblock *stateblock = impl_from_IDirect3DStateBlock9(iface);
+    struct wined3d_texture *wined3d_texture;
+    unsigned int i, offset, stride, stage;
+    struct wined3d_buffer *wined3d_buffer;
+    struct d3d9_vertexbuffer *buffer;
+    enum wined3d_format_id format;
+    struct d3d9_texture *texture;
+    struct d3d9_device *device;
+    HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
+    device = impl_from_IDirect3DDevice9Ex(stateblock->parent_device);
+    if (device->recording)
+    {
+        wined3d_mutex_unlock();
+        WARN("Trying to apply stateblock while recording, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     wined3d_stateblock_apply(stateblock->wined3d_stateblock);
+    device->sysmem_vb = 0;
+    for (i = 0; i < D3D9_MAX_STREAMS; ++i)
+    {
+        if (FAILED(hr = wined3d_device_get_stream_source(device->wined3d_device,
+                i, &wined3d_buffer, &offset, &stride)))
+            continue;
+        if (!wined3d_buffer || !(buffer = wined3d_buffer_get_parent(wined3d_buffer)))
+            continue;
+        if (buffer->draw_buffer)
+            device->sysmem_vb |= 1u << i;
+    }
+    device->sysmem_ib = (wined3d_buffer = wined3d_device_get_index_buffer(device->wined3d_device, &format, &offset))
+            && (buffer = wined3d_buffer_get_parent(wined3d_buffer)) && buffer->draw_buffer;
+    device->auto_mipmaps = 0;
+    for (i = 0; i < D3D9_MAX_TEXTURE_UNITS; ++i)
+    {
+        stage = i >= 16 ? i - 16 + D3DVERTEXTEXTURESAMPLER0 : i;
+
+        if ((wined3d_texture = wined3d_device_get_texture(device->wined3d_device, stage))
+                && (texture = wined3d_texture_get_parent(wined3d_texture))
+                && texture->usage & D3DUSAGE_AUTOGENMIPMAP)
+            device->auto_mipmaps |= 1u << i;
+        else
+            device->auto_mipmaps &= ~(1u << i);
+    }
     wined3d_mutex_unlock();
 
     return D3D_OK;

@@ -1,0 +1,326 @@
+diff --git a/dll/directx/wine/ddraw/ddraw.c b/dll/directx/wine/ddraw/ddraw.c
+index 83c7ae3..aaeff43 100644
+--- a/dll/directx/wine/ddraw/ddraw.c
++++ b/dll/directx/wine/ddraw/ddraw.c
+@@ -44,37 +44,80 @@ static const DDDEVICEIDENTIFIER2 deviceidentifier =
+     0
+ };
+ 
++#define D3D_VERSION(x) (1 << (x))
++
+ static struct enum_device_entry
+ {
+-    char interface_name[100];
++    unsigned int version_mask;
++    /* Some games (Motoracer 2 demo) have the bad idea to modify the device
++     * name/description strings. Let's put the strings in sufficiently sized
++     * arrays in static-lifetime writable memory. */
++    char device_desc[100];
+     char device_name[100];
+     const GUID *device_guid;
+     DWORD remove_caps;
+-} device_list7[] =
++} device_list[] =
+ {
+-    /* T&L HAL device */
++    /* Ramp Emulation (D3D 1&2 only) */
+     {
+-        "WINE Direct3D7 Hardware Transform and Lighting acceleration using WineD3D",
+-        "Wine D3D7 T&L HAL",
+-        &IID_IDirect3DTnLHalDevice,
++        D3D_VERSION(1)|D3D_VERSION(2),
++        "WineD3D Ramp Software Emulation",
++        "Ramp Emulation",
++        &IID_IDirect3DRampDevice,
+         0,
+     },
+ 
+-    /* HAL device */
++    /* RGB Emulation (D3D 1-7) */
+     {
+-        "WINE Direct3D7 Hardware acceleration using WineD3D",
++        D3D_VERSION(1)|D3D_VERSION(2)|D3D_VERSION(3)|D3D_VERSION(7),
++        "WineD3D RGB Software Emulation",
++        "RGB Emulation",
++        &IID_IDirect3DRGBDevice,
++        D3DDEVCAPS_HWTRANSFORMANDLIGHT,
++    },
++
++    /* Direct3D HAL (D3D 1-7) */
++    {
++        D3D_VERSION(1)|D3D_VERSION(2)|D3D_VERSION(3)|D3D_VERSION(7),
++        "WineD3D Hardware Acceleration",
+         "Direct3D HAL",
+         &IID_IDirect3DHALDevice,
+         0,
+     },
+ 
+-    /* RGB device */
++    /* MMX Emulation (D3D2 only) */
+     {
+-        "WINE Direct3D7 RGB Software Emulation using WineD3D",
+-        "Wine D3D7 RGB",
+-        &IID_IDirect3DRGBDevice,
+-        D3DDEVCAPS_HWTRANSFORMANDLIGHT,
++        D3D_VERSION(2),
++        "WineD3D MMX Software Emulation",
++        "MMX Emulation",
++        &IID_IDirect3DMMXDevice,
++        0,
++    },
++
++    /* Direct3D T&L HAL (D3D7 only) */
++    {
++        D3D_VERSION(7),
++        "WineD3D Hardware Transform and Lighting Acceleration",
++        "Direct3D T&L HAL",
++        &IID_IDirect3DTnLHalDevice,
++        0,
+     },
++
++    /* In the future, we may wish to add the "Reference Rasterizer" and
++     * "Null device", which are only available in DX6-8 and must be explicitly
++     * enabled by the registry values:
++     * * EnumReference
++     * * EnumNullDevice,
++     * which are DWORD values which must be created under
++     * HKLM\Software\Microsoft\Direct3D\Drivers and set to any nonzero value.
++     * (Refer to enablerefrast.reg/disablerefrast.reg in the DX6/7 SDKs and
++     * KB249579 for more information.)
++     *
++     * DirectX 9.0 and higher appear to no longer recognize these settings,
++     * so apparently these devices were removed starting with DX9.
++     *
++     * Some games (AvP, Motoracer 2) break if these devices are enumerated.
++     */
+ };
+ 
+ static void STDMETHODCALLTYPE ddraw_null_wined3d_object_destroyed(void *parent) {}
+@@ -1371,15 +1414,6 @@ HRESULT ddraw_get_d3dcaps(const struct ddraw *ddraw, D3DDEVICEDESC7 *caps)
+         D3DPTADDRESSCAPS_WRAP            | D3DPTADDRESSCAPS_MIRROR             | D3DPTADDRESSCAPS_CLAMP              |
+         D3DPTADDRESSCAPS_BORDER          | D3DPTADDRESSCAPS_INDEPENDENTUV);
+ 
+-    if (!(caps->dpcLineCaps.dwTextureCaps & D3DPTEXTURECAPS_POW2))
+-    {
+-        /* DirectX7 always has the np2 flag set, no matter what the card
+-         * supports. Some old games (Rollcage) check the caps incorrectly.
+-         * If wined3d supports nonpow2 textures it also has np2 conditional
+-         * support. */
+-        caps->dpcLineCaps.dwTextureCaps |= D3DPTEXTURECAPS_POW2 | D3DPTEXTURECAPS_NONPOW2CONDITIONAL;
+-    }
+-
+     /* Fill the missing members, and do some fixup */
+     caps->dpcLineCaps.dwSize = sizeof(caps->dpcLineCaps);
+     caps->dpcLineCaps.dwTextureBlendCaps = D3DPTBLENDCAPS_ADD
+@@ -3695,8 +3729,7 @@ static HRESULT WINAPI ddraw1_DuplicateSurface(IDirectDraw *iface, IDirectDrawSur
+ /*****************************************************************************
+  * IDirect3D7::EnumDevices
+  *
+- * The EnumDevices method for IDirect3D7. It enumerates all supported
+- * D3D7 devices. Currently the T&L, HAL and RGB devices are enumerated.
++ * The EnumDevices method for IDirect3D7. It enumerates all D3D7 devices.
+  *
+  * Params:
+  *  callback: Function to call for each enumerated device
+@@ -3729,14 +3762,17 @@ static HRESULT WINAPI d3d7_EnumDevices(IDirect3D7 *iface, LPD3DENUMDEVICESCALLBA
+ 
+     dev_caps = device_desc7.dwDevCaps;
+ 
+-    for (i = 0; i < ARRAY_SIZE(device_list7); i++)
++    for (i = 0; i < ARRAY_SIZE(device_list); i++)
+     {
+         HRESULT ret;
+ 
+-        device_desc7.deviceGUID = *device_list7[i].device_guid;
+-        device_desc7.dwDevCaps  = dev_caps & ~device_list7[i].remove_caps;
++        if (!(device_list[i].version_mask & D3D_VERSION(ddraw->d3dversion)))
++            continue;
++
++        device_desc7.deviceGUID = *device_list[i].device_guid;
++        device_desc7.dwDevCaps  = dev_caps & ~device_list[i].remove_caps;
+ 
+-        ret = callback(device_list7[i].interface_name, device_list7[i].device_name, &device_desc7, context);
++        ret = callback(device_list[i].device_name, device_list[i].device_name, &device_desc7, context);
+         if (ret != DDENUMRET_OK)
+         {
+             TRACE("Application cancelled the enumeration.\n");
+@@ -3752,11 +3788,21 @@ static HRESULT WINAPI d3d7_EnumDevices(IDirect3D7 *iface, LPD3DENUMDEVICESCALLBA
+     return D3D_OK;
+ }
+ 
++static void clear_device_desc(D3DDEVICEDESC *device_desc)
++{
++    memset(device_desc, 0, sizeof(*device_desc));
++    device_desc->dwSize = sizeof(*device_desc);
++    device_desc->dtcTransformCaps.dwSize = sizeof(device_desc->dtcTransformCaps);
++    device_desc->dlcLightingCaps.dwSize = sizeof(device_desc->dlcLightingCaps);
++    device_desc->dpcLineCaps.dwSize = sizeof(device_desc->dpcLineCaps);
++    device_desc->dpcTriCaps.dwSize = sizeof(device_desc->dpcTriCaps);
++}
++
+ /*****************************************************************************
+  * IDirect3D3::EnumDevices
+  *
+- * Enumerates all supported Direct3DDevice interfaces. This is the
+- * implementation for Direct3D 1 to Direc3D 3, Version 7 has its own.
++ * Enumerates all Direct3DDevice interfaces. This is the implementation for
++ * Direct3D 1 to Direct3D 3; Version 7 has its own.
+  *
+  * Versions 1, 2 and 3
+  *
+@@ -3771,18 +3817,18 @@ static HRESULT WINAPI d3d7_EnumDevices(IDirect3D7 *iface, LPD3DENUMDEVICESCALLBA
+  *****************************************************************************/
+ static HRESULT WINAPI d3d3_EnumDevices(IDirect3D3 *iface, LPD3DENUMDEVICESCALLBACK callback, void *context)
+ {
+-    static CHAR wined3d_description[] = "Wine D3DDevice using WineD3D and OpenGL";
+-
++/* Size of D3DDEVICEDESC in Direct3D 1-3 */
++enum {
++    D3D1_DESC_SIZE = FIELD_OFFSET(D3DDEVICEDESC, dwMinTextureWidth), /* 172 */
++    D3D2_DESC_SIZE = FIELD_OFFSET(D3DDEVICEDESC, dwMaxTextureRepeat), /* 204 */
++    D3D3_DESC_SIZE = sizeof(D3DDEVICEDESC) /* 252 */
++};
+     struct ddraw *ddraw = impl_from_IDirect3D3(iface);
+-    D3DDEVICEDESC device_desc1, hal_desc, hel_desc;
++    DWORD desc_size;
++    D3DDEVICEDESC device_desc1, empty_desc1, hal_desc, hel_desc;
+     D3DDEVICEDESC7 device_desc7;
+     HRESULT hr;
+-
+-    /* Some games (Motoracer 2 demo) have the bad idea to modify the device
+-     * name string. Let's put the string in a sufficiently sized array in
+-     * writable memory. */
+-    char device_name[50];
+-    strcpy(device_name,"Direct3D HEL");
++    size_t i;
+ 
+     TRACE("iface %p, callback %p, context %p.\n", iface, callback, context);
+ 
+@@ -3791,52 +3837,58 @@ static HRESULT WINAPI d3d3_EnumDevices(IDirect3D3 *iface, LPD3DENUMDEVICESCALLBA
+ 
+     wined3d_mutex_lock();
+ 
++    switch (ddraw->d3dversion)
++    {
++        case 1:  desc_size = D3D1_DESC_SIZE; break;
++        case 2:  desc_size = D3D2_DESC_SIZE; break;
++        default: desc_size = D3D3_DESC_SIZE; break;
++    }
++
+     if (FAILED(hr = ddraw_get_d3dcaps(ddraw, &device_desc7)))
+     {
+         wined3d_mutex_unlock();
+         return hr;
+     }
++
+     ddraw_d3dcaps1_from_7(&device_desc1, &device_desc7);
++    device_desc1.dwSize = desc_size;
+ 
+-    /* Do I have to enumerate the reference id? Note from old d3d7:
+-     * "It seems that enumerating the reference IID on Direct3D 1 games
+-     * (AvP / Motoracer2) breaks them". So do not enumerate this iid in V1
+-     *
+-     * There's a registry key HKLM\Software\Microsoft\Direct3D\Drivers,
+-     * EnumReference which enables / disables enumerating the reference
+-     * rasterizer. It's a DWORD, 0 means disabled, 2 means enabled. The
+-     * enablerefrast.reg and disablerefrast.reg files in the DirectX 7.0 sdk
+-     * demo directory suggest this.
+-     *
+-     * Some games(GTA 2) seem to use the second enumerated device, so I have
+-     * to enumerate at least 2 devices. So enumerate the reference device to
+-     * have 2 devices.
+-     *
+-     * Other games (Rollcage) tell emulation and hal device apart by certain
+-     * flags. Rollcage expects D3DPTEXTURECAPS_POW2 to be set (yeah, it is a
+-     * limitation flag), and it refuses all devices that have the perspective
+-     * flag set. This way it refuses the emulation device, and HAL devices
+-     * never have POW2 unset in d3d7 on windows. */
+-    if (ddraw->d3dversion != 1)
+-    {
+-        static CHAR reference_description[] = "RGB Direct3D emulation";
+-
+-        TRACE("Enumerating WineD3D D3DDevice interface.\n");
+-        hal_desc = device_desc1;
+-        hel_desc = device_desc1;
+-        /* The rgb device has the pow2 flag set in the hel caps, but not in the hal caps. */
+-        hal_desc.dpcLineCaps.dwTextureCaps &= ~(D3DPTEXTURECAPS_POW2
+-                | D3DPTEXTURECAPS_NONPOW2CONDITIONAL | D3DPTEXTURECAPS_PERSPECTIVE);
+-        hal_desc.dpcTriCaps.dwTextureCaps &= ~(D3DPTEXTURECAPS_POW2
+-                | D3DPTEXTURECAPS_NONPOW2CONDITIONAL | D3DPTEXTURECAPS_PERSPECTIVE);
+-        /* RGB, RAMP and MMX devices have a HAL dcmColorModel of 0 */
+-        hal_desc.dcmColorModel = 0;
+-        /* RGB, RAMP and MMX devices cannot report HAL hardware flags */
+-        hal_desc.dwFlags = 0;
+-
+-        hr = callback((GUID *)&IID_IDirect3DRGBDevice, reference_description,
+-                device_name, &hal_desc, &hel_desc, context);
+-        if (hr != D3DENUMRET_OK)
++    clear_device_desc(&empty_desc1);
++    empty_desc1.dwSize = desc_size;
++
++    for (i = 0; i < ARRAY_SIZE(device_list); i++)
++    {
++        if (!(device_list[i].version_mask & D3D_VERSION(ddraw->d3dversion)))
++            continue;
++
++        if (IsEqualGUID(&IID_IDirect3DHALDevice, device_list[i].device_guid))
++        {
++            hal_desc = device_desc1;
++
++            /* The HAL device's hel_desc is almost empty -- but not completely */
++            hel_desc = empty_desc1;
++            hel_desc.dwFlags = D3DDD_COLORMODEL | D3DDD_DEVCAPS | D3DDD_TRANSFORMCAPS
++                | D3DDD_LIGHTINGCAPS | D3DDD_BCLIPPING;
++            hel_desc.dcmColorModel = 0;
++            hel_desc.dwDevCaps = D3DDEVCAPS_FLOATTLVERTEX;
++            hel_desc.dtcTransformCaps.dwCaps = hal_desc.dtcTransformCaps.dwCaps;
++            hel_desc.dlcLightingCaps = hal_desc.dlcLightingCaps;
++            hel_desc.bClipping = hal_desc.bClipping;
++            hel_desc.dwMaxVertexCount = hal_desc.dwMaxVertexCount;
++        }
++        else
++        {
++            hal_desc = empty_desc1;
++
++            hel_desc = device_desc1;
++            /* Ramp device supports grayscale only */
++            if (IsEqualGUID(&IID_IDirect3DRampDevice, device_list[i].device_guid))
++                hel_desc.dcmColorModel = D3DCOLOR_MONO;
++        }
++
++        hr = callback((GUID *)device_list[i].device_guid, device_list[i].device_desc,
++                device_list[i].device_name, &hal_desc, &hel_desc, context);
++        if (hr != DDENUMRET_OK)
+         {
+             TRACE("Application cancelled the enumeration.\n");
+             wined3d_mutex_unlock();
+@@ -3844,29 +3896,6 @@ static HRESULT WINAPI d3d3_EnumDevices(IDirect3D3 *iface, LPD3DENUMDEVICESCALLBA
+         }
+     }
+ 
+-    strcpy(device_name,"Direct3D HAL");
+-
+-    TRACE("Enumerating HAL Direct3D device.\n");
+-    hal_desc = device_desc1;
+-    hel_desc = device_desc1;
+-
+-    /* The hal device does not have the pow2 flag set in hel, but in hal. */
+-    hel_desc.dpcLineCaps.dwTextureCaps &= ~(D3DPTEXTURECAPS_POW2
+-            | D3DPTEXTURECAPS_NONPOW2CONDITIONAL | D3DPTEXTURECAPS_PERSPECTIVE);
+-    hel_desc.dpcTriCaps.dwTextureCaps &= ~(D3DPTEXTURECAPS_POW2
+-            | D3DPTEXTURECAPS_NONPOW2CONDITIONAL | D3DPTEXTURECAPS_PERSPECTIVE);
+-    /* HAL devices have a HEL dcmColorModel of 0 */
+-    hel_desc.dcmColorModel = 0;
+-
+-    hr = callback((GUID *)&IID_IDirect3DHALDevice, wined3d_description,
+-            device_name, &hal_desc, &hel_desc, context);
+-    if (hr != D3DENUMRET_OK)
+-    {
+-        TRACE("Application cancelled the enumeration.\n");
+-        wined3d_mutex_unlock();
+-        return D3D_OK;
+-    }
+-
+     TRACE("End of enumeration.\n");
+ 
+     wined3d_mutex_unlock();

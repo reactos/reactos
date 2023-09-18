@@ -19,7 +19,6 @@
  *
  */
 
-#include "config.h"
 #include "initguid.h"
 #include "d3d8_private.h"
 #include "wine/debug.h"
@@ -59,36 +58,47 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
 /***********************************************************************
  *              ValidateVertexShader (D3D8.@)
  */
-HRESULT WINAPI ValidateVertexShader(DWORD *vertexshader, DWORD *reserved1, DWORD *reserved2,
-                                    BOOL return_error, char **errors)
+HRESULT WINAPI ValidateVertexShader(const DWORD *ps_code,
+       const D3DCAPS8 *caps, BOOL return_error, char **errors)
 {
     const char *message = "";
+    SIZE_T message_size;
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %p %d %p): semi-stub\n", vertexshader, reserved1, reserved2, return_error, errors);
+    TRACE("ps_code %p, caps %p, return_error %#x, errors %p.\n",
+            ps_code, caps, return_error, errors);
 
-    if (!vertexshader)
-    {
-        message = "(Global Validation Error) Version Token: Code pointer cannot be NULL.\n";
-        goto done;
-    }
+    if (!ps_code)
+        return E_FAIL;
 
-    switch (*vertexshader)
+    switch (*ps_code)
     {
-        case 0xFFFE0101:
-        case 0xFFFE0100:
-            hr = S_OK;
+        case D3DPS_VERSION(1, 4):
+        case D3DPS_VERSION(1, 3):
+        case D3DPS_VERSION(1, 2):
+        case D3DPS_VERSION(1, 1):
+        case D3DPS_VERSION(1, 0):
             break;
 
         default:
-            WARN("Invalid shader version token %#x.\n", *vertexshader);
-            message = "(Global Validation Error) Version Token: Unsupported vertex shader version.\n";
+            message = "Unsupported shader version.\n";
+            goto done;
     }
 
+    if (caps && *ps_code > caps->PixelShaderVersion)
+    {
+        message = "Shader version not supported by caps.\n";
+        goto done;
+    }
+
+    hr = S_OK;
+
 done:
-    if (!return_error) message = "";
-    if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
-        strcpy(*errors, message);
+    if (!return_error)
+        message = "";
+    message_size = strlen(message) + 1;
+    if (errors && (*errors = heap_alloc(message_size)))
+        memcpy(*errors, message, message_size);
 
     return hr;
 }
@@ -96,12 +106,12 @@ done:
 /***********************************************************************
  *              ValidatePixelShader (D3D8.@)
  */
-HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL return_error, char **errors)
+HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL boolean, char **errors)
 {
     const char *message = "";
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %d %p): semi-stub\n", pixelshader, reserved1, return_error, errors);
+    TRACE("(%p %p %d %p): semi-stub\n", pixelshader, reserved1, boolean, errors);
 
     if (!pixelshader)
         return E_FAIL;
@@ -120,7 +130,7 @@ HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL re
             message = "(Global Validation Error) Version Token: Unsupported pixel shader version.\n";
     }
 
-    if (!return_error) message = "";
+    if (!boolean) message = "";
     if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
         strcpy(*errors, message);
 

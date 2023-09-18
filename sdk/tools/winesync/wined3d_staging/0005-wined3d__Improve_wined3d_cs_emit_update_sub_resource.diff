@@ -1,0 +1,160 @@
+diff --git a/dll/directx/wine/wined3d/cs.c b/dll/directx/wine/wined3d/cs.c
+index ec17b59..fc5d722 100644
+--- a/dll/directx/wine/wined3d/cs.c
++++ b/dll/directx/wine/wined3d/cs.c
+@@ -409,6 +409,7 @@ struct wined3d_cs_update_sub_resource
+     unsigned int sub_resource_idx;
+     struct wined3d_box box;
+     struct wined3d_sub_resource_data data;
++    BYTE copy_data[1];
+ };
+ 
+ struct wined3d_cs_add_dirty_texture_region
+@@ -2363,6 +2364,51 @@ void wined3d_cs_emit_update_sub_resource(struct wined3d_cs *cs, struct wined3d_r
+         unsigned int slice_pitch)
+ {
+     struct wined3d_cs_update_sub_resource *op;
++    size_t data_size, size;
++
++    if (resource->type != WINED3D_RTYPE_BUFFER && resource->format_flags & WINED3DFMT_FLAG_BLOCKS)
++        goto no_async;
++
++    data_size = 0;
++    switch (resource->type)
++    {
++        case WINED3D_RTYPE_TEXTURE_3D:
++            data_size += (box->back - box->front - 1) * slice_pitch;
++            /* fall-through */
++        case WINED3D_RTYPE_TEXTURE_2D:
++            data_size += (box->bottom - box->top - 1) * row_pitch;
++            /* fall-through */
++        case WINED3D_RTYPE_TEXTURE_1D:
++            data_size += (box->right - box->left) * resource->format->byte_count;
++            break;
++        case WINED3D_RTYPE_BUFFER:
++            data_size = box->right - box->left;
++            break;
++        case WINED3D_RTYPE_NONE:
++            return;
++    }
++
++    size = FIELD_OFFSET(struct wined3d_cs_update_sub_resource, copy_data[data_size]);
++    if (!cs->ops->check_space(cs, size, WINED3D_CS_QUEUE_DEFAULT))
++        goto no_async;
++
++    op = cs->ops->require_space(cs, size, WINED3D_CS_QUEUE_DEFAULT);
++    op->opcode = WINED3D_CS_OP_UPDATE_SUB_RESOURCE;
++    op->resource = resource;
++    op->sub_resource_idx = sub_resource_idx;
++    op->box = *box;
++    op->data.row_pitch = row_pitch;
++    op->data.slice_pitch = slice_pitch;
++    op->data.data = op->copy_data;
++    memcpy(op->copy_data, data, data_size);
++
++    wined3d_resource_acquire(resource);
++
++    cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
++    return;
++
++no_async:
++    wined3d_resource_wait_idle(resource);
+ 
+     op = wined3d_cs_require_space(cs, sizeof(*op), WINED3D_CS_QUEUE_MAP);
+     op->opcode = WINED3D_CS_OP_UPDATE_SUB_RESOURCE;
+@@ -2376,6 +2422,7 @@ void wined3d_cs_emit_update_sub_resource(struct wined3d_cs *cs, struct wined3d_r
+     wined3d_resource_acquire(resource);
+ 
+     wined3d_cs_submit(cs, WINED3D_CS_QUEUE_MAP);
++
+     /* The data pointer may go away, so we need to wait until it is read.
+      * Copying the data may be faster if it's small. */
+     wined3d_cs_finish(cs, WINED3D_CS_QUEUE_MAP);
+@@ -2558,6 +2605,11 @@ static void (* const wined3d_cs_op_handlers[])(struct wined3d_cs *cs, const void
+     /* WINED3D_CS_OP_GENERATE_MIPMAPS            */ wined3d_cs_exec_generate_mipmaps,
+ };
+ 
++static BOOL wined3d_cs_st_check_space(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id)
++{
++    return TRUE;
++}
++
+ static void *wined3d_cs_st_require_space(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id)
+ {
+     if (size > (cs->data_size - cs->end))
+@@ -2611,6 +2663,7 @@ static void wined3d_cs_st_finish(struct wined3d_cs *cs, enum wined3d_cs_queue_id
+ 
+ static const struct wined3d_cs_ops wined3d_cs_st_ops =
+ {
++    wined3d_cs_st_check_space,
+     wined3d_cs_st_require_space,
+     wined3d_cs_st_submit,
+     wined3d_cs_st_finish,
+@@ -2644,6 +2697,19 @@ static void wined3d_cs_mt_submit(struct wined3d_cs *cs, enum wined3d_cs_queue_id
+     wined3d_cs_queue_submit(&cs->queue[queue_id], cs);
+ }
+ 
++static BOOL wined3d_cs_queue_check_space(struct wined3d_cs_queue *queue, size_t size)
++{
++    size_t queue_size = ARRAY_SIZE(queue->data);
++    size_t header_size, packet_size, remaining;
++
++    header_size = FIELD_OFFSET(struct wined3d_cs_packet, data[0]);
++    size = (size + header_size - 1) & ~(header_size - 1);
++    packet_size = FIELD_OFFSET(struct wined3d_cs_packet, data[size]);
++
++    remaining = queue_size - queue->head;
++    return (remaining >= packet_size);
++}
++
+ static void *wined3d_cs_queue_require_space(struct wined3d_cs_queue *queue, size_t size, struct wined3d_cs *cs)
+ {
+     size_t queue_size = ARRAY_SIZE(queue->data);
+@@ -2705,6 +2771,14 @@ static void *wined3d_cs_queue_require_space(struct wined3d_cs_queue *queue, size
+     return packet->data;
+ }
+ 
++static BOOL wined3d_cs_mt_check_space(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id)
++{
++    if (cs->thread_id == GetCurrentThreadId())
++        return wined3d_cs_st_check_space(cs, size, queue_id);
++
++    return wined3d_cs_queue_check_space(&cs->queue[queue_id], size);
++}
++
+ static void *wined3d_cs_mt_require_space(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id)
+ {
+     if (cs->thread_id == GetCurrentThreadId())
+@@ -2724,6 +2798,7 @@ static void wined3d_cs_mt_finish(struct wined3d_cs *cs, enum wined3d_cs_queue_id
+ 
+ static const struct wined3d_cs_ops wined3d_cs_mt_ops =
+ {
++    wined3d_cs_mt_check_space,
+     wined3d_cs_mt_require_space,
+     wined3d_cs_mt_submit,
+     wined3d_cs_mt_finish,
+diff --git a/dll/directx/wine/wined3d/device.c b/dll/directx/wine/wined3d/device.c
+index 8bba545..90d04e6 100644
+--- a/dll/directx/wine/wined3d/device.c
++++ b/dll/directx/wine/wined3d/device.c
+@@ -4870,8 +4870,6 @@ void CDECL wined3d_device_update_sub_resource(struct wined3d_device *device, str
+         return;
+     }
+ 
+-    wined3d_resource_wait_idle(resource);
+-
+     wined3d_cs_emit_update_sub_resource(device->cs, resource, sub_resource_idx, box, data, row_pitch, depth_pitch);
+ }
+ 
+diff --git a/dll/directx/wine/wined3d/wined3d_private.h b/dll/directx/wine/wined3d/wined3d_private.h
+index b67ac6a..0efff6d 100644
+--- a/dll/directx/wine/wined3d/wined3d_private.h
++++ b/dll/directx/wine/wined3d/wined3d_private.h
+@@ -4012,6 +4012,7 @@ struct wined3d_cs_queue
+ 
+ struct wined3d_cs_ops
+ {
++    BOOL (*check_space)(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id);
+     void *(*require_space)(struct wined3d_cs *cs, size_t size, enum wined3d_cs_queue_id queue_id);
+     void (*submit)(struct wined3d_cs *cs, enum wined3d_cs_queue_id queue_id);
+     void (*finish)(struct wined3d_cs *cs, enum wined3d_cs_queue_id queue_id);

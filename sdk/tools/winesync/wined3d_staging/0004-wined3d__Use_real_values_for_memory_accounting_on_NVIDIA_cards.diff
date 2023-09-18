@@ -1,0 +1,76 @@
+diff --git a/dll/directx/wine/wined3d/adapter_gl.c b/dll/directx/wine/wined3d/adapter_gl.c
+index ed10220..afd6a40 100644
+--- a/dll/directx/wine/wined3d/adapter_gl.c
++++ b/dll/directx/wine/wined3d/adapter_gl.c
+@@ -228,6 +228,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
+     {"GL_NV_vertex_program2",               NV_VERTEX_PROGRAM2            },
+     {"GL_NV_vertex_program2_option",        NV_VERTEX_PROGRAM2_OPTION     },
+     {"GL_NV_vertex_program3",               NV_VERTEX_PROGRAM3            },
++    {"GL_NVX_gpu_memory_info",              NVX_GPU_MEMORY_INFO           },
+ };
+ 
+ static const struct wined3d_extension_map wgl_extension_map[] =
+@@ -1059,6 +1060,17 @@ static const struct wined3d_gpu_description *query_gpu_description(const struct 
+ 
+         gpu_description = wined3d_get_gpu_description(vendor, device);
+     }
++    else if (gl_info->supported[NVX_GPU_MEMORY_INFO])
++    {
++        GLint vram_kb;
++        gl_info->gl_ops.gl.p_glGetIntegerv(GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX, &vram_kb);
++
++        *vram_bytes = (UINT64)vram_kb * 1024;
++        TRACE("Got 0x%s as video memory from NVX_GPU_MEMORY_INFO extension.\n",
++                wine_dbgstr_longlong(*vram_bytes));
++
++        gpu_description = wined3d_get_gpu_description(vendor, device);
++    }
+ 
+     if ((gpu_description_override = wined3d_get_user_override_gpu_description(vendor, device)))
+         gpu_description = gpu_description_override;
+diff --git a/dll/directx/wine/wined3d/device.c b/dll/directx/wine/wined3d/device.c
+index 0a668c4..8bba545 100644
+--- a/dll/directx/wine/wined3d/device.c
++++ b/dll/directx/wine/wined3d/device.c
+@@ -1200,6 +1200,29 @@ UINT CDECL wined3d_device_get_available_texture_mem(const struct wined3d_device 
+ 
+     driver_info = &device->adapter->driver_info;
+ 
++    /* We can not acquire the context unless there is a swapchain. */
++    /*
++    if (device->swapchains && gl_info->supported[NVX_GPU_MEMORY_INFO] &&
++            !wined3d_settings.emulated_textureram)
++    {
++        GLint vram_free_kb;
++        UINT64 vram_free;
++
++        struct wined3d_context *context = context_acquire(device, NULL, 0);
++        gl_info->gl_ops.gl.p_glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &vram_free_kb);
++        vram_free = (UINT64)vram_free_kb * 1024;
++        context_release(context);
++
++        TRACE("Total 0x%s bytes. emulation 0x%s left, driver 0x%s left.\n",
++                wine_dbgstr_longlong(device->adapter->vram_bytes),
++                wine_dbgstr_longlong(device->adapter->vram_bytes - device->adapter->vram_bytes_used),
++                wine_dbgstr_longlong(vram_free));
++
++        vram_free = min(vram_free, device->adapter->vram_bytes - device->adapter->vram_bytes_used);
++        return min(UINT_MAX, vram_free);
++    }
++    */
++
+     TRACE("Emulating 0x%s bytes. 0x%s used, returning 0x%s left.\n",
+             wine_dbgstr_longlong(driver_info->vram_bytes),
+             wine_dbgstr_longlong(device->adapter->vram_bytes_used),
+diff --git a/dll/directx/wine/wined3d/wined3d_gl.h b/dll/directx/wine/wined3d/wined3d_gl.h
+index 678ad1a..52eeeb0 100644
+--- a/dll/directx/wine/wined3d/wined3d_gl.h
++++ b/dll/directx/wine/wined3d/wined3d_gl.h
+@@ -204,6 +204,7 @@ enum wined3d_gl_extension
+     NV_VERTEX_PROGRAM2,
+     NV_VERTEX_PROGRAM2_OPTION,
+     NV_VERTEX_PROGRAM3,
++    NVX_GPU_MEMORY_INFO,
+     /* WGL extensions */
+     WGL_ARB_PIXEL_FORMAT,
+     WGL_EXT_SWAP_CONTROL,

@@ -1,6 +1,4 @@
 /*
- * IDirect3DVertexDeclaration8 implementation
- *
  * Copyright 2007 Henri Verbeet
  *
  * This library is free software; you can redistribute it and/or
@@ -18,10 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* IDirect3DVertexDeclaration8 is internal to our implementation.
- * It's not visible in the API. */
-
-#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -254,7 +248,7 @@ wined3d_usage_lookup[] =
 
 /* TODO: find out where rhw (or positionT) is for declaration8 */
 static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size,
-        struct wined3d_vertex_element **wined3d_elements)
+        struct wined3d_vertex_element **wined3d_elements, DWORD *stream_map)
 {
     struct wined3d_vertex_element *element;
     const DWORD *token = d3d8_elements;
@@ -265,6 +259,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
 
     TRACE("d3d8_elements %p, d3d8_elements_size %p, wined3d_elements %p\n", d3d8_elements, d3d8_elements_size, wined3d_elements);
 
+    *stream_map = 0;
     /* 128 should be enough for anyone... */
     *wined3d_elements = heap_alloc_zero(128 * sizeof(**wined3d_elements));
     while (D3DVSD_END() != *token)
@@ -291,6 +286,8 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
             element->method = WINED3D_DECL_METHOD_DEFAULT;
             element->usage = wined3d_usage_lookup[reg].usage;
             element->usage_idx = wined3d_usage_lookup[reg].usage_idx;
+
+            *stream_map |= 1u << stream;
 
             offset += wined3d_type_sizes[type];
         } else if (token_type == D3DVSD_TOKEN_STREAMDATA && (*token & D3DVSD_DATALOADTYPEMASK)) {
@@ -341,7 +338,8 @@ HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration
 
     declaration->shader_handle = shader_handle;
 
-    wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size, &wined3d_elements);
+    wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size,
+            &wined3d_elements, &declaration->stream_map);
     if (!(declaration->elements = heap_alloc(declaration->elements_size)))
     {
         ERR("Failed to allocate vertex declaration elements memory.\n");
@@ -373,6 +371,7 @@ HRESULT d3d8_vertex_declaration_init_fvf(struct d3d8_vertex_declaration *declara
 
     declaration->elements = NULL;
     declaration->elements_size = 0;
+    declaration->stream_map = 1;
     declaration->shader_handle = fvf;
 
     hr = wined3d_vertex_declaration_create_from_fvf(device->wined3d_device, fvf, declaration,

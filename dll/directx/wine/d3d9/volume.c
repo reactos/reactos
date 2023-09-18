@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -126,7 +125,7 @@ static HRESULT WINAPI d3d9_volume_GetDesc(IDirect3DVolume9 *iface, D3DVOLUME_DES
 
     desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
     desc->Type = D3DRTYPE_VOLUME;
-    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
     desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
     desc->Width = wined3d_desc.width;
     desc->Height = wined3d_desc.height;
@@ -148,7 +147,7 @@ static HRESULT WINAPI d3d9_volume_LockBox(IDirect3DVolume9 *iface,
     wined3d_mutex_lock();
     if (FAILED(hr = wined3d_resource_map(wined3d_texture_get_resource(volume->wined3d_texture),
             volume->sub_resource_idx, &map_desc, (const struct wined3d_box *)box,
-            wined3dmapflags_from_d3dmapflags(flags))))
+            wined3dmapflags_from_d3dmapflags(flags, 0))))
         map_desc.data = NULL;
     wined3d_mutex_unlock();
 
