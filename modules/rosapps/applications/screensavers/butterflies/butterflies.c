@@ -227,18 +227,16 @@ void Display()
 	Sleep(15);													// Create A Short Delay (15 Milliseconds)
 
 	glFlush ();
-
 }
 
-BOOL AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
-    
+INT_PTR CALLBACK AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
 	switch(msg){
 	case WM_CTLCOLORSTATIC:
 		if(((HWND)lpm == GetDlgItem(hdlg, WEBPAGE1)) || ((HWND)lpm == GetDlgItem(hdlg, WEBPAGE2)))
 		{
 			SetTextColor((HDC)wpm, RGB(0,0,255));
 			SetBkColor((HDC)wpm, (COLORREF)GetSysColor(COLOR_3DFACE));
-			return((int)GetSysColorBrush(COLOR_3DFACE));
+			return (INT_PTR)GetSysColorBrush(COLOR_3DFACE);
 		}
 		break;
     case WM_COMMAND:
@@ -314,7 +312,7 @@ BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message,
 			        EndDialog(hDlg, TRUE);
 			        break;
 		        case IDABOUT:
-			        DialogBox(hInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hDlg, (DLGPROC)AboutProc);
+			        DialogBox(hInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hDlg, AboutProc);
                     break;
 		    }
 	}
