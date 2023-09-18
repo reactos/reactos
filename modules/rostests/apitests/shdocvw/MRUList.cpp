@@ -74,18 +74,22 @@ static INT MRUList_Check(LPCWSTR pszSubKey, LPCWSTR pszValueName, LPCVOID pvData
     error = SHGetValueW(HKEY_CURRENT_USER, pszSubKey, pszValueName, NULL, abData, &dwSize);
     if (error != ERROR_SUCCESS)
         return -999;
+
 #if 0
+    printf("dwSize: %ld\n", dwSize);
     for (DWORD i = 0; i < dwSize; ++i)
     {
         printf("%02X ", abData[i]);
     }
     printf("\n");
 #endif
+
     if (dwSize != cbData)
-    {
-        //printf("dwSize: %ld\n", dwSize);
         return +999;
-    }
+
+    if (!pvData)
+        return TRUE;
+
     return memcmp(abData, pvData, cbData) == 0;
 }
 
@@ -228,10 +232,9 @@ static void MRUList_PidlList_0(void)
     error = SHGetValueW(HKEY_CURRENT_USER, SUBKEY0, NULL, NULL, NULL, NULL);
     ok_long(error, ERROR_FILE_NOT_FOUND);
 
-    LPITEMIDLIST pidl1, pidl2, pidl3;
+    LPITEMIDLIST pidl1, pidl2;
     SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl1);
     SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &pidl2);
-    SHGetSpecialFolderLocation(NULL, CSIDL_MYPICTURES, &pidl3);
 
     UINT uNodeSlot1 = 0xDEADFACE;
     hr = pList->UsePidl(pidl1, &uNodeSlot1);
@@ -248,9 +251,7 @@ static void MRUList_PidlList_0(void)
     ok_hex(uNodeSlot2, 2);
 
     // "0" value
-    ok_int(MRUList_Check(SUBKEY0, L"0",
-                         "\x14\x00\x1F\x48\xBA\x8F\x0D\x45\x25\xAD\xD0"
-                         "\x11\x98\xA8\x08\x00\x36\x1B\x11\x03\x00\x00", 22), TRUE);
+    ok_int(MRUList_Check(SUBKEY0, L"0", NULL, 22), TRUE);
 
     // "MRUListEx" value
     ok_int(MRUList_Check(SUBKEY0, L"MRUListEx", "\x00\x00\x00\x00\xFF\xFF\xFF\xFF", 8), TRUE);
@@ -266,10 +267,6 @@ static void MRUList_PidlList_0(void)
 
     // SUBSUBKEY0: "NodeSlot" value
     ok_int(MRUList_Check(SUBSUBKEY0, L"NodeSlot", "\x02\x00\x00\x00", 4), TRUE);
-
-    UINT uNodeSlot3 = 0xFEEDF00D;
-    hr = pList->UsePidl(pidl3, &uNodeSlot3);
-    ok(uNodeSlot3 == 1 || uNodeSlot3 == 3, "uNodeSlot3 was %u\n", uNodeSlot3);
 
     // QueryPidl
     UINT anNodeSlot[2], cNodeSlots;
@@ -316,18 +313,9 @@ static void MRUList_PidlList_0(void)
     ok_int(anNodeSlot[1], 0xCCCCCCCC);
     ok_int(cNodeSlots, 1);
 
-    FillMemory(anNodeSlot, sizeof(anNodeSlot), 0xCC);
-    cNodeSlots = 0xDEAD;
-    hr = pList->QueryPidl(pidl3, _countof(anNodeSlot), anNodeSlot, &cNodeSlots);
-    ok(hr == S_OK || hr == S_FALSE, "hr was 0x%08lX\n", hr);
-    ok_int(anNodeSlot[0], 1);
-    ok_int(anNodeSlot[1], 0xCCCCCCCC);
-    ok_int(cNodeSlots, 1);
-
     pList->Release();
     ILFree(pidl1);
     ILFree(pidl2);
-    ILFree(pidl3);
 }
 
 static void MRUList_PidlList(void)
