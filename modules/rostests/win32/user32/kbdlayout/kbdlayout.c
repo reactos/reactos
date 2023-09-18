@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/testset/user32/kbdlayout/kbdlayout.c
- * PURPOSE:         Keyboard layout testapp
- * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
+ * PROJECT:     ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Keyboard layout testapp
+ * COPYRIGHT:   Copyright 2007 Saveliy Tretiakov
  */
 
 #define UNICODE
@@ -13,7 +12,7 @@
 
 
 
-LRESULT MainDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK MainDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 
 HINSTANCE hInst;
@@ -27,11 +26,10 @@ typedef struct {
 
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
-
 	DialogBoxParam(hInst,
 		MAKEINTRESOURCE(IDD_MAINDIALOG),
 		NULL,
-		(DLGPROC)MainDialogProc,
+		MainDialogProc,
 		(LPARAM)NULL);
 
 	return 0;
@@ -42,15 +40,12 @@ INT WINAPI WinMain(HINSTANCE hInstance,
     LPSTR lpCmdLine,
     int nCmdShow)
 {
-
-
 	hInst = hInstance;
 
 	ThreadProc(0);
 
 	return 0;
 }
-
 
 int GetKlList(HKL **list)
 {
@@ -68,7 +63,6 @@ void FreeKlList(HKL *list)
 {
 	HeapFree(GetProcessHeap(), 0, list);
 }
-
 
 void UpdateData(HWND hDlg)
 {
@@ -119,8 +113,7 @@ void FormatBox(HWND hWnd, DWORD Flags, WCHAR *Caption, WCHAR *Format, ...)
 	va_end(argptr);
 }
 
-
-LRESULT CALLBACK WndSubclassProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	WND_DATA *data = (WND_DATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
@@ -137,7 +130,7 @@ LRESULT CALLBACK WndSubclassProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		//Pass message to defwindowproc
 	}
 
-	return ( CallWindowProc( data->OrigProc, hwnd, uMsg, wParam, lParam) );
+	return CallWindowProc(data->OrigProc, hwnd, uMsg, wParam, lParam);
 }
 
 void SubclassWnd(HWND hWnd, WCHAR* Name)
@@ -146,7 +139,6 @@ void SubclassWnd(HWND hWnd, WCHAR* Name)
 	data->OrigProc = (WNDPROC)SetWindowLongPtr( hWnd, GWLP_WNDPROC, (LONG_PTR)WndSubclassProc);
 	wcsncpy(data->WndName, Name, 25);
 	SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)data);
-	return;
 }
 
 DWORD GetActivateFlags(HWND hDlg)
@@ -166,7 +158,6 @@ DWORD GetActivateFlags(HWND hDlg)
 		ret |= KLF_SETFORPROCESS;
 
 	return ret;
-
 }
 
 DWORD GetLoadFlags(HWND hDlg)
@@ -218,22 +209,15 @@ HKL GetSelectedLayout(HWND hDlg)
 
 HKL GetActivateHandle(HWND hDlg)
 {
-
 	if(IsDlgButtonChecked(hDlg, IDC_FROMLIST))
 		return GetSelectedLayout(hDlg);
 	else if(IsDlgButtonChecked(hDlg, IDC_HKL_NEXT))
 		return (HKL)HKL_NEXT;
 
 	return (HKL)HKL_PREV;
-
 }
 
-
-/***************************************************
- * MainDialogProc                                  *
- ***************************************************/
-
-LRESULT MainDialogProc(HWND hDlg,
+INT_PTR CALLBACK MainDialogProc(HWND hDlg,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam)
@@ -350,12 +334,10 @@ LRESULT MainDialogProc(HWND hDlg,
 					}
 					break;
 				}
-
 			}
 
 			return TRUE;
 		} /* WM_COMMAND */
-
 
 		case WM_INPUTLANGCHANGE:
 		{
@@ -379,9 +361,5 @@ LRESULT MainDialogProc(HWND hDlg,
 		default:
 			return FALSE;
 	}
-
 }
-
-
-
 
