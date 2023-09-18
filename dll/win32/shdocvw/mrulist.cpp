@@ -34,6 +34,7 @@ class CMruClassFactory;
 
 extern "C" void __cxa_pure_virtual(void)
 {
+    ERR("__cxa_pure_virtual\n");
     ::DebugBreak();
 }
 
@@ -129,7 +130,7 @@ public:
     STDMETHODIMP AddData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP FindData(LPCVOID pvData, DWORD cbData, UINT *piSlot) override;
     STDMETHODIMP GetData(UINT iSlot, LPVOID pvData, DWORD cbData) override;
-    STDMETHODIMP QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData) override;
+    STDMETHODIMP QueryInfo(UINT iSlot, UINT *piGotSlot, DWORD *pcbData) override;
     STDMETHODIMP Delete(UINT iSlot) override;
 
     // Non-standard methods
@@ -172,8 +173,7 @@ CMruBase::~CMruBase()
             m_pSlots[iSlot].pvData = ::LocalFree(m_pSlots[iSlot].pvData);
         }
 
-        ::LocalFree(m_pSlots);
-        m_pSlots = NULL;
+        m_pSlots = (SLOTITEMDATA*)::LocalFree(m_pSlots);
     }
 
     ::InterlockedDecrement(&SHDOCVW_refCount);
@@ -377,15 +377,15 @@ STDMETHODIMP CMruBase::GetData(UINT iSlot, LPVOID pvData, DWORD cbData)
     return hr;
 }
 
-STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *puSlot, DWORD *pcbData)
+STDMETHODIMP CMruBase::QueryInfo(UINT iSlot, UINT *piGotSlot, DWORD *pcbData)
 {
     UINT iGotSlot;
     HRESULT hr = _GetSlot(iSlot, &iGotSlot);
     if (FAILED(hr))
         return hr;
 
-    if (puSlot)
-        *puSlot = iGotSlot;
+    if (piGotSlot)
+        *piGotSlot = iGotSlot;
 
     if (pcbData)
     {
@@ -604,11 +604,7 @@ public:
 
     ~CMruLongList() override
     {
-        if (m_puSlotData)
-        {
-            ::LocalFree(m_puSlotData);
-            m_puSlotData = NULL;
-        }
+        m_puSlotData = (UINT*)::LocalFree(m_puSlotData);
     }
 };
 
