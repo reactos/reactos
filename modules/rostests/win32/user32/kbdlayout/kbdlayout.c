@@ -12,7 +12,7 @@
 
 
 
-INT_PTR WINAPI MainDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK MainDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 
 HINSTANCE hInst;
