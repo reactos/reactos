@@ -217,7 +217,7 @@ HKL GetActivateHandle(HWND hDlg)
 	return (HKL)HKL_PREV;
 }
 
-INT_PTR WINAPI MainDialogProc(HWND hDlg,
+INT_PTR CALLBACK MainDialogProc(HWND hDlg,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam)
