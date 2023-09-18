@@ -371,7 +371,7 @@ STDMETHODIMP CMruBase::GetData(UINT iSlot, LPVOID pvData, DWORD cbData)
         return hr;
 
     if (cbData < pItem->cbData)
-        return 0x8007007A; // FIXME: Magic number
+        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 
     CopyMemory(pvData, pItem->pvData, pItem->cbData);
     return hr;
