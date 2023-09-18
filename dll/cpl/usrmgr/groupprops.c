@@ -638,7 +638,7 @@ GroupProperties(HWND hwndDlg)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_GROUP_GENERAL, (DLGPROC)GroupGeneralPageProc, szGroupName);
+    InitPropSheetPage(&psp[0], IDD_GROUP_GENERAL, GroupGeneralPageProc, szGroupName);
 
     return (PropertySheet(&psh) == IDOK);
 }

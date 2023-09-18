@@ -96,9 +96,9 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         psh.nStartPage = 0;
         psh.ppsp = psp;
 
-        InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, (DLGPROC) DateTimePageProc);
-        InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, (DLGPROC) TimeZonePageProc);
-        InitPropSheetPage(&psp[2], IDD_INETTIMEPAGE, (DLGPROC) InetTimePageProc);
+        InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, DateTimePageProc);
+        InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, TimeZonePageProc);
+        InitPropSheetPage(&psp[2], IDD_INETTIMEPAGE, InetTimePageProc);
 
         Ret = (LONG)(PropertySheetW(&psh) != -1);
 

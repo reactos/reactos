@@ -113,7 +113,7 @@ DWORD WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
 	DialogInfo.lpCC = lpCommConfig;
 
 	return DialogBoxParamW(hDllInstance, MAKEINTRESOURCEW(IDD_COMMDLG),
-					hWnd, (DLGPROC)CommDlgProc, (LPARAM)&DialogInfo);
+					hWnd, CommDlgProc, (LPARAM)&DialogInfo);
 }
 
 /*
@@ -186,10 +186,9 @@ DWORD WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
  *
  ************************************/
 
-LRESULT CommDlgProc(HWND hDlg,
-	UINT Msg,
-	WPARAM wParam,
-	LPARAM lParam)
+INT_PTR
+CALLBACK
+CommDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	LPDIALOG_INFO lpDlgInfo = NULL;
 	HWND hBox;

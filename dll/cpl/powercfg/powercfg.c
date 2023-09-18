@@ -97,16 +97,16 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   psh.nStartPage = 0;
   psh.phpage = hpsp;
 
-  InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSCHEMES, (DLGPROC)PowerSchemesDlgProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSCHEMES, PowerSchemesDlgProc);
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)
     {
-      InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC)AlarmsDlgProc);
+      InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
     }
   }
-  InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC)AdvancedDlgProc);
-  InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, (DLGPROC)HibernateDlgProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedDlgProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
 
   /* Load additional pages provided by shell extensions */
   hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);

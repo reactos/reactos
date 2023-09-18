@@ -64,9 +64,9 @@ UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_USERS, (DLGPROC)UsersPageProc);
-    InitPropSheetPage(&psp[1], IDD_GROUPS, (DLGPROC)GroupsPageProc);
-    InitPropSheetPage(&psp[2], IDD_EXTRA, (DLGPROC)ExtraPageProc);
+    InitPropSheetPage(&psp[0], IDD_USERS, UsersPageProc);
+    InitPropSheetPage(&psp[1], IDD_GROUPS, GroupsPageProc);
+    InitPropSheetPage(&psp[2], IDD_EXTRA, ExtraPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

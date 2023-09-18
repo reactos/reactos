@@ -467,7 +467,7 @@ FilterKeysDlgProc(HWND hwndDlg,
                     DialogBoxParam(hApplet,
                                    MAKEINTRESOURCE(IDD_BOUNCEKEYSOPTIONS),
                                    hwndDlg,
-                                   (DLGPROC)BounceKeysDlgProc,
+                                   BounceKeysDlgProc,
                                    (LPARAM)pGlobalData);
                     break;
 
@@ -492,7 +492,7 @@ FilterKeysDlgProc(HWND hwndDlg,
                     DialogBoxParam(hApplet,
                                    MAKEINTRESOURCE(IDD_REPEATKEYSOPTIONS),
                                    hwndDlg,
-                                   (DLGPROC)RepeatKeysDlgProc,
+                                   RepeatKeysDlgProc,
                                    (LPARAM)pGlobalData);
                     break;
 
@@ -621,7 +621,7 @@ KeyboardPageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_STICKYKEYSOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)StickyKeysDlgProc,
+                                       StickyKeysDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
@@ -635,7 +635,7 @@ KeyboardPageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_FILTERKEYSOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)FilterKeysDlgProc,
+                                       FilterKeysDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
@@ -649,7 +649,7 @@ KeyboardPageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_TOGGLEKEYSOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)ToggleKeysDlgProc,
+                                       ToggleKeysDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;

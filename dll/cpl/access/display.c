@@ -179,7 +179,7 @@ DisplayPageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_CONTRASTOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)HighContrastDlgProc,
+                                       HighContrastDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;

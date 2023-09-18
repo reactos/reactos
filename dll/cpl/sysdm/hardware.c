@@ -95,7 +95,7 @@ HardwarePageProc(HWND hwndDlg,
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_HARDWAREPROFILES),
                               hwndDlg,
-                              (DLGPROC)HardProfDlgProc);
+                              HardProfDlgProc);
                     return TRUE;
             }
             break;

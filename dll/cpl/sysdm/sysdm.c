@@ -147,10 +147,10 @@ SystemApplet(VOID)
     psh.phpage = hpsp;
     psh.pfnCallback = NULL;
 
-    InitPropSheetPage(&psh, IDD_PROPPAGEGENERAL, (DLGPROC) GeneralPageProc);
+    InitPropSheetPage(&psh, IDD_PROPPAGEGENERAL, GeneralPageProc);
     hNetIdDll = AddNetIdPage(&psh);
-    InitPropSheetPage(&psh, IDD_PROPPAGEHARDWARE, (DLGPROC) HardwarePageProc);
-    InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
+    InitPropSheetPage(&psh, IDD_PROPPAGEHARDWARE, HardwarePageProc);
+    InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedPageProc);
 
     /* Load additional pages provided by shell extensions */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\System"), MAX_SYSTEM_PAGES - psh.nPages);

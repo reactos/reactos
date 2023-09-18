@@ -177,7 +177,7 @@ MousePageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_MOUSEKEYSOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)MouseKeysDlgProc,
+                                       MouseKeysDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;

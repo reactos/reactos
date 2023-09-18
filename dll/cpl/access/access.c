@@ -200,11 +200,11 @@ SystemApplet(VOID)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, (DLGPROC)KeyboardPageProc, pGlobalData);
-    InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, (DLGPROC)SoundPageProc, pGlobalData);
-    InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, (DLGPROC)DisplayPageProc, pGlobalData);
-    InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, (DLGPROC)MousePageProc, pGlobalData);
-    InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, (DLGPROC)GeneralPageProc, pGlobalData);
+    InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, KeyboardPageProc, pGlobalData);
+    InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, SoundPageProc, pGlobalData);
+    InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, DisplayPageProc, pGlobalData);
+    InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, MousePageProc, pGlobalData);
+    InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, GeneralPageProc, pGlobalData);
 
     ret = PropertySheet(&psh);
 
