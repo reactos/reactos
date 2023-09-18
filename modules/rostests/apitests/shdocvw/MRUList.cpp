@@ -74,8 +74,6 @@ static INT MRUList_Check(LPCWSTR pszSubKey, LPCWSTR pszValueName, LPCVOID pvData
     error = SHGetValueW(HKEY_CURRENT_USER, pszSubKey, pszValueName, NULL, abData, &dwSize);
     if (error != ERROR_SUCCESS)
         return -999;
-    if (dwSize != cbData)
-        return +999;
 #if 0
     for (DWORD i = 0; i < dwSize; ++i)
     {
@@ -83,6 +81,11 @@ static INT MRUList_Check(LPCWSTR pszSubKey, LPCWSTR pszValueName, LPCVOID pvData
     }
     printf("\n");
 #endif
+    if (dwSize != cbData)
+    {
+        //printf("dwSize: %ld\n", dwSize);
+        return +999;
+    }
     return memcmp(abData, pvData, cbData) == 0;
 }
 
