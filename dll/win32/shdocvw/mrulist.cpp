@@ -1122,34 +1122,53 @@ HRESULT CMruPidlList::GetEmptySlot(UINT *pnNodeSlot)
 
 STDMETHODIMP CMruPidlList::InitList(UINT cMRUSize, HKEY hKey, LPCWSTR pszSubKey)
 {
+    TRACE("%p -> %u %p %s\n", this, cMRUSize, hKey, debugstr_w(pszSubKey));
+
     HRESULT hr = InitData(cMRUSize, 0, hKey, pszSubKey, NULL);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     hr = _InitNodeSlots();
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     m_hMutex = ::CreateMutexW(NULL, FALSE, L"Shell.CMruPidlList");
     if (!m_hMutex)
+    {
         hr = HRESULT_FROM_WIN32(GetLastError());
+        ERR("0x%08lX\n", hr);
+    }
 
     return hr;
 }
 
 STDMETHODIMP CMruPidlList::UsePidl(LPCITEMIDLIST pidl, UINT *pnNodeSlot)
 {
+    TRACE("%p -> %p %p\n", this, pidl, pnNodeSlot);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     *pnNodeSlot = 0;
 
     CMruNode *pNode;
     hr = GetNode(TRUE, pidl, &pNode);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     hr = pNode->GetNodeSlot(pnNodeSlot);
     if (FAILED(hr))
@@ -1171,17 +1190,25 @@ STDMETHODIMP CMruPidlList::QueryPidl(
     UINT *pnNodeSlots,
     UINT *pcNodeSlots)
 {
+    TRACE("%p -> %p %u %p %p\n", this, pidl, cSlots, pnNodeSlots, pcNodeSlots);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     *pcNodeSlots = 0;
 
     CMruNode *pNode;
     hr = GetNode(FALSE, pidl, &pNode);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     while (pNode && *pcNodeSlots < cSlots)
     {
@@ -1206,10 +1233,15 @@ STDMETHODIMP CMruPidlList::QueryPidl(
 
 STDMETHODIMP CMruPidlList::PruneKids(LPCITEMIDLIST pidl)
 {
+    TRACE("%p -> %p\n", this, pidl);
+
     CSafeMutex mutex;
     HRESULT hr = mutex.Enter(m_hMutex);
     if (FAILED(hr))
+    {
+        ERR("0x%08lX\n", hr);
         return hr;
+    }
 
     if (!_LoadNodeSlots())
         return hr;
