@@ -259,3 +259,7 @@ add_subdirectory(xinput1_3)
 add_subdirectory(xinput9_1_0)
 add_subdirectory(xmllite)
 add_subdirectory(xolehlp)
+
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    add_subdirectory(dwmapi)
+endif()
