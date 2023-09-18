@@ -25,7 +25,7 @@ list(APPEND SOURCE
     query.c
     queue.c
     setupcab.c
-    stringtable.c
+    stringtable_wine.c
     stubs.c
     rpc.c)
 
