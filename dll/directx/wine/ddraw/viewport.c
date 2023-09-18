@@ -1220,7 +1220,7 @@ struct d3d_viewport *unsafe_impl_from_IDirect3DViewport2(IDirect3DViewport2 *ifa
     /* IDirect3DViewport and IDirect3DViewport3 use the same iface. */
     if (!iface) return NULL;
     assert(iface->lpVtbl == (IDirect3DViewport2Vtbl *)&d3d_viewport_vtbl);
-    return CONTAINING_RECORD((IDirect3DViewport3 *)iface, struct d3d_viewport, IDirect3DViewport3_iface);
+    return CONTAINING_RECORD(iface, struct d3d_viewport, IDirect3DViewport3_iface);
 }
 
 struct d3d_viewport *unsafe_impl_from_IDirect3DViewport(IDirect3DViewport *iface)
@@ -1228,7 +1228,7 @@ struct d3d_viewport *unsafe_impl_from_IDirect3DViewport(IDirect3DViewport *iface
     /* IDirect3DViewport and IDirect3DViewport3 use the same iface. */
     if (!iface) return NULL;
     assert(iface->lpVtbl == (IDirect3DViewportVtbl *)&d3d_viewport_vtbl);
-    return CONTAINING_RECORD((IDirect3DViewport3 *)iface, struct d3d_viewport, IDirect3DViewport3_iface);
+    return CONTAINING_RECORD(iface, struct d3d_viewport, IDirect3DViewport3_iface);
 }
 
 void d3d_viewport_init(struct d3d_viewport *viewport, struct ddraw *ddraw)
