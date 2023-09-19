@@ -552,7 +552,17 @@ static void init_filedlg_infoW(OPENFILENAMEW *ofn, FileOpenDlgInfos *info)
     info->ofnInfos = ofn;
 
     info->title = ofn->lpstrTitle;
+#ifdef __REACTOS__
+    if (ofn->lpstrDefExt)
+    {
+        INT cchExt = lstrlenW(ofn->lpstrDefExt);
+        LPWSTR pszExt = heap_alloc((cchExt + 1) * sizeof(WCHAR));
+        lstrcpyW(pszExt, ofn->lpstrDefExt);
+        info->defext = pszExt;
+    }
+#else
     info->defext = ofn->lpstrDefExt;
+#endif
     info->filter = ofn->lpstrFilter;
     info->customfilter = ofn->lpstrCustomFilter;
 
@@ -697,6 +707,12 @@ static BOOL GetFileDialog95(FileOpenDlgInfos *info, UINT dlg_type)
         heap_free((void *)info->filter);
         heap_free((void *)info->customfilter);
     }
+#ifdef __REACTOS__
+    else
+    {
+        heap_free((void *)info->defext);
+    }
+#endif
 
     heap_free(info->filename);
     heap_free(info->initdir);
@@ -1206,6 +1222,34 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
             }
             else retval = FALSE;
             break;
+
+#ifdef __REACTOS__
+        case CDM_SETDEFEXT:
+        {
+            LPWSTR olddefext = (LPWSTR)fodInfos->defext;
+            fodInfos->defext = NULL;
+
+            if (fodInfos->unicode)
+            {
+                LPCWSTR pszExt = (LPCWSTR)lParam;
+                if (pszExt)
+                {
+                    INT cchExt = lstrlenW(pszExt);
+                    fodInfos->defext = heap_alloc((cchExt + 1) * sizeof(WCHAR));
+                    lstrcpyW((LPWSTR)fodInfos->defext, pszExt);
+                }
+            }
+            else
+            {
+                LPCSTR pszExt = (LPCSTR)lParam;
+                if (pszExt)
+                    fodInfos->defext = heap_strdupAtoW(pszExt);
+            }
+
+            heap_free(olddefext);
+            break;
+        }
+#endif
 
         default:
             if (uMsg >= CDM_FIRST && uMsg <= CDM_LAST)
