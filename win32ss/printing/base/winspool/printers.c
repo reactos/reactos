@@ -834,7 +834,19 @@ IntFixUpDevModeNames( PDOCUMENTPROPERTYHEADER pdphdr )
 
     if (res)
     {
-        FIXME("IFUDMN : Get Printer Name %S\n",pi2->pPrinterName);
+        /* Check if the provided buffer is large enough */
+        DWORD cbDevMode = pi2->pDevMode->dmSize + pi2->pDevMode->dmDriverExtra;
+        if (pdphdr->cbOut < cbDevMode)
+        {
+            ERR("cbOut (%lu) < cbDevMode(%u)\n", pdphdr->cbOut, cbDevMode);
+            res = FALSE;
+            goto Exit;
+        }
+
+        /* Copy the devmode */
+        RtlCopyMemory(pdphdr->pdmOut, pi2->pDevMode, cbDevMode);
+
+        TRACE("IFUDMN : Get Printer Name %S\n", pi2->pPrinterName);
         StringCchCopyW( pdphdr->pdmOut->dmDeviceName, CCHDEVICENAME-1, pi2->pPrinterName );
         pdphdr->pdmOut->dmDeviceName[CCHDEVICENAME-1] = 0;
     }
@@ -842,6 +854,8 @@ IntFixUpDevModeNames( PDOCUMENTPROPERTYHEADER pdphdr )
     {
         ERR("IFUDMN : GetPrinterW failed with %u\n", GetLastError());
     }
+
+Exit:
     HeapFree(hProcessHeap, 0, pi2);
     return res;
 }
