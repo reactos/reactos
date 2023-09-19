@@ -585,28 +585,33 @@ typedef struct _WSK_TRANSPORT
 
 _Must_inspect_result_
 NTSTATUS
+WSKAPI
 WskRegister(
     _In_ PWSK_CLIENT_NPI WskClientNpi,
     _Out_ PWSK_REGISTRATION WskRegistration);
 
 _Must_inspect_result_
 NTSTATUS
+WSKAPI
 WskCaptureProviderNPI(
     _In_ PWSK_REGISTRATION WskRegistration,
     _In_ ULONG WaitTimeout,
     _Out_ PWSK_PROVIDER_NPI WskProviderNpi);
 
 VOID
+WSKAPI
 WskReleaseProviderNPI(
     _In_ PWSK_REGISTRATION WskRegistration);
 
 _Must_inspect_result_
 NTSTATUS
+WSKAPI
 WskQueryProviderCharacteristics(
     _In_ PWSK_REGISTRATION WskRegistration,
     _Out_ PWSK_PROVIDER_CHARACTERISTICS WskProviderCharacteristics);
 
 VOID
+WSKAPI
 WskDeregister(
     _In_ PWSK_REGISTRATION WskRegistration);
 
