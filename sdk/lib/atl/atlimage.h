@@ -65,7 +65,7 @@ public:
 
     HBITMAP Detach() noexcept
     {
-        m_hOldBitmap = m_hBitmap = NULL;
+        m_hOldBitmap = NULL;
         m_nWidth = m_nHeight = m_nPitch = m_nBPP = 0;
         m_pBits = NULL;
 
