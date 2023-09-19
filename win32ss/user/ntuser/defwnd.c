@@ -792,17 +792,19 @@ IntDefWindowProc(
          {
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
+            BOOL allowSnap = FALSE;
 
             // MS Doc: foreground window can be NULL, e.g. when window is losing activation
             if (!topWnd)
                return 0;
 
-            if (IntIsSnapAllowedForWindow(topWnd))
+            allowSnap = IntIsSnapAllowedForWindow(topWnd);
+            if (!allowSnap && (topWnd->style & (WS_MINIMIZEBOX|WS_THICKFRAME)) == WS_MINIMIZEBOX)
+                allowSnap = wParam == VK_DOWN; // Allow minimize Calc.exe
+
+            if (allowSnap)
             {
                UINT snapped = IntGetWindowSnapEdge(topWnd);
-
-               if ((topWnd->style & WS_THICKFRAME) == 0)
-                  return 0;
 
                if (wParam == VK_DOWN)
                {

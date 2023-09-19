@@ -95,8 +95,10 @@ IntIsSnapAllowedForWindow(PWND w)
 {
     /* We want to forbid snapping operations on the TaskBar and on child windows */
     /* We use a heuristic for detecting the TaskBar by its typical Style & ExStyle */
+    UINT style = w->style;
     UINT tbws = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     UINT tbes = WS_EX_TOOLWINDOW;
-    BOOL istb = (w->style & tbws) == tbws && (w->ExStyle & (tbes|WS_EX_APPWINDOW)) == tbes;
-    return !(w->style & WS_CHILD) && !istb;
+    BOOL istb = (style & tbws) == tbws && (w->ExStyle & (tbes|WS_EX_APPWINDOW)) == tbes;
+    BOOL thickframe = (style & WS_THICKFRAME) && (style & (WS_DLGFRAME|WS_BORDER)) != WS_DLGFRAME;
+    return thickframe && !(style & WS_CHILD) && !istb;
 }
