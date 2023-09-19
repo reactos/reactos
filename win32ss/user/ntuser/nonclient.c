@@ -309,7 +309,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       {
           co_UserSetCapture(UserHMGetHandle(pwnd));
           hittest = DefWndStartSizeMove(pwnd, wParam, &capturePoint);
-	  if (!hittest)
+          if (!hittest)
           {
               IntReleaseCapture();
               return;
@@ -444,10 +444,10 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
       if (msg.message == WM_KEYDOWN) switch(msg.wParam)
       {
-	case VK_UP:    pt.y -= 8; break;
-	case VK_DOWN:  pt.y += 8; break;
-	case VK_LEFT:  pt.x -= 8; break;
-	case VK_RIGHT: pt.x += 8; break;
+      case VK_UP:    pt.y -= 8; break;
+      case VK_DOWN:  pt.y += 8; break;
+      case VK_LEFT:  pt.x -= 8; break;
+      case VK_RIGHT: pt.x += 8; break;
       }
 
       pt.x = max( pt.x, mouseRect.left );
@@ -460,9 +460,9 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
       if (dx || dy)
       {
-	  if ( !moved )
-	  {
-	      moved = TRUE;
+      if ( !moved )
+      {
+          moved = TRUE;
           if ( iconic ) /* ok, no system popup tracking */
           {
               OldCursor = UserSetCursor(DragCursor, FALSE);
@@ -470,7 +470,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
           }
           else if(!DragFullWindows)
              UserDrawMovingFrame( hdc, &sizingRect, thickframe );
-	  }
+      }
 
       if (msg.message == WM_KEYDOWN)
       {
@@ -537,12 +537,12 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               /* regular window moving */
               RECTL_vOffsetRect(&newRect, dx, dy);
           }
-	      if (ON_LEFT_BORDER(hittest)) newRect.left += dx;
-	      else if (ON_RIGHT_BORDER(hittest)) newRect.right += dx;
-	      if (ON_TOP_BORDER(hittest)) newRect.top += dy;
-	      else if (ON_BOTTOM_BORDER(hittest)) newRect.bottom += dy;
+          if (ON_LEFT_BORDER(hittest)) newRect.left += dx;
+          else if (ON_RIGHT_BORDER(hittest)) newRect.right += dx;
+          if (ON_TOP_BORDER(hittest)) newRect.top += dy;
+          else if (ON_BOTTOM_BORDER(hittest)) newRect.bottom += dy;
 
-	      capturePoint = pt;
+          capturePoint = pt;
 
               //
               //  Save the new position to the unmodified rectangle. This allows explorer task bar
@@ -551,7 +551,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               //
               unmodRect = newRect;
 
-	      /* determine the hit location */
+          /* determine the hit location */
               if (syscommand == SC_SIZE)
               {
                   WPARAM wpSizingHit = 0;
@@ -563,7 +563,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               else
                   co_IntSendMessage( UserHMGetHandle(pwnd), WM_MOVING, 0, (LPARAM)&newRect );
 
-	      if (!iconic)
+              if (!iconic)
               {
                  if (!DragFullWindows)
                      UserDrawMovingFrame( hdc, &newRect, thickframe );
@@ -611,7 +611,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                  }
               }
               sizingRect = newRect;
-	  }
+        }
       }
    }
 
@@ -704,15 +704,14 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
    if ( IntIsWindow(UserHMGetHandle(pwnd)) )
    {
-     if ( iconic )
-     {
-	/* Single click brings up the system menu when iconized */
-	if ( !moved )
-        {
-	    if( Style & WS_SYSMENU )
-	      co_IntSendMessage( UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
-        }
-     }
+      if ( iconic )
+      {
+         /* Single click brings up the system menu when iconized */
+         if ( !moved && ( Style & WS_SYSMENU ) )
+         {
+            co_IntSendMessage( UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
+         }
+      }
    }
 }
 
