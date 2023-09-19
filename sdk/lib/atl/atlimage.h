@@ -39,16 +39,6 @@ public:
 
     CImage() noexcept
     {
-        m_hBitmap = NULL;
-        m_hOldBitmap = NULL;
-        m_hDC = NULL;
-
-        m_eOrientation = DIBOR_DEFAULT;
-        m_bHasAlphaChannel = false;
-        m_bIsDIBSection = false;
-        m_clrTransparentColor = CLR_INVALID;
-        ZeroMemory(&m_ds, sizeof(m_ds));
-
         s_gdiplus.IncreaseCImageCount();
     }
 
@@ -75,10 +65,12 @@ public:
 
     HBITMAP Detach() noexcept
     {
-        m_eOrientation = DIBOR_DEFAULT;
-        m_bHasAlphaChannel = false;
+        m_hOldBitmap = m_hBitmap = NULL;
+        m_nWidth = m_nHeight = m_nPitch = m_nBPP = 0;
+        m_pBits = NULL;
+
+        m_bHasAlphaChannel = m_bIsDIBSection = FALSE;
         m_clrTransparentColor = CLR_INVALID;
-        ZeroMemory(&m_ds, sizeof(m_ds));
 
         HBITMAP hBitmap = m_hBitmap;
         m_hBitmap = NULL;
@@ -275,12 +267,7 @@ public:
     void *GetBits() noexcept
     {
         ATLASSERT(IsDIBSection());
-        BYTE *pb = (BYTE *)m_bm.bmBits;
-        if (m_eOrientation == DIBOR_BOTTOMUP)
-        {
-            pb += m_bm.bmWidthBytes * (m_bm.bmHeight - 1);
-        }
-        return pb;
+        return m_pBits;
     }
 
     const void *GetBits() const noexcept
@@ -291,7 +278,7 @@ public:
     int GetBPP() const noexcept
     {
         ATLASSERT(m_hBitmap);
-        return m_bm.bmBitsPixel;
+        return m_nBPP;
     }
 
     void GetColorTable(UINT iFirstColor, UINT nColors,
@@ -306,24 +293,18 @@ public:
     int GetHeight() const noexcept
     {
         ATLASSERT(m_hBitmap);
-        return m_bm.bmHeight;
+        return m_nHeight;
     }
 
     int GetMaxColorTableEntries() const noexcept
     {
         ATLASSERT(IsDIBSection());
-        if (m_ds.dsBmih.biClrUsed && m_ds.dsBmih.biBitCount < 16)
-            return m_ds.dsBmih.biClrUsed;
-        switch (m_bm.bmBitsPixel)
+        switch (m_nBPP)
         {
-            case 1:     return 2;
-            case 4:     return 16;
-            case 8:     return 256;
-            case 16: case 32:
-                if (m_ds.dsBmih.biCompression == BI_BITFIELDS)
-                    return 3;
-                return 0;
-            case 24:
+            case 1: case 4: case 8:
+                return (1 << m_nBPP);
+
+            case 16: case 24: case 32:
             default:
                 return 0;
         }
@@ -332,10 +313,7 @@ public:
     int GetPitch() const noexcept
     {
         ATLASSERT(IsDIBSection());
-        if (m_eOrientation == DIBOR_BOTTOMUP)
-            return -m_bm.bmWidthBytes;
-        else
-            return m_bm.bmWidthBytes;
+        return m_nPitch;
     }
 
     COLORREF GetPixel(int x, int y) const noexcept
@@ -368,7 +346,7 @@ public:
     int GetWidth() const noexcept
     {
         ATLASSERT(m_hBitmap);
-        return m_bm.bmWidth;
+        return m_nWidth;
     }
 
     bool IsDIBSection() const noexcept
@@ -1030,21 +1008,18 @@ private:
     }
 
 private:
-    // FIXME: MS ATL CImage has m_nWidth, m_nHeight, m_nPitch, m_nBPP, and m_pBits.
-    // FIXME: MS ATL CImage hasn't m_eOrientation, m_bm, and m_ds.
-    HBITMAP             m_hBitmap;
-    mutable HBITMAP     m_hOldBitmap;
-    mutable HDC         m_hDC;
-    mutable LONG        m_nDCRefCount = 0;
-    DIBOrientation      m_eOrientation;
-    bool                m_bHasAlphaChannel;
-    bool                m_bIsDIBSection;
-    COLORREF            m_clrTransparentColor;
-    union
-    {
-        BITMAP          m_bm;
-        DIBSECTION      m_ds;
-    };
+    HBITMAP             m_hBitmap               = NULL;
+    mutable HBITMAP     m_hOldBitmap            = NULL;
+    INT                 m_nWidth                = 0;
+    INT                 m_nHeight               = 0;
+    INT                 m_nPitch                = 0;
+    INT                 m_nBPP                  = 0;
+    LPVOID              m_pBits                 = NULL;
+    BOOL                m_bHasAlphaChannel      = FALSE;
+    BOOL                m_bIsDIBSection         = FALSE;
+    COLORREF            m_clrTransparentColor   = CLR_INVALID;
+    mutable HDC         m_hDC                   = NULL;
+    mutable LONG        m_nDCRefCount           = 0;
 
     LPCWSTR GetFileExtension(LPCWSTR pszFileName) const
     {
@@ -1150,26 +1125,40 @@ private:
     {
         Destroy();
 
-        const int size = sizeof(DIBSECTION);
-        m_bIsDIBSection = (::GetObject(hBitmap, size, &m_ds) == size);
+        DIBSECTION ds;
+        BITMAP& bm = ds.dsBm;
 
-        bool bOK = (::GetObject(hBitmap, sizeof(BITMAP), &m_bm) != 0);
-        if (!bOK)
+        m_bIsDIBSection = (::GetObjectW(hBitmap, sizeof(ds), &ds) == sizeof(ds));
+
+        if (!m_bIsDIBSection && !::GetObjectW(hBitmap, sizeof(bm), &bm))
             return;
 
         m_hBitmap = hBitmap;
-
-        if (m_bIsDIBSection && eOrientation == DIBOR_DEFAULT)
-        {
-            if (m_ds.dsBmih.biHeight < 0)
-                eOrientation = DIBOR_TOPDOWN;
-            else
-                eOrientation = DIBOR_BOTTOMUP;
-        }
-        m_eOrientation = eOrientation;
-
-        m_bHasAlphaChannel = (m_bm.bmBitsPixel == 32);
+        m_nWidth = bm.bmWidth;
+        m_nHeight = bm.bmHeight;
+        m_nBPP = bm.bmBitsPixel;
+        m_bHasAlphaChannel = (bm.bmBitsPixel == 32);
         m_clrTransparentColor = CLR_INVALID;
+
+        m_nPitch = 0;
+        m_pBits = NULL;
+        if (m_bIsDIBSection)
+        {
+            if (eOrientation == DIBOR_DEFAULT)
+                eOrientation = ((ds.dsBmih.biHeight < 0) ? DIBOR_TOPDOWN : DIBOR_BOTTOMUP);
+
+            LPBYTE pb = (LPBYTE)bm.bmBits;
+            if (eOrientation == DIBOR_BOTTOMUP)
+            {
+                m_nPitch = -bm.bmWidthBytes;
+                m_pBits = pb + bm.bmWidthBytes * (m_nHeight - 1);
+            }
+            else
+            {
+                m_nPitch = bm.bmWidthBytes;
+                m_pBits = pb;
+            }
+        }
     }
 
     BOOL CreateInternal(int nWidth, int nHeight, int nBPP,
