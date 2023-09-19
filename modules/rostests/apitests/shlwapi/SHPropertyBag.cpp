@@ -826,10 +826,14 @@ static void SHPropertyBag_OnIniFile(void)
 
 static void SHPropertyBag_PerScreenRes(void)
 {
+    HDC hDC = GetDC(NULL);
+    INT cxWidth = GetDeviceCaps(hDC, HORZRES);
+    INT cyHeight = GetDeviceCaps(hDC, VERTRES);
+    INT cMonitors = GetSystemMetrics(SM_CMONITORS);
+    ReleaseDC(NULL, hDC);
+
     WCHAR szBuff1[64], szBuff2[64];
-    StringCchPrintfW(szBuff1, _countof(szBuff1), L"%dx%d(%d)",
-                     GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN),
-                     GetSystemMetrics(SM_CMONITORS));
+    StringCchPrintfW(szBuff1, _countof(szBuff1), L"%dx%d(%d)", cxWidth, cyHeight, cMonitors);
 
     szBuff2[0] = UNICODE_NULL;
     SHGetPerScreenResName(szBuff2, _countof(szBuff2), 0);
