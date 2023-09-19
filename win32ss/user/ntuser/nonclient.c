@@ -300,7 +300,6 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
    else  /* SC_SIZE */
    {
-      RECTL_vSetEmptyRect(&pwnd->InternalPos.NormalRect); /* CORE-19160 */
       if (!thickframe) return;
       if (hittest && (syscommand != SC_MOUSEMENU))
       {
@@ -495,7 +494,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                   !RECTL_bIsEmptyRect(&pwnd->InternalPos.NormalRect))
               {
                   *r = pwnd->InternalPos.NormalRect;
-                  origRect = *r; /* Save normal size - it required when window unsnapped from one side and snapped to another holding mouse down */
+                  origRect = *r; /* Save normal size - is required when window unsnapped from one side and snapped to another holding mouse down */
 
                   /* Try to position the center of the caption where the mouse is horizontally */
                   capcy = UserGetSystemMetrics((ExStyle & WS_EX_TOPMOST) ? SM_CYSMCAPTION : SM_CYCAPTION); /* No border, close enough */

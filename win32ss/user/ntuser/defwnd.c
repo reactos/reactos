@@ -835,13 +835,13 @@ IntDefWindowProc(
                      IntSetSnapInfo(topWnd, edge, &normalRect); /* Reset the real place to unsnap to */
                      snapped = FALSE; /* Force snap */
                   }
-                  #if 0 /* Windows 8 does this but is it a good feature? */
+#if 0 /* Windows 8 does this but is it a good feature? */
                   else if (snapped == edge)
                   {
                        /* Already snapped to this edge, snap to the opposite side */
                      edge = otherEdge;
                   }
-                  #endif
+#endif
 
                   if (snapped == otherEdge)
                      co_IntUnsnapWindow(topWnd);
