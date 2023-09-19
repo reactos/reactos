@@ -1478,7 +1478,7 @@ public:
     using CWindowImplRoot<TBase>::m_hWnd;
     // - Hacks for gcc
 
-    HWND Create(HWND hWndParent, LPARAM dwInitParam = NULL)
+    HWND Create(HWND hWndParent, LPARAM dwInitParam = 0)
     {
         BOOL result;
         HWND hWnd;
@@ -1495,7 +1495,7 @@ public:
         return hWnd;
     }
 
-    INT_PTR DoModal(HWND hWndParent = ::GetActiveWindow(), LPARAM dwInitParam = NULL)
+    INT_PTR DoModal(HWND hWndParent = ::GetActiveWindow(), LPARAM dwInitParam = 0)
     {
         BOOL result;
         T* pImpl;
