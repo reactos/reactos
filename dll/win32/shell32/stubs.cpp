@@ -952,38 +952,6 @@ Printers_GetPidl(LPCITEMIDLIST pidl, LPCWSTR lpName, DWORD dwUnknown1, DWORD dwU
 /*
  * Unimplemented
  */
-EXTERN_C INT
-WINAPI
-Int64ToString(LONGLONG llInt64,
-              LPWSTR lpOut,
-              UINT uSize,
-              BOOL bUseFormat,
-              NUMBERFMT *pNumberFormat,
-              DWORD dwNumberFlags)
-{
-    FIXME("Int64ToString() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C INT
-WINAPI
-LargeIntegerToString(LARGE_INTEGER *pLargeInt,
-                     LPWSTR lpOut,
-                     UINT uSize,
-                     BOOL bUseFormat,
-                     NUMBERFMT *pNumberFormat,
-                     DWORD dwNumberFlags)
-{
-    FIXME("LargeIntegerToString() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C LONG
 WINAPI
 Printers_AddPrinterPropPages(LPVOID lpUnknown1, LPVOID lpUnknown2)
