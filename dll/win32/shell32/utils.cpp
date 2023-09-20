@@ -100,7 +100,11 @@ SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
     return SUCCEEDED(hr);
 }
 
-static HRESULT Int64ToStr(LONGLONG llValue, LPWSTR pszValue, UINT cchValue)
+static HRESULT
+Int64ToStr(
+    _In_ LONGLONG llValue,
+    _Out_writes_z_(cchValue) LPWSTR pszValue,
+    _In_ UINT cchValue)
 {
     WCHAR szBuff[40];
     UINT ich = 0, ichValue;
