@@ -176,6 +176,9 @@ SearchKcbList:
             /* Now go back and search the list */
             goto SearchKcbList;
         }
+
+        /* Release the allocation lock */
+        KeReleaseGuardedMutex(&CmpAllocBucketLock);
     }
 
     /* Allocate a KCB only */
