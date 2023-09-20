@@ -332,7 +332,7 @@ SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
 {
     PSAM_DB_OBJECT SamObject;
     PSAMPR_SR_SECURITY_DESCRIPTOR SdData = NULL;
-    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PISECURITY_DESCRIPTOR_RELATIVE RelativeSd = NULL;
     PSECURITY_DESCRIPTOR ResultSd = NULL;
     ACCESS_MASK DesiredAccess = 0;
     ULONG RelativeSdSize = 0;
@@ -397,16 +397,16 @@ SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
 
     /* Invalidate the SD information that was not requested */
     if (!(SecurityInformation & OWNER_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Owner = NULL;
+        RelativeSd->Owner = 0;
 
     if (!(SecurityInformation & GROUP_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Group = NULL;
+        RelativeSd->Group = 0;
 
     if (!(SecurityInformation & DACL_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_DACL_PRESENT;
+        RelativeSd->Control &= ~SE_DACL_PRESENT;
 
     if (!(SecurityInformation & SACL_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_SACL_PRESENT;
+        RelativeSd->Control &= ~SE_SACL_PRESENT;
 
     /* Calculate the required SD size */
     Status = RtlMakeSelfRelativeSD(RelativeSd,
@@ -439,7 +439,7 @@ SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
     }
 
     /* Fill the SD data buffer and return it to the caller */
-    SdData->Length = RelativeSdSize;
+    SdData->Length = ResultSdSize;
     SdData->SecurityDescriptor = (PBYTE)ResultSd;
 
     *SecurityDescriptor = SdData;
