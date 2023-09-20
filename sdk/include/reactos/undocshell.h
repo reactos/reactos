@@ -678,7 +678,7 @@ Int64ToString(
 INT WINAPI
 LargeIntegerToString(
     _In_ const LARGE_INTEGER *pLargeInt,
-    _Out_writes_(cchOut) LPWSTR pszOut,
+    _Out_writes_z_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
