@@ -50,11 +50,13 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         nidW.cbSize = sizeof(nidW);
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     else if (cbSize == NOTIFYICONDATAA_V3_SIZE)
     {
         nidW.cbSize = NOTIFYICONDATAW_V3_SIZE;
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
     }
+#endif
     else if (cbSize == NOTIFYICONDATAA_V2_SIZE)
     {
         nidW.cbSize = NOTIFYICONDATAW_V2_SIZE;
@@ -112,11 +114,13 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         }
     }
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     if ((cbSize >= NOTIFYICONDATAA_V3_SIZE) && (nidW.uFlags & NIF_GUID))
         nidW.guidItem = pnid->guidItem;
 
     if (cbSize >= sizeof(NOTIFYICONDATAA))
         nidW.hBalloonIcon = pnid->hBalloonIcon;
+#endif
 
     /* Call the unicode function */
     return Shell_NotifyIconW(dwMessage, &nidW);
@@ -145,10 +149,12 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
     {
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     else if (cbSize == NOTIFYICONDATAW_V3_SIZE)
     {
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
     }
+#endif
     else if (cbSize == NOTIFYICONDATAW_V2_SIZE)
     {
         dwValidFlags |= NIF_STATE | NIF_INFO;

@@ -51,8 +51,9 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_WS03
+#ifdef __REACTOS__
+    #include "compat.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1058,8 +1059,7 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_SystemX86Path,
 } CSIDL_Type;
 
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #define CSIDL_CONTACTS         0x0043
 #define CSIDL_DOWNLOADS        0x0047
 #define CSIDL_LINKS            0x004d
@@ -1527,8 +1527,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         NULL,
         NULL
     },
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     { /* 0x3f */
         &FOLDERID_AddNewPrograms,
         CSIDL_Type_Disallowed,
@@ -2958,8 +2957,7 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_MYPICTURES,
      CSIDL_FONTS,
      CSIDL_ADMINTOOLS,
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
      CSIDL_CONTACTS,
      CSIDL_DOWNLOADS,
      CSIDL_LINKS,

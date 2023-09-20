@@ -39,6 +39,10 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 
+#ifdef __REACTOS__
+    #include "compat.h"
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_EXTENSION_LENGTH 20
