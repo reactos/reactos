@@ -137,7 +137,7 @@ NC_GetSysPopupPos(PWND Wnd, RECT *Rect)
 }
 
 static UINT
-IsSnapActivationPoint(PWND Wnd, POINT pt)
+GetSnapActivationPoint(PWND Wnd, POINT pt)
 {
     RECT wa;
     UserSystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0); /* FIXME: MultiMon of PWND */
@@ -276,7 +276,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    iconic = (Style & WS_MINIMIZE) != 0;
 
    if (((Style & WS_MAXIMIZE) && syscommand != SC_MOVE) || !IntIsWindowVisible(pwnd)) return;
-   if ((Style & (WS_MAXIMIZE|WS_CHILD)) == WS_MAXIMIZE) orgSnap = snap = HTTOP;
+   if ((Style & (WS_MAXIMIZE | WS_CHILD)) == WS_MAXIMIZE)
+       orgSnap = snap = HTTOP;
 
    thickframe = UserHasThickFrameStyle(Style, ExStyle) && !iconic;
 
@@ -418,14 +419,15 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          if (hittest == HTCAPTION && thickframe && /* Check for snapping if was moved by caption */
              IntIsSnapAllowedForWindow(pwnd) && (ExStyle & WS_EX_MDICHILD) == 0)
          {
-            UINT wasSnap = IntIsWindowSnapped(pwnd); /* Need the live snap state, not orgSnap nor maximized state */
-            UINT snapTo = iconic ? FALSE : IsSnapActivationPoint(pwnd, pt);
+            BOOLEAN wasSnap = IntIsWindowSnapped(pwnd); /* Need the live snap state, not orgSnap nor maximized state */
+            UINT snapTo = iconic ? HTNOWHERE : GetSnapActivationPoint(pwnd, pt);
             if (snapTo)
             {
                 if (DragFullWindows)
                 {
                     co_IntSnapWindow(pwnd, snapTo);
-                    if (!wasSnap) pwnd->InternalPos.NormalRect = origRect;
+                    if (!wasSnap)
+                        pwnd->InternalPos.NormalRect = origRect;
                 }
                 snap = snapTo;
             }
@@ -460,16 +462,16 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
       if (dx || dy)
       {
-      if ( !moved )
+      if (!moved)
       {
           moved = TRUE;
-          if ( iconic ) /* ok, no system popup tracking */
+          if (iconic) /* ok, no system popup tracking */
           {
               OldCursor = UserSetCursor(DragCursor, FALSE);
-              UserShowCursor( TRUE );
+              UserShowCursor(TRUE);
           }
           else if(!DragFullWindows)
-             UserDrawMovingFrame( hdc, &sizingRect, thickframe );
+             UserDrawMovingFrame(hdc, &sizingRect, thickframe);
       }
 
       if (msg.message == WM_KEYDOWN)
@@ -498,13 +500,22 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
                   /* Try to position the center of the caption where the mouse is horizontally */
                   capcy = UserGetSystemMetrics((ExStyle & WS_EX_TOPMOST) ? SM_CYSMCAPTION : SM_CYCAPTION); /* No border, close enough */
-                  width = r->right - r->left, height = r->bottom - r->top;
-                  r->left = pt.x - width / 2, r->right = r->left + width;
-                  r->top = mouseRect.top, r->bottom = r->top + height;
+                  width = r->right - r->left;
+                  height = r->bottom - r->top;
+                  r->left = pt.x - width / 2;
+                  r->right = r->left + width;
+                  r->top = mouseRect.top;
+                  r->bottom = r->top + height;
                   if (r->left < mouseRect.left)
-                      r->left = mouseRect.left, r->right = r->left + width;
+                  {
+                      r->left = mouseRect.left;
+                      r->right = r->left + width;
+                  }
                   if ((pwnd->ExStyle & WS_EX_LAYOUTRTL) && r->right > mouseRect.right)
-                      r->left = mouseRect.right - width, r->right = r->left + width;
+                  {
+                      r->left = mouseRect.right - width;
+                      r->right = r->left + width;
+                  }
                   UserSetCursorPos(pt.x, r->top + capcy / 2, 0, 0, FALSE);
                   snap = FALSE;
                   dx = dy = 0; /* Don't offset this move */
@@ -519,19 +530,20 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               }
               else if (!snap && syscommand == SC_MOVE && !iconic)
               {
-                if ((snapTo = IsSnapActivationPoint(pwnd, pt)) != 0)
-                {
-                   co_IntCalculateSnapPosition(pwnd, snapTo, &snapPreviewRect);
-                   if (DragFullWindows)
-                   {
-                      /* TODO: Show preview of snap */
-                   }
-                   else
-                   {
-                      UserDrawMovingFrame(hdc, frameRect = &snapPreviewRect, thickframe);
-                      continue;
-                   }
-                }
+                  if ((snapTo = GetSnapActivationPoint(pwnd, pt)) != 0)
+                  {
+                      co_IntCalculateSnapPosition(pwnd, snapTo, &snapPreviewRect);
+                      if (DragFullWindows)
+                      {
+                          /* TODO: Show preview of snap */
+                      }
+                      else
+                      {
+                          frameRect = &snapPreviewRect;
+                          UserDrawMovingFrame(hdc, frameRect, thickframe);
+                          continue;
+                      }
+                  }
               }
 
               /* regular window moving */
@@ -551,7 +563,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               //
               unmodRect = newRect;
 
-          /* determine the hit location */
+              /* determine the hit location */
               if (syscommand == SC_SIZE)
               {
                   WPARAM wpSizingHit = 0;
@@ -702,14 +714,14 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       }
    }
 
-   if ( IntIsWindow(UserHMGetHandle(pwnd)) )
+   if (IntIsWindow(UserHMGetHandle(pwnd)))
    {
-      if ( iconic )
+      if (iconic)
       {
          /* Single click brings up the system menu when iconized */
-         if ( !moved && ( Style & WS_SYSMENU ) )
+         if (!moved && (Style & WS_SYSMENU))
          {
-            co_IntSendMessage( UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
+            co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x, pt.y));
          }
       }
    }

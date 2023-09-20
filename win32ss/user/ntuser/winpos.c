@@ -553,7 +553,9 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
       /* Lie about the snap */
       if (!IntIsWindowSnapped(Wnd) ||
           RECTL_bIsEmptyRect(&Wnd->InternalPos.NormalRect))
+      {
          Wnd->InternalPos.NormalRect = Rect;
+      }
    }
 }
 
@@ -2539,10 +2541,13 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                   }
                   else
                   {
-                     UINT edge = IntGetWindowSnapEdge(Wnd);
                      *NewPos = wpl.rcNormalPosition;
-                     if (edge && ShowFlag != SW_SHOWDEFAULT)
-                        co_IntCalculateSnapPosition(Wnd, edge, NewPos);
+                     if (ShowFlag != SW_SHOWNORMAL && ShowFlag != SW_SHOWDEFAULT)
+                     {
+                        UINT edge = IntGetWindowSnapEdge(Wnd);
+                        if (edge)
+                           co_IntCalculateSnapPosition(Wnd, edge, NewPos);
+                     }
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -3936,10 +3941,10 @@ VOID FASTCALL
 co_IntSnapWindow(PWND Wnd, UINT Edge)
 {
     RECT newPos;
-    UINT wasSnapped = IntIsWindowSnapped(Wnd);
-    UINT normal = !(Wnd->style & (WS_MAXIMIZE|WS_MINIMIZE));
+    BOOLEAN wasSnapped = IntIsWindowSnapped(Wnd);
+    UINT normal = !(Wnd->style & (WS_MAXIMIZE | WS_MINIMIZE));
     USER_REFERENCE_ENTRY ref;
-    BOOL hasRef = FALSE;
+    BOOLEAN hasRef = FALSE;
 
     if (Edge == HTTOP)
     {
@@ -3948,7 +3953,8 @@ co_IntSnapWindow(PWND Wnd, UINT Edge)
     }
     else if (Edge)
     {
-        UserRefObjectCo(Wnd, &ref), ++hasRef;
+        UserRefObjectCo(Wnd, &ref);
+        hasRef = TRUE;
         co_IntCalculateSnapPosition(Wnd, Edge, &newPos);
         IntSetSnapInfo(Wnd, Edge, (wasSnapped || !normal) ? NULL : &Wnd->rcWindow);
     }
@@ -3974,13 +3980,14 @@ co_IntSnapWindow(PWND Wnd, UINT Edge)
                           newPos.right - newPos.left,
                           newPos.bottom - newPos.top,
                           0);
-    if (hasRef) UserDerefObjectCo(Wnd);
+    if (hasRef)
+        UserDerefObjectCo(Wnd);
 }
 
 VOID FASTCALL
 IntSetSnapEdge(PWND Wnd, UINT Edge)
 {
-    UINT styleMask = WS_EX2_VERTICALLYMAXIMIZEDLEFT|WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
+    UINT styleMask = WS_EX2_VERTICALLYMAXIMIZEDLEFT | WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
     UINT style = 0;
     switch(Edge)
     {

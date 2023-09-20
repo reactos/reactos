@@ -799,8 +799,9 @@ IntDefWindowProc(
                return 0;
 
             allowSnap = IntIsSnapAllowedForWindow(topWnd);
+            /* Allow the minimize action if it has a minimize button, even if the window cannot be snapped (eg. Calc.exe) */
             if (!allowSnap && (topWnd->style & (WS_MINIMIZEBOX|WS_THICKFRAME)) == WS_MINIMIZEBOX)
-                allowSnap = wParam == VK_DOWN; // Allow minimize Calc.exe
+                allowSnap = wParam == VK_DOWN;
 
             if (allowSnap)
             {
@@ -835,12 +836,12 @@ IntDefWindowProc(
                      IntSetSnapEdge(topWnd, edge); /* Tell everyone the edge we are snapped to */
                      co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, MAKELONG(0, 1));
                      IntSetSnapInfo(topWnd, edge, &normalRect); /* Reset the real place to unsnap to */
-                     snapped = FALSE; /* Force snap */
+                     snapped = HTNOWHERE; /* Force snap */
                   }
 #if 0 /* Windows 8 does this but is it a good feature? */
                   else if (snapped == edge)
                   {
-                       /* Already snapped to this edge, snap to the opposite side */
+                     /* Already snapped to this edge, snap to the opposite side */
                      edge = otherEdge;
                   }
 #endif
