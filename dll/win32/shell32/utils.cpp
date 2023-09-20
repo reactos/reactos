@@ -152,7 +152,7 @@ Int64GetNumFormat(
     _In_ DWORD dwNumberFlags,
     _Out_writes_z_(cchDecimal) LPWSTR pszDecimal,
     _In_ INT cchDecimal,
-    _Out_writes_(cchThousand) LPWSTR pszThousand,
+    _Out_writes_z_(cchThousand) LPWSTR pszThousand,
     _In_ INT cchThousand)
 {
     WCHAR szBuff[20];
