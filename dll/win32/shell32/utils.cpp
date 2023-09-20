@@ -10,6 +10,48 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*************************************************************************
+ *                SHGetShellStyleHInstance (SHELL32.749)
+ */
+EXTERN_C HINSTANCE
+WINAPI
+SHGetShellStyleHInstance(VOID)
+{
+    HINSTANCE hInst = NULL;
+    WCHAR szPath[MAX_PATH], szColorName[100];
+    HRESULT hr;
+    CStringW strShellStyle;
+
+    TRACE("\n");
+
+    /* First, attempt to load the shellstyle dll from the current active theme */
+    hr = GetCurrentThemeName(szPath, _countof(szPath), szColorName, _countof(szColorName), NULL, 0);
+    if (FAILED(hr))
+        goto DoDefault;
+
+    /* Strip the theme filename */
+    PathRemoveFileSpecW(szPath);
+
+    strShellStyle = szPath;
+    strShellStyle += L"\\Shell\\";
+    strShellStyle += szColorName;
+    strShellStyle += L"\\ShellStyle.dll";
+
+    hInst = LoadLibraryExW(strShellStyle, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hInst)
+        return hInst;
+
+    /* Otherwise, use the version stored in the System32 directory */
+DoDefault:
+    if (!ExpandEnvironmentStringsW(L"%SystemRoot%\\System32\\ShellStyle.dll",
+                                   szPath, _countof(szPath)))
+    {
+        ERR("Expand failed\n");
+        return NULL;
+    }
+    return LoadLibraryExW(szPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+}
+
+/*************************************************************************
  *                SHCreatePropertyBag (SHELL32.715)
  */
 EXTERN_C HRESULT
