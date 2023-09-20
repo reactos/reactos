@@ -934,7 +934,7 @@
 @ stub -version=0x600+ _scwprintf_p_l
 @ cdecl _searchenv(str str ptr)
 @ cdecl -version=0x600+ _searchenv_s(str str ptr long)
-@ stub -version=0x600+ -arch=i386 _seh_longjmp_unwind4
+@ stdcall -version=0x600+ -arch=i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -arch=i386 _seh_longjmp_unwind(ptr)
 @ stub -arch=i386 _set_SSE2_enable
 @ stub -version=0x600+ _set_controlfp
