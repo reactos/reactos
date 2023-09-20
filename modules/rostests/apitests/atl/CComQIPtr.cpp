@@ -80,6 +80,8 @@ public:
 #define DECLARE_QIPTR(type)     CComQIIDPtr<I_ID(type)>
 #elif defined(__GNUC__)
 #define DECLARE_QIPTR(type)     CComQIIDPtr<I_ID(type)>
+#elif defined(__RATL__)
+#define DECLARE_QIPTR(type)     CComQIIDPtr<I_ID(type)>
 #else
 #define DECLARE_QIPTR(type)     CComQIPtr<type>
 #endif
