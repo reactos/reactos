@@ -21,7 +21,7 @@ SHGetShellStyleHInstance(VOID)
     HRESULT hr;
     CStringW strShellStyle;
 
-    TRACE("\n");
+    TRACE("SHGetShellStyleHInstance called\n");
 
     /* First, attempt to load the shellstyle dll from the current active theme */
     hr = GetCurrentThemeName(szPath, _countof(szPath), szColorName, _countof(szColorName), NULL, 0);
