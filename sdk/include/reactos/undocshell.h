@@ -669,7 +669,7 @@ LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);
 INT WINAPI
 Int64ToString(
     _In_ LONGLONG llValue,
-    _Out_writes_(cchOut) LPWSTR pszOut,
+    _Out_writes_z_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
