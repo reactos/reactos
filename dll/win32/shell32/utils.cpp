@@ -162,37 +162,37 @@ Int64GetNumFormat(
     else
         dwNumberFlags = 0;
 
-    if (!(dwNumberFlags & NUMFLAG_NUMDIGITS))
+    if (!(dwNumberFlags & FMT_USE_NUMDIGITS))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IDIGITS, szBuff, _countof(szBuff));
         pDest->NumDigits = StrToIntW(szBuff);
     }
 
-    if (!(dwNumberFlags & NUMFLAG_LEADINGZERO))
+    if (!(dwNumberFlags & FMT_USE_LEADZERO))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_ILZERO, szBuff, _countof(szBuff));
         pDest->LeadingZero = StrToIntW(szBuff);
     }
 
-    if (!(dwNumberFlags & NUMFLAG_GROUPING))
+    if (!(dwNumberFlags & FMT_USE_GROUPING))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SGROUPING, szBuff, _countof(szBuff));
         pDest->Grouping = StrToIntW(szBuff);
     }
 
-    if (!(dwNumberFlags & NUMFLAG_DECIMALSEP))
+    if (!(dwNumberFlags & FMT_USE_DECIMAL))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, pszDecimal, cchDecimal);
         pDest->lpDecimalSep = pszDecimal;
     }
 
-    if (!(dwNumberFlags & NUMFLAG_THOUSANDSEP))
+    if (!(dwNumberFlags & FMT_USE_THOUSAND))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, pszThousand, cchThousand);
         pDest->lpThousandSep = pszThousand;
     }
 
-    if (!(dwNumberFlags & NUMFLAG_NEGATIVEORDER))
+    if (!(dwNumberFlags & FMT_USE_NEGNUMBER))
     {
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_INEGNUMBER, szBuff, _countof(szBuff));
         pDest->NegativeOrder = StrToIntW(szBuff);
@@ -201,6 +201,8 @@ Int64GetNumFormat(
 
 /*************************************************************************
  *  Int64ToString [SHELL32.209]
+ *
+ * @see http://undoc.airesoft.co.uk/shell32.dll/Int64ToString.php
  */
 EXTERN_C
 INT WINAPI
@@ -237,6 +239,8 @@ Int64ToString(
 
 /*************************************************************************
  *  LargeIntegerToString [SHELL32.210]
+ *
+ * @see http://undoc.airesoft.co.uk/shell32.dll/LargeIntegerToString.php
  */
 EXTERN_C
 INT WINAPI

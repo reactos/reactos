@@ -659,12 +659,12 @@ LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
 LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);
 
 /* Flags for Int64ToString and LargeIntegerToString */
-#define NUMFLAG_NUMDIGITS      0x01
-#define NUMFLAG_LEADINGZERO    0x02
-#define NUMFLAG_GROUPING       0x04
-#define NUMFLAG_DECIMALSEP     0x08
-#define NUMFLAG_THOUSANDSEP    0x10
-#define NUMFLAG_NEGATIVEORDER  0x20
+#define FMT_USE_NUMDIGITS 0x01
+#define FMT_USE_LEADZERO  0x02
+#define FMT_USE_GROUPING  0x04
+#define FMT_USE_DECIMAL   0x08
+#define FMT_USE_THOUSAND  0x10
+#define FMT_USE_NEGNUMBER 0x20
 
 INT WINAPI
 Int64ToString(
