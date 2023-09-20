@@ -150,7 +150,7 @@ Int64GetNumFormat(
     _Out_ NUMBERFMTW *pDest,
     _In_opt_ const NUMBERFMTW *pSrc,
     _In_ DWORD dwNumberFlags,
-    _Out_writes_(cchDecimal) LPWSTR pszDecimal,
+    _Out_writes_z_(cchDecimal) LPWSTR pszDecimal,
     _In_ INT cchDecimal,
     _Out_writes_(cchThousand) LPWSTR pszThousand,
     _In_ INT cchThousand)
