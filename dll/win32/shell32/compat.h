@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#if (_WIN32_WINNT < 0x0600)
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
     /*
      * For versions < Vista+, redefine ShellMessageBoxW to ShellMessageBoxWrapW
      * (this is needed to avoid a linker error). On Vista+ onwards, shell32.ShellMessageBoxW
