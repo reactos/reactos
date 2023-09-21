@@ -865,8 +865,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbm = selectionModel.CopyBitmap();
-                if (!SaveDIBToFile(hbm, szFileName, FALSE))
-                    ShowError(IDS_SAVEERROR, szFileName);
+                SaveDIBToFile(hbm, szFileName, FALSE);
                 ::DeleteObject(hbm);
             }
             break;
@@ -879,8 +878,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
                 if (hbmNew)
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
-                else
-                    ShowError(IDS_LOADERRORTEXT, szFileName);
             }
             break;
         }
