@@ -592,8 +592,8 @@ static LPCSTR DumpEvent(LONG event)
 EXTERN_C BOOL WINAPI
 SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
 {
-    FIXME("SHChangeRegistrationReceive() stub\n");
-    return FALSE;
+    TRACE("\n");
+    return FALSE; /* Just return FALSE */
 }
 
 EXTERN_C VOID WINAPI
