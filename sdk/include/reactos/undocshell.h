@@ -684,6 +684,9 @@ LargeIntegerToString(
     _In_opt_ const NUMBERFMTW *pNumberFormat,
     _In_ DWORD dwNumberFlags);
 
+BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken);
+DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken);
+
 /*****************************************************************************
  * Shell32 resources
  */
