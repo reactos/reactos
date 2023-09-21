@@ -658,6 +658,32 @@ BOOL WINAPI GUIDFromStringW(
 LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
 LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);
 
+/* Flags for Int64ToString and LargeIntegerToString */
+#define FMT_USE_NUMDIGITS 0x01
+#define FMT_USE_LEADZERO  0x02
+#define FMT_USE_GROUPING  0x04
+#define FMT_USE_DECIMAL   0x08
+#define FMT_USE_THOUSAND  0x10
+#define FMT_USE_NEGNUMBER 0x20
+
+INT WINAPI
+Int64ToString(
+    _In_ LONGLONG llValue,
+    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _In_ UINT cchOut,
+    _In_ BOOL bUseFormat,
+    _In_opt_ const NUMBERFMTW *pNumberFormat,
+    _In_ DWORD dwNumberFlags);
+
+INT WINAPI
+LargeIntegerToString(
+    _In_ const LARGE_INTEGER *pLargeInt,
+    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _In_ UINT cchOut,
+    _In_ BOOL bUseFormat,
+    _In_opt_ const NUMBERFMTW *pNumberFormat,
+    _In_ DWORD dwNumberFlags);
+
 /*****************************************************************************
  * Shell32 resources
  */
