@@ -80,7 +80,7 @@ VOID CUserNotification::RemoveIcon()
     // HACK: Force XP-S2003 size, until nid.hBalloonIcon support is investigated and implemented if needed here.
     nid.cbSize = NOTIFYICONDATAW_V3_SIZE;
 #else
-    nid.cbSize = sizeof(nid);
+    nid.cbSize = NOTIFYICONDATAW_V2_SIZE;
 #endif
     nid.hWnd = m_hWorkerWnd;
     nid.uID  = ID_NOTIFY_ICON;
@@ -126,7 +126,7 @@ VOID CUserNotification::SetUpNotifyData(
     // HACK: Force XP-S2003 size, until pnid->hBalloonIcon support is investigated and implemented if needed here.
     pnid->cbSize = NOTIFYICONDATAW_V3_SIZE;
 #else
-    pnid->cbSize = sizeof(nid);
+    pnid->cbSize = NOTIFYICONDATAW_V2_SIZE;
 #endif
     pnid->hWnd = m_hWorkerWnd;
     pnid->uID  = ID_NOTIFY_ICON;
