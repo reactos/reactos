@@ -42,7 +42,7 @@ EXTERN_C BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken)
  */
 EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
 {
-    DWORD dwSessionId = 0, dwLength;
+    DWORD dwSessionId, dwLength;
     BOOL bOpenToken = FALSE;
 
     TRACE("%p\n", hToken);
@@ -50,7 +50,7 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
     if (!hToken)
         bOpenToken = SHOpenEffectiveToken(&hToken);
 
-    if (hToken &&
+    if (!hToken ||
         !GetTokenInformation(hToken, TokenSessionId, &dwSessionId, sizeof(dwSessionId), &dwLength))
     {
         dwSessionId = 0;
