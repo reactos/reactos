@@ -261,26 +261,25 @@ void ImageModel::Clamp(POINT& pt) const
 
 HBITMAP ImageModel::CopyBitmap()
 {
-    // NOTE: An app cannot select a bitmap into more than one device context at a time.
-    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-    HBITMAP ret = CopyDIBImage(m_hBms[m_currInd]);
-    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
+    HBITMAP hBitmap = LockBitmap();
+    HBITMAP ret = CopyDIBImage(hBitmap);
+    UnlockBitmap(hBitmap);
     return ret;
 }
 
 BOOL ImageModel::IsBlackAndWhite()
 {
-    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-    BOOL bBlackAndWhite = IsBitmapBlackAndWhite(m_hBms[m_currInd]);
-    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
+    HBITMAP hBitmap = LockBitmap();
+    BOOL bBlackAndWhite = IsBitmapBlackAndWhite(hBitmap);
+    UnlockBitmap(hBitmap);
     return bBlackAndWhite;
 }
 
 void ImageModel::PushBlackAndWhite()
 {
-    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-    HBITMAP hNewBitmap = ConvertToBlackAndWhite(m_hBms[m_currInd]);
-    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]); // Re-select
+    HBITMAP hBitmap = LockBitmap();
+    HBITMAP hNewBitmap = ConvertToBlackAndWhite(hBitmap);
+    UnlockBitmap(hBitmap);
 
     if (hNewBitmap)
         PushImageForUndo(hNewBitmap);
@@ -288,8 +287,11 @@ void ImageModel::PushBlackAndWhite()
 
 HBITMAP ImageModel::LockBitmap()
 {
+    // NOTE: An app cannot select a bitmap into more than one device context at a time.
     ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-    return m_hBms[m_currInd];
+    HBITMAP hbmLocked = m_hBms[m_currInd];
+    m_hBms[m_currInd] = NULL;
+    return hbmLocked;
 }
 
 void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
