@@ -285,3 +285,15 @@ void ImageModel::PushBlackAndWhite()
     if (hNewBitmap)
         PushImageForUndo(hNewBitmap);
 }
+
+HBITMAP ImageModel::LockBitmap()
+{
+    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
+    return m_hBms[m_currInd];
+}
+
+void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
+{
+    m_hBms[m_currInd] = hbmLocked;
+    m_hbmOld = ::SelectObject(m_hDrawingDC, hbmLocked); // Re-select
+}

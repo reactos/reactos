@@ -31,6 +31,8 @@ public:
     int GetWidth() const;
     int GetHeight() const;
     HBITMAP CopyBitmap();
+    HBITMAP LockBitmap();
+    void UnlockBitmap(HBITMAP hbmLocked);
     void InvertColors();
     void FlipHorizontally();
     void FlipVertically();

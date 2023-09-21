@@ -117,9 +117,9 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
             strFileTitle += L".png";
 
             // Save it to the temporary file
-            HBITMAP hbm = imageModel.CopyBitmap();
-            BOOL ret = SaveDIBToFile(hbm, g_szMailTempFile, FALSE, Gdiplus::ImageFormatPNG);
-            ::DeleteObject(hbm);
+            HBITMAP hbmLocked = imageModel.LockBitmap();
+            BOOL ret = SaveDIBToFile(hbmLocked, g_szMailTempFile, FALSE, Gdiplus::ImageFormatPNG);
+            imageModel.UnlockBitmap(hbmLocked);
             if (!ret)
             {
                 g_szMailTempFile[0] = UNICODE_NULL;
