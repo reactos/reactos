@@ -123,9 +123,10 @@ VOID CUserNotification::SetUpNotifyData(
     IN OUT PNOTIFYICONDATAW pnid)
 {
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-    pnid->cbSize = NOTIFYICONDATAW_V3_SIZE; // sizeof(nid);
+    // HACK: Force XP-S2003 size, until pnid->hBalloonIcon support is investigated and implemented if needed here.
+    pnid->cbSize = NOTIFYICONDATAW_V3_SIZE;
 #else
-    pnid->cbSize = NOTIFYICONDATAW_V2_SIZE;
+    pnid->cbSize = sizeof(nid);
 #endif
     pnid->hWnd = m_hWorkerWnd;
     pnid->uID  = ID_NOTIFY_ICON;
