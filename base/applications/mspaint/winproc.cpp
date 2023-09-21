@@ -77,6 +77,7 @@ void CMainWindow::alignChildrenToMainWindow()
     RECT clientRect, rc;
     GetClientRect(&clientRect);
     RECT rcSpace = clientRect;
+    const UINT uFlags = (SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOCOPYBITS);
 
     if (::IsWindowVisible(g_hStatusBar))
     {
@@ -93,7 +94,7 @@ void CMainWindow::alignChildrenToMainWindow()
             hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
                                     rcSpace.right - CX_TOOLBAR, rcSpace.top,
                                     CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
-                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                                    uFlags);
             rcSpace.right -= CX_TOOLBAR;
         }
         else
@@ -101,7 +102,7 @@ void CMainWindow::alignChildrenToMainWindow()
             hDWP = ::DeferWindowPos(hDWP, toolBoxContainer, NULL,
                                     rcSpace.left, rcSpace.top,
                                     CX_TOOLBAR, rcSpace.bottom - rcSpace.top,
-                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                                    uFlags);
             rcSpace.left += CX_TOOLBAR;
         }
     }
@@ -113,7 +114,7 @@ void CMainWindow::alignChildrenToMainWindow()
             hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
                                     rcSpace.left, rcSpace.bottom - CY_PALETTE,
                                     rcSpace.right - rcSpace.left, CY_PALETTE,
-                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                                    uFlags);
             rcSpace.bottom -= CY_PALETTE;
         }
         else
@@ -121,7 +122,7 @@ void CMainWindow::alignChildrenToMainWindow()
             hDWP = ::DeferWindowPos(hDWP, paletteWindow, NULL,
                                     rcSpace.left, rcSpace.top,
                                     rcSpace.right - rcSpace.left, CY_PALETTE,
-                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                                    uFlags);
             rcSpace.top += CY_PALETTE;
         }
     }
@@ -131,7 +132,7 @@ void CMainWindow::alignChildrenToMainWindow()
         hDWP = ::DeferWindowPos(hDWP, canvasWindow, NULL,
                                 rcSpace.left, rcSpace.top,
                                 rcSpace.right - rcSpace.left, rcSpace.bottom - rcSpace.top,
-                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                                uFlags);
     }
 
     ::EndDeferWindowPos(hDWP);
