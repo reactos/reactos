@@ -1202,14 +1202,3 @@ DWORD WINAPI SHGetComputerDisplayNameW(DWORD param1, DWORD param2, DWORD param3,
     FIXME("SHGetComputerDisplayNameW() stub\n");
     return E_FAIL;
 }
-
-/*
- * Unimplemented
- */
-EXTERN_C HINSTANCE
-WINAPI
-SHGetShellStyleHInstance(VOID)
-{
-    FIXME("SHGetShellStyleHInstance() stub\n");
-    return NULL;
-}

@@ -336,6 +336,10 @@ SHOpenFolderAndSelectItems(
 
 int WINAPI PathCleanupSpec(_In_opt_ LPCWSTR, _Inout_ LPWSTR);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP) && (_WIN32_WINNT <= _WIN32_WINNT_WS03)
+HINSTANCE WINAPI SHGetShellStyleHInstance(VOID);
+#endif
+
 /*****************************************************************************
  * IContextMenu interface
  */
