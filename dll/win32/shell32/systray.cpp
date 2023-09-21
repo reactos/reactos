@@ -114,10 +114,10 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         }
     }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-    if ((cbSize >= NOTIFYICONDATAA_V3_SIZE) && (nidW.uFlags & NIF_GUID))
+    if ((cbSize >= NOTIFYICONDATAA_V2_SIZE) && (nidW.uFlags & NIF_GUID))
         nidW.guidItem = pnid->guidItem;
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     if (cbSize >= sizeof(NOTIFYICONDATAA))
         nidW.hBalloonIcon = pnid->hBalloonIcon;
 #endif
