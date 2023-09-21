@@ -1104,17 +1104,6 @@ SHSetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
  */
 EXTERN_C BOOL
 WINAPI
-SHOpenEffectiveToken(LPVOID Token)
-{
-    FIXME("SHOpenEffectiveToken() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 SHTestTokenPrivilegeW(HANDLE hToken, LPDWORD ReturnLength)
 {
     FIXME("SHTestTokenPrivilegeW() stub\n");
@@ -1176,17 +1165,6 @@ SHGetProcessDword(DWORD dwUnknown1, DWORD dwUnknown2)
     /* Unimplemented in WinXP SP3 */
     TRACE("SHGetProcessDword() stub\n");
     return 0;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C LPVOID
-WINAPI
-SHGetUserSessionId(HANDLE hHandle)
-{
-    FIXME("SHGetUserSessionId() stub\n");
-    return NULL;
 }
 
 EXTERN_C

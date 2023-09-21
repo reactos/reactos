@@ -9,6 +9,57 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
+{
+    BOOL ret;
+
+    if (IsBadWritePtr(phToken, sizeof(*phToken)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    *phToken = NULL;
+
+    ret = OpenThreadToken(GetCurrentThread(), DesiredAccess, FALSE, phToken);
+    if (!ret && GetLastError() == ERROR_NO_TOKEN)
+        ret = OpenProcessToken(GetCurrentProcess(), DesiredAccess, phToken);
+
+    return ret;
+}
+
+/*************************************************************************
+ *                SHOpenEffectiveToken (SHELL32.235)
+ */
+EXTERN_C BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken)
+{
+    TRACE("%p\n", phToken);
+    return OpenEffectiveToken((TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), phToken);
+}
+
+/*************************************************************************
+ *                SHGetUserSessionId (SHELL32.248)
+ */
+EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_ HANDLE hToken)
+{
+    LPVOID TokenInfo;
+    DWORD dwSessionId = 0, dwLength;
+    BOOL bOpenToken = FALSE;
+
+    TRACE("%p\n", hToken);
+
+    if (!hToken)
+        bOpenToken = SHOpenEffectiveToken(&hToken);
+
+    if (hToken)
+        GetTokenInformation(hToken, TokenSessionId, &dwSessionId, sizeof(dwSessionId), &dwLength);
+
+    if (bOpenToken)
+        CloseHandle(hToken);
+
+    return dwSessionId;
+}
+
 /*************************************************************************
  *                SHGetShellStyleHInstance (SHELL32.749)
  */
