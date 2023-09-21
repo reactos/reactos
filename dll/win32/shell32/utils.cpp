@@ -13,7 +13,7 @@ static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
 {
     BOOL ret;
 
-    if (IsBadWritePtr(phToken, sizeof(*phToken)))
+    if (phToken == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -50,8 +50,11 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
     if (!hToken)
         bOpenToken = SHOpenEffectiveToken(&hToken);
 
-    if (hToken)
-        GetTokenInformation(hToken, TokenSessionId, &dwSessionId, sizeof(dwSessionId), &dwLength);
+    if (hToken &&
+        !GetTokenInformation(hToken, TokenSessionId, &dwSessionId, sizeof(dwSessionId), &dwLength))
+    {
+        dwSessionId = 0;
+    }
 
     if (bOpenToken)
         CloseHandle(hToken);
