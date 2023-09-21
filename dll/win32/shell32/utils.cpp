@@ -34,7 +34,7 @@ static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
 EXTERN_C BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken)
 {
     TRACE("%p\n", phToken);
-    return OpenEffectiveToken((TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), phToken);
+    return OpenEffectiveToken(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, phToken);
 }
 
 /*************************************************************************
