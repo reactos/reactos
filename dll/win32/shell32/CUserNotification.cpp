@@ -77,9 +77,10 @@ VOID CUserNotification::RemoveIcon()
     NOTIFYICONDATAW nid = {0};
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-    nid.cbSize = NOTIFYICONDATAW_V3_SIZE; // sizeof(nid);
+    // HACK: Force XP-S2003 size, until nid.hBalloonIcon support is investigated and implemented if needed here.
+    nid.cbSize = NOTIFYICONDATAW_V3_SIZE;
 #else
-    nid.cbSize = NOTIFYICONDATAW_V2_SIZE;
+    nid.cbSize = sizeof(nid);
 #endif
     nid.hWnd = m_hWorkerWnd;
     nid.uID  = ID_NOTIFY_ICON;
