@@ -12,6 +12,11 @@ extern "C" {
 #endif
 
 #if (_WIN32_WINNT < 0x0600)
+    /*
+     * For versions < Vista+, redefine ShellMessageBoxW to ShellMessageBoxWrapW
+     * (this is needed to avoid a linker error). On Vista+ onwards, shell32.ShellMessageBoxW
+     * redirects to shlwapi.ShellMessageBoxW so the #define should not be needed.
+     */
     #define ShellMessageBoxW ShellMessageBoxWrapW
 
     LSTATUS

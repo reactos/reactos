@@ -47,11 +47,6 @@
 #undef ShellExecute
 #include <undocshell.h>
 
-/*
- * For versions < Vista+, redefine ShellMessageBoxW to ShellMessageBoxWrapW
- * (this is needed to avoid a linker error). On Vista+ onwards, shell32.ShellMessageBoxW
- * redirects to shlwapi.ShellMessageBoxW so the #define should not be needed.
- */
 #include "compat.h"
 
 #include <browseui_undoc.h>
