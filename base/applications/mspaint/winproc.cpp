@@ -741,13 +741,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             selectionModel.TakeOff();
 
             {
-                HBITMAP hbm = selectionModel.CopyBitmap();
-                if (hbm)
+                HBITMAP hbmLocked = selectionModel.LockBitmap();
+                if (hbmLocked)
                 {
-                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbm);
+                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbmLocked);
                     if (hGlobal)
                         ::SetClipboardData(CF_DIB, hGlobal);
-                    ::DeleteObject(hbm);
+                    selectionModel.UnlockBitmap(hbmLocked);
                 }
             }
 
@@ -865,10 +865,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             WCHAR szFileName[MAX_LONG_PATH] = L"*.png";
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
-                HBITMAP hbm = selectionModel.CopyBitmap();
-                if (!SaveDIBToFile(hbm, szFileName, FALSE))
-                    ShowError(IDS_SAVEERROR, szFileName);
-                ::DeleteObject(hbm);
+                HBITMAP hbmLocked = selectionModel.LockBitmap();
+                SaveDIBToFile(hbmLocked, szFileName, FALSE);
+                selectionModel.UnlockBitmap(hbmLocked);
             }
             break;
         }
@@ -880,8 +879,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 HBITMAP hbmNew = DoLoadImageFile(m_hWnd, szFileName, FALSE);
                 if (hbmNew)
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
-                else
-                    ShowError(IDS_LOADERRORTEXT, szFileName);
             }
             break;
         }
@@ -1008,7 +1005,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageModel.PushImageForUndo(selectionModel.CopyBitmap());
             selectionModel.HideSelection();
             break;
-
         case IDM_VIEWTOOLBOX:
             registrySettings.ShowToolBox = !toolBoxContainer.IsWindowVisible();
             toolBoxContainer.ShowWindow(registrySettings.ShowToolBox ? SW_SHOWNOACTIVATE : SW_HIDE);

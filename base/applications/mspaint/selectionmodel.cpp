@@ -528,3 +528,15 @@ void SelectionModel::SwapWidthAndHeight()
     m_rc.right = m_rc.left + cy;
     m_rc.bottom = m_rc.top + cx;
 }
+
+HBITMAP SelectionModel::LockBitmap()
+{
+    HBITMAP hbm = m_hbmColor;
+    m_hbmColor = NULL;
+    return hbm;
+}
+
+void SelectionModel::UnlockBitmap(HBITMAP hbmLocked)
+{
+    m_hbmColor = hbmLocked;
+}

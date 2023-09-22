@@ -40,6 +40,8 @@ public:
     void DeleteSelection();
 
     HBITMAP CopyBitmap();
+    HBITMAP LockBitmap();
+    void UnlockBitmap(HBITMAP hbmLocked);
     void GetSelectionContents(HDC hDCImage);
     void DrawFramePoly(HDC hDCImage);
     void DrawBackground(HDC hDCImage);
