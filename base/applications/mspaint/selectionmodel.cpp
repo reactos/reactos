@@ -560,7 +560,7 @@ void SelectionModel::StretchSelection(BOOL bShrink)
     else
         m_rc.InflateRect(+cx / 2, +cy / 2);
 
-    // The selection area must exist at here
+    // The selection area must exist there
     if (m_rc.Width() <= 0)
         m_rc.right = m_rc.left + 1;
     if (m_rc.Height() <= 0)
