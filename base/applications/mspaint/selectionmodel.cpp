@@ -555,8 +555,10 @@ void SelectionModel::ControlPlusMinus(BOOL bMinus)
     else
         m_rc.InflateRect(+cx / 2, +cy / 2);
 
-    if (m_rc.IsRectEmpty())
-        m_rc.InflateRect(0, 0, 1, 1);
+    if (m_rc.Width() <= 0)
+        m_rc.right = m_rc.left + 1;
+    if (m_rc.Height() <= 0)
+        m_rc.bottom = m_rc.top + 1;
 
     imageModel.NotifyImageChanged();
 }
