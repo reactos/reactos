@@ -174,12 +174,17 @@ BOOL SelectionModel::TakeOff()
     if (!IsLanded() || ::IsRectEmpty(&m_rc))
         return FALSE;
 
+    // The background color is needed for transparency of selection
     m_rgbBack = paletteModel.GetBgColor();
+
+    // Get the contents of the selection area
     GetSelectionContents(imageModel.GetDC());
 
+    // RectSel doesn't need the mask image
     if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
         ClearMask();
 
+    // Save the selection area
     m_rcOld = m_rc;
 
     imageModel.NotifyImageChanged();
