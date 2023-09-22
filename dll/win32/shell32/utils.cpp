@@ -62,6 +62,71 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
     return dwSessionId;
 }
 
+// Helper class for SHInvokePrivilegedFunctionW
+struct CPrivilegeEnable
+{
+    BOOL m_bAdjusted;
+    HANDLE m_hToken;
+    TOKEN_PRIVILEGES m_PrevPriv;
+
+    CPrivilegeEnable(LPCWSTR pszName);
+    ~CPrivilegeEnable();
+};
+
+CPrivilegeEnable::CPrivilegeEnable(LPCWSTR pszName)
+    : m_bAdjusted(FALSE)
+    , m_hToken(NULL)
+{
+    TOKEN_PRIVILEGES NewPriv;
+    DWORD dwReturnSize;
+
+    if (!SHOpenEffectiveToken(&m_hToken) ||
+        !::LookupPrivilegeValueW(NULL, pszName, &NewPriv.Privileges[0].Luid))
+    {
+        return;
+    }
+
+    NewPriv.PrivilegeCount = 1;
+    NewPriv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    m_bAdjusted = ::AdjustTokenPrivileges(m_hToken, FALSE, &NewPriv,
+                                          sizeof(m_PrevPriv), &m_PrevPriv,
+                                          &dwReturnSize);
+}
+
+CPrivilegeEnable::~CPrivilegeEnable()
+{
+    if (m_bAdjusted)
+        ::AdjustTokenPrivileges(m_hToken, FALSE, &m_PrevPriv, 0, NULL, NULL);
+
+    if (m_hToken)
+    {
+        ::CloseHandle(m_hToken);
+        m_hToken = NULL;
+    }
+}
+
+typedef HRESULT (CALLBACK *PRIVILEGED_FUNCTION)(LPARAM lParam);
+
+/*************************************************************************
+ *                SHInvokePrivilegedFunctionW (SHELL32.246)
+ */
+EXTERN_C
+HRESULT WINAPI
+SHInvokePrivilegedFunctionW(
+    _In_z_ LPCWSTR pszName,
+    _In_ PRIVILEGED_FUNCTION fn,
+    _In_opt_ LPARAM lParam)
+{
+    TRACE("%s %p %p\n", debugstr_w(pszName), fn, lParam);
+
+    if (!pszName || !fn)
+        return E_INVALIDARG;
+
+    CPrivilegeEnable privEnable(pszName);
+    return fn(lParam);
+}
+
 /*************************************************************************
  *                SHGetShellStyleHInstance (SHELL32.749)
  */

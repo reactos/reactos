@@ -687,6 +687,14 @@ LargeIntegerToString(
 BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken);
 DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken);
 
+typedef HRESULT (CALLBACK *PRIVILEGED_FUNCTION)(LPARAM lParam);
+
+HRESULT WINAPI
+SHInvokePrivilegedFunctionW(
+    _In_z_ LPCWSTR pszName,
+    _In_ PRIVILEGED_FUNCTION fn,
+    _In_opt_ LPARAM lParam);
+
 /*****************************************************************************
  * Shell32 resources
  */
