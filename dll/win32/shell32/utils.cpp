@@ -62,52 +62,6 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
     return dwSessionId;
 }
 
-// Helper class for SHInvokePrivilegedFunctionW
-struct CPrivilegeEnable
-{
-    BOOL m_bAdjusted;
-    HANDLE m_hToken;
-    TOKEN_PRIVILEGES m_PrevPriv;
-
-    CPrivilegeEnable(LPCWSTR pszName);
-    ~CPrivilegeEnable();
-};
-
-CPrivilegeEnable::CPrivilegeEnable(LPCWSTR pszName)
-    : m_bAdjusted(FALSE)
-    , m_hToken(NULL)
-{
-    TOKEN_PRIVILEGES NewPriv;
-    DWORD dwReturnSize;
-
-    if (!SHOpenEffectiveToken(&m_hToken) ||
-        !::LookupPrivilegeValueW(NULL, pszName, &NewPriv.Privileges[0].Luid))
-    {
-        return;
-    }
-
-    NewPriv.PrivilegeCount = 1;
-    NewPriv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    m_bAdjusted = ::AdjustTokenPrivileges(m_hToken, FALSE, &NewPriv,
-                                          sizeof(m_PrevPriv), &m_PrevPriv,
-                                          &dwReturnSize);
-}
-
-CPrivilegeEnable::~CPrivilegeEnable()
-{
-    if (m_bAdjusted)
-        ::AdjustTokenPrivileges(m_hToken, FALSE, &m_PrevPriv, 0, NULL, NULL);
-
-    if (m_hToken)
-    {
-        ::CloseHandle(m_hToken);
-        m_hToken = NULL;
-    }
-}
-
-typedef HRESULT (CALLBACK *PRIVILEGED_FUNCTION)(LPARAM lParam);
-
 /*************************************************************************
  *                SHInvokePrivilegedFunctionW (SHELL32.246)
  */
@@ -123,8 +77,30 @@ SHInvokePrivilegedFunctionW(
     if (!pszName || !fn)
         return E_INVALIDARG;
 
-    CPrivilegeEnable privEnable(pszName);
-    return fn(lParam);
+    HANDLE hToken = NULL;
+    TOKEN_PRIVILEGES NewPriv, PrevPriv;
+    BOOL bAdjusted = FALSE;
+
+    if (SHOpenEffectiveToken(&hToken) &&
+        ::LookupPrivilegeValueW(NULL, pszName, &NewPriv.Privileges[0].Luid))
+    {
+        NewPriv.PrivilegeCount = 1;
+        NewPriv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        DWORD dwReturnSize;
+        bAdjusted = ::AdjustTokenPrivileges(hToken, FALSE, &NewPriv,
+                                            sizeof(PrevPriv), &PrevPriv, &dwReturnSize);
+    }
+
+    HRESULT hr = fn(lParam);
+
+    if (bAdjusted)
+        ::AdjustTokenPrivileges(hToken, FALSE, &PrevPriv, 0, NULL, NULL);
+
+    if (hToken)
+        ::CloseHandle(hToken);
+
+    return hr;
 }
 
 /*************************************************************************
