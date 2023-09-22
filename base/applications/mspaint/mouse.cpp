@@ -200,7 +200,7 @@ struct FreeSelTool : ToolBase
         ToolBase::OnCancelDraw();
     }
 
-    void OnControlPlusMinus(BOOL bMinus) override
+    void OnSpecialTweak(BOOL bMinus) override
     {
         selectionModel.StretchSelection(bMinus);
     }
@@ -286,7 +286,7 @@ struct RectSelTool : ToolBase
         ToolBase::OnCancelDraw();
     }
 
-    void OnControlPlusMinus(BOOL bMinus) override
+    void OnSpecialTweak(BOOL bMinus) override
     {
         selectionModel.StretchSelection(bMinus);
     }

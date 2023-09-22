@@ -249,7 +249,7 @@ void ToolsModel::selectAll()
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
 }
 
-void ToolsModel::ControlPlusMinus(BOOL bMinus)
+void ToolsModel::SpecialTweak(BOOL bMinus)
 {
-    m_pToolObject->OnControlPlusMinus(bMinus);
+    m_pToolObject->OnSpecialTweak(bMinus);
 }

@@ -1071,10 +1071,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case IDM_CTRL_PLUS:
-            toolsModel.ControlPlusMinus(FALSE);
+            toolsModel.SpecialTweak(FALSE);
             break;
         case IDM_CTRL_MINUS:
-            toolsModel.ControlPlusMinus(TRUE);
+            toolsModel.SpecialTweak(TRUE);
             break;
     }
     return 0;
