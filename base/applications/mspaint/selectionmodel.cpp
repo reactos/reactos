@@ -541,7 +541,7 @@ void SelectionModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmColor = hbmLocked;
 }
 
-void SelectionModel::ControlPlusMinus(BOOL bMinus)
+void SelectionModel::StretchSelection(BOOL bShrink)
 {
     if (!m_bShow)
         return;
@@ -550,11 +550,12 @@ void SelectionModel::ControlPlusMinus(BOOL bMinus)
 
     INT cx = m_rc.Width(), cy = m_rc.Height();
 
-    if (bMinus)
+    if (bShrink)
         m_rc.InflateRect(-cx / 4, -cy / 4);
     else
         m_rc.InflateRect(+cx / 2, +cy / 2);
 
+    // The selection area must exist at here
     if (m_rc.Width() <= 0)
         m_rc.right = m_rc.left + 1;
     if (m_rc.Height() <= 0)

@@ -62,7 +62,7 @@ public:
     void ClearColor();
     void NotifyContentChanged();
 
-    void ControlPlusMinus(BOOL bMinus);
+    void StretchSelection(BOOL bShrink);
 
 private:
     SelectionModel(const SelectionModel&);

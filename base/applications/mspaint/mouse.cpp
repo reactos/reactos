@@ -202,7 +202,7 @@ struct FreeSelTool : ToolBase
 
     void OnControlPlusMinus(BOOL bMinus) override
     {
-        selectionModel.ControlPlusMinus(bMinus);
+        selectionModel.StretchSelection(bMinus);
     }
 };
 
@@ -288,7 +288,7 @@ struct RectSelTool : ToolBase
 
     void OnControlPlusMinus(BOOL bMinus) override
     {
-        selectionModel.ControlPlusMinus(bMinus);
+        selectionModel.StretchSelection(bMinus);
     }
 };
 
