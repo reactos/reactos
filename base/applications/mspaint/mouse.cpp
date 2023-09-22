@@ -199,6 +199,11 @@ struct FreeSelTool : ToolBase
         selectionModel.HideSelection();
         ToolBase::OnCancelDraw();
     }
+
+    void OnControlPlusMinus(BOOL bMinus) override
+    {
+        selectionModel.ControlPlusMinus(bMinus);
+    }
 };
 
 // TOOL_RECTSEL
@@ -279,6 +284,11 @@ struct RectSelTool : ToolBase
     {
         selectionModel.HideSelection();
         ToolBase::OnCancelDraw();
+    }
+
+    void OnControlPlusMinus(BOOL bMinus) override
+    {
+        selectionModel.ControlPlusMinus(bMinus);
     }
 };
 

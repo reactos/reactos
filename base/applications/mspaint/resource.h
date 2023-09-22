@@ -102,6 +102,9 @@
 #define IDM_UNDERLINE   282
 #define IDM_VERTICAL    283
 
+#define IDM_CTRL_PLUS   290
+#define IDM_CTRL_MINUS  291
+
 /* the following 16 numbers need to be in order, increasing by 1 */
 #define ID_FREESEL  600
 #define ID_RECTSEL  601

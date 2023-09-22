@@ -248,3 +248,8 @@ void ToolsModel::selectAll()
     OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
 }
+
+void ToolsModel::ControlPlusMinus(BOOL bMinus)
+{
+    m_pToolObject->OnControlPlusMinus(bMinus);
+}

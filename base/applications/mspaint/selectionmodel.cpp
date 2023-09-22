@@ -540,3 +540,20 @@ void SelectionModel::UnlockBitmap(HBITMAP hbmLocked)
 {
     m_hbmColor = hbmLocked;
 }
+
+void SelectionModel::ControlPlusMinus(BOOL bMinus)
+{
+    if (!m_bShow)
+        return;
+
+    TakeOff();
+
+    INT cx = m_rc.Width(), cy = m_rc.Height();
+
+    if (bMinus)
+        m_rc.InflateRect(-cx / 4, -cy / 4);
+    else
+        m_rc.InflateRect(+cx / 2, +cy / 2);
+
+    imageModel.NotifyImageChanged();
+}

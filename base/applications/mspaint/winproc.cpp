@@ -1069,6 +1069,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             fullscreenWindow.DoCreate();
             fullscreenWindow.ShowWindow(SW_SHOWMAXIMIZED);
             break;
+
+        case IDM_CTRL_PLUS:
+            toolsModel.ControlPlusMinus(FALSE);
+            break;
+        case IDM_CTRL_MINUS:
+            toolsModel.ControlPlusMinus(TRUE);
+            break;
     }
     return 0;
 }

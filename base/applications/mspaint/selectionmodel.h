@@ -62,6 +62,8 @@ public:
     void ClearColor();
     void NotifyContentChanged();
 
+    void ControlPlusMinus(BOOL bMinus);
+
 private:
     SelectionModel(const SelectionModel&);
     SelectionModel& operator=(const SelectionModel&);

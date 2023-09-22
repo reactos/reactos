@@ -51,6 +51,8 @@ struct ToolBase
     virtual void OnDrawOverlayOnImage(HDC hdc) { }
     virtual void OnDrawOverlayOnCanvas(HDC hdc) { }
 
+    virtual void OnControlPlusMinus(BOOL bMinus) { }
+
     void beginEvent();
     void endEvent();
     void reset();
@@ -115,6 +117,8 @@ public:
     void NotifyToolChanged();
     void NotifyToolSettingsChanged();
     void NotifyZoomChanged();
+
+    void ControlPlusMinus(BOOL bMinus);
 };
 
 extern ToolsModel toolsModel;
