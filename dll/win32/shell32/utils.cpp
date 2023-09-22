@@ -118,7 +118,7 @@ SHInvokePrivilegedFunctionW(
     _In_ PRIVILEGED_FUNCTION fn,
     _In_opt_ LPARAM lParam)
 {
-    TRACE("%s %p %p\n", debugstr_w(pszName), fn, lParam);
+    TRACE("(%s %p %p)\n", debugstr_w(pszName), fn, lParam);
 
     if (!pszName || !fn)
         return E_INVALIDARG;
