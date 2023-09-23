@@ -2226,16 +2226,19 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     }
 
     /* Check for ROS specific memory area */
+    MmLockAddressSpace(&Process->Vm);
     MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
     if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
     {
         /* Evil hack */
+        MmUnlockAddressSpace(&Process->Vm);
         return MiRosProtectVirtualMemory(Process,
                                          BaseAddress,
                                          NumberOfBytesToProtect,
                                          NewAccessProtection,
                                          OldAccessProtection);
     }
+    MmUnlockAddressSpace(&Process->Vm);
 
     /* Lock the address space and make sure the process isn't already dead */
     AddressSpace = MmGetCurrentAddressSpace();
