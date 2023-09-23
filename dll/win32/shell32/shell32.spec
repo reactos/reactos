@@ -242,7 +242,7 @@
 243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx
 244 stdcall -noname SHSettingsChanged(ptr ptr)
 245 stdcall SHTestTokenMembership(ptr ptr)
-246 stub -noname SHInvokePrivilegedFunctionW
+246 stdcall -noname SHInvokePrivilegedFunctionW(wstr ptr ptr)
 247 stub -noname SHGetActiveConsoleSessionId
 248 stdcall -noname SHGetUserSessionId(ptr)
 249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW

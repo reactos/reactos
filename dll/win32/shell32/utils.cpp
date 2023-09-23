@@ -63,6 +63,47 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
 }
 
 /*************************************************************************
+ *                SHInvokePrivilegedFunctionW (SHELL32.246)
+ */
+EXTERN_C
+HRESULT WINAPI
+SHInvokePrivilegedFunctionW(
+    _In_z_ LPCWSTR pszName,
+    _In_ PRIVILEGED_FUNCTION fn,
+    _In_opt_ LPARAM lParam)
+{
+    TRACE("(%s %p %p)\n", debugstr_w(pszName), fn, lParam);
+
+    if (!pszName || !fn)
+        return E_INVALIDARG;
+
+    HANDLE hToken = NULL;
+    TOKEN_PRIVILEGES NewPriv, PrevPriv;
+    BOOL bAdjusted = FALSE;
+
+    if (SHOpenEffectiveToken(&hToken) &&
+        ::LookupPrivilegeValueW(NULL, pszName, &NewPriv.Privileges[0].Luid))
+    {
+        NewPriv.PrivilegeCount = 1;
+        NewPriv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        DWORD dwReturnSize;
+        bAdjusted = ::AdjustTokenPrivileges(hToken, FALSE, &NewPriv,
+                                            sizeof(PrevPriv), &PrevPriv, &dwReturnSize);
+    }
+
+    HRESULT hr = fn(lParam);
+
+    if (bAdjusted)
+        ::AdjustTokenPrivileges(hToken, FALSE, &PrevPriv, 0, NULL, NULL);
+
+    if (hToken)
+        ::CloseHandle(hToken);
+
+    return hr;
+}
+
+/*************************************************************************
  *                SHGetShellStyleHInstance (SHELL32.749)
  */
 EXTERN_C HINSTANCE
