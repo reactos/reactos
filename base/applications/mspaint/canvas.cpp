@@ -750,8 +750,8 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 VOID CCanvasWindow::cancelDrawing()
 {
-    selectionModel.ClearColor();
-    selectionModel.ClearMask();
+    selectionModel.ClearColorImage();
+    selectionModel.ClearMaskImage();
     m_hitSelection = HIT_NONE;
     m_drawing = FALSE;
     toolsModel.OnCancelDraw();

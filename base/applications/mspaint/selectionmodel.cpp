@@ -28,8 +28,8 @@ SelectionModel::SelectionModel()
 
 SelectionModel::~SelectionModel()
 {
-    ClearColor();
-    ClearMask();
+    ClearColorImage();
+    ClearMaskImage();
     ResetPtStack();
 }
 
@@ -85,7 +85,7 @@ void SelectionModel::BuildMaskFromPtStack()
 
     m_rc = m_rcOld = rc;
 
-    ClearMask();
+    ClearMaskImage();
 
     ShiftPtStack(-m_rcOld.left, -m_rcOld.top);
 
@@ -154,7 +154,7 @@ void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTranspar
 
 void SelectionModel::GetSelectionContents(HDC hDCImage)
 {
-    ClearColor();
+    ClearColorImage();
 
     HDC hMemDC = ::CreateCompatibleDC(NULL);
     m_hbmColor = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
@@ -174,12 +174,17 @@ BOOL SelectionModel::TakeOff()
     if (!IsLanded() || ::IsRectEmpty(&m_rc))
         return FALSE;
 
+    // The background color is needed for transparency of selection
     m_rgbBack = paletteModel.GetBgColor();
+
+    // Get the contents of the selection area
     GetSelectionContents(imageModel.GetDC());
 
+    // RectSel doesn't need the mask image
     if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
-        ClearMask();
+        ClearMaskImage();
 
+    // Save the selection area
     m_rcOld = m_rc;
 
     imageModel.NotifyImageChanged();
@@ -225,7 +230,7 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hbmColor, INT x, INT y, HBITMAP h
     }
     else
     {
-        ClearMask();
+        ClearMaskImage();
     }
 
     NotifyContentChanged();
@@ -458,7 +463,7 @@ void SelectionModel::Dragging(HITTEST hit, POINT pt)
     m_ptHit = pt;
 }
 
-void SelectionModel::ClearMask()
+void SelectionModel::ClearMaskImage()
 {
     if (m_hbmMask)
     {
@@ -467,7 +472,7 @@ void SelectionModel::ClearMask()
     }
 }
 
-void SelectionModel::ClearColor()
+void SelectionModel::ClearColorImage()
 {
     if (m_hbmColor)
     {
@@ -479,8 +484,8 @@ void SelectionModel::ClearColor()
 void SelectionModel::HideSelection()
 {
     m_bShow = m_bContentChanged = FALSE;
-    ClearColor();
-    ClearMask();
+    ClearColorImage();
+    ClearMaskImage();
     ::SetRectEmpty(&m_rc);
     ::SetRectEmpty(&m_rcOld);
     imageModel.NotifyImageChanged();
@@ -539,4 +544,27 @@ HBITMAP SelectionModel::LockBitmap()
 void SelectionModel::UnlockBitmap(HBITMAP hbmLocked)
 {
     m_hbmColor = hbmLocked;
+}
+
+void SelectionModel::StretchSelection(BOOL bShrink)
+{
+    if (!m_bShow)
+        return;
+
+    TakeOff();
+
+    INT cx = m_rc.Width(), cy = m_rc.Height();
+
+    if (bShrink)
+        m_rc.InflateRect(-cx / 4, -cy / 4);
+    else
+        m_rc.InflateRect(+cx / 2, +cy / 2);
+
+    // The selection area must exist there
+    if (m_rc.Width() <= 0)
+        m_rc.right = m_rc.left + 1;
+    if (m_rc.Height() <= 0)
+        m_rc.bottom = m_rc.top + 1;
+
+    imageModel.NotifyImageChanged();
 }

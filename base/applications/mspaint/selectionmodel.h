@@ -58,9 +58,11 @@ public:
     void InvertSelection();
 
     void Dragging(HITTEST hit, POINT pt);
-    void ClearMask();
-    void ClearColor();
+    void ClearMaskImage();
+    void ClearColorImage();
     void NotifyContentChanged();
+
+    void StretchSelection(BOOL bShrink);
 
 private:
     SelectionModel(const SelectionModel&);
