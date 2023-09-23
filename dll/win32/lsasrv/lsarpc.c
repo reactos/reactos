@@ -201,7 +201,7 @@ LsarQuerySecurityObject(
     PLSAPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PLSA_DB_OBJECT DbObject = NULL;
-    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PISECURITY_DESCRIPTOR_RELATIVE RelativeSd = NULL;
     PSECURITY_DESCRIPTOR ResultSd = NULL;
     PLSAPR_SR_SECURITY_DESCRIPTOR SdData = NULL;
     ACCESS_MASK DesiredAccess = 0;
@@ -256,16 +256,16 @@ LsarQuerySecurityObject(
 
     /* Invalidate the SD information that was not requested */
     if (!(SecurityInformation & OWNER_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Owner = NULL;
+        RelativeSd->Owner = 0;
 
     if (!(SecurityInformation & GROUP_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Group = NULL;
+        RelativeSd->Group = 0;
 
     if (!(SecurityInformation & DACL_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_DACL_PRESENT;
+        RelativeSd->Control &= ~SE_DACL_PRESENT;
 
     if (!(SecurityInformation & SACL_SECURITY_INFORMATION))
-        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_SACL_PRESENT;
+        RelativeSd->Control &= ~SE_SACL_PRESENT;
 
     /* Calculate the required SD size */
     Status = RtlMakeSelfRelativeSD(RelativeSd,
@@ -298,7 +298,7 @@ LsarQuerySecurityObject(
     }
 
     /* Fill the SD data buffer and return it to the caller */
-    SdData->Length = RelativeSdSize;
+    SdData->Length = ResultSdSize;
     SdData->SecurityDescriptor = (PBYTE)ResultSd;
 
     *SecurityDescriptor = SdData;
