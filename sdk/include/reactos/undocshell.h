@@ -695,6 +695,9 @@ SHInvokePrivilegedFunctionW(
     _In_ PRIVILEGED_FUNCTION fn,
     _In_opt_ LPARAM lParam);
 
+BOOL WINAPI
+SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
+
 /*****************************************************************************
  * Shell32 resources
  */
