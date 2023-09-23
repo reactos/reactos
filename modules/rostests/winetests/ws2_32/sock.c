@@ -11638,15 +11638,12 @@ START_TEST( sock )
     }
     else
     {
-        /* UNIMPLEMENTED in ReactOS See dll/win32/msafd/misc/stubs.c */
-        test_AcceptEx();
-        test_ConnectEx();
-        test_DisconnectEx();
-    }
-#else
+#endif
     test_AcceptEx();
     test_ConnectEx();
     test_DisconnectEx();
+#ifdef __REACTOS__
+    }
 #endif
 
     test_sioRoutingInterfaceQuery();
