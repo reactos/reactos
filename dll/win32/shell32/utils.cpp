@@ -141,7 +141,7 @@ SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
     dwLength = 0;
     GetTokenInformation(hTokenChoice, TokenPrivileges, NULL, 0, &dwLength);
 
-    pTokenPriv = (TOKEN_PRIVILEGES *)LocalAlloc(0, dwLength);
+    pTokenPriv = (PTOKEN_PRIVILEGES)LocalAlloc(LPTR, dwLength);
     if (!pTokenPriv)
         goto Quit;
 
