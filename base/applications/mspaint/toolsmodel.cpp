@@ -189,7 +189,6 @@ void ToolsModel::NotifyZoomChanged()
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
     m_pToolObject->beginEvent();
-    updateStartAndLast(x, y);
     m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
     m_pToolObject->endEvent();
 }
@@ -198,7 +197,6 @@ void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     m_pToolObject->OnMouseMove(bLeftButton, x, y);
-    updateLast(x, y);
     m_pToolObject->endEvent();
 }
 
@@ -206,7 +204,6 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     m_pToolObject->OnButtonUp(bLeftButton, x, y);
-    updateLast(x, y);
     m_pToolObject->endEvent();
 }
 

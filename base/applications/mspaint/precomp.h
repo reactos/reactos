@@ -21,6 +21,7 @@
 #include <commdlg.h>
 #include <commctrl.h>
 #include <stdlib.h>
+#include <math.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
 #include "atlimagedx.h"

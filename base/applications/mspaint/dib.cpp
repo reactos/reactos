@@ -6,7 +6,6 @@
  */
 
 #include "precomp.h"
-#include <math.h>
 
 INT g_fileSize = 0;
 float g_xDpi = 96;

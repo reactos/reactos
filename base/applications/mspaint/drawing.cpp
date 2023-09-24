@@ -115,7 +115,7 @@ Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 void
 Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
-    LONG b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
+    LONG b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
     HBRUSH hbr = ::CreateSolidBrush(color);
 
     for (LONG a = 0; a <= b; a++)
@@ -132,7 +132,7 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 void
 Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LONG radius)
 {
-    LONG b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
+    LONG b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
 
     for (LONG a = 0; a <= b; a++)
     {
@@ -169,7 +169,7 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
     LONG a, b;
-    b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
+    b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
     switch (style)
     {
         case 0:
