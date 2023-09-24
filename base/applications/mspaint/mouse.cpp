@@ -414,6 +414,7 @@ GetDirection(LONG x0, LONG y0, LONG x1, LONG y1)
     ATLTRACE("DIRECTION_HORIZONTAL: %ld\n", RAD2DEG(radian));
     return DIRECTION_HORIZONTAL;
 #undef DEG2RAD
+#undef RAD2DEG
 }
 
 static void
