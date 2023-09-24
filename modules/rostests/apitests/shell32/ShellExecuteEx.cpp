@@ -498,8 +498,8 @@ static void test_sei_lpIDList()
     ShellExecInfo.lpIDList = lpBytes;
 
     Result = ShellExecuteExW(&ShellExecInfo);
-    ok(Result == TRUE, "ShellExecuteEx lpIDList 'C:\\' failed.\n");
-    trace("sei_lpIDList returned: %s.\n", Result ? "SUCCESS" : "FAILURE");
+    ok(Result == TRUE, "ShellExecuteEx lpIDList 'C:\\' failed\n");
+    trace("sei_lpIDList returned: %s\n", Result ? "SUCCESS" : "FAILURE");
     if (Result)
     {
         Sleep(700);

@@ -2125,7 +2125,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             lpFile = wfileName;
         }
         /* We have to test sei instead of sei_tmp because sei_tmp had its
-         * input fMask modifed above in SHELL_translate_idlist.
+         * input fMask modified above in SHELL_translate_idlist.
          * This code is needed to handle the case where we only have an
          * lpIDList with multiple CLSID/PIDL's (not 'My Computer' only) */
         else if ((sei->fMask & SEE_MASK_IDLIST) == SEE_MASK_IDLIST)
