@@ -814,7 +814,7 @@ HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFOEX lpcmi)
     CComPtr<IShellBrowser> psb;
     HRESULT hr;
 
-    if (!m_site || !m_cidl)
+    if (!m_site || m_cidl == 0)
         return E_FAIL;
 
     /* Get a pointer to the shell browser */
