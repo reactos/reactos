@@ -467,6 +467,48 @@ static void test_properties()
     ok_ptr(info.hInstApp, (HINSTANCE)2);
 }
 
+static void test_sei_lpIDList()
+{
+    /* This tests ShellExecuteEx with lpIDList for explorer C:\ */
+
+    /* ITEMIDLIST for CLSID of 'My Computer' followed by PIDL for 'C:\' */
+    BYTE lpitemidlist[30] = { 0x14, 0, 0x1f, 0, 0xe0, 0x4f, 0xd0, 0x20, 0xea,
+    0x3a, 0x69, 0x10, 0xa2, 0xd8, 0x08, 0, 0x2b, 0x30, 0x30, 0x9d, // My Computer
+    0x8, 0, 0x23, 0x43, 0x3a, 0x5c, 0x5c, 0, 0, 0,}; // C:\\ + NUL-NUL ending
+    BYTE *lpBytes;
+    lpBytes = lpitemidlist;
+
+    SHELLEXECUTEINFOW ShellExecInfo;
+    BOOL Result;
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    HWND hWnd;
+
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );
+
+    ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
+    ShellExecInfo.cbSize = sizeof(ShellExecInfo);
+    ShellExecInfo.fMask = SEE_MASK_IDLIST;
+    ShellExecInfo.hwnd = NULL;
+    ShellExecInfo.nShow = SW_SHOWNORMAL;
+    ShellExecInfo.lpFile = NULL;
+    ShellExecInfo.lpDirectory = NULL;
+    ShellExecInfo.lpIDList = lpBytes;
+
+    Result = ShellExecuteExW(&ShellExecInfo);
+    ok(Result == TRUE, "ShellExecuteEx lpIDList 'C:\\' failed\n");
+    trace("sei_lpIDList returned: %s\n", Result ? "SUCCESS" : "FAILURE");
+    if (Result)
+    {
+        Sleep(700);
+        // Terminate Window
+        hWnd = FindWindowW(L"CabinetWClass", L"Local Disk (C:)");
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+    }
+}
+
 START_TEST(ShellExecuteEx)
 {
     DoAppPathTest();
@@ -475,4 +517,7 @@ START_TEST(ShellExecuteEx)
 
     DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
     Sleep(100);
+
+    test_sei_lpIDList();
+
 }

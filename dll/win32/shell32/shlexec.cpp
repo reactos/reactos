@@ -2124,6 +2124,39 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             *end = L'\0';
             lpFile = wfileName;
         }
+        /* We have to test sei instead of sei_tmp because sei_tmp had its
+         * input fMask modified above in SHELL_translate_idlist.
+         * This code is needed to handle the case where we only have an
+         * lpIDList with multiple CLSID/PIDL's (not 'My Computer' only) */
+        else if ((sei->fMask & SEE_MASK_IDLIST) == SEE_MASK_IDLIST)
+        {
+            WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH];
+            LPWSTR space, s;
+
+            LPWSTR beg = wszApplicationName;
+            for(s = beg; (space = const_cast<LPWSTR>(strchrW(s, L' '))); s = space + 1)
+            {
+                int idx = space - sei_tmp.lpFile;
+                memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
+                buffer[idx] = '\0';
+
+                if (SearchPathW(*sei_tmp.lpDirectory ? sei_tmp.lpDirectory : NULL,
+                    buffer, L".exe", _countof(xlpFile), xlpFile, NULL))
+                {
+                    /* separate out command from parameter string */
+                    LPCWSTR p = space + 1;
+
+                    while(isspaceW(*p))
+                        ++p;
+
+                    strcpyW(wszParameters, p);
+                    *space = L'\0';
+
+                    break;
+                }
+            }
+            lpFile = sei_tmp.lpFile;
+        }
         else
         {
             lpFile = sei_tmp.lpFile;
