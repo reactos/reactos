@@ -115,7 +115,7 @@ SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
     UINT iPriv, cPrivs;
     LUID Luid, *pPrivLuid;
     DWORD dwLength;
-    TOKEN_PRIVILEGES *pTokenPriv;
+    PTOKEN_PRIVILEGES pTokenPriv;
     HANDLE hTokenChoice = hToken, hNewToken = NULL;
     BOOL ret = FALSE;
 
