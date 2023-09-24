@@ -246,9 +246,9 @@ MmAccessFault(IN ULONG FaultCode,
         if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
         {
             /* Could this be a VAD fault from user-mode? */
-            MmLockAddressSpace(MmGetCurrentAddressSpace());
+//            MmLockAddressSpace(MmGetCurrentAddressSpace());
             MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
-            MmUnlockAddressSpace(MmGetCurrentAddressSpace());
+//            MmUnlockAddressSpace(MmGetCurrentAddressSpace());
         }
     }
 
