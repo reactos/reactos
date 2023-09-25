@@ -20,7 +20,7 @@
  */
 
 #undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_VISTA
+#define _WIN32_WINNT _WIN32_WINNT_VISTA // NOTIFYICONDATAW_V3_SIZE needs Vista+
 #include "precomp.h"
 
 #include <mmsystem.h>
