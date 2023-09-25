@@ -772,7 +772,6 @@ struct TextTool : ToolBase
         textEditWindow.ValidateEditRect(&rc);
         textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
         textEditWindow.SetFocus();
-        updateLast(x, y);
     }
 
     void OnFinishDraw() override
