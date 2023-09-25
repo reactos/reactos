@@ -70,7 +70,7 @@ static const char strNoChangeStartMenu[] = {"NoChangeStartMenu"};
 static const char strNoWindowsUpdate[] = {"NoWindowsUpdate"};
 static const char strNoSetActiveDesktop[] = {"NoSetActiveDesktop"};
 static const char strNoForgetSoftwareUpdate[] = {"NoForgetSoftwareUpdate"};
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
 static const char strNoMSAppLogo[] = {"NoMSAppLogo5ChannelNotify"};
 #endif
 static const char strForceCopyACLW[] = {"ForceCopyACLWithFile"};
@@ -437,7 +437,7 @@ static POLICYDATA sh32_policy_table[] =
     strForceCopyACLW,
     SHELL_NO_POLICY
   },
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
   {
     REST_NOLOGO3CHANNELNOTIFY,
     strExplorer,

@@ -748,7 +748,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
 
     if (TRACE_ON(shell))
     {
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
         if (m_Header.dwFlags & SLDF_HAS_LOGO3ID)
         {
             hr = GetAdvertiseInfo(&sProduct, EXP_LOGO3_ID_SIG);
@@ -889,7 +889,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
      */
     m_Header.dwFlags &= (SLDF_RUN_WITH_SHIMLAYER | SLDF_RUNAS_USER |
                          SLDF_RUN_IN_SEPARATE | SLDF_HAS_DARWINID |
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
                          SLDF_HAS_LOGO3ID |
 #endif
                          SLDF_HAS_EXP_ICON_SZ | SLDF_HAS_EXP_SZ);
@@ -1406,7 +1406,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Resolve(HWND hwnd, DWORD fFlags)
 
     // FIXME: See InvokeCommand().
 
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     // NOTE: For Logo3 (EXP_LOGO3_ID_SIG), check also for SHRestricted(REST_NOLOGO3CHANNELNOTIFY)
     if (m_Header.dwFlags & SLDF_HAS_LOGO3ID)
     {
@@ -2042,7 +2042,7 @@ HRESULT CShellLink::WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig)
     LPEXP_DARWIN_LINK pInfo;
 
     if (   (dwSig != EXP_DARWIN_ID_SIG)
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
         && (dwSig != EXP_LOGO3_ID_SIG)
 #endif
         )
@@ -2064,7 +2064,7 @@ HRESULT CShellLink::WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig)
             /* Invalid structure, remove it altogether */
             if (dwSig == EXP_DARWIN_ID_SIG)
                 m_Header.dwFlags &= ~SLDF_HAS_DARWINID;
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
             else if (dwSig == EXP_LOGO3_ID_SIG)
                 m_Header.dwFlags &= ~SLDF_HAS_LOGO3ID;
 #endif
@@ -2093,7 +2093,7 @@ HRESULT CShellLink::WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig)
     {
         if (dwSig == EXP_DARWIN_ID_SIG)
             m_Header.dwFlags |= SLDF_HAS_DARWINID;
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
         else if (dwSig == EXP_LOGO3_ID_SIG)
             m_Header.dwFlags |= SLDF_HAS_LOGO3ID;
 #endif
@@ -2164,7 +2164,7 @@ HRESULT CShellLink::SetAdvertiseInfo(LPCWSTR str)
     hr = WriteAdvertiseInfo(szComponent, EXP_DARWIN_ID_SIG);
     // if (FAILED(hr))
         // return hr;
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     hr = WriteAdvertiseInfo(szProduct, EXP_LOGO3_ID_SIG);
     // if (FAILED(hr))
         // return hr;
@@ -2177,7 +2177,7 @@ HRESULT CShellLink::SetAdvertiseInfo(LPCWSTR str)
     {
         GetAdvertiseInfo(&sComponent, EXP_DARWIN_ID_SIG);
         TRACE("Component = %s\n", debugstr_w(sComponent));
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
         GetAdvertiseInfo(&sProduct, EXP_LOGO3_ID_SIG);
         TRACE("Product = %s\n", debugstr_w(sProduct));
 #endif
