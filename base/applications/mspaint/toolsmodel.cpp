@@ -190,7 +190,8 @@ void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClic
 {
     m_pToolObject->beginEvent();
     m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
-    updateStartAndLast(x, y);
+    g_ptStart.x = g_ptEnd.x = x;
+    g_ptStart.y = g_ptEnd.y = y;
     m_pToolObject->endEvent();
 }
 
@@ -198,7 +199,10 @@ void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     if (m_pToolObject->OnMouseMove(bLeftButton, x, y))
-        updateLast(x, y);
+    {
+        g_ptEnd.x = x;
+        g_ptEnd.y = y;
+    }
     m_pToolObject->endEvent();
 }
 
@@ -206,7 +210,10 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     if (m_pToolObject->OnButtonUp(bLeftButton, x, y))
-        updateLast(x, y);
+    {
+        g_ptEnd.x = x;
+        g_ptEnd.y = y;
+    }
     m_pToolObject->endEvent();
 }
 

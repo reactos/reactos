@@ -50,18 +50,6 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
-void updateStartAndLast(LONG x, LONG y)
-{
-    g_ptStart.x = g_ptEnd.x = x;
-    g_ptStart.y = g_ptEnd.y = y;
-}
-
-void updateLast(LONG x, LONG y)
-{
-    g_ptEnd.x = x;
-    g_ptEnd.y = y;
-}
-
 void ToolBase::reset()
 {
     s_pointSP = 0;
@@ -471,7 +459,8 @@ struct SmoothDrawTool : ToolBase
             {
                 m_direction = NO_DIRECTION;
                 draw(bLeftButton, x, y);
-                updateStartAndLast(x, y);
+                g_ptStart.x = g_ptEnd.x = x;
+                g_ptStart.y = g_ptEnd.y = y;
                 return TRUE;
             }
         }
