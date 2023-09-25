@@ -323,8 +323,6 @@ struct TwoPointDrawTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
     {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
         imageModel.PushImageForUndo();
         OnDrawOverlayOnImage(m_hdc);
         m_bDrawing = FALSE;
