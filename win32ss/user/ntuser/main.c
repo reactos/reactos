@@ -813,6 +813,9 @@ ExitThreadCallback(PETHREAD Thread)
             UserDereferenceObject(ref->obj);
 
             psle = PopEntryList(&ptiCurrent->ReferencesList);
+#if DBG
+            ptiCurrent->cRefObjectCo--;
+#endif
         }
     }
 
@@ -871,6 +874,8 @@ ExitThreadCallback(PETHREAD Thread)
        ObDereferenceObject(ptiCurrent->pEventQueueServer);
     }
     ptiCurrent->hEventQueueClient = NULL;
+
+    ASSERT(ptiCurrent->cRefObjectCo == 0);
 
     /* The thread is dying */
     PsSetThreadWin32Thread(Thread /*ptiCurrent->pEThread*/, NULL, ptiCurrent);
