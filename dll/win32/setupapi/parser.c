@@ -2012,12 +2012,8 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
         }
         buffer[i - index] = value;
     }
-    if (TRACE_ON(setupapi))
-    {
-        TRACE( "%p/%p/%d/%d index %d returning:\n",
-               context->Inf, context->CurrentInf, context->Section, context->Line, index );
-        for (i = index; i < line->nb_fields; i++) TRACE( " %02x\n", buffer[i - index] );
-    }
+    TRACE( "%p/%p/%d/%d index %d\n",
+           context->Inf, context->CurrentInf, context->Section, context->Line, index );
     return TRUE;
 }
 
