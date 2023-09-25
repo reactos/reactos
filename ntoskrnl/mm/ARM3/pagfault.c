@@ -2730,7 +2730,7 @@ MmSetExecuteOptions(IN ULONG ExecuteOptions)
             CurrentProcess->Flags.ImageDispatchEnable = TRUE;
         }
 
-        /* These are turned on by default if no-execution is also eanbled */
+        /* These are turned on by default if no-execution is also enabled */
         if (CurrentProcess->Flags.ExecuteEnable)
         {
             CurrentProcess->Flags.ExecuteDispatchEnable = TRUE;
