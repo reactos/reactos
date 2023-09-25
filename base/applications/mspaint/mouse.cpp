@@ -337,10 +337,6 @@ typedef enum DIRECTION
     DIRECTION_DIAGONAL_RIGHT_UP,
 } DIRECTION;
 
-#ifndef M_PI
-    #define M_PI 3.14156265
-#endif
-
 #define THRESHOULD_DEG 15
 
 static DIRECTION

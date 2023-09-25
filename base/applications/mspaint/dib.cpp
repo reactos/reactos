@@ -338,10 +338,6 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight, BOOL bMono)
     return hbm2;
 }
 
-#ifndef M_PI
-    #define M_PI 3.14159265
-#endif
-
 HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
 {
     CWaitCursor waitCursor;
