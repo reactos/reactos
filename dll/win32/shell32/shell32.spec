@@ -232,7 +232,7 @@
 233 stdcall -noname SHGetUserPicturePathW(wstr long ptr)
 234 stdcall -noname SHSetUserPicturePathW(wstr long ptr)
 235 stdcall -noname SHOpenEffectiveToken(ptr)
-236 stdcall -noname SHTestTokenPrivilegeW(ptr ptr)
+236 stdcall -noname SHTestTokenPrivilegeW(ptr wstr)
 237 stdcall -noname SHShouldShowWizards(ptr)
 238 stdcall InternalExtractIconListW(ptr wstr ptr)
 239 stdcall PathIsSlowW(wstr long)

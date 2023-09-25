@@ -104,6 +104,67 @@ SHInvokePrivilegedFunctionW(
 }
 
 /*************************************************************************
+ *                SHTestTokenPrivilegeW (SHELL32.236)
+ *
+ * @see http://undoc.airesoft.co.uk/shell32.dll/SHTestTokenPrivilegeW.php
+ */
+EXTERN_C
+BOOL WINAPI
+SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
+{
+    LUID Luid;
+    DWORD dwLength;
+    PTOKEN_PRIVILEGES pTokenPriv;
+    HANDLE hNewToken = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("(%p, %s)\n", hToken, debugstr_w(lpName));
+
+    if (!lpName)
+        return FALSE;
+
+    if (!hToken)
+    {
+        if (!SHOpenEffectiveToken(&hNewToken))
+            goto Quit;
+
+        if (!hNewToken)
+            return FALSE;
+
+        hToken = hNewToken;
+    }
+
+    if (!LookupPrivilegeValueW(NULL, lpName, &Luid))
+        return FALSE;
+
+    dwLength = 0;
+    if (!GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwLength))
+        goto Quit;
+
+    pTokenPriv = (PTOKEN_PRIVILEGES)LocalAlloc(LPTR, dwLength);
+    if (!pTokenPriv)
+        goto Quit;
+
+    if (GetTokenInformation(hToken, TokenPrivileges, pTokenPriv, dwLength, &dwLength))
+    {
+        UINT iPriv, cPrivs;
+        cPrivs = pTokenPriv->PrivilegeCount;
+        for (iPriv = 0; !ret && iPriv < cPrivs; ++iPriv)
+        {
+            ret = RtlEqualLuid(&Luid, &pTokenPriv->Privileges[iPriv].Luid);
+        }
+    }
+
+    LocalFree(pTokenPriv);
+
+Quit:
+    if (hToken == hNewToken)
+        CloseHandle(hNewToken);
+
+    return ret;
+}
+
+/*************************************************************************
  *                SHGetShellStyleHInstance (SHELL32.749)
  */
 EXTERN_C HINSTANCE

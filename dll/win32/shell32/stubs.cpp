@@ -1104,17 +1104,6 @@ SHSetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
  */
 EXTERN_C BOOL
 WINAPI
-SHTestTokenPrivilegeW(HANDLE hToken, LPDWORD ReturnLength)
-{
-    FIXME("SHTestTokenPrivilegeW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 SHShouldShowWizards(LPVOID lpUnknown)
 {
     FIXME("SHShouldShowWizards() stub\n");
