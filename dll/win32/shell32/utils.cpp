@@ -112,11 +112,10 @@ EXTERN_C
 BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
 {
-    UINT iPriv, cPrivs;
-    LUID Luid, *pPrivLuid;
+    LUID Luid;
     DWORD dwLength;
     PTOKEN_PRIVILEGES pTokenPriv;
-    HANDLE hTokenChoice = hToken, hNewToken = NULL;
+    HANDLE hNewToken = NULL;
     BOOL ret = FALSE;
 
     TRACE("(%p, %s)\n", hToken, debugstr_w(lpName));
@@ -132,34 +131,34 @@ SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
         if (!hNewToken)
             return FALSE;
 
-        hTokenChoice = hNewToken;
+        hToken = hNewToken;
     }
 
     if (!LookupPrivilegeValueW(NULL, lpName, &Luid))
         return FALSE;
 
     dwLength = 0;
-    GetTokenInformation(hTokenChoice, TokenPrivileges, NULL, 0, &dwLength);
+    if (!GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwLength))
+        goto Quit;
 
     pTokenPriv = (PTOKEN_PRIVILEGES)LocalAlloc(LPTR, dwLength);
     if (!pTokenPriv)
         goto Quit;
 
-    if (GetTokenInformation(hTokenChoice, TokenPrivileges, pTokenPriv, dwLength, &dwLength))
+    if (GetTokenInformation(hToken, TokenPrivileges, pTokenPriv, dwLength, &dwLength))
     {
+        UINT iPriv, cPrivs;
         cPrivs = pTokenPriv->PrivilegeCount;
         for (iPriv = 0; !ret && iPriv < cPrivs; ++iPriv)
         {
-            pPrivLuid = &pTokenPriv->Privileges[iPriv].Luid;
-            ret = (Luid.LowPart == pPrivLuid->LowPart) &&
-                  (Luid.HighPart == pPrivLuid->HighPart);
+            ret = RtlEqualLuid(&Luid, &pTokenPriv->Privileges[iPriv].Luid);
         }
     }
 
     LocalFree(pTokenPriv);
 
 Quit:
-    if (hNewToken)
+    if (hToken == hNewToken)
         CloseHandle(hNewToken);
 
     return ret;
