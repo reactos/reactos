@@ -922,6 +922,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     SP_FILE_COPY_PARAMS_W params;
     INT flags;
     BOOL ret;
+    DWORD len;
 
     TRACE("queue %p, src_root %s, hinf %p, hlist %p, section %s, style %#x.\n",
             queue, debugstr_w(src_root), hinf, hlist, debugstr_w(section), style);
@@ -993,7 +994,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
 
         if (!SetupGetStringFieldW( &context, 1, dst_file, ARRAY_SIZE( dst_file ), NULL ))
             goto end;
-        if (!SetupGetStringFieldW( &context, 2, src_file, ARRAY_SIZE( src_file ), NULL ))
+        if (!SetupGetStringFieldW( &context, 2, src_file, ARRAY_SIZE( src_file ), &len ) || len <= sizeof(WCHAR))
             strcpyW( src_file, dst_file );
 
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
@@ -1396,6 +1397,8 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 #endif
         TRACE("Did copy... rc was %i\n",rc);
     }
+    else
+        SetLastError(ERROR_SUCCESS);
 
     /* after copy processing */
     if (style & SP_COPY_DELETESOURCE)
@@ -1467,7 +1470,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
     static const WCHAR CopyFiles[] = {'C','o','p','y','F','i','l','e','s',0};
 
     BOOL ret, absolute = (root && *root && !(style & SP_COPY_SOURCE_ABSOLUTE));
-    WCHAR *buffer, *p, *inf_source = NULL;
+    WCHAR *buffer, *p, *inf_source = NULL, dest_path[MAX_PATH];
     unsigned int len;
 
     TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
@@ -1475,8 +1478,11 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
 
     if (in_use) FIXME("no file in use support\n");
 
+    dest_path[0] = 0;
+
     if (hinf)
     {
+        WCHAR *dest_dir;
         INFCONTEXT ctx;
 
         if (!inf_context)
@@ -1496,6 +1502,13 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
             return FALSE;
         }
         source = inf_source;
+
+        if ((dest_dir = get_destination_dir( hinf, NULL )))
+        {
+            strcpyW( dest_path, dest_dir );
+            strcatW( dest_path, backslashW );
+            heap_free( dest_dir );
+        }
     }
     else if (!source)
     {
@@ -1522,7 +1535,9 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
     while (*source == '\\') source++;
     strcpyW( p, source );
 
-    ret = do_file_copyW( buffer, dest, style, handler, context );
+    strcatW( dest_path, dest );
+
+    ret = do_file_copyW( buffer, dest_path, style, handler, context );
 
     HeapFree( GetProcessHeap(), 0, inf_source );
     HeapFree( GetProcessHeap(), 0, buffer );
@@ -1546,7 +1561,7 @@ static BOOL queue_copy_file( const WCHAR *source, const WCHAR *dest,
     if (op->dst_path && !create_full_pathW(op->dst_path))
         return FALSE;
 
-    if (do_file_copyW(source, dest, op->style, handler, context))
+    if (do_file_copyW(source, dest, op->style, handler, context) || GetLastError() == ERROR_SUCCESS)
         return TRUE;
 
     /* try to extract it from the cabinet file */
