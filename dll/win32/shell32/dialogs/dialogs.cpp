@@ -1599,8 +1599,6 @@ int WINAPI ShutdownWindowsDialog(HWND hWndOwner)
     typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
     HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
 
-    TRACE("(%p)\n", hWndOwner);
-
     CComPtr<IUnknown> fadeHandler;
     HWND parent;
     if (!CallShellDimScreen(&fadeHandler, &parent))
@@ -1701,6 +1699,8 @@ static BOOL IsShutdownAllowed(VOID)
  */
 int WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
+    TRACE("(%p)\n", hWndOwner);
+
     if (IsOS(OS_WELCOMELOGONUI) && !IsShutdownAllowed())
         return LogoffWindowsDialog(hWndOwner);
     else
