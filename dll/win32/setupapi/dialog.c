@@ -49,28 +49,23 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
         WCHAR format[256];
         WCHAR unknown[256];
         DWORD_PTR args[2];
-        LoadStringW(SETUPAPI_hInstance, IDS_PROMPTDISK, format,
-            sizeof(format)/sizeof(format[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_PROMPTDISK, format, ARRAY_SIZE(format));
 
         args[0] = (DWORD_PTR)params->FileSought;
         if(params->DiskName)
             args[1] = (DWORD_PTR)params->DiskName;
         else
         {
-            LoadStringW(SETUPAPI_hInstance, IDS_UNKNOWN, unknown,
-                sizeof(unknown)/sizeof(unknown[0]));
+            LoadStringW(SETUPAPI_hInstance, IDS_UNKNOWN, unknown, ARRAY_SIZE(unknown));
             args[1] = (DWORD_PTR)unknown;
         }
         FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                       format, 0, 0, message, sizeof(message)/sizeof(*message),
-                       (__ms_va_list*)args);
+                       format, 0, 0, message, ARRAY_SIZE(message), (__ms_va_list*)args);
         SetDlgItemTextW(hwnd, IDC_FILENEEDED, message);
 
-        LoadStringW(SETUPAPI_hInstance, IDS_INFO, message,
-            sizeof(message)/sizeof(message[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_INFO, message, ARRAY_SIZE(message));
         SetDlgItemTextW(hwnd, IDC_INFO, message);
-        LoadStringW(SETUPAPI_hInstance, IDS_COPYFROM, message,
-            sizeof(message)/sizeof(message[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_COPYFROM, message, ARRAY_SIZE(message));
         SetDlgItemTextW(hwnd, IDC_COPYFROM, message);
     }
     if(params->DiskPromptStyle & IDF_NOBROWSE)

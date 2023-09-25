@@ -714,8 +714,7 @@ BOOL WINAPI SetupQueryInfOriginalFileInformationW(
 
     if (!SetupGetLineTextW(NULL, hinf, wszVersion, wszCatalogFile,
                            OriginalFileInfo->OriginalCatalogName,
-                           sizeof(OriginalFileInfo->OriginalCatalogName)/sizeof(OriginalFileInfo->OriginalCatalogName[0]),
-                           NULL))
+                           ARRAY_SIZE(OriginalFileInfo->OriginalCatalogName), NULL))
     {
         OriginalFileInfo->OriginalCatalogName[0] = '\0';
     }
