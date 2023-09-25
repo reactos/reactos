@@ -842,9 +842,9 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     if (!(params.TargetDirectory = dest_dir = get_destination_dir( hinf, section ))) goto done;
     do
     {
-        if (!SetupGetStringFieldW( &context, 1, dest, sizeof(dest)/sizeof(WCHAR), NULL ))
+        if (!SetupGetStringFieldW( &context, 1, dest, ARRAY_SIZE( dest ), NULL ))
             goto end;
-        if (!SetupGetStringFieldW( &context, 2, src, sizeof(src)/sizeof(WCHAR), NULL )) *src = 0;
+        if (!SetupGetStringFieldW( &context, 2, src, ARRAY_SIZE( src ), NULL )) *src = 0;
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
 
         params.SourceFilename = *src ? src : NULL;
@@ -898,7 +898,7 @@ BOOL WINAPI SetupQueueDeleteSectionW( HSPFILEQ queue, HINF hinf, HINF hlist, PCW
     if (!(dest_dir = get_destination_dir( hinf, section ))) return FALSE;
     do
     {
-        if (!SetupGetStringFieldW( &context, 1, buffer, sizeof(buffer)/sizeof(WCHAR), NULL ))
+        if (!SetupGetStringFieldW( &context, 1, buffer, ARRAY_SIZE( buffer ), NULL ))
             goto done;
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;
         if (!SetupQueueDeleteW( queue, dest_dir, buffer )) goto done;
@@ -946,9 +946,9 @@ BOOL WINAPI SetupQueueRenameSectionW( HSPFILEQ queue, HINF hinf, HINF hlist, PCW
     if (!(dest_dir = get_destination_dir( hinf, section ))) return FALSE;
     do
     {
-        if (!SetupGetStringFieldW( &context, 1, dst, sizeof(dst)/sizeof(WCHAR), NULL ))
+        if (!SetupGetStringFieldW( &context, 1, dst, ARRAY_SIZE( dst ), NULL ))
             goto done;
-        if (!SetupGetStringFieldW( &context, 2, src, sizeof(src)/sizeof(WCHAR), NULL ))
+        if (!SetupGetStringFieldW( &context, 2, src, ARRAY_SIZE( src ), NULL ))
             goto done;
         if (!SetupQueueRenameW( queue, dest_dir, src, NULL, dst )) goto done;
     } while (SetupFindNextLine( &context, &context ));
