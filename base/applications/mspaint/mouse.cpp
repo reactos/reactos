@@ -151,10 +151,9 @@ struct FreeSelTool : ToolBase
             selectionModel.PushToPtStack(pt);
         }
         m_bLeftButton = bLeftButton;
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if (bLeftButton)
         {
@@ -163,10 +162,10 @@ struct FreeSelTool : ToolBase
             selectionModel.PushToPtStack(pt);
             imageModel.NotifyImageChanged();
         }
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if (bLeftButton)
         {
@@ -188,7 +187,7 @@ struct FreeSelTool : ToolBase
             canvasWindow.ClientToScreen(&pt);
             mainWindow.TrackPopupMenu(pt, 0);
         }
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnFinishDraw() override
@@ -247,10 +246,9 @@ struct RectSelTool : ToolBase
             selectionModel.HideSelection();
         }
         m_bLeftButton = bLeftButton;
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if (bLeftButton)
         {
@@ -259,10 +257,10 @@ struct RectSelTool : ToolBase
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             imageModel.NotifyImageChanged();
         }
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         POINT pt = { x, y };
         if (bLeftButton)
@@ -277,7 +275,7 @@ struct RectSelTool : ToolBase
             canvasWindow.ClientToScreen(&pt);
             mainWindow.TrackPopupMenu(pt, 0);
         }
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnFinishDraw() override
@@ -312,22 +310,21 @@ struct TwoPointDrawTool : ToolBase
         m_bLeftButton = bLeftButton;
         m_bDrawing = TRUE;
         imageModel.NotifyImageChanged();
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         imageModel.PushImageForUndo();
         OnDrawOverlayOnImage(m_hdc);
         m_bDrawing = FALSE;
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnFinishDraw() override
@@ -453,10 +450,9 @@ struct SmoothDrawTool : ToolBase
         m_direction = NO_DIRECTION;
         imageModel.PushImageForUndo();
         imageModel.NotifyImageChanged();
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if (::GetKeyState(VK_SHIFT) < 0) // Shift key is pressed
         {
@@ -464,7 +460,7 @@ struct SmoothDrawTool : ToolBase
             {
                 m_direction = GetDirection(g_ptStart.x, g_ptStart.y, x, y);
                 if (m_direction == NO_DIRECTION)
-                    return;
+                    return FALSE;
             }
 
             RestrictDrawDirection(m_direction, g_ptStart.x, g_ptStart.y, x, y);
@@ -476,17 +472,16 @@ struct SmoothDrawTool : ToolBase
                 m_direction = NO_DIRECTION;
                 draw(bLeftButton, x, y);
                 updateStartAndLast(x, y);
-                return;
+                return TRUE;
             }
         }
 
         draw(bLeftButton, x, y);
-
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if (m_direction != NO_DIRECTION)
         {
@@ -495,7 +490,7 @@ struct SmoothDrawTool : ToolBase
 
         draw(bLeftButton, x, y);
         OnFinishDraw();
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnFinishDraw() override
@@ -505,7 +500,8 @@ struct SmoothDrawTool : ToolBase
 
     void OnCancelDraw() override
     {
-        OnButtonUp(FALSE, 0, 0);
+        LONG x = 0, y = 0;
+        OnButtonUp(FALSE, x, y);
         imageModel.Undo(TRUE);
         ToolBase::OnCancelDraw();
     }
@@ -540,7 +536,6 @@ struct FillTool : ToolBase
     {
         imageModel.PushImageForUndo();
         Fill(m_hdc, x, y, bLeftButton ? m_fg : m_bg);
-        updateStartAndLast(x, y);
     }
 };
 
@@ -566,17 +561,17 @@ struct ColorTool : ToolBase
             paletteModel.SetBgColor(rgbColor);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         fetchColor(bLeftButton, x, y);
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         fetchColor(bLeftButton, x, y);
         toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
-        updateLast(x, y);
+        return TRUE;
     }
 };
 
@@ -600,7 +595,6 @@ struct ZoomTool : ToolBase
             if (toolsModel.GetZoom() > MIN_ZOOM)
                 zoomTo(toolsModel.GetZoom() / 2, x, y);
         }
-        updateStartAndLast(x, y);
     }
 };
 
@@ -682,13 +676,12 @@ struct TextTool : ToolBase
             textEditWindow.Create(canvasWindow);
 
         UpdatePoint(x, y);
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         UpdatePoint(x, y);
-        updateLast(x, y);
+        return TRUE;
     }
 
     void draw(HDC hdc)
@@ -714,7 +707,7 @@ struct TextTool : ToolBase
         selectionModel.HideSelection();
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         POINT pt = { x, y };
         imageModel.Clamp(pt);
@@ -731,7 +724,7 @@ struct TextTool : ToolBase
             if (::IsRectEmpty(&selectionModel.m_rc))
             {
                 quit();
-                return;
+                return TRUE;
             }
         }
 
@@ -766,6 +759,7 @@ struct TextTool : ToolBase
         textEditWindow.ValidateEditRect(&rc);
         textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
         textEditWindow.SetFocus();
+        return TRUE;
     }
 
     void OnFinishDraw() override
@@ -854,28 +848,27 @@ struct BezierTool : ToolBase
         }
 
         imageModel.NotifyImageChanged();
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         s_pointStack[s_pointSP].x = x;
         s_pointStack[s_pointSP].y = y;
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         s_pointStack[s_pointSP].x = x;
         s_pointStack[s_pointSP].y = y;
         if (s_pointSP >= 3)
         {
             OnFinishDraw();
-            return;
+            return TRUE;
         }
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnCancelDraw() override
@@ -959,10 +952,9 @@ struct ShapeTool : ToolBase
         }
 
         imageModel.NotifyImageChanged();
-        updateStartAndLast(x, y);
     }
 
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
@@ -971,10 +963,10 @@ struct ShapeTool : ToolBase
         s_pointStack[s_pointSP].y = y;
 
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y) override
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
@@ -983,7 +975,7 @@ struct ShapeTool : ToolBase
         if (nearlyEqualPoints(x, y, s_pointStack[0].x, s_pointStack[0].y))
         {
             OnFinishDraw();
-            return;
+            return TRUE;
         }
         else
         {
@@ -996,7 +988,7 @@ struct ShapeTool : ToolBase
             s_pointSP--;
 
         imageModel.NotifyImageChanged();
-        updateLast(x, y);
+        return TRUE;
     }
 
     void OnCancelDraw() override
