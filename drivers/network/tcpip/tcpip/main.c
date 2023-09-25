@@ -10,6 +10,10 @@
 
 #include "precomp.h"
 
+#include <ntifs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
+
 #include <dispatch.h>
 #include <fileobjs.h>
 
@@ -556,6 +560,212 @@ TiDispatch(
     return IRPFinish(Irp, Status);
 }
 
+static
+NTSTATUS TiCreateSecurityDescriptor(
+    _Out_ PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    NTSTATUS Status;
+    SECURITY_DESCRIPTOR AbsSD;
+    ULONG DaclSize, RelSDSize = 0;
+    PSECURITY_DESCRIPTOR RelSD = NULL;
+    PACL Dacl = NULL;
+
+    /* Setup a SD */
+    Status = RtlCreateSecurityDescriptor(&AbsSD,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to create the absolute SD (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    /* Setup a DACL */
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(SeExports->SeLocalSystemSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(SeExports->SeAliasAdminsSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(SeExports->SeNetworkServiceSid);
+    Dacl = ExAllocatePoolWithTag(PagedPool,
+                                 DaclSize,
+                                 DEVICE_OBJ_SECURITY_TAG);
+    if (Dacl == NULL)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to allocate buffer heap for a DACL\n"));
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    Status = RtlCreateAcl(Dacl,
+                          DaclSize,
+                          ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to create a DACL (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    /* Setup access */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    GENERIC_ALL,
+                                    SeExports->SeLocalSystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to add access allowed ACE for System SID (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    GENERIC_ALL,
+                                    SeExports->SeAliasAdminsSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to add access allowed ACE for Admins SID (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    GENERIC_ALL,
+                                    SeExports->SeNetworkServiceSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to add access allowed ACE for Network Service SID (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    /* Assign security data to SD */
+    Status = RtlSetDaclSecurityDescriptor(&AbsSD,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set DACL to security descriptor (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    Status = RtlSetGroupSecurityDescriptor(&AbsSD,
+                                           SeExports->SeLocalSystemSid,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set group to security descriptor (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    Status = RtlSetOwnerSecurityDescriptor(&AbsSD,
+                                           SeExports->SeAliasAdminsSid,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set owner to security descriptor (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    /* Get the required buffer size for the self-relative SD */
+    Status = RtlAbsoluteToSelfRelativeSD(&AbsSD,
+                                         NULL,
+                                         &RelSDSize);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Expected STATUS_BUFFER_TOO_SMALL but got something else (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    RelSD = ExAllocatePoolWithTag(PagedPool,
+                                  RelSDSize,
+                                  DEVICE_OBJ_SECURITY_TAG);
+    if (RelSD == NULL)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to allocate buffer heap for relative SD\n"));
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Convert it now */
+    Status = RtlAbsoluteToSelfRelativeSD(&AbsSD,
+                                         RelSD,
+                                         &RelSDSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to convert absolute SD into a relative SD (0x%X)\n", Status));
+        goto Quit;
+    }
+
+    /* Give the buffer to caller */
+    *SecurityDescriptor = RelSD;
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        if (RelSD != NULL)
+        {
+            ExFreePoolWithTag(RelSD, DEVICE_OBJ_SECURITY_TAG);
+        }
+    }
+
+    if (Dacl != NULL)
+    {
+        ExFreePoolWithTag(Dacl, DEVICE_OBJ_SECURITY_TAG);
+    }
+
+    return Status;
+}
+
+static
+NTSTATUS TiSetupTcpDeviceSD(
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR Sd;
+    SECURITY_INFORMATION Info = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+
+    /* Obtain a security descriptor */
+    Status = TiCreateSecurityDescriptor(&Sd);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to create a security descriptor for the device object\n"));
+        return Status;
+    }
+
+    /* Whack the new descriptor into the TCP device object */
+    Status = ObSetSecurityObjectByPointer(DeviceObject,
+                                          Info,
+                                          Sd);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set new security information to the device object\n"));
+    }
+
+    ExFreePoolWithTag(Sd, DEVICE_OBJ_SECURITY_TAG);
+    return Status;
+}
+
+static
+NTSTATUS TiSecurityStartup(
+    VOID)
+{
+    NTSTATUS Status;
+
+    /* Set security data for the TCP and IP device objects */
+    Status = TiSetupTcpDeviceSD(TCPDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set security data for TCP device object\n"));
+        return Status;
+    }
+
+    Status = TiSetupTcpDeviceSD(IPDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MIN_TRACE, ("Failed to set security data for IP device object\n"));
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 VOID NTAPI TiUnload(
   PDRIVER_OBJECT DriverObject)
@@ -757,6 +967,14 @@ DriverEntry(
 
     Status = ICMPStartup();
     if( !NT_SUCCESS(Status) ) {
+        TiUnload(DriverObject);
+        return Status;
+    }
+
+    /* Initialize security */
+    Status = TiSecurityStartup();
+    if (!NT_SUCCESS(Status))
+    {
         TiUnload(DriverObject);
         return Status;
     }
