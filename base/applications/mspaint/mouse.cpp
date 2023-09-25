@@ -369,8 +369,6 @@ GetDirection(LONG x0, LONG y0, LONG x1, LONG y1)
         return NO_DIRECTION;
 
     double radian = atan2((double)dy, (double)dx);
-#define DEG2RAD(degree) (((degree) * M_PI) / 180)
-#define RAD2DEG(radian) ((LONG)(((radian) * 180) / M_PI))
     if (radian < DEG2RAD(-180 + THRESHOULD_DEG))
     {
         ATLTRACE("DIRECTION_HORIZONTAL: %ld\n", RAD2DEG(radian));
@@ -413,8 +411,6 @@ GetDirection(LONG x0, LONG y0, LONG x1, LONG y1)
     }
     ATLTRACE("DIRECTION_HORIZONTAL: %ld\n", RAD2DEG(radian));
     return DIRECTION_HORIZONTAL;
-#undef DEG2RAD
-#undef RAD2DEG
 }
 
 static void
