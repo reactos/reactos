@@ -1594,6 +1594,11 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
     }
 }
 
+/*
+ * TODO:
+ * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
+ *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
+ */
 int WINAPI ShutdownWindowsDialog(HWND hWndOwner)
 {
     typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
@@ -1693,12 +1698,6 @@ static BOOL IsShutdownAllowed(VOID)
  */
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
-    /*
-     * TODO:
-     * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
-     *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
-     */
-
     TRACE("(%p)\n", hWndOwner);
 
     if (IsOS(OS_WELCOMELOGONUI) && !IsShutdownAllowed())
