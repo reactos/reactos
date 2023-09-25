@@ -1599,7 +1599,7 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
  * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
  *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
  */
-int WINAPI ShutdownWindowsDialog(HWND hWndOwner)
+void WINAPI ShutdownWindowsDialog(HWND hWndOwner)
 {
     typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
     HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
@@ -1615,7 +1615,7 @@ int WINAPI ShutdownWindowsDialog(HWND hWndOwner)
     {
         TRACE("Unable to load msgina.dll.\n");
         ExitWindowsDialog_backup(parent);
-        return 0;
+        return;
     }
 
     ShellShFunc pShellShutdownDialog = (ShellShFunc)GetProcAddress(msginaDll, "ShellShutdownDialog");
@@ -1683,7 +1683,6 @@ int WINAPI ShutdownWindowsDialog(HWND hWndOwner)
     }
 
     FreeLibrary(msginaDll);
-    return 0;
 }
 
 static BOOL IsShutdownAllowed(VOID)
