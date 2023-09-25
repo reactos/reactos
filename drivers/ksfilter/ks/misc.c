@@ -22,7 +22,6 @@ CompleteRequest(
 
     ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
 
-
     IoCompleteRequest(Irp, PriorityBoost);
 }
 
@@ -31,19 +30,14 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_KS);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_KS);
 }
 
 VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_KS);
 }
 
 NTSTATUS
@@ -172,5 +166,3 @@ KsGetParent(
     /* return object type */
     return (PVOID)BasicHeader->Parent.KsDevice;
 }
-
-
