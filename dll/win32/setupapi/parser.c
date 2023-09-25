@@ -25,13 +25,6 @@
 
 #include <ndk/obfuncs.h>
 
-/* Unicode constants */
-static const WCHAR BackSlash[] = {'\\',0};
-static const WCHAR Class[]  = {'C','l','a','s','s',0};
-static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
-static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
-static const WCHAR InfFileSpecification[] = {'*','.','i','n','f',0};
-
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255
 #define MAX_FIELD_LEN         511  /* larger fields get silently truncated */
@@ -319,7 +312,7 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     WCHAR *dirid_str, *end;
     const WCHAR *ret = NULL;
     WCHAR StringLangId[13] = {'S','t','r','i','n','g','s','.',0};
-    TCHAR Lang[5];
+    WCHAR Lang[5];
 
     if (!*len)  /* empty string (%%) is replaced by single percent */
     {
@@ -336,51 +329,60 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     }
     if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
     field = &file->fields[line->first_field];
-    GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
+
+    // get the current system locale for translated strings
+    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, ARRAY_SIZE(Lang));
 
     strcpyW(StringLangId + 8, Lang + 2);
-    // now you have e.g. Strings.07 for german neutral translations
+    // now we have e.g. Strings.07 for german neutral translations
     for (i = 0; i < file->nb_sections; i++) // search in all sections
     {
-        if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
+        // if the section is a Strings.* section
+        if (!strcmpiW(file->sections[i]->name,StringLangId))
         {
-            strings_section = file->sections[i]; // select this section for further use
-            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
+            // select this section for further use
+            strings_section = file->sections[i];
+            // process all lines in this section
+            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
             {
                 if (line->key_field == -1) continue; // if no key then skip
                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
                 if (!file->fields[line->key_field].text[*len]) // if value exist
                 {
-                    field = &file->fields[line->first_field]; // then extract value and
-                    break; // no more search necessary
+                    // then extract value and no more search necessary
+                    field = &file->fields[line->first_field];
+                    break;
                 }
             }
         }
     }
 
-    strcpyW(StringLangId + 8, Lang); // append the Language identifier from GetLocaleInfo
-    // now you have e.g. Strings.0407 for german translations
+    // append the Language identifier from GetLocaleInfo
+    strcpyW(StringLangId + 8, Lang);
+    // now we have e.g. Strings.0407 for german translations
     for (i = 0; i < file->nb_sections; i++) // search in all sections
     {
-        if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
+        // if the section is a Strings.* section
+        if (!strcmpiW(file->sections[i]->name,StringLangId))
         {
-            strings_section = file->sections[i]; // select this section for further use
-            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
+            // select this section for further use
+            strings_section = file->sections[i];
+            // process all lines in this section
+            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
             {
                 if (line->key_field == -1) continue; // if no key then skip
                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
                 if (!file->fields[line->key_field].text[*len]) // if value exist
                 {
-                    field = &file->fields[line->first_field]; // then extract value and
-                    break; // no more search necessary
+                    // then extract value and no more search necessary
+                    field = &file->fields[line->first_field];
+                    break;
                 }
             }
         }
     }
-    *len = strlenW( field->text ); // set length
-    ret = field->text; // return the english or translated string
-    return ret;
-
+    *len = strlenW( field->text );
+    return field->text; // return the english or translated string
 
  not_found:  /* check for integer id */
     if ((dirid_str = HeapAlloc( GetProcessHeap(), 0, (*len+1) * sizeof(WCHAR) )))
@@ -1170,14 +1172,14 @@ PARSER_GetInfClassW(
     BOOL ret = FALSE;
 
     /* Read class Guid */
-    if (!SetupGetLineTextW(NULL, hInf, Version, ClassGUID, guidW, sizeof(guidW), NULL))
+    if (!SetupGetLineTextW(NULL, hInf, Version, L"ClassGUID", guidW, sizeof(guidW), NULL))
         goto cleanup;
     guidW[37] = '\0'; /* Replace the } by a NULL character */
     if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
         goto cleanup;
 
     /* Read class name */
-    ret = SetupGetLineTextW(NULL, hInf, Version, Class, ClassName, ClassNameSize, &requiredSize);
+    ret = SetupGetLineTextW(NULL, hInf, Version, L"Class", ClassName, ClassNameSize, &requiredSize);
     if (ret && ClassName == NULL && ClassNameSize == 0)
     {
         if (RequiredSize)
@@ -2178,7 +2180,7 @@ SetupGetInfFileListW(
         len = strlenW(DirectoryPath) + 1 + 1;
     else
         /* "%SYSTEMROOT%\Inf\" form */
-        len = MAX_PATH + 1 + strlenW(InfDirectory) + 1;
+        len = MAX_PATH + 1 + strlenW(L"inf\\") + 1;
     len += MAX_PATH; /* To contain file name or "*.inf" string */
     pFullFileName = MyMalloc(len * sizeof(WCHAR));
     if (pFullFileName == NULL)
@@ -2192,7 +2194,7 @@ SetupGetInfFileListW(
     {
         strcpyW(pFullFileName, DirectoryPath);
         if (*pFullFileName && pFullFileName[strlenW(pFullFileName) - 1] != '\\')
-            strcatW(pFullFileName, BackSlash);
+            strcatW(pFullFileName, L"\\");
     }
     else
     {
@@ -2200,13 +2202,13 @@ SetupGetInfFileListW(
         if (len == 0 || len > MAX_PATH)
             goto cleanup;
         if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
-            strcatW(pFullFileName, BackSlash);
-        strcatW(pFullFileName, InfDirectory);
+            strcatW(pFullFileName, L"\\");
+        strcatW(pFullFileName, L"inf\\");
     }
     pFileName = &pFullFileName[strlenW(pFullFileName)];
 
     /* Search for the first file */
-    strcpyW(pFileName, InfFileSpecification);
+    strcpyW(pFileName, L"*.inf");
     hSearch = FindFirstFileW(pFullFileName, &wfdFileInfo);
     if (hSearch == INVALID_HANDLE_VALUE)
     {
