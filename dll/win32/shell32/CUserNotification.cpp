@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#undef _WIN32_WINNT
+#define _WIN32_WINNT _WIN32_WINNT_VISTA
 #include "precomp.h"
 
 #include <mmsystem.h>
