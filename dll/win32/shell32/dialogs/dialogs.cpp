@@ -1689,20 +1689,20 @@ static BOOL IsShutdownAllowed(VOID)
 /*************************************************************************
  * ExitWindowsDialog                [SHELL32.60]
  *
- * NOTES
- *     exported by ordinal
+ * @see http://www.jasinskionline.com/WindowsApi/ref/e/exitwindowsdialog.html
  */
-/*
- * TODO:
- * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
- *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
- */
-int WINAPI ExitWindowsDialog(HWND hWndOwner)
+void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
+    /*
+     * TODO:
+     * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
+     *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
+     */
+
     TRACE("(%p)\n", hWndOwner);
 
     if (IsOS(OS_WELCOMELOGONUI) && !IsShutdownAllowed())
-        return LogoffWindowsDialog(hWndOwner);
+        LogoffWindowsDialog(hWndOwner);
     else
-        return ShutdownWindowsDialog(hWndOwner);
+        ShutdownWindowsDialog(hWndOwner);
 }

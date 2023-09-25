@@ -170,7 +170,7 @@ void WINAPI RunFileDlg(
     UINT uFlags);
 
 int WINAPI LogoffWindowsDialog(HWND hWndOwner);
-int WINAPI ExitWindowsDialog(HWND hWndOwner);
+void WINAPI ExitWindowsDialog(HWND hWndOwner);
 
 BOOL WINAPI SHFindComputer(
     LPCITEMIDLIST pidlRoot,
