@@ -1687,7 +1687,7 @@ void WINAPI ShutdownWindowsDialog(HWND hWndOwner)
 
 static BOOL IsShutdownAllowed(VOID)
 {
-    return SHTestTokenPrivilegeW(NULL, L"SeShutdownPrivilege");
+    return SHTestTokenPrivilegeW(NULL, SE_SHUTDOWN_NAME);
 }
 
 /*************************************************************************
