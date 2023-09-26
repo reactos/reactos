@@ -151,6 +151,6 @@ IsReactOS()
     WCHAR szPath[MAX_PATH];
     GetSystemDirectoryW(szPath, _countof(szPath));
     lstrcatW(szPath, L"\\roshttpd.exe");
-    return GetFileAttributesW(szPath) != 0xFFFFFFFF;
+    return GetFileAttributesW(szPath) != INVALID_FILE_ATTRIBUTES;
 }
 #endif // __REACTOS__
