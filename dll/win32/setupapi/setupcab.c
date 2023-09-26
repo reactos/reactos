@@ -29,7 +29,7 @@
 #include <share.h>
 #include <fdi.h>
 
-HINSTANCE hInstance = NULL;
+HINSTANCE SETUPAPI_hInstance = NULL;
 OSVERSIONINFOEXW OsVersionInfo;
 
 static HINSTANCE CABINET_hInstance = NULL;
@@ -655,7 +655,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         OsVersionInfo.dwOSVersionInfoSize = sizeof(OsVersionInfo);
         if (!GetVersionExW((POSVERSIONINFOW)&OsVersionInfo))
             return FALSE;
-        hInstance = (HINSTANCE)hinstDLL;
+        SETUPAPI_hInstance = hinstDLL;
         break;
     case DLL_PROCESS_DETACH:
         if (lpvReserved) break;

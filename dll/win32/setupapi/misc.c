@@ -911,7 +911,7 @@ VOID WINAPI AssertFail(LPSTR lpFile, UINT uLine, LPSTR lpMessage)
 
     TRACE("%s %u %s\n", lpFile, uLine, lpMessage);
 
-    GetModuleFileNameA(hInstance, szModule, MAX_PATH);
+    GetModuleFileNameA(SETUPAPI_hInstance, szModule, MAX_PATH);
     lpName = strrchr(szModule, '\\');
     if (lpName != NULL)
         lpName++;
