@@ -145,15 +145,12 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
-#include <winreg.h>
 VERSIONHELPERAPI
 IsReactOS()
 {
-    HKEY hKey;
-    LONG error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", 0, KEY_READ, &hKey);
-    if (error != ERROR_SUCCESS)
-        return FALSE;
-    RegCloseKey(hKey);
-    return TRUE;
+    WCHAR szPath[MAX_PATH];
+    GetSystemDirectoryW(szPath, MAX_PATH);
+    lstrcatW(szPath, L"\\roshttpd.exe");
+    return GetFileAttributesW(szPath) != 0xFFFFFFFF;
 }
 #endif // __REACTOS__
