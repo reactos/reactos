@@ -149,7 +149,7 @@ VERSIONHELPERAPI
 IsReactOS()
 {
     WCHAR szPath[MAX_PATH];
-    GetSystemDirectoryW(szPath, MAX_PATH);
+    GetSystemDirectoryW(szPath, _countof(szPath));
     lstrcatW(szPath, L"\\roshttpd.exe");
     return GetFileAttributesW(szPath) != 0xFFFFFFFF;
 }
