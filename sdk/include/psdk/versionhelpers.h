@@ -150,8 +150,7 @@ VERSIONHELPERAPI
 IsReactOS()
 {
     HKEY hKey;
-    LONG error;
-    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS", 0, KEY_READ, &hKey);
+    LONG error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", 0, KEY_READ, &hKey);
     if (error != ERROR_SUCCESS)
         return FALSE;
     RegCloseKey(hKey);
