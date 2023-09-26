@@ -78,6 +78,7 @@ VOID CUserNotification::RemoveIcon()
 {
     NOTIFYICONDATAW nid = {0};
 
+    static_assert(sizeof(nid) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
     nid.cbSize = NOTIFYICONDATAW_V3_SIZE;
     nid.hWnd = m_hWorkerWnd;
     nid.uID  = ID_NOTIFY_ICON;
@@ -119,6 +120,7 @@ VOID CUserNotification::SetUpNotifyData(
     IN UINT uFlags,
     IN OUT PNOTIFYICONDATAW pnid)
 {
+    static_assert(sizeof(*pnid) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
     pnid->cbSize = NOTIFYICONDATAW_V3_SIZE;
     pnid->hWnd = m_hWorkerWnd;
     pnid->uID  = ID_NOTIFY_ICON;
