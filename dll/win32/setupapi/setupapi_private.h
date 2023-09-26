@@ -58,6 +58,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 #undef __WINESRC__
 #endif
 
+#ifdef __REACTOS__
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+#endif
+
 #include "resource.h"
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
@@ -245,7 +249,7 @@ struct FileLog /* HSPFILELOG */
     LPWSTR LogName;
 };
 
-extern HINSTANCE hInstance;
+extern HINSTANCE SETUPAPI_hInstance;
 extern OSVERSIONINFOEXW OsVersionInfo;
 
 /*

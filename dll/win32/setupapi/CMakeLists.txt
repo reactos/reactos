@@ -4,11 +4,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
     ${CMAKE_CURRENT_BINARY_DIR})
 
-add_definitions(
-    -D_SETUPAPI_
-    -D_CFGMGR32_
-)
-
+add_definitions(-D_SETUPAPI_ -D_CFGMGR32_)
 remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/pnp.idl)
