@@ -145,12 +145,16 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
+#include <winreg.h>
 VERSIONHELPERAPI
 IsReactOS()
 {
-    // FIXME: Find a better method!
-    WCHAR szWinDir[MAX_PATH];
-    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+    HKEY hKey;
+    LONG error;
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS", 0, KEY_READ, &hKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+    RegCloseKey(hKey);
+    return TRUE;
 }
 #endif // __REACTOS__
