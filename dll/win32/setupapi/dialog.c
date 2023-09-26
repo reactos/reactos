@@ -49,7 +49,7 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
         WCHAR format[256];
         WCHAR unknown[256];
         DWORD_PTR args[2];
-        LoadStringW(hInstance, IDS_PROMPTDISK, format,
+        LoadStringW(SETUPAPI_hInstance, IDS_PROMPTDISK, format,
             sizeof(format)/sizeof(format[0]));
 
         args[0] = (DWORD_PTR)params->FileSought;
@@ -57,7 +57,7 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
             args[1] = (DWORD_PTR)params->DiskName;
         else
         {
-            LoadStringW(hInstance, IDS_UNKNOWN, unknown,
+            LoadStringW(SETUPAPI_hInstance, IDS_UNKNOWN, unknown,
                 sizeof(unknown)/sizeof(unknown[0]));
             args[1] = (DWORD_PTR)unknown;
         }
@@ -66,10 +66,10 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
                        (__ms_va_list*)args);
         SetDlgItemTextW(hwnd, IDC_FILENEEDED, message);
 
-        LoadStringW(hInstance, IDS_INFO, message,
+        LoadStringW(SETUPAPI_hInstance, IDS_INFO, message,
             sizeof(message)/sizeof(message[0]));
         SetDlgItemTextW(hwnd, IDC_INFO, message);
-        LoadStringW(hInstance, IDS_COPYFROM, message,
+        LoadStringW(SETUPAPI_hInstance, IDS_COPYFROM, message,
             sizeof(message)/sizeof(message[0]));
         SetDlgItemTextW(hwnd, IDC_COPYFROM, message);
     }
@@ -272,7 +272,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
     params.PathBufferSize = PathBufferSize;
     params.PathRequiredSize = PathRequiredSize;
 
-    ret = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDPROMPTFORDISK),
+    ret = DialogBoxParamW(SETUPAPI_hInstance, MAKEINTRESOURCEW(IDPROMPTFORDISK),
         hwndParent, promptdisk_proc, (LPARAM)&params);
 
     if(ret == DPROMPT_CANCEL)
