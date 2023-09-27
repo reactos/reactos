@@ -40,7 +40,7 @@
 #include "shresdef.h"
 
 #ifdef __REACTOS__
-    #include "compat.h"
+    #include "compat.h" /* for RegGetValueA/W */
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

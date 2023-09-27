@@ -92,7 +92,7 @@ extern "C" {
     #endif
 
     #if (_WIN32_WINNT >= _WIN32_WINNT_XP && _WIN32_WINNT < _WIN32_WINNT_VISTA)
-        /* In PSDK, V3 uses hBalloonIcon. This member is not defined in WinXP PSDK. */
+        /* In PSDK, V3 uses hBalloonIcon. This member hBalloonIcon is not defined in WinXP PSDK. */
         #undef NOTIFYICONDATAA_V3_SIZE
         #undef NOTIFYICONDATAW_V3_SIZE
         #undef NOTIFYICONDATA_V3_SIZE

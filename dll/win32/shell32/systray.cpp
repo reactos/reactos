@@ -22,7 +22,7 @@
 
 #include "precomp.h"
 #ifdef __REACTOS__
-    #include "compat.h"
+    #include "compat.h" /* for V3 */
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
