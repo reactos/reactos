@@ -90,20 +90,33 @@ extern "C" {
     #ifndef OAIF_HIDE_REGISTRATION
         #define OAIF_HIDE_REGISTRATION 32
     #endif
+#endif
 
-    #if (_WIN32_WINNT >= _WIN32_WINNT_XP && _WIN32_WINNT < _WIN32_WINNT_VISTA)
-        /* In PSDK, V3 uses hBalloonIcon. This member hBalloonIcon is not defined in WinXP PSDK. */
-        #undef NOTIFYICONDATAA_V3_SIZE
-        #undef NOTIFYICONDATAW_V3_SIZE
-        #undef NOTIFYICONDATA_V3_SIZE
-        #define NOTIFYICONDATAA_V3_SIZE sizeof(NOTIFYICONDATAA)
-        #define NOTIFYICONDATAW_V3_SIZE sizeof(NOTIFYICONDATAW)
-        #define NOTIFYICONDATA_V3_SIZE  sizeof(NOTIFYICONDATA)
-        #ifdef __cplusplus
-            static_assert(NOTIFYICONDATAA_V3_SIZE > NOTIFYICONDATAA_V2_SIZE, "Logical error");
-            static_assert(NOTIFYICONDATAW_V3_SIZE > NOTIFYICONDATAW_V2_SIZE, "Logical error");
-            static_assert(NOTIFYICONDATA_V3_SIZE  > NOTIFYICONDATA_V2_SIZE , "Logical error");
-        #endif
+/* Compatibility macros */
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    #define NOTIFYICONDATAA_V3_SIZE_COMPAT NOTIFYICONDATAA_V3_SIZE
+    #define NOTIFYICONDATAW_V3_SIZE_COMPAT NOTIFYICONDATAW_V3_SIZE
+    #define NOTIFYICONDATA_V3_SIZE_COMPAT  NOTIFYICONDATA_V3_SIZE
+
+    #define NOTIFYICONDATAA_V4_SIZE_COMPAT sizeof(NOTIFYICONDATAA)
+    #define NOTIFYICONDATAW_V4_SIZE_COMPAT sizeof(NOTIFYICONDATAW)
+    #define NOTIFYICONDATA_V4_SIZE_COMPAT  sizeof(NOTIFYICONDATA)
+#elif (_WIN32_WINNT >= _WIN32_WINNT_XP && _WIN32_WINNT < _WIN32_WINNT_VISTA)
+    /* PSDK NOTIFYICONDATA_V3_SIZE uses hBalloonIcon that is not defined in WinXP PSDK. */
+    #define NOTIFYICONDATAA_V3_SIZE_COMPAT sizeof(NOTIFYICONDATAA)
+    #define NOTIFYICONDATAW_V3_SIZE_COMPAT sizeof(NOTIFYICONDATAW)
+    #define NOTIFYICONDATA_V3_SIZE_COMPAT  sizeof(NOTIFYICONDATA)
+#endif
+
+/* Logical check */
+#ifdef __cplusplus
+    static_assert(NOTIFYICONDATAA_V3_SIZE_COMPAT > NOTIFYICONDATAA_V2_SIZE, "Logical error");
+    static_assert(NOTIFYICONDATAW_V3_SIZE_COMPAT > NOTIFYICONDATAW_V2_SIZE, "Logical error");
+    static_assert(NOTIFYICONDATA_V3_SIZE_COMPAT  > NOTIFYICONDATA_V2_SIZE , "Logical error");
+    #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+        static_assert(NOTIFYICONDATAA_V4_SIZE_COMPAT > NOTIFYICONDATAA_V3_SIZE_COMPAT, "Logical error");
+        static_assert(NOTIFYICONDATAW_V4_SIZE_COMPAT > NOTIFYICONDATAW_V3_SIZE_COMPAT, "Logical error");
+        static_assert(NOTIFYICONDATA_V4_SIZE_COMPAT  > NOTIFYICONDATA_V3_SIZE_COMPAT,  "Logical error");
     #endif
 #endif
 

@@ -21,14 +21,8 @@
  */
 
 #include "precomp.h"
-#ifdef __REACTOS__
-    #include "compat.h" /* for V3 */
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
-
-static_assert(sizeof(NOTIFYICONDATAA) >= NOTIFYICONDATAA_V3_SIZE, "V3 or later is needed");
-static_assert(sizeof(NOTIFYICONDATAW) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
 
 /*************************************************************************
  * Shell_NotifyIcon             [SHELL32.296]
@@ -51,14 +45,17 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
     /* Validate the structure size and the flags */
     cbSize = pnid->cbSize;
     dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-    if (cbSize == sizeof(NOTIFYICONDATAA))
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    if (cbSize == NOTIFYICONDATAA_V4_SIZE_COMPAT)
     {
-        nidW.cbSize = sizeof(nidW);
+        nidW.cbSize = NOTIFYICONDATAA_V4_SIZE_COMPAT;
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
-    else if (cbSize == NOTIFYICONDATAA_V3_SIZE)
+    else
+#endif
+    if (cbSize == NOTIFYICONDATAA_V3_SIZE_COMPAT)
     {
-        nidW.cbSize = NOTIFYICONDATAW_V3_SIZE;
+        nidW.cbSize = NOTIFYICONDATAW_V3_SIZE_COMPAT;
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
     }
     else if (cbSize == NOTIFYICONDATAA_V2_SIZE)
@@ -118,7 +115,7 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         }
     }
 
-    if ((cbSize >= NOTIFYICONDATAA_V3_SIZE) && (nidW.uFlags & NIF_GUID))
+    if ((cbSize >= NOTIFYICONDATAA_V3_SIZE_COMPAT) && (nidW.uFlags & NIF_GUID))
         nidW.guidItem = pnid->guidItem;
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
@@ -149,11 +146,14 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
     /* Validate the structure size and the flags */
     cbSize = pnid->cbSize;
     dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-    if (cbSize == sizeof(NOTIFYICONDATAW))
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    if (cbSize == NOTIFYICONDATAW_V4_SIZE_COMPAT)
     {
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
-    else if (cbSize == NOTIFYICONDATAW_V3_SIZE)
+    else
+#endif
+    if (cbSize == NOTIFYICONDATAW_V3_SIZE_COMPAT)
     {
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
     }

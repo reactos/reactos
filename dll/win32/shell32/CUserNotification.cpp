@@ -20,16 +20,11 @@
  */
 
 #include "precomp.h"
-#ifdef __REACTOS__
-    #include "compat.h" /* for V3 */
-#endif
 
 #include <mmsystem.h>
 #undef PlaySound
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
-
-static_assert(sizeof(NOTIFYICONDATAW) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
 
 /* Use Windows-compatible window callback message */
 #define WM_TRAYNOTIFY   (WM_USER + 100)
@@ -80,7 +75,7 @@ VOID CUserNotification::RemoveIcon()
 {
     NOTIFYICONDATAW nid = {0};
 
-    nid.cbSize = NOTIFYICONDATAW_V3_SIZE;
+    nid.cbSize = NOTIFYICONDATAW_V3_SIZE_COMPAT;
     nid.hWnd = m_hWorkerWnd;
     nid.uID  = ID_NOTIFY_ICON;
 
@@ -121,7 +116,7 @@ VOID CUserNotification::SetUpNotifyData(
     IN UINT uFlags,
     IN OUT PNOTIFYICONDATAW pnid)
 {
-    pnid->cbSize = NOTIFYICONDATAW_V3_SIZE;
+    pnid->cbSize = NOTIFYICONDATAW_V3_SIZE_COMPAT;
     pnid->hWnd = m_hWorkerWnd;
     pnid->uID  = ID_NOTIFY_ICON;
     // pnid->uVersion = NOTIFYICON_VERSION;
