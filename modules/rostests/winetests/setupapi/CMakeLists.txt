@@ -4,6 +4,8 @@ add_definitions(
     -Dstrcasecmp=_stricmp
 )
 
+remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
+
 list(APPEND SOURCE
     devinst.c
     dialog.c
