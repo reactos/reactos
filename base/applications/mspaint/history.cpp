@@ -300,7 +300,7 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmOld = ::SelectObject(m_hDrawingDC, hbmLocked); // Re-select
 }
 
-void ImageModel::SelectionStamp(BOOL bUndoable)
+void ImageModel::SelectionClone(BOOL bUndoable)
 {
     if (!selectionModel.m_bShow || ::IsRectEmpty(&selectionModel.m_rc))
         return;

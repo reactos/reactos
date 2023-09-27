@@ -272,11 +272,11 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
         if (bLeftButton)
         {
             CanvasToImage(pt);
-            if (::GetKeyState(VK_CONTROL) < 0) // Selection Stamp
+            if (::GetKeyState(VK_CONTROL) < 0) // Ctrl+Click is Selection Clone
             {
-                imageModel.SelectionStamp();
+                imageModel.SelectionClone();
             }
-            else if (::GetKeyState(VK_SHIFT) < 0) // Selection Brush
+            else if (::GetKeyState(VK_SHIFT) < 0) // Shift+Dragging is Selection Brush
             {
                 selectionModel.m_nSelectionBrush = 1; // Selection Brush is ON
             }
@@ -801,7 +801,7 @@ VOID CCanvasWindow::SelectionDragging(POINT ptImage)
 {
     if (selectionModel.m_nSelectionBrush)
     {
-        imageModel.SelectionStamp(selectionModel.m_nSelectionBrush == 1);
+        imageModel.SelectionClone(selectionModel.m_nSelectionBrush == 1);
         selectionModel.m_nSelectionBrush = 2; // Selection Brush is ON and drawn
     }
 
