@@ -1128,7 +1128,7 @@
 @ stdcall -arch=win32 RtlExtendedLargeIntegerDivide(long long long ptr)
 @ stdcall -arch=win32 RtlExtendedMagicDivide(long long long long long)
 @ stdcall RtlFillMemory(ptr long long)
-@ stdcall -arch=i386,arm RtlFillMemoryUlong(ptr long long)
+@ stdcall -arch=i386,arm,arm64 RtlFillMemoryUlong(ptr long long)
 @ stdcall RtlFindClearBits(ptr long long)
 @ stdcall RtlFindClearBitsAndSet(ptr long long)
 @ stdcall RtlFindClearRuns(ptr ptr long long)

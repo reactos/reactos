@@ -255,5 +255,3 @@ FuncEndName .equ    &Name&_end
 
 
 #endif
-
-
