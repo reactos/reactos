@@ -268,9 +268,18 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
     HITTEST hitSelection = SelectionHitTest(pt);
     if (hitSelection != HIT_NONE)
     {
+        m_bSelectionBrush = FALSE;
         if (bLeftButton)
         {
             CanvasToImage(pt);
+            if (::GetKeyState(VK_CONTROL) < 0) // Selection Stamp
+            {
+                imageModel.SelectionStamp();
+            }
+            else if (::GetKeyState(VK_SHIFT) < 0) // Selection Brush
+            {
+                m_bSelectionBrush = TRUE;
+            }
             StartSelectionDrag(hitSelection, pt);
         }
         else
@@ -790,6 +799,9 @@ VOID CCanvasWindow::StartSelectionDrag(HITTEST hit, POINT ptImage)
 
 VOID CCanvasWindow::SelectionDragging(POINT ptImage)
 {
+    if (m_bSelectionBrush)
+        imageModel.SelectionStamp();
+
     selectionModel.Dragging(m_hitSelection, ptImage);
     Invalidate(FALSE);
 }
@@ -798,6 +810,7 @@ VOID CCanvasWindow::EndSelectionDrag(POINT ptImage)
 {
     selectionModel.Dragging(m_hitSelection, ptImage);
     m_hitSelection = HIT_NONE;
+    m_bSelectionBrush = FALSE;
     Invalidate(FALSE);
 }
 

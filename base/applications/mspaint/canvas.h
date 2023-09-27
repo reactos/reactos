@@ -57,6 +57,7 @@ protected:
     POINT m_ptOrig; // The origin of drag start
     HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
     CRect m_rcResizing; // Resizing rectagle
+    BOOL m_bSelectionBrush = FALSE; // Using the selection as a brush
 
     HITTEST CanvasHitTest(POINT pt);
     RECT GetBaseRect();
