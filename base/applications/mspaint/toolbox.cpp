@@ -20,8 +20,13 @@ CPaintToolBar::ToolBarWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     {
         // We have to detect clicking on toolbar even if no change of pressed button
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        INT id = (INT)SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
-        ::PostMessage(::GetParent(hwnd), WM_TOOLBARHIT, id, 0);
+        INT index = (INT)::SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+        if (index >= 0)
+        {
+            TBBUTTON button;
+            if (::SendMessage(hwnd, TB_GETBUTTON, index, (LPARAM)&button))
+                ::PostMessage(::GetParent(hwnd), WM_COMMAND, button.idCommand, 0);
+        }
     }
     return ::CallWindowProc(oldWndProc, hwnd, uMsg, wParam, lParam);
 }
@@ -112,6 +117,7 @@ static const COMMAND_TO_TOOL CommandToToolMapping[] =
     { ID_ELLIPSE, TOOL_ELLIPSE },
     { ID_RRECT, TOOL_RRECT },
 };
+static_assert(_countof(CommandToToolMapping) == TOOL_MAX, "Logical error");
 
 LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -181,12 +187,5 @@ LRESULT CToolBox::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
         return 0;
 
     ::ReleaseCapture();
-    return 0;
-}
-
-LRESULT CToolBox::OnToolBarHit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    // See also: CPaintToolBar::ToolBarWndProc
-    selectionModel.Landing();
     return 0;
 }

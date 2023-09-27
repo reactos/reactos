@@ -67,6 +67,7 @@ class ToolsModel
 {
 private:
     int m_lineWidth;
+    INT m_penWidth;
     int m_shapeStyle;
     int m_brushStyle;
     TOOLTYPE m_activeTool;
@@ -85,8 +86,15 @@ public:
     ~ToolsModel();
 
     BOOL IsSelection() const;
+
     int GetLineWidth() const;
     void SetLineWidth(int nLineWidth);
+    void MakeLineThickerOrThinner(BOOL bThinner);
+
+    INT GetPenWidth() const;
+    void SetPenWidth(INT nPenWidth);
+    void MakePenThickerOrThinner(BOOL bThinner);
+
     int GetShapeStyle() const;
     void SetShapeStyle(int nShapeStyle);
     int GetBrushStyle() const;

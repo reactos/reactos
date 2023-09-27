@@ -13,7 +13,7 @@ ToolsModel toolsModel;
 
 ToolsModel::ToolsModel()
 {
-    m_lineWidth = 1;
+    m_lineWidth = m_penWidth = 1;
     m_shapeStyle = 0;
     m_brushStyle = 0;
     m_oldActiveTool = m_activeTool = TOOL_PEN;
@@ -53,6 +53,31 @@ void ToolsModel::SetLineWidth(int nLineWidth)
 {
     m_lineWidth = nLineWidth;
     NotifyToolSettingsChanged();
+    imageModel.NotifyImageChanged();
+}
+
+INT ToolsModel::GetPenWidth() const
+{
+    return m_penWidth;
+}
+
+void ToolsModel::SetPenWidth(INT nPenWidth)
+{
+    m_penWidth = nPenWidth;
+    NotifyToolSettingsChanged();
+    imageModel.NotifyImageChanged();
+}
+
+void ToolsModel::MakeLineThickerOrThinner(BOOL bThinner)
+{
+    INT thickness = GetLineWidth();
+    SetLineWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+}
+
+void ToolsModel::MakePenThickerOrThinner(BOOL bThinner)
+{
+    INT thickness = GetPenWidth();
+    SetPenWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
 }
 
 int ToolsModel::GetShapeStyle() const
@@ -91,23 +116,44 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     OnFinishDraw();
 
+    selectionModel.Landing();
+
+    m_activeTool = nActiveTool;
+
     switch (m_activeTool)
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
-        case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
         case TOOL_TEXT:
+            // The active tool is not an actually drawing tool
             break;
 
-        default:
-            m_oldActiveTool = m_activeTool;
+        case TOOL_LINE:
+        case TOOL_BEZIER:
+        case TOOL_RECT:
+        case TOOL_SHAPE:
+        case TOOL_ELLIPSE:
+        case TOOL_FILL:
+        case TOOL_AIRBRUSH:
+        case TOOL_RRECT:
+        case TOOL_RUBBER:
+        case TOOL_BRUSH:
+            // The active tool is an actually drawing tool. Save it for TOOL_COLOR to restore
+            m_oldActiveTool = nActiveTool;
+            break;
+
+        case TOOL_PEN:
+            // The active tool is an actually drawing tool. Save it for TOOL_COLOR to restore
+            m_oldActiveTool = nActiveTool;
+
+            SetLineWidth(1);
             break;
     }
 
-    m_activeTool = nActiveTool;
     m_pToolObject = GetOrCreateTool(m_activeTool);
+
     NotifyToolChanged();
 }
 

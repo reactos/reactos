@@ -17,6 +17,7 @@ Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
     MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
+    SetPixelV(hdc, x2, y2, color);
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
