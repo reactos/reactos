@@ -90,6 +90,21 @@ extern "C" {
     #ifndef OAIF_HIDE_REGISTRATION
         #define OAIF_HIDE_REGISTRATION 32
     #endif
+
+    #if (_WIN32_WINNT >= _WIN32_WINNT_XP && _WIN32_WINNT < _WIN32_WINNT_VISTA)
+        /* In PSDK, V3 uses hBalloonIcon. This member is not defined in WinXP PSDK. */
+        #undef NOTIFYICONDATAA_V3_SIZE
+        #undef NOTIFYICONDATAW_V3_SIZE
+        #undef NOTIFYICONDATA_V3_SIZE
+        #define NOTIFYICONDATAA_V3_SIZE sizeof(NOTIFYICONDATAA)
+        #define NOTIFYICONDATAW_V3_SIZE sizeof(NOTIFYICONDATAW)
+        #define NOTIFYICONDATA_V3_SIZE  sizeof(NOTIFYICONDATA)
+        #ifdef __cplusplus
+            static_assert(NOTIFYICONDATAA_V3_SIZE > NOTIFYICONDATAA_V2_SIZE, "Logical error");
+            static_assert(NOTIFYICONDATAW_V3_SIZE > NOTIFYICONDATAW_V2_SIZE, "Logical error");
+            static_assert(NOTIFYICONDATA_V3_SIZE  > NOTIFYICONDATA_V2_SIZE , "Logical error");
+        #endif
+    #endif
 #endif
 
 #ifdef __cplusplus
