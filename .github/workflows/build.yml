@@ -52,7 +52,7 @@ jobs:
       run: cmake --build build --target subsystems/all
     - name: Build some applications (arm64)
       if: ${{ matrix.arch == 'arm64' }}
-      run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
+      run: cmake --build build --target uefildr calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
     - name: Upload compiled binaries
       uses: actions/upload-artifact@v3
       with:
