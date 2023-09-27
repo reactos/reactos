@@ -27,6 +27,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
 
+static_assert(sizeof(NOTIFYICONDATAA) >= NOTIFYICONDATAA_V3_SIZE, "V3 or later is needed");
+static_assert(sizeof(NOTIFYICONDATAW) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
+
 /*************************************************************************
  * Shell_NotifyIcon             [SHELL32.296]
  * Shell_NotifyIconA            [SHELL32.297]
@@ -48,7 +51,6 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
     /* Validate the structure size and the flags */
     cbSize = pnid->cbSize;
     dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-    static_assert(sizeof(*pnid) >= NOTIFYICONDATAA_V3_SIZE, "V3 or later is needed");
     if (cbSize == sizeof(NOTIFYICONDATAA))
     {
         nidW.cbSize = sizeof(nidW);
@@ -147,7 +149,6 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
     /* Validate the structure size and the flags */
     cbSize = pnid->cbSize;
     dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-    static_assert(sizeof(*pnid) >= NOTIFYICONDATAW_V3_SIZE, "V3 or later is needed");
     if (cbSize == sizeof(NOTIFYICONDATAW))
     {
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
