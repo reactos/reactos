@@ -58,7 +58,35 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 #endif
 
 #ifdef __REACTOS__
+
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
+#include <malloc.h>
+// Redefine _recalloc since the header contains the function definition
+// as exported from msvcrt.dll, which we do not currently support (NT 6+)
+#define _recalloc _my_recalloc
+static inline void* /*__cdecl*/ _recalloc(void *mem, size_t num, size_t size)
+{
+    size_t old_size;
+    void *ret;
+
+    if(!mem)
+        return calloc(num, size);
+
+    size = num*size;
+    old_size = _msize(mem);
+
+    ret = realloc(mem, size);
+    if(!ret) {
+        *_errno() = ENOMEM;
+        return NULL;
+    }
+
+    if(size>old_size)
+        memset((BYTE*)ret+old_size, 0, size-old_size);
+    return ret;
+}
+
 #endif
 
 #include <setupapi_undoc.h>
