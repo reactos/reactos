@@ -38,6 +38,10 @@ const PCSTR FrLdrVersionString =
 
 CCHAR FrLdrBootPath[MAX_PATH] = "";
 
+#ifdef _M_ARM64
+VOID __cdecl Reboot(VOID);
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 VOID __cdecl BootMain(IN PCCH CmdLine)

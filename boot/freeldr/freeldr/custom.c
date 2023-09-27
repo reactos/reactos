@@ -23,6 +23,14 @@
 
 /* GLOBALS ********************************************************************/
 
+#ifdef _M_ARM64
+VOID __cdecl Reboot(VOID);
+
+UCHAR
+DriveMapGetBiosDriveNumber(PCSTR DeviceName);
+#endif
+
+
 #if defined(_M_IX86) || defined(_M_AMD64)
 
 const CHAR BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExamples:\n\\BOOTSECT.DOS\n/boot/bootsect.dos";
