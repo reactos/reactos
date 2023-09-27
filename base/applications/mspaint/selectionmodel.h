@@ -23,6 +23,7 @@ public:
     CRect m_rc;    // in image pixel coordinates
     POINT m_ptHit; // in image pixel coordinates
     CRect m_rcOld; // in image pixel coordinates
+    INT m_nSelectionBrush = 0;
 
     SelectionModel();
     ~SelectionModel();

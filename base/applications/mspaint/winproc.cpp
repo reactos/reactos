@@ -704,6 +704,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (toolsModel.IsSelection())
                 {
                     canvasWindow.cancelDrawing();
+                    if (toolsModel.GetActiveTool() == TOOL_FREESEL ||
+                        toolsModel.GetActiveTool() == TOOL_RECTSEL)
+                    {
+                        imageModel.Undo();
+                        if (selectionModel.m_nSelectionBrush == 2) // Selection Brush is drawn
+                        {
+                            imageModel.Undo();
+                            selectionModel.m_nSelectionBrush = 0;
+                        }
+                    }
                     break;
                 }
             }

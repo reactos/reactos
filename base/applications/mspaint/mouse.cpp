@@ -112,10 +112,7 @@ struct FreeSelTool : ToolBase
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!selectionModel.IsLanded())
-        {
-            selectionModel.DrawBackgroundPoly(hdc, selectionModel.m_rgbBack);
             selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
 
         if (canvasWindow.m_drawing)
         {
@@ -208,10 +205,7 @@ struct RectSelTool : ToolBase
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!selectionModel.IsLanded())
-        {
-            selectionModel.DrawBackgroundRect(hdc, selectionModel.m_rgbBack);
             selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
 
         if (canvasWindow.m_drawing)
         {

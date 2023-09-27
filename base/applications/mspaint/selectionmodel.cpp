@@ -187,6 +187,17 @@ BOOL SelectionModel::TakeOff()
     // Save the selection area
     m_rcOld = m_rc;
 
+    if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
+    {
+        imageModel.PushImageForUndo();
+        selectionModel.DrawBackgroundRect(imageModel.GetDC(), selectionModel.m_rgbBack);
+    }
+    else if (toolsModel.GetActiveTool() == TOOL_FREESEL)
+    {
+        imageModel.PushImageForUndo();
+        selectionModel.DrawBackgroundPoly(imageModel.GetDC(), selectionModel.m_rgbBack);
+    }
+
     imageModel.NotifyImageChanged();
     return TRUE;
 }
