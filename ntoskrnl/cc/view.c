@@ -497,6 +497,10 @@ retry:
         /* Check if it's mapped and not dirty */
         if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
         {
+            /* We have to break these locks to call MmPageOutPhysicalAddress */
+            KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
             /* Page out the VACB */
             for (i = 0; i < VACB_MAPPING_GRANULARITY / PAGE_SIZE; i++)
             {
@@ -504,6 +508,10 @@ retry:
 
                 MmPageOutPhysicalAddress(Page);
             }
+
+            /* Reacquire the locks */
+            oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
         }
 
         /* Dereference the VACB */
