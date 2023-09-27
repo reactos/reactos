@@ -37,6 +37,22 @@ KeGetCurrentThread(VOID);
 
 #define DbgRaiseAssertionFailure() __break(0xf001)
 
+/* Interesting.. even in Windows it's like this for arm64 */
+NTHALAPI
+KIRQL
+KeGetCurrentIrql(VOID);
+
+NTHALAPI
+VOID
+KfLowerIrql(_In_ KIRQL NewIrql);
+
+NTHALAPI
+KIRQL
+KfRaiseIrql(_In_ KIRQL NewIrql);
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
