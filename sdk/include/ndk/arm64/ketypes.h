@@ -29,6 +29,8 @@ extern "C" {
 #define IPI_PACKET_READY        6
 #define IPI_SYNCH_REQUEST       16
 
+#define KSEG0_BASE 0xfffff80000000000ULL
+
 //
 // PRCB Flags
 //
