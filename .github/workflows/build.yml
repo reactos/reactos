@@ -58,6 +58,7 @@ jobs:
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
+          boot/freeldr/freeldr
           build/base
           build/dll/cpl
           build/modules/rosapps
