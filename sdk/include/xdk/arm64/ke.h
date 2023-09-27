@@ -13,7 +13,23 @@ $if (_WDMDDK_)
 #define PROFILE_LEVEL           15
 #define HIGH_LEVEL              15
 
-#define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
+#define KI_USER_SHARED_DATA 0xFFFFF78000000000UI64
+
+#define SharedUserData ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
+#define SharedInterruptTime (KI_USER_SHARED_DATA + 0x8)
+#define SharedSystemTime (KI_USER_SHARED_DATA + 0x14)
+#define SharedTickCount (KI_USER_SHARED_DATA + 0x320)
+
+#if 0
+//TODO: Fix instrinsics
+#define KeQueryInterruptTime() ((ULONG64)ReadNoFence64((const volatile LONG64 *)(SharedInterruptTime)))
+
+#define KeQuerySystemTime(CurrentCount)                                     \
+    *((PULONG64)(CurrentCount)) = ReadNoFence64((const volatile LONG64 *)(SharedSystemTime))
+
+#define KeQueryTickCount(CurrentCount)                                      \
+    *((PULONG64)(CurrentCount)) = ReadNoFence64((const volatile LONG64 *)(SharedTickCount))
+#endif
 
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
