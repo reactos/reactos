@@ -300,12 +300,13 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmOld = ::SelectObject(m_hDrawingDC, hbmLocked); // Re-select
 }
 
-void ImageModel::SelectionStamp()
+void ImageModel::SelectionStamp(BOOL bUndoable)
 {
     if (!selectionModel.m_bShow || ::IsRectEmpty(&selectionModel.m_rc))
         return;
 
-    PushImageForUndo(CopyBitmap());
+    if (bUndoable)
+        PushImageForUndo(CopyBitmap());
 
     selectionModel.DrawSelection(m_hDrawingDC, paletteModel.GetBgColor(),
                                  toolsModel.IsBackgroundTransparent());

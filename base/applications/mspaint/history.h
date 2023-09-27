@@ -41,7 +41,7 @@ public:
     void NotifyImageChanged();
     BOOL IsBlackAndWhite();
     void PushBlackAndWhite();
-    void SelectionStamp();
+    void SelectionStamp(BOOL bUndoable = TRUE);
 
 protected:
     HDC m_hDrawingDC; // The device context for this class
