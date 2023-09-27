@@ -145,12 +145,32 @@ IsActiveSessionCountLimited()
 }
 
 #ifdef __REACTOS__
+#include <winreg.h>
+typedef DWORD (WINAPI FN_SHGetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
+                                     LPDWORD pwType, LPVOID pvData, LPDWORD pcbData);
 VERSIONHELPERAPI
-IsReactOS()
+IsReactOS(VOID)
 {
-    WCHAR szPath[MAX_PATH];
-    GetSystemDirectoryW(szPath, _countof(szPath));
-    lstrcatW(szPath, L"\\roshttpd.exe");
-    return GetFileAttributesW(szPath) != INVALID_FILE_ATTRIBUTES;
+    BOOL ret = FALSE;
+    HINSTANCE hSHLWAPI;
+    static INT s_bCached = -1;
+
+    if (s_bCached != -1)
+        return s_bCached;
+
+    hSHLWAPI = LoadLibraryW(L"shlwapi.dll");
+    if (hSHLWAPI)
+    {
+        FN_SHGetValueW fn = (FN_SHGetValueW)GetProcAddress(hSHLWAPI, "SHGetValueW");
+        if (fn)
+        {
+            DWORD error = fn(HKEY_LOCAL_MACHINE, L"Software\\ReactOS", NULL, NULL, NULL, NULL);
+            ret = (error == ERROR_SUCCESS);
+        }
+        FreeLibrary(hSHLWAPI);
+    }
+
+    s_bCached = ret;
+    return ret;
 }
 #endif // __REACTOS__
