@@ -102,7 +102,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	printf("This code has been released to some close applications with my permission, if any company\n");
     printf("want use part or whole code, you need contact the original author to ask for permission\n");
     printf("This code is released under a lot of different licenses\n");
-    printf("All GPL and LGPL projects has the right to use and study this code.\n");
+    printf("All GPL and LGPL projects have the right to use and study this code.\n");
     printf("This code maybe need more comments to know how stuff works.\n");
 	printf("Best regards Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
     printf("Copyright 2006 by Magnus Olsen\n\n");
