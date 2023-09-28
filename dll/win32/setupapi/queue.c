@@ -32,9 +32,13 @@ static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
 /* context structure for the default queue callback */
 struct default_callback_context
 {
-    HWND owner;
-    HWND progress;
-    UINT message;
+    DWORD     magic;
+    HWND      owner;
+    DWORD     unk1[4];
+    DWORD_PTR unk2[7];
+    HWND      progress;
+    UINT      message;
+    DWORD_PTR unk3[5];
 };
 
 struct file_op
@@ -1678,8 +1682,9 @@ PVOID WINAPI SetupInitDefaultQueueCallbackEx( HWND owner, HWND progress, UINT ms
 {
     struct default_callback_context *context;
 
-    if ((context = HeapAlloc( GetProcessHeap(), 0, sizeof(*context) )))
+    if ((context = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context) )))
     {
+        context->magic    = 0x43515053; /* "SPQC" */
         context->owner    = owner;
         context->progress = progress;
         context->message  = msg;
