@@ -375,6 +375,7 @@ setupapi -
   dll/win32/setupapi/dialog.c           # Synced to WineStaging-1.9.15
   dll/win32/setupapi/query.c            # Partially synced to Wine-4.8
   dll/win32/setupapi/setupcab.c         # Synced to WineStaging-1.9.4
+  dll/win32/setupapi/stringtable.c      # Forked at Wine-1.7.18
 
 win32k -
   win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.9.4 (gdi32/painting.c)

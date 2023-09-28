@@ -69,29 +69,6 @@ struct file_queue
 };
 
 
-static inline WCHAR *strdupW( const WCHAR *str )
-{
-    WCHAR *ret = NULL;
-    if (str)
-    {
-        int len = (strlenW(str) + 1) * sizeof(WCHAR);
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len ))) memcpy( ret, str, len );
-    }
-    return ret;
-}
-
-static inline char *strdupWtoA( const WCHAR *str )
-{
-    char *ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
-    return ret;
-}
-
 /* append a file operation to a queue */
 static inline void queue_file_op( struct file_op_queue *queue, struct file_op *op )
 {
@@ -203,7 +180,7 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
     switch(notification)
     {
     case SPFILENOTIFY_COPYERROR:
-        param2 = (UINT_PTR)&buffer;
+        param2 = (UINT_PTR)buffer;
         /* fall through */
     case SPFILENOTIFY_STARTDELETE:
     case SPFILENOTIFY_ENDDELETE:
@@ -363,10 +340,17 @@ static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
     static const WCHAR Dest[] = {'D','e','s','t','i','n','a','t','i','o','n','D','i','r','s',0};
     static const WCHAR Def[]  = {'D','e','f','a','u','l','t','D','e','s','t','D','i','r',0};
     INFCONTEXT context;
+    WCHAR systemdir[MAX_PATH], *dir;
+    BOOL ret;
 
-    if (!SetupFindFirstLineW( hinf, Dest, section, &context ) &&
-        !SetupFindFirstLineW( hinf, Dest, Def, &context )) return NULL;
-    return PARSER_get_dest_dir( &context );
+    if (!(ret = SetupFindFirstLineW( hinf, Dest, section, &context )))
+        ret = SetupFindFirstLineW( hinf, Dest, Def, &context );
+
+    if (ret && (dir = PARSER_get_dest_dir( &context )))
+        return dir;
+
+    GetSystemDirectoryW( systemdir, MAX_PATH );
+    return strdupW( systemdir );
 }
 
 struct extract_cab_ctx
@@ -798,7 +782,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     INFCONTEXT security_context;
 #endif
     INFCONTEXT context;
-    WCHAR dest[MAX_PATH], src[MAX_PATH];
+    WCHAR dest[MAX_PATH], src[MAX_PATH], *dest_dir;
     INT flags;
     BOOL ret;
 
@@ -851,19 +835,20 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     if (!hlist) hlist = hinf;
     if (!hinf) hinf = hlist;
     if (!SetupFindFirstLineW( hlist, section, NULL, &context )) goto done;
-    if (!(params.TargetDirectory = get_destination_dir( hinf, section ))) goto done;
+    if (!(params.TargetDirectory = dest_dir = get_destination_dir( hinf, section ))) goto done;
     do
     {
         if (!SetupGetStringFieldW( &context, 1, dest, sizeof(dest)/sizeof(WCHAR), NULL ))
-            goto done;
+            goto end;
         if (!SetupGetStringFieldW( &context, 2, src, sizeof(src)/sizeof(WCHAR), NULL )) *src = 0;
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
 
         params.SourceFilename = *src ? src : NULL;
-        if (!SetupQueueCopyIndirectW( &params )) goto done;
+        if (!SetupQueueCopyIndirectW( &params )) goto end;
     } while (SetupFindNextLine( &context, &context ));
     ret = TRUE;
-
+end:
+    HeapFree(GetProcessHeap(), 0, dest_dir);
 done:
 #ifdef __REACTOS__
     if (security_descriptor)
@@ -1163,7 +1148,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             VS_FIXEDFILEINFO *TargetInfo;
             VS_FIXEDFILEINFO *SourceInfo;
             UINT length;
-            WCHAR  SubBlock[2]={'\\',0};
+            static const WCHAR SubBlock[]={'\\',0};
             DWORD  ret;
 
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
@@ -1263,17 +1248,17 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 }
 
 /***********************************************************************
- *            SetupInstallFileA   (SETUPAPI.@)
+ *            SetupInstallFileExA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
-                               PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context )
+BOOL WINAPI SetupInstallFileExA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
+                                 PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context, PBOOL in_use )
 {
     BOOL ret = FALSE;
     struct callback_WtoA_context ctx;
     UNICODE_STRING sourceW, rootW, destW;
 
-    TRACE("%p %p %s %s %s %x %p %p\n", hinf, inf_context, debugstr_a(source), debugstr_a(root),
-          debugstr_a(dest), style, handler, context);
+    TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_a(source), debugstr_a(root),
+          debugstr_a(dest), style, handler, context, in_use);
 
     sourceW.Buffer = rootW.Buffer = destW.Buffer = NULL;
     if (source && !RtlCreateUnicodeStringFromAsciiz( &sourceW, source ))
@@ -1295,7 +1280,7 @@ BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source,
     ctx.orig_context = context;
     ctx.orig_handler = handler;
 
-    ret = SetupInstallFileW( hinf, inf_context, sourceW.Buffer, rootW.Buffer, destW.Buffer, style, QUEUE_callback_WtoA, &ctx );
+    ret = SetupInstallFileExW( hinf, inf_context, sourceW.Buffer, rootW.Buffer, destW.Buffer, style, QUEUE_callback_WtoA, &ctx, in_use );
 
 exit:
     RtlFreeUnicodeString( &sourceW );
@@ -1305,10 +1290,19 @@ exit:
 }
 
 /***********************************************************************
- *            SetupInstallFileW   (SETUPAPI.@)
+ *            SetupInstallFileA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
-                               PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context )
+BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
+                               PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context )
+{
+    return SetupInstallFileExA( hinf, inf_context, source, root, dest, style, handler, context, NULL );
+}
+
+/***********************************************************************
+ *            SetupInstallFileExW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
+                                 PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context, PBOOL in_use )
 {
     static const WCHAR CopyFiles[] = {'C','o','p','y','F','i','l','e','s',0};
 
@@ -1316,8 +1310,10 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
     WCHAR *buffer, *p, *inf_source = NULL;
     unsigned int len;
 
-    TRACE("%p %p %s %s %s %x %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
-          debugstr_w(dest), style, handler, context);
+    TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
+          debugstr_w(dest), style, handler, context, in_use);
+
+    if (in_use) FIXME("no file in use support\n");
 
     if (hinf)
     {
@@ -1371,6 +1367,15 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
     HeapFree( GetProcessHeap(), 0, inf_source );
     HeapFree( GetProcessHeap(), 0, buffer );
     return ret;
+}
+
+/***********************************************************************
+ *            SetupInstallFileW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
+                               PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context )
+{
+    return SetupInstallFileExW( hinf, inf_context, source, root, dest, style, handler, context, NULL );
 }
 
 /***********************************************************************
@@ -1699,7 +1704,7 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_A *paths = (FILEPATHS_A *)param1;
-    struct default_callback_context *ctx = (struct default_callback_context *)context;
+    struct default_callback_context *ctx = context;
 
     switch(notification)
     {
@@ -1763,7 +1768,7 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_W *paths = (FILEPATHS_W *)param1;
-    struct default_callback_context *ctx = (struct default_callback_context *)context;
+    struct default_callback_context *ctx = context;
 
     switch(notification)
     {
