@@ -425,6 +425,8 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 #elif defined (_M_ARM)
     return (struct _TEB *)KeGetPcr()->Used_Self;
+#elif defined (_M_ARM64)
+    return (struct _TEB *)__getReg(18);
 #endif
 }
 #else
