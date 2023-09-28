@@ -47,7 +47,24 @@ ENDM
     CREATE_ALIAS2   $alias, $target
     IMPORT  IMPSYM($alias), WEAK IMPSYM($target)
     MEND
+    MACRO
+    CREATE_ALIAS   $alias, $target
+    CREATE_ALIAS1 $alias, $target
+    CREATE_ALIAS2 $alias, $target
+    MEND
 
+#elif defined(_M_ARM64)
+
+#include <kxarm64.h>
+    MACRO
+    CREATE_ALIAS1   $alias, $target
+    IMPORT  SYM($alias), WEAK SYM($target)
+    MEND
+
+    MACRO
+    CREATE_ALIAS2   $alias, $target
+    IMPORT  IMPSYM($alias), WEAK IMPSYM($target)
+    MEND
     MACRO
     CREATE_ALIAS   $alias, $target
     CREATE_ALIAS1 $alias, $target

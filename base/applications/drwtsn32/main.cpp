@@ -71,6 +71,17 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
                  ctx.R0, ctx.R1, ctx.R2, ctx.R3, ctx.R4, ctx.R5, ctx.R6);
         xfprintf(output, "r7:%p r8:%p r9:%p r10:%p r11:%p r12:%p" NEWLINE,
                  ctx.R7, ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12);
+#elif defined(_M_ARM64)
+        xfprintf(output, "x0:%p x1:%p x2:%p x3:%p x4:%p x5:%p x6:%p" NEWLINE,
+                 ctx.X0, ctx.X1, ctx.X2, ctx.X3, ctx.X4, ctx.X5, ctx.X6);
+        xfprintf(output, "x7:%p x8:%p x9:%p x10:%p x11:%p x12:%p" NEWLINE,
+                 ctx.X7, ctx.X8, ctx.X9, ctx.X10, ctx.X11, ctx.X12);
+        xfprintf(output, "x13:%p x14:%p x15:%p x16:%p x17:%p x18:%p" NEWLINE,
+                 ctx.X13, ctx.X14, ctx.X15, ctx.X16, ctx.X17, ctx.X18);
+        xfprintf(output, "x19:%p x20:%p x21:%p x22:%p x23:%p x24:%p" NEWLINE,
+                 ctx.X19, ctx.X20, ctx.X21, ctx.X22, ctx.X23, ctx.X24);
+        xfprintf(output, "x25:%p x26:%p x27:%p x28:%p" NEWLINE,
+                 ctx.X25, ctx.X26, ctx.X27, ctx.X28);
 #else
 #error Unknown architecture
 #endif
@@ -87,6 +98,9 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
 #elif defined(_M_ARM)
         xfprintf(output, "sp:%p lr:%p pc:%p cpsr:%p" NEWLINE,
                  ctx.Sp, ctx.Lr, ctx.Pc, ctx.Cpsr);
+#elif defined(_M_ARM64)
+        xfprintf(output, "sp:%p pc:%p fpcr:%p fpsr:%p" NEWLINE,
+                 ctx.Sp, ctx.Pc, ctx.Fpcr, ctx.Fpsr);
 #else
 #error Unknown architecture
 #endif
@@ -107,6 +121,16 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
             xfprintf(output, "Wvr%d:%p%s", n, ctx.Wvr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
         for (int n = 0; n < ARM_MAX_WATCHPOINTS; ++n)
             xfprintf(output, "Wcr%d:%p%s", n, ctx.Wcr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
+#elif defined(_M_ARM64)
+        for (int n = 0; n < ARM64_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bvr%d:%p%s", n, ctx.Bvr[n], ((n + 1) == ARM64_MAX_BREAKPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM64_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bcr%d:%p%s", n, ctx.Bcr[n], ((n + 1) == ARM64_MAX_BREAKPOINTS) ? NEWLINE : " ");
+
+        for (int n = 0; n < ARM64_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wvr%d:%p%s", n, ctx.Wvr[n], ((n + 1) == ARM64_MAX_WATCHPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM64_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wcr%d:%p%s", n, ctx.Wcr[n], ((n + 1) == ARM64_MAX_WATCHPOINTS) ? NEWLINE : " ");
 #else
 #error Unknown architecture
 #endif

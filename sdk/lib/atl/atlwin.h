@@ -224,6 +224,27 @@ struct thunkCode
     }
 };
 #pragma pack(pop)
+#elif defined(_M_ARM64)
+
+#pragma pack(push,4)
+struct thunkCode
+{
+    DWORD64 m_mov_x0; /* mov r0, m_this */
+    DWORD64 m_mov_pc; /* mov pc, m_proc */
+    DWORD64 m_this;
+    DWORD64 m_proc;
+
+    void
+    Init(WNDPROC proc, void *pThis)
+    {
+        m_mov_x0 = 0xE59F0000;
+        m_mov_pc = 0xE59FF000;
+        m_this = (DWORD64)pThis;
+        m_proc = (DWORD64)proc;
+        FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
+    }
+};
+#pragma pack(pop)
 
 #else
 #error ARCH not supported
