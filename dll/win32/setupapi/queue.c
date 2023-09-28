@@ -396,7 +396,7 @@ static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
     WCHAR systemdir[MAX_PATH], *dir;
     BOOL ret;
 
-    if (!(ret = SetupFindFirstLineW( hinf, Dest, section, &context )))
+    if (!section || !(ret = SetupFindFirstLineW( hinf, Dest, section, &context )))
         ret = SetupFindFirstLineW( hinf, Dest, Def, &context );
 
     if (ret && (dir = PARSER_get_dest_dir( &context )))
@@ -645,24 +645,21 @@ BOOL WINAPI SetupQueueCopyW( HSPFILEQ queue, PCWSTR src_root, PCWSTR src_path, P
 /***********************************************************************
  *            SetupQueueDefaultCopyA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupQueueDefaultCopyA( HSPFILEQ queue, HINF hinf, PCSTR src_root, PCSTR src_file,
-                                    PCSTR dst_file, DWORD style )
+BOOL WINAPI SetupQueueDefaultCopyA( HSPFILEQ queue, HINF hinf, const char *src_rootA,
+                                    const char *src_fileA, const char *dst_fileA, DWORD style )
 {
-    SP_FILE_COPY_PARAMS_A params;
+    WCHAR src_rootW[MAX_PATH], src_fileW[MAX_PATH], dst_fileW[MAX_PATH];
 
-    params.cbSize             = sizeof(params);
-    params.QueueHandle        = queue;
-    params.SourceRootPath     = src_root;
-    params.SourcePath         = NULL;
-    params.SourceFilename     = src_file;
-    params.SourceDescription  = NULL;
-    params.SourceTagfile      = NULL;
-    params.TargetDirectory    = NULL;
-    params.TargetFilename     = dst_file;
-    params.CopyStyle          = style;
-    params.LayoutInf          = hinf;
-    params.SecurityDescriptor = NULL;
-    return SetupQueueCopyIndirectA( &params );
+    if (!src_rootA || !src_fileA || !dst_fileA)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    MultiByteToWideChar( CP_ACP, 0, src_rootA, -1, src_rootW, ARRAY_SIZE(src_rootW) );
+    MultiByteToWideChar( CP_ACP, 0, src_fileA, -1, src_fileW, ARRAY_SIZE(src_fileW) );
+    MultiByteToWideChar( CP_ACP, 0, dst_fileA, -1, dst_fileW, ARRAY_SIZE(dst_fileW) );
+    return SetupQueueDefaultCopyW( queue, hinf, src_rootW, src_fileW, dst_fileW, style );
 }
 
 
@@ -672,21 +669,43 @@ BOOL WINAPI SetupQueueDefaultCopyA( HSPFILEQ queue, HINF hinf, PCSTR src_root, P
 BOOL WINAPI SetupQueueDefaultCopyW( HSPFILEQ queue, HINF hinf, PCWSTR src_root, PCWSTR src_file,
                                     PCWSTR dst_file, DWORD style )
 {
+    WCHAR src_root_buffer[MAX_PATH], src_path[MAX_PATH];
     SP_FILE_COPY_PARAMS_W params;
+    BOOL ret;
+
+    if (!src_root || !src_file || !dst_file)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     params.cbSize             = sizeof(params);
     params.QueueHandle        = queue;
-    params.SourceRootPath     = src_root;
+    params.SourceRootPath     = src_root_buffer;
     params.SourcePath         = NULL;
     params.SourceFilename     = src_file;
     params.SourceDescription  = NULL;
     params.SourceTagfile      = NULL;
-    params.TargetDirectory    = NULL;
     params.TargetFilename     = dst_file;
     params.CopyStyle          = style;
+#ifdef __REACTOS__
     params.LayoutInf          = hinf;
+#else
+    params.LayoutInf          = NULL;
+#endif
     params.SecurityDescriptor = NULL;
-    return SetupQueueCopyIndirectW( &params );
+
+    strcpyW( src_root_buffer, src_root );
+    src_path[0] = 0;
+    if (!(params.TargetDirectory = get_destination_dir( hinf, NULL ))) return FALSE;
+    get_source_info( hinf, src_file, &params, src_root_buffer, src_path );
+
+    ret = SetupQueueCopyIndirectW( &params );
+
+    heap_free( (WCHAR *)params.TargetDirectory );
+    heap_free( (WCHAR *)params.SourceDescription );
+    heap_free( (WCHAR *)params.SourceTagfile );
+    return ret;
 }
 
 
