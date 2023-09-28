@@ -171,15 +171,15 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
 
     if (thickness <= 1)
-        Line(hdc, x1, y1, x2, y2, color, thickness);
-
-    LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
-    switch ((BrushStyle)style)
     {
-        case BrushStyleRound:
+        Line(hdc, x1, y1, x2, y2, color, thickness);
+    }
+    else
+    {
+        LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
+        switch ((BrushStyle)style)
         {
-            if (thickness > 1)
-            {
+            case BrushStyleRound:
                 for (a = 0; a <= b; a++)
                 {
                     Ellipse(hdc,
@@ -188,13 +188,9 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
                             (x1 * (b - a) + x2 * a) / b + (thickness / 2),
                             (y1 * (b - a) + y2 * a) / b + (thickness / 2));
                 }
-            }
-            break;
-        }
-        case BrushStyleSquare:
-        {
-            if (thickness > 1)
-            {
+                break;
+
+            case BrushStyleSquare:
                 for (a = 0; a <= b; a++)
                 {
                     Rectangle(hdc,
@@ -203,23 +199,20 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
                               (x1 * (b - a) + x2 * a) / b + (thickness / 2),
                               (y1 * (b - a) + y2 * a) / b + (thickness / 2));
                 }
-            }
-            break;
-        }
-        case BrushStyleForeSlash:
-        case BrushStyleBackSlash:
-        {
-            if (thickness > 1)
+                break;
+
+            case BrushStyleForeSlash:
+            case BrushStyleBackSlash:
             {
                 POINT offsetTop, offsetBottom;
                 if ((BrushStyle)style == BrushStyleForeSlash)
                 {
-                    offsetTop = { (thickness - 1) / 2, -(thickness - 1) / 2 };
-                    offsetBottom = { -thickness / 2, thickness / 2 };
+                    offsetTop    = { (thickness - 1) / 2, -(thickness - 1) / 2 };
+                    offsetBottom = { -thickness      / 2,   thickness      / 2 };
                 }
                 else
                 {
-                    offsetTop = { -thickness / 2, -thickness / 2 };
+                    offsetTop =    { -thickness      / 2, -thickness      / 2 };
                     offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
                 }
                 POINT points[4] =
@@ -230,8 +223,8 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
                     { x2 + offsetTop.x,    y2 + offsetTop.y    },
                 };
                 Polygon(hdc, points, _countof(points));
+                break;
             }
-            break;
         }
     }
     DeleteObject(SelectObject(hdc, oldBrush));
