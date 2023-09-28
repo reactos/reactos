@@ -229,9 +229,9 @@ void ToolsModel::NotifyZoomChanged()
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
     m_pToolObject->beginEvent();
-    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
     g_ptStart.x = g_ptEnd.x = x;
     g_ptStart.y = g_ptEnd.y = y;
+    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
     m_pToolObject->endEvent();
 }
 

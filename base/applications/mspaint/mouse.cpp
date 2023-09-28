@@ -504,8 +504,6 @@ struct RubberTool : SmoothDrawTool
             Erase(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, m_bg, toolsModel.GetRubberRadius());
         else
             Replace(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
     }
 };
 
@@ -612,8 +610,6 @@ struct BrushTool : SmoothDrawTool
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Brush(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, toolsModel.GetBrushStyle());
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
     }
 
     void OnSpecialTweak(BOOL bMinus) override
