@@ -1692,7 +1692,7 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_A *paths = (FILEPATHS_A *)param1;
-    struct default_callback_context *ctx = (struct default_callback_context *)context;
+    struct default_callback_context *ctx = context;
 
     switch(notification)
     {
@@ -1756,7 +1756,7 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
                                         UINT_PTR param1, UINT_PTR param2 )
 {
     FILEPATHS_W *paths = (FILEPATHS_W *)param1;
-    struct default_callback_context *ctx = (struct default_callback_context *)context;
+    struct default_callback_context *ctx = context;
 
     switch(notification)
     {
