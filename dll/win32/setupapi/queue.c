@@ -775,7 +775,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     INFCONTEXT security_context;
 #endif
     INFCONTEXT context;
-    WCHAR dest[MAX_PATH], src[MAX_PATH];
+    WCHAR dest[MAX_PATH], src[MAX_PATH], *dest_dir;
     INT flags;
     BOOL ret;
 
@@ -828,19 +828,20 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     if (!hlist) hlist = hinf;
     if (!hinf) hinf = hlist;
     if (!SetupFindFirstLineW( hlist, section, NULL, &context )) goto done;
-    if (!(params.TargetDirectory = get_destination_dir( hinf, section ))) goto done;
+    if (!(params.TargetDirectory = dest_dir = get_destination_dir( hinf, section ))) goto done;
     do
     {
         if (!SetupGetStringFieldW( &context, 1, dest, sizeof(dest)/sizeof(WCHAR), NULL ))
-            goto done;
+            goto end;
         if (!SetupGetStringFieldW( &context, 2, src, sizeof(src)/sizeof(WCHAR), NULL )) *src = 0;
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
 
         params.SourceFilename = *src ? src : NULL;
-        if (!SetupQueueCopyIndirectW( &params )) goto done;
+        if (!SetupQueueCopyIndirectW( &params )) goto end;
     } while (SetupFindNextLine( &context, &context ));
     ret = TRUE;
-
+end:
+    HeapFree(GetProcessHeap(), 0, dest_dir);
 done:
 #ifdef __REACTOS__
     if (security_descriptor)
