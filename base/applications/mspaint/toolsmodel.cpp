@@ -14,8 +14,9 @@ ToolsModel toolsModel;
 ToolsModel::ToolsModel()
 {
     m_lineWidth = m_penWidth = 1;
+    m_brushWidth = 4;
     m_shapeStyle = 0;
-    m_brushStyle = 0;
+    m_brushStyle = BrushStyleRound;
     m_oldActiveTool = m_activeTool = TOOL_PEN;
     m_airBrushWidth = 5;
     m_rubberRadius = 4;
@@ -68,6 +69,18 @@ void ToolsModel::SetPenWidth(INT nPenWidth)
     imageModel.NotifyImageChanged();
 }
 
+INT ToolsModel::GetBrushWidth() const
+{
+    return m_brushWidth;
+}
+
+void ToolsModel::SetBrushWidth(INT nBrushWidth)
+{
+    m_brushWidth = nBrushWidth;
+    NotifyToolSettingsChanged();
+    imageModel.NotifyImageChanged();
+}
+
 void ToolsModel::MakeLineThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetLineWidth();
@@ -78,6 +91,12 @@ void ToolsModel::MakePenThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetPenWidth();
     SetPenWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+}
+
+void ToolsModel::MakeBrushThickerOrThinner(BOOL bThinner)
+{
+    INT thickness = GetBrushWidth();
+    SetBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
 }
 
 int ToolsModel::GetShapeStyle() const
@@ -91,12 +110,12 @@ void ToolsModel::SetShapeStyle(int nShapeStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetBrushStyle() const
+BrushStyle ToolsModel::GetBrushStyle() const
 {
     return m_brushStyle;
 }
 
-void ToolsModel::SetBrushStyle(int nBrushStyle)
+void ToolsModel::SetBrushStyle(BrushStyle nBrushStyle)
 {
     m_brushStyle = nBrushStyle;
     NotifyToolSettingsChanged();

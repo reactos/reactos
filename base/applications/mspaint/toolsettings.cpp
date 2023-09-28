@@ -112,23 +112,43 @@ static inline INT getBrushRects(RECT rects[12], LPCRECT prc, LPPOINT ppt = NULL)
     return getSplitRects(rects, 3, 4, prc, ppt);
 }
 
+struct BrushStyleAndWidth
+{
+    BrushStyle style;
+    INT width;
+};
+
+static const BrushStyleAndWidth c_BrushPresets[] =
+{
+    { BrushStyleRound,     7 }, { BrushStyleRound,     4 }, { BrushStyleRound,     1 },
+    { BrushStyleSquare,    8 }, { BrushStyleSquare,    5 }, { BrushStyleSquare,    2 },
+    { BrushStyleForeSlash, 8 }, { BrushStyleForeSlash, 5 }, { BrushStyleForeSlash, 2 },
+    { BrushStyleBackSlash, 8 }, { BrushStyleBackSlash, 5 }, { BrushStyleBackSlash, 2 },
+};
+
 VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
 {
     RECT rects[12];
     getBrushRects(rects, prc);
 
-    ::FillRect(hdc, &rects[toolsModel.GetBrushStyle()], (HBRUSH)(COLOR_HIGHLIGHT + 1));
-
     for (INT i = 0; i < 12; i++)
     {
         RECT rcItem = rects[i];
         INT x = (rcItem.left + rcItem.right) / 2, y = (rcItem.top + rcItem.bottom) / 2;
+
         INT iColor;
-        if (i == toolsModel.GetBrushStyle())
+        const BrushStyleAndWidth& data = c_BrushPresets[i];
+        if (data.width == toolsModel.GetBrushWidth() && data.style == toolsModel.GetBrushStyle())
+        {
             iColor = COLOR_HIGHLIGHTTEXT;
+            ::FillRect(hdc, &rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+        }
         else
+        {
             iColor = COLOR_WINDOWTEXT;
-        Brush(hdc, x, y, x, y, ::GetSysColor(iColor), i);
+        }
+
+        Brush(hdc, x, y, x, y, ::GetSysColor(iColor), data.style, data.width);
     }
 }
 
@@ -383,7 +403,11 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_BRUSH:
             iItem = getBrushRects(rects, &rect1, &pt);
             if (iItem != -1)
-                toolsModel.SetBrushStyle(iItem);
+            {
+                const BrushStyleAndWidth& data = c_BrushPresets[iItem];
+                toolsModel.SetBrushStyle(data.style);
+                toolsModel.SetBrushWidth(data.width);
+            }
             break;
         case TOOL_AIRBRUSH:
             iItem = getAirBrushRects(rects, &rect1, &pt);
