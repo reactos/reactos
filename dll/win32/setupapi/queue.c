@@ -180,7 +180,7 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
     switch(notification)
     {
     case SPFILENOTIFY_COPYERROR:
-        param2 = (UINT_PTR)&buffer;
+        param2 = (UINT_PTR)buffer;
         /* fall through */
     case SPFILENOTIFY_STARTDELETE:
     case SPFILENOTIFY_ENDDELETE:
