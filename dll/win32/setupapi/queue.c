@@ -255,7 +255,7 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
     return ret;
 }
 
-
+#ifdef __REACTOS__
 /***********************************************************************
  *            get_src_file_info
  *
@@ -335,6 +335,7 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
     }
     if (!op->src_root) op->src_root = PARSER_get_src_root(hinf);
 }
+#endif // __REACTOS__
 
 static void get_source_info( HINF hinf, const WCHAR *src_file, SP_FILE_COPY_PARAMS_W *params,
                              WCHAR *src_root, WCHAR *src_path)
@@ -573,10 +574,14 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
     if (params->LayoutInf)
+#ifdef __REACTOS__
     {
         get_src_file_info( params->LayoutInf, op );
         if (!op->dst_path) op->dst_path = get_destination_dir( params->LayoutInf, op->dst_file );
     }
+#else
+        FIXME("Unhandled LayoutInf %p.\n", params->LayoutInf);
+#endif
 
     TRACE( "root=%s path=%s file=%s -> dir=%s file=%s  descr=%s tag=%s\n",
            debugstr_w(op->src_root), debugstr_w(op->src_path), debugstr_w(op->src_file),
