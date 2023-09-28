@@ -169,15 +169,16 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
 {
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
+
+    if (thickness <= 1)
+        Line(hdc, x1, y1, x2, y2, color, thickness);
+
     LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
     switch ((BrushStyle)style)
     {
         case BrushStyleRound:
-            if (thickness <= 1)
-            {
-                Line(hdc, x1, y1, x2, y2, color, thickness);
-            }
-            else
+        {
+            if (thickness > 1)
             {
                 for (a = 0; a <= b; a++)
                 {
@@ -189,41 +190,47 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
                 }
             }
             break;
-
+        }
         case BrushStyleSquare:
-            for (a = 0; a <= b; a++)
+        {
+            if (thickness > 1)
             {
-                Rectangle(hdc,
-                          (x1 * (b - a) + x2 * a) / b - (thickness / 2),
-                          (y1 * (b - a) + y2 * a) / b - (thickness / 2),
-                          (x1 * (b - a) + x2 * a) / b + (thickness / 2),
-                          (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                for (a = 0; a <= b; a++)
+                {
+                    Rectangle(hdc,
+                              (x1 * (b - a) + x2 * a) / b - (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b - (thickness / 2),
+                              (x1 * (b - a) + x2 * a) / b + (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                }
             }
             break;
-
+        }
         case BrushStyleForeSlash:
         case BrushStyleBackSlash:
         {
-            POINT points[4], offsetTop, offsetBottom;
-            if ((BrushStyle)style == BrushStyleForeSlash)
+            if (thickness > 1)
             {
-                offsetTop = { (thickness - 1) / 2, -(thickness - 1) / 2 };
-                offsetBottom = { -thickness / 2, thickness / 2 };
+                POINT offsetTop, offsetBottom;
+                if ((BrushStyle)style == BrushStyleForeSlash)
+                {
+                    offsetTop = { (thickness - 1) / 2, -(thickness - 1) / 2 };
+                    offsetBottom = { -thickness / 2, thickness / 2 };
+                }
+                else
+                {
+                    offsetTop = { -thickness / 2, -thickness / 2 };
+                    offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
+                }
+                POINT points[4] =
+                {
+                    { x1 + offsetTop.x,    y1 + offsetTop.y    },
+                    { x1 + offsetBottom.x, y1 + offsetBottom.y },
+                    { x2 + offsetBottom.x, y2 + offsetBottom.y },
+                    { x2 + offsetTop.x,    y2 + offsetTop.y    },
+                };
+                Polygon(hdc, points, _countof(points));
             }
-            else
-            {
-                offsetTop = { -thickness / 2, -thickness / 2 };
-                offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
-            }
-            points[0].x = x1 + offsetTop.x;
-            points[0].y = y1 + offsetTop.y;
-            points[1].x = x1 + offsetBottom.x;
-            points[1].y = y1 + offsetBottom.y;
-            points[2].x = x2 + offsetBottom.x;
-            points[2].y = y2 + offsetBottom.y;
-            points[3].x = x2 + offsetTop.x;
-            points[3].y = y2 + offsetTop.y;
-            Polygon(hdc, points, _countof(points));
             break;
         }
     }
