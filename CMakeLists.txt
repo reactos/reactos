@@ -341,6 +341,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(MSVC)
         if (ARCH STREQUAL "amd64")
             include(sdk/cmake/baseaddress_msvc_x64.cmake)
+        elseif (ARCH STREQUAL "arm64")
+            include(sdk/cmake/baseaddress_msvc_arm64.cmake)
         else()
             include(sdk/cmake/baseaddress_msvc.cmake)
         endif()
