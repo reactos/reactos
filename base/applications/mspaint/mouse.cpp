@@ -320,6 +320,11 @@ struct TwoPointDrawTool : ToolBase
         m_bDrawing = FALSE;
         ToolBase::OnCancelDraw();
     }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        toolsModel.MakeLineThickerOrThinner(bMinus);
+    }
 };
 
 typedef enum DIRECTION
@@ -499,8 +504,6 @@ struct RubberTool : SmoothDrawTool
             Erase(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, m_bg, toolsModel.GetRubberRadius());
         else
             Replace(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
     }
 };
 
@@ -587,10 +590,12 @@ struct PenTool : SmoothDrawTool
     void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Line(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, 1);
-        ::SetPixelV(m_hdc, x, y, rgb);
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
+        Line(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, toolsModel.GetPenWidth());
+    }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        toolsModel.MakePenThickerOrThinner(bMinus);
     }
 };
 
@@ -605,8 +610,11 @@ struct BrushTool : SmoothDrawTool
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
         Brush(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, toolsModel.GetBrushStyle());
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
+    }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        // TODO:
     }
 };
 
@@ -863,6 +871,11 @@ struct BezierTool : ToolBase
         m_bDrawing = FALSE;
         ToolBase::OnFinishDraw();
     }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        toolsModel.MakeLineThickerOrThinner(bMinus);
+    }
 };
 
 // TOOL_RECT
@@ -990,6 +1003,11 @@ struct ShapeTool : ToolBase
         s_pointSP = 0;
 
         ToolBase::OnFinishDraw();
+    }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        toolsModel.MakeLineThickerOrThinner(bMinus);
     }
 };
 
