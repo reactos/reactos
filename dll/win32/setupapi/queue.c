@@ -1473,6 +1473,24 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
     return SetupInstallFileExW( hinf, inf_context, source, root, dest, style, handler, context, NULL );
 }
 
+static BOOL queue_copy_file( const WCHAR *source, const WCHAR *dest,
+        const struct file_op *op, PSP_FILE_CALLBACK_W handler, void *context )
+{
+    TRACE("copying file %s -> %s\n", debugstr_w(source), debugstr_w(dest));
+
+    if (op->dst_path && !create_full_pathW(op->dst_path))
+        return FALSE;
+
+    if (do_file_copyW(source, dest, op->style, handler, context))
+        return TRUE;
+
+    /* try to extract it from the cabinet file */
+    if (op->src_tag && extract_cabinet_file(op->src_tag, op->src_root, op->src_file, dest))
+        return TRUE;
+
+    return FALSE;
+}
+
 /***********************************************************************
  *            SetupCommitFileQueueW   (SETUPAPI.@)
  */
@@ -1557,27 +1575,10 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
             if (op_result == FILEOP_NEWPATH) op_result = FILEOP_DOIT;
             while (op_result == FILEOP_DOIT || op_result == FILEOP_NEWPATH)
             {
-                TRACE( "copying file %s -> %s\n",
-                       debugstr_w( op_result == FILEOP_NEWPATH ? newpath : paths.Source ),
-                       debugstr_w(paths.Target) );
-                if (op->dst_path)
-                {
-                    if (!create_full_pathW( op->dst_path ))
-                    {
-                        paths.Win32Error = GetLastError();
-                        op_result = handler( context, SPFILENOTIFY_COPYERROR,
-                                     (UINT_PTR)&paths, (UINT_PTR)newpath );
-                        if (op_result == FILEOP_ABORT) goto done;
-                    }
-                }
-                if (do_file_copyW( op_result == FILEOP_NEWPATH ? newpath : paths.Source,
-                               paths.Target, op->style, handler, context )) break;  /* success */
-                /* try to extract it from the cabinet file */
-                if (op->src_tag)
-                {
-                    if (extract_cabinet_file( op->src_tag, op->src_root,
-                                              op->src_file, paths.Target )) break;
-                }
+                if (queue_copy_file( op_result == FILEOP_NEWPATH ? newpath : paths.Source,
+                                     paths.Target, op, handler, context ))
+                    break;
+
                 paths.Win32Error = GetLastError();
                 op_result = handler( context, SPFILENOTIFY_COPYERROR,
                                      (UINT_PTR)&paths, (UINT_PTR)newpath );
