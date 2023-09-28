@@ -609,12 +609,13 @@ struct BrushTool : SmoothDrawTool
     void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Brush(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, toolsModel.GetBrushStyle());
+        Brush(m_hdc, g_ptEnd.x, g_ptEnd.y, x, y, rgb, toolsModel.GetBrushStyle(),
+              toolsModel.GetBrushWidth());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
     {
-        // TODO:
+        toolsModel.MakeBrushThickerOrThinner(bMinus);
     }
 };
 
