@@ -103,7 +103,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     printf("want use part or whole code, you need contact the original author to ask for permission\n");
     printf("This code is released under a lot of different licenses\n");
     printf("All GPL and LGPL projects has the right to use and study this code.\n");
-    printf("This code maybe need more comments to know how stuff working and maybe looking а bit messy\n");
+    printf("This code maybe need more comments to know how stuff works.\n");
 	printf("Best regards Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
     printf("Copyright 2006 by Magnus Olsen\n\n");
     printf("This demo showing how to  start dx draw hal and create a primary surface,\n");
