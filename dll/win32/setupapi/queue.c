@@ -340,10 +340,17 @@ static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
     static const WCHAR Dest[] = {'D','e','s','t','i','n','a','t','i','o','n','D','i','r','s',0};
     static const WCHAR Def[]  = {'D','e','f','a','u','l','t','D','e','s','t','D','i','r',0};
     INFCONTEXT context;
+    WCHAR systemdir[MAX_PATH], *dir;
+    BOOL ret;
 
-    if (!SetupFindFirstLineW( hinf, Dest, section, &context ) &&
-        !SetupFindFirstLineW( hinf, Dest, Def, &context )) return NULL;
-    return PARSER_get_dest_dir( &context );
+    if (!(ret = SetupFindFirstLineW( hinf, Dest, section, &context )))
+        ret = SetupFindFirstLineW( hinf, Dest, Def, &context );
+
+    if (ret && (dir = PARSER_get_dest_dir( &context )))
+        return dir;
+
+    GetSystemDirectoryW( systemdir, MAX_PATH );
+    return strdupW( systemdir );
 }
 
 struct extract_cab_ctx
