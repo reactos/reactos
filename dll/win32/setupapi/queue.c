@@ -515,39 +515,35 @@ BOOL WINAPI SetupCloseFileQueue( HSPFILEQ handle )
 /***********************************************************************
  *            SetupQueueCopyIndirectA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupQueueCopyIndirectA( PSP_FILE_COPY_PARAMS_A params )
+BOOL WINAPI SetupQueueCopyIndirectA( SP_FILE_COPY_PARAMS_A *paramsA )
 {
-    struct file_queue *queue = params->QueueHandle;
-    struct file_op *op;
+    SP_FILE_COPY_PARAMS_W paramsW;
+    BOOL ret;
 
-    if (!(op = HeapAlloc( GetProcessHeap(), 0, sizeof(*op) ))) return FALSE;
-    op->style      = params->CopyStyle;
-    op->src_root   = strdupAtoW( params->SourceRootPath );
-    op->src_path   = strdupAtoW( params->SourcePath );
-    op->src_file   = strdupAtoW( params->SourceFilename );
-    op->src_descr  = strdupAtoW( params->SourceDescription );
-    op->src_tag    = strdupAtoW( params->SourceTagfile );
-    op->dst_path   = strdupAtoW( params->TargetDirectory );
-    op->dst_file   = strdupAtoW( params->TargetFilename );
-#ifdef __REACTOS__
-    op->dst_sd     = NULL;
-#endif
+    paramsW.cbSize = sizeof(paramsW);
+    paramsW.QueueHandle = paramsA->QueueHandle;
+    paramsW.SourceRootPath = strdupAtoW( paramsA->SourceRootPath );
+    paramsW.SourcePath = strdupAtoW( paramsA->SourcePath );
+    paramsW.SourceFilename = strdupAtoW( paramsA->SourceFilename );
+    paramsW.SourceDescription = strdupAtoW( paramsA->SourceDescription );
+    paramsW.SourceTagfile = strdupAtoW( paramsA->SourceTagfile );
+    paramsW.TargetDirectory = strdupAtoW( paramsA->TargetDirectory );
+    paramsW.TargetFilename = strdupAtoW( paramsA->TargetFilename );
+    paramsW.CopyStyle = paramsA->CopyStyle;
+    paramsW.LayoutInf = paramsA->LayoutInf;
+    paramsW.SecurityDescriptor = strdupAtoW( paramsA->SecurityDescriptor );
 
-    /* some defaults */
-    if (!op->src_file) op->src_file = op->dst_file;
-    if (params->LayoutInf)
-    {
-        get_src_file_info( params->LayoutInf, op );
-        if (!op->dst_path) op->dst_path = get_destination_dir( params->LayoutInf, op->dst_file );
-    }
+    ret = SetupQueueCopyIndirectW( &paramsW );
 
-    TRACE( "root=%s path=%s file=%s -> dir=%s file=%s  descr=%s tag=%s\n",
-           debugstr_w(op->src_root), debugstr_w(op->src_path), debugstr_w(op->src_file),
-           debugstr_w(op->dst_path), debugstr_w(op->dst_file),
-           debugstr_w(op->src_descr), debugstr_w(op->src_tag) );
-
-    queue_file_op( &queue->copy_queue, op );
-    return TRUE;
+    heap_free( (WCHAR *)paramsW.SourceRootPath );
+    heap_free( (WCHAR *)paramsW.SourcePath );
+    heap_free( (WCHAR *)paramsW.SourceFilename );
+    heap_free( (WCHAR *)paramsW.SourceDescription );
+    heap_free( (WCHAR *)paramsW.SourceTagfile );
+    heap_free( (WCHAR *)paramsW.TargetDirectory );
+    heap_free( (WCHAR *)paramsW.TargetFilename );
+    heap_free( (WCHAR *)paramsW.SecurityDescriptor );
+    return ret;
 }
 
 
