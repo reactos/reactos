@@ -1240,17 +1240,17 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 }
 
 /***********************************************************************
- *            SetupInstallFileA   (SETUPAPI.@)
+ *            SetupInstallFileExA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
-                               PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context )
+BOOL WINAPI SetupInstallFileExA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
+                                 PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context, PBOOL in_use )
 {
     BOOL ret = FALSE;
     struct callback_WtoA_context ctx;
     UNICODE_STRING sourceW, rootW, destW;
 
-    TRACE("%p %p %s %s %s %x %p %p\n", hinf, inf_context, debugstr_a(source), debugstr_a(root),
-          debugstr_a(dest), style, handler, context);
+    TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_a(source), debugstr_a(root),
+          debugstr_a(dest), style, handler, context, in_use);
 
     sourceW.Buffer = rootW.Buffer = destW.Buffer = NULL;
     if (source && !RtlCreateUnicodeStringFromAsciiz( &sourceW, source ))
@@ -1272,7 +1272,7 @@ BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source,
     ctx.orig_context = context;
     ctx.orig_handler = handler;
 
-    ret = SetupInstallFileW( hinf, inf_context, sourceW.Buffer, rootW.Buffer, destW.Buffer, style, QUEUE_callback_WtoA, &ctx );
+    ret = SetupInstallFileExW( hinf, inf_context, sourceW.Buffer, rootW.Buffer, destW.Buffer, style, QUEUE_callback_WtoA, &ctx, in_use );
 
 exit:
     RtlFreeUnicodeString( &sourceW );
@@ -1282,10 +1282,19 @@ exit:
 }
 
 /***********************************************************************
- *            SetupInstallFileW   (SETUPAPI.@)
+ *            SetupInstallFileA   (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
-                               PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context )
+BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source, PCSTR root,
+                               PCSTR dest, DWORD style, PSP_FILE_CALLBACK_A handler, PVOID context )
+{
+    return SetupInstallFileExA( hinf, inf_context, source, root, dest, style, handler, context, NULL );
+}
+
+/***********************************************************************
+ *            SetupInstallFileExW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
+                                 PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context, PBOOL in_use )
 {
     static const WCHAR CopyFiles[] = {'C','o','p','y','F','i','l','e','s',0};
 
@@ -1293,8 +1302,10 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
     WCHAR *buffer, *p, *inf_source = NULL;
     unsigned int len;
 
-    TRACE("%p %p %s %s %s %x %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
-          debugstr_w(dest), style, handler, context);
+    TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
+          debugstr_w(dest), style, handler, context, in_use);
+
+    if (in_use) FIXME("no file in use support\n");
 
     if (hinf)
     {
@@ -1344,6 +1355,15 @@ BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source
     HeapFree( GetProcessHeap(), 0, inf_source );
     HeapFree( GetProcessHeap(), 0, buffer );
     return ret;
+}
+
+/***********************************************************************
+ *            SetupInstallFileW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallFileW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
+                               PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context )
+{
+    return SetupInstallFileExW( hinf, inf_context, source, root, dest, style, handler, context, NULL );
 }
 
 /***********************************************************************
