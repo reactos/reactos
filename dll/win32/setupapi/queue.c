@@ -1148,7 +1148,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             VS_FIXEDFILEINFO *TargetInfo;
             VS_FIXEDFILEINFO *SourceInfo;
             UINT length;
-            WCHAR  SubBlock[2]={'\\',0};
+            static const WCHAR SubBlock[]={'\\',0};
             DWORD  ret;
 
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
