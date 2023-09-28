@@ -120,9 +120,11 @@ public:
 
     int GetAirBrushWidth() const;
     void SetAirBrushWidth(int nAirBrushWidth);
+    void MakeAirBrushThickerOrThinner(BOOL bThinner);
 
     int GetRubberRadius() const;
     void SetRubberRadius(int nRubberRadius);
+    void MakeRubberThickerOrThinner(BOOL bThinner);
 
     BOOL IsBackgroundTransparent() const;
     void SetBackgroundTransparent(BOOL bTransparent);

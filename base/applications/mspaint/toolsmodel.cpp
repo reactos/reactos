@@ -99,6 +99,18 @@ void ToolsModel::MakeBrushThickerOrThinner(BOOL bThinner)
     SetBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
 }
 
+void ToolsModel::MakeAirBrushThickerOrThinner(BOOL bThinner)
+{
+    INT thickness = GetAirBrushWidth();
+    SetAirBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+}
+
+void ToolsModel::MakeRubberThickerOrThinner(BOOL bThinner)
+{
+    INT thickness = GetRubberRadius();
+    SetRubberRadius(bThinner ? max(1, thickness - 1) : (thickness + 1));
+}
+
 int ToolsModel::GetShapeStyle() const
 {
     return m_shapeStyle;
