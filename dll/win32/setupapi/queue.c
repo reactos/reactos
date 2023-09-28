@@ -381,7 +381,7 @@ static UINT WINAPI extract_cab_cb( void *arg, UINT message, UINT_PTR param1, UIN
 
         if (lstrcmpiW( filename, ctx->src ))
             return FILEOP_SKIP;
- 
+
         strcpyW( info->FullTargetName, ctx->dst );
         return FILEOP_DOIT;
     }
@@ -416,8 +416,8 @@ static BOOL extract_cabinet_file( const WCHAR *cabinet, const WCHAR *root,
     static const WCHAR extW[] = {'.','c','a','b',0};
 #endif
     static const WCHAR backslashW[] = {'\\',0};
-    WCHAR path[MAX_PATH];
     struct extract_cab_ctx ctx = {src, dst};
+    WCHAR path[MAX_PATH];
 
 #ifdef __REACTOS__
     TRACE("extract_cabinet_file(cab = '%s' ; root = '%s' ; src = '%s' ; dst = '%s')\n",
