@@ -69,29 +69,6 @@ struct file_queue
 };
 
 
-static inline WCHAR *strdupW( const WCHAR *str )
-{
-    WCHAR *ret = NULL;
-    if (str)
-    {
-        int len = (strlenW(str) + 1) * sizeof(WCHAR);
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len ))) memcpy( ret, str, len );
-    }
-    return ret;
-}
-
-static inline char *strdupWtoA( const WCHAR *str )
-{
-    char *ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
-    return ret;
-}
-
 /* append a file operation to a queue */
 static inline void queue_file_op( struct file_op_queue *queue, struct file_op *op )
 {
