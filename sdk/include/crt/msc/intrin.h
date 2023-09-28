@@ -147,6 +147,9 @@ extern "C" {
 #pragma intrinsic(__addfsdword)
 #endif
 
+#if defined _M_ARM64
+#pragma intrinsic(__getReg)
+#endif
 /*** Bit manipulation ***/
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
