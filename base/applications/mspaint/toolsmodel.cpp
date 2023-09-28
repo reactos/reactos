@@ -140,15 +140,9 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RRECT:
         case TOOL_RUBBER:
         case TOOL_BRUSH:
-            // The active tool is an actually drawing tool. Save it for TOOL_COLOR to restore
-            m_oldActiveTool = nActiveTool;
-            break;
-
         case TOOL_PEN:
             // The active tool is an actually drawing tool. Save it for TOOL_COLOR to restore
             m_oldActiveTool = nActiveTool;
-
-            SetLineWidth(1);
             break;
     }
 
