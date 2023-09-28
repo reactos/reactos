@@ -106,7 +106,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     printf("This code maybe need more comments to know how stuff works.\n");
 	printf("Best regards Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
     printf("Copyright 2006 by Magnus Olsen\n\n");
-    printf("This demo showing how to  start dx draw hal and create a primary surface,\n");
+    printf("This demo showing how to start dx draw hal and create a primary surface,\n");
 	printf("and a overlay surface and blt to the primary surface\n");
 
 
