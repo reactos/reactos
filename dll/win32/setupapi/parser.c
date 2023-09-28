@@ -1232,11 +1232,18 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
 
     TRACE("%s %s %lx %p\n", debugstr_w(name), debugstr_w(class), style, error);
 
+#ifdef __REACTOS__
     if (style & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return (HINF)INVALID_HANDLE_VALUE;
     }
+    if (!name)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (HINF)INVALID_HANDLE_VALUE;
+    }
+#endif // __REACTOS__
 
     if (wcschr( name, '\\' ) || wcschr( name, '/' ))
     {
@@ -2328,6 +2335,12 @@ SetupDiGetINFClassW(
 
     TRACE("%s %p %p %ld %p\n", debugstr_w(InfName), ClassGuid,
         ClassName, ClassNameSize, RequiredSize);
+
+    if (!InfName || !ClassGuid || !ClassName || ClassNameSize == 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Open .inf file */
     hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
