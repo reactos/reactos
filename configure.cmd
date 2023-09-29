@@ -75,6 +75,21 @@ if not defined ARCH (
 
 set USE_CLANG_CL=0
 
+REM Some magic code to parse the parameters and extract those for CMake
+set CMAKE_PARAMS=
+set REMAINING=%*
+:loop
+for /f "tokens=1*" %%a in ("%REMAINING%") do (
+    set "PARAM=%%a"
+    if "!PARAM:~0,1!" == "-" (
+        if "!PARAM!" NEQ "-VS_VER" (
+            set "CMAKE_PARAMS=%CMAKE_PARAMS% !PARAM!"
+        )
+    )
+    set REMAINING=%%b
+)
+if defined REMAINING goto :loop
+
 REM Parse command line parameters
 :repeat
     if "%BUILD_ENVIRONMENT%" == "MinGW" (
@@ -118,6 +133,8 @@ REM Parse command line parameters
             REM explicitly set VS version for project generator
             if /I "%2" == "-VS_VER" (
                 set VS_VERSION=%3
+                SHIFT
+                SHIFT
                 echo Visual Studio Environment set to !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
             )
             set CMAKE_GENERATOR="Visual Studio !VS_VERSION!"
@@ -198,7 +215,7 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 ) else if %USE_CLANG_CL% == 1 (
     cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %CMAKE_PARAMS% "%REACTOS_SOURCE_DIR%"
 )
 
 if %ERRORLEVEL% NEQ 0 (
