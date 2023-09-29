@@ -1875,8 +1875,12 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
              debugstr_a(paths->Source), debugstr_a(paths->Target) );
         return FILEOP_SKIP;
     case SPFILENOTIFY_NEEDMEDIA:
-        TRACE( "need media\n" );
-        return FILEOP_SKIP;
+    {
+        const SOURCE_MEDIA_A *media = (const SOURCE_MEDIA_A *)param1;
+        TRACE( "need media %s %s\n", debugstr_a(media->SourcePath), debugstr_a(media->SourceFile) );
+        strcpy( (char *)param2, media->SourcePath );
+        return FILEOP_DOIT;
+    }
     default:
         FIXME( "notification %d params %lx,%lx\n", notification, param1, param2 );
         break;
@@ -1940,8 +1944,12 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
              debugstr_w(paths->Source), debugstr_w(paths->Target) );
         return FILEOP_SKIP;
     case SPFILENOTIFY_NEEDMEDIA:
-        TRACE( "need media\n" );
-        return FILEOP_SKIP;
+    {
+        const SOURCE_MEDIA_W *media = (const SOURCE_MEDIA_W *)param1;
+        TRACE( "need media %s %s\n", debugstr_w(media->SourcePath), debugstr_w(media->SourceFile) );
+        strcpyW( (WCHAR *)param2, media->SourcePath );
+        return FILEOP_DOIT;
+    }
     default:
         FIXME( "notification %d params %lx,%lx\n", notification, param1, param2 );
         break;
