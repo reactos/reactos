@@ -48,6 +48,8 @@ struct source_media
 {
     WCHAR root[MAX_PATH];
     WCHAR *desc, *tag;
+    BOOL resolved;
+    BOOL cabinet;
 };
 
 struct file_op
@@ -121,6 +123,7 @@ static void concat_W( WCHAR *buffer, const WCHAR *src1, const WCHAR *src2, const
         strcpyW( buffer, src1 );
         buffer += strlenW(buffer );
         if (buffer[-1] != '\\') *buffer++ = '\\';
+        *buffer = 0;
         if (src2) while (*src2 == '\\') src2++;
     }
 
@@ -129,6 +132,7 @@ static void concat_W( WCHAR *buffer, const WCHAR *src1, const WCHAR *src2, const
         strcpyW( buffer, src2 );
         buffer += strlenW(buffer );
         if (buffer[-1] != '\\') *buffer++ = '\\';
+        *buffer = 0;
         if (src3) while (*src3 == '\\') src3++;
     }
 
@@ -246,7 +250,28 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
         break;
 
     case SPFILENOTIFY_NEEDMEDIA:
-        FIXME("mapping for %d not implemented\n",notification);
+    {
+        const SOURCE_MEDIA_W *mediaW = (const SOURCE_MEDIA_W *)param1;
+        char path[MAX_PATH];
+        SOURCE_MEDIA_A mediaA;
+
+        mediaA.Tagfile = strdupWtoA(mediaW->Tagfile);
+        mediaA.Description = strdupWtoA(mediaW->Description);
+        mediaA.SourcePath = strdupWtoA(mediaW->SourcePath);
+        mediaA.SourceFile = strdupWtoA(mediaW->SourceFile);
+        mediaA.Flags = mediaW->Flags;
+        path[0] = 0;
+
+        ret = callback_ctx->orig_handler(callback_ctx->orig_context, notification,
+                (UINT_PTR)&mediaA, (UINT_PTR)&path);
+        MultiByteToWideChar(CP_ACP, 0, path, -1, (WCHAR *)param2, MAX_PATH);
+
+        heap_free((char *)mediaA.Tagfile);
+        heap_free((char *)mediaA.Description);
+        heap_free((char *)mediaA.SourcePath);
+        heap_free((char *)mediaA.SourceFile);
+        break;
+    }
     case SPFILENOTIFY_STARTQUEUE:
     case SPFILENOTIFY_ENDQUEUE:
     case SPFILENOTIFY_STARTSUBQUEUE:
@@ -583,6 +608,8 @@ static struct source_media *get_source_media(struct file_queue *queue,
     strcpyW(queue->sources[i]->root, root);
     queue->sources[i]->desc = strdupW(desc);
     queue->sources[i]->tag = strdupW(tag);
+    queue->sources[i]->resolved = FALSE;
+    queue->sources[i]->cabinet = FALSE;
 
     return queue->sources[i];
 }
@@ -613,7 +640,7 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
 #endif
 
     /* some defaults */
-    if (!op->src_file) op->src_file = op->dst_file;
+    if (!op->dst_file) op->dst_file = op->src_file;
     if (params->LayoutInf)
 #ifdef __REACTOS__
     {
@@ -1513,7 +1540,10 @@ static BOOL queue_copy_file( const WCHAR *source, const WCHAR *dest,
 
     /* try to extract it from the cabinet file */
     if (op->media->tag && extract_cabinet_file(op->media->tag, op->media->root, op->src_file, dest))
+    {
+        op->media->cabinet = TRUE;
         return TRUE;
+    }
 
     return FALSE;
 }
@@ -1596,43 +1626,127 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
         {
             WCHAR newpath[MAX_PATH];
 
-            build_filepathsW( op, &paths );
-            op_result = handler( context, SPFILENOTIFY_STARTCOPY, (UINT_PTR)&paths, FILEOP_COPY );
-            if (op_result == FILEOP_ABORT) goto done;
-            if (op_result == FILEOP_NEWPATH) op_result = FILEOP_DOIT;
-            while (op_result == FILEOP_DOIT || op_result == FILEOP_NEWPATH)
+            if (!op->media->resolved)
             {
-                if (queue_copy_file( op_result == FILEOP_NEWPATH ? newpath : paths.Source,
-                                     paths.Target, op, handler, context ))
-                    break;
+                /* The NEEDMEDIA callback asks for the folder containing the
+                 * first file, but that might be in a subdir of the source
+                 * disk's root directory. We have to do some contortions to
+                 * correct for this. Pretend that the file we're using
+                 * actually isn't in a subdirectory, but keep track of what it
+                 * was, and then later strip it from the root path that we
+                 * ultimately resolve the source disk to. */
+                WCHAR *src_path = op->src_path;
 
-                paths.Win32Error = GetLastError();
-                op_result = handler( context, SPFILENOTIFY_COPYERROR,
-                                     (UINT_PTR)&paths, (UINT_PTR)newpath );
-                if (op_result == FILEOP_ABORT) goto done;
-            }
+                op->src_path = NULL;
+                if (src_path)
+                {
+                    strcatW(op->media->root, backslashW);
+                    strcatW(op->media->root, src_path);
+                }
+
+                for (;;)
+                {
+                    SOURCE_MEDIA_W media;
+                    media.Reserved = NULL;
+                    media.Tagfile = op->media->tag;
+                    media.Description = op->media->desc;
+                    media.SourcePath = op->media->root;
+                    media.SourceFile = op->src_file;
+                    media.Flags = op->style & (SP_COPY_WARNIFSKIP | SP_COPY_NOSKIP | SP_FLAG_CABINETCONTINUATION | SP_COPY_NOBROWSE);
+
+                    newpath[0] = 0;
+                    op_result = handler( context, SPFILENOTIFY_NEEDMEDIA, (UINT_PTR)&media, (UINT_PTR)newpath );
+
+                    if (op_result == FILEOP_ABORT)
+                        goto done;
+                    else if (op_result == FILEOP_SKIP)
+                        break;
+                    else if (op_result == FILEOP_NEWPATH)
+                        strcpyW(op->media->root, newpath);
+                    else if (op_result != FILEOP_DOIT)
+                        FIXME("Unhandled return value %#x.\n", op_result);
+
+                    build_filepathsW( op, &paths );
+                    op_result = handler( context, SPFILENOTIFY_STARTCOPY, (UINT_PTR)&paths, FILEOP_COPY );
+                    if (op_result == FILEOP_ABORT)
+                        goto done;
+                    else if (op_result == FILEOP_SKIP)
+                        break;
+                    else if (op_result != FILEOP_DOIT)
+                        FIXME("Unhandled return value %#x.\n", op_result);
+
+                    if (queue_copy_file( paths.Source, paths.Target, op, handler, context ))
+                    {
+                        if (src_path && !op->media->cabinet)
+                        {
+                            size_t root_len = strlenW(op->media->root), path_len = strlenW(src_path);
+                            if (path_len <= root_len && !strncmpiW(op->media->root + root_len - path_len, src_path, path_len))
+                                op->media->root[root_len - path_len - 1] = 0;
+                            heap_free( src_path );
+                        }
+                        op->media->resolved = TRUE;
 #ifdef __REACTOS__
-            if (op->dst_sd)
-            {
-                PSID psidOwner = NULL, psidGroup = NULL;
-                PACL pDacl = NULL, pSacl = NULL;
-                SECURITY_INFORMATION security_info = 0;
-                BOOL present, dummy;
-
-                if (GetSecurityDescriptorOwner( op->dst_sd, &psidOwner, &dummy ) && psidOwner)
-                    security_info |= OWNER_SECURITY_INFORMATION;
-                if (GetSecurityDescriptorGroup( op->dst_sd, &psidGroup, &dummy ) && psidGroup)
-                    security_info |= GROUP_SECURITY_INFORMATION;
-                if (GetSecurityDescriptorDacl( op->dst_sd, &present, &pDacl, &dummy ))
-                    security_info |= DACL_SECURITY_INFORMATION;
-                if (GetSecurityDescriptorSacl( op->dst_sd, &present, &pSacl, &dummy ))
-                    security_info |= DACL_SECURITY_INFORMATION;
-                SetNamedSecurityInfoW( (LPWSTR)paths.Target, SE_FILE_OBJECT, security_info,
-                    psidOwner, psidGroup, pDacl, pSacl );
-                /* Yes, ignore the return code... */
+                        goto setDestSD;
+#else
+                        handler( context, SPFILENOTIFY_ENDCOPY, (UINT_PTR)&paths, 0 );
+                        break;
+#endif
+                    }
+                }
             }
+            else
+            {
+                build_filepathsW( op, &paths );
+                op_result = handler( context, SPFILENOTIFY_STARTCOPY, (UINT_PTR)&paths, FILEOP_COPY );
+                if (op_result == FILEOP_ABORT)
+                    goto done;
+                else if (op_result == FILEOP_SKIP)
+                    break;
+                else if (op_result != FILEOP_DOIT)
+                    FIXME("Unhandled return value %#x.\n", op_result);
+
+                while (op_result == FILEOP_DOIT || op_result == FILEOP_NEWPATH)
+                {
+                    if (queue_copy_file( paths.Source, paths.Target, op, handler, context ))
+                        break;
+
+                    paths.Win32Error = GetLastError();
+                    newpath[0] = 0;
+                    op_result = handler( context, SPFILENOTIFY_COPYERROR, (UINT_PTR)&paths, (UINT_PTR)newpath );
+                    if (op_result == FILEOP_ABORT)
+                        goto done;
+                    else if (op_result == FILEOP_NEWPATH)
+                    {
+                        strcpyW(op->media->root, newpath);
+                        build_filepathsW(op, &paths);
+                    }
+                    else if (op_result != FILEOP_SKIP && op_result != FILEOP_DOIT)
+                        FIXME("Unhandled return value %#x.\n", op_result);
+                }
+#ifdef __REACTOS__
+setDestSD:
+                if (op->dst_sd)
+                {
+                    PSID psidOwner = NULL, psidGroup = NULL;
+                    PACL pDacl = NULL, pSacl = NULL;
+                    SECURITY_INFORMATION security_info = 0;
+                    BOOL present, dummy;
+
+                    if (GetSecurityDescriptorOwner( op->dst_sd, &psidOwner, &dummy ) && psidOwner)
+                        security_info |= OWNER_SECURITY_INFORMATION;
+                    if (GetSecurityDescriptorGroup( op->dst_sd, &psidGroup, &dummy ) && psidGroup)
+                        security_info |= GROUP_SECURITY_INFORMATION;
+                    if (GetSecurityDescriptorDacl( op->dst_sd, &present, &pDacl, &dummy ))
+                        security_info |= DACL_SECURITY_INFORMATION;
+                    if (GetSecurityDescriptorSacl( op->dst_sd, &present, &pSacl, &dummy ))
+                        security_info |= DACL_SECURITY_INFORMATION;
+                    SetNamedSecurityInfoW( (LPWSTR)paths.Target, SE_FILE_OBJECT, security_info,
+                        psidOwner, psidGroup, pDacl, pSacl );
+                    /* Yes, ignore the return code... */
+                }
 #endif // __REACTOS__
-            handler( context, SPFILENOTIFY_ENDCOPY, (UINT_PTR)&paths, 0 );
+                handler( context, SPFILENOTIFY_ENDCOPY, (UINT_PTR)&paths, 0 );
+            }
         }
         handler( context, SPFILENOTIFY_ENDSUBQUEUE, FILEOP_COPY, 0 );
     }
@@ -1875,8 +1989,12 @@ UINT WINAPI SetupDefaultQueueCallbackA( PVOID context, UINT notification,
              debugstr_a(paths->Source), debugstr_a(paths->Target) );
         return FILEOP_SKIP;
     case SPFILENOTIFY_NEEDMEDIA:
-        TRACE( "need media\n" );
-        return FILEOP_SKIP;
+    {
+        const SOURCE_MEDIA_A *media = (const SOURCE_MEDIA_A *)param1;
+        TRACE( "need media %s %s\n", debugstr_a(media->SourcePath), debugstr_a(media->SourceFile) );
+        strcpy( (char *)param2, media->SourcePath );
+        return FILEOP_DOIT;
+    }
     default:
         FIXME( "notification %d params %lx,%lx\n", notification, param1, param2 );
         break;
@@ -1940,8 +2058,12 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
              debugstr_w(paths->Source), debugstr_w(paths->Target) );
         return FILEOP_SKIP;
     case SPFILENOTIFY_NEEDMEDIA:
-        TRACE( "need media\n" );
-        return FILEOP_SKIP;
+    {
+        const SOURCE_MEDIA_W *media = (const SOURCE_MEDIA_W *)param1;
+        TRACE( "need media %s %s\n", debugstr_w(media->SourcePath), debugstr_w(media->SourceFile) );
+        strcpyW( (WCHAR *)param2, media->SourcePath );
+        return FILEOP_DOIT;
+    }
     default:
         FIXME( "notification %d params %lx,%lx\n", notification, param1, param2 );
         break;
