@@ -454,6 +454,25 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
         return E_INVALIDARG;
     }
 
+    if (lParam == 4) // file modified date
+    {
+        LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
+        LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
+        int result;
+
+        result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
+        if (result == 0)
+            result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
+        if (result == 0)
+            return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+        return MAKE_COMPARE_HRESULT(result);
+    }
+
+    if (lParam == 5) // attributes
+    {
+        return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+    }
+
     bIsDesktopFolder1 = _ILIsDesktop(pidl1);
     bIsDesktopFolder2 = _ILIsDesktop(pidl2);
     if (bIsDesktopFolder1 || bIsDesktopFolder2)
@@ -781,6 +800,10 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
+    UINT iColumnModified = 0;
+
+    TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
+
     if (!psd || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
@@ -790,13 +813,42 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
         psd->cxChar = DesktopSFHeader[iColumn].cxChar;
         return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
     }
+    else
+    {   // iColumn is the listview column number in explorer
+        switch (iColumn)
+        {
+            case 0:                /* name */
+                break;
+            case 1:                /* comments */
+                if (_ILIsSpecialFolder(pidl))
+                    iColumnModified = 2; 
+                else
+                    iColumnModified = 5;
+                break;
+            case 2:                /* type */
+                iColumnModified = 1;
+                break;
+            case 3:                /* size */
+                if (_ILIsSpecialFolder(pidl))
+                    iColumnModified = 5;
+                else
+                    iColumnModified = 2;
+                break;
+            case 4:                /* modified date */
+                iColumnModified = 3;
+                break;
+            case 5:                /* attributes */
+                iColumnModified = 4;
+                break;
+        }
+    }
 
     CComPtr<IShellFolder2> psf;
     HRESULT hr = _GetSFFromPidl(pidl, &psf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr =  psf->GetDetailsOf(pidl, iColumn, psd);
+    hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
