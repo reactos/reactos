@@ -1815,6 +1815,21 @@ static void test_need_media(void)
     ok(ret, "Failed to delete INF file, error %u.\n", GetLastError());
 }
 
+static void test_close_queue(void)
+{
+    void *context;
+    BOOL ret;
+
+    context = SetupInitDefaultQueueCallback(NULL);
+    ok(!!context, "Failed to create callback context, error %#x.\n", GetLastError());
+
+    ret = SetupCloseFileQueue(context);
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Got unexpected error %u.\n", GetLastError());
+
+    SetupTermDefaultQueueCallback(context);
+}
+
 START_TEST(install)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
@@ -1841,6 +1856,7 @@ START_TEST(install)
     test_dirid();
     test_install_files_queue();
     test_need_media();
+    test_close_queue();
 
     UnhookWindowsHookEx(hhook);
 
