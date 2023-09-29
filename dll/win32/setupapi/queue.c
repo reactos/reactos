@@ -246,7 +246,28 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
         break;
 
     case SPFILENOTIFY_NEEDMEDIA:
-        FIXME("mapping for %d not implemented\n",notification);
+    {
+        const SOURCE_MEDIA_W *mediaW = (const SOURCE_MEDIA_W *)param1;
+        char path[MAX_PATH];
+        SOURCE_MEDIA_A mediaA;
+
+        mediaA.Tagfile = strdupWtoA(mediaW->Tagfile);
+        mediaA.Description = strdupWtoA(mediaW->Description);
+        mediaA.SourcePath = strdupWtoA(mediaW->SourcePath);
+        mediaA.SourceFile = strdupWtoA(mediaW->SourceFile);
+        mediaA.Flags = mediaW->Flags;
+        path[0] = 0;
+
+        ret = callback_ctx->orig_handler(callback_ctx->orig_context, notification,
+                (UINT_PTR)&mediaA, (UINT_PTR)&path);
+        MultiByteToWideChar(CP_ACP, 0, path, -1, (WCHAR *)param2, MAX_PATH);
+
+        heap_free((char *)mediaA.Tagfile);
+        heap_free((char *)mediaA.Description);
+        heap_free((char *)mediaA.SourcePath);
+        heap_free((char *)mediaA.SourceFile);
+        break;
+    }
     case SPFILENOTIFY_STARTQUEUE:
     case SPFILENOTIFY_ENDQUEUE:
     case SPFILENOTIFY_STARTSUBQUEUE:
