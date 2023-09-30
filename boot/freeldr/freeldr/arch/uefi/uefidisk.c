@@ -415,7 +415,7 @@ UefiSetupBlockDevices(VOID)
         if (EFI_ERROR(Status) || 
             bio == NULL ||
             bio->Media->BlockSize == 0 ||
-            bio->Media->BlockSize > 2048)
+            bio->Media->BlockSize > 4096)
         {
             TRACE("UefiSetupBlockDevices: UEFI has found a block device that failed, skipping\n");
             continue;

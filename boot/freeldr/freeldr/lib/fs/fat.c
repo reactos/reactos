@@ -1369,7 +1369,7 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
     //
     // Seek to right position
     //
-    Position.QuadPart = (ULONGLONG)SectorNumber * 512;
+    Position.QuadPart = (ULONGLONG)SectorNumber * Volume->BytesPerSector;
     Status = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
@@ -1380,8 +1380,8 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
     //
     // Read data
     //
-    Status = ArcRead(Volume->DeviceId, Buffer, SectorCount * 512, &Count);
-    if (Status != ESUCCESS || Count != SectorCount * 512)
+    Status = ArcRead(Volume->DeviceId, Buffer, SectorCount * Volume->BytesPerSector, &Count);
+    if (Status != ESUCCESS || Count != SectorCount * Volume->BytesPerSector)
     {
         TRACE("FatReadVolumeSectors() Failed to read\n");
         return FALSE;
