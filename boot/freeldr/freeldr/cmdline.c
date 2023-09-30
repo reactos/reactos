@@ -36,7 +36,6 @@ CmdLineParse(IN PCSTR CmdLine)
     CmdLineInfo.DefaultOs = NULL;
     CmdLineInfo.TimeOut = -1;
 
-    if (!CmdLine) return;
     /*
      * Get debug string, in the following format:
      * "debug=option1=XXX;option2=YYY;..."

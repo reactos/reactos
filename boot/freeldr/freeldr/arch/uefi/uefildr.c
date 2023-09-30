@@ -25,7 +25,7 @@ EfiEntry(
     GlobalImageHandle = ImageHandle;
     GlobalSystemTable = SystemTable;
 
-    BootMain(NULL);
+    BootMain("");
 
     UNREACHABLE;
     return 0;
