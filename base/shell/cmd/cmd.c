@@ -2147,7 +2147,6 @@ VOID PrintInfoLine(LPTSTR InfoBar)
     {
         iInfoLineLen = LoadString(CMD_ModuleHandle, STRING_CMD_INFOLINE, (PTSTR)&pszInfoLine, 0);
     }
-
     else
     {
         iInfoLineLen = lstrlen(InfoBar);
@@ -2348,7 +2347,7 @@ Initialize(VOID)
         /* If neither /C or /K was given, display a simple version string */
 
         /* Print the information bar if its environment variable is set. */
-        if (GetEnvironmentVariable(_T("INFOLINE"), szInfoBar, _countof(szInfoBar))  &&
+        if (GetEnvironmentVariable(_T("INFOLINE"), szInfoBar, _countof(szInfoBar)) &&
             wcscmp(szInfoBar, _T("0")) != 0)
         {
             InfoBar = szInfoBar;
