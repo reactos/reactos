@@ -1058,6 +1058,34 @@ SepAccessCheckWorker(
         goto ReturnCommonStatus;
     }
 
+    /*
+     * HACK: Temporary hack that checks if the caller passed an empty
+     * generic mapping. In such cases we cannot mask out the remaining
+     * access rights without a proper mapping so the only option we
+     * can do is to check if the client is an administrator,
+     * since they are powerful users.
+     *
+     * See CORE-18576 for information.
+     */
+    if (GenericMapping->GenericRead == 0 &&
+        GenericMapping->GenericWrite == 0 &&
+        GenericMapping->GenericExecute == 0 &&
+        GenericMapping->GenericAll == 0)
+    {
+        if (SeTokenIsAdmin(Token))
+        {
+            /* Grant him access */
+            PreviouslyGrantedAccess |= RemainingAccess;
+            Status = STATUS_SUCCESS;
+            goto ReturnCommonStatus;
+        }
+
+        /* It's not an admin so bail out */
+        PreviouslyGrantedAccess = 0;
+        Status = STATUS_ACCESS_DENIED;
+        goto ReturnCommonStatus;
+    }
+
     /* Get the DACL */
     Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
                                           &Present,
