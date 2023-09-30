@@ -32,6 +32,10 @@ extern "C" {
 #define _VA_STRUCT_ALIGN 16
 #define _ALIGNOF(ap) ((((ap)+_VA_STRUCT_ALIGN - 1) & ~(_VA_STRUCT_ALIGN -1)) - (ap))
 #define _APALIGN(t,ap) (__alignof(t) > 8 ? _ALIGNOF((uintptr_t) ap) : 0)
+#elif defined(_M_ARM64)
+#define _VA_ALIGN 8
+#define _SLOTSIZEOF(t) ((sizeof(t) + _VA_ALIGN - 1) & ~(_VA_ALIGN - 1))
+#define _APALIGN(t,ap) (((va_list)0 - (ap)) & (__alignof(t) - 1))
 #else
 #define _SLOTSIZEOF(t) (sizeof(t))
 #define _APALIGN(t,ap) (__alignof(t))
