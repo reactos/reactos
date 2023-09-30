@@ -753,6 +753,11 @@ PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
     if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
     {
         pi9 = HeapAlloc(hProcessHeap, 0, needed);
+        if (!pi9)
+        {
+            ERR("Failed to allocate PRINTER_INFO_9W of %u bytes\n", needed);
+            return NULL;
+        }
         res = GetPrinterW(hprn, 9, (LPBYTE)pi9, needed, &needed);
     }
 
@@ -829,6 +834,11 @@ IntFixUpDevModeNames( PDOCUMENTPROPERTYHEADER pdphdr )
     if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
     {
         pi2 = HeapAlloc(hProcessHeap, 0, needed);
+        if (!pi2)
+        {
+            ERR("Failed to allocate PRINTER_INFO_2W of %u bytes\n", needed);
+            return FALSE;
+        }
         res = GetPrinterW( pdphdr->hPrinter, 2, (LPBYTE)pi2, needed, &needed);
     }
 
@@ -1272,6 +1282,11 @@ PrinterProperties( HWND hWnd, HANDLE hPrinter )
     if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
     {
         pi2 = HeapAlloc(hProcessHeap, 0, needed);
+        if (!pi2)
+        {
+            ERR("Failed to allocate PRINTER_INFO_2W of %u bytes\n", needed);
+            return FALSE;
+        }
         res = GetPrinterW(hPrinter, 2, (LPBYTE)pi2, needed, &needed);
     }
 
@@ -2805,6 +2820,11 @@ QuerySpoolMode( HANDLE hPrinter, PDWORD downloadFontsFlags, PDWORD dwVersion )
     if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
     {
         pi2 = HeapAlloc(hProcessHeap, 0, needed);
+        if (!pi2)
+        {
+            ERR("Failed to allocate PRINTER_INFO_2W of %u bytes\n", needed);
+            return FALSE;
+        }
         res = GetPrinterW(hPrinter, 2, (LPBYTE)pi2, needed, &needed);
     }
 
@@ -3506,6 +3526,11 @@ INT_PTR CALLBACK file_dlg_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam
                 LPWSTR *output;
 
                 filename = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+                if (!filename)
+                {
+                    ERR("Failed to allocate filename of %u bytes\n", (len + 1) * sizeof(WCHAR));
+                    return FALSE;
+                }
                 GetDlgItemTextW(hwnd, EDITBOX, filename, len + 1);
 
                 if(GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
@@ -3568,6 +3593,12 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
             return NULL;
         pi5 = HeapAlloc(GetProcessHeap(), 0, len);
+        if (!pi5)
+        {
+            ERR("Failed to allocate PRINTER_INFO_5W of %u bytes\n", len);
+            return NULL;
+        }
+
         GetPrinterW(hPrinter, 5, (LPBYTE)pi5, len, &len);
         if (!pi5->pPortName || wcsicmp(pi5->pPortName, FILE_Port))
         {
@@ -3595,6 +3626,12 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
                 return NULL;
             }
             ret = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            if (!ret)
+            {
+                ERR("Failed to allocate path name buffer of %u bytes\n", len * sizeof(WCHAR));
+                HeapFree(GetProcessHeap(), 0, name);
+                return NULL;
+            }
             GetFullPathNameW(name, len, ret, NULL);
             HeapFree(GetProcessHeap(), 0, name);
         }
@@ -3614,6 +3651,11 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         return NULL;
 
     ret = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!ret)
+    {
+        ERR("Failed to allocate path name buffer of %u bytes\n", len * sizeof(WCHAR));
+        return NULL;
+    }
     GetFullPathNameW(doc->lpszOutput, len, ret, NULL);
 
     attr = GetFileAttributesW(ret);
@@ -3658,7 +3700,14 @@ StartDocDlgA( HANDLE hPrinter, DOCINFOA *doc )
     {
         DWORD len = WideCharToMultiByte(CP_ACP, 0, retW, -1, NULL, 0, NULL, NULL);
         ret = HeapAlloc(GetProcessHeap(), 0, len);
-        WideCharToMultiByte(CP_ACP, 0, retW, -1, ret, len, NULL, NULL);
+        if (ret)
+        {
+            WideCharToMultiByte(CP_ACP, 0, retW, -1, ret, len, NULL, NULL);
+        }
+        else
+        {
+            ERR("Failed to allocate path name buffer of %u bytes\n", len);
+        }
         HeapFree(GetProcessHeap(), 0, retW);
     }
 
