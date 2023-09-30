@@ -145,7 +145,7 @@ INT cmd_ver (LPTSTR param)
     {
         ConOutPuts(_T("\n\n"));
         ConOutPuts(_T("Copyright (C) 1994-1998 Tim Norman and others.\n"));
-        ConOutPuts(_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team\n"));
+        ConOutResPrintf(STRING_CMD_COPYRIGHT, _T(COPYRIGHT_YEAR));
 
         for (i = 0; param[i]; i++)
         {
