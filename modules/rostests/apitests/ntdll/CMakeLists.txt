@@ -10,6 +10,7 @@ list(APPEND SOURCE
     load_notifications.c
     locale.c
     NtAcceptConnectPort.c
+    NtAccessCheck.c
     NtAccessCheckByType.c
     NtAccessCheckByTypeResultList.c
     NtAdjustGroupsToken.c
