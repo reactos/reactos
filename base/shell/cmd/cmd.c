@@ -2158,6 +2158,8 @@ VOID PrintInfoLine(LPTSTR InfoBar)
         return;
 
     /* Display the localized information line */
+    coPos.X = 0;
+    coPos.Y = 0;
     FillConsoleOutputAttribute(hOutput, BACKGROUND_BLUE | FOREGROUND_WHITE,
                                csbi.dwSize.X,
                                coPos, &dwWritten);
