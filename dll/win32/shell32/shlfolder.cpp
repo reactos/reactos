@@ -241,8 +241,9 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     SHELLDETAILS sd;
     WCHAR wszItem1[MAX_PATH], wszItem2[MAX_PATH];
     HRESULT hres;
+    UINT col = LOWORD(lParam); // Column index without SHCIDS_* flags
 
-    hres = isf->GetDetailsOf(pidl1, lParam, &sd);
+    hres = isf->GetDetailsOf(pidl1, col, &sd);
     if (FAILED(hres))
         return MAKE_COMPARE_HRESULT(1);
 
@@ -250,7 +251,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     if (FAILED(hres))
         return MAKE_COMPARE_HRESULT(1);
 
-    hres = isf->GetDetailsOf(pidl2, lParam, &sd);
+    hres = isf->GetDetailsOf(pidl2, col, &sd);
     if (FAILED(hres))
         return MAKE_COMPARE_HRESULT(1);
 
