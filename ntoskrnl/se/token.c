@@ -1784,12 +1784,14 @@ SepCreateSystemProcessToken(VOID)
     {
         {SeAliasAdminsSid, OwnerAttributes},
         {SeWorldSid, GroupAttributes},
-        {SeAuthenticatedUsersSid, GroupAttributes}
+        {SeAuthenticatedUsersSid, GroupAttributes},
+        {SeLocalSid, SE_GROUP_ENABLED} // HACK: Temporarily add the local group. See CORE-18250.
     };
     GroupsLength = sizeof(SID_AND_ATTRIBUTES) +
                    SeLengthSid(Groups[0].Sid) +
                    SeLengthSid(Groups[1].Sid) +
-                   SeLengthSid(Groups[2].Sid);
+                   SeLengthSid(Groups[2].Sid) +
+                   SeLengthSid(Groups[3].Sid); // HACK
     ASSERT(GroupsLength <= (sizeof(Groups) * sizeof(ULONG)));
 
     /* Setup the privileges */
