@@ -426,13 +426,17 @@ RtlpRemoveFreeBlock(PHEAP Heap,
     SIZE_T Result, RealSize;
     ULONG HintIndex;
 
+    if (FreeEntry->Size == 0)
+        return;
+
     /* Remove the free block */
     if (FreeEntry->Size > Heap->DeCommitFreeBlockThreshold)
         HintIndex = 0;
     else
         HintIndex = FreeEntry->Size - 1;
 
-    ASSERT(RtlTestBit(&Heap->FreeHintBitmap, HintIndex));
+    if (FreeEntry->Size != Heap->FreeHintBitmap.SizeOfBitMap)
+        ASSERT(RtlTestBit(&Heap->FreeHintBitmap, HintIndex));
 
     /* Are we removing the hint entry for this size ? */
     if (Heap->FreeHints[HintIndex] == &FreeEntry->FreeList)
@@ -1163,7 +1167,8 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
         !(CurrentEntry->Flags & HEAP_ENTRY_BUSY) &&
         (*FreeSize + CurrentEntry->Size) <= HEAP_MAX_BLOCK_SIZE)
     {
-        ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
+        if (CurrentEntry->Size)
+            ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
 
         /* Remove it if asked for */
         if (Remove)
