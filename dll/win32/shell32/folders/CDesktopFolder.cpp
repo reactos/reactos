@@ -174,14 +174,13 @@ int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hI
 
 static const shvheader DesktopSFHeader[] = {
     {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
+    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
 };
 
-#define DESKTOPSHELLVIEWCOLUMNS 6
+#define DESKTOPSHELLVIEWCOLUMNS 5
 
 static const DWORD dwDesktopAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
@@ -448,27 +447,46 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
 {
     bool bIsDesktopFolder1, bIsDesktopFolder2;
 
+    if (LOWORD(lParam) >= DESKTOPSHELLVIEWCOLUMNS)
+    {
+        ERR("Got invalid column pointer %Ix\n", LOWORD(lParam));
+        return E_INVALIDARG;
+    }
+
     if (!pidl1 || !pidl2)
     {
         ERR("Got null pidl pointer (%Ix %p %p)!\n", lParam, pidl1, pidl2);
         return E_INVALIDARG;
     }
 
-    if (lParam == 4) // file modified date
+    if (lParam == 3) // file modified date from index into DesktopSFHeader[]
     {
         LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
         LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
+        BOOL bIsSpecialFolder1 = _ILIsSpecialFolder(pidl1);
+        BOOL bIsSpecialFolder2 = _ILIsSpecialFolder(pidl2);
         int result;
 
+        /* If both are Special Folders then it does not matter which is first */
+        if (bIsSpecialFolder1 && bIsSpecialFolder2)
+            return MAKE_COMPARE_HRESULT(0);
+
+        /* If only one is a Special Folder, then the Special Folder is first */
+        if (bIsSpecialFolder1 || bIsSpecialFolder2)
+            return MAKE_COMPARE_HRESULT(bIsSpecialFolder1 ? -1 : 1);
+
+        /* Otherwise, compare on date/time */
         result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
         if (result == 0)
+        {
             result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
-        if (result == 0)
-            return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+            if (result == 0)
+                return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+        }
         return MAKE_COMPARE_HRESULT(result);
     }
 
-    if (lParam == 5) // attributes
+    if (lParam == 4) // attributes from index into DesktopSFHeader[]
     {
         return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
@@ -800,8 +818,6 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    UINT iColumnModified = 0;
-
     TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
 
     if (!psd || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
@@ -813,44 +829,16 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
         psd->cxChar = DesktopSFHeader[iColumn].cxChar;
         return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
     }
-    else
-    {   // iColumn is the listview column number in explorer
-        switch (iColumn)
-        {
-            case 0:                /* name */
-                break;
-            case 1:                /* comments */
-                if (_ILIsSpecialFolder(pidl))
-                    iColumnModified = 2; 
-                else
-                    iColumnModified = 5;
-                break;
-            case 2:                /* type */
-                iColumnModified = 1;
-                break;
-            case 3:                /* size */
-                if (_ILIsSpecialFolder(pidl))
-                    iColumnModified = 5;
-                else
-                    iColumnModified = 2;
-                break;
-            case 4:                /* modified date */
-                iColumnModified = 3;
-                break;
-            case 5:                /* attributes */
-                iColumnModified = 4;
-                break;
-        }
-    }
 
     CComPtr<IShellFolder2> psf;
     HRESULT hr = _GetSFFromPidl(pidl, &psf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (iColumn == 2 && _ILIsSpecialFolder(pidl)) /* size col and Special Folder */
+        return SHSetStrRet(&psd->str, ""); /* blank col */
+    else
+        hr =  psf->GetDetailsOf(pidl, iColumn, psd);
 
     return hr;
 }
