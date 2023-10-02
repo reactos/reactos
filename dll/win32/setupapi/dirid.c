@@ -165,7 +165,7 @@ static const WCHAR *create_printer_dirid( DWORD dirid )
         return create_system_dirid( DIRID_COLOR );
     case 66004:  /* asp files directory */
     default:
-        FIXME( "unsupported dirid %d\n", dirid );
+        FIXME( "unsupported dirid %ld\n", dirid );
         return get_unknown_dirid();
     }
     len = (lstrlenW(buffer) + 1) * sizeof(WCHAR);
@@ -180,7 +180,7 @@ static const WCHAR *get_csidl_dir( DWORD csidl )
 
     if (!SHGetSpecialFolderPathW( NULL, buffer, csidl, TRUE ))
     {
-        FIXME( "CSIDL %x not found\n", csidl );
+        FIXME( "CSIDL %lx not found\n", csidl );
         return get_unknown_dirid();
     }
     len = (lstrlenW(buffer) + 1) * sizeof(WCHAR);

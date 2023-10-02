@@ -88,7 +88,7 @@ static void promptdisk_ok(HWND hwnd, struct promptdisk_params *params)
     if(params->PathRequiredSize)
     {
         *params->PathRequiredSize = requiredSize;
-        TRACE("returning PathRequiredSize=%d\n",*params->PathRequiredSize);
+        TRACE("returning PathRequiredSize=%ld\n",*params->PathRequiredSize);
     }
     if(!params->PathBuffer)
     {
@@ -174,7 +174,7 @@ UINT WINAPI SetupPromptForDiskA(HWND hwndParent, PCSTR DialogTitle, PCSTR DiskNa
     WCHAR *FileSoughtW, *TagFileW, PathBufferW[MAX_PATH];
     UINT ret, length;
 
-    TRACE("%p, %s, %s, %s, %s, %s, 0x%08x, %p, %d, %p\n", hwndParent, debugstr_a(DialogTitle),
+    TRACE("%p, %s, %s, %s, %s, %s, 0x%08lx, %p, %ld, %p\n", hwndParent, debugstr_a(DialogTitle),
           debugstr_a(DiskName), debugstr_a(PathToSource), debugstr_a(FileSought),
           debugstr_a(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
           PathRequiredSize);
@@ -218,7 +218,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
     struct promptdisk_params params;
     UINT ret;
 
-    TRACE("%p, %s, %s, %s, %s, %s, 0x%08x, %p, %d, %p\n", hwndParent, debugstr_w(DialogTitle),
+    TRACE("%p, %s, %s, %s, %s, %s, 0x%08lx, %p, %ld, %p\n", hwndParent, debugstr_w(DialogTitle),
           debugstr_w(DiskName), debugstr_w(PathToSource), debugstr_w(FileSought),
           debugstr_w(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
           PathRequiredSize);
