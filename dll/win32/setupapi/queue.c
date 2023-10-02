@@ -25,11 +25,6 @@
 #include <aclapi.h>
 #endif
 
-/* Unicode constants */
-#ifdef __REACTOS__
-static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
-#endif
-
 /* context structure for the default queue callback */
 struct default_callback_context
 {
@@ -292,18 +287,13 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification,
  */
 static void get_src_file_info( HINF hinf, struct file_op *op, PWSTR* psrc_root, PWSTR* psrc_descr, PWSTR* psrc_tag)
 {
-    static const WCHAR SourceDisksNames[] =
-        {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
-    static const WCHAR SourceDisksFiles[] =
-        {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s',0};
-
     INFCONTEXT file_ctx, disk_ctx;
     INT id, diskid;
     DWORD len, len2;
     WCHAR SectionName[MAX_PATH];
 
     /* find the SourceDisksFiles entry */
-    if(!SetupDiGetActualSectionToInstallW(hinf, SourceDisksFiles, SectionName, ARRAY_SIZE(SectionName), NULL, NULL))
+    if(!SetupDiGetActualSectionToInstallW(hinf, L"SourceDisksFiles", SectionName, ARRAY_SIZE(SectionName), NULL, NULL))
         return;
     if (!SetupFindFirstLineW( hinf, SectionName, op->src_file, &file_ctx ))
     {
@@ -315,7 +305,7 @@ static void get_src_file_info( HINF hinf, struct file_op *op, PWSTR* psrc_root, 
     if (!SetupGetIntField( &file_ctx, 1, &diskid )) return;
 
     /* now find the diskid in the SourceDisksNames section */
-    if(!SetupDiGetActualSectionToInstallW(hinf, SourceDisksNames, SectionName, ARRAY_SIZE(SectionName), NULL, NULL))
+    if(!SetupDiGetActualSectionToInstallW(hinf, L"SourceDisksNames", SectionName, ARRAY_SIZE(SectionName), NULL, NULL))
         return;
     if (!SetupFindFirstLineW( hinf, SectionName, NULL, &disk_ctx )) return;
     for (;;)
@@ -922,14 +912,14 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
 
 #ifdef __REACTOS__
     /* Check for .Security section */
-    security_key = MyMalloc( (lstrlenW( section ) + lstrlenW( DotSecurity )) * sizeof(WCHAR) + sizeof(UNICODE_NULL) );
+    security_key = MyMalloc( (lstrlenW( section ) + lstrlenW( L".Security" )) * sizeof(WCHAR) + sizeof(UNICODE_NULL) );
     if (!security_key)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
     lstrcpyW( security_key, section );
-    lstrcatW( security_key, DotSecurity );
+    lstrcatW( security_key, L".Security" );
     ret = SetupFindFirstLineW( hinf, security_key, NULL, &security_context );
     MyFree(security_key);
     if (ret)
