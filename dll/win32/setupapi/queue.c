@@ -1354,7 +1354,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
         }
     }
     if (style & (SP_COPY_NODECOMP | SP_COPY_LANGUAGEAWARE | SP_COPY_FORCE_IN_USE |
-                 SP_COPY_IN_USE_NEEDS_REBOOT | SP_COPY_NOSKIP | SP_COPY_WARNIFSKIP))
+                 SP_COPY_NOSKIP | SP_COPY_WARNIFSKIP))
     {
         ERR("Unsupported style(s) 0x%x\n",style);
     }
@@ -1366,6 +1366,26 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 #else
         rc = CopyFileW(source,target,FALSE);
 #endif
+        if (!rc && GetLastError() == ERROR_SHARING_VIOLATION &&
+            (style & SP_COPY_IN_USE_NEEDS_REBOOT))
+        {
+#ifndef __REACTOS__
+            WCHAR temp_file[MAX_PATH];
+            WCHAR temp[MAX_PATH];
+
+            if (GetTempPathW(MAX_PATH, temp) &&
+                GetTempFileNameW(temp, L"SET", 0, temp_file))
+            {
+                rc = CopyFileW(source, temp_file, FALSE);
+                if (rc)
+                    rc = MoveFileExW(temp_file, target, MOVEFILE_DELAY_UNTIL_REBOOT);
+                else
+                    DeleteFileW(temp_file);
+            }
+#else
+            rc = MoveFileExW(TempFile, target, MOVEFILE_DELAY_UNTIL_REBOOT);
+#endif
+        }
         if (!rc) WARN( "failed to copy, err %u\n", GetLastError() );
     }
     else
