@@ -21,8 +21,6 @@
 
 #include "precomp.h"
 
-#define BALLOON_MAXWIDTH 340
-
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -619,19 +617,19 @@ void CBalloonQueue::Show(Info& info)
 
     // TODO: NIF_REALTIME, NIIF_NOSOUND, other Vista+ flags
 
-    m_current = info.pSource;
+    const int index = IndexOf(info.pSource);
     RECT rc;
-    m_toolbar->GetItemRect(IndexOf(m_current), &rc);
+    m_toolbar->GetItemRect(index, &rc);
     m_toolbar->ClientToScreen(&rc);
     const WORD x = (rc.left + rc.right) / 2;
     const WORD y = (rc.top + rc.bottom) / 2;
 
     m_tooltips->SetTitle(info.szInfoTitle, info.uIcon);
     m_tooltips->TrackPosition(x, y);
-    m_tooltips->SetMaxTipWidth(BALLOON_MAXWIDTH);
     m_tooltips->UpdateTipText(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd), info.szInfo);
     m_tooltips->TrackActivate(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd));
 
+    m_current = info.pSource;
     int timeout = info.uTimeout;
     if (timeout < MinTimeout) timeout = MinTimeout;
     if (timeout > MaxTimeout) timeout = MaxTimeout;
