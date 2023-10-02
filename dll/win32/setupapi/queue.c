@@ -30,8 +30,6 @@
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
 #endif
 
-static const WCHAR backslashW[] = {'\\',0};
-
 /* context structure for the default queue callback */
 struct default_callback_context
 {
@@ -371,21 +369,16 @@ static void get_src_file_info( HINF hinf, struct file_op *op, PWSTR* psrc_root, 
 static void get_source_info( HINF hinf, const WCHAR *src_file, SP_FILE_COPY_PARAMS_W *params,
                              WCHAR *src_root, WCHAR *src_path)
 {
-    static const WCHAR SourceDisksNames[] =
-        {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
-    static const WCHAR SourceDisksFiles[] =
-        {'S','o','u','r','c','e','D','i','s','k','s','F','i','l','e','s',0};
-
     INFCONTEXT file_ctx, disk_ctx;
     INT id, diskid;
     DWORD len;
 
     /* find the SourceDisksFiles entry */
-    if (!SetupFindFirstLineW( hinf, SourceDisksFiles, src_file, &file_ctx )) return;
+    if (!SetupFindFirstLineW( hinf, L"SourceDisksFiles", src_file, &file_ctx )) return;
     if (!SetupGetIntField( &file_ctx, 1, &diskid )) return;
 
     /* now find the diskid in the SourceDisksNames section */
-    if (!SetupFindFirstLineW( hinf, SourceDisksNames, NULL, &disk_ctx )) return;
+    if (!SetupFindFirstLineW( hinf, L"SourceDisksNames", NULL, &disk_ctx )) return;
     for (;;)
     {
         if (SetupGetIntField( &disk_ctx, 0, &id ) && (id == diskid)) break;
@@ -403,7 +396,7 @@ static void get_source_info( HINF hinf, const WCHAR *src_file, SP_FILE_COPY_PARA
     if (SetupGetStringFieldW( &disk_ctx, 4, NULL, 0, &len ) && len > sizeof(WCHAR)
             && len < MAX_PATH - lstrlenW( src_root ) - 1)
     {
-        lstrcatW( src_root, backslashW );
+        lstrcatW( src_root, L"\\" );
         SetupGetStringFieldW( &disk_ctx, 4, src_root + lstrlenW( src_root ),
                               MAX_PATH - lstrlenW( src_root ), NULL );
     }
@@ -422,14 +415,12 @@ static void get_source_info( HINF hinf, const WCHAR *src_file, SP_FILE_COPY_PARA
  */
 static WCHAR *get_destination_dir( HINF hinf, const WCHAR *section )
 {
-    static const WCHAR Dest[] = {'D','e','s','t','i','n','a','t','i','o','n','D','i','r','s',0};
-    static const WCHAR Def[]  = {'D','e','f','a','u','l','t','D','e','s','t','D','i','r',0};
     INFCONTEXT context;
     WCHAR systemdir[MAX_PATH], *dir;
     BOOL ret;
 
-    if (!section || !(ret = SetupFindFirstLineW( hinf, Dest, section, &context )))
-        ret = SetupFindFirstLineW( hinf, Dest, Def, &context );
+    if (!section || !(ret = SetupFindFirstLineW( hinf, L"DestinationDirs", section, &context )))
+        ret = SetupFindFirstLineW( hinf, L"DestinationDirs", L"DefaultDestDir", &context );
 
     if (ret && (dir = PARSER_get_dest_dir( &context )))
         return dir;
@@ -493,10 +484,6 @@ static UINT WINAPI extract_cab_cb( void *arg, UINT message, UINT_PTR param1, UIN
 static BOOL extract_cabinet_file( const WCHAR *cabinet, const WCHAR *root,
                                   const WCHAR *src, const WCHAR *dst )
 {
-#ifndef __REACTOS__
-    static const WCHAR extW[] = {'.','c','a','b',0};
-#endif
-    static const WCHAR backslashW[] = {'\\',0};
     struct extract_cab_ctx ctx = {src, dst};
     WCHAR path[MAX_PATH];
 
@@ -506,10 +493,10 @@ static BOOL extract_cabinet_file( const WCHAR *cabinet, const WCHAR *root,
 #else
     int len = lstrlenW( cabinet );
     /* make sure the cabinet file has a .cab extension */
-    if (len <= 4 || wcsicmp( cabinet + len - 4, extW )) return FALSE;
+    if (len <= 4 || wcsicmp( cabinet + len - 4, L".cab" )) return FALSE;
 #endif
     lstrcpyW(path, root);
-    lstrcatW(path, backslashW);
+    lstrcatW(path, L"\\" );
     lstrcatW(path, cabinet);
 
     return SetupIterateCabinetW( path, 0, extract_cab_cb, &ctx );
@@ -631,7 +618,6 @@ static struct source_media *get_source_media(struct file_queue *queue,
  */
 BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
 {
-    static const WCHAR emptyW[] = {0};
     struct file_queue *queue = params->QueueHandle;
     struct file_op *op;
 #ifdef __REACTOS__
@@ -666,7 +652,7 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
         FIXME("Unhandled LayoutInf %p.\n", params->LayoutInf);
 #endif
 
-    op->media = get_source_media( queue, params->SourceRootPath ? params->SourceRootPath : emptyW,
+    op->media = get_source_media( queue, params->SourceRootPath ? params->SourceRootPath : L"",
                                   params->SourceDescription, params->SourceTagfile );
 
 #ifdef __REACTOS__
@@ -1307,7 +1293,6 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             VS_FIXEDFILEINFO *TargetInfo;
             VS_FIXEDFILEINFO *SourceInfo;
             UINT length;
-            static const WCHAR SubBlock[]={'\\',0};
             DWORD  ret;
 
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
@@ -1320,11 +1305,9 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
             if (ret)
             {
-                ret = VerQueryValueW(VersionSource, SubBlock,
-                                    (LPVOID*)&SourceInfo, &length);
+                ret = VerQueryValueW(VersionSource, L"\\", (LPVOID*)&SourceInfo, &length);
                 if (ret)
-                    ret = VerQueryValueW(VersionTarget, SubBlock,
-                                         (LPVOID*)&TargetInfo, &length);
+                    ret = VerQueryValueW(VersionTarget, L"\\", (LPVOID*)&TargetInfo, &length);
 
                 if (ret)
                 {
@@ -1465,8 +1448,6 @@ BOOL WINAPI SetupInstallFileA( HINF hinf, PINFCONTEXT inf_context, PCSTR source,
 BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR source, PCWSTR root,
                                  PCWSTR dest, DWORD style, PSP_FILE_CALLBACK_W handler, PVOID context, PBOOL in_use )
 {
-    static const WCHAR CopyFiles[] = {'C','o','p','y','F','i','l','e','s',0};
-
     BOOL ret, absolute = (root && *root && !(style & SP_COPY_SOURCE_ABSOLUTE));
     WCHAR *buffer, *p, *inf_source = NULL, dest_path[MAX_PATH];
     unsigned int len;
@@ -1486,7 +1467,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
         if (!inf_context)
         {
             inf_context = &ctx;
-            if (!SetupFindFirstLineW( hinf, CopyFiles, NULL, inf_context )) return FALSE;
+            if (!SetupFindFirstLineW( hinf, L"CopyFiles", NULL, inf_context )) return FALSE;
         }
         if (!SetupGetStringFieldW( inf_context, 1, NULL, 0, (PDWORD) &len )) return FALSE;
         if (!(inf_source = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
@@ -1504,7 +1485,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
         if ((dest_dir = get_destination_dir( hinf, NULL )))
         {
             lstrcpyW( dest_path, dest_dir );
-            lstrcatW( dest_path, backslashW );
+            lstrcatW( dest_path, L"\\" );
             heap_free( dest_dir );
         }
     }
@@ -1668,7 +1649,7 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                     lstrcpyW(src_path, op->src_path);
                     path_len = lstrlenW(src_path);
 
-                    lstrcatW(op->media->root, backslashW);
+                    lstrcatW(op->media->root, L"\\");
                     lstrcatW(op->media->root, op->src_path);
 
                     heap_free(op->src_path);
