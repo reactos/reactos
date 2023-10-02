@@ -54,7 +54,7 @@ GetFunctionPointer(
     *ModulePointer = NULL;
     *FunctionPointer = NULL;
 
-    Comma = strchrW(InstallerName, ',');
+    Comma = wcschr(InstallerName, ',');
     if (!Comma)
     {
         rc = ERROR_INVALID_PARAMETER;
@@ -72,7 +72,7 @@ GetFunctionPointer(
     }
 
     /* Skip comma spaces */
-    while (*Comma == ',' || isspaceW(*Comma))
+    while (*Comma == ',' || iswspace(*Comma))
         Comma++;
 
     /* W->A conversion for function name */

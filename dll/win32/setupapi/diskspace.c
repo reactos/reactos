@@ -181,7 +181,7 @@ BOOL WINAPI SetupQuerySpaceRequiredOnDriveW(HDSKSPC DiskSpace,
     for (i = 0; i < list->dwDriveCount; i++)
     {
         TRACE("checking drive %s\n",debugstr_w(list->Drives[i].lpzName));
-        if (lstrcmpW(driveW,list->Drives[i].lpzName)==0)
+        if (wcscmp(driveW,list->Drives[i].lpzName)==0)
         {
             rc = TRUE;
             *SpaceRequired = list->Drives[i].dwWantedSpace;
