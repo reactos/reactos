@@ -166,7 +166,7 @@ static INT_PTR CDECL sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
   case fdintPARTIAL_FILE:
     return 0;
   case fdintCOPY_FILE:
-    TRACE("Copy file %s, length %d, date %#x, time %#x, attributes %#x.\n",
+    TRACE("Copy file %s, length %ld, date %#x, time %#x, attributes %#x.\n",
             debugstr_a(pfdin->psz1), pfdin->cb, pfdin->date, pfdin->time, pfdin->attribs);
     fici.NameInCabinet = pfdin->psz1;
     fici.FileSize = pfdin->cb;
@@ -247,7 +247,7 @@ BOOL WINAPI SetupIterateCabinetA(const char *file, DWORD reserved,
     HFDI hfdi;
     BOOL ret;
 
-    TRACE("file %s, reserved %#x, callback %p, context %p.\n",
+    TRACE("file %s, reserved %#lx, callback %p, context %p.\n",
             debugstr_a(file), reserved, callback, context);
 
     if (!file)

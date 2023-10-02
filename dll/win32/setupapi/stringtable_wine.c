@@ -138,7 +138,7 @@ HSTRING_TABLE WINAPI StringTableInitializeEx(ULONG max_extra_size, DWORD reserve
 {
     struct stringtable *table;
 
-    TRACE("(%d %x)\n", max_extra_size, reserved);
+    TRACE("(%ld %lx)\n", max_extra_size, reserved);
 
     table = MyMalloc(sizeof(*table));
     if (!table) return NULL;
@@ -261,7 +261,7 @@ BOOL WINAPI StringTableGetExtraData(HSTRING_TABLE hTable, ULONG id, void *extra,
     struct stringtable *table = (struct stringtable*)hTable;
     char *extraptr;
 
-    TRACE("%p %u %p %u\n", table, id, extra, extra_size);
+    TRACE("%p %lu %p %lu\n", table, id, extra, extra_size);
 
     if (!table)
         return FALSE;
@@ -306,7 +306,7 @@ DWORD WINAPI StringTableLookUpStringEx(HSTRING_TABLE hTable, LPWSTR string, DWOR
     DWORD offset;
     int cmp;
 
-    TRACE("%p->%p %s %x %p, %x\n", table, table->data, debugstr_w(string), flags, extra, extra_size);
+    TRACE("%p->%p %s %lx %p, %lx\n", table, table->data, debugstr_w(string), flags, extra, extra_size);
 
     if (!table)
         return -1;
@@ -391,7 +391,7 @@ DWORD WINAPI StringTableAddStringEx(HSTRING_TABLE hTable, LPWSTR string,
     WCHAR *ptrW;
     int len;
 
-    TRACE("%p %s %x %p, %u\n", hTable, debugstr_w(string), flags, extra, extra_size);
+    TRACE("%p %s %lx %p, %lu\n", hTable, debugstr_w(string), flags, extra, extra_size);
 
     if (!table)
         return -1;
@@ -482,7 +482,7 @@ BOOL WINAPI StringTableSetExtraData(HSTRING_TABLE hTable, DWORD id, void *extra,
     struct stringtable *table = (struct stringtable*)hTable;
     char *extraptr;
 
-    TRACE("%p %d %p %u\n", hTable, id, extra, extra_size);
+    TRACE("%p %ld %p %lu\n", hTable, id, extra, extra_size);
 
     if (!table)
         return FALSE;
@@ -521,7 +521,7 @@ LPWSTR WINAPI StringTableStringFromId(HSTRING_TABLE hTable, ULONG id)
     struct stringtable *table = (struct stringtable*)hTable;
     static WCHAR empty[] = {0};
 
-    TRACE("%p %d\n", table, id);
+    TRACE("%p %ld\n", table, id);
 
     if (!table)
         return NULL;
@@ -554,7 +554,7 @@ BOOL WINAPI StringTableStringFromIdEx(HSTRING_TABLE hTable, ULONG id, LPWSTR buf
     WCHAR *ptrW;
     int len;
 
-    TRACE("%p %x %p %p\n", table, id, buff, buflen);
+    TRACE("%p %lx %p %p\n", table, id, buff, buflen);
 
     if (!table) {
         *buflen = 0;
