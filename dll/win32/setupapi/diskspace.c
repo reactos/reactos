@@ -42,7 +42,7 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
     WCHAR *ptr;
     LPDISKSPACELIST list=NULL;
 
-    TRACE("(%p, %u, 0x%08x)\n", Reserved1, Reserved2, Flags);
+    TRACE("(%p, %lu, 0x%08x)\n", Reserved1, Reserved2, Flags);
 
     if (Reserved1 || Reserved2 || Flags & ~SPDSL_IGNORE_DISK)
     {
