@@ -151,7 +151,7 @@ static BOOL build_filepathsW( const struct file_op *op, FILEPATHS_W *paths )
     WCHAR *source = (PWSTR)paths->Source, *target = (PWSTR)paths->Target;
 
 #ifdef __WINESRC__
-    if (op->src_file[0] != '@')
+    if (!op->src_file || op->src_file[0] != '@')
 #endif
     {
         if (op->media) src_len += lstrlenW(op->media->root) + 1;
@@ -175,7 +175,7 @@ static BOOL build_filepathsW( const struct file_op *op, FILEPATHS_W *paths )
     }
     if (!source || !target) return FALSE;
 #ifdef __WINESRC__
-    if (op->src_file[0] != '@')
+    if (!op->src_file || op->src_file[0] != '@')
 #endif
         concat_W( source, op->media ? op->media->root : NULL, op->src_path, op->src_file );
 #ifdef __WINESRC__
