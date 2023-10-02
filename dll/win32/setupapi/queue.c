@@ -922,6 +922,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     SP_FILE_COPY_PARAMS_W params;
     INT flags;
     BOOL ret;
+    DWORD len;
 
     TRACE("queue %p, src_root %s, hinf %p, hlist %p, section %s, style %#x.\n",
             queue, debugstr_w(src_root), hinf, hlist, debugstr_w(section), style);
@@ -993,7 +994,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
 
         if (!SetupGetStringFieldW( &context, 1, dst_file, ARRAY_SIZE( dst_file ), NULL ))
             goto end;
-        if (!SetupGetStringFieldW( &context, 2, src_file, ARRAY_SIZE( src_file ), NULL ))
+        if (!SetupGetStringFieldW( &context, 2, src_file, ARRAY_SIZE( src_file ), &len ) || len <= sizeof(WCHAR))
             strcpyW( src_file, dst_file );
 
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;  /* FIXME */
