@@ -83,7 +83,7 @@ static inline DWORD get_string_hash(const WCHAR *str, BOOL case_sensitive)
     DWORD hash = 0;
 
     while (*str) {
-        WCHAR ch = case_sensitive ? *str : tolowerW(*str);
+        WCHAR ch = case_sensitive ? *str : towlower(*str);
         hash += ch;
         if (ch & ~0xff)
             hash |= 1;
@@ -108,7 +108,7 @@ static inline char *get_extradata_ptr(struct stringtable *table, DWORD id)
 {
     WCHAR *ptrW = get_string_ptr(table, id);
     /* skip string itself */
-    return (char*)(ptrW + strlenW(ptrW) + 1);
+    return (char*)(ptrW + lstrlenW(ptrW) + 1);
 }
 
 static inline BOOL is_valid_string_id(struct stringtable *table, DWORD id)
@@ -320,7 +320,7 @@ DWORD WINAPI StringTableLookUpStringEx(HSTRING_TABLE hTable, LPWSTR string, DWOR
     while (1) {
         entry = (struct stringentry*)(table->data + offset);
         if (case_sensitive)
-            cmp = lstrcmpW(entry->data, string);
+            cmp = wcscmp(entry->data, string);
         else
             cmp = lstrcmpiW(entry->data, string);
         if (!cmp) {
@@ -401,7 +401,7 @@ DWORD WINAPI StringTableAddStringEx(HSTRING_TABLE hTable, LPWSTR string,
         return id;
 
     /* needed space for new record */
-    len = sizeof(DWORD) + (strlenW(string)+1)*sizeof(WCHAR) + table->max_extra_size;
+    len = sizeof(DWORD) + (lstrlenW(string)+1)*sizeof(WCHAR) + table->max_extra_size;
     if (table->nextoffset + len >= table->allocated) {
         table->allocated <<= 1;
         table->data = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, table->data, table->allocated);
@@ -425,9 +425,9 @@ DWORD WINAPI StringTableAddStringEx(HSTRING_TABLE hTable, LPWSTR string,
 
     /* copy string */
     ptrW = get_string_ptr(table, id);
-    strcpyW(ptrW, string);
+    lstrcpyW(ptrW, string);
     if (!case_sensitive)
-        strlwrW(ptrW);
+        wcslwr(ptrW);
 
     /* copy extra data */
     if (extra)
@@ -568,9 +568,9 @@ BOOL WINAPI StringTableStringFromIdEx(HSTRING_TABLE hTable, ULONG id, LPWSTR buf
     }
 
     ptrW = get_string_ptr(table, id);
-    len = (strlenW(ptrW) + 1)*sizeof(WCHAR);
+    len = (lstrlenW(ptrW) + 1)*sizeof(WCHAR);
     if (len <= *buflen)
-        strcpyW(buff, ptrW);
+        lstrcpyW(buff, ptrW);
     else
         ret = FALSE;
 

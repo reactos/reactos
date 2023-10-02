@@ -427,7 +427,7 @@ static INT_PTR CDECL sc_FNNOTIFY_W(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
     if (err == FILEOP_DOIT) {
       TRACE("  Callback specified filename: %s\n", debugstr_w(fici.FullTargetName));
       if (fici.FullTargetName[0]) {
-        len = strlenW(fici.FullTargetName) + 1;
+        len = lstrlenW(fici.FullTargetName) + 1;
         if ((len > MAX_PATH ) || (len <= 1))
           return 0;
         if (!WideCharToMultiByte(CP_ACP, 0, fici.FullTargetName, len, charbuf, MAX_PATH, 0, 0))
@@ -437,7 +437,7 @@ static INT_PTR CDECL sc_FNNOTIFY_W(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
         SetLastError(ERROR_PATH_NOT_FOUND);
         return -1;
       }
-      strcpyW( phsc->most_recent_target, fici.FullTargetName );
+      lstrcpyW( phsc->most_recent_target, fici.FullTargetName );
       return sc_cb_open(charbuf, _O_BINARY | _O_CREAT | _O_WRONLY,  _S_IREAD | _S_IWRITE);
     } else {
       TRACE("  Callback skipped file.\n");
@@ -490,7 +490,7 @@ static INT_PTR CDECL sc_FNNOTIFY_W(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION p
       return -1;
     } else {
       if (mysterio[0]) {
-        len = strlenW(mysterio) + 1;
+        len = lstrlenW(mysterio) + 1;
         if ((len > 255) || (len <= 1))
           return 0;
         if (!WideCharToMultiByte(CP_ACP, 0, mysterio, len, pfdin->psz3, 255, 0, 0))
@@ -602,13 +602,13 @@ BOOL WINAPI SetupIterateCabinetW(PCWSTR CabinetFile, DWORD Reserved,
   }
 
   if (p) {
-    strcpyW(my_hsc.most_recent_cabinet_name, p);
+    lstrcpyW(my_hsc.most_recent_cabinet_name, p);
     *p = 0;
     len = WideCharToMultiByte(CP_ACP, 0, pszCabPathW, -1, pszCabPath,
 				MAX_PATH, 0, 0);
     if (!len) return FALSE;
   } else {
-    strcpyW(my_hsc.most_recent_cabinet_name, CabinetFile);
+    lstrcpyW(my_hsc.most_recent_cabinet_name, CabinetFile);
     pszCabPath[0] = '\0';
   }
 
