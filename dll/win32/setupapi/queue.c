@@ -1661,13 +1661,20 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                  * actually isn't in a subdirectory, but keep track of what it
                  * was, and then later strip it from the root path that we
                  * ultimately resolve the source disk to. */
-                WCHAR *src_path = op->src_path;
+                WCHAR src_path[MAX_PATH];
+                size_t path_len = 0;
 
-                op->src_path = NULL;
-                if (src_path)
+                src_path[0] = 0;
+                if (op->src_path)
                 {
+                    lstrcpyW(src_path, op->src_path);
+                    path_len = lstrlenW(src_path);
+
                     lstrcatW(op->media->root, backslashW);
-                    lstrcatW(op->media->root, src_path);
+                    lstrcatW(op->media->root, op->src_path);
+
+                    heap_free(op->src_path);
+                    op->src_path = NULL;
                 }
 
                 for (;;)
@@ -1703,12 +1710,11 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
 
                     if (queue_copy_file( paths.Source, paths.Target, op, handler, context ))
                     {
-                        if (src_path && !op->media->cabinet)
+                        if (path_len > 0 && !op->media->cabinet)
                         {
-                            size_t root_len = lstrlenW(op->media->root), path_len = lstrlenW(src_path);
+                            size_t root_len = lstrlenW(op->media->root);
                             if (path_len <= root_len && !wcsnicmp(op->media->root + root_len - path_len, src_path, path_len))
                                 op->media->root[root_len - path_len - 1] = 0;
-                            heap_free( src_path );
                         }
                         op->media->resolved = TRUE;
 #ifdef __REACTOS__
