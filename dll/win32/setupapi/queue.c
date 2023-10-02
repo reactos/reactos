@@ -1300,9 +1300,6 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             VersionSizeTarget = GetFileVersionInfoSizeW(target,&zero);
         }
 
-        TRACE("SizeTarget %i ... SizeSource %i\n",VersionSizeTarget,
-                VersionSizeSource);
-
         if (VersionSizeSource && VersionSizeTarget)
         {
             LPVOID VersionSource;
@@ -1396,7 +1393,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 #else
         rc = CopyFileW(source,target,FALSE);
 #endif
-        TRACE("Did copy... rc was %i\n",rc);
+        if (!rc) WARN( "failed to copy, err %u\n", GetLastError() );
     }
     else
         SetLastError(ERROR_SUCCESS);
@@ -1725,11 +1722,32 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                         break;
 #endif
                     }
+                    paths.Win32Error = GetLastError();
+                    if (paths.Win32Error == ERROR_PATH_NOT_FOUND ||
+                        paths.Win32Error == ERROR_FILE_NOT_FOUND)
 #if defined(__REACTOS__) // TEMP HACK!
-                    ERR( "** Could not find source install media! ** copy error %d %s -> %s\n",
-                        paths.Win32Error, debugstr_w(paths.Source), debugstr_w(paths.Target) );
-                    break;
+                    {
+                        ERR( "** Could not find source install media! ** copy error %d %s -> %s\n",
+                            paths.Win32Error, debugstr_w(paths.Source), debugstr_w(paths.Target) );
+                        break;
+                    }
+#else
+                        continue;
 #endif
+
+                    newpath[0] = 0;
+                    op_result = handler( context, SPFILENOTIFY_COPYERROR, (UINT_PTR)&paths, (UINT_PTR)newpath );
+                    if (op_result == FILEOP_ABORT)
+                        goto done;
+                    else if (op_result == FILEOP_SKIP)
+                        break;
+                    else if (op_result == FILEOP_NEWPATH)
+                    {
+                        lstrcpyW(op->media->root, newpath);
+                        build_filepathsW(op, &paths);
+                    }
+                    else if (op_result != FILEOP_DOIT)
+                        FIXME("Unhandled return value %#x.\n", op_result);
                 }
             }
             else
