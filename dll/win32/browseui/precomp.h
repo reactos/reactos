@@ -36,10 +36,7 @@
 #include <wine/debug.h>
 
 #include "resource.h"
-
-#define BWM_SETTINGCHANGE  (WM_USER + 300)
-#define BWM_GETSETTINGSPTR (WM_USER + 301)
-struct ShellSettings;
+#include "settings.h"
 
 #include "ACLCustomMRU.h"
 #include "aclhistory.h"
@@ -68,15 +65,5 @@ struct ShellSettings;
 #include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
-
-struct ShellSettings
-{
-    BOOL fLocked = FALSE;
-    BOOL fShowGoButton = FALSE;
-    BOOL fStatusBarVisible = FALSE;
-
-    BOOL Save();
-    BOOL Load();
-};
 
 #endif /* _BROWSEUI_PCH_ */
