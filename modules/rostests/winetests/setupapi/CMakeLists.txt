@@ -15,6 +15,7 @@ add_importlibs(setupapi_coinst msvcrt kernel32)
 
 list(APPEND SOURCE
     devinst.c
+    dialog.c
     diskspace.c
     install.c
     misc.c
