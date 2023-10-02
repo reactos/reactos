@@ -1531,7 +1531,7 @@ BOOL WINAPI SetupInstallFileExW( HINF hinf, PINFCONTEXT inf_context, PCWSTR sour
 {
     BOOL ret, absolute = (root && *root && !(style & SP_COPY_SOURCE_ABSOLUTE));
     WCHAR *buffer, *p, *inf_source = NULL, dest_path[MAX_PATH];
-    unsigned int len;
+    DWORD len;
 
     TRACE("%p %p %s %s %s %x %p %p %p\n", hinf, inf_context, debugstr_w(source), debugstr_w(root),
           debugstr_w(dest), style, handler, context, in_use);
