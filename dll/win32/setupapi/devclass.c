@@ -262,7 +262,7 @@ SETUP_GetIconIndex(
     Buffer[dwLength / sizeof(WCHAR)] = 0;
 
     /* Transform icon value to a INT */
-    *ImageIndex = atoiW(Buffer);
+    *ImageIndex = wcstol(Buffer, NULL, 10);
     ret = TRUE;
 
 cleanup:
@@ -417,7 +417,7 @@ SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *
             SetLastError(ERROR_FILE_NOT_FOUND);
             goto cleanup;
         }
-        Comma = strchrW(Buffer, ',');
+        Comma = wcschr(Buffer, ',');
         if (!Comma)
         {
             SetLastError(ERROR_GEN_FAILURE);
@@ -806,7 +806,7 @@ SetupDiInstallClassExW(
                 hInf,
                 ClassInstall32,
                 SectionName,
-                MAX_PATH - strlenW(DotServices),
+                MAX_PATH - lstrlenW(DotServices),
                 NULL,
                 NULL);
             if (!ret)

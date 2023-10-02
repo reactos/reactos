@@ -60,7 +60,7 @@ CreateInfFileDetails(
     DWORD Needed;
 
     Needed = FIELD_OFFSET(struct InfFileDetails, szData)
-        + strlenW(FullInfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+        + lstrlenW(FullInfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
     details = HeapAlloc(GetProcessHeap(), 0, Needed);
     if (!details)
@@ -70,8 +70,8 @@ CreateInfFileDetails(
     }
 
     memset(details, 0, Needed);
-    strcpyW(details->szData, FullInfFileName);
-    last = strrchrW(details->szData, '\\');
+    lstrcpyW(details->szData, FullInfFileName);
+    last = wcsrchr(details->szData, '\\');
     if (last)
     {
         details->DirectoryName = details->szData;
@@ -162,13 +162,13 @@ AddKnownDriverToList(
     /* Copy MatchingId information */
     if (MatchingId)
     {
-        driverInfo->MatchingId = HeapAlloc(GetProcessHeap(), 0, (strlenW(MatchingId) + 1) * sizeof(WCHAR));
+        driverInfo->MatchingId = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(MatchingId) + 1) * sizeof(WCHAR));
         if (!driverInfo->MatchingId)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        RtlCopyMemory(driverInfo->MatchingId, MatchingId, (strlenW(MatchingId) + 1) * sizeof(WCHAR));
+        RtlCopyMemory(driverInfo->MatchingId, MatchingId, (lstrlenW(MatchingId) + 1) * sizeof(WCHAR));
     }
     else
         driverInfo->MatchingId = NULL;
@@ -397,7 +397,7 @@ GetVersionInformationFromInfFile(
     }
 
     /* Get driver date and driver version, by analyzing the "DriverVer" value */
-    pComma = strchrW(DriverVer, ',');
+    pComma = wcschr(DriverVer, ',');
     if (pComma != NULL)
     {
         *pComma = UNICODE_NULL;
@@ -405,7 +405,7 @@ GetVersionInformationFromInfFile(
     }
     /* Get driver date version. Invalid date = 00/00/00 */
     memset(DriverDate, 0, sizeof(FILETIME));
-    if (strlenW(DriverVer) == 10
+    if (lstrlenW(DriverVer) == 10
         && (DriverVer[2] == '-' || DriverVer[2] == '/')
         && (DriverVer[5] == '-' || DriverVer[5] == '/'))
     {
@@ -424,26 +424,26 @@ GetVersionInformationFromInfFile(
         LPWSTR pMinor = NULL, pRevision = NULL, pBuild = NULL;
         LARGE_INTEGER fullVersion;
 
-        pMinor = strchrW(pVersion, '.');
+        pMinor = wcschr(pVersion, '.');
         if (pMinor)
         {
             *pMinor = 0;
-            pRevision = strchrW(++pMinor, '.');
-            Minor = atoiW(pMinor);
+            pRevision = wcschr(++pMinor, '.');
+            Minor = (WORD)wcstoul(pMinor, NULL, 10);
         }
         if (pRevision)
         {
             *pRevision = 0;
-            pBuild = strchrW(++pRevision, '.');
-            Revision = atoiW(pRevision);
+            pBuild = wcschr(++pRevision, '.');
+            Revision = (WORD)wcstoul(pRevision, NULL, 10);
         }
         if (pBuild)
         {
             *pBuild = 0;
             pBuild++;
-            Build = atoiW(pBuild);
+            Build = (WORD)wcstoul(pBuild, NULL, 10);
         }
-        Major = atoiW(pVersion);
+        Major = (WORD)wcstoul(pVersion, NULL, 10);
         fullVersion.u.HighPart = Major << 16 | Minor;
         fullVersion.u.LowPart = Revision << 16 | Build;
         memcpy(DriverVersion, &fullVersion, sizeof(LARGE_INTEGER));
@@ -803,22 +803,22 @@ SetupDiBuildDriverInfoList(
             RequiredSize = GetSystemWindowsDirectoryW(InfFileName, len);
             if (RequiredSize == 0 || RequiredSize >= len)
                 goto done;
-            if (*InfFileName && InfFileName[strlenW(InfFileName) - 1] != '\\')
-                strcatW(InfFileName, BackSlash);
-            strcatW(InfFileName, InfDirectory);
+            if (*InfFileName && InfFileName[lstrlenW(InfFileName) - 1] != '\\')
+                lstrcatW(InfFileName, BackSlash);
+            lstrcatW(InfFileName, InfDirectory);
 
             /* Read some information from registry, before creating the driver structure */
             hDriverKey = SETUPDI_OpenDrvKey(((struct DeviceInfoSet *)DeviceInfoSet)->HKLM, devInfo, KEY_QUERY_VALUE);
             if (hDriverKey == INVALID_HANDLE_VALUE)
                 goto done;
-            RequiredSize = (len - strlenW(InfFileName)) * sizeof(WCHAR);
+            RequiredSize = (len - lstrlenW(InfFileName)) * sizeof(WCHAR);
             rc = RegGetValueW(
                 hDriverKey,
                 NULL,
                 REGSTR_VAL_INFPATH,
                 RRF_RT_REG_SZ,
                 NULL,
-                &InfFileName[strlenW(InfFileName)],
+                &InfFileName[lstrlenW(InfFileName)],
                 &RequiredSize);
             if (rc != ERROR_SUCCESS)
             {
@@ -871,14 +871,14 @@ SetupDiBuildDriverInfoList(
         else if (InstallParams.Flags & DI_ENUMSINGLEINF)
         {
             /* InstallParams.DriverPath contains the name of a .inf file */
-            RequiredSize = strlenW(InstallParams.DriverPath) + 2;
+            RequiredSize = lstrlenW(InstallParams.DriverPath) + 2;
             Buffer = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
             if (!Buffer)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto done;
             }
-            strcpyW(Buffer, InstallParams.DriverPath);
+            lstrcpyW(Buffer, InstallParams.DriverPath);
             ((LPWSTR)Buffer)[RequiredSize - 1] = 0;
             Result = TRUE;
         }
@@ -939,9 +939,9 @@ SetupDiBuildDriverInfoList(
                 len = GetFullPathNameW(InstallParams.DriverPath, len, FullInfFileName, NULL);
                 if (len == 0)
                     goto done;
-                if (*FullInfFileName && FullInfFileName[strlenW(FullInfFileName) - 1] != '\\')
-                    strcatW(FullInfFileName, BackSlash);
-                pFullFilename = &FullInfFileName[strlenW(FullInfFileName)];
+                if (*FullInfFileName && FullInfFileName[lstrlenW(FullInfFileName) - 1] != '\\')
+                    lstrcatW(FullInfFileName, BackSlash);
+                pFullFilename = &FullInfFileName[lstrlenW(FullInfFileName)];
             }
             else
             {
@@ -950,24 +950,24 @@ SetupDiBuildDriverInfoList(
                 len = GetSystemWindowsDirectoryW(NULL, 0);
                 if (len == 0)
                     goto done;
-                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, (len + 1 + strlenW(InfDirectory) + MAX_PATH) * sizeof(WCHAR));
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, (len + 1 + lstrlenW(InfDirectory) + MAX_PATH) * sizeof(WCHAR));
                 if (!FullInfFileName)
                     goto done;
                 len = GetSystemWindowsDirectoryW(FullInfFileName, len);
                 if (len == 0)
                     goto done;
-                if (*FullInfFileName && FullInfFileName[strlenW(FullInfFileName) - 1] != '\\')
-                    strcatW(FullInfFileName, BackSlash);
-                strcatW(FullInfFileName, InfDirectory);
-                pFullFilename = &FullInfFileName[strlenW(FullInfFileName)];
+                if (*FullInfFileName && FullInfFileName[lstrlenW(FullInfFileName) - 1] != '\\')
+                    lstrcatW(FullInfFileName, BackSlash);
+                lstrcatW(FullInfFileName, InfDirectory);
+                pFullFilename = &FullInfFileName[lstrlenW(FullInfFileName)];
             }
 
-            for (filename = (LPCWSTR)Buffer; *filename; filename += strlenW(filename) + 1)
+            for (filename = (LPCWSTR)Buffer; *filename; filename += lstrlenW(filename) + 1)
             {
                 INFCONTEXT ContextManufacturer, ContextDevice;
                 GUID ClassGuid;
 
-                strcpyW(pFullFilename, filename);
+                lstrcpyW(pFullFilename, filename);
                 TRACE("Opening file %s\n", debugstr_w(FullInfFileName));
 
                 currentInfFileDetails = CreateInfFileDetails(FullInfFileName);
@@ -1105,9 +1105,9 @@ SetupDiBuildDriverInfoList(
                                 DriverAlreadyAdded = FALSE;
                                 if (HardwareIDs)
                                 {
-                                    for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
+                                    for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += lstrlenW(currentId) + 1, DriverRank++)
                                     {
-                                        if (strcmpiW(DeviceId, currentId) == 0)
+                                        if (wcsicmp(DeviceId, currentId) == 0)
                                         {
                                             AddDriverToList(
                                                 pDriverListHead,
@@ -1127,9 +1127,9 @@ SetupDiBuildDriverInfoList(
                                 }
                                 if (CompatibleIDs)
                                 {
-                                    for (DriverRank = 0, currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
+                                    for (DriverRank = 0, currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += lstrlenW(currentId) + 1, DriverRank++)
                                     {
-                                        if (strcmpiW(DeviceId, currentId) == 0)
+                                        if (wcsicmp(DeviceId, currentId) == 0)
                                         {
                                             AddDriverToList(
                                                 pDriverListHead,
@@ -1643,8 +1643,8 @@ SetupDiSetSelectedDriverW(
                     /* The caller wants to compare only DriverType, Description and ProviderName fields */
                     struct DriverInfoElement *driverInfo = CONTAINING_RECORD(ItemList, struct DriverInfoElement, ListEntry);
                     if (driverInfo->Info.DriverType == DriverInfoData->DriverType
-                        && strcmpW(driverInfo->Info.Description, DriverInfoData->Description) == 0
-                        && strcmpW(driverInfo->Info.ProviderName, DriverInfoData->ProviderName) == 0)
+                        && wcscmp(driverInfo->Info.Description, DriverInfoData->Description) == 0
+                        && wcscmp(driverInfo->Info.ProviderName, DriverInfoData->ProviderName) == 0)
                     {
                         break;
                     }
@@ -2135,7 +2135,7 @@ SetupDiInstallDriverFiles(
         ret = SetupDiGetActualSectionToInstallW(
             SelectedDriver->InfFileDetails->hInf,
             SelectedDriver->Details.SectionName,
-            SectionName, MAX_PATH - strlenW(DotCoInstallers), &SectionNameLength, NULL);
+            SectionName, MAX_PATH - lstrlenW(DotCoInstallers), &SectionNameLength, NULL);
         if (!ret)
             goto done;
 
