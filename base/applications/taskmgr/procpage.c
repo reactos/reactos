@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Processes Page.
+ * PURPOSE:     Processes Page
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  *              Copyright 2009 Maxime Vernier <maxime.vernier@gmail.com>
  *              Copyright 2022 Thamatip Chitpong <tangaming123456@outlook.com>
@@ -797,8 +797,8 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 
     if (TaskManagerSettings.SortColumn == COLUMN_IMAGENAME)
     {
-        PerfDataGetImageName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetImageName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetImageName(IndexParam1, text1, _countof(text1));
+        PerfDataGetImageName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_PID)
@@ -809,14 +809,14 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_USERNAME)
     {
-        PerfDataGetUserName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetUserName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetUserName(IndexParam1, text1, _countof(text1));
+        PerfDataGetUserName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_COMMANDLINE)
     {
-        PerfDataGetCommandLine(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetCommandLine(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetCommandLine(IndexParam1, text1, _countof(text1));
+        PerfDataGetCommandLine(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_SESSIONID)

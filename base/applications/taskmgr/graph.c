@@ -28,7 +28,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
 
     /*
-     * Filter out mouse  & keyboard messages
+     * Filter out mouse & keyboard messages
      */
     /* case WM_APPCOMMAND: */
     case WM_CAPTURECHANGED:
@@ -84,7 +84,6 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_PAINT:
-
         hdc = BeginPaint(hWnd, &ps);
 
         WindowId = GetWindowLongPtrW(hWnd, GWLP_ID);
@@ -103,13 +102,11 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         EndPaint(hWnd, &ps);
-
         return 0;
-
     }
 
     /*
-     * We pass on all non-handled messages
+     * Pass on all non-handled messages
      */
     return CallWindowProcW(OldGraphWndProc, hWnd, message, wParam, lParam);
 }
@@ -163,8 +160,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     SetTextColor(hDC, crPrevForeground);
 
     /*
-     * Now we have to draw the graph
-     * So first find out how many bars we can fit
+     * Draw the graph. So first find out how many bars we can fit
      */
     nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
     nBarsUsed = (nBars * CpuUsage) / 100;
@@ -185,7 +181,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     }
 
     /*
-     * Now draw the bar graph
+     * Draw the bar graph
      */
     rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
     rcBarLeft.right =  rcBarLeft.left + 16;
@@ -266,7 +262,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
     for (i=0; i<nBarsUsedKernel; i++)
     {
-
         FillSolidRect(hDC, &rcBarLeft, RED);
         FillSolidRect(hDC, &rcBarRight, RED);
 
@@ -275,7 +270,6 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
         rcBarRight.top -=3;
         rcBarRight.bottom -=3;
-
     }
 
     SelectObject(hDC, hOldFont);
@@ -331,8 +325,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     SetTextColor(hDC, crPrevForeground);
 
     /*
-     * Now we have to draw the graph
-     * So first find out how many bars we can fit
+     * Draw the graph. So first find out how many bars we can fit
      */
     nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
         if (CommitChargeLimit)
@@ -346,7 +339,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     if (nBarsFree > nBars) nBarsFree = nBars;
 
     /*
-     * Now draw the bar graph
+     * Draw the bar graph
      */
     rcBarLeft.left =  ((rcClient.right - rcClient.left) - 33) / 2;
     rcBarLeft.right =  rcBarLeft.left + 16;
@@ -414,17 +407,16 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
     //CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
     /*
-     * Draw the graph background
-     *
-     * Draw the horizontal bars
+     * Draw the graph background and horizontal bars
      */
     for (i=0; i<rcClient.bottom; i++)
     {
         if ((i % 11) == 0)
         {
-            /* FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);  */
+            //FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);
         }
     }
+
     /*
      * Draw the vertical bars
      */
@@ -432,7 +424,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
     {
         if ((i % 11) == 0)
         {
-            /* FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);  */
+            //FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);
         }
     }
 

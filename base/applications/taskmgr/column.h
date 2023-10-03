@@ -63,7 +63,7 @@ typedef struct {
 } PresetColumnEntry;
 
 
-extern    UINT    ColumnDataHints[COLUMN_NMAX];
+extern UINT  ColumnDataHints[COLUMN_NMAX];
 extern const PresetColumnEntry ColumnPresets[COLUMN_NMAX];
 
 #define Column_ImageName            Columns[COLUMN_IMAGENAME]

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Application Entry-point.
+ * PURPOSE:     Application Entry-point
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  */
@@ -110,7 +110,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         HWND hTaskMgr;
         TCHAR szTaskmgr[128];
 
-        LoadString(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(TCHAR));
+        LoadString(hInst, IDS_APP_TITLE, szTaskmgr, _countof(szTaskmgr));
         hTaskMgr = FindWindow(NULL, szTaskmgr);
 
         if (hTaskMgr != NULL)
@@ -139,10 +139,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
      * so that we can debug processes
      */
 
-    /* Get a token for this process.  */
+    /* Get a token for this process. */
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
     {
-        /* Get the LUID for the debug privilege.  */
+        /* Get the LUID for the debug privilege. */
         if (LookupPrivilegeValueW(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid))
         {
             tkp.PrivilegeCount = 1;  /* one privilege to set */
@@ -159,9 +159,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     /* Initialize perf data */
     if (!PerfDataInitialize())
-    {
         return -1;
-    }
 
     /*
      * Set our shutdown parameters: we want to shutdown the very last,
@@ -371,21 +369,14 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             hPopupMenu = GetSubMenu(hMenu, 0);
 
             if(IsWindowVisible(hMainWnd))
-            {
-              DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
-            }
+                DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
             else
-            {
-              SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
-            }
+                SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
 
             if(OnTop)
-            {
-              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
-            } else
-            {
-              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_UNCHECKED);
-            }
+                CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
+            else
+                CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_UNCHECKED);
 
             SetForegroundWindow(hMainWnd);
             TrackPopupMenuEx(hPopupMenu, 0, pt.x, pt.y, hMainWnd, NULL);
@@ -680,19 +671,19 @@ BOOL OnCreate(HWND hWnd)
         lpUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (lpUserName && GetUserNameW(lpUserName, &len))
         {
-            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, lpUserName);
-            szLogOffItem[sizeof(szLogOffItem)/sizeof(szLogOffItem[0]) - 1] = UNICODE_NULL;
+            _snwprintf(szLogOffItem, _countof(szLogOffItem), szTemp, lpUserName);
+            szLogOffItem[_countof(szLogOffItem) - 1] = UNICODE_NULL;
         }
         else
         {
-            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+            _snwprintf(szLogOffItem, _countof(szLogOffItem), szTemp, L"n/a");
         }
 
         if (lpUserName) HeapFree(GetProcessHeap(), 0, lpUserName);
     }
     else
     {
-        _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+        _snwprintf(szLogOffItem, _countof(szLogOffItem), szTemp, L"n/a");
     }
 
     /* 3- Set the menu item text to its formatted counterpart */
@@ -868,11 +859,8 @@ void SaveSettings(void)
 
 void TaskManager_OnRestoreMainWindow(void)
 {
-    //HMENU hMenu, hOptionsMenu;
     BOOL OnTop;
 
-    //hMenu = GetMenu(hMainWnd);
-    //hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
     OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
     OpenIcon(hMainWnd);
