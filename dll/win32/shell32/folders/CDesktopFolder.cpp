@@ -482,7 +482,7 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
         {
             result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             if (result == 0)
-                return SHELL32_CompareChildren(this, LOWORD(lParam), pidl1, pidl2);
+                return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
         }
         return MAKE_COMPARE_HRESULT(result);
     }
