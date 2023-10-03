@@ -22,7 +22,13 @@ VOID NTAPI AVrfpNtdllHeapFreeCallback(PVOID AllocationBase, SIZE_T AllocationSiz
 // DPFLTR_VERIFIER_ID
 
 
-NTSTATUS NTAPI AVrfpLdrGetProcedureAddress(IN PVOID BaseAddress, IN PANSI_STRING Name, IN ULONG Ordinal, OUT PVOID *ProcedureAddress);
+NTSTATUS
+NTAPI
+AVrfpLdrGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress);
 
 static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpNtdllThunks[] =
 {
@@ -116,9 +122,18 @@ PVOID AVrfpFindReplacementThunk(PVOID Proc)
 }
 
 
-NTSTATUS NTAPI AVrfpLdrGetProcedureAddress(IN PVOID BaseAddress, IN PANSI_STRING Name, IN ULONG Ordinal, OUT PVOID *ProcedureAddress)
+NTSTATUS NTAPI
+AVrfpLdrGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress)
 {
-    NTSTATUS (NTAPI *oLdrGetProcedureAddress)(IN PVOID BaseAddress, IN PANSI_STRING Name, IN ULONG Ordinal, OUT PVOID *ProcedureAddress);
+    NTSTATUS(NTAPI *oLdrGetProcedureAddress)(
+        _In_ PVOID BaseAddress,
+        _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+        _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+        _Out_ PVOID *ProcedureAddress);
     NTSTATUS Status;
     PVOID Replacement;
 

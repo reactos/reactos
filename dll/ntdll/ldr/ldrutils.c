@@ -2249,11 +2249,12 @@ lookinhash:
 
 NTSTATUS
 NTAPI
-LdrpGetProcedureAddress(IN PVOID BaseAddress,
-                        IN PANSI_STRING Name,
-                        IN ULONG Ordinal,
-                        OUT PVOID *ProcedureAddress,
-                        IN BOOLEAN ExecuteInit)
+LdrpGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress,
+    _In_ BOOLEAN ExecuteInit)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     UCHAR ImportBuffer[64];

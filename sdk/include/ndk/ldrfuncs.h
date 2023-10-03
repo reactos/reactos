@@ -89,8 +89,8 @@ NTSTATUS
 NTAPI
 LdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
-    _In_ PANSI_STRING Name,
-    _In_ ULONG Ordinal,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
     _Out_ PVOID *ProcedureAddress
 );
 
