@@ -20,10 +20,14 @@
 
 #include "setupapi_private.h"
 
+#ifdef __REACTOS__
 #include <aclapi.h>
+#endif
 
 /* Unicode constants */
+#ifdef __REACTOS__
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
+#endif
 
 /* context structure for the default queue callback */
 struct default_callback_context
@@ -44,7 +48,9 @@ struct file_op
     WCHAR          *src_tag;
     WCHAR          *dst_path;
     WCHAR          *dst_file;
+#ifdef __REACTOS__
     PSECURITY_DESCRIPTOR  dst_sd;
+#endif
 };
 
 struct file_op_queue
@@ -109,7 +115,9 @@ static void free_file_op_queue( struct file_op_queue *queue )
         HeapFree( GetProcessHeap(), 0, op->src_descr );
         HeapFree( GetProcessHeap(), 0, op->src_tag );
         HeapFree( GetProcessHeap(), 0, op->dst_path );
-        if (op->dst_sd) LocalFree( op->dst_sd);
+#ifdef __REACTOS__
+        if (op->dst_sd) LocalFree(op->dst_sd);
+#endif
         if (op->dst_file != op->src_file) HeapFree( GetProcessHeap(), 0, op->dst_file );
         t = op;
         op = op->next;
@@ -484,7 +492,9 @@ BOOL WINAPI SetupQueueCopyIndirectA( PSP_FILE_COPY_PARAMS_A params )
     op->src_tag    = strdupAtoW( params->SourceTagfile );
     op->dst_path   = strdupAtoW( params->TargetDirectory );
     op->dst_file   = strdupAtoW( params->TargetFilename );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
+#endif
 
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
@@ -521,9 +531,11 @@ BOOL WINAPI SetupQueueCopyIndirectW( PSP_FILE_COPY_PARAMS_W params )
     op->src_tag    = strdupW( params->SourceTagfile );
     op->dst_path   = strdupW( params->TargetDirectory );
     op->dst_file   = strdupW( params->TargetFilename );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
     if (params->SecurityDescriptor)
         ConvertStringSecurityDescriptorToSecurityDescriptorW( params->SecurityDescriptor, SDDL_REVISION_1, &op->dst_sd, NULL );
+#endif
 
     /* some defaults */
     if (!op->src_file) op->src_file = op->dst_file;
@@ -658,7 +670,9 @@ BOOL WINAPI SetupQueueDeleteA( HSPFILEQ handle, PCSTR part1, PCSTR part2 )
     op->src_tag    = NULL;
     op->dst_path   = strdupAtoW( part1 );
     op->dst_file   = strdupAtoW( part2 );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
+#endif
     queue_file_op( &queue->delete_queue, op );
     return TRUE;
 }
@@ -681,7 +695,9 @@ BOOL WINAPI SetupQueueDeleteW( HSPFILEQ handle, PCWSTR part1, PCWSTR part2 )
     op->src_tag    = NULL;
     op->dst_path   = strdupW( part1 );
     op->dst_file   = strdupW( part2 );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
+#endif
     queue_file_op( &queue->delete_queue, op );
     return TRUE;
 }
@@ -705,7 +721,9 @@ BOOL WINAPI SetupQueueRenameA( HSPFILEQ handle, PCSTR SourcePath, PCSTR SourceFi
     op->src_tag    = NULL;
     op->dst_path   = strdupAtoW( TargetPath );
     op->dst_file   = strdupAtoW( TargetFilename );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
+#endif
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
 }
@@ -729,7 +747,9 @@ BOOL WINAPI SetupQueueRenameW( HSPFILEQ handle, PCWSTR SourcePath, PCWSTR Source
     op->src_tag    = NULL;
     op->dst_path   = strdupW( TargetPath );
     op->dst_file   = strdupW( TargetFilename );
+#ifdef __REACTOS__
     op->dst_sd     = NULL;
+#endif
     queue_file_op( &queue->rename_queue, op );
     return TRUE;
 }
@@ -773,16 +793,19 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
                                     PCWSTR section, DWORD style )
 {
     SP_FILE_COPY_PARAMS_W params;
+#ifdef __REACTOS__
     LPWSTR security_key, security_descriptor = NULL;
-    INFCONTEXT context, security_context;
+    INFCONTEXT security_context;
+#endif
+    INFCONTEXT context;
     WCHAR dest[MAX_PATH], src[MAX_PATH];
     INT flags;
-    DWORD required;
     BOOL ret;
 
     TRACE( "hinf=%p/%p section=%s root=%s\n",
            hinf, hlist, debugstr_w(section), debugstr_w(src_root) );
 
+#ifdef __REACTOS__
     /* Check for .Security section */
     security_key = MyMalloc( (strlenW( section ) + strlenW( DotSecurity )) * sizeof(WCHAR) + sizeof(UNICODE_NULL) );
     if (!security_key)
@@ -796,6 +819,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     MyFree(security_key);
     if (ret)
     {
+        DWORD required;
         if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
             return FALSE;
         security_descriptor = MyMalloc( required * sizeof(WCHAR) );
@@ -810,6 +834,8 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
             return FALSE;
         }
     }
+#endif // __REACTOS__
+    ret = FALSE;
 
     params.cbSize             = sizeof(params);
     params.QueueHandle        = queue;
@@ -822,7 +848,6 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     params.LayoutInf          = hinf;
     params.SecurityDescriptor = security_descriptor;
 
-    ret = FALSE;
     if (!hlist) hlist = hinf;
     if (!hinf) hinf = hlist;
     if (!SetupFindFirstLineW( hlist, section, NULL, &context )) goto done;
@@ -840,8 +865,10 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     ret = TRUE;
 
 done:
+#ifdef __REACTOS__
     if (security_descriptor)
         MyFree( security_descriptor );
+#endif
     return ret;
 }
 
@@ -1123,7 +1150,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
             (GetFileAttributesW(TempFile) != INVALID_FILE_ATTRIBUTES))
         {
             VersionSizeSource = GetFileVersionInfoSizeW(TempFile,&zero);
-            VersionSizeTarget = GetFileVersionInfoSizeW((LPWSTR)target,&zero);
+            VersionSizeTarget = GetFileVersionInfoSizeW(target,&zero);
         }
 
         TRACE("SizeTarget %i ... SizeSource %i\n",VersionSizeTarget,
@@ -1144,7 +1171,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
             ret = GetFileVersionInfoW(TempFile,0,VersionSizeSource,VersionSource);
             if (ret)
-              ret = GetFileVersionInfoW((LPWSTR)target, 0, VersionSizeTarget,
+              ret = GetFileVersionInfoW(target, 0, VersionSizeTarget,
                     VersionTarget);
 
             if (ret)
@@ -1217,7 +1244,11 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
     if (docopy)
     {
+#ifdef __REACTOS__
         rc = MoveFileExW(TempFile,target,MOVEFILE_REPLACE_EXISTING);
+#else
+        rc = CopyFileW(source,target,FALSE);
+#endif
         TRACE("Did copy... rc was %i\n",rc);
     }
 
@@ -1452,6 +1483,7 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                                      (UINT_PTR)&paths, (UINT_PTR)newpath );
                 if (op_result == FILEOP_ABORT) goto done;
             }
+#ifdef __REACTOS__
             if (op->dst_sd)
             {
                 PSID psidOwner = NULL, psidGroup = NULL;
@@ -1471,6 +1503,7 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                     psidOwner, psidGroup, pDacl, pSacl );
                 /* Yes, ignore the return code... */
             }
+#endif // __REACTOS__
             handler( context, SPFILENOTIFY_ENDCOPY, (UINT_PTR)&paths, 0 );
         }
         handler( context, SPFILENOTIFY_ENDSUBQUEUE, FILEOP_COPY, 0 );
