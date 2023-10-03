@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Applications Page.
+ * PURPOSE:     Applications Page
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  *              Copyright 2005 Klemens Friedl <frik85@reactos.at>
  *              Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -18,6 +18,7 @@ extern HWND hApplicationPageNewTaskButton;  /* Application New Task button */
 INT_PTR CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void                RefreshApplicationPage(void);
 void                UpdateApplicationListControlViewSetting(void);
+
 void                ApplicationPage_OnView(DWORD);
 void                ApplicationPage_OnWindowsTile(DWORD);
 void                ApplicationPage_OnWindowsMinimize(void);
