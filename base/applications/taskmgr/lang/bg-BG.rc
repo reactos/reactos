@@ -232,16 +232,6 @@ BEGIN
     PUSHBUTTON "Дневник на паметта", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Обезбубяващи канали"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List1", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Затваряне", IDOK, 171, 189, 69, 14
-END
-
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Процесорно сродство"
@@ -249,7 +239,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Добре", IDOK, 120, 133, 50, 14
     PUSHBUTTON "Отказ", IDCANCEL, 174, 133, 50, 14
-    LTEXT "Настройката на сродството на процесора указва на кои ЦПУта е разрешено изпълнението да действието.",                    IDC_STATIC,5,5,220,16
+    LTEXT "Настройката на сродството на процесора указва на кои ЦПУта е разрешено изпълнението да действието.", IDC_STATIC,5,5,220,16
     CONTROL "ЦПУ 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "ЦПУ 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "ЦПУ 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10

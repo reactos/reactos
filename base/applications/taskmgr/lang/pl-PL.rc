@@ -1,9 +1,8 @@
 /*
- *    Translated by xrogers
- *    xxrogers@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2014)
+ * TRANSLATOR: xrogers <xxrogers@users.sourceforge.net>
+ * https://sourceforge.net/projects/reactospl
+ * UTF-8 conversion by Caemyr (May, 2011)
+ * Updated by Saibamen - Adam Stachowicz <saibamenppl@gmail.com> (August, 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -238,16 +237,6 @@ BEGIN
     PUSHBUTTON "Wyświetl zużycie pamięci", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
     PUSHBUTTON "Historia użycia procesora", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
     PUSHBUTTON "Historia zużycia pamięci", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kanały debugowania"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List1", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Zamknij", IDOK, 171, 189, 69, 14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
