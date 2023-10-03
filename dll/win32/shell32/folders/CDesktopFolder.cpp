@@ -868,6 +868,8 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
         return SHSetStrRet(&psd->str, ""); /* blank col */
 
     hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
 }
