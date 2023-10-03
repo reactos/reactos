@@ -48,7 +48,7 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     if (cbSize == NOTIFYICONDATAA_V4_SIZE_COMPAT)
     {
-        nidW.cbSize = NOTIFYICONDATAA_V4_SIZE_COMPAT;
+        nidW.cbSize = NOTIFYICONDATAW_V4_SIZE_COMPAT;
         dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
     else
