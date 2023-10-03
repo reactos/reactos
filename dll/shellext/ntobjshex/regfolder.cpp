@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/ntobjshex/regfolder.cpp
  * PURPOSE:     NT Object Namespace shell extension
  * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
  */
@@ -11,9 +10,6 @@
 // {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}
 const GUID CLSID_RegistryFolder = { 0x1c6d6e08, 0x2332, 0x4a7b, { 0xa9, 0x4d, 0x64, 0x32, 0xdb, 0x2b, 0x5a, 0xe6 } };
 
-// {18A4B504-F6D8-4D8A-8661-6296514C2CF0}
-static const GUID GUID_RegistryColumns = { 0x18a4b504, 0xf6d8, 0x4d8a, { 0x86, 0x61, 0x62, 0x96, 0x51, 0x4c, 0x2c, 0xf0 } };
-
 enum RegistryColumns
 {
     REGISTRY_COLUMN_NAME = 0,
@@ -22,13 +18,10 @@ enum RegistryColumns
     REGISTRY_COLUMN_END
 };
 
-// -------------------------------
-// CRegistryFolderExtractIcon
 CRegistryFolderExtractIcon::CRegistryFolderExtractIcon() :
     m_pcidlFolder(NULL),
     m_pcidlChild(NULL)
 {
-
 }
 
 CRegistryFolderExtractIcon::~CRegistryFolderExtractIcon()
@@ -93,8 +86,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolderExtractIcon::Extract(
     return SHDefExtractIconW(pszFile, nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
 }
 
-// CRegistryFolder 
-
 CRegistryFolder::CRegistryFolder()
 {
 }
@@ -103,20 +94,15 @@ CRegistryFolder::~CRegistryFolder()
 {
 }
 
-// IShellFolder
 HRESULT STDMETHODCALLTYPE CRegistryFolder::EnumObjects(
     HWND hwndOwner,
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
     if (m_NtPath[0] == 0 && m_hRoot == NULL)
-    {
         return GetEnumRegistryRoot(ppenumIDList);
-    }
     else
-    {
         return GetEnumRegistryKey(m_NtPath, m_hRoot, ppenumIDList);
-    }
 }
 
 HRESULT STDMETHODCALLTYPE CRegistryFolder::InternalBindToObject(
@@ -129,9 +115,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::InternalBindToObject(
     IShellFolder** ppsfChild)
 {
     if (wcslen(m_NtPath) == 0 && m_hRoot == NULL)
-    {
         return ShellObjectCreatorInit<CRegistryFolder>(fullPidl, L"", info->rootKey, IID_PPV_ARG(IShellFolder, ppsfChild));
-    }
 
     return ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, m_hRoot, IID_PPV_ARG(IShellFolder, ppsfChild));
 }
@@ -181,8 +165,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
 {
     const RegPidlEntry * info;
 
-    TRACE("GetDetailsEx\n");
-
     if (pidl)
     {
         HRESULT hr = GetInfoFromPidl(pidl, &info);
@@ -195,24 +177,19 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
             if (pscid->pid == PID_STG_NAME)
             {
                 if (info->entryNameLength > 0)
-                {
                     return MakeVariantString(pv, info->entryName);
-                }
-                return  MakeVariantString(pv, L"(Default)");
+                return MakeVariantString(pv, L"(Default)");
             }
             else if (pscid->pid == PID_STG_STORAGETYPE)
             {
                 if (info->entryType == REG_ENTRY_ROOT)
-                {
                     return MakeVariantString(pv, L"Key");
-                }
 
                 if (info->entryType == REG_ENTRY_KEY)
                 {
                     if (info->contentsLength > 0)
                     {
                         PWSTR td = (PWSTR)(((PBYTE)info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
-
                         return MakeVariantString(pv, td);
                     }
                     return MakeVariantString(pv, L"Key");
@@ -235,11 +212,8 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
                 }
 
                 hr = MakeVariantString(pv, strValueContents);
-
                 CoTaskMemFree((PVOID)strValueContents);
-
                 return hr;
-
             }
         }
     }
@@ -254,8 +228,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 {
     const RegPidlEntry * info;
 
-    TRACE("GetDetailsOf\n");
-
     if (pidl)
     {
         HRESULT hr = GetInfoFromPidl(pidl, &info);
@@ -268,25 +240,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
             psd->fmt = LVCFMT_LEFT;
 
             if (info->entryNameLength > 0)
-            {
                 return MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
-            }
             return MakeStrRetFromString(L"(Default)", &(psd->str));
 
         case REGISTRY_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
 
             if (info->entryType == REG_ENTRY_ROOT)
-            {
                 return MakeStrRetFromString(L"Key", &(psd->str));
-            }
 
             if (info->entryType == REG_ENTRY_KEY)
             {
                 if (info->contentsLength > 0)
                 {
                     PWSTR td = (PWSTR)(((PBYTE)info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
-
                     return MakeStrRetFromString(td, info->contentsLength, &(psd->str));
                 }
 
@@ -305,14 +272,10 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
                 return hr;
 
             if (hr == S_FALSE)
-            {
                 return MakeStrRetFromString(L"(Empty)", &(psd->str));
-            }
 
             hr = MakeStrRetFromString(strValueContents, &(psd->str));
-
             CoTaskMemFree((PVOID)strValueContents);
-
             return hr;
         }
     }
@@ -403,7 +366,7 @@ HRESULT CRegistryFolder::CompareIDs(LPARAM lParam, const RegPidlEntry * first, c
         return E_INVALIDARG;
     }
 
-    DbgPrint("Unsupported sorting mode.\n");
+    DbgPrint("Unsupported sorting mode\n");
     return E_INVALIDARG;
 }
 
@@ -430,13 +393,13 @@ HRESULT CRegistryFolder::GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry
 
     if (entry->cb < sizeof(RegPidlEntry))
     {
-        DbgPrint("PCIDL too small %l (required %l)\n", entry->cb, sizeof(RegPidlEntry));
+        DbgPrint("PCIDL too small\n");
         return E_INVALIDARG;
     }
 
     if (entry->magic != REGISTRY_PIDL_MAGIC)
     {
-        DbgPrint("PCIDL magic mismatch %04x (expected %04x)\n", entry->magic, REGISTRY_PIDL_MAGIC);
+        DbgPrint("PCIDL magic mismatch\n");
         return E_INVALIDARG;
     }
 
@@ -551,9 +514,7 @@ HRESULT CRegistryFolder::FormatContentsForDisplay(const RegPidlEntry * info, HKE
     if (info->entryType == REG_ENTRY_VALUE_WITH_CONTENT)
     {
         if (info->contentsLength > 0)
-        {
             return FormatValueData(info->contentType, td, info->contentsLength, strContents);
-        }
     }
     else if (info->entryType == REG_ENTRY_VALUE)
     {
@@ -573,9 +534,7 @@ HRESULT CRegistryFolder::FormatContentsForDisplay(const RegPidlEntry * info, HKE
         if (valueLength > 0)
         {
             hr = FormatValueData(info->contentType, valueData, valueLength, strContents);
-
             CoTaskMemFree(valueData);
-
             return hr;
         }
     }

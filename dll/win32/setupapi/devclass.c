@@ -27,13 +27,11 @@
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
-static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR SetupapiDll[]  = {'s','e','t','u','p','a','p','i','.','d','l','l',0};
-static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
 
 typedef BOOL
 (WINAPI* PROPERTY_PAGE_PROVIDER) (
@@ -90,8 +88,6 @@ SetupDiDestroyClassImageList(
     struct ClassImageList *list;
     BOOL ret = FALSE;
 
-    TRACE("%p\n", ClassImageListData);
-
     if (!ClassImageListData)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (ClassImageListData->cbSize != sizeof(SP_CLASSIMAGELIST_DATA))
@@ -115,7 +111,6 @@ SetupDiDestroyClassImageList(
         ret = TRUE;
     }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -239,7 +234,6 @@ SETUP_CreateDevicesListFromEnumerator(
                 rc = GetLastError();
                 goto cleanup;
             }
-            TRACE("Adding '%s' to device info set %p\n", debugstr_w(InstancePath), list);
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
         }
     }
@@ -403,8 +397,6 @@ SetupDiGetClassImageIndex(
     struct ClassImageList *list;
     BOOL ret = FALSE;
 
-    TRACE("%p %s %p\n", ClassImageListData, debugstr_guid(ClassGuid), ImageIndex);
-
     if (!ClassImageListData || !ClassGuid || !ImageIndex)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (ClassImageListData->cbSize != sizeof(SP_CLASSIMAGELIST_DATA))
@@ -432,7 +424,6 @@ SetupDiGetClassImageIndex(
         }
     }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -472,7 +463,7 @@ SetupDiGetClassImageListExA(
     return ret;
 }
 
-static BOOL WINAPI 
+static BOOL WINAPI
 SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *OutDllName)
 {
     LPWSTR Buffer = NULL;
@@ -484,9 +475,7 @@ SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *
     {
         hKey = SetupDiOpenClassRegKey(ClassGuid, KEY_QUERY_VALUE);
         if (hKey != INVALID_HANDLE_VALUE)
-        {
             SETUP_GetIconIndex(hKey, &iconIndex);
-        }
     }
 
     if (iconIndex > 0)
@@ -557,10 +546,7 @@ SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *
     *OutIndex = iconIndex;
     ret = TRUE;
 
-    TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(*OutDllName ? *OutDllName : SetupapiDll));
-
 cleanup:
-
     if (hKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hKey);
 
@@ -581,8 +567,6 @@ SetupDiGetClassImageListExW(
     IN PVOID Reserved)
 {
     BOOL ret = FALSE;
-
-    TRACE("%p %p %p\n", ClassImageListData, debugstr_w(MachineName), Reserved);
 
     if (!ClassImageListData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -736,7 +720,6 @@ cleanup:
         }
     }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -798,7 +781,6 @@ SetupDiLoadClassIcon(
                 iconIndex = UNKNOWN_ICON_INDEX;
 
             hIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-
             if(!hIcon)
                 goto cleanup;
         }
@@ -812,11 +794,9 @@ SetupDiLoadClassIcon(
     ret = TRUE;
 
 cleanup:
-
     if(DllName)
         MyFree(DllName);
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -836,9 +816,6 @@ SetupDiInstallClassExW(
     IN PVOID Reserved2)
 {
     BOOL ret = FALSE;
-
-    TRACE("%p %s 0x%lx %p %s %p %p\n", hwndParent, debugstr_w(InfFileName), Flags,
-        FileQueue, debugstr_guid(InterfaceClassGuid), Reserved1, Reserved2);
 
     if (!InfFileName)
     {
@@ -975,7 +952,6 @@ cleanup:
         SetupTermDefaultQueueCallback(callback_context);
     }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1099,9 +1075,6 @@ SetupDiSetClassInstallParamsW(
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
-    TRACE("%p %p %p %lu\n", DeviceInfoSet, DeviceInfoData,
-        ClassInstallParams, ClassInstallParamsSize);
-
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
@@ -1159,7 +1132,6 @@ SetupDiSetClassInstallParamsW(
     }
 
 done:
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1178,10 +1150,6 @@ SetupDiGetClassDevPropertySheetsA(
     PROPSHEETHEADERW psh;
     BOOL ret = FALSE;
 
-    TRACE("%p %p %p 0%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
-        PropertySheetHeader, PropertySheetHeaderPageListSize,
-        RequiredSize, PropertySheetType);
-
     if(PropertySheetHeader)
     {
         psh.dwFlags = PropertySheetHeader->dwFlags;
@@ -1193,11 +1161,8 @@ SetupDiGetClassDevPropertySheetsA(
                                             PropertySheetHeaderPageListSize, RequiredSize,
                                             PropertySheetType);
     if (ret)
-    {
         PropertySheetHeader->nPages = psh.nPages;
-    }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -1244,10 +1209,6 @@ SetupDiGetClassDevPropertySheetsW(
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
-
-    TRACE("%p %p %p 0%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
-        PropertySheetHeader, PropertySheetHeaderPageListSize,
-        RequiredSize, PropertySheetType);
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1365,13 +1326,9 @@ SetupDiGetClassDevPropertySheetsW(
             *RequiredSize = PropPageData.NumberOfPages;
 
         if (InitialNumberOfPages + PropPageData.NumberOfPages <= PropertySheetHeaderPageListSize)
-        {
             ret = TRUE;
-        }
         else
-        {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        }
 
 cleanup:
         if (hKey != INVALID_HANDLE_VALUE)
@@ -1379,6 +1336,5 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, PropPageProvider);
     }
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }

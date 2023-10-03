@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            subsystems/mvdm/ntvdm/cpu/callback.c
  * PURPOSE:         16 and 32-bit Callbacks Support
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -28,16 +27,6 @@
 #include "cpu.h"
 #include "bop.h"
 #include <isvbop.h>
-
-/* PRIVATE VARIABLES **********************************************************/
-
-static BYTE Yield[] =
-{
-    0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-    0x90, 0x90, 0x90, 0x90, 0x90, 0x90,         // 13x nop
-    BOP(BOP_UNSIMULATE),                        // UnSimulate16 BOP
-};
-C_ASSERT(sizeof(Yield) == 16 * sizeof(BYTE));
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
