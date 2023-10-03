@@ -98,8 +98,9 @@ LdrpMakeCookie(VOID)
  */
 NTSTATUS
 NTAPI
-LdrUnlockLoaderLock(IN ULONG Flags,
-                    IN ULONG Cookie OPTIONAL)
+LdrUnlockLoaderLock(
+    _In_ ULONG Flags,
+    _In_opt_ ULONG Cookie)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -170,9 +171,10 @@ LdrUnlockLoaderLock(IN ULONG Flags,
  */
 NTSTATUS
 NTAPI
-LdrLockLoaderLock(IN ULONG Flags,
-                  OUT PULONG Disposition OPTIONAL,
-                  OUT PULONG_PTR Cookie OPTIONAL)
+LdrLockLoaderLock(
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG Disposition,
+    _Out_opt_ PULONG_PTR Cookie)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN InInit = LdrpInLdrInit;
@@ -440,8 +442,9 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
  */
 NTSTATUS
 NTAPI
-LdrFindEntryForAddress(PVOID Address,
-                       PLDR_DATA_TABLE_ENTRY *Module)
+LdrFindEntryForAddress(
+    _In_ PVOID Address,
+    _Out_ PLDR_DATA_TABLE_ENTRY *Module)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -519,11 +522,12 @@ LdrFindEntryForAddress(PVOID Address,
  */
 NTSTATUS
 NTAPI
-LdrGetDllHandleEx(IN ULONG Flags,
-                  IN PWSTR DllPath OPTIONAL,
-                  IN PULONG DllCharacteristics OPTIONAL,
-                  IN PUNICODE_STRING DllName,
-                  OUT PVOID *DllHandle OPTIONAL)
+LdrGetDllHandleEx(
+    _In_ ULONG Flags,
+    _In_opt_ PWSTR DllPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_opt_ PVOID *DllHandle)
 {
     NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -802,10 +806,11 @@ Quickie:
  */
 NTSTATUS
 NTAPI
-LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
-                IN PULONG DllCharacteristics OPTIONAL,
-                IN PUNICODE_STRING DllName,
-                OUT PVOID *DllHandle)
+LdrGetDllHandle(
+    _In_opt_ PWSTR DllPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID *DllHandle)
 {
     /* Call the newer API */
     return LdrGetDllHandleEx(LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT,
@@ -820,10 +825,11 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
  */
 NTSTATUS
 NTAPI
-LdrGetProcedureAddress(IN PVOID BaseAddress,
-                       IN PANSI_STRING Name,
-                       IN ULONG Ordinal,
-                       OUT PVOID *ProcedureAddress)
+LdrGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress)
 {
     /* Call the internal routine and tell it to execute DllInit */
     return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
