@@ -1,4 +1,4 @@
-/* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
+/* TRANSLATOR: 2021 Gabriel Aguiar <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -138,7 +138,7 @@ BEGIN
         END
         MENUITEM "Definir &afinidade...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Propriedades", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "P&ropriedades", ID_PROCESS_PAGE_PROPERTIES
         MENUITEM "&Abrir localização do ficheiro", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
