@@ -866,8 +866,8 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     if (DesktopSFHeader[iColumn].colnameid ==  IDS_SHV_COLUMN_SIZE
         && _ILIsSpecialFolder(pidl))
         return SHSetStrRet(&psd->str, ""); /* blank col */
-    else
-        hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
+
+    hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
 
     return hr;
 }
