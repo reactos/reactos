@@ -164,7 +164,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         if (*p != OBJ_NAME_PATH_SEPARATOR)
         {
             /* Add it to the hash */
-            ConvKey = 37 * ConvKey + RtlUpcaseUnicodeChar(*p);
+            ConvKey = COMPUTE_HASH_CHAR(ConvKey, *p);
         }
 
         /* Next character */
@@ -701,7 +701,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         if (*p != OBJ_NAME_PATH_SEPARATOR)
         {
             /* Add this key to the hash */
-            ConvKey = 37 * ConvKey + RtlUpcaseUnicodeChar(*p);
+            ConvKey = COMPUTE_HASH_CHAR(ConvKey, *p);
         }
 
         /* Move on */
