@@ -9,17 +9,15 @@
 
 #pragma once
 
-extern    HWND        hApplicationPage;                /* Application List Property Page */
-
-extern    HWND        hApplicationPageListCtrl;        /* Application ListCtrl Window */
-extern    HWND        hApplicationPageEndTaskButton;    /* Application End Task button */
-extern    HWND        hApplicationPageSwitchToButton;    /* Application Switch To button */
-extern    HWND        hApplicationPageNewTaskButton;    /* Application New Task button */
+extern HWND hApplicationPage;               /* Application List Property Page */
+extern HWND hApplicationPageListCtrl;       /* Application ListCtrl Window */
+extern HWND hApplicationPageEndTaskButton;  /* Application End Task button */
+extern HWND hApplicationPageSwitchToButton; /* Application Switch To button */
+extern HWND hApplicationPageNewTaskButton;  /* Application New Task button */
 
 INT_PTR CALLBACK    ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void                RefreshApplicationPage(void);
 void                UpdateApplicationListControlViewSetting(void);
-
 void                ApplicationPage_OnView(DWORD);
 void                ApplicationPage_OnWindowsTile(DWORD);
 void                ApplicationPage_OnWindowsMinimize(void);
