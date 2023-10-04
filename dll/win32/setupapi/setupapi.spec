@@ -1,11 +1,13 @@
 @ stdcall CMP_GetBlockedDriverInfo(wstr ptr long ptr)
 @ stdcall CMP_GetServerSideDeviceInstallFlags(ptr long ptr)
 @ stdcall CMP_Init_Detection(long)
-@ stdcall CMP_RegisterNotification(ptr ptr long ptr)
+@ stdcall -version=0x500-0x601 CMP_RegisterNotification(ptr ptr long ptr)
 @ stdcall CMP_Report_LogOn(long long)
-@ stdcall CMP_UnregisterNotification(ptr)
+@ stdcall -version=0x500-0x601 CMP_UnregisterNotification(ptr)
 @ stdcall CMP_WaitNoPendingInstallEvents(long)
 @ stdcall CMP_WaitServicesAvailable(ptr)
+
+@ stub -version=0x601+ CM_Add_Driver_PackageW
 @ stdcall CM_Add_Empty_Log_Conf(ptr ptr long long)
 @ stdcall CM_Add_Empty_Log_Conf_Ex(ptr ptr long long ptr)
 @ stdcall CM_Add_IDA(ptr str long)
@@ -15,6 +17,7 @@
 @ stdcall CM_Add_Range(int64 int64 ptr long)
 @ stdcall CM_Add_Res_Des(ptr ptr long ptr long long)
 @ stdcall CM_Add_Res_Des_Ex(ptr ptr long ptr long long ptr)
+@ stdcall -stub -version=0x600+ CM_Apply_PowerScheme()
 @ stdcall CM_Connect_MachineA(str ptr)
 @ stdcall CM_Connect_MachineW(wstr ptr)
 @ stdcall CM_Create_DevNodeA(ptr str long long)
@@ -26,6 +29,12 @@
 @ stdcall CM_Delete_Class_Key_Ex(ptr long ptr)
 @ stdcall CM_Delete_DevNode_Key(long long long)
 @ stdcall CM_Delete_DevNode_Key_Ex(long long long ptr)
+@ stdcall -stub -version=0x600+ CM_Delete_Device_Interface_KeyA(str long)
+@ stdcall -stub -version=0x600+ CM_Delete_Device_Interface_KeyW(wstr long)
+@ stdcall -stub -version=0x600+ CM_Delete_Device_Interface_Key_ExA(str long ptr)
+@ stdcall -stub -version=0x600+ CM_Delete_Device_Interface_Key_ExW(wstr long ptr)
+@ stub -version=0x601+ CM_Delete_Driver_PackageW
+@ stdcall -stub -version=0x600+ CM_Delete_PowerScheme(ptr ptr)
 @ stdcall CM_Delete_Range(int64 int64 ptr long)
 @ stdcall CM_Detect_Resource_Conflict(long long ptr long ptr long)
 @ stdcall CM_Detect_Resource_Conflict_Ex(long long ptr long ptr long ptr)
@@ -33,6 +42,7 @@
 @ stdcall CM_Disable_DevNode_Ex(long long ptr)
 @ stdcall CM_Disconnect_Machine(ptr)
 @ stdcall CM_Dup_Range_List(ptr ptr long)
+@ stdcall -stub -version=0x600+ CM_Duplicate_PowerScheme(ptr ptr ptr)
 @ stdcall CM_Enable_DevNode(long long)
 @ stdcall CM_Enable_DevNode_Ex(long long ptr)
 @ stdcall CM_Enumerate_Classes(long ptr long)
@@ -132,6 +142,9 @@
 @ stdcall CM_Get_Sibling_Ex(ptr long long ptr)
 @ stdcall CM_Get_Version()
 @ stdcall CM_Get_Version_Ex(ptr)
+@ stdcall -stub -version=0x600+ CM_Import_PowerScheme(wstr ptr ptr)
+@ stub -version=0x600+ CM_Install_DevNodeW
+@ stub -version=0x600+ CM_Install_DevNode_ExW
 @ stdcall CM_Intersect_Range_List(ptr ptr ptr long)
 @ stdcall CM_Invert_Range_List(ptr ptr int64 long)
 @ stdcall CM_Is_Dock_Station_Present(ptr)
@@ -154,6 +167,10 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long ptr)
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long)
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long ptr)
+@ stdcall -stub -version=0x600+ CM_Open_Device_Interface_KeyA(str long long ptr long)
+@ stdcall -stub -version=0x600+ CM_Open_Device_Interface_KeyW(wstr long long ptr long)
+@ stdcall -stub -version=0x600+ CM_Open_Device_Interface_Key_ExA(str long long ptr long ptr)
+@ stdcall -stub -version=0x600+ CM_Open_Device_Interface_Key_ExW(wstr long long ptr long ptr)
 @ stdcall CM_Query_And_Remove_SubTreeA(long ptr str long long)
 @ stdcall CM_Query_And_Remove_SubTreeW(long ptr wstr long long)
 @ stdcall CM_Query_And_Remove_SubTree_ExA(long ptr str long long ptr)
@@ -181,8 +198,11 @@
 @ stdcall CM_Request_Device_Eject_ExW(long ptr wstr long long ptr)
 @ stdcall CM_Request_Eject_PC()
 @ stdcall CM_Request_Eject_PC_Ex(ptr)
+@ stdcall -stub -version=0x600+ CM_RestoreAll_DefaultPowerSchemes(ptr)
+@ stdcall -stub -version=0x600+ CM_Restore_DefaultPowerScheme(ptr ptr)
 @ stdcall CM_Run_Detection(long)
 @ stdcall CM_Run_Detection_Ex(long ptr)
+@ stdcall -stub -version=0x600+ CM_Set_ActiveScheme(ptr ptr)
 @ stdcall CM_Set_Class_Registry_PropertyA(ptr long ptr long long ptr)
 @ stdcall CM_Set_Class_Registry_PropertyW(ptr long ptr long long ptr)
 @ stdcall CM_Set_DevNode_Problem(long long long)
@@ -206,7 +226,17 @@
 @ stdcall CM_Unregister_Device_InterfaceW(wstr long)
 @ stdcall CM_Unregister_Device_Interface_ExA(str long ptr)
 @ stdcall CM_Unregister_Device_Interface_ExW(wstr long ptr)
+@ stdcall -stub -version=0x600+ CM_Write_UserPowerKey(ptr ptr ptr long long ptr long ptr)
+
 @ stdcall DoesUserHavePrivilege(wstr)
+@ stub -version=0x600+ DriverStoreAddDriverPackageA
+@ stub -version=0x600+ DriverStoreAddDriverPackageW
+@ stub -version=0x600+ DriverStoreDeleteDriverPackageA
+@ stub -version=0x600+ DriverStoreDeleteDriverPackageW
+@ stub -version=0x600+ DriverStoreEnumDriverPackageA
+@ stub -version=0x600+ DriverStoreEnumDriverPackageW
+@ stub -version=0x600+ DriverStoreFindDriverPackageA
+@ stub -version=0x600+ DriverStoreFindDriverPackageW
 @ stub ExtensionPropSheetPageProc
 @ stdcall InstallCatalog(str str ptr)
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
@@ -216,6 +246,13 @@
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
+
+@ stub -version=0x600+ PnpEnumDrpFile
+@ stub -version=0x600+ PnpIsFileAclIntact
+@ stub -version=0x600+ PnpIsFileContentIntact
+@ stub -version=0x600+ PnpIsFilePnpDriver
+@ stub -version=0x600+ PnpRepairWindowsProtectedDriver
+
 @ stdcall SetupAddInstallSectionToDiskSpaceListA(ptr ptr ptr str ptr long)
 @ stdcall SetupAddInstallSectionToDiskSpaceListW(ptr ptr ptr wstr ptr long)
 @ stdcall SetupAddSectionToDiskSpaceListA(ptr ptr ptr str long ptr long)
@@ -251,6 +288,7 @@
 @ stdcall SetupDeleteErrorA(long str str long long)
 @ stdcall SetupDeleteErrorW(long wstr wstr long long)
 @ stdcall SetupDestroyDiskSpaceList(long)
+@ stub -version=0x600+ SetupDiApplyPowerScheme
 @ stub SetupDiAskForOEMDisk
 @ stdcall SetupDiBuildClassInfoList(long ptr long ptr)
 @ stdcall SetupDiBuildClassInfoListExA(long ptr long ptr str ptr)
@@ -313,6 +351,10 @@
 @ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
 @ stdcall SetupDiGetClassInstallParamsA(ptr ptr ptr long ptr)
 @ stdcall SetupDiGetClassInstallParamsW(ptr ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ SetupDiGetClassPropertyExW(ptr ptr ptr ptr long ptr long wstr ptr)
+@ stdcall -stub -version=0x600+ SetupDiGetClassPropertyKeys(ptr ptr long ptr long)
+@ stdcall -stub -version=0x600+ SetupDiGetClassPropertyKeysExW(ptr ptr long ptr long wstr ptr)
+@ stdcall -stub -version=0x600+ SetupDiGetClassPropertyW(ptr ptr ptr ptr long ptr long)
 @ stub SetupDiGetClassRegistryPropertyA
 @ stub SetupDiGetClassRegistryPropertyW
 @ stub SetupDiGetCustomDevicePropertyA
@@ -327,6 +369,10 @@
 @ stdcall SetupDiGetDeviceInterfaceAlias(ptr ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailA(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailW(long ptr ptr long ptr ptr)
+@ stdcall -stub -version=0x600+ SetupDiGetDeviceInterfacePropertyKeys(ptr ptr ptr long ptr long)
+@ stdcall -stub -version=0x600+ SetupDiGetDeviceInterfacePropertyW(ptr ptr ptr ptr ptr long ptr long)
+@ stdcall -stub -version=0x600+ SetupDiGetDevicePropertyKeys(ptr ptr ptr long ptr long)
+@ stdcall -stub -version=0x600+ SetupDiGetDevicePropertyW(ptr ptr ptr ptr ptr long ptr long)
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyW(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailA(ptr ptr ptr ptr long ptr)
@@ -354,6 +400,7 @@
 @ stdcall SetupDiInstallDeviceInterfaces(ptr ptr)
 @ stdcall SetupDiInstallDriverFiles(ptr ptr)
 @ stdcall SetupDiLoadClassIcon(ptr ptr ptr)
+@ stdcall -stub -version=0x600+ SetupDiLoadDeviceIcon(ptr ptr long long long ptr)
 @ stub SetupDiMoveDuplicateDevice
 @ stdcall SetupDiOpenClassRegKey(ptr long)
 @ stdcall SetupDiOpenClassRegKeyExA(ptr long long str ptr)
@@ -368,17 +415,27 @@
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
 @ stdcall SetupDiRemoveDeviceInterface(ptr ptr)
+@ stub -version=0x601+ SetupDiReportAdditionalSoftwareRequested
+@ stub -version=0x600+ SetupDiReportDeviceInstallError
+@ stub -version=0x600+ SetupDiReportDriverNotFoundError
+@ stub -version=0x600+ SetupDiReportDriverPackageImportationError
+@ stub -version=0x600+ SetupDiReportGenericDriverInstalled
+@ stub -version=0x600+ SetupDiReportPnPDeviceProblem
 @ stdcall -version=0x502+ SetupDiRestartDevices(ptr ptr)
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
 @ stub SetupDiSelectOEMDrv
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)
 @ stdcall SetupDiSetClassInstallParamsW(ptr ptr ptr long)
+@ stdcall -stub -version=0x600+ SetupDiSetClassPropertyExW(ptr ptr long ptr long long wstr ptr)
+@ stdcall -stub -version=0x600+ SetupDiSetClassPropertyW(ptr ptr long ptr long long)
 @ stub SetupDiSetClassRegistryPropertyA
 @ stub SetupDiSetClassRegistryPropertyW
 @ stdcall SetupDiSetDeviceInstallParamsA(ptr ptr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsW(ptr ptr ptr)
 @ stub SetupDiSetDeviceInterfaceDefault
+@ stdcall -stub -version=0x600+ SetupDiSetDeviceInterfacePropertyW(ptr ptr ptr long ptr long long)
+@ stdcall -stub -version=0x600+ SetupDiSetDevicePropertyW(ptr ptr ptr long ptr long long)
 @ stdcall SetupDiSetDeviceRegistryPropertyA(ptr ptr long ptr long)
 @ stdcall SetupDiSetDeviceRegistryPropertyW(ptr ptr long ptr long)
 @ stdcall SetupDiSetDriverInstallParamsA(ptr ptr ptr ptr)
@@ -391,6 +448,8 @@
 @ stdcall SetupDuplicateDiskSpaceListW(ptr ptr long long)
 @ stdcall SetupEnumInfSectionsA(long long ptr long ptr)
 @ stdcall SetupEnumInfSectionsW(long long ptr long ptr)
+@ stub -version=0x600+ SetupEnumPublishedInfA
+@ stub -version=0x600+ SetupEnumPublishedInfW
 @ stdcall SetupFindFirstLineA(long str str ptr)
 @ stdcall SetupFindFirstLineW(long wstr wstr ptr)
 @ stdcall SetupFindNextLine(ptr ptr)
@@ -414,6 +473,8 @@
 @ stdcall SetupGetInfFileListW(wstr long wstr long ptr)
 @ stdcall SetupGetInfInformationA(ptr long ptr long ptr)
 @ stdcall SetupGetInfInformationW(ptr long ptr long ptr)
+@ stdcall -stub -version=0x600+ SetupGetInfPublishedNameA(str ptr long ptr)
+@ stdcall -stub -version=0x600+ SetupGetInfPublishedNameW(wstr ptr long ptr)
 @ stub SetupGetInfSections
 @ stdcall SetupGetIntField(ptr long ptr)
 @ stdcall SetupGetLineByIndexA(long str long ptr)
@@ -435,6 +496,7 @@
 @ stdcall SetupGetStringFieldW(ptr long ptr long ptr)
 @ stdcall SetupGetTargetPathA(ptr ptr str ptr long ptr)
 @ stdcall SetupGetTargetPathW(ptr ptr wstr ptr long ptr)
+@ stdcall -stub -version=0x600+ SetupGetThreadLogToken()
 @ stdcall SetupInitDefaultQueueCallback(long)
 @ stdcall SetupInitDefaultQueueCallbackEx(long long long long ptr)
 @ stdcall SetupInitializeFileLogA(str long)
@@ -447,6 +509,8 @@
 @ stdcall SetupInstallFilesFromInfSectionW(long long long wstr wstr long)
 @ stdcall SetupInstallFromInfSectionA(long long str long long str long ptr ptr long ptr)
 @ stdcall SetupInstallFromInfSectionW(long long wstr long long wstr long ptr ptr long ptr)
+@ stub -version=0x600+ SetupInstallLogCloseEventGroup
+@ stub -version=0x600+ SetupInstallLogCreateEventGroup
 @ stdcall SetupInstallServicesFromInfSectionA(long str long)
 @ stdcall SetupInstallServicesFromInfSectionExA(long str long ptr ptr ptr ptr)
 @ stdcall SetupInstallServicesFromInfSectionExW(long wstr long ptr ptr ptr ptr)
@@ -526,6 +590,7 @@
 @ stub SetupSetPlatformPathOverrideW
 @ stdcall SetupSetSourceListA(long ptr long)
 @ stdcall SetupSetSourceListW(long ptr long)
+@ stdcall -stub -version=0x600+ SetupSetThreadLogToken(int64)
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub SetupUninstallNewlyCopiedInfs
@@ -533,41 +598,69 @@
 @ stdcall SetupUninstallOEMInfW(wstr long ptr)
 @ stdcall SetupVerifyInfFileA(str ptr ptr)
 @ stdcall SetupVerifyInfFileW(wstr ptr ptr)
+@ varargs -stub -version=0x600+ SetupWriteTextLog(int64 long long str)
+@ varargs -stub -version=0x600+ SetupWriteTextLogError(int64 long long long str)
+@ stdcall -stub -version=0x600+ SetupWriteTextLogInfLine(int64 long ptr ptr)
 @ stdcall UnicodeToMultiByte(wstr long) pSetupUnicodeToMultiByte
+@ stub -version=0x600 UpdateAllDeviceIndirectStrings
 @ stub VerifyCatalogFile
+
+@ stub -version=0x600+ pGetDriverPackageHash
+@ stub -version=0x600 pServerAddDriverPackage
+@ stub -version=0x600 pServerDeleteDriverPackage
 @ stub pSetupAccessRunOnceNodeList
-@ stub pSetupAcquireSCMLock
+@ stub -version=0x501-0x502 pSetupAcquireSCMLock
 @ stub pSetupAddMiniIconToList
 @ stub pSetupAddTagToGroupOrderListEntry
-@ stub pSetupAppendStringToMultiSz
+@ stub -version=0x600+ pSetupAppendPath
+@ stub -version=0x501-0x502 pSetupAppendStringToMultiSz
 @ stdcall pSetupCaptureAndConvertAnsiArg(str ptr)
 @ stdcall pSetupCenterWindowRelativeToParent(long)
+@ stub -version=0x600+ pSetupCloseTextLogSection
 @ stdcall pSetupConcatenatePaths(wstr wstr long ptr)
+@ stub -version=0x600+ pSetupCreateTextLogSectionA
+@ stub -version=0x600+ pSetupCreateTextLogSectionW
 @ stub pSetupDestroyRunOnceNodeList
-@ stub pSetupDiGetDeviceInfoContext
-@ stub pSetupDiSetDeviceInfoContext
+@ stub -version=0x500-0x502 pSetupDiGetDeviceInfoContext
+@ stub -version=0x500-0x502 pSetupDiSetDeviceInfoContext
+@ stub -version=0x600+ pSetupDiBuildInfoDataFromStrongName
+@ stub -version=0x600+ pSetupDiCrimsonLogDeviceInstall
+@ stub -version=0x603+ pSetupDiEnumSelectedDrivers
+@ stub -version=0x603+ pSetupDiGetDriverInfoExtensionId
+@ stub -version=0x600+ pSetupDiGetStrongNameForDriverNode
+@ stub -version=0x600+ pSetupDiInvalidateHelperModules
+@ stub -version=0x600+ pSetupDoLastKnownGoodBackup
 @ stdcall pSetupDoesUserHavePrivilege(wstr) DoesUserHavePrivilege
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
 @ stdcall pSetupFree(ptr) MyFree
-@ stub pSetupFreeStringArray
+@ stub -version=0x501-0x502 pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
+@ stub -version=0x600+ pSetupGetDriverDate
+@ stub -version=0x600+ pSetupGetDriverVersion
 @ stdcall pSetupGetField(ptr long)
 @ stdcall pSetupGetFileTitle(wstr)
 @ stdcall pSetupGetGlobalFlags()
+@ stub -version=0x600+ pSetupGetIndirectStringsFromDriverInfo
 @ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
 @ stub pSetupGetRealSystemTime
-@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr)
+@ stdcall -version=0x501-0x502 pSetupGetVersionInfoFromImage(wstr ptr ptr)
 @ stdcall pSetupGuidFromString(wstr ptr)
 @ stub pSetupHandleFailedVerification
-@ stub pSetupInfCacheBuild
-@ stub pSetupInfIsFromOemLocation
+@ stub -version=0x501-0x502 pSetupInfCacheBuild
+@ stub -version=0x501-0x502 pSetupInfIsFromOemLocation
+@ stub -version=0x600+ pSetupInfGetDigitalSignatureInfo
+@ stub -version=0x601+ pSetupInfIsInbox
+@ stub -version=0x600+ pSetupInfSetDigitalSignatureInfo
 @ stdcall pSetupInstallCatalog(wstr wstr ptr)
-@ stub pSetupInstallStopEx
+@ stub -version=0x501-0x502 pSetupInstallStopEx
+@ stub -version=0x600+ pSetupIsBiDiLocalizedSystemEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub -version=0x502+ pSetupIsLocalSystem
 @ stdcall pSetupIsUserAdmin()
+@ stub -version=0x600+ pSetupIsUserTrustedInstaller
+@ stub -version=0x600+ pSetupLoadIndirectString
 @ stub pSetupMakeSurePathExists
 @ stdcall pSetupMalloc(long) MyMalloc
 @ stdcall pSetupModifyGlobalFlags(long long)
@@ -579,10 +672,11 @@
 @ stdcall pSetupRegistryDelnode(long long)
 @ stub pSetupRetrieveServiceConfig
 @ stub pSetupSetArrayToMultiSzValue
+@ stub -version=0x601-0xA00 pSetupSetDriverPackageRestorePoint
 @ stdcall pSetupSetGlobalFlags(long)
-@ stub pSetupSetNoDriverPrompts
+@ stub -version=0x501-0x600 pSetupSetNoDriverPrompts
 @ stdcall pSetupSetQueueFlags(ptr long)
-@ stub pSetupSetSystemSourcePath
+@ stub -version=0x500-0x502 pSetupSetSystemSourcePath
 @ stub pSetupShouldDeviceBeExcluded
 @ stdcall pSetupStringFromGuid(ptr wstr long)
 @ stdcall pSetupStringTableAddString(ptr wstr long)
@@ -599,9 +693,13 @@
 @ stdcall pSetupStringTableStringFromId(ptr long)
 @ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr)
 @ stdcall pSetupUnicodeToMultiByte(wstr long)
+@ stub -version=0x602+ pSetupUninstallCatalog
 @ stdcall pSetupUnmapAndCloseFile(long long ptr)
+@ stub -version=0x601-0xA00 pSetupValidateDriverPackage
 @ stub pSetupVerifyCatalogFile
-@ stub pSetupVerifyFile
+@ stub -version=0x501-0x502 pSetupVerifyFile
 @ stub pSetupVerifyQueuedCatalogs
 @ stub pSetupWriteLogEntry
 @ stub pSetupWriteLogError
+@ stub -version=0x600 pSpAddInboxDriverPackage
+@ stub -version=0x600 pSpDeleteInboxDriverPackage
