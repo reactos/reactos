@@ -8,8 +8,11 @@
  */
 
 #include "desk.h"
+
 #include <shellapi.h>
 #include <cplext.h>
+#include <winnls.h>
+
 #include <debug.h>
 
 #define NUM_APPLETS    (1)
@@ -364,6 +367,7 @@ InstallScreenSaverA(
     IN UINT nCmdShow)
 {
     LPWSTR lpwString;
+    int nLength;
 
     if (!pszFile)
     {
@@ -371,16 +375,32 @@ InstallScreenSaverA(
         SetLastError(ERROR_INVALID_PARAMETER);
         return;
     }
-    DPRINT("InstallScreenSaver() Install from file %s\n", pszFile);
-    lpwString = pSetupMultiByteToUnicode(pszFile, 0);
+
+    /* Convert the string to unicode */
+    lpwString = NULL;
+    nLength = MultiByteToWideChar(CP_ACP, 0, pszFile, -1, NULL, 0);
+    if (nLength != 0)
+    {
+        lpwString = LocalAlloc(LMEM_FIXED, nLength * sizeof(WCHAR));
+        if (lpwString)
+        {
+            if (!MultiByteToWideChar(CP_ACP, 0, pszFile, -1, lpwString, nLength))
+            {
+                LocalFree(lpwString);
+                lpwString = NULL;
+            }
+        }
+    }
     if (!lpwString)
     {
         DPRINT("InstallScreenSaver() not enough memory to convert string to unicode\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return;
     }
+
+    /* Call the unicode function */
     InstallScreenSaverW(hWindow, hInstance, lpwString, nCmdShow);
-    MyFree(lpwString);
+
+    LocalFree(lpwString);
 }
 
 BOOL WINAPI
