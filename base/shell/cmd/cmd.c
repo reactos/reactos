@@ -2124,51 +2124,6 @@ GetCmdLineCommand(
     _tcscpy(commandline, ptr);
 }
 
-/*
- * Print an information line on top of the screen.
- */
-VOID PrintInfoLine(LPTSTR InfoBar)
-{
-#define FOREGROUND_WHITE (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY)
-
-    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    COORD coPos;
-    DWORD dwWritten;
-
-    PTSTR pszInfoLine = NULL;
-    INT iInfoLineLen;
-
-    /* Return directly if the output handle is not a console handle */
-    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
-        return;
-
-    if (wcscmp(InfoBar, _T("1")) == 0)
-    {
-        iInfoLineLen = LoadString(CMD_ModuleHandle, STRING_CMD_INFOLINE, (PTSTR)&pszInfoLine, 0);
-    }
-    else
-    {
-        iInfoLineLen = lstrlen(InfoBar);
-        pszInfoLine = InfoBar;
-    }
-
-    if (!pszInfoLine || iInfoLineLen == 0)
-        return;
-
-    /* Display the localized information line */
-    coPos.X = 0;
-    coPos.Y = 0;
-    FillConsoleOutputAttribute(hOutput, BACKGROUND_BLUE | FOREGROUND_WHITE,
-                               csbi.dwSize.X,
-                               coPos, &dwWritten);
-    FillConsoleOutputCharacter(hOutput, _T(' '),
-                               csbi.dwSize.X,
-                               coPos, &dwWritten);
-
-    WriteConsoleOutputCharacter(hOutput, pszInfoLine, iInfoLineLen,
-                                coPos, &dwWritten);
-}
 
 /*
  * Set up global initializations and process parameters.
@@ -2179,11 +2134,10 @@ Initialize(VOID)
 {
     HMODULE NtDllModule;
     HANDLE hIn, hOut;
-    LPTSTR ptr, cmdLine, InfoBar;
+    LPTSTR ptr, cmdLine;
     TCHAR option = 0;
     BOOL AutoRun = TRUE;
     TCHAR ModuleName[MAX_PATH + 1];
-    TCHAR szInfoBar[256];
 
     /* Get version information */
     InitOSVersion();
@@ -2346,14 +2300,9 @@ Initialize(VOID)
     {
         /* If neither /C or /K was given, display a simple version string */
 
-        /* Print the information bar if its environment variable is set. */
-        if (GetEnvironmentVariable(_T("INFOLINE"), szInfoBar, _countof(szInfoBar)) &&
-            wcscmp(szInfoBar, _T("0")) != 0)
-        {
-            InfoBar = szInfoBar;
-            PrintInfoLine(InfoBar);
+        /* Insert a new line above the copyright notice if we are drawing the information line. */
+        if (HasInfoLine())
             ConOutChar('\n');
-        }
 
         ConOutResPrintf(STRING_REACTOS_VERSION,
                         _T(KERNEL_VERSION_STR),

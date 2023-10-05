@@ -434,6 +434,7 @@ INT cmd_path (LPTSTR);
 VOID InitPrompt (VOID);
 VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR);
+BOOL HasInfoLine(VOID);
 
 /* Prototypes for REDIR.C */
 HANDLE GetHandle(UINT Number);

@@ -67,6 +67,68 @@ VOID InitPrompt(VOID)
 }
 
 /*
+ * Checks if information line should be displayed.
+ */
+BOOL HasInfoLine(VOID)
+{
+    LPTSTR pr;
+    TCHAR szPrompt[256];
+
+    if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, _countof(szPrompt)))
+    {
+        pr = szPrompt;
+        while (*pr)
+        {
+            if (*pr++ != _T('$'))
+                continue;
+            if (!*pr || _totupper(*pr++) != _T('I'))
+                continue;
+
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*
+ * Print an information line on top of the screen.
+ */
+VOID PrintInfoLine(VOID)
+{
+#define FOREGROUND_WHITE (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY)
+
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coPos;
+    DWORD dwWritten;
+
+    PTSTR pszInfoLine = NULL;
+    INT iInfoLineLen;
+
+    /* Return directly if the output handle is not a console handle */
+    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
+        return;
+
+    iInfoLineLen = LoadString(CMD_ModuleHandle, STRING_CMD_INFOLINE, (PTSTR)&pszInfoLine, 0);
+    if (!pszInfoLine || iInfoLineLen == 0)
+        return;
+
+    /* Display the localized information line */
+    coPos.X = 0;
+    coPos.Y = 0;
+    FillConsoleOutputAttribute(hOutput, BACKGROUND_BLUE | FOREGROUND_WHITE,
+                               csbi.dwSize.X,
+                               coPos, &dwWritten);
+    FillConsoleOutputCharacter(hOutput, _T(' '),
+                               csbi.dwSize.X,
+                               coPos, &dwWritten);
+
+    WriteConsoleOutputCharacter(hOutput, pszInfoLine, iInfoLineLen,
+                                coPos, &dwWritten);
+}
+
+/*
  * Print the command-line prompt.
  */
 VOID PrintPrompt(VOID)
@@ -79,6 +141,13 @@ VOID PrintPrompt(VOID)
         Prompt = szPrompt;
     else
         Prompt = DefaultPrompt;
+
+     /*
+     * Special pre-handling for $I: If the information line is displayed
+     * on top of the screen, ensure that the prompt won't be hidden below it.
+     */
+    if (HasInfoLine() && GetCursorY() == 0)
+        ConOutChar(_T('\n'));
 
     /* Parse the prompt string */
     for (pr = Prompt; *pr; ++pr)
@@ -123,6 +192,10 @@ VOID PrintPrompt(VOID)
 
                 case _T('H'):
                     ConOutPuts(_T("\x08 \x08"));
+                    break;
+
+                case _T('I'):
+                    PrintInfoLine();
                     break;
 
                 case _T('L'):
