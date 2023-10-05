@@ -142,7 +142,7 @@ VOID PrintPrompt(VOID)
     else
         Prompt = DefaultPrompt;
 
-     /*
+    /*
      * Special pre-handling for $I: If the information line is displayed
      * on top of the screen, ensure that the prompt won't be hidden below it.
      */
