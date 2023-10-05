@@ -762,7 +762,8 @@ struct TextTool : ToolBase
 
     void OnFinishDraw() override
     {
-        if (textEditWindow.GetWindowTextLength() > 0)
+        if (::IsWindowVisible(textEditWindow) &&
+            textEditWindow.GetWindowTextLength() > 0)
         {
             imageModel.PushImageForUndo();
             draw(m_hdc);
