@@ -1189,27 +1189,6 @@ static void test_is_testdb(PDB pdb)
     }
 }
 
-static BOOL IsUserAdmin()
-{
-    BOOL Result;
-    SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
-    PSID AdministratorsGroup;
-
-    Result = AllocateAndInitializeSid(&NtAuthority, 2,
-                                      SECURITY_BUILTIN_DOMAIN_RID,
-                                      DOMAIN_ALIAS_RID_ADMINS,
-                                      0, 0, 0, 0, 0, 0,
-                                      &AdministratorsGroup);
-    if (Result)
-    {
-        if (!CheckTokenMembership( NULL, AdministratorsGroup, &Result))
-            Result = FALSE;
-        FreeSid(AdministratorsGroup);
-    }
-
-    return Result;
-}
-
 
 template<typename SDBQUERYRESULT_T>
 static void check_adwExeFlags(DWORD adwExeFlags_0, SDBQUERYRESULT_T& query, const char* file, int line, size_t cur)
@@ -1597,8 +1576,6 @@ static void test_MatchApplicationsEx(void)
     ret = RemoveDirectoryW(workdir);
     ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
 }
-
-
 
 
 static void test_TagRef(void)

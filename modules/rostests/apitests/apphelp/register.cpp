@@ -13,6 +13,8 @@
 #include <strsafe.h>
 #include "wine/test.h"
 
+#include "apphelp_apitest.h"
+
 static const unsigned char rawDB[] =
 {
     /* Header: Major,           Minor,                      'sdbf' */
@@ -90,7 +92,7 @@ BOOL IsUserAdmin()
                                       &AdministratorsGroup);
     if (Result)
     {
-        if (!CheckTokenMembership( NULL, AdministratorsGroup, &Result))
+        if (!CheckTokenMembership(NULL, AdministratorsGroup, &Result))
             Result = FALSE;
         FreeSid(AdministratorsGroup);
     }
