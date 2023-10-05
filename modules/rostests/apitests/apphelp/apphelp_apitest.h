@@ -21,9 +21,9 @@ void silence_debug_output(void);        // Silence output if the environment var
 #define test_create_ne      (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_ne_imp
 
 /* register.cpp */
-BOOL IsUserAdmin();
+BOOL IsUserAdmin(VOID);
 
-static DWORD g_WinVersion;
+extern DWORD g_WinVersion;
 
 #define WINVER_ANY     0
 #define WINVER_WINXP   0x0501

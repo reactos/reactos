@@ -13,8 +13,6 @@
 #include <strsafe.h>
 #include "wine/test.h"
 
-#include "apphelp_apitest.h"
-
 static const unsigned char rawDB[] =
 {
     /* Header: Major,           Minor,                      'sdbf' */
@@ -79,7 +77,8 @@ BOOL (WINAPI *pSdbRegisterDatabaseEx)(LPCWSTR pszDatabasePath, DWORD dwDatabaseT
 BOOL (WINAPI *pSdbUnregisterDatabase)(REFGUID pguidDB);
 
 
-BOOL IsUserAdmin()
+extern "C"
+BOOL IsUserAdmin(VOID)
 {
     BOOL Result;
     SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
