@@ -546,6 +546,7 @@ RegpCopyTree(IN HKEY hKeySrc,
                     if (Buffer != NULL)
                     {
                         Info.Buffer = Buffer;
+                        BufferSize = BufferSizeRequired;
                         /* try again */
                     }
                     else
@@ -672,6 +673,7 @@ RegpCopyTree(IN HKEY hKeySrc,
                     if (Buffer != NULL)
                     {
                         Info.Buffer = Buffer;
+                        BufferSize = BufferSizeRequired;
                         /* try again */
                     }
                     else
