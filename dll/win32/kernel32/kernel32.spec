@@ -405,7 +405,7 @@
 @ stdcall GetConsoleFontInfo(long long long ptr)
 @ stdcall GetConsoleFontSize(long long)
 @ stdcall GetConsoleHardwareState(long long ptr)
-@ stub -version=0x600+ GetConsoleHistoryInfo
+@ stdcall -version=0x600+ GetConsoleHistoryInfo(ptr)
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
@@ -413,12 +413,12 @@
 @ stdcall GetConsoleKeyboardLayoutNameW(ptr)
 @ stdcall GetConsoleMode(long ptr)
 @ stdcall GetConsoleNlsMode(long ptr)
-@ stub -version=0x600+ GetConsoleOriginalTitleA
-@ stub -version=0x600+ GetConsoleOriginalTitleW
+@ stdcall -version=0x600+ GetConsoleOriginalTitleA(ptr long)
+@ stdcall -version=0x600+ GetConsoleOriginalTitleW(ptr long)
 @ stdcall GetConsoleOutputCP()
 @ stdcall GetConsoleProcessList(ptr long) ; missing in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
-@ stdcall -stub -version=0x600+ GetConsoleScreenBufferInfoEx(ptr ptr)
+@ stdcall -version=0x600+ GetConsoleScreenBufferInfoEx(ptr ptr)
 @ stdcall GetConsoleSelectionInfo(ptr)
 @ stdcall GetConsoleTitleA(ptr long)
 @ stdcall GetConsoleTitleW(ptr long)
@@ -428,7 +428,7 @@
 @ stdcall GetCurrencyFormatW(long long wstr ptr wstr long)
 @ stdcall GetCurrentActCtx(ptr)
 @ stdcall GetCurrentConsoleFont(long long ptr)
-@ stub -version=0x600+ GetCurrentConsoleFontEx
+@ stdcall -version=0x600+ GetCurrentConsoleFontEx(ptr long ptr)
 @ stdcall GetCurrentDirectoryA(long ptr)
 @ stdcall GetCurrentDirectoryW(long ptr)
 @ stdcall -version=0x602+ GetCurrentPackageId(ptr ptr)
@@ -982,7 +982,7 @@
 @ stdcall SetConsoleDisplayMode(long long ptr)
 @ stdcall SetConsoleFont(long long)
 @ stdcall SetConsoleHardwareState(long long long)
-@ stub -version=0x600+ SetConsoleHistoryInfo
+@ stdcall -version=0x600+ SetConsoleHistoryInfo(ptr)
 @ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)
@@ -997,7 +997,7 @@
 @ stdcall SetConsoleOS2OemFormat(long)
 @ stdcall SetConsoleOutputCP(long)
 @ stdcall SetConsolePalette(long long long)
-@ stub -version=0x600+ SetConsoleScreenBufferInfoEx
+@ stdcall -version=0x600+ SetConsoleScreenBufferInfoEx(ptr ptr)
 @ stdcall SetConsoleScreenBufferSize(long long)
 @ stdcall SetConsoleTextAttribute(long long)
 @ stdcall SetConsoleTitleA(str)
