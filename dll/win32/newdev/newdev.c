@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <winnls.h>
+#include <setupapi_undoc.h>
 
 /* Global variables */
 HINSTANCE hDllInstance;

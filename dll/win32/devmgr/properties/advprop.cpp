@@ -31,6 +31,7 @@
 #include "properties.h"
 #include "resource.h"
 
+#include <setupapi_undoc.h>
 #include <winver.h>
 
 #define PDCAP_D0_SUPPORTED                       0x00000001
