@@ -42,7 +42,7 @@ public:
 
     VOID cancelDrawing();
     VOID finishDrawing();
-    VOID Update(HWND hwndFrom);
+    VOID updateScrollInfo();
 
     VOID ImageToCanvas(POINT& pt);
     VOID ImageToCanvas(RECT& rc);

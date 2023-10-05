@@ -180,7 +180,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     ::DeleteDC(hdcMem0);
 }
 
-VOID CCanvasWindow::Update(HWND hwndFrom)
+VOID CCanvasWindow::updateScrollInfo()
 {
     CRect rcClient;
     GetClientRect(&rcClient);
@@ -214,7 +214,7 @@ VOID CCanvasWindow::Update(HWND hwndFrom)
 LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_hWnd)
-        Update(m_hWnd);
+        updateScrollInfo();
 
     return 0;
 }
@@ -245,7 +245,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             break;
     }
     SetScrollInfo(fnBar, &si);
-    Update(m_hWnd);
+    updateScrollInfo();
     Invalidate(FALSE); // FIXME: Flicker
 }
 
@@ -627,7 +627,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
 
     m_hitCanvasSizeBox = HIT_NONE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
-    Update(NULL);
+    updateScrollInfo();
     Invalidate(TRUE);
     return 0;
 }

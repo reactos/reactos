@@ -274,8 +274,14 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     CImageDx img;
     float xDpi = 0, yDpi = 0;
     HRESULT hr = img.LoadDx(name, &xDpi, &yDpi);
+    if (FAILED(hr) && fIsMainFile)
+    {
+        imageModel.ClearHistory();
+        hr = img.LoadDx(name, &xDpi, &yDpi);
+    }
     if (FAILED(hr))
     {
+        ATLTRACE("hr: 0x%08lX\n", hr);
         ShowError(IDS_LOADERRORTEXT, name);
         return NULL;
     }

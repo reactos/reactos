@@ -15,9 +15,13 @@ ImageModel imageModel;
 void ImageModel::NotifyImageChanged()
 {
     if (canvasWindow.IsWindow())
-        canvasWindow.Invalidate(FALSE);
+    {
+        canvasWindow.updateScrollInfo();
+        canvasWindow.Invalidate();
+    }
+
     if (miniature.IsWindow())
-        miniature.Invalidate(FALSE);
+        miniature.Invalidate();
 }
 
 ImageModel::ImageModel()
@@ -99,6 +103,15 @@ void ImageModel::ResetToPrevious()
 
 void ImageModel::ClearHistory()
 {
+    for (int i = 0; i < HISTORYSIZE; ++i)
+    {
+        if (m_hBms[i] && i != m_currInd)
+        {
+            ::DeleteObject(m_hBms[i]);
+            m_hBms[i] = NULL;
+        }
+    }
+
     m_undoSteps = 0;
     m_redoSteps = 0;
 }
