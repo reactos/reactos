@@ -396,6 +396,9 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
+    # Do not use precompiled headers for the stub file
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
     if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}")
         if(__spec2def_NO_PRIVATE_WARNINGS)
