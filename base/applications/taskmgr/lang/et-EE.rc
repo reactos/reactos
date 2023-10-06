@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "Lõpeta protsessi&puu", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Silu", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Määra &prioriteet"
+        POPUP "Mää&ra prioriteet"
         BEGIN
             MENUITEM "&Reaalajas", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Kõrge", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -142,7 +142,7 @@ BEGIN
         END
         MENUITEM "Määra &ühtivus...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "Prop&erties", ID_PROCESS_PAGE_PROPERTIES
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
