@@ -74,6 +74,8 @@ MmLocateMemoryAreaByAddress(
 
     if (Process == NULL)
         ASSERT(PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread());
+    else
+        ASSERT(Process->AddressCreationLock.Owner == KeGetCurrentThread());
 
     Result = MiCheckForConflictingNode(StartVpn, StartVpn, Table, &Node);
     if (Result != TableFoundNode)
