@@ -27,11 +27,24 @@
 #define CHARS_IN_GUID 39
 
 typedef struct {
-    int colnameid;
-    int pcsFlags;
-    int fmt;
-    int cxChar;
+    WORD colnameid; // Column title text resource id passed to LoadString
+    WORD colstate;  // SHCOLSTATEF
+    WORD fmt;       // LVCFMT_*
+    WORD cxChar;    // Column width hint
 } shvheader;
+/* 
+ * CFSFolder column indices. CDesktopFolder MUST use the same indices!
+ * According to the documentation for IShellFolder2::GetDetailsOf,
+ * the first 4 columns for SFGAO_FILESYSTEM items must be Name, Size, Type, Modified date
+For Details See:
+https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishellfolder2-getdetailsof
+ */
+#define SHFSF_COL_NAME          0
+#define SHFSF_COL_SIZE          1
+#define SHFSF_COL_TYPE          2 // SHGFI_TYPENAME
+#define SHFSF_COL_MDATE         3 // Modified date
+#define SHFSF_COL_FATTS         4 // File attributes
+#define SHFSF_COL_COMMENT       5
 
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)

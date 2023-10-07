@@ -42,6 +42,8 @@ class CDesktopFolder :
 
         HRESULT _GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf);
 
+        static HRESULT GetColumnDetails(UINT iColumn, SHELLDETAILS &sd);
+
     public:
         CDesktopFolder();
         ~CDesktopFolder();
@@ -63,7 +65,7 @@ class CDesktopFolder :
         virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
         virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
         virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
-        virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
+        virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags);
         virtual HRESULT WINAPI GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
         virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
         virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);

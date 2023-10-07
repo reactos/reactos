@@ -1138,7 +1138,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFla
 
     if (!pcsFlags || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
-    *pcsFlags = MyComputerSFHeader[iColumn].pcsFlags;
+    *pcsFlags = MyComputerSFHeader[iColumn].colstate;
     return S_OK;
 }
 

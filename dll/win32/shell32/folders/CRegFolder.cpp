@@ -215,14 +215,6 @@ class CRegFolderEnum :
         END_COM_MAP()
 };
 
-enum registry_columns
-{
-    REGISTRY_COL_NAME,
-    REGISTRY_COL_TYPE,
-    REGISTRY_COL_VALUE,
-    REGISTRY_COL_COUNT,
-};
-
 CRegFolderEnum::CRegFolderEnum()
 {
 }
@@ -283,6 +275,18 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
 
     return S_OK;
 }
+
+/*
+ * These columns try to map to CFSFolder's columns because the CDesktopFolder
+ * displays CFSFolder and CRegFolder items in the same view.
+ */
+enum REGFOLDERCOLUMNINDEX
+{
+    COL_NAME = SHFSF_COL_NAME,
+    COL_TYPE = SHFSF_COL_TYPE,
+    COL_INFOTIP = SHFSF_COL_COMMENT,
+    REGFOLDERCOLUMNCOUNT = max(COL_INFOTIP, COL_TYPE) + 1
+};
 
 class CRegFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -734,7 +738,7 @@ HRESULT WINAPI CRegFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pD
 
 HRESULT WINAPI CRegFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (iColumn >= REGISTRY_COL_COUNT)
+    if (iColumn >= REGFOLDERCOLUMNCOUNT)
         return E_INVALIDARG;
     *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
     return S_OK;
@@ -750,6 +754,12 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
     if (!psd)
         return E_INVALIDARG;
 
+    if (!pidl)
+    {
+        TRACE("CRegFolder has no column info\n");
+        return E_INVALIDARG;
+    }
+
     GUID const *clsid = _ILGetGUIDPointer (pidl);
 
     if (!clsid)
@@ -760,11 +770,11 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
 
     switch(iColumn)
     {
-        case REGISTRY_COL_NAME:
+        case COL_NAME:
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case REGISTRY_COL_TYPE:
+        case COL_TYPE:
             return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
-        case REGISTRY_COL_VALUE:
+        case COL_INFOTIP:
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
                 return SHSetStrRet(&psd->str, "");

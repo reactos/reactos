@@ -516,7 +516,7 @@ HRESULT WINAPI CNetFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 
     if (!pcsFlags || iColumn >= NETWORKPLACESSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
-    *pcsFlags = NetworkPlacesSFHeader[iColumn].pcsFlags;
+    *pcsFlags = NetworkPlacesSFHeader[iColumn].colstate;
     return S_OK;
 }
 

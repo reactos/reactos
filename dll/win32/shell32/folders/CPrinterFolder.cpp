@@ -436,7 +436,7 @@ HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFla
 {
     if (!pcsFlags || iColumn >= PrinterSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
-    *pcsFlags = PrinterSFHeader[iColumn].pcsFlags;
+    *pcsFlags = PrinterSFHeader[iColumn].colstate;
     return S_OK;
 
 }

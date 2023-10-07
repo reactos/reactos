@@ -21,6 +21,7 @@
  */
 
 #include <precomp.h>
+#include "CFSFolder.h" // Only for CFSFolder::*FSColumn* helpers!
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -171,16 +172,6 @@ class CDesktopFolderEnum :
 };
 
 int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll);
-
-static const shvheader DesktopSFHeader[] = {
-    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
-};
-
-#define DESKTOPSHELLVIEWCOLUMNS RTL_NUMBER_OF(DesktopSFHeader)
 
 static const DWORD dwDesktopAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
@@ -446,57 +437,12 @@ HRESULT WINAPI CDesktopFolder::BindToStorage(
 HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     bool bIsDesktopFolder1, bIsDesktopFolder2;
-    UINT iColumnModified = LOWORD(lParam);
-
-    if (LOWORD(lParam) >= DESKTOPSHELLVIEWCOLUMNS)
-    {
-        ERR("Got invalid column pointer %x\n", LOWORD(lParam));
-        return E_INVALIDARG;
-    }
 
     if (!pidl1 || !pidl2)
     {
-        ERR("Got null pidl pointer (%x %p %p)!\n", LOWORD(lParam), pidl1, pidl2);
+        ERR("Got null pidl pointer (%Ix %p %p)!\n", lParam, pidl1, pidl2);
         return E_INVALIDARG;
     }
-
-    if (DesktopSFHeader[LOWORD(lParam)].colnameid == IDS_SHV_COLUMN_MODIFIED)
-    {
-        LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
-        LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
-        BOOL bIsSpecialFolder1 = _ILIsSpecialFolder(pidl1);
-        BOOL bIsSpecialFolder2 = _ILIsSpecialFolder(pidl2);
-        int result;
-
-        /* If both are Special Folders then it does not matter which is first */
-        if (bIsSpecialFolder1 && bIsSpecialFolder2)
-            return MAKE_COMPARE_HRESULT(0);
-
-        /* If only one is a Special Folder, then the Special Folder is first */
-        if (bIsSpecialFolder1 || bIsSpecialFolder2)
-            return MAKE_COMPARE_HRESULT(bIsSpecialFolder1 ? -1 : 1);
-
-        /* Otherwise, compare on date/time */
-        result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
-        if (result == 0)
-        {
-            result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
-            if (result == 0)
-                return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
-        }
-        return MAKE_COMPARE_HRESULT(result);
-    }
-
-    if (DesktopSFHeader[LOWORD(lParam)].colnameid == IDS_SHV_COLUMN_ATTRIBUTES)
-    {
-        return SHELL32_CompareDetails(this, LOWORD(lParam), pidl1, pidl2);
-    }
-
-    /* Swap the ReactOS size and type columns */
-    if (LOWORD(lParam) == 1)
-        iColumnModified = 2;
-    if (LOWORD(lParam) == 2)
-        iColumnModified = 1;
 
     bIsDesktopFolder1 = _ILIsDesktop(pidl1);
     bIsDesktopFolder2 = _ILIsDesktop(pidl2);
@@ -504,9 +450,9 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
         return MAKE_COMPARE_HRESULT(bIsDesktopFolder1 - bIsDesktopFolder2);
 
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
-        return m_regFolder->CompareIDs(LOWORD(lParam), pidl1, pidl2);
+        return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
-    return m_DesktopFSFolder->CompareIDs(iColumnModified, pidl1, pidl2);
+    return m_DesktopFSFolder->CompareIDs(lParam, pidl1, pidl2);
 }
 
 /**************************************************************************
@@ -798,16 +744,25 @@ HRESULT WINAPI CDesktopFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
+HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
 {
+    HRESULT hr;
     TRACE ("(%p)\n", this);
 
-    if (!pcsFlags || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
+    if (!pcsFlags)
         return E_INVALIDARG;
 
-    *pcsFlags = DesktopSFHeader[iColumn].pcsFlags;
-
-    return S_OK;
+    hr = CFSFolder::GetDefaultFSColumnState(iColumn, *pcsFlags);
+    /*
+    // CDesktopFolder may override the flags if desired (future)
+    switch(iColumn)
+    {
+    case SHFSF_COL_FATTS:
+        *pcsFlags &= ~SHCOLSTATE_ONBYDEFAULT;
+        break;
+    }
+    */
+    return hr;
 }
 
 HRESULT WINAPI CDesktopFolder::GetDetailsEx(
@@ -820,41 +775,27 @@ HRESULT WINAPI CDesktopFolder::GetDetailsEx(
     return E_NOTIMPL;
 }
 
+/*************************************************************************
+ * Column info functions.
+ * CFSFolder.h provides defaults for us.
+ */
+HRESULT CDesktopFolder::GetColumnDetails(UINT iColumn, SHELLDETAILS &sd)
+{
+    /* CDesktopFolder may override the flags and/or name if desired */
+    return CFSFolder::GetFSColumnDetails(iColumn, sd);
+}
+
 HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     PCUITEMID_CHILD pidl,
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    UINT iColumnModified = iColumn;
-    TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
-
-    if (!psd || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
+    if (!psd)
         return E_INVALIDARG;
 
     if (!pidl)
     {
-        psd->fmt = DesktopSFHeader[iColumn].fmt;
-        psd->cxChar = DesktopSFHeader[iColumn].cxChar;
-        return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
-    }
-    else
-    {   /* iColumn is the listview column number in explorer */
-        /* Swap the ReactOS size and type columns */
-        switch (iColumn)
-        {
-            case 0:                /* name */
-            case 3:                /* modified date */
-            case 4:                /* attributes */
-                break;
-            case 1:                /* size */
-                if (_ILIsSpecialFolder(pidl))
-                    iColumnModified = 5;
-                else
-                    iColumnModified = 2;
-                break;
-            case 2:                /* type */
-                iColumnModified = 1;
-        }
+        return GetColumnDetails(iColumn, *psd);
     }
 
     CComPtr<IShellFolder2> psf;
@@ -862,12 +803,7 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    /* size col and Special Folder */
-    if (DesktopSFHeader[iColumn].colnameid ==  IDS_SHV_COLUMN_SIZE
-        && _ILIsSpecialFolder(pidl))
-        return SHSetStrRet(&psd->str, ""); /* blank col */
-
-    hr =  psf->GetDetailsOf(pidl, iColumnModified, psd);
+    hr =  psf->GetDetailsOf(pidl, iColumn, psd);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

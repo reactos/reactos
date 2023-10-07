@@ -524,17 +524,35 @@ CFSFolder::~CFSFolder()
     SHFree(m_sPathTarget);
 }
 
-
 static const shvheader GenericSFHeader[] = {
     {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
+    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10}
+    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_SLOW, LVCFMT_LEFT, 10},  // We don't currently support comments but CRegFolder does
 };
 
-#define GENERICSHELLVIEWCOLUMNS 6
+#define GENERICSHELLVIEWCOLUMNS _countof(GenericSFHeader)
+
+HRESULT CFSFolder::GetFSColumnDetails(UINT iColumn, SHELLDETAILS &sd)
+{
+    if (iColumn >= _countof(GenericSFHeader))
+        return E_INVALIDARG;
+
+    sd.fmt = GenericSFHeader[iColumn].fmt;
+    sd.cxChar = GenericSFHeader[iColumn].cxChar;
+    return SHSetStrRet(&sd.str, GenericSFHeader[iColumn].colnameid);
+}
+
+HRESULT CFSFolder::GetDefaultFSColumnState(UINT iColumn, SHCOLSTATEF &csFlags)
+{
+    if (iColumn >= _countof(GenericSFHeader))
+        return E_INVALIDARG;
+
+    csFlags = GenericSFHeader[iColumn].colstate;
+    return S_OK;
+}
 
 /**************************************************************************
  *  SHELL32_CreatePidlFromBindCtx  [internal]
@@ -963,18 +981,13 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         return MAKE_COMPARE_HRESULT(bIsFolder1 ? -1 : 1);
     }
 
-    int result;
+    int result = 0;
     switch (LOWORD(lParam))
     {
-        case 0: /* Name */
+        case SHFSF_COL_NAME:
             result = wcsicmp(pDataW1->wszName, pDataW2->wszName);
             break;
-        case 1: /* Type */
-            pExtension1 = PathFindExtensionW(pDataW1->wszName);
-            pExtension2 = PathFindExtensionW(pDataW2->wszName);
-            result = wcsicmp(pExtension1, pExtension2);
-            break;
-        case 2: /* Size */
+        case SHFSF_COL_SIZE:
             if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
                 result = 1;
             else if (pData1->u.file.dwFileSize < pData2->u.file.dwFileSize)
@@ -982,16 +995,28 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
             else
                 result = 0;
             break;
-        case 3: /* Modified */
+        case SHFSF_COL_TYPE:
+            pExtension1 = PathFindExtensionW(pDataW1->wszName);
+            pExtension2 = PathFindExtensionW(pDataW2->wszName);
+            result = wcsicmp(pExtension1, pExtension2);
+            break;
+        case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
             if (result == 0)
                 result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             break;
-        case 4: /* Attributes */
+        case SHFSF_COL_FATTS:
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
-        case 5: /* Comments */
+        case SHFSF_COL_COMMENT:
             result = 0;
             break;
+        default:
+#if DBG
+            if (_ILIsPidlSimple(pidl1) || _ILIsPidlSimple(pidl2))
+                ERR("Unknown column %u, can't compare\n", LOWORD(lParam));
+            else
+                TRACE("Unknown column %u, deferring to the subfolder\n", LOWORD(lParam));
+#endif
     }
 
     if (result == 0)
@@ -1485,16 +1510,14 @@ HRESULT WINAPI CFSFolder::GetDefaultColumn(DWORD dwRes,
 }
 
 HRESULT WINAPI CFSFolder::GetDefaultColumnState(UINT iColumn,
-        DWORD * pcsFlags)
+        SHCOLSTATEF *pcsFlags)
 {
     TRACE ("(%p)\n", this);
 
-    if (!pcsFlags || iColumn >= GENERICSHELLVIEWCOLUMNS)
+    if (!pcsFlags)
         return E_INVALIDARG;
-
-    *pcsFlags = GenericSFHeader[iColumn].pcsFlags;
-
-    return S_OK;
+    else
+        return GetDefaultFSColumnState(iColumn, *pcsFlags);
 }
 
 HRESULT WINAPI CFSFolder::GetDetailsEx(PCUITEMID_CHILD pidl,
@@ -1518,9 +1541,7 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     if (!pidl)
     {
         /* the header titles */
-        psd->fmt = GenericSFHeader[iColumn].fmt;
-        psd->cxChar = GenericSFHeader[iColumn].cxChar;
-        return SHSetStrRet(&psd->str, GenericSFHeader[iColumn].colnameid);
+        return GetFSColumnDetails(iColumn, *psd);
     }
     else
     {
@@ -1529,24 +1550,30 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
         /* the data from the pidl */
         switch (iColumn)
         {
-            case 0:                /* name */
+            case SHFSF_COL_NAME:
                 hr = GetDisplayNameOf (pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
-            case 1:                /* type */
-                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
-                break;
-            case 2:                /* size */
+            case SHFSF_COL_SIZE:
                 _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 3:                /* date */
+            case SHFSF_COL_TYPE:
+                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case SHFSF_COL_MDATE:
                 _ILGetFileDate(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 4:                /* attributes */
+            case SHFSF_COL_FATTS:
                 _ILGetFileAttributes(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 5:                /* FIXME: comments */
-                psd->str.cStr[0] = 0;
+            case SHFSF_COL_COMMENT:
+                psd->str.cStr[0] = '\0'; // TODO: Extract comment from .lnk files? desktop.ini?
                 break;
+#if DBG
+            default:
+                ERR("Missing case for column %d\n", iColumn);
+#else
+            DEFAULT_UNREACHABLE;
+#endif
         }
     }
 
