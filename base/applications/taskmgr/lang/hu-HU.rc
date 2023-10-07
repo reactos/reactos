@@ -139,7 +139,7 @@ BEGIN
         MENUITEM "&Processzorok használata...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
         MENUITEM "&Tulajdonságok", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "Fájl &helyének megnyitása", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "Fájl h&elyének megnyitása", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 

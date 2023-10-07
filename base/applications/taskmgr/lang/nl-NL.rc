@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Verbergen indien geminimaliseerd", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "16-&bits taken weergeven", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "&Beeld"
+    POPUP "B&eeld"
     BEGIN
         MENUITEM "&Nu vernieuwen", ID_VIEW_REFRESH
         POPUP "Bijwerk&snelheid"
@@ -121,11 +121,11 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Proces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Pro&ces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Process&tructuur beëindigen", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Fouten opsporen", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "P&rioriteit instellen"
+        POPUP "&Prioriteit instellen"
         BEGIN
             MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Hoog", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -136,7 +136,7 @@ BEGIN
         END
         MENUITEM "&Affiniteit instellen...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
