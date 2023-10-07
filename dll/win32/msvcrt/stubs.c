@@ -1,4 +1,5 @@
 
+#include <windef.h>
 #include <stubs.h>
 
 #undef UNIMPLEMENTED
