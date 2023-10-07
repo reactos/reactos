@@ -1692,6 +1692,11 @@ BOOL WINAPI SetupCommitFileQueueW( HWND owner, HSPFILEQ handle, PSP_FILE_CALLBAC
                         break;
 #endif
                     }
+#if defined(__REACTOS__) // TEMP HACK!
+                    ERR( "** Could not find source install media! ** copy error %d %s -> %s\n",
+                        paths.Win32Error, debugstr_w(paths.Source), debugstr_w(paths.Target) );
+                    break;
+#endif
                 }
             }
             else
