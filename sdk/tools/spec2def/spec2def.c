@@ -228,13 +228,6 @@ OutputHeader_stub(FILE *file)
         fprintf(file, "WINE_DECLARE_DEBUG_CHANNEL(relay);\n");
     }
 
-    /* __int128 is not supported on x86, so use a custom type */
-    fprintf(file, "\n"
-                  "typedef struct {\n"
-                  "    __int64 lower;\n"
-                  "    __int64 upper;\n"
-                  "} MyInt128;\n");
-
     fprintf(file, "\n");
 }
 

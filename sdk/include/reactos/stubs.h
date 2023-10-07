@@ -31,6 +31,13 @@ typedef struct _EXCEPTION_RECORD {
 #define EXCEPTION_WINE_STUB     0x80000100
 #define EH_NONCONTINUABLE       0x01
 
+/* __int128 is not supported on x86, so use a custom type */
+typedef struct
+{
+    __int64 lower;
+    __int64 upper;
+} MyInt128;
+
 void
 __stdcall
 RtlRaiseException(
