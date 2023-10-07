@@ -1011,12 +1011,10 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
             result = 0;
             break;
         default:
-#if DBG
             if (_ILIsPidlSimple(pidl1) || _ILIsPidlSimple(pidl2))
                 ERR("Unknown column %u, can't compare\n", LOWORD(lParam));
             else
                 TRACE("Unknown column %u, deferring to the subfolder\n", LOWORD(lParam));
-#endif
     }
 
     if (result == 0)
