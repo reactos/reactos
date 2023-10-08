@@ -35,6 +35,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O shtrirje"
+    IDS_COPY "&Kopjo"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
