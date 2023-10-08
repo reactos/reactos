@@ -247,6 +247,12 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
                     -DDXGKDDI_INTERFACE_VERSION=0x1052 # Vista
                     -DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
 
+    if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+        add_definitions(
+            -DVER_USE_OTHER_MAJOR_MINOR_VER
+            -DVER_PRODUCTVERSION_W=${DLL_EXPORT_VERSION})
+    endif()
+
     # Arch Options
     if(ARCH STREQUAL "i386")
         # clang-cl defines this one for itself
