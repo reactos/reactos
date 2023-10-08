@@ -48,15 +48,15 @@ BEGIN
     END
     POPUP "Vy&pnout"
     BEGIN
-        MENUITEM "Režim &spánku",              ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernace",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Vypnout",                   ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restartovat",               ID_SHUTDOWN_REBOOT
-        MENUITEM "&Odhlásit uživatele %s",     ID_SHUTDOWN_LOGOFF
+        MENUITEM "Režim &spánku", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernace", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Vypnout", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restartovat", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Odhlásit uživatele %s", ID_SHUTDOWN_LOGOFF
         MENUITEM "&Přepnout uživatele\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Zamknout počítač\tWin+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "O&dpojit se",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "Vy&jmout počítač",           ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Zamknout počítač\tWin+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "O&dpojit se", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Vy&jmout počítač", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Nápověda"
     BEGIN
