@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Винаги отгоре", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "С&маляване при употреба", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Скриване при смаляване", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Показване на 16-битово задачи", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "Из&глед"
     BEGIN

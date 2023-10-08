@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Vždy navrchu", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimalizovať pri použití", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Skryť pri minimalizovaní", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Zobraziť 16-bitové úlohy", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Zobraziť"
     BEGIN

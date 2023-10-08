@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Altijd op voorgrond", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "Minimaliseren &bij gebruik", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Verbergen indien geminimaliseerd", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "16-&bits taken weergeven", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "B&eeld"
     BEGIN

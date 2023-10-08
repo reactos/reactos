@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Mindig látható", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Indításkor kis méret", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Elrejtés kis méretnél", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16 bites feladatok megjelenítése", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Nézet"
     BEGIN

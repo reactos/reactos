@@ -18,7 +18,7 @@ BEGIN
         MENUITEM "Mereu &deasupra", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimizează la comutare", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ascunde la minimizare", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "Afișează activități pe 16 &biți", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Afișare"
     BEGIN

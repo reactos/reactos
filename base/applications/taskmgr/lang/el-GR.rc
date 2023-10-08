@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Πάντα Μπροστά", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Σμίκρυνση κατά τη Χρήση", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Απόκρυψη όταν είναι σε Σμίκρυνση", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Εμφάνιση 16-bit διεργασιών", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Εμφάνιση"
     BEGIN

@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Her Zaman Üstte", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Kullanımda Simge Durumuna Küçült", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Simge Durumuna Küçültüldüğünde Gizle", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "16 &Bitlik Görevleri Göster", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Görünüm"
     BEGIN

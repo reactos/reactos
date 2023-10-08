@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Toujours visible", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Réduire à l'exécution", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Masquer l'icône réduite", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "Afficher les &tâches 16-bits", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Affichage"
     BEGIN

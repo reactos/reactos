@@ -20,7 +20,7 @@ BEGIN
         MENUITEM "Za&wsze na wierzchu", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimalizuj podczas użytkowania", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ukryj, gdy zminimalizowane", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "Pokazuj 16-&bitowe zadania", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Widok"
     BEGIN

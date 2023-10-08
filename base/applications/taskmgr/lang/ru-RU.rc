@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "Пове&рх остальных окон", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Сворачивать после обращения", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "С&крывать свернутое", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Отображать 16-разрядные задачи", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Вид"
     BEGIN

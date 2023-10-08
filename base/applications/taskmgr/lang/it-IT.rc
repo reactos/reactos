@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Sempre in primo piano", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Riduci a icona in esecuzione", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Nascondi se ridotto a icona", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Mostra operazioni a 16 bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Visualizza"
     BEGIN

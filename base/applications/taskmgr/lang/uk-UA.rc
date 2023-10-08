@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Поверх інших вікон", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Згортати після звернення", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "При&ховувати згорнуте", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Відображати 16-розрядні завдання", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Вигляд"
     BEGIN
