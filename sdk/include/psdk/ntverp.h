@@ -13,19 +13,102 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-//
-// Windows NT Build 3790.3959
-//
-#define VER_PRODUCTBUILD                    3790
-#define VER_PRODUCTBUILD_QFE                3959
+#if !defined(VER_USE_OTHER_MAJOR_MINOR_VER)
 
 //
-// Windows NT Version 5.2
+// Windows Server 2003 / NT Version 5.2
 //
 #define VER_PRODUCTMAJORVERSION             5
 #define VER_PRODUCTMINORVERSION             2
 #define VER_PRODUCTVERSION_W                (0x0502)
-#define VER_PRODUCTVERSION_DW               (0x05020000 | VER_PRODUCTBUILD)
+
+#endif
+
+//
+// ReactOS extension: derive major/minor version from VER_PRODUCTVERSION_W
+//
+#if defined(VER_PRODUCTVERSION_W) && !defined(VER_PRODUCTMAJORVERSION) && !defined(VER_PRODUCTMINORVERSION)
+#if (VER_PRODUCTVERSION_W == 0x502)
+#define VER_PRODUCTMAJORVERSION             5
+#define VER_PRODUCTMINORVERSION             2
+#elif (VER_PRODUCTVERSION_W == 0x600)
+#define VER_PRODUCTMAJORVERSION             6
+#define VER_PRODUCTMINORVERSION             0
+#elif (VER_PRODUCTVERSION_W == 0x601)
+#define VER_PRODUCTMAJORVERSION             6
+#define VER_PRODUCTMINORVERSION             1
+#elif (VER_PRODUCTVERSION_W == 0x602)
+#define VER_PRODUCTMAJORVERSION             6
+#define VER_PRODUCTMINORVERSION             2
+#elif (VER_PRODUCTVERSION_W == 0x603)
+#define VER_PRODUCTMAJORVERSION             6
+#define VER_PRODUCTMINORVERSION             3
+#elif (VER_PRODUCTVERSION_W == 0xA00)
+#define VER_PRODUCTMAJORVERSION             10
+#define VER_PRODUCTMINORVERSION             0
+#endif
+#endif
+
+//
+// Set product build based on major / minor version
+//
+#if (VER_PRODUCTMAJORVERSION == 5) && (VER_PRODUCTMINORVERSION == 2)
+
+//
+// Windows 2003 SP2 / NT Version 5.2 Build 3790.3959
+//
+#define VER_PRODUCTBUILD                    3790
+#define VER_PRODUCTBUILD_QFE                3959
+
+#elif (VER_PRODUCTMAJORVERSION == 6) && (VER_PRODUCTMINORVERSION == 0)
+
+//
+// Windows Vista SP2 / NT Version 6.0 Build 6002.16386
+//
+#define VER_PRODUCTBUILD                    6002
+#define VER_PRODUCTBUILD_QFE                16386
+
+#elif (VER_PRODUCTMAJORVERSION == 6) && (VER_PRODUCTMINORVERSION == 1)
+
+//
+// Windows 7 SP1 / NT Version 6.1 Build 7601.17514
+//
+#define VER_PRODUCTBUILD                    7601
+#define VER_PRODUCTBUILD_QFE                17514
+
+#elif (VER_PRODUCTMAJORVERSION == 6) && (VER_PRODUCTMINORVERSION == 2)
+
+//
+// Windows 8 / NT Version 6.2 Build 9200.20550
+//
+#define VER_PRODUCTBUILD                    9200
+#define VER_PRODUCTBUILD_QFE                20550
+
+#elif (VER_PRODUCTMAJORVERSION == 6) && (VER_PRODUCTMINORVERSION == 3)
+
+//
+// Windows 8.1 / NT Version 6.3 Build 9600.17336
+//
+#define VER_PRODUCTBUILD                    9600
+#define VER_PRODUCTBUILD_QFE                17336
+
+#elif (VER_PRODUCTMAJORVERSION == 10) && (VER_PRODUCTMINORVERSION == 0)
+
+//
+// Windows 10
+//
+#define VER_PRODUCTBUILD                    10011
+#define VER_PRODUCTBUILD_QFE                16384
+
+#else
+
+#error Unknown Windows version!
+
+#endif
+
+#ifndef VER_PRODUCTVERSION_DW
+#define VER_PRODUCTVERSION_DW               ((VER_PRODUCTVERSION_W << 16) | VER_PRODUCTBUILD)
+#endif
 
 //
 // Not a beta
