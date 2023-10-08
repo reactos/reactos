@@ -495,11 +495,10 @@ DcHandleRx(
 static
 VOID
 DcHandleSystemError(
-    _In_ PDC21X4_ADAPTER Adapter)
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG InterruptStatus)
 {
-    ERR("%s error occured %08lx\n",
-        DcDbgBusError(Adapter->InterruptStatus),
-        Adapter->InterruptStatus);
+    ERR("%s error occured, CSR5 %08lx\n", DcDbgBusError(InterruptStatus), InterruptStatus);
 
     NdisWriteErrorLogEntry(Adapter->AdapterHandle, NDIS_ERROR_CODE_HARDWARE_FAILURE, 1, __LINE__);
 
@@ -534,7 +533,7 @@ DcHandleInterrupt(
             /* PCI bus error detected */
             if (InterruptStatus & DC_IRQ_SYSTEM_ERROR)
             {
-                DcHandleSystemError(Adapter);
+                DcHandleSystemError(Adapter, InterruptStatus);
                 return;
             }
 
