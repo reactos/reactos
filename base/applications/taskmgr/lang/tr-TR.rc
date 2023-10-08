@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "&Bilgisayarı Kapat"
     BEGIN
-        MENUITEM "&Uykuya Geçir",              ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hazırda Beklet",            ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Kapat",                     ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Yeniden Başlat",            ID_SHUTDOWN_REBOOT
-        MENUITEM """%s"" &Oturumunu Kapat",    ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Uykuya Geçir", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hazırda Beklet", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Kapat", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Yeniden Başlat", ID_SHUTDOWN_REBOOT
+        MENUITEM """%s"" &Oturumunu Kapat", ID_SHUTDOWN_LOGOFF
         MENUITEM "Ku&llanıcı Değiştir\tROS+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "&Bilgisayarı Kilitle\tROS+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "B&ağlantıyı Kes",            ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "B&ilgisayarı Çıkar",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "B&ağlantıyı Kes", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "B&ilgisayarı Çıkar", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
