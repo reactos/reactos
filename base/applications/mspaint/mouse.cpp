@@ -571,7 +571,6 @@ struct ZoomTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
-        imageModel.PushImageForUndo();
         if (bLeftButton)
         {
             if (toolsModel.GetZoom() < MAX_ZOOM)
