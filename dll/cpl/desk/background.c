@@ -657,7 +657,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     sizeRemain = buffersize;
     c = filter;
 
-    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls (%ls)", filterdesc, extensions)))
+    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls (%ls)\0", filterdesc, extensions)))
     {
         HeapFree(GetProcessHeap(), 0, extensions);
         HeapFree(GetProcessHeap(), 0, filter);
@@ -667,7 +667,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     c++;
     sizeRemain -= sizeof(*c);
 
-    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls", extensions)))
+    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls\0", extensions)))
     {
         HeapFree(GetProcessHeap(), 0, extensions);
         HeapFree(GetProcessHeap(), 0, filter);
