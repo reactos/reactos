@@ -1,4 +1,4 @@
-/*
+﻿/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -466,8 +466,6 @@ CcRosTrimCache(
     ULONG PagesFreed;
     KIRQL oldIrql;
     LIST_ENTRY FreeList;
-    PFN_NUMBER Page;
-    ULONG i;
     BOOLEAN FlushedPages = FALSE;
 
     DPRINT("CcRosTrimCache(Target %lu)\n", Target);
@@ -497,6 +495,16 @@ retry:
         /* Check if it's mapped and not dirty */
         if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
         {
+            /* The code here presents a difficult to solve locking scenario.
+             * In testing, I (Doug Lyons) have never seen it exercised.
+             * For now we could bypass it with a message as shown below. */
+#if 1
+            DPRINT1("MmPageOutPhysicalAddress unexpectedly called\n");
+            ASSERT(FALSE);
+#else
+            ULONG i;
+            PFN_NUMBER Page;
+
             /* We have to break these locks to call MmPageOutPhysicalAddress */
             KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
             KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
@@ -512,6 +520,7 @@ retry:
             /* Reacquire the locks */
             oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
+#endif
         }
 
         /* Dereference the VACB */
