@@ -55,15 +55,15 @@ BEGIN
     END
     POPUP "&Zamknij"
     BEGIN
-        MENUITEM "Przejdź w &stan gotowości",           ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernuj",                           ID_SHUTDOWN_HIBERNATE
-        MENUITEM "Wyłą&cz",                             ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Uruchom ponownie",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Wyloguj: %s",                        ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Przełącz użytkownika\tLogo Win+L",   ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Zablokuj komputer\tLogo Win+L",      ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Rozłącz",                            ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Wysuń komputer",                     ID_SHUTDOWN_EJECT_COMPUTER, GRAYED //FIXME ?
+        MENUITEM "Przejdź w &stan gotowości", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernuj", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Wyłą&cz", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Uruchom ponownie", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Wyloguj: %s", ID_SHUTDOWN_LOGOFF //FIXME: accelerator collision
+        MENUITEM "&Przełącz użytkownika\tLogo Win+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Zablokuj komputer\tLogo Win+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Rozłącz", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Wysuń komputer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED //FIXME: accelerator collision
     END
     POPUP "Pomo&c"
     BEGIN
