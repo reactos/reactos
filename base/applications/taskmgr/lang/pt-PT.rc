@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "&Desligar"
     BEGIN
-        MENUITEM "&Suspender",                 ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernar",                  ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Desligar",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Reiniciar",                 ID_SHUTDOWN_REBOOT
-        MENUITEM "&Terminar sessão %s",        ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Mudar de utilizador\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Bloquear\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Desligar",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Ejectar",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Suspender", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernar", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Desligar", ID_SHUTDOWN_POWEROFF //FIXME: accelerator collision
+        MENUITEM "&Reiniciar", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Terminar sessão %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Mudar de utilizador\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Bloquear\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Desligar", ID_SHUTDOWN_DISCONNECT, GRAYED //FIXME: accelerator collision
+        MENUITEM "&Ejectar", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Aj&uda"
     BEGIN
@@ -136,10 +136,10 @@ BEGIN
             MENUITEM "Abai&xo do normal", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
             MENUITEM "&Baixa", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
-        MENUITEM "Definir &afinidade...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Definir &afinidade...", ID_PROCESS_PAGE_SETAFFINITY //FIXME: accelerator collision
         MENUITEM SEPARATOR
         MENUITEM "P&ropriedades", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Abrir localização do ficheiro", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "&Abrir localização do ficheiro", ID_PROCESS_PAGE_OPENFILELOCATION //FIXME: accelerator collision
     END
 END
 
@@ -285,7 +285,7 @@ BEGIN
     LTEXT "Seleccione as colunas que aparecerão na página de processos do 'Gestor de tarefas.", IDC_STATIC, 7, 7, 181, 17
     CONTROL "Nome da ima&gem", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 66, 10
     CONTROL "&Identificação do processo (PID)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 113, 10
-    CONTROL "&Uso de CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
+    CONTROL "&Uso de CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10 //FIXME: accelerator collision
     CONTROL "&Tempo de CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 61, 10
     CONTROL "U&so de memória", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
     CONTROL "Inter&valo de uso de memória", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 110, 10
@@ -295,7 +295,7 @@ BEGIN
     CONTROL "Leituras de E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 61, 10
     CONTROL "Bytes de leitura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 86, 10
     CONTROL "Ide&ntificação de sessão", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 90, 10
-    CONTROL "Nome de &utilizador", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 65, 10
+    CONTROL "Nome de &utilizador", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 65, 10 //FIXME: accelerator collision
     CONTROL "Intervalo de fal&has de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 28, 110, 10
     CONTROL "Tamanho da &memória virtual", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 39, 110, 10
     CONTROL "&Reserva de memória paginável", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 50, 110, 10
