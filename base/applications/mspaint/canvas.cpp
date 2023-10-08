@@ -400,8 +400,12 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
         if (!m_drawing)
         {
+            RECT rcImage;
+            GetImageRect(rcImage);
+
             CString strCoord;
-            strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
+            if (::PtInRect(&rcImage, pt))
+                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
             ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
         }
     }
