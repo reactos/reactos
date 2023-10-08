@@ -527,8 +527,13 @@ BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
         return FALSE;
     }
 
+#ifdef __REACTOS__ // BUGFIX
+    size++; // Add terminating NUL
+    fullpathW = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+#else
     size = (size+1) * sizeof(WCHAR);
     fullpathW = HeapAlloc(GetProcessHeap(), 0, size);
+#endif
 
     if (!GetFullPathNameW(targetfile, size, fullpathW, NULL))
     {
@@ -551,7 +556,11 @@ BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
 
     if (&file->entry == &list->files)
     {
+#ifdef __REACTOS__ // BUGFIX
+        file = malloc(sizeof(*file));
+#else
         file = HeapAlloc(GetProcessHeap(), 0, sizeof(*file));
+#endif
         if (!file)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -562,7 +571,11 @@ BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
         if (!file->path)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+#ifdef __REACTOS__ // BUGFIX
+            free(file);
+#else
             HeapFree(GetProcessHeap(), 0, file);
+#endif
             goto done;
         }
 
