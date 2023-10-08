@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Приостановить", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Крупные значки", ID_VIEW_LARGE
-        MENUITEM "&Мелкие значки", ID_VIEW_SMALL
-        MENUITEM "&Таблица", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "В&ыбрать столбцы...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Загрузка ЦП"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Один график на все ЦП", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&По графику на каждый ЦП", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Вывод времени ядра", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Окна"
+    POPUP ""
     BEGIN
         MENUITEM "С&верху вниз", ID_WINDOWS_TILEVERTICALLY
         MENUITEM "С&лева направо", ID_WINDOWS_TILEHORIZONTALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "Завер&шение работы"
     BEGIN
-        MENUITEM "Переход в &ждущий режим",       ID_SHUTDOWN_STANDBY
-        MENUITEM "Переход в &спящий режим",       ID_SHUTDOWN_HIBERNATE
-        MENUITEM "В&ыключение",                   ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Перезагрузка",                 ID_SHUTDOWN_REBOOT
-        MENUITEM "&Завершение сеанса %s",         ID_SHUTDOWN_LOGOFF
+        MENUITEM "Переход в &ждущий режим", ID_SHUTDOWN_STANDBY
+        MENUITEM "Переход в &спящий режим", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "В&ыключение", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Перезагрузка", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Завершение сеанса %s", ID_SHUTDOWN_LOGOFF
         MENUITEM "С&мена пользователя\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Заб&локировать компьютер\tWinKey+L",      ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Отключить",                   ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "С&нять компьютер с док-станции",               ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Заб&локировать компьютер\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Отключить", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "С&нять компьютер с док-станции", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Справка"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Новая задача (Выполнить...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Переключиться", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&На передний план", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Востановить", ID_RESTORE
         MENUITEM "&Закрыть", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Завершить процесс", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Завершить &дерево процессов", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -154,14 +154,14 @@ CAPTION "Диспетчер задач"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Завершить &задачу", IDC_ENDTASK, 12, 189, 73, 14, WS_DISABLED
     PUSHBUTTON "&Переключиться", IDC_SWITCHTO, 89, 189, 73, 14, WS_DISABLED
@@ -172,7 +172,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Отображать процессы всех пользователей", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 158, 10

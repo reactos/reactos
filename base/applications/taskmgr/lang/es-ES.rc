@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Pausar", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "Iconos &grandes", ID_VIEW_LARGE
-        MENUITEM "Iconos &pequeños", ID_VIEW_SMALL
-        MENUITEM "&Detalles", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Seleccionar columnas...", ID_VIEW_SELECTCOLUMNS
-        POPUP "Historial de &CPU"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Un gráfico de todas las CPU", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Un gráfico &por cada CPU",     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
         MENUITEM "&Mostrar cronología del kernel", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Ventanas"
+    POPUP ""
     BEGIN
         MENUITEM "Mosaico &horizontal", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Mosaico &vertical", ID_WINDOWS_TILEVERTICALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "Apaga&r"
     BEGIN
-        MENUITEM "&Suspender",                 ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernar",                  ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Apagar",                    ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Reiniciar",                 ID_SHUTDOWN_REBOOT
-        MENUITEM "&Cerrar sesión de %s",       ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Suspender", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernar", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Apagar", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Reiniciar", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Cerrar sesión de %s", ID_SHUTDOWN_LOGOFF
         MENUITEM "&Cambiar usuario\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "&Bloquear equipo\tWin+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Desconectar",               ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Expulsar equipo",           ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Desconectar", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Expulsar equipo", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Ay&uda"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Nueva tarea (Ejecutar...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Cambiar a", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Traer al frente", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Restaurar", ID_RESTORE
         MENUITEM "&Cerrar", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Terminar proceso", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Finalizar el ár&bol de procesos", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -154,14 +154,14 @@ CAPTION "Administrador de tareas"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Finalizar tarea", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "&Cambiar a", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
@@ -172,7 +172,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Mostrar procesos de todos los usuarios", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 160, 10

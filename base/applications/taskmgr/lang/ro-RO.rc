@@ -31,18 +31,18 @@ BEGIN
             MENUITEM "St&agnantă", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "D&ale", ID_VIEW_LARGE
-        MENUITEM "&Pictograme", ID_VIEW_SMALL
-        MENUITEM "&Detalii", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "Selectare &coloane…", ID_VIEW_SELECTCOLUMNS
-        POPUP    "Ist&oric procesor"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Grafic general &comun", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Grafice indi&viduale", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "Afișea&ză timpi nucleu", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "Fe&restre"
+    POPUP ""
     BEGIN
         MENUITEM "Aranjări &orizontale", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Aranjări &verticale", ID_WINDOWS_TILEVERTICALLY
@@ -53,15 +53,15 @@ BEGIN
     END
     POPUP "Î&nchidere calculator"
     BEGIN
-        MENUITEM "Intră în starea de &veche",  ID_SHUTDOWN_STANDBY
-        MENUITEM "Intră în &hibernare",        ID_SHUTDOWN_HIBERNATE
-        MENUITEM "Î&nchide calculatorul",      ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Repornește calculatorul",   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Deautentifică-mă (%s)",     ID_SHUTDOWN_LOGOFF
+        MENUITEM "Intră în starea de &veche", ID_SHUTDOWN_STANDBY
+        MENUITEM "Intră în &hibernare", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Î&nchide calculatorul", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Repornește calculatorul", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Deautentifică-mă (%s)", ID_SHUTDOWN_LOGOFF
         MENUITEM "&Comută utilizator\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "&Blochează calculatorul\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "Deconectea&ză",              ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Elimină calculator",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Deconectea&ză", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Elimină calculator", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Aj&utor"
     BEGIN
@@ -83,7 +83,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "Activitate nouă (E&xecutare…)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -95,7 +95,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Comută la", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "Ad&uce în prim-plan", ID_WINDOWS_BRINGTOFRONT
@@ -113,7 +113,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Restabilește", ID_RESTORE
         MENUITEM "Î&nchide", ID_FILE_EXIT
@@ -124,7 +124,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "Opr&ește procesul", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Oprește &arborele de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -157,14 +157,14 @@ CAPTION "Gestionar de activități"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Închid&e", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "&Comută la", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
@@ -175,7 +175,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Afișea&ză procesele tuturor utilizatorilor", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 150, 10
