@@ -56,15 +56,15 @@ BEGIN
     END
     POPUP "關閉(&U)"
     BEGIN
-        MENUITEM "待機(&B)",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "休眠(&H)",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "關閉電源(&U)",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "重新啟動(&R)",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "登出 %s (&L)",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "切換使用者(&S)\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "鎖定電腦(&K)\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "斷開連接(&D)",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "退出電腦(&E)",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "待機(&B)", ID_SHUTDOWN_STANDBY
+        MENUITEM "休眠(&H)", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "關閉電源(&U)", ID_SHUTDOWN_POWEROFF
+        MENUITEM "重新啟動(&R)", ID_SHUTDOWN_REBOOT
+        MENUITEM "登出 %s (&L)", ID_SHUTDOWN_LOGOFF
+        MENUITEM "切換使用者(&S)\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "鎖定電腦(&K)\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "斷開連接(&D)", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "退出電腦(&E)", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "說明(&H)"
     BEGIN
