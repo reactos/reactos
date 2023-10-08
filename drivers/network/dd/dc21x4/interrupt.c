@@ -547,7 +547,7 @@ DcHandleInterrupt(
             /* Link state changed */
             if (InterruptStatus & Adapter->LinkStateChangeMask)
             {
-                Adapter->HandleLinkStateChange(Adapter);
+                Adapter->HandleLinkStateChange(Adapter, InterruptStatus);
             }
         }
 

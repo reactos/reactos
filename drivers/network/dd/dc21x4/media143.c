@@ -121,7 +121,7 @@ Media143Handle10LinkFail(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ ULONG SiaStatus)
 {
-    INFO_VERB("Link failed, status %08lx\n", SiaStatus);
+    INFO_VERB("Link failed, CSR12 %08lx\n", SiaStatus);
 
     /* 10Base-T link is down */
     MediaIndicateConnect(Adapter, FALSE);
@@ -139,7 +139,7 @@ Media143Handle10LinkPass(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ ULONG SiaStatus)
 {
-    INFO_VERB("Link passed, status %08lx\n", SiaStatus);
+    INFO_VERB("Link passed, CSR12 %08lx\n", SiaStatus);
 
     /* 10Base-T is the active port now */
     if (!MEDIA_IS_10T(Adapter->MediaNumber))
@@ -171,7 +171,7 @@ Media143Handle100LinkChange(
 {
     BOOLEAN LinkUp;
 
-    INFO_VERB("Link changed, status %08lx\n", SiaStatus);
+    INFO_VERB("Link changed, CSR12 %08lx\n", SiaStatus);
 
     LinkUp = !(SiaStatus & DC_SIA_STATUS_100T_LINK_FAIL);
 
@@ -230,7 +230,7 @@ Media143HandleNWayComplete(
     }
     else
     {
-        INFO_VERB("Link partner does not support auto-negotiation\n");
+        INFO_VERB("Link partner does not support auto-negotiation, CSR12 %08lx\n", SiaStatus);
 
         /* Check the results of parallel detection */
         if (!(SiaStatus & DC_SIA_STATUS_100T_LINK_FAIL))
@@ -249,7 +249,7 @@ Media143HandleNWayComplete(
         }
     }
 
-    if (MEDIA_IS_10T(MediaNumber) && !MEDIA_IS_10T(Adapter->MediaNumber))
+    if (MEDIA_IS_10T(MediaNumber) && (MediaNumber != Adapter->MediaNumber))
     {
         /* Set the time limit for auto-negotiation */
         Adapter->ModeFlags &= ~DC_MODE_AUTONEG_MASK;
@@ -273,7 +273,8 @@ Media143HandleNWayComplete(
 
 VOID
 MediaLinkStateChange21143(
-    _In_ PDC21X4_ADAPTER Adapter)
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG InterruptStatus)
 {
     ULONG SiaStatus;
 
@@ -288,12 +289,12 @@ MediaLinkStateChange21143(
 
     SiaStatus = DC_READ(Adapter, DcCsr12_SiaStatus);
 
-    if ((Adapter->InterruptStatus & DC_IRQ_LINK_FAIL) && MEDIA_IS_10T(Adapter->MediaNumber))
+    if ((InterruptStatus & DC_IRQ_LINK_FAIL) && MEDIA_IS_10T(Adapter->MediaNumber))
     {
         /* Link has failed */
         Media143Handle10LinkFail(Adapter, SiaStatus);
     }
-    else if (Adapter->InterruptStatus & DC_IRQ_LINK_PASS)
+    else if (InterruptStatus & DC_IRQ_LINK_PASS)
     {
         if (DC_READ(Adapter, DcCsr14_SiaTxRx) & DC_SIA_TXRX_AUTONEG)
         {
@@ -309,7 +310,7 @@ MediaLinkStateChange21143(
     else
     {
         /* NOTE: The Link Changed bit is reserved on the 21142 and always reads as 1 */
-        if (Adapter->InterruptStatus & Adapter->LinkStateChangeMask & DC_IRQ_LINK_CHANGED)
+        if (InterruptStatus & Adapter->LinkStateChangeMask & DC_IRQ_LINK_CHANGED)
         {
             /* Link has changed */
             Media143Handle100LinkChange(Adapter, SiaStatus);

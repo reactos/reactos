@@ -31,7 +31,6 @@ typedef struct _DC_SROM_ENTRY
     ULONG BusNumber;
     DC_CHIP_TYPE ChipType;
     UCHAR DeviceNumber;
-    UCHAR PortNumber;
     ULONG InterruptLevel;
     ULONG InterruptVector;
     ULONG DeviceBitmap;

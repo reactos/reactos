@@ -15,13 +15,14 @@
 
 VOID
 MediaLinkStateChange21041(
-    _In_ PDC21X4_ADAPTER Adapter)
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG InterruptStatus)
 {
     NdisDprAcquireSpinLock(&Adapter->ModeLock);
 
-    if (Adapter->InterruptStatus & DC_IRQ_LINK_PASS)
+    if (InterruptStatus & DC_IRQ_LINK_PASS)
     {
-        INFO_VERB("Link passed, status %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
+        INFO_VERB("Link passed, CSR12 %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
 
         /* 10Base-T is the active port now */
         if (MEDIA_IS_AUI_BNC(Adapter->MediaNumber))
@@ -44,7 +45,7 @@ MediaLinkStateChange21041(
     }
     else // DC_IRQ_LINK_FAIL
     {
-        INFO_VERB("Link failed, status %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
+        INFO_VERB("Link failed, CSR12 %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
 
         /* 10Base-T link is down */
         if (!MEDIA_IS_AUI_BNC(Adapter->MediaNumber))

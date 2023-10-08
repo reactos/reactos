@@ -313,7 +313,7 @@ DcCheckForHang(
 
     if (TxHang)
     {
-        WARN("Transmit timeout, status %08lx, events %08lx\n",
+        WARN("Transmit timeout, CSR12 %08lx, CSR5 %08lx\n",
              DC_READ(Adapter, DcCsr12_SiaStatus),
              DC_READ(Adapter, DcCsr5_Status));
 

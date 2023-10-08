@@ -15,9 +15,12 @@
 
 VOID
 MediaLinkStateChange21040(
-    _In_ PDC21X4_ADAPTER Adapter)
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG InterruptStatus)
 {
-    INFO_VERB("Link failed, status %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
+    UNREFERENCED_PARAMETER(InterruptStatus);
+
+    INFO_VERB("Link failed, CSR12 %08lx\n", DC_READ(Adapter, DcCsr12_SiaStatus));
 
     NdisDprAcquireSpinLock(&Adapter->ModeLock);
 

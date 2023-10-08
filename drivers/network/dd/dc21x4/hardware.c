@@ -57,7 +57,7 @@ DcStopTxRxProcess(
         NdisStallExecution(10);
     }
 
-    WARN("Failed to stop the TX/RX process 0x%lx\n", Status);
+    WARN("Failed to stop the TX/RX process 0x%08lx\n", Status);
 }
 
 VOID
@@ -144,7 +144,7 @@ DcTestPacket(
 
     if (!Adapter->LoopbackFrameSlots)
     {
-        ERR("Failed to complete test packets, status %08lx, events %08lx\n",
+        ERR("Failed to complete test packets, CSR12 %08lx, CSR5 %08lx\n",
             DC_READ(Adapter, DcCsr12_SiaStatus),
             DC_READ(Adapter, DcCsr5_Status));
 

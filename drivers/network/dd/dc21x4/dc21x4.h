@@ -66,7 +66,8 @@ typedef struct _DC_COALESCE_BUFFER   DC_COALESCE_BUFFER, *PDC_COALESCE_BUFFER;
 
 typedef VOID
 (MEDIA_HANDLE_LINK_STATE_CHANGE)(
-    _In_ PDC21X4_ADAPTER Adapter);
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG InterruptStatus);
 typedef MEDIA_HANDLE_LINK_STATE_CHANGE *PMEDIA_HANDLE_LINK_STATE_CHANGE;
 
 typedef struct _DC_TX_BUFFER_DATA
@@ -370,17 +371,6 @@ DcFreeAdapter(
 
 CODE_SEG("PAGE")
 VOID
-MediaInitMediaList(
-    _In_ PDC21X4_ADAPTER Adapter);
-
-CODE_SEG("PAGE")
-VOID
-MediaInitDefaultMedia(
-    _In_ PDC21X4_ADAPTER Adapter,
-    _In_ ULONG MediaNumber);
-
-CODE_SEG("PAGE")
-VOID
 NTAPI
 DcResetWorker(
     _In_ PNDIS_WORK_ITEM WorkItem,
@@ -525,22 +515,25 @@ NDIS_TIMER_FUNCTION MediaMonitor21041Dpc;
 NDIS_TIMER_FUNCTION MediaMonitor21140Dpc;
 NDIS_TIMER_FUNCTION MediaMonitor21143Dpc;
 
+MEDIA_HANDLE_LINK_STATE_CHANGE MediaLinkStateChange21040;
+MEDIA_HANDLE_LINK_STATE_CHANGE MediaLinkStateChange21041;
+MEDIA_HANDLE_LINK_STATE_CHANGE MediaLinkStateChange21143;
+
+CODE_SEG("PAGE")
+VOID
+MediaInitMediaList(
+    _In_ PDC21X4_ADAPTER Adapter);
+
+CODE_SEG("PAGE")
+VOID
+MediaInitDefaultMedia(
+    _In_ PDC21X4_ADAPTER Adapter,
+    _In_ ULONG MediaNumber);
+
 VOID
 MediaIndicateConnect(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ BOOLEAN LinkUp);
-
-VOID
-MediaLinkStateChange21040(
-    _In_ PDC21X4_ADAPTER Adapter);
-
-VOID
-MediaLinkStateChange21041(
-    _In_ PDC21X4_ADAPTER Adapter);
-
-VOID
-MediaLinkStateChange21143(
-    _In_ PDC21X4_ADAPTER Adapter);
 
 VOID
 MediaSelectMiiPort(
