@@ -1003,6 +1003,7 @@ int _isunorderedf(float, float);
 
 #ifdef _M_ARM64
 unsigned __int64 __getReg(int);
+unsigned char _InterlockedCompareExchange128(__int64 volatile * _Destination, __int64 _ExchangeHigh, __int64 _ExchangeLow, __int64 * _ComparandResult);
 #endif
 
 #if defined(_M_CEE_PURE)

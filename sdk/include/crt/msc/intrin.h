@@ -90,7 +90,8 @@ extern "C" {
 #pragma intrinsic(_InterlockedXor_np)
 #pragma intrinsic(_InterlockedOr64_np)
 #elif defined(_M_ARM)
-
+#elif defined(_M_ARM64)
+#pragma intrinsic(_InterlockedCompareExchange128)
 #endif
 
 #if defined(_M_AMD64) || defined(_M_ARM)

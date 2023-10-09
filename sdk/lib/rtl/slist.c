@@ -95,6 +95,7 @@ RtlQueryDepthSList(
 #endif
 }
 
+
 PSLIST_ENTRY
 FASTCALL
 RtlInterlockedPushListSList(
@@ -208,7 +209,7 @@ RtlInterlockedPushListSList(
 }
 
 
-#if !defined(_M_IX86) && !defined(_M_AMD64)
+#if !defined(_M_IX86) && !defined(_M_AMD64) && !defined(_M_ARM64)
 
 _WARN("C based S-List functions can bugcheck, if not handled properly in kernel")
 
