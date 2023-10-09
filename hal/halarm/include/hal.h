@@ -34,6 +34,6 @@
 #include <obfuncs.h>
 
 /* Internal HAL Headers */
-#include "halp.h"
+//#include "halp.h"
 
 /* EOF */
