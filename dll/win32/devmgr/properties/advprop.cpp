@@ -1906,15 +1906,13 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                     if (LoadStringW(hDllInstance, IDS_COPY, szColName, _countof(szColName)))
                     {
                         INT nSelectedItems = ListView_GetSelectedCount((HWND)wParam);
+                        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
                         HMENU hPopup = CreatePopupMenu();
 
                         AppendMenuW(hPopup, MF_STRING, IDS_MENU_COPY, szColName);
 
                         if (nSelectedItems <= 0)
                             EnableMenuItem(hPopup, IDS_MENU_COPY, MF_BYCOMMAND | MF_GRAYED);
-
-                        POINT pt;
-                        GetCursorPos(&pt);
 
                         TrackPopupMenu(hPopup, TPM_LEFTALIGN, pt.x, pt.y, 0, hwndDlg, NULL);
                         DestroyMenu(hPopup);
