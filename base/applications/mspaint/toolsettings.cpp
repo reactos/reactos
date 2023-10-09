@@ -306,17 +306,6 @@ LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
     return 0;
 }
 
-LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    NMHDR *pnmhdr = (NMHDR*)lParam;
-    if (pnmhdr->code == NM_CUSTOMDRAW)
-    {
-        NMCUSTOMDRAW *pCustomDraw = (NMCUSTOMDRAW*)pnmhdr;
-        pCustomDraw->uItemState &= ~CDIS_FOCUS; // Do not draw the focus
-    }
-    return 0;
-}
-
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     INT trackPos = (INT)(MAX_ZOOM_TRACK - trackbarZoom.SendMessage(TBM_GETPOS, 0, 0));
@@ -334,6 +323,17 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
     OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
 
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NMHDR *pnmhdr = (NMHDR*)lParam;
+    if (pnmhdr->code == NM_CUSTOMDRAW)
+    {
+        NMCUSTOMDRAW *pCustomDraw = (NMCUSTOMDRAW*)pnmhdr;
+        pCustomDraw->uItemState &= ~CDIS_FOCUS; // Do not draw the focus
+    }
     return 0;
 }
 
