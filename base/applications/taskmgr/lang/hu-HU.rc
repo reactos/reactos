@@ -19,8 +19,8 @@ BEGIN
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Frissítés most", ID_VIEW_REFRESH
-        POPUP "&Frissítés gyakorisága"
+        MENUITEM "&Frissítés most", ID_VIEW_REFRESH //FIXME: accelerator collision
+        POPUP "&Frissítés gyakorisága" //FIXME: accelerator collision
         BEGIN
             MENUITEM "&Gyakran", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normál", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
