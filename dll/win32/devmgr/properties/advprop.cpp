@@ -1956,8 +1956,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                             if (!hGlobal)
                                 return Ret;
                             pszBuffer = (LPWSTR)GlobalLock(hGlobal);
-
-                            if (pszBuffer == NULL)
+                            if (!pszBuffer)
                             {
                                 GlobalFree(hGlobal);
                                 return Ret;
