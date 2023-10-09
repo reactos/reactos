@@ -637,9 +637,6 @@ MmCreateVirtualMappingUnsafeEx(
     PMMPTE PointerPte;
     MMPTE TempPte;
     ULONG_PTR Pte;
-#ifdef _M_AMD64
-    BOOLEAN LockReleased = FALSE;
-#endif
 
     DPRINT("MmCreateVirtualMappingUnsafe(%p, %p, %lu, %x)\n",
            Process, Address, flProtect, Page);
@@ -667,15 +664,6 @@ MmCreateVirtualMappingUnsafeEx(
 #if _MI_PAGING_LEVELS == 2
         if (!MiSynchronizeSystemPde(MiAddressToPde(Address)))
             MiFillSystemPageDirectory(Address, PAGE_SIZE);
-#endif
-
-#ifdef _M_AMD64
-        /* This is a temporary hack, because we can incur a recursive page fault when accessing the PDE */
-        if (PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread())
-        {
-            MmUnlockAddressSpace(MmGetKernelAddressSpace());
-            LockReleased = TRUE;
-        }
 #endif
     }
     else
@@ -727,15 +715,6 @@ MmCreateVirtualMappingUnsafeEx(
         MiIncrementPageTableReferences(Address);
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
     }
-#ifdef _M_AMD64
-    else
-    {
-        if (LockReleased)
-        {
-            MmLockAddressSpace(MmGetKernelAddressSpace());
-        }
-    }
-#endif
 
     return(STATUS_SUCCESS);
 }
