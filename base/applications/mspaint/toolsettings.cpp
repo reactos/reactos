@@ -21,6 +21,10 @@
 #define MARGIN1 3
 #define MARGIN2 2
 
+#define MAX_ZOOM_TRACK 6
+#define MIN_ZOOM_TRACK 0
+#define DEFAULT_ZOOM_TRACK 3
+
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
 
 CToolSettingsWindow toolSettingsWindow;
@@ -290,8 +294,8 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, W
     ::InflateRect(&trackbarZoomPos, -1, -1);
 
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
-    trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(0, 6));
-    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);
+    trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(MIN_ZOOM_TRACK, MAX_ZOOM_TRACK));
+    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) DEFAULT_ZOOM_TRACK);
     return 0;
 }
 
@@ -304,7 +308,7 @@ LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    INT pos = (INT)trackbarZoom.SendMessage(TBM_GETPOS, 0, 0);
+    INT pos = (INT)(MAX_ZOOM_TRACK - trackbarZoom.SendMessage(TBM_GETPOS, 0, 0));
     zoomTo(125 << pos, 0, 0);
 
     INT zoomRate = toolsModel.GetZoom();
@@ -472,7 +476,7 @@ LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wPara
 
 LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    int tbPos = 0;
+    int tbPos = MIN_ZOOM_TRACK;
     int tempZoom = toolsModel.GetZoom();
 
     while (tempZoom > MIN_ZOOM)
@@ -480,6 +484,6 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
         tbPos++;
         tempZoom = tempZoom >> 1;
     }
-    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) tbPos);
+    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM)(MAX_ZOOM_TRACK - tbPos));
     return 0;
 }
