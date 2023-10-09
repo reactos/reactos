@@ -46,6 +46,64 @@ $if (_WDMDDK_)
 #define EXCEPTION_WRITE_FAULT   1
 #define EXCEPTION_EXECUTE_FAULT 8
 
+
+
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+/* this is just ARM32 KPCR, it's a hack to move on*/
+typedef struct _KPCR
+{
+    _ANONYMOUS_UNION union
+    {
+        _ANONYMOUS_STRUCT struct
+        {
+            ULONG TibPad0[2];
+            PVOID Spare1;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    KIRQL CurrentIrql;
+    UCHAR SecondLevelCacheAssociativity;
+    ULONG Unused0[3];
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    _ANONYMOUS_UNION union
+    {
+        USHORT SoftwareInterruptPending; // Software Interrupt Pending Flag
+        struct
+        {
+            UCHAR ApcInterrupt;          // 0x01 if APC int pending
+            UCHAR DispatchInterrupt;     // 0x01 if dispatch int pending
+        };
+    };
+    USHORT InterruptPad;
+    ULONG HalReserved[32];
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[8];
+} KPCR, *PKPCR;
+
+
+/* this isn't correct.. There's a far better way to do this then this static address. */
+#define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
+#define PCR                     ((KPCR * const)KIP0PCRADDRESS)
+
+FORCEINLINE
+PKPCR
+KeGetPcr(
+    VOID)
+{
+    return (PKPCR)(PCR);
+}
+
 NTSYSAPI
 PKTHREAD
 NTAPI
