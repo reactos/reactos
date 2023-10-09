@@ -358,9 +358,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
 
-    if (toolsModel.GetActiveTool() == TOOL_ZOOM)
-        ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT);
-    else
+    if (toolsModel.GetActiveTool() != TOOL_ZOOM)
         ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
     if (toolsModel.GetActiveTool() >= TOOL_RECT)
