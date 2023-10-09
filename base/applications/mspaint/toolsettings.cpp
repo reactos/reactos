@@ -304,10 +304,21 @@ LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!zoomTo(125 << trackbarZoom.SendMessage(TBM_GETPOS, 0, 0), 0, 0))
-    {
-        OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
-    }
+    INT pos = (INT)trackbarZoom.SendMessage(TBM_GETPOS, 0, 0);
+    zoomTo(125 << pos, 0, 0);
+
+    INT zoomRate = toolsModel.GetZoom();
+
+    CString strZoom;
+    if (zoomRate % 10 == 0)
+        strZoom.Format(_T("%d%%"), zoomRate / 10);
+    else
+        strZoom.Format(_T("%d.%d%%"), zoomRate / 10, zoomRate % 10);
+
+    ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCTSTR)strZoom);
+
+    OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
+
     return 0;
 }
 
