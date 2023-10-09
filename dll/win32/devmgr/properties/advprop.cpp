@@ -1953,6 +1953,8 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                                                  _countof(szItemName));
 
                             hGlobal = GlobalAlloc(GHND, MAX_PATH);
+                            if (!hGlobal)
+                                return Ret;
                             pszBuffer = (LPWSTR)GlobalLock(hGlobal);
 
                             if (pszBuffer == NULL)
