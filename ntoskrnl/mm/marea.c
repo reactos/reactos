@@ -300,8 +300,7 @@ MmFreeMemoryArea(
         PEPROCESS CurrentProcess = PsGetCurrentProcess();
         PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-        if (Process != NULL &&
-                Process != CurrentProcess)
+        if ((Process != NULL) && (Process != CurrentProcess))
         {
             KeAttachProcess(&Process->Pcb);
         }
@@ -337,12 +336,6 @@ MmFreeMemoryArea(
             }
         }
 
-        if (Process != NULL &&
-                Process != CurrentProcess)
-        {
-            KeDetachProcess();
-        }
-
         //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
         if (MemoryArea->Vad)
         {
@@ -357,14 +350,23 @@ MmFreeMemoryArea(
             ASSERT(MemoryArea->VadNode.u.VadFlags.Spare != 0);
             if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
             {
+                MiLockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
                 MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
+                MiUnlockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
             }
 
             MemoryArea->Vad = NULL;
         }
         else
         {
+            MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
             MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &MiRosKernelVadRoot);
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
+
+        if ((Process != NULL) && (Process != CurrentProcess))
+        {
+            KeDetachProcess();
         }
     }
 
