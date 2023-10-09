@@ -285,7 +285,10 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, W
     m_hTranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_TRANSPARENT),
                                      IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
-    RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};
+    RECT trackbarZoomPos, rect2;
+    calculateTwoBoxes(trackbarZoomPos, rect2);
+    ::InflateRect(&trackbarZoomPos, -1, -1);
+
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
     trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(0, 6));
     trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);

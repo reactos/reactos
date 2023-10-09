@@ -62,7 +62,6 @@ protected:
     RECT GetBaseRect();
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
-    VOID drawZoomFrame(INT mouseX, INT mouseY);
 
     HITTEST SelectionHitTest(POINT ptImage);
     VOID StartSelectionDrag(HITTEST hit, POINT ptImage);
