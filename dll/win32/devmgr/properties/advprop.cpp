@@ -1921,6 +1921,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
 
                     DestroyMenu(hPopup);
                 }
+                break;
             }
 
             case WM_COMMAND:
