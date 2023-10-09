@@ -1955,12 +1955,12 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
 
                         hGlobal = GlobalAlloc(GHND, MAX_PATH);
                         if (!hGlobal)
-                            return Ret;
+                            break;
                         pszBuffer = (LPWSTR)GlobalLock(hGlobal);
                         if (!pszBuffer)
                         {
                             GlobalFree(hGlobal);
-                            return Ret;
+                            break;
                         }
 
                         wsprintf(pszBuffer, L"%s", szItemName);
