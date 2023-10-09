@@ -1902,11 +1902,12 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                 if ((HWND)wParam == GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE))
                 {
                     WCHAR szColName[255];
-                    INT nSelectedItems = ListView_GetSelectedCount((HWND)wParam);
-                    HMENU hPopup = CreatePopupMenu();
 
                     if (LoadStringW(hDllInstance, IDS_COPY, szColName, _countof(szColName)))
                     {
+                        INT nSelectedItems = ListView_GetSelectedCount((HWND)wParam);
+                        HMENU hPopup = CreatePopupMenu();
+
                         AppendMenuW(hPopup, MF_STRING, IDS_MENU_COPY, szColName);
 
                         if (nSelectedItems <= 0)
@@ -1916,10 +1917,9 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                         GetCursorPos(&pt);
 
                         TrackPopupMenu(hPopup, TPM_LEFTALIGN, pt.x, pt.y, 0, hwndDlg, NULL);
+                        DestroyMenu(hPopup);
                         Ret = TRUE;
                     }
-
-                    DestroyMenu(hPopup);
                 }
                 break;
             }
