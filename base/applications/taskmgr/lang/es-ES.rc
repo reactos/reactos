@@ -54,8 +54,8 @@ BEGIN
         MENUITEM "&Hibernar", ID_SHUTDOWN_HIBERNATE
         MENUITEM "&Apagar", ID_SHUTDOWN_POWEROFF
         MENUITEM "&Reiniciar", ID_SHUTDOWN_REBOOT
-        MENUITEM "&Cerrar sesión de %s", ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Cambiar usuario\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Cerrar sesión de %s", ID_SHUTDOWN_LOGOFF //FIXME: accelerator collision
+        MENUITEM "&Cambiar usuario\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED //FIXME: accelerator collision
         MENUITEM "&Bloquear equipo\tWin+L", ID_SHUTDOWN_LOCKCOMPUTER
         MENUITEM "&Desconectar", ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "&Expulsar equipo", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
