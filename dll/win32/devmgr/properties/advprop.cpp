@@ -1905,7 +1905,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                     INT nSelectedItems = ListView_GetSelectedCount((HWND)wParam);
                     HMENU hPopup = CreatePopupMenu();
 
-                    if (LoadString(hDllInstance, IDS_COPY, szColName, sizeof(szColName) / sizeof(szColName[0])))
+                    if (LoadStringW(hDllInstance, IDS_COPY, szColName, _countof(szColName)))
                     {
                         AppendMenuW(hPopup, MF_STRING, IDS_MENU_COPY, szColName);
 
