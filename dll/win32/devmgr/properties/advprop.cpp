@@ -1978,8 +1978,8 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                                 GlobalFree(hGlobal);
                             }
                         }
+                        break;
                     }
-                    break;
                 }
                 break;
             }
