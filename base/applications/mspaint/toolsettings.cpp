@@ -309,7 +309,7 @@ LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     INT pos = (INT)(MAX_ZOOM_TRACK - trackbarZoom.SendMessage(TBM_GETPOS, 0, 0));
-    zoomTo(125 << pos, 0, 0);
+    zoomTo(125 << pos, 0, 0); // 12.5% * (2 ** pos)
 
     INT zoomRate = toolsModel.GetZoom();
 
@@ -484,6 +484,7 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
         tbPos++;
         tempZoom = tempZoom >> 1;
     }
+
     trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM)(MAX_ZOOM_TRACK - tbPos));
     return 0;
 }
