@@ -1950,7 +1950,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                             ListView_GetItemText(hwndListView,
                                                  nSelectedId, 0,
                                                  szItemName,
-                                                 MAX_PATH);
+                                                 _countof(szItemName));
 
                             hGlobal = GlobalAlloc(GHND, MAX_PATH);
                             pszBuffer = (LPWSTR)GlobalLock(hGlobal);
