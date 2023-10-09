@@ -1961,7 +1961,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                                 return Ret;
                             }
 
-                            wsprintfW(pszBuffer, L"%s", szItemName);
+                            wsprintf(pszBuffer, L"%s", szItemName);
 
                             GlobalUnlock(hGlobal);
 
