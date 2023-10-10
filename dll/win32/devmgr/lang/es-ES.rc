@@ -40,6 +40,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Intervalo de E/S"
+    IDS_COPY "&Copiar"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */

@@ -36,6 +36,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "Rozsah I/O"
+    IDS_COPY "&Kopírovat"
 END
 
 /* puvodni anglicke error messages prevzaty z: http://www.z123.org/techsupport/medm.htm */

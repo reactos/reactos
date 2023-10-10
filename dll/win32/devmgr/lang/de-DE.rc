@@ -33,6 +33,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "E/A-Bereich"
+    IDS_COPY "&Kopieren"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */

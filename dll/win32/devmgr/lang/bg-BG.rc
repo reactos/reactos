@@ -31,6 +31,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O range"
+    IDS_COPY "За&помняне"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */

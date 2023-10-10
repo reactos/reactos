@@ -39,6 +39,7 @@ BEGIN
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O 範圍"
+    IDS_COPY "複製(&C)"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
