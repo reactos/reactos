@@ -227,11 +227,12 @@ MmAccessFault(IN ULONG FaultCode,
 #endif
     }
 
-    /* Handle shared user page, which doesn't have a VAD / MemoryArea */
-    if (PAGE_ALIGN(Address) == (PVOID)MM_SHARED_USER_DATA_VA)
+    /* Handle shared user page / page table, which don't have a VAD / MemoryArea */
+    if ((PAGE_ALIGN(Address) == (PVOID)MM_SHARED_USER_DATA_VA) ||
+        MI_IS_PAGE_TABLE_ADDRESS(Address))
     {
         /* This is an ARM3 fault */
-        DPRINT("ARM3 fault %p\n", MemoryArea);
+        DPRINT("ARM3 fault %p\n", Address);
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
