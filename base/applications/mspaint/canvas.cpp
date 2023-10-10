@@ -29,18 +29,6 @@ CCanvasWindow::~CCanvasWindow()
         ::DeleteObject(m_ahbmCached[1]);
 }
 
-VOID CCanvasWindow::drawZoomFrame(INT mouseX, INT mouseY)
-{
-    // FIXME: Draw the border of the area that is to be zoomed in
-    CRect rc;
-    GetImageRect(rc);
-    ImageToCanvas(rc);
-
-    HDC hdc = GetDC();
-    DrawXorRect(hdc, &rc);
-    ReleaseDC(hdc);
-}
-
 RECT CCanvasWindow::GetBaseRect()
 {
     CRect rcBase;
@@ -376,6 +364,9 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     CanvasToImage(pt);
 
+    if (toolsModel.GetActiveTool() == TOOL_ZOOM)
+        Invalidate();
+
     if (m_hitSelection != HIT_NONE)
     {
         SelectionDragging(pt);
@@ -384,14 +375,6 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (!m_drawing || toolsModel.GetActiveTool() <= TOOL_AIRBRUSH)
     {
-        if (toolsModel.GetActiveTool() == TOOL_ZOOM)
-        {
-            Invalidate(FALSE);
-            UpdateWindow();
-            CanvasToImage(pt);
-            drawZoomFrame(pt.x, pt.y);
-        }
-
         TRACKMOUSEEVENT tme = { sizeof(tme) };
         tme.dwFlags = TME_LEAVE;
         tme.hwndTrack = m_hWnd;
