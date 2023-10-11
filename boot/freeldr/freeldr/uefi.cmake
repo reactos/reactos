@@ -16,6 +16,7 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/stubs.c
     arch/uefi/ueficon.c
     arch/uefi/uefidisk.c
+    arch/uefi/uefihw.c
     arch/uefi/uefimem.c
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
@@ -23,11 +24,14 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/vgafont.c)
 
 if(ARCH STREQUAL "i386")
+    list(APPEND UEFILDR_ARC_SOURCE
+        arch/i386/i386idt.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
+        arch/uefi/i386/uefiasm.S
         arch/i386/i386trap.S)
-
 elseif(ARCH STREQUAL "amd64")
-    #TBD
+    list(APPEND UEFILDR_COMMON_ASM_SOURCE
+        arch/uefi/amd64/uefiasm.S)
 elseif(ARCH STREQUAL "arm")
     list(APPEND UEFILDR_ARC_SOURCE
         arch/arm/macharm.c
@@ -87,6 +91,11 @@ add_executable(uefildr ${UEFILDR_BASE_SOURCE})
 set_target_properties(uefildr PROPERTIES SUFFIX ".efi")
 
 target_compile_definitions(uefildr PRIVATE UEFIBOOT)
+
+# On AMD64 we only map 1GB with freeloader, tell UEFI to keep us low!
+if(ARCH STREQUAL "amd64")
+    set_image_base(uefildr 0x10000)
+endif()
 
 if(MSVC)
 if(NOT ARCH STREQUAL "arm")
