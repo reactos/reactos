@@ -951,59 +951,6 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY ruRUBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \255\245 \341\254\256\243\253\240 \343\341\342\240\255\256\242\250\342\354 \247\240\243\340\343\247\347\250\252 \255\240",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\246\245\341\342\252\250\251 \244\250\341\252 \242\240\350\245\243\256 \252\256\254\257\354\356\342\245\340\240.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\217\256\246\240\253\343\251\341\342\240 \242\341\342\240\242\354\342\245 \256\342\344\256\340\254\240\342\250\340\256\242\240\255\255\353\251 \243\250\241\252\250\251 \244\250\341\252 \242 \244\250\341\252\256\242\256\244 A: \250",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "\255\240\246\254\250\342\245 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = \217\340\256\244\256\253\246\250\342\354   F3 = \202\353\345\256\244",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY ruRUSelectPartitionEntries[] =
 {
     {
@@ -1487,7 +1434,7 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY ruRUBootLoaderEntries[] =
+static MUI_ENTRY ruRUBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1499,7 +1446,7 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         6,
         8,
-        "\223\341\342\240\255\256\242\252\240 \247\240\243\340\343\247\347\250\252\240 ReactOS:",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1556,6 +1503,13 @@ static MUI_ENTRY ruRUBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\223\341\342\240\255\256\242\252\240 \247\240\243\340\343\247\347\250\252\240 ReactOS",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "\217\340\256\250\247\242\256\244\250\342\341\357 \343\341\342\240\255\256\242\252\240 \247\240\243\340\343\247\347\250\252\240 \255\240 \255\256\341\250\342\245\253\354. \217\256\246\240\253\343\251\341\342\240, \257\256\244\256\246\244\250\342\245...",
@@ -1568,6 +1522,59 @@ static MUI_ENTRY ruRUBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY ruRUBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \255\245 \341\254\256\243\253\240 \343\341\342\240\255\256\242\250\342\354 \247\240\243\340\343\247\347\250\252 \255\240",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\246\245\341\342\252\250\251 \244\250\341\252 \242\240\350\245\243\256 \252\256\254\257\354\356\342\245\340\240.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\217\256\246\240\253\343\251\341\342\240 \242\341\342\240\242\354\342\245 \256\342\344\256\340\254\240\342\250\340\256\242\240\255\255\353\251 \243\250\241\252\250\251 \244\250\341\252 \242 \244\250\341\252\256\242\256\244 A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "\250 \255\240\246\254\250\342\245 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = \217\340\256\244\256\253\246\250\342\354   F3 = \202\353\345\256\244",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
@@ -2203,8 +2210,8 @@ MUI_PAGE ruRUPages[] =
         ruRUKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        ruRUBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        ruRUBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2219,12 +2226,12 @@ MUI_PAGE ruRUPages[] =
         ruRUSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         ruRUBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        ruRUBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        ruRUBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

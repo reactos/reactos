@@ -933,59 +933,6 @@ static MUI_ENTRY esESSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY esESBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "El instalador no pudo instalar el cargador de arranque en el disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "duro del equipo",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Inserte un disquete formateado en la unidad A: y",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "Pulse INTRO.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   INTRO = Continuar   F3 = Salir",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY esESSelectPartitionEntries[] =
 {
     {
@@ -1470,7 +1417,7 @@ static MUI_ENTRY esESFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY esESBootLoaderEntries[] =
+static MUI_ENTRY esESBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1482,7 +1429,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         6,
         8,
-        "En este paso, el instalador crear\240 el cargador de arranque",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1539,6 +1486,13 @@ static MUI_ENTRY etESBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "En este paso, el instalador crear\240 el cargador de arranque.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalando sector de arranque en el disco, espere por favor...",
@@ -1551,6 +1505,59 @@ static MUI_ENTRY etESBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY esESBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "El instalador no pudo instalar el cargador de arranque en el disco",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "duro del equipo.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Inserte un disquete formateado en la unidad A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "y pulse INTRO.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   INTRO = Continuar   F3 = Salir",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY esESKeyboardSettingsEntries[] =
@@ -2186,8 +2193,8 @@ MUI_PAGE esESPages[] =
         esESKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        esESBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        esESBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2202,12 +2209,12 @@ MUI_PAGE esESPages[] =
         esESSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         etESBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        esESBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        esESBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

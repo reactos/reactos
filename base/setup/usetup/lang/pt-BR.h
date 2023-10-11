@@ -937,59 +937,6 @@ static MUI_ENTRY ptBRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY ptBRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "O instalador n\306o p\223de instalar o ger\210nciador de inicializa\207\306o no disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "r\241gido do computador.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Por favor insira um disquete formatado na unidade A: e",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "pressione ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER=Continuar  F3=Sair",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY ptBRSelectPartitionEntries[] =
 {
     {
@@ -1481,7 +1428,7 @@ static MUI_ENTRY ptBRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY ptBRBootLoaderEntries[] =
+static MUI_ENTRY ptBRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1493,7 +1440,7 @@ static MUI_ENTRY ptBRBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1550,6 +1497,13 @@ static MUI_ENTRY ptBRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1562,6 +1516,59 @@ static MUI_ENTRY ptBRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY ptBRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador n\306o p\223de instalar o ger\210nciador de inicializa\207\306o no disco",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "r\241gido do computador.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Por favor insira um disquete formatado na unidade A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "e pressione ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER=Continuar  F3=Sair",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY ptBRKeyboardSettingsEntries[] =
@@ -2218,8 +2225,8 @@ MUI_PAGE ptBRPages[] =
         ptBRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        ptBRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        ptBRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2234,12 +2241,12 @@ MUI_PAGE ptBRPages[] =
         ptBRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         ptBRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        ptBRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        ptBRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

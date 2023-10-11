@@ -936,59 +936,6 @@ static MUI_ENTRY csCZSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY csCZBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalace ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instala\237n\241 aplikace nedok\240\247e nainstalovat zavad\330\237 na tento",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "disk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Vlo\247te naform\240tovanou disketu do jednotky A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "a stiskn\330te ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY csCZSelectPartitionEntries[] =
 {
     {
@@ -1472,7 +1419,7 @@ static MUI_ENTRY csCZFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY csCZBootLoaderEntries[] =
+static MUI_ENTRY csCZBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1484,7 +1431,7 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalace nyn\241 nainstaluje zavad\330\237.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1541,6 +1488,13 @@ static MUI_ENTRY csCZBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalace nyn\241 nainstaluje zavad\330\237.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1553,6 +1507,52 @@ static MUI_ENTRY csCZBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY csCZBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instala\237n\241 aplikace nedok\240\247e nainstalovat zavad\330\237 na tento disk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Vlo\247te naform\240tovanou disketu do jednotky A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "a stiskn\330te ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY csCZKeyboardSettingsEntries[] =
@@ -2188,8 +2188,8 @@ MUI_PAGE csCZPages[] =
         csCZKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        csCZBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        csCZBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2204,12 +2204,12 @@ MUI_PAGE csCZPages[] =
         csCZSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         csCZBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        csCZBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        csCZBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

@@ -927,59 +927,6 @@ static MUI_ENTRY msMYSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY msMYBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Persediaan tidak dapat memasang bootloader pada komputer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "cakera keras anda",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Sila sisipkan cakera liut diformatkan dalam pemacu A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dan tekan ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Teruskan   F3 = Keluar",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY msMYSelectPartitionEntries[] =
 {
     {
@@ -1456,7 +1403,7 @@ static MUI_ENTRY msMYFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY msMYBootLoaderEntries[] =
+static MUI_ENTRY msMYBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1468,7 +1415,7 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
     {
         6,
         8,
-        "Persediaan sedang memasang boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1496,7 +1443,7 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
     {
         8,
         15,
-        "Langkau memasang boot loader.",
+        "Langkau memasang bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1525,6 +1472,13 @@ static MUI_ENTRY msMYBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Persediaan sedang memasang bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1537,6 +1491,59 @@ static MUI_ENTRY msMYBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY msMYBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Persediaan tidak dapat memasang bootloader pada komputer",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "cakera keras anda.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Sila sisipkan cakera liut diformatkan dalam pemacu A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dan tekan ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Teruskan   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY msMYKeyboardSettingsEntries[] =
@@ -2165,8 +2172,8 @@ MUI_PAGE msMYPages[] =
         msMYKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        msMYBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        msMYBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2181,12 +2188,12 @@ MUI_PAGE msMYPages[] =
         msMYSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         msMYBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        msMYBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        msMYBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

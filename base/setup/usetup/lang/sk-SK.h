@@ -936,59 +936,6 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY skSKBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dzaŸ syst‚mu
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "po\237\241ta\237a",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Vlo\247te pros\241m, naform\240tovan\243 disketu do mechaniky A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "a stla\237te ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY skSKSelectPartitionEntries[] =
 {
     {
@@ -1473,7 +1420,7 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY skSKBootLoaderEntries[] =
+static MUI_ENTRY skSKBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1485,7 +1432,7 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         6,
         8,
-        "In\347tal\240tor je pripraven\354 nain\347talova\234 zav\240dza\237 opera\237n\202ho syst\202mu",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1542,6 +1489,13 @@ static MUI_ENTRY skSKBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "In\347tal\240tor je pripraven\354 nain\347talova\234 zav\240dza\237 opera\237n\202ho syst\202mu.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1554,6 +1508,59 @@ static MUI_ENTRY skSKBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY skSKBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dzaŸ syst‚mu
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "po\237\241ta\237a.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Vlo\247te pros\241m, naform\240tovan\243 disketu do mechaniky A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "a stla\237te ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY skSKKeyboardSettingsEntries[] =
@@ -2192,8 +2199,8 @@ MUI_PAGE skSKPages[] =
         skSKKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        skSKBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        skSKBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2208,12 +2215,12 @@ MUI_PAGE skSKPages[] =
         skSKSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         skSKBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        skSKBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        skSKBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

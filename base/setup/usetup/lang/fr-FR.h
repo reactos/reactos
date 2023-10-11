@@ -951,59 +951,6 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY frFRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Installation de ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup ne peut installer le chargeur sur le disque dur",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "de votre ordinateur",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Veuillez ins\202rer une disquette format\202e dans le lecteur A: et",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "appuyer sur ENTR\220E.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTR\220E = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY frFRSelectPartitionEntries[] =
 {
     {
@@ -1416,7 +1363,7 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Choisissez un repertoire o\227 vous voulez que ReactOS soit install\202 :",
+        "Choisissez un r\202pertoire o\227 vous voulez que ReactOS soit install\202 :",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1501,7 +1448,7 @@ static MUI_ENTRY frFRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY frFRBootLoaderEntries[] =
+static MUI_ENTRY frFRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1513,7 +1460,7 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installe le chargeur de d\202marrage",
+        "Veuillez choisir o\227 Setup doit installer le chargeur de d\202marrage :",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1570,6 +1517,13 @@ static MUI_ENTRY frFRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installe le chargeur de d\202marrage.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1582,6 +1536,52 @@ static MUI_ENTRY frFRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY frFRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup ne peut installer le chargeur sur le disque dur de votre ordinateur.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Veuillez ins\202rer une disquette format\202e dans le lecteur A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "et appuyer sur ENTR\220E.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTR\220E = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY frFRKeyboardSettingsEntries[] =
@@ -2217,8 +2217,8 @@ MUI_PAGE frFRPages[] =
         frFRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        frFRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        frFRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2233,12 +2233,12 @@ MUI_PAGE frFRPages[] =
         frFRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         frFRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        frFRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        frFRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

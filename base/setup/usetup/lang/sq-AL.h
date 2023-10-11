@@ -934,59 +934,6 @@ static MUI_ENTRY sqALSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY sqALBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalimi nuk mund t\211 instaloj\211 programin e bootloaderit ne kompjuterin tuaj",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisku",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Ju lutem fusni nje floppy disk t\211 formatuar n\211 drive A: dhe",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "klikoni ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Vazhdo   F3 = Dil",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY sqALSelectPartitionEntries[] =
 {
     {
@@ -999,7 +946,7 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         6,
         8,
-        "Lista meposht tregon particionet dhe pjes\211n e paperdorur t\211 hard diskut",
+        "Lista meposht tregon particionet dhe pjes\211n e paperdorur t\211 harddiskut",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1471,7 +1418,7 @@ static MUI_ENTRY sqALFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY sqALBootLoaderEntries[] =
+static MUI_ENTRY sqALBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1483,7 +1430,7 @@ static MUI_ENTRY sqALBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalimi po instalon boot loaderin",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1540,6 +1487,13 @@ static MUI_ENTRY sqALBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalimi po instalon bootloaderin.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1552,6 +1506,59 @@ static MUI_ENTRY sqALBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY sqALBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalimi nuk mund t\211 instaloj\211 programin e bootloaderit ne kompjuterin tuaj",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "harddisku.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Ju lutem fusni nje floppy disk t\211 formatuar n\211 drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dhe klikoni ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Vazhdo   F3 = Dil",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY sqALKeyboardSettingsEntries[] =
@@ -2193,8 +2200,8 @@ MUI_PAGE sqALPages[] =
         sqALKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        sqALBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        sqALBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2209,12 +2216,12 @@ MUI_PAGE sqALPages[] =
         sqALSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         sqALBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        sqALBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        sqALBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

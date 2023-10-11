@@ -937,59 +937,6 @@ static MUI_ENTRY huHUSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY huHUBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "a sz\240m\241t\242g\202p merevlemez\202re.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "az A: meghajt\242ba, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY huHUSelectPartitionEntries[] =
 {
     {
@@ -1358,7 +1305,7 @@ static MUI_ENTRY huHUFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY huHUBootLoaderEntries[] =
+static MUI_ENTRY huHUBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1370,7 +1317,7 @@ static MUI_ENTRY huHUBootLoaderEntries[] =
     {
         6,
         8,
-        "Boot loader telep\241t\202se",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1427,6 +1374,13 @@ static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Bootloader telep\241t\202se.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Bootloader telep\241t\202se az eszk\224zre, k\202rem v\240rjon...",
@@ -1439,6 +1393,59 @@ static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY huHUBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "a sz\240m\241t\242g\202p merevlemez\202re.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "az A: meghajt\242ba, majd nyomjon ENTER-t.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Folytat\240s   F3 = Kil\202p\202s",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY huHUKeyboardSettingsEntries[] =
@@ -2071,8 +2078,8 @@ MUI_PAGE huHUPages[] =
         huHUKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        huHUBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        huHUBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2087,12 +2094,12 @@ MUI_PAGE huHUPages[] =
         huHUSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         huHUBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        huHUBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        huHUBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

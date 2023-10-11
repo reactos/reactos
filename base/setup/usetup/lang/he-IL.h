@@ -932,59 +932,6 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY heILBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\207\211\231\227\204 \217\220\205\213\204 \214\222 \214\205\207\232\200\204 \214\204\220\216 \232\200 \217\211\227\232\204\214 \204\214\205\213\211 \204\220\211\200 \204\220\227\232\204\204",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\212\201\231\207\216\201",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        ".ENTER \225\207\214\205 :A \217\220\205\213\214 \214\207\232\205\200\216 \217\205\210\211\214\227\232 \221\220\213\204 \204\231\227\201\201",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY heILSelectPartitionEntries[] =
 {
     {
@@ -1468,7 +1415,7 @@ static MUI_ENTRY heILFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY heILBootLoaderEntries[] =
+static MUI_ENTRY heILBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1480,7 +1427,7 @@ static MUI_ENTRY heILBootLoaderEntries[] =
     {
         6,
         8,
-        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1537,6 +1484,13 @@ static MUI_ENTRY heILBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1549,6 +1503,52 @@ static MUI_ENTRY heILBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY heILBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\207\211\231\227\204 \217\220\205\213\204 \214\222 \214\205\207\232\200\204 \214\204\220\216 \232\200 \217\211\227\232\204\214 \204\214\205\213\211 \204\220\211\200 \204\220\227\232\204\204",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\212\201\231\207\216\201.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        ".ENTER \225\207\214\205 :A \217\220\205\213\214 \214\207\232\205\200\216 \217\205\210\211\214\227\232 \221\220\213\204 \204\231\227\201\201",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY heILKeyboardSettingsEntries[] =
@@ -2182,8 +2182,8 @@ MUI_PAGE heILPages[] =
         heILKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        heILBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        heILBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2198,12 +2198,12 @@ MUI_PAGE heILPages[] =
         heILSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         heILBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        heILBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        heILBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

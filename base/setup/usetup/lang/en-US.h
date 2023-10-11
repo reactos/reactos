@@ -928,59 +928,6 @@ static MUI_ENTRY enUSSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup cannot install the bootloader on your computers",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Please insert a formatted floppy disk in drive A: and",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "press ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY enUSSelectPartitionEntries[] =
 {
     {
@@ -1464,7 +1411,7 @@ static MUI_ENTRY enUSFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderEntries[] =
+static MUI_ENTRY enUSBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1476,7 +1423,7 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1504,7 +1451,7 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     {
         8,
         15,
-        "Skip install bootloader.",
+        "Skip bootloader installation.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1533,6 +1480,13 @@ static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup is installing the bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1545,6 +1499,52 @@ static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY enUSBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup cannot install the bootloader on your computer's harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Please insert a formatted floppy disk in drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "and press ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY enUSKeyboardSettingsEntries[] =
@@ -2180,8 +2180,8 @@ MUI_PAGE enUSPages[] =
         enUSKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        enUSBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        enUSBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2196,12 +2196,12 @@ MUI_PAGE enUSPages[] =
         enUSSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         enUSBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        enUSBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        enUSBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

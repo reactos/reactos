@@ -930,59 +930,6 @@ static MUI_ENTRY etEESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY etEEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Alglaadurit ei saanud kettale kirjutada.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Sisesta vormindatud flopiketas draivi A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "ja vajuta ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = J\204tka   F3 = V\204lju",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY etEESelectPartitionEntries[] =
 {
     {
@@ -1467,7 +1414,7 @@ static MUI_ENTRY etEEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY etEEBootLoaderEntries[] =
+static MUI_ENTRY etEEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1479,7 +1426,7 @@ static MUI_ENTRY etEEBootLoaderEntries[] =
     {
         6,
         8,
-        "Alglaaduri paigaldamine",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1536,6 +1483,13 @@ static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Alglaaduri paigaldamine.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1548,6 +1502,52 @@ static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY etEEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Alglaadurit ei saanud kettale kirjutada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Sisesta vormindatud flopiketas draivi A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "ja vajuta ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = J\204tka   F3 = V\204lju",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY etEEKeyboardSettingsEntries[] =
@@ -2181,8 +2181,8 @@ MUI_PAGE etEEPages[] =
         etEEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        etEEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        etEEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2197,12 +2197,12 @@ MUI_PAGE etEEPages[] =
         etEESuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         etEEBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        etEEBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        etEEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

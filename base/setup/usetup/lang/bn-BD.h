@@ -928,83 +928,6 @@ static MUI_ENTRY bnBDSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup cannot install the bootloader on your computers",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Please insert a formatted floppy disk in drive A: and",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "press ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
-static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "Installing the bootloader onto the media, please wait...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-};
-
 static MUI_ENTRY bnBDSelectPartitionEntries[] =
 {
     {
@@ -1488,7 +1411,7 @@ static MUI_ENTRY bnBDFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootLoaderEntries[] =
+static MUI_ENTRY bnBDBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1500,7 +1423,7 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1528,7 +1451,7 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
     {
         8,
         15,
-        "Skip install bootloader.",
+        "Skip bootloader installation.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1545,6 +1468,83 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup is installing the bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bnBDBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup cannot install the bootloader on your computer's harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Please insert a formatted floppy disk in drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "and press ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY bnBDKeyboardSettingsEntries[] =
@@ -2180,8 +2180,8 @@ MUI_PAGE bnBDPages[] =
         bnBDKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        bnBDBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        bnBDBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2196,12 +2196,12 @@ MUI_PAGE bnBDPages[] =
         bnBDSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         bnBDBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        bnBDBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        bnBDBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

@@ -929,59 +929,6 @@ static MUI_ENTRY euESSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY euESBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalazio ez du ahalmenik bootloader-a instalatu zure ordenagailuaren",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "disko gogorra",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Mesedez sartu diskete bat formateatuta A: unitaten barnean",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "eta sakatu SARTU.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "SARTU = Jarraitu   F3 = Irten",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY euESSelectPartitionEntries[] =
 {
     {
@@ -1465,7 +1412,7 @@ static MUI_ENTRY euESFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY euESBootLoaderEntries[] =
+static MUI_ENTRY euESBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1477,7 +1424,7 @@ static MUI_ENTRY euESBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalazioak bootloader-a sartzen ari du",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1534,6 +1481,13 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalazioak bootloader-a sartzen ari du.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalatzen ari du bootloader unitatean, itxaron mezedez...",
@@ -1546,6 +1500,59 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY euESBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalazio ez du ahalmenik bootloader-a instalatu zure ordenagailuaren",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "disko gogorra.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Mesedez sartu diskete bat formateatuta A: unitaten barnean",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "eta sakatu SARTU.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "SARTU = Jarraitu   F3 = Irten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY euESKeyboardSettingsEntries[] =
@@ -2181,8 +2188,8 @@ MUI_PAGE euESPages[] =
         euESKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        euESBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        euESBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2197,12 +2204,12 @@ MUI_PAGE euESPages[] =
         euESSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         euESBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        euESBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        euESBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

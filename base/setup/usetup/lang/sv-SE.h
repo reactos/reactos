@@ -936,59 +936,6 @@ static MUI_ENTRY svSESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY svSEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup misslyckades med att installera bootloadern p\206 datorns",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "h\206rddisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Var god s\204tt in en formatterad floppy-disk i l\204sare A: och",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "tryck p\206 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   ENTER = Forts\204tt   F3 = Avbryt",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY svSESelectPartitionEntries[] =
 {
     {
@@ -1473,7 +1420,7 @@ static MUI_ENTRY svSEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY svSEBootLoaderEntries[] =
+static MUI_ENTRY svSEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1485,7 +1432,7 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installerar boot-loadern",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1542,6 +1489,13 @@ static MUI_ENTRY svSEBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installerar boot-loadern.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1554,6 +1508,52 @@ static MUI_ENTRY svSEBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY svSEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup misslyckades med att installera bootloadern p\206 datorns h\206rddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Var god s\204tt in en formatterad floppy-disk i l\204sare A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "och tryck p\206 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   ENTER = Forts\204tt   F3 = Avbryt",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY svSEKeyboardSettingsEntries[] =
@@ -2189,8 +2189,8 @@ MUI_PAGE svSEPages[] =
         svSEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        svSEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        svSEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2205,12 +2205,12 @@ MUI_PAGE svSEPages[] =
         svSESuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         svSEBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        svSEBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        svSEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

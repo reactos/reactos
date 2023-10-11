@@ -938,59 +938,6 @@ static MUI_ENTRY hrHRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY hrHRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " instalacija ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalacijski program ne mo\247e instalirati bootloader (pokreta\237 operativnog sustava) na va\347",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "tvrdi disk u ra\237unalu",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Ubacite formatiranu disketu u Disk A: i",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "pritisnite ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Nastavi   F3 = Iza\320i",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY hrHRSelectPartitionEntries[] =
 {
     {
@@ -1481,7 +1428,7 @@ static MUI_ENTRY hrHRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY hrHRBootLoaderEntries[] =
+static MUI_ENTRY hrHRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1493,14 +1440,7 @@ static MUI_ENTRY hrHRBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalacijski program instalirava bootloader",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "(pokreta\237a operativnog sustava)",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1557,6 +1497,20 @@ static MUI_ENTRY hrHRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalacijski program instalirava bootloader",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "(pokreta\237a operativnog sustava).",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalacija bootloader-a, molimo pri\237elajte...",
@@ -1569,6 +1523,59 @@ static MUI_ENTRY hrHRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY hrHRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " instalacija ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalacijski program ne mo\247e instalirati bootloader (pokreta\237 operativnog sustava) na va\347",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "tvrdi disk u ra\237unalu.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Ubacite formatiranu disketu u Disk A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "i pritisnite ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Nastavi   F3 = Iza\320i",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY hrHRKeyboardSettingsEntries[] =
@@ -2204,8 +2211,8 @@ MUI_PAGE hrHRPages[] =
         hrHRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        hrHRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        hrHRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2220,12 +2227,12 @@ MUI_PAGE hrHRPages[] =
         hrHRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         hrHRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        hrHRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        hrHRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

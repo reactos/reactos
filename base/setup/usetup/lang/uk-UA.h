@@ -935,59 +935,6 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY ukUABootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\202\341\342\240\255\256\242\253\356\242\240\347 \255\245 \254\256\246\245 \242\341\342\240\255\256\242\250\342\250 bootloader \255\240 \246\256\340\341\342\252\250\251 \244\250\341\252",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\202\240\350\256\243\256 \252\256\254\257'\356\342\245\340\240",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\201\343\244\354-\253\240\341\252\240 \242\341\342\240\242\342\245 \242i\244\344\256\340\254\240\342\256\242\240\255\343 \244\250\341\252\245\342\343 \242 \244\250\242\252\256\242\256\244 A: \342\240",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "\255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY ukUASelectPartitionEntries[] =
 {
     {
@@ -1472,7 +1419,7 @@ static MUI_ENTRY ukUAFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY ukUABootLoaderEntries[] =
+static MUI_ENTRY ukUABootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1484,7 +1431,7 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         6,
         8,
-        "\202\341\342\240\255\256\242\253\356\242\240\347 \242\341\342\240\255\256\242\253\356\363 \247\240\242\240\255\342\240\246\343\242\240\347",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1541,6 +1488,13 @@ static MUI_ENTRY ukUABootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \242\341\342\240\255\256\242\253\356\363 \247\240\242\240\255\342\240\246\343\242\240\347.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1553,6 +1507,59 @@ static MUI_ENTRY ukUABootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY ukUABootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \255\245 \254\256\246\245 \242\341\342\240\255\256\242\250\342\250 bootloader \255\240 \246\256\340\341\342\252\250\251 \244\250\341\252",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\202\240\350\256\243\256 \252\256\254\257'\356\342\245\340\240.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\201\343\244\354-\253\240\341\252\240 \242\341\342\240\242\342\245 \242i\244\344\256\340\254\240\342\256\242\240\255\343 \244\250\341\252\245\342\343 \242 \244\250\242\252\256\242\256\244 A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "\342\240 \255\240\342\250\341\255i\342\354 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
@@ -2189,8 +2196,8 @@ MUI_PAGE ukUAPages[] =
         ukUAKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        ukUABootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        ukUABootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2205,12 +2212,12 @@ MUI_PAGE ukUAPages[] =
         ukUASuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         ukUABootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        ukUABootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        ukUABootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

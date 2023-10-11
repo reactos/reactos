@@ -930,59 +930,6 @@ static MUI_ENTRY jaJPSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY jaJPBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\276\257\304\261\257\314\337\312 \314\336\260\304\333\260\300\336\246 \272\335\313\337\255\260\300\311 \312\260\304\336\303\336\250\275\270\274\336\256\263\306 \262\335\275\304\260\331",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\303\336\267\317\276\335\303\336\274\300",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\304\336\327\262\314\336 A: \306 \314\253\260\317\257\304 \273\332\300 \314\333\257\313\337\260 \303\336\250\275\270\246 \262\332\303\244",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "ENTER \267\260\246 \265\274\303 \270\300\336\273\262\241",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = \277\336\257\272\263   F3 = \301\255\263\274",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY jaJPSelectPartitionEntries[] =
 {
     {
@@ -1467,7 +1414,7 @@ static MUI_ENTRY jaJPFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY jaJPBootLoaderEntries[] =
+static MUI_ENTRY jaJPBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1479,7 +1426,7 @@ static MUI_ENTRY jaJPBootLoaderEntries[] =
     {
         6,
         8,
-        "\276\257\304\261\257\314\337\312 \314\336\260\304 \333\260\300\336\246 \262\335\275\304\260\331 \274\317\275",
+        "\276\257\304\261\257\314\337\312 \314\336\260\304 \333\260\300\336\246 \262\335\275\304\260\331 \274\317\275.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1536,6 +1483,13 @@ static MUI_ENTRY jaJPBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\276\257\304\261\257\314\337\312 \314\336\260\304 \333\260\300\336\246 \262\335\275\304\260\331 \274\317\275.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "\322\303\336\250\261 \306 \314\336\260\304\333\260\300\336\260\246 \262\335\275\304\260\331 \274\303\262\317\275\241 \265\317\301\270\300\336\273\262...",
@@ -1548,6 +1502,59 @@ static MUI_ENTRY jaJPBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY jaJPBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\276\257\304\261\257\314\337\312 \314\336\260\304\333\260\300\336\246 \272\335\313\337\255\260\300\311 \312\260\304\336\303\336\250\275\270\274\336\256\263\306 \262\335\275\304\260\331",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\303\336\267\317\276\335\303\336\274\300.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\304\336\327\262\314\336 A: \306 \314\253\260\317\257\304 \273\332\300 \314\333\257\313\337\260 \303\336\250\275\270\246 \262\332\303\244",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "ENTER \267\260\246 \265\274\303 \270\300\336\273\262\241",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = \277\336\257\272\263   F3 = \301\255\263\274",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY jaJPKeyboardSettingsEntries[] =
@@ -2183,8 +2190,8 @@ MUI_PAGE jaJPPages[] =
         jaJPKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        jaJPBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        jaJPBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2199,12 +2206,12 @@ MUI_PAGE jaJPPages[] =
         jaJPSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         jaJPBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        jaJPBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        jaJPBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

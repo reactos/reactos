@@ -944,59 +944,6 @@ static MUI_ENTRY elGRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY elGRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\234 \243\247\246\250\234\345 \244\230 \234\232\241\230\253\230\251\253\343\251\234\240 \253\246\244 bootloader",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\251\253\246 \251\241\242\236\250\346 \233\345\251\241\246 \253\246\254 \254\247\246\242\246\232\240\251\253\343 \251\230\252",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\217\230\250\230\241\230\242\351 \234\240\251\341\232\234\253\234 \243\240\230 \233\240\230\243\246\250\255\340\243\342\244\236 \233\240\251\241\342\253\230 \251\253\246 A: \241\230\240",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "\247\230\253\343\251\253\234 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY elGRSelectPartitionEntries[] =
 {
     {
@@ -1481,7 +1428,7 @@ static MUI_ENTRY elGRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY elGRBootLoaderEntries[] =
+static MUI_ENTRY elGRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1493,7 +1440,7 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 boot loader",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1550,6 +1497,13 @@ static MUI_ENTRY elGRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \232\250\341\255\234\240 \253\246\244 bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1562,6 +1516,59 @@ static MUI_ENTRY elGRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY elGRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\234 \243\247\246\250\234\345 \244\230 \234\232\241\230\253\230\251\253\343\251\234\240 \253\246\244 bootloader",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\251\253\246 \251\241\242\236\250\346 \233\345\251\241\246 \253\246\254 \254\247\246\242\246\232\240\251\253\343 \251\230\252.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\217\230\250\230\241\230\242\351 \234\240\251\341\232\234\253\234 \243\240\230 \233\240\230\243\246\250\255\340\243\342\244\236 \233\240\251\241\342\253\230 \251\253\246 A: \241\230\240",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "\247\230\253\343\251\253\234 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY elGRKeyboardSettingsEntries[] =
@@ -2196,8 +2203,8 @@ MUI_PAGE elGRPages[] =
         elGRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        elGRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        elGRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2212,12 +2219,12 @@ MUI_PAGE elGRPages[] =
         elGRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         elGRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        elGRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        elGRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

@@ -937,59 +937,6 @@ static MUI_ENTRY daDKSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY daDKBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " installationen ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Installationen kan ikke installere opstartsl\221seren p\206",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "din computers hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "S\221t en formateret diskette i drev A: og",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "tryk p\206 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Forts\221t   F3 = Afslut",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY daDKSelectPartitionEntries[] =
 {
     {
@@ -1466,7 +1413,7 @@ static MUI_ENTRY daDKFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY daDKBootLoaderEntries[] =
+static MUI_ENTRY daDKBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1478,7 +1425,7 @@ static MUI_ENTRY daDKBootLoaderEntries[] =
     {
         6,
         8,
-        "Installatione af opstartsl\221ser",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1535,6 +1482,13 @@ static MUI_ENTRY daDKBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Installatione af opstartsl\221ser.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1547,6 +1501,59 @@ static MUI_ENTRY daDKBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY daDKBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Installationen kan ikke installere opstartsl\221seren p\206",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "din computers harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "S\221t en formateret diskette i drev A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "og tryk p\206 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Forts\221t   F3 = Afslut",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY daDKKeyboardSettingsEntries[] =
@@ -2183,8 +2190,8 @@ MUI_PAGE daDKPages[] =
         daDKKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        daDKBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        daDKBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2199,12 +2206,12 @@ MUI_PAGE daDKPages[] =
         daDKSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         daDKBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        daDKBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        daDKBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

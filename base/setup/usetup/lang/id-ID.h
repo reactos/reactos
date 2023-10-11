@@ -928,59 +928,6 @@ static MUI_ENTRY idIDSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY idIDBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Penyetelan tidak dapat menasang bootloader pada komputer Anda",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Mohon masukkan cakram disket yang terformat di drive A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dan tekan ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Lanjut   F3 = Keluar",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY idIDSelectPartitionEntries[] =
 {
     {
@@ -1464,7 +1411,7 @@ static MUI_ENTRY idIDFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY idIDBootLoaderEntries[] =
+static MUI_ENTRY idIDBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1476,7 +1423,7 @@ static MUI_ENTRY idIDBootLoaderEntries[] =
     {
         6,
         8,
-        "Penyetelan sedang memasang the boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1533,6 +1480,13 @@ static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Penyetelan sedang memasang the bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Memasang bootloader pada media, harap tunggu...",
@@ -1545,6 +1499,59 @@ static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY idIDBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Penyetelan tidak dapat menasang bootloader pada komputer Anda",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Mohon masukkan cakram disket yang terformat di drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dan tekan ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Lanjut   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY idIDKeyboardSettingsEntries[] =
@@ -2180,8 +2187,8 @@ MUI_PAGE idIDPages[] =
         idIDKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        idIDBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        idIDBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2196,12 +2203,12 @@ MUI_PAGE idIDPages[] =
         idIDSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         idIDBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        idIDBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        idIDBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

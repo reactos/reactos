@@ -975,59 +975,6 @@ static MUI_ENTRY roROSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY roROBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Programul de instalare nu poate instala modulul de",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "ini\376ializare a calculatorului pe discul local.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Introduce\376i un disc flexibil formatat \356n",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "unitatea A: apoi s\343 ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY roROSelectPartitionEntries[] =
 {
     {
@@ -1497,7 +1444,7 @@ static MUI_ENTRY roROFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY roROBootLoaderEntries[] =
+static MUI_ENTRY roROBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1509,7 +1456,7 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalare modul de ini\376ializare al calculatorului",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1566,6 +1513,13 @@ static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalare modul de ini\376ializare al calculatorului.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalarea programului de pornire pe suport, v\343 rug\343m s\343 a\272tepta\376i...",
@@ -1578,6 +1532,59 @@ static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY roROBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Programul de instalare nu poate instala modulul de",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "ini\376ializare a calculatorului pe discul local.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Introduce\376i un disc flexibil formatat \356n unitatea A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "apoi s\343 ap\343sa\376i ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Continuare   F3 = Ie\272ire",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY roROKeyboardSettingsEntries[] =
@@ -2234,8 +2241,8 @@ MUI_PAGE roROPages[] =
         roROKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        roROBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        roROBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2250,12 +2257,12 @@ MUI_PAGE roROPages[] =
         roROSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         roROBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        roROBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        roROBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

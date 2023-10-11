@@ -944,59 +944,6 @@ static MUI_ENTRY bgBGSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY bgBGBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "\210\255\341\342\240\253\250\340\240\255\245 \255\240 \247\240\340\245\246\244\240\351\240\342\240 \257\340\256\243\340\240\254\240 (bootloader) \255\240 \244\250\341\252\240 \255\240 \252\256\254\257\356\342\352\340\240 \242\250",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "\241\245 \255\245\343\341\257\245\350\255\256.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "\221\253\256\246\245\342\245 \344\256\340\254\240\342\250\340\240\255\240 \244\250\341\252\245\342\240 \242 \343\341\342\340\256\251\341\342\242\256 A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "\250 \255\240\342\250\341\255\245\342\245 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   ENTER = \217\340\256\244\352\253\246\250   F3 = \210\247\345\256\244",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY bgBGSelectPartitionEntries[] =
 {
     {
@@ -1481,7 +1428,7 @@ static MUI_ENTRY bgBGFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY bgBGBootLoaderEntries[] =
+static MUI_ENTRY bgBGBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1493,7 +1440,7 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         6,
         8,
-        "\217\340\256\342\250\347\240 \250\255\341\342\240\253\250\340\240\255\245\342\256 \255\240 \247\240\340\245\246\244\240\351\240\342\240 \257\340\256\243\340\240\254\240.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1550,6 +1497,13 @@ static MUI_ENTRY bgBGBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "\217\340\256\342\250\347\240 \250\255\341\342\240\253\250\340\240\255\245\342\256 \255\240 \247\240\340\245\246\244\240\351\240\342\240 \257\340\256\243\340\240\254\240.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "\210\255\341\342\240\253\250\340\240 \341\245 \247\240\340\245\246\244\240\351\240\342\240 \257\340\256\243\340\240\254\240, \254\256\253\357 \250\247\347\240\252\240\251\342\245...",
@@ -1562,6 +1516,59 @@ static MUI_ENTRY bgBGBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY bgBGBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\210\255\341\342\240\253\250\340\240\255\245 \255\240 \247\240\340\245\246\244\240\351\240\342\240 \257\340\256\243\340\240\254\240 (bootloader) \255\240 \244\250\341\252\240 \255\240 \252\256\254\257\356\342\352\340\240 \242\250",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "\241\245 \255\245\343\341\257\245\350\255\256.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "\221\253\256\246\245\342\245 \344\256\340\254\240\342\250\340\240\255\240 \244\250\341\252\245\342\240 \242 \343\341\342\340\256\251\341\342\242\256 A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "\250 \255\240\342\250\341\255\245\342\245 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   ENTER = \217\340\256\244\352\253\246\250   F3 = \210\247\345\256\244",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY bgBGKeyboardSettingsEntries[] =
@@ -2198,8 +2205,8 @@ MUI_PAGE bgBGPages[] =
         bgBGKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        bgBGBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        bgBGBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2214,12 +2221,12 @@ MUI_PAGE bgBGPages[] =
         bgBGSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         bgBGBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        bgBGBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        bgBGBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

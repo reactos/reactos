@@ -927,83 +927,6 @@ static MUI_ENTRY itITSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY itITBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Il Setup non ha potuto installare il bootloader nel disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "del vostro computer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Inserire un disco floppy formattato nell'unit\x85 A: e",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "premere INVIO.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
-static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "Installing the bootloader onto the media, please wait...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-};
-
 static MUI_ENTRY itITSelectPartitionEntries[] =
 {
     {
@@ -1494,7 +1417,7 @@ static MUI_ENTRY itITFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY itITBootLoaderEntries[] =
+static MUI_ENTRY itITBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1506,7 +1429,7 @@ static MUI_ENTRY itITBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup sta installando il bootloader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1551,6 +1474,90 @@ static MUI_ENTRY itITBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup sta installando il bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY itITBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Il Setup non ha potuto installare il bootloader nel disco",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "del vostro computer.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Inserire un disco floppy formattato nell'unit\x85 A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "e premere INVIO.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   INVIO = Continua   F3 = Termina",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY itITKeyboardSettingsEntries[] =
@@ -2186,8 +2193,8 @@ MUI_PAGE itITPages[] =
         itITKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        itITBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        itITBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2202,12 +2209,12 @@ MUI_PAGE itITPages[] =
         itITSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         itITBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        itITBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        itITBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

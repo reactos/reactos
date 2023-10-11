@@ -926,52 +926,6 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY trTRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Kur, bilgisayar\215n\215z\215n sabit diskine \224ny\201kleyiciyi kuramad\215.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        12,
-        "L\201tfen A: s\201r\201c\201s\201ne bi\207imlendirilmi\237 bir disket tak\215n\215z",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "ve ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY trTRSelectPartitionEntries[] =
 {
     {
@@ -1441,7 +1395,7 @@ static MUI_ENTRY trTRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY trTRBootLoaderEntries[] =
+static MUI_ENTRY trTRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1453,7 +1407,7 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         6,
         8,
-        "Kur, \224ny\201kleyiciyi kuruyor.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1510,6 +1464,13 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Kur, \224ny\201kleyiciyi kuruyor.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "\231ny\201kleyici diske kuruluyor, l\201tfen bekleyiniz...",
@@ -1522,6 +1483,52 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY trTRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Kur, bilgisayar\215n\215z\215n sabit diskine \224ny\201kleyiciyi kuramad\215.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        12,
+        "L\201tfen A: s\201r\201c\201s\201ne bi\207imlendirilmi\237 bir disket tak\215n\215z",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "ve ENTER'e bas\215n\215z.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = S\201rd\201r   F3 = \200\215k",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY trTRKeyboardSettingsEntries[] =
@@ -2157,8 +2164,8 @@ MUI_PAGE trTRPages[] =
         trTRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        trTRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        trTRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2173,12 +2180,12 @@ MUI_PAGE trTRPages[] =
         trTRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         trTRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        trTRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        trTRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

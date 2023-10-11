@@ -923,59 +923,6 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY deDEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Der Bootsektor konnte nicht auf der",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "Festplatte Ihres Computers installiert werden.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Bitte legen Sie eine formatierte Diskette in Laufwerk A: ein und",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dr\201cken Sie ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Fortsetzen   F3 = Installation abbrechen",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY deDESelectPartitionEntries[] =
 {
     {
@@ -1466,7 +1413,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY deDEBootLoaderEntries[] =
+static MUI_ENTRY deDEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1478,7 +1425,7 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         6,
         8,
-        "Bestimmen Sie, wo der Bootloader installiert werden soll:",
+        "Bestimmen Sie, wo Setup den Bootloader installieren soll:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1535,6 +1482,13 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installiert den Bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Bootloader wird installiert. Bitte warten...",
@@ -1547,6 +1501,59 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY deDEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Der Bootsektor konnte nicht auf der Festplatte Ihres Computers",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "installiert werden.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Bitte legen Sie eine formatierte Diskette in Laufwerk A: ein",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "und dr\201cken Sie ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY deDEKeyboardSettingsEntries[] =
@@ -2185,8 +2192,8 @@ MUI_PAGE deDEPages[] =
         deDEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        deDEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        deDEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2201,12 +2208,12 @@ MUI_PAGE deDEPages[] =
         deDESuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         deDEBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        deDEBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        deDEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

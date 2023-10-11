@@ -940,59 +940,6 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY plPLBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalator ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalator systemu ReactOS nie mo\276e zainstalowa\206",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "mened\276era rozruchu na dysku twardym",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "W\210\242\276 sformatowan\245 dyskietk\251 do nap\251du A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "i nacisnij klawisz ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Kontynuacja   F3 = Wyj\230cie",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY plPLSelectPartitionEntries[] =
 {
     {
@@ -1476,7 +1423,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY plPLBootLoaderEntries[] =
+static MUI_ENTRY plPLBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1488,7 +1435,7 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalator musi teraz zainstalowa\206 mened\276er rozruchu",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1545,6 +1492,13 @@ static MUI_ENTRY plPLBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalator musi teraz zainstalowa\206 mened\276er rozruchu.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalacja mened\276era rozruchu na no\230niku, prosz\251 czeka\206...",
@@ -1557,6 +1511,59 @@ static MUI_ENTRY plPLBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY plPLBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalator systemu ReactOS nie mo\276e zainstalowa\206",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "mened\276era rozruchu na dysku twardym.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "W\210\242\276 sformatowan\245 dyskietk\251 do nap\251du A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "i nacisnij klawisz ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Kontynuacja   F3 = Wyj\230cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY plPLKeyboardSettingsEntries[] =
@@ -2192,8 +2199,8 @@ MUI_PAGE plPLPages[] =
         plPLKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        plPLBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        plPLBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2208,12 +2215,12 @@ MUI_PAGE plPLPages[] =
         plPLSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         plPLBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        plPLBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        plPLBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,

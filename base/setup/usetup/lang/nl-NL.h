@@ -942,59 +942,6 @@ static MUI_ENTRY nlNLSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup kan de bootloader niet op de vaste schijf van uw computer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "installeren",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Voer een geformatteerde diskette in station A: in en",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "druk op ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Doorgaan   F3 = Afsluiten",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY nlNLSelectPartitionEntries[] =
 {
     {
@@ -1479,7 +1426,7 @@ static MUI_ENTRY nlNLFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLBootLoaderEntries[] =
+static MUI_ENTRY nlNLBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1491,7 +1438,7 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installeert de bootloader.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1548,6 +1495,13 @@ static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installeert de bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1560,6 +1514,59 @@ static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY nlNLBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup kan de bootloader niet op de vaste schijf van uw computer",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "installeren.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Voer een geformatteerde diskette in station A: in",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "en druk op ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Doorgaan   F3 = Afsluiten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY nlNLkeyboardSettingsEntries[] =
@@ -2205,8 +2212,8 @@ MUI_PAGE nlNLPages[] =
         nlNLkeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        nlNLBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        nlNLBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2221,12 +2228,12 @@ MUI_PAGE nlNLPages[] =
         nlNLSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         nlNLBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        nlNLBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        nlNLBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
