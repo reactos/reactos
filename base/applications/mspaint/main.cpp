@@ -299,11 +299,6 @@ HWND CMainWindow::DoCreate()
 INT WINAPI
 _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nCmdShow)
 {
-#ifdef _DEBUG
-    // Report any memory leaks on exit
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
-
     g_hinstExe = hInstance;
 
     // Initialize common controls library
