@@ -281,7 +281,7 @@ VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
     }
 }
 
-LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
+LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* preloading the draw transparent/nontransparent icons for later use */
     m_hNontranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
