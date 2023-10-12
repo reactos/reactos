@@ -92,9 +92,9 @@ DcHandleTxCompletedFrames(
     PDC_TBD Tbd;
     ULONG TbdStatus, Collisions;
 
-    Tcb = Adapter->LastTcb;
-
-    while (Tcb != Adapter->CurrentTcb)
+    for (Tcb = Adapter->LastTcb;
+         Tcb != Adapter->CurrentTcb;
+         Tcb = DC_NEXT_TCB(Adapter, Tcb))
     {
         Tbd = Tcb->Tbd;
         TbdStatus = Tbd->Status;
@@ -114,7 +114,7 @@ DcHandleTxCompletedFrames(
                 *DpcEvents |= DC_EVENT_SETUP_FRAME_COMPLETED;
             }
 
-            goto NextTcb;
+            continue;
         }
 
         /* This is our media test packet, so no need to update the TX statistics */
@@ -127,7 +127,7 @@ DcHandleTxCompletedFrames(
 
             ++Adapter->LoopbackFrameSlots;
 
-            goto NextTcb;
+            continue;
         }
 
         if (TbdStatus & DC_TBD_STATUS_ERROR_SUMMARY)
@@ -164,9 +164,6 @@ DcHandleTxCompletedFrames(
         InsertTailList(SendReadyList, DC_LIST_ENTRY_FROM_PACKET(Tcb->Packet));
 
         DC_RELEASE_TCB(Adapter, Tcb);
-
-NextTcb:
-        Tcb = DC_NEXT_TCB(Adapter, Tcb);
     }
 
     Adapter->LastTcb = Tcb;
@@ -229,7 +226,7 @@ DcStopRxProcess(
     OpMode &= ~DC_OPMODE_RX_ENABLE;
     DC_WRITE(Adapter, DcCsr6_OpMode, OpMode);
 
-    for (i = 0; i < 500; ++i)
+    for (i = 0; i < 5000; ++i)
     {
         Status = DC_READ(Adapter, DcCsr5_Status);
 
@@ -441,6 +438,7 @@ DcHandleRxReceivedFrames(
             Rcb = (PDC_RCB)DcPopEntryList(&Adapter->FreeRcbList);
             *RcbSlot = Rcb;
 
+            ASSERT(Adapter->RcbFree > 0);
             --Adapter->RcbFree;
 
             Rbd->Address1 = Rcb->PhysicalAddress;
@@ -525,6 +523,7 @@ DcHandleInterrupt(
     IoLimit = DC_INTERRUPT_PROCESSING_LIMIT;
     InterruptStatus = Adapter->InterruptStatus;
 
+    /* Loop until the condition to stop is encountered */
     while (TRUE)
     {
         /* Uncommon interrupts */

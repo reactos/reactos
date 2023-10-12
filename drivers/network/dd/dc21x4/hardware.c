@@ -44,7 +44,7 @@ DcStopTxRxProcess(
     OpMode &= ~(DC_OPMODE_RX_ENABLE | DC_OPMODE_TX_ENABLE);
     DC_WRITE(Adapter, DcCsr6_OpMode, OpMode);
 
-    for (i = 0; i < 10000; ++i)
+    for (i = 0; i < 5000; ++i)
     {
         Status = DC_READ(Adapter, DcCsr5_Status);
 
@@ -247,7 +247,7 @@ DcSetupFrameDownload(
     }
     if (i == 0)
     {
-        ERR("Failed to complete setup frame\n");
+        ERR("Failed to complete setup frame %08lx\n", Tbd->Status);
         return FALSE;
     }
 
@@ -380,6 +380,7 @@ DcUpdateMulticastList(
     UsePerfectFiltering = (Adapter->MulticastCount <= DC_SETUP_FRAME_ADDRESSES);
 
     Adapter->ProgramHashPerfectFilter = UsePerfectFiltering;
+    Adapter->OidPending = TRUE;
 
     if (UsePerfectFiltering)
         DcSetupFramePerfectFiltering(Adapter);
@@ -391,8 +392,6 @@ DcUpdateMulticastList(
     DcSetupFrameDownload(Adapter, FALSE);
 
     NdisReleaseSpinLock(&Adapter->SendLock);
-
-    Adapter->OidPending = TRUE;
 
     return NDIS_STATUS_PENDING;
 }

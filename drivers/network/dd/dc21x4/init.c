@@ -269,7 +269,7 @@ DcAllocateReceiveBuffers(
         Rcb = DcAllocateRcb(Adapter);
         if (!Rcb)
         {
-            WARN("RCB allocation failed, total buffers %d\n", Adapter->RcbCount);
+            WARN("RCB allocation failed, total buffers %u\n", Adapter->RcbCount);
             break;
         }
 
@@ -1231,8 +1231,6 @@ DcInitialize(
         goto Failure;
     }
 
-    MediaInitDefaultMedia(Adapter, Adapter->DefaultMedia);
-
     DcInitTestPacket(Adapter);
 
     DcCreateRxRing(Adapter);
@@ -1274,6 +1272,8 @@ DcInitialize(
             Adapter->Features &= ~DC_HAS_MII;
         }
     }
+
+    MediaInitDefaultMedia(Adapter, Adapter->DefaultMedia);
 
     /* Set the MAC address */
     DcSetupFrameInitialize(Adapter);

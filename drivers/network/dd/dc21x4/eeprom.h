@@ -18,10 +18,10 @@ typedef struct _DC_SROM_COMPACT_BLOCK
 
 typedef struct _DC_SROM_REPAIR_ENTRY
 {
-    PUCHAR InfoLeaf;
 #if DBG
     PCSTR Name;
 #endif
+    PUCHAR InfoLeaf;
     ULONG Length;
 } DC_SROM_REPAIR_ENTRY, *PDC_SROM_REPAIR_ENTRY;
 

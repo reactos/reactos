@@ -5,8 +5,7 @@
  * COPYRIGHT:   Copyright 2023 Dmitry Borisov <di.sean@protonmail.com>
  */
 
-#ifndef _DC21X4_PCH_
-#define _DC21X4_PCH_
+#pragma once
 
 #if !DBG
 #define NO_KERNEL_LIST_ENTRY_CHECKS
@@ -495,21 +494,6 @@ DcTransmitTimeoutRecoveryWorker(
     _In_ PNDIS_WORK_ITEM WorkItem,
     _In_opt_ PVOID Context);
 
-#if DBG
-/* HACK: 'memcmp' is unavailable for some reason */
-#define MEMCMP_HACK
-#endif
-
-#if defined(MEMCMP_HACK)
-BOOLEAN
-DcEqualMemory(
-    _In_reads_bytes_(Length) const VOID* Destination,
-    _In_reads_bytes_(Length) const VOID* Source,
-    _In_ SIZE_T Length);
-#undef NdisEqualMemory
-#define NdisEqualMemory DcEqualMemory
-#endif
-
 NDIS_TIMER_FUNCTION MediaMonitor21040Dpc;
 NDIS_TIMER_FUNCTION MediaMonitor21041Dpc;
 NDIS_TIMER_FUNCTION MediaMonitor21140Dpc;
@@ -555,5 +539,3 @@ MediaSiaSelect(
 VOID
 MediaGprSelect(
     _In_ PDC21X4_ADAPTER Adapter);
-
-#endif /* _DC21X4_PCH_ */

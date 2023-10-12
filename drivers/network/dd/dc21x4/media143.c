@@ -175,12 +175,21 @@ Media143Handle100LinkChange(
 
     LinkUp = !(SiaStatus & DC_SIA_STATUS_100T_LINK_FAIL);
 
-    MediaIndicateConnect(Adapter, LinkUp);
-
-    /* Select the other port */
-    if (!LinkUp && !MEDIA_IS_FIXED(Adapter))
+    if (MEDIA_IS_FIXED(Adapter))
     {
-        Media143SelectNextMedia(Adapter, SiaStatus);
+        MediaIndicateConnect(Adapter, LinkUp);
+    }
+    else
+    {
+        /* Select the other port */
+        if (!LinkUp)
+        {
+            Media143SelectNextMedia(Adapter, SiaStatus);
+        }
+        else
+        {
+            /* Ignore this hint */
+        }
     }
 }
 
@@ -277,6 +286,8 @@ MediaLinkStateChange21143(
     _In_ ULONG InterruptStatus)
 {
     ULONG SiaStatus;
+
+    INFO_VERB("Link interrupt, CSR5 %08lx\n", InterruptStatus);
 
     NdisDprAcquireSpinLock(&Adapter->ModeLock);
 

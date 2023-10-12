@@ -14,19 +14,14 @@ typedef struct _ETH_HEADER
     UCHAR Source[ETH_LENGTH_OF_ADDRESS];
     USHORT PayloadType;
 } ETH_HEADER, *PETH_HEADER;
-
-typedef struct _MY_USHORT
-{
-    USHORT Word;
-} MY_USHORT, *PMY_USHORT;
 #include <poppack.h>
 
 #define ETH_IS_LOCALLY_ADMINISTERED(Address) \
-    (BOOLEAN)(((PUCHAR)(Address))[0] & ((UCHAR)0x02))
+    ((BOOLEAN)(((PUCHAR)(Address))[0] & ((UCHAR)0x02)))
 
 #define ETH_IS_EMPTY(Address) \
-    (BOOLEAN)((((PUCHAR)(Address))[0] | ((PUCHAR)(Address))[1] | ((PUCHAR)(Address))[2] | \
-               ((PUCHAR)(Address))[3] | ((PUCHAR)(Address))[4] | ((PUCHAR)(Address))[5]) == 0)
+    ((BOOLEAN)((((PUCHAR)(Address))[0] | ((PUCHAR)(Address))[1] | ((PUCHAR)(Address))[2] | \
+                ((PUCHAR)(Address))[3] | ((PUCHAR)(Address))[4] | ((PUCHAR)(Address))[5]) == 0))
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 /* Strict memory model, does not reorder Write-Write operations */
@@ -54,7 +49,7 @@ DcRetrieveWord(
 {
 #if defined(_M_IX86) || defined(_M_AMD64)
     /* Supported by ISA */
-    return ((const UNALIGNED MY_USHORT*)Data)->Word;
+    return *(const UNALIGNED USHORT*)Data;
 #else
     USHORT Result;
 
@@ -63,6 +58,9 @@ DcRetrieveWord(
 #endif
 }
 
+#if DBG
+#define DcPopEntryList PopEntryList
+#else
 /*
  * This is an optimized version of the PopEntryList() function.
  * We assume that the next entry has already been checked for nullability
@@ -83,3 +81,4 @@ DcPopEntryList(
 
     return FirstEntry;
 }
+#endif

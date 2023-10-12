@@ -65,17 +65,17 @@ SRomIsAdapterInList(
     _In_ BOOLEAN SearchForMaster,
     _Out_opt_ PDC_SROM_ENTRY* FoundEntry)
 {
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY PrevEntry;
     PDC_SROM_ENTRY SRomEntry;
 
     PAGED_CODE();
 
     /* Loop the adapter list backwards */
-    ListHead = &SRompAdapterList;
-    NextEntry = ListHead->Blink;
-    while (NextEntry != ListHead)
+    for (PrevEntry = (&SRompAdapterList)->Blink;
+         PrevEntry != &SRompAdapterList;
+         PrevEntry = PrevEntry->Blink)
     {
-        SRomEntry = CONTAINING_RECORD(NextEntry, DC_SROM_ENTRY, ListEntry);
+        SRomEntry = CONTAINING_RECORD(PrevEntry, DC_SROM_ENTRY, ListEntry);
 
         if ((SRomEntry->ChipType == Adapter->ChipType) &&
             (SRomEntry->BusNumber == Adapter->BusNumber) &&
@@ -86,8 +86,6 @@ SRomIsAdapterInList(
 
             return TRUE;
         }
-
-        NextEntry = NextEntry->Blink;
     }
 
     return FALSE;
@@ -1289,7 +1287,7 @@ SRomDumpContents(
         DbgPrint("\n");
     }
 }
-#endif
+#endif // DBG
 
 static
 CODE_SEG("PAGE")

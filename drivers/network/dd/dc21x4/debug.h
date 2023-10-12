@@ -19,7 +19,7 @@
 #define DEBUG_WARN
 #define DEBUG_ERR
 
-#if defined (DEBUG_TRACE)
+#ifdef DEBUG_TRACE
 #define TRACE(fmt, ...) \
     do { \
       if (DbgPrint("(%s:%d) %s " fmt, __RELFILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)) \
@@ -30,7 +30,7 @@
 #define TRACE
 #endif
 
-#if defined (DEBUG_INFO)
+#ifdef DEBUG_INFO
 #define INFO(fmt, ...) \
     do { \
       if (DbgPrint("(%s:%d) %s " fmt, __RELFILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)) \
@@ -41,7 +41,7 @@
 #define INFO
 #endif
 
-#if defined (DEBUG_INFO_VERB)
+#ifdef DEBUG_INFO_VERB
 #define INFO_VERB(fmt, ...) \
     do { \
       if (DbgPrint("(%s:%d) %s " fmt, __RELFILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)) \
@@ -52,7 +52,7 @@
 #define INFO_VERB
 #endif
 
-#if defined (DEBUG_WARN)
+#ifdef DEBUG_WARN
 #define WARN(fmt, ...) \
     do { \
       if (DbgPrint("(%s:%d) %s " fmt, __RELFILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)) \
@@ -63,7 +63,7 @@
 #define WARN
 #endif
 
-#if defined (DEBUG_ERR)
+#ifdef DEBUG_ERR
 #define ERR(fmt, ...) \
     do { \
       if (DbgPrint("(%s:%d) %s " fmt, __RELFILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)) \

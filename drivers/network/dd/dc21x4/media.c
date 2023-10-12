@@ -149,7 +149,6 @@ MediaMiiCheckLink(
     {
         goto NoLink;
     }
-
     if (!(MiiStatus & MII_SR_LINK_STATUS))
     {
         MiiRead(Adapter, Adapter->PhyAddress, MII_STATUS, &MiiStatus);
@@ -589,7 +588,7 @@ MediaInitMediaList(
             Adapter->Media[MEDIA_10T_HD].Csr14 = 0x7F3F;
             Adapter->Media[MEDIA_10T_HD].Csr15 = 0x0008;
 
-            Adapter->Media[MEDIA_10T_FD].Csr13 = 0xEF09;
+            Adapter->Media[MEDIA_10T_FD].Csr13 = 0xEF01;
             Adapter->Media[MEDIA_10T_FD].Csr14 = 0x7F3D;
             Adapter->Media[MEDIA_10T_FD].Csr15 = 0x0008;
             Adapter->Media[MEDIA_10T_FD].OpMode = DC_OPMODE_FULL_DUPLEX;

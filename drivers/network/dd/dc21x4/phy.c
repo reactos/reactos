@@ -119,7 +119,7 @@ MiiRead(
     MiiMdioClearExtraBits(Adapter);
 
     Csr = DC_READ(Adapter, DcCsr9_SerialInterface);
-    Success = (Csr & DC_SERIAL_MII_MDI) ? FALSE : TRUE;
+    Success = !(Csr & DC_SERIAL_MII_MDI);
 
     *Data = MiiMdioShiftIn(Adapter);
 
@@ -185,7 +185,7 @@ HpnaWrite(
                     (Data << 16) |
                     (RegAddress << 8) |
                     DC_SPI_BYTE_WRITE_OPERATION,
-                    24);
+                    RTL_BITS_OF(UCHAR) * 3);
     HpnaSpiClose(Adapter);
 }
 
@@ -222,9 +222,9 @@ DcFindMiiPhy(
     PAGED_CODE();
 
     /* Look for the first connected PHY */
-    for (Phy = 1; Phy <= 32; ++Phy)
+    for (Phy = 1; Phy <= MII_MAX_PHY_ADDRESSES; ++Phy)
     {
-        ULONG PhyAddress = Phy & 0x1F; /* Check the PHY 0 last */
+        ULONG PhyAddress = Phy % MII_MAX_PHY_ADDRESSES; /* Check the PHY 0 last */
         ULONG MiiStatus;
 #if DBG
         ULONG PhyIdLow, PhyIdHigh, MiiControl, MiiAdvertise;
@@ -252,9 +252,6 @@ DcFindMiiPhy(
                   MiiControl,
                   MiiStatus,
                   MiiAdvertise);
-
-        /* Sanity check */
-        ASSERT((MiiStatus & 0xFF00) == 0x7800);
 #endif
 
         Adapter->PhyAddress = PhyAddress;

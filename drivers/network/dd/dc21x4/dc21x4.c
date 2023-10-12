@@ -13,27 +13,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-#if defined(MEMCMP_HACK)
-BOOLEAN
-DcEqualMemory(
-    _In_reads_bytes_(Length) const VOID* Destination,
-    _In_reads_bytes_(Length) const VOID* Source,
-    _In_ SIZE_T Length)
-{
-    SIZE_T i;
-    const UCHAR* Src = Source;
-    const UCHAR* Dest = Destination;
-
-    for (i = 0; i < Length; ++i)
-    {
-        if (Src[i] != Dest[i])
-            return FALSE;
-    }
-
-    return TRUE;
-}
-#endif
-
 ULONG
 DcEthernetCrc(
     _In_reads_bytes_(Size) const VOID* Buffer,

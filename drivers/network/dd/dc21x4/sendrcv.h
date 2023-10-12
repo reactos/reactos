@@ -111,9 +111,5 @@ DC_GET_RCB_SLOT(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ PDC_RBD Rbd)
 {
-    PDC_RCB* Rcb;
-
-    Rcb = Adapter->RcbArray + (((ULONG_PTR)(Rbd - Adapter->HeadRbd)));
-
-    return Rcb;
+    return Adapter->RcbArray + (((ULONG_PTR)(Rbd - Adapter->HeadRbd)));
 }

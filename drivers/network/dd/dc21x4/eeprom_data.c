@@ -200,7 +200,7 @@ static DC_PG_DATA UCHAR SRompLeafCobaltMicroserver[] =
 };
 
 #if DBG
-#define DEFINE_BOARD(Leaf, Name) { Leaf, Name, sizeof(Leaf) - 3 /* OUI (3 bytes) */}
+#define DEFINE_BOARD(Leaf, Name) { Name, Leaf, sizeof(Leaf) - 3 /* OUI (3 bytes) */}
 #else
 #define DEFINE_BOARD(Leaf, Name) { Leaf, sizeof(Leaf) - 3 }
 #endif

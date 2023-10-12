@@ -205,6 +205,8 @@ DcProcessPendingPackets(
     NDIS_STATUS Status;
     PNDIS_PACKET Packet;
 
+    ASSERT(!IsListEmpty(&Adapter->SendQueueList));
+
     do
     {
         Entry = RemoveHeadList(&Adapter->SendQueueList);
@@ -272,7 +274,7 @@ DcCancelSendPackets(
 {
     PDC21X4_ADAPTER Adapter = (PDC21X4_ADAPTER)MiniportAdapterContext;
     LIST_ENTRY DoneList;
-    PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry, NextEntry;
 
     TRACE("Called\n");
 
@@ -280,11 +282,15 @@ DcCancelSendPackets(
 
     NdisAcquireSpinLock(&Adapter->SendLock);
 
-    for (Entry = Adapter->SendQueueList.Flink;
-         Entry != &Adapter->SendQueueList;
-         Entry = Entry->Flink)
+    NextEntry = Adapter->SendQueueList.Flink;
+    while (NextEntry != &Adapter->SendQueueList)
     {
-        PNDIS_PACKET Packet = DC_PACKET_FROM_LIST_ENTRY(Entry);
+        PNDIS_PACKET Packet;
+
+        Entry = NextEntry;
+        NextEntry = NextEntry->Flink;
+
+        Packet = DC_PACKET_FROM_LIST_ENTRY(Entry);
 
         if (NDIS_GET_PACKET_CANCEL_ID(Packet) == CancelId)
         {
