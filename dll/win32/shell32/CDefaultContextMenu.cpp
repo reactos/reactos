@@ -39,7 +39,7 @@ typedef struct _StaticShellEntry_
     HKEY hkClass;
 } StaticShellEntry, *PStaticShellEntry;
 
-#define DFM_FCIDM_SHVIEW_OFFSET 0x7000 // Offset from the menu ids in the menu resource to FCIDM_SHVIEW_*
+#define DCM_FCIDM_SHVIEW_OFFSET 0x7000 // Offset from the menu ids in the menu resource to FCIDM_SHVIEW_*
 
 //
 // verbs for InvokeCommandInfo
@@ -683,7 +683,9 @@ CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffse
     UINT ntver = RosGetProcessEffectiveVersion();
     if (((uFlags & CMF_NODEFAULT) && ntver >= _WIN32_WINNT_VISTA) ||
         ((uFlags & CMF_DONOTPICKDEFAULT) && ntver >= _WIN32_WINNT_WIN7))
+    {
         return;
+    }
 
     // Do we already have a default?
     if ((int)GetMenuDefaultItem(hMenu, MF_BYPOSITION, 0) != -1)
@@ -695,7 +697,7 @@ CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffse
     {
         for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
         {
-            UINT menuItemId = g_StaticInvokeCmdMap[i].IntVerb + DfltOffset - DFM_FCIDM_SHVIEW_OFFSET;
+            UINT menuItemId = g_StaticInvokeCmdMap[i].IntVerb + DfltOffset - DCM_FCIDM_SHVIEW_OFFSET;
             if ((int)g_StaticInvokeCmdMap[i].DfmCmd == (int)(UINT)forceDfm &&
                 SetMenuDefaultItem(hMenu, menuItemId, MF_BYCOMMAND))
             {
@@ -707,9 +709,7 @@ CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffse
     // Don't want to pick something like cut or delete as the default but
     // a static or dynamic verb is a good default.
     if (m_iIdSCMLast > m_iIdSCMFirst || m_iIdSHELast > m_iIdSHEFirst)
-    {
         SetMenuDefaultItem(hMenu, idCmdFirst, MF_BYCOMMAND);
-    }
 }
 
 HRESULT
@@ -1336,7 +1336,7 @@ CDefaultContextMenu::InvokeCommand(
     {
         CmdId -= m_iIdDfltFirst;
         /* See the definitions of IDM_CUT and co to see how this works */
-        CmdId += DFM_FCIDM_SHVIEW_OFFSET;
+        CmdId += DCM_FCIDM_SHVIEW_OFFSET;
     }
 
     if (LocalInvokeInfo.cbSize >= sizeof(CMINVOKECOMMANDINFOEX) && (LocalInvokeInfo.fMask & CMIC_MASK_PTINVOKE))
@@ -1463,7 +1463,7 @@ CDefaultContextMenu::GetCommandString(
     {
         CmdId -= m_iIdDfltFirst;
         /* See the definitions of IDM_CUT and co to see how this works */
-        CmdId += DFM_FCIDM_SHVIEW_OFFSET;
+        CmdId += DCM_FCIDM_SHVIEW_OFFSET;
     }
 
     /* Loop looking for a matching Id */
