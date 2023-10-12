@@ -239,10 +239,10 @@ class CDefView :
         BOOL InitList();
         static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
 
-        HRESULT MapFolderToList(UINT FoldCol);
-        HRESULT MapListToFolder(UINT ListCol);
-        HRESULT GetDetailsOfFromFolder(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd);
-        HRESULT GetDetailsOfFromList(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd);
+        HRESULT MapFolderColumnToListColumn(UINT FoldCol);
+        HRESULT MapListColumnToFolderColumn(UINT ListCol);
+        HRESULT GetDetailsByFolderColumn(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd);
+        HRESULT GetDetailsByListColumn(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd);
         HRESULT LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert);
         HRESULT LoadColumns(UINT *pColList = NULL, UINT ColListCount = 0);
         void ColumnListChanged();
@@ -861,7 +861,7 @@ static HRESULT SHGetLVColumnSubItem(HWND List, UINT Col)
         return lvc.iSubItem;
 }
 
-HRESULT CDefView::MapFolderToList(UINT FoldCol)
+HRESULT CDefView::MapFolderColumnToListColumn(UINT FoldCol)
 {
     // This function is only called during column management, performance is not critical.
     for (UINT i = 0;; ++i)
@@ -874,7 +874,7 @@ HRESULT CDefView::MapFolderToList(UINT FoldCol)
     }
 }
 
-HRESULT CDefView::MapListToFolder(UINT ListCol)
+HRESULT CDefView::MapListColumnToFolderColumn(UINT ListCol)
 {
     // This function is called every time a LVITEM::iSubItem is mapped to
     // a folder column (calls to GetDetailsOf etc.) and should be fast.
@@ -895,7 +895,7 @@ HRESULT CDefView::MapListToFolder(UINT ListCol)
     return SHGetLVColumnSubItem(m_ListView.m_hWnd, ListCol);
 }
 
-HRESULT CDefView::GetDetailsOfFromFolder(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd)
+HRESULT CDefView::GetDetailsByFolderColumn(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd)
 {
     // According to learn.microsoft.com/en-us/windows/win32/shell/sfvm-getdetailsof
     // the query order is IShellFolder2, IShellDetails, SFVM_GETDETAILSOF.
@@ -917,11 +917,11 @@ HRESULT CDefView::GetDetailsOfFromFolder(PCUITEMID_CHILD pidl, UINT FoldCol, SHE
     return hr;
 }
 
-HRESULT CDefView::GetDetailsOfFromList(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd)
+HRESULT CDefView::GetDetailsByListColumn(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd)
 {
-    HRESULT hr = MapListToFolder(ListCol);
+    HRESULT hr = MapListColumnToFolderColumn(ListCol);
     if (SUCCEEDED(hr))
-        return GetDetailsOfFromFolder(pidl, hr, sd);
+        return GetDetailsByFolderColumn(pidl, hr, sd);
     ERR("Unable to determine folder column from list column %d\n", (int) ListCol);
     return hr;
 }
@@ -933,7 +933,7 @@ HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
     HRESULT hr;
 
     sd.str.uType = !STRRET_WSTR; // Protect ourself from broken implementations
-    hr = GetDetailsOfFromFolder(NULL, FoldCol, sd);
+    hr = GetDetailsByFolderColumn(NULL, FoldCol, sd);
     if (FAILED(hr))
         return hr;
     hr = StrRetToStrNW(buf, _countof(buf), &sd.str, NULL);
@@ -945,7 +945,7 @@ HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
     lvc.pszText = buf;
     lvc.fmt = sd.fmt;
     lvc.cx = sd.cxChar * 8; // FIXME: Font size? DPI?
-    lvc.iSubItem = FoldCol; // Used by MapFolderToList & MapListToFolder
+    lvc.iSubItem = FoldCol; // Used by MapFolderColumnToListColumn & MapListColumnToFolderColumn
     if ((int) ListCol == -1)
     {
         assert(Insert); // You can insert at the end but you can't change something that is not there
@@ -1014,7 +1014,7 @@ HRESULT CDefView::LoadColumns(UINT *pColList, UINT ColListCount)
 
     m_ListView.SetRedraw(TRUE);
     ColumnListChanged();
-    assert(SUCCEEDED(MapFolderToList(0))); // We don't allow turning off the Name column
+    assert(SUCCEEDED(MapFolderColumnToListColumn(0))); // We don't allow turning off the Name column
     return hr;
 }
 
@@ -1025,7 +1025,7 @@ void CDefView::ColumnListChanged()
     DPA_DeleteAllPtrs(cache);
     for (UINT i = 0;; ++i)
     {
-        HRESULT hr = MapListToFolder(i);
+        HRESULT hr = MapListColumnToFolderColumn(i);
         if (FAILED(hr))
             break; // No more columns
         if (!DPA_SetPtr(cache, i, (void*)(INT_PTR) hr))
@@ -1058,7 +1058,7 @@ void CDefView::ColumnListChanged()
     {
         if (!ListView_GetColumn(m_ListView.m_hWnd, listCol, &lvc))
             break;
-        HRESULT foldCol = MapListToFolder(listCol);
+        HRESULT foldCol = MapListColumnToFolderColumn(listCol);
         assert(SUCCEEDED(foldCol));
         AppendMenuItem(m_hMenuArrangeModes, MF_STRING,
                        DVIDM_ARRANGESORT_FIRST + listCol, lvc.pszText, listCol);
@@ -1386,7 +1386,7 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
             ULONG foldSortCol = sortCol;
             HRESULT hr = m_pSF2Parent->GetDefaultColumn(NULL, &foldSortCol, NULL);
             if (SUCCEEDED(hr))
-                hr = MapFolderToList(foldSortCol);
+                hr = MapFolderColumnToListColumn(foldSortCol);
             if (SUCCEEDED(hr))
                 sortCol = (int) hr;
         }
@@ -1783,7 +1783,7 @@ LRESULT CDefView::DoColumnContextMenu(LPARAM lParam)
         WCHAR buf[MAX_PATH];
         SHELLDETAILS sd;
         sd.str.uType = !STRRET_WSTR;
-        if (FAILED(GetDetailsOfFromFolder(NULL, foldCol, sd)))
+        if (FAILED(GetDetailsByFolderColumn(NULL, foldCol, sd)))
             break;
         if (FAILED(StrRetToStrNW(buf, _countof(buf), &sd.str, NULL)))
             break;
@@ -1794,7 +1794,7 @@ LRESULT CDefView::DoColumnContextMenu(LPARAM lParam)
         showMore |= (state & (SHCOLSTATE_SECONDARYUI));
 
         UINT mf = MF_STRING;
-        HRESULT listCol = MapFolderToList(foldCol);
+        HRESULT listCol = MapFolderColumnToListColumn(foldCol);
 
         if (foldCol == 0)
             mf |= MF_CHECKED | MF_GRAYED | MF_DISABLED; // Force column 0
@@ -1839,7 +1839,7 @@ LRESULT CDefView::DoColumnContextMenu(LPARAM lParam)
     else if (idCmd)
     {
         UINT foldCol = idCmd - idFirst;
-        HRESULT listCol = MapFolderToList(foldCol);
+        HRESULT listCol = MapFolderColumnToListColumn(foldCol);
         if (SUCCEEDED(listCol))
         {
             ListView_DeleteColumn(m_ListView.m_hWnd, listCol);
@@ -2472,7 +2472,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
         case LVN_COLUMNCLICK:
             // The folder returns 0 if it sorted, otherwise we do the sorting
-            if (!m_pSDParent || m_pSDParent->ColumnClick(MapListToFolder(lpnmlv->iSubItem)))
+            if (!m_pSDParent || m_pSDParent->ColumnClick(MapListColumnToFolderColumn(lpnmlv->iSubItem)))
                 _Sort(lpnmlv->iSubItem);
             break;
 
@@ -2484,7 +2484,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             if (lpdi->item.mask & LVIF_TEXT)    /* text requested */
             {
                 SHELLDETAILS sd;
-                if (FAILED_UNEXPECTEDLY(GetDetailsOfFromList(pidl, lpdi->item.iSubItem, sd)))
+                if (FAILED_UNEXPECTEDLY(GetDetailsByListColumn(pidl, lpdi->item.iSubItem, sd)))
                     break;
 
                 if (lpnmh->code == LVN_GETDISPINFOA)
