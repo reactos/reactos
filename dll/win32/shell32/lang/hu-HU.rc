@@ -364,23 +364,22 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Futtatás mint"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Melyik felhasználói fiók használatával akarja futtatni ezt a programot?", -1, 10, 20, 220, 20
-    CHECKBOX "Jelenlegi felhasználó %s", 14000, 10, 40, 150, 10
+    AUTORADIOBUTTON "Jelenlegi felhasználó %s", IDC_RUNAS_CURRENT, 10, 45, 150, 10, WS_GROUP
     LTEXT "A számítógép és az adatok védelme jogosulatlan programtevékenységek ellen.", -1, 25, 50, 200, 16, WS_DISABLED
     CHECKBOX "Ez a beállítás meg tudja akadályozni hogy számítógépes vírusok kárt tegyenek a számítógépében vagy a személyes adataiban, de ezt választva lehet hogy a program nem fog megfelelően működni.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "A következő felhasználó:", 14002, 10, 100, 90, 10
+    AUTORADIOBUTTON "A következő felhasználó:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "Felhasználónév:", -1, 20, 118, 54, 10
-    COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14
+    COMBOBOX IDC_RUNAS_NAME, 75, 115, 100, 15, CBS_DROPDOWN | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Jelszó:", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Mégse", 14008, 122, 170, 60, 14
+    EDITTEXT IDC_RUNAS_PWD, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "OK", IDOK, 57, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "Mégse", IDCANCEL, 122, 170, 60, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190

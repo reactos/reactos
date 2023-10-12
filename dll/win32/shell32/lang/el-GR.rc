@@ -364,23 +364,22 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Εκτέλεση ώς"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Επιλέξτε ποιός λογαριασμός χρήστη θέλετε να τρέξει αυτό το πρόγραμμα", -1, 10, 20, 220, 20
-    CHECKBOX "Τρέχον χρήστης %s", 14000, 10, 45, 150, 10
+    AUTORADIOBUTTON "Τρέχον χρήστης %s", IDC_RUNAS_CURRENT, 10, 45, 150, 10, WS_GROUP
     LTEXT "Προστασία του υπολογιστή απο μη εξουσιοδοτημένες ενέργειες προγραμμάτων", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Αυτή η επιλογή μπορεί να αποτρέψει ιούς να βλάψουν τον υπολογιστή σας αλλά επιλέγοντάς το μπορεί να κάνει κάποια προγράμματα να μην λειτουργούν σωστά.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Ο παρακάτω χρήστης:", 14002, 10, 100, 90, 10
+    AUTORADIOBUTTON "Ο παρακάτω χρήστης:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "Όνομα χρήστη:", -1, 20, 115, 60, 10
-    COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 10
+    COMBOBOX IDC_RUNAS_NAME, 70, 115, 100, 15, CBS_DROPDOWN | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
     LTEXT "Κωδικός πρόσβασης:", -1, 20, 140, 60, 10
-    EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 10
-    PUSHBUTTON "OK", 14007, 70, 170, 60, 15
-    PUSHBUTTON "Άκυρο", 14008, 140, 170, 60, 15
+    EDITTEXT IDC_RUNAS_PWD, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "OK", IDOK, 70, 170, 60, 15, WS_TABSTOP
+    PUSHBUTTON "Άκυρο", IDCANCEL, 140, 170, 60, 15, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190

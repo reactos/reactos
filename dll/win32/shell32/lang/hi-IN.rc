@@ -371,7 +371,7 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "रन ऐज़"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -379,7 +379,7 @@ BEGIN
     CHECKBOX "मौजूदा यूज़र %s", 14000, 10, 45, 150, 10
     LTEXT "अनधिकृत प्रोग्राम गतिविधि से अपने कंप्यूटर और डेटा को सुरक्षित रखें", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "यह विकल्प कंप्यूटर वायरस को आपके कंप्यूटर या व्यक्तिगत डेटा को नुकसान पहुंचाने से रोक सकता है, लेकिन इसे चुनने से प्रोग्राम अनुचित तरीके से कार्य कर सकता है।", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "निम्नलिखित यूज़र:", 14002, 10, 100, 90, 10
+    CHECKBOX "निम्नलिखित यूज़र:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "यूज़र नेम:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14

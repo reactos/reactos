@@ -364,23 +364,22 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Kör som"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Vilket användarkonto vill du använda för att köra det här programmet?", -1, 10, 20, 220, 20
-    CHECKBOX "Nuvarande användare %s", 14000, 10, 45, 150, 10
+    AUTORADIOBUTTON "Nuvarande användare %s", IDC_RUNAS_CURRENT, 10, 45, 150, 10, WS_GROUP
     LTEXT "Skydda min dator från otillåten programaktivitet", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Det här alternativet kan hindra virus från att skada din dator eller personliga data, men kan orsaka att programmet inte fungerar korrekt.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Följande användare:", 14002, 10, 100, 90, 10
+    AUTORADIOBUTTON "Följande användare:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "Användarnamn:", -1, 20, 118, 54, 10
-    COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14
+    COMBOBOX IDC_RUNAS_NAME, 75, 115, 100, 15, CBS_DROPDOWN | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Lösenord:", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Avbryt", 14008, 122, 170, 60, 14
+    EDITTEXT IDC_RUNAS_PWD, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "OK", IDOK, 57, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "Avbryt", IDCANCEL, 122, 170, 60, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190

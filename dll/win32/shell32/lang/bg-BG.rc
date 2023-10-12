@@ -364,23 +364,22 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Изпълняване като"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "От чия потребителска сметка искате да изпълните приложението?", -1, 10, 20, 220, 20
-    CHECKBOX "Сегашен потребител %s", 14000, 10, 45, 150, 10
+    AUTORADIOBUTTON "Сегашен потребител %s", IDC_RUNAS_CURRENT, 10, 45, 150, 10, WS_GROUP
     LTEXT "Защита на компютъра и данните от неупълномощена дейност на приложенията", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Този избор може да попречи на вирусите да повредят компютъра или данните ви, но може и да попречи на редовната работа на приложението.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Следният потребител:", 14002, 10, 100, 90, 10
+    AUTORADIOBUTTON "Следният потребител:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "Потребител:", -1, 20, 115, 60, 10
-    COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14
+    COMBOBOX IDC_RUNAS_NAME, 70, 115, 100, 15, CBS_DROPDOWN | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Парола:", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14
-    PUSHBUTTON "Добре", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Отказ", 14008, 122, 170, 60, 14
+    EDITTEXT IDC_RUNAS_PWD, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "Добре", IDOK, 57, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "Отказ", IDCANCEL, 122, 170, 60, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190

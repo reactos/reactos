@@ -372,23 +372,22 @@ BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Executare ca"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Ce cont de utilizator alegeţi pentru a executa acest program?", -1, 10, 20, 220, 20
-    CHECKBOX "Utilizatorul &curent (%s)", 14000, 10, 45, 150, 10
-    LTEXT "&Protejează computerul şi datele faţă de programe neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "Această opţiune poate preveni daunele provocate computerului şi datelor personale de către viruşi, dar selectarea acesteia poate cauza funcţionarea necorespunzătoare a programului.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "&Acest utilizator:", 14002, 10, 100, 90, 10
+    LTEXT "Ce cont de utilizator este folosit pentru a executa?", -1, 10, 20, 220, 20
+    AUTORADIOBUTTON "Utilizator curent: %s", IDC_RUNAS_CURRENT, 10, 45, 150, 10, WS_GROUP
+    LTEXT "Protejare calculator de activiăți neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
+    CHECKBOX "Această opțiune vă poate proteja calculatorul de activități care pot fi dăunătoare dar poate de asemenea duce la funcționarea incorectă a programului.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    AUTORADIOBUTTON "Următorul utilizator:", IDC_RUNAS_OTHER, 10, 100, 90, 10
     LTEXT "Nume utilizator:", -1, 20, 118, 54, 10
-    COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "…", 14004, 180, 115, 30, 14
+    COMBOBOX IDC_RUNAS_NAME, 75, 115, 100, 15, CBS_DROPDOWN | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "…", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Parolă:", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "…", 14006, 180, 140, 30, 14
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Revocare", 14008, 122, 170, 60, 14
+    EDITTEXT IDC_RUNAS_PWD, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "Con&firmă", IDOK, 57, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "A&nulează", IDCANCEL, 122, 170, 60, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
