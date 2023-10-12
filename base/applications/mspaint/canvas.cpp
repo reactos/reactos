@@ -199,6 +199,12 @@ VOID CCanvasWindow::updateScrollInfo()
     SetScrollInfo(SB_VERT, &si);
 }
 
+VOID CCanvasWindow::resetScrollPos()
+{
+    SetScrollPos(SB_HORZ, 0);
+    SetScrollPos(SB_VERT, 0);
+}
+
 LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_hWnd)

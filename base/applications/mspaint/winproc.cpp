@@ -921,6 +921,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_IMAGEROTATEMIRROR:
             {
                 CWaitCursor waitCursor;
+                canvasWindow.resetScrollPos();
                 switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
                 {
                     case 1: /* flip horizontally */
