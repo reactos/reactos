@@ -413,7 +413,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                                                  pnmv->iItem,
                                                  pnmv->iSubItem,
                                                  szDriverPath,
-                                                 MAX_PATH);
+                                                 _countof(szDriverPath));
 
                             UpdateDriverVersionInfoDetails(hwndDlg,
                                                            szDriverPath);
@@ -1944,16 +1944,11 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                         if (nSelectedId < 0 || nSelectedItems <= 0)
                             break;
 
-                        TCHAR szItemName[MAX_PATH];
                         HGLOBAL hGlobal;
                         LPWSTR pszBuffer;
+                        SIZE_T cchSize = MAX_PATH + 1;
 
-                        ListView_GetItemText(hwndListView,
-                                             nSelectedId, 0,
-                                             szItemName,
-                                             _countof(szItemName));
-
-                        hGlobal = GlobalAlloc(GHND, MAX_PATH);
+                        hGlobal = GlobalAlloc(GHND, cchSize * sizeof(WCHAR));
                         if (!hGlobal)
                             break;
                         pszBuffer = (LPWSTR)GlobalLock(hGlobal);
@@ -1963,7 +1958,12 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                             break;
                         }
 
-                        wsprintf(pszBuffer, L"%s", szItemName);
+                        ListView_GetItemText(hwndListView,
+                                             nSelectedId, 0,
+                                             pszBuffer,
+                                             cchSize);
+                        /* Ensure NULL-termination */
+                        pszBuffer[cchSize - 1] = UNICODE_NULL;
 
                         GlobalUnlock(hGlobal);
 
