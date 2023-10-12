@@ -504,7 +504,7 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     UINT id = LOWORD(wParam);
     UINT codeNotify = HIWORD(wParam);
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
-    BOOL bChecked = ::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
+    BOOL bChecked = (BOOL)::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
 
     switch (id)
     {
