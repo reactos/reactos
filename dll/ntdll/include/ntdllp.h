@@ -104,7 +104,7 @@ LdrpGetProcedureAddress(
     _In_ PVOID BaseAddress,
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-    _Out_ PVOID *ProcedureAddress,
+    _Out_ PVOID* ProcedureAddress,
     _In_ BOOLEAN ExecuteInit);
 
 PLDR_DATA_TABLE_ENTRY NTAPI

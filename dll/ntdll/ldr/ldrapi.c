@@ -309,10 +309,11 @@ LdrLockLoaderLock(
 NTSTATUS
 NTAPI
 DECLSPEC_HOTPATCH
-LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
-           IN PULONG DllCharacteristics OPTIONAL,
-           IN PUNICODE_STRING DllName,
-           OUT PVOID *BaseAddress)
+LdrLoadDll(
+    _In_opt_ PWSTR SearchPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID* BaseAddress)
 {
     WCHAR StringBuffer[MAX_PATH];
     UNICODE_STRING DllString1, DllString2;
@@ -426,7 +427,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
         LdrpTopLevelDllBeingLoaded = OldTldDll;
 
         /* Release the lock */
-        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+        LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
     }
     _SEH2_END;
 
@@ -793,7 +794,7 @@ Quickie:
     /* Release lock */
     if (Locked)
     {
-        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
+        LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
                             Cookie);
     }
 
@@ -829,7 +830,7 @@ LdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-    _Out_ PVOID *ProcedureAddress)
+    _Out_ PVOID* ProcedureAddress)
 {
     /* Call the internal routine and tell it to execute DllInit */
     return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
@@ -840,10 +841,11 @@ LdrGetProcedureAddress(
  */
 NTSTATUS
 NTAPI
-LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
-                              IN PLDR_CALLBACK Callback,
-                              IN PVOID CallbackContext,
-                              OUT PUSHORT ImageCharacteristics)
+LdrVerifyImageMatchesChecksum(
+    _In_ HANDLE FileHandle,
+    _In_ PLDR_CALLBACK Callback,
+    _In_ PVOID CallbackContext,
+    _Out_ PUSHORT ImageCharacteristics)
 {
     FILE_STANDARD_INFORMATION FileStandardInfo;
     PIMAGE_IMPORT_DESCRIPTOR ImportData;
@@ -982,18 +984,19 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 
 NTSTATUS
 NTAPI
-LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
-                                   IN ULONG Reserved,
-                                   OUT PRTL_PROCESS_MODULES ModuleInformation,
-                                   IN ULONG Size,
-                                   OUT PULONG ReturnedSize OPTIONAL)
+LdrQueryProcessModuleInformationEx(
+    _In_opt_ ULONG ProcessId,
+    _Reserved_ ULONG Reserved,
+    _Out_writes_bytes_to_(Size, *ReturnedSize) PRTL_PROCESS_MODULES ModuleInformation,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG ReturnedSize)
 {
     PLIST_ENTRY ModuleListHead, InitListHead;
     PLIST_ENTRY Entry, InitEntry;
     PLDR_DATA_TABLE_ENTRY Module, InitModule;
     PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG UsedSize = sizeof(ULONG);
+    ULONG UsedSize = FIELD_OFFSET(RTL_PROCESS_MODULES, Modules);
     ANSI_STRING AnsiString;
     PCHAR p;
 
@@ -1110,9 +1113,10 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
  */
 NTSTATUS
 NTAPI
-LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
-                                 IN ULONG Size,
-                                 OUT PULONG ReturnedSize OPTIONAL)
+LdrQueryProcessModuleInformation(
+    _Out_writes_bytes_to_(Size, *ReturnedSize) PRTL_PROCESS_MODULES ModuleInformation,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG ReturnedSize)
 {
     /* Call Ex version of the API */
     return LdrQueryProcessModuleInformationEx(0, 0, ModuleInformation, Size, ReturnedSize);
@@ -1123,9 +1127,10 @@ LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
  */
 NTSTATUS
 NTAPI
-LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
-                          IN PLDR_ENUM_CALLBACK EnumProc,
-                          IN PVOID Context)
+LdrEnumerateLoadedModules(
+    _Reserved_ ULONG ReservedFlag,
+    _In_ PLDR_ENUM_CALLBACK EnumProc,
+    _In_opt_ PVOID Context)
 {
     PLIST_ENTRY ListHead, ListEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -1161,28 +1166,24 @@ LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
         /* Break if we were asked to stop enumeration */
         if (Stop)
         {
-            /* Release loader lock */
-            Status = LdrUnlockLoaderLock(0, Cookie);
-
-            /* Reset any successful status to STATUS_SUCCESS, but leave
-               failure to the caller */
-            if (NT_SUCCESS(Status))
-                Status = STATUS_SUCCESS;
-
-            /* Return any possible failure status */
-            return Status;
+            break;
         }
 
         /* Advance to the next module */
         ListEntry = ListEntry->Flink;
     }
 
-    /* Release loader lock, it must succeed this time */
+    /* Release loader lock */
     Status = LdrUnlockLoaderLock(0, Cookie);
     ASSERT(NT_SUCCESS(Status));
 
-    /* Return success */
-    return STATUS_SUCCESS;
+    /* Reset any successful status to STATUS_SUCCESS,
+     * but leave failure to the caller */
+    if (NT_SUCCESS(Status))
+        Status = STATUS_SUCCESS;
+
+    /* Return any possible failure status */
+    return Status;
 }
 
 /*
@@ -1190,7 +1191,7 @@ LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
  */
 NTSTATUS
 NTAPI
-LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
+LdrDisableThreadCalloutsForDll(_In_ PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status;
@@ -1240,8 +1241,9 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
  */
 NTSTATUS
 NTAPI
-LdrAddRefDll(IN ULONG Flags,
-             IN PVOID BaseAddress)
+LdrAddRefDll(
+    _In_ ULONG Flags,
+    _In_ PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1316,7 +1318,7 @@ quickie:
     }
 
     /* Release the lock if needed */
-    if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    if (Locked) LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
     return Status;
 }
 
@@ -1325,7 +1327,7 @@ quickie:
  */
 NTSTATUS
 NTAPI
-LdrUnloadDll(IN PVOID BaseAddress)
+LdrUnloadDll(_In_ PVOID BaseAddress)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PPEB Peb = NtCurrentPeb();
@@ -1601,10 +1603,11 @@ RtlDllShutdownInProgress(VOID)
  */
 PIMAGE_BASE_RELOCATION
 NTAPI
-LdrProcessRelocationBlock(IN ULONG_PTR Address,
-                          IN ULONG Count,
-                          IN PUSHORT TypeOffset,
-                          IN LONG_PTR Delta)
+LdrProcessRelocationBlock(
+    _In_ ULONG_PTR Address,
+    _In_ ULONG Count,
+    _In_ PUSHORT TypeOffset,
+    _In_ LONG_PTR Delta)
 {
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
@@ -1617,8 +1620,9 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
  */
 NTSTATUS
 NTAPI
-LdrLoadAlternateResourceModule(IN PVOID Module,
-                               IN PWSTR Buffer)
+LdrLoadAlternateResourceModule(
+    _In_ PVOID Module,
+    _In_ PWSTR Buffer)
 {
     /* Is MUI Support enabled? */
     if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
@@ -1632,7 +1636,7 @@ LdrLoadAlternateResourceModule(IN PVOID Module,
  */
 BOOLEAN
 NTAPI
-LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+LdrUnloadAlternateResourceModule(_In_ PVOID BaseAddress)
 {
     ULONG_PTR Cookie;
 
@@ -1646,7 +1650,7 @@ LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
     }
 
     /* Release the loader lock */
-    LdrUnlockLoaderLock(1, Cookie);
+    LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
 
     /* All done */
     return TRUE;
