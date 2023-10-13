@@ -8,7 +8,6 @@
 #include "precomp.h"
 
 #include <mapi.h>
-#include <mapicode.h>
 
 POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
