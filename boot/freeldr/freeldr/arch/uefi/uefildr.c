@@ -18,6 +18,7 @@ PVOID UefiServiceStack;
 PVOID BasicStack;
 
 void _changestack(VOID);
+VOID __cdecl Reboot(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
