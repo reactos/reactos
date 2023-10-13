@@ -2597,19 +2597,20 @@ ExFreePoolWithTag(IN PVOID P,
         else if (Tag & PROTECTED_POOL)
         {
             Tag &= ~PROTECTED_POOL;
-        }
+            TagToFree &= ~PROTECTED_POOL;
 
-        //
-        // Check block tag
-        //
-        if (TagToFree && TagToFree != Tag)
-        {
-            DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
+            //
+            // Check block tag
+            //
+            if (TagToFree && TagToFree != Tag)
+            {
+                DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
 #if DBG
-            /* Do not bugcheck in case this is a big allocation for which we didn't manage to insert the tag */
-            if (Tag != ' GIB')
-                KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
+                /* Do not bugcheck in case this is a big allocation for which we didn't manage to insert the tag */
+                if (Tag != ' GIB')
+                    KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
 #endif
+            }
         }
 
         //
@@ -2683,17 +2684,21 @@ ExFreePoolWithTag(IN PVOID P,
     // Get the pool tag and get rid of the PROTECTED_POOL flag
     //
     Tag = Entry->PoolTag;
-    if (Tag & PROTECTED_POOL) Tag &= ~PROTECTED_POOL;
-
-    //
-    // Check block tag
-    //
-    if (TagToFree && TagToFree != Tag)
+    if (Tag & PROTECTED_POOL)
     {
-        DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
+        Tag &= ~PROTECTED_POOL;
+        TagToFree &= ~PROTECTED_POOL;
+
+        //
+        // Check block tag
+        //
+        if (TagToFree && TagToFree != Tag)
+        {
+            DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
 #if DBG
-        KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
+            KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
 #endif
+	    }
     }
 
     //
