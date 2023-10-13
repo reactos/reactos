@@ -184,6 +184,68 @@ TestPoolTags(VOID)
     ExFreePoolWithTag(Memory, 'MyTa');
 }
 
+/*
+ * Reference: https://community.osr.com/discussion/236393/exfreepoolwithtag-etc
+ * 
+ * "In general the tags are associated with the memory but not checked. So
+ * allocating with a tag, then using a different tag or no tag to free
+ * memory is fine. You can change this behavior by or'ing PROTECTED_POOL
+ * to the tag, then the tag is checked at memory freeing to ensure they are
+ * the same. Using PROTECTED_POOL can be a good diagnostic."
+ */
+static
+VOID
+TestProtectedPoolTags(VOID)
+{
+    PVOID Memory;
+
+    /* First, test allocation and freeing with the same tag
+     * with a PROTECTED_POOL flag, which enables pool checking.
+     */
+    Memory = ExAllocatePoolWithTag(PagedPool, 8, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'MyTa' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 3 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID) + 1, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'MyTa' | PROTECTED_POOL);
+
+    /* Then, test it with different tags.
+     * The pool tag checks should be triggered now (on debug configuration).
+     */
+    Memory = ExAllocatePoolWithTag(PagedPool, 8, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'TooL' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'TooL' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 3 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'TooL' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID) + 1, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'TooL' | PROTECTED_POOL);
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'TooL' | PROTECTED_POOL);
+}
+
 static
 VOID
 TestPoolQuota(VOID)
@@ -310,6 +372,7 @@ START_TEST(ExPools)
     PoolsTest();
     PoolsCorruption();
     TestPoolTags();
+    TestProtectedPoolTags();
     TestPoolQuota();
     TestBigPoolExpansion();
 }
