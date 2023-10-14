@@ -91,10 +91,9 @@ HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
-    // Calculate the intersection on the canvas to reduce bits transfer.
-    // This is the target area we have to draw on.
-    CRect rcIntersectCanvas;
-    rcIntersectCanvas.IntersectRect(&rcClient, &rcPaint);
+    // This is the target area we have to draw on
+    CRect rcCanvasDraw;
+    rcCanvasDraw.IntersectRect(&rcClient, &rcPaint);
 
     // We use a memory bitmap to reduce flickering
     HDC hdcMem0 = ::CreateCompatibleDC(hDC);
@@ -102,12 +101,12 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
 
     // Fill the background on hdcMem0
-    ::FillRect(hdcMem0, &rcIntersectCanvas, (HBRUSH)(COLOR_APPWORKSPACE + 1));
+    ::FillRect(hdcMem0, &rcCanvasDraw, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow && !::IsWindowVisible(textEditWindow))
-        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcIntersectCanvas);
+        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcCanvasDraw);
 
     // Calculate image size
     CRect rcImage;
@@ -115,16 +114,16 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
     // Calculate the target area on the image
-    CRect rcIntersectImage = rcIntersectCanvas;
-    CanvasToImage(rcIntersectImage);
+    CRect rcImageDraw = rcCanvasDraw;
+    CanvasToImage(rcImageDraw);
 
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
     HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
-    ::BitBlt(hdcMem1, rcIntersectImage.left, rcIntersectImage.top,
-                      rcIntersectImage.Width(), rcIntersectImage.Height(),
-             imageModel.GetDC(), rcIntersectImage.left, rcIntersectImage.top, SRCCOPY);
+    ::BitBlt(hdcMem1, rcImageDraw.left, rcImageDraw.top,
+                      rcImageDraw.Width(), rcImageDraw.Height(),
+             imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
@@ -170,9 +169,9 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     // Transfer the bits (hDC <-- hdcMem0)
     ::BitBlt(hDC,
-             rcIntersectCanvas.left, rcIntersectCanvas.top,
-             rcIntersectCanvas.Width(), rcIntersectCanvas.Height(),
-             hdcMem0, rcIntersectCanvas.left, rcIntersectCanvas.top, SRCCOPY);
+             rcCanvasDraw.left, rcCanvasDraw.top,
+             rcCanvasDraw.Width(), rcCanvasDraw.Height(),
+             hdcMem0, rcCanvasDraw.left, rcCanvasDraw.top, SRCCOPY);
 
     // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
