@@ -478,7 +478,6 @@ struct SmoothDrawTool : ToolBase
     void OnFinishDraw() override
     {
         ToolBase::OnFinishDraw();
-        m_bShiftDown = FALSE;
     }
 
     void OnCancelDraw() override
