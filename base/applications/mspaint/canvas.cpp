@@ -121,9 +121,9 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
     HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
-    BitBlt(hdcMem1, rcIntersectImage.left, rcIntersectImage.top,
-                    rcIntersectImage.Width(), rcIntersectImage.Height(),
-           imageModel.GetDC(), rcIntersectImage.left, rcIntersectImage.top, SRCCOPY);
+    ::BitBlt(hdcMem1, rcIntersectImage.left, rcIntersectImage.top,
+                      rcIntersectImage.Width(), rcIntersectImage.Height(),
+             imageModel.GetDC(), rcIntersectImage.left, rcIntersectImage.top, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
