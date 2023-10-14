@@ -118,6 +118,10 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     CanvasToImage(rcImageDraw);
     rcImageDraw &= rcImage;
 
+    // Consider rounding down by zooming
+    rcImageDraw.right += 1;
+    rcImageDraw.bottom += 1;
+
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
