@@ -116,6 +116,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Calculate the target area on the image
     CRect rcImageDraw = rcCanvasDraw;
     CanvasToImage(rcImageDraw);
+    rcImageDraw &= rcImage;
 
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
