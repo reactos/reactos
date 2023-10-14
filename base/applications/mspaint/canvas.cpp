@@ -91,7 +91,8 @@ HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
-    // Calculate the intersection on the canvas to reduce bits transfer
+    // Calculate the intersection on the canvas to reduce bits transfer.
+    // This is the target area we have to draw on.
     CRect rcIntersectCanvas;
     rcIntersectCanvas.IntersectRect(&rcClient, &rcPaint);
 
@@ -113,7 +114,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     GetImageRect(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
-    // Calculate the intersection on the image to reduce bits transfer
+    // Calculate the target area on the image
     CRect rcIntersectImage = rcIntersectCanvas;
     CanvasToImage(rcIntersectImage);
 
