@@ -434,7 +434,7 @@ struct SmoothDrawTool : ToolBase
         m_direction = NO_DIRECTION;
         imageModel.PushImageForUndo();
         imageModel.NotifyImageChanged();
-        m_bShiftDown = (::GetKeyState(VK_SHIFT) < 0); // Is Shift key pressed?
+        m_bShiftDown = (::GetKeyState(VK_SHIFT) & 0x8000); // Is Shift key pressed?
     }
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
