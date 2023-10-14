@@ -20,6 +20,7 @@ Multiple directories can be specified:
 import os
 import struct
 import sys
+import subprocess
 
 try:
     import pefile
@@ -343,6 +344,13 @@ class MemoryLayout(object):
         for obj in self.addresses:
             obj.gen_baseaddress(output_file)
 
+def is_gcc():
+    try:
+        result = subprocess.run(['gcc', '--version'], capture_output=True, text=True)
+        return result.stdout
+    except FileNotFoundError:
+        return None
+
 def get_target_file(ntdll_path):
     if 'pefile' in globals():
         ntdll_pe = pefile.PE(ntdll_path, fast_load=True)
@@ -356,6 +364,8 @@ def get_target_file(ntdll_path):
             return 'baseaddress_msvc.cmake'
         elif count > 3:
             return 'baseaddress_dwarf.cmake'
+        elif is_gcc() and is_x64():
+            return 'baseaddress_gcc_x64.cmake'
         else:
             assert False, "Unknown"
     return None
