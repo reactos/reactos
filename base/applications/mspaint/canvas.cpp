@@ -173,9 +173,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
         DrawXorRect(hdcMem0, &m_rcResizing);
 
     // Transfer the bits (hDC <-- hdcMem0)
-    ::BitBlt(hDC,
-             rcCanvasDraw.left, rcCanvasDraw.top,
-             rcCanvasDraw.Width(), rcCanvasDraw.Height(),
+    ::BitBlt(hDC, rcCanvasDraw.left, rcCanvasDraw.top, rcCanvasDraw.Width(), rcCanvasDraw.Height(),
              hdcMem0, rcCanvasDraw.left, rcCanvasDraw.top, SRCCOPY);
 
     // Clean up hdcMem0
