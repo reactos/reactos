@@ -116,7 +116,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Calculate the target area on the image
     CRect rcImageDraw = rcCanvasDraw;
     CanvasToImage(rcImageDraw);
-    rcImageDraw &= rcImage;
+    rcImageDraw.IntersectRect(&rcImageDraw, &rcImage);
 
     // Consider rounding down by zooming
     rcImageDraw.right += 1;
