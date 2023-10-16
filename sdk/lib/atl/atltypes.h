@@ -359,11 +359,46 @@ public:
             top == 0 && bottom == 0);
     }
 
-    //void MoveToX(int x) noexcept
-    //void MoveToXY(int x, int y) noexcept
-    //void MoveToXY(POINT point) noexcept
-    //void MoveToY(int y) noexcept
-    //void NormalizeRect() noexcept
+    void MoveToX(int x) noexcept
+    {
+        int dx = x - left;
+        left = x;
+        right += dx;
+    }
+
+    void MoveToY(int y) noexcept
+    {
+        int dy = y - top;
+        top = y;
+        bottom += dy;
+    }
+
+    void MoveToXY(int x, int y) noexcept
+    {
+        MoveToX(x);
+        MoveToY(y);
+    }
+
+    void MoveToXY(POINT point) noexcept
+    {
+        MoveToXY(point.x, point.y);
+    }
+
+    void NormalizeRect() noexcept
+    {
+        if (left > right)
+        {
+            LONG tmp = left;
+            left = right;
+            right = tmp;
+        }
+        if (top > bottom)
+        {
+            LONG tmp = top;
+            top = bottom;
+            bottom = tmp;
+        }
+    }
 
     void OffsetRect(int x, int y) noexcept
     {
@@ -384,10 +419,29 @@ public:
     {
         return ::PtInRect(this, point);
     }
-    //void SetRect(int x1, int y1, int x2, int y2) noexcept
-    //void SetRectEmpty() noexcept
-    //CSize Size() const noexcept
-    //BOOL SubtractRect(LPCRECT lpRectSrc1, LPCRECT lpRectSrc2) noexcept
+
+    void SetRect(int x1, int y1, int x2, int y2) noexcept
+    {
+        left = x1;
+        top = y1;
+        right = x2;
+        bottom = y2;
+    }
+
+    void SetRectEmpty() noexcept
+    {
+        ZeroMemory(this, sizeof(*this));
+    }
+
+    CSize Size() const noexcept
+    {
+        return CSize(Width(), Height());
+    }
+
+    BOOL SubtractRect(LPCRECT lpRectSrc1, LPCRECT lpRectSrc2) noexcept
+    {
+        return ::SubtractRect(this, lpRectSrc1, lpRectSrc2);
+    }
 
     CPoint& TopLeft() noexcept
     {
