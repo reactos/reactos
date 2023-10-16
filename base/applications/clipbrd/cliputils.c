@@ -207,6 +207,9 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
 
     switch (uFormat)
     {
+        case CF_NONE:
+            break;
+
         case CF_DSPBITMAP:
         case CF_BITMAP:
         {
