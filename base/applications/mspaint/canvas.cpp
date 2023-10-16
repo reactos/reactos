@@ -100,8 +100,8 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
     INT oldZoom = toolsModel.GetZoom();
     LONG cxView = rcView.Width() * oldZoom / newZoom;
     LONG cyView = rcView.Height() * oldZoom / newZoom;
-    SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
-                     ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
+    ::SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
+                       ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
 
     if (rcView.IsRectEmpty())
     {
