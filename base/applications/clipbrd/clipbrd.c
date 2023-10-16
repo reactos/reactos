@@ -25,6 +25,8 @@ static void InitGlobals(HINSTANCE hInstance)
     Globals.uCFSTR_FILENAMEA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
     Globals.uCFSTR_FILENAMEW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
     Globals.uCF_HTML = RegisterClipboardFormatW(L"HTML Format");
+    Globals.uCFSTR_INETURLA = RegisterClipboardFormatA(CFSTR_INETURLA);
+    Globals.uCFSTR_INETURLW = RegisterClipboardFormatW(CFSTR_INETURLW);
 }
 
 static void SaveClipboardToFile(void)

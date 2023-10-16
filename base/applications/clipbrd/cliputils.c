@@ -193,7 +193,9 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
 
     return (uFormat == Globals.uCFSTR_FILENAMEA ||
             uFormat == Globals.uCFSTR_FILENAMEW ||
-            uFormat == Globals.uCF_HTML);
+            uFormat == Globals.uCF_HTML ||
+            uFormat == Globals.uCFSTR_INETURLA ||
+            uFormat == Globals.uCFSTR_INETURLW);
 }
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
@@ -298,7 +300,9 @@ BOOL IsFormatText(UINT uFormat)
 
     return (uFormat == Globals.uCFSTR_FILENAMEA ||
             uFormat == Globals.uCFSTR_FILENAMEW ||
-            uFormat == Globals.uCF_HTML);
+            uFormat == Globals.uCF_HTML ||
+            uFormat == Globals.uCFSTR_INETURLA ||
+            uFormat == Globals.uCFSTR_INETURLW);
 }
 
 BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
@@ -335,23 +339,37 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
         LPVOID pvData = GlobalLock(hGlobal);
         if (pvData)
         {
-            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW)
+            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW ||
+                uFormat == Globals.uCFSTR_INETURLW)
+            {
                 fnCallback(pvData, cbGlobal, ENCODING_WIDE);
+            }
             else if (uFormat == Globals.uCF_HTML)
+            {
                 fnCallback(pvData, cbGlobal, ENCODING_UTF8);
+            }
             else
+            {
                 fnCallback(pvData, cbGlobal, ENCODING_ANSI);
+            }
 
             GlobalUnlock(hGlobal);
         }
         else if (cbGlobal == 0)
         {
-            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW)
+            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW ||
+                uFormat == Globals.uCFSTR_INETURLW)
+            {
                 fnCallback(L"", 0, ENCODING_WIDE);
+            }
             else if (uFormat == Globals.uCF_HTML)
+            {
                 fnCallback("", 0, ENCODING_UTF8);
+            }
             else
+            {
                 fnCallback("", 0, ENCODING_ANSI);
+            }
         }
     }
 
