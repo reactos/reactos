@@ -95,18 +95,14 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
     GetImageRect(rcImage);
     ImageToCanvas(rcImage);
 
+    // Calculate the zoom rectangle
     INT oldZoom = toolsModel.GetZoom();
     GetClientRect(rcView);
-    LONG cxView = rcView.Width() * oldZoom / newZoom;
-    LONG cyView = rcView.Height() * oldZoom / newZoom;
+    LONG cxView = rcView.right * oldZoom / newZoom, cyView = rcView.bottom * oldZoom / newZoom;
     ::SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
                        ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
-    if (rcView.IsRectEmpty())
-    {
-        rcView = rcImage;
-        return;
-    }
 
+    // Shift the rectangle if necessary
     INT dx = 0, dy = 0;
     if (rcView.left < rcImage.left)
         dx = rcImage.left - rcView.left;
