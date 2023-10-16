@@ -430,7 +430,7 @@ public:
 
     void SetRectEmpty() noexcept
     {
-        ::SetRectEmpty(this);
+        ZeroMemory(this, sizeof(*this));
     }
 
     CSize Size() const noexcept
