@@ -553,7 +553,6 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 GetClientRect(hWnd, &rc);
                 MoveWindow(Globals.hwndText, 0, 0, rc.right, rc.bottom, TRUE);
-                ShowWindowAsync(Globals.hwndText, SW_SHOWNORMAL);
                 break;
             }
 
@@ -765,17 +764,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     LoadStringW(hInstance, STRING_CLIPBOARD, szBuffer, ARRAYSIZE(szBuffer));
     Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_ACCEPTFILES,
-                                       szClassName,
-                                       szBuffer,
-                                       WS_OVERLAPPEDWINDOW,
-                                       CW_USEDEFAULT,
-                                       CW_USEDEFAULT,
-                                       480,
-                                       360,
-                                       NULL,
-                                       NULL,
-                                       Globals.hInstance,
-                                       NULL);
+                                       szClassName, szBuffer, WS_OVERLAPPEDWINDOW,
+                                       CW_USEDEFAULT, CW_USEDEFAULT, 480, 360,
+                                       NULL, NULL, Globals.hInstance, NULL);
     if (!Globals.hMainWnd)
     {
         ShowLastWin32Error(NULL);
