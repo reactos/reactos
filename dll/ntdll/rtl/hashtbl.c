@@ -1258,5 +1258,4 @@ RtlContractHashTable(_In_ RTL_DYNAMIC_HASH_TABLE *HashTable)
     return TRUE;
 }
 
-#endif
-/* EOF */
+#endif  // NTDDI_VERSION >= NTDDI_WIN7

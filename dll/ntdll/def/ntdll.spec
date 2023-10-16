@@ -690,7 +690,7 @@
 @ stdcall RtlComputePrivatizedDllName_U(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ RtlConnectToSm(ptr ptr long ptr)
 @ stdcall RtlConsoleMultiByteToUnicodeN(ptr long ptr ptr long ptr)
-@ stdcall -version=0x601+ -version=0x601+ RtlContractHashTable(ptr)
+@ stdcall -version=0x601+ RtlContractHashTable(ptr)
 @ stdcall RtlConvertExclusiveToShared(ptr)
 @ stub -version=0x600+ RtlConvertLCIDToString
 @ stdcall -arch=win32 -ret64 RtlConvertLongToLargeInteger(long)
@@ -719,7 +719,7 @@
 @ stub -version=0x600+ RtlCreateBoundaryDescriptor
 @ stdcall RtlCreateEnvironment(long ptr)
 @ stub -version=0x600+ RtlCreateEnvironmentEx
-@ stdcall -version=0x601+ -version=0x601+ RtlCreateHashTable(ptr long long)
+@ stdcall -version=0x601+ RtlCreateHashTable(ptr long long)
 @ stdcall RtlCreateHeap(long ptr long long ptr ptr)
 @ stub -version=0x600+ RtlCreateMemoryBlockLookaside
 @ stub -version=0x600+ RtlCreateMemoryZone
@@ -743,7 +743,7 @@
 @ stdcall RtlCustomCPToUnicodeN(ptr wstr long ptr str long)
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
 @ stub -version=0x600+ RtlDeCommitDebugInfo
-@ stdcall -version=0x601+ -version=0x601+ RtlDeleteHashTable(ptr)
+@ stdcall -version=0x601+ RtlDeleteHashTable(ptr)
 @ stdcall RtlDeNormalizeProcessParams(ptr)
 @ stdcall RtlDeactivateActivationContext(long long)
 @ stdcall -arch=x86_64,arm RtlDeactivateActivationContextUnsafeFast(ptr)
@@ -799,14 +799,14 @@
 @ stdcall -stub RtlEnableEarlyCriticalSectionEventCreation()
 @ stdcall RtlEncodePointer(ptr)
 @ stdcall RtlEncodeSystemPointer(ptr)
-@ stdcall -version=0x601+ -version=0x601+ RtlEndEnumerationHashTable(ptr ptr)
-@ stdcall -version=0x601+ -version=0x601+ RtlEndWeakEnumerationHashTable(ptr ptr)
+@ stdcall -version=0x601+ RtlEndEnumerationHashTable(ptr ptr)
+@ stdcall -version=0x601+ RtlEndWeakEnumerationHashTable(ptr ptr)
 @ stdcall -arch=win32 -ret64 RtlEnlargedIntegerMultiply(long long)
 @ stdcall -arch=win32 RtlEnlargedUnsignedDivide(double long ptr)
 @ stdcall -arch=win32 -ret64 RtlEnlargedUnsignedMultiply(long long)
 @ stdcall RtlEnterCriticalSection(ptr)
 @ stdcall RtlEnumProcessHeaps(ptr ptr)
-@ stdcall -version=0x601+ -version=0x601+ RtlEnumerateEntryHashTable(ptr ptr)
+@ stdcall -version=0x601+ RtlEnumerateEntryHashTable(ptr ptr)
 @ stdcall RtlEnumerateGenericTable(ptr long)
 @ stdcall RtlEnumerateGenericTableAvl(ptr long)
 @ stdcall RtlEnumerateGenericTableLikeADirectory(ptr ptr ptr long ptr ptr ptr)
@@ -1036,7 +1036,7 @@
 @ stdcall RtlLookupElementGenericTableAvl(ptr ptr)
 @ stdcall RtlLookupElementGenericTableFull(ptr ptr ptr long)
 @ stdcall RtlLookupElementGenericTableFullAvl(ptr ptr ptr long)
-@ stdcall -version=0x601+ -version=0x601+ RtlLookupEntryHashTable(ptr ptr ptr)
+@ stdcall -version=0x601+ RtlLookupEntryHashTable(ptr ptr ptr)
 @ stdcall -arch=x86_64 RtlLookupFunctionEntry(long ptr ptr)
 @ stdcall -arch=x86_64 RtlLookupFunctionTable(int64 ptr ptr)
 @ stdcall RtlMakeSelfRelativeSD(ptr ptr ptr)
@@ -1123,7 +1123,7 @@
 @ stdcall -version=0x600+ RtlReleaseSRWLockExclusive(ptr)
 @ stdcall -version=0x600+ RtlReleaseSRWLockShared(ptr)
 @ stdcall RtlRemoteCall(ptr ptr ptr long ptr long long)
-@ stdcall -version=0x601+ -version=0x601+ RtlRemoveEntryHashTable(ptr ptr ptr)
+@ stdcall -version=0x601+ RtlRemoveEntryHashTable(ptr ptr ptr)
 @ stdcall -version=0x600+ RtlRemovePrivileges(ptr ptr long)
 @ stdcall RtlRemoveVectoredContinueHandler(ptr)
 @ stdcall RtlRemoveVectoredExceptionHandler(ptr)
@@ -1267,7 +1267,7 @@
 @ stdcall -version=0x600+ RtlWakeConditionVariable(ptr)
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWalkHeap(long ptr)
-@ stdcall -version=0x601+ -version=0x601+ RtlWeaklyEnumerateEntryHashTable(ptr ptr)
+@ stdcall -version=0x601+ RtlWeaklyEnumerateEntryHashTable(ptr ptr)
 @ stub -version=0x600+ RtlWerpReportException
 @ stub -version=0x600+ RtlWow64CallFunction64
 @ stdcall RtlWow64EnableFsRedirection(long)
