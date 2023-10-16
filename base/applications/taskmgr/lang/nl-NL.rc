@@ -11,7 +11,7 @@ BEGIN
     POPUP "&Opties"
     BEGIN
         MENUITEM "&Altijd op voorgrond", ID_OPTIONS_ALWAYSONTOP, CHECKED
-        MENUITEM "Minimaliseren &bij gebruik", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "Minimaliseren &bij gebruik", ID_OPTIONS_MINIMIZEONUSE, CHECKED //FIXME: accelerator collision &b with IDS_MENU_16BITTASK
         MENUITEM "&Verbergen indien geminimaliseerd", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
@@ -406,7 +406,7 @@ BEGIN
     IDS_TAB_IOOTHERBYTES "I/O: overige bytes"
     IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Kolommen selecteren..."
-    IDS_MENU_16BITTASK "16-&bits taken weergeven"
+    IDS_MENU_16BITTASK "16-&bits taken weergeven" //FIXME: accelerator collision &b with ID_OPTIONS_MINIMIZEONUSE
     IDS_MENU_WINDOWS "&Vensters"
     IDS_MENU_LARGEICONS "&Grote pictogrammen"
     IDS_MENU_SMALLICONS "&Kleine pictogrammen"
