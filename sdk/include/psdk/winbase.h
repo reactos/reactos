@@ -985,6 +985,7 @@ typedef struct _FILE_ID_DESCRIPTOR {
     } DUMMYUNIONNAME;
 } FILE_ID_DESCRIPTOR, *LPFILE_ID_DESCRIPTOR;
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
 typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileBasicInfo,
     FileStandardInfo,
@@ -1002,13 +1003,25 @@ typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileRemoteProtocolInfo,
     FileFullDirectoryInfo,
     FileFullDirectoryRestartInfo,
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
     FileStorageInfo,
     FileAlignmentInfo,
     FileIdInfo,
     FileIdExtdDirectoryInfo,
     FileIdExtdDirectoryRestartInfo,
-    MaximumFileInfoByHandlesClass
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+    FileDispositionInfoEx,
+    FileRenameInfoEx,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_19H1) || defined(__REACTOS__)
+    FileCaseSensitiveInfo,
+    FileNormalizedNameInfo,
+#endif
+    MaximumFileInfoByHandleClass,
+    MaximumFileInfoByHandlesClass = MaximumFileInfoByHandleClass // Old name
 } FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+#endif
 
 typedef struct _FILE_ID_BOTH_DIR_INFO {
     DWORD         NextEntryOffset;
