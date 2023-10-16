@@ -107,15 +107,16 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
         return;
     }
 
+    INT dx = 0, dy = 0;
     if (rcView.left < rcImage.left)
-        rcView.OffsetRect(rcImage.left - rcView.left, 0);
+        dx = rcImage.left - rcView.left;
     else if (rcImage.right < rcView.right)
-        rcView.OffsetRect(rcImage.right - rcView.right, 0);
-
+        dx = rcImage.right - rcView.right;
     if (rcView.top < rcImage.top)
-        rcView.OffsetRect(0, rcImage.top - rcView.top);
+        dy = rcImage.top - rcView.top;
     else if (rcImage.bottom < rcView.bottom)
-        rcView.OffsetRect(0, rcImage.bottom - rcView.bottom);
+        dy = rcImage.bottom - rcView.bottom;
+    rcView.OffsetRect(dx, dy);
 
     rcView.IntersectRect(&rcView, &rcImage);
 }
