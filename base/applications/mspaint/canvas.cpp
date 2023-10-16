@@ -89,6 +89,49 @@ HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
     return getSizeBoxHitTest(pt, &rcBase);
 }
 
+VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
+{
+    CRect rcImage;
+    GetImageRect(rcImage);
+    ImageToCanvas(rcImage);
+
+    // Calculate the zoom rectangle
+    INT oldZoom = toolsModel.GetZoom();
+    GetClientRect(rcView);
+    LONG cxView = rcView.right * oldZoom / newZoom, cyView = rcView.bottom * oldZoom / newZoom;
+    ::SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
+                       ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
+
+    // Shift the rectangle if necessary
+    INT dx = 0, dy = 0;
+    if (rcView.left < rcImage.left)
+        dx = rcImage.left - rcView.left;
+    else if (rcImage.right < rcView.right)
+        dx = rcImage.right - rcView.right;
+    if (rcView.top < rcImage.top)
+        dy = rcImage.top - rcView.top;
+    else if (rcImage.bottom < rcView.bottom)
+        dy = rcImage.bottom - rcView.bottom;
+    rcView.OffsetRect(dx, dy);
+
+    rcView.IntersectRect(&rcView, &rcImage);
+}
+
+VOID CCanvasWindow::zoomTo(INT newZoom, LONG left, LONG top)
+{
+    POINT pt = { left, top };
+    CanvasToImage(pt);
+
+    toolsModel.SetZoom(newZoom);
+    ImageToCanvas(pt);
+    pt.x += GetScrollPos(SB_HORZ);
+    pt.y += GetScrollPos(SB_VERT);
+
+    updateScrollRange();
+    updateScrollPos(pt.x, pt.y);
+    Invalidate(TRUE);
+}
+
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // This is the target area we have to draw on
@@ -180,7 +223,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     ::DeleteDC(hdcMem0);
 }
 
-VOID CCanvasWindow::updateScrollInfo()
+VOID CCanvasWindow::updateScrollRange()
 {
     CRect rcClient;
     GetClientRect(&rcClient);
@@ -211,16 +254,16 @@ VOID CCanvasWindow::updateScrollInfo()
     SetScrollInfo(SB_VERT, &si);
 }
 
-VOID CCanvasWindow::resetScrollPos()
+VOID CCanvasWindow::updateScrollPos(INT x, INT y)
 {
-    SetScrollPos(SB_HORZ, 0);
-    SetScrollPos(SB_VERT, 0);
+    SetScrollPos(SB_HORZ, x);
+    SetScrollPos(SB_VERT, y);
 }
 
 LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_hWnd)
-        updateScrollInfo();
+        updateScrollRange();
 
     return 0;
 }
@@ -251,7 +294,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             break;
     }
     SetScrollInfo(fnBar, &si);
-    updateScrollInfo();
+    updateScrollRange();
     Invalidate(FALSE); // FIXME: Flicker
 }
 
@@ -632,7 +675,7 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
 
     m_hitCanvasSizeBox = HIT_NONE;
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
-    updateScrollInfo();
+    updateScrollRange();
     Invalidate(TRUE);
     return 0;
 }

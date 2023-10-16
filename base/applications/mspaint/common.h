@@ -43,7 +43,6 @@ enum HITTEST // hit
 
 /* FUNCTIONS ********************************************************/
 
-BOOL zoomTo(int newZoom, int mouseX, int mouseY);
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
 BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
 
