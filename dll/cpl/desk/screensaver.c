@@ -57,9 +57,7 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
                           &BufSize);
     if (Ret == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
         if (lpBuf)
         {
             Ret = RegQueryValueEx(hKey,
@@ -173,10 +171,14 @@ ShowScreenSaverPreview(IN LPDRAWITEMSTRUCT draw, IN PDATA pData)
 }
 
 
+/*
+ * /p:<hwnd>    Run preview, hwnd is handle of calling window
+ */
 static VOID
 SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
 {
     HWND hPreview = pData->ScreenSaverPreviewParent;
+    HRESULT hr;
     STARTUPINFO si;
     TCHAR szCmdline[2048];
 
@@ -190,32 +192,34 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
     }
     ShowWindow(pData->ScreenSaverPreviewParent, SW_HIDE);
 
-    if (pData->Selection > 0)
+    if (pData->Selection < 1)
+        return;
+
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /p %Iu"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename,
+                        (ULONG_PTR)hPreview);
+    if (FAILED(hr))
+        return;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pData->PrevWindowPi, sizeof(pData->PrevWindowPi));
+
+    ShowWindow(pData->ScreenSaverPreviewParent, SW_SHOW);
+
+    if (!CreateProcess(NULL,
+                       szCmdline,
+                       NULL,
+                       NULL,
+                       FALSE,
+                       0,
+                       NULL,
+                       NULL,
+                       &si,
+                       &pData->PrevWindowPi))
     {
-        _stprintf(szCmdline,
-                  _T("%s /p %Iu"),
-                  pData->ScreenSaverItems[pData->Selection].szFilename,
-                  (ULONG_PTR)hPreview);
-
-        ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
-        ZeroMemory(&pData->PrevWindowPi, sizeof(pData->PrevWindowPi));
-
-        ShowWindow(pData->ScreenSaverPreviewParent, SW_SHOW);
-
-        if (!CreateProcess(NULL,
-                           szCmdline,
-                           NULL,
-                           NULL,
-                           FALSE,
-                           0,
-                           NULL,
-                           NULL,
-                           &si,
-                           &pData->PrevWindowPi))
-        {
-            pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
-        }
+        pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
 }
 
@@ -260,38 +264,40 @@ WaitForSettingsDialog(HWND hwndDlg,
 }
 
 
+/*
+ * /c:<hwnd>    Run configuration, hwnd is handle of calling window
+ */
 static VOID
-ScreensaverConfig(HWND hwndDlg, PDATA pData)
+ScreenSaverConfig(HWND hwndDlg, PDATA pData)
 {
-    /*
-     * /c:<hwnd>  Run configuration, hwnd is handle of calling window
-     */
-
-    TCHAR szCmdline[2048];
+    HRESULT hr;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    TCHAR szCmdline[2048];
 
     if (pData->Selection < 1)
         return;
 
-    _stprintf(szCmdline,
-              _T("%s /c:%Iu"),
-              pData->ScreenSaverItems[pData->Selection].szFilename,
-              (ULONG_PTR)hwndDlg);
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /c:%Iu"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename,
+                        (ULONG_PTR)hwndDlg);
+    if (FAILED(hr))
+        return;
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
     if (CreateProcess(NULL,
-                     szCmdline,
-                     NULL,
-                     NULL,
-                     FALSE,
-                     0,
-                     NULL,
-                     NULL,
-                     &si,
-                     &pi))
+                      szCmdline,
+                      NULL,
+                      NULL,
+                      FALSE,
+                      0,
+                      NULL,
+                      NULL,
+                      &si,
+                      &pi))
     {
         /* Kill off the previous preview process */
         if (pData->PrevWindowPi.hProcess)
@@ -310,17 +316,16 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
     }
 }
 
-
+/*
+ * /s   Run normal
+ */
 static VOID
-ScreensaverPreview(HWND hwndDlg, PDATA pData)
+ScreenSaverPreview(HWND hwndDlg, PDATA pData)
 {
-    /*
-       /s         Run normal
-    */
-
-    TCHAR szCmdline[2048];
+    HRESULT hr;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    TCHAR szCmdline[2048];
 
     if (pData->Selection < 1)
         return;
@@ -334,23 +339,25 @@ ScreensaverPreview(HWND hwndDlg, PDATA pData)
         pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
     }
 
-    _stprintf(szCmdline,
-              _T("%s /s"),
-              pData->ScreenSaverItems[pData->Selection].szFilename);
+    hr = StringCbPrintf(szCmdline, sizeof(szCmdline),
+                        TEXT("%s /s"),
+                        pData->ScreenSaverItems[pData->Selection].szFilename);
+    if (FAILED(hr))
+        return;
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
     if (CreateProcess(NULL,
-                     szCmdline,
-                     NULL,
-                     NULL,
-                     FALSE,
-                     0,
-                     NULL,
-                     NULL,
-                     &si,
-                     &pi))
+                      szCmdline,
+                      NULL,
+                      NULL,
+                      FALSE,
+                      0,
+                      NULL,
+                      NULL,
+                      &si,
+                      &pi))
     {
         WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
@@ -638,9 +645,8 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
                              &bRet,
                              FALSE);
         if (Time == 0)
-            Time = 60;
-        else
-            Time *= 60;
+            Time = 1;
+        Time *= 60; // Convert to seconds
 
         SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 
@@ -657,9 +663,7 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
     INT Num;
     WNDCLASS wc = {0};
 
-    pData = HeapAlloc(GetProcessHeap(),
-                            HEAP_ZERO_MEMORY,
-                            sizeof(DATA));
+    pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DATA));
     if (!pData)
     {
         EndDialog(hwndDlg, -1);
@@ -700,9 +704,7 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
         pData->ScreenSaverPreviewParent = hChild;
     }
 
-    SetWindowLongPtr(hwndDlg,
-                     DWLP_USER,
-                     (LONG_PTR)pData);
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
 
     pData->Selection = -1;
 
@@ -754,9 +756,7 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
                         0);
         }
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpCurSs);
+        HeapFree(GetProcessHeap(), 0, lpCurSs);
     }
     else
     {
@@ -781,14 +781,10 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
                            0,
                            Time);
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpCurSs);
-
+        HeapFree(GetProcessHeap(), 0, lpCurSs);
     }
 
-    SelectionChanged(hwndDlg,
-                     pData);
+    SelectionChanged(hwndDlg, pData);
 
     return TRUE;
 }
@@ -829,16 +825,13 @@ ScreenSaverPageProc(HWND hwndDlg,
                 CloseHandle(pData->PrevWindowPi.hProcess);
                 CloseHandle(pData->PrevWindowPi.hThread);
             }
-            HeapFree(GetProcessHeap(),
-                     0,
-                     pData);
+            HeapFree(GetProcessHeap(), 0, pData);
             break;
         }
 
         case WM_ENDSESSION:
         {
-            SetScreenSaverPreviewBox(hwndDlg,
-                                     pData);
+            SetScreenSaverPreviewBox(hwndDlg, pData);
             break;
         }
 
@@ -888,7 +881,7 @@ ScreenSaverPageProc(HWND hwndDlg,
                 {
                     if (command == BN_CLICKED)
                     {
-                        ScreensaverPreview(hwndDlg, pData);
+                        ScreenSaverPreview(hwndDlg, pData);
                         SetScreenSaverPreviewBox(hwndDlg, pData);
                     }
                     break;
@@ -897,16 +890,14 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_SETTINGS: // Screensaver Settings
                 {
                     if (command == BN_CLICKED)
-                        ScreensaverConfig(hwndDlg, pData);
+                        ScreenSaverConfig(hwndDlg, pData);
                     break;
                 }
 
                 case IDC_SCREENS_USEPASSCHK: // Screensaver Is Secure
                 {
                     if (command == BN_CLICKED)
-                    {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
                     break;
                 }
             }
