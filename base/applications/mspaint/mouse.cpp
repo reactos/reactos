@@ -581,14 +581,14 @@ struct ZoomTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
-        m_bZoomed = FALSE;
-
         INT oldZoom = toolsModel.GetZoom();
         INT newZoom;
         if (bLeftButton)
             newZoom = (oldZoom < MAX_ZOOM) ? (oldZoom * 2) : MIN_ZOOM;
         else
             newZoom = (oldZoom > MIN_ZOOM) ? (oldZoom / 2) : MAX_ZOOM;
+
+        m_bZoomed = FALSE;
 
         if (oldZoom != newZoom)
         {
