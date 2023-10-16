@@ -53,7 +53,7 @@
 namespace ATL
 {
 
-inline HRESULT AtlHresultFromLastError() throw()
+inline HRESULT AtlHresultFromLastError() noexcept
 {
     DWORD dwError = ::GetLastError();
     return HRESULT_FROM_WIN32(dwError);

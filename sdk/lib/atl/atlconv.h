@@ -29,14 +29,14 @@ public:
         UNREFERENCED_PARAMETER(nCodePage);
     }
 
-    ~CA2CAEX() throw() { } // There is nothing to free here
+    ~CA2CAEX() noexcept { } // There is nothing to free here
 
-    _Ret_z_ operator LPCSTR() const throw() { return m_psz; }
+    _Ret_z_ operator LPCSTR() const noexcept { return m_psz; }
 
 private:
     // CA2CAEX is not copyable
-    CA2CAEX(_In_ const CA2CAEX&) throw() = delete;
-    CA2CAEX& operator=(_In_ const CA2CAEX&) throw() = delete;
+    CA2CAEX(_In_ const CA2CAEX&) noexcept = delete;
+    CA2CAEX& operator=(_In_ const CA2CAEX&) noexcept = delete;
 };
 
 // This class does not own the string
@@ -53,14 +53,14 @@ public:
         UNREFERENCED_PARAMETER(nCodePage);
     }
 
-    ~CW2CWEX() throw() { } // There is nothing to free here
+    ~CW2CWEX() noexcept { } // There is nothing to free here
 
-    _Ret_z_ operator LPCWSTR() const throw() { return m_psz; }
+    _Ret_z_ operator LPCWSTR() const noexcept { return m_psz; }
 
 private:
     // CW2CWEX is not copyable
-    CW2CWEX(_In_ const CW2CWEX&) throw() = delete;
-    CW2CWEX& operator=(_In_ const CW2CWEX&) throw() = delete;
+    CW2CWEX(_In_ const CW2CWEX&) noexcept = delete;
+    CW2CWEX& operator=(_In_ const CW2CWEX&) noexcept = delete;
 };
 
 template <int t_nBufferLength = 128>
@@ -81,21 +81,21 @@ public:
         Init(psz);
     }
 
-    ~CA2AEX() throw()
+    ~CA2AEX() noexcept
     {
         if (m_psz != m_szBuffer)
             free(m_psz);
     }
 
-    _Ret_z_ operator LPSTR() const throw()
+    _Ret_z_ operator LPSTR() const noexcept
     {
         return m_psz;
     }
 
 private:
     // CA2AEX is not copyable
-    CA2AEX(_In_ const CA2AEX &) throw() = delete;
-    CA2AEX& operator=(_In_ const CA2AEX &) throw() = delete;
+    CA2AEX(_In_ const CA2AEX &) noexcept = delete;
+    CA2AEX& operator=(_In_ const CA2AEX &) noexcept = delete;
 
     void Init(_In_z_ LPCSTR psz)
     {
@@ -142,21 +142,21 @@ public:
         Init(psz);
     }
 
-    ~CW2WEX() throw()
+    ~CW2WEX() noexcept
     {
         if (m_psz != m_szBuffer)
             free(m_psz);
     }
 
-    _Ret_z_ operator LPWSTR() const throw()
+    _Ret_z_ operator LPWSTR() const noexcept
     {
         return m_psz;
     }
 
 private:
     // CW2WEX is not copyable
-    CW2WEX(_In_ const CW2WEX&) throw() = delete;
-    CW2WEX& operator=(_In_ const CW2WEX&) throw() = delete;
+    CW2WEX(_In_ const CW2WEX&) noexcept = delete;
+    CW2WEX& operator=(_In_ const CW2WEX&) noexcept = delete;
 
     void Init(_In_z_ LPCWSTR psz)
     {
@@ -202,21 +202,21 @@ public:
         Init(psz, nCodePage);
     }
 
-    ~CA2WEX() throw()
+    ~CA2WEX() noexcept
     {
         if (m_psz != m_szBuffer)
             free(m_psz);
     }
 
-    _Ret_z_ operator LPWSTR() const throw()
+    _Ret_z_ operator LPWSTR() const noexcept
     {
         return m_psz;
     }
 
 private:
     // CA2WEX is not copyable
-    CA2WEX(_In_ const CA2WEX&) throw() = delete;
-    CA2WEX& operator=(_In_ const CA2WEX&) throw() = delete;
+    CA2WEX(_In_ const CA2WEX&) noexcept = delete;
+    CA2WEX& operator=(_In_ const CA2WEX&) noexcept = delete;
 
     void Init(_In_z_ LPCSTR psz, _In_ UINT nCodePage)
     {
@@ -269,21 +269,21 @@ public:
         Init(psz, nCodePage);
     }
 
-    ~CW2AEX() throw()
+    ~CW2AEX() noexcept
     {
         if (m_psz != m_szBuffer)
             free(m_psz);
     }
 
-    _Ret_z_ operator LPSTR() const throw()
+    _Ret_z_ operator LPSTR() const noexcept
     {
         return m_psz;
     }
 
 private:
     // CW2AEX is not copyable
-    CW2AEX(_In_ const CW2AEX&) throw() = delete;
-    CW2AEX& operator=(_In_ const CW2AEX&) throw() = delete;
+    CW2AEX(_In_ const CW2AEX&) noexcept = delete;
+    CW2AEX& operator=(_In_ const CW2AEX&) noexcept = delete;
 
     void Init(_In_z_ LPCWSTR psz, _In_ UINT nConvertCodePage)
     {
