@@ -122,17 +122,7 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
 
 VOID CCanvasWindow::zoomTo(INT newZoom, INT left, INT top)
 {
-    POINT pt;
-    if (left == -1 && top == -1)
-    {
-        CRect rc;
-        GetClientRect(&rc);
-        pt = { rc.left, rc.top };
-    }
-    else
-    {
-        pt = { left, top };
-    }
+    POINT pt = { left, top };
     CanvasToImage(pt);
 
     toolsModel.SetZoom(newZoom);

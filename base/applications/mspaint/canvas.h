@@ -52,7 +52,7 @@ public:
     VOID GetImageRect(RECT& rc);
     VOID MoveSelection(INT xDelta, INT yDelta);
     VOID getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget);
-    VOID zoomTo(INT newZoom, INT left = -1, INT top = -1);
+    VOID zoomTo(INT newZoom, INT left = 0, INT top = 0);
 
 protected:
     HITTEST m_hitSelection;
