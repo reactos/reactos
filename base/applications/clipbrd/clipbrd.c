@@ -4,14 +4,27 @@
  * PURPOSE:     Provides a view of the contents of the ReactOS clipboard.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
+ *              Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
+
+#include <shlobj.h> /* For CFSTR_... */
 
 static const WCHAR szClassName[] = L"ClipBookWClass";
 
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
+
+static void InitGlobals(HINSTANCE hInstance)
+{
+    ZeroMemory(&Globals, sizeof(Globals));
+    Globals.hInstance = hInstance;
+
+    /* Registered clipboard formats */
+    Globals.uCFSTR_FILENAMEA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+    Globals.uCFSTR_FILENAMEW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+}
 
 static void SaveClipboardToFile(void)
 {
@@ -107,6 +120,28 @@ static void LoadClipboardFromDrop(HDROP hDrop)
     LoadClipboardDataFromFile(szFileName);
 }
 
+BOOL CALLBACK DoSetTextMode(LPCVOID pvText, BOOL bUnicode)
+{
+    RECT rc;
+
+    Globals.bTextMode = TRUE;
+
+    if (bUnicode)
+        SetWindowTextW(Globals.hwndText, (LPCWSTR)pvText);
+    else
+        SetWindowTextA(Globals.hwndText, (LPCSTR)pvText);
+
+    ShowScrollBar(Globals.hMainWnd, SB_BOTH, FALSE);
+
+    GetClientRect(Globals.hMainWnd, &rc);
+    MoveWindow(Globals.hwndText, 0, 0, rc.right, rc.bottom, TRUE);
+    ShowWindowAsync(Globals.hwndText, SW_SHOWNORMAL);
+    InvalidateRect(Globals.hMainWnd, NULL, TRUE);
+    InvalidateRect(Globals.hwndText, NULL, TRUE);
+
+    return TRUE;
+}
+
 static void SetDisplayFormat(UINT uFormat)
 {
     RECT rc;
@@ -116,13 +151,16 @@ static void SetDisplayFormat(UINT uFormat)
     CheckMenuItem(Globals.hMenu, Globals.uCheckedItem, MF_BYCOMMAND | MF_CHECKED);
 
     if (uFormat == 0)
-    {
-        Globals.uDisplayFormat = GetAutomaticClipboardFormat();
-    }
-    else
-    {
-        Globals.uDisplayFormat = uFormat;
-    }
+        uFormat = GetAutomaticClipboardFormat();
+
+    Globals.uDisplayFormat = uFormat;
+
+    Globals.bTextMode = FALSE;
+    if (DoTextFromFormat(Globals.uDisplayFormat, DoSetTextMode))
+        return;
+
+    ShowWindowAsync(Globals.hwndText, SW_HIDE);
+    ShowScrollBar(Globals.hMainWnd, SB_BOTH, TRUE);
 
     GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
     Scrollstate.CurrentX = Scrollstate.CurrentY = 0;
@@ -271,6 +309,13 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     COLORREF crOldBkColor, crOldTextColor;
     RECT rc;
 
+    if (Globals.bTextMode)
+    {
+        BeginPaint(hWnd, &ps);
+        EndPaint(hWnd, &ps);
+        return;
+    }
+
     if (!OpenClipboard(Globals.hMainWnd))
         return;
 
@@ -299,10 +344,8 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case CF_TEXT:
         case CF_OEMTEXT:
         case CF_UNICODETEXT:
-        {
-            DrawTextFromClipboard(Globals.uDisplayFormat, ps, Scrollstate);
+            /* Done in Globals.hwndText */
             break;
-        }
 
         case CF_DSPBITMAP:
         case CF_BITMAP:
@@ -359,17 +402,15 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
 
         case CF_HDROP:
-        {
-            GetClientRect(hWnd, &rc);
-            HDropFromClipboard(hdc, &rc);
+            /* Done in Globals.hwndText */
             break;
-        }
 
         default:
         {
+            WCHAR szText[256];
             GetClientRect(hWnd, &rc);
-            DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT,
-                                 hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
+            LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
+            DoSetTextMode(szText, TRUE);
             break;
         }
     }
@@ -389,20 +430,19 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     {
         case WM_CREATE:
         {
-            TEXTMETRICW tm;
-            HDC hDC = GetDC(hWnd);
-
-            /*
-             * Note that the method with GetObjectW just returns
-             * the original parameters with which the font was created.
-             */
-            if (GetTextMetricsW(hDC, &tm))
-            {
-                Globals.CharWidth  = tm.tmMaxCharWidth; // tm.tmAveCharWidth;
-                Globals.CharHeight = tm.tmHeight + tm.tmExternalLeading;
-            }
-            ReleaseDC(hWnd, hDC);
-
+            /* Create a text box */
+            const DWORD style = WS_CHILD | ES_MULTILINE | ES_READONLY | WS_HSCROLL | WS_VSCROLL;
+            Globals.hwndText = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                               L"EDIT",
+                                               NULL,
+                                               style,
+                                               0, 0, 0, 0,
+                                               hWnd,
+                                               NULL,
+                                               Globals.hInstance,
+                                               NULL);
+            if (!Globals.hwndText)
+                return -1;
 
             Globals.hMenu = GetMenu(hWnd);
             Globals.hWndNext = SetClipboardViewer(hWnd);
@@ -489,6 +529,14 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             RECT rc;
 
+            if (Globals.bTextMode)
+            {
+                GetClientRect(hWnd, &rc);
+                MoveWindow(Globals.hwndText, 0, 0, rc.right, rc.bottom, TRUE);
+                ShowWindowAsync(Globals.hwndText, SW_SHOWNORMAL);
+                break;
+            }
+
             if (Globals.uDisplayFormat == CF_OWNERDISPLAY)
             {
                 HGLOBAL hglb;
@@ -514,22 +562,6 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
             UpdateWindowScrollState(hWnd, rc.right, rc.bottom, &Scrollstate);
-
-            // NOTE: There still are little problems drawing
-            // the background when displaying clipboard text.
-            if (!IsClipboardFormatSupported(Globals.uDisplayFormat) ||
-                Globals.uDisplayFormat == CF_DSPTEXT ||
-                Globals.uDisplayFormat == CF_TEXT    ||
-                Globals.uDisplayFormat == CF_OEMTEXT ||
-                Globals.uDisplayFormat == CF_UNICODETEXT)
-            {
-                InvalidateRect(Globals.hMainWnd, NULL, TRUE);
-            }
-            else
-            {
-                InvalidateRect(Globals.hMainWnd, NULL, FALSE);
-            }
-
             break;
         }
 
@@ -690,16 +722,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             break;
     }
 
-    ZeroMemory(&Globals, sizeof(Globals));
-    Globals.hInstance = hInstance;
+    InitGlobals(hInstance);
 
     ZeroMemory(&wndclass, sizeof(wndclass));
     wndclass.cbSize = sizeof(wndclass);
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc = MainWndProc;
     wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON));
     wndclass.hCursor = LoadCursorW(0, IDC_ARROW);
-    wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wndclass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCEW(MAIN_MENU);
     wndclass.lpszClassName = szClassName;
 
@@ -715,7 +747,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_ACCEPTFILES,
                                        szClassName,
                                        szBuffer,
-                                       WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
+                                       WS_OVERLAPPEDWINDOW,
                                        CW_USEDEFAULT,
                                        CW_USEDEFAULT,
                                        CW_USEDEFAULT,

@@ -23,6 +23,8 @@ typedef struct _SCROLLSTATE
     INT nMaxHeight;
 } SCROLLSTATE, *LPSCROLLSTATE;
 
+extern SCROLLSTATE Scrollstate;
+
 void OnKeyScroll(HWND hWnd, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state);
 void OnMouseScroll(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LPSCROLLSTATE state);
 void OnScroll(HWND hWnd, INT nBar, WPARAM wParam, INT iDelta, LPSCROLLSTATE state);

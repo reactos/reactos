@@ -43,13 +43,15 @@ typedef struct _CLIPBOARD_GLOBALS
     HINSTANCE hInstance;
     HWND hMainWnd;
     HWND hWndNext;
+    BOOL bTextMode;
+    HWND hwndText;
     HMENU hMenu;
     UINT uDisplayFormat;
     UINT uCheckedItem;
 
-    /* Metrics of the current font */
-    LONG CharWidth;
-    LONG CharHeight;
+    /* Registered clipboard formats */
+    UINT uCFSTR_FILENAMEA;
+    UINT uCFSTR_FILENAMEW;
 } CLIPBOARD_GLOBALS;
 
 extern CLIPBOARD_GLOBALS Globals;
