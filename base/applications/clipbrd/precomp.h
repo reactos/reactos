@@ -43,9 +43,9 @@ typedef struct _CLIPBOARD_GLOBALS
     HINSTANCE hInstance;
     HWND hMainWnd;
     HWND hWndNext;
-    BOOL bTextMode;
     HWND hwndText;
     HMENU hMenu;
+    BOOL bTextMode;
     UINT uDisplayFormat;
     UINT uCheckedItem;
 
