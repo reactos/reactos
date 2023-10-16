@@ -34,7 +34,7 @@ private:
     DWORD m_dwViewDesiredAccess;
 
 public:
-    CAtlFileMappingBase() throw()
+    CAtlFileMappingBase() noexcept
         :m_pData(NULL)
         ,m_nMappingSize(0)
         ,m_hMapping(NULL)
@@ -43,7 +43,7 @@ public:
         m_nOffset.QuadPart = 0;
     }
 
-    ~CAtlFileMappingBase() throw()
+    ~CAtlFileMappingBase() noexcept
     {
         Unmap();
     }
@@ -74,7 +74,7 @@ public:
         return *this;
     }
 
-    HRESULT CopyFrom(CAtlFileMappingBase& orig) throw()
+    HRESULT CopyFrom(CAtlFileMappingBase& orig) noexcept
     {
         HRESULT hr = S_OK;
 
@@ -112,7 +112,7 @@ public:
         SIZE_T nMappingSize = 0,
         ULONGLONG nOffset = 0,
         DWORD dwMappingProtection = PAGE_READONLY,
-        DWORD dwViewDesiredAccess = FILE_MAP_READ) throw()
+        DWORD dwViewDesiredAccess = FILE_MAP_READ) noexcept
     {
         HRESULT hr = S_OK;
         ULARGE_INTEGER FileSize;
@@ -153,7 +153,7 @@ public:
         BOOL* pbAlreadyExisted = NULL,
         LPSECURITY_ATTRIBUTES lpsa = NULL,
         DWORD dwMappingProtection = PAGE_READWRITE,
-        DWORD dwViewDesiredAccess = FILE_MAP_ALL_ACCESS) throw()
+        DWORD dwViewDesiredAccess = FILE_MAP_ALL_ACCESS) noexcept
     {
         HRESULT hr = S_OK;
         ULARGE_INTEGER Size;
@@ -194,7 +194,7 @@ public:
         LPCTSTR szName,
         SIZE_T nMappingSize,
         ULONGLONG nOffset = 0,
-        DWORD dwViewDesiredAccess = FILE_MAP_ALL_ACCESS) throw()
+        DWORD dwViewDesiredAccess = FILE_MAP_ALL_ACCESS) noexcept
     {
         HRESULT hr = S_OK;
 
@@ -225,7 +225,7 @@ public:
         return hr;
     }
 
-    HRESULT Unmap() throw()
+    HRESULT Unmap() noexcept
     {
         HRESULT hr = S_OK;
 
@@ -248,7 +248,7 @@ public:
         return hr;
     }
 
-    void* GetData() const throw()
+    void* GetData() const noexcept
     {
         return m_pData;
     }
@@ -258,7 +258,7 @@ public:
         return m_hMapping;
     }
 
-    SIZE_T GetMappingSize() throw()
+    SIZE_T GetMappingSize() noexcept
     {
         return m_nMappingSize;
     }
@@ -271,7 +271,7 @@ class CAtlFileMapping:
     public CAtlFileMappingBase
 {
 public:
-    operator T*() const throw()
+    operator T*() const noexcept
     {
         return reinterpret_cast<T*>(GetData());
     }

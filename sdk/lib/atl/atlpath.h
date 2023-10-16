@@ -111,7 +111,7 @@ public:
         m_strPath = path.m_strPath;
     }
 
-    CPathT() throw()
+    CPathT() noexcept
     {
         // do nothing, m_strPath initializes itself
     }
@@ -367,17 +367,17 @@ public:
         m_strPath.ReleaseBuffer();
     }
 
-    operator const StringType&() const throw()
+    operator const StringType&() const noexcept
     {
         return m_strPath;
     }
 
-    operator PCXSTR() const throw()
+    operator PCXSTR() const noexcept
     {
         return m_strPath;
     }
 
-    operator StringType&() throw()
+    operator StringType&() noexcept
     {
         return m_strPath;
     }

@@ -52,18 +52,18 @@ struct CStringData
     int nDataLength;
     long nRefs;
 
-    void* data() throw()
+    void* data() noexcept
     {
         return (this + 1);
     }
 
-    void AddRef() throw()
+    void AddRef() noexcept
     {
         ATLASSERT(nRefs > 0);
         _InterlockedIncrement(&nRefs);
     }
 
-    void Release() throw()
+    void Release() noexcept
     {
         ATLASSERT(nRefs != 0);
 
@@ -73,12 +73,12 @@ struct CStringData
         }
     }
 
-    bool IsLocked() const throw()
+    bool IsLocked() const noexcept
     {
         return (nRefs < 0);
     }
 
-    bool IsShared() const throw()
+    bool IsShared() const noexcept
     {
         return (nRefs > 1);
     }
@@ -88,7 +88,7 @@ class CNilStringData :
     public CStringData
 {
 public:
-    CNilStringData() throw()
+    CNilStringData() noexcept
     {
         pStringMgr = NULL;
         nRefs = 2;
@@ -98,7 +98,7 @@ public:
         achNil[1] = 0;
     }
 
-    void SetManager(_In_ IAtlStringMgr* pMgr) throw()
+    void SetManager(_In_ IAtlStringMgr* pMgr) noexcept
     {
         ATLASSERT(pStringMgr == NULL);
         pStringMgr = pMgr;
@@ -193,7 +193,7 @@ public:
         CopyChars(m_pszData, nLength, pchSrc, nLength);
     }
 
-    ~CSimpleStringT() throw()
+    ~CSimpleStringT() noexcept
     {
         CStringData* pData = GetData();
         pData->Release();
@@ -245,12 +245,12 @@ public:
         return *this;
     }
 
-    operator PCXSTR() const throw()
+    operator PCXSTR() const noexcept
     {
         return m_pszData;
     }
 
-    void Empty() throw()
+    void Empty() noexcept
     {
         CStringData* pOldData = GetData();
         IAtlStringMgr* pStringMgr = pOldData->pStringMgr;
@@ -354,21 +354,21 @@ public:
         return PrepareWrite(nMinBufferLength);
     }
 
-    int GetAllocLength() const throw()
+    int GetAllocLength() const noexcept
     {
         return GetData()->nAllocLength;
     }
 
-    int GetLength() const throw()
+    int GetLength() const noexcept
     {
         return GetData()->nDataLength;
     }
 
-    PXSTR GetString() throw()
+    PXSTR GetString() noexcept
     {
         return m_pszData;
     }
-    PCXSTR GetString() const throw()
+    PCXSTR GetString() const noexcept
     {
         return m_pszData;
     }
@@ -386,17 +386,17 @@ public:
         ReleaseBufferSetLength(nNewLength);
     }
 
-    bool IsEmpty() const throw()
+    bool IsEmpty() const noexcept
     {
         return (GetLength() == 0);
     }
 
-    CStringData* GetData() const throw()
+    CStringData* GetData() const noexcept
     {
         return (reinterpret_cast<CStringData*>(m_pszData) - 1);
     }
 
-    IAtlStringMgr* GetManager() const throw()
+    IAtlStringMgr* GetManager() const noexcept
     {
         IAtlStringMgr* pStringMgr = GetData()->pStringMgr;
         return (pStringMgr ? pStringMgr->Clone() : NULL);
@@ -434,7 +434,7 @@ public:
         _Out_writes_to_(nDestLen, nChars) XCHAR* pchDest,
         _In_ size_t nDestLen,
         _In_reads_opt_(nChars) const XCHAR* pchSrc,
-        _In_ int nChars) throw()
+        _In_ int nChars) noexcept
     {
         memcpy(pchDest, pchSrc, nChars * sizeof(XCHAR));
     }
@@ -443,18 +443,18 @@ public:
         _Out_writes_to_(nDestLen, nDestLen) XCHAR* pchDest,
         _In_ size_t nDestLen,
         _In_reads_(nChars) const XCHAR* pchSrc,
-        _In_ int nChars) throw()
+        _In_ int nChars) noexcept
     {
         memmove(pchDest, pchSrc, nChars * sizeof(XCHAR));
     }
 
-    static int __cdecl StringLength(_In_opt_z_ const char* psz) throw()
+    static int __cdecl StringLength(_In_opt_z_ const char* psz) noexcept
     {
         if (psz == NULL) return 0;
         return (int)strlen(psz);
     }
 
-    static int __cdecl StringLength(_In_opt_z_ const wchar_t* psz) throw()
+    static int __cdecl StringLength(_In_opt_z_ const wchar_t* psz) noexcept
     {
         if (psz == NULL) return 0;
         return (int)wcslen(psz);
@@ -464,7 +464,7 @@ public:
       // strnlen / wcsnlen are available in MSVCRT starting Vista+.
     static int __cdecl StringLengthN(
         _In_opt_z_count_(sizeInXChar) const char* psz,
-        _In_ size_t sizeInXChar) throw()
+        _In_ size_t sizeInXChar) noexcept
     {
         if (psz == NULL) return 0;
         return (int)strnlen(psz, sizeInXChar);
@@ -472,7 +472,7 @@ public:
 
     static int __cdecl StringLengthN(
         _In_opt_z_count_(sizeInXChar) const wchar_t* psz,
-        _In_ size_t sizeInXChar) throw()
+        _In_ size_t sizeInXChar) noexcept
     {
         if (psz == NULL) return 0;
         return (int)wcsnlen(psz, sizeInXChar);
@@ -495,7 +495,7 @@ protected:
     }
 
 private:
-    void Attach(_Inout_ CStringData* pData) throw()
+    void Attach(_Inout_ CStringData* pData) noexcept
     {
         m_pszData = static_cast<PXSTR>(pData->data());
     }
