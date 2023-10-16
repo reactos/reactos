@@ -120,7 +120,7 @@ static void LoadClipboardFromDrop(HDROP hDrop)
     LoadClipboardDataFromFile(szFileName);
 }
 
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, BOOL bUnicode)
+BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode)
 {
     RECT rc;
 
@@ -410,7 +410,7 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
             WCHAR szText[256];
             GetClientRect(hWnd, &rc);
             LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
-            DoSetTextMode(szText, TRUE);
+            DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), TRUE);
             break;
         }
     }

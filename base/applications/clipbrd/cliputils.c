@@ -289,6 +289,7 @@ BOOL IsFormatText(UINT uFormat)
 BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
 {
     HGLOBAL hGlobal;
+    SIZE_T cbGlobal;
 
     if (!IsFormatText(uFormat))
         return FALSE;
@@ -297,6 +298,7 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
         return FALSE;
 
     hGlobal = GetClipboardData(uFormat);
+    cbGlobal = GlobalSize(hGlobal);
     if (uFormat == CF_HDROP)
     {
         HDROP hDrop = (HDROP)hGlobal;
@@ -310,7 +312,7 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
             lstrcat(szFile, L"\r\n");
             pszText = AllocStrCat(pszText, szFile);
         }
-        fnCallback(pszText, TRUE);
+        fnCallback(pszText, lstrlenW(pszText) * sizeof(WCHAR), TRUE);
         free(pszText);
     }
     else
@@ -319,9 +321,9 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
         if (pvData)
         {
             if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW)
-                fnCallback(pvData, TRUE);
+                fnCallback(pvData, cbGlobal, TRUE);
             else
-                fnCallback(pvData, FALSE);
+                fnCallback(pvData, cbGlobal, FALSE);
 
             GlobalUnlock(hGlobal);
         }

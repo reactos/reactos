@@ -28,6 +28,6 @@ BOOL IsClipboardFormatSupported(UINT uFormat);
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc);
 
-typedef BOOL (CALLBACK *TEXTPROC)(LPCVOID pvText, BOOL bUnicode);
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, BOOL bUnicode);
+typedef BOOL (CALLBACK *TEXTPROC)(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode);
+BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode);
 BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback);
