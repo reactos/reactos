@@ -26,6 +26,7 @@ ExcludeFromSelect = *
 %DC21140.DeviceDesc% = DC21140.ndi,PCI\VEN_1011&DEV_0009
 %DC21143.DeviceDesc% = DC21143.ndi,PCI\VEN_1011&DEV_0019
 %DC21145.DeviceDesc% = DC21145.ndi,PCI\VEN_8086&DEV_0039
+%DC21140_VPC.DeviceDesc% = DC21140.ndi,PCI\VEN_1011&DEV_0009&SUBSYS_21140A00&REV_20
 
 [DC21040.ndi.NT]
 Characteristics = 0x84 ; NCF_PHYSICAL | NCF_HAS_UI
@@ -137,19 +138,21 @@ NA="Network Address"
 SD="Speed & Duplex"
 Auto="Auto"
 
-DC21040.DeviceDesc="Intel 21040 PCI Ethernet Adapter"
-DC21041.DeviceDesc="Intel 21041 PCI Ethernet Adapter"
-DC21140.DeviceDesc="Intel 21140 PCI Ethernet Adapter"
-DC21143.DeviceDesc="Intel 21143 PCI Ethernet Adapter"
-DC21145.DeviceDesc="Intel 21145 PCI Ethernet Adapter"
+DC21040.DeviceDesc="Intel 21040-based PCI Ethernet Adapter"
+DC21041.DeviceDesc="Intel 21041-based PCI Ethernet Adapter"
+DC21140.DeviceDesc="Intel 21140-based PCI Ethernet Adapter"
+DC21143.DeviceDesc="Intel 21143-based PCI Ethernet Adapter"
+DC21145.DeviceDesc="Intel 21145-based PCI Ethernet Adapter"
+DC21140_VPC.DeviceDesc="Intel 21140-based PCI Ethernet Adapter (emulated)"
 
 [Strings.0419]
 NA="Сетевой адрес"
 SD="Скорость и дуплекс"
 Auto="Авто"
 
-DC21040.DeviceDesc="Intel 21040 PCI сетевой адаптер"
-DC21041.DeviceDesc="Intel 21041 PCI сетевой адаптер"
-DC21140.DeviceDesc="Intel 21140 PCI сетевой адаптер"
-DC21143.DeviceDesc="Intel 21143 PCI сетевой адаптер"
-DC21145.DeviceDesc="Intel 21145 PCI сетевой адаптер"
+DC21040.DeviceDesc="Intel 21040-based PCI сетевой адаптер"
+DC21041.DeviceDesc="Intel 21041-based PCI сетевой адаптер"
+DC21140.DeviceDesc="Intel 21140-based PCI сетевой адаптер"
+DC21143.DeviceDesc="Intel 21143-based PCI сетевой адаптер"
+DC21145.DeviceDesc="Intel 21145-based PCI сетевой адаптер"
+DC21140_VPC.DeviceDesc="Intel 21140-based PCI сетевой адаптер (эмуляция)"
