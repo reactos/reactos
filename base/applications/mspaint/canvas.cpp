@@ -91,29 +91,43 @@ HITTEST CCanvasWindow::CanvasHitTest(POINT pt)
 
 VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
+    // This is the target area we have to draw on
+    CRect rcCanvasDraw;
+    rcCanvasDraw.IntersectRect(&rcClient, &rcPaint);
+
     // We use a memory bitmap to reduce flickering
     HDC hdcMem0 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
     HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
 
     // Fill the background on hdcMem0
-    ::FillRect(hdcMem0, &rcPaint, (HBRUSH)(COLOR_APPWORKSPACE + 1));
+    ::FillRect(hdcMem0, &rcCanvasDraw, (HBRUSH)(COLOR_APPWORKSPACE + 1));
 
     // Draw the sizeboxes if necessary
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow && !::IsWindowVisible(textEditWindow))
-        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcPaint);
+        drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcCanvasDraw);
 
     // Calculate image size
     CRect rcImage;
     GetImageRect(rcImage);
     SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
+    // Calculate the target area on the image
+    CRect rcImageDraw = rcCanvasDraw;
+    CanvasToImage(rcImageDraw);
+    rcImageDraw.IntersectRect(&rcImageDraw, &rcImage);
+
+    // Consider rounding down by zooming
+    rcImageDraw.right += 1;
+    rcImageDraw.bottom += 1;
+
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
     m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
     HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
-    BitBlt(hdcMem1, 0, 0, sizeImage.cx, sizeImage.cy, imageModel.GetDC(), 0, 0, SRCCOPY);
+    ::BitBlt(hdcMem1, rcImageDraw.left, rcImageDraw.top, rcImageDraw.Width(), rcImageDraw.Height(),
+             imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
@@ -158,10 +172,8 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
         DrawXorRect(hdcMem0, &m_rcResizing);
 
     // Transfer the bits (hDC <-- hdcMem0)
-    ::BitBlt(hDC,
-             rcPaint.left, rcPaint.top,
-             rcPaint.right - rcPaint.left, rcPaint.bottom - rcPaint.top,
-             hdcMem0, rcPaint.left, rcPaint.top, SRCCOPY);
+    ::BitBlt(hDC, rcCanvasDraw.left, rcCanvasDraw.top, rcCanvasDraw.Width(), rcCanvasDraw.Height(),
+             hdcMem0, rcCanvasDraw.left, rcCanvasDraw.top, SRCCOPY);
 
     // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
