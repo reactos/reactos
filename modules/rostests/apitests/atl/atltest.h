@@ -137,7 +137,7 @@ char *wine_dbgstr_w(const wchar_t *wstr)
 
 static inline const char *wine_dbgstr_point(const POINT *ppt)
 {
-    static char s_asz[4][40];
+    static char s_asz[4][40]; /* Ring buffer */
     static int s_i = 0;
     char *buf;
 
@@ -159,7 +159,7 @@ static inline const char *wine_dbgstr_size(const SIZE *psize)
 
 static inline const char *wine_dbgstr_rect(const RECT *prc)
 {
-    static char s_asz[4][80];
+    static char s_asz[4][80]; /* Ring buffer */
     static int s_i = 0;
     char *buf;
 
