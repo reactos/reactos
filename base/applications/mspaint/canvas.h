@@ -43,7 +43,7 @@ public:
     VOID cancelDrawing();
     VOID finishDrawing();
     VOID updateScrollRange();
-    VOID setScrollPos(INT x = 0, INT y = 0);
+    VOID updateScrollPos(INT x = 0, INT y = 0);
 
     VOID ImageToCanvas(POINT& pt);
     VOID ImageToCanvas(RECT& rc);

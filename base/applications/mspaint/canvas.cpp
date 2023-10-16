@@ -143,7 +143,7 @@ VOID CCanvasWindow::zoomTo(INT newZoom, INT left, INT top)
     pt.y += GetScrollPos(SB_VERT);
 
     updateScrollRange();
-    setScrollPos(pt.x, pt.y);
+    updateScrollPos(pt.x, pt.y);
     Invalidate(TRUE);
 }
 
@@ -269,7 +269,7 @@ VOID CCanvasWindow::updateScrollRange()
     SetScrollInfo(SB_VERT, &si);
 }
 
-VOID CCanvasWindow::setScrollPos(INT x, INT y)
+VOID CCanvasWindow::updateScrollPos(INT x, INT y)
 {
     SetScrollPos(SB_HORZ, x);
     SetScrollPos(SB_VERT, y);
