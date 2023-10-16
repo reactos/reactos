@@ -445,6 +445,8 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             if (!Globals.hwndText)
                 return -1;
 
+            SendMessageW(Globals.hwndText, EM_SETLIMITTEXT, 0, 0);
+
             Globals.hMenu = GetMenu(hWnd);
             Globals.hWndNext = SetClipboardViewer(hWnd);
 
