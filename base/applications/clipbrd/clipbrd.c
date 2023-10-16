@@ -734,7 +734,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(CLIPBRD_ICON));
     wndclass.hCursor = LoadCursorW(0, IDC_ARROW);
-    wndclass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wndclass.hbrBackground = (HBRUSH)(COLOR_APPWORKSPACE + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCEW(MAIN_MENU);
     wndclass.lpszClassName = szClassName;
 
@@ -750,7 +750,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_ACCEPTFILES,
                                        szClassName,
                                        szBuffer,
-                                       WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
+                                       WS_OVERLAPPEDWINDOW,
                                        CW_USEDEFAULT,
                                        CW_USEDEFAULT,
                                        CW_USEDEFAULT,
