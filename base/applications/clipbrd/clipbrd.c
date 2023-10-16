@@ -123,7 +123,6 @@ static void LoadClipboardFromDrop(HDROP hDrop)
 BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode)
 {
     RECT rc;
-
     Globals.bTextMode = TRUE;
 
     if (bUnicode)
@@ -159,10 +158,17 @@ static void SetDisplayFormat(UINT uFormat)
     if (DoTextFromFormat(Globals.uDisplayFormat, DoSetTextMode))
         return;
 
+    if (!GetClipboardDataDimensions(uFormat, &rc))
+    {
+        WCHAR szText[256];
+        LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
+        DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), TRUE);
+        return;
+    }
+
     ShowWindowAsync(Globals.hwndText, SW_HIDE);
     ShowScrollBar(Globals.hMainWnd, SB_BOTH, TRUE);
 
-    GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
     Scrollstate.CurrentX = Scrollstate.CurrentY = 0;
     Scrollstate.iWheelCarryoverX = Scrollstate.iWheelCarryoverY = 0;
     UpdateWindowScrollState(Globals.hMainWnd, rc.right, rc.bottom, &Scrollstate);
@@ -406,13 +412,8 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
             break;
 
         default:
-        {
-            WCHAR szText[256];
-            GetClientRect(hWnd, &rc);
-            LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
-            DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), TRUE);
+            /* Done in Globals.hwndText */
             break;
-        }
     }
 
     /* Restore the original colors */

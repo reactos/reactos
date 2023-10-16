@@ -197,6 +197,7 @@ BOOL IsClipboardFormatSupported(UINT uFormat)
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
 {
+    BOOL ret = TRUE;
     SetRectEmpty(pRc);
 
     if (!OpenClipboard(Globals.hMainWnd))
@@ -215,6 +216,14 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
             hBitmap = (HBITMAP)GetClipboardData(CF_BITMAP);
             GetObjectW(hBitmap, sizeof(bmp), &bmp);
             SetRect(pRc, 0, 0, bmp.bmWidth, bmp.bmHeight);
+            break;
+        }
+
+        case CF_ENHMETAFILE:
+        case CF_METAFILEPICT:
+        case CF_DSPMETAFILEPICT:
+        case CF_DSPENHMETAFILE:
+        {
             break;
         }
 
@@ -259,12 +268,13 @@ BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc)
         }
 
         default:
+            ret = FALSE;
             break;
     }
 
     CloseClipboard();
 
-    return TRUE;
+    return ret;
 }
 
 BOOL IsFormatText(UINT uFormat)
@@ -326,6 +336,13 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
                 fnCallback(pvData, cbGlobal, FALSE);
 
             GlobalUnlock(hGlobal);
+        }
+        else if (cbGlobal == 0)
+        {
+            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW)
+                fnCallback(L"", 0, TRUE);
+            else
+                fnCallback("", 0, FALSE);
         }
     }
 
