@@ -22,7 +22,7 @@
     <ClCompile Include="..\atltypes.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{85194CA3-33FF-4270-962A-333743E2BF83}</ProjectGuid>
+    <ProjectGuid>{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>atltypes</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
