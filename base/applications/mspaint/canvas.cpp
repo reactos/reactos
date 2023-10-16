@@ -101,7 +101,6 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
     LONG cyView = rcView.Height() * oldZoom / newZoom;
     ::SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
                        ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
-
     if (rcView.IsRectEmpty())
     {
         rcView = rcImage;
