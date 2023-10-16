@@ -569,25 +569,13 @@ struct ZoomTool : ToolBase
     {
     }
 
-    BOOL getNewZoomRect(CRect& rcView, INT newZoom)
-    {
-        CPoint pt;
-        ::GetCursorPos(&pt);
-        canvasWindow.ScreenToClient(&pt);
-
-        canvasWindow.getNewZoomRect(rcView, newZoom, pt);
-
-        CRect rc;
-        canvasWindow.GetImageRect(rc);
-        canvasWindow.ImageToCanvas(rc);
-
-        return rc.PtInRect(pt);
-    }
+    BOOL getNewZoomRect(CRect& rcView, INT newZoom);
 
     void OnDrawOverlayOnCanvas(HDC hdc) override
     {
         CRect rcView;
-        if (getNewZoomRect(rcView, toolsModel.GetZoom() * 2))
+        INT oldZoom = toolsModel.GetZoom();
+        if (oldZoom < MAX_ZOOM && getNewZoomRect(rcView, oldZoom * 2))
             DrawXorRect(hdc, &rcView);
     }
 
@@ -595,17 +583,12 @@ struct ZoomTool : ToolBase
     {
         m_bZoomed = FALSE;
 
-        INT oldZoom = toolsModel.GetZoom(), newZoom = oldZoom;
+        INT oldZoom = toolsModel.GetZoom();
+        INT newZoom;
         if (bLeftButton)
-        {
-            if (oldZoom < MAX_ZOOM)
-                newZoom = oldZoom * 2;
-        }
+            newZoom = (oldZoom < MAX_ZOOM) ? (oldZoom * 2) : MIN_ZOOM;
         else
-        {
-            if (oldZoom > MIN_ZOOM)
-                newZoom = oldZoom / 2;
-        }
+            newZoom = (oldZoom > MIN_ZOOM) ? (oldZoom / 2) : MAX_ZOOM;
 
         if (oldZoom != newZoom)
         {
@@ -626,6 +609,21 @@ struct ZoomTool : ToolBase
         return TRUE;
     }
 };
+
+BOOL ZoomTool::getNewZoomRect(CRect& rcView, INT newZoom)
+{
+    CPoint pt;
+    ::GetCursorPos(&pt);
+    canvasWindow.ScreenToClient(&pt);
+
+    canvasWindow.getNewZoomRect(rcView, newZoom, pt);
+
+    CRect rc;
+    canvasWindow.GetImageRect(rc);
+    canvasWindow.ImageToCanvas(rc);
+
+    return rc.PtInRect(pt);
+}
 
 // TOOL_PEN
 struct PenTool : SmoothDrawTool
