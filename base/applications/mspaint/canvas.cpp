@@ -117,7 +117,7 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
     rcView.IntersectRect(&rcView, &rcImage);
 }
 
-VOID CCanvasWindow::zoomTo(INT newZoom, INT left, INT top)
+VOID CCanvasWindow::zoomTo(INT newZoom, LONG left, LONG top)
 {
     POINT pt = { left, top };
     CanvasToImage(pt);
