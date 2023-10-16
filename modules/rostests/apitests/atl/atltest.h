@@ -170,7 +170,8 @@ static inline const char *wine_dbgstr_rect(const RECT *prc)
 
     buf = s_asz[s_i];
     s_i = (s_i + 1) % _countof(s_asz);
-    sprintf_s(buf, _countof(s_asz[0]), "(%ld, %ld) - (%ld, %ld)", prc->left, prc->top, prc->right, prc->bottom);
+    sprintf_s(buf, _countof(s_asz[0]), "(%ld, %ld) - (%ld, %ld)",
+              prc->left, prc->top, prc->right, prc->bottom);
     return buf;
 }
 
