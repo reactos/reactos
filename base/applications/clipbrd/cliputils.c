@@ -318,7 +318,7 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
         LPVOID pvData = GlobalLock(hGlobal);
         if (pvData)
         {
-            if (uFormat == CF_UNICODETEXT)
+            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW)
                 fnCallback(pvData, TRUE);
             else
                 fnCallback(pvData, FALSE);
