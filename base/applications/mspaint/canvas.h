@@ -42,8 +42,8 @@ public:
 
     VOID cancelDrawing();
     VOID finishDrawing();
-    VOID updateScrollInfo();
-    VOID resetScrollPos();
+    VOID updateScrollRange();
+    VOID setScrollPos(INT x = 0, INT y = 0);
 
     VOID ImageToCanvas(POINT& pt);
     VOID ImageToCanvas(RECT& rc);
@@ -51,6 +51,8 @@ public:
     VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
     VOID GetImageRect(RECT& rc);
     VOID MoveSelection(INT xDelta, INT yDelta);
+    VOID getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget);
+    VOID zoomTo(INT newZoom, INT left = -1, INT top = -1);
 
 protected:
     HITTEST m_hitSelection;

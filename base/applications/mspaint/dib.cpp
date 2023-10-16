@@ -241,7 +241,7 @@ HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
 HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
 {
     // update image
-    canvasWindow.resetScrollPos();
+    canvasWindow.setScrollPos();
     imageModel.PushImageForUndo(hBitmap);
     imageModel.ClearHistory();
 

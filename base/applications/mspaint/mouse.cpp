@@ -563,37 +563,67 @@ struct ColorTool : ToolBase
 // TOOL_ZOOM
 struct ZoomTool : ToolBase
 {
+    BOOL m_bZoomed = FALSE;
+
     ZoomTool() : ToolBase(TOOL_ZOOM)
     {
     }
 
-    void OnDrawOverlayOnCanvas(HDC hdc) override
+    BOOL getNewZoomRect(CRect& rcView, INT newZoom)
     {
+        CPoint pt;
+        ::GetCursorPos(&pt);
+        canvasWindow.ScreenToClient(&pt);
+
+        canvasWindow.getNewZoomRect(rcView, newZoom, pt);
+
         CRect rc;
         canvasWindow.GetImageRect(rc);
         canvasWindow.ImageToCanvas(rc);
 
-        POINT pt;
-        ::GetCursorPos(&pt);
-        ::ScreenToClient(canvasWindow, &pt);
+        return rc.PtInRect(pt);
+    }
 
-        // FIXME: Draw the border of the area that is to be zoomed in
-        if (rc.PtInRect(pt))
-            DrawXorRect(hdc, &rc);
+    void OnDrawOverlayOnCanvas(HDC hdc) override
+    {
+        CRect rcView;
+        if (getNewZoomRect(rcView, toolsModel.GetZoom() * 2))
+            DrawXorRect(hdc, &rcView);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
+        m_bZoomed = FALSE;
+
+        INT oldZoom = toolsModel.GetZoom(), newZoom = oldZoom;
         if (bLeftButton)
         {
-            if (toolsModel.GetZoom() < MAX_ZOOM)
-                zoomTo(toolsModel.GetZoom() * 2, x, y);
+            if (oldZoom < MAX_ZOOM)
+                newZoom = oldZoom * 2;
         }
         else
         {
-            if (toolsModel.GetZoom() > MIN_ZOOM)
-                zoomTo(toolsModel.GetZoom() / 2, x, y);
+            if (oldZoom > MIN_ZOOM)
+                newZoom = oldZoom / 2;
         }
+
+        if (oldZoom != newZoom)
+        {
+            CRect rcView;
+            if (getNewZoomRect(rcView, newZoom))
+            {
+                canvasWindow.zoomTo(newZoom, rcView.left, rcView.top);
+                m_bZoomed = TRUE;
+            }
+        }
+    }
+
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
+    {
+        if (m_bZoomed)
+            toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
+
+        return TRUE;
     }
 };
 

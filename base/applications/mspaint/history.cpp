@@ -16,7 +16,7 @@ void ImageModel::NotifyImageChanged()
 {
     if (canvasWindow.IsWindow())
     {
-        canvasWindow.updateScrollInfo();
+        canvasWindow.updateScrollRange();
         canvasWindow.Invalidate();
     }
 
