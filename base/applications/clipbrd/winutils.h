@@ -17,3 +17,4 @@ void PlayMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
 void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect);
 BOOL RealizeClipboardPalette(HDC hdc);
 LPWSTR AllocStrCat(LPWSTR psz, LPCWSTR cat);
+LPWSTR WideFromUtf8(LPCSTR pszText, INT cchText);

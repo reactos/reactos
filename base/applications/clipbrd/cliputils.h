@@ -28,6 +28,13 @@ BOOL IsClipboardFormatSupported(UINT uFormat);
 
 BOOL GetClipboardDataDimensions(UINT uFormat, PRECT pRc);
 
-typedef BOOL (CALLBACK *TEXTPROC)(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode);
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode);
+typedef enum tagENCODING
+{
+    ENCODING_ANSI = 0,
+    ENCODING_WIDE,
+    ENCODING_UTF8
+} ENCODING;
+
+typedef BOOL (CALLBACK *TEXTPROC)(LPCVOID pvText, SIZE_T cbText, ENCODING encoding);
+BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, ENCODING encoding);
 BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback);

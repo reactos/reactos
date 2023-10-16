@@ -52,6 +52,7 @@ typedef struct _CLIPBOARD_GLOBALS
     /* Registered clipboard formats */
     UINT uCFSTR_FILENAMEA;
     UINT uCFSTR_FILENAMEW;
+    UINT uCF_HTML;
 } CLIPBOARD_GLOBALS;
 
 extern CLIPBOARD_GLOBALS Globals;

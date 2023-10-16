@@ -24,6 +24,7 @@ static void InitGlobals(HINSTANCE hInstance)
     /* Registered clipboard formats */
     Globals.uCFSTR_FILENAMEA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
     Globals.uCFSTR_FILENAMEW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    Globals.uCF_HTML = RegisterClipboardFormatW(L"HTML Format");
 }
 
 static void SaveClipboardToFile(void)
@@ -120,15 +121,29 @@ static void LoadClipboardFromDrop(HDROP hDrop)
     LoadClipboardDataFromFile(szFileName);
 }
 
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, BOOL bUnicode)
+BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, ENCODING encoding)
 {
     RECT rc;
+
     Globals.bTextMode = TRUE;
 
-    if (bUnicode)
-        SetWindowTextW(Globals.hwndText, (LPCWSTR)pvText);
-    else
-        SetWindowTextA(Globals.hwndText, (LPCSTR)pvText);
+    switch (encoding)
+    {
+        case ENCODING_ANSI:
+            SetWindowTextA(Globals.hwndText, (LPCSTR)pvText);
+            break;
+
+        case ENCODING_WIDE:
+            SetWindowTextW(Globals.hwndText, (LPCWSTR)pvText);
+            break;
+
+        case ENCODING_UTF8:
+        {
+            LPWSTR pszWide = WideFromUtf8((LPCSTR)pvText, cbText * sizeof(CHAR));
+            SetWindowTextW(Globals.hwndText, pszWide);
+            free(pszWide);
+        }
+    }
 
     ShowScrollBar(Globals.hMainWnd, SB_BOTH, FALSE);
 
@@ -162,7 +177,7 @@ static void SetDisplayFormat(UINT uFormat)
     {
         WCHAR szText[256];
         LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
-        DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), TRUE);
+        DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), ENCODING_WIDE);
         return;
     }
 

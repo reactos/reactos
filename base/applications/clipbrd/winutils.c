@@ -267,6 +267,19 @@ LPWSTR AllocStrCat(LPWSTR psz, LPCWSTR cat)
     return wcscat(pszNew, cat);
 }
 
+LPWSTR WideFromUtf8(LPCSTR pszText, INT cchText)
+{
+    INT cchWide = MultiByteToWideChar(CP_UTF8, 0, pszText, cchText, NULL, 0);
+    INT cbWide = (cchWide + 1) * sizeof(WCHAR);
+    LPWSTR pszWide = malloc(cbWide);
+    if (!pszWide)
+        return NULL;
+
+    MultiByteToWideChar(CP_UTF8, 0, pszText, cchText, pszWide, cchWide);
+    pszWide[cchWide] = UNICODE_NULL;
+    return pszWide;
+}
+
 BOOL RealizeClipboardPalette(HDC hdc)
 {
     BOOL Success;
