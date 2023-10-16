@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34114.132
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CImage", "CImage.vcxproj", "{AE520E17-2DAE-40FF-B082-F32A7A935FB2}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AtlObjMap", "AtlObjMap.vcxproj", "{B628C42A-A38E-488E-8512-2B997B75E95C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atlconv", "atlconv.vcxproj", "{85194CA3-A828-4270-962A-333743E2BF83}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atltypes", "atltypes.vcxproj", "{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -161,6 +163,14 @@ Global
 		{85194CA3-A828-4270-962A-333743E2BF83}.Release|x64.Build.0 = Release|x64
 		{85194CA3-A828-4270-962A-333743E2BF83}.Release|x86.ActiveCfg = Release|Win32
 		{85194CA3-A828-4270-962A-333743E2BF83}.Release|x86.Build.0 = Release|Win32
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Debug|x64.ActiveCfg = Debug|x64
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Debug|x64.Build.0 = Debug|x64
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Debug|x86.ActiveCfg = Debug|Win32
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Debug|x86.Build.0 = Debug|Win32
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Release|x64.ActiveCfg = Release|x64
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Release|x64.Build.0 = Release|x64
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Release|x86.ActiveCfg = Release|Win32
+		{6F9D87BA-0FBD-4A0D-9B11-6363D12ADD1D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
