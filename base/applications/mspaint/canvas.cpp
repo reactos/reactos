@@ -310,9 +310,12 @@ LRESULT CCanvasWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     return 0;
 }
 
-LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+    m_nMouseDownMsg = nMsg;
+    BOOL bLeftButton = (m_nMouseDownMsg == WM_LBUTTONDOWN);
 
     HITTEST hitSelection = SelectionHitTest(pt);
     if (hitSelection != HIT_NONE)
@@ -333,7 +336,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
         }
         else
         {
-            canvasWindow.ClientToScreen(&pt);
+            ClientToScreen(&pt);
             mainWindow.TrackPopupMenu(pt, 0);
         }
         return 0;
@@ -347,13 +350,13 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
             case TOOL_BEZIER:
             case TOOL_SHAPE:
                 toolsModel.OnCancelDraw();
-                canvasWindow.Invalidate();
+                Invalidate();
                 break;
 
             case TOOL_FREESEL:
             case TOOL_RECTSEL:
                 toolsModel.OnFinishDraw();
-                canvasWindow.Invalidate();
+                Invalidate();
                 break;
 
             default:
@@ -386,17 +389,7 @@ LRESULT CCanvasWindow::OnLRButtonDown(BOOL bLeftButton, UINT nMsg, WPARAM wParam
     return 0;
 }
 
-LRESULT CCanvasWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonDown(TRUE, nMsg, wParam, lParam, bHandled);
-}
-
-LRESULT CCanvasWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonDown(FALSE, nMsg, wParam, lParam, bHandled);
-}
-
-LRESULT CCanvasWindow::OnLRButtonDblClk(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     CanvasToImage(pt);
@@ -404,20 +397,10 @@ LRESULT CCanvasWindow::OnLRButtonDblClk(BOOL bLeftButton, UINT nMsg, WPARAM wPar
     m_drawing = FALSE;
     ReleaseCapture();
 
-    toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, TRUE);
+    toolsModel.OnButtonDown(nMsg == WM_LBUTTONDBLCLK, pt.x, pt.y, TRUE);
     toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
-}
-
-LRESULT CCanvasWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonDblClk(TRUE, nMsg, wParam, lParam, bHandled);
-}
-
-LRESULT CCanvasWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonDblClk(FALSE, nMsg, wParam, lParam, bHandled);
 }
 
 LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -612,12 +595,15 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
-LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     CanvasToImage(pt);
 
     ::ReleaseCapture();
+
+    BOOL bLeftButton = (m_nMouseDownMsg == WM_LBUTTONDOWN);
+    m_nMouseDownMsg = 0;
 
     if (m_drawing)
     {
@@ -678,16 +664,6 @@ LRESULT CCanvasWindow::OnLRButtonUp(BOOL bLeftButton, UINT nMsg, WPARAM wParam, 
     updateScrollRange();
     Invalidate(TRUE);
     return 0;
-}
-
-LRESULT CCanvasWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonUp(TRUE, nMsg, wParam, lParam, bHandled);
-}
-
-LRESULT CCanvasWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return OnLRButtonUp(FALSE, nMsg, wParam, lParam, bHandled);
 }
 
 LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
