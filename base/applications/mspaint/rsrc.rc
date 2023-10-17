@@ -33,6 +33,7 @@ IDC_COLOR ICON "icons/color_cur.ico"
 IDC_ZOOM ICON "icons/zoom_cur.ico"
 IDC_PEN ICON "icons/pen_cur.ico"
 IDC_AIRBRUSH ICON "icons/airbrush_cur.ico"
+IDC_HANDDRAG CURSOR "icons/handdrag.cur"
 
 IDI_HORZSTRETCH ICON "icons/horzstretch.ico"
 IDI_VERTSTRETCH ICON "icons/vertstretch.ico"
