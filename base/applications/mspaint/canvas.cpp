@@ -395,7 +395,8 @@ LRESULT CCanvasWindow::OnButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     CanvasToImage(pt);
 
     m_drawing = FALSE;
-    ReleaseCapture();
+    ::ReleaseCapture();
+    m_nMouseDownMsg = 0;
 
     toolsModel.OnButtonDown(nMsg == WM_LBUTTONDBLCLK, pt.x, pt.y, TRUE);
     toolsModel.resetTool();
@@ -736,6 +737,7 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     {
         // Cancel dragging
         ::ReleaseCapture();
+        m_nMouseDownMsg = 0;
         m_hitCanvasSizeBox = HIT_NONE;
         ::SetRectEmpty(&m_rcResizing);
         Invalidate(TRUE);
