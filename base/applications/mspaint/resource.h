@@ -22,6 +22,7 @@
 #define IDC_ZOOM     532
 #define IDC_PEN      533
 #define IDC_AIRBRUSH 534
+#define IDC_HANDDRAG 535
 
 #define IDI_HORZSTRETCH 535
 #define IDI_VERTSTRETCH 536
