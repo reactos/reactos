@@ -237,7 +237,8 @@ DcSetupFrameDownload(
     if (!WaitForCompletion)
         return TRUE;
 
-    for (i = 100000; i > 0; --i)
+    /* Wait up to 500 ms for the chip to process the setup frame */
+    for (i = 50000; i > 0; --i)
     {
         NdisStallExecution(10);
 

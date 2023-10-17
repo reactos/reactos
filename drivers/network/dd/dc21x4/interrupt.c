@@ -231,10 +231,12 @@ DcStopRxProcess(
         Status = DC_READ(Adapter, DcCsr5_Status);
 
         if ((Status & DC_STATUS_RX_STATE_MASK) == DC_STATUS_RX_STATE_STOPPED)
-            break;
+            return;
 
         NdisStallExecution(10);
     }
+
+    WARN("Failed to stop the RX process 0x%08lx\n", Status);
 }
 
 VOID

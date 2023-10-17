@@ -1287,7 +1287,7 @@ DcInitialize(
     if (Status != NDIS_STATUS_SUCCESS)
     {
         ERR("Failed to initialize the NIC\n");
-        goto Failure;
+        goto Disable;
     }
 
     Adapter->Flags &= ~DC_FIRST_SETUP;
@@ -1303,13 +1303,15 @@ DcInitialize(
     if (Status != NDIS_STATUS_SUCCESS)
     {
         ERR("Unable to register interrupt\n");
-        goto Failure;
+        goto Disable;
     }
 
     DcStartAdapter(Adapter);
 
     return NDIS_STATUS_SUCCESS;
 
+Disable:
+    DcDisableHw(Adapter);
 Failure:
     ERR("Initialization failed with status %08lx\n", Status);
 
