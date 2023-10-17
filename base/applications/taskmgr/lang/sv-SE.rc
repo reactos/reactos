@@ -4,13 +4,13 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDR_TASKMANAGER MENU
 BEGIN
-    POPUP "&Arkiv" //FIXME: acclerator collision &A
+    POPUP "&Arkiv" //FIXME: accelerator collision &A
     BEGIN
         MENUITEM "&Ny Aktivitet (Kör...)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta Aktivitetshanteraren", ID_FILE_EXIT
     END
-    POPUP "&Alternativ" //FIXME: acclerator collision &A
+    POPUP "&Alternativ" //FIXME: accelerator collision &A
     BEGIN
         MENUITEM "&Alltid överst", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimera vid användning", ID_OPTIONS_MINIMIZEONUSE, CHECKED
