@@ -32,9 +32,11 @@ typedef enum tagENCODING
 {
     ENCODING_ANSI = 0,
     ENCODING_WIDE,
-    ENCODING_UTF8
+    ENCODING_UTF8,
+    ENCODING_HLOCAL_ANSI,
+    ENCODING_HLOCAL_WIDE,
 } ENCODING;
 
-typedef BOOL (CALLBACK *TEXTPROC)(LPCVOID pvText, SIZE_T cbText, ENCODING encoding);
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, ENCODING encoding);
+typedef BOOL (CALLBACK *TEXTPROC)(LPVOID pvText, SIZE_T cbText, ENCODING encoding, BOOL bAlloc);
+BOOL CALLBACK DoSetTextMode(LPVOID pvText, SIZE_T cbText, ENCODING encoding, BOOL bAlloc);
 BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback);

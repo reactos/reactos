@@ -321,55 +321,34 @@ BOOL DoTextFromFormat(UINT uFormat, TEXTPROC fnCallback)
     if (uFormat == CF_HDROP)
     {
         HDROP hDrop = (HDROP)hGlobal;
-        LPWSTR pszText = NULL;
+        HGLOBAL hText = NULL;
         UINT iFile, cFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
         WCHAR szFile[MAX_PATH + 2];
         for (iFile = 0; iFile < cFiles; ++iFile)
         {
             if (!DragQueryFile(hDrop, iFile, szFile, MAX_PATH))
                 break;
-            lstrcat(szFile, L"\r\n");
-            pszText = AllocStrCat(pszText, szFile);
+            wcscat(szFile, L"\r\n");
+            hText = AllocStrCat(hText, szFile);
         }
-        fnCallback(pszText, lstrlenW(pszText) * sizeof(WCHAR), ENCODING_WIDE);
-        free(pszText);
+        fnCallback(hText, GlobalSize(hText), ENCODING_HLOCAL_WIDE, TRUE);
     }
     else
     {
-        LPVOID pvData = GlobalLock(hGlobal);
-        if (pvData)
+        if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW ||
+            uFormat == Globals.uCFSTR_INETURLW)
         {
-            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW ||
-                uFormat == Globals.uCFSTR_INETURLW)
-            {
-                fnCallback(pvData, cbGlobal, ENCODING_WIDE);
-            }
-            else if (uFormat == Globals.uCF_HTML)
-            {
-                fnCallback(pvData, cbGlobal, ENCODING_UTF8);
-            }
-            else
-            {
-                fnCallback(pvData, cbGlobal, ENCODING_ANSI);
-            }
-
+            fnCallback(hGlobal, cbGlobal, ENCODING_HLOCAL_WIDE, FALSE);
+        }
+        else if (uFormat == Globals.uCF_HTML)
+        {
+            LPVOID pvData = GlobalLock(hGlobal);
+            fnCallback(pvData, cbGlobal, ENCODING_UTF8, TRUE);
             GlobalUnlock(hGlobal);
         }
-        else if (cbGlobal == 0)
+        else
         {
-            if (uFormat == CF_UNICODETEXT || uFormat == Globals.uCFSTR_FILENAMEW ||
-                uFormat == Globals.uCFSTR_INETURLW)
-            {
-                fnCallback(L"", 0, ENCODING_WIDE);
-            }
-            else if (uFormat == Globals.uCF_HTML)
-            {
-                fnCallback("", 0, ENCODING_UTF8);
-            }
-            else
-            {
-                fnCallback("", 0, ENCODING_ANSI);
-            }
+            fnCallback(hGlobal, cbGlobal, ENCODING_HLOCAL_ANSI, FALSE);
         }
     }
 

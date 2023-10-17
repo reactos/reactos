@@ -251,33 +251,53 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     PlayEnhMetaFile(hdc, hEmf, lpRect);
 }
 
-LPWSTR AllocStrCat(LPWSTR psz, LPCWSTR cat)
+HGLOBAL AllocStrCat(HGLOBAL hGlobal, LPCWSTR cat)
 {
     size_t cch;
-    LPWSTR pszNew;
+    LPWSTR psz, pszNew;
+    HLOCAL hNewGlobal;
 
-    if (psz == NULL)
-        return _wcsdup(cat);
+    if (hGlobal == NULL)
+    {
+        hGlobal = GlobalAlloc(GHND | GMEM_SHARE, (wcslen(cat) + 1) * sizeof(WCHAR));
+        pszNew = GlobalLock(hGlobal);
+        if (pszNew)
+        {
+            wcscpy(pszNew, cat);
+            GlobalUnlock(hGlobal);
+        }
+        return hGlobal;
+    }
 
+    psz = GlobalLock(hGlobal);
     cch = wcslen(psz) + wcslen(cat) + 1;
-    pszNew = realloc(psz, cch * sizeof(WCHAR));
-    if (!pszNew)
-        return psz;
+    GlobalUnlock(hGlobal);
 
-    return wcscat(pszNew, cat); /* needs free */
+    hNewGlobal = GlobalReAlloc(hGlobal, cch * sizeof(WCHAR), LHND | GMEM_SHARE);
+    if (!hNewGlobal)
+        return hGlobal;
+
+    pszNew = GlobalLock(hGlobal);
+    if (pszNew)
+    {
+        wcscat(pszNew, cat);
+        GlobalUnlock(hGlobal);
+    }
+
+    return hGlobal;
 }
 
 LPWSTR WideFromUtf8(LPCSTR pszText, INT cchText)
 {
     INT cchWide = MultiByteToWideChar(CP_UTF8, 0, pszText, cchText, NULL, 0);
     INT cbWide = (cchWide + 1) * sizeof(WCHAR);
-    LPWSTR pszWide = malloc(cbWide);
+    LPWSTR pszWide = (LPWSTR)LocalAlloc(LPTR, cbWide);
     if (!pszWide)
         return NULL;
 
     MultiByteToWideChar(CP_UTF8, 0, pszText, cchText, pszWide, cchWide);
     pszWide[cchWide] = UNICODE_NULL;
-    return pszWide; /* needs free */
+    return pszWide; /* needs LocalFree */
 }
 
 BOOL RealizeClipboardPalette(HDC hdc)

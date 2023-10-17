@@ -46,6 +46,7 @@ typedef struct _CLIPBOARD_GLOBALS
     HWND hwndText;
     HMENU hMenu;
     BOOL bTextMode;
+    BOOL bTextAlloced;
     UINT uDisplayFormat;
     UINT uCheckedItem;
 
@@ -58,5 +59,8 @@ typedef struct _CLIPBOARD_GLOBALS
 } CLIPBOARD_GLOBALS;
 
 extern CLIPBOARD_GLOBALS Globals;
+
+HWND ReCreateTextBox(HWND hwndParent, BOOL bUnicode, BOOL bUseHandle, BOOL bTextAlloced, LPVOID pvText);
+void DestroyTextBox(void);
 
 #endif /* _CLIPBRD_PCH_ */

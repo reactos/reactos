@@ -15,6 +15,7 @@ static const WCHAR szClassName[] = L"ClipBookWClass";
 
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
+WNDPROC g_fnOldEditWndProc = NULL;
 
 static void InitGlobals(HINSTANCE hInstance)
 {
@@ -27,6 +28,24 @@ static void InitGlobals(HINSTANCE hInstance)
     Globals.uCF_HTML = RegisterClipboardFormatW(L"HTML Format");
     Globals.uCFSTR_INETURLA = RegisterClipboardFormatA(CFSTR_INETURLA);
     Globals.uCFSTR_INETURLW = RegisterClipboardFormatW(CFSTR_INETURLW);
+}
+
+static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_UNDO:
+        case EM_UNDO:
+        case EM_REDO:
+        case WM_CUT:
+        case WM_COPY:
+        case WM_PASTE:
+        case WM_CLEAR:
+        case WM_CONTEXTMENU:
+            /* Eat the message */
+            return 0;
+    }
+    return CallWindowProcW(g_fnOldEditWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 static void SaveClipboardToFile(void)
@@ -123,7 +142,70 @@ static void LoadClipboardFromDrop(HDROP hDrop)
     LoadClipboardDataFromFile(szFileName);
 }
 
-BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, ENCODING encoding)
+HWND ReCreateTextBox(HWND hwndParent, BOOL bUnicode, BOOL bUseHandle, BOOL bTextAlloced, LPVOID pvText)
+{
+    HWND hwndText;
+    const DWORD style = WS_CHILD | ES_MULTILINE | ES_READONLY | WS_HSCROLL | WS_VSCROLL;
+
+    DestroyTextBox();
+
+    if (bUnicode)
+    {
+        hwndText = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", NULL, style, 0, 0, 0, 0,
+                                   hwndParent, NULL, Globals.hInstance, NULL);
+    }
+    else
+    {
+        hwndText = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", NULL, style, 0, 0, 0, 0,
+                                   hwndParent, NULL, Globals.hInstance, NULL);
+    }
+
+    if (!hwndText)
+        return NULL;
+
+    g_fnOldEditWndProc = (WNDPROC)SetWindowLongPtrW(hwndText, GWLP_WNDPROC, (LONG_PTR)EditWndProc);
+
+    SendMessageW(Globals.hwndText, EM_SETLIMITTEXT, 0, 0);
+
+    if (pvText)
+    {
+        if (bUnicode)
+        {
+            if (bUseHandle)
+                SendMessageW(hwndText, EM_SETHANDLE, (WPARAM)(HLOCAL)pvText, 0);
+            else
+                SetWindowTextW(hwndText, (LPWSTR)pvText);
+        }
+        else
+        {
+#if 0
+            if (bUseHandle)
+                SendMessageA(hwndText, EM_SETHANDLE, (WPARAM)(HLOCAL)pvText, 0);
+            else
+                SetWindowTextA(hwndText, (LPSTR)pvText);
+#else
+            /* In some environments, ANSI version doesn't support EM_SETHANDLE */
+            if (bUseHandle)
+            {
+                LPSTR pszAnsi = GlobalLock((HGLOBAL)pvText);
+                SetWindowTextA(hwndText, (LPSTR)pszAnsi);
+                GlobalUnlock((HGLOBAL)pvText);
+            }
+            else
+            {
+                SetWindowTextA(hwndText, (LPSTR)pvText);
+            }
+            bTextAlloced = TRUE;
+#endif
+        }
+    }
+
+    Globals.hwndText = hwndText;
+    Globals.bTextAlloced = bTextAlloced;
+    return hwndText;
+}
+
+BOOL CALLBACK DoSetTextMode(LPVOID pvText, SIZE_T cbText, ENCODING encoding, BOOL bTextAlloced)
 {
     RECT rc;
 
@@ -132,18 +214,31 @@ BOOL CALLBACK DoSetTextMode(LPCVOID pvText, SIZE_T cbText, ENCODING encoding)
     switch (encoding)
     {
         case ENCODING_ANSI:
-            SetWindowTextA(Globals.hwndText, (LPCSTR)pvText);
+        {
+            Globals.hwndText = ReCreateTextBox(Globals.hMainWnd, FALSE, FALSE, TRUE, pvText);
             break;
-
+        }
         case ENCODING_WIDE:
-            SetWindowTextW(Globals.hwndText, (LPCWSTR)pvText);
+        {
+            Globals.hwndText = ReCreateTextBox(Globals.hMainWnd, TRUE, FALSE, TRUE, pvText);
             break;
-
+        }
         case ENCODING_UTF8:
         {
             LPWSTR pszWide = WideFromUtf8((LPCSTR)pvText, cbText * sizeof(CHAR));
-            SetWindowTextW(Globals.hwndText, pszWide);
-            free(pszWide);
+            Globals.hwndText = ReCreateTextBox(Globals.hMainWnd, TRUE, FALSE, TRUE, pszWide);
+            LocalFree(pszWide);
+            break;
+        }
+        case ENCODING_HLOCAL_ANSI:
+        {
+            Globals.hwndText = ReCreateTextBox(Globals.hMainWnd, FALSE, TRUE, bTextAlloced, pvText);
+            break;
+        }
+        case ENCODING_HLOCAL_WIDE:
+        {
+            Globals.hwndText = ReCreateTextBox(Globals.hMainWnd, TRUE, TRUE, bTextAlloced, pvText);
+            break;
         }
     }
 
@@ -179,7 +274,7 @@ static void SetDisplayFormat(UINT uFormat)
     {
         WCHAR szText[256];
         LoadStringW(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, szText, _countof(szText));
-        DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), ENCODING_WIDE);
+        DoSetTextMode(szText, wcslen(szText) * sizeof(WCHAR), ENCODING_WIDE, TRUE);
         return;
     }
 
@@ -442,28 +537,27 @@ static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     CloseClipboard();
 }
 
+void DestroyTextBox(void)
+{
+    if (!Globals.hwndText)
+        return;
+
+    if (!Globals.bTextAlloced)
+    {
+        HLOCAL hLocal = LocalAlloc(LHND, 8);
+        SendMessageW(Globals.hwndText, EM_SETHANDLE, (WPARAM)hLocal, 0);
+    }
+
+    DestroyWindow(Globals.hwndText);
+    Globals.hwndText = NULL;
+}
+
 static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
     {
         case WM_CREATE:
         {
-            /* Create a text box */
-            const DWORD style = WS_CHILD | ES_MULTILINE | ES_READONLY | WS_HSCROLL | WS_VSCROLL;
-            Globals.hwndText = CreateWindowExW(WS_EX_CLIENTEDGE,
-                                               L"EDIT",
-                                               NULL,
-                                               style,
-                                               0, 0, 0, 0,
-                                               hWnd,
-                                               NULL,
-                                               Globals.hInstance,
-                                               NULL);
-            if (!Globals.hwndText)
-                return -1;
-
-            SendMessageW(Globals.hwndText, EM_SETLIMITTEXT, 0, 0);
-
             Globals.hMenu = GetMenu(hWnd);
             Globals.hWndNext = SetClipboardViewer(hWnd);
 
@@ -487,6 +581,8 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_DESTROY:
         {
+            DestroyTextBox();
+
             ChangeClipboardChain(hWnd, Globals.hWndNext);
 
             if (Globals.uDisplayFormat == CF_OWNERDISPLAY)
