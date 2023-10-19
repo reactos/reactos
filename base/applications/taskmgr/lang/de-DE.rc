@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Immer im Vordergrund", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Nach Programmstart minimieren", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ausblenden, wenn minimiert", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16-Bit-Tasks anzeigen", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Ansicht"
     BEGIN
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "Ang&ehalten", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Große Symbole", ID_VIEW_LARGE
-        MENUITEM "K&leine Symbole", ID_VIEW_SMALL
-        MENUITEM "&Details", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Spalten auswählen...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU-Verlauf"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Alle CPUs in einem Diagramm", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&Ein Diagramm pro CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "K&ernel-Zeiten anzeigen", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Fenster"
+    POPUP ""
     BEGIN
         MENUITEM "&Untereinander", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Nebeneinander", ID_WINDOWS_TILEVERTICALLY
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Neuer Task (Ausführen...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Wechseln zu", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&In Vordergrund", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Wiederherstellen", ID_RESTORE
         MENUITEM "S&chließen", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Prozess beenden", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Pr&ozessstruktur beenden", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -154,14 +154,14 @@ CAPTION "Task-Manager"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Task beenden", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "&Wechseln zu", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
@@ -172,7 +172,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Prozesse aller &Benutzer anzeigen", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 120, 10
@@ -285,7 +285,7 @@ BEGIN
     LTEXT "Wählen Sie die Spalten aus, die auf der Registerkarte Prozesse angezeigt werden sollen.", IDC_STATIC, 7, 7, 221, 17
     CONTROL "&Name", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
     CONTROL "&PID (Prozess-ID)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
-    CONTROL "&CPU %", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 80, 10
+    CONTROL "&CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 80, 10
     CONTROL "CP&U-Zeit", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
     CONTROL "&Speicherlast", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 90, 10
     CONTROL "&Delta Speicherlast", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 120, 10
@@ -326,7 +326,7 @@ BEGIN
     ID_OPTIONS_ALWAYSONTOP "Task-Manager bleibt im Vordergrund, wenn nicht minimiert."
     ID_OPTIONS_MINIMIZEONUSE "Task-Manager wird minimiert, wenn ein SwitchTo-Vorgang durchgeführt wird."
     ID_OPTIONS_HIDEWHENMINIMIZED "Blendet den Task-Manager aus, wenn er minimiert ist."
-    ID_VIEW_REFRESH "Veranlasst den Task-Manager zur sofortigen Aktualisierung, unabhängig von der Geschwindigkeitseinstellung."
+    ID_VIEW_REFRESH "Veranlasst den Task-Manager zur sofortigen Aktualisierung."
     ID_VIEW_LARGE "Zeigt Tasks als große Symbole an."
     ID_VIEW_SMALL "Zeigt Tasks als kleine Symbole an."
     ID_VIEW_DETAILS "Zeigt Informationen über jeden Task an."
@@ -385,7 +385,7 @@ BEGIN
     IDS_TAB_PID "PID"
     IDS_TAB_USERNAME "Benutzername"
     IDS_TAB_SESSIONID "Sitzungskennung"
-    IDS_TAB_CPU "CPU %"
+    IDS_TAB_CPU "CPU"
     IDS_TAB_CPUTIME "CPU-Zeit"
     IDS_TAB_MEMUSAGE "Speicherlast"
     IDS_TAB_PEAKMEMUSAGE "Maximale Speicherlast"

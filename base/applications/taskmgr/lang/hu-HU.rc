@@ -15,12 +15,12 @@ BEGIN
         MENUITEM "&Mindig látható", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Indításkor kis méret", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Elrejtés kis méretnél", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16 bites feladatok megjelenítése", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Frissítés most", ID_VIEW_REFRESH
-        POPUP "&Frissítés gyakorisága"
+        MENUITEM "&Frissítés most", ID_VIEW_REFRESH //FIXME: accelerator collision
+        POPUP "&Frissítés gyakorisága" //FIXME: accelerator collision
         BEGIN
             MENUITEM "&Gyakran", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normál", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Felfüggesztve", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Nagy ikonok", ID_VIEW_LARGE
-        MENUITEM "&Kis ikonok", ID_VIEW_SMALL
-        MENUITEM "Rés&zletek", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Oszlopok kiválasztása...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU használat"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Minden CPU &egy grafikonon", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Külön grafikon &minden CPU-hoz", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Kernel idő megjelenítése", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Ablak"
+    POPUP ""
     BEGIN
         MENUITEM "&Vízszintes rendezés", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Függőleges rendezés", ID_WINDOWS_TILEVERTICALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "&Leállítás"
     BEGIN
-        MENUITEM "Készen&léti állapot",            ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernálás",                    ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Kikapcsolás",                   ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Újraindítás",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "Ki&jelentkezés - %s",            ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Felhasználóváltás\tWinKey+L",   ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Készen&léti állapot", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernálás", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Kikapcsolás", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Újraindítás", ID_SHUTDOWN_REBOOT
+        MENUITEM "Ki&jelentkezés - %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Felhasználóváltás\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "Számítógép &zárolása\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Szétkapcsolódás",               ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Dokkolóról leválasztás",        ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Szétkapcsolódás", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Dokkolóról leválasztás", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Súgó"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Új feladat (Futtatás...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Váltás", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Előtérbe helyezés", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Visszaállít", ID_RESTORE
         MENUITEM "&Bezárás", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Folyamat befejezése", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Folyamat&struktúra leállítása", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -154,14 +154,14 @@ CAPTION "Feladatkezelő"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Fela&dat befejezése", IDC_ENDTASK, 28, 188, 68, 14, WS_DISABLED
     PUSHBUTTON "&Váltás", IDC_SWITCHTO, 100, 188, 68, 14, WS_DISABLED
@@ -172,7 +172,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Minden felhasználó folya&matait jelenítse meg", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 155, 10
@@ -283,32 +283,32 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 129, 178, 50, 14
     PUSHBUTTON "Mégse", IDCANCEL, 183, 178, 50, 14
     LTEXT "Válassza ki azokat az oszlopokat amelyeket szeretne látni a feladatkezelőben.", IDC_STATIC, 7, 7, 226, 17
-    CONTROL "&Program neve", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
-    CONTROL "&PID (Folyamatazonosító)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10
+    CONTROL "&Program neve", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10 //FIXME: accelerator collision
+    CONTROL "&PID (Folyamatazonosító)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10 //FIXME: accelerator collision
     CONTROL "&CPU használat", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 100, 10
     CONTROL "CPU idő", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
     CONTROL "&Memóriahasználat", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
-    CONTROL "Memóriahasználat &változása", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 110, 10
+    CONTROL "Memóriahasználat &változása", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 110, 10 //FIXME: accelerator collision
     CONTROL "Memóriahasználat &csúcsértéke", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 110, 10
-    CONTROL "&Laphibák", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "&Laphibák", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10 //FIXME: accelerator collision
     CONTROL "&USER objektumok", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 72, 10
     CONTROL "I/O olvasások", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 100, 10
     CONTROL "I/O olvasott bájtok", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 100, 10
     CONTROL "&Munkamenet-azonosító", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 100, 10
     CONTROL "&Felhasználónév", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 71, 10
     CONTROL "Lap&hibaszám változása", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 28, 110, 10
-    CONTROL "&Virtuális memória mérete", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 110, 10
-    CONTROL "&Lapozható készlet", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 50, 110, 10
+    CONTROL "&Virtuális memória mérete", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 110, 10 //FIXME: accelerator collision
+    CONTROL "&Lapozható készlet", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 50, 110, 10 //FIXME: accelerator collision
     CONTROL "&Nem lapozható készlet", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 61, 110, 10
-    CONTROL "&Prioritás", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 72, 55, 10
-    CONTROL "&Leírók száma", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 83, 59, 10
+    CONTROL "&Prioritás", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 72, 55, 10 //FIXME: accelerator collision
+    CONTROL "&Leírók száma", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 83, 59, 10 //FIXME: accelerator collision
     CONTROL "&Szálak száma", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 94, 59, 10
     CONTROL "GDI Objektumok", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 105, 85, 10
     CONTROL "I/O írások", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 116, 49, 10
     CONTROL "I/O írott bájtok", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 127, 65, 10
     CONTROL "Egyéb I/O műveletek", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 138, 85, 10
     CONTROL "Egyéb I/O műveletek bájtjai", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 149, 110, 10
-    CONTROL "&Parancssor", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 160, 65, 10
+    CONTROL "&Parancssor", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 160, 65, 10 //FIXME: accelerator collision
 END
 
 /* String Tables */

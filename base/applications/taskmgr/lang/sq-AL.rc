@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "Perhere lart", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimizo ne perdorim", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "Fshehe gjate minimizimit", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Shfaq 16-bit detyre", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Vezhgo"
     BEGIN
@@ -29,18 +29,18 @@ BEGIN
             MENUITEM "&Pushim", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "Ikona te medha", ID_VIEW_LARGE
-        MENUITEM "Ikona te vogla", ID_VIEW_SMALL
-        MENUITEM "&Detaje", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "Perzgjedh kolone...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU Histori"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Nje grafik, Te gjith CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Nje grafik &Per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Shfaq oren e Kernelit", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "Dritare"
+    POPUP ""
     BEGIN
         MENUITEM "Shfaq &Horizontalisht", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Shfaq &Vertikalisht", ID_WINDOWS_TILEVERTICALLY
@@ -51,15 +51,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Ndihme"
     BEGIN
@@ -81,7 +81,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "Detyre e re (Run...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -93,7 +93,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "Ndrysho ne", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "Sjelle para", ID_WINDOWS_BRINGTOFRONT
@@ -111,7 +111,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Restauro", ID_RESTORE
         MENUITEM "Mbyll", ID_FILE_EXIT
@@ -122,7 +122,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "Mbyll procesin", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Mbyll procesin &Tree", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -146,6 +146,8 @@ END
 
 /* Dialogs */
 
+/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
+
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
@@ -153,14 +155,14 @@ CAPTION "Task Manager"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Mbyll", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "Kalo tek", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
@@ -171,7 +173,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Shfaq proceset nga te gjith perdoruesit", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 140, 10
@@ -430,7 +432,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "E pamundur ndryshimi i prioritetit"
     IDS_MSG_WARNINGCHANGEPRIORITY "KUJDES: Ndryshimi i klases se prioritetit te ketij procesi mund te\nsjell rrezultate te padeshirushme ne stabilitetin e sistemit. Jeni i sigurt\nper ndryshimin e klases se prioriteteve?"
     IDS_MSG_TRAYICONCPUUSAGE "Perdorimi i CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %s / %s (%d%%)"
+    IDS_STATUS_MEMUSAGE "Perdorimi i Mem: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Perdorimi i CPU: %3d%%"
     IDS_STATUS_PROCESSES "Proceset: %d"
     IDS_NOT_RESPONDING "Nuk pergjigjet"

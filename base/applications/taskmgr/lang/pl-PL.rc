@@ -20,7 +20,7 @@ BEGIN
         MENUITEM "Za&wsze na wierzchu", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimalizuj podczas użytkowania", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ukryj, gdy zminimalizowane", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "Pokazuj 16-&bitowe zadania", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Widok"
     BEGIN
@@ -33,18 +33,18 @@ BEGIN
             MENUITEM "&Wstrzymana", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "D&uże ikony", ID_VIEW_LARGE
-        MENUITEM "&Małe ikony", ID_VIEW_SMALL
-        MENUITEM "&Szczegóły", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "Wybierz &kolumny...", ID_VIEW_SELECTCOLUMNS
-        POPUP "H&istoria użycia procesora CPU"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Jeden &wykres dla wszystkich procesorów CPU", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Jeden w&ykres dla każdego procesora CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "Pokaż &czas jądra", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "O&kna"
+    POPUP ""
     BEGIN
         MENUITEM "&Sąsiadująco w poziomie", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Sąsi&adująco w pionie", ID_WINDOWS_TILEVERTICALLY
@@ -55,15 +55,15 @@ BEGIN
     END
     POPUP "&Zamknij"
     BEGIN
-        MENUITEM "Przejdź w &stan gotowości",           ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernuj",                           ID_SHUTDOWN_HIBERNATE
-        MENUITEM "Wyłą&cz",                             ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Uruchom ponownie",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Wyloguj: %s",                        ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Przełącz użytkownika\tLogo Win+L",   ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Zablokuj komputer\tLogo Win+L",      ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Rozłącz",                            ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Wysuń komputer",                     ID_SHUTDOWN_EJECT_COMPUTER, GRAYED //FIXME ?
+        MENUITEM "Przejdź w &stan gotowości", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernuj", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Wyłą&cz", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Uruchom ponownie", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Wyloguj: %s", ID_SHUTDOWN_LOGOFF //FIXME: accelerator collision
+        MENUITEM "&Przełącz użytkownika\tLogo Win+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Zablokuj komputer\tLogo Win+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Rozłącz", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Wysuń komputer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED //FIXME: accelerator collision
     END
     POPUP "Pomo&c"
     BEGIN
@@ -85,7 +85,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Nowe zadanie (Uruchom...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -97,7 +97,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "P&rzełącz na", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Przesuń na wierzch", ID_WINDOWS_BRINGTOFRONT
@@ -115,7 +115,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Przywróć", ID_RESTORE
         MENUITEM "&Zamknij", ID_FILE_EXIT
@@ -126,7 +126,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Zakończ proces", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Zamknij &drzewo procesów", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -159,14 +159,14 @@ CAPTION "Menedżer zadań"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Zakończ zadanie", IDC_ENDTASK, 39, 189, 65, 14, WS_DISABLED
     PUSHBUTTON "P&rzełącz na", IDC_SWITCHTO, 107, 189, 65, 14, WS_DISABLED
@@ -177,7 +177,7 @@ IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List1", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Po&każ procesy wszystkich użytkowników", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 153, 10
