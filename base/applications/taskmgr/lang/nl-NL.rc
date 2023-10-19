@@ -13,9 +13,9 @@ BEGIN
         MENUITEM "&Altijd op voorgrond", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "Minimaliseren &bij gebruik", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Verbergen indien geminimaliseerd", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "16-&bits taken weergeven", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "&Beeld"
+    POPUP "B&eeld"
     BEGIN
         MENUITEM "&Nu vernieuwen", ID_VIEW_REFRESH
         POPUP "Bijwerk&snelheid"
@@ -26,18 +26,18 @@ BEGIN
             MENUITEM "&Onderbroken", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Grote pictogrammen", ID_VIEW_LARGE
-        MENUITEM "&Kleine pictogrammen", ID_VIEW_SMALL
-        MENUITEM "&Details", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Kolommen selecteren...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Geschiedenis van CPU"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Eén grafiek, alle CPU's", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Eén grafiek &per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Kerneltijden weergeven", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Vensters"
+    POPUP ""
     BEGIN
         MENUITEM "&Onder elkaar", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "N&aast elkaar", ID_WINDOWS_TILEVERTICALLY
@@ -48,15 +48,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Help"
     BEGIN
@@ -78,7 +78,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Nieuwe taak (Uitvoeren...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -90,7 +90,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Activeren", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "Naar &voorgrond", ID_WINDOWS_BRINGTOFRONT
@@ -108,7 +108,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Vorig formaat", ID_RESTORE
         MENUITEM "&Sluiten", ID_FILE_EXIT
@@ -119,13 +119,13 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
-        MENUITEM "&Proces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Pro&ces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Process&tructuur beëindigen", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Fouten opsporen", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "P&rioriteit instellen"
+        POPUP "&Prioriteit instellen"
         BEGIN
             MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Hoog", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -135,6 +135,9 @@ BEGIN
             MENUITEM "&Laag", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "&Affiniteit instellen...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -149,32 +152,31 @@ CAPTION "Taakbeheer"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Nieuwe Taak...", IDC_NEWTASK, 172, 188, 68, 14
-    PUSHBUTTON "&Activeren", IDC_SWITCHTO, 100, 188, 68, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Taa&k beëindigen", IDC_ENDTASK, 28, 188, 68, 14, WS_DISABLED
+    PUSHBUTTON "&Activeren", IDC_SWITCHTO, 100, 188, 68, 14, WS_DISABLED
+    PUSHBUTTON "&Nieuwe Taak...", IDC_NEWTASK, 172, 188, 68, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Proces beëindigen", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Processen van &alle gebruikers weergeven", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 151, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 151, 10
+    PUSHBUTTON "&Proces beëindigen", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -223,20 +225,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Geschiedenis van CPU gebruik", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Geschiedenis van wisselbestandsgebruik", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Weergave van CPU-gebruik", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Weergave van wisselbestandsgebruik", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Geschiedenis van CPU gebruik", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Geschiedenis van wisselbestandsgebruik", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug kanalen"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Sluit", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -324,58 +316,6 @@ BEGIN
     IDS_APP_TITLE "Taakbeheer"
     IDC_TASKMGR "Taakbeheer"
     IDS_IDLE_PROCESS "Niet-actieve systeemprocessen"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Een nieuw programma uitvoeren"
-    ID_OPTIONS_ALWAYSONTOP "Taakbeheer blijft op de voorgrond, behalve als het wordt geminimaliseerd"
-    ID_OPTIONS_MINIMIZEONUSE "Taakbeheer wordt geminimaliseerd als een taak wordt geactiveerd"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Taakbeheer verbergen als dit geminimaliseerd is"
-    ID_VIEW_REFRESH "Gegevens nu vernieuwen, ongeacht de instelling van Bijwerksnelheid"
-    ID_VIEW_LARGE "De taken met grote pictogrammen weergeven"
-    ID_VIEW_SMALL "De taken met kleine pictogrammen weergeven"
-    ID_VIEW_DETAILS "Gegevens van elke taak weergeven"
-    ID_VIEW_UPDATESPEED_HIGH "Het beeldscherm twee keer per seconde bijwerken"
-    ID_VIEW_UPDATESPEED_NORMAL "Het beeldscherm elke twee seconden bijwerken"
-    ID_VIEW_UPDATESPEED_LOW "Het beeldscherm elke vier seconden bijwerken"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Beeldscherm wordt niet automatisch bijgewerkt"
-    ID_WINDOWS_TILEHORIZONTALLY "Vensters onder elkaar schikken"
-    ID_WINDOWS_TILEVERTICALLY "Vensters naast elkaar schikken"
-    ID_WINDOWS_MINIMIZE "Vensters minimaliseren"
-    ID_WINDOWS_MAXIMIZE "Vensters maximaliseren"
-    ID_WINDOWS_CASCADE "Vensters diagonaal over het bureaublad schikken"
-    ID_WINDOWS_BRINGTOFRONT "Venster naar de voorgrond brengen, maar niet actief maken"
-    ID_HELP_TOPICS "Help-onderwerpen over Taakbeheer weergeven"
-    ID_HELP_ABOUT "Programma-informatie, versienummer en copyrightgegevens weergeven"
-    ID_FILE_EXIT "Taakbeheer afsluiten"
-    ID_OPTIONS_SHOW16BITTASKS "16-bits taken weergeven van de bijbehorende ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "De kolommen selecteren die moeten worden weergegeven op de pagina Proces"
-    ID_VIEW_SHOWKERNELTIMES "De kerneltijden in de prestatiegrafiek weergeven"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Eén grafiek geeft het totale CPU-gebruik weer"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Elke CPU heeft zijn eigen grafiek"
-    ID_APPLICATION_PAGE_SWITCHTO "Venster naar de voorgrond brengen en actief maken"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Sluit de geselecteerde taken"
-    ID_GOTOPROCESS "Activeert het proces van de geselecteerde taak"
-    ID_RESTORE "Taakbeheer herstellen als dit verborgen is"
-    ID_PROCESS_PAGE_ENDPROCESS "Dit proces wordt van het systeem verwijderd"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Dit proces en alle afhankelijkheden ervan van het systeem verwijderen"
-    ID_PROCESS_PAGE_DEBUG "De debugger wordt voor dit proces gebruikt"
-    ID_PROCESS_PAGE_SETAFFINITY "Instellen op welke processors het proces uitgevoerd kan worden"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Het proces wordt ingesteld met de prioriteitsklasse REALTIME"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Het proces wordt ingesteld met de prioriteitsklasse HOOG"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Proces instellen op prioriteitsklasse HOGER DAN NORMAAL"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Het proces wordt ingesteld met de prioriteitsklasse NORMAAL"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Proces instellen op prioriteitsklasse LAGER DAN NORMAAL"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Het proces wordt ingesteld met de prioriteitsklasse LAAG"
 END
 
 STRINGTABLE

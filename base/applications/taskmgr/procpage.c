@@ -1,32 +1,20 @@
 /*
- *  ReactOS Task Manager
- *
- *  procpage.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *  Copyright (C) 2009         Maxime Vernier <maxime.vernier@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2009 Maxime Vernier <maxime.vernier@gmail.com>
  */
 
 #include "precomp.h"
 
 #include "proclist.h"
 
+#include <ndk/psfuncs.h>
+
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
+
+#define CONST_STR_LEN(str) (_countof(str) - 1)
 
 typedef struct
 {
@@ -348,6 +336,9 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     DWORD        dwDebuggerSize;
     HKEY         hKey;
 
+    if (dwProcessId == 0)
+        return;
+
     memset(&si, 0, sizeof(SYSTEM_INFO));
 
     GetCursorPos(&pt);
@@ -556,8 +547,8 @@ void AddProcess(ULONG Index)
 
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount)
 {
-    IO_COUNTERS    iocounters;
-    LARGE_INTEGER  time;
+    IO_COUNTERS iocounters;
+    LARGE_INTEGER time;
 
     if (ColumnDataHints[ColumnIndex] == COLUMN_IMAGENAME)
         PerfDataGetImageName(Index, lpText, nMaxCount);
@@ -652,42 +643,36 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADS)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadOperationCount); */
         _ui64tow(iocounters.ReadOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteOperationCount); */
         _ui64tow(iocounters.WriteOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHER)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherOperationCount); */
         _ui64tow(iocounters.OtherOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadTransferCount); */
         _ui64tow(iocounters.ReadTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITEBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteTransferCount); */
         _ui64tow(iocounters.WriteTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHERBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherTransferCount); */
         _ui64tow(iocounters.OtherTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
@@ -763,8 +748,8 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 
     if (TaskManagerSettings.SortColumn == COLUMN_IMAGENAME)
     {
-        PerfDataGetImageName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetImageName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetImageName(IndexParam1, text1, _countof(text1));
+        PerfDataGetImageName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_PID)
@@ -775,14 +760,14 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_USERNAME)
     {
-        PerfDataGetUserName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetUserName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetUserName(IndexParam1, text1, _countof(text1));
+        PerfDataGetUserName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_COMMANDLINE)
     {
-        PerfDataGetCommandLine(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetCommandLine(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetCommandLine(IndexParam1, text1, _countof(text1));
+        PerfDataGetCommandLine(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_SESSIONID)
@@ -930,4 +915,200 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ret = CMP(ull1, ull2);
     }
     return ret;
+}
+
+static DWORD
+DevicePathToDosPath(LPCWSTR lpDevicePath, LPWSTR lpDosPath, DWORD dwLength)
+{
+    DWORD dwRet = 0;
+    WCHAR szDrive[3] = L"?:";
+    WCHAR szDeviceName[MAX_PATH];
+
+    if (_wcsnicmp(lpDevicePath, L"\\Device\\", CONST_STR_LEN(L"\\Device\\")) != 0)
+        return 0;
+
+    for (szDrive[0] = L'A'; szDrive[0] <= L'`'; szDrive[0]++)
+    {
+        if (QueryDosDeviceW(szDrive, szDeviceName, _countof(szDeviceName)) != 0)
+        {
+            size_t len = wcslen(szDeviceName);
+
+            if (_wcsnicmp(lpDevicePath, szDeviceName, len) == 0)
+            {
+                dwRet = _countof(szDrive) + wcslen(lpDevicePath + len);
+                if (lpDosPath && (dwLength >= dwRet))
+                {
+                    StringCchPrintfW(lpDosPath, dwLength, L"%s%s",
+                                     szDrive, lpDevicePath + len);
+                }
+                break;
+            }
+        }
+    }
+
+    return dwRet;
+}
+
+static DWORD
+GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
+{
+    DWORD dwRet = 0;
+    NTSTATUS Status;
+    BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
+    PVOID DynamicBuffer = NULL;
+    PUNICODE_STRING ExePath;
+    ULONG SizeNeeded;
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessImageFileName,
+                                       StaticBuffer,
+                                       sizeof(StaticBuffer) - sizeof(WCHAR),
+                                       &SizeNeeded);
+    if (NT_SUCCESS(Status))
+        ExePath = (PUNICODE_STRING)StaticBuffer;
+    else if (Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+        DynamicBuffer = HeapAlloc(GetProcessHeap(), 0, SizeNeeded + sizeof(WCHAR));
+        if (!DynamicBuffer)
+            return 0;
+
+        Status = NtQueryInformationProcess(hProcess,
+                                           ProcessImageFileName,
+                                           DynamicBuffer,
+                                           SizeNeeded,
+                                           &SizeNeeded);
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+
+        ExePath = DynamicBuffer;
+    }
+    else
+        return 0;
+
+    ExePath->Buffer[ExePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    dwRet = DevicePathToDosPath(ExePath->Buffer, lpExePath, dwLength);
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, DynamicBuffer);
+
+    return dwRet;
+}
+
+static DWORD
+GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+{
+    DWORD dwRet = 0;
+
+    if (dwProcessId == 0)
+        return 0;
+
+    if (dwProcessId == 4)
+    {
+        static const WCHAR szKernelExe[] = L"\\ntoskrnl.exe";
+        LPWSTR pszSystemDir;
+        UINT uLength;
+
+        uLength = GetSystemDirectoryW(NULL, 0);
+        if (uLength == 0)
+            return 0;
+
+        pszSystemDir = HeapAlloc(GetProcessHeap(), 0, uLength * sizeof(WCHAR));
+        if (!pszSystemDir)
+            return 0;
+
+        if (GetSystemDirectoryW(pszSystemDir, uLength) != 0)
+        {
+            dwRet = uLength + CONST_STR_LEN(szKernelExe);
+
+            if (lpExePath && (dwLength >= dwRet))
+            {
+                StringCchPrintfW(lpExePath, dwLength, L"%s%s",
+                                 pszSystemDir, szKernelExe);
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, pszSystemDir);
+    }
+    else
+    {
+        HANDLE hProcess;
+
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
+        if (hProcess)
+        {
+            dwRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
+            CloseHandle(hProcess);
+        }
+    }
+
+    return dwRet;
+}
+
+void ProcessPage_OnProperties(void)
+{
+    DWORD dwProcessId;
+    DWORD dwLength;
+    LPWSTR pszExePath;
+    SHELLEXECUTEINFOW info = { 0 };
+
+    dwProcessId = GetSelectedProcessId();
+
+    dwLength = GetProcessExecutablePathById(dwProcessId, NULL, 0);
+    if (dwLength == 0)
+        return;
+
+    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+    if (!pszExePath)
+        return;
+
+    if (GetProcessExecutablePathById(dwProcessId, pszExePath, dwLength) == 0)
+        goto Cleanup;
+
+    info.cbSize = sizeof(SHELLEXECUTEINFOW);
+    info.fMask = SEE_MASK_INVOKEIDLIST;
+    info.hwnd = NULL;
+    info.lpVerb = L"properties";
+    info.lpFile = pszExePath;
+    info.lpParameters = L"";
+    info.lpDirectory = NULL;
+    info.nShow = SW_SHOW;
+    info.hInstApp = NULL;
+
+    ShellExecuteExW(&info);
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, pszExePath);
+}
+
+void ProcessPage_OnOpenFileLocation(void)
+{
+    DWORD dwProcessId;
+    DWORD dwLength;
+    LPWSTR pszExePath;
+    LPWSTR pszCmdLine = NULL;
+
+    dwProcessId = GetSelectedProcessId();
+
+    dwLength = GetProcessExecutablePathById(dwProcessId, NULL, 0);
+    if (dwLength == 0)
+        return;
+
+    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+    if (!pszExePath)
+        return;
+
+    if (GetProcessExecutablePathById(dwProcessId, pszExePath, dwLength) == 0)
+        goto Cleanup;
+
+    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, (dwLength + CONST_STR_LEN(L"/select,\"\"")) * sizeof(WCHAR));
+    if (!pszCmdLine)
+        goto Cleanup;
+
+    StringCchPrintfW(pszCmdLine, dwLength + CONST_STR_LEN(L"/select,\"\""), L"/select,\"%s\"", pszExePath);
+
+    ShellExecuteW(NULL, L"open", L"explorer.exe", pszCmdLine, NULL, SW_SHOWNORMAL);
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, pszCmdLine);
+    HeapFree(GetProcessHeap(), 0, pszExePath);
 }

@@ -19,6 +19,7 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include <tlhelp32.h>
+#include <strsafe.h>
 
 #include "column.h"
 #include "taskmgr.h"

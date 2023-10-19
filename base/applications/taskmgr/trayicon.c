@@ -1,52 +1,30 @@
 /*
- *  ReactOS Task Manager
- *
- *  trayicon.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {
-    HICON     hTrayIcon = NULL;
-    HDC       hScreenDC = NULL;
-    HDC       hDC = NULL;
-    HBITMAP   hBitmap = NULL;
-    HBITMAP   hOldBitmap = NULL;
-    HBITMAP   hBitmapMask = NULL;
-    ICONINFO  iconInfo;
-    ULONG     ProcessorUsage;
-    int       nLinesToDraw;
-    HBRUSH    hBitmapBrush = NULL;
-    RECT      rc;
+    HICON    hTrayIcon = NULL;
+    HDC      hScreenDC = NULL;
+    HDC      hDC = NULL;
+    HBITMAP  hBitmap = NULL;
+    HBITMAP  hOldBitmap = NULL;
+    HBITMAP  hBitmapMask = NULL;
+    ICONINFO iconInfo;
+    ULONG    CpuUsage;
+    int      nLinesToDraw;
+    HBRUSH   hBitmapBrush = NULL;
+    RECT     rc;
 
-    /*
-     * Get a handle to the screen DC
-     */
     hScreenDC = GetDC(NULL);
     if (!hScreenDC)
         goto done;
 
-    /*
-     * Create our own DC from it
-     */
     hDC = CreateCompatibleDC(hScreenDC);
     if (!hDC)
         goto done;
@@ -67,12 +45,9 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
      * Select the bitmap into our device context
      * so we can draw on it.
      */
-    hOldBitmap = (HBITMAP) SelectObject(hDC, hBitmap);
+    hOldBitmap = SelectObject(hDC, hBitmap);
 
-    /*
-     * Get the cpu usage
-     */
-    ProcessorUsage = PerfDataGetProcessorUsage();
+    CpuUsage = PerfDataGetProcessorUsage();
 
     /*
      * Calculate how many lines to draw
@@ -80,15 +55,13 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
      * to draw the cpu usage instead of
      * just having 10.
      */
-    nLinesToDraw = (ProcessorUsage + (ProcessorUsage / 10)) / 11;
+    nLinesToDraw = (CpuUsage + (CpuUsage / 10)) / 11;
     rc.left = 3;
     rc.top = 12 - nLinesToDraw;
     rc.right = 13;
     rc.bottom = 13;
 
-    /*
-     * Now draw the cpu usage
-     */
+    /* Now draw the cpu usage */
     if (nLinesToDraw)
         FillRect(hDC, &rc, hBitmapBrush);
 
@@ -120,32 +93,29 @@ done:
     if (hBitmapMask)
         DeleteObject(hBitmapMask);
 
-    /*
-     * Return the newly created tray icon (if successful)
-     */
+    /* Return the newly created tray icon (if successful) */
     return hTrayIcon;
 }
 
-BOOL TrayIcon_ShellAddTrayIcon(void)
+BOOL TrayIcon_AddIcon(void)
 {
     NOTIFYICONDATAW nid;
-    HICON           hIcon = NULL;
-    BOOL            bRetVal;
-    WCHAR           szMsg[64];
+    HICON hIcon = NULL;
+    BOOL  bRetVal;
+    WCHAR szMsg[64];
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+    memset(&nid, 0, sizeof(nid));
 
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
+    nid.cbSize = sizeof(nid);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
 
-
-    LoadStringW( GetModuleHandleW(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+    LoadStringW(GetModuleHandleW(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, _countof(szMsg));
     wsprintfW(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIconW(NIM_ADD, &nid);
@@ -156,43 +126,40 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     return bRetVal;
 }
 
-BOOL TrayIcon_ShellRemoveTrayIcon(void)
+BOOL TrayIcon_RemoveIcon(void)
 {
     NOTIFYICONDATAW nid;
-    BOOL            bRetVal;
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+    memset(&nid, 0, sizeof(nid));
 
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
+    nid.cbSize = sizeof(nid);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = 0;
     nid.uCallbackMessage = WM_ONTRAYICON;
 
-    bRetVal = Shell_NotifyIconW(NIM_DELETE, &nid);
-
-    return bRetVal;
+    return Shell_NotifyIconW(NIM_DELETE, &nid);
 }
 
-BOOL TrayIcon_ShellUpdateTrayIcon(void)
+BOOL TrayIcon_UpdateIcon(void)
 {
     NOTIFYICONDATAW nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
-    WCHAR           szTemp[64];
+    WCHAR           szMsg[64];
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+    memset(&nid, 0, sizeof(nid));
 
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
+    nid.cbSize = sizeof(nid);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
-    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, sizeof(szTemp)/sizeof(szTemp[0]));
-    wsprintfW(nid.szTip, szTemp, PerfDataGetProcessorUsage());
+    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szMsg, _countof(szMsg));
+    wsprintfW(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIconW(NIM_MODIFY, &nid);
 

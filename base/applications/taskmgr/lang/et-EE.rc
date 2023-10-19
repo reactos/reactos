@@ -1,9 +1,6 @@
 /*
- * PROJECT:     Task Manager for ReactOS
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/taskmgr/lang/et-EE.rc
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ * LICENSE:    GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * TRANSLATOR: Joann Mõndresku <joannmondresku@gmail.com>
  */
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
@@ -20,7 +17,7 @@ BEGIN
         MENUITEM "&Alati pealmiseks", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimeeri kasutamisel", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "Minmeerimisel &peida", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Näita 16-bitiseid tegumeid", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Vaade"
     BEGIN
@@ -33,18 +30,18 @@ BEGIN
             MENUITEM "&Peatatud", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "S&uured ikoonid", ID_VIEW_LARGE
-        MENUITEM "Vä&ikesed ikoonid", ID_VIEW_SMALL
-        MENUITEM "&Detailid", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "Va&li veerud...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU Ajalugu"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Üks diagramm kõigile protsessoritele", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Üks diagramm protsessori kohta", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Kuva tuumaajad", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Aknad"
+    POPUP ""
     BEGIN
         MENUITEM "Paani &horisontaalselt", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Paani &vertikaalselt", ID_WINDOWS_TILEVERTICALLY
@@ -55,15 +52,15 @@ BEGIN
     END
     POPUP "S&ulgemine"
     BEGIN
-        MENUITEM "&Puhkerežiim",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Talveuni",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "Lül&ita välja",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "T&aaskäivita",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Logi välja %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Vaheta kasutajat\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Lu&kusta arvuti\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "Katkesta &ühendus",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eemalda arvuti",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Puhkerežiim", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Talveuni", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Lül&ita välja", ID_SHUTDOWN_POWEROFF
+        MENUITEM "T&aaskäivita", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Logi välja %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Vaheta kasutajat\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Lu&kusta arvuti\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "Katkesta &ühendus", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eemalda arvuti", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "S&pikker"
     BEGIN
@@ -85,7 +82,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Uus tegum (käivita...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -97,7 +94,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Aktiveeri", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Too kõige ette", ID_WINDOWS_BRINGTOFRONT
@@ -115,7 +112,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Taasta", ID_RESTORE
         MENUITEM "&Sule", ID_FILE_EXIT
@@ -126,7 +123,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Lõpeta protsess", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Lõpeta protsessi&puu", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -142,6 +139,9 @@ BEGIN
             MENUITEM "&Madal", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Määra &ühtivus...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "Prop&erties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -154,32 +154,31 @@ CAPTION "Tegumihaldur"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Uus tegum...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&Aktiveeri", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Lõpeta tegum", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Aktiveeri", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Uus tegum...", IDC_NEWTASK, 187, 189, 53, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Lõpeta protsess", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Näita protsesse kõigilt kasutajatelt", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 111, 10
+    PUSHBUTTON "&Lõpeta protsess", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -228,20 +227,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "CPU hõivatuse ajalugu", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Füüsilise mälu hõivatuse ajalugu", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "CPU hõivatuse kuva", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Füüsilise mälu hõivatuse kuva", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "CPU hõivatuse ajalugu", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Füüsilise mälu hõivatuse ajalugu", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Silumiskanalid"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Sule", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -329,58 +318,6 @@ BEGIN
     IDS_APP_TITLE "Tegumihaldur"
     IDC_TASKMGR "Tegumihaldur"
     IDS_IDLE_PROCESS "Süsteemi jõudeoleku protsess"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Käivitab uue programmi"
-    ID_OPTIONS_ALWAYSONTOP "Tegumihaldur jääb kõige muude akende ette, v.a. minimeerituna"
-    ID_OPTIONS_MINIMIZEONUSE "Tegumihaldur minimeeritakse nupu Aktiveeri toimingu ajaks"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Peida tegumihaldur minimeerimisel"
-    ID_VIEW_REFRESH "Sundige Tegumihaldur praegu värskenduma, sättest Värskenduskiirus olenemata"
-    ID_VIEW_LARGE "Kuva tegumeid suurte ikoonidega"
-    ID_VIEW_SMALL "Kuva tegumeid väikeste ikoonidega"
-    ID_VIEW_DETAILS "Kuvab informatsiooni iga tegumi kohta"
-    ID_VIEW_UPDATESPEED_HIGH "Värskendab kuva kaks korda sekundis"
-    ID_VIEW_UPDATESPEED_NORMAL "Värskendab kuva iga kahe sekundi järel"
-    ID_VIEW_UPDATESPEED_LOW "Värskendab kuva iga nelja sekundi järel"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Ei värskenda automaatselt"
-    ID_WINDOWS_TILEHORIZONTALLY "Paanib aknad töölaual horisontaalselt"
-    ID_WINDOWS_TILEVERTICALLY "Paanib aknad töölaual vertikaalselt"
-    ID_WINDOWS_MINIMIZE "Minimeerib aknad"
-    ID_WINDOWS_MAXIMIZE "Maksimeerib aknad"
-    ID_WINDOWS_CASCADE "Virnastab aknad töölaual diagonaalselt"
-    ID_WINDOWS_BRINGTOFRONT "Toob akna esiplaanile, kuid ei aktiveeri seda"
-    ID_HELP_TOPICS "Kuvab Tegumihalduri spikriteemad"
-    ID_HELP_ABOUT "Kuvab programmiteabe, versiooninumbrit ja autoriõigust"
-    ID_FILE_EXIT "Väljub Tegumihaldurist"
-    ID_OPTIONS_SHOW16BITTASKS "Kuvab ntvdm.exe-ga seotud 16-bittiseid tegumeid"
-    ID_VIEW_SELECTCOLUMNS "Valige, millised veerud kuvatakse vahekaardil Protsess"
-    ID_VIEW_SHOWKERNELTIMES "Kuvab jõudlusdiagrammides tuuma aja"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Üks ajalgoodiagramm kõigi protsessorite kohta"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Igal protsessoril on oma ajaloodiagram"
-    ID_APPLICATION_PAGE_SWITCHTO "Toob akna esiplaanile ja aktiveerib selle"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Teavitab valitud tegumitel sulgeda"
-    ID_GOTOPROCESS "Muudab fookuse valitud tegumi protsessile"
-    ID_RESTORE "Taastab Tegumihalduri peidetud olekust"
-    ID_PROCESS_PAGE_ENDPROCESS "Eemaldab protsessi süsteemist"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Eemaldab selle protsessi ja selle järglased süsteemist"
-    ID_PROCESS_PAGE_DEBUG "Ühendab siluri sellele protsessile"
-    ID_PROCESS_PAGE_SETAFFINITY "Juhib millistel protsessoritel võib protsess tööd teha"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sätib protsessi reaalajas prioriteedile"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sätib protsessi kõrgele prioriteedile"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sätib protsessi üle keskmise prioriteedile"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sätib protsessi keskmisele prioriteedile"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "SSätib protsessi alla keskmise prioriteedile"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sätib protsessi madalals prioriteedile"
 END
 
 STRINGTABLE

@@ -1,23 +1,7 @@
 /*
- *  ReactOS Task Manager
- *
- *  graphctl.h
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 2002 Robert Dickenson <robd@reactos.org>
  */
 
 #pragma once
@@ -29,35 +13,22 @@
 extern "C" {
 #endif
 
-#if 0
-
-/* Attributes */
-public:
-  void SetXUnits(const char* string);
-  void SetYUnits(const char* string);
-
-  /* Operations */
-public:
-  BOOL Create(DWORD dwStyle, const RECT& rect, HWND hParentWnd, UINT nID=NULL);
-
-#endif
-
 typedef struct
 {
-  int m_nShiftPixels;          /* amount to shift with each new point */
+  int m_nShiftPixels; // amount to shift with each new point
   int m_nYDecimals;
 
   char m_strXUnitsString[50];
   char m_strYUnitsString[50];
 
-  COLORREF m_crBackColor;                 /* background color */
-  COLORREF m_crGridColor;                 /* grid color */
-  COLORREF m_crPlotColor[MAX_PLOTS];      /* data color   */
+  COLORREF m_crBackColor; // background color
+  COLORREF m_crGridColor; // grid color
+  COLORREF m_crPlotColor[MAX_PLOTS]; // data color
 
-  double m_dCurrentPosition[MAX_PLOTS];   /* current position */
-  double m_dPreviousPosition[MAX_PLOTS];  /* previous position */
+  double m_dCurrentPosition[MAX_PLOTS]; // current position
+  double m_dPreviousPosition[MAX_PLOTS]; // previous position
 
-/* those were protected fields */
+// those were protected fields
   int m_nHalfShiftPixels;
   int m_nPlotShiftPixels;
   int m_nClientHeight;
@@ -65,8 +36,8 @@ typedef struct
   int m_nPlotHeight;
   int m_nPlotWidth;
 
-  double m_dLowerLimit;        /* lower bounds */
-  double m_dUpperLimit;        /* upper bounds */
+  double m_dLowerLimit; // lower bounds
+  double m_dUpperLimit; // upper bounds
   double m_dRange;
   double m_dVerticalFactor;
 
@@ -85,24 +56,20 @@ typedef struct
 } TGraphCtrl;
 
 extern WNDPROC OldGraphCtrlWndProc;
-double  GraphCtrl_AppendPoint(TGraphCtrl* this,
-                              double dNewPoint0, double dNewPoint1,
-                              double dNewPoint2, double dNewPoint3);
-void    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd,
-UINT nID);
-void    GraphCtrl_Dispose(TGraphCtrl* this);
-void    GraphCtrl_DrawPoint(TGraphCtrl* this);
-void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize);
-void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
-void    GraphCtrl_Reset(TGraphCtrl* this);
-void    GraphCtrl_Resize(TGraphCtrl* this);
-void    GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF
-color);
-void    GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color);
-void    GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF
-color);
-void    GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double
-dUpper, int nDecimalPlaces);
+double GraphCtrl_AppendPoint(TGraphCtrl* this,
+    double dNewPoint0, double dNewPoint1,
+    double dNewPoint2, double dNewPoint3);
+void GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID);
+void GraphCtrl_Dispose(TGraphCtrl* this);
+void GraphCtrl_DrawPoint(TGraphCtrl* this);
+void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize);
+void GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
+void GraphCtrl_Reset(TGraphCtrl* this);
+void GraphCtrl_Resize(TGraphCtrl* this);
+void GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF color);
+void GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color);
+void GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF color);
+void GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double dUpper, int nDecimalPlaces);
 
 INT_PTR CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 

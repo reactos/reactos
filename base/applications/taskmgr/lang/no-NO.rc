@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Alltid øverst", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimer ved bruk", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Skjul når Minimert", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Vis 16-bites oppgaver", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Vis"
     BEGIN
@@ -26,18 +26,18 @@ BEGIN
             MENUITEM "&Midlertidig stanset", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "St&ore Ikoner", ID_VIEW_LARGE
-        MENUITEM "S&må Ikoner", ID_VIEW_SMALL
-        MENUITEM "&Detaljer", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Velg tospaltet...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU Historie"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&En graf, per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "EN graf &per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Vis Kjernetider", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Vindu"
+    POPUP ""
     BEGIN
         MENUITEM "Sorter &horisontalt", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Sorter &vertikalt", ID_WINDOWS_TILEVERTICALLY
@@ -48,15 +48,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Hjelp"
     BEGIN
@@ -78,7 +78,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Ny oppgave (Kjør...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -90,7 +90,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Bytt til", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Plasser lengst frem", ID_WINDOWS_BRINGTOFRONT
@@ -108,7 +108,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Få tilbake", ID_RESTORE
         MENUITEM "&Avslutt", ID_FILE_EXIT
@@ -119,7 +119,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Avslutt Prosess", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Avslutt Prosess&tre", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -135,6 +135,9 @@ BEGIN
             MENUITEM "&Lav", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Sett &tiltrekning ...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -149,32 +152,31 @@ CAPTION "Oppgavebehandling"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Ny oppgave...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&Bytt til", IDC_SWITCHTO, 129, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Avslutt oppgave", IDC_ENDTASK, 60, 189, 65, 14, WS_DISABLED
+    PUSHBUTTON "&Bytt til", IDC_SWITCHTO, 129, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Ny oppgave...", IDC_NEWTASK, 187, 189, 53, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Avslutt prosess", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Vis prosesser fra alle brukere", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 111, 10
+    PUSHBUTTON "&Avslutt prosess", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -223,20 +225,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Logg for bruk av prosessor", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Logg for bruk av fysisk minne", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Vis prosessorbruk", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Vis minnebruk", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Logg for prosessorbruk", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Minne bruk historie", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug kanaler"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Avslutt", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -324,58 +316,6 @@ BEGIN
     IDS_APP_TITLE "Oppgavebehandling"
     IDC_TASKMGR "Oppgavebehandling"
     IDS_IDLE_PROCESS "System Idle Process"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Kjør et nytt program"
-    ID_OPTIONS_ALWAYSONTOP "Oppgavebehandler fortsette å være over alle andre vinduer med mindre de er minimert"
-    ID_OPTIONS_MINIMIZEONUSE "Oppgavebehandling er minimert når en 'Skift til' operasjon utføres"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Skjule oppgavebehandelen når det er minimert"
-    ID_VIEW_REFRESH "Oppdater nå, uahengig av innstillingene for oppdatering hastighet"
-    ID_VIEW_LARGE "Viser oppgavene ved å bruke store ikoner"
-    ID_VIEW_SMALL "Viser oppgavene ved å bruke små ikoner"
-    ID_VIEW_DETAILS "Viser informasjon om hver oppgave"
-    ID_VIEW_UPDATESPEED_HIGH "Oppdater skjermen to ganger per sekund"
-    ID_VIEW_UPDATESPEED_NORMAL "Oppdater skjermen annenhver sekund"
-    ID_VIEW_UPDATESPEED_LOW "Oppdater skjermen hvert fjerde sekund"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Skjermen oppdaterer ikke automatisk"
-    ID_WINDOWS_TILEHORIZONTALLY "Viser tittel vindu horisontalt på skrivebordet"
-    ID_WINDOWS_TILEVERTICALLY "Viser tittel vindu vertikalt på skrivebordet"
-    ID_WINDOWS_MINIMIZE "Minimalisere vinduet"
-    ID_WINDOWS_MAXIMIZE "Maksimere vinduet"
-    ID_WINDOWS_CASCADE "Overlapper vinduet diagonalt på skrivebordet"
-    ID_WINDOWS_BRINGTOFRONT "Legger vinduet øverst, men kan ikke skifte til det"
-    ID_HELP_TOPICS "Viser emner i hjelp for oppgavebehandling"
-    ID_HELP_ABOUT "Viser program informasjon, versjon nummer, og enerett"
-    ID_FILE_EXIT "Avslutter oppgavebehandling"
-    ID_OPTIONS_SHOW16BITTASKS "Viser 16-biters oppgaver under tilknyttende ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Velg hvilken kolonner som vil bli synlig på prosess siden"
-    ID_VIEW_SHOWKERNELTIMES "Viser kjerne tid i ytelses grafene"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "En enkelt logg graf viser totalt prosessorbruk"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Hver prosessor har sin egen logg graf"
-    ID_APPLICATION_PAGE_SWITCHTO "Skaffe en oppgave til forgrunn, endre fokus til den oppgaven"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Fortell valgte oppgave for å avsluttes"
-    ID_GOTOPROCESS "Endre fokus til prosess av valgte oppgave"
-    ID_RESTORE "Gjenopprette oppgavebehandelen fra dens skjulte stand"
-    ID_PROCESS_PAGE_ENDPROCESS "Fjern prosessen fra systemet"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Flytte denne prosessen og alle etterkommer fra systemet"
-    ID_PROCESS_PAGE_DEBUG "Tilknytte feilsøkingsprogram til denne prosess"
-    ID_PROCESS_PAGE_SETAFFINITY "Kontroll hvilken prosessorer prosessen vil bli godtatt å kjøre på"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sett prosess til EKTETID prioritet klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sett prosess til HØY prioritet klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sett prosess til OVER NORMAL prioritet klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sett prosess til NORMAL prioritet klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sett prosess til NEDENFOR NORMAL prioritet klasse"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sett prosess til LAV prioritet klasse"
 END
 
 STRINGTABLE

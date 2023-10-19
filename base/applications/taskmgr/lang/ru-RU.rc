@@ -1,4 +1,4 @@
-/* Russian language resource file by Dmitry Chapyshev, 2007-06-10, Kudratov Olimjon (olim98@bk.ru) */
+/* TRANSLATORS: Dmitry Chapyshev, 2007-06-10, Kudratov Olimjon <olim98@bk.ru> */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "Пове&рх остальных окон", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Сворачивать после обращения", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "С&крывать свернутое", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Отображать 16-разрядные задачи", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Вид"
     BEGIN
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Приостановить", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Крупные значки", ID_VIEW_LARGE
-        MENUITEM "&Мелкие значки", ID_VIEW_SMALL
-        MENUITEM "&Таблица", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "В&ыбрать столбцы...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Загрузка ЦП"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Один график на все ЦП", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&По графику на каждый ЦП", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Вывод времени ядра", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Окна"
+    POPUP ""
     BEGIN
         MENUITEM "С&верху вниз", ID_WINDOWS_TILEVERTICALLY
         MENUITEM "С&лева направо", ID_WINDOWS_TILEHORIZONTALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "Завер&шение работы"
     BEGIN
-        MENUITEM "Переход в &ждущий режим",       ID_SHUTDOWN_STANDBY
-        MENUITEM "Переход в &спящий режим",       ID_SHUTDOWN_HIBERNATE
-        MENUITEM "В&ыключение",                   ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Перезагрузка",                 ID_SHUTDOWN_REBOOT
-        MENUITEM "&Завершение сеанса %s",         ID_SHUTDOWN_LOGOFF
+        MENUITEM "Переход в &ждущий режим", ID_SHUTDOWN_STANDBY
+        MENUITEM "Переход в &спящий режим", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "В&ыключение", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Перезагрузка", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Завершение сеанса %s", ID_SHUTDOWN_LOGOFF
         MENUITEM "С&мена пользователя\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Заб&локировать компьютер\tWinKey+L",      ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Отключить",                   ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "С&нять компьютер с док-станции",               ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Заб&локировать компьютер\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Отключить", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "С&нять компьютер с док-станции", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Справка"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Новая задача (Выполнить...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Переключиться", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&На передний план", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Востановить", ID_RESTORE
         MENUITEM "&Закрыть", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Завершить процесс", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Завершить &дерево процессов", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -137,6 +137,9 @@ BEGIN
             MENUITEM "&Низкий", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Задать &соответствие...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "Сво&йства", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "О&ткрыть расположение файла", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -151,32 +154,31 @@ CAPTION "Диспетчер задач"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Новая задача...", IDC_NEWTASK, 167, 189, 73, 14
-    PUSHBUTTON "&Переключиться", IDC_SWITCHTO, 89, 189, 73, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Завершить &задачу", IDC_ENDTASK, 12, 189, 73, 14, WS_DISABLED
+    PUSHBUTTON "&Переключиться", IDC_SWITCHTO, 89, 189, 73, 14, WS_DISABLED
+    PUSHBUTTON "&Новая задача...", IDC_NEWTASK, 167, 189, 73, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Завершить процесс", IDC_ENDPROCESS, 167, 189, 74, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Отображать процессы всех пользователей", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 158, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 158, 10
+    PUSHBUTTON "&Завершить процесс", IDC_ENDPROCESS, 167, 189, 74, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -225,20 +227,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Хронология загрузки ЦП", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Хронология использования файла подкачки", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Отображение загрузки ЦП", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Отображение использования памяти", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Хронология загрузки ЦП", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Хронология использования памяти", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Отладка потоков"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Закрыть", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -326,58 +318,6 @@ BEGIN
     IDS_APP_TITLE "Диспетчер задач"
     IDC_TASKMGR "Диспетчер задач"
     IDS_IDLE_PROCESS "Бездействие системы"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Создать новую задачу"
-    ID_OPTIONS_ALWAYSONTOP "Окно Диспетчера задач отображается поверх других окон, если не свернуто"
-    ID_OPTIONS_MINIMIZEONUSE "Окно Диспетчера задач свертывается при выполнении переключения"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Скрывает свернутое окно Диспетчера задач"
-    ID_VIEW_REFRESH "Вызывает немедленное обновление окна Диспетчера задач"
-    ID_VIEW_LARGE "Отображает задачи в виде крупных значков"
-    ID_VIEW_SMALL "Отображает задачи в виде мелких значков"
-    ID_VIEW_DETAILS "Отображает дополнительную информацию о задачах"
-    ID_VIEW_UPDATESPEED_HIGH "Обновляет изображение один раз в секунду"
-    ID_VIEW_UPDATESPEED_NORMAL "Обновляет изображение один раз в две секунды"
-    ID_VIEW_UPDATESPEED_LOW "Обновляет изображение один раз в четыре секунды"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Изображение не обновляется автоматически"
-    ID_WINDOWS_TILEHORIZONTALLY "Располагает окна сверху вниз на рабочем столе"
-    ID_WINDOWS_TILEVERTICALLY "Располагает окна слева направо на рабочем столе"
-    ID_WINDOWS_MINIMIZE "Свертывает окна"
-    ID_WINDOWS_MAXIMIZE "Развертывает окна"
-    ID_WINDOWS_CASCADE "Размещает окна каскадом на рабочем столе"
-    ID_WINDOWS_BRINGTOFRONT "Перемещает окно на передний план, но не активизирует его"
-    ID_HELP_TOPICS "Открывает окно встроенной справки диспетчера задач"
-    ID_HELP_ABOUT "Вывод сведений о программе, ее версии и авторских правах"
-    ID_FILE_EXIT "Завершает Диспетчер задач"
-    ID_OPTIONS_SHOW16BITTASKS "Отображает 16-разрядные задачи, обрабатываемые ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Определяет список столбцов, отображаемых на вкладке Процессы"
-    ID_VIEW_SHOWKERNELTIMES "Отображает время ядра на графиках загруженности"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Один график общей загрузки ЦП"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Каждому ЦП соответствует свой график"
-    ID_APPLICATION_PAGE_SWITCHTO "Перенести задачу на передний план и переключиться к ней"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Сообщает выбранным задачам о необходимости завершиться"
-    ID_GOTOPROCESS "Переносит выбранный процесс на передний план"
-    ID_RESTORE "Восстанавливает Диспетчер задач из скрытого состояния"
-    ID_PROCESS_PAGE_ENDPROCESS "Завершает процесс в системе"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Завершает процесс и все его дочерние процессы в системе"
-    ID_PROCESS_PAGE_DEBUG "Прикрепляет отладчик к выбранному процессу"
-    ID_PROCESS_PAGE_SETAFFINITY "Переключение между процессорами разрешенными для выполнения задачи"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Установить для процесса приоритет Реального времени"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Установить для процесса Высокий приоритет"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Установить для процесса приоритет Выше среднего"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Установить для процесса Средний приоритет"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Установить для процесса приоритет Ниже среднего"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Установить для процесса Низкий приоритет"
 END
 
 STRINGTABLE
