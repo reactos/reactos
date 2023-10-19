@@ -1,4 +1,4 @@
-/* Swedish translation by David Nordenberg */
+/* TRANSLATOR: David Nordenberg */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Alltid överst", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimera vid användning", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Göm minimerad", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Visa 16-bitarsaktiviteter", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Visa"
     BEGIN
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Fryst", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Stora ikoner", ID_VIEW_LARGE
-        MENUITEM "S&må ikoner", ID_VIEW_SMALL
-        MENUITEM "&Detaljer", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Välj kolumner...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU Historik"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "En visare för &alla processorer", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&En visare per processor", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Visa kernel-tider", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Fönster"
+    POPUP ""
     BEGIN
         MENUITEM "Ordna &horizontellt", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Ordna &vertikalt", ID_WINDOWS_TILEVERTICALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Hjälp"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Ny aktivitet (Kör...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Växla till", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&För till förgrunden", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Återställ", ID_RESTORE
         MENUITEM "&Stäng", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Avsluta process", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Avsluta process&träd", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -151,32 +151,31 @@ CAPTION "Aktivitetshanteraren"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Ny aktivitet...", IDC_NEWTASK, 175, 189, 65, 14
-    PUSHBUTTON "&Växla till", IDC_SWITCHTO, 120, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Avsluta aktiviteten", IDC_ENDTASK, 34, 189, 83, 14, WS_DISABLED
+    PUSHBUTTON "&Växla till", IDC_SWITCHTO, 120, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Ny aktivitet...", IDC_NEWTASK, 175, 189, 65, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Avsluta process", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Visa processer från alla användare", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 156, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 156, 10
+    PUSHBUTTON "&Avsluta process", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -225,20 +224,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Processorhistorik", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Minneshistorik", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Processoranvändning", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Minnesanvändning", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Processorhistorik", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Minneshistorik", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Felsökningskanaler"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Stäng", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -326,58 +315,6 @@ BEGIN
     IDS_APP_TITLE "Aktivitetshanteraren"
     IDC_TASKMGR "Aktivitetshanteraren"
     IDS_IDLE_PROCESS "Systemets lediga resurser"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Kör ett nytt program"
-    ID_OPTIONS_ALWAYSONTOP "Aktivitetshanteraren förblir i förgrunden om den inte minimeras"
-    ID_OPTIONS_MINIMIZEONUSE "Aktivitetshanteraren minimeras när en Växla till operation utförs"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Göm Aktivitetshanteraren när den minimeras"
-    ID_VIEW_REFRESH "Tvinga Aktivitetshanteraren att uppdatera nu, oavsätt vald uppdateringshastighet"
-    ID_VIEW_LARGE "Visa aktiviteter med stora ikoner"
-    ID_VIEW_SMALL "Visa aktiviteter med små ikoner"
-    ID_VIEW_DETAILS "Visa information om varje aktivitet"
-    ID_VIEW_UPDATESPEED_HIGH "Uppdaterar värden två gånger per sekund"
-    ID_VIEW_UPDATESPEED_NORMAL "Uppdaterar värden varannan sekund"
-    ID_VIEW_UPDATESPEED_LOW "Uppdaterar värden var 4:e sekund"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Uppdaterar inte automatiskt"
-    ID_WINDOWS_TILEHORIZONTALLY "Ordna fönstren horizontellt på skrivbordet"
-    ID_WINDOWS_TILEVERTICALLY "Ordna fönstren vertikalt på skrivbordet"
-    ID_WINDOWS_MINIMIZE "Minimerar fönstret"
-    ID_WINDOWS_MAXIMIZE "Maximerar fönstret"
-    ID_WINDOWS_CASCADE "Ordna fönstren diagonalt överlappande på skrivbordet"
-    ID_WINDOWS_BRINGTOFRONT "För fönstret till förgrunden men växla inte till det"
-    ID_HELP_TOPICS "Visa Aktivitetshanterarens hjälpavsnitt"
-    ID_HELP_ABOUT "Visa programinformation, versionsnummer, och upphovsrätt"
-    ID_FILE_EXIT "Avsluta Aktivitetshanteraren"
-    ID_OPTIONS_SHOW16BITTASKS "Visa 16-bitarsprocesser under tillhörande ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Välj de kolumner som ska synas på process-sidan"
-    ID_VIEW_SHOWKERNELTIMES "Visar kernel-tider i prestandagrafer"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "En enda historik-graf visar totala processoranvändningen"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Varje processor har sin egen historik-graf"
-    ID_APPLICATION_PAGE_SWITCHTO "För aktiviteten till förgrunden och växla till den"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Ber de valda aktiviteterna att avslutas"
-    ID_GOTOPROCESS "Ändrar fokus till den valda aktivitetens process"
-    ID_RESTORE "Återställer Aktivitetshanteraren från sitt gömda tillstånd"
-    ID_PROCESS_PAGE_ENDPROCESS "Tar bort processen från systemet"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Tar bort den här processen och underprocesser från systemet"
-    ID_PROCESS_PAGE_DEBUG "Kopplar felsökaren till den här processen"
-    ID_PROCESS_PAGE_SETAFFINITY "Kontrollerar vilka processorer processen tillåts att köras på"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Ändrar processens prioritet till realtidsläge"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Ändrar processens prioritet till hög"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Ändrar processens prioritet till över normal"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Ändrar processens prioritet till normal"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Ändrar processens prioritet till under normal"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Ändrar processens prioritet till låg"
 END
 
 STRINGTABLE

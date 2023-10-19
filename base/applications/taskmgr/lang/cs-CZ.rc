@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Vždy navrchu", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimalizovat při použití", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Skrýt při minimalizaci", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Zobrazit 16-bitové úlohy", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Zobrazit"
     BEGIN
@@ -26,18 +26,18 @@ BEGIN
             MENUITEM "&Zastavit", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Velké ikony", ID_VIEW_LARGE
-        MENUITEM "&Malé ikony", ID_VIEW_SMALL
-        MENUITEM "&Detaily", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Vybrat sloupce...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Historie CPU"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&Jeden graf, všechny procesory", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&Jeden graf, jeden procesor", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Zobrazit časy jádra", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Okna"
+    POPUP ""
     BEGIN
         MENUITEM "Vyrovnat &horizontálně", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Vyrovnat &vertikálně", ID_WINDOWS_TILEVERTICALLY
@@ -48,15 +48,15 @@ BEGIN
     END
     POPUP "Vy&pnout"
     BEGIN
-        MENUITEM "Režim &spánku",              ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernace",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "&Vypnout",                   ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restartovat",               ID_SHUTDOWN_REBOOT
-        MENUITEM "&Odhlásit uživatele %s",     ID_SHUTDOWN_LOGOFF
+        MENUITEM "Režim &spánku", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernace", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Vypnout", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restartovat", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Odhlásit uživatele %s", ID_SHUTDOWN_LOGOFF
         MENUITEM "&Přepnout uživatele\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Zamknout počítač\tWin+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "O&dpojit se",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "Vy&jmout počítač",           ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Zamknout počítač\tWin+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "O&dpojit se", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Vy&jmout počítač", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Nápověda"
     BEGIN
@@ -78,7 +78,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Nová úloha (Spustit...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -90,7 +90,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Přepnout do", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Přenést do popředí", ID_WINDOWS_BRINGTOFRONT
@@ -108,7 +108,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Obnovit", ID_RESTORE
         MENUITEM "&Uzavřít", ID_FILE_EXIT
@@ -119,7 +119,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Ukončit proces", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Ukončit &strom procesu", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -149,32 +149,31 @@ CAPTION "Správce úloh"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Nová úloha...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&Přepnout", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Ukončit úlohu", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Přepnout", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Nová úloha...", IDC_NEWTASK, 187, 189, 53, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Ukončit proces", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Zobrazit procesy všech uživatelů", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 153, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 153, 10
+    PUSHBUTTON "&Ukončit proces", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -223,20 +222,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Historie využití CPU", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Historie využití paměti", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Zobrazení využití CPU", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Zobrazení využití paměti", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Historie využití CPU", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Historie využití paměti", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kanály ladění"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Zavřít", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -324,58 +313,6 @@ BEGIN
     IDS_APP_TITLE "Správce úloh"
     IDC_TASKMGR "Správce úloh"
     IDS_IDLE_PROCESS "Nečinné procesy"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Spustí novou aplikaci"
-    ID_OPTIONS_ALWAYSONTOP "Správce úloh zůstane zobrazený nad ostatními okny, dokud jej neminimalizujete"
-    ID_OPTIONS_MINIMIZEONUSE "Správce úloh se zminimalizuje po přepnutí na jinou úlohu"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Schovat správce úloh po minimalizaci"
-    ID_VIEW_REFRESH "Přinutí správce úloh k aktualizaci nezávisle na nastavení rychlosti aktualizace"
-    ID_VIEW_LARGE "Zobrazí úlohy velkými ikonami"
-    ID_VIEW_SMALL "Zobrazí úlohy malými ikonami"
-    ID_VIEW_DETAILS "Zobrazí informace o každé úloze"
-    ID_VIEW_UPDATESPEED_HIGH "Aktualizuje ukazatel dvakrát za vteřinu"
-    ID_VIEW_UPDATESPEED_NORMAL "Aktualizuje ukazatel jednou za dvě vteřinu"
-    ID_VIEW_UPDATESPEED_LOW "Aktualizuje ukazatel jednou za čtyři vteřinu"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Automaticky neaktualizuje"
-    ID_WINDOWS_TILEHORIZONTALLY "Vyrovná okna horizontálně na ploše"
-    ID_WINDOWS_TILEVERTICALLY "Vyrovná okna vertikálně na ploše"
-    ID_WINDOWS_MINIMIZE "Minimalizuje okna"
-    ID_WINDOWS_MAXIMIZE "Maximalizuje okna"
-    ID_WINDOWS_CASCADE "Poskládá okna do diagonální kaskády"
-    ID_WINDOWS_BRINGTOFRONT "Přesune úlohu do popředí, ale nepřepne do ní"
-    ID_HELP_TOPICS "Zobrazí témata nápovědy pro správce úloh"
-    ID_HELP_ABOUT "Zobrazí informace o aplikaci, její verzi a copyright"
-    ID_FILE_EXIT "Ukončí správce úloh"
-    ID_OPTIONS_SHOW16BITTASKS "Zobrazí 16-bitové úlohy pod NTVDM"
-    ID_VIEW_SELECTCOLUMNS "Vyberte, které sloupce budou viditelné na kartě Procesy"
-    ID_VIEW_SHOWKERNELTIMES "Zobrazí čas jádra v grafu výkonu"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Jediný graf historie zobrazí celkovou využitelnost CPU"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Každý procesor má svůj vlastní graf historie"
-    ID_APPLICATION_PAGE_SWITCHTO "Přepne úlohu do popředí"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Pokusí se ukončit zvolenou aplikaci"
-    ID_GOTOPROCESS "Přepne na proces zvolené úlohy"
-    ID_RESTORE "Obnoví správce úloh z neviditelného stavu"
-    ID_PROCESS_PAGE_ENDPROCESS "Odstraní proces ze systému"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Odstraní proces a všechny jeho dceřinné podprocesy ze systému"
-    ID_PROCESS_PAGE_DEBUG "Připojí ladicí aplikaci k tomuto procesu"
-    ID_PROCESS_PAGE_SETAFFINITY "Spravuje, který procesor obslouží daný proces"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Přiřadí procesu Realtime prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Přiřadí procesu vysokou prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Přiřadí procesu nadprůměrnou prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Přiřadí procesu normální prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Přiřadí procesu podprůměrnou prioritu"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Přiřadí procesu nízkou prioritu"
 END
 
 STRINGTABLE
