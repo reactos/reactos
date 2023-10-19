@@ -1,4 +1,4 @@
-/* Hungaruan (HU) translation by Robert Horvath - talley at cubeclub.hu */
+/* TRANSLATOR: Robert Horvath <talley@cubeclub.hu> */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Mindig látható", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Indításkor kis méret", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Elrejtés kis méretnél", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16bites feladatok megjelenítése", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Nézet"
     BEGIN
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&Felfüggesztve", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Nagy ikonok", ID_VIEW_LARGE
-        MENUITEM "&Kis ikonok", ID_VIEW_SMALL
-        MENUITEM "Rés&zletek", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Oszlopok kiválasztása...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU használat"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Minden CPU &egy grafikonon", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Külön grafikon &minden CPU-hoz", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Kernel idõ megjelenítése", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Ablak"
+    POPUP ""
     BEGIN
         MENUITEM "&Vízszintes rendezés", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Függõleges rendezés", ID_WINDOWS_TILEVERTICALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Súgó"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Új feladat (Futtatás...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Váltás", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Elõtérbe helyezés", ID_WINDOWS_BRINGTOFRONT
@@ -110,9 +110,9 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
-        MENUITEM "&Vissza állít", ID_RESTORE
+        MENUITEM "&Visszaállít", ID_RESTORE
         MENUITEM "&Bezárás", ID_FILE_EXIT
         MENUITEM SEPARATOR
         MENUITEM "&Mindig látható", ID_OPTIONS_ALWAYSONTOP
@@ -121,10 +121,10 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Folyamat befejezése", ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Folyamat &struktúra leállítása", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Folyamat&struktúra leállítása", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Hibakeresés", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "&Prioritás beállítása"
@@ -151,44 +151,43 @@ CAPTION "Feladatkezelõ"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "Új &folyamat...", IDC_NEWTASK, 172, 188, 68, 14
-    PUSHBUTTON "&Váltás", IDC_SWITCHTO, 100, 188, 68, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "Fela&dat befejezése", IDC_ENDTASK, 28, 188, 68, 14, WS_DISABLED
+    PUSHBUTTON "&Váltás", IDC_SWITCHTO, 100, 188, 68, 14, WS_DISABLED
+    PUSHBUTTON "Új &folyamat...", IDC_NEWTASK, 172, 188, 68, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Folyamat befejezése", IDC_ENDPROCESS, 165, 189, 75, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "Minden felhasználó folya&matait jelenítse meg", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 155, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 155, 10
+    PUSHBUTTON "&Folyamat befejezése", IDC_ENDPROCESS, 165, 189, 75, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "CPU használat", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Memória használat", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX "Memóriahasználat", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Totals", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Commit Charge (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Fizikai memória (K)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Kernel memória (K)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    LTEXT "Handles", IDS_TOTALS_HANDLE_COUNT, 12, 131, 35, 8
-    LTEXT "Szálak száma", IDS_TOTALS_THREAD_COUNT, 12, 140, 45, 8
+    LTEXT "Leírók", IDS_TOTALS_HANDLE_COUNT, 12, 131, 35, 8
+    LTEXT "Szálak", IDS_TOTALS_THREAD_COUNT, 12, 140, 45, 8
     LTEXT "Folyamatok", IDS_TOTALS_PROCESS_COUNT, 12, 149, 45, 8
     EDITTEXT IDC_TOTALS_HANDLE_COUNT, 65, 131, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -225,20 +224,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "CPU használat", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memória használat", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "CPU használat megjelenítése", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Memória használat megjelenítése", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "CPU használata", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Memória használata", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Hibakeresõ csatornák"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Bezárás", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -292,13 +281,13 @@ BEGIN
     PUSHBUTTON "Mégse", IDCANCEL, 138, 178, 50, 14
     LTEXT "Válaszd ki azokat az oszlopokat amelyeket szeretnél látni a feladatkezelõben.", IDC_STATIC, 7, 7, 181, 17
     CONTROL "&Image Name", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
-    CONTROL "&PID (Folyamat azonosító)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10
+    CONTROL "PI&D (Folyamatazonosító)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10
     CONTROL "&CPU használat", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 100, 10
     CONTROL "CPU idõ", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
-    CONTROL "&Memória használat", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
+    CONTROL "&Memóriahasználat", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
     CONTROL "Memória használat &változása", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 100, 10
     CONTROL "Pea&k Memory Usage", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
-    CONTROL "Page &Faults", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "&Laphibák", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
     CONTROL "&USER Objects", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
     CONTROL "I/O Olvasások", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 100, 10
     CONTROL "I/O Olvasott bájtok", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 100, 10
@@ -308,7 +297,7 @@ BEGIN
     CONTROL "&Virtuális memória mérete", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 85, 10
     CONTROL "Pa&ged Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
     CONTROL "N&on-paged Pool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
-    CONTROL "&Prioritás", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
+    CONTROL "P&rioritás", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
     CONTROL "&Handle Count", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
     CONTROL "&Szálak száma", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
     CONTROL "GDI Objektumok", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 85, 10
@@ -316,7 +305,7 @@ BEGIN
     CONTROL "I/O Írott bájtok", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "Egyéb I/O mûveletek", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 85, 10
     CONTROL "Egyéb I/O mûveletek bájtjai", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 85, 10
-    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "&Parancssor", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -325,59 +314,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Feladatkezelõ"
     IDC_TASKMGR "Feladatkezelõ"
-    IDS_IDLE_PROCESS "Üres járat"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Program indítása"
-    ID_OPTIONS_ALWAYSONTOP "A feladatkezelõ minden ablak felett lesz addig amíg nem lesz kicsinyítve"
-    ID_OPTIONS_MINIMIZEONUSE "A feladatkezelõ elrejtõdik ha egy váltást csinálsz"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Feladatkezelõ elrejtése elrejtéskor"
-    ID_VIEW_REFRESH "Azonnali frissítés"
-    ID_VIEW_LARGE "Feladatok megjelenítése nagy ikonként"
-    ID_VIEW_SMALL "Feladatok megjelenítése kis ikonként"
-    ID_VIEW_DETAILS "Információk megjelenítése minden feladatról"
-    ID_VIEW_UPDATESPEED_HIGH "Másodpercenként kétszer frissít"
-    ID_VIEW_UPDATESPEED_NORMAL "Két másodpercenként frissít"
-    ID_VIEW_UPDATESPEED_LOW "Négy másodpercenként frissít"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Nincs automatikus frissítés"
-    ID_WINDOWS_TILEHORIZONTALLY "Vízszintben rendezi az ablakokat"
-    ID_WINDOWS_TILEVERTICALLY "Függõlegesen rendezi az ablakokat"
-    ID_WINDOWS_MINIMIZE "Elrejti az ablakokat"
-    ID_WINDOWS_MAXIMIZE "Legagyobbra méretezi az ablakokat"
-    ID_WINDOWS_CASCADE "Lépcsõzetes rendezés"
-    ID_WINDOWS_BRINGTOFRONT "Elõtérbe helyezi az ablakot, de nem teszi aktívvá azt"
-    ID_HELP_TOPICS "Megjeleníti a feladatkezelõ súgó témáit"
-    ID_HELP_ABOUT "Megjeleníti a program információit, verzióját és jogvédelmi információit"
-    ID_FILE_EXIT "Kilép a feladatkezelõbõl"
-    ID_OPTIONS_SHOW16BITTASKS "Minden 16-bites feladatot a hozzátartozó ntvdm.exe alá sorol"
-    ID_VIEW_SELECTCOLUMNS "Válaszd ki mely oszlopokat kivánod látni"
-    ID_VIEW_SHOWKERNELTIMES "Megjeleníti a Kernel idõt a teljesítmény grafikonon"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Közös CPU történet minden processzornak"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Minden processzor saját grafikonnal"
-    ID_APPLICATION_PAGE_SWITCHTO "Elõtérbe hozza és aktívvá teszi a kiválasztott alkalmazást"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Bezárja a kiválasztott alkalmazást"
-    ID_GOTOPROCESS "Elõtérbe hozza és aktívvá teszi a kiválasztott alkalmazást"
-    ID_RESTORE "Vissza állítja a feladatkezelõt rejtett állapotából"
-    ID_PROCESS_PAGE_ENDPROCESS "Bezárja a folyamatot"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Bezárja a folyamatot és az általa létrehozott összes többi folyamatot is"
-    ID_PROCESS_PAGE_DEBUG "Hibakeresõt csatol a kiválasztott folyamathoz"
-    ID_PROCESS_PAGE_SETAFFINITY "Ennek segítségével állítható be, hogy a folyamatok mely processzorokon futhatnak"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Valósidejû prioritásra kapcsolja a folyamatot"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Magas prioritásra kapcsolja a folyamatot"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Magasabb prioritásra kapcsolja a folyamatot"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Normál prioritásra kapcsolja a folyamatot"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Alacsonyabb prioritásra kapcsolja a folyamatot"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Alacsony prioritásra kapcsolja a folyamatot"
+    IDS_IDLE_PROCESS "Üresjárat"
 END
 
 STRINGTABLE
@@ -393,16 +330,16 @@ BEGIN
     IDS_TAB_SESSIONID "Munkamenet azonosító"
     IDS_TAB_CPU "CPU"
     IDS_TAB_CPUTIME "CPU idõ"
-    IDS_TAB_MEMUSAGE "Memória használat"
-    IDS_TAB_PEAKMEMUSAGE "Legnagyobb memória használat"
+    IDS_TAB_MEMUSAGE "Memóriahasználat"
+    IDS_TAB_PEAKMEMUSAGE "Legnagyobb memóriahasználat"
     IDS_TAB_MEMDELTA "Memória változás"
-    IDS_TAB_PAGEFAULT "Page Faults"
+    IDS_TAB_PAGEFAULT "Laphibák"
     IDS_TAB_PFDELTA "Lapozóállomány változások"
     IDS_TAB_VMSIZE "VM Méret"
     IDS_TAB_PAGEDPOOL "Paged Pool"
     IDS_TAB_NPPOOL "NP Pool"
     IDS_TAB_BASEPRI "Prioritás"
-    IDS_TAB_HANDLES "Handles"
+    IDS_TAB_HANDLES "Leírók"
     IDS_TAB_THREADS "Szálak"
     IDS_TAB_USERPBJECTS "USER Objektumok"
     IDS_TAB_GDIOBJECTS "GDI Objektumok"
@@ -412,7 +349,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Olvasott bájtok"
     IDS_TAB_IOWRITESBYTES "I/O Írott bájtok"
     IDS_TAB_IOOTHERBYTES "Egyéb I/O bájtok"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_COMMANDLINE "Parancssor"
     IDS_MENU_SELECTCOLUMNS "&Oszlopok kiválasztása..."
     IDS_MENU_16BITTASK "&16bites feladatok megjelenítése"
     IDS_MENU_WINDOWS "&Ablak"
@@ -429,7 +366,7 @@ BEGIN
     IDS_MSG_PROCESSONEPRO "A folyamatnak legalább egy processzoron futnia kell."
     IDS_MSG_INVALIDOPTION "Invalid Option"
     IDS_MSG_UNABLEDEBUGPROCESS "Nem lehetséges a folyamat hibakeresése"
-    IDS_MSG_WARNINGDEBUG "FIGYELEM: A folyamat hibakeresése adatvesztést okozhat.\nBiztosan csatlakoztatni szeretnéd a hibakeresõt?"
+    IDS_MSG_WARNINGDEBUG "FIGYELEM: A folyamat hibakeresése adatvesztést okozhat.\nBiztosan csatlakoztatni szeretné a hibakeresőt?"
     IDS_MSG_TASKMGRWARNING "Feladatkezelõ figyelmeztetése"
     IDS_MSG_WARNINGTERMINATING "FIGYELEM: A folyamat befejezése kellemetlen\nváltozásokat hozhat, adatvesztést és rendszer instabilitást okozhat. A folyamat\n nem fog lehetõséget kapni, hogy elmentse az adatokat.\nBiztosan beakarod fejezni?"
     IDS_MSG_UNABLETERMINATEPRO "Nem lehetséges a folyamat befejezése"

@@ -1,24 +1,8 @@
 /*
- *  ReactOS Task Manager
- *
- *  perfdata.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer                <brianp@reactos.org>
- *  Copyright (C)        2014  Ismael Ferreras Morezuelas  <swyterzone+ros@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 #include "precomp.h"
@@ -44,7 +28,7 @@ LARGE_INTEGER                              liOldSystemTime = {{0,0}};
 SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
-SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
+ULONG                                      SystemNumberOfHandles;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
 
@@ -115,7 +99,7 @@ void PerfDataUninitialize(void)
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 {
     static WCHAR szDomainNameUnused[255];
-    DWORD DomainNameLen = sizeof(szDomainNameUnused) / sizeof(szDomainNameUnused[0]);
+    DWORD DomainNameLen = _countof(szDomainNameUnused);
     SID_NAME_USE Use;
 
     if (Sid != NULL)
@@ -151,8 +135,6 @@ CachedGetUserFromSid(
 
     /* We didn't find the SID in the list, get the name conventional */
     SidToUserName(pSid, pUserName, cwcUserName);
-
-    /* Allocate a new entry */
     *pcwcUserName = wcslen(pUserName);
     cwcUserName = *pcwcUserName + 1;
     cbSid = GetLengthSid(pSid);
@@ -168,8 +150,6 @@ CachedGetUserFromSid(
     pEntry->List.Blink = SidToUserNameHead.Blink;
     SidToUserNameHead.Blink->Flink = &pEntry->List;
     SidToUserNameHead.Blink = &pEntry->List;
-
-    return;
 }
 
 void PerfDataRefresh(void)
@@ -186,7 +166,7 @@ void PerfDataRefresh(void)
     SYSTEM_PERFORMANCE_INFORMATION             SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION               SysTimeInfo;
     SYSTEM_FILECACHE_INFORMATION               SysCacheInfo;
-    LPBYTE                                     SysHandleInfoData;
+    SYSTEM_HANDLE_INFORMATION                  SysHandleInfoData;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SysProcessorTimeInfo;
     double                                     CurrentKernelTime;
     PSECURITY_DESCRIPTOR                       ProcessSD;
@@ -221,22 +201,10 @@ void PerfDataRefresh(void)
     }
 
     /* Get handle information
-     * We don't know how much data there is so just keep
-     * increasing the buffer size until the call succeeds
      */
-    BufferSize = 0;
-    do
-    {
-        BufferSize += 0x10000;
-        SysHandleInfoData = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
-
-        status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
-
-        if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
-        }
-
-    } while (status == STATUS_INFO_LENGTH_MISMATCH);
+    status = NtQuerySystemInformation(SystemHandleInformation, &SysHandleInfoData, sizeof(SysHandleInfoData), NULL);
+    if (status != STATUS_INFO_LENGTH_MISMATCH)
+        SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
     /* Get process information
      * We don't know how much data there is so just keep
@@ -279,8 +247,7 @@ void PerfDataRefresh(void)
     /*
      * Save system handle info
      */
-    memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
-    HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
@@ -348,7 +315,7 @@ void PerfDataRefresh(void)
             wcsncpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer, len);
         } else {
             LoadStringW(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
-                       sizeof(pPerfData[Idx].ImageName) / sizeof(pPerfData[Idx].ImageName[0]));
+                       _countof(pPerfData[Idx].ImageName));
         }
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
@@ -426,7 +393,7 @@ ClearInfo:
             ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
 
-        cwcUserName = sizeof(pPerfData[0].UserName) / sizeof(pPerfData[0].UserName[0]);
+        cwcUserName = _countof(pPerfData[0].UserName);
         CachedGetUserFromSid(ProcessUser, pPerfData[Idx].UserName, &cwcUserName);
 
         if (ProcessSD != NULL)
@@ -482,7 +449,7 @@ ULONG PerfDataGetProcessorUsage(void)
 {
     ULONG Result;
     EnterCriticalSection(&PerfDataCriticalSection);
-    Result = (ULONG)dbIdleTime;
+    Result = (ULONG)min(max(dbIdleTime, 0.), 100.);
     LeaveCriticalSection(&PerfDataCriticalSection);
     return Result;
 }
@@ -491,7 +458,7 @@ ULONG PerfDataGetProcessorSystemUsage(void)
 {
     ULONG Result;
     EnterCriticalSection(&PerfDataCriticalSection);
-    Result = (ULONG)dbKernelTime;
+    Result = (ULONG)min(max(dbKernelTime, 0.), 100.);
     LeaveCriticalSection(&PerfDataCriticalSection);
     return Result;
 }
@@ -1106,7 +1073,7 @@ ULONG PerfDataGetSystemHandleCount(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    HandleCount = SystemHandleInfo.NumberOfHandles;
+    HandleCount = SystemNumberOfHandles;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 

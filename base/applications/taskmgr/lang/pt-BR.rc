@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "&Sempre visível", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimizar durante o uso", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ocultar ao minimizar", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Exibir tarefas de 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "E&xibir"
     BEGIN
@@ -26,18 +26,18 @@ BEGIN
             MENUITEM "Em &pausa", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "Íco&nes grandes", ID_VIEW_LARGE
-        MENUITEM "Ícones &pequenos", ID_VIEW_SMALL
-        MENUITEM "Detal&hes", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Selecionar colunas...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Historico do CPU"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "Um gráfico para &todas as CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "Um gráfico &por CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Mostrar tempos do núcleo", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&Janelas"
+    POPUP ""
     BEGIN
         MENUITEM "Lado a lado &horizontalmente", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "Lado a lado &verticalmente", ID_WINDOWS_TILEVERTICALLY
@@ -48,15 +48,15 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Aj&uda"
     BEGIN
@@ -78,7 +78,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Executar nova tarefa...", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -90,7 +90,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "A&lternar para", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Trazer para a frente", ID_WINDOWS_BRINGTOFRONT
@@ -108,7 +108,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Restaurar", ID_RESTORE
         MENUITEM "&Fechar", ID_FILE_EXIT
@@ -119,7 +119,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&Finalizar processo", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "F&inalizar árvore de processos", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -149,32 +149,31 @@ CAPTION "Gerenciador de tarefas"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Nova tarefa...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "A&lternar para", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&Finalizar tarefa", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "A&lternar para", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Nova tarefa...", IDC_NEWTASK, 187, 189, 53, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Finalizar processo", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&Mostrar processos de todos os usuários", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 140, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 140, 10
+    PUSHBUTTON "&Finalizar processo", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -223,20 +222,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "Histórico de uso de CPU", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Histórico de uso de Memoria", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "CPU Usage Display", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "MEM Usage Display", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "CPU Usage History", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "MEM Usage History", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Canais de depuração"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "Fechar", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -324,58 +313,6 @@ BEGIN
     IDS_APP_TITLE "Gerenciador de tarefas"
     IDC_TASKMGR "Gerenciador de tarefas"
     IDS_IDLE_PROCESS "Processo inativo do sistema"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "Executa um novo programa"
-    ID_OPTIONS_ALWAYSONTOP "O 'Gerenciador de tarefas' permanece na frente de todas as outras janelas, a menos que seja minimizado"
-    ID_OPTIONS_MINIMIZEONUSE "O 'Gerenciador de tarefas' é minimizado toda vez que uma operação de alternância for executada"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Oculta o 'Gerenciador de tarefas' quando ele estiver minimizado"
-    ID_VIEW_REFRESH "Força o 'Gerenciador de tarefas' a atualizar a tela agora, independentemente do parâmetro 'Velocidade de atualização'"
-    ID_VIEW_LARGE "Exibe as tarefas usando ícones grandes"
-    ID_VIEW_SMALL "Exibe as tarefas usando ícones pequenos"
-    ID_VIEW_DETAILS "Exibe as informações sobre cada tarefa"
-    ID_VIEW_UPDATESPEED_HIGH "Atualiza a tela duas vezes por segundo"
-    ID_VIEW_UPDATESPEED_NORMAL "Atualiza a tela a cada dois segundos"
-    ID_VIEW_UPDATESPEED_LOW "Atualiza a tela a cada quatro segundos"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Não atualiza a tela automaticamente"
-    ID_WINDOWS_TILEHORIZONTALLY "Organiza as janelas lado a lado horizontalmente na área de trabalho"
-    ID_WINDOWS_TILEVERTICALLY "Organiza as janelas lado a lado verticalmente na área de trabalho"
-    ID_WINDOWS_MINIMIZE "Minimiza as janelas"
-    ID_WINDOWS_MAXIMIZE "Maximiza as janelas"
-    ID_WINDOWS_CASCADE "Organiza as janelas em cascata diagonalmente na área de trabalho"
-    ID_WINDOWS_BRINGTOFRONT "Coloca a janela em primeiro plano, mas não alterna o foco para ela"
-    ID_HELP_TOPICS "Exibe os tópicos da 'Ajuda' do 'Gerenciador de tarefas'"
-    ID_HELP_ABOUT "Exibe informações sobre o programa, o número da versão e os direitos autorais"
-    ID_FILE_EXIT "Sai do aplicativo 'Gerenciador de tarefas'"
-    ID_OPTIONS_SHOW16BITTASKS "Exibe as tarefas de 16 bits do Windows sob o arquivo ntvdm.exe associado"
-    ID_VIEW_SELECTCOLUMNS "Seleciona quais colunas serão visíveis na tela Processo"
-    ID_VIEW_SHOWKERNELTIMES "Exibe o tempo do núcleo nos gráficos de desempenho"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico exibe o uso total de CPU"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU possui o seu próprio gráfico"
-    ID_APPLICATION_PAGE_SWITCHTO "Coloca a tarefa em primeiro plano e alterna o foco para ela"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Fecha tarefa selecionada"
-    ID_GOTOPROCESS "Altera o foco para o processo da tarefa selecionada"
-    ID_RESTORE "Tira o 'Gerenciador de tarefas' do estado oculto"
-    ID_PROCESS_PAGE_ENDPROCESS "Remover este processo do sistema"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Remover este processo e todos os seus descendentes do sistema"
-    ID_PROCESS_PAGE_DEBUG "Conecta o depurador a este processo"
-    ID_PROCESS_PAGE_SETAFFINITY "Define em que processadores o processo poderá ser executado"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Define o processo como tendo classe de prioridade TEMPO REAL"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Define o processo como tendo classe de prioridade ALTA"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Define o processo com a classe de prioridade ACIMA DO NORMAL"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Define o processo como tendo classe de prioridade NORMAL"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Define o processo com a classe de prioridade ABAIXO DO NORMAL"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Define o processo como tendo classe de prioridade BAIXA"
 END
 
 STRINGTABLE
