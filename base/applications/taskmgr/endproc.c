@@ -1,25 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  endproc.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer               <brianp@reactos.org>
- *                2005         Klemens Friedl             <frik85@reactos.at>
- *                2014         Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2005 Klemens Friedl <frik85@reactos.at>
+ *            2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 #include "precomp.h"
@@ -107,6 +91,53 @@ BOOL IsCriticalProcess(HANDLE hProcess)
     return FALSE;
 }
 
+BOOL ShutdownProcessTreeHelper(HANDLE hSnapshot, HANDLE hParentProcess, DWORD dwParentPID)
+{
+    HANDLE hChildHandle;
+    PROCESSENTRY32W ProcessEntry = {0};
+    ProcessEntry.dwSize = sizeof(ProcessEntry);
+
+    if (Process32FirstW(hSnapshot, &ProcessEntry))
+    {
+        do
+        {
+            if (ProcessEntry.th32ParentProcessID == dwParentPID)
+            {
+                hChildHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                                           FALSE,
+                                           ProcessEntry.th32ProcessID);
+                if (!hChildHandle || IsCriticalProcess(hChildHandle))
+                {
+                    if (hChildHandle)
+                        CloseHandle(hChildHandle);
+                    continue;
+                }
+                if (!ShutdownProcessTreeHelper(hSnapshot, hChildHandle, ProcessEntry.th32ProcessID))
+                {
+                    CloseHandle(hChildHandle);
+                    return FALSE;
+                }
+                CloseHandle(hChildHandle);
+            }
+        } while (Process32NextW(hSnapshot, &ProcessEntry));
+    }
+
+    return TerminateProcess(hParentProcess, 0);
+}
+
+BOOL ShutdownProcessTree(HANDLE hParentProcess, DWORD dwParentPID)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    BOOL bResult;
+
+    if (!hSnapshot)
+        return FALSE;
+
+    bResult = ShutdownProcessTreeHelper(hSnapshot, hParentProcess, dwParentPID);
+    CloseHandle(hSnapshot);
+    return bResult;
+}
+
 void ProcessPage_OnEndProcessTree(void)
 {
     DWORD   dwProcessId;
@@ -147,7 +178,7 @@ void ProcessPage_OnEndProcessTree(void)
         return;
     }
 
-    if (!TerminateProcess(hProcess, 0))
+    if (!ShutdownProcessTree(hProcess, dwProcessId))
     {
         GetLastErrorText(strErrorText, 260);
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
