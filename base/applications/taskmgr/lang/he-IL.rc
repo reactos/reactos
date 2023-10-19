@@ -1,4 +1,4 @@
-/* Hebrew translations by Baruch Rutman (peterooch) and Shy Zedaka */
+/* TRANSLATORS: Baruch Rutman (peterooch), Shy Zedaka */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "תמיד &עליון", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&מזער בעת שימוש", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&הסתר בעת שימוש", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "הצג משימות של 16 &סיביות", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "ת&צוגה"
     BEGIN
@@ -28,18 +28,18 @@ BEGIN
             MENUITEM "&מושהה", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "סמלים ג&דולים", ID_VIEW_LARGE
-        MENUITEM "סמלים ק&טנים", ID_VIEW_SMALL
-        MENUITEM "מ&אפיינים", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "ב&חירת עמודות...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&היסטורית מעבד"
+        MENUITEM "", ID_VIEW_LARGE
+        MENUITEM "", ID_VIEW_SMALL
+        MENUITEM "", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "", ID_VIEW_SELECTCOLUMNS
+        POPUP ""
         BEGIN
-            MENUITEM "&עמודה אחת עבור כל המעבדים", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "עמ&ודה אחת לכל מעבד", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "הראה זמני &ליבה", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "&חלונות"
+    POPUP ""
     BEGIN
         MENUITEM "חלונות מוערמים", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "חלונות זה לצד זה", ID_WINDOWS_TILEVERTICALLY
@@ -50,15 +50,15 @@ BEGIN
     END
     POPUP "&כיבוי"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&עזרה"
     BEGIN
@@ -80,7 +80,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "משימה &חדשה", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -92,7 +92,7 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&עבור אל", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "ה&בא לפנים", ID_WINDOWS_BRINGTOFRONT
@@ -110,7 +110,7 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&שחזר", ID_RESTORE
         MENUITEM "&סגור", ID_FILE_EXIT
@@ -121,7 +121,7 @@ END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "DUMMY"
+    POPUP ""
     BEGIN
         MENUITEM "&סיים תהליך", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "סיים &עץ תהליכים", ID_PROCESS_PAGE_ENDPROCESSTREE
@@ -151,32 +151,31 @@ CAPTION "מנהל המשימות"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+    CONTROL "", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&משימה חדשה", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&עבור אל", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     PUSHBUTTON "&סיים משימה", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&עבור אל", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&משימה חדשה", IDC_NEWTASK, 187, 189, 53, 14
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&סיים תהליך", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
     CONTROL "&הראה תהליכים מכל המשתמשים", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 126, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 126, 10
+    PUSHBUTTON "&סיים תהליך", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
-/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -225,20 +224,10 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "היסטורית שימוש במעבד", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "היסטורית שימוש בזיכרון", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "CPU Usage Display", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "MEM Usage Display", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "היסטורית שימוש במעבד", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "היסטורית שימוש בזיכרון", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-END
-
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug Channels"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
-    PUSHBUTTON "סגירה", IDOK, 171, 189, 69, 14
+    PUSHBUTTON "", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -326,58 +315,6 @@ BEGIN
     IDS_APP_TITLE "מנהל המשימות"
     IDC_TASKMGR "מנהל המשימות"
     IDS_IDLE_PROCESS "תהליך לא פעיל של המערכת"
-END
-
-STRINGTABLE
-BEGIN
-    ID_FILE_NEW "הפעלת תוכנית חדשה"
-    ID_OPTIONS_ALWAYSONTOP "Task Manager remains in front of all other windows unless minimized"
-    ID_OPTIONS_MINIMIZEONUSE "Task Manager is minimized when a SwitchTo operation is performed"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Hide the Task Manager when it is minimized"
-    ID_VIEW_REFRESH "Force Task Manager to update now, regardless of Update Speed setting"
-    ID_VIEW_LARGE "Displays tasks by using large icons"
-    ID_VIEW_SMALL "Displays tasks by using small icons"
-    ID_VIEW_DETAILS "Displays information about each task"
-    ID_VIEW_UPDATESPEED_HIGH "מעדכן את התצוגה פעמיים בכל שניה"
-    ID_VIEW_UPDATESPEED_NORMAL "מעדכן את התצוגה כל 2 שניות"
-    ID_VIEW_UPDATESPEED_LOW "מעדכן את התצוגה כל 4 שניות"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Does not automatically update"
-    ID_WINDOWS_TILEHORIZONTALLY "Tiles the windows horizontally on the desktop"
-    ID_WINDOWS_TILEVERTICALLY "Tiles the windows vertically on the desktop"
-    ID_WINDOWS_MINIMIZE "Minimizes the windows"
-    ID_WINDOWS_MAXIMIZE "Maximizes the windows"
-    ID_WINDOWS_CASCADE "Cascades the windows diagonally on the desktop"
-    ID_WINDOWS_BRINGTOFRONT "Brings the window front, but does not switch to it"
-    ID_HELP_TOPICS "Displays Task Manager help topics"
-    ID_HELP_ABOUT "Displays program information, version number, and copyright"
-    ID_FILE_EXIT "Exits the Task Manager application"
-    ID_OPTIONS_SHOW16BITTASKS "Shows 16-bit tasks under the associated ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Select which columns will be visible on the Process page"
-    ID_VIEW_SHOWKERNELTIMES "Displays kernel time in the performance graphs"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "A single history graph shows total CPU usage"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Each CPU has its own history graph"
-    ID_APPLICATION_PAGE_SWITCHTO "Brings a task to the foreground, switch focus to that task"
-END
-
-STRINGTABLE
-BEGIN
-    ID_ENDTASK "Tells the selected tasks to close"
-    ID_GOTOPROCESS "Switches the focus to the process of the selected task"
-    ID_RESTORE "Restores the Task Manager from its hidden state"
-    ID_PROCESS_PAGE_ENDPROCESS "Removes the process from the system"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Removes this process and all descendants from the system"
-    ID_PROCESS_PAGE_DEBUG "Attaches the debugger to this process"
-    ID_PROCESS_PAGE_SETAFFINITY "Controls which processors the process will be allowed to run on"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sets process to the REALTIME priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sets process to the HIGH priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sets process to the ABOVE NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sets process to the NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sets process to the BELOW NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sets process to the LOW priority class"
 END
 
 STRINGTABLE

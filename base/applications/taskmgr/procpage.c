@@ -1,24 +1,8 @@
 /*
- *  ReactOS Task Manager
- *
- *  procpage.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *  Copyright (C) 2009         Maxime Vernier <maxime.vernier@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2009 Maxime Vernier <maxime.vernier@gmail.com>
  */
 
 #include "precomp.h"
@@ -348,6 +332,9 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     DWORD        dwDebuggerSize;
     HKEY         hKey;
 
+    if (dwProcessId == 0)
+        return;
+
     memset(&si, 0, sizeof(SYSTEM_INFO));
 
     GetCursorPos(&pt);
@@ -556,8 +543,8 @@ void AddProcess(ULONG Index)
 
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount)
 {
-    IO_COUNTERS    iocounters;
-    LARGE_INTEGER  time;
+    IO_COUNTERS iocounters;
+    LARGE_INTEGER time;
 
     if (ColumnDataHints[ColumnIndex] == COLUMN_IMAGENAME)
         PerfDataGetImageName(Index, lpText, nMaxCount);
@@ -652,42 +639,36 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADS)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadOperationCount); */
         _ui64tow(iocounters.ReadOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteOperationCount); */
         _ui64tow(iocounters.WriteOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHER)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherOperationCount); */
         _ui64tow(iocounters.OtherOperationCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.ReadTransferCount); */
         _ui64tow(iocounters.ReadTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITEBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.WriteTransferCount); */
         _ui64tow(iocounters.WriteTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
     if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHERBYTES)
     {
         PerfDataGetIOCounters(Index, &iocounters);
-        /* wsprintfW(pnmdi->item.pszText, L"%d", iocounters.OtherTransferCount); */
         _ui64tow(iocounters.OtherTransferCount, lpText, 10);
         CommaSeparateNumberString(lpText, nMaxCount);
     }
@@ -763,8 +744,8 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 
     if (TaskManagerSettings.SortColumn == COLUMN_IMAGENAME)
     {
-        PerfDataGetImageName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetImageName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetImageName(IndexParam1, text1, _countof(text1));
+        PerfDataGetImageName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_PID)
@@ -775,14 +756,14 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_USERNAME)
     {
-        PerfDataGetUserName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetUserName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetUserName(IndexParam1, text1, _countof(text1));
+        PerfDataGetUserName(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_COMMANDLINE)
     {
-        PerfDataGetCommandLine(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
-        PerfDataGetCommandLine(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        PerfDataGetCommandLine(IndexParam1, text1, _countof(text1));
+        PerfDataGetCommandLine(IndexParam2, text2, _countof(text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_SESSIONID)
