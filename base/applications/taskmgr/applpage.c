@@ -1,24 +1,8 @@
 /*
- *  ReactOS Task Manager
- *
- *  applpage.c
- *
- *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
- *                2005         Klemens Friedl <frik85@reactos.at>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:   ReactOS Task Manager
+ * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * COPYRIGHT: 1999-2001 Brian Palmer <brianp@reactos.org>
+ *            2005 Klemens Friedl <frik85@reactos.at>
  */
 
 #include "precomp.h"
@@ -55,13 +39,6 @@ int             ProcGetIndexByProcessId(DWORD dwProcessId);
 #ifdef RUN_APPS_PAGE
 static HANDLE   hApplicationThread = NULL;
 static DWORD    dwApplicationThread;
-#endif
-
-#if 0
-void SwitchToThisWindow (
-HWND hWnd,   /* Handle to the window that should be activated */
-BOOL bRestore /* Restore the window if it is minimized */
-);
 #endif
 
 static INT
@@ -118,7 +95,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message) {
     case WM_INITDIALOG:
-
         /* Save the width and height */
         GetClientRect(hDlg, &rc);
         nApplicationPageWidth = rc.right;
@@ -172,7 +148,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-
         /* Handle the button clicks */
         switch (LOWORD(wParam))
         {
@@ -238,17 +213,14 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (wParam == VK_DELETE)
             ProcessPage_OnEndProcess();
         break;
-
     }
 
-  return 0;
+    return 0;
 }
 
 void RefreshApplicationPage(void)
 {
 #ifdef RUN_APPS_PAGE
-    /* Signal the event so that our refresh thread */
-    /* will wake up and refresh the application page */
     PostThreadMessage(dwApplicationThread, WM_TIMER, 0, 0);
 #endif
 }
@@ -288,11 +260,6 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 
         if (msg.message == WM_TIMER)
         {
-            /*
-             * FIXME:
-             *
-             * Should this be EnumDesktopWindows() instead?
-             */
             noApps = TRUE;
             EnumWindows(EnumWindowsProc, 0);
             if (noApps)
@@ -464,7 +431,6 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
             InvalidateRect(hApplicationPageListCtrl, NULL, 0);
         }
     }
-    /* It is not already in the list so add it */
     else
     {
         pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_PAGE_LIST_ITEM));
@@ -486,40 +452,24 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
     }
 
     /* Select first item if any */
-    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
+    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) &&
         (ListView_GetItemCount(hApplicationPageListCtrl) > 0) && !bApplicationPageSelectionMade)
     {
         ListView_SetItemState(hApplicationPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
         bApplicationPageSelectionMade = TRUE;
     }
-    /*
-    else
-    {
-        bApplicationPageSelectionMade = FALSE;
-    }
-    */
 }
 
 void ApplicationPageUpdate(void)
 {
     /* Enable or disable the "End Task" & "Switch To" buttons */
     if (ListView_GetSelectedCount(hApplicationPageListCtrl))
-    {
         EnableWindow(hApplicationPageEndTaskButton, TRUE);
-    }
     else
-    {
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
-    }
-    /* Enable "Switch To" button only if one app is selected */
-    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
-    {
-        EnableWindow(hApplicationPageSwitchToButton, TRUE);
-    }
-    else
-    {
-    EnableWindow(hApplicationPageSwitchToButton, FALSE);
-    }
+
+    /* Enable "Switch To" button only if only one app is selected */
+    EnableWindow(hApplicationPageSwitchToButton, (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1));
 
     /* If we are on the applications tab the windows menu will be */
     /* present on the menu bar so enable & disable the menu items */
@@ -531,7 +481,6 @@ void ApplicationPageUpdate(void)
         hMenu = GetMenu(hMainWnd);
         hWindowsMenu = GetSubMenu(hMenu, 3);
 
-        /* Only one item selected */
         if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1)
         {
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
@@ -541,7 +490,6 @@ void ApplicationPageUpdate(void)
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_CASCADE, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_BRINGTOFRONT, MF_BYCOMMAND|MF_ENABLED);
         }
-        /* More than one item selected */
         else if (ListView_GetSelectedCount(hApplicationPageListCtrl) > 1)
         {
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_ENABLED);
@@ -551,7 +499,6 @@ void ApplicationPageUpdate(void)
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_CASCADE, MF_BYCOMMAND|MF_ENABLED);
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_BRINGTOFRONT, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         }
-        /* No items selected */
         else
         {
             EnableMenuItem(hWindowsMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
@@ -585,52 +532,35 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
 
             /* Update the item text */
             if (pnmdi->item.iSubItem == 0)
-            {
                 wcsncpy(pnmdi->item.pszText, pAPLI->szTitle, pnmdi->item.cchTextMax);
-            }
 
             /* Update the item status */
             else if (pnmdi->item.iSubItem == 1)
             {
                 if (pAPLI->bHung)
-                {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_NOT_RESPONDING , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-                }
+                    LoadStringW(GetModuleHandleW(NULL), IDS_NOT_RESPONDING , szMsg, _countof(szMsg));
                 else
-                {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-                }
+                    LoadStringW(GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, _countof(szMsg));
                 wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }
 
             break;
 
         case NM_RCLICK:
-
             if (ListView_GetSelectedCount(hApplicationPageListCtrl) < 1)
-            {
                 ApplicationPageShowContextMenu1();
-            }
             else
-            {
                 ApplicationPageShowContextMenu2();
-            }
-
             break;
 
         case NM_DBLCLK:
-
             ApplicationPage_OnSwitchTo();
-
             break;
 
         case LVN_KEYDOWN:
-
             if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
                 ApplicationPage_OnEndTask();
-
             break;
-
         }
     }
     else if (pnmh->hwndFrom == ListView_GetHeader(hApplicationPageListCtrl))
@@ -638,27 +568,18 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
         switch (pnmh->code)
         {
         case NM_RCLICK:
-
             if (ListView_GetSelectedCount(hApplicationPageListCtrl) < 1)
-            {
                 ApplicationPageShowContextMenu1();
-            }
             else
-            {
                 ApplicationPageShowContextMenu2();
-            }
-
             break;
 
         case HDN_ITEMCLICK:
-
             (void)ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, 0);
             bSortAscending = !bSortAscending;
-
             break;
         }
     }
-
 }
 
 void ApplicationPageShowContextMenu1(void)
@@ -692,6 +613,7 @@ void ApplicationPageShowContextMenu2(void)
 
     if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1)
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_ENABLED);
@@ -701,6 +623,7 @@ void ApplicationPageShowContextMenu2(void)
     }
     else if (ListView_GetSelectedCount(hApplicationPageListCtrl) > 1)
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_ENABLED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_ENABLED);
@@ -710,6 +633,7 @@ void ApplicationPageShowContextMenu2(void)
     }
     else
     {
+        EnableMenuItem(hSubMenu, ID_APPLICATION_PAGE_SWITCHTO, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEHORIZONTALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_TILEVERTICALLY, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
         EnableMenuItem(hSubMenu, ID_WINDOWS_MINIMIZE, MF_BYCOMMAND|MF_DISABLED|MF_GRAYED);
@@ -961,9 +885,7 @@ void ApplicationPage_OnGotoProcess(void)
                                   i,
                                   LVIS_SELECTED | LVIS_FOCUSED,
                                   LVIS_SELECTED | LVIS_FOCUSED);
-            (void)ListView_EnsureVisible(hProcessPageListCtrl,
-                                         i,
-                                         FALSE);
+            (void)ListView_EnsureVisible(hProcessPageListCtrl, i, FALSE);
         }
     }
 }
