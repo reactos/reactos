@@ -1,28 +1,11 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Main Header.
+ * PURPOSE:     Main Header
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  */
 
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef _MSC_VER
-/*MF
-typedef struct _IO_COUNTERS {
-	ULONGLONG  ReadOperationCount;
-	ULONGLONG  WriteOperationCount;
-	ULONGLONG  OtherOperationCount;
-	ULONGLONG ReadTransferCount;
-	ULONGLONG WriteTransferCount;
-	ULONGLONG OtherTransferCount;
-} IO_COUNTERS, *PIO_COUNTERS;
-*/
-#endif /* _MSC_VER */
 
 #include "resource.h"
 
@@ -100,7 +83,3 @@ void TaskManager_OnTabWndSelChange(void);
 VOID ShowWin32Error(DWORD dwError);
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);
-
-#ifdef __cplusplus
-}
-#endif

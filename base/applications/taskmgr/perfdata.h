@@ -1,16 +1,12 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Performance Counters.
+ * PURPOSE:     Performance Counters
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
 
@@ -43,9 +39,9 @@ typedef struct _PERFDATA
 
 typedef struct _CMD_LINE_CACHE
 {
-     DWORD idx;
+    DWORD  idx;
     LPWSTR str;
-     ULONG len;
+    ULONG  len;
     struct _CMD_LINE_CACHE* pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
@@ -99,8 +95,3 @@ ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
 ULONG	PerfDataGetSystemHandleCount(void);
 
 ULONG	PerfDataGetTotalThreadCount(void);
-
-
-#ifdef __cplusplus
-};
-#endif
