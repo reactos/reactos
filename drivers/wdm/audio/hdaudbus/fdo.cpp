@@ -5,6 +5,7 @@
 * PURPOSE:         HDA Driver Entry
 * PROGRAMMER:      Johannes Anderwald
 */
+
 #include "hdaudbus.h"
 
 BOOLEAN
@@ -217,7 +218,7 @@ HDA_InitCodec(
     Entry = (PHDA_CODEC_ENTRY)AllocateItem(NonPagedPool, sizeof(HDA_CODEC_ENTRY));
     if (!Entry)
     {
-        DPRINT1("hda: failed to allocate memory");
+        DPRINT1("hda: failed to allocate memory\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -812,5 +813,3 @@ HDA_FDOQueryBusRelations(
     /* done */
     return STATUS_SUCCESS;
 }
-
-
