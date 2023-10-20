@@ -2886,7 +2886,7 @@ void CShellLink::OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify)
             return;
         }
     }
-    if (codeNotify == EN_CHANGE)
+    if (codeNotify == EN_CHANGE || codeNotify == CBN_SELCHANGE)
     {
         if (!m_bInInit)
             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
