@@ -33,8 +33,7 @@ IDI_ICON5 ICON "resources/5.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "\
-Wine - http://winehq.org\
+    IDS_ACKPROJECTS "Wine - http://winehq.org\
 \nFreeType - http://freetype.org\
 \nSYSLINUX - http://syslinux.zytor.com\
 \nMinGW - http://mingw.org\
@@ -43,7 +42,7 @@ Wine - http://winehq.org\
 \nadns - http://gnu.org/software/adns\
 \nICU - http://icu.unicode.org\
 \nGraphApp - http://enchantia.com/software/graphapp\
-\nExt2 - http://ext2fsd.com\
+\nExt2 - http://sourceforge.net/projects/ext2fsd\
 \nGNU FreeFont - http://savannah.gnu.org/projects/freefont\
 \nDejaVu Fonts - http://dejavu.sourceforge.net\
 \nLiberation(tm) Fonts - http://pagure.io/liberation-fonts\
