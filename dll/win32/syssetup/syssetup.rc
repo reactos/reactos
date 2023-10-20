@@ -41,12 +41,12 @@ Wine - http://www.winehq.org\
 \nBochs - http://bochs.sourceforge.net\
 \nMesa3D - http://www.mesa3d.org\
 \nadns - http://www.gnu.org/software/adns\
-\nICU - http://www.icu-project.org\
+\nICU - http://icu.unicode.org\
 \nGraphApp - http://enchantia.com/software/graphapp\
 \nExt2 - http://www.ext2fsd.com\
 \nGNU FreeFont - http://savannah.gnu.org/projects/freefont\
 \nDejaVu Fonts - http://dejavu.sourceforge.net\
-\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts\
+\nLiberation(tm) Fonts - http://pagure.io/liberation-fonts\
 \nBtrfs - https://github.com/maharmstone/btrfs\
 \nTango Desktop Project - http://tango.freedesktop.org/Tango_Desktop_Project\
 "
