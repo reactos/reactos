@@ -93,8 +93,8 @@ Path: drivers/filesystems/ext2
 Path: sdk/lib/fslib/ext2lib
 Used Version: 0.69
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://web.archive.org/web/20210516213924/http://www.ext2fsd.com
-URL: http://sourceforge.net/projects/ext2fsd
+URL: https://web.archive.org/web/20210516213924/http://www.ext2fsd.com
+URL: https://sourceforge.net/projects/ext2fsd
 
 Title: NFSv4.1 Client for Windows
 Path: base/services/nfsd
