@@ -157,13 +157,13 @@ InsertDeviceTreeItem(
     tvItem.hParent = hParent;
     tvItem.hInsertAfter = TVI_LAST;
 
-    tvItem.item.mask = TVIF_STATE | TVIF_TEXT /*| TVIF_PARAM*/ | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     tvItem.item.state = TVIS_EXPANDED;
     tvItem.item.stateMask = TVIS_EXPANDED;
     tvItem.item.pszText = szDisplayName;
     tvItem.item.iImage = nClassImage;
     tvItem.item.iSelectedImage = nClassImage;
-    tvItem.item.lParam = (LPARAM)NULL;
+    tvItem.item.lParam = (LPARAM)DevInst;
 
     return TreeView_InsertItem(hwndDeviceTree, &tvItem);
 }
@@ -344,6 +344,78 @@ ShowContextMenu(
 }
 
 
+static
+DWORD
+GetSelectedDeviceInst(
+    _In_ HWND hwndDeviceTree)
+{
+    HTREEITEM hTreeItem;
+    TVITEMW item;
+
+    hTreeItem = TreeView_GetSelection(hwndDeviceTree);
+    if (hTreeItem == NULL)
+        return 0;
+
+    ZeroMemory(&item, sizeof(item));
+    item.mask = TVIF_PARAM;
+    item.hItem = hTreeItem;
+
+    TreeView_GetItem(hwndDeviceTree, &item);
+
+    return item.lParam;
+}
+
+static
+int
+_DevicePropertiesW(
+    _In_ HWND hWndParent,
+    _In_ LPCWSTR lpMachineName,
+    _In_ LPCWSTR lpDeviceID,
+    _In_ BOOL bShowDevMgr)
+{
+    typedef int (WINAPI *PFDEVICEPROPERTIESW)(HWND, LPCWSTR, LPCWSTR, BOOL);
+    HMODULE hDll;
+    PFDEVICEPROPERTIESW pFunc;
+    int ret = -1;
+
+    hDll = LoadLibraryW(L"devmgr.dll");
+    if (hDll == NULL)
+        return -1;
+
+    pFunc = (PFDEVICEPROPERTIESW)GetProcAddress(hDll, "DevicePropertiesW");
+    if (pFunc != NULL)
+        ret = pFunc(hWndParent, lpMachineName, lpDeviceID, bShowDevMgr);
+
+    FreeLibrary(hDll);
+
+    return ret;
+}
+
+static
+VOID
+ShowDeviceProperties(
+    _In_ HWND hwndParent,
+    _In_ DWORD DevInst)
+{
+    ULONG ulSize;
+    CONFIGRET cr;
+    LPWSTR pszDevId;
+
+    cr = CM_Get_Device_ID_Size(&ulSize, DevInst, 0);
+    if (cr != CR_SUCCESS || ulSize == 0)
+        return;
+
+    pszDevId = HeapAlloc(GetProcessHeap(), 0, (ulSize + 1) * sizeof(WCHAR));
+    if (pszDevId == NULL)
+        return;
+
+    cr = CM_Get_Device_IDW(DevInst, pszDevId, ulSize + 1, 0);
+    if (cr == CR_SUCCESS)
+        _DevicePropertiesW(hwndParent, NULL, pszDevId, FALSE);
+
+    HeapFree(GetProcessHeap(), 0, pszDevId);
+}
+
 INT_PTR
 CALLBACK
 SafeRemovalDlgProc(
@@ -434,6 +506,14 @@ SafeRemovalDlgProc(
                         }
                     }
                     break;
+
+                case IDC_SAFE_REMOVE_PROPERTIES:
+                case IDM_PROPERTIES:
+                {
+                    HWND hwndDevTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
+                    ShowDeviceProperties(hwndDlg, GetSelectedDeviceInst(hwndDevTree));
+                    break;
+                }
             }
             break;
 
