@@ -196,36 +196,36 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     }
     else
     {
+        /* Check if we have length */
+        if (KeyValueInfo->DataLength)
+        {
+            /* Increase the spare data */
+            SpareData += KeyValueInfo->DataOffset +
+                         KeyValueInfo->DataLength;
+        }
+        else
+        {
+            /* Otherwise, the spare data only has the name data */
+            SpareData += FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name) +
+                         KeyValueInfo->NameLength;
+        }
+
+        /* Align the pointer and get new size of spare data */
+        SpareData = (PVOID)(((ULONG_PTR)SpareData + 7) & ~7);
+        SpareLength = DataEnd - SpareData;
+
+        /* Check if we have space to copy the data */
+        RequiredLength = KeyValueInfo->NameLength + sizeof(UNICODE_NULL);
+        if ((SpareData > DataEnd) || (SpareLength < RequiredLength))
+        {
+            /* Fail and return the missing length */
+            *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) + RequiredLength;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
         /* Check if this isn't a direct return */
         if (!(QueryTable->Flags & RTL_QUERY_REGISTRY_DIRECT))
         {
-            /* Check if we have length */
-            if (KeyValueInfo->DataLength)
-            {
-                /* Increase the spare data */
-                SpareData += KeyValueInfo->DataOffset +
-                             KeyValueInfo->DataLength;
-            }
-            else
-            {
-                /* Otherwise, the spare data only has the name data */
-                SpareData += FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name) +
-                             KeyValueInfo->NameLength;
-            }
-
-            /* Align the pointer and get new size of spare data */
-            SpareData = (PVOID)(((ULONG_PTR)SpareData + 7) & ~7);
-            SpareLength = DataEnd - SpareData;
-
-            /* Check if we have space to copy the data */
-            RequiredLength = KeyValueInfo->NameLength + sizeof(UNICODE_NULL);
-            if ((SpareData > DataEnd) || (SpareLength < RequiredLength))
-            {
-                /* Fail and return the missing length */
-                *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) + RequiredLength;
-                return STATUS_BUFFER_TOO_SMALL;
-            }
-
             /* Copy the data and null-terminate it */
             Name = (PWCHAR)SpareData;
             RtlCopyMemory(Name, KeyValueInfo->Name, KeyValueInfo->NameLength);
@@ -330,7 +330,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 RtlInitEmptyUnicodeString(&Source, Data, (USHORT)Length);
                 Source.Length = Source.MaximumLength - sizeof(UNICODE_NULL);
 
-                /* Setup the desination string */
+                /* Setup the destination string */
                 RtlInitEmptyUnicodeString(&Destination, (PWCHAR)SpareData, 0);
 
                 /* Check if we're out of space */
