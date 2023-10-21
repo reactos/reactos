@@ -2276,7 +2276,11 @@ static void LISTVIEW_InvalidateSelectedItems(const LISTVIEW_INFO *infoPtr)
     iterator_frameditems(&i, infoPtr, &infoPtr->rcList); 
     while(iterator_next(&i))
     {
+#ifdef __REACTOS__
+	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED | LVIS_CUT))
+#else
 	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED))
+#endif
 	    LISTVIEW_InvalidateItem(infoPtr, i.nItem);
     }
     iterator_destroy(&i);
