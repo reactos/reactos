@@ -366,32 +366,6 @@ GetSelectedDeviceInst(
 }
 
 static
-int
-_DevicePropertiesW(
-    _In_ HWND hWndParent,
-    _In_ LPCWSTR lpMachineName,
-    _In_ LPCWSTR lpDeviceID,
-    _In_ BOOL bShowDevMgr)
-{
-    typedef int (WINAPI *PFDEVICEPROPERTIESW)(HWND, LPCWSTR, LPCWSTR, BOOL);
-    HMODULE hDll;
-    PFDEVICEPROPERTIESW pFunc;
-    int ret = -1;
-
-    hDll = LoadLibraryW(L"devmgr.dll");
-    if (hDll == NULL)
-        return -1;
-
-    pFunc = (PFDEVICEPROPERTIESW)GetProcAddress(hDll, "DevicePropertiesW");
-    if (pFunc != NULL)
-        ret = pFunc(hWndParent, lpMachineName, lpDeviceID, bShowDevMgr);
-
-    FreeLibrary(hDll);
-
-    return ret;
-}
-
-static
 VOID
 ShowDeviceProperties(
     _In_ HWND hwndParent,
@@ -405,13 +379,30 @@ ShowDeviceProperties(
     if (cr != CR_SUCCESS || ulSize == 0)
         return;
 
-    pszDevId = HeapAlloc(GetProcessHeap(), 0, (ulSize + 1) * sizeof(WCHAR));
+    /* Take the terminating NULL into account */
+    ulSize++;
+
+    pszDevId = HeapAlloc(GetProcessHeap(), 0, ulSize * sizeof(WCHAR));
     if (pszDevId == NULL)
         return;
 
-    cr = CM_Get_Device_IDW(DevInst, pszDevId, ulSize + 1, 0);
+    cr = CM_Get_Device_IDW(DevInst, pszDevId, ulSize, 0);
     if (cr == CR_SUCCESS)
-        _DevicePropertiesW(hwndParent, NULL, pszDevId, FALSE);
+    {
+        typedef int (WINAPI *PFDEVICEPROPERTIESW)(HWND, LPCWSTR, LPCWSTR, BOOL);
+        HMODULE hDevMgrDll;
+        PFDEVICEPROPERTIESW pDevicePropertiesW;
+
+        hDevMgrDll = LoadLibraryW(L"devmgr.dll");
+        if (hDevMgrDll != NULL)
+        {
+            pDevicePropertiesW = (PFDEVICEPROPERTIESW)GetProcAddress(hDevMgrDll, "DevicePropertiesW");
+            if (pDevicePropertiesW != NULL)
+                pDevicePropertiesW(hwndParent, NULL, pszDevId, FALSE);
+
+            FreeLibrary(hDevMgrDll);
+        }
+    }
 
     HeapFree(GetProcessHeap(), 0, pszDevId);
 }
