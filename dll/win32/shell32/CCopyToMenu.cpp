@@ -319,7 +319,7 @@ CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = E_FAIL;
     TRACE("CCopyToMenu::InvokeCommand(%p)\n", lpici);
 
-    if (HIWORD(lpici->lpVerb) == 0)
+    if (IS_INTRESOURCE(lpici->lpVerb))
     {
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdCopyTo)
         {
