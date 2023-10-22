@@ -3362,6 +3362,7 @@ RegOpenKeyExW(HKEY hKey,
     NTSTATUS Status;
     ULONG Attributes = OBJ_CASE_INSENSITIVE;
     LONG ErrorCode = ERROR_SUCCESS;
+    BOOLEAN SubKeyStringAllocated = FALSE;
 
     TRACE("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
           hKey, lpSubKey, ulOptions, samDesired, phkResult);
@@ -3398,9 +3399,30 @@ RegOpenKeyExW(HKEY hKey,
         Attributes |= OBJ_OPENLINK;
 
     if (lpSubKey == NULL || wcscmp(lpSubKey, L"\\") == 0)
+    {
         RtlInitUnicodeString(&SubKeyString, L"");
+    }
     else
+    {
         RtlInitUnicodeString(&SubKeyString, lpSubKey);
+
+        /* Handle unaligned lpSubKey */
+        if ((ULONG_PTR)lpSubKey & 1)
+        {
+            UNICODE_STRING AlignedString;
+
+            Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                               &SubKeyString,
+                                               &AlignedString);
+            if (!NT_SUCCESS(Status))
+            {
+                goto Exit;
+            }
+
+            SubKeyString = AlignedString;
+            SubKeyStringAllocated = TRUE;
+        }
+    }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
@@ -3412,44 +3434,17 @@ RegOpenKeyExW(HKEY hKey,
                        samDesired,
                        &ObjectAttributes);
 
-    if (Status == STATUS_DATATYPE_MISALIGNMENT)
+Exit:
+
+    if (SubKeyStringAllocated)
     {
-        HANDLE hAligned;
-        UNICODE_STRING AlignedString;
-
-        Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-                                           &SubKeyString,
-                                           &AlignedString);
-        if (NT_SUCCESS(Status))
-        {
-            /* Try again with aligned parameters */
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &AlignedString,
-                                       Attributes,
-                                       KeyHandle,
-                                       NULL);
-
-            Status = NtOpenKey(&hAligned,
-                               samDesired,
-                               &ObjectAttributes);
-
-            RtlFreeUnicodeString(&AlignedString);
-
-            if (NT_SUCCESS(Status))
-                *phkResult = hAligned;
-        }
-        else
-        {
-            /* Restore the original error */
-            Status = STATUS_DATATYPE_MISALIGNMENT;
-        }
+        RtlFreeUnicodeString(&SubKeyString);
     }
 
     if (!NT_SUCCESS(Status))
     {
         ErrorCode = RtlNtStatusToDosError(Status);
     }
-
 
     ClosePredefKey(KeyHandle);
 
