@@ -345,7 +345,7 @@ ShowContextMenu(
 
 
 static
-DWORD
+DEVINST
 GetSelectedDeviceInst(
     _In_ HWND hwndDeviceTree)
 {
@@ -369,7 +369,7 @@ static
 VOID
 ShowDeviceProperties(
     _In_ HWND hwndParent,
-    _In_ DWORD DevInst)
+    _In_ DEVINST DevInst)
 {
     ULONG ulSize;
     CONFIGRET cr;
