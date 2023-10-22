@@ -270,3 +270,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "パッケージ %1 を探すのに失敗しました。\n"
     IDS_CMD_PACKAGE_INFO "パッケージ %1 に関する情報:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END

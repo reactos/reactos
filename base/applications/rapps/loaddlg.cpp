@@ -48,6 +48,7 @@
 #include "rosui.h"
 #include "dialogs.h"
 #include "misc.h"
+#include "unattended.h"
 
 #ifdef USE_CERT_PINNING
 #define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
@@ -89,12 +90,19 @@ struct DownloadInfo
     {
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
+        IType = AppInfo.GetInstallerType();
+        if (IType == INSTALLER_GENERATE)
+        {
+            szPackageName = AppInfo.szIdentifier;
+        }
     }
 
     DownloadType DLType;
+    InstallerType IType;
     CStringW szUrl;
     CStringW szName;
     CStringW szSHA1;
+    CStringW szPackageName;
     ULONG SizeInBytes;
 };
 
@@ -375,12 +383,12 @@ CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char> &subjectInfo, CLocalPtr
 #endif
 
 inline VOID
-MessageBox_LoadString(HWND hMainWnd, INT StringID)
+MessageBox_LoadString(HWND hOwnerWnd, INT StringID)
 {
     CStringW szMsgText;
     if (szMsgText.LoadStringW(StringID))
     {
-        MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+        MessageBoxW(hOwnerWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
     }
 }
 
@@ -982,6 +990,7 @@ CDownloadManager::ThreadFunc(LPVOID param)
         // run it
         if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
+            CStringW app, params;
             SHELLEXECUTEINFOW shExInfo = {0};
             shExInfo.cbSize = sizeof(shExInfo);
             shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -989,6 +998,17 @@ CDownloadManager::ThreadFunc(LPVOID param)
             shExInfo.lpFile = Path;
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
+
+            if (InfoArray[iAppId].IType == INSTALLER_GENERATE)
+            {
+                params = L"/" + CStringW(CMD_KEY_GENINST) + L" \"" +
+                         InfoArray[iAppId].szPackageName + L"\" \"" +
+                         CStringW(shExInfo.lpFile) + L"\"";
+                shExInfo.lpParameters = params;
+                shExInfo.lpFile = app.GetBuffer(MAX_PATH);
+                GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
+                app.ReleaseBuffer();
+            }
 
             /* FIXME: Do we want to log installer status? */
             WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, InfoArray[iAppId].szName);

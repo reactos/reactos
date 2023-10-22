@@ -272,3 +272,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "未能找到软件包 %1。\n"
     IDS_CMD_PACKAGE_INFO "有关软件包 %1 的信息：\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END

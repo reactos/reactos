@@ -276,7 +276,7 @@ CMainWindow::RemoveSelectedAppFromRegistry()
         if (!InstalledApp)
             return FALSE;
 
-        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp);
+        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp) == ERROR_SUCCESS;
     }
 
     return FALSE;
@@ -292,7 +292,7 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     if (!InstalledApp)
         return FALSE;
 
-    return InstalledApp->UninstallApplication(bModify);
+    return InstalledApp->UninstallApplication(bModify ? UCF_MODIFY : 0);
 }
 
 BOOL

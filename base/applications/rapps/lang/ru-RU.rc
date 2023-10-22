@@ -273,3 +273,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "Не удалось найти пакет %1.\n"
     IDS_CMD_PACKAGE_INFO "Информация о пакете %1:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END
