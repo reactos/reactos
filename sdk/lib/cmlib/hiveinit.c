@@ -619,6 +619,11 @@ HvpGetHiveHeader(
     return HiveSuccess;
 }
 
+/*
+ * FIXME: Disable compilation for AMD64 for now since it makes
+ * the FreeLdr binary size so large it makes booting impossible.
+ */
+#if !defined(_M_AMD64)
 /**
  * @brief
  * Computes the hive space size by querying
@@ -960,6 +965,7 @@ HvpRecoverDataFromLog(
 
     return HiveSuccess;
 }
+#endif
 
 /**
  * @brief
@@ -998,7 +1004,12 @@ HvLoadHive(
     NTSTATUS Status;
     BOOLEAN Success;
     PHBASE_BLOCK BaseBlock = NULL;
+/* FIXME: See the comment above (near HvpQueryHiveSize) */
+#if defined(_M_AMD64)
+    ULONG Result;
+#else
     ULONG Result, Result2;
+#endif
     LARGE_INTEGER TimeStamp;
     ULONG Offset = 0;
     PVOID HiveData;
@@ -1044,6 +1055,12 @@ HvLoadHive(
 
         /* Hive header needs a repair */
         case RecoverHeader:
+/* FIXME: See the comment above (near HvpQueryHiveSize) */
+#if defined(_M_AMD64)
+        {
+            return STATUS_REGISTRY_CORRUPT;
+        }
+#else
         {
             /* Check if this hive has a log at hand to begin with */
             #if (NTDDI_VERSION < NTDDI_VISTA)
@@ -1092,6 +1109,7 @@ HvLoadHive(
 
             break;
         }
+#endif
     }
 
     /* Set the boot type */
@@ -1384,6 +1402,8 @@ HvInitialize(
                 return Status;
             }
 
+/* FIXME: See the comment above (near HvpQueryHiveSize) */
+#if !defined(_M_AMD64)
             /*
              * Check if we have recovered this hive. We are responsible to
              * flush the primary hive back to backing storage afterwards.
@@ -1418,7 +1438,7 @@ HvInitialize(
                  */
                 Status = STATUS_SUCCESS;
             }
-
+#endif
             break;
         }
 
