@@ -1132,3 +1132,26 @@ RtlSetUnwindContext(
     *ContextPointers.Xmm14 = Context->Xmm14;
     *ContextPointers.Xmm15 = Context->Xmm15;
 }
+
+VOID
+RtlpRestoreContextInternal(
+    _In_ PCONTEXT ContextRecord);
+
+VOID
+RtlRestoreContext(
+    _In_ PCONTEXT ContextRecord,
+    _In_ PEXCEPTION_RECORD ExceptionRecord)
+{
+    if (ExceptionRecord != NULL)
+    {
+        if ((ExceptionRecord->ExceptionCode == STATUS_UNWIND_CONSOLIDATE) &&
+            (ExceptionRecord->NumberParameters >= 1))
+        {
+            PVOID (*Consolidate)(EXCEPTION_RECORD*) = (PVOID)ExceptionRecord->ExceptionInformation[0];
+            // FIXME: This should be called through an asm wrapper to allow handling recursive unwinding
+            ContextRecord->Rip = (ULONG64)Consolidate(ExceptionRecord);
+        }
+    }
+
+    RtlpRestoreContextInternal(ContextRecord);
+}

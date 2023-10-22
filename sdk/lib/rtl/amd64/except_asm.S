@@ -107,22 +107,19 @@ PUBLIC RtlCaptureContext
 .ENDP
 
 /*
- * VOID NTAPI
- * RtlRestoreContext(
- *     _In_ PCONTEXT ContextRecord@<rcx>,
- *     PEXCEPTION_RECORD *ExceptionRecord@<rdx>);
+ * VOID
+ * RtlpRestoreContextInternal(
+ *     _In_ PCONTEXT ContextRecord@<rcx>);
  */
-PUBLIC RtlRestoreContext
-.PROC RtlRestoreContext
+PUBLIC RtlpRestoreContextInternal
+.PROC RtlpRestoreContextInternal
 
     /* Allocate space */
     sub rsp, HEX(8)
     .ALLOCSTACK 8
     .ENDPROLOG
 
-    // TODO: Handle ExceptionRecord
-
-    /* Restore legacy floating point registers (It's slow, so do it first) */
+    /* Restore legacy floating point registers (It is slow, so do it first) */
     ldmxcsr [rcx + CxMxCsr]
     fxrstor [rcx + CxFltSave]
 
