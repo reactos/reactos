@@ -272,4 +272,5 @@ BEGIN
     IDS_SAVEERROR "Не удалось сохранить точечный рисунок в файл:\n\n%s"
     IDS_CANTSENDMAIL "Не удалось отправить письмо."
     IDS_LOSECOLOR "В результате этой операции сведения о цвете будут потеряны. Продолжить?"
+    IDS_OUTOFMEMORY "There is not enough memory or resources to complete the operation. Please close some programs and try again."
 END

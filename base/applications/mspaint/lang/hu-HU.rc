@@ -269,4 +269,5 @@ BEGIN
     IDS_SAVEERROR "Nem sikerült a bitkép mentése az alábbi fájlba:\n\n%s"
     IDS_CANTSENDMAIL "Nem sikerült az email küldése."
     IDS_LOSECOLOR "A színinformációk el fognak veszni a művelet során. Biztosan folytatja?"
+    IDS_OUTOFMEMORY "There is not enough memory or resources to complete the operation. Please close some programs and try again."
 END

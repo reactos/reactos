@@ -116,13 +116,24 @@ void ImageModel::ClearHistory()
     m_redoSteps = 0;
 }
 
+void ImageModel::PushImageForUndo()
+{
+    PushImageForUndo(CopyBitmap());
+}
+
 void ImageModel::PushImageForUndo(HBITMAP hbm)
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, m_currInd);
 
+    if (hbm == NULL)
+    {
+        ShowError(IDS_OUTOFMEMORY);
+        return;
+    }
+
     // Go to the next item with an HBITMAP or current item
     ::DeleteObject(m_hBms[(m_currInd + 1) % HISTORYSIZE]);
-    m_hBms[(m_currInd + 1) % HISTORYSIZE] = (hbm ? hbm : CopyDIBImage(m_hBms[m_currInd]));
+    m_hBms[(m_currInd + 1) % HISTORYSIZE] = hbm;
     m_currInd = (m_currInd + 1) % HISTORYSIZE;
     ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]);
 
@@ -145,7 +156,10 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     // Create an HBITMAP
     HBITMAP hbmCropped = CreateDIBWithProperties(nWidth, nHeight);
     if (!hbmCropped)
+    {
+        ShowError(IDS_OUTOFMEMORY);
         return;
+    }
 
     // Select the HBITMAP by memory DC
     HDC hdcMem = ::CreateCompatibleDC(m_hDrawingDC);
@@ -251,8 +265,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         case 3:
         {
             HBITMAP hbm = Rotate90DegreeBlt(m_hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
-            if (hbm)
-                PushImageForUndo(hbm);
+            PushImageForUndo(hbm);
             break;
         }
         case 2:
@@ -294,8 +307,7 @@ void ImageModel::PushBlackAndWhite()
     HBITMAP hNewBitmap = ConvertToBlackAndWhite(hBitmap);
     UnlockBitmap(hBitmap);
 
-    if (hNewBitmap)
-        PushImageForUndo(hNewBitmap);
+    PushImageForUndo(hNewBitmap);
 }
 
 HBITMAP ImageModel::LockBitmap()
@@ -319,7 +331,7 @@ void ImageModel::SelectionClone(BOOL bUndoable)
         return;
 
     if (bUndoable)
-        PushImageForUndo(CopyBitmap());
+        PushImageForUndo();
 
     selectionModel.DrawSelection(m_hDrawingDC, paletteModel.GetBgColor(),
                                  toolsModel.IsBackgroundTransparent());

@@ -270,4 +270,5 @@ BEGIN
     IDS_SAVEERROR "次のファイルとして画像を保存するのに失敗しました:\n\n%s"
     IDS_CANTSENDMAIL "メール送信に失敗しました。"
     IDS_LOSECOLOR "この操作を行うと色情報が失われます。続行しますか？"
+    IDS_OUTOFMEMORY "There is not enough memory or resources to complete the operation. Please close some programs and try again."
 END
