@@ -19,7 +19,7 @@ static inline bool RegValueExists(HKEY hKey, LPCWSTR Name)
 static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
 {
     MENUITEMINFOW mii;
-    mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem);
+    mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem); // USER32 version agnostic
     mii.fMask = MIIM_TYPE;
     mii.fType = Flags;
     return InsertMenuItemW(hMenu, Pos, TRUE, &mii);
