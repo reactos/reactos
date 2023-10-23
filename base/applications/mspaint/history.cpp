@@ -127,7 +127,7 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
 
     if (hbm == NULL)
     {
-        ShowError(IDS_OUTOFMEMORY);
+        ShowOutOfMemory();
         return;
     }
 
@@ -157,7 +157,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     HBITMAP hbmCropped = CreateDIBWithProperties(nWidth, nHeight);
     if (!hbmCropped)
     {
-        ShowError(IDS_OUTOFMEMORY);
+        ShowOutOfMemory();
         return;
     }
 

@@ -270,5 +270,4 @@ BEGIN
     IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
     IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
     IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
-    IDS_OUTOFMEMORY "There is not enough memory or resources to complete the operation. Please close some programs and try again."
 END
