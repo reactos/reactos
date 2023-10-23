@@ -1,6 +1,8 @@
 
 #include "precomp.h"
 
+#define TAG_BDASUP 'SadB'
+
 const GUID KSPROPSETID_BdaPinControl = {0xded49d5, 0xa8b7, 0x4d5d, {0x97, 0xa1, 0x12, 0xb0, 0xc1, 0x95, 0x87, 0x4d}};
 const GUID KSMETHODSETID_BdaDeviceConfiguration = {0x71985f45, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 const GUID KSPROPSETID_BdaTopology = {0xa14ee835, 0x0a23, 0x11d3, {0x9c, 0xc7, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
@@ -23,7 +25,6 @@ KSPROPERTY_ITEM FilterPropertyItem[] =
     DEFINE_KSPROPERTY_ITEM_BDA_CONTROLLING_PIN_ID(BdaPropertyGetControllingPinId, NULL),
     DEFINE_KSPROPERTY_ITEM_BDA_NODE_DESCRIPTORS(BdaPropertyNodeDescriptors, NULL)
 };
-
 
 KSPROPERTY_SET FilterPropertySet =
 {
@@ -90,27 +91,20 @@ KSAUTOMATION_TABLE PinAutomationTable =
     NULL
 };
 
-
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_BDASUP);
 }
 
 VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_BDASUP);
 }
-
 
 PBDA_FILTER_INSTANCE_ENTRY
 GetFilterInstanceEntry(
@@ -140,7 +134,6 @@ GetFilterInstanceEntry(
         /* set to null as it has not been found */
         InstanceEntry = NULL;
     }
-
 
     /* release spin lock */
     KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
@@ -245,7 +238,6 @@ FreeFilterInstance(
     KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
 }
 
-
 /*
     @implemented
 */
@@ -338,7 +330,6 @@ BdaCreateFilterFactoryEx(
 
         /* release spin lock */
         KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
-
 
         if (ppKSFilterFactory)
         {
@@ -450,7 +441,6 @@ BdaCreatePin(
         }
     }
 
-
     DPRINT("BdaCreatePin Result %x PinId %u\n", Status, PinId);
     return Status;
 }
@@ -542,8 +532,6 @@ BdaInitFilter(
     /* done */
     return Status;
 }
-
-
 
 /*
     @implemented
