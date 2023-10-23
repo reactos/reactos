@@ -25,7 +25,7 @@ CMainWindow mainWindow;
 void ShowOutOfMemory(void)
 {
     WCHAR szTitle[64];
-    LoadStringW(NULL, IDS_PROGRAMNAME, szTitle, _countof(szTitle));
+    ::LoadStringW(NULL, IDS_PROGRAMNAME, szTitle, _countof(szTitle));
 
     WCHAR szText[256];
     ::FormatMessageW(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
