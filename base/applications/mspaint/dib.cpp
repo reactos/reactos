@@ -227,6 +227,11 @@ HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
 {
     COLORREF white = RGB(255, 255, 255);
     HBITMAP hBitmap = CreateColorDIB(registrySettings.BMPWidth, registrySettings.BMPHeight, white);
+    if (hBitmap == NULL)
+    {
+        ShowOutOfMemory();
+        return NULL;
+    }
 
     HDC hScreenDC = ::GetDC(NULL);
     g_xDpi = (float)::GetDeviceCaps(hScreenDC, LOGPIXELSX);
