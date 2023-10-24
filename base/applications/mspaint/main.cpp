@@ -24,9 +24,6 @@ CMainWindow mainWindow;
 
 void ShowOutOfMemory(void)
 {
-    WCHAR szTitle[64];
-    ::LoadStringW(NULL, IDS_PROGRAMNAME, szTitle, _countof(szTitle));
-
     WCHAR szText[256];
     ::FormatMessageW(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
                      NULL,
@@ -34,7 +31,7 @@ void ShowOutOfMemory(void)
                      0,
                      szText, _countof(szText),
                      NULL);
-    mainWindow.MessageBox(szText, szTitle, MB_ICONERROR);
+    mainWindow.MessageBox(szText, NULL, MB_ICONERROR);
 }
 
 // get file name extension from filter string
