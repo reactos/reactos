@@ -43,6 +43,7 @@ enum HITTEST // hit
 
 /* FUNCTIONS ********************************************************/
 
+void ShowOutOfMemory(void);
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
 BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
 

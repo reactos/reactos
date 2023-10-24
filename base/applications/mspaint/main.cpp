@@ -22,6 +22,18 @@ CMainWindow mainWindow;
 
 /* FUNCTIONS ********************************************************/
 
+void ShowOutOfMemory(void)
+{
+    WCHAR szText[256];
+    ::FormatMessageW(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+                     NULL,
+                     ERROR_OUTOFMEMORY,
+                     0,
+                     szText, _countof(szText),
+                     NULL);
+    mainWindow.MessageBox(szText, NULL, MB_ICONERROR);
+}
+
 // get file name extension from filter string
 static BOOL
 FileExtFromFilter(LPTSTR pExt, OPENFILENAME *pOFN)
