@@ -345,8 +345,11 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
             include(sdk/cmake/baseaddress_msvc.cmake)
         endif()
     else()
-        include(sdk/cmake/baseaddress.cmake)
-    endif()
+        if (ARCH STREQUAL "amd64")
+            include(sdk/cmake/baseaddress_gcc_x64.cmake)
+        else()
+            include(sdk/cmake/baseaddress.cmake)
+        endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
     if(MSVC)
