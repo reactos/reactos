@@ -74,6 +74,11 @@ static PPARTLIST PartitionList = NULL;
 
 /* Currently selected partition entry in the list */
 static PPARTENTRY CurrentPartition = NULL;
+static enum {
+    PartTypePrimary,
+    PartTypeExtended,
+    PartTypeLogical
+} PartCreateType = PartTypePrimary;
 
 /* List of supported file systems for the partition to be formatted */
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
@@ -1524,9 +1529,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
  * Next pages:
  *  SelectFileSystemPage (At once if unattended)
  *  SelectFileSystemPage (Default if free space is selected)
- *  CreatePrimaryPartitionPage
- *  CreateExtendedPartitionPage
- *  CreateLogicalPartitionPage
+ *  CreatePartitionPage
  *  ConfirmDeleteSystemPartitionPage (if the selected partition is the system partition, aka with the boot flag set)
  *  DeletePartitionPage
  *  QuitPage
@@ -1791,7 +1794,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     return SELECT_PARTITION_PAGE;
                 }
 
-                return CREATE_PRIMARY_PARTITION_PAGE;
+                PartCreateType = PartTypePrimary;
+                return CREATE_PARTITION_PAGE;
             }
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
@@ -1807,7 +1811,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     return SELECT_PARTITION_PAGE;
                 }
 
-                return CREATE_EXTENDED_PARTITION_PAGE;
+                PartCreateType = PartTypeExtended;
+                return CREATE_PARTITION_PAGE;
             }
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
@@ -1823,7 +1828,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     return SELECT_PARTITION_PAGE;
                 }
 
-                return CREATE_LOGICAL_PARTITION_PAGE;
+                PartCreateType = PartTypeLogical;
+                return CREATE_PARTITION_PAGE;
             }
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
@@ -2066,7 +2072,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 
 
 /*
- * Displays the CreatePrimaryPartitionPage.
+ * Displays the CreatePartitionPage.
  *
  * Next pages:
  *  SelectPartitionPage
@@ -2077,10 +2083,11 @@ ShowPartitionSizeInputBox(SHORT Left,
  *   Number of the next page.
  */
 static PAGE_NUMBER
-CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
+CreatePartitionPage(PINPUT_RECORD Ir)
 {
     PPARTENTRY PartEntry;
     PDISKENTRY DiskEntry;
+    ULONG uID;
     BOOLEAN Quit;
     BOOLEAN Cancel;
     ULONG MaxSize;
@@ -2095,12 +2102,17 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    if (PartCreateType == PartTypePrimary)
+        uID = STRING_CHOOSE_NEW_PARTITION;
+    else if (PartCreateType == PartTypeExtended)
+        uID = STRING_CHOOSE_NEW_EXTENDED_PARTITION;
+    else // if (PartCreateType == PartTypeLogical)
+        uID = STRING_CHOOSE_NEW_LOGICAL_PARTITION;
+
+    CONSOLE_SetTextXY(6, 8, MUIGetString(uID));
+
     PartEntry = CurrentPartition;
     DiskEntry = CurrentPartition->DiskEntry;
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_PARTITION));
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
     CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
@@ -2110,11 +2122,9 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
-    PartEntry = CurrentPartition;
     while (TRUE)
     {
         MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
-
         if (MaxSize > PARTITION_MAXSIZE)
             MaxSize = PARTITION_MAXSIZE;
 
@@ -2125,7 +2135,6 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Cancel)
@@ -2136,242 +2145,11 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         {
             PartSize = _wcstoui64(InputBuffer, NULL, 10);
 
+            /* Retry if too small or too large */
             if (PartSize < 1)
-            {
-                /* Too small */
                 continue;
-            }
-
             if (PartSize > MaxSize)
-            {
-                /* Too large */
                 continue;
-            }
-
-            /* Convert to bytes */
-            if (PartSize == MaxSize)
-            {
-                /* Use all of the unpartitioned disk space */
-                SectorCount = PartEntry->SectorCount.QuadPart;
-            }
-            else
-            {
-                /* Calculate the sector count from the size in MB */
-                SectorCount = PartSize * MB / DiskEntry->BytesPerSector;
-
-                /* But never get larger than the unpartitioned disk space */
-                if (SectorCount > PartEntry->SectorCount.QuadPart)
-                    SectorCount = PartEntry->SectorCount.QuadPart;
-            }
-
-            DPRINT ("Partition size: %I64u bytes\n", PartSize);
-
-            CreatePrimaryPartition(PartitionList,
-                                   CurrentPartition,
-                                   SectorCount,
-                                   FALSE);
-
-            return SELECT_PARTITION_PAGE;
-        }
-    }
-
-    return CREATE_PRIMARY_PARTITION_PAGE;
-}
-
-
-/*
- * Displays the CreateExtendedPartitionPage.
- *
- * Next pages:
- *  SelectPartitionPage (default)
- *  QuitPage
- *
- * RETURNS
- *   Number of the next page.
- */
-static PAGE_NUMBER
-CreateExtendedPartitionPage(PINPUT_RECORD Ir)
-{
-    PPARTENTRY PartEntry;
-    PDISKENTRY DiskEntry;
-    BOOLEAN Quit;
-    BOOLEAN Cancel;
-    ULONG MaxSize;
-    ULONGLONG PartSize;
-    ULONGLONG SectorCount;
-    WCHAR InputBuffer[50];
-    CHAR LineBuffer[100];
-
-    if (PartitionList == NULL || CurrentPartition == NULL)
-    {
-        /* FIXME: show an error dialog */
-        return QUIT_PAGE;
-    }
-
-    PartEntry = CurrentPartition;
-    DiskEntry = CurrentPartition->DiskEntry;
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_EXTENDED_PARTITION));
-
-    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
-                        LineBuffer);
-
-    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
-
-    PartEntry = CurrentPartition;
-    while (TRUE)
-    {
-        MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
-
-        if (MaxSize > PARTITION_MAXSIZE)
-            MaxSize = PARTITION_MAXSIZE;
-
-        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
-                                  MaxSize, InputBuffer, &Quit, &Cancel);
-
-        if (Quit)
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Cancel)
-        {
-            return SELECT_PARTITION_PAGE;
-        }
-        else
-        {
-            PartSize = _wcstoui64(InputBuffer, NULL, 10);
-
-            if (PartSize < 1)
-            {
-                /* Too small */
-                continue;
-            }
-
-            if (PartSize > MaxSize)
-            {
-                /* Too large */
-                continue;
-            }
-
-            /* Convert to bytes */
-            if (PartSize == MaxSize)
-            {
-                /* Use all of the unpartitioned disk space */
-                SectorCount = PartEntry->SectorCount.QuadPart;
-            }
-            else
-            {
-                /* Calculate the sector count from the size in MB */
-                SectorCount = PartSize * MB / DiskEntry->BytesPerSector;
-
-                /* But never get larger than the unpartitioned disk space */
-                if (SectorCount > PartEntry->SectorCount.QuadPart)
-                    SectorCount = PartEntry->SectorCount.QuadPart;
-            }
-
-            DPRINT ("Partition size: %I64u bytes\n", PartSize);
-
-            CreateExtendedPartition(PartitionList,
-                                    CurrentPartition,
-                                    SectorCount);
-
-            return SELECT_PARTITION_PAGE;
-        }
-    }
-
-    return CREATE_EXTENDED_PARTITION_PAGE;
-}
-
-
-/*
- * Displays the CreateLogicalPartitionPage.
- *
- * Next pages:
- *  SelectFileSystemPage (default)
- *  QuitPage
- *
- * RETURNS
- *   Number of the next page.
- */
-static PAGE_NUMBER
-CreateLogicalPartitionPage(PINPUT_RECORD Ir)
-{
-    PPARTENTRY PartEntry;
-    PDISKENTRY DiskEntry;
-    BOOLEAN Quit;
-    BOOLEAN Cancel;
-    ULONG MaxSize;
-    ULONGLONG PartSize;
-    ULONGLONG SectorCount;
-    WCHAR InputBuffer[50];
-    CHAR LineBuffer[100];
-
-    if (PartitionList == NULL || CurrentPartition == NULL)
-    {
-        /* FIXME: show an error dialog */
-        return QUIT_PAGE;
-    }
-
-    PartEntry = CurrentPartition;
-    DiskEntry = CurrentPartition->DiskEntry;
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_LOGICAL_PARTITION));
-
-    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
-                        LineBuffer);
-
-    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
-
-    PartEntry = CurrentPartition;
-    while (TRUE)
-    {
-        MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
-
-        if (MaxSize > PARTITION_MAXSIZE)
-            MaxSize = PARTITION_MAXSIZE;
-
-        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
-                                  MaxSize, InputBuffer, &Quit, &Cancel);
-
-        if (Quit)
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Cancel)
-        {
-            return SELECT_PARTITION_PAGE;
-        }
-        else
-        {
-            PartSize = _wcstoui64(InputBuffer, NULL, 10);
-
-            if (PartSize < 1)
-            {
-                /* Too small */
-                continue;
-            }
-
-            if (PartSize > MaxSize)
-            {
-                /* Too large */
-                continue;
-            }
 
             /* Convert to bytes */
             if (PartSize == MaxSize)
@@ -2391,16 +2169,32 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 
             DPRINT("Partition size: %I64u bytes\n", PartSize);
 
-            CreateLogicalPartition(PartitionList,
-                                   CurrentPartition,
-                                   SectorCount,
-                                   FALSE);
+            if (PartCreateType == PartTypePrimary)
+            {
+                CreatePrimaryPartition(PartitionList,
+                                       CurrentPartition,
+                                       SectorCount,
+                                       FALSE);
+            }
+            else if (PartCreateType == PartTypeExtended)
+            {
+                CreateExtendedPartition(PartitionList,
+                                        CurrentPartition,
+                                        SectorCount);
+            }
+            else // if (PartCreateType == PartTypeLogical)
+            {
+                CreateLogicalPartition(PartitionList,
+                                       CurrentPartition,
+                                       SectorCount,
+                                       FALSE);
+            }
 
             return SELECT_PARTITION_PAGE;
         }
     }
 
-    return CREATE_LOGICAL_PARTITION_PAGE;
+    return CREATE_PARTITION_PAGE;
 }
 
 
@@ -4541,16 +4335,8 @@ RunUSetup(VOID)
                 Page = SelectPartitionPage(&Ir);
                 break;
 
-            case CREATE_PRIMARY_PARTITION_PAGE:
-                Page = CreatePrimaryPartitionPage(&Ir);
-                break;
-
-            case CREATE_EXTENDED_PARTITION_PAGE:
-                Page = CreateExtendedPartitionPage(&Ir);
-                break;
-
-            case CREATE_LOGICAL_PARTITION_PAGE:
-                Page = CreateLogicalPartitionPage(&Ir);
+            case CREATE_PARTITION_PAGE:
+                Page = CreatePartitionPage(&Ir);
                 break;
 
             case CONFIRM_DELETE_SYSTEM_PARTITION_PAGE:
