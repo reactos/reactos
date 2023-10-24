@@ -2108,11 +2108,6 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
 
-#if 0
-    CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
-#endif
-
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
     PartEntry = CurrentPartition;
@@ -2226,11 +2221,6 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
 
-#if 0
-    CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
-#endif
-
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
     PartEntry = CurrentPartition;
@@ -2342,11 +2332,6 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
                         LineBuffer);
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
-
-#if 0
-    CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
-#endif
 
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
@@ -2489,7 +2474,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
     PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, "   %s", LineBuffer);
+    CONSOLE_SetTextXY(6, 10, LineBuffer);
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
     CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
@@ -2822,20 +2807,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     if (PartEntry->AutoCreate)
     {
-        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
-
-#if 0
-        PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_SetTextXY(8, 10, LineBuffer);
-#endif
-
-        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDISK1),
-                            LineBuffer);
-
-        CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
-
         PartEntry->AutoCreate = FALSE;
+
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
     }
     else if (PartEntry->New)
     {
@@ -2857,24 +2831,22 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                 ASSERT(FALSE);
                 break;
         }
-
-        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDISK1),
-                            LineBuffer);
-
-        CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
     }
     else
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
-
-        PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_SetTextXY(8, 10, LineBuffer);
-
-        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
-                            LineBuffer);
     }
+
+    PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_SetTextXY(6, 10, LineBuffer);
+
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
+                        LineBuffer);
+
+    /* Show "This Partition will be formatted next" only if it is unformatted */
+    if (PartEntry->New || PartEntry->FormatState == Unformatted)
+        CONSOLE_SetTextXY(6, 14, MUIGetString(STRING_PARTFORMAT));
 
     ASSERT(FileSystemList == NULL);
 
