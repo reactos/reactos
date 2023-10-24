@@ -118,7 +118,14 @@ void ImageModel::ClearHistory()
 
 void ImageModel::PushImageForUndo()
 {
-    PushImageForUndo(CopyBitmap());
+    HBITMAP hbm = CopyBitmap();
+    if (hbm)
+    {
+        ShowOutOfMemory();
+        return;
+    }
+
+    PushImageForUndo(hbm);
 }
 
 void ImageModel::PushImageForUndo(HBITMAP hbm)
