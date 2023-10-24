@@ -350,6 +350,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         else()
             include(sdk/cmake/baseaddress.cmake)
         endif()
+    endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
     if(MSVC)
