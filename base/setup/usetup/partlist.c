@@ -316,7 +316,7 @@ DiskDescription(
     if (DiskEntry->DriverName.Length > 0)
     {
         RtlStringCchPrintfA(strBuffer, cchBuffer,
-                            MUIGetString(STRING_HDDINFO_1),
+                            MUIGetString(STRING_HDDINFO1),
                             DiskSize,
                             Unit,
                             DiskEntry->DiskNumber,
@@ -331,7 +331,7 @@ DiskDescription(
     else
     {
         RtlStringCchPrintfA(strBuffer, cchBuffer,
-                            MUIGetString(STRING_HDDINFO_2),
+                            MUIGetString(STRING_HDDINFO2),
                             DiskSize,
                             Unit,
                             DiskEntry->DiskNumber,

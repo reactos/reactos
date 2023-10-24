@@ -2100,13 +2100,13 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSENEWPARTITION));
+    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_PARTITION));
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
                         LineBuffer);
 
-    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
+    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
@@ -2221,10 +2221,10 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_EXTENDED_PARTITION));
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
                         LineBuffer);
 
-    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
+    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
@@ -2338,10 +2338,10 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_LOGICAL_PARTITION));
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDDISK1),
                         LineBuffer);
 
-    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
+    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDPARTSIZE));
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
@@ -2492,7 +2492,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     CONSOLE_PrintTextXY(6, 10, "   %s", LineBuffer);
 
     DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTDELETE_1),
+    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
                         LineBuffer);
 
     while (TRUE)
@@ -2603,7 +2603,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                 CONSOLE_SetTextXY(8, 10, LineBuffer);
 
                 DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-                CONSOLE_PrintTextXY(8, 14, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                CONSOLE_PrintTextXY(8, 14, MUIGetString(STRING_HDDISK1),
                                     LineBuffer);
 
 
@@ -2830,7 +2830,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 #endif
 
         DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDISK1),
                             LineBuffer);
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
@@ -2859,7 +2859,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         }
 
         DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDDISK1),
                             LineBuffer);
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
@@ -2872,7 +2872,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         CONSOLE_SetTextXY(8, 10, LineBuffer);
 
         DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
-        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTDELETE_1),
+        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
                             LineBuffer);
     }
 
