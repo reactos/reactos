@@ -469,20 +469,18 @@ SHOpenPropSheetA(
     _In_opt_ IShellBrowser *pShellBrowser,
     _In_opt_z_ LPCSTR pszStartPage)
 {
-    LPCWSTR pszCaptionW, pszStartPageW;
     WCHAR szStartPageW[MAX_PATH], szCaptionW[MAX_PATH];
+    LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
 
     TRACE("(%s, %p, %u, %p, %p, %p, %s)", pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject,
           pShellBrowser, pszStartPage);
 
-    pszCaptionW = NULL;
     if (pszCaption)
     {
         SHAnsiToUnicode(pszCaption, szCaptionW, _countof(szCaptionW));
         pszCaptionW = szCaptionW;
     }
 
-    pszStartPageW = NULL;
     if (pszStartPage)
     {
         SHAnsiToUnicode(pszStartPage, szStartPageW, _countof(szStartPageW));
