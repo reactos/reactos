@@ -1251,7 +1251,7 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Die gew\201nschte Partition wird nun formatiert.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2302,9 +2302,9 @@ MUI_STRING deDEStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB-Tastaturen werden noch nicht vollst\204ndig unterst\201tzt\r\n"},
     {STRING_FORMATTINGPART,
-    "Ihre Festplatte wird formatiert"},
+    "Die Partition wird formatiert..."},
     {STRING_CHECKINGDISK,
-    "Ihre Festplatte wird \201berpr\201ft"},
+    "Die Festplatte wird \201berpr\201ft..."},
     {STRING_FORMATDISK1,
     " Partition mit dem %S-Dateisystem formatieren (Schnell) "},
     {STRING_FORMATDISK2,

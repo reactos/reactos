@@ -1271,7 +1271,7 @@ static MUI_ENTRY nlNLFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup gaat nu de partitie formatteren. Druk op ENTER om door te gaan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2324,9 +2324,9 @@ MUI_STRING nlNLStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB toetsenborden worden nog niet volledig ondersteund.\r\n"},
     {STRING_FORMATTINGPART,
-    "Setup is de vaste schijf aan het formatteren."},
+    "Setup is de partitie aan het formatteren..."},
     {STRING_CHECKINGDISK,
-    "Setup is de vaste schijf aan het controleren."},
+    "Setup is de vaste schijf aan het controleren..."},
     {STRING_FORMATDISK1,
     " Formatteer partitie als %S bestandssysteem (snel) "},
     {STRING_FORMATDISK2,

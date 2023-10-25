@@ -1258,7 +1258,7 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Installationen vil nu formatere partitionen. Tryk p\206 ENTER for at forts\221tte.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2300,9 +2300,9 @@ MUI_STRING daDKStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB-tastatuere er endnu ikke fuldt underst\233ttet\r\n"},
     {STRING_FORMATTINGPART,
-    "Installationen formatere din disk"},
+    "Installationen formaterer partitionen..."},
     {STRING_CHECKINGDISK,
-    "Installationen tjekker din disk"},
+    "Installationen tjekker disken..."},
     {STRING_FORMATDISK1,
     " Formater partitionen som %S-filesystemet (hurtigformatering) "},
     {STRING_FORMATDISK2,

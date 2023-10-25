@@ -1256,7 +1256,7 @@ static MUI_ENTRY idIDFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Penyetelan akan memformat partisi. Tekan ENTER untuk lanjut.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2297,9 +2297,9 @@ MUI_STRING idIDStrings[] =
     {STRING_CONSOLEFAIL3,
     "Papan ketik USB belum didukung sepenuhnya\r\n"},
     {STRING_FORMATTINGPART,
-    "Penyetelan sedang memformat cakram anda"},
+    "Penyetelan sedang memformat partisi..."},
     {STRING_CHECKINGDISK,
-    "Penyetelan sedang memeriksa cakram anda"},
+    "Penyetelan sedang memeriksa cakram..."},
     {STRING_FORMATDISK1,
     " Format partisi sebagai sistem berkas %S (format cepat) "},
     {STRING_FORMATDISK2,

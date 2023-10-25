@@ -1293,7 +1293,7 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup va formater la partition. Appuyer sur ENTR\220E pour continuer.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2327,9 +2327,9 @@ MUI_STRING frFRStrings[] =
     {STRING_CONSOLEFAIL3,
     "Les claviers USB ne sont pas compl\212tement support\202s actuellement\r\n"},
     {STRING_FORMATTINGPART,
-    "Setup formate votre disque"},
+    "Setup formate la partition..."},
     {STRING_CHECKINGDISK,
-    "Setup v\202rifie votre disque"},
+    "Setup v\202rifie le disque..."},
     {STRING_FORMATDISK1,
     " Formater la partition comme syst\212me de fichiers %S (formatage rapide) "},
     {STRING_FORMATDISK2,

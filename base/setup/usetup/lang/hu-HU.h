@@ -1150,7 +1150,7 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "A telep\241t\213 form\240zni fogja a part\241ci\242t. Nyomjon ENTER-t a folytat\240shoz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2188,9 +2188,9 @@ MUI_STRING huHUStrings[] =
     {STRING_CONSOLEFAIL3,
     "Az USB-s billenty\373zetek m\202g nincsenek teljesen t\240mogatva\r\n"},
     {STRING_FORMATTINGPART,
-    "A telep\241t\213 form\240zza a merevlemezt"},
+    "A telep\241t\213 form\240zza a part\241ci\242t..."},
     {STRING_CHECKINGDISK,
-    "A telep\241t\213 ellen\213rzi a merevlemezt"},
+    "A telep\241t\213 ellen\213rzi a merevlemezt..."},
     {STRING_FORMATDISK1,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel (gyorsform\240z\240s) "},
     {STRING_FORMATDISK2,

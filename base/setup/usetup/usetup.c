@@ -2784,8 +2784,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     DPRINT("FormatPartitionPage()\n");
 
-    MUIDisplayPage(FORMAT_PARTITION_PAGE);
-
     if (PartitionList == NULL || TempPartition == NULL)
     {
         /* FIXME: show an error dialog */
@@ -2799,6 +2797,15 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     SelectedFileSystem = FileSystemList->Selected;
     ASSERT(SelectedFileSystem && SelectedFileSystem->FileSystem);
+
+    MUIDisplayPage(FORMAT_PARTITION_PAGE);
+
+    PartitionDescription(PartEntry, Buffer, ARRAYSIZE(Buffer));
+    CONSOLE_SetTextXY(6, 10, Buffer);
+
+    DiskDescription(DiskEntry, Buffer, ARRAYSIZE(Buffer));
+    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
+                        Buffer);
 
     while (TRUE)
     {
@@ -2929,8 +2936,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     CHAR Buffer[MAX_PATH];
 
-    MUIDisplayPage(CHECK_FILE_SYSTEM_PAGE);
-
     if (PartitionList == NULL)
     {
         /* FIXME: show an error dialog */
@@ -2946,6 +2951,15 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystem: %S\n",
             PartEntry->PartitionType, (*PartEntry->FileSystem ? PartEntry->FileSystem : L"n/a"));
+
+    MUIDisplayPage(CHECK_FILE_SYSTEM_PAGE);
+
+    PartitionDescription(PartEntry, Buffer, ARRAYSIZE(Buffer));
+    CONSOLE_SetTextXY(6, 10, Buffer);
+
+    DiskDescription(PartEntry->DiskEntry, Buffer, ARRAYSIZE(Buffer));
+    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDDISK2),
+                        Buffer);
 
     /* Check the partition */
     Status = DoChkdsk(PartEntry);

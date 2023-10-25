@@ -1268,7 +1268,7 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalator sformatuje teraz partycj\251. Naci\230nij ENTER, aby kontynuowa\206.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2309,9 +2309,9 @@ MUI_STRING plPLStrings[] =
     {STRING_CONSOLEFAIL3,
     "Nie s\245 obecnie w pe\210ni obs\210ugiwane.\r\n"},
     {STRING_FORMATTINGPART,
-    "Instalator formatuje tw\242j dysk"},
+    "Instalator formatuje partycj\251..."},
     {STRING_CHECKINGDISK,
-    "Instalator sprawdza tw\242j dysk"},
+    "Instalator sprawdza dysk..."},
     {STRING_FORMATDISK1,
     " Formatuj partycj\251 w systemie plik\242w %S (szybkie formatowanie) "},
     {STRING_FORMATDISK2,

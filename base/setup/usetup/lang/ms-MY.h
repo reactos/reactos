@@ -1248,7 +1248,7 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Persediaan sekarang akan format partition. Tekan ENTER untuk teruskan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2282,9 +2282,9 @@ MUI_STRING msMYStrings[] =
     {STRING_CONSOLEFAIL3,
     "Papan kekunci USB tidak disokong sepenuhnya lagi\r\n"},
     {STRING_FORMATTINGPART,
-    "Persediaan sedang format cakera"},
+    "Persediaan sedang format partition..."},
     {STRING_CHECKINGDISK,
-    "Persediaan sedang menyemak cakera"},
+    "Persediaan sedang menyemak cakera..."},
     {STRING_FORMATDISK1,
     " Format partition seperti sistem fail %S (format ringkas) "},
     {STRING_FORMATDISK2,

@@ -1264,7 +1264,7 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Tento odd\241l bude nyn\241 zform\240tov\240n. Stisknut\241m kl\240vesy ENTER za\237nete.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2298,9 +2298,9 @@ MUI_STRING csCZStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB kl\240vesnice zat\241m nejsou pln\330 podporov\240ny\r\n"},
     {STRING_FORMATTINGPART,
-    "Instalace form\240tuje disk"},
+    "Instalace form\240tuje odd\241l..."},
     {STRING_CHECKINGDISK,
-    "Instalace kontroluje disk"},
+    "Instalace kontroluje disk..."},
     {STRING_FORMATDISK1,
     " Zform\240tovat odd\241l na souborov\354 syst\202m %S (rychle) "},
     {STRING_FORMATDISK2,

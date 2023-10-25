@@ -1247,7 +1247,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Kur, \237imdi b\224l\201m\201 bi\207imlendirecek. Devam etmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2274,9 +2274,9 @@ MUI_STRING trTRStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB klavye daha t\201m\201yle desteklenmemektedir.\r\n"},
     {STRING_FORMATTINGPART,
-    "Kur, diskinizi bi\207imlendiriyor."},
+    "Kur, b\224l\201m\201 bi\207imlendiriyor..."},
     {STRING_CHECKINGDISK,
-    "Kur, diskinizi g\224zden ge\207iriyor."},
+    "Kur, diski g\224zden ge\207iriyor..."},
     {STRING_FORMATDISK1,
     " B\224l\201m\201 %S dosya sistemiyle h\215zl\215 bi\207imlendir. "},
     {STRING_FORMATDISK2,

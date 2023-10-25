@@ -1265,7 +1265,7 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Partitionen kommer nu att formaters Tryck ENTER f\224r att forts\204tta.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2301,9 +2301,9 @@ MUI_STRING svSEStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB tangentbord \204r itne helt st\224tt \204n\r\n"},
     {STRING_FORMATTINGPART,
-    "Setup formaterar din disk"},
+    "Setup formaterar partitionen..."},
     {STRING_CHECKINGDISK,
-    "Setup under\224ker din disk"},
+    "Setup unders\224ker disken..."},
     {STRING_FORMATDISK1,
     " Formaterar partition som %S filsystem (snabbformatering) "},
     {STRING_FORMATDISK2,

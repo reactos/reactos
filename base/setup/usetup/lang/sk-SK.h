@@ -1265,7 +1265,7 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "In\347tal\240tor teraz naform\240tuje oblas\234. Stla\237te ENTER pre pokra\237ovanie.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2311,9 +2311,9 @@ MUI_STRING skSKStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB kl\240vesnica e\347te nie je plne podporovan\240\r\n"},
     {STRING_FORMATTINGPART,
-    "In\347tal\240tor form\240tuje V\240\347 disk"},
+    "In\347tal\240tor form\240tuje oblas\234..."},
     {STRING_CHECKINGDISK,
-    "In\347tal\240tor kontroluje V\240\347 disk"},
+    "In\347tal\240tor kontroluje disk..."},
     {STRING_FORMATDISK1,
     " Naform\240tova\234 oblas\234 ako syst\202m s\243borov %S (r\354chly form\240t) "},
     {STRING_FORMATDISK2,

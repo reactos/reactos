@@ -1259,7 +1259,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "N\201\201d vormindatakse partitsioon. Vajuta ENTER j\204tkamiseks.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2292,9 +2292,9 @@ MUI_STRING etEEStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB klaviatuurid ei ole veel toetatud\r\n"},
     {STRING_FORMATTINGPART,
-    "K\344vaketta vormindamine"},
+    "Partitsioon vormindamine..."},
     {STRING_CHECKINGDISK,
-    "K\344vaketta kontrollimine"},
+    "K\344vaketta kontrollimine..."},
     {STRING_FORMATDISK1,
     " Vorminda partitsioon %S failis\201steemiga (kiire vormindus) "},
     {STRING_FORMATDISK2,

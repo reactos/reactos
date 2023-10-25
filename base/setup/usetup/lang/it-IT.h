@@ -1262,7 +1262,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup formatter\x85 la partizione. Premere INVIO per continuare.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2303,9 +2303,9 @@ MUI_STRING itITStrings[] =
     {STRING_CONSOLEFAIL3,
     "le tastiere USB non sono ancora completamente supportate\r\n"},
     {STRING_FORMATTINGPART,
-    "Setup sta formattando il disco"},
+    "Setup sta formattando la partizione..."},
     {STRING_CHECKINGDISK,
-    "Setup sta controllando il disco"},
+    "Setup sta controllando il disco..."},
     {STRING_FORMATDISK1,
     " Formatta la partizione con file system %S (formattazione rapida) "},
     {STRING_FORMATDISK2,

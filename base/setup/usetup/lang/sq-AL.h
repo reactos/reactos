@@ -1263,7 +1263,7 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalimi tani do t\211 formatoj\211 particionin. Kliko ENTER p\211r t\211 vazhduar.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2312,9 +2312,9 @@ MUI_STRING sqALStrings[] =
     {STRING_CONSOLEFAIL3,
     "Tastierat USB nuk jan\211 t\211 mb\211shtetura ende plot\211sisht\r\n"},
     {STRING_FORMATTINGPART,
-    "Instalimi po formaton diskun tuaj"},
+    "Instalimi po formaton particionin..."},
     {STRING_CHECKINGDISK,
-    "Instalimi \211sht\211 duke kontrolluar diskun tuaj"},
+    "Instalimi \211sht\211 duke kontrolluar diskun..."},
     {STRING_FORMATDISK1,
     " Formato particionin si %S dokumentat e sistemit (formatim i shpejt\211) "},
     {STRING_FORMATDISK2,

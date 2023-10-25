@@ -1266,7 +1266,7 @@ static MUI_ENTRY hrHRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalacijski program \206e sada formatirati particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2321,9 +2321,9 @@ MUI_STRING hrHRStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB tipkovnice nisu jo\347 potupuno podr\247ane\r\n"},
     {STRING_FORMATTINGPART,
-    "Instalacijski program formatira va\347 disk"},
+    "Instalacijski program formatira particiju..."},
     {STRING_CHECKINGDISK,
-    "Instalacijski sustav provjerava va\347 disk"},
+    "Instalacijski program provjerava disk..."},
     {STRING_FORMATDISK1,
     " Formatiraj particiju kao %S sustav datoteka (brzo formatiranje) "},
     {STRING_FORMATDISK2,

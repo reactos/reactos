@@ -1297,6 +1297,13 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         8,
+        "Urmeaz\343 formatarea parti\376iei.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        16,
         "Urmeaz\343 formatarea parti\376iei. Tasta\376i ENTER pentru a continua.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2351,7 +2358,7 @@ MUI_STRING roROStrings[] =
     {STRING_CONSOLEFAIL3,
     "Tastaturile USB nu sunt \356nc\343 toate acceptate\r\n"},
     {STRING_FORMATTINGPART,
-    "Disc \356n curs de formatare..."},
+    "Parti\376ia \356n curs de formatare..."},
     {STRING_CHECKINGDISK,
     "Disc \356n curs de verificare..."},
     {STRING_FORMATDISK1,

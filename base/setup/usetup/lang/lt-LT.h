@@ -1267,7 +1267,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup will now format the partition. Press ENTER to continue.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -2301,9 +2301,9 @@ MUI_STRING ltLTStrings[] =
     {STRING_CONSOLEFAIL3,
     "USB keyboards are not fully supported yet\r\n"},
     {STRING_FORMATTINGPART,
-    "Setup is formatting your disk"},
+    "Setup is formatting the partition..."},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Setup is checking the disk..."},
     {STRING_FORMATDISK1,
     " Format partition as %S file system (quick format) "},
     {STRING_FORMATDISK2,
