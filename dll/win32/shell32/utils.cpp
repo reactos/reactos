@@ -164,6 +164,19 @@ Quit:
     return ret;
 }
 
+BOOL IsShutdownAllowed(VOID)
+{
+    return SHTestTokenPrivilegeW(NULL, SE_SHUTDOWN_NAME);
+}
+
+/*************************************************************************
+ *                IsSuspendAllowed (SHELL32.53)
+ */
+BOOL WINAPI IsSuspendAllowed(VOID)
+{
+    return IsShutdownAllowed() && IsPwrSuspendAllowed();
+}
+
 /*************************************************************************
  *                SHGetShellStyleHInstance (SHELL32.749)
  */

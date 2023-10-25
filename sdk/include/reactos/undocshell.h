@@ -697,6 +697,7 @@ SHInvokePrivilegedFunctionW(
 
 BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
+BOOL WINAPI IsSuspendAllowed(VOID);
 
 /*****************************************************************************
  * Shell32 resources
