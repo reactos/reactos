@@ -452,3 +452,35 @@ LargeIntegerToString(
     return Int64ToString(pLargeInt->QuadPart, pszOut, cchOut, bUseFormat,
                          pNumberFormat, dwNumberFlags);
 }
+
+/*************************************************************************
+ *  SHOpenPropSheetA [SHELL32.707]
+ */
+EXTERN_C
+BOOL WINAPI
+SHOpenPropSheetA(
+    _In_opt_z_ LPCSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_z_ LPCSTR pszStartPage)
+{
+    LPCWSTR pszStartPageW = NULL;
+    WCHAR szStartPageW[MAX_PATH], szCaptionW[MAX_PATH];
+
+    TRACE("(%s, %p, %u, %p, %p, %p, %s)", pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject,
+          pShellBrowser, pszStartPage);
+
+    SHAnsiToUnicode(pszCaption, szCaptionW, _countof(szCaptionW));
+
+    if (pszStartPage)
+    {
+        SHAnsiToUnicode(pszStartPage, szStartPageW, _countof(szStartPageW));
+        pszStartPageW = szStartPageW;
+    }
+
+    return SHOpenPropSheetW(szCaptionW, ahKeys, cKeys, pclsidDefault,
+                            pDataObject, pShellBrowser, pszStartPageW);
+}

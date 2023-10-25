@@ -223,23 +223,6 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
  */
 EXTERN_C BOOL
 WINAPI
-SHOpenPropSheetA(LPCSTR lpCaption,
-                 HKEY hKeys[],
-                 UINT uCount,
-                 const CLSID *pClsID,
-                 IDataObject *pDataObject,
-                 IShellBrowser *pShellBrowser,
-                 LPCSTR lpStartPage)
-{
-    FIXME("SHOpenPropSheetA() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 SHOpenPropSheetW(LPCWSTR lpCaption,
                  HKEY hKeys[],
                  UINT uCount,
