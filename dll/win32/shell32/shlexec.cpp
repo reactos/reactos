@@ -713,7 +713,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     STARTUPINFOW  startup;
     PROCESS_INFORMATION info;
     UINT_PTR retval = SE_ERR_NOASSOC;
-    UINT gcdret = 0, lasterror;
+    UINT gcdret = 0, lasterror = 0;
     WCHAR curdir[MAX_PATH];
     DWORD dwCreationFlags;
     const WCHAR *lpDirectory = NULL;
@@ -818,7 +818,8 @@ done:
     {
         if (!SetCurrentDirectoryW(curdir))
             ERR("cannot return to directory %s\n", debugstr_w(curdir));
-        RestoreLastError(lasterror);
+        if (lasterror)
+            RestoreLastError(lasterror);
     }
     return retval;
 }
