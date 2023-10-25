@@ -455,6 +455,8 @@ LargeIntegerToString(
 
 /*************************************************************************
  *  SHOpenPropSheetA [SHELL32.707]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta
  */
 EXTERN_C
 BOOL WINAPI

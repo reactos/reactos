@@ -698,16 +698,6 @@ SHInvokePrivilegedFunctionW(
 BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
 
-BOOL WINAPI
-SHOpenPropSheetA(
-    _In_opt_z_ LPCSTR pszCaption,
-    _In_opt_ HKEY *ahKeys,
-    _In_ UINT cKeys,
-    _In_ const CLSID *pclsidDefault,
-    _In_ IDataObject *pDataObject,
-    _In_opt_ IShellBrowser *pShellBrowser,
-    _In_opt_z_ LPCSTR pszStartPage);
-
 /*****************************************************************************
  * Shell32 resources
  */
