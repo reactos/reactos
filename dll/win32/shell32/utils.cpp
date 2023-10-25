@@ -174,6 +174,7 @@ BOOL IsShutdownAllowed(VOID)
  */
 BOOL WINAPI IsSuspendAllowed(VOID)
 {
+    TRACE("()\n");
     return IsShutdownAllowed() && IsPwrSuspendAllowed();
 }
 
