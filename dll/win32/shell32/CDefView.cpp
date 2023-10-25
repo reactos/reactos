@@ -198,7 +198,7 @@ class CDefView :
         void OnDeactivate();
         void DoActivate(UINT uState);
         HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, LPCSTR lpVerb, POINT* pt = NULL);
+        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt = NULL);
         LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
 
         // *** IOleWindow methods ***
@@ -1514,7 +1514,7 @@ UINT CDefView::GetSelections()
     return m_cidl;
 }
 
-HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, LPCSTR lpVerb, POINT* pt)
+HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt)
 {
     CMINVOKECOMMANDINFOEX cmi;
 
