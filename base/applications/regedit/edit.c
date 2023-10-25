@@ -50,10 +50,10 @@ void error(HWND hwnd, INT resId, ...)
     hInstance = GetModuleHandle(0);
 
     if (!LoadStringW(hInstance, IDS_ERROR, title, ARRAY_SIZE(title)))
-        wcscpy(title, L"Error");
+        StringCbCopyW(title, sizeof(title), L"Error");
 
     if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
-        wcscpy(errfmt, L"Unknown error string!");
+        StringCbCopyW(errfmt, sizeof(errfmt), L"Unknown error string!");
 
     va_start(ap, resId);
     _vsnwprintf(errstr, ARRAY_SIZE(errstr), errfmt, ap);
@@ -66,7 +66,7 @@ static void error_code_messagebox(HWND hwnd, DWORD error_code)
 {
     WCHAR title[256];
     if (!LoadStringW(hInst, IDS_ERROR, title, ARRAY_SIZE(title)))
-        wcscpy(title, L"Error");
+        StringCbCopyW(title, sizeof(title), L"Error");
     ErrorMessageBox(hwnd, title, error_code);
 }
 
@@ -81,13 +81,13 @@ void warning(HWND hwnd, INT resId, ...)
     hInstance = GetModuleHandle(0);
 
     if (!LoadStringW(hInstance, IDS_WARNING, title, ARRAY_SIZE(title)))
-        wcscpy(title, L"Warning");
+        StringCbCopyW(title, sizeof(title), L"Warning");
 
     if (!LoadStringW(hInstance, resId, errfmt, ARRAY_SIZE(errfmt)))
-        wcscpy(errfmt, L"Unknown error string!");
+        StringCbCopyW(errfmt, sizeof(errfmt), L"Unknown error string!");
 
     va_start(ap, resId);
-    _vsnwprintf(errstr, ARRAY_SIZE(errstr), errfmt, ap);
+    StringCbVPrintfW(errstr, sizeof(errstr), errfmt, ap);
     va_end(ap);
 
     MessageBoxW(hwnd, errstr, title, MB_OK | MB_ICONSTOP);
@@ -304,7 +304,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
-        swprintf(ValueString, L"%lx", dwordValueData);
+        StringCbPrintfW(ValueString, sizeof(ValueString), L"%lx", dwordValueData);
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
         SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -327,7 +327,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                     }
                 }
-                swprintf(ValueString, L"%lx", Value);
+                StringCbPrintfW(ValueString, sizeof(ValueString), L"%lx", Value);
                 SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -347,7 +347,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         }
                     }
                 }
-                swprintf(ValueString, L"%lu", Value);
+                StringCbPrintfW(ValueString, sizeof(ValueString), L"%lu", Value);
                 SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
                 return TRUE;
             }
@@ -1491,6 +1491,7 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     LPCWSTR s;
     LPWSTR lpNewSubKey = NULL;
     LONG Ret = 0;
+    SIZE_T cbNewSubKey;
 
     if (!lpSubKey)
         return Ret;
@@ -1499,11 +1500,12 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     if (s)
     {
         s++;
-        lpNewSubKey = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR));
+        cbNewSubKey = (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR);
+        lpNewSubKey = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
         if (lpNewSubKey != NULL)
         {
-            memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
-            wcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
+            StringCbCopyNW(lpNewSubKey, cbNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
+            StringCbCatW(lpNewSubKey, cbNewSubKey, lpNewName);
             lpNewName = lpNewSubKey;
         }
         else
