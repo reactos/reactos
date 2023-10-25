@@ -200,7 +200,7 @@
 201 stdcall -noname SHDesktopMessageLoop(ptr)
 202 stub -noname DDEHandleViewFolderNotify
 203 stdcall -noname AddCommasW(long wstr)
-204 stdcall -noname ShortSizeFormatW(double)
+204 stdcall -noname ShortSizeFormatW(long ptr)
 205 stdcall -noname Printer_LoadIconsW(wstr ptr ptr)
 206 stdcall ExtractAssociatedIconA(long str ptr)
 207 stdcall ExtractAssociatedIconExA(long str long long)
