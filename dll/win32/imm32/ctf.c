@@ -17,10 +17,129 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * https://googleprojectzero.blogspot.com/2019/08/down-rabbit-hole.html
  */
 
-// Win: LoadCtfIme
+/* Define the function types FN_... for CTF IME functions */
+#undef DEFINE_CTF_IME_FN
+#define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
+    typedef ret_type (WINAPI *FN_##func_name)params;
+#include "CtfImeTable.h"
+
+HINSTANCE g_hCtfIme = NULL;
+
+#define CTF_IME_FN(func_name) g_p##func_name
+
+/* Define the global variables for CTF IME functions */
+#undef DEFINE_CTF_IME_FN
+#define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
+    FN_##func_name g_p##func_name = NULL;
+#include "CtfImeTable.h"
+
+typedef BOOL (WINAPI *FN_ApphelpCheckIME)(LPCWSTR);
+
+/* FIXME: This is kernel32.dll function */
+BOOL
+WINAPI
+BaseCheckAppcompatCache(IN LPCWSTR ApplicationName,
+                        IN HANDLE FileHandle,
+                        IN LPCWSTR Environment,
+                        OUT PULONG Reason);
+
+BOOL Imm32CheckAndApplyAppCompat(ULONG dwReason, LPCWSTR pszAppName)
+{
+    HINSTANCE hinstApphelp;
+    FN_ApphelpCheckIME pApphelpCheckIME;
+
+    if (BaseCheckAppcompatCache(pszAppName, INVALID_HANDLE_VALUE, NULL, &dwReason))
+        return TRUE;
+
+    hinstApphelp = GetModuleHandleW(L"apphelp.dll");
+    if (!hinstApphelp)
+    {
+        hinstApphelp = LoadLibraryW(L"apphelp.dll");
+        if (!hinstApphelp)
+            return TRUE;
+    }
+
+    pApphelpCheckIME = (FN_ApphelpCheckIME)GetProcAddress(hinstApphelp, "ApphelpCheckIME");
+    if (!pApphelpCheckIME)
+        return TRUE;
+
+    return pApphelpCheckIME(pszAppName);
+}
+
 HMODULE APIENTRY Imm32LoadCtfIme(VOID)
 {
-    return NULL;
+    BOOL bSuccess = FALSE;
+    IMEINFOEX ImeInfoEx;
+    WCHAR szImeFile[MAX_PATH];
+
+    RtlEnterCriticalSection(&gcsImeDpi);
+    do
+    {
+        if (g_hCtfIme)
+            break;
+
+        /*
+         * NOTE: (HKL)0x04090409 is English US keyboard (default).
+         * The Cicero keyboard uses English US keyboard.
+         */
+        if (!ImmLoadLayout((HKL)ULongToHandle(0x04090409), &ImeInfoEx))
+            break;
+
+        Imm32GetSystemLibraryPath(szImeFile, _countof(szImeFile), ImeInfoEx.wszImeFile);
+
+        if (!Imm32CheckAndApplyAppCompat(0, szImeFile))
+            break;
+
+        g_hCtfIme = LoadLibraryW(szImeFile);
+        if (!g_hCtfIme)
+            break;
+
+        bSuccess = TRUE;
+
+#undef DEFINE_CTF_IME_FN
+#define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
+        CTF_IME_FN(func_name) = (FN_##func_name)GetProcAddress(g_hCtfIme, #func_name); \
+        if (!CTF_IME_FN(func_name)) \
+        { \
+            bSuccess = FALSE; \
+            break; \
+        }
+#include "CtfImeTable.h"
+    } while (0);
+
+    if (g_hCtfIme && !bSuccess)
+    {
+#undef DEFINE_CTF_IME_FN
+#define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
+        CTF_IME_FN(func_name) = NULL;
+#include "CtfImeTable.h"
+
+        FreeLibrary(g_hCtfIme);
+        g_hCtfIme = NULL;
+    }
+
+    RtlLeaveCriticalSection(&gcsImeDpi);
+    return g_hCtfIme;
+}
+
+HRESULT Imm32CtfImeCreateThreadMgr(VOID)
+{
+    if (!Imm32LoadCtfIme() || CTF_IME_FN(CtfImeCreateThreadMgr) == NULL)
+        return E_FAIL;
+    return CTF_IME_FN(CtfImeCreateThreadMgr)();
+}
+
+HRESULT Imm32CtfImeCreateInputContext(HIMC hIMC)
+{
+    if (!Imm32LoadCtfIme() || CTF_IME_FN(CtfImeCreateInputContext) == NULL)
+        return E_FAIL;
+    return CTF_IME_FN(CtfImeCreateInputContext)(hIMC);
+}
+
+BOOL CALLBACK Imm32EnumIMC(HIMC hIMC, LPARAM lParam)
+{
+    Imm32CtfImeCreateInputContext(hIMC);
+    return TRUE;
 }
 
 // Win: Internal_CtfImeDestroyInputContext
@@ -51,6 +170,31 @@ HRESULT APIENTRY CtfImmTIMCreateInputContext(HIMC hIMC)
 {
     TRACE("(%p)\n", hIMC);
     return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *      CtfAImmActivate (IMM32.1)
+ */
+HRESULT WINAPI CtfAImmActivate(HINSTANCE *phinstCtfIme)
+{
+    HINSTANCE hinstCtfIme;
+    HRESULT hr;
+
+    TRACE("(%p)\n", phinstCtfIme);
+
+    hinstCtfIme = Imm32LoadCtfIme();
+    hr = Imm32CtfImeCreateThreadMgr();
+    if (hr == S_OK)
+    {
+        GetWin32ClientInfo()->CI_flags |= 0x800; /* FIXME */
+        GetWin32ClientInfo()->CI_flags &= ~CI_TFSDISABLED;
+        ImmEnumInputContext(0, Imm32EnumIMC, 0);
+    }
+
+    if (phinstCtfIme)
+        *phinstCtfIme = hinstCtfIme;
+
+    return hr;
 }
 
 /***********************************************************************

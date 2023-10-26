@@ -14,6 +14,7 @@ extern "C" {
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
 
+BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx);
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
 PIMEDPI WINAPI ImmLockImeDpi(HKL hKL);
