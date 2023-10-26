@@ -331,7 +331,7 @@ GetAdaptersAddresses(
     DWORD MIN_SIZE = 15 * 1024;
     PIP_ADAPTER_ADDRESSES PreviousAA = NULL;
 
-    TRACE("Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p.\n",
+    TRACE("Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p\n",
           Family, Flags, Reserved, pAdapterAddresses, pOutBufLen);
 
     if (!pOutBufLen)
