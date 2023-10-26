@@ -660,7 +660,7 @@ Sigur doriți să deschideți acest fișier?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Crearea unei noi extensii"
+CAPTION "Crează o nouă extensie"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
