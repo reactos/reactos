@@ -1105,11 +1105,23 @@ void delete_registry_key(WCHAR *reg_key_name)
     if (!(key_class = parse_key_name(reg_key_name, &key_name)))
     {
         if (key_name) *(key_name - 1) = 0;
+#ifdef __REACTOS__
+        output_message(STRING_INVALID_SYSTEM_KEY, reg_key_name);
+        return;
+#else
         error_exit(STRING_INVALID_SYSTEM_KEY, reg_key_name);
+#endif
     }
 
     if (!key_name || !*key_name)
+#ifdef __REACTOS__
+    {
+        output_message(STRING_DELETE_FAILED, reg_key_name);
+        return;
+    }
+#else
         error_exit(STRING_DELETE_FAILED, reg_key_name);
+#endif
 
 #ifdef __REACTOS__
     SHDeleteKey(key_class, key_name);
@@ -1460,7 +1472,12 @@ static FILE *REGPROC_open_export_file(WCHAR *file_name, BOOL unicode)
         if (!file)
         {
             _wperror(L"regedit");
+#ifdef __REACTOS__
+            output_message(STRING_CANNOT_OPEN_FILE, file_name);
+            return NULL;
+#else
             error_exit(STRING_CANNOT_OPEN_FILE, file_name);
+#endif
         }
     }
 
@@ -1506,6 +1523,10 @@ static BOOL export_key(WCHAR *file_name, WCHAR *path, BOOL unicode)
         return FALSE;
 
     fp = REGPROC_open_export_file(file_name, unicode);
+#ifdef __REACTOS__
+    if (!fp)
+        return TRUE; /* Error message is already displayed */
+#endif
     export_registry_data(fp, key, path, unicode);
     export_newline(fp, unicode);
     fclose(fp);
@@ -1522,6 +1543,10 @@ static BOOL export_all(WCHAR *file_name, WCHAR *path, BOOL unicode)
     WCHAR *class_name;
 
     fp = REGPROC_open_export_file(file_name, unicode);
+#ifdef __REACTOS__
+    if (!fp)
+        return TRUE; /* Error message is already displayed */
+#endif
 
     for (i = 0; i < ARRAY_SIZE(classes); i++)
     {
