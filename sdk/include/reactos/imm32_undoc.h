@@ -19,9 +19,10 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
 PIMEDPI WINAPI ImmLockImeDpi(HKL hKL);
 VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi);
-HRESULT APIENTRY CtfImmTIMCreateInputContext(HIMC hIMC);
-HRESULT APIENTRY CtfImmTIMDestroyInputContext(HIMC hIMC);
 HRESULT WINAPI CtfImmTIMActivate(HKL hKL);
+
+HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
+HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
 
 #ifdef __cplusplus
 } // extern "C"
