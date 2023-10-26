@@ -119,6 +119,22 @@ void WINAPIV error_exit(unsigned int id, ...)
     exit(0); /* regedit.exe always terminates with error code zero */
 }
 
+#ifdef __REACTOS__
+void WINAPIV error_dont_exit(unsigned int id, ...)
+{
+    WCHAR fmt[256], text[512], title[64];
+    va_list va;
+
+    LoadStringW(hInst, IDS_APP_TITLE, title, _countof(title));
+    LoadStringW(hInst, id, fmt, _countof(fmt));
+
+    va_start(va, id);
+    FormatMessageW(FORMAT_MESSAGE_FROM_STRING, fmt, 0, 0, text, _countof(text), &va);
+    MessageBoxW(hFrameWnd, text, title, MB_ICONERROR);
+    va_end(va);
+}
+#endif
+
 typedef enum {
     ACTION_ADD, ACTION_EXPORT, ACTION_DELETE
 } REGEDIT_ACTION;
@@ -219,7 +235,11 @@ static void PerformRegAction(REGEDIT_ACTION action, WCHAR **argv, int *i)
             break;
         }
     default:
+#ifdef __REACTOS__
+        error_dont_exit(STRING_UNHANDLED_ACTION);
+#else
         error_exit(STRING_UNHANDLED_ACTION);
+#endif
         break;
     }
 }
