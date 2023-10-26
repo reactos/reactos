@@ -221,23 +221,6 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-SHOpenPropSheetW(LPCWSTR lpCaption,
-                 HKEY hKeys[],
-                 UINT uCount,
-                 const CLSID *pClsID,
-                 IDataObject *pDataObject,
-                 IShellBrowser *pShellBrowser,
-                 LPCWSTR lpStartPage)
-{
-    FIXME("SHOpenPropSheetW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 CDefFolderMenu_MergeMenu(HINSTANCE hInstance,
