@@ -786,17 +786,6 @@ DAD_DragEnterEx2(HWND hwndTarget,
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-IsSuspendAllowed(VOID)
-{
-    FIXME("IsSuspendAllowed() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C UINT
 WINAPI
 SHGetNetResource(LPVOID lpUnknown1, UINT iIndex, LPVOID lpUnknown2, UINT cchMax)
