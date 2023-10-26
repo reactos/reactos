@@ -75,10 +75,9 @@ static PPARTLIST PartitionList = NULL;
 /* Currently selected partition entry in the list */
 static PPARTENTRY CurrentPartition = NULL;
 static enum {
-    PartTypePrimary,
-    PartTypeExtended,
-    PartTypeLogical
-} PartCreateType = PartTypePrimary;
+    PartTypeData,    // On MBR-disks, primary or logical partition
+    PartTypeExtended // MBR-disk container
+} PartCreateType = PartTypeData;
 
 /* List of supported file systems for the partition to be formatted */
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
@@ -1607,20 +1606,10 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 ASSERT(CurrentPartition != NULL);
                 ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
 
-                if (CurrentPartition->LogicalPartition)
-                {
-                    CreateLogicalPartition(PartitionList,
-                                           CurrentPartition,
-                                           CurrentPartition->SectorCount.QuadPart,
-                                           TRUE);
-                }
-                else
-                {
-                    CreatePrimaryPartition(PartitionList,
-                                           CurrentPartition,
-                                           CurrentPartition->SectorCount.QuadPart,
-                                           TRUE);
-                }
+                CreatePartition(PartitionList,
+                                CurrentPartition,
+                                CurrentPartition->SectorCount.QuadPart,
+                                TRUE);
 
 // FIXME?? Aren't we going to enter an infinite loop, if this test fails??
                 if (!IsDiskSizeValid(CurrentPartition))
@@ -1654,42 +1643,40 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
     while (TRUE)
     {
+        ULONG uID;
+
         CurrentPartition = ListUi.CurrentPartition;
 
         /* Update status text */
         if (CurrentPartition == NULL)
         {
-            CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
-        }
-        else if (CurrentPartition->LogicalPartition)
-        {
-            if (CurrentPartition->IsPartitioned)
-            {
-                CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
-            }
-            else
-            {
-                CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATELOGICAL));
-            }
+            // FIXME: If we get a NULL current partition, this means that
+            // the current disk is of unrecognized type. So we should display
+            // instead a status string to initialize the disk with one of
+            // the recognized partitioning schemes (MBR, later: GPT, etc.)
+            // For the time being we don't have that, so use instead another
+            // known string.
+            uID = STRING_INSTALLCREATEPARTITION;
         }
         else
         {
             if (CurrentPartition->IsPartitioned)
             {
-                if (IsContainerPartition(CurrentPartition->PartitionType))
+                uID = STRING_INSTALLDELETEPARTITION;
+                if (!CurrentPartition->LogicalPartition &&
+                    IsContainerPartition(CurrentPartition->PartitionType))
                 {
-                    CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
-                }
-                else
-                {
-                    CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLDELETEPARTITION));
+                    uID = STRING_DELETEPARTITION;
                 }
             }
             else
             {
-                CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
+                uID = STRING_INSTALLCREATEPARTITION;
+                if (CurrentPartition->LogicalPartition)
+                    uID = STRING_INSTALLCREATELOGICAL;
             }
         }
+        CONSOLE_SetStatusText(MUIGetString(uID));
 
         CONSOLE_ConInKey(Ir);
 
@@ -1741,34 +1728,17 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             if (CurrentPartition->IsPartitioned == FALSE)
             {
-                if (CurrentPartition->LogicalPartition)
+                Error = PartitionCreationChecks(CurrentPartition);
+                if (Error != NOT_AN_ERROR)
                 {
-                    Error = LogicalPartitionCreationChecks(CurrentPartition);
-                    if (Error != NOT_AN_ERROR)
-                    {
-                        MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                        return SELECT_PARTITION_PAGE;
-                    }
-
-                    CreateLogicalPartition(PartitionList,
-                                           CurrentPartition,
-                                           0ULL,
-                                           TRUE);
+                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE;
                 }
-                else
-                {
-                    Error = PrimaryPartitionCreationChecks(CurrentPartition);
-                    if (Error != NOT_AN_ERROR)
-                    {
-                        MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                        return SELECT_PARTITION_PAGE;
-                    }
 
-                    CreatePrimaryPartition(PartitionList,
-                                           CurrentPartition,
-                                           0ULL,
-                                           TRUE);
-                }
+                CreatePartition(PartitionList,
+                                CurrentPartition,
+                                0ULL,
+                                TRUE);
             }
 
             if (!IsDiskSizeValid(CurrentPartition))
@@ -1787,14 +1757,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             if (CurrentPartition->LogicalPartition == FALSE)
             {
-                Error = PrimaryPartitionCreationChecks(CurrentPartition);
+                Error = PartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
                     return SELECT_PARTITION_PAGE;
                 }
 
-                PartCreateType = PartTypePrimary;
+                PartCreateType = PartTypeData;
                 return CREATE_PARTITION_PAGE;
             }
         }
@@ -1821,14 +1791,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             if (CurrentPartition->LogicalPartition)
             {
-                Error = LogicalPartitionCreationChecks(CurrentPartition);
+                Error = PartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
                     return SELECT_PARTITION_PAGE;
                 }
 
-                PartCreateType = PartTypeLogical;
+                PartCreateType = PartTypeData;
                 return CREATE_PARTITION_PAGE;
             }
         }
@@ -2102,12 +2072,16 @@ CreatePartitionPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    if (PartCreateType == PartTypePrimary)
+    if (PartCreateType == PartTypeData)
+    {
         uID = STRING_CHOOSE_NEW_PARTITION;
-    else if (PartCreateType == PartTypeExtended)
+        if (CurrentPartition->LogicalPartition)
+            uID = STRING_CHOOSE_NEW_LOGICAL_PARTITION;
+    }
+    else // if (PartCreateType == PartTypeExtended)
+    {
         uID = STRING_CHOOSE_NEW_EXTENDED_PARTITION;
-    else // if (PartCreateType == PartTypeLogical)
-        uID = STRING_CHOOSE_NEW_LOGICAL_PARTITION;
+    }
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(uID));
 
@@ -2169,25 +2143,18 @@ CreatePartitionPage(PINPUT_RECORD Ir)
 
             DPRINT("Partition size: %I64u bytes\n", PartSize);
 
-            if (PartCreateType == PartTypePrimary)
+            if (PartCreateType == PartTypeData)
             {
-                CreatePrimaryPartition(PartitionList,
-                                       CurrentPartition,
-                                       SectorCount,
-                                       FALSE);
+                CreatePartition(PartitionList,
+                                CurrentPartition,
+                                SectorCount,
+                                FALSE);
             }
-            else if (PartCreateType == PartTypeExtended)
+            else // if (PartCreateType == PartTypeExtended)
             {
                 CreateExtendedPartition(PartitionList,
                                         CurrentPartition,
                                         SectorCount);
-            }
-            else // if (PartCreateType == PartTypeLogical)
-            {
-                CreateLogicalPartition(PartitionList,
-                                       CurrentPartition,
-                                       SectorCount,
-                                       FALSE);
             }
 
             return SELECT_PARTITION_PAGE;
@@ -2443,10 +2410,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
          */
         if (!SystemPartition->IsPartitioned)
         {
-            CreatePrimaryPartition(PartitionList,
-                                   SystemPartition,
-                                   0LL, // SystemPartition->SectorCount.QuadPart,
-                                   TRUE);
+            CreatePartition(PartitionList,
+                            SystemPartition,
+                            0LL, // SystemPartition->SectorCount.QuadPart,
+                            TRUE);
             ASSERT(SystemPartition->IsPartitioned);
         }
 

@@ -294,25 +294,26 @@ GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
 
+ERROR_NUMBER
+PartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
+
+ERROR_NUMBER
+ExtendedPartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
+
 BOOLEAN
-CreatePrimaryPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate);
+CreatePartition(
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_ ULONGLONG SectorCount,
+    _In_ BOOLEAN AutoCreate);
 
 BOOLEAN
 CreateExtendedPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount);
-
-BOOLEAN
-CreateLogicalPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate);
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_ ULONGLONG SectorCount);
 
 NTSTATUS
 DismountVolume(
@@ -359,18 +360,6 @@ VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
-
-ERROR_NUMBER
-PrimaryPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
-
-ERROR_NUMBER
-ExtendedPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
-
-ERROR_NUMBER
-LogicalPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
 
 BOOLEAN
 GetNextUnformattedPartition(
