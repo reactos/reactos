@@ -1106,7 +1106,7 @@ void delete_registry_key(WCHAR *reg_key_name)
     {
         if (key_name) *(key_name - 1) = 0;
 #ifdef __REACTOS__
-        error_dont_exit(STRING_INVALID_SYSTEM_KEY, reg_key_name);
+        output_message(STRING_INVALID_SYSTEM_KEY, reg_key_name);
         return;
 #else
         error_exit(STRING_INVALID_SYSTEM_KEY, reg_key_name);
@@ -1116,7 +1116,7 @@ void delete_registry_key(WCHAR *reg_key_name)
     if (!key_name || !*key_name)
 #ifdef __REACTOS__
     {
-        error_dont_exit(STRING_DELETE_FAILED, reg_key_name);
+        output_message(STRING_DELETE_FAILED, reg_key_name);
         return;
     }
 #else
@@ -1473,7 +1473,7 @@ static FILE *REGPROC_open_export_file(WCHAR *file_name, BOOL unicode)
         {
             _wperror(L"regedit");
 #ifdef __REACTOS__
-            error_dont_exit(STRING_CANNOT_OPEN_FILE, file_name);
+            output_message(STRING_CANNOT_OPEN_FILE, file_name);
             return NULL;
 #else
             error_exit(STRING_CANNOT_OPEN_FILE, file_name);

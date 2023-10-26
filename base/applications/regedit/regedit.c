@@ -37,9 +37,7 @@ static void output_writeconsole(const WCHAR *str, DWORD wlen)
 #ifdef __REACTOS__
     /* This is win32gui application, don't ever try writing to console.
      * For the console version we have a separate reg.exe application. */
-    WCHAR AppStr[255];
-    LoadStringW(hInst, IDS_APP_TITLE, AppStr, ARRAY_SIZE(AppStr));
-    MessageBoxW(NULL, str, AppStr, MB_OK | MB_ICONINFORMATION);
+    MessageBoxW(NULL, str, NULL, MB_ICONERROR);
 #else
     DWORD count;
 
@@ -118,22 +116,6 @@ void WINAPIV error_exit(unsigned int id, ...)
 
     exit(0); /* regedit.exe always terminates with error code zero */
 }
-
-#ifdef __REACTOS__
-void WINAPIV error_dont_exit(unsigned int id, ...)
-{
-    WCHAR fmt[256], text[512], title[64];
-    va_list va;
-
-    LoadStringW(hInst, IDS_APP_TITLE, title, _countof(title));
-    LoadStringW(hInst, id, fmt, _countof(fmt));
-
-    va_start(va, id);
-    FormatMessageW(FORMAT_MESSAGE_FROM_STRING, fmt, 0, 0, text, _countof(text), &va);
-    MessageBoxW(hFrameWnd, text, title, MB_ICONERROR);
-    va_end(va);
-}
-#endif
 
 typedef enum {
     ACTION_ADD, ACTION_EXPORT, ACTION_DELETE
@@ -236,7 +218,7 @@ static void PerformRegAction(REGEDIT_ACTION action, WCHAR **argv, int *i)
         }
     default:
 #ifdef __REACTOS__
-        error_dont_exit(STRING_UNHANDLED_ACTION);
+        output_message(STRING_UNHANDLED_ACTION);
 #else
         error_exit(STRING_UNHANDLED_ACTION);
 #endif
