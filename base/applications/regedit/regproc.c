@@ -1191,7 +1191,8 @@ static size_t export_value_name(FILE *fp, WCHAR *name, size_t len, BOOL unicode)
         WCHAR *str = REGPROC_escape_string(name, len, &line_len);
         WCHAR *buf = malloc((line_len + 4) * sizeof(WCHAR));
 #ifdef __REACTOS__
-        line_len = swprintf(buf, L"\"%s\"=", str);
+        StringCchPrintfW(buf, line_len + 4, L"\"%s\"=", str);
+        line_len = wcslen(buf);
 #else
         line_len = swprintf(buf, line_len + 4, L"\"%s\"=", str);
 #endif
@@ -1218,7 +1219,7 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
     str = REGPROC_escape_string(data, len, &line_len);
     *buf = malloc((line_len + 3) * sizeof(WCHAR));
 #ifdef __REACTOS__
-    swprintf(*buf, L"\"%s\"", str);
+    StringCchPrintfW(*buf, line_len + 3, L"\"%s\"", str);
 #else
     swprintf(*buf, line_len + 3, L"\"%s\"", str);
 #endif
@@ -1229,7 +1230,7 @@ static void export_dword_data(WCHAR **buf, DWORD *data)
 {
     *buf = malloc(15 * sizeof(WCHAR));
 #ifdef __REACTOS__
-    swprintf(*buf, L"dword:%08x", *data);
+    StringCchPrintfW(*buf, 15, L"dword:%08x", *data);
 #else
     swprintf(*buf, 15, L"dword:%08x", *data);
 #endif
@@ -1249,7 +1250,8 @@ static size_t export_hex_data_type(FILE *fp, DWORD type, BOOL unicode)
     {
         WCHAR *buf = malloc(15 * sizeof(WCHAR));
 #ifdef __REACTOS__
-        line_len = swprintf(buf, L"hex(%x):", type);
+        StringCchPrintfW(buf, 15, L"hex(%x):", type);
+        line_len = wcslen(buf);
 #else
         line_len = swprintf(buf, 15, L"hex(%x):", type);
 #endif
@@ -1280,7 +1282,8 @@ static void export_hex_data(FILE *fp, WCHAR **buf, DWORD type, DWORD line_len,
     for (i = 0, pos = 0; i < size; i++)
     {
 #ifdef __REACTOS__
-        pos += swprintf(*buf + pos, L"%02x", ((BYTE *)data)[i]);
+        StringCchPrintfW(*buf + pos, 3, L"%02x", ((BYTE *)data)[i]);
+        pos += wcslen(*buf + pos);
 #else
         pos += swprintf(*buf + pos, 3, L"%02x", ((BYTE *)data)[i]);
 #endif
@@ -1346,7 +1349,7 @@ static WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name,
 
     subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
 #ifdef __REACTOS__
-    swprintf(subkey_path, L"%s\\%s", path, subkey_name);
+    StringCchPrintfW(subkey_path, path_len + subkey_len + 2, L"%s\\%s", path, subkey_name);
 #else
     swprintf(subkey_path, path_len + subkey_len + 2, L"%s\\%s", path, subkey_name);
 #endif
@@ -1360,7 +1363,7 @@ static void export_key_name(FILE *fp, WCHAR *name, BOOL unicode)
 
     buf = malloc((lstrlenW(name) + 7) * sizeof(WCHAR));
 #ifdef __REACTOS__
-    swprintf(buf, L"\r\n[%s]\r\n", name);
+    StringCchPrintfW(buf, lstrlenW(name) + 7, L"\r\n[%s]\r\n", name);
 #else
     swprintf(buf, lstrlenW(name) + 7, L"\r\n[%s]\r\n", name);
 #endif
