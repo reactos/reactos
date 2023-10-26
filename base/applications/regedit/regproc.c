@@ -1525,7 +1525,7 @@ static BOOL export_key(WCHAR *file_name, WCHAR *path, BOOL unicode)
     fp = REGPROC_open_export_file(file_name, unicode);
 #ifdef __REACTOS__
     if (!fp)
-        return TRUE;
+        return TRUE; /* Error message is already displayed */
 #endif
     export_registry_data(fp, key, path, unicode);
     export_newline(fp, unicode);
@@ -1545,7 +1545,7 @@ static BOOL export_all(WCHAR *file_name, WCHAR *path, BOOL unicode)
     fp = REGPROC_open_export_file(file_name, unicode);
 #ifdef __REACTOS__
     if (!fp)
-        return TRUE;
+        return TRUE; /* Error message is already displayed */
 #endif
 
     for (i = 0; i < ARRAY_SIZE(classes); i++)
