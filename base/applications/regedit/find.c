@@ -144,7 +144,7 @@ BOOL RegFindRecurse(
     if(wcslen(pszSubKey) >= _countof(szSubKey))
         return FALSE;
 
-    wcscpy(szSubKey, pszSubKey);
+    StringCbCopyW(szSubKey, sizeof(szSubKey), pszSubKey);
     hSubKey = NULL;
 
     lResult = RegOpenKeyExW(hKey, szSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
@@ -304,14 +304,14 @@ BOOL RegFindRecurse(
                            ppszFoundValueName))
         {
             LPWSTR psz = *ppszFoundSubKey;
-            *ppszFoundSubKey = malloc(
-                                   (wcslen(szSubKey) + wcslen(psz) + 2) * sizeof(WCHAR));
+            SIZE_T cbFoundSubKey = (wcslen(szSubKey) + wcslen(psz) + 2) * sizeof(WCHAR);
+            *ppszFoundSubKey = malloc(cbFoundSubKey);
             if (*ppszFoundSubKey == NULL)
                 goto err;
             if (szSubKey[0])
             {
-                wcscpy(*ppszFoundSubKey, szSubKey);
-                wcscat(*ppszFoundSubKey, s_backslash);
+                StringCbCopyW(*ppszFoundSubKey, cbFoundSubKey, szSubKey);
+                StringCbCatW(*ppszFoundSubKey, cbFoundSubKey, s_backslash);
             }
             else
                 **ppszFoundSubKey = 0;
@@ -368,7 +368,7 @@ BOOL RegFindWalk(
                        ppszFoundValueName))
         return TRUE;
 
-    wcscpy(szSubKey, pszSubKey);
+    StringCbCopyW(szSubKey, sizeof(szSubKey), pszSubKey);
     while(szSubKey[0] != 0)
     {
         if (DoEvents())
@@ -460,15 +460,14 @@ BOOL RegFindWalk(
                                ppszFoundSubKey, ppszFoundValueName))
             {
                 LPWSTR psz = *ppszFoundSubKey;
-                *ppszFoundSubKey = malloc(
-                                       (wcslen(szSubKey) + wcslen(psz) + 2) *
-                                       sizeof(WCHAR));
+                SIZE_T cbFoundSubKey = (wcslen(szSubKey) + wcslen(psz) + 2) * sizeof(WCHAR);
+                *ppszFoundSubKey = malloc(cbFoundSubKey);
                 if (*ppszFoundSubKey == NULL)
                     goto err;
                 if (szSubKey[0])
                 {
-                    wcscpy(*ppszFoundSubKey, szSubKey);
-                    wcscat(*ppszFoundSubKey, s_backslash);
+                    StringCbCopyW(*ppszFoundSubKey, cbFoundSubKey, szSubKey);
+                    StringCbCatW(*ppszFoundSubKey, cbFoundSubKey, s_backslash);
                 }
                 else
                     **ppszFoundSubKey = 0;
