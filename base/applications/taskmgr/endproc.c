@@ -39,7 +39,7 @@ void ProcessPage_OnEndProcess(void)
     /* if this is a standard process just ask for confirmation before doing it */
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
-    if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING|MB_TOPMOST) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING|MB_TOPMOST))
     {
         if (hProcess) CloseHandle(hProcess);
         return;
@@ -169,7 +169,7 @@ void ProcessPage_OnEndProcessTree(void)
 
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
-    if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING))
     {
         if (hProcess) CloseHandle(hProcess);
         return;
