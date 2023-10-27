@@ -165,7 +165,7 @@ Imm32LoadCtfIme(VOID)
 }
 
 /***********************************************************************
- * This function calls CTF IME's CtfImeCreateThreadMgr function.
+ * This function calls the same name function of the CTF IME side.
  */
 HRESULT
 CtfImeCreateThreadMgr(VOID)
@@ -177,7 +177,7 @@ CtfImeCreateThreadMgr(VOID)
 }
 
 /***********************************************************************
- * This function calls CTF IME's CtfImeDestroyThreadMgr function.
+ * This function calls the same name function of the CTF IME side.
  */
 HRESULT
 CtfImeDestroyThreadMgr(VOID)
@@ -189,7 +189,7 @@ CtfImeDestroyThreadMgr(VOID)
 }
 
 /***********************************************************************
- * This function calls CTF IME's CtfImeCreateInputContext function.
+ * This function calls the same name function of the CTF IME side.
  */
 HRESULT
 CtfImeCreateInputContext(
@@ -199,6 +199,18 @@ CtfImeCreateInputContext(
         return E_FAIL;
 
     return CTF_IME_FN(CtfImeCreateInputContext)(hIMC);
+}
+
+/***********************************************************************
+ * This function calls the same name function of the CTF IME side.
+ */
+HRESULT
+CtfImeDestroyInputContext(_In_ HIMC hIMC)
+{
+    if (!Imm32LoadCtfIme())
+        return E_FAIL;
+
+    return CTF_IME_FN(CtfImeDestroyInputContext)(hIMC);
 }
 
 /***********************************************************************
@@ -212,18 +224,6 @@ Imm32EnumCreateCtfICProc(
     UNREFERENCED_PARAMETER(lParam);
     CtfImeCreateInputContext(hIMC);
     return TRUE; /* Continue */
-}
-
-/***********************************************************************
- * This function calls CTF IME's CtfImeDestroyInputContext function.
- */
-HRESULT
-CtfImeDestroyInputContext(_In_ HIMC hIMC)
-{
-    if (!Imm32LoadCtfIme())
-        return E_FAIL;
-
-    return CTF_IME_FN(CtfImeDestroyInputContext)(hIMC);
 }
 
 /***********************************************************************
