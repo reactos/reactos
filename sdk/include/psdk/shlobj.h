@@ -190,7 +190,7 @@ SHGetFolderPathAndSubDirW(
   _In_opt_ LPCWSTR,
   _Out_writes_(MAX_PATH) LPWSTR);
 
-#define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
+#define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir)
 
 HRESULT WINAPI
 SHSetFolderPathA(
@@ -206,7 +206,7 @@ SHSetFolderPathW(
     _In_ DWORD dwFlags,
     _In_z_ LPCWSTR pszPath);
 
-#define SHSetFolderPath WINELIB_NAME_AW(SHSetFolderPath);
+#define SHSetFolderPath WINELIB_NAME_AW(SHSetFolderPath)
 
 BOOL WINAPI
 PathIsSlowA(
@@ -218,7 +218,7 @@ PathIsSlowW(
     _In_z_ LPCWSTR pszFile,
     _In_ DWORD dwAttr);
 
-#define PathIsSlow WINELIB_NAME_AW(PathIsSlow);
+#define PathIsSlow WINELIB_NAME_AW(PathIsSlow)
 
 _Success_(return != 0)
 BOOL
@@ -270,7 +270,7 @@ SHPathPrepareForWriteW(
   _In_opt_ IUnknown*,
   _In_ LPCWSTR, DWORD);
 
-#define SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite);
+#define SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite)
 
 UINT
 WINAPI
