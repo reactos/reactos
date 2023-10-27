@@ -41,7 +41,7 @@ SHSetFolderPathA(
     _In_ DWORD dwFlags,
     _In_z_ LPCSTR pszPath)
 {
-    TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, pszPath);
+    TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, debugstr_a(pszPath));
     CStringW strPathW(pszPath);
     return SHSetFolderPathW(csidl, hToken, dwFlags, strPathW);
 }
@@ -57,7 +57,7 @@ PathIsSlowA(
     _In_z_ LPCSTR pszFile,
     _In_ DWORD dwAttr)
 {
-    TRACE("(%s, 0x%X)\n", pszFile, dwAttr);
+    TRACE("(%s, 0x%X)\n", debugstr_a(pszFile), dwAttr);
     CStringW strFileW(pszFile);
     return PathIsSlowW(strFileW, dwAttr);
 }
@@ -520,8 +520,8 @@ SHOpenPropSheetA(
     WCHAR szStartPageW[MAX_PATH], szCaptionW[MAX_PATH];
     LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
 
-    TRACE("(%s, %p, %u, %p, %p, %p, %s)", pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject,
-          pShellBrowser, pszStartPage);
+    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
+          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
 
     if (pszCaption)
     {
