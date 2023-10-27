@@ -218,35 +218,20 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
     return E_FAIL;
 }
 
-/*
- * Unimplemented
+/*************************************************************************
+ *  SHOpenPropSheetW [SHELL32.80]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheetw
  */
-EXTERN_C BOOL
-WINAPI
-SHOpenPropSheetA(LPCSTR lpCaption,
-                 HKEY hKeys[],
-                 UINT uCount,
-                 const CLSID *pClsID,
-                 IDataObject *pDataObject,
-                 IShellBrowser *pShellBrowser,
-                 LPCSTR lpStartPage)
-{
-    FIXME("SHOpenPropSheetA() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
-SHOpenPropSheetW(LPCWSTR lpCaption,
-                 HKEY hKeys[],
-                 UINT uCount,
-                 const CLSID *pClsID,
-                 IDataObject *pDataObject,
-                 IShellBrowser *pShellBrowser,
-                 LPCWSTR lpStartPage)
+BOOL WINAPI
+SHOpenPropSheetW(
+    _In_opt_z_ LPCWSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_z_ LPCWSTR pszStartPage)
 {
     FIXME("SHOpenPropSheetW() stub\n");
     return FALSE;

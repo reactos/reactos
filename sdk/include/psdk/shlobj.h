@@ -340,6 +340,25 @@ int WINAPI PathCleanupSpec(_In_opt_ LPCWSTR, _Inout_ LPWSTR);
 HINSTANCE WINAPI SHGetShellStyleHInstance(VOID);
 #endif
 
+BOOL WINAPI
+SHOpenPropSheetA(
+    _In_opt_z_ LPCSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_z_ LPCSTR pszStartPage);
+BOOL WINAPI
+SHOpenPropSheetW(
+    _In_opt_z_ LPCWSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_z_ LPCWSTR pszStartPage);
+
 /*****************************************************************************
  * IContextMenu interface
  */

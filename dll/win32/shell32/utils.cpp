@@ -466,3 +466,41 @@ LargeIntegerToString(
     return Int64ToString(pLargeInt->QuadPart, pszOut, cchOut, bUseFormat,
                          pNumberFormat, dwNumberFlags);
 }
+
+/*************************************************************************
+ *  SHOpenPropSheetA [SHELL32.707]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta
+ */
+EXTERN_C
+BOOL WINAPI
+SHOpenPropSheetA(
+    _In_opt_z_ LPCSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_z_ LPCSTR pszStartPage)
+{
+    WCHAR szStartPageW[MAX_PATH], szCaptionW[MAX_PATH];
+    LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
+
+    TRACE("(%s, %p, %u, %p, %p, %p, %s)", pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject,
+          pShellBrowser, pszStartPage);
+
+    if (pszCaption)
+    {
+        SHAnsiToUnicode(pszCaption, szCaptionW, _countof(szCaptionW));
+        pszCaptionW = szCaptionW;
+    }
+
+    if (pszStartPage)
+    {
+        SHAnsiToUnicode(pszStartPage, szStartPageW, _countof(szStartPageW));
+        pszStartPageW = szStartPageW;
+    }
+
+    return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
+                            pDataObject, pShellBrowser, pszStartPageW);
+}
