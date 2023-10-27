@@ -116,7 +116,7 @@ Imm32LoadCtfIme(VOID)
         if (!ImmLoadLayout((HKL)ULongToHandle(0x04090409), &ImeInfoEx))
             break;
 
-        /* Build a path string in system32. The IME file must be in system32. */
+        /* Build a path string in system32. The installed IME file must be in system32. */
         Imm32GetSystemLibraryPath(szImeFile, _countof(szImeFile), ImeInfoEx.wszImeFile);
 
         /* Is the CTF IME disabled by app compatibility patcher? */
