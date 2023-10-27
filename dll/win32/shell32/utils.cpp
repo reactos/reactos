@@ -41,10 +41,9 @@ SHSetFolderPathA(
     _In_ DWORD dwFlags,
     _In_z_ LPCSTR pszPath)
 {
-    WCHAR szPathW[MAX_PATH];
     TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, pszPath);
-    SHAnsiToUnicode(pszPath, szPathW, _countof(szPathW));
-    return SHSetFolderPathW(csidl, hToken, dwFlags, szPathW);
+    CStringW strPathW(pszPath);
+    return SHSetFolderPathW(csidl, hToken, dwFlags, strPathW);
 }
 
 /*************************************************************************
@@ -59,9 +58,8 @@ PathIsSlowA(
     _In_ DWORD dwAttr)
 {
     TRACE("(%s, 0x%X)\n", pszFile, dwAttr);
-    WCHAR szFileW[MAX_PATH];
-    SHAnsiToUnicode(pszFile, szFileW, _countof(szFileW));
-    return PathIsSlowW(szFileW, dwAttr);
+    CStringW strFileW(pszFile);
+    return PathIsSlowW(strFileW, dwAttr);
 }
 
 /*************************************************************************
