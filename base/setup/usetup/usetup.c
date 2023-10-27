@@ -1586,7 +1586,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
     InitPartitionListUi(&ListUi, PartitionList,
                         CurrentPartition,
-                        2, 23,
+                        2, 21,
                         xScreen - 3,
                         yScreen - 3);
     DrawPartitionList(&ListUi);
@@ -1751,22 +1751,19 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             InstallPartition = CurrentPartition;
             return SELECT_FILE_SYSTEM_PAGE;
         }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'P')  /* P */
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'C')  /* C */
         {
             ASSERT(CurrentPartition != NULL);
 
-            if (CurrentPartition->LogicalPartition == FALSE)
+            Error = PartitionCreationChecks(CurrentPartition);
+            if (Error != NOT_AN_ERROR)
             {
-                Error = PartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                PartCreateType = PartTypeData;
-                return CREATE_PARTITION_PAGE;
+                MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE;
             }
+
+            PartCreateType = PartTypeData;
+            return CREATE_PARTITION_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
         {
@@ -1782,23 +1779,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 }
 
                 PartCreateType = PartTypeExtended;
-                return CREATE_PARTITION_PAGE;
-            }
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
-        {
-            ASSERT(CurrentPartition != NULL);
-
-            if (CurrentPartition->LogicalPartition)
-            {
-                Error = PartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                PartCreateType = PartTypeData;
                 return CREATE_PARTITION_PAGE;
             }
         }

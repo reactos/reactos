@@ -967,14 +967,14 @@ static MUI_ENTRY msMYSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tekan P untuk mencipta partition yang utama.",
+        "\x07  Tekan C untuk mencipta partition yang utama/logik.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Tekan E untuk mencipta partition yang berpanjangan.",
+        "\x07  Tekan E untuk mencipta partition yang lanjutan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2210,9 +2210,9 @@ MUI_STRING msMYStrings[] =
     {STRING_PLEASEWAIT,
      "   Sila tunggu..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Pasang   P = Mencipta Utama   E = Mencipta Dilanjutkan   F3 = Keluar"},
+     "   ENTER = Pasang   C = Mencipta Utama   E = Mencipta Dilanjutkan   F3 = Keluar"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Pasang   L = Mencipta Partition Logik   F3 = Keluar"},
+     "   ENTER = Pasang   C = Mencipta Partition Logik   F3 = Keluar"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Pasang   D = Menghapuskan Partition   F3 = Keluar"},
     {STRING_DELETEPARTITION,

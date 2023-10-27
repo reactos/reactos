@@ -968,7 +968,7 @@ static MUI_ENTRY idIDSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tekan P untuk membuat partisi primary.",
+        "\x07  Tekan C untuk membuat partisi primary/logical.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -982,13 +982,6 @@ static MUI_ENTRY idIDSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tekan L untuk membuat partisi logical.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tekan D untuk menghapus partisi yang tersedia.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2225,9 +2218,9 @@ MUI_STRING idIDStrings[] =
     {STRING_PLEASEWAIT,
      "   Mohon tunggu..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Pasang   P = Buat Primary   E = Buat Extended   F3 = Keluar"},
+     "   ENTER = Pasang   C = Buat Primary   E = Buat Extended   F3 = Keluar"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Pasang   L = Buat Partisi Logical   F3 = Keluar"},
+     "   ENTER = Pasang   C = Buat Partisi Logical   F3 = Keluar"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Pasang   D = Hapus Partisi   F3 = Keluar"},
     {STRING_DELETEPARTITION,

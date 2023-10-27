@@ -974,8 +974,7 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Kiko C p‰r t‰ krijuar nj‰ particion t‰ ri.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -989,13 +988,6 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Kliko D p\211r t\211 fshir\211 nj\211 particion ekzistues.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2238,14 +2230,14 @@ MUI_STRING sqALStrings[] =
     {STRING_PLEASEWAIT,
      "   Ju lutem prisni..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Instalo   C = Create Primary   E = Create Extended   F3 = Dil"},
 //     "   ENTER = Instalo   C = Krijo Particion   F3 = Dil"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalo   C = Create Logical Partition   F3 = Dil"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalo   D = Fshi Particion   F3 = Dil"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Fshi Particion   F3 = Dil"},
     {STRING_PARTITIONSIZE,
      "Madh\211sia e particionit t\211 ri:"},
     {STRING_CHOOSE_NEW_PARTITION,

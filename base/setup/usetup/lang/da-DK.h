@@ -977,7 +977,7 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tryk p\206 P for at lave en ny prim\221r partition.",
+        "\x07  Tryk p\206 C for at lave en ny prim\221r/logisk partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -991,13 +991,6 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tryk p\206 L for at lave en ny logisk partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tryk p\206 D for at slette en eksisterende partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2228,9 +2221,9 @@ MUI_STRING daDKStrings[] =
     {STRING_PLEASEWAIT,
      "   Vent..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = installer   P = Lav prim\221r   E = Lav udviddet   F3 = Afslut"},
+     "   ENTER = installer   C = Lav prim\221r   E = Lav udviddet   F3 = Afslut"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = installer   L = Lav logisk partition   F3 = Afslut"},
+     "   ENTER = installer   C = Lav logisk partition   F3 = Afslut"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = installer   D = Slet partition   F3 = Afslut"},
     {STRING_DELETEPARTITION,

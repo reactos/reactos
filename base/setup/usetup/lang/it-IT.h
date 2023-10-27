@@ -967,7 +967,8 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Premere P per creare una nuova partizione.",
+        "\x07  Premere C per creare una partizione primaria/logica.",
+//        "\x07  Premere C per creare una nuova partizione.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -981,13 +982,6 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Premere L per creare una partizione logica.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Premere D per cancellare una partizione esistente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2231,9 +2225,9 @@ MUI_STRING itITStrings[] =
     {STRING_PLEASEWAIT,
      "   Attendere..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   INVIO = Installa   P = Crea Partizione   E = Crea Partizione Estesa   F3 = Esci"},
+     "   INVIO = Installa   C = Crea Partizione   E = Crea Partizione Estesa   F3 = Esci"},
     {STRING_INSTALLCREATELOGICAL,
-     "   INVIO = Installa   L = Crea Partizione Lgica  F3 = Esci"},
+     "   INVIO = Installa   C = Crea Partizione Lgica  F3 = Esci"},
     {STRING_INSTALLDELETEPARTITION,
      "   INVIO = Installa   D = Rimuovi Partizione   F3 = Esci"},
     {STRING_DELETEPARTITION,

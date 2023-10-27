@@ -963,7 +963,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  P erstellt eine prim\204re Partition.",
+        "\x07  C erstellt eine prim\204re/logische Partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -977,13 +977,6 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  L erstellt eine logische Partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  D l\224scht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2230,9 +2223,9 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  ENTER = Installieren   P = Prim\204re   E = Erweiterte   F3 = Installation abbr."},
+     "  ENTER = Installieren   C = Prim\204re   E = Erweiterte   F3 = Installation abbr."},
     {STRING_INSTALLCREATELOGICAL,
-     "  ENTER = Installieren   L = Logisches Laufwerk   F3 = Installation abbrechen"},
+     "  ENTER = Installieren   C = Logische Partition   F3 = Installation abbrechen"},
     {STRING_INSTALLDELETEPARTITION,
      "  ENTER = Installieren   D = Partition l\224schen   F3 = Installation abbrechen"},
     {STRING_DELETEPARTITION,
@@ -2244,7 +2237,7 @@ MUI_STRING deDEStrings[] =
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Eine erweiterte Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Ein logisches Laufwerk soll hier erstellt werden:"},
+     "Eine logische Partition soll hier erstellt werden:"},
     {STRING_HDPARTSIZE,
     "Bitte geben Sie die Gr\224\341e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,

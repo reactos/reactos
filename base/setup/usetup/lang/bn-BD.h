@@ -968,7 +968,7 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -982,13 +982,6 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Press D to delete an existing partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2218,9 +2211,9 @@ MUI_STRING bnBDStrings[] =
     {STRING_PLEASEWAIT,
      "   Please wait..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Install   C = Create Primary   E = Create Extended   F3 = Quit"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Install   C = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Install   D = Delete Partition   F3 = Quit"},
     {STRING_DELETEPARTITION,

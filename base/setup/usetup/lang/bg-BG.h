@@ -8,7 +8,7 @@ static MUI_ENTRY bgBGSetupInitPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -46,7 +46,7 @@ static MUI_ENTRY bgBGLanguagePageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -98,7 +98,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -192,7 +192,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -279,7 +279,7 @@ static MUI_ENTRY bgBGLicensePageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -422,7 +422,7 @@ static MUI_ENTRY bgBGDevicePageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -529,7 +529,7 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -602,7 +602,7 @@ static MUI_ENTRY bgBGUpgradePageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -682,7 +682,7 @@ static MUI_ENTRY bgBGComputerPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -741,7 +741,7 @@ static MUI_ENTRY bgBGFlushPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -786,7 +786,7 @@ static MUI_ENTRY bgBGQuitPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -838,7 +838,7 @@ static MUI_ENTRY bgBGDisplayPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -897,7 +897,7 @@ static MUI_ENTRY bgBGSuccessPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -949,7 +949,7 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -984,28 +984,20 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  \215\240\342\250\341\255\245\342\245 P \247\240 \341\352\247\244\240\242\240\255\245 \255\240 \243\253\240\242\245\255 \244\357\253.",
-//        "\x07  Натиснете C за създаване на нов дял.",
+        "\x07  \215\240\342\250\341\255\245\342\245 C \247\240 \341\352\247\244\240\242\240\255\245 \255\240 \243\253\240\242\245\255/\253\256\243\250\347\245\341\252\250 \244\357\253.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  \215\240\342\250\341\255\245\342\245 E \247\240 \244\240 \341\352\247\244\240\244\245\342\245 \244\340\343\243 \244\357\253.",
+        "\x07  \215\240\342\250\341\255\245\342\245 E \247\240 \341\352\247\244\240\242\240\255\245 \255\240 \340\240\247\350\250\340\245\255 \244\357\253.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  \215\240\342\250\341\255\245\342\245 L \247\240 \244\240 \341\352\247\244\240\244\245\342\245 \253\256\243\250\347\245\341\252\250 \244\357\253.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  \215\240\342\250\341\255\245\342\245 D \247\240 \250\247\342\340\250\242\240\255\245 \255\240 \341\352\351\245\341\342\242\343\242\240\351 \244\357\253.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1152,7 +1144,7 @@ static MUI_ENTRY bgBGConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1260,7 +1252,7 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1297,7 +1289,8 @@ static MUI_ENTRY bgBGCheckFSEntries[] =
 {
     {
         4,
-        3, " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        3,
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1328,7 +1321,7 @@ static MUI_ENTRY bgBGInstallDirectoryEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1387,7 +1380,7 @@ static MUI_ENTRY bgBGFileCopyEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1433,7 +1426,7 @@ static MUI_ENTRY bgBGBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1523,7 +1516,7 @@ static MUI_ENTRY bgBGBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1576,7 +1569,7 @@ static MUI_ENTRY bgBGKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1635,7 +1628,7 @@ static MUI_ENTRY bgBGLayoutSettingsEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1695,7 +1688,7 @@ static MUI_ENTRY bgBGPrepareCopyEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1727,7 +1720,7 @@ static MUI_ENTRY bgBGSelectFSEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1775,7 +1768,7 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1827,7 +1820,7 @@ static MUI_ENTRY bgBGRegistryEntries[] =
     {
         4,
         3,
-        " \210\255\341\342\240\253\240\346\250\357 \255\240 ReactOS " KERNEL_VERSION_STR " .",
+        " \210\255\341\342\240\253\250\340\240\255\245 \255\240 ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -2243,10 +2236,9 @@ MUI_STRING bgBGStrings[] =
     {STRING_PLEASEWAIT,
      "   \214\256\253\357 \250\247\347\240\252\240\251\342\245..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = \210\255\341\342\240\253\250\340\240\251   P = \221\352\247\244\240\251\342\245 \257\352\340\242\250\347\245\255   E = \221\352\247\244\240\251\342\245 \340\240\247\350\250\340\245\255   F3 = \210\247\345\256\244"},
-//     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
+     "   ENTER = \210\255\341\342\240\253\250\340\240\251   C = \221\352\247\244\240\251\342\245 \257\352\340\242\250\347\245\255   E = \221\352\247\244\240\251\342\245 \340\240\247\350\250\340\245\255   F3 = \210\247\345\256\244"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = \210\255\341\342\240\253\250\340\240\251   L = \221\352\247\244\240\251 \253\256\243\250\347\245\341\252\250 \257\240\340\342\250\350\352\255   F3 = \210\247\345\256\244"},
+     "   ENTER = \210\255\341\342\240\253\250\340\240\251   C = \221\352\247\244\240\251 \253\256\243\250\347\245\341\252\250 \257\240\340\342\250\350\352\255   F3 = \210\247\345\256\244"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = \210\255\341\342\240\253\250\340\240\251   D = \210\247\342\340\250\242\240\255\245 \255\240 \244\357\253   F3 = \210\247\345\256\244"},
     {STRING_DELETEPARTITION,

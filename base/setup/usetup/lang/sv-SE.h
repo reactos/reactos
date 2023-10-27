@@ -976,28 +976,21 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Tryck C f”r att skapa en ny partition.",
+        "\x07  Tryck C f\224r att skapa en primär/logisk partition.",
+//        "\x07  Tryck C f\224r att skapa en ny partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Tryck E f\224r att skapa en ut\224kad partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tryck D f\224r att ta bort en befintlig partititon.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2227,14 +2220,13 @@ MUI_STRING svSEStrings[] =
     {STRING_PLEASEWAIT,
      "   Var v\204nlig v\204nta..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Installera   C = Skapa Partition   F3 = Avsluta"},
+     "   ENTER = Installera   C = Skapa Primär Partition   E = Skapa Ut\224kad Partition   F3 = Avsluta"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Installera   C = Skapa Logisk Partition   F3 = Avsluta"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installera   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Ta bort Partition   F3 = Avsluta"},
     {STRING_PARTITIONSIZE,
      "Storlek p\206 den nya partitionen:"},
     {STRING_CHOOSE_NEW_PARTITION,

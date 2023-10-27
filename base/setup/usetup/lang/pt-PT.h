@@ -984,8 +984,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Para criar uma  parti\207\306o prim\240ria, pressione P.",
-//        "\x07  Para criar uma parti\207\306o no espa\207o n\306o particionado, pressione C.",
+        "\x07  Para criar uma parti\207\306o prim\240ria/l\242gica, pressione C.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -999,13 +998,6 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Para criar uma parti\207\3060 l\242gica, pressione L.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Para excluir a parti\207\306o seleccionada, pressione D.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2263,13 +2255,13 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER=Instalar  P=Criar Part. Prim\240ria E=Criar Part. Estendida  F3=Sair"},
+    "   ENTER = Instalar  C = Criar Prim\240ria  E = Criar Estendida  F3 = Sair"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Instalar   L = Criar Parti\207\306o L\242gica   F3 = Sair"},
+    "   ENTER = Instalar  C = Criar parti\207\306o L\242gica  F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
-    "   ENTER=Instalar  D=Apagar parti\207\306o  F3 = Sair"},
+    "   ENTER = Instalar  D = Apagar parti\207\306o  F3 = Sair"},
     {STRING_DELETEPARTITION,
-     "   D = Apagar Parti\207\306o   F3 = Sair"},
+     "   D = Apagar parti\207\306o   F3 = Sair"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova parti\207\306o:"},
     {STRING_CHOOSE_NEW_PARTITION,

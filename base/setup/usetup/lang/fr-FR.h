@@ -991,7 +991,7 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur P pour cr\202er une partition primaire.",
+        "\x07  Appuyer sur C pour cr\202er une partition primaire/logique.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1005,13 +1005,6 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Appuyer sur L pour cr\202er une partition logique.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2255,9 +2248,9 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTR\220E = Installer   P/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
+     "   ENTR\220E = Installer   C/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTR\220E = Installer   L = Cr\202er partition Logique   F3 = Quitter"},
+     "   ENTR\220E = Installer   C = Cr\202er partition Logique   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTR\220E = Installer   D = Supprimer partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,

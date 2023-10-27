@@ -984,8 +984,7 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  èò´„©´ú C ö†ò §ò õû£†¶¨®ö„©ú´ú ‚§ò §‚¶ õ†ò£‚®†©£ò.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -999,13 +998,6 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  \217\230\253\343\251\253\234 D \232\240\230 \244\230 \233\240\230\232\250\341\257\234\253\234 \342\244\230 \254\247\341\250\256\246\244 \233\240\230\243\342\250\240\251\243\230.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2241,10 +2233,9 @@ MUI_STRING elGRStrings[] =
     {STRING_PLEASEWAIT,
      "   \217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Ñö°ò´·©´ò©û   C = Éû£†¶¨®öÂò Partition   F3 = Äß¶ÆÈ®û©û"},
+     "   ENTER = Install   C = Create Primary   E = Create Extended   F3 = Quit"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Install   C = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = \204\232\241\230\253\341\251\253\230\251\236   D = \203\240\230\232\250\230\255\343 Partition   F3 = \200\247\246\256\351\250\236\251\236"},
     {STRING_DELETEPARTITION,

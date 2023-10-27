@@ -966,27 +966,20 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Bir ana b\224l\201m olu\237turmak i\207in P'ye bas\215n\215z.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Bir geni\237letilmi\237 b\224l\201m olu\237turmak i\207in E'ye bas\215n\215z.",
+        "\x07  Press E to create an extended partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Mant\215ksal bir b\224l\201m olu\237turmak i\207in L'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Var olan bir b\224l\201m\224 silmek i\207in D'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2202,9 +2195,9 @@ MUI_STRING trTRStrings[] =
     {STRING_PLEASEWAIT,
     "   L\201tfen bekleyiniz..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER = Kur  P = Ana B\224l\201m Olu\237tur  E = Geni\237letilmi\237 B\224l\201m Olu\237tur  F3 = \200\215k"},
+    "   ENTER = Kur  C = Ana B\224l\201m Olu\237tur  E = Geni\237letilmi\237 B\224l\201m Olu\237tur  F3 = \200\215k"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Kur   L = Mant\215ksal B\224l\201m Olu\237tur   F3 = \200\215k"},
+    "   ENTER = Kur   C = Mant\215ksal B\224l\201m Olu\237tur   F3 = \200\215k"},
     {STRING_INSTALLDELETEPARTITION,
     "   ENTER = Kur   D = B\224l\201m\201 Sil   F3 = \200\215k"},
     {STRING_DELETEPARTITION,

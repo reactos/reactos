@@ -976,7 +976,7 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Stistknut\241m P vytvo\375\241te prim\240rn\241 odd\241l.",
+        "\x07  Stistknut\241m C vytvo\375\241te prim\240rn\241/logick\354 odd\241l.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -990,13 +990,6 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Stisknut\241m D umo\247n\241te smaz\240n\241 existuj\241c\241ho odd\241lu.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2226,9 +2219,9 @@ MUI_STRING csCZStrings[] =
     {STRING_PLEASEWAIT,
      "   \254ekejte, pros\241m..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalovat   P = Nov\354 prim\240rn\241   E = Nov\354 roz\347\241\375en\354   F3 = Ukon\237it"},
+     "   ENTER = Instalovat   C = Nov\354 prim\240rn\241   E = Nov\354 roz\347\241\375en\354   F3 = Ukon\237it"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalovat   L = Vytvo\375it logick\354 odd\241l   F3 = Ukon\237it"},
+     "   ENTER = Instalovat   C = Vytvo\375it logick\354 odd\241l   F3 = Ukon\237it"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalovat   D = Odstranit odd\241l   F3 = Ukon\237it"},
     {STRING_DELETEPARTITION,

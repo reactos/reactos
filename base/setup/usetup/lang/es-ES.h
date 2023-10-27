@@ -973,7 +973,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Pulse P para crear una Partici\242n Primaria.",
+        "\x07  Pulse C para crear una Partici\242n Primaria/L\242gica.",
 //        "\x07  Pulse C para crear una Nueva Partici\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -988,13 +988,6 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Pulse L para crear una Partici\242n L\242gica.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Pulse D para eliminar una Partici\242n existente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2231,7 +2224,7 @@ MUI_STRING esESStrings[] =
     {STRING_PLEASEWAIT,
      "   Espere un momento..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   INTRO = Instalar  P = Crear Primaria   E = Crear Extendida   F3 = Salir"},
+     "   INTRO = Instalar  C = Crear Primaria   E = Crear Extendida   F3 = Salir"},
     {STRING_INSTALLCREATELOGICAL,
      "   INTRO = Instalar  C = Crear Partici\242n L\242gica   F3 = Salir"},
     {STRING_DELETEPARTITION,

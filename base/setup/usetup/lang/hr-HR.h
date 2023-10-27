@@ -978,27 +978,20 @@ static MUI_ENTRY hrHRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Pritisnite P da biste stvorili primarnu particiju.",
+        "\x07  Pritisnite C da biste stvorili primarnu/logi\237ku particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Pritisnite P da biste stvorili pro\347irenu particiju.",
+        "\x07  Pritisnite E da biste stvorili pro\347irenu particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Pritisnite P da biste stvorili logi\237ku particiju.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Pritisnite D da biste izbrisali postoje\206u particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2249,9 +2242,9 @@ MUI_STRING hrHRStrings[] =
     {STRING_PLEASEWAIT,
      "   Molimo pri\237ekajte..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instaliraj   P = Stvori Primarnu   E = Stvori Pro\347irenu   F3 = Iza\320i"},
+     "   ENTER = Instaliraj   C = Stvori Primarnu   E = Stvori Pro\347irenu   F3 = Iza\320i"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instaliraj   L = Stvori Logi\237ku particiju  F3 = Iza\320i"},
+     "   ENTER = Instaliraj   C = Stvori Logi\237ku particiju  F3 = Iza\320i"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instaliraj   D = Izbri\347i particiju   F3 = Iza\320i"},
     {STRING_DELETEPARTITION,

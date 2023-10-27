@@ -977,7 +977,7 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Nyomjon P-t egy els\213dleges part\241ci\242 l\202trehoz\240s\240hoz.",
+        "\x07  Nyomjon C-t egy els\213dleges/logikai part\241ci\242 l\202trehoz\240s\240hoz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -991,13 +991,6 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Nyomjon L-t egy logikai part\241ci\242 l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Nyomjon D-t egy megl\202v\213 part\241ci\242 t\224rl\202s\202hez.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2116,9 +2109,9 @@ MUI_STRING huHUStrings[] =
     {STRING_PLEASEWAIT,
      "   K\202rem v\240rjon..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Telep\241t\202s   P = \351j els\213dleges   E = \351j kiterjesztett   F3 = Kil\202p\202s"},
+     "   ENTER = Telep\241t\202s   C = \351j els\213dleges   E = \351j kiterjesztett   F3 = Kil\202p\202s"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Telep\241t\202s   L = Logikai part\241ci\242 l\202trehoz\240sa   F3 = Kil\202p\202s"},
+     "   ENTER = Telep\241t\202s   C = Logikai part\241ci\242 l\202trehoz\240sa   F3 = Kil\202p\202s"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Telep\241t\202s   D = Part\241ci\242 t\224rl\202se   F3 = Kil\202p\202s"},
     {STRING_DELETEPARTITION,

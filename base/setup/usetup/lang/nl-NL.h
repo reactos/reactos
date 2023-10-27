@@ -260,7 +260,7 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Doorgaan   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -982,7 +982,7 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Druk op C om een primaire/logische partitie aan te maken.",
 //        "\x07  Druk op C om een nieuwe partitie aan te maken.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -990,20 +990,13 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Druk op E om een uitgebreide partitie aan te maken.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Druk op D om een bestaande partitie te verwijderen.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2250,14 +2243,14 @@ MUI_STRING nlNLStrings[] =
     {STRING_PLEASEWAIT,
      "   Een ogenblik geduld..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Installeren   C = Primaire aanmaken   E = Uitgebreide aanmaken   F3 = Afsluiten"},
 //     "   ENTER = Installeren   C = Partitie aanmaken   F3 = Afsluiten"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Installeren   C = Logische Partitie aanmaken   F3 = Afsluiten"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installeren   D = Partitie verwijderen   F3 = Afsluiten"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Delete Partition   F3 = Afsluiten"},
     {STRING_PARTITIONSIZE,
      "Grootte nieuwe partitie:"},
     {STRING_CHOOSE_NEW_PARTITION,

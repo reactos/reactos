@@ -980,7 +980,7 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Naci\230nij P, by utworzy\206 partycj\251 podstawow\245.",
+        "\x07  Naci\230nij C, by utworzy\206 partycj\251 podstawow\245/logiczn\245.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -994,13 +994,6 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Naci\230nij L, by utworzy\206 partycj\251 logiczn\245.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Naci\230nij D, by usun\245\206 istniej\245c\245 partycj\251.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2237,9 +2230,9 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz\251 czeka\206..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  ENTER = Instalacja   P = Partycja podstawowa   E = Rozszerzona   F3 = Wyj\230cie"},
+     "  ENTER = Instalacja   C = Partycja podstawowa   E = Rozszerzona   F3 = Wyj\230cie"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalacja   L = Utworzenie partycji logicznej   F3 = Wyj\230cie"},
+     "   ENTER = Instalacja   C = Utworzenie partycji logicznej   F3 = Wyj\230cie"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Usuni\251cie partycji   F3 = Wyj\230cie"},
     {STRING_DELETEPARTITION,

@@ -1,7 +1,7 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  Mario Kacmar /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
  * LastChange:  22-05-2011
@@ -976,8 +976,8 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  StlaŸte C pre vytvorenie novej oblasti.",
+        "\x07  Press C to create a primary/logical partition.",
+//        "\x07  Stla\237te C pre vytvorenie novej oblasti.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -991,13 +991,6 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Stla\237te D pre vymazanie existuj\243cej oblasti.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1522,7 +1515,7 @@ static MUI_ENTRY skSKBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dzaŸ syst‚mu
+        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dza\237 syst‚mu
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1899,7 +1892,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, znaŸka, çifra)
+        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, zna\237ka, \347ifra)
         "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
@@ -1935,7 +1928,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-//          "Inçtal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
+//          "In\347tal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
           "In\347tal\240tor na\347iel najmenej na jednom pevnom disku nekompatibiln\243\n"
           "tabu\226ku oblast\241, s ktorou sa ned\240 spr\240vne zaobch\240dza\234!\n"
           "\n"
@@ -2237,14 +2230,14 @@ MUI_STRING skSKStrings[] =
     {STRING_PLEASEWAIT,
      "   Po\237kajte, pros\241m ..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Inçtalovaœ   C = Vytvoriœ oblasœ   F3 = SkonŸiœ"},
+     "   ENTER = In\347talova\234   C = Create Primary   E = Create Extended   F3 = Skon\237i\234"},
+//     "   ENTER = In\347talova\234   C = Vytvori\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = In\347talova\234   C = Create Logical Partition   F3 = Skon\237i\234"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = In\347talova\234   D = Odstr\240ni\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Odstr\240ni\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_PARTITIONSIZE,
      "Ve\226kos\234 novej oblasti:"},
     {STRING_CHOOSE_NEW_PARTITION,

@@ -1015,7 +1015,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tasta\376i P pentru a crea o parti\376ie primar\343.",
+        "\x07  Tasta\376i C pentru a crea o parti\376ie primar\343/logic\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1029,13 +1029,6 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tasta\376i L pentru a crea o parti\376ie logic\343.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tasta\376i D pentru a \272terge o parti\376ie existent\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2286,9 +2279,9 @@ MUI_STRING roROStrings[] =
     {STRING_PLEASEWAIT,
      "   A\272tepta\376i..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalare   P/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalare   L = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_DELETEPARTITION,

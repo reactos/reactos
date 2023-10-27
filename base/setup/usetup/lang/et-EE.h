@@ -970,7 +970,7 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Vajuta P uue primaarse partitsiooni loomiseks.",
+        "\x07  Vajuta C uue primaarse/loogilise partitsiooni loomiseks.",
 //        "\x07  Vajuta C, et teha uus partitsioon.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -985,13 +985,6 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Vajuta L uue loogilise partitsiooni loomiiseks.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Vajuta D olemasoleva partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2219,9 +2212,9 @@ MUI_STRING etEEStrings[] =
     {STRING_PLEASEWAIT,
      "   Palun oota..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Paigalda   P = Loo primaarne   E = Loo laiendatud   F3 = V\204lju"},
+     "   ENTER = Paigalda   C = Loo primaarne   E = Loo laiendatud   F3 = V\204lju"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Paigalda   L = Loo loogiline partitsioon   F3 = V\204lju"},
+     "   ENTER = Paigalda   C = Loo loogiline partitsioon   F3 = V\204lju"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Paigalda  D = Kustuta partitsioon  F3 = V\204lju"},
     {STRING_DELETEPARTITION,
