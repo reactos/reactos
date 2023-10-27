@@ -1028,24 +1028,11 @@ FirstUserLogon(LPWSTR lpUnknown1, LPWSTR lpUnknown2)
  */
 EXTERN_C HRESULT
 WINAPI
-SHSetFolderPathA(int csidl,
-                 HANDLE hToken,
-                 DWORD dwFlags,
-                 LPCSTR pszPath)
-{
-    FIXME("SHSetFolderPathA() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HRESULT
-WINAPI
-SHSetFolderPathW(int csidl,
-                 HANDLE hToken,
-                 DWORD dwFlags,
-                 LPCWSTR pszPath)
+SHSetFolderPathW(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_z_ LPCWSTR pszPath)
 {
     FIXME("SHSetFolderPathW() stub\n");
     return E_FAIL;
@@ -1089,20 +1076,11 @@ SHShouldShowWizards(LPVOID lpUnknown)
  */
 EXTERN_C BOOL
 WINAPI
-PathIsSlowW(LPCWSTR pszFile, DWORD dwFileAttr)
+PathIsSlowW(
+    _In_z_ LPCWSTR pszFile,
+    _In_ DWORD dwAttr)
 {
     FIXME("PathIsSlowW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
-PathIsSlowA(LPCSTR pszFile, DWORD dwFileAttr)
-{
-    FIXME("PathIsSlowA() stub\n");
     return FALSE;
 }
 

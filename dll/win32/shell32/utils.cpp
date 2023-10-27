@@ -29,6 +29,42 @@ static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
 }
 
 /*************************************************************************
+ *                SHSetFolderPathA (SHELL32.231)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shsetfolderpatha
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetFolderPathA(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_z_ LPCSTR pszPath)
+{
+    WCHAR szPathW[MAX_PATH];
+    TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, pszPath);
+    SHAnsiToUnicode(pszPath, szPathW, _countof(szPathW));
+    return SHSetFolderPathW(csidl, hToken, dwFlags, szPathW);
+}
+
+/*************************************************************************
+ *                PathIsSlowA (SHELL32.240)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathisslowa
+ */
+EXTERN_C
+BOOL WINAPI
+PathIsSlowA(
+    _In_z_ LPCSTR pszFile,
+    _In_ DWORD dwAttr)
+{
+    TRACE("(%s, 0x%X)\n", pszFile, dwAttr);
+    WCHAR szFileW[MAX_PATH];
+    SHAnsiToUnicode(pszFile, szFileW, _countof(szFileW));
+    return PathIsSlowW(szFileW, dwAttr);
+}
+
+/*************************************************************************
  *                SHOpenEffectiveToken (SHELL32.235)
  */
 EXTERN_C BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken)

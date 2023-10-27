@@ -192,6 +192,32 @@ SHGetFolderPathAndSubDirW(
 
 #define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
 
+HRESULT WINAPI
+SHSetFolderPathA(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_z_ LPCSTR pszPath);
+HRESULT WINAPI
+SHSetFolderPathW(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_z_ LPCWSTR pszPath);
+
+#define SHSetFolderPath WINELIB_NAME_AW(SHSetFolderPath);
+
+BOOL WINAPI
+PathIsSlowA(
+    _In_z_ LPCSTR pszFile,
+    _In_ DWORD dwAttr);
+BOOL WINAPI
+PathIsSlowW(
+    _In_z_ LPCWSTR pszFile,
+    _In_ DWORD dwAttr);
+
+#define PathIsSlow WINELIB_NAME_AW(PathIsSlow);
+
 _Success_(return != 0)
 BOOL
 WINAPI
