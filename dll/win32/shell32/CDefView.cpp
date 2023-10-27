@@ -163,6 +163,7 @@ class CDefView :
         INT _FindInsertableIndexFromPoint(POINT pt);
         void _HandleStatusBarResize(int width);
         void _ForceStatusBarResize();
+        void _DoCopyToMoveToFolder(BOOL bCopy);
 
     public:
         CDefView();
@@ -197,7 +198,7 @@ class CDefView :
         void OnDeactivate();
         void DoActivate(UINT uState);
         HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand, POINT* pt);
+        HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt = NULL);
         LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
 
         // *** IOleWindow methods ***
@@ -1513,14 +1514,14 @@ UINT CDefView::GetSelections()
     return m_cidl;
 }
 
-HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu> &pCM, UINT uCommand, POINT* pt)
+HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt)
 {
     CMINVOKECOMMANDINFOEX cmi;
 
     ZeroMemory(&cmi, sizeof(cmi));
     cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
     cmi.hwnd = m_hWnd;
+    cmi.lpVerb = lpVerb;
 
     if (GetKeyState(VK_SHIFT) & 0x8000)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
@@ -1583,7 +1584,7 @@ HRESULT CDefView::OpenSelectedItems()
         return E_FAIL;
     }
 
-    InvokeContextMenuCommand(pCM, uCommand, NULL);
+    InvokeContextMenuCommand(pCM, MAKEINTRESOURCEA(uCommand), NULL);
 
     return hResult;
 }
@@ -1682,7 +1683,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         return 0;
 
-    InvokeContextMenuCommand(m_pCM, uCommand - CONTEXT_MENU_BASE_ID, &pt);
+    InvokeContextMenuCommand(m_pCM, MAKEINTRESOURCEA(uCommand - CONTEXT_MENU_BASE_ID), &pt);
 
     return 0;
 }
@@ -1731,7 +1732,7 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     }
 
     // FIXME: We should probably use the objects position?
-    InvokeContextMenuCommand(pCM, uCommand, NULL);
+    InvokeContextMenuCommand(pCM, MAKEINTRESOURCEA(uCommand), NULL);
     return 0;
 }
 
@@ -1816,6 +1817,29 @@ void CDefView::DoActivate(UINT uState)
 
     m_uState = uState;
     TRACE("--\n");
+}
+
+void CDefView::_DoCopyToMoveToFolder(BOOL bCopy)
+{
+    if (!GetSelections())
+        return;
+
+    SFGAOF rfg = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_FILESYSTEM;
+    HRESULT hr = m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &rfg);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    if (!bCopy && !(rfg & SFGAO_CANMOVE))
+        return;
+    if (bCopy && !(rfg & SFGAO_CANCOPY))
+        return;
+
+    CComPtr<IContextMenu> pCM;
+    hr = m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, m_apidl, IID_IContextMenu, 0, (void **)&pCM);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    InvokeContextMenuCommand(pCM, (bCopy ? "copyto" : "moveto"), NULL);
 }
 
 /**********************************************************
@@ -1954,12 +1978,15 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_COPY:
         case FCIDM_SHVIEW_RENAME:
         case FCIDM_SHVIEW_PROPERTIES:
-        case FCIDM_SHVIEW_COPYTO:
-        case FCIDM_SHVIEW_MOVETO:
             if (SHRestricted(REST_NOVIEWCONTEXTMENU))
                 return 0;
 
             return OnExplorerCommand(dwCmdID, TRUE);
+
+        case FCIDM_SHVIEW_COPYTO:
+        case FCIDM_SHVIEW_MOVETO:
+            _DoCopyToMoveToFolder(dwCmdID == FCIDM_SHVIEW_COPYTO);
+            return 0;
 
         case FCIDM_SHVIEW_INSERT:
         case FCIDM_SHVIEW_UNDO:
@@ -1967,13 +1994,15 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_NEWFOLDER:
             return OnExplorerCommand(dwCmdID, FALSE);
         default:
+        {
             /* WM_COMMAND messages from the file menu are routed to the CDefView so as to let m_pFileMenu handle the command */
             if (m_pFileMenu && dwCmd == 0)
             {
                 HMENU Dummy = NULL;
                 MenuCleanup _(m_pFileMenu, Dummy);
-                InvokeContextMenuCommand(m_pFileMenu, dwCmdID, NULL);
+                InvokeContextMenuCommand(m_pFileMenu, MAKEINTRESOURCEA(dwCmdID), NULL);
             }
+        }
     }
 
     return 0;
