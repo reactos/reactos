@@ -302,7 +302,7 @@ typedef struct _CALLBACKWND
 #define CI_INITTHREAD        0x00000008
 #define CI_CURTHPRHOOK       0x00000010
 #define CI_CLASSESREGISTERED 0x00000020
-#define CI_IMMACTIVATE       0x00000040 /* IMM/IME (Asian input) enabled */
+#define CI_IMMACTIVATE       0x00000040 /* IMM/IME (Asian input) */
 #define CI_TSFDISABLED       0x00000400 /* TSF (Text Services Framework a.k.a. Cicero) */
 #define CI_AIMMACTIVATED     0x00000800 /* Active IMM (AIMM) */
 
