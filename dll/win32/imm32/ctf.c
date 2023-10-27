@@ -121,7 +121,7 @@ Imm32LoadCtfIme(VOID)
 
         /* Is the CTF IME disabled by app compatibility patcher? */
         if (!Imm32CheckAndApplyAppCompat(0, szImeFile))
-            break; /* The app's IME is disabled */
+            break; /* This IME is disabled */
 
         /* Load a CTF IME file */
         g_hCtfIme = LoadLibraryW(szImeFile);
@@ -227,7 +227,7 @@ Imm32EnumCreateCtfICProc(
 }
 
 /***********************************************************************
- * This function calls CTF IME's CtfImeDestroyInputContext function if necessary.
+ * This function calls CtfImeDestroyInputContext if possible.
  */
 HRESULT
 CtfImmTIMDestroyInputContext(
@@ -250,7 +250,7 @@ CtfImmTIMCreateInputContext(
 /***********************************************************************
  *      CtfAImmActivate (IMM32.@)
  *
- * This function activates "Active IMM" (AIMM).
+ * This function activates "Active IMM" (AIMM) and TSF.
  */
 HRESULT WINAPI
 CtfAImmActivate(
@@ -285,7 +285,7 @@ CtfAImmActivate(
 /***********************************************************************
  *      CtfAImmDeactivate (IMM32.@)
  *
- * This function de-activates "Active IMM" (AIMM).
+ * This function de-activates "Active IMM" (AIMM) and TSF.
  */
 HRESULT WINAPI
 CtfAImmDeactivate(
@@ -308,6 +308,8 @@ CtfAImmDeactivate(
 
 /***********************************************************************
  *		CtfImmIsCiceroEnabled (IMM32.@)
+ *
+ * @return TRUE if Cicero is enabled.
  */
 BOOL WINAPI
 CtfImmIsCiceroEnabled(VOID)
@@ -317,6 +319,8 @@ CtfImmIsCiceroEnabled(VOID)
 
 /***********************************************************************
  *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
+ *
+ * @return TRUE if TSF is disabled.
  */
 BOOL WINAPI
 CtfImmIsTextFrameServiceDisabled(VOID)
