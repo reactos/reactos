@@ -20,6 +20,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 /*
  * TSF stands for "Text Services Framework". "Cicero" is the code name of TSF.
  * CTF stands for "Cicero-aware Text Framework".
+ * The combination of CTF IME and TSF provides high-level input.
  *
  * The CTF IME file is a DLL file. The export functions of the CTF IME file are
  * defined in "CtfImeTable.h" of this folder.
