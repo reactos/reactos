@@ -528,31 +528,6 @@ DefWndScreenshot(PWND pWnd)
     UserCloseClipboard();
 }
 
-/**
- * Toggle the language on Alt+Shift or Ctrl+Shift.
- * The behaviour depends on key "HKCU\Keyboard Layout\Toggle", value "Language Hotkey".
- * @see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc976564%28v=technet.10%29
- */
-static VOID FASTCALL IntLanguageToggle(PWND Wnd)
-{
-    RTL_ATOM ClassAtom = 0;
-    UNICODE_STRING ustrClass, ustrWindow;
-    HWND hwndSwitch;
-
-    RtlInitUnicodeString(&ustrClass, L"kbswitcher");
-    RtlInitUnicodeString(&ustrWindow, L"");
-
-    IntGetAtomFromStringOrAtom(&ustrClass, &ClassAtom);
-
-    hwndSwitch = IntFindWindow(UserGetDesktopWindow(), NULL, ClassAtom, &ustrWindow);
-    if (!hwndSwitch)
-        return;
-
-#define ID_NEXTLAYOUT 10003
-    UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, (LPARAM)UserHMGetHandle(Wnd));
-#undef ID_NEXTLAYOUT
-}
-
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -970,15 +945,6 @@ IntDefWindowProc(
                    wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
                    co_IntSendMessage( Active, WM_SYSCOMMAND, wParamTmp, wParam );
                 }
-                else if (wParam == VK_SHIFT && gdwLanguageToggleKey == 1) // Alt+Shift
-                {
-                    IntLanguageToggle(Wnd);
-                }
-            }
-            else if (wParam == VK_SHIFT && (UserGetKeyState(VK_CONTROL) & 0x8000) &&
-                     gdwLanguageToggleKey == 2) // Ctrl+Shift
-            {
-                IntLanguageToggle(Wnd);
             }
             else if( wParam == VK_F10 )
             {

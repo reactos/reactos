@@ -77,6 +77,8 @@ PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
 extern int gLanguageToggleKeyState;
 extern DWORD gdwLanguageToggleKey;
+extern int gLayoutToggleKeyState;
+extern DWORD gdwLayoutToggleKey;
 
 /* Mouse */
 WORD FASTCALL UserGetMouseButtonsState(VOID);
