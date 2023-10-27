@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* A CTF IME file contains the following functions: */
+/* The valid CTF IME file contains the following functions: */
 
 /* DEFINE_CTF_IME_FN(func_name, ret_type, params) */
 DEFINE_CTF_IME_FN(CtfImeCreateThreadMgr, HRESULT, (VOID))
