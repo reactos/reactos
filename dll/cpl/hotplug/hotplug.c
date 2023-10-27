@@ -14,17 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
-typedef struct _HOTPLUG_DATA
-{
-    HICON hIcon;
-    HICON hIconSm;
-    SP_CLASSIMAGELIST_DATA ImageListData;
-    HMENU hPopupMenu;
-    DWORD dwFlags;
-} HOTPLUG_DATA, *PHOTPLUG_DATA;
-
-
 // globals
 HINSTANCE hApplet = 0;
 
@@ -407,23 +396,6 @@ ShowDeviceProperties(
     HeapFree(GetProcessHeap(), 0, pszDevId);
 }
 
-static
-VOID
-SafeRemoveDevice(
-    _In_ DEVINST DevInst)
-{
-    PNP_VETO_TYPE VetoType = PNP_VetoTypeUnknown;
-    CONFIGRET cr;
-
-    cr = CM_Request_Device_EjectW(DevInst, &VetoType, NULL, 0, 0);
-    if (cr != CR_SUCCESS && VetoType == PNP_VetoTypeUnknown)
-    {
-        WCHAR szError[64];
-        swprintf(szError, L"Failed to remove device (0x%x)", cr);
-        MessageBoxW(NULL, szError, NULL, MB_ICONEXCLAMATION | MB_OK);
-    }
-}
-
 INT_PTR
 CALLBACK
 SafeRemovalDlgProc(
@@ -473,7 +445,7 @@ SafeRemovalDlgProc(
                 SetupDiGetClassImageList(&pHotplugData->ImageListData);
 
                 pHotplugData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_DEVICE_TREE));
-
+                pHotplugData->hwndDeviceTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
                 pHotplugData->dwFlags = GetHotPlugFlags();
 
                 if (pHotplugData->dwFlags & HOTPLUG_DISPLAY_DEVICE_COMPONENTS)
@@ -526,8 +498,15 @@ SafeRemovalDlgProc(
                 case IDC_SAFE_REMOVE_STOP:
                 case IDM_STOP:
                 {
-                    HWND hwndDevTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
-                    SafeRemoveDevice(GetSelectedDeviceInst(hwndDevTree));
+                    if (pHotplugData != NULL)
+                    {
+                        DialogBoxParamW(hApplet,
+                                        MAKEINTRESOURCEW(IDD_CONFIRM_STOP_HARDWARE_DIALOG),
+                                        hwndDlg,
+                                        ConfirmRemovalDlgProc,
+                                        (LPARAM)pHotplugData);
+                    }
+
                     break;
                 }
             }

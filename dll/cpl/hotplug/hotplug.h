@@ -38,7 +38,24 @@ typedef struct
     APPLET_PROC AppletProc;
 }APPLET, *PAPPLET;
 
+typedef struct _HOTPLUG_DATA
+{
+    HICON hIcon;
+    HICON hIconSm;
+    SP_CLASSIMAGELIST_DATA ImageListData;
+    HMENU hPopupMenu;
+    HWND hwndDeviceTree;
+    DWORD dwFlags;
+} HOTPLUG_DATA, *PHOTPLUG_DATA;
 
+// eject.c
+INT_PTR
+CALLBACK
+ConfirmRemovalDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
 
 // hotplug.c
 LONG
