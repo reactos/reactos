@@ -377,6 +377,7 @@ SHOpenPropSheetA(
     _In_ IDataObject *pDataObject,
     _In_opt_ IShellBrowser *pShellBrowser,
     _In_opt_z_ LPCSTR pszStartPage);
+
 BOOL WINAPI
 SHOpenPropSheetW(
     _In_opt_z_ LPCWSTR pszCaption,
@@ -386,6 +387,8 @@ SHOpenPropSheetW(
     _In_ IDataObject *pDataObject,
     _In_opt_ IShellBrowser *pShellBrowser,
     _In_opt_z_ LPCWSTR pszStartPage);
+
+#define SHOpenPropSheet WINELIB_NAME_AW(SHOpenPropSheet)
 
 /*****************************************************************************
  * IContextMenu interface
