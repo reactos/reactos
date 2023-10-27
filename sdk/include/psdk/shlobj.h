@@ -198,6 +198,7 @@ SHSetFolderPathA(
     _In_ HANDLE hToken,
     _In_ DWORD dwFlags,
     _In_z_ LPCSTR pszPath);
+
 HRESULT WINAPI
 SHSetFolderPathW(
     _In_ INT csidl,
@@ -211,6 +212,7 @@ BOOL WINAPI
 PathIsSlowA(
     _In_z_ LPCSTR pszFile,
     _In_ DWORD dwAttr);
+
 BOOL WINAPI
 PathIsSlowW(
     _In_z_ LPCWSTR pszFile,
