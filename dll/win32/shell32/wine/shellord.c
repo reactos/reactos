@@ -2348,9 +2348,15 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
+#ifdef __REACTOS__
+    if (SHELL_OsIsUnicode())
+        return SHStartNetConnectionDialogW(hwnd, (LPCWSTR)pszRemoteName, dwType);
+    return SHStartNetConnectionDialogA(hwnd, pszRemoteName, dwType);
+#else
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
+#endif
 }
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)
