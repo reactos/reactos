@@ -17,17 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
-EXTERN_C LPWSTR
-WINAPI
-ShortSizeFormatW(LONGLONG llNumber)
-{
-    FIXME("ShortSizeFormatW() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 PathIsEqualOrSubFolder(LPWSTR lpFolder, LPWSTR lpSubFolder)
