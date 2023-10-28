@@ -577,3 +577,30 @@ SHOpenPropSheetA(
     return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
                             pDataObject, pShellBrowser, pszStartPageW);
 }
+
+/*************************************************************************
+ *  Activate_RunDLL [SHELL32.105]
+ *
+ * Unlocks the foreground window and allows the shell window to become the
+ * foreground window. Every parameter is unused.
+ */
+EXTERN_C
+BOOL WINAPI
+Activate_RunDLL(
+    _In_ DWORD dwUnused1,
+    _In_ LPVOID lpUnused2,
+    _In_ LPVOID lpUnused3,
+    _In_ LPVOID lpUnused4)
+{
+    DWORD dwPID;
+
+    UNREFERENCED_PARAMETER(dwUnused1);
+    UNREFERENCED_PARAMETER(lpUnused2);
+    UNREFERENCED_PARAMETER(lpUnused3);
+    UNREFERENCED_PARAMETER(lpUnused4);
+
+    TRACE("(%lu, %p, %p, %p)\n", dwUnused1, lpUnused2, lpUnused3, lpUnused4);
+
+    GetWindowThreadProcessId(GetShellWindow(), &dwPID);
+    return AllowSetForegroundWindow(dwPID);
+}
