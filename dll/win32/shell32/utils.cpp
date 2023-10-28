@@ -594,7 +594,7 @@ CopyStreamUI(
     {
 #define COPY_STREAM_DEFAULT_BUFFER_SIZE 0x4000
         cbBuff = COPY_STREAM_DEFAULT_BUFFER_SIZE;
-        pBuff = LocalAlloc(LPTR, cbBuff);
+        pBuff = LocalAlloc(LMEM_FIXED, cbBuff);
         if (!pBuff) // Low memory?
         {
             cbBuff = sizeof(szBuff);
