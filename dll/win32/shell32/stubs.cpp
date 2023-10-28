@@ -89,17 +89,6 @@ SHReValidateDarwinCache(VOID)
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-CopyStreamUI(IStream *pSrc, IStream *pDst, IProgressDialog *pProgDlg)
-{
-    FIXME("CopyStreamUI() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C FILEDESCRIPTOR*
 WINAPI
 GetFileDescriptor(FILEGROUPDESCRIPTOR *pFileGroupDesc, BOOL bUnicode, INT iIndex, LPWSTR lpName)
