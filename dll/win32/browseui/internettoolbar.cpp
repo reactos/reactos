@@ -250,11 +250,11 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
         bandInfo.fStyle |= RBBS_BREAK;
     if (fDeskBandInfo.dwModeFlags & DBIMF_TOPALIGN)
         bandInfo.fStyle |= RBBS_TOPALIGN;
-    if (fFlags & ITF_NOGRIPPER || fToolbar->pSettings->fLocked)
+    if ((fFlags & ITF_NOGRIPPER) || fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_NOGRIPPER;
     if (fFlags & ITF_NOTITLE)
         bandInfo.fStyle |= RBBS_HIDETITLE;
-    if (fFlags & ITF_GRIPPERALWAYS && !fToolbar->pSettings->fLocked)
+    if ((fFlags & ITF_GRIPPERALWAYS) && !fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_GRIPPERALWAYS;
     if (fFlags & ITF_FIXEDSIZE)
         bandInfo.fStyle |= RBBS_FIXEDSIZE;
@@ -736,9 +736,9 @@ void CInternetToolbar::RefreshLockedToolbarState()
         if (dockSite != NULL)
         {
             rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
-            if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || pSettings->fLocked)
+            if ((dockSite->fFlags & CDockSite::ITF_NOGRIPPER) || pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
-            if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !pSettings->fLocked)
+            if ((dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS) && !pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
             SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
         }

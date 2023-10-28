@@ -566,7 +566,7 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
         return NULL;
 
     /* Ignore streams */
-    if ((attrs & SFGAO_STREAM))
+    if (attrs & SFGAO_STREAM)
     {
         TRACE("Ignoring stream\n");
         return NULL;
