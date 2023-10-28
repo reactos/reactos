@@ -815,17 +815,6 @@ SHIsBadInterfacePtr(LPVOID pv, UINT ucb)
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-Activate_RunDLL(DWORD dwProcessId, LPVOID lpUnused1, LPVOID lpUnused2, LPVOID lpUnused3)
-{
-    FIXME("Activate_RunDLL() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 AppCompat_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)

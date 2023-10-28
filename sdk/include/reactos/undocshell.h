@@ -699,6 +699,13 @@ BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
 BOOL WINAPI IsSuspendAllowed(VOID);
 
+BOOL WINAPI
+Activate_RunDLL(
+    _In_ DWORD dwUnused1,
+    _In_ LPVOID lpUnused2,
+    _In_ LPVOID lpUnused3,
+    _In_ LPVOID lpUnused4);
+
 /*****************************************************************************
  * Shell32 resources
  */
