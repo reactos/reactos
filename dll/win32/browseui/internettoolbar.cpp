@@ -711,9 +711,9 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
-    if (locked != pSettings->fLocked)
+    if (locked != !!pSettings->fLocked)
     {
-        pSettings->fLocked = locked;
+        pSettings->fLocked = (BOOL)locked;
         pSettings->Save();
         RefreshLockedToolbarState();
     }
