@@ -821,6 +821,8 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 BOOL
 CFileDefExt::InitVersionPage(HWND hwndDlg)
 {
+    AddVersionString(hwndDlg, L"Comments");
+
     /* Get fixed info */
     VS_FIXEDFILEINFO *pInfo = m_VerInfo.GetFixedInfo();
     if (pInfo)
@@ -957,8 +959,11 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (pwszData == NULL)
                     break;
 
-                TRACE("hDlgCtrl %x string %s\n", hDlgCtrl, debugstr_w(pwszData));
-                SetDlgItemTextW(hwndDlg, 14010, pwszData);
+                CString str(pwszData);
+                str.Trim();
+
+                TRACE("hDlgCtrl %x string %s\n", hDlgCtrl, debugstr_w(str));
+                SetDlgItemTextW(hwndDlg, 14010, str);
 
                 return TRUE;
             }
