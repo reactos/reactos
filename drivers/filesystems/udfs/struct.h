@@ -149,7 +149,7 @@ typedef struct _UDFContextControlBlock {
 #define UDF_CCB_ACCESSED                        (0x00000010)
 #define UDF_CCB_MODIFIED                        (0x00000020)
 // if an application process set the file date time, we must
-//  honour that request and *not* overwrite the values at cleanup
+//  honor that request and *not* overwrite the values at cleanup
 #define UDF_CCB_ACCESS_TIME_SET                 (0x00000040)
 #define UDF_CCB_MODIFY_TIME_SET                 (0x00000080)
 #define UDF_CCB_CREATE_TIME_SET                 (0x00000100)
