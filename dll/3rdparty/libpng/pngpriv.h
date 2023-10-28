@@ -316,7 +316,7 @@
 
 /* See pngconf.h for more details: the builder of the library may set this on
  * the command line to the right thing for the specific compilation system or it
- * may be automatically set above (at present we know of no system where it does
+ * may be automagically set above (at present we know of no system where it does
  * need to be set on the command line.)
  *
  * PNG_IMPEXP must be set here when building the library to prevent pngconf.h
