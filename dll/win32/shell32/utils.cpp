@@ -604,3 +604,29 @@ Activate_RunDLL(
     GetWindowThreadProcessId(GetShellWindow(), &dwPID);
     return AllowSetForegroundWindow(dwPID);
 }
+
+/*************************************************************************
+ *                SHStartNetConnectionDialogA (SHELL32.12)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shstartnetconnectiondialoga
+ */
+EXTERN_C
+HRESULT WINAPI
+SHStartNetConnectionDialogA(
+    _In_ HWND hwnd,
+    _In_ LPCSTR pszRemoteName,
+    _In_ DWORD dwType)
+{
+    LPCWSTR pszRemoteNameW = NULL;
+    CStringW strRemoteNameW;
+
+    TRACE("(%p, %s, %lu)\n", hwnd, debugstr_a(pszRemoteName), dwType);
+
+    if (pszRemoteName)
+    {
+        strRemoteNameW = pszRemoteName;
+        pszRemoteNameW = strRemoteNameW;
+    }
+
+    return SHStartNetConnectionDialogW(hwnd, pszRemoteNameW, dwType);
+}

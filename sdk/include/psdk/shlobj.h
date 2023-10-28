@@ -390,6 +390,20 @@ SHOpenPropSheetW(
 
 #define SHOpenPropSheet WINELIB_NAME_AW(SHOpenPropSheet)
 
+HRESULT WINAPI
+SHStartNetConnectionDialogA(
+    _In_ HWND hwnd,
+    _In_ LPCSTR pszRemoteName,
+    _In_ DWORD dwType);
+
+HRESULT WINAPI
+SHStartNetConnectionDialogW(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszRemoteName,
+    _In_ DWORD dwType);
+
+#define SHStartNetConnectionDialog WINELIB_NAME_AW(SHStartNetConnectionDialog)
+
 /*****************************************************************************
  * IContextMenu interface
  */

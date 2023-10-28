@@ -712,22 +712,10 @@ PifMgr_SetProperties(HANDLE hHandle, LPCSTR lpName, LPCVOID lpUnknown, INT iUnkn
  */
 EXTERN_C HRESULT
 WINAPI
-SHStartNetConnectionDialogA(HWND hwnd,
-                            LPCSTR pszRemoteName,
-                            DWORD dwType)
-{
-    FIXME("SHStartNetConnectionDialogA() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HRESULT
-WINAPI
-SHStartNetConnectionDialogW(HWND hwnd,
-                            LPCWSTR pszRemoteName,
-                            DWORD dwType)
+SHStartNetConnectionDialogW(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszRemoteName,
+    _In_ DWORD dwType)
 {
     FIXME("SHStartNetConnectionDialogW() stub\n");
     return E_FAIL;
