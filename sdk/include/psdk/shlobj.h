@@ -402,8 +402,6 @@ SHStartNetConnectionDialogW(
     _In_ LPCWSTR pszRemoteName,
     _In_ DWORD dwType);
 
-#define SHStartNetConnectionDialog WINELIB_NAME_AW(SHStartNetConnectionDialog)
-
 /*****************************************************************************
  * IContextMenu interface
  */
