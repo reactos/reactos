@@ -587,20 +587,20 @@ SHOpenPropSheetA(
 EXTERN_C
 BOOL WINAPI
 Activate_RunDLL(
-    _In_ DWORD dwUnused1,
-    _In_ LPVOID lpUnused2,
-    _In_ LPVOID lpUnused3,
-    _In_ LPVOID lpUnused4)
+    _In_ HWND hwnd,
+    _In_ HINSTANCE hinst,
+    _In_ LPCWSTR cmdline,
+    _In_ INT cmdshow)
 {
-    DWORD dwPID;
+    DWORD dwProcessID;
 
-    UNREFERENCED_PARAMETER(dwUnused1);
-    UNREFERENCED_PARAMETER(lpUnused2);
-    UNREFERENCED_PARAMETER(lpUnused3);
-    UNREFERENCED_PARAMETER(lpUnused4);
+    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(hinst);
+    UNREFERENCED_PARAMETER(cmdline);
+    UNREFERENCED_PARAMETER(cmdshow);
 
-    TRACE("(%lu, %p, %p, %p)\n", dwUnused1, lpUnused2, lpUnused3, lpUnused4);
+    TRACE("(%p, %p, %s, %d)\n", hwnd, hinst, debugstr_w(cmdline), cmdline);
 
-    GetWindowThreadProcessId(GetShellWindow(), &dwPID);
-    return AllowSetForegroundWindow(dwPID);
+    GetWindowThreadProcessId(GetShellWindow(), &dwProcessID);
+    return AllowSetForegroundWindow(dwProcessID);
 }

@@ -101,7 +101,7 @@
 102 stdcall SHCoCreateInstance(wstr ptr long ptr ptr)
 103 stdcall SignalFileOpen(ptr)
 104 stdcall OpenAs_RunDLLW(long long wstr long)
-105 stdcall Activate_RunDLL(long ptr ptr ptr)
+105 stdcall Activate_RunDLL(ptr ptr wstr long)
 106 stdcall AppCompat_RunDLLW(ptr ptr wstr long)
 107 stdcall CheckEscapesA(str long)
 108 stdcall CheckEscapesW(wstr long)
