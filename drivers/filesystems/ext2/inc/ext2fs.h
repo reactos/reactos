@@ -340,7 +340,7 @@ Ext2ClearFlag(PULONG Flags, ULONG FlagBit)
 #define Ext2BugCheck(A,B,C,D) { KeBugCheckEx(EXT2_FILE_SYSTEM, A | __LINE__, B, C, D ); }
 
 
-/* Ext2 file system define-e+ions *******************************************/
+/* Ext2 file system definitions *******************************************/
 
 //
 // The second extended file system magic number
