@@ -543,7 +543,7 @@ LargeIntegerToString(
 /*************************************************************************
  *  CopyStreamUI [SHELL32.726]
  *
- * Copy a stream to another stream with displaying progress.
+ * Copy a stream to another stream with optional progress display.
  */
 EXTERN_C
 HRESULT WINAPI
