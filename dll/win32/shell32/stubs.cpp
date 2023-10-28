@@ -225,13 +225,13 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
  */
 BOOL WINAPI
 SHOpenPropSheetW(
-    _In_opt_z_ LPCWSTR pszCaption,
+    _In_opt_ LPCWSTR pszCaption,
     _In_opt_ HKEY *ahKeys,
     _In_ UINT cKeys,
     _In_ const CLSID *pclsidDefault,
     _In_ IDataObject *pDataObject,
     _In_opt_ IShellBrowser *pShellBrowser,
-    _In_opt_z_ LPCWSTR pszStartPage)
+    _In_opt_ LPCWSTR pszStartPage)
 {
     FIXME("SHOpenPropSheetW() stub\n");
     return FALSE;
@@ -1032,7 +1032,7 @@ SHSetFolderPathW(
     _In_ INT csidl,
     _In_ HANDLE hToken,
     _In_ DWORD dwFlags,
-    _In_z_ LPCWSTR pszPath)
+    _In_ LPCWSTR pszPath)
 {
     FIXME("SHSetFolderPathW() stub\n");
     return E_FAIL;
@@ -1077,7 +1077,7 @@ SHShouldShowWizards(LPVOID lpUnknown)
 EXTERN_C BOOL
 WINAPI
 PathIsSlowW(
-    _In_z_ LPCWSTR pszFile,
+    _In_ LPCWSTR pszFile,
     _In_ DWORD dwAttr)
 {
     FIXME("PathIsSlowW() stub\n");
