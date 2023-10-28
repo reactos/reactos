@@ -444,7 +444,7 @@
 723 stdcall -noname SHCreateSessionKey(long ptr)
 724 stdcall -noname SHIsTempDisplayMode()
 725 stdcall -noname GetFileDescriptor(ptr long long wstr)
-726 stdcall -noname CopyStreamUI(ptr ptr ptr double)
+726 stdcall -noname CopyStreamUI(ptr ptr ptr int64)
 727 stdcall SHGetImageList(long ptr ptr)
 730 stdcall RestartDialogEx(long wstr long long)
 731 stdcall -noname -stub SHRegisterDarwinLink(long long long)
