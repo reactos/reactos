@@ -939,26 +939,12 @@ Printers_AddPrinterPropPages(LPVOID lpUnknown1, LPVOID lpUnknown2)
  */
 EXTERN_C WORD
 WINAPI
-ExtractIconResInfoA(HANDLE hHandle,
-                    LPSTR lpFile,
-                    WORD wIndex,
-                    LPWORD lpSize,
-                    LPHANDLE lpIcon)
-{
-    FIXME("ExtractIconResInfoA() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C WORD
-WINAPI
-ExtractIconResInfoW(HANDLE hHandle,
-                    LPWSTR lpFile,
-                    WORD wIndex,
-                    LPWORD lpSize,
-                    LPHANDLE lpIcon)
+ExtractIconResInfoW(
+    _In_ HANDLE hHandle,
+    _In_ LPCWSTR lpFileName,
+    _In_ WORD wIndex,
+    _Out_ LPWORD lpSize,
+    _Out_ LPHANDLE lpIcon)
 {
     FIXME("ExtractIconResInfoW() stub\n");
     return 0;

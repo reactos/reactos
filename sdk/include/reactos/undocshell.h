@@ -239,6 +239,22 @@ HICON WINAPI SHGetFileIcon(
 
 BOOL WINAPI FileIconInit(BOOL bFullInit);
 
+WORD WINAPI
+ExtractIconResInfoA(
+    _In_ HANDLE hHandle,
+    _In_ LPCSTR lpFileName,
+    _In_ WORD wIndex,
+    _Out_ LPWORD lpSize,
+    _Out_ LPHANDLE lpIcon);
+
+WORD WINAPI
+ExtractIconResInfoW(
+    _In_ HANDLE hHandle,
+    _In_ LPCWSTR lpFileName,
+    _In_ WORD wIndex,
+    _Out_ LPWORD lpSize,
+    _Out_ LPHANDLE lpIcon);
+
 /****************************************************************************
  * File Menu Routines
  */
