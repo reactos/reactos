@@ -9,7 +9,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
+static BOOL
+OpenEffectiveToken(
+    _In_ DWORD DesiredAccess,
+    _Out_ HANDLE *phToken)
 {
     BOOL ret;
 
@@ -26,6 +29,40 @@ static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
         ret = OpenProcessToken(GetCurrentProcess(), DesiredAccess, phToken);
 
     return ret;
+}
+
+/*************************************************************************
+ *                SHSetFolderPathA (SHELL32.231)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shsetfolderpatha
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetFolderPathA(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_ LPCSTR pszPath)
+{
+    TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, debugstr_a(pszPath));
+    CStringW strPathW(pszPath);
+    return SHSetFolderPathW(csidl, hToken, dwFlags, strPathW);
+}
+
+/*************************************************************************
+ *                PathIsSlowA (SHELL32.240)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathisslowa
+ */
+EXTERN_C
+BOOL WINAPI
+PathIsSlowA(
+    _In_ LPCSTR pszFile,
+    _In_ DWORD dwAttr)
+{
+    TRACE("(%s, 0x%X)\n", debugstr_a(pszFile), dwAttr);
+    CStringW strFileW(pszFile);
+    return PathIsSlowW(strFileW, dwAttr);
 }
 
 /*************************************************************************
@@ -68,7 +105,7 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
 EXTERN_C
 HRESULT WINAPI
 SHInvokePrivilegedFunctionW(
-    _In_z_ LPCWSTR pszName,
+    _In_ LPCWSTR pszName,
     _In_ PRIVILEGED_FUNCTION fn,
     _In_opt_ LPARAM lParam)
 {
@@ -110,7 +147,9 @@ SHInvokePrivilegedFunctionW(
  */
 EXTERN_C
 BOOL WINAPI
-SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
+SHTestTokenPrivilegeW(
+    _In_opt_ HANDLE hToken,
+    _In_ LPCWSTR lpName)
 {
     LUID Luid;
     DWORD dwLength;
@@ -314,7 +353,7 @@ SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
 static HRESULT
 Int64ToStr(
     _In_ LONGLONG llValue,
-    _Out_writes_z_(cchValue) LPWSTR pszValue,
+    _Out_writes_(cchValue) LPWSTR pszValue,
     _In_ UINT cchValue)
 {
     WCHAR szBuff[40];
@@ -361,9 +400,9 @@ Int64GetNumFormat(
     _Out_ NUMBERFMTW *pDest,
     _In_opt_ const NUMBERFMTW *pSrc,
     _In_ DWORD dwNumberFlags,
-    _Out_writes_z_(cchDecimal) LPWSTR pszDecimal,
+    _Out_writes_(cchDecimal) LPWSTR pszDecimal,
     _In_ INT cchDecimal,
-    _Out_writes_z_(cchThousand) LPWSTR pszThousand,
+    _Out_writes_(cchThousand) LPWSTR pszThousand,
     _In_ INT cchThousand)
 {
     WCHAR szBuff[20];
@@ -419,7 +458,7 @@ EXTERN_C
 INT WINAPI
 Int64ToString(
     _In_ LONGLONG llValue,
-    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _Out_writes_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
@@ -457,7 +496,7 @@ EXTERN_C
 INT WINAPI
 LargeIntegerToString(
     _In_ const LARGE_INTEGER *pLargeInt,
-    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _Out_writes_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
@@ -475,30 +514,30 @@ LargeIntegerToString(
 EXTERN_C
 BOOL WINAPI
 SHOpenPropSheetA(
-    _In_opt_z_ LPCSTR pszCaption,
+    _In_opt_ LPCSTR pszCaption,
     _In_opt_ HKEY *ahKeys,
     _In_ UINT cKeys,
     _In_ const CLSID *pclsidDefault,
     _In_ IDataObject *pDataObject,
     _In_opt_ IShellBrowser *pShellBrowser,
-    _In_opt_z_ LPCSTR pszStartPage)
+    _In_opt_ LPCSTR pszStartPage)
 {
-    WCHAR szStartPageW[MAX_PATH], szCaptionW[MAX_PATH];
+    CStringW strStartPageW, strCaptionW;
     LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
 
-    TRACE("(%s, %p, %u, %p, %p, %p, %s)", pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject,
-          pShellBrowser, pszStartPage);
+    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
+          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
 
     if (pszCaption)
     {
-        SHAnsiToUnicode(pszCaption, szCaptionW, _countof(szCaptionW));
-        pszCaptionW = szCaptionW;
+        strStartPageW = pszCaption;
+        pszCaptionW = strCaptionW;
     }
 
     if (pszStartPage)
     {
-        SHAnsiToUnicode(pszStartPage, szStartPageW, _countof(szStartPageW));
-        pszStartPageW = szStartPageW;
+        strStartPageW = pszStartPage;
+        pszStartPageW = strStartPageW;
     }
 
     return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
