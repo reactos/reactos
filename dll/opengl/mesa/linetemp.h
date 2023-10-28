@@ -44,7 +44,7 @@
  * This file is #include'd to generate custom line rasterizers.
  *
  * The following macros may be defined to indicate what auxillary information
- * must be interplated along the line:
+ * must be interpolated along the line:
  *    INTERP_Z      - if defined, interpolate Z values
  *    INTERP_RGB    - if defined, interpolate RGB values
  *    INTERP_ALPHA  - if defined, interpolate Alpha values

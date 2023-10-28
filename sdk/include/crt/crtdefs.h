@@ -471,7 +471,7 @@ typedef struct localeinfo_struct {
 # elif defined (__GNUC__)
 #  define PRAGMA_DIAGNOSTIC_PUSH() _Pragma("GCC diagnostic push")
 #  define PRAGMA_DIAGNOSTIC_IGNORED(__x) \
-    _Pragma("GCC diagnostic ignored \"-Wpragmas\"") /* This allows us to use it for unkonwn warnings */ \
+    _Pragma("GCC diagnostic ignored \"-Wpragmas\"") /* This allows us to use it for unknown warnings */ \
     _Pragma(_CRT_STRINGIZE(GCC diagnostic ignored _CRT_DEFER_MACRO(_CRT_STRINGIZE,__x))) \
     _Pragma("GCC diagnostic error \"-Wpragmas\"") /* This makes sure that we don't have side effects because we disabled it for our own use. This will be popped anyway. */
 #  define PRAGMA_DIAGNOSTIC_POP() _Pragma("GCC diagnostic pop")

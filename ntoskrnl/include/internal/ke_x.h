@@ -861,7 +861,7 @@ KiCheckAlertability(IN PKTHREAD Thread,
         }
         else if (Thread->Alerted[KernelMode])
         {
-            /* It isn't that either, but we're alered in kernel mode */
+            /* It isn't that either, but we're alerted in kernel mode */
             Thread->Alerted[KernelMode] = FALSE;
             return STATUS_ALERTED;
         }
@@ -996,7 +996,7 @@ KiComputeDueTime(IN PKTIMER Timer,
 
 //
 // Called from Unlink and Queue Insert Code.
-// Also called by timer code when canceling an inserted timer.
+// Also called by timer code when cancelling an inserted timer.
 // Removes a timer from it's tree.
 //
 FORCEINLINE

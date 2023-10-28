@@ -493,7 +493,7 @@ void DumpIdList(LPCITEMIDLIST pcidl)
         int i;
         int cb = pcidl->mkid.cb;
         BYTE * sh = (BYTE*) &(pcidl->mkid);
-        if (cb == 0) // ITEMIDLISTs are terminatedwith a null SHITEMID.
+        if (cb == 0) // ITEMIDLISTs are terminated with a null SHITEMID.
             break;
         DbgPrint("Begin SHITEMID (cb=%d)\n", cb);
         if ((cb & 3) != 0)

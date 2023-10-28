@@ -70,7 +70,7 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND MoveSize;
   /* Current menu owner window for this queue */
   HWND MenuOwner;
-  /* Identifes the menu state */
+  /* Identifies the menu state */
   BYTE MenuState;
   /* Message Queue Flags */
   DWORD QF_flags;

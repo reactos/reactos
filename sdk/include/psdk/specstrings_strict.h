@@ -1016,7 +1016,7 @@
 * Macros deprecated with strict level greater then 1.
 **************************************************************************/
 #if (__SPECSTRINGS_STRICT_LEVEL > 1)
-/* Must come before macro defintions */
+/* Must come before macro definitions */
 #pragma deprecated(__in_nz)
 #pragma deprecated(__in_ecount_nz)
 #pragma deprecated(__in_bcount_nz)
@@ -1148,7 +1148,7 @@
 
 /**************************************************************************
 *  This should go away. It's only for __success which we should split into.
-*  __success and __typdecl_sucess
+*  __success and __typdecl_success
 ***************************************************************************/
 #define __$allowed_on_function_or_typedecl /* empty */
 #if (__SPECSTRINGS_STRICT_LEVEL == 1) || (__SPECSTRINGS_STRICT_LEVEL == 2)

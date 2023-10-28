@@ -316,7 +316,7 @@
 
 /* See pngconf.h for more details: the builder of the library may set this on
  * the command line to the right thing for the specific compilation system or it
- * may be automagically set above (at present we know of no system where it does
+ * may be automatically set above (at present we know of no system where it does
  * need to be set on the command line.)
  *
  * PNG_IMPEXP must be set here when building the library to prevent pngconf.h
@@ -1910,7 +1910,7 @@ PNG_INTERNAL_FUNCTION(void,png_ascii_from_fixed,(png_const_structrp png_ptr,
  */
 #define PNG_FP_INVALID  512  /* Available for callers as a distinct value */
 
-/* Result codes for the parser (boolean - true meants ok, false means
+/* Result codes for the parser (boolean - true means ok, false means
  * not ok yet.)
  */
 #define PNG_FP_MAYBE      0  /* The number may be valid in the future */

@@ -38,7 +38,7 @@ extern "C" {
 //
 typedef enum  _DEVICE_STATE
 {
-	VFD_STOPPED,				// Dvice stopped
+	VFD_STOPPED,				// Device stopped
 	VFD_WORKING,				// Started and working
 	VFD_PENDINGSTOP,			// Stop pending
 	VFD_PENDINGREMOVE,			// Remove pending
@@ -120,7 +120,7 @@ typedef struct _DEVICE_EXTENSION
 DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 //
-//	Stanard driver routines
+//	Standard driver routines
 //
 NTSTATUS
 NTAPI

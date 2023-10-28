@@ -1,5 +1,5 @@
 /*
- * Windows Error Reporing definitions
+ * Windows Error Reporting definitions
  *
  * Copyright (C) 2010 Louis Lenders
  *

@@ -137,7 +137,7 @@ private:
     NTSTATUS SetAC97Default (void);
 
     //
-    // Aquires the semaphore for AC97 register access.
+    // Acquires the semaphore for AC97 register access.
     //
     NTSTATUS AcquireCodecSemiphore (void);
 
@@ -158,7 +158,7 @@ private:
     NTSTATUS ReadNABMCtrlRegs (void);
 
     //
-    // Writes back native audio bus master control resgister to be used upon 
+    // Writes back native audio bus master control register to be used upon 
     // resume.
     //
     NTSTATUS RestoreNABMCtrlRegs (void);
@@ -235,7 +235,7 @@ public:
     };
 
     //
-    // Returns the AC97 register that is assosiated with the node.
+    // Returns the AC97 register that is associated with the node.
     //
     STDMETHODIMP_(AC97Register) GetNodeReg
     (   IN  TopoNodes node
@@ -245,7 +245,7 @@ public:
     };
 
     //
-    // Returns the AC97 register mask that is assosiated with the node.
+    // Returns the AC97 register mask that is associated with the node.
     //
     STDMETHODIMP_(WORD) GetNodeMask
     (

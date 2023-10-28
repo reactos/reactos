@@ -171,9 +171,9 @@ extern const xmlChar *xsltConstNamespaceNameXSLT;
 /**
  * XSLT_REFACTORED_MANDATORY_VERSION:
  *
- * TODO: Currently disabled to surpress regression test failures, since
+ * TODO: Currently disabled to suppress regression test failures, since
  *  the old behaviour was that a missing version attribute
- *  produced a only a warning and not an error, which was incerrect.
+ *  produced a only a warning and not an error, which was incorrect.
  *  So the regression tests need to be fixed if this is enabled.
  */
 /* #define XSLT_REFACTORED_MANDATORY_VERSION */
@@ -288,7 +288,7 @@ struct _xsltTemplate {
     void *params;       /* xsl:param instructions */
 
     int              templNr;		/* Nb of templates in the stack */
-    int              templMax;		/* Size of the templtes stack */
+    int              templMax;		/* Size of the templates stack */
     xsltTemplatePtr *templCalledTab;	/* templates called */
     int             *templCountTab;  /* .. and how often */
 
@@ -1137,7 +1137,7 @@ struct _xsltStyleItemUknown {
  *  field will hold now the xsltStyleItemExtElementPtr and not
  *  the xsltElemPreCompPtr.
  *  However the place where the structure is anchored in the node-tree,
- *  namely node->psvi, has beed already once been moved from node->_private
+ *  namely node->psvi, has been already once been moved from node->_private
  *  to node->psvi, so we have a precedent here, which, I think, should allow
  *  us to change such semantics without headaches.
  */
@@ -1162,7 +1162,7 @@ struct _xsltEffectiveNs {
     const xmlChar *prefix;
     const xmlChar *nsName;
     /*
-    * Indicates if eclared on the literal result element; dunno if really
+    * Indicates if declared on the literal result element; dunno if really
     * needed.
     */
     int holdByElem;
@@ -1675,7 +1675,7 @@ struct _xsltTransformContext {
 
     xsltTemplatePtr  templ;		/* the current template */
     int              templNr;		/* Nb of templates in the stack */
-    int              templMax;		/* Size of the templtes stack */
+    int              templMax;		/* Size of the templates stack */
     xsltTemplatePtr *templTab;		/* the template stack */
 
     xsltStackElemPtr  vars;		/* the current variable list */

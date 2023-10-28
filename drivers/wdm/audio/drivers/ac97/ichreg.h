@@ -41,7 +41,7 @@ const ULONG MC_PIV          = 0x2A; // Mic In Prefetch Index Value
 const ULONG MC_CR           = 0x2B; // Mic In Control Register
 const ULONG GLOB_CNT        = 0x2C; // Global Control
 const ULONG GLOB_STA        = 0x30; // Global Status
-const ULONG CAS             = 0x34; // Codec Access Semiphore
+const ULONG CAS             = 0x34; // Codec Access Semaphore
 
 // Defines for relative accesses (offsets)
 const ULONG X_PI_BASE       = 0x00; // PCM In Base
@@ -55,9 +55,9 @@ const ULONG X_PICB          = 0x08; // Position In Current Buffer
 const ULONG X_PIV           = 0x0A; // Prefetch Index Value
 const ULONG X_CR            = 0x0B; // Control Register
 
-// Bits defined in satatus register (*_SR)
+// Bits defined in status register (*_SR)
 const USHORT SR_FIFOE       = 0x0010;   // FIFO error
-const USHORT SR_BCIS        = 0x0008;   // Buffer Completeion Interrupt Status
+const USHORT SR_BCIS        = 0x0008;   // Buffer Completion Interrupt Status
 const USHORT SR_LVBCI       = 0x0004;   // Last Valid Buffer Completion Interrupt
 const USHORT SR_CELV        = 0x0002;   // Last Valid Buffer Completion Interrupt
 
@@ -74,8 +74,8 @@ const ULONG GLOB_CNT_GIE    = 0x00000001;   // GPI Interrupt Enable
 // Global Status bit defines (GLOB_STA)
 const ULONG GLOB_STA_MC6    = 0x00200000;   // Multichannel Capability 6 channel
 const ULONG GLOB_STA_MC4    = 0x00100000;   // Multichannel Capability 4 channel
-const ULONG GLOB_STA_MD3    = 0x00020000;   // Modem Power Down Semiphore
-const ULONG GLOB_STA_AD3    = 0x00010000;   // Audio Power Down Semiphore
+const ULONG GLOB_STA_MD3    = 0x00020000;   // Modem Power Down Semaphore
+const ULONG GLOB_STA_AD3    = 0x00010000;   // Audio Power Down Semaphore
 const ULONG GLOB_STA_RCS    = 0x00008000;   // Read Completion Status
 const ULONG GLOB_STA_B3S12  = 0x00004000;   // Bit 3 Slot 12
 const ULONG GLOB_STA_B2S12  = 0x00002000;   // Bit 2 Slot 12
@@ -89,8 +89,8 @@ const ULONG GLOB_STA_POINT  = 0x00000040;   // PCM Out Interrupt
 const ULONG GLOB_STA_PIINT  = 0x00000020;   // PCM In Interrupt
 const ULONG GLOB_STA_MOINT  = 0x00000004;   // Modem Out Interrupt
 
-// CoDec Access Semiphore bit defines (CAS)
-const UCHAR CAS_CAS         = 0x01; // Codec Access Semiphore Bit
+// CoDec Access Semaphore bit defines (CAS)
+const UCHAR CAS_CAS         = 0x01; // Codec Access Semaphore Bit
 
 // DMA Engine Control Register (*_CR) bit defines
 const UCHAR CR_IOCE         = 0x10; // Interrupt On Completion Enable

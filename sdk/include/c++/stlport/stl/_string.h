@@ -90,7 +90,7 @@ _STLP_BEGIN_NAMESPACE
 //     value_type is not a POD it is value_type().
 // (4) [finish + 1, end_of_storage) is a valid range.
 // (5) Each iterator in [finish + 1, end_of_storage) points to
-//     unininitialized memory.
+//     uninitialized memory.
 
 // Note one important consequence: a string of length n must manage
 // a block of memory whose size is at least n + 1.
@@ -289,7 +289,7 @@ public:                         // Constructor, destructor, assignment.
 #    endif
 #  endif
 #  if defined (_STLP_USE_MSVC6_MEM_T_BUG_WORKAROUND)
-  /* We need an additionnal constructor to build an empty string without
+  /* We need an additional constructor to build an empty string without
    * any allocation or termination char*/
 protected:
   struct _CalledFromWorkaround_t {};
@@ -1135,7 +1135,7 @@ inline void _STLP_CALL swap(wstring& __x, wstring& __y)
 template <class _CharT, class _Traits, class _Alloc>
 struct __move_traits<basic_string<_CharT, _Traits, _Alloc> > {
   typedef __true_type implemented;
-  //Completness depends on the allocator:
+  //Completeness depends on the allocator:
   typedef typename __move_traits<_Alloc>::complete complete;
 };
 /*#else

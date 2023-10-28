@@ -174,7 +174,7 @@ Quickie:
  * specified Object Directory.
  *
  * @param ObjectDirectory
- *        Handle fo the Object Directory to protect.
+ *        Handle to the Object Directory to protect.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
@@ -457,7 +457,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     /* Check if this is the first Session */
     if (Session)
     {
-        /* Not the first, so the name will be slighly more complex */
+        /* Not the first, so the name will be slightly more complex */
         swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
         RtlInitUnicodeString(&BnoString, BnoBuffer);
     }

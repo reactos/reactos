@@ -264,7 +264,7 @@ struct _STL_SAME_TYPE_ERROR {
 };
 
 
-// Some Functon Object Checks
+// Some Funciton Object Checks
 
 template <class _Func, class _Ret>
 struct _STL_GENERATOR_ERROR {

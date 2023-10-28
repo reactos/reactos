@@ -431,7 +431,7 @@ typedef DIRENT *PDIRENT;
 //  This macro returns the first Lbo (zero based) of the root directory on
 //  the device.  This area is after the reserved and fats.
 //
-//  For Fat32, the root directory is moveable.  This macro returns the LBO
+//  For Fat32, the root directory is movable.  This macro returns the LBO
 //  for cluster 2 because it is used to determine the location of cluster 2.
 //  FatRootDirectoryLbo32() returns the actual LBO of the beginning of the
 //  actual root directory.
@@ -476,7 +476,7 @@ typedef DIRENT *PDIRENT;
 // After DOS 4.0, at least one of these, Sectors or LargeSectors, will be zero.
 // but DOS version 3.2 case, both of these value might contains some value,
 // because, before 3.2, we don't have Large Sector entry, some disk might have
-// unexpected value in the field, we will use LargeSectors if Sectors eqaul to zero.
+// unexpected value in the field, we will use LargeSectors if Sectors equal to zero.
 //
 
 #define FatNumberOfClusters(B) (                                         \

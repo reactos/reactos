@@ -481,7 +481,7 @@ typedef struct _SPropProblemArray
 typedef ULONG BOOKMARK;
 
 #define BOOKMARK_BEGINNING ((BOOKMARK)0) /* The first row */
-#define BOOKMARK_CURRENT   ((BOOKMARK)1) /* The curent table row */
+#define BOOKMARK_CURRENT   ((BOOKMARK)1) /* The current table row */
 #define BOOKMARK_END       ((BOOKMARK)2) /* The last row */
 
 /* Row restrictions */

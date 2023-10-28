@@ -1,4 +1,4 @@
-// A TParser is a class for parsing input and formatting it (presumabyl for
+// A TParser is a class for parsing input and formatting it (presumably for
 // display on the screen).  All parsers are derived from the TParser class,
 // in order to facilitate extending telnet to include other kinds of
 // output.  Currently, only one parser is implemented, the ANSI parser.

@@ -131,7 +131,7 @@ typedef struct ext3_dir_entry_2 EXT2_DIR_ENTRY2, *PEXT2_DIR_ENTRY2;
 
 #define CL_ASSERT(cond) do {switch('x') {case (cond): case 0: break;}} while (0)
 
-/* File System Releated *************************************************/
+/* File System Related *************************************************/
 
 #define DRIVER_NAME      "Ext2Fsd"
 #define DEVICE_NAME     L"\\Ext2Fsd"
@@ -340,7 +340,7 @@ Ext2ClearFlag(PULONG Flags, ULONG FlagBit)
 #define Ext2BugCheck(A,B,C,D) { KeBugCheckEx(EXT2_FILE_SYSTEM, A | __LINE__, B, C, D ); }
 
 
-/* Ext2 file system definions *******************************************/
+/* Ext2 file system define-e+ions *******************************************/
 
 //
 // The second extended file system magic number
@@ -352,7 +352,7 @@ Ext2ClearFlag(PULONG Flags, ULONG FlagBit)
 #define EXT2_MIN_FRAG           1024
 #define EXT2_MAX_USER_BLKSIZE   65536
 //
-// Inode flags (Linux uses octad number, but why ? strange!!!)
+// Inode flags (Linux uses octal number, but why ? strange!!!)
 //
 
 #define S_IFMT   0x0F000            /* 017 0000 */
@@ -434,7 +434,7 @@ Ext2ClearFlag(PULONG Flags, ULONG FlagBit)
 
 
 /*
- * We need 8-bytes aligned for all the sturctures
+ * We need 8-bytes aligned for all the structures
  * It's a must for all ERESOURCE allocations
  */
 
@@ -573,11 +573,11 @@ typedef struct _EXT2_GLOBAL {
     BOOLEAN                     bHidingSuffix;
     CHAR                        sHidingSuffix[HIDINGPAT_LEN];
 
-    /* Registery path */
+    /* Registry path */
     UNICODE_STRING              RegistryPath;
 
     /* global memory and i/o statistics and memory allocations
-       of various sturctures */
+       of various structures */
 
     EXT2_PERF_STATISTICS_V2     PerfStat;
 
@@ -594,7 +594,7 @@ typedef struct _EXT2_GLOBAL {
 #define EXT2_AUTO_MOUNT         0x00000010
 
 //
-// Glboal Ext2Fsd Memory Block
+// Global Ext2Fsd Memory Block
 //
 
 extern PEXT2_GLOBAL Ext2Global;
@@ -760,7 +760,7 @@ typedef struct _EXT2_VCB {
     BOOLEAN                     bHidingSuffix;
     CHAR                        sHidingSuffix[HIDINGPAT_LEN];
 
-    /* User to impersanate */
+    /* User to impersonate */
     uid_t                       uid;
     gid_t                       gid;
 
@@ -1437,7 +1437,7 @@ Ext2SupersedeOrOverWriteFile(
 #define DL_FUN 0x00000010
 #define DL_LOW 0x00000020
 #define DL_REN 0x00000040   /* renaming operation */
-#define DL_RES 0x00000080   /* entry reference managment */
+#define DL_RES 0x00000080   /* entry reference management */
 #define DL_BLK 0x00000100   /* data block allocation / free */
 #define DL_CP  0x00000200   /* code pages (create, querydir) */
 #define DL_EXT 0x00000400   /* mcb extents */
@@ -2681,7 +2681,7 @@ Ext2TruncateIndirect(
 
 
 //
-// linux.c: linux lib implemenation
+// linux.c: linux lib implementation
 //
 
 int

@@ -201,7 +201,7 @@ typedef struct _DEVICE_EXTENSION
     KSPIN_LOCK IdleReqStateLock;
     KEVENT NoIdleReqPendEvent;
 
-    // Default power state to power down to on self-susped
+    // Default power state to power down to on self-suspend
     ULONG PowerDownLevel;
 
     // remote wakeup variables

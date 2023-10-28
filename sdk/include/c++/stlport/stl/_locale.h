@@ -317,7 +317,7 @@ _STLP_MOVE_TO_PRIV_NAMESPACE
 /* _GetFacetId is a helper function that allow delaying access to
  * facet id static instance in the library source code to avoid
  * the other static instances that many compilers are generating
- * in all dynamic library or executable when instanciating facet
+ * in all dynamic library or executable when instantiating facet
  * template class.
  */
 template <class _Facet>

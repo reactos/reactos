@@ -123,7 +123,7 @@ typedef		TVSORTEX				TV_SORTEX;
 #define 	VK_ICONCLK				0x10001				// Edit with click on icon
 #endif
 #ifndef		VK_EDITCLK
-#define 	VK_EDITCLK				0x10002				// Edit with click on augewähltes Element //visble element ?
+#define 	VK_EDITCLK				0x10002				// Edit with click on selected Element //visible element ?
 #endif
 #ifdef		UNICODE
 #define		TV_UINICODE				1
@@ -271,7 +271,7 @@ typedef		TVSORTEX				TV_SORTEX;
 #define 	TVS_EX_SUBSELECT		0x00040000			// allow to select columns
 #define 	TVS_EX_FULLROWMARK		0x00080000			// the row mark fill the entire row
 #define 	TVS_EX_TOOLTIPNOTIFY	0x00100000			// send a TVN_ITEMTOOLTIP notify to query for tooltip
-#define 	TVS_EX_AUTOEXPANDICON	0x00200000			// use automaticaly the next icon for expanded items
+#define 	TVS_EX_AUTOEXPANDICON	0x00200000			// use automatically the next icon for expanded items
 #define 	TVS_EX_NOCHARSELCET		0x00400000			// disable looping selection of items via keyboard 
 #define 	TVS_EX_NOCOLUMNRESIZE	0x00800000			// user cannot change the columns width
 #define 	TVS_EX_HIDEHEADERS		0x01000000			// hide the header

@@ -17,7 +17,7 @@
 //   and the virtual key code they have.                         //
 //   If you repeat a name you'll overwrite the code.             //
 //   You can name the keys anything you like                     //
-//   The Virtual key nymber must be in Decimal                   //
+//   The Virtual key number must be in Decimal                   //
 //   After the number you can put anything : it is ignored       //
 //   Here you must put ALL the keys you'll use in the            //
 //   other sections.                                             //
@@ -36,7 +36,7 @@
 //   There are three parts :                                     //
 //      a) the key name                                          //
 //      b) the shift state                                       //
-//         here you put compination of the words :               //
+//         here you put combination of the words :               //
 //                                                               //
 //                RIGHT_ALT                                      //
 //                LEFT_ALT                                       //
@@ -55,7 +55,7 @@
 //         You can't use the NULL !!!                            //
 //         Also (for the moment) you can't use spaces            //
 //         in the string : everything after the 3rd word is      //
-//           ignored - use unsderscore instead.                  //
+//           ignored - use underscore instead.                  //
 //                                                               //
 //   for  example :                                              //
 //                                                               //

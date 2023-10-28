@@ -717,7 +717,7 @@ struct ANSUNC DWebBrowserEvents2Impl
 			_callback->DownloadComplete();
 			break;
 
-		  case DISPID_ONTHEATERMODE:	// sent when theater mode should be on/off
+		  case DISPID_ONTHEATERMODE:	// sent when heater mode should be on/off
 			if (pDispParams->cArgs != 1)
 				return E_INVALIDARG;
 			_callback->OnTheatermode(Variant(pDispParams->rgvarg[0]));
@@ -848,7 +848,7 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 
-	 // DWebBrowserEvents2Impl overides ->
+	 // DWebBrowserEvents2Impl overrides ->
 
     void BeforeNavigate2(IDispatch* pDisp, const Variant& url, const Variant& flags,
 							const Variant& targetFrameName, const Variant& postData,

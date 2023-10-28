@@ -204,7 +204,7 @@ iterator_category(const ostream_iterator<_TpP, _CharT, _Traits>&) { return outpu
 
 _STLP_END_NAMESPACE
 
-// form-independent definiotion of stream iterators
+// form-independent definition of stream iterators
 _STLP_BEGIN_NAMESPACE
 
 template < __ISI_TMPL_HEADER_ARGUMENTS >

@@ -241,7 +241,7 @@ typedef struct _TOKEN_PRIMARY_GROUP { // tpg
 
 #endif //WIN64
 
-//  The following macro is used to detemine if the file object is opened
+//  The following macro is used to determine if the file object is opened
 //  for read only access (i.e., it is not also opened for write access or
 //  delete access).
 //

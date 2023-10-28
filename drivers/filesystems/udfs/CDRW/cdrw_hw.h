@@ -840,7 +840,7 @@ typedef union _CDB {
 // Mode Sense/Select page constants.
 
 #define MODE_PAGE_ERROR_RECOVERY        0x01
-#define MODE_PAGE_MRW2                  0x03        // fuck, standard commitee claimed new standard
+#define MODE_PAGE_MRW2                  0x03        // fuck, standard committee claimed new standard
 #define MODE_PAGE_WRITE_PARAMS          0x05
 #define MODE_PAGE_VERIFY_ERROR          0x07        // shall not be used
 #define MODE_PAGE_CACHING               0x08        // undocumented, but used by DirectCd
@@ -2302,7 +2302,7 @@ typedef struct _DISC_INFO_BLOCK {        //
 #define DiscInfo_BGF_Complete        0x03     //  /  to check MRW state on old drives
 
 #define DiscInfo_DBit           0x04    // MRW structures may be not current (dirty)
-#define DiscInfo_DAC_V          0x10    // Disk Appclication Code valid
+#define DiscInfo_DAC_V          0x10    // Disk Application Code valid
 #define DiscInfo_URU            0x20    // unrestricted use (1 for CD/DVD, 0 for DB)
 #define DiscInfo_DBC_V          0x40    // Disk Bar Code valid
 #define DiscInfo_DID_V          0x80    // DiskID valid
@@ -3313,7 +3313,7 @@ typedef struct _PROFILE_LIST_DESCRIPTOR {
 // Profile descriptor format
 typedef struct _PROFILE_DESCRIPTOR {
     UCHAR    ProfileNum[2];            // Profile Number
-    UCHAR    CurrentProfile : 1;       // indicate that this Profile curently active
+    UCHAR    CurrentProfile : 1;       // indicate that this Profile currently active
     UCHAR    Reserved1 : 7;
     UCHAR    Reserved;
 } PROFILE_DESCRIPTOR, *PPROFILE_DESCRIPTOR;

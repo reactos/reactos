@@ -122,7 +122,7 @@ typedef struct _UDFContextControlBlock {
     PUNICODE_STRING                     DirectorySearchPattern;
     HASH_ENTRY                          hashes;
     ULONG                               TreeLength;
-    // Acces rights previously granted to caller's thread
+    // Access rights previously granted to caller's thread
     ACCESS_MASK                         PreviouslyGrantedAccess;
 } UDFCCB, *PtrUDFCCB;
 
@@ -149,7 +149,7 @@ typedef struct _UDFContextControlBlock {
 #define UDF_CCB_ACCESSED                        (0x00000010)
 #define UDF_CCB_MODIFIED                        (0x00000020)
 // if an application process set the file date time, we must
-//  honor that request and *not* overwrite the values at cleanup
+//  honour that request and *not* overwrite the values at cleanup
 #define UDF_CCB_ACCESS_TIME_SET                 (0x00000040)
 #define UDF_CCB_MODIFY_TIME_SET                 (0x00000080)
 #define UDF_CCB_CREATE_TIME_SET                 (0x00000100)
@@ -211,7 +211,7 @@ typedef struct _UDFNTRequiredFCB {
     LARGE_INTEGER                       LastAccessTime;
     LARGE_INTEGER                       LastWriteTime;
     LARGE_INTEGER                       ChangeTime;
-    // NT requires that a file system maintain and honor the various
+    // NT requires that a file system maintain and honour the various
     //  SHARE_ACCESS modes ...
     SHARE_ACCESS                        FCBShareAccess;
     // This counter is used to prevent unexpected structure releases

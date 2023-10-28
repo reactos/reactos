@@ -213,7 +213,7 @@ private:
   {}
 
   typedef time_get_byname<_Ch, _InIt> _Self;
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   time_get_byname(_Self const&);
   _Self& operator = (_Self const&);
 };
@@ -301,7 +301,7 @@ private:
   {}
 
   typedef time_put_byname<_Ch, _OutIt> _Self;
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   time_put_byname(_Self const&);
   _Self& operator = (_Self const&);
 };

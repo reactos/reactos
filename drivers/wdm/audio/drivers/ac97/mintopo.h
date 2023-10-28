@@ -313,7 +313,7 @@ public:
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
 
-    // property handler for muxer. we have just two muxer, one for recording
+    // property handler for mixer. we have just two mixer, one for recording
     // and one for mono out.
     static NTSTATUS NTAPI PropertyHandler_Ulong
     (

@@ -45,7 +45,7 @@
 #define TAG_DCIOBJ      'M0hG' /* Correct? */
 #define TAG_SPOOL       'N0hG' /* Correct? */
 
-/* Dx internal tags rember I do not known if it right namees */
+/* Dx internal tags remember I do not known if it right names */
 #define TAG_DXPVMLIST   'LPXD' /* pmvlist for the driver */
 #define TAG_DXFOURCC    'OFXD' /* pdwFourCC for the driver */
 #define TAG_DDRAW       '1 hD'

@@ -95,7 +95,7 @@
 /* Support NeXT 2-bit RLE algorithm */
 #define NEXT_SUPPORT 1
 
-/* Support Old JPEG compresson (read contrib/ojpeg/README first! Compilation
+/* Support Old JPEG compression (read contrib/ojpeg/README first! Compilation
    fails with unpatched IJG JPEG library) */
 /* #undef OJPEG_SUPPORT */
 
@@ -112,7 +112,7 @@
 /* #undef ZIP_SUPPORT */
 
 /* Support strip chopping (whether or not to convert single-strip uncompressed
-   images to mutiple strips of ~8Kb to reduce memory usage) */
+   images to multiple strips of ~8Kb to reduce memory usage) */
 #define STRIPCHOP_DEFAULT TIFF_STRIPCHOP
 
 /* Enable SubIFD tag (330) support */

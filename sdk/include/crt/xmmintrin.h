@@ -1086,7 +1086,7 @@ __INTRIN_INLINE_SSE void _mm_storer_ps(float *__p, __m128 __a)
     _mm_store_ps(__p, __tmp);
 }
 
-/* GCC / Clang specific consants */
+/* GCC / Clang specific constants */
 #define _MM_HINT_NTA_ALT 0
 #define _MM_HINT_T0_ALT  3
 #define _MM_HINT_T1_ALT  2

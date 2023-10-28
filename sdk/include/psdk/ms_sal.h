@@ -136,7 +136,7 @@
      _Success_(return != FALSE) BOOL
      PathCanonicalizeA(_Out_writes_(MAX_PATH) LPSTR pszBuf, LPCSTR pszPath) :
         pszBuf is only guaranteed to be NULL-terminated when TRUE is returned,
-        and FALSE indiates failure. In common practice, callers check for zero
+        and FALSE indicates failure. In common practice, callers check for zero
         vs. non-zero returns, so it is preferable to express the success
         criteria in terms of zero/non-zero, not checked for exactly TRUE.
 
@@ -269,7 +269,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 // Only applicable with functions that have  _Success_ or _Return_type_succss_.
 #define _Always_(annos)                  _Always_impl_(annos _SAL_nop_impl_)
 
-// Usable on a function defintion. Asserts that a function declaration is
+// Usable on a function definition. Asserts that a function declaration is
 // in scope, and its annotations are to be used. There are no other annotations
 // allowed on the function definition.
 #define _Use_decl_annotations_         _Use_decl_anno_impl_
@@ -294,7 +294,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 // Reserved pointer parameters, must always be NULL.
 #define _Reserved_                      _SAL2_Source_(_Reserved_, (), _Pre1_impl_(__null_impl))
 
-// _Const_ allows specification that any namable memory location is considered
+// _Const_ allows specification that any nameable memory location is considered
 // readonly for a given call.
 #define _Const_                         _SAL2_Source_(_Const_, (), _Pre1_impl_(__readaccess_impl_notref))
 
@@ -583,7 +583,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 
 // Annotations to allow expressing generalized pre and post conditions.
 // 'cond' may be any valid SAL expression that is considered to be true as a precondition
-// or postcondition (respsectively).
+// or postcondition (respectively).
 #define _Pre_satisfies_(cond)       _SAL2_Source_(_Pre_satisfies_, (cond), _Pre_satisfies_impl_(cond))
 #define _Post_satisfies_(cond)      _SAL2_Source_(_Post_satisfies_, (cond), _Post_satisfies_impl_(cond))
 
@@ -812,7 +812,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _In_bytecount_(size)           _SAL1_1_Source_(_In_bytecount_, (size), _Pre_bytecount_(size)     _Deref_pre_readonly_)
 #define _In_opt_bytecount_(size)       _SAL1_1_Source_(_In_opt_bytecount_, (size), _Pre_opt_bytecount_(size) _Deref_pre_readonly_)
 
-// valid buffer extent described by a constant extression
+// valid buffer extent described by a constant expression
 #define _In_count_c_(size)             _SAL1_1_Source_(_In_count_c_, (size), _Pre_count_c_(size)         _Deref_pre_readonly_)
 #define _In_opt_count_c_(size)         _SAL1_1_Source_(_In_opt_count_c_, (size), _Pre_opt_count_c_(size)     _Deref_pre_readonly_)
 #define _In_bytecount_c_(size)         _SAL1_1_Source_(_In_bytecount_c_, (size), _Pre_bytecount_c_(size)     _Deref_pre_readonly_)
@@ -827,7 +827,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _In_z_bytecount_(size)           _SAL1_1_Source_(_In_z_bytecount_, (size), _Pre_z_ _Pre_bytecount_(size)     _Deref_pre_readonly_)
 #define _In_opt_z_bytecount_(size)       _SAL1_1_Source_(_In_opt_z_bytecount_, (size), _Pre_opt_z_ _Pre_opt_bytecount_(size) _Deref_pre_readonly_)
 
-// nullterminated valid buffer extent described by a constant extression
+// nullterminated valid buffer extent described by a constant expression
 #define _In_z_count_c_(size)             _SAL1_1_Source_(_In_z_count_c_, (size), _Pre_z_ _Pre_count_c_(size)         _Deref_pre_readonly_)
 #define _In_opt_z_count_c_(size)         _SAL1_1_Source_(_In_opt_z_count_c_, (size), _Pre_opt_z_ _Pre_opt_count_c_(size)     _Deref_pre_readonly_)
 #define _In_z_bytecount_c_(size)         _SAL1_1_Source_(_In_z_bytecount_c_, (size), _Pre_z_ _Pre_bytecount_c_(size)     _Deref_pre_readonly_)
@@ -1489,7 +1489,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 // not required to be a legal standalone annotation, and in the case
 // of attribute annotations, usually is not.  (In the case of some declspec
 // annotations, it might be, but it should not be assumed so.)  Those
-// symols will be used in the _PreN..., _PostN... and _RetN... annotations
+// symbols will be used in the _PreN..., _PostN... and _RetN... annotations
 // to build up more complete annotations.
 
 // A symbol ending in _impl_ is reserved to the implementation as well,
@@ -2402,7 +2402,7 @@ extern "C" {
      In the primitive "SAL_*" annotations "SAL" stands for Standard
      Annotation Language.  These "SAL_*" annotations are the
      primitives the compiler understands and high-level MACROs
-     will decompose into these primivates.
+     will decompose into these primitives.
     */
 
     #define _SA_SPECSTRIZE( x ) #x
@@ -2425,7 +2425,7 @@ extern "C" {
     /*
      __readonly l
      __notreadonly l
-     __mabyereadonly l
+     __maybereadonly l
 
      Annotates a location l. States that location l is not modified after
      this point.  If the annotation is placed on the precondition state of

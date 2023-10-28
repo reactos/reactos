@@ -139,7 +139,7 @@ protected:
 private:
   messages_byname(_Locale_messages*);
   typedef messages_byname<char> _Self;
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   messages_byname(_Self const&);
   _Self& operator = (_Self const&);
 
@@ -167,7 +167,7 @@ protected:
 private:
   messages_byname(_Locale_messages*);
   typedef messages_byname<wchar_t> _Self;
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   messages_byname(_Self const&);
   _Self& operator = (_Self const&);
 

@@ -202,7 +202,7 @@ typedef enum _KEY_SET_INFORMATION_CLASS
 #endif
 
 //
-// Plag and Play Classes
+// Plug and Play Classes
 //
 typedef enum _PLUGPLAY_CONTROL_CLASS
 {
@@ -240,7 +240,7 @@ typedef enum _PLUGPLAY_BUS_CLASS
 } PLUGPLAY_BUS_CLASS, *PPLUGPLAY_BUS_CLASS;
 
 //
-// Plag and Play Bus Types
+// Plug and Play Bus Types
 //
 typedef enum _PLUGPLAY_VIRTUAL_BUS_TYPE
 {
@@ -249,7 +249,7 @@ typedef enum _PLUGPLAY_VIRTUAL_BUS_TYPE
 } PLUGPLAY_VIRTUAL_BUS_TYPE, *PPLUGPLAY_VIRTUAL_BUS_TYPE;
 
 //
-// Plag and Play Event Categories
+// Plug and Play Event Categories
 //
 typedef enum _PLUGPLAY_EVENT_CATEGORY
 {

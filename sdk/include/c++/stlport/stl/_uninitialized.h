@@ -94,7 +94,7 @@ inline _OutputIter __ucopy(_RandomAccessIter __first, _RandomAccessIter __last,
   _STLP_RET_AFTER_THROW(__cur)
 }
 
-//Used internaly
+//Used internally
 template <class _RandomAccessIter, class _OutputIter>
 inline _OutputIter __ucopy(_RandomAccessIter __first, _RandomAccessIter __last, _OutputIter __result)
 { return __ucopy(__first, __last, __result, random_access_iterator_tag(), (ptrdiff_t*)0); }
@@ -411,7 +411,7 @@ __uninitialized_copy_fill(_Iter __first1, _Iter __last1, _Iter __first2, _Iter _
 }
 
 /* __uninitialized_move:
- * This function is used internaly and only with pointers as iterators.
+ * This function is used internally and only with pointers as iterators.
  */
 template <class _InputIter, class _ForwardIter, class _TrivialUCpy>
 inline _ForwardIter

@@ -135,7 +135,7 @@ extern CDROM_SCAN_FOR_SPECIAL_INFO CdromHackItems[];
 #define MEDIA_CHANGE_TIMEOUT_TIME  300
 
 // Indicates whether is is safe to send StartUnit commands
-// to this device. It will only be off for some removeable devices.
+// to this device. It will only be off for some removable devices.
 #define DEV_SAFE_START_UNIT 0x00000004
 
 // Indicates that the device is connected to a backup power supply
@@ -682,7 +682,7 @@ typedef struct _COMPLETION_CONTEXT {
 
 //
 // This value is used as the upper limit for all commands CDROM sends down
-// to device, unless the default timeout value is overriden by registry value
+// to device, unless the default timeout value is overridden by registry value
 // "TimeOutValue" and it is larger than this value.
 //
 #define SCSI_CDROM_OPC_TIMEOUT      260
@@ -777,7 +777,7 @@ VOID
     _In_ ULONG_PTR                Data
     );
 
-// Rountines Definition
+// Routines Definition
 
 #define FREE_POOL(_PoolPtr)     \
     if (_PoolPtr != NULL) {     \

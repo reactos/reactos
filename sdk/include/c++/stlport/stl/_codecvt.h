@@ -52,7 +52,7 @@ public:
 #if defined (_STLP_MSVC) && (_STLP_MSVC < 1300)
   /* For the moment VC6 do not support this facet default implementation
    * because of the static locale::id instance. When VC6 see this definition
-   * it goes crasy with locale::id static instances and all the has_facet tests
+   * it goes crazy with locale::id static instances and all the has_facet tests
    * unit tests are failing.
    */
 };

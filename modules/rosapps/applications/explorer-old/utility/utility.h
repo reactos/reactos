@@ -421,7 +421,7 @@ protected:
 
  // window utilities
 
- /// ClientRect retreives the client area rectangle of a window.
+ /// ClientRect retrieves the client area rectangle of a window.
 struct ClientRect : public RECT
 {
 	ClientRect(HWND hwnd)
@@ -434,7 +434,7 @@ struct ClientRect : public RECT
 	POINT& pos() {return *(LPPOINT)this;}
 };
 
- /// ClientRect retreives the window rectangle of a window.
+ /// ClientRect retrieves the window rectangle of a window.
 struct WindowRect : public RECT
 {
 	WindowRect(HWND hwnd)
@@ -467,11 +467,11 @@ struct Point : public POINT
 };
 
 
- /// transform coordinates in a RECT from client to screen coordiantes
+ /// transform coordinates in a RECT from client to screen coordinates
 inline void ClientToScreen(HWND hwnd, RECT* prect)
  {::ClientToScreen(hwnd,(LPPOINT)&prect->left); ::ClientToScreen(hwnd,(LPPOINT)&prect->right);}
 
- /// transform coordinates in a RECT from screen to client coordiantes
+ /// transform coordinates in a RECT from screen to client coordinates
 inline void ScreenToClient(HWND hwnd, RECT* prect)
  {::ScreenToClient(hwnd,(LPPOINT)&prect->left); ::ScreenToClient(hwnd,(LPPOINT)&prect->right);}
 
@@ -538,7 +538,7 @@ protected:
 
  // double buffering classes
 
- /// Memory Canvas creates and destroys memory devoce contexts.
+ /// Memory Canvas creates and destroys memory device contexts.
 struct MemCanvas : public Canvas
 {
 	MemCanvas(HDC hdc=0)
@@ -547,7 +547,7 @@ struct MemCanvas : public Canvas
 	~MemCanvas() {DeleteDC(_hdc);}
 };
 
- /// SelectedBitmap is used to localy select bitmaps into device contexts.
+ /// SelectedBitmap is used to locally select bitmaps into device contexts.
 struct SelectedBitmap
 {
 	SelectedBitmap(HDC hdc, HBITMAP hbmp)
@@ -852,7 +852,7 @@ struct String
 	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
 #endif
 
-	LPTSTR str() {return (LPTSTR)data();}	/// return modifyable character string pointer
+	LPTSTR str() {return (LPTSTR)data();}	/// return modifiable character string pointer
 
 	String& printf(LPCTSTR fmt, ...)
 	{
@@ -978,7 +978,7 @@ protected:
 String get_windows_version_str();
 
 
- /// link dynamicly to functions by using GetModuleHandle() and GetProcAddress()
+ /// link dynamically to functions by using GetModuleHandle() and GetProcAddress()
 template<typename FCT> struct DynamicFct
 {
 	DynamicFct(LPCTSTR moduleName, UINT ordinal)
@@ -1003,7 +1003,7 @@ protected:
 };
 
 
- /// link dynamicly to functions by using LoadLibrary() and GetProcAddress()
+ /// link dynamicaly to functions by using LoadLibrary() and GetProcAddress()
 template<typename FCT> struct DynamicLoadLibFct
 {
 	DynamicLoadLibFct(LPCTSTR moduleName, UINT ordinal)

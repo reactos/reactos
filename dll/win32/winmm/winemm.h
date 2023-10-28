@@ -69,7 +69,7 @@ typedef	DWORD	(CALLBACK *WINEMM_msgFunc32)(UINT, UINT, DWORD_PTR, DWORD_PTR, DWO
  */
 typedef struct tagWINE_MM_DRIVER_PART {
     int				nIDMin;		/* lower bound of global indexes for this type */
-    int				nIDMax;		/* hhigher bound of global indexes for this type */
+    int				nIDMax;		/* higher bound of global indexes for this type */
     WINEMM_msgFunc32	        fnMessage32;	/* pointer to function */
 } WINE_MM_DRIVER_PART;
 

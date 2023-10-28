@@ -148,7 +148,7 @@ struct netbuf {
 };
 
 /*
- * The format of the addres and options arguments of the XTI t_bind call.
+ * The format of the address and options arguments of the XTI t_bind call.
  * Only provided for compatibility, it should not be used.
  */
 

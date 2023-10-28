@@ -124,7 +124,7 @@ __inline OSSTATUS UDFFindFile__(IN PVCB Vcb,
 
 // calculate file mapping length (in bytes) including ZERO-terminator
 uint32   UDFGetMappingLength(IN PEXTENT_MAP Extent);
-// merge 2 sequencial file mappings
+// merge 2 sequential file mappings
 PEXTENT_MAP
 __fastcall UDFMergeMappings(IN PEXTENT_MAP Extent,
                              IN PEXTENT_MAP Extent2);
@@ -163,7 +163,7 @@ OSSTATUS UDFReadFileEntry(IN PVCB Vcb,
 OSSTATUS UDFFindLastFileSet(IN PVCB Vcb,
                             IN lb_addr *Addr,  // Addr for the 1st FileSet
                             IN OUT PFILE_SET_DESC FileSetDesc);
-// read all sparing tables & stores them in contiguos memory
+// read all sparing tables & stores them in contiguous memory
 OSSTATUS UDFLoadSparingTable(IN PVCB Vcb,
                               IN PSPARABLE_PARTITION_MAP PartMap);
 // build mapping for extent
@@ -259,7 +259,7 @@ SIZE_T    UDFFindMinSuitableExtent(IN PVCB Vcb,
                                    IN uint8  AllocFlags);
 
 #ifdef UDF_CHECK_DISK_ALLOCATION
-// mark space described by Mapping as Used/Freed (optionaly)
+// mark space described by Mapping as Used/Freed (optionally)
 void     UDFCheckSpaceAllocation_(IN PVCB Vcb,
                                   IN PEXTENT_MAP Map,
                                   IN uint32 asXXX
@@ -281,7 +281,7 @@ void     UDFCheckSpaceAllocation_(IN PVCB Vcb,
 #define UDFCheckSpaceAllocation(Vcb, FileInfo, Map, asXXX) {;}
 #endif //UDF_CHECK_DISK_ALLOCATION
 
-// mark space described by Mapping as Used/Freed (optionaly)
+// mark space described by Mapping as Used/Freed (optionally)
 // this routine doesn't acquire any resource
 void
 UDFMarkSpaceAsXXXNoProtect_(
@@ -304,7 +304,7 @@ UDFMarkSpaceAsXXXNoProtect_(
 #endif //UDF_TRACK_ONDISK_ALLOCATION
 
 
-// mark space described by Mapping as Used/Freed (optionaly)
+// mark space described by Mapping as Used/Freed (optionally)
 void     UDFMarkSpaceAsXXX_(IN PVCB Vcb,
                             IN PEXTENT_MAP Map,
                             IN uint32 asXXX
@@ -630,7 +630,7 @@ OSSTATUS UDFUnlinkFile__(IN PVCB Vcb,
 // delete all files in directory (FreeSpace = TRUE)
 OSSTATUS UDFUnlinkAllFilesInDir(IN PVCB Vcb,
                                 IN PUDF_FILE_INFO DirInfo);
-// init UDF_FILE_INFO structure for specifiend file
+// init UDF_FILE_INFO structure for specified file
 OSSTATUS UDFOpenFile__(IN PVCB Vcb,
                        IN BOOLEAN IgnoreCase,
                        IN BOOLEAN NotDeleted,
@@ -869,7 +869,7 @@ OSSTATUS UDFReadTagged(IN PVCB Vcb,
                        IN uint32 Block,
                        IN uint32 Location,
                        OUT uint16 *Ident);
-// get physycal Lba for partition-relative addr
+// get physical Lba for partition-relative addr
 uint32
 __fastcall UDFPartLbaToPhys(IN PVCB Vcb,
                             IN lb_addr* Addr);

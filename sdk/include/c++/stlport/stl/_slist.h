@@ -403,7 +403,7 @@ public:
 public:
 
   // Experimental new feature: before_begin() returns a
-  // non-dereferenceable iterator that, when incremented, yields
+  // non-Dereferencable iterator that, when incremented, yields
   // begin().  This iterator may be used as the argument to
   // insert_after, erase_after, etc.  Note that even for an empty
   // slist, before_begin() is not the same iterator as end().  It

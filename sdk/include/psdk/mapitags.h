@@ -345,7 +345,7 @@
 #define PR_MINI_ICON PROP_TAG(PT_BINARY,0x0FFC)
 #define PR_STORE_ENTRYID PROP_TAG(PT_BINARY,0x0FFB)
 #define PR_STORE_RECORD_KEY PROP_TAG(PT_BINARY,0x0FFA)
-/* Binary identifer for an individual object */
+/* Binary identifier for an individual object */
 #define PR_RECORD_KEY PROP_TAG(PT_BINARY,0x0FF9)
 #define PR_MAPPING_SIGNATURE PROP_TAG(PT_BINARY,0x0FF8)
 #define PR_ACCESS_LEVEL PROP_TAG(PT_I4,0x0FF7)

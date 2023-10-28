@@ -163,7 +163,7 @@ typedef struct _NIC_ADAPTER
     UINT TXNext;    /* Next buffer to use */
     /* Length of packet. 0 means buffer is unused */
     UINT TXSize[DRIVER_DEFAULT_TX_BUFFER_COUNT];
-    INT TXCurrent;  /* Current buffer beeing transmitted. -1 means none */
+    INT TXCurrent;  /* Current buffer being transmitted. -1 means none */
 
     /* Head of transmit queue */
     PNDIS_PACKET TXQueueHead;

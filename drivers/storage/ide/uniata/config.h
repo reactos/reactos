@@ -31,14 +31,14 @@
 /***************************************/
 // Use hack to avoid PCI-ISA DMA limitations (physical memory must
 // be allocated below 16Mb). Actually there is no such limitation,
-// so we have to pretent to be PIO and converl logical addresses
+// so we have to prevent to be PIO and convert logical addresses
 // to physical manually
 /***************************************/
 
 #define USE_OWN_DMA
 
 /***************************************/
-// Special option, enables dumping of ATAPI cammands and data buffers
+// Special option, enables dumping of ATAPI commands and data buffers
 // via DbgPrint API
 /***************************************/
 

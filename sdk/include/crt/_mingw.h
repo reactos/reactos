@@ -110,7 +110,7 @@
 #endif
 
 /* Attribute `nonnull' was valid as of gcc 3.3.  We don't use GCC's
-   variadiac macro facility, because variadic macros cause syntax
+   variadic macro facility, because variadic macros cause syntax
    errors with  --traditional-cpp.  */
 #if  __MINGW_GNUC_PREREQ (3, 3)
 #define __MINGW_ATTRIB_NONNULL(arg) __attribute__ ((__nonnull__ (arg)))

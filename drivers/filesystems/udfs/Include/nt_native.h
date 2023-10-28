@@ -1440,14 +1440,14 @@ typedef struct _CONTEXT {
 
     //
     // This section is specified/returned if the
-    // ContextFlags word contians the flag CONTEXT_FLOATING_POINT.
+    // ContextFlags word contains the flag CONTEXT_FLOATING_POINT.
     //
 
     FLOATING_SAVE_AREA FloatSave;
 
     //
     // This section is specified/returned if the
-    // ContextFlags word contians the flag CONTEXT_SEGMENTS.
+    // ContextFlags word contains the flag CONTEXT_SEGMENTS.
     //
 
     ULONG   SegGs;
@@ -1457,7 +1457,7 @@ typedef struct _CONTEXT {
 
     //
     // This section is specified/returned if the
-    // ContextFlags word contians the flag CONTEXT_INTEGER.
+    // ContextFlags word contains the flag CONTEXT_INTEGER.
     //
 
     ULONG   Edi;
@@ -1469,7 +1469,7 @@ typedef struct _CONTEXT {
 
     //
     // This section is specified/returned if the
-    // ContextFlags word contians the flag CONTEXT_CONTROL.
+    // ContextFlags word contains the flag CONTEXT_CONTROL.
     //
 
     ULONG   Ebp;

@@ -104,7 +104,7 @@ enum TopoNodeConfig
 };
 
 //
-// Pin Defininition goes here
+// Pin Definition goes here
 // We define all the possible pins in the AC97 CoDec and some "virtual" pins
 // that are used for the topology to connect special functionality like 3D.
 //
@@ -178,7 +178,7 @@ const PCHAR TopoPinStrings[] =
 // like 3D controls (exposed as volumes) or to give the user volume controls
 // for each possible record line. In that case, the volume is placed in front
 // of the record selector (mux). The topology is not parsed correctly if there
-// are no volume controls between the pins and a muxer. Also, these virtual
+// are no volume controls between the pins and a mixer. Also, these virtual
 // controls only represent volumes and no mutes, cause mutes wouldn't be dis-
 // played by sndvol32.
 // ATTN: DON'T  change without first looking at the table in ac97reg.h!!!
@@ -206,7 +206,7 @@ enum TopoNodes
     NODE_MAIN_MIX,
     NODE_VIRT_3D_CENTER,                // we have no 3D control type, so we
     NODE_VIRT_3D_DEPTH,                 // expose 2 volume controls and 2 mute
-    NODE_VIRT_3D_ENABLE,                // checkboxs (the other is bypass).
+    NODE_VIRT_3D_ENABLE,                // checkboxes (the other is bypass).
     NODE_BEEP_MIX,
     NODE_BASS,
     NODE_TREBLE,

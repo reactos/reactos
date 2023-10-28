@@ -84,7 +84,7 @@ typedef ULONG_PTR SWAPENTRY;
 //
 #define MMDBG_COPY_MAX_SIZE         0x8
 
-#if defined(_X86_) // intenal for marea.c
+#if defined(_X86_) // internal for marea.c
 #define MI_STATIC_MEMORY_AREAS              (14)
 #else
 #define MI_STATIC_MEMORY_AREAS              (13)

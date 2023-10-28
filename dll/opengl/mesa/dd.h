@@ -166,7 +166,7 @@ struct dd_function_table {
 
    void (*UpdateState)( GLcontext *ctx );
    /*
-    * UpdateState() is called whenver Mesa thinks the device driver should
+    * UpdateState() is called whenever Mesa thinks the device driver should
     * update its state and/or the other pointers (such as PointsFunc,
     * LineFunc, or TriangleFunc).
     */

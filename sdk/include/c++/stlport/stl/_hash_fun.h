@@ -96,7 +96,7 @@ _STLP_TEMPLATE_NULL struct hash<unsigned int> {
 #else
 /* MSVC .Net since 2002 has a 64 bits portability warning feature. typedef
  * like size_t are tagged as potential 64 bits variables making them different from
- * unsigned int. To avoid the warning when a hash container is instanciated with
+ * unsigned int. To avoid the warning when a hash container is instantiated with
  * the size_t key we prefer to grant the size_t specialization rather than the
  * unsigned int one.
  */

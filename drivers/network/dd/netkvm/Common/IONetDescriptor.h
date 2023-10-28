@@ -118,7 +118,7 @@ struct virtio_net_ctrl_mac {
  * Control VLAN filtering
  *
  * The VLAN filter table is controlled via a simple ADD/DEL interface.
- * VLAN IDs not added may be filterd by the hypervisor.  Del is the
+ * VLAN IDs not added may be filtered by the hypervisor.  Del is the
  * opposite of add.  Both commands expect an out entry containing a 2
  * byte VLAN ID.  VLAN filtering is available with the
  * VIRTIO_NET_F_CTRL_VLAN feature bit.

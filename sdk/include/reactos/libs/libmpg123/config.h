@@ -29,10 +29,10 @@
 /* The default audio output module(s) to use */
 #define DEFAULT_OUTPUT_MODULE "win32"
 
-/* Define if building with dynamcally linked libmpg123 */
+/* Define if building with dynamically linked libmpg123 */
 /* #undef DYNAMIC_BUILD */
 
-/* Use EFBIG as substitude for EOVERFLOW, mingw.org may lack the latter */
+/* Use EFBIG as substitute for EOVERFLOW, mingw.org may lack the latter */
 /* #undef EOVERFLOW */
 
 /* Define if FIFO support is enabled. */

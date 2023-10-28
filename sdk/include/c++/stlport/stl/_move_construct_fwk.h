@@ -42,7 +42,7 @@ public:
 private:
   _Tp &_M_data;
 
-  //We explicitely forbid assignment to avoid warning:
+  //We explicitly forbid assignment to avoid warning:
   typedef __move_source<_Tp> _Self;
   _Self& operator = (_Self const&);
 };
@@ -77,7 +77,7 @@ struct __move_traits {
 _STLP_MOVE_TO_PRIV_NAMESPACE
 
 /*
- * This struct should never be used if the user has not explicitely stipulated
+ * This struct should never be used if the user has not explicitly stipulated
  * that its class support the full move concept. To check that the return type
  * in such a case will be __invalid_source<_Tp> to generate a compile error
  * revealing the configuration problem.

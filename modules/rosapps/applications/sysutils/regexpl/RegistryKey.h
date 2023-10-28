@@ -27,7 +27,7 @@ public:
   // Parameters:
   //   hKey - handle to opened key.
   //   pszPath - optional path string. NULL if pszKeyName is the needed name.
-  //   pszKeyName - pointer to buffer conatining name of key.
+  //   pszKeyName - pointer to buffer containing name of key.
   //   CurrentAccess - Access of hKey.
   //
   // Remarks:
@@ -50,7 +50,7 @@ public:
   // Destructor
 	virtual ~CRegistryKey();
 
-  // Call ths function to check if handle to key is handle to hive root.
+  // Call this function to check if handle to key is handle to hive root.
   //
   // Parameters:
   //   hKey - handle to check.
@@ -71,8 +71,8 @@ public:
   // Call this method to open existing subkey of this key.
   //
   // Parameters:
-  //   samDesired - deisred access.
-  //   pszSubkeyName - pointer to bufer containing name of key to open.
+  //   samDesired - desired access.
+  //   pszSubkeyName - pointer to buffer containing name of key to open.
   //   rhKey - reference to variable that receives handle of opened key. If method fails, variable value is unchanged.
   //
   // Return value:
@@ -83,8 +83,8 @@ public:
   // Call this method to open existing subkey of this key.
   //
   // Parameters:
-  //   samDesired - deisred access.
-  //   pszSubkeyName - pointer to bufer containing name of key to open.
+  //   samDesired - desired access.
+  //   pszSubkeyName - pointer to buffer containing name of key to open.
   //   rKey - reference to CRegistryKey object. If method succeeds, rKey is initialized with newly opened key.
   //
   // Return value:
@@ -190,8 +190,8 @@ public:
   // Call this method to get data and/or type of default value.
   //
   // Parameters:
-  //   pdwType - optional pointer to variable receiving default value type. NULL if not requred.
-  //   pbValueDataBuffer - optional pointer to buffer receiving default value data. NULL if not requred.
+  //   pdwType - optional pointer to variable receiving default value type. NULL if not required.
+  //   pbValueDataBuffer - optional pointer to buffer receiving default value data. NULL if not required.
   //   dwValueDataBufferSize - size of buffer pointer by pbValueDataBuffer. Ignored if pbValueDataBuffer is NULL.
   //   pdwValueDataActualSize - optional pointer to variable receiving size, in bytes, of data stored into buffer. If pbValueDataBuffer is NULL, returned value is size of default value data, in bytes.
   //
@@ -214,11 +214,11 @@ public:
   // Call this method to create subkey of this key.
   //
   // Parameters:
-  //   samDesired - deisred access.
-  //   pszKeyName - pointer to bufer containing name of key to create.
+  //   samDesired - desired access.
+  //   pszKeyName - pointer to buffer containing name of key to create.
   //   rhKey - reference to variable that receives handle of opened key. If method fails, variable value is unchanged.
   //   pblnOpened - optional pointer to variable that receives create/open status. If subkey is opened value is TRUE. If key is created value is FALSE.
-  //   blnVolatile - opitional parameter specifining if created key is volatile.
+  //   blnVolatile - optional parameter specifying if created key is volatile.
   //
   // Return value:
   //   If the method succeeds, the return value is ERROR_SUCCESS.

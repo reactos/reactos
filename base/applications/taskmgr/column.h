@@ -39,7 +39,7 @@
 /*
  * temporary fix:
  * Some macro IDS_* have different name from IDC_*
- * It would be better to unify thone name one day
+ * It would be better to unify those name one day
  */
 #define IDS_TAB_CPUUSAGE            IDS_TAB_CPU
 #define IDS_TAB_MEMORYUSAGE         IDS_TAB_MEMUSAGE

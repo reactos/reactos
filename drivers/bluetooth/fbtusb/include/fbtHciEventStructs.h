@@ -1,7 +1,7 @@
 #ifndef _FBT_HCI_EVENT_STRUCTS_H
 #define _FBT_HCI_EVENT_STRUCTS_H
 
-// Pack structures to single unsigned char boundries
+// Pack structures to single unsigned char boundaries
 #pragma pack(push, 1)
 
 typedef struct

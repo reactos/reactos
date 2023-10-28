@@ -16,7 +16,7 @@ typedef struct GDI_DRAW_STREAM_TAG
     DWORD   signature;     // must be 0x44727753;//"Swrd"
     DWORD   reserved;      // must be 0
     HDC     hDC;           // handle to the device object of windiw to draw.
-    RECT    rcDest;        // desination rect of dc to draw.
+    RECT    rcDest;        // destination rect of dc to draw.
     DWORD   unknown1;      // must be 1.
     HBITMAP hImage;
     DWORD   unknown2;      // must be 9.

@@ -125,7 +125,7 @@ private:
   numpunct_byname(_Locale_numeric *__numeric)
     : _M_numeric(__numeric) {}
 
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   typedef numpunct_byname<char> _Self;
   numpunct_byname(_Self const&);
   _Self& operator = (_Self const&);
@@ -156,7 +156,7 @@ private:
   numpunct_byname(_Locale_numeric *__numeric)
     : _M_numeric(__numeric) {}
 
-  //explicitely defined as private to avoid warnings:
+  //explicitly defined as private to avoid warnings:
   typedef numpunct_byname<wchar_t> _Self;
   numpunct_byname(_Self const&);
   _Self& operator = (_Self const&);

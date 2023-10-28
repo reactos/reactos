@@ -153,7 +153,7 @@ struct __select {
 
 #endif /* _STLP_CLASS_PARTIAL_SPECIALIZATION */
 
-/* Rather than introducing a new macro for the following constrution we use
+/* Rather than introducing a new macro for the following construction we use
  * an existing one (_STLP_DONT_SIMULATE_PARTIAL_SPEC_FOR_TYPE_TRAITS) that
  * is used for a similar feature.
  */
@@ -284,7 +284,7 @@ template <class _Tp> struct _UnQual<const volatile _Tp> { typedef _Tp _Type; };
 #  endif
 
 /* This struct is intended to say if a pointer can be convertible to an other
- * taking into account cv qualifications. It shouldn't be instanciated with
+ * taking into account cv qualifications. It shouldn't be instantiated with
  * something else than pointer type as it uses pass by value parameter that
  * results in compilation error when parameter type has a special memory
  * alignment

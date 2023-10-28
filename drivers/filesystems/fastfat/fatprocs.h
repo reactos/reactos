@@ -240,7 +240,7 @@ Arguments:
 
 Return Value:
 
-    BOOLEAN - if, considering the cluster size, the neccesary size of
+    BOOLEAN - if, considering the cluster size, the neccessary size of
         the object to contain the range can be represented in 32 bits.
 
 --*/
@@ -266,7 +266,7 @@ Return Value:
 
 
 //
-//  This strucure is used by FatLookupFatEntry to remember a pinned page
+//  This structure is used by FatLookupFatEntry to remember a pinned page
 //  of fat.
 //
 
@@ -681,7 +681,7 @@ FatBuildZeroMdl (
 //
 
 //
-//  Tunneling is a deletion precursor (all tunneling cases do
+//  Tunnelling is a deletion precursor (all tunnelling cases do
 //  not involve deleting dirents, however)
 //
 
@@ -1018,7 +1018,7 @@ FatUnpinEaRange (
 //
 //  The following macro computes the size of a full ea (not including
 //  padding to bring it to a longword.  A full ea has a 4 byte offset,
-//  folowed by 1 byte flag, 1 byte name length, 2 bytes value length,
+//  followed by 1 byte flag, 1 byte name length, 2 bytes value length,
 //  the name, 1 null byte, and the value.
 //
 //      ULONG
@@ -2853,7 +2853,7 @@ FatScanForDataTrack(
 )
 
 //
-//  The following macro is used to detemine if the file object is opened
+//  The following macro is used to determine if the file object is opened
 //  for read only access (i.e., it is not also opened for write access or
 //  delete access).
 //

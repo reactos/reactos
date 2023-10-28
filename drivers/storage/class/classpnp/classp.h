@@ -246,7 +246,7 @@ extern CONST LARGE_INTEGER Magic10000;
 #define SHIFT10000               13
 
 //
-// Constant to help wih various time conversions
+// Constant to help with various time conversions
 //
 #define CONST_MSECS_PER_SEC                 1000
 

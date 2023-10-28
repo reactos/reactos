@@ -35,8 +35,8 @@ typedef set<HWND> WindowSet;
 	natural order without explicitly specifying any access mode at the begin
 	of the definition.
 	First are public constructors and destructor, then public member functions.
-	After that we list protected member varibables and functions. If needed,
-	private implemenation varibales and functions are positioned at the end.
+	After that we list protected member variables and functions. If needed,
+	private implementation variables and functions are positioned at the end.
  */
 
 
@@ -190,7 +190,7 @@ protected:
 };
 
 
- /// template class used in macro WINDOW_CREATOR to define the creater functions for Window objects
+ /// template class used in macro WINDOW_CREATOR to define the creator functions for Window objects
 template<typename WND_CLASS> struct WindowCreator
 {
 	static WND_CLASS* window_creator(HWND hwnd)
@@ -203,7 +203,7 @@ template<typename WND_CLASS> struct WindowCreator
 	((Window::CREATORFUNC) WindowCreator<WND_CLASS>::window_creator)
 
 
- /// template class used in macro WINDOW_CREATOR_INFO to the define creater functions for Window objects with additional creation information
+ /// template class used in macro WINDOW_CREATOR_INFO to the define creator functions for Window objects with additional creation information
 template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 {
 	static WND_CLASS* window_creator(HWND hwnd, const void* info)
@@ -865,7 +865,7 @@ struct ToolTip : public WindowHandle
 			{0,0,0,0}, 0, (LPTSTR)txt, lparam
 		};
 
-#ifdef UNICODE	///@todo Why is it neccesary to try both TTM_ADDTOOLW and TTM_ADDTOOLW ?!
+#ifdef UNICODE	///@todo Why is it neccessary to try both TTM_ADDTOOLW and TTM_ADDTOOLW ?!
 		if (!SendMessage(_hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti))
 			SendMessage(_hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti);
 #else

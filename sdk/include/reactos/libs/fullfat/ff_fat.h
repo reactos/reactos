@@ -68,7 +68,7 @@
 #else
 		FF_T_UINT32 FF_GetFreeSize			(FF_IOMAN *pIoman, FF_ERROR *pError);
 #endif
-		FF_T_UINT32 FF_CountFreeClusters	(FF_IOMAN *pIoman, FF_ERROR *pError);	// WARNING: If this protoype changes, it must be updated in ff_ioman.c also!
+		FF_T_UINT32 FF_CountFreeClusters	(FF_IOMAN *pIoman, FF_ERROR *pError);	// WARNING: If this prototype changes, it must be updated in ff_ioman.c also!
 		void		FF_lockFAT				(FF_IOMAN *pIoman);
 		void		FF_unlockFAT			(FF_IOMAN *pIoman);
 

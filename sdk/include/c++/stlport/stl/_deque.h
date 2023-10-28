@@ -57,7 +57,7 @@
  *    i.first == *(i.node)
  *    i.last  == i.first + node_size
  *    i.cur is a pointer in the range [i.first, i.last).  NOTE:
- *      the implication of this is that i.cur is always a dereferenceable
+ *      the implication of this is that i.cur is always a Dereferencable
  *      pointer, even if i is a past-the-end iterator.
  *  Start and Finish are always nonsingular iterators.  NOTE: this means
  *    that an empty deque must have one node, and that a deque

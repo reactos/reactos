@@ -1,5 +1,5 @@
 /*
-	frame: Central data structures and opmitization hooks.
+	frame: Central data structures and optimization hooks.
 
 	copyright 2007 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
@@ -233,7 +233,7 @@ struct mpg123_handle_struct
 
 	/* rva data, used in common.c, set in id3.c */
 
-	double maxoutburst; /* The maximum amplitude in current sample represenation. */
+	double maxoutburst; /* The maximum amplitude in current sample representation. */
 	double lastscale;
 	struct
 	{

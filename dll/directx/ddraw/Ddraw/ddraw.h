@@ -1,4 +1,4 @@
-/* public interfaces  we doing pur type cast here instead in the code, it will make more cleaner code */
+/* public interfaces  we doing pure type cast here instead in the code, it will make more cleaner code */
 
 HRESULT WINAPI
 Main_DirectDraw_QueryInterface (

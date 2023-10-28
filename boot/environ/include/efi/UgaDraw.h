@@ -85,7 +85,7 @@ typedef union {
 } EFI_UGA_PIXEL_UNION;
 
 ///
-/// Enumration value for actions of Blt operations.
+/// Enumeration value for actions of Blt operations.
 ///
 typedef enum {
   EfiUgaVideoFill,          ///< Write data from the  BltBuffer pixel (SourceX, SourceY)

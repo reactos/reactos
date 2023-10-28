@@ -95,7 +95,7 @@ typedef struct _FAT_DATA {
     BOOLEAN FujitsuFMR:1;
 
     //
-    //  Inidicates that FspClose is currently processing closes.
+    //  Indicates that FspClose is currently processing closes.
     //
 
     BOOLEAN AsyncCloseActive:1;
@@ -115,7 +115,7 @@ typedef struct _FAT_DATA {
     BOOLEAN CodePageInvariant:1;
 
     //
-    //  The following flags tell us if we are in an aggresive push to lower
+    //  The following flags tell us if we are in an aggressive push to lower
     //  the size of the deferred close queues.
     //
 
@@ -320,7 +320,7 @@ typedef struct _VCB {
 
     //
     //  A count of the number of residual opens on this volume.
-    //  This is usually two or three.  One is for the virutal volume
+    //  This is usually two or three.  One is for the virtual volume
     //  file.  One is for the root directory.  And one is for the
     //  EA file, if there is one.
     //
@@ -422,7 +422,7 @@ typedef struct _VCB {
 
     //
     //  The following field contains a record of special pointers used by
-    //  MM and Cache to manipluate section objects.  Note that the values
+    //  MM and Cache to manipulate section objects.  Note that the values
     //  are set outside of the file system.  However the file system on an
     //  open/create will set the file object's SectionObject field to point
     //  to this field
@@ -506,7 +506,7 @@ typedef struct _VCB {
     struct _FILE_SYSTEM_STATISTICS *Statistics;
 
     //
-    //  The property tunneling cache for this volume
+    //  The property tunnelling cache for this volume
     //
 
     TUNNEL Tunnel;
@@ -720,7 +720,7 @@ typedef struct _NON_PAGED_FCB {
 
     //
     //  The following field contains a record of special pointers used by
-    //  MM and Cache to manipluate section objects.  Note that the values
+    //  MM and Cache to manipulate section objects.  Note that the values
     //  are set outside of the file system.  However the file system on an
     //  open/create will set the file object's SectionObject field to point
     //  to this field
@@ -811,7 +811,7 @@ typedef struct _FCB {
     PNON_PAGED_FCB NonPaged;
 
     //
-    //  The head of the fat alloaction chain.  FirstClusterOfFile == 0
+    //  The head of the fat allocation chain.  FirstClusterOfFile == 0
     //  means that the file has no current allocation.
     //
 
@@ -913,7 +913,7 @@ typedef struct _FCB {
     VBO LfnOffsetWithinDirectory;
 
     //
-    //  Thess entries is kept in ssync with the dirent.  It allows a more
+    //  These entries is kept in ssync with the dirent.  It allows a more
     //  accurate verify capability and speeds up FatFastQueryBasicInfo().
     //
 
@@ -972,7 +972,7 @@ typedef struct _FCB {
 
             //
             //  If the UnusedDirentVbo is != 0xffffffff, then the dirent at this
-            //  offset is guarenteed to unused.  A value of 0xffffffff means
+            //  offset is guaranteed to unused.  A value of 0xffffffff means
             //  it has yet to be initialized.  Note that a value beyond the
             //  end of allocation means that there an unused dirent, but we
             //  will have to allocate another cluster to use it.
@@ -998,17 +998,17 @@ typedef struct _FCB {
             //  into fastfat can match a single OEM on-disk name, and there
             //  is really no way to enumerate all the possible UNICODE
             //  source strings that can map to a given OEM name.  This argues
-            //  for converting the incomming UNICODE name into OEM, and then
+            //  for converting the incoming UNICODE name into OEM, and then
             //  running through an OEM splay tree of the open files.  This
             //  works well when there are only OEM names on disk.
             //
             //  The UNICODE name on disk can be VERY different from the short
             //  name in the DIRENT and not even representable in the OEM code
             //  page.  Even if it were representable in OEM, it is possible
-            //  that a case varient of the original UNICODE name would match
+            //  that a case variant of the original UNICODE name would match
             //  a different OEM name, causing us to miss the Fcb in the
             //  prefix lookup phase.  In these cases, we must put UNICODE
-            //  name in the splay to guarentee that we find any case varient
+            //  name in the splay to guarantee that we find any case variant
             //  of the input UNICODE name.  See the routine description of
             //  FatConstructNamesInFcb() for a detailed analysis of how we
             //  detect this case.
@@ -1331,14 +1331,14 @@ typedef DCB *PDCB;
 #define CCB_FLAG_COMPLETE_DISMOUNT       (0x10000)
 
 //
-//  This flag indicates the handle may not call priveleged
+//  This flag indicates the handle may not call privileged
 //  FSCTL which modify the volume.
 //
 
 #define CCB_FLAG_MANAGE_VOLUME_ACCESS    (0x20000)
 
 //
-//  This flag indicates that a format unit commmand was issued
+//  This flag indicates that a format unit command was issued
 //  on this handle and all subsequent writes need to ignore verify.
 //
 
@@ -1404,7 +1404,7 @@ typedef struct _CCB {
             //  The query template is used to filter directory query requests.
             //  It originally is set to null and on the first call the NtQueryDirectory
             //  it is set to the input filename or "*" if the name is not supplied.
-            //  All subsquent queries then use this template.
+            //  All subsequent queries then use this template.
             //
             //  The Oem structure are unions because if the name is wild we store
             //  the arbitrary length string, while if the name is constant we store
@@ -1615,7 +1615,7 @@ typedef struct _FAT_IO_CONTEXT {
     union {
 
         //
-        //  This element handles the asychronous non-cached Io
+        //  This element handles the asynchronous non-cached Io
         //
 
         struct {
@@ -1628,7 +1628,7 @@ typedef struct _FAT_IO_CONTEXT {
         } Async;
 
         //
-        //  and this element the sycnrhonous non-cached Io
+        //  and this element the synchronous non-cached Io
         //
 
         KEVENT SyncEvent;

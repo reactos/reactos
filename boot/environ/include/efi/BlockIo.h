@@ -133,7 +133,7 @@ EFI_STATUS
 **/
 typedef struct {
   ///
-  /// The curent media Id. If the media changes, this value is changed.
+  /// The current media Id. If the media changes, this value is changed.
   ///
   UINT32  MediaId;         
    
@@ -144,7 +144,7 @@ typedef struct {
   
   ///
   /// TRUE if there is a media currently present in the device;
-  /// othersise, FALSE. THis field shows the media present status
+  /// otherwise, FALSE. THis field shows the media present status
   /// as of the most recent ReadBlocks() or WriteBlocks() call.  
   ///
   BOOLEAN MediaPresent;

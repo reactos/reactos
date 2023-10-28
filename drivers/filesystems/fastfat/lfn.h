@@ -17,7 +17,7 @@ Abstract:
 #define _LFN_
 
 //
-//  This strucure defines the on disk format on long file name dirents.
+//  This structure defines the on disk format on long file name dirents.
 //
 
 typedef struct _PACKED_LFN_DIRENT {

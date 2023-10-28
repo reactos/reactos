@@ -596,7 +596,7 @@ class _TpWithState : private _Tp {
 };
 
 /* This is an internal helper struct used to guess if we are working
- * on a stateless class. It can only be instanciated with a class type. */
+ * on a stateless class. It can only be instantiated with a class type. */
 template <class _Tp>
 struct _IsStateless {
   enum { _Is = sizeof(_TpWithState<_Tp>) == sizeof(int) };

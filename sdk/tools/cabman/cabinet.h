@@ -293,7 +293,7 @@ public:
 #define CS_BADSTREAM    0x0002  /* Bad data stream */
 
 
-/* Codec indentifiers */
+/* Codec identifiers */
 #define CAB_CODEC_RAW   0x00
 #define CAB_CODEC_LZX   0x01
 #define CAB_CODEC_MSZIP 0x02

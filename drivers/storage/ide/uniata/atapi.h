@@ -109,7 +109,7 @@ DbgPrint(
 #define PRINT_PREFIX
 
 // Note, that using DbgPrint on raised IRQL will crash w2k
-// ttis will not happen immediately, so we shall see some logs
+// this will not happen immediately, so we shall see some logs
 //#define LOG_ON_RAISED_IRQL_W2K    TRUE
 //#define LOG_ON_RAISED_IRQL_W2K    FALSE
 

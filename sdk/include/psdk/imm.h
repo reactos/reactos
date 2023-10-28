@@ -339,7 +339,7 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IME_KHOTKEY_SHAPE_TOGGLE                0x50
 #define IME_KHOTKEY_HANJACONVERT                0x51
 #define IME_KHOTKEY_ENGLISH                     0x52
-/* Windows for Tranditional Chinese Edition hot key ID from 0x70 - 0x8F */
+/* Windows for Traditional Chinese Edition hot key ID from 0x70 - 0x8F */
 #define IME_THOTKEY_IME_NONIME_TOGGLE           0x70
 #define IME_THOTKEY_SHAPE_TOGGLE                0x71
 #define IME_THOTKEY_SYMBOL_TOGGLE               0x72
@@ -612,7 +612,7 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 
 /*
  * type of soft keyboard
- * for Windows Tranditional Chinese Edition
+ * for Windows Traditional Chinese Edition
  */
 #define SOFTKEYBOARD_TYPE_T1            0x0001
 /* for Windows Simplified Chinese Edition */

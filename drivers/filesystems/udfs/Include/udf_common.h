@@ -382,7 +382,7 @@ typedef struct _UDFVolumeControlBlock {
     PCHAR           FSBM_OldBitmap;  // 0 - free, 1 - used
     ULONG           BitmapModified;
 
-    PCHAR           ZSBM_Bitmap;     // 0 - data, 1 - zero-filleld
+    PCHAR           ZSBM_Bitmap;     // 0 - data, 1 - zero-filled
 #endif //_BROWSE_UDF_
 
     PCHAR           BSBM_Bitmap;     // 0 - normal, 1 - bad-block

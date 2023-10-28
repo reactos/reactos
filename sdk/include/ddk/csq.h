@@ -197,7 +197,7 @@ typedef IO_CSQ_RELEASE_LOCK *PIO_CSQ_RELEASE_LOCK;
 
 /*
  * Finally, this is called by the queue library when it wants to complete
- * a canceled IRP.
+ * a cancelled IRP.
  *
  * Sample:
  *

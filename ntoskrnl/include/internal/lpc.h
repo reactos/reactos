@@ -126,7 +126,7 @@ LpcpSaveDataInfoMessage(
 );
 
 //
-// Module-external utlity functions
+// Module-external utility functions
 //
 VOID
 NTAPI

@@ -38,7 +38,7 @@
 
 /* Runtime optimization interface now here: */
 
-/* Nedit inline Perl script to generate decoder list and name mapping in one place
+/* Edit inline Perl script to generate decoder list and name mapping in one place
    optimize.c defining I_AM_OPTIMIZE to get the names
 
 perl <<'EOT'

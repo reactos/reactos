@@ -817,7 +817,7 @@ image is successfully loaded.
 
 @retval EFI_SUCCESS           Image was loaded into memory correctly.
 @retval EFI_NOT_FOUND         Both SourceBuffer and DevicePath are NULL.
-@retval EFI_INVALID_PARAMETER One or more parametes are invalid.
+@retval EFI_INVALID_PARAMETER One or more parameters are invalid.
 @retval EFI_UNSUPPORTED       The image type is not supported.
 @retval EFI_OUT_OF_RESOURCES  Image was not loaded due to insufficient resources.
 @retval EFI_LOAD_ERROR        Image was not loaded because the image format was corrupt or not
@@ -969,7 +969,7 @@ typedef enum {
     ///
     /// Used to induce a system-wide reset. This sets all circuitry within the 
     /// system to its initial state.  This type of reset is asynchronous to system
-    /// operation and operates withgout regard to cycle boundaries.  EfiColdReset 
+    /// operation and operates without regard to cycle boundaries.  EfiColdReset 
     /// is tantamount to a system power cycle.
     ///
     EfiResetCold,
@@ -1277,7 +1277,7 @@ protocol interface was returned in Interface.
 @retval EFI_UNSUPPORTED       Handle does not support Protocol.
 @retval EFI_INVALID_PARAMETER One or more parameters are invalid.
 @retval EFI_ACCESS_DENIED     Required attributes can't be supported in current environment.
-@retval EFI_ALREADY_STARTED   Item on the open list already has requierd attributes whose agent
+@retval EFI_ALREADY_STARTED   Item on the open list already has required attributes whose agent
 handle is the same as AgentHandle.
 
 **/
@@ -1324,7 +1324,7 @@ IN EFI_HANDLE               ControllerHandle
 );
 
 ///
-/// EFI Oprn Protocol Information Entry
+/// EFI Open Protocol Information Entry
 ///
 typedef struct {
     EFI_HANDLE  AgentHandle;
@@ -1418,7 +1418,7 @@ typedef enum {
     ///
     AllHandles,
     ///
-    /// Retrieve the next handle fron a RegisterProtocolNotify() event.
+    /// Retrieve the next handle from a RegisterProtocolNotify() event.
     ///
     ByRegisterNotify,
     ///
