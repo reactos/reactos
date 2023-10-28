@@ -66,6 +66,27 @@ PathIsSlowA(
 }
 
 /*************************************************************************
+ *                ExtractIconResInfoA (SHELL32.221)
+ */
+EXTERN_C
+WORD WINAPI
+ExtractIconResInfoA(
+    _In_ HANDLE hHandle,
+    _In_ LPCSTR lpFileName,
+    _In_ WORD wIndex,
+    _Out_ LPWORD lpSize,
+    _Out_ LPHANDLE lpIcon)
+{
+    TRACE("(%p, %s, %u, %p, %p)\n", hHandle, debugstr_a(lpFileName), wIndex, lpSize, lpIcon);
+
+    if (!lpFileName)
+        return 0;
+
+    CStringW strFileNameW(lpFileName);
+    return ExtractIconResInfoW(hHandle, strFileNameW, wIndex, lpSize, lpIcon);
+}
+
+/*************************************************************************
  *                SHOpenEffectiveToken (SHELL32.235)
  */
 EXTERN_C BOOL WINAPI SHOpenEffectiveToken(_Out_ LPHANDLE phToken)
