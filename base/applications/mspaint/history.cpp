@@ -119,7 +119,7 @@ void ImageModel::ClearHistory()
 void ImageModel::PushImageForUndo()
 {
     HBITMAP hbm = CopyBitmap();
-    if (hbm)
+    if (hbm == NULL)
     {
         ShowOutOfMemory();
         return;
