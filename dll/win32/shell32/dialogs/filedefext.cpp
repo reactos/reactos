@@ -821,8 +821,6 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 BOOL
 CFileDefExt::InitVersionPage(HWND hwndDlg)
 {
-    AddVersionString(hwndDlg, L"Comments");
-
     /* Get fixed info */
     VS_FIXEDFILEINFO *pInfo = m_VerInfo.GetFixedInfo();
     if (pInfo)
@@ -854,6 +852,14 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     AddVersionString(hwndDlg, L"OriginalFilename");
     AddVersionString(hwndDlg, L"FileVersion");
     AddVersionString(hwndDlg, L"ProductVersion");
+    AddVersionString(hwndDlg, L"Comments");
+    AddVersionString(hwndDlg, L"LegalTrademarks");
+
+    if (pInfo && (pInfo->dwFileFlags & VS_FF_PRIVATEBUILD))
+        AddVersionString(hwndDlg, L"PrivateBuild");
+
+    if (pInfo && (pInfo->dwFileFlags & VS_FF_SPECIALBUILD))
+        AddVersionString(hwndDlg, L"SpecialBuild");
 
     /* Attach file version to dialog window */
     SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)this);
