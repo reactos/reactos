@@ -164,7 +164,7 @@ FsRtlUninitializeFileLock(
         default: IofCompleteRequest with STATUS_INVALID_DEVICE_REQUEST;
                  return STATUS_INVALID_DEVICE_REQUEST;
 
-    -'AllwaysZero' is passed throught as 'AllwaysZero' to lock / unlock routines.
+    -'AllwaysZero' is passed through as 'AllwaysZero' to lock / unlock routines.
     -'Irp' is passed thru as 'Irp' to FsRtlPrivateLock.
 */
 _Must_inspect_result_
