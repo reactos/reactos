@@ -87,7 +87,7 @@
 
 /***********************************************************************************/
 /* This driver functions are exported raw from Eng* it only exists in the def file */
-/* you can not do syscallback to this but you can import them from win32k.sys     */
+/* you can not do syscallback to these but you can import them from win32k.sys     */
 /* for them are in the export list                                                 */
 /***********************************************************************************/
 /* not added yet */
