@@ -1,7 +1,7 @@
 /* FontSub by Katayama Hirofumi MZ
  *
  * To the extent possible under law, the person who associated CC0 with
- * FontSub has waived all copyright and related or neighbouring rights
+ * FontSub has waived all copyright and related or neighboring rights
  * to FontSub.
  *
  * You should have received a copy of the CC0 legalcode along with this
