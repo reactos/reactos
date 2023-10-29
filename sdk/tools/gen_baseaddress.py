@@ -104,7 +104,6 @@ EXCLUDE = (
     'framebuf.dll',
     'framebuf_new.dll',
     'ftfd.dll',
-    'fusion.dll',
     'genincdata.dll',
     'hal.dll',
     'halaacpi.dll',
