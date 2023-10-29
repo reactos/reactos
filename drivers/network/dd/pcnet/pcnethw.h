@@ -63,7 +63,7 @@
 #define CSR0   0x0      /* controller status register */
 #define CSR1   0x1      /* init block address 0 */
 #define CSR2   0x2      /* init block address 1 */
-#define CSR3   0x3      /* interrupt masks and referral control */
+#define CSR3   0x3      /* interrupt masks and deferral control */
 #define CSR4   0x4      /* test and features control */
 #define CSR5   0x5      /* extended control and interrupt */
 #define CSR6   0x6      /* rx/tx descriptor table length */
