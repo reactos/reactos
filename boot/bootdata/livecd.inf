@@ -17,7 +17,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute",0x00010000,""
 
 ; ComputerName
-HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"ROSLIVECD"
+HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"ROSHOST"
 
 ; Shell
 HKLM,"SYSTEM\Setup","CmdLine",0x00020000,"setup -mini"

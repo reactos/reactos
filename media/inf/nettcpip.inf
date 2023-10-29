@@ -254,8 +254,8 @@ HKR,"Parameters\PersistentRoutes",,0x00000010
 [tcpip_AddReg]
 HKR,"Parameters","DataBasePath",0x00020000,"%SystemRoot%\System32\drivers\etc"
 HKR,"Parameters","Domain",0x00000000,""
-HKR,"Parameters","Hostname",0x00000000,"ROSLIVECD"
-HKR,"Parameters","NV Hostname",0x00000000,"ROSLIVECD"
+HKR,"Parameters","Hostname",0x00000000,"ROSHOST"
+HKR,"Parameters","NV Hostname",0x00000000,"ROSHOST"
 HKR,"Parameters","NameServer",0x00000000,""
 HKR,"Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
