@@ -717,7 +717,7 @@ struct ANSUNC DWebBrowserEvents2Impl
 			_callback->DownloadComplete();
 			break;
 
-		  case DISPID_ONTHEATERMODE:	// sent when heater mode should be on/off
+		  case DISPID_ONTHEATERMODE:	// sent when theater mode should be on/off
 			if (pDispParams->cArgs != 1)
 				return E_INVALIDARG;
 			_callback->OnTheatermode(Variant(pDispParams->rgvarg[0]));
