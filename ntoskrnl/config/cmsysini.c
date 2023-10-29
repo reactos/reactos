@@ -1324,8 +1324,14 @@ CmpLoadHiveThread(IN PVOID StartContext)
                 //ASSERT(FALSE);
             //}
 
-            /* Another thing we don't support is NTLDR-recovery */
-            if (CmHive->Hive.BaseBlock->BootRecover) ASSERT(FALSE);
+            /* FreeLdr has recovered the hive with a log, we must do a flush */
+            if (CmHive->Hive.BaseBlock->BootRecover == HBOOT_BOOT_RECOVERED_BY_HIVE_LOG)
+            {
+                DPRINT1("FreeLdr recovered the hive (hive 0x%p)\n", CmHive);
+                RtlSetAllBits(&CmHive->Hive.DirtyVector);
+                CmHive->Hive.DirtyCount = CmHive->Hive.DirtyVector.SizeOfBitMap;
+                HvSyncHive((PHHIVE)CmHive);
+            }
 
             /* Finally, set our allocated hive to the same hive we've had */
             CmpMachineHiveList[i].CmHive2 = CmHive;
