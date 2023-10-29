@@ -170,7 +170,7 @@
 /* CSR3 bits */
 #define CSR3_BSWP    0x4        /* byte swap */
 #define CSR3_EMBA    0x8        /* enable modified backoff algorithm */
-#define CSR3_DXMT2PD 0x10       /* disable transmit two-part referral */
+#define CSR3_DXMT2PD 0x10       /* disable transmit two-part deferral */
 #define CSR3_LAPPEN  0x20       /* lookahead packet processing enable */
 #define CSR3_DXSUFLO 0x40       /* disable transmit stop on underflow */
 #define CSR3_IDONM   0x100      /* initialization done mask */
@@ -205,8 +205,8 @@
 #define CSR5_MPINTE    0x8      /* magic packet interrupt enable */
 #define CSR5_MPINT     0x10     /* magic packet interrupt */
 #define CSR5_MPPLBA    0x20     /* magic packet physical logical broadcast accept */
-#define CSR5_EXDINTE   0x40     /* excessive referral interrupt enable */
-#define CSR5_EXDINT    0x80     /* excessive referral interrupt */
+#define CSR5_EXDINTE   0x40     /* excessive deferral interrupt enable */
+#define CSR5_EXDINT    0x80     /* excessive deferral interrupt */
 #define CSR5_SLPINTE   0x100    /* sleep interrupt enable */
 #define CSR5_SLPINT    0x200    /* sleep interrupt */
 #define CSR5_SINE      0x400    /* system interrupt enable */
@@ -410,6 +410,6 @@ typedef struct _TRANSMIT_DESCRIPTOR
 #define TD2_RTRY        0x400   /* retry error */
 #define TD2_LCAR        0x800   /* loss of carrier */
 #define TD2_LCOL        0x1000  /* late collision */
-#define TD2_EXDEF       0x2000  /* excessive referral */
+#define TD2_EXDEF       0x2000  /* excessive deferral */
 #define TD2_UFLO        0x4000  /* buffer underflow */
 #define TD2_BUFF        0x8000  /* buffer error */
