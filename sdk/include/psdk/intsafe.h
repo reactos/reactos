@@ -32,7 +32,7 @@
 
 /* Handle ntintsafe here too */
 #ifdef _NTINTSAFE_H_INCLUDED_
-#ifndef _NTDEF_ /* Guard again redefinition from ntstatus.h */
+#ifndef _NTDEF_ /* Guard against redefinition from ntstatus.h */
 typedef _Return_type_success_(return >= 0) long NTSTATUS;
 #endif
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
