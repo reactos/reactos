@@ -1366,7 +1366,7 @@ void FASTCALL MENU_InitSysMenuPopup(PMENU menu, DWORD style, DWORD clsStyle, LON
 
     gray = !(style & WS_THICKFRAME) || (style & (WS_MAXIMIZE | WS_MINIMIZE));
     IntEnableMenuItem( menu, SC_SIZE, (gray ? MF_GRAYED : MF_ENABLED) );
-    gray = ((style & WS_MAXIMIZE) != 0);
+    gray = ((style & (WS_MAXIMIZE | WS_MINIMIZE)) != 0);
     IntEnableMenuItem( menu, SC_MOVE, (gray ? MF_GRAYED : MF_ENABLED) );
     gray = !(style & WS_MINIMIZEBOX) || (style & WS_MINIMIZE);
     IntEnableMenuItem( menu, SC_MINIMIZE, (gray ? MF_GRAYED : MF_ENABLED) );
