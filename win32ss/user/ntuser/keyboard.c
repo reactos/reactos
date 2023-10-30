@@ -15,9 +15,9 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
-int gLanguageToggleKeyState = 0;
+INT gLanguageToggleKeyState = 0;
 DWORD gdwLanguageToggleKey = 1;
-int gLayoutToggleKeyState = 0;
+INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
 
 /* FUNCTIONS *****************************************************************/
