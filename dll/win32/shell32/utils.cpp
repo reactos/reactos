@@ -566,7 +566,7 @@ CopyStreamUI(
     {
         // Get the stream size
         ZeroMemory(&Stat, sizeof(Stat));
-        if (FAILED(pSrc->Stat(&Stat, 1)))
+        if (FAILED(pSrc->Stat(&Stat, STATFLAG_NONAME)))
             pProgress = NULL; // No size info. Disable progress
         else
             dwlSize = Stat.cbSize.QuadPart;
