@@ -616,8 +616,12 @@ CopyStreamUI(
     pProgress->SetProgress64(cbDone, dwlSize);
 
     // Repeat reading and writing until goal
-    while (SUCCEEDED(pSrc->Read(pBuff, cbBuff, &cbRead)))
+    for (;;)
     {
+        hr = pSrc->Read(pBuff, cbBuff, &cbRead);
+        if (FAILED(hr))
+            break;
+
         // Calculate the size to write
         if (dwlSize > 0)
             dwSizeToWrite = (DWORD)min((DWORDLONG)(dwlSize - cbDone), (DWORDLONG)cbRead);
