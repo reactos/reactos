@@ -609,8 +609,7 @@ CopyStreamUI(
     pSrc->Seek(zero, 0, NULL);
     pDst->Seek(zero, 0, NULL);
     cbDone = 0;
-    if (pProgress) // Progress is enabled?
-        pProgress->SetProgress64(cbDone, dwlSize);
+    pProgress->SetProgress64(cbDone, dwlSize);
 
     // Repeat reading and writing until goal
     while (SUCCEEDED(pSrc->Read(pBuff, cbBuff, &cbRead)))
@@ -633,15 +632,12 @@ CopyStreamUI(
 
         cbDone += dwSizeToWrite;
 
-        if (pProgress) // Progress is enabled?
+        if (pProgress->HasUserCancelled()) // Cancelled?
         {
-            if (pProgress->HasUserCancelled()) // Cancelled?
-            {
-                hr = HRESULT_FROM_WIN32(ERROR_CANCELLED);
-                break;
-            }
-            pProgress->SetProgress64(cbDone, dwlSize);
+            hr = HRESULT_FROM_WIN32(ERROR_CANCELLED);
+            break;
         }
+        pProgress->SetProgress64(cbDone, dwlSize);
 
         if (dwlSize > 0 && cbDone >= dwlSize) // Reached the goal?
         {
