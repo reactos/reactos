@@ -81,7 +81,9 @@ IntTID2PTI(HANDLE id)
  */
 DWORD
 FASTCALL
-UserGetLanguageToggle(LPCWSTR pszType, DWORD dwDefaultValue)
+UserGetLanguageToggle(
+    _In_ PCWSTR pszType,
+    _In_ DWORD dwDefaultValue)
 {
     NTSTATUS Status;
     DWORD dwValue = dwDefaultValue;
