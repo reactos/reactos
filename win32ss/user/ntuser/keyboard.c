@@ -816,7 +816,7 @@ IntGetNextKL(
 
 /* Perform layout toggle by [Left Alt]+Shift or Ctrl+Shift */
 static VOID
-IntLayoutToggle(
+IntLanguageToggle(
     _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
     _In_ BOOL bSameLang,
     _In_ int nKeyState)
@@ -873,7 +873,7 @@ IntCheckLanguageToggle(
         if (*pKeyState == 0)
             return FALSE;
 
-        IntLayoutToggle(pFocusQueue, (pKeyState == &gLayoutToggleKeyState), *pKeyState);
+        IntLanguageToggle(pFocusQueue, (pKeyState == &gLayoutToggleKeyState), *pKeyState);
         *pKeyState = 0;
     }
     return TRUE;
