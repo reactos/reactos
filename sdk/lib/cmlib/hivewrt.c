@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Configuration Manager Library - Registry Syncing & Hive/Log Writing
+ * PURPOSE:     Configuration Manager Library - Registry Syncing & Hive/Log/Alternate Writing
  * COPYRIGHT:   Copyright 2001 - 2005 Eric Kohl
  *              Copyright 2005 Filip Navara <navaraf@reactos.org>
  *              Copyright 2021 Max Korostil
@@ -297,16 +297,26 @@ HvpWriteLog(
  * data to be written to the primary hive, otherwise if
  * it's set to FALSE then the function writes all the data.
  *
+ * @param[in] FileType
+ * The file type of a registry hive. This can be HFILE_TYPE_PRIMARY
+ * or HFILE_TYPE_ALTERNATE.
+ *
  * @return
  * Returns TRUE if writing to hive has succeeded,
  * FALSE otherwise.
+ *
+ * @remarks
+ * The on-disk header metadata of a hive is already written with type
+ * of HFILE_TYPE_PRIMARY, regardless of what file type the caller submits,
+ * as an alternate hive is basically a mirror of the primary hive.
  */
 static
 BOOLEAN
 CMAPI
 HvpWriteHive(
     _In_ PHHIVE RegistryHive,
-    _In_ BOOLEAN OnlyDirty)
+    _In_ BOOLEAN OnlyDirty,
+    _In_ ULONG FileType)
 {
     BOOLEAN Success;
     ULONG FileOffset;
@@ -348,7 +358,7 @@ HvpWriteHive(
 
     /* Write hive block */
     FileOffset = 0;
-    Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+    Success = RegistryHive->FileWrite(RegistryHive, FileType,
                                       &FileOffset, RegistryHive->BaseBlock,
                                       sizeof(HBASE_BLOCK));
     if (!Success)
@@ -384,7 +394,7 @@ HvpWriteHive(
         FileOffset = (BlockIndex + 1) * HBLOCK_SIZE;
 
         /* Now write this block to primary hive file */
-        Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+        Success = RegistryHive->FileWrite(RegistryHive, FileType,
                                           &FileOffset, Block, HBLOCK_SIZE);
         if (!Success)
         {
@@ -401,7 +411,7 @@ HvpWriteHive(
      * We wrote all the hive contents to the file, we
      * must flush the changes to disk now.
      */
-    Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_PRIMARY, NULL, 0);
+    Success = RegistryHive->FileFlush(RegistryHive, FileType, NULL, 0);
     if (!Success)
     {
         DPRINT1("Failed to flush the primary hive\n");
@@ -420,7 +430,7 @@ HvpWriteHive(
 
     /* Write hive block */
     FileOffset = 0;
-    Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+    Success = RegistryHive->FileWrite(RegistryHive, FileType,
                                       &FileOffset, RegistryHive->BaseBlock,
                                       sizeof(HBASE_BLOCK));
     if (!Success)
@@ -430,7 +440,7 @@ HvpWriteHive(
     }
 
     /* Flush the hive immediately */
-    Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_PRIMARY, NULL, 0);
+    Success = RegistryHive->FileFlush(RegistryHive, FileType, NULL, 0);
     if (!Success)
     {
         DPRINT1("Failed to flush the primary hive\n");
@@ -526,13 +536,26 @@ HvSyncHive(
     }
 
     /* Update the primary hive file */
-    if (!HvpWriteHive(RegistryHive, TRUE))
+    if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_PRIMARY))
     {
         DPRINT1("Failed to write the primary hive\n");
 #if !defined(CMLIB_HOST) && !defined(_BLDR_)
         IoSetThreadHardErrorMode(HardErrors);
 #endif
         return FALSE;
+    }
+
+    /* Update the alternate hive file if present */
+    if (RegistryHive->Alternate == TRUE)
+    {
+        if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_ALTERNATE))
+        {
+            DPRINT1("Failed to write the alternate hive\n");
+#if !defined(CMLIB_HOST) && !defined(_BLDR_)
+            IoSetThreadHardErrorMode(HardErrors);
+#endif
+            return FALSE;
+        }
     }
 
     /* Clear dirty bitmap. */
@@ -601,7 +624,7 @@ HvWriteHive(
 #endif
 
     /* Update hive file */
-    if (!HvpWriteHive(RegistryHive, FALSE))
+    if (!HvpWriteHive(RegistryHive, FALSE, HFILE_TYPE_PRIMARY))
     {
         DPRINT1("Failed to write the hive\n");
         return FALSE;
@@ -610,6 +633,44 @@ HvWriteHive(
     return TRUE;
 }
 
+/**
+ * @brief
+ * Writes data to an alternate registry hive.
+ * An alternate hive is usually backed up by a primary
+ * hive. This function is tipically used to force write
+ * data into the alternate hive if both hives no longer match.
+ *
+ * @param[in] RegistryHive
+ * A pointer to a hive descriptor where data
+ * is to be written into.
+ *
+ * @return
+ * Returns TRUE if hive writing has succeeded,
+ * FALSE otherwise.
+ */
+BOOLEAN
+CMAPI
+HvWriteAlternateHive(
+    _In_ PHHIVE RegistryHive)
+{
+    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
+    ASSERT(RegistryHive->Alternate == TRUE);
+
+#if !defined(_BLDR_)
+    /* Update hive header modification time */
+    KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
+#endif
+
+    /* Update hive file */
+    if (!HvpWriteHive(RegistryHive, FALSE, HFILE_TYPE_ALTERNATE))
+    {
+        DPRINT1("Failed to write the alternate hive\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /**
  * @brief
@@ -634,7 +695,7 @@ HvSyncHiveFromRecover(
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
 
     /* Call the private API call to do the deed for us */
-    return HvpWriteHive(RegistryHive, TRUE);
+    return HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_PRIMARY);
 }
 
 /* EOF */

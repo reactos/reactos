@@ -2703,6 +2703,7 @@ CmSaveKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                NULL,
                                NULL,
                                NULL,
+                               NULL,
                                CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
@@ -2790,6 +2791,7 @@ CmSaveMergedKeys(IN PCM_KEY_CONTROL_BLOCK HighKcb,
                                HINIT_CREATE,
                                HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
+                               NULL,
                                NULL,
                                NULL,
                                NULL,

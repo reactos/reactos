@@ -121,6 +121,10 @@
         IN ULONG NumberToSet);
 
     VOID NTAPI
+    RtlSetAllBits(
+        IN PRTL_BITMAP BitMapHeader);
+
+    VOID NTAPI
     RtlClearAllBits(
         IN PRTL_BITMAP BitMapHeader);
 
@@ -508,6 +512,11 @@ HvSyncHive(
 BOOLEAN CMAPI
 HvWriteHive(
    PHHIVE RegistryHive);
+
+BOOLEAN
+CMAPI
+HvWriteAlternateHive(
+    _In_ PHHIVE RegistryHive);
 
 BOOLEAN
 CMAPI

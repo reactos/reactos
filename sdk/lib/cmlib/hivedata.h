@@ -33,7 +33,8 @@
 #define HFILE_TYPE_PRIMARY              0
 #define HFILE_TYPE_LOG                  1
 #define HFILE_TYPE_EXTERNAL             2
-#define HFILE_TYPE_MAX                  3
+#define HFILE_TYPE_ALTERNATE            3 // Technically a HFILE_TYPE_PRIMARY but for mirror backup hives. ONLY USED for the SYSTEM hive!
+#define HFILE_TYPE_MAX                  4
 
 //
 // Hive sizes
@@ -334,6 +335,7 @@ typedef struct _HHIVE
     BOOLEAN ReadOnly;
 #if (NTDDI_VERSION < NTDDI_VISTA) // NTDDI_LONGHORN
     BOOLEAN Log;
+    BOOLEAN Alternate;
 #endif
     BOOLEAN DirtyFlag;
 #if (NTDDI_VERSION >= NTDDI_VISTA) // NTDDI_LONGHORN

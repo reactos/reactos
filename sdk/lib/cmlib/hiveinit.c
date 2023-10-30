@@ -441,6 +441,18 @@ HvpInitializeMemoryHive(
     RtlInitializeBitMap(&Hive->DirtyVector, BitmapBuffer, BitmapSize * 8);
     RtlClearAllBits(&Hive->DirtyVector);
 
+    /*
+     * Mark the entire hive as dirty. Indeed we understand if we charged up
+     * the alternate variant of the primary hive (e.g. SYSTEM.ALT) because
+     * FreeLdr could not load the main SYSTEM hive, due to corruptions, and
+     * repairing it with a LOG did not help at all.
+     */
+    if (ChunkBase->BootRecover == HBOOT_BOOT_RECOVERED_BY_ALTERNATE_HIVE)
+    {
+        RtlSetAllBits(&Hive->DirtyVector);
+        Hive->DirtyCount = Hive->DirtyVector.SizeOfBitMap;
+    }
+
     HvpInitFileName(Hive->BaseBlock, FileName);
 
     return STATUS_SUCCESS;
@@ -1377,6 +1389,7 @@ HvInitialize(
     Hive->Version = HSYS_MINOR;
 #if (NTDDI_VERSION < NTDDI_VISTA)
     Hive->Log = (FileType == HFILE_TYPE_LOG);
+    Hive->Alternate = (FileType == HFILE_TYPE_ALTERNATE);
 #endif
     Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
