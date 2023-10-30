@@ -1,16 +1,12 @@
 /*
  * PROJECT:     ReactOS Safely Remove Hardware Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Confirm Removal Dialog
+ * PURPOSE:     Device Removal Support
  * COPYRIGHT:   Copyright 2023 Thamatip Chitpong <thamatip.chitpong@reactos.org>
  */
 
 #include "hotplug.h"
 
-#include <initguid.h>
-#include <devguid.h>
-
-static
 DEVINST
 GetDeviceInstForRemoval(
     _In_ PHOTPLUG_DATA pHotplugData)
@@ -39,111 +35,18 @@ GetDeviceInstForRemoval(
 
 static
 VOID
-InsertConfirmDeviceListItem(
-    _In_ HWND hwndCfmDeviceList,
-    _In_ DEVINST DevInst,
-    _In_ PHOTPLUG_DATA pHotplugData)
-{
-    WCHAR szDisplayName[40];
-    WCHAR szGuidString[MAX_GUID_STRING_LEN];
-    DWORD dwSize;
-    GUID ClassGuid;
-    INT nClassImage;
-    CONFIGRET cr;
-    LVITEMW lvItem;
-
-    /* Get the device description */
-    dwSize = sizeof(szDisplayName);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_DEVICEDESC,
-                                          NULL,
-                                          szDisplayName,
-                                          &dwSize,
-                                          0);
-    if (cr != CR_SUCCESS)
-        wcscpy(szDisplayName, L"Unknown Device");
-
-    /* Get the class GUID */
-    dwSize = sizeof(szGuidString);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_CLASSGUID,
-                                          NULL,
-                                          szGuidString,
-                                          &dwSize,
-                                          0);
-    if (cr == CR_SUCCESS)
-    {
-        pSetupGuidFromString(szGuidString, &ClassGuid);
-    }
-    else
-    {
-        memcpy(&ClassGuid, &GUID_DEVCLASS_UNKNOWN, sizeof(GUID));
-    }
-
-    /* Get the image for the class this device is in */
-    SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
-                              &ClassGuid,
-                              &nClassImage);
-
-    /* Add it to the confirm device list */
-    ZeroMemory(&lvItem, sizeof(lvItem));
-    lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
-    lvItem.iItem = ListView_GetItemCount(hwndCfmDeviceList);
-    lvItem.pszText = szDisplayName;
-    lvItem.iImage = nClassImage;
-    lvItem.lParam = (LPARAM)DevInst;
-
-    ListView_InsertItem(hwndCfmDeviceList, &lvItem);
-}
-
-static
-VOID
-CfmListRecursiveInsertSubDevices(
-    _In_ HWND hwndCfmDeviceList,
-    _In_ DEVINST ParentDevInst,
-    _In_ PHOTPLUG_DATA pHotplugData)
-{
-    DEVINST ChildDevInst;
-    CONFIGRET cr;
-
-    cr = CM_Get_Child(&ChildDevInst, ParentDevInst, 0);
-    if (cr != CR_SUCCESS)
-        return;
-
-    InsertConfirmDeviceListItem(hwndCfmDeviceList, ChildDevInst, pHotplugData);
-    CfmListRecursiveInsertSubDevices(hwndCfmDeviceList, ChildDevInst, pHotplugData);
-
-    for (;;)
-    {
-        cr = CM_Get_Sibling(&ChildDevInst, ChildDevInst, 0);
-        if (cr != CR_SUCCESS)
-            return;
-
-        InsertConfirmDeviceListItem(hwndCfmDeviceList, ChildDevInst, pHotplugData);
-        CfmListRecursiveInsertSubDevices(hwndCfmDeviceList, ChildDevInst, pHotplugData);
-    }
-}
-
-static
-VOID
 FillConfirmDeviceList(
     _In_ HWND hwndCfmDeviceList,
     _In_ PHOTPLUG_DATA pHotplugData)
 {
-    DEVINST DevInst;
     LVCOLUMNW lvColumn;
-
-    DevInst = GetDeviceInstForRemoval(pHotplugData);
-    if (DevInst == 0)
-        return;
 
     ZeroMemory(&lvColumn, sizeof(lvColumn));
     lvColumn.mask = LVCF_FMT;
     lvColumn.fmt = LVCFMT_LEFT | LVCFMT_IMAGE;
     ListView_InsertColumn(hwndCfmDeviceList, 0, &lvColumn);
 
-    InsertConfirmDeviceListItem(hwndCfmDeviceList, DevInst, pHotplugData);
-    CfmListRecursiveInsertSubDevices(hwndCfmDeviceList, DevInst, pHotplugData);
+    CfmListEnumDevices(hwndCfmDeviceList, pHotplugData);
 
     ListView_SetColumnWidth(hwndCfmDeviceList, 0, LVSCW_AUTOSIZE_USEHEADER);
 }
@@ -200,11 +103,11 @@ ConfirmRemovalDlgProc(
             {
                 case IDOK:
                     SafeRemoveDevice(GetDeviceInstForRemoval(pHotplugData));
-                    EndDialog(hwndDlg, 0);
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     break;
 
                 case IDCANCEL:
-                    EndDialog(hwndDlg, 0);
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     break;
             }
 

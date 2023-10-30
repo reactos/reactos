@@ -49,6 +49,10 @@ typedef struct _HOTPLUG_DATA
 } HOTPLUG_DATA, *PHOTPLUG_DATA;
 
 // eject.c
+DEVINST
+GetDeviceInstForRemoval(
+    _In_ PHOTPLUG_DATA pHotplugData);
+
 INT_PTR
 CALLBACK
 ConfirmRemovalDlgProc(
@@ -56,6 +60,16 @@ ConfirmRemovalDlgProc(
     UINT uMsg,
     WPARAM wParam,
     LPARAM lParam);
+
+// enum.c
+VOID
+EnumHotpluggedDevices(
+    _In_ PHOTPLUG_DATA pHotplugData);
+
+VOID
+CfmListEnumDevices(
+    _In_ HWND hwndCfmDeviceList,
+    _In_ PHOTPLUG_DATA pHotplugData);
 
 // hotplug.c
 LONG
