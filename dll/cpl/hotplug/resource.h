@@ -23,6 +23,7 @@
 #define IDM_PROPERTIES                     502
 
 /* Resource strings IDs */
-#define IDS_CPLNAME        1000
-#define IDS_CPLDESCRIPTION 1001
-
+#define IDS_CPLNAME            1000
+#define IDS_CPLDESCRIPTION     1001
+#define IDS_UNKNOWN_DEVICE     1002
+#define IDS_EJECT_ERROR_FORMAT 1003

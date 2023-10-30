@@ -7,6 +7,8 @@
 
 #include "hotplug.h"
 
+#include <strsafe.h>
+
 DEVINST
 GetDeviceInstForRemoval(
     _In_ PHOTPLUG_DATA pHotplugData)
@@ -63,8 +65,12 @@ SafeRemoveDevice(
     cr = CM_Request_Device_EjectW(DevInst, &VetoType, NULL, 0, 0);
     if (cr != CR_SUCCESS && VetoType == PNP_VetoTypeUnknown)
     {
+        LPCWSTR pszFormat = L"";
         WCHAR szError[64];
-        swprintf(szError, L"Failed to remove device (0x%x)", cr);
+
+        LoadStringW(hApplet, IDS_EJECT_ERROR_FORMAT, (LPWSTR)&pszFormat, 0);
+        StringCbPrintfW(szError, sizeof(szError), pszFormat, cr);
+
         MessageBoxW(hwndDlg, szError, NULL, MB_ICONEXCLAMATION | MB_OK);
     }
 }

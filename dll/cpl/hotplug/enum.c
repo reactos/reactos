@@ -38,7 +38,12 @@ InsertDeviceTreeItem(
                                           &dwSize,
                                           0);
     if (cr != CR_SUCCESS)
-        wcscpy(szDisplayName, L"Unknown Device");
+    {
+        LoadStringW(hApplet,
+                    IDS_UNKNOWN_DEVICE,
+                    szDisplayName,
+                    ARRAYSIZE(szDisplayName));
+    }
 
     /* Get the class GUID */
     dwSize = sizeof(szGuidString);
@@ -222,7 +227,12 @@ InsertConfirmDeviceListItem(
                                           &dwSize,
                                           0);
     if (cr != CR_SUCCESS)
-        wcscpy(szDisplayName, L"Unknown Device");
+    {
+        LoadStringW(hApplet,
+                    IDS_UNKNOWN_DEVICE,
+                    szDisplayName,
+                    ARRAYSIZE(szDisplayName));
+    }
 
     /* Get the class GUID */
     dwSize = sizeof(szGuidString);
