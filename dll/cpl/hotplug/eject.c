@@ -54,7 +54,8 @@ FillConfirmDeviceList(
 static
 VOID
 SafeRemoveDevice(
-    _In_ DEVINST DevInst)
+    _In_ DEVINST DevInst,
+    _In_opt_ HWND hwndDlg)
 {
     PNP_VETO_TYPE VetoType = PNP_VetoTypeUnknown;
     CONFIGRET cr;
@@ -64,7 +65,7 @@ SafeRemoveDevice(
     {
         WCHAR szError[64];
         swprintf(szError, L"Failed to remove device (0x%x)", cr);
-        MessageBoxW(NULL, szError, NULL, MB_ICONEXCLAMATION | MB_OK);
+        MessageBoxW(hwndDlg, szError, NULL, MB_ICONEXCLAMATION | MB_OK);
     }
 }
 
@@ -102,7 +103,7 @@ ConfirmRemovalDlgProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    SafeRemoveDevice(GetDeviceInstForRemoval(pHotplugData));
+                    SafeRemoveDevice(GetDeviceInstForRemoval(pHotplugData), hwndDlg);
                     EndDialog(hwndDlg, LOWORD(wParam));
                     break;
 
