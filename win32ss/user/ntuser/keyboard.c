@@ -819,7 +819,7 @@ static VOID
 IntLanguageToggle(
     _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
     _In_ BOOL bSameLang,
-    _In_ int nKeyState)
+    _In_ INT nKeyState)
 {
     PWND pWnd = pFocusQueue->spwndFocus;
     HWND hWnd;
