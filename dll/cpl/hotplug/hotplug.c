@@ -90,15 +90,20 @@ done:
 
 static
 VOID
-UpdateButtons(
-    HWND hwndDlg)
+UpdateDialog(
+    _In_ HWND hwndDlg)
 {
-    BOOL bEnabled;
+    HWND hwndDeviceTree;
+    BOOL bHasItem;
 
-    bEnabled = (TreeView_GetCount(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE)) != 0);
+    hwndDeviceTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_PROPERTIES), bEnabled);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bEnabled);
+    bHasItem = (TreeView_GetCount(hwndDeviceTree) != 0);
+    if (bHasItem)
+        TreeView_SelectItem(hwndDeviceTree, TreeView_GetFirstVisible(hwndDeviceTree));
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_PROPERTIES), bHasItem);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bHasItem);
 }
 
 
@@ -255,7 +260,7 @@ SafeRemovalDlgProc(
                                       TVSIL_NORMAL);
 
                 EnumHotpluggedDevices(pHotplugData);
-                UpdateButtons(hwndDlg);
+                UpdateDialog(hwndDlg);
             }
             return TRUE;
 
@@ -280,6 +285,7 @@ SafeRemovalDlgProc(
                             SetHotPlugFlags(pHotplugData->dwFlags);
 
                             EnumHotpluggedDevices(pHotplugData);
+                            UpdateDialog(hwndDlg);
                         }
                     }
                     break;
@@ -326,7 +332,7 @@ SafeRemovalDlgProc(
                 if (pHotplugData != NULL)
                 {
                     EnumHotpluggedDevices(pHotplugData);
-                    UpdateButtons(hwndDlg);
+                    UpdateDialog(hwndDlg);
                 }
             }
             break;
