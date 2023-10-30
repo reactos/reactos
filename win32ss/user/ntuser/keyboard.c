@@ -853,7 +853,7 @@ IntCheckLanguageToggle(
     _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
     _In_ BOOL bIsDown,
     _In_ WORD wVk,
-    _Inout_ int *pKeyState)
+    _Inout_ PINT pKeyState)
 {
     if (bIsDown) /* Toggle key combination is pressed? */
     {
