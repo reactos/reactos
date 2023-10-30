@@ -557,8 +557,9 @@ CopyStreamUI(
     DWORD cbBuff, cbRead, dwSizeToWrite;
     DWORDLONG cbDone;
     LPVOID pBuff;
+    CComHeapPtr<BYTE> pHeapPtr;
     STATSTG Stat;
-    BYTE szBuff[1024];
+    BYTE abBuff[1024];
 
     TRACE("(%p, %p, %p, %I64u)\n", pSrc, pDst, pProgress, dwlSize);
 
@@ -585,20 +586,23 @@ CopyStreamUI(
     }
 
     // Allocate the buffer if necessary
-    if (dwlSize > 0 && dwlSize <= sizeof(szBuff))
+    if (dwlSize > 0 && dwlSize <= sizeof(abBuff))
     {
-        cbBuff = sizeof(szBuff);
-        pBuff = szBuff;
+        cbBuff = sizeof(abBuff);
+        pBuff = abBuff;
     }
     else
     {
 #define COPY_STREAM_DEFAULT_BUFFER_SIZE 0x4000
         cbBuff = COPY_STREAM_DEFAULT_BUFFER_SIZE;
-        pBuff = LocalAlloc(LMEM_FIXED, cbBuff);
-        if (!pBuff) // Low memory?
+        if (pHeapPtr.AllocateBytes(cbBuff))
         {
-            cbBuff = sizeof(szBuff);
-            pBuff = szBuff;
+            pBuff = pHeapPtr;
+        }
+        else // Low memory?
+        {
+            cbBuff = sizeof(abBuff);
+            pBuff = abBuff;
         }
 #undef COPY_STREAM_DEFAULT_BUFFER_SIZE
     }
@@ -645,10 +649,6 @@ CopyStreamUI(
             break;
         }
     }
-
-    // Free the buffer if necessary
-    if (pBuff != szBuff)
-        LocalFree(pBuff);
 
     return hr;
 }
