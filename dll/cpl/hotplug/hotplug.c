@@ -140,12 +140,12 @@ ShowContextMenu(
 static
 DEVINST
 GetSelectedDeviceInst(
-    _In_ HWND hwndDeviceTree)
+    _In_ PHOTPLUG_DATA pHotplugData)
 {
     HTREEITEM hTreeItem;
     TVITEMW item;
 
-    hTreeItem = TreeView_GetSelection(hwndDeviceTree);
+    hTreeItem = TreeView_GetSelection(pHotplugData->hwndDeviceTree);
     if (hTreeItem == NULL)
         return 0;
 
@@ -153,7 +153,7 @@ GetSelectedDeviceInst(
     item.mask = TVIF_PARAM;
     item.hItem = hTreeItem;
 
-    TreeView_GetItem(hwndDeviceTree, &item);
+    TreeView_GetItem(pHotplugData->hwndDeviceTree, &item);
 
     return item.lParam;
 }
@@ -255,7 +255,7 @@ SafeRemovalDlgProc(
                 if (pHotplugData->dwFlags & HOTPLUG_DISPLAY_DEVICE_COMPONENTS)
                     Button_SetCheck(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DISPLAY_COMPONENTS), BST_CHECKED);
 
-                TreeView_SetImageList(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
+                TreeView_SetImageList(pHotplugData->hwndDeviceTree,
                                       pHotplugData->ImageListData.ImageList,
                                       TVSIL_NORMAL);
 
@@ -292,11 +292,8 @@ SafeRemovalDlgProc(
 
                 case IDC_SAFE_REMOVE_PROPERTIES:
                 case IDM_PROPERTIES:
-                {
-                    HWND hwndDevTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
-                    ShowDeviceProperties(hwndDlg, GetSelectedDeviceInst(hwndDevTree));
+                    ShowDeviceProperties(hwndDlg, GetSelectedDeviceInst(pHotplugData));
                     break;
-                }
 
                 case IDC_SAFE_REMOVE_STOP:
                 case IDM_STOP:
