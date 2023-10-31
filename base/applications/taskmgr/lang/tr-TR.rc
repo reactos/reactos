@@ -62,8 +62,6 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Görev Yöneticisi Yardım Konuları", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Görev Yöneticisi Hakkında", ID_HELP_ABOUT
     END
 END
@@ -139,8 +137,6 @@ BEGIN
         MENUITEM "İ&lişkiyi Ayarla...", ID_PROCESS_PAGE_SETAFFINITY
     END
 END
-
-/* Dialogs */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -306,17 +302,11 @@ BEGIN
     CONTROL "Komut Satırı", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Görev Yöneticisi"
     IDC_TASKMGR "Görev Yöneticisi"
     IDS_IDLE_PROCESS "Boş Sistem İşlemi"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Uygulamalar"
     IDS_TAB_PROCESSES "İşlemler"
     IDS_TAB_PERFORMANCE "Başarım"

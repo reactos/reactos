@@ -6,10 +6,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
 
 typedef struct _PERFDATA
@@ -34,16 +30,15 @@ typedef struct _PERFDATA
 	ULONG				USERObjectCount;
 	ULONG				GDIObjectCount;
 	IO_COUNTERS			IOCounters;
-
 	LARGE_INTEGER		UserTime;
 	LARGE_INTEGER		KernelTime;
 } PERFDATA, *PPERFDATA;
 
 typedef struct _CMD_LINE_CACHE
 {
-     DWORD idx;
+    DWORD  idx;
     LPWSTR str;
-     ULONG len;
+    ULONG  len;
     struct _CMD_LINE_CACHE* pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
@@ -97,8 +92,3 @@ ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
 ULONG	PerfDataGetSystemHandleCount(void);
 
 ULONG	PerfDataGetTotalThreadCount(void);
-
-
-#ifdef __cplusplus
-};
-#endif
