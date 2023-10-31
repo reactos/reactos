@@ -17,9 +17,9 @@ typedef struct
 
 HWND            hApplicationPage;               /* Application List Property Page */
 HWND            hApplicationPageListCtrl;       /* Application ListCtrl Window */
-HWND            hApplicationPageEndTaskButton;  /* Application End Task button */
-HWND            hApplicationPageSwitchToButton; /* Application Switch To button */
-HWND            hApplicationPageNewTaskButton;  /* Application New Task button */
+HWND            hApplicationPageEndTaskButton;
+HWND            hApplicationPageSwitchToButton;
+HWND            hApplicationPageNewTaskButton;
 static int      nApplicationPageWidth;
 static int      nApplicationPageHeight;
 static BOOL     bSortAscending = TRUE;
@@ -82,7 +82,6 @@ void AppPageCleanup(void)
     }
 }
 
-
 INT_PTR CALLBACK
 ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -133,10 +132,8 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         hApplicationThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, &dwApplicationThread);
 #endif
-
         /* Refresh page */
         ApplicationPageUpdate();
-
         return TRUE;
 
     case WM_DESTROY:
@@ -161,7 +158,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             SendMessageW(hMainWnd, WM_COMMAND, MAKEWPARAM(ID_FILE_NEW, 0), 0);
             break;
         }
-
         break;
 
     case WM_SIZE:
@@ -202,7 +198,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageNewTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageNewTaskButton, NULL, TRUE);
-
         break;
 
     case WM_NOTIFY:
@@ -252,9 +247,9 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
     HIMAGELIST                      hImageListSmall;
 
     /* If we couldn't create the event then exit the thread */
-    while (1)
+    for (;;)
     {
-        /*  Wait for an the event or application close */
+        // Wait for an the event or application close
         if (GetMessage(&msg, NULL, 0, 0) <= 0)
             return 0;
 
@@ -352,14 +347,13 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     /* Get the icon for this window */
     hIcon = NULL;
-    SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG : ICON_SMALL, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+    SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG : ICON_SMALL, 0, 0, 100, (PDWORD_PTR)&hIcon);
     if (!hIcon)
     {
         /* We failed, try to retrieve other icons... */
         hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
         if (!hIcon) hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL : ICON_BIG, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL : ICON_BIG, 0, 0, 100, (PDWORD_PTR)&hIcon);
 
         /* If we still do not have any icon, load the default one */
         if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
@@ -427,7 +421,6 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
 
             /* Update the list view */
             (void)ListView_RedrawItems(hApplicationPageListCtrl, 0, ListView_GetItemCount(hApplicationPageListCtrl));
-            /* UpdateWindow(hApplicationPageListCtrl); */
             InvalidateRect(hApplicationPageListCtrl, NULL, 0);
         }
     }
@@ -526,15 +519,11 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
         case LVN_ITEMCHANGED:
             ApplicationPageUpdate();
             break;
-
         case LVN_GETDISPINFO:
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)pnmdi->item.lParam;
-
             /* Update the item text */
             if (pnmdi->item.iSubItem == 0)
                 wcsncpy(pnmdi->item.pszText, pAPLI->szTitle, pnmdi->item.cchTextMax);
-
-            /* Update the item status */
             else if (pnmdi->item.iSubItem == 1)
             {
                 if (pAPLI->bHung)
@@ -543,20 +532,16 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
                     LoadStringW(GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, _countof(szMsg));
                 wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }
-
             break;
-
         case NM_RCLICK:
             if (ListView_GetSelectedCount(hApplicationPageListCtrl) < 1)
                 ApplicationPageShowContextMenu1();
             else
                 ApplicationPageShowContextMenu2();
             break;
-
         case NM_DBLCLK:
             ApplicationPage_OnSwitchTo();
             break;
-
         case LVN_KEYDOWN:
             if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
                 ApplicationPage_OnEndTask();
@@ -573,7 +558,6 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             else
                 ApplicationPageShowContextMenu2();
             break;
-
         case HDN_ITEMCLICK:
             (void)ListView_SortItems(hApplicationPageListCtrl, ApplicationPageCompareFunc, 0);
             bSortAscending = !bSortAscending;
@@ -708,9 +692,8 @@ void ApplicationPage_OnWindowsMinimize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MINIMIZE);
-            }
+            if (pAPLI)
+                ShowWindowAsync(pAPLI->hWnd, SW_MINIMIZE);
         }
     }
 }
@@ -729,9 +712,8 @@ void ApplicationPage_OnWindowsMaximize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MAXIMIZE);
-            }
+            if (pAPLI)
+                ShowWindowAsync(pAPLI->hWnd, SW_MAXIMIZE);
         }
     }
 }
@@ -782,11 +764,8 @@ void ApplicationPage_OnWindowsBringToFront(void)
             break;
         }
     }
-    if (pAPLI) {
-        if (IsIconic(pAPLI->hWnd))
-            ShowWindow(pAPLI->hWnd, SW_RESTORE);
-        BringWindowToTop(pAPLI->hWnd);
-    }
+    if (pAPLI)
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
 }
 
 void ApplicationPage_OnSwitchTo(void)
@@ -808,21 +787,9 @@ void ApplicationPage_OnSwitchTo(void)
         }
     }
     if (pAPLI) {
-        typedef void (WINAPI *PROCSWITCHTOTHISWINDOW) (HWND, BOOL);
-        PROCSWITCHTOTHISWINDOW SwitchToThisWindow;
-
-        HMODULE hUser32 = GetModuleHandleW(L"USER32");
-        SwitchToThisWindow = (PROCSWITCHTOTHISWINDOW)GetProcAddress(hUser32, "SwitchToThisWindow");
-        if (SwitchToThisWindow) {
-            SwitchToThisWindow(pAPLI->hWnd, TRUE);
-        } else {
-            if (IsIconic(pAPLI->hWnd))
-                ShowWindow(pAPLI->hWnd, SW_RESTORE);
-            BringWindowToTop(pAPLI->hWnd);
-            SetForegroundWindow(pAPLI->hWnd);
-        }
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
         if (TaskManagerSettings.MinimizeOnUse)
-            ShowWindow(hMainWnd, SW_MINIMIZE);
+            ShowWindowAsync(hMainWnd, SW_MINIMIZE);
     }
 }
 
@@ -843,9 +810,8 @@ void ApplicationPage_OnEndTask(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI) {
+            if (pAPLI)
                 EndTask(pAPLI->hWnd, 0, ForceEndTask);
-            }
         }
     }
 }
