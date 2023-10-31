@@ -7,13 +7,12 @@
 
 #define _ATL_NO_EXCEPTIONS
 #include "precomp.h"
+#include <shellapi.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <atlstr.h>         // for CStringW
-#include <atlsimpcoll.h>    // for CSimpleMap
-#include <atlconv.h>        // for CA2W and CW2A
 #include <strsafe.h>        // for StringC... functions
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -35,7 +34,7 @@ IContextMenu_Invoke(
     if (!pContextMenu)
         return FALSE;
 
-    hOldCursor = SetCursor(LoadCursor(0, IDC_WAIT));
+    hOldCursor = SetCursor(LoadCursorW(0, (LPCWSTR)IDC_WAIT));
 
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(CMINVOKECOMMANDINFO);
