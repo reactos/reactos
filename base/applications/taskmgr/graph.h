@@ -6,11 +6,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 #define BRIGHT_GREEN  RGB(0, 255, 0)
 #define MEDIUM_GREEN  RGB(0, 190, 0)
 #define DARK_GREEN    RGB(0, 130, 0)
@@ -19,8 +14,3 @@ extern "C" {
 extern WNDPROC OldGraphWndProc;
 
 INT_PTR CALLBACK Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-
-#ifdef __cplusplus
-};
-#endif

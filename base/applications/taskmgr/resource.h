@@ -150,7 +150,6 @@
 #define ID_WINDOWS_MAXIMIZE          32788
 #define ID_WINDOWS_CASCADE           32789
 #define ID_WINDOWS_BRINGTOFRONT      32790
-#define ID_HELP_TOPICS               32791
 #define ID_HELP_ABOUT                32792
 #define ID_FILE_EXIT                 32793
 #define ID_OPTIONS_SHOW16BITTASKS    32794
