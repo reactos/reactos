@@ -91,9 +91,8 @@ void PerfDataUninitialize(void)
         HeapFree(GetProcessHeap(), 0, pEntry);
     }
 
-    if (SystemProcessorTimeInfo) {
+    if (SystemProcessorTimeInfo)
         HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
-    }
 }
 
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
@@ -257,18 +256,16 @@ void PerfDataRefresh(void)
 
     /* If it's a first call - skip idle time calcs */
     if (liOldIdleTime.QuadPart != 0) {
-        /*  CurrentValue = NewValue - OldValue */
+        // CurrentValue = NewValue - OldValue
         dbIdleTime = Li2Double(SysPerfInfo.IdleProcessTime) - Li2Double(liOldIdleTime);
         dbKernelTime = CurrentKernelTime - OldKernelTime;
         dbSystemTime = Li2Double(SysTimeInfo.CurrentTime) - Li2Double(liOldSystemTime);
 
-        /*  CurrentCpuIdle = IdleTime / SystemTime */
         dbIdleTime = dbIdleTime / dbSystemTime;
         dbKernelTime = dbKernelTime / dbSystemTime;
 
-        /*  CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors */
-        dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
-        dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
+        dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors;
+        dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors;
     }
 
     /* Store new CPU's idle and system time */
@@ -320,11 +317,11 @@ void PerfDataRefresh(void)
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
 
-        if (pPDOld)    {
+        if (pPDOld) {
             double    CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
             double    OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
             double    CpuTime = (CurTime - OldTime) / dbSystemTime;
-            CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
+            CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors;
             pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
         }
         pPerfData[Idx].CPUTime.QuadPart = pSPI->UserTime.QuadPart + pSPI->KernelTime.QuadPart;
@@ -390,25 +387,22 @@ ReadProcOwner:
         } else {
 ClearInfo:
             /* clear information we were unable to fetch */
-            ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
+            memset(&pPerfData[Idx].IOCounters, 0, sizeof(IO_COUNTERS));
         }
 
         cwcUserName = _countof(pPerfData[0].UserName);
         CachedGetUserFromSid(ProcessUser, pPerfData[Idx].UserName, &cwcUserName);
 
         if (ProcessSD != NULL)
-        {
             LocalFree((HLOCAL)ProcessSD);
-        }
 
         pPerfData[Idx].UserTime.QuadPart = pSPI->UserTime.QuadPart;
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
     HeapFree(GetProcessHeap(), 0, pBuffer);
-    if (pPerfDataOld) {
+    if (pPerfDataOld)
         HeapFree(GetProcessHeap(), 0, pPerfDataOld);
-    }
     pPerfDataOld = pPerfData;
     LeaveCriticalSection(&PerfDataCriticalSection);
 }
@@ -422,17 +416,13 @@ ULONG PerfDataGetProcessIndex(ULONG pid)
     for (idx = 0; idx < ProcessCount; idx++)
     {
         if (PtrToUlong(pPerfData[idx].ProcessId) == pid)
-        {
             break;
-        }
     }
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
     if (idx == ProcessCount)
-    {
         return -1;
-    }
     return idx;
 }
 
@@ -625,16 +615,15 @@ cleanup:
 
 void PerfDataDeallocCommandLineCache()
 {
-    PCMD_LINE_CACHE cache = global_cache;
-    PCMD_LINE_CACHE cache_old;
+    PCMD_LINE_CACHE cache, pnext;
 
-    while (cache && cache->pnext != NULL)
+    for (cache = global_cache; cache; cache = pnext)
     {
-        cache_old = cache;
-        cache = cache->pnext;
-
-        HeapFree(GetProcessHeap(), 0, cache_old);
+        pnext = cache->pnext;
+        HeapFree(GetProcessHeap(), 0, cache);
     }
+
+    global_cache = NULL;
 }
 
 ULONG PerfDataGetSessionId(ULONG Index)
@@ -1088,9 +1077,7 @@ ULONG PerfDataGetTotalThreadCount(void)
     EnterCriticalSection(&PerfDataCriticalSection);
 
     for (i=0; i<ProcessCount; i++)
-    {
         ThreadCount += pPerfData[i].ThreadCount;
-    }
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 

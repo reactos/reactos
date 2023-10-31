@@ -6,18 +6,10 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern HWND hPerformancePage;   /* Performance Property Page */
+extern HWND hPerformancePage;
 INT_PTR CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void RefreshPerformancePage(void);
 void PerformancePage_OnViewShowKernelTimes(void);
 void PerformancePage_OnViewCPUHistoryOneGraphAll(void);
 void PerformancePage_OnViewCPUHistoryOneGraphPerCPU(void);
-
-#ifdef __cplusplus
-};
-#endif
