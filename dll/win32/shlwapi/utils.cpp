@@ -19,6 +19,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*************************************************************************
  * IContextMenu_Invoke [SHLWAPI.207]
+ *
+ * Used by Win:SHELL32!CISFBand::_TrySimpleInvoke.
  */
 EXTERN_C
 BOOL WINAPI
