@@ -60,8 +60,6 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Help-onderwerpen", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Info", ID_HELP_ABOUT
     END
 END
@@ -121,11 +119,11 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Proces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Pro&ces beëindigen", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "Process&tructuur beëindigen", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Fouten opsporen", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "P&rioriteit instellen"
+        POPUP "&Prioriteit instellen"
         BEGIN
             MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Hoog", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -137,10 +135,6 @@ BEGIN
         MENUITEM "&Affiniteit instellen...", ID_PROCESS_PAGE_SETAFFINITY
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -306,17 +300,11 @@ BEGIN
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 117, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Taakbeheer"
     IDC_TASKMGR "Taakbeheer"
     IDS_IDLE_PROCESS "Niet-actieve systeemprocessen"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Toepassingen"
     IDS_TAB_PROCESSES "Procesnaam"
     IDS_TAB_PERFORMANCE "Prestaties"
