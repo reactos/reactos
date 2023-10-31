@@ -67,8 +67,6 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "任务管理器帮助主题(&H)", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "关于任务管理器(&A)", ID_HELP_ABOUT
     END
 END
@@ -147,10 +145,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -316,17 +310,11 @@ BEGIN
     CONTROL "命令行(&L)", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "任务管理器"
     IDC_TASKMGR "任务管理器"
     IDS_IDLE_PROCESS "系统空闲进程"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "应用程序"
     IDS_TAB_PROCESSES "进程"
     IDS_TAB_PERFORMANCE "性能"

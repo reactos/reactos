@@ -1,7 +1,5 @@
-/*
- * LICENSE:    GPL - See COPYING in the top level directory
- * TRANSLATOR: Elton Chung <elton328@gmail.com>
- */
+// LICENSE:   GPL - See COPYING in the top level directory
+// COPYRIGHT: Elton Chung <elton328@gmail.com>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -65,8 +63,6 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "工作管理員說明主题(&H)", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "關於工作管理員(&A)", ID_HELP_ABOUT
     END
 END
@@ -145,10 +141,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -314,17 +306,11 @@ BEGIN
     CONTROL "命令列(&L)", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "工作管理員"
     IDC_TASKMGR "工作管理員"
     IDS_IDLE_PROCESS "系統空閒處理序"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "應用程式"
     IDS_TAB_PROCESSES "處理程序"
     IDS_TAB_PERFORMANCE "性能"

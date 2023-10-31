@@ -6,399 +6,252 @@
 
 #include "precomp.h"
 
-#include <math.h>
-
 WNDPROC OldGraphCtrlWndProc;
 
-static void GraphCtrl_Init(TGraphCtrl* this)
+void GraphCtrl_Create(PTGraphCtrl inst, HWND hWnd, HWND hParentWnd, PTFormat fmt)
 {
-    int i;
+    HDC     hdc, hdcg;
+    HBITMAP hbmOld;
+    UINT    Size;
+    INT     p;
+    RECT    rc;
 
-    this->m_hWnd = 0;
-    this->m_hParentWnd = 0;
-    this->m_dcGrid = 0;
-    this->m_dcPlot = 0;
-    this->m_bitmapOldGrid = 0;
-    this->m_bitmapOldPlot = 0;
-    this->m_bitmapGrid = 0;
-    this->m_bitmapPlot = 0;
-    this->m_brushBack = 0;
+    inst->hParentWnd = hParentWnd;
+    inst->hWnd = hWnd;
 
-    this->m_penPlot[0] = 0;
-    this->m_penPlot[1] = 0;
-    this->m_penPlot[2] = 0;
-    this->m_penPlot[3] = 0;
+    Size = GetSystemMetrics(SM_CXSCREEN);
+    inst->BitmapWidth = Size;
+    Size /= PLOT_SHIFT;
+    inst->PointBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size * NUM_PLOTS);
+    if (!inst->PointBuffer)
+        goto fail;
 
-    // since plotting is based on a LineTo for each new point
-    // we need a starting point (i.e. a "previous" point)
-    // use 0.0 as the default first point.
-    // these are public member variables, and can be changed outside
-    // (after construction). Therefore m_perviousPosition could be set to
-    // a more appropriate value prior to the first call to SetPosition.
-    this->m_dPreviousPosition[0] = 0.0;
-    this->m_dPreviousPosition[1] = 0.0;
-    this->m_dPreviousPosition[2] = 0.0;
-    this->m_dPreviousPosition[3] = 0.0;
+    inst->NumberOfPoints = Size;
+    inst->CurrIndex = 0;
 
-    // public variable for the number of decimal places on the y axis
-    this->m_nYDecimals = 3;
+    inst->hPenGrid = CreatePen(PS_SOLID, 0, fmt->clrGrid);
+    inst->hPen0 = CreatePen(PS_SOLID, 0, fmt->clrPlot0);
+    inst->hPen1 = CreatePen(PS_SOLID, 0, fmt->clrPlot1);
+    inst->hBrushBack = CreateSolidBrush(fmt->clrBack);
 
-    // set some initial values for the scaling until "SetRange" is called.
-    // these are protected variables and must be set with SetRange
-    // in order to ensure that m_dRange is updated accordingly
-    this->m_dLowerLimit = 0.0;
-    this->m_dUpperLimit = 100.0;
-    this->m_dRange      = this->m_dUpperLimit - this->m_dLowerLimit; // protected member variable
+    if (!inst->hPenGrid || !inst->hPen0 || !inst->hPen1 || !inst->hBrushBack)
+        goto fail;
 
-    // m_nShiftPixels determines how much the plot shifts (in terms of pixels)
-    // with the addition of a new data point
-    this->m_nShiftPixels     = 4;
-    this->m_nHalfShiftPixels = this->m_nShiftPixels/2; // protected
-    this->m_nPlotShiftPixels = this->m_nShiftPixels + this->m_nHalfShiftPixels; // protected
+    if (fmt->GridCellWidth >= PLOT_SHIFT << 2)
+        inst->GridCellWidth = fmt->GridCellWidth;
+    else
+        inst->GridCellWidth = PLOT_SHIFT << 2;
+    if (fmt->GridCellHeight >= PLOT_SHIFT << 2)
+        inst->GridCellHeight = fmt->GridCellHeight;
+    else
+        inst->GridCellHeight = PLOT_SHIFT << 2;
 
-    // background, grid and data colors
-    // these are public variables and can be set directly
-    this->m_crBackColor = RGB(  0,   0,  0); // see also SetBackgroundColor
-    this->m_crGridColor = RGB(  0, 128, 64); // see also SetGridColor
-    this->m_crPlotColor[0] = RGB(255, 255, 255); // see also SetPlotColor
-    this->m_crPlotColor[1] = RGB(100, 255, 255); // see also SetPlotColor
-    this->m_crPlotColor[2] = RGB(255, 100, 255); // see also SetPlotColor
-    this->m_crPlotColor[3] = RGB(255, 255, 100); // see also SetPlotColor
+    inst->DrawSecondaryPlot = fmt->DrawSecondaryPlot;
 
-    // protected variables
-    for (i = 0; i < MAX_PLOTS; i++)
-        this->m_penPlot[i] = CreatePen(PS_SOLID, 0, this->m_crPlotColor[i]);
-    this->m_brushBack = CreateSolidBrush(this->m_crBackColor);
+    GetClientRect(hWnd, &rc);
+    inst->BitmapHeight = rc.bottom;
+    inst->ftPixelsPerPercent = (FLOAT)(inst->BitmapHeight) / 100.00f;
 
-    // public member variables, can be set directly
-    strcpy(this->m_strXUnitsString, "Samples"); // can also be set with SetXUnits
-    strcpy(this->m_strYUnitsString, "Y units"); // can also be set with SetYUnits
+    hdc = GetDC(hParentWnd);
+    hdcg = CreateCompatibleDC(hdc);
+    inst->hdcGraph = hdcg;
+    inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, inst->BitmapHeight);
 
-    // protected bitmaps to restore the memory DC's
-    this->m_bitmapOldGrid = NULL;
-    this->m_bitmapOldPlot = NULL;
-}
+    if (!hdc || !hdcg || !inst->hbmGraph)
+        goto fail;
 
-void GraphCtrl_Dispose(TGraphCtrl* this)
-{
-    int plot;
+    ReleaseDC(hParentWnd, hdc);
+    hbmOld = (HBITMAP)SelectObject(hdcg, inst->hbmGraph);
+    DeleteObject(hbmOld);
 
-    for (plot = 0; plot < MAX_PLOTS; plot++)
-        DeleteObject(this->m_penPlot[plot]);
+    SetBkColor(hdcg, fmt->clrBack);
+    rc.right = inst->BitmapWidth;
+    FillRect(hdcg, &rc, inst->hBrushBack);
 
-    // just to be picky restore the bitmaps for the two memory dc's
-    // (these dc's are being destroyed so there shouldn't be any leaks)
-    if (this->m_bitmapOldGrid != NULL) SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
-    if (this->m_bitmapOldPlot != NULL) SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
-    if (this->m_bitmapGrid    != NULL) DeleteObject(this->m_bitmapGrid);
-    if (this->m_bitmapPlot    != NULL) DeleteObject(this->m_bitmapPlot);
-    if (this->m_dcGrid        != NULL) DeleteDC(this->m_dcGrid);
-    if (this->m_dcPlot        != NULL) DeleteDC(this->m_dcPlot);
-    if (this->m_brushBack     != NULL) DeleteObject(this->m_brushBack);
-}
-
-void GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
-{
-    GraphCtrl_Init(this);
-    this->m_hParentWnd = hParentWnd;
-    this->m_hWnd = hWnd;
-
-    GraphCtrl_Resize(this);
-}
-
-void GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double dUpper, int nDecimalPlaces)
-{
-    this->m_dLowerLimit     = dLower;
-    this->m_dUpperLimit     = dUpper;
-    this->m_nYDecimals      = nDecimalPlaces;
-    this->m_dRange          = this->m_dUpperLimit - this->m_dLowerLimit;
-    this->m_dVerticalFactor = (double)this->m_nPlotHeight / this->m_dRange;
-    // clear out the existing garbage, re-start with a clean plot
-    GraphCtrl_InvalidateCtrl(this, FALSE);
-}
-
-void GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color)
-{
-    this->m_crGridColor = color;
-    // clear out the existing garbage, re-start with a clean plot
-    GraphCtrl_InvalidateCtrl(this, FALSE);
-}
-
-void GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF color)
-{
-    this->m_crPlotColor[plot] = color;
-    DeleteObject(this->m_penPlot[plot]);
-    this->m_penPlot[plot] = CreatePen(PS_SOLID, 0, this->m_crPlotColor[plot]);
-    // clear out the existing garbage, re-start with a clean plot
-    GraphCtrl_InvalidateCtrl(this, FALSE);
-}
-
-void GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF color)
-{
-    this->m_crBackColor = color;
-    DeleteObject(this->m_brushBack);
-    this->m_brushBack = CreateSolidBrush(this->m_crBackColor);
-    // clear out the existing garbage, re-start with a clean plot
-    GraphCtrl_InvalidateCtrl(this, FALSE);
-}
-
-void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
-{
-    // There is a lot of drawing going on here - particularly in terms of
-    // drawing the grid.  Don't panic, this is all being drawn (only once)
-    // to a bitmap. The result is then BitBlt'd to the control whenever needed.
-    int i;
-    int nCharacters;
-    HPEN oldPen;
-    HPEN solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
-
-    // in case we haven't established the memory dc's
-    HDC dc = GetDC(this->m_hParentWnd);
-
-    // if we don't have one yet, set up a memory dc for the grid
-    if (this->m_dcGrid == NULL)
+    inst->CurrShift = 0;
+    SelectObject(hdcg, inst->hPenGrid);
+    for (p = inst->GridCellHeight - 1; p < inst->BitmapHeight; p += inst->GridCellHeight)
     {
-        this->m_dcGrid = CreateCompatibleDC(dc);
-        this->m_bitmapGrid = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
-        this->m_bitmapOldGrid = (HBITMAP)SelectObject(this->m_dcGrid, this->m_bitmapGrid);
+        MoveToEx(hdcg, 0, p, NULL);
+        LineTo(hdcg, inst->BitmapWidth, p);
     }
-    else if(bResize)
+    for (p = inst->BitmapWidth - 1; p > 0; p -= inst->GridCellWidth)
     {
-        // the size of the drawing area has changed
-        // so create a new bitmap of the appropriate size
-        if(this->m_bitmapGrid != NULL)
+        MoveToEx(hdcg, p, 0, NULL);
+        LineTo(hdcg, p, inst->BitmapHeight);
+    }
+    SelectObject(hdcg, inst->hPen0);
+
+    return;
+
+fail:
+    GraphCtrl_Dispose(inst);
+}
+
+void GraphCtrl_Dispose(PTGraphCtrl inst)
+{
+    if (inst->PointBuffer)
+        HeapFree(GetProcessHeap(), 0, inst->PointBuffer);
+
+    if (inst->hdcGraph)
+        DeleteDC(inst->hdcGraph);
+
+    if (inst->hPenGrid)
+        DeleteObject(inst->hPenGrid);
+
+    if (inst->hPen0)
+        DeleteObject(inst->hPen0);
+
+    if (inst->hPen1)
+        DeleteObject(inst->hPen1);
+
+    if (inst->hBrushBack)
+        DeleteObject(inst->hBrushBack);
+
+    if (inst->hbmGraph)
+        DeleteObject(inst->hbmGraph);
+}
+
+void GraphCtrl_AddPoint(PTGraphCtrl inst, BYTE val0, BYTE val1)
+{
+    HDC    hdcg;
+    PBYTE  t;
+    RECT   rcDirt;
+    UINT   Prev0, Prev1, RetainingWidth;
+    INT    PrevY, CurrY, p, v;
+
+    hdcg = inst->hdcGraph;
+    RetainingWidth = inst->BitmapWidth - PLOT_SHIFT;
+    t = inst->PointBuffer;
+    Prev0 = *(t + inst->CurrIndex);
+    Prev1 = *(t + inst->CurrIndex + inst->NumberOfPoints);
+    if (inst->CurrIndex < inst->NumberOfPoints - 1)
+        inst->CurrIndex++;
+    else
+        inst->CurrIndex = 0;
+    *(t + inst->CurrIndex) = val0;
+    *(t + inst->CurrIndex + inst->NumberOfPoints) = val1;
+
+    // Drawing points, first shifting the plot left
+    BitBlt(hdcg, 0, 0, RetainingWidth, inst->BitmapHeight, hdcg, PLOT_SHIFT, 0, SRCCOPY);
+
+    rcDirt.left = RetainingWidth;
+    rcDirt.top = 0;
+    rcDirt.right = inst->BitmapWidth;
+    rcDirt.bottom = inst->BitmapHeight;
+    FillRect(hdcg, &rcDirt, inst->hBrushBack);
+
+    SelectObject(hdcg, inst->hPenGrid);
+    for (p = inst->GridCellHeight - 1; p < inst->BitmapHeight; p += inst->GridCellHeight)
+    {
+        MoveToEx(hdcg, RetainingWidth, p, NULL);
+        LineTo(hdcg, inst->BitmapWidth, p);
+    }
+    v = inst->CurrShift + PLOT_SHIFT;
+    if (v >= inst->GridCellWidth)
+    {
+        v -= inst->GridCellWidth;
+        p = inst->BitmapWidth - v - 1;
+        MoveToEx(hdcg, p, 0, NULL);
+        LineTo(hdcg, p, inst->BitmapHeight);
+    }
+    inst->CurrShift = v;
+
+    if (inst->DrawSecondaryPlot)
+    {
+        SelectObject(inst->hdcGraph, inst->hPen1);
+
+        PrevY = inst->BitmapHeight - Prev1 * inst->ftPixelsPerPercent;
+        MoveToEx(inst->hdcGraph, RetainingWidth - 1, PrevY, NULL);
+        CurrY = inst->BitmapHeight - val1 * inst->ftPixelsPerPercent;
+        LineTo(inst->hdcGraph, inst->BitmapWidth - 1, CurrY);
+    }
+
+    SelectObject(inst->hdcGraph, inst->hPen0);
+    PrevY = inst->BitmapHeight - Prev0 * inst->ftPixelsPerPercent;
+    MoveToEx(inst->hdcGraph, RetainingWidth - 1, PrevY, NULL);
+    CurrY = inst->BitmapHeight - val0 * inst->ftPixelsPerPercent;
+    LineTo(inst->hdcGraph, inst->BitmapWidth - 1, CurrY);
+}
+
+inline void GraphCtrl_RedrawBitmap(PTGraphCtrl inst, INT h)
+{
+    HDC    hdcg;
+    PBYTE  t;
+    RECT   rc;
+    INT    i, j, y, x, p;
+    FLOAT  coef;
+
+    hdcg = inst->hdcGraph;
+    rc.left = 0; rc.top = 0;
+    rc.right = inst->BitmapWidth; rc.bottom = h;
+    FillRect(hdcg, &rc, inst->hBrushBack);
+
+    SelectObject(hdcg, inst->hPenGrid);
+
+    for (p = inst->GridCellHeight - 1; p < inst->BitmapHeight; p += inst->GridCellHeight)
+    {
+        MoveToEx(hdcg, 0, p, NULL);
+        LineTo(hdcg, inst->BitmapWidth, p);
+    }
+
+    for (p = inst->BitmapWidth - inst->CurrShift - 1; p > 0; p -= inst->GridCellWidth)
+    {
+        MoveToEx(hdcg, p, 0, NULL);
+        LineTo(hdcg, p, inst->BitmapHeight);
+    }
+
+    coef = inst->ftPixelsPerPercent;
+
+    if (inst->DrawSecondaryPlot)
+    {
+        SelectObject(hdcg, inst->hPen1);
+        t = inst->PointBuffer + inst->NumberOfPoints;
+        x = inst->BitmapWidth - 1;
+        j = inst->CurrIndex;
+        y = h - *(t + j) * coef;
+        MoveToEx(hdcg, x, y, NULL);
+        for (i = 0; i < inst->NumberOfPoints; i++)
         {
-            this->m_bitmapGrid = (HBITMAP)SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
-            DeleteObject(this->m_bitmapGrid);
-            this->m_bitmapGrid = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
-            SelectObject(this->m_dcGrid, this->m_bitmapGrid);
+            j = (j ? j : inst->NumberOfPoints) - 1;
+            y = h - *(t + j) * coef;
+            x -= PLOT_SHIFT;
+            LineTo(hdcg, x, y);
         }
     }
 
-    SetBkColor(this->m_dcGrid, this->m_crBackColor);
+    SelectObject(hdcg, inst->hPen0);
+    t = inst->PointBuffer;
+    x = inst->BitmapWidth - 1;
+    j = inst->CurrIndex;
+    y = h - *(t + j) * coef;
+    MoveToEx(hdcg, x, y, NULL);
 
-    // fill the grid background
-    FillRect(this->m_dcGrid, &this->m_rectClient, this->m_brushBack);
-
-    // draw the plot rectangle:
-    // determine how wide the y axis scaling values are
-    nCharacters = abs((int)log10(fabs(this->m_dUpperLimit)));
-    nCharacters = max(nCharacters, abs((int)log10(fabs(this->m_dLowerLimit))));
-
-    // add the units digit, decimal point and a minus sign, and an extra space
-    // as well as the number of decimal places to display
-    nCharacters = nCharacters + 4 + this->m_nYDecimals;
-
-    // adjust the plot rectangle dimensions
-    this->m_rectPlot.left = this->m_rectClient.left;
-    this->m_nPlotWidth    = this->m_rectPlot.right - this->m_rectPlot.left;
-
-    // draw the plot rectangle
-    oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
-    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top, NULL);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right+1, this->m_rectPlot.top);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right+1, this->m_rectPlot.bottom+1);
-    LineTo(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.bottom+1);
-
-    // draw the horizontal axis
-    for (i = this->m_rectPlot.top; i < this->m_rectPlot.bottom; i += 12)
+    for (i = 0; i < inst->NumberOfPoints; i++)
     {
-        MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + i, NULL);
-        LineTo(this->m_dcGrid, this->m_rectPlot.right, this->m_rectPlot.top + i);
-    }
-
-    // draw the vertical axis
-    for (i = this->m_rectPlot.left; i < this->m_rectPlot.right; i += 12)
-    {
-        MoveToEx(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.bottom, NULL);
-        LineTo(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.top);
-    }
-
-    SelectObject(this->m_dcGrid, oldPen);
-    DeleteObject(solidPen);
-
-    // at this point we are done filling the grid bitmap,
-    // no more drawing to this bitmap is needed until the settings are changed
-
-    // if we don't have one yet, set up a memory dc for the plot
-    if (this->m_dcPlot == NULL)
-    {
-        this->m_dcPlot = CreateCompatibleDC(dc);
-        this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
-        this->m_bitmapOldPlot = (HBITMAP)SelectObject(this->m_dcPlot, this->m_bitmapPlot);
-    }
-    else if(bResize)
-    {
-        // the size of the drawing area has changed
-        // so create a new bitmap of the appropriate size
-        if(this->m_bitmapPlot != NULL)
-        {
-            this->m_bitmapPlot = (HBITMAP)SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
-            DeleteObject(this->m_bitmapPlot);
-            this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
-            SelectObject(this->m_dcPlot, this->m_bitmapPlot);
-        }
-    }
-
-    // make sure the plot bitmap is cleared
-    SetBkColor(this->m_dcPlot, this->m_crBackColor);
-    FillRect(this->m_dcPlot, &this->m_rectClient, this->m_brushBack);
-
-    // finally, force the plot area to redraw
-    InvalidateRect(this->m_hParentWnd, &this->m_rectClient, TRUE);
-    ReleaseDC(this->m_hParentWnd, dc);
-}
-
-double GraphCtrl_AppendPoint(TGraphCtrl* this,
-    double dNewPoint0, double dNewPoint1,
-    double dNewPoint2, double dNewPoint3)
-{
-    // append a data point to the plot & return the previous point
-    double dPrevious;
-
-    dPrevious = this->m_dCurrentPosition[0];
-    this->m_dCurrentPosition[0] = dNewPoint0;
-    this->m_dCurrentPosition[1] = dNewPoint1;
-    this->m_dCurrentPosition[2] = dNewPoint2;
-    this->m_dCurrentPosition[3] = dNewPoint3;
-    GraphCtrl_DrawPoint(this);
-    return dPrevious;
-}
-
-void GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc)
-{
-    HDC memDC;
-    HBITMAP memBitmap;
-    HBITMAP oldBitmap; // bitmap originally found in CMemDC
-
-    // no real plotting work is performed here,
-    // just putting the existing bitmaps on the client
-    // to avoid flicker, establish a memory dc, draw to it
-    // and then BitBlt it to the client
-    memDC = CreateCompatibleDC(dc);
-    memBitmap = (HBITMAP)CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
-    oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
-
-    if (memDC != NULL)
-    {
-        // first drop the grid on the memory dc
-        BitBlt(memDC, 0, 0, this->m_nClientWidth, this->m_nClientHeight, this->m_dcGrid, 0, 0, SRCCOPY);
-        // now add the plot on top as a "pattern" via SRCPAINT.
-        // works well with dark background and a light plot
-        BitBlt(memDC, 0, 0, this->m_nClientWidth, this->m_nClientHeight, this->m_dcPlot, 0, 0, SRCPAINT);
-        // finally send the result to the display
-        BitBlt(dc, 0, 0, this->m_nClientWidth, this->m_nClientHeight, memDC, 0, 0, SRCCOPY);
-    }
-    SelectObject(memDC, oldBitmap);
-    DeleteObject(memBitmap);
-    DeleteDC(memDC);
-}
-
-void GraphCtrl_DrawPoint(TGraphCtrl* this)
-{
-    // this does the work of "scrolling" the plot to the left
-    // and appending a new data point all of the plotting is
-    // directed to the memory based bitmap associated with m_dcPlot
-    // the will subsequently be BitBlt'd to the client in Paint
-    int currX, prevX, currY, prevY;
-    HPEN oldPen;
-    RECT rectCleanUp;
-    int i;
-
-    if (this->m_dcPlot != NULL)
-    {
-        // shift the plot by BitBlt'ing it to itself
-        // note: the m_dcPlot covers the entire client
-        //       but we only shift bitmap that is the size
-        //       of the plot rectangle
-        // grab the right side of the plot (excluding m_nShiftPixels on the left)
-        // move this grabbed bitmap to the left by m_nShiftPixels
-        BitBlt(this->m_dcPlot, this->m_rectPlot.left, this->m_rectPlot.top+1,
-               this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcPlot,
-               this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top+1,
-               SRCCOPY);
-
-        // establish a rectangle over the right side of plot
-        // which now needs to be cleaned up prior to adding the new point
-        rectCleanUp = this->m_rectPlot;
-        rectCleanUp.left  = rectCleanUp.right - this->m_nShiftPixels;
-
-        // fill the cleanup area with the background
-        FillRect(this->m_dcPlot, &rectCleanUp, this->m_brushBack);
-
-        // draw the next line segment
-        for (i = 0; i < MAX_PLOTS; i++)
-        {
-            // grab the plotting pen
-            oldPen = (HPEN)SelectObject(this->m_dcPlot, this->m_penPlot[i]);
-
-            // move to the previous point
-            prevX = this->m_rectPlot.right-this->m_nPlotShiftPixels;
-            prevY = this->m_rectPlot.bottom -
-                (long)((this->m_dPreviousPosition[i] - this->m_dLowerLimit) * this->m_dVerticalFactor);
-            MoveToEx(this->m_dcPlot, prevX, prevY, NULL);
-
-            // draw to the current point
-            currX = this->m_rectPlot.right-this->m_nHalfShiftPixels;
-            currY = this->m_rectPlot.bottom -
-                (long)((this->m_dCurrentPosition[i] - this->m_dLowerLimit) * this->m_dVerticalFactor);
-            LineTo(this->m_dcPlot, currX, currY);
-
-            // Restore the pen
-            SelectObject(this->m_dcPlot, oldPen);
-
-            // if the data leaks over the upper or lower plot boundaries
-            // fill the upper and lower leakage with the background
-            // this will facilitate clipping on an as needed basis
-            // as opposed to always calling IntersectClipRect
-            if ((prevY <= this->m_rectPlot.top) || (currY <= this->m_rectPlot.top))
-            {
-                RECT rc;
-                rc.bottom = this->m_rectPlot.top+1;
-                rc.left = prevX;
-                rc.right = currX+1;
-                rc.top = this->m_rectClient.top;
-                FillRect(this->m_dcPlot, &rc, this->m_brushBack);
-            }
-            if ((prevY >= this->m_rectPlot.bottom) || (currY >= this->m_rectPlot.bottom))
-            {
-                RECT rc;
-                rc.bottom = this->m_rectClient.bottom+1;
-                rc.left = prevX;
-                rc.right = currX+1;
-                rc.top = this->m_rectPlot.bottom+1;
-                FillRect(this->m_dcPlot, &rc, this->m_brushBack);
-            }
-
-            // store the current point for connection to the next point
-            this->m_dPreviousPosition[i] = this->m_dCurrentPosition[i];
-        }
+        j = (j ? j : inst->NumberOfPoints) - 1;
+        y = h - *(t + j) * coef;
+        x -= PLOT_SHIFT;
+        LineTo(hdcg, x, y);
     }
 }
 
-void GraphCtrl_Resize(TGraphCtrl* this)
+inline void GraphCtrl_RedrawOnHeightChange(PTGraphCtrl inst, INT nh)
 {
-    // NOTE: Resize automatically gets called during the setup of the control
-    GetClientRect(this->m_hWnd, &this->m_rectClient);
+    HDC     hdc;
+    HBITMAP hbmOld;
 
-    // set some member variables to avoid multiple function calls
-    this->m_nClientHeight = this->m_rectClient.bottom - this->m_rectClient.top;
-    this->m_nClientWidth  = this->m_rectClient.right - this->m_rectClient.left;
+    inst->BitmapHeight = nh;
+    inst->ftPixelsPerPercent = (FLOAT)nh / 100.00f;
 
-    // the "left" coordinate and "width" will be modified in
-    // InvalidateCtrl to be based on the width of the y axis scaling
-    this->m_rectPlot.left   = 0;
-    this->m_rectPlot.top    = -1;
-    this->m_rectPlot.right  = this->m_rectClient.right;
-    this->m_rectPlot.bottom = this->m_rectClient.bottom;
+    hdc = GetDC(inst->hParentWnd);
+    hbmOld = inst->hbmGraph;
+    inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, nh);
+    SelectObject(inst->hdcGraph, inst->hbmGraph);
+    DeleteObject(hbmOld);
+    ReleaseDC(inst->hParentWnd, hdc);
 
-    // set some member variables to avoid multiple function calls
-    this->m_nPlotHeight = this->m_rectPlot.bottom - this->m_rectPlot.top;
-    this->m_nPlotWidth  = this->m_rectPlot.right - this->m_rectPlot.left;
-
-    // set the scaling factor for now, this can be adjusted
-    // in the SetRange functions
-    this->m_dVerticalFactor = (double)this->m_nPlotHeight / this->m_dRange;
+    GraphCtrl_RedrawBitmap(inst, nh);
 }
 
 extern TGraphCtrl PerformancePageCpuUsageHistoryGraph;
@@ -409,6 +262,7 @@ extern HWND hPerformancePageMemUsageHistoryGraph;
 INT_PTR CALLBACK
 GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    PTGraphCtrl graph;
     RECT        rcClient;
     HDC         hdc;
     PAINTSTRUCT ps;
@@ -417,7 +271,6 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_ERASEBKGND:
         return TRUE;
-    // Filter out mouse & keyboard messages
     case WM_CAPTURECHANGED:
     case WM_LBUTTONDBLCLK:
     case WM_LBUTTONDOWN:
@@ -459,31 +312,36 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SYSKEYUP:
     case WM_NCCALCSIZE:
         return 0;
-
     case WM_SIZE:
-        if (hWnd == hPerformancePageMemUsageHistoryGraph)
-        {
-            GraphCtrl_Resize(&PerformancePageMemUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageMemUsageHistoryGraph, TRUE);
-        }
         if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-        {
-            GraphCtrl_Resize(&PerformancePageCpuUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageCpuUsageHistoryGraph, TRUE);
-        }
+            graph = &PerformancePageCpuUsageHistoryGraph;
+        else if (hWnd == hPerformancePageMemUsageHistoryGraph)
+            graph = &PerformancePageMemUsageHistoryGraph;
+        else
+            return 0;
+        if (HIWORD(lParam) != graph->BitmapHeight)
+            GraphCtrl_RedrawOnHeightChange(graph, HIWORD(lParam));
+        InvalidateRect(hWnd, NULL, FALSE);
         return 0;
-
     case WM_PAINT:
+        if (hWnd == hPerformancePageCpuUsageHistoryGraph)
+            graph = &PerformancePageCpuUsageHistoryGraph;
+        else if (hWnd == hPerformancePageMemUsageHistoryGraph)
+            graph = &PerformancePageMemUsageHistoryGraph;
+        else
+            return 0;
         hdc = BeginPaint(hWnd, &ps);
         GetClientRect(hWnd, &rcClient);
-        if (hWnd == hPerformancePageMemUsageHistoryGraph)
-            GraphCtrl_Paint(&PerformancePageMemUsageHistoryGraph, hWnd, hdc);
-        if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-            GraphCtrl_Paint(&PerformancePageCpuUsageHistoryGraph, hWnd, hdc);
+        BitBlt(hdc, 0, 0,
+               rcClient.right,
+               rcClient.bottom,
+               graph->hdcGraph,
+               graph->BitmapWidth - rcClient.right,
+               0,
+               SRCCOPY);
         EndPaint(hWnd, &ps);
         return 0;
     }
 
-    // Pass on all non-handled messages
     return CallWindowProcW(OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
 }

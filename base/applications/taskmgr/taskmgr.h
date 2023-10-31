@@ -6,10 +6,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "resource.h"
 
 #define RUN_APPS_PAGE
@@ -39,15 +35,14 @@ typedef struct
 	BOOL	HideWhenMinimized;
 	BOOL	Show16BitTasks;
 
-	/* Update speed settings */
-	/* How many half-seconds in between updates (i.e. 0 - Paused, 1 - High, 2 - Normal, 4 - Low) */
+	// 0 - Paused, 1 - High, 2 - Normal, 4 - Low
 	DWORD	UpdateSpeed;
 
 	/* Applications page settings */
 	DWORD	ViewMode;
 
 	/* Processes page settings */
-	BOOL	ShowProcessesFromAllUsers; /* Server-only? */
+	BOOL	ShowProcessesFromAllUsers;
 	BOOL	Columns[COLUMN_NMAX];
 	int		ColumnOrderArray[COLUMN_NMAX];
 	int		ColumnSizeArray[COLUMN_NMAX];
@@ -57,10 +52,8 @@ typedef struct
 	/* Performance page settings */
 	BOOL	CPUHistory_OneGraphPerCPU;
 	BOOL	ShowKernelTimes;
-
 } TASKMANAGER_SETTINGS, *LPTASKMANAGER_SETTINGS;
 
-/* Global Variables: */
 extern	HINSTANCE	hInst;						/* current instance */
 extern	HWND		hMainWnd;					/* Main Window */
 extern	HWND		hStatusWnd;					/* Status Bar Window */
@@ -71,7 +64,6 @@ extern	int			nOldWidth;					/* Holds the previous client area width */
 extern	int			nOldHeight;					/* Holds the previous client area height */
 extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
 
-/* Forward declarations of functions included in this code module: */
 INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL OnCreate(HWND hWnd);
 void OnSize(WPARAM nType, int cx, int cy);
@@ -83,9 +75,5 @@ void TaskManager_OnRestoreMainWindow(void);
 void TaskManager_OnViewUpdateSpeed(DWORD);
 void TaskManager_OnTabWndSelChange(void);
 VOID ShowWin32Error(DWORD dwError);
-LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
+LPTSTR GetLastErrorText(LPTSTR lpszBuf, DWORD dwSize);
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);
-
-#ifdef __cplusplus
-}
-#endif

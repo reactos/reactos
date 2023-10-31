@@ -60,8 +60,6 @@ BEGIN
     END
     POPUP "&Hjælp"
     BEGIN
-        MENUITEM "Opgavestyring &Hjælpe Emner", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Omkring Opgavestyring", ID_HELP_ABOUT
     END
 END
@@ -140,10 +138,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -309,17 +303,11 @@ BEGIN
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 85, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Opgavestyring"
     IDC_TASKMGR "Opgavestyring"
     IDS_IDLE_PROCESS "System Idle Process"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Applications"
     IDS_TAB_PROCESSES "Processes"
     IDS_TAB_PERFORMANCE "Performance"

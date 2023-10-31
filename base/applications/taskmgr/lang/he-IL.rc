@@ -62,8 +62,6 @@ BEGIN
     END
     POPUP "&עזרה"
     BEGIN
-        MENUITEM "&נושאי עזרה של מנהל המשימות", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&אודות מנהל המשימות", ID_HELP_ABOUT
     END
 END
@@ -142,10 +140,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -311,17 +305,11 @@ BEGIN
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "מנהל המשימות"
     IDC_TASKMGR "מנהל המשימות"
     IDS_IDLE_PROCESS "תהליך לא פעיל של המערכת"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "יישומים"
     IDS_TAB_PROCESSES "תהליכים"
     IDS_TAB_PERFORMANCE "ביצועים"

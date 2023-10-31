@@ -60,8 +60,6 @@ BEGIN
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Зміст", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Про Диспетчер завдань", ID_HELP_ABOUT
     END
 END
@@ -140,10 +138,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -309,17 +303,11 @@ BEGIN
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Диспетчер завдань"
     IDC_TASKMGR "Диспетчер завдань"
     IDS_IDLE_PROCESS "Бездіяльність системи"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Додатки"
     IDS_TAB_PROCESSES "Процеси"
     IDS_TAB_PERFORMANCE "Швидкодія"

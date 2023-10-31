@@ -62,8 +62,6 @@ BEGIN
     END
     POPUP "&Bantuan"
     BEGIN
-        MENUITEM "&Topik Bantuan Manajer Tugas", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "Te&ntang Manajer Tugas", ID_HELP_ABOUT
     END
 END
@@ -142,10 +140,6 @@ BEGIN
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -311,17 +305,11 @@ BEGIN
     CONTROL "&Baris Perintah", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 160, 95, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Manajer Tugas"
     IDC_TASKMGR "Manajer Tugas"
     IDS_IDLE_PROCESS "Proses Diam Sistem"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Aplikasi"
     IDS_TAB_PROCESSES "Proses"
     IDS_TAB_PERFORMANCE "Kinerja"
