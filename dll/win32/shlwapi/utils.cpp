@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Implement shell property bags
+ * PURPOSE:     Implement shell light-weight utility functions
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
