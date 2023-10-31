@@ -54,14 +54,12 @@ IContextMenu_Invoke(
         hMenu = CreatePopupMenu();
         if (hMenu)
         {
-            pContextMenu->QueryContextMenu(hMenu, 0, 1, 0x7FFF, uFlags | CMF_DEFAULTONLY);
+            pContextMenu->QueryContextMenu(hMenu, 0, 1, MAXSHORT, uFlags | CMF_DEFAULTONLY);
             iDefItem = GetMenuDefaultItem(hMenu, 0, 0);
             if (iDefItem != -1)
                 info.lpVerb = MAKEINTRESOURCEA(iDefItem - 1);
         }
     }
-
-    SetCursor(hOldCursor);
 
     if (iDefItem != -1 || info.lpVerb)
     {
@@ -70,6 +68,8 @@ IContextMenu_Invoke(
         pContextMenu->InvokeCommand(&info);
         ret = TRUE;
     }
+
+    SetCursor(hOldCursor);
 
     if (hMenu)
         DestroyMenu(hMenu);
