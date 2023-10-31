@@ -30,13 +30,12 @@ IContextMenu_Invoke(
     BOOL ret = FALSE;
     INT iDefItem = 0;
     HMENU hMenu = NULL;
-    HCURSOR hWaitCursor, hOldCursor;
+    HCURSOR hOldCursor;
 
     if (!pContextMenu)
         return FALSE;
 
-    hWaitCursor = LoadCursor(0, IDC_WAIT);
-    hOldCursor = SetCursor(hWaitCursor);
+    hOldCursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(CMINVOKECOMMANDINFO);

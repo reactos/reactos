@@ -283,7 +283,7 @@ IContextMenu_Invoke(
     _In_ IContextMenu *pContextMenu,
     _In_ HWND hwnd,
     _In_ LPCSTR lpVerb,
-    _In_ UINT uFlags)
+    _In_ UINT uFlags);
 
 #ifdef __cplusplus
 } /* extern "C" */
