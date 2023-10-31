@@ -1,3 +1,5 @@
+@ stdcall CtfAImmActivate(ptr)
+@ stdcall CtfAImmDeactivate(long)
 @ stdcall CtfImmIsCiceroEnabled()
 @ stdcall CtfImmIsTextFrameServiceDisabled()
 @ stdcall CtfImmTIMActivate(ptr)
