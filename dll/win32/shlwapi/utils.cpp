@@ -69,10 +69,10 @@ IContextMenu_Invoke(
         ret = TRUE;
     }
 
-    SetCursor(hOldCursor);
-
     if (hMenu)
         DestroyMenu(hMenu);
+
+    SetCursor(hOldCursor);
 
     return ret;
 }
