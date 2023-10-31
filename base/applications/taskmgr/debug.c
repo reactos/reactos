@@ -68,8 +68,8 @@ void ProcessPage_OnDebug(void)
 
     wsprintfW(strDebugPath, strDebugger, dwProcessId, hDebugEvent);
 
-    ZeroMemory(&pi, sizeof(pi));
-    ZeroMemory(&si, sizeof(si));
+    memset(&pi, 0, sizeof(pi));
+    memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     if (!CreateProcessW(NULL, strDebugPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
