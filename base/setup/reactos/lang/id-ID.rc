@@ -133,8 +133,8 @@ CAPTION "Menyelesaikan Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 10
-    LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 10
+    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
 END

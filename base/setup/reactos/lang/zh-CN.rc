@@ -133,10 +133,10 @@ CAPTION "ReactOS 安装程序已经完成"
 FONT 9, "宋体"
 BEGIN
     LTEXT "正在完成 ReactOS 安装程序向导", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "您成功完成 ReactOS 第一阶段安装过程。", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "点击完成后，您的电脑将会重新启动。", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "请从光盘驱动器取出所有光盘。然后点击完成来重启您的电脑。", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "您成功完成 ReactOS 第一阶段安装过程。", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "点击完成后，您的电脑将会重新启动。", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "请从光盘驱动器取出所有光盘。然后点击完成来重启您的电脑。", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

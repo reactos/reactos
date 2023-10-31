@@ -142,10 +142,10 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Finalizarea instalării asistate a ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Ați dus la bun sfârșit prima etapă de instalare a ReactOS", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Când veți apăsa „Sfârșit”, calculatorul va reporni.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Dacă aveți vreun CD în calculator, scoateți-l, după care apăsați „Sfârșit” pentru a reporni.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Ați dus la bun sfârșit prima etapă de instalare a ReactOS.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Când veți apăsa „Sfârșit”, calculatorul va reporni.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Dacă aveți vreun CD în calculator, scoateți-l, după care apăsați „Sfârșit” pentru a reporni.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

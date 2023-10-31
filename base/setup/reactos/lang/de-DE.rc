@@ -133,10 +133,10 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Sie haben die erste Stufe des ReactOS-Setup erfolgreich abgeschlossen.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Wenn eine CD im Laufwerk ist, entfernen Sie diese. Klicken Sie zum Neustart auf Beenden.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Sie haben die erste Stufe des ReactOS-Setup erfolgreich abgeschlossen.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Wenn eine CD im Laufwerk ist, entfernen Sie diese. Klicken Sie zum Neustart auf Beenden.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

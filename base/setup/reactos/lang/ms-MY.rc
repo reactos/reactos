@@ -135,10 +135,10 @@ CAPTION "ReactOS Persediaan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Jika ada CD ke dalam pemacu, mengeluarkannya. Kemudian, untuk memulakan semula komputer anda, klik selesai.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Jika ada CD ke dalam pemacu, mengeluarkannya. Kemudian, untuk memulakan semula komputer anda, klik selesai.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

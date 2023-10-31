@@ -133,10 +133,10 @@ CAPTION "ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Du har nå fullført første steget av ReactOS installering.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Når du trykker Fullført, vil din datamaskin starte på nytt.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. For å starte din datamaskin på nytt, trykk på Fullført.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Du har nå fullført første steget av ReactOS installering.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Når du trykker Fullført, vil din datamaskin starte på nytt.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. For å starte din datamaskin på nytt, trykk på Fullført.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE
