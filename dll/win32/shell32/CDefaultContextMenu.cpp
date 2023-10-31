@@ -10,6 +10,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
+// FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
+#define MAX_VERB 260
+
+static HRESULT
+SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)
+{
+    WCHAR buf[42];
+    DWORD cb = sizeof(buf);
+    DWORD err = RegGetValueW(hKey, SubKey, Value, RRF_RT_REG_SZ, NULL, buf, &cb);
+    return !err ? CLSIDFromString(buf, &clsid) : HRESULT_FROM_WIN32(err);
+}
+
 typedef struct _DynamicShellEntry_
 {
     UINT iIdCmdFirst;
@@ -53,7 +65,8 @@ struct _StaticInvokeCommandMap_
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
-    public IObjectWithSite
+    public IObjectWithSite,
+    public IServiceProvider
 {
     private:
         CComPtr<IUnknown> m_site;
@@ -124,11 +137,18 @@ class CDefaultContextMenu :
         virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
         virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
+        // IServiceProvider
+        virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID svc, REFIID riid, void**ppv)
+        {
+            return IUnknown_QueryService(m_site, svc, riid, ppv);
+        }
+
         BEGIN_COM_MAP(CDefaultContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
         END_COM_MAP()
 };
 
@@ -505,7 +525,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         /* By default use verb for menu item name */
         mii.dwTypeData = (LPWSTR)info.Verb.GetString();
 
-        WCHAR wszKey[256];
+        WCHAR wszKey[sizeof("shell\\") + MAX_VERB];
         HRESULT hr;
         hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", info.Verb.GetString());
         if (FAILED_UNEXPECTEDLY(hr))
@@ -972,9 +992,6 @@ PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
     return NULL;
 }
 
-// FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
-#define MAX_VERB 260
-
 BOOL
 CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
 {
@@ -1030,7 +1047,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStatic
     CComPtr<IShellBrowser> psb;
     HWND hwndTree;
     LPCWSTR FlagsName;
-    WCHAR wszKey[256];
+    WCHAR wszKey[sizeof("shell\\") + MAX_VERB];
     HRESULT hr;
     DWORD wFlags;
     DWORD cbVerb;
@@ -1141,6 +1158,40 @@ CDefaultContextMenu::InvokeRegVerb(
 
     PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
 
+    WCHAR VerbKey[sizeof("shell\\") + MAX_VERB];
+    hr = StringCbPrintfW(VerbKey, sizeof(VerbKey), L"shell\\%s", pEntry->Verb.GetString());
+    HKEY hVerbKey;
+    if (SUCCEEDED(hr) && m_pDataObj &&
+        RegOpenKeyExW(pEntry->hkClass, VerbKey, 0, KEY_READ, &hVerbKey) == ERROR_SUCCESS)
+    {
+        DWORD KeyState = 0;
+        if (lpcmi->fMask & CMIC_MASK_SHIFT_DOWN)
+            KeyState |= MK_SHIFT;
+        if (lpcmi->fMask & CMIC_MASK_CONTROL_DOWN)
+            KeyState |= MK_CONTROL;
+        POINTL *pPtl = NULL;
+        C_ASSERT(sizeof(POINT) == sizeof(POINTL));
+        if (lpcmi->fMask & CMIC_MASK_PTINVOKE)
+            pPtl = (POINTL*)&lpcmi->ptInvoke;
+        CLSID clsid;
+
+        // TODO: IExecuteCommand
+
+        IDropTarget *pDT;
+        hr = SHELL_GetRegCLSID(hVerbKey, L"DropTarget", L"CLSID", clsid);
+        if (SUCCEEDED(hr))
+            hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
+        if (SUCCEEDED(hr))
+        {
+            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
+            hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
+            IUnknown_SetSite(pDT, NULL);
+            pDT->Release();
+            return hr;
+        }
+        RegCloseKey(hVerbKey);
+    }
+
     /* Get the browse flags to see if we need to browse */
     DWORD wFlags = BrowserFlagsFromVerb(lpcmi, pEntry);
     BOOL bBrowsed = FALSE;
@@ -1204,6 +1255,7 @@ CDefaultContextMenu::InvokeCommand(
     {
         LocalInvokeInfo.lpVerb -= m_iIdSCMFirst;
         Result = InvokeRegVerb(&LocalInvokeInfo);
+        // TODO: if (FAILED(Result) && !(lpcmi->fMask & CMIC_MASK_FLAG_NO_UI)) SHELL_ErrorBox(m_pSite, Result);
         return Result;
     }
 
