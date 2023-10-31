@@ -34,6 +34,8 @@ IContextMenu_Invoke(
     HMENU hMenu = NULL;
     HCURSOR hOldCursor;
 
+    TRACE("(%p, %p, %s, %u)\n", pContextMenu, hwnd, debugstr_a(lpVerb), uFlags);
+
     if (!pContextMenu)
         return FALSE;
 
