@@ -817,6 +817,14 @@ LONG WINAPI SHRegQueryValueExW(
     #define SHRegQueryValueEx SHRegQueryValueExA
 #endif
 
+EXTERN_C
+HRESULT WINAPI
+CopyStreamUI(
+    _In_ IStream *pSrc,
+    _Out_ IStream *pDst,
+    _Inout_opt_ IProgressDialog *pProgress,
+    _In_opt_ DWORDLONG dwlSize);
+
 /*****************************************************************************
  * INVALID_FILETITLE_CHARACTERS
  */
