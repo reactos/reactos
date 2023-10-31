@@ -17,6 +17,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/*************************************************************************
+ * IContextMenu_Invoke [SHLWAPI.207]
+ */
 EXTERN_C
 BOOL WINAPI
 IContextMenu_Invoke(
