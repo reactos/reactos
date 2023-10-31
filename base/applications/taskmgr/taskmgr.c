@@ -15,47 +15,27 @@
 
 #define STATUS_WINDOW   2001
 
-/* Global Variables: */
 HINSTANCE hInst;                 /* current instance */
-
 HWND hMainWnd;                   /* Main Window */
 HWND hStatusWnd;                 /* Status Bar Window */
 HWND hTabWnd;                    /* Tab Control Window */
-
 HMENU hWindowMenu = NULL;
-
 int  nMinimumWidth;              /* Minimum width of the dialog (OnSize()'s cx) */
 int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy) */
-
 int  nOldWidth;                  /* Holds the previous client area width */
 int  nOldHeight;                 /* Holds the previous client area height */
-
 BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
 
-////////////////////////////////////////////////////////////////////////////////
-// Taken from WinSpy++ 1.7
-// http://www.catch22.net/software/winspy
-// Copyright (c) 2002 by J Brown
-//
-
-//
-//	Copied from uxtheme.h
-//  If you have this new header, then delete these and
-//  #include <uxtheme.h> instead!
-//
 #define ETDT_DISABLE        0x00000001
 #define ETDT_ENABLE         0x00000002
 #define ETDT_USETABTEXTURE  0x00000004
 #define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
 
-//
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
-//
 //	Try to call EnableThemeDialogTexture, if uxtheme.dll is present
-//
 BOOL EnableDialogTheme(HWND hwnd)
 {
     HMODULE hUXTheme;
@@ -99,7 +79,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     TOKEN_PRIVILEGES tkp;
     HANDLE hMutex;
 
-    /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
     if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS)
     {
@@ -152,10 +131,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         CloseHandle(hToken);
     }
 
-    /* Load our settings from the registry */
     LoadSettings();
 
-    /* Initialize perf data */
     if (!PerfDataInitialize())
         return -1;
 
@@ -167,7 +144,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     DialogBoxW(hInst, (LPCWSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
 
-    /* Save our settings to the registry */
     SaveSettings();
     PerfDataUninitialize();
     CloseHandle(hMutex);
@@ -176,7 +152,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     return 0;
 }
 
-/* Message handler for dialog box. */
 INT_PTR CALLBACK
 TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -186,8 +161,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message) {
     case WM_INITDIALOG:
-        // For now, the Help dialog menu item is disabled because of lacking of HTML Help support
-        EnableMenuItem(GetMenu(hDlg), ID_HELP_TOPICS, MF_BYCOMMAND | MF_GRAYED);
         hMainWnd = hDlg;
         return OnCreate(hDlg);
 
@@ -300,8 +273,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_PROCESS_PAGE_SETPRIORITY_LOW:
             DoSetPriority(IDLE_PRIORITY_CLASS);
             break;
-
-/* ShutDown items */
         case ID_SHUTDOWN_STANDBY:
             ShutDown_StandBy();
             break;
@@ -329,7 +300,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_SHUTDOWN_EJECT_COMPUTER:
             ShutDown_EjectComputer();
             break;
-
         case ID_HELP_ABOUT:
             OnAbout();
             break;
@@ -338,12 +308,11 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         break;
-
     case WM_ONTRAYICON:
         switch(lParam)
         {
         case WM_RBUTTONDOWN:
-            {
+        {
             POINT pt;
             BOOL OnTop;
             HMENU hMenu, hPopupMenu;
@@ -370,13 +339,12 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             DestroyMenu(hMenu);
             break;
-            }
+        }
         case WM_LBUTTONDBLCLK:
             TaskManager_OnRestoreMainWindow();
             break;
         }
         break;
-
     case WM_NOTIFY:
         pnmh = (LPNMHDR)lParam;
         if ((pnmh->hwndFrom == hTabWnd) &&
@@ -396,7 +364,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-
     case WM_SIZING:
         /* Make sure the user is sizing the dialog */
         /* in an acceptable range */
@@ -420,18 +387,9 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 pRC->bottom = pRC->top + nMinimumHeight;
         }
         return TRUE;
-        break;
-
     case WM_SIZE:
-        /* Handle the window sizing in it's own function */
         OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
         break;
-
-    case WM_MOVE:
-        /* Handle the window moving in it's own function */
-        OnMove(wParam, LOWORD(lParam), HIWORD(lParam));
-        break;
-
     case WM_DESTROY:
         ShowWindow(hDlg, SW_HIDE);
         TrayIcon_RemoveIcon();
@@ -450,16 +408,13 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (hWindowMenu)
             DestroyMenu(hWindowMenu);
         return DefWindowProcW(hDlg, message, wParam, lParam);
-
     case WM_TIMER:
-        /* Refresh the performance data */
         PerfDataRefresh();
         RefreshApplicationPage();
         RefreshProcessPage();
         RefreshPerformancePage();
         TrayIcon_UpdateIcon();
         break;
-
     case WM_SYSCOLORCHANGE:
         /* Forward WM_SYSCOLORCHANGE to common controls */
         SendMessage(hApplicationPageListCtrl, WM_SYSCOLORCHANGE, 0, 0);
@@ -512,7 +467,6 @@ BOOL OnCreate(HWND hWnd)
 
     SendMessageW(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER)));
 
-    /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
 
     /* Get the minimum window sizes */
@@ -533,15 +487,9 @@ BOOL OnCreate(HWND hWnd)
 
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-#if 1
     hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
     hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
     hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
-#else
-    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
-    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
-    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
-#endif
 
     /* Insert tabs */
     LoadStringW(hInst, IDS_TAB_APPS, szTemp, 256);
@@ -564,13 +512,6 @@ BOOL OnCreate(HWND hWnd)
     GetClientRect(hWnd, &rc);
     nOldWidth = rc.right;
     nOldHeight = rc.bottom;
-    /* nOldStartX = rc.left; */
-    /*nOldStartY = rc.top;  */
-
-#define PAGE_OFFSET_LEFT    17
-#define PAGE_OFFSET_TOP     72
-#define PAGE_OFFSET_WIDTH   (PAGE_OFFSET_LEFT*2)
-#define PAGE_OFFSET_HEIGHT  (PAGE_OFFSET_TOP+32)
 
     if ((TaskManagerSettings.Left != 0) ||
         (TaskManagerSettings.Top != 0) ||
@@ -578,11 +519,6 @@ BOOL OnCreate(HWND hWnd)
         (TaskManagerSettings.Bottom != 0))
     {
         MoveWindow(hWnd, TaskManagerSettings.Left, TaskManagerSettings.Top, TaskManagerSettings.Right - TaskManagerSettings.Left, TaskManagerSettings.Bottom - TaskManagerSettings.Top, TRUE);
-#ifdef __GNUC__TEST__
-        MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-        MoveWindow(hProcessPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-        MoveWindow(hPerformancePage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-#endif
     }
     if (TaskManagerSettings.Maximized)
         ShowWindow(hWnd, SW_MAXIMIZE);
@@ -595,7 +531,6 @@ BOOL OnCreate(HWND hWnd)
     hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
     hCPUHistoryMenu  = GetSubMenu(hViewMenu, 7);
 
-    /* Check or uncheck the always on top menu item */
     if (TaskManagerSettings.AlwaysOnTop) {
         CheckMenuItem(hEditMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND|MF_CHECKED);
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
@@ -604,19 +539,16 @@ BOOL OnCreate(HWND hWnd)
         SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
     }
 
-    /* Check or uncheck the minimize on use menu item */
     if (TaskManagerSettings.MinimizeOnUse)
         CheckMenuItem(hEditMenu, ID_OPTIONS_MINIMIZEONUSE, MF_BYCOMMAND|MF_CHECKED);
     else
         CheckMenuItem(hEditMenu, ID_OPTIONS_MINIMIZEONUSE, MF_BYCOMMAND|MF_UNCHECKED);
 
-    /* Check or uncheck the hide when minimized menu item */
     if (TaskManagerSettings.HideWhenMinimized)
         CheckMenuItem(hEditMenu, ID_OPTIONS_HIDEWHENMINIMIZED, MF_BYCOMMAND|MF_CHECKED);
     else
         CheckMenuItem(hEditMenu, ID_OPTIONS_HIDEWHENMINIMIZED, MF_BYCOMMAND|MF_UNCHECKED);
 
-    /* Check or uncheck the show 16-bit tasks menu item */
     if (TaskManagerSettings.Show16BitTasks)
         CheckMenuItem(hEditMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_CHECKED);
     else
@@ -672,7 +604,6 @@ BOOL OnCreate(HWND hWnd)
     /* 3- Set the menu item text to its formatted counterpart */
     ModifyMenuW(hShutMenu, ID_SHUTDOWN_LOGOFF, MF_BYCOMMAND | MF_STRING, ID_SHUTDOWN_LOGOFF, szLogOffItem);
 
-    /* Setup update speed */
     SetUpdateSpeed(hWnd);
 
     /*
@@ -692,24 +623,11 @@ BOOL OnCreate(HWND hWnd)
     return TRUE;
 }
 
-/* OnMove()
- * This function handles all the moving events for the application
- * It moves every child window that needs moving
- */
-void OnMove( WPARAM nType, int cx, int cy )
-{
-#ifdef __GNUC__TEST__
-    MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-    MoveWindow(hProcessPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-    MoveWindow(hPerformancePage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
-#endif
-}
-
 /* OnSize()
  * This function handles all the sizing events for the application
  * It re-sizes every window, and child window that needs re-sizing
  */
-void OnSize( WPARAM nType, int cx, int cy )
+void OnSize(WPARAM nType, int cx, int cy)
 {
     int   nParts[3];
     int   nXDifference;
@@ -1027,18 +945,17 @@ LPWSTR GetLastErrorText(LPWSTR lpszBuf, DWORD dwSize)
                            LANG_NEUTRAL,
                            (LPWSTR)&lpszTemp,
                            0,
-                           NULL );
+                           NULL);
 
     /* supplied buffer is not long enough */
-    if (!dwRet || ( (long)dwSize < (long)dwRet+14)) {
+    if (!dwRet || ((long)dwSize < (long)dwRet+14))
         lpszBuf[0] = L'\0';
-    } else {
+    else {
         lpszTemp[lstrlenW(lpszTemp)-2] = L'\0';  /*remove cr and newline character */
         wsprintfW(lpszBuf, L"%s (0x%x)", lpszTemp, (int)GetLastError());
     }
-    if (lpszTemp) {
+    if (lpszTemp)
         LocalFree((HLOCAL)lpszTemp);
-    }
     return lpszBuf;
 }
 

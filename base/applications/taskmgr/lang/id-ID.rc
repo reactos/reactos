@@ -1,4 +1,4 @@
-/* TRANSLATOR: Zaenal Mutaqin <ade999@gmail.com> */
+// COPYRIGHT: Zaenal Mutaqin <ade999@gmail.com>
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
@@ -62,8 +62,6 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Task Manager &Help Topics", ID_HELP_TOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&About Task Manager", ID_HELP_ABOUT
     END
 END
@@ -139,10 +137,6 @@ BEGIN
         MENUITEM "Set &Affinity...", ID_PROCESS_PAGE_SETAFFINITY
     END
 END
-
-/* Dialogs */
-
-/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -308,17 +302,11 @@ BEGIN
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
-/* String Tables */
-
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Manajer Tugas"
     IDC_TASKMGR "Manajer Tugas"
     IDS_IDLE_PROCESS "Proses Diam Sistem"
-END
-
-STRINGTABLE
-BEGIN
     IDS_TAB_APPS "Aplikasi"
     IDS_TAB_PROCESSES "Proses"
     IDS_TAB_PERFORMANCE "Kinerja"
