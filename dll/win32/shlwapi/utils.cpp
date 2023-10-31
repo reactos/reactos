@@ -34,7 +34,7 @@ IContextMenu_Invoke(
     if (!pContextMenu)
         return FALSE;
 
-    hOldCursor = SetCursor(LoadCursorW(0, (LPCWSTR)IDC_WAIT));
+    hOldCursor = SetCursor(LoadCursorW(NULL, (LPCWSTR)IDC_WAIT));
 
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(CMINVOKECOMMANDINFO);
