@@ -224,7 +224,7 @@ CtfImmIsCiceroStartedInThread(VOID)
 /***********************************************************************
  *		CtfImmSetAppCompatFlags (IMM32.@)
  *
- * Sets the application compatible flags.
+ * Sets the application compatibility flags.
  */
 VOID WINAPI
 CtfImmSetAppCompatFlags(_In_ DWORD dwFlags)
