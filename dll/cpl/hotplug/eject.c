@@ -13,22 +13,24 @@ DEVINST
 GetDeviceInstForRemoval(
     _In_ PHOTPLUG_DATA pHotplugData)
 {
-    HTREEITEM hTreeItem;
+    HTREEITEM hItem, hParentItem;
     TVITEMW tvItem;
 
-    hTreeItem = TreeView_GetSelection(pHotplugData->hwndDeviceTree);
-    if (!hTreeItem)
+    hItem = TreeView_GetSelection(pHotplugData->hwndDeviceTree);
+    if (!hItem)
         return 0;
 
-    /* Find top-level parent item */
-    while (TreeView_GetParent(pHotplugData->hwndDeviceTree, hTreeItem))
+    /* Find root item */
+    hParentItem = TreeView_GetParent(pHotplugData->hwndDeviceTree, hItem);
+    while (hParentItem)
     {
-        hTreeItem = TreeView_GetParent(pHotplugData->hwndDeviceTree, hTreeItem);
+        hItem = hParentItem;
+        hParentItem = TreeView_GetParent(pHotplugData->hwndDeviceTree, hItem);
     }
 
     ZeroMemory(&tvItem, sizeof(tvItem));
     tvItem.mask = TVIF_PARAM;
-    tvItem.hItem = hTreeItem;
+    tvItem.hItem = hItem;
 
     TreeView_GetItem(pHotplugData->hwndDeviceTree, &tvItem);
 
