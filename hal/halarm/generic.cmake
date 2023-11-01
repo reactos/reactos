@@ -19,8 +19,7 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/profil.c
     generic/reboot.c
     generic/rtc.c
-    generic/sysinfo.c
-    generic/timer.c)
+    generic/sysinfo.c)
 
 add_asm_files(lib_hal_generic_asm ${HAL_GENERIC_ASM_SOURCE})
 add_library(lib_hal_generic OBJECT ${HAL_GENERIC_SOURCE} ${lib_hal_generic_asm})

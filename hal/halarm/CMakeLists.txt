@@ -36,13 +36,16 @@ endfunction()
 # The components
 include(generic.cmake)
 include(gic.cmake)
+include(armtimer.cmake)
+include(sp804.cmake)
+include(vic.cmake)
 
 # the ACPI UP GIC hal is default due to existing on qemu (arm32, arm64) with the same GIC revision.
-add_hal(hal SOURCES gic/halagic.rc COMPONENTS generic gic) #Acpi, UP #HALAGIC
+add_hal(hal SOURCES gic/halagic.rc COMPONENTS generic gic armtimer)
 
 if(ARCH STREQUAL "arm")
     #ARM32 Specific HALs
-    #add_hal(halavic SOURCES vic/halvic.rc COMPONENTS generic vic)
+    #add_hal(halvic SOURCES vic/halvic.rc COMPONENTS generic vic sp804)
 elseif(ARCH STREQUAL "arm64") 
     #ARM64 Specific HALs
 endif()

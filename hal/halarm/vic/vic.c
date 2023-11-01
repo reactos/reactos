@@ -114,7 +114,7 @@ HalReportResourceUsage(VOID)
     UNICODE_STRING HalString;
 
     /* Build HAL usage */
-    RtlInitUnicodeString(&HalString, L"ARM Versatile HAL");
+    RtlInitUnicodeString(&HalString, L"ARM VIC HAL");
     HalpReportResourceUsage(&HalString, Internal);
 }
 

@@ -35,6 +35,16 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+HaliHaltSystem(VOID)
+{
+    for(;;)
+    {
+
+    }
+}
+
 /*
  * @implemented
  */
@@ -97,7 +107,7 @@ HalInitSystem(IN ULONG BootPhase,
         //HalGetDmaAdapter = NULL; // FIXME: TODO;
         //HalGetInterruptTranslator = NULL;  // FIXME: TODO
         //HalResetDisplay = NULL; // FIXME: TODO;
-        //HalHaltSystem = NULL; // FIXME: TODO;
+        HalHaltSystem = HaliHaltSystem; // FIXME: TODO;
 
         /* Setup I/O space */
         //HalpDefaultIoSpace.Next = HalpAddressUsageList;
@@ -107,26 +117,25 @@ HalInitSystem(IN ULONG BootPhase,
         //HalpCalibrateStallExecution();
 
         /* Initialize the clock */
-        //HalpInitializeClock();
+        HalpInitializeClock();
 
         /* Setup time increments to 10ms and 1ms */
-        //HalpCurrentTimeIncrement = 100000;
-        //HalpNextTimeIncrement = 100000;
-        //HalpNextIntervalCount = 0;
-        //KeSetTimeIncrement(100000, 10000);
+        HalpCurrentTimeIncrement = 100000;
+        HalpNextTimeIncrement = 100000;
+        HalpNextIntervalCount = 0;
+        KeSetTimeIncrement(100000, 10000);
 
         /*
          * We could be rebooting with a pending profile interrupt,
          * so clear it here before interrupts are enabled
          */
-        HalStopProfileInterrupt(ProfileTime);
+        //HalStopProfileInterrupt(ProfileTime);
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
     }
     else if (BootPhase == 1)
     {
-#if 0		
         /* Enable timer interrupt */
         HalpEnableInterruptHandler(IDT_DEVICE,
                                    0,
@@ -134,7 +143,7 @@ HalInitSystem(IN ULONG BootPhase,
                                    CLOCK2_LEVEL,
                                    HalpClockInterrupt,
                                    Latched);
-
+#if 0
         /* Enable IRQ 8 */
         HalpEnableInterruptHandler(IDT_DEVICE,
                                    0,
@@ -153,4 +162,5 @@ HalInitSystem(IN ULONG BootPhase,
     /* All done, return */
     return TRUE;
 }
+
 /* EOF */

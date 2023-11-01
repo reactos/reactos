@@ -159,6 +159,20 @@ HalBeginSystemInterrupt(IN KIRQL Irql,
     return FALSE;
 }
 
+VOID
+NTAPI
+HalpEnableInterruptHandler(IN UCHAR Flags,
+                           IN ULONG BusVector,
+                           IN ULONG SystemVector,
+                           IN KIRQL Irql,
+                           IN PVOID Handler,
+                           IN KINTERRUPT_MODE Mode)
+{
+    /* Register the routine */
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
 /*
  * @implemented
  */
