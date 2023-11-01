@@ -760,6 +760,8 @@ DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
     PCLIENTIMC pClientIMC;
     DWORD dwFlags;
 
+    TRACE("(%p)\n", hIMC);
+
     pClientIMC = ImmLockClientImc(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pClientIMC))
         return 0;
