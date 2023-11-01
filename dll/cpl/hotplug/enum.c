@@ -15,6 +15,54 @@
 #define MAX_DEVICE_DISPLAYNAME_LEN 40
 
 static
+VOID
+GetDeviceDisplayInfo(
+    _In_ DEVINST DevInst,
+    _In_ PHOTPLUG_DATA pHotplugData,
+    _Out_ LPWSTR pszDesc,
+    _In_ ULONG cchDesc,
+    _Out_ PINT pImageIndex)
+{
+    WCHAR szGuidString[MAX_GUID_STRING_LEN];
+    GUID ClassGuid;
+    ULONG ulSize;
+    CONFIGRET cr;
+
+    /* Get the device description */
+    ulSize = cchDesc * sizeof(WCHAR);
+    cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
+                                           CM_DRP_DEVICEDESC,
+                                           NULL,
+                                           pszDesc,
+                                           &ulSize,
+                                           0);
+    if (cr != CR_SUCCESS)
+        LoadStringW(hApplet, IDS_UNKNOWN_DEVICE, pszDesc, cchDesc);
+
+    /* Get the class GUID */
+    ulSize = sizeof(szGuidString);
+    cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
+                                           CM_DRP_CLASSGUID,
+                                           NULL,
+                                           szGuidString,
+                                           &ulSize,
+                                           0);
+    if (cr == CR_SUCCESS)
+    {
+        pSetupGuidFromString(szGuidString, &ClassGuid);
+    }
+    else
+    {
+        ClassGuid = GUID_DEVCLASS_UNKNOWN;
+    }
+
+    /* Get the image for the class this device is in */
+    SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
+                              &ClassGuid,
+                              pImageIndex);
+}
+
+static
 HTREEITEM
 InsertDeviceTreeItem(
     _In_ HTREEITEM hParent,
@@ -22,52 +70,15 @@ InsertDeviceTreeItem(
     _In_ PHOTPLUG_DATA pHotplugData)
 {
     WCHAR szDisplayName[MAX_DEVICE_DISPLAYNAME_LEN];
-    WCHAR szGuidString[MAX_GUID_STRING_LEN];
-    TVINSERTSTRUCTW tvItem;
-    GUID ClassGuid;
     INT nClassImage;
-    DWORD dwSize;
-    CONFIGRET cr;
+    TVINSERTSTRUCTW tvItem;
 
-    /* Get the device description */
-    dwSize = sizeof(szDisplayName);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_DEVICEDESC,
-                                          NULL,
-                                          szDisplayName,
-                                          &dwSize,
-                                          0);
-    if (cr != CR_SUCCESS)
-    {
-        LoadStringW(hApplet,
-                    IDS_UNKNOWN_DEVICE,
-                    szDisplayName,
-                    ARRAYSIZE(szDisplayName));
-    }
+    GetDeviceDisplayInfo(DevInst,
+                         pHotplugData,
+                         szDisplayName,
+                         ARRAYSIZE(szDisplayName),
+                         &nClassImage);
 
-    /* Get the class GUID */
-    dwSize = sizeof(szGuidString);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_CLASSGUID,
-                                          NULL,
-                                          szGuidString,
-                                          &dwSize,
-                                          0);
-    if (cr == CR_SUCCESS)
-    {
-        pSetupGuidFromString(szGuidString, &ClassGuid);
-    }
-    else
-    {
-        memcpy(&ClassGuid, &GUID_DEVCLASS_UNKNOWN, sizeof(GUID));
-    }
-
-    /* Get the image for the class this device is in */
-    SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
-                              &ClassGuid,
-                              &nClassImage);
-
-    /* Add it to the device tree */
     ZeroMemory(&tvItem, sizeof(tvItem));
     tvItem.hParent = hParent;
     tvItem.hInsertAfter = TVI_LAST;
@@ -211,52 +222,15 @@ InsertConfirmDeviceListItem(
     _In_ PHOTPLUG_DATA pHotplugData)
 {
     WCHAR szDisplayName[MAX_DEVICE_DISPLAYNAME_LEN];
-    WCHAR szGuidString[MAX_GUID_STRING_LEN];
-    DWORD dwSize;
-    GUID ClassGuid;
     INT nClassImage;
-    CONFIGRET cr;
     LVITEMW lvItem;
 
-    /* Get the device description */
-    dwSize = sizeof(szDisplayName);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_DEVICEDESC,
-                                          NULL,
-                                          szDisplayName,
-                                          &dwSize,
-                                          0);
-    if (cr != CR_SUCCESS)
-    {
-        LoadStringW(hApplet,
-                    IDS_UNKNOWN_DEVICE,
-                    szDisplayName,
-                    ARRAYSIZE(szDisplayName));
-    }
+    GetDeviceDisplayInfo(DevInst,
+                         pHotplugData,
+                         szDisplayName,
+                         ARRAYSIZE(szDisplayName),
+                         &nClassImage);
 
-    /* Get the class GUID */
-    dwSize = sizeof(szGuidString);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_CLASSGUID,
-                                          NULL,
-                                          szGuidString,
-                                          &dwSize,
-                                          0);
-    if (cr == CR_SUCCESS)
-    {
-        pSetupGuidFromString(szGuidString, &ClassGuid);
-    }
-    else
-    {
-        memcpy(&ClassGuid, &GUID_DEVCLASS_UNKNOWN, sizeof(GUID));
-    }
-
-    /* Get the image for the class this device is in */
-    SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
-                              &ClassGuid,
-                              &nClassImage);
-
-    /* Add it to the confirm device list */
     ZeroMemory(&lvItem, sizeof(lvItem));
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
     lvItem.iItem = ListView_GetItemCount(hwndCfmDeviceList);
