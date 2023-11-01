@@ -17,7 +17,7 @@
 //   and the virtual key code they have.                         //
 //   If you repeat a name you'll overwrite the code.             //
 //   You can name the keys anything you like                     //
-//   The Virtual key number must be in Decimal                   //
+//   The Virtual key nymber must be in Decimal                   //
 //   After the number you can put anything : it is ignored       //
 //   Here you must put ALL the keys you'll use in the            //
 //   other sections.                                             //
