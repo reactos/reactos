@@ -170,7 +170,7 @@
 #define IDC_ADD_FAILCOUNT       11114
 #define IDC_RESTART_OPTIONS     11115
 
-/* dependencies dialog */
+/* dependancies dialog */
 #define IDD_DLG_DEPEND     20001
 #define IDC_DEPEND_TREE1   20002
 #define IDC_DEPEND_TREE2   20003
