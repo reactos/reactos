@@ -36,7 +36,7 @@
 //   There are three parts :                                     //
 //      a) the key name                                          //
 //      b) the shift state                                       //
-//         here you put combination of the words :               //
+//         here you put compination of the words :               //
 //                                                               //
 //                RIGHT_ALT                                      //
 //                LEFT_ALT                                       //
