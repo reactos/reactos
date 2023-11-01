@@ -75,6 +75,7 @@ extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
 extern HANDLE ghImmHeap;
+extern DWORD g_aimm_compat_flags;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);

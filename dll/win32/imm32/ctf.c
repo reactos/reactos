@@ -29,6 +29,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * this folder.
  */
 
+/* "Active IMM" compatibility flags */
+DWORD g_aimm_compat_flags = 0;
+
 /* The instance of the CTF IME file */
 HINSTANCE g_hCtfIme = NULL;
 
@@ -190,6 +193,45 @@ CtfImeDestroyThreadMgr(VOID)
         return E_FAIL;
 
     return CTF_IME_FN(CtfImeDestroyThreadMgr)();
+}
+
+/***********************************************************************
+ *		CtfAImmIsIME (IMM32.@)
+ *
+ * @return TRUE if CTF IME or IMM IME is enabled.
+ */
+BOOL WINAPI
+CtfAImmIsIME(_In_ HKL hKL)
+{
+    TRACE("(%p)\n", hKL);
+    if (!Imm32LoadCtfIme())
+        return ImmIsIME(hKL);
+    return CTF_IME_FN(CtfImeIsIME)(hKL);
+}
+
+/***********************************************************************
+ *		CtfImmIsCiceroStartedInThread (IMM32.@)
+ *
+ * @return TRUE if Cicero is started in the current thread.
+ */
+BOOL WINAPI
+CtfImmIsCiceroStartedInThread(VOID)
+{
+    TRACE("()\n");
+    return !!(GetWin32ClientInfo()->CI_flags & 0x200);
+}
+
+/***********************************************************************
+ *		CtfImmSetAppCompatFlags (IMM32.@)
+ *
+ * Sets the application compatibility flags.
+ */
+VOID WINAPI
+CtfImmSetAppCompatFlags(_In_ DWORD dwFlags)
+{
+    TRACE("(0x%08X)\n", dwFlags);
+    if (!(dwFlags & 0xF0FFFFFF))
+        g_aimm_compat_flags = dwFlags;
 }
 
 /***********************************************************************
@@ -361,6 +403,18 @@ CtfImmHideToolbarWnd(VOID)
     return 0;
 }
 
+BOOL Imm32InsideLoaderLock(VOID)
+{
+    return (NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
+            NtCurrentTeb()->ClientId.UniqueThread);
+}
+
+/* FIXME: Use RTL */
+BOOL WINAPI RtlDllShutdownInProgress(VOID)
+{
+    return FALSE;
+}
+
 /***********************************************************************
  *		CtfImmDispatchDefImeMessage(IMM32.@)
  */
@@ -371,8 +425,12 @@ CtfImmDispatchDefImeMessage(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
-    /* FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam); */
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+
+    if (RtlDllShutdownInProgress() || Imm32InsideLoaderLock() || !Imm32LoadCtfIme())
+        return 0;
+
+    return CTF_IME_FN(CtfImeDispatchDefImeMessage)(hWnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************

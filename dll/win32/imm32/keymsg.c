@@ -752,10 +752,15 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     return ret;
 }
 
+/***********************************************************************
+ *		ImmGetAppCompatFlags (IMM32.@)
+ */
 DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
 {
     PCLIENTIMC pClientIMC;
     DWORD dwFlags;
+
+    TRACE("(%p)\n", hIMC);
 
     pClientIMC = ImmLockClientImc(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pClientIMC))
@@ -763,7 +768,7 @@ DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
 
     dwFlags = pClientIMC->dwCompatFlags;
     ImmUnlockClientImc(pClientIMC);
-    return dwFlags;
+    return (dwFlags | g_aimm_compat_flags);
 }
 
 /***********************************************************************
