@@ -29,6 +29,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * this folder.
  */
 
+/* "Active IMM" compatibility flags */
+DWORD g_aimm_compat_flags = 0;
+
 /* The instance of the CTF IME file */
 HINSTANCE g_hCtfIme = NULL;
 
@@ -190,6 +193,43 @@ CtfImeDestroyThreadMgr(VOID)
         return E_FAIL;
 
     return CTF_IME_FN(CtfImeDestroyThreadMgr)();
+}
+
+/***********************************************************************
+ *		CtfAImmIsIME (IMM32.@)
+ *
+ * @return TRUE if "Active IMM" is enabled.
+ */
+BOOL WINAPI
+CtfAImmIsIME(_In_ HKL hKL)
+{
+    TRACE("(%p)\n", hKL);
+    return (Imm32LoadCtfIme() ? CTF_IME_FN(CtfImeIsIME)(hKL) : ImmIsIME(hKL));
+}
+
+/***********************************************************************
+ *		CtfImmIsCiceroStartedInThread (IMM32.@)
+ *
+ * @return TRUE if Cicero is started in the current thread.
+ */
+BOOL WINAPI
+CtfImmIsCiceroStartedInThread(VOID)
+{
+    TRACE("()\n");
+    return !!(GetWin32ClientInfo()->CI_flags & 0x200);
+}
+
+/***********************************************************************
+ *		CtfImmSetAppCompatFlags (IMM32.@)
+ *
+ * Sets the application compatible flags.
+ */
+VOID WINAPI
+CtfImmSetAppCompatFlags(_In_ DWORD dwFlags)
+{
+    TRACE("(0x%08X)\n", dwFlags);
+    if (!(dwFlags & 0xF0FFFFFF))
+        g_aimm_compat_flags = dwFlags;
 }
 
 /***********************************************************************
