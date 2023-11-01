@@ -28,6 +28,13 @@ BOOL WINAPI CtfAImmIsIME(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 VOID WINAPI CtfImmSetAppCompatFlags(_In_ DWORD dwFlags);
 
+LRESULT WINAPI
+CtfImmDispatchDefImeMessage(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

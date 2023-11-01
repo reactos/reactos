@@ -403,6 +403,18 @@ CtfImmHideToolbarWnd(VOID)
     return 0;
 }
 
+BOOL Imm32InsideLoaderLock(VOID)
+{
+    return (NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
+            NtCurrentTeb()->ClientId.UniqueThread);
+}
+
+/* FIXME: Use RTL */
+BOOL WINAPI RtlDllShutdownInProgress(VOID)
+{
+    return FALSE;
+}
+
 /***********************************************************************
  *		CtfImmDispatchDefImeMessage(IMM32.@)
  */
@@ -413,8 +425,12 @@ CtfImmDispatchDefImeMessage(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
-    /* FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam); */
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+
+    if (RtlDllShutdownInProgress() || Imm32InsideLoaderLock() || !Imm32LoadCtfIme())
+        return 0;
+
+    return CTF_IME_FN(CtfImeDispatchDefImeMessage)(hWnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************
