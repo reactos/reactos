@@ -8,7 +8,7 @@
 //typedef void (*Sig_t)(int);
 
 /* The following defines are from ftp.h and telnet.h from bsd.h */
-/* All relevant copyrights below apply.                         */
+/* All relevent copyrights below apply.                         */
 
 #define	IAC	255
 #define	DONT	254
