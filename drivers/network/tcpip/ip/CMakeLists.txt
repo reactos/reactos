@@ -31,7 +31,7 @@ list(APPEND SOURCE
 
 add_library(ip OBJECT ${SOURCE} ${ip_asm})
 
-target_link_libraries(ip lwip)
+target_link_libraries(ip lwipcore)
 
 target_include_directories(ip BEFORE
     PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include)
