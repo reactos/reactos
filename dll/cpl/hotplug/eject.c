@@ -91,15 +91,18 @@ ConfirmRemovalDlgProc(
     {
         case WM_INITDIALOG:
         {
+            HWND hwndDevList;
+
             pHotplugData = (PHOTPLUG_DATA)lParam;
             SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pHotplugData);
 
-            ListView_SetImageList(GetDlgItem(hwndDlg, IDC_CONFIRM_STOP_DEVICE_LIST),
+            hwndDevList = GetDlgItem(hwndDlg, IDC_CONFIRM_STOP_DEVICE_LIST);
+
+            ListView_SetImageList(hwndDevList,
                                   pHotplugData->ImageListData.ImageList,
                                   LVSIL_SMALL);
 
-            FillConfirmDeviceList(GetDlgItem(hwndDlg, IDC_CONFIRM_STOP_DEVICE_LIST),
-                                  pHotplugData);
+            FillConfirmDeviceList(hwndDevList, pHotplugData);
 
             return TRUE;
         }
