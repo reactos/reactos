@@ -1,18 +1,18 @@
 #pragma once
 
-#define YDEBUG
 #include <ntddk.h>
-#include <debug.h>
 #include <initguid.h>
 #include <hdaudio.h>
 #include <stdio.h>
 #include <ntstrsafe.h>
 
-#define TAG_HDA 'bADH'
-
-
-// include Haiku headers
+// Include Haiku headers
 #include "driver.h"
+
+// #define NDEBUG
+#include <debug.h>
+
+#define TAG_HDA 'bADH'
 
 #define MAKE_RATE(base, multiply, divide) \
 	((base == 44100 ? FORMAT_44_1_BASE_RATE : 0) \
@@ -28,7 +28,6 @@
 		+ (index)) * HDAC_STREAM_SIZE)
 
 #define ALIGN(size, align)	(((size) + align - 1) & ~(align - 1))
-
 
 typedef struct {
 	ULONG response;
@@ -61,7 +60,6 @@ typedef struct
 
 }HDA_CODEC_ENTRY, *PHDA_CODEC_ENTRY;
 
-
 typedef struct
 {
 	BOOLEAN IsFDO;
@@ -92,7 +90,6 @@ typedef struct
 	PDEVICE_OBJECT FDO;
 }HDA_PDO_DEVICE_EXTENSION, *PHDA_PDO_DEVICE_EXTENSION;
 
-
 typedef struct {
 	ULONG device : 16;
 	ULONG vendor : 16;
@@ -107,7 +104,6 @@ typedef struct {
 	ULONG _reserved2 : 8;
 }CODEC_RESPONSE, *PCODEC_RESPONSE;
 
-
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,
@@ -118,6 +114,7 @@ FreeItem(
     IN PVOID Item);
 
 /* fdo.cpp */
+
 KSERVICE_ROUTINE HDA_InterruptService;
 IO_DPC_ROUTINE HDA_DpcForIsr;
 

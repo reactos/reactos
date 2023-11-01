@@ -80,6 +80,7 @@ void TaskManager_OnRestoreMainWindow(void);
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);
 void TaskManager_OnViewUpdateSpeed(DWORD);
 void TaskManager_OnTabWndSelChange(void);
+BOOL ConfirmMessageBox(HWND hWnd, LPCWSTR Text, LPCWSTR Title, UINT Type);
 VOID ShowWin32Error(DWORD dwError);
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);

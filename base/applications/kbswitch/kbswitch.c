@@ -145,16 +145,9 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 
     if (!hKL)
     {
-        if (0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
-        {
-            hKL = g_ahKLs[g_nCurrentLayoutNum - 1];
-        }
-        else
-        {
-            HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
-            DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
-            hKL = GetKeyboardLayout(dwTID);
-        }
+        HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
+        DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+        hKL = GetKeyboardLayout(dwTID);
     }
 
     g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
@@ -737,6 +730,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case WM_RBUTTONUP:
                 case WM_LBUTTONUP:
                 {
+                    UpdateLayoutList(NULL);
+
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 

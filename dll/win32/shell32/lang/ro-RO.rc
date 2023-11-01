@@ -1,5 +1,10 @@
-/* Translators: Ștefan Fulea (stefan dot fulea at mail dot com) 
- *              Andrei Miloiu (miloiuandrei@gmail.com) */
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
@@ -655,7 +660,7 @@ Sigur doriți să deschideți acest fișier?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Ceare nouă extensie"
+CAPTION "Crează o nouă extensie"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN

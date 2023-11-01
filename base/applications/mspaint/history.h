@@ -21,7 +21,6 @@ public:
     BOOL CanRedo() const { return m_redoSteps > 0; }
     void PushImageForUndo();
     void PushImageForUndo(HBITMAP hbm);
-    void ResetToPrevious(void);
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ClearHistory(void);

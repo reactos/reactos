@@ -15,8 +15,10 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
-int gLanguageToggleKeyState = 0;
-DWORD gdwLanguageToggleKey = 0;
+INT gLanguageToggleKeyState = 0;
+DWORD gdwLanguageToggleKey = 1;
+INT gLayoutToggleKeyState = 0;
+DWORD gdwLayoutToggleKey = 2;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -791,6 +793,92 @@ cleanup:
         UserReleaseDC(pWnd, hdc, FALSE);
 }
 
+/* Find the next/previous keyboard layout of the same/different language */
+static PKL FASTCALL
+IntGetNextKL(
+    _In_ PKL pKL,
+    _In_ BOOL bNext,
+    _In_ BOOL bSameLang)
+{
+    PKL pFirstKL = pKL;
+    LANGID LangID = LOWORD(pKL->hkl);
+
+    do
+    {
+        pKL = (bNext ? pKL->pklNext : pKL->pklPrev);
+
+        if (!(pKL->dwKL_Flags & KLF_UNLOAD) && bSameLang == (LangID == LOWORD(pKL->hkl)))
+            return pKL;
+    } while (pKL != pFirstKL);
+
+    return pFirstKL;
+}
+
+/* Perform layout toggle by [Left Alt]+Shift or Ctrl+Shift */
+static VOID
+IntLanguageToggle(
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
+    _In_ BOOL bSameLang,
+    _In_ INT nKeyState)
+{
+    PWND pWnd = pFocusQueue->spwndFocus;
+    HWND hWnd;
+    WPARAM wParam = 0;
+    PTHREADINFO pti;
+    PKL pkl;
+
+    if (!pWnd)
+        pWnd = pFocusQueue->spwndActive;
+    if (!pWnd)
+        return;
+
+    pti = pWnd->head.pti;
+    pkl = pti->KeyboardLayout;
+
+    if (nKeyState == INPUTLANGCHANGE_FORWARD)
+        pkl = IntGetNextKL(pkl, TRUE, bSameLang);
+    else if (nKeyState == INPUTLANGCHANGE_BACKWARD)
+        pkl = IntGetNextKL(pkl, FALSE, bSameLang);
+
+    if (gSystemFS & pkl->dwFontSigs)
+        wParam |= INPUTLANGCHANGE_SYSCHARSET;
+
+    hWnd = UserHMGetHandle(pWnd);
+    UserPostMessage(hWnd, WM_INPUTLANGCHANGEREQUEST, wParam, (LPARAM)pkl->hkl);
+}
+
+/* Check Language Toggle by [Left Alt]+Shift or Ctrl+Shift */
+static BOOL
+IntCheckLanguageToggle(
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue,
+    _In_ BOOL bIsDown,
+    _In_ WORD wVk,
+    _Inout_ PINT pKeyState)
+{
+    if (bIsDown) /* Toggle key combination is pressed? */
+    {
+        if (wVk == VK_LSHIFT)
+            *pKeyState = INPUTLANGCHANGE_FORWARD;
+        else if (wVk == VK_RSHIFT)
+            *pKeyState = INPUTLANGCHANGE_BACKWARD;
+        else if (!wVk && IS_KEY_DOWN(gafAsyncKeyState, VK_LSHIFT))
+            *pKeyState = INPUTLANGCHANGE_FORWARD;
+        else if (!wVk && IS_KEY_DOWN(gafAsyncKeyState, VK_RSHIFT))
+            *pKeyState = INPUTLANGCHANGE_BACKWARD;
+        else
+            return FALSE;
+    }
+    else
+    {
+        if (*pKeyState == 0)
+            return FALSE;
+
+        IntLanguageToggle(pFocusQueue, (pKeyState == &gLayoutToggleKeyState), *pKeyState);
+        *pKeyState = 0;
+    }
+    return TRUE;
+}
+
 /*
  * UserSendKeyboardInput
  *
@@ -808,6 +896,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     BOOL bWasSimpleDown = FALSE, bPostMsg = TRUE, bIsSimpleDown;
     MSG Msg;
     static BOOL bMenuDownRecently = FALSE;
+    BOOL bLangToggled = FALSE;
 
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
@@ -904,6 +993,41 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         (wVk == VK_ESCAPE || wVk == VK_TAB))
     {
        TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
+    }
+
+    /*
+     * Check Language/Layout Toggle by [Left Alt]+Shift or Ctrl+Shift.
+     * @see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc976564%28v=technet.10%29
+     */
+    if (gdwLanguageToggleKey == 1 || gdwLanguageToggleKey == 2)
+    {
+        if (wSimpleVk == VK_SHIFT) /* Shift key is pressed or released */
+        {
+            UINT targetKey = ((gdwLanguageToggleKey == 1) ? VK_LMENU : VK_CONTROL);
+            if (IS_KEY_DOWN(gafAsyncKeyState, targetKey))
+                bLangToggled = IntCheckLanguageToggle(pFocusQueue, bIsDown, wVk, &gLanguageToggleKeyState);
+        }
+        else if ((wSimpleVk == VK_MENU && gdwLanguageToggleKey == 1) ||
+                 (wSimpleVk == VK_CONTROL && gdwLanguageToggleKey == 2))
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+                bLangToggled = IntCheckLanguageToggle(pFocusQueue, bIsDown, 0, &gLanguageToggleKeyState);
+        }
+    }
+    if (!bLangToggled && (gdwLayoutToggleKey == 1 || gdwLayoutToggleKey == 2))
+    {
+        if (wSimpleVk == VK_SHIFT) /* Shift key is pressed or released */
+        {
+            UINT targetKey = ((gdwLayoutToggleKey == 1) ? VK_LMENU : VK_CONTROL);
+            if (IS_KEY_DOWN(gafAsyncKeyState, targetKey))
+                IntCheckLanguageToggle(pFocusQueue, bIsDown, wVk, &gLayoutToggleKeyState);
+        }
+        else if ((wSimpleVk == VK_MENU && gdwLayoutToggleKey == 1) ||
+                 (wSimpleVk == VK_CONTROL && gdwLayoutToggleKey == 2))
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+                IntCheckLanguageToggle(pFocusQueue, bIsDown, 0, &gLayoutToggleKeyState);
+        }
     }
 
     if (bIsDown && wVk == VK_SNAPSHOT)

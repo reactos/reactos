@@ -302,8 +302,9 @@ typedef struct _CALLBACKWND
 #define CI_INITTHREAD        0x00000008
 #define CI_CURTHPRHOOK       0x00000010
 #define CI_CLASSESREGISTERED 0x00000020
-#define CI_IMMACTIVATE       0x00000040
-#define CI_TFSDISABLED       0x00000400
+#define CI_IMMACTIVATE       0x00000040 /* IMM/IME (Asian input) */
+#define CI_TSFDISABLED       0x00000400 /* TSF (Text Services Framework a.k.a. Cicero) */
+#define CI_AIMMACTIVATED     0x00000800 /* Active IMM (AIMM) */
 
 /*
  * CLIENTINFO structure.
@@ -1231,6 +1232,7 @@ typedef enum IMEINFOEXCLASS
 #define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
 #define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
 #define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+#define IS_16BIT_MODE() (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 typedef struct tagIMEUI
 {

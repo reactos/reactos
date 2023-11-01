@@ -89,18 +89,6 @@ void ImageModel::Redo()
     NotifyImageChanged();
 }
 
-void ImageModel::ResetToPrevious()
-{
-    ATLTRACE("%s: %d\n", __FUNCTION__, m_currInd);
-
-    // Revert current item with previous item
-    ::DeleteObject(m_hBms[m_currInd]);
-    m_hBms[m_currInd] = CopyDIBImage(m_hBms[(m_currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
-    ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]);
-
-    NotifyImageChanged();
-}
-
 void ImageModel::ClearHistory()
 {
     for (int i = 0; i < HISTORYSIZE; ++i)
@@ -119,7 +107,7 @@ void ImageModel::ClearHistory()
 void ImageModel::PushImageForUndo()
 {
     HBITMAP hbm = CopyBitmap();
-    if (hbm)
+    if (hbm == NULL)
     {
         ShowOutOfMemory();
         return;

@@ -547,22 +547,27 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_INPUTLANGCHANGEREQUEST:
         {
-            HKL NewHkl;
+            HKL hNewKL;
+            HWND hwndFocus;
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD
-               && wParam & INPUTLANGCHANGE_FORWARD)
-            {
+            if ((wParam & INPUTLANGCHANGE_BACKWARD) && (wParam & INPUTLANGCHANGE_FORWARD))
                 return FALSE;
+
+            hwndFocus = GetFocus();
+            if (hwndFocus && hwndFocus != hWnd &&
+                GetClassLongPtrW(hWnd, GCW_ATOM) != (ULONG_PTR)WC_DIALOG)
+            {
+                return SendMessageW(hwndFocus, Msg, wParam, lParam);
             }
 
-            //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
+            if (wParam & INPUTLANGCHANGE_FORWARD)
+                hNewKL = (HKL)UlongToHandle(HKL_NEXT);
+            else if (wParam & INPUTLANGCHANGE_BACKWARD)
+                hNewKL = (HKL)UlongToHandle(HKL_PREV);
+            else
+                hNewKL = (HKL)lParam;
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = (HKL) HKL_PREV;
-            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
-            else NewHkl = (HKL) lParam;
-
-            NtUserActivateKeyboardLayout(NewHkl, KLF_SETFORPROCESS);
-
+            NtUserActivateKeyboardLayout(hNewKL, KLF_SETFORPROCESS);
             return TRUE;
         }
 
