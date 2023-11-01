@@ -198,7 +198,7 @@ CtfImeDestroyThreadMgr(VOID)
 /***********************************************************************
  *		CtfAImmIsIME (IMM32.@)
  *
- * @return TRUE if "Active IMM" is enabled.
+ * @return TRUE if CTF IME or IMM IME is enabled.
  */
 BOOL WINAPI
 CtfAImmIsIME(_In_ HKL hKL)
