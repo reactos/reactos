@@ -1056,6 +1056,14 @@ void TaskManager_OnTabWndSelChange(void)
     }
 }
 
+BOOL ConfirmMessageBox(HWND hWnd, LPCWSTR Text, LPCWSTR Title, UINT Type)
+{
+    UINT positive = ((Type & 0xF) <= MB_OKCANCEL ? IDOK : IDYES);
+    if (GetKeyState(VK_SHIFT) < 0)
+        return TRUE;
+    return (MessageBoxW(hWnd, Text, Title, Type) == positive);
+}
+
 VOID ShowWin32Error(DWORD dwError)
 {
     LPWSTR lpMessageBuffer;
