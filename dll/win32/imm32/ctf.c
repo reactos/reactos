@@ -204,7 +204,9 @@ BOOL WINAPI
 CtfAImmIsIME(_In_ HKL hKL)
 {
     TRACE("(%p)\n", hKL);
-    return (Imm32LoadCtfIme() ? CTF_IME_FN(CtfImeIsIME)(hKL) : ImmIsIME(hKL));
+    if (!Imm32LoadCtfIme())
+        return ImmIsIME(hKL);
+    return CTF_IME_FN(CtfImeIsIME)(hKL);
 }
 
 /***********************************************************************
