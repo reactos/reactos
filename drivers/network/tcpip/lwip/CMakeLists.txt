@@ -46,11 +46,10 @@ list(APPEND SOURCE
 add_library(lwipcore ${SOURCE})
 
 target_include_directories(lwipcore
-    PUBLIC src/include
+    PRIVATE ${LWIP_INCLUDE_DIRS}
     PUBLIC src/include/ipv4)
 
 add_dependencies(lwipcore bugcodes xdk)
-add_pch(lwipcore precomp.h SOURCE)
 
 if(NOT MSVC)
     target_compile_options(lwipcore PRIVATE -fno-builtin-malloc -fno-builtin-free)
