@@ -55,42 +55,16 @@ HISTORY
     Also added code to allow ip_forward() to forward non-broadcast packets to
     the input netif (set IP_FORWARD_ALLOW_TX_ON_RX_NETIF==1).
 
-  2011-07-21: Simon Goldschmidt
-  * sockets.c, opt.h: (bug #30185): added LWIP_FIONREAD_LINUXMODE that makes
-    ioctl/FIONREAD return the size of the next pending datagram.
-
   2011-06-26: Simon Goldschmidt (patch by Cameron Gutman)
   * tcp.c, tcp_out.c: bug #33604: added some more asserts to check that
     pcb->state != LISTEN
 
- 2011-05-25: Simon Goldschmidt
-  * again nearly the whole stack, renamed ip.c to ip4.c, ip_addr.c to ip4_addr.c,
-    combined ipv4/ipv6 inet_chksum.c, added ip.h, ip_addr.h: Combined IPv4
-    and IPv6 code where possible, added defines to access IPv4/IPv6 in non-IP
-    code so that the code is more readable.
-
-  2011-05-17: Patch by Ivan Delamer (only checked in by Simon Goldschmidt)
-  * nearly the whole stack: Finally, we got decent IPv6 support, big thanks to
-    Ivan! (this is work in progress: we're just post release anyway :-)
-
-   2011-05-14: Simon Goldschmidt (patch by St?phane Lesage)
+   2011-05-14: Simon Goldschmidt (patch by Stéphane Lesage)
   * tcpip.c/.h: patch #7449 allow tcpip callback from interrupt with static
     memory message
 
 
  ++ Bugfixes:
-
-  2013-01-15: Simon Goldschmidt
-  * ip4.c: fixed bug #37665 ip_canforward operates on address in wrong byte order
-
-  2013-01-15: Simon Goldschmidt
-  * pbuf.h: fixed bug #38097 pbuf_free_ooseq() warning
-
-  2013-01-14: Simon Goldschmidt
-  * dns.c: fixed bug #37705 Possible memory corruption in DNS query
-
-  2013-01-11: Simon Goldschmidt
-  * raw.c: fixed bug #38066 Raw pcbs can alter packet without eating it
 
   2012-09-26: Simon Goldschmidt
   * api_msg.c: fixed bug #37405 'err_tcp()' uses already freed 'netconn' object
@@ -104,32 +78,9 @@ HISTORY
   2012-08-22: Simon Goldschmidt
   * memp.c: fixed bug #37166: memp_sanity check loops itself
 
-  2012-08-13: Simon Goldschmidt
-  * dhcp.c: fixed bug #36645: Calling dhcp_release before dhcp_start
-    dereferences NULL
-
-  2012-08-13: Simon Goldschmidt
-  * msg_out.c: fixed bug #36840 snmp_send_trap() NULL de-reference if traps
-    configured but no interfaces available
-
-  2012-08-13: Simon Goldschmidt
-  * dns.c: fixed bug #36899 DNS TTL 0 is cached for a long time
-
-  2012-05-11: Simon Goldschmidt (patch by Marty)
-  * memp.c: fixed bug #36412: memp.c does not compile when
-    MEMP_OVERFLOW_CHECK > zero and MEMP_SEPARATE_POOLS == 1
-
   2012-05-08: Simon Goldschmidt
-  * tcp_out.c: fixed bug #36380: unsent_oversize mismatch in 1.4.1RC1 (this was
+  * tcp_out.c: fixed bug: #36380 unsent_oversize mismatch in 1.4.1RC1 (this was
     a debug-check issue only)
-
-  2012-05-03: Simon Goldschmidt (patch by Sylvain Rochet)
-  * ppp.c: fixed bug #36283 (PPP struct used on header size computation and
-    not packed)
-
-  2012-05-03: Simon Goldschmidt (patch by David Empson)
-  * ppp.c: fixed bug #36388 (PPP: checksum-only in last pbuf leads to pbuf with
-    zero length)
 
   2012-03-27: Simon Goldschmidt
   * vj.c: fixed bug #35756 header length calculation problem in ppp/vj.c
@@ -137,14 +88,6 @@ HISTORY
   2012-03-27: Simon Goldschmidt (patch by Mason)
   * tcp_out.c: fixed bug #35945: SYN packet should provide the recv MSS not the
     send MSS
-
-  2012-03-25: Simon Goldschmidt
-  * api_msg.c: Fixed bug #35817: do_connect() invalidly signals op_completed
-    for UDP/RAW with LWIP_TCPIP_CORE_LOCKING==1
-
-  2012-03-25: Simon Goldschmidt
-  * api_msg.h, api_lib.c, api_msg.c, netifapi.c: fixed bug #35931: Name space
-    pollution in api_msg.c and netifapi.c
 
   2012-03-22: Simon Goldschmidt
   * ip4.c: fixed bug #35927: missing refragmentaion in ip_forward
@@ -168,7 +111,7 @@ HISTORY
   * etharp.c: fixed bug #35531: Impossible to send multicast without a gateway
     (introduced when fixing bug# 33551)
 
-  2012-02-16: Simon Goldschmidt (patch by St?phane Lesage)
+  2012-02-16: Simon Goldschmidt (patch by Stéphane Lesage)
   * msg_in.c, msg_out.c: fixed bug #35536 SNMP: error too big response is malformed
 
   2012-02-15: Simon Goldschmidt
@@ -305,9 +248,6 @@ HISTORY
   * tcp_in.c: fixed bug #34111 RST for ACK to listening pcb has wrong seqno
 
   2011-08-24: Simon Goldschmidt
-  * inet6.h: fixed bug #34124 struct in6_addr does not conform to the standard
-
-  2011-08-24: Simon Goldschmidt
   * api_msg.c, sockets.c: fixed bug #33956 Wrong error returned when calling
     accept() on UDP connections
 
@@ -355,6 +295,9 @@ HISTORY
 
   2011-06-26: Simon Goldschmidt
   * mem.c: fixed bug #33544 "warning in mem.c in lwip 1.4.0 with NO_SYS=1"
+
+   2011-05-25: Simon Goldschmidt
+  * tcp.c: fixed bug #33398 (pointless conversion when checking TCP port range)
 
 
 

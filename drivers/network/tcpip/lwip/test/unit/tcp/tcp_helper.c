@@ -92,8 +92,8 @@ tcp_create_segment_wnd(ip_addr_t* src_ip, ip_addr_t* dst_ip,
 
   /* calculate checksum */
 
-  tcphdr->chksum = inet_chksum_pseudo(p,
-          IP_PROTO_TCP, p->tot_len, src_ip, dst_ip);
+  tcphdr->chksum = inet_chksum_pseudo(p, src_ip, dst_ip,
+          IP_PROTO_TCP, p->tot_len);
 
   pbuf_header(p, sizeof(struct ip_hdr));
 
@@ -238,21 +238,17 @@ test_tcp_new_counters_pcb(struct test_tcp_counters* counters)
 void test_tcp_input(struct pbuf *p, struct netif *inp)
 {
   struct ip_hdr *iphdr = (struct ip_hdr*)p->payload;
-  /* these lines are a hack, don't use them as an example :-) */
-  ip_addr_copy(*ipX_current_dest_addr(), iphdr->dest);
-  ip_addr_copy(*ipX_current_src_addr(), iphdr->src);
-  ip_current_netif() = inp;
-  ip_current_header() = iphdr;
-
-  /* since adding IPv6, p->payload must point to tcp header, not ip header */
-  pbuf_header(p, -(s16_t)sizeof(struct ip_hdr));
+  ip_addr_copy(current_iphdr_dest, iphdr->dest);
+  ip_addr_copy(current_iphdr_src, iphdr->src);
+  current_netif = inp;
+  current_header = iphdr;
 
   tcp_input(p, inp);
 
-  ipX_current_dest_addr()->addr = 0;
-  ipX_current_src_addr()->addr = 0;
-  ip_current_netif() = NULL;
-  ip_current_header() = NULL;
+  current_iphdr_dest.addr = 0;
+  current_iphdr_src.addr = 0;
+  current_netif = NULL;
+  current_header = NULL;
 }
 
 static err_t test_tcp_netif_output(struct netif *netif, struct pbuf *p,
@@ -260,21 +256,18 @@ static err_t test_tcp_netif_output(struct netif *netif, struct pbuf *p,
 {
   struct test_tcp_txcounters *txcounters = (struct test_tcp_txcounters*)netif->state;
   LWIP_UNUSED_ARG(ipaddr);
-  if (txcounters != NULL)
-  {
-    txcounters->num_tx_calls++;
-    txcounters->num_tx_bytes += p->tot_len;
-    if (txcounters->copy_tx_packets) {
-      struct pbuf *p_copy = pbuf_alloc(PBUF_LINK, p->tot_len, PBUF_RAM);
-      err_t err;
-      EXPECT(p_copy != NULL);
-      err = pbuf_copy(p_copy, p);
-      EXPECT(err == ERR_OK);
-      if (txcounters->tx_packets == NULL) {
-        txcounters->tx_packets = p_copy;
-      } else {
-        pbuf_cat(txcounters->tx_packets, p_copy);
-      }
+  txcounters->num_tx_calls++;
+  txcounters->num_tx_bytes += p->tot_len;
+  if (txcounters->copy_tx_packets) {
+    struct pbuf *p_copy = pbuf_alloc(PBUF_LINK, p->tot_len, PBUF_RAM);
+    err_t err;
+    EXPECT(p_copy != NULL);
+    err = pbuf_copy(p_copy, p);
+    EXPECT(err == ERR_OK);
+    if (txcounters->tx_packets == NULL) {
+      txcounters->tx_packets = p_copy;
+    } else {
+      pbuf_cat(txcounters->tx_packets, p_copy);
     }
   }
   return ERR_OK;
@@ -285,11 +278,9 @@ void test_tcp_init_netif(struct netif *netif, struct test_tcp_txcounters *txcoun
 {
   struct netif *n;
   memset(netif, 0, sizeof(struct netif));
-  if (txcounters != NULL) {
-    memset(txcounters, 0, sizeof(struct test_tcp_txcounters));
-    netif->state = txcounters;
-  }
+  memset(txcounters, 0, sizeof(struct test_tcp_txcounters));
   netif->output = test_tcp_netif_output;
+  netif->state = txcounters;
   netif->flags |= NETIF_FLAG_UP;
   ip_addr_copy(netif->netmask, *netmask);
   ip_addr_copy(netif->ip_addr, *ip_addr);
