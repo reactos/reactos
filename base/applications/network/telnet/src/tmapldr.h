@@ -55,7 +55,7 @@
 //         You can't use the NULL !!!                            //
 //         Also (for the moment) you can't use spaces            //
 //         in the string : everything after the 3rd word is      //
-//           ignored - use underscore instead.                  //
+//           ignored - use unsderscore instead.                  //
 //                                                               //
 //   for  example :                                              //
 //                                                               //
