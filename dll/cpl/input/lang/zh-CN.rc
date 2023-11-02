@@ -114,7 +114,7 @@ BEGIN
     IDS_SWITCH_BET_INLANG "在输入语言间切换"
     IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
     IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
-    IDS_ADVANCED_SETTINGS "Advanced Settings"
+    IDS_ADVANCED_SETTINGS "高级设置"
 END
 
 STRINGTABLE

@@ -120,7 +120,7 @@ BEGIN
     IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
     IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
     IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
-    IDS_ADVANCED_SETTINGS "Advanced Settings"
+    IDS_ADVANCED_SETTINGS "Configurație avansată"
 END
 
 STRINGTABLE
