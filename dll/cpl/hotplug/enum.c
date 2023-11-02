@@ -12,7 +12,7 @@
 #include <initguid.h>
 #include <devguid.h>
 
-#define MAX_DEVICE_DISPLAYNAME_LEN 40
+#define MAX_DEVICE_DISPLAYNAME_LEN 256
 
 static
 VOID
@@ -31,13 +31,23 @@ GetDeviceDisplayInfo(
     /* Get the device description */
     ulSize = cchDesc * sizeof(WCHAR);
     cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
-                                           CM_DRP_DEVICEDESC,
+                                           CM_DRP_FRIENDLYNAME,
                                            NULL,
                                            pszDesc,
                                            &ulSize,
                                            0);
     if (cr != CR_SUCCESS)
-        LoadStringW(hApplet, IDS_UNKNOWN_DEVICE, pszDesc, cchDesc);
+    {
+        ulSize = cchDesc * sizeof(WCHAR);
+        cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
+                                               CM_DRP_DEVICEDESC,
+                                               NULL,
+                                               pszDesc,
+                                               &ulSize,
+                                               0);
+        if (cr != CR_SUCCESS)
+            LoadStringW(hApplet, IDS_UNKNOWN_DEVICE, pszDesc, cchDesc);
+    }
 
     /* Get the class GUID */
     ulSize = sizeof(szGuidString);
