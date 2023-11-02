@@ -10,6 +10,14 @@
 #define HAL_BUILD_TYPE ((DBG ? PRCB_BUILD_DEBUG : 0) | PRCB_BUILD_UNIPROCESSOR)
 #endif
 
+/* Don't include this in freeloader */
+#ifndef _BLDR_
+extern KIRQL HalpIrqlSynchLevel;
+
+#undef SYNCH_LEVEL
+#define SYNCH_LEVEL HalpIrqlSynchLevel
+#endif
+
 typedef struct _HAL_BIOS_FRAME
 {
     ULONG SegSs;
