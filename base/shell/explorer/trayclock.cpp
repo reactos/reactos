@@ -407,31 +407,36 @@ VOID CTrayClockWnd::UpdateWnd()
     delete[] szDate;
 }
 
-static BOOL SameTime(SYSTEMTIME a, SYSTEMTIME b)
+static BOOL
+IsSameTime(const SYSTEMTIME& time1, const SYSTEMTIME& time2)
 {
     /* No need to look for milliseconds nor seconds (only used if second not displayed) */
-    return (a.wMinute == b.wMinute) &&
-           (a.wHour == b.wHour) &&
-           (a.wDay == b.wDay) &&
-           (a.wMonth == b.wMonth) &&
-           (a.wYear == b.wYear);
+    return (time1.wMinute == time2.wMinute) &&
+           (time1.wHour == time2.wHour) &&
+           (time1.wDay == time2.wDay) &&
+           (time1.wMonth == time2.wMonth) &&
+           (time1.wYear == time2.wYear);
 }
 
 VOID CTrayClockWnd::Update()
 {
     static SYSTEMTIME s_OldTime;
-    static BOOL s_bOldShowSeconds;
+    static BOOL s_OldShowSeconds;
 
     GetLocalTime(&LocalTime);
 
     /* If seconds not displayed and time (w/o secs) and date unchanged, no need to update
        but force update if switching from hh:mm:ss to hh:mm */
-    if (SameTime(LocalTime, s_OldLocalTime) && !g_TaskbarSettings.bShowSeconds && !s_bOldShowSeconds)
+    if (IsSameTime(LocalTime, s_OldLocalTime) &&
+        !g_TaskbarSettings.bShowSeconds && !s_OldShowSeconds)
+    {
         return;
+    }
 
     UpdateWnd();
+
     s_OldLocalTime = LocalTime;
-    s_bOldShowSeconds = g_TaskbarSettings.bShowSeconds;
+    s_OldShowSeconds = g_TaskbarSettings.bShowSeconds;
 }
 
 UINT CTrayClockWnd::CalculateDueTime()
