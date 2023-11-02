@@ -230,8 +230,6 @@ ControlHandler(DWORD request)
         default:
             break;
     }
-
-    return;
 }
 
 
@@ -239,7 +237,7 @@ VOID
 WINAPI
 W32TmServiceMain(DWORD argc, LPWSTR *argv)
 {
-    int   result;
+    LONG error;
     DWORD dwInterval;
     HKEY hKey;
     WCHAR szData[8];
@@ -296,7 +294,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
         {
             cbData = sizeof(szData);
             RegQueryValueExW(hKey, L"Type", NULL, NULL, (LPBYTE)szData, &cbData);
-            szData[_countof(szData) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+            szData[ARRAYSIZE(szData) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
             bAutoSync = (wcscmp(szData, L"NTP") == 0);
 
             RegCloseKey(hKey);
@@ -304,10 +302,10 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
 
         if (bAutoSync)
         {
-            result = SetTime();
-            if (result)
+            error = SetTime();
+            if (error != ERROR_SUCCESS)
             {
-                DPRINT("W32Time Service failed to set clock: 0x%08lX\n", result);
+                DPRINT("W32Time Service failed to set clock: 0x%08lX\n", error);
 #if 0
                 /*
                  * In general, we do not want to stop this service for a single
@@ -315,7 +313,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
                  * we really might want to stop it. Therefore this code is left here.
                  */
                 ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
-                ServiceStatus.dwWin32ExitCode = result;
+                ServiceStatus.dwWin32ExitCode = error;
                 SetServiceStatus(hStatus, &ServiceStatus);
                 return;
 #endif
@@ -336,7 +334,6 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
         }
     }
 }
-
 
 
 BOOL WINAPI
