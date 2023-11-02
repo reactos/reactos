@@ -281,7 +281,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     ServiceStatus.dwCurrentState = SERVICE_RUNNING;
     SetServiceStatus(hStatus, &ServiceStatus);
 
-    /* The worker loop of a service */
+    /* The service's worker loop */
     for (;;)
     {
         /* Is it Auto-Sync? */
