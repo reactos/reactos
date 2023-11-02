@@ -619,23 +619,10 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 
         case PSN_APPLY:
         {
-            BOOL bRebootNeeded = IsRebootNeeded();
+            g_bRebootNeeded |= IsRebootNeeded();
 
             /* Write Input Methods list to registry */
-            if (InputList_Process() && bRebootNeeded)
-            {
-                /* Needs reboot */
-                WCHAR szNeedsReboot[128], szLanguage[64];
-                LoadStringW(hApplet, IDS_REBOOT_NOW, szNeedsReboot, _countof(szNeedsReboot));
-                LoadStringW(hApplet, IDS_LANGUAGE, szLanguage, _countof(szLanguage));
-
-                if (MessageBoxW(hwndDlg, szNeedsReboot, szLanguage,
-                                MB_ICONINFORMATION | MB_YESNOCANCEL) == IDYES)
-                {
-                    EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
-                    ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
-                }
-            }
+            InputList_Process();
             break;
         }
     }

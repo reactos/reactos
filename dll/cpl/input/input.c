@@ -58,6 +58,7 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     PROPSHEETPAGEW page[2];
     PROPSHEETHEADERW header;
+    LONG ret;
 
     ZeroMemory(&header, sizeof(header));
 
@@ -78,7 +79,23 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     /* Advanced Settings */
     InitPropSheetPage(&page[1], IDD_PROPPAGEADVANCEDSETTINGS, AdvancedSettingsPageProc);
 
-    return (LONG)(PropertySheetW(&header) != -1);
+    ret = (LONG)(PropertySheetW(&header) != -1);
+
+    /* Reboot now? */
+    if (g_bRebootNeeded)
+    {
+        WCHAR szText[128], szCaption[64];
+        LoadStringW(hApplet, IDS_REBOOT_NOW, szText, _countof(szText));
+        LoadStringW(hApplet, IDS_LANGUAGE, szCaption, _countof(szCaption));
+
+        if (MessageBoxW(hwnd, szText, szCaption, MB_ICONINFORMATION | MB_YESNO) == IDYES)
+        {
+            EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
+            ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+        }
+    }
+
+    return ret;
 }
 
 

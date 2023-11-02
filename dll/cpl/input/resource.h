@@ -60,8 +60,6 @@
 #define IDS_SWITCH_BET_INLANG    16
 #define IDC_TURNOFFTEXTSVCS_CB   17
 #define IDS_REBOOT_NOW           18
-#define IDS_REQUIRE_REBOOT       19
-#define IDS_ADVANCED_SETTINGS    20
 
 /* Layouts */
 #define IDS_US_LAYOUT                                  5000

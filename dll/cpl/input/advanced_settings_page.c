@@ -8,6 +8,9 @@
 
 #include "input.h"
 
+static BOOL s_bTextServiceWasOff = FALSE;
+BOOL g_bRebootNeeded = FALSE;
+
 static BOOL LoadAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
@@ -23,6 +26,7 @@ static BOOL LoadAdvancedSettings(HWND hwndDlg)
     RegCloseKey(hKey);
 
     CheckDlgButton(hwndDlg, IDC_TURNOFFTEXTSVCS_CB, (dwValue ? BST_CHECKED : BST_UNCHECKED));
+    s_bTextServiceWasOff = !!dwValue;
     return TRUE;
 }
 
@@ -59,13 +63,7 @@ static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
         {
             BOOL bOff = (IsDlgButtonChecked(hwndDlg, IDC_TURNOFFTEXTSVCS_CB) == BST_CHECKED);
             SaveAdvancedSettings(hwndDlg, bOff);
-            if (!bOff)
-            {
-                WCHAR szText[128], szCaption[64];
-                LoadStringW(hApplet, IDS_REQUIRE_REBOOT, szText, _countof(szText));
-                LoadStringW(hApplet, IDS_ADVANCED_SETTINGS, szCaption, _countof(szCaption));
-                MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION);
-            }
+            g_bRebootNeeded |= (s_bTextServiceWasOff && !bOff);
             break;
         }
     }

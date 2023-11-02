@@ -111,8 +111,6 @@ BEGIN
     IDS_LEFT_ALT_SHIFT "Alt слева+Shift"
     IDS_SWITCH_BET_INLANG "Переключение между языками ввода"
     IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
-    IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
-    IDS_ADVANCED_SETTINGS "Дополнительные параметры"
 END
 
 STRINGTABLE
