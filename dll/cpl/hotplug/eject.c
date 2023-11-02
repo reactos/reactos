@@ -80,10 +80,10 @@ SafeRemoveDevice(
 INT_PTR
 CALLBACK
 ConfirmRemovalDlgProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam)
+    _In_ HWND hwndDlg,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     PHOTPLUG_DATA pHotplugData;
 

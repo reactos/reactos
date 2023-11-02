@@ -19,7 +19,7 @@ VOID
 GetDeviceDisplayInfo(
     _In_ DEVINST DevInst,
     _In_ PHOTPLUG_DATA pHotplugData,
-    _Out_ LPWSTR pszDesc,
+    _Out_writes_z_(cchDesc) LPWSTR pszDesc,
     _In_ ULONG cchDesc,
     _Out_ PINT pImageIndex)
 {
