@@ -1104,36 +1104,6 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 }
 
 /***********************************************************************
- *              ImmCreateSoftKeyboard(IMM32.@)
- */
-HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
-{
-    FIXME("(%d, %d, %d, %d): stub\n", uType, hOwner, x, y);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/***********************************************************************
- *              ImmDestroySoftKeyboard(IMM32.@)
- */
-BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
-{
-    TRACE("(%p)\n", hSoftWnd);
-    return DestroyWindow(hSoftWnd);
-}
-
-/***********************************************************************
- *              ImmShowSoftKeyboard(IMM32.@)
- */
-BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
-{
-    TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
-    if (hSoftWnd)
-        return ShowWindow(hSoftWnd, nCmdShow);
-    return FALSE;
-}
-
-/***********************************************************************
 *		ImmDisableTextFrameService(IMM32.@)
 */
 BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)

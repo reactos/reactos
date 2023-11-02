@@ -19,7 +19,7 @@
 @ stdcall ImmConfigureIMEW(ptr ptr long ptr)
 @ stdcall ImmCreateContext()
 @ stdcall ImmCreateIMCC(long)
-@ stdcall ImmCreateSoftKeyboard(long long long long)
+@ stdcall ImmCreateSoftKeyboard(long ptr long long)
 @ stdcall ImmDestroyContext(ptr)
 @ stdcall ImmDestroyIMCC(ptr)
 @ stdcall ImmDestroySoftKeyboard(ptr)

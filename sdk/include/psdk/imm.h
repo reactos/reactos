@@ -253,9 +253,22 @@ LRESULT WINAPI ImmRequestMessageA(HIMC, WPARAM, LPARAM);
 LRESULT WINAPI ImmRequestMessageW(HIMC, WPARAM, LPARAM);
 #define ImmRequestMessage WINELIB_NAME_AW(ImmRequestMessage);
 BOOL WINAPI ImmTranslateMessage(HWND, UINT, WPARAM, LPARAM);
-HWND WINAPI ImmCreateSoftKeyboard(UINT, UINT, int, int);
-BOOL WINAPI ImmDestroySoftKeyboard(HWND);
-BOOL WINAPI ImmShowSoftKeyboard(HWND, int);
+
+HWND WINAPI
+ImmCreateSoftKeyboard(
+    _In_ UINT uType,
+    _In_ HWND hwndParent,
+    _In_ INT x,
+    _In_ INT y);
+
+BOOL WINAPI
+ImmShowSoftKeyboard(
+    _In_ HWND hwndSoftKBD,
+    _In_ INT nCmdShow);
+
+BOOL WINAPI
+ImmDestroySoftKeyboard(
+    _In_ HWND hwndSoftKBD);
 
 BOOL WINAPI ImeInquire(LPIMEINFO, LPWSTR, LPCWSTR lpszOptions);
 BOOL WINAPI ImeConfigure (HKL, HWND, DWORD, LPVOID);
