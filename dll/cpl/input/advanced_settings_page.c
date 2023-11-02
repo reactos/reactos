@@ -34,8 +34,7 @@ static BOOL SaveAdvancedSettings(HWND hwndDlg, BOOL bOff)
 {
     HKEY hKey;
     LONG error;
-    const DWORD dwValue = bOff;
-    const DWORD cbValue = sizeof(dwValue);
+    const DWORD dwValue = bOff, cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_WRITE, &hKey);
     if (error != ERROR_SUCCESS)
