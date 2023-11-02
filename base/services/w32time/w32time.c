@@ -244,7 +244,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     HKEY hKey;
     WCHAR szData[8];
     DWORD cbData;
-    BOOL bAutoSync = FALSE;
+    BOOL bAutoSync;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
@@ -286,6 +286,8 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     /* The worker loop of a service */
     for (;;)
     {
+        /* Is it Auto-Sync? */
+        bAutoSync = FALSE;
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
                           0,
@@ -293,16 +295,9 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
                           &hKey) == ERROR_SUCCESS)
         {
             cbData = sizeof(szData);
-            if (RegQueryValueExW(hKey,
-                                 L"Type",
-                                 NULL,
-                                 NULL,
-                                 (LPBYTE)szData,
-                                 &cbData) == ERROR_SUCCESS)
-            {
-                szData[_countof(szData) - 1] = UNICODE_NULL;
-                bAutoSync = (wcscmp(szData, L"NTP") == 0);
-            }
+            RegQueryValueExW(hKey, L"Type", NULL, NULL, (LPBYTE)szData, &cbData);
+            szData[_countof(szData) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+            bAutoSync = (wcscmp(szData, L"NTP") == 0);
 
             RegCloseKey(hKey);
         }
@@ -311,12 +306,8 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
         {
             result = SetTime();
             if (result)
-                DPRINT("W32Time Service failed to set clock.\n");
-            else
-                DPRINT("W32Time Service successfully set clock.\n");
-
-            if (result)
             {
+                DPRINT("W32Time Service failed to set clock: 0x%08lX\n", result);
 #if 0
                 /*
                  * In general, we do not want to stop this service for a single
@@ -329,10 +320,6 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
                 return;
 #endif
             }
-        }
-        else
-        {
-            DPRINT1("W32Time Service disabled.\n");
         }
 
         if (WaitForSingleObject(hStopEvent, dwInterval * 1000) == WAIT_OBJECT_0)
@@ -348,7 +335,6 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
             return;
         }
     }
-    return;
 }
 
 
