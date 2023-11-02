@@ -242,7 +242,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     HKEY hKey;
     WCHAR szData[8];
     DWORD cbData;
-    BOOL bAutoSync;
+    BOOL bNoSync;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
@@ -284,8 +284,8 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     /* The service's worker loop */
     for (;;)
     {
-        /* Is it Auto-Sync? */
-        bAutoSync = FALSE;
+        bNoSync = FALSE;
+        /* TODO: Use RegNotifyChangeKeyValue() when implemented */
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
                           0,
@@ -295,12 +295,11 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
             cbData = sizeof(szData);
             RegQueryValueExW(hKey, L"Type", NULL, NULL, (LPBYTE)szData, &cbData);
             szData[ARRAYSIZE(szData) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-            bAutoSync = (wcscmp(szData, L"NTP") == 0);
-
+            bNoSync = (_wcsicmp(szData, L"NoSync") == 0);
             RegCloseKey(hKey);
         }
 
-        if (bAutoSync)
+        if (!bNoSync)
         {
             error = SetTime();
             if (error != ERROR_SUCCESS)
