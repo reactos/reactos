@@ -115,14 +115,9 @@ DevTreeRecursiveInsertSubDevices(
     DEVINST ChildDevInst;
     CONFIGRET cr;
 
-    //DPRINT("DevTreeRecursiveInsertSubDevices()\n");
-
     cr = CM_Get_Child(&ChildDevInst, ParentDevInst, 0);
     if (cr != CR_SUCCESS)
-    {
-        //DPRINT("No child! %lu\n", cr);
         return;
-    }
 
     hTreeItem = InsertDeviceTreeItem(hParentItem,
                                      ChildDevInst,
@@ -138,10 +133,7 @@ DevTreeRecursiveInsertSubDevices(
     {
         cr = CM_Get_Sibling(&ChildDevInst, ChildDevInst, 0);
         if (cr != CR_SUCCESS)
-        {
-            //DPRINT("No sibling! %lu\n", cr);
             return;
-        }
 
         hTreeItem = InsertDeviceTreeItem(hParentItem,
                                          ChildDevInst,
@@ -166,8 +158,6 @@ EnumHotpluggedDevices(
     ULONG ulStatus, ulProblem;
     HTREEITEM hTreeItem;
     CONFIGRET cr;
-
-    //DPRINT1("EnumHotpluggedDevices()\n");
 
     TreeView_DeleteAllItems(pHotplugData->hwndDeviceTree);
 
