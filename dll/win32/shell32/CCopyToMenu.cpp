@@ -192,7 +192,7 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 
 CStringW CCopyToMenu::DoGetFileTitle()
 {
-    CStringW ret = L"(file)";
+    CStringW ret;
 
     CDataObjectHIDA pCIDA(m_pDataObject);
     if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
@@ -240,6 +240,9 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     }
 
     CStringW strFileTitle = DoGetFileTitle();
+    if (strFileTitle.IsEmpty())
+        return hr;
+
     CStringW strTitle;
     strTitle.Format(IDS_COPYTOTITLE, static_cast<LPCWSTR>(strFileTitle));
 
