@@ -110,7 +110,9 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Maj"
     IDS_LEFT_ALT_SHIFT "Alt Gauche+Maj"
     IDS_SWITCH_BET_INLANG "Changer les langues de saisie"
-    IDS_REBOOT_NOW, "Redémarrer maintenant ?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
+    IDS_ADVANCED_SETTINGS "Advanced Settings"
 END
 
 /* FIXME : À améliorer/compléter */

@@ -119,7 +119,9 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Mayús"
     IDS_LEFT_ALT_SHIFT "Alt Izq+Mayús"
     IDS_SWITCH_BET_INLANG "Cambiar entre los idiomas de entrada"
-    IDS_REBOOT_NOW, "¿Reiniciar ahora?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
+    IDS_ADVANCED_SETTINGS "Advanced Settings"
 END
 
 STRINGTABLE

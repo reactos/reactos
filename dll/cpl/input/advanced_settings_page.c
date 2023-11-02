@@ -26,11 +26,11 @@ static BOOL LoadAdvancedSettings(HWND hwndDlg)
     return TRUE;
 }
 
-static BOOL SaveAdvancedSettings(HWND hwndDlg)
+static BOOL SaveAdvancedSettings(HWND hwndDlg, BOOL bOff)
 {
     HKEY hKey;
     LONG error;
-    const DWORD dwValue = (IsDlgButtonChecked(hwndDlg, IDC_TURNOFFTEXTSVCS_CB) == BST_CHECKED);
+    const DWORD dwValue = bOff;
     const DWORD cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_WRITE, &hKey);
@@ -57,7 +57,15 @@ static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
     {
         case PSN_APPLY:
         {
-            SaveAdvancedSettings(hwndDlg);
+            BOOL bOff = (IsDlgButtonChecked(hwndDlg, IDC_TURNOFFTEXTSVCS_CB) == BST_CHECKED);
+            SaveAdvancedSettings(hwndDlg, bOff);
+            if (!bOff)
+            {
+                WCHAR szText[128], szCaption[64];
+                LoadStringW(hApplet, IDS_REQUIRE_REBOOT, szText, _countof(szText));
+                LoadStringW(hApplet, IDS_ADVANCED_SETTINGS, szCaption, _countof(szCaption));
+                MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION);
+            }
             break;
         }
     }

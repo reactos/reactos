@@ -118,7 +118,9 @@ BEGIN
     IDS_CTRL_SHIFT "«Ctrl» + «Shift»"
     IDS_LEFT_ALT_SHIFT "«Alt» (stâng) + «Shift»"
     IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
-    IDS_REBOOT_NOW, "Reporniți acum?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REQUIRE_REBOOT "You have to restart the system for the settings to take effect."
+    IDS_ADVANCED_SETTINGS "Advanced Settings"
 END
 
 STRINGTABLE
