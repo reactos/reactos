@@ -27,6 +27,8 @@ HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
 BOOL WINAPI CtfAImmIsIME(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 VOID WINAPI CtfImmSetAppCompatFlags(_In_ DWORD dwFlags);
+DWORD WINAPI CtfImmHideToolbarWnd(VOID);
+VOID WINAPI CtfImmRestoreToolbarWnd(_In_ LPVOID pUnused, _In_ DWORD dwShowFlags);
 
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(

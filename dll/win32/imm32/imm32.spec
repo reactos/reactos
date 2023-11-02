@@ -5,7 +5,7 @@
 @ stdcall CtfImmIsCiceroStartedInThread()
 @ stdcall CtfImmIsTextFrameServiceDisabled()
 @ stdcall CtfImmTIMActivate(ptr)
-@ stdcall CtfImmRestoreToolbarWnd(long)
+@ stdcall CtfImmRestoreToolbarWnd(ptr long)
 @ stdcall CtfImmHideToolbarWnd()
 @ stdcall CtfImmDispatchDefImeMessage(ptr long ptr ptr)
 @ stdcall CtfImmIsGuidMapEnable(ptr)
