@@ -407,10 +407,31 @@ VOID CTrayClockWnd::UpdateWnd()
     delete[] szDate;
 }
 
+static BOOL SameTime(SYSTEMTIME a, SYSTEMTIME b)
+{
+    /* No need to look for milliseconds nor seconds (only used if second not displayed) */
+    return (a.wMinute == b.wMinute) &&
+           (a.wHour == b.wHour) &&
+           (a.wDay == b.wDay) &&
+           (a.wMonth == b.wMonth) &&
+           (a.wYear == b.wYear);
+}
+
 VOID CTrayClockWnd::Update()
 {
+    static SYSTEMTIME s_OldTime;
+    static BOOL s_bOldShowSeconds;
+
     GetLocalTime(&LocalTime);
+
+    /* If seconds not displayed and time (w/o secs) and date unchanged, no need to update
+       but force update if switching from hh:mm:ss to hh:mm */
+    if (SameTime(LocalTime, s_OldLocalTime) && !g_TaskbarSettings.bShowSeconds && !s_bOldShowSeconds)
+        return;
+
     UpdateWnd();
+    s_OldLocalTime = LocalTime;
+    s_bOldShowSeconds = g_TaskbarSettings.bShowSeconds;
 }
 
 UINT CTrayClockWnd::CalculateDueTime()
@@ -419,8 +440,6 @@ UINT CTrayClockWnd::CalculateDueTime()
 
     GetLocalTime(&LocalTime);
     uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-    if (!g_TaskbarSettings.bShowSeconds)
-        uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
     return uiDueTime;
 }
@@ -462,29 +481,19 @@ VOID CTrayClockWnd::CalibrateTimer()
 
     uiDueTime = CalculateDueTime();
 
-    if (g_TaskbarSettings.bShowSeconds)
-    {
-        uiWait1 = 1000 - 200;
-        uiWait2 = 1000;
-    }
-    else
-    {
-        uiWait1 = 60 * 1000 - 200;
-        uiWait2 = 60 * 1000;
-    }
+    uiWait1 = 1000 - 200;
+    uiWait2 = 1000;
 
     if (uiDueTime > uiWait1)
     {
         /* The update of the clock will be up to 200 ms late, but that's
-            acceptable. We're going to setup a timer that fires depending
-            uiWait2. */
+           acceptable. We're going to setup a timer that fires depending uiWait2. */
         Ret = SetTimer(ID_TRAYCLOCK_TIMER, uiWait2, NULL) != 0;
         IsTimerEnabled = Ret;
     }
     else
     {
-        /* Recalibrate the timer and recalculate again when the current
-            minute/second ends. */
+        /* Recalibrate the timer and recalculate again when the current minute/second ends. */
         ResetTime();
     }
 
