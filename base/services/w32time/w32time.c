@@ -284,7 +284,9 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     /* The service's worker loop */
     for (;;)
     {
-        bNoSync = FALSE;
+        /* The default is NoSync */
+        bNoSync = TRUE;
+
         /* TODO: Use RegNotifyChangeKeyValue() when implemented */
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
