@@ -22,7 +22,7 @@ RTL_TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpAltTimeZoneBias;
-ULONG ExpTimeZoneId; // 0 = unknown, 1 = standard time, 2 = daylight time
+ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
 ERESOURCE ExpTimeRefreshLock;
 ULONG ExpKernelResolutionCount = 0;
@@ -30,7 +30,18 @@ ULONG ExpTimerResolutionCount = 0;
 
 /* FUNCTIONS ****************************************************************/
 
-static ULONG TimeZoneID(IN PLARGE_INTEGER TimeNow)
+/*++
+ * This function sets the following Global Variables:
+ * ExpTimeZoneID
+ * ExpTimeZoneInfo
+ * ExpTimeZoneBias
+ *
+ * It returns ExpTimeZoneBias as follows:
+ *     0 = TIME_ZONE_ID_UNKNOWN
+ *     1 = TIME_ZONE_ID_STANDARD
+ *     2 = TIME_ZONE_ID_DAYLIGHT
+ *--*/
+static ULONG TimeZoneID(_In_ PLARGE_INTEGER TimeNow)
 {
     LARGE_INTEGER StandardTime;
     LARGE_INTEGER DaylightTime;
@@ -50,23 +61,23 @@ static ULONG TimeZoneID(IN PLARGE_INTEGER TimeNow)
     if (ExpTimeZoneInfo.StandardDate.Month != 0 &&
         ExpTimeZoneInfo.DaylightDate.Month != 0)
     {
-        /* Get this years standard start time */
+        /* Get this year's standard start time */
         if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.StandardDate,
                                         &StandardTime,
                                         TimeNow,
                                         TRUE))
         {
-            DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed!\n");
+            DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed\n");
             return FALSE;
         }
 
-        /* Get this years daylight start time */
+        /* Get this year's daylight start time */
         if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.DaylightDate,
                                         &DaylightTime,
                                         TimeNow,
                                         TRUE))
         {
-            DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed!\n");
+            DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed\n");
             return FALSE;
         }
 
@@ -76,13 +87,13 @@ static ULONG TimeZoneID(IN PLARGE_INTEGER TimeNow)
             if ((TimeNow->QuadPart >= DaylightTime.QuadPart) &&
                 (TimeNow->QuadPart < StandardTime.QuadPart))
             {
-                DPRINT("Daylight time!\n");
+                DPRINT("Daylight time\n");
                 ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
             }
             else
             {
-                DPRINT("Standard time!\n");
+                DPRINT("Standard time\n");
                 ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
             }
@@ -92,13 +103,13 @@ static ULONG TimeZoneID(IN PLARGE_INTEGER TimeNow)
             if ((TimeNow->QuadPart >= StandardTime.QuadPart) &&
                 (TimeNow->QuadPart < DaylightTime.QuadPart))
             {
-                DPRINT("Standard time!\n");
+                DPRINT("Standard time\n");
                 ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
             }
             else
             {
-                DPRINT("Daylight time!\n");
+                DPRINT("Daylight time\n");
                 ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
             }
@@ -310,7 +321,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 
     /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
     ExpTimeZoneId = TimeZoneID(CurrentBootTime);
-    DPRINT("ExpTimeZoneId is %d.\n", ExpTimeZoneId);
+    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
     /* Change SharedUserData->TimeZoneBias for user-mode applications */
     SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
@@ -355,7 +366,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
     ExpTimeZoneId = TimeZoneID(&SystemTime);
-    DPRINT("ExpTimeZoneId is %d.\n", ExpTimeZoneId);
+    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
     DPRINT("Old time zone bias: %d minutes\n", ExpTimeZoneInfo.Bias);
     DPRINT("Old time zone standard bias: %d minutes\n",
@@ -373,8 +384,8 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
                                            TimeZoneInformation->StandardBias)) *
                                            TICKSPERMINUTE;
 
-    /* If Daylight Savings Time this subtracts an hour from the Time Zone Bias */
-    if (ExpTimeZoneId == 2)
+    /* If Daylight Savings Time then add the DayLightBias to the Time Zone Bias */
+    if (ExpTimeZoneId == TIME_ZONE_ID_DAYLIGHT)
         ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
 
     /* Copy the timezone information */
