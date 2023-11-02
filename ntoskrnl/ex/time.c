@@ -373,7 +373,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
                                            TimeZoneInformation->StandardBias)) *
                                            TICKSPERMINUTE;
 
-    /* If Daylight Savings Time this subtracts an hour from the Time Zone Bias */.
+    /* If Daylight Savings Time this subtracts an hour from the Time Zone Bias */
     if (ExpTimeZoneId == 2)
         ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
 
