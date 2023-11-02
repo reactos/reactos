@@ -343,10 +343,12 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
         BOOL done = TRUE;
         int fname_len;
 
+#ifdef __REACTOS__
         if (flags & ADN_DEL_IF_EMPTY)
         {
             goto deleteinitialdirectory;
         }
+#endif
 
         /* Generate a path with wildcard suitable for iterating */
         fname_len = lstrlenW(fname);
@@ -377,10 +379,14 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
 
         if (done)
         {
+#ifdef __REACTOS__
 deleteinitialdirectory:
             TRACE("%s: directory\n", debugstr_w(fname));
             SetFileAttributesW(fname, FILE_ATTRIBUTE_NORMAL);
             if (RemoveDirectoryW(fname))
+#else
+            if (SetFileAttributesW(fname, FILE_ATTRIBUTE_NORMAL) && RemoveDirectoryW(fname))
+#endif
             {
                 ret = S_OK;
             }
@@ -389,8 +395,12 @@ deleteinitialdirectory:
     else
     {
         TRACE("%s: file\n", debugstr_w(fname));
+#ifdef __REACTOS__
         SetFileAttributesW(fname, FILE_ATTRIBUTE_NORMAL);
         if (DeleteFileW(fname))
+#else
+        if (SetFileAttributesW(fname, FILE_ATTRIBUTE_NORMAL) && DeleteFileW(fname))
+#endif
         {
             ret = S_OK;
         }
@@ -444,9 +454,14 @@ HRESULT WINAPI DelNodeW(LPCWSTR pszFileOrDirName, DWORD dwFlags)
     HRESULT ret = E_FAIL;
     
     TRACE("(%s, %d)\n", debugstr_w(pszFileOrDirName), dwFlags);
-    
+
+#ifdef __REACTOS__
     if (dwFlags & ~ADN_DEL_IF_EMPTY)
-        FIXME("Flags %#x ignored!\n", dwFlags);
+        FIXME("Flags %#x ignored!\n", dwFlags & ~ADN_DEL_IF_EMPTY);
+#else
+    if (dwFlags)
+        FIXME("Flags ignored!\n");
+#endif
 
     if (pszFileOrDirName && *pszFileOrDirName)
     {
