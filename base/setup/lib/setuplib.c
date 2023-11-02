@@ -154,13 +154,13 @@ CheckUnattendedSetup(
     IsUnattendedSetup = TRUE;
     DPRINT("Running unattended setup\n");
 
-    /* Search for 'MBRInstallType' in the 'Unattend' section */
-    pSetupData->MBRInstallType = -1;
-    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    /* Search for 'BootLoaderLocation' in the 'Unattend' section */
+    pSetupData->BootLoaderLocation = 2; // Default to "system partition"
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"BootLoaderLocation", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
         {
-            pSetupData->MBRInstallType = IntValue;
+            pSetupData->BootLoaderLocation = IntValue;
         }
     }
 

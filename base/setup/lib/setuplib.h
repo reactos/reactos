@@ -110,7 +110,7 @@ typedef struct _USETUP_DATA
     LONG DestinationDiskNumber;
     LONG DestinationPartitionNumber;
 
-    LONG MBRInstallType;
+    LONG BootLoaderLocation;
     LONG FormatPartition;
     LONG AutoPartition;
     LONG FsType;
