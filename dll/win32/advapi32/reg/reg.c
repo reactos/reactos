@@ -3718,6 +3718,16 @@ RegQueryInfoKeyW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (IsHKCRKey(KeyHandle))
+    {
+        ErrorCode = QueryInfoHKCRKey(KeyHandle, lpClass, lpcClass, lpReserved,
+                                     lpcSubKeys, lpcMaxSubKeyLen, lpcMaxClassLen,
+                                     lpcValues, lpcMaxValueNameLen, lpcMaxValueLen,
+                                     lpcbSecurityDescriptor, lpftLastWriteTime);
+        ClosePredefKey(KeyHandle);
+        return ErrorCode;
+    }
+
     if (lpClass != NULL)
     {
         if (*lpcClass > 0)

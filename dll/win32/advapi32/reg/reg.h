@@ -96,3 +96,18 @@ EnumHKCRValue(
     _Out_opt_ LPBYTE data,
     _Inout_opt_ PDWORD count);
 
+LONG
+WINAPI
+QueryInfoHKCRKey(
+    _In_ HKEY hKey,
+    _Out_writes_to_opt_(*lpcchClass, *lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpcSubKeys,
+    _Out_opt_ LPDWORD lpcbMaxSubKeyLen,
+    _Out_opt_ LPDWORD lpcbMaxClassLen,
+    _Out_opt_ LPDWORD lpcValues,
+    _Out_opt_ LPDWORD lpcbMaxValueNameLen,
+    _Out_opt_ LPDWORD lpcbMaxValueLen,
+    _Out_opt_ LPDWORD lpcbSecurityDescriptor,
+    _Out_opt_ PFILETIME lpftLastWriteTime);
