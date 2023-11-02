@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 GUID IID_IDmaChannelSlave;
@@ -87,7 +84,6 @@ KSPROPERTY_SET WaveCyclicPropertySet[] =
 //KSEVENTSETID_LoopedStreaming, Type = KSEVENT_LOOPEDSTREAMING_POSITION
 //KSEVENTSETID_Connection, Type = KSEVENT_CONNECTION_ENDOFSTREAM,
 
-
 //---------------------------------------------------------------
 // IPortEvents
 //
@@ -99,7 +95,6 @@ CPortWaveCyclic::AddEventToEventList(
 {
     UNIMPLEMENTED;
 }
-
 
 void
 NTAPI
@@ -227,7 +222,6 @@ CPortWaveCyclic::Init(
         return Status;
     }
 
-
     // get the miniport device descriptor
     Status = Miniport->GetDescription(&m_pDescriptor);
     if (!NT_SUCCESS(Status))
@@ -283,7 +277,6 @@ CPortWaveCyclic::Init(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortWaveCyclic::NewRegistryKey(
@@ -299,7 +292,6 @@ CPortWaveCyclic::NewRegistryKey(
 
     return PcNewRegistryKey(OutRegistryKey, OuterUnknown, RegistryKeyType, DesiredAccess, m_pDeviceObject, (ISubdevice*)this, ObjectAttributes, CreateOptions, Disposition);
 }
-
 
 //---------------------------------------------------------------
 // IPortWaveCyclic interface functions
@@ -431,7 +423,6 @@ CPortWaveCyclic::NewIrpTarget(
     return Status;
 }
 
-
 NTSTATUS
 NTAPI
 CPortWaveCyclic::ReleaseChildren()
@@ -459,7 +450,6 @@ CPortWaveCyclic::ReleaseChildren()
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortWaveCyclic::GetDescriptor(
@@ -472,7 +462,6 @@ CPortWaveCyclic::GetDescriptor(
     DPRINT("ISubDevice_GetDescriptor this %p desc %p\n", this, m_SubDeviceDescriptor);
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 NTAPI
@@ -493,7 +482,6 @@ CPortWaveCyclic::DataRangeIntersection(
 
     return STATUS_UNSUCCESSFUL;
 }
-
 
 NTSTATUS
 NTAPI
@@ -530,8 +518,8 @@ CPortWaveCyclic::PinCount(
     return STATUS_UNSUCCESSFUL;
 }
 
-
 ///--------------------------------------------------------------
+
 PMINIPORTWAVECYCLIC
 GetWaveCyclicMiniport(
     IN IPortWaveCyclic* iface)
@@ -573,4 +561,3 @@ NewPortWaveCyclic(
     DPRINT("NewPortWaveCyclic %p Status %u\n", Port, Status);
     return Status;
 }
-
