@@ -145,6 +145,8 @@ public:
     void NotifyZoomChanged();
 
     void SpecialTweak(BOOL bMinus);
+
+    void DrawWithMouseTool(POINT pt, WPARAM wParam);
 };
 
 extern ToolsModel toolsModel;

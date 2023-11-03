@@ -459,78 +459,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (m_drawing)
     {
-        // values displayed in statusbar
-        LONG xRel = pt.x - g_ptStart.x;
-        LONG yRel = pt.y - g_ptStart.y;
-
-        switch (toolsModel.GetActiveTool())
-        {
-            // freesel, rectsel and text tools always show numbers limited to fit into image area
-            case TOOL_FREESEL:
-            case TOOL_RECTSEL:
-            case TOOL_TEXT:
-                if (xRel < 0)
-                    xRel = (pt.x < 0) ? -g_ptStart.x : xRel;
-                else if (pt.x > imageModel.GetWidth())
-                    xRel = imageModel.GetWidth() - g_ptStart.x;
-                if (yRel < 0)
-                    yRel = (pt.y < 0) ? -g_ptStart.y : yRel;
-                else if (pt.y > imageModel.GetHeight())
-                    yRel = imageModel.GetHeight() - g_ptStart.y;
-                break;
-
-            // while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14
-            case TOOL_RUBBER:
-            case TOOL_PEN:
-            case TOOL_BRUSH:
-            case TOOL_AIRBRUSH:
-            case TOOL_SHAPE:
-            {
-                CString strCoord;
-                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
-                break;
-            }
-            default:
-                break;
-        }
-
-        // rectsel and shape tools always show non-negative numbers when drawing
-        if (toolsModel.GetActiveTool() == TOOL_RECTSEL || toolsModel.GetActiveTool() == TOOL_SHAPE)
-        {
-            if (xRel < 0)
-                xRel = -xRel;
-            if (yRel < 0)
-                yRel =  -yRel;
-        }
-
-        if (wParam & MK_LBUTTON)
-        {
-            toolsModel.OnMouseMove(TRUE, pt.x, pt.y);
-            Invalidate(FALSE);
-            if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || toolsModel.IsSelection())
-            {
-                CString strSize;
-                if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                    yRel = xRel;
-                strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
-            }
-        }
-
-        if (wParam & MK_RBUTTON)
-        {
-            toolsModel.OnMouseMove(FALSE, pt.x, pt.y);
-            Invalidate(FALSE);
-            if (toolsModel.GetActiveTool() >= TOOL_TEXT)
-            {
-                CString strSize;
-                if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                    yRel = xRel;
-                strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
-            }
-        }
+        toolsModel.DrawWithMouseTool(pt, wParam);
         return 0;
     }
 
