@@ -242,7 +242,7 @@ HRESULT CCopyMoveToMenu::DoAction(LPCMINVOKECOMMANDINFO lpici)
         return hr;
 
     CStringW strTitle;
-    strTitle.Format(GetDoToTitleStringID(), static_cast<LPCWSTR>(strFileTitle));
+    strTitle.Format(GetActionTitleStringID(), static_cast<LPCWSTR>(strFileTitle));
 
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;

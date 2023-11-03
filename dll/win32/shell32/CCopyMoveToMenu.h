@@ -29,7 +29,7 @@ public:
 
     virtual UINT GetCaptionStringID() const = 0;
     virtual UINT GetButtonStringID() const = 0;
-    virtual UINT GetDoToTitleStringID() const = 0;
+    virtual UINT GetActionTitleStringID() const = 0;
     virtual UINT GetFileOp() const = 0;
     virtual LPCSTR GetVerb() const = 0;
 
@@ -76,7 +76,7 @@ public:
 
     UINT GetCaptionStringID() const override { return IDS_COPYITEMS; }
     UINT GetButtonStringID() const override { return IDS_COPYBUTTON; }
-    UINT GetDoToTitleStringID() const override { return IDS_COPYTOTITLE; }
+    UINT GetActionTitleStringID() const override { return IDS_COPYTOTITLE; }
     UINT GetFileOp() const override { return FO_COPY; }
     LPCSTR GetVerb() const override { return "copyto"; }
 };
@@ -105,7 +105,7 @@ public:
 
     UINT GetCaptionStringID() const override { return IDS_MOVEITEMS; }
     UINT GetButtonStringID() const override { return IDS_MOVEBUTTON; }
-    UINT GetDoToTitleStringID() const override { return IDS_MOVETOTITLE; }
+    UINT GetActionTitleStringID() const override { return IDS_MOVETOTITLE; }
     UINT GetFileOp() const override { return FO_MOVE; }
     LPCSTR GetVerb() const override { return "moveto"; }
 };
