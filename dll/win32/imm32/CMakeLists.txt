@@ -16,6 +16,7 @@ list(APPEND SOURCE
     imm.c
     keymsg.c
     regword.c
+    softkbd.c
     utils.c
     win3.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
