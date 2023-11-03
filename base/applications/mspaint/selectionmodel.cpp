@@ -152,16 +152,19 @@ void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTranspar
     DeleteDC(hMemDC);
 }
 
-void SelectionModel::GetSelectionContents(HDC hDCImage)
+HBITMAP SelectionModel::GetSelectionContents()
 {
-    ClearColorImage();
+    if (m_hbmColor)
+        return CopyDIBImage(m_hbmColor, m_rc.Width(), m_rc.Height());
 
     HDC hMemDC = ::CreateCompatibleDC(NULL);
-    m_hbmColor = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
-    HGDIOBJ hbmOld = ::SelectObject(hMemDC, m_hbmColor);
-    ::BitBlt(hMemDC, 0, 0, m_rc.Width(), m_rc.Height(), hDCImage, m_rc.left, m_rc.top, SRCCOPY);
+    HBITMAP hBitmap = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hBitmap);
+    ::BitBlt(hMemDC, 0, 0, m_rc.Width(), m_rc.Height(), imageModel.GetDC(), m_rc.left, m_rc.top, SRCCOPY);
     ::SelectObject(hMemDC, hbmOld);
     ::DeleteDC(hMemDC);
+
+    return hBitmap;
 }
 
 BOOL SelectionModel::IsLanded() const
@@ -178,7 +181,8 @@ BOOL SelectionModel::TakeOff()
     m_rgbBack = paletteModel.GetBgColor();
 
     // Get the contents of the selection area
-    GetSelectionContents(imageModel.GetDC());
+    ClearColorImage();
+    m_hbmColor = GetSelectionContents();
 
     // RectSel doesn't need the mask image
     if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
@@ -406,13 +410,6 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     NotifyContentChanged();
 }
 
-HBITMAP SelectionModel::CopyBitmap()
-{
-    if (m_hbmColor == NULL)
-        GetSelectionContents(imageModel.GetDC());
-    return CopyDIBImage(m_hbmColor);
-}
-
 int SelectionModel::PtStackSize() const
 {
     return m_iPtSP;
@@ -543,18 +540,6 @@ void SelectionModel::SwapWidthAndHeight()
     INT cy = m_rc.Height();
     m_rc.right = m_rc.left + cy;
     m_rc.bottom = m_rc.top + cx;
-}
-
-HBITMAP SelectionModel::LockBitmap()
-{
-    HBITMAP hbm = m_hbmColor;
-    m_hbmColor = NULL;
-    return hbm;
-}
-
-void SelectionModel::UnlockBitmap(HBITMAP hbmLocked)
-{
-    m_hbmColor = hbmLocked;
 }
 
 void SelectionModel::StretchSelection(BOOL bShrink)

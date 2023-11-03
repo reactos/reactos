@@ -720,14 +720,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             selectionModel.TakeOff();
 
             {
-                HBITMAP hbmLocked = selectionModel.LockBitmap();
-                if (hbmLocked)
-                {
-                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbmLocked);
-                    if (hGlobal)
-                        ::SetClipboardData(CF_DIB, hGlobal);
-                    selectionModel.UnlockBitmap(hbmLocked);
-                }
+                HBITMAP hbmCopy = selectionModel.GetSelectionContents();
+                HGLOBAL hGlobal = BitmapToClipboardDIB(hbmCopy);
+                if (hGlobal)
+                    ::SetClipboardData(CF_DIB, hGlobal);
+                else
+                    ShowOutOfMemory();
+                ::DeleteObject(hbmCopy);
             }
 
             CloseClipboard();
@@ -841,12 +840,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
         {
-            WCHAR szFileName[MAX_LONG_PATH] = L"*.png";
+            WCHAR szFileName[MAX_LONG_PATH] = L"";
+            CStringW strUntitled(MAKEINTRESOURCEW(IDS_DEFAULTFILENAME));
+            lstrcpynW(szFileName, strUntitled, _countof(szFileName));
+
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
-                HBITMAP hbmLocked = selectionModel.LockBitmap();
-                SaveDIBToFile(hbmLocked, szFileName, FALSE);
-                selectionModel.UnlockBitmap(hbmLocked);
+                HBITMAP hbmSelection = selectionModel.GetSelectionContents();
+                if (hbmSelection)
+                {
+                    SaveDIBToFile(hbmSelection, szFileName, FALSE);
+                    DeleteObject(hbmSelection);
+                }
+                else
+                {
+                    ShowOutOfMemory();
+                }
             }
             break;
         }
@@ -982,9 +991,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.PushImageForUndo(selectionModel.CopyBitmap());
+        {
+            HBITMAP hbmCopy = selectionModel.GetSelectionContents();
+            imageModel.PushImageForUndo(hbmCopy);
             selectionModel.HideSelection();
             break;
+        }
         case IDM_VIEWTOOLBOX:
             registrySettings.ShowToolBox = !toolBoxContainer.IsWindowVisible();
             toolBoxContainer.ShowWindow(registrySettings.ShowToolBox ? SW_SHOWNOACTIVATE : SW_HIDE);
