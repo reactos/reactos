@@ -70,6 +70,8 @@ SafeRemoveDevice(
         LPCWSTR pszFormat = L"";
         WCHAR szError[64];
 
+        /* NOTES: IDS_EJECT_ERROR_FORMAT resource has to be explicitly NULL-terminated
+         * so we can use the string directly without having to make a copy of it. */
         LoadStringW(hApplet, IDS_EJECT_ERROR_FORMAT, (LPWSTR)&pszFormat, 0);
         StringCbPrintfW(szError, sizeof(szError), pszFormat, cr);
 
