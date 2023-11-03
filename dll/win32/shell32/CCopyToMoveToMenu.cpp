@@ -9,46 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HRESULT
-CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
-{
-    CDataObjectHIDA pCIDA(pDataObject);
-    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
-        return E_FAIL;
-
-    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
-    if (!pidlParent)
-    {
-        ERR("HIDA_GetPIDLFolder failed\n");
-        return E_FAIL;
-    }
-
-    WCHAR szPath[MAX_PATH];
-    PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, 0);
-    if (!pidlRelative)
-    {
-        ERR("HIDA_GetPIDLItem failed\n");
-        return E_FAIL;
-    }
-
-    CComHeapPtr<ITEMIDLIST> pidlCombine(ILCombine(pidlParent, pidlRelative));
-
-    if (!SHGetPathFromIDListW(pidlCombine, szPath))
-    {
-        ERR("Cannot get path\n");
-        return E_FAIL;
-    }
-
-    strTitle = PathFindFileNameW(szPath);
-    if (strTitle.IsEmpty())
-        return E_FAIL;
-
-    if (pCIDA->cidl > 1)
-        strTitle += L" ...";
-
-    return S_OK;
-}
-
 CCopyToMoveToMenu::CCopyToMoveToMenu() :
     m_idCmdFirst(0),
     m_idCmdLast(0),
@@ -259,6 +219,46 @@ CCopyToMoveToMenu::JustDoIt(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
         ERR("SHFileOperationW failed with 0x%x\n", res);
         return E_FAIL;
     }
+    return S_OK;
+}
+
+HRESULT
+CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
+{
+    CDataObjectHIDA pCIDA(pDataObject);
+    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
+        return E_FAIL;
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
+    if (!pidlParent)
+    {
+        ERR("HIDA_GetPIDLFolder failed\n");
+        return E_FAIL;
+    }
+
+    WCHAR szPath[MAX_PATH];
+    PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, 0);
+    if (!pidlRelative)
+    {
+        ERR("HIDA_GetPIDLItem failed\n");
+        return E_FAIL;
+    }
+
+    CComHeapPtr<ITEMIDLIST> pidlCombine(ILCombine(pidlParent, pidlRelative));
+
+    if (!SHGetPathFromIDListW(pidlCombine, szPath))
+    {
+        ERR("Cannot get path\n");
+        return E_FAIL;
+    }
+
+    strTitle = PathFindFileNameW(szPath);
+    if (strTitle.IsEmpty())
+        return E_FAIL;
+
+    if (pCIDA->cidl > 1)
+        strTitle += L" ...";
+
     return S_OK;
 }
 
