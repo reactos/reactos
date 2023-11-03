@@ -18,40 +18,6 @@ CCopyToMoveToMenu::CCopyToMoveToMenu() :
 {
 }
 
-HRESULT CCopyToMoveToMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici)
-{
-    WCHAR wszPath[MAX_PATH];
-    HRESULT hr = E_FAIL;
-
-    TRACE("DoCopyToMoveToFolder(%p)\n", lpici);
-
-    if (!SHGetPathFromIDListW(m_pidlFolder, wszPath))
-    {
-        ERR("SHGetPathFromIDListW failed\n");
-        return hr;
-    }
-
-    CStringW strFileTitle;
-    hr = DoGetFileTitle(strFileTitle, m_pDataObject);
-    if (FAILED(hr))
-        return hr;
-
-    CStringW strTitle;
-    strTitle.Format(GetDoToTitleStringID(), static_cast<LPCWSTR>(strFileTitle));
-
-    BROWSEINFOW info = { lpici->hwnd };
-    info.pidlRoot = NULL;
-    info.lpszTitle = strTitle;
-    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
-    info.lpfn = BrowseCallbackProc;
-    info.lParam = reinterpret_cast<LPARAM>(this);
-    CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
-    if (pidl)
-        hr = DoRealFileOp(lpici, pidl);
-
-    return hr;
-}
-
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -258,6 +224,40 @@ CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
         strTitle += L" ...";
 
     return S_OK;
+}
+
+HRESULT CCopyToMoveToMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici)
+{
+    WCHAR wszPath[MAX_PATH];
+    HRESULT hr = E_FAIL;
+
+    TRACE("(%p)\n", lpici);
+
+    if (!SHGetPathFromIDListW(m_pidlFolder, wszPath))
+    {
+        ERR("SHGetPathFromIDListW failed\n");
+        return hr;
+    }
+
+    CStringW strFileTitle;
+    hr = DoGetFileTitle(strFileTitle, m_pDataObject);
+    if (FAILED(hr))
+        return hr;
+
+    CStringW strTitle;
+    strTitle.Format(GetDoToTitleStringID(), static_cast<LPCWSTR>(strFileTitle));
+
+    BROWSEINFOW info = { lpici->hwnd };
+    info.pidlRoot = NULL;
+    info.lpszTitle = strTitle;
+    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+    info.lpfn = BrowseCallbackProc;
+    info.lParam = reinterpret_cast<LPARAM>(this);
+    CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
+    if (pidl)
+        hr = DoRealFileOp(lpici, pidl);
+
+    return hr;
 }
 
 STDMETHODIMP
