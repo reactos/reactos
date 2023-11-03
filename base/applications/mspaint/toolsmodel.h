@@ -53,13 +53,12 @@ struct ToolBase
     virtual BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) { return TRUE; }
     virtual BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) { return TRUE; }
 
-    virtual void OnCancelDraw();
-    virtual void OnFinishDraw();
-
     virtual void OnDrawOverlayOnImage(HDC hdc) { }
     virtual void OnDrawOverlayOnCanvas(HDC hdc) { }
 
     virtual void OnSpecialTweak(BOOL bMinus) { }
+
+    virtual void OnEndDraw(BOOL bCancel);
 
     void beginEvent();
     void endEvent();
@@ -135,8 +134,7 @@ public:
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
-    void OnCancelDraw();
-    void OnFinishDraw();
+    void OnEndDraw(BOOL bCancel);
     void OnDrawOverlayOnImage(HDC hdc);
     void OnDrawOverlayOnCanvas(HDC hdc);
 
