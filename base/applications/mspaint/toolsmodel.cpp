@@ -351,7 +351,7 @@ void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
         {
             CString strCoord;
             strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCTSTR)strCoord);
             break;
         }
         default:
