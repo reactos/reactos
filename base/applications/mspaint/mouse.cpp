@@ -790,6 +790,7 @@ struct TextTool : ToolBase
                 draw(m_hdc);
             }
         }
+        quit();
         ToolBase::OnEndDraw(bCancel);
     }
 };
