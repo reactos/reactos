@@ -47,9 +47,7 @@ HRESULT CCopyToMoveToMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici)
     info.lParam = reinterpret_cast<LPARAM>(this);
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
-    {
-        hr = JustDoIt(lpici, pidl);
-    }
+        hr = DoRealFileOp(lpici, pidl);
 
     return hr;
 }
@@ -158,7 +156,7 @@ CCopyToMoveToMenu::BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARA
 }
 
 HRESULT
-CCopyToMoveToMenu::JustDoIt(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
+CCopyToMoveToMenu::DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
     CDataObjectHIDA pCIDA(m_pDataObject);
     if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
@@ -386,16 +384,12 @@ CCopyToMoveToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     if (IS_INTRESOURCE(lpici->lpVerb))
     {
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdDoTo)
-        {
             hr = DoCopyToMoveToFolder(lpici);
-        }
     }
     else
     {
         if (::lstrcmpiA(lpici->lpVerb, GetVerb()) == 0)
-        {
             hr = DoCopyToMoveToFolder(lpici);
-        }
     }
 
     return hr;

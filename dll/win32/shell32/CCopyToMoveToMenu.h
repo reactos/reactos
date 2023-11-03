@@ -20,7 +20,7 @@ protected:
     static INT CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
     static HRESULT DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject);
 
-    HRESULT JustDoIt(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
+    HRESULT DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
     HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici);
 
 public:
