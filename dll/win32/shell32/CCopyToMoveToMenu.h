@@ -19,8 +19,12 @@ protected:
     UINT m_idCmdFirst, m_idCmdLast, m_idCmdDoTo;
     CComPtr<IDataObject> m_pDataObject;
     CComPtr<IUnknown> m_pSite;
+
     static INT CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
     static HRESULT DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject);
+
+    HRESULT JustDoIt(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
+    HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici);
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
@@ -31,9 +35,13 @@ public:
 
     virtual UINT GetDoItemsStringID() const = 0;
     virtual UINT GetDoButtonStringID() const = 0;
+    virtual UINT GetDoToTitleStringID() const = 0;
+    virtual UINT GetFileOp() const = 0;
+    virtual LPCSTR GetVerb() const = 0;
 
     // IContextMenu
     STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi) override;
 
     // IContextMenu2
     STDMETHODIMP HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -50,10 +58,6 @@ class CCopyToMenu
     : public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>
     , public CCopyToMoveToMenu
 {
-protected:
-    HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
-    HRESULT DoRealCopy(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
-
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     WNDPROC m_fnOldWndProc;
@@ -63,7 +67,6 @@ public:
 
     // IContextMenu
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
-    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_COPYTOMENU)
     DECLARE_NOT_AGGREGATABLE(CCopyToMenu)
@@ -85,22 +88,29 @@ public:
     {
         return IDS_COPYBUTTON;
     }
+    UINT GetDoToTitleStringID() const override
+    {
+        return IDS_COPYTOTITLE;
+    }
+    UINT GetFileOp() const override
+    {
+        return FO_COPY;
+    }
+    LPCSTR GetVerb() const override
+    {
+        return "copyto";
+    }
 };
 
 class CMoveToMenu
     : public CComCoClass<CMoveToMenu, &CLSID_MoveToMenu>
     , public CCopyToMoveToMenu
 {
-protected:
-    HRESULT DoMoveToFolder(LPCMINVOKECOMMANDINFO lpici);
-    HRESULT DoRealMove(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
-
 public:
     CMoveToMenu();
 
     // IContextMenu
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
-    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_MOVETOMENU)
     DECLARE_NOT_AGGREGATABLE(CMoveToMenu)
@@ -121,5 +131,17 @@ public:
     UINT GetDoButtonStringID() const override
     {
         return IDS_MOVEBUTTON;
+    }
+    UINT GetDoToTitleStringID() const override
+    {
+        return IDS_MOVETOTITLE;
+    }
+    UINT GetFileOp() const override
+    {
+        return FO_MOVE;
+    }
+    LPCSTR GetVerb() const override
+    {
+        return "moveto";
     }
 };
