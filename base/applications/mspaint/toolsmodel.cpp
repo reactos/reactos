@@ -361,10 +361,8 @@ void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
     // rectsel and shape tools always show non-negative numbers when drawing
     if (m_activeTool == TOOL_RECTSEL || m_activeTool == TOOL_SHAPE)
     {
-        if (xRel < 0)
-            xRel = -xRel;
-        if (yRel < 0)
-            yRel =  -yRel;
+        xRel = labs(xRel);
+        yRel = labs(yRel);
     }
 
     if (wParam & MK_LBUTTON)
