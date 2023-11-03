@@ -1,8 +1,8 @@
 /*
- * PROJECT:     shell32
+ * PROJECT:     ReactOS shell32
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     MoveTo implementation
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PURPOSE:     CopyTo and MoveTo implementation
+ * COPYRIGHT:   Copyright 2020-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"

@@ -1,13 +1,10 @@
 /*
- * PROJECT:     shell32
+ * PROJECT:     ReactOS shell32
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CopyTo and MoveTo implementation
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #pragma once
-
-// helper function
-HRESULT DoGetFileTitleFromDataObject(CStringW& strTitle, IDataObject *pDataObject);
 
 class CCopyToMoveToMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
