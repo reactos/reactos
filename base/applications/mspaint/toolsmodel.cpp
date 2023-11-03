@@ -349,9 +349,9 @@ void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
         case TOOL_AIRBRUSH:
         case TOOL_SHAPE:
         {
-            CString strCoord;
-            strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCTSTR)strCoord);
+            CStringW strCoord;
+            strCoord.Format(L"%ld, %ld", pt.x, pt.y);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
             break;
         }
         default:
@@ -373,11 +373,11 @@ void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
         canvasWindow.Invalidate(FALSE);
         if ((m_activeTool >= TOOL_TEXT) || IsSelection())
         {
-            CString strSize;
+            CStringW strSize;
             if ((m_activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 yRel = xRel;
-            strSize.Format(_T("%ld x %ld"), xRel, yRel);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+            strSize.Format(L"%ld x %ld", xRel, yRel);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
         }
     }
 
@@ -387,11 +387,11 @@ void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
         canvasWindow.Invalidate(FALSE);
         if (m_activeTool >= TOOL_TEXT)
         {
-            CString strSize;
+            CStringW strSize;
             if ((m_activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 yRel = xRel;
-            strSize.Format(_T("%ld x %ld"), xRel, yRel);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+            strSize.Format(L"%ld x %ld", xRel, yRel);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
         }
     }
 }
