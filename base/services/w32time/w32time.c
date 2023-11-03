@@ -230,8 +230,6 @@ ControlHandler(DWORD request)
         default:
             break;
     }
-
-    return;
 }
 
 
@@ -239,8 +237,12 @@ VOID
 WINAPI
 W32TmServiceMain(DWORD argc, LPWSTR *argv)
 {
-    int   result;
+    LONG error;
     DWORD dwInterval;
+    HKEY hKey;
+    WCHAR szData[8];
+    DWORD cbData;
+    BOOL bNoSync;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
@@ -279,29 +281,44 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
     ServiceStatus.dwCurrentState = SERVICE_RUNNING;
     SetServiceStatus(hStatus, &ServiceStatus);
 
-    /* The worker loop of a service */
+    /* The service's worker loop */
     for (;;)
     {
-        result = SetTime();
+        /* The default is NoSync */
+        bNoSync = TRUE;
 
-        if (result)
-            DPRINT("W32Time Service failed to set clock.\n");
-        else
-            DPRINT("W32Time Service successfully set clock.\n");
-
-        if (result)
+        /* TODO: Use RegNotifyChangeKeyValue() when implemented */
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
+                          0,
+                          KEY_QUERY_VALUE,
+                          &hKey) == ERROR_SUCCESS)
         {
-            /* In general we do not want to stop this service for a single
-             * Internet read failure but there may be other reasons for which
-             * we really might want to stop it.
-             * Therefore this code is left here to make it easy to stop this
-             * service when the correct conditions can be determined, but it
-             * is left commented out.
-            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = result;
-            SetServiceStatus(hStatus, &ServiceStatus);
-            return;
-            */
+            cbData = sizeof(szData);
+            RegQueryValueExW(hKey, L"Type", NULL, NULL, (LPBYTE)szData, &cbData);
+            szData[ARRAYSIZE(szData) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+            bNoSync = (_wcsicmp(szData, L"NoSync") == 0);
+            RegCloseKey(hKey);
+        }
+
+        if (!bNoSync)
+        {
+            error = SetTime();
+            if (error != ERROR_SUCCESS)
+            {
+                DPRINT("W32Time Service failed to set clock: 0x%08lX\n", error);
+#if 0
+                /*
+                 * In general, we do not want to stop this service for a single
+                 * Internet read failure but there may be other reasons for which
+                 * we really might want to stop it. Therefore this code is left here.
+                 */
+                ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+                ServiceStatus.dwWin32ExitCode = error;
+                SetServiceStatus(hStatus, &ServiceStatus);
+                return;
+#endif
+            }
         }
 
         if (WaitForSingleObject(hStopEvent, dwInterval * 1000) == WAIT_OBJECT_0)
@@ -317,9 +334,7 @@ W32TmServiceMain(DWORD argc, LPWSTR *argv)
             return;
         }
     }
-    return;
 }
-
 
 
 BOOL WINAPI
