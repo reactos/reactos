@@ -218,8 +218,8 @@ static
 LONG
 GetSubkeyInfoHelper(
     _In_ HKEY hKey,
-    _Out_ LPDWORD lpSubKeys,
-    _Out_ LPDWORD lpMaxSubKeyLen)
+    _Out_opt_ LPDWORD lpSubKeys,
+    _Out_opt_ LPDWORD lpMaxSubKeyLen)
 {
     LONG err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
                                 NULL, NULL, NULL, NULL, NULL, NULL);
@@ -229,7 +229,7 @@ GetSubkeyInfoHelper(
     /* Windows RegEdit only uses KEY_ENUMERATE_SUB_KEYS when enumerating but
      * KEY_QUERY_VALUE is required to get the info in EnumHKCRKey.
      */
-    if (!RegOpenKeyExW(hKey, NULL, 0, KEY_QUERY_VALUE, &hKey))
+    if (RegOpenKeyExW(hKey, NULL, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
                                NULL, NULL, NULL, NULL, NULL, NULL);
