@@ -295,6 +295,12 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c)
 
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+list(APPEND SOURCE
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/callout.c
+)
+endif()
+
 if(DBG)
     list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/se/debug.c)
 endif()

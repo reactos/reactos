@@ -239,7 +239,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
                     -DMINGW_HAS_SECURE_API=1
                     -DD3D_UMD_INTERFACE_VERSION=0x000C # Vista
                     -DDXGKDDI_INTERFACE_VERSION=0x1052 # Vista
-                    -DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
+                    -DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION}
+                    -DENABLE_CALLBACK_STACKS=${ENABLE_CALLBACK_STACKS})
 
     # Arch Options
     if(ARCH STREQUAL "i386")

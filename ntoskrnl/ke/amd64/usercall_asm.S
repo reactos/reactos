@@ -147,5 +147,59 @@ PUBLIC KiCallbackReturn
 
 .ENDP
 
+/*
+ * VOID
+ * NTAPI
+ * KiSwitchStackAndCallout(
+ *    _In_opt_ PVOID Parameter@<rcx>,
+ *    _In_ PEXPAND_STACK_CALLOUT Callout@<rdx>,
+ *    _In_ PVOID Stack@<r8>)
+*/
+PUBLIC KiSwitchStackAndCallout
+.PROC KiSwitchStackAndCallout
+    /* Save rbp */
+    mov [rsp + 8], rbp
+    .SAVEREG rbp, 8
+
+    /* Save stack pointer in rbp for unwinding */
+    mov rbp, rsp
+    .SETFRAME rbp, 0
+
+    .ENDPROLOG
+
+    /* Save the current stack pointer on the new stack */
+    mov [r8 - 8], rsp
+
+    /* Switch to the new stack and reserve home space */
+    lea rsp, [r8 - 48]
+
+    /* Enable interrupts again */
+    sti
+
+    /* Call the callout */
+    call rdx
+
+    /* Disable interrupts */
+    cli
+
+    /* Restore the stack pointer */
+    mov rsp, [rsp + 48 - 8]
+
+    /* Return */
+    mov rbp, [rsp + 8]
+    ret
+
+.ENDP
+
+/*
+ * ULONG_PTR KiGetStackPointer(VOID);
+ */
+PUBLIC KiGetStackPointer
+KiGetStackPointer:
+
+    /* Return the stack pointer */
+    lea rax, [rsp + 8]
+    ret
+
 
 END

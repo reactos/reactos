@@ -2176,6 +2176,25 @@ typedef struct _KENTROPY_TIMING_STATE
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 
+typedef struct _KERNEL_STACK_SEGMENT
+{
+    ULONG_PTR StackBase;
+    ULONG_PTR StackLimit;
+    ULONG_PTR KernelStack;
+    ULONG_PTR InitialStack;
+} KERNEL_STACK_SEGMENT, *PKERNEL_STACK_SEGMENT;
+
+typedef struct _KSTACK_CONTROL
+{
+    ULONG_PTR StackBase;
+    union
+    {
+        ULONG_PTR ActualLimit;
+        ULONG_PTR StackExpansion : 1;
+    };
+    KERNEL_STACK_SEGMENT Previous;
+} KSTACK_CONTROL, *PKSTACK_CONTROL;
+
 //
 // Exported Loader Parameter Block
 //

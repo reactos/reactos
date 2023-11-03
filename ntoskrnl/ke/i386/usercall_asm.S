@@ -199,4 +199,27 @@ V86Switch:
     pop esi
     ret 8
 
+/*
+ * VOID
+ * NTAPI
+ * KiSwitchStackAndCallout(
+ *    _In_opt_ PVOID Parameter,
+ *    _In_ PEXPAND_STACK_CALLOUT Callout,
+ *    _In_ PVOID Stack)
+*/
+PUBLIC _KiSwitchStackAndCallout@12
+_KiSwitchStackAndCallout@12:
+   int 3
+    ret
+
+/*
+ * ULONG_PTR KiGetStackPointer(VOID);
+ */
+PUBLIC _KiGetStackPointer@0
+_KiGetStackPointer@0:
+
+    /* Return the stack pointer */
+    lea eax, [esp + 8]
+    ret
+
 END
