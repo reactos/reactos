@@ -197,75 +197,6 @@ CCopyToMoveToMenu::BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARA
     return FALSE;
 }
 
-STDMETHODIMP
-CCopyToMoveToMenu::GetCommandString(
-    UINT_PTR idCmd,
-    UINT uType,
-    UINT *pwReserved,
-    LPSTR pszName,
-    UINT cchMax)
-{
-    FIXME("%p %lu %u %p %p %u\n", this,
-          idCmd, uType, pwReserved, pszName, cchMax);
-
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP
-CCopyToMoveToMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    TRACE("This %p uMsg %x\n", this, uMsg);
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP
-CCopyToMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
-{
-    m_pidlFolder.Attach(ILClone(pidlFolder));
-    m_pDataObject = pdtobj;
-    return S_OK;
-}
-
-STDMETHODIMP
-CCopyToMoveToMenu::SetSite(IUnknown *pUnkSite)
-{
-    m_pSite = pUnkSite;
-    return S_OK;
-}
-
-STDMETHODIMP
-CCopyToMoveToMenu::GetSite(REFIID riid, void **ppvSite)
-{
-    if (!m_pSite)
-        return E_FAIL;
-
-    return m_pSite->QueryInterface(riid, ppvSite);
-}
-
-STDMETHODIMP
-CCopyToMoveToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
-{
-    HRESULT hr = E_FAIL;
-    TRACE("CCopyToMoveToMenu::InvokeCommand(%p)\n", lpici);
-
-    if (IS_INTRESOURCE(lpici->lpVerb))
-    {
-        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdDoTo)
-        {
-            hr = DoCopyToMoveToFolder(lpici);
-        }
-    }
-    else
-    {
-        if (::lstrcmpiA(lpici->lpVerb, GetVerb()) == 0)
-        {
-            hr = DoCopyToMoveToFolder(lpici);
-        }
-    }
-
-    return hr;
-}
-
 HRESULT
 CCopyToMoveToMenu::JustDoIt(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
@@ -452,4 +383,73 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst + Count);
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+{
+    HRESULT hr = E_FAIL;
+    TRACE("CCopyToMoveToMenu::InvokeCommand(%p)\n", lpici);
+
+    if (IS_INTRESOURCE(lpici->lpVerb))
+    {
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdDoTo)
+        {
+            hr = DoCopyToMoveToFolder(lpici);
+        }
+    }
+    else
+    {
+        if (::lstrcmpiA(lpici->lpVerb, GetVerb()) == 0)
+        {
+            hr = DoCopyToMoveToFolder(lpici);
+        }
+    }
+
+    return hr;
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::GetCommandString(
+    UINT_PTR idCmd,
+    UINT uType,
+    UINT *pwReserved,
+    LPSTR pszName,
+    UINT cchMax)
+{
+    FIXME("%p %lu %u %p %p %u\n", this,
+          idCmd, uType, pwReserved, pszName, cchMax);
+
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TRACE("This %p uMsg %x\n", this, uMsg);
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+{
+    m_pidlFolder.Attach(ILClone(pidlFolder));
+    m_pDataObject = pdtobj;
+    return S_OK;
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::SetSite(IUnknown *pUnkSite)
+{
+    m_pSite = pUnkSite;
+    return S_OK;
+}
+
+STDMETHODIMP
+CCopyToMoveToMenu::GetSite(REFIID riid, void **ppvSite)
+{
+    if (!m_pSite)
+        return E_FAIL;
+
+    return m_pSite->QueryInterface(riid, ppvSite);
 }
