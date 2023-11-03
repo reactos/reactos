@@ -361,10 +361,10 @@ void CFontsDialog::InitFontSizes()
     HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
     ComboBox_ResetContent(hwndSizes);
 
-    TCHAR szText[16];
+    WCHAR szText[16];
     for (UINT i = 0; i < _countof(s_sizes); ++i)
     {
-        wsprintf(szText, TEXT("%d"), s_sizes[i]);
+        StringCchPrintfW(szText, _countof(szText), L"%d", s_sizes[i]);
         INT iItem = ComboBox_AddString(hwndSizes, szText);
         if (s_sizes[i] == (INT)registrySettings.PointSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
@@ -372,7 +372,7 @@ void CFontsDialog::InitFontSizes()
 
     if (ComboBox_GetCurSel(hwndSizes) == CB_ERR)
     {
-        wsprintf(szText, TEXT("%d"), (INT)registrySettings.PointSize);
+        StringCchPrintfW(szText, _countof(szText), L"%d", (INT)registrySettings.PointSize);
         ::SetWindowText(hwndSizes, szText);
     }
 }

@@ -382,8 +382,8 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         assert(_tcslen((LPCTSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
 
         // Add an accelerator (by '&') to the item number for quick access
-        TCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
-        wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
+        WCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
+        StringCchPrintfW(szText, _countof(szText), L"&%u %s", iItem + 1, (LPCWSTR)pathFile);
 
         INT iMenuItem = (cMenuItems - 2) + iItem;
         InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, szText);
