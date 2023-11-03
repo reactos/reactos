@@ -114,11 +114,11 @@ CCopyToMoveToMenu::BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARA
                 reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
 
             // Set caption
-            CString strCaption(MAKEINTRESOURCEW(this_->GetDoItemsStringID()));
+            CString strCaption(MAKEINTRESOURCEW(this_->GetCaptionStringID()));
             SetWindowTextW(hwnd, strCaption);
 
             // Set OK button text
-            CString strCopyOrMove(MAKEINTRESOURCEW(this_->GetDoButtonStringID()));
+            CString strCopyOrMove(MAKEINTRESOURCEW(this_->GetButtonStringID()));
             SetDlgItemText(hwnd, IDOK, strCopyOrMove);
 
             // Subclassing
