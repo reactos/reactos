@@ -847,15 +847,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmSelection = selectionModel.GetSelectionContents();
-                if (hbmSelection)
-                {
-                    SaveDIBToFile(hbmSelection, szFileName, FALSE);
-                    DeleteObject(hbmSelection);
-                }
-                else
+                if (!hbmSelection)
                 {
                     ShowOutOfMemory();
+                    break;
                 }
+                SaveDIBToFile(hbmSelection, szFileName, FALSE);
+                DeleteObject(hbmSelection);
             }
             break;
         }
