@@ -357,13 +357,13 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         {
             case TOOL_BEZIER:
             case TOOL_SHAPE:
-                toolsModel.OnCancelDraw();
+                toolsModel.OnEndDraw(TRUE);
                 Invalidate();
                 break;
 
             case TOOL_FREESEL:
             case TOOL_RECTSEL:
-                toolsModel.OnFinishDraw();
+                toolsModel.OnEndDraw(FALSE);
                 Invalidate();
                 break;
 
@@ -814,13 +814,13 @@ VOID CCanvasWindow::cancelDrawing()
     selectionModel.ClearMaskImage();
     m_hitSelection = HIT_NONE;
     m_drawing = FALSE;
-    toolsModel.OnCancelDraw();
+    toolsModel.OnEndDraw(TRUE);
     Invalidate(FALSE);
 }
 
 VOID CCanvasWindow::finishDrawing()
 {
-    toolsModel.OnFinishDraw();
+    toolsModel.OnEndDraw(FALSE);
     m_drawing = FALSE;
     Invalidate(FALSE);
 }

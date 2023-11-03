@@ -104,7 +104,7 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 {
     if (wParam == VK_ESCAPE)
     {
-        toolsModel.OnCancelDraw();
+        toolsModel.OnEndDraw(TRUE);
         return 0;
     }
 

@@ -62,13 +62,7 @@ void ToolBase::reset()
     }
 }
 
-void ToolBase::OnCancelDraw()
-{
-    reset();
-    imageModel.NotifyImageChanged();
-}
-
-void ToolBase::OnFinishDraw()
+void ToolBase::OnEndDraw(BOOL bCancel)
 {
     reset();
     imageModel.NotifyImageChanged();
@@ -175,16 +169,13 @@ struct FreeSelTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        selectionModel.Landing();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        selectionModel.HideSelection();
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+            selectionModel.HideSelection();
+        else
+            selectionModel.Landing();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -260,16 +251,13 @@ struct RectSelTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        selectionModel.Landing();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        selectionModel.HideSelection();
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+            selectionModel.HideSelection();
+        else
+            selectionModel.Landing();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -309,16 +297,10 @@ struct TwoPointDrawTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
         m_bDrawing = FALSE;
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        m_bDrawing = FALSE;
-        ToolBase::OnCancelDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -471,21 +453,19 @@ struct SmoothDrawTool : ToolBase
         }
 
         draw(bLeftButton, x, y);
-        OnFinishDraw();
+        OnEndDraw(FALSE);
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        LONG x = 0, y = 0;
-        OnButtonUp(FALSE, x, y);
-        imageModel.Undo(TRUE);
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+        {
+            LONG x = 0, y = 0;
+            OnButtonUp(FALSE, x, y);
+            imageModel.Undo(TRUE);
+        }
+        ToolBase::OnEndDraw(bCancel);
     }
 };
 
@@ -799,22 +779,18 @@ struct TextTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        if (::IsWindowVisible(textEditWindow) &&
-            textEditWindow.GetWindowTextLength() > 0)
+        if (!bCancel)
         {
-            imageModel.PushImageForUndo();
-            draw(m_hdc);
+            if (::IsWindowVisible(textEditWindow) &&
+                textEditWindow.GetWindowTextLength() > 0)
+            {
+                imageModel.PushImageForUndo();
+                draw(m_hdc);
+            }
         }
-        quit();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        quit();
-        ToolBase::OnCancelDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 };
 
@@ -902,25 +878,22 @@ struct BezierTool : ToolBase
         s_pointStack[s_pointSP].y = y;
         if (s_pointSP >= 3)
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return TRUE;
         }
         imageModel.NotifyImageChanged();
         return TRUE;
     }
 
-    void OnCancelDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
+        if (!bCancel)
+        {
+            imageModel.PushImageForUndo();
+            OnDrawOverlayOnImage(m_hdc);
+        }
         m_bDrawing = FALSE;
-        ToolBase::OnCancelDraw();
-    }
-
-    void OnFinishDraw() override
-    {
-        imageModel.PushImageForUndo();
-        OnDrawOverlayOnImage(m_hdc);
-        m_bDrawing = FALSE;
-        ToolBase::OnFinishDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -983,7 +956,7 @@ struct ShapeTool : ToolBase
 
         if (s_pointSP && bDoubleClick)
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return;
         }
 
@@ -1017,7 +990,7 @@ struct ShapeTool : ToolBase
         m_bClosed = FALSE;
         if (nearlyEqualPoints(x, y, s_pointStack[0].x, s_pointStack[0].y))
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return TRUE;
         }
         else
@@ -1034,26 +1007,22 @@ struct ShapeTool : ToolBase
         return TRUE;
     }
 
-    void OnCancelDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        ToolBase::OnCancelDraw();
-    }
-
-    void OnFinishDraw() override
-    {
-        if (s_pointSP)
+        if (!bCancel)
         {
-            --s_pointSP;
-            m_bClosed = TRUE;
+            if (s_pointSP)
+            {
+                --s_pointSP;
+                m_bClosed = TRUE;
 
-            imageModel.PushImageForUndo();
-            OnDrawOverlayOnImage(m_hdc);
+                imageModel.PushImageForUndo();
+                OnDrawOverlayOnImage(m_hdc);
+            }
+            m_bClosed = FALSE;
+            s_pointSP = 0;
         }
-
-        m_bClosed = FALSE;
-        s_pointSP = 0;
-
-        ToolBase::OnFinishDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override

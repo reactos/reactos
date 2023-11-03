@@ -145,7 +145,7 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
-    OnFinishDraw();
+    OnEndDraw(FALSE);
 
     selectionModel.Landing();
 
@@ -288,19 +288,11 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     m_pToolObject->endEvent();
 }
 
-void ToolsModel::OnCancelDraw()
+void ToolsModel::OnEndDraw(BOOL bCancel)
 {
-    ATLTRACE("ToolsModel::OnCancelDraw()\n");
+    ATLTRACE("ToolsModel::OnEndDraw(%d)\n", bCancel);
     m_pToolObject->beginEvent();
-    m_pToolObject->OnCancelDraw();
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnFinishDraw()
-{
-    ATLTRACE("ToolsModel::OnFinishDraw()\n");
-    m_pToolObject->beginEvent();
-    m_pToolObject->OnFinishDraw();
+    m_pToolObject->OnEndDraw(bCancel);
     m_pToolObject->endEvent();
 }
 
