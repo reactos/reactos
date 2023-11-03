@@ -840,9 +840,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
         {
-            WCHAR szFileName[MAX_LONG_PATH] = L"";
+            WCHAR szFileName[MAX_LONG_PATH];
             CStringW strUntitled(MAKEINTRESOURCEW(IDS_DEFAULTFILENAME));
-            lstrcpynW(szFileName, strUntitled, _countof(szFileName));
+            StringCchCopyW(szFileName, _countof(szFileName), strUntitled);
 
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {

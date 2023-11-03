@@ -55,7 +55,7 @@ FileExtFromFilter(LPTSTR pExt, OPENFILENAME *pOFN)
             CharLower(pExt);
             return TRUE;
         }
-        pch += lstrlen(pch) + 1;
+        pch += wcslen(pch) + 1;
     }
     return FALSE;
 }
@@ -77,7 +77,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendMessage(hParent, CDM_GETFILEPATH, _countof(Path), (LPARAM)Path);
             FileExtFromFilter(PathFindExtension(Path), pon->lpOFN);
             SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)PathFindFileName(Path));
-            lstrcpyn(pon->lpOFN->lpstrFile, Path, pon->lpOFN->nMaxFile);
+            StringCchCopyW(pon->lpOFN->lpstrFile, pon->lpOFN->nMaxFile, Path);
         }
         break;
     }
