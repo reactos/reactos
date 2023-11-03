@@ -80,26 +80,11 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     END_COM_MAP()
 
-    UINT GetDoItemsStringID() const override
-    {
-        return IDS_COPYITEMS;
-    }
-    UINT GetDoButtonStringID() const override
-    {
-        return IDS_COPYBUTTON;
-    }
-    UINT GetDoToTitleStringID() const override
-    {
-        return IDS_COPYTOTITLE;
-    }
-    UINT GetFileOp() const override
-    {
-        return FO_COPY;
-    }
-    LPCSTR GetVerb() const override
-    {
-        return "copyto";
-    }
+    UINT GetDoItemsStringID() const override { return IDS_COPYITEMS; }
+    UINT GetDoButtonStringID() const override { return IDS_COPYBUTTON; }
+    UINT GetDoToTitleStringID() const override { return IDS_COPYTOTITLE; }
+    UINT GetFileOp() const override { return FO_COPY; }
+    LPCSTR GetVerb() const override { return "copyto"; }
 };
 
 class CMoveToMenu
@@ -124,24 +109,9 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     END_COM_MAP()
 
-    UINT GetDoItemsStringID() const override
-    {
-        return IDS_MOVEITEMS;
-    }
-    UINT GetDoButtonStringID() const override
-    {
-        return IDS_MOVEBUTTON;
-    }
-    UINT GetDoToTitleStringID() const override
-    {
-        return IDS_MOVETOTITLE;
-    }
-    UINT GetFileOp() const override
-    {
-        return FO_MOVE;
-    }
-    LPCSTR GetVerb() const override
-    {
-        return "moveto";
-    }
+    UINT GetDoItemsStringID() const override { return IDS_MOVEITEMS; }
+    UINT GetDoButtonStringID() const override { return IDS_MOVEBUTTON; }
+    UINT GetDoToTitleStringID() const override { return IDS_MOVETOTITLE; }
+    UINT GetFileOp() const override { return FO_MOVE; }
+    LPCSTR GetVerb() const override { return "moveto"; }
 };
