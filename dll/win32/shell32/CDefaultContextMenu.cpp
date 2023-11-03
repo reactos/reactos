@@ -1158,38 +1158,50 @@ CDefaultContextMenu::InvokeRegVerb(
 
     PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
 
+    HKEY hVerbKey;
     WCHAR VerbKey[sizeof("shell\\") + MAX_VERB];
     hr = StringCbPrintfW(VerbKey, sizeof(VerbKey), L"shell\\%s", pEntry->Verb.GetString());
-    HKEY hVerbKey;
     if (SUCCEEDED(hr) && m_pDataObj &&
         RegOpenKeyExW(pEntry->hkClass, VerbKey, 0, KEY_READ, &hVerbKey) == ERROR_SUCCESS)
     {
+        CLSID clsid;
+        BOOL Done = FALSE;
+
         DWORD KeyState = 0;
         if (lpcmi->fMask & CMIC_MASK_SHIFT_DOWN)
             KeyState |= MK_SHIFT;
         if (lpcmi->fMask & CMIC_MASK_CONTROL_DOWN)
             KeyState |= MK_CONTROL;
+
         POINTL *pPtl = NULL;
         C_ASSERT(sizeof(POINT) == sizeof(POINTL));
         if (lpcmi->fMask & CMIC_MASK_PTINVOKE)
             pPtl = (POINTL*)&lpcmi->ptInvoke;
-        CLSID clsid;
 
-        // TODO: IExecuteCommand
-
-        IDropTarget *pDT;
-        hr = SHELL_GetRegCLSID(hVerbKey, L"DropTarget", L"CLSID", clsid);
-        if (SUCCEEDED(hr))
-            hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
-        if (SUCCEEDED(hr))
+        if (!Done)
         {
-            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
-            hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
-            IUnknown_SetSite(pDT, NULL);
-            pDT->Release();
-            return hr;
+            // TODO: IExecuteCommand
         }
+
+        if (!Done)
+        {
+            IDropTarget *pDT;
+            hr = SHELL_GetRegCLSID(hVerbKey, L"DropTarget", L"CLSID", clsid);
+            if (SUCCEEDED(hr))
+                hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
+            if (SUCCEEDED(hr))
+            {
+                Done = TRUE;
+                IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
+                hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
+                IUnknown_SetSite(pDT, NULL);
+                pDT->Release();
+            }
+        }
+
         RegCloseKey(hVerbKey);
+        if (Done)
+            return hr;
     }
 
     /* Get the browse flags to see if we need to browse */
