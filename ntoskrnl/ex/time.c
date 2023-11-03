@@ -357,6 +357,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
     LARGE_INTEGER LocalTime, SystemTime, OldTime;
     TIME_FIELDS TimeFields;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL; // Allow easy failure return change
     DPRINT("ExpSetTimeZoneInformation() called\n");
 
     /* Get the Shared User Data System Time into the local SystemTime */
@@ -370,8 +371,8 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     /* Set the Global Data for ExpTimeZoneBias and ExpTimeZoneId */
     if (!ExpGetTimeZoneId(&SystemTime, &ExpTimeZoneId))
     {
-        DPRINT1("ExpSetTimeZoneInformation() failed (Status 0x%08lx)\n", STATUS_UNSUCCESSFUL);
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("ExpSetTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
     DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
