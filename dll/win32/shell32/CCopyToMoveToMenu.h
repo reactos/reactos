@@ -60,7 +60,7 @@ public:
     WNDPROC m_fnOldWndProc;
     BOOL m_bIgnoreTextBoxChange;
 
-    CCopyToMenu();
+    CCopyToMenu() { }
 
     // IContextMenu
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
@@ -89,7 +89,7 @@ class CMoveToMenu
     , public CCopyToMoveToMenu
 {
 public:
-    CMoveToMenu();
+    CMoveToMenu() { }
 
     // IContextMenu
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;

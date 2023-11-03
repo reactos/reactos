@@ -262,14 +262,6 @@ CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
     return S_OK;
 }
 
-CCopyToMenu::CCopyToMenu()
-{
-}
-
-CMoveToMenu::CMoveToMenu()
-{
-}
-
 STDMETHODIMP
 CCopyToMenu::QueryContextMenu(HMENU hMenu,
                               UINT indexMenu,
