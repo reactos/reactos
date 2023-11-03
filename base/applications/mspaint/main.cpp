@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 
+#include <dlgs.h>
 #include <mapi.h>
 
 POINT g_ptStart, g_ptEnd;
@@ -66,6 +67,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hParent;
     OFNOTIFY *pon;
+    WCHAR Path[MAX_PATH];
     switch (uMsg)
     {
     case WM_NOTIFY:
@@ -73,10 +75,9 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (pon->hdr.code == CDN_TYPECHANGE)
         {
             hParent = GetParent(hwnd);
-            TCHAR Path[MAX_PATH];
-            SendMessage(hParent, CDM_GETFILEPATH, _countof(Path), (LPARAM)Path);
-            FileExtFromFilter(PathFindExtension(Path), pon->lpOFN);
-            SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)PathFindFileName(Path));
+            SendMessageW(hParent, CDM_GETFILEPATH, _countof(Path), (LPARAM)Path);
+            FileExtFromFilter(PathFindExtensionW(Path), pon->lpOFN);
+            SendMessageW(hParent, CDM_SETCONTROLTEXT, cmb13, (LPARAM)PathFindFileNameW(Path));
             StringCchCopyW(pon->lpOFN->lpstrFile, pon->lpOFN->nMaxFile, Path);
         }
         break;
