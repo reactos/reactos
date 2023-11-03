@@ -73,6 +73,7 @@ list(APPEND SOURCE
     COpenWithMenu.cpp
     CNewMenu.cpp
     CSendToMenu.cpp
+    CCopyToMoveToMenu.cpp
     CCopyToMenu.cpp
     CMoveToMenu.cpp
     CShellDispatch.cpp

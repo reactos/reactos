@@ -6,22 +6,53 @@
  */
 #pragma once
 
+// helper function
+HRESULT DoGetFileTitleFromDataObject(CStringW& strTitle, IDataObject *pDataObject);
 
-class CCopyToMenu :
-    public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>,
+class CCopyToMoveToMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2,
     public IObjectWithSite,
     public IShellExtInit
 {
 protected:
-    UINT m_idCmdFirst, m_idCmdLast, m_idCmdCopyTo;
+    UINT m_idCmdFirst, m_idCmdLast, m_idCmdDoTo;
     CComPtr<IDataObject> m_pDataObject;
     CComPtr<IUnknown> m_pSite;
+    static INT CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+    static HRESULT DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject);
 
+public:
+    CComHeapPtr<ITEMIDLIST> m_pidlFolder;
+    WNDPROC m_fnOldWndProc;
+    BOOL m_bIgnoreTextBoxChange;
+
+    CCopyToMoveToMenu();
+
+    virtual UINT GetDoItemsStringID() const = 0;
+    virtual UINT GetDoButtonStringID() const = 0;
+
+    // IContextMenu
+    STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;
+
+    // IContextMenu2
+    STDMETHODIMP HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+    // IShellExtInit
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID) override;
+
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override;
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override;
+};
+
+class CCopyToMenu
+    : public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>
+    , public CCopyToMoveToMenu
+{
+protected:
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT DoRealCopy(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
-    CStringW DoGetFileTitle();
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
@@ -29,22 +60,10 @@ public:
     BOOL m_bIgnoreTextBoxChange;
 
     CCopyToMenu();
-    ~CCopyToMenu();
 
     // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
-
-    // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    // IShellExtInit
-    virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
-
-    // IObjectWithSite
-    virtual HRESULT WINAPI SetSite(IUnknown *pUnkSite);
-    virtual HRESULT WINAPI GetSite(REFIID riid, void **ppvSite);
+    STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_COPYTOMENU)
     DECLARE_NOT_AGGREGATABLE(CCopyToMenu)
@@ -57,46 +76,31 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     END_COM_MAP()
+
+    UINT GetDoItemsStringID() const override
+    {
+        return IDS_COPYITEMS;
+    }
+    UINT GetDoButtonStringID() const override
+    {
+        return IDS_COPYBUTTON;
+    }
 };
 
-class CMoveToMenu :
-    public CComCoClass<CMoveToMenu, &CLSID_MoveToMenu>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu2,
-    public IObjectWithSite,
-    public IShellExtInit
+class CMoveToMenu
+    : public CComCoClass<CMoveToMenu, &CLSID_MoveToMenu>
+    , public CCopyToMoveToMenu
 {
 protected:
-    UINT m_idCmdFirst, m_idCmdLast, m_idCmdMoveTo;
-    CComPtr<IDataObject> m_pDataObject;
-    CComPtr<IUnknown> m_pSite;
-
     HRESULT DoMoveToFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT DoRealMove(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
-    CStringW DoGetFileTitle();
 
 public:
-    CComHeapPtr<ITEMIDLIST> m_pidlFolder;
-    WNDPROC m_fnOldWndProc;
-    BOOL m_bIgnoreTextBoxChange;
-
     CMoveToMenu();
-    ~CMoveToMenu();
 
     // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
-
-    // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    // IShellExtInit
-    virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
-
-    // IObjectWithSite
-    virtual HRESULT WINAPI SetSite(IUnknown *pUnkSite);
-    virtual HRESULT WINAPI GetSite(REFIID riid, void **ppvSite);
+    STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_MOVETOMENU)
     DECLARE_NOT_AGGREGATABLE(CMoveToMenu)
@@ -109,4 +113,13 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     END_COM_MAP()
+
+    UINT GetDoItemsStringID() const override
+    {
+        return IDS_MOVEITEMS;
+    }
+    UINT GetDoButtonStringID() const override
+    {
+        return IDS_MOVEBUTTON;
+    }
 };
