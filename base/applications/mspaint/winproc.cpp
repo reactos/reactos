@@ -841,9 +841,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITCOPYTO:
         {
             WCHAR szFileName[MAX_LONG_PATH];
-            CStringW strUntitled(MAKEINTRESOURCEW(IDS_DEFAULTFILENAME));
-            StringCchCopyW(szFileName, _countof(szFileName), strUntitled);
-
+            LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, szFileName, _countof(szFileName));
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmSelection = selectionModel.GetSelectionContents();
