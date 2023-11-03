@@ -29,7 +29,7 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
     {
         // The function loads the system library, not local
         GetSystemDirectoryW(szPath, _countof(szPath));
-        wcscat(szPath, L"\\hhctrl.ocx");
+        StringCchCatW(szPath, _countof(szPath), L"\\hhctrl.ocx");
         s_hHHCTRL_OCX = LoadLibraryW(szPath);
         if (s_hHHCTRL_OCX)
             s_pHtmlHelpW = (FN_HtmlHelpW)GetProcAddress(s_hHHCTRL_OCX, "HtmlHelpW");
@@ -382,8 +382,8 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
         assert(_tcslen((LPCTSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
 
         // Add an accelerator (by '&') to the item number for quick access
-        TCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
-        wsprintf(szText, _T("&%u %s"), iItem + 1, (LPCTSTR)pathFile);
+        WCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
+        StringCchPrintfW(szText, _countof(szText), L"&%u %s", iItem + 1, (LPCWSTR)pathFile);
 
         INT iMenuItem = (cMenuItems - 2) + iItem;
         InsertMenu(hPopupMenu, iMenuItem, MF_BYPOSITION | MF_STRING, IDM_FILE1 + iItem, szText);
@@ -720,14 +720,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             selectionModel.TakeOff();
 
             {
-                HBITMAP hbmLocked = selectionModel.LockBitmap();
-                if (hbmLocked)
-                {
-                    HGLOBAL hGlobal = BitmapToClipboardDIB(hbmLocked);
-                    if (hGlobal)
-                        ::SetClipboardData(CF_DIB, hGlobal);
-                    selectionModel.UnlockBitmap(hbmLocked);
-                }
+                HBITMAP hbmCopy = selectionModel.GetSelectionContents();
+                HGLOBAL hGlobal = BitmapToClipboardDIB(hbmCopy);
+                if (hGlobal)
+                    ::SetClipboardData(CF_DIB, hGlobal);
+                else
+                    ShowOutOfMemory();
+                ::DeleteObject(hbmCopy);
             }
 
             CloseClipboard();
@@ -841,12 +840,18 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
         {
-            WCHAR szFileName[MAX_LONG_PATH] = L"*.png";
+            WCHAR szFileName[MAX_LONG_PATH];
+            LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, szFileName, _countof(szFileName));
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
-                HBITMAP hbmLocked = selectionModel.LockBitmap();
-                SaveDIBToFile(hbmLocked, szFileName, FALSE);
-                selectionModel.UnlockBitmap(hbmLocked);
+                HBITMAP hbmSelection = selectionModel.GetSelectionContents();
+                if (!hbmSelection)
+                {
+                    ShowOutOfMemory();
+                    break;
+                }
+                SaveDIBToFile(hbmSelection, szFileName, FALSE);
+                DeleteObject(hbmSelection);
             }
             break;
         }
@@ -982,9 +987,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.PushImageForUndo(selectionModel.CopyBitmap());
+        {
+            HBITMAP hbmCopy = selectionModel.GetSelectionContents();
+            imageModel.PushImageForUndo(hbmCopy);
             selectionModel.HideSelection();
             break;
+        }
         case IDM_VIEWTOOLBOX:
             registrySettings.ShowToolBox = !toolBoxContainer.IsWindowVisible();
             toolBoxContainer.ShowWindow(registrySettings.ShowToolBox ? SW_SHOWNOACTIVATE : SW_HIDE);

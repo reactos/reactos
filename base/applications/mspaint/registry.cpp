@@ -123,7 +123,7 @@ void RegistrySettings::Load(INT nCmdShow)
         TCHAR szName[64];
         for (INT i = 0; i < MAX_RECENT_FILES; ++i)
         {
-            wsprintf(szName, _T("File%u"), i + 1);
+            StringCchPrintfW(szName, _countof(szName), L"File%u", i + 1);
             ReadString(files, szName, strFiles[i]);
         }
     }
@@ -204,10 +204,10 @@ void RegistrySettings::Store()
     CRegKey files;
     if (files.Create(paint, _T("Recent File List")) == ERROR_SUCCESS)
     {
-        TCHAR szName[64];
+        WCHAR szName[64];
         for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
         {
-            wsprintf(szName, _T("File%u"), iFile + 1);
+            StringCchPrintfW(szName, _countof(szName), L"File%u", iFile + 1);
             files.SetStringValue(szName, strFiles[iFile]);
         }
     }
