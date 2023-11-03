@@ -22,22 +22,20 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    ZeroMemory(&m_tools, sizeof(m_tools));
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
 ToolsModel::~ToolsModel()
 {
-    for (size_t i = 0; i < _countof(m_tools); ++i)
-        delete m_tools[i];
+    delete m_pToolObject;
+    m_pToolObject = NULL;
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
 {
-    if (!m_tools[nTool])
-        m_tools[nTool] = ToolBase::createToolObject(nTool);
-
-    return m_tools[nTool];
+    delete m_pToolObject;
+    m_pToolObject = ToolBase::createToolObject(nTool);
+    return m_pToolObject;
 }
 
 BOOL ToolsModel::IsSelection() const
