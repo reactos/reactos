@@ -6,29 +6,26 @@
  */
 #pragma once
 
-class CCopyToMoveToMenu :
+class CCopyMoveToMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2,
     public IObjectWithSite,
     public IShellExtInit
 {
 protected:
-    UINT m_idCmdFirst, m_idCmdLast, m_idCmdDoTo;
+    UINT m_idCmdFirst, m_idCmdLast, m_idCmdAction;
     CComPtr<IDataObject> m_pDataObject;
     CComPtr<IUnknown> m_pSite;
 
-    static INT CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
-    static HRESULT DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject);
-
     HRESULT DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
-    HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici);
+    HRESULT DoAction(LPCMINVOKECOMMANDINFO lpici);
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     WNDPROC m_fnOldWndProc;
     BOOL m_bIgnoreTextBoxChange;
 
-    CCopyToMoveToMenu();
+    CCopyMoveToMenu();
 
     virtual UINT GetCaptionStringID() const = 0;
     virtual UINT GetButtonStringID() const = 0;
@@ -53,7 +50,7 @@ public:
 
 class CCopyToMenu
     : public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>
-    , public CCopyToMoveToMenu
+    , public CCopyMoveToMenu
 {
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
@@ -86,7 +83,7 @@ public:
 
 class CMoveToMenu
     : public CComCoClass<CMoveToMenu, &CLSID_MoveToMenu>
-    , public CCopyToMoveToMenu
+    , public CCopyMoveToMenu
 {
 public:
     CMoveToMenu() { }

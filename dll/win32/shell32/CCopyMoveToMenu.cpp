@@ -9,10 +9,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-CCopyToMoveToMenu::CCopyToMoveToMenu() :
+CCopyMoveToMenu::CCopyMoveToMenu() :
     m_idCmdFirst(0),
     m_idCmdLast(0),
-    m_idCmdDoTo(-1),
+    m_idCmdAction(-1),
     m_fnOldWndProc(NULL),
     m_bIgnoreTextBoxChange(FALSE)
 {
@@ -22,8 +22,8 @@ static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WCHAR szPath[MAX_PATH];
-    CCopyToMoveToMenu *this_ =
-        reinterpret_cast<CCopyToMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    CCopyMoveToMenu *this_ =
+        reinterpret_cast<CCopyMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (uMsg)
     {
@@ -60,18 +60,18 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return CallWindowProcW(this_->m_fnOldWndProc, hwnd, uMsg, wParam, lParam);
 }
 
-INT CALLBACK
-CCopyToMoveToMenu::BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+static INT CALLBACK
+BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-    CCopyToMoveToMenu *this_ =
-        reinterpret_cast<CCopyToMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    CCopyMoveToMenu *this_ =
+        reinterpret_cast<CCopyMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (uMsg)
     {
         case BFFM_INITIALIZED:
         {
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
-            this_ = reinterpret_cast<CCopyToMoveToMenu *>(lpData);
+            this_ = reinterpret_cast<CCopyMoveToMenu *>(lpData);
 
             // Select initial directory
             SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
@@ -122,7 +122,7 @@ CCopyToMoveToMenu::BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARA
 }
 
 HRESULT
-CCopyToMoveToMenu::DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
+CCopyMoveToMenu::DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
     CDataObjectHIDA pCIDA(m_pDataObject);
     if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
@@ -172,10 +172,7 @@ CCopyToMoveToMenu::DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
         return E_FAIL;
     }
 
-    SHFILEOPSTRUCTW op = { lpici->hwnd };
-    op.wFunc = GetFileOp();
-    op.pFrom = strFiles;
-    op.pTo = szPath;
+    SHFILEOPSTRUCTW op = { lpici->hwnd, GetFileOp(), strFiles, szPath };
     op.fFlags = FOF_ALLOWUNDO;
     int res = SHFileOperationW(&op);
     if (res)
@@ -186,8 +183,8 @@ CCopyToMoveToMenu::DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT
-CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
+static HRESULT
+DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
 {
     CDataObjectHIDA pCIDA(pDataObject);
     if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
@@ -226,7 +223,7 @@ CCopyToMoveToMenu::DoGetFileTitle(CStringW& strTitle, IDataObject *pDataObject)
     return S_OK;
 }
 
-HRESULT CCopyToMoveToMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici)
+HRESULT CCopyMoveToMenu::DoAction(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
     HRESULT hr = E_FAIL;
@@ -307,7 +304,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     mii.wID = m_idCmdLast;
     if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
-        m_idCmdDoTo = m_idCmdLast++;
+        m_idCmdAction = m_idCmdLast++;
         ++indexMenu;
         ++Count;
     }
@@ -367,7 +364,7 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
     mii.wID = m_idCmdLast;
     if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
-        m_idCmdDoTo = m_idCmdLast++;
+        m_idCmdAction = m_idCmdLast++;
         ++indexMenu;
         ++Count;
     }
@@ -376,27 +373,27 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+CCopyMoveToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
-    TRACE("CCopyToMoveToMenu::InvokeCommand(%p)\n", lpici);
+    TRACE("CCopyMoveToMenu::InvokeCommand(%p)\n", lpici);
 
     if (IS_INTRESOURCE(lpici->lpVerb))
     {
-        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdDoTo)
-            hr = DoCopyToMoveToFolder(lpici);
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdAction)
+            hr = DoAction(lpici);
     }
     else
     {
         if (::lstrcmpiA(lpici->lpVerb, GetVerb()) == 0)
-            hr = DoCopyToMoveToFolder(lpici);
+            hr = DoAction(lpici);
     }
 
     return hr;
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::GetCommandString(
+CCopyMoveToMenu::GetCommandString(
     UINT_PTR idCmd,
     UINT uType,
     UINT *pwReserved,
@@ -410,14 +407,14 @@ CCopyToMoveToMenu::GetCommandString(
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+CCopyMoveToMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TRACE("This %p uMsg %x\n", this, uMsg);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+CCopyMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     m_pidlFolder.Attach(ILClone(pidlFolder));
     m_pDataObject = pdtobj;
@@ -425,14 +422,14 @@ CCopyToMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj,
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::SetSite(IUnknown *pUnkSite)
+CCopyMoveToMenu::SetSite(IUnknown *pUnkSite)
 {
     m_pSite = pUnkSite;
     return S_OK;
 }
 
 STDMETHODIMP
-CCopyToMoveToMenu::GetSite(REFIID riid, void **ppvSite)
+CCopyMoveToMenu::GetSite(REFIID riid, void **ppvSite)
 {
     if (!m_pSite)
         return E_FAIL;
