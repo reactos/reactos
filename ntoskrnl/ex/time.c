@@ -31,8 +31,7 @@ ULONG ExpTimerResolutionCount = 0;
 /* FUNCTIONS ****************************************************************/
 
 /*++
- * This function sets the following Global Variables:
- * ExpTimeZoneID
+ * If successful, this function sets the following Global Variables:
  * ExpTimeZoneInfo
  * ExpTimeZoneBias
  *
@@ -41,7 +40,10 @@ ULONG ExpTimerResolutionCount = 0;
  *     1 = TIME_ZONE_ID_STANDARD
  *     2 = TIME_ZONE_ID_DAYLIGHT
  *--*/
-static ULONG TimeZoneID(_In_ PLARGE_INTEGER TimeNow)
+static BOOLEAN
+ExpGetTimeZoneId(
+    _In_ PLARGE_INTEGER TimeNow,
+    _Out_ PULONG TimeZoneId)
 {
     LARGE_INTEGER StandardTime;
     LARGE_INTEGER DaylightTime;
@@ -88,13 +90,13 @@ static ULONG TimeZoneID(_In_ PLARGE_INTEGER TimeNow)
                 (TimeNow->QuadPart < StandardTime.QuadPart))
             {
                 DPRINT("Daylight time\n");
-                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                *TimeZoneId = TIME_ZONE_ID_DAYLIGHT;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
             }
             else
             {
                 DPRINT("Standard time\n");
-                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+                *TimeZoneId = TIME_ZONE_ID_STANDARD;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
             }
         }
@@ -104,22 +106,22 @@ static ULONG TimeZoneID(_In_ PLARGE_INTEGER TimeNow)
                 (TimeNow->QuadPart < DaylightTime.QuadPart))
             {
                 DPRINT("Standard time\n");
-                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+                *TimeZoneId = TIME_ZONE_ID_STANDARD;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
             }
             else
             {
                 DPRINT("Daylight time\n");
-                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                *TimeZoneId = TIME_ZONE_ID_DAYLIGHT;
                 ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
             }
         }
     }
     else
     {
-        ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
+        *TimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
-    return ExpTimeZoneId;
+    return TRUE;
 }
 
 /*++
@@ -320,7 +322,8 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     LARGE_INTEGER CurrentTime;
 
     /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
-    ExpTimeZoneId = TimeZoneID(CurrentBootTime);
+    if (!ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId))
+        return FALSE;
     DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
     /* Change SharedUserData->TimeZoneBias for user-mode applications */
@@ -364,8 +367,12 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     }
     while (SystemTime.HighPart != SharedUserData->SystemTime.High2Time);
 
-    /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
-    ExpTimeZoneId = TimeZoneID(&SystemTime);
+    /* Set the Global Data for ExpTimeZoneBias and ExpTimeZoneId */
+    if (!ExpGetTimeZoneId(&SystemTime, &ExpTimeZoneId))
+    {
+        DPRINT1("ExpSetTimeZoneInformation() failed (Status 0x%08lx)\n", STATUS_UNSUCCESSFUL);
+        return STATUS_UNSUCCESSFUL;
+    }
     DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
     DPRINT("Old time zone bias: %d minutes\n", ExpTimeZoneInfo.Bias);
@@ -386,6 +393,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     /* If Daylight Savings Time then add the DayLightBias to the Time Zone Bias */
     if (ExpTimeZoneId == TIME_ZONE_ID_DAYLIGHT)
+
         ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
 
     /* Copy the timezone information */
