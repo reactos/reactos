@@ -251,7 +251,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
         if (*pchDotExt == UNICODE_NULL)
         {
             // Choose PNG
-            wcscat(pszFile, L".png");
+            StringCchCatW(pszFile, cchMaxFile, L".png");
             for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
             {
                 if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)

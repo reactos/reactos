@@ -29,7 +29,7 @@ static HWND DoHtmlHelpW(HWND hwndCaller, LPCWSTR pszFile, UINT uCommand, DWORD_P
     {
         // The function loads the system library, not local
         GetSystemDirectoryW(szPath, _countof(szPath));
-        wcscat(szPath, L"\\hhctrl.ocx");
+        StringCchCatW(szPath, _countof(szPath), L"\\hhctrl.ocx");
         s_hHHCTRL_OCX = LoadLibraryW(szPath);
         if (s_hHHCTRL_OCX)
             s_pHtmlHelpW = (FN_HtmlHelpW)GetProcAddress(s_hHHCTRL_OCX, "HtmlHelpW");
