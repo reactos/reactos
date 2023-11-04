@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-de-DE.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-de-DE.bmp"
 
 ID_MENU MENU
 BEGIN

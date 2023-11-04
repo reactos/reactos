@@ -659,19 +659,19 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         switch (toolsModel.GetActiveTool())
         {
             case TOOL_FILL:
-                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_FILL)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_FILL)));
                 break;
             case TOOL_COLOR:
-                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_COLOR)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_COLOR)));
                 break;
             case TOOL_ZOOM:
-                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_ZOOM)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_ZOOM)));
                 break;
             case TOOL_PEN:
-                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_PEN)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_PEN)));
                 break;
             case TOOL_AIRBRUSH:
-                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
             default:
                 ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));

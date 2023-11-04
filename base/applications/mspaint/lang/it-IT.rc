@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-it-IT.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-it-IT.bmp"
 
 ID_MENU MENU
 BEGIN
