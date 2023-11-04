@@ -210,17 +210,17 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         WCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, (int) (wcstod(tempS, NULL) * g_xDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, (int) (wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
@@ -235,17 +235,17 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         WCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, (int) (wcstod(tempS, NULL) * g_yDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, (int) (wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
-            GetDlgItemTextW(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
