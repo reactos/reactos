@@ -199,7 +199,7 @@ struct RtfData {
     HLPFILE_LINK*current_link;
     BOOL        force_color;
     unsigned    relative;       /* offset within page to lookup for */
-    unsigned    char_pos_rel;   /* char_pos corresponding to relative */
+    unsigned    char_pos_rel;   /* char_pos correspondinf to relative */
 };
 
 BOOL          HLPFILE_BrowsePage(HLPFILE_PAGE*, struct RtfData* rd,

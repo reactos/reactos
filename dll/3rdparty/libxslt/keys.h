@@ -1,6 +1,6 @@
 /*
  * Summary:  interface for the key matching used in key() and template matches.
- * Description: implementation of the key mechanism.
+ * Description: implementation of the key mechanims.
  *
  * Copy: See Copyright for the status of this software.
  *

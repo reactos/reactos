@@ -564,7 +564,7 @@ struct gl_light {
 	GLfloat Position[4];		/* position in eye coordinates */
 	GLfloat Direction[4];		/* spotlight dir in eye coordinates */
 	GLfloat SpotExponent;
-	GLfloat SpotCutoff;		/* in degrees */
+	GLfloat SpotCutoff;		/* in degress */
         GLfloat CosCutoff;		/* = cos(SpotCutoff) */
 	GLfloat ConstantAttenuation;
 	GLfloat LinearAttenuation;
@@ -1056,7 +1056,7 @@ struct gl_2d_map {
 
 
 /*
- * All evaluator control points
+ * All evalutator control points
  */
 struct gl_evaluators {
 	/* 1-D maps */

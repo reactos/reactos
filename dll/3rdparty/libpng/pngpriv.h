@@ -1910,7 +1910,7 @@ PNG_INTERNAL_FUNCTION(void,png_ascii_from_fixed,(png_const_structrp png_ptr,
  */
 #define PNG_FP_INVALID  512  /* Available for callers as a distinct value */
 
-/* Result codes for the parser (boolean - true means ok, false means
+/* Result codes for the parser (boolean - true meants ok, false means
  * not ok yet.)
  */
 #define PNG_FP_MAYBE      0  /* The number may be valid in the future */

@@ -84,7 +84,7 @@
  * This file is #include'd to generate custom triangle rasterizers.
  *
  * The following macros may be defined to indicate what auxillary information
- * must be interpolated across the triangle:
+ * must be interplated across the triangle:
  *    INTERP_Z      - if defined, interpolate Z values
  *    INTERP_RGB    - if defined, interpolate RGB values
  *    INTERP_ALPHA  - if defined, interpolate Alpha values

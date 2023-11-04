@@ -49,8 +49,8 @@ extern IDirect3D7Vtbl IDirect3D7_Vtbl;
 /* Start up direct hal or hel
  * iface = a pointer to the com object
  * pGUID = guid hardware accelerations or software acceleration this can  be NULL
- * reenable = FALSE if we want create a new directdraw com
- *          = TRUE if we really want rebuild the whole com interface (not in use)
+ * reenable = FALSE if we whant create a new directdraw com
+ *          = TRUE if we really whant rebuild the whole com interface (not in use)
  */
 
 HRESULT WINAPI
@@ -60,7 +60,7 @@ StartDirectDraw(
                 BOOL reenable);
 
 /* iface = a pointer to the com object
- * reenable = FALSE / TRUE rebuild dx hal interface, this is need if we doing a mode change
+ * reenable = FALSE / TRUE rebuld dx hal interface, this is need if we doing a mode change
  */
 
 HRESULT WINAPI
@@ -185,7 +185,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 /*
    use this macro to close
    down the debugger text complete
-   no debugging at all, it will
+   no debuging at all, it will
    crash ms debugger in VS
 */
 
@@ -218,7 +218,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
    so you can figout what going wrong and what
    api are being call or if it hel or is it hal
 
-   This macro does not create warnings when you compile
+   This marco does not create warnings when you compile
 */
 
 #define DX_STUB \
