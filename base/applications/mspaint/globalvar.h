@@ -11,8 +11,6 @@
 
 extern BOOL g_askBeforeEnlarging;
 
-extern POINT g_ptStart, g_ptEnd;
-
 extern HINSTANCE g_hinstExe;
 
 extern WCHAR g_szFileName[MAX_LONG_PATH];

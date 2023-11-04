@@ -10,7 +10,6 @@
 #include <dlgs.h>
 #include <mapi.h>
 
-POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 HINSTANCE g_hinstExe = NULL;
 WCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
