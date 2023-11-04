@@ -321,7 +321,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         m_ptOrig = pt;
         SetCapture();
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -450,10 +450,10 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             RECT rcImage;
             GetImageRect(rcImage);
 
-            CString strCoord;
+            CStringW strCoord;
             if (::PtInRect(&rcImage, pt))
-                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+                strCoord.Format(L"%ld, %ld", pt.x, pt.y);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
         }
     }
 
@@ -511,9 +511,9 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     cyImage = min(MAXWORD, cyImage);
 
     // Display new size
-    CString strSize;
-    strSize.Format(_T("%d x %d"), cxImage, cyImage);
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+    CStringW strSize;
+    strSize.Format(L"%d x %d", cxImage, cyImage);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
 
     // Dragging now... Fix the position...
     CRect rcResizing = { 0, 0, cxImage, cyImage };
@@ -559,7 +559,7 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
-        ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+        ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
         return 0;
     }
     else if (m_hitSelection != HIT_NONE && bLeftButton)
@@ -625,7 +625,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (m_nMouseDownMsg == WM_MBUTTONDOWN)
     {
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -646,7 +646,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
-            ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
+            ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL));
         return 0;
     }
 
@@ -659,22 +659,22 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         switch (toolsModel.GetActiveTool())
         {
             case TOOL_FILL:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_FILL)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_FILL)));
                 break;
             case TOOL_COLOR:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_COLOR)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_COLOR)));
                 break;
             case TOOL_ZOOM:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_ZOOM)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_ZOOM)));
                 break;
             case TOOL_PEN:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_PEN)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_PEN)));
                 break;
             case TOOL_AIRBRUSH:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_AIRBRUSH)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
             default:
-                ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
+                ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));
         }
         return 0;
     }
@@ -711,12 +711,12 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+    return ::SendMessageW(GetParent(), nMsg, wParam, lParam);
 }
 
 LRESULT CCanvasWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
     return 0;
 }
 

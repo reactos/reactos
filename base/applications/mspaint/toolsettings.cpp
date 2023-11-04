@@ -284,10 +284,10 @@ VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
 LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* preloading the draw transparent/nontransparent icons for later use */
-    m_hNontranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
-                                        IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
-    m_hTranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_TRANSPARENT),
-                                     IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
+    m_hNontranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_NONTRANSPARENT),
+                                         IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
+    m_hTranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_TRANSPARENT),
+                                      IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
     RECT trackbarZoomPos, rect2;
     calculateTwoBoxes(trackbarZoomPos, rect2);
@@ -313,13 +313,13 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
     INT zoomRate = toolsModel.GetZoom();
 
-    CString strZoom;
+    CStringW strZoom;
     if (zoomRate % 10 == 0)
-        strZoom.Format(_T("%d%%"), zoomRate / 10);
+        strZoom.Format(L"%d%%", zoomRate / 10);
     else
-        strZoom.Format(_T("%d.%d%%"), zoomRate / 10, zoomRate % 10);
+        strZoom.Format(L"%d.%d%%", zoomRate / 10, zoomRate % 10);
 
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCTSTR)strZoom);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strZoom);
 
     OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
     return 0;

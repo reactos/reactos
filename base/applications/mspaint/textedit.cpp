@@ -44,9 +44,9 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     drawSizeBoxes(hDC, &rc, TRUE, NULL);
 }
 
-void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
+void CTextEditWindow::FixEditPos(LPCWSTR pszOldText)
 {
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     RECT rcParent;
@@ -62,10 +62,10 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
         SelectObject(hDC, m_hFontZoomed);
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-        szText += TEXT("x"); // This is a trick to enable the g_ptEnd newlines
+        szText += L"x"; // This is a trick to enable the g_ptEnd newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
-        DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
+        DrawTextW(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
         if (tm.tmDescent > 0)
             rcText.bottom += tm.tmDescent;
         ReleaseDC(hDC);
@@ -91,7 +91,7 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     if (wParam == VK_TAB)
         return 0; // FIXME: Tabs
 
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
@@ -108,7 +108,7 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
@@ -135,7 +135,7 @@ LRESULT CTextEditWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         FillRect(hDC, &rc, hbr);
         DeleteObject(hbr);
     }
-    SetTextColor(hDC, paletteModel.GetFgColor());
+    ::SetTextColor(hDC, paletteModel.GetFgColor());
     return TRUE;
 }
 
@@ -196,7 +196,7 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     UINT nHitTest = LOWORD(lParam);
     if (nHitTest == HTCAPTION)
     {
-        ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL)); // Enable drag move
+        ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL)); // Enable drag move
         return FALSE;
     }
     return DefWindowProc(nMsg, wParam, lParam);
@@ -336,7 +336,7 @@ void CTextEditWindow::UpdateFont()
         m_hFontZoomed = NULL;
     }
 
-    LOGFONT lf;
+    LOGFONTW lf;
     ZeroMemory(&lf, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET; // registrySettings.CharSet; // Ignore
     lf.lfWeight = (registrySettings.Bold ? FW_BOLD : FW_NORMAL);
@@ -493,7 +493,7 @@ LRESULT CTextEditWindow::OnSizing(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+    return ::SendMessageW(GetParent(), nMsg, wParam, lParam);
 }
 
 LRESULT CTextEditWindow::OnCut(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

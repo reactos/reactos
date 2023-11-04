@@ -13,7 +13,7 @@
 POINT g_ptStart, g_ptEnd;
 BOOL g_askBeforeEnlarging = FALSE;  // TODO: initialize from registry
 HINSTANCE g_hinstExe = NULL;
-TCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
+WCHAR g_szFileName[MAX_LONG_PATH] = { 0 };
 WCHAR g_szMailTempFile[MAX_LONG_PATH] = { 0 };
 BOOL g_isAFile = FALSE;
 BOOL g_imageSaved = FALSE;
@@ -37,18 +37,18 @@ void ShowOutOfMemory(void)
 
 // get file name extension from filter string
 static BOOL
-FileExtFromFilter(LPTSTR pExt, OPENFILENAME *pOFN)
+FileExtFromFilter(LPWSTR pExt, OPENFILENAME *pOFN)
 {
-    LPTSTR pchExt = pExt;
+    LPWSTR pchExt = pExt;
     *pchExt = 0;
 
     DWORD nIndex = 1;
-    for (LPCTSTR pch = pOFN->lpstrFilter; *pch; ++nIndex)
+    for (LPCWSTR pch = pOFN->lpstrFilter; *pch; ++nIndex)
     {
         pch += lstrlen(pch) + 1;
         if (pOFN->nFilterIndex == nIndex)
         {
-            for (++pch; *pch && *pch != _T(';'); ++pch)
+            for (++pch; *pch && *pch != L';'; ++pch)
             {
                 *pchExt++ = *pch;
             }
@@ -66,12 +66,12 @@ static UINT_PTR APIENTRY
 OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hParent;
-    OFNOTIFY *pon;
+    OFNOTIFYW *pon;
     WCHAR Path[MAX_PATH];
     switch (uMsg)
     {
     case WM_NOTIFY:
-        pon = (OFNOTIFY *)lParam;
+        pon = (OFNOTIFYW *)lParam;
         if (pon->hdr.code == CDN_TYPECHANGE)
         {
             hParent = GetParent(hwnd);
@@ -195,21 +195,21 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
     return FALSE; // Failure
 }
 
-BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 {
-    static OPENFILENAME ofn = { 0 };
-    static CString strFilter;
+    static OPENFILENAMEW ofn = { 0 };
+    static CStringW strFilter;
 
     if (ofn.lStructSize == 0)
     {
         // The "All Files" item text
-        CString strAllPictureFiles;
+        CStringW strAllPictureFiles;
         strAllPictureFiles.LoadString(g_hinstExe, IDS_ALLPICTUREFILES);
 
         // Get the import filter
         CSimpleArray<GUID> aguidFileTypesI;
         CImage::GetImporterFilterString(strFilter, aguidFileTypesI, strAllPictureFiles,
-                                        CImage::excludeDefaultLoad, _T('\0'));
+                                        CImage::excludeDefaultLoad, UNICODE_NULL);
 
         // Initializing the OPENFILENAME structure for GetOpenFileName
         ZeroMemory(&ofn, sizeof(ofn));
@@ -223,20 +223,20 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 
     ofn.lpstrFile = pszFile;
     ofn.nMaxFile  = cchMaxFile;
-    return ::GetOpenFileName(&ofn);
+    return ::GetOpenFileNameW(&ofn);
 }
 
-BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 {
-    static OPENFILENAME sfn = { 0 };
-    static CString strFilter;
+    static OPENFILENAMEW sfn = { 0 };
+    static CStringW strFilter;
 
     if (sfn.lStructSize == 0)
     {
         // Get the export filter
         CSimpleArray<GUID> aguidFileTypesE;
         CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL,
-                                        CImage::excludeDefaultSave, _T('\0'));
+                                        CImage::excludeDefaultSave, UNICODE_NULL);
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
         ZeroMemory(&sfn, sizeof(sfn));
@@ -266,7 +266,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile)
 
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
-    return ::GetSaveFileName(&sfn);
+    return ::GetSaveFileNameW(&sfn);
 }
 
 BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
@@ -298,9 +298,9 @@ BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
 
 HWND CMainWindow::DoCreate()
 {
-    ::LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
+    ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
 
-    CString strTitle;
+    CStringW strTitle;
     strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
 
     RECT& rc = registrySettings.WindowPlacement.rcNormalPosition;
@@ -309,7 +309,7 @@ HWND CMainWindow::DoCreate()
 
 // entry point
 INT WINAPI
-_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nCmdShow)
+wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCmdShow)
 {
     g_hinstExe = hInstance;
 
@@ -325,7 +325,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
     // Create the main window
     if (!mainWindow.DoCreate())
     {
-        MessageBox(NULL, TEXT("Failed to create main window."), NULL, MB_ICONERROR);
+        MessageBox(NULL, L"Failed to create main window.", NULL, MB_ICONERROR);
         return 1;
     }
 
@@ -337,7 +337,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     // Load the access keys
-    HACCEL hAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(800));
+    HACCEL hAccel = ::LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(800));
 
     // The message loop
     MSG msg;
@@ -346,7 +346,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, INT nC
         if (fontsDialog.IsWindow() && fontsDialog.IsDialogMessage(&msg))
             continue;
 
-        if (::TranslateAccelerator(mainWindow, hAccel, &msg))
+        if (::TranslateAcceleratorW(mainWindow, hAccel, &msg))
             continue;
 
         ::TranslateMessage(&msg);

@@ -10,7 +10,7 @@
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ReactOSPaintCanvas"), CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+    DECLARE_WND_CLASS_EX(L"ReactOSPaintCanvas", CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
                          COLOR_APPWORKSPACE)
 
     BEGIN_MSG_MAP(CCanvasWindow)

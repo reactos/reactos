@@ -25,7 +25,7 @@ public:
     void Redo(void);
     void ClearHistory(void);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
-    void SaveImage(LPCTSTR lpFileName);
+    void SaveImage(LPCWSTR lpFileName);
     BOOL IsImageSaved() const;
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;

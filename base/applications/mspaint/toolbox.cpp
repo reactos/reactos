@@ -20,12 +20,12 @@ CPaintToolBar::ToolBarWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     {
         // We have to detect clicking on toolbar even if no change of pressed button
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        INT index = (INT)::SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+        INT index = (INT)::SendMessageW(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
         if (index >= 0)
         {
             TBBUTTON button;
-            if (::SendMessage(hwnd, TB_GETBUTTON, index, (LPARAM)&button))
-                ::PostMessage(::GetParent(hwnd), WM_COMMAND, button.idCommand, 0);
+            if (::SendMessageW(hwnd, TB_GETBUTTON, index, (LPARAM)&button))
+                ::PostMessageW(::GetParent(hwnd), WM_COMMAND, button.idCommand, 0);
         }
     }
     return ::CallWindowProc(oldWndProc, hwnd, uMsg, wParam, lParam);
@@ -42,26 +42,26 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
     };
     DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
                   TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
-    if (!CWindow::Create(TOOLBARCLASSNAME, hwndParent, toolbarPos, NULL, style))
+    if (!CWindow::Create(TOOLBARCLASSNAMEW, hwndParent, toolbarPos, NULL, style))
         return FALSE;
 
     HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(TB_SETIMAGELIST, 0, (LPARAM)hImageList);
 
-    HBITMAP hbmIcons = (HBITMAP)::LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_TOOLBARICONS),
-                                            IMAGE_BITMAP, 256, 16, 0);
+    HBITMAP hbmIcons = (HBITMAP)::LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDB_TOOLBARICONS),
+                                             IMAGE_BITMAP, 256, 16, 0);
     ImageList_AddMasked(hImageList, hbmIcons, RGB(255, 0, 255));
     ::DeleteObject(hbmIcons);
 
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    TCHAR szToolTip[30];
+    WCHAR szToolTip[30];
     TBBUTTON tbbutton;
     ZeroMemory(&tbbutton, sizeof(tbbutton));
     tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
     for (INT i = 0; i < NUM_TOOLS; i++)
     {
-        ::LoadString(g_hinstExe, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
+        ::LoadStringW(g_hinstExe, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
         tbbutton.iString   = (INT_PTR)szToolTip;
         tbbutton.fsState   = TBSTATE_ENABLED | ((i % 2 == 1) ? TBSTATE_WRAP : 0);
         tbbutton.idCommand = ID_FREESEL + i;

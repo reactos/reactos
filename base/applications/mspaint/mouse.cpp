@@ -703,7 +703,7 @@ struct TextTool : ToolBase
 
     void draw(HDC hdc)
     {
-        CString szText;
+        CStringW szText;
         textEditWindow.GetWindowText(szText);
 
         RECT rc;

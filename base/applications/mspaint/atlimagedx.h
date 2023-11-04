@@ -69,7 +69,7 @@ public:
         return TRUE;
     }
 
-    HRESULT LoadDx(LPCTSTR pszFileName, float *pxDpi, float *pyDpi) throw()
+    HRESULT LoadDx(LPCWSTR pszFileName, float *pxDpi, float *pyDpi) throw()
     {
         using namespace Gdiplus;
 
@@ -111,7 +111,7 @@ public:
         return (status == Ok ? S_OK : E_FAIL);
     }
 
-    HRESULT SaveDx(LPCTSTR pszFileName, REFGUID guidFileType = GUID_NULL,
+    HRESULT SaveDx(LPCWSTR pszFileName, REFGUID guidFileType = GUID_NULL,
                    float xDpi = 0, float yDpi = 0) throw()
     {
         using namespace Gdiplus;
@@ -141,7 +141,7 @@ public:
         CLSID clsid;
         if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
-            CString strExt(PathFindExtension(pszFileName));
+            CStringW strExt(PathFindExtensionW(pszFileName));
             clsid = FindCodecForExtension(strExt, pEncoders, cEncoders);
         }
         else
@@ -300,23 +300,23 @@ protected:
 
     // CImage::FindCodecForExtension is private. We have to duplicate it at here...
     static CLSID
-    FindCodecForExtension(LPCTSTR dotext, const Gdiplus::ImageCodecInfo *pCodecs, UINT nCodecs)
+    FindCodecForExtension(LPCWSTR dotext, const Gdiplus::ImageCodecInfo *pCodecs, UINT nCodecs)
     {
         for (UINT i = 0; i < nCodecs; ++i)
         {
-            CString strSpecs(pCodecs[i].FilenameExtension);
+            CStringW strSpecs(pCodecs[i].FilenameExtension);
             int ichOld = 0, ichSep;
             for (;;)
             {
-                ichSep = strSpecs.Find(TEXT(';'), ichOld);
+                ichSep = strSpecs.Find(L';', ichOld);
 
-                CString strSpec;
+                CStringW strSpec;
                 if (ichSep < 0)
                     strSpec = strSpecs.Mid(ichOld);
                 else
                     strSpec = strSpecs.Mid(ichOld, ichSep - ichOld);
 
-                int ichDot = strSpec.ReverseFind(TEXT('.'));
+                int ichDot = strSpec.ReverseFind(L'.');
                 if (ichDot >= 0)
                     strSpec = strSpec.Mid(ichDot);
 
