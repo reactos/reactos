@@ -23,7 +23,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  * Used by Win:SHELL32!CISFBand::_TrySimpleInvoke.
  */
 EXTERN_C
-HRESULT WINAPI
+BOOL WINAPI
 IContextMenu_Invoke(
     _In_ IContextMenu *pContextMenu,
     _In_ HWND hwnd,
@@ -31,7 +31,7 @@ IContextMenu_Invoke(
     _In_ UINT uFlags)
 {
     CMINVOKECOMMANDINFO info;
-    HRESULT hr = S_OK;
+    BOOL ret = FALSE;
     INT iDefItem = 0;
     HMENU hMenu = NULL;
     HCURSOR hOldCursor;
@@ -39,7 +39,7 @@ IContextMenu_Invoke(
     TRACE("(%p, %p, %s, %u)\n", pContextMenu, hwnd, debugstr_a(lpVerb), uFlags);
 
     if (!pContextMenu)
-        return S_OK;
+        return FALSE;
 
     hOldCursor = SetCursor(LoadCursorW(NULL, (LPCWSTR)IDC_WAIT));
 
@@ -66,7 +66,7 @@ IContextMenu_Invoke(
         if (!hwnd)
             info.fMask |= CMIC_MASK_FLAG_NO_UI;
         pContextMenu->InvokeCommand(&info);
-        hr = S_FALSE;
+        ret = TRUE;
     }
 
     if (hMenu)
@@ -74,5 +74,5 @@ IContextMenu_Invoke(
 
     SetCursor(hOldCursor);
 
-    return hr;
+    return ret;
 }

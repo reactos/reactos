@@ -278,7 +278,7 @@ VOID WINAPI FixSlashesAndColonW(LPWSTR);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
 
-HRESULT WINAPI
+BOOL WINAPI
 IContextMenu_Invoke(
     _In_ IContextMenu *pContextMenu,
     _In_ HWND hwnd,
