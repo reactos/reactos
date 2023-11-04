@@ -65,8 +65,7 @@ IContextMenu_Invoke(
     {
         if (!hwnd)
             info.fMask |= CMIC_MASK_FLAG_NO_UI;
-        pContextMenu->InvokeCommand(&info);
-        ret = TRUE;
+        ret = SUCCEEDED(pContextMenu->InvokeCommand(&info));
     }
 
     if (hMenu)
