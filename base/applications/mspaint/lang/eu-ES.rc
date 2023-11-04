@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-eu-ES.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-eu-ES.bmp"
 
 ID_MENU MENU
 BEGIN

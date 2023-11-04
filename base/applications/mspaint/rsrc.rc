@@ -21,24 +21,24 @@
 
 /* Icons */
 
-IDI_APPICON ICON "icons/paint.ico"
+IDI_APPICON ICON "img/paint.ico"
 
-IDB_TOOLBARICONS BITMAP "icons/iconbar.bmp"
+IDB_TOOLBARICONS BITMAP "img/iconbar.bmp"
 
-IDI_TRANSPARENT ICON "icons/transparent.ico"
-IDI_NONTRANSPARENT ICON "icons/nontransparent.ico"
+IDI_TRANSPARENT ICON "img/transparent.ico"
+IDI_NONTRANSPARENT ICON "img/nontransparent.ico"
 
-IDC_FILL ICON "icons/fill_cur.ico"
-IDC_COLOR ICON "icons/color_cur.ico"
-IDC_ZOOM ICON "icons/zoom_cur.ico"
-IDC_PEN ICON "icons/pen_cur.ico"
-IDC_AIRBRUSH ICON "icons/airbrush_cur.ico"
-IDC_HANDDRAG CURSOR "icons/handdrag.cur"
+IDC_FILL CURSOR "img/fill.cur"
+IDC_COLOR CURSOR "img/color.cur"
+IDC_ZOOM CURSOR "img/zoom.cur"
+IDC_PEN CURSOR "img/pen.cur"
+IDC_AIRBRUSH CURSOR "img/airbrush.cur"
+IDC_HANDDRAG CURSOR "img/handdrag.cur"
 
-IDI_HORZSTRETCH ICON "icons/horzstretch.ico"
-IDI_VERTSTRETCH ICON "icons/vertstretch.ico"
-IDI_HORZSKEW ICON "icons/horzskew.ico"
-IDI_VERTSKEW ICON "icons/vertskew.ico"
+IDI_HORZSTRETCH ICON "img/horzstretch.ico"
+IDI_VERTSTRETCH ICON "img/vertstretch.ico"
+IDI_HORZSKEW ICON "img/horzskew.ico"
+IDI_VERTSKEW ICON "img/vertskew.ico"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "mspaint.exe.manifest"
 

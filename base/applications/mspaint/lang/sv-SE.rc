@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-sv-SE.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-sv-SE.bmp"
 
 ID_MENU MENU
 BEGIN
