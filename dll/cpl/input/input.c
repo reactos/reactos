@@ -48,13 +48,12 @@ static BOOL AskForReboot(VOID)
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
-    HICON hIcon;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
             /* Set large icon correctly */
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            HICON hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
         }
