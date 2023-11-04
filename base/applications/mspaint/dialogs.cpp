@@ -332,9 +332,9 @@ void CFontsDialog::InitFontNames()
     HDC hDC = CreateCompatibleDC(NULL);
     if (hDC)
     {
-        EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc,
-                         reinterpret_cast<LPARAM>(&arrFontNames));
-        DeleteDC(hDC);
+        EnumFontFamiliesW(hDC, NULL, (FONTENUMPROCW)EnumFontFamProc,
+                          reinterpret_cast<LPARAM>(&arrFontNames));
+        ::DeleteDC(hDC);
     }
 
     // Actually add them to the combobox
@@ -446,9 +446,7 @@ void CFontsDialog::OnFontName(UINT codeNotify)
             iItem = ComboBox_GetCurSel(hwndNames);
             cch = ComboBox_GetLBTextLen(hwndNames, iItem);
             if (iItem != CB_ERR && 0 < cch && cch < _countof(szText))
-            {
                 ComboBox_GetLBText(hwndNames, iItem, szText);
-            }
             break;
 
         case CBN_EDITCHANGE:
