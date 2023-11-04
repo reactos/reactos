@@ -18,7 +18,7 @@ enum LicenseType
 inline BOOL
 IsKnownLicenseType(INT x)
 {
-    return (x > 0 && x <= LICENSE_MAX);
+    return (x > LICENSE_NONE && x <= LICENSE_MAX);
 }
 
 enum AppsCategories
