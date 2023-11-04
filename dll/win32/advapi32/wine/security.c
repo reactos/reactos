@@ -304,7 +304,7 @@ OpenProcessToken(HANDLE ProcessHandle,
                                 TokenHandle);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("NtOpenProcessToken failed! Status %08x\n", Status);
+        WARN("NtOpenProcessToken failed! Status %08x\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
