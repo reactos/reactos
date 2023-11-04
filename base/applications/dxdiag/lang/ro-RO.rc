@@ -1,7 +1,9 @@
 /*
- * FILE:        base/applications/dxdiag/lang/ro-RO.rc
- *              ReactOS Project (https://reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS DX Diagnostic
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -15,7 +17,7 @@ BEGIN
     CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Manual…", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     DEFPUSHBUTTON "&Următorul compartiment", IDC_BUTTON_NEXT, 187, 260, 120, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Păstrare informații…", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "S&alvare informații…", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "Î&nchide", IDC_BUTTON_EXIT, 425, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
