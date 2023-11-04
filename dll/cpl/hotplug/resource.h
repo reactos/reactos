@@ -15,6 +15,7 @@
 #define IDC_SAFE_REMOVE_DISPLAY_COMPONENTS 306
 
 #define IDD_CONFIRM_STOP_HARDWARE_DIALOG   310
+#define IDC_CONFIRM_STOP_DEVICE_LIST       311
 
 /* Menu IDs */
 #define IDM_POPUP_DEVICE_TREE              500
@@ -22,6 +23,7 @@
 #define IDM_PROPERTIES                     502
 
 /* Resource strings IDs */
-#define IDS_CPLNAME        1000
-#define IDS_CPLDESCRIPTION 1001
-
+#define IDS_CPLNAME            1000
+#define IDS_CPLDESCRIPTION     1001
+#define IDS_UNKNOWN_DEVICE     1002
+#define IDS_EJECT_ERROR_FORMAT 1003
