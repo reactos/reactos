@@ -48,8 +48,8 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
     HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(TB_SETIMAGELIST, 0, (LPARAM)hImageList);
 
-    HBITMAP hbmIcons = (HBITMAP)::LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_TOOLBARICONS),
-                                            IMAGE_BITMAP, 256, 16, 0);
+    HBITMAP hbmIcons = (HBITMAP)::LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDB_TOOLBARICONS),
+                                             IMAGE_BITMAP, 256, 16, 0);
     ImageList_AddMasked(hImageList, hbmIcons, RGB(255, 0, 255));
     ::DeleteObject(hbmIcons);
 

@@ -388,7 +388,7 @@ void CFontsDialog::InitToolbar()
     AddBitmap.nID = IDB_FONTSTOOLBAR;
     ::SendMessageW(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
 
-    HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
+    HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCEW(IDB_FONTSTOOLBAR),
                                           16, 8, RGB(255, 0, 255), IMAGE_BITMAP,
                                           LR_CREATEDIBSECTION);
     ::SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
@@ -551,10 +551,10 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         pToolTip->hinst = g_hinstExe;
         switch (pnmhdr->idFrom)
         {
-            case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD); break;
-            case IDM_ITALIC:    pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC); break;
-            case IDM_UNDERLINE: pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE); break;
-            case IDM_VERTICAL:  pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL); break;
+            case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCEW(IDS_BOLD); break;
+            case IDM_ITALIC:    pToolTip->lpszText = MAKEINTRESOURCEW(IDS_ITALIC); break;
+            case IDM_UNDERLINE: pToolTip->lpszText = MAKEINTRESOURCEW(IDS_UNDERLINE); break;
+            case IDM_VERTICAL:  pToolTip->lpszText = MAKEINTRESOURCEW(IDS_VERTICAL); break;
 
             default:
                 break;

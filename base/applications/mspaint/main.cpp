@@ -337,7 +337,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nC
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     // Load the access keys
-    HACCEL hAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(800));
+    HACCEL hAccel = ::LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(800));
 
     // The message loop
     MSG msg;

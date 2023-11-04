@@ -321,7 +321,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         m_ptOrig = pt;
         SetCapture();
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -625,7 +625,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (m_nMouseDownMsg == WM_MBUTTONDOWN)
     {
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -646,7 +646,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
-            ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
+            ::SetCursor(::LoadCursorW(NULL, IDC_SIZEALL));
         return 0;
     }
 
@@ -659,22 +659,22 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         switch (toolsModel.GetActiveTool())
         {
             case TOOL_FILL:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_FILL)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_FILL)));
                 break;
             case TOOL_COLOR:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_COLOR)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_COLOR)));
                 break;
             case TOOL_ZOOM:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_ZOOM)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_ZOOM)));
                 break;
             case TOOL_PEN:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_PEN)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_PEN)));
                 break;
             case TOOL_AIRBRUSH:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_AIRBRUSH)));
+                ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
             default:
-                ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
+                ::SetCursor(::LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_CROSS)));
         }
         return 0;
     }

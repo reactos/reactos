@@ -196,7 +196,7 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     UINT nHitTest = LOWORD(lParam);
     if (nHitTest == HTCAPTION)
     {
-        ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL)); // Enable drag move
+        ::SetCursor(::LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_SIZEALL))); // Enable drag move
         return FALSE;
     }
     return DefWindowProc(nMsg, wParam, lParam);

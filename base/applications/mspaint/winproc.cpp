@@ -247,13 +247,13 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Loading and setting the window menu from resource
-    m_hMenu = ::LoadMenu(g_hinstExe, MAKEINTRESOURCE(ID_MENU));
+    m_hMenu = ::LoadMenuW(g_hinstExe, MAKEINTRESOURCEW(ID_MENU));
     SetMenu(m_hMenu);
 
     // Create the status bar
     DWORD style = SBARS_SIZEGRIP | WS_CHILD | (registrySettings.ShowStatusBar ? WS_VISIBLE : 0);
-    g_hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
-                                  NULL, g_hinstExe, NULL);
+    g_hStatusBar = ::CreateWindowExW(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
+                                     NULL, g_hinstExe, NULL);
     ::SendMessageW(g_hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
     // Create the tool box
@@ -276,8 +276,8 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     }
 
     // Set icon
-    SendMessage(WM_SETICON, ICON_BIG, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
-    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM) LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_BIG, (LPARAM)::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDI_APPICON)));
+    SendMessage(WM_SETICON, ICON_SMALL, (LPARAM)::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDI_APPICON)));
 
     return 0;
 }
@@ -572,8 +572,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             WCHAR infotitle[100], infotext[200];
             ::LoadStringW(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
             ::LoadStringW(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
-            ShellAbout(m_hWnd, infotitle, infotext,
-                       LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
+            ::ShellAboutW(m_hWnd, infotitle, infotext,
+                          LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDI_APPICON)));
             break;
         }
         case IDM_HELPHELPTOPICS:
@@ -947,8 +947,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 CWaitCursor waitCursor;
                 if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
-                    CStringW strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
-                    CStringW strTitle(MAKEINTRESOURCE(IDS_PROGRAMNAME));
+                    CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
+                    CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
                     INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
                     if (id != IDYES)
                         break;
