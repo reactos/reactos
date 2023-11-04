@@ -65,7 +65,7 @@ void CTextEditWindow::FixEditPos(LPCWSTR pszOldText)
         szText += L"x"; // This is a trick to enable the g_ptEnd newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
-        DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
+        DrawTextW(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
         if (tm.tmDescent > 0)
             rcText.bottom += tm.tmDescent;
         ReleaseDC(hDC);
@@ -135,7 +135,7 @@ LRESULT CTextEditWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         FillRect(hDC, &rc, hbr);
         DeleteObject(hbr);
     }
-    SetTextColor(hDC, paletteModel.GetFgColor());
+    ::SetTextColor(hDC, paletteModel.GetFgColor());
     return TRUE;
 }
 
@@ -336,7 +336,7 @@ void CTextEditWindow::UpdateFont()
         m_hFontZoomed = NULL;
     }
 
-    LOGFONT lf;
+    LOGFONTW lf;
     ZeroMemory(&lf, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET; // registrySettings.CharSet; // Ignore
     lf.lfWeight = (registrySettings.Bold ? FW_BOLD : FW_NORMAL);

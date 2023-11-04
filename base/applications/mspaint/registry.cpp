@@ -77,8 +77,8 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     Bar1ID = BAR1ID_TOP;
     Bar2ID = BAR2ID_LEFT;
 
-    LOGFONT lf;
-    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    LOGFONTW lf;
+    ::GetObjectW(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     strFontName = lf.lfFaceName;
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));

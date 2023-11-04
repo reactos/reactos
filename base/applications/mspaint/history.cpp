@@ -266,8 +266,8 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         case 2:
         {
             PushImageForUndo();
-            StretchBlt(m_hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(),
-                       m_hDrawingDC, 0, 0, GetWidth(), GetHeight(), SRCCOPY);
+            ::StretchBlt(m_hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(),
+                         m_hDrawingDC, 0, 0, GetWidth(), GetHeight(), SRCCOPY);
             break;
         }
     }

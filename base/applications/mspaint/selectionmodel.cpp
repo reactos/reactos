@@ -139,7 +139,7 @@ void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTranspar
         return;
 
     BITMAP bm;
-    if (!GetObject(m_hbmColor, sizeof(BITMAP), &bm))
+    if (!GetObjectW(m_hbmColor, sizeof(BITMAP), &bm))
         return;
 
     COLORREF keyColor = (bBgTransparent ? crBg : CLR_INVALID);
@@ -516,7 +516,7 @@ void SelectionModel::InvertSelection()
     TakeOff();
 
     BITMAP bm;
-    ::GetObject(m_hbmColor, sizeof(bm), &bm);
+    ::GetObjectW(m_hbmColor, sizeof(bm), &bm);
 
     HDC hdc = ::CreateCompatibleDC(NULL);
     HGDIOBJ hbmOld = ::SelectObject(hdc, m_hbmColor);

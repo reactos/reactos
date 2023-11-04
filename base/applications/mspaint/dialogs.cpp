@@ -272,9 +272,7 @@ LRESULT CStretchSkewDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CStretchSkewDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    CStringW strrcIntNumbers;
-    CStringW strrcPercentage;
-    CStringW strrcAngle;
+    CStringW strrcIntNumbers, strrcPercentage, strrcAngle;
     BOOL tr1, tr2, tr3, tr4;
 
     strrcIntNumbers.LoadString(g_hinstExe, IDS_INTNUMBERS);
@@ -304,7 +302,7 @@ LRESULT CStretchSkewDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 }
 
 static INT CALLBACK
-EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM lParam)
+EnumFontFamProc(ENUMLOGFONTW *lpelf, NEWTEXTMETRICW *lpntm, INT FontType, LPARAM lParam)
 {
     CSimpleArray<CStringW>& arrFontNames = *reinterpret_cast<CSimpleArray<CStringW>*>(lParam);
     LPWSTR name = lpelf->elfLogFont.lfFaceName;
@@ -547,7 +545,7 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     NMHDR *pnmhdr = reinterpret_cast<NMHDR *>(lParam);
     if (pnmhdr->code == TTN_NEEDTEXT)
     {
-        LPTOOLTIPTEXT pToolTip = reinterpret_cast<LPTOOLTIPTEXT>(lParam);
+        LPTOOLTIPTEXTW pToolTip = reinterpret_cast<LPTOOLTIPTEXTW>(lParam);
         pToolTip->hinst = g_hinstExe;
         switch (pnmhdr->idFrom)
         {
@@ -603,19 +601,19 @@ LRESULT CFontsDialog::OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         if (pDrawItem->itemID == (UINT)-1)
             return TRUE;
 
-        SetBkMode(pDrawItem->hDC, TRANSPARENT);
+        ::SetBkMode(pDrawItem->hDC, TRANSPARENT);
 
         HWND hwndItem = pDrawItem->hwndItem;
         RECT rcItem = pDrawItem->rcItem;
         if (pDrawItem->itemState & ODS_SELECTED)
         {
-            FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_HIGHLIGHT));
-            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            ::FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_HIGHLIGHT));
+            ::SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
         }
         else
         {
-            FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_WINDOW));
-            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_WINDOWTEXT));
+            ::FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_WINDOW));
+            ::SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_WINDOWTEXT));
         }
 
         WCHAR szText[LF_FACESIZE];
@@ -625,7 +623,7 @@ LRESULT CFontsDialog::OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
             ComboBox_GetLBText(hwndItem, pDrawItem->itemID, szText);
 
             rcItem.left += 24;
-            DrawText(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            ::DrawTextW(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
         if (pDrawItem->itemState & ODS_FOCUS)

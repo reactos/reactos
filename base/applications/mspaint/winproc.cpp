@@ -627,7 +627,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             pd.nMaxPage = 0xffff;
             if (PrintDlg(&pd) == TRUE)
             {
-                BitBlt(pd.hDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), imageModel.GetDC(), 0, 0, SRCCOPY);
+                ::BitBlt(pd.hDC, 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), imageModel.GetDC(), 0, 0, SRCCOPY);
                 DeleteDC(pd.hDC);
             }
             if (pd.hDevMode)
