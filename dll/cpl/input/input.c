@@ -37,12 +37,12 @@ InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
     page->pfnDlgProc  = DlgProc;
 }
 
-static BOOL AskForReboot(VOID)
+static BOOL AskForReboot(HWND hwndDlg)
 {
     WCHAR szText[128], szCaption[64];
     LoadStringW(hApplet, IDS_REBOOT_NOW, szText, _countof(szText));
     LoadStringW(hApplet, IDS_LANGUAGE, szCaption, _countof(szCaption));
-    return (MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION | MB_YESNO) == IDYES)
+    return (MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION | MB_YESNO) == IDYES);
 }
 
 static int CALLBACK
@@ -71,7 +71,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
                     /* Write advanced settings */
                     SaveAdvancedSettings(hwndDlg);
 
-                    if (g_bRebootNeeded && AskForReboot())
+                    if (g_bRebootNeeded && AskForReboot(hwndDlg))
                     {
                         EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
                         ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
