@@ -8,10 +8,9 @@
 
 #include "input.h"
 
-static BOOL s_bTextServiceWasOff = FALSE;
-BOOL g_bRebootNeeded = FALSE;
+BOOL g_bTextServiceIsOff = FALSE;
 
-static BOOL LoadAdvancedSettings(HWND hwndDlg)
+BOOL LoadAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
     LONG error;
@@ -26,15 +25,15 @@ static BOOL LoadAdvancedSettings(HWND hwndDlg)
     RegCloseKey(hKey);
 
     CheckDlgButton(hwndDlg, IDC_TURNOFFTEXTSVCS_CB, (dwValue ? BST_CHECKED : BST_UNCHECKED));
-    s_bTextServiceWasOff = !!dwValue;
+    g_bTextServiceIsOff = !!dwValue;
     return TRUE;
 }
 
-static BOOL SaveAdvancedSettings(HWND hwndDlg, BOOL bOff)
+BOOL SaveAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
     LONG error;
-    const DWORD dwValue = bOff, cbValue = sizeof(dwValue);
+    const DWORD dwValue = g_bTextServiceIsOff, cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_WRITE, &hKey);
     if (error != ERROR_SUCCESS)
@@ -47,11 +46,6 @@ static BOOL SaveAdvancedSettings(HWND hwndDlg, BOOL bOff)
     return error == ERROR_SUCCESS;
 }
 
-static VOID OnInitAdvancedSettingsPage(HWND hwndDlg)
-{
-    LoadAdvancedSettings(hwndDlg);
-}
-
 static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
 {
     LPNMHDR header = (LPNMHDR)lParam;
@@ -61,13 +55,23 @@ static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
         case PSN_APPLY:
         {
             BOOL bOff = (IsDlgButtonChecked(hwndDlg, IDC_TURNOFFTEXTSVCS_CB) == BST_CHECKED);
-            SaveAdvancedSettings(hwndDlg, bOff);
-            g_bRebootNeeded |= (s_bTextServiceWasOff && !bOff);
+            g_bRebootNeeded |= (g_bTextServiceIsOff && !bOff);
+            g_bTextServiceIsOff = bOff;
             break;
         }
     }
 
     return 0;
+}
+
+VOID OnCommandAdvancedSettingsPage(HWND hwndDlg, WPARAM wParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case IDC_TURNOFFTEXTSVCS_CB:
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
+    }
 }
 
 INT_PTR CALLBACK
@@ -76,11 +80,15 @@ AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            OnInitAdvancedSettingsPage(hwndDlg);
+            LoadAdvancedSettings(hwndDlg);
             return TRUE;
 
         case WM_NOTIFY:
             return OnNotifyAdvancedSettingsPage(hwndDlg, lParam);
+
+        case WM_COMMAND:
+            OnCommandAdvancedSettingsPage(hwndDlg, wParam);
+            break;
     }
 
     return 0;

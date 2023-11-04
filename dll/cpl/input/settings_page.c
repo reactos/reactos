@@ -15,7 +15,6 @@ static INT s_nAliveLeafCount = 0;
 static INT s_nRootCount = 0;
 static INT s_iKeyboardImage = -1;
 static INT s_iDotImage = -1;
-static BOOL s_bDefaultInputChanged = FALSE;
 
 static HICON
 CreateLayoutIcon(LANGID LangID)
@@ -461,12 +460,12 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                     if (HIWORD(item.lParam)) // Leaf?
                     {
                         if (InputList_Remove((INPUT_LIST_NODE*)item.lParam))
-                            s_bDefaultInputChanged = TRUE;
+                            g_bRebootNeeded = TRUE;
                     }
                     else // Root?
                     {
                         if (InputList_RemoveByLang(LOWORD(item.lParam)))
-                            s_bDefaultInputChanged = TRUE;
+                            g_bRebootNeeded = TRUE;
                     }
 
                     UpdateInputListView(hwndList);
@@ -533,7 +532,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
                         INPUT_LIST_NODE* pNode = (INPUT_LIST_NODE*)lParam;
                         if (!(pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT))
                         {
-                            s_bDefaultInputChanged = TRUE;
+                            g_bRebootNeeded = TRUE;
                             InputList_SetDefault(pNode);
                             UpdateInputListView(hwndList);
                             SetControlsState(hwndDlg);
@@ -544,24 +543,6 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
             }
         }
     }
-}
-
-static BOOL IsRebootNeeded(VOID)
-{
-    INPUT_LIST_NODE *pNode;
-
-    if (s_bDefaultInputChanged)
-        return TRUE;
-
-    for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
-    {
-        if (IS_IME_HKL(pNode->hkl)) /* IME? */
-        {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
 }
 
 BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable)
@@ -619,10 +600,16 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 
         case PSN_APPLY:
         {
-            g_bRebootNeeded |= IsRebootNeeded();
-
-            /* Write Input Methods list to registry */
-            InputList_Process();
+            /* If an HKL is IME, then reboot is needed */
+            INPUT_LIST_NODE *pNode;
+            for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
+            {
+                if (IS_IME_HKL(pNode->hkl)) /* IME? */
+                {
+                    g_bRebootNeeded = TRUE;
+                    break;
+                }
+            }
             break;
         }
     }

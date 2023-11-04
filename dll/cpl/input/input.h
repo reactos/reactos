@@ -44,8 +44,10 @@ SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable);
 
 /* advanced_settings_page.c */
+extern BOOL g_bTextServiceIsOff;
 INT_PTR CALLBACK
 AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL SaveAdvancedSettings(HWND hwndDlg);
 
 /* add_dialog.c */
 INT_PTR CALLBACK
@@ -95,5 +97,7 @@ DWORDfromString(const WCHAR *pszString)
 #define IS_SUBST_KLID(dwKLID)       ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
 VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
+
+extern BOOL g_bRebootNeeded;
 
 #endif /* _INPUT_H */
