@@ -48,6 +48,7 @@ list(APPEND SOURCE
     endpointvolume.idl
     exdisp.idl
     fusion.idl
+    gameux.idl
     hlink.idl
     htiface.idl
     htiframe.idl
