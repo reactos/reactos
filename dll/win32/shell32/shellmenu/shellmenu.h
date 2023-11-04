@@ -14,7 +14,7 @@
 // Disable some warnings in headers only
 #pragma warning(push)
 #pragma warning(disable:4244) // possible loss of data
-#pragma warning(disable:4512) // assignment operator could not be generated
+#pragma warning(disable:4512) // assignment operator could not be gernerated
 #endif
 
 #include <stdio.h>

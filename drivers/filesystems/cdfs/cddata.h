@@ -142,7 +142,7 @@ extern CDFS_TELEMETRY_DATA_CONTEXT CdTelemetryData;
 //      ASSERT_RESOURCE_NOT_MINE( _In_ PERESOURCE Resource );
 //
 //  The following macros are used to check whether the current thread
-//  owns the resources in the given structures.
+//  owns the resoures in the given structures.
 //
 //      ASSERT_EXCLUSIVE_CDDATA
 //

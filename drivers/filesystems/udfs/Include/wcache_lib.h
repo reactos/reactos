@@ -276,7 +276,7 @@ OSSTATUS WCacheEODirect__(IN PW_CACHE Cache,
 OSSTATUS WCacheStartDirect__(IN PW_CACHE Cache,
                              IN PVOID Context,
                              IN BOOLEAN Exclusive);
-// check if requested extent completely cached
+// check if requested extent completly cached
 BOOLEAN  WCacheIsCached__(IN PW_CACHE Cache,
                           IN lba_t Lba,
                           IN ULONG BCount);

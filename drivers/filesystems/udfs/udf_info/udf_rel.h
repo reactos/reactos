@@ -194,7 +194,7 @@ typedef struct _DIR_INDEX_ITEM {
     file used for internal FS purposes & must be invisible.
     - #UDF_FI_FLAG_LINKED\n
     Presence of this bit means that related  FileEntry  has  more
-    than one FileIdent. It happens when we use HardLinks.
+    than one FileIdent. It happends when we use HardLinks.
 */
     uint8 FI_Flags;                    // FileIdent-related flags
 /**
@@ -219,10 +219,10 @@ typedef struct _DIR_INDEX_ITEM {
 #define UDF_FI_FLAG_SYS_ATTR     (0x02)// cached flags in system-specific format
 /// Given  entry  represents the file used for internal FS purposes & must be invisible
 #define UDF_FI_FLAG_FI_INTERNAL  (0x04)
-/// Related  FileEntry  has more than one FileIdent. It happens when we use HardLinks.
+/// Related  FileEntry  has more than one FileIdent. It happends when we use HardLinks.
 #define UDF_FI_FLAG_LINKED       (0x08)
 
-#define UDF_FI_FLAG_DOS          (0x10)// Lfn-style name is equal to DOS-style (case insensitive)
+#define UDF_FI_FLAG_DOS          (0x10)// Lfn-style name is equal to DOS-style (case insensetive)
 #define UDF_FI_FLAG_KEEP_NAME    (0x20)
 
 #define UDF_DATALOC_INFO_MT PagedPool
@@ -240,7 +240,7 @@ typedef struct _DIR_INDEX_ITEM {
     handle HardLiks properly. When all references to  given  Dloc
     has gone it  is  released.  In  case  of  file  deletion  the
     association between Dloc & Lba is discarded, but Dloc is  not
-    released until UDFCleanUpFile__() is called.  This  prevents
+    released untill UDFCleanUpFile__() is called.  This  prevents
     interference between deleted files & newly  created  ones  in
     case of equal Lba of deleted & created FileEntries.
 
@@ -278,7 +278,7 @@ typedef struct _UDF_DATALOC_INFO {
 */
     EXTENT_INFO FELoc;                 // file entry location
 /**
-    Pointer to cached FileEntry. This field mush be valid  until
+    Pointer to cached FileEntry. This field mush be valid  untill
     all file instances are cleaned up (see UDFCleanUpFile__() and
     #LinkRefCount).
 */
@@ -301,7 +301,7 @@ typedef struct _UDF_DATALOC_INFO {
     Counter of currently opened directory tree instances  (files)
     pointing to given data. It is introduced because UDF supports
     HardLink concept. UDF_DATALOC_INFO structure  should  not  be
-    released until this field reaches zero.
+    released untill this field reaches zero.
 */
     uint32      LinkRefCount;
 /**
@@ -357,7 +357,7 @@ typedef struct _UDF_FILE_INFO {
     directory tree. Each file opened by NT has  Fcb  structure  &
     associated FileInfo. If the file is opened  by  UDF  FSD  for
     internal use this field may be NULL.  Each  Fcb  has  a  back
-    pointer to FileInfo, so both structures are accessible.
+    pointer to FileInfo, so both structures are accessable.
 */
     struct _UDFFileControlBlock* Fcb;  // pointer to corresponding Fcb (null if absent)
 /**
@@ -366,7 +366,7 @@ typedef struct _UDF_FILE_INFO {
 */
     PUDF_DATALOC_INFO Dloc;            // actual data location descriptor
 /**
-    Pointer to cached FileIdent. This field mush be valid  until
+    Pointer to cached FileIdent. This field mush be valid  untill
     the file is cleaned up (see UDFCleanUpFile__()).
 */
     PFILE_IDENT_DESC FileIdent;        // file ident data
@@ -393,16 +393,16 @@ typedef struct _UDF_FILE_INFO {
 /**
     Counter of open operations. Each  routine  opening  the  file
     increments this counter, each  routine  closing  the  file  -
-    decrements. The FileInfo structure can't be  released  until
-    this counter reaches zero.
+    decrements. The FileInfo structure can't be  released  untill
+    this counter reachs zero.
 */
     uint32       RefCount;             // number of references
 /**
     Counter of open operations performed  for  subsequent  files.
     Each routine opening the  file  increments  this  counter  in
     parent FileInfo structure, each routine closing  the  file  -
-    decrements. The FileInfo structure can't be  released  until
-    this counter reaches zero.
+    decrements. The FileInfo structure can't be  released  untill
+    this counter reachs zero.
 */
     uint32       OpenCount;            // number of opened files in Dir
     struct _UDF_FILE_INFO* NextLinkedFile; //

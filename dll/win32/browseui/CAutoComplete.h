@@ -226,7 +226,7 @@ protected:
     CStringW m_strStemText; // dirname + '\\'
     CStringW m_strQuickComplete; // used for [Ctrl]+[Enter]
     CACListView m_hwndList; // this listview is virtual
-    CACScrollBar m_hwndScrollBar; // scroll bar control
+    CACScrollBar m_hwndScrollBar; // scroll bar contol
     CACSizeBox m_hwndSizeBox; // the size grip
     CComPtr<IEnumString> m_pEnum; // used for enumeration
     CComPtr<IACList> m_pACList; // for IACList::Expand to update the list

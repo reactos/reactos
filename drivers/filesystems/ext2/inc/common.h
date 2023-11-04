@@ -12,7 +12,7 @@ CTL_CODE(FILE_DEVICE_UNKNOWN, 2001, METHOD_BUFFERED, FILE_ANY_ACCESS)
 CTL_CODE(FILE_DEVICE_UNKNOWN, 2002, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
-/* performance / memory allocation statistics */
+/* performance / memory allocaiton statistics */
 #define PS_IRP_CONTEXT  0x00
 #define PS_VCB          0x01
 #define PS_FCB          0x02
@@ -92,7 +92,7 @@ typedef union {
 
 typedef struct _EXT2_PERF_STATISTICS_V1 {
 
-    /* total number of processed/being processed requests */
+    /* totoal number of processed/being processed requests */
     struct {
         ULONG           Processed;
         ULONG           Current;
@@ -107,7 +107,7 @@ typedef struct _EXT2_PERF_STATISTICS_V1 {
     /* memory allocated in bytes */
     EXT2_STAT_ARRAY_V1  Size;
 
-    /* total memory allocation statistics */
+    /* totoal memory allocation statistics */
     EXT2_STAT_ARRAY_V1  Total;
 
 } EXT2_PERF_STATISTICS_V1, *PEXT2_PERF_STATISTICS_V1;
@@ -121,7 +121,7 @@ typedef struct _EXT2_PERF_STATISTICS_V2 {
     USHORT              Version;    /* 02 */
     USHORT              Length;     /* sizeof(EXT2_PERF_STATISTICS_V2) */
 
-    /* total number of processed/being processed requests */
+    /* totoal number of processed/being processed requests */
     struct {
         ULONG           Processed;
         ULONG           Current;
@@ -136,7 +136,7 @@ typedef struct _EXT2_PERF_STATISTICS_V2 {
     /* memory allocated in bytes */
     EXT2_STAT_ARRAY_V2  Size;
 
-    /* total memory allocation statistics */
+    /* totoal memory allocation statistics */
     EXT2_STAT_ARRAY_V2  Total;
 
 } EXT2_PERF_STATISTICS_V2, *PEXT2_PERF_STATISTICS_V2;

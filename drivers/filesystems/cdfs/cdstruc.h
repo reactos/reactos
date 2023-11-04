@@ -244,7 +244,7 @@ typedef struct _CD_NAME {
     UNICODE_STRING FileName;
 
     //
-    //  String containing the version number.
+    //  String containging the version number.
     //
 
     UNICODE_STRING VersionString;
@@ -336,7 +336,7 @@ typedef struct _CD_DATA {
     //
     //  The following fields are used to allocate IRP context structures
     //  using a lookaside list, and other fixed sized structures from a
-    //  small cache.  We use the CdData mutex to protect these structures.
+    //  small cache.  We use the CdData mutex to protext these structures.
     //
 
     ULONG IrpContextDepth;
@@ -368,7 +368,7 @@ typedef struct _CD_DATA {
     //      operation.
     //  MaxDelayedCloseCount - Trigger delay close work at this threshold.
     //  MinDelayedCloseCount - Turn off delay close work at this threshold.
-    //  DelayedCloseCount - Number of entries on the delayed close queue.
+    //  DelayedCloseCount - Number of entries on the delayted close queue.
     //
     //  CloseItem - Workqueue item used to start FspClose thread.
     //
@@ -864,7 +864,7 @@ typedef struct _FCB_NONPAGED {
 
     //
     //  The following field contains a record of special pointers used by
-    //  MM and Cache to manipulate section objects.  Note that the values
+    //  MM and Cache to manipluate section objects.  Note that the values
     //  are set outside of the file system.  However the file system on an
     //  open/create will set the file object's SectionObject field to
     //  point to this field
@@ -1861,14 +1861,14 @@ typedef struct _CDFS_TELEMETRY_DATA_CONTEXT {
     volatile LONG MissedTelemetryPoints;
 
     //
-    //  System Time of the last periodic telemetry event.  System Time
+    //  System Time of the last periodic telemtry event.  System Time
     //  is according to KeQuerySystemTime()
     //
 
     LARGE_INTEGER LastPeriodicTelemetrySystemTime;
 
     //
-    //  TickCount of the last periodic telemetry event.  TickCount is
+    //  TickCount of the last periodic telemtry event.  TickCount is
     //  according to KeQueryTickCount()
     //
 
@@ -1891,7 +1891,7 @@ typedef struct _CDFS_TELEMETRY_DATA_CONTEXT {
 #if DBG
 
     //
-    //  For DBG builds we want a mechanism to change the frequency of
+    //  For DBG builds we want a machanism to change the frequency of
     //  periodic events
     //
 

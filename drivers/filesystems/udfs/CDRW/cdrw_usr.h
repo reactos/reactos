@@ -24,7 +24,7 @@ Environment:
 
 #define CDRW_SIGNATURE_v1 "ALWA CD-R/W v1"
 
-//#define CDRW_RESTRICT_ACCESS    // require W-access rights for some IOCTLs
+//#define CDRW_RESTRICT_ACCESS    // require W-acces rights for some IOCTLs
 
 #include "cdrw_hw.h"
 //#include "ntdddisk.h"
@@ -1481,7 +1481,7 @@ typedef struct _GET_DEVICE_INFO_USER_OUT {
 #define CDRW_FEATURE_EVENT          0x00000002
 #define CDRW_FEATURE_GET_CFG        0x00000004
 #define CDRW_FEATURE_NO_LOCK_REP    0x00000008 // device doesn't report tray lock state
-#define CDRW_FEATURE_SYNC_ON_WRITE  0x00000010 // device prefers Sync Cache after each Write
+#define CDRW_FEATURE_SYNC_ON_WRITE  0x00000010 // device preferes Sync Cache after each Write
 #define CDRW_FEATURE_BAD_RW_SEEK    0x00000020 // seek error occures with status Illegal Sector Mode For This Track
                                                //   on old CdRoms when they attempt to read outer sectors on FP formatted
                                                //   disk. Workaround: perform sequence of seeks from lower address
@@ -1489,7 +1489,7 @@ typedef struct _GET_DEVICE_INFO_USER_OUT {
 #define CDRW_FEATURE_FP_ADDRESSING_PROBLEM  0x00000040
 #define CDRW_FEATURE_MRW_ADDRESSING_PROBLEM 0x00000080
 #define CDRW_FEATURE_FORCE_SYNC_ON_WRITE    0x00000100 // device requires Sync Cache after each Write
-#define CDRW_FEATURE_BAD_DVD_LAST_LBA       0x00000200 // device cannot determine LastLba on not closed DVD disks
+#define CDRW_FEATURE_BAD_DVD_LAST_LBA       0x00000200 // device cannot determile LastLba on not closed DVD disks
 #define CDRW_FEATURE_FULL_BLANK_ON_FORMAT   0x00000400 // device cannot format disk until it is full-blanked
 #define CDRW_FEATURE_STREAMING              0x00000800 // device supports streaming read/write
 #define CDRW_FEATURE_FORCE_SYNC_BEFORE_READ 0x00001000 // device requires Sync Cache on Write -> Read state transition
@@ -1713,7 +1713,7 @@ typedef struct _GET_DISK_LAYOUT_USER_OUT {
 #define CDRW_ERR_INVALID_LBA                    0x0017
 #define CDRW_ERR_INVALID_FIXED_PACKET_SIZE      0x0018
 #define CDRW_ERR_INVALID_WRITE_TYPE_FOR_MEDIA   0x0019
-#define CDRW_ERR_CUE_SHEET_REQUIRED             0x001a  // you should send cue sheet before SAO
+#define CDRW_ERR_CUE_SHEET_REQUIRED             0x001a  // you sould send cue sheet before SAO
 #define CDRW_ERR_CANT_DEINIT_IN_CLASS_MODE      0x001b  // there is no underlayered driver
 #define CDRW_ERR_INVALID_FORMAT_UNIT_SETTINGS   0x001c  // use SET_WRITE_PARAMS properly before
                                                         // calling FormatUnit
@@ -1759,8 +1759,8 @@ typedef struct _GET_DISK_LAYOUT_USER_OUT {
 #define FORMATUNIT_STD          1
 #endif //WITHOUT_FORMATTER
 
-#define REG_R_SPLIT_SIZE_NAME_USER  ("ReadSplitSize")       // Read request splitting limit
-#define REG_W_SPLIT_SIZE_NAME_USER  ("WriteSplitSize")      // Write request splitting limit
+#define REG_R_SPLIT_SIZE_NAME_USER  ("ReadSplitSize")       // Read request spliting limit
+#define REG_W_SPLIT_SIZE_NAME_USER  ("WriteSplitSize")      // Write request spliting limit
 
 #define REG_CDR_SIMULATION_NAME_USER    ("CdRSimulationMode")  // Influence on READ_DISC_INFO
                                                         // capability check on startup

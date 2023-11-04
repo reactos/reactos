@@ -1,7 +1,7 @@
 #ifndef _FBT_HCI_CMD_STRUCTS_H
 #define _FBT_HCI_CMD_STRUCTS_H
 
-// Pack structures to single unsigned char boundaries
+// Pack structures to single unsigned char boundries
 #pragma pack(push, 1)
 
 // Command Header

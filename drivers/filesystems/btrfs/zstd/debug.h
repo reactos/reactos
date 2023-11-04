@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 
-/* static assert is triggered at compile time, leaving no runtime artifact.
+/* static assert is triggered at compile time, leaving no runtime artefact.
  * static assert only works with compile-time constants.
  * Also, this variant can only be used inside a function. */
 #define DEBUG_STATIC_ASSERT(c) (void)sizeof(char[(c) ? 1 : -1])

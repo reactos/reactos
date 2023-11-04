@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1992, 1993, 1994, 1995
  * Remy Card (card@masi.ibp.fr)
- * Laboratoire MASI - Institute Blaise Pascal
+ * Laboratoire MASI - Institut Blaise Pascal
  * Universite Pierre et Marie Curie (Paris VI)
  *
  *  from
@@ -61,7 +61,7 @@ struct ext3_block_alloc_info {
     /*
      * Was i_next_alloc_goal in ext3_inode_info
      * is the *physical* companion to i_next_alloc_block.
-     * it the physical block number of the block which was most-recently
+     * it the physical block number of the block which was most-recentl
      * allocated to this file.  This give us the goal (target) for the next
      * allocation when we detect linearly ascending requests.
      */
@@ -89,7 +89,7 @@ struct ext3_inode_info {
     /*
      * i_block_group is the number of the block group which contains
      * this file's inode.  Constant across the lifetime of the inode,
-     * it is used for making block allocation decisions - we try to
+     * it is ued for making block allocation decisions - we try to
      * place a file's data blocks near its inode block, and new inodes
      * near to their parent directory's inode.
      */

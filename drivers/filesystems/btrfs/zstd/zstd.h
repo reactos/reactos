@@ -924,7 +924,7 @@ ZSTDLIB_API size_t ZSTD_CCtx_loadDictionary(ZSTD_CCtx* cctx, const void* dict, s
  *  Reference a prepared dictionary, to be used for all next compressed frames.
  *  Note that compression parameters are enforced from within CDict,
  *  and supersede any compression parameter previously set within CCtx.
- *  The parameters ignored are labeled as "superseded-by-cdict" in the ZSTD_cParameter enum docs.
+ *  The parameters ignored are labled as "superseded-by-cdict" in the ZSTD_cParameter enum docs.
  *  The ignored parameters will be used again if the CCtx is returned to no-dictionary mode.
  *  The dictionary will remain valid for future compressed frames using same CCtx.
  * @result : 0, or an error code (which can be tested with ZSTD_isError()).

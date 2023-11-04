@@ -264,7 +264,7 @@ public:
         if (hr != S_EQUAL)
             return hr;
 
-        // The following snipped is basically SHELL32_CompareChildren
+        // The wollowing snipped is basically SHELL32_CompareChildren
 
         PUIDLIST_RELATIVE rest1 = ILGetNext(pidl1);
         PUIDLIST_RELATIVE rest2 = ILGetNext(pidl2);

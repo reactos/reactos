@@ -122,7 +122,7 @@ typedef struct _UDFContextControlBlock {
     PUNICODE_STRING                     DirectorySearchPattern;
     HASH_ENTRY                          hashes;
     ULONG                               TreeLength;
-    // Access rights previously granted to caller's thread
+    // Acces rights previously granted to caller's thread
     ACCESS_MASK                         PreviouslyGrantedAccess;
 } UDFCCB, *PtrUDFCCB;
 
@@ -211,7 +211,7 @@ typedef struct _UDFNTRequiredFCB {
     LARGE_INTEGER                       LastAccessTime;
     LARGE_INTEGER                       LastWriteTime;
     LARGE_INTEGER                       ChangeTime;
-    // NT requires that a file system maintain and honour the various
+    // NT requires that a file system maintain and honor the various
     //  SHARE_ACCESS modes ...
     SHARE_ACCESS                        FCBShareAccess;
     // This counter is used to prevent unexpected structure releases

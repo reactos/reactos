@@ -11,7 +11,7 @@
 // check mode
 #ifdef NT_KERNEL_MODE
   #ifdef NT_NATIVE_MODE
-    #error Error cannot combine Kernel and Native
+    #error Error cannot combine Kernel and Natime
   #endif //
 #endif //NT_KERNEL_MODE
 #ifdef NT_KERNEL_MODE
