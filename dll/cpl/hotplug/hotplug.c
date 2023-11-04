@@ -53,7 +53,6 @@ done:
     return dwFlags;
 }
 
-
 static
 DWORD
 SetHotPlugFlags(
@@ -106,7 +105,6 @@ UpdateDialog(
     EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bHasItem);
 }
 
-
 static
 VOID
 ShowContextMenu(
@@ -135,7 +133,6 @@ ShowContextMenu(
                    hwndDlg,
                    NULL);
 }
-
 
 static
 DEVINST
@@ -364,14 +361,10 @@ SafeRemovalDlgProc(
                 SetupDiDestroyClassImageList(&pHotplugData->ImageListData);
 
                 if (pHotplugData->hIconSm)
-                {
                     DestroyIcon(pHotplugData->hIconSm);
-                }
 
                 if (pHotplugData->hIcon)
-                {
                     DestroyIcon(pHotplugData->hIcon);
-                }
 
                 HeapFree(GetProcessHeap(), 0, pHotplugData);
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
@@ -381,7 +374,6 @@ SafeRemovalDlgProc(
 
     return FALSE;
 }
-
 
 LONG
 APIENTRY
@@ -401,7 +393,6 @@ InitApplet(
     // TODO
     return TRUE;
 }
-
 
 LONG
 CALLBACK
@@ -450,7 +441,6 @@ CPlApplet(
     }
     return FALSE;
 }
-
 
 INT
 WINAPI
