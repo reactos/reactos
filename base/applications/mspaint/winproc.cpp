@@ -147,8 +147,8 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
             WCHAR programname[20];
             WCHAR shouldEnlargePromptText[100];
 
-            LoadString(g_hinstExe, IDS_PROGRAMNAME, programname, _countof(programname));
-            LoadString(g_hinstExe, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
+            ::LoadStringW(g_hinstExe, IDS_PROGRAMNAME, programname, _countof(programname));
+            ::LoadStringW(g_hinstExe, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
 
             switch (MessageBox(shouldEnlargePromptText, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
             {
@@ -570,8 +570,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_HELPINFO:
         {
             WCHAR infotitle[100], infotext[200];
-            LoadString(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
-            LoadString(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
+            ::LoadStringW(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
+            ::LoadStringW(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
             ShellAbout(m_hWnd, infotitle, infotext,
                        LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDI_APPICON)));
             break;
@@ -840,7 +840,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITCOPYTO:
         {
             WCHAR szFileName[MAX_LONG_PATH];
-            LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, szFileName, _countof(szFileName));
+            ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, szFileName, _countof(szFileName));
             if (GetSaveFileName(szFileName, _countof(szFileName)))
             {
                 HBITMAP hbmSelection = selectionModel.GetSelectionContents();
