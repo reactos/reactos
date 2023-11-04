@@ -179,7 +179,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     NotifyImageChanged();
 }
 
-void ImageModel::SaveImage(LPCTSTR lpFileName)
+void ImageModel::SaveImage(LPCWSTR lpFileName)
 {
     SaveDIBToFile(m_hBms[m_currInd], lpFileName, TRUE);
 }

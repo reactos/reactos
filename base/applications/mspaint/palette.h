@@ -14,7 +14,7 @@
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("Palette"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(L"Palette", CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CPaletteWindow)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)

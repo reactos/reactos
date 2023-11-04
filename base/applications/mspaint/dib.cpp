@@ -211,7 +211,7 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
     }
 
     // set title
-    CString strTitle;
+    CStringW strTitle;
     strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
     mainWindow.SetWindowText(strTitle);
 

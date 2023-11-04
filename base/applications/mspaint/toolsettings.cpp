@@ -313,13 +313,13 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
     INT zoomRate = toolsModel.GetZoom();
 
-    CString strZoom;
+    CStringW strZoom;
     if (zoomRate % 10 == 0)
-        strZoom.Format(_T("%d%%"), zoomRate / 10);
+        strZoom.Format(L"%d%%", zoomRate / 10);
     else
-        strZoom.Format(_T("%d.%d%%"), zoomRate / 10, zoomRate % 10);
+        strZoom.Format(L"%d.%d%%", zoomRate / 10, zoomRate % 10);
 
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCTSTR)strZoom);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strZoom);
 
     OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
     return 0;

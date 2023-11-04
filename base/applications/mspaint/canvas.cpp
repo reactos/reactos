@@ -450,10 +450,10 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             RECT rcImage;
             GetImageRect(rcImage);
 
-            CString strCoord;
+            CStringW strCoord;
             if (::PtInRect(&rcImage, pt))
-                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+                strCoord.Format(L"%ld, %ld", pt.x, pt.y);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCWSTR) strCoord);
         }
     }
 
@@ -511,9 +511,9 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     cyImage = min(MAXWORD, cyImage);
 
     // Display new size
-    CString strSize;
-    strSize.Format(_T("%d x %d"), cxImage, cyImage);
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+    CStringW strSize;
+    strSize.Format(L"%d x %d", cxImage, cyImage);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCWSTR) strSize);
 
     // Dragging now... Fix the position...
     CRect rcResizing = { 0, 0, cxImage, cyImage };
@@ -559,7 +559,7 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
-        ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+        ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
         return 0;
     }
     else if (m_hitSelection != HIT_NONE && bLeftButton)
@@ -711,12 +711,12 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+    return ::SendMessageW(GetParent(), nMsg, wParam, lParam);
 }
 
 LRESULT CCanvasWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
     return 0;
 }
 

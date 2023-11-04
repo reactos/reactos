@@ -144,8 +144,8 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
         if (g_askBeforeEnlarging)
         {
-            TCHAR programname[20];
-            TCHAR shouldEnlargePromptText[100];
+            WCHAR programname[20];
+            WCHAR shouldEnlargePromptText[100];
 
             LoadString(g_hinstExe, IDS_PROGRAMNAME, programname, _countof(programname));
             LoadString(g_hinstExe, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
@@ -233,7 +233,7 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TCHAR droppedfile[MAX_PATH];
+    WCHAR droppedfile[MAX_PATH];
 
     HDROP hDrop = (HDROP)wParam;
     DragQueryFile(hDrop, 0, droppedfile, _countof(droppedfile));
@@ -254,7 +254,7 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     DWORD style = SBARS_SIZEGRIP | WS_CHILD | (registrySettings.ShowStatusBar ? WS_VISIBLE : 0);
     g_hStatusBar = ::CreateWindowEx(0, STATUSCLASSNAME, NULL, style, 0, 0, 0, 0, m_hWnd,
                                   NULL, g_hinstExe, NULL);
-    ::SendMessage(g_hStatusBar, SB_SETMINHEIGHT, 21, 0);
+    ::SendMessageW(g_hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
     // Create the tool box
     toolBoxContainer.DoCreate(m_hWnd);
@@ -314,10 +314,10 @@ BOOL CMainWindow::ConfirmSave()
     if (imageModel.IsImageSaved())
         return TRUE;
 
-    CString strProgramName;
+    CStringW strProgramName;
     strProgramName.LoadString(IDS_PROGRAMNAME);
 
-    CString strSavePromptText;
+    CStringW strSavePromptText;
     strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(g_szFileName));
 
     switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
@@ -345,11 +345,11 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 {
-    LPCTSTR dotext = PathFindExtensionW(g_szFileName);
+    LPCWSTR dotext = PathFindExtensionW(g_szFileName);
     BOOL isBMP = FALSE;
-    if (_tcsicmp(dotext, _T(".bmp")) == 0 ||
-        _tcsicmp(dotext, _T(".dib")) == 0 ||
-        _tcsicmp(dotext, _T(".rle")) == 0)
+    if (_wcsicmp(dotext, L".bmp") == 0 ||
+        _wcsicmp(dotext, L".dib") == 0 ||
+        _wcsicmp(dotext, L".rle") == 0)
     {
         isBMP = TRUE;
     }
@@ -371,7 +371,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
     {
-        CString& strFile = registrySettings.strFiles[iItem];
+        CStringW& strFile = registrySettings.strFiles[iItem];
         if (strFile.IsEmpty())
             break;
 
@@ -379,7 +379,7 @@ void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 #define MAX_RECENT_PATHNAME_DISPLAY 30
         CPath pathFile(strFile);
         pathFile.CompactPathEx(MAX_RECENT_PATHNAME_DISPLAY);
-        assert(_tcslen((LPCTSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
+        assert(wcslen((LPCWSTR)pathFile) <= MAX_RECENT_PATHNAME_DISPLAY);
 
         // Add an accelerator (by '&') to the item number for quick access
         WCHAR szText[4 + MAX_RECENT_PATHNAME_DISPLAY + 1];
@@ -489,8 +489,8 @@ LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
     if (::IsWindow(g_hStatusBar))
     {
-        ::SendMessage(g_hStatusBar, WM_SIZE, 0, 0);
-        ::SendMessage(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+        ::SendMessageW(g_hStatusBar, WM_SIZE, 0, 0);
+        ::SendMessageW(g_hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
     }
     alignChildrenToMainWindow();
     return 0;
@@ -516,7 +516,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (canvasWindow.m_hWnd == hwndCapture ||
                     fullscreenWindow.m_hWnd == hwndCapture)
                 {
-                    ::SendMessage(hwndCapture, nMsg, wParam, lParam);
+                    ::SendMessageW(hwndCapture, nMsg, wParam, lParam);
                 }
             }
             else if (selectionModel.m_bShow)
@@ -551,7 +551,7 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     /* Redirect message to common controls */
     HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-    SendMessage(hToolbar, WM_SYSCOLORCHANGE, 0, 0);
+    ::SendMessageW(hToolbar, WM_SYSCOLORCHANGE, 0, 0);
     return 0;
 }
 
@@ -569,8 +569,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         case IDM_HELPINFO:
         {
-            TCHAR infotitle[100];
-            TCHAR infotext[200];
+            WCHAR infotitle[100], infotext[200];
             LoadString(g_hinstExe, IDS_INFOTITLE, infotitle, _countof(infotitle));
             LoadString(g_hinstExe, IDS_INFOTEXT, infotext, _countof(infotext));
             ShellAbout(m_hWnd, infotitle, infotext,
@@ -591,7 +590,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILEOPEN:
             {
-                TCHAR szFileName[MAX_LONG_PATH] = _T("");
+                WCHAR szFileName[MAX_LONG_PATH] = L"";
                 if (ConfirmSave() && GetOpenFileName(szFileName, _countof(szFileName)))
                 {
                     DoLoadImageFile(m_hWnd, szFileName, TRUE);
@@ -795,7 +794,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
             // Failed to paste
             {
-                CString strText, strTitle;
+                CStringW strText, strTitle;
                 strText.LoadString(IDS_CANTPASTE);
                 strTitle.LoadString(IDS_PROGRAMNAME);
                 MessageBox(strText, strTitle, MB_ICONINFORMATION);
@@ -833,7 +832,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 break;
             }
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
-            SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
+            ::SendMessageW(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolsModel.selectAll();
             canvasWindow.Invalidate(TRUE);
             break;
@@ -948,8 +947,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 CWaitCursor waitCursor;
                 if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
-                    CString strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
-                    CString strTitle(MAKEINTRESOURCE(IDS_PROGRAMNAME));
+                    CStringW strText(MAKEINTRESOURCE(IDS_LOSECOLOR));
+                    CStringW strTitle(MAKEINTRESOURCE(IDS_PROGRAMNAME));
                     INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
                     if (id != IDYES)
                         break;

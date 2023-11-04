@@ -11,7 +11,7 @@
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("MSPaintApp"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(L"MSPaintApp", CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CMainWindow)
         MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
@@ -30,8 +30,8 @@ public:
     CMainWindow() : m_hMenu(NULL) { }
 
     HWND DoCreate();
-    BOOL GetOpenFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
-    BOOL GetSaveFileName(IN OUT LPTSTR pszFile, INT cchMaxFile);
+    BOOL GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
     BOOL ChooseColor(IN OUT COLORREF *prgbColor);
     VOID TrackPopupMenu(POINT ptScreen, INT iSubMenu);
     BOOL CanUndo() const;

@@ -44,9 +44,9 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     drawSizeBoxes(hDC, &rc, TRUE, NULL);
 }
 
-void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
+void CTextEditWindow::FixEditPos(LPCWSTR pszOldText)
 {
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     RECT rcParent;
@@ -62,7 +62,7 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
         SelectObject(hDC, m_hFontZoomed);
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-        szText += TEXT("x"); // This is a trick to enable the g_ptEnd newlines
+        szText += L"x"; // This is a trick to enable the g_ptEnd newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
@@ -91,7 +91,7 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     if (wParam == VK_TAB)
         return 0; // FIXME: Tabs
 
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
@@ -108,7 +108,7 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    CString szText;
+    CStringW szText;
     GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
@@ -493,7 +493,7 @@ LRESULT CTextEditWindow::OnSizing(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+    return ::SendMessageW(GetParent(), nMsg, wParam, lParam);
 }
 
 LRESULT CTextEditWindow::OnCut(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

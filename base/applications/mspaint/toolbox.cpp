@@ -20,12 +20,12 @@ CPaintToolBar::ToolBarWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     {
         // We have to detect clicking on toolbar even if no change of pressed button
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        INT index = (INT)::SendMessage(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
+        INT index = (INT)::SendMessageW(hwnd, TB_HITTEST, 0, (LPARAM)&pt);
         if (index >= 0)
         {
             TBBUTTON button;
-            if (::SendMessage(hwnd, TB_GETBUTTON, index, (LPARAM)&button))
-                ::PostMessage(::GetParent(hwnd), WM_COMMAND, button.idCommand, 0);
+            if (::SendMessageW(hwnd, TB_GETBUTTON, index, (LPARAM)&button))
+                ::PostMessageW(::GetParent(hwnd), WM_COMMAND, button.idCommand, 0);
         }
     }
     return ::CallWindowProc(oldWndProc, hwnd, uMsg, wParam, lParam);
@@ -55,13 +55,13 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
 
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    TCHAR szToolTip[30];
+    WCHAR szToolTip[30];
     TBBUTTON tbbutton;
     ZeroMemory(&tbbutton, sizeof(tbbutton));
     tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
     for (INT i = 0; i < NUM_TOOLS; i++)
     {
-        ::LoadString(g_hinstExe, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
+        ::LoadStringW(g_hinstExe, IDS_TOOLTIP1 + i, szToolTip, _countof(szToolTip));
         tbbutton.iString   = (INT_PTR)szToolTip;
         tbbutton.fsState   = TBSTATE_ENABLED | ((i % 2 == 1) ? TBSTATE_WRAP : 0);
         tbbutton.idCommand = ID_FREESEL + i;
