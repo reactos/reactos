@@ -19,7 +19,7 @@
     Note the following:
     The debug level is not required
     The operation to enable/disable (+/-) and the name of the channel is required
-    Channels are divided by commas
+    Channels are devided by commas
     No spaces are allowed
     The syntax is case sensitive. Levels must be lowercase and
     the names of the channels must be exactly like they are defined in DBG_DEFAULT_CHANNEL

@@ -54,7 +54,7 @@ typedef struct _SPIVALUES
     UINT uiFocusBorderWidth;
     UINT uiFocusBorderHeight;
 
-    /* Accessibility */
+    /* Accessability */
     ACCESSTIMEOUT accesstimeout;
     HIGHCONTRASTW highcontrast;
     BOOL bScreenReader;

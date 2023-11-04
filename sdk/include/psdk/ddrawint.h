@@ -68,7 +68,7 @@ DEFINE_GUID( GUID_VPE2Callbacks,           0x52882147, 0x2d47, 0x469a, 0xa0, 0xd
 extern "C" {
 #endif
 
-#ifndef MAKE_HRESULT // fixme this if statement should not be here, but MAKE_HRESULT should be here
+#ifndef MAKE_HRESULT // fixme this if statment should not be here, but MAKE_HRESULT should be here
 #define MAKE_HRESULT(sev,fac,code) ((HRESULT) (((unsigned long)(sev)<<31) | ((unsigned long)(fac)<<16) | ((unsigned long)(code))) )
 #endif
 

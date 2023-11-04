@@ -441,7 +441,7 @@ MPG123_EXPORT const char* mpg123_plain_strerror(int errcode);
  */
 MPG123_EXPORT const char* mpg123_strerror(mpg123_handle *mh);
 
-/** Return the plain errcode instead of a string.
+/** Return the plain errcode intead of a string.
  *  \param mh handle
  *  \return error code recorded in handle or MPG123_BAD_HANDLE
  */
@@ -476,7 +476,7 @@ MPG123_EXPORT const char **mpg123_supported_decoders(void);
 MPG123_EXPORT int mpg123_decoder(mpg123_handle *mh, const char* decoder_name);
 
 /** Get the currently active decoder name.
- *  The active decoder engine can vary depending on output constraints,
+ *  The active decoder engine can vary depening on output constraints,
  *  mostly non-resampling, integer output is accelerated via 3DNow & Co. but for
  *  other modes a fallback engine kicks in.
  *  Note that this can return a decoder that is only active in the hidden and not
@@ -643,7 +643,7 @@ MPG123_EXPORT int mpg123_getformat2( mpg123_handle *mh
  *  MPEG files. You could set MPG123_FORCE_RATE beforehand, but that may trigger
  *  low-quality resampling in the decoder, only do so if in dire need.
  *  The library will convert mono files to stereo for you, and vice versa.
- *  If any constraint cannot be satisfied (most likely because of a non-default
+ *  If any constraint cannot be satisified (most likely because of a non-default
  *  build of libmpg123), you get MPG123_ERR returned and can query the detailed
  *  cause from the handle. Only on MPG123_OK there will an open file that you
  *  then close using mpg123_close(), or implicitly on mpg123_delete() or the next
@@ -857,7 +857,7 @@ MPG123_EXPORT off_t mpg123_tellframe(mpg123_handle *mh);
 MPG123_EXPORT off_t mpg123_tell_stream(mpg123_handle *mh);
 
 /** Seek to a desired sample offset.
- *  Usage is modelled after the standard lseek().
+ *  Usage is modelled afer the standard lseek().
  * \param mh handle
  * \param sampleoff offset in PCM samples
  * \param whence one of SEEK_SET, SEEK_CUR or SEEK_END
@@ -878,7 +878,7 @@ MPG123_EXPORT off_t mpg123_feedseek( mpg123_handle *mh
 ,	off_t sampleoff, int whence, off_t *input_offset );
 
 /** Seek to a desired MPEG frame offset.
- *  Usage is modelled after the standard lseek().
+ *  Usage is modelled afer the standard lseek().
  * \param mh handle
  * \param frameoff offset in MPEG frames
  * \param whence one of SEEK_SET, SEEK_CUR or SEEK_END
@@ -1195,7 +1195,7 @@ typedef struct
 	size_t fill; /**< number of used bytes (including closing zero byte) */
 } mpg123_string;
 
-/** Allocate and initialize a new string.
+/** Allocate and intialize a new string.
  *  \param val optional initial string value (can be NULL)
  */
 MPG123_EXPORT mpg123_string* mpg123_new_string(const char* val);
@@ -1238,7 +1238,7 @@ MPG123_EXPORT int mpg123_resize_string(mpg123_string* sb, size_t news);
 MPG123_EXPORT int mpg123_grow_string(mpg123_string* sb, size_t news);
 
 /** Copy the contents of one mpg123_string string to another.
- *  Yes the order of arguments is reversed compared to memcpy().
+ *  Yes the order of arguments is reversed compated to memcpy().
  *  \param from string handle
  *  \param to string handle
  *  \return 0 on error, 1 on success
@@ -1434,7 +1434,7 @@ typedef struct
 	mpg123_string *genre;   /**< Genre String (pointer into text_list). The genre string(s) may very well need postprocessing, esp. for ID3v2.3. */
 	mpg123_string *comment; /**< Pointer to last encountered comment text with empty description. */
 	/* Encountered ID3v2 fields are appended to these lists.
-	   There can be multiple occurrences, the pointers above always point to the last encountered data. */
+	   There can be multiple occurences, the pointers above always point to the last encountered data. */
 	mpg123_text    *comment_list; /**< Array of comments. */
 	size_t          comments;     /**< Number of comments. */
 	mpg123_text    *text;         /**< Array of ID3v2 text fields (including USLT) */
@@ -1477,7 +1477,7 @@ MPG123_EXPORT int mpg123_meta_check(mpg123_handle *mh);
  */
 MPG123_EXPORT void mpg123_meta_free(mpg123_handle *mh);
 
-/** Point v1 and v2 to existing data structures which may change on any next read/decode function call.
+/** Point v1 and v2 to existing data structures wich may change on any next read/decode function call.
  *  v1 and/or v2 can be set to NULL when there is no corresponding data.
  *  \return MPG123_OK on success
  */
@@ -1499,7 +1499,7 @@ MPG123_EXPORT int mpg123_id3_raw( mpg123_handle *mh
 ,	unsigned char **v1, size_t *v1_size
 ,	unsigned char **v2, size_t *v2_size );
 
-/** Point icy_meta to existing data structure which may change on any next read/decode function call.
+/** Point icy_meta to existing data structure wich may change on any next read/decode function call.
  *  \param mh handle
  *  \param icy_meta return address for ICY meta string (set to NULL if nothing there)
  *  \return MPG123_OK on success
@@ -1526,7 +1526,7 @@ MPG123_EXPORT char* mpg123_icy2utf8(const char* icy_text);
  *	The functions for handling mpg123_pars (mpg123_par() and mpg123_fmt()
  *  family) directly return a fully qualified mpg123 error code, the ones
  *  operating on full handles normally MPG123_OK or MPG123_ERR, storing the
- *  specific error code itself inside the handle.
+ *  specific error code itseld inside the handle.
  *
  * @{
  */

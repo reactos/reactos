@@ -404,7 +404,7 @@ public:
 // underflow() may be called for one of two reasons.  (1) We've
 // been going through the special putback buffer, and we need to move back
 // to the regular internal buffer.  (2) We've exhausted the internal buffer,
-// and we need to replenish it.
+// and we need to replentish it.
 template <class _CharT, class _Traits>
 class _Underflow {
 public:
@@ -688,7 +688,7 @@ private:
 
 #if defined (_STLP_MSVC) && (_STLP_MSVC >= 1300 && _STLP_MSVC <= 1310)
   typedef basic_fstream<_CharT, _Traits> _Self;
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   basic_fstream(_Self const&);
   _Self& operator = (_Self const&);
 #endif

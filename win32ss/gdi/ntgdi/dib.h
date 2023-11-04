@@ -8,7 +8,7 @@ INT APIENTRY DIB_GetDIBImageBytes (INT  width, INT height, INT depth);
 HPALETTE FASTCALL DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi);
 HPALETTE FASTCALL BuildDIBPalette (CONST BITMAPINFO *bmi);
 
-/* Those functions permit to transparently work with a BITMAPCOREINFO structure */
+/* Those functions permit to tranparently work with a BITMAPCOREINFO structure */
 BITMAPINFO* FASTCALL DIB_ConvertBitmapInfo(CONST BITMAPINFO* bmi, DWORD Usage);
 /* Pass Usage = -1 if you don't want to convert the BITMAPINFO back to BITMAPCOREINFO */
 VOID FASTCALL DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD Usage);

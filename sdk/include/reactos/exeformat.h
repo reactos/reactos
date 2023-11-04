@@ -17,7 +17,7 @@
  )
 
 /*
- Minimum size of the buffer passed to each loader for identification of the
+ Minumum size of the buffer passed to each loader for identification of the
  executable
 */
 #define EXEFMT_LOAD_HEADER_SIZE (0x2000)

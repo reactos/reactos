@@ -127,7 +127,7 @@ typedef struct tagDPLDATA_PLAYERSCORE
 
 
 
-/* Used to identify the message type */
+/* Used to indentify the message type */
 typedef struct tagDPLMSG_GENERIC
 {
     DWORD       dwType;         /* Message type */
@@ -193,7 +193,7 @@ typedef struct tagDPLMSG_NEWSESSIONHOST
 
 /*****************************************************************************
  * DirectPlay Address ID's
- * A DirectPlay address is composed of multiple data chunks, each associated with
+ * A DirectPlay address is composed of multiple data chunks, each assocated with
  * a GUID to give significance to the type of data. All chunks have an associated
  * size so that unknown chunks can be ignored for backwards compatibility!
  * EnumAddresses function is used to parse the address data chunks.

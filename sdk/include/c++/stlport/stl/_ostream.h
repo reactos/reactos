@@ -54,7 +54,7 @@ class basic_ostream : virtual public basic_ios<_CharT, _Traits> {
   typedef basic_ostream<_CharT, _Traits> _Self;
 
 #if defined (_STLP_MSVC) && (_STLP_MSVC >= 1300 && _STLP_MSVC <= 1310)
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   basic_ostream(_Self const&);
   _Self& operator = (_Self const&);
 #endif

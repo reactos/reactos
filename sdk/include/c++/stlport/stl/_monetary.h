@@ -271,7 +271,7 @@ private:
   moneypunct_byname _STLP_PSPEC2(char, true) (_Locale_monetary *__monetary);
 
   typedef moneypunct_byname<char, true> _Self;
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   moneypunct_byname(_Self const&);
   _Self& operator = (_Self const&);
 
@@ -304,7 +304,7 @@ private:
   moneypunct_byname _STLP_PSPEC2(char, false) (_Locale_monetary *__monetary);
 
   typedef moneypunct_byname<char, false> _Self;
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   moneypunct_byname(_Self const&);
   _Self& operator = (_Self const&);
 
@@ -338,7 +338,7 @@ private:
   moneypunct_byname _STLP_PSPEC2(wchar_t, true) (_Locale_monetary *__monetary);
 
   typedef moneypunct_byname<wchar_t, true> _Self;
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   moneypunct_byname(_Self const&);
   _Self& operator = (_Self const&);
 
@@ -371,7 +371,7 @@ private:
   moneypunct_byname _STLP_PSPEC2(wchar_t, false) (_Locale_monetary *__monetary);
 
   typedef moneypunct_byname<wchar_t, false> _Self;
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   moneypunct_byname(_Self const&);
   _Self& operator = (_Self const&);
 

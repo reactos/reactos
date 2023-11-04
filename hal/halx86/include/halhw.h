@@ -121,7 +121,7 @@ typedef union _TIMER_CONTROL_PORT_REGISTER
 // See ISA System Architecture 3rd Edition (Tom Shanley, Don Anderson, John Swindle)
 // P. 400
 //
-// This port is controlled by the i8255 Programmable Peripheral Interface (PPI)
+// This port is controled by the i8255 Programmable Peripheral Interface (PPI)
 //
 #define SYSTEM_CONTROL_PORT_A   0x92
 #define SYSTEM_CONTROL_PORT_B   0x61

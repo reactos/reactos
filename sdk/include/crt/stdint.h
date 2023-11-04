@@ -177,7 +177,7 @@ __MINGW_EXTENSION typedef unsigned long long   uintmax_t;
 
 /* 7.18.4.1  Macros for minimum-width integer constants
 
-    According to Douglas Gwyn <gwyn@arl.mil>:
+    Accoding to Douglas Gwyn <gwyn@arl.mil>:
 	"This spec was changed in ISO/IEC 9899:1999 TC1; in ISO/IEC
 	9899:1999 as initially published, the expansion was required
 	to be an integer constant of precisely matching type, which

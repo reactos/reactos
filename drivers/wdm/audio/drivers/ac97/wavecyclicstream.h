@@ -32,7 +32,7 @@ typedef struct tagMapData
 
 //
 // Structure needed to keep track of the BDL tables.
-// This structure is separated from tBDEntry because we want to
+// This structure is seperated from tBDEntry because we want to
 // have it in cached memory (and not along with tBDEntry in non-
 // cached memory).
 //

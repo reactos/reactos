@@ -13,7 +13,7 @@ public:
 	// Call this function to specify buffer containing the command line to be parsed
 	// Parameters:
 	//	pchArguments - pointer to buffer containing the command line. This buffer is modified by object,
-	//					and must not be accessed externaly when object is used, unless you integrate it
+	//					and must not be accessed extrenaly when object is used, unless you interate it
 	//					only once and modify only substrings returned by GetNextArgument.
 	//
 	// Remarks:
@@ -33,7 +33,7 @@ public:
 	CArgumentParser();
 	virtual ~CArgumentParser();
 private:
-	TCHAR *m_pchArgumentList;		// points to begin of argument list
+	TCHAR *m_pchArgumentList;		// points to begin of argumet list
 	const TCHAR *m_pchArgumentListEnd;	// points to last 0 in argument list
 	TCHAR *m_pchArgument;
 };

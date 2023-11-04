@@ -1,5 +1,5 @@
 //
-// Pattern.h: declaration for pattern functions
+// Pattern.h: decalration for pattern functions
 
 #if !defined(PATTERN_H__INCLUDED_)
 #define PATTERN_H__INCLUDED_

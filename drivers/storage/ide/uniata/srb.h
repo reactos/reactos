@@ -54,7 +54,7 @@ typedef struct _ACCESS_RANGE {
 //
 
 typedef struct _PORT_CONFIGURATION_INFORMATION {
-    ULONG Length;				// Length of port configration information structure.
+    ULONG Length;				// Length of port configuation information strucuture.
     ULONG SystemIoBusNumber;	// IO bus number (0 for machines that have only 1 IO bus
     INTERFACE_TYPE  AdapterInterfaceType;	// EISA, MCA or ISA
     ULONG BusInterruptLevel;	// Interrupt request level for device
@@ -84,7 +84,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
     BOOLEAN Dma32BitAddresses;		// The master uses 32-bit DMA addresses.
     BOOLEAN DemandMode;				// Use Demand Mode DMA rather than Single Request.
     BOOLEAN MapBuffers;				// Data buffers must be mapped into virtual address space.
-    BOOLEAN NeedPhysicalAddresses;	// We need to translate virtual to physical addresses.
+    BOOLEAN NeedPhysicalAddresses;	// We need to tranlate virtual to physical addresses.
     BOOLEAN TaggedQueuing;			// Supports tagged queuing
     BOOLEAN AutoRequestSense;		// Supports auto request sense.
     BOOLEAN MultipleRequestPerLu;	// Supports multiple requests per logical unit.
@@ -578,7 +578,7 @@ typedef struct _HW_INITIALIZATION_DATA {
     PVOID Reserved;
 
     BOOLEAN MapBuffers;				// Data buffers must be mapped into virtual address space.
-    BOOLEAN NeedPhysicalAddresses;	// We need to translate virtual to physical addresses.
+    BOOLEAN NeedPhysicalAddresses;	// We need to tranlate virtual to physical addresses.
     BOOLEAN TaggedQueuing;			// Supports tagged queuing
     BOOLEAN AutoRequestSense;		// Supports auto request sense.
     BOOLEAN MultipleRequestPerLu;	// Supports multiple requests per logical unit.

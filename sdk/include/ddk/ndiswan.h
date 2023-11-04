@@ -214,7 +214,7 @@ typedef struct _NDIS_WAN_SET_COMP_INFO {
 
 /*
  * NOTE: As some people may notice, this structure contains three misspelled
- * fields (the "Tunnel*Receive*" fields). Their names come from the Windows
+ * fields (the "Tunnel*Recieve*" fields). Their names come from the Windows
  * Driver Development Kit and thus, blame Microsoft if they do not know how
  * to write proper English or if they do not re-read what they are writing !!
  */
@@ -310,7 +310,7 @@ typedef struct _NDIS_WAN_CO_SET_COMP_INFO {
 
 /*
  * NOTE: As some people may notice, this structure contains three misspelled
- * fields (the "Tunnel*Receive*" fields). Their names come from the Windows
+ * fields (the "Tunnel*Recieve*" fields). Their names come from the Windows
  * Driver Development Kit and thus, blame Microsoft if they do not know how
  * to write proper English or if they do not re-read what they are writing !!
  */

@@ -246,7 +246,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE /* Must match win32k/include/gdiobj.h *
     GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT]; /* Handle table. */
     DEVCAPS         DevCaps;                   /* Shared device capabilities. */
     FLONG           flDeviceUniq;              /* Device settings uniqueness. */
-    PVOID           pvLangPack;                /* Language Pack. */
+    PVOID           pvLangPack;                /* Lanuage Pack. */
     CFONT           cfPublic[GDI_CFONT_MAX];   /* Public Fonts. */
     DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;

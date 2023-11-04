@@ -693,7 +693,7 @@ typedef struct _WND
     WW ww;
 #else
     /* These fields should be moved in the WW at some point. */
-    /* Please do not change them to keep the same layout with WW. */
+    /* Plese do not change them to keep the same layout with WW. */
     DWORD state;
     DWORD state2;
     /* Extended style. */

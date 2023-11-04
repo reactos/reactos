@@ -144,7 +144,7 @@ __MINGW_NOTHROW _CRTIMP unsigned int __cdecl _statusfp (void);	/* Report the FPU
    MSVCRT.dll _fpreset initializes the control register to 0x27f,
    the status register to zero and the tag word to 0FFFFh.
    This differs from asm instruction finit/fninit which set control
-   word to 0x37f (64 bit mantissa precision rather than 53 bit).
+   word to 0x37f (64 bit mantissa precison rather than 53 bit).
    By default, the mingw version of _fpreset sets fp control as
    per fninit. To use the MSVCRT.dll _fpreset, include CRT_fp8.o when
    building your application.

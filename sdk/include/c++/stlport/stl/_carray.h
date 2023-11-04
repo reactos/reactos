@@ -20,7 +20,7 @@
 #ifndef _STLP_CARRAY_H
 #define _STLP_CARRAY_H
 
-/* Purpose: Mimic a pure C array with the additional feature of
+/* Purpose: Mimic a pur C array with the additionnal feature of
  * being able to be used with type not default constructible.
  */
 

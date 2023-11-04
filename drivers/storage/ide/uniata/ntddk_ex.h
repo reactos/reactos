@@ -390,7 +390,7 @@ typedef TEB *PTEB;
 typedef struct _KTHREAD_HDR {
 
     //
-    // The dispatcher header and mutant listhead are fairly infrequently
+    // The dispatcher header and mutant listhead are faifly infrequently
     // referenced, but pad the thread to a 32-byte boundary (assumption
     // that pool allocation is in units of 32-bytes).
     //
@@ -470,7 +470,7 @@ typedef struct _KTHREAD_HDR {
     UCHAR NextProcessor;
 
     //
-    // The following fields are referenced during system calls.
+    // The following fields are referenced suring system calls.
     //
 
     PVOID CallbackStack;
@@ -490,7 +490,7 @@ typedef struct _KTHREAD_HDR {
     ULONG UserTime;
 
     //
-    // The following fields are referenced during APC queuing and process
+    // The following fileds are referenced during APC queuing and process
     // attach/detach.
     //
 

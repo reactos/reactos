@@ -4076,7 +4076,7 @@ NdisUnicodeStringToAnsiString(
 #define NdisFreeString(_s) NdisFreeMemory((_s).Buffer, (_s).MaximumLength, 0)
 #define NdisPrintString(_s) DbgPrint("%ls", (_s).Buffer)
 
-/* Spin lock routines */
+/* Spin lock reoutines */
 
 /*
 NDISAPI

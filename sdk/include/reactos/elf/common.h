@@ -328,7 +328,7 @@ typedef struct {
 #define	DT_INIT_ARRAYSZ	27	/* Size in bytes of the array of
 				   initialization functions. */
 #define	DT_FINI_ARRAYSZ	28	/* Size in bytes of the array of
-				   termination functions. */
+				   terminationfunctions. */
 #define	DT_RUNPATH	29	/* String table offset of a null-terminated
 				   library search path string. */
 #define	DT_FLAGS	30	/* Object specific flag values. */

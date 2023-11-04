@@ -14,7 +14,7 @@
  *                  with absolutely no other changes needed.
  * - Rename and new parameters. This deals with a case similar to the one
  *                              above, except that new parameters have now
- *                              been added. This is also usually extremely
+ *                              been added. This is also usually extremly
  *                              simple to fix. Either pass the right params
  *                              or pass null/0 values that you ignore.
  * - Rename and new structure. This is similar to the above, except that the
@@ -113,11 +113,11 @@ NtGdiSetWindowOrgEx (
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
 
 
-/* Follow thing need be rewritten
+/* Follow thing need be rewriten
  *
- * Opengl icd are complete hacked in reactos and are using own way, this need be rewritten and be setup with the correct syscall
- * and the opengl32 shall using correct syscall to obtain then driver interface or using the correct version in gdi32.
- * it mean whole icd are hacked in first place and need be rewritten from scrash. and it need enum the opengl correct way and
+ * Opengl icd are complete hacked in reactos and are using own way, this need be rewriten and be setup with the correct syscall
+ * and the opengl32 shall using correct syscall to optain then driver interface or using the correct version in gdi32.
+ * it mean whole icd are hacked in frist place and need be rewtiten from scrash. and it need enum the opengl correct way and
  * export the driver correct
  *
  * DirectX aka ReactX alot api that have been implement in reactos win32k for ReactX shall move to a file call dxg.sys

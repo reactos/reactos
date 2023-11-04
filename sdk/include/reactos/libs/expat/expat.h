@@ -235,8 +235,8 @@ XML_ParserCreate_MM(const XML_Char *encoding,
                     const XML_Char *namespaceSeparator);
 
 /* Prepare a parser object to be re-used.  This is particularly
-   valuable when memory allocation overhead is disproportionately high,
-   such as when a large number of small documents need to be parsed.
+   valuable when memory allocation overhead is disproportionatly high,
+   such as when a large number of small documnents need to be parsed.
    All handlers are cleared from the parser, except for the
    unknownEncodingHandler. The parser's external state is re-initialized
    except for the values of ns and ns_triplets.
@@ -728,7 +728,7 @@ XML_GetBase(XML_Parser parser);
 /* Returns the number of the attribute/value pairs passed in last call
    to the XML_StartElementHandler that were specified in the start-tag
    rather than defaulted. Each attribute/value pair counts as 2; thus
-   this corresponds to an index into the atts array passed to the
+   this correspondds to an index into the atts array passed to the
    XML_StartElementHandler.
 */
 XMLPARSEAPI(int)
@@ -736,7 +736,7 @@ XML_GetSpecifiedAttributeCount(XML_Parser parser);
 
 /* Returns the index of the ID attribute passed in the last call to
    XML_StartElementHandler, or -1 if there is no ID attribute.  Each
-   attribute/value pair counts as 2; thus this corresponds to an
+   attribute/value pair counts as 2; thus this correspondds to an
    index into the atts array passed to the XML_StartElementHandler.
 */
 XMLPARSEAPI(int)

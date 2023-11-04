@@ -438,13 +438,13 @@ extern "C" {
   #define DDSVCAPS_RESERVED2                     0x00000002
   #define DDSVCAPS_RESERVED3                     0x00000004
   #define DDSVCAPS_RESERVED4                     0x00000008
-/* remember that DDSVCAPS_ENIGMA is same as DDSVCAPS_RESERVED1 */
+/* rember that DDSVCAPS_ENIGMA is same as DDSVCAPS_RESERVED1 */
   #define DDSVCAPS_ENIGMA                        0x00000001
-/* remember that DDSVCAPS_FLICKER is same as DDSVCAPS_RESERVED2 */
+/* rember that DDSVCAPS_FLICKER is same as DDSVCAPS_RESERVED2 */
   #define DDSVCAPS_FLICKER                       0x00000002
-/* remember that DDSVCAPS_REDBLUE is same as DDSVCAPS_RESERVED3 */
+/* rember that DDSVCAPS_REDBLUE is same as DDSVCAPS_RESERVED3 */
   #define DDSVCAPS_REDBLUE                       0x00000004
-/* remember that DDSVCAPS_SPLIT is same as DDSVCAPS_RESERVED4 */
+/* rember that DDSVCAPS_SPLIT is same as DDSVCAPS_RESERVED4 */
   #define DDSVCAPS_SPLIT                         0x00000008
 
 #define DDSVCAPS_STEREOSEQUENTIAL              0x00000010

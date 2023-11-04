@@ -163,7 +163,7 @@ private:
 
   void _M_init();
 
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   typedef ctype_byname<char> _Self;
   ctype_byname(_Self const&);
   _Self& operator = (_Self const&);
@@ -260,7 +260,7 @@ private:
   ctype_byname(_Locale_ctype* __ctype)
     : _M_ctype(__ctype) {}
 
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   typedef ctype_byname<wchar_t> _Self;
   ctype_byname(_Self const&);
   _Self& operator = (_Self const&);

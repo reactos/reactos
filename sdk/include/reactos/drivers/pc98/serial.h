@@ -42,7 +42,7 @@
 #define SER1_IO_i_INTERRUPT_ID       0x136
     #define SER_IIR_MS                    0x00 /* Modem status change */
     #define SER_IIR_THR                   0x02 /* Transmitter holding register empty */
-    #define SER_IIR_RDA                   0x04 /* Received data available */
+    #define SER_IIR_RDA                   0x04 /* Received data acailable */
     #define SER_IIR_RLS                   0x06 /* Receiver line status change */
     #define SER_IIR_CTI                   0x0C /* Character timeout */
     #define SER_IIR_ID_MASK               0x0F

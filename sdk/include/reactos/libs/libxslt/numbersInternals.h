@@ -63,7 +63,7 @@ struct _xsltFormatNumberInfo {
     int	    group;		/* Number of chars per display 'group' */
     int     multiplier;		/* Scaling for percent or permille */
     char    add_decimal;	/* Flag for whether decimal point appears in pattern */
-    char    is_multiplier_set;	/* Flag to catch multiple occurrences of percent/permille */
+    char    is_multiplier_set;	/* Flag to catch multiple occurences of percent/permille */
     char    is_negative_pattern;/* Flag for processing -ve prefix/suffix */
 };
 

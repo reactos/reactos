@@ -199,7 +199,7 @@ __ANNOTATION(SAL_failureDefault(enum __SAL_failureKind));
 /* Provide default definition to be overridden when needed */
 #define __post_nullnullterminated
 
-/* Must protect redefinitions of macros to workaround rc.exe issues. */
+/* Must protect redfinitions of macros to workaround rc.exe issues. */
 #ifndef RC_INVOKED
 
 #undef __nullnullterminated
@@ -226,7 +226,7 @@ __ANNOTATION(SAL_failureDefault(enum __SAL_failureKind));
 #define __analysis_hint(hint)               _SA_annotes1(SAL_analysisHint, hint)
 // For "breakpoint": doesn't return as far as analysis is concerned.
 #define __analysis_noreturn                 __declspec(noreturn)
-/* Internal definitions */
+/* Internal defintions */
 #define __inner_data_source(src_raw)        _SA_annotes1(SAL_untrusted_data_source,src_raw)
 #define __inner_this_data_source(src_raw)   _SA_annotes1(SAL_untrusted_data_source_this,src_raw)
 #define __inner_out_validated(typ_raw)      _Post_ _SA_annotes1(SAL_validated,typ_raw)
@@ -263,7 +263,7 @@ __ANNOTATION(SAL_failureDefault(enum __SAL_failureKind));
 #else
 #define __analysis_noreturn __attribute__((analyzer_noreturn))
 #endif
-/* Internal definitions */
+/* Internal defintions */
 #define __inner_data_source(src_raw)
 #define __inner_this_data_source(src_raw)
 #define __inner_out_validated(typ_raw)
@@ -482,8 +482,8 @@ __inner_analysis_assume_nullterminated_dec
 
 #ifdef _PREFIX_
 /**************************************************************************
-* Definition of __pfx_assume and __pfx_assert. These should be the only
-* definitions of these functions.
+* Defintion of __pfx_assume and __pfx_assert. Thse should be the only
+* defintions of these functions.
 ***************************************************************************/
 #if __cplusplus
 extern "C" void __pfx_assert(bool, const char *);
@@ -493,7 +493,7 @@ void __pfx_assert(int, const char *);
 void __pfx_assume(int, const char *);
 #endif
 /**************************************************************************
-* Redefinition of __analysis_assume and __analysis_assert for PREFIX build
+* Redefintion of __analysis_assume and __analysis_assert for PREFIX build
 **************************************************************************/
 #undef  __analysis_assume
 #undef  __analysis_assert
@@ -503,7 +503,7 @@ void __pfx_assume(int, const char *);
 
 /**************************************************************************
 * This include should always be the last thing in this file.
-* Must avoid redefinitions of macros to workaround rc.exe issues.
+* Must avoid redfinitions of macros to workaround rc.exe issues.
 ***************************************************************************/
 #if !(defined(RC_INVOKED) || defined(SORTPP_PASS))
 #include <specstrings_strict.h>

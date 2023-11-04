@@ -146,7 +146,7 @@
  *  - Each method is declared as a pointer to function field in the jump table. The implementation
  *    will fill this jump table with appropriate values, probably using a static variable, and
  *    initialize the lpVtbl field to point to this variable.
- *  - The IDirect3D_Xxx macros then just dereference the lpVtbl pointer and use the function pointer
+ *  - The IDirect3D_Xxx macros then just derefence the lpVtbl pointer and use the function pointer
  *    corresponding to the macro name. This emulates the behavior of a virtual table and should be
  *    just as fast.
  *  - This C code should be quite compatible with the Windows headers both for code that uses COM

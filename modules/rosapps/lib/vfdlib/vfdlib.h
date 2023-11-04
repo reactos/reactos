@@ -53,7 +53,7 @@ extern UINT			g_nNotifyMsg;
 #define VFD_MSGBOX_TITLE	"Virtual Floppy Drive"
 
 //
-//	shell extension string constants
+//	shell extention string constants
 //
 #define VFDEXT_DESCRIPTION	"VFD shell extension"
 #define VFDEXT_MENU_REGKEY	"Drive\\shellex\\ContextMenuHandlers\\VFD"

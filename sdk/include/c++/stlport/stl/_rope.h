@@ -302,7 +302,7 @@ public:
 // that doesn't work, since it makes it impossible to define generic
 // equality on rope iterators.  According to the draft standard, the
 // template parameters for such an equality operator cannot be inferred
-// from the occurrence of a member class as a parameter.
+// from the occurence of a member class as a parameter.
 // (SGI compilers in fact allow this, but the __result wouldn't be
 // portable.)
 // Similarly, some of the static member functions are member functions
@@ -389,7 +389,7 @@ public:
 #if 0
   /* Please tell why this code is necessary if you uncomment it.
    * Problem with it is that rope implementation expect that _S_rounded_up_size(n)
-   * returns a size > n in order to store the terminating null character. When
+   * returns a size > n in order to store the terminating null charater. When
    * instanciation type is not a char or wchar_t this is not guaranty resulting in
    * memory overrun.
    */
@@ -1169,7 +1169,7 @@ public:
                                              const _CharT* __iter, size_t __slen);
     // As above, but one reference to __r is about to be
     // destroyed.  Thus the pieces may be recycled if all
-    // relevant reference counts are 1.
+    // relevent reference counts are 1.
 
   // General concatenation on _RopeRep.  _Result
   // has refcount of 1.  Adjusts argument refcounts.
@@ -1326,7 +1326,7 @@ protected:
   // definition.
   static _RopeRep* _S_balance(_RopeRep* __r);
 
-  // Add all unbalanced subtrees to the forest of balanced trees.
+  // Add all unbalanced subtrees to the forest of balanceed trees.
   // Used only by balance.
   static void _S_add_to_forest(_RopeRep*__r, _RopeRep** __forest);
 
@@ -2371,7 +2371,7 @@ inline _Rope_char_ref_proxy<_CharT, _Alloc>::operator _CharT () const {
 template <class _CharT, class _Alloc>
 struct __move_traits<rope<_CharT, _Alloc> > {
   typedef __true_type implemented;
-  //Completeness depends on the allocator:
+  //Completness depends on the allocator:
   typedef typename __move_traits<_Alloc>::complete complete;
 };
 #endif

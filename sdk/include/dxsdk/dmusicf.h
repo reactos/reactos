@@ -185,7 +185,7 @@ extern "C" {
 #define DMUS_FOURCC_SCRIPTTRACKEVENT_LIST          mmioFOURCC('s','c','r','e')
 #define DMUS_FOURCC_SCRIPTTRACKEVENTHEADER_CHUNK   mmioFOURCC('s','c','r','h')
 #define DMUS_FOURCC_SCRIPTTRACKEVENTNAME_CHUNK     mmioFOURCC('s','c','r','n')
-/* Segment Trigger Track */
+/* Segment Trgigger Track */
 #define DMUS_FOURCC_SEGTRACK_LIST                  mmioFOURCC('s','e','g','t')
 #define DMUS_FOURCC_SEGTRACK_CHUNK                 mmioFOURCC('s','g','t','h')
 #define DMUS_FOURCC_SEGMENTS_LIST                  mmioFOURCC('l','s','g','l')

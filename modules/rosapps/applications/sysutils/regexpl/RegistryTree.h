@@ -55,7 +55,7 @@ public:
 
   // Call this function to obtain key at relative path and opened with desired access.
   //
-  // Parameters:
+  // Parametes:
   //   pchRelativePath - path to key to be opened.
   //   DesiredAccess - desired access to key.
   //   rKey - reference to variable that receives pointer to key. Caller must free object with delete operator, when object is not longer needed.

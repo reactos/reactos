@@ -82,7 +82,7 @@ public:
     );
     
     // 
-    // Stream register read/write
+    // Stream regiter read/write
     // 
     void WriteReg8(ULONG addr, UCHAR data);
     void WriteReg16(ULONG addr, USHORT data);

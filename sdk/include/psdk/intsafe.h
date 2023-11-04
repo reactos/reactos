@@ -32,7 +32,7 @@
 
 /* Handle ntintsafe here too */
 #ifdef _NTINTSAFE_H_INCLUDED_
-#ifndef _NTDEF_ /* Guard again redefinition from ntstatus.h */
+#ifndef _NTDEF_ /* Guard agains redefinition from ntstatus.h */
 typedef _Return_type_success_(return >= 0) long NTSTATUS;
 #endif
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
@@ -232,7 +232,7 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define _SIZE_T_ERROR 0xffffffffUL
 #endif /* _WIN64 */
 
-/* special definitions (the CHAR ones should not be defined here!) */
+/* special definitons (the CHAR ones should not be defined here!) */
 #define _INTSAFE_CHAR CHAR
 #define _INTSAFE_CHAR_ERROR ((signed char)(-1))
 #ifdef _CHAR_UNSIGNED

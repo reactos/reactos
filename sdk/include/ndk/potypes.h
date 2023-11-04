@@ -8,7 +8,7 @@ Header Name:
 
 Abstract:
 
-    Type definitions for the Power Subsystem
+    Type definitions for the Power Subystem
 
 Author:
 

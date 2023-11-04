@@ -187,9 +187,9 @@ typedef struct _MEDIA_CHANGE_DETECTION_INFO {
     // Mutex to synchronize enable/disable requests and media state changes
     KMUTEX      MediaChangeMutex;
 
-    // For request serialization use.
+    // For request erialization use.
     // This irp is used in timer callback routine, will be sent to the device itself.
-    // so that the sequential queue will get request wrapped on this irp. After doing
+    // so that the sequentail queue will get request wrapped on this irp. After doing
     // the real work, this irp will be completed to indicate it's ok to send the next
     // MCN request.
     PIRP        MediaChangeSyncIrp;

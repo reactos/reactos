@@ -67,7 +67,7 @@
 
 
 //---------- FAT12 SUPPORT
-#define FF_FAT12_SUPPORT				// Enable FAT12 Support. You can reduce the code-size by commenting this out.
+#define FF_FAT12_SUPPORT				// Enable FAT12 Suppport. You can reduce the code-size by commenting this out.
 										// If you don't need FAT12 support, why have it. FAT12 is more complex to process,
 										// therefore savings can be made by not having it.
 
@@ -78,7 +78,7 @@
 
 
 //---------- FILE SPACE ALLOCATION PERFORMANCE
-										// Uncomment the preferred method. (Can only choose a single method).
+										// Uncomment the prefered method. (Can only choose a single method).
 #define FF_ALLOC_DEFAULT				// Only allocate as much as is needed. (Provides good performance, without wasting space).
 //#define FF_ALLOC_DOUBLE				// Doubles the size of a file each time allocation is required. (When high-performance writing is required).
 
@@ -143,7 +143,7 @@
 
 
 //---------- Driver Sleep Time
-#define FF_DRIVER_BUSY_SLEEP	20		// How long FullFAT should sleep the thread for in ms, if FF_ERR_DRIVER_BUSY is received.
+#define FF_DRIVER_BUSY_SLEEP	20		// How long FullFAT should sleep the thread for in ms, if FF_ERR_DRIVER_BUSY is recieved.
 
 
 //---------- DEBUGGING FEATURES (HELPFUL ERROR MESSAGES)

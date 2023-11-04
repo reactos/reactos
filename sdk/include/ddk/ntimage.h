@@ -422,7 +422,7 @@ typedef PIMAGE_NT_HEADERS32                 PIMAGE_NT_HEADERS;
 #endif /* _NTDDK_ */
 
 //
-// Retrieves the first image section header from the Nt Header
+// Retreives the first image section header from the Nt Header
 //
 #define IMAGE_FIRST_SECTION( NtHeader )                \
   ((PIMAGE_SECTION_HEADER) ((ULONG_PTR)(NtHeader) +    \

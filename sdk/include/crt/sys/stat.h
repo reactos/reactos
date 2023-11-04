@@ -257,7 +257,7 @@ extern "C" {
 #endif /* _WSTAT_DEFINED */
 
 
-/** Compatibility definitions *************************************************/
+/** Compatibility definitons *************************************************/
 
 #if !defined(RC_INVOKED)
 

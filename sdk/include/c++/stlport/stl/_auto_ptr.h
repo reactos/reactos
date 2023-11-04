@@ -39,7 +39,7 @@ public:
   _Tp* release() const { _M_r.__set(__STATIC_CAST(void*, 0)); return _M_p; }
 
 private:
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   typedef auto_ptr_ref<_Tp> _Self;
   _Self& operator = (_Self const&);
 };

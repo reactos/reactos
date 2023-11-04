@@ -57,7 +57,7 @@
 #define R_I_RXOK        0x0001  //Receive OK
 #define R_I_RXERR       0x0002  //Receive error
 #define R_I_TXOK        0x0004  //Transmit OK
-#define R_I_TXERR       0x0008  //Transmit error
+#define R_I_TXERR       0x0008  //Trasmit error
 #define R_I_RXOVRFLW    0x0010  //Receive overflow
 #define R_I_RXUNDRUN    0x0020  //Receive underrun
 #define R_I_FIFOOVR     0x0040  //FIFO overflow

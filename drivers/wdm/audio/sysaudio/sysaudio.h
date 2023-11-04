@@ -15,7 +15,7 @@ typedef struct
     UNICODE_STRING DeviceName;                         // symbolic link of audio device
 
     HANDLE Handle;                          // handle to audio device
-    PFILE_OBJECT FileObject;                // file object to audio device
+    PFILE_OBJECT FileObject;                // file objecto to audio device
 
     //PIN_INFO * Pins;                        // array of PIN_INFO
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;

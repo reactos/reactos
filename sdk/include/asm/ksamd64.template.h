@@ -354,7 +354,7 @@ OFFSET(DcHandlerData, DISPATCHER_CONTEXT, HandlerData),
 OFFSET(DcHistoryTable, DISPATCHER_CONTEXT, HistoryTable),
 OFFSET(DcScopeIndex, DISPATCHER_CONTEXT, ScopeIndex),
 
-// DPC Stack Frame Definitions
+// DPC Stack Frame Defintions
 //OFFSET(DpRsp, ????, Rsp), // 0x0040
 //OFFSET(DpRip, ????, Rip), // 0x0028
 

@@ -3,7 +3,7 @@
 
 #define USBPORT_HCI_MN 0x10000001
 
-/* Transfer types */
+/* Tranfer types */
 #define USBPORT_TRANSFER_TYPE_ISOCHRONOUS 0
 #define USBPORT_TRANSFER_TYPE_CONTROL     1
 #define USBPORT_TRANSFER_TYPE_BULK        2

@@ -253,9 +253,22 @@ LRESULT WINAPI ImmRequestMessageA(HIMC, WPARAM, LPARAM);
 LRESULT WINAPI ImmRequestMessageW(HIMC, WPARAM, LPARAM);
 #define ImmRequestMessage WINELIB_NAME_AW(ImmRequestMessage);
 BOOL WINAPI ImmTranslateMessage(HWND, UINT, WPARAM, LPARAM);
-HWND WINAPI ImmCreateSoftKeyboard(UINT, UINT, int, int);
-BOOL WINAPI ImmDestroySoftKeyboard(HWND);
-BOOL WINAPI ImmShowSoftKeyboard(HWND, int);
+
+HWND WINAPI
+ImmCreateSoftKeyboard(
+    _In_ UINT uType,
+    _In_ HWND hwndParent,
+    _In_ INT x,
+    _In_ INT y);
+
+BOOL WINAPI
+ImmShowSoftKeyboard(
+    _In_ HWND hwndSoftKBD,
+    _In_ INT nCmdShow);
+
+BOOL WINAPI
+ImmDestroySoftKeyboard(
+    _In_ HWND hwndSoftKBD);
 
 BOOL WINAPI ImeInquire(LPIMEINFO, LPWSTR, LPCWSTR lpszOptions);
 BOOL WINAPI ImeConfigure (HKL, HWND, DWORD, LPVOID);
@@ -339,7 +352,7 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IME_KHOTKEY_SHAPE_TOGGLE                0x50
 #define IME_KHOTKEY_HANJACONVERT                0x51
 #define IME_KHOTKEY_ENGLISH                     0x52
-/* Windows for Traditional Chinese Edition hot key ID from 0x70 - 0x8F */
+/* Windows for Tranditional Chinese Edition hot key ID from 0x70 - 0x8F */
 #define IME_THOTKEY_IME_NONIME_TOGGLE           0x70
 #define IME_THOTKEY_SHAPE_TOGGLE                0x71
 #define IME_THOTKEY_SYMBOL_TOGGLE               0x72
@@ -612,7 +625,7 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 
 /*
  * type of soft keyboard
- * for Windows Traditional Chinese Edition
+ * for Windows Tranditional Chinese Edition
  */
 #define SOFTKEYBOARD_TYPE_T1            0x0001
 /* for Windows Simplified Chinese Edition */

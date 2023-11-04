@@ -1037,7 +1037,7 @@ typedef struct _HW_CHANNEL {
     // Placeholder for the sub-command value of the last
     // SMART command.
     UCHAR               SmartCommand;
-    // Reorder enabled
+    // Reorder anabled
     BOOLEAN             UseReorder;
     // Placeholder for status register after a GET_MEDIA_STATUS command
     UCHAR               ReturningMediaStatus;

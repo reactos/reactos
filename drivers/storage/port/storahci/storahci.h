@@ -482,7 +482,7 @@ typedef struct _AHCI_PORT_EXTENSION
     } DeviceParams;
 
     STOR_DPC CommandCompletion;
-    PAHCI_PORT Port;                                    // AHCI Port Information
+    PAHCI_PORT Port;                                    // AHCI Port Infomation
     AHCI_QUEUE SrbQueue;                                // pending Srbs
     AHCI_QUEUE CompletionQueue;
     PSCSI_REQUEST_BLOCK Slot[MAXIMUM_AHCI_PORT_NCS];    // Srbs which has been alloted a port

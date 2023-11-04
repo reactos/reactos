@@ -229,7 +229,7 @@ off_t ntom_ins2outs(mpg123_handle *fr, off_t ins);
 off_t ntom_frameoff(mpg123_handle *fr, off_t soff);
 #endif
 
-/* Initialization of any static data that may be needed at runtime.
+/* Initialization of any static data that majy be needed at runtime.
    Make sure you call these once before it is too late. */
 #ifndef NO_LAYER3
 void init_layer3(void);

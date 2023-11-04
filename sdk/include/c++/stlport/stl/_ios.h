@@ -113,7 +113,7 @@ public:                         // Locale-related member functions.
   }
 
 protected:
-  // Cached copy of the current locale's ctype facet.  Set by init() and imbue().
+  // Cached copy of the curent locale's ctype facet.  Set by init() and imbue().
   const ctype<char_type>* _M_cached_ctype;
 
 public:

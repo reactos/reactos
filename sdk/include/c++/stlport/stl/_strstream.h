@@ -155,7 +155,7 @@ public:
 private:
   strstreambuf _M_buf;
 
-  //explicitly defined as private to avoid warnings:
+  //explicitely defined as private to avoid warnings:
   strstream(strstream const&);
   strstream& operator = (strstream const&);
 };

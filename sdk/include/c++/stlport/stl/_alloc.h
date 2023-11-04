@@ -515,8 +515,8 @@ public:
 
   /* We need to define the following swap implementation for allocator with state
    * as those allocators might have implement a special swap function to correctly
-   * move datas from an instance to the other, _STLP_alloc_proxy should not break
-   * this mechanism. */
+   * move datas from an instance to the oher, _STLP_alloc_proxy should not break
+   * this mecanism. */
   void swap(_Self& __x) {
     _M_swap_alloc(__x);
     _STLP_STD::swap(_M_data, __x._M_data);

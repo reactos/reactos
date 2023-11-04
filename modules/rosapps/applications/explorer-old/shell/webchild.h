@@ -848,7 +848,7 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 
-	 // DWebBrowserEvents2Impl overrides ->
+	 // DWebBrowserEvents2Impl overides ->
 
     void BeforeNavigate2(IDispatch* pDisp, const Variant& url, const Variant& flags,
 							const Variant& targetFrameName, const Variant& postData,

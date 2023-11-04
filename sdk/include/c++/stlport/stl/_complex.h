@@ -704,7 +704,7 @@ template <class _Tp>
 inline bool _STLP_CALL operator==(const _Tp& __x, const complex<_Tp>& __z)
 { return __x == __z._M_re && 0 == __z._M_im; }
 
-//04/27/04 dums: removal of this check, if it is reestablish
+//04/27/04 dums: removal of this check, if it is restablish
 //please explain why the other operators are not macro guarded
 //#ifdef _STLP_FUNCTION_TMPL_PARTIAL_ORDER
 
