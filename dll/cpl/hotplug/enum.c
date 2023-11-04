@@ -1,10 +1,9 @@
 /*
  * PROJECT:     Safely Remove Hardware Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/hotplug/enum.c
- * PURPOSE:     device enumeration
- * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
- *              Thamatip Chitpong (thamatip.chitpong@reactos.org)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Device enumeration
+ * COPYRIGHT:   Copyright 2013 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2023 Thamatip Chitpong <thamatip.chitpong@reactos.org>
  */
 
 #include "hotplug.h"
