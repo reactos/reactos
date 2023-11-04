@@ -8,7 +8,7 @@
 /* INCLUDES *********************************************************/
 
 #include <windef.h>
-#include <winuser.h>
+#include <winuser.rh>
 #include <commctrl.h>
 
 #include "resource.h"
