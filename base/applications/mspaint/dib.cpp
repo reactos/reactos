@@ -212,7 +212,7 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
 
     // set title
     CStringW strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileNameW(g_szFileName));
     mainWindow.SetWindowText(strTitle);
 
     // update file info and recent
@@ -258,7 +258,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     CWaitCursor waitCursor;
 
     // find the file
-    WIN32_FIND_DATA find;
+    WIN32_FIND_DATAW find;
     HANDLE hFind = ::FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE) // does not exist
     {

@@ -66,12 +66,12 @@ static UINT_PTR APIENTRY
 OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hParent;
-    OFNOTIFY *pon;
+    OFNOTIFYW *pon;
     WCHAR Path[MAX_PATH];
     switch (uMsg)
     {
     case WM_NOTIFY:
-        pon = (OFNOTIFY *)lParam;
+        pon = (OFNOTIFYW *)lParam;
         if (pon->hdr.code == CDN_TYPECHANGE)
         {
             hParent = GetParent(hwnd);
@@ -197,7 +197,7 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
 
 BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 {
-    static OPENFILENAME ofn = { 0 };
+    static OPENFILENAMEW ofn = { 0 };
     static CStringW strFilter;
 
     if (ofn.lStructSize == 0)
@@ -223,12 +223,12 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 
     ofn.lpstrFile = pszFile;
     ofn.nMaxFile  = cchMaxFile;
-    return ::GetOpenFileName(&ofn);
+    return ::GetOpenFileNameW(&ofn);
 }
 
 BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 {
-    static OPENFILENAME sfn = { 0 };
+    static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
 
     if (sfn.lStructSize == 0)
@@ -266,7 +266,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
-    return ::GetSaveFileName(&sfn);
+    return ::GetSaveFileNameW(&sfn);
 }
 
 BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
@@ -298,7 +298,7 @@ BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
 
 HWND CMainWindow::DoCreate()
 {
-    ::LoadString(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
+    ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, g_szFileName, _countof(g_szFileName));
 
     CStringW strTitle;
     strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
@@ -309,7 +309,7 @@ HWND CMainWindow::DoCreate()
 
 // entry point
 INT WINAPI
-_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCmdShow)
+wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCmdShow)
 {
     g_hinstExe = hInstance;
 
@@ -346,7 +346,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nC
         if (fontsDialog.IsWindow() && fontsDialog.IsDialogMessage(&msg))
             continue;
 
-        if (::TranslateAccelerator(mainWindow, hAccel, &msg))
+        if (::TranslateAcceleratorW(mainWindow, hAccel, &msg))
             continue;
 
         ::TranslateMessage(&msg);

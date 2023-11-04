@@ -141,7 +141,7 @@ public:
         CLSID clsid;
         if (::IsEqualGUID(guidFileType, GUID_NULL))
         {
-            CStringW strExt(PathFindExtension(pszFileName));
+            CStringW strExt(PathFindExtensionW(pszFileName));
             clsid = FindCodecForExtension(strExt, pEncoders, cEncoders);
         }
         else

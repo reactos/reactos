@@ -42,7 +42,7 @@ BOOL CPaintToolBar::DoCreate(HWND hwndParent)
     };
     DWORD style = WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE |
                   TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
-    if (!CWindow::Create(TOOLBARCLASSNAME, hwndParent, toolbarPos, NULL, style))
+    if (!CWindow::Create(TOOLBARCLASSNAMEW, hwndParent, toolbarPos, NULL, style))
         return FALSE;
 
     HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
