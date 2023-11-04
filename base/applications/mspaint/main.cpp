@@ -209,7 +209,8 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
         // Get the import filter
         CSimpleArray<GUID> aguidFileTypesI;
         CImage::GetImporterFilterString(strFilter, aguidFileTypesI, strAllPictureFiles,
-                                        CImage::excludeDefaultLoad, UNICODE_NULL);
+                                        CImage::excludeDefaultLoad, L'|');
+        strFilter.Replace(L'|', UNICODE_NULL);
 
         // Initializing the OPENFILENAME structure for GetOpenFileName
         ZeroMemory(&ofn, sizeof(ofn));
@@ -236,7 +237,8 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
         // Get the export filter
         CSimpleArray<GUID> aguidFileTypesE;
         CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL,
-                                        CImage::excludeDefaultSave, UNICODE_NULL);
+                                        CImage::excludeDefaultSave, L'|');
+        strFilter.Replace(L'|', UNICODE_NULL);
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
         ZeroMemory(&sfn, sizeof(sfn));
