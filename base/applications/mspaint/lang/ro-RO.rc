@@ -17,8 +17,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
         MENUITEM "&Deschidere...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Păst&rare în...", IDM_FILESAVEAS
+        MENUITEM "S&alvează\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Sal&vează ca...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Din aparat media...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
@@ -234,7 +234,7 @@ BEGIN
     IDS_WINDOWTITLE "%s - Pictare"
     IDS_INFOTITLE "Pictare pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
+    IDS_SAVEPROMPTTEXT "Doriți salvarea modificărilor din %s?"
     IDS_DEFAULTFILENAME "Fără nume"
     IDS_MINIATURETITLE "Miniatură"
     IDS_TOOLTIP1 "Golire selecție"
@@ -267,7 +267,7 @@ BEGIN
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_SAVEERROR "Eșec în salvarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
     IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
     IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
 END
