@@ -48,12 +48,12 @@ static BOOL AskForReboot(VOID)
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
-    // NOTE: This callback is needed to set large icon correctly.
     HICON hIcon;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
+            /* Set large icon correctly */
             hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
@@ -63,20 +63,22 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
         {
             switch (lParam)
             {
-            case PSBTN_OK:
-            case PSBTN_APPLYNOW:
-                /* Write Input Methods list to registry */
-                InputList_Process();
-
-                /* Write advanced settings */
-                SaveAdvancedSettings(hwndDlg);
-
-                if (g_bRebootNeeded && AskForReboot())
+                case PSBTN_OK:
+                case PSBTN_APPLYNOW:
                 {
-                    EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
-                    ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+                    /* Write Input Methods list to registry */
+                    InputList_Process();
+
+                    /* Write advanced settings */
+                    SaveAdvancedSettings(hwndDlg);
+
+                    if (g_bRebootNeeded && AskForReboot())
+                    {
+                        EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
+                        ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+                    }
+                    break;
                 }
-                break;
             }
             break;
         }
