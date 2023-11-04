@@ -1,10 +1,10 @@
 /*
-* PROJECT:     Safely Remove Hardware Applet
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/cpl/hotplug/hotplug.c
-* PURPOSE:     applet initialization
-* PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
-*/
+ * PROJECT:     Safely Remove Hardware Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Applet initialization
+ * COPYRIGHT:   Copyright 2013 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2020 Eric Kohl <eric.kohl@reactos.org>
+ */
 
 #include "hotplug.h"
 
