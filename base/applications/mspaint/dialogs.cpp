@@ -211,12 +211,12 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (wcstod(tempS, NULL) * g_xDpi));
+            newWidth = max(1, (int)(wcstod(tempS, NULL) * g_xDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
+            newWidth = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
@@ -236,12 +236,12 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (wcstod(tempS, NULL) * g_yDpi));
+            newHeight = max(1, (int)(wcstod(tempS, NULL) * g_yDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
+            newHeight = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
@@ -479,13 +479,13 @@ void CFontsDialog::OnFontSize(UINT codeNotify)
             if (iItem != CB_ERR && 0 < cch && cch < _countof(szText))
             {
                 ComboBox_GetLBText(hwndSizes, iItem, szText);
-                PointSize = _ttoi(szText);
+                PointSize = _wtoi(szText);
             }
             break;
 
         case CBN_EDITCHANGE:
             ::GetWindowTextW(hwndSizes, szText, _countof(szText));
-            PointSize = _ttoi(szText);
+            PointSize = _wtoi(szText);
             break;
     }
 
