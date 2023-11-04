@@ -646,7 +646,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
-            ::SetCursor(::LoadCursorW(NULL, IDC_SIZEALL));
+            ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL));
         return 0;
     }
 
@@ -674,7 +674,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 ::SetCursor(::LoadIconW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
             default:
-                ::SetCursor(::LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_CROSS)));
+                ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));
         }
         return 0;
     }
