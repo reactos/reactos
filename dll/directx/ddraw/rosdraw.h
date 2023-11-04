@@ -69,7 +69,7 @@ StartDirectDrawHal(
                    BOOL reenable);
 
 /* iface = a pointer to the com object
- * reenable = FALSE / TRUE rebuild dx hel interface, this is need if we doing a mode change
+ * reenable = FALSE / TRUE rebuld dx hel interface, this is need if we doing a mode change
  */
 
 HRESULT WINAPI

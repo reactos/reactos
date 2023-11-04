@@ -3,7 +3,7 @@
  * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
  * PURPOSE:     Implements a TreeList control: a tree window with columns.
  * COPYRIGHT:   Copyright (C) Anton Zechner (az_software@inode.at) 2007
- *              Copyright (C) S√©bastien Kirche (sebastien.kirche@free.fr) 2014
+ *              Copyright (C) SÈbastien Kirche (sebastien.kirche@free.fr) 2014
  *
  * NOTE: Taken from the TreeList code found at https://github.com/sebkirche/treelist
  */
@@ -123,7 +123,7 @@ typedef		TVSORTEX				TV_SORTEX;
 #define 	VK_ICONCLK				0x10001				// Edit with click on icon
 #endif
 #ifndef		VK_EDITCLK
-#define 	VK_EDITCLK				0x10002				// Edit with click on augew√§hltes Element //visible element ?
+#define 	VK_EDITCLK				0x10002				// Edit with click on augew‰hltes Element //visble element ?
 #endif
 #ifdef		UNICODE
 #define		TV_UINICODE				1
@@ -217,7 +217,7 @@ typedef		TVSORTEX				TV_SORTEX;
 // constants for HitTest (flags)
 #define 	TVHT_SUBTOCOL(u)		(((unsigned)u)>>24)	// Convert column to column numbers mask
 #define 	TVHT_SUBMASK			0xFF000000			// Maske in der die Spalte gespeichert wird
-#define 	TVHT_ONRIGHTSPACE		0x00800000			// Auf rechtem Rand nach den Extr√§gen
+#define 	TVHT_ONRIGHTSPACE		0x00800000			// Auf rechtem Rand nach den Extr‰gen
 #define 	TVHT_ONSUBLABEL			0x00400000			// Koordinate ist auf dem Text eines Extraeintrages
 #define 	TVHT_ONSUBICON			0x00200000			// Koordinate ist auf einem Extraeintrag
 #define 	TVHT_ONSUBRIGHT			0x00100000			// Koordinate ist auf einem Extraeintrag rechts vom Text
