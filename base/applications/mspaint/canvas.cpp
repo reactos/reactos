@@ -453,7 +453,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             CStringW strCoord;
             if (::PtInRect(&rcImage, pt))
                 strCoord.Format(L"%ld, %ld", pt.x, pt.y);
-            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCWSTR) strCoord);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
         }
     }
 
@@ -513,7 +513,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     // Display new size
     CStringW strSize;
     strSize.Format(L"%d x %d", cxImage, cyImage);
-    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCWSTR) strSize);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
 
     // Dragging now... Fix the position...
     CRect rcResizing = { 0, 0, cxImage, cyImage };
