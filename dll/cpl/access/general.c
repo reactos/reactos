@@ -195,9 +195,8 @@ GeneralPageProc(HWND hwndDlg,
                            IDC_RESET_BOX,
                            pGlobalData->accessTimeout.dwFlags & ATF_TIMEOUTON ? BST_CHECKED : BST_UNCHECKED);
             FillResetComboBox(GetDlgItem(hwndDlg, IDC_RESET_COMBO));
+            pGlobalData->accessTimeout.iTimeOutMSec = max(pGlobalData->accessTimeout.iTimeOutMSec, 300000);
             iCurSel = (pGlobalData->accessTimeout.iTimeOutMSec / 300000) - 1;
-            if (iCurSel < 0)
-                iCurSel = 0;
             SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_SETCURSEL, iCurSel, 0);
             EnableWindow(GetDlgItem(hwndDlg, IDC_RESET_COMBO),
                          pGlobalData->accessTimeout.dwFlags & ATF_TIMEOUTON ? TRUE : FALSE);
