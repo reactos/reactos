@@ -29,7 +29,7 @@ BOOL LoadAdvancedSettings(HWND hwndDlg)
                              (LPBYTE)&dwValue,
                              &cbValue);
     if ((error != ERROR_SUCCESS) || (dwType != REG_DWORD) || (cbValue != sizeof(dwValue)))
-        dwValue = FALSE;
+        dwValue = FALSE; /* Default */
 
     RegCloseKey(hKey);
 
