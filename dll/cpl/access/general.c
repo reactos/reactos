@@ -177,7 +177,7 @@ GeneralPageProc(HWND hwndDlg,
 {
     PGLOBAL_DATA pGlobalData;
     LPPSHNOTIFY lppsn;
-    int iCurSel;
+    INT iCurSel;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
