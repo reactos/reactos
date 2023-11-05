@@ -301,14 +301,6 @@ TOOLBAR_GetText(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr)
 }
 
 static void
-TOOLBAR_DumpTBButton(const TBBUTTON *tbb, BOOL fUnicode)
-{
-    TRACE("TBBUTTON: id %d, bitmap=%d, state=%02x, style=%02x, data=%p, stringid=%p (%s)\n", tbb->idCommand,
-        tbb->iBitmap, tbb->fsState, tbb->fsStyle, (void *)tbb->dwData, (void *)tbb->iString,
-        tbb->iString != -1 ? (fUnicode ? debugstr_w((LPWSTR)tbb->iString) : debugstr_a((LPSTR)tbb->iString)) : "");
-}
-
-static void
 TOOLBAR_DumpButton(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *bP, INT btn_num)
 {
     if (TRACE_ON(toolbar)){
@@ -377,23 +369,7 @@ static void set_stringT( TBUTTON_INFO *btn, const WCHAR *str, BOOL unicode )
 static void free_string( TBUTTON_INFO *btn )
 {
     set_string_index( btn, 0, TRUE );
-
 }
-
-/***********************************************************************
-* 		TOOLBAR_CheckStyle
-*
-* This function validates that the styles set are implemented and
-* issues FIXMEs warning of possible problems. In a perfect world this
-* function should be null.
-*/
-static void
-TOOLBAR_CheckStyle (const TOOLBAR_INFO *infoPtr)
-{
-    if (infoPtr->dwStyle & TBSTYLE_REGISTERDROP)
-	FIXME("[%p] TBSTYLE_REGISTERDROP not implemented\n", infoPtr->hwndSelf);
-}
-
 
 static INT
 TOOLBAR_SendNotify (NMHDR *nmhdr, const TOOLBAR_INFO *infoPtr, UINT code)
@@ -2017,8 +1993,6 @@ TOOLBAR_InternalInsertButtonsT(TOOLBAR_INFO *infoPtr, INT iIndex, UINT nAddButto
     for (iButton = 0; iButton < nAddButtons; iButton++) {
         TBUTTON_INFO *btnPtr = &infoPtr->buttons[iIndex + iButton];
         INT_PTR str;
-
-        TOOLBAR_DumpTBButton(lpTbb + iButton, fUnicode);
 
         ZeroMemory(btnPtr, sizeof(*btnPtr));
 
@@ -5267,7 +5241,6 @@ TOOLBAR_SetStyle (TOOLBAR_INFO *infoPtr, DWORD style)
         infoPtr->dwDTFlags = DT_CENTER | DT_END_ELLIPSIS;
 
     infoPtr->dwStyle = style;
-    TOOLBAR_CheckStyle(infoPtr);
 
     if ((dwOldStyle ^ style) & TBSTYLE_WRAPABLE)
     {
@@ -5552,8 +5525,6 @@ TOOLBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     OpenThemeData (hwnd, themeClass);
 #endif
 
-    TOOLBAR_CheckStyle (infoPtr);
-
     return 0;
 }
 
@@ -5632,9 +5603,6 @@ TOOLBAR_EraseBackground (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 		break;
 	    case CDRF_SKIPDEFAULT:
 		return TRUE;
-	    default:
-		FIXME("[%p] response %d not handled to NM_CUSTOMDRAW (CDDS_PREERASE)\n",
-		      infoPtr->hwndSelf, ntfret);
 	    }
     }
 
@@ -5669,9 +5637,6 @@ TOOLBAR_EraseBackground (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 		break;
 	    case CDRF_SKIPDEFAULT:
 		return TRUE;
-	    default:
-		FIXME("[%p] response %d not handled to NM_CUSTOMDRAW (CDDS_POSTERASE)\n",
-		      infoPtr->hwndSelf, ntfret);
 	    }
     }
     return ret;
