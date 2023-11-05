@@ -162,7 +162,6 @@ PdoPnp(IN PDEVICE_OBJECT DeviceObject,
        IN PIRP Irp)
 {
     NTSTATUS Status;
-    DPRINT("PdoPnp()\n");
 
     Status = Irp->IoStatus.Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -177,8 +176,6 @@ PdoPower(IN PDEVICE_OBJECT DeviceObject,
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
-
-    DPRINT("PdoPower()\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
