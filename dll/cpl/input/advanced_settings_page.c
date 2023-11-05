@@ -14,15 +14,23 @@ BOOL LoadAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
     LRESULT error;
-    DWORD dwValue = FALSE;
+    DWORD dwValue;
+    DWORD dwType;
     DWORD cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_READ, &hKey);
     if (error != ERROR_SUCCESS)
         return FALSE;
 
-    RegQueryValueExW(hKey, L"Disable Thread Input Manager", NULL, NULL,
-                     (LPBYTE)&dwValue, &cbValue);
+    error = RegQueryValueExW(hKey,
+                             L"Disable Thread Input Manager",
+                             NULL,
+                             &dwType,
+                             (LPBYTE)&dwValue,
+                             &cbValue);
+    if ((error != ERROR_SUCCESS) || (dwType != REG_DWORD) || (cbValue != sizeof(dwValue)))
+        dwValue = FALSE;
+
     RegCloseKey(hKey);
 
     CheckDlgButton(hwndDlg, IDC_TURNOFFTEXTSVCS_CB, (dwValue ? BST_CHECKED : BST_UNCHECKED));
