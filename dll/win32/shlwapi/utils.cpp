@@ -68,6 +68,8 @@ IContextMenu_Invoke(
         ret = SUCCEEDED(pContextMenu->InvokeCommand(&info));
     }
 
+    /* Invoking itself doesn't need the menu object, but getting the command info
+       needs the menu. */
     if (hMenu)
         DestroyMenu(hMenu);
 
