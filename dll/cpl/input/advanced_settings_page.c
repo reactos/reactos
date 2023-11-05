@@ -13,7 +13,7 @@ BOOL g_bTextServiceIsOff = FALSE;
 BOOL LoadAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
-    LONG error;
+    LRESULT error;
     DWORD dwValue = FALSE;
     DWORD cbValue = sizeof(dwValue);
 
@@ -33,8 +33,9 @@ BOOL LoadAdvancedSettings(HWND hwndDlg)
 BOOL SaveAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
-    LONG error;
-    const DWORD dwValue = g_bTextServiceIsOff, cbValue = sizeof(dwValue);
+    LRESULT error;
+    const DWORD dwValue = g_bTextServiceIsOff;
+    const DWORD cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_WRITE, &hKey);
     if (error != ERROR_SUCCESS)
