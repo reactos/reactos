@@ -33,9 +33,10 @@ SYSTEM_POWER_CAPABILITIES PopCapabilities;
 static
 NTSTATUS
 NTAPI
-PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
-                             IN PIRP Irp,
-                             IN PVOID Context)
+PopRequestPowerIrpCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
 {
     PIO_STACK_LOCATION Stack;
     PREQUEST_POWER_COMPLETE CompletionRoutine;
@@ -306,8 +307,7 @@ PoInitSystem(IN ULONG BootPhase)
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_SYS_BUTTON,
-                                       IopRootDeviceNode->
-                                       PhysicalDeviceObject->DriverObject,
+                                       IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                        PopAddRemoveSysCapsCallback,
                                        NULL,
                                        &NotificationEntry);
@@ -316,8 +316,7 @@ PoInitSystem(IN ULONG BootPhase)
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_LID,
-                                       IopRootDeviceNode->
-                                       PhysicalDeviceObject->DriverObject,
+                                       IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                        PopAddRemoveSysCapsCallback,
                                        NULL,
                                        &NotificationEntry);
@@ -482,15 +481,15 @@ PoSetHiberRange(IN PVOID HiberContext,
  */
 NTSTATUS
 NTAPI
-PoCallDriver(IN PDEVICE_OBJECT DeviceObject,
-             IN OUT PIRP Irp)
+PoCallDriver(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
 {
     NTSTATUS Status;
 
     /* Forward to Io -- FIXME! */
     Status = IoCallDriver(DeviceObject, Irp);
 
-    /* Return status */
     return Status;
 }
 
@@ -525,12 +524,13 @@ PoRegisterSystemState(IN PVOID StateHandle,
  */
 NTSTATUS
 NTAPI
-PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
-                  IN UCHAR MinorFunction,
-                  IN POWER_STATE PowerState,
-                  IN PREQUEST_POWER_COMPLETE CompletionFunction,
-                  IN PVOID Context,
-                  OUT PIRP *pIrp OPTIONAL)
+PoRequestPowerIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR MinorFunction,
+    IN POWER_STATE PowerState,
+    IN PREQUEST_POWER_COMPLETE CompletionFunction,
+    IN PVOID Context,
+    OUT PIRP *pIrp OPTIONAL)
 {
     PDEVICE_OBJECT TopDeviceObject;
     PIO_STACK_LOCATION Stack;
@@ -625,7 +625,6 @@ VOID
 NTAPI
 PoStartNextPowerIrp(IN PIRP Irp)
 {
-    UNIMPLEMENTED_ONCE;
 }
 
 /*
@@ -998,7 +997,6 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         }
 
         /* You should not have made it this far */
-        // ASSERTMSG("System is still up and running?!\n", FALSE);
         DPRINT1("System is still up and running, you may not have chosen a yet supported power option: %u\n", PopAction.Action);
         break;
     }

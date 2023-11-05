@@ -1846,12 +1846,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 &CommandLine);
     }
 
-    /* If the timeout is too long */
+    /* If the CS timeout is longer than 1 hour, disable it */
     if (RtlpTimeout.QuadPart < Int32x32To64(3600, -10000000))
-    {
-        /* Then disable CS Timeout */
         RtlpTimeoutDisable = TRUE;
-    }
 
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();
