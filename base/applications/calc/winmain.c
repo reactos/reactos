@@ -642,7 +642,6 @@ static void build_operand(HWND hwnd, DWORD idc)
     }
 
     cbPtr = sizeof(calc.buffer) - ((BYTE*)calc.ptr - (BYTE*)calc.buffer);
-
     StringCbPrintf(calc.ptr, cbPtr, _T("%C"), key2code[i].key);
 
     calc.ptr += _tcslen(calc.ptr);
