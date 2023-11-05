@@ -505,7 +505,7 @@ static void update_lcd_display(HWND hwnd)
      */
     if (calc.base == IDC_RADIO_DEC && !calc.is_nan) {
         if (_tcschr(tmp, _T('.')) == NULL)
-            _tcscat(tmp, _T("."));
+            StringCbCat(tmp, sizeof(tmp), _T("."));
     }
     /* if separator mode is on, let's add an additional space */
     if (calc.usesep && !calc.sci_in && !calc.sci_out && !calc.is_nan) {
