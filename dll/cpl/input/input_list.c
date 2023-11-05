@@ -395,12 +395,28 @@ InputList_Process(VOID)
         return FALSE;
     }
 
+    /* Find change in the IME HKLs */
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        if (!IS_IME_HKL(pCurrent->hkl))
+            continue;
+
+        if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
+            (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED) ||
+            (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED))
+        {
+            bRet = TRUE; /* Reboot is needed */
+            break;
+        }
+    }
+
     /* Process DELETED and EDITED entries */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED) ||
             (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
+
             /* Only unload the DELETED and EDITED entries */
             if (UnloadKeyboardLayout(pCurrent->hkl))
             {

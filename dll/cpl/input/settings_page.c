@@ -600,19 +600,8 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 
         case PSN_APPLY:
         {
-            /* If an HKL is IME, then reboot is needed */
-            INPUT_LIST_NODE *pNode;
-            for (pNode = InputList_GetFirst(); pNode != NULL; pNode = pNode->pNext)
-            {
-                if (IS_IME_HKL(pNode->hkl)) /* IME? */
-                {
-                    g_bRebootNeeded = TRUE;
-                    break;
-                }
-            }
-
             /* Write Input Methods list to registry */
-            InputList_Process();
+            g_bRebootNeeded |= InputList_Process();
             break;
         }
     }
