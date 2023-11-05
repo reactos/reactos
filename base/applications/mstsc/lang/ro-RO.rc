@@ -20,8 +20,8 @@ BEGIN
     LTEXT "Nume utilizator:", IDC_STATIC, 47, 58, 58, 8
     COMBOBOX IDC_SERVERCOMBO, 101, 39, 119, 13, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_NAMEEDIT, 101, 55, 119, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Păstrează", IDC_SAVE, 57, 139, 50, 14
-    PUSHBUTTON "Păst&rare în…", IDC_SAVEAS, 112, 139, 60, 14
+    PUSHBUTTON "S&alvează", IDC_SAVE, 57, 139, 50, 14
+    PUSHBUTTON "Sal&vează ca…", IDC_SAVEAS, 112, 139, 60, 14
     PUSHBUTTON "&Deschidere…", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
     LTEXT "Puteți păstra preferințele curente de conectare sau puteți deschide preferințe existente.", IDC_STATIC, 50, 115, 172, 20
