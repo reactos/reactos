@@ -1299,7 +1299,7 @@ CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
             hIcon = ExtractIconW(hInst, szIconPath.GetString(), 0);
         }
 
-        if (!hIcon)
+        if ((!hIcon) || (hIcon == (HICON)1))
         {
             /* Load default icon */
             hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
