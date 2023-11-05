@@ -14,7 +14,8 @@ BOOL LoadAdvancedSettings(HWND hwndDlg)
 {
     HKEY hKey;
     LONG error;
-    DWORD dwValue = FALSE, cbValue = sizeof(dwValue);
+    DWORD dwValue = FALSE;
+    DWORD cbValue = sizeof(dwValue);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\CTF", 0, KEY_READ, &hKey);
     if (error != ERROR_SUCCESS)
