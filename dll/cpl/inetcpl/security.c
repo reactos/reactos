@@ -275,6 +275,7 @@ static INT_PTR security_on_destroy(secdlg_data * sd)
 
     heap_free(sd->zone_attr);
     heap_free(sd->zones);
+#ifndef __REACTOS__
 
     security_cleanup_zones(sd);
     SetWindowLongPtrW(sd->hsec, DWLP_USER, 0);
