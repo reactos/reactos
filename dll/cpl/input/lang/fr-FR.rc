@@ -110,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Maj"
     IDS_LEFT_ALT_SHIFT "Alt Gauche+Maj"
     IDS_SWITCH_BET_INLANG "Changer les langues de saisie"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "Il est nécessaire de redémarrer le système afin que les changements prennent effet. Redémarrer maintenant ?"
 END
 
 /* FIXME : À améliorer/compléter */
