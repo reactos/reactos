@@ -44,7 +44,7 @@ BOOL SaveAdvancedSettings(HWND hwndDlg)
                            (const BYTE *)&dwValue, cbValue);
 
     RegCloseKey(hKey);
-    return error == ERROR_SUCCESS;
+    return (error == ERROR_SUCCESS);
 }
 
 static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
