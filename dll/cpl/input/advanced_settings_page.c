@@ -67,6 +67,9 @@ static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
             BOOL bOff = (IsDlgButtonChecked(hwndDlg, IDC_TURNOFFTEXTSVCS_CB) == BST_CHECKED);
             g_bRebootNeeded |= (g_bTextServiceIsOff && !bOff);
             g_bTextServiceIsOff = bOff;
+
+            /* Write advanced settings */
+            SaveAdvancedSettings(hwndDlg);
             break;
         }
     }

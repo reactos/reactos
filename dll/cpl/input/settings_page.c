@@ -610,6 +610,9 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
                     break;
                 }
             }
+
+            /* Write Input Methods list to registry */
+            InputList_Process();
             break;
         }
     }

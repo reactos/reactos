@@ -9,7 +9,6 @@
  */
 
 #include "input.h"
-#include "input_list.h"
 
 #define NUM_APPLETS    (1)
 
@@ -65,12 +64,6 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
                 case PSBTN_OK:
                 case PSBTN_APPLYNOW:
                 {
-                    /* Write Input Methods list to registry */
-                    InputList_Process();
-
-                    /* Write advanced settings */
-                    SaveAdvancedSettings(hwndDlg);
-
                     if (g_bRebootNeeded && AskForReboot(hwndDlg))
                     {
                         EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
