@@ -13,6 +13,7 @@ static BOOLEAN CMAPI
 HvpWriteLog(
     PHHIVE RegistryHive)
 {
+#if 0 // UNIMPLEMENTED
     ULONG FileOffset;
     UINT32 BufferSize;
     UINT32 BitmapSize;
@@ -22,13 +23,6 @@ HvpWriteLog(
     ULONG LastIndex;
     PVOID BlockPtr;
     BOOLEAN Success;
-    static ULONG PrintCount = 0;
-
-    if (PrintCount++ == 0)
-    {
-        UNIMPLEMENTED;
-    }
-    return TRUE;
 
     ASSERT(RegistryHive->ReadOnly == FALSE);
     ASSERT(RegistryHive->BaseBlock->Length ==
@@ -139,7 +133,7 @@ HvpWriteLog(
     {
         DPRINT("FileFlush failed\n");
     }
-
+#endif // UNIMPLEMENTED
     return TRUE;
 }
 
@@ -277,7 +271,6 @@ CMAPI
 HvHiveWillShrink(IN PHHIVE RegistryHive)
 {
     /* No shrinking yet */
-    UNIMPLEMENTED_ONCE;
     return FALSE;
 }
 

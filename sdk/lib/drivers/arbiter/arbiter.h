@@ -1,13 +1,11 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            lib/drivers/arbiter/arbiter.h
- * PURPOSE:         Hardware Resources Arbiter Library
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hardware Resources Arbiter Library
+ * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
-#ifndef _ARBITER_H
-#define _ARBITER_H
+#pragma once
 
 typedef struct _ARBITER_ORDERING
 {
@@ -231,5 +229,3 @@ ArbInitializeArbiterInstance(
     _In_ PCWSTR OrderName,
     _In_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction
 );
-
-#endif  /* _ARBITER_H */

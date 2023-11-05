@@ -1,24 +1,15 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            lib/drivers/arbiter/arbiter.c
- * PURPOSE:         Hardware Resources Arbiter Library
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hardware Resources Arbiter Library
+ * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
 #include <ndk/rtltypes.h>
-
 #include "arbiter.h"
-
-#define NDEBUG
-#include <debug.h>
-
-/* GLOBALS ********************************************************************/
-
-/* DATA **********************************************************************/
 
 /* FUNCTIONS ******************************************************************/
 
@@ -34,11 +25,6 @@ ArbInitializeArbiterInstance(
 {
     NTSTATUS Status;
 
-    DPRINT("ArbInitializeArbiterInstance: Initializing %S Arbiter\n", ArbiterName);
-    UNIMPLEMENTED;
-
     Status = STATUS_SUCCESS;
     return Status;
 }
-
-/* EOF */
