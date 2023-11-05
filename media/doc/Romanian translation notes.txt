@@ -1,5 +1,7 @@
 The following material is addressed (in Romanian) to Romanian translators.
-Last modified: 2023 Miloiu Andrei
+
+Copyright 2017 ColinFinck
+Copyright 2023 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
@@ -36,7 +38,6 @@ La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” ra
   - „logică computațională” vs. „software”
   - „configurare”/„particularizare” vs. „Setare”
   - „modul pilot” (sau doar „pilot”) vs. „driver”
-  - „Confirmă”/„Anulează” vs. „OK”/„Renunță”
  16. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
  17. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
   - Este recomandată evitarea utilizării literelor „s” și „t” pe post de taste de acces pentru a preveni confuzia între acestea și diacriticele „ș” și „ț”.
