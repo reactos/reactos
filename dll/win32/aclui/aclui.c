@@ -87,11 +87,6 @@ AceHeaderToSID(IN PACE_HEADER AceHeader)
 static VOID
 DestroySecurityPage(IN PSECURITY_PAGE sp)
 {
-    if(sp->hiPrincipals != NULL)
-    {
-        ImageList_Destroy(sp->hiPrincipals);
-    }
-
     DestroySidCacheMgr(sp->SidCacheMgr);
 
     if (sp->OwnerSid != NULL)
