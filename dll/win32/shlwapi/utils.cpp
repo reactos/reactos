@@ -12,8 +12,8 @@
 #include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
-#include <atlstr.h>         // for CStringW
-#include <strsafe.h>        // for StringC... functions
+#include <atlstr.h>
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
