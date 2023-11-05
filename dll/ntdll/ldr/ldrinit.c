@@ -1784,12 +1784,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 &CommandLine);
     }
 
-    /* If the timeout is too long */
+    /* If the CS timeout is longer than 1 hour, disable it */
     if (RtlpTimeout.QuadPart < Int32x32To64(3600, -10000000))
-    {
-        /* Then disable CS Timeout */
         RtlpTimeoutDisable = TRUE;
-    }
 
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();
@@ -1874,9 +1871,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Allocate an Activation Context Stack */
     Status = RtlAllocateActivationContextStack(&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
-
-    // FIXME: Loader private heap is missing
-    //DPRINT1("Loader private heap is missing\n");
 
     /* Check for Debug Heap */
     if (OptionsKey)
@@ -2130,7 +2124,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if we should look for a .local file */
     if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH)
     {
-        /* FIXME */
         DPRINT1("We don't support .local overrides yet\n");
     }
 
