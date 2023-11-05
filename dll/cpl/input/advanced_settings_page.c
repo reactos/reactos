@@ -74,16 +74,6 @@ static INT_PTR OnNotifyAdvancedSettingsPage(HWND hwndDlg, LPARAM lParam)
     return 0;
 }
 
-VOID OnCommandAdvancedSettingsPage(HWND hwndDlg, WPARAM wParam)
-{
-    switch (LOWORD(wParam))
-    {
-        case IDC_TURNOFFTEXTSVCS_CB:
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            break;
-    }
-}
-
 INT_PTR CALLBACK
 AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -97,8 +87,15 @@ AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return OnNotifyAdvancedSettingsPage(hwndDlg, lParam);
 
         case WM_COMMAND:
-            OnCommandAdvancedSettingsPage(hwndDlg, wParam);
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_TURNOFFTEXTSVCS_CB:
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
             break;
+        }
     }
 
     return 0;
