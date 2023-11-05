@@ -275,10 +275,6 @@ static INT_PTR security_on_destroy(secdlg_data * sd)
 
     heap_free(sd->zone_attr);
     heap_free(sd->zones);
-    if (sd->himages) {
-        SendMessageW(sd->hlv, LVM_SETIMAGELIST, LVSIL_NORMAL, 0);
-        ImageList_Destroy(sd->himages);
-    }
 
     security_cleanup_zones(sd);
     SetWindowLongPtrW(sd->hsec, DWLP_USER, 0);
