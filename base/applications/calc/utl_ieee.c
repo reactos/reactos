@@ -45,7 +45,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
             TCHAR *ptr, *dst;
 
             StringCbPrintf(buffer, sizeof(buffer), _T("%#*.*f"), width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, rpn->f);
-            ptr = buffer + wcslen(buffer);
+            ptr = buffer + _tcslen(buffer);
             /* format string ensures there is a '.': */
             dst = _tcschr(buffer, _T('.'));
             while (--ptr > dst)

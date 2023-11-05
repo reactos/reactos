@@ -645,7 +645,7 @@ static void build_operand(HWND hwnd, DWORD idc)
 
     StringCbPrintf(calc.ptr, cbPtr, _T("%C"), key2code[i].key);
 
-    calc.ptr += wcslen(calc.ptr);
+    calc.ptr += _tcslen(calc.ptr);
     update_lcd_display(hwnd);
 }
 
