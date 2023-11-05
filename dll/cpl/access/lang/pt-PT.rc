@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -96,7 +96,7 @@ BEGIN
     AUTOCHECKBOX "Emitir um &som ao activar ou desactivar um recurso", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Dispositivos ""Teclas série""", -1, 6, 115, 234, 47
-    LTEXT "Os dispositivos ""Teclas série"" permitem o acesso alternativo aos recursos de teclado e do rato.",
+    LTEXT "Os dispositivos ""Teclas série"" permitem o acesso alternativo aos recursos do teclado e do rato.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "&Utilizar as ""Teclas série""", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Definições", IDC_SERIAL_BUTTON, 144, 142, 90, 14
