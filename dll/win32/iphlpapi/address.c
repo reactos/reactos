@@ -331,8 +331,8 @@ GetAdaptersAddresses(
     DWORD MIN_SIZE = 15 * 1024;
     PIP_ADAPTER_ADDRESSES PreviousAA = NULL;
 
-    FIXME("GetAdaptersAddresses - Semi Stub: Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p.\n",
-        Family, Flags, Reserved, pAdapterAddresses, pOutBufLen);
+    TRACE("Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p\n",
+          Family, Flags, Reserved, pAdapterAddresses, pOutBufLen);
 
     if (!pOutBufLen)
         return ERROR_INVALID_PARAMETER;
@@ -488,9 +488,9 @@ GetAdaptersAddresses(
                 CurrentAA->IfType = Entry->if_type;
                 if(Entry->if_operstatus >= IF_OPER_STATUS_CONNECTING)
                     CurrentAA->OperStatus = IfOperStatusUp;
-                else 
+                else
                     CurrentAA->OperStatus = IfOperStatusDown;
-                    
+
                 /* Next items */
                 Ptr = (BYTE*)(CurrentAA + 1);
 
