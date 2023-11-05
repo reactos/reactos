@@ -98,6 +98,4 @@ DWORDfromString(const WCHAR *pszString)
 
 VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
 
-extern BOOL g_bRebootNeeded;
-
 #endif /* _INPUT_H */
