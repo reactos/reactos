@@ -216,7 +216,7 @@ Cabinet=reactos.cab
 DefaultPath = \ReactOS
 SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
-OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 
 [NLS]
 AnsiCodepage     = c_1252.nls
