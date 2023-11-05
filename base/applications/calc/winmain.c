@@ -642,9 +642,9 @@ static void build_operand(HWND hwnd, DWORD idc)
     }
 
     cbPtr = sizeof(calc.buffer) - ((BYTE*)calc.ptr - (BYTE*)calc.buffer);
-    StringCbPrintf(calc.ptr, cbPtr, _T("%C"), key2code[i].key);
+    StringCbPrintfEx(calc.ptr, cbPtr, &calc.ptr, NULL, STRSAFE_FILL_ON_FAILURE,
+                     _T("%C"), key2code[i].key);
 
-    calc.ptr += _tcslen(calc.ptr);
     update_lcd_display(hwnd);
 }
 
@@ -1065,8 +1065,8 @@ static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
         }
     } else
     if (ch == '$') {
-        StringCbCopy(calc.buffer, sizeof(calc.buffer), calc.source);
-        calc.ptr = calc.buffer + _tcslen(calc.source);
+        StringCbCopyEx(calc.buffer, sizeof(calc.buffer), calc.source, &calc.ptr, NULL,
+                       STRSAFE_FILL_ON_FAILURE);
     } else {
         for (x=0; x<SIZEOF(key2code); x++) {
             if (!(key2code[x].mask & BITMASK_IS_ASCII) ||
