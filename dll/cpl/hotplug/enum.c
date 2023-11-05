@@ -2,7 +2,7 @@
  * PROJECT:     Safely Remove Hardware Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Device enumeration
- * COPYRIGHT:   Copyright 2013 Johannes Anderwald <johannes.anderwald@reactos.org>
+ * COPYRIGHT:   Copyright 2020 Eric Kohl <eric.kohl@reactos.org>
  *              Copyright 2023 Thamatip Chitpong <thamatip.chitpong@reactos.org>
  */
 
