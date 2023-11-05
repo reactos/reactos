@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Parallel Port Function Driver
- * FILE:            drivers/parallel/parport/fdo.c
  * PURPOSE:         FDO functions
  */
 
@@ -21,8 +20,6 @@ AddDeviceInternal(IN PDRIVER_OBJECT DriverObject,
     WCHAR DeviceNameBuffer[32];
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
-
-    DPRINT("AddDeviceInternal()\n");
 
     ASSERT(DriverObject);
     ASSERT(Pdo);
@@ -107,13 +104,6 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
     ULONG i;
-//    ULONG Vector = 0;
-//    KIRQL Dirql = 0;
-//    KAFFINITY Affinity = 0;
-//    KINTERRUPT_MODE InterruptMode = Latched;
-//    BOOLEAN ShareInterrupt = TRUE;
-
-    DPRINT("FdoStartDevice ()\n");
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -150,18 +140,13 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
     for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
     {
         PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
-        PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[i];
 
         switch (PartialDescriptor->Type)
         {
             case CmResourceTypePort:
-                DPRINT("Port: BaseAddress 0x%lx  Length %lu\n",
-                       PartialDescriptor->u.Port.Start.u.LowPart,
-                       PartialDescriptor->u.Port.Length);
-
                 if (DeviceExtension->BaseAddress == 0)
                 {
-                    if (PartialDescriptor->u.Port.Length < 4)
+                    if (PartialDescriptor->u.Port.Length < 3)
                         return STATUS_INSUFFICIENT_RESOURCES;
 
                     DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;
@@ -169,30 +154,12 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             case CmResourceTypeInterrupt:
-                DPRINT("Interrupt: Level %lu  Vector %lu\n",
-                       PartialDescriptorTranslated->u.Interrupt.Level,
-                       PartialDescriptorTranslated->u.Interrupt.Vector);
-
-//                Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
-//                Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
-//                Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;
-
-//                if (PartialDescriptorTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
-//                    InterruptMode = Latched;
-//                else
-//                    InterruptMode = LevelSensitive;
-
-//                ShareInterrupt = (PartialDescriptorTranslated->ShareDisposition == CmResourceShareShared);
                 break;
 
             default:
-                DPRINT1("Other resource: \n");
                 break;
         }
     }
-
-    DPRINT("New LPT port: Base 0x%lx\n",
-           DeviceExtension->BaseAddress);
 
     if (!DeviceExtension->BaseAddress)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -229,8 +196,6 @@ FdoCreateRawParallelPdo(
     UNICODE_STRING KeyName;
     HANDLE KeyHandle;
     NTSTATUS Status;
-
-    DPRINT("FdoCreateRawParallelPdo()\n");
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -348,8 +313,6 @@ FdoQueryBusRelations(
 
     UNREFERENCED_PARAMETER(IrpSp);
 
-    DPRINT("FdoQueryBusRelations()\n");
-
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(DeviceExtension->Common.IsFDO);
 
@@ -375,8 +338,6 @@ FdoQueryBusRelations(
 
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
-    DPRINT("Done\n");
-
     return STATUS_SUCCESS;
 }
 
@@ -388,8 +349,6 @@ NTAPI
 AddDevice(IN PDRIVER_OBJECT DriverObject,
           IN PDEVICE_OBJECT Pdo)
 {
-    DPRINT("AddDevice(%p %p)\n", DriverObject, Pdo);
-
     /* Serial.sys is a legacy driver. AddDevice is called once
      * with a NULL Pdo just after the driver initialization.
      * Detect this case and return success.
@@ -510,8 +469,6 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
     ULONG_PTR Information = 0;
     NTSTATUS Status;
 
-    DPRINT("FdoPnp()\n");
-
     Stack = IoGetCurrentIrpStackLocation(Irp);
     MinorFunction = Stack->MinorFunction;
 
@@ -543,8 +500,6 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
         IRP_MN_SURPRISE_REMOVAL 0x17
         */
         case IRP_MN_START_DEVICE: /* 0x0 */
-            DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-
             ASSERT(((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.PnpState == dsStopped);
 
             /* Call lower driver */
@@ -552,8 +507,8 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
             if (NT_SUCCESS(Status))
             {
                 Status = FdoStartDevice(DeviceObject,
-                                        Stack->Parameters.StartDevice.AllocatedResources,
-                                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                    Stack->Parameters.StartDevice.AllocatedResources,
+                    Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
             }
             break;
 
@@ -561,7 +516,6 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
             switch (Stack->Parameters.QueryDeviceRelations.Type)
             {
                 case BusRelations:
-                    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
                     Status = FdoQueryBusRelations(DeviceObject, Irp, Stack);
                     Irp->IoStatus.Status = Status;
                     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -579,11 +533,9 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0xd */
-            DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
             return ForwardIrpAndForget(DeviceObject, Irp);
 
         default:
-            DPRINT("Unknown minor function 0x%x\n", MinorFunction);
             return ForwardIrpAndForget(DeviceObject, Irp);
     }
 
@@ -601,8 +553,6 @@ FdoPower(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
     PDEVICE_OBJECT LowerDevice;
-
-    DPRINT("FdoPower()\n");
 
     LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
     PoStartNextPowerIrp(Irp);

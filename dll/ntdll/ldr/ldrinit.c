@@ -712,21 +712,6 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         NextEntry = NextEntry->Flink;
     }
 
-    /* If we got a context, then we have to call Kernel32 for TS support */
-    if (Context)
-    {
-        /* Check if we have one */
-        //if (Kernel32ProcessInitPostImportfunction)
-        //{
-            /* Call it */
-            //Kernel32ProcessInitPostImportfunction();
-        //}
-
-        /* Clear it */
-        //Kernel32ProcessInitPostImportfunction = NULL;
-        //UNIMPLEMENTED;
-    }
-
     /* No root entry? return */
     if (!LdrRootEntry) return STATUS_SUCCESS;
 
@@ -1129,7 +1114,6 @@ LdrShutdownThread(VOID)
     /* Check for FLS Data */
     if (Teb->FlsData)
     {
-        /* FIXME */
         DPRINT1("We don't support FLS Data yet\n");
     }
 
@@ -1534,7 +1518,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 {
     RTL_HEAP_PARAMETERS HeapParameters;
     ULONG ComSectionSize;
-    //ANSI_STRING FunctionName = RTL_CONSTANT_STRING("BaseQueryModuleData");
     PVOID OldShimData;
     OBJECT_ATTRIBUTES ObjectAttributes;
     //UNICODE_STRING LocalFileName, FullImageName;
@@ -1684,12 +1667,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 &CommandLine);
     }
 
-    /* If the timeout is too long */
+    /* If the CS timeout is longer than 1 hour, disable it */
     if (RtlpTimeout.QuadPart < Int32x32To64(3600, -10000000))
-    {
-        /* Then disable CS Timeout */
         RtlpTimeoutDisable = TRUE;
-    }
 
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();
@@ -1773,9 +1753,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Allocate an Activation Context Stack */
     Status = RtlAllocateActivationContextStack(&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
-
-    // FIXME: Loader private heap is missing
-    //DPRINT1("Loader private heap is missing\n");
 
     /* Check for Debug Heap */
     if (OptionsKey)
@@ -2029,7 +2006,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if we should look for a .local file */
     if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH)
     {
-        /* FIXME */
         DPRINT1("We don't support .local overrides yet\n");
     }
 
@@ -2055,7 +2031,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
     {
         /* Load kernel32 and call BasePostImportInit... */
-        DPRINT("Unimplemented codepath!\n");
+        DPRINT("Unimplemented codepath\n");
     }
 
     /* Walk the IAT and load all the DLLs */
