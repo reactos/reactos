@@ -198,8 +198,7 @@ GeneralPageProc(HWND hwndDlg,
             iCurSel = (pGlobalData->accessTimeout.iTimeOutMSec / 300000) - 1;
             if (iCurSel < 0)
                 iCurSel = 0;
-            SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_SETCURSEL,
-                               iCurSel, 0);
+            SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_SETCURSEL, iCurSel, 0);
             EnableWindow(GetDlgItem(hwndDlg, IDC_RESET_COMBO),
                          pGlobalData->accessTimeout.dwFlags & ATF_TIMEOUTON ? TRUE : FALSE);
 
