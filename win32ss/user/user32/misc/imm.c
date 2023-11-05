@@ -1,11 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/misc/imm.c
  * PURPOSE:         User32.dll Imm functions
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
- * UPDATE HISTORY:
- *      01/27/2009  Created
  */
 
 #include <user32.h>
@@ -19,29 +16,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define IMM_INIT_MAGIC 0x19650412
 
-
 Imm32ApiTable gImmApiEntries = {0};
 HINSTANCE ghImm32 = NULL;
 BOOL bImmInitializing = FALSE;
 BOOL ImmApiTableZero = TRUE;
 
-HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
-{
-  UINT length;
-  STRSAFE_LPWSTR Safe = lpBuffer;
-
-  length = GetSystemDirectoryW(lpBuffer, uSize);
-  if ( length && length < uSize )
-  {
-    StringCchCatW(Safe, uSize, L"\\");
-    return StringCchCatW(Safe, uSize, L"IMM32.DLL");
-  }
-  return StringCchCopyW(Safe, uSize, L"IMM32.DLL");
-}  
-
 /*
- *  This function should not be implemented, it is used,
- *  if you can not load function from imm32.dll
+ * This function should not be implemented, it is used,
+ * if you can not load function from imm32.dll
  */
 BOOL WINAPI IMM_ImmIsIME(HKL hKL) { return 0; }
 HIMC WINAPI IMM_ImmAssociateContext(HWND hwnd, HIMC himc) { return 0; }
@@ -59,43 +41,49 @@ BOOL WINAPI IMM_ImmNotifyIME(HIMC himc, DWORD dword1, DWORD dword2, DWORD dword3
 BOOL WINAPI IMM_ImmRegisterClient(PVOID ptr, HINSTANCE hMod) { return 0; }
 UINT WINAPI IMM_ImmProcessKey(HWND hwnd, HKL hkl, UINT Vk, LPARAM lParam, DWORD HotKey) { return 0; }
 
-/*
- * @unimplemented
- */
+HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
+{
+    UINT length;
+    STRSAFE_LPWSTR Safe = lpBuffer;
+
+    length = GetSystemDirectoryW(lpBuffer, uSize);
+    if (length && length < uSize)
+    {
+        StringCchCatW(Safe, uSize, L"\\");
+        return StringCchCatW(Safe, uSize, L"IMM32.DLL");
+    }
+    return StringCchCopyW(Safe, uSize, L"IMM32.DLL");
+}
+
+// @unimplemented
 BOOL WINAPI IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
     if (gImmApiEntries.pImmIsIME != 0)
-    {
-       ERR("Imm Api Table Init 1\n");
-       return TRUE;
-    }
+        return TRUE;
 
     GetImmFileName(ImmFile, sizeof(ImmFile));
-    TRACE("File %ws\n",ImmFile);
 
     if (imm32 == NULL)
-    {
-       imm32 = GetModuleHandleW(ImmFile);
-    }
+        imm32 = GetModuleHandleW(ImmFile);
 
     if (imm32 == NULL)
     {
         imm32 = ghImm32 = LoadLibraryW(ImmFile);
         if (imm32 == NULL)
         {
-           ERR("Did not load!\n");
-           return FALSE;
+            ERR("Did not load\n");
+            return FALSE;
         }
         return TRUE;
     }
 
     if (ImmApiTableZero)
     {
-       ImmApiTableZero = FALSE;
-       ZeroMemory(&gImmApiEntries, sizeof(Imm32ApiTable));
+        ImmApiTableZero = FALSE;
+        ZeroMemory(&gImmApiEntries, sizeof(Imm32ApiTable));
     }
 
     gImmApiEntries.pImmIsIME = (BOOL (WINAPI*)(HKL)) GetProcAddress(imm32, "ImmIsIME");
@@ -162,13 +150,11 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
     if (!gImmApiEntries.pImmNotifyIME)
         gImmApiEntries.pImmNotifyIME = IMM_ImmNotifyIME;
 
-    /*
-     *  TODO: Load more functions from imm32.dll
-     *  Function like IMPSetIMEW, IMPQueryIMEW etc. call functions
-     *  from imm32.dll through pointers in the structure gImmApiEntries.
-     *  I do not know whether it is necessary to initialize a table
-     *  of functions to load user32 (DLL_PROCESS_ATTACH)
-     */
+    // TODO: Load more functions from imm32.dll
+    // Function like IMPSetIMEW, IMPQueryIMEW etc. call functions
+    // from imm32.dll through pointers in the structure gImmApiEntries.
+    // I do not know whether it is necessary to initialize a table
+    // of functions to load user32 (DLL_PROCESS_ATTACH)
 
     gImmApiEntries.pImmRegisterClient = (BOOL (WINAPI*)(PVOID, HINSTANCE)) GetProcAddress(imm32, "ImmRegisterClient");
     if (!gImmApiEntries.pImmRegisterClient)
@@ -183,48 +169,39 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
 
 BOOL WINAPI InitializeImmEntryTable(VOID)
 {
-  bImmInitializing = TRUE;
-  return IntInitializeImmEntryTable();
+    bImmInitializing = TRUE;
+    return IntInitializeImmEntryTable();
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 {
-    TRACE("(%x)\n", magic);
-
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
 
     if (gImmApiEntries.pImmIsIME != 0)
-    {
-       ERR("Imm Api Table Init 2\n");
-       return TRUE;
-    }
+        return TRUE;
 
     IntInitializeImmEntryTable();
 
     if (ghImm32 == NULL && !bImmInitializing)
     {
-       WCHAR ImmFile[MAX_PATH];
-       ERR("IMM32 not installed!\n");
-       GetImmFileName(ImmFile, sizeof(ImmFile));
-       ERR("File %ws\n",ImmFile);
-       ghImm32 = LoadLibraryW(ImmFile);
-       if (ghImm32 == NULL)
-       {
-          ERR("Did not load! 2\n");
-          return FALSE;
-       } 
+        WCHAR ImmFile[MAX_PATH];
+        GetImmFileName(ImmFile, sizeof(ImmFile));
+        ghImm32 = LoadLibraryW(ImmFile);
+        if (ghImm32 == NULL)
+        {
+            ERR("Did not load\n");
+            return FALSE;
+        }
     }
-#if 0 // For real Imm32.dll testing!!!!
+#if 0 // For real Imm32.dll testing
     if (ghImm32 && !gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32))
-    {
-       ERR("Wine is stubed!\n");
-    }
+        ERR("Wine is stubed\n");
 #endif
     return TRUE;
 }
 
-LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
+LRESULT WINAPI ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
     PWND pWnd;
     PIMEUI pimeui;
@@ -232,32 +209,32 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
-       if (!pWnd->fnid)
-       {
-          if (msg != WM_NCCREATE)
-          {
-             if (unicode)
-                return DefWindowProcW(hwnd, msg, wParam, lParam);
-             return DefWindowProcA(hwnd, msg, wParam, lParam);
-          }
-          NtUserSetWindowFNID(hwnd, FNID_IME);
-          pimeui = HeapAlloc( GetProcessHeap(), 0, sizeof(IMEUI) );
-          SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
-       }
-       else
-       {
-          if (pWnd->fnid != FNID_IME)
-          {
-             ERR("Wrong window class for Ime! fnId 0x%x\n",pWnd->fnid);
-             return 0;
-          }
-          pimeui = ((PIMEWND)pWnd)->pimeui;
-          if (pimeui == NULL)
-          {
-             ERR("Window is not set to IME!\n");
-             return 0;
-          }
-       }
+        if (!pWnd->fnid)
+        {
+            if (msg != WM_NCCREATE)
+            {
+                if (unicode)
+                    return DefWindowProcW(hwnd, msg, wParam, lParam);
+                return DefWindowProcA(hwnd, msg, wParam, lParam);
+            }
+            NtUserSetWindowFNID(hwnd, FNID_IME);
+            pimeui = HeapAlloc(GetProcessHeap(), 0, sizeof(IMEUI));
+            SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
+        }
+        else
+        {
+            if (pWnd->fnid != FNID_IME)
+            {
+                ERR("Wrong window class for Ime\n");
+                return 0;
+            }
+            pimeui = ((PIMEWND)pWnd)->pimeui;
+            if (pimeui == NULL)
+            {
+                ERR("Window is not set to IME\n");
+                return 0;
+            }
+        }
     }
 
     if (msg==WM_CREATE || msg==WM_NCCREATE)
@@ -265,13 +242,13 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
     if (msg==WM_NCDESTROY)
     {
-        HeapFree( GetProcessHeap(), 0, pimeui );
+        HeapFree(GetProcessHeap(), 0, pimeui);
         SetWindowLongPtrW(hwnd, 0, 0);
         NtUserSetWindowFNID(hwnd, FNID_DESTROY);
     }
 
     if (unicode)
-       return DefWindowProcW(hwnd, msg, wParam, lParam);
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
@@ -285,8 +262,6 @@ LRESULT WINAPI ImeWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     return ImeWndProc_common(hwnd, msg, wParam, lParam, TRUE);
 }
 
-static const WCHAR imeW[] = {'I','M','E',0};
-
 BOOL
 WINAPI
 RegisterIMEClass(VOID)
@@ -297,23 +272,19 @@ RegisterIMEClass(VOID)
     ZeroMemory(&WndClass, sizeof(WndClass));
 
     WndClass.cbSize = sizeof(WndClass);
-    WndClass.lpszClassName = imeW;
+    WndClass.lpszClassName = L"IME";
     WndClass.style = CS_GLOBALCLASS;
     WndClass.lpfnWndProc = ImeWndProcW;
     WndClass.cbWndExtra = sizeof(LONG_PTR);
     WndClass.hCursor = LoadCursorW(NULL, IDC_ARROW);
 
-    atom = RegisterClassExWOWW( &WndClass,
-                                 0,
-                                 FNID_IME,
-                                 0,
-                                 FALSE);
+    atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);
     if (atom)
     {
-       RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
-       return TRUE;
+        RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
+        return TRUE;
     }
-    ERR("Failed to register IME Class!\n");
+    ERR("Failed to register IME Class\n");
     return FALSE;
 }
 
@@ -322,8 +293,7 @@ RegisterIMEClass(VOID)
  */
 BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return FALSE;
 }
 
 /*
@@ -333,7 +303,6 @@ BOOL
 WINAPI
 IMPSetIMEW(HWND hwnd, LPIMEPROW ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -344,7 +313,6 @@ BOOL
 WINAPI
 IMPQueryIMEW(LPIMEPROW ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -355,7 +323,6 @@ BOOL
 WINAPI
 IMPGetIMEW(HWND hwnd, LPIMEPROW ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -366,7 +333,6 @@ BOOL
 WINAPI
 IMPSetIMEA(HWND hwnd, LPIMEPROA ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -377,7 +343,6 @@ BOOL
 WINAPI
 IMPQueryIMEA(LPIMEPROA ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -388,7 +353,6 @@ BOOL
 WINAPI
 IMPGetIMEA(HWND hwnd, LPIMEPROA ime)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -399,7 +363,6 @@ LRESULT
 WINAPI
 SendIMEMessageExW(HWND hwnd, LPARAM lparam)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -410,7 +373,6 @@ LRESULT
 WINAPI
 SendIMEMessageExA(HWND hwnd, LPARAM lparam)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -421,7 +383,6 @@ BOOL
 WINAPI
 WINNLSEnableIME(HWND hwnd, BOOL enable)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -432,7 +393,6 @@ BOOL
 WINAPI
 WINNLSGetEnableStatus(HWND hwnd)
 {
-    UNIMPLEMENTED;
     return FALSE;
 }
 
