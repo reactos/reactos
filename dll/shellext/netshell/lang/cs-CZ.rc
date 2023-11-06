@@ -14,7 +14,7 @@ BEGIN
     PUSHBUTTON "&Odstranit", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 105, 65, 14
     GROUPBOX "Popis", -1, 9, 128, 230, 46, BS_GROUPBOX
-    LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
     AUTOCHECKBOX "Po připojení zobrazit ikonu na hlavním panelu", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
     AUTOCHECKBOX "&Upozornit při omezeném nebo žádném připojení", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, WS_TABSTOP | BS_TOP | BS_MULTILINE
 END

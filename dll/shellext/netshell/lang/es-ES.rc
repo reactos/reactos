@@ -22,7 +22,7 @@ BEGIN
     PUSHBUTTON "&Desinstalar", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Propiedades", IDC_PROPERTIES, 174, 105, 65, 14
     GROUPBOX "Descripción ", -1, 9, 128, 230, 46, BS_GROUPBOX
-    LTEXT "La descripción de los componentes va aquí...", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
     AUTOCHECKBOX "Mostrar icono en el área de notificación al conectarse", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
     AUTOCHECKBOX "Notificarme cuando esta conexión tenga conectividad limitada o nula", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
