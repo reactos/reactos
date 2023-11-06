@@ -411,7 +411,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Get the new one and make sure this isn't a retarded request
     //
     NewLimitPte = MiAddressToPte((PVOID)((ULONG_PTR)StackPointer - GrowSize));
-    if (NewLimitPte == LimitPte) return STATUS_SUCCESS;
+    if (NewLimitPte >= LimitPte) return STATUS_SUCCESS;
 
     //
     // Now make sure you're not going past the reserved space
@@ -427,7 +427,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     }
 
     //
-    // Calculate the number of new pages
+    // Start with the first unmapped PTE
     //
     LimitPte--;
 
@@ -444,6 +444,8 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     while (LimitPte >= NewLimitPte)
     {
+        ASSERT(LimitPte->u.Long == 0);
+
         /* Get a page and write the current invalid PTE */
         MI_SET_USAGE(MI_USAGE_KERNEL_STACK_EXPANSION);
         MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
