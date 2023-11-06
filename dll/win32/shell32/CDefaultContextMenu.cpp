@@ -1158,14 +1158,13 @@ CDefaultContextMenu::InvokeRegVerb(
 
     PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
 
-    HKEY hVerbKey;
-    WCHAR VerbKey[sizeof("shell\\") + MAX_VERB];
-    hr = StringCbPrintfW(VerbKey, sizeof(VerbKey), L"shell\\%s", pEntry->Verb.GetString());
+    CRegKey VerbKey;
+    WCHAR VerbKeyPath[sizeof("shell\\") + MAX_VERB];
+    hr = StringCbPrintfW(VerbKeyPath, sizeof(VerbKeyPath), L"shell\\%s", pEntry->Verb.GetString());
     if (SUCCEEDED(hr) && m_pDataObj &&
-        RegOpenKeyExW(pEntry->hkClass, VerbKey, 0, KEY_READ, &hVerbKey) == ERROR_SUCCESS)
+        VerbKey.Open(pEntry->hkClass, VerbKeyPath, KEY_READ) == ERROR_SUCCESS)
     {
         CLSID clsid;
-        BOOL Done = FALSE;
 
         DWORD KeyState = 0;
         if (lpcmi->fMask & CMIC_MASK_SHIFT_DOWN)
@@ -1178,30 +1177,19 @@ CDefaultContextMenu::InvokeRegVerb(
         if (lpcmi->fMask & CMIC_MASK_PTINVOKE)
             pPtl = (POINTL*)&lpcmi->ptInvoke;
 
-        if (!Done)
-        {
-            // TODO: IExecuteCommand
-        }
+        // TODO: IExecuteCommand
 
-        if (!Done)
+        CComPtr<IDropTarget> pDT;
+        hr = SHELL_GetRegCLSID(VerbKey, L"DropTarget", L"CLSID", clsid);
+        if (SUCCEEDED(hr))
+            hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
+        if (SUCCEEDED(hr))
         {
-            IDropTarget *pDT;
-            hr = SHELL_GetRegCLSID(hVerbKey, L"DropTarget", L"CLSID", clsid);
-            if (SUCCEEDED(hr))
-                hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
-            if (SUCCEEDED(hr))
-            {
-                Done = TRUE;
-                IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
-                hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
-                IUnknown_SetSite(pDT, NULL);
-                pDT->Release();
-            }
-        }
-
-        RegCloseKey(hVerbKey);
-        if (Done)
+            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
+            hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
+            IUnknown_SetSite(pDT, NULL);
             return hr;
+        }
     }
 
     /* Get the browse flags to see if we need to browse */
