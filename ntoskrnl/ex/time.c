@@ -34,13 +34,15 @@ ULONG ExpTimerResolutionCount = 0;
  * If successful, this function sets the following Global Variables:
  * ExpTimeZoneInfo
  * ExpTimeZoneBias
+ * ExpTimeZoneId
  *
- * It returns ExpTimeZoneBias as follows:
+ * It returns *TimeZoneId as follows:
  *     0 = TIME_ZONE_ID_UNKNOWN
  *     1 = TIME_ZONE_ID_STANDARD
  *     2 = TIME_ZONE_ID_DAYLIGHT
  *--*/
-static BOOLEAN
+static
+BOOLEAN
 ExpGetTimeZoneId(
     _In_ PLARGE_INTEGER TimeNow,
     _Out_ PULONG TimeZoneId)
@@ -48,6 +50,7 @@ ExpGetTimeZoneId(
     LARGE_INTEGER StandardTime;
     LARGE_INTEGER DaylightTime;
     NTSTATUS Status;
+    static BOOLEAN InitialRun = TRUE;
 
     /* Read time zone information from the registry */
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
@@ -55,6 +58,16 @@ ExpGetTimeZoneId(
     {
         DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
         return FALSE;
+    }
+
+    if (!InitialRun)
+    {
+        /* Adjust TimeNow for Time Zone Bias to use UTC for compares */
+        TimeNow->QuadPart -= (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+    }
+    else
+    {
+        InitialRun = FALSE;
     }
 
     /* Get the default bias */
@@ -121,6 +134,8 @@ ExpGetTimeZoneId(
     {
         *TimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
+
+    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
     return TRUE;
 }
 
@@ -323,7 +338,10 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 
     /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
     if (!ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId))
+    {
+        DPRINT1("ExpTimeZoneId failed returning %lu\n", ExpTimeZoneId);
         return FALSE;
+    }
     DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
 
     /* Change SharedUserData->TimeZoneBias for user-mode applications */
@@ -357,7 +375,6 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
     LARGE_INTEGER LocalTime, SystemTime, OldTime;
     TIME_FIELDS TimeFields;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL; // Allow easy failure return change
     DPRINT("ExpSetTimeZoneInformation() called\n");
 
     /* Get the Shared User Data System Time into the local SystemTime */
@@ -371,10 +388,10 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     /* Set the Global Data for ExpTimeZoneBias and ExpTimeZoneId */
     if (!ExpGetTimeZoneId(&SystemTime, &ExpTimeZoneId))
     {
-        DPRINT1("ExpSetTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
-        return Status;
+        DPRINT1("ExpGetTimeZoneId() failed\n");
+        return STATUS_UNSUCCESSFUL;
     }
-    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
+    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
 
     DPRINT("Old time zone bias: %d minutes\n", ExpTimeZoneInfo.Bias);
     DPRINT("Old time zone standard bias: %d minutes\n",
@@ -394,7 +411,6 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     /* If Daylight Savings Time then add the DayLightBias to the Time Zone Bias */
     if (ExpTimeZoneId == TIME_ZONE_ID_DAYLIGHT)
-
         ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
 
     /* Copy the timezone information */
@@ -443,6 +459,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    RTL_TIME_ZONE_INFORMATION TimeZoneInformation;
 
     PAGED_CODE();
 
@@ -509,6 +526,15 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         }
         _SEH2_END;
     }
+
+    /* Read time zone information from the registry */
+    Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+    }
+
+    ExpSetTimeZoneInformation(&TimeZoneInformation);
 
     /* Return status */
     return Status;
