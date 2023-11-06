@@ -865,24 +865,115 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     *   "a path\foo.cpl"
     */
 {
-    LPWSTR	buffer;
 #ifndef __REACTOS__
+    LPWSTR	buffer;
     LPWSTR	beg = NULL;
     LPWSTR	end;
     WCHAR	ch;
-#endif
     LPWSTR       ptr;
     signed 	sp = -1;
-#ifdef __REACTOS__
-    LPCWSTR	extraPmts = L"";
-#else
     LPWSTR	extraPmtsBuf = NULL;
     LPWSTR	extraPmts = NULL;
-#endif
     BOOL        quoted = FALSE;
     CPlApplet *applet;
 
-#ifdef __REACTOS__
+    buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
+    if (!buffer) return;
+
+    end = lstrcpyW(buffer, wszCmd);
+
+    for (;;) {
+        ch = *end;
+        if (ch == '"') quoted = !quoted;
+        if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
+            *end = '\0';
+            if (beg) {
+                if (*beg == '@') {
+                    sp = atoiW(beg + 1);
+                } else if (*beg == '\0') {
+                    sp = -1;
+                } else {
+                    extraPmtsBuf = beg;
+                }
+            }
+            if (ch == '\0') break;
+            beg = end + 1;
+            if (ch == ' ') while (end[1] == ' ') end++;
+        }
+        end++;
+    }
+    while ((ptr = StrChrW(buffer, '"')))
+	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+    /* now check for any quotes in extraPmtsBuf and remove */
+    if (extraPmtsBuf != NULL)
+    {
+        beg = end = extraPmtsBuf;
+        quoted = FALSE;
+
+        for (;;) {
+            ch = *end;
+            if (ch == '"') quoted = !quoted;
+            if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
+                *end = '\0';
+                if (beg) {
+                    if (*beg != '\0') {
+                        extraPmts = beg;
+                    }
+                }
+                if (ch == '\0') break;
+                beg = end + 1;
+                if (ch == ' ') while (end[1] == ' ') end++;
+            }
+            end++;
+        }
+
+        while ((ptr = StrChrW(extraPmts, '"')))
+            memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+        if (extraPmts == NULL)
+            extraPmts = extraPmtsBuf;
+    }
+
+    /* Now check if there had been a numerical value in the extra params */
+    if ((extraPmts) && (*extraPmts == '@') && (sp == -1)) {
+        sp = atoiW(extraPmts + 1);
+    }
+
+    TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
+
+    applet = Control_LoadApplet(hWnd, buffer, panel);
+    if (applet)
+    {
+        /* we've been given a textual parameter (or none at all) */
+        if (sp == -1) {
+            while ((++sp) != applet->count) {
+                TRACE("sp %d, name %s\n", sp, debugstr_w(applet->info[sp].name));
+
+                if (StrCmpIW(extraPmts, applet->info[sp].name) == 0)
+                    break;
+            }
+        }
+
+        if (sp >= applet->count) {
+            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
+            sp = 0;
+        }
+
+        if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+            applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+
+        Control_UnloadApplet(applet);
+    }
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+#else
+    LPWSTR	buffer;
+    LPWSTR       ptr;
+    signed 	sp = -1;
+    LPCWSTR	extraPmts = L"";
+    BOOL        quoted = FALSE;
+    CPlApplet *applet;
     LPCWSTR wszFirstCommaPosition = NULL, wszSecondCommaPosition = NULL;
     LPCWSTR wszLastUnquotedSpacePosition = NULL;
     LPWSTR wszDialogBoxName;
@@ -975,175 +1066,91 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     {
         sp = atoiW(wszDialogBoxName + 1);
     }
-#else
-    buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
-    if (!buffer) return;
-
-    end = lstrcpyW(buffer, wszCmd);
-
-    for (;;) {
-        ch = *end;
-        if (ch == '"') quoted = !quoted;
-        if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
-            *end = '\0';
-            if (beg) {
-                if (*beg == '@') {
-                    sp = atoiW(beg + 1);
-                } else if (*beg == '\0') {
-                    sp = -1;
-                } else {
-                    extraPmtsBuf = beg;
-                }
-            }
-            if (ch == '\0') break;
-            beg = end + 1;
-            if (ch == ' ') while (end[1] == ' ') end++;
-        }
-        end++;
-    }
-    while ((ptr = StrChrW(buffer, '"')))
-	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
-
-    /* now check for any quotes in extraPmtsBuf and remove */
-    if (extraPmtsBuf != NULL)
-    {
-        beg = end = extraPmtsBuf;
-        quoted = FALSE;
-
-        for (;;) {
-            ch = *end;
-            if (ch == '"') quoted = !quoted;
-            if (!quoted && (ch == ' ' || ch == ',' || ch == '\0')) {
-                *end = '\0';
-                if (beg) {
-                    if (*beg != '\0') {
-                        extraPmts = beg;
-                    }
-                }
-                if (ch == '\0') break;
-                beg = end + 1;
-                if (ch == ' ') while (end[1] == ' ') end++;
-            }
-            end++;
-        }
-
-        while ((ptr = StrChrW(extraPmts, '"')))
-            memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
-
-        if (extraPmts == NULL)
-            extraPmts = extraPmtsBuf;
-    }
-
-    /* Now check if there had been a numerical value in the extra params */
-    if ((extraPmts) && (*extraPmts == '@') && (sp == -1)) {
-        sp = atoiW(extraPmts + 1);
-    }
-#endif
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
 
     applet = Control_LoadApplet(hWnd, buffer, panel);
     if (applet)
     {
-#ifdef __REACTOS__
-    ULONG_PTR cookie;
-    BOOL bActivated;
-    ATOM aCPLName;
-    ATOM aCPLFlags;
-    ATOM aCPLPath;
-    AppDlgFindData findData;
-#endif
+        ULONG_PTR cookie;
+        BOOL bActivated;
+        ATOM aCPLName;
+        ATOM aCPLFlags;
+        ATOM aCPLPath;
+        AppDlgFindData findData;
+        
         /* we've been given a textual parameter (or none at all) */
-        if (sp == -1) {
-            while ((++sp) != applet->count) {
+        if (sp == -1) 
+        {
+            while ((++sp) != applet->count) 
+            {
                 TRACE("sp %d, name %s\n", sp, debugstr_w(applet->info[sp].name));
 
-#ifdef __REACTOS__
                 if (StrCmpIW(wszDialogBoxName, applet->info[sp].name) == 0)
-#else
-                if (StrCmpIW(extraPmts, applet->info[sp].name) == 0)
-#endif
                     break;
             }
         }
 
-#ifdef __REACTOS__
         if (sp >= applet->count && wszDialogBoxName[0] == L'\0')
         {
             sp = 0;
         }
-#else
-        if (sp >= applet->count) {
-            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
-            sp = 0;
-        }
-#endif
 
-#ifdef __REACTOS__
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
 
         if (sp < applet->count)
         {
-        aCPLPath = GlobalFindAtomW(applet->cmd);
-        if (!aCPLPath)
-        {
-            aCPLPath = GlobalAddAtomW(applet->cmd);
-        }
+            aCPLPath = GlobalFindAtomW(applet->cmd);
+            if (!aCPLPath)
+            {
+                aCPLPath = GlobalAddAtomW(applet->cmd);
+            }
 
-        aCPLName = GlobalFindAtomW(L"CPLName");
-        if (!aCPLName)
-        {
-            aCPLName = GlobalAddAtomW(L"CPLName");
-        }
+            aCPLName = GlobalFindAtomW(L"CPLName");
+            if (!aCPLName)
+            {
+                aCPLName = GlobalAddAtomW(L"CPLName");
+            }
 
-        aCPLFlags = GlobalFindAtomW(L"CPLFlags");
-        if (!aCPLFlags)
-        {
-            aCPLFlags = GlobalAddAtomW(L"CPLFlags");
-        }
+            aCPLFlags = GlobalFindAtomW(L"CPLFlags");
+            if (!aCPLFlags)
+            {
+                aCPLFlags = GlobalAddAtomW(L"CPLFlags");
+            }
 
-        findData.szAppFile = applet->cmd;
-        findData.sAppletNo = (UINT_PTR)(sp + 1);
-        findData.aCPLName = aCPLName;
-        findData.aCPLFlags = aCPLFlags;
-        findData.hRunDLL = applet->hWnd;
-        findData.hDlgResult = NULL;
-        // Find the dialog of this applet in the first instance.
-        // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
-        EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
-        if (findData.hDlgResult)
-        {
-            BringWindowToTop(findData.hDlgResult);
-        }
-        else
-        {
-            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
-            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
-            Control_ShowAppletInTaskbar(applet, sp);
+            findData.szAppFile = applet->cmd;
+            findData.sAppletNo = (UINT_PTR)(sp + 1);
+            findData.aCPLName = aCPLName;
+            findData.aCPLFlags = aCPLFlags;
+            findData.hRunDLL = applet->hWnd;
+            findData.hDlgResult = NULL;
+            // Find the dialog of this applet in the first instance.
+            // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
+            EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+            if (findData.hDlgResult)
+            {
+                BringWindowToTop(findData.hDlgResult);
+            }
+            else
+            {
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
+                SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+                Control_ShowAppletInTaskbar(applet, sp);
 
-            if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
-#else
-        if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
-#endif
-            applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
-#ifdef __REACTOS__
-            RemovePropW(applet->hWnd, applet->cmd);
-            GlobalDeleteAtom(aCPLPath);
+                if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+                applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+                RemovePropW(applet->hWnd, applet->cmd);
+                GlobalDeleteAtom(aCPLPath);
+            }
         }
-        }
-#endif
 
         Control_UnloadApplet(applet);
 
-#ifdef __REACTOS__
-    if (bActivated)
-        DeactivateActCtx(0, cookie);
-#endif
-
+        if (bActivated)
+            DeactivateActCtx(0, cookie);
     }
 
     HeapFree(GetProcessHeap(), 0, buffer);
-#ifdef __REACTOS__
     HeapFree(GetProcessHeap(), 0, wszDialogBoxName);
 #endif
 }
