@@ -342,7 +342,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
         DPRINT1("ExpTimeZoneId failed returning %lu\n", ExpTimeZoneId);
         return FALSE;
     }
-    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
+    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
 
     /* Change SharedUserData->TimeZoneBias for user-mode applications */
     SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
