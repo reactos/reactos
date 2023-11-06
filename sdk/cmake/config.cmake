@@ -122,6 +122,6 @@ if(ARCH STREQUAL "amd64")
 set(ENABLE_CALLBACK_STACKS TRUE CACHE BOOL
 "Whether to enable the use of callout stacks in user mode callbacks.")
 else()
-set(ENABLE_CALLBACK_STACKS FALSE CACHE BOOL
+set(ENABLE_CALLBACK_STACKS TRUE CACHE BOOL
 "Whether to enable the use of callout stacks in user mode callbacks.")
 endif()
