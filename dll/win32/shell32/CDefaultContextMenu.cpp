@@ -692,13 +692,13 @@ CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffse
         return;
 
     // Does the view want to pick one?
-    SIZE_T forceDfm = 0;
+    INT_PTR forceDfm = 0;
     if (_DoCallback(DFM_GETDEFSTATICID, 0, &forceDfm) == S_OK && forceDfm)
     {
         for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
         {
             UINT menuItemId = g_StaticInvokeCmdMap[i].IntVerb + DfltOffset - DCM_FCIDM_SHVIEW_OFFSET;
-            if ((int)g_StaticInvokeCmdMap[i].DfmCmd == (int)(UINT)forceDfm &&
+            if (g_StaticInvokeCmdMap[i].DfmCmd == forceDfm &&
                 SetMenuDefaultItem(hMenu, menuItemId, MF_BYCOMMAND))
             {
                 return;
