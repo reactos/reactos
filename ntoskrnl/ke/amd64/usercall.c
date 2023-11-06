@@ -8,6 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <minwin/ntosifs.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -146,7 +147,6 @@ KiUserModeCallout(
     KTRAP_FRAME CallbackTrapFrame;
     PKIPCR Pcr;
     ULONG_PTR InitialStack;
-    NTSTATUS Status;
 
     /* Get the current thread */
     CurrentThread = KeGetCurrentThread();
@@ -165,7 +165,7 @@ KiUserModeCallout(
     if ((InitialStack - KERNEL_STACK_SIZE) < CurrentThread->StackLimit)
     {
         /* We don't, we'll have to grow our stack */
-        Status = MmGrowKernelStack((PVOID)InitialStack);
+        NTSTATUS Status = MmGrowKernelStack((PVOID)InitialStack);
 
         /* Quit if we failed */
         if (!NT_SUCCESS(Status)) return Status;
@@ -194,7 +194,7 @@ KiUserModeCallout(
     /* Get PCR */
     Pcr = (PKIPCR)KeGetPcr();
 
-    /* Set user-mode dispatcher address as EIP */
+    /* Set user-mode dispatcher address as RIP */
     Pcr->TssBase->Rsp0 = InitialStack;
     Pcr->Prcb.RspBase = InitialStack;
     CallbackTrapFrame.Rip = (ULONG_PTR)KeUserCallbackDispatcher;
@@ -229,6 +229,98 @@ KiSetupUserCalloutFrame(
 #error "KiSetupUserCalloutFrame not implemented!"
 #endif
 }
+
+#if ENABLE_CALLBACK_STACKS
+
+typedef struct _KUSER_CALLOUT_PARAMETER
+{
+    PVOID *Result;
+    PULONG ResultLength;
+    NTSTATUS CallbackStatus;
+} KUSER_CALLOUT_PARAMETER, *PKUSER_CALLOUT_PARAMETER;
+
+VOID
+NTAPI
+KiCallUserModeHelper(
+    _In_ PVOID Parameter)
+{
+    PKUSER_CALLOUT_PARAMETER CalloutParameter = (PKUSER_CALLOUT_PARAMETER)Parameter;
+    NTSTATUS Status;
+
+    /* Call the callback */
+    Status = KiCallUserMode(CalloutParameter->Result,
+                            CalloutParameter->ResultLength);
+
+    /* Store the callback status */
+    CalloutParameter->CallbackStatus = Status;
+}
+
+NTSTATUS
+NTAPI
+KiCallUserModeEx(
+    _Out_ PVOID *Result,
+    _Out_ PULONG ResultLength)
+{
+    KUSER_CALLOUT_PARAMETER CalloutParameter;
+    NTSTATUS Status;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    Thread->CallbackNestingLevel++;
+#endif // (NTDDI_VERSION >= NTDDI_WIN8)
+
+    /* Setup the callout parameter */
+    CalloutParameter.Result = Result;
+    CalloutParameter.ResultLength = ResultLength;
+
+    /* Call the callback and make sure the stack is large enough */
+    Status = KeExpandKernelStackAndCallout(KiCallUserModeHelper,
+                                           &CalloutParameter,
+                                           KERNEL_STACK_SIZE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the callback status */
+        Status = CalloutParameter.CallbackStatus;
+    }
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    Thread->CallbackNestingLevel--;
+#endif // (NTDDI_VERSION >= NTDDI_WIN8)
+
+    /* Return the status */
+    return Status;
+}
+
+VOID
+NTAPI
+KiReapCallbackStacks(
+    _In_ PKTHREAD Thread)
+{
+    ASSERT(Thread != KeGetCurrentThread());
+
+    /* Loop while we have a callback stack */
+    while (Thread->CallbackStack)
+    {
+        /* Get the current callout frame */
+        PKCALLOUT_FRAME CalloutFrame = Thread->CallbackStack;
+
+        /* Restore the previous callback stack */
+        Thread->CallbackStack = (PVOID)CalloutFrame->CallbackStack;
+
+        /* Check whether the saved trapframe is outside of the current stack */
+        if (((ULONG_PTR)CalloutFrame->TrapFrame < (ULONG_PTR)Thread->StackLimit) ||
+            ((ULONG_PTR)CalloutFrame->TrapFrame > (ULONG_PTR)Thread->StackBase))
+        {
+            /* We were on a callout stack, remove it */
+            KiRemoveThreadCalloutStack(Thread);
+        }
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+        Thread->CallbackNestingLevel--;
+#endif // (NTDDI_VERSION >= NTDDI_WIN8)
+    }
+}
+
+#endif // ENABLE_CALLBACK_STACK
 
 NTSTATUS
 NTAPI
@@ -291,7 +383,11 @@ KeUserModeCallback(
 
         /* Jump to user mode */
         *UserStackPointer = (ULONG_PTR)CalloutFrame;
+#ifdef USE_CALLOUT_STACK
+        CallbackStatus = KiCallUserModeEx(Result, ResultLength);
+#else
         CallbackStatus = KiCallUserMode(Result, ResultLength);
+#endif
         if (CallbackStatus != STATUS_CALLBACK_POP_STACK)
         {
 #ifdef _M_IX86

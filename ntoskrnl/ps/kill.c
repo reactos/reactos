@@ -184,8 +184,14 @@ PspReapRoutine(IN PVOID Context)
             /* Get the first Thread Entry */
             Thread = CONTAINING_RECORD(NextEntry, ETHREAD, ReaperLink);
 
+            /* Reap callback stacks */
+            if (Thread->Tcb.CalloutActive)
+            {
+                KiReapCallbackStacks(&Thread->Tcb);
+            }
+
             /* Delete this entry's kernel stack */
-            MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
+            MmDeleteKernelStack(Thread->Tcb.StackBase,
                                 Thread->Tcb.LargeStack);
             Thread->Tcb.InitialStack = NULL;
 
@@ -400,8 +406,14 @@ PspDeleteThread(IN PVOID ObjectBody)
     /* Check if we have a stack */
     if (Thread->Tcb.InitialStack)
     {
+        /* Reap callback stacks */
+        if (Thread->Tcb.CalloutActive)
+        {
+            KiReapCallbackStacks(&Thread->Tcb);
+        }
+
         /* Release it */
-        MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
+        MmDeleteKernelStack(Thread->Tcb.StackBase,
                             Thread->Tcb.LargeStack);
     }
 

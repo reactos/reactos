@@ -358,6 +358,14 @@ KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
     KiServiceExit(CallbackTrapFrame, 0);
 }
 
+VOID
+NTAPI
+KiReapCallbackStacks(
+    _In_ PKTHREAD Thread)
+{
+    __debugbreak();
+}
+
 /*++
  * @name NtCallbackReturn
  *
