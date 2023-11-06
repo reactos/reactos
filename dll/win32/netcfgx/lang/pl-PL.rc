@@ -1,20 +1,15 @@
-/*
- *    Translated by Polish Translation Team (Apr, 2007)
- *    Updated by Caemyr and Maciej Białas (2008)
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011)
- */
+// COPYRIGHT: 2008 Caemyr, Maciej Białas
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Możesz automatycznie pobrać ustawienia sieciowe protokołu IP, jeżeli Twoja sieć obsługuje te funkcje. W innym przypadku musisz skontaktować się z administratorem sieci w celu zdobycia odpowiednich ustawień.", -1, 9, 7, 235, 34
     CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "&Użyj następującego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Adres IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
@@ -22,17 +17,17 @@ BEGIN
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Brama domyślna:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "Pobierz adresy serwerów DNS automatycznie", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
-    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "&Użyj poniższych adresów serwera DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
-    LTEXT "Pierwszy serwer DNS:", -1, 14, 171, 135, 8
-    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
-    LTEXT "Alternatywny serwer DNS:", -1, 14, 186, 135, 8
-    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
-    PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 178, 209, 60, 14, WS_TABSTOP
+    CONTROL "Pobierz adresy serwerów DNS automatycznie", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
+    GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
+    CONTROL "&Użyj poniższych adresów serwera DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    LTEXT "Pierwszy serwer DNS:", -1, 14, 161, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
+    LTEXT "Alternatywny serwer DNS:", -1, 14, 176, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
+    PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 178, 199, 60, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Konfiguracja alternatywna"
 FONT 8, "MS Shell Dlg"
