@@ -974,8 +974,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     LPCWSTR	extraPmts = L"";
     BOOL        quoted = FALSE;
     CPlApplet *applet;
-    LPCWSTR wszFirstCommaPosition = NULL, wszSecondCommaPosition = NULL;
-    LPCWSTR wszLastUnquotedSpacePosition = NULL;
+    LPCWSTR pchFirstComma = NULL, pchSecondComma = NULL;
+    LPCWSTR pchLastUnquotedSpace = NULL;
     LPWSTR wszDialogBoxName;
     int i = 0;
     SIZE_T nLen = lstrlenW(wszCmd);
@@ -998,32 +998,32 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             quoted = !quoted;
         if (wszCmd[i] == ',' && !quoted)
         {
-            if (wszFirstCommaPosition == NULL)
-                wszFirstCommaPosition = &wszCmd[i];
-            else if (wszSecondCommaPosition == NULL)
-                wszSecondCommaPosition = &wszCmd[i];
+            if (pchFirstComma == NULL)
+                pchFirstComma = &wszCmd[i];
+            else if (pchSecondComma == NULL)
+                pchSecondComma = &wszCmd[i];
         }
         if (wszCmd[i] == ' ' && !quoted)
         {
-            wszLastUnquotedSpacePosition = &wszCmd[i];
+            pchLastUnquotedSpace = &wszCmd[i];
         }
     }
 
     /* If no unquoted commas are found, parameters are either space separated, or the entire string
      * is a CPL path. */
-    if (wszFirstCommaPosition == NULL)
+    if (pchFirstComma == NULL)
     {
         /* An unquoted space was found in the string. Assume the last word is the dialog box
          * name/number. */
-        if (wszLastUnquotedSpacePosition != NULL)
+        if (pchLastUnquotedSpace != NULL)
         {
             int nSpaces = 0;
 
-            while (wszLastUnquotedSpacePosition[nSpaces] == L' ')
+            while (pchLastUnquotedSpace[nSpaces] == L' ')
                 nSpaces++;
 
-            StringCchCopyNW(buffer, nLen, wszCmd, wszLastUnquotedSpacePosition - wszCmd);
-            lstrcpyW(wszDialogBoxName, wszLastUnquotedSpacePosition + nSpaces);
+            StringCchCopyNW(buffer, nLen, wszCmd, pchLastUnquotedSpace - wszCmd);
+            lstrcpyW(wszDialogBoxName, pchLastUnquotedSpace + nSpaces);
         }
         /* No parameters were passed, the entire string is the CPL path. */
         else
@@ -1040,18 +1040,18 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     {
         /* If there was no second unquoted comma in the string, the CPL path ends at thes
           * null terminator. */
-        if (wszSecondCommaPosition == NULL)
-            wszSecondCommaPosition = wszCmd + nLen;
+        if (pchSecondComma == NULL)
+            pchSecondComma = wszCmd + nLen;
 
-        StringCchCopyNW(buffer, nLen, wszCmd, wszFirstCommaPosition - wszCmd);
+        StringCchCopyNW(buffer, nLen, wszCmd, pchFirstComma - wszCmd);
         StringCchCopyNW(wszDialogBoxName,
                         nLen,
-                        wszFirstCommaPosition + 1,
-                        wszSecondCommaPosition - wszFirstCommaPosition - 1);
+                        pchFirstComma + 1,
+                        pchSecondComma - pchFirstComma - 1);
 
-        if (wszSecondCommaPosition != wszCmd + nLen)
+        if (pchSecondComma != wszCmd + nLen)
         {
-            extraPmts = wszSecondCommaPosition + 1;
+            extraPmts = pchSecondComma + 1;
         }
     }
 
