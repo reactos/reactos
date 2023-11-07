@@ -7,5 +7,5 @@ add_library(win32u_vista MODULE
     ${win32u_vista_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/win32u_vista.def)
 
-set_module_type(win32u_vista module)
+set_module_type(win32u_vista module IMAGEBASE default)
 add_dependencies(win32u_vista psdk)

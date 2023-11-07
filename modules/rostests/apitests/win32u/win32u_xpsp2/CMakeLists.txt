@@ -7,5 +7,5 @@ add_library(win32u_xpsp2 MODULE
     ${win32u_xpsp2_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/win32u_xpsp2.def)
 
-set_module_type(win32u_xpsp2 module)
+set_module_type(win32u_xpsp2 module IMAGEBASE default)
 add_dependencies(win32u_xpsp2 psdk)
