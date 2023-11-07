@@ -36,7 +36,7 @@ ULONG ExpTimerResolutionCount = 0;
  * ExpTimeZoneBias
  * ExpTimeZoneId
  *
- * It returns *TimeZoneId as follows:
+ * Also, it sets *TimeZoneId to one of the following values:
  *     0 = TIME_ZONE_ID_UNKNOWN
  *     1 = TIME_ZONE_ID_STANDARD
  *     2 = TIME_ZONE_ID_DAYLIGHT
@@ -460,6 +460,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     RTL_TIME_ZONE_INFORMATION TimeZoneInformation;
+    ULONG ExpTimeZoneIdSave;
 
     PAGED_CODE();
 
@@ -527,14 +528,32 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         _SEH2_END;
     }
 
-    /* Read time zone information from the registry */
+    /* Read time zone information from the registry and set the clock */
     Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
     }
 
+    /* Test of we changed from Daylight Time to Standard Time */
+    ExpTimeZoneIdSave = ExpTimeZoneId;
     ExpSetTimeZoneInformation(&TimeZoneInformation);
+
+    if (ExpTimeZoneIdSave == TIME_ZONE_ID_DAYLIGHT &&
+        ExpTimeZoneId == TIME_ZONE_ID_STANDARD)
+    {
+        /* When going from DT to ST we need to do this again */
+        DPRINT("Daylight Time is Changing to Standard Time\n");
+        Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
+        }
+
+        /* Set the system time and notify the system */
+        KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
+        PoNotifySystemTimeSet();
+    }
 
     /* Return status */
     return Status;
