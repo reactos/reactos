@@ -1023,12 +1023,12 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 nSpaces++;
 
             StringCchCopyNW(buffer, nLen, wszCmd, pchLastUnquotedSpace - wszCmd);
-            lstrcpyW(wszDialogBoxName, pchLastUnquotedSpace + nSpaces);
+            StringCchCopyW(wszDialogBoxName, nLen, pchLastUnquotedSpace + nSpaces);
         }
         /* No parameters were passed, the entire string is the CPL path. */
         else
         {
-            lstrcpyW(buffer, wszCmd);
+            StringCchCopyW(buffer, nLen, wszCmd);
         }
     }
     /* If an unquoted comma was found, there are at least two parts of the string:
@@ -1064,7 +1064,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
     if (wszDialogBoxName[0] == L'@')
     {
-        sp = atoiW(wszDialogBoxName + 1);
+        sp = _wtoi(wszDialogBoxName + 1);
     }
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
@@ -1102,21 +1102,15 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         {
             aCPLPath = GlobalFindAtomW(applet->cmd);
             if (!aCPLPath)
-            {
                 aCPLPath = GlobalAddAtomW(applet->cmd);
-            }
 
             aCPLName = GlobalFindAtomW(L"CPLName");
             if (!aCPLName)
-            {
                 aCPLName = GlobalAddAtomW(L"CPLName");
-            }
 
             aCPLFlags = GlobalFindAtomW(L"CPLFlags");
             if (!aCPLFlags)
-            {
                 aCPLFlags = GlobalAddAtomW(L"CPLFlags");
-            }
 
             findData.szAppFile = applet->cmd;
             findData.sAppletNo = (UINT_PTR)(sp + 1);
