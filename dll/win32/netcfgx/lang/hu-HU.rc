@@ -1,13 +1,13 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Az IP-beállításokat automatikusan is megkaphatja, ha hálózata támogatja ezt a képességet. Eltérõ esetben keresse meg hálózati rendszergazdáját a helyes IP-beállításokért.", -1, 9, 9, 235, 27
     CONTROL "IP-cím automatikus lekérése", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
-    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "A &következõ IP-cím használata:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "IP cím:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
@@ -15,17 +15,17 @@ BEGIN
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Alapértelmezett átjáró:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "A DNS-kiszolgáló címének automatikus lekérése", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
-    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "A kö&vetkezõ DNS-kiszolgálók használata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
-    LTEXT "Elsõdleges DNS-kiszolgáló:", -1, 14, 171, 135, 8
-    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
-    LTEXT "Másodlagos DNS-kiszolgáló:", -1, 14, 186, 135, 8
-    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
-    PUSHBUTTON "&Haladóknak", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    CONTROL "A DNS-kiszolgáló címének automatikus lekérése", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 129, 210, 12
+    GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
+    CONTROL "A kö&vetkezõ DNS-kiszolgálók használata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    LTEXT "Elsõdleges DNS-kiszolgáló:", -1, 14, 161, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
+    LTEXT "Másodlagos DNS-kiszolgáló:", -1, 14, 176, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
+    PUSHBUTTON "&Haladóknak", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP
 END
 
-IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Alternate Configuration"
 FONT 8, "MS Shell Dlg"
@@ -82,7 +82,7 @@ BEGIN
     LTEXT "The following three settings are applied to all connections with TCP/IP enabled. For resolution of unqualified names:", -1, 5, 90, 220, 24
     CONTROL "Append &primary and connection specific DNS suffixes", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
     CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Append t&hese DNS suffixes(in order):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    CONTROL "Append t&hese DNS suffixes (in order):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
     PUSHBUTTON "Up", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "Down", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
