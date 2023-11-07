@@ -273,8 +273,10 @@ MmDeleteKernelStack(IN PVOID StackBase,
 
 PVOID
 NTAPI
-MmCreateKernelStack(IN BOOLEAN GuiStack,
-                    IN UCHAR Node)
+MmCreateKernelStackEx(
+    _In_ BOOLEAN GuiStack,
+    _In_ SIZE_T CommitSize,
+    _In_ UCHAR Node)
 {
     PFN_COUNT StackPtes, StackPages;
     PMMPTE PointerPte, StackPte;
@@ -291,10 +293,23 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     if (GuiStack)
     {
         //
-        // We'll allocate 64KB stack, but only commit 12K
+        // We always reserve MmLargeStackSize
         //
         StackPtes = BYTES_TO_PAGES(MmLargeStackSize);
-        StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
+
+        //
+        // If requested, use the whole thing, otherwise just the minimum
+        //
+        if (CommitSize != 0)
+        {
+            ASSERT(CommitSize >= KERNEL_LARGE_STACK_COMMIT);
+            ASSERT(CommitSize <= MmLargeStackSize);
+            StackPages = BYTES_TO_PAGES(CommitSize);
+        }
+        else
+        {
+            StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
+        }
     }
     else
     {
@@ -382,6 +397,18 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     // Return the stack address
     //
     return BaseAddress;
+}
+
+PVOID
+NTAPI
+MmCreateKernelStack(
+    _In_ BOOLEAN GuiStack,
+    _In_ UCHAR Node)
+{
+    //
+    // Call the extended version
+    //
+    return MmCreateKernelStackEx(GuiStack, 0, Node);
 }
 
 NTSTATUS
