@@ -535,15 +535,14 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
     }
 
-    /* Test of we changed from Daylight Time to Standard Time */
+    /* Test if we went from Daylight to Standard Time or vice versa */
     ExpTimeZoneIdSave = ExpTimeZoneId;
     ExpSetTimeZoneInformation(&TimeZoneInformation);
 
-    if (ExpTimeZoneIdSave == TIME_ZONE_ID_DAYLIGHT &&
-        ExpTimeZoneId == TIME_ZONE_ID_STANDARD)
+    if (ExpTimeZoneIdSave != ExpTimeZoneId)
     {
-        /* When going from DT to ST we need to do this again */
-        DPRINT("Daylight Time is Changing to Standard Time\n");
+        /* Going from DT to ST or vice versa we need to repeat this */
+        DPRINT("Daylight Time and Standard Time are switching\n");
         Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
         if (!NT_SUCCESS(Status))
         {
