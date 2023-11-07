@@ -16,7 +16,7 @@ URL: https://github.com/rdesktop/rdesktop
 Title: TreeList
 Path: base/setup/reactos/treelist.c
 Path: base/setup/reactos/treelist.h
-Used Version: ???
+Used Version: ??? (Imported on 2018.11.06: 2fdfb41 (0.4.11-dev-668))
 License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://github.com/sebkirche/treelist
 
@@ -107,7 +107,7 @@ Path: base/services/nfsd
 Path: dll/3rdparty/libtirpc
 Path: dll/np/nfs
 Path: drivers/filesystems/nfs
-Used Version: ??? (Imported on 2017.06.18.)
+Used Version: ??? (Imported on 2017.06.18-19: 4008c7e (r75096), 42e5eee (r75105) and f445db2 (r75114))
 License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
 URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
 
@@ -272,7 +272,7 @@ URL: http://www.zlib.net
 Title: chmc and lzxcomp
 Path: sdk/tools/hhpcomp/chmc
 Path: sdk/tools/hhpcomp/lzx_compress
-Used Version: ??? (Imported on 2015.08.11.)
+Used Version: ??? (Imported on 2015.08.11: 65780ec (r68685))
 License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://sourceforge.net/projects/chmc/
 
