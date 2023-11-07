@@ -17,7 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -74,7 +75,7 @@ BEGIN
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Datele formularelor\nNume de utilizatori și alte informații pe care le-ați introdus prin formulare.",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Parolele\nParolele păstrate pe care le-ați introdus prin formulare.",
+    AUTOCHECKBOX   "&Parolele\nParolele salvate pe care le-ați introdus prin formulare.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "A&nulează", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "&Elimină", IDOK, 120, 230, 60, 15, WS_GROUP
