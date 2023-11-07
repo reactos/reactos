@@ -1137,8 +1137,12 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
                 Control_ShowAppletInTaskbar(applet, sp);
 
-                if (extraPmts[0] == L'\0' || !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
-                applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+                if (extraPmts[0] == L'\0' ||
+                    !applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+                {
+                    applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+                }
+
                 RemovePropW(applet->hWnd, applet->cmd);
                 GlobalDeleteAtom(aCPLPath);
             }
