@@ -216,10 +216,13 @@ EXCLUDE = (
     'dllexport_test_dll1.dll', # Moreover, this module hardcodes its baseaddress.
     'dllexport_test_dll2.dll', # Moreover, this module hardcodes its baseaddress.
     'dllimport_test.dll',
+    'load_notifications.dll',
     'localspl_apitest.dll',
+    'msvcrt_crt_dll_startup.dll',
     'redirtest1.dll',
     'redirtest2.dll',
     'selfreg.dll', # msi_selfreg target.
+    'shlwapi_resource_dll.dll',
     'testvdd.dll',
     # 'win32u.dll' # Future-proof: Is currently a test file, but will eventually move to "Win7+ core".
     'win32u_2k3sp2.dll',
