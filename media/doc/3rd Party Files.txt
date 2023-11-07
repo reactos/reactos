@@ -206,8 +206,8 @@ URL: http://www.gnu.org/software/adns/, http://adns.jgaa.com
 Title: CardLib
 Path: sdk/lib/3rdparty/cardlib
 Used Version: 2005-07-14
-License:
-URL: http://www.catch22.net/tuts/cardlib
+License: "Public Domain"
+URL: https://www.catch22.net/tuts/cards/cardlib/
 
 Title: lwIP - A Lightweight TCP/IP stack
 Path: drivers/network/tcpip/lwip
