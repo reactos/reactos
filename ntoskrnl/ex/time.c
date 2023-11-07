@@ -135,7 +135,7 @@ ExpGetTimeZoneId(
         *TimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
 
-    DPRINT("ExpTimeZoneId is %d\n", ExpTimeZoneId);
+    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
     return TRUE;
 }
 
