@@ -36,10 +36,8 @@ ULONG ExpTimerResolutionCount = 0;
  * ExpTimeZoneBias
  * ExpTimeZoneId
  *
- * Also, it sets *TimeZoneId to one of the following values:
- *     0 = TIME_ZONE_ID_UNKNOWN
- *     1 = TIME_ZONE_ID_STANDARD
- *     2 = TIME_ZONE_ID_DAYLIGHT
+ * This variable is modified and returned as a result of this function
+ * *TimeZoneId
  *--*/
 static
 BOOLEAN
@@ -62,7 +60,7 @@ ExpGetTimeZoneId(
 
     if (!InitialRun)
     {
-        /* Adjust TimeNow for Time Zone Bias to use UTC for compares */
+        /* Adjust TimeNow for Time Zone Bias to use UTC for comparisons */
         TimeNow->QuadPart -= (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
     }
     else
@@ -459,7 +457,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    RTL_TIME_ZONE_INFORMATION TimeZoneInformation;
+    RTL_TIME_ZONE_INFORMATION TimeZoneInformation = { 0 };
     ULONG ExpTimeZoneIdSave;
 
     PAGED_CODE();
@@ -539,7 +537,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     ExpTimeZoneIdSave = ExpTimeZoneId;
     ExpSetTimeZoneInformation(&TimeZoneInformation);
 
-    if (ExpTimeZoneIdSave != ExpTimeZoneId)
+    if (ExpTimeZoneId != ExpTimeZoneIdSave)
     {
         /* Going from DT to ST or vice versa we need to repeat this */
         DPRINT("Daylight Time and Standard Time are switching\n");
