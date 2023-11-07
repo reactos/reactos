@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Command Prompt
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -120,7 +126,7 @@ dispozitivul auxiliar."
 DATE [/T][dată]\n\n\
   /T    doar afișează\n\n\
 Tastați DATE fără argumente pentru a afișa data curentă urmată de\n\
-cerea modificării ei.  Confirmați aceiași dată apăsând ENTER.\n"
+cerea modificării ei.  Confirmați aceeași dată apăsând ENTER.\n"
     STRING_DEL_HELP1 "Șterge unul sau mai multe fișiere.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fișier ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fișier ...\n\
@@ -428,7 +434,7 @@ TITLE [șir]\n\n\
 TIME [/T][oră]\n\n\
   /T    Omite modificarea orei curente\n\n\
 Tastați TIME fără perametri pentru a afișa ora curentă urmată de posibilitatea\n\
-de a introduce o nouă oră. Tastați ENTER pentru a păstra aceiași oră.\n"
+de a introduce o nouă oră. Tastați ENTER pentru a păstra aceeași oră.\n"
     STRING_TIME_HELP2 "Introduceți noua oră: "
     STRING_TIMER_HELP1 "Timp cronometrat: %d msec\n"
     STRING_TIMER_HELP2 "Timp cronometrat: %02d%c%02d%c%02d%c%02d\n"
