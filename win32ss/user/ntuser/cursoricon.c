@@ -261,18 +261,20 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     if (y >= rcClip.bottom) y = rcClip.bottom - 1;
     if (y < rcClip.top)     y = rcClip.top;
 
+    /* Nothing to do if position did not actually change */
+    if (x == gpsi->ptCursor.x && y == gpsi->ptCursor.y)
+        return TRUE;
+
     pt.x = x;
     pt.y = y;
 
-    if ((gpsi->ptCursor.x != x) || (gpsi->ptCursor.y != y))
-    {
-        /* 1. Generate a mouse move message, this sets the htEx and Track Window too. */
-        Msg.message = WM_MOUSEMOVE;
-        Msg.wParam = UserGetMouseButtonsState();
-        Msg.lParam = MAKELPARAM(x, y);
-        Msg.pt = pt;
-        co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
-    }
+    /* 1. Generate a mouse move message, this sets the htEx and Track Window too */
+    Msg.message = WM_MOUSEMOVE;
+    Msg.wParam = UserGetMouseButtonsState();
+    Msg.lParam = MAKELPARAM(x, y);
+    Msg.pt = pt;
+    co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
+
     /* 2. Store the new cursor position */
     gpsi->ptCursor = pt;
 
