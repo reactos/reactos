@@ -501,7 +501,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = NULL;
 
     POSITION it = m_StaticEntries.GetHeadPosition();
     bool first = true;
@@ -511,7 +510,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         BOOL forceFirstPos = FALSE;
 
         fState = MFS_ENABLED;
-        mii.dwTypeData = NULL;
 
         /* set first entry as default */
         if (first)
