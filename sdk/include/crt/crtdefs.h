@@ -443,7 +443,7 @@ typedef struct localeinfo_struct {
     pthreadlocinfo locinfo;
     pthreadmbcinfo mbcinfo;
 }_locale_tstruct,*_locale_t;
-#define DEFINED_localeinfo_struct 1
+#define DEFINED_localeinfo_struct
 #endif
 
 #ifdef __cplusplus
