@@ -1299,7 +1299,8 @@ CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
             hIcon = ExtractIconW(hInst, szIconPath.GetString(), 0);
         }
 
-        if (!hIcon || (hIcon == (HICON)(INT_PTR)1))
+        /* Use the default icon if none were found in the file, or if it is not supported (returned 1) */
+        if (!hIcon || (hIcon == (HICON)(UINT_PTR)1))
         {
             /* Load default icon */
             hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
