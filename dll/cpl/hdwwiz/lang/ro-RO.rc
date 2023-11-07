@@ -1,10 +1,10 @@
 /*
- * PROJECT: ReactOS Add hardware control panel
- * FILE:    dll/cpl/hdwwiz/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for add hardware control panel
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Add hardware control panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian Language File for add hardware control panel
+ * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -127,7 +127,7 @@ BEGIN
     LTEXT "Starea curentă a dispozitivului selectat:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Pentru a porni un program de depanare pentru rezolvarea posibilelor probleme de instalare, apăsați „Sfârșit”.", -1, 114, 136, 193, 16
-    LTEXT "Pentru a ieși, apăsți „Anulează”.", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "Pentru a ieși, apăsați „Anulează”.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
