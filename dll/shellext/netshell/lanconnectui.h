@@ -44,7 +44,7 @@ class CNetConnectionPropertyUi:
 
     private:
         BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
-        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
+        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type, PSP_CLASSIMAGELIST_DATA pCILD);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
         BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID);
