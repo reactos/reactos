@@ -1000,7 +1000,7 @@ konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne urucha
 .
 Language=Romanian
 Administratorul de control al serviciului nu s-a putut inițializa cu succes. Securitatea
-servitorului de configurație (scesrv.dll) a eșuat să se inițializeze cu eroarea %1.
+serverului de configurație (scesrv.dll) a eșuat să se inițializeze cu eroarea %1.
 Se repornește sistemul...
 .
 
