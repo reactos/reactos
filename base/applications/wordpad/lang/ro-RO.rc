@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "&Nou…\tCtrl+N",            ID_FILE_NEW
         MENUITEM "&Deschidere…\tCtrl+O",     ID_FILE_OPEN
         MENUITEM "S&alvează\tCtrl+S",        ID_FILE_SAVE
-        MENUITEM "Sal&vează ca…",            ID_FILE_SAVEAS
+        MENUITEM "Salvea&ză ca…",            ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "I&mprimare…\tCtrl+P",      ID_PRINT
         MENUITEM "Pre&vizionare imprimare…", ID_PREVIEW
