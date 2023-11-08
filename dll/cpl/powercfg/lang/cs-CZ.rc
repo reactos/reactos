@@ -92,7 +92,7 @@ BEGIN
     GROUPBOX "Možnosti", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Vždy zobrazovat &ikonu na hlavním panelu", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "Dotázat se na &heslo při přechodu z úsporného režimu", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Snížit jas displeje při chodu na baterie.", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Snížit jas displeje při chodu na baterie", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Tlačítka napájení", -1, 6, 101, 240, 110
     LTEXT "&Při sklopení displeje přenosného počítače:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
