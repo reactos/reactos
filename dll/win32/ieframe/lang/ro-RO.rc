@@ -18,7 +18,7 @@ IDR_BROWSE_MAIN_MENU MENU
         }
         MENUITEM "&Deschidere…",                ID_BROWSE_OPEN
         MENUITEM "S&alvează",                   ID_BROWSE_SAVE
-        MENUITEM "Sal&vează ca…",               ID_BROWSE_SAVE_AS
+        MENUITEM "Salvea&ză ca…",               ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Formatare imprima&bil…",      ID_BROWSE_PRINT_FORMAT
         MENUITEM "I&mprimare…",                 ID_BROWSE_PRINT
