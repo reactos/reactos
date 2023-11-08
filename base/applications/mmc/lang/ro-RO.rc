@@ -28,8 +28,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Deschide\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Păstrează", IDM_FILE_SAVE
-        MENUITEM "Păst&rare în…", IDM_FILE_SAVEAS
+        MENUITEM "S&alvează", IDM_FILE_SAVE
+        MENUITEM "Sal&vează ca…", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", IDM_FILE_EXIT
     END
