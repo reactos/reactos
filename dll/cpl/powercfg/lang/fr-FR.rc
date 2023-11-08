@@ -118,7 +118,7 @@ BEGIN
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
     LTEXT "Espace disque nécessaire :", -1, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
-    LTEXT "Vous devez libérer de l'espace avant que votre ordinateur ne se mette en veille. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Vous devez libérer de l'espace avant que votre ordinateur ne se mette en veille.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
