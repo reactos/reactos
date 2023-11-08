@@ -14,7 +14,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Regim de consum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Alegeți un regim de consum al energiei cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 208, 36
     GROUPBOX "&Regimuri de consum", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -23,9 +23,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Când calculatorul este:", IDC_SAT, 12, 110, 60, 15
     LTEXT "În priză", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Pe baterii", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Închiderea e&cranului:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -45,7 +45,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Regim de consum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Alegeți un regim de consum al energiei cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 208, 36
     GROUPBOX "&Regimuri de consum", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -96,7 +96,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Specificați opțiunile de economisire ale consumului de energie al calculatorului.", -1, 37, 6, 208, 20
     GROUPBOX "Opțiuni", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Afișează pictogramă în &zona de notificare", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -116,7 +116,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hibernare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Intrarea în starea de hibernare presupune stocarea pe disc a întregului conținut de memorie operativă, urmată de închiderea completă a calculatorului. La revenirea din hibernare, calculatorul revine exact la starea anterioară hibernării.", -1, 37, 6, 208, 35
     GROUPBOX "Hibernare", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Doresc folosirea funcționalității &Hibernare", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Strømstyringsplan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Velg Strømstyringsplan med den mest passende innstilling for denne datamaskinen. Vær oppmerksom på å endre innstillingene under vil forandre valgte plan.", -1, 37, 6, 208, 36
     GROUPBOX "S&trømstyringsplan", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -16,9 +16,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Mens datamaskinen er:", IDC_SAT, 12, 110, 60, 15
     LTEXT "Koblet til", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Kjører på batterier", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Slå av &skjermen:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Strømstyringsplan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Velg Strømstyringsplan med den mest passende innstilling for denne datamaskinen. Vær oppmerksom på å endre innstillingene under vil forandre valgte plan.", -1, 37, 6, 208, 36
     GROUPBOX "S&trømstyringsplan", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -89,7 +89,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Velg strøm-sparing innstillinger som du vil bruke.", -1, 37, 6, 208, 20
     GROUPBOX "Valg", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Allti&d vis ikon på oppgavelinjen", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dvalemodus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Når din datamaskin går i dvalemodus, lagres all data i minnet til din harddisk også blir pcen slått av. Når din datamaskin våkner fra dvalemodus, gjennoppretter den økten til forrige stand.", -1, 37, 6, 208, 35
     GROUPBOX "Dvalemodus", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Aktiver &dvalemodus", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

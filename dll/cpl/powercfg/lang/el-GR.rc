@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Συνδυασμοί τροφοδοσίας"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", -1, 37, 6, 208, 36
     GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -16,9 +16,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Όταν ο υπολογιστής:", IDC_SAT, 12, 110, 60, 15
     LTEXT "είναι στην πρίζα", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "λειτουργεί με μπαταρίες", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Σβήσιμο &οθόνης:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Συνδυασμοί τροφοδοσίας"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", -1, 37, 6, 208, 36
     GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -89,7 +89,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Για προχωρημένους"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Επιλέξτε τις ρυθμίσεις εξοικονόμησης ενέργειας που θέλετε να χρησιμοποιήσετε.", -1, 37, 6, 208, 20
     GROUPBOX "Επιλογές", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Εμφάνιση του εικονιδίου στη γραμμή εργασιών", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Αδρανοποίηση"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Όταν ο υπολογιστής αδρανοποιείται, αποθηκεύει ό,τι έχει στη μνήμη στο σκληρό δίσκο και μετά τερματίζεται η λειτουργία του. Όταν επανέρχεται από την αδρανοποίηση, επιστρέφει στο αρχικό του επίπεδο. ", -1, 37, 6, 208, 35
     GROUPBOX "Αδρανοποίηση", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Ενε&ργοποίηση αδρανοποίησης", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

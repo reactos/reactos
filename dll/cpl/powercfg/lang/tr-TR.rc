@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Güç Düzenleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 208, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -16,9 +16,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Bilgisyar:", IDC_SAT, 12, 110, 60, 15
     LTEXT "Adaptöre Takılıyken", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Pilde Çalışıyorken", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "&Monitörü Kapat:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Güç Düzenleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 208, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -89,7 +89,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Kullanmak istediğiniz güç tasarrufu ayarlarını seçiniz.", -1, 37, 6, 208, 20
     GROUPBOX "Seçenekler", -1, 6, 30, 240, 65
     AUTOCHECKBOX "&Görev çubuğunda sürekli simge göster", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hazırda Bekleme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Bilgisayar hazırda bekletildiğinde sabit diskinize bellekte ne varsa kaydedilir ve sonra bilgisayar kapatılır. Bilgisayarınız hazırda beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 208, 35
     GROUPBOX "Hazırda Bekleme", -1, 6, 41, 240, 32
     AUTOCHECKBOX "&Hazırda beklemeyi etkinleştir", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

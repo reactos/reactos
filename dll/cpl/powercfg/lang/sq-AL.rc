@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Skema e Energjisë"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Zgjidhni skemën energjisë me parametrat më të përshtatshme për këtë kompjuter. Vini re se ndryshimet e parametrave te më poshtëm do të ndryshojë skemën e zgjedhur.", -1, 37, 6, 208, 36
     GROUPBOX "Skema e Energjisë", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -16,9 +16,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Kur kompjuteri është i:", IDC_SAT, 12, 110, 60, 15
     LTEXT "Hyrese në", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Punon në bateri", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Fik &monitorin:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Skema e Energjisë"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Zgjidhni skemën energjisë me parametrat më të përshtatshme për këtë kompjuter. Vini re se ndryshimet e parametrave te më poshtëm do të ndryshojë skemën e zgjedhur.", -1, 37, 6, 208, 36
     GROUPBOX "Skema e Energjisë", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -89,7 +89,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advancuar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Zgjidhni cilësimet e ruaj-energjinë që ju doni të përdorni.", -1, 37, 6, 208, 20
     GROUPBOX "Alternativa", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Gjithmonë shfaq ikonën në taskbar", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hibernate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Kur kompjuteri juaj hibernates, ajo ruan çdo gjë që ajo ka në kujtesën e në diskun tuaj të vështirë dhe pastaj mbyllet. Kur kompjuteri juaj vjen nga letargjia, ajo kthehet në gjendjen e mëparshme. ", -1, 37, 6, 208, 35
     GROUPBOX "Hibernate", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Mundëso &hibernation", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

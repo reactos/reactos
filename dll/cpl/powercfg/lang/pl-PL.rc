@@ -8,7 +8,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Schematy zasilania"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Wybierz schemat zasilana najbardziej pasujący do Twojego komputera. Miej na uwadze, że zmiany poniżej spowodują modyfikację wybranego schematu.", -1, 37, 6, 208, 36
     GROUPBOX "&Schematy zasilania", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -17,9 +17,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Kiedy komputer jest:", IDC_SAT, 12, 110, 60, 15
     LTEXT "Podłączony", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Zasilany akumulatorem", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Wyłącz &monitor:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Schematy zasilania"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Wybierz schemat zasilana najbardziej pasujący do Twojego komputera. Miej na uwadze, że zmiany poniżej spowodują modyfikację wybranego schematu.", -1, 37, 6, 208, 36
     GROUPBOX "&Schematy zasilania", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -90,7 +90,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Wybierz, których ustawień oszczędzania energii chcesz używać.", -1, 37, 6, 208, 20
     GROUPBOX "Opcje", -1, 6, 30, 240, 65
     AUTOCHECKBOX "&Zawsze pokazuj ikonę w zasobniku systemowym", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -110,7 +110,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hibernacja"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Kiedy Twój komputer przechodzi w stan hibernacji cała zawartość pamięci jest zrzucana na dysk twardy i komputer jest wyłączany. Kiedy komputer budzi się z hibernacji, powraca on do poprzedniego stanu. ", -1, 37, 6, 208, 35
     GROUPBOX "Hibernacja", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Włącz &hibernację", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP

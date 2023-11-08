@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gestione risparmio energia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Scegliere lo schema di gestione dell'energia con le impostazioni piu' appropriate per questo computer. La modifica delle impostazioni seguenti altera lo schema selezionato.", -1, 37, 6, 208, 36
     GROUPBOX "Schema di gestione dell'energia", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -14,9 +14,9 @@ BEGIN
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Quando il computer è:", IDC_SAT, 12, 110, 60, 15
     LTEXT "Alimentato\rda rete", IDC_SAC, 100, 110, 50, 15
-    ICON IDI_AC, IDC_IAC, 141, 122, 21, 20
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
     LTEXT "Alimentato\ra batterie", IDC_SDC, 173, 110, 50, 15
-    ICON IDI_DC, IDC_IDC, 218, 122, 21, 20
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
     LTEXT "Spegni il &monitor:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -36,7 +36,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gestione risparmio energia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Scegliere lo schema di gestione dell'energia con le impostazioni piu' appropriate per questo computer. La modifica delle impostazioni seguenti altera lo schema selezionato.", -1, 37, 6, 208, 36
     GROUPBOX "Schema di gestione dell'energia", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -87,7 +87,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Avanzate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Scegli le impostazioni di risparmi energia che intendi usare.", -1, 37, 6, 208, 20
     GROUPBOX "Opzioni", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Mostra sempre l'icona nella barra dei task", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
@@ -107,7 +107,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sospensione"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
     LTEXT "Quando il computer viene sospeso, il contenuto della RAM viene salvato su disco e poi il sistema si spegne. Alla riaccensione il computer si ripresenta nello stato in cui si trovava.", -1, 37, 6, 208, 35
     GROUPBOX "Sospensione", -1, 6, 41, 240, 32
     AUTOCHECKBOX "Abilita la Sospensione", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
