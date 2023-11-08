@@ -127,7 +127,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Zapisywanie schematu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zapisz ten schemat zasilania jako:", -1, 7, 7, 104, 8
+    LTEXT "Zapisz ten schemat zasilania jako:", -1, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 133, 40, 50, 14
