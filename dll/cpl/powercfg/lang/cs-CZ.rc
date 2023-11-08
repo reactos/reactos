@@ -116,7 +116,7 @@ BEGIN
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
     LTEXT "Potřebné místo na disku:", -1, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
-    LTEXT "Pro funkci režim spánku musíte uvolnit místo na disku. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Pro funkci režim spánku musíte uvolnit místo na disku.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
