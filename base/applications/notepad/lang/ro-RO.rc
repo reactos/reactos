@@ -36,8 +36,8 @@ BEGIN
         MENUITEM "&Nou\tCtrl+N", CMD_NEW
         MENUITEM "Fereastră &nouă\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
-        MENUITEM "&Păstrează\tCtrl+S", CMD_SAVE
-        MENUITEM "Păst&rare în…", CMD_SAVE_AS
+        MENUITEM "S&alvează\tCtrl+S", CMD_SAVE
+        MENUITEM "Sal&vare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Configurare pagină…", CMD_PAGE_SETUP
         MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
