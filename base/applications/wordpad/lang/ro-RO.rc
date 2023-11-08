@@ -1,7 +1,4 @@
 /*
-
-
-
  * PROJECT:     ReactOS Wordpad
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
@@ -10,7 +7,6 @@
  *              Copyright 2010 Michael Stefaniuc
  *              Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
- 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
