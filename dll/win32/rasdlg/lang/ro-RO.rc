@@ -2225,7 +2225,7 @@ BEGIN
     1580 "Această conexiune a fost configurată cu un nivel de securitate nesusținut de infrastructura programelor instalate.  Opțiunile de securitate ale acestei conexiuni au fost ajustate la nivelul de securitate disponibil.\0"
     1581 "Tip&ul de VPN:\0"
     1582 "Introduceți un nume de utilizator.\0"
-    1583 "Aceste date de autentificare sunt salvate pentru propria dumneavoastră utilizare.  Totuși deja există un nume de utilizator disponibil pentru toți utilizatorii acestei conexiuni.  Doriți înlăturarea datelor de autentificare disponibile pentru toți ceilalți utilizatori?\0"
+    1583 "Aceste date de autentificare sunt salvate pentru propria dumneavoastră utilizare. Totuși deja există un nume de utilizator disponibil pentru toți utilizatorii acestei conexiuni. Doriți înlăturarea datelor de autentificare disponibile pentru toți ceilalți utilizatori?\0"
     1584 "De exemplu, veți putea introduce numele serverului la care vă conectați.\0"
     1585 "Informații de cont\0"
     1586 "Controalele acestui formular sunt dezactivate deoarece sistemul trebuie mai întâi repornit înainte de a putea efectua alte modificări.\0"
