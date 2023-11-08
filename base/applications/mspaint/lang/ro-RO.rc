@@ -17,8 +17,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
         MENUITEM "&Deschidere...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "S&alvează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Sal&vează ca...", IDM_FILESAVEAS
+        MENUITEM "&Salvează\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Salvea&ză ca...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Din aparat media...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
