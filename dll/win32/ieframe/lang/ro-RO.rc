@@ -17,7 +17,7 @@ IDR_BROWSE_MAIN_MENU MENU
             MENUITEM "&Fereastră",              ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Deschidere…",                ID_BROWSE_OPEN
-        MENUITEM "S&alvează",                  ID_BROWSE_SAVE
+        MENUITEM "S&alvează",                   ID_BROWSE_SAVE
         MENUITEM "Sal&vează ca…",               ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Formatare imprima&bil…",      ID_BROWSE_PRINT_FORMAT
