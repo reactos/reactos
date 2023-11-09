@@ -115,13 +115,11 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
          RecvReq->BufferArray &&
              BytesAvailable &&
              i < RecvReq->BufferCount;
-         i++ )
-    {
+         i++ ) {
         BytesToCopy =
             MIN( RecvReq->BufferArray[i].len, BytesAvailable );
 
-        if( Map[i].Mdl )
-        {
+        if( Map[i].Mdl ) {
             Map[i].BufferAddress = MmMapLockedPages( Map[i].Mdl, KernelMode );
 
             AFD_DbgPrint(MID_TRACE,("Buffer %u: %p:%u\n",
@@ -163,13 +161,11 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     AFD_DbgPrint(MID_TRACE,("FCB %p Receive data waiting %u\n",
                             FCB, FCB->Recv.Content));
 
-    if( CantReadMore( FCB ) )
-    {
+    if( CantReadMore( FCB ) ) {
         /* Success here means that we got an EOF.  Complete a pending read
          * with zero bytes if we haven't yet overread, then kill the others.
          */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) )
-        {
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
             NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
@@ -199,8 +195,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         /*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
 
         /* Try to clear some requests */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) )
-        {
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
             NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
@@ -211,8 +206,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             Status = TryToSatisfyRecvRequestFromBuffer
             ( FCB, RecvReq, &TotalBytesCopied );
 
-            if( Status == STATUS_PENDING )
-            {
+            if( Status == STATUS_PENDING ) {
                 AFD_DbgPrint(MID_TRACE,("Ran out of data for %p\n", NextIrp));
                 InsertHeadList(&FCB->PendingIrpList[FUNCTION_RECV],
                                &NextIrp->Tail.Overlay.ListEntry);
@@ -224,8 +218,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                                RecvReq->BufferCount, FALSE );
                 NextIrp->IoStatus.Status = Status;
                 NextIrp->IoStatus.Information = TotalBytesCopied;
-                if( NextIrp == Irp )
-                {
+                if( NextIrp == Irp ) {
                     RetStatus = Status;
                 }
                 if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
@@ -236,8 +229,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     }
 
     if( FCB->Recv.Content - FCB->Recv.BytesUsed &&
-        IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) )
-    {
+        IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) ) {
         FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -287,11 +279,9 @@ NTSTATUS NTAPI ReceiveComplete
     ASSERT(FCB->ReceiveIrp.InFlightRequest == Irp);
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED )
-    {
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) )
-        {
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
             NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
             NextIrpSp = IoGetCurrentIrpStackLocation(NextIrp);
@@ -454,8 +444,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS) &&
         FCB->State != SOCKET_STATE_CONNECTED &&
-        FCB->State != SOCKET_STATE_CONNECTING )
-    {
+        FCB->State != SOCKET_STATE_CONNECTING ) {
         AFD_DbgPrint(MIN_TRACE,("Called recv on wrong kind of socket (s%x)\n",
                                 FCB->State));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
@@ -473,8 +462,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        NULL, NULL,
                                        TRUE, FALSE, LockMode );
 
-    if( !RecvReq->BufferArray )
-    {
+    if( !RecvReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
                                       Irp, 0 );
     }
@@ -535,8 +523,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( Status == STATUS_PENDING &&
         !(RecvReq->AfdFlags & AFD_OVERLAPPED) &&
-        ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)))
-    {
+        ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking))) {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
@@ -581,11 +568,9 @@ PacketSocketRecvComplete(
     ASSERT(FCB->ReceiveIrp.InFlightRequest == Irp);
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED )
-    {
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) )
-        {
+        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
             NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
@@ -599,8 +584,7 @@ PacketSocketRecvComplete(
         }
 
         /* Free all items on the datagram list */
-        while( !IsListEmpty( &FCB->DatagramList ) )
-        {
+        while( !IsListEmpty( &FCB->DatagramList ) ) {
                DatagramRecvEntry = RemoveHeadList(&FCB->DatagramList);
                DatagramRecv = CONTAINING_RECORD(DatagramRecvEntry, AFD_STORED_DATAGRAM, ListEntry);
                ExFreePoolWithTag(DatagramRecv->Address, TAG_AFD_TRANSPORT_ADDRESS);
@@ -627,8 +611,7 @@ PacketSocketRecvComplete(
                                          DGSize,
                                          TAG_AFD_STORED_DATAGRAM);
 
-    if( DatagramRecv )
-    {
+    if( DatagramRecv ) {
         DatagramRecv->Len = Irp->IoStatus.Information;
         RtlCopyMemory( DatagramRecv->Buffer, FCB->Recv.Window,
                        DatagramRecv->Len );
@@ -641,8 +624,7 @@ PacketSocketRecvComplete(
 
     } else Status = STATUS_NO_MEMORY;
 
-    if( !NT_SUCCESS( Status ) )
-    {
+    if( !NT_SUCCESS( Status ) ) {
 
         if (DatagramRecv)
         {
@@ -659,8 +641,7 @@ PacketSocketRecvComplete(
     /* Satisfy as many requests as we can */
 
     while( !IsListEmpty( &FCB->DatagramList ) &&
-           !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) )
-    {
+           !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
         AFD_DbgPrint(MID_TRACE,("Looping trying to satisfy request\n"));
         ListEntry = RemoveHeadList( &FCB->DatagramList );
         DatagramRecv = CONTAINING_RECORD( ListEntry, AFD_STORED_DATAGRAM,
@@ -695,8 +676,7 @@ PacketSocketRecvComplete(
         IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
     }
 
-    if( !IsListEmpty( &FCB->DatagramList ) && IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) )
-    {
+    if( !IsListEmpty( &FCB->DatagramList ) && IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) ) {
         AFD_DbgPrint(MID_TRACE,("Signalling\n"));
         FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
@@ -704,8 +684,7 @@ PacketSocketRecvComplete(
     } else
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
-    if( NT_SUCCESS(Irp->IoStatus.Status) && FCB->Recv.Content < FCB->Recv.Size )
-    {
+    if( NT_SUCCESS(Irp->IoStatus.Status) && FCB->Recv.Content < FCB->Recv.Size ) {
         /* Now relaunch the datagram request */
         Status = TdiReceiveDatagram
             ( &FCB->ReceiveIrp.InFlightRequest,
@@ -766,8 +745,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                         RecvReq->AddressLength,
                                         TRUE, TRUE, LockMode );
 
-    if( !RecvReq->BufferArray )
-    { /* access violation in userspace */
+    if( !RecvReq->BufferArray ) { /* access violation in userspace */
         return UnlockAndMaybeComplete(FCB, STATUS_ACCESS_VIOLATION, Irp, 0);
     }
 
