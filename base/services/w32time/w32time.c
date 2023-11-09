@@ -153,7 +153,7 @@ GetIntervalSetting(VOID)
     }
 
     if (lRet != ERROR_SUCCESS || dwData < 120)
-        return 9 * 60 * 60; // 9 hours, because Windows uses 9 hrs, 6 mins and 8 seconds by default.
+        return 4 * 60 * 60; // 4 hours, because Windows uses 9 hrs, 6 mins and 8 seconds by default.
     else
         return dwData;
 }
