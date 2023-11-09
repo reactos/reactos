@@ -368,13 +368,31 @@ HvpInitializeMemoryHive(
     {
         Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HBLOCK_SIZE);
         if (Bin->Signature != HV_HBIN_SIGNATURE ||
-           (Bin->Size % HBLOCK_SIZE) != 0)
+           (Bin->Size % HBLOCK_SIZE) != 0 ||
+           (Bin->FileOffset / HBLOCK_SIZE) != BlockIndex)
         {
-            DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",
+            /*
+             * Bin is toast but luckily either the signature, size or offset
+             * is out of order. For the signature it is obvious what we are going
+             * to do, for the offset we are re-positioning the bin back to where it
+             * was and for the size we will set it up to a block size, since technically
+             * a hive bin is large as a block itself to accommodate cells.
+             */
+            if (!CmIsSelfHealEnabled(FALSE))
+            {
+                DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x. Self-heal not possible!\n",
                     (unsigned long)BlockIndex, (unsigned)Bin->Signature, (unsigned)Bin->Size);
-            Hive->Free(Hive->Storage[Stable].BlockList, 0);
-            Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
-            return STATUS_REGISTRY_CORRUPT;
+                Hive->Free(Hive->Storage[Stable].BlockList, 0);
+                Hive->Free(Hive->BaseBlock, Hive->BaseBlockAlloc);
+                return STATUS_REGISTRY_CORRUPT;
+            }
+
+            /* Fix this bin */
+            Bin->Signature = HV_HBIN_SIGNATURE;
+            Bin->Size = HBLOCK_SIZE;
+            Bin->FileOffset = BlockIndex * HBLOCK_SIZE;
+            ChunkBase->BootType |= HBOOT_TYPE_SELF_HEAL;
+            DPRINT1("Bin at index %lu is corrupt and it has been repaired!\n", (unsigned long)BlockIndex);
         }
 
         NewBin = Hive->Allocate(Bin->Size, TRUE, TAG_CM);
