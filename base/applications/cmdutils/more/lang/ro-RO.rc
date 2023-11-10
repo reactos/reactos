@@ -17,7 +17,8 @@ command | MORE [/E [opțiuni]\n\
 \n\
     [disc:][cale]numele fișierului  Un fișier al cărui conținut urmează\n\
                                     să fie afișat.\n\
-    comandă                         O comandă a cărei ieșire urmează să fie afișată.\n\
+    comandă                         O comandă a cărei ieșire urmează\n\
+                                    să fie afișată.\n\
 \n\
 Atunci când opțiunea Caracteristici extinse e activată,\n\
 următoarea formă este acceptată:\n\
