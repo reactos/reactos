@@ -7489,7 +7489,7 @@ CM_Request_Device_Eject_ExA(
     TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
           dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
 
-    if (pszVetoName == NULL && ulNameLength == 0)
+    if (pszVetoName == NULL && ulNameLength != 0)
         return CR_INVALID_POINTER;
 
     lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
@@ -7544,7 +7544,7 @@ CM_Request_Device_Eject_ExW(
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    if (pszVetoName == NULL && ulNameLength == 0)
+    if (pszVetoName == NULL && ulNameLength != 0)
         return CR_INVALID_POINTER;
 
     if (hMachine != NULL)
