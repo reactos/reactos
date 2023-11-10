@@ -29,10 +29,10 @@ Opțiuni:\n\
     configurațiile implicite de registru pentru programul CMD.EXE. Pentru mai\n\
     multe detalii legate de cum pot fi schimbate aceste configurații, vedeți\n\
     secțiunea ""Extensii de comenzi"" în secțiunea de ajutor a programului\n\
-    CMD.EXE.
+    CMD.EXE.\n\
 \n\
 Atunci când opțiunea Caracteristici extinse e activată, sunt disponibile\n\
-următoarele opțiuni:
+următoarele opțiuni:\n\
     /C       Curățarea ecranului înainte de a se afișa o pagină.\n\
     /P       Extinderea caracterelor Form-Feed (de alimentare de formulare).\n\
     /S       Reducerea liniilor goale succesive la o singură linie.\n\
