@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS More Command
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
@@ -19,8 +19,8 @@ command | MORE [/E [opțiuni]\n\
                                           să fie afișat.\n\
     comandă                               O comandă a cărei ieșire urmează să fie afișată.\n\
 \n\
-Atunci când opțiunea Caracteristici extinse e activată, următoarea formă este
-acceptată:\n\
+Atunci când opțiunea Caracteristici extinse e activată,\n\
+următoarea formă este acceptată:\n\
 MORE [/E] [opțiuni] [fișiere]\n\
 \n\
 Opțiuni:\n\
