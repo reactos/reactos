@@ -16,7 +16,8 @@ FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""șir"" [fișier...]\n\
   /C         Numără liniile ce conțin șirul.\n\
   /N         Numără rândurile afișate, începând cu 1.\n\
   /I         Ignoră diferențele între majuscule și minuscule.\n\
-  /OFF[LINE] Nu omite fișierele care care au configurate atributul offline (deconectat)."
+  /OFF[LINE] Nu omite fișierele care care au configurate atributul\n\
+             offline (deconectat)."
     IDS_NO_SUCH_FILE "FIND: Fișierul «%s» nu există!\n"
     IDS_CANNOT_OPEN "FIND: Fișierul «%s» nu poate fi deschis!\n"
     IDS_INVALID_SWITCH "FIND: Comutare nevalidă\n"
