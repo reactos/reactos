@@ -387,17 +387,6 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
 
 #endif /* _INTEGRAL_MAX_BITS >= 64 */
 
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wsopen_s(
-    _Out_ int *_FileHandle,
-    _In_z_ const wchar_t *_Filename,
-    _In_ int _OpenFlag,
-    _In_ int _ShareFlag,
-    _In_ int _PermissionFlag);
-
 #if !defined(__cplusplus) || !(defined(_X86_) && !defined(__x86_64))
   _CRTIMP int __cdecl _wopen(const wchar_t *_Filename,int _OpenFlag,...);
   _CRTIMP int __cdecl _wsopen(const wchar_t *_Filename,int _OpenFlag,int _ShareFlag,...);
@@ -2340,50 +2329,12 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   _wstrtime(
     _Out_writes_z_(9) wchar_t *_Buffer);
 
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wasctime_s(
-    _Out_writes_(_SizeInWords) _Post_readable_size_(26) wchar_t *_Buf,
-    _In_ size_t _SizeInWords,
-    _In_ const struct tm *_Tm);
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wctime32_s(
-    _Out_writes_(_SizeInWords) _Post_readable_size_(26) wchar_t *_Buf,
-    _In_ size_t _SizeInWords,
-    _In_ const __time32_t *_Time);
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wstrdate_s(
-    _Out_writes_(_SizeInWords) _Post_readable_size_(9) wchar_t *_Buf,
-    _In_range_(>=, 9) size_t _SizeInWords);
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wstrtime_s(
-    _Out_writes_(_SizeInWords) _Post_readable_size_(9) wchar_t *_Buf,
-    _In_ size_t _SizeInWords);
-
 #if _INTEGRAL_MAX_BITS >= 64
 
   _CRTIMP
   wchar_t*
   __cdecl
   _wctime64(
-    _In_ const __time64_t *_Time);
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wctime64_s(
-    _Out_writes_(_SizeInWords) _Post_readable_size_(26) wchar_t *_Buf,
-    _In_ size_t _SizeInWords,
     _In_ const __time64_t *_Time);
 
 #endif /* _INTEGRAL_MAX_BITS >= 64 */
@@ -2630,5 +2581,8 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 
 #pragma pack(pop)
 
+#if __STDC_WANT_SECURE_LIB__
 #include <sec_api/wchar_s.h>
+#endif /* __STDC_WANT_SECURE_LIB__ */
+
 #endif

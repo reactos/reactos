@@ -334,6 +334,17 @@ extern "C" {
   _CRTIMP
   errno_t
   __cdecl
+  _wsopen_s(
+    _Out_ int *_FileHandle,
+    _In_z_ const wchar_t *_Filename,
+    _In_ int _OpenFlag,
+    _In_ int _ShareFlag,
+    _In_ int _PermissionFlag);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
   _wtmpnam_s(
     _Out_writes_z_(_SizeInWords) wchar_t *_DstBuf,
     _In_ size_t _SizeInWords);
@@ -643,7 +654,7 @@ extern "C" {
   __cdecl
   _wstrdate_s(
     _Out_writes_(_SizeInWords) _Post_readable_size_(9) wchar_t *_Buf,
-    _In_range_(>= , 9) size_t _SizeInWords);
+    _In_range_(>=, 9) size_t _SizeInWords);
 
   _CRTIMP
   errno_t
@@ -652,6 +663,8 @@ extern "C" {
     _Out_writes_(_SizeInWords) _Post_readable_size_(9) wchar_t *_Buf,
     _In_ size_t _SizeInWords);
 
+#if _INTEGRAL_MAX_BITS >= 64
+
   _CRTIMP
   errno_t
   __cdecl
@@ -659,6 +672,8 @@ extern "C" {
     _Out_writes_(_SizeInWords) _Post_readable_size_(26) wchar_t *_Buf,
     _In_ size_t _SizeInWords,
     _In_ const __time64_t *_Time);
+
+#endif /* _INTEGRAL_MAX_BITS >= 64 */
 
 #if !defined (RC_INVOKED) && !defined (_INC_WTIME_S_INL)
 #define _INC_WTIME_S_INL

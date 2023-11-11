@@ -81,6 +81,15 @@ extern "C" {
   _CRTIMP
   errno_t
   __cdecl
+  strcat_s(
+    _Inout_updates_z_(_Size) char *_Dst,
+    _In_ size_t _Size,
+    _In_z_ const char *_Src);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
   strncat_s(
     _Inout_updates_z_(_DstSizeInChars) char *_Dst,
     _In_ size_t _DstSizeInChars,
@@ -149,6 +158,30 @@ extern "C" {
 
 #ifndef _WSTRING_S_DEFINED
 #define _WSTRING_S_DEFINED
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcscat_s(
+    wchar_t *Dest,
+    size_t SizeInWords,
+    const wchar_t *_Source);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcscpy_s(
+    _Out_writes_z_(SizeInWords) wchar_t *Dest,
+    _In_ size_t SizeInWords,
+    _In_z_ const wchar_t *_Source);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcsnlen_s(
+    wchar_t **_Src,
+    size_t _MaxCount);
 
   _Check_return_
   _CRTIMP
