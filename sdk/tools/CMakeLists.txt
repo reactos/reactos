@@ -29,6 +29,7 @@ add_host_tool(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(asmpp)
 add_subdirectory(cabman)
+add_subdirectory(chkreg)
 add_subdirectory(fatten)
 add_subdirectory(hhpcomp)
 add_subdirectory(hpp)
