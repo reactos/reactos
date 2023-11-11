@@ -92,7 +92,7 @@ BEGIN
     LTEXT "Suffisso DNS per questa connessione:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
     CHECKBOX "&Registrare nel DNS gli indirizzi di questa connessione", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Usare i suffissi DNS di questa connessione nella registrazione DNS", IDC_USESUFFIX, 15, 207, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Usare i suffissi DNS di questa connessione nella registrazione DNS", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 220

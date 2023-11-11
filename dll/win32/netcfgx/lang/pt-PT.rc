@@ -94,7 +94,7 @@ BEGIN
     LTEXT "DNS e &sufixo para esta ligação:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
     CHECKBOX "&Registe os endereços desta ligação no DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Use o sufixo DNS desta ligação no registo DNS", IDC_USESUFFIX, 15, 207, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Use o sufixo DNS desta ligação no registo DNS", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 220

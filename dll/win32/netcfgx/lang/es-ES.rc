@@ -100,7 +100,7 @@ BEGIN
     LTEXT "&Sufijo DNS para esta conexión:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
     CHECKBOX "&Registrar estas direcciones de cone&xiones en DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Utilizar este sufijo DNS de conexión para registro DNS", IDC_USESUFFIX, 15, 207, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Utilizar este sufijo DNS de conexión para registro DNS", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 220
