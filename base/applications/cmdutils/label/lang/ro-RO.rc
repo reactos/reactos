@@ -11,10 +11,10 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
 //    STRING_LABEL_HELP "Afișează sau modifică eticheta unei unități (de stocare).\n\nLABEL [unitate:][etichetă]\n"
-    STRING_LABEL_HELP "Crează, schimbă sau șterge denumirea unui disc.\n\n\
-LABEL [disc:][denumire]\n\n\
-  disc:           Specifică litera unui disc.\n\
-  denumire        Specifică denumirea unui disc."
+    STRING_LABEL_HELP "Crează, schimbă sau șterge denumirea unui dispozitiv.\n\n\
+LABEL [dispozitiv:][denumire]\n\n\
+  dispozitiv:     Specifică litera unui dispozitiv.\n\
+  denumire        Specifică denumirea unui dispozitiv."
     STRING_LABEL_TEXT1 "Volumul unității %c: este denumit ca %s\n"
     STRING_LABEL_TEXT2 "Volumul unității %c: nu este denumit.\n"
     STRING_LABEL_TEXT3 "Numărul de serie al volumului este %04X-%04X\n"
