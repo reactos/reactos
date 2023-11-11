@@ -63,7 +63,7 @@ BEGIN
     PUSHBUTTON "Премахване", IDC_GWDEL, 180, 155, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 181, 240, 30
     CHECKBOX "Автоматични мерни единици", IDC_AUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "МЕрни единици на интерфейса:", -1, 15, 196, 90, 12
+    LTEXT "МЕрни единици на интерфейса:", -1, 15, 195, 90, 12
     EDITTEXT IDC_METRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
