@@ -1902,6 +1902,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   _wcsdup(
     _In_z_ const wchar_t *_Str);
 
+  _CRTIMP
   wchar_t*
   __cdecl
   wcscat(
@@ -1916,12 +1917,14 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     wchar_t _Ch);
 
   _Check_return_
+  _CRTIMP
   int
   __cdecl
   wcscmp(
     _In_z_ const wchar_t *_Str1,
     _In_z_ const wchar_t *_Str2);
 
+  _CRTIMP
   wchar_t*
   __cdecl
   wcscpy(
@@ -1929,6 +1932,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Source);
 
   _Check_return_
+  _CRTIMP
   size_t
   __cdecl
   wcscspn(
