@@ -1085,7 +1085,7 @@ BITMAP_LoadImageW(
     HBITMAP hbmpOld, hbmpRet = NULL;
     LONG width, height;
     WORD bpp;
-    DWORD compr, HdrSize = 0, ResSize = 0;
+    DWORD compr, ResSize = 0;
 
     /* Map the bitmap info */
     if(fuLoad & LR_LOADFROMFILE)
@@ -1150,8 +1150,7 @@ BITMAP_LoadImageW(
     CopyMemory(pbmiCopy, pbmi, iBMISize);
 
     /* Test if MSVC Resource Compiler used and if so, adjust pvBits */
-    HdrSize = *(char*)pbmi;
-    if (pbmiCopy->bmiHeader.biSizeImage + HdrSize + 12 == ResSize
+    if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize + 12 == ResSize
              && compr == BI_BITFIELDS && bpp == 32)
     {
         /* MSVC pointer to the image data has 12 more bytes than GCC */
