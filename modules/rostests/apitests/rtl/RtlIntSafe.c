@@ -5,8 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#define KMT_EMULATE_KERNEL
-#include <kmt_test.h>
+#include <rtltests.h>
 #define ENABLE_INTSAFE_SIGNED_FUNCTIONS
 #include <ntintsafe.h>
 
@@ -76,7 +75,7 @@ START_TEST(RtlIntSafe)
 
     TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, 0,                  0,              STATUS_SUCCESS);
     TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, 5,                  5,              STATUS_SUCCESS);
-    TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, LONG_MAX,           LONG_MAX,       STATUS_SUCCESS);
+    TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, INT_MAX,            INT_MAX,       STATUS_SUCCESS);
     TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, -1,                 (UINT)-1,       STATUS_INTEGER_OVERFLOW);
     TEST_CONVERSION(Long,  LONG,  UInt,   UINT,   uint, LONG_MIN,           (UINT)-1,       STATUS_INTEGER_OVERFLOW);
 
@@ -129,15 +128,15 @@ START_TEST(RtlIntSafe)
     TEST_ADD(Int8,      INT8,       int,        INT8_MIN,           -1,             (INT8)-1,       STATUS_INTEGER_OVERFLOW);
     TEST_ADD(Int8,      INT8,       int,        INT8_MIN,           INT8_MIN,       (INT8)-1,       STATUS_INTEGER_OVERFLOW);
 
-    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  0,              0,              STATUS_SUCCESS);
-    TEST_ADD(LongLong,  LONGLONG,   longlong,   5,                  5,              10,             STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  0,              (LONGLONG)0,    STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   5,                  5,              (LONGLONG)10,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  LONGLONG_MAX,   LONGLONG_MAX,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       0,              LONGLONG_MAX,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX - 1,   1,              LONGLONG_MAX,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       1,              (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       INT8_MAX,       (LONGLONG)-1,   STATUS_INTEGER_OVERFLOW);
-    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  -1,             -1,             STATUS_SUCCESS);
-    TEST_ADD(LongLong,  LONGLONG,   longlong,   -1,                 0,              -1,             STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  -1,             (LONGLONG)-1,   STATUS_SUCCESS);
+    TEST_ADD(LongLong,  LONGLONG,   longlong,   -1,                 0,              (LONGLONG)-1,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   0,                  LONGLONG_MIN,   LONGLONG_MIN,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MIN,       0,              LONGLONG_MIN,   STATUS_SUCCESS);
     TEST_ADD(LongLong,  LONGLONG,   longlong,   LONGLONG_MAX,       LONGLONG_MIN,   (LONGLONG)-1,   STATUS_SUCCESS);

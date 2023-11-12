@@ -549,7 +549,7 @@
 @ stub -version=0x600+ _fwscanf_l
 @ stub -version=0x600+ _fwscanf_s_l
 @ cdecl _gcvt(double long str)
-@ stub -version=0x600+ _gcvt_s
+@ cdecl -version=0x600+ _gcvt_s(ptr ptr double long)
 @ cdecl -version=0x600+ _get_doserrno(ptr)
 @ stub -version=0x600+ _get_environ
 @ cdecl -version=0x600+ _get_errno(ptr)

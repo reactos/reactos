@@ -9,7 +9,7 @@ list(APPEND SOURCE
 
 add_library(localspl_apitest.dll MODULE ${SOURCE})
 target_link_libraries(localspl_apitest.dll wine ${PSEH_LIB})
-set_module_type(localspl_apitest.dll win32dll)
+set_module_type(localspl_apitest.dll win32dll IMAGEBASE default)
 add_importlibs(localspl_apitest.dll spoolss advapi32 msvcrt kernel32 ntdll)
 set_target_properties(localspl_apitest.dll PROPERTIES SUFFIX "")
 add_rostests_file(TARGET localspl_apitest.dll)

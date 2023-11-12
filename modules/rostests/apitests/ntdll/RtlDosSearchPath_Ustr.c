@@ -23,10 +23,6 @@ RtlDosSearchPath_Ustr(
 );
 */
 
-#define ok_eq_ulong(value, expected) ok((value) == (expected), #value " = %lu, expected %lu\n", value, expected)
-#define ok_eq_hex(value, expected) ok((value) == (expected), #value " = 0x%lx, expected 0x%lx\n", value, expected)
-#define ok_eq_pointer(value, expected) ok((value) == (expected), #value " = %p, expected %p\n", value, expected)
-
 #define ok_eq_ustr(str1, str2) do {                                                     \
         ok((str1)->Buffer        == (str2)->Buffer,        "Buffer modified\n");        \
         ok((str1)->Length        == (str2)->Length,        "Length modified\n");        \
