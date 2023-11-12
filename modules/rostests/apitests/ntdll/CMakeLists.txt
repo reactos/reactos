@@ -47,6 +47,7 @@ list(APPEND SOURCE
     NtQueryVolumeInformationFile.c
     NtReadFile.c
     NtSaveKey.c
+    NtSetDefaultLocale.c
     NtSetInformationFile.c
     NtSetInformationProcess.c
     NtSetInformationThread.c
