@@ -111,7 +111,6 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
 HRESULT Volume_IsMute()
 {
-#if 0
     MIXERCONTROLDETAILS mixerControlDetails;
 
     if (g_mixerId != (UINT)-1 && g_muteControlID != (DWORD)-1)
@@ -130,7 +129,7 @@ HRESULT Volume_IsMute()
 
         g_IsMute = detailsResult != 0;
     }
-#endif
+
     return S_OK;
 }
 
