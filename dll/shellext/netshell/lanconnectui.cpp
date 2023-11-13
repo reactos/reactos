@@ -34,7 +34,7 @@ AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName, BOOL bChecked, 
     lvItem.pszText = szName;
     lvItem.lParam = (LPARAM)pItem;
     lvItem.iImage = Image;
-    lvItem.iItem = 0x7fff;
+    lvItem.iItem = 0x7fffffff; // Append at the end of the list.
     lvItem.iSubItem = 0;
     lvItem.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
     ListView_SetCheckState(hDlgCtrl, lvItem.iItem, bChecked);
