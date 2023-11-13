@@ -629,19 +629,27 @@ void CDefView::UpdateStatusbar()
 BOOL CDefView::CreateList()
 {
     HRESULT hr;
-    DWORD dwStyle, dwExStyle;
+    DWORD dwStyle, dwExStyle, ListExStyle;
     UINT ViewMode;
 
     TRACE("%p\n", this);
 
     dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-              LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE;
+              LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE; // FIXME: Why is LVS_AUTOARRANGE here?
     dwExStyle = WS_EX_CLIENTEDGE;
+    ListExStyle = 0;
 
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
+    {
+        m_FolderSettings.fFlags |= FWF_NOCLIENTEDGE | FWF_NOSCROLL;
         dwStyle |= LVS_ALIGNLEFT;
+    }
     else
-        dwStyle |= LVS_ALIGNTOP | LVS_SHOWSELALWAYS;
+    {
+        dwStyle |= LVS_SHOWSELALWAYS; // MSDN says FWF_SHOWSELALWAYS is deprecated, always turn on for folders.
+        dwStyle |= (m_FolderSettings.fFlags & FWF_ALIGNLEFT) ? LVS_ALIGNLEFT : LVS_ALIGNTOP;
+        ListExStyle = LVS_EX_DOUBLEBUFFER;
+    }
 
     ViewMode = m_FolderSettings.ViewMode;
     hr = _DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&ViewMode);
@@ -680,13 +688,26 @@ BOOL CDefView::CreateList()
         dwStyle |= LVS_AUTOARRANGE;
 
     if (m_FolderSettings.fFlags & FWF_SNAPTOGRID)
-        dwExStyle |= LVS_EX_SNAPTOGRID;
-
-    if (m_FolderSettings.fFlags & FWF_DESKTOP)
-        m_FolderSettings.fFlags |= FWF_NOCLIENTEDGE | FWF_NOSCROLL;
+        ListExStyle |= LVS_EX_SNAPTOGRID;
 
     if (m_FolderSettings.fFlags & FWF_SINGLESEL)
         dwStyle |= LVS_SINGLESEL;
+
+    if (m_FolderSettings.fFlags & FWF_FULLROWSELECT)
+        ListExStyle |= LVS_EX_FULLROWSELECT;
+
+    if (m_FolderSettings.fFlags & FWF_SINGLECLICKACTIVATE)
+        ListExStyle |= LVS_EX_TRACKSELECT | LVS_EX_ONECLICKACTIVATE;
+
+    if (m_FolderSettings.fFlags & FWF_NOCOLUMNHEADER)
+        dwStyle |= LVS_NOCOLUMNHEADER;
+
+#if 0
+    // FIXME: Because this is a negative, everyone gets the new flag by default unless they
+    // opt out. This code should be enabled when the shell looks like Vista instead of 2003.
+    if (!(m_FolderSettings.fFlags & FWF_NOHEADERINALLVIEWS))
+        ListExStyle |= LVS_EX_HEADERINALLVIEWS;
+#endif
 
     if (m_FolderSettings.fFlags & FWF_NOCLIENTEDGE)
         dwExStyle &= ~WS_EX_CLIENTEDGE;
@@ -696,6 +717,8 @@ BOOL CDefView::CreateList()
 
     if (!m_ListView)
         return FALSE;
+
+    m_ListView.SetExtendedListViewStyle(ListExStyle);
 
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nHeaderID = -1;
