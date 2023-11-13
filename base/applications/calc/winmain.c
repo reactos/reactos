@@ -1627,6 +1627,12 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_D:
         case IDC_BUTTON_E:
         case IDC_BUTTON_F:
+            if(calc.is_nan)
+            {
+                calc_number_t tmp;
+                rpn_zero(&tmp);
+                display_rpn_result(hWnd, &tmp);
+            }
             calc.is_nan = FALSE;
             build_operand(hWnd, LOWORD(wp));
             return TRUE;
