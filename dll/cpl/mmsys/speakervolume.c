@@ -120,7 +120,6 @@ OnMixerControlChange(
     HWND hwndDlg)
 {
     MIXERCONTROLDETAILS mxcd;
-    INT i, j;
 
     /* Retrieve the channel volume values */
     mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
@@ -133,12 +132,6 @@ OnMixerControlChange(
     if (mixerGetControlDetailsW((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
         return;
 
-    for (i = 0; i < pPageData->volumeChannels; i++)
-    {
-        j = i * 4;
-
-        SendDlgItemMessageW(hwndDlg, 9475 + j, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pPageData->volumeValues[i].dwValue - pPageData->volumeMinimum) / pPageData->volumeStep);
-    }
 }
 
 
