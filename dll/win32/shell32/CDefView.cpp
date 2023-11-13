@@ -717,7 +717,7 @@ BOOL CDefView::CreateList()
     if (!m_ListView)
         return FALSE;
 
-    ListView_SetExtendedListViewStyle(m_ListView.m_hWnd, ListExStyle);
+    m_ListView.SetExtendedListViewStyle(ListExStyle);
 
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nHeaderID = -1;
