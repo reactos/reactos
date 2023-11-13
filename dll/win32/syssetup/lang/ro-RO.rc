@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -84,13 +84,13 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Localizarea regională trebuie să se potrivească cu limba aplicațiilor utilizate. De ea depinde cum vor apărea numerele, valutele și data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Modificați configurația de localizare a sistemului.", IDC_STATIC, 53, 60, 186, 8
-    PUSHBUTTON "&Configurare…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
+    LTEXT "Modificați setarea de localizare a sistemului.", IDC_STATIC, 53, 60, 186, 8
+    PUSHBUTTON "Seta&re…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
     LTEXT "", IDC_STATIC, 53, 78, 246, 1, SS_ETCHEDHORZ
-    LTEXT "Configurări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
+    LTEXT "Setări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Configurați aranjamentele de tastatură.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "Config&urare…", IDC_CUSTOMLAYOUT, 230, 122, 70, 14
+    LTEXT "Setați aranjamentele de tastatură.", IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "S&etare…", IDC_CUSTOMLAYOUT, 230, 122, 70, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
@@ -122,7 +122,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Componente în curs de înregistrare", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Instalarea elementelor din meniul de pornire", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Păstrarea configurațiilor", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Salvarea setărilor", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "Ștergerea fișierelor temporare", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
