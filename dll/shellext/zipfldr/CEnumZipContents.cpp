@@ -34,25 +34,25 @@ public:
     // *** IEnumIDList methods ***
     STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
     {
-        if (!pceltFetched || !rgelt)
+        if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
 
-        *pceltFetched = 0;
-
-        if (celt != 1)
-            return E_FAIL;
-
+        LPITEMIDLIST item;
         CStringW name;
         bool dir;
         unz_file_info64 info;
-        if (mEnumerator.next_unique(m_Prefix, name, dir, info))
+        for (ULONG i = 0; i < celt; ++i)
         {
-            *pceltFetched = 1;
-            *rgelt = _ILCreate(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
-            return S_OK;
+            if (pceltFetched)
+                *pceltFetched = i;
+            if (!mEnumerator.next_unique(m_Prefix, name, dir, info))
+                return S_FALSE;
+            item = _ILCreate(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
+            if (!item)
+                return i ? S_FALSE : E_OUTOFMEMORY;
+            rgelt[i] = item;
         }
-
-        return S_FALSE;
+        return S_OK;
     }
     STDMETHODIMP Skip(ULONG celt)
     {
