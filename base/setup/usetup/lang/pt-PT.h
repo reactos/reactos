@@ -1127,7 +1127,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Continuar   ESC = Cancelar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1432,7 +1432,7 @@ static MUI_ENTRY ptPTBootLoaderSelectPageEntries[] =
     {
         6,
         8,
-        "Please select where Setup should install the bootloader:",
+        "Por favor seleccione onde o instalador dever\240 instalar o gestor de arranque:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2021,17 +2021,17 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "O ficheiro cab n\306o cont\202m um ficheiro inf v\240lido.\n",
+        "O arquivo cab n\306o cont\202m um ficheiro inf v\240lido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_MISSING,
-        "N\306o foi poss\241vel encontrar o ficheiro cab.\n",
+        "N\306o foi poss\241vel encontrar o arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "O ficheiro cab n\306o cont\202m um script de instala\207\306o.\n",
+        "O arquivo cab n\306o cont\202m um script de instala\207\306o.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -2255,7 +2255,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER = Instalar  C = Criar Prim\240ria  E = Criar Estendida  F3 = Sair"},
+    "   ENTER = Instalar  Criar parti\207\306o C = Prim\240ria  E = Estendida  F3 = Sair"},
     {STRING_INSTALLCREATELOGICAL,
     "   ENTER = Instalar  C = Criar parti\207\306o L\242gica  F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
@@ -2294,15 +2294,15 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER=Reiniciar"},
     {STRING_DELETING,
-     "   A apagar arquivo: %S"},
+     "   A apagar o ficheiro: %S"},
     {STRING_MOVING,
-     "   A mover arquivo: %S to: %S"},
+     "   A mover o ficheiro: %S para: %S"},
     {STRING_RENAMING,
-     "   A renomear arquivo: %S to: %S"},
+     "   A renomear o ficheiro: %S para: %S"},
     {STRING_COPYING,
-    "   A Copiar arquivo: %S"},
+    "   A Copiar o ficheiro: %S"},
     {STRING_SETUPCOPYINGFILES,
-    "O instalador est\240 a copiar os arquivos..."},
+    "O instalador est\240 a copiar os ficheiros..."},
     {STRING_REGHIVEUPDATE,
     "  A actualizar a estrutura do registo..."},
     {STRING_IMPORTFILE,
@@ -2332,11 +2332,11 @@ MUI_STRING ptPTStrings[] =
     {STRING_CHECKINGDISK,
     "O instalador est\240 a verificar o disco..."},
     {STRING_FORMATDISK1,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S (R\240pido) "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S (R\240pido) "},
     {STRING_FORMATDISK2,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S "},
     {STRING_KEEPFORMAT,
-    " Manter o sistema de arquivos actual (sem altera\207\344es) "},
+    " Manter o sistema de ficheiros actual (sem altera\207\344es) "},
     {STRING_HDDISK1,
     "%s."},
     {STRING_HDDISK2,
