@@ -861,7 +861,7 @@ KiCheckAlertability(IN PKTHREAD Thread,
         }
         else if (Thread->Alerted[KernelMode])
         {
-            /* It isn't that either, but we're alerted in kernel mode */
+            /* It isn't that either, but we're alered in kernel mode */
             Thread->Alerted[KernelMode] = FALSE;
             return STATUS_ALERTED;
         }
