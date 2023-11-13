@@ -168,16 +168,17 @@ static int _CrtDbgReportWindow(int reportType, const char_t *filename, int linen
     if (message && !message[0])
         message = NULL;
     if (linenumber)
-        _itow(linenumber, LineBuffer, 10);
+        _itow_s(linenumber, LineBuffer, _countof(LineBuffer), 10);
 
-    _snwprintf(szCompleteMessage,
-               _countof(szCompleteMessage) - 1,
-               traits::szAssertionMessage,
-               _CrtModeMessages[reportType],
-               moduleName ? L"\nModule: " : L"", moduleName ? moduleName : traits::szEmptyString,
-               filename ? L"\nFile: " : L"", filename ? filename : traits::szEmptyString,
-               LineBuffer[0] ? L"\nLine: " : L"", LineBuffer[0] ? LineBuffer : L"",
-               message ? L"\n\n" : L"", message ? message : traits::szEmptyString);
+    _snwprintf_s(szCompleteMessage,
+                 _countof(szCompleteMessage),
+                 _countof(szCompleteMessage) - 1,
+                 traits::szAssertionMessage,
+                 _CrtModeMessages[reportType],
+                 moduleName ? L"\nModule: " : L"", moduleName ? moduleName : traits::szEmptyString,
+                 filename ? L"\nFile: " : L"", filename ? filename : traits::szEmptyString,
+                 LineBuffer[0] ? L"\nLine: " : L"", LineBuffer[0] ? LineBuffer : L"",
+                 message ? L"\n\n" : L"", message ? message : traits::szEmptyString);
 
     if (IsDebuggerPresent())
     {
@@ -207,7 +208,7 @@ static int _CrtEnterDbgReport(int reportType, const char_t *filename, int linenu
         {
             char LineBuffer[20] = {0};
 
-            _itoa(linenumber, LineBuffer, 10);
+            _itoa_s(linenumber, LineBuffer, _countof(LineBuffer), 10);
 
             OutputDebugStringA("Nested Assert from File: ");
             traits::OutputDebugString(filename ? filename : traits::szUnknownFile);
@@ -328,38 +329,40 @@ _VCrtDbgReportA(
 
     if (filename)
     {
-        _snprintf(szCompleteMessage,
-                  _countof(szCompleteMessage) - 1,
-                  "%s(%d) : ",
-                  filename,
-                  linenumber);
+        _snprintf_s(szCompleteMessage,
+                    _countof(szCompleteMessage),
+                    _countof(szCompleteMessage) - 1,
+                    "%s(%d) : ",
+                    filename,
+                    linenumber);
     }
 
     if (format)
     {
-        int len = _vsnprintf(szFormatted,
-                             _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
-                             format,
-                             arglist);
+        int len = _vsnprintf_s(szFormatted,
+                               _countof(szFormatted),
+                               _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
+                               format,
+                               arglist);
         if (len < 0)
         {
-            strcpy(szFormatted, DBGRPT_STRING_TOO_LONG);
+            strcpy_s(szFormatted, _countof(szFormatted), DBGRPT_STRING_TOO_LONG);
         }
 
         if (reportType == _CRT_ASSERT)
-            strcat(szCompleteMessage, DBGRPT_ASSERT_PREFIX_MESSAGE);
-        strcat(szCompleteMessage, szFormatted);
+            strcat_s(szCompleteMessage, _countof(szCompleteMessage), DBGRPT_ASSERT_PREFIX_MESSAGE);
+        strcat_s(szCompleteMessage, _countof(szCompleteMessage), szFormatted);
     }
     else if (reportType == _CRT_ASSERT)
     {
-        strcat(szCompleteMessage, DBGRPT_ASSERT_PREFIX_NOMESSAGE);
+        strcat_s(szCompleteMessage, _countof(szCompleteMessage), DBGRPT_ASSERT_PREFIX_NOMESSAGE);
     }
 
     if (reportType == _CRT_ASSERT)
     {
         if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_FILE)
-            strcat(szCompleteMessage, "\r");
-        strcat(szCompleteMessage, "\n");
+            strcat_s(szCompleteMessage, _countof(szCompleteMessage), "\r");
+        strcat_s(szCompleteMessage, _countof(szCompleteMessage), "\n");
     }
 
     // FIXME: Handle user report hooks here
@@ -390,38 +393,40 @@ _VCrtDbgReportW(
 
     if (filename)
     {
-        _snwprintf(szCompleteMessage,
-                   _countof(szCompleteMessage) - 1,
-                   L"%s(%d) : ",
-                   filename,
-                   linenumber);
+        _snwprintf_s(szCompleteMessage,
+                     _countof(szCompleteMessage),
+                     _countof(szCompleteMessage) - 1,
+                     L"%s(%d) : ",
+                     filename,
+                     linenumber);
     }
 
     if (format)
     {
-        int len = _vsnwprintf(szFormatted,
-                              _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
-                              format,
-                              arglist);
+        int len = _vsnwprintf_s(szFormatted,
+                                _countof(szFormatted),
+                                _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
+                                format,
+                                arglist);
         if (len < 0)
         {
-            wcscpy(szFormatted, _CRT_WIDE(DBGRPT_STRING_TOO_LONG));
+            wcscpy_s(szFormatted, _countof(szFormatted), _CRT_WIDE(DBGRPT_STRING_TOO_LONG));
         }
 
         if (reportType == _CRT_ASSERT)
-            wcscat(szCompleteMessage, _CRT_WIDE(DBGRPT_ASSERT_PREFIX_MESSAGE));
-        wcscat(szCompleteMessage, szFormatted);
+            wcscat_s(szCompleteMessage, _countof(szCompleteMessage), _CRT_WIDE(DBGRPT_ASSERT_PREFIX_MESSAGE));
+        wcscat_s(szCompleteMessage, _countof(szCompleteMessage), szFormatted);
     }
     else if (reportType == _CRT_ASSERT)
     {
-        wcscat(szCompleteMessage, _CRT_WIDE(DBGRPT_ASSERT_PREFIX_NOMESSAGE));
+        wcscat_s(szCompleteMessage, _countof(szCompleteMessage), _CRT_WIDE(DBGRPT_ASSERT_PREFIX_NOMESSAGE));
     }
 
     if (reportType == _CRT_ASSERT)
     {
         if (_CrtModeOutputFormat[reportType] & _CRTDBG_MODE_FILE)
-            wcscat(szCompleteMessage, L"\r");
-        wcscat(szCompleteMessage, L"\n");
+            wcscat_s(szCompleteMessage, _countof(szCompleteMessage), L"\r");
+        wcscat_s(szCompleteMessage, _countof(szCompleteMessage), L"\n");
     }
 
     // FIXME: Handle user report hooks here
