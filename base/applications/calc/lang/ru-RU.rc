@@ -429,8 +429,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Угловые минуты"
-    IDS_ANGLE_ARCSECONDS "Угловые секунды"
+    IDS_ANGLE_ARCMINUTES "Угловая минута"
+    IDS_ANGLE_ARCSECONDS "Угловая секунда"
     IDS_ANGLE_DEGREES "градус"
     IDS_ANGLE_GRADIANS "град"
     IDS_ANGLE_RADIANS "радиан"
