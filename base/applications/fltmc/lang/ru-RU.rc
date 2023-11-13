@@ -11,7 +11,7 @@ BEGIN
     IDS_USAGE_LOAD      "Загружает драйвер фильтра\n"
     IDS_USAGE_UNLOAD    "Выгружает драйвер фильтра\n"
     IDS_USAGE_FILTERS   "Выводит список всех зарегистрированных фильтров\n"
-    IDS_USAGE_VOLUMES   "Перечисляет все тома\n"
+    IDS_USAGE_VOLUMES   "Отображает все тома\n"
 END
 
 STRINGTABLE
