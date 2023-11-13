@@ -27,5 +27,5 @@ BEGIN
     IDS_ERROR_FILTERS   "Не удалось получить список фильтров (0x%X)\n"
     IDS_ERROR_LOAD      "Не удалось загрузить фильтр (0x%X)\n"
     IDS_ERROR_UNLOAD    "Не удалось выгрузить фильтр (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Не удалось перечислить тома (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Не удалось отобразить тома (0x%X)\n"
 END
