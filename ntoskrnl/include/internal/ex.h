@@ -79,9 +79,9 @@ VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
 #define HANDLE_LOW_BITS     (PAGE_SHIFT - 3)
 #define HANDLE_HIGH_BITS    (PAGE_SHIFT - 2)
 #endif
-#define HANDLE_TAG_BITS     (2)
-#define HANDLE_INDEX_BITS   (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS)
-#define KERNEL_FLAG_BITS    (sizeof(PVOID)*8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
+#define HANDLE_TAG_BITS     2
+#define HANDLE_INDEX_BITS   (HANDLE_LOW_BITS + 2 * HANDLE_HIGH_BITS)
+#define KERNEL_FLAG_BITS    (sizeof(ULONG_PTR) * 8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
 
 typedef union _EXHANDLE
 {
@@ -160,9 +160,9 @@ typedef struct _HARDERROR_USER_PARAMETERS
 #define MAX_MID_INDEX       (MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
-#define ExpChangeRundown(x, y, z)   (ULONG_PTR)InterlockedCompareExchangePointer(&x->Ptr, (PVOID)y, (PVOID)z)
-#define ExpChangePushlock(x, y, z)  InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
-#define ExpSetRundown(x, y)         InterlockedExchangePointer(&x->Ptr, (PVOID)y)
+#define ExpChangeRundown(x, y, z)   (ULONG_PTR)InterlockedCompareExchangePointer(&(x)->Ptr, (PVOID)(y), (PVOID)(z))
+#define ExpChangePushlock(x, y, z)  InterlockedCompareExchangePointer((PVOID*)(x), (PVOID)(y), (PVOID)(z))
+#define ExpSetRundown(x, y)         InterlockedExchangePointer(&(x)->Ptr, (PVOID)(y))
 
 NTSTATUS
 NTAPI
@@ -1541,10 +1541,10 @@ XIPInit(
 
 #ifdef _WIN64
 #define InterlockedExchangeSizeT(Target, Value) \
-    (SIZE_T)InterlockedExchange64((PLONG64)Target, (LONG64)Value)
+    (SIZE_T)InterlockedExchange64((PLONG64)(Target), (LONG64)(Value))
 #else
 #define InterlockedExchangeSizeT(Target, Value) \
-    (SIZE_T)InterlockedExchange((PLONG)Target, (LONG)Value)
+    (SIZE_T)InterlockedExchange((PLONG)(Target), (LONG)(Value))
 #endif
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \

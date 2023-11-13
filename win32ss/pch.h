@@ -1,5 +1,3 @@
-#ifndef __W32K_H
-#define __W32K_H
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32k subsystem
@@ -7,6 +5,9 @@
  * PURPOSE:         Main Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
+
+#ifndef __W32K_H
+#define __W32K_H
 
 /* INCLUDES ******************************************************************/
 
@@ -103,8 +104,8 @@ extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#define InterlockedIncrementUL(Value) InterlockedIncrement((PLONG)Value)
-#define InterlockedDecrementUL(Value) InterlockedDecrement((PLONG)Value)
+#define InterlockedIncrementUL(Value) (ULONG)InterlockedIncrement((PLONG)(Value))
+#define InterlockedDecrementUL(Value) (ULONG)InterlockedDecrement((PLONG)(Value))
 
 /* Internal Win32K header */
 #include "win32kp.h"
