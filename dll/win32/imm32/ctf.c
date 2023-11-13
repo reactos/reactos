@@ -6,18 +6,127 @@
  */
 
 #include "precomp.h"
+#include <msctf.h>
+#include <ctfutb.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-/*
- * NOTE: Microsoft CTF protocol has vulnerability.
- *       If insecure, we don't follow the dangerous design.
- *
- * https://www.zdnet.com/article/vulnerability-in-microsoft-ctf-protocol-goes-back-to-windows-xp/
- * https://googleprojectzero.blogspot.com/2019/08/down-rabbit-hole.html
+BOOL
+Imm32GetFn(
+    _Inout_opt_ FARPROC *ppfn,
+    _Inout_ HINSTANCE *phinstDLL,
+    _In_ LPCWSTR pszDllName,
+    _In_ LPCSTR pszFuncName)
+{
+    WCHAR szPath[MAX_PATH];
+
+    if (*ppfn)
+        return TRUE;
+
+    if (*phinstDLL == NULL)
+    {
+        Imm32GetSystemLibraryPath(szPath, _countof(szPath), pszDllName);
+        *phinstDLL = LoadLibraryExW(szPath, NULL, 0);
+        if (*phinstDLL == NULL)
+            return FALSE;
+    }
+
+    *ppfn = (FARPROC)GetProcAddress(*phinstDLL, pszFuncName);
+    return *ppfn != NULL;
+}
+
+#define IMM32_GET_FN(ppfn, phinstDLL, dll_name, func_name) \
+    Imm32GetFn((FARPROC*)(ppfn), (phinstDLL), (dll_name), #func_name)
+
+/***********************************************************************
+ * OLE32.DLL
  */
 
-/*
+HINSTANCE g_hOle32 = NULL;
+
+#define OLE32_FN(name) g_pfnOLE32_##name
+
+typedef HRESULT (WINAPI *FN_CoInitializeEx)(LPVOID, DWORD);
+typedef VOID    (WINAPI *FN_CoUninitialize)(VOID);
+typedef HRESULT (WINAPI *FN_CoRegisterInitializeSpy)(IInitializeSpy*, ULARGE_INTEGER*);
+typedef HRESULT (WINAPI *FN_CoRevokeInitializeSpy)(ULARGE_INTEGER);
+
+FN_CoInitializeEx           OLE32_FN(CoInitializeEx)            = NULL;
+FN_CoUninitialize           OLE32_FN(CoUninitialize)            = NULL;
+FN_CoRegisterInitializeSpy  OLE32_FN(CoRegisterInitializeSpy)   = NULL;
+FN_CoRevokeInitializeSpy    OLE32_FN(CoRevokeInitializeSpy)     = NULL;
+
+#define Imm32GetOle32Fn(func_name) \
+    IMM32_GET_FN(&OLE32_FN(func_name), &g_hOle32, L"ole32.dll", #func_name)
+
+HRESULT Imm32CoInitializeEx(VOID)
+{
+    if (!Imm32GetOle32Fn(CoInitializeEx))
+        return E_FAIL;
+
+    return OLE32_FN(CoInitializeEx)(NULL, COINIT_APARTMENTTHREADED);
+}
+
+VOID Imm32CoUninitialize(VOID)
+{
+    if (!Imm32GetOle32Fn(CoUninitialize))
+        return;
+
+    OLE32_FN(CoUninitialize)();
+}
+
+HRESULT Imm32CoRegisterInitializeSpy(IInitializeSpy* spy, ULARGE_INTEGER* cookie)
+{
+    if (!Imm32GetOle32Fn(CoRegisterInitializeSpy))
+        return E_FAIL;
+
+    return OLE32_FN(CoRegisterInitializeSpy)(spy, cookie);
+}
+
+HRESULT Imm32CoRevokeInitializeSpy(ULARGE_INTEGER cookie)
+{
+    if (!Imm32GetOle32Fn(CoRevokeInitializeSpy))
+        return E_FAIL;
+
+    return OLE32_FN(CoRevokeInitializeSpy)(cookie);
+}
+
+/***********************************************************************
+ * MSCTF.DLL
+ */
+
+HINSTANCE g_hMsctf = NULL;
+
+#define MSCTF_FN(name) g_pfnMSCTF_##name
+
+typedef HRESULT (WINAPI *FN_TF_CreateLangBarMgr)(ITfLangBarMgr**);
+typedef VOID    (WINAPI *FN_TF_InvalidAssemblyListCacheIfExist)(VOID);
+
+FN_TF_CreateLangBarMgr                MSCTF_FN(TF_CreateLangBarMgr)                = NULL;
+FN_TF_InvalidAssemblyListCacheIfExist MSCTF_FN(TF_InvalidAssemblyListCacheIfExist) = NULL;
+
+#define Imm32GetMsctfFn(func_name) \
+    IMM32_GET_FN(&MSCTF_FN(func_name), &g_hMsctf, L"msctf.dll", #func_name)
+
+HRESULT Imm32TF_CreateLangBarMgr(_Inout_ ITfLangBarMgr **ppBarMgr)
+{
+    if (!Imm32GetMsctfFn(TF_CreateLangBarMgr))
+        return E_FAIL;
+
+    return MSCTF_FN(TF_CreateLangBarMgr)(ppBarMgr);
+}
+
+VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
+{
+    if (!Imm32GetMsctfFn(TF_InvalidAssemblyListCacheIfExist))
+        return;
+
+    MSCTF_FN(TF_InvalidAssemblyListCacheIfExist)();
+}
+
+/***********************************************************************
+ * CTF IME support
+ *
  * TSF stands for "Text Services Framework". "Cicero" is the code name of TSF.
  * CTF stands for "Cicero-aware Text Framework".
  *
@@ -28,6 +137,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * The export functions of the CTF IME file are defined in "CtfImeTable.h" of
  * this folder.
  */
+
+/* "Active IMM" compatibility flags */
+DWORD g_aimm_compat_flags = 0;
 
 /* The instance of the CTF IME file */
 HINSTANCE g_hCtfIme = NULL;
@@ -193,6 +305,45 @@ CtfImeDestroyThreadMgr(VOID)
 }
 
 /***********************************************************************
+ *		CtfAImmIsIME (IMM32.@)
+ *
+ * @return TRUE if CTF IME or IMM IME is enabled.
+ */
+BOOL WINAPI
+CtfAImmIsIME(_In_ HKL hKL)
+{
+    TRACE("(%p)\n", hKL);
+    if (!Imm32LoadCtfIme())
+        return ImmIsIME(hKL);
+    return CTF_IME_FN(CtfImeIsIME)(hKL);
+}
+
+/***********************************************************************
+ *		CtfImmIsCiceroStartedInThread (IMM32.@)
+ *
+ * @return TRUE if Cicero is started in the current thread.
+ */
+BOOL WINAPI
+CtfImmIsCiceroStartedInThread(VOID)
+{
+    TRACE("()\n");
+    return !!(GetWin32ClientInfo()->CI_flags & 0x200);
+}
+
+/***********************************************************************
+ *		CtfImmSetAppCompatFlags (IMM32.@)
+ *
+ * Sets the application compatibility flags.
+ */
+VOID WINAPI
+CtfImmSetAppCompatFlags(_In_ DWORD dwFlags)
+{
+    TRACE("(0x%08X)\n", dwFlags);
+    if (!(dwFlags & 0xF0FFFFFF))
+        g_aimm_compat_flags = dwFlags;
+}
+
+/***********************************************************************
  * This function calls the same name function of the CTF IME side.
  */
 HRESULT
@@ -343,22 +494,71 @@ CtfImmTIMActivate(_In_ HKL hKL)
 }
 
 /***********************************************************************
- *		CtfImmRestoreToolbarWnd(IMM32.@)
- */
-VOID WINAPI
-CtfImmRestoreToolbarWnd(_In_ DWORD dwStatus)
-{
-    FIXME("(0x%lx)\n", dwStatus);
-}
-
-/***********************************************************************
  *		CtfImmHideToolbarWnd(IMM32.@)
+ *
+ * Used with CtfImmRestoreToolbarWnd.
  */
 DWORD WINAPI
 CtfImmHideToolbarWnd(VOID)
 {
-    FIXME("()\n");
-    return 0;
+    ITfLangBarMgr *pBarMgr;
+    DWORD dwShowFlags = 0;
+    BOOL bShown;
+
+    TRACE("()\n");
+
+    if (FAILED(Imm32TF_CreateLangBarMgr(&pBarMgr)))
+        return dwShowFlags;
+
+    if (SUCCEEDED(pBarMgr->lpVtbl->GetShowFloatingStatus(pBarMgr, &dwShowFlags)))
+    {
+        bShown = !(dwShowFlags & 0x800);
+        dwShowFlags &= 0xF;
+        if (bShown)
+            pBarMgr->lpVtbl->ShowFloating(pBarMgr, 8);
+    }
+
+    pBarMgr->lpVtbl->Release(pBarMgr);
+    return dwShowFlags;
+}
+
+/***********************************************************************
+ *		CtfImmRestoreToolbarWnd(IMM32.@)
+ *
+ * Used with CtfImmHideToolbarWnd.
+ */
+VOID WINAPI
+CtfImmRestoreToolbarWnd(
+    _In_ LPVOID pUnused,
+    _In_ DWORD dwShowFlags)
+{
+    HRESULT hr;
+    ITfLangBarMgr *pBarMgr;
+
+    UNREFERENCED_PARAMETER(pUnused);
+
+    TRACE("(%p, 0x%X)\n", pUnused, dwShowFlags);
+
+    hr = Imm32TF_CreateLangBarMgr(&pBarMgr);
+    if (FAILED(hr))
+        return;
+
+    if (dwShowFlags)
+        pBarMgr->lpVtbl->ShowFloating(pBarMgr, dwShowFlags);
+
+    pBarMgr->lpVtbl->Release(pBarMgr);
+}
+
+BOOL Imm32InsideLoaderLock(VOID)
+{
+    return (NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
+            NtCurrentTeb()->ClientId.UniqueThread);
+}
+
+/* FIXME: Use RTL */
+BOOL WINAPI RtlDllShutdownInProgress(VOID)
+{
+    return FALSE;
 }
 
 /***********************************************************************
@@ -371,8 +571,12 @@ CtfImmDispatchDefImeMessage(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
-    /* FIXME("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam); */
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+
+    if (RtlDllShutdownInProgress() || Imm32InsideLoaderLock() || !Imm32LoadCtfIme())
+        return 0;
+
+    return CTF_IME_FN(CtfImeDispatchDefImeMessage)(hWnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************

@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "マルチチャンネル"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "By moving the sliders below you can adjust the volume of all speakers connected to this computer.", 9506, 8, 4, 212, 24
+    LTEXT "下のスライダーを移動すると、このコンピューターに接続されているすべてのスピーカーの音量を調整できます。", 9506, 8, 4, 212, 24
     LTEXT "低", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "スライダー1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17

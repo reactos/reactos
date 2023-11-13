@@ -1,8 +1,8 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+// COYPRIGHT: Ștefan Fulea <stefan.fulea@mail.com>
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"

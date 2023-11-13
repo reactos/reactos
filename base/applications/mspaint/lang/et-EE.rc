@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-et-EE.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-et-EE.bmp"
 
 ID_MENU MENU
 BEGIN

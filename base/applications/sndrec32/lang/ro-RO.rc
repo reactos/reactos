@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Sound Recorder
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -14,8 +20,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou", ID_FILE_NEW
         MENUITEM "&Deschidere…", ID_FILE_OPEN
-        MENUITEM "&Păstrează", ID_FILE_SAVE, GRAYED
-        MENUITEM "Păst&rare în…", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "S&alvează", ID_FILE_SAVE, GRAYED
+        MENUITEM "Sal&vează ca…", ID_FILE_SAVEAS, GRAYED
         MENUITEM "Re&constituire…", ID_FILE_RESTORE, GRAYED
         MENUITEM "Pr&oprietăți…", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR

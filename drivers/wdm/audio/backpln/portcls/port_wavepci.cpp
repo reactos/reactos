@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortWavePci : public CUnknownImpl<IPortWavePci, IPortEvents, ISubdevice, IServiceSink>
@@ -82,7 +79,6 @@ KSPROPERTY_SET WavePciPropertySet[] =
     }
 };
 
-
 //---------------------------------------------------------------
 // IPortEvents
 //
@@ -100,8 +96,6 @@ CPortWavePci::AddEventToEventList(
     InsertTailList(&m_EventList, &EventEntry->ListEntry);
     KeReleaseSpinLock(&m_EventListLock, OldIrql);
 }
-
-
 
 void
 NTAPI
@@ -268,7 +262,6 @@ CPortWavePci::Init(
                                          NULL,
                                          m_pDescriptor);
 
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
@@ -277,7 +270,7 @@ CPortWavePci::Init(
     }
 
     // did we get a service group
-   if (ServiceGroup)
+    if (ServiceGroup)
     {
         // store service group in context
         m_ServiceGroup = ServiceGroup;
@@ -512,7 +505,6 @@ CPortWavePci::PinCount(
     return STATUS_UNSUCCESSFUL;
 }
 
-
 NTSTATUS
 NewPortWavePci(
     OUT PPORT* OutPort)
@@ -535,7 +527,6 @@ NewPortWavePci(
     return Status;
 
 }
-
 
 PDEVICE_OBJECT
 GetDeviceObjectFromPortWavePci(

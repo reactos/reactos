@@ -22,22 +22,20 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    ZeroMemory(&m_tools, sizeof(m_tools));
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
 ToolsModel::~ToolsModel()
 {
-    for (size_t i = 0; i < _countof(m_tools); ++i)
-        delete m_tools[i];
+    delete m_pToolObject;
+    m_pToolObject = NULL;
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
 {
-    if (!m_tools[nTool])
-        m_tools[nTool] = ToolBase::createToolObject(nTool);
-
-    return m_tools[nTool];
+    delete m_pToolObject;
+    m_pToolObject = ToolBase::createToolObject(nTool);
+    return m_pToolObject;
 }
 
 BOOL ToolsModel::IsSelection() const
@@ -145,7 +143,7 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
-    OnFinishDraw();
+    OnEndDraw(FALSE);
 
     selectionModel.Landing();
 
@@ -257,63 +255,6 @@ void ToolsModel::NotifyZoomChanged()
         canvasWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
-void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-{
-    m_pToolObject->beginEvent();
-    g_ptStart.x = g_ptEnd.x = x;
-    g_ptStart.y = g_ptEnd.y = y;
-    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-{
-    m_pToolObject->beginEvent();
-    if (m_pToolObject->OnMouseMove(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-{
-    m_pToolObject->beginEvent();
-    if (m_pToolObject->OnButtonUp(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnCancelDraw()
-{
-    ATLTRACE("ToolsModel::OnCancelDraw()\n");
-    m_pToolObject->beginEvent();
-    m_pToolObject->OnCancelDraw();
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnFinishDraw()
-{
-    ATLTRACE("ToolsModel::OnFinishDraw()\n");
-    m_pToolObject->beginEvent();
-    m_pToolObject->OnFinishDraw();
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
-{
-    m_pToolObject->OnDrawOverlayOnImage(hdc);
-}
-
-void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)
-{
-    m_pToolObject->OnDrawOverlayOnCanvas(hdc);
-}
-
 void ToolsModel::resetTool()
 {
     m_pToolObject->reset();
@@ -325,9 +266,4 @@ void ToolsModel::selectAll()
     OnButtonDown(TRUE, 0, 0, FALSE);
     OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
-}
-
-void ToolsModel::SpecialTweak(BOOL bMinus)
-{
-    m_pToolObject->OnSpecialTweak(bMinus);
 }

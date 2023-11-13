@@ -17,6 +17,10 @@ CNetConnectionPropertyUi::~CNetConnectionPropertyUi()
     if (m_pNCfg)
         m_pNCfg->Uninitialize();
 
+    // Note: MSDN says we can only unlock after INetCfg::Uninitialize
+    if (m_NCfgLock)
+        m_NCfgLock->ReleaseWriteLock();
+
     if (m_pProperties)
         NcFreeNetconProperties(m_pProperties);
 }
@@ -181,7 +185,10 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
 
     hr = pNCfg->Initialize(NULL);
     if (FAILED_UNEXPECTEDLY(hr))
+    {
+        pNCfgLock->ReleaseWriteLock();
         return;
+    }
 
     m_pNCfg = pNCfg;
     m_NCfgLock = pNCfgLock;

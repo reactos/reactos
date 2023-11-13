@@ -36,8 +36,8 @@ BEGIN
         MENUITEM "&Nou\tCtrl+N", CMD_NEW
         MENUITEM "Fereastră &nouă\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
-        MENUITEM "&Păstrează\tCtrl+S", CMD_SAVE
-        MENUITEM "Păst&rare în…", CMD_SAVE_AS
+        MENUITEM "S&alvează\tCtrl+S", CMD_SAVE
+        MENUITEM "Sal&vare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Configurare pagină…", CMD_PAGE_SETUP
         MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
@@ -163,14 +163,14 @@ BEGIN
     STRING_TEXT_FILES_TXT "Fișiere text (*.txt)"
     STRING_TOOLARGE "Fișierul „%s” este prea mare.\n\
 Încercați un alt editor."
-    STRING_NOTEXT "Nu ați scris nimic. \
+    STRING_NOTEXT "Nu ați scris nimic.\
 \nScrieți ceva apoi încercați din nou."
     STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n\
-Creați un nou fișier ?"
+Creați un nou fișier?"
     STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
 Păstrați modificările aduse?"
     STRING_NOTFOUND "„%s” nu poate fi găsit."
-    STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație. \
+    STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație.\
 \nÎnchideți una sau mai multe aplicații pentru a elibera memorie."
     STRING_CANNOTFIND "„%s” nu poate fi găsit"
     STRING_ANSI "ANSI"

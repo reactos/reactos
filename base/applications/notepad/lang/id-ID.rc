@@ -154,7 +154,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Berkas teks (*.txt)"
     STRING_TOOLARGE "Berkas '%s' terlalu besar untuk notepad.\n\
 Mohon gunakan editor teks yang berbeda."
-    STRING_NOTEXT "Anda belum memasukkan teks apapun. \
+    STRING_NOTEXT "Anda belum memasukkan teks apapun.\
 \nMohon ketik sesuatu dan coba lagi."
     STRING_DOESNOTEXIST "Berkas '%s'\ntidak ada\n\n\
 Ingin membuat berkas baru?"
@@ -162,8 +162,7 @@ Ingin membuat berkas baru?"
 Ingin menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak bisa ditemukan."
     STRING_OUT_OF_MEMORY "Memori tidak cukup untuk menyelesaikan tugas \
-ini.\nTutup satu atau lebih aplikasi untuk meningkatkan jumlah\nmemori \
-bebas."
+ini.\nTutup satu atau lebih aplikasi untuk meningkatkan jumlah\nmemori bebas."
     STRING_CANNOTFIND "Tidak bisa menemukan '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

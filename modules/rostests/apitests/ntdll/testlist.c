@@ -54,6 +54,7 @@ extern void func_NtUnloadDriver(void);
 extern void func_NtWriteFile(void);
 extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
+extern void func_RtlCaptureContext(void);
 extern void func_RtlComputePrivatizedDllName_U(void);
 extern void func_RtlCopyMappedMemory(void);
 extern void func_RtlCriticalSection(void);
@@ -78,6 +79,7 @@ extern void func_RtlGetUnloadEventTrace(void);
 extern void func_RtlHandle(void);
 extern void func_RtlImageDirectoryEntryToData(void);
 extern void func_RtlImageRvaToVa(void);
+extern void func_RtlIntSafe(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlMultipleAllocateHeap(void);
@@ -175,6 +177,7 @@ const struct test winetest_testlist[] =
     { "RtlHandle",                      func_RtlHandle },
     { "RtlImageDirectoryEntryToData",   func_RtlImageDirectoryEntryToData },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
+    { "RtlIntSafe",                     func_RtlIntSafe },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlMultipleAllocateHeap",        func_RtlMultipleAllocateHeap },
@@ -194,6 +197,9 @@ const struct test winetest_testlist[] =
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
     { "UserModeException",              func_UserModeException },
+#ifdef _M_AMD64
+    { "RtlCaptureContext",              func_RtlCaptureContext },
+#endif
 
     { 0, 0 }
 };

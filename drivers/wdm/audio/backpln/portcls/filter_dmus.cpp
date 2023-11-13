@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortFilterDMus : public CUnknownImpl<IPortFilterDMus>
@@ -287,7 +284,6 @@ CPortFilterDMus::Init(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortFilterDMus::FreePin(
@@ -321,7 +317,6 @@ CPortFilterDMus::NotifyPins()
     }
 }
 
-
 NTSTATUS
 NewPortFilterDMus(
     OUT PPORTFILTERDMUS * OutFilter)
@@ -339,5 +334,3 @@ NewPortFilterDMus(
 
     return STATUS_SUCCESS;
 }
-
-

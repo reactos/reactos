@@ -7,5 +7,5 @@ add_library(win32u_2k3sp2 MODULE
     ${win32u_2k3sp2_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/win32u_2k3sp2.def)
 
-set_module_type(win32u_2k3sp2 module)
+set_module_type(win32u_2k3sp2 module IMAGEBASE default)
 add_dependencies(win32u_2k3sp2 psdk)

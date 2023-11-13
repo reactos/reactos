@@ -154,15 +154,15 @@ BEGIN
     STRING_TEXT_FILES_TXT "Datoteke z besedilom (*.txt)"
     STRING_TOOLARGE "Datoteka '%s' je prevelika za Beležnico.\n\
 Uporabite drug urejevalnik."
-    STRING_NOTEXT "Niste vnesli besedila. \
-\nVnesite besedilo in poskusite znova."
+    STRING_NOTEXT "Niste vnesli besedila.\n\
+Vnesite besedilo in poskusite znova."
     STRING_DOESNOTEXIST "Datoteka '%s' ne obstaja.\n\n\
 Ali želite ustvariti novo datoteko?"
     STRING_NOTSAVED "Vsebina datoteke '%s'je bila spremenjena.\n\n\
 Ali želite shraniti spremembe?"
     STRING_NOTFOUND "Ni mogoèe najti '%s'."
     STRING_OUT_OF_MEMORY "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati to \
-operacijo.\nÈe ga želite sprostiti, konèajte enega ali veè programov in poskusite znova. "
+operacijo.\nÈe ga želite sprostiti, konèajte enega ali veè programov in poskusite znova."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

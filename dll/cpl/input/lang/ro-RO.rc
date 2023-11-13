@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Configurare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
+    GROUPBOX "Li&mba de intrare implicită", -1, 5, 5, 246, 55
     LTEXT "Selectați una din limbile de intrare pentru a o folosi atunci când vă pornește calculatorul.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "&Servicii instalate", -1, 5, 65, 246, 125
