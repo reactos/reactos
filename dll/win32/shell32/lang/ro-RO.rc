@@ -941,7 +941,7 @@ BEGIN
     IDS_CUR_FILE "Indicator"
     IDS_DB__FILE "Fișier bază-de-date"
     IDS_DLL_FILE "Bibliotecă aplicație"
-    IDS_DRV_FILE "Modul-pilot de dispozitiv"
+    IDS_DRV_FILE "Driver de dispozitiv"
     IDS_EFI_FILE "Executabil interfață firmware extensibilă"
     IDS_EXE_FILE "Executabil"
     IDS_NLS_FILE "Fișier suport de limbă națională"
