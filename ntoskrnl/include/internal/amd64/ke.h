@@ -88,6 +88,8 @@ extern "C" {
 
 #ifndef __ASM__
 
+extern SIZE_T KeXStateLength;
+
 #include "intrin_i.h"
 
 typedef struct _KIDT_INIT
@@ -493,6 +495,11 @@ BOOLEAN
 KiProcessorFreezeHandler(
     _In_ PKTRAP_FRAME TrapFrame,
     _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KiInitializeXStateConfiguration(
+    ULONG Processor);
 
 #ifdef __cplusplus
 } // extern "C"
