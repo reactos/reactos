@@ -236,7 +236,7 @@ GeneralPageProc(HWND hwndDlg,
                     {
                         INT nSel;
                         nSel = SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_GETCURSEL, 0, 0);
-                        pGlobalData->accessTimeout.iTimeOutMSec = (ULONG)((nSel + 1) * FIVE_MINS_IN_MS);
+                        pGlobalData->accessTimeout.iTimeOutMSec = (DWORD)((nSel + 1) * FIVE_MINS_IN_MS);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
