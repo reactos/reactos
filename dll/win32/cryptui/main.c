@@ -3731,7 +3731,7 @@ static UINT CALLBACK cert_properties_general_callback(HWND hwnd, UINT msg,
         data = (struct edit_cert_data *)GetWindowLongPtrW(hwnd, DWLP_USER);
         if (data)
         {
-#ifdef __REACTOS__
+#ifndef __REACTOS__
             ImageList_Destroy(data->imageList);
 #endif
             HeapFree(GetProcessHeap(), 0, data);
@@ -4235,7 +4235,7 @@ static UINT CALLBACK hierarchy_callback(HWND hwnd, UINT msg,
     {
     case PSPCB_RELEASE:
         data = (struct hierarchy_data *)page->lParam;
-#ifdef __REACTOS__
+#ifndef __REACTOS__
         ImageList_Destroy(data->imageList);
 #endif
         HeapFree(GetProcessHeap(), 0, data);
