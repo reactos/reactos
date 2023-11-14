@@ -114,6 +114,7 @@ elseif(ARCH STREQUAL "amd64")
         amd64/except.c
         amd64/unwind.c
         amd64/stubs.c
+        amd64/xcontext.c
         mem.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE arm/debug_asm.S)
