@@ -238,3 +238,105 @@ KiInitializeXStateConfiguration(
 
 
 }
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Ret_range_(<=, 0)
+_When_(return==0, _Kernel_float_saved_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSaveExtendedProcessorState(
+  _In_ ULONG64 Mask,
+  _Out_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return==0, _Acquires_lock_(*_Curr_))
+    PXSTATE_SAVE XStateSave)
+{
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    ULONG64 EnabledMask = SharedUserData->XState.EnabledFeatures;
+    ULONG Length;
+
+    /* Validate the mask */
+    EnabledMask = SharedUserData->XState.EnabledFeatures |
+                  SharedUserData->XState.EnabledSupervisorFeatures;
+    if ((Mask & ~EnabledMask) != 0)
+    {
+        /* Invalid mask */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Length = (ULONG)KeXStateLength; // TODO: calculate needed size
+
+    /* Initialize the structure */
+    XStateSave->XStateContext.Mask = Mask;
+    XStateSave->XStateContext.Length = Length;
+    XStateSave->Thread = CurrentThread;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    XStateSave->Level = CurrentThread->XStateSave ?
+        CurrentThread->XStateSave->Level + 1 : 1;
+    XStateSave->Prev = CurrentThread->XStateSave;
+#else
+    XStateSave->Level = 1;
+    XStateSave->Prev = NULL;
+#endif
+
+    /* Check if we already saved */
+    if (XStateSave->Prev != NULL)
+    {
+        /* We already saved once, we need to allocate a new buffer */
+        PVOID Buffer = ExAllocatePoolWithTag(PagedPool, Length + 63, 'XsSK');
+        if (Buffer == NULL)
+        {
+            /* Failed to allocate */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        XStateSave->XStateContext.Buffer = Buffer;
+        XStateSave->XStateContext.Area = ALIGN_UP_POINTER_BY(Buffer, 64);
+    }
+    else
+    {
+        /* We didn't save yet, we can use the reserved stack buffer */
+        XStateSave->XStateContext.Buffer = NULL;
+        XStateSave->XStateContext.Area = (PXSAVE_AREA)CurrentThread->StateSaveArea;
+    }
+
+    /* Save the state */
+    KiSaveXState(&XStateSave->XStateContext.Area, Mask);
+
+    /* Link this up to the thread */
+    XStateSave->Thread = CurrentThread;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    XStateSave->Level = CurrentThread->XStateSave ?
+        CurrentThread->XStateSave->Level + 1 : 1;
+    XStateSave->Prev = CurrentThread->XStateSave;
+    CurrentThread->XStateSave = XStateSave;
+#endif
+
+    return STATUS_SUCCESS;
+}
+
+_Kernel_float_restored_
+NTKERNELAPI
+VOID
+NTAPI
+KeRestoreExtendedProcessorState(
+  _In_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PXSTATE_SAVE XStateSave)
+{
+    /* Restore the state */
+    KiRestoreXState(XStateSave->XStateContext.Area,
+                    XStateSave->XStateContext.Mask);
+
+    /* If we allocated a buffer, free it */
+    if (XStateSave->XStateContext.Buffer != NULL)
+    {
+        ExFreePoolWithTag(XStateSave->XStateContext.Buffer, 'XsSK');
+    }
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    /* Unlink the XStateSave from the thread */
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    CurrentThread->XStateSave = XStateSave->Prev;
+#endif
+}
