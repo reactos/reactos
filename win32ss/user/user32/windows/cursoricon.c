@@ -1149,13 +1149,12 @@ BITMAP_LoadImageW(
         goto end;
     CopyMemory(pbmiCopy, pbmi, iBMISize);
 
-    /* Test if MSVC Resource Compiler used and if so, adjust pvBits */
+    /* Test compression BI_BITFIELDS & if its 12 bytes are in Resource Size */
     if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize + 12 == ResSize
-             && compr == BI_BITFIELDS && bpp == 32)
+             && compr == BI_BITFIELDS && (bpp == 32 || bpp == 16))
     {
-        /* MSVC pointer to the image data has 12 more bytes than GCC */
         pvBits = (char*)pvBits + 12;
-        TRACE("MSVC Resource Compiled\n");
+        TRACE("12 bytes added to pvBits to adjust for BI_BITFIELDS\n");
     }
 
     /* Fix it up, if needed */
