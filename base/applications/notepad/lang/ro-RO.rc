@@ -158,7 +158,7 @@ BEGIN
     STRING_ERROR "EROARE"
     STRING_WARNING "ATENȚIONARE"
     STRING_INFO "Informație"
-    STRING_UNTITLED "Neintitulat"
+    STRING_UNTITLED "Fără titlu"
     STRING_ALL_FILES "Orice fișier (*.*)"
     STRING_TEXT_FILES_TXT "Fișiere text (*.txt)"
     STRING_TOOLARGE "Fișierul „%s” este prea mare.\n\
