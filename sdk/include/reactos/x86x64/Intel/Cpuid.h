@@ -1984,7 +1984,7 @@ typedef union {
     ///
     /// [Bit 8] Used for IA32_XSS.
     ///
-    UINT32    IA32_XSS   : 1;
+    UINT32    IA32_XSS   : 1; // Isn't his PT?
     ///
     /// [Bit 9] PKRU state.
     ///
@@ -2167,7 +2167,7 @@ typedef union {
     /// following the preceding state component (otherwise, it is located
     /// immediately following the preceding state component).
     ///
-    UINT32    Compacted : 1;
+    UINT32    Aligned : 1;
     UINT32    Reserved  : 30;
   } Bits;
   ///
