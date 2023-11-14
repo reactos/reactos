@@ -125,7 +125,7 @@
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
 
 /*  Translating virtual addresses to physical addresses
-        (See: "IntelÂ® 64 and IA-32 Architectures Software Developerâ€™s Manual
+        (See: "Intel® 64 and IA-32 Architectures Software Developer’s Manual
               Volume 3A: System Programming Guide, Part 1, CHAPTER 4 PAGING")
     Page directory (PD) and Page table (PT) definitions
     Page directory entry (PDE) and Page table entry (PTE) definitions
