@@ -255,7 +255,7 @@ KiGetFeatureBits(VOID)
     if (signature.MaxLeaf >= CPUID_EXTENDED_STATE)
     {
         /* Read CPUID_EXTENDED_STATE */
-        CPUID_EXTENDED_STATE_SUB_LEAF_EAX_REGS ExtStateSub;
+        CPUID_EXTENDED_STATE_SUB_LEAF_REGS ExtStateSub;
         __cpuidex(ExtStateSub.AsInt32,
             CPUID_EXTENDED_STATE,
             CPUID_EXTENDED_STATE_SUB_LEAF);
