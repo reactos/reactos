@@ -41,7 +41,7 @@ LegacyDriverClassName = "Controladores incompatibles con PnP"
 LegacyDriverClassName = "Sterowniki niezgodne z Plug and Play"
 
 [Strings.0418]
-LegacyDriverClassName = "Drivere ce nu sunt de tipul Conectează și utilizează (non-PnP)"
+LegacyDriverClassName = "Drivere de dispozitiv ce nu sunt Plug and Play"
 
 [Strings.0419]
 LegacyDriverClassName = "Драйверы устройств не Plug and Play"
