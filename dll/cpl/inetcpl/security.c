@@ -281,6 +281,7 @@ static INT_PTR security_on_destroy(secdlg_data * sd)
         ImageList_Destroy(sd->himages);
     }
 #endif
+
     security_cleanup_zones(sd);
     SetWindowLongPtrW(sd->hsec, DWLP_USER, 0);
     heap_free(sd);
