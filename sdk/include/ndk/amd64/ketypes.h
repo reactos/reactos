@@ -95,10 +95,10 @@ Author:
 //
 typedef enum
 {
-    CPU_UNKNOWN,
-    CPU_AMD,
-    CPU_INTEL,
-    CPU_VIA
+    CPU_UNKNOWN = 0,
+    CPU_AMD = 1,
+    CPU_INTEL = 2,
+    CPU_VIA = 3,
 } CPU_VENDORS;
 
 //
