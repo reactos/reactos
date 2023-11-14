@@ -1132,11 +1132,84 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 #define XSTATE_LEGACY_FLOATING_POINT        0
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
+#define XSTATE_AVX                          XSTATE_GSSE
+#define XSTATE_MPX_BNDREGS                  3
+#define XSTATE_MPX_BNDCSR                   4
+#define XSTATE_AVX512_KMASK                 5
+#define XSTATE_AVX512_ZMM_H                 6
+#define XSTATE_AVX512_ZMM                   7
+#define XSTATE_IPT                          8
+#define XSTATE_PASID                        10
+#define XSTATE_CET_U                        11
+#define XSTATE_CET_S                        12
+#define XSTATE_AMX_TILE_CONFIG              17
+#define XSTATE_AMX_TILE_DATA                18
+#define XSTATE_LWP                          62
+#define MAXIMUM_XSTATE_FEATURES             64
 
 #define XSTATE_MASK_LEGACY_FLOATING_POINT   (1LL << (XSTATE_LEGACY_FLOATING_POINT))
 #define XSTATE_MASK_LEGACY_SSE              (1LL << (XSTATE_LEGACY_SSE))
 #define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
 #define XSTATE_MASK_GSSE                    (1LL << (XSTATE_GSSE))
+#define XSTATE_MASK_AVX                     XSTATE_MASK_GSSE
+#define XSTATE_MASK_MPX                     ((1LL << (XSTATE_MPX_BNDREGS)) | (1LL << (XSTATE_MPX_BNDCSR)))
+#define XSTATE_MASK_AVX512                  ((1LL << (XSTATE_AVX512_KMASK)) | (1LL << (XSTATE_AVX512_ZMM_H)) |  (1LL << (XSTATE_AVX512_ZMM)))
+#define XSTATE_MASK_IPT                     (1LL << (XSTATE_IPT))
+#define XSTATE_MASK_PASID                   (1LL << (XSTATE_PASID))
+#define XSTATE_MASK_CET_U                   (1LL << (XSTATE_CET_U))
+#define XSTATE_MASK_CET_S                   (1LL << (XSTATE_CET_S))
+#define XSTATE_MASK_AMX_TILE_CONFIG         (1LL << (XSTATE_AMX_TILE_CONFIG))
+#define XSTATE_MASK_AMX_TILE_DATA           (1LL << (XSTATE_AMX_TILE_DATA))
+#define XSTATE_MASK_LWP                     (1LL << (XSTATE_LWP))
+
+#if defined(_AMD64_)
+#define XSTATE_MASK_ALLOWED \
+    (XSTATE_MASK_LEGACY | \
+     XSTATE_MASK_AVX | \
+     XSTATE_MASK_MPX | \
+     XSTATE_MASK_AVX512 | \
+     XSTATE_MASK_IPT | \
+     XSTATE_MASK_PASID | \
+     XSTATE_MASK_CET_U | \
+     XSTATE_MASK_AMX_TILE_CONFIG | \
+     XSTATE_MASK_AMX_TILE_DATA | \
+     XSTATE_MASK_LWP)
+#elif defined(_X86_)
+#define XSTATE_MASK_ALLOWED \
+    (XSTATE_MASK_LEGACY | \
+     XSTATE_MASK_AVX | \
+     XSTATE_MASK_MPX | \
+     XSTATE_MASK_AVX512 | \
+     XSTATE_MASK_IPT | \
+     XSTATE_MASK_CET_U | \
+     XSTATE_MASK_LWP)
+#endif
+
+#define XSTATE_MASK_PERSISTENT              ((1LL << (XSTATE_MPX_BNDCSR)) | XSTATE_MASK_LWP)
+#define XSTATE_MASK_USER_VISIBLE_SUPERVISOR (XSTATE_MASK_CET_U)
+#define XSTATE_MASK_LARGE_FEATURES          (XSTATE_MASK_AMX_TILE_DATA)
+
+#if defined(_X86_)
+#if !defined(__midl) && !defined(MIDL_PASS)
+C_ASSERT((XSTATE_MASK_ALLOWED & XSTATE_MASK_LARGE_FEATURES) == 0);
+#endif
+#endif
+
+#define XSTATE_COMPACTION_ENABLE            63
+#define XSTATE_COMPACTION_ENABLE_MASK       (1LL << (XSTATE_COMPACTION_ENABLE))
+#define XSTATE_ALIGN_BIT                    1
+#define XSTATE_ALIGN_MASK                   (1LL << (XSTATE_ALIGN_BIT))
+
+#define XSTATE_XFD_BIT                      2
+#define XSTATE_XFD_MASK                     (1LL << (XSTATE_XFD_BIT))
+
+#define XSTATE_CONTROLFLAG_XSAVEOPT_MASK    1
+#define XSTATE_CONTROLFLAG_XSAVEC_MASK      2
+#define XSTATE_CONTROLFLAG_XFD_MASK         4
+#define XSTATE_CONTROLFLAG_VALID_MASK \
+    (XSTATE_CONTROLFLAG_XSAVEOPT_MASK | \
+     XSTATE_CONTROLFLAG_XSAVEC_MASK | \
+     XSTATE_CONTROLFLAG_XFD_MASK)
 
 #define MAXIMUM_XSTATE_FEATURES             64
 
@@ -1145,11 +1218,37 @@ typedef struct _XSTATE_FEATURE {
   ULONG Size;
 } XSTATE_FEATURE, *PXSTATE_FEATURE;
 
-typedef struct _XSTATE_CONFIGURATION {
-  ULONG64 EnabledFeatures;
-  ULONG Size;
-  ULONG OptimizedSave:1;
-  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+typedef struct _XSTATE_CONFIGURATION
+{
+    ULONG64 EnabledFeatures;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+    ULONG64 EnabledVolatileFeatures;
+#endif
+    ULONG Size;
+    union
+    {
+        ULONG ControlFlags;
+        struct
+        {
+            ULONG OptimizedSave:1;
+            ULONG CompactionEnabled:1; // WIN10+
+        };
+    };
+    XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG64 EnabledSupervisorFeatures;
+    ULONG64 AlignedFeatures;
+    ULONG AllFeatureSize;
+    ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    ULONG64 EnabledUserVisibleSupervisorFeatures;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    ULONG64 ExtendedFeatureDisableFeatures;
+    ULONG AllNonLargeFeatureSize;
+    ULONG Spare;
+#endif
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
 
 #define MAX_WOW64_SHARED_ENTRIES 16
