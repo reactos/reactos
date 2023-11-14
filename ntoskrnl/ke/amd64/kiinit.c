@@ -207,6 +207,13 @@ KiInitializeCpu(PKIPCR Pcr)
     /* Disable x87 fpu exceptions */
     __writecr0(__readcr0() & ~CR0_NE);
 
+    /* Check if XSAVE is supported */
+    if (FeatureBits & KF_XSTATE)
+    {
+        /* Enable CR4.OSXSAVE[Bit 18] */
+        __writecr4(__readcr4() | CR4_XSAVE);
+    }
+
     /* LDT is unused */
     __lldt(0);
 
@@ -504,11 +511,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set the PRCB for this Processor */
     KiProcessorBlock[Cpu] = &Pcr->Prcb;
 
-    /* Align stack to 16 bytes */
-    LoaderBlock->KernelStack &= ~(16 - 1);
-
-    /* Save the initial thread and stack */
-    InitialStack = LoaderBlock->KernelStack; // Checkme
+    /* Save the initial thread */
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
     /* Set us as the current process */
@@ -562,7 +565,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Machine specific kernel initialization */
     if (Cpu == 0) KiInitializeKernelMachineDependent(&Pcr->Prcb, LoaderBlock);
 
+    /* Initialize extended state management */
+    KiInitializeXStateConfiguration(Cpu);
+
+    /* Calculate the initial stack pointer */
+    InitialStack = ALIGN_DOWN_BY(LoaderBlock->KernelStack - KeXStateLength, 64);
+
     /* Switch to new kernel stack and start kernel bootstrapping */
-    KiSwitchToBootStack(InitialStack & ~3);
+    KiSwitchToBootStack(InitialStack);
 }
 
