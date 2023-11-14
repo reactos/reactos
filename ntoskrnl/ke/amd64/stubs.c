@@ -76,6 +76,10 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     CurrentThread->InitialStack = Add2Ptr(CurrentThread->InitialStack,
                                           StackOffset);
 
+    /* Switch StateSaveArea */
+    CurrentThread->StateSaveArea = Add2Ptr(CurrentThread->StateSaveArea,
+                                           StackOffset);
+
     /* Set the new stack limits */
     CurrentThread->StackBase = StackBase;
     CurrentThread->StackLimit = (ULONG_PTR)StackLimit;
