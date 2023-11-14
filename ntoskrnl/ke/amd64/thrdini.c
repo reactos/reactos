@@ -158,8 +158,14 @@ KiSwapContextResume(
     PKPROCESS OldProcess, NewProcess;
 
     /* Setup ring 0 stack pointer */
-    Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack; // FIXME: NPX save area?
+    Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack;
     Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0;
+
+    /* Save old thread's extended state */
+    KiSaveXState(OldThread->StateSaveArea, OldThread->NpxState);
+
+    /* Load new thread's extended state */
+    KiRestoreXState(NewThread->StateSaveArea, NewThread->NpxState);
 
     /* Now we are the new thread. Check if it's in a new process */
     OldProcess = OldThread->ApcState.Process;
