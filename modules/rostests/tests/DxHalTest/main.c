@@ -211,8 +211,8 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     // Do not release HDC, it has been mapped in kernel mode
     // DeleteDC(hdc);
 
-    /* we need reenable it if screen res has changes, and some bad drv need be reenable very few
-	   to contiune */
+    /* we need to reenable it if the screen resolution has changed, and some
+       bad driver needs to be reenabled infrequently to continue */
 	/*
     if (!DdReenableDirectDrawObject(&mDDrawGlobal, &newmode))
     {
