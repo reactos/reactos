@@ -313,7 +313,7 @@ LdrLoadDll(
     _In_opt_ PWSTR SearchPath,
     _In_opt_ PULONG DllCharacteristics,
     _In_ PUNICODE_STRING DllName,
-    _Out_ PVOID* BaseAddress)
+    _Out_ PVOID *BaseAddress)
 {
     WCHAR StringBuffer[MAX_PATH];
     UNICODE_STRING DllString1, DllString2;
