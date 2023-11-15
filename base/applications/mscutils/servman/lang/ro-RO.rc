@@ -1,6 +1,10 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Service Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -133,7 +137,7 @@ BEGIN
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Alt&e căderi:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "&Ropornire contor după:", IDC_STATIC, 7, 75, 72, 8
+    LTEXT "&Repornire contor după:", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "zile", IDC_STATIC, 150, 75, 95, 8
     LTEXT "Repornire ser&viciu după:", IDC_RESTART_TEXT1, 7, 92, 92, 8
@@ -332,7 +336,7 @@ BEGIN
     IDS_NO_ACTION "Nici o acțiune"
     IDS_RESTART_SERVICE "Repornește serviciul"
     IDS_RUN_PROGRAM "Execută un program"
-    IDS_RESTART_COMPUTER "Ropornește calculatorul"
+    IDS_RESTART_COMPUTER "Repornește calculatorul"
 END
 
 STRINGTABLE
