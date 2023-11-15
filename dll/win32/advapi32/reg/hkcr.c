@@ -214,6 +214,30 @@ GetPreferredHKCRKey(
     return ErrorCode;
 }
 
+static
+LONG
+GetSubkeyInfoHelper(
+    _In_ HKEY hKey,
+    _Out_opt_ LPDWORD lpSubKeys,
+    _Out_opt_ LPDWORD lpMaxSubKeyLen)
+{
+    LONG err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
+                                NULL, NULL, NULL, NULL, NULL, NULL);
+    if (err != ERROR_ACCESS_DENIED)
+        return err;
+
+    /* Windows RegEdit only uses KEY_ENUMERATE_SUB_KEYS when enumerating but
+     * KEY_QUERY_VALUE is required to get the info in EnumHKCRKey.
+     */
+    if (RegOpenKeyExW(hKey, NULL, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
+                               NULL, NULL, NULL, NULL, NULL, NULL);
+        RegCloseKey(hKey);
+    }
+    return err;
+}
+
 /* HKCR version of RegCreateKeyExW. */
 LONG
 WINAPI
@@ -654,19 +678,7 @@ EnumHKCRKey(
     }
 
     /* Get some info on the HKCU side */
-    ErrorCode = RegQueryInfoKeyW(
-        PreferredKey,
-        NULL,
-        NULL,
-        NULL,
-        &NumPreferredSubKeys,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
+    ErrorCode = GetSubkeyInfoHelper(PreferredKey, &NumPreferredSubKeys, NULL);
     if (ErrorCode != ERROR_SUCCESS)
         goto Exit;
 
@@ -692,19 +704,7 @@ EnumHKCRKey(
     dwIndex -= NumPreferredSubKeys;
 
     /* Get some info */
-    ErrorCode = RegQueryInfoKeyW(
-        FallbackKey,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        &MaxFallbackSubKeyLen,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
+    ErrorCode = GetSubkeyInfoHelper(FallbackKey, NULL, &MaxFallbackSubKeyLen);
     if (ErrorCode != ERROR_SUCCESS)
     {
         ERR("Could not query info of key %p (Err: %d)\n", FallbackKey, ErrorCode);
