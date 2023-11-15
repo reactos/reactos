@@ -101,7 +101,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	printf("This app shows how to start up directx draw/d3d interface and some others.\n");
 	printf("This code has been released to some closed applications with my permission. If any company\n");
     printf("want to use parts or whole code, you need to contact the original author to ask for permission.\n");
-    printf("This code is released under a lot of different licenses\n");
+    printf("This code is released under a lot of different licenses.\n");
     printf("All GPL and LGPL projects have the right to use and study this code.\n");
     printf("This code maybe need more comments to know how stuff works.\n");
 	printf("Best regards Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
