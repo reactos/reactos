@@ -1191,7 +1191,8 @@ LdrEnumerateLoadedModules(
  */
 NTSTATUS
 NTAPI
-LdrDisableThreadCalloutsForDll(_In_ PVOID BaseAddress)
+LdrDisableThreadCalloutsForDll(
+    _In_ PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status;
@@ -1327,7 +1328,8 @@ quickie:
  */
 NTSTATUS
 NTAPI
-LdrUnloadDll(_In_ PVOID BaseAddress)
+LdrUnloadDll(
+    _In_ PVOID BaseAddress)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PPEB Peb = NtCurrentPeb();
@@ -1636,7 +1638,8 @@ LdrLoadAlternateResourceModule(
  */
 BOOLEAN
 NTAPI
-LdrUnloadAlternateResourceModule(_In_ PVOID BaseAddress)
+LdrUnloadAlternateResourceModule(
+    _In_ PVOID BaseAddress)
 {
     ULONG_PTR Cookie;
 
