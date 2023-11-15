@@ -208,7 +208,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
 	mDDrawGlobal.dwRefCnt = 1; //addref / remove ref
 
-    // Do not release HDC it has been map in kernel mode
+    // Do not release HDC, it has been mapped in kernel mode
     // DeleteDC(hdc);
 
     /* we need reenable it if screen res has changes, and some bad drv need be reenable very few
