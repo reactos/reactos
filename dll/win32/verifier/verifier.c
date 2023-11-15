@@ -28,7 +28,7 @@ AVrfpLdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-    _Out_ PVOID* ProcedureAddress);
+    _Out_ PVOID *ProcedureAddress);
 
 static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpNtdllThunks[] =
 {
@@ -127,13 +127,13 @@ AVrfpLdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-    _Out_ PVOID* ProcedureAddress)
+    _Out_ PVOID *ProcedureAddress)
 {
     NTSTATUS(NTAPI *oLdrGetProcedureAddress)(
         _In_ PVOID BaseAddress,
         _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
         _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-        _Out_ PVOID* ProcedureAddress);
+        _Out_ PVOID *ProcedureAddress);
     NTSTATUS Status;
     PVOID Replacement;
 

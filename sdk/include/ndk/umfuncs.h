@@ -142,7 +142,7 @@ LdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
-    _Out_ PVOID* ProcedureAddress
+    _Out_ PVOID *ProcedureAddress
 );
 
 VOID
@@ -160,7 +160,7 @@ LdrLoadDll(
     _In_opt_ PWSTR SearchPath,
     _In_opt_ PULONG DllCharacteristics,
     _In_ PUNICODE_STRING DllName,
-    _Out_ PVOID* BaseAddress
+    _Out_ PVOID *BaseAddress
 );
 
 PIMAGE_BASE_RELOCATION
