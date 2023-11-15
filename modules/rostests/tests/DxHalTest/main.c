@@ -328,7 +328,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       Copy over from HalInfo to DirectDrawGlobal
    */
 
-  // this is wrong, cDriverName need be in ASCII code not UNICODE
+  // this is wrong, cDriverName needs to be in ASCII not UNICODE
   //memcpy(mDDrawGlobal.cDriverName, mDisplayAdapter, sizeof(wchar)*MAX_DRIVER_NAME);
 
   memcpy(&mDDrawGlobal.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
