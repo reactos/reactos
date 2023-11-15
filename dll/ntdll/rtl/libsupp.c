@@ -338,7 +338,6 @@ RtlpGetStackLimits(
 {
     *LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
     *HighLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
-    return;
 }
 
 BOOLEAN
