@@ -56,15 +56,18 @@ KiIdentifyCpuVendor(
     _In_reads_z_(CPU_VENDOR_STR_LEN) const CHAR VendorString[CPU_VENDOR_STR_LEN])
 {
     /* Identify the CPU vendor */
-    if (!strcmp(VendorString, "GenuineIntel"))
+    if (!strcmp(VendorString, "GenuineIntel") ||
+        !strcmp(VendorString, "GenuineIotel")) // Intel Xeon E3-1231 v3
     {
         return CPU_INTEL;
     }
-    else if (!strcmp(VendorString, "AuthenticAMD"))
+    else if (!strcmp(VendorString, "AuthenticAMD") ||
+             !strcmp(VendorString, "HygonGenuine"))
     {
         return CPU_AMD;
     }
-    else if (!strcmp(VendorString, "CentaurHauls"))
+    else if (!strcmp(VendorString, "CentaurHauls") ||
+             !strcmp(VendorString, "  Shanghai  "))
     {
         return CPU_VIA; // == CPU_CENTAUR
     }
