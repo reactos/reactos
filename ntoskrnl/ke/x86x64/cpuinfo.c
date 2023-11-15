@@ -88,3 +88,59 @@ KiIdentifyCpuVendor(
 
     return CPU_UNKNOWN;
 }
+
+/*!
+ * \brief Get the CPU signature
+ *
+ * \param[out] Family - Pointer to a USHORT to receive the family
+ * \param[out] Model - Pointer to a USHORT to receive the model
+ * \param[out] Stepping - Pointer to a USHORT to receive the stepping
+ * 
+ * \See
+ * - https://www.sandpile.org/x86/cpuid.htm#level_0000_0001h
+ * - https://github.com/InstLatx64/InstLatx64
+ * 
+ * - Intel:
+ *   - https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-2a-manual.pdf#G5.876260
+ *   - https://www.scss.tcd.ie/Jeremy.Jones/CS4021/processor-identification-cpuid-instruction-note.pdf
+ *   - https://web.archive.org/web/20250907014024/https://en.wikichip.org/wiki/intel/cpuid
+ * - AMD:
+ *   - https://docs.amd.com/v/u/en-US/24594_3.37 (Appendix E)
+ *   - https://ia803100.us.archive.org/29/items/advancedmicrodevices_24594_3.28/24594.pdf
+ *   - https://kib.kiev.ua/x86docs/AMD/AMD-CPUID-Spec/20734-r3.13.pdf
+ *   - https://web.archive.org/web/20251208232456/https://en.wikichip.org/wiki/amd/cpuid
+ * - Cyrix:
+ *   - http://bitsavers.computerhistory.org/components/cyrix/appnotes/Cyrix_CPU_Detection_Guide_1997.pdf
+ *
+ */
+VOID
+NTAPI
+KiGetCpuSignature(
+    _Out_ PUSHORT Family,
+    _Out_ PUSHORT Model,
+    _Out_ PUSHORT Stepping)
+{
+    CPUID_VERSION_INFO_REGS VersionInfo;
+
+    /* Get the CPUID */
+    __cpuid(VersionInfo.AsInt32, 1);
+
+    /* Get the family */
+    *Family = VersionInfo.Eax.Bits.FamilyId;
+    if (VersionInfo.Eax.Bits.FamilyId == 15)
+    {
+        *Family += VersionInfo.Eax.Bits.ExtendedFamilyId;
+    }
+
+    /* Get the model */
+    *Model = VersionInfo.Eax.Bits.Model;
+    if ((VersionInfo.Eax.Bits.FamilyId == 6) ||
+        (VersionInfo.Eax.Bits.FamilyId == 15))
+    {
+        /* For Family < 15, AMD documents extended model as RAZ (reads as zero) */
+        *Model |= VersionInfo.Eax.Bits.ExtendedModelId << 4;
+    }
+
+    /* Get the stepping */
+    *Stepping = VersionInfo.Eax.Bits.SteppingId;
+}
