@@ -33,22 +33,6 @@ BOOLEAN KiSMTProcessorsPresent;
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 
-/* CPU Signatures */
-typedef union _CPU_SIGNATURE
-{
-    struct
-    {
-        ULONG Step : 4;
-        ULONG Model : 4;
-        ULONG Family : 4;
-        ULONG Unused : 4;
-        ULONG ExtendedModel : 4;
-        ULONG ExtendedFamily : 8;
-        ULONG Unused2 : 4;
-    };
-    ULONG AsULONG;
-} CPU_SIGNATURE;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -56,55 +40,19 @@ NTAPI
 KiSetProcessorType(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    CPU_INFO CpuInfo;
-    CPU_SIGNATURE CpuSignature;
-    BOOLEAN ExtendModel;
-    ULONG Stepping, Type, Vendor;
+    USHORT Family, Model, Stepping;
 
     /* This initializes Prcb->CpuVendor */
     KiGetCpuVendorString(Prcb->VendorString);
     Prcb->CpuVendor = KiIdentifyCpuVendor(Prcb->VendorString);
-    Vendor = Prcb->CpuVendor;
 
-    /* Do CPUID 1 now */
-    KiCpuId(&CpuInfo, 1);
-
-    /*
-     * Get the Stepping and Type. The stepping contains both the
-     * Model and the Step, while the Type contains the returned Family.
-     *
-     * For the stepping, we convert this: zzzzzzxy into this: x0y
-     */
-    CpuSignature.AsULONG = CpuInfo.Eax;
-    Stepping = CpuSignature.Model;
-    ExtendModel = (CpuSignature.Family == 15);
-#if ( (NTDDI_VERSION >= NTDDI_WINXPSP2) && (NTDDI_VERSION < NTDDI_WS03) ) || (NTDDI_VERSION >= NTDDI_WS03SP1)
-    if (CpuSignature.Family == 6)
-    {
-        ExtendModel |= (Vendor == CPU_INTEL);
-#if (NTDDI_VERSION >= NTDDI_WIN8)
-        ExtendModel |= (Vendor == CPU_CENTAUR);
-#endif
-    }
-#endif
-    if (ExtendModel)
-    {
-        /* Add ExtendedModel to distinguish from non-extended values. */
-        Stepping |= (CpuSignature.ExtendedModel << 4);
-    }
-    Stepping = (Stepping << 8) | CpuSignature.Step;
-    Type = CpuSignature.Family;
-    if (CpuSignature.Family == 15)
-    {
-        /* Add ExtendedFamily to distinguish from non-extended values.
-         * It must not be larger than 0xF0 to avoid overflow. */
-        Type += min(CpuSignature.ExtendedFamily, 0xF0);
-    }
+    /* Get the family, model and stepping */
+    KiGetCpuSignature(&Family, &Model, &Stepping);
 
     /* Save them in the PRCB */
     Prcb->CpuID = TRUE;
-    Prcb->CpuType = (UCHAR)Type;
-    Prcb->CpuStep = (USHORT)Stepping;
+    Prcb->CpuType = (UCHAR)Family;
+    Prcb->CpuStep = ((Model << 8) | Stepping);
 }
 
 /*!
