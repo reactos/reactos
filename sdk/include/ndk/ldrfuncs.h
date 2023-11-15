@@ -97,8 +97,8 @@ LdrGetProcedureAddress(
 ULONG
 NTAPI
 LdrRelocateImage(
-    _In_ PVOID NewBase,
-    _In_ PCCH LoaderName,
+    _In_ PVOID BaseAddress,
+    _In_opt_ PCSTR LoaderName,
     _In_ ULONG Success,
     _In_ ULONG Conflict,
     _In_ ULONG Invalid
@@ -139,9 +139,9 @@ LdrProcessRelocationBlockLongLong(
 NTSTATUS
 NTAPI
 LdrEnumerateLoadedModules(
-    _In_ BOOLEAN ReservedFlag,
+    _Reserved_ ULONG ReservedFlag,
     _In_ PLDR_ENUM_CALLBACK EnumProc,
-    _In_ PVOID Context
+    _In_opt_ PVOID Context
 );
 
 #endif
