@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -23,19 +23,19 @@ BEGIN
     IDS_ENABLEDEVICE "Folosește acest dispozitiv (activare)"
     IDS_DISABLEDEVICE "Nu folosi acest dispozitiv (dezactivare)"
     IDS_UNKNOWNDEVICE "Dispozitiv necunoscut"
-    IDS_NODRIVERLOADED "Pentru acest dispozitiv nu sunt instalate module-pilot."
+    IDS_NODRIVERLOADED "Pentru acest dispozitiv nu sunt instalate drivere."
     IDS_DEVONPARENT "pe %1"
     IDS_TROUBLESHOOTDEV "&Depanare…"
     IDS_ENABLEDEV "A&ctivare"
-    IDS_REINSTALLDRV "Reinstalea&ză modulul-pilot"
+    IDS_REINSTALLDRV "Reinstalea&ză Driverul"
     IDS_PROPERTIES "P&roprietăți"
-    IDS_UPDATEDRV "A&ctualizare modul-pilot…"
+    IDS_UPDATEDRV "A&ctualizare driver…"
     IDS_REBOOT "Repornire &calculator…"
     IDS_NOTAVAILABLE "Indisponibil"
     IDS_NOTDIGITALLYSIGNED "Nesemnat digital"
-    IDS_NODRIVERS "Fie nu sunt necesare module-pilot, fie nu a fost încărcat niciunul."
+    IDS_NODRIVERS "Fie nu sunt necesare drivere, fie nu a fost încărcat niciunul."
     IDS_RESOURCE_COLUMN "Tip de resursă"
-    IDS_SETTING_COLUMN "Configurație"
+    IDS_SETTING_COLUMN "Setare"
     IDS_RESOURCE_MEMORY_RANGE "Domeniu de memorie"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
@@ -48,61 +48,61 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Acest dispozitiv funcționează corect."
     IDS_DEV_NOT_CONFIGURED "Acest dispozitiv nu este configurat corect."
-    IDS_DEV_DEVLOADER_FAILED "Modulul-pilot nu a putut fi încărcat, deoarece calculatorul indică două tipuri de magistrale %1."
-    IDS_DEV_DEVLOADER_FAILED2 "Eșec la încărcarea modulelor-pilot pentru dispozitivul %1."
-    IDS_DEV_OUT_OF_MEMORY "Fie modulul-pilot este defect, fie sistemul are carențe de memorie sau de alte resurse."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Acest dispozitiv nu funcționează corect deoarece fie modulul-pilot nu este corect, fie registrul de sistem este deteriorat."
-    IDS_DEV_LACKED_ARBITRATOR "Modulul-pilot al acestui dispozitiv solicită o resursă necunoscută în actualul sistem de operare."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS nu a putut încărca driverul pentru acest dispozitiv deoarece calculatorul indică două tipuri de magistrale %1."
+    IDS_DEV_DEVLOADER_FAILED2 "Eșec la încărcarea driverelor pentru dispozitivul %1."
+    IDS_DEV_OUT_OF_MEMORY "Fie driverul este defect, fie sistemul are carențe de memorie sau de alte resurse."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Acest dispozitiv nu funcționează corect deoarece fie Driverul nu este corect, fie registrul de sistem este deteriorat."
+    IDS_DEV_LACKED_ARBITRATOR "Driverul al acestui dispozitiv solicită o resursă pe care ReactOS nu știe cum să o gestioneze."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Resursele necesare pentru acest dispozitiv sunt ocupate de un alt dispozitiv."
-    IDS_DEV_FAILED_FILTER "Modulele-pilot pentru acest dispozitiv necesită reinstalare."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Acest dispozitiv nu funcționează corect deoarece nu poate fi pornit mecanismul (ce conține fișierul %1) necesar pentru încărcarea modulelor-pilot."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Acest dispozitiv nu funcționează corect deoare fișierul %1 care încarcă modulele-pilot pentru acest dispozitiv, este deteriorat."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Defecțiune dispozitiv: Încercați alte module-pilot pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
+    IDS_DEV_FAILED_FILTER "Driverele pentru acest dispozitiv necesită reinstalare."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Acest dispozitiv nu funcționează corect deoarece ReactOS nu poate porni încărca fișierul %1 ce încarcă  driverele pentru dispozitiv."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Acest dispozitiv nu funcționează corect deoare fișierul %1 care încarcă driverele pentru acest dispozitiv, este deteriorat."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Defecțiune dispozitiv: Încercați alte drivere pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
     IDS_DEV_INVALID_DATA "Acest dispozitiv nu funcționează corect, deoarece BIOS din calculator nu raportează corect resursele dispozitivului."
     IDS_DEV_INVALID_DATA2 "Acest dispozitiv nu funcționează corect, deoarece BIOS din dispozitiv nu raportează corect resursele dispozitivului. "
-    IDS_DEV_FAILED_START "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
-    IDS_DEV_LIAR "Încercarea de a activa acest dispozitiv a provocat un blocaj în sistem. Prin urmare, nu mai este recomandată reactivarea acestui dispozitiv."
+    IDS_DEV_FAILED_START "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate driverele."
+    IDS_DEV_LIAR "ReactOS nu mai răspunde, în timp ce a încercat să pornească dispozitivul și prin urmare, nu va mai încerca să pornească acest dispozitiv."
     IDS_DEV_NORMAL_CONFLICT "Acest dispozitiv nu are la dispoziție resursele %1 necesare pentru a funcționa."
-    IDS_DEV_NOT_VERIFIED "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
+    IDS_DEV_NOT_VERIFIED "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate driverele."
     IDS_DEV_NEED_RESTART "Funcționarea corectă a acestui dispozitiv necesită repornirea sistemului."
     IDS_DEV_REENUMERATION "Acest dispoztiv provoacă un conflict de resurse."
-    IDS_DEV_PARTIAL_LOG_CONF "Nu au putut fi identificate toate resursele utilizate de către acest dispozitiv."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS nu au putut fi identificate toate resursele folosite de acest dispozitiv."
     IDS_DEV_UNKNOWN_RESOURCE "Fișierul de informații %1 cere acestui sub-dispozitiv folosirea unei resurse pe care dispozitivul-parinte nu o are sau nu o recunoaște."
-    IDS_DEV_REINSTALL "Este necesară reinstalarea modulelor-pilot ale acestui dispozitiv."
+    IDS_DEV_REINSTALL "Este necesară reinstalarea driverelor ale acestui dispozitiv."
     IDS_DEV_REGISTRY "Este posibil ca registrul să fie deteriorat."
-    IDS_DEV_WILL_BE_REMOVED "Acest dispozitiv este pregătit pentru a fi deconectat."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS deconectează acest dispozitiv."
     IDS_DEV_DISABLED "Acest dispozitiv nu este pornit."
     IDS_DEV_DISABLED2 "Acest dispozitiv este dezactivat."
-    IDS_DEV_DEVLOADER_NOT_READY "Nu au putut fi încărcate toate modulele-pilot necesare."
+    IDS_DEV_DEVLOADER_NOT_READY "Nu au putut fi încărcate toate driverele necesare."
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
-    IDS_DEV_DEVICE_NOT_THERE "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele-pilot."
-    IDS_DEV_MOVED "Pentru moment acest dispozitiv încă nu este pe deplin instalat."
-    IDS_DEV_TOO_EARLY "Pentru moment acest dispozitiv încă nu este pe deplin instalat."
-    IDS_DEV_NO_VALID_LOG_CONF "Nu au putut fi specificate resoursele necesare pentru acest dispozitiv."
-    IDS_DEV_FAILED_INSTALL "Modulele-pilot ale acestui dispozitiv nu sunt instalate."
+    IDS_DEV_DEVICE_NOT_THERE "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate driverele."
+    IDS_DEV_MOVED "ReactOS este în proces de configurare a acestui dispozitiv."
+    IDS_DEV_TOO_EARLY "ReactOS este în proces de configurare a acestui dispozitiv."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS nu poate specifica resursele necesare pentru acest dispozitiv."
+    IDS_DEV_FAILED_INSTALL "Driverele ale acestui dispozitiv nu sunt instalate."
     IDS_DEV_HARDWARE_DISABLED "Acest dispozitiv este dezactivat deoarece BIOS nu i-a alocat resursele necesare."
-    IDS_DEV_CANT_SHARE_IRQ "Acest dispozitiv necesită o cerere de întrerupere (IRQ) care este folosită deja de alt dispozitiv și care nu poate fi folosită în comun.\nFie modificați configurația dispozitivelor pentru a rezolva problema gestiunii cererilor de întreruperi, fie eliminați modulul-pilot de mod-real care provoacă acest conflict."
+    IDS_DEV_CANT_SHARE_IRQ "Acest dispozitiv necesită o cerere de întrerupere (IRQ) care este folosită deja de alt dispozitiv și care nu poate fi folosită în comun.\nFie modificați configurația dispozitivelor pentru a rezolva problema gestiunii cererilor de întreruperi, fie eliminați Driverul de mod-real care provoacă acest conflict."
     IDS_DEV_FAILED_ADD "Acest dispozitiv nu funcționează corect deoarcere %1 nu funcționează corect."
-    IDS_DEV_DISABLED_SERVICE "Nu au putut fi instalate modulele-pilot pentru acest dispozitiv deoarece locația de stocare a fișierelor necesare pentru instalare nu a putut fi accesată."
-    IDS_DEV_TRANSLATION_FAILED "Acest dispozitiv nu răspunde la comenzile modulului-pilot."
-    IDS_DEV_NO_SOFTCONFIG "Configurația acestui dispozitiv nu poate fi determinată. Consultați-i documentația din dotare și utilizați compartimentul „Resurse” pentru a-i stabili configurația corectă."
+    IDS_DEV_DISABLED_SERVICE "ReactOS nu poate instala driverele pentru acest dispozitiv deoarece locația de stocare a fișierelor necesare pentru instalare nu a putut fi accesată."
+    IDS_DEV_TRANSLATION_FAILED "Acest dispozitiv nu răspunde la comenzile driverului."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS nu poate determina setările acestui dispozitiv. Consultați-i documentația din dotare și utilizați compartimentul „Resurse” pentru a-i stabili configurația corectă."
     IDS_DEV_BIOS_TABLE "Microprogramele din sistemul calculatorului dumneavoastră nu conțin suficiente informații pentru a configura și a putea utiliza acest dispozitiv.\nPentru a utiliza acest dispozitiv, contactați producatorul calculatorului în vederea obținerii de actualizări pentru microprograme sau BIOS."
     IDS_DEV_IRQ_TRANSLATION_FAILED "Acest dispozitiv a solicitat o întrerupere PCI însă este configurat pentru întreruperi ISA (sau viceversa).\nUtilizați programele de configurare din dotare pentru a reconfigura întreruperile pentru acest dispozitiv."
-    IDS_DEV_FAILED_DRIVER_ENTRY "Modulul-pilot al acestui dispozitiv nu a putut fi pornit."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "Modulul-pilot al acestui dispozitiv nu a putut fi încărcat, deoarece acesta deja este încărcat în memorie."
-    IDS_DEV_DRIVER_FAILED_LOAD "Modulul-pilot al acestui dispozitiv nu a putut fi încărcat, deoarece fie lipsește, fie este deteriorat."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "Acest dispozitiv nu poate fi accesat, deoarece informația cheii din registru fie lipsește, fie a fost înregistrată incorect."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "Modulul-pilot pentru acest dispozitiv a fost încărcat cu succes, însă dispozitivul nu mai poate fi găsit."
-    IDS_DEV_DUPLICATE_DEVICE "Modulul-pilot nu a putut fi încărcat, deoarece în sistem deja exista un dispozitiv în funcțiune de acest fel."
-    IDS_DEV_FAILED_POST_START "Acest dispozitiv a fost oprit, deoarece au fost depistate probleme cu el."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nu poate inițializa driverul acestui dispozitiv."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS nu poate încărca driverul al acestui dispozitiv deoarece acesta deja este încărcat în memorie."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS nu poate încărca driverul al acestui dispozitiv deoarece fie lipsește, fie este deteriorat."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS nu poate accesa acest dispozitiv deoarece informația cheii din registru fie lipsește, fie a fost înregistrată incorect."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS a încărcat driverul dispozitivului cu succes, însă nu poate găsi dispozitivul."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS nu poate încărca driverul deoarece în sistem deja exista un dispozitiv în funcțiune de acest fel."
+    IDS_DEV_FAILED_POST_START "ReactOS a oprit acest dispozitiv deoarece au fost depistate probleme cu el."
     IDS_DEV_HALTED "O aplicație sau un serviciu a oprit acest dispozitiv."
     IDS_DEV_PHANTOM "La moment, acest dispozitiv nu este conectat la calculator."
-    IDS_DEV_SYSTEM_SHUTDOWN "Dispozitivul nu poate fi accesat, deoarece sistemul de operare este în curs de închidere."
-    IDS_DEV_HELD_FOR_EJECT "Dispozitivul nu poate fi utilizat, deoarece acesta a fost deja pregătit pentru a fi deconectat."
-    IDS_DEV_DRIVER_BLOCKED "Modulul-pilot al acestui dispozitiv a fost oprit din cauza unor probleme de compatibilitate. Contactați furnizorul dispozitivului pentru o versiune compatibilă."
-    IDS_DEV_REGISTRY_TOO_LARGE "Dispozitivul nu poate fi pornit, deoarece secțiunea registrului de sistem este prea mare (depășind limita admisă a dimensiunii totale a registrului)."
-    IDS_DEV_SETPROPERTIES_FAILED "Configurația acestui dispozitiv nu a putut fi modificată."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS nu poate obține acces la acest dispozitiv deoarece sistemul de operare este în curs de închidere."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS nu poate folosi acest dispozitiv deoarece acesta a fost deja pregătit pentru a fi deconectat."
+    IDS_DEV_DRIVER_BLOCKED "Driverul al acestui dispozitiv a fost oprit din cauza unor probleme de compatibilitate. Contactați furnizorul dispozitivului pentru o versiune compatibilă."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS nu poate porni dispozitive noi deoarece secțiunea registrului de sistem este prea mare (depășind limita admisă a dimensiunii totale a registrului)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS nu a putut schimba setările acestui dispozitiv."
 END
 
 STRINGTABLE
@@ -170,7 +170,7 @@ END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Module-pilot"
+CAPTION "Drivere"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -179,23 +179,23 @@ BEGIN
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Dată:", -1, 15, 53, 80, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Versiunea modulului-pilot:", -1, 15, 67, 82, 8, SS_NOPREFIX
+    LTEXT "Versiunea driverului:", -1, 15, 67, 82, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Semnatar digital:", -1, 15, 81, 81, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalii…", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Mai multe detalii despre modulele-pilot.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    LTEXT "Mai multe detalii despre driverele.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Actualizare…", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Actualizați modulul-pilot pentru dispozitiv.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    LTEXT "Actualizați Driverul pentru dispozitiv.", -1, 91, 138, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Restabilește", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "Dacă dispozitivul manifestă disfuncții după actualizarea modulului-pilot, restabiliți o versiune precedentă.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    LTEXT "Dacă dispozitivul manifestă disfuncții după actualizarea driverului, restabiliți o versiune precedentă.", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "De&zinstalează", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "Pentru a dezinstala un modul-pilot (opțiuni avansate).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    LTEXT "Pentru a dezinstala un driver (opțiuni avansate).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detaliile modulului-pilot"
+CAPTION "Detaliile driverului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -235,7 +235,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Configurație de resurse:", -1, 7, 36, 204, 8
+    LTEXT "Setările de resurse:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
@@ -303,7 +303,7 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Actualizare modul-pilot…"
+  IDS_MENU_UPDATE           "Actualizare driver…"
   IDS_MENU_ENABLE           "Activează"
   IDS_MENU_DISABLE          "Dezactivează"
   IDS_MENU_UNINSTALL        "Dezinstalează"
@@ -318,7 +318,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "Scanează configurația fizică"
   IDS_TOOLTIP_ENABLE        "Activează"
   IDS_TOOLTIP_DISABLE       "Dezactivează"
-  IDS_TOOLTIP_UPDATE        "Actualizare modul-pilot…"
+  IDS_TOOLTIP_UPDATE        "Actualizare driver…"
   IDS_TOOLTIP_UNINSTALL     "Dezinstalează"
 END
 
@@ -330,8 +330,8 @@ BEGIN
   IDS_HINT_SCAN         " Scanare pentru depistarea schimbărilor în configurația sistemului."
   IDS_HINT_ENABLE       " Activare dispozitiv selectat."
   IDS_HINT_DISABLE      " Dezactivare dispozitiv selectat."
-  IDS_HINT_UPDATE       " Lansare asistent de actualizare a modulului-pilot pentru dispozitivul selestat."
-  IDS_HINT_UNINSTALL    " Dezinstalare modul-pilot pentru dispozitivul selectat."
+  IDS_HINT_UPDATE       " Lansare asistent de actualizare a driverului pentru dispozitivul selestat."
+  IDS_HINT_UNINSTALL    " Dezinstalare driver pentru dispozitivul selectat."
   IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator."
   IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
   IDS_HINT_EXIT         " Ieșire din program."
