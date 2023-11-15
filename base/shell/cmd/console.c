@@ -106,9 +106,10 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 #endif
     for (p = lpInput; *p; p++)
     {
-        if (*p == _T('\x0d'))
+        if (*p == _T('\r')) // Terminate at the next carriage-return.
         {
             *p = _T('\0');
+            ConOutChar(_T('\n')); // Output newline as well.
             break;
         }
     }

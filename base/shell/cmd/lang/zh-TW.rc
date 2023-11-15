@@ -103,9 +103,9 @@ CTTY device\n\n\
             CON is usually the default standard I/O device.\n\n\
 To return control to the standard console, type: CTTY CON on the auxiliary\n\
 device."
-    STRING_DATE_HELP1 "\n輸入新的日期 (mm%cdd%cyyyy)："
-    STRING_DATE_HELP2 "\n輸入新的日期 (dd%cmm%cyyyy)："
-    STRING_DATE_HELP3 "\n輸入新的日期 (yyyy%cmm%cdd)："
+    STRING_DATE_HELP1 "輸入新的日期 (mm%cdd%cyyyy)： "
+    STRING_DATE_HELP2 "輸入新的日期 (dd%cmm%cyyyy)： "
+    STRING_DATE_HELP3 "輸入新的日期 (yyyy%cmm%cdd)： "
     STRING_DATE_HELP4 "顯示或者設定日期。\n\n\
 DATE [/T][日期]\n\n\
   /T    僅顯示\n\n\
@@ -237,7 +237,7 @@ ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字�
 字元串1==字元串2   當所指定的字元串相匹配時為 TRUE。\n\
 EXIST 檔案名稱     當指定的檔案名稱存在時為 TRUE。\n\
 DEFINED 變數       當指定的變數已被定義時為 TRUE。\n"
-    STRING_LOCALE_HELP1 "目前的時間是"
+    STRING_TIME_NOW "目前的時間是： "
     STRING_MKDIR_HELP "建立一個目錄。\n\n\
 MKDIR [磁碟機:]路徑\nMD [磁碟機:]路徑"
     STRING_MKLINK_HELP "建立一個檔案系統連結物件。\n\n\
@@ -377,7 +377,7 @@ TITLE [字串]\n\n\
 TIME [/T][時間]\n\n\
   /T    僅顯示\n\n\
 執行不帶參數的 TIME 將會顯示目前的時間設定並且提示設定新的時間。按下 ENTER 鍵來保持原有設定。\n"
-    STRING_TIME_HELP2 "輸入新的時間："
+    STRING_TIME_HELP2 "輸入新的時間： "
     STRING_TIMER_HELP1 "已過去 %d 毫秒\n"
     STRING_TIMER_HELP2 "已過去 %02d%c%02d%c%02d%c%02d\n"
     STRING_TIMER_HELP3 "允許使用最多十個計時器。\n\n\
@@ -453,23 +453,23 @@ RESTORE       恢復視窗\n\
     STRING_CMD_ERROR3 "無法重定向到檔案 %s\n"
     STRING_CMD_ERROR4 "正在運行 %s...\n"
     STRING_CMD_ERROR5 "正在運行 cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "同樣顏色錯誤！ (背景和前景不能同色)"
-    STRING_COLOR_ERROR2 "顏色指定錯誤"
+    STRING_COLOR_ERROR1 "同樣顏色錯誤！ (背景和前景不能同色)\n"
+    STRING_COLOR_ERROR2 "顏色指定錯誤\n"
     STRING_CONSOLE_ERROR "未知錯誤：%d\n"
     STRING_COPY_ERROR1 "錯誤：無法開啟來源 - %s！\n"
     STRING_COPY_ERROR2 "錯誤：無法複製到自身！\n"
     STRING_COPY_ERROR3 "寫入目的時出錯！\n"
     STRING_COPY_ERROR4 "錯誤：尚未實現！\n"
-    STRING_DATE_ERROR "無效的日期。"
+    STRING_DATE_ERROR "無效的日期。\n"
     STRING_DEL_ERROR5 "檔案 %s 將會被刪除！"
     STRING_DEL_ERROR6 "您確定嗎 (Y/N)？ "
     STRING_DEL_ERROR7 "正在刪除：%s\n"
     STRING_ERROR_ERROR1 "未知錯誤！錯誤碼：0x%lx\n"
     STRING_ERROR_ERROR2 "語法錯誤"
-    STRING_FOR_ERROR1 "語句中缺少 'in'。"
-    STRING_FOR_ERROR2 "沒有發現括號。"
-    STRING_FOR_ERROR3 "缺少 'do'。"
-    STRING_FOR_ERROR4 "'do' 後沒有命令。"
+    STRING_FOR_ERROR1 "語句中缺少 'in'。\n"
+    STRING_FOR_ERROR2 "沒有發現括號。\n"
+    STRING_FOR_ERROR3 "缺少 'do'。\n"
+    STRING_FOR_ERROR4 "'do' 後沒有命令。\n"
     STRING_FREE_ERROR1 "無效的磁碟機"
     STRING_FREE_ERROR2 "未標記"
     STRING_GOTO_ERROR1 "沒有為 GOTO 指定標籤\n"
@@ -478,10 +478,10 @@ RESTORE       恢復視窗\n\
     STRING_MD_ERROR2 "新資料夾的路徑不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[錯誤]\n"
-    STRING_REN_ERROR1 "MoveFile() 失敗。錯誤碼：%lu\n"
-    STRING_TIME_ERROR1 "無效的時間。"
-    STRING_TYPE_ERROR1 "無效的選項 '/%s'\n"
-    STRING_WINDOW_ERROR1 "找不到視窗"
+    STRING_REN_ERROR "MoveFile() 失敗。錯誤碼：%lu\n"
+    STRING_TIME_ERROR "無效的時間。\n"
+    STRING_TYPE_ERROR "無效的選項 '/%s'\n"
+    STRING_WINDOW_ERROR "找不到視窗\n"
     STRING_ERROR_PARAMETERF_ERROR "參數格式不正確 - %c\n"
     STRING_ERROR_INVALID_SWITCH "無效的開關 - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "太多參數 - %s\n"
@@ -510,9 +510,9 @@ RESTORE       恢復視窗\n\
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d 個檔案已複製\n"
     STRING_DELETE_WIPE "已擦除"
-    STRING_FOR_ERROR "無效的變數指定。"
-    STRING_SCREEN_COL "無效的行值"
-    STRING_SCREEN_ROW "無效的列值"
+    STRING_FOR_ERROR "無效的變數指定。\n"
+    STRING_SCREEN_COL "無效的行值\n"
+    STRING_SCREEN_ROW "無效的列值\n"
     STRING_TIMER_TIME "計時器 %d 是 %s："
     STRING_MKLINK_CREATED_SYMBOLIC "已為 %s <<===>> %s 建立符號連結\n"
     STRING_MKLINK_CREATED_HARD "已為 %s <<===>> %s 建立硬連結\n"
