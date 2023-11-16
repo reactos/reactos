@@ -1,6 +1,6 @@
 The following material is addressed (in Romanian) to Romanian translators.
 
-Copyright 2017 ColinFinck
+Copyright 2014 Ștefan Fulea
 Copyright 2023 Miloiu Andrei
 
 ------------------------------------------------------------------------------
