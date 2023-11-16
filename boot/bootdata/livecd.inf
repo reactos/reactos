@@ -10,6 +10,11 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 ; Default locale for the keyboard layout
 HKU,".DEFAULT\Keyboard Layout\Preload","1",0x00000000,"00000409"
 
+; Toggle keys (Alt+Shift etc.)
+HKU,".DEFAULT\Keyboard Layout\Toggle","Hotkey",0x00000000,"1"
+HKU,".DEFAULT\Keyboard Layout\Toggle","Language Hotkey",0x00000000,"1"
+HKU,".DEFAULT\Keyboard Layout\Toggle","Layout Hotkey",0x00000000,"2"
+
 ; Cdrom class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000000
 
