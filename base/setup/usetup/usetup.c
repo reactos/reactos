@@ -2847,7 +2847,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                                     DiskEntry->DiskNumber,
                                     PartEntry->PartitionNumber);
 
-                DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
+                DPRINT1("DoFormat() failed: Status 0x%08lx\n", Status);
                 MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
 
                 /* Reset the filesystem list */
@@ -2950,7 +2950,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
     else if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ChkdskPartition() failed with status 0x%08lx\n", Status);
+        DPRINT1("DoChkdsk() failed: Status 0x%08lx\n", Status);
 
         RtlStringCbPrintfA(Buffer,
                            sizeof(Buffer),
@@ -3060,7 +3060,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         Status = InitDestinationPaths(&USetupData, InstallDir, InstallPartition);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("InitDestinationPaths() failed. Status code: 0x%lx", Status);
+            DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
             MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
@@ -3164,7 +3164,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
             Status = InitDestinationPaths(&USetupData, InstallDir, InstallPartition);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("InitDestinationPaths() failed. Status code: 0x%lx", Status);
+                DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
                 MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
                 return QUIT_PAGE;
             }
@@ -3825,7 +3825,7 @@ BootLoaderHardDiskPage(PINPUT_RECORD Ir)
                                               DestinationDevicePathBuffer);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
+                DPRINT1("InstallMbrBootCodeToDisk() failed: Status 0x%lx\n", Status);
                 MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
                 return FALSE;
             }

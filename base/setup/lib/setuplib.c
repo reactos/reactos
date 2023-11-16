@@ -833,7 +833,7 @@ InitializeSetup(
                                 &pSetupData->SourceRootDir);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
+            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)\n", Status);
             return ERROR_NO_SOURCE_DRIVE;
         }
         /*
@@ -850,7 +850,7 @@ InitializeSetup(
         Error = LoadSetupInf(pSetupData);
         if (Error != ERROR_SUCCESS)
         {
-            DPRINT1("LoadSetupInf() failed (Error 0x%lx)", Error);
+            DPRINT1("LoadSetupInf() failed (Error 0x%lx)\n", Error);
             return Error;
         }
         DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
