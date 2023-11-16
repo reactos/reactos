@@ -7483,22 +7483,25 @@ CM_Request_Device_Eject_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    LPWSTR lpLocalVetoName;
+    LPWSTR lpLocalVetoName = NULL;
     CONFIGRET ret;
 
     TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
           dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
 
-    if (pszVetoName == NULL && ulNameLength != 0)
-        return CR_INVALID_POINTER;
+    if (ulNameLength != 0)
+    {
+        if (pszVetoName == NULL)
+            return CR_INVALID_POINTER;
 
-    lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
-    if (lpLocalVetoName == NULL)
-        return CR_OUT_OF_MEMORY;
+        lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+        if (lpLocalVetoName == NULL)
+            return CR_OUT_OF_MEMORY;
+    }
 
     ret = CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, lpLocalVetoName,
                                       ulNameLength, ulFlags, hMachine);
-    if (ret == CR_REMOVE_VETOED)
+    if (ret == CR_REMOVE_VETOED && ulNameLength != 0)
     {
         if (WideCharToMultiByte(CP_ACP,
                                 0,
