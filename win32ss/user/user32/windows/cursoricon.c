@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
@@ -151,10 +151,16 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         else return FALSE;
     }
 }
-
-static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
+/***********************************************************************
+ *           bitmap_info_size
+ *
+ * Return the size of the bitmap info structure including color table and
+ * the bytes required for 3 DWORDS if this is a BI_BITFIELDS(3) bmp.
+ */
+static int bitmap_info_size(const BITMAPINFO * info, WORD coloruse, DWORD ResSize)
+/* If GCC for 32-bpp BI_BITFIELDS gets fixed, the third parameter can be removed. */
 {
-    unsigned int colors, size, masks = 0;
+    unsigned int colors, size, masks = 0, bitfields = 0;
 
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
@@ -165,6 +171,24 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
     }
     else  /* assume BITMAPINFOHEADER */
     {
+        /* Test if compression BI_BITFIELDS & bpp either 16 or 32 bpp.
+         * If so, account for the 3 DWORD masks (RGB Order).
+         * BITMAPCOREHEADER tested above has no 16 or 32 bpp types.
+         * See table "All of the possible pixel formats in a DIB"
+         * at https://en.wikipedia.org/wiki/BMP_file_format. */
+        if (info->bmiHeader.biCompression == BI_BITFIELDS &&
+            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
+                bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
+
+        /* Test if this is a GCC windres.exe compiled 32 bpp bitmap. If so,
+         * then this is a mistake. It does not include the bytes for the bitfields.
+         * So, we we have to zero out the bitfield accounted for above.
+         * If this is ever fixed, then this code needs to be removed. */
+        if (info->bmiHeader.biSizeImage + info->bmiHeader.biSize + 12 != ResSize &&
+            info->bmiHeader.biCompression == BI_BITFIELDS &&
+            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
+            bitfields = 0;
+
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) /* buffer overflow otherwise */
                 colors = 256;
@@ -172,7 +196,7 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
             colors = 1 << info->bmiHeader.biBitCount;
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
-        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD)) + bitfields;
     }
 }
 
@@ -585,7 +609,7 @@ static BOOL CURSORICON_GetCursorDataFromBMI(
     _In_    const BITMAPINFO *pbmi
 )
 {
-    UINT ubmiSize = bitmap_info_size(pbmi, DIB_RGB_COLORS);
+    UINT ubmiSize = bitmap_info_size(pbmi, DIB_RGB_COLORS, 0);
     BOOL monochrome = is_dib_monochrome(pbmi);
     LONG width, height;
     WORD bpp;
@@ -1138,7 +1162,7 @@ BITMAP_LoadImageW(
     else if(height < 0)
         cyDesired = -cyDesired;
 
-    iBMISize = bitmap_info_size(pbmi, DIB_RGB_COLORS);
+    iBMISize = bitmap_info_size(pbmi, DIB_RGB_COLORS, ResSize);
 
     /* Get a pointer to the image data */
     pvBits = (char*)pbmi + (dwOffset ? dwOffset : iBMISize);
@@ -1148,14 +1172,6 @@ BITMAP_LoadImageW(
     if(!pbmiCopy)
         goto end;
     CopyMemory(pbmiCopy, pbmi, iBMISize);
-
-    /* Test compression BI_BITFIELDS & if its 12 bytes are in Resource Size */
-    if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize + 12 == ResSize
-             && compr == BI_BITFIELDS && (bpp == 32 || bpp == 16))
-    {
-        pvBits = (char*)pvBits + 12;
-        TRACE("12 bytes added to pvBits to adjust for BI_BITFIELDS\n");
-    }
 
     /* Fix it up, if needed */
     if(fuLoad & (LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS))
