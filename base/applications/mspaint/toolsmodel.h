@@ -80,7 +80,7 @@ private:
     BrushStyle m_brushStyle;
     TOOLTYPE m_activeTool;
     TOOLTYPE m_oldActiveTool;
-    int m_airBrushWidth;
+    INT m_airBrushRadius;
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
@@ -116,8 +116,8 @@ public:
     TOOLTYPE GetOldActiveTool() const;
     void SetActiveTool(TOOLTYPE nActiveTool);
 
-    int GetAirBrushWidth() const;
-    void SetAirBrushWidth(int nAirBrushWidth);
+    INT GetAirBrushRadius() const;
+    void SetAirBrushRadius(INT nAirBrushRadius);
     void MakeAirBrushThickerOrThinner(BOOL bThinner);
 
     int GetRubberRadius() const;

@@ -219,7 +219,7 @@ VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
         RECT& rc = rects[i];
         INT x = (rc.left + rc.right) / 2;
         INT y = (rc.top + rc.bottom) / 2;
-        BOOL bHigh = (s_AirRadius[i] == toolsModel.GetAirBrushWidth());
+        BOOL bHigh = (s_AirRadius[i] == toolsModel.GetAirBrushRadius());
         if (bHigh)
         {
             ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -438,7 +438,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_AIRBRUSH:
             iItem = getAirBrushRects(rects, &rect1, &pt);
             if (iItem != -1)
-                toolsModel.SetAirBrushWidth(s_AirRadius[iItem]);
+                toolsModel.SetAirBrushRadius(s_AirRadius[iItem]);
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:

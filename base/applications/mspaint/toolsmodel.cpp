@@ -18,7 +18,7 @@ ToolsModel::ToolsModel()
     m_shapeStyle = 0;
     m_brushStyle = BrushStyleRound;
     m_oldActiveTool = m_activeTool = TOOL_PEN;
-    m_airBrushWidth = 5;
+    m_airBrushRadius = 5;
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
@@ -99,8 +99,8 @@ void ToolsModel::MakeBrushThickerOrThinner(BOOL bThinner)
 
 void ToolsModel::MakeAirBrushThickerOrThinner(BOOL bThinner)
 {
-    INT thickness = GetAirBrushWidth();
-    SetAirBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    INT thickness = GetAirBrushRadius();
+    SetAirBrushRadius(bThinner ? max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakeRubberThickerOrThinner(BOOL bThinner)
@@ -180,14 +180,14 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
     NotifyToolChanged();
 }
 
-int ToolsModel::GetAirBrushWidth() const
+INT ToolsModel::GetAirBrushRadius() const
 {
-    return m_airBrushWidth;
+    return m_airBrushRadius;
 }
 
-void ToolsModel::SetAirBrushWidth(int nAirBrushWidth)
+void ToolsModel::SetAirBrushRadius(INT nAirBrushRadius)
 {
-    m_airBrushWidth = nAirBrushWidth;
+    m_airBrushRadius = nAirBrushRadius;
     NotifyToolSettingsChanged();
 }
 
