@@ -3555,7 +3555,9 @@ static BOOL FASTCALL MENU_ButtonDown(MTRACKER* pmt, PMENU PtMenu, UINT Flags)
   {
       UINT id = 0;
       PITEM item;
-      if (IS_SYSTEM_MENU(PtMenu))
+      
+      // Special check for the icon system menu
+      if (IS_SYSTEM_MENU(PtMenu) && !(PtMenu->fFlags & MNF_POPUP))
       {
          item = PtMenu->rgItems;
       }
@@ -3599,7 +3601,8 @@ static INT FASTCALL MENU_ButtonUp(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
       UINT Id = 0;
       ITEM *item;
       
-      if ( IS_SYSTEM_MENU(PtMenu) )
+      // Special check for the icon system menu
+      if (IS_SYSTEM_MENU(PtMenu) && !(PtMenu->fFlags & MNF_POPUP))
       {
           item = PtMenu->rgItems;
       }

@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortFilterWavePci : public CUnknownImpl<IPortFilterWavePci>
@@ -90,7 +87,6 @@ CPortFilterWavePci::NewIrpTarget(
         // no available instance
         return STATUS_UNSUCCESSFUL;
     }
-
 
     // now create the pin
     Status = NewPortPinWavePci(&Pin);
@@ -312,7 +308,6 @@ CPortFilterWavePci::FreePin(
     }
     return STATUS_UNSUCCESSFUL;
 }
-
 
 NTSTATUS
 NewPortFilterWavePci(

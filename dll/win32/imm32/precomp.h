@@ -75,6 +75,7 @@ extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
 extern HANDLE ghImmHeap;
+extern DWORD g_aimm_compat_flags;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
@@ -143,7 +144,6 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 #define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
 #define IS_CROSS_PROCESS_HWND(hWnd)    IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define IS_16BIT_MODE()                (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
@@ -189,3 +189,6 @@ PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 
 HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
 BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
+
+HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
+HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);

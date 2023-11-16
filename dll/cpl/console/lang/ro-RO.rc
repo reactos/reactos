@@ -1,9 +1,10 @@
 /*
- * PROJECT:    ReactOS Console Configuration DLL
- * LICENSE:    GPL - See COPYING in the top level directory
- * PURPOSE:    Romanian resource file
- * TRANSLATOR: Petru Dimitriu <petrimetri@gmail.com>
- *             Ștefan Fulea <stefan.fulea@mail.com>
+ * PROJECT:     ReactOS Console
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -31,8 +32,8 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 119, 120, 12, 15
     AUTOCHECKBOX "Înlătură duplicatele &vechi", IDC_CHECK_DISCARD_DUPLICATES, 12, 140, 110, 15
     GROUPBOX "Opțiuni de editare", IDC_STATIC, 133, 85, 112, 77, BS_GROUPBOX | WS_CHILD | WS_VISIBLE | WS_GROUP
-    AUTOCHECKBOX "Mod de &editare rapidă”", IDC_CHECK_QUICK_EDIT, 140, 97, 102, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    AUTOCHECKBOX "Mod de inse&rție”", IDC_CHECK_INSERT_MODE, 140, 113, 76, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Mod de &editare rapidă", IDC_CHECK_QUICK_EDIT, 140, 97, 102, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Mod de inse&rție", IDC_CHECK_INSERT_MODE, 140, 113, 76, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Cod de pagină", IDC_STATIC, 7, 170, 238, 31
     COMBOBOX IDL_CODEPAGE, 13, 181, 224, 58, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
@@ -47,7 +48,7 @@ BEGIN
     LTEXT "Mărime:", IDC_STATIC, 130, 7, 45, 10
     LISTBOX IDC_LBOX_FONTSIZE, 130, 20, 50, 86, LBS_SORT | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_CBOX_FONTSIZE, 130, 20, 30, 86, CBS_SIMPLE | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    AUTORADIOBUTTON "pi&xels", IDC_RADIO_PIXEL_UNIT, 165, 17, 60, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTORADIOBUTTON "pi&xeli", IDC_RADIO_PIXEL_UNIT, 165, 17, 60, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     AUTORADIOBUTTON "p&uncte", IDC_RADIO_POINT_UNIT, 165, 28, 60, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "F&ont:", IDC_STATIC, 10, 105, 33, 10
     AUTOCHECKBOX "&Aldin", IDC_CHECK_BOLD_FONTS, 56, 105, 60, 10

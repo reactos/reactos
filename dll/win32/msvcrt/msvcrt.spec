@@ -200,9 +200,9 @@
 @ stub -version=0x600+ _CrtCheckMemory
 @ stub -version=0x600+ _CrtDbgBreak
 @ cdecl -version=0x600+ _CrtDbgReport(long str long str str)
-@ stub -version=0x600+ _CrtDbgReportV
+@ cdecl -version=0x600+ _CrtDbgReportV(long str long str str ptr)
 @ cdecl -version=0x600+ _CrtDbgReportW(long wstr long wstr wstr)
-@ stub -version=0x600+ _CrtDbgReportWV
+@ cdecl -version=0x600+ _CrtDbgReportWV(long wstr long wstr wstr ptr)
 @ stub -version=0x600+ _CrtDoForAllClientObjects
 @ stub -version=0x600+ _CrtDumpMemoryLeaks
 @ stub -version=0x600+ _CrtIsMemoryBlock
@@ -549,7 +549,7 @@
 @ stub -version=0x600+ _fwscanf_l
 @ stub -version=0x600+ _fwscanf_s_l
 @ cdecl _gcvt(double long str)
-@ stub -version=0x600+ _gcvt_s
+@ cdecl -version=0x600+ _gcvt_s(ptr ptr double long)
 @ cdecl -version=0x600+ _get_doserrno(ptr)
 @ stub -version=0x600+ _get_environ
 @ cdecl -version=0x600+ _get_errno(ptr)

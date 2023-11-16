@@ -15,18 +15,18 @@ RegistrySettings registrySettings;
 
 /* FUNCTIONS ********************************************************/
 
-static void ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue)
+static void ReadDWORD(CRegKey &key, LPCWSTR lpName, DWORD &dwValue)
 {
     DWORD dwTemp;
     if (key.QueryDWORDValue(lpName, dwTemp) == ERROR_SUCCESS)
         dwValue = dwTemp;
 }
 
-static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR lpDefault = TEXT(""))
+static void ReadString(CRegKey &key, LPCWSTR lpName, CStringW &strValue, LPCWSTR lpDefault = L"")
 {
-    CString strTemp;
+    CStringW strTemp;
     ULONG nChars = MAX_PATH;
-    LPTSTR psz = strTemp.GetBuffer(nChars);
+    LPWSTR psz = strTemp.GetBuffer(nChars);
     LONG error = key.QueryStringValue(lpName, psz, &nChars);
     strTemp.ReleaseBuffer();
 
@@ -36,15 +36,15 @@ static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR 
         strValue = lpDefault;
 }
 
-void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::WallpaperStyle style)
+void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
     CRegKey desktop;
-    if (desktop.Open(HKEY_CURRENT_USER, _T("Control Panel\\Desktop")) == ERROR_SUCCESS)
+    if (desktop.Open(HKEY_CURRENT_USER, L"Control Panel\\Desktop") == ERROR_SUCCESS)
     {
-        desktop.SetStringValue(_T("Wallpaper"), szFileName);
+        desktop.SetStringValue(L"Wallpaper", szFileName);
 
-        desktop.SetStringValue(_T("WallpaperStyle"), (style == RegistrySettings::STRETCHED) ? _T("2") : _T("0"));
-        desktop.SetStringValue(_T("TileWallpaper"), (style == RegistrySettings::TILED) ? _T("1") : _T("0"));
+        desktop.SetStringValue(L"WallpaperStyle", (style == RegistrySettings::STRETCHED) ? L"2" : L"0");
+        desktop.SetStringValue(L"TileWallpaper", (style == RegistrySettings::TILED) ? L"1" : L"0");
     }
 
     SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
@@ -77,8 +77,8 @@ void RegistrySettings::LoadPresets(INT nCmdShow)
     Bar1ID = BAR1ID_TOP;
     Bar2ID = BAR2ID_LEFT;
 
-    LOGFONT lf;
-    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    LOGFONTW lf;
+    ::GetObjectW(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     strFontName = lf.lfFaceName;
 
     ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
@@ -94,76 +94,76 @@ void RegistrySettings::Load(INT nCmdShow)
     LoadPresets(nCmdShow);
 
     CRegKey paint;
-    if (paint.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint"), KEY_READ) != ERROR_SUCCESS)
+    if (paint.Open(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint", KEY_READ) != ERROR_SUCCESS)
         return;
 
     CRegKey view;
-    if (view.Open(paint, _T("View"), KEY_READ) == ERROR_SUCCESS)
+    if (view.Open(paint, L"View", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(view, _T("BMPHeight"),     BMPHeight);
-        ReadDWORD(view, _T("BMPWidth"),      BMPWidth);
-        ReadDWORD(view, _T("GridExtent"),    GridExtent);
-        ReadDWORD(view, _T("NoStretching"),  NoStretching);
-        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail);
-        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid);
-        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight);
-        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth);
-        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos);
-        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos);
-        ReadDWORD(view, _T("UnitSetting"),   UnitSetting);
-        ReadDWORD(view, _T("ShowStatusBar"), ShowStatusBar);
+        ReadDWORD(view, L"BMPHeight",     BMPHeight);
+        ReadDWORD(view, L"BMPWidth",      BMPWidth);
+        ReadDWORD(view, L"GridExtent",    GridExtent);
+        ReadDWORD(view, L"NoStretching",  NoStretching);
+        ReadDWORD(view, L"ShowThumbnail", ShowThumbnail);
+        ReadDWORD(view, L"SnapToGrid",    SnapToGrid);
+        ReadDWORD(view, L"ThumbHeight",   ThumbHeight);
+        ReadDWORD(view, L"ThumbWidth",    ThumbWidth);
+        ReadDWORD(view, L"ThumbXPos",     ThumbXPos);
+        ReadDWORD(view, L"ThumbYPos",     ThumbYPos);
+        ReadDWORD(view, L"UnitSetting",   UnitSetting);
+        ReadDWORD(view, L"ShowStatusBar", ShowStatusBar);
 
         ULONG pnBytes = sizeof(WINDOWPLACEMENT);
-        view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
+        view.QueryBinaryValue(L"WindowPlacement", &WindowPlacement, &pnBytes);
     }
 
     CRegKey files;
-    if (files.Open(paint, _T("Recent File List"), KEY_READ) == ERROR_SUCCESS)
+    if (files.Open(paint, L"Recent File List", KEY_READ) == ERROR_SUCCESS)
     {
-        TCHAR szName[64];
+        WCHAR szName[64];
         for (INT i = 0; i < MAX_RECENT_FILES; ++i)
         {
-            wsprintf(szName, _T("File%u"), i + 1);
+            StringCchPrintfW(szName, _countof(szName), L"File%u", i + 1);
             ReadString(files, szName, strFiles[i]);
         }
     }
 
     CRegKey text;
-    if (text.Open(paint, _T("Text"), KEY_READ) == ERROR_SUCCESS)
+    if (text.Open(paint, L"Text", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(text, _T("Bold"),         Bold);
-        ReadDWORD(text, _T("Italic"),       Italic);
-        ReadDWORD(text, _T("Underline"),    Underline);
-        ReadDWORD(text, _T("CharSet"),      CharSet);
-        ReadDWORD(text, _T("PointSize"),    PointSize);
-        ReadDWORD(text, _T("PositionX"),    FontsPositionX);
-        ReadDWORD(text, _T("PositionY"),    FontsPositionY);
-        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool);
-        ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
+        ReadDWORD(text, L"Bold",         Bold);
+        ReadDWORD(text, L"Italic",       Italic);
+        ReadDWORD(text, L"Underline",    Underline);
+        ReadDWORD(text, L"CharSet",      CharSet);
+        ReadDWORD(text, L"PointSize",    PointSize);
+        ReadDWORD(text, L"PositionX",    FontsPositionX);
+        ReadDWORD(text, L"PositionY",    FontsPositionY);
+        ReadDWORD(text, L"ShowTextTool", ShowTextTool);
+        ReadString(text, L"TypeFaceName", strFontName, strFontName);
     }
 
     CRegKey bar1;
-    if (bar1.Open(paint, _T("General-Bar1"), KEY_READ) == ERROR_SUCCESS)
+    if (bar1.Open(paint, L"General-Bar1", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar1, _T("BarID"), Bar1ID);
+        ReadDWORD(bar1, L"BarID", Bar1ID);
     }
 
     CRegKey bar2;
-    if (bar2.Open(paint, _T("General-Bar2"), KEY_READ) == ERROR_SUCCESS)
+    if (bar2.Open(paint, L"General-Bar2", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar2, _T("BarID"), Bar2ID);
+        ReadDWORD(bar2, L"BarID", Bar2ID);
     }
 
     CRegKey bar3;
-    if (bar3.Open(paint, _T("General-Bar3"), KEY_READ) == ERROR_SUCCESS)
+    if (bar3.Open(paint, L"General-Bar3", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar3, _T("Visible"), ShowToolBox);
+        ReadDWORD(bar3, L"Visible", ShowToolBox);
     }
 
     CRegKey bar4;
-    if (bar4.Open(paint, _T("General-Bar4"), KEY_READ) == ERROR_SUCCESS)
+    if (bar4.Open(paint, L"General-Bar4", KEY_READ) == ERROR_SUCCESS)
     {
-        ReadDWORD(bar4, _T("Visible"), ShowPalette);
+        ReadDWORD(bar4, L"Visible", ShowPalette);
     }
 
     // Fix the bitmap size if too large
@@ -179,79 +179,79 @@ void RegistrySettings::Store()
     BMPHeight = imageModel.GetHeight();
 
     CRegKey paint;
-    if (paint.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint")) != ERROR_SUCCESS)
+    if (paint.Create(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint") != ERROR_SUCCESS)
         return;
 
     CRegKey view;
-    if (view.Create(paint, _T("View")) == ERROR_SUCCESS)
+    if (view.Create(paint, L"View") == ERROR_SUCCESS)
     {
-        view.SetDWORDValue(_T("BMPHeight"),     BMPHeight);
-        view.SetDWORDValue(_T("BMPWidth"),      BMPWidth);
-        view.SetDWORDValue(_T("GridExtent"),    GridExtent);
-        view.SetDWORDValue(_T("NoStretching"),  NoStretching);
-        view.SetDWORDValue(_T("ShowThumbnail"), ShowThumbnail);
-        view.SetDWORDValue(_T("SnapToGrid"),    SnapToGrid);
-        view.SetDWORDValue(_T("ThumbHeight"),   ThumbHeight);
-        view.SetDWORDValue(_T("ThumbWidth"),    ThumbWidth);
-        view.SetDWORDValue(_T("ThumbXPos"),     ThumbXPos);
-        view.SetDWORDValue(_T("ThumbYPos"),     ThumbYPos);
-        view.SetDWORDValue(_T("UnitSetting"),   UnitSetting);
-        view.SetDWORDValue(_T("ShowStatusBar"), ShowStatusBar);
+        view.SetDWORDValue(L"BMPHeight",     BMPHeight);
+        view.SetDWORDValue(L"BMPWidth",      BMPWidth);
+        view.SetDWORDValue(L"GridExtent",    GridExtent);
+        view.SetDWORDValue(L"NoStretching",  NoStretching);
+        view.SetDWORDValue(L"ShowThumbnail", ShowThumbnail);
+        view.SetDWORDValue(L"SnapToGrid",    SnapToGrid);
+        view.SetDWORDValue(L"ThumbHeight",   ThumbHeight);
+        view.SetDWORDValue(L"ThumbWidth",    ThumbWidth);
+        view.SetDWORDValue(L"ThumbXPos",     ThumbXPos);
+        view.SetDWORDValue(L"ThumbYPos",     ThumbYPos);
+        view.SetDWORDValue(L"UnitSetting",   UnitSetting);
+        view.SetDWORDValue(L"ShowStatusBar", ShowStatusBar);
 
-        view.SetBinaryValue(_T("WindowPlacement"), &WindowPlacement, sizeof(WINDOWPLACEMENT));
+        view.SetBinaryValue(L"WindowPlacement", &WindowPlacement, sizeof(WINDOWPLACEMENT));
     }
 
     CRegKey files;
-    if (files.Create(paint, _T("Recent File List")) == ERROR_SUCCESS)
+    if (files.Create(paint, L"Recent File List") == ERROR_SUCCESS)
     {
-        TCHAR szName[64];
+        WCHAR szName[64];
         for (INT iFile = 0; iFile < MAX_RECENT_FILES; ++iFile)
         {
-            wsprintf(szName, _T("File%u"), iFile + 1);
+            StringCchPrintfW(szName, _countof(szName), L"File%u", iFile + 1);
             files.SetStringValue(szName, strFiles[iFile]);
         }
     }
 
     CRegKey text;
-    if (text.Create(paint, _T("Text")) == ERROR_SUCCESS)
+    if (text.Create(paint, L"Text") == ERROR_SUCCESS)
     {
-        text.SetDWORDValue(_T("Bold"),          Bold);
-        text.SetDWORDValue(_T("Italic"),        Italic);
-        text.SetDWORDValue(_T("Underline"),     Underline);
-        text.SetDWORDValue(_T("CharSet"),       CharSet);
-        text.SetDWORDValue(_T("PointSize"),     PointSize);
-        text.SetDWORDValue(_T("PositionX"),     FontsPositionX);
-        text.SetDWORDValue(_T("PositionY"),     FontsPositionY);
-        text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
-        text.SetStringValue(_T("TypeFaceName"), strFontName);
+        text.SetDWORDValue(L"Bold",          Bold);
+        text.SetDWORDValue(L"Italic",        Italic);
+        text.SetDWORDValue(L"Underline",     Underline);
+        text.SetDWORDValue(L"CharSet",       CharSet);
+        text.SetDWORDValue(L"PointSize",     PointSize);
+        text.SetDWORDValue(L"PositionX",     FontsPositionX);
+        text.SetDWORDValue(L"PositionY",     FontsPositionY);
+        text.SetDWORDValue(L"ShowTextTool",  ShowTextTool);
+        text.SetStringValue(L"TypeFaceName", strFontName);
     }
 
     CRegKey bar1;
-    if (bar1.Create(paint, _T("General-Bar1")) == ERROR_SUCCESS)
+    if (bar1.Create(paint, L"General-Bar1") == ERROR_SUCCESS)
     {
-        bar1.SetDWORDValue(_T("BarID"), Bar1ID);
+        bar1.SetDWORDValue(L"BarID", Bar1ID);
     }
 
     CRegKey bar2;
-    if (bar2.Create(paint, _T("General-Bar2")) == ERROR_SUCCESS)
+    if (bar2.Create(paint, L"General-Bar2") == ERROR_SUCCESS)
     {
-        bar2.SetDWORDValue(_T("BarID"), Bar2ID);
+        bar2.SetDWORDValue(L"BarID", Bar2ID);
     }
 
     CRegKey bar3;
-    if (bar3.Create(paint, _T("General-Bar3")) == ERROR_SUCCESS)
+    if (bar3.Create(paint, L"General-Bar3") == ERROR_SUCCESS)
     {
-        bar3.SetDWORDValue(_T("Visible"), ShowToolBox);
+        bar3.SetDWORDValue(L"Visible", ShowToolBox);
     }
 
     CRegKey bar4;
-    if (bar4.Create(paint, _T("General-Bar4")) == ERROR_SUCCESS)
+    if (bar4.Create(paint, L"General-Bar4") == ERROR_SUCCESS)
     {
-        bar4.SetDWORDValue(_T("Visible"), ShowPalette);
+        bar4.SetDWORDValue(L"Visible", ShowPalette);
     }
 }
 
-void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
+void RegistrySettings::SetMostRecentFile(LPCWSTR szPathName)
 {
     // Register the file to the user's 'Recent' folder
     if (szPathName && szPathName[0])
@@ -265,7 +265,7 @@ void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
 
         if (iFound >= 0)
         {
-            CString tmp = strFiles[i];
+            CStringW tmp = strFiles[i];
             strFiles[i] = strFiles[i - 1];
             strFiles[i - 1] = tmp;
         }

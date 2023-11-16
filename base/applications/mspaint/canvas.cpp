@@ -321,7 +321,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         m_ptOrig = pt;
         SetCapture();
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -357,13 +357,13 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         {
             case TOOL_BEZIER:
             case TOOL_SHAPE:
-                toolsModel.OnCancelDraw();
+                toolsModel.OnEndDraw(TRUE);
                 Invalidate();
                 break;
 
             case TOOL_FREESEL:
             case TOOL_RECTSEL:
-                toolsModel.OnFinishDraw();
+                toolsModel.OnEndDraw(FALSE);
                 Invalidate();
                 break;
 
@@ -450,87 +450,16 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             RECT rcImage;
             GetImageRect(rcImage);
 
-            CString strCoord;
+            CStringW strCoord;
             if (::PtInRect(&rcImage, pt))
-                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-            ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
+                strCoord.Format(L"%ld, %ld", pt.x, pt.y);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
         }
     }
 
     if (m_drawing)
     {
-        // values displayed in statusbar
-        LONG xRel = pt.x - g_ptStart.x;
-        LONG yRel = pt.y - g_ptStart.y;
-
-        switch (toolsModel.GetActiveTool())
-        {
-            // freesel, rectsel and text tools always show numbers limited to fit into image area
-            case TOOL_FREESEL:
-            case TOOL_RECTSEL:
-            case TOOL_TEXT:
-                if (xRel < 0)
-                    xRel = (pt.x < 0) ? -g_ptStart.x : xRel;
-                else if (pt.x > imageModel.GetWidth())
-                    xRel = imageModel.GetWidth() - g_ptStart.x;
-                if (yRel < 0)
-                    yRel = (pt.y < 0) ? -g_ptStart.y : yRel;
-                else if (pt.y > imageModel.GetHeight())
-                    yRel = imageModel.GetHeight() - g_ptStart.y;
-                break;
-
-            // while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14
-            case TOOL_RUBBER:
-            case TOOL_PEN:
-            case TOOL_BRUSH:
-            case TOOL_AIRBRUSH:
-            case TOOL_SHAPE:
-            {
-                CString strCoord;
-                strCoord.Format(_T("%ld, %ld"), pt.x, pt.y);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
-                break;
-            }
-            default:
-                break;
-        }
-
-        // rectsel and shape tools always show non-negative numbers when drawing
-        if (toolsModel.GetActiveTool() == TOOL_RECTSEL || toolsModel.GetActiveTool() == TOOL_SHAPE)
-        {
-            if (xRel < 0)
-                xRel = -xRel;
-            if (yRel < 0)
-                yRel =  -yRel;
-        }
-
-        if (wParam & MK_LBUTTON)
-        {
-            toolsModel.OnMouseMove(TRUE, pt.x, pt.y);
-            Invalidate(FALSE);
-            if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || toolsModel.IsSelection())
-            {
-                CString strSize;
-                if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                    yRel = xRel;
-                strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
-            }
-        }
-
-        if (wParam & MK_RBUTTON)
-        {
-            toolsModel.OnMouseMove(FALSE, pt.x, pt.y);
-            Invalidate(FALSE);
-            if (toolsModel.GetActiveTool() >= TOOL_TEXT)
-            {
-                CString strSize;
-                if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                    yRel = xRel;
-                strSize.Format(_T("%ld x %ld"), xRel, yRel);
-                ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
-            }
-        }
+        toolsModel.DrawWithMouseTool(pt, wParam);
         return 0;
     }
 
@@ -582,9 +511,9 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     cyImage = min(MAXWORD, cyImage);
 
     // Display new size
-    CString strSize;
-    strSize.Format(_T("%d x %d"), cxImage, cyImage);
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
+    CStringW strSize;
+    strSize.Format(L"%d x %d", cxImage, cyImage);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
 
     // Dragging now... Fix the position...
     CRect rcResizing = { 0, 0, cxImage, cyImage };
@@ -630,7 +559,7 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
-        ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+        ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
         return 0;
     }
     else if (m_hitSelection != HIT_NONE && bLeftButton)
@@ -696,7 +625,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (m_nMouseDownMsg == WM_MBUTTONDOWN)
     {
-        ::SetCursor(::LoadCursor(g_hinstExe, MAKEINTRESOURCE(IDC_HANDDRAG)));
+        ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return 0;
     }
 
@@ -717,7 +646,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
-            ::SetCursor(::LoadCursor(NULL, IDC_SIZEALL));
+            ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL));
         return 0;
     }
 
@@ -730,22 +659,22 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         switch (toolsModel.GetActiveTool())
         {
             case TOOL_FILL:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_FILL)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_FILL)));
                 break;
             case TOOL_COLOR:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_COLOR)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_COLOR)));
                 break;
             case TOOL_ZOOM:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_ZOOM)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_ZOOM)));
                 break;
             case TOOL_PEN:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_PEN)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_PEN)));
                 break;
             case TOOL_AIRBRUSH:
-                ::SetCursor(::LoadIcon(g_hinstExe, MAKEINTRESOURCE(IDC_AIRBRUSH)));
+                ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
             default:
-                ::SetCursor(::LoadCursor(NULL, IDC_CROSS));
+                ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));
         }
         return 0;
     }
@@ -782,12 +711,12 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CCanvasWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+    return ::SendMessageW(GetParent(), nMsg, wParam, lParam);
 }
 
 LRESULT CCanvasWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ::SendMessage(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
     return 0;
 }
 
@@ -814,13 +743,13 @@ VOID CCanvasWindow::cancelDrawing()
     selectionModel.ClearMaskImage();
     m_hitSelection = HIT_NONE;
     m_drawing = FALSE;
-    toolsModel.OnCancelDraw();
+    toolsModel.OnEndDraw(TRUE);
     Invalidate(FALSE);
 }
 
 VOID CCanvasWindow::finishDrawing()
 {
-    toolsModel.OnFinishDraw();
+    toolsModel.OnEndDraw(FALSE);
     m_drawing = FALSE;
     Invalidate(FALSE);
 }

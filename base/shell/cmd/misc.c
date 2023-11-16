@@ -570,7 +570,6 @@ INT FilePromptYN (UINT resID)
 
     /* preliminary fix */
     ConInString(szIn, 10);
-    ConOutChar(_T('\n'));
 
     _tcsupr (szIn);
     for (p = szIn; _istspace (*p); p++)
@@ -634,13 +633,12 @@ INT FilePromptYNA (UINT resID)
 
     /* preliminary fix */
     ConInString(szIn, 10);
-    ConOutChar(_T('\n'));
 
     _tcsupr (szIn);
     for (p = szIn; _istspace (*p); p++)
         ;
 
-    LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, ARRAYSIZE(szMsg));
+    LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, ARRAYSIZE(szMsg));
 
     if (_tcsncmp(p, &szMsg[0], 1) == 0)
         return PROMPT_YES;

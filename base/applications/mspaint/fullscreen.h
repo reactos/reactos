@@ -10,7 +10,7 @@
 class CFullscreenWindow : public CWindowImpl<CFullscreenWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("FullscreenWindow"), CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+    DECLARE_WND_CLASS_EX(L"FullscreenWindow", CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
                          COLOR_BACKGROUND)
 
     BEGIN_MSG_MAP(CFullscreenWindow)

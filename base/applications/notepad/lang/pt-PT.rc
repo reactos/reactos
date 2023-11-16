@@ -154,7 +154,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Arquivos texto (*.txt)"
     STRING_TOOLARGE "Arquivo '%s' é muito longo para o notepad.\n\
 Por favor use um editor diferente."
-    STRING_NOTEXT "Você não digitou nenhum texto. \
+    STRING_NOTEXT "Você não digitou nenhum texto.\
 \nPor favor digite alguma coisa e tente novamente"
     STRING_DOESNOTEXIST "Arquivo '%s'\nnão existe\n\n\
 Você deseja criar um novo arquivo?"

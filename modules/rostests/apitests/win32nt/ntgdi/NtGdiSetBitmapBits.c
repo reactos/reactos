@@ -5,7 +5,7 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 START_TEST(NtGdiSetBitmapBits)
 {

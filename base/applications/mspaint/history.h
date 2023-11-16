@@ -21,12 +21,11 @@ public:
     BOOL CanRedo() const { return m_redoSteps > 0; }
     void PushImageForUndo();
     void PushImageForUndo(HBITMAP hbm);
-    void ResetToPrevious(void);
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ClearHistory(void);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
-    void SaveImage(LPCTSTR lpFileName);
+    void SaveImage(LPCWSTR lpFileName);
     BOOL IsImageSaved() const;
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;

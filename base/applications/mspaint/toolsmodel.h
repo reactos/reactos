@@ -53,13 +53,12 @@ struct ToolBase
     virtual BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) { return TRUE; }
     virtual BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) { return TRUE; }
 
-    virtual void OnCancelDraw();
-    virtual void OnFinishDraw();
-
     virtual void OnDrawOverlayOnImage(HDC hdc) { }
     virtual void OnDrawOverlayOnCanvas(HDC hdc) { }
 
     virtual void OnSpecialTweak(BOOL bMinus) { }
+
+    virtual void OnEndDraw(BOOL bCancel);
 
     void beginEvent();
     void endEvent();
@@ -81,11 +80,10 @@ private:
     BrushStyle m_brushStyle;
     TOOLTYPE m_activeTool;
     TOOLTYPE m_oldActiveTool;
-    int m_airBrushWidth;
+    INT m_airBrushRadius;
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
-    ToolBase* m_tools[TOOL_MAX + 1];
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
@@ -118,8 +116,8 @@ public:
     TOOLTYPE GetOldActiveTool() const;
     void SetActiveTool(TOOLTYPE nActiveTool);
 
-    int GetAirBrushWidth() const;
-    void SetAirBrushWidth(int nAirBrushWidth);
+    INT GetAirBrushRadius() const;
+    void SetAirBrushRadius(INT nAirBrushRadius);
     void MakeAirBrushThickerOrThinner(BOOL bThinner);
 
     int GetRubberRadius() const;
@@ -135,8 +133,7 @@ public:
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
-    void OnCancelDraw();
-    void OnFinishDraw();
+    void OnEndDraw(BOOL bCancel);
     void OnDrawOverlayOnImage(HDC hdc);
     void OnDrawOverlayOnCanvas(HDC hdc);
 
@@ -148,6 +145,8 @@ public:
     void NotifyZoomChanged();
 
     void SpecialTweak(BOOL bMinus);
+
+    void DrawWithMouseTool(POINT pt, WPARAM wParam);
 };
 
 extern ToolsModel toolsModel;

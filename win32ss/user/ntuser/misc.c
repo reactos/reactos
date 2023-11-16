@@ -76,19 +76,27 @@ IntTID2PTI(HANDLE id)
    return pti;
 }
 
+/**
+ * @see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc976564%28v=technet.10%29
+ */
 DWORD
 FASTCALL
-UserGetLanguageToggle(VOID)
+UserGetLanguageToggle(
+    _In_ PCWSTR pszType,
+    _In_ DWORD dwDefaultValue)
 {
     NTSTATUS Status;
-    DWORD dwValue = 0;
+    DWORD dwValue = dwDefaultValue;
+    WCHAR szBuff[4];
 
-    Status = RegReadUserSetting(L"Keyboard Layout\\Toggle", L"Layout Hotkey", REG_SZ, &dwValue, sizeof(dwValue));
+    Status = RegReadUserSetting(L"Keyboard Layout\\Toggle", pszType, REG_SZ, szBuff, sizeof(szBuff));
     if (NT_SUCCESS(Status))
     {
-        dwValue = atoi((char *)&dwValue);
-        TRACE("Layout Hotkey %d\n",dwValue);
+        szBuff[RTL_NUMBER_OF(szBuff) - 1] = UNICODE_NULL;
+        dwValue = _wtoi(szBuff);
     }
+
+    TRACE("%ls: %lu\n", pszType, dwValue);
     return dwValue;
 }
 

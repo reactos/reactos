@@ -21,7 +21,7 @@ BOOL setCursorOnSizeBox(HITTEST hit)
 {
     if (HIT_UPPER_LEFT <= hit && hit <= HIT_LOWER_RIGHT)
     {
-        ::SetCursor(::LoadCursor(NULL, s_cursor_shapes[hit - HIT_UPPER_LEFT]));
+        ::SetCursor(::LoadCursorW(NULL, s_cursor_shapes[hit - HIT_UPPER_LEFT]));
         return TRUE;
     }
     return FALSE;

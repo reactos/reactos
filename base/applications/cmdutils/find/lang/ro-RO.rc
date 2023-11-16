@@ -1,9 +1,9 @@
 /*
- * FILE:       base/applications/cmdutils/find/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-20  initial translation
- *             2011-10-17  diacritics change, other minor changes
+ * PROJECT:     ReactOS Find Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -16,8 +16,9 @@ FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""șir"" [fișier...]\n\
   /C         Numără liniile ce conțin șirul.\n\
   /N         Numără rândurile afișate, începând cu 1.\n\
   /I         Ignoră diferențele între majuscule și minuscule.\n\
-  /OFF[LINE] Do not skip files that have the offline attribute set."
+  /OFF[LINE] Nu omite fișierele care au configurate atributul\n\
+             offline (deconectat)."
     IDS_NO_SUCH_FILE "FIND: Fișierul «%s» nu există!\n"
     IDS_CANNOT_OPEN "FIND: Fișierul «%s» nu poate fi deschis!\n"
-    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
+    IDS_INVALID_SWITCH "FIND: Comutare nevalidă\n"
 END

@@ -172,9 +172,15 @@ HRESULT WINAPI CEnumIDListBase::Next(
 
     for(i = 0; i < celt; i++)
     { if(!mpCurrent)
+      { hr = S_FALSE;
         break;
+      }
 
       temp = ILClone(mpCurrent->pidl);
+      if (!temp)
+      { hr = i ? S_FALSE : E_OUTOFMEMORY;
+        break;
+      }
       rgelt[i] = temp;
       mpCurrent = mpCurrent->pNext;
     }

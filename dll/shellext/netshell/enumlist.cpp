@@ -277,9 +277,17 @@ CEnumIDList::Next(
     for (i = 0; i < celt; i++)
     {
         if (!m_pCurrent)
+        {
+            hr = S_FALSE;
             break;
+        }
 
         temp = ILClone(m_pCurrent->pidl);
+        if (!temp)
+        {
+            hr = i ? S_FALSE : E_OUTOFMEMORY;
+            break;
+        }
         rgelt[i] = temp;
         m_pCurrent = m_pCurrent->pNext;
     }

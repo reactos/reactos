@@ -541,6 +541,123 @@ LargeIntegerToString(
 }
 
 /*************************************************************************
+ *  CopyStreamUI [SHELL32.726]
+ *
+ * Copy a stream to another stream with optional progress display.
+ */
+EXTERN_C
+HRESULT WINAPI
+CopyStreamUI(
+    _In_ IStream *pSrc,
+    _Out_ IStream *pDst,
+    _Inout_opt_ IProgressDialog *pProgress,
+    _In_opt_ DWORDLONG dwlSize)
+{
+    HRESULT hr = E_FAIL;
+    DWORD cbBuff, cbRead, dwSizeToWrite;
+    DWORDLONG cbDone;
+    LPVOID pBuff;
+    CComHeapPtr<BYTE> pHeapPtr;
+    STATSTG Stat;
+    BYTE abBuff[1024];
+
+    TRACE("(%p, %p, %p, %I64u)\n", pSrc, pDst, pProgress, dwlSize);
+
+    if (dwlSize == 0) // Invalid size?
+    {
+        // Get the stream size
+        ZeroMemory(&Stat, sizeof(Stat));
+        if (FAILED(pSrc->Stat(&Stat, STATFLAG_NONAME)))
+            pProgress = NULL; // No size info. Disable progress
+        else
+            dwlSize = Stat.cbSize.QuadPart;
+    }
+
+    if (!pProgress) // Progress is disabled?
+    {
+        ULARGE_INTEGER uliSize;
+
+        if (dwlSize > 0)
+            uliSize.QuadPart = dwlSize;
+        else
+            uliSize.HighPart = uliSize.LowPart = INVALID_FILE_SIZE;
+
+        return pSrc->CopyTo(pDst, uliSize, NULL, NULL); // One punch
+    }
+
+    // Allocate the buffer if necessary
+    if (dwlSize > 0 && dwlSize <= sizeof(abBuff))
+    {
+        cbBuff = sizeof(abBuff);
+        pBuff = abBuff;
+    }
+    else
+    {
+#define COPY_STREAM_DEFAULT_BUFFER_SIZE 0x4000
+        cbBuff = COPY_STREAM_DEFAULT_BUFFER_SIZE;
+        if (pHeapPtr.AllocateBytes(cbBuff))
+        {
+            pBuff = pHeapPtr;
+        }
+        else // Low memory?
+        {
+            cbBuff = sizeof(abBuff);
+            pBuff = abBuff;
+        }
+#undef COPY_STREAM_DEFAULT_BUFFER_SIZE
+    }
+
+    // Start reading
+    LARGE_INTEGER zero;
+    zero.QuadPart = 0;
+    pSrc->Seek(zero, 0, NULL);
+    pDst->Seek(zero, 0, NULL);
+    cbDone = 0;
+    pProgress->SetProgress64(cbDone, dwlSize);
+
+    // Repeat reading and writing until goal
+    for (;;)
+    {
+        hr = pSrc->Read(pBuff, cbBuff, &cbRead);
+        if (FAILED(hr))
+            break;
+
+        // Calculate the size to write
+        if (dwlSize > 0)
+            dwSizeToWrite = (DWORD)min((DWORDLONG)(dwlSize - cbDone), (DWORDLONG)cbRead);
+        else
+            dwSizeToWrite = cbRead;
+
+        if (dwSizeToWrite == 0) // No need to write?
+        {
+            hr = S_OK;
+            break;
+        }
+
+        hr = pDst->Write(pBuff, dwSizeToWrite, NULL);
+        if (hr != S_OK)
+            break;
+
+        cbDone += dwSizeToWrite;
+
+        if (pProgress->HasUserCancelled()) // Cancelled?
+        {
+            hr = HRESULT_FROM_WIN32(ERROR_CANCELLED);
+            break;
+        }
+        pProgress->SetProgress64(cbDone, dwlSize);
+
+        if (dwlSize > 0 && cbDone >= dwlSize) // Reached the goal?
+        {
+            hr = S_OK;
+            break;
+        }
+    }
+
+    return hr;
+}
+
+/*************************************************************************
  *  SHOpenPropSheetA [SHELL32.707]
  *
  * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta

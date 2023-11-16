@@ -106,7 +106,8 @@ BOOLEAN
 UefiInitializeBootDevices(VOID);
 
 PCONFIGURATION_COMPONENT_DATA
-UefiHwDetect(VOID);
+UefiHwDetect(
+    _In_opt_ PCSTR Options);
 
 VOID
 UefiPrepareForReactOS(VOID);

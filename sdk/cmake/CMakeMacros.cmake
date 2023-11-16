@@ -643,7 +643,9 @@ function(set_module_type MODULE TYPE)
 
     # Set base address
     if(__module_IMAGEBASE)
-        set_image_base(${MODULE} ${__module_IMAGEBASE})
+        if(NOT ${__module_IMAGEBASE} STREQUAL "default")
+            set_image_base(${MODULE} ${__module_IMAGEBASE})
+        endif()
     elseif(${TYPE} STREQUAL win32dll)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})

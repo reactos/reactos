@@ -96,7 +96,7 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
     hFile = GetStdHandle(STD_INPUT_HANDLE);
     GetConsoleMode(hFile, &dwOldMode);
 
-    SetConsoleMode(hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(hFile, ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
     ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
@@ -106,7 +106,7 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 #endif
     for (p = lpInput; *p; p++)
     {
-        if (*p == _T('\x0d'))
+        if (*p == _T('\r')) // Terminate at the carriage-return.
         {
             *p = _T('\0');
             break;

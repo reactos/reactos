@@ -103,9 +103,9 @@ CTTY device\n\n\
             CON 一般是默认的标准 I/O 设备名。\n\n\
 想要把控制权交还给默认终端，在外置设备上输入：CTTY CON\n\
 device."
-    STRING_DATE_HELP1 "\n输入新的日期 (mm%cdd%cyyyy)："
-    STRING_DATE_HELP2 "\n输入新的日期 (dd%cmm%cyyyy)："
-    STRING_DATE_HELP3 "\n输入新的日期 (yyyy%cmm%cdd)："
+    STRING_DATE_HELP1 "输入新的日期 (mm%cdd%cyyyy)： "
+    STRING_DATE_HELP2 "输入新的日期 (dd%cmm%cyyyy)： "
+    STRING_DATE_HELP3 "输入新的日期 (yyyy%cmm%cdd)： "
     STRING_DATE_HELP4 "显示或者设置日期。\n\n\
 DATE [/T][日期]\n\n\
   /T    仅显示\n\n\
@@ -237,7 +237,7 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
-    STRING_LOCALE_HELP1 "当前时间是"
+    STRING_TIME_NOW "当前时间是： "
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"
     STRING_MKLINK_HELP "创建一个文件系统链接对象。\n\n\
@@ -376,7 +376,7 @@ TITLE [字符串]\n\n\
 TIME [/T][时间]\n\n\
   /T    仅显示\n\n\
 执行不带参数的 TIME 将会显示当前时间设置并且提示设置新的时间。按下 ENTER 键来保持原有设置。\n"
-    STRING_TIME_HELP2 "输入新的时间："
+    STRING_TIME_HELP2 "输入新的时间： "
     STRING_TIMER_HELP1 "已过去 %d 毫秒\n"
     STRING_TIMER_HELP2 "已过去 %02d%c%02d%c%02d%c%02d\n"
     STRING_TIMER_HELP3 "允许使用最多十个停表。\n\n\
@@ -449,23 +449,23 @@ RESTORE       恢复窗口\n\
     STRING_CMD_ERROR3 "无法重定向到文件 %s\n"
     STRING_CMD_ERROR4 "正在运行 %s...\n"
     STRING_CMD_ERROR5 "正在运行 cmdexit.bat...\n"
-    STRING_COLOR_ERROR1 "同样颜色错误！ (背景和前景不能同色)"
-    STRING_COLOR_ERROR2 "颜色指定错误"
+    STRING_COLOR_ERROR1 "同样颜色错误！ (背景和前景不能同色)\n"
+    STRING_COLOR_ERROR2 "颜色指定错误\n"
     STRING_CONSOLE_ERROR "未知错误：%d\n"
     STRING_COPY_ERROR1 "错误：无法打开源文件 -  %s！\n"
     STRING_COPY_ERROR2 "错误：无法复制到自身！\n"
     STRING_COPY_ERROR3 "写入目标文件时出错！\n"
     STRING_COPY_ERROR4 "错误：尚未实现！\n"
-    STRING_DATE_ERROR "无效日期。"
+    STRING_DATE_ERROR "无效日期。\n"
     STRING_DEL_ERROR5 "文件 %s 将会被删除！"
     STRING_DEL_ERROR6 "您确定吗（Y/N）？ "
     STRING_DEL_ERROR7 "正在删除：%s\n"
     STRING_ERROR_ERROR1 "未知错误！错误码：0x%lx\n"
     STRING_ERROR_ERROR2 "语法错误"
-    STRING_FOR_ERROR1 "语句中缺少“in”。"
-    STRING_FOR_ERROR2 "没有发现括号。"
-    STRING_FOR_ERROR3 "缺少“do”。"
-    STRING_FOR_ERROR4 "“do”后没有命令。"
+    STRING_FOR_ERROR1 "语句中缺少“in”。\n"
+    STRING_FOR_ERROR2 "没有发现括号。\n"
+    STRING_FOR_ERROR3 "缺少“do”。\n"
+    STRING_FOR_ERROR4 "“do”后没有命令。\n"
     STRING_FREE_ERROR1 "无效驱动器"
     STRING_FREE_ERROR2 "未标记"
     STRING_GOTO_ERROR1 "没有为 GOTO 指定标签\n"
@@ -474,10 +474,10 @@ RESTORE       恢复窗口\n\
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
-    STRING_REN_ERROR1 "MoveFile() 失败。错误码：%lu\n"
-    STRING_TIME_ERROR1 "无效时间。"
-    STRING_TYPE_ERROR1 "无效选项“/%s”\n"
-    STRING_WINDOW_ERROR1 "未找到窗口"
+    STRING_REN_ERROR "MoveFile() 失败。错误码：%lu\n"
+    STRING_TIME_ERROR "无效时间。\n"
+    STRING_TYPE_ERROR "无效选项“/%s”\n"
+    STRING_WINDOW_ERROR "未找到窗口\n"
     STRING_ERROR_PARAMETERF_ERROR "参数格式不正确 - %c\n"
     STRING_ERROR_INVALID_SWITCH "无效开关 - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "参数过多 - %s\n"
@@ -506,9 +506,9 @@ RESTORE       恢复窗口\n\
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d 个文件已复制\n"
     STRING_DELETE_WIPE "已擦除"
-    STRING_FOR_ERROR "无效的变量指定。"
-    STRING_SCREEN_COL "无效的列值"
-    STRING_SCREEN_ROW "无效的行值"
+    STRING_FOR_ERROR "无效的变量指定。\n"
+    STRING_SCREEN_COL "无效的列值\n"
+    STRING_SCREEN_ROW "无效的行值\n"
     STRING_TIMER_TIME "计时器 %d 是 %s："
     STRING_MKLINK_CREATED_SYMBOLIC "已为 %s <<===>> %s 创建符号链接\n"
     STRING_MKLINK_CREATED_HARD "已为 %s <<===>> %s 创建硬链接\n"

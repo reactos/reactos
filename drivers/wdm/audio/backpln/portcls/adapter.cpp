@@ -11,10 +11,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 //
@@ -200,7 +197,6 @@ cleanup:
 
     // delete created fdo
     IoDeleteDevice(fdo);
-
 
     return status;
 }

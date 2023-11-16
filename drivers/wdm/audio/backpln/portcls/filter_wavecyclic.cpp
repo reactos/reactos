@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortFilterWaveCyclic : public CUnknownImpl<IPortFilterWaveCyclic>
@@ -312,7 +309,6 @@ CPortFilterWaveCyclic::Init(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortFilterWaveCyclic::FreePin(
@@ -332,7 +328,6 @@ CPortFilterWaveCyclic::FreePin(
     return STATUS_UNSUCCESSFUL;
 }
 
-
 NTSTATUS
 NewPortFilterWaveCyclic(
     OUT IPortFilterWaveCyclic ** OutFilter)
@@ -351,4 +346,3 @@ NewPortFilterWaveCyclic(
 
     return STATUS_SUCCESS;
 }
-

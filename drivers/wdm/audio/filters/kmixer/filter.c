@@ -10,7 +10,7 @@
 
 #include <swenum.h>
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -199,4 +199,3 @@ KMixAllocateDeviceHeader(
                                     CreateItem);
     return Status;
 }
-

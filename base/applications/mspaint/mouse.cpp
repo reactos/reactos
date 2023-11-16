@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Things which should not be in the mouse event handler itself
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *********************************************************/
@@ -12,6 +12,7 @@
 
 INT ToolBase::s_pointSP = 0;
 POINT ToolBase::s_pointStack[256] = { { 0 } };
+static POINT g_ptStart, g_ptEnd;
 
 /* FUNCTIONS ********************************************************/
 
@@ -62,13 +63,7 @@ void ToolBase::reset()
     }
 }
 
-void ToolBase::OnCancelDraw()
-{
-    reset();
-    imageModel.NotifyImageChanged();
-}
-
-void ToolBase::OnFinishDraw()
+void ToolBase::OnEndDraw(BOOL bCancel)
 {
     reset();
     imageModel.NotifyImageChanged();
@@ -175,16 +170,13 @@ struct FreeSelTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        selectionModel.Landing();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        selectionModel.HideSelection();
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+            selectionModel.HideSelection();
+        else
+            selectionModel.Landing();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -260,16 +252,13 @@ struct RectSelTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        selectionModel.Landing();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        selectionModel.HideSelection();
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+            selectionModel.HideSelection();
+        else
+            selectionModel.Landing();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -309,16 +298,10 @@ struct TwoPointDrawTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
         m_bDrawing = FALSE;
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        m_bDrawing = FALSE;
-        ToolBase::OnCancelDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -471,21 +454,19 @@ struct SmoothDrawTool : ToolBase
         }
 
         draw(bLeftButton, x, y);
-        OnFinishDraw();
+        OnEndDraw(FALSE);
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        LONG x = 0, y = 0;
-        OnButtonUp(FALSE, x, y);
-        imageModel.Undo(TRUE);
-        ToolBase::OnCancelDraw();
+        if (bCancel)
+        {
+            LONG x = 0, y = 0;
+            OnButtonUp(FALSE, x, y);
+            imageModel.Undo(TRUE);
+        }
+        ToolBase::OnEndDraw(bCancel);
     }
 };
 
@@ -673,7 +654,7 @@ struct AirBrushTool : SmoothDrawTool
     void draw(BOOL bLeftButton, LONG x, LONG y) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Airbrush(m_hdc, x, y, rgb, toolsModel.GetAirBrushWidth());
+        Airbrush(m_hdc, x, y, rgb, toolsModel.GetAirBrushRadius());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -723,7 +704,7 @@ struct TextTool : ToolBase
 
     void draw(HDC hdc)
     {
-        CString szText;
+        CStringW szText;
         textEditWindow.GetWindowText(szText);
 
         RECT rc;
@@ -799,22 +780,19 @@ struct TextTool : ToolBase
         return TRUE;
     }
 
-    void OnFinishDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        if (::IsWindowVisible(textEditWindow) &&
-            textEditWindow.GetWindowTextLength() > 0)
+        if (!bCancel)
         {
-            imageModel.PushImageForUndo();
-            draw(m_hdc);
+            if (::IsWindowVisible(textEditWindow) &&
+                textEditWindow.GetWindowTextLength() > 0)
+            {
+                imageModel.PushImageForUndo();
+                draw(m_hdc);
+            }
         }
         quit();
-        ToolBase::OnFinishDraw();
-    }
-
-    void OnCancelDraw() override
-    {
-        quit();
-        ToolBase::OnCancelDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 };
 
@@ -902,25 +880,22 @@ struct BezierTool : ToolBase
         s_pointStack[s_pointSP].y = y;
         if (s_pointSP >= 3)
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return TRUE;
         }
         imageModel.NotifyImageChanged();
         return TRUE;
     }
 
-    void OnCancelDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
+        if (!bCancel)
+        {
+            imageModel.PushImageForUndo();
+            OnDrawOverlayOnImage(m_hdc);
+        }
         m_bDrawing = FALSE;
-        ToolBase::OnCancelDraw();
-    }
-
-    void OnFinishDraw() override
-    {
-        imageModel.PushImageForUndo();
-        OnDrawOverlayOnImage(m_hdc);
-        m_bDrawing = FALSE;
-        ToolBase::OnFinishDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -983,7 +958,7 @@ struct ShapeTool : ToolBase
 
         if (s_pointSP && bDoubleClick)
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return;
         }
 
@@ -1017,7 +992,7 @@ struct ShapeTool : ToolBase
         m_bClosed = FALSE;
         if (nearlyEqualPoints(x, y, s_pointStack[0].x, s_pointStack[0].y))
         {
-            OnFinishDraw();
+            OnEndDraw(FALSE);
             return TRUE;
         }
         else
@@ -1034,26 +1009,22 @@ struct ShapeTool : ToolBase
         return TRUE;
     }
 
-    void OnCancelDraw() override
+    void OnEndDraw(BOOL bCancel) override
     {
-        ToolBase::OnCancelDraw();
-    }
-
-    void OnFinishDraw() override
-    {
-        if (s_pointSP)
+        if (!bCancel)
         {
-            --s_pointSP;
-            m_bClosed = TRUE;
+            if (s_pointSP)
+            {
+                --s_pointSP;
+                m_bClosed = TRUE;
 
-            imageModel.PushImageForUndo();
-            OnDrawOverlayOnImage(m_hdc);
+                imageModel.PushImageForUndo();
+                OnDrawOverlayOnImage(m_hdc);
+            }
+            m_bClosed = FALSE;
+            s_pointSP = 0;
         }
-
-        m_bClosed = FALSE;
-        s_pointSP = 0;
-
-        ToolBase::OnFinishDraw();
+        ToolBase::OnEndDraw(bCancel);
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -1126,4 +1097,130 @@ ToolBase::createToolObject(TOOLTYPE type)
     }
     UNREACHABLE;
     return NULL;
+}
+
+void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+{
+    m_pToolObject->beginEvent();
+    g_ptStart.x = g_ptEnd.x = x;
+    g_ptStart.y = g_ptEnd.y = y;
+    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+{
+    m_pToolObject->beginEvent();
+    if (m_pToolObject->OnMouseMove(bLeftButton, x, y))
+    {
+        g_ptEnd.x = x;
+        g_ptEnd.y = y;
+    }
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+{
+    m_pToolObject->beginEvent();
+    if (m_pToolObject->OnButtonUp(bLeftButton, x, y))
+    {
+        g_ptEnd.x = x;
+        g_ptEnd.y = y;
+    }
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnEndDraw(BOOL bCancel)
+{
+    ATLTRACE("ToolsModel::OnEndDraw(%d)\n", bCancel);
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnEndDraw(bCancel);
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
+{
+    m_pToolObject->OnDrawOverlayOnImage(hdc);
+}
+
+void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)
+{
+    m_pToolObject->OnDrawOverlayOnCanvas(hdc);
+}
+
+void ToolsModel::SpecialTweak(BOOL bMinus)
+{
+    m_pToolObject->OnSpecialTweak(bMinus);
+}
+
+void ToolsModel::DrawWithMouseTool(POINT pt, WPARAM wParam)
+{
+    LONG xRel = pt.x - g_ptStart.x, yRel = pt.y - g_ptStart.y;
+
+    switch (m_activeTool)
+    {
+        // freesel, rectsel and text tools always show numbers limited to fit into image area
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+        case TOOL_TEXT:
+            if (xRel < 0)
+                xRel = (pt.x < 0) ? -g_ptStart.x : xRel;
+            else if (pt.x > imageModel.GetWidth())
+                xRel = imageModel.GetWidth() - g_ptStart.x;
+            if (yRel < 0)
+                yRel = (pt.y < 0) ? -g_ptStart.y : yRel;
+            else if (pt.y > imageModel.GetHeight())
+                yRel = imageModel.GetHeight() - g_ptStart.y;
+            break;
+
+        // while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14
+        case TOOL_RUBBER:
+        case TOOL_PEN:
+        case TOOL_BRUSH:
+        case TOOL_AIRBRUSH:
+        case TOOL_SHAPE:
+        {
+            CStringW strCoord;
+            strCoord.Format(L"%ld, %ld", pt.x, pt.y);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
+            break;
+        }
+        default:
+            break;
+    }
+
+    // rectsel and shape tools always show non-negative numbers when drawing
+    if (m_activeTool == TOOL_RECTSEL || m_activeTool == TOOL_SHAPE)
+    {
+        xRel = labs(xRel);
+        yRel = labs(yRel);
+    }
+
+    if (wParam & MK_LBUTTON)
+    {
+        OnMouseMove(TRUE, pt.x, pt.y);
+        canvasWindow.Invalidate(FALSE);
+        if ((m_activeTool >= TOOL_TEXT) || IsSelection())
+        {
+            CStringW strSize;
+            if ((m_activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
+                yRel = xRel;
+            strSize.Format(L"%ld x %ld", xRel, yRel);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
+        }
+    }
+
+    if (wParam & MK_RBUTTON)
+    {
+        OnMouseMove(FALSE, pt.x, pt.y);
+        canvasWindow.Invalidate(FALSE);
+        if (m_activeTool >= TOOL_TEXT)
+        {
+            CStringW strSize;
+            if ((m_activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
+                yRel = xRel;
+            strSize.Format(L"%ld x %ld", xRel, yRel);
+            ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(LPCWSTR)strSize);
+        }
+    }
 }

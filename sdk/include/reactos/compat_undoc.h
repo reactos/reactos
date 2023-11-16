@@ -34,5 +34,16 @@ DWORD RosGetProcessCompatVersion(VOID)
     return g_CompatVersion < REACTOS_COMPATVERSION_UNINITIALIZED ? g_CompatVersion : 0;
 }
 
+static
+inline
+UINT RosGetProcessEffectiveVersion(VOID)
+{
+    PPEB peb = NtCurrentPeb();
+    UINT shimVer = RosGetProcessCompatVersion();
+    if (shimVer)
+        return shimVer;
+    else
+        return (peb->OSMajorVersion << 8) | (peb->OSMinorVersion);
+}
 
 #endif // COMPAT_UNDOC_H

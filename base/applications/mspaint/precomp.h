@@ -25,6 +25,7 @@
 #include <math.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
+#include <strsafe.h>
 #include "atlimagedx.h"
 
 #include <debug.h>

@@ -204,7 +204,7 @@
 204 stdcall -noname SHIsChildOrSelf(long long)
 205 stdcall -noname SHGetValueGoodBootA(long str str ptr ptr ptr)
 206 stdcall -noname SHGetValueGoodBootW(long wstr wstr ptr ptr ptr)
-207 stub -noname IContextMenu_Invoke
+207 stdcall -noname IContextMenu_Invoke(ptr ptr str long)
 208 stdcall -noname FDSA_Initialize(long long ptr ptr long)
 209 stdcall -noname FDSA_Destroy(ptr)
 210 stdcall -noname FDSA_InsertItem(ptr long ptr)

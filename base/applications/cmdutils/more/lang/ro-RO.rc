@@ -1,60 +1,65 @@
 /*
- * FILE:       base/applications/cmdutils/more/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-20  initial translation
- *             2011-10-17  diacritics change, other minor changes
+ * PROJECT:     ReactOS More Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Afișează date pe ecran, pagină-cu-pagină.\n\
+    IDS_USAGE "Afișarea datelor pe ecran, pagină cu pagină.\n\
 \n\
-MORE [/E [options]] < [drive:][path]filename\n\
-command | MORE [/E [options]]\n\
+MORE [/E [opțiuni]] < [dispozitiv:][cale]numele fișierului\n\
+command | MORE [/E [opțiuni]\n\
 \n\
-    [drive:][path]filename  A file whose contents are to be displayed.\n\
-    command                 A command whose output is to be displayed.\n\
+    [dispozitiv:][cale]numele fișierului  Un fișier al cărui conținut\n\
+                                          urmează să fie afișat.\n\
+    comandă                               O comandă a cărei ieșire\n\
+                                          urmează să fie afișată.\n\
 \n\
-When Extended Features are enabled, the following form is supported:\n\
-MORE [/E] [options] [files]\n\
+Atunci când opțiunea Caracteristici extinse e activată,\n\
+următoarea formă este acceptată:\n\
+MORE [/E] [opțiuni] [fișiere]\n\
 \n\
-Options:\n\
-    /E       Enable Extended Features.\n\
-    The default state of the Extended Features is controlled by the default\n\
-    registry settings for CMD.EXE. For more details on how to change these\n\
-    settings, see the section ""Command Extensions"" in CMD.EXE help.\n\
+Opțiuni:\n\
+    /E       Activarea opțiunii Caracteristici extinse.\n\
+    Stadiul implicit al Caracteristicilor extinse e controlat de setările\n\
+    implicite de registru pentru programul CMD.EXE. Pentru mai multe detalii\n\
+    legate de cum pot fi schimbate aceste setări, vedeți secțiunea\n\
+    ""Extensii de comenzi"" în secțiunea de ajutor a programului CMD.EXE.\n\
 \n\
-    When Extended Features are enabled, the following options are available:\n\
-    /C       Clear the screen before displaying a page.\n\
-    /P       Expand Form-Feed characters.\n\
-    /S       Shrink successive blank lines to a single line.\n\
-    /Tn      Expand tabs to n spaces (default: 8).\n\
+Atunci când opțiunea Caracteristici extinse e activată, sunt disponibile\n\
+următoarele opțiuni:\n\
+    /C       Curățarea ecranului înainte de a se afișa o pagină.\n\
+    /P       Extinderea caracterelor Form-Feed (de alimentare de formulare).\n\
+    /S       Reducerea liniilor goale succesive la o singură linie.\n\
+    /Tn      Extinderea tab-urilor la n spații (implicit: 8).\n\
 \n\
-    These options can be specified in the MORE environment variable.\n\
+    Aceste opțiuni pot fi specificate în variabila de mediu MORE.\n\
 \n\
-    +n       Start displaying the first file at line n.\n\
-    files    List of files to display, separated by blanks.\n\
+    +n       Începerea afișării primului fișier la linia n.\n\
+    fișiere  Lista fișierelor de afișat, separate prin spații libere.\n\
 \n\
-When Extended Features are enabled, the following commands are available\n\
-at the ""-- Continue --"" prompt:\n\
+Atunci când opțiunea Caracteristici extinse e activată, sunt disponibile\n\
+următoarele comenzi la panoul ""-- Continuă --"":\n\
 \n\
-    P n      Display the next n lines.\n\
-    S n      Skip the next n lines.\n\
-    F        Display the next file.\n\
-    Q        Quit.\n\
-    =        Show the line number.\n\
-    ?        Show the help line.\n\
-    <Space>  Display the next page.\n\
-    <Enter>  Display the next line.\n"
+    P n      Afișarea următoarelor n linii.\n\
+    S n      Omiterea următoarelor n linii.\n\
+    F        Afișarea următorului fișier.\n\
+    Q        Ieșire.\n\
+    =        Afișarea numărului de linie.\n\
+    ?        Afișarea liniei de ajutor.\n\
+    <Space>  Afișarea următoarei pagini.\n\
+    <Enter>  Afișarea următoari linii.\n"
 
-    IDS_BAD_FLAG "Invalid argument - '%s'\n"
+    IDS_BAD_FLAG "Argument nevalid - '%s'\n"
     IDS_FILE_ACCESS "Fișierul «%s» nu poate fi accesat!\n"
     IDS_CONTINUE_PROMPT  "-- Continuă%1%2%3 --%4"
     IDS_CONTINUE_PERCENT " (%d%%)"
-    IDS_CONTINUE_LINE_AT " [Line: %d]"
-    IDS_CONTINUE_OPTIONS " [Options: psfq=<Space><Enter>]"
-    IDS_CONTINUE_LINES   " Lines: "
+    IDS_CONTINUE_LINE_AT " [Linie: %d]"
+    IDS_CONTINUE_OPTIONS " [Opțiuni: psfq=<Space><Enter>]"
+    IDS_CONTINUE_LINES   " Linii: "
 END

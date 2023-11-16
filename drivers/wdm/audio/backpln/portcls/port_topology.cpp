@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortTopology : public CUnknownImpl<IPortTopology, ISubdevice, IPortEvents>
@@ -78,7 +75,6 @@ KSPROPERTY_SET TopologyPropertySet[] =
 // IPortEvents
 //
 
-
 void
 NTAPI
 CPortTopology::AddEventToEventList(
@@ -99,7 +95,6 @@ CPortTopology::GenerateEventList(
 {
     UNIMPLEMENTED;
 }
-
 
 //---------------------------------------------------------------
 // IUnknown interface functions
@@ -255,7 +250,6 @@ CPortTopology::Init(
                                          NULL,
                                          m_pDescriptor);
 
-
     DPRINT("IPortTopology_fnInit success\n");
     if (NT_SUCCESS(Status))
     {
@@ -265,7 +259,6 @@ CPortTopology::Init(
 
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 NTAPI
@@ -431,7 +424,6 @@ CPortTopology::PinCount(
     return STATUS_UNSUCCESSFUL;
 }
 
-
 NTSTATUS
 NTAPI
 PcCreatePinDispatch(
@@ -455,7 +447,6 @@ PcCreatePinDispatch(
     // sanity checks
     PC_ASSERT(Filter != NULL);
     PC_ASSERT_IRQL(PASSIVE_LEVEL);
-
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
@@ -517,7 +508,6 @@ PcCreateItemDispatch(
     // sanity checks
     PC_ASSERT(SubDevice != NULL);
 
-
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
@@ -571,7 +561,6 @@ PcCreateItemDispatch(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NewPortTopology(
     OUT PPORT* OutPort)
@@ -593,7 +582,6 @@ NewPortTopology(
     DPRINT("NewPortTopology %p Status %x\n", *OutPort, Status);
     return Status;
 }
-
 
 PMINIPORTTOPOLOGY
 GetTopologyMiniport(

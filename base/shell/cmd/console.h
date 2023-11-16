@@ -14,7 +14,6 @@ extern CON_PAGER  StdOutPager;
 // extern BOOL   bIgnoreEcho;
 // extern BOOL   bExit;
 
-VOID ConInDummy (VOID);
 VOID ConInDisable (VOID);
 VOID ConInEnable (VOID);
 VOID ConInFlush (VOID);

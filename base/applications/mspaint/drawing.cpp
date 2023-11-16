@@ -253,38 +253,37 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 }
 
 void
-Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
+Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCWSTR lpchText, HFONT font, LONG style)
 {
-    INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.
+    INT iSaveDC = ::SaveDC(hdc); // We will modify the clipping region. Save now.
 
     RECT rc;
-    SetRect(&rc, x1, y1, x2, y2);
+    ::SetRect(&rc, x1, y1, x2, y2);
 
     if (style == 0) // Transparent
     {
-        SetBkMode(hdc, TRANSPARENT);
-        GetBkColor(hdc);
+        ::SetBkMode(hdc, TRANSPARENT);
     }
     else // Opaque
     {
-        SetBkMode(hdc, OPAQUE);
-        SetBkColor(hdc, bg);
+        ::SetBkMode(hdc, OPAQUE);
+        ::SetBkColor(hdc, bg);
 
-        HBRUSH hbr = CreateSolidBrush(bg);
-        FillRect(hdc, &rc, hbr); // Fill the background
-        DeleteObject(hbr);
+        HBRUSH hbr = ::CreateSolidBrush(bg);
+        ::FillRect(hdc, &rc, hbr); // Fill the background
+        ::DeleteObject(hbr);
     }
 
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
-    HGDIOBJ hFontOld = SelectObject(hdc, font);
-    SetTextColor(hdc, fg);
+    HGDIOBJ hFontOld = ::SelectObject(hdc, font);
+    ::SetTextColor(hdc, fg);
     const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                          DT_EXPANDTABS | DT_WORDBREAK;
-    DrawText(hdc, lpchText, -1, &rc, uFormat);
-    SelectObject(hdc, hFontOld);
+    ::DrawTextW(hdc, lpchText, -1, &rc, uFormat);
+    ::SelectObject(hdc, hFontOld);
 
-    RestoreDC(hdc, iSaveDC); // Restore
+    ::RestoreDC(hdc, iSaveDC); // Restore
 }
 
 BOOL

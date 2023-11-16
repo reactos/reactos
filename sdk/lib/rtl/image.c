@@ -460,11 +460,11 @@ LdrProcessRelocationBlockLongLong(
 ULONG
 NTAPI
 LdrRelocateImage(
-    IN PVOID BaseAddress,
-    IN PCCH  LoaderName,
-    IN ULONG Success,
-    IN ULONG Conflict,
-    IN ULONG Invalid)
+    _In_ PVOID BaseAddress,
+    _In_opt_ PCSTR LoaderName,
+    _In_ ULONG Success,
+    _In_ ULONG Conflict,
+    _In_ ULONG Invalid)
 {
     return LdrRelocateImageWithBias(BaseAddress, 0, LoaderName, Success, Conflict, Invalid);
 }
@@ -472,12 +472,12 @@ LdrRelocateImage(
 ULONG
 NTAPI
 LdrRelocateImageWithBias(
-    IN PVOID BaseAddress,
-    IN LONGLONG AdditionalBias,
-    IN PCCH  LoaderName,
-    IN ULONG Success,
-    IN ULONG Conflict,
-    IN ULONG Invalid)
+    _In_ PVOID BaseAddress,
+    _In_ LONGLONG AdditionalBias,
+    _In_opt_ PCSTR LoaderName,
+    _In_ ULONG Success,
+    _In_ ULONG Conflict,
+    _In_ ULONG Invalid)
 {
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_DATA_DIRECTORY RelocationDDir;
@@ -486,6 +486,8 @@ LdrRelocateImageWithBias(
     ULONG_PTR Address;
     PUSHORT TypeOffset;
     LONGLONG Delta;
+
+    UNREFERENCED_PARAMETER(LoaderName);
 
     NtHeaders = RtlImageNtHeader(BaseAddress);
 
