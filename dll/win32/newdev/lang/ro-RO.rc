@@ -15,7 +15,7 @@ CAPTION "Asistent de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit!", IDC_WELCOMETITLE, 120, 8, 195, 16
-    LTEXT "Acest asistent va instala drivere pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "Acest asistent va instala un nou driver de dispozitiv pentru:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "AVERTISMENT: INSTALAREA UNUI DISPOZITIV NEOBIȘNUIT VĂ POATE SCOATE DIN FUNCȚIUNE CALCULATORUL!", IDC_STATIC, 120, 59, 195, 16
