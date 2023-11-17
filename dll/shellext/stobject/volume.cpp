@@ -122,7 +122,7 @@ HRESULT Volume_IsMute()
         mixerControlDetails.cChannels = 1;
         mixerControlDetails.paDetails = &detailsResult;
         mixerControlDetails.cbDetails = sizeof(detailsResult);
-        if (mixerGetControlDetailsW((HMIXEROBJ) g_mixerId, &mixerControlDetails, 0))
+        if (mixerGetControlDetailsW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerControlDetails, 0))
             return E_FAIL;
 
         TRACE("Obtained mute status %d\n", detailsResult);
