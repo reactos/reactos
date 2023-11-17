@@ -151,14 +151,13 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         else return FALSE;
     }
 }
-/***********************************************************************
+/************************************************************************
  *           bitmap_info_size
  *
  * Return the size of the bitmap info structure including color table and
  * the bytes required for 3 DWORDS if this is a BI_BITFIELDS(3) bmp.
  */
-static int bitmap_info_size(const BITMAPINFO * info, WORD coloruse, DWORD ResSize)
-/* If GCC for 32-bpp BI_BITFIELDS gets fixed, the third parameter can be removed. */
+static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
     unsigned int colors, size, masks = 0, bitfields = 0;
 
@@ -181,13 +180,14 @@ static int bitmap_info_size(const BITMAPINFO * info, WORD coloruse, DWORD ResSiz
                 bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
 
         /* Test if this is a GCC windres.exe compiled 32 bpp bitmap. If so,
-         * then this is a mistake. It does not include the bytes for the bitfields.
+         * then a mistake causes it not to include the bytes for the bitfields.
          * So, we we have to zero out the bitfield accounted for above.
          * If this is ever fixed, then this code needs to be removed. */
-        if (info->bmiHeader.biSizeImage + info->bmiHeader.biSize + 12 != ResSize &&
-            info->bmiHeader.biCompression == BI_BITFIELDS &&
-            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
+#ifdef __GNUC__
+        if (info->bmiHeader.biCompression == BI_BITFIELDS &&
+            info->bmiHeader.biBitCount == 32)
             bitfields = 0;
+#endif
 
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) /* buffer overflow otherwise */
@@ -609,7 +609,7 @@ static BOOL CURSORICON_GetCursorDataFromBMI(
     _In_    const BITMAPINFO *pbmi
 )
 {
-    UINT ubmiSize = bitmap_info_size(pbmi, DIB_RGB_COLORS, 0);
+    UINT ubmiSize = bitmap_info_size(pbmi, DIB_RGB_COLORS);
     BOOL monochrome = is_dib_monochrome(pbmi);
     LONG width, height;
     WORD bpp;
@@ -1150,6 +1150,11 @@ BITMAP_LoadImageW(
         ResSize = SizeofResource(hinst, hrsrc);
     }
 
+    if (pbmi->bmiHeader.biSizeImage + pbmi->bmiHeader.biSize + 12 != ResSize &&
+        pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
+        pbmi->bmiHeader.biBitCount == 32)
+        ERR("Possibly bad resource size provided\n");
+
     /* Fix up values */
     if(DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &bpp, &compr) == -1)
         goto end;
@@ -1162,7 +1167,7 @@ BITMAP_LoadImageW(
     else if(height < 0)
         cyDesired = -cyDesired;
 
-    iBMISize = bitmap_info_size(pbmi, DIB_RGB_COLORS, ResSize);
+    iBMISize = bitmap_info_size(pbmi, DIB_RGB_COLORS);
 
     /* Get a pointer to the image data */
     pvBits = (char*)pbmi + (dwOffset ? dwOffset : iBMISize);
