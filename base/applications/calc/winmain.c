@@ -1627,7 +1627,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_D:
         case IDC_BUTTON_E:
         case IDC_BUTTON_F:
-            calc.is_nan = FALSE;
+            if (calc.is_nan) break;
             build_operand(hWnd, LOWORD(wp));
             return TRUE;
         case IDC_BUTTON_PERCENT:
@@ -1693,6 +1693,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             }
             return TRUE;
         case IDC_BUTTON_BACK:
+            if (calc.is_nan) break;
             if (calc.sci_in) {
                 if (calc.esp == 0) {
                     TCHAR *ptr;
