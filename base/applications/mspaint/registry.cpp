@@ -264,11 +264,7 @@ void RegistrySettings::SetMostRecentFile(LPCWSTR szPathName)
             iFound = i;
 
         if (iFound >= 0)
-        {
-            CStringW tmp = strFiles[i];
-            strFiles[i] = strFiles[i - 1];
-            strFiles[i - 1] = tmp;
-        }
+            Swap(strFiles[i], strFiles[i - 1]);
     }
 
     // If szPathName is not the first item in strFiles, insert it at the top of the list
