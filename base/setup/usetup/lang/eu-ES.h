@@ -1937,13 +1937,6 @@ MUI_ERROR euESErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ez ahal duzu diskoaren ez-partiziotatu ezpazioa ezabatzeko!\n"
-        "\n"
-        "  * Sakatu tekla bat jarraitzeko.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalazioa huts egin du bootcode instalatzeko %S sistemaren partizioan.",
         "SARTU = Berrabiarazi"

@@ -1940,13 +1940,6 @@ MUI_ERROR ltLTErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "You cannot delete unpartitioned disk space!\n"
-        "\n"
-        "  * Press any key to continue.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = Reboot computer"

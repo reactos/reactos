@@ -1913,13 +1913,6 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "B\224l\201mlenmemi\237 disk alan\215n\215 silemezsiniz!\n"
-        "\n"
-        "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Kur, sistem b\224l\201m\201 \201zerinde %S \224ny\201kleme kodunu kurmada ba\237ar\215s\215z oldu.",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"

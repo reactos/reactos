@@ -1973,13 +1973,6 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Voc\210 n\306o pode excluir um espa\207o n\306o-particionado!\n"
-        "\n"
-        "  * Pressione qualquer tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Erro ao instalar o c\242digo de inicializa\207\306o %S na parti\207\306o do sistema.",
         "ENTER=Reiniciar"

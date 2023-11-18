@@ -1935,13 +1935,6 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Anda tidak boleh menghapuskan ruang cakera yang tiada partition!\n"
-        "\n"
-        "  * Tekan sebarang kunci untuk meneruskan.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Persediaan gagal memasang bootcode %S pada partition sistem.",
         "ENTER = Memulakan semula komputer"

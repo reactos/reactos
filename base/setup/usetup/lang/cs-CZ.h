@@ -1937,13 +1937,6 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nelze vymazat m\241sto na disku, kter\202 nepat\375\241 \247\240dn\202mu odd\241lu!\n"
-        "\n"
-        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Nepoda\375ilo se nainstalovat %S zavad\330\237 na syst\202mov\354 odd\241l.",
         "ENTER = Restartovat po\237\241ta\237"

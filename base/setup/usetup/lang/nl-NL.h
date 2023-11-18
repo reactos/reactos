@@ -1958,13 +1958,6 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "U kunt ongebruikte schijfruimte voor partities niet verwijderen!\n"
-        "\n"
-        "  * Druk op een willekeurige toets om door te gaan.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup kan de %S bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
