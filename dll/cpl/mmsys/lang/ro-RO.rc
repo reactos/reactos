@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -24,9 +24,9 @@ BEGIN
     AUTOCHECKBOX "A&muțește tot", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     AUTOCHECKBOX "Afișează pictogramă în &zona de notificare", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "A&vansate…", IDC_ADVANCED_BTN, 150, 105, 75, 15
-    GROUPBOX "Opțiuni difuzoare", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
+    GROUPBOX "Setări difuzoare", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
-    LTEXT "Folosiți opțiunile de mai jos pentru a ajusta volumul fiecărui difuzor în parte sau pentru alte modificări în configurația difuzoarelor.", -1, 70, 155, 150, 36
+    LTEXT "Folosiți setările de mai jos pentru a ajusta volumul fiecărui difuzor în parte sau pentru alte modificări în setarea difuzoarelor.", -1, 70, 155, 150, 36
     PUSHBUTTON "V&olum difuzoare…", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "Avansat&e…", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
@@ -39,9 +39,9 @@ BEGIN
     LTEXT "O colecție de sunete conținele semnalele sonore emise atunci când au loc evenimente în ReactOS și în programe. Puteți alege una dintre colecțiile prezente, sau a vă gestiona propriile colecții.", -1, 8, 7, 230, 40
     LTEXT "C&olecție de sunete:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Păstrare…", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "&Salvează…", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Pentru a schimba sunetele, selectați un eveniment din lista de mai jos, apoi alegeți sunetul corespunzător care va fi emis. Modificările pot fi păstrate într-o nouă colecție de sunete.", -1, 8, 90, 230, 40
+    LTEXT "Pentru a schimba sunetele, selectați un eveniment din lista de mai jos, apoi alegeți sunetul corespunzător care va fi emis. Modificările pot fi salvate într-o nouă colecție de sunete.", -1, 8, 90, 230, 40
     LTEXT "E&venimente:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "S&unete:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
@@ -81,7 +81,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Voce"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste opțiuni determină volumul și reglajele avansate ale dispozitivelor alese pentru lectura sau înregistrarea vocii.", -1, 8, 7, 230, 40
+    LTEXT "Aceste setări determină volumul și reglajele avansate ale dispozitivelor alese pentru lectura sau înregistrarea vocii.", -1, 8, 7, 230, 40
     GROUPBOX "Lectură voce", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
     LTEXT "&Dispozitiv implicit:", -1, 50, 50, 80, 17
@@ -106,10 +106,10 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Păstrare colecție"
+CAPTION "Salvează colecția"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Păstrați colecția sub numele:", -1, 7, 7, 212, 9
+    LTEXT "&Salvați colecția sub numele:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Con&firmă", IDOK, 93, 36, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 157, 36, 60, 14
@@ -132,20 +132,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Performanță"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste opțiuni determină modul în care ReactOS produce sunetele, permițându-vă rezolvarea problemelor pe care le aveți cu sunetul.", 8492, 34, 7, 220, 23
-    GROUPBOX "Lectură sunet", 8494, 7, 32, 243, 152
+    LTEXT "Aceste setări determină modul în care ReactOS produce sunetele, permițându-vă rezolvarea problemelor pe care le aveți cu sunetul.", 8492, 34, 7, 220, 23
+    GROUPBOX "Redare sunet", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Accelerație dispozitiv fizic:", 8495, 13, 56, 102, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 144, 54, 62, 18
     LTEXT "&Calitate conversie rată de eșantionare:", 8496, 13, 121, 102, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 144, 121, 62, 18
-    PUSHBUTTON "&Restabilire implicite", 5400, 7, 191, 110, 14
+    PUSHBUTTON "&Restabilire valori implicite", 5400, 7, 191, 110, 14
     LTEXT "Fără", 8497, 122, 56, 21, 10
     LTEXT "Completă", 8498, 208, 56, 38, 9
     LTEXT "Bună", 8499, 122, 123, 21, 10
     LTEXT "Superioară", 8500, 208, 123, 38, 9
-    LTEXT "Opțiuni pentru dispozitivul de înregistrare a sunetelor.", 5399, 13, 145, 227, 21
-    LTEXT "Opțiuni pentru dispozitivul de lectură a sunetelor.", 5398, 13, 78, 227, 22
+    LTEXT "Acest șir descrie setările hardware pentru dispozitivul de captură.", 5399, 13, 145, 227, 21
+    LTEXT "Acest șir descrie setările hardware pentru dispozitivul de redare a sunetelor.", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
@@ -153,7 +153,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Performanță"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste opțiuni determină modul în care ReactOS înregistrează sunetele, permițându-vă rezolvarea problemelor pe care le aveți la înregistrarea sunetelor.", 8492, 34, 7, 217, 26
+    LTEXT "Aceste setări determină modul în care ReactOS înregistrează sunetele, permițându-vă rezolvarea problemelor pe care le aveți la înregistrarea sunetelor.", 8492, 34, 7, 217, 26
     GROUPBOX "Înregistrare sunet", 8494, 7, 34, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Accelerație dispozitiv fizic:", 8495, 13, 51, 108, 17
@@ -165,8 +165,8 @@ BEGIN
     LTEXT "Completă", 8498, 209, 51, 38, 9
     LTEXT "Bună", 8499, 122, 108, 24, 10
     LTEXT "Superioară", 8500, 209, 108, 38, 9
-    LTEXT "Opțiuni pentru dispozitivul de înregistrare a sunetelor.", 5399, 13, 130, 222, 21
-    LTEXT "Opțiuni pentru dispozitivul de lectură a sunetelor.", 5398, 13, 73, 218, 24
+    LTEXT "Acest șir descrie setările hardware pentru dispozitivul de captură.", 5399, 13, 130, 222, 21
+    LTEXT "Acest șir descrie setările hardware pentru dispozitivul de redare a sunetelor.", 5398, 13, 73, 218, 24
 END
 
 IDD_SETUP1 DIALOGEX 0, 0, 227, 206
@@ -232,7 +232,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sunet ReactOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Serviciul audio ReactOS acum este activ. Totuși, ar putea să nu funcționeze corect până când nu reporniți sistemul. Dacă reporniți acum, păstrați-vă documentele în calculator și închideți toate programele curente.", 10261, 60, 25, 150, 50
+    LTEXT "Serviciul audio ReactOS acum este activ. Totuși, ar putea să nu funcționeze corect până când nu reporniți sistemul. Dacă reporniți acum, salvați-vă documentele în calculator și închideți toate programele curente.", 10261, 60, 25, 150, 50
     LTEXT "Pentru a reporni ReactOS, apăsați „Confirmă”.", 10262, 60, 75, 150, 20
     LTEXT "Anularea operației de repornire presupune amânarea până la un moment oportun. Sistemul va trebui eventual repornit pentru ca sunetul să funcționeze corect.", 10263, 60, 100, 150, 40
 END
@@ -240,7 +240,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Sunet și dispozitive audio"
-    IDS_CPLDESCRIPTION "Schimbarea colecției de sunete a calculatorului și modificarea opțiunilor pentru dispozitivele de lectură și înregistrare de sunet."
+    IDS_CPLDESCRIPTION "Schimbarea schemei de sunete a calculatorului sau configurarea setărilor pentru dispozitivele de lectură și înregistrare de sunet."
     IDS_NO_SOUND "(nespecificat)"
     IDS_NO_DEVICES "lipsă dispozitive"
     IDS_SPEAKER_VOLUME "Volum difuzor intern"
