@@ -169,6 +169,7 @@ void ImageModel::PushImageForUndo(const RECT& rcPartial)
     part.clear();
     part.m_bPartial = TRUE;
     part.m_rcPart = rcPartial;
+
     HBITMAP hbmMaster = LockBitmap();
     part.m_hbmImage = getSubImage(hbmMaster, rcPartial);
     UnlockBitmap(hbmMaster);
