@@ -124,6 +124,8 @@ public:
     void SetRubberRadius(int nRubberRadius);
     void MakeRubberThickerOrThinner(BOOL bThinner);
 
+    SIZE GetToolSize() const;
+
     BOOL IsBackgroundTransparent() const;
     void SetBackgroundTransparent(BOOL bTransparent);
 
