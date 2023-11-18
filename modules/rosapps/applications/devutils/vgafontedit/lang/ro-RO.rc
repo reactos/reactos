@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
- * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ * TRANSLATORS: Copyright 2008 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -40,8 +40,8 @@ BEGIN
         MENUITEM "&Deschidere…\tCtrl+O", ID_FILE_OPEN
         MENUITEM "În&chide", ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "Pă&strează\tCtrl+S", ID_FILE_SAVE
-        MENUITEM "&Păstrare în…", ID_FILE_SAVE_AS
+        MENUITEM "Sal&vează\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "Salvea&ză ca…", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", ID_FILE_EXIT
     END
@@ -80,13 +80,13 @@ BEGIN
     IDS_UNSUPPORTEDFORMAT, "Format de fișier incompatibil!"
     IDS_UNSUPPORTEDPSF, "Format incompatibil de font PSF! Posibilitățile editorului se limitează la fonturile 8x8 fără moduri speciale."
     IDS_DOCNAME, "Font %1!u!"
-    IDS_SAVEPROMPT, "Modificările în fișierul „%1” încă nu au fost păstrate.\n\nDoriți păstrarea lor?"
+    IDS_SAVEPROMPT, "Modificările în fișierul „%1” încă nu au fost salvate.\n\nDoriți salvarea lor?"
     IDS_APPTITLE, "Editor de font VGA ReactOS"
     IDS_CLOSEEDIT, "Închideți mai întâi toate ferestrele de editare!"
 
     IDS_TOOLTIP_NEW, "Nou"
     IDS_TOOLTIP_OPEN, "Deschide"
-    IDS_TOOLTIP_SAVE, "Păstrează"
+    IDS_TOOLTIP_SAVE, "Salvează"
     IDS_TOOLTIP_EDIT_GLYPH, "Editează glifă"
     IDS_TOOLTIP_COPY, "Copiază"
     IDS_TOOLTIP_PASTE, "Lipește"
