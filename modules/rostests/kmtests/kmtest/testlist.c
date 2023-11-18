@@ -71,7 +71,7 @@ const KMT_TEST TestList[] =
     { "TcpIpTdi",                     Test_TcpIpTdi },
     { "TcpIpConnect",                 Test_TcpIpConnect },
 #ifdef _M_AMD64
-    { "RtlCaptureContext",            Test_RtlCaptureContext },
+    { "RtlCaptureContextUM",          Test_RtlCaptureContext },
 #endif
     { NULL,                           NULL },
 };
