@@ -152,33 +152,22 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (nHeight <= 0)
         nHeight = 1;
 
-    // Create an HBITMAP
-    HBITMAP hbmCropped = CreateDIBWithProperties(nWidth, nHeight);
-    if (!hbmCropped)
+    // Create a white HBITMAP
+    HBITMAP hbmNew = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+    if (!hbmNew)
     {
         ShowOutOfMemory();
         return;
     }
 
-    // Select the HBITMAP by memory DC
-    HDC hdcMem = ::CreateCompatibleDC(m_hDrawingDC);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmCropped);
-
-    // Fill background of the HBITMAP
-    RECT rcBack = { 0, 0, nWidth, nHeight };
-    HBRUSH hbrBack = ::CreateSolidBrush(paletteModel.GetBgColor());
-    ::FillRect(hdcMem, &rcBack, hbrBack);
-    ::DeleteObject(hbrBack);
-
-    // Copy the old content
-    ::BitBlt(hdcMem, -nOffsetX, -nOffsetY, GetWidth(), GetHeight(), m_hDrawingDC, 0, 0, SRCCOPY);
-
-    // Clean up
-    ::SelectObject(hdcMem, hbmOld);
-    ::DeleteDC(hdcMem);
+    // Put the master image as a sub-image
+    RECT rcPart = { -nOffsetX, -nOffsetY, GetWidth() - nOffsetX, GetHeight() - nOffsetY };
+    HBITMAP hbmOld = imageModel.LockBitmap();
+    putSubImage(hbmNew, rcPart, hbmOld);
+    imageModel.UnlockBitmap(hbmOld);
 
     // Push it
-    PushImageForUndo(hbmCropped);
+    PushImageForUndo(hbmNew);
 
     NotifyImageChanged();
 }

@@ -157,14 +157,10 @@ HBITMAP SelectionModel::GetSelectionContents()
     if (m_hbmColor)
         return CopyDIBImage(m_hbmColor, m_rc.Width(), m_rc.Height());
 
-    HDC hMemDC = ::CreateCompatibleDC(NULL);
-    HBITMAP hBitmap = CreateColorDIB(m_rc.Width(), m_rc.Height(), RGB(255, 255, 255));
-    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hBitmap);
-    ::BitBlt(hMemDC, 0, 0, m_rc.Width(), m_rc.Height(), imageModel.GetDC(), m_rc.left, m_rc.top, SRCCOPY);
-    ::SelectObject(hMemDC, hbmOld);
-    ::DeleteDC(hMemDC);
-
-    return hBitmap;
+    HBITMAP hbmWhole = imageModel.LockBitmap();
+    HBITMAP hbmPart = getSubImage(hbmWhole, m_rc);
+    imageModel.UnlockBitmap(hbmWhole);
+    return hbmPart;
 }
 
 BOOL SelectionModel::IsLanded() const
