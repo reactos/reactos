@@ -18,6 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/*
+ * PROJECT:     ReactOS ACM Audio Filter
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2008 Michael Stefaniuc
+ *              Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -33,7 +42,7 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Păstrare ca…", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "&Salvează ca…", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
     PUSHBUTTON      "&Elimină", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
 
     LTEXT           "F&ormat:", -1, 5, 56, 44, 8, NOT WS_GROUP
