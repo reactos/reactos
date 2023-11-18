@@ -130,11 +130,10 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
         return;
     }
 
-    INT iNextItem = (m_currInd + 1) % HISTORYSIZE;
-    ::DeleteObject(m_hBms[iNextItem]);
+    ::DeleteObject(m_hBms[m_currInd]);
     m_hBms[m_currInd] = m_hbmMaster;
     m_hbmMaster = hbm;
-    m_currInd = iNextItem;
+    m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     if (m_undoSteps < HISTORYSIZE - 1)
