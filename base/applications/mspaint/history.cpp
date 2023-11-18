@@ -32,21 +32,18 @@ ImageModel::ImageModel()
 {
     ZeroMemory(m_hBms, sizeof(m_hBms));
 
-    m_hBms[0] = CreateColorDIB(1, 1, RGB(255, 255, 255));
-    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hBms[0]);
+    m_hbmMaster = CreateColorDIB(1, 1, RGB(255, 255, 255));
+    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster);
 
     g_imageSaved = TRUE;
 }
 
 ImageModel::~ImageModel()
 {
+    ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
     ::DeleteDC(m_hDrawingDC);
-
-    for (size_t i = 0; i < HISTORYSIZE; ++i)
-    {
-        if (m_hBms[i])
-            ::DeleteObject(m_hBms[i]);
-    }
+    ::DeleteObject(m_hbmMaster);
+    ClearHistory();
 }
 
 void ImageModel::Undo(BOOL bClearRedo)
@@ -57,9 +54,13 @@ void ImageModel::Undo(BOOL bClearRedo)
 
     selectionModel.HideSelection();
 
-    // Select previous item
-    m_currInd = (m_currInd + HISTORYSIZE - 1) % HISTORYSIZE;
-    ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]);
+    m_currInd = (m_currInd + HISTORYSIZE - 1) % HISTORYSIZE; // Go previous
+
+    ATLASSERT(m_hbmMaster != NULL);
+    ATLASSERT(m_hBms[m_currInd] != NULL);
+
+    Swap(m_hbmMaster, m_hBms[m_currInd]);
+    ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_undoSteps--;
     if (bClearRedo)
@@ -78,9 +79,12 @@ void ImageModel::Redo()
 
     selectionModel.HideSelection();
 
-    // Select next item
-    m_currInd = (m_currInd + 1) % HISTORYSIZE;
-    ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]);
+    ATLASSERT(m_hbmMaster != NULL);
+    ATLASSERT(m_hBms[m_currInd] != NULL);
+
+    Swap(m_hbmMaster, m_hBms[m_currInd]);
+    m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
+    ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_redoSteps--;
     if (m_undoSteps < HISTORYSIZE - 1)
@@ -93,7 +97,7 @@ void ImageModel::ClearHistory()
 {
     for (int i = 0; i < HISTORYSIZE; ++i)
     {
-        if (m_hBms[i] && i != m_currInd)
+        if (m_hBms[i])
         {
             ::DeleteObject(m_hBms[i]);
             m_hBms[i] = NULL;
@@ -126,11 +130,12 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
         return;
     }
 
-    // Go to the next item with an HBITMAP or current item
-    ::DeleteObject(m_hBms[(m_currInd + 1) % HISTORYSIZE]);
-    m_hBms[(m_currInd + 1) % HISTORYSIZE] = hbm;
-    m_currInd = (m_currInd + 1) % HISTORYSIZE;
-    ::SelectObject(m_hDrawingDC, m_hBms[m_currInd]);
+    INT iNextItem = (m_currInd + 1) % HISTORYSIZE;
+    ::DeleteObject(m_hBms[iNextItem]);
+    m_hBms[m_currInd] = m_hbmMaster;
+    m_hbmMaster = hbm;
+    m_currInd = iNextItem;
+    ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     if (m_undoSteps < HISTORYSIZE - 1)
         m_undoSteps++;
@@ -181,7 +186,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
 void ImageModel::SaveImage(LPCWSTR lpFileName)
 {
-    SaveDIBToFile(m_hBms[m_currInd], lpFileName, TRUE);
+    SaveDIBToFile(m_hbmMaster, lpFileName, TRUE);
 }
 
 BOOL ImageModel::IsImageSaved() const
@@ -197,17 +202,17 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     INT newHeight = oldHeight * nStretchPercentY / 100;
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
-        HBITMAP hbm0 = CopyDIBImage(m_hBms[m_currInd], newWidth, newHeight);
+        HBITMAP hbm0 = CopyDIBImage(m_hbmMaster, newWidth, newHeight);
         PushImageForUndo(hbm0);
     }
     if (nSkewDegX)
     {
-        HBITMAP hbm1 = SkewDIB(m_hDrawingDC, m_hBms[m_currInd], nSkewDegX, FALSE);
+        HBITMAP hbm1 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegX, FALSE);
         PushImageForUndo(hbm1);
     }
     if (nSkewDegY)
     {
-        HBITMAP hbm2 = SkewDIB(m_hDrawingDC, m_hBms[m_currInd], nSkewDegY, TRUE);
+        HBITMAP hbm2 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegY, TRUE);
         PushImageForUndo(hbm2);
     }
     NotifyImageChanged();
@@ -215,12 +220,12 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
 
 int ImageModel::GetWidth() const
 {
-    return GetDIBWidth(m_hBms[m_currInd]);
+    return GetDIBWidth(m_hbmMaster);
 }
 
 int ImageModel::GetHeight() const
 {
-    return GetDIBHeight(m_hBms[m_currInd]);
+    return GetDIBHeight(m_hbmMaster);
 }
 
 void ImageModel::InvertColors()
@@ -309,15 +314,15 @@ HBITMAP ImageModel::LockBitmap()
 {
     // NOTE: An app cannot select a bitmap into more than one device context at a time.
     ::SelectObject(m_hDrawingDC, m_hbmOld); // De-select
-    HBITMAP hbmLocked = m_hBms[m_currInd];
-    m_hBms[m_currInd] = NULL;
+    HBITMAP hbmLocked = m_hbmMaster;
+    m_hbmMaster = NULL;
     return hbmLocked;
 }
 
 void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
 {
-    m_hBms[m_currInd] = hbmLocked;
-    m_hbmOld = ::SelectObject(m_hDrawingDC, hbmLocked); // Re-select
+    m_hbmMaster = hbmLocked;
+    m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 }
 
 void ImageModel::SelectionClone(BOOL bUndoable)

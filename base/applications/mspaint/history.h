@@ -45,6 +45,7 @@ public:
 
 protected:
     HDC m_hDrawingDC; // The device context for this class
+    HBITMAP m_hbmMaster; // The master bitmap
     int m_currInd; // The current index in m_hBms
     int m_undoSteps; // The undo-able count
     int m_redoSteps; // The redo-able count

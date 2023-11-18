@@ -49,3 +49,11 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName);
 
 #define DEG2RAD(degree) (((degree) * M_PI) / 180)
 #define RAD2DEG(radian) ((LONG)(((radian) * 180) / M_PI))
+
+template <typename T>
+void Swap(T& a, T& b)
+{
+    T tmp = a;
+    a = b;
+    b = tmp;
+}
