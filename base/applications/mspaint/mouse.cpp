@@ -997,9 +997,9 @@ struct ShapeTool : ToolBase
             return;
 
         if (m_bLeftButton)
-            Poly(hdc, s_pointStack, s_pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, s_pointSP, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
         else
-            Poly(hdc, s_pointStack, s_pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, s_pointSP, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -1010,26 +1010,29 @@ struct ShapeTool : ToolBase
         if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
-        s_pointStack[s_pointSP] = { x, y };
+        pushToPtStack(x, y);
 
-        if (s_pointSP && bDoubleClick)
+        if (s_pointSP > 1 && bDoubleClick)
         {
             OnEndDraw(FALSE);
             return;
         }
 
-        if (s_pointSP == 0)
-            s_pointStack[++s_pointSP] = { x, y };
+        if (s_pointSP == 1)
+            pushToPtStack(x, y); // We have to draw the first point
 
         imageModel.NotifyImageChanged();
     }
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-            roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
+        if (s_pointSP > 1)
+        {
+            if (GetAsyncKeyState(VK_SHIFT) < 0)
+                roundTo8Directions(s_pointStack[s_pointSP - 2].x, s_pointStack[s_pointSP - 2].y, x, y);
 
-        s_pointStack[s_pointSP] = { x, y };
+            s_pointStack[s_pointSP - 1] = { x, y };
+        }
 
         imageModel.NotifyImageChanged();
         return TRUE;
@@ -1037,8 +1040,8 @@ struct ShapeTool : ToolBase
 
     BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-            roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
+        if ((s_pointSP > 1) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(s_pointStack[s_pointSP - 2].x, s_pointStack[s_pointSP - 2].y, x, y);
 
         m_bClosed = FALSE;
         if (nearlyEqualPoints(x, y, s_pointStack[0].x, s_pointStack[0].y))
@@ -1046,14 +1049,8 @@ struct ShapeTool : ToolBase
             OnEndDraw(FALSE);
             return TRUE;
         }
-        else
-        {
-            s_pointStack[++s_pointSP] = { x, y };
-        }
 
-        if (s_pointSP == s_maxPointSP)
-            s_pointSP--;
-
+        pushToPtStack(x, y);
         imageModel.NotifyImageChanged();
         return TRUE;
     }
@@ -1062,12 +1059,13 @@ struct ShapeTool : ToolBase
     {
         if (!bCancel)
         {
-            if (s_pointSP)
+            if (s_pointSP > 1)
             {
-                --s_pointSP;
-                m_bClosed = TRUE;
+                CRect rcPartial;
+                getBoundaryOfPtStack(rcPartial, s_pointSP, s_pointStack);
+                imageModel.PushImageForUndo(rcPartial);
 
-                imageModel.PushImageForUndo();
+                m_bClosed = TRUE;
                 OnDrawOverlayOnImage(m_hdc);
             }
             m_bClosed = FALSE;
