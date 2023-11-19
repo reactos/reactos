@@ -43,7 +43,7 @@ struct ToolBase
     TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
-    static INT s_pointSP;
+    static SIZE_T s_pointSP;
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
     virtual ~ToolBase() { }

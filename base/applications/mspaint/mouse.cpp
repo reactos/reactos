@@ -9,11 +9,11 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include <atlalloc.h>
 
-INT ToolBase::s_pointSP = 0;
-static POINT s_staticPointStack[256];
-static INT s_maxPointSP = _countof(s_staticPointStack);
-static LPPOINT s_pointStack = s_staticPointStack;
+SIZE_T ToolBase::s_pointSP = 0;
+static SIZE_T s_maxPointSP = 0;
+static CHeapPtr<POINT, CLocalAllocator> s_pointStack;
 static POINT g_ptStart, g_ptEnd;
 
 /* FUNCTIONS ********************************************************/
@@ -83,13 +83,6 @@ void ToolBase::reset()
         selectionModel.Landing();
         selectionModel.HideSelection();
     }
-
-    if (s_pointStack != s_staticPointStack)
-    {
-        ::LocalFree(s_pointStack);
-        s_pointStack = s_staticPointStack;
-        s_maxPointSP = _countof(s_staticPointStack);
-    }
 }
 
 void ToolBase::OnEndDraw(BOOL bCancel)
@@ -126,25 +119,10 @@ void ToolBase::pushToPtStack(LONG x, LONG y)
 {
     if (s_pointSP >= s_maxPointSP)
     {
-        INT newMax = s_maxPointSP + 256;
-        SIZE_T cbNew = newMax * sizeof(POINT);
-
-        LPPOINT pptNew;
-        if (s_pointStack == s_staticPointStack)
-            pptNew = (LPPOINT)::LocalAlloc(LPTR, cbNew);
-        else
-            pptNew = (LPPOINT)::LocalReAlloc(s_pointStack, cbNew, 0);
-
-        if (!pptNew)
-        {
-            ATLTRACE("Out of memory!\n");
+        SIZE_T newMax = s_maxPointSP + 256, cbNew = newMax * sizeof(POINT);
+        if (!s_pointStack.ReallocateBytes(cbNew))
             return;
-        }
 
-        if (s_pointStack == s_staticPointStack)
-            CopyMemory(pptNew, s_staticPointStack, s_pointSP * sizeof(POINT));
-
-        s_pointStack = pptNew;
         s_maxPointSP = newMax;
     }
 
@@ -532,7 +510,7 @@ struct SmoothDrawTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc) override
     {
-        for (INT i = 1; i < s_pointSP; ++i)
+        for (SIZE_T i = 1; i < s_pointSP; ++i)
         {
             OnDraw(hdc, m_bLeftButton, s_pointStack[i - 1], s_pointStack[i]);
         }
