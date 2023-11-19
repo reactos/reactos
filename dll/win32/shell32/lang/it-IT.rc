@@ -7,7 +7,7 @@ BEGIN
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Dettagli", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "Disponi &Icone", FCIDM_SHVIEW_ARRANGE
+    POPUP "Disponi &Icone", FCIDM_SHVIEW_ARRANGE //FIXME: accelerator collision &I
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Disponi Automaticamente", FCIDM_SHVIEW_AUTOARRANGE
@@ -28,7 +28,7 @@ BEGIN
             MENUITEM "&Dettagli", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "Disponi &Icone", FCIDM_SHVIEW_ARRANGE
+        POPUP "Disponi &Icone", FCIDM_SHVIEW_ARRANGE //FIXME: accelerator collision &I
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Disponi Automaticamente", FCIDM_SHVIEW_AUTOARRANGE
