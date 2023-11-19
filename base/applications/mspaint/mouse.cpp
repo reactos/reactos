@@ -1063,6 +1063,10 @@ struct ShapeTool : ToolBase
             {
                 CRect rcPartial;
                 getBoundaryOfPtStack(rcPartial, s_pointSP, s_pointStack);
+
+                SIZE size = toolsModel.GetToolSize();
+                rcPartial.InflateRect((size.cx + 1) / 2, (size.cy + 1) / 2);
+
                 imageModel.PushImageForUndo(rcPartial);
 
                 m_bClosed = TRUE;
