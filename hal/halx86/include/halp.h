@@ -53,6 +53,12 @@ VOID
 #define IDT_INTERNAL            0x11
 #define IDT_DEVICE              0x21
 
+#ifdef _M_AMD64
+#define HALP_LOW_STUB_SIZE_IN_PAGES 5
+#else
+#define HALP_LOW_STUB_SIZE_IN_PAGES 3
+#endif
+
 /* Conversion functions */
 #define BCD_INT(bcd)            \
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))

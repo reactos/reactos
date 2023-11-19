@@ -304,6 +304,13 @@ KiCompleteTimer(
     IN PKSPIN_LOCK_QUEUE LockQueue
 );
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+KeStartAllProcessors(
+    VOID
+);
+
 /* gmutex.c ********************************************************************/
 
 VOID
