@@ -11,9 +11,9 @@
 #include "precomp.h"
 
 INT ToolBase::s_pointSP = 0;
-INT ToolBase::s_maxPointSP = 256;
+static INT s_maxPointSP = 256;
 static POINT s_staticPointStack[256];
-LPPOINT ToolBase::s_pointStack = s_staticPointStack;
+static LPPOINT s_pointStack = s_staticPointStack;
 static POINT g_ptStart, g_ptEnd;
 
 /* FUNCTIONS ********************************************************/

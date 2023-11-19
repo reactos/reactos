@@ -44,8 +44,6 @@ struct ToolBase
     HDC m_hdc;
     COLORREF m_fg, m_bg;
     static INT s_pointSP;
-    static LPPOINT s_pointStack;
-    static INT s_maxPointSP;
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
     virtual ~ToolBase() { }
