@@ -291,7 +291,12 @@ struct TwoPointDrawTool : ToolBase
 
     BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        imageModel.PushImageForUndo();
+        CRect rcPartial(g_ptStart, g_ptEnd);
+        rcPartial.NormalizeRect();
+        SIZE size = toolsModel.GetToolSize();
+        rcPartial.InflateRect((size.cx + 1) / 2, (size.cy + 1) / 2);
+        imageModel.PushImageForUndo(rcPartial);
+
         OnDrawOverlayOnImage(m_hdc);
         m_bDrawing = FALSE;
         imageModel.NotifyImageChanged();

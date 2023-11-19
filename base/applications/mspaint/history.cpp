@@ -12,6 +12,14 @@ ImageModel imageModel;
 
 /* FUNCTIONS ********************************************************/
 
+void IMAGE_PART::clear()
+{
+    ::DeleteObject(m_hbmImage);
+    m_hbmImage = NULL;
+    m_rcPart.SetRectEmpty();
+    m_bPartial = FALSE;
+}
+
 void ImageModel::NotifyImageChanged()
 {
     if (canvasWindow.IsWindow())
@@ -30,7 +38,7 @@ ImageModel::ImageModel()
     , m_undoSteps(0)
     , m_redoSteps(0)
 {
-    ZeroMemory(m_hBms, sizeof(m_hBms));
+    ZeroMemory(m_historyItems, sizeof(m_historyItems));
 
     m_hbmMaster = CreateColorDIB(1, 1, RGB(255, 255, 255));
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster);
@@ -46,6 +54,23 @@ ImageModel::~ImageModel()
     ClearHistory();
 }
 
+void ImageModel::SwapPart()
+{
+    IMAGE_PART& part = m_historyItems[m_currInd];
+    if (!part.m_bPartial)
+    {
+        Swap(m_hbmMaster, part.m_hbmImage);
+        return;
+    }
+
+    HBITMAP hbmMaster = LockBitmap();
+    HBITMAP hbmPart = getSubImage(hbmMaster, part.m_rcPart);
+    putSubImage(hbmMaster, part.m_rcPart, part.m_hbmImage);
+    ::DeleteObject(part.m_hbmImage);
+    part.m_hbmImage = hbmPart;
+    UnlockBitmap(hbmMaster);
+}
+
 void ImageModel::Undo(BOOL bClearRedo)
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, m_undoSteps);
@@ -55,11 +80,8 @@ void ImageModel::Undo(BOOL bClearRedo)
     selectionModel.HideSelection();
 
     m_currInd = (m_currInd + HISTORYSIZE - 1) % HISTORYSIZE; // Go previous
-
     ATLASSERT(m_hbmMaster != NULL);
-    ATLASSERT(m_hBms[m_currInd] != NULL);
-
-    Swap(m_hbmMaster, m_hBms[m_currInd]);
+    SwapPart();
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_undoSteps--;
@@ -80,9 +102,7 @@ void ImageModel::Redo()
     selectionModel.HideSelection();
 
     ATLASSERT(m_hbmMaster != NULL);
-    ATLASSERT(m_hBms[m_currInd] != NULL);
-
-    Swap(m_hbmMaster, m_hBms[m_currInd]);
+    SwapPart();
     m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
@@ -97,11 +117,7 @@ void ImageModel::ClearHistory()
 {
     for (int i = 0; i < HISTORYSIZE; ++i)
     {
-        if (m_hBms[i])
-        {
-            ::DeleteObject(m_hBms[i]);
-            m_hBms[i] = NULL;
-        }
+        m_historyItems[i].clear();
     }
 
     m_undoSteps = 0;
@@ -130,11 +146,34 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
         return;
     }
 
-    ::DeleteObject(m_hBms[m_currInd]);
-    m_hBms[m_currInd] = m_hbmMaster;
+    IMAGE_PART& part = m_historyItems[m_currInd];
+    part.clear();
+    part.m_hbmImage = m_hbmMaster;
     m_hbmMaster = hbm;
-    m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
+
+    PushDone();
+}
+
+void ImageModel::PushImageForUndo(const RECT& rcPartial)
+{
+    ATLTRACE("%s: %d\n", __FUNCTION__, m_currInd);
+
+    IMAGE_PART& part = m_historyItems[m_currInd];
+    part.clear();
+    part.m_bPartial = TRUE;
+    part.m_rcPart = rcPartial;
+
+    HBITMAP hbmMaster = LockBitmap();
+    part.m_hbmImage = getSubImage(hbmMaster, rcPartial);
+    UnlockBitmap(hbmMaster);
+
+    PushDone();
+}
+
+void ImageModel::PushDone()
+{
+    m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
 
     if (m_undoSteps < HISTORYSIZE - 1)
         m_undoSteps++;
