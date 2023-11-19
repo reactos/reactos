@@ -1057,24 +1057,20 @@ struct ShapeTool : ToolBase
 
     void OnEndDraw(BOOL bCancel) override
     {
-        if (!bCancel)
+        if (!bCancel && s_pointSP > 1)
         {
-            if (s_pointSP > 1)
-            {
-                CRect rcPartial;
-                getBoundaryOfPtStack(rcPartial, s_pointSP, s_pointStack);
+            CRect rcPartial;
+            getBoundaryOfPtStack(rcPartial, s_pointSP, s_pointStack);
 
-                SIZE size = toolsModel.GetToolSize();
-                rcPartial.InflateRect((size.cx + 1) / 2, (size.cy + 1) / 2);
+            SIZE size = toolsModel.GetToolSize();
+            rcPartial.InflateRect((size.cx + 1) / 2, (size.cy + 1) / 2);
 
-                imageModel.PushImageForUndo(rcPartial);
+            imageModel.PushImageForUndo(rcPartial);
 
-                m_bClosed = TRUE;
-                OnDrawOverlayOnImage(m_hdc);
-            }
-            m_bClosed = FALSE;
-            s_pointSP = 0;
+            m_bClosed = TRUE;
+            OnDrawOverlayOnImage(m_hdc);
         }
+        m_bClosed = FALSE;
         ToolBase::OnEndDraw(bCancel);
     }
 
