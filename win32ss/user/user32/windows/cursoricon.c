@@ -177,7 +177,7 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
          * at https://en.wikipedia.org/wiki/BMP_file_format. */
         if (info->bmiHeader.biCompression == BI_BITFIELDS &&
             (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
-                bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
+            bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
 
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) /* buffer overflow otherwise */
@@ -1177,7 +1177,7 @@ BITMAP_LoadImageW(
      * size of the bitfields previously included from bitmap_info_size.
      * If this is ever fixed, then this code needs to be removed. */
     if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize
-             && compr == BI_BITFIELDS && bpp == 32)
+        && compr == BI_BITFIELDS && bpp == 32)
     {
         /* GCC pointer to the image data has 12 less bytes than MSVC */
         pvBits = (char*)pvBits - 12;
