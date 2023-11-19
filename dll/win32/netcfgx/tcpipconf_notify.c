@@ -236,7 +236,7 @@ InitFilterListBox(LPWSTR pData, HWND hwndDlg, HWND hDlgCtrl, UINT AllowButton, U
 
     if (!pData || !_wtoi(pData))
     {
-        SendDlgItemMessageW(hwndDlg, AllowButton, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, AllowButton, BST_CHECKED);
         EnableWindow(GetDlgItem(hwndDlg, AddButton), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, DelButton), FALSE);
         return;
@@ -257,9 +257,9 @@ InitFilterListBox(LPWSTR pData, HWND hwndDlg, HWND hDlgCtrl, UINT AllowButton, U
     }
 
     if (!iItem)
-        SendDlgItemMessageW(hwndDlg, AllowButton, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, AllowButton, BST_CHECKED);
     else
-        SendDlgItemMessageW(hwndDlg, RestrictButton, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, RestrictButton, BST_CHECKED);
 }
 
 LPWSTR
@@ -321,7 +321,7 @@ StoreTcpipFilterSettings(
     if (!pFilter)
         return NULL;
 
-    if (SendDlgItemMessageW(hwndDlg, IDC_USE_FILTER, BM_GETCHECK, 0, 0) == BST_CHECKED)
+    if (IsDlgButtonChecked(hwndDlg, IDC_USE_FILTER) == BST_CHECKED)
         pFilter->EnableSecurityFilters = TRUE;
     else
         pFilter->EnableSecurityFilters = FALSE;
@@ -390,7 +390,7 @@ TcpipFilterSettingsDlg(
                 InitFilterListBox(pContext->pCurrentConfig->pFilter->szUDPAllowedPorts, hwndDlg, GetDlgItem(hwndDlg, IDC_UDP_LIST), IDC_UDP_ALLOW_ALL, IDC_UDP_RESTRICT, IDC_UDP_ADD, IDC_UDP_DEL);
                 InitFilterListBox(pContext->pCurrentConfig->pFilter->szRawIPAllowedProtocols, hwndDlg, GetDlgItem(hwndDlg, IDC_IP_LIST), IDC_IP_ALLOW_ALL, IDC_IP_RESTRICT, IDC_IP_ADD, IDC_IP_DEL);
                 if (pContext->pCurrentConfig->pFilter->EnableSecurityFilters)
-                    SendDlgItemMessageW(hwndDlg, IDC_USE_FILTER, BM_SETCHECK, BST_CHECKED, 0);
+                    CheckDlgButton(hwndDlg, IDC_USE_FILTER, BST_CHECKED);
              }
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             return TRUE;
@@ -400,61 +400,61 @@ TcpipFilterSettingsDlg(
                 switch (LOWORD(wParam))
                 {
                     case IDC_TCP_ALLOW_ALL:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_TCP_ALLOW_ALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_TCP_ALLOW_ALL) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_TCP_RESTRICT, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_TCP_RESTRICT, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_LIST), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_ADD), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_DEL), FALSE);
                         }
                         break;
                     case IDC_TCP_RESTRICT:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_TCP_RESTRICT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_TCP_RESTRICT) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_TCP_ALLOW_ALL, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_TCP_ALLOW_ALL, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_LIST), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_ADD), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_TCP_DEL), TRUE);
                         }
                         break;
                     case IDC_UDP_ALLOW_ALL:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_UDP_ALLOW_ALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_UDP_ALLOW_ALL) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_UDP_RESTRICT, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_UDP_RESTRICT, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_LIST), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_ADD), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_DEL), FALSE);
                         }
                         break;
                     case IDC_UDP_RESTRICT:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_UDP_RESTRICT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_UDP_RESTRICT) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_UDP_ALLOW_ALL, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_UDP_ALLOW_ALL, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_LIST), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_ADD), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_UDP_DEL), TRUE);
                         }
                         break;
                     case IDC_IP_ALLOW_ALL:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_IP_ALLOW_ALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_IP_ALLOW_ALL) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_IP_RESTRICT, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_IP_RESTRICT, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_LIST), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_ADD), FALSE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_DEL), FALSE);
                         }
                         break;
                     case IDC_IP_RESTRICT:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_IP_RESTRICT, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_IP_RESTRICT) == BST_CHECKED)
                         {
-                            SendDlgItemMessageW(hwndDlg, IDC_IP_ALLOW_ALL, BM_SETCHECK, BST_UNCHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_IP_ALLOW_ALL, BST_UNCHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_LIST), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_ADD), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IP_DEL), TRUE);
                         }
                         break;
                     case IDC_USE_FILTER:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_USE_FILTER, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_USE_FILTER) == BST_UNCHECKED)
                             DisplayError(IDS_DISABLE_FILTER, IDS_TCPIP, MB_OK);
 
                         break;
@@ -744,7 +744,7 @@ TcpipAdvGwDlg(
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 EnableWindow(GetDlgItem(hwndDlg, IDC_OK), FALSE);
-                SendDlgItemMessageW(hwndDlg, IDC_USEMETRIC, BM_SETCHECK, BST_CHECKED, 0);
+                CheckDlgButton(hwndDlg, IDC_USEMETRIC, BST_CHECKED);
             }
             else
             {
@@ -764,7 +764,7 @@ TcpipAdvGwDlg(
                 }
                 else
                 {
-                    SendDlgItemMessageW(hwndDlg, IDC_USEMETRIC, BM_SETCHECK, BST_CHECKED, 0);
+                    CheckDlgButton(hwndDlg, IDC_USEMETRIC, BST_CHECKED);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), FALSE);
                 }
@@ -773,7 +773,7 @@ TcpipAdvGwDlg(
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_USEMETRIC)
             {
-                if (SendDlgItemMessage(hwndDlg, IDC_USEMETRIC, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if (IsDlgButtonChecked(hwndDlg, IDC_USEMETRIC) == BST_CHECKED)
                 {
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), FALSE);
@@ -802,7 +802,7 @@ TcpipAdvGwDlg(
                     find.flags = LVFI_STRING;
                     find.psz = pGwSettings->szIP;
 
-                    if (SendDlgItemMessage(hwndDlg, IDC_USEMETRIC, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
+                    if (IsDlgButtonChecked(hwndDlg, IDC_USEMETRIC) == BST_UNCHECKED)
                         pGwSettings->Metric = GetDlgItemInt(hwndDlg, IDC_METRIC, NULL, FALSE);
                     else
                         pGwSettings->Metric = 0;
@@ -1335,7 +1335,7 @@ TcpipAdvancedIpDlg(
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_AUTOMETRIC)
             {
-                if (SendDlgItemMessageW(hwndDlg, IDC_AUTOMETRIC, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if (IsDlgButtonChecked(hwndDlg, IDC_AUTOMETRIC) == BST_CHECKED)
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
                 else
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
@@ -1588,22 +1588,22 @@ InitializeTcpipAdvancedDNSDlg(
         return;
 
     if (This->pCurrentConfig->pDNS->RegisterAdapterName)
-        SendDlgItemMessageW(hwndDlg, IDC_REGSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_REGSUFFIX, BST_CHECKED);
     else
         EnableWindow(GetDlgItem(hwndDlg, IDC_USESUFFIX), FALSE);
 
     if (This->pCurrentConfig->pDNS->RegistrationEnabled)
-        SendDlgItemMessageW(hwndDlg, IDC_USESUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_USESUFFIX, BST_CHECKED);
 
     if (This->pCurrentConfig->pDNS->szDomain[0])
         SendDlgItemMessageW(hwndDlg, IDC_SUFFIX, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
     if (This->pCurrentConfig->pDNS->UseDomainNameDevolution)
-        SendDlgItemMessageW(hwndDlg, IDC_TOPPRIMSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_TOPPRIMSUFFIX, BST_CHECKED);
 
     if (!This->pCurrentConfig->pDNS->szSearchList || (wcslen(This->pCurrentConfig->pDNS->szSearchList) == 0))
     {
-        SendDlgItemMessageW(hwndDlg, IDC_PRIMSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_PRIMSUFFIX, BST_CHECKED);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNSSUFFIXADD), FALSE);
 
         return;
@@ -1631,7 +1631,7 @@ InitializeTcpipAdvancedDNSDlg(
         }while(TRUE);
 
         EnableWindow(GetDlgItem(hwndDlg, IDC_TOPPRIMSUFFIX), FALSE);
-        SendDlgItemMessageW(hwndDlg, IDC_SELSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_SELSUFFIX, BST_CHECKED);
         SendDlgItemMessageW(hwndDlg, IDC_DNSSUFFIXLIST, LB_SETCURSEL, 0, 0);
     }
 }
@@ -1834,7 +1834,7 @@ TcpipAdvancedDnsDlg(
             lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_KILLACTIVE)
             {
-                if (SendDlgItemMessageW(hwndDlg, IDC_SELSUFFIX, BM_GETCHECK, 0, 0) == BST_CHECKED &&
+                if (IsDlgButtonChecked(hwndDlg, IDC_SELSUFFIX) == BST_CHECKED &&
                     SendDlgItemMessageW(hwndDlg, IDC_DNSSUFFIXLIST, LB_GETCOUNT, 0, 0) == 0)
                 {
                     DisplayError(IDS_NO_SUFFIX, IDS_TCPIP, MB_ICONWARNING);
@@ -1870,11 +1870,11 @@ TcpipAdvancedDnsDlg(
                    break;
 
                  StoreDNSSettings(GetDlgItem(hwndDlg, IDC_DNSADDRLIST), This);
-                 if (SendDlgItemMessageW(hwndDlg, IDC_PRIMSUFFIX, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                 if (IsDlgButtonChecked(hwndDlg, IDC_PRIMSUFFIX) == BST_CHECKED)
                  {
                      CoTaskMemFree(This->pCurrentConfig->pDNS->szSearchList);
                      This->pCurrentConfig->pDNS->szSearchList = NULL;
-                     if (SendDlgItemMessageW(hwndDlg, IDC_TOPPRIMSUFFIX, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                     if (IsDlgButtonChecked(hwndDlg, IDC_TOPPRIMSUFFIX) == BST_CHECKED)
                          This->pCurrentConfig->pDNS->UseDomainNameDevolution = TRUE;
                      else
                          This->pCurrentConfig->pDNS->UseDomainNameDevolution = FALSE;
@@ -1887,10 +1887,10 @@ TcpipAdvancedDnsDlg(
                      This->pCurrentConfig->pDNS->szSearchList = GetListViewEntries(GetDlgItem(hwndDlg, IDC_DNSSUFFIXLIST));
                  }
 
-                 if (SendDlgItemMessageW(hwndDlg, IDC_REGSUFFIX, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                 if (IsDlgButtonChecked(hwndDlg, IDC_REGSUFFIX) == BST_CHECKED)
                  {
                      This->pCurrentConfig->pDNS->RegisterAdapterName = TRUE;
-                     if (SendDlgItemMessageW(hwndDlg, IDC_USESUFFIX, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                     if (IsDlgButtonChecked(hwndDlg, IDC_USESUFFIX) == BST_CHECKED)
                          This->pCurrentConfig->pDNS->RegistrationEnabled = TRUE;
                      else
                          This->pCurrentConfig->pDNS->RegistrationEnabled = FALSE;
@@ -2174,7 +2174,7 @@ StoreTcpipBasicSettings(
 {
     DWORD dwIpAddr;
 
-    if (SendDlgItemMessageW(hwndDlg, IDC_NODHCP, BM_GETCHECK, 0, 0) == BST_CHECKED)
+    if (IsDlgButtonChecked(hwndDlg, IDC_NODHCP) == BST_CHECKED)
     {
         This->pCurrentConfig->DhcpEnabled = FALSE;
         if (SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) != 4)
@@ -2246,7 +2246,7 @@ StoreTcpipBasicSettings(
         }
     }
 
-    if (SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+    if (IsDlgButtonChecked(hwndDlg, IDC_FIXEDDNS) == BST_CHECKED)
     {
         BOOL bSkip = FALSE;
         This->pCurrentConfig->AutoconfigActive = FALSE;
@@ -2354,7 +2354,7 @@ InitializeTcpipBasicDlgCtrls(
 
     if (pCurSettings->DhcpEnabled)
     {
-        SendDlgItemMessageW(hwndDlg, IDC_USEDHCP, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_USEDHCP, BST_CHECKED);
         EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), FALSE);
@@ -2362,7 +2362,7 @@ InitializeTcpipBasicDlgCtrls(
     }
     else
     {
-        SendDlgItemMessageW(hwndDlg, IDC_NODHCP, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_NODHCP, BST_CHECKED);
 
         if (pCurSettings->Ip)
         {
@@ -2381,13 +2381,13 @@ InitializeTcpipBasicDlgCtrls(
 
     if (pCurSettings->AutoconfigActive)
     {
-        SendDlgItemMessageW(hwndDlg, IDC_AUTODNS, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_AUTODNS, BST_CHECKED);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
     }
     else
     {
-        SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_SETCHECK, BST_CHECKED, 0);
+        CheckDlgButton(hwndDlg, IDC_FIXEDDNS, BST_CHECKED);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
         if (pCurSettings->Ns)
@@ -2530,7 +2530,7 @@ TcpipBasicDlg(
                 switch (LOWORD(wParam))
                 {
                     case IDC_USEDHCP:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_USEDHCP, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_CHECKED)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
@@ -2544,25 +2544,25 @@ TcpipBasicDlg(
                         }
                         break;
                     case IDC_NODHCP:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_NODHCP, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_NODHCP) == BST_CHECKED)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), TRUE);
-                            if (SendDlgItemMessageW(hwndDlg, IDC_AUTODNS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                            if (IsDlgButtonChecked(hwndDlg, IDC_AUTODNS) == BST_CHECKED)
                             {
-                                SendDlgItemMessageW(hwndDlg, IDC_AUTODNS, BM_SETCHECK, BST_UNCHECKED, 0);
+                                CheckDlgButton(hwndDlg, IDC_AUTODNS, BST_UNCHECKED);
                             }
                             EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODNS), FALSE);
-                            SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_SETCHECK, BST_CHECKED, 0);
+                            CheckDlgButton(hwndDlg, IDC_FIXEDDNS, BST_CHECKED);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
                             SendMessageW(GetParent(hwndDlg), PSM_REMOVEPAGE, 1, 0);
                         }
                         break;
                     case IDC_AUTODNS:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_AUTODNS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_AUTODNS) == BST_CHECKED)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
@@ -2572,7 +2572,7 @@ TcpipBasicDlg(
                         }
                         break;
                     case IDC_FIXEDDNS:
-                        if (SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        if (IsDlgButtonChecked(hwndDlg, IDC_FIXEDDNS) == BST_CHECKED)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
