@@ -61,5 +61,7 @@ protected:
     int m_redoSteps; // The redo-able count
     IMAGE_PART m_historyItems[HISTORYSIZE]; // A ring buffer of IMAGE_PARTs
     HGDIOBJ m_hbmOld;
+
     void SwapPart();
+    void PushDone();
 };

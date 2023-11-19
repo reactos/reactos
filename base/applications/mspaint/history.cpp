@@ -150,15 +150,9 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
     part.clear();
     part.m_hbmImage = m_hbmMaster;
     m_hbmMaster = hbm;
-    m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
-    if (m_undoSteps < HISTORYSIZE - 1)
-        m_undoSteps++;
-    m_redoSteps = 0;
-
-    g_imageSaved = FALSE;
-    NotifyImageChanged();
+    PushDone();
 }
 
 void ImageModel::PushImageForUndo(const RECT& rcPartial)
@@ -174,6 +168,11 @@ void ImageModel::PushImageForUndo(const RECT& rcPartial)
     part.m_hbmImage = getSubImage(hbmMaster, rcPartial);
     UnlockBitmap(hbmMaster);
 
+    PushDone();
+}
+
+void ImageModel::PushDone()
+{
     m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
 
     if (m_undoSteps < HISTORYSIZE - 1)
