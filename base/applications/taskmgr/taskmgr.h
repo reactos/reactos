@@ -15,7 +15,7 @@
 
 #define STATUS_WINDOW	2001
 #define STATUS_SIZE1	85
-#define STATUS_SIZE2	157 // he-IL.rc determines 72 requirement
+#define STATUS_SIZE2	157 // he-IL.rc determines minimum width:  72 == 157 - 85
 #define STATUS_SIZE3	400
 
 typedef struct
