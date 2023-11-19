@@ -1613,7 +1613,7 @@ FileTypesDlg_OnDelete(HWND hwndDlg)
     {
         FileTypesDlg_RemoveExt(hwndDlg);
 
-        // Select first item
+        // Select first item (Win2k3 does it)
         HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
         LV_ITEMW item = { LVIF_STATE };
         item.stateMask = item.state = LVIS_FOCUSED | LVIS_SELECTED;
