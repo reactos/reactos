@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "警告：改变这一进程的优先级可能会\n导致意外的结果，包括系统不稳定。 您确定\n要更改优先级类？"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情况：%d%%"
     IDS_STATUS_MEMUSAGE "内存使用情况：%s / %s（%d%%）"
-    IDS_STATUS_CPUUSAGE "CPU: %3d%%"
+    IDS_STATUS_CPUUSAGE "CPU： %3d%%"
     IDS_STATUS_PROCESSES "进程数：%d"
     IDS_NOT_RESPONDING "未响应"
     IDS_RUNNING "正在运行"
