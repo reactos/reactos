@@ -152,8 +152,7 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
     }
 }
 
-/************************************************************************
- * Return the size of the bitmap info structure including color table and
+/* Return the size of the bitmap info structure including color table and
  * the bytes required for 3 DWORDS if this is a BI_BITFIELDS(3) bmp.
  */
 static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
