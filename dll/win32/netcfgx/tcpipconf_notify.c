@@ -15,7 +15,7 @@ typedef struct
     DWORD IPSize;
     DWORD TCPSize;
     DWORD UDPSize;
-}TcpFilterSettings;
+} TcpFilterSettings;
 
 // KEY: Tcpip\Parameter\{InstanceGuid}\IpAddress | DhcpIpAddress
 // KEY: Tcpip\Parameter\{InstanceGuid}\SubnetMask | DhcpSubnetMask
@@ -30,7 +30,7 @@ typedef struct
     DWORD UseDomainNameDevolution;
     WCHAR szDomain[100];
     LPWSTR szSearchList;
-}TcpipAdvancedDNSDlgSettings;
+} TcpipAdvancedDNSDlgSettings;
 
 typedef struct tagIP_ADDR
 {
@@ -39,42 +39,42 @@ typedef struct tagIP_ADDR
     {
         DWORD Subnetmask;
         USHORT Metric;
-    }u;
+    } u;
     ULONG NTEContext;
-    struct tagIP_ADDR * Next;
-}IP_ADDR;
+    struct tagIP_ADDR *Next;
+} IP_ADDR;
 
 typedef enum
 {
     METRIC = 1,
     SUBMASK = 2,
     IPADDR = 3
-}COPY_TYPE;
+} COPY_TYPE;
 
 typedef struct
 {
-    IP_ADDR * Ip;
-    IP_ADDR * Ns;
-    IP_ADDR * Gw;
+    IP_ADDR *Ip;
+    IP_ADDR *Ns;
+    IP_ADDR *Gw;
 
     UINT DhcpEnabled;
     UINT AutoconfigActive;
     DWORD Index;
-    TcpFilterSettings * pFilter;
-    TcpipAdvancedDNSDlgSettings * pDNS;
-}TcpipSettings;
+    TcpFilterSettings *pFilter;
+    TcpipAdvancedDNSDlgSettings *pDNS;
+} TcpipSettings;
 
 typedef struct
 {
-    const INetCfgComponentPropertyUi * lpVtbl;
-    const INetCfgComponentControl * lpVtblCompControl;
-    LONG  ref;
-    IUnknown * pUnknown;
-    INetCfg * pNCfg;
-    INetCfgComponent * pNComp;
+    const INetCfgComponentPropertyUi *lpVtbl;
+    const INetCfgComponentControl *lpVtblCompControl;
+    LONG ref;
+    IUnknown *pUnknown;
+    INetCfg *pNCfg;
+    INetCfgComponent *pNComp;
     TcpipSettings *pCurrentConfig;
     CLSID NetCfgInstanceId;
-}TcpipConfNotifyImpl, *LPTcpipConfNotifyImpl;
+} TcpipConfNotifyImpl, *LPTcpipConfNotifyImpl;
 
 typedef struct
 {
@@ -82,36 +82,36 @@ typedef struct
     HWND hDlgCtrl;
     WCHAR szIP[16];
     UINT Metric;
-}TcpipGwSettings;
-
-typedef struct
-{
-   BOOL bAdd;
-    HWND hDlgCtrl;
-    WCHAR szIP[16];
-    WCHAR szMask[16];
-}TcpipIpSettings;
+} TcpipGwSettings;
 
 typedef struct
 {
     BOOL bAdd;
     HWND hDlgCtrl;
     WCHAR szIP[16];
-}TcpipDnsSettings;
+    WCHAR szMask[16];
+} TcpipIpSettings;
+
+typedef struct
+{
+    BOOL bAdd;
+    HWND hDlgCtrl;
+    WCHAR szIP[16];
+} TcpipDnsSettings;
 
 typedef struct
 {
     BOOL bAdd;
     HWND hDlgCtrl;
     LPWSTR Suffix;
-}TcpipSuffixSettings;
+} TcpipSuffixSettings;
 
 typedef struct
 {
     HWND hDlgCtrl;
     UINT ResId;
     UINT MaxNum;
-}TcpipPortSettings;
+} TcpipPortSettings;
 
 static __inline LPTcpipConfNotifyImpl impl_from_INetCfgComponentControl(INetCfgComponentControl *iface)
 {
@@ -2136,6 +2136,83 @@ LaunchAdvancedTcpipSettings(
     }
 }
 
+HRESULT
+InitializeTcpipAltDlgCtrls(
+    HWND hwndDlg,
+    TcpipSettings *pCurSettings)
+{
+    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
+    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
+    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETRANGE, 0, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
+    SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
+    SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
+    SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
+    SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETRANGE, 0, MAKEIPRANGE(1, 223));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETRANGE, 1, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETRANGE, 2, MAKEIPRANGE(0, 255));
+    SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETRANGE, 3, MAKEIPRANGE(0, 255));
+
+    if (pCurSettings->DhcpEnabled)
+    {
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_USEDHCP);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
+    }
+    else
+    {
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_NODHCP);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
+
+        if (pCurSettings->Ip)
+        {
+            /* Set current ip address */
+            SendDlgItemMessageA(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->IpAddress);
+            /* Set current hostmask */
+            SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
+        }
+    }
+
+    if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
+    {
+        /* Set current gateway */
+        SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+    }
+
+    if (pCurSettings->Ns)
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->IpAddress);
+        if (pCurSettings->Ns->Next)
+            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->Next->IpAddress);
+        else
+            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+    }
+    else
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+    }
+
+    return S_OK;
+}
+
 INT_PTR
 CALLBACK
 TcpipAltConfDlg(
@@ -2144,10 +2221,53 @@ TcpipAltConfDlg(
     WPARAM wParam,
     LPARAM lParam)
 {
-    switch(uMsg)
+    TcpipConfNotifyImpl *This;
+    LPPROPSHEETPAGE page;
+    BOOL bEnabled;
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            page = (LPPROPSHEETPAGE)lParam;
+            This = (TcpipConfNotifyImpl*)page->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
+            if (This->pCurrentConfig)
+            {
+                InitializeTcpipAltDlgCtrls(hwndDlg, This->pCurrentConfig);
+            }
             return TRUE;
+        }
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_USEDHCP:
+                case IDC_NODHCP:
+                {
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        bEnabled = (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_CHECKED);
+                        if (bEnabled)
+                        {
+                            SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_CLEARADDRESS, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_CLEARADDRESS, 0, 0);
+                        }
+
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), bEnabled);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), bEnabled);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), bEnabled);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), bEnabled);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), bEnabled);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+                }
+            }
+            break;
+        }
     }
     return FALSE;
 }
