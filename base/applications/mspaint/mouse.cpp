@@ -934,15 +934,13 @@ struct BezierTool : ToolBase
         if (!m_bDrawing)
         {
             m_bDrawing = TRUE;
-            s_pointStack[s_pointSP].x = s_pointStack[s_pointSP + 1].x = x;
-            s_pointStack[s_pointSP].y = s_pointStack[s_pointSP + 1].y = y;
+            s_pointStack[s_pointSP + 1] = s_pointStack[s_pointSP] = { x, y };
             ++s_pointSP;
         }
         else
         {
             ++s_pointSP;
-            s_pointStack[s_pointSP].x = x;
-            s_pointStack[s_pointSP].y = y;
+            s_pointStack[s_pointSP] = { x, y };
         }
 
         imageModel.NotifyImageChanged();
@@ -950,16 +948,14 @@ struct BezierTool : ToolBase
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        s_pointStack[s_pointSP].x = x;
-        s_pointStack[s_pointSP].y = y;
+        s_pointStack[s_pointSP] = { x, y };
         imageModel.NotifyImageChanged();
         return TRUE;
     }
 
     BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        s_pointStack[s_pointSP].x = x;
-        s_pointStack[s_pointSP].y = y;
+        s_pointStack[s_pointSP] = { x, y };
         if (s_pointSP >= 3)
         {
             OnEndDraw(FALSE);
@@ -1035,8 +1031,7 @@ struct ShapeTool : ToolBase
         if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
-        s_pointStack[s_pointSP].x = x;
-        s_pointStack[s_pointSP].y = y;
+        s_pointStack[s_pointSP] = { x, y };
 
         if (s_pointSP && bDoubleClick)
         {
@@ -1045,11 +1040,7 @@ struct ShapeTool : ToolBase
         }
 
         if (s_pointSP == 0)
-        {
-            s_pointSP++;
-            s_pointStack[s_pointSP].x = x;
-            s_pointStack[s_pointSP].y = y;
-        }
+            s_pointStack[++s_pointSP] = { x, y };
 
         imageModel.NotifyImageChanged();
     }
@@ -1059,8 +1050,7 @@ struct ShapeTool : ToolBase
         if ((s_pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(s_pointStack[s_pointSP - 1].x, s_pointStack[s_pointSP - 1].y, x, y);
 
-        s_pointStack[s_pointSP].x = x;
-        s_pointStack[s_pointSP].y = y;
+        s_pointStack[s_pointSP] = { x, y };
 
         imageModel.NotifyImageChanged();
         return TRUE;
@@ -1079,9 +1069,7 @@ struct ShapeTool : ToolBase
         }
         else
         {
-            s_pointSP++;
-            s_pointStack[s_pointSP].x = x;
-            s_pointStack[s_pointSP].y = y;
+            s_pointStack[++s_pointSP] = { x, y };
         }
 
         if (s_pointSP == s_maxPointSP)
@@ -1184,8 +1172,7 @@ ToolBase::createToolObject(TOOLTYPE type)
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
     m_pToolObject->beginEvent();
-    g_ptStart.x = g_ptEnd.x = x;
-    g_ptStart.y = g_ptEnd.y = y;
+    g_ptEnd = g_ptStart = { x, y };
     m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
     m_pToolObject->endEvent();
 }
@@ -1194,10 +1181,8 @@ void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     if (m_pToolObject->OnMouseMove(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
+        g_ptEnd = { x, y };
+
     m_pToolObject->endEvent();
 }
 
@@ -1205,10 +1190,8 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->beginEvent();
     if (m_pToolObject->OnButtonUp(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
+        g_ptEnd = { x, y };
+
     m_pToolObject->endEvent();
 }
 

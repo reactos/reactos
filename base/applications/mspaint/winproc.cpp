@@ -499,8 +499,7 @@ LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     MINMAXINFO *mm = (LPMINMAXINFO) lParam;
-    mm->ptMinTrackSize.x = 330;
-    mm->ptMinTrackSize.y = 360;
+    mm->ptMinTrackSize ={ 330, 360 };
     return 0;
 }
 
