@@ -1018,8 +1018,7 @@ typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileCaseSensitiveInfo,
     FileNormalizedNameInfo,
 #endif
-    MaximumFileInfoByHandleClass,
-    MaximumFileInfoByHandlesClass = MaximumFileInfoByHandleClass // Old name
+    MaximumFileInfoByHandleClass
 } FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
 #endif
 
