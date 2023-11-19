@@ -689,7 +689,7 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     if (wParam == VK_ESCAPE && ::GetCapture() == m_hWnd)
     {
-        // Cancel dragging
+        cancelDrawing();
         ::ReleaseCapture();
         m_nMouseDownMsg = 0;
         m_hitCanvasSizeBox = HIT_NONE;

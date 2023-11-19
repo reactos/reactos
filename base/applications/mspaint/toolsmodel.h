@@ -44,7 +44,8 @@ struct ToolBase
     HDC m_hdc;
     COLORREF m_fg, m_bg;
     static INT s_pointSP;
-    static POINT s_pointStack[256];
+    static LPPOINT s_pointStack;
+    static INT s_maxPointSP;
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
     virtual ~ToolBase() { }
@@ -63,6 +64,8 @@ struct ToolBase
     void beginEvent();
     void endEvent();
     void reset();
+    void pushToPtStack(LONG x, LONG y);
+    void getBoundaryOfPtStack(RECT& rcBoundary);
 
     static ToolBase* createToolObject(TOOLTYPE type);
 
