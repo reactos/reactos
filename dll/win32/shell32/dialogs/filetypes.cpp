@@ -1612,6 +1612,15 @@ FileTypesDlg_OnDelete(HWND hwndDlg)
     if (MessageBoxW(hwndDlg, strRemoveExt, strTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
     {
         FileTypesDlg_RemoveExt(hwndDlg);
+        // select first item
+        HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+        LVITEMW lvItem;
+        ZeroMemory(&lvItem, sizeof(LVITEMW));
+        lvItem.mask = LVIF_STATE;
+        lvItem.stateMask = (UINT)-1;
+        lvItem.state = LVIS_FOCUSED | LVIS_SELECTED;
+        lvItem.iItem = 0;
+        ListView_SetItem(hListView, &lvItem);
     }
 }
 
