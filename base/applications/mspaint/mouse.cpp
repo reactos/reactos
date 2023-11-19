@@ -53,7 +53,7 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
-void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, LPPOINT pPoints)
+void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
 {
     POINT ptMin = { MAXLONG, MAXLONG }, ptMax = { (LONG)MINLONG, (LONG)MINLONG };
     for (INT iPoint = 0; iPoint < cPoints; ++iPoint)
