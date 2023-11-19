@@ -1718,8 +1718,6 @@ FolderOptionsFileTypesDlg(
                     edittype.pEntry = pEntry = FileTypesDlg_GetEntry(edittype.hwndLV);
                     if (pEntry)
                     {
-                        edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
-                        edittype.pEntry = pEntry;
                         DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
                                         hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
                     }
