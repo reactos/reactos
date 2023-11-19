@@ -151,15 +151,14 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         else return FALSE;
     }
 }
+
 /************************************************************************
- *           bitmap_info_size
- *
  * Return the size of the bitmap info structure including color table and
  * the bytes required for 3 DWORDS if this is a BI_BITFIELDS(3) bmp.
  */
 static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
-    unsigned int colors, size, masks = 0, bitfields = 0;
+    unsigned int colors, size, masks = 0;
 
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
@@ -170,23 +169,25 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
     }
     else  /* assume BITMAPINFOHEADER */
     {
-        /* Test if compression BI_BITFIELDS & bpp either 16 or 32 bpp.
-         * If so, account for the 3 DWORD masks (RGB Order).
-         * BITMAPCOREHEADER tested above has no 16 or 32 bpp types.
-         * See table "All of the possible pixel formats in a DIB"
-         * at https://en.wikipedia.org/wiki/BMP_file_format. */
-        if (info->bmiHeader.biCompression == BI_BITFIELDS &&
-            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
-            bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
-
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) /* buffer overflow otherwise */
                 colors = 256;
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
+        /* Account for BI_BITFIELDS in BITMAPINFOHEADER(v1-v3) bmp's. The
+         * 'max' selection using biSize below will exclude v4 & v5's. */
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
-        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD)) + bitfields;
+        /* Test if compression BI_BITFIELDS and bpp either 16 or 32.
+         * If so, account for the 3 DWORD masks (RGB Order).
+         * BITMAPCOREHEADER tested above has no 16 or 32 bpp types.
+         * See table "All of the possible pixel formats in a DIB"
+         * at https://en.wikipedia.org/wiki/BMP_file_format. */
+        if (info->bmiHeader.biSize >= sizeof(BITMAPV4HEADER) &&
+            info->bmiHeader.biCompression == BI_BITFIELDS &&
+            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
+                size += 3 * sizeof(DWORD);  // BI_BITFIELDS
+        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
     }
 }
 
@@ -1140,10 +1141,10 @@ BITMAP_LoadImageW(
         ResSize = SizeofResource(hinst, hrsrc);
     }
 
-    if (pbmi->bmiHeader.biSizeImage + pbmi->bmiHeader.biSize + 12 != ResSize &&
-        pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
-        pbmi->bmiHeader.biBitCount == 32)
-        ERR("Possibly bad resource size provided\n");
+    if (pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
+        pbmi->bmiHeader.biBitCount == 32 &&
+        pbmi->bmiHeader.biSizeImage + pbmi->bmiHeader.biSize + 12 != ResSize)
+        WARN("Possibly bad resource size provided\n");
 
     /* Fix up values */
     if(DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &bpp, &compr) == -1)
@@ -1173,15 +1174,15 @@ BITMAP_LoadImageW(
 
     /* Test if this is a GCC windres.exe compiled 32 bpp bitmap using
      * BI_BITFIELDS and if so, then a mistake causes it not to include
-     * the bytes for the bitfields. So, we we have to substract out the
+     * the bytes for the bitfields. So, we have to substract out the
      * size of the bitfields previously included from bitmap_info_size.
      * If this is ever fixed, then this code needs to be removed. */
-    if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize
-        && compr == BI_BITFIELDS && bpp == 32)
+    if (compr == BI_BITFIELDS && bpp == 32 &&
+        pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize)
     {
         /* GCC pointer to the image data has 12 less bytes than MSVC */
         pvBits = (char*)pvBits - 12;
-        WARN("GCC Resource Compiled 32-bpp with error\n");
+        ERR("GCC Resource Compiled 32-bpp with error\n");
     }
 
     /* Fix it up, if needed */
