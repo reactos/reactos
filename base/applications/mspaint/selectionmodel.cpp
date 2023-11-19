@@ -23,7 +23,7 @@ SelectionModel::SelectionModel()
 {
     ::SetRectEmpty(&m_rc);
     ::SetRectEmpty(&m_rcOld);
-    m_ptHit.x = m_ptHit.y = -1;
+    m_ptHit = { -1, -1 };
 }
 
 SelectionModel::~SelectionModel()

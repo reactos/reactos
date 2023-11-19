@@ -40,18 +40,14 @@ RECT CCanvasWindow::GetBaseRect()
 
 VOID CCanvasWindow::ImageToCanvas(POINT& pt)
 {
-    pt.x = Zoomed(pt.x);
-    pt.y = Zoomed(pt.y);
+    Zoomed(pt);
     pt.x += GRIP_SIZE - GetScrollPos(SB_HORZ);
     pt.y += GRIP_SIZE - GetScrollPos(SB_VERT);
 }
 
 VOID CCanvasWindow::ImageToCanvas(RECT& rc)
 {
-    rc.left = Zoomed(rc.left);
-    rc.top = Zoomed(rc.top);
-    rc.right = Zoomed(rc.right);
-    rc.bottom = Zoomed(rc.bottom);
+    Zoomed(rc);
     ::OffsetRect(&rc, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
 }
 
@@ -61,8 +57,7 @@ VOID CCanvasWindow::CanvasToImage(POINT& pt, BOOL bZoomed)
     pt.y -= GRIP_SIZE - GetScrollPos(SB_VERT);
     if (bZoomed)
         return;
-    pt.x = UnZoomed(pt.x);
-    pt.y = UnZoomed(pt.y);
+    UnZoomed(pt);
 }
 
 VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bZoomed)
@@ -70,15 +65,12 @@ VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bZoomed)
     ::OffsetRect(&rc, GetScrollPos(SB_HORZ) - GRIP_SIZE, GetScrollPos(SB_VERT) - GRIP_SIZE);
     if (bZoomed)
         return;
-    rc.left = UnZoomed(rc.left);
-    rc.top = UnZoomed(rc.top);
-    rc.right = UnZoomed(rc.right);
-    rc.bottom = UnZoomed(rc.bottom);
+    UnZoomed(rc);
 }
 
 VOID CCanvasWindow::GetImageRect(RECT& rc)
 {
-    ::SetRect(&rc, 0, 0, imageModel.GetWidth(), imageModel.GetHeight());
+    rc = { 0, 0, imageModel.GetWidth(), imageModel.GetHeight() };
 }
 
 HITTEST CCanvasWindow::CanvasHitTest(POINT pt)

@@ -56,13 +56,14 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
 void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
 {
     POINT ptMin = { MAXLONG, MAXLONG }, ptMax = { (LONG)MINLONG, (LONG)MINLONG };
-    for (INT iPoint = 0; iPoint < cPoints; ++iPoint)
+    while (cPoints-- > 0)
     {
-        LONG x = pPoints[iPoint].x, y = pPoints[iPoint].y;
+        LONG x = pPoints->x, y = pPoints->y;
         ptMin.x = min(x, ptMin.x);
         ptMin.y = min(y, ptMin.y);
         ptMax.x = max(x, ptMax.x);
         ptMax.y = max(y, ptMax.y);
+        ++pPoints;
     }
 
     ptMax.x += 1;
@@ -75,8 +76,10 @@ void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
 void ToolBase::reset()
 {
     s_pointSP = 0;
-    g_ptStart.x = g_ptStart.y = g_ptEnd.x = g_ptEnd.y = -1;
+    g_ptEnd = g_ptStart = { -1, -1 };
+
     selectionModel.ResetPtStack();
+
     if (selectionModel.m_bShow)
     {
         selectionModel.Landing();
