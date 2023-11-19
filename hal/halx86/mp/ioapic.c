@@ -70,7 +70,7 @@ static ULONG EISA_ELCR_Read(ULONG irq)
       PUCHAR port = (PUCHAR)(0x4d0 + (irq >> 3));
       return (READ_PORT_UCHAR(port) >> (irq & 7)) & 1;
    }
-   DPRINT("Broken MPtable reports ISA irq %d\n", irq);
+   DPRINT1("Broken MPtable reports ISA irq %lu\n", irq);
    return 0;
 }
 
@@ -106,7 +106,7 @@ IRQPolarity(ULONG idx)
 		  break;
 
 	       default:
-		  DPRINT("Broken BIOS!!\n");
+                  DPRINT1("Broken BIOS\n");
 		  polarity = 1;
 	    }
 	 }
@@ -117,7 +117,7 @@ IRQPolarity(ULONG idx)
 	 break;
 
       case 2: /* reserved */
-	 DPRINT("Broken BIOS!!\n");
+         DPRINT1("Broken BIOS\n");
 	 polarity = 1;
 	 break;
 
@@ -126,7 +126,7 @@ IRQPolarity(ULONG idx)
 	 break;
 
       default: /* invalid */
-	 DPRINT("Broken BIOS!!\n");
+         DPRINT1("Broken BIOS\n");
 	 polarity = 1;
    }
    return polarity;
@@ -164,7 +164,7 @@ IRQTrigger(ULONG idx)
 		  break;
 
                default:
-                  DPRINT("Broken BIOS!!\n");
+                  DPRINT1("Broken BIOS\n");
 		  trigger = 1;
 	    }
 	 }
@@ -175,7 +175,7 @@ IRQTrigger(ULONG idx)
 	 break;
 
       case 2: /* reserved */
-	 DPRINT("Broken BIOS!!\n");
+         DPRINT1("Broken BIOS\n");
 	 trigger = 1;
 	 break;
 
@@ -184,7 +184,7 @@ IRQTrigger(ULONG idx)
 	 break;
 
       default: /* invalid */
-	 DPRINT("Broken BIOS!!\n");
+         DPRINT1("Broken BIOS\n");
 	 trigger = 0;
    }
    return trigger;
@@ -203,7 +203,7 @@ Pin2Irq(ULONG idx,
     */
    if (IRQMap[idx].DstApicInt != pin)
    {
-      DPRINT("broken BIOS or MPTABLE parser, ayiee!!\n");
+      DPRINT1("Broken BIOS or MPTABLE parser\n");
    }
 
    switch (BUSMap[bus])
@@ -227,7 +227,7 @@ Pin2Irq(ULONG idx,
 	 break;
 
       default:
-	 DPRINT("Unknown bus type %d.\n",bus);
+	 DPRINT1("Unknown bus type %lu\n", bus);
 	 irq = 0;
    }
    return irq;
@@ -254,7 +254,7 @@ AssignIrqVector(ULONG irq)
    }
    else if (current_vector == FIRST_SYSTEM_VECTOR)
    {
-      DPRINT1("Ran out of interrupt sources!");
+      DPRINT1("Ran out of interrupt sources\n");
       ASSERT(FALSE);
    }
 
@@ -322,12 +322,12 @@ IOAPICSetupIrqs(VOID)
 	 {
 	    if (first_notcon)
 	    {
-	       DPRINT(" IO-APIC (apicid-pin) %d-%d\n", IOAPICMap[apic].ApicId, pin);
+            DPRINT(" IO-APIC (apicid-pin) %u-%lu\n", IOAPICMap[apic].ApicId, pin);
 	       first_notcon = 0;
 	    }
 	    else
 	    {
-	       DPRINT(", %d-%d\n", IOAPICMap[apic].ApicId, pin);
+               DPRINT(", %u-%lu\n", IOAPICMap[apic].ApicId, pin);
             }
 	    continue;
 	 }
@@ -345,7 +345,7 @@ IOAPICSetupIrqs(VOID)
   	 vector = AssignIrqVector(irq);
 	 entry.vector = vector;
 
-	 DPRINT("vector 0x%.08x assigned to irq 0x%.02x\n", vector, irq);
+         DPRINT("Vector 0x%.08lx assigned to irq 0x%.02lx\n", vector, irq);
 
          if (irq == 0)
          {
@@ -362,7 +362,7 @@ IOAPICSetupIrqs(VOID)
 
 	 IrqApicMap[irq] = apic;
 
-	 DPRINT("Vector %x, Pin %x, Irq %x\n", vector, pin, irq);
+         DPRINT("Vector %lx, Pin %lx, Irq %lx\n", vector, pin, irq);
       }
    }
 }
@@ -372,7 +372,7 @@ IOAPICClearPin(ULONG Apic, ULONG Pin)
 {
    IOAPIC_ROUTE_ENTRY Entry;
 
-   DPRINT("IOAPICClearPin(Apic %d, Pin %d\n", Apic, Pin);
+   DPRINT("IOAPICClearPin(Apic %lu, Pin %lu\n", Apic, Pin);
    /*
     * Disable it in the IO-APIC irq-routing table
     */
@@ -447,11 +447,9 @@ IOAPICSetupIds(VOID)
 
     if (IOAPICMap[apic].ApicId >= 0xf)
     {
-      DPRINT1("BIOS bug, IO-APIC#%d ID is %d in the MPC table!...\n",
-	      apic, IOAPICMap[apic].ApicId);
-      DPRINT1("... fixing up to %d. (tell your hw vendor)\n",
-	      GET_IOAPIC_ID(tmp));
+      DPRINT1("BIOS bug, IO-APIC#%lu ID is %u in the MPC table\n", apic, IOAPICMap[apic].ApicId);
       IOAPICMap[apic].ApicId = GET_IOAPIC_ID(tmp);
+      DPRINT1(" Fixed up to %u. (Tell your hardware vendor)\n", IOAPICMap[apic].ApicId);
     }
 
     /*
@@ -473,8 +471,7 @@ IOAPICSetupIds(VOID)
      * Read the right value from the MPC table and
      * write it into the ID register.
      */
-    DPRINT("Changing IO-APIC physical APIC ID to %d\n",
-	   IOAPICMap[apic].ApicId);
+    DPRINT("Changing IO-APIC physical APIC ID to %u\n", IOAPICMap[apic].ApicId);
 
     tmp &= ~IOAPIC_ID_MASK;
     tmp |= SET_IOAPIC_ID(IOAPICMap[apic].ApicId);
@@ -642,10 +639,10 @@ HaliReconfigurePciInterrupts(VOID)
    {
       if (BUSMap[IRQMap[i].SrcBusId] == MP_BUS_PCI)
       {
-         DPRINT("%02x: IrqType %02x, IrqFlag %02x, SrcBusId %02x, SrcBusIrq %02x"
-	        ", DstApicId %02x, DstApicInt %02x\n",
-	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId,
-	        IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
+         DPRINT("%02lx: IrqType %02x, IrqFlag %04x, SrcBusId %02x"
+                ", SrcBusIrq %02x, DstApicId %02x, DstApicInt %02x\n",
+                i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId,
+                IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
 
 	 HalSetBusDataByOffset(PCIConfiguration,
 	                               IRQMap[i].SrcBusId,

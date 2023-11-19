@@ -138,7 +138,8 @@ HalInitializeBios(
         x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
         ASSERT(x86BiosMemoryMapping);
 
-        DPRINT1("memory: %p, %p\n", *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
+        DPRINT1("*x86BiosMemoryMapping: %p, %p\n",
+                *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
         //DbgDumpPage(x86BiosMemoryMapping, 0xc351);
 
         x86BiosIsInitialized = TRUE;
@@ -271,7 +272,7 @@ x86MemRead(
     else
     {
         RtlFillMemory(Buffer, Size, 0xCC);
-        DPRINT1("x86MemRead: invalid read at 0x%lx (size 0x%lx)", Address, Size);
+        DPRINT1("x86MemRead: invalid read at 0x%lx (size 0x%lx)\n", Address, Size);
     }
 }
 
@@ -291,7 +292,7 @@ x86MemWrite(
     }
     else
     {
-        DPRINT1("x86MemWrite: invalid write at 0x%lx (size 0x%lx)", Address, Size);
+        DPRINT1("x86MemWrite: invalid write at 0x%lx (size 0x%lx)\n", Address, Size);
     }
 }
 
@@ -465,7 +466,7 @@ x86BiosCall(
         /* Make sure we haven't left the allowed memory range */
         if (FlatIp >= 0x100000)
         {
-            DPRINT1("x86BiosCall: invalid IP (0x%lx) during BIOS execution", FlatIp);
+            DPRINT1("x86BiosCall: invalid IP (0x%lx) during BIOS execution\n", FlatIp);
             return FALSE;
         }
 
