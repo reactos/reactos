@@ -481,6 +481,7 @@ struct SmoothDrawTool : ToolBase
         m_bLeftButton = bLeftButton;
         s_pointSP = 0;
         pushToPtStack(x, y);
+        pushToPtStack(x, y);
         imageModel.NotifyImageChanged();
     }
 
