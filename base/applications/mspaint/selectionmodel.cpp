@@ -71,17 +71,8 @@ void SelectionModel::ShiftPtStack(INT dx, INT dy)
 
 void SelectionModel::BuildMaskFromPtStack()
 {
-    CRect rc = { MAXLONG, MAXLONG, 0, 0 };
-    for (INT i = 0; i < m_iPtSP; ++i)
-    {
-        POINT& pt = m_ptStack[i];
-        rc.left = min(pt.x, rc.left);
-        rc.top = min(pt.y, rc.top);
-        rc.right = max(pt.x, rc.right);
-        rc.bottom = max(pt.y, rc.bottom);
-    }
-    rc.right += 1;
-    rc.bottom += 1;
+    CRect rc;
+    getBoundaryOfPtStack(rc, m_iPtSP, m_ptStack);
 
     m_rc = m_rcOld = rc;
 

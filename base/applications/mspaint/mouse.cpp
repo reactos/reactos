@@ -53,6 +53,25 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
+void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, LPPOINT pPoints)
+{
+    POINT ptMin = { MAXLONG, MAXLONG }, ptMax = { (LONG)MINLONG, (LONG)MINLONG };
+    for (INT iPoint = 0; iPoint < cPoints; ++iPoint)
+    {
+        LONG x = pPoints[iPoint].x, y = pPoints[iPoint].y;
+        ptMin.x = min(x, ptMin.x);
+        ptMin.y = min(y, ptMin.y);
+        ptMax.x = max(x, ptMax.x);
+        ptMax.y = max(y, ptMax.y);
+    }
+
+    ptMax.x += 1;
+    ptMax.y += 1;
+
+    CRect rc(ptMin, ptMax);
+    rcBoundary = rc;
+}
+
 void ToolBase::reset()
 {
     s_pointSP = 0;
@@ -129,24 +148,6 @@ void ToolBase::pushToPtStack(LONG x, LONG y)
     }
 
     s_pointStack[s_pointSP++] = { x, y };
-}
-
-void ToolBase::getBoundaryOfPtStack(RECT& rcBoundary)
-{
-    POINT ptMin, ptMax;
-    ptMin = ptMax = s_pointStack[0];
-
-    for (INT i = 1; i < s_pointSP; ++i)
-    {
-        LONG x = s_pointStack[i].x, y = s_pointStack[i].y;
-        ptMin.x = min(x, ptMin.x);
-        ptMin.y = min(y, ptMin.y);
-        ptMax.x = max(x, ptMax.x);
-        ptMax.y = max(y, ptMax.y);
-    }
-
-    CRect rc(ptMin, ptMax);
-    rcBoundary = rc;
 }
 
 /* TOOLS ********************************************************/
@@ -515,7 +516,7 @@ struct SmoothDrawTool : ToolBase
         pushToPtStack(x, y);
 
         CRect rcPartial;
-        getBoundaryOfPtStack(rcPartial);
+        getBoundaryOfPtStack(rcPartial, s_pointSP, s_pointStack);
 
         SIZE size = toolsModel.GetToolSize();
         rcPartial.InflateRect((size.cx + 1) / 2, (size.cy + 1) / 2);

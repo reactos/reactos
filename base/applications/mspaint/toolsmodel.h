@@ -65,7 +65,6 @@ struct ToolBase
     void endEvent();
     void reset();
     void pushToPtStack(LONG x, LONG y);
-    void getBoundaryOfPtStack(RECT& rcBoundary);
 
     static ToolBase* createToolObject(TOOLTYPE type);
 
