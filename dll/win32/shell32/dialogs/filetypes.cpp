@@ -1714,7 +1714,8 @@ FolderOptionsFileTypesDlg(
                     break;
 
                 case IDC_FILETYPES_ADVANCED:
-                    pEntry = FileTypesDlg_GetEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                    edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+                    edittype.pEntry = pEntry = FileTypesDlg_GetEntry(edittype.hwndLV);
                     if (pEntry)
                     {
                         edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
