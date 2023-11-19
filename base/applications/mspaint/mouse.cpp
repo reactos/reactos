@@ -59,10 +59,8 @@ void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
     while (cPoints-- > 0)
     {
         LONG x = pPoints->x, y = pPoints->y;
-        ptMin.x = min(x, ptMin.x);
-        ptMin.y = min(y, ptMin.y);
-        ptMax.x = max(x, ptMax.x);
-        ptMax.y = max(y, ptMax.y);
+        ptMin = { min(x, ptMin.x), min(y, ptMin.y) };
+        ptMax = { max(x, ptMax.x), max(y, ptMax.y) };
         ++pPoints;
     }
 
