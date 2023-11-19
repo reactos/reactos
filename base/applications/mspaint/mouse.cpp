@@ -119,9 +119,13 @@ void ToolBase::pushToPtStack(LONG x, LONG y)
 {
     if (s_pointSP >= s_maxPointSP)
     {
-        SIZE_T newMax = s_maxPointSP + 256, cbNew = newMax * sizeof(POINT);
+        SIZE_T newMax = s_maxPointSP + 512;
+        SIZE_T cbNew = newMax * sizeof(POINT);
         if (!s_pointStack.ReallocateBytes(cbNew))
+        {
+            ATLTRACE("%d, %d, %d\n", (INT)s_pointSP, (INT)s_maxPointSP, (INT)cbNew);
             return;
+        }
 
         s_maxPointSP = newMax;
     }
