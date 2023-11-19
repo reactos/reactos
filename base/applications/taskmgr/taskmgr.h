@@ -36,7 +36,7 @@ typedef struct
 	BOOL	HideWhenMinimized;
 	BOOL	Show16BitTasks;
 
-	// 0 - Paused, 1 - High, 2 - Normal, 4 - Low
+	/* 0 - Paused, 1 - High, 2 - Normal, 4 - Low */
 	DWORD	UpdateSpeed;
 
 	/* Applications page settings */
