@@ -879,7 +879,6 @@ struct LineTool : TwoPointDrawTool
 struct BezierTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
-    BOOL m_bDrawing = FALSE;
 
     BezierTool() : ToolBase(TOOL_BEZIER)
     {
@@ -887,20 +886,17 @@ struct BezierTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
-        if (!m_bDrawing)
-            return;
-
         COLORREF rgb = (m_bLeftButton ? m_fg : m_bg);
         switch (s_pointSP)
         {
-            case 1:
+            case 2:
                 Line(hdc, s_pointStack[0].x, s_pointStack[0].y, s_pointStack[1].x, s_pointStack[1].y, rgb,
                      toolsModel.GetLineWidth());
                 break;
-            case 2:
+            case 3:
                 Bezier(hdc, s_pointStack[0], s_pointStack[2], s_pointStack[2], s_pointStack[1], rgb, toolsModel.GetLineWidth());
                 break;
-            case 3:
+            case 4:
                 Bezier(hdc, s_pointStack[0], s_pointStack[2], s_pointStack[3], s_pointStack[1], rgb, toolsModel.GetLineWidth());
                 break;
         }
@@ -910,16 +906,14 @@ struct BezierTool : ToolBase
     {
         m_bLeftButton = bLeftButton;
 
-        if (!m_bDrawing)
+        if (s_pointSP == 0)
         {
-            m_bDrawing = TRUE;
-            s_pointStack[s_pointSP + 1] = s_pointStack[s_pointSP] = { x, y };
-            ++s_pointSP;
+            pushToPtStack(x, y);
+            pushToPtStack(x, y);
         }
         else
         {
-            ++s_pointSP;
-            s_pointStack[s_pointSP] = { x, y };
+            s_pointStack[s_pointSP - 1] = { x, y };
         }
 
         imageModel.NotifyImageChanged();
@@ -927,31 +921,32 @@ struct BezierTool : ToolBase
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        s_pointStack[s_pointSP] = { x, y };
+        if (s_pointSP > 0)
+            s_pointStack[s_pointSP - 1] = { x, y };
         imageModel.NotifyImageChanged();
         return TRUE;
     }
 
     BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        s_pointStack[s_pointSP] = { x, y };
-        if (s_pointSP >= 3)
+        if (s_pointSP >= 4)
         {
             OnEndDraw(FALSE);
             return TRUE;
         }
+        pushToPtStack(x, y);
         imageModel.NotifyImageChanged();
         return TRUE;
     }
 
     void OnEndDraw(BOOL bCancel) override
     {
-        if (!bCancel)
+        if (!bCancel && s_pointSP > 1)
         {
+            // FIXME: I couldn't calculate boundary rectangle from Bezier curve
             imageModel.PushImageForUndo();
             OnDrawOverlayOnImage(m_hdc);
         }
-        m_bDrawing = FALSE;
         ToolBase::OnEndDraw(bCancel);
     }
 
