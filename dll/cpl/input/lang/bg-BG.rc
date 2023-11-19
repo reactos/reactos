@@ -110,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Ляв Alt+Shift"
     IDS_SWITCH_BET_INLANG    "Превключване на езиците за въвеждане"
-    IDS_REBOOT_NOW, "Рестартирай сега?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE
