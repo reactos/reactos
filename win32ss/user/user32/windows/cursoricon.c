@@ -179,16 +179,6 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
             (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
                 bitfields = 3 * sizeof(DWORD);  // BI_BITFIELDS
 
-        /* Test if this is a GCC windres.exe compiled 32 bpp bitmap. If so,
-         * then a mistake causes it not to include the bytes for the bitfields.
-         * So, we we have to zero out the bitfield accounted for above.
-         * If this is ever fixed, then this code needs to be removed. */
-#ifdef __GNUC__
-        if (info->bmiHeader.biCompression == BI_BITFIELDS &&
-            info->bmiHeader.biBitCount == 32)
-            bitfields = 0;
-#endif
-
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) /* buffer overflow otherwise */
                 colors = 256;
@@ -1177,6 +1167,22 @@ BITMAP_LoadImageW(
     if(!pbmiCopy)
         goto end;
     CopyMemory(pbmiCopy, pbmi, iBMISize);
+
+    TRACE("Size Image %d, Size Header %d, ResSize %d\n",
+        pbmiCopy->bmiHeader.biSizeImage, pbmiCopy->bmiHeader.biSize, ResSize);
+
+    /* Test if this is a GCC windres.exe compiled 32 bpp bitmap using
+     * BI_BITFIELDS and if so, then a mistake causes it not to include
+     * the bytes for the bitfields. So, we we have to substract out the
+     * size of the bitfields previously included from bitmap_info_size.
+     * If this is ever fixed, then this code needs to be removed. */
+    if (pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize
+             && compr == BI_BITFIELDS && bpp == 32)
+    {
+        /* GCC pointer to the image data has 12 less bytes than MSVC */
+        pvBits = (char*)pvBits - 12;
+        WARN("GCC Resource Compiled 32-bpp with error\n");
+    }
 
     /* Fix it up, if needed */
     if(fuLoad & (LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS))
