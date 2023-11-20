@@ -34,8 +34,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Jeśli ten komputer jest używany w więcej niż jednej sieci, wprowadź poniżej alternatywne ustawienia protokołu IP", -1, 9, 9, 220, 20
     CONTROL "Au&tomatyczny prywatny adres IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "&Ustawienia konfigurowane przez użytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 210, 12
+    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
+    CONTROL "&Ustawienia konfigurowane przez użytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 210, 12
     LTEXT "Adres &IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "&Maska podsieci:", -1, 14, 95, 135, 8

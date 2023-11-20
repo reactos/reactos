@@ -32,8 +32,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "If this computer is used on more than one network, enter the alternate IP settings below", -1, 9, 9, 220, 20
     CONTROL "Au&tomatic private IP address", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "U&ser configured", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
+    CONTROL "U&ser configured", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
     LTEXT "&IP address:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
