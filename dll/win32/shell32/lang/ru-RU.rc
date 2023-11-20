@@ -1,9 +1,6 @@
-/*
-    Translators:
-    Kudratov Olimjon (olim98@bk.ru)
-    Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
-    Stanislav Motylkov (binarymaster@mail.ru)
-*/
+// COPYRIGHT: Kudratov Olimjon <olim98@bk.ru>
+//            Abdulganiev Rafael <abdulganiev.rafael@gmail.com>
+//            Stanislav Motylkov <binarymaster@mail.ru>
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -303,7 +300,7 @@ BEGIN
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -332,11 +329,11 @@ BEGIN
     CTEXT "Диск %c", 14009, 95, 162, 50, 10
     PUSHBUTTON "Очистка &диска", 14010, 160, 159, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "&Сжимать для экономии места", 14011, 8, 200, 222, 10, WS_DISABLED
-    CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 8, 214, 222, 10, WS_DISABLED
+    CHECKBOX "&Сжимать для экономии места", 14011, 8, 190, 222, 10, WS_DISABLED
+    CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 8, 204, 222, 10, WS_DISABLED
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Сервис"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -355,7 +352,7 @@ BEGIN
     PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оборудование"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -708,7 +705,7 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 160, 40, 60, 14
 END
 
-IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
+IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
 CAPTION "Настройка"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
@@ -717,16 +714,16 @@ BEGIN
     LTEXT "Использовать этот тип в качестве &шаблона:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Также применять его ко всем &подпапкам", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Картинка для папки", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    GROUPBOX "Картинка для папки", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
     LTEXT "В режиме просмотра эскизов можно разместить картинку для этой папки, которая напомнит о её содержимом.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Выбрать &картинку...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Восстановить по умолчанию", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    PUSHBUTTON "Выбрать &картинку...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
+    PUSHBUTTON "&Восстановить по умолчанию", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Просмотр:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Значок для папки", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Для всех режимов просмотра, кроме эскизов, можно заменить стандартный значок папки на другой.", IDC_STATIC, 15, 180, 210, 25
-    ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Сменить &значок...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    GROUPBOX "Значок для папки", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "Для всех режимов просмотра, кроме эскизов, можно заменить стандартный значок папки на другой.", IDC_STATIC, 15, 175, 210, 25
+    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
+    PUSHBUTTON "Сменить &значок...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
