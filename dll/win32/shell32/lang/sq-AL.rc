@@ -1,6 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  06-02-2014
-*/
+// COPYRIGHT: 2014 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
@@ -300,7 +298,7 @@ BEGIN
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Përgjithshme"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -329,11 +327,11 @@ BEGIN
     CTEXT "Drive %c", 14009, 95, 162, 50, 10
     PUSHBUTTON "Pastrim &Disku", 14010, 160, 159, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "Kompres drivin për të kursyer hapësirë ​​në disk", 14011, 8, 200, 222, 10, WS_DISABLED
-    CHECKBOX "Lejo Shërbimet e Indeksimi për indeksim të këtij disku për dokumentat të shpejtë në kërkim", 14012, 8, 214, 222, 10, WS_DISABLED
+    CHECKBOX "Kompres drivin për të kursyer hapësirë ​​në disk", 14011, 8, 190, 222, 10, WS_DISABLED
+    CHECKBOX "Lejo Shërbimet e Indeksimi për indeksim të këtij disku për dokumentat të shpejtë në kërkim", 14012, 8, 204, 222, 10, WS_DISABLED
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vegla"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -352,7 +350,7 @@ BEGIN
     PUSHBUTTON "Rezerv Tani...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Pajisje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -622,7 +620,7 @@ BEGIN
     GROUPBOX "Opsione kontrollo diskun", -1, 7, 6, 179, 40
     PUSHBUTTON "Anulo", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Rregullo dokumentet e sistemit automatikisht", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Skano për shërim dhe përpjekje të sektorëve të këqij", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "&Skano për shërim dhe përpjekje të sektorëve të këqij", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -705,7 +703,7 @@ BEGIN
     PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
 END
 
-IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
+IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
 CAPTION "Customize"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
@@ -714,16 +712,16 @@ BEGIN
     LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
     LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
+    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
-    ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    GROUPBOX "Folder icons", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 175, 210, 25
+    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
+    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
