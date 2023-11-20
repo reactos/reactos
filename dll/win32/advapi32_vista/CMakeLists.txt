@@ -12,6 +12,7 @@ include_directories(
 
 list(APPEND SOURCE
     DllMain.c
+    ../advapi32/reg/reg.c
     RegDeleteTree.c
     RegSetKeyValue.c
     RegLoadMUIString.c
