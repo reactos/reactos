@@ -87,12 +87,14 @@ KiInitMachineDependent(VOID)
 
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
-KiInitializePcr(IN PKIPCR Pcr,
-                IN ULONG ProcessorNumber,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack)
+KiInitializePcr(
+    _In_ ULONG ProcessorNumber,
+    _Inout_ PKIPCR Pcr,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID DpcStack)
 {
     KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
     PKGDTENTRY64 TssEntry;
@@ -425,11 +427,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
     //FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
-    /* Save the loader block */
+    /* Save the loader block and get the current CPU number */
     KeLoaderBlock = LoaderBlock;
-
-    /* Get the current CPU number */
-    Cpu = KeNumberProcessors++; // FIXME
+    Cpu = KeNumberProcessors;
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
@@ -458,7 +458,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
     /* Initialize the PCR */
-    KiInitializePcr(Pcr, Cpu, InitialThread, (PVOID)KiDoubleFaultStack);
+    KiInitializePcr(Cpu, Pcr, InitialThread, (PVOID)KiDoubleFaultStack);
 
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
@@ -474,16 +474,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         /* Setup the IDT */
         KeInitExceptions();
-
-         /* Initialize debugging system */
-        KdInitSystem(0, KeLoaderBlock);
-
-        /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
-
-    DPRINT1("Pcr = %p, Gdt = %p, Idt = %p, Tss = %p\n",
-           Pcr, Pcr->GdtBase, Pcr->IdtBase, Pcr->TssBase);
 
     /* Acquire lock */
     while (InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0))
@@ -495,11 +486,25 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
 
-    /* Set processor as active */
+    /* Set active processors */
     KeActiveProcessors |= 1ULL << Cpu;
+    KeNumberProcessors++;
 
     /* Release lock */
     InterlockedAnd64((PLONG64)&KiFreezeExecutionLock, 0);
+
+    /* Check if this is the boot CPU */
+    if (Cpu == 0)
+    {
+         /* Initialize debugging system */
+        KdInitSystem(0, KeLoaderBlock);
+
+        /* Check for break-in */
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    }
+
+    DPRINT1("Pcr = %p, Gdt = %p, Idt = %p, Tss = %p\n",
+           Pcr, Pcr->GdtBase, Pcr->IdtBase, Pcr->TssBase);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);

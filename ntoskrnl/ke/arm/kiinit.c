@@ -173,13 +173,15 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 //C_ASSERT((FIELD_OFFSET(KIPCR, FirstLevelDcacheSize) & 4) == 0);
 //C_ASSERT(sizeof(KIPCR) <= PAGE_SIZE);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
-KiInitializePcr(IN ULONG ProcessorNumber,
-                IN PKIPCR Pcr,
-                IN PKTHREAD IdleThread,
-                IN PVOID PanicStack,
-                IN PVOID InterruptStack)
+KiInitializePcr(
+    _In_ ULONG ProcessorNumber,
+    _Inout_ PKIPCR Pcr,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID PanicStack,
+    _In_ PVOID InterruptStack)
 {
     ULONG i;
 
@@ -339,7 +341,7 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Flush the TLB */
     KeFlushTb();
 
-    /* Save the loader block and get the current CPU */
+    /* Save the loader block and get the current CPU number */
     KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
 

@@ -281,13 +281,14 @@ KiInitMachineDependent(VOID)
 CODE_SEG("INIT")
 VOID
 NTAPI
-KiInitializePcr(IN ULONG ProcessorNumber,
-                IN PKIPCR Pcr,
-                IN PKIDTENTRY Idt,
-                IN PKGDTENTRY Gdt,
-                IN PKTSS Tss,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack)
+KiInitializePcr(
+    _In_ ULONG ProcessorNumber,
+    _Inout_ PKIPCR Pcr,
+    _In_ PKIDTENTRY Idt,
+    _In_ PKGDTENTRY Gdt,
+    _In_ PKTSS Tss,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID DpcStack)
 {
     /* Setup the TIB */
     Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
@@ -739,12 +740,12 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
 
-    /* Save the loader block and get the current CPU */
+    /* Save the loader block and get the current CPU number */
     KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
     if (!Cpu)
     {
-        /* If this is the boot CPU, set FS and the CPU Number*/
+        /* If this is the boot CPU, set FS and the CPU number */
         Ke386SetFs(KGDT_R0_PCR);
         __writefsdword(KPCR_PROCESSOR_NUMBER, Cpu);
 

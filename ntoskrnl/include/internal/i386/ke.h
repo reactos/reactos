@@ -402,13 +402,14 @@ KiRundownThread(IN PKTHREAD Thread)
 CODE_SEG("INIT")
 VOID
 NTAPI
-KiInitializePcr(IN ULONG ProcessorNumber,
-                IN PKIPCR Pcr,
-                IN PKIDTENTRY Idt,
-                IN PKGDTENTRY Gdt,
-                IN PKTSS Tss,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack);
+KiInitializePcr(
+    _In_ ULONG ProcessorNumber,
+    _Inout_ PKIPCR Pcr,
+    _In_ PKIDTENTRY Idt,
+    _In_ PKGDTENTRY Gdt,
+    _In_ PKTSS Tss,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID DpcStack);
 
 FORCEINLINE
 VOID
