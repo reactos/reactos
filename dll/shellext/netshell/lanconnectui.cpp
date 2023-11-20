@@ -341,6 +341,13 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 return PSNRET_NOERROR;
             }
 #endif
+            if (lppl->hdr.code == NM_DBLCLK)
+            {
+                This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                This->ShowNetworkComponentProperties(hwndDlg);
+                return FALSE;
+            }
+
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                 ZeroMemory(&li, sizeof(li));
