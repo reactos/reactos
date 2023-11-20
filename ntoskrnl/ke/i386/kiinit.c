@@ -536,6 +536,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     {
         /* FIXME */
         DPRINT1("Starting CPU#%u - you are brave\n", Number);
+        KeLowerIrql(DISPATCH_LEVEL);
     }
 
     /* Setup the Idle Thread */
@@ -676,7 +677,7 @@ KiSystemStartupBootStack(VOID)
 
     /* Initialize the kernel for the current CPU */
     KiInitializeKernel(&KiInitialProcess.Pcb,
-                       (PKTHREAD)KeLoaderBlock->Thread,
+                       (PKTHREAD)__readfsdword(KPCR_CURRENT_THREAD),
                        (PVOID)(KeLoaderBlock->KernelStack & ~3),
                        (PKPRCB)__readfsdword(KPCR_PRCB),
                        KeNumberProcessors - 1,
@@ -810,24 +811,12 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
 
 AppCpuInit:
-    //TODO: We don't setup IPIs yet so freeze other processors here.
-    if (Cpu)
+    /* Acquire lock */
+    while (InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0))
     {
-        KeMemoryBarrier();
-        LoaderBlock->Prcb = 0;
-
-        for (;;)
-        {
-            YieldProcessor();
-        }
+        /* Loop until lock is free */
+        while ((*(volatile KSPIN_LOCK*)&KiFreezeExecutionLock) & 1);
     }
-
-    /* Loop until we can release the freeze lock */
-    do
-    {
-        /* Loop until execution can continue */
-        while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
-    } while(InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0));
 
     /* Setup CPU-related fields */
     __writefsdword(KPCR_NUMBER, Cpu);
@@ -835,10 +824,13 @@ AppCpuInit:
     __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
     __writefsdword(KPCR_PRCB_SET_MEMBER, 1 << Cpu);
 
-    KiVerifyCpuFeatures(Pcr->Prcb);
+    KiVerifyCpuFeatures(KeGetCurrentPrcb());
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
+
+    /* Release lock */
+    InterlockedAnd((PLONG)&KiFreezeExecutionLock, 0);
 
     /* Set active processors */
     KeActiveProcessors |= __readfsdword(KPCR_SET_MEMBER);
