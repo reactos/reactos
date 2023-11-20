@@ -322,6 +322,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
                      &Attributes);
 }
 
+#ifndef _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegDisablePredefinedCache
@@ -5135,5 +5136,7 @@ RegUnLoadKeyW(HKEY hKey,
 
     return ERROR_SUCCESS;
 }
+
+#endif // _ADVAPI32_VISTA_
 
 /* EOF */
