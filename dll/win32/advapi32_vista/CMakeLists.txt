@@ -5,6 +5,11 @@ add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 add_definitions(-D_ADVAPI32_ -D_ADVAPI32_VISTA_)
 spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)
 
+include_directories(
+    ../advapi32
+    ${CMAKE_CURRENT_BINARY_DIR}/../advapi32
+)
+
 list(APPEND SOURCE
     DllMain.c
     RegDeleteTree.c
