@@ -2233,9 +2233,7 @@ TcpipAltConfDlg(
             This = (TcpipConfNotifyImpl*)page->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
             if (This->pCurrentConfig)
-            {
                 InitializeTcpipAltDlgCtrls(hwndDlg, This->pCurrentConfig);
-            }
             return TRUE;
         }
         case WM_COMMAND:
