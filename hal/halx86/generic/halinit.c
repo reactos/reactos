@@ -14,6 +14,9 @@
 
 /* GLOBALS *******************************************************************/
 
+//#ifdef CONFIG_SMP // FIXME: Reenable conditional once HAL is consistently compiled for SMP mode
+BOOLEAN HalpOnlyBootProcessor;
+//#endif
 BOOLEAN HalpPciLockSettings;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -29,6 +32,12 @@ HalpGetParameters(
     {
         /* Read the command line */
         PCSTR CommandLine = LoaderBlock->LoadOptions;
+
+//#ifdef CONFIG_SMP // FIXME: Reenable conditional once HAL is consistently compiled for SMP mode
+        /* Check whether we should only start one CPU */
+        if (strstr(CommandLine, "ONECPU"))
+            HalpOnlyBootProcessor = TRUE;
+//#endif
 
         /* Check if PCI is locked */
         if (strstr(CommandLine, "PCILOCK"))
