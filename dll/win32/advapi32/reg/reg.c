@@ -445,6 +445,7 @@ RegCloseKey(HKEY hKey)
   return ERROR_SUCCESS;
 }
 
+#endif // _ADVAPI32_VISTA_
 
 static NTSTATUS
 RegpCopyTree(IN HKEY hKeySrc,
@@ -804,6 +805,7 @@ Cleanup2:
     return ERROR_SUCCESS;
 }
 
+#ifndef _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegCopyTreeA
