@@ -27,7 +27,7 @@ BOOL ResourceToFile(INT i, PCWSTR FileName)
 
     if (FileExists(FileName))
     {
-        /* We should onlyl be using %temp% paths, so deleting here should be OK */
+        /* We should only be using %temp% paths, so deleting here should be OK */
         DeleteFileW(FileName);
         printf("'%S' already exists. Deleting now\n", FileName);
     }
