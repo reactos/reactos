@@ -32,15 +32,15 @@ list(APPEND imm32_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_106.bmp
     ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_107.bmp
     ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_108.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_201.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_202.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_203.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_204.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_205.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_206.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_207.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_208.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_209.bmp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_201.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_202.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_203.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_204.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_205.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_206.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_207.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_208.bmp
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/2052_Bitmap_209.bmp)
 
 add_library(imm32 MODULE ${SOURCE} imm32.rc)
 set_module_type(imm32 win32dll UNICODE ENTRYPOINT ImmDllInitialize 12)
