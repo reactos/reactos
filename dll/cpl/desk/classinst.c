@@ -218,6 +218,33 @@ DisplayClassInstaller(
     /* Install SoftwareSettings section */
     /* Yes, we're installing this section for the second time.
      * We don't want to create a link to Settings subkey */
+    int i = 0;
+    TCHAR SectionNameMod[MAX_PATH];
+    TCHAR *pSectionName;
+
+    StringCbCat(SectionNameMod, sizeof(SectionNameMod), SectionName);
+    while (SectionNameMod[i] < 'A' || SectionNameMod[i] > 'Z')
+       i++;
+    pSectionName = &SectionNameMod[i];
+    while (i < _tcslen(SectionNameMod))
+    {
+        if (SectionNameMod[i] == '_')
+        {
+            SectionNameMod[i] = 0;
+            break;
+        }
+        i++;
+    }
+    StringCbCat(pSectionName, sizeof(SectionNameMod), _T(".SoftwareSettings"));
+    result = SetupInstallFromInfSection(
+        InstallParams.hwndParent, hInf, pSectionName, SPINST_REGISTRY, hDeviceSubKey, NULL, 0, NULL, NULL, NULL, NULL);
+    if (!result)
+    {
+        rc = GetLastError();
+        DPRINT("SetupInstallFromInfSection() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
     result = SetupInstallFromInfSection(
         InstallParams.hwndParent, hInf, SectionName,
         SPINST_REGISTRY, hDeviceSubKey,
