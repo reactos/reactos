@@ -149,25 +149,38 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     HFONT hFont;
     HGDIOBJ hFontOld;
     HDC hDC;
+#ifndef NDEBUG
+    WCHAR szFace[LF_FACESIZE];
+#endif
 
     ZeroMemory(&g_T1LogFont, sizeof(g_T1LogFont));
     g_T1LogFont.lfHeight = -12;
     g_T1LogFont.lfWeight = FW_NORMAL;
     g_T1LogFont.lfCharSet = CHINESEBIG5_CHARSET;
+#ifdef NO_HACK /* FIXME: We lack proper Asian fonts! */
     g_T1LogFont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
     g_T1LogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     g_T1LogFont.lfQuality = PROOF_QUALITY;
-#ifndef NO_HACK /* FIXME: We lack fixed-pitch Asian fonts! */
     g_T1LogFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+#else
+    /* "新細明體" */
+    StringCchCopyW(g_T1LogFont.lfFaceName, _countof(g_T1LogFont.lfFaceName),
+                   L"\u65B0\u7D30\u660E\x9AD4");
 #endif
     hFont = CreateFontIndirectW(&g_T1LogFont);
 
     hDC = GetDC(NULL);
     hFontOld = SelectObject(hDC, hFont);
+
+#ifndef NDEBUG
+    GetTextFaceW(hDC, _countof(szFace), szFace);
+    TRACE("szFace: %s\n", debugstr_w(szFace));
+#endif
+
     GetTextMetricsW(hDC, ptm);
 
-    wch = 0x4E11; /* U+4E11 */
-    if (GetTextExtentPoint32W(hDC, &wch, 1, &textSize) && ptm->tmMaxCharWidth < textSize.cx)
+    wch = 0x4E11; /* U+4E11: 丑 */
+    if (GetTextExtentPoint32W(hDC, &wch, 1, &textSize) && textSize.cx > ptm->tmMaxCharWidth)
         ptm->tmMaxCharWidth = textSize.cx;
 
     DeleteObject(SelectObject(hDC, hFontOld));
