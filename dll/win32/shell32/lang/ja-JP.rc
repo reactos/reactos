@@ -948,7 +948,7 @@ BEGIN
     IDS_SCR_FILE "スクリーン セーバー"
     IDS_SYS_FILE "システム ファイル"
     IDS_VXD_FILE "仮想 デバイス ドライバ"
-    IDS_ANY_FILE "%s-ファイル"
+    IDS_ANY_FILE "%s ファイル"
 
     IDS_OPEN_VERB "開く"
     IDS_EXPLORE_VERB "エクスプローラで開く"
