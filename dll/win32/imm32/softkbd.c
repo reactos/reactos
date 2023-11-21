@@ -157,7 +157,9 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     g_T1LogFont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
     g_T1LogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     g_T1LogFont.lfQuality = PROOF_QUALITY;
+#ifndef NO_HACK /* FIXME: We lack fixed-pitch Asian fonts! */
     g_T1LogFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+#endif
     hFont = CreateFontIndirectW(&g_T1LogFont);
 
     hDC = GetDC(NULL);
@@ -888,6 +890,7 @@ T1_SetData(
     ReleaseDC(hWnd, hDC);
 
     SelectObject(hMemDC, pT1->hbmKeyboard);
+    SetTextColor(hMemDC, RGB(0, 0, 0));
     SetBkColor(hMemDC, RGB(192, 192, 192));
 
     if (pT1->CharSet == DEFAULT_CHARSET)
@@ -904,12 +907,11 @@ T1_SetData(
 
     for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
-        WCHAR *pwch = &pT1->chKeyChar[iKey];
         INT x0 = T1_KEYPOS(iKey).x, y0 = T1_KEYPOS(iKey).y;
         INT x = x0 + 6, y = y0 + 8;
-        *pwch = pData->wCode[0][gIC2VK[iKey]];
+        WCHAR wch = pT1->chKeyChar[iKey] = pData->wCode[0][gIC2VK[iKey]];
         SetRect(&rc, x, y, x0 + pT1->cxDefWidth, y0 + pT1->cyDefHeight);
-        ExtTextOutW(hDC, x, y, ETO_OPAQUE, &rc, pwch, !!*pwch, NULL);
+        ExtTextOutW(hDC, x, y, ETO_OPAQUE, &rc, &wch, wch != 0, NULL);
     }
 
     DeleteObject(SelectObject(hMemDC, hFontOld));
