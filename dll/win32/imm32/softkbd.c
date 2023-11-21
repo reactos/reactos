@@ -889,7 +889,7 @@ T1_SetData(
     PT1WINDOW pT1;
     HDC hDC, hMemDC;
     HFONT hFont;
-    HGDIOBJ hFontOld;
+    HGDIOBJ hFontOld, hbmOld;
     RECT rc;
     INT iKey;
 
@@ -902,7 +902,7 @@ T1_SetData(
     hMemDC = CreateCompatibleDC(hDC);
     ReleaseDC(hWnd, hDC);
 
-    SelectObject(hMemDC, pT1->hbmKeyboard);
+    hbmOld = SelectObject(hMemDC, pT1->hbmKeyboard);
     SetTextColor(hMemDC, RGB(0, 0, 0));
     SetBkColor(hMemDC, RGB(192, 192, 192));
 
@@ -924,10 +924,11 @@ T1_SetData(
         INT x = x0 + 6, y = y0 + 8;
         WCHAR wch = pT1->chKeyChar[iKey] = pData->wCode[0][gIC2VK[iKey]];
         SetRect(&rc, x, y, x0 + pT1->cxDefWidth, y0 + pT1->cyDefHeight);
-        ExtTextOutW(hDC, x, y, ETO_OPAQUE, &rc, &wch, wch != 0, NULL);
+        ExtTextOutW(hMemDC, x, y, ETO_OPAQUE, &rc, &wch, wch != 0, NULL);
     }
 
     DeleteObject(SelectObject(hMemDC, hFontOld));
+    SelectObject(hMemDC, hbmOld);
     DeleteDC(hMemDC);
     GlobalUnlock(hGlobal);
     return 0;
