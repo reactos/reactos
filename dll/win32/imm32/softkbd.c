@@ -947,6 +947,7 @@ T1_OnImeControl(
     {
         case IMC_GETSOFTKBDFONT:
         {
+            TRACE("IMC_GETSOFTKBDFONT: %p\n", lParam);
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
             pT1 = (PT1WINDOW)GlobalLock(hGlobal);
             if (hGlobal && pT1)
@@ -966,12 +967,13 @@ T1_OnImeControl(
         case IMC_SETSOFTKBDFONT:
         {
             const LOGFONTW *plf = (LPLOGFONTW)lParam;
+            TRACE("IMC_SETSOFTKBDFONT: %p\n", lParam);
             if (g_T1LogFont.lfCharSet == plf->lfCharSet)
                 return 0;
 
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
             pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-            if (pT1)
+            if (hGlobal && pT1)
             {
                 pT1->CharSet = plf->lfCharSet;
                 GlobalUnlock(hGlobal);
@@ -983,6 +985,7 @@ T1_OnImeControl(
         case IMC_GETSOFTKBDPOS:
         {
             RECT rc;
+            TRACE("IMC_GETSOFTKBDPOS\n");
             GetWindowRect(hWnd, &rc);
             return MAKELRESULT(rc.left, rc.top);
         }
@@ -992,6 +995,8 @@ T1_OnImeControl(
             HWND hwndParent;
 
             POINTSTOPOINT(pt, lParam);
+            TRACE("IMC_SETSOFTKBDPOS(%ld, %ld)\n", pt.x, pt.y);
+
             SetWindowPos(hWnd, NULL, pt.x, pt.y, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 
             hwndParent = GetParent(hWnd);
@@ -1015,6 +1020,7 @@ T1_OnImeControl(
         case IMC_GETSOFTKBDSUBTYPE:
         case IMC_SETSOFTKBDSUBTYPE:
         {
+            TRACE("IMC_GETSOFTKBDSUBTYPE/IMC_SETSOFTKBDSUBTYPE\n");
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
             pT1 = (PT1WINDOW)GlobalLock(hGlobal);
             if (!hGlobal || !pT1)
@@ -1030,6 +1036,7 @@ T1_OnImeControl(
         }
         case IMC_SETSOFTKBDDATA:
         {
+            TRACE("IMC_SETSOFTKBDDATA: %p\n", lParam);
             ret = T1_SetData(hWnd, (SOFTKBDDATA*)lParam);
             if (!ret)
             {
