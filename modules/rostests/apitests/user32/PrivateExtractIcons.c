@@ -28,8 +28,8 @@ BOOL ResourceToFile(INT i, PCWSTR FileName)
     if (FileExists(FileName))
     {
         /* We should only be using %temp% paths, so deleting here should be OK */
+        printf("Deleting '%S' that already exists.\n", FileName);
         DeleteFileW(FileName);
-        printf("'%S' already exists. Deleting now\n", FileName);
     }
 
     hRes = FindResourceW(NULL, MAKEINTRESOURCEW(i), MAKEINTRESOURCEW(RT_RCDATA));
