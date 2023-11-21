@@ -25,6 +25,8 @@
 
 #include "wine/wine_common_ver.rc"
 
+#include "resource.h"
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDB_T1_BACKSPACE BITMAP "res/1033_Bitmap_100.bmp"
