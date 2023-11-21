@@ -10,6 +10,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+/*
+ * There are two types of IME Software Keyboard: Type T1 and Type C1.
+ * T1 is created for Traditional Chinese but not limitted to it.
+ * C1 is created for Simplified Chinese but not limitted to it.
+ * Type T1 is smaller than Type C1.
+ */
+
 static UINT guScanCode[256]; /* Mapping: virtual key --> scan code */
 static POINT gptRaiseEdge; /* Border + Edge metrics */
 static BOOL g_bWantSoftKBDMetrics = TRUE;
@@ -109,7 +116,7 @@ const BYTE gIC2VK[IC_MAX] =
 };
 
 /*****************************************************************************
- * T1 software keyboard (for Traditional Chinese)
+ * IME Software Keyboard Type T1
  */
 
 #define T1_CLASSNAMEW L"SoftKBDClsT1"
@@ -163,9 +170,7 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     g_T1LogFont.lfQuality = PROOF_QUALITY;
     g_T1LogFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
 #else
-    /* "新細明體" */
-    StringCchCopyW(g_T1LogFont.lfFaceName, _countof(g_T1LogFont.lfFaceName),
-                   L"\u65B0\u7D30\u660E\x9AD4");
+    StringCchCopyW(g_T1LogFont.lfFaceName, _countof(g_T1LogFont.lfFaceName), L"MS Shell Dlg");
 #endif
     hFont = CreateFontIndirectW(&g_T1LogFont);
 
@@ -903,7 +908,9 @@ T1_SetData(
     ReleaseDC(hWnd, hDC);
 
     hbmOld = SelectObject(hMemDC, pT1->hbmKeyboard);
+#if 0 /* The default text color is black */
     SetTextColor(hMemDC, RGB(0, 0, 0));
+#endif
     SetBkColor(hMemDC, RGB(192, 192, 192));
 
     if (pT1->CharSet == DEFAULT_CHARSET)
@@ -1115,7 +1122,7 @@ T1_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************
- * C1 software keyboard (for Simplified Chinese)
+ * IME Software Keyboard Type C1
  */
 
 #define C1_CLASSNAMEW L"SoftKBDClsC1"
