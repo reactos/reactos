@@ -10,10 +10,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-static UINT guScanCode[256];
-static POINT gptRaiseEdge;
+static UINT guScanCode[256]; /* Mapping: virtual key --> scan code */
+static POINT gptRaiseEdge; /* Border + Edge metrics */
 static BOOL g_bWantSoftKBDMetrics = TRUE;
-static INT g_cxWork = 0, g_cyWork = 0;
 
 static inline BOOL
 Imm32PtInRect(
@@ -24,6 +23,19 @@ Imm32PtInRect(
     _In_ const POINT *ppt)
 {
     return (x <= ppt->x) && (ppt->x < x + cx) && (y <= ppt->y) && (ppt->y < y + cy);
+}
+
+static inline INT
+Imm32Clamp(
+    _In_ INT x,
+    _In_ INT xMin,
+    _In_ INT xMax)
+{
+    if (x < xMin)
+        return xMin;
+    if (x > xMax)
+        return xMax;
+    return x;
 }
 
 static VOID
@@ -43,8 +55,8 @@ Imm32GetAllMonitorSize(
 }
 
 static BOOL
-Imm32GetNearestMonitorSize(
-    _In_ HWND hwnd,
+Imm32GetNearestWorkArea(
+    _In_opt_ HWND hwnd,
     _Out_ LPRECT prcWork)
 {
     HMONITOR hMonitor;
@@ -71,14 +83,40 @@ Imm32GetNearestMonitorSize(
 }
 
 /*****************************************************************************
- * T1 software keyboard
+ * Internal codes
+ */
+
+#define IC_MAX 60
+
+#undef DEFINE_IC
+#define DEFINE_IC(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
+    internal_code_name = internal_code,
+
+/* Define internal codes */
+typedef enum INTERNAL_CODE
+{
+#include "internal.h"
+} INTERNAL_CODE;
+
+#undef DEFINE_IC
+#define DEFINE_IC(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
+    virtual_key_code,
+
+/* Mapping: Internal Code --> Virtual Key */
+const BYTE gIC2VK[IC_MAX] =
+{
+#include "internal.h"
+};
+
+/*****************************************************************************
+ * T1 software keyboard (for Traditional Chinese)
  */
 
 #define T1_CLASSNAMEW L"SoftKBDClsT1"
 
 typedef struct T1WINDOW
 {
-    INT cxKeyWidthDefault;    /* Normal button width */
+    INT cxKeyWidth;           /* Regular key width */
     INT cxWidth47;            /* [BackSpace] width */
     INT cxWidth48;            /* [Tab] width */
     INT cxWidth49;            /* [Caps] width */
@@ -88,37 +126,18 @@ typedef struct T1WINDOW
     INT cxWidth55or56;        /* [Alt] width */
     INT cxWidth57;            /* [Esc] width */
     INT cxWidth58;            /* [Space] width */
-    INT cyKeyHeight;          /* Normal button height */
+    INT cyKeyHeight;          /* Regular key height */
     INT cyHeight50;           /* [Enter] height */
-    POINT KeyPos[60];         /* Internal Code --> POINT */
+    POINT KeyPos[IC_MAX];     /* Internal Code --> POINT */
     WCHAR chKeyChar[48];      /* Internal Code --> WCHAR */
     HBITMAP hbmKeyboard;      /* The keyboard image */
     DWORD CharSet;            /* LOGFONT.lfCharSet */
-    UINT PressedKey;          /* Currently pressed button */
+    UINT PressedKey;          /* Currently pressed key */
     POINT pt0, pt1;           /* The soft keyboard window position */
     DWORD KeyboardSubType;    /* See IMC_GETSOFTKBDSUBTYPE/IMC_SETSOFTKBDSUBTYPE */
 } T1WINDOW, *PT1WINDOW;
 
-static LOGFONTW g_lfSKT1Font; /* LOGFONT for T1 */
-
-/* Define internal codes */
-#undef DEFINE_T1_KEY
-#define DEFINE_T1_KEY(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special_code) \
-    internal_code_name = internal_code,
-typedef enum INTERNAL_CODE
-{
-#include "t1keys.h"
-} INTERNAL_CODE;
-
-#undef DEFINE_T1_KEY
-#define DEFINE_T1_KEY(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special_code) \
-    virtual_key_code,
-
-/* Define mapping: Internal Code --> Virtual Key */
-const UINT gT1VirtKey[60] =
-{
-#include "t1keys.h"
-};
+static LOGFONTW g_T1LogFont;
 
 static void
 T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
@@ -129,15 +148,15 @@ T1_GetTextMetric(_Out_ LPTEXTMETRICW ptm)
     HGDIOBJ hFontOld;
     HDC hDC;
 
-    ZeroMemory(&g_lfSKT1Font, sizeof(g_lfSKT1Font));
-    g_lfSKT1Font.lfHeight = -12;
-    g_lfSKT1Font.lfWeight = FW_NORMAL;
-    g_lfSKT1Font.lfCharSet = CHINESEBIG5_CHARSET;
-    g_lfSKT1Font.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-    g_lfSKT1Font.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    g_lfSKT1Font.lfQuality = PROOF_QUALITY;
-    g_lfSKT1Font.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
-    hFont = CreateFontIndirectW(&g_lfSKT1Font);
+    ZeroMemory(&g_T1LogFont, sizeof(g_T1LogFont));
+    g_T1LogFont.lfHeight = -12;
+    g_T1LogFont.lfWeight = FW_NORMAL;
+    g_T1LogFont.lfCharSet = CHINESEBIG5_CHARSET;
+    g_T1LogFont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+    g_T1LogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    g_T1LogFont.lfQuality = PROOF_QUALITY;
+    g_T1LogFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+    hFont = CreateFontIndirectW(&g_T1LogFont);
 
     hDC = GetDC(NULL);
     hFontOld = SelectObject(hDC, hFont);
@@ -163,7 +182,7 @@ T1_InitButtonPos(_Out_ PT1WINDOW pT1)
     T1_GetTextMetric(&tm);
     tmMaxCharWidth = tm.tmMaxCharWidth;
 
-    pT1->cxKeyWidthDefault = (2 * tmMaxCharWidth + 12) / 2;
+    pT1->cxKeyWidth = (2 * tmMaxCharWidth + 12) / 2;
     pT1->cxWidth47 = (2 * tmMaxCharWidth + 12) / 2 + 1;
     pT1->cxWidth49 = (4 * tmMaxCharWidth + 24) / 2 + 3;
     pT1->cxWidth51or52 = (5 * tmMaxCharWidth + 30) / 2 + 5;
@@ -184,76 +203,76 @@ T1_InitButtonPos(_Out_ PT1WINDOW pT1)
     /* First row */
     xKey1 = gptRaiseEdge.x + 3;
     yKey1 = gptRaiseEdge.y + 3;
-    for (iKey = 0; iKey < T1IC_Q; ++iKey)
+    for (iKey = 0; iKey < IC_Q; ++iKey)
     {
         pT1->KeyPos[iKey].x = xKey1;
         pT1->KeyPos[iKey].y = yKey1;
-        xKey1 += pT1->cxKeyWidthDefault + 3;
+        xKey1 += pT1->cxKeyWidth + 3;
     }
-    pT1->KeyPos[T1IC_BACKSPACE].y = yKey1;
-    pT1->KeyPos[T1IC_BACKSPACE].x = xKey1;
+    pT1->KeyPos[IC_BACKSPACE].y = yKey1;
+    pT1->KeyPos[IC_BACKSPACE].x = xKey1;
 
     /* 2nd row */
     xKey2 = 3 + gptRaiseEdge.x + pT1->cxWidth48 + 3;
     yKey2 = 3 + yKey1 + cyLarge;
-    pT1->KeyPos[T1IC_TAB].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[T1IC_TAB].y = yKey2;
-    for (iKey = T1IC_Q; iKey < T1IC_A; ++iKey)
+    pT1->KeyPos[IC_TAB].x = gptRaiseEdge.x + 3;
+    pT1->KeyPos[IC_TAB].y = yKey2;
+    for (iKey = IC_Q; iKey < IC_A; ++iKey)
     {
         pT1->KeyPos[iKey].x = xKey2;
         pT1->KeyPos[iKey].y = yKey2;
-        xKey2 += pT1->cxKeyWidthDefault + 3;
+        xKey2 += pT1->cxKeyWidth + 3;
     }
-    pT1->KeyPos[T1IC_ENTER].x = xKey2;
-    pT1->KeyPos[T1IC_ENTER].y = yKey2;
+    pT1->KeyPos[IC_ENTER].x = xKey2;
+    pT1->KeyPos[IC_ENTER].y = yKey2;
 
     /* 3rd row */
     xKey3 = gptRaiseEdge.x + 3 + pT1->cxWidth49 + 3;
     yKey3 = yKey2 + cyLarge + 3;
-    pT1->KeyPos[T1IC_CAPS].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[T1IC_CAPS].y = yKey3;
-    for (iKey = T1IC_A; iKey < T1IC_Z; ++iKey)
+    pT1->KeyPos[IC_CAPS].x = gptRaiseEdge.x + 3;
+    pT1->KeyPos[IC_CAPS].y = yKey3;
+    for (iKey = IC_A; iKey < IC_Z; ++iKey)
     {
         pT1->KeyPos[iKey].x = xKey3;
         pT1->KeyPos[iKey].y = yKey3;
-        xKey3 += pT1->cxKeyWidthDefault + 3;
+        xKey3 += pT1->cxKeyWidth + 3;
     }
 
     /* 4th row */
     xKey4 = gptRaiseEdge.x + pT1->cxWidth51or52 + 3 + 3;
     yKey4 = yKey3 + cyLarge + 3;
-    pT1->KeyPos[T1IC_L_SHIFT].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[T1IC_L_SHIFT].y = yKey4;
-    for (iKey = T1IC_Z; iKey < T1IC_BACKSPACE; ++iKey)
+    pT1->KeyPos[IC_L_SHIFT].x = gptRaiseEdge.x + 3;
+    pT1->KeyPos[IC_L_SHIFT].y = yKey4;
+    for (iKey = IC_Z; iKey < IC_BACKSPACE; ++iKey)
     {
         pT1->KeyPos[iKey].x = xKey4;
         pT1->KeyPos[iKey].y = yKey4;
-        xKey4 += pT1->cxKeyWidthDefault + 3;
+        xKey4 += pT1->cxKeyWidth + 3;
     }
-    pT1->KeyPos[T1IC_R_SHIFT].y = yKey4;
-    pT1->KeyPos[T1IC_R_SHIFT].x = xKey4;
+    pT1->KeyPos[IC_R_SHIFT].y = yKey4;
+    pT1->KeyPos[IC_R_SHIFT].x = xKey4;
 
     /* 5th row */
     xKey5 = gptRaiseEdge.x + 3 + pT1->cxWidth53or54 + 3;
     yKey5 = yKey4 + cyLarge + 3;
-    pT1->KeyPos[T1IC_L_CTRL].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[T1IC_L_CTRL].y = yKey5;
-    pT1->KeyPos[T1IC_ESCAPE].x = xKey5;
-    pT1->KeyPos[T1IC_ESCAPE].y = yKey5;
-    pT1->KeyPos[T1IC_L_ALT].x = xKey5 + pT1->cxWidth57 + 3;
-    pT1->KeyPos[T1IC_L_ALT].y = yKey5;
+    pT1->KeyPos[IC_L_CTRL].x = gptRaiseEdge.x + 3;
+    pT1->KeyPos[IC_L_CTRL].y = yKey5;
+    pT1->KeyPos[IC_ESCAPE].x = xKey5;
+    pT1->KeyPos[IC_ESCAPE].y = yKey5;
+    pT1->KeyPos[IC_L_ALT].x = xKey5 + pT1->cxWidth57 + 3;
+    pT1->KeyPos[IC_L_ALT].y = yKey5;
 
     xKey6 = xKey5 + pT1->cxWidth57 + 3 + pT1->cxWidth55or56 + 3;
     xKey7 = xKey6 + pT1->cxWidth58 + 3;
 
-    pT1->KeyPos[T1IC_R_ALT].x = xKey7;
-    pT1->KeyPos[T1IC_R_ALT].y = yKey5;
+    pT1->KeyPos[IC_R_ALT].x = xKey7;
+    pT1->KeyPos[IC_R_ALT].y = yKey5;
 
-    pT1->KeyPos[T1IC_SPACE].x = xKey6;
-    pT1->KeyPos[T1IC_SPACE].y = yKey5;
+    pT1->KeyPos[IC_SPACE].x = xKey6;
+    pT1->KeyPos[IC_SPACE].y = yKey5;
 
-    pT1->KeyPos[T1IC_R_CTRL].x = xKey7 + pT1->cxWidth57 + pT1->cxWidth55or56 + 6;
-    pT1->KeyPos[T1IC_R_CTRL].y = yKey5;
+    pT1->KeyPos[IC_R_CTRL].x = xKey7 + pT1->cxWidth57 + pT1->cxWidth55or56 + 6;
+    pT1->KeyPos[IC_R_CTRL].y = yKey5;
 }
 
 /* Draw keyboard key edge */
@@ -313,16 +332,16 @@ T1_DrawBitmap(
 static void
 T1_DrawLabels(
     _In_ HDC hDC,
-    _In_ PT1WINDOW pT1,
+    _In_ const T1WINDOW *pT1,
     _In_ LPCWSTR pszBmpName)
 {
     HBITMAP hBitmap = LoadBitmapW(ghImm32Inst, pszBmpName);
     HDC hdcMem = CreateCompatibleDC(hDC);
     HGDIOBJ hbmOld = SelectObject(hdcMem, hBitmap);
     INT iKey;
-    for (iKey = 0; iKey < T1IC_BACKSPACE; ++iKey)
+    for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
-        LPPOINT ppt = &pT1->KeyPos[iKey];
+        const POINT *ppt = &pT1->KeyPos[iKey];
         BitBlt(hDC, ppt->x, ppt->y, 8, 8, hdcMem, iKey * 8, 0, SRCCOPY);
     }
     SelectObject(hdcMem, hbmOld);
@@ -333,21 +352,21 @@ T1_DrawLabels(
 static void
 T1_InitBitmap(
     _In_ HWND hWnd,
-    _Out_ PT1WINDOW pT1)
+    _Inout_ PT1WINDOW pT1)
 {
     HDC hDC, hMemDC;
-    HGDIOBJ hNullPen = GetStockObject(NULL_PEN);
-    HGDIOBJ hbrLtGray = GetStockObject(LTGRAY_BRUSH);
+    HGDIOBJ hNullPen = GetStockObject(NULL_PEN), hbrLtGray = GetStockObject(LTGRAY_BRUSH);
     RECT rc;
     INT iKey;
 
+    /* Create the bitmap */
     hDC = GetDC(hWnd);
     hMemDC = CreateCompatibleDC(hDC);
     GetClientRect(hWnd, &rc);
     pT1->hbmKeyboard = CreateCompatibleBitmap(hDC, rc.right - rc.left, rc.bottom - rc.top);
     ReleaseDC(hWnd, hDC);
 
-    /* Draw keyboard frame */
+    /* Draw keyboard face */
     SelectObject(hMemDC, pT1->hbmKeyboard);
     SelectObject(hMemDC, hNullPen);
     SelectObject(hMemDC, hbrLtGray);
@@ -355,138 +374,114 @@ T1_InitBitmap(
     DrawEdge(hMemDC, &rc, EDGE_RAISED, BF_RECT);
 
     /* 53 --> Left [Ctrl] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_L_CTRL].x, pT1->KeyPos[T1IC_L_CTRL].y,
-        pT1->cxWidth53or54, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth53or54 / 2 + pT1->KeyPos[T1IC_L_CTRL].x - 8,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_L_CTRL].y - 4,
-        16, 9, IDB_T1_CTRL);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_L_CTRL].x, pT1->KeyPos[IC_L_CTRL].y,
+                      pT1->cxWidth53or54, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth53or54 / 2 + pT1->KeyPos[IC_L_CTRL].x - 8,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_CTRL].y - 4,
+                  16, 9, IDB_T1_CTRL);
 
     /* 54 --> Right [Ctrl] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_R_CTRL].x, pT1->KeyPos[T1IC_R_CTRL].y,
-        pT1->cxWidth53or54, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth53or54 / 2 + pT1->KeyPos[T1IC_R_CTRL].x - 8,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_R_CTRL].y - 4,
-        16, 9, IDB_T1_CTRL);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_R_CTRL].x, pT1->KeyPos[IC_R_CTRL].y,
+                      pT1->cxWidth53or54, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth53or54 / 2 + pT1->KeyPos[IC_R_CTRL].x - 8,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_CTRL].y - 4,
+                  16, 9, IDB_T1_CTRL);
 
     /* 57 --> [Esc] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_ESCAPE].x, pT1->KeyPos[T1IC_ESCAPE].y,
-        pT1->cxWidth57, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth57   / 2 + pT1->KeyPos[T1IC_ESCAPE].x - 9,
-        pT1->cyKeyHeight / 2 + pT1->KeyPos[T1IC_ESCAPE].y - 4,
-        18, 9, IDB_T1_ESCAPE);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_ESCAPE].x, pT1->KeyPos[IC_ESCAPE].y,
+                      pT1->cxWidth57, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth57   / 2 + pT1->KeyPos[IC_ESCAPE].x - 9,
+                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_ESCAPE].y - 4,
+                  18, 9, IDB_T1_ESCAPE);
 
     /* 55 --> Left [Alt] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_L_ALT].x, pT1->KeyPos[T1IC_L_ALT].y,
-        pT1->cxWidth55or56, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth55or56 / 2 + pT1->KeyPos[T1IC_L_ALT].x - 8,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_L_ALT].y - 4,
-        16, 9, IDB_T1_ALT);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_L_ALT].x, pT1->KeyPos[IC_L_ALT].y,
+                      pT1->cxWidth55or56, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth55or56 / 2 + pT1->KeyPos[IC_L_ALT].x - 8,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_ALT].y - 4,
+                  16, 9, IDB_T1_ALT);
 
     /* 56 --> Right [Alt] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_R_ALT].x, pT1->KeyPos[T1IC_R_ALT].y,
-        pT1->cxWidth55or56, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth55or56 / 2 + pT1->KeyPos[T1IC_R_ALT].x - 8,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_R_ALT].y - 4,
-        16, 9, IDB_T1_ALT);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_R_ALT].x, pT1->KeyPos[IC_R_ALT].y,
+                      pT1->cxWidth55or56, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth55or56 / 2 + pT1->KeyPos[IC_R_ALT].x - 8,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_ALT].y - 4,
+                  16, 9, IDB_T1_ALT);
 
     /* 58 --> [Space] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_SPACE].x, pT1->KeyPos[T1IC_SPACE].y,
-        pT1->cxWidth58, pT1->cyKeyHeight);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_SPACE].x, pT1->KeyPos[IC_SPACE].y,
+                      pT1->cxWidth58, pT1->cyKeyHeight);
 
     /* 51 --> Left [Shift] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_L_SHIFT].x, pT1->KeyPos[T1IC_L_SHIFT].y,
-        pT1->cxWidth51or52, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth51or52 / 2 + pT1->KeyPos[T1IC_L_SHIFT].x - 11,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_L_SHIFT].y - 4,
-        23, 9, IDB_T1_SHIFT);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_L_SHIFT].x, pT1->KeyPos[IC_L_SHIFT].y,
+                      pT1->cxWidth51or52, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth51or52 / 2 + pT1->KeyPos[IC_L_SHIFT].x - 11,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_SHIFT].y - 4,
+                  23, 9, IDB_T1_SHIFT);
 
     /* 52 --> Right [Shift] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_R_SHIFT].x, pT1->KeyPos[T1IC_R_SHIFT].y,
-        pT1->cxWidth51or52, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth51or52 / 2 + pT1->KeyPos[T1IC_R_SHIFT].x - 11,
-        pT1->cyKeyHeight   / 2 + pT1->KeyPos[T1IC_R_SHIFT].y - 4,
-        23, 9, IDB_T1_SHIFT);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_R_SHIFT].x, pT1->KeyPos[IC_R_SHIFT].y,
+                      pT1->cxWidth51or52, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth51or52 / 2 + pT1->KeyPos[IC_R_SHIFT].x - 11,
+                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_SHIFT].y - 4,
+                  23, 9, IDB_T1_SHIFT);
 
     /* 49 --> [Caps] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_CAPS].x, pT1->KeyPos[T1IC_CAPS].y,
-        pT1->cxWidth49, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth49   / 2 + pT1->KeyPos[T1IC_CAPS].x - 11,
-        pT1->cyKeyHeight / 2 + pT1->KeyPos[T1IC_CAPS].y - 4,
-        22, 9, IDB_T1_CAPS);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_CAPS].x, pT1->KeyPos[IC_CAPS].y,
+                      pT1->cxWidth49, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth49   / 2 + pT1->KeyPos[IC_CAPS].x - 11,
+                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_CAPS].y - 4,
+                  22, 9, IDB_T1_CAPS);
 
     /* 48 --> [Tab] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_TAB].x, pT1->KeyPos[T1IC_TAB].y,
-        pT1->cxWidth48, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth48   / 2 + pT1->KeyPos[T1IC_TAB].x - 8,
-        pT1->cyKeyHeight / 2 + pT1->KeyPos[T1IC_TAB].y - 4,
-        16, 9, IDB_T1_TAB);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_TAB].x, pT1->KeyPos[IC_TAB].y,
+                      pT1->cxWidth48, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth48   / 2 + pT1->KeyPos[IC_TAB].x - 8,
+                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_TAB].y - 4,
+                  16, 9, IDB_T1_TAB);
 
     /* 50 --> [Enter] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_ENTER].x, pT1->KeyPos[T1IC_ENTER].y,
-        pT1->cxWidth50, pT1->cyHeight50);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth50  / 2 + pT1->KeyPos[T1IC_ENTER].x - 13,
-        pT1->cyHeight50 / 2 + pT1->KeyPos[T1IC_ENTER].y - 4,
-        26, 9, IDB_T1_ENTER);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_ENTER].x, pT1->KeyPos[IC_ENTER].y,
+                      pT1->cxWidth50, pT1->cyHeight50);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth50  / 2 + pT1->KeyPos[IC_ENTER].x - 13,
+                  pT1->cyHeight50 / 2 + pT1->KeyPos[IC_ENTER].y - 4,
+                  26, 9, IDB_T1_ENTER);
 
     /* 47 --> [BackSpace] */
-    T1_DrawConvexRect(
-        hMemDC,
-        pT1->KeyPos[T1IC_BACKSPACE].x, pT1->KeyPos[T1IC_BACKSPACE].y,
-        pT1->cxWidth47, pT1->cyKeyHeight);
-    T1_DrawBitmap(
-        hMemDC,
-        pT1->cxWidth47   / 2 + pT1->KeyPos[T1IC_BACKSPACE].x - 8,
-        pT1->cyKeyHeight / 2 + pT1->KeyPos[T1IC_BACKSPACE].y - 4,
-        16, 9, IDB_T1_BACKSPACE);
+    T1_DrawConvexRect(hMemDC,
+                      pT1->KeyPos[IC_BACKSPACE].x, pT1->KeyPos[IC_BACKSPACE].y,
+                      pT1->cxWidth47, pT1->cyKeyHeight);
+    T1_DrawBitmap(hMemDC,
+                  pT1->cxWidth47   / 2 + pT1->KeyPos[IC_BACKSPACE].x - 8,
+                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_BACKSPACE].y - 4,
+                  16, 9, IDB_T1_BACKSPACE);
 
-    /* Normal keys */
-    for (iKey = 0; iKey < T1IC_BACKSPACE; ++iKey)
+    /* Regular keys */
+    for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
         LPPOINT ppt = &pT1->KeyPos[iKey];
-        T1_DrawConvexRect(hMemDC, ppt->x, ppt->y,
-                          pT1->cxKeyWidthDefault, pT1->cyKeyHeight);
+        T1_DrawConvexRect(hMemDC, ppt->x, ppt->y, pT1->cxKeyWidth, pT1->cyKeyHeight);
     }
 
     T1_DrawLabels(hMemDC, pT1, MAKEINTRESOURCEW(IDB_T1_CHARS));
@@ -494,7 +489,8 @@ T1_InitBitmap(
 }
 
 static INT
-T1_OnCreate(_In_ HWND hWnd)
+T1_OnCreate(
+    _In_ HWND hWnd)
 {
     PT1WINDOW pT1;
     HGLOBAL hGlobal = GlobalAlloc(GHND, sizeof(T1WINDOW));
@@ -510,7 +506,7 @@ T1_OnCreate(_In_ HWND hWnd)
 
     SetWindowLongPtrW(hWnd, 0, (LONG_PTR)hGlobal);
     pT1->pt1.x = pT1->pt1.y = -1;
-    pT1->PressedKey = T1IC_NONE;
+    pT1->PressedKey = IC_NONE;
     pT1->CharSet = CHINESEBIG5_CHARSET;
 
     T1_InitButtonPos(pT1);
@@ -551,11 +547,8 @@ T1_OnDestroy(
     HWND hwndOwner;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
+    if (!hGlobal || !pT1)
         return;
 
     if (pT1->pt1.x != -1 && pT1->pt1.y != -1)
@@ -577,10 +570,10 @@ T1_InvertButton(
     _In_ const T1WINDOW *pT1,
     _In_ UINT iPressed)
 {
-    INT cxWidth = pT1->cxKeyWidthDefault, cyHeight = pT1->cyKeyHeight;
+    INT cxWidth = pT1->cxKeyWidth, cyHeight = pT1->cyKeyHeight;
     HDC hChoiceDC;
 
-    if (iPressed >= T1IC_NONE)
+    if (iPressed >= IC_NONE)
         return;
 
     if (hDC)
@@ -588,25 +581,25 @@ T1_InvertButton(
     else
         hChoiceDC = GetDC(hWnd);
 
-    if (iPressed >= T1IC_BACKSPACE)
+    if (iPressed >= IC_BACKSPACE)
     {
         switch (iPressed)
         {
-            case T1IC_BACKSPACE:
+            case IC_BACKSPACE:
                 cxWidth = pT1->cxWidth47;
                 break;
-            case T1IC_TAB:
+            case IC_TAB:
                 cxWidth = pT1->cxWidth48;
                 break;
-            case T1IC_ENTER:
+            case IC_ENTER:
                 pT1 = pT1;
                 cxWidth = pT1->cxWidth50;
                 cyHeight = pT1->cyHeight50;
                 break;
-            case T1IC_ESCAPE:
+            case IC_ESCAPE:
                 cxWidth = pT1->cxWidth57;
                 break;
-            case T1IC_SPACE:
+            case IC_SPACE:
                 cxWidth = pT1->cxWidth58;
                 break;
             default:
@@ -619,8 +612,7 @@ T1_InvertButton(
     if (cxWidth > 0)
     {
         PatBlt(hChoiceDC,
-               pT1->KeyPos[iPressed].x - 1,
-               pT1->KeyPos[iPressed].y - 1,
+               pT1->KeyPos[iPressed].x - 1, pT1->KeyPos[iPressed].y - 1,
                cxWidth + 2, cyHeight + 2,
                DSTINVERT);
     }
@@ -640,11 +632,8 @@ T1_OnDraw(
     RECT rc;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
+    if (!hGlobal || !pT1)
         return;
 
     hMemDC = CreateCompatibleDC(hDC);
@@ -653,7 +642,7 @@ T1_OnDraw(
     BitBlt(hDC, 0, 0, rc.right - rc.left, rc.bottom - rc.top, hMemDC, 0, 0, SRCCOPY);
     DeleteDC(hMemDC);
 
-    if (pT1->PressedKey < T1IC_NONE)
+    if (pT1->PressedKey < IC_NONE)
         T1_InvertButton(hWnd, hDC, pT1, pT1->PressedKey);
 
     GlobalUnlock(hGlobal);
@@ -665,48 +654,47 @@ T1_HitTest(
     _In_ const POINT *ppt)
 {
     INT iKey;
-
-    for (iKey = 0; iKey < T1IC_BACKSPACE; ++iKey)
+    for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
         const POINT *pptKey = &pT1->KeyPos[iKey];
-        if (Imm32PtInRect(pptKey->x, pptKey->y, pT1->cxKeyWidthDefault, pT1->cyKeyHeight, ppt))
+        if (Imm32PtInRect(pptKey->x, pptKey->y, pT1->cxKeyWidth, pT1->cyKeyHeight, ppt))
             return iKey;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_BACKSPACE].x, pT1->KeyPos[T1IC_BACKSPACE].y, pT1->cxWidth47, pT1->cyKeyHeight, ppt))
-        return T1IC_BACKSPACE;
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_TAB].x, pT1->KeyPos[T1IC_TAB].y, pT1->cxWidth48, pT1->cyKeyHeight, ppt))
-        return T1IC_TAB;
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_CAPS].x, pT1->KeyPos[T1IC_CAPS].y, pT1->cxWidth49, pT1->cyKeyHeight, ppt))
-        return T1IC_CAPS;
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_ENTER].x, pT1->KeyPos[T1IC_ENTER].y, pT1->cxWidth50, pT1->cyHeight50, ppt))
-        return T1IC_ENTER;
+    if (Imm32PtInRect(pT1->KeyPos[IC_BACKSPACE].x, pT1->KeyPos[IC_BACKSPACE].y, pT1->cxWidth47, pT1->cyKeyHeight, ppt))
+        return IC_BACKSPACE;
+    if (Imm32PtInRect(pT1->KeyPos[IC_TAB].x, pT1->KeyPos[IC_TAB].y, pT1->cxWidth48, pT1->cyKeyHeight, ppt))
+        return IC_TAB;
+    if (Imm32PtInRect(pT1->KeyPos[IC_CAPS].x, pT1->KeyPos[IC_CAPS].y, pT1->cxWidth49, pT1->cyKeyHeight, ppt))
+        return IC_CAPS;
+    if (Imm32PtInRect(pT1->KeyPos[IC_ENTER].x, pT1->KeyPos[IC_ENTER].y, pT1->cxWidth50, pT1->cyHeight50, ppt))
+        return IC_ENTER;
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_L_SHIFT].x, pT1->KeyPos[T1IC_L_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[T1IC_R_SHIFT].x, pT1->KeyPos[T1IC_R_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(pT1->KeyPos[IC_L_SHIFT].x, pT1->KeyPos[IC_L_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt) ||
+        Imm32PtInRect(pT1->KeyPos[IC_R_SHIFT].x, pT1->KeyPos[IC_R_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt))
     {
-        return T1IC_L_SHIFT;
+        return IC_L_SHIFT;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_L_CTRL].x, pT1->KeyPos[T1IC_L_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[T1IC_R_CTRL].x, pT1->KeyPos[T1IC_R_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(pT1->KeyPos[IC_L_CTRL].x, pT1->KeyPos[IC_L_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt) ||
+        Imm32PtInRect(pT1->KeyPos[IC_R_CTRL].x, pT1->KeyPos[IC_R_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt))
     {
-        return T1IC_L_CTRL;
+        return IC_L_CTRL;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_L_ALT].x, pT1->KeyPos[T1IC_L_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[T1IC_R_ALT].x, pT1->KeyPos[T1IC_R_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(pT1->KeyPos[IC_L_ALT].x, pT1->KeyPos[IC_L_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt) ||
+        Imm32PtInRect(pT1->KeyPos[IC_R_ALT].x, pT1->KeyPos[IC_R_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt))
     {
-        return T1IC_L_ALT;
+        return IC_L_ALT;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_ESCAPE].x, pT1->KeyPos[T1IC_ESCAPE].y, pT1->cxWidth57, pT1->cyKeyHeight, ppt))
-        return T1IC_ESCAPE;
+    if (Imm32PtInRect(pT1->KeyPos[IC_ESCAPE].x, pT1->KeyPos[IC_ESCAPE].y, pT1->cxWidth57, pT1->cyKeyHeight, ppt))
+        return IC_ESCAPE;
 
-    if (Imm32PtInRect(pT1->KeyPos[T1IC_SPACE].x, pT1->KeyPos[T1IC_SPACE].y, pT1->cxWidth58, pT1->cyKeyHeight, ppt))
-        return T1IC_SPACE;
+    if (Imm32PtInRect(pT1->KeyPos[IC_SPACE].x, pT1->KeyPos[IC_SPACE].y, pT1->cxWidth58, pT1->cyKeyHeight, ppt))
+        return IC_SPACE;
 
-    return T1IC_NONE;
+    return IC_NONE;
 }
 
 static BOOL
@@ -714,9 +702,9 @@ T1_IsValidButton(
     _In_ UINT iKey,
     _In_ const T1WINDOW *pT1)
 {
-    if (iKey < T1IC_BACKSPACE)
+    if (iKey < IC_BACKSPACE)
         return !!pT1->chKeyChar[iKey];
-    return iKey <= T1IC_TAB || iKey == T1IC_ENTER || (T1IC_ESCAPE <= iKey && iKey <= T1IC_SPACE);
+    return iKey <= IC_TAB || iKey == IC_ENTER || (IC_ESCAPE <= iKey && iKey <= IC_SPACE);
 }
 
 /**
@@ -731,16 +719,12 @@ T1_OnSetCursor(
     HGLOBAL hGlobal;
     PT1WINDOW pT1;
     HCURSOR hCursor;
-    UINT iPressed;
-    RECT rcWork, rc;
-    UINT iKey;
+    UINT iPressed, iKey;
+    RECT rc, rcWork;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return FALSE;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
+    if (!hGlobal || !pT1)
         return FALSE;
 
     if (pT1->pt1.x != -1 && pT1->pt1.y != -1)
@@ -754,7 +738,7 @@ T1_OnSetCursor(
     ScreenToClient(hWnd, &pT1->pt0);
 
     iKey = T1_HitTest(pT1, &pT1->pt0);
-    if (iKey >= T1IC_NONE)
+    if (iKey >= IC_NONE)
         hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL);
     else
         hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_HAND);
@@ -765,17 +749,15 @@ T1_OnSetCursor(
         SetCapture(hWnd);
 
         iPressed = pT1->PressedKey;
-        if (iPressed < T1IC_NONE)
+        if (iPressed < IC_NONE)
         {
-            keybd_event(gT1VirtKey[iPressed],
-                        guScanCode[(BYTE)gT1VirtKey[iPressed]],
-                        KEYEVENTF_KEYUP,
-                        0);
+            UINT iVK = gIC2VK[iPressed];
+            keybd_event(iVK, guScanCode[iVK], KEYEVENTF_KEYUP, 0);
             T1_InvertButton(hWnd, NULL, pT1, pT1->PressedKey);
-            pT1->PressedKey = T1IC_NONE;
+            pT1->PressedKey = IC_NONE;
         }
 
-        if (iKey >= T1IC_NONE)
+        if (iKey >= IC_NONE)
         {
             Imm32GetAllMonitorSize(&rcWork);
             GetCursorPos(&pT1->pt0);
@@ -786,8 +768,8 @@ T1_OnSetCursor(
         }
         else if (T1_IsValidButton(iKey, pT1))
         {
-            UINT iVK = gT1VirtKey[iKey];
-            keybd_event(iVK, guScanCode[(BYTE)iVK], 0, 0);
+            UINT iVK = gIC2VK[iKey];
+            keybd_event(iVK, guScanCode[iVK], 0, 0);
             pT1->PressedKey = iKey;
             T1_InvertButton(hWnd, 0, pT1, iKey);
         }
@@ -809,11 +791,8 @@ T1_OnMouseMove(
     PT1WINDOW pT1;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return FALSE;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
+    if (!hGlobal || !pT1)
         return FALSE;
 
     if (pT1->pt1.x != -1 && pT1->pt1.y != -1)
@@ -835,26 +814,21 @@ T1_OnButtonUp(
     BOOL ret = FALSE;
     HGLOBAL hGlobal;
     PT1WINDOW pT1;
-    INT x, y;
-    HWND hwndCapture = GetCapture();
-    INT iPressed;
+    INT x, y, iPressed;
+    HWND hwndOwner, hwndCapture = GetCapture();
     HIMC hIMC;
     LPINPUTCONTEXT pIC;
-    HWND hwndOwner;
 
     if (hwndCapture == hWnd)
         ReleaseCapture();
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return FALSE;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
+    if (!hGlobal || !pT1)
         return FALSE;
 
     iPressed = pT1->PressedKey;
-    if (iPressed >= T1IC_NONE)
+    if (iPressed >= IC_NONE)
     {
         if (pT1->pt1.x != -1 && pT1->pt1.y != -1 )
         {
@@ -863,7 +837,7 @@ T1_OnButtonUp(
             y = pT1->pt0.y - pT1->pt1.y;
             SetWindowPos(hWnd, NULL, x, y, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
             pT1->pt1.x = pT1->pt1.y = -1;
-            pT1->PressedKey = T1IC_NONE;
+            pT1->PressedKey = IC_NONE;
             ret = TRUE;
 
             hwndOwner = GetWindow(hWnd, GW_OWNER);
@@ -883,11 +857,11 @@ T1_OnButtonUp(
     }
     else
     {
-        UINT iVK = gT1VirtKey[iPressed];
-        keybd_event(iVK, guScanCode[(BYTE)iVK], KEYEVENTF_KEYUP, 0);
+        UINT iVK = gIC2VK[iPressed];
+        keybd_event(iVK, guScanCode[iVK], KEYEVENTF_KEYUP, 0);
 
         T1_InvertButton(hWnd, 0, pT1, pT1->PressedKey);
-        pT1->PressedKey = T1IC_NONE;
+        pT1->PressedKey = IC_NONE;
         ret = TRUE;
     }
 
@@ -895,7 +869,7 @@ T1_OnButtonUp(
     return ret;
 }
 
-static HRESULT
+static LRESULT
 T1_SetData(
     _In_ HWND hWnd,
     _In_ const SOFTKBDDATA *pData)
@@ -906,16 +880,12 @@ T1_SetData(
     HFONT hFont;
     HGDIOBJ hFontOld;
     RECT rc;
-    LOGFONTW lf;
     INT iKey;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-    if (!hGlobal)
-        return E_FAIL;
-
     pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-    if (!pT1)
-        return E_FAIL;
+    if (!hGlobal || !pT1)
+        return 1;
 
     hDC = GetDC(hWnd);
     hMemDC = CreateCompatibleDC(hDC);
@@ -926,33 +896,30 @@ T1_SetData(
 
     if (pT1->CharSet == DEFAULT_CHARSET)
     {
-        hFont = CreateFontIndirectW(&g_lfSKT1Font);
+        hFont = CreateFontIndirectW(&g_T1LogFont);
     }
     else
     {
-        lf = g_lfSKT1Font;
+        LOGFONTW lf = g_T1LogFont;
         lf.lfCharSet = (BYTE)pT1->CharSet;
         hFont = CreateFontIndirectW(&lf);
     }
     hFontOld = SelectObject(hMemDC, hFont);
 
-    for (iKey = 0; iKey < T1IC_BACKSPACE; ++iKey)
+    for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
         WCHAR *pwch = &pT1->chKeyChar[iKey];
         INT x0 = pT1->KeyPos[iKey].x, y0 = pT1->KeyPos[iKey].y;
         INT x = x0 + 6, y = y0 + 8;
-        *pwch = pData->wCode[0][(BYTE)gT1VirtKey[iKey]];
-        rc.left = x;
-        rc.top = y;
-        rc.right = x0 + pT1->cxKeyWidthDefault;
-        rc.bottom = y0 + pT1->cyKeyHeight;
+        *pwch = pData->wCode[0][gIC2VK[iKey]];
+        SetRect(&rc, x, y, x0 + pT1->cxKeyWidth, y0 + pT1->cyKeyHeight);
         ExtTextOutW(hDC, x, y, ETO_OPAQUE, &rc, pwch, !!*pwch, NULL);
     }
 
     DeleteObject(SelectObject(hMemDC, hFontOld));
     DeleteDC(hMemDC);
     GlobalUnlock(hGlobal);
-    return S_OK;
+    return 0;
 }
 
 static LRESULT
@@ -970,28 +937,25 @@ T1_OnImeControl(
         case IMC_GETSOFTKBDFONT:
         {
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-            if (hGlobal)
+            pT1 = (PT1WINDOW)GlobalLock(hGlobal);
+            if (hGlobal && pT1)
             {
-                pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-                if (pT1)
-                {
-                    LPLOGFONTW plf = (LPLOGFONTW)lParam;
-                    DWORD CharSet = pT1->CharSet;
-                    GlobalUnlock(hGlobal);
+                LPLOGFONTW plf = (LPLOGFONTW)lParam;
+                DWORD CharSet = pT1->CharSet;
+                GlobalUnlock(hGlobal);
 
-                    *plf = g_lfSKT1Font;
-                    if (CharSet != DEFAULT_CHARSET)
-                        plf->lfCharSet = (BYTE)CharSet;
+                *plf = g_T1LogFont;
+                if (CharSet != DEFAULT_CHARSET)
+                    plf->lfCharSet = (BYTE)CharSet;
 
-                    ret = 0;
-                }
+                ret = 0;
             }
             break;
         }
         case IMC_SETSOFTKBDFONT:
         {
             const LOGFONTW *plf = (LPLOGFONTW)lParam;
-            if (g_lfSKT1Font.lfCharSet == plf->lfCharSet)
+            if (g_T1LogFont.lfCharSet == plf->lfCharSet)
                 return 0;
 
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
@@ -1017,8 +981,7 @@ T1_OnImeControl(
             HWND hwndParent;
 
             POINTSTOPOINT(pt, lParam);
-            SetWindowPos(hWnd, NULL, pt.x, pt.y, 0, 0,
-                         SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
+            SetWindowPos(hWnd, NULL, pt.x, pt.y, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 
             hwndParent = GetParent(hWnd);
             if (hwndParent)
@@ -1042,23 +1005,15 @@ T1_OnImeControl(
         case IMC_SETSOFTKBDSUBTYPE:
         {
             hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
-            if (!hGlobal)
-                return -1;
-
             pT1 = (PT1WINDOW)GlobalLock(hGlobal);
-            if (!pT1)
+            if (!hGlobal || !pT1)
                 return -1;
 
-            if (wParam == IMC_GETSOFTKBDSUBTYPE)
-            {
-                ret = pT1->KeyboardSubType;
-            }
-            else
-            {
-                DWORD *pSubType = &pT1->KeyboardSubType;
-                ret = *pSubType;
-                *pSubType = (DWORD)lParam;
-            }
+            ret = pT1->KeyboardSubType;
+
+            if (wParam == IMC_SETSOFTKBDSUBTYPE)
+                pT1->KeyboardSubType = (DWORD)lParam;
+
             GlobalUnlock(hGlobal);
             break;
         }
@@ -1141,14 +1096,13 @@ T1_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************
- * C1 software keyboard
+ * C1 software keyboard (for Simplified Chinese)
  */
 
 #define C1_CLASSNAMEW L"SoftKBDClsC1"
 
-/* Software keyboard window procedure (Simplified Chinese) */
 static LRESULT CALLBACK
-SKWndProcC1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+C1_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -1160,7 +1114,7 @@ SKWndProcC1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         default:
         {
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            return DefWindowProcW(hWnd, uMsg, wParam, lParam);
         }
     }
     return 0;
@@ -1172,26 +1126,18 @@ static BOOL
 Imm32RegisterSoftKeyboard(
     _In_ UINT uType)
 {
-    LPCWSTR pszClass;
     WNDCLASSEXW wcx;
-
-    if (uType == 1)
-        pszClass = T1_CLASSNAMEW;
-    else if (uType == 2)
-        pszClass = C1_CLASSNAMEW;
-    else
-        return FALSE;
-
+    LPCWSTR pszClass = ((uType == 1) ? T1_CLASSNAMEW : C1_CLASSNAMEW);
     if (GetClassInfoExW(ghImm32Inst, pszClass, &wcx))
         return TRUE;
 
     ZeroMemory(&wcx, sizeof(wcx));
-    wcx.cbSize = sizeof(wcx);
-    wcx.style = CS_IME;
-    wcx.cbWndExtra = sizeof(LONG_PTR);
-    wcx.hIcon = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
-    wcx.hInstance = ghImm32Inst;
-    wcx.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL);
+    wcx.cbSize        = sizeof(wcx);
+    wcx.style         = CS_IME;
+    wcx.cbWndExtra    = sizeof(PT1WINDOW);
+    wcx.hIcon         = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    wcx.hInstance     = ghImm32Inst;
+    wcx.hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL);
     wcx.lpszClassName = pszClass;
 
     if (uType == 1)
@@ -1201,7 +1147,7 @@ Imm32RegisterSoftKeyboard(
     }
     else
     {
-        wcx.lpfnWndProc = SKWndProcC1;
+        wcx.lpfnWndProc = C1_WindowProc;
         wcx.hbrBackground = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
     }
 
@@ -1221,11 +1167,11 @@ Imm32GetSoftKeyboardDimension(
         *pcx = 15 * tm.tmMaxCharWidth + 2 * gptRaiseEdge.x + 139;
         *pcy = 5 * tm.tmHeight + 2 * gptRaiseEdge.y + 58;
     }
-    else if (uType == 2)
+    else
     {
         INT cxEdge = GetSystemMetrics(SM_CXEDGE), cyEdge = GetSystemMetrics(SM_CXEDGE);
         *pcx = 2 * (GetSystemMetrics(SM_CXBORDER) + cxEdge) + 348;
-        *pcy = 2 * (GetSystemMetrics(SM_CXBORDER) + cyEdge) + 136;
+        *pcy = 2 * (GetSystemMetrics(SM_CYBORDER) + cyEdge) + 136;
     }
 }
 
@@ -1243,55 +1189,55 @@ ImmCreateSoftKeyboard(
 {
     HKL hKL;
     PIMEDPI pImeDpi;
-    DWORD UICaps;
     UINT iVK;
     INT xSoftKBD, ySoftKBD, cxSoftKBD, cySoftKBD, cxEdge, cyEdge;
     HWND hwndSoftKBD;
-    RECT rcWork;;
-    DWORD Style, ExStyle;
+    DWORD Style, ExStyle, UICaps;
     LPCWSTR pszClass;
+    RECT rcWorkArea;
 
     if (uType != 1 && uType != 2)
     {
         ERR("uType: %u\n", uType);
-        return NULL;
+        return NULL; /* Invalid keyboard type */
     }
 
-    /* Check IME for soft keyboard */
+    /* Check IME */
     hKL = GetKeyboardLayout(0);
     pImeDpi = ImmLockImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
-        return NULL;
+        return NULL; /* No IME */
 
     UICaps = pImeDpi->ImeInfo.fdwUICaps;
     ImmUnlockImeDpi(pImeDpi);
 
+    /* Check IME capability */
     if (!(UICaps & UI_CAP_SOFTKBD))
     {
         ERR("UICaps: 0x%X\n", UICaps);
-        return NULL;
+        return NULL; /* No capability for soft keyboard */
     }
 
     /* Want metrics? */
     if (g_bWantSoftKBDMetrics)
     {
-        if (!Imm32GetNearestMonitorSize(hwndParent, &rcWork))
-            return NULL;
-
         for (iVK = 0; iVK < 0xFF; ++iVK)
         {
             guScanCode[iVK] = MapVirtualKeyW(iVK, 0);
         }
 
-        g_cxWork = rcWork.right - rcWork.left;
-        g_cyWork = rcWork.bottom - rcWork.top;
         cxEdge = GetSystemMetrics(SM_CXEDGE);
         cyEdge = GetSystemMetrics(SM_CYEDGE);
         gptRaiseEdge.x = GetSystemMetrics(SM_CXBORDER) + cxEdge;
         gptRaiseEdge.y = GetSystemMetrics(SM_CYBORDER) + cyEdge;
+
         g_bWantSoftKBDMetrics = FALSE;
     }
 
+    if (!Imm32GetNearestWorkArea(hwndParent, &rcWorkArea))
+        return NULL;
+
+    /* Register the window class */
     if (!Imm32RegisterSoftKeyboard(uType))
     {
         ERR("\n");
@@ -1301,10 +1247,11 @@ ImmCreateSoftKeyboard(
     /* Calculate keyboard size */
     Imm32GetSoftKeyboardDimension(uType, &cxSoftKBD, &cySoftKBD);
 
-    /* Calculate keyboard position */
-    xSoftKBD = ((x >= 0) ? min(x, g_cxWork - cxSoftKBD) : 0);
-    ySoftKBD = ((y >= 0) ? min(y, g_cyWork - cySoftKBD) : 0);
+    /* Adjust keyboard position */
+    xSoftKBD = Imm32Clamp(x, rcWorkArea.left, rcWorkArea.right  - cxSoftKBD);
+    ySoftKBD = Imm32Clamp(y, rcWorkArea.top , rcWorkArea.bottom - cySoftKBD);
 
+    /* Create soft keyboard window */
     if (uType == 1)
     {
         Style = (WS_POPUP | WS_DISABLED);
@@ -1314,16 +1261,13 @@ ImmCreateSoftKeyboard(
     else
     {
         Style = (WS_POPUP | WS_DISABLED | WS_BORDER);
-        ExStyle = WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
+        ExStyle = (WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME);
         pszClass = C1_CLASSNAMEW;
     }
-
-    /* Create keyboard window */
     hwndSoftKBD = CreateWindowExW(ExStyle, pszClass, NULL, Style,
                                   xSoftKBD, ySoftKBD, cxSoftKBD, cySoftKBD,
                                   hwndParent, NULL, ghImm32Inst, NULL);
-
-    /* Initial is hidden. Use ImmShowSoftKeyboard */
+    /* Initial is hidden */
     ShowWindow(hwndSoftKBD, SW_HIDE);
     UpdateWindow(hwndSoftKBD);
 

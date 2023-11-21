@@ -42,9 +42,9 @@ list(APPEND imm32_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_208.bmp
     ${CMAKE_CURRENT_SOURCE_DIR}/res/1033_Bitmap_209.bmp)
 
-add_library(imm32 MODULE ${SOURCE} rsrc.rc)
+add_library(imm32 MODULE ${SOURCE} imm32.rc)
 set_module_type(imm32 win32dll UNICODE ENTRYPOINT ImmDllInitialize 12)
-set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${imm32_rc_deps}")
+set_source_files_properties(imm32.rc PROPERTIES OBJECT_DEPENDS "${imm32_rc_deps}")
 target_link_libraries(imm32 wine win32ksys)
 add_importlibs(imm32 advapi32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)

@@ -1,4 +1,4 @@
-// Bitmap IDs
+/* Bitmap IDs */
 #define IDB_T1_BACKSPACE    100
 #define IDB_T1_TAB          101
 #define IDB_T1_CAPS         102
