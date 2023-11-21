@@ -16,11 +16,11 @@ static BOOL g_bWantSoftKBDMetrics = TRUE;
 
 static inline BOOL
 Imm32PtInRect(
+    _In_ const POINT *ppt,
     _In_ LONG x,
     _In_ LONG y,
     _In_ LONG cx,
-    _In_ LONG cy,
-    _In_ const POINT *ppt)
+    _In_ LONG cy)
 {
     return (x <= ppt->x) && (ppt->x < x + cx) && (y <= ppt->y) && (ppt->y < y + cy);
 }
@@ -116,7 +116,7 @@ const BYTE gIC2VK[IC_MAX] =
 
 typedef struct T1WINDOW
 {
-    INT cxKeyWidth;           /* Regular key width */
+    INT cxDefWidth;           /* Regular key width */
     INT cxWidth47;            /* [BackSpace] width */
     INT cxWidth48;            /* [Tab] width */
     INT cxWidth49;            /* [Caps] width */
@@ -126,7 +126,7 @@ typedef struct T1WINDOW
     INT cxWidth55or56;        /* [Alt] width */
     INT cxWidth57;            /* [Esc] width */
     INT cxWidth58;            /* [Space] width */
-    INT cyKeyHeight;          /* Regular key height */
+    INT cyDefHeight;          /* Regular key height */
     INT cyHeight50;           /* [Enter] height */
     POINT KeyPos[IC_MAX];     /* Internal Code --> POINT */
     WCHAR chKeyChar[48];      /* Internal Code --> WCHAR */
@@ -136,6 +136,8 @@ typedef struct T1WINDOW
     POINT pt0, pt1;           /* The soft keyboard window position */
     DWORD KeyboardSubType;    /* See IMC_GETSOFTKBDSUBTYPE/IMC_SETSOFTKBDSUBTYPE */
 } T1WINDOW, *PT1WINDOW;
+
+#define T1_KEYPOS(iKey) pT1->KeyPos[iKey]
 
 static LOGFONTW g_T1LogFont;
 
@@ -174,105 +176,96 @@ static void
 T1_InitButtonPos(_Out_ PT1WINDOW pT1)
 {
     TEXTMETRICW tm;
-    LONG cxLarge, cyLarge, tmMaxCharWidth;
+    LONG cxLarge, cyLarge;
     LONG xKey1, yKey1, xKey2, yKey2, xKey3, yKey3;
     LONG yKey4, xKey4, xKey5, yKey5, xKey6, xKey7;
     INT iKey;
 
     T1_GetTextMetric(&tm);
-    tmMaxCharWidth = tm.tmMaxCharWidth;
 
-    pT1->cxKeyWidth = (2 * tmMaxCharWidth + 12) / 2;
-    pT1->cxWidth47 = (2 * tmMaxCharWidth + 12) / 2 + 1;
-    pT1->cxWidth49 = (4 * tmMaxCharWidth + 24) / 2 + 3;
-    pT1->cxWidth51or52 = (5 * tmMaxCharWidth + 30) / 2 + 5;
-    pT1->cxWidth58 = 4 * (3 * tmMaxCharWidth + 18) / 2 + 15;
-
-    cxLarge = (3 * tmMaxCharWidth + 18) / 2;
+    cxLarge = (3 * tm.tmMaxCharWidth + 18) / 2;
     cyLarge = tm.tmHeight + 8;
 
     /* key widths and heights */
-    pT1->cxWidth48 = cxLarge + 2;
-    pT1->cxWidth50 = cxLarge + 2;
-    pT1->cxWidth53or54 = cxLarge + 2;
-    pT1->cxWidth55or56 = cxLarge + 2;
+    pT1->cxDefWidth = (2 * tm.tmMaxCharWidth + 12) / 2;
+    pT1->cxWidth47 = (2 * tm.tmMaxCharWidth + 12) / 2 + 1;
+    pT1->cxWidth49 = (4 * tm.tmMaxCharWidth + 24) / 2 + 3;
+    pT1->cxWidth51or52 = (5 * tm.tmMaxCharWidth + 30) / 2 + 5;
+    pT1->cxWidth58 = 4 * (3 * tm.tmMaxCharWidth + 18) / 2 + 15;
+    pT1->cxWidth48 = pT1->cxWidth50 = cxLarge + 2;
+    pT1->cxWidth53or54 = pT1->cxWidth55or56 = cxLarge + 2;
     pT1->cyHeight50 = 2 * (tm.tmHeight + 8) + 3;
     pT1->cxWidth57 = cxLarge + 1;
-    pT1->cyKeyHeight = cyLarge;
+    pT1->cyDefHeight = cyLarge;
 
     /* First row */
     xKey1 = gptRaiseEdge.x + 3;
     yKey1 = gptRaiseEdge.y + 3;
     for (iKey = 0; iKey < IC_Q; ++iKey)
     {
-        pT1->KeyPos[iKey].x = xKey1;
-        pT1->KeyPos[iKey].y = yKey1;
-        xKey1 += pT1->cxKeyWidth + 3;
+        T1_KEYPOS(iKey).x = xKey1;
+        T1_KEYPOS(iKey).y = yKey1;
+        xKey1 += pT1->cxDefWidth + 3;
     }
-    pT1->KeyPos[IC_BACKSPACE].y = yKey1;
-    pT1->KeyPos[IC_BACKSPACE].x = xKey1;
+    T1_KEYPOS(IC_BACKSPACE).y = yKey1;
+    T1_KEYPOS(IC_BACKSPACE).x = xKey1;
 
     /* 2nd row */
     xKey2 = 3 + gptRaiseEdge.x + pT1->cxWidth48 + 3;
     yKey2 = 3 + yKey1 + cyLarge;
-    pT1->KeyPos[IC_TAB].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[IC_TAB].y = yKey2;
+    T1_KEYPOS(IC_TAB).x = gptRaiseEdge.x + 3;
+    T1_KEYPOS(IC_TAB).y = yKey2;
     for (iKey = IC_Q; iKey < IC_A; ++iKey)
     {
-        pT1->KeyPos[iKey].x = xKey2;
-        pT1->KeyPos[iKey].y = yKey2;
-        xKey2 += pT1->cxKeyWidth + 3;
+        T1_KEYPOS(iKey).x = xKey2;
+        T1_KEYPOS(iKey).y = yKey2;
+        xKey2 += pT1->cxDefWidth + 3;
     }
-    pT1->KeyPos[IC_ENTER].x = xKey2;
-    pT1->KeyPos[IC_ENTER].y = yKey2;
+    T1_KEYPOS(IC_ENTER).x = xKey2;
+    T1_KEYPOS(IC_ENTER).y = yKey2;
 
     /* 3rd row */
     xKey3 = gptRaiseEdge.x + 3 + pT1->cxWidth49 + 3;
     yKey3 = yKey2 + cyLarge + 3;
-    pT1->KeyPos[IC_CAPS].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[IC_CAPS].y = yKey3;
+    T1_KEYPOS(IC_CAPS).x = gptRaiseEdge.x + 3;
+    T1_KEYPOS(IC_CAPS).y = yKey3;
     for (iKey = IC_A; iKey < IC_Z; ++iKey)
     {
-        pT1->KeyPos[iKey].x = xKey3;
-        pT1->KeyPos[iKey].y = yKey3;
-        xKey3 += pT1->cxKeyWidth + 3;
+        T1_KEYPOS(iKey).x = xKey3;
+        T1_KEYPOS(iKey).y = yKey3;
+        xKey3 += pT1->cxDefWidth + 3;
     }
 
     /* 4th row */
     xKey4 = gptRaiseEdge.x + pT1->cxWidth51or52 + 3 + 3;
     yKey4 = yKey3 + cyLarge + 3;
-    pT1->KeyPos[IC_L_SHIFT].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[IC_L_SHIFT].y = yKey4;
+    T1_KEYPOS(IC_L_SHIFT).x = gptRaiseEdge.x + 3;
+    T1_KEYPOS(IC_L_SHIFT).y = yKey4;
     for (iKey = IC_Z; iKey < IC_BACKSPACE; ++iKey)
     {
-        pT1->KeyPos[iKey].x = xKey4;
-        pT1->KeyPos[iKey].y = yKey4;
-        xKey4 += pT1->cxKeyWidth + 3;
+        T1_KEYPOS(iKey).x = xKey4;
+        T1_KEYPOS(iKey).y = yKey4;
+        xKey4 += pT1->cxDefWidth + 3;
     }
-    pT1->KeyPos[IC_R_SHIFT].y = yKey4;
-    pT1->KeyPos[IC_R_SHIFT].x = xKey4;
+    T1_KEYPOS(IC_R_SHIFT).x = xKey4;
+    T1_KEYPOS(IC_R_SHIFT).y = yKey4;
 
     /* 5th row */
     xKey5 = gptRaiseEdge.x + 3 + pT1->cxWidth53or54 + 3;
+    T1_KEYPOS(IC_L_CTRL).x = gptRaiseEdge.x + 3;
+    T1_KEYPOS(IC_ESCAPE).x = xKey5;
+    T1_KEYPOS(IC_L_ALT).x = xKey5 + pT1->cxWidth57 + 3;
+
     yKey5 = yKey4 + cyLarge + 3;
-    pT1->KeyPos[IC_L_CTRL].x = gptRaiseEdge.x + 3;
-    pT1->KeyPos[IC_L_CTRL].y = yKey5;
-    pT1->KeyPos[IC_ESCAPE].x = xKey5;
-    pT1->KeyPos[IC_ESCAPE].y = yKey5;
-    pT1->KeyPos[IC_L_ALT].x = xKey5 + pT1->cxWidth57 + 3;
-    pT1->KeyPos[IC_L_ALT].y = yKey5;
+    T1_KEYPOS(IC_L_CTRL).y = T1_KEYPOS(IC_ESCAPE).y = T1_KEYPOS(IC_L_ALT).y = yKey5;
+    T1_KEYPOS(IC_R_ALT).y = T1_KEYPOS(IC_SPACE).y = T1_KEYPOS(IC_R_CTRL).y = yKey5;
 
     xKey6 = xKey5 + pT1->cxWidth57 + 3 + pT1->cxWidth55or56 + 3;
+    T1_KEYPOS(IC_SPACE).x = xKey6;
+
     xKey7 = xKey6 + pT1->cxWidth58 + 3;
-
-    pT1->KeyPos[IC_R_ALT].x = xKey7;
-    pT1->KeyPos[IC_R_ALT].y = yKey5;
-
-    pT1->KeyPos[IC_SPACE].x = xKey6;
-    pT1->KeyPos[IC_SPACE].y = yKey5;
-
-    pT1->KeyPos[IC_R_CTRL].x = xKey7 + pT1->cxWidth57 + pT1->cxWidth55or56 + 6;
-    pT1->KeyPos[IC_R_CTRL].y = yKey5;
+    T1_KEYPOS(IC_R_ALT).x = xKey7;
+    T1_KEYPOS(IC_R_CTRL).x = xKey7 + pT1->cxWidth57 + pT1->cxWidth55or56 + 6;
 }
 
 /* Draw keyboard key edge */
@@ -341,7 +334,7 @@ T1_DrawLabels(
     INT iKey;
     for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
-        const POINT *ppt = &pT1->KeyPos[iKey];
+        const POINT *ppt = &T1_KEYPOS(iKey);
         BitBlt(hDC, ppt->x, ppt->y, 8, 8, hdcMem, iKey * 8, 0, SRCCOPY);
     }
     SelectObject(hdcMem, hbmOld);
@@ -375,113 +368,113 @@ T1_InitBitmap(
 
     /* 53 --> Left [Ctrl] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_L_CTRL].x, pT1->KeyPos[IC_L_CTRL].y,
-                      pT1->cxWidth53or54, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_L_CTRL).x, T1_KEYPOS(IC_L_CTRL).y,
+                      pT1->cxWidth53or54, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth53or54 / 2 + pT1->KeyPos[IC_L_CTRL].x - 8,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_CTRL].y - 4,
+                  pT1->cxWidth53or54 / 2 + T1_KEYPOS(IC_L_CTRL).x - 8,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_L_CTRL).y - 4,
                   16, 9, IDB_T1_CTRL);
 
     /* 54 --> Right [Ctrl] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_R_CTRL].x, pT1->KeyPos[IC_R_CTRL].y,
-                      pT1->cxWidth53or54, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_R_CTRL).x, T1_KEYPOS(IC_R_CTRL).y,
+                      pT1->cxWidth53or54, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth53or54 / 2 + pT1->KeyPos[IC_R_CTRL].x - 8,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_CTRL].y - 4,
+                  pT1->cxWidth53or54 / 2 + T1_KEYPOS(IC_R_CTRL).x - 8,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_R_CTRL).y - 4,
                   16, 9, IDB_T1_CTRL);
 
     /* 57 --> [Esc] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_ESCAPE].x, pT1->KeyPos[IC_ESCAPE].y,
-                      pT1->cxWidth57, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_ESCAPE).x, T1_KEYPOS(IC_ESCAPE).y,
+                      pT1->cxWidth57, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth57   / 2 + pT1->KeyPos[IC_ESCAPE].x - 9,
-                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_ESCAPE].y - 4,
+                  pT1->cxWidth57   / 2 + T1_KEYPOS(IC_ESCAPE).x - 9,
+                  pT1->cyDefHeight / 2 + T1_KEYPOS(IC_ESCAPE).y - 4,
                   18, 9, IDB_T1_ESCAPE);
 
     /* 55 --> Left [Alt] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_L_ALT].x, pT1->KeyPos[IC_L_ALT].y,
-                      pT1->cxWidth55or56, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_L_ALT).x, T1_KEYPOS(IC_L_ALT).y,
+                      pT1->cxWidth55or56, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth55or56 / 2 + pT1->KeyPos[IC_L_ALT].x - 8,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_ALT].y - 4,
+                  pT1->cxWidth55or56 / 2 + T1_KEYPOS(IC_L_ALT).x - 8,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_L_ALT).y - 4,
                   16, 9, IDB_T1_ALT);
 
     /* 56 --> Right [Alt] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_R_ALT].x, pT1->KeyPos[IC_R_ALT].y,
-                      pT1->cxWidth55or56, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_R_ALT).x, T1_KEYPOS(IC_R_ALT).y,
+                      pT1->cxWidth55or56, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth55or56 / 2 + pT1->KeyPos[IC_R_ALT].x - 8,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_ALT].y - 4,
+                  pT1->cxWidth55or56 / 2 + T1_KEYPOS(IC_R_ALT).x - 8,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_R_ALT).y - 4,
                   16, 9, IDB_T1_ALT);
 
     /* 58 --> [Space] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_SPACE].x, pT1->KeyPos[IC_SPACE].y,
-                      pT1->cxWidth58, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_SPACE).x, T1_KEYPOS(IC_SPACE).y,
+                      pT1->cxWidth58, pT1->cyDefHeight);
 
     /* 51 --> Left [Shift] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_L_SHIFT].x, pT1->KeyPos[IC_L_SHIFT].y,
-                      pT1->cxWidth51or52, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_L_SHIFT).x, T1_KEYPOS(IC_L_SHIFT).y,
+                      pT1->cxWidth51or52, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth51or52 / 2 + pT1->KeyPos[IC_L_SHIFT].x - 11,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_L_SHIFT].y - 4,
+                  pT1->cxWidth51or52 / 2 + T1_KEYPOS(IC_L_SHIFT).x - 11,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_L_SHIFT).y - 4,
                   23, 9, IDB_T1_SHIFT);
 
     /* 52 --> Right [Shift] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_R_SHIFT].x, pT1->KeyPos[IC_R_SHIFT].y,
-                      pT1->cxWidth51or52, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_R_SHIFT).x, T1_KEYPOS(IC_R_SHIFT).y,
+                      pT1->cxWidth51or52, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth51or52 / 2 + pT1->KeyPos[IC_R_SHIFT].x - 11,
-                  pT1->cyKeyHeight   / 2 + pT1->KeyPos[IC_R_SHIFT].y - 4,
+                  pT1->cxWidth51or52 / 2 + T1_KEYPOS(IC_R_SHIFT).x - 11,
+                  pT1->cyDefHeight   / 2 + T1_KEYPOS(IC_R_SHIFT).y - 4,
                   23, 9, IDB_T1_SHIFT);
 
     /* 49 --> [Caps] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_CAPS].x, pT1->KeyPos[IC_CAPS].y,
-                      pT1->cxWidth49, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_CAPS).x, T1_KEYPOS(IC_CAPS).y,
+                      pT1->cxWidth49, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth49   / 2 + pT1->KeyPos[IC_CAPS].x - 11,
-                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_CAPS].y - 4,
+                  pT1->cxWidth49   / 2 + T1_KEYPOS(IC_CAPS).x - 11,
+                  pT1->cyDefHeight / 2 + T1_KEYPOS(IC_CAPS).y - 4,
                   22, 9, IDB_T1_CAPS);
 
     /* 48 --> [Tab] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_TAB].x, pT1->KeyPos[IC_TAB].y,
-                      pT1->cxWidth48, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_TAB).x, T1_KEYPOS(IC_TAB).y,
+                      pT1->cxWidth48, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth48   / 2 + pT1->KeyPos[IC_TAB].x - 8,
-                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_TAB].y - 4,
+                  pT1->cxWidth48   / 2 + T1_KEYPOS(IC_TAB).x - 8,
+                  pT1->cyDefHeight / 2 + T1_KEYPOS(IC_TAB).y - 4,
                   16, 9, IDB_T1_TAB);
 
     /* 50 --> [Enter] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_ENTER].x, pT1->KeyPos[IC_ENTER].y,
+                      T1_KEYPOS(IC_ENTER).x, T1_KEYPOS(IC_ENTER).y,
                       pT1->cxWidth50, pT1->cyHeight50);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth50  / 2 + pT1->KeyPos[IC_ENTER].x - 13,
-                  pT1->cyHeight50 / 2 + pT1->KeyPos[IC_ENTER].y - 4,
+                  pT1->cxWidth50  / 2 + T1_KEYPOS(IC_ENTER).x - 13,
+                  pT1->cyHeight50 / 2 + T1_KEYPOS(IC_ENTER).y - 4,
                   26, 9, IDB_T1_ENTER);
 
     /* 47 --> [BackSpace] */
     T1_DrawConvexRect(hMemDC,
-                      pT1->KeyPos[IC_BACKSPACE].x, pT1->KeyPos[IC_BACKSPACE].y,
-                      pT1->cxWidth47, pT1->cyKeyHeight);
+                      T1_KEYPOS(IC_BACKSPACE).x, T1_KEYPOS(IC_BACKSPACE).y,
+                      pT1->cxWidth47, pT1->cyDefHeight);
     T1_DrawBitmap(hMemDC,
-                  pT1->cxWidth47   / 2 + pT1->KeyPos[IC_BACKSPACE].x - 8,
-                  pT1->cyKeyHeight / 2 + pT1->KeyPos[IC_BACKSPACE].y - 4,
+                  pT1->cxWidth47   / 2 + T1_KEYPOS(IC_BACKSPACE).x - 8,
+                  pT1->cyDefHeight / 2 + T1_KEYPOS(IC_BACKSPACE).y - 4,
                   16, 9, IDB_T1_BACKSPACE);
 
     /* Regular keys */
     for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
-        LPPOINT ppt = &pT1->KeyPos[iKey];
-        T1_DrawConvexRect(hMemDC, ppt->x, ppt->y, pT1->cxKeyWidth, pT1->cyKeyHeight);
+        LPPOINT ppt = &T1_KEYPOS(iKey);
+        T1_DrawConvexRect(hMemDC, ppt->x, ppt->y, pT1->cxDefWidth, pT1->cyDefHeight);
     }
 
     T1_DrawLabels(hMemDC, pT1, MAKEINTRESOURCEW(IDB_T1_CHARS));
@@ -570,7 +563,7 @@ T1_InvertButton(
     _In_ const T1WINDOW *pT1,
     _In_ UINT iPressed)
 {
-    INT cxWidth = pT1->cxKeyWidth, cyHeight = pT1->cyKeyHeight;
+    INT cxWidth = pT1->cxDefWidth, cyHeight = pT1->cyDefHeight;
     HDC hChoiceDC;
 
     if (iPressed >= IC_NONE)
@@ -612,7 +605,7 @@ T1_InvertButton(
     if (cxWidth > 0)
     {
         PatBlt(hChoiceDC,
-               pT1->KeyPos[iPressed].x - 1, pT1->KeyPos[iPressed].y - 1,
+               T1_KEYPOS(iPressed).x - 1, T1_KEYPOS(iPressed).y - 1,
                cxWidth + 2, cyHeight + 2,
                DSTINVERT);
     }
@@ -656,42 +649,45 @@ T1_HitTest(
     INT iKey;
     for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
-        const POINT *pptKey = &pT1->KeyPos[iKey];
-        if (Imm32PtInRect(pptKey->x, pptKey->y, pT1->cxKeyWidth, pT1->cyKeyHeight, ppt))
+        const POINT *pptKey = &T1_KEYPOS(iKey);
+        if (Imm32PtInRect(ppt, pptKey->x, pptKey->y, pT1->cxDefWidth, pT1->cyDefHeight))
             return iKey;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_BACKSPACE].x, pT1->KeyPos[IC_BACKSPACE].y, pT1->cxWidth47, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_BACKSPACE).x, T1_KEYPOS(IC_BACKSPACE).y, pT1->cxWidth47, pT1->cyDefHeight))
         return IC_BACKSPACE;
-    if (Imm32PtInRect(pT1->KeyPos[IC_TAB].x, pT1->KeyPos[IC_TAB].y, pT1->cxWidth48, pT1->cyKeyHeight, ppt))
+
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_TAB).x, T1_KEYPOS(IC_TAB).y, pT1->cxWidth48, pT1->cyDefHeight))
         return IC_TAB;
-    if (Imm32PtInRect(pT1->KeyPos[IC_CAPS].x, pT1->KeyPos[IC_CAPS].y, pT1->cxWidth49, pT1->cyKeyHeight, ppt))
+
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_CAPS).x, T1_KEYPOS(IC_CAPS).y, pT1->cxWidth49, pT1->cyDefHeight))
         return IC_CAPS;
-    if (Imm32PtInRect(pT1->KeyPos[IC_ENTER].x, pT1->KeyPos[IC_ENTER].y, pT1->cxWidth50, pT1->cyHeight50, ppt))
+
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_ENTER).x, T1_KEYPOS(IC_ENTER).y, pT1->cxWidth50, pT1->cyHeight50))
         return IC_ENTER;
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_L_SHIFT].x, pT1->KeyPos[IC_L_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[IC_R_SHIFT].x, pT1->KeyPos[IC_R_SHIFT].y, pT1->cxWidth51or52, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_L_SHIFT).x, T1_KEYPOS(IC_L_SHIFT).y, pT1->cxWidth51or52, pT1->cyDefHeight) ||
+        Imm32PtInRect(ppt, T1_KEYPOS(IC_R_SHIFT).x, T1_KEYPOS(IC_R_SHIFT).y, pT1->cxWidth51or52, pT1->cyDefHeight))
     {
         return IC_L_SHIFT;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_L_CTRL].x, pT1->KeyPos[IC_L_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[IC_R_CTRL].x, pT1->KeyPos[IC_R_CTRL].y, pT1->cxWidth53or54, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_L_CTRL).x, T1_KEYPOS(IC_L_CTRL).y, pT1->cxWidth53or54, pT1->cyDefHeight) ||
+        Imm32PtInRect(ppt, T1_KEYPOS(IC_R_CTRL).x, T1_KEYPOS(IC_R_CTRL).y, pT1->cxWidth53or54, pT1->cyDefHeight))
     {
         return IC_L_CTRL;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_L_ALT].x, pT1->KeyPos[IC_L_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt) ||
-        Imm32PtInRect(pT1->KeyPos[IC_R_ALT].x, pT1->KeyPos[IC_R_ALT].y, pT1->cxWidth55or56, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_L_ALT).x, T1_KEYPOS(IC_L_ALT).y, pT1->cxWidth55or56, pT1->cyDefHeight) ||
+        Imm32PtInRect(ppt, T1_KEYPOS(IC_R_ALT).x, T1_KEYPOS(IC_R_ALT).y, pT1->cxWidth55or56, pT1->cyDefHeight))
     {
         return IC_L_ALT;
     }
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_ESCAPE].x, pT1->KeyPos[IC_ESCAPE].y, pT1->cxWidth57, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_ESCAPE).x, T1_KEYPOS(IC_ESCAPE).y, pT1->cxWidth57, pT1->cyDefHeight))
         return IC_ESCAPE;
 
-    if (Imm32PtInRect(pT1->KeyPos[IC_SPACE].x, pT1->KeyPos[IC_SPACE].y, pT1->cxWidth58, pT1->cyKeyHeight, ppt))
+    if (Imm32PtInRect(ppt, T1_KEYPOS(IC_SPACE).x, T1_KEYPOS(IC_SPACE).y, pT1->cxWidth58, pT1->cyDefHeight))
         return IC_SPACE;
 
     return IC_NONE;
@@ -909,10 +905,10 @@ T1_SetData(
     for (iKey = 0; iKey < IC_BACKSPACE; ++iKey)
     {
         WCHAR *pwch = &pT1->chKeyChar[iKey];
-        INT x0 = pT1->KeyPos[iKey].x, y0 = pT1->KeyPos[iKey].y;
+        INT x0 = T1_KEYPOS(iKey).x, y0 = T1_KEYPOS(iKey).y;
         INT x = x0 + 6, y = y0 + 8;
         *pwch = pData->wCode[0][gIC2VK[iKey]];
-        SetRect(&rc, x, y, x0 + pT1->cxKeyWidth, y0 + pT1->cyKeyHeight);
+        SetRect(&rc, x, y, x0 + pT1->cxDefWidth, y0 + pT1->cyDefHeight);
         ExtTextOutW(hDC, x, y, ETO_OPAQUE, &rc, pwch, !!*pwch, NULL);
     }
 
