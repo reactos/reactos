@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Defining the internal codes of IMM Software Keyboard
+ * PURPOSE:     Defining internal codes of IME Software Keyboard
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
