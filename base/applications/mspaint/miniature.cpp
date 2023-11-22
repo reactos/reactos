@@ -122,7 +122,6 @@ LRESULT CMiniatureWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lPara
 {
     // Avoid too small
     LPMINMAXINFO pInfo = (LPMINMAXINFO)lParam;
-    pInfo->ptMinTrackSize.x = 100;
-    pInfo->ptMinTrackSize.y = 75;
+    pInfo->ptMinTrackSize = { 100, 75 };
     return 0;
 }

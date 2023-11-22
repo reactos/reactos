@@ -43,8 +43,7 @@ struct ToolBase
     TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
-    static INT s_pointSP;
-    static POINT s_pointStack[256];
+    static SIZE_T s_pointSP;
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
     virtual ~ToolBase() { }
@@ -63,6 +62,7 @@ struct ToolBase
     void beginEvent();
     void endEvent();
     void reset();
+    void pushToPtStack(LONG x, LONG y);
 
     static ToolBase* createToolObject(TOOLTYPE type);
 
@@ -165,28 +165,20 @@ static inline int UnZoomed(int xy)
 
 static inline void Zoomed(POINT& pt)
 {
-    pt.x = Zoomed(pt.x);
-    pt.y = Zoomed(pt.y);
+    pt = { Zoomed(pt.x), Zoomed(pt.y) };
 }
 
 static inline void Zoomed(RECT& rc)
 {
-    rc.left = Zoomed(rc.left);
-    rc.top = Zoomed(rc.top);
-    rc.right = Zoomed(rc.right);
-    rc.bottom = Zoomed(rc.bottom);
+    rc = { Zoomed(rc.left), Zoomed(rc.top), Zoomed(rc.right), Zoomed(rc.bottom) };
 }
 
 static inline void UnZoomed(POINT& pt)
 {
-    pt.x = UnZoomed(pt.x);
-    pt.y = UnZoomed(pt.y);
+    pt = { UnZoomed(pt.x), UnZoomed(pt.y) };
 }
 
 static inline void UnZoomed(RECT& rc)
 {
-    rc.left = UnZoomed(rc.left);
-    rc.top = UnZoomed(rc.top);
-    rc.right = UnZoomed(rc.right);
-    rc.bottom = UnZoomed(rc.bottom);
+    rc = { UnZoomed(rc.left), UnZoomed(rc.top), UnZoomed(rc.right), UnZoomed(rc.bottom) };
 }
