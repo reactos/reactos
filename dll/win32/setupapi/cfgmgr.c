@@ -7430,125 +7430,28 @@ CM_Remove_SubTree_Ex(
 }
 
 
-/***********************************************************************
- * CM_Request_Device_EjectA [SETUPAPI.@]
- */
+static
 CONFIGRET
-WINAPI
-CM_Request_Device_EjectA(
+CFGMGR_RequestDeviceEject(
     _In_ DEVINST dnDevInst,
     _Out_opt_ PPNP_VETO_TYPE pVetoType,
-    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
-    _In_ ULONG ulNameLength,
-    _In_ ULONG ulFlags)
-{
-    TRACE("CM_Request_Device_EjectA(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags);
-
-    return CM_Request_Device_Eject_ExA(dnDevInst, pVetoType, pszVetoName,
-                                       ulNameLength, ulFlags, NULL);
-}
-
-
-/***********************************************************************
- * CM_Request_Device_EjectW [SETUPAPI.@]
- */
-CONFIGRET
-WINAPI
-CM_Request_Device_EjectW(
-    _In_ DEVINST dnDevInst,
-    _Out_opt_ PPNP_VETO_TYPE pVetoType,
-    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
-    _In_ ULONG ulNameLength,
-    _In_ ULONG ulFlags)
-{
-    TRACE("CM_Request_Device_EjectW(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
-
-    return CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, pszVetoName,
-                                       ulNameLength, ulFlags, NULL);
-}
-
-
-/***********************************************************************
- * CM_Request_Device_Eject_ExA [SETUPAPI.@]
- */
-CONFIGRET
-WINAPI
-CM_Request_Device_Eject_ExA(
-    _In_ DEVINST dnDevInst,
-    _Out_opt_ PPNP_VETO_TYPE pVetoType,
-    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+    _Out_writes_opt_(ulNameLength) LPVOID pszVetoName,
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags,
-    _In_opt_ HMACHINE hMachine)
-{
-    LPWSTR lpLocalVetoName = NULL;
-    CONFIGRET ret;
-
-    TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
-
-    if (ulNameLength != 0)
-    {
-        if (pszVetoName == NULL)
-            return CR_INVALID_POINTER;
-
-        lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
-        if (lpLocalVetoName == NULL)
-            return CR_OUT_OF_MEMORY;
-    }
-
-    ret = CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, lpLocalVetoName,
-                                      ulNameLength, ulFlags, hMachine);
-    if (ret == CR_REMOVE_VETOED && ulNameLength != 0)
-    {
-        if (WideCharToMultiByte(CP_ACP,
-                                0,
-                                lpLocalVetoName,
-                                ulNameLength,
-                                pszVetoName,
-                                ulNameLength,
-                                NULL,
-                                NULL) == 0)
-            ret = CR_FAILURE;
-    }
-
-    HeapFree(GetProcessHeap(), 0, lpLocalVetoName);
-
-    return ret;
-}
-
-
-/***********************************************************************
- * CM_Request_Device_Eject_ExW [SETUPAPI.@]
- */
-CONFIGRET
-WINAPI
-CM_Request_Device_Eject_ExW(
-    _In_ DEVINST dnDevInst,
-    _Out_opt_ PPNP_VETO_TYPE pVetoType,
-    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
-    _In_ ULONG ulNameLength,
-    _In_ ULONG ulFlags,
-    _In_opt_ HMACHINE hMachine)
+    _In_opt_ HMACHINE hMachine,
+    _In_ BOOL bUnicode)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
+    LPWSTR pszVetoNameW = NULL;
     CONFIGRET ret;
-
-    TRACE("CM_Request_Device_Eject_ExW(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
-
-    if (pszVetoName == NULL && ulNameLength != 0)
-        return CR_INVALID_POINTER;
 
     if (hMachine != NULL)
     {
@@ -7570,12 +7473,29 @@ CM_Request_Device_Eject_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
+    if (ulNameLength != 0)
+    {
+        if (pszVetoName == NULL)
+            return CR_INVALID_POINTER;
+
+        if (!bUnicode)
+        {
+            pszVetoNameW = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+            if (pszVetoNameW == NULL)
+                return CR_OUT_OF_MEMORY;
+        }
+        else
+        {
+            pszVetoNameW = pszVetoName;
+        }
+    }
+
     RpcTryExcept
     {
         ret = PNP_RequestDeviceEject(BindingHandle,
                                      lpDevInst,
                                      pVetoType,
-                                     pszVetoName,
+                                     pszVetoNameW,
                                      ulNameLength,
                                      ulFlags);
     }
@@ -7585,7 +7505,109 @@ CM_Request_Device_Eject_ExW(
     }
     RpcEndExcept;
 
+    if (ulNameLength != 0 && !bUnicode)
+    {
+        if (ret == CR_REMOVE_VETOED)
+        {
+            if (WideCharToMultiByte(CP_ACP,
+                                    0,
+                                    pszVetoNameW,
+                                    ulNameLength,
+                                    pszVetoName,
+                                    ulNameLength,
+                                    NULL,
+                                    NULL) == 0)
+            {
+                ret = CR_FAILURE;
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, pszVetoNameW);
+    }
+
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_EjectA [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Request_Device_EjectA(
+    _In_ DEVINST dnDevInst,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags)
+{
+    TRACE("CM_Request_Device_EjectA(%lx %p %s %lu %lx)\n",
+          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags);
+
+    return CFGMGR_RequestDeviceEject(dnDevInst, pVetoType, pszVetoName,
+                                     ulNameLength, ulFlags, NULL, FALSE);
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_EjectW [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Request_Device_EjectW(
+    _In_ DEVINST dnDevInst,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags)
+{
+    TRACE("CM_Request_Device_EjectW(%lx %p %s %lu %lx)\n",
+          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
+
+    return CFGMGR_RequestDeviceEject(dnDevInst, pVetoType, pszVetoName,
+                                     ulNameLength, ulFlags, NULL, TRUE);
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_Eject_ExA [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Request_Device_Eject_ExA(
+    _In_ DEVINST dnDevInst,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
+          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
+
+    return CFGMGR_RequestDeviceEject(dnDevInst, pVetoType, pszVetoName,
+                                     ulNameLength, ulFlags, hMachine, FALSE);
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_Eject_ExW [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Request_Device_Eject_ExW(
+    _In_ DEVINST dnDevInst,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    TRACE("CM_Request_Device_Eject_ExW(%lx %p %s %lu %lx %p)\n",
+          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+
+    return CFGMGR_RequestDeviceEject(dnDevInst, pVetoType, pszVetoName,
+                                     ulNameLength, ulFlags, hMachine, TRUE);
 }
 
 
