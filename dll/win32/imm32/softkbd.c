@@ -96,17 +96,17 @@ Imm32GetNearestWorkArea(
 #define T1_CLASSNAMEW L"SoftKBDClsT1"
 
 #undef DEFINE_T1K
-#define DEFINE_T1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
-    internal_code_name = internal_code,
+#define DEFINE_T1K(t1k_code, virtual_key_code, t1k_code_name, virtual_key_name, is_special) \
+    t1k_code_name = t1k_code,
 
-/* Define T1 internal codes */
+/* Define T1 internal codes (T1K_...) */
 typedef enum T1KEY
 {
 #include "t1keys.h"
 } T1KEY;
 
 #undef DEFINE_T1K
-#define DEFINE_T1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
+#define DEFINE_T1K(t1k_code, virtual_key_code, t1k_code_name, virtual_key_name, is_special) \
     virtual_key_code,
 
 #define T1K_MAX 60

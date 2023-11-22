@@ -1,11 +1,11 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Defining internal codes of IME Soft Keyboard Type T1
+ * PURPOSE:     Defining internal codes (T1K_...) of IME Soft Keyboard Type T1
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* DEFINE_T1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) */
+/* DEFINE_T1K(t1k_code, virtual_key_code, t1k_code_name, virtual_key_name, is_special) */
 DEFINE_T1K( 0, 0xC0, T1K_BACKTICK  , VK_OEM_3,      FALSE)
 DEFINE_T1K( 1, 0x31, T1K_1         , VK_1,          FALSE)
 DEFINE_T1K( 2, 0x32, T1K_2         , VK_2,          FALSE)
