@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Defining internal codes of IME Software Keyboard Type T1
+ * PURPOSE:     Defining internal codes of IME Soft Keyboard Type T1
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 

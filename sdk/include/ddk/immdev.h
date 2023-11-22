@@ -17,6 +17,10 @@
 extern "C" {
 #endif
 
+/* Soft Keyboard Types */
+#define SOFTKEYBOARD_TYPE_T1 1
+#define SOFTKEYBOARD_TYPE_C1 2
+
 typedef struct tagSOFTKBDDATA
 {
     UINT uCount;
@@ -66,11 +70,6 @@ typedef struct tagSOFTKBDDATA
 #define IMMGWLP_IMC      0
 #define IMMGWLP_PRIVATE  (sizeof(LONG_PTR))
 
-typedef union tagINPUTCONTEXTLOGFONT {
-    LOGFONTA A;
-    LOGFONTW W;
-} INPUTCONTEXTLOGFONT, *PINPUTCONTEXTLOGFONT, *LPINPUTCONTEXTLOGFONT;
-
 typedef struct _tagINPUTCONTEXT {
     HWND                hWnd;
     BOOL                fOpen;
@@ -78,7 +77,10 @@ typedef struct _tagINPUTCONTEXT {
     POINT               ptSoftKbdPos;
     DWORD               fdwConversion;
     DWORD               fdwSentence;
-    INPUTCONTEXTLOGFONT lfFont;
+    union {
+        LOGFONTA        A;
+        LOGFONTW        W;
+    } lfFont;
     COMPOSITIONFORM     cfCompForm;
     CANDIDATEFORM       cfCandForm[4];
     HIMCC               hCompStr;

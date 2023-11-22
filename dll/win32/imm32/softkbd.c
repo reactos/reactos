@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing IME Software Keyboard
+ * PURPOSE:     Implementing IME Soft Keyboard
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -11,7 +11,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 /*
- * There are two types of IME Software Keyboard: Type T1 and Type C1.
+ * There are two types of IME Soft Keyboard: Type T1 and Type C1.
  * T1 is created for Traditional Chinese but not limitted to it.
  * C1 is created for Simplified Chinese but not limitted to it.
  * Type C1 has SHIFT status while Type T1 hasn't.
@@ -90,7 +90,7 @@ Imm32GetNearestWorkArea(
 }
 
 /*****************************************************************************
- * IME Software Keyboard Type T1
+ * IME Soft Keyboard Type T1
  */
 
 #define T1_CLASSNAMEW L"SoftKBDClsT1"
@@ -1118,7 +1118,7 @@ T1_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************
- * IME Software Keyboard Type C1
+ * IME Soft Keyboard Type C1
  */
 
 #define C1_CLASSNAMEW L"SoftKBDClsC1"
@@ -1149,7 +1149,7 @@ Imm32RegisterSoftKeyboard(
     _In_ UINT uType)
 {
     WNDCLASSEXW wcx;
-    LPCWSTR pszClass = ((uType == 1) ? T1_CLASSNAMEW : C1_CLASSNAMEW);
+    LPCWSTR pszClass = ((uType == SOFTKEYBOARD_TYPE_T1) ? T1_CLASSNAMEW : C1_CLASSNAMEW);
     if (GetClassInfoExW(ghImm32Inst, pszClass, &wcx))
         return TRUE;
 
@@ -1162,7 +1162,7 @@ Imm32RegisterSoftKeyboard(
     wcx.hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_SIZEALL);
     wcx.lpszClassName = pszClass;
 
-    if (uType == 1)
+    if (uType == SOFTKEYBOARD_TYPE_T1)
     {
         wcx.lpfnWndProc = T1_WindowProc;
         wcx.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -1182,7 +1182,7 @@ Imm32GetSoftKeyboardDimension(
     _Out_ LPINT pcx,
     _Out_ LPINT pcy)
 {
-    if (uType == 1)
+    if (uType == SOFTKEYBOARD_TYPE_T1)
     {
         TEXTMETRICW tm;
         T1_GetTextMetric(&tm);
@@ -1218,7 +1218,7 @@ ImmCreateSoftKeyboard(
     LPCWSTR pszClass;
     RECT rcWorkArea;
 
-    if (uType != 1 && uType != 2)
+    if (uType != SOFTKEYBOARD_TYPE_T1 && uType != SOFTKEYBOARD_TYPE_C1)
     {
         ERR("uType: %u\n", uType);
         return NULL; /* Invalid keyboard type */
@@ -1274,7 +1274,7 @@ ImmCreateSoftKeyboard(
     ySoftKBD = Imm32Clamp(y, rcWorkArea.top , rcWorkArea.bottom - cySoftKBD);
 
     /* Create soft keyboard window */
-    if (uType == 1)
+    if (uType == SOFTKEYBOARD_TYPE_T1)
     {
         Style = (WS_POPUP | WS_DISABLED);
         ExStyle = 0;
