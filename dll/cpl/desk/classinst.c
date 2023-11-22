@@ -4,7 +4,7 @@
  * FILE:            dll/cpl/desk/classinst.c
  * PURPOSE:         Class installers
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "desk.h"
@@ -222,9 +222,7 @@ DisplayClassInstaller(
     TCHAR SectionNameMod[MAX_PATH];
     TCHAR *pSectionName;
 
-    StringCbCat(SectionNameMod, sizeof(SectionNameMod), SectionName);
-    while (SectionNameMod[i] < 'A' || SectionNameMod[i] > 'Z')
-       i++;
+    StringCbCopy(SectionNameMod, sizeof(SectionNameMod), SectionName);
     pSectionName = &SectionNameMod[i];
     while (i < _tcslen(SectionNameMod))
     {
