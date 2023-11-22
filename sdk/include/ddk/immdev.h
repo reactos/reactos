@@ -17,10 +17,6 @@
 extern "C" {
 #endif
 
-/* Soft Keyboard Types */
-#define SOFTKEYBOARD_TYPE_T1 1
-#define SOFTKEYBOARD_TYPE_C1 2
-
 typedef struct tagSOFTKBDDATA
 {
     UINT uCount;
