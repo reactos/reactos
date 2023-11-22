@@ -100,10 +100,10 @@ Imm32GetNearestWorkArea(
     internal_code_name = internal_code,
 
 /* Define T1 internal codes */
-typedef enum T1KEYS
+typedef enum T1KEY
 {
 #include "t1keys.h"
-} T1KEYS;
+} T1KEY;
 
 #undef DEFINE_T1K
 #define DEFINE_T1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
@@ -111,7 +111,7 @@ typedef enum T1KEYS
 
 #define T1K_MAX 60
 
-/* Mapping: T1 Internal Code --> Virtual Key */
+/* Mapping: T1K --> Virtual Key */
 const BYTE gT1K2VK[T1K_MAX] =
 {
 #include "t1keys.h"
@@ -131,13 +131,13 @@ typedef struct T1WINDOW
     INT cxWidth58;            /* [Space] width */
     INT cyDefHeight;          /* Regular key height */
     INT cyHeight50;           /* [Enter] height */
-    POINT KeyPos[T1K_MAX];    /* T1 Internal Code --> POINT */
-    WCHAR chKeyChar[48];      /* T1 Internal Code --> WCHAR */
+    POINT KeyPos[T1K_MAX];    /* T1K --> POINT */
+    WCHAR chKeyChar[48];      /* T1K --> WCHAR */
     HBITMAP hbmKeyboard;      /* The keyboard image */
     DWORD CharSet;            /* LOGFONT.lfCharSet */
     UINT PressedKey;          /* Currently pressed key */
     POINT pt0, pt1;           /* The soft keyboard window position */
-    DWORD KeyboardSubType;    /* See IMC_GETSOFTKBDSUBTYPE/IMC_SETSOFTKBDSUBTYPE */
+    LPARAM KeyboardSubType;   /* See IMC_GETSOFTKBDSUBTYPE/IMC_SETSOFTKBDSUBTYPE */
 } T1WINDOW, *PT1WINDOW;
 
 #define T1_KEYPOS(iKey) pT1->KeyPos[iKey]
@@ -1033,7 +1033,7 @@ T1_OnImeControl(
             ret = pT1->KeyboardSubType;
 
             if (wParam == IMC_SETSOFTKBDSUBTYPE)
-                pT1->KeyboardSubType = (DWORD)lParam;
+                pT1->KeyboardSubType = lParam;
 
             GlobalUnlock(hGlobal);
             break;
@@ -1218,7 +1218,7 @@ ImmCreateSoftKeyboard(
     LPCWSTR pszClass;
     RECT rcWorkArea;
 
-    if (uType != SOFTKEYBOARD_TYPE_T1 && uType != SOFTKEYBOARD_TYPE_C1)
+    if ((uType != SOFTKEYBOARD_TYPE_T1) && (uType != SOFTKEYBOARD_TYPE_C1))
     {
         ERR("uType: %u\n", uType);
         return NULL; /* Invalid keyboard type */
