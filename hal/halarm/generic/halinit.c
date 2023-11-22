@@ -16,20 +16,21 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
+CODE_SEG("INIT")
 VOID
-NTAPI
-HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpGetParameters(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine;
-
     /* Make sure we have a loader block and command line */
-    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    if (LoaderBlock && LoaderBlock->LoadOptions)
     {
         /* Read the command line */
-        CommandLine = LoaderBlock->LoadOptions;
+        PCSTR CommandLine = LoaderBlock->LoadOptions;
 
         /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+        if (strstr(CommandLine, "BREAK"))
+            DbgBreakPoint();
     }
 }
 
@@ -38,15 +39,17 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * @implemented
  */
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
-HalInitSystem(IN ULONG BootPhase,
-              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalInitSystem(
+    _In_ ULONG BootPhase,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Check the boot phase */
-    if (!BootPhase)
+    if (BootPhase == 0)
     {
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
