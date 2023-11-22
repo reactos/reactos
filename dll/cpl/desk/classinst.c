@@ -105,6 +105,7 @@ DisplayClassInstaller(
                                               cchMax,
                                               NULL,
                                               NULL);
+
     if (!result)
     {
         rc = GetLastError();
@@ -218,31 +219,38 @@ DisplayClassInstaller(
     /* Install SoftwareSettings section */
     /* Yes, we're installing this section for the second time.
      * We don't want to create a link to Settings subkey */
-    int i = 0;
+    INFCONTEXT ContextManufacturer;
+    TCHAR ManufacturerSection[LINE_LEN + 1];
     TCHAR SectionNameMod[MAX_PATH];
-    TCHAR *pSectionName;
-
-    StringCbCopy(SectionNameMod, sizeof(SectionNameMod), SectionName);
-    pSectionName = &SectionNameMod[i];
-    while (i < _tcslen(SectionNameMod))
+    result = SetupFindFirstLine(hInf, _T("Manufacturer"), NULL, &ContextManufacturer);
+    if (!result)
     {
-        if (SectionNameMod[i] == '_')
-        {
-            SectionNameMod[i] = 0;
-            break;
-        }
-        i++;
+        rc = GetLastError();
+        DPRINT("SetupFindFirstLine() failed with error 0x%lx\n", rc);
+        goto cleanup;
     }
-    StringCbCat(pSectionName, sizeof(SectionNameMod), _T(".SoftwareSettings"));
+        result = SetupGetStringField(
+            &ContextManufacturer, 1, /* Field index */
+            ManufacturerSection, LINE_LEN, NULL);
+    if (!result)
+    {
+        rc = GetLastError();
+        DPRINT("SetupGetStringField() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+    StringCbCopy(SectionNameMod, sizeof(SectionNameMod), ManufacturerSection);
+    StringCbCat(SectionNameMod, sizeof(SectionNameMod), _T(".SoftwareSettings"));
     result = SetupInstallFromInfSection(
-        InstallParams.hwndParent, hInf, pSectionName, SPINST_REGISTRY, hDeviceSubKey, NULL, 0, NULL, NULL, NULL, NULL);
+        InstallParams.hwndParent, hInf, SectionNameMod, SPINST_REGISTRY, hDeviceSubKey, NULL, 0, NULL, NULL,
+        NULL,
+        NULL);
     if (!result)
     {
         rc = GetLastError();
         DPRINT("SetupInstallFromInfSection() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-
+        
     result = SetupInstallFromInfSection(
         InstallParams.hwndParent, hInf, SectionName,
         SPINST_REGISTRY, hDeviceSubKey,
