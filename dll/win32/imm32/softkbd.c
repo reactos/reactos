@@ -14,7 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
  * There are two types of IME Software Keyboard: Type T1 and Type C1.
  * T1 is created for Traditional Chinese but not limitted to it.
  * C1 is created for Simplified Chinese but not limitted to it.
- * Type T1 is smaller than Type C1.
+ * Type C1 has SHIFT status while Type T1 hasn't.
  */
 
 static UINT guScanCode[256]; /* Mapping: virtual key --> scan code */
