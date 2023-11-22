@@ -17,6 +17,7 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+#define OEMRESOURCE
 
 #include <windef.h>
 #include <winbase.h>
