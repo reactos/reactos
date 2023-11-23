@@ -679,10 +679,10 @@ PUBLIC KiDpcInterrupt
     ExitTrap (TF_SAVE_ALL or TF_IRQL)
 .ENDP
 
-
+EXTERN KiIpiInterruptHandler:PROC
 PUBLIC KiIpiInterrupt
 .PROC KiIpiInterrupt
-   /* No error code */
+    /* No error code */
     EnterTrap (TF_SAVE_ALL or TF_IRQL)
 
     /* Raise to IPI_LEVEL */
@@ -692,7 +692,10 @@ PUBLIC KiIpiInterrupt
     /* End the interrupt */
     mov dword ptr [APIC_EOI], 0
 
-    int 3
+    call KiIpiInterruptHandler
+
+    movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
+    mov cr8, rax
 
     /* Return */
     ExitTrap (TF_SAVE_ALL or TF_IRQL)
