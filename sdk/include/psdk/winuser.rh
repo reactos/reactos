@@ -293,7 +293,7 @@
 
 
 /*** Messages ***/
-#ifndef NOWINMESSAGES
+// #ifndef NOWINMESSAGES
 #define WM_NULL                0x0000
 #define WM_CREATE              0x0001
 #define WM_DESTROY             0x0002
@@ -695,6 +695,7 @@
 #define WMSZ_BOTTOMRIGHT       8
 
 /* WM_NCHITTEST return codes */
+#ifndef NONCMESSAGES
 #define HTERROR                (-2)
 #define HTTRANSPARENT          (-1)
 #define HTNOWHERE              0
@@ -731,6 +732,7 @@
 #define SMTO_ABORTIFHUNG       0x0002
 #define SMTO_NOTIMEOUTIFNOTHUNG 0x0008
 #define SMTO_ERRORONEXIT       0x0020
+#endif /* !NONCMESSAGES */
 
 /* WM_MOUSEACTIVATE return values */
 #define MA_ACTIVATE            1
@@ -785,11 +787,11 @@
 #define HOVER_DEFAULT          0xFFFFFFFF
 #endif /* NOTRACKMOUSEEVENT */
 
-#endif /* NOWINMESSAGES */
+// #endif /* NOWINMESSAGES */
 
 
 /*** Window Styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define WS_OVERLAPPED          __MSABI_LONG(0x00000000)
 #define WS_POPUP               __MSABI_LONG(0x80000000)
 #define WS_CHILD               __MSABI_LONG(0x40000000)
@@ -817,11 +819,11 @@
 #define WS_POPUPWINDOW         (WS_POPUP | WS_BORDER | WS_SYSMENU)
 #define WS_CHILDWINDOW         WS_CHILD
 #define WS_TILEDWINDOW         WS_OVERLAPPEDWINDOW
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 
 /*** Window extended styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define WS_EX_DLGMODALFRAME    __MSABI_LONG(0x00000001)
 #define WS_EX_DRAGDETECT       __MSABI_LONG(0x00000002) /* Undocumented */
 #define WS_EX_NOPARENTNOTIFY   __MSABI_LONG(0x00000004)
@@ -851,11 +853,11 @@
 
 #define WS_EX_OVERLAPPEDWINDOW (WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE)
 #define WS_EX_PALETTEWINDOW    (WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST)
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 
 /*** Class styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define CS_VREDRAW             0x00000001
 #define CS_HREDRAW             0x00000002
 #define CS_KEYCVTWINDOW        0x00000004 /* DDK / Win16 */
@@ -871,11 +873,11 @@
 #define CS_GLOBALCLASS         0x00004000
 #define CS_IME                 0x00010000
 #define CS_DROPSHADOW          0x00020000
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 
 /*** Predefined Clipboard Formats ***/
-#ifndef NOCLIPBOARD
+// #ifndef NOCLIPBOARD
 #define CF_TEXT                1
 #define CF_BITMAP              2
 #define CF_METAFILEPICT        3
@@ -908,11 +910,11 @@
 /* "GDIOBJ" formats do get DeleteObject()'d */
 #define CF_GDIOBJFIRST         0x0300
 #define CF_GDIOBJLAST          0x03FF
-#endif /* NOCLIPBOARD */
+// #endif /* NOCLIPBOARD */
 
 
 /*** Menu flags ***/
-#ifndef NOMENUS
+// #ifndef NOMENUS
 #define MF_INSERT              __MSABI_LONG(0x00000000)
 #define MF_CHANGE              __MSABI_LONG(0x00000080)
 #define MF_APPEND              __MSABI_LONG(0x00000100)
@@ -971,15 +973,11 @@
 #define MFS_BOTTOMGAPDROP      __MSABI_LONG(0x40000000)
 #define MFS_TOPGAPDROP         __MSABI_LONG(0x80000000)
 #define MFS_GAPDROP            (MFS_BOTTOMGAPDROP | MFS_TOPGAPDROP)
-#endif /* NOMENUS */
+// #endif /* NOMENUS */
 
 
 /*** WM_SYSCOMMAND parameters ***/
-#ifndef NOSYSCOMMANDS
-/* At least HP-UX defines it in /usr/include/sys/signal.h */
-# ifdef SC_SIZE
-#  undef SC_SIZE
-# endif
+// #ifndef NOSYSCOMMANDS
 #define SC_SIZE                0xf000
 #define SC_MOVE                0xf010
 #define SC_MINIMIZE            0xf020
@@ -1009,11 +1007,11 @@
 /* Obsolete names */
 #define SC_ICON               SC_MINIMIZE
 #define SC_ZOOM               SC_MAXIMIZE
-#endif /* NOSYSCOMMANDS */
+// #endif /* NOSYSCOMMANDS */
 
 
 /*** OEM Resource Ordinal Numbers ***/
-#ifdef OEMRESOURCE
+// #ifdef OEMRESOURCE
 #define OBM_RDRVERT            32559
 #define OBM_RDRHORZ            32660
 #define OBM_RDR2DIM            32661
@@ -1093,11 +1091,11 @@
 #define OIC_INFORMATION        OIC_NOTE
 #define OIC_WINLOGO            32517
 #define OIC_SHIELD             32518
-#endif /* OEMRESOURCE */
+// #endif /* OEMRESOURCE */
 
 
 /*** Predefined resources ***/
-#ifndef NOICONS
+// #ifndef NOICONS
 #define IDI_APPLICATION        MAKEINTRESOURCE(32512)
 #define IDI_HAND               MAKEINTRESOURCE(32513)
 #define IDI_QUESTION           MAKEINTRESOURCE(32514)
@@ -1109,7 +1107,7 @@
 #define IDI_WARNING            IDI_EXCLAMATION
 #define IDI_ERROR              IDI_HAND
 #define IDI_INFORMATION        IDI_ASTERISK
-#endif /* NOICONS */
+// #endif /* NOICONS */
 
 
 /*** Standard dialog button IDs ***/
@@ -1130,7 +1128,7 @@
 
 
 /*** Edit control styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define ES_LEFT                __MSABI_LONG(0x00000000)
 #define ES_CENTER              __MSABI_LONG(0x00000001)
 #define ES_RIGHT               __MSABI_LONG(0x00000002)
@@ -1146,11 +1144,11 @@
 #define ES_READONLY            __MSABI_LONG(0x00000800)
 #define ES_WANTRETURN          __MSABI_LONG(0x00001000)
 #define ES_NUMBER              __MSABI_LONG(0x00002000)
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 
 /*** Edit control messages ***/
-#ifndef NOWINMESSAGES
+// #ifndef NOWINMESSAGES
 #define EM_GETSEL              0x00b0
 #define EM_SETSEL              0x00b1
 #define EM_GETRECT             0x00b2
@@ -1193,7 +1191,7 @@
 #define EM_CHARFROMPOS         0x00d7
 #define EM_SETIMESTATUS        0x00d8
 #define EM_GETIMESTATUS        0x00d9
-#endif /* NOWINMESSAGES */
+// #endif /* NOWINMESSAGES */
 
 
 /*** Button control styles ***/
@@ -1316,7 +1314,7 @@
 
 
 /*** Listbox styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define LBS_NOTIFY             __MSABI_LONG(0x00000001)
 #define LBS_SORT               __MSABI_LONG(0x00000002)
 #define LBS_NOREDRAW           __MSABI_LONG(0x00000004)
@@ -1334,10 +1332,10 @@
 #define LBS_NOSEL              __MSABI_LONG(0x00004000)
 #define LBS_COMBOBOX           __MSABI_LONG(0x00008000)
 #define LBS_STANDARD           (LBS_NOTIFY | LBS_SORT | WS_VSCROLL | WS_BORDER)
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 /*** Combo box styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define CBS_SIMPLE             __MSABI_LONG(0x00000001)
 #define CBS_DROPDOWN           __MSABI_LONG(0x00000002)
 #define CBS_DROPDOWNLIST       __MSABI_LONG(0x00000003)
@@ -1352,11 +1350,11 @@
 
 #define CBS_UPPERCASE          __MSABI_LONG(0x00002000)
 #define CBS_LOWERCASE          __MSABI_LONG(0x00004000)
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 
 /*** Scrollbar styles ***/
-#ifndef NOWINSTYLES
+// #ifndef NOWINSTYLES
 #define SBS_HORZ               __MSABI_LONG(0x00000000)
 #define SBS_VERT               __MSABI_LONG(0x00000001)
 #define SBS_TOPALIGN           __MSABI_LONG(0x00000002)
@@ -1367,7 +1365,7 @@
 #define SBS_SIZEBOXBOTTOMRIGHTALIGN __MSABI_LONG(0x00000004)
 #define SBS_SIZEBOX            __MSABI_LONG(0x00000008)
 #define SBS_SIZEGRIP           __MSABI_LONG(0x00000010)
-#endif /* NOWINSTYLES */
+// #endif /* NOWINSTYLES */
 
 /*** WinHelp commands ***/
 #define HELP_CONTEXT           __MSABI_LONG(0x00000001)
