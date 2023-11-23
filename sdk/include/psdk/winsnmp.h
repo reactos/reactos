@@ -21,10 +21,10 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-#ifndef _WINSNMP_H
-#define _WINSNMP_H
+#ifndef _INC_WINSNMP
+#define _INC_WINSNMP
 
-#ifndef _WINDOWS_H
+#ifndef _INC_WINDOWS
 #include <windows.h>
 #endif
 
@@ -323,4 +323,5 @@ SNMPAPI_STATUS WINSNMPAPI SnmpPasswordToKey(smiLPOCTETS,smiINT32,smiLPOCTETS);
 }
 #endif
 #include <poppack.h>
-#endif
+
+#endif /* _INC_WINSNMP */

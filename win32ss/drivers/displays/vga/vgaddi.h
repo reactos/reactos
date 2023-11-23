@@ -2,7 +2,7 @@
 #define _VGADDI_PCH_
 
 #define _WINBASE_
-#define _WINDOWS_H
+#define _INC_WINDOWS
 #include <stdarg.h>
 #include <windef.h>
 #include <wingdi.h>
