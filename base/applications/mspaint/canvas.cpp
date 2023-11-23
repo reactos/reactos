@@ -770,16 +770,6 @@ VOID CCanvasWindow::EndSelectionDrag(POINT ptImage)
     Invalidate(FALSE);
 }
 
-VOID CCanvasWindow::MoveSelection(INT xDelta, INT yDelta)
-{
-    if (!selectionModel.m_bShow)
-        return;
-
-    selectionModel.TakeOff();
-    ::OffsetRect(&selectionModel.m_rc, xDelta, yDelta);
-    Invalidate(FALSE);
-}
-
 LRESULT CCanvasWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     SetTextColor((HDC)wParam, paletteModel.GetFgColor());

@@ -529,16 +529,16 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case VK_LEFT:
-            canvasWindow.MoveSelection(-1, 0);
+            selectionModel.moveSelection(-1, 0);
             break;
         case VK_RIGHT:
-            canvasWindow.MoveSelection(+1, 0);
+            selectionModel.moveSelection(+1, 0);
             break;
         case VK_UP:
-            canvasWindow.MoveSelection(0, -1);
+            selectionModel.moveSelection(0, -1);
             break;
         case VK_DOWN:
-            canvasWindow.MoveSelection(0, +1);
+            selectionModel.moveSelection(0, +1);
             break;
         default:
             break;

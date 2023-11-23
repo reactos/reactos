@@ -551,6 +551,16 @@ void SelectionModel::drawFrameOnCanvas(HDC hCanvasDC)
     drawSizeBoxes(hCanvasDC, &rcSelection, TRUE);
 }
 
+void SelectionModel::moveSelection(INT xDelta, INT yDelta)
+{
+    if (!m_bShow)
+        return;
+
+    TakeOff();
+    ::OffsetRect(&m_rc, xDelta, yDelta);
+    canvasWindow.Invalidate();
+}
+
 void SelectionModel::StretchSelection(BOOL bShrink)
 {
     if (!m_bShow)
