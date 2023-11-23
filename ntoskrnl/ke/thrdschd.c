@@ -74,13 +74,48 @@ KiQueueReadyThread(IN PKTHREAD Thread,
     KxQueueReadyThread(Thread, Prcb);
 }
 
+#ifdef CONFIG_SMP
+static
+ULONG
+KiSelectNextProcessor(
+    _In_ PKTHREAD Thread)
+{
+    KAFFINITY PreferredSet, IdleSet;
+    ULONG Processor;
+
+    /* Start with the affinity */
+    PreferredSet = Thread->Affinity;
+
+    /* If we have matching idle processors, use them */
+    IdleSet = PreferredSet & KiIdleSummary;
+    if (IdleSet != 0)
+    {
+        PreferredSet = IdleSet;
+    }
+
+    /* Check if we can use the ideal processor */
+    if (PreferredSet & AFFINITY_MASK(Thread->IdealProcessor))
+    {
+        return Thread->IdealProcessor;
+    }
+
+    /* Return the first set bit */
+    NT_VERIFY(BitScanForwardAffinity(&Processor, PreferredSet) != FALSE);
+    ASSERT(Processor < KeNumberProcessors);
+
+    return Processor;
+}
+#else
+#define KiSelectNextProcessor(Thread) 0
+#endif
+
 VOID
 FASTCALL
 KiDeferredReadyThread(IN PKTHREAD Thread)
 {
     PKPRCB Prcb;
     BOOLEAN Preempted;
-    ULONG Processor = 0;
+    ULONG Processor;
     KPRIORITY OldPriority;
     PKTHREAD NextThread;
 
@@ -228,9 +263,12 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     OldPriority = Thread->Priority;
     Thread->Preempted = FALSE;
 
-    /* Queue the thread on CPU 0 and get the PRCB and lock it */
-    Thread->NextProcessor = 0;
-    Prcb = KiProcessorBlock[0];
+    /* Select a processor to run on */
+    Processor = KiSelectNextProcessor(Thread);
+    Thread->NextProcessor = Processor;
+
+    /* Get the PRCB and lock it */
+    Prcb = KiProcessorBlock[Processor];
     KiAcquirePrcbLock(Prcb);
 
     /* Check if we have an idle summary */
@@ -245,9 +283,6 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         KiReleasePrcbLock(Prcb);
         return;
     }
-
-    /* Set the CPU number */
-    Thread->NextProcessor = (UCHAR)Processor;
 
     /* Get the next scheduled thread */
     NextThread = Prcb->NextThread;
@@ -341,12 +376,12 @@ KiSelectNextThread(IN PKPRCB Prcb)
         Prcb->IdleSchedule = TRUE;
 
         /* FIXME: SMT support */
-        ASSERTMSG("SMP: Not yet implemented\n", FALSE);
+        //ASSERTMSG("SMP: Not yet implemented\n", FALSE);
     }
 
     /* Sanity checks and return the thread */
     ASSERT(Thread != NULL);
-    ASSERT((Thread->BasePriority == 0) || (Thread->Priority != 0));
+    //ASSERT((Thread->BasePriority == 0) || (Thread->Priority != 0));
     return Thread;
 }
 
