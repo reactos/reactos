@@ -1,11 +1,12 @@
-#ifndef _WINRESRC_H
-#define _WINRESRC_H
+#ifndef _WINRESRC_
+#define _WINRESRC_
 
 #define WIN32_LEAN_AND_MEAN
-#include <winuser.h>
-#include <winnt.h>
-#include <winver.h>
-#include <dde.h>
+#include <winuser.rh>
+#include <winnt.rh>
+#include <commctrl.rh>
+#include <dde.rh>
 #include <dlgs.h>
-#include <commctrl.h>
-#endif
+#include <winver.h>
+
+#endif /* _WINRESRC_ */
