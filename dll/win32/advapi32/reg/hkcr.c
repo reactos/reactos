@@ -18,6 +18,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(reg);
 static const UNICODE_STRING HKLM_ClassesPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Classes");
 
 static
+BOOL
+ValueExists(_In_ HKEY hNormalKey, _In_ PUNICODE_STRING Name)
+{
+    KEY_VALUE_PARTIAL_INFORMATION kvi;
+    ULONG total_size = sizeof(kvi);
+    NTSTATUS status = NtQueryValueKey(hNormalKey, Name, KeyValuePartialInformation,
+                                      &kvi, total_size, &total_size);
+    return status != STATUS_OBJECT_NAME_NOT_FOUND;
+}
+
+static
 LONG
 GetKeyName(HKEY hKey, PUNICODE_STRING KeyName)
 {
@@ -107,7 +118,10 @@ GetFallbackHKCRKey(
     /* Get the key name */
     ErrorCode = GetKeyName(hKey, &KeyName);
     if (ErrorCode != ERROR_SUCCESS)
+    {
+        *MachineKey = hKey;
         return ErrorCode;
+    }
 
     /* See if we really need a conversion */
     if (RtlPrefixUnicodeString(&HKLM_ClassesPath, &KeyName, TRUE))
@@ -180,7 +194,10 @@ GetPreferredHKCRKey(
     /* Get the key name */
     ErrorCode = GetKeyName(hKey, &KeyName);
     if (ErrorCode != ERROR_SUCCESS)
+    {
+        *PreferredKey = hKey;
         return ErrorCode;
+    }
 
     /* See if we really need a conversion */
     if (!RtlPrefixUnicodeString(&HKLM_ClassesPath, &KeyName, TRUE))
@@ -473,6 +490,49 @@ DeleteHKCRKey(
         RegCloseKey(QueriedKey);
     }
 
+    return ErrorCode;
+}
+
+/* HKCR version of RegDeleteValueA+W */
+LONG
+WINAPI
+DeleteHKCRValue(
+    _In_ HKEY hKey,
+    _In_ PUNICODE_STRING ValueName)
+{
+    HKEY hActualKey;
+    LONG ErrorCode;
+
+    ASSERT(IsHKCRKey(hKey));
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2); /* Remove the HKCR flag while we're working */
+
+    /* Does the HKCU key and value exist? */
+    ErrorCode = GetPreferredHKCRKey(hKey, &hActualKey);
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        if (!ValueExists(hActualKey, ValueName))
+        {
+            if (hActualKey != hKey)
+            {
+                RegCloseKey(hActualKey);
+            }
+            ErrorCode = ERROR_FILE_NOT_FOUND;
+        }
+    }
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        ErrorCode = GetFallbackHKCRKey(hKey, &hActualKey, FALSE);
+    }
+
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        NTSTATUS Status = NtDeleteValueKey(hActualKey, ValueName);
+        ErrorCode = NT_SUCCESS(Status) ? ERROR_SUCCESS : RtlNtStatusToDosError(Status);
+    }
+    if (hActualKey != hKey)
+    {
+        RegCloseKey(hActualKey);
+    }
     return ErrorCode;
 }
 
