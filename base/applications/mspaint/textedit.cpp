@@ -52,7 +52,7 @@ void CTextEditWindow::FixEditPos(LPCWSTR pszOldText)
     RECT rcParent;
     ::GetWindowRect(m_hwndParent, &rcParent);
 
-    RECT rc, rcWnd, rcText;
+    CRect rc, rcWnd, rcText;
     GetWindowRect(&rcWnd);
     rcText = rcWnd;
 
@@ -76,7 +76,7 @@ void CTextEditWindow::FixEditPos(LPCWSTR pszOldText)
 
     rcWnd = rc;
     ::GetClientRect(m_hwndParent, &rcParent);
-    IntersectRect(&rc, &rcParent, &rcWnd);
+    rc.IntersectRect(&rcParent, &rcWnd);
 
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
 
@@ -158,13 +158,13 @@ LRESULT CTextEditWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
 LRESULT CTextEditWindow::OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    RECT rc;
+    CRect rc;
     GetWindowRect(&rc);
 
     HDC hDC = GetDCEx(NULL, DCX_WINDOW | DCX_PARENTCLIP);
     if (hDC)
     {
-        OffsetRect(&rc, -rc.left, -rc.top);
+        rc.OffsetRect(-rc.left, -rc.top);
         DrawGrip(hDC, rc);
         ReleaseDC(hDC);
     }

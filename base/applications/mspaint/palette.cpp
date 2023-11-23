@@ -93,7 +93,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     ::FillRect(hMemDC, &rcClient, (HBRUSH)(COLOR_3DFACE + 1));
 
     /* Draw the big box that contains the black box and the white box */
-    ::SetRect(&rc, X_MARGIN, Y_MARGIN, X_MARGIN + CXY_BIGBOX, Y_MARGIN + CXY_BIGBOX);
+    rc = { X_MARGIN, Y_MARGIN, X_MARGIN + CXY_BIGBOX, Y_MARGIN + CXY_BIGBOX };
     ::DrawEdge(hMemDC, &rc, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
     COLORREF rgbLight = ::GetSysColor(COLOR_3DHIGHLIGHT);
     for (INT y = rc.top; y < rc.bottom; ++y)

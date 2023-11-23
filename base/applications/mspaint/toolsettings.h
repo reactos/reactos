@@ -37,7 +37,7 @@ private:
     VOID drawLine(HDC hdc, LPCRECT prc);
     VOID drawBox(HDC hdc, LPCRECT prc);
     VOID drawAirBrush(HDC hdc, LPCRECT prc);
-    VOID calculateTwoBoxes(RECT& rect1, RECT& rect2);
+    VOID calculateTwoBoxes(CRect& rect1, CRect& rect2);
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

@@ -18,7 +18,7 @@ CCanvasWindow::CCanvasWindow()
     , m_ptOrig { -1, -1 }
 {
     m_ahbmCached[0] = m_ahbmCached[1] = NULL;
-    ::SetRectEmpty(&m_rcResizing);
+    m_rcResizing.SetRectEmpty();
 }
 
 CCanvasWindow::~CCanvasWindow()
@@ -34,7 +34,7 @@ RECT CCanvasWindow::GetBaseRect()
     CRect rcBase;
     GetImageRect(rcBase);
     ImageToCanvas(rcBase);
-    ::InflateRect(&rcBase, GRIP_SIZE, GRIP_SIZE);
+    rcBase.InflateRect(GRIP_SIZE, GRIP_SIZE);
     return rcBase;
 }
 
@@ -87,8 +87,8 @@ VOID CCanvasWindow::getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget)
     INT oldZoom = toolsModel.GetZoom();
     GetClientRect(rcView);
     LONG cxView = rcView.right * oldZoom / newZoom, cyView = rcView.bottom * oldZoom / newZoom;
-    ::SetRect(&rcView, ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
-                       ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
+    rcView.SetRect(ptTarget.x - cxView / 2, ptTarget.y - cyView / 2,
+                   ptTarget.x + cxView / 2, ptTarget.y + cyView / 2);
 
     // Shift the rectangle if necessary
     INT dx = 0, dy = 0;
@@ -199,7 +199,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     toolsModel.OnDrawOverlayOnCanvas(hdcMem0);
 
     // Draw new frame on hdcMem0 if any
-    if (m_hitCanvasSizeBox != HIT_NONE && !::IsRectEmpty(&m_rcResizing))
+    if (m_hitCanvasSizeBox != HIT_NONE && !m_rcResizing.IsRectEmpty())
         DrawXorRect(hdcMem0, &m_rcResizing);
 
     // Transfer the bits (hDC <-- hdcMem0)
@@ -434,11 +434,11 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
         if (!m_drawing)
         {
-            RECT rcImage;
+            CRect rcImage;
             GetImageRect(rcImage);
 
             CStringW strCoord;
-            if (::PtInRect(&rcImage, pt))
+            if (rcImage.PtInRect(pt))
                 strCoord.Format(L"%ld, %ld", pt.x, pt.y);
             ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strCoord);
         }
@@ -507,19 +507,19 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     switch (m_hitCanvasSizeBox)
     {
         case HIT_UPPER_LEFT:
-            ::OffsetRect(&rcResizing, cxDelta, cyDelta);
+            rcResizing.OffsetRect(cxDelta, cyDelta);
             break;
         case HIT_UPPER_CENTER:
-            ::OffsetRect(&rcResizing, 0, cyDelta);
+            rcResizing.OffsetRect(0, cyDelta);
             break;
         case HIT_UPPER_RIGHT:
-            ::OffsetRect(&rcResizing, 0, cyDelta);
+            rcResizing.OffsetRect(0, cyDelta);
             break;
         case HIT_MIDDLE_LEFT:
-            ::OffsetRect(&rcResizing, cxDelta, 0);
+            rcResizing.OffsetRect(cxDelta, 0);
             break;
         case HIT_LOWER_LEFT:
-            ::OffsetRect(&rcResizing, cxDelta, 0);
+            rcResizing.OffsetRect(cxDelta, 0);
             break;
         default:
             break;
@@ -591,7 +591,7 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         default:
             break;
     }
-    ::SetRectEmpty(&m_rcResizing);
+    m_rcResizing.SetRectEmpty();
 
     g_imageSaved = FALSE;
 
@@ -623,7 +623,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     CRect rcClient;
     GetClientRect(&rcClient);
 
-    if (!::PtInRect(&rcClient, pt))
+    if (!rcClient.PtInRect(pt))
     {
         bHandled = FALSE;
         return 0;
@@ -641,7 +641,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     GetImageRect(rcImage);
     ImageToCanvas(rcImage);
 
-    if (::PtInRect(&rcImage, pt))
+    if (rcImage.PtInRect(pt))
     {
         switch (toolsModel.GetActiveTool())
         {
@@ -680,7 +680,7 @@ LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         ::ReleaseCapture();
         m_nMouseDownMsg = 0;
         m_hitCanvasSizeBox = HIT_NONE;
-        ::SetRectEmpty(&m_rcResizing);
+        m_rcResizing.SetRectEmpty();
         Invalidate(TRUE);
     }
 
@@ -691,7 +691,7 @@ LRESULT CCanvasWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     // Cancel dragging
     m_hitCanvasSizeBox = HIT_NONE;
-    ::SetRectEmpty(&m_rcResizing);
+    m_rcResizing.SetRectEmpty();
     Invalidate(TRUE);
     return 0;
 }

@@ -229,8 +229,8 @@ struct RectSelTool : ToolBase
 
         if (canvasWindow.m_drawing)
         {
-            RECT rc = selectionModel.m_rc;
-            if (!::IsRectEmpty(&rc))
+            CRect& rc = selectionModel.m_rc;
+            if (!rc.IsRectEmpty())
                 RectSel(hdc, rc.left, rc.top, rc.right, rc.bottom);
         }
     }
@@ -727,8 +727,8 @@ struct TextTool : ToolBase
     {
         if (canvasWindow.m_drawing)
         {
-            RECT rc = selectionModel.m_rc;
-            if (!::IsRectEmpty(&rc))
+            CRect& rc = selectionModel.m_rc;
+            if (!rc.IsRectEmpty())
                 RectSel(hdc, rc.left, rc.top, rc.right, rc.bottom);
         }
     }
@@ -760,10 +760,10 @@ struct TextTool : ToolBase
         CStringW szText;
         textEditWindow.GetWindowText(szText);
 
-        RECT rc;
+        CRect rc;
         textEditWindow.InvalidateEditRect();
         textEditWindow.GetEditRect(&rc);
-        ::InflateRect(&rc, -GRIP_SIZE / 2, -GRIP_SIZE / 2);
+        rc.InflateRect(-GRIP_SIZE / 2, -GRIP_SIZE / 2);
 
         // Draw the text
         INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
@@ -792,7 +792,7 @@ struct TextTool : ToolBase
                 imageModel.PushImageForUndo();
                 draw(m_hdc);
             }
-            if (::IsRectEmpty(&selectionModel.m_rc))
+            if (selectionModel.m_rc.IsRectEmpty())
             {
                 quit();
                 return TRUE;
@@ -807,13 +807,13 @@ struct TextTool : ToolBase
             fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
         }
 
-        RECT rc = selectionModel.m_rc;
+        CRect rc = selectionModel.m_rc;
 
         // Enlarge if tool small
         INT cxMin = CX_MINTEXTEDIT, cyMin = CY_MINTEXTEDIT;
         if (selectionModel.m_rc.IsRectEmpty())
         {
-            SetRect(&rc, x, y, x + cxMin, y + cyMin);
+            rc.SetRect(x, y, x + cxMin, y + cyMin);
         }
         else
         {

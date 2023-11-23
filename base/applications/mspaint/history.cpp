@@ -354,7 +354,7 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
 
 void ImageModel::SelectionClone(BOOL bUndoable)
 {
-    if (!selectionModel.m_bShow || ::IsRectEmpty(&selectionModel.m_rc))
+    if (!selectionModel.m_bShow || selectionModel.m_rc.IsRectEmpty())
         return;
 
     if (bUndoable)
