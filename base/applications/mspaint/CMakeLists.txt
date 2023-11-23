@@ -25,7 +25,6 @@ list(APPEND SOURCE
     toolbox.cpp
     toolsettings.cpp
     toolsmodel.cpp
-    winproc.cpp
     precomp.h)
 
 file(GLOB mspaint_rc_deps img/*.*)
