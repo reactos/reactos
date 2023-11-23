@@ -179,13 +179,6 @@ KiSystemStartupBootStack(VOID)
     {
         /* Initialize the startup thread */
         KiInitializeHandBuiltThread(Thread, Process, KernelStack);
-
-        /* Initialize cpu with HAL */
-        if (!HalInitSystem(0, LoaderBlock))
-        {
-            /* Initialization failed */
-            KeBugCheck(HAL_INITIALIZATION_FAILED);
-        }
     }
 
     /* Calculate the CPU frequency */
