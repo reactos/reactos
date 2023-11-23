@@ -378,6 +378,15 @@ KiIpiSignalPacketDoneAndStall(
     IN volatile PULONG ReverseStall
 );
 
+VOID
+NTAPI
+KiIpiSendRequest(
+    _In_ KAFFINITY TargetSet,
+    _In_ PKIPI_WORKER WorkerRoutine,
+    _In_ PVOID Parameter1,
+    _In_ PVOID Parameter2,
+    _In_ PVOID Parameter3);
+
 /* next file ***************************************************************/
 
 UCHAR
