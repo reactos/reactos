@@ -47,7 +47,7 @@
 #include "toolbox.h"
 #include "toolsettings.h"
 #include "toolsmodel.h"
-#include "winproc.h"
+#include "main.h"
 #include "dialogs.h"
 #include <ui/CWaitCursor.h>
 #include "globalvar.h"
