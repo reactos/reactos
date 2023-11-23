@@ -51,20 +51,16 @@ VOID CCanvasWindow::ImageToCanvas(RECT& rc)
     ::OffsetRect(&rc, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
 }
 
-VOID CCanvasWindow::CanvasToImage(POINT& pt, BOOL bZoomed)
+VOID CCanvasWindow::CanvasToImage(POINT& pt)
 {
     pt.x -= GRIP_SIZE - GetScrollPos(SB_HORZ);
     pt.y -= GRIP_SIZE - GetScrollPos(SB_VERT);
-    if (bZoomed)
-        return;
     UnZoomed(pt);
 }
 
-VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bZoomed)
+VOID CCanvasWindow::CanvasToImage(RECT& rc)
 {
     ::OffsetRect(&rc, GetScrollPos(SB_HORZ) - GRIP_SIZE, GetScrollPos(SB_VERT) - GRIP_SIZE);
-    if (bZoomed)
-        return;
     UnZoomed(rc);
 }
 
@@ -367,12 +363,11 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         return 0;
     }
 
-    CanvasToImage(pt, TRUE);
+    CanvasToImage(pt);
 
     if (hit == HIT_INNER)
     {
         m_drawing = TRUE;
-        UnZoomed(pt);
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
         Invalidate(FALSE);
@@ -382,10 +377,10 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (bLeftButton)
     {
         m_hitCanvasSizeBox = hit;
-        UnZoomed(pt);
         m_ptOrig = pt;
         SetCapture();
     }
+
     return 0;
 }
 

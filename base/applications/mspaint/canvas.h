@@ -49,8 +49,8 @@ public:
 
     VOID ImageToCanvas(POINT& pt);
     VOID ImageToCanvas(RECT& rc);
-    VOID CanvasToImage(POINT& pt, BOOL bZoomed = FALSE);
-    VOID CanvasToImage(RECT& rc, BOOL bZoomed = FALSE);
+    VOID CanvasToImage(POINT& pt);
+    VOID CanvasToImage(RECT& rc);
     VOID GetImageRect(RECT& rc);
     VOID MoveSelection(INT xDelta, INT yDelta);
     VOID getNewZoomRect(CRect& rcView, INT newZoom, CPoint ptTarget);
