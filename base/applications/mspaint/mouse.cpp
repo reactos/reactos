@@ -128,10 +128,6 @@ struct FreeSelTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
 
-    FreeSelTool()
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!selectionModel.IsLanded())
@@ -218,10 +214,6 @@ struct RectSelTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
 
-    RectSelTool()
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!selectionModel.IsLanded())
@@ -299,10 +291,6 @@ struct TwoPointDrawTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
     BOOL m_bDrawing = FALSE;
-
-    TwoPointDrawTool(TOOLTYPE type)
-    {
-    }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
@@ -440,10 +428,6 @@ struct SmoothDrawTool : ToolBase
     BOOL m_bShiftDown = FALSE;
     BOOL m_bLeftButton = FALSE;
 
-    SmoothDrawTool(TOOLTYPE type)
-    {
-    }
-
     virtual void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) = 0;
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -512,10 +496,6 @@ struct SmoothDrawTool : ToolBase
 // TOOL_RUBBER
 struct RubberTool : SmoothDrawTool
 {
-    RubberTool() : SmoothDrawTool(TOOL_RUBBER)
-    {
-    }
-
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
         if (bLeftButton)
@@ -533,10 +513,6 @@ struct RubberTool : SmoothDrawTool
 // TOOL_FILL
 struct FillTool : ToolBase
 {
-    FillTool()
-    {
-    }
-
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
@@ -547,10 +523,6 @@ struct FillTool : ToolBase
 // TOOL_COLOR
 struct ColorTool : ToolBase
 {
-    ColorTool()
-    {
-    }
-
     void fetchColor(BOOL bLeftButton, LONG x, LONG y)
     {
         COLORREF rgbColor;
@@ -584,10 +556,6 @@ struct ColorTool : ToolBase
 struct ZoomTool : ToolBase
 {
     BOOL m_bZoomed = FALSE;
-
-    ZoomTool()
-    {
-    }
 
     BOOL getNewZoomRect(CRect& rcView, INT newZoom);
 
@@ -647,10 +615,6 @@ BOOL ZoomTool::getNewZoomRect(CRect& rcView, INT newZoom)
 // TOOL_PEN
 struct PenTool : SmoothDrawTool
 {
-    PenTool() : SmoothDrawTool(TOOL_PEN)
-    {
-    }
-
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
@@ -666,10 +630,6 @@ struct PenTool : SmoothDrawTool
 // TOOL_BRUSH
 struct BrushTool : SmoothDrawTool
 {
-    BrushTool() : SmoothDrawTool(TOOL_BRUSH)
-    {
-    }
-
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
         COLORREF rgb = bLeftButton ? m_fg : m_bg;
@@ -687,10 +647,6 @@ struct BrushTool : SmoothDrawTool
 struct AirBrushTool : SmoothDrawTool
 {
     DWORD m_dwTick = 0;
-
-    AirBrushTool() : SmoothDrawTool(TOOL_AIRBRUSH)
-    {
-    }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
@@ -719,10 +675,6 @@ struct AirBrushTool : SmoothDrawTool
 // TOOL_TEXT
 struct TextTool : ToolBase
 {
-    TextTool()
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (canvasWindow.m_drawing)
@@ -852,10 +804,6 @@ struct TextTool : ToolBase
 // TOOL_LINE
 struct LineTool : TwoPointDrawTool
 {
-    LineTool() : TwoPointDrawTool(TOOL_LINE)
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!m_bDrawing)
@@ -871,10 +819,6 @@ struct LineTool : TwoPointDrawTool
 struct BezierTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
-
-    BezierTool()
-    {
-    }
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
@@ -951,10 +895,6 @@ struct BezierTool : ToolBase
 // TOOL_RECT
 struct RectTool : TwoPointDrawTool
 {
-    RectTool() : TwoPointDrawTool(TOOL_RECT)
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!m_bDrawing)
@@ -973,10 +913,6 @@ struct ShapeTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
     BOOL m_bClosed = FALSE;
-
-    ShapeTool()
-    {
-    }
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
@@ -1070,10 +1006,6 @@ struct ShapeTool : ToolBase
 // TOOL_ELLIPSE
 struct EllipseTool : TwoPointDrawTool
 {
-    EllipseTool() : TwoPointDrawTool(TOOL_ELLIPSE)
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!m_bDrawing)
@@ -1090,10 +1022,6 @@ struct EllipseTool : TwoPointDrawTool
 // TOOL_RRECT
 struct RRectTool : TwoPointDrawTool
 {
-    RRectTool() : TwoPointDrawTool(TOOL_RRECT)
-    {
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         if (!m_bDrawing)
