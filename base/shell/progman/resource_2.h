@@ -3,7 +3,7 @@
 // Used by new_resources.rc
 //
 
-// #include <winuser.h>
+#include <winuser.h>
 
 #define IDHELP 9
 

@@ -157,7 +157,7 @@ typedef struct _BATTERY_STATUS {
   LONG Rate;
 } BATTERY_STATUS, *PBATTERY_STATUS;
 
-#ifndef _WINDOWS_
+#ifndef _WINDOWS_H
 
 /* BATTERY_MINIPORT_INFO.XxxVersion */
 #define BATTERY_CLASS_MAJOR_VERSION       0x0001
@@ -388,7 +388,7 @@ NTAPI
 BatteryClassUnload(
   _In_ PVOID ClassData);
 
-#endif /* _WINDOWS_ */
+#endif /* _WINDOWS_H */
 
 #endif /* _BATCLASS_ */
 

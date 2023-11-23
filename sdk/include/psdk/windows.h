@@ -10,12 +10,8 @@
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 */
-
-#ifndef _WINDOWS_
-#define _WINDOWS_
-
-#ifndef _INC_WINDOWS
-#define _INC_WINDOWS
+#ifndef _WINDOWS_H
+#define _WINDOWS_H
 
 #ifdef __GNUC__
 #include <msvctarget.h>
@@ -48,32 +44,10 @@
 
 #endif
 
-#if defined(RC_INVOKED) && !defined(NOWINRES)
+#ifdef RC_INVOKED
 /* winresrc.h includes the necessary headers */
 #include <winresrc.h>
-
 #else
-
-#ifdef RC_INVOKED
-/* Turn off some modules to ensure RC files compile OK */
-#define NOATOM
-#define NOGDI
-#define NOGDICAPMASKS
-#define NOMETAFILE
-#define NOMINMAX
-#define NOMSG
-#define NOOPENFILE
-#define NORASTEROPS
-#define NOSCROLL
-#define NOSOUND
-#define NOSYSMETRICS
-#define NOTEXTMETRIC
-#define NOWH
-#define NOCOMM
-#define NOKANJI
-#define NOCRYPT
-#define NOMCX
-#endif /* RC_INVOKED */
 
 #include <excpt.h>
 #include <stdarg.h>
@@ -86,39 +60,29 @@
 #include <winver.h>
 #include <winnetwk.h>
 #include <winreg.h>
-
-#ifndef NOSERVICE
 #include <winsvc.h>
-#endif
 
 #ifndef WIN32_LEAN_AND_MEAN
 #include <cderr.h>
 #include <dde.h>
 #include <ddeml.h>
 #include <dlgs.h>
-
-#ifndef NOIME
 #include <imm.h>
-#endif
-
 #include <lzexpand.h>
 #include <mmsystem.h>
 #include <nb30.h>
 #include <rpc.h>
 #include <shellapi.h>
 #include <winperf.h>
-
 #ifndef NOCRYPT
 #include <wincrypt.h>
 #include <winefs.h>
 #include <winscard.h>
 #endif
-
 #ifndef NOGDI
 #include <commdlg.h>
 #include <winspool.h>
 #endif
-
 #if defined(Win32_Winsock)
 #warning "The  Win32_Winsock macro name is deprecated.\
     Please use __USE_W32_SOCKETS instead"
@@ -158,5 +122,4 @@
 #undef BOOL
 #endif
 
-#endif /* _INC_WINDOWS */
-#endif /* _WINDOWS_ */
+#endif

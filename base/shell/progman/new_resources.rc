@@ -7,9 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#if 0
 #include "afxres.h"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -34,9 +32,7 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#if 0\r\n"
     "#include ""afxres.h""\r\n"
-    "#endif\r\n"
     "\0"
 END
 

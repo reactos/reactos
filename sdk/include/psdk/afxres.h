@@ -5,11 +5,8 @@
 extern "C" {
 #endif
 
-#ifdef RC_INVOKED
-#ifndef _INC_WINDOWS
-#define _INC_WINDOWS
-   #include "winres.h"
-#endif
+#ifndef _WINDOWS_H
+#include <windows.h>
 #endif
 
 /* IDC_STATIC is documented in winuser.h, but not defined. */

@@ -16,6 +16,7 @@
 #include <tdi.h>
 #include <tcpioctl.h>
 #define _WINBASE_
+#define _WINDOWS_H
 #define _INC_WINDOWS
 #include <windef.h>
 #include <winsock2.h>

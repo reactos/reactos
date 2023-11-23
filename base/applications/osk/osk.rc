@@ -5,10 +5,8 @@
  * COPYRIGHT:       Denis ROBERT
  */
 
-#include <windef.h>
-#include <winuser.h>
-
-#include "osk_res.h"
+/* INCLUDES ******************************************************************/
+#include "precomp.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS On Screen Keyboard"
 #define REACTOS_STR_INTERNAL_NAME     "osk"
@@ -18,6 +16,7 @@
 
 IDI_OSK             ICON "res/osk.ico"
 IDI_SOUNDCLICK      WAVE "res/click.wav"
+
 
 IDI_BACK      ICON "res/back.ico"
 IDI_TAB       ICON "res/tab.ico"
