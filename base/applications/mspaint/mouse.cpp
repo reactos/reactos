@@ -128,7 +128,7 @@ struct FreeSelTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
 
-    FreeSelTool() : ToolBase(TOOL_FREESEL)
+    FreeSelTool()
     {
     }
 
@@ -218,7 +218,7 @@ struct RectSelTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
 
-    RectSelTool() : ToolBase(TOOL_RECTSEL)
+    RectSelTool()
     {
     }
 
@@ -300,7 +300,7 @@ struct TwoPointDrawTool : ToolBase
     BOOL m_bLeftButton = FALSE;
     BOOL m_bDrawing = FALSE;
 
-    TwoPointDrawTool(TOOLTYPE type) : ToolBase(type)
+    TwoPointDrawTool(TOOLTYPE type)
     {
     }
 
@@ -440,7 +440,7 @@ struct SmoothDrawTool : ToolBase
     BOOL m_bShiftDown = FALSE;
     BOOL m_bLeftButton = FALSE;
 
-    SmoothDrawTool(TOOLTYPE type) : ToolBase(type)
+    SmoothDrawTool(TOOLTYPE type)
     {
     }
 
@@ -533,7 +533,7 @@ struct RubberTool : SmoothDrawTool
 // TOOL_FILL
 struct FillTool : ToolBase
 {
-    FillTool() : ToolBase(TOOL_FILL)
+    FillTool()
     {
     }
 
@@ -547,7 +547,7 @@ struct FillTool : ToolBase
 // TOOL_COLOR
 struct ColorTool : ToolBase
 {
-    ColorTool() : ToolBase(TOOL_COLOR)
+    ColorTool()
     {
     }
 
@@ -585,7 +585,7 @@ struct ZoomTool : ToolBase
 {
     BOOL m_bZoomed = FALSE;
 
-    ZoomTool() : ToolBase(TOOL_ZOOM)
+    ZoomTool()
     {
     }
 
@@ -719,7 +719,7 @@ struct AirBrushTool : SmoothDrawTool
 // TOOL_TEXT
 struct TextTool : ToolBase
 {
-    TextTool() : ToolBase(TOOL_TEXT)
+    TextTool()
     {
     }
 
@@ -872,7 +872,7 @@ struct BezierTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
 
-    BezierTool() : ToolBase(TOOL_BEZIER)
+    BezierTool()
     {
     }
 
@@ -974,7 +974,7 @@ struct ShapeTool : ToolBase
     BOOL m_bLeftButton = FALSE;
     BOOL m_bClosed = FALSE;
 
-    ShapeTool() : ToolBase(TOOL_SHAPE)
+    ShapeTool()
     {
     }
 

@@ -40,12 +40,11 @@ enum BrushStyle
 
 struct ToolBase
 {
-    TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
     static SIZE_T s_pointSP;
 
-    ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL) { }
+    ToolBase() : m_hdc(NULL) { }
     virtual ~ToolBase() { }
 
     virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) { }
