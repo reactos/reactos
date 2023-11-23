@@ -529,6 +529,17 @@ void SelectionModel::SwapWidthAndHeight()
     m_rc.bottom = m_rc.top + cx;
 }
 
+HITTEST SelectionModel::hitTest(POINT ptCanvas)
+{
+    if (!m_bShow)
+        return HIT_NONE;
+
+    RECT rcSelection = m_rc;
+    canvasWindow.ImageToCanvas(rcSelection);
+    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
+    return getSizeBoxHitTest(ptCanvas, &rcSelection);
+}
+
 void SelectionModel::StretchSelection(BOOL bShrink)
 {
     if (!m_bShow)

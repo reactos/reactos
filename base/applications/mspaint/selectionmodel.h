@@ -39,6 +39,7 @@ public:
     BOOL IsLanded() const;
     void HideSelection();
     void DeleteSelection();
+    HITTEST hitTest(POINT ptCanvas);
 
     HBITMAP GetSelectionContents();
     void DrawFramePoly(HDC hDCImage);

@@ -317,7 +317,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         return 0;
     }
 
-    HITTEST hitSelection = SelectionHitTest(pt);
+    HITTEST hitSelection = selectionModel.hitTest(pt);
     if (hitSelection != HIT_NONE)
     {
         selectionModel.m_nSelectionBrush = 0; // Selection Brush is OFF
@@ -634,7 +634,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    HITTEST hitSelection = SelectionHitTest(pt);
+    HITTEST hitSelection = selectionModel.hitTest(pt);
     if (hitSelection != HIT_NONE)
     {
         if (!setCursorOnSizeBox(hitSelection))
@@ -744,19 +744,6 @@ VOID CCanvasWindow::finishDrawing()
     toolsModel.OnEndDraw(FALSE);
     m_drawing = FALSE;
     Invalidate(FALSE);
-}
-
-HITTEST CCanvasWindow::SelectionHitTest(POINT ptImage)
-{
-    if (!selectionModel.m_bShow)
-        return HIT_NONE;
-
-    RECT rcSelection = selectionModel.m_rc;
-    Zoomed(rcSelection);
-    ::OffsetRect(&rcSelection, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
-    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
-
-    return getSizeBoxHitTest(ptImage, &rcSelection);
 }
 
 VOID CCanvasWindow::StartSelectionDrag(HITTEST hit, POINT ptImage)
