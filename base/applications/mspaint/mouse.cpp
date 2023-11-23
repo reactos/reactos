@@ -103,18 +103,6 @@ void ToolBase::endEvent()
     m_hdc = NULL;
 }
 
-void ToolBase::OnDrawSelectionOnCanvas(HDC hdc)
-{
-    if (!selectionModel.m_bShow)
-        return;
-
-    RECT rcSelection = selectionModel.m_rc;
-    canvasWindow.ImageToCanvas(rcSelection);
-
-    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
-    drawSizeBoxes(hdc, &rcSelection, TRUE);
-}
-
 void ToolBase::pushToPtStack(LONG x, LONG y)
 {
     if (s_pointSP >= s_maxPointSP)
@@ -157,7 +145,7 @@ struct FreeSelTool : ToolBase
 
     void OnDrawOverlayOnCanvas(HDC hdc) override
     {
-        OnDrawSelectionOnCanvas(hdc);
+        selectionModel.drawFrameOnCanvas(hdc);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -249,7 +237,7 @@ struct RectSelTool : ToolBase
 
     void OnDrawOverlayOnCanvas(HDC hdc) override
     {
-        OnDrawSelectionOnCanvas(hdc);
+        selectionModel.drawFrameOnCanvas(hdc);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override

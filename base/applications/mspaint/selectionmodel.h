@@ -40,6 +40,7 @@ public:
     void HideSelection();
     void DeleteSelection();
     HITTEST hitTest(POINT ptCanvas);
+    void drawFrameOnCanvas(HDC hCanvasDC);
 
     HBITMAP GetSelectionContents();
     void DrawFramePoly(HDC hDCImage);

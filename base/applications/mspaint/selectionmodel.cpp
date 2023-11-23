@@ -523,8 +523,7 @@ void SelectionModel::NotifyContentChanged()
 
 void SelectionModel::SwapWidthAndHeight()
 {
-    INT cx = m_rc.Width();
-    INT cy = m_rc.Height();
+    INT cx = m_rc.Width(), cy = m_rc.Height();
     m_rc.right = m_rc.left + cy;
     m_rc.bottom = m_rc.top + cx;
 }
@@ -538,6 +537,18 @@ HITTEST SelectionModel::hitTest(POINT ptCanvas)
     canvasWindow.ImageToCanvas(rcSelection);
     ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
     return getSizeBoxHitTest(ptCanvas, &rcSelection);
+}
+
+void SelectionModel::drawFrameOnCanvas(HDC hCanvasDC)
+{
+    if (!m_bShow)
+        return;
+
+    RECT rcSelection = m_rc;
+    canvasWindow.ImageToCanvas(rcSelection);
+
+    ::InflateRect(&rcSelection, GRIP_SIZE, GRIP_SIZE);
+    drawSizeBoxes(hCanvasDC, &rcSelection, TRUE);
 }
 
 void SelectionModel::StretchSelection(BOOL bShrink)

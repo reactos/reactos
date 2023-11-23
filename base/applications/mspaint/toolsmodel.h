@@ -65,9 +65,6 @@ struct ToolBase
     void pushToPtStack(LONG x, LONG y);
 
     static ToolBase* createToolObject(TOOLTYPE type);
-
-protected:
-    void OnDrawSelectionOnCanvas(HDC hdc);
 };
 
 class ToolsModel
