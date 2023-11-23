@@ -540,6 +540,11 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Setup the IDT */
         KeInitExceptions();
     }
+    else
+    {
+        /* Update CR3 from the startup page tables to the initial process */
+        __writecr3(InitialThread->ApcState.Process->DirectoryTableBase[0]);
+    }
 
     /* Acquire lock */
     while (InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0))
