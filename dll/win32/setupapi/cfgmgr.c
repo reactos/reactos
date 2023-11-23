@@ -7548,15 +7548,12 @@ CM_Request_Device_Eject_ExW(
         return CR_INVALID_FLAG;
 
     if (pszVetoName == NULL && ulNameLength != 0)
-    {
         return CR_INVALID_POINTER;
-    }
-    else if (pszVetoName != NULL && ulNameLength == 0)
-    {
-        /* Windows 2003 SP2 ignores pszVetoName when ulNameLength is zero
-         * and behaves like when pszVetoName is NULL */
+
+    /* Windows 2003 SP2 ignores pszVetoName when ulNameLength is zero
+     * and behaves like when pszVetoName is NULL */
+    if (ulNameLength == 0)
         pszVetoName = NULL;
-    }
 
     if (hMachine != NULL)
     {
