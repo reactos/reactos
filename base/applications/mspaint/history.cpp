@@ -164,12 +164,13 @@ void ImageModel::PushImageForUndo(const RECT& rcPartial)
     part.m_bPartial = TRUE;
     part.m_rcPart = rcPartial;
 
-    CRect rcIntersect, rcImage = { 0, 0, GetWidth(), GetHeight() };
-    if (!rcIntersect.IntersectRect(part.m_rcPart, rcImage))
-        rcIntersect.SetRect(-1, -1, 0, 0);
+    CRect rcImage = { 0, 0, GetWidth(), GetHeight() };
+    CRect& rc = part.m_rcPart;
+    if (!rc.IntersectRect(rc, rcImage))
+        rc.SetRect(-1, -1, 0, 0);
 
     HBITMAP hbmMaster = LockBitmap();
-    part.m_hbmImage = getSubImage(hbmMaster, rcIntersect);
+    part.m_hbmImage = getSubImage(hbmMaster, rc);
     UnlockBitmap(hbmMaster);
 
     PushDone();
