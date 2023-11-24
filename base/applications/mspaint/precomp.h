@@ -1,5 +1,11 @@
-#ifndef _MSPAINT_H
-#define _MSPAINT_H
+/*
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:    The precompiled header
+ * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ */
+
+#pragma once
 
 #ifdef NDEBUG
     #undef DBG
@@ -26,7 +32,7 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 #include <strsafe.h>
-#include "atlimagedx.h"
+#include <ui/CWaitCursor.h>
 
 #include <debug.h>
 
@@ -49,7 +55,41 @@
 #include "toolsmodel.h"
 #include "main.h"
 #include "dialogs.h"
-#include <ui/CWaitCursor.h>
-#include "globalvar.h"
+#include "atlimagedx.h"
 
-#endif /* _MSPAINT_H */
+/* GLOBAL VARIABLES *************************************************/
+
+extern HINSTANCE g_hinstExe;
+
+extern WCHAR g_szFileName[MAX_LONG_PATH];
+extern BOOL g_isAFile;
+extern BOOL g_imageSaved;
+extern BOOL g_showGrid;
+extern BOOL g_askBeforeEnlarging;
+
+extern CMainWindow mainWindow;
+
+extern CMirrorRotateDialog mirrorRotateDialog;
+extern CAttributesDialog attributesDialog;
+extern CStretchSkewDialog stretchSkewDialog;
+extern CFontsDialog fontsDialog;
+
+extern RegistrySettings registrySettings;
+extern ImageModel imageModel;
+extern ToolsModel toolsModel;
+extern SelectionModel selectionModel;
+extern PaletteModel paletteModel;
+
+extern HWND g_hStatusBar;
+extern float g_xDpi;
+extern float g_yDpi;
+extern INT g_fileSize;
+extern SYSTEMTIME g_fileTime;
+
+extern CFullscreenWindow fullscreenWindow;
+extern CMiniatureWindow miniature;
+extern CToolBox toolBoxContainer;
+extern CToolSettingsWindow toolSettingsWindow;
+extern CPaletteWindow paletteWindow;
+extern CCanvasWindow canvasWindow;
+extern CTextEditWindow textEditWindow;
