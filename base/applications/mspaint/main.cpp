@@ -798,19 +798,11 @@ LRESULT CMainWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HWND hwndCapture;
     switch (wParam)
     {
         case VK_ESCAPE:
-            hwndCapture = GetCapture();
-            if (hwndCapture)
-                ::PostMessageW(hwndCapture, nMsg, wParam, lParam);
-            else if (selectionModel.m_bShow)
-                selectionModel.HideSelection();
-            else
-                canvasWindow.OnEndDraw(TRUE);
+            canvasWindow.OnEndDraw(TRUE);
             break;
-
         case VK_LEFT:
             selectionModel.moveSelection(-1, 0);
             break;
