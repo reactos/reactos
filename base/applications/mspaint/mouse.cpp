@@ -360,7 +360,7 @@ struct SelectionBaseTool : SmoothDrawTool
         m_hitSelection = HIT_NONE;
 
         POINT pt = { x, y };
-        if (!bLeftButton) // Show context menu on Right-click
+        if (!m_bLeftButton) // Show context menu on Right-click
         {
             canvasWindow.ImageToCanvas(pt);
             canvasWindow.ClientToScreen(&pt);
@@ -387,18 +387,15 @@ struct SelectionBaseTool : SmoothDrawTool
         selectionModel.Landing();
         m_bDrawing = TRUE;
 
-        if (m_bLeftButton)
+        imageModel.Clamp(pt);
+        if (isRectSelect())
         {
-            imageModel.Clamp(pt);
-            if (isRectSelect())
-            {
-                selectionModel.SetRectFromPoints(g_ptStart, pt);
-            }
-            else
-            {
-                selectionModel.ResetPtStack();
-                selectionModel.PushToPtStack(pt);
-            }
+            selectionModel.SetRectFromPoints(g_ptStart, pt);
+        }
+        else
+        {
+            selectionModel.ResetPtStack();
+            selectionModel.PushToPtStack(pt);
         }
 
         imageModel.NotifyImageChanged();
@@ -421,16 +418,13 @@ struct SelectionBaseTool : SmoothDrawTool
             return TRUE;
         }
 
-        if (m_bLeftButton)
-        {
-            imageModel.Clamp(pt);
-            if (isRectSelect())
-                selectionModel.SetRectFromPoints(g_ptStart, pt);
-            else
-                selectionModel.PushToPtStack(pt);
-            imageModel.NotifyImageChanged();
-        }
+        imageModel.Clamp(pt);
+        if (isRectSelect())
+            selectionModel.SetRectFromPoints(g_ptStart, pt);
+        else
+            selectionModel.PushToPtStack(pt);
 
+        imageModel.NotifyImageChanged();
         return TRUE;
     }
 
@@ -450,9 +444,9 @@ struct SelectionBaseTool : SmoothDrawTool
             return TRUE;
         }
 
+        imageModel.Clamp(pt);
         if (isRectSelect())
         {
-            imageModel.Clamp(pt);
             selectionModel.SetRectFromPoints(g_ptStart, pt);
             selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
         }
