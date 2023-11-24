@@ -2306,7 +2306,7 @@ RegDeleteValueA(HKEY hKey,
         if (!NT_SUCCESS(Status))
             ErrorCode = RtlNtStatusToDosError(Status);
     }
-    RtlFreeUnicodeString (&ValueName);
+    RtlFreeUnicodeString(&ValueName);
     ClosePredefKey(KeyHandle);
     return ErrorCode;
 }

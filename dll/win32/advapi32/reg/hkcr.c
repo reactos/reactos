@@ -23,7 +23,10 @@ ValueExists(_In_ HKEY hNormalKey, _In_ PUNICODE_STRING Name)
 {
     KEY_VALUE_PARTIAL_INFORMATION kvi;
     ULONG total_size = sizeof(kvi);
-    NTSTATUS status = NtQueryValueKey(hNormalKey, Name, KeyValuePartialInformation,
+    NTSTATUS status;
+
+    ASSERT(!IsHKCRKey(hNormalKey));
+    status = NtQueryValueKey(hNormalKey, Name, KeyValuePartialInformation,
                                       &kvi, total_size, &total_size);
     return status != STATUS_OBJECT_NAME_NOT_FOUND;
 }
@@ -504,7 +507,8 @@ DeleteHKCRValue(
     LONG ErrorCode;
 
     ASSERT(IsHKCRKey(hKey));
-    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2); /* Remove the HKCR flag while we're working */
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
 
     /* Does the HKCU key and value exist? */
     ErrorCode = GetPreferredHKCRKey(hKey, &hActualKey);
