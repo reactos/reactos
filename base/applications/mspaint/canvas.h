@@ -56,7 +56,6 @@ public:
     VOID zoomTo(INT newZoom, LONG left = 0, LONG top = 0);
 
 protected:
-    HITTEST m_hitSelection;
     HITTEST m_hitCanvasSizeBox;
     POINT m_ptOrig; // The origin of drag start
     HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
@@ -66,10 +65,6 @@ protected:
     RECT GetBaseRect();
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
-
-    VOID StartSelectionDrag(HITTEST hit, POINT ptImage);
-    VOID SelectionDragging(POINT ptImage);
-    VOID EndSelectionDrag(POINT ptImage);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

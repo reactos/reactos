@@ -121,170 +121,6 @@ void ToolBase::pushToPtStack(LONG x, LONG y)
 
 /* TOOLS ********************************************************/
 
-// TOOL_FREESEL
-struct FreeSelTool : ToolBase
-{
-    BOOL m_bLeftButton = FALSE;
-
-    void OnDrawOverlayOnImage(HDC hdc) override
-    {
-        if (!selectionModel.IsLanded())
-            selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-
-        if (canvasWindow.m_drawing)
-        {
-            selectionModel.DrawFramePoly(hdc);
-        }
-    }
-
-    void OnDrawOverlayOnCanvas(HDC hdc) override
-    {
-        selectionModel.drawFrameOnCanvas(hdc);
-    }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
-    {
-        selectionModel.Landing();
-        if (bLeftButton)
-        {
-            selectionModel.HideSelection();
-            selectionModel.ResetPtStack();
-            POINT pt = { x, y };
-            selectionModel.PushToPtStack(pt);
-        }
-        m_bLeftButton = bLeftButton;
-    }
-
-    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
-    {
-        if (bLeftButton)
-        {
-            POINT pt = { x, y };
-            imageModel.Clamp(pt);
-            selectionModel.PushToPtStack(pt);
-            imageModel.NotifyImageChanged();
-        }
-        return TRUE;
-    }
-
-    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
-    {
-        if (bLeftButton)
-        {
-            if (selectionModel.PtStackSize() > 2)
-            {
-                selectionModel.BuildMaskFromPtStack();
-                selectionModel.m_bShow = TRUE;
-            }
-            else
-            {
-                selectionModel.ResetPtStack();
-                selectionModel.m_bShow = FALSE;
-            }
-            imageModel.NotifyImageChanged();
-        }
-        else
-        {
-            POINT pt = { x, y };
-            canvasWindow.ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt, 0);
-        }
-        return TRUE;
-    }
-
-    void OnEndDraw(BOOL bCancel) override
-    {
-        if (bCancel)
-            selectionModel.HideSelection();
-        else
-            selectionModel.Landing();
-        ToolBase::OnEndDraw(bCancel);
-    }
-
-    void OnSpecialTweak(BOOL bMinus) override
-    {
-        selectionModel.StretchSelection(bMinus);
-    }
-};
-
-// TOOL_RECTSEL
-struct RectSelTool : ToolBase
-{
-    BOOL m_bLeftButton = FALSE;
-
-    void OnDrawOverlayOnImage(HDC hdc) override
-    {
-        if (!selectionModel.IsLanded())
-            selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-
-        if (canvasWindow.m_drawing)
-        {
-            CRect& rc = selectionModel.m_rc;
-            if (!rc.IsRectEmpty())
-                RectSel(hdc, rc.left, rc.top, rc.right, rc.bottom);
-        }
-    }
-
-    void OnDrawOverlayOnCanvas(HDC hdc) override
-    {
-        selectionModel.drawFrameOnCanvas(hdc);
-    }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
-    {
-        selectionModel.Landing();
-        if (bLeftButton)
-        {
-            selectionModel.HideSelection();
-        }
-        m_bLeftButton = bLeftButton;
-    }
-
-    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
-    {
-        if (bLeftButton)
-        {
-            POINT pt = { x, y };
-            imageModel.Clamp(pt);
-            selectionModel.SetRectFromPoints(g_ptStart, pt);
-            imageModel.NotifyImageChanged();
-        }
-        return TRUE;
-    }
-
-    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
-    {
-        POINT pt = { x, y };
-        if (bLeftButton)
-        {
-            imageModel.Clamp(pt);
-            selectionModel.SetRectFromPoints(g_ptStart, pt);
-            selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
-            imageModel.NotifyImageChanged();
-        }
-        else
-        {
-            canvasWindow.ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt, 0);
-        }
-        return TRUE;
-    }
-
-    void OnEndDraw(BOOL bCancel) override
-    {
-        if (bCancel)
-            selectionModel.HideSelection();
-        else
-            selectionModel.Landing();
-        ToolBase::OnEndDraw(bCancel);
-    }
-
-    void OnSpecialTweak(BOOL bMinus) override
-    {
-        selectionModel.StretchSelection(bMinus);
-    }
-};
-
 struct TwoPointDrawTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
@@ -487,6 +323,208 @@ struct SmoothDrawTool : ToolBase
         for (SIZE_T i = 1; i < s_pointSP; ++i)
         {
             OnDraw(hdc, m_bLeftButton, s_pointStack[i - 1], s_pointStack[i]);
+        }
+    }
+};
+
+struct SelectionBaseTool : SmoothDrawTool
+{
+    BOOL m_bLeftButton = FALSE;
+    BOOL m_bCtrlKey = FALSE;
+    BOOL m_bShiftKey = FALSE;
+    BOOL m_bDrawing = FALSE;
+    HITTEST m_hitSelection = HIT_NONE;
+
+    BOOL isRectSelect() const
+    {
+        return (toolsModel.GetActiveTool() == TOOL_RECTSEL);
+    }
+
+    void OnDrawOverlayOnImage(HDC hdc) override
+    {
+        if (!selectionModel.IsLanded())
+            selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+    }
+
+    void OnDrawOverlayOnCanvas(HDC hdc) override
+    {
+        selectionModel.drawFrameOnCanvas(hdc);
+    }
+
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
+    {
+        m_bLeftButton = bLeftButton;
+        m_bCtrlKey = (::GetKeyState(VK_CONTROL) < 0);
+        m_bShiftKey = (::GetKeyState(VK_SHIFT) < 0);
+        m_bDrawing = FALSE;
+        m_hitSelection = HIT_NONE;
+
+        POINT pt = { x, y };
+        if (!m_bLeftButton) // Show context menu on Right-click
+        {
+            canvasWindow.ImageToCanvas(pt);
+            canvasWindow.ClientToScreen(&pt);
+            mainWindow.TrackPopupMenu(pt, 0);
+            return;
+        }
+
+        POINT ptCanvas = pt;
+        canvasWindow.ImageToCanvas(ptCanvas);
+        HITTEST hit = selectionModel.hitTest(ptCanvas);
+        if (hit != HIT_NONE) // Dragging of selection started?
+        {
+            if (m_bCtrlKey || m_bShiftKey)
+                imageModel.SelectionClone();
+
+            m_hitSelection = hit;
+            selectionModel.m_ptHit = pt;
+            selectionModel.TakeOff();
+
+            imageModel.NotifyImageChanged();
+            return;
+        }
+
+        selectionModel.Landing();
+        m_bDrawing = TRUE;
+
+        imageModel.Clamp(pt);
+        if (isRectSelect())
+        {
+            selectionModel.SetRectFromPoints(g_ptStart, pt);
+        }
+        else
+        {
+            selectionModel.ResetPtStack();
+            selectionModel.PushToPtStack(pt);
+        }
+
+        imageModel.NotifyImageChanged();
+    }
+
+    BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
+    {
+        POINT pt = { x, y };
+
+        if (!m_bLeftButton)
+            return TRUE;
+
+        if (m_hitSelection != HIT_NONE) // Now dragging selection?
+        {
+            if (m_bShiftKey)
+                imageModel.SelectionClone(m_bShiftKey);
+
+            selectionModel.Dragging(m_hitSelection, pt);
+            imageModel.NotifyImageChanged();
+            return TRUE;
+        }
+
+        imageModel.Clamp(pt);
+        if (isRectSelect())
+            selectionModel.SetRectFromPoints(g_ptStart, pt);
+        else
+            selectionModel.PushToPtStack(pt);
+
+        imageModel.NotifyImageChanged();
+        return TRUE;
+    }
+
+    BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
+    {
+        POINT pt = { x, y };
+        m_bDrawing = FALSE;
+
+        if (!m_bLeftButton)
+            return TRUE;
+
+        if (m_hitSelection != HIT_NONE) // Dragging of selection ended?
+        {
+            selectionModel.Dragging(m_hitSelection, pt);
+            m_hitSelection = HIT_NONE;
+            imageModel.NotifyImageChanged();
+            return TRUE;
+        }
+
+        imageModel.Clamp(pt);
+        if (isRectSelect())
+        {
+            selectionModel.SetRectFromPoints(g_ptStart, pt);
+            selectionModel.m_bShow = !selectionModel.m_rc.IsRectEmpty();
+        }
+        else
+        {
+            if (selectionModel.PtStackSize() > 2)
+            {
+                selectionModel.BuildMaskFromPtStack();
+                selectionModel.m_bShow = TRUE;
+            }
+            else
+            {
+                selectionModel.ResetPtStack();
+                selectionModel.m_bShow = FALSE;
+            }
+        }
+
+        imageModel.NotifyImageChanged();
+        return TRUE;
+    }
+
+    void OnEndDraw(BOOL bCancel) override
+    {
+        if (bCancel)
+            selectionModel.HideSelection();
+        else
+            selectionModel.Landing();
+
+        m_hitSelection = HIT_NONE;
+        ToolBase::OnEndDraw(bCancel);
+    }
+
+    void OnSpecialTweak(BOOL bMinus) override
+    {
+        selectionModel.StretchSelection(bMinus);
+    }
+};
+
+// TOOL_FREESEL
+struct FreeSelTool : SelectionBaseTool
+{
+    void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
+    {
+        if (m_bShiftKey && !m_bCtrlKey)
+        {
+            // TODO:
+        }
+    }
+
+    void OnDrawOverlayOnImage(HDC hdc) override
+    {
+        SelectionBaseTool::OnDrawOverlayOnImage(hdc);
+
+        if (!selectionModel.m_bShow && m_bDrawing)
+            selectionModel.DrawFramePoly(hdc);
+    }
+};
+
+// TOOL_RECTSEL
+struct RectSelTool : SelectionBaseTool
+{
+    void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
+    {
+        if (m_bShiftKey && !m_bCtrlKey)
+        {
+            // TODO:
+        }
+    }
+
+    void OnDrawOverlayOnImage(HDC hdc) override
+    {
+        SelectionBaseTool::OnDrawOverlayOnImage(hdc);
+
+        if (!selectionModel.m_bShow && m_bDrawing)
+        {
+            CRect& rc = selectionModel.m_rc;
+            if (!rc.IsRectEmpty())
+                RectSel(hdc, rc.left, rc.top, rc.right, rc.bottom);
         }
     }
 };
