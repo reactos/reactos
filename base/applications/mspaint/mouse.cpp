@@ -371,7 +371,7 @@ struct SelectionBaseTool : SmoothDrawTool
         POINT ptCanvas = pt;
         canvasWindow.ImageToCanvas(ptCanvas);
         HITTEST hit = selectionModel.hitTest(ptCanvas);
-        if (hit != HIT_NONE)
+        if (hit != HIT_NONE) // Dragging of selection started?
         {
             if (m_bCtrlKey || m_bShiftKey)
                 imageModel.SelectionClone();
@@ -408,7 +408,7 @@ struct SelectionBaseTool : SmoothDrawTool
         if (!m_bLeftButton)
             return TRUE;
 
-        if (m_hitSelection != HIT_NONE)
+        if (m_hitSelection != HIT_NONE) // Now dragging selection?
         {
             if (m_bShiftKey)
                 imageModel.SelectionClone(m_bShiftKey);
@@ -436,7 +436,7 @@ struct SelectionBaseTool : SmoothDrawTool
         if (!m_bLeftButton)
             return TRUE;
 
-        if (m_hitSelection != HIT_NONE)
+        if (m_hitSelection != HIT_NONE) // Dragging of selection ended?
         {
             selectionModel.Dragging(m_hitSelection, pt);
             m_hitSelection = HIT_NONE;
