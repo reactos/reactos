@@ -7550,6 +7550,11 @@ CM_Request_Device_Eject_ExW(
     if (pszVetoName == NULL && ulNameLength != 0)
         return CR_INVALID_POINTER;
 
+    /* Windows 2003 SP2 ignores pszVetoName when ulNameLength is zero
+     * and behaves like when pszVetoName is NULL */
+    if (ulNameLength == 0)
+        pszVetoName = NULL;
+
     if (hMachine != NULL)
     {
         BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
