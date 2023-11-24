@@ -1125,17 +1125,17 @@ T1_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #define C1K_MAX 56
 
 #undef DEFINE_C1K
-#define DEFINE_C1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
-    internal_code_name = internal_code,
+#define DEFINE_C1K(c1k_code, virtual_key_code, c1k_code_name, virtual_key_name, is_special) \
+    c1k_code_name = c1k_code,
 
-/* Define internal codes (C1K_...) */
+/* Define C1 internal codes (C1K_...) */
 typedef enum C1KEY
 {
 #include "c1keys.h"
 } C1KEY;
 
 #undef DEFINE_C1K
-#define DEFINE_C1K(internal_code, virtual_key_code, internal_code_name, virtual_key_name, is_special) \
+#define DEFINE_C1K(c1k_code, virtual_key_code, c1k_code_name, virtual_key_name, is_special) \
     virtual_key_code,
 
 /* Mapping: C1K --> Virtual Key */
@@ -1155,7 +1155,7 @@ typedef struct C1WINDOW
     DWORD CharSet;
 } C1WINDOW, *PC1WINDOW;
 
-// The flags for C1WINDOW.dwFlags
+/* The flags for C1WINDOW.dwFlags */
 #define FLAG_SHIFT_PRESSED 1
 #define FLAG_DRAGGING 2
 #define FLAG_PRESSED 4
