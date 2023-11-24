@@ -17,12 +17,23 @@
 extern "C" {
 #endif
 
+typedef struct tagSOFTKBDDATA
+{
+    UINT uCount;
+    WORD wCode[1][256];
+} SOFTKBDDATA, *PSOFTKBDDATA, *LPSOFTKBDDATA;
+
 /* wParam for WM_IME_CONTROL */
 #define IMC_GETCONVERSIONMODE           0x0001
 #define IMC_GETSENTENCEMODE             0x0003
 #define IMC_GETOPENSTATUS               0x0005
+#define IMC_GETSOFTKBDFONT              0x0011
+#define IMC_SETSOFTKBDFONT              0x0012
 #define IMC_GETSOFTKBDPOS               0x0013
 #define IMC_SETSOFTKBDPOS               0x0014
+#define IMC_GETSOFTKBDSUBTYPE           0x0015
+#define IMC_SETSOFTKBDSUBTYPE           0x0016
+#define IMC_SETSOFTKBDDATA              0x0018
 
 /* wParam for WM_IME_SYSTEM */
 #define IMS_NOTIFYIMESHOW       0x05
@@ -46,6 +57,9 @@ extern "C" {
 #define IMS_SETLANGBAND         0x23
 #define IMS_UNSETLANGBAND       0x24
 
+/* wParam for WM_IME_NOTIFY */
+#define IMN_SOFTKBDDESTROYED    0x0011
+
 #define IMMGWL_IMC       0
 #define IMMGWL_PRIVATE   (sizeof(LONG))
 
@@ -59,7 +73,7 @@ typedef struct _tagINPUTCONTEXT {
     POINT               ptSoftKbdPos;
     DWORD               fdwConversion;
     DWORD               fdwSentence;
-    union   {
+    union {
         LOGFONTA        A;
         LOGFONTW        W;
     } lfFont;

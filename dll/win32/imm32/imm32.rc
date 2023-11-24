@@ -24,3 +24,29 @@
 #define WINE_PRODUCTVERSION_STR "5.1.2600.2180"
 
 #include "wine/wine_common_ver.rc"
+
+#include "resource.h"
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDB_T1_BACKSPACE BITMAP "res/1033_Bitmap_100.bmp"
+IDB_T1_TAB       BITMAP "res/1033_Bitmap_101.bmp"
+IDB_T1_CAPS      BITMAP "res/1033_Bitmap_102.bmp"
+IDB_T1_ENTER     BITMAP "res/1033_Bitmap_103.bmp"
+IDB_T1_SHIFT     BITMAP "res/1033_Bitmap_104.bmp"
+IDB_T1_CTRL      BITMAP "res/1033_Bitmap_105.bmp"
+IDB_T1_ESCAPE    BITMAP "res/1033_Bitmap_106.bmp"
+IDB_T1_ALT       BITMAP "res/1033_Bitmap_107.bmp"
+IDB_T1_CHARS     BITMAP "res/1033_Bitmap_108.bmp"
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDB_C1_BACKSPACE BITMAP "res/2052_Bitmap_201.bmp"
+IDB_C1_TAB       BITMAP "res/2052_Bitmap_202.bmp"
+IDB_C1_CAPS      BITMAP "res/2052_Bitmap_203.bmp"
+IDB_C1_ENTER     BITMAP "res/2052_Bitmap_204.bmp"
+IDB_C1_SHIFT     BITMAP "res/2052_Bitmap_205.bmp"
+IDB_C1_INS       BITMAP "res/2052_Bitmap_206.bmp"
+IDB_C1_DEL       BITMAP "res/2052_Bitmap_207.bmp"
+IDB_C1_ESCAPE    BITMAP "res/2052_Bitmap_208.bmp"
+IDB_C1_CHARS     BITMAP "res/2052_Bitmap_209.bmp"
