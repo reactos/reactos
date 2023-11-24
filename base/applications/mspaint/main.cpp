@@ -963,29 +963,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
             }
-            if (selectionModel.m_bShow)
-            {
-                if (toolsModel.IsSelection())
-                {
-                    canvasWindow.cancelDrawing();
-                    if (toolsModel.GetActiveTool() == TOOL_FREESEL ||
-                        toolsModel.GetActiveTool() == TOOL_RECTSEL)
-                    {
-                        imageModel.Undo();
-                        if (selectionModel.m_nSelectionBrush == 2) // Selection Brush is drawn
-                        {
-                            imageModel.Undo();
-                            selectionModel.m_nSelectionBrush = 0;
-                        }
-                    }
-                    break;
-                }
-            }
-            if (ToolBase::s_pointSP != 0) // drawing something?
-            {
-                canvasWindow.cancelDrawing();
-                break;
-            }
+            canvasWindow.finishDrawing();
             imageModel.Undo();
             break;
         case IDM_EDITREDO:
@@ -994,11 +972,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 // There is no "WM_REDO" in EDIT control
                 break;
             }
-            if (ToolBase::s_pointSP != 0) // drawing something?
-            {
-                canvasWindow.finishDrawing();
-                break;
-            }
+            canvasWindow.finishDrawing();
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:

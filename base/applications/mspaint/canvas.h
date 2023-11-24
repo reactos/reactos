@@ -67,10 +67,6 @@ protected:
     VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
 
-    VOID StartSelectionDrag(HITTEST hit, POINT ptImage);
-    VOID SelectionDragging(POINT ptImage);
-    VOID EndSelectionDrag(POINT ptImage);
-
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

@@ -13,7 +13,6 @@ CCanvasWindow canvasWindow;
 
 CCanvasWindow::CCanvasWindow()
     : m_drawing(FALSE)
-    , m_hitSelection(HIT_NONE)
     , m_hitCanvasSizeBox(HIT_NONE)
     , m_ptOrig { -1, -1 }
 {
@@ -316,25 +315,11 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     HITTEST hitSelection = selectionModel.hitTest(pt);
     if (hitSelection != HIT_NONE)
     {
-        selectionModel.m_nSelectionBrush = 0; // Selection Brush is OFF
-        if (bLeftButton)
-        {
-            CanvasToImage(pt);
-            if (::GetKeyState(VK_CONTROL) < 0) // Ctrl+Click is Selection Clone
-            {
-                imageModel.SelectionClone();
-            }
-            else if (::GetKeyState(VK_SHIFT) < 0) // Shift+Dragging is Selection Brush
-            {
-                selectionModel.m_nSelectionBrush = 1; // Selection Brush is ON
-            }
-            StartSelectionDrag(hitSelection, pt);
-        }
-        else
-        {
-            ClientToScreen(&pt);
-            mainWindow.TrackPopupMenu(pt, 0);
-        }
+        m_drawing = TRUE;
+        CanvasToImage(pt);
+        SetCapture();
+        toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
+        Invalidate(FALSE);
         return 0;
     }
 
@@ -418,12 +403,6 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (toolsModel.GetActiveTool() == TOOL_ZOOM)
         Invalidate();
 
-    if (m_hitSelection != HIT_NONE)
-    {
-        SelectionDragging(pt);
-        return 0;
-    }
-
     if (!m_drawing || toolsModel.GetActiveTool() <= TOOL_AIRBRUSH)
     {
         TRACKMOUSEEVENT tme = { sizeof(tme) };
@@ -444,7 +423,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         }
     }
 
-    if (m_drawing)
+    if (m_drawing || toolsModel.IsSelection())
     {
         toolsModel.DrawWithMouseTool(pt, wParam);
         return 0;
@@ -541,17 +520,12 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     BOOL bLeftButton = (m_nMouseDownMsg == WM_LBUTTONDOWN);
     m_nMouseDownMsg = 0;
 
-    if (m_drawing)
+    if (m_drawing || m_hitSelection != HIT_NONE)
     {
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
         Invalidate(FALSE);
         ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)L"");
-        return 0;
-    }
-    else if (m_hitSelection != HIT_NONE && bLeftButton)
-    {
-        EndSelectionDrag(pt);
         return 0;
     }
 
@@ -738,35 +712,6 @@ VOID CCanvasWindow::finishDrawing()
 {
     toolsModel.OnEndDraw(FALSE);
     m_drawing = FALSE;
-    Invalidate(FALSE);
-}
-
-VOID CCanvasWindow::StartSelectionDrag(HITTEST hit, POINT ptImage)
-{
-    m_hitSelection = hit;
-    selectionModel.m_ptHit = ptImage;
-    selectionModel.TakeOff();
-
-    SetCapture();
-    Invalidate(FALSE);
-}
-
-VOID CCanvasWindow::SelectionDragging(POINT ptImage)
-{
-    if (selectionModel.m_nSelectionBrush)
-    {
-        imageModel.SelectionClone(selectionModel.m_nSelectionBrush == 1);
-        selectionModel.m_nSelectionBrush = 2; // Selection Brush is ON and drawn
-    }
-
-    selectionModel.Dragging(m_hitSelection, ptImage);
-    Invalidate(FALSE);
-}
-
-VOID CCanvasWindow::EndSelectionDrag(POINT ptImage)
-{
-    selectionModel.Dragging(m_hitSelection, ptImage);
-    m_hitSelection = HIT_NONE;
     Invalidate(FALSE);
 }
 
