@@ -13,8 +13,6 @@ class SelectionModel
 private:
     HBITMAP m_hbmColor;
     HBITMAP m_hbmMask;
-    POINT *m_ptStack;
-    int m_iPtSP;
 
 public:
     COLORREF m_rgbBack;
@@ -27,11 +25,8 @@ public:
     SelectionModel();
     ~SelectionModel();
 
-    void ResetPtStack();
-    void PushToPtStack(POINT pt);
-    int PtStackSize() const;
     void SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
-    void BuildMaskFromPtStack();
+    void setMask(const CRect& rc, HBITMAP hbmMask);
 
     BOOL TakeOff();
     void Landing();
@@ -43,8 +38,7 @@ public:
     void moveSelection(INT xDelta, INT yDelta);
 
     HBITMAP GetSelectionContents();
-    void DrawFramePoly(HDC hDCImage);
-    void DrawBackground(HDC hDCImage);
+    void DrawBackground(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
     void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);

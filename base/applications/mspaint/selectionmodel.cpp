@@ -15,8 +15,6 @@ SelectionModel selectionModel;
 SelectionModel::SelectionModel()
     : m_hbmColor(NULL)
     , m_hbmMask(NULL)
-    , m_ptStack(NULL)
-    , m_iPtSP(0)
     , m_rgbBack(RGB(255, 255, 255))
     , m_bShow(FALSE)
     , m_bContentChanged(FALSE)
@@ -30,69 +28,6 @@ SelectionModel::~SelectionModel()
 {
     ClearColorImage();
     ClearMaskImage();
-    ResetPtStack();
-}
-
-void SelectionModel::ResetPtStack()
-{
-    if (m_ptStack)
-    {
-        free(m_ptStack);
-        m_ptStack = NULL;
-    }
-    m_iPtSP = 0;
-}
-
-void SelectionModel::PushToPtStack(POINT pt)
-{
-#define GROW_COUNT 256
-    if (m_iPtSP % GROW_COUNT == 0)
-    {
-        INT nNewCount = m_iPtSP + GROW_COUNT;
-        LPPOINT pptNew = (LPPOINT)realloc(m_ptStack, sizeof(POINT) * nNewCount);
-        if (pptNew == NULL)
-            return;
-        m_ptStack = pptNew;
-    }
-    m_ptStack[m_iPtSP] = pt;
-    m_iPtSP++;
-#undef GROW_COUNT
-}
-
-void SelectionModel::ShiftPtStack(INT dx, INT dy)
-{
-    for (INT i = 0; i < m_iPtSP; ++i)
-    {
-        POINT& pt = m_ptStack[i];
-        pt.x += dx;
-        pt.y += dy;
-    }
-}
-
-void SelectionModel::BuildMaskFromPtStack()
-{
-    CRect rc;
-    getBoundaryOfPtStack(rc, m_iPtSP, m_ptStack);
-
-    m_rc = m_rcOld = rc;
-
-    ClearMaskImage();
-
-    ShiftPtStack(-m_rcOld.left, -m_rcOld.top);
-
-    HDC hdcMem = ::CreateCompatibleDC(NULL);
-    m_hbmMask = ::CreateBitmap(rc.Width(), rc.Height(), 1, 1, NULL);
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_hbmMask);
-    ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
-    HGDIOBJ hPenOld = ::SelectObject(hdcMem, GetStockObject(NULL_PEN));
-    HGDIOBJ hbrOld = ::SelectObject(hdcMem, GetStockObject(WHITE_BRUSH));
-    ::Polygon(hdcMem, m_ptStack, m_iPtSP);
-    ::SelectObject(hdcMem, hbrOld);
-    ::SelectObject(hdcMem, hPenOld);
-    ::SelectObject(hdcMem, hbmOld);
-    ::DeleteDC(hdcMem);
-
-    ShiftPtStack(+m_rcOld.left, +m_rcOld.top);
 }
 
 void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
@@ -100,11 +35,11 @@ void SelectionModel::DrawBackgroundPoly(HDC hDCImage, COLORREF crBg)
     if (m_rcOld.IsRectEmpty())
         return;
 
-    HGDIOBJ hPenOld = ::SelectObject(hDCImage, ::GetStockObject(NULL_PEN));
-    HGDIOBJ hbrOld = ::SelectObject(hDCImage, ::CreateSolidBrush(crBg));
-    ::Polygon(hDCImage, m_ptStack, m_iPtSP);
-    ::DeleteObject(::SelectObject(hDCImage, hbrOld));
-    ::SelectObject(hDCImage, hPenOld);
+    HGDIOBJ hbrOld = ::SelectObject(hDCImage, ::GetStockObject(DC_BRUSH));
+    ::SetDCBrushColor(hDCImage, crBg);
+    ::MaskBlt(hDCImage, m_rcOld.left, m_rcOld.top, m_rcOld.Width(), m_rcOld.Height(),
+              hDCImage, m_rcOld.left, m_rcOld.top, m_hbmMask, 0, 0, MAKEROP4(PATCOPY, SRCCOPY));
+    ::SelectObject(hDCImage, hbrOld);
 }
 
 void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
@@ -115,12 +50,12 @@ void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
     Rect(hDCImage, m_rcOld.left, m_rcOld.top, m_rcOld.right, m_rcOld.bottom, crBg, crBg, 0, 1);
 }
 
-void SelectionModel::DrawBackground(HDC hDCImage)
+void SelectionModel::DrawBackground(HDC hDCImage, COLORREF crBg)
 {
     if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-        DrawBackgroundPoly(hDCImage, paletteModel.GetBgColor());
+        DrawBackgroundPoly(hDCImage, crBg);
     else
-        DrawBackgroundRect(hDCImage, paletteModel.GetBgColor());
+        DrawBackgroundRect(hDCImage, crBg);
 }
 
 void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
@@ -141,6 +76,15 @@ void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTranspar
                       hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, m_hbmMask, keyColor);
     SelectObject(hMemDC, hbmOld);
     DeleteDC(hMemDC);
+}
+
+void SelectionModel::setMask(const CRect& rc, HBITMAP hbmMask)
+{
+    if (m_hbmMask)
+        ::DeleteObject(m_hbmMask);
+
+    m_hbmMask = hbmMask;
+    m_rc = m_rcOld = rc;
 }
 
 HBITMAP SelectionModel::GetSelectionContents()
@@ -178,17 +122,6 @@ BOOL SelectionModel::TakeOff()
     // Save the selection area
     m_rcOld = m_rc;
 
-    if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
-    {
-        imageModel.PushImageForUndo();
-        selectionModel.DrawBackgroundRect(imageModel.GetDC(), selectionModel.m_rgbBack);
-    }
-    else if (toolsModel.GetActiveTool() == TOOL_FREESEL)
-    {
-        imageModel.PushImageForUndo();
-        selectionModel.DrawBackgroundPoly(imageModel.GetDC(), selectionModel.m_rgbBack);
-    }
-
     imageModel.NotifyImageChanged();
     return TRUE;
 }
@@ -201,12 +134,12 @@ void SelectionModel::Landing()
         return;
     }
 
-    m_bShow = FALSE;
-
     if (m_bContentChanged ||
         (!m_rc.EqualRect(m_rcOld) && !m_rc.IsRectEmpty() && !m_rcOld.IsRectEmpty()))
     {
-        imageModel.PushImageForUndo();
+        CRect rc;
+        rc.UnionRect(m_rc, m_rcOld);
+        imageModel.PushImageForUndo(rc);
 
         canvasWindow.m_drawing = FALSE;
         toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
@@ -397,17 +330,6 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     NotifyContentChanged();
 }
 
-int SelectionModel::PtStackSize() const
-{
-    return m_iPtSP;
-}
-
-void SelectionModel::DrawFramePoly(HDC hDCImage)
-{
-    /* draw the freehand selection inverted/xored */
-    Poly(hDCImage, m_ptStack, m_iPtSP, 0, 0, 2, 0, FALSE, TRUE);
-}
-
 void SelectionModel::SetRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
 {
     m_rc = CRect(ptFrom, ptTo);
@@ -491,7 +413,7 @@ void SelectionModel::DeleteSelection()
 
     TakeOff();
     imageModel.PushImageForUndo();
-    DrawBackground(imageModel.GetDC());
+    DrawBackground(imageModel.GetDC(), paletteModel.GetBgColor());
 
     HideSelection();
 }

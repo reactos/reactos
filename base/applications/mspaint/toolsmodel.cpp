@@ -209,6 +209,9 @@ SIZE ToolsModel::GetToolSize() const
     {
         case TOOL_FREESEL:
         case TOOL_RECTSEL:
+            size.cx = selectionModel.m_rc.Width();
+            size.cy = selectionModel.m_rc.Height();
+            break;
         case TOOL_COLOR:
         case TOOL_ZOOM:
         case TOOL_TEXT:

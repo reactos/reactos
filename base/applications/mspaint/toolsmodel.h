@@ -42,7 +42,6 @@ struct ToolBase
 {
     HDC m_hdc;
     COLORREF m_fg, m_bg;
-    static SIZE_T s_pointSP;
 
     ToolBase() : m_hdc(NULL) { }
     virtual ~ToolBase() { }

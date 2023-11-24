@@ -693,8 +693,6 @@ BOOL CMainWindow::CanUndo() const
         return (BOOL)textEditWindow.SendMessage(EM_CANUNDO);
     if (selectionModel.m_bShow && toolsModel.IsSelection())
         return TRUE;
-    if (ToolBase::s_pointSP != 0)
-        return TRUE;
     return imageModel.CanUndo();
 }
 
@@ -702,8 +700,6 @@ BOOL CMainWindow::CanRedo() const
 {
     if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
         return FALSE; // There is no "WM_REDO" in EDIT control
-    if (ToolBase::s_pointSP != 0)
-        return TRUE;
     return imageModel.CanRedo();
 }
 
