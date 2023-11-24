@@ -355,16 +355,3 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmMaster = hbmLocked;
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 }
-
-void ImageModel::SelectionClone(BOOL bUndoable)
-{
-    if (!selectionModel.m_bShow || selectionModel.m_rc.IsRectEmpty())
-        return;
-
-    if (bUndoable)
-        PushImageForUndo();
-
-    selectionModel.DrawSelection(m_hDrawingDC, paletteModel.GetBgColor(),
-                                 toolsModel.IsBackgroundTransparent());
-    NotifyImageChanged();
-}
