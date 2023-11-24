@@ -7,8 +7,6 @@
  *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 #define X_TOOLSETTINGS  0

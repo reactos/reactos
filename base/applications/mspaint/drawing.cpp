@@ -5,8 +5,6 @@
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
