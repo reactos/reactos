@@ -1160,8 +1160,8 @@ typedef struct C1WINDOW
 #define FLAG_DRAGGING 2
 #define FLAG_PRESSED 4
 
-static POINT gptButtonPos[C1K_MAX];
-static BOOL gfSoftKbdC1Init = FALSE;
+static BOOL gbC1ButtonInit = FALSE;
+static POINT gptC1ButtonPos[C1K_MAX];
 
 static void C1_InitButtonPos(void)
 {
@@ -1171,61 +1171,61 @@ static void C1_InitButtonPos(void)
     /* 1st row */
     for (iKey = C1K_OEM_3; iKey < C1K_Q; ++iKey)
     {
-        gptButtonPos[iKey].x = x;
-        gptButtonPos[iKey].y = y;
+        gptC1ButtonPos[iKey].x = x;
+        gptC1ButtonPos[iKey].y = y;
         x += 24;
     }
-    gptButtonPos[C1K_BACKSPACE].x = x;
-    gptButtonPos[C1K_BACKSPACE].y = y;
+    gptC1ButtonPos[C1K_BACKSPACE].x = x;
+    gptC1ButtonPos[C1K_BACKSPACE].y = y;
 
     /* 2nd row */
     y = 28;
-    gptButtonPos[C1K_TAB].x = 0;
-    gptButtonPos[C1K_TAB].y = y;
+    gptC1ButtonPos[C1K_TAB].x = 0;
+    gptC1ButtonPos[C1K_TAB].y = y;
     x = 36;
     for (; iKey < C1K_A; ++iKey)
     {
-        gptButtonPos[iKey].x = x;
-        gptButtonPos[iKey].y = y;
+        gptC1ButtonPos[iKey].x = x;
+        gptC1ButtonPos[iKey].y = y;
         x += 24;
     }
 
     /* 3rd row */
     y = 56;
-    gptButtonPos[C1K_CAPS].x = 0;
-    gptButtonPos[C1K_CAPS].y = y;
+    gptC1ButtonPos[C1K_CAPS].x = 0;
+    gptC1ButtonPos[C1K_CAPS].y = y;
     x = 42;
     for (; iKey < C1K_Z; ++iKey)
     {
-        gptButtonPos[iKey].x = x;
-        gptButtonPos[iKey].y = y;
+        gptC1ButtonPos[iKey].x = x;
+        gptC1ButtonPos[iKey].y = y;
         x += 24;
     }
-    gptButtonPos[C1K_ENTER].x = x;
-    gptButtonPos[C1K_ENTER].y = y;
+    gptC1ButtonPos[C1K_ENTER].x = x;
+    gptC1ButtonPos[C1K_ENTER].y = y;
 
     /* 4th row */
     y = 84;
-    gptButtonPos[C1K_SHIFT].x = 0;
-    gptButtonPos[C1K_SHIFT].y = y;
+    gptC1ButtonPos[C1K_SHIFT].x = 0;
+    gptC1ButtonPos[C1K_SHIFT].y = y;
     x = 60;
     for (; iKey < C1K_BACKSPACE; ++iKey)
     {
-        gptButtonPos[iKey].x = x;
-        gptButtonPos[iKey].y = y;
+        gptC1ButtonPos[iKey].x = x;
+        gptC1ButtonPos[iKey].y = y;
         x += 24;
     }
 
     /* 5th row */
     y = 112;
-    gptButtonPos[C1K_INSERT].x = 0;
-    gptButtonPos[C1K_INSERT].y = y;
-    gptButtonPos[C1K_DELETE].x = 58;
-    gptButtonPos[C1K_DELETE].y = y;
-    gptButtonPos[C1K_SPACE].x = 96;
-    gptButtonPos[C1K_SPACE].y = y;
-    gptButtonPos[C1K_ESCAPE].x = 310;
-    gptButtonPos[C1K_ESCAPE].y = y;
+    gptC1ButtonPos[C1K_INSERT].x = 0;
+    gptC1ButtonPos[C1K_INSERT].y = y;
+    gptC1ButtonPos[C1K_DELETE].x = 58;
+    gptC1ButtonPos[C1K_DELETE].y = y;
+    gptC1ButtonPos[C1K_SPACE].x = 96;
+    gptC1ButtonPos[C1K_SPACE].y = y;
+    gptC1ButtonPos[C1K_ESCAPE].x = 310;
+    gptC1ButtonPos[C1K_ESCAPE].y = y;
 }
 
 static void
@@ -1291,8 +1291,8 @@ C1_InvertButton(
             break;
     }
 
-    BitBlt(hDC, gptButtonPos[iKey].x, gptButtonPos[iKey].y, width, height,
-           hDC, gptButtonPos[iKey].x, gptButtonPos[iKey].y, DSTINVERT);
+    BitBlt(hDC, gptC1ButtonPos[iKey].x, gptC1ButtonPos[iKey].y, width, height,
+           hDC, gptC1ButtonPos[iKey].x, gptC1ButtonPos[iKey].y, DSTINVERT);
 }
 
 static void
@@ -1310,7 +1310,7 @@ C1_DrawLabel(
     hbmOld = SelectObject(hMemDC, hBitmap);
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        BitBlt(hDC, gptButtonPos[iKey].x + 2, gptButtonPos[iKey].y + 2, 8, 8,
+        BitBlt(hDC, gptC1ButtonPos[iKey].x + 2, gptC1ButtonPos[iKey].y + 2, 8, 8,
                hMemDC, iKey * 8, 0, SRCCOPY);
     }
     DeleteObject(SelectObject(hMemDC, hbmOld));
@@ -1336,36 +1336,36 @@ C1_InitBitmap(
 
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        C1_DrawConvexRect(hDC, gptButtonPos[iKey].x, gptButtonPos[iKey].y, 24, 28);
+        C1_DrawConvexRect(hDC, gptC1ButtonPos[iKey].x, gptC1ButtonPos[iKey].y, 24, 28);
     }
 
     C1_DrawLabel(hDC, IDB_C1_CHARS);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_BACKSPACE].x, gptButtonPos[C1K_BACKSPACE].y, 36, 28);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_BACKSPACE].x + 2, gptButtonPos[C1K_BACKSPACE].y + 2, 32, 24, IDB_C1_BACKSPACE);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_BACKSPACE].x, gptC1ButtonPos[C1K_BACKSPACE].y, 36, 28);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_BACKSPACE].x + 2, gptC1ButtonPos[C1K_BACKSPACE].y + 2, 32, 24, IDB_C1_BACKSPACE);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_TAB].x, gptButtonPos[C1K_TAB].y, 36, 28);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_TAB].x + 2, gptButtonPos[C1K_TAB].y + 2, 32, 24, IDB_C1_TAB);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_TAB].x, gptC1ButtonPos[C1K_TAB].y, 36, 28);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_TAB].x + 2, gptC1ButtonPos[C1K_TAB].y + 2, 32, 24, IDB_C1_TAB);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_CAPS].x, gptButtonPos[C1K_CAPS].y, 42, 28);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_CAPS].x + 2, gptButtonPos[C1K_CAPS].y + 2, 38, 24, IDB_C1_CAPS);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_CAPS].x, gptC1ButtonPos[C1K_CAPS].y, 42, 28);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_CAPS].x + 2, gptC1ButtonPos[C1K_CAPS].y + 2, 38, 24, IDB_C1_CAPS);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_ENTER].x, gptButtonPos[C1K_ENTER].y, 42, 28);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_ENTER].x + 2, gptButtonPos[C1K_ENTER].y + 2, 38, 24, IDB_C1_ENTER);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_ENTER].x, gptC1ButtonPos[C1K_ENTER].y, 42, 28);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_ENTER].x + 2, gptC1ButtonPos[C1K_ENTER].y + 2, 38, 24, IDB_C1_ENTER);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_SHIFT].x, gptButtonPos[C1K_SHIFT].y, 60, 28);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_SHIFT].x + 2, gptButtonPos[C1K_SHIFT].y + 2, 56, 24, IDB_C1_SHIFT);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_SHIFT].x, gptC1ButtonPos[C1K_SHIFT].y, 60, 28);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_SHIFT].x + 2, gptC1ButtonPos[C1K_SHIFT].y + 2, 56, 24, IDB_C1_SHIFT);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_INSERT].x, gptButtonPos[C1K_INSERT].y, 38, 24);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_INSERT].x + 2, gptButtonPos[C1K_INSERT].y + 2, 34, 20, IDB_C1_INS);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_INSERT].x, gptC1ButtonPos[C1K_INSERT].y, 38, 24);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_INSERT].x + 2, gptC1ButtonPos[C1K_INSERT].y + 2, 34, 20, IDB_C1_INS);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_DELETE].x, gptButtonPos[C1K_DELETE].y, 38, 24);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_DELETE].x + 2, gptButtonPos[C1K_DELETE].y + 2, 34, 20, IDB_C1_DEL);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_DELETE].x, gptC1ButtonPos[C1K_DELETE].y, 38, 24);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_DELETE].x + 2, gptC1ButtonPos[C1K_DELETE].y + 2, 34, 20, IDB_C1_DEL);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_SPACE].x, gptButtonPos[C1K_SPACE].y, 172, 24);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_SPACE].x, gptC1ButtonPos[C1K_SPACE].y, 172, 24);
 
-    C1_DrawConvexRect(hDC, gptButtonPos[C1K_ESCAPE].x, gptButtonPos[C1K_ESCAPE].y , 38, 24);
-    Imm32DrawBitmap(hDC, gptButtonPos[C1K_ESCAPE].x + 2, gptButtonPos[C1K_ESCAPE].y + 2, 34, 20, IDB_C1_ESCAPE);
+    C1_DrawConvexRect(hDC, gptC1ButtonPos[C1K_ESCAPE].x, gptC1ButtonPos[C1K_ESCAPE].y , 38, 24);
+    Imm32DrawBitmap(hDC, gptC1ButtonPos[C1K_ESCAPE].x + 2, gptC1ButtonPos[C1K_ESCAPE].y + 2, 34, 20, IDB_C1_ESCAPE);
 }
 
 static INT
@@ -1391,10 +1391,10 @@ C1_OnCreate(
     }
     SetWindowLongPtrW(hWnd, 0, (LONG_PTR)hGlobal);
 
-    if (!gfSoftKbdC1Init)
+    if (!gbC1ButtonInit)
     {
         C1_InitButtonPos();
-        gfSoftKbdC1Init = TRUE;
+        gbC1ButtonInit = TRUE;
     }
 
     pC1->iPressedKey = -1;
@@ -1490,15 +1490,15 @@ C1_SetData(
 
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        rc.left = gptButtonPos[iKey].x + 10;
+        rc.left = gptC1ButtonPos[iKey].x + 10;
         rc.right = rc.left + 12;
-        rc.top = gptButtonPos[iKey].y + 2;
-        rc.bottom = gptButtonPos[iKey].y + 14;
+        rc.top = gptC1ButtonPos[iKey].y + 2;
+        rc.bottom = gptC1ButtonPos[iKey].y + 14;
         bDisabled = pC1->Data[0][iKey] == 0;
         DrawTextExW(hMemDC, &pC1->Data[0][iKey], !bDisabled, &rc, DT_CENTER, NULL);
-        rc.left = gptButtonPos[iKey].x + 1 + 1;
-        rc.right = gptButtonPos[iKey].x + 1 + 13;
-        rc.top = gptButtonPos[iKey].y + 14;
+        rc.left = gptC1ButtonPos[iKey].x + 1 + 1;
+        rc.right = gptC1ButtonPos[iKey].x + 1 + 13;
+        rc.top = gptC1ButtonPos[iKey].y + 14;
         rc.bottom = rc.top + 12;
         bDisabled = pC1->Data[1][iKey] == 0;
         DrawTextExW(hMemDC, &pC1->Data[1][iKey], !bDisabled, &rc, DT_CENTER, NULL);
@@ -1568,27 +1568,27 @@ C1_HitTest(
 
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        if (Imm32PtInRect(ppt, gptButtonPos[iKey].x, gptButtonPos[iKey].y, 24, 28))
+        if (Imm32PtInRect(ppt, gptC1ButtonPos[iKey].x, gptC1ButtonPos[iKey].y, 24, 28))
             return iKey;
     }
 
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_BACKSPACE].x, gptButtonPos[C1K_BACKSPACE].y, 36, 28))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_BACKSPACE].x, gptC1ButtonPos[C1K_BACKSPACE].y, 36, 28))
         return C1K_BACKSPACE;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_TAB].x, gptButtonPos[C1K_TAB].y, 36, 28))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_TAB].x, gptC1ButtonPos[C1K_TAB].y, 36, 28))
         return C1K_TAB;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_CAPS].x, gptButtonPos[C1K_CAPS].y, 42, 28))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_CAPS].x, gptC1ButtonPos[C1K_CAPS].y, 42, 28))
         return C1K_CAPS;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_ENTER].x, gptButtonPos[C1K_ENTER].y, 42, 28))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_ENTER].x, gptC1ButtonPos[C1K_ENTER].y, 42, 28))
         return C1K_ENTER;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_SHIFT].x, gptButtonPos[C1K_SHIFT].y, 60, 28))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_SHIFT].x, gptC1ButtonPos[C1K_SHIFT].y, 60, 28))
         return C1K_SHIFT;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_ESCAPE].x, gptButtonPos[C1K_ESCAPE].y, 38, 24))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_ESCAPE].x, gptC1ButtonPos[C1K_ESCAPE].y, 38, 24))
         return C1K_ESCAPE;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_SPACE].x, gptButtonPos[C1K_SPACE].y, 172, 24))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_SPACE].x, gptC1ButtonPos[C1K_SPACE].y, 172, 24))
         return C1K_SPACE;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_INSERT].x, gptButtonPos[C1K_INSERT].y, 38, 24))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_INSERT].x, gptC1ButtonPos[C1K_INSERT].y, 38, 24))
         return C1K_INSERT;
-    if (Imm32PtInRect(ppt, gptButtonPos[C1K_DELETE].x, gptButtonPos[C1K_DELETE].y, 38, 24))
+    if (Imm32PtInRect(ppt, gptC1ButtonPos[C1K_DELETE].x, gptC1ButtonPos[C1K_DELETE].y, 38, 24))
         return C1K_DELETE;
 
     return -1;
