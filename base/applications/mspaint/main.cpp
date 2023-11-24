@@ -801,7 +801,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     switch (wParam)
     {
         case VK_ESCAPE:
-            canvasWindow.OnEndDraw(TRUE);
+            canvasWindow.PostMessage(nMsg, wParam, lParam);
             break;
         case VK_LEFT:
             selectionModel.moveSelection(-1, 0);
