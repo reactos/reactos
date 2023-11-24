@@ -51,12 +51,6 @@
 #define WM_TOOLSMODELZOOMCHANGED         (WM_APP + 2)
 #define WM_PALETTEMODELCOLORCHANGED      (WM_APP + 3)
 
-/* this simplifies checking and unchecking menu items */
-#define CHECKED_IF(a) ((a) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND))
-
-/* this simplifies enabling or graying menu items */
-#define ENABLED_IF(a) ((a) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND))
-
 enum HITTEST // hit
 {
     HIT_NONE = 0, // Nothing hit or outside
@@ -81,6 +75,14 @@ void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints);
 
 #define DEG2RAD(degree) (((degree) * M_PI) / 180)
 #define RAD2DEG(radian) ((LONG)(((radian) * 180) / M_PI))
+
+/* This simplifies checking and unchecking menu items */
+#define CHECKED_IF(bChecked) \
+    ((bChecked) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND))
+
+/* This simplifies enabling or graying menu items */
+#define ENABLED_IF(bEnabled) \
+    ((bEnabled) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND))
 
 template <typename T>
 inline void Swap(T& a, T& b)
