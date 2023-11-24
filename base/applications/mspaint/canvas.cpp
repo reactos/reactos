@@ -648,7 +648,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (wParam == VK_ESCAPE && ::GetCapture() == m_hWnd)
+    if (wParam == VK_ESCAPE)
     {
         OnEndDraw(TRUE);
         ::ReleaseCapture();
