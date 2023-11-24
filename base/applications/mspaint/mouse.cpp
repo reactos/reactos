@@ -397,7 +397,8 @@ struct SelectionBaseTool : ToolBase
 
     void OnDrawOverlayOnCanvas(HDC hdc) override
     {
-        selectionModel.drawFrameOnCanvas(hdc);
+        if (m_bDrawing || selectionModel.m_bShow)
+            selectionModel.drawFrameOnCanvas(hdc);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -538,6 +539,7 @@ struct SelectionBaseTool : ToolBase
         else
             selectionModel.Landing();
 
+        m_bDrawing = FALSE;
         m_hitSelection = HIT_NONE;
         ToolBase::OnEndDraw(bCancel);
     }

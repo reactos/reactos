@@ -406,7 +406,7 @@ void CMainWindow::alignChildrenToMainWindow()
 
 void CMainWindow::saveImage(BOOL overwrite)
 {
-    canvasWindow.finishDrawing();
+    canvasWindow.OnEndDraw(FALSE);
 
     // Is the extension not supported?
     PWCHAR pchDotExt = PathFindExtensionW(g_szFileName);
@@ -606,7 +606,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 BOOL CMainWindow::ConfirmSave()
 {
-    canvasWindow.finishDrawing();
+    canvasWindow.OnEndDraw(FALSE);
 
     if (imageModel.IsImageSaved())
         return TRUE;
@@ -804,21 +804,11 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case VK_ESCAPE:
             hwndCapture = GetCapture();
             if (hwndCapture)
-            {
-                if (canvasWindow.m_hWnd == hwndCapture ||
-                    fullscreenWindow.m_hWnd == hwndCapture)
-                {
-                    ::SendMessageW(hwndCapture, nMsg, wParam, lParam);
-                }
-            }
+                ::PostMessageW(hwndCapture, nMsg, wParam, lParam);
             else if (selectionModel.m_bShow)
-            {
                 selectionModel.HideSelection();
-            }
             else
-            {
-                canvasWindow.cancelDrawing();
-            }
+                canvasWindow.OnEndDraw(TRUE);
             break;
 
         case VK_LEFT:
@@ -928,7 +918,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 GlobalFree(pd.hDevNames);
             break;
         case IDM_FILESEND:
-            canvasWindow.finishDrawing();
+            canvasWindow.OnEndDraw(FALSE);
             if (!OpenMailer(m_hWnd, g_szFileName))
             {
                 ShowError(IDS_CANTSENDMAIL);
@@ -959,7 +949,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 textEditWindow.PostMessage(WM_UNDO, 0, 0);
                 break;
             }
-            canvasWindow.finishDrawing();
+            canvasWindow.OnEndDraw(FALSE);
             imageModel.Undo();
             break;
         case IDM_EDITREDO:
@@ -968,7 +958,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 // There is no "WM_REDO" in EDIT control
                 break;
             }
-            canvasWindow.finishDrawing();
+            canvasWindow.OnEndDraw(FALSE);
             imageModel.Redo();
             break;
         case IDM_EDITCOPY:
@@ -1083,7 +1073,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     break;
 
                 case TOOL_TEXT:
-                    canvasWindow.cancelDrawing();
+                    canvasWindow.OnEndDraw(TRUE);
                     break;
                 default:
                     break;

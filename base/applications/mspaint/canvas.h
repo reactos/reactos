@@ -42,8 +42,7 @@ public:
 
     BOOL m_drawing;
 
-    VOID cancelDrawing();
-    VOID finishDrawing();
+    VOID OnEndDraw(BOOL bCancel);
     VOID updateScrollRange();
     VOID updateScrollPos(INT x = 0, INT y = 0);
 
