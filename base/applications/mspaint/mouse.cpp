@@ -373,7 +373,7 @@ struct SelectionBaseTool : SmoothDrawTool
         HITTEST hit = selectionModel.hitTest(ptCanvas);
         if (hit != HIT_NONE)
         {
-            if (m_bCtrlKey)
+            if (m_bCtrlKey || m_bShiftKey)
                 imageModel.SelectionClone();
 
             m_hitSelection = hit;
@@ -408,13 +408,13 @@ struct SelectionBaseTool : SmoothDrawTool
     {
         POINT pt = { x, y };
 
+        if (!m_bLeftButton)
+            return TRUE;
+
         if (m_hitSelection != HIT_NONE)
         {
-            if (m_bShiftKey || m_bCtrlKey)
-            {
+            if (m_bShiftKey)
                 imageModel.SelectionClone(m_bShiftKey);
-                m_bCtrlKey = FALSE;
-            }
 
             selectionModel.Dragging(m_hitSelection, pt);
             imageModel.NotifyImageChanged();
@@ -438,6 +438,9 @@ struct SelectionBaseTool : SmoothDrawTool
     {
         POINT pt = { x, y };
         m_bDrawing = FALSE;
+
+        if (!m_bLeftButton)
+            return TRUE;
 
         if (m_hitSelection != HIT_NONE)
         {

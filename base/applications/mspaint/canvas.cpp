@@ -319,7 +319,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         CanvasToImage(pt);
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
-        Invalidate(FALSE);
+        Invalidate();
         return 0;
     }
 
@@ -355,7 +355,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         m_drawing = TRUE;
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
-        Invalidate(FALSE);
+        Invalidate();
         return 0;
     }
 
@@ -380,7 +380,7 @@ LRESULT CCanvasWindow::OnButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
     toolsModel.OnButtonDown(nMsg == WM_LBUTTONDBLCLK, pt.x, pt.y, TRUE);
     toolsModel.resetTool();
-    Invalidate(FALSE);
+    Invalidate();
     return 0;
 }
 
