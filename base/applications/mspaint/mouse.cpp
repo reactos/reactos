@@ -380,7 +380,6 @@ struct SelectionBaseTool : SmoothDrawTool
             selectionModel.m_ptHit = pt;
             selectionModel.TakeOff();
 
-            canvasWindow.SetCapture();
             imageModel.NotifyImageChanged();
             return;
         }
