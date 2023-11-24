@@ -56,7 +56,6 @@ public:
     VOID zoomTo(INT newZoom, LONG left = 0, LONG top = 0);
 
 protected:
-    HITTEST m_hitSelection;
     HITTEST m_hitCanvasSizeBox;
     POINT m_ptOrig; // The origin of drag start
     HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps

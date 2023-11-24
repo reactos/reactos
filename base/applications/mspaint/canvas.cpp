@@ -520,7 +520,7 @@ LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     BOOL bLeftButton = (m_nMouseDownMsg == WM_LBUTTONDOWN);
     m_nMouseDownMsg = 0;
 
-    if (m_drawing || m_hitSelection != HIT_NONE)
+    if (m_drawing)
     {
         m_drawing = FALSE;
         toolsModel.OnButtonUp(bLeftButton, pt.x, pt.y);
@@ -702,7 +702,6 @@ VOID CCanvasWindow::cancelDrawing()
 {
     selectionModel.ClearColorImage();
     selectionModel.ClearMaskImage();
-    m_hitSelection = HIT_NONE;
     m_drawing = FALSE;
     toolsModel.OnEndDraw(TRUE);
     Invalidate(FALSE);
