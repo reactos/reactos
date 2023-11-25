@@ -134,7 +134,7 @@ VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
  * new-style and high-level input method.
  *
  * The CTF IME file is a DLL file that the software developer distributes.
- * The export functions of the CTF IME file are defined in "CtfImeTable.h" of
+ * The export functions of the CTF IME file are defined in <CtfImeTable.h> of
  * this folder.
  */
 
@@ -148,13 +148,13 @@ HINSTANCE g_hCtfIme = NULL;
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
     typedef ret_type (WINAPI *FN_##func_name)params;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
 /* Define the global variables (g_pfn...) for CTF IME functions */
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
     FN_##func_name g_pfn##func_name = NULL;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
 /* The macro that gets the variable name from the CTF IME function name */
 #define CTF_IME_FN(func_name) g_pfn##func_name
@@ -256,7 +256,7 @@ Imm32LoadCtfIme(VOID)
             bSuccess = FALSE; /* Failed */ \
             break; \
         }
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
     } while (0);
 
     /* Unload the CTF IME if failed */
@@ -265,7 +265,7 @@ Imm32LoadCtfIme(VOID)
         /* Set NULL to the function pointers */
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) CTF_IME_FN(func_name) = NULL;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
         if (g_hCtfIme)
         {
