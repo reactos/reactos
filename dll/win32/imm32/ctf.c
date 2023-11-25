@@ -494,6 +494,94 @@ CtfImmTIMActivate(_In_ HKL hKL)
 }
 
 /***********************************************************************
+ *		CtfImmGenerateMessage(IMM32.@)
+ */
+BOOL WINAPI
+CtfImmGenerateMessage(
+    _In_ HIMC hIMC,
+    _In_ BOOL bSend)
+{
+    DWORD_PTR dwImeThreadId, dwCurrentThreadId;
+    PCLIENTIMC pClientImc;
+    BOOL bUnicode;
+    LPINPUTCONTEXT pIC;
+    DWORD iMsg, dwNumMsgBuf;
+    LPTRANSMSG pOldTransMsg, pNewTransMsg;
+    SIZE_T cbTransMsg;
+
+    TRACE("(%p, %d)\n", hIMC, bSend);
+
+    dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+    dwCurrentThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwCurrentThreadId)
+    {
+        ERR("%p vs %p\n", dwImeThreadId, dwCurrentThreadId);
+        return FALSE;
+    }
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+        return FALSE;
+
+    bUnicode = !!(pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    pIC = (LPINPUTCONTEXT)ImmLockIMC(hIMC);
+    if (IS_NULL_UNEXPECTEDLY(pIC))
+        return FALSE;
+
+    dwNumMsgBuf = pIC->dwNumMsgBuf;
+    pOldTransMsg = (LPTRANSMSG)ImmLockIMCC(pIC->hMsgBuf);
+    if (IS_NULL_UNEXPECTEDLY(pOldTransMsg))
+    {
+        pIC->dwNumMsgBuf = 0;
+        ImmUnlockIMC(hIMC);
+        return TRUE;
+    }
+
+    cbTransMsg = sizeof(TRANSMSG) * dwNumMsgBuf;
+    pNewTransMsg = (PTRANSMSG)ImmLocalAlloc(0, cbTransMsg);
+    if (IS_NULL_UNEXPECTEDLY(pNewTransMsg))
+    {
+        ImmUnlockIMCC(pIC->hMsgBuf);
+        pIC->dwNumMsgBuf = 0;
+        ImmUnlockIMC(hIMC);
+        return TRUE;
+    }
+
+    RtlCopyMemory(pNewTransMsg, pOldTransMsg, cbTransMsg);
+
+    for (iMsg = 0; iMsg < dwNumMsgBuf; ++iMsg)
+    {
+        HWND hWnd = pIC->hWnd;
+        UINT uMsg = pNewTransMsg[iMsg].message;
+        WPARAM wParam = pNewTransMsg[iMsg].wParam;
+        LPARAM lParam = pNewTransMsg[iMsg].lParam;
+        if (bSend)
+        {
+            if (bUnicode)
+                SendMessageW(hWnd, uMsg, wParam, lParam);
+            else
+                SendMessageA(hWnd, uMsg, wParam, lParam);
+        }
+        else
+        {
+            if (bUnicode)
+                PostMessageW(hWnd, uMsg, wParam, lParam);
+            else
+                PostMessageA(hWnd, uMsg, wParam, lParam);
+        }
+    }
+
+    ImmLocalFree(pNewTransMsg);
+    ImmUnlockIMCC(pIC->hMsgBuf);
+    pIC->dwNumMsgBuf = 0; /* Processed */
+    ImmUnlockIMC(hIMC);
+
+    return TRUE;
+}
+
+/***********************************************************************
  *		CtfImmHideToolbarWnd(IMM32.@)
  *
  * Used with CtfImmRestoreToolbarWnd.

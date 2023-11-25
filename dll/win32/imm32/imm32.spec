@@ -2,6 +2,7 @@
 @ stdcall CtfAImmDeactivate(long)
 @ stdcall CtfAImmIsIME(ptr)
 @ stdcall CtfImmDispatchDefImeMessage(ptr long ptr ptr)
+@ stdcall CtfImmGenerateMessage(ptr long)
 @ stdcall CtfImmGetGuidAtom(ptr long ptr)
 @ stdcall CtfImmHideToolbarWnd()
 @ stdcall CtfImmIsCiceroEnabled()
