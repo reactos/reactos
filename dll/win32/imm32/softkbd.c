@@ -1493,7 +1493,7 @@ C1_SetData(
         /* Upper right */
         rc.right = gptC1ButtonPos[iKey].x + 24 - 2;
         rc.top = gptC1ButtonPos[iKey].y + 2;
-        rc.left = rc.left - 14;
+        rc.left = rc.right - 14;
         rc.bottom = rc.top + 14;
         bDisabled = (pC1->Data[0][iKey] == 0);
         DrawTextW(hMemDC, &pC1->Data[0][iKey], !bDisabled, &rc,
