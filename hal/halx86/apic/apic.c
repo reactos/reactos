@@ -674,7 +674,6 @@ HalEnableSystemInterrupt(
     IN KINTERRUPT_MODE InterruptMode)
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
-    PKPRCB Prcb = KeGetCurrentPrcb();
     UCHAR Index;
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT((IrqlToTpr(Irql) & 0xF0) == (Vector & 0xF0));
@@ -692,26 +691,21 @@ HalEnableSystemInterrupt(
     /* Read the redirection entry */
     ReDirReg = ApicReadIORedirectionEntry(Index);
 
-    /* Check if the interrupt was unused */
-    if (ReDirReg.Vector != Vector)
+    /* Check if the interrupt is already enabled */
+    if (ReDirReg.Mask == FALSE)
     {
-        ReDirReg.Vector = Vector;
-        ReDirReg.MessageType = APIC_MT_LowestPriority;
-        ReDirReg.DestinationMode = APIC_DM_Logical;
-        ReDirReg.Destination = 0;
+        /* If the vector matches, there is nothing more to do,
+           otherwise something is wrong. */
+        return (ReDirReg.Vector == Vector);
     }
 
-    /* Check if the destination is logical */
-    if (ReDirReg.DestinationMode == APIC_DM_Logical)
-    {
-        /* Set the bit for this cpu */
-        ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
-    }
-
-    /* Set the trigger mode */
-    ReDirReg.TriggerMode = 1 - InterruptMode;
-
-    /* Now unmask it */
+    /* Set up the redirection entry */
+    ReDirReg.Vector = Vector;
+    ReDirReg.MessageType = APIC_MT_Fixed;
+    ReDirReg.DestinationMode = APIC_DM_Physical;
+    ReDirReg.Destination = KeGetCurrentPrcb()->InitialApicId;
+    ReDirReg.TriggerMode = (InterruptMode == LevelSensitive) ?
+        APIC_TGM_Level : APIC_TGM_Edge;
     ReDirReg.Mask = FALSE;
 
     /* Write back the entry */
