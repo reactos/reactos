@@ -238,14 +238,14 @@ typedef struct IME_STATE
 C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
-typedef struct tagTRANSMSG
+typedef struct _tagTRANSMSG
 {
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
 } TRANSMSG, *PTRANSMSG, *LPTRANSMSG;
 
-typedef struct tagTRANSMSGLIST
+typedef struct _tagTRANSMSGLIST
 {
     UINT     uMsgCount;
     TRANSMSG TransMsg[ANYSIZE_ARRAY];
