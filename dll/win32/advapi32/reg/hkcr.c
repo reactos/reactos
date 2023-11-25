@@ -27,7 +27,7 @@ ValueExists(_In_ HKEY hNormalKey, _In_ PUNICODE_STRING Name)
 
     ASSERT(!IsHKCRKey(hNormalKey));
     status = NtQueryValueKey(hNormalKey, Name, KeyValuePartialInformation,
-                                      &kvi, total_size, &total_size);
+                             &kvi, total_size, &total_size);
     return status != STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
@@ -150,6 +150,7 @@ GetFallbackHKCRKey(
     if (ErrorCode != ERROR_SUCCESS)
     {
         RtlFreeUnicodeString(&KeyName);
+        *MachineKey = hKey;
         return ErrorCode;
     }
 
@@ -218,6 +219,7 @@ GetPreferredHKCRKey(
     if (ErrorCode != ERROR_SUCCESS)
     {
         RtlFreeUnicodeString(&KeyName);
+        *PreferredKey = hKey;
         return ErrorCode;
     }
 
