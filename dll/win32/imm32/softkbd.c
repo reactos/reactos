@@ -1652,7 +1652,7 @@ C1_OnSetCursor(
     INT iKey;
     POINT pt1, pt2;
 
-    hGlobal = (HGLOBAL)GetWindowLongW(hWnd, 0);
+    hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
     pC1 = (PC1WINDOW)GlobalLock(hGlobal);
     if (!hGlobal || !pC1)
         return FALSE;
@@ -1704,7 +1704,7 @@ C1_OnMouseMove(
     HDC hDC;
     INT iKey;
 
-    hGlobal = (HGLOBAL)GetWindowLongW(hWnd, 0);
+    hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
     pC1 = (PC1WINDOW)GlobalLock(hGlobal);
     if (!hGlobal || !pC1)
         return FALSE;
