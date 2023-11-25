@@ -29,6 +29,7 @@ BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 VOID WINAPI CtfImmSetAppCompatFlags(_In_ DWORD dwFlags);
 DWORD WINAPI CtfImmHideToolbarWnd(VOID);
 VOID WINAPI CtfImmRestoreToolbarWnd(_In_ LPVOID pUnused, _In_ DWORD dwShowFlags);
+BOOL WINAPI CtfImmGenerateMessage(_In_ HIMC hIMC, _In_ BOOL bSend);
 
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(

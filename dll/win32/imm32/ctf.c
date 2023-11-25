@@ -134,7 +134,7 @@ VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
  * new-style and high-level input method.
  *
  * The CTF IME file is a DLL file that the software developer distributes.
- * The export functions of the CTF IME file are defined in "CtfImeTable.h" of
+ * The export functions of the CTF IME file are defined in <CtfImeTable.h> of
  * this folder.
  */
 
@@ -148,13 +148,13 @@ HINSTANCE g_hCtfIme = NULL;
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
     typedef ret_type (WINAPI *FN_##func_name)params;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
 /* Define the global variables (g_pfn...) for CTF IME functions */
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) \
     FN_##func_name g_pfn##func_name = NULL;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
 /* The macro that gets the variable name from the CTF IME function name */
 #define CTF_IME_FN(func_name) g_pfn##func_name
@@ -256,7 +256,7 @@ Imm32LoadCtfIme(VOID)
             bSuccess = FALSE; /* Failed */ \
             break; \
         }
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
     } while (0);
 
     /* Unload the CTF IME if failed */
@@ -265,7 +265,7 @@ Imm32LoadCtfIme(VOID)
         /* Set NULL to the function pointers */
 #undef DEFINE_CTF_IME_FN
 #define DEFINE_CTF_IME_FN(func_name, ret_type, params) CTF_IME_FN(func_name) = NULL;
-#include "CtfImeTable.h"
+#include <CtfImeTable.h>
 
         if (g_hCtfIme)
         {
@@ -491,6 +491,94 @@ CtfImmTIMActivate(_In_ HKL hKL)
 {
     FIXME("(%p)\n", hKL);
     return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *		CtfImmGenerateMessage(IMM32.@)
+ */
+BOOL WINAPI
+CtfImmGenerateMessage(
+    _In_ HIMC hIMC,
+    _In_ BOOL bSend)
+{
+    DWORD_PTR dwImeThreadId, dwCurrentThreadId;
+    PCLIENTIMC pClientImc;
+    BOOL bUnicode;
+    LPINPUTCONTEXT pIC;
+    DWORD iMsg, dwNumMsgBuf;
+    LPTRANSMSG pOldTransMsg, pNewTransMsg;
+    SIZE_T cbTransMsg;
+
+    TRACE("(%p, %d)\n", hIMC, bSend);
+
+    dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+    dwCurrentThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwCurrentThreadId)
+    {
+        ERR("%p vs %p\n", dwImeThreadId, dwCurrentThreadId);
+        return FALSE;
+    }
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+        return FALSE;
+
+    bUnicode = !!(pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    pIC = (LPINPUTCONTEXT)ImmLockIMC(hIMC);
+    if (IS_NULL_UNEXPECTEDLY(pIC))
+        return FALSE;
+
+    dwNumMsgBuf = pIC->dwNumMsgBuf;
+    pOldTransMsg = (LPTRANSMSG)ImmLockIMCC(pIC->hMsgBuf);
+    if (IS_NULL_UNEXPECTEDLY(pOldTransMsg))
+    {
+        pIC->dwNumMsgBuf = 0;
+        ImmUnlockIMC(hIMC);
+        return TRUE;
+    }
+
+    cbTransMsg = sizeof(TRANSMSG) * dwNumMsgBuf;
+    pNewTransMsg = (PTRANSMSG)ImmLocalAlloc(0, cbTransMsg);
+    if (IS_NULL_UNEXPECTEDLY(pNewTransMsg))
+    {
+        ImmUnlockIMCC(pIC->hMsgBuf);
+        pIC->dwNumMsgBuf = 0;
+        ImmUnlockIMC(hIMC);
+        return TRUE;
+    }
+
+    RtlCopyMemory(pNewTransMsg, pOldTransMsg, cbTransMsg);
+
+    for (iMsg = 0; iMsg < dwNumMsgBuf; ++iMsg)
+    {
+        HWND hWnd = pIC->hWnd;
+        UINT uMsg = pNewTransMsg[iMsg].message;
+        WPARAM wParam = pNewTransMsg[iMsg].wParam;
+        LPARAM lParam = pNewTransMsg[iMsg].lParam;
+        if (bSend)
+        {
+            if (bUnicode)
+                SendMessageW(hWnd, uMsg, wParam, lParam);
+            else
+                SendMessageA(hWnd, uMsg, wParam, lParam);
+        }
+        else
+        {
+            if (bUnicode)
+                PostMessageW(hWnd, uMsg, wParam, lParam);
+            else
+                PostMessageA(hWnd, uMsg, wParam, lParam);
+        }
+    }
+
+    ImmLocalFree(pNewTransMsg);
+    ImmUnlockIMCC(pIC->hMsgBuf);
+    pIC->dwNumMsgBuf = 0; /* Processed */
+    ImmUnlockIMC(hIMC);
+
+    return TRUE;
 }
 
 /***********************************************************************
