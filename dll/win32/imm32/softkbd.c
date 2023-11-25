@@ -841,7 +841,7 @@ T1_OnButtonUp(
     iPressed = pT1->PressedKey;
     if (iPressed >= T1K_NONE)
     {
-        if (pT1->pt1.x != -1 && pT1->pt1.y != -1 )
+        if (pT1->pt1.x != -1 && pT1->pt1.y != -1)
         {
             T1_DrawDragBorder(hWnd, &pT1->pt0, &pT1->pt1);
             x = pT1->pt0.x - pT1->pt1.x;
@@ -1474,7 +1474,7 @@ C1_SetData(
     hbmKeyboard = pC1->hbmKeyboard;
     hbmOld = SelectObject(hMemDC, hbmKeyboard);
 
-    GetObjectW(GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONTW), &lf);
+    GetObjectW(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     lf.lfHeight = -12;
     if (pC1->CharSet != DEFAULT_CHARSET)
         lf.lfCharSet = (BYTE)pC1->CharSet;
@@ -1486,22 +1486,27 @@ C1_SetData(
         pC1->Data[1][iKey] = pData->wCode[0][(BYTE)gC1K2VK[iKey]];
         pC1->Data[0][iKey] = pData->wCode[1][(BYTE)gC1K2VK[iKey]];
     }
-    SetBkColor(hMemDC, RGB(191, 191, 191));
 
+    SetBkColor(hMemDC, RGB(191, 191, 191));
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        rc.left = gptC1ButtonPos[iKey].x + 10;
-        rc.right = rc.left + 12;
+        /* Upper right */
+        rc.right = gptC1ButtonPos[iKey].x + 24 - 2;
         rc.top = gptC1ButtonPos[iKey].y + 2;
-        rc.bottom = gptC1ButtonPos[iKey].y + 14;
-        bDisabled = pC1->Data[0][iKey] == 0;
-        DrawTextExW(hMemDC, &pC1->Data[0][iKey], !bDisabled, &rc, DT_CENTER, NULL);
-        rc.left = gptC1ButtonPos[iKey].x + 1 + 1;
-        rc.right = gptC1ButtonPos[iKey].x + 1 + 13;
-        rc.top = gptC1ButtonPos[iKey].y + 14;
-        rc.bottom = rc.top + 12;
-        bDisabled = pC1->Data[1][iKey] == 0;
-        DrawTextExW(hMemDC, &pC1->Data[1][iKey], !bDisabled, &rc, DT_CENTER, NULL);
+        rc.left = rc.left - 14;
+        rc.bottom = rc.top + 14;
+        bDisabled = (pC1->Data[0][iKey] == 0);
+        DrawTextW(hMemDC, &pC1->Data[0][iKey], !bDisabled, &rc,
+                  DT_RIGHT | DT_TOP | DT_SINGLELINE);
+
+        /* Lower left */
+        rc.left = gptC1ButtonPos[iKey].x + 2;
+        rc.bottom = gptC1ButtonPos[iKey].y + 28 - 2;
+        rc.right = rc.left + 14;
+        rc.top = rc.bottom - 14;
+        bDisabled = (pC1->Data[1][iKey] == 0);
+        DrawTextW(hMemDC, &pC1->Data[1][iKey], !bDisabled, &rc,
+                  DT_LEFT | DT_BOTTOM | DT_SINGLELINE);
     }
 
     if (pC1->dwFlags & FLAG_SHIFT_PRESSED)
