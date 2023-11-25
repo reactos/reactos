@@ -2223,7 +2223,7 @@ TcpipAltConfDlg(
 {
     TcpipConfNotifyImpl *This;
     LPPROPSHEETPAGE page;
-    BOOL bEnabled;
+    BOOL bNoDHCP;
 
     switch (uMsg)
     {
@@ -2245,19 +2245,19 @@ TcpipAltConfDlg(
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        bEnabled = (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_UNCHECKED);
-                        if (bEnabled)
+                        bNoDHCP = (IsDlgButtonChecked(hwndDlg, IDC_NODHCP) == BST_CHECKED);
+                        if (bNoDHCP)
                         {
                             SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
                             SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_CLEARADDRESS, 0, 0);
                             SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_CLEARADDRESS, 0, 0);
                         }
 
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), bEnabled);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), bEnabled);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), bEnabled);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), bEnabled);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), bEnabled);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), bNoDHCP);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), bNoDHCP);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), bNoDHCP);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), bNoDHCP);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), bNoDHCP);
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
