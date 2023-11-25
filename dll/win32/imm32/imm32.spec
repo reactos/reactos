@@ -11,6 +11,7 @@
 @ stdcall CtfImmIsTextFrameServiceDisabled()
 @ stdcall CtfImmRestoreToolbarWnd(ptr long)
 @ stdcall CtfImmSetAppCompatFlags(long)
+@ stdcall CtfImmSetCiceroStartInThread(long)
 @ stdcall CtfImmTIMActivate(ptr)
 @ stdcall ImmActivateLayout(ptr)
 @ stdcall ImmAssociateContext(ptr ptr)

@@ -26,6 +26,7 @@ HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
 BOOL WINAPI CtfAImmIsIME(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
+VOID WINAPI CtfImmSetCiceroStartInThread(_In_ BOOL bStarted);
 VOID WINAPI CtfImmSetAppCompatFlags(_In_ DWORD dwFlags);
 DWORD WINAPI CtfImmHideToolbarWnd(VOID);
 VOID WINAPI CtfImmRestoreToolbarWnd(_In_ LPVOID pUnused, _In_ DWORD dwShowFlags);

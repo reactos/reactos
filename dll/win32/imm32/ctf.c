@@ -331,6 +331,18 @@ CtfImmIsCiceroStartedInThread(VOID)
 }
 
 /***********************************************************************
+ *		CtfImmSetCiceroStartInThread (IMM32.@)
+ */
+VOID WINAPI CtfImmSetCiceroStartInThread(_In_ BOOL bStarted)
+{
+    TRACE("(%d)\n", bStarted);
+    if (bStarted)
+        GetWin32ClientInfo()->CI_flags |= 0x200;
+    else
+        GetWin32ClientInfo()->CI_flags &= ~0x200;
+}
+
+/***********************************************************************
  *		CtfImmSetAppCompatFlags (IMM32.@)
  *
  * Sets the application compatibility flags.
