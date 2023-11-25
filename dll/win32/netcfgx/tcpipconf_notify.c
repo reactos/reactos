@@ -2245,7 +2245,7 @@ TcpipAltConfDlg(
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        bEnabled = (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_CHECKED);
+                        bEnabled = (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_UNCHECKED);
                         if (bEnabled)
                         {
                             SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
