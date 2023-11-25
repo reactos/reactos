@@ -703,7 +703,7 @@ HalEnableSystemInterrupt(
     ReDirReg.Vector = Vector;
     ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
-    ReDirReg.Destination = KeGetCurrentPrcb()->InitialApicId;
+    ReDirReg.Destination = 0;
     ReDirReg.TriggerMode = (InterruptMode == LevelSensitive) ?
         APIC_TGM_Level : APIC_TGM_Edge;
     ReDirReg.Mask = FALSE;
