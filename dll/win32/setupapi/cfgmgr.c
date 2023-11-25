@@ -6235,7 +6235,7 @@ CM_Open_Class_KeyW(
     _Out_ PHKEY phkClass,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Open_Class_KeyW%p %s %lx %lx %p %lx)\n",
+    TRACE("CM_Open_Class_KeyW(%p %s %lx %lx %p %lx)\n",
           debugstr_guid(pClassGuid), debugstr_w(pszClassName),
           samDesired, Disposition, phkClass, ulFlags);
 
@@ -6566,7 +6566,7 @@ CM_Query_And_Remove_SubTreeA(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %s %lu %lx)\n",
+    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %p %lu %lx)\n",
           dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExA(dnAncestor, pVetoType, pszVetoName,
