@@ -60,7 +60,6 @@ struct ToolBase
     void beginEvent();
     void endEvent();
     void reset();
-    void pushToPtStack(LONG x, LONG y);
 
     static ToolBase* createToolObject(TOOLTYPE type);
 };
