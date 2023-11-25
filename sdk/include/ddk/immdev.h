@@ -252,7 +252,7 @@ typedef struct tagTRANSMSGLIST
 } TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
 
 #define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
-#include "imetable.h"
+#include <imetable.h>
 #undef DEFINE_IME_ENTRY
 
 typedef struct IMEDPI
@@ -266,7 +266,7 @@ typedef struct IMEDPI
     DWORD          cLockObj;
     DWORD          dwFlags;
 #define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;
-#include "imetable.h"
+#include <imetable.h>
 #undef DEFINE_IME_ENTRY
 } IMEDPI, *PIMEDPI;
 
