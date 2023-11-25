@@ -53,7 +53,7 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
-void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
+void getBoundaryOfPtStack(RECT& rcBoundary, SIZE_T cPoints, const POINT *pPoints)
 {
     POINT ptMin = { MAXLONG, MAXLONG }, ptMax = { (LONG)MINLONG, (LONG)MINLONG };
     while (cPoints-- > 0)
@@ -94,7 +94,7 @@ void BuildMaskFromPtStack()
     ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
     HGDIOBJ hPenOld = ::SelectObject(hdcMem, GetStockObject(NULL_PEN));
     HGDIOBJ hbrOld = ::SelectObject(hdcMem, GetStockObject(WHITE_BRUSH));
-    ::Polygon(hdcMem, s_pointStack, s_pointSP);
+    ::Polygon(hdcMem, s_pointStack, (INT)s_pointSP);
     ::SelectObject(hdcMem, hbrOld);
     ::SelectObject(hdcMem, hPenOld);
     ::SelectObject(hdcMem, hbmOld);
@@ -560,7 +560,7 @@ struct FreeSelTool : SelectionBaseTool
         if (!selectionModel.m_bShow && m_bDrawing)
         {
             /* Draw the freehand selection inverted/xored */
-            Poly(hdc, s_pointStack, s_pointSP, 0, 0, 2, 0, FALSE, TRUE);
+            Poly(hdc, s_pointStack, (INT)s_pointSP, 0, 0, 2, 0, FALSE, TRUE);
         }
     }
 };
@@ -1008,9 +1008,9 @@ struct ShapeTool : ToolBase
             return;
 
         if (m_bLeftButton)
-            Poly(hdc, s_pointStack, s_pointSP, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, (INT)s_pointSP, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
         else
-            Poly(hdc, s_pointStack, s_pointSP, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pointStack, (INT)s_pointSP, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
