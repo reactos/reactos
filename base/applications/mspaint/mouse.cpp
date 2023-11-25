@@ -9,9 +9,11 @@
 #include "precomp.h"
 #include <atlalloc.h>
 
-SIZE_T ToolBase::s_pointSP = 0;
-static SIZE_T s_maxPointSP = 0;
-static CHeapPtr<POINT, CLocalAllocator> s_pointStack;
+static SIZE_T s_pointSP = 0;
+static CHeapPtr<POINT, CLocalAllocator> s_pointsAllocated;
+static POINT s_staticPointStack[512]; // 512 is enough
+static SIZE_T s_maxPointSP = _countof(s_staticPointStack);
+static LPPOINT s_pointStack = s_staticPointStack;
 static POINT g_ptStart, g_ptEnd;
 
 /* FUNCTIONS ********************************************************/
@@ -69,12 +71,49 @@ void getBoundaryOfPtStack(RECT& rcBoundary, INT cPoints, const POINT *pPoints)
     rcBoundary = rc;
 }
 
+void ShiftPtStack(INT dx, INT dy)
+{
+    for (SIZE_T i = 0; i < s_pointSP; ++i)
+    {
+        POINT& pt = s_pointStack[i];
+        pt.x += dx;
+        pt.y += dy;
+    }
+}
+
+void BuildMaskFromPtStack()
+{
+    CRect rc;
+    getBoundaryOfPtStack(rc, s_pointSP, s_pointStack);
+
+    ShiftPtStack(-rc.left, -rc.top);
+
+    HDC hdcMem = ::CreateCompatibleDC(NULL);
+    HBITMAP hbmMask = ::CreateBitmap(rc.Width(), rc.Height(), 1, 1, NULL);
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmMask);
+    ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
+    HGDIOBJ hPenOld = ::SelectObject(hdcMem, GetStockObject(NULL_PEN));
+    HGDIOBJ hbrOld = ::SelectObject(hdcMem, GetStockObject(WHITE_BRUSH));
+    ::Polygon(hdcMem, s_pointStack, s_pointSP);
+    ::SelectObject(hdcMem, hbrOld);
+    ::SelectObject(hdcMem, hPenOld);
+    ::SelectObject(hdcMem, hbmOld);
+    ::DeleteDC(hdcMem);
+
+    selectionModel.setMask(rc, hbmMask);
+}
+
 void ToolBase::reset()
 {
+    if (s_pointStack != s_staticPointStack)
+    {
+        s_pointsAllocated.Free();
+        s_pointStack = s_staticPointStack;
+        s_maxPointSP = _countof(s_staticPointStack);
+    }
+
     s_pointSP = 0;
     g_ptEnd = g_ptStart = { -1, -1 };
-
-    selectionModel.ResetPtStack();
 
     if (selectionModel.m_bShow)
     {
@@ -103,16 +142,20 @@ void ToolBase::endEvent()
 
 void ToolBase::pushToPtStack(LONG x, LONG y)
 {
-    if (s_pointSP >= s_maxPointSP)
+    if (s_pointSP + 1 >= s_maxPointSP)
     {
         SIZE_T newMax = s_maxPointSP + 512;
         SIZE_T cbNew = newMax * sizeof(POINT);
-        if (!s_pointStack.ReallocateBytes(cbNew))
+        if (!s_pointsAllocated.ReallocateBytes(cbNew))
         {
             ATLTRACE("%d, %d, %d\n", (INT)s_pointSP, (INT)s_maxPointSP, (INT)cbNew);
             return;
         }
 
+        if (s_pointStack == s_staticPointStack)
+            CopyMemory(s_pointsAllocated, s_staticPointStack, s_pointSP * sizeof(POINT));
+
+        s_pointStack = s_pointsAllocated;
         s_maxPointSP = newMax;
     }
 
@@ -327,12 +370,13 @@ struct SmoothDrawTool : ToolBase
     }
 };
 
-struct SelectionBaseTool : SmoothDrawTool
+struct SelectionBaseTool : ToolBase
 {
     BOOL m_bLeftButton = FALSE;
     BOOL m_bCtrlKey = FALSE;
     BOOL m_bShiftKey = FALSE;
     BOOL m_bDrawing = FALSE;
+    BOOL m_bNoDrawBack = FALSE;
     HITTEST m_hitSelection = HIT_NONE;
 
     BOOL isRectSelect() const
@@ -342,13 +386,19 @@ struct SelectionBaseTool : SmoothDrawTool
 
     void OnDrawOverlayOnImage(HDC hdc) override
     {
-        if (!selectionModel.IsLanded())
-            selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+        if (selectionModel.IsLanded() || !selectionModel.m_bShow)
+            return;
+
+        if (!m_bNoDrawBack)
+            selectionModel.DrawBackground(hdc, selectionModel.m_rgbBack);
+
+        selectionModel.DrawSelection(hdc, paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
     }
 
     void OnDrawOverlayOnCanvas(HDC hdc) override
     {
-        selectionModel.drawFrameOnCanvas(hdc);
+        if (m_bDrawing || selectionModel.m_bShow)
+            selectionModel.drawFrameOnCanvas(hdc);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -374,12 +424,14 @@ struct SelectionBaseTool : SmoothDrawTool
         if (hit != HIT_NONE) // Dragging of selection started?
         {
             if (m_bCtrlKey || m_bShiftKey)
-                imageModel.SelectionClone();
-
+            {
+                imageModel.PushImageForUndo();
+                toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
+            }
             m_hitSelection = hit;
             selectionModel.m_ptHit = pt;
             selectionModel.TakeOff();
-
+            m_bNoDrawBack |= (m_bCtrlKey || m_bShiftKey);
             imageModel.NotifyImageChanged();
             return;
         }
@@ -394,8 +446,8 @@ struct SelectionBaseTool : SmoothDrawTool
         }
         else
         {
-            selectionModel.ResetPtStack();
-            selectionModel.PushToPtStack(pt);
+            s_pointSP = 0;
+            pushToPtStack(pt.x, pt.y);
         }
 
         imageModel.NotifyImageChanged();
@@ -411,18 +463,22 @@ struct SelectionBaseTool : SmoothDrawTool
         if (m_hitSelection != HIT_NONE) // Now dragging selection?
         {
             if (m_bShiftKey)
-                imageModel.SelectionClone(m_bShiftKey);
+                toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
 
             selectionModel.Dragging(m_hitSelection, pt);
             imageModel.NotifyImageChanged();
             return TRUE;
         }
 
+        if (isRectSelect() && ::GetKeyState(VK_SHIFT) < 0)
+            regularize(g_ptStart.x, g_ptStart.y, pt.x, pt.y);
+
         imageModel.Clamp(pt);
+
         if (isRectSelect())
             selectionModel.SetRectFromPoints(g_ptStart, pt);
         else
-            selectionModel.PushToPtStack(pt);
+            pushToPtStack(pt.x, pt.y);
 
         imageModel.NotifyImageChanged();
         return TRUE;
@@ -438,13 +494,20 @@ struct SelectionBaseTool : SmoothDrawTool
 
         if (m_hitSelection != HIT_NONE) // Dragging of selection ended?
         {
+            if (m_bShiftKey)
+                toolsModel.OnDrawOverlayOnImage(imageModel.GetDC());
+
             selectionModel.Dragging(m_hitSelection, pt);
             m_hitSelection = HIT_NONE;
             imageModel.NotifyImageChanged();
             return TRUE;
         }
 
+        if (isRectSelect() && ::GetKeyState(VK_SHIFT) < 0)
+            regularize(g_ptStart.x, g_ptStart.y, pt.x, pt.y);
+
         imageModel.Clamp(pt);
+
         if (isRectSelect())
         {
             selectionModel.SetRectFromPoints(g_ptStart, pt);
@@ -452,18 +515,19 @@ struct SelectionBaseTool : SmoothDrawTool
         }
         else
         {
-            if (selectionModel.PtStackSize() > 2)
+            if (s_pointSP > 2)
             {
-                selectionModel.BuildMaskFromPtStack();
+                BuildMaskFromPtStack();
                 selectionModel.m_bShow = TRUE;
             }
             else
             {
-                selectionModel.ResetPtStack();
+                s_pointSP = 0;
                 selectionModel.m_bShow = FALSE;
             }
         }
 
+        m_bNoDrawBack = FALSE;
         imageModel.NotifyImageChanged();
         return TRUE;
     }
@@ -475,6 +539,7 @@ struct SelectionBaseTool : SmoothDrawTool
         else
             selectionModel.Landing();
 
+        m_bDrawing = FALSE;
         m_hitSelection = HIT_NONE;
         ToolBase::OnEndDraw(bCancel);
     }
@@ -488,34 +553,21 @@ struct SelectionBaseTool : SmoothDrawTool
 // TOOL_FREESEL
 struct FreeSelTool : SelectionBaseTool
 {
-    void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
-    {
-        if (m_bShiftKey && !m_bCtrlKey)
-        {
-            // TODO:
-        }
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         SelectionBaseTool::OnDrawOverlayOnImage(hdc);
 
         if (!selectionModel.m_bShow && m_bDrawing)
-            selectionModel.DrawFramePoly(hdc);
+        {
+            /* Draw the freehand selection inverted/xored */
+            Poly(hdc, s_pointStack, s_pointSP, 0, 0, 2, 0, FALSE, TRUE);
+        }
     }
 };
 
 // TOOL_RECTSEL
 struct RectSelTool : SelectionBaseTool
 {
-    void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
-    {
-        if (m_bShiftKey && !m_bCtrlKey)
-        {
-            // TODO:
-        }
-    }
-
     void OnDrawOverlayOnImage(HDC hdc) override
     {
         SelectionBaseTool::OnDrawOverlayOnImage(hdc);

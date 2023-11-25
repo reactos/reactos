@@ -648,9 +648,9 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CCanvasWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (wParam == VK_ESCAPE && ::GetCapture() == m_hWnd)
+    if (wParam == VK_ESCAPE)
     {
-        cancelDrawing();
+        OnEndDraw(TRUE);
         ::ReleaseCapture();
         m_nMouseDownMsg = 0;
         m_hitCanvasSizeBox = HIT_NONE;
@@ -698,19 +698,10 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
-VOID CCanvasWindow::cancelDrawing()
+VOID CCanvasWindow::OnEndDraw(BOOL bCancel)
 {
-    selectionModel.ClearColorImage();
-    selectionModel.ClearMaskImage();
     m_drawing = FALSE;
-    toolsModel.OnEndDraw(TRUE);
-    Invalidate(FALSE);
-}
-
-VOID CCanvasWindow::finishDrawing()
-{
-    toolsModel.OnEndDraw(FALSE);
-    m_drawing = FALSE;
+    toolsModel.OnEndDraw(bCancel);
     Invalidate(FALSE);
 }
 

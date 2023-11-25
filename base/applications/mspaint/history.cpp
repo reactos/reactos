@@ -164,8 +164,13 @@ void ImageModel::PushImageForUndo(const RECT& rcPartial)
     part.m_bPartial = TRUE;
     part.m_rcPart = rcPartial;
 
+    CRect rcImage = { 0, 0, GetWidth(), GetHeight() };
+    CRect& rc = part.m_rcPart;
+    if (!rc.IntersectRect(rc, rcImage))
+        rc.SetRect(-1, -1, 0, 0);
+
     HBITMAP hbmMaster = LockBitmap();
-    part.m_hbmImage = getSubImage(hbmMaster, rcPartial);
+    part.m_hbmImage = getSubImage(hbmMaster, rc);
     UnlockBitmap(hbmMaster);
 
     PushDone();
@@ -350,17 +355,4 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
 {
     m_hbmMaster = hbmLocked;
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
-}
-
-void ImageModel::SelectionClone(BOOL bUndoable)
-{
-    if (!selectionModel.m_bShow || selectionModel.m_rc.IsRectEmpty())
-        return;
-
-    if (bUndoable)
-        PushImageForUndo();
-
-    selectionModel.DrawSelection(m_hDrawingDC, paletteModel.GetBgColor(),
-                                 toolsModel.IsBackgroundTransparent());
-    NotifyImageChanged();
 }
