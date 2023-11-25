@@ -41,10 +41,12 @@ public:
         CStringW name;
         bool dir;
         unz_file_info64 info;
-        for (ULONG i = 0; i < celt; ++i)
+        for (ULONG i = 0;; ++i)
         {
             if (pceltFetched)
                 *pceltFetched = i;
+            if (i >= celt)
+                return S_OK;
             if (!mEnumerator.next_unique(m_Prefix, name, dir, info))
                 return S_FALSE;
             item = _ILCreate(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
@@ -52,7 +54,6 @@ public:
                 return i ? S_FALSE : E_OUTOFMEMORY;
             rgelt[i] = item;
         }
-        return S_OK;
     }
     STDMETHODIMP Skip(ULONG celt)
     {
