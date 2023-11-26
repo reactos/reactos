@@ -758,9 +758,9 @@ DynamicPathCommonPrefixW(
     _In_ LPCWSTR lpszPath2,
     _Out_ CStringW& strPath)
 {
-    INT cchPath1 = lstrlenW(lpszPath1);
-    INT cchPath2 = lstrlenW(lpszPath2);
-    LPWSTR lpszPath = strPath.GetBuffer(max(cchPath1, cchPath2) + 16);
+    SIZE_T cchPath1 = wcslen(lpszPath1);
+    SIZE_T cchPath2 = wcslen(lpszPath2);
+    LPWSTR lpszPath = strPath.GetBuffer((INT)max(cchPath1, cchPath2) + 16);
     INT ret = PathCommonPrefixW(lpszPath1, lpszPath2, lpszPath);
     strPath.ReleaseBuffer();
     return ret;
