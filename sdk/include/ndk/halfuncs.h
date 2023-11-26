@@ -192,6 +192,23 @@ HalRequestSoftwareInterrupt(
     _In_ KIRQL SoftwareInterruptRequested
 );
 
+#ifdef _M_AMD64
+
+NTHALAPI
+VOID
+NTAPI
+HalSendNMI(
+    _In_ KAFFINITY TargetSet);
+
+NTHALAPI
+VOID
+NTAPI
+HalSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql);
+
+#endif // _M_AMD64
+
 NTHALAPI
 VOID
 NTAPI
