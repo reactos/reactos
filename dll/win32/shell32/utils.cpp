@@ -863,5 +863,5 @@ PathIsEqualOrSubFolder(
     if (!DynamicPathCommonPrefixW(strPath1, pszPath2, strCommon))
         return FALSE;
 
-    return lstrcmpiW(strPath1, strCommon) == 0;
+    return strPath1.CompareNoCase(strCommon) == 0;
 }
