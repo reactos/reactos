@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+BOOL WINAPI ImmDisableTextFrameService(_In_ DWORD dwThreadId);
+
 typedef struct tagSOFTKBDDATA
 {
     UINT uCount;
@@ -317,7 +319,7 @@ typedef struct tagCLIENTIMC
     RTL_CRITICAL_SECTION cs;
     UINT uCodePage;
     HKL hKL;
-    BOOL bUnknown4;
+    BOOL bCtfIme;
 } CLIENTIMC, *PCLIENTIMC;
 
 #ifndef _WIN64

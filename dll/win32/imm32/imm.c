@@ -1104,15 +1104,6 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 }
 
 /***********************************************************************
-*		ImmDisableTextFrameService(IMM32.@)
-*/
-BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)
-{
-    FIXME("Stub\n");
-    return FALSE;
-}
-
-/***********************************************************************
  *              ImmEnumInputContext(IMM32.@)
  */
 BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)

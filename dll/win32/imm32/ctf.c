@@ -12,17 +12,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-typedef struct IMMTLSDATA
-{
-    IInitializeSpy *pSpy;
-    DWORD           dwUnknown1[1];
-    ULARGE_INTEGER  uliCookie;
-    BOOL            bDoCount;
-    DWORD           dwSkipCount;
-    BOOL            bUpdating;
-    DWORD           dwUnknown2;
-} IMMTLSDATA, *PIMMTLSDATA;
-
 /* FIXME: Use RTL */
 static BOOL WINAPI RtlDllShutdownInProgress(VOID)
 {
@@ -33,6 +22,65 @@ static BOOL Imm32InsideLoaderLock(VOID)
 {
     return NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
            NtCurrentTeb()->ClientId.UniqueThread;
+}
+
+static BOOL
+Imm32IsInteractiveUserLogon(VOID)
+{
+    BOOL bOK, IsMember = FALSE;
+    PSID pSid;
+    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
+
+    if (IS_FALSE_UNEXPECTEDLY(AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
+                                                       0, 0, 0, 0, 0, 0, 0, &pSid)))
+    {
+        return FALSE;
+    }
+
+    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
+
+    if (pSid)
+        FreeSid(pSid);
+
+    return bOK && IsMember;
+}
+
+static BOOL
+Imm32IsRunningInMsoobe(VOID)
+{
+    LPWSTR pchFilePart = NULL;
+    WCHAR Buffer[MAX_PATH], FileName[MAX_PATH];
+
+    if (!GetModuleFileNameW(NULL, FileName, _countof(FileName)))
+        return FALSE;
+
+    GetFullPathNameW(FileName, 260u, Buffer, &pchFilePart);
+    if (!pchFilePart)
+        return FALSE;
+
+    return lstrcmpiW(pchFilePart, L"msoobe.exe") == 0;
+}
+
+static BOOL
+Imm32IsCUASEnabledInRegistry(VOID)
+{
+    HKEY hKey;
+    LSTATUS error;
+    DWORD dwType, dwData, cbData;
+
+    error = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\CTF\\SystemShared", &hKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    dwData = 0;
+    cbData = sizeof(dwData);
+    error = RegQueryValueExW(hKey, L"CUAS", NULL, &dwType, (LPBYTE)&dwData, &cbData);
+    RegCloseKey(hKey);
+
+    if (error != ERROR_SUCCESS || dwType != REG_DWORD)
+        return FALSE;
+
+    return !!dwData;
 }
 
 BOOL
@@ -165,6 +213,9 @@ VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
 /* "Active IMM" compatibility flags */
 DWORD g_aimm_compat_flags = 0;
 
+/* Disable CUAS? */
+BOOL g_disable_CUAS_flag = FALSE;
+
 /* The instance of the CTF IME file */
 HINSTANCE g_hCtfIme = NULL;
 
@@ -228,44 +279,24 @@ Imm32CheckAndApplyAppCompat(
 }
 
 /***********************************************************************
- * Text Input Manager (TIM) (that manages Text Input Processors; TIPs)
- */
-static HRESULT
-Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate)
-{
-    HRESULT hr = S_OK;
-
-    if (!IS_CICERO_MODE() ||
-        IS_16BIT_MODE() ||
-        !(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
-    {
-        return S_OK;
-    }
-
-    if (bCreate)
-    {
-        if (!(GetWin32ClientInfo()->CI_flags & CI_CTFTHREADINIT))
-        {
-            hr = CtfImeCreateThreadMgr();
-            if (SUCCEEDED(hr))
-                GetWin32ClientInfo()->CI_flags |= CI_CTFTHREADINIT;
-        }
-    }
-    else if (GetWin32ClientInfo()->CI_flags & CI_CTFTHREADINIT)
-    {
-        hr = CtfImeDestroyThreadMgr();
-        if (SUCCEEDED(hr))
-            GetWin32ClientInfo()->CI_flags &= ~CI_CTFTHREADINIT;
-    }
-
-    return hr;
-}
-
-/***********************************************************************
- * TLS (Thread Local Storage) Related
+ * TLS (Thread-Local Storage)
+ *
+ * See: TlsAlloc
  */
 
 DWORD g_dwTLSIndex = -1;
+
+/* IMM Thread-Local Storage (TLS) data */
+typedef struct IMMTLSDATA
+{
+    IInitializeSpy *pSpy;           /* CoInitialize Spy */
+    DWORD           dwUnknown1;
+    ULARGE_INTEGER  uliCookie;      /* Spy needs cookie */
+    BOOL            bDoCount;       /* Does count skipping? */
+    DWORD           dwSkipCount;    /* The count that it skipped */
+    BOOL            bUpdating;      /* Updating now? */
+    DWORD           dwUnknown2;
+} IMMTLSDATA, *PIMMTLSDATA;
 
 static VOID
 Imm32InitTLS(VOID)
@@ -291,10 +322,10 @@ Imm32AllocateTLS(VOID)
         return pData;
 
     pData = (IMMTLSDATA*)ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMMTLSDATA));
-    if (!pData)
-      return NULL;
+    if (IS_NULL_UNEXPECTEDLY(pData))
+        return NULL;
 
-    if (!TlsSetValue(g_dwTLSIndex, pData))
+    if (IS_FALSE_UNEXPECTEDLY(TlsSetValue(g_dwTLSIndex, pData)))
     {
         ImmLocalFree(pData);
         return NULL;
@@ -362,7 +393,40 @@ Imm32DecCoInitCountSkip(VOID)
 }
 
 /***********************************************************************
+ *		CtfImmEnterCoInitCountSkipMode (IMM32.@)
+ */
+VOID WINAPI CtfImmEnterCoInitCountSkipMode(VOID)
+{
+    IMMTLSDATA *pData;
+
+    TRACE("()\n");
+
+    pData = Imm32GetTLS();
+    if (pData)
+        ++(pData->bDoCount);
+}
+
+/***********************************************************************
+ *		CtfImmLeaveCoInitCountSkipMode (IMM32.@)
+ */
+BOOL WINAPI CtfImmLeaveCoInitCountSkipMode(VOID)
+{
+    IMMTLSDATA *pData;
+
+    TRACE("()\n");
+
+    pData = Imm32GetTLS();
+    if (!pData || !pData->bDoCount)
+        return FALSE;
+
+    --(pData->bDoCount);
+    return TRUE;
+}
+
+/***********************************************************************
  * ISPY (I am not spy!)
+ *
+ * ISPY watches CoInitialize[Ex] / CoUninitialize to manage COM initialization status.
  */
 
 typedef struct ISPY
@@ -413,6 +477,11 @@ ISPY_Release(
     return pSpy->m_cRefs;
 }
 
+/*
+ * (Pre/Post)(Initialize/Uninitialize) will be automatically called from OLE32
+ * as the results of watching.
+ */
+
 static STDMETHODIMP
 ISPY_PreInitialize(
     _Inout_ IInitializeSpy *pThis,
@@ -431,6 +500,7 @@ ISPY_PreInitialize(
         Imm32ActivateOrDeactivateTIM(FALSE);
         CtfImmCoUninitialize();
     }
+
     return S_OK;
 }
 
@@ -472,7 +542,7 @@ ISPY_PreUninitialize(
     {
         IMMTLSDATA *pData = Imm32GetTLS();
         if (pData && !pData->bUpdating)
-            OLE32_FN(CoInitializeEx)(NULL, COINIT_APARTMENTTHREADED);
+            Imm32CoInitializeEx();
     }
 
     return S_OK;
@@ -527,8 +597,8 @@ CtfImmCoInitialize(VOID)
     if (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT)
         return S_OK;
 
-    hr = OLE32_FN(CoInitializeEx)(NULL, COINIT_APARTMENTTHREADED);
-    if (FAILED(hr))
+    hr = Imm32CoInitializeEx();
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     GetWin32ClientInfo()->CI_flags |= CI_CTFCOINIT;
@@ -540,10 +610,10 @@ CtfImmCoInitialize(VOID)
 
     pSpy = Imm32AllocIMMISPY();
     pData->pSpy = (IInitializeSpy*)pSpy;
-    if (!pSpy)
+    if (IS_NULL_UNEXPECTEDLY(pSpy))
         return S_OK;
 
-    if (FAILED(OLE32_FN(CoRegisterInitializeSpy)((IInitializeSpy*)pSpy, &pData->uliCookie)))
+    if (FAILED_UNEXPECTEDLY(Imm32CoRegisterInitializeSpy(pData->pSpy, &pData->uliCookie)))
     {
         Imm32DeleteIMMISPY(pData->pSpy);
         pData->pSpy = NULL;
@@ -568,8 +638,9 @@ CtfImmCoUninitialize(VOID)
     if (pData)
     {
         pData->bUpdating = TRUE;
-        OLE32_FN(CoUninitialize)();
-        pData->bUpdating = 0;
+        Imm32CoUninitialize();
+        pData->bUpdating = FALSE;
+
         GetWin32ClientInfo()->CI_flags &= ~CI_CTFCOINIT;
     }
 
@@ -577,7 +648,7 @@ CtfImmCoUninitialize(VOID)
     if (!pData || !pData->pSpy)
         return;
 
-    OLE32_FN(CoRevokeInitializeSpy)(pData->uliCookie);
+    Imm32CoRevokeInitializeSpy(pData->uliCookie);
     ISPY_Release(pData->pSpy);
     pData->pSpy = NULL;
     pData->uliCookie.QuadPart = 0;
@@ -774,8 +845,59 @@ Imm32EnumCreateCtfICProc(
 }
 
 /***********************************************************************
- * This function calls CtfImeDestroyInputContext if possible.
+ * Thread Input Manager (TIM)
  */
+
+static BOOL
+Imm32IsTIMDisabledInRegistry(VOID)
+{
+    DWORD dwData, cbData;
+    HKEY hKey;
+    LSTATUS error;
+
+    error = RegOpenKeyW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF", &hKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    dwData = 0;
+    cbData = sizeof(dwData);
+    RegQueryValueExW(hKey, L"Disable Thread Input Manager", NULL, NULL, (LPBYTE)&dwData, &cbData);
+    RegCloseKey(hKey);
+    return !!dwData;
+}
+
+HRESULT
+Imm32ActivateOrDeactivateTIM(
+    _In_ BOOL bCreate)
+{
+    HRESULT hr = S_OK;
+
+    if (!IS_CICERO_MODE() ||
+        IS_16BIT_MODE() ||
+        !(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+    {
+        return S_OK;
+    }
+
+    if (bCreate)
+    {
+        if (!(GetWin32ClientInfo()->CI_flags & CI_CTFTIM))
+        {
+            hr = CtfImeCreateThreadMgr();
+            if (SUCCEEDED(hr))
+                GetWin32ClientInfo()->CI_flags |= CI_CTFTIM;
+        }
+    }
+    else if (GetWin32ClientInfo()->CI_flags & CI_CTFTIM)
+    {
+        hr = CtfImeDestroyThreadMgr();
+        if (SUCCEEDED(hr))
+            GetWin32ClientInfo()->CI_flags &= ~CI_CTFTIM;
+    }
+
+    return hr;
+}
+
 HRESULT
 CtfImmTIMDestroyInputContext(
     _In_ HIMC hIMC)
@@ -802,40 +924,51 @@ CtfImmTIMCreateInputContext(
 
     if (GetWin32ClientInfo()->CI_flags & CI_AIMMACTIVATED)
     {
-        if (!pClientImc->bUnknown4)
+        if (!pClientImc->bCtfIme)
         {
             dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
             dwCurrentThreadId = GetCurrentThreadId();
             if (dwImeThreadId == dwCurrentThreadId)
             {
-                pClientImc->bUnknown4 = 1;
+                pClientImc->bCtfIme = TRUE;
                 hr = CtfImeCreateInputContext(hIMC);
                 if (FAILED(hr))
-                    pClientImc->bUnknown4 = 0;
+                    pClientImc->bCtfIme = FALSE;
             }
         }
     }
     else
     {
-        if (!(GetWin32ClientInfo()->CI_flags & 0x100))
+        if (!(GetWin32ClientInfo()->CI_flags & CI_CTFTIM))
             return S_OK;
 
-        if (!pClientImc->bUnknown4)
+        if (!pClientImc->bCtfIme)
         {
             dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
             dwCurrentThreadId = GetCurrentThreadId();
             if ((dwImeThreadId == dwCurrentThreadId) && IS_CICERO_MODE() && !IS_16BIT_MODE())
             {
-                pClientImc->bUnknown4 = 1;
+                pClientImc->bCtfIme = TRUE;
                 hr = CtfImeCreateInputContext(hIMC);
                 if (FAILED(hr))
-                    pClientImc->bUnknown4 = 0;
+                    pClientImc->bCtfIme = FALSE;
             }
         }
     }
 
     ImmUnlockClientImc(pClientImc);
     return hr;
+}
+
+/***********************************************************************
+ *      CtfImmLastEnabledWndDestroy (IMM32.@)
+ */
+HRESULT WINAPI
+CtfImmLastEnabledWndDestroy(
+    _In_ BOOL bCreate)
+{
+    TRACE("(%d)\n", bCreate);
+    return Imm32ActivateOrDeactivateTIM(bCreate);
 }
 
 /***********************************************************************
@@ -909,7 +1042,7 @@ CtfImmIsCiceroEnabled(VOID)
 }
 
 /***********************************************************************
- *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
+ *		CtfImmIsTextFrameServiceDisabled (IMM32.@)
  *
  * @return TRUE if TSF is disabled.
  */
@@ -920,17 +1053,107 @@ CtfImmIsTextFrameServiceDisabled(VOID)
 }
 
 /***********************************************************************
- *		CtfImmTIMActivate(IMM32.@)
+ *		ImmDisableTextFrameService (IMM32.@)
+ */
+BOOL WINAPI
+ImmDisableTextFrameService(_In_ DWORD dwThreadId)
+{
+    HRESULT hr = S_OK;
+
+    TRACE("(0x%lX)\n", dwThreadId);
+
+    if (dwThreadId == -1)
+        g_disable_CUAS_flag = TRUE;
+
+    if ((dwThreadId && !g_disable_CUAS_flag) || (GetWin32ClientInfo()->CI_flags & CI_TSFDISABLED))
+        return TRUE;
+
+    GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
+
+    if (IS_CICERO_MODE() && !IS_16BIT_MODE() &&
+        (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT) &&
+        (GetWin32ClientInfo()->CI_flags & CI_CTFTIM))
+    {
+        hr = CtfImeDestroyThreadMgr();
+        if (SUCCEEDED(hr))
+        {
+            GetWin32ClientInfo()->CI_flags &= ~CI_CTFTIM;
+            CtfImmCoUninitialize();
+        }
+    }
+
+    return hr == S_OK;
+}
+
+/***********************************************************************
+ *		CtfImmTIMActivate (IMM32.@)
+ *
+ * Activates Thread Input Manager (TIM) in the thread.
  */
 HRESULT WINAPI
 CtfImmTIMActivate(_In_ HKL hKL)
 {
-    FIXME("(%p)\n", hKL);
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+
+    TRACE("(%p)\n", hKL);
+
+    if (g_disable_CUAS_flag)
+    {
+        GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
+        return FALSE;
+    }
+
+    if (GetWin32ClientInfo()->CI_flags & CI_TSFDISABLED)
+        return FALSE;
+
+    if (Imm32IsTIMDisabledInRegistry())
+    {
+        GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
+        return FALSE;
+    }
+
+    if (!Imm32IsInteractiveUserLogon() || Imm32IsRunningInMsoobe())
+        return FALSE;
+
+    if (!Imm32IsCUASEnabledInRegistry())
+    {
+        GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
+        return FALSE;
+    }
+
+    if (NtCurrentTeb()->ProcessEnvironmentBlock->AppCompatFlags.LowPart & 0x100)
+    {
+        GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
+        return FALSE;
+    }
+
+    if (RtlIsThreadWithinLoaderCallout() || Imm32InsideLoaderLock())
+        return FALSE;
+
+    if (!IS_CICERO_MODE() || IS_16BIT_MODE())
+        return FALSE;
+
+    if (IS_IME_HKL(hKL))
+        hKL = (HKL)UlongToHandle(MAKELONG(LOWORD(hKL), LOWORD(hKL)));
+
+    if (!ImmLoadIME(hKL))
+        Imm32TF_InvalidAssemblyListCacheIfExist();
+
+    CtfImmCoInitialize();
+
+    if ((GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT) &&
+        !(GetWin32ClientInfo()->CI_flags & CI_CTFTIM))
+    {
+        hr = CtfImeCreateThreadMgr();
+        if (SUCCEEDED(hr))
+            GetWin32ClientInfo()->CI_flags |= CI_CTFTIM;
+    }
+
+    return hr;
 }
 
 /***********************************************************************
- *		CtfImmGenerateMessage(IMM32.@)
+ *		CtfImmGenerateMessage (IMM32.@)
  */
 BOOL WINAPI
 CtfImmGenerateMessage(
@@ -1018,7 +1241,7 @@ CtfImmGenerateMessage(
 }
 
 /***********************************************************************
- *		CtfImmHideToolbarWnd(IMM32.@)
+ *		CtfImmHideToolbarWnd (IMM32.@)
  *
  * Used with CtfImmRestoreToolbarWnd.
  */
@@ -1047,7 +1270,7 @@ CtfImmHideToolbarWnd(VOID)
 }
 
 /***********************************************************************
- *		CtfImmRestoreToolbarWnd(IMM32.@)
+ *		CtfImmRestoreToolbarWnd (IMM32.@)
  *
  * Used with CtfImmHideToolbarWnd.
  */
@@ -1074,7 +1297,7 @@ CtfImmRestoreToolbarWnd(
 }
 
 /***********************************************************************
- *		CtfImmDispatchDefImeMessage(IMM32.@)
+ *		CtfImmDispatchDefImeMessage (IMM32.@)
  */
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(
@@ -1092,7 +1315,7 @@ CtfImmDispatchDefImeMessage(
 }
 
 /***********************************************************************
- *		CtfImmIsGuidMapEnable(IMM32.@)
+ *		CtfImmIsGuidMapEnable (IMM32.@)
  */
 BOOL WINAPI
 CtfImmIsGuidMapEnable(
@@ -1125,7 +1348,7 @@ CtfImmIsGuidMapEnable(
 }
 
 /***********************************************************************
- *		CtfImmGetGuidAtom(IMM32.@)
+ *		CtfImmGetGuidAtom (IMM32.@)
  */
 HRESULT WINAPI
 CtfImmGetGuidAtom(
