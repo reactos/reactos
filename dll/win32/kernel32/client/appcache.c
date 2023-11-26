@@ -415,14 +415,32 @@ GetComPlusPackageInstallStatus(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-SetComPlusPackageInstallStatus(LPVOID lpInfo)
+SetComPlusPackageInstallStatus(IN ULONG ComPlusPackage)
 {
-   STUB;
-   return FALSE;
+    NTSTATUS Status;
+
+    DPRINT("(0x%X)\n", ComPlusPackage);
+
+    if (ComPlusPackage & ~1)
+    {
+        DPRINT1("0x%lX\n", ComPlusPackage);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtSetSystemInformation(SystemComPlusPackage, &ComPlusPackage, sizeof(ComPlusPackage));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("0x%lX\n", Status);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
