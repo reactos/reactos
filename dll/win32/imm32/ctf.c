@@ -410,8 +410,52 @@ HRESULT
 CtfImmTIMCreateInputContext(
     _In_ HIMC hIMC)
 {
+    PCLIENTIMC pClientImc;
+    DWORD_PTR dwImeThreadId, dwCurrentThreadId;
+    HRESULT hr = S_FALSE;
+
     TRACE("(%p)\n", hIMC);
-    return E_NOTIMPL;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (!pClientImc)
+        return E_FAIL;
+
+    if (GetWin32ClientInfo()->CI_flags & CI_AIMMACTIVATED)
+    {
+        if (!pClientImc->bUnknown4)
+        {
+            dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+            dwCurrentThreadId = GetCurrentThreadId();
+            if (dwImeThreadId == dwCurrentThreadId)
+            {
+                pClientImc->bUnknown4 = 1;
+                hr = CtfImeCreateInputContext(hIMC);
+                if (FAILED(hr))
+                    pClientImc->bUnknown4 = 0;
+            }
+        }
+    }
+    else
+    {
+        if (!(GetWin32ClientInfo()->CI_flags & 0x100))
+            return S_OK;
+
+        if (!pClientImc->bUnknown4)
+        {
+            dwImeThreadId = NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+            dwCurrentThreadId = GetCurrentThreadId();
+            if ((dwImeThreadId == dwCurrentThreadId) && IS_CICERO_MODE() && !IS_16BIT_MODE())
+            {
+                pClientImc->bUnknown4 = 1;
+                hr = CtfImeCreateInputContext(hIMC);
+                if (FAILED(hr))
+                    pClientImc->bUnknown4 = 0;
+            }
+        }
+    }
+
+    ImmUnlockClientImc(pClientImc);
+    return hr;
 }
 
 /***********************************************************************
