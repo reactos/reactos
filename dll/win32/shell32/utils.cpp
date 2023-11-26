@@ -826,7 +826,7 @@ DynamicSHGetSpecialFolderPathW(
     return hr;
 }
 
-static void
+static VOID
 DynamicPathRemoveBackslashW(
     _Out_ CStringW& strPath)
 {
