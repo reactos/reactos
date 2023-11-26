@@ -155,7 +155,6 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 
 /* MACROS *************************************************************************/
 
-#define AFFINITY_MASK(ProcessorIndex) ((KAFFINITY)1 << (ProcessorIndex))
 #define PRIORITY_MASK(Priority) (1UL << (Priority))
 
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
