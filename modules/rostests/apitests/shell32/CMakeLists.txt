@@ -19,6 +19,7 @@ list(APPEND SOURCE
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
+    PathIsEqualOrSubFolder.cpp
     PathResolve.cpp
     SHAppBarMessage.cpp
     SHChangeNotify.cpp

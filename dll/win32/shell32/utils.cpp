@@ -747,3 +747,121 @@ SHStartNetConnectionDialogA(
 
     return SHStartNetConnectionDialogW(hwnd, pszRemoteNameW, dwType);
 }
+
+/*************************************************************************
+ * Helper functions for PathIsEqualOrSubFolder
+ */
+
+static INT
+DynamicPathCommonPrefixW(
+    _In_ LPCWSTR lpszPath1,
+    _In_ LPCWSTR lpszPath2,
+    _Out_ CStringW& strPath)
+{
+    INT cchPath1 = lstrlenW(lpszPath1);
+    INT cchPath2 = lstrlenW(lpszPath2);
+    LPWSTR lpszPath = strPath.GetBuffer(max(cchPath1, cchPath2) + 16);
+    INT ret = PathCommonPrefixW(lpszPath1, lpszPath2, lpszPath);
+    strPath.ReleaseBuffer();
+    return ret;
+}
+
+EXTERN_C HRESULT WINAPI
+SHGetPathCchFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, SIZE_T cchPathMax);
+
+static HRESULT
+DynamicSHGetPathFromIDListW(
+    _In_ LPCITEMIDLIST pidl,
+    _Out_ CStringW& strPath)
+{
+    UINT cchPath = MAX_PATH;
+    HRESULT hr;
+    for (;;)
+    {
+        LPWSTR lpszPath = strPath.GetBuffer(cchPath);
+        if (!lpszPath)
+            return E_OUTOFMEMORY;
+
+        hr = SHGetPathCchFromIDListW(pidl, lpszPath, cchPath);
+        strPath.ReleaseBuffer();
+
+        if (hr != E_NOT_SUFFICIENT_BUFFER)
+            break;
+
+        if (cchPath >= MAXUINT / sizeof(WCHAR))
+        {
+            hr = E_FAIL;
+            break;
+        }
+
+        cchPath *= 2;
+    }
+
+    if (FAILED(hr))
+        strPath.Empty();
+
+    return hr;
+}
+
+static HRESULT
+DynamicSHGetSpecialFolderPathW(
+    _In_ HWND hwndOwner,
+    _Out_ CStringW& strPath,
+    _In_ INT nCSIDL,
+    _In_ BOOL bCreate)
+{
+    LPITEMIDLIST pidl;
+    HRESULT hr = SHGetSpecialFolderLocation(hwndOwner, nCSIDL, &pidl);
+    if (SUCCEEDED(hr))
+    {
+        hr = DynamicSHGetPathFromIDListW(pidl, strPath);
+        CoTaskMemFree(pidl);
+    }
+
+    if (FAILED(hr))
+        strPath.Empty();
+    else if (bCreate)
+        CreateDirectoryW(strPath, NULL);
+
+    return hr;
+}
+
+static void
+DynamicPathRemoveBackslashW(
+    _Out_ CStringW& strPath)
+{
+    INT nLength = strPath.GetLength();
+    if (nLength > 0 && strPath[nLength - 1] == L'\\')
+        strPath = strPath.Left(nLength - 1);
+}
+
+/*************************************************************************
+ *                PathIsEqualOrSubFolder (SHELL32.755)
+ */
+EXTERN_C
+BOOL WINAPI
+PathIsEqualOrSubFolder(
+    _In_ LPCWSTR pszPath1OrCSIDL,
+    _In_ LPCWSTR pszPath2)
+{
+    CStringW strCommon, strPath1;
+
+    TRACE("(%s %s)\n", debugstr_w(pszPath1OrCSIDL), debugstr_w(pszPath2));
+
+    if (IS_INTRESOURCE(pszPath1OrCSIDL))
+    {
+        DynamicSHGetSpecialFolderPathW(
+            NULL, strPath1, LOWORD(pszPath1OrCSIDL) | CSIDL_FLAG_DONT_VERIFY, FALSE);
+    }
+    else
+    {
+        strPath1 = pszPath1OrCSIDL;
+    }
+
+    DynamicPathRemoveBackslashW(strPath1);
+
+    if (!DynamicPathCommonPrefixW(strPath1, pszPath2, strCommon))
+        return FALSE;
+
+    return lstrcmpiW(strPath1, strCommon) == 0;
+}

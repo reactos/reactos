@@ -498,6 +498,8 @@ BOOL WINAPI PathIsSameRootAW(LPCVOID lpszPath1, LPCVOID lpszPath2);
 
 BOOL WINAPI PathFindOnPathAW(LPVOID sFile, LPCVOID *sOtherDirs);
 
+BOOL WINAPI PathIsEqualOrSubFolder(_In_ LPCWSTR pszFile1OrCSIDL, _In_ LPCWSTR pszFile2);
+
 /****************************************************************************
  * Shell File Operations error codes - SHFileOperationA/W
  */
