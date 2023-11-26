@@ -5,11 +5,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "&Idioma de entrada padrão", -1, 5, 5, 246, 55
-    LTEXT "Seleccione um dos idiomas de entrada instalados para utilizar quando o computador for iniciado.", -1, 15, 15, 230, 23
+    GROUPBOX "&Idioma de teclado predefinido", -1, 5, 5, 246, 55
+    LTEXT "Seleccione um dos idiomas de teclado instalados para utilizar quando o computador for iniciado.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "&Serviços instalados", -1, 5, 65, 246, 125
-    LTEXT "Seleccione os serviços desejados para cada idioma de entrada mostrado na lista. Utilize os botões 'Adicionar' e 'Remover' para modificar a lista.", -1, 15, 78, 230, 25
+    LTEXT "Seleccione os serviços que deseja para cada um dos idiomas de teclado mostrado na lista. Utilize os botões 'Adicionar' e 'Remover' para modificar a lista.", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "&Adicionar...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "&Remover", IDC_REMOVE_BUTTON, 175, 125, 70, 14
@@ -21,7 +21,7 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Definições avançadas"
+CAPTION "Avançadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configuração do sistema", -1, 7, 7, 240, 70
@@ -37,7 +37,7 @@ BEGIN
     GROUPBOX "Para desactivar Caps Lock", -1, 7, 7, 258, 26
     AUTORADIOBUTTON "Pressione a tecla CAPS LOC&K", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
     AUTORADIOBUTTON "Pressione a tecla SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-    GROUPBOX "Teclas de acesso para idiomas de entrada", -1, 7, 37, 258, 95
+    GROUPBOX "Teclas de acesso para idiomas de teclado", -1, 7, 37, 258, 95
     LTEXT "Acção", -1, 14, 47, 60, 9
     RTEXT "Seqüência de &teclas", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
@@ -48,12 +48,12 @@ END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Adicionar idioma de entrada"
+CAPTION "Adicionar idioma de teclado"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Idioma de entrada:", -1, 7, 7, 61, 10
+    LTEXT "&Idioma de teclado:", -1, 7, 7, 61, 10
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Esquema do teclado/IME:", -1, 7, 36, 110, 10
+    LTEXT "&Esquema de teclado/IME:", -1, 7, 36, 110, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 169, 68, 50, 14
@@ -65,7 +65,7 @@ CAPTION "Alterar seqüência de teclas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "Alternar &idiomas de entrada", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    AUTOCHECKBOX "Alternar &idiomas de teclado", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "SHIFT", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&CTRL", IDC_CTRL_LANG, 29, 31, 30, 11
@@ -81,10 +81,10 @@ END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Propriedades do idioma de entrada"
+CAPTION "Propriedades do idioma de teclado"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Idioma de entrada:", -1, 7, 7, 61, 8
+    LTEXT "Idioma de teclado:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
     LTEXT "&Esquema do teclado/IME:", -1, 7, 21, 110, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Serviços de texto e idiomas de entrada"
+    IDS_CPLSYSTEMNAME "Serviços de texto e idiomas de introdução"
     IDS_CPLSYSTEMDESCRIPTION "Personaliza configurações para entrada de texto de idiomas"
     IDS_KEYBOARD "Teclado"
     IDS_NONE "(Nenhum)"
@@ -102,14 +102,14 @@ BEGIN
     IDS_RESTART "Deseja reiniciar o computador agora?"
     IDS_WHATS_THIS "O que é isto?"
     IDS_LANGUAGE "Idioma"
-    IDS_LAYOUT "Esquema do teclado"
-    IDS_REM_QUESTION "Deseja remover o esquema do teclado selecionado?"
+    IDS_LAYOUT "Esquema de teclado"
+    IDS_REM_QUESTION "Deseja remover o esquema de teclado seleccionado?"
     IDS_CONFIRMATION "Confirmação"
     IDS_LAYOUT_EXISTS "Este esquema já existe."
     IDS_LAYOUT_EXISTS2 "Este esquema já existe e não pode ser adicionado."
     IDS_CTRL_SHIFT "CTRL+SHIFT"
     IDS_LEFT_ALT_SHIFT "ALT esquerdo+SHIFT"
-    IDS_SWITCH_BET_INLANG "Alternar entre idiomas de entrada"
+    IDS_SWITCH_BET_INLANG "Alternar entre idiomas de teclado"
     IDS_REBOOT_NOW "Tem de reiniciar o computador para que as novas definições surtam efeito.\nPretende reiniciar o computador agora?"
 END
 
