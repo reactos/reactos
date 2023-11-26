@@ -900,7 +900,7 @@ SetProcessAffinityMask(IN HANDLE hProcess,
     Status = NtSetInformationProcess(hProcess,
                                      ProcessAffinityMask,
                                      (PVOID)&dwProcessAffinityMask,
-                                     sizeof(DWORD));
+                                     sizeof(dwProcessAffinityMask));
     if (!NT_SUCCESS(Status))
     {
         /* Handle failure */
