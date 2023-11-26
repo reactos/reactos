@@ -126,6 +126,7 @@ KiInitializeHandBuiltThread(
     KeInitializeThread(Process, Thread, NULL, NULL, NULL, NULL, NULL, Stack);
 
     Thread->NextProcessor = Prcb->Number;
+    Thread->IdealProcessor = Prcb->Number;
     Thread->Priority = HIGH_PRIORITY;
     Thread->State = Running;
     Thread->Affinity = (ULONG_PTR)1 << Prcb->Number;
