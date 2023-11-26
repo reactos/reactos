@@ -34,6 +34,53 @@ extern "C"
 #ifndef NTOS_MODE_USER
 
 //
+// Affinity helpers
+//
+FORCEINLINE KAFFINITY AFFINITY_MASK(ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+    return (KAFFINITY)1 << Index;
+}
+
+FORCEINLINE BOOLEAN BitScanForwardAffinity(PULONG Index, KAFFINITY Mask)
+{
+#ifdef _WIN64
+    return BitScanForward64(Index, Mask);
+#else
+    return BitScanForward(Index, Mask);
+#endif
+}
+
+FORCEINLINE BOOLEAN BitScanReverseAffinity(PULONG Index, KAFFINITY Mask)
+{
+#ifdef _WIN64
+    return BitScanReverse64(Index, Mask);
+#else
+    return BitScanReverse(Index, Mask);
+#endif
+}
+
+FORCEINLINE BOOLEAN InterlockedBitTestAndSetAffinity(volatile KAFFINITY *Affinity, ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+#ifdef _WIN64
+    return InterlockedBitTestAndSet64((PLONG64)Affinity, Index);
+#else
+    return InterlockedBitTestAndSet((PLONG)Affinity, Index);
+#endif
+}
+
+FORCEINLINE BOOLEAN InterlockedBitTestAndResetAffinity(volatile KAFFINITY *Affinity, ULONG Index)
+{
+    ASSERT(Index < sizeof(KAFFINITY) * 8);
+#ifdef _WIN64
+    return InterlockedBitTestAndReset64((PLONG64)Affinity, Index);
+#else
+    return InterlockedBitTestAndReset((PLONG)Affinity, Index);
+#endif
+}
+
+//
 // APC Functions
 //
 VOID
