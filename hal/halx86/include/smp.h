@@ -7,6 +7,15 @@
 
 #pragma once
 
+#define AFFINITY_MASK(Id) ((KAFFINITY)1 << (Id))
+
+/* Helper to find the lowest CPU in a KAFFINITY */
+#ifdef _WIN64
+#define BitScanForwardAffinity BitScanForward64
+#else
+#define BitScanForwardAffinity BitScanForward
+#endif
+
 /* This table is filled for each physical processor on system */
 typedef struct _PROCESSOR_IDENTITY
 {
@@ -53,3 +62,32 @@ VOID
 NTAPI
 HalpRequestIpi(
     _In_ KAFFINITY TargetProcessors);
+
+VOID
+NTAPI
+HalpBroadcastIpiSpecifyVector(
+    _In_ UCHAR Vector,
+    _In_ BOOLEAN IncludeSelf);
+
+VOID
+NTAPI
+HalRequestIpiSpecifyVector(
+    _In_ KAFFINITY TargetSet,
+    _In_ UCHAR Vector);
+
+#ifdef _M_AMD64
+
+NTHALAPI
+VOID
+NTAPI
+HalpSendNMI(
+    _In_ KAFFINITY TargetSet);
+
+NTHALAPI
+VOID
+NTAPI
+HalpSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql);
+
+#endif // _M_AMD64
