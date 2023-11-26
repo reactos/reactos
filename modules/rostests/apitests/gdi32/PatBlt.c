@@ -1,8 +1,9 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for ...
+ * PURPOSE:         Test for PatBlt
  * PROGRAMMERS:     Timo Kreuzer
+ *                  Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
@@ -16,6 +17,8 @@ void Test_PatBlt_Params()
     BOOL ret;
     ULONG i, rop;
     HDC hdc;
+    HBITMAP hBitmap;
+    HGDIOBJ hOldBitmap;
 
     /* Test a rop that contains only the operation index */
     ret = PatBlt(hdcTarget, 0, 0, 1, 1, PATCOPY & 0x00FF0000);
@@ -73,8 +76,36 @@ void Test_PatBlt_Params()
     ok_err(0);
     DeleteDC(hdc);
 
-
-
+    /* Test with bitmap and negative values */
+    hdc = CreateCompatibleDC(NULL);
+    hBitmap = CreateCompatibleBitmap(hdc, 8, 8);
+    hOldBitmap = SelectObject(hdc, hBitmap);
+    SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+    ok_long(PatBlt(hdc, 2, 2, -1, 1, PATCOPY), TRUE);
+    ok_long(GetPixel(hdc, 1, 1), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 1, 2), RGB(255, 255, 255));
+    ok_long(GetPixel(hdc, 1, 3), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 1), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 2), RGB(0, 0, 0));
+    SetPixel(hdc, 1, 2, RGB(0, 0, 0));
+    ok_long(PatBlt(hdc, 2, 2, 1, -1, PATCOPY), TRUE);
+    ok_long(GetPixel(hdc, 1, 2), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 1, 3), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 1), RGB(255, 255, 255));
+    ok_long(GetPixel(hdc, 2, 2), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 3), RGB(0, 0, 0));
+    SetPixel(hdc, 2, 1, RGB(0, 0, 0));
+    ok_long(PatBlt(hdc, 3, 2, -2, -1, PATCOPY), TRUE);
+    ok_long(GetPixel(hdc, 0, 2), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 0, 3), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 1, 1), RGB(255, 255, 255));
+    ok_long(GetPixel(hdc, 1, 2), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 1, 3), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 1), RGB(255, 255, 255));
+    ok_long(GetPixel(hdc, 2, 2), RGB(0, 0, 0));
+    ok_long(GetPixel(hdc, 2, 3), RGB(0, 0, 0));
+    DeleteObject(SelectObject(hdc, hOldBitmap));
+    DeleteDC(hdc);
 }
 
 void Test_BrushOrigin()
@@ -120,7 +151,6 @@ void Test_BrushOrigin()
     ok_long(gpulTargetBits[16], 0);
     ok_long(gpulTargetBits[17], 0xffffff);
     ok_long(gpulTargetBits[18], 0);
-
 }
 
 START_TEST(PatBlt)
@@ -157,7 +187,6 @@ START_TEST(PatBlt)
         return;
     }
 
-
     if (!SelectObject(hdcTarget, ghbmpTarget))
     {
         printf("Failed to select bitmap\n");
@@ -167,7 +196,4 @@ START_TEST(PatBlt)
     Test_PatBlt_Params();
 
     Test_BrushOrigin();
-
-
 }
-
