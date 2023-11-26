@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -99,7 +99,7 @@ BEGIN
     IDS_KEYBOARD "Teclado"
     IDS_NONE "(Nenhum)"
     IDS_UNKNOWN "(Desconhecido)"
-    IDS_RESTART "Deseja reiniciar o seu computador agora?"
+    IDS_RESTART "Deseja reiniciar o computador agora?"
     IDS_WHATS_THIS "O que é isto?"
     IDS_LANGUAGE "Idioma"
     IDS_LAYOUT "Esquema do teclado"
@@ -110,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "CTRL+SHIFT"
     IDS_LEFT_ALT_SHIFT "ALT esquerdo+SHIFT"
     IDS_SWITCH_BET_INLANG "Alternar entre idiomas de entrada"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "Tem de reiniciar o computador para que as novas definições surtam efeito.\nPretende reiniciar o computador agora?"
 END
 
 STRINGTABLE
