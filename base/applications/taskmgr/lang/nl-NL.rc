@@ -406,7 +406,7 @@ BEGIN
     IDS_TAB_IOOTHERBYTES "I/O: overige bytes"
     IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Kolommen selecteren..."
-    IDS_MENU_16BITTASK "&16-bits taken weergeven"
+    IDS_MENU_16BITTASK "&16-bits taken weergeven" //FIXME: Please double-check this accelerator
     IDS_MENU_WINDOWS "&Vensters"
     IDS_MENU_LARGEICONS "&Grote pictogrammen"
     IDS_MENU_SMALLICONS "&Kleine pictogrammen"
