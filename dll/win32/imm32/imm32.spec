@@ -1,6 +1,7 @@
 @ stdcall CtfAImmActivate(ptr)
 @ stdcall CtfAImmDeactivate(long)
 @ stdcall CtfAImmIsIME(ptr)
+@ stdcall CtfImmCoUninitialize()
 @ stdcall CtfImmDispatchDefImeMessage(ptr long ptr ptr)
 @ stdcall CtfImmGenerateMessage(ptr long)
 @ stdcall CtfImmGetGuidAtom(ptr long ptr)

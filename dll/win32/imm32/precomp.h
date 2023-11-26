@@ -192,3 +192,6 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 
 HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
 HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);
+HRESULT CtfImmCoInitialize(VOID);
+HRESULT CtfImeCreateThreadMgr(VOID);
+HRESULT CtfImeDestroyThreadMgr(VOID);

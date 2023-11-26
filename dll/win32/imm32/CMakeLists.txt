@@ -45,6 +45,6 @@ list(APPEND imm32_rc_deps
 add_library(imm32 MODULE ${SOURCE} imm32.rc)
 set_module_type(imm32 win32dll UNICODE ENTRYPOINT ImmDllInitialize 12)
 set_source_files_properties(imm32.rc PROPERTIES OBJECT_DEPENDS "${imm32_rc_deps}")
-target_link_libraries(imm32 wine win32ksys)
+target_link_libraries(imm32 wine win32ksys uuid)
 add_importlibs(imm32 advapi32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)

@@ -8,8 +8,32 @@
 #include "precomp.h"
 #include <msctf.h>
 #include <ctfutb.h>
+#include <objidl.h> /* for IInitializeSpy */
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
+
+typedef struct IMMTLSDATA
+{
+    IInitializeSpy *pSpy;
+    DWORD           dwUnknown1[1];
+    ULARGE_INTEGER  uliCookie;
+    BOOL            bDoCount;
+    DWORD           dwSkipCount;
+    BOOL            bUpdating;
+    DWORD           dwUnknown2;
+} IMMTLSDATA, *PIMMTLSDATA;
+
+/* FIXME: Use RTL */
+static BOOL WINAPI RtlDllShutdownInProgress(VOID)
+{
+    return FALSE;
+}
+
+static BOOL Imm32InsideLoaderLock(VOID)
+{
+    return NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
+           NtCurrentTeb()->ClientId.UniqueThread;
+}
 
 BOOL
 Imm32GetFn(
@@ -201,6 +225,362 @@ Imm32CheckAndApplyAppCompat(
 
     /* Is the app's IME disabled or not? */
     return pApphelpCheckIME(pszAppName);
+}
+
+/***********************************************************************
+ * Text Input Manager (TIM) (that manages Text Input Processors; TIPs)
+ */
+static HRESULT
+Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate)
+{
+    HRESULT hr = S_OK;
+
+    if (!IS_CICERO_MODE() ||
+        IS_16BIT_MODE() ||
+        !(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+    {
+        return S_OK;
+    }
+
+    if (bCreate)
+    {
+        if (!(GetWin32ClientInfo()->CI_flags & CI_CTFTHREADINIT))
+        {
+            hr = CtfImeCreateThreadMgr();
+            if (SUCCEEDED(hr))
+                GetWin32ClientInfo()->CI_flags |= CI_CTFTHREADINIT;
+        }
+    }
+    else if (GetWin32ClientInfo()->CI_flags & CI_CTFTHREADINIT)
+    {
+        hr = CtfImeDestroyThreadMgr();
+        if (SUCCEEDED(hr))
+            GetWin32ClientInfo()->CI_flags &= ~CI_CTFTHREADINIT;
+    }
+
+    return hr;
+}
+
+/***********************************************************************
+ * TLS (Thread Local Storage) Related
+ */
+
+DWORD g_dwTLSIndex = -1;
+
+static VOID
+Imm32InitTLS(VOID)
+{
+    RtlEnterCriticalSection(&gcsImeDpi);
+
+    if (g_dwTLSIndex == -1)
+        g_dwTLSIndex = TlsAlloc();
+
+    RtlLeaveCriticalSection(&gcsImeDpi);
+}
+
+static IMMTLSDATA*
+Imm32AllocateTLS(VOID)
+{
+    IMMTLSDATA *pData;
+
+    if (g_dwTLSIndex == -1)
+        return NULL;
+
+    pData = (IMMTLSDATA*)TlsGetValue(g_dwTLSIndex);
+    if (pData)
+        return pData;
+
+    pData = (IMMTLSDATA*)ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMMTLSDATA));
+    if (!pData)
+      return NULL;
+
+    if (!TlsSetValue(g_dwTLSIndex, pData))
+    {
+        ImmLocalFree(pData);
+        return NULL;
+    }
+
+    return pData;
+}
+
+static IMMTLSDATA*
+Imm32GetTLS(VOID)
+{
+    if (g_dwTLSIndex == -1)
+        return NULL;
+
+    return (IMMTLSDATA*)TlsGetValue(g_dwTLSIndex);
+}
+
+/* Get */
+static DWORD
+Imm32GetCoInitCountSkip(VOID)
+{
+    IMMTLSDATA *pData = Imm32GetTLS();
+    if (!pData)
+        return 0;
+    return pData->dwSkipCount;
+}
+
+/* Increment */
+static DWORD
+Imm32IncCoInitCountSkip(VOID)
+{
+    IMMTLSDATA *pData;
+    DWORD dwOldSkipCount;
+
+    pData = Imm32GetTLS();
+    if (!pData)
+        return 0;
+
+    dwOldSkipCount = pData->dwSkipCount;
+    if (pData->bDoCount)
+        pData->dwSkipCount = dwOldSkipCount + 1;
+
+    return dwOldSkipCount;
+}
+
+/* Decrement */
+static DWORD
+Imm32DecCoInitCountSkip(VOID)
+{
+    DWORD dwSkipCount;
+    IMMTLSDATA *pData;
+
+    pData = Imm32GetTLS();;
+    if (!pData)
+        return 0;
+
+    dwSkipCount = pData->dwSkipCount;
+    if (pData->bDoCount)
+    {
+        if (dwSkipCount)
+            pData->dwSkipCount = dwSkipCount - 1;
+    }
+
+    return dwSkipCount;
+}
+
+/***********************************************************************
+ * ISPY (I am not spy!)
+ */
+
+typedef struct ISPY
+{
+    const IInitializeSpyVtbl *m_pSpyVtbl;
+    LONG m_cRefs;
+} ISPY, *PISPY;
+
+static STDMETHODIMP
+ISPY_QueryInterface(
+    _Inout_ IInitializeSpy *pThis,
+    _In_ REFIID riid,
+    _Inout_ LPVOID *ppvObj)
+{
+    ISPY *pSpy = (ISPY*)pThis;
+
+    if (!ppvObj)
+        return E_INVALIDARG;
+
+    *ppvObj = NULL;
+
+    if (!IsEqualIID(riid, &IID_IUnknown) && !IsEqualIID(riid, &IID_IInitializeSpy))
+        return E_NOINTERFACE;
+
+    ++(pSpy->m_cRefs);
+    *ppvObj = pSpy;
+    return S_OK;
+}
+
+static STDMETHODIMP_(ULONG)
+ISPY_AddRef(
+    _Inout_ IInitializeSpy *pThis)
+{
+    ISPY *pSpy = (ISPY*)pThis;
+    return ++pSpy->m_cRefs;
+}
+
+static STDMETHODIMP_(ULONG)
+ISPY_Release(
+    _Inout_ IInitializeSpy *pThis)
+{
+    ISPY *pSpy = (ISPY*)pThis;
+    if (--pSpy->m_cRefs == 0)
+    {
+        ImmLocalFree(pSpy);
+        return 0;
+    }
+    return pSpy->m_cRefs;
+}
+
+static STDMETHODIMP
+ISPY_PreInitialize(
+    _Inout_ IInitializeSpy *pThis,
+    _In_ DWORD dwCoInit,
+    _In_ DWORD dwCurThreadAptRefs)
+{
+    DWORD cCount;
+
+    UNREFERENCED_PARAMETER(pThis);
+
+    cCount = Imm32IncCoInitCountSkip();
+    if (!dwCoInit &&
+        (dwCurThreadAptRefs == cCount + 1) &&
+        (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+    {
+        Imm32ActivateOrDeactivateTIM(FALSE);
+        CtfImmCoUninitialize();
+    }
+    return S_OK;
+}
+
+static STDMETHODIMP
+ISPY_PostInitialize(
+    _Inout_ IInitializeSpy *pThis,
+    _In_ HRESULT hrCoInit,
+    _In_ DWORD dwCoInit,
+    _In_ DWORD dwNewThreadAptRefs)
+{
+    DWORD CoInitCountSkip;
+
+    UNREFERENCED_PARAMETER(pThis);
+    UNREFERENCED_PARAMETER(dwCoInit);
+
+    CoInitCountSkip = Imm32GetCoInitCountSkip();
+
+    if ((hrCoInit != S_FALSE) ||
+        (dwNewThreadAptRefs != CoInitCountSkip + 2) ||
+        !(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+    {
+        return hrCoInit;
+    }
+
+    return S_OK;
+}
+
+static STDMETHODIMP
+ISPY_PreUninitialize(
+    _Inout_ IInitializeSpy *pThis,
+    _In_ DWORD dwCurThreadAptRefs)
+{
+    UNREFERENCED_PARAMETER(pThis);
+
+    if (dwCurThreadAptRefs == 1 &&
+        !RtlDllShutdownInProgress() &&
+        !Imm32InsideLoaderLock() &&
+        (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+    {
+        IMMTLSDATA *pData = Imm32GetTLS();
+        if (pData && !pData->bUpdating)
+            OLE32_FN(CoInitializeEx)(NULL, COINIT_APARTMENTTHREADED);
+    }
+
+    return S_OK;
+}
+
+static STDMETHODIMP
+ISPY_PostUninitialize(
+    _In_ IInitializeSpy *pThis,
+    _In_ DWORD dwNewThreadAptRefs)
+{
+    UNREFERENCED_PARAMETER(pThis);
+    UNREFERENCED_PARAMETER(dwNewThreadAptRefs);
+    Imm32DecCoInitCountSkip();
+    return S_OK;
+}
+
+static const IInitializeSpyVtbl g_vtblISPY =
+{
+    ISPY_QueryInterface,
+    ISPY_AddRef,
+    ISPY_Release,
+    ISPY_PreInitialize,
+    ISPY_PostInitialize,
+    ISPY_PreUninitialize,
+    ISPY_PostUninitialize,
+};
+
+static ISPY*
+Imm32AllocIMMISPY(VOID)
+{
+    ISPY *pSpy = (ISPY*)ImmLocalAlloc(0, sizeof(ISPY));
+    if (!pSpy)
+        return NULL;
+
+    pSpy->m_pSpyVtbl = &g_vtblISPY;
+    pSpy->m_cRefs = 1;
+    return pSpy;
+}
+
+#define Imm32DeleteIMMISPY(pSpy) ImmLocalFree(pSpy)
+
+/***********************************************************************
+ *		CtfImmCoInitialize (Not exported)
+ */
+HRESULT
+CtfImmCoInitialize(VOID)
+{
+    HRESULT hr;
+    IMMTLSDATA *pData;
+    ISPY *pSpy;
+
+    if (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT)
+        return S_OK;
+
+    hr = OLE32_FN(CoInitializeEx)(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return hr;
+
+    GetWin32ClientInfo()->CI_flags |= CI_CTFCOINIT;
+    Imm32InitTLS();
+
+    pData = Imm32AllocateTLS();
+    if (!pData || pData->pSpy)
+        return S_OK;
+
+    pSpy = Imm32AllocIMMISPY();
+    pData->pSpy = (IInitializeSpy*)pSpy;
+    if (!pSpy)
+        return S_OK;
+
+    if (FAILED(OLE32_FN(CoRegisterInitializeSpy)((IInitializeSpy*)pSpy, &pData->uliCookie)))
+    {
+        Imm32DeleteIMMISPY(pData->pSpy);
+        pData->pSpy = NULL;
+        pData->uliCookie.QuadPart = 0;
+    }
+
+    return S_OK;
+}
+
+/***********************************************************************
+ *		CtfImmCoUninitialize (IMM32.@)
+ */
+VOID WINAPI
+CtfImmCoUninitialize(VOID)
+{
+    IMMTLSDATA *pData;
+
+    if (!(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
+        return;
+
+    pData = Imm32GetTLS();
+    if (pData)
+    {
+        pData->bUpdating = TRUE;
+        OLE32_FN(CoUninitialize)();
+        pData->bUpdating = 0;
+        GetWin32ClientInfo()->CI_flags &= ~CI_CTFCOINIT;
+    }
+
+    pData = Imm32AllocateTLS();
+    if (!pData || !pData->pSpy)
+        return;
+
+    OLE32_FN(CoRevokeInitializeSpy)(pData->uliCookie);
+    ISPY_Release(pData->pSpy);
+    pData->pSpy = NULL;
+    pData->uliCookie.QuadPart = 0;
 }
 
 /***********************************************************************
@@ -691,18 +1071,6 @@ CtfImmRestoreToolbarWnd(
         pBarMgr->lpVtbl->ShowFloating(pBarMgr, dwShowFlags);
 
     pBarMgr->lpVtbl->Release(pBarMgr);
-}
-
-BOOL Imm32InsideLoaderLock(VOID)
-{
-    return (NtCurrentTeb()->ProcessEnvironmentBlock->LoaderLock->OwningThread ==
-            NtCurrentTeb()->ClientId.UniqueThread);
-}
-
-/* FIXME: Use RTL */
-BOOL WINAPI RtlDllShutdownInProgress(VOID)
-{
-    return FALSE;
 }
 
 /***********************************************************************
