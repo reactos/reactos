@@ -715,9 +715,9 @@ static UINT ICO_ExtractIconExW(
             if( !xresdir )
             {
 #ifdef __REACTOS__
-              /* XP/2K3 can decode icons this way. Vista/Win7, cannot. This
-               * handles damaged Resources in 'Icon Group' by using the 'Icon'
-               * resources. Error can occur in older Watcom C/C++ compiles. */
+              /* XP/2K3 can decode icons this way. Vista/7 cannot. This handles
+               * damaged Resources in 'Icon Group' by falling back to 'Icon' resources.
+               * Older Watcom C/C++ compilers can generate such a case */
               const IMAGE_RESOURCE_DIRECTORY *resdir;
               WARN("icon entry %d not found\n", LOWORD(pIconId[i]));
 
