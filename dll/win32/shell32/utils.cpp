@@ -788,12 +788,11 @@ DynamicSHGetPathFromIDListW(
         if (hr != E_NOT_SUFFICIENT_BUFFER)
             break;
 
-        if (cchPath >= MAXUINT / sizeof(WCHAR))
+        if (cchPath >= MAXUINT / 2)
         {
             hr = E_FAIL;
             break;
         }
-
         cchPath *= 2;
     }
 
