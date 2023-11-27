@@ -1,5 +1,6 @@
 
 list(APPEND HAL_SMP_SOURCE
+    apic/apicsmp.c
     generic/buildtype.c
     generic/spinlock.c
     smp/ipi.c
