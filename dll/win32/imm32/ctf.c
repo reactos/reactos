@@ -6,7 +6,7 @@
  */
 
 #include "precomp.h"
-#include <msctf.h>
+#include <msctf.h> /* for ITfLangBarMgr */
 #include <objidl.h> /* for IInitializeSpy */
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
