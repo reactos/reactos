@@ -27,7 +27,7 @@ HDA_InterruptService(
     // Check if this interrupt is ours
     InterruptStatus = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_INTR_STATUS));
 
-    DPRINT1("HDA_InterruptService %lx\n", InterruptStatus);
+    DPRINT("HDA_InterruptService %lx\n", InterruptStatus);
     if ((InterruptStatus & INTR_STATUS_GLOBAL) == 0)
         return FALSE;
 

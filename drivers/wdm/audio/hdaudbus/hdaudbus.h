@@ -9,7 +9,7 @@
 // Include Haiku headers
 #include "driver.h"
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define TAG_HDA 'bADH'
