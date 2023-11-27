@@ -669,6 +669,12 @@ NTSTATUS
 IopInitPlugPlayEvents(VOID);
 
 NTSTATUS
+IopQueueDeviceChangeEvent(
+    _In_ const GUID *EventGuid,
+    _In_ const GUID *InterfaceClassGuid,
+    _In_ PUNICODE_STRING SymbolicLinkName);
+
+NTSTATUS
 IopQueueTargetDeviceEvent(
     const GUID *Guid,
     PUNICODE_STRING DeviceIds
