@@ -652,7 +652,7 @@ int wmain(int argc, WCHAR **argv)
                 }
                 if (SUCCEEDED(hr))
                 {
-                    UINT first = 10, last = 60000, cmf = 0, nosub = 0, fakeinit = 0;
+                    UINT first = 10, last = 9000, cmf = 0, nosub = 0, fakeinit = 0;
                     for (; ++n < argc;)
                     {
                         if (argv[n][0] != '-' && argv[n][0] != '/')
