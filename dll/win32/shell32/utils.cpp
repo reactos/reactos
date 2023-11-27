@@ -774,9 +774,9 @@ DynamicSHGetPathFromIDListW(
     _In_ LPCITEMIDLIST pidl,
     _Out_ CStringW& strPath)
 {
-    UINT cchPath = MAX_PATH;
     HRESULT hr;
-    for (;;)
+
+    for (UINT cchPath = MAX_PATH;; cchPath *= 2)
     {
         LPWSTR lpszPath = strPath.GetBuffer(cchPath);
         if (!lpszPath)
@@ -793,7 +793,6 @@ DynamicSHGetPathFromIDListW(
             hr = E_FAIL;
             break;
         }
-        cchPath *= 2;
     }
 
     if (FAILED(hr))
