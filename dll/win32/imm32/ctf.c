@@ -31,9 +31,10 @@ Imm32IsInteractiveUserLogon(VOID)
     PSID pSid;
     SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
 
-    if (IS_FALSE_UNEXPECTEDLY(AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
-                                                       0, 0, 0, 0, 0, 0, 0, &pSid)))
+    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
+                                  0, 0, 0, 0, 0, 0, 0, &pSid))
     {
+        ERR("Error: %ld\n", GetLastError());
         return FALSE;
     }
 
@@ -595,26 +596,27 @@ CtfImmCoInitialize(VOID)
     ISPY *pSpy;
 
     if (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT)
-        return S_OK;
+        return S_OK; /* Already initialized */
 
     hr = Imm32CoInitializeEx();
     if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+        return hr; /* CoInitializeEx failed */
 
     GetWin32ClientInfo()->CI_flags |= CI_CTFCOINIT;
     Imm32InitTLS();
 
     pData = Imm32AllocateTLS();
     if (!pData || pData->pSpy)
-        return S_OK;
+        return S_OK; /* Cannot allocate or already it has a spy */
 
     pSpy = Imm32AllocIMMISPY();
     pData->pSpy = (IInitializeSpy*)pSpy;
     if (IS_NULL_UNEXPECTEDLY(pSpy))
-        return S_OK;
+        return S_OK; /* Cannot allocate a spy */
 
     if (FAILED_UNEXPECTEDLY(Imm32CoRegisterInitializeSpy(pData->pSpy, &pData->uliCookie)))
     {
+        /* Failed to register the spy */
         Imm32DeleteIMMISPY(pData->pSpy);
         pData->pSpy = NULL;
         pData->uliCookie.QuadPart = 0;
@@ -632,13 +634,13 @@ CtfImmCoUninitialize(VOID)
     IMMTLSDATA *pData;
 
     if (!(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
-        return;
+        return; /* Not CoInitialize'd */
 
     pData = Imm32GetTLS();
     if (pData)
     {
         pData->bUpdating = TRUE;
-        Imm32CoUninitialize();
+        Imm32CoUninitialize(); /* Do CoUninitialize */
         pData->bUpdating = FALSE;
 
         GetWin32ClientInfo()->CI_flags &= ~CI_CTFCOINIT;
@@ -646,8 +648,9 @@ CtfImmCoUninitialize(VOID)
 
     pData = Imm32AllocateTLS();
     if (!pData || !pData->pSpy)
-        return;
+        return; /* There were no spy */
 
+    /* Our work is done. We don't need spies like you anymore. */
     Imm32CoRevokeInitializeSpy(pData->uliCookie);
     ISPY_Release(pData->pSpy);
     pData->pSpy = NULL;
@@ -872,11 +875,10 @@ Imm32ActivateOrDeactivateTIM(
 {
     HRESULT hr = S_OK;
 
-    if (!IS_CICERO_MODE() ||
-        IS_16BIT_MODE() ||
+    if (!IS_CICERO_MODE() || IS_16BIT_MODE() ||
         !(GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
     {
-        return S_OK;
+        return S_OK; /* No need to activate/de-activate TIM */
     }
 
     if (bCreate)
@@ -888,11 +890,14 @@ Imm32ActivateOrDeactivateTIM(
                 GetWin32ClientInfo()->CI_flags |= CI_CTFTIM;
         }
     }
-    else if (GetWin32ClientInfo()->CI_flags & CI_CTFTIM)
+    else /* Destroy */
     {
-        hr = CtfImeDestroyThreadMgr();
-        if (SUCCEEDED(hr))
-            GetWin32ClientInfo()->CI_flags &= ~CI_CTFTIM;
+        if (GetWin32ClientInfo()->CI_flags & CI_CTFTIM)
+        {
+            hr = CtfImeDestroyThreadMgr();
+            if (SUCCEEDED(hr))
+                GetWin32ClientInfo()->CI_flags &= ~CI_CTFTIM;
+        }
     }
 
     return hr;
