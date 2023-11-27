@@ -26,7 +26,12 @@ HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,0x00020000,"%SystemRoot%\system32\she
 HKCR,"CLSID\%CLSID_Internet%\Shell",,,"open"
 HKCR,"CLSID\%CLSID_Internet%\Shell\open",,,""
 HKCR,"CLSID\%CLSID_Internet%\Shell\open\Command",,,"rundll32.exe url,OpenURL https://google.com"
-HKCR,"CLSID\%CLSID_Internet%\ShellFolder",,2,"0x24"
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","",,"@%SystemRoot%\system32\ieframe.dll,-190"
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","Attributes",0x10001,0x24
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideAsDeletePerUser",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideFolderVerbs",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideOnDesktopPerUser",,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder","WantsParseDisplayName",,""
 
 HKCR,"CLSID\%CLSID_InternetExplorerManager%\LocalServer32",,,"""%16422%\Internet Explorer\iexplore.exe"" -startmanager"
 
