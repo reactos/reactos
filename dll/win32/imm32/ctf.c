@@ -7,7 +7,6 @@
 
 #include "precomp.h"
 #include <msctf.h>
-#include <ctfutb.h>
 #include <objidl.h> /* for IInitializeSpy */
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
