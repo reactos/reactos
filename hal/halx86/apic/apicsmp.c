@@ -170,7 +170,7 @@ HalRequestIpiSpecifyVector(
     _In_ KAFFINITY TargetSet,
     _In_ UCHAR Vector)
 {
-    KAFFINITY ActiveProcessors = HalpActiveProcessors;
+    KAFFINITY ActiveProcessors = KeQueryActiveProcessors();
     KAFFINITY RemainingSet, SetMember;
     ULONG ProcessorIndex;
     ULONG LApicId;
