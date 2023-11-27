@@ -54,7 +54,7 @@ Imm32IsRunningInMsoobe(VOID)
     if (!GetModuleFileNameW(NULL, FileName, _countof(FileName)))
         return FALSE;
 
-    GetFullPathNameW(FileName, 260u, Buffer, &pchFilePart);
+    GetFullPathNameW(FileName, _countof(Buffer), Buffer, &pchFilePart);
     if (!pchFilePart)
         return FALSE;
 
