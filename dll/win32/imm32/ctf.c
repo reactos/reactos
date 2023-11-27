@@ -294,12 +294,12 @@ DWORD g_dwTLSIndex = -1;
 /* IMM Thread-Local Storage (TLS) data */
 typedef struct IMMTLSDATA
 {
-    IInitializeSpy *pSpy;           /* CoInitialize Spy */
+    IInitializeSpy *pSpy;            /* CoInitialize Spy */
     DWORD           dwUnknown1;
-    ULARGE_INTEGER  uliCookie;      /* Spy needs cookie */
-    BOOL            bDoCount;       /* Does count skipping? */
-    DWORD           dwSkipCount;    /* The count that it skipped */
-    BOOL            bUpdating;      /* Updating now? */
+    ULARGE_INTEGER  uliCookie;       /* Spy requires a cookie for revoking */
+    BOOL            bDoCount;        /* Is it counting? */
+    DWORD           dwSkipCount;     /* The skipped count */
+    BOOL            bUninitializing; /* Is it uninitializing? */
     DWORD           dwUnknown2;
 } IMMTLSDATA, *PIMMTLSDATA;
 
@@ -546,7 +546,7 @@ ISPY_PreUninitialize(
         (GetWin32ClientInfo()->CI_flags & CI_CTFCOINIT))
     {
         IMMTLSDATA *pData = Imm32GetTLS();
-        if (pData && !pData->bUpdating)
+        if (pData && !pData->bUninitializing)
             Imm32CoInitializeEx();
     }
 
@@ -643,9 +643,9 @@ CtfImmCoUninitialize(VOID)
     pData = Imm32GetTLS();
     if (pData)
     {
-        pData->bUpdating = TRUE;
+        pData->bUninitializing = TRUE;
         Imm32CoUninitialize(); /* Do CoUninitialize */
-        pData->bUpdating = FALSE;
+        pData->bUninitializing = FALSE;
 
         GetWin32ClientInfo()->CI_flags &= ~CI_CTFCOINIT;
     }
