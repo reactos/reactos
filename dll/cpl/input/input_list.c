@@ -385,6 +385,7 @@ InputList_Process(VOID)
     DWORD dwNumber;
     BOOL bRet = FALSE;
     HKEY hPreloadKey, hSubstKey;
+    HKL hDefaultKL = NULL;
 
     if (!InputList_PrepareUserRegistry(&hPreloadKey, &hSubstKey))
     {
@@ -442,6 +443,9 @@ InputList_Process(VOID)
 
             /* Activate the DEFAULT entry */
             ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
+
+            /* Save it */
+            hDefaultKL = pCurrent->hkl;
             break;
         }
     }
@@ -467,7 +471,7 @@ InputList_Process(VOID)
     }
 
     /* Change the default keyboard language */
-    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
+    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hDefaultKL, 0))
     {
         DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
 
@@ -475,7 +479,7 @@ InputList_Process(VOID)
                                 &dwRecipients,
                                 WM_INPUTLANGCHANGEREQUEST,
                                 INPUTLANGCHANGE_SYSCHARSET,
-                                (LPARAM)pCurrent->hkl);
+                                (LPARAM)hDefaultKL);
     }
 
     /* Retry to delete (in case of failure to delete the default keyboard) */
