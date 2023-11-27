@@ -948,7 +948,7 @@ CtfImmTIMCreateInputContext(
             {
                 pClientImc->bCtfIme = TRUE;
                 hr = CtfImeCreateInputContext(hIMC);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     pClientImc->bCtfIme = FALSE;
             }
         }
@@ -966,7 +966,7 @@ CtfImmTIMCreateInputContext(
             {
                 pClientImc->bCtfIme = TRUE;
                 hr = CtfImeCreateInputContext(hIMC);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     pClientImc->bCtfIme = FALSE;
             }
         }
@@ -1319,7 +1319,7 @@ CtfImmRestoreToolbarWnd(
     TRACE("(%p, 0x%X)\n", pUnused, dwShowFlags);
 
     hr = Imm32TF_CreateLangBarMgr(&pBarMgr);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return;
 
     if (dwShowFlags)
