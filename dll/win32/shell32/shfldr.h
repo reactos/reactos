@@ -64,7 +64,7 @@ HRESULT SHELL32_BindToSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* pp
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 
-void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys);
+void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys);
 
 HRESULT CDefViewBckgrndMenu_CreateInstance(IShellFolder* psf, REFIID riid, void **ppv);
 
@@ -94,7 +94,7 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPCWSTR pwszPath);
 
-void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys);
+LSTATUS AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys);
 
 #ifdef __cplusplus
 

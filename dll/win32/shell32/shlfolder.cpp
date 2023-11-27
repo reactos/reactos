@@ -266,59 +266,80 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
-void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
+LSTATUS AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
 {
     if (*cKeys >= 16)
-        return;
+        return ERROR_MORE_DATA;
 
     HKEY hkey;
     LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result != ERROR_SUCCESS)
-        return;
-
-    array[*cKeys] = hkey;
-    *cKeys += 1;
+    if (result == ERROR_SUCCESS)
+    {
+        array[*cKeys] = hkey;
+        *cKeys += 1;
+    }
+    return result;
 }
 
-void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys)
+void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys)
 {
+    //learn.microsoft.com/en-us/windows/win32/shell/fa-associationarray#about-association-arrays
+
+    ASSERT(cidl >= 1 && apidl);
+    PCUITEMID_CHILD pidl = apidl[0];
     if (_ILIsValue(pidl))
     {
+        WCHAR buf[MAX_PATH], *name;
         FileStructW* pFileData = _ILGetFileStructW(pidl);
-        LPWSTR extension = PathFindExtension(pFileData->wszName);
+        if (pFileData)
+        {
+            name = pFileData->wszName;
+        }
+        else
+        {
+            _ILSimpleGetTextW(pidl, name = buf, _countof(buf));
+        }
+        LPWSTR extension = PathFindExtension(name);
 
         if (extension)
         {
-            AddClassKeyToArray(extension, array, cKeys);
-
-            WCHAR wszClass[MAX_PATH], wszClass2[MAX_PATH];
+            WCHAR wszClass[MAX_PATH], wszSFA[23 + _countof(wszClass)];
             DWORD dwSize = sizeof(wszClass);
-            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) != ERROR_SUCCESS ||
+                !*wszClass || AddClassKeyToArray(wszClass, array, cKeys) != ERROR_SUCCESS)
             {
-                swprintf(wszClass2, L"%s//%s", extension, wszClass);
+                // Only add the extension key if the ProgId is not valid
+                AddClassKeyToArray(extension, array, cKeys);
 
-                AddClassKeyToArray(wszClass, array, cKeys);
-                AddClassKeyToArray(wszClass2, array, cKeys);
+                // Open With becomes the default when there are no verbs in the above keys
+                if (cidl == 1)
+                    AddClassKeyToArray(L"Unknown", array, cKeys);
             }
 
-            swprintf(wszClass2, L"SystemFileAssociations//%s", extension);
-            AddClassKeyToArray(wszClass2, array, cKeys);
+            swprintf(wszSFA, L"SystemFileAssociations\\%s", extension);
+            AddClassKeyToArray(wszSFA, array, cKeys);
 
+            dwSize = sizeof(wszClass);
             if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
             {
-                swprintf(wszClass2, L"SystemFileAssociations//%s", wszClass);
-                AddClassKeyToArray(wszClass2, array, cKeys);
+                swprintf(wszSFA, L"SystemFileAssociations\\%s", wszClass);
+                AddClassKeyToArray(wszSFA, array, cKeys);
             }
         }
 
-        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
         AddClassKeyToArray(L"*", array, cKeys);
+        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
     }
     else if (_ILIsFolder(pidl))
     {
+        // FIXME: Directory > Folder > AFO is the correct order and it's
+        // the order Windows reports in its undocumented association array
+        // but it is somehow not the order Windows adds the items to its menu!
+        // Until the correct algorithm in CDefaultContextMenu can be determined,
+        // we add the folder keys in "menu order".
+        AddClassKeyToArray(L"Folder", array, cKeys);
         AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
         AddClassKeyToArray(L"Directory", array, cKeys);
-        AddClassKeyToArray(L"Folder", array, cKeys);
     }
     else
     {

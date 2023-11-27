@@ -1204,7 +1204,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         {
             HKEY hKeys[16];
             UINT cKeys = 0;
-            AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+            AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
 
             DEFCONTEXTMENU dcm;
             dcm.hwnd = hwndOwner;
