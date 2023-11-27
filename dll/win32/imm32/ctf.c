@@ -183,6 +183,8 @@ FN_TF_InvalidAssemblyListCacheIfExist MSCTF_FN(TF_InvalidAssemblyListCacheIfExis
 
 HRESULT Imm32TF_CreateLangBarMgr(_Inout_ ITfLangBarMgr **ppBarMgr)
 {
+    TRACE("TF_CreateLangBarMgr(%p)\n", ppBarMgr);
+
     if (!Imm32GetMsctfFn(TF_CreateLangBarMgr))
         return E_FAIL;
 
@@ -191,6 +193,8 @@ HRESULT Imm32TF_CreateLangBarMgr(_Inout_ ITfLangBarMgr **ppBarMgr)
 
 VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
 {
+    TRACE("TF_InvalidAssemblyListCacheIfExist()\n");
+
     if (!Imm32GetMsctfFn(TF_InvalidAssemblyListCacheIfExist))
         return;
 
@@ -740,6 +744,8 @@ Imm32LoadCtfIme(VOID)
 HRESULT
 CtfImeCreateThreadMgr(VOID)
 {
+    TRACE("()\n");
+
     if (!Imm32LoadCtfIme())
         return E_FAIL;
 
@@ -752,6 +758,8 @@ CtfImeCreateThreadMgr(VOID)
 HRESULT
 CtfImeDestroyThreadMgr(VOID)
 {
+    TRACE("()\n");
+
     if (!Imm32LoadCtfIme())
         return E_FAIL;
 
@@ -816,6 +824,8 @@ HRESULT
 CtfImeCreateInputContext(
     _In_ HIMC hIMC)
 {
+    TRACE("(%p)\n", hIMC);
+
     if (!Imm32LoadCtfIme())
         return E_FAIL;
 
@@ -828,6 +838,8 @@ CtfImeCreateInputContext(
 HRESULT
 CtfImeDestroyInputContext(_In_ HIMC hIMC)
 {
+    TRACE("(%p)\n", hIMC);
+
     if (!Imm32LoadCtfIme())
         return E_FAIL;
 
@@ -1104,39 +1116,55 @@ CtfImmTIMActivate(_In_ HKL hKL)
 
     if (g_disable_CUAS_flag)
     {
+        TRACE("g_disable_CUAS_flag\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
         return FALSE;
     }
 
     if (GetWin32ClientInfo()->CI_flags & CI_TSFDISABLED)
+    {
+        TRACE("CI_TSFDISABLED\n");
         return FALSE;
+    }
 
     if (Imm32IsTIMDisabledInRegistry())
     {
+        TRACE("TIM is disabled in registry\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
         return FALSE;
     }
 
     if (!Imm32IsInteractiveUserLogon() || Imm32IsRunningInMsoobe())
+    {
+        TRACE("TIM is disabled due to LOGON or MSOBE\n");
         return FALSE;
+    }
 
     if (!Imm32IsCUASEnabledInRegistry())
     {
+        TRACE("CUAS is disabled in registry\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
         return FALSE;
     }
 
     if (NtCurrentTeb()->ProcessEnvironmentBlock->AppCompatFlags.LowPart & 0x100)
     {
+        TRACE("CUAS is disabled by AppCompatFlags\n");
         GetWin32ClientInfo()->CI_flags |= CI_TSFDISABLED;
         return FALSE;
     }
 
     if (RtlIsThreadWithinLoaderCallout() || Imm32InsideLoaderLock())
+    {
+        TRACE("TIM is disabled by Loader\n");
         return FALSE;
+    }
 
     if (!IS_CICERO_MODE() || IS_16BIT_MODE())
+    {
+        TRACE("TIM is disabled because CICERO mode is unset\n");
         return FALSE;
+    }
 
     if (IS_IME_HKL(hKL))
         hKL = (HKL)UlongToHandle(MAKELONG(LOWORD(hKL), LOWORD(hKL)));
