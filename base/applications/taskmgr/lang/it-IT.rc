@@ -430,7 +430,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorità può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nSei sicuro di voler procedere?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso CPU: %d%%"
     IDS_STATUS_MEMUSAGE "Uso Mem: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "Uso CPU: %3d%%"
+    IDS_STATUS_CPUUSAGE "CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processi: %d"
     IDS_NOT_RESPONDING "Non risponde"
     IDS_RUNNING "In esecuzione"
