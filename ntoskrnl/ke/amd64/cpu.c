@@ -667,16 +667,6 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
 
 }
 
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(VOID)
-{
-    PAGED_CODE();
-
-    /* Simply return the number of active processors */
-    return KeActiveProcessors;
-}
-
 NTSTATUS
 NTAPI
 KxSaveFloatingPointState(OUT PKFLOATING_SAVE FloatingState)

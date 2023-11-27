@@ -156,21 +156,6 @@ KeSetDmaIoCoherency(IN ULONG Coherency)
 /*
  * @implemented
  */
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(VOID)
-{
-    PAGED_CODE();
-
-    //
-    // Simply return the number of active processors
-    //
-    return KeActiveProcessors;
-}
-
-/*
- * @implemented
- */
 VOID
 __cdecl
 KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
