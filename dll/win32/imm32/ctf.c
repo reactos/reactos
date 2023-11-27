@@ -978,6 +978,8 @@ CtfImmTIMCreateInputContext(
 
 /***********************************************************************
  *      CtfImmLastEnabledWndDestroy (IMM32.@)
+ *
+ * Same as Imm32ActivateOrDeactivateTIM but its naming is improper.
  */
 HRESULT WINAPI
 CtfImmLastEnabledWndDestroy(
