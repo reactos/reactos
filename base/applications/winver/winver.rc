@@ -8,3 +8,5 @@
 #include <reactos/version.rc>
 
 #include <reactos/manifest_exe.rc>
+
+1 ICON "winver.ico"
