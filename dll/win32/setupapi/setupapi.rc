@@ -23,6 +23,12 @@
 
 #include "resource.h"
 
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Setup API"
+#define REACTOS_STR_INTERNAL_NAME     "setupapi"
+#define REACTOS_STR_ORIGINAL_FILENAME "setupapi.dll"
+#include <reactos/version.rc>
+
 #include "res/icons_res.rc"
 
 #include <reactos/manifest_dll.rc>
