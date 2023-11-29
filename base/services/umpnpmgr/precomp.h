@@ -45,6 +45,14 @@ typedef struct
     PWSTR pszName;
 } NOTIFY_ENTRY, *PNOTIFY_ENTRY;
 
+/* event.c */
+
+DWORD
+WINAPI
+PnpEventThread(
+    LPVOID lpParameter);
+
+
 /* install.c */
 
 extern HANDLE hUserToken;
@@ -66,6 +74,8 @@ DeviceInstallThread(
 
 
 /* rpcserver.c */
+
+extern LIST_ENTRY NotificationListHead;
 
 DWORD
 WINAPI
