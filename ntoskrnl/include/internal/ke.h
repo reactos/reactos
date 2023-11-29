@@ -982,6 +982,16 @@ VOID
 NTAPI
 KiInitMachineDependent(VOID);
 
+VOID
+NTAPI
+KxFreezeExecution(
+    VOID);
+
+VOID
+NTAPI
+KxThawExecution(
+    VOID);
+
 BOOLEAN
 NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,

@@ -474,6 +474,11 @@ KiSetTrapContext(
     _In_ PCONTEXT Context,
     _In_ KPROCESSOR_MODE RequestorMode);
 
+BOOLEAN
+KiProcessorFreezeHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
