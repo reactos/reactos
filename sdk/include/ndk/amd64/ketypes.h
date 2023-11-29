@@ -301,6 +301,21 @@ typedef enum
 #define IPI_SYNCH_REQUEST       16
 
 //
+// Flags for KPRCB::IpiFrozen
+//
+// Values shown with !ipi extension in WinDbg:
+// 0 = [Running], 1 = [Unknown], 2 = [Frozen], 3 = [Thaw], 4 = [Freeze Owner]
+// 5 = [Target Freeze], 6-15 = [Unknown]
+// 0x20 = [Active] (flag)
+//
+#define IPI_FROZEN_STATE_RUNNING 0
+#define IPI_FROZEN_STATE_FROZEN 2
+#define IPI_FROZEN_STATE_THAW 3
+#define IPI_FROZEN_STATE_OWNER 4
+#define IPI_FROZEN_STATE_TARGET_FREEZE 5
+#define IPI_FROZEN_FLAG_ACTIVE 0x20
+
+//
 // PRCB Flags
 //
 #define PRCB_MINOR_VERSION      1
