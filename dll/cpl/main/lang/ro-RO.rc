@@ -73,7 +73,7 @@ BEGIN
     GROUPBOX "Blocatorul de clicuri", -1, 5, 150, 236, 70
     CHECKBOX "Pornește blocatorul de clicuri", IDC_CHECK_CLICK_LOCK, 10, 160, 150, 20
     PUSHBUTTON "&Setări…", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "Această funcționalitate vă permite activarea sau trasarea elementelor fără a ține apăsat încontinuu butonul de mouse. Pentru a activa/dezactiva, mențineți un pic apăsat butonul de mouse.", -1, 10, 180, 224, 30
+    LTEXT "Această funcționalitate vă permite activarea sau trasarea elementelor fără a ține apăsat încontinuu butonul de mouse. Pentru a o activa/dezactiva, mențineți un pic apăsat butonul de mouse.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
