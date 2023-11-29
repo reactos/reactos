@@ -17,14 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-PathIsEqualOrSubFolder(LPWSTR lpFolder, LPWSTR lpSubFolder)
-{
-    FIXME("PathIsEqualOrSubFolder() stub\n");
-    return FALSE;
-}
-
 EXTERN_C HRESULT
 WINAPI
 SHGetUnreadMailCountW(HKEY hKeyUser,
