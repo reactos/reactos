@@ -283,7 +283,8 @@ LSTATUS AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
 
 void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys)
 {
-    //learn.microsoft.com/en-us/windows/win32/shell/fa-associationarray#about-association-arrays
+    // This function opens the association array keys in canonical order for filesystem items.
+    // The order is documented: learn.microsoft.com/en-us/windows/win32/shell/fa-associationarray
 
     ASSERT(cidl >= 1 && apidl);
     PCUITEMID_CHILD pidl = apidl[0];
@@ -299,7 +300,7 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
         {
             _ILSimpleGetTextW(pidl, name = buf, _countof(buf));
         }
-        LPWSTR extension = PathFindExtension(name);
+        LPCWSTR extension = PathFindExtension(name);
 
         if (extension)
         {
