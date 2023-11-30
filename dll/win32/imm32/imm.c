@@ -14,7 +14,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HMODULE ghImm32Inst = NULL; /* The instance of IMM32 */
+HMODULE ghImm32Inst = NULL; /* The IMM32 instance */
 PSERVERINFO gpsi = NULL;
 SHAREDINFO gSharedInfo = { NULL };
 BYTE gfImmInitialized = FALSE; /* Is IMM32 initialized? */
