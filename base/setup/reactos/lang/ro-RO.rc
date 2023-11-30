@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -64,7 +64,7 @@ BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Crează", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "Șt&erge", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "Mo&dul pilot", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "&Driver", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
     PUSHBUTTON "Opțiuni a&vansate…", IDC_PARTMOREOPTS, 230, 122, 80, 15
     // LTEXT "Apăsați pe „Înainte” pentru a verifica sumarul.", IDC_STATIC, 10, 180, 277, 20
 END
