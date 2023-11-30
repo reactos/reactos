@@ -136,6 +136,7 @@ HvpWriteLog(
      * contents in a buffer.
      */
     BitmapSize = ROUND_UP(sizeof(ULONG) + RegistryHive->DirtyVector.SizeOfBitMap, HSECTOR_SIZE);
+    ASSERT(BitmapSize == HV_LOG_GET_DIRTY_BITMAP_SIZE(RegistryHive->BaseBlock->Length));
     BufferSize = HV_LOG_HEADER_SIZE + BitmapSize;
 
     /* Now allocate the base header block buffer */

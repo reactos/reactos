@@ -45,6 +45,9 @@
 
 #define HV_LOG_HEADER_SIZE              FIELD_OFFSET(HBASE_BLOCK, Reserved2)
 
+#define HV_LOG_GET_DIRTY_BITMAP_SIZE(HiveLength) \
+    ROUND_UP(sizeof(ULONG) + HiveLength / HBLOCK_SIZE, HSECTOR_SIZE)
+
 //
 // Clean Block identifier
 //

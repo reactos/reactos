@@ -900,13 +900,33 @@ HvpRecoverDataFromLog(
     _In_ PHHIVE Hive,
     _In_ PHBASE_BLOCK BaseBlock)
 {
+    RESULT Result;
     BOOLEAN Success;
     ULONG FileOffset;
     ULONG BlockIndex;
     ULONG LogIndex;
     ULONG StorageLength;
-    UCHAR DirtyVector[HSECTOR_SIZE];
-    UCHAR Buffer[HBLOCK_SIZE];
+    ULONG DirtyVectorLength;
+    PUCHAR Buffer;
+    PUCHAR DirtyVector = NULL;
+
+    Buffer = Hive->Allocate(HBLOCK_SIZE, TRUE, TAG_CM);
+    if (Buffer == NULL)
+    {
+        DPRINT1("Failed to allocate block buffer\n");
+        Result = Fail;
+        goto Exit;
+    }
+
+    /* Allocate a buffer for the dirty bitmap */
+    DirtyVectorLength = HV_LOG_GET_DIRTY_BITMAP_SIZE(BaseBlock->Length);
+    DirtyVector = Hive->Allocate(DirtyVectorLength, TRUE, TAG_CM);
+    if (DirtyVector == NULL)
+    {
+        DPRINT1("Failed to allocate 0x%lx bytes for dirty vector\n", DirtyVectorLength);
+        Result = SelfHeal;
+        goto Exit;
+    }
 
     /* Read the dirty data from the log */
     FileOffset = HV_LOG_HEADER_SIZE;
@@ -914,15 +934,9 @@ HvpRecoverDataFromLog(
                              HFILE_TYPE_LOG,
                              &FileOffset,
                              DirtyVector,
-                             HSECTOR_SIZE);
+                             DirtyVectorLength);
     if (!Success)
     {
-        if (!CmIsSelfHealEnabled(FALSE))
-        {
-            DPRINT1("The log couldn't be read and self-healing mode is disabled\n");
-            return Fail;
-        }
-
         /*
          * There's nothing we can do on a situation
          * where dirty data could not be read from
@@ -931,27 +945,21 @@ HvpRecoverDataFromLog(
          * trigger a self-heal and go on. The worst
          * thing that can happen? Data loss, that's it.
          */
-        DPRINT1("Triggering self-heal mode, DATA LOSS IS IMMINENT\n");
-        return SelfHeal;
+        Result = SelfHeal;
+        goto Exit;
     }
 
     /* Check the dirty vector */
     if (*((PULONG)DirtyVector) != HV_LOG_DIRTY_SIGNATURE)
     {
-        if (!CmIsSelfHealEnabled(FALSE))
-        {
-            DPRINT1("The log's dirty vector signature is not valid\n");
-            return Fail;
-        }
-
         /*
          * Trigger a self-heal like above. If the
          * vector signature is garbage then logically
          * whatever comes after the signature is also
          * garbage.
          */
-        DPRINT1("Triggering self-heal mode, DATA LOSS IS IMMINENT\n");
-        return SelfHeal;
+        Result = SelfHeal;
+        goto Exit;
     }
 
     /* Now read each data individually and write it back to hive */
@@ -965,7 +973,7 @@ HvpRecoverDataFromLog(
             continue;
         }
 
-        FileOffset = HSECTOR_SIZE + HSECTOR_SIZE + LogIndex * HBLOCK_SIZE;
+        FileOffset = HSECTOR_SIZE + DirtyVectorLength + LogIndex * HBLOCK_SIZE;
         Success = Hive->FileRead(Hive,
                                  HFILE_TYPE_LOG,
                                  &FileOffset,
@@ -974,7 +982,8 @@ HvpRecoverDataFromLog(
         if (!Success)
         {
             DPRINT1("Failed to read the dirty block (index %lu)\n", BlockIndex);
-            return Fail;
+            Result = Fail;
+            goto Exit;
         }
 
         FileOffset = HBLOCK_SIZE + BlockIndex * HBLOCK_SIZE;
@@ -986,14 +995,38 @@ HvpRecoverDataFromLog(
         if (!Success)
         {
             DPRINT1("Failed to write dirty block to hive (index %lu)\n", BlockIndex);
-            return Fail;
+            Result = Fail;
+            goto Exit;
         }
 
         /* Increment the index in log as we continue further */
         LogIndex++;
     }
 
-    return HiveSuccess;
+    Result = HiveSuccess;
+Exit:
+    if (Result == SelfHeal)
+    {
+        if (CmIsSelfHealEnabled(FALSE))
+        {
+            DPRINT1("Triggering self-heal mode, DATA LOSS IS IMMINENT\n");
+        }
+        else
+        {
+            DPRINT1("The log couldn't be read and self-healing mode is disabled\n");
+            Result = Fail;
+        }
+    }
+
+    if (DirtyVector != NULL)
+    {
+        Hive->Free(DirtyVector, 0);
+    }
+    if (Buffer != NULL)
+    {
+        Hive->Free(Buffer, 0);
+    }
+    return Result;
 }
 #endif
 
