@@ -337,13 +337,15 @@ static BOOL parse_data_type(struct parser *parser, WCHAR **line)
             if (!**line || towlower((*line)[1]) == 'x')
                 return FALSE;
 
-            /* "hex(xx):" is special. Up to 8 hex digits ("hex(000000002)" is invalid). */
+            /* "hex(xx):" is special */
             val = wcstoul(*line, &end, 16);
-            if (*end != ')' || *(end + 1) != ':' || end - *line > 8 ||
-                (val == ~0u && errno == ERANGE))
-            {
+#ifdef __REACTOS__
+            /* Up to 8 hex digits, "hex(000000002)" is invalid */
+            if (*end != ')' || *(end + 1) != ':' || (val == ~0u && errno == ERANGE) || end - *line > 8)
+#else
+            if (*end != ')' || *(end + 1) != ':' || (val == ~0u && errno == ERANGE))
+#endif
                 return FALSE;
-            }
 
             parser->data_type = val;
             *line = end + 2;
