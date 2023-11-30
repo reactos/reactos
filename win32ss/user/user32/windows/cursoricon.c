@@ -1454,7 +1454,20 @@ CURSORICON_LoadImageW(
             RtlInitUnicodeString(&ustrRsrc, lpszName);
     }
 
-    if(hinst)
+    if(LDR_IS_RESOURCE(hinst))
+    {
+        /* We don't have a real module, can't call GetModuleFileName */
+        LPCWSTR fakeNameFmt = sizeof(void*) > 4 ? L"*DF?%016IX" : L"*DF?%08IX";
+        ustrModule.MaximumLength = 42 * sizeof(WCHAR);
+        ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
+        if (!ustrModule.Buffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return NULL;
+        }
+        ustrModule.Length = wsprintfW(ustrModule.Buffer, fakeNameFmt, hinst) * sizeof(WCHAR);
+    }
+    else if(hinst)
     {
         DWORD size = MAX_PATH;
         /* Get the module name string */
