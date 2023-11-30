@@ -35,7 +35,7 @@ HalSendNMI(
 
 // See:
 // - https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Runtime/r0drv/nt/internal-r0drv-nt.h#L53
-// https://github.com/mirror/vbox/blob/b9657cd5351cf17432b664009cc25bb480dc64c1/src/VBox/Runtime/r0drv/nt/mp-r0drv-nt.cpp#L683
+// - https://github.com/mirror/vbox/blob/b9657cd5351cf17432b664009cc25bb480dc64c1/src/VBox/Runtime/r0drv/nt/mp-r0drv-nt.cpp#L683
 VOID
 NTAPI
 HalSendSoftwareInterrupt(

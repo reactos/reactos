@@ -40,6 +40,7 @@ NTAPI
 HalSendNMI(
     _In_ KAFFINITY TargetSet)
 {
+    NOTHING;
 }
 
 VOID
@@ -48,6 +49,7 @@ HalSendSoftwareInterrupt(
     _In_ KAFFINITY TargetSet,
     _In_ KIRQL Irql)
 {
+    NOTHING;
 }
 
 #endif // _M_AMD64

@@ -51,7 +51,7 @@ extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
         APIC_DSH_Destination
         APIC_DSH_Self
         APIC_DSH_AllIncludingSelf
-        APIC_DSH_AllExclusingSelf
+        APIC_DSH_AllExcludingSelf
 
     \see "AMD64 Architecture Programmer's Manual Volume 2 System Programming"
         Chapter 16 "Advanced Programmable Interrupt Controller (APIC)"
@@ -170,7 +170,7 @@ HalRequestIpiSpecifyVector(
     _In_ KAFFINITY TargetSet,
     _In_ UCHAR Vector)
 {
-    KAFFINITY ActiveProcessors = KeQueryActiveProcessors();
+    KAFFINITY ActiveProcessors = HalpActiveProcessors;
     KAFFINITY RemainingSet, SetMember;
     ULONG ProcessorIndex;
     ULONG LApicId;
@@ -277,7 +277,7 @@ HalpSendNMI(
     ULONG LApicId;
 
     /* Make sure we do not send an NMI to ourselves */
-    ASSERT((TargetSet & ~KeGetCurrentPrcb()->SetMember) == 0);
+    ASSERT((TargetSet & KeGetCurrentPrcb()->SetMember) == 0);
 
     /* Loop while we have more processors */
     RemainingSet = TargetSet;
