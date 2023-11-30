@@ -112,12 +112,17 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
  * --- Examine the condition, and then generate trace log if necessary.
  */
 #ifdef NDEBUG /* on Release */
+#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr))
 #define IS_NULL_UNEXPECTEDLY(p) (!(p))
 #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
 #define IS_TRUE_UNEXPECTEDLY(x) (x)
 #define IS_FALSE_UNEXPECTEDLY(x) (!(x))
 #define IS_ERROR_UNEXPECTEDLY(x) (!(x))
 #else /* on Debug */
+#define FAILED_UNEXPECTEDLY(hr) \
+    (FAILED(hr) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                   __FILE__, __FUNCTION__, __LINE__, "FAILED(%s)\n", #hr), UNEXPECTED(), TRUE) \
+                : FALSE)
 #define IS_NULL_UNEXPECTEDLY(p) \
     (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
                          __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), UNEXPECTED(), TRUE) \
@@ -192,3 +197,7 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
 
 HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
 HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);
+HRESULT CtfImmCoInitialize(VOID);
+HRESULT CtfImeCreateThreadMgr(VOID);
+HRESULT CtfImeDestroyThreadMgr(VOID);
+HRESULT Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate);
