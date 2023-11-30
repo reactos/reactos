@@ -139,18 +139,62 @@ IsShimInfrastructureDisabled(VOID)
  * @unimplemented
  */
 BOOL
-WINAPI
-BaseCheckAppcompatCache(IN PWCHAR ApplicationName,
-                        IN HANDLE FileHandle,
-                        IN PWCHAR Environment,
-                        OUT PULONG Reason)
+BasepShimCacheCheckBypass(
+    _In_ LPCWSTR ApplicationName,
+    _In_ HANDLE FileHandle,
+    _In_opt_ LPCWSTR Environment,
+    _In_ BOOL bUnknown,
+    _Out_opt_ PULONG pdwReason)
 {
-    DPRINT("BaseCheckAppcompatCache is UNIMPLEMENTED\n");
-
-    if (Reason) *Reason = 0;
-
-    // We don't know this app.
+    DPRINT("fixme:(%S, %p, %S, %d, %p)\n", ApplicationName, FileHandle, Environment, bUnknown,
+           pdwReason);
     return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepShimCacheLookup(
+    _In_ LPCWSTR ApplicationName,
+    _In_ HANDLE FileHandle)
+{
+    DPRINT("fixme:(%S, %p)\n", ApplicationName, FileHandle);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+BaseCheckAppcompatCache(
+    _In_ LPCWSTR ApplicationName,
+    _In_ HANDLE FileHandle,
+    _In_opt_ LPCWSTR Environment,
+    _Out_opt_ PULONG pdwReason)
+{
+    BOOL ret = FALSE;
+    ULONG dwReason;
+
+    DPRINT("(%S, %p, %S, %p)\n", ApplicationName, FileHandle, Environment, pdwReason);
+
+    dwReason = 0;
+    if (BasepShimCacheCheckBypass(ApplicationName, FileHandle, Environment, TRUE, &dwReason))
+    {
+        dwReason |= 2;
+    }
+    else
+    {
+        ret = BasepShimCacheLookup(ApplicationName, FileHandle);
+        if (!ret)
+            dwReason |= 1;
+    }
+
+    if (pdwReason)
+        *pdwReason = dwReason;
+
+    return ret;
 }
 
 static
