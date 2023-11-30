@@ -54,9 +54,8 @@ HalInitializeProcessor(
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */
-    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
+    InterlockedBitTestAndSetAffinity(&HalpActiveProcessors, ProcessorNumber);
+    InterlockedBitTestAndSetAffinity(&HalpDefaultInterruptAffinity, ProcessorNumber);
 
     /* Register routines for KDCOM */
     HalpRegisterKdSupportFunctions();
