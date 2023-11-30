@@ -152,6 +152,53 @@ BasepShimCacheCheckBypass(
 }
 
 /*
+ * @implemented
+ */
+BOOL
+BasepShimCacheSearch(
+    _In_ LPCWSTR ApplicationName,
+    _In_ HANDLE FileHandle)
+{
+    APPHELP_CACHE_SERVICE_LOOKUP Lookup;
+    RtlInitUnicodeString(&Lookup.ImageName, ApplicationName);
+    Lookup.ImageHandle = FileHandle;
+    return NT_SUCCESS(NtApphelpCacheControl(ApphelpCacheServiceLookup, &Lookup));
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepCheckCacheExcludeList(
+    _In_ LPCWSTR ApplicationName)
+{
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepCheckCacheExcludeCustom(
+    _In_ LPCWSTR ApplicationName)
+{
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+BasepShimCacheRemoveEntry(
+    _In_ LPCWSTR ApplicationName)
+{
+    APPHELP_CACHE_SERVICE_LOOKUP Lookup;
+    RtlInitUnicodeString(&Lookup.ImageName, ApplicationName);
+    Lookup.ImageHandle = INVALID_HANDLE_VALUE;
+    NtApphelpCacheControl(ApphelpCacheServiceRemove, &Lookup);
+}
+
+/*
  * @unimplemented
  */
 BOOL
@@ -160,7 +207,18 @@ BasepShimCacheLookup(
     _In_ HANDLE FileHandle)
 {
     DPRINT("fixme:(%S, %p)\n", ApplicationName, FileHandle);
-    return FALSE;
+
+    if (!BasepShimCacheSearch(ApplicationName, FileHandle))
+        return FALSE;
+
+    if (!BasepCheckCacheExcludeList(ApplicationName) ||
+        !BasepCheckCacheExcludeCustom(ApplicationName))
+    {
+        BasepShimCacheRemoveEntry(ApplicationName);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
