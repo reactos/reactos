@@ -28,6 +28,10 @@ Author:
 #include <ntimage.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Resource Functions
 //
@@ -58,7 +62,6 @@ LdrEnumResources(
     _Inout_ ULONG *ResourceCount,
     _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources
 );
-
 
 NTSTATUS
 NTAPI
@@ -143,5 +146,18 @@ LdrEnumerateLoadedModules(
     _In_ PLDR_ENUM_CALLBACK EnumProc,
     _In_opt_ PVOID Context
 );
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDllShutdownInProgress(
+    VOID
+);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
