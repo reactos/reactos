@@ -14,13 +14,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HMODULE ghImm32Inst = NULL; // Win: ghInst
-PSERVERINFO gpsi = NULL; // Win: gpsi
-SHAREDINFO gSharedInfo = { NULL }; // Win: gSharedInfo
-BYTE gfImmInitialized = FALSE; // Win: gfInitialized
+HMODULE ghImm32Inst = NULL; /* The instance of IMM32 */
+PSERVERINFO gpsi = NULL;
+SHAREDINFO gSharedInfo = { NULL };
+BYTE gfImmInitialized = FALSE; /* Is IMM32 initialized? */
 ULONG_PTR gHighestUserAddress = 0;
+LANGID gwKeyboardLangIdCache = 0; /* Cache for GetKeyboardLayoutCP */
+UINT guKeyboardLayoutCPCache = 0; /* Cache for GetKeyboardLayoutCP */
 
-// Win: ImmInitializeGlobals
 static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
@@ -1255,6 +1256,27 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     if (IS_NULL_UNEXPECTEDLY(hIMC))
         return FALSE;
     return ImmSetActiveContext(hwnd, hIMC, fFlag);
+}
+
+/***********************************************************************
+ *              GetKeyboardLayoutCP (IMM32.@)
+ */
+UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
+{
+    WCHAR szText[8];
+
+    TRACE("(%u)\n", wLangId);
+
+    if (wLangId == gwKeyboardLangIdCache)
+        return guKeyboardLayoutCPCache;
+
+    if (!GetLocaleInfoW(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
+        return 0;
+
+    gwKeyboardLangIdCache = wLangId;
+    szText[_countof(szText) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    guKeyboardLayoutCPCache = _wcstol(szText, 0, 10);
+    return guKeyboardLayoutCPCache;
 }
 
 #ifndef NDEBUG
