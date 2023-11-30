@@ -20,6 +20,7 @@ list(APPEND SOURCE
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathIsEqualOrSubFolder.cpp
+    PathIsTemporary.cpp
     PathResolve.cpp
     SHAppBarMessage.cpp
     SHChangeNotify.cpp

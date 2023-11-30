@@ -500,6 +500,9 @@ BOOL WINAPI PathFindOnPathAW(LPVOID sFile, LPCVOID *sOtherDirs);
 
 BOOL WINAPI PathIsEqualOrSubFolder(_In_ LPCWSTR pszFile1OrCSIDL, _In_ LPCWSTR pszFile2);
 
+BOOL WINAPI PathIsTemporaryA(_In_ LPCSTR Str);
+BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
+
 /****************************************************************************
  * Shell File Operations error codes - SHFileOperationA/W
  */
