@@ -11,11 +11,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-/* FIXME: Use RTL */
-static BOOL WINAPI RtlDllShutdownInProgress(VOID)
-{
-    return FALSE;
-}
+/* FIXME: Use proper header */
+BOOLEAN WINAPI RtlDllShutdownInProgress(VOID);
 
 static BOOL Imm32InsideLoaderLock(VOID)
 {
