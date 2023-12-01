@@ -1,4 +1,10 @@
-// COYPRIGHT: Ștefan Fulea <stefan.fulea@mail.com>
+/*
+ * PROJECT:     ReactOS OpenGL Configuration Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -11,7 +17,7 @@ BEGIN
     GROUPBOX "Opțiuni de redare", -1, 5, 25, 230, 90
     LTEXT "&Motor de redare:", -1, 15, 42, 65, 10
     COMBOBOX IDC_RENDERER, 80, 40, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Acesta va înlocui configurația implicită pentru modulul-pilot grafic! Alegeți „Implicit” pentru a reveni la configurația originală.", -1, 15, 60, 210, 40
+    LTEXT "Acesta va înlocui configurația implicită pentru driverul grafic! Alegeți „Implicit” pentru a reveni la configurația originală.", -1, 15, 60, 210, 40
     GROUPBOX "Depanare", -1, 5, 125, 230, 90
     LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
     COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
@@ -26,5 +32,5 @@ BEGIN
     IDS_CPLDESCRIPTION "Configurează motorul de redare OpenGL."
     IDS_DEBUG_SET "instituie"
     IDS_DEBUG_CLEAR "destituie"
-    IDS_DEBUG_DNM "nu modificați"
+    IDS_DEBUG_DNM "nu modifica"
 END
