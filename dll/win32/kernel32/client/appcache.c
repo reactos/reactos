@@ -140,9 +140,9 @@ IsShimInfrastructureDisabled(VOID)
  */
 BOOL
 BasepShimCacheCheckBypass(
-    _In_ LPCWSTR ApplicationName,
+    _In_ PCWSTR ApplicationName,
     _In_ HANDLE FileHandle,
-    _In_opt_ LPCWSTR Environment,
+    _In_opt_ PCWSTR Environment,
     _In_ BOOL bUnknown,
     _Out_opt_ PULONG pdwReason)
 {
@@ -156,7 +156,7 @@ BasepShimCacheCheckBypass(
  */
 BOOL
 BasepShimCacheSearch(
-    _In_ LPCWSTR ApplicationName,
+    _In_ PCWSTR ApplicationName,
     _In_ HANDLE FileHandle)
 {
     APPHELP_CACHE_SERVICE_LOOKUP Lookup;
@@ -170,7 +170,7 @@ BasepShimCacheSearch(
  */
 BOOL
 BasepCheckCacheExcludeList(
-    _In_ LPCWSTR ApplicationName)
+    _In_ PCWSTR ApplicationName)
 {
     return FALSE;
 }
@@ -180,7 +180,7 @@ BasepCheckCacheExcludeList(
  */
 BOOL
 BasepCheckCacheExcludeCustom(
-    _In_ LPCWSTR ApplicationName)
+    _In_ PCWSTR ApplicationName)
 {
     return FALSE;
 }
@@ -190,7 +190,7 @@ BasepCheckCacheExcludeCustom(
  */
 VOID
 BasepShimCacheRemoveEntry(
-    _In_ LPCWSTR ApplicationName)
+    _In_ PCWSTR ApplicationName)
 {
     APPHELP_CACHE_SERVICE_LOOKUP Lookup;
     RtlInitUnicodeString(&Lookup.ImageName, ApplicationName);
@@ -203,7 +203,7 @@ BasepShimCacheRemoveEntry(
  */
 BOOL
 BasepShimCacheLookup(
-    _In_ LPCWSTR ApplicationName,
+    _In_ PCWSTR ApplicationName,
     _In_ HANDLE FileHandle)
 {
     DPRINT("fixme:(%S, %p)\n", ApplicationName, FileHandle);
@@ -227,9 +227,9 @@ BasepShimCacheLookup(
 BOOL
 WINAPI
 BaseCheckAppcompatCache(
-    _In_ LPCWSTR ApplicationName,
+    _In_ PCWSTR ApplicationName,
     _In_ HANDLE FileHandle,
-    _In_opt_ LPCWSTR Environment,
+    _In_opt_ PCWSTR Environment,
     _Out_opt_ PULONG pdwReason)
 {
     BOOL ret = FALSE;

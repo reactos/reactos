@@ -49,9 +49,9 @@ UINT RosGetProcessEffectiveVersion(VOID)
 BOOL
 WINAPI
 BaseCheckAppcompatCache(
-    _In_ LPCWSTR ApplicationName,
+    _In_ PCWSTR ApplicationName,
     _In_ HANDLE FileHandle,
-    _In_opt_ LPCWSTR Environment,
+    _In_opt_ PCWSTR Environment,
     _Out_opt_ PULONG pdwReason);
 
 #endif // COMPAT_UNDOC_H
