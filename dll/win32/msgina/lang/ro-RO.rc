@@ -262,5 +262,5 @@ BEGIN
     IDS_SHUTDOWN_SHUTDOWN_DESC "Închide atât sesiunea curentă cât și sistemul de operare pentru a puta opri în siguranță alimentarea electrică."
     IDS_SHUTDOWN_RESTART_DESC "Închide sesiunea curentă și repornește sistemul."
     IDS_SHUTDOWN_SLEEP_DESC "Induce sistemul în starea de veghe."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Păstrează sesiunea curentă și oprește calculatorul."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Salvează sesiunea curentă și oprește calculatorul."
 END
