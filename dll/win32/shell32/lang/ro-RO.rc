@@ -958,7 +958,7 @@ BEGIN
     IDS_PIF_FILE "Fișier de informații program NT VDM"
     IDS_SCR_FILE "Animație regim de inactivitate"
     IDS_SYS_FILE "Fișier de sistem"
-    IDS_VXD_FILE "Pilot dispozitiv virtual"
+    IDS_VXD_FILE "Driver de dispozitiv virtual"
     IDS_ANY_FILE "Fișier-%s"
 
     IDS_OPEN_VERB "Deschide"
