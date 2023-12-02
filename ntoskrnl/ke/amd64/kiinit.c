@@ -443,6 +443,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
         LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
         LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
+
+        /* Initialize the PCR */
+        KiInitializePcr(&KiInitialPcr, 0, &KiInitialThread.Tcb, KiP0DoubleFaultStack);
     }
 
     /* Get Pcr from loader block */
@@ -460,9 +463,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Set us as the current process */
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
-
-    /* Initialize the PCR */
-    KiInitializePcr(Pcr, Cpu, InitialThread, KiP0DoubleFaultStack);
 
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
