@@ -446,6 +446,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         /* Initialize the PCR */
         KiInitializePcr(&KiInitialPcr, 0, &KiInitialThread.Tcb, KiP0DoubleFaultStack);
+
+        /* Setup the TSS descriptors and entries */
+        KiInitializeTss(&KiInitialPcr,
+                        KiInitialPcr.TssBase,
+                        KiP0BootStack,
+                        KiP0DoubleFaultStack,
+                        KiP0DoubleFaultStack);
     }
 
     /* Get Pcr from loader block */
@@ -472,13 +479,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Initialize the module list (ntos, hal, kdcom) */
         KiInitModuleList(LoaderBlock);
-
-        /* Setup the TSS descriptors and entries */
-        KiInitializeTss(Pcr,
-                        Pcr->TssBase,
-                        (PVOID)InitialStack,
-                        KiP0DoubleFaultStack,
-                        KiP0DoubleFaultStack);
 
         /* Setup the IDT */
         KeInitExceptions();
