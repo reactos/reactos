@@ -29,10 +29,10 @@ KSPIN_LOCK KiFreezeExecutionLock;
 KIPCR KiInitialPcr;
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR DECLSPEC_ALIGN(16) P0BootStackData[KERNEL_STACK_SIZE] = {0};
-UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
-ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
-ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
+UCHAR DECLSPEC_ALIGN(16) KiP0BootStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(16) KiP0DoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
+PVOID KiP0BootStack = &KiP0BootStackData[KERNEL_STACK_SIZE];
+PVOID KiP0DoubleFaultStack = &KiP0DoubleFaultStackData[KERNEL_STACK_SIZE];
 
 ULONGLONG BootCycles, BootCyclesEnd;
 
@@ -265,13 +265,13 @@ KiInitializeTss(IN PKTSS64 Tss,
     Tss->Rsp0 = Stack;
 
     /* Setup a stack for Double Fault Traps */
-    Tss->Ist[1] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[1] = (ULONG64)KiP0DoubleFaultStack;
 
     /* Setup a stack for CheckAbort Traps */
-    Tss->Ist[2] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[2] = (ULONG64)KiP0DoubleFaultStack;
 
     /* Setup a stack for NMI Traps */
-    Tss->Ist[3] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[3] = (ULONG64)KiP0DoubleFaultStack;
 
     /* Load the task register */
     __ltr(KGDT64_SYS_TSS);
@@ -435,7 +435,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (Cpu == 0)
     {
         /* Set the initial stack, idle thread and process */
-        LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
+        LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
         LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
         LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
         LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
@@ -458,7 +458,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
     /* Initialize the PCR */
-    KiInitializePcr(Pcr, Cpu, InitialThread, (PVOID)KiDoubleFaultStack);
+    KiInitializePcr(Pcr, Cpu, InitialThread, KiP0DoubleFaultStack);
 
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
