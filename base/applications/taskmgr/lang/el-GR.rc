@@ -10,17 +10,17 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος από τον Διαχειριστή Διεργασιών", ID_FILE_EXIT
     END
-    POPUP "&Επιλογές"
+    POPUP "&Επιλογές" //FIXME: accelerator collision &E
     BEGIN
         MENUITEM "&Πάντα Μπροστά", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Σμίκρυνση κατά τη Χρήση", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Απόκρυψη όταν είναι σε Σμίκρυνση", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Εμφάνιση" //FIXME: accelerator collision &E
     BEGIN
-        MENUITEM "&Ανανέωση Τώρα", ID_VIEW_REFRESH
-        POPUP "&Ανανέωση Ταχύτητας"
+        MENUITEM "&Ανανέωση Τώρα", ID_VIEW_REFRESH //FIXME: accelerator collision &A
+        POPUP "&Ανανέωση Ταχύτητας" //FIXME: accelerator collision &A
         BEGIN
             MENUITEM "&Υψηλή", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Κανονική", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
