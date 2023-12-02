@@ -271,6 +271,38 @@ KiInitializeTss(
 }
 
 CODE_SEG("INIT")
+VOID
+KiInitializeProcessorBootStructures(
+    _In_ ULONG ProcessorNumber,
+    _Out_ PKIPCR Pcr,
+    _In_ PKGDTENTRY64 GdtBase,
+    _In_ PKIDTENTRY64 IdtBase,
+    _In_ PKTSS64 TssBase,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID KernelStack,
+    _In_ PVOID DpcStack,
+    _In_ PVOID DoubleFaultStack,
+    _In_ PVOID NmiStack)
+{
+    /* Initialize the PCR */
+    KiInitializePcr(Pcr,
+                    ProcessorNumber,
+                    GdtBase,
+                    IdtBase,
+                    TssBase,
+                    IdleThread,
+                    DpcStack);
+
+
+    /* Setup the TSS descriptor and entries */
+    KiInitializeTss(Pcr,
+                    TssBase,
+                    KernelStack,
+                    DoubleFaultStack,
+                    NmiStack);
+}
+
+CODE_SEG("INIT")
 static
 VOID
 KiInitializeP0BootStructures(
@@ -294,21 +326,17 @@ KiInitializeP0BootStructures(
     TssEntry = KiGetGdtEntry(GdtDescriptor.Base, KGDT64_SYS_TSS);
     TssBase = KiGetGdtDescriptorBase(TssEntry);
 
-    /* Initialize the PCR */
-    KiInitializePcr(&KiInitialPcr,
-                    0,
-                    GdtDescriptor.Base,
-                    IdtDescriptor.Base,
-                    TssBase,
-                    &KiInitialThread.Tcb,
-                    KiP0DoubleFaultStack);
-
-    /* Setup the TSS descriptors and entries */
-    KiInitializeTss(&KiInitialPcr,
-                    KiInitialPcr.TssBase,
-                    KiP0BootStack,
-                    KiP0DoubleFaultStack,
-                    KiP0DoubleFaultStack);
+    /* Initialize PCR and TSS */
+    KiInitializeProcessorBootStructures(0,
+                                        &KiInitialPcr,
+                                        GdtDescriptor.Base,
+                                        IdtDescriptor.Base,
+                                        TssBase,
+                                        &KiInitialThread.Tcb,
+                                        KiP0BootStack,
+                                        KiP0DoubleFaultStack,
+                                        KiP0DoubleFaultStack,
+                                        KiP0DoubleFaultStack);
 }
 
 CODE_SEG("INIT")
