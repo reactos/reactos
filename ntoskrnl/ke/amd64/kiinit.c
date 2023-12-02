@@ -242,15 +242,19 @@ KiInitializeCpu(PKIPCR Pcr)
     _mm_setcsr(INITIAL_MXCSR);
 }
 
+static
 VOID
-FASTCALL
-KiInitializeTss(IN PKTSS64 Tss,
-                IN UINT64 Stack)
+KiInitializeTss(
+    _In_ PKIPCR Pcr,
+    _Out_ PKTSS64 Tss,
+    _In_ PVOID InitialStack,
+    _In_ PVOID DoubleFaultStack,
+    _In_ PVOID NmiStack)
 {
     PKGDTENTRY64 TssEntry;
 
     /* Get pointer to the GDT entry */
-    TssEntry = KiGetGdtEntry(KeGetPcr()->GdtBase, KGDT64_SYS_TSS);
+    TssEntry = KiGetGdtEntry(Pcr->GdtBase, KGDT64_SYS_TSS);
 
     /* Initialize the GDT entry */
     KiInitGdtEntry(TssEntry, (ULONG64)Tss, sizeof(KTSS64), AMD64_TSS, 0);
@@ -262,16 +266,16 @@ KiInitializeTss(IN PKTSS64 Tss,
     Tss->IoMapBase = 0x68;
 
     /* Setup ring 0 stack pointer */
-    Tss->Rsp0 = Stack;
+    Tss->Rsp0 = (ULONG64)InitialStack;
 
     /* Setup a stack for Double Fault Traps */
-    Tss->Ist[1] = (ULONG64)KiP0DoubleFaultStack;
+    Tss->Ist[1] = (ULONG64)DoubleFaultStack;
 
     /* Setup a stack for CheckAbort Traps */
-    Tss->Ist[2] = (ULONG64)KiP0DoubleFaultStack;
+    Tss->Ist[2] = (ULONG64)DoubleFaultStack;
 
     /* Setup a stack for NMI Traps */
-    Tss->Ist[3] = (ULONG64)KiP0DoubleFaultStack;
+    Tss->Ist[3] = (ULONG64)NmiStack;
 
     /* Load the task register */
     __ltr(KGDT64_SYS_TSS);
@@ -470,7 +474,11 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         KiInitModuleList(LoaderBlock);
 
         /* Setup the TSS descriptors and entries */
-        KiInitializeTss(Pcr->TssBase, InitialStack);
+        KiInitializeTss(Pcr,
+                        Pcr->TssBase,
+                        (PVOID)InitialStack,
+                        KiP0DoubleFaultStack,
+                        KiP0DoubleFaultStack);
 
         /* Setup the IDT */
         KeInitExceptions();
