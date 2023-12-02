@@ -429,15 +429,15 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
     //FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
-    /* Save the loader block */
-    KeLoaderBlock = LoaderBlock;
-
     /* Get the current CPU number */
     Cpu = KeNumberProcessors++; // FIXME
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
     {
+        /* Save the loader block */
+        KeLoaderBlock = LoaderBlock;
+
         /* Set the initial stack, idle thread and process */
         LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
         LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
