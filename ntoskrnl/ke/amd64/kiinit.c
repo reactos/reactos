@@ -162,7 +162,6 @@ KiInitializePcr(IN PKIPCR Pcr,
 
     /* Start us out at PASSIVE_LEVEL */
     Pcr->Irql = PASSIVE_LEVEL;
-    KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
 VOID
@@ -240,6 +239,8 @@ KiInitializeCpu(PKIPCR Pcr)
 
     /* Initialize MXCSR */
     _mm_setcsr(INITIAL_MXCSR);
+
+    KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
 static
@@ -276,9 +277,6 @@ KiInitializeTss(
 
     /* Setup a stack for NMI Traps */
     Tss->Ist[3] = (ULONG64)NmiStack;
-
-    /* Load the task register */
-    __ltr(KGDT64_SYS_TSS);
 }
 
 CODE_SEG("INIT")
