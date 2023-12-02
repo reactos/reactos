@@ -280,6 +280,29 @@ KiInitializeTss(
 }
 
 CODE_SEG("INIT")
+static
+VOID
+KiInitializeP0BootStructures(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Set the initial stack, idle thread and process for processor 0 */
+    LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
+    LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
+    LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
+    LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
+
+    /* Initialize the PCR */
+    KiInitializePcr(&KiInitialPcr, 0, &KiInitialThread.Tcb, KiP0DoubleFaultStack);
+
+    /* Setup the TSS descriptors and entries */
+    KiInitializeTss(&KiInitialPcr,
+                    KiInitialPcr.TssBase,
+                    KiP0BootStack,
+                    KiP0DoubleFaultStack,
+                    KiP0DoubleFaultStack);
+}
+
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeKernelMachineDependent(
@@ -436,21 +459,8 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Save the loader block */
         KeLoaderBlock = LoaderBlock;
 
-        /* Set the initial stack, idle thread and process */
-        LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
-        LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
-        LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
-        LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
-
-        /* Initialize the PCR */
-        KiInitializePcr(&KiInitialPcr, 0, &KiInitialThread.Tcb, KiP0DoubleFaultStack);
-
-        /* Setup the TSS descriptors and entries */
-        KiInitializeTss(&KiInitialPcr,
-                        KiInitialPcr.TssBase,
-                        KiP0BootStack,
-                        KiP0DoubleFaultStack,
-                        KiP0DoubleFaultStack);
+        /* Prepare LoaderBlock, PCR, TSS with the P0 boot data */
+        KiInitializeP0BootStructures(LoaderBlock);
     }
 
     /* Get Pcr from loader block */
