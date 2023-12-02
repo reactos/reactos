@@ -1275,7 +1275,7 @@ UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
 
     s_wKeyboardLangIdCache = wLangId;
     szText[_countof(szText) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-    s_uKeyboardLayoutCPCache = wcstol(szText, 0, 10);
+    s_uKeyboardLayoutCPCache = wcstol(szText, NULL, 10);
     return s_uKeyboardLayoutCPCache;
 }
 
