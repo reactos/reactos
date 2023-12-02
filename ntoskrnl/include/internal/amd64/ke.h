@@ -474,13 +474,6 @@ KiSetTrapContext(
     _In_ PCONTEXT Context,
     _In_ KPROCESSOR_MODE RequestorMode);
 
-VOID
-NTAPI
-KiInitializePcr(IN PKIPCR Pcr,
-                IN ULONG ProcessorNumber,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack);
-
 #ifdef __cplusplus
 } // extern "C"
 #endif

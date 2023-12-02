@@ -87,17 +87,17 @@ KiInitMachineDependent(VOID)
 
 }
 
+static
 VOID
-NTAPI
-KiInitializePcr(IN PKIPCR Pcr,
-                IN ULONG ProcessorNumber,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack)
+KiInitializePcr(
+    _Out_ PKIPCR Pcr,
+    _In_ ULONG ProcessorNumber,
+    _In_ PKGDTENTRY64 GdtBase,
+    _In_ PKIDTENTRY64 IdtBase,
+    _In_ PKTSS64 TssBase,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID DpcStack)
 {
-    KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
-    PKGDTENTRY64 TssEntry;
-    USHORT Tr = 0;
-
     /* Zero out the PCR */
     RtlZeroMemory(Pcr, sizeof(KIPCR));
 
@@ -126,21 +126,12 @@ KiInitializePcr(IN PKIPCR Pcr,
     Pcr->Prcb.Number = (UCHAR)ProcessorNumber;
     Pcr->Prcb.SetMember = 1ULL << ProcessorNumber;
 
-    /* Get GDT and IDT descriptors */
-    __sgdt(&GdtDescriptor.Limit);
-    __sidt(&IdtDescriptor.Limit);
-    Pcr->GdtBase = (PVOID)GdtDescriptor.Base;
-    Pcr->IdtBase = (PKIDTENTRY)IdtDescriptor.Base;
+    /* Set GDT and IDT base */
+    Pcr->GdtBase = GdtBase;
+    Pcr->IdtBase = IdtBase;
 
-    /* Get TSS Selector */
-    __str(&Tr);
-    ASSERT(Tr == KGDT64_SYS_TSS);
-
-    /* Get TSS Entry */
-    TssEntry = KiGetGdtEntry(Pcr->GdtBase, Tr);
-
-    /* Get the KTSS itself */
-    Pcr->TssBase = KiGetGdtDescriptorBase(TssEntry);
+    /* Set TssBase */
+    Pcr->TssBase = TssBase;
 
     Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0; // FIXME
 
@@ -285,14 +276,32 @@ VOID
 KiInitializeP0BootStructures(
     _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
+    PKGDTENTRY64 TssEntry;
+    PKTSS64 TssBase;
+
     /* Set the initial stack, idle thread and process for processor 0 */
     LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
     LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
     LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
     LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
 
+    /* Get GDT and IDT descriptors */
+    __sgdt(&GdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
+
+    /* Get the boot TSS from the GDT */
+    TssEntry = KiGetGdtEntry(GdtDescriptor.Base, KGDT64_SYS_TSS);
+    TssBase = KiGetGdtDescriptorBase(TssEntry);
+
     /* Initialize the PCR */
-    KiInitializePcr(&KiInitialPcr, 0, &KiInitialThread.Tcb, KiP0DoubleFaultStack);
+    KiInitializePcr(&KiInitialPcr,
+                    0,
+                    GdtDescriptor.Base,
+                    IdtDescriptor.Base,
+                    TssBase,
+                    &KiInitialThread.Tcb,
+                    KiP0DoubleFaultStack);
 
     /* Setup the TSS descriptors and entries */
     KiInitializeTss(&KiInitialPcr,
