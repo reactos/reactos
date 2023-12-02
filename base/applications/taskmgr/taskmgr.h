@@ -14,7 +14,7 @@
 
 #define STATUS_WINDOW	2001
 #define STATUS_SIZE1	85
-#define STATUS_SIZE2	190
+#define STATUS_SIZE2	157
 #define STATUS_SIZE3	400
 
 typedef struct
