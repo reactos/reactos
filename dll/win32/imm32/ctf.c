@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing the IMM CTF (Collaborative Translation Framework)
+ * PURPOSE:     Implementing IMM CTF (Collaborative Translation Framework)
  * COPYRIGHT:   Copyright 2022-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
