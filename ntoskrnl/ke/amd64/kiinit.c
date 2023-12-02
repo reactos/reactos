@@ -490,6 +490,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get the current CPU number */
     Cpu = KeNumberProcessors++; // FIXME
 
+    /* Set processor as active */
+    KeActiveProcessors |= 1ULL << Cpu;
+
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
     {
@@ -547,9 +550,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
-
-    /* Set processor as active */
-    KeActiveProcessors |= 1ULL << Cpu;
 
     /* Release lock */
     InterlockedAnd64((PLONG64)&KiFreezeExecutionLock, 0);
