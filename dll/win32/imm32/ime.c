@@ -926,15 +926,6 @@ BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue
 }
 
 /***********************************************************************
- *              ImmDisableLegacyIME(IMM32.@)
- */
-BOOL WINAPI ImmDisableLegacyIME(void)
-{
-    FIXME("stub\n");
-    return TRUE;
-}
-
-/***********************************************************************
  *              ImmGetImeInfoEx (IMM32.@)
  */
 BOOL WINAPI

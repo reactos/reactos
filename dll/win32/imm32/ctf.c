@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing the IMM32 Cicero-aware Text Framework (CTF)
+ * PURPOSE:     Implementing IMM CTF (Collaborative Translation Framework)
  * COPYRIGHT:   Copyright 2022-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -11,11 +11,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-/* FIXME: Use RTL */
-static BOOL WINAPI RtlDllShutdownInProgress(VOID)
-{
-    return FALSE;
-}
+/* FIXME: Use proper header */
+BOOLEAN WINAPI RtlDllShutdownInProgress(VOID);
 
 static BOOL Imm32InsideLoaderLock(VOID)
 {
@@ -201,17 +198,7 @@ VOID Imm32TF_InvalidAssemblyListCacheIfExist(VOID)
 }
 
 /***********************************************************************
- * CTF IME support
- *
- * TSF stands for "Text Services Framework". "Cicero" is the code name of TSF.
- * CTF stands for "Cicero-aware Text Framework".
- *
- * Comparing with old-style IMM IME, the combination of CTF IME and TSF provides
- * new-style and high-level input method.
- *
- * The CTF IME file is a DLL file that the software developer distributes.
- * The export functions of the CTF IME file are defined in <CtfImeTable.h> of
- * this folder.
+ * CTF (Collaborative Translation Framework) IME support
  */
 
 /* "Active IMM" compatibility flags */

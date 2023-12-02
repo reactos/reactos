@@ -1185,24 +1185,6 @@ LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 }
 
 /***********************************************************************
- *              ImmSendMessageToActiveDefImeWndW (IMM32.@)
- */
-LRESULT WINAPI
-ImmSendMessageToActiveDefImeWndW(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    HWND hwndIME;
-
-    if (uMsg != WM_COPYDATA)
-        return 0;
-
-    hwndIME = (HWND)NtUserQueryWindow((HWND)wParam, QUERY_WINDOW_DEFAULT_IME);
-    if (IS_NULL_UNEXPECTEDLY(hwndIME))
-        return 0;
-
-    return SendMessageW(hwndIME, uMsg, wParam, lParam);
-}
-
-/***********************************************************************
  *              ImmCallImeConsoleIME (IMM32.@)
  */
 DWORD WINAPI
