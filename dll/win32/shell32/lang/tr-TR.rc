@@ -1,4 +1,11 @@
-/* TRANSLATORS: 2006 Fatih Aşıcı, 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2015-2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2006 Fatih Aşıcı <fasici@linux-sevenler.org>
+ *              Copyright 2012 Arda Tanrıkulu (ardatan) <ardatanrikulu@gmail.com>
+ *              Copyright 2015-2016, 2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
