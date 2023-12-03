@@ -2361,7 +2361,7 @@ BEGIN
     7389 "Dispozitivul ales nu are disponibile opțiuni de configurare.\0"
     7390 "Domeniu nevalid\0"
     7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare.  Pentru a dezactiva aceasta, e necesară oprirea serviciului „Server”.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare.  Doriți scoaterea unei console sistem care va permite oprirea serviciului „Server”?\r\n\nÎn „Gestionarea calculatorului”, clic pe „Instrumente de sistem”, apoi clic pe „Servicii”.  În panoul din dreapta, clic-dreapta pe „Server”, apoi alegeți oprirea lui.\0"
-    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator.  Acest expert îl va activa.  Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
+    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator. Acest expert îl va activa. Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
     7393 "Conexiuni de intrare\0"
     7394 "Fondul de adrese IP introdus este nevalid.\0"
     7395 "Masca furnizată nu este validă.\0"
