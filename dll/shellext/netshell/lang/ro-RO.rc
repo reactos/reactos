@@ -145,7 +145,7 @@ BEGIN
     IDS_SHV_COLUMN_TYPE "Tipe"
     IDS_SHV_COLUMN_STATE "Stare"
     IDS_SHV_COLUMN_DEVNAME "Nume dispozitiv"
-    IDS_SHV_COLUMN_PHONE "Număr de telefon sau adresa gazdei"
+    IDS_SHV_COLUMN_PHONE "Numărul de telefon # sau adresa gazdei"
     IDS_SHV_COLUMN_OWNER "Posesor"
     IDS_TYPE_ETHERNET "LAN sau Internet de mare viteză"
     IDS_STATUS_NON_OPERATIONAL "Dezactivat"
