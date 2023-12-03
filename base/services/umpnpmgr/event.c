@@ -42,34 +42,9 @@ ProcessTargetDeviceEvent(
 {
     RPC_STATUS RpcStatus;
 
-    if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ENUMERATED, &RpcStatus))
-    {
-        DeviceInstallParams* Params;
-        DWORD len;
-        DWORD DeviceIdLength;
+    DPRINT("ProcessTargetDeviceEvent(%p)\n", PnpEvent);
 
-        DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
-
-        DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
-        if (DeviceIdLength)
-        {
-            /* Allocate a new device-install event */
-            len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
-            Params = HeapAlloc(GetProcessHeap(), 0, len);
-            if (Params)
-            {
-                wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-
-                /* Queue the event (will be dequeued by DeviceInstallThread) */
-                WaitForSingleObject(hDeviceInstallListMutex, INFINITE);
-                InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
-                ReleaseMutex(hDeviceInstallListMutex);
-
-                SetEvent(hDeviceInstallListNotEmpty);
-            }
-        }
-    }
-    else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+    if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
     {
 //        DWORD dwRecipient;
 
@@ -143,13 +118,46 @@ VOID
 ProcessDeviceClassChangeEvent(
     _In_ PPLUGPLAY_EVENT_BLOCK PnpEvent)
 {
-    DPRINT("DeviceClassChangeEvent: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
-
+    DPRINT("ProcessDeviceClassChangeEvent(%p)\n", PnpEvent);
+    DPRINT("SymbolicLink: %S\n", PnpEvent->DeviceClass.SymbolicLinkName);
     DPRINT("ClassGuid: {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
            PnpEvent->DeviceClass.ClassGuid.Data1, PnpEvent->DeviceClass.ClassGuid.Data2, PnpEvent->DeviceClass.ClassGuid.Data3,
            PnpEvent->DeviceClass.ClassGuid.Data4[0], PnpEvent->DeviceClass.ClassGuid.Data4[1], PnpEvent->DeviceClass.ClassGuid.Data4[2],
            PnpEvent->DeviceClass.ClassGuid.Data4[3], PnpEvent->DeviceClass.ClassGuid.Data4[4], PnpEvent->DeviceClass.ClassGuid.Data4[5],
            PnpEvent->DeviceClass.ClassGuid.Data4[6], PnpEvent->DeviceClass.ClassGuid.Data4[7]);
+}
+
+
+static
+VOID
+ProcessDeviceInstallEvent(
+    _In_ PPLUGPLAY_EVENT_BLOCK PnpEvent)
+{
+    DeviceInstallParams* Params;
+    DWORD len;
+    DWORD DeviceIdLength;
+
+    DPRINT("ProcessDeviceInstallEvent(%p)\n", PnpEvent);
+    DPRINT("Device enumerated: %S\n", PnpEvent->InstallDevice.DeviceId);
+
+    DeviceIdLength = lstrlenW(PnpEvent->InstallDevice.DeviceId);
+    if (DeviceIdLength)
+    {
+        /* Allocate a new device-install event */
+        len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
+        Params = HeapAlloc(GetProcessHeap(), 0, len);
+        if (Params)
+        {
+            wcscpy(Params->DeviceIds, PnpEvent->InstallDevice.DeviceId);
+
+            /* Queue the event (will be dequeued by DeviceInstallThread) */
+            WaitForSingleObject(hDeviceInstallListMutex, INFINITE);
+            InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+            ReleaseMutex(hDeviceInstallListMutex);
+
+            SetEvent(hDeviceInstallListNotEmpty);
+        }
+    }
 }
 
 
@@ -213,7 +221,11 @@ PnpEventThread(
                 break;
 
 //            case CustomDeviceEvent:
-//            case DeviceInstallEvent:
+
+            case DeviceInstallEvent:
+                ProcessDeviceInstallEvent(PnpEvent);
+                break;
+
 //            case DeviceArrivalEvent:
 //            case PowerEvent:
 //            case VetoEvent:
