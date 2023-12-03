@@ -8,6 +8,7 @@
 #include "precomp.h"
 #include <msctf.h> /* for ITfLangBarMgr */
 #include <objidl.h> /* for IInitializeSpy */
+#include <compat_undoc.h> /* for BaseCheckAppcompatCache */
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -227,13 +228,6 @@ HINSTANCE g_hCtfIme = NULL;
 
 /* The type of ApphelpCheckIME function in apphelp.dll */
 typedef BOOL (WINAPI *FN_ApphelpCheckIME)(_In_z_ LPCWSTR AppName);
-
-/* FIXME: This is kernel32 function. We have to declare this in some header. */
-BOOL WINAPI
-BaseCheckAppcompatCache(_In_z_ LPCWSTR ApplicationName,
-                        _In_ HANDLE FileHandle,
-                        _In_opt_z_ LPCWSTR Environment,
-                        _Out_ PULONG pdwReason);
 
 /***********************************************************************
  * This function checks whether the app's IME is disabled by application
