@@ -1726,7 +1726,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 // return SELECT_PARTITION_PAGE;
             }
 
-            if (CurrentPartition->IsPartitioned == FALSE)
+            if (!CurrentPartition->IsPartitioned)
             {
                 Error = PartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
@@ -1789,10 +1789,10 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             ASSERT(CurrentPartition != NULL);
 
-            if (CurrentPartition->IsPartitioned == FALSE)
+            /* Ignore deletion in case this is not a partitioned entry */
+            if (!CurrentPartition->IsPartitioned)
             {
-                MUIDisplayError(ERROR_DELETE_SPACE, Ir, POPUP_WAIT_ANY_KEY);
-                return SELECT_PARTITION_PAGE;
+                continue;
             }
 
 // TODO: Do something similar before trying to format the partition?

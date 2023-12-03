@@ -135,7 +135,7 @@ HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb)
         DeleteObject(hbm);
         return NULL;
     }
-    CopyMemory(pvBits, pb, bm.bmWidthBytes * bm.bmHeight);
+    RtlCopyMemory(pvBits, pb, bm.bmWidthBytes * bm.bmHeight);
 
     return hbm;
 }
@@ -196,10 +196,10 @@ BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax)
         *(LPDWORD)pb = cbBytes;
         pb += sizeof(DWORD);
 
-        CopyMemory(pb, &bmci.bmciHeader, sizeof(BITMAPCOREHEADER));
+        RtlCopyMemory(pb, &bmci.bmciHeader, sizeof(BITMAPCOREHEADER));
         pb += sizeof(BITMAPCOREHEADER);
 
-        CopyMemory(pb, &bmci.bmciColors, cColors * sizeof(RGBTRIPLE));
+        RtlCopyMemory(pb, &bmci.bmciColors, cColors * sizeof(RGBTRIPLE));
         pb += cColors * sizeof(RGBTRIPLE);
 
         ret = GetDIBits(hDC, hbm, 0, bm.bmHeight, pb, (LPBITMAPINFO)&bmci, DIB_RGB_COLORS);

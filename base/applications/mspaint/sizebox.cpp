@@ -79,21 +79,21 @@ BOOL getSizeBoxRect(LPRECT prc, HITTEST hit, LPCRECT prcBase)
 
 HITTEST getSizeBoxHitTest(POINT pt, LPCRECT prcBase)
 {
-    RECT rc;
+    CRect rc;
 
     if (!::PtInRect(prcBase, pt))
         return HIT_NONE;
 
     rc = *prcBase;
-    ::InflateRect(&rc, -GRIP_SIZE, -GRIP_SIZE);
-    if (::PtInRect(&rc, pt))
+    rc.InflateRect(-GRIP_SIZE, -GRIP_SIZE);
+    if (rc.PtInRect(pt))
         return HIT_INNER;
 
     for (INT i = HIT_UPPER_LEFT; i <= HIT_LOWER_RIGHT; ++i)
     {
         HITTEST hit = (HITTEST)i;
         getSizeBoxRect(&rc, hit, prcBase);
-        if (::PtInRect(&rc, pt))
+        if (rc.PtInRect(pt))
             return hit;
     }
 
@@ -110,7 +110,7 @@ VOID drawSizeBoxes(HDC hdc, LPCRECT prcBase, BOOL bDrawFrame, LPCRECT prcPaint)
     if (bDrawFrame)
     {
         rc = *prcBase;
-        ::InflateRect(&rc, -GRIP_SIZE / 2, -GRIP_SIZE / 2);
+        rc.InflateRect(-GRIP_SIZE / 2, -GRIP_SIZE / 2);
 
         LOGBRUSH logBrush = { BS_HOLLOW, 0, 0 };
         COLORREF rgbHighlight = ::GetSysColor(COLOR_HIGHLIGHT);

@@ -12,6 +12,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define OEMRESOURCE
 
 #include "comctl32.h"
 

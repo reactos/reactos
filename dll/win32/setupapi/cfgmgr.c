@@ -6235,7 +6235,7 @@ CM_Open_Class_KeyW(
     _Out_ PHKEY phkClass,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Open_Class_KeyW%p %s %lx %lx %p %lx)\n",
+    TRACE("CM_Open_Class_KeyW(%p %s %lx %lx %p %lx)\n",
           debugstr_guid(pClassGuid), debugstr_w(pszClassName),
           samDesired, Disposition, phkClass, ulFlags);
 
@@ -6566,7 +6566,7 @@ CM_Query_And_Remove_SubTreeA(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %s %lu %lx)\n",
+    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %p %lu %lx)\n",
           dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExA(dnAncestor, pVetoType, pszVetoName,
@@ -6586,8 +6586,8 @@ CM_Query_And_Remove_SubTreeW(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Query_And_Remove_SubTreeW(%lx %p %s %lu %lx)\n",
-          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Query_And_Remove_SubTreeW(%lx %p %p %lu %lx)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExW(dnAncestor, pVetoType, pszVetoName,
                                            ulNameLength, ulFlags, NULL);
@@ -6610,8 +6610,8 @@ CM_Query_And_Remove_SubTree_ExA(
     LPWSTR lpLocalVetoName;
     CONFIGRET ret;
 
-    TRACE("CM_Query_And_Remove_SubTree_ExA(%lx %p %s %lu %lx %p)\n",
-          dnAncestor, pVetoType, debugstr_a(pszVetoName), ulNameLength,
+    TRACE("CM_Query_And_Remove_SubTree_ExA(%lx %p %p %lu %lx %p)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength,
           ulFlags, hMachine);
 
     if (pszVetoName == NULL && ulNameLength == 0)
@@ -6660,8 +6660,8 @@ CM_Query_And_Remove_SubTree_ExW(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("CM_Query_And_Remove_SubTree_ExW(%lx %p %s %lu %lx %p)\n",
-          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength,
+    TRACE("CM_Query_And_Remove_SubTree_ExW(%lx %p %p %lu %lx %p)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength,
           ulFlags, hMachine);
 
     if (dnAncestor == 0)
@@ -7442,8 +7442,8 @@ CM_Request_Device_EjectA(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Request_Device_EjectA(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Request_Device_EjectA(%lx %p %p %lu %lx)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Request_Device_Eject_ExA(dnDevInst, pVetoType, pszVetoName,
                                        ulNameLength, ulFlags, NULL);
@@ -7462,8 +7462,8 @@ CM_Request_Device_EjectW(
     _In_ ULONG ulNameLength,
     _In_ ULONG ulFlags)
 {
-    TRACE("CM_Request_Device_EjectW(%lx %p %s %lu %lx)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Request_Device_EjectW(%lx %p %p %lu %lx)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, pszVetoName,
                                        ulNameLength, ulFlags, NULL);
@@ -7483,22 +7483,25 @@ CM_Request_Device_Eject_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    LPWSTR lpLocalVetoName;
+    LPWSTR lpLocalVetoName = NULL;
     CONFIGRET ret;
 
-    TRACE("CM_Request_Device_Eject_ExA(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_a(pszVetoName), ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Request_Device_Eject_ExA(%lx %p %p %lu %lx %p)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags, hMachine);
 
-    if (pszVetoName == NULL && ulNameLength == 0)
-        return CR_INVALID_POINTER;
+    if (ulNameLength != 0)
+    {
+        if (pszVetoName == NULL)
+            return CR_INVALID_POINTER;
 
-    lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
-    if (lpLocalVetoName == NULL)
-        return CR_OUT_OF_MEMORY;
+        lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+        if (lpLocalVetoName == NULL)
+            return CR_OUT_OF_MEMORY;
+    }
 
     ret = CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, lpLocalVetoName,
                                       ulNameLength, ulFlags, hMachine);
-    if (ret == CR_REMOVE_VETOED)
+    if (ret == CR_REMOVE_VETOED && ulNameLength != 0)
     {
         if (WideCharToMultiByte(CP_ACP,
                                 0,
@@ -7535,8 +7538,8 @@ CM_Request_Device_Eject_ExW(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("CM_Request_Device_Eject_ExW(%lx %p %s %lu %lx %p)\n",
-          dnDevInst, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Request_Device_Eject_ExW(%lx %p %p %lu %lx %p)\n",
+          dnDevInst, pVetoType, pszVetoName, ulNameLength, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
@@ -7544,8 +7547,13 @@ CM_Request_Device_Eject_ExW(
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    if (pszVetoName == NULL && ulNameLength == 0)
+    if (pszVetoName == NULL && ulNameLength != 0)
         return CR_INVALID_POINTER;
+
+    /* Windows 2003 SP2 ignores pszVetoName when ulNameLength is zero
+     * and behaves like when pszVetoName is NULL */
+    if (ulNameLength == 0)
+        pszVetoName = NULL;
 
     if (hMachine != NULL)
     {

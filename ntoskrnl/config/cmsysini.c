@@ -21,7 +21,6 @@ LIST_ENTRY CmpSelfHealQueueListHead;
 KEVENT CmpLoadWorkerEvent;
 LONG CmpLoadWorkerIncrement;
 PEPROCESS CmpSystemProcess;
-BOOLEAN HvShutdownComplete;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
 BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
@@ -30,6 +29,7 @@ BOOLEAN CmpWasSetupBoot;
 BOOLEAN CmpProfileLoaded;
 BOOLEAN CmpNoVolatileCreates;
 ULONG CmpTraceLevel = 0;
+BOOLEAN HvShutdownComplete = FALSE;
 
 extern LONG CmpFlushStarveWriters;
 extern BOOLEAN CmFirstTime;
@@ -358,6 +358,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
                                NULL,
                                FileHandle,
                                LogHandle,
+                               NULL,
                                NULL,
                                HiveName,
                                CheckFlags);
@@ -906,13 +907,14 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Status = CmpInitializeHive(&SystemHive,
                                HiveBase ? HINIT_MEMORY : HINIT_CREATE,
                                HIVE_NOLAZYFLUSH,
-                               HFILE_TYPE_LOG,
+                               HFILE_TYPE_ALTERNATE,
                                HiveBase,
                                NULL,
                                NULL,
                                NULL,
+                               NULL,
                                &HiveName,
-                               HiveBase ? 2 : 0);
+                               HiveBase ? CM_CHECK_REGISTRY_PURGE_VOLATILES : CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -936,7 +938,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Disable self-healing internally and check if boot type wanted it */
         CmpSelfHeal = FALSE;
-        if (CmpBootType & 4)
+        if (CmpBootType & HBOOT_TYPE_SELF_HEAL)
         {
             /* We're disabled, so bugcheck */
             KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO,
@@ -1181,6 +1183,76 @@ CmpGetRegistryPath(VOID)
     return ConfigPath;
 }
 
+/**
+ * @brief
+ * Checks if the primary and alternate backing hive are
+ * the same, by determining the time stamp of both hives.
+ *
+ * @param[in] FileName
+ * A pointer to a string containing the file name of the
+ * primary hive.
+ *
+ * @param[in] CmMainmHive
+ * A pointer to a CM hive descriptor associated with the
+ * primary hive.
+ *
+ * @param[in] AlternateHandle
+ * A handle to a file that represents the alternate hive.
+ *
+ * @param[in] Diverged
+ * A pointer to a boolean value, if both hives are the same
+ * it returns TRUE. Otherwise it returns FALSE.
+ */
+static
+VOID
+CmpHasAlternateHiveDiverged(
+    _In_ PCUNICODE_STRING FileName,
+    _In_ PCMHIVE CmMainmHive,
+    _In_ HANDLE AlternateHandle,
+    _Out_ PBOOLEAN Diverged)
+{
+    PHHIVE Hive, AlternateHive;
+    NTSTATUS Status;
+    PCMHIVE CmiAlternateHive;
+
+    /* Assume it has not diverged */
+    *Diverged = FALSE;
+
+    /* Initialize the SYSTEM alternate hive */
+    Status = CmpInitializeHive(&CmiAlternateHive,
+                               HINIT_FILE,
+                               0,
+                               HFILE_TYPE_PRIMARY,
+                               NULL,
+                               AlternateHandle,
+                               NULL,
+                               NULL,
+                               NULL,
+                               FileName,
+                               CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Assume it has diverged... */
+        DPRINT1("Failed to initialize the alternate hive to check for diversion (Status 0x%lx)\n", Status);
+        *Diverged = TRUE;
+        return;
+    }
+
+    /*
+     * Check the timestamp of both hives. If they do not match they
+     * have diverged, the kernel has to synchronize the both hives.
+     */
+    Hive = &CmMainmHive->Hive;
+    AlternateHive = &CmiAlternateHive->Hive;
+    if (AlternateHive->BaseBlock->TimeStamp.QuadPart !=
+        Hive->BaseBlock->TimeStamp.QuadPart)
+    {
+        *Diverged = TRUE;
+    }
+
+    CmpDestroyHive(CmiAlternateHive);
+}
+
 _Function_class_(KSTART_ROUTINE)
 VOID
 NTAPI
@@ -1193,9 +1265,10 @@ CmpLoadHiveThread(IN PVOID StartContext)
     USHORT FileStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
-    HANDLE PrimaryHandle = NULL, LogHandle = NULL;
+    HANDLE PrimaryHandle = NULL, AlternateHandle = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID ErrorParameters;
+    BOOLEAN HasDiverged;
     PAGED_CODE();
 
     /* Get the hive index, make sure it makes sense */
@@ -1245,7 +1318,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
                                      CmpMachineHiveList[i].HHiveFlags,
                                      &CmHive,
                                      &CmpMachineHiveList[i].Allocate,
-                                     0);
+                                     CM_CHECK_REGISTRY_PURGE_VOLATILES);
         if (!(NT_SUCCESS(Status)) ||
             (!(CmpShareSystemHives) && !(CmHive->FileHandles[HFILE_TYPE_LOG])))
         {
@@ -1274,18 +1347,18 @@ CmpLoadHiveThread(IN PVOID StartContext)
         {
             /* It's now, open the hive file and log */
             Status = CmpOpenHiveFiles(&FileName,
-                                      L".LOG",
+                                      L".ALT",
                                       &PrimaryHandle,
-                                      &LogHandle,
+                                      &AlternateHandle,
                                       &PrimaryDisposition,
                                       &SecondaryDisposition,
                                       TRUE,
                                       TRUE,
                                       FALSE,
                                       &ClusterSize);
-            if (!(NT_SUCCESS(Status)) || !(LogHandle))
+            if (!(NT_SUCCESS(Status)) || !(AlternateHandle))
             {
-                /* Couldn't open the hive or its log file, raise a hard error */
+                /* Couldn't open the hive or its alternate file, raise a hard error */
                 ErrorParameters = &FileName;
                 NtRaiseHardError(STATUS_CANNOT_LOAD_REGISTRY_FILE,
                                  1,
@@ -1299,7 +1372,14 @@ CmpLoadHiveThread(IN PVOID StartContext)
             }
 
             /* Save the file handles. This should remove our sync hacks */
-            CmHive->FileHandles[HFILE_TYPE_LOG] = LogHandle;
+            /*
+             * FIXME: Any hive that relies on the alternate hive for recovery purposes
+             * will only get an alternate hive. As a result, the LOG file would never
+             * get synced each time a write is done to the hive. In the future it would
+             * be best to adapt the code so that a primary hive can use a LOG and ALT
+             * hives at the same time.
+             */
+            CmHive->FileHandles[HFILE_TYPE_ALTERNATE] = AlternateHandle;
             CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
 
             /* Allow lazy flushing since the handles are there -- remove sync hacks */
@@ -1324,8 +1404,36 @@ CmpLoadHiveThread(IN PVOID StartContext)
                 //ASSERT(FALSE);
             //}
 
-            /* Another thing we don't support is NTLDR-recovery */
-            if (CmHive->Hive.BaseBlock->BootRecover) ASSERT(FALSE);
+            /* FreeLdr has recovered the hive with a log, we must do a flush */
+            if (CmHive->Hive.BaseBlock->BootRecover == HBOOT_BOOT_RECOVERED_BY_HIVE_LOG)
+            {
+                DPRINT1("FreeLdr recovered the hive (hive 0x%p)\n", CmHive);
+                RtlSetAllBits(&CmHive->Hive.DirtyVector);
+                CmHive->Hive.DirtyCount = CmHive->Hive.DirtyVector.SizeOfBitMap;
+                HvSyncHive((PHHIVE)CmHive);
+            }
+            else
+            {
+                /*
+                 * Check whether the both primary and alternate hives are the same,
+                 * or that the primary or alternate were created for the first time.
+                 * Do a write against the alternate hive in these cases.
+                 */
+                CmpHasAlternateHiveDiverged(&FileName,
+                                            CmHive,
+                                            AlternateHandle,
+                                            &HasDiverged);
+                if (HasDiverged ||
+                    PrimaryDisposition == FILE_CREATED ||
+                    SecondaryDisposition == FILE_CREATED)
+                {
+                    if (!HvWriteAlternateHive((PHHIVE)CmHive))
+                    {
+                        DPRINT1("Failed to write to alternate hive\n");
+                        goto Exit;
+                    }
+                }
+            }
 
             /* Finally, set our allocated hive to the same hive we've had */
             CmpMachineHiveList[i].CmHive2 = CmHive;
@@ -1333,6 +1441,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
         }
     }
 
+Exit:
     /* We're done */
     CmpMachineHiveList[i].ThreadFinished = TRUE;
 
@@ -1565,7 +1674,8 @@ CmInitSystem1(VOID)
                                NULL,
                                NULL,
                                NULL,
-                               0);
+                               NULL,
+                               CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -1656,7 +1766,8 @@ CmInitSystem1(VOID)
                                NULL,
                                NULL,
                                NULL,
-                               0);
+                               NULL,
+                               CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -2048,6 +2159,14 @@ CmShutdownSystem(VOID)
 
         ListEntry = ListEntry->Flink;
     }
+
+    /*
+     * As we flushed all the hives on the disk,
+     * tell the system we do not want any further
+     * registry flushing or syncing at this point
+     * since we are shutting down the registry anyway.
+     */
+    HvShutdownComplete = TRUE;
 
     CmpUnlockRegistry();
 }

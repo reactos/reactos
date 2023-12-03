@@ -1,9 +1,9 @@
 /*
  * PROJECT:    PAINT for ReactOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:    Window procedure of the main window and all children apart from
- *             hPalWin, hToolSettings and hSelection
+ * PURPOSE:    The main window
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once

@@ -139,18 +139,120 @@ IsShimInfrastructureDisabled(VOID)
  * @unimplemented
  */
 BOOL
-WINAPI
-BaseCheckAppcompatCache(IN PWCHAR ApplicationName,
-                        IN HANDLE FileHandle,
-                        IN PWCHAR Environment,
-                        OUT PULONG Reason)
+BasepShimCacheCheckBypass(
+    _In_ PCWSTR ApplicationName,
+    _In_ HANDLE FileHandle,
+    _In_opt_ PCWSTR Environment,
+    _In_ BOOL bUnknown,
+    _Out_opt_ PULONG pdwReason)
 {
-    DPRINT("BaseCheckAppcompatCache is UNIMPLEMENTED\n");
-
-    if (Reason) *Reason = 0;
-
-    // We don't know this app.
+    DPRINT("fixme:(%S, %p, %S, %d, %p)\n", ApplicationName, FileHandle, Environment, bUnknown,
+           pdwReason);
     return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+BasepShimCacheSearch(
+    _In_ PCWSTR ApplicationName,
+    _In_ HANDLE FileHandle)
+{
+    APPHELP_CACHE_SERVICE_LOOKUP Lookup;
+    RtlInitUnicodeString(&Lookup.ImageName, ApplicationName);
+    Lookup.ImageHandle = FileHandle;
+    return NT_SUCCESS(NtApphelpCacheControl(ApphelpCacheServiceLookup, &Lookup));
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepCheckCacheExcludeList(
+    _In_ PCWSTR ApplicationName)
+{
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepCheckCacheExcludeCustom(
+    _In_ PCWSTR ApplicationName)
+{
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+BasepShimCacheRemoveEntry(
+    _In_ PCWSTR ApplicationName)
+{
+    APPHELP_CACHE_SERVICE_LOOKUP Lookup;
+    RtlInitUnicodeString(&Lookup.ImageName, ApplicationName);
+    Lookup.ImageHandle = INVALID_HANDLE_VALUE;
+    NtApphelpCacheControl(ApphelpCacheServiceRemove, &Lookup);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+BasepShimCacheLookup(
+    _In_ PCWSTR ApplicationName,
+    _In_ HANDLE FileHandle)
+{
+    DPRINT("fixme:(%S, %p)\n", ApplicationName, FileHandle);
+
+    if (!BasepShimCacheSearch(ApplicationName, FileHandle))
+        return FALSE;
+
+    if (!BasepCheckCacheExcludeList(ApplicationName) ||
+        !BasepCheckCacheExcludeCustom(ApplicationName))
+    {
+        BasepShimCacheRemoveEntry(ApplicationName);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+BaseCheckAppcompatCache(
+    _In_ PCWSTR ApplicationName,
+    _In_ HANDLE FileHandle,
+    _In_opt_ PCWSTR Environment,
+    _Out_opt_ PULONG pdwReason)
+{
+    BOOL ret = FALSE;
+    ULONG dwReason;
+
+    DPRINT("(%S, %p, %S, %p)\n", ApplicationName, FileHandle, Environment, pdwReason);
+
+    dwReason = 0;
+    if (BasepShimCacheCheckBypass(ApplicationName, FileHandle, Environment, TRUE, &dwReason))
+    {
+        dwReason |= 2;
+    }
+    else
+    {
+        ret = BasepShimCacheLookup(ApplicationName, FileHandle);
+        if (!ret)
+            dwReason |= 1;
+    }
+
+    if (pdwReason)
+        *pdwReason = dwReason;
+
+    return ret;
 }
 
 static
@@ -415,14 +517,32 @@ GetComPlusPackageInstallStatus(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-SetComPlusPackageInstallStatus(LPVOID lpInfo)
+SetComPlusPackageInstallStatus(IN ULONG ComPlusPackage)
 {
-   STUB;
-   return FALSE;
+    NTSTATUS Status;
+
+    DPRINT("(0x%X)\n", ComPlusPackage);
+
+    if (ComPlusPackage & ~1)
+    {
+        DPRINT1("0x%lX\n", ComPlusPackage);
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtSetSystemInformation(SystemComPlusPackage, &ComPlusPackage, sizeof(ComPlusPackage));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("0x%lX\n", Status);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*

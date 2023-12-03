@@ -14,13 +14,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HMODULE ghImm32Inst = NULL; // Win: ghInst
-PSERVERINFO gpsi = NULL; // Win: gpsi
-SHAREDINFO gSharedInfo = { NULL }; // Win: gSharedInfo
-BYTE gfImmInitialized = FALSE; // Win: gfInitialized
+HMODULE ghImm32Inst = NULL; /* The IMM32 instance */
+PSERVERINFO gpsi = NULL;
+SHAREDINFO gSharedInfo = { NULL };
+BYTE gfImmInitialized = FALSE; /* Is IMM32 initialized? */
 ULONG_PTR gHighestUserAddress = 0;
 
-// Win: ImmInitializeGlobals
 static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
@@ -184,7 +183,6 @@ Retry:
     return TRUE;
 }
 
-// Win: SelectInputContext
 VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
@@ -489,12 +487,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
         SendMessageW(hwndDefIME, WM_IME_SELECT, TRUE, (LPARAM)hKL);
 
     return TRUE;
-}
-
-/* Win: Internal_CtfImeSetActiveContextAlways */
-static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
-{
-    TRACE("We have to do something\n");
 }
 
 /***********************************************************************
@@ -1104,15 +1096,6 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 }
 
 /***********************************************************************
-*		ImmDisableTextFrameService(IMM32.@)
-*/
-BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)
-{
-    FIXME("Stub\n");
-    return FALSE;
-}
-
-/***********************************************************************
  *              ImmEnumInputContext(IMM32.@)
  */
 BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)
@@ -1206,7 +1189,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     hKL = GetKeyboardLayout(0);
     if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
-        Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
+        CtfImeSetActiveContextAlways(hIMC, fActive, hWnd, hKL);
         hKL = GetKeyboardLayout(0);
     }
 
@@ -1264,6 +1247,29 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     if (IS_NULL_UNEXPECTEDLY(hIMC))
         return FALSE;
     return ImmSetActiveContext(hwnd, hIMC, fFlag);
+}
+
+/***********************************************************************
+ *              GetKeyboardLayoutCP (IMM32.@)
+ */
+UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
+{
+    WCHAR szText[8];
+    static LANGID s_wKeyboardLangIdCache = 0;
+    static UINT s_uKeyboardLayoutCPCache = 0;
+
+    TRACE("(%u)\n", wLangId);
+
+    if (wLangId == s_wKeyboardLangIdCache)
+        return s_uKeyboardLayoutCPCache;
+
+    if (!GetLocaleInfoW(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
+        return 0;
+
+    s_wKeyboardLangIdCache = wLangId;
+    szText[_countof(szText) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    s_uKeyboardLayoutCPCache = wcstol(szText, NULL, 10);
+    return s_uKeyboardLayoutCPCache;
 }
 
 #ifndef NDEBUG

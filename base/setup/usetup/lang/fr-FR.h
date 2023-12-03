@@ -1966,13 +1966,6 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Vous ne pouvez supprimer de l'espace disque non partitionn\202!\n"
-        "\n"
-        "  * Appuyer sur une touche pour continuer.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Echec de l'installation du code de d\202marrage %S sur la partition syst\212me.",
         "ENTR\220E = Red\202marrer l'ordinateur"

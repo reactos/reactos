@@ -1942,13 +1942,6 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ju nuk mund t\211 fshini hap\211sir\211 n\211 disk jasht particioneve!\n"
-        "\n"
-        "  * Shtypni nj\211 tast cfar\211do p\211r t\211 vazhduar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalimi d\211shtoj n\211 instalimin e %S bootcode n\211 particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"

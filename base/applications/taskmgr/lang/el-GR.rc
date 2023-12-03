@@ -10,17 +10,17 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος από τον Διαχειριστή Διεργασιών", ID_FILE_EXIT
     END
-    POPUP "&Επιλογές"
+    POPUP "&Επιλογές" //FIXME: accelerator collision &E
     BEGIN
         MENUITEM "&Πάντα Μπροστά", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Σμίκρυνση κατά τη Χρήση", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Απόκρυψη όταν είναι σε Σμίκρυνση", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Εμφάνιση" //FIXME: accelerator collision &E
     BEGIN
-        MENUITEM "&Ανανέωση Τώρα", ID_VIEW_REFRESH
-        POPUP "&Ανανέωση Ταχύτητας"
+        MENUITEM "&Ανανέωση Τώρα", ID_VIEW_REFRESH //FIXME: accelerator collision &A
+        POPUP "&Ανανέωση Ταχύτητας" //FIXME: accelerator collision &A
         BEGIN
             MENUITEM "&Υψηλή", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Κανονική", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
@@ -432,7 +432,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Usage: %d%%"
     IDS_STATUS_MEMUSAGE "Commit Charge: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "CPU Usage: %3d%%"
+    IDS_STATUS_CPUUSAGE "CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processes: %d"
     IDS_NOT_RESPONDING "Not Responding"
     IDS_RUNNING "Running"

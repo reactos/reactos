@@ -1,4 +1,9 @@
-// COPYRIGHT: Baruch Rutman (peterooch)
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Hebrew resource file
+ * TRANSLATOR:  Copyright 2013-2019 Baruch Rutman <peterooch@gmail.com>
+ */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 

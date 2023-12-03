@@ -44,7 +44,7 @@ LRESULT CFullscreenWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     INT cyDest = imageModel.GetHeight();
     INT xDest = (rcWnd.right - rcWnd.left - cxDest) / 2;
     INT yDest = (rcWnd.bottom - rcWnd.top - cyDest) / 2;
-    BitBlt(hDC, xDest, yDest, cxDest, cyDest, imageModel.GetDC(), 0, 0, SRCCOPY);
+    ::BitBlt(hDC, xDest, yDest, cxDest, cyDest, imageModel.GetDC(), 0, 0, SRCCOPY);
     EndPaint(&ps);
     return 0;
 }

@@ -261,6 +261,11 @@ typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
 #endif
 
 //
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE             0x3000
+
+//
 // Number of pool lookaside lists per pool in the PRCB
 //
 #define NUMBER_POOL_LOOKASIDE_LISTS 32

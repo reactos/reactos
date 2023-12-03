@@ -1,8 +1,8 @@
 /*
- * PROJECT:     shell32 for ReactOS
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku <joannmondresku@gmail.com>
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Estonian resource file
+ * TRANSLATOR:  Copyright 2018 Joann Mõndresku <joannmondresku@gmail.com>
  */
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT

@@ -432,7 +432,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "%3d%% :שימוש במעבד"
     IDS_STATUS_MEMUSAGE "Commit Charge: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "%3d%% :שימוש במעבד "
+    IDS_STATUS_CPUUSAGE "%3d%% :מעבד"
     IDS_STATUS_PROCESSES "%d :תהליכים"
     IDS_NOT_RESPONDING "לא מגיב"
     IDS_RUNNING "פועל"

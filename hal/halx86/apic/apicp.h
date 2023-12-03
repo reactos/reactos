@@ -151,7 +151,7 @@ typedef enum _APIC_DSH
     APIC_DSH_Destination,
     APIC_DSH_Self,
     APIC_DSH_AllIncludingSelf,
-    APIC_DSH_AllExclusingSelf
+    APIC_DSH_AllExcludingSelf
 } APIC_DSH;
 
 /* Write Constants */

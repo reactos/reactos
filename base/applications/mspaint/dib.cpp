@@ -406,6 +406,39 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
     return hbmNew;
 }
 
+HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial)
+{
+    CRect rc = rcPartial;
+    HBITMAP hbmPart = CreateDIBWithProperties(rc.Width(), rc.Height());
+    if (!hbmPart)
+        return NULL;
+
+    HDC hDC1 = ::CreateCompatibleDC(NULL);
+    HDC hDC2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = ::SelectObject(hDC1, hbmWhole);
+    HGDIOBJ hbm2Old = ::SelectObject(hDC2, hbmPart);
+    ::BitBlt(hDC2, 0, 0, rc.Width(), rc.Height(), hDC1, rc.left, rc.top, SRCCOPY);
+    ::SelectObject(hDC1, hbm1Old);
+    ::SelectObject(hDC2, hbm2Old);
+    ::DeleteDC(hDC1);
+    ::DeleteDC(hDC2);
+    return hbmPart;
+}
+
+void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart)
+{
+    CRect rc = rcPartial;
+    HDC hDC1 = ::CreateCompatibleDC(NULL);
+    HDC hDC2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = ::SelectObject(hDC1, hbmWhole);
+    HGDIOBJ hbm2Old = ::SelectObject(hDC2, hbmPart);
+    ::BitBlt(hDC1, rc.left, rc.top, rc.Width(), rc.Height(), hDC2, 0, 0, SRCCOPY);
+    ::SelectObject(hDC1, hbm1Old);
+    ::SelectObject(hDC2, hbm2Old);
+    ::DeleteDC(hDC1);
+    ::DeleteDC(hDC2);
+}
+
 struct BITMAPINFODX : BITMAPINFO
 {
     RGBQUAD bmiColorsAdditional[256 - 1];

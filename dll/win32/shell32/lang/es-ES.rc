@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Shell
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Spanish locale file
- * COPYRIGHT:   Ismael Ferreras Morezuelas
- *              Julio Carchi Ruiz
- *              2020 Julen Urizar Compains
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL

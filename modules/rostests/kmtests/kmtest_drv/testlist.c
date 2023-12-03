@@ -169,7 +169,7 @@ const KMT_TEST TestList[] =
     { "ZwMapViewOfSection",                 Test_ZwMapViewOfSection },
     { "ZwWaitForMultipleObjects",           Test_ZwWaitForMultipleObjects},
 #ifdef _M_AMD64
-    { "RtlCaptureContext",                  Test_RtlCaptureContext },
+    { "RtlCaptureContextKM",                Test_RtlCaptureContext },
 #endif
     { NULL,                                 NULL }
 };

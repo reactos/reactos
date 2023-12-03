@@ -1932,13 +1932,6 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Partitsioneerimata kettaruumi ei saa kustutada!\n"
-        "\n"
-        "  * Vajuta mis tahes klahvi, et j\204tkata.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "S\201steemikettale ei \344nnestunud paigaldada %S alglaadimiskoodi.",
         "ENTER = Taask\204ivita arvuti"

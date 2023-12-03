@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Danish resource file
+ * TRANSLATOR:  Copyright 2009 Thomas Larsen <sikker2004@yahoo.com>
+ */
+
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX

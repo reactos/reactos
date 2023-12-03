@@ -137,7 +137,6 @@ extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
 extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
-extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG_PTR KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
@@ -156,8 +155,8 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 
 /* MACROS *************************************************************************/
 
-#define AFFINITY_MASK(Id) KiMask32Array[Id]
-#define PRIORITY_MASK(Id) KiMask32Array[Id]
+#define AFFINITY_MASK(ProcessorIndex) ((KAFFINITY)1 << (ProcessorIndex))
+#define PRIORITY_MASK(Priority) (1UL << (Priority))
 
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
@@ -302,6 +301,13 @@ FASTCALL
 KiCompleteTimer(
     IN PKTIMER Timer,
     IN PKSPIN_LOCK_QUEUE LockQueue
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KeStartAllProcessors(
+    VOID
 );
 
 /* gmutex.c ********************************************************************/

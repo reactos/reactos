@@ -110,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Alt kiri+Shift"
     IDS_SWITCH_BET_INLANG "Mengganti salah satu bahasa masukan"
-    IDS_REBOOT_NOW, "Mulai ulang sekarang?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE

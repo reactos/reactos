@@ -1947,13 +1947,6 @@ MUI_ERROR skSKErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nem\223\247ete odstr\240ni\234 miesto na disku, ktor\202 nie je oblas\234ou!\n"
-        "\n"
-        "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "In\347tal\240toru sa nepodarilo nain\347talova\234 %S zav\240dzac\241 k\242d s\243borov\202ho\n"
         "syst\202mu FAT na syst\202mov\243 part\241ciu.",

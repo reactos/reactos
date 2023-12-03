@@ -16,16 +16,18 @@
 
 NTSTATUS
 NTAPI
-CmpInitializeHive(OUT PCMHIVE *CmHive,
-                  IN ULONG OperationType,
-                  IN ULONG HiveFlags,
-                  IN ULONG FileType,
-                  IN PVOID HiveData OPTIONAL,
-                  IN HANDLE Primary,
-                  IN HANDLE Log,
-                  IN HANDLE External,
-                  IN PCUNICODE_STRING FileName OPTIONAL,
-                  IN ULONG CheckFlags)
+CmpInitializeHive(
+    _Out_ PCMHIVE *CmHive,
+    _In_ ULONG OperationType,
+    _In_ ULONG HiveFlags,
+    _In_ ULONG FileType,
+    _In_opt_ PVOID HiveData,
+    _In_ HANDLE Primary,
+    _In_ HANDLE Log,
+    _In_ HANDLE External,
+    _In_ HANDLE Alternate,
+    _In_opt_ PCUNICODE_STRING FileName,
+    _In_ ULONG CheckFlags)
 {
     PCMHIVE Hive;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -44,13 +46,17 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
      *   unless this hive is a shared system hive.
      * - An in-memory initialization without hive data.
      * - A log hive that is not linked to a correct file type.
+     * - An alternate hive that is not linked to a correct file type.
+     * - A lonely alternate hive not backed up with its corresponding primary hive.
      */
     if (((External) && ((Primary) || (Log))) ||
         ((Log) && !(Primary)) ||
         (!(CmpShareSystemHives) && (HiveFlags & HIVE_VOLATILE) &&
             ((Primary) || (External) || (Log))) ||
         ((OperationType == HINIT_MEMORY) && (!HiveData)) ||
-        ((Log) && (FileType != HFILE_TYPE_LOG)))
+        ((Log) && (FileType != HFILE_TYPE_LOG)) ||
+        ((Alternate) && (FileType != HFILE_TYPE_ALTERNATE)) ||
+        ((Alternate) && !(Primary)))
     {
         /* Fail the request */
         return STATUS_INVALID_PARAMETER;
@@ -140,6 +146,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     Hive->FileHandles[HFILE_TYPE_PRIMARY] = Primary;
     Hive->FileHandles[HFILE_TYPE_LOG] = Log;
     Hive->FileHandles[HFILE_TYPE_EXTERNAL] = External;
+    Hive->FileHandles[HFILE_TYPE_ALTERNATE] = Alternate;
 
     /* Initailize the guarded mutex */
     KeInitializeGuardedMutex(Hive->ViewLock);
@@ -201,8 +208,8 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
         (OperationType == HINIT_MAPFILE))
     {
         /* Verify integrity */
-        ULONG CheckStatus = CmCheckRegistry(Hive, CheckFlags);
-        if (CheckStatus != 0)
+        CM_CHECK_REGISTRY_STATUS CheckStatus = CmCheckRegistry(Hive, CheckFlags);
+        if (!CM_CHECK_REGISTRY_SUCCESS(CheckStatus))
         {
             /* Cleanup allocations and fail */
             ExDeleteResourceLite(Hive->FlusherLock);

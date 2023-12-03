@@ -1,13 +1,13 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 216
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti è necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 235, 27
-    CONTROL "Ottieni automaticamente l'indirizzo IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
+    CONTROL "Ottieni automaticamente l'indirizzo IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Indirizzo IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
@@ -15,8 +15,8 @@ BEGIN
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Default gateway:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "Ottieni automaticamente l'indirizzo dei server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
+    CONTROL "Ottieni automaticamente l'indirizzo dei server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
     LTEXT "Server DNS preferito:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
@@ -31,9 +31,9 @@ CAPTION "Configurazione alternativa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Se questo computer viene utilizzato in più di una rete indicare di seguito le configurazioni di rete alternative", -1, 9, 9, 220, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "Indirizzo IP privato &automatico", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "Configurato dall'&utente", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    CONTROL "Configurato dall'&utente", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
     LTEXT "&Indirizzo IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
@@ -196,7 +196,7 @@ BEGIN
 END
 
 IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN

@@ -136,7 +136,7 @@ BEGIN
             MENUITEM "&Under normal", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
             MENUITEM "&Låg", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
-        MENUITEM "Välj &källa (FIXME)...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Välj &källa...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
         MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
         MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
@@ -432,7 +432,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Processoranvändning: %d%%"
     IDS_STATUS_MEMUSAGE "Minnesanv: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "Processoranv: %3d%%"
+    IDS_STATUS_CPUUSAGE "CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processer: %d"
     IDS_NOT_RESPONDING "Svarar inte"
     IDS_RUNNING "Igång"

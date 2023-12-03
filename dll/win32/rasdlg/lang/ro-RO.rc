@@ -2217,7 +2217,7 @@ BEGIN
     1571 "Opțiunea curentă de criptare cere EAP sau o careva versiune de autentificare securizată MS-CHAP.\0"
     1572 "Protocoale și securitate\0"
     1573 "Alegeți transporturi și opțiuni de securitate pentru conexiune.\0"
-    1574 "Protocolul ales include PAP, SPAP, și/sau CHAP.  Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți păstrarea acestei configurații?\0"
+    1574 "Protocolul ales include PAP, SPAP, și/sau CHAP.  Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți să păstrați aceste setări?\0"
     1575 "Pentru conectarea la „%1”, este necesară mai întâi conectarea la „%2”.  Doriți conectarea la „%2”?\0"
     1576 "Conectarea prin cablu paralel…\0"
     1577 "Conectarea prin infraroșu…\0"

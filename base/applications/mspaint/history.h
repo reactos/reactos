@@ -10,6 +10,15 @@
 /* HISTORYSIZE = number of possible undo-steps + 1 */
 #define HISTORYSIZE 11
 
+struct IMAGE_PART
+{
+    CRect m_rcPart;
+    HBITMAP m_hbmImage;
+    BOOL m_bPartial;
+
+    void clear();
+};
+
 class ImageModel
 {
 public:
@@ -21,6 +30,7 @@ public:
     BOOL CanRedo() const { return m_redoSteps > 0; }
     void PushImageForUndo();
     void PushImageForUndo(HBITMAP hbm);
+    void PushImageForUndo(const RECT& rcPartial);
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ClearHistory(void);
@@ -41,13 +51,16 @@ public:
     void NotifyImageChanged();
     BOOL IsBlackAndWhite();
     void PushBlackAndWhite();
-    void SelectionClone(BOOL bUndoable = TRUE);
 
 protected:
     HDC m_hDrawingDC; // The device context for this class
+    HBITMAP m_hbmMaster; // The master bitmap
     int m_currInd; // The current index in m_hBms
     int m_undoSteps; // The undo-able count
     int m_redoSteps; // The redo-able count
-    HBITMAP m_hBms[HISTORYSIZE]; // A rotation buffer of HBITMAPs
+    IMAGE_PART m_historyItems[HISTORYSIZE]; // A ring buffer of IMAGE_PARTs
     HGDIOBJ m_hbmOld;
+
+    void SwapPart();
+    void PushDone();
 };

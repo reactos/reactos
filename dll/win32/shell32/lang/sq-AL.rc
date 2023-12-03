@@ -1,4 +1,9 @@
-// COPYRIGHT: 2014 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Albanian resource file
+ * TRANSLATOR:  Copyright 2014 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
+ */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 

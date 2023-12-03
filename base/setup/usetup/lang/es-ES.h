@@ -1942,13 +1942,6 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "\255No se puede eliminar un espacio de disco sin particionar!\n"
-        "\n"
-        "  * Pulse cualquier tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "El instalador fall\242 al instalar el c\242digo de arranque %S en la partici\242n del sistema.",
         "INTRO = Reiniciar el equipo"

@@ -1,5 +1,10 @@
-// COPYRIGHT: 2015 Radek Liska (Black_Fox) <radekliska@gmail.com>
-//            navaraf
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2003 Filip Navara (navaraf@reactos.org)
+ *              Copyright 2008-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 

@@ -858,26 +858,26 @@ IntPatBlt(
         return TRUE;
     }
 
-    if (Width > 0)
+    if (Width >= 0)
     {
         DestRect.left = XLeft;
         DestRect.right = XLeft + Width;
     }
     else
     {
-        DestRect.left = XLeft + Width + 1;
-        DestRect.right = XLeft + 1;
+        DestRect.left = XLeft + Width;
+        DestRect.right = XLeft;
     }
 
-    if (Height > 0)
+    if (Height >= 0)
     {
         DestRect.top = YLeft;
         DestRect.bottom = YLeft + Height;
     }
     else
     {
-        DestRect.top = YLeft + Height + 1;
-        DestRect.bottom = YLeft + 1;
+        DestRect.top = YLeft + Height;
+        DestRect.bottom = YLeft;
     }
 
     IntLPtoDP(pdc, (LPPOINT)&DestRect, 2);

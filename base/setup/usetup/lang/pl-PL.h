@@ -1948,13 +1948,6 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nie mo\276na usun\245\206 nieprzydzielonego miejsca, gdzie nie ma \276adnej partycji!\n"
-        "\n"
-        "  * Naci\230nij dowolny klawisz, aby kontynuowa\206.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego %S na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"

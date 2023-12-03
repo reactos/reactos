@@ -1938,13 +1938,6 @@ MUI_ERROR daDKErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Du kan ikke slette upartitionernet diskplads!\n"
-        "\n"
-        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Installationen kunne ikke installere %S-startkode p\206 systempartitionen.",
         "ENTER = Genstart"

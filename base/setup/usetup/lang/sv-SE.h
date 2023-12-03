@@ -1938,13 +1938,6 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Du kan inte ta bort opartitionerrat diskutrymme!\n"
-        "\n"
-        "  * Tryck valfri tangent f\224r att forts\204tta.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup misslyckades att installera %S bootkoden p\206 systempartitionen.",
         "ENTER = Starta om datorn"

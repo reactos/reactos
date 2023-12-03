@@ -202,6 +202,50 @@ void ToolsModel::SetRubberRadius(int nRubberRadius)
     NotifyToolSettingsChanged();
 }
 
+SIZE ToolsModel::GetToolSize() const
+{
+    SIZE size;
+    switch (m_activeTool)
+    {
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+            size.cx = selectionModel.m_rc.Width();
+            size.cy = selectionModel.m_rc.Height();
+            break;
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_TEXT:
+        case TOOL_FILL:
+            size.cx = size.cy = 1;
+            break;
+        case TOOL_LINE:
+        case TOOL_BEZIER:
+        case TOOL_RECT:
+        case TOOL_RRECT:
+        case TOOL_SHAPE:
+        case TOOL_ELLIPSE:
+            size.cx = size.cy = GetLineWidth();
+            break;
+        case TOOL_AIRBRUSH:
+            size.cx = size.cy = GetAirBrushRadius() * 2;
+            break;
+        case TOOL_RUBBER:
+            size.cx = size.cy = GetRubberRadius() * 2;
+            break;
+        case TOOL_BRUSH:
+            size.cx = size.cy = GetBrushWidth();
+            break;
+        case TOOL_PEN:
+            size.cx = size.cy = GetPenWidth();
+            break;
+    }
+    if (size.cx < 1)
+        size.cx = 1;
+    if (size.cy < 1)
+        size.cy = 1;
+    return size;
+}
+
 BOOL ToolsModel::IsBackgroundTransparent() const
 {
     return m_transpBg;

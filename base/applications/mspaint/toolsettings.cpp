@@ -7,8 +7,6 @@
  *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 #define X_TOOLSETTINGS  0
@@ -169,8 +167,8 @@ VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
     for (INT i = 0; i < 5; i++)
     {
         INT penWidth = i + 1;
-        RECT rcLine = rects[i];
-        ::InflateRect(&rcLine, -2, 0);
+        CRect rcLine = rects[i];
+        rcLine.InflateRect(-2, 0);
         rcLine.top = (rcLine.top + rcLine.bottom - penWidth) / 2;
         rcLine.bottom = rcLine.top + penWidth;
         if (toolsModel.GetLineWidth() == penWidth)
@@ -242,17 +240,17 @@ static inline INT getBoxRects(RECT rects[3], LPCRECT prc, LPPOINT ppt = NULL)
 
 VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
 {
-    RECT rects[3];
+    CRect rects[3];
     getBoxRects(rects, prc);
 
     for (INT iItem = 0; iItem < 3; ++iItem)
     {
-        RECT& rcItem = rects[iItem];
+        CRect& rcItem = rects[iItem];
 
         if (toolsModel.GetShapeStyle() == iItem)
             ::FillRect(hdc, &rcItem, ::GetSysColorBrush(COLOR_HIGHLIGHT));
 
-        ::InflateRect(&rcItem, -5, -5);
+        rcItem.InflateRect(-5, -5);
 
         if (iItem <= 1)
         {
@@ -289,9 +287,9 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     m_hTranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_TRANSPARENT),
                                       IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
-    RECT trackbarZoomPos, rect2;
+    CRect trackbarZoomPos, rect2;
     calculateTwoBoxes(trackbarZoomPos, rect2);
-    ::InflateRect(&trackbarZoomPos, -1, -1);
+    trackbarZoomPos.InflateRect(-1, -1);
 
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
     trackbarZoom.SendMessage(TBM_SETRANGE, TRUE, MAKELPARAM(MIN_ZOOM_TRACK, MAX_ZOOM_TRACK));
@@ -336,23 +334,23 @@ LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
-VOID CToolSettingsWindow::calculateTwoBoxes(RECT& rect1, RECT& rect2)
+VOID CToolSettingsWindow::calculateTwoBoxes(CRect& rect1, CRect& rect2)
 {
-    RECT rcClient;
+    CRect rcClient;
     GetClientRect(&rcClient);
-    ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
+    rcClient.InflateRect(-MARGIN1, -MARGIN1);
 
     INT yCenter = (rcClient.top + rcClient.bottom) / 2;
-    ::SetRect(&rect1, rcClient.left, rcClient.top, rcClient.right, yCenter);
-    ::SetRect(&rect2, rcClient.left, yCenter, rcClient.right, rcClient.bottom);
+    rect1.SetRect(rcClient.left, rcClient.top, rcClient.right, yCenter);
+    rect2.SetRect(rcClient.left, yCenter, rcClient.right, rcClient.bottom);
 
-    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
-    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
+    rect1.InflateRect(-MARGIN2, -MARGIN2);
+    rect2.InflateRect(-MARGIN2, -MARGIN2);
 }
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    RECT rect1, rect2;
+    CRect rect1, rect2;
     calculateTwoBoxes(rect1, rect2);
 
     PAINTSTRUCT ps;
@@ -364,8 +362,8 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     if (toolsModel.GetActiveTool() >= TOOL_RECT)
         ::DrawEdge(hdc, &rect2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
-    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
-    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
+    rect1.InflateRect(-MARGIN2, -MARGIN2);
+    rect2.InflateRect(-MARGIN2, -MARGIN2);
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
@@ -407,7 +405,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-    RECT rect1, rect2;
+    CRect rect1, rect2;
     calculateTwoBoxes(rect1, rect2);
     RECT rects[12];
 

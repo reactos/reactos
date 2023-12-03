@@ -187,7 +187,7 @@ BEGIN
     GROUPBOX "Uso de MEM", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Totais", IDC_TOTALS_FRAME, 5, 122, 114, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Carga comprometida (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 114, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Memória física(K)", IDC_PHYSICAL_MEMORY_FRAME, 128, 122, 114, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Memória física (K)", IDC_PHYSICAL_MEMORY_FRAME, 128, 122, 114, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memória usada pelo núcleo (K)", IDC_KERNEL_MEMORY_FRAME, 128, 166, 114, 39, 0, WS_EX_TRANSPARENT
     LTEXT "Identificadores", IDS_TOTALS_HANDLE_COUNT, 12, 131, 57, 8
     LTEXT "Segmentos", IDS_TOTALS_THREAD_COUNT, 12, 140, 57, 8
@@ -432,7 +432,7 @@ BEGIN
     IDS_MSG_WARNINGCHANGEPRIORITY "AVISO: a alteração da classe de prioridade do processo\npode causar efeitos indesejáveis, inclusive a instabilidade do sistema. Tem\ncerteza de que deseja alterar a classe de prioridade?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso de CPU: %d%%"
     IDS_STATUS_MEMUSAGE "Uso de Memória: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "Uso de CPU: %3d%%"
+    IDS_STATUS_CPUUSAGE "CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processo: %d"
     IDS_NOT_RESPONDING "Não responde"
     IDS_RUNNING "Em execução"

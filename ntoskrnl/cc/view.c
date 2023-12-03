@@ -75,13 +75,16 @@ ULONG CcRosVacbIncRefCount_(PROS_VACB vacb, PCSTR file, INT line)
 ULONG CcRosVacbDecRefCount_(PROS_VACB vacb, PCSTR file, INT line)
 {
     ULONG Refs;
+    BOOLEAN VacbDirty = vacb->Dirty;
+    BOOLEAN VacbTrace = vacb->SharedCacheMap->Trace;
+    BOOLEAN VacbPageOut = vacb->PageOut;
 
     Refs = InterlockedDecrement((PLONG)&vacb->ReferenceCount);
-    ASSERT(!(Refs == 0 && vacb->Dirty));
-    if (vacb->SharedCacheMap->Trace)
+    ASSERT(!(Refs == 0 && VacbDirty));
+    if (VacbTrace)
     {
         DbgPrint("(%s:%i) VACB %p --RefCount=%lu, Dirty %u, PageOut %lu\n",
-                 file, line, vacb, Refs, vacb->Dirty, vacb->PageOut);
+                 file, line, vacb, Refs, VacbDirty, VacbPageOut);
     }
 
     if (Refs == 0)

@@ -5,15 +5,10 @@
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
-
 #include "dialogs.h"
 
 #include <winnls.h>
-
-/* GLOBALS **********************************************************/
 
 CMirrorRotateDialog mirrorRotateDialog;
 CAttributesDialog attributesDialog;

@@ -1,13 +1,13 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 216
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Параметры протокола IP могут назначаться автоматически, если сеть поддерживает эту возможность. В противном случае параметры IP можно получить у сетевого администратора.", -1, 9, 9, 235, 27
-    CONTROL "Получать IP-адрес автоматически", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
+    CONTROL "Получать IP-адрес автоматически", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     CONTROL "&Использовать следующий IP-адрес:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 140, 12
     LTEXT "IP-адрес:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
@@ -15,8 +15,8 @@ BEGIN
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Шлюз по умолчанию:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "Получать адрес DNS-сервера автоматически", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
+    CONTROL "Получать адрес DNS-сервера автоматически", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     CONTROL "&Использовать следующие адреса DNS-серверов:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 185, 12
     LTEXT "Предпочитаемый DNS-сервер:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
@@ -31,9 +31,9 @@ CAPTION "Альтернативная конфигурация"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Если этот компьютер используется в нескольких сетях, введите параметры альтернативной конфигурации протокола IP:", -1, 9, 9, 230, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "А&втоматический частный IP-адрес", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "Настраиваем&ый пользователем", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 130, 12
+    CONTROL "Настраиваем&ый пользователем", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 130, 12
     LTEXT "IP-&адрес:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "Ма&ска подсети:", -1, 14, 95, 135, 8
@@ -196,7 +196,7 @@ BEGIN
 END
 
 IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg"
 BEGIN

@@ -1,6 +1,11 @@
-// COPYRIGHT: 2015 Saibamen
-//            2018 BlackDragonDv
-//            2021 Piotr Hetnarowicz <piotrhwz@gmail.com>
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2018 Kamil Smoliński <blackdragondev85@gmail.com>
+ *              Copyright 2021 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 

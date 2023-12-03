@@ -4,7 +4,8 @@
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
  * Copyright 2008 Michael Stefaniuc
- *           2012 Ștefan Fulea
+ * Copyright 2012 Ștefan Fulea <stefan.fulea@mail.com>
+ * Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -61,12 +62,12 @@ Corectați marginile."
     PD32_NR_OF_COPIES_EMPTY               "Numărul de copii nu poate fi nul."
     PD32_TOO_LARGE_COPIES                 "Imprimanta nu susține un număr atât de mare de copii.\n\
 Introduceți un număr între 1 și %d."
-    PD32_PRINT_ERROR                      "A survenit o eroare la imprimare."
+    PD32_PRINT_ERROR                      "A apărut o eroare la imprimare."
     PD32_NO_DEFAULT_PRINTER               "Imprimanta implicită nu a fost definită."
     PD32_CANT_FIND_PRINTER                "Imprimanta nu poate fi găsită."
     PD32_OUT_OF_MEMORY                    "Memorie insuficientă."
-    PD32_GENERIC_ERROR                    "A survenit o eroare."
-    PD32_DRIVER_UNKNOWN                   "Modulul-pilot de imprimantă este necunoscut."
+    PD32_GENERIC_ERROR                    "A apărut o eroare."
+    PD32_DRIVER_UNKNOWN                   "Driverul de imprimantă este necunoscut."
     PD32_NO_DEVICES                       "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei (cum ar fi accesarea opțiunilor de pagină sau imprimarea unui document). Instalați o imprimantă apoi reîncercați."
 
     PD32_DEFAULT_PRINTER                  "Imprimantă implicită; "
@@ -134,12 +135,12 @@ STRINGTABLE /* Color names */
 STRINGTABLE
 {
     IDS_FONT_SIZE   "Alegeți o mărime de font între %d și %d puncte."
-    IDS_SAVE_BUTTON "&Păstrează"
-    IDS_SAVE_IN     "Păst&rează în:"
-    IDS_SAVE        "Păstrare"
-    IDS_SAVE_AS     "Păstrare în…"
+    IDS_SAVE_BUTTON "&Salvează"
+    IDS_SAVE_IN     "Sal&vează în:"
+    IDS_SAVE        "Salvează"
+    IDS_SAVE_AS     "Salvează ca…"
     IDS_OPEN_FILE   "Deschidere fișier"
-    IDS_SELECT_FOLDER "Selecează dosar"
+    IDS_SELECT_FOLDER "Selectează dosar"
     IDS_FONT_SIZE_INPUT "Dimensiunea fontului trebuie să fie un număr."
 }
 
@@ -171,7 +172,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG 36, 24, 275, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Păstrare fișier"
+CAPTION "Salvează fișierul"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "N&ume fișier:", stc3, 6, 6, 76, 9
@@ -184,7 +185,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "Dis&curi:", stc4, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "&Păstrează", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&Salvează", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&nulează", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Manual…", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Nem&odificabil", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP

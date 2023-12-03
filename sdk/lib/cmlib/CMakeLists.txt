@@ -4,7 +4,9 @@ add_definitions(
     -DNASSERT)
 
 list(APPEND SOURCE
+    cmcheck.c
     cminit.c
+    cmheal.c
     cmindex.c
     cmkeydel.c
     cmname.c

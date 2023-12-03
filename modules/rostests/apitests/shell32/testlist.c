@@ -21,6 +21,8 @@ extern void func_Int64ToString(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
+extern void func_PathIsEqualOrSubFolder(void);
+extern void func_PathIsTemporary(void);
 extern void func_PathResolve(void);
 extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
@@ -57,6 +59,8 @@ const struct test winetest_testlist[] =
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
     { "OpenAs_RunDLL", func_OpenAs_RunDLL },
+    { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
+    { "PathIsTemporary", func_PathIsTemporary },
     { "PathResolve", func_PathResolve },
     { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },

@@ -1943,13 +1943,6 @@ MUI_ERROR itITErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Non si pu\x95 cancellare spazio in un disco non partizionato!\n"
-        "\n"
-        "  * Premere un tasto qualsiasi per continuare.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Impossibile installare il bootcode %S nella partizione di sistema.",
         "INVIO = Riavviare il computer"

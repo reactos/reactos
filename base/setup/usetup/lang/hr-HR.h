@@ -1960,13 +1960,6 @@ MUI_ERROR hrHRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ne mo\247ete obriati neparticionirani diskovni prostor!\n"
-        "\n"
-        "  * Pritisnite bilo koju tipku za nastavak.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalacijski program je neuspje\347no instalirao %S bootcode na sistemsku particiju.",
         "ENTER = Ponovno pokreni ra\237unalo"

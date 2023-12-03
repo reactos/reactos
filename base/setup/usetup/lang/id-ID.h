@@ -1936,13 +1936,6 @@ MUI_ERROR idIDErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Anda tidak dapat menghapus ukuran cakram yang belum dipartisi!\n"
-        "\n"
-        "  * Tekan tombol apapun untuk lanjut.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Penyetelan gagal memasang bootcode %S pada partisi sistem.",
         "ENTER = Mulai ulang komputer"

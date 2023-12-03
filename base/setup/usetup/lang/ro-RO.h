@@ -1989,14 +1989,6 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "A\376i \356ncercat \272tergerea de spa\376iu neparti\376ionat,\n"
-        "\356ns\343 doar spa\376iul parti\376ionat poate fi \272ters!\n"
-        "\n"
-        "  * Tasta\376i pentru a continua.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "E\272ec la instalarea codului %S de ini\376ializare\n"
         "pe parti\376ia de sistem.",

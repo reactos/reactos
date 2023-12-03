@@ -1830,13 +1830,6 @@ MUI_ERROR huHUErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nem tud t\224r\224lni particion\240latlan lemezter\201letet!\n"
-        "\n"
-        "  * Nyomjon meg egy gombot a folytat\240shoz.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Nem siker\201lt a %S bootcode telep\241t\202se a rendszerpart\241ci\242ra.",
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"

@@ -112,7 +112,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "מקש Alt שמאלי+Shift"
     IDS_SWITCH_BET_INLANG "החלף בין שפות כתיבה"
-    IDS_REBOOT_NOW, "להפעיל מחדש כעת?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE

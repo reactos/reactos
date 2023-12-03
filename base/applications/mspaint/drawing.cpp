@@ -5,8 +5,6 @@
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
@@ -257,8 +255,7 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCW
 {
     INT iSaveDC = ::SaveDC(hdc); // We will modify the clipping region. Save now.
 
-    RECT rc;
-    ::SetRect(&rc, x1, y1, x2, y2);
+    CRect rc = { x1, y1, x2, y2 };
 
     if (style == 0) // Transparent
     {
