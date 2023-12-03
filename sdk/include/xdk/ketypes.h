@@ -1263,6 +1263,10 @@ typedef struct _XSTATE_CONFIGURATION
 #define NX_SUPPORT_POLICY_OPTOUT    3
 #endif
 
+//
+// Shared Kernel User Data
+// Keep in sync with sdk/include/ndk/ketypes.h
+//
 typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;                           // 0x0
