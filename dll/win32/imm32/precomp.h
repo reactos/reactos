@@ -201,3 +201,16 @@ HRESULT CtfImmCoInitialize(VOID);
 HRESULT CtfImeCreateThreadMgr(VOID);
 HRESULT CtfImeDestroyThreadMgr(VOID);
 HRESULT Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate);
+
+HRESULT
+CtfImeSetActiveContextAlways(
+    _In_ HIMC hIMC,
+    _In_ BOOL fActive,
+    _In_ HWND hWnd,
+    _In_ HKL hKL);
+
+BOOL
+CtfImeProcessCicHotkey(
+    _In_ HIMC hIMC,
+    _In_ UINT vKey,
+    _In_ LPARAM lParam);

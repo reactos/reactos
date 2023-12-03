@@ -741,6 +741,20 @@ CtfImeCreateThreadMgr(VOID)
 /***********************************************************************
  * This function calls the same name function of the CTF IME side.
  */
+BOOL
+CtfImeProcessCicHotkey(_In_ HIMC hIMC, _In_ UINT vKey, _In_ LPARAM lParam)
+{
+    TRACE("(%p, %u, %p)\n", hIMC, vKey, lParam);
+
+    if (!Imm32LoadCtfIme())
+        return FALSE;
+
+    return CTF_IME_FN(CtfImeProcessCicHotkey)(hIMC, vKey, lParam);
+}
+
+/***********************************************************************
+ * This function calls the same name function of the CTF IME side.
+ */
 HRESULT
 CtfImeDestroyThreadMgr(VOID)
 {
@@ -775,7 +789,7 @@ BOOL WINAPI
 CtfImmIsCiceroStartedInThread(VOID)
 {
     TRACE("()\n");
-    return !!(GetWin32ClientInfo()->CI_flags & 0x200);
+    return !!(GetWin32ClientInfo()->CI_flags & CI_CICERO_STARTED);
 }
 
 /***********************************************************************
@@ -785,9 +799,9 @@ VOID WINAPI CtfImmSetCiceroStartInThread(_In_ BOOL bStarted)
 {
     TRACE("(%d)\n", bStarted);
     if (bStarted)
-        GetWin32ClientInfo()->CI_flags |= 0x200;
+        GetWin32ClientInfo()->CI_flags |= CI_CICERO_STARTED;
     else
-        GetWin32ClientInfo()->CI_flags &= ~0x200;
+        GetWin32ClientInfo()->CI_flags &= ~CI_CICERO_STARTED;
 }
 
 /***********************************************************************
@@ -830,6 +844,24 @@ CtfImeDestroyInputContext(_In_ HIMC hIMC)
         return E_FAIL;
 
     return CTF_IME_FN(CtfImeDestroyInputContext)(hIMC);
+}
+
+/***********************************************************************
+ * This function calls the same name function of the CTF IME side.
+ */
+HRESULT
+CtfImeSetActiveContextAlways(
+    _In_ HIMC hIMC,
+    _In_ BOOL fActive,
+    _In_ HWND hWnd,
+    _In_ HKL hKL)
+{
+    TRACE("(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
+
+    if (!Imm32LoadCtfIme())
+        return E_FAIL;
+
+    return CTF_IME_FN(CtfImeSetActiveContextAlways)(hIMC, fActive, hWnd, hKL);
 }
 
 /***********************************************************************

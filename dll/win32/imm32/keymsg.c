@@ -783,11 +783,11 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
     PIMEDPI pImeDpi;
     LPINPUTCONTEXTDX pIC;
     BYTE KeyState[256];
-    UINT vk;
-    BOOL bUseIme = TRUE, bSkipThisKey = FALSE, bLowWordOnly = FALSE;
+    BOOL bLowWordOnly = FALSE, bSkipThisKey = FALSE, bHotKeyDone = TRUE;
 
     TRACE("(%p, %p, 0x%X, %p, 0x%lX)\n", hWnd, hKL, vKey, lParam, dwHotKeyID);
 
+    /* Process the key by the IME */
     hIMC = ImmGetContext(hWnd);
     pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi)
@@ -795,7 +795,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
-            if (LOBYTE(vKey) == VK_PACKET &&
+            if ((LOBYTE(vKey) == VK_PACKET) &&
                 !(pImeDpi->ImeInfo.fdwProperty & IME_PROP_ACCEPT_WIDE_VKEY))
             {
                 if (ImeDpi_IsUnicode(pImeDpi))
@@ -804,28 +804,22 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
                 }
                 else
                 {
-                    bUseIme = FALSE;
                     if (pIC->fOpen)
-                        bSkipThisKey = TRUE;
+                        ret |= IPHK_SKIPTHISKEY;
+
+                    bSkipThisKey = TRUE;
                 }
             }
 
-            if (bUseIme)
+            if (!bSkipThisKey && GetKeyboardState(KeyState))
             {
-                if (GetKeyboardState(KeyState))
+                UINT vk = (bLowWordOnly ? LOWORD(vKey) : vKey);
+                if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
                 {
-                    vk = (bLowWordOnly ? LOWORD(vKey) : vKey);
-                    if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
-                    {
-                        pIC->bNeedsTrans = TRUE;
-                        pIC->nVKey = vKey;
-                        ret |= IPHK_PROCESSBYIME;
-                    }
+                    pIC->bNeedsTrans = TRUE;
+                    pIC->nVKey = vKey;
+                    ret |= IPHK_PROCESSBYIME;
                 }
-            }
-            else if (bSkipThisKey)
-            {
-                ret |= IPHK_SKIPTHISKEY;
             }
 
             ImmUnlockIMC(hIMC);
@@ -834,14 +828,25 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    if (dwHotKeyID != INVALID_HOTKEY_ID) /* Valid Hot-key */
+    /* Process the hot-key if necessary */
+    if (!CtfImmIsCiceroStartedInThread()) /* Not Cicero? */
     {
-        if (Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
+        /* Process IMM IME hotkey */
+        if ((dwHotKeyID == INVALID_HOTKEY_ID) || !Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
+            bHotKeyDone = FALSE;
+    }
+    else if (!CtfImeProcessCicHotkey(hIMC, vKey, lParam)) /* CTF IME not processed the hotkey? */
+    {
+        /* Process IMM IME hotkey */
+        if (!IS_IME_HKL(hKL) ||
+            ((dwHotKeyID == INVALID_HOTKEY_ID) || !Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID)))
         {
-            if (vKey != VK_KANJI || dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)
-                ret |= IPHK_HOTKEY;
+            bHotKeyDone = FALSE;
         }
     }
+
+    if (bHotKeyDone && (vKey != VK_KANJI || dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN))
+        ret |= IPHK_HOTKEY;
 
     if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
     {
@@ -856,6 +861,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         {
             /* Add WM_KEYDOWN:VK_PROCESSKEY message */
             ImmTranslateMessage(hWnd, WM_KEYDOWN, VK_PROCESSKEY, lParam);
+
             ret &= ~IPHK_PROCESSBYIME;
             ret |= IPHK_SKIPTHISKEY;
         }

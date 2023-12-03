@@ -490,12 +490,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
     return TRUE;
 }
 
-/* Win: Internal_CtfImeSetActiveContextAlways */
-static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
-{
-    TRACE("We have to do something\n");
-}
-
 /***********************************************************************
  *		ImmAssociateContext (IMM32.@)
  */
@@ -1196,7 +1190,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     hKL = GetKeyboardLayout(0);
     if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
-        Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
+        CtfImeSetActiveContextAlways(hIMC, fActive, hWnd, hKL);
         hKL = GetKeyboardLayout(0);
     }
 
