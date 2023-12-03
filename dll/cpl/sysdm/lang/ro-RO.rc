@@ -335,7 +335,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
-    IDS_CPLSYSTEMDESCRIPTION "Afișarea informațiilor de sistem și schimbarea setărilor de dispozitive sau de sistem."
+    IDS_CPLSYSTEMDESCRIPTION "Afișarea informațiilor de sistem și schimbarea setărilor hardware sau de sistem."
     IDS_MEGABYTE "Mo de memorie"
     IDS_GIGABYTE "Go de memorie"
     IDS_TERABYTE "To de memorie"
