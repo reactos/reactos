@@ -48,8 +48,8 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "C&ouper\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copier\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "Co&ller\tCtrl+V", FCIDM_SHVIEW_INSERT //FIXME: accelerator collision &L
-    MENUITEM "Créer un &lien", FCIDM_SHVIEW_INSERTLINK //FIXME: accelerator collision &L
+    MENUITEM "Coll&er\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Créer un &lien", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Copier vers le &dossier...", FCIDM_SHVIEW_COPYTO //FIXME: accelerator collision &D
     MENUITEM "&Déplacer vers le dossier...", FCIDM_SHVIEW_MOVETO //FIXME: accelerator collision &D
