@@ -806,6 +806,9 @@ typedef struct _KUSER_SHARED_DATA
     ULONG64 UserPointerAuthMask;                            // 0x730
 #endif // NTDDI_VERSION >= NTDDI_WIN11_NI
 
+#if (NTDDI_VERSION < NTDDI_WIN7) && defined(__REACTOS__)
+    XSTATE_CONFIGURATION XState;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 //
@@ -1768,6 +1771,9 @@ typedef struct _KTHREAD
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN) // ][
     PVOID MdlForLockedTeb;
 #endif // ]
+#if defined(__REACTOS__) && defined(_M_AMD64) // HACK!
+    XSAVE_FORMAT* StateSaveArea;
+#endif
 } KTHREAD;
 
 #else // not (NTDDI_VERSION < NTDDI_WIN8)
