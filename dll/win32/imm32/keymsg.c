@@ -845,15 +845,15 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         }
     }
 
-    if (bHotKeyDone && (vKey != VK_KANJI || dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN))
+    if (bHotKeyDone && ((vKey != VK_KANJI) || (dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)))
         ret |= IPHK_HOTKEY;
 
     if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
     {
         /* The key has been processed by IME's ImeProcessKey */
         LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        if (PRIMARYLANGID(wLangID) == LANG_KOREAN &&
-            (vKey == VK_PROCESSKEY || (ret & IPHK_HOTKEY)))
+        if ((PRIMARYLANGID(wLangID) == LANG_KOREAN) &&
+            ((vKey == VK_PROCESSKEY) || (ret & IPHK_HOTKEY)))
         {
             /* Korean don't want VK_PROCESSKEY and IME hot-keys */
         }
