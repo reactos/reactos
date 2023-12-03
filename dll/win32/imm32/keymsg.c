@@ -394,22 +394,23 @@ LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
     return 0;
 }
 
-/* Win: SendNotificationProc */
-static BOOL CALLBACK Imm32SendNotificationProc(HIMC hIMC, LPARAM lParam)
+static BOOL CALLBACK
+Imm32SendNotificationProc(
+    _In_ HIMC hIMC,
+    _In_ LPARAM lParam)
 {
     HWND hWnd;
     LPINPUTCONTEXTDX pIC;
+
+    UNREFERENCED_PARAMETER(lParam);
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pIC))
         return TRUE;
 
     hWnd = pIC->hWnd;
-    if (hWnd == NULL || !IsWindow(hWnd))
-    {
-        ERR("\n");
+    if (!IsWindow(hWnd))
         goto Quit;
-    }
 
     TRACE("dwChange: 0x%08X\n", pIC->dwChange);
 
