@@ -1263,117 +1263,124 @@ typedef struct _XSTATE_CONFIGURATION
 #define NX_SUPPORT_POLICY_OPTOUT    3
 #endif
 
-typedef struct _KUSER_SHARED_DATA {
-  ULONG TickCountLowDeprecated;
-  ULONG TickCountMultiplier;
-  volatile KSYSTEM_TIME InterruptTime;
-  volatile KSYSTEM_TIME SystemTime;
-  volatile KSYSTEM_TIME TimeZoneBias;
-  USHORT ImageNumberLow;
-  USHORT ImageNumberHigh;
-  WCHAR NtSystemRoot[260];
-  ULONG MaxStackTraceDepth;
-  ULONG CryptoExponent;
-  ULONG TimeZoneId;
-  ULONG LargePageMinimum;
-  ULONG Reserved2[7];
-  NT_PRODUCT_TYPE NtProductType;
-  BOOLEAN ProductTypeIsValid;
-  ULONG NtMajorVersion;
-  ULONG NtMinorVersion;
-  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-  ULONG Reserved1;
-  ULONG Reserved3;
-  volatile ULONG TimeSlip;
-  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-  ULONG AltArchitecturePad[1];
-  LARGE_INTEGER SystemExpirationDate;
-  ULONG SuiteMask;
-  BOOLEAN KdDebuggerEnabled;
+typedef struct _KUSER_SHARED_DATA
+{
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[260];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[7];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    ULONG AltArchitecturePad[1];
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-  UCHAR NXSupportPolicy;
+    UCHAR NXSupportPolicy;
 #endif
-  volatile ULONG ActiveConsoleId;
-  volatile ULONG DismountCount;
-  ULONG ComPlusPackage;
-  ULONG LastSystemRITEventTickCount;
-  ULONG NumberOfPhysicalPages;
-  BOOLEAN SafeBootMode;
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  _ANONYMOUS_UNION union {
-    UCHAR TscQpcData;
-    _ANONYMOUS_STRUCT struct {
-      UCHAR TscQpcEnabled:1;
-      UCHAR TscQpcSpareFlag:1;
-      UCHAR TscQpcShift:6;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  UCHAR TscQpcPad[2];
+    _ANONYMOUS_UNION union
+    {
+        UCHAR TscQpcData;
+        _ANONYMOUS_STRUCT struct
+        {
+            UCHAR TscQpcEnabled:1;
+            UCHAR TscQpcSpareFlag:1;
+            UCHAR TscQpcShift:6;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    UCHAR TscQpcPad[2];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-  _ANONYMOUS_UNION union {
-    ULONG SharedDataFlags;
-    _ANONYMOUS_STRUCT struct {
-      ULONG DbgErrorPortPresent:1;
-      ULONG DbgElevationEnabled:1;
-      ULONG DbgVirtEnabled:1;
-      ULONG DbgInstallerDetectEnabled:1;
-      ULONG DbgSystemDllRelocated:1;
-      ULONG DbgDynProcessorEnabled:1;
-      ULONG DbgSEHValidationEnabled:1;
-      ULONG SpareBits:25;
-    } DUMMYSTRUCTNAME2;
-  } DUMMYUNIONNAME2;
+    _ANONYMOUS_UNION union
+    {
+        ULONG SharedDataFlags;
+        _ANONYMOUS_STRUCT struct
+        {
+            ULONG DbgErrorPortPresent:1;
+            ULONG DbgElevationEnabled:1;
+            ULONG DbgVirtEnabled:1;
+            ULONG DbgInstallerDetectEnabled:1;
+            ULONG DbgSystemDllRelocated:1;
+            ULONG DbgDynProcessorEnabled:1;
+            ULONG DbgSEHValidationEnabled:1;
+            ULONG SpareBits:25;
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
 #else
-  ULONG TraceLogging;
+    ULONG TraceLogging;
 #endif
-  ULONG DataFlagsPad[1];
-  ULONGLONG TestRetInstruction;
-  ULONG SystemCall;
-  ULONG SystemCallReturn;
-  ULONGLONG SystemCallPad[3];
-  _ANONYMOUS_UNION union {
-    volatile KSYSTEM_TIME TickCount;
-    volatile ULONG64 TickCountQuad;
-    _ANONYMOUS_STRUCT struct {
-      ULONG ReservedTickCountOverlay[3];
-      ULONG TickCountPad[1];
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME3;
-  ULONG Cookie;
-  ULONG CookiePad[1];
+    ULONG DataFlagsPad[1];
+    ULONGLONG TestRetInstruction;
+    ULONG SystemCall;
+    ULONG SystemCallReturn;
+    ULONGLONG SystemCallPad[3];
+    _ANONYMOUS_UNION union
+    {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+        _ANONYMOUS_STRUCT struct
+        {
+            ULONG ReservedTickCountOverlay[3];
+            ULONG TickCountPad[1];
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
+    ULONG Cookie;
+    ULONG CookiePad[1];
 #if (NTDDI_VERSION >= NTDDI_WS03)
-  LONGLONG ConsoleSessionForegroundProcessId;
-  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+    LONGLONG ConsoleSessionForegroundProcessId;
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  USHORT UserModeGlobalLogger[16];
+    USHORT UserModeGlobalLogger[16];
 #else
-  USHORT UserModeGlobalLogger[8];
-  ULONG HeapTracingPid[2];
-  ULONG CritSecTracingPid[2];
+    USHORT UserModeGlobalLogger[8];
+    ULONG HeapTracingPid[2];
+    ULONG CritSecTracingPid[2];
 #endif
-  ULONG ImageFileExecutionOptions;
+    ULONG ImageFileExecutionOptions;
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
-  ULONG LangGenerationCount;
+    ULONG LangGenerationCount;
 #else
   /* 4 bytes padding */
 #endif
-  ULONGLONG Reserved5;
-  volatile ULONG64 InterruptTimeBias;
-#endif
+    ULONGLONG Reserved5;
+    volatile ULONG64 InterruptTimeBias;
+#endif // NTDDI_VERSION >= NTDDI_VISTA
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  volatile ULONG64 TscQpcBias;
-  volatile ULONG ActiveProcessorCount;
-  volatile USHORT ActiveGroupCount;
-  USHORT Reserved4;
-  volatile ULONG AitSamplingValue;
-  volatile ULONG AppCompatFlag;
-  ULONGLONG SystemDllNativeRelocation;
-  ULONG SystemDllWowRelocation;
-  ULONG XStatePad[1];
-  XSTATE_CONFIGURATION XState;
+    volatile ULONG64 TscQpcBias;
+    volatile ULONG ActiveProcessorCount;
+    volatile USHORT ActiveGroupCount;
+    USHORT Reserved4;
+    volatile ULONG AitSamplingValue;
+    volatile ULONG AppCompatFlag;
+    ULONGLONG SystemDllNativeRelocation;
+    ULONG SystemDllWowRelocation;
+    ULONG XStatePad[1];
+    XSTATE_CONFIGURATION XState;
 #endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
