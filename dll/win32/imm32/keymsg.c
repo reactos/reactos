@@ -158,7 +158,6 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 }
 
 /* Open or close Japanese IME */
-/* Win: JCloseOpen */
 BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
@@ -177,7 +176,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
-            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Notify open change */
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_FORCE_OPEN;
             ImmUnlockIMC(hIMC);
         }
     }
@@ -329,69 +328,6 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
         SendMessageW(hWndIME, msg, wParam, lParam);
 
     return TRUE;
-}
-
-typedef struct IMM_DELAY_SET_LANG_BAND
-{
-    HWND hWnd;
-    BOOL fSet;
-} IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
-
-/* Sends a message to set the language band with delay. */
-/* Win: DelaySetLangBand */
-static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
-{
-    HWND hwndDefIME;
-    WPARAM wParam;
-    DWORD_PTR lResult;
-    PIMM_DELAY_SET_LANG_BAND pSetBand = arg;
-
-    Sleep(3000); /* Delay 3 seconds! */
-
-    hwndDefIME = ImmGetDefaultIMEWnd(pSetBand->hWnd);
-    if (hwndDefIME)
-    {
-        wParam = (pSetBand->fSet ? IMS_SETLANGBAND : IMS_UNSETLANGBAND);
-        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, wParam, (LPARAM)pSetBand->hWnd,
-                            SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
-    }
-    ImmLocalFree(pSetBand);
-    return FALSE;
-}
-
-/* Updates the language band. */
-/* Win: CtfImmSetLangBand */
-LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
-{
-    HANDLE hThread;
-    PWND pWnd = NULL;
-    PIMM_DELAY_SET_LANG_BAND pSetBand;
-    DWORD_PTR lResult = 0;
-
-    if (hWnd && gpsi)
-        pWnd = ValidateHwndNoErr(hWnd);
-
-    if (IS_NULL_UNEXPECTEDLY(pWnd))
-        return 0;
-
-    if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
-    {
-        SendMessageTimeoutW(hWnd, WM_USER + 0x105, 0, fSet, SMTO_BLOCK | SMTO_ABORTIFHUNG,
-                            5000, &lResult);
-        return lResult;
-    }
-
-    pSetBand = ImmLocalAlloc(0, sizeof(IMM_DELAY_SET_LANG_BAND));
-    if (IS_NULL_UNEXPECTEDLY(pSetBand))
-        return 0;
-
-    pSetBand->hWnd = hWnd;
-    pSetBand->fSet = fSet;
-
-    hThread = CreateThread(NULL, 0, Imm32DelaySetLangBandProc, pSetBand, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
-    return 0;
 }
 
 static BOOL CALLBACK

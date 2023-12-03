@@ -183,7 +183,6 @@ Retry:
     return TRUE;
 }
 
-// Win: SelectInputContext
 VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 {
     PCLIENTIMC pClientImc;

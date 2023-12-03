@@ -214,3 +214,8 @@ CtfImeProcessCicHotkey(
     _In_ HIMC hIMC,
     _In_ UINT vKey,
     _In_ LPARAM lParam);
+
+LRESULT
+CtfImmSetLangBand(
+    _In_ HWND hWnd,
+    _In_ BOOL fSet);
