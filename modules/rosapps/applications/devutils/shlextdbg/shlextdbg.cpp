@@ -101,6 +101,15 @@ template<class T> static bool CLSIDPrefix(T &String, CLSID &Clsid)
     return false;
 }
 
+static HRESULT GetUIObjectOfAbsolute(LPCITEMIDLIST pidl, REFIID riid, void**ppv)
+{
+    CComPtr<IShellFolder> shellFolder;
+    PCUITEMID_CHILD child;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shellFolder), &child);
+    if (SUCCEEDED(hr)) hr = shellFolder->GetUIObjectOf(NULL, 1, &child, riid, NULL, ppv);
+    return hr;
+}
+
 static HRESULT CreateShellItemFromParse(LPCWSTR Path, IShellItem**ppSI)
 {
     PIDLIST_ABSOLUTE pidl = NULL;
@@ -111,6 +120,45 @@ static HRESULT CreateShellItemFromParse(LPCWSTR Path, IShellItem**ppSI)
         SHFree(pidl);
     }
     return hr;
+}
+
+static void GetAssocClass(LPCWSTR Path, LPCITEMIDLIST pidl, HKEY &hKey)
+{
+    hKey = NULL;
+    IQueryAssociations *pQA;
+    if (SUCCEEDED(GetUIObjectOfAbsolute(pidl, IID_PPV_ARG(IQueryAssociations, &pQA))))
+    {
+        pQA->GetKey(0, ASSOCKEY_CLASS, NULL, &hKey); // Not implemented in ROS
+        pQA->Release();
+    }
+    if (!hKey)
+    {
+        DWORD cb;
+        WCHAR buf[MAX_PATH], *ext = PathFindExtensionW(Path);
+        SHFILEINFOW info;
+        info.dwAttributes = 0;
+        SHGetFileInfoW((LPWSTR)pidl, 0, &info, sizeof(info), SHGFI_PIDL | SHGFI_ATTRIBUTES);
+        if (info.dwAttributes & SFGAO_FOLDER)
+        {
+            ext = const_cast<LPWSTR>(L"Directory");
+        }
+        else if (info.dwAttributes & SFGAO_BROWSABLE)
+        {
+            ext = const_cast<LPWSTR>(L"Folder"); // Best guess
+        }
+        else
+        {
+            cb = sizeof(buf);
+            if (!SHGetValueW(HKEY_CLASSES_ROOT, ext, NULL, NULL, buf, &cb))
+            {
+                RegOpenKeyExW(HKEY_CLASSES_ROOT, buf, 0, KEY_READ, &hKey);
+            }
+        }
+        if (!hKey)
+        {
+            RegOpenKeyExW(HKEY_CLASSES_ROOT, ext, 0, KEY_READ, &hKey);
+        }
+    }
 }
 
 static void DumpBytes(const void *Data, SIZE_T cb)
@@ -410,7 +458,11 @@ HRESULT LoadAndInitialize(REFIID riid, LPVOID* ppv)
     if (!SUCCEEDED(hr))
         return hr;
 
-    hr = spShellExtInit->Initialize(pidl, spDataObject, NULL);
+    HKEY hKey = NULL;
+    GetAssocClass(g_ShellExtInit.GetString(), pidl, hKey);
+    hr = spShellExtInit->Initialize(pidl, spDataObject, hKey);
+    if (hKey)
+        RegCloseKey(hKey);
     if (!SUCCEEDED(hr))
     {
         wprintf(L"IShellExtInit->Initialize failed: 0x%x\n", hr);
