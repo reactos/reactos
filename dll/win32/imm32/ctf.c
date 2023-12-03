@@ -6,14 +6,12 @@
  */
 
 #include "precomp.h"
+#include <ndk/ldrfuncs.h> /* for RtlDllShutdownInProgress */
 #include <msctf.h> /* for ITfLangBarMgr */
 #include <objidl.h> /* for IInitializeSpy */
 #include <compat_undoc.h> /* for BaseCheckAppcompatCache */
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
-
-/* FIXME: Use proper header */
-BOOLEAN WINAPI RtlDllShutdownInProgress(VOID);
 
 static BOOL Imm32InsideLoaderLock(VOID)
 {
