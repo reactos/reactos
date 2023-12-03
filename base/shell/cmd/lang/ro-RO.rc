@@ -17,13 +17,13 @@ assoc (afișează toate asocierile)\n\
 assoc .ext (afișează o anumită asociere)\n\
 assoc .ext= (elimină o anumită asociere)\n\
 assoc .ext=tip_fișier (adaugă o nouă asociere)\n"
-    STRING_ALIAS_HELP "Instituie, destituie sau afișează alias.\n\n\
+    STRING_ALIAS_HELP "Setează, șterge sau afișează alias.\n\n\
 ALIAS [alias=[comandă]]\n\n\
   alias    Numele pentru alias.\n\
-  comandă  Textul de substituție dintr-un alias.\n\n\
+  comandă  Textul de substituție dintr-un aliasuri.\n\n\
 Pentru a afișa toate alias:\n\
   ALIAS\n\n\
-Pentru a institui sau a înlocui un alias:\n\
+Pentru a seta sau a înlocui un alias:\n\
   ALIAS da=dir a:\n\n\
 Pentru a destitui un alias:\n\
   ALIAS da=\n"
