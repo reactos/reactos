@@ -428,7 +428,6 @@ Quit:
     return TRUE;
 }
 
-/* Win: ImmSendNotification */
 BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
 {
     return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
