@@ -1230,7 +1230,7 @@ typedef struct _XSTATE_FEATURE {
 typedef struct _XSTATE_CONFIGURATION
 {
     ULONG64 EnabledFeatures;
-#if (NTDDI_VERSION >= NTDDI_WIN8)
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
     ULONG64 EnabledVolatileFeatures;
 #endif
     ULONG Size;
@@ -1245,16 +1245,16 @@ typedef struct _XSTATE_CONFIGURATION
         };
     };
     XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
-#if (NTDDI_VERSION >= NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN10) || defined(__REACTOS__)
     ULONG64 EnabledSupervisorFeatures;
     ULONG64 AlignedFeatures;
     ULONG AllFeatureSize;
     ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5) || defined(__REACTOS__)
     ULONG64 EnabledUserVisibleSupervisorFeatures;
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN11)
+#if (NTDDI_VERSION >= NTDDI_WIN11) || defined(__REACTOS__)
     ULONG64 ExtendedFeatureDisableFeatures;
     ULONG AllNonLargeFeatureSize;
     ULONG Spare;
@@ -1564,6 +1564,9 @@ typedef struct _KUSER_SHARED_DATA
     ULONG64 UserPointerAuthMask;                            // 0x730
 #endif // NTDDI_VERSION >= NTDDI_WIN11_NI
 
+#if (NTDDI_VERSION < NTDDI_WIN7) && defined(__REACTOS__)
+    XSTATE_CONFIGURATION XState;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
