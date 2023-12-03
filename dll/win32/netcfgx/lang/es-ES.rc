@@ -39,8 +39,8 @@ CAPTION "Configuración alternativa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Escriba a continuación la configuración IP alternativa si este equipo  se utiliza en más de una red.", -1, 9, 9, 220, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "&Dirección IP privada automática", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
     CONTROL "Configurada por el u&suario:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 100, 12
     LTEXT "Dire&cción IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 140, 75, 85, 12

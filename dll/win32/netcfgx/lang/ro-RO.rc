@@ -33,8 +33,8 @@ CAPTION "Configurație alternativă"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dacă acest calculator este utilizat în mai multe rețele, puteți specifica mai jos o configurație alternativă.", -1, 9, 9, 220, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "Adresă IP p&rivată obținută automat", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
     CONTROL "Configurată &manual", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 90, 12
     LTEXT "Adresă I&P:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12

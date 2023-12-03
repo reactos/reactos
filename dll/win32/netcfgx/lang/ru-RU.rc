@@ -31,8 +31,8 @@ CAPTION "Альтернативная конфигурация"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Если этот компьютер используется в нескольких сетях, введите параметры альтернативной конфигурации протокола IP:", -1, 9, 9, 230, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "А&втоматический частный IP-адрес", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
     CONTROL "Настраиваем&ый пользователем", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 130, 12
     LTEXT "IP-&адрес:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
