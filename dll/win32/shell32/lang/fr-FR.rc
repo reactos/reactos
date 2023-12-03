@@ -36,7 +36,7 @@ BEGIN
         END
         MENUITEM "Rafraîchir", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Coller", FCIDM_SHVIEW_INSERT
+        MENUITEM "Coll&er", FCIDM_SHVIEW_INSERT
         MENUITEM "Coller comme un lien", FCIDM_SHVIEW_INSERTLINK
     END
 END
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "C&ouper", IDM_CUT
         MENUITEM "&Copier", IDM_COPY
-        MENUITEM "Coller", IDM_INSERT
+        MENUITEM "Coll&er", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Créer un &lien", IDM_CREATELINK
         MENUITEM "&Supprimer", IDM_DELETE
