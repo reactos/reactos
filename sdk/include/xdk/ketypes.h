@@ -1301,10 +1301,10 @@ typedef struct _KUSER_SHARED_DATA
     ULONG NumberOfPhysicalPages;
     BOOLEAN SafeBootMode;
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-    _ANONYMOUS_UNION union
+    union
     {
         UCHAR TscQpcData;
-        _ANONYMOUS_STRUCT struct
+        struct
         {
             UCHAR TscQpcEnabled:1;
             UCHAR TscQpcSpareFlag:1;
@@ -1314,10 +1314,10 @@ typedef struct _KUSER_SHARED_DATA
     UCHAR TscQpcPad[2];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-    _ANONYMOUS_UNION union
+    union
     {
         ULONG SharedDataFlags;
-        _ANONYMOUS_STRUCT struct
+        struct
         {
             ULONG DbgErrorPortPresent:1;
             ULONG DbgElevationEnabled:1;
@@ -1337,11 +1337,11 @@ typedef struct _KUSER_SHARED_DATA
     ULONG SystemCall;
     ULONG SystemCallReturn;
     ULONGLONG SystemCallPad[3];
-    _ANONYMOUS_UNION union
+    union
     {
         volatile KSYSTEM_TIME TickCount;
         volatile ULONG64 TickCountQuad;
-        _ANONYMOUS_STRUCT struct
+        struct
         {
             ULONG ReservedTickCountOverlay[3];
             ULONG TickCountPad[1];
