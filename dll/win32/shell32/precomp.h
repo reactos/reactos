@@ -107,6 +107,7 @@
 #include "CUserNotification.h"
 #include "dialogs/folder_options.h"
 #include "shelldesktop/CChangeNotifyServer.h"
+#include "utils.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -152,14 +153,5 @@ public:
     BEGIN_MSG_MAP(CStubWindow32)
     END_MSG_MAP()
 };
-
-// SHExtractIconsW is a forward, use this function instead inside shell32
-static inline HICON
-SHELL32_SHExtractIcon(LPCWSTR File, int Index, int cx, int cy)
-{
-    HICON hIco;
-    int r = PrivateExtractIconsW(File, Index, cx, cy, &hIco, NULL, 1, 0);
-    return r > 0 ? hIco : NULL;
-}
 
 #endif /* _PRECOMP_H__ */

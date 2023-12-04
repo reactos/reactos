@@ -11,11 +11,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
-static inline bool RegValueExists(HKEY hKey, LPCWSTR Name)
-{
-    return RegQueryValueExW(hKey, Name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
-}
-
 static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
 {
     MENUITEMINFOW mii;
