@@ -1459,8 +1459,8 @@ CURSORICON_LoadImageW(
         /* We don't have a real module for GetModuleFileName, construct a fake name instead.
         ** GetIconInfoEx reveals the name used by Windows.
         */
-        LPCWSTR fakeNameFmt = sizeof(void*) > 4 ? L"\001%016IX" : L"\001%08IX";
-        ustrModule.MaximumLength = 42 * sizeof(WCHAR);
+        LPCWSTR fakeNameFmt = sizeof(void*) > 4 ? L"\x01%016IX" : L"\x01%08IX";
+        ustrModule.MaximumLength = 18 * sizeof(WCHAR);
         ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
         if (!ustrModule.Buffer)
         {
