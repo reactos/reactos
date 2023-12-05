@@ -14,8 +14,7 @@
 #include <atlsimpcoll.h>
 #include <conio.h>
 #include <shellutils.h>
-
-EXTERN_C HRESULT WINAPI SHForwardContextMenuMsg(struct IContextMenu*, UINT, WPARAM, LPARAM, LRESULT*, BOOL);
+#include <shlwapi_undoc.h>
 
 static void PrintHelp(PCWSTR ExtraLine = NULL)
 {
@@ -76,7 +75,7 @@ static int ErrMsg(int Error)
     {
         lstrcpynW(buf, L"?", _countof(buf));
         cch = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, e, 0, buf, _countof(buf), NULL);
-        for (; cch && buf[cch - 1] <= ' ';)
+        while (cch && buf[cch - 1] <= ' ')
             buf[--cch] = UNICODE_NULL; // Remove trailing newlines
         if (cch || HIWORD(e) != HIWORD(HRESULT_FROM_WIN32(1)))
             break;
@@ -88,10 +87,10 @@ static int ErrMsg(int Error)
 
 template<class T> static bool CLSIDPrefix(T &String, CLSID &Clsid)
 {
-    WCHAR buf[39];
+    WCHAR buf[38 + 1];
     if (String[0] == '{')
     {
-        lstrcpynW(buf, String, 39);
+        lstrcpynW(buf, String, 38 + 1);
         if (SUCCEEDED(CLSIDFromString(buf, &Clsid)))
         {
             String = String + 38;
@@ -170,7 +169,7 @@ static void DumpBytes(const void *Data, SIZE_T cb)
     wprintf(L"\n");
 }
 
-static HRESULT GetCommandString(IContextMenu&CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
+static HRESULT GetCommandString(IContextMenu &CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
 {
     *buf = UNICODE_NULL;
     HRESULT hr = CM.GetCommandString(Id, Type | GCS_UNICODE, 0, (char*)buf, cchMax);
@@ -186,7 +185,8 @@ static HRESULT GetCommandString(IContextMenu&CM, UINT Id, UINT Type, LPWSTR buf,
 
 static void DumpMenu(HMENU hMenu, UINT IdOffset, IContextMenu*pCM, BOOL FakeInit, UINT Indent)
 {
-    WCHAR buf[MAX_PATH], recurse = Indent != UINT(-1);
+    bool recurse = Indent != UINT(-1);
+    WCHAR buf[MAX_PATH];
     MENUITEMINFOW mii;
     mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem);
     for (UINT i = 0, defid = GetMenuDefaultItem(hMenu, FALSE, 0); ; ++i)
@@ -561,17 +561,17 @@ static void Wait()
     case Wait_None:
         break;
     case Wait_Infinite:
-        wprintf(L"%s\n", nag);
+        _putws(nag);
         while (true) {
             Sleep(1000);
         }
         break;
     case Wait_OpenWindows:
-        wprintf(L"%s\n", nag);
+        _putws(nag);
         WaitWindows();
         break;
     case Wait_Input:
-        wprintf(L"Press any key to continue...%s\n", nag);
+        wprintf(L"Press any key to continue... %s\n", nag);
         _getch();
         break;
     case Wait_ExplorerInstance:
@@ -656,7 +656,7 @@ int wmain(int argc, WCHAR **argv)
                 SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_IDLIST | SEE_MASK_UNICODE };
                 sei.lpIDList = pidl;
                 sei.nShow = SW_SHOW;
-                for (; ++n < argc;)
+                while (++n < argc)
                 {
                     if (argv[n][0] != '-' && argv[n][0] != '/')
                         break;
@@ -705,7 +705,7 @@ int wmain(int argc, WCHAR **argv)
                 if (SUCCEEDED(hr))
                 {
                     UINT first = 10, last = 9000, cmf = 0, nosub = 0, fakeinit = 0;
-                    for (; ++n < argc;)
+                    while (++n < argc)
                     {
                         if (argv[n][0] != '-' && argv[n][0] != '/')
                             break;
