@@ -36,6 +36,7 @@ static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
     mii.fMask = MIIM_TYPE;
     mii.fType = Flags;
     return InsertMenuItemW(hMenu, Pos, TRUE, &mii);
+}
 
 typedef struct _DynamicShellEntry_
 {
