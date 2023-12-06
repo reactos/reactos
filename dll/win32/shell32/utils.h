@@ -18,7 +18,7 @@ RegKeyExists(HKEY hKey, LPCWSTR Path)
 {
     BOOL ret = !RegOpenKeyExW(hKey, Path, 0, MAXIMUM_ALLOWED, &hKey);
     if (ret)
-        !RegCloseKey(hKey);
+        RegCloseKey(hKey);
     return ret;
 }
 

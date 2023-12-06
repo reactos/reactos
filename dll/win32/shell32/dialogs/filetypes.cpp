@@ -243,19 +243,19 @@ GetFileTypeIconsByKey(HKEY hKey, PFILE_TYPE_ENTRY Entry, UINT IconSize)
 }
 
 static LPCWSTR
-GetProgramPath(PFILE_TYPE_ENTRY p)
+GetProgramPath(PFILE_TYPE_ENTRY Entry)
 {
-    if (!p->ProgramPath[1] && !p->ProgramPath[0])
+    if (!Entry->ProgramPath[1] && !Entry->ProgramPath[0])
     {
-        DWORD cch = _countof(p->ProgramPath);
+        DWORD cch = _countof(Entry->ProgramPath);
         if (FAILED(AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, ASSOCSTR_EXECUTABLE,
-                                     p->FileExtension, NULL, p->ProgramPath, &cch)))
+                                     Entry->FileExtension, NULL, Entry->ProgramPath, &cch)))
         {
-            p->ProgramPath[0] = UNICODE_NULL;
-            p->ProgramPath[1] = TRUE;
+            Entry->ProgramPath[0] = UNICODE_NULL;
+            Entry->ProgramPath[1] = TRUE;
         }
     }
-    return p->ProgramPath;
+    return Entry->ProgramPath;
 }
 
 static BOOL
@@ -272,61 +272,61 @@ QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
 }
 
 static LPCWSTR
-GetAppName(PFILE_TYPE_ENTRY p)
+GetAppName(PFILE_TYPE_ENTRY Entry)
 {
-    if (!p->AppName[1] && !p->AppName[0])
+    if (!Entry->AppName[1] && !Entry->AppName[0])
     {
-        LPCWSTR exe = GetProgramPath(p);
-        if (!*exe || !QueryFileDescription(exe, p->AppName, _countof(p->AppName)))
+        LPCWSTR exe = GetProgramPath(Entry);
+        if (!*exe || !QueryFileDescription(exe, Entry->AppName, _countof(Entry->AppName)))
         {
-            p->AppName[0] = UNICODE_NULL;
-            p->AppName[1] = TRUE;
+            Entry->AppName[0] = UNICODE_NULL;
+            Entry->AppName[1] = TRUE;
         }
     }
-    return p->AppName;
+    return Entry->AppName;
 }
 
 static LPWSTR
-GetTypeName(PFILE_TYPE_ENTRY p, PFILE_TYPE_GLOBALS pG)
+GetTypeName(PFILE_TYPE_ENTRY Entry, PFILE_TYPE_GLOBALS pG)
 {
-    if (!p->FileDescription[1] && !p->FileDescription[0])
+    if (!Entry->FileDescription[1] && !Entry->FileDescription[0])
     {
-        p->FileDescription[1] = TRUE;
-        if (p->IsExtension())
+        Entry->FileDescription[1] = TRUE;
+        if (Entry->IsExtension())
         {
             SHFILEINFOW fi;
-            if (SHGetFileInfoW(p->FileExtension, 0, &fi, sizeof(fi), SHGFI_TYPENAME |
+            if (SHGetFileInfoW(Entry->FileExtension, 0, &fi, sizeof(fi), SHGFI_TYPENAME |
                                SHGFI_USEFILEATTRIBUTES) && *fi.szTypeName)
             {
-                StringCchCopyW(p->FileDescription, _countof(p->FileDescription), fi.szTypeName);
+                StringCchCopyW(Entry->FileDescription, _countof(Entry->FileDescription), fi.szTypeName);
             }
             else
             {
                 // FIXME: Remove this hack when SHGetFileInfo is fixed
-                StringCbPrintfW(p->FileDescription, sizeof(p->FileDescription),
-                                pG->DefExtTypeNameFmt, &p->FileExtension[1]);
+                StringCbPrintfW(Entry->FileDescription, sizeof(Entry->FileDescription),
+                                pG->DefExtTypeNameFmt, &Entry->FileExtension[1]);
             }
         }
         else
         {
             // FIXME: Fix and use ASSOCSTR_FRIENDLYDOCNAME
-            DWORD cb = sizeof(p->FileDescription), Fallback = TRUE;
+            DWORD cb = sizeof(Entry->FileDescription), Fallback = TRUE;
             LPCWSTR ClassKey;
-            HRESULT hr = GetClassKey(*p, ClassKey);
+            HRESULT hr = GetClassKey(*Entry, ClassKey);
             HKEY hKey;
             if (SUCCEEDED(hr) && !RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hKey))
             {
-                Fallback = RegQueryValueExW(hKey, NULL, 0, NULL, (BYTE*)p->FileDescription, &cb) != ERROR_SUCCESS ||
-                           !*p->FileDescription;
+                Fallback = RegQueryValueExW(hKey, NULL, 0, NULL, (BYTE*)Entry->FileDescription, &cb) != ERROR_SUCCESS ||
+                           !*Entry->FileDescription;
                 RegCloseKey(hKey);
             }
             if (Fallback)
             {
-                StringCchCopyW(p->FileDescription, _countof(p->FileDescription), p->FileExtension);
+                StringCchCopyW(Entry->FileDescription, _countof(Entry->FileDescription), Entry->FileExtension);
             }
         }
     }
-    return p->FileDescription;
+    return Entry->FileDescription;
 }
 
 static void
