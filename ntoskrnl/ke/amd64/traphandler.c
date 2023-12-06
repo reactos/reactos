@@ -84,6 +84,14 @@ KiDpcInterruptHandler(VOID)
     KeLowerIrql(OldIrql);
 }
 
+VOID
+KiNmiInterruptHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    KiHandleNmi();
+}
+
 #define MAX_SYSCALL_PARAMS 16
 
 NTSTATUS
