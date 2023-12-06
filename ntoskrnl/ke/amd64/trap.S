@@ -192,14 +192,30 @@ KiDebugTrapOrFaultKMode:
     ExitTrap TF_SAVE_ALL
 ENDFUNC
 
+EXTERN KiNmiInterruptHandler:PROC
+
+FUNC KiNmiInterruptWithEf
+    /* Generate a KEXCEPTION_FRAME on the stack */
+    GENERATE_EXCEPTION_FRAME
+
+    /* Call the C handler */
+    lea rcx, [rsp + KEXCEPTION_FRAME_LENGTH]
+    lea rdx, [rsp]
+    call KiNmiInterruptHandler
+
+    /* Restore the registers from the KEXCEPTION_FRAME */
+    RESTORE_EXCEPTION_STATE
+
+    /* Return */
+    ret
+ENDFUNC
 
 PUBLIC KiNmiInterrupt
 FUNC KiNmiInterrupt
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    UNIMPLEMENTED KiNmiInterrupt
-    int 3
+    call KiNmiInterruptWithEf
 
     /* Return */
     ExitTrap TF_SAVE_ALL
