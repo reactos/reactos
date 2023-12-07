@@ -3756,7 +3756,7 @@ BOOLEAN NTAPI RtlValidateHeap(
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 NTSTATUS NTAPI
 RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
@@ -3766,21 +3766,8 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 /*
- * @implemented
- */
-ULONG NTAPI
-RtlGetProcessHeaps(ULONG count,
-                   HANDLE *heaps)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-/*
- * @implemented
+ * @unimplemented
  */
 BOOLEAN NTAPI
 RtlValidateProcessHeaps(VOID)
