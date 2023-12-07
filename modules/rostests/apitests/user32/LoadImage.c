@@ -1,6 +1,49 @@
 
 #include "precomp.h"
 
+static void test_LoadImage_DataFile()
+{
+    SIZE_T i;
+    static const struct
+    {
+        int result;
+        LPCWSTR file;
+        int res_id;
+        UINT lr;
+        BOOL same_handle;
+        BOOL after_unload; /* LR_SHARED stays valid */
+    }
+    tests[] =
+    {
+        { 1, L"shell32.dll", 2,        0,         0, 0 },
+        { 1, L"shell32.dll", 2,        LR_SHARED, 1, 1 },
+        { 0, L"shell32.dll", 0xfff0,   0,         1, 0 }, /* Icon should not exist */
+        { 1, L"regedit.exe", 100,      0,         0, 0 },
+        { 1, L"regedit.exe", 100,      LR_SHARED, 1, 1 }
+    };
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        HANDLE handle1, handle2;
+        HMODULE hMod = LoadLibraryExW(tests[i].file, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        if (!((SIZE_T)hMod & 3))
+        {
+            skip("Could not load library as datafile %ls\n", tests[i].file);
+            continue;
+        }
+
+        handle1 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        ok(!!handle1 == !!tests[i].result, "Failed to load %ls,-%d from %p\n", tests[i].file, tests[i].res_id, hMod);
+
+        handle2 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        ok(!!(handle1 == handle2) == !!tests[i].same_handle, "Shared handles don't match\n");
+
+        FreeLibrary(hMod);
+
+        handle1 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        ok(!!handle1 == !!tests[i].after_unload, "LR_%x handle should %sload after FreeLibrary\n", tests[i].lr, tests[i].after_unload ? "" : "not ");
+    }
+}
+
 START_TEST(LoadImage)
 {
     char path[MAX_PATH];
@@ -76,6 +119,9 @@ START_TEST(LoadImage)
         ok(ii.hbmMask != NULL, "\n");
         DeleteObject(ii.hbmMask);
         if(ii.hbmColor) DeleteObject(ii.hbmColor);
+
+        /* LOAD_LIBRARY_AS_DATAFILE */
+        test_LoadImage_DataFile();
 
         return;
     }
