@@ -2,38 +2,106 @@
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Volume utility functions
- * COPYRIGHT:   Copyright 2024 HermÃ¨s BÃ©lusca-MaÃ¯to <hermes.belusca-maito@reactos.org>
+ * COPYRIGHT:   Copyright 2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
 
+/* EXTRA HANDFUL MACROS *****************************************************/
+
+// NOTE: They should be moved into some global header.
+
+// /* We have to define it there, because it is not in the MS DDK */
+// #define PARTITION_LINUX 0x83
+
+/* OEM MBR partition types recognized by NT (see [MS-DMRP] Appendix B) */
+#define PARTITION_EISA          0x12    // EISA partition
+#define PARTITION_HIBERNATION   0x84    // Hibernation partition for laptops
+#define PARTITION_DIAGNOSTIC    0xA0    // Diagnostic partition on some Hewlett-Packard (HP) notebooks
+#define PARTITION_DELL          0xDE    // Dell partition
+#define PARTITION_IBM           0xFE    // IBM Initial Microprogram Load (IML) partition
+
+#define IsOEMPartition(PartitionType) \
+    ( ((PartitionType) == PARTITION_EISA)        || \
+      ((PartitionType) == PARTITION_HIBERNATION) || \
+      ((PartitionType) == PARTITION_DIAGNOSTIC)  || \
+      ((PartitionType) == PARTITION_DELL)        || \
+      ((PartitionType) == PARTITION_IBM) )
+
+
+/* VOLUME UTILITY FUNCTIONS *************************************************/
+
+// FORMATSTATE
+
+typedef enum _VOLUME_TYPE
+{
+    VOLUME_TYPE_CDROM,
+    VOLUME_TYPE_PARTITION,
+    VOLUME_TYPE_REMOVABLE,
+    VOLUME_TYPE_UNKNOWN
+} VOLUME_TYPE, *PVOLUME_TYPE;
+
+#if 0
+//
+// This is the structure from diskpart
+//
+typedef struct _VOLENTRY
+{
+    LIST_ENTRY ListEntry;
+
+    ULONG VolumeNumber;
+    WCHAR VolumeName[MAX_PATH];
+    WCHAR DeviceName[MAX_PATH];
+
+    WCHAR DriveLetter;
+
+    PWSTR pszLabel;
+    PWSTR pszFilesystem;
+    VOLUME_TYPE VolumeType;
+    ULARGE_INTEGER Size;
+
+    PVOLUME_DISK_EXTENTS pExtents;
+
+} VOLENTRY, *PVOLENTRY;
+#else
+
 typedef struct _VOLINFO
 {
-    // WCHAR VolumeName[MAX_PATH]; ///< Name in the DOS/Win32 namespace: "\??\Volume{GUID}\"
-    WCHAR DeviceName[MAX_PATH]; ///< NT device name: "\Device\HarddiskVolumeN"
+    // LIST_ENTRY ListEntry;
+
+    // WCHAR VolumeName[MAX_PATH]; // Name in the DOS/Win32 namespace
+    WCHAR DeviceName[MAX_PATH]; // NT device name
 
     WCHAR DriveLetter;
     WCHAR VolumeLabel[20];
     WCHAR FileSystem[MAX_PATH+1];
+    FORMATSTATE FormatState;
 
-    // VOLUME_TYPE VolumeType;
-    // ULARGE_INTEGER Size;
-    // PVOLUME_DISK_EXTENTS Extents;
+/** The following properties may be replaced by flags **/
+
+    /* Volume is new and has not yet been actually formatted and mounted */
+    BOOLEAN New;
+
+    /* Volume must be checked */
+    BOOLEAN NeedsCheck;
+
 } VOLINFO, *PVOLINFO;
 
-/* RawFS "RAW" file system name */
-#define IS_RAWFS(fs) \
-    ((fs)[0] == 'R' && (fs)[1] == 'A' && (fs)[2] == 'W' && (fs)[3] == 0)
+#define VOLENTRY  VOLINFO
+#define PVOLENTRY PVOLINFO
 
-#define IsUnknown(VolInfo) \
-    (!*(VolInfo)->FileSystem)
+#endif
 
-#define IsUnformatted(VolInfo) \
-    IS_RAWFS((VolInfo)->FileSystem)
 
-#define IsFormatted(VolInfo) \
-    (!IsUnknown(VolInfo) && !IsUnformatted(VolInfo))
+// static
+VOID
+AssignDriveLetters(
+    IN PPARTLIST List);
 
+NTSTATUS
+DetectFileSystem(
+    _Inout_ PPARTENTRY PartEntry) // FIXME: Replace by volume entry
+;
 
 NTSTATUS
 MountVolume(
@@ -44,5 +112,15 @@ NTSTATUS
 DismountVolume(
     _Inout_ PVOLINFO Volume,
     _In_ BOOLEAN Force);
+
+// BOOLEAN
+// SetMountedDeviceValue(
+//     IN WCHAR Letter,
+//     IN ULONG Signature,
+//     IN LARGE_INTEGER StartingOffset);
+
+// BOOLEAN
+// SetMountedDeviceValues(
+//     IN PPARTLIST List);
 
 /* EOF */

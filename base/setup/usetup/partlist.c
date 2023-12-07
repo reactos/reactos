@@ -559,7 +559,7 @@ PrintDiskData(
                            DiskEntry,
                            PrimaryPartEntry);
 
-        if (IsContainerPartition(PrimaryPartEntry->PartitionType))
+        if (PrimaryPartEntry == DiskEntry->ExtendedPartition)
         {
             for (LogicalEntry = DiskEntry->LogicalPartListHead.Flink;
                  LogicalEntry != &DiskEntry->LogicalPartListHead;
@@ -843,8 +843,9 @@ ScrollUpDownPartitionList(
     _In_ BOOLEAN Direction)
 {
     PPARTENTRY PartEntry =
-        (Direction ? GetNextPartition
-                   : GetPrevPartition)(ListUi->List, ListUi->CurrentPartition);
+        GetAdjPartition(ListUi->List, ListUi->CurrentPartition,
+                        (Direction ? ENUM_REGION_NEXT : ENUM_REGION_PREV)
+                            | ENUM_REGION_MBR_BY_ORDER);
     if (PartEntry)
     {
         ListUi->CurrentPartition = PartEntry;

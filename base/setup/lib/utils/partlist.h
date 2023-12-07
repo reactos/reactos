@@ -12,6 +12,9 @@
 
 // NOTE: They should be moved into some global header.
 
+// /* We have to define it there, because it is not in the MS DDK */
+// #define PARTITION_LINUX 0x83
+
 /* OEM MBR partition types recognized by NT (see [MS-DMRP] Appendix B) */
 #define PARTITION_EISA          0x12    // EISA partition
 #define PARTITION_HIBERNATION   0x84    // Hibernation partition for laptops
@@ -129,8 +132,9 @@ typedef struct _DISKENTRY
     ULONG DiskNumber;
 //  SCSI_ADDRESS;
     USHORT Port;
-    USHORT Bus;
-    USHORT Id;
+    USHORT Bus;  // PathId;
+    USHORT Id;   // TargetId;
+    // USHORT Lun;
 
     /* Has the partition list been modified? */
     BOOLEAN Dirty;
@@ -258,6 +262,51 @@ RoundingDivide(
     ((DiskEntry)->SectorCount.QuadPart * (DiskEntry)->BytesPerSector)
 
 
+#define ENUM_REGION_NEXT                0x00 //< Enumerate the next region (default)
+#define ENUM_REGION_PREV                0x01 //< Enumerate the previous region
+#define ENUM_REGION_PARTITIONED         0x02 //< Enumerate only partitioned regions (otherwise, enumerate all regions, including free space)
+// 0x04, 0x08 reserved
+#define ENUM_REGION_MBR_PRIMARY_ONLY    0x10 //< MBR disks only: Enumerate only primary regions
+#define ENUM_REGION_MBR_LOGICAL_ONLY    0x20 //< MBR disks only: Enumerate only logical regions
+#define ENUM_REGION_MBR_BY_ORDER        0x40 //< MBR disks only: Enumerate by order on disk (may traverse extended partitions to enumerate the logical ones in-between), instead of by type (first all primary, then all logical)
+/*
+they are listed in actual
+order of appearance on a given disk. For example for MBR disks, all
+_primary_ partitions are enumerated first, before _logical_ partitions.
+*/
+// 0x80 reserved
+
+PPARTENTRY
+GetAdjDiskRegion(
+    _In_opt_ PDISKENTRY CurrentDisk,
+    _In_opt_ PPARTENTRY CurrentPart,
+    _In_ ULONG EnumFlags);
+
+PPARTENTRY
+GetAdjPartition(
+    _In_ PPARTLIST List,
+    _In_opt_ PPARTENTRY CurrentPart,
+    _In_ ULONG EnumFlags);
+
+#if 0 // FIXME Temporary
+PPARTENTRY
+GetNextPartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY CurrentPart OPTIONAL);
+
+PPARTENTRY
+GetPrevPartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY CurrentPart OPTIONAL);
+
+PPARTENTRY
+GetAdjUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry,
+    _In_ BOOLEAN Direction);
+#endif // FIXME Temporary
+
+
+
 BOOLEAN
 IsDiskSuperFloppy2(
     _In_ const DISK_PARTITION_INFO* DiskInfo,
@@ -321,21 +370,6 @@ SelectPartition(
     _In_ PPARTLIST List,
     _In_ ULONG DiskNumber,
     _In_ ULONG PartitionNumber);
-
-PPARTENTRY
-GetNextPartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY CurrentPart OPTIONAL);
-
-PPARTENTRY
-GetPrevPartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY CurrentPart OPTIONAL);
-
-PPARTENTRY
-GetAdjUnpartitionedEntry(
-    _In_ PPARTENTRY PartEntry,
-    _In_ BOOLEAN Direction);
 
 ERROR_NUMBER
 PartitionCreationChecks(
