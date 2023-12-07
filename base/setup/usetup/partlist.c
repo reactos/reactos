@@ -156,7 +156,7 @@ PartitionDescription(
     PCSTR Unit;
 
     /* Get the partition size */
-    PartSize = PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector;
+    PartSize = GetPartEntrySizeInBytes(PartEntry);
     PrettifySize2(&PartSize, &Unit);
 
     if (PartEntry->IsPartitioned == FALSE)
@@ -307,7 +307,7 @@ DiskDescription(
     PCSTR Unit;
 
     /* Get the disk size */
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    DiskSize = GetDiskSizeInBytes(DiskEntry);
     PrettifySize1(&DiskSize, &Unit);
 
     //

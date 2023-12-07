@@ -806,12 +806,11 @@ CreateNTOSInstallationsList(
 
             ASSERT(PartEntry->DiskEntry == DiskEntry);
 
-            DPRINT("   Primary Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
+            DPRINT("   Primary Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, FormatState = %lu -- Should I check it? %s\n",
                    PartEntry->PartitionNumber, PartEntry->PartitionIndex,
                    PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
                    PartEntry->IsPartitioned ? "TRUE" : "FALSE",
                    PartEntry->New ? "Yes" : "No",
-                   PartEntry->AutoCreate ? "Yes" : "No",
                    PartEntry->FormatState,
                    ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
 
@@ -828,12 +827,11 @@ CreateNTOSInstallationsList(
 
             ASSERT(PartEntry->DiskEntry == DiskEntry);
 
-            DPRINT("   Logical Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
+            DPRINT("   Logical Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, FormatState = %lu -- Should I check it? %s\n",
                    PartEntry->PartitionNumber, PartEntry->PartitionIndex,
                    PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
                    PartEntry->IsPartitioned ? "TRUE" : "FALSE",
                    PartEntry->New ? "Yes" : "No",
-                   PartEntry->AutoCreate ? "Yes" : "No",
                    PartEntry->FormatState,
                    ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
 
