@@ -72,14 +72,6 @@ BOOLEAN
     IN BOOLEAN SecondChance
 );
 
-typedef
-BOOLEAN
-(NTAPI *PKDEBUG_SWITCH_ROUTINE)(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN BOOLEAN SecondChance
-);
-
 //
 // Initialization Routines
 //
@@ -110,13 +102,10 @@ KdIsThisAKdTrap(
 //
 // Multi-Processor Switch Support
 //
-BOOLEAN
+KCONTINUE_STATUS
 NTAPI
-KdpSwitchProcessor(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN OUT PCONTEXT ContextRecord,
-    IN BOOLEAN SecondChanceException
-);
+KdReportProcessorChange(
+    VOID);
 
 //
 // Time Slip Support
@@ -540,7 +529,6 @@ extern LARGE_INTEGER KdTimerStart;
 extern ULONG KdDisableCount;
 extern KD_CONTEXT KdpContext;
 extern PKDEBUG_ROUTINE KiDebugRoutine;
-extern PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
 extern BOOLEAN KdBreakAfterSymbolLoad;
 extern BOOLEAN KdPitchDebugger;
 extern BOOLEAN KdAutoEnableOnEvent;

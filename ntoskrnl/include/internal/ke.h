@@ -1001,6 +1001,11 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
 
+KCONTINUE_STATUS
+NTAPI
+KxSwitchKdProcessor(
+    _In_ ULONG ProcessorIndex);
+
 _IRQL_requires_min_(DISPATCH_LEVEL)
 _Acquires_nonreentrant_lock_(*LockHandle->Lock)
 _Acquires_exclusive_lock_(*LockHandle->Lock)
