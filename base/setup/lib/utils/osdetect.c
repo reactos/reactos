@@ -46,22 +46,20 @@ FindExistingNTOSInstall(
 
 static PNTOS_INSTALLATION
 AddNTOSInstallation(
-    IN PGENERIC_LIST List,
-    IN PCWSTR InstallationName,
-    IN USHORT Machine,
-    IN PCWSTR VendorName,
-    IN PCWSTR SystemRootArcPath,
-    IN PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
-    IN PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber,
-    IN PPARTENTRY PartEntry OPTIONAL);
+    _In_ PGENERIC_LIST List,
+    _In_ PCWSTR InstallationName,
+    _In_ USHORT Machine,
+    _In_ PCWSTR VendorName,
+    _In_ PCWSTR SystemRootArcPath,
+    _In_ PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
+    _In_ PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber);
 
 typedef struct _ENUM_INSTALLS_DATA
 {
     IN OUT PGENERIC_LIST List;
     IN PPARTLIST PartList;
-    // IN PPARTENTRY PartEntry;
 } ENUM_INSTALLS_DATA, *PENUM_INSTALLS_DATA;
 
 // PENUM_BOOT_ENTRIES_ROUTINE
@@ -78,7 +76,6 @@ EnumerateInstallations(
 
     ULONG DiskNumber = 0, PartitionNumber = 0;
     PCWSTR PathComponent = NULL;
-    PPARTENTRY PartEntry = NULL;
 
     UNICODE_STRING SystemRootPath;
     WCHAR SystemRoot[MAX_PATH];
@@ -136,9 +133,9 @@ EnumerateInstallations(
     }
 
     /*
-     * Convert the ARC path into an NT path, from which we will deduce
-     * the real disk drive & partition on which the candidate installation
-     * resides, as well verifying whether it is indeed an NTOS installation.
+     * Convert the ARC path into an NT path, from which we will deduce the
+     * real disk drive & partition on which the candidate installation resides,
+     * as well as verifying whether it is indeed an NTOS installation.
      */
     RtlInitEmptyUnicodeString(&SystemRootPath, SystemRoot, sizeof(SystemRoot));
     if (!ArcPathToNtPath(&SystemRootPath, Options->OsLoadPath, Data->PartList))
@@ -182,14 +179,6 @@ EnumerateInstallations(
     {
         DPRINT("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
                &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
-
-        /* Retrieve the corresponding partition */
-        PartEntry = SelectPartition(Data->PartList, DiskNumber, PartitionNumber);
-        if (!PartEntry)
-        {
-            DPRINT1("SelectPartition(disk #%d, partition #%d) failed\n",
-                    DiskNumber, PartitionNumber);
-        }
     }
     else
     {
@@ -203,7 +192,7 @@ EnumerateInstallations(
                         VendorName.Buffer, // FIXME: What if it's not NULL-terminated?
                         Options->OsLoadPath,
                         &SystemRootPath, PathComponent,
-                        DiskNumber, PartitionNumber, PartEntry);
+                        DiskNumber, PartitionNumber);
 
     /* Continue the enumeration */
     return STATUS_SUCCESS;
@@ -607,16 +596,15 @@ FindExistingNTOSInstall(
 
 static PNTOS_INSTALLATION
 AddNTOSInstallation(
-    IN PGENERIC_LIST List,
-    IN PCWSTR InstallationName,
-    IN USHORT Machine,
-    IN PCWSTR VendorName,
-    IN PCWSTR SystemRootArcPath,
-    IN PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
-    IN PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber,
-    IN PPARTENTRY PartEntry OPTIONAL)
+    _In_ PGENERIC_LIST List,
+    _In_ PCWSTR InstallationName,
+    _In_ USHORT Machine,
+    _In_ PCWSTR VendorName,
+    _In_ PCWSTR SystemRootArcPath,
+    _In_ PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
+    _In_ PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber)
 {
     PNTOS_INSTALLATION NtOsInstall;
     SIZE_T ArcPathLength, NtPathLength;
@@ -648,7 +636,6 @@ AddNTOSInstallation(
 
     NtOsInstall->DiskNumber = DiskNumber;
     NtOsInstall->PartitionNumber = PartitionNumber;
-    NtOsInstall->PartEntry = PartEntry;
 
     NtOsInstall->Machine = Machine;
 
@@ -759,86 +746,32 @@ FindNTOSInstallations(
     NtClose(PartitionDirectoryHandle);
 }
 
-// static
-FORCEINLINE BOOLEAN
-ShouldICheckThisPartition(
-    IN PPARTENTRY PartEntry)
-{
-    if (!PartEntry)
-        return FALSE;
-
-    return PartEntry->IsPartitioned &&
-           !IsContainerPartition(PartEntry->PartitionType) /* alternatively: PartEntry->PartitionNumber != 0 */ &&
-           !PartEntry->New &&
-           (PartEntry->FormatState == Preformatted /* || PartEntry->FormatState == Formatted */);
-}
-
 // EnumerateNTOSInstallations
 PGENERIC_LIST
 CreateNTOSInstallationsList(
     IN PPARTLIST PartList)
 {
     PGENERIC_LIST List;
-    PLIST_ENTRY Entry, Entry2;
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
+    PPARTENTRY PartEntry = NULL;
 
     List = CreateGenericList();
-    if (List == NULL)
+    if (!List)
         return NULL;
 
-    /* Loop each available disk ... */
-    Entry = PartList->DiskListHead.Flink;
-    while (Entry != &PartList->DiskListHead)
+    /* Loop each available disk and partition */
+    while ((PartEntry = GetAdjPartition(PartList, PartEntry,
+                                        ENUM_REGION_NEXT | ENUM_REGION_PARTITIONED)))
     {
-        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        Entry = Entry->Flink;
+        BOOLEAN CheckPartition =
+            (PartEntry->IsPartitioned &&
+             !IsContainerPartition(PartEntry->PartitionType) /* alternatively: PartEntry->PartitionNumber != 0 */ &&
+             !PartEntry->New &&
+             (PartEntry->Volume.FormatState == Formatted));
 
-        DPRINT("Disk #%d\n", DiskEntry->DiskNumber);
+        DPRINT("   -- Should I check it? %s\n", CheckPartition ? "YES!" : "NO!");
 
-        /* ... and for each disk, loop each available partition */
-
-        /* First, the primary partitions */
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            Entry2 = Entry2->Flink;
-
-            ASSERT(PartEntry->DiskEntry == DiskEntry);
-
-            DPRINT("   Primary Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, FormatState = %lu -- Should I check it? %s\n",
-                   PartEntry->PartitionNumber, PartEntry->PartitionIndex,
-                   PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
-                   PartEntry->IsPartitioned ? "TRUE" : "FALSE",
-                   PartEntry->New ? "Yes" : "No",
-                   PartEntry->FormatState,
-                   ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
-
-            if (ShouldICheckThisPartition(PartEntry))
-                FindNTOSInstallations(List, PartList, PartEntry);
-        }
-
-        /* Then, the logical partitions (present in the extended partition) */
-        Entry2 = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry2 != &DiskEntry->LogicalPartListHead)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            Entry2 = Entry2->Flink;
-
-            ASSERT(PartEntry->DiskEntry == DiskEntry);
-
-            DPRINT("   Logical Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, FormatState = %lu -- Should I check it? %s\n",
-                   PartEntry->PartitionNumber, PartEntry->PartitionIndex,
-                   PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
-                   PartEntry->IsPartitioned ? "TRUE" : "FALSE",
-                   PartEntry->New ? "Yes" : "No",
-                   PartEntry->FormatState,
-                   ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
-
-            if (ShouldICheckThisPartition(PartEntry))
-                FindNTOSInstallations(List, PartList, PartEntry);
-        }
+        if (CheckPartition)
+            FindNTOSInstallations(List, PartList, PartEntry);
     }
 
 #ifndef NDEBUG

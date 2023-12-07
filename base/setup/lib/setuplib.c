@@ -707,7 +707,7 @@ InitSystemPartition(
      * In all cases, whether or not we are going to perform a formatting,
      * we must perform a filesystem check of the system partition.
      */
-    SystemPartition->NeedsCheck = TRUE;
+    SystemPartition->Volume.NeedsCheck = TRUE;
 
     return TRUE;
 }

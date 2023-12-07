@@ -204,8 +204,8 @@ PartitionDescription(
     RtlStringCchPrintfExA(pBuffer, cchBufferSize,
                           &pBuffer, &cchBufferSize, 0,
                           "%c%c %c %s(%lu) ",
-                          (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                          (PartEntry->DriveLetter == 0) ? '-' : ':',
+                          (PartEntry->Volume.DriveLetter == 0) ? '-' : (CHAR)PartEntry->Volume.DriveLetter,
+                          (PartEntry->Volume.DriveLetter == 0) ? '-' : ':',
                           PartEntry->BootIndicator ? '*' : ' ',
                           PartEntry->LogicalPartition ? "  " : "", // Optional indentation
                           PartEntry->PartitionNumber);
@@ -215,16 +215,16 @@ PartitionDescription(
      * (if any) and the file system name. Otherwise, display the partition
      * type if it's not a new partition.
      */
-    if (!PartEntry->New && *PartEntry->FileSystem &&
-        _wcsicmp(PartEntry->FileSystem, L"RAW") != 0)
+    if (!PartEntry->New && *PartEntry->Volume.FileSystem &&
+        _wcsicmp(PartEntry->Volume.FileSystem, L"RAW") != 0)
     {
         size_t cchLabelSize = 0;
-        if (*PartEntry->VolumeLabel)
+        if (*PartEntry->Volume.VolumeLabel)
         {
             RtlStringCchPrintfExA(pBuffer, cchBufferSize,
                                   &pBuffer, &cchLabelSize, 0,
                                   "\"%-.11S\" ",
-                                  PartEntry->VolumeLabel);
+                                  PartEntry->Volume.VolumeLabel);
             cchLabelSize = cchBufferSize - cchLabelSize; // Actual length of the label part.
             cchBufferSize -= cchLabelSize; // And reset cchBufferSize to what it should be.
         }
@@ -237,7 +237,7 @@ PartitionDescription(
                               /* The minimum length can be at most 11 since
                                * cchLabelSize can be at most == 11 + 3 == 14 */
                               25 - min(cchLabelSize, 25),
-                              PartEntry->FileSystem);
+                              PartEntry->Volume.FileSystem);
     }
     else
     {
@@ -275,7 +275,7 @@ PartitionDescription(
     /* Show the remaining free space only if a FS is mounted */
     // FIXME: We don't support that yet!
 #if 0
-    if (*PartEntry->FileSystem)
+    if (*PartEntry->Volume.FileSystem)
     {
         RtlStringCchPrintfA(pBuffer, cchBufferSize,
                             "%*s%6I64u %s (%6I64u %s %s)",
@@ -559,7 +559,7 @@ PrintDiskData(
                            DiskEntry,
                            PrimaryPartEntry);
 
-        if (IsContainerPartition(PrimaryPartEntry->PartitionType))
+        if (PrimaryPartEntry == DiskEntry->ExtendedPartition)
         {
             for (LogicalEntry = DiskEntry->LogicalPartListHead.Flink;
                  LogicalEntry != &DiskEntry->LogicalPartListHead;
@@ -843,8 +843,9 @@ ScrollUpDownPartitionList(
     _In_ BOOLEAN Direction)
 {
     PPARTENTRY PartEntry =
-        (Direction ? GetNextPartition
-                   : GetPrevPartition)(ListUi->List, ListUi->CurrentPartition);
+        GetAdjPartition(ListUi->List, ListUi->CurrentPartition,
+                        (Direction ? ENUM_REGION_NEXT : ENUM_REGION_PREV)
+                            | ENUM_REGION_MBR_BY_ORDER);
     if (PartEntry)
     {
         ListUi->CurrentPartition = PartEntry;
