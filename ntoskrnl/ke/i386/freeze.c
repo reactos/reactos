@@ -26,3 +26,12 @@ KxThawExecution(
 {
     UNIMPLEMENTED;
 }
+
+KCONTINUE_STATUS
+NTAPI
+KxSwitchKdProcessor(
+    _In_ ULONG ProcessorIndex)
+{
+    UNIMPLEMENTED;
+    return ContinueError;
+}

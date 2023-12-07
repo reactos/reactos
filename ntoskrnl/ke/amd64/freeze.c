@@ -40,6 +40,25 @@ KiProcessorFreezeHandler(
     /* Wait for the freeze owner to release us */
     while (CurrentPrcb->IpiFrozen != IPI_FROZEN_STATE_THAW)
     {
+        /* Check for Kd processor switch */
+        if (CurrentPrcb->IpiFrozen & IPI_FROZEN_FLAG_ACTIVE)
+        {
+            KCONTINUE_STATUS ContinueStatus;
+
+            /* Enter the debugger */
+            ContinueStatus = KdReportProcessorChange();
+
+            /* Set the state back to frozen */
+            CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_FROZEN;
+
+            /* If the status is ContinueSuccess, we need to release the freeze owner */
+            if (ContinueStatus == ContinueSuccess)
+            {
+                /* Release the freeze owner */
+                KiFreezeOwner->IpiFrozen = IPI_FROZEN_STATE_THAW;
+            }
+        }
+
         YieldProcessor();
         KeMemoryBarrier();
     }
@@ -158,4 +177,47 @@ KxThawExecution(
 
     /* Release the freeze owner */
     InterlockedExchangePointer(&KiFreezeOwner, NULL);
+}
+
+KCONTINUE_STATUS
+NTAPI
+KxSwitchKdProcessor(
+    _In_ ULONG ProcessorIndex)
+{
+    PKPRCB CurrentPrcb = KeGetCurrentPrcb();
+    PKPRCB TargetPrcb;
+
+    /* Make sure that the processor index is valid */
+    ASSERT(ProcessorIndex < KeNumberProcessors);
+
+    /* Inform the target processor that it's his turn now */
+    TargetPrcb = KiProcessorBlock[ProcessorIndex];
+    TargetPrcb->IpiFrozen |= IPI_FROZEN_FLAG_ACTIVE;
+
+    /* If we are not the freeze owner, we return back to the freeze loop */
+    if (KiFreezeOwner != CurrentPrcb)
+    {
+        return ContinueNextProcessor;
+    }
+
+    /* Loop until it's our turn again */
+    while (CurrentPrcb->IpiFrozen == IPI_FROZEN_STATE_OWNER)
+    {
+        YieldProcessor();
+        KeMemoryBarrier();
+    }
+
+    /* Check if we have been thawed */
+    if (CurrentPrcb->IpiFrozen == IPI_FROZEN_STATE_THAW)
+    {
+        /* Another CPU has completed, we can leave the debugger now */
+        KdpDprintf("[%u] KxSwitchKdProcessor: ContinueSuccess\n", KeGetCurrentProcessorNumber());
+        CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER;
+        return ContinueSuccess;
+    }
+
+    /* We have been reselected, return to Kd to continue in the debugger */
+    CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER;
+
+    return ContinueProcessorReselected;
 }
