@@ -31,15 +31,15 @@ static void test_LoadImage_DataFile()
             continue;
         }
 
-        handle1 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        handle1 = LoadImage(hMod, MAKEINTRESOURCE(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
         ok(!!handle1 == !!tests[i].result, "Failed to load %ls,-%d from %p\n", tests[i].file, tests[i].res_id, hMod);
 
-        handle2 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        handle2 = LoadImage(hMod, MAKEINTRESOURCE(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
         ok(!!(handle1 == handle2) == !!tests[i].same_handle, "Shared handles don't match\n");
 
         FreeLibrary(hMod);
 
-        handle1 = LoadImageW(hMod, (LPWSTR)(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
+        handle1 = LoadImage(hMod, MAKEINTRESOURCE(tests[i].res_id), IMAGE_ICON, 0, 0, tests[i].lr);
         ok(!!handle1 == !!tests[i].after_unload, "LR_%x handle should %sload after FreeLibrary\n", tests[i].lr, tests[i].after_unload ? "" : "not ");
     }
 }
