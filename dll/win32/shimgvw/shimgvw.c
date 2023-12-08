@@ -1013,8 +1013,7 @@ ImageView_Delete(HWND hwnd)
     currentFile = NULL;
 
     currentFile = pBuildFileList(szNextFile);
-    if (currentFile)
-        pLoadImageFromNode(currentFile, hwnd);
+    pLoadImageFromNode(currentFile, hwnd);
 
     return 1;
 }
