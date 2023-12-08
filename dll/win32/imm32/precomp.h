@@ -58,7 +58,6 @@
 #define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
 
 #define REGKEY_KEYBOARD_LAYOUTS     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
-#define REGKEY_IMM                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
