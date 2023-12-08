@@ -8,10 +8,10 @@ extern HINSTANCE hInstance;
 typedef struct
 {
     BOOL Maximized;
-    INT Left;
-    INT Top;
-    INT Right;
-    INT Bottom;
+    INT X;
+    INT Y;
+    INT Width;
+    INT Height;
 } SHIMGVW_SETTINGS;
 
 typedef struct SHIMGVW_FILENODE_INTERNAL

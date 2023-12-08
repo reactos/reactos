@@ -829,6 +829,12 @@ ImageView_LoadSettings(VOID)
     DWORD dwSize;
     LONG nError;
 
+    shiSettings.Maximized = FALSE;
+    shiSettings.X         = CW_USEDEFAULT;
+    shiSettings.Y         = CW_USEDEFAULT;
+    shiSettings.Width     = 520;
+    shiSettings.Height    = 400;
+
     nError = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\shimgvw", 0, KEY_READ, &hKey);
     if (nError)
         return FALSE;
@@ -845,16 +851,17 @@ ImageView_SaveSettings(HWND hwnd)
 {
     WINDOWPLACEMENT wp;
     HKEY hKey;
+    RECT *prc;
 
-    ShowWindow(hwnd, SW_HIDE);
     wp.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(hwnd, &wp);
 
-    shiSettings.Left = wp.rcNormalPosition.left;
-    shiSettings.Top  = wp.rcNormalPosition.top;
-    shiSettings.Right  = wp.rcNormalPosition.right;
-    shiSettings.Bottom = wp.rcNormalPosition.bottom;
-    shiSettings.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
+    prc = &wp.rcNormalPosition;
+    shiSettings.X = prc->left;
+    shiSettings.Y = prc->top;
+    shiSettings.Width = prc->right - prc->left;
+    shiSettings.Height = prc->bottom - prc->top;
+    shiSettings.Maximized = IsZoomed(hwnd);
 
     if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\ReactOS\\shimgvw"), 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
@@ -940,12 +947,6 @@ ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 static VOID
 ImageView_InitControls(HWND hwnd)
 {
-    MoveWindow(hwnd, shiSettings.Left, shiSettings.Top,
-               shiSettings.Right - shiSettings.Left,
-               shiSettings.Bottom - shiSettings.Top, TRUE);
-
-    if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
-
     hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
                                WS_CHILD | WS_VISIBLE,
                                0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
@@ -1182,14 +1183,7 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
         DPRINT1("Warning, CoInitializeEx failed with code=%08X\n", (int)hComRes);
     }
 
-    if (!ImageView_LoadSettings())
-    {
-        shiSettings.Maximized = FALSE;
-        shiSettings.Left      = 0;
-        shiSettings.Top       = 0;
-        shiSettings.Right     = 520;
-        shiSettings.Bottom    = 400;
-    }
+    ImageView_LoadSettings();
 
     // Initialize GDI+
     gdiplusStartupInput.GdiplusVersion              = 1;
@@ -1214,8 +1208,11 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     LoadStringW(hInstance, IDS_APPTITLE, szBuf, _countof(szBuf));
     hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE, WC_SHIMGVW, szBuf,
                                WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS,
-                               CW_USEDEFAULT, CW_USEDEFAULT,
-                               0, 0, NULL, NULL, hInstance, NULL);
+                               shiSettings.X, shiSettings.Y,
+                               shiSettings.Width, shiSettings.Height,
+                               NULL, NULL, hInstance, NULL);
+    if (shiSettings.Maximized)
+        ShowWindow(hMainWnd, SW_MAXIMIZE);
 
     // make sure the path has no quotes on it
     StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
