@@ -1136,15 +1136,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case WM_SIZING:
+        case WM_GETMINMAXINFO:
         {
-            LPRECT pRect = (LPRECT)lParam;
-            if (pRect->right-pRect->left < 350)
-                pRect->right = pRect->left + 350;
-
-            if (pRect->bottom-pRect->top < 290)
-                pRect->bottom = pRect->top + 290;
-            return TRUE;
+            MINMAXINFO *pMMI = (MINMAXINFO*)lParam;
+            pMMI->ptMinTrackSize.x = 350;
+            pMMI->ptMinTrackSize.y = 290;
+            return 0;
         }
         case WM_SIZE:
         {
