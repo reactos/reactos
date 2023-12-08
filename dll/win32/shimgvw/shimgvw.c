@@ -987,8 +987,34 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 static LRESULT
 ImageView_Delete(HWND hwnd)
 {
-    DPRINT1("ImageView_Delete: unimplemented.\n");
-    return 0;
+    WCHAR szCurFile[MAX_PATH + 1], szNextFile[MAX_PATH];
+    SHFILEOPSTRUCT FileOp = { hwnd, FO_DELETE };
+
+    if (image)
+    {
+        GdipDisposeImage(image);
+        image = NULL;
+    }
+
+    /* FileOp.pFrom must be double-null-terminated */
+    GetFullPathNameW(currentFile->FileName, _countof(szCurFile) - 1, szCurFile, NULL);
+    szCurFile[lstrlenW(szCurFile)] = UNICODE_NULL;
+
+    GetFullPathNameW(currentFile->Next->FileName, _countof(szNextFile) - 1, szNextFile, NULL);
+
+    FileOp.pFrom = szCurFile;
+    FileOp.fFlags = FOF_ALLOWUNDO;
+    if (SHFileOperation(&FileOp) != 0)
+        return 0;
+
+    pFreeFileList(currentFile);
+    currentFile = NULL;
+
+    currentFile = pBuildFileList(szNextFile);
+    if (currentFile)
+        pLoadImageFromNode(currentFile, hwnd);
+
+    return 1;
 }
 
 static LRESULT
