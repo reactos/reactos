@@ -179,7 +179,11 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
         }
 
 #ifdef __REACTOS__
-        FillRect(hdc, &rect, GetSysColorBrush(infoPtr->Enabled ? COLOR_WINDOW : COLOR_3DFACE));
+        {
+            HBRUSH brush = CreateSolidBrush(bgCol);
+            FillRect(hdc, &rect, brush);
+            DeleteObject(brush);
+        }
 #else
         FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
 #endif
