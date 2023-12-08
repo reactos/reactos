@@ -242,7 +242,7 @@ BOOL Anime_Step(DWORD *pdwDelay)
     return FALSE;
 }
 
-static void UpdateZoom(UINT NewZoom)
+static void UpdateZoom(UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
     BOOL bEnableZoomIn, bEnableZoomOut;
 
@@ -270,6 +270,10 @@ static void UpdateZoom(UINT NewZoom)
 
     /* Redraw the display window */
     InvalidateRect(hDispWnd, NULL, FALSE);
+
+    /* Update toolbar buttons */
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
 }
 
 static void ZoomInOrOut(BOOL bZoomIn)
@@ -308,7 +312,7 @@ static void ZoomInOrOut(BOOL bZoomIn)
     }
 
     /* Update toolbar and refresh screen */
-    UpdateZoom(NewZoom);
+    UpdateZoom(NewZoom, TRUE, TRUE);
 }
 
 static void ResetZoom(void)
@@ -353,7 +357,7 @@ static void ResetZoom(void)
         }
     }
 
-    UpdateZoom(NewZoom);
+    UpdateZoom(NewZoom, FALSE, TRUE);
 }
 
 static void pLoadImage(LPCWSTR szOpenFileName)
@@ -1055,11 +1059,11 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_BEST_FIT:
-                    DPRINT1("IDC_BEST_FIT unimplemented\n");
+                    ResetZoom();
                     break;
 
                 case IDC_REAL_SIZE:
-                    UpdateZoom(100);
+                    UpdateZoom(100, TRUE, FALSE);
                     return 0;
 
                 case IDC_SLIDE_SHOW:
