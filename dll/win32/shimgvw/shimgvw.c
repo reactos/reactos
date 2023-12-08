@@ -1200,19 +1200,19 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     pLoadImage(szFileName);
 
     // Create the window
-    WndClass.lpszClassName  = L"shimgvw_window";
+    WndClass.lpszClassName  = WC_SHIMGVW;
     WndClass.lpfnWndProc    = ImageView_WndProc;
     WndClass.hInstance      = hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
-    WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    WndClass.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
 
     if (!RegisterClassW(&WndClass)) return -1;
 
     LoadStringW(hInstance, IDS_APPTITLE, szBuf, _countof(szBuf));
-    hMainWnd = CreateWindowExW(0, L"shimgvw_window", szBuf,
-                               WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
+    hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE, WC_SHIMGVW, szBuf,
+                               WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                0, 0, NULL, NULL, hInstance, NULL);
 
