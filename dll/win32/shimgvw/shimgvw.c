@@ -998,7 +998,7 @@ ImageView_Delete(HWND hwnd)
 
     /* FileOp.pFrom must be double-null-terminated */
     GetFullPathNameW(currentFile->FileName, _countof(szCurFile) - 1, szCurFile, NULL);
-    szCurFile[_countof(szCurFile) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    szCurFile[_countof(szCurFile) - 2] = UNICODE_NULL; /* Avoid buffer overrun */
     szCurFile[lstrlenW(szCurFile)] = UNICODE_NULL;
 
     GetFullPathNameW(currentFile->Next->FileName, _countof(szNextFile), szNextFile, NULL);
