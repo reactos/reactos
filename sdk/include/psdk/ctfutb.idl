@@ -1,5 +1,6 @@
 /*
  * Copyright 2010 Justin Chevrier
+ * Copyright 2023 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,12 +24,40 @@ import "msctf.idl";
 #endif
 #endif
 
+typedef enum __MIDL_ITfLangBarItemBalloon_0001
+{
+    TF_LB_BALLOON_RECO = 0,
+    TF_LB_BALLOON_SHOW = 1,
+    TF_LB_BALLOON_MISS = 2
+} TfLBBalloonStyle;
+
+typedef enum __MIDL___MIDL_itf_ctfutb_0000_0010_0001
+{
+    TF_LBI_CLK_RIGHT = 1,
+    TF_LBI_CLK_LEFT = 2
+} TfLBIClick;
+
+typedef struct TF_LBBALLOONINFO
+{
+    TfLBBalloonStyle style;
+    BSTR             bstrText;
+} TF_LBBALLOONINFO;
+
 interface ITfLangBarEventSink;
 interface ITfLangBarItemMgr;
 interface ITfInputProcessorProfiles;
 interface IEnumTfLangBarItems;
 interface ITfLangBarItem;
 interface ITfLangBarItemSink;
+interface ITfLangBarItemBalloon;
+interface ITfLangBarItemBitmap;
+interface ITfLangBarItemBitmapButton;
+interface ITfLangBarItemButton;
+interface ITfMenu;
+interface ITfSystemDeviceTypeLangBarItem;
+interface ITfSystemLangBarItem;
+interface ITfSystemLangBarItemSink;
+interface ITfSystemLangBarItemText;
 
 [
     object,
@@ -230,3 +259,163 @@ interface ITfLangBarItemSink : IUnknown
     HRESULT OnUpdate(
         [in] DWORD dwFlags);
 }
+
+[
+  object,
+  uuid(01c2d285-d3c7-4b7b-b5b5-d97411d0c283),
+  pointer_default(unique),
+]
+interface ITfLangBarItemBalloon : IUnknown
+{
+    HRESULT GetBalloonInfo(
+        [out] TF_LBBALLOONINFO *pInfo);
+    HRESULT GetPreferredSize(
+        [in]  const SIZE *pszDefault,
+        [out] SIZE       *psz);
+    HRESULT OnClick(
+        [in] TfLBIClick click,
+        [in] POINT      pt,
+        [in] const RECT *prcArea);
+};
+
+[
+  object,
+  uuid(73830352-d722-4179-ada5-f045c98df355),
+  pointer_default(unique),
+]
+interface ITfLangBarItemBitmap : IUnknown
+{
+    HRESULT DrawBitmap(
+        [in]  LONG    bmWidth,
+        [in]  LONG    bmHeight,
+        [in]  DWORD   dwFlags,
+        [out] HBITMAP *phbmp,
+        [out] HBITMAP *phbmpMask);
+    HRESULT GetPreferredSize(
+        [in]  const SIZE *pszDefault,
+        [out] SIZE       *psz);
+    HRESULT OnClick(
+        [in] TfLBIClick click,
+        [in] POINT      pt,
+        [in] const RECT *prcArea);
+};
+
+[
+  object,
+  uuid(a26a0525-3fae-4fa0-89ee-88a964f9f1b5),
+  pointer_default(unique),
+]
+interface ITfLangBarItemBitmapButton : IUnknown
+{
+    HRESULT DrawBitmap(
+        [in]  LONG    bmWidth,
+        [in]  LONG    bmHeight,
+        [in]  DWORD   dwFlags,
+        [out] HBITMAP *phbmp,
+        [out] HBITMAP *phbmpMask);
+    HRESULT GetPreferredSize(
+        [in]  const SIZE *pszDefault,
+        [out] SIZE       *psz);
+    HRESULT GetText(
+        [out] BSTR *pbstrText);
+    HRESULT InitMenu(
+        [in] ITfMenu *pMenu);
+    HRESULT OnClick(
+        [in] TfLBIClick click,
+        [in] POINT      pt,
+        [in] const RECT *prcArea);
+    HRESULT OnMenuSelect(
+        [in] UINT wID);
+};
+
+[
+  object,
+  uuid(28c7f1d0-de25-11d2-afdd-00105a2799b5),
+  pointer_default(unique),
+]
+interface ITfLangBarItemButton : IUnknown
+{
+    HRESULT GetIcon(
+        [out] HICON *phIcon);
+    HRESULT GetText(
+        [out] BSTR *pbstrText);
+    HRESULT InitMenu(
+        [in] ITfMenu *pMenu);
+    HRESULT OnClick(
+        [in] TfLBIClick click,
+        [in] POINT      pt,
+        [in] const RECT *prcArea);
+    HRESULT OnMenuSelect(
+        [in] UINT wID);
+};
+
+[
+  object,
+  uuid(6f8a98e4-aaa0-4f15-8c5b-07e0df0a3dd8),
+  pointer_default(unique),
+]
+interface ITfMenu : IUnknown
+{
+    HRESULT AddMenuItem(
+        [in] UINT        uId,
+        [in] DWORD       dwFlags,
+        [in] HBITMAP     hbmp,
+        [in] HBITMAP     hbmpMask,
+        [in] const WCHAR *pch,
+        [in] ULONG       cch,
+             ITfMenu     **ppMenu);
+};
+
+[
+  object,
+  uuid(45672eb9-9059-46a2-838d-4530355f6a77),
+  pointer_default(unique),
+]
+interface ITfSystemDeviceTypeLangBarItem : IUnknown
+{
+    HRESULT GetIconMode(
+        [out] DWORD *pdwFlags);
+    HRESULT SetIconMode(
+        [in] DWORD dwFlags);
+};
+
+[
+  object,
+  uuid(1e13e9ec-6b33-4d4a-b5eb-8a92f029f356),
+  pointer_default(unique),
+]
+interface ITfSystemLangBarItem : IUnknown
+{
+    HRESULT SetIcon(
+        [in] HICON hIcon);
+    HRESULT SetTooltipString(
+        [in] WCHAR *pchToolTip,
+        [in] ULONG cch);
+};
+
+[
+  object,
+  uuid(1449d9ab-13cf-4687-aa3e-8d8b18574396),
+  pointer_default(unique),
+]
+interface ITfSystemLangBarItemSink : IUnknown
+{
+    HRESULT InitMenu(
+        [in] ITfMenu *pMenu);
+    HRESULT OnMenuSelect(
+        [in] UINT wID);
+};
+
+[
+  object,
+  uuid(5c4ce0e5-ba49-4b52-ac6b-3b397b4f701f),
+  pointer_default(unique),
+]
+interface ITfSystemLangBarItemText : IUnknown
+{
+    HRESULT GetItemText(
+        [out] BSTR *pbstrText);
+    HRESULT SetItemText(
+        [in] const WCHAR *pch,
+        [in] ULONG       cch);
+};
