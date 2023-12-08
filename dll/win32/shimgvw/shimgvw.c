@@ -962,7 +962,8 @@ ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
 {
     if (zDelta != 0)
     {
-        ZoomInOrOut(zDelta > 0);
+        if (GetKeyState(VK_CONTROL) < 0)
+            ZoomInOrOut(zDelta > 0);
     }
 }
 
