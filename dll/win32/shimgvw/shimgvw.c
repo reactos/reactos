@@ -37,15 +37,15 @@
 
 HINSTANCE g_hInstance;
 SHIMGVW_SETTINGS g_Settings;
-SHIMGVW_FILENODE *g_currentFile;
+SHIMGVW_FILENODE *g_pCurrentFile;
 GpImage *g_pImage = NULL;
-WNDPROC g_PrevProc = NULL;
+WNDPROC g_fnPrevProc = NULL;
 
 HWND g_hDispWnd = NULL;
 HWND g_hToolBar = NULL;
 
 /* zooming */
-static UINT s_ZoomPercents = 100;
+static UINT s_nZoomPercents = 100;
 
 static const UINT s_ZoomSteps[] =
 {
@@ -94,7 +94,7 @@ static const TBBUTTON s_Buttons[] =
 
 #define DEFINE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
 
-static const TB_BUTTON_CONFIG s_BtnConfig[] =
+static const TB_BUTTON_CONFIG s_ButtonConfig[] =
 {
     DEFINE_BTN_CONFIG(PREV_PIC),
     DEFINE_BTN_CONFIG(NEXT_PIC),
@@ -248,10 +248,10 @@ static void UpdateZoom(UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
     BOOL bEnableZoomIn, bEnableZoomOut;
 
     /* If zoom has not been changed, ignore it */
-    if (s_ZoomPercents == NewZoom)
+    if (s_nZoomPercents == NewZoom)
         return;
 
-    s_ZoomPercents = NewZoom;
+    s_nZoomPercents = NewZoom;
 
     /* Check if a zoom button of the toolbar must be grayed */
     bEnableZoomIn = bEnableZoomOut = TRUE;
@@ -289,7 +289,7 @@ static void ZoomInOrOut(BOOL bZoomIn)
         /* find next step */
         for (i = 0; i < _countof(s_ZoomSteps); ++i)
         {
-            if (s_ZoomPercents < s_ZoomSteps[i])
+            if (s_nZoomPercents < s_ZoomSteps[i])
                 break;
         }
         if (i == _countof(s_ZoomSteps))
@@ -303,7 +303,7 @@ static void ZoomInOrOut(BOOL bZoomIn)
         for (i = _countof(s_ZoomSteps); i > 0; )
         {
             --i;
-            if (s_ZoomSteps[i] < s_ZoomPercents)
+            if (s_ZoomSteps[i] < s_nZoomPercents)
                 break;
         }
         if (i < 0)
@@ -759,8 +759,8 @@ ImageView_DrawImage(HWND hwnd)
         GdipGetImageWidth(g_pImage, &ImageWidth);
         GdipGetImageHeight(g_pImage, &ImageHeight);
 
-        ZoomedWidth = (ImageWidth * s_ZoomPercents) / 100;
-        ZoomedHeight = (ImageHeight * s_ZoomPercents) / 100;
+        ZoomedWidth = (ImageWidth * s_nZoomPercents) / 100;
+        ZoomedHeight = (ImageHeight * s_nZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
@@ -785,10 +785,10 @@ ImageView_DrawImage(HWND hwnd)
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
-        DPRINT("s_ZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
-               s_ZoomPercents, ZoomedWidth, ZoomedWidth);
+        DPRINT("s_nZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
+               s_nZoomPercents, ZoomedWidth, ZoomedWidth);
 
-        if (s_ZoomPercents % 100 == 0)
+        if (s_nZoomPercents % 100 == 0)
         {
             GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
             GdipSetSmoothingMode(graphics, SmoothingModeNone);
@@ -892,9 +892,9 @@ ImageView_CreateToolBar(HWND hwnd)
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
         if (hImageList == NULL) return FALSE;
 
-        for (UINT n = 0; n < _countof(s_BtnConfig); n++)
+        for (UINT n = 0; n < _countof(s_ButtonConfig); n++)
         {
-            ImageList_AddMasked(hImageList, LoadImageW(g_hInstance, MAKEINTRESOURCEW(s_BtnConfig[n].idb), IMAGE_BITMAP,
+            ImageList_AddMasked(hImageList, LoadImageW(g_hInstance, MAKEINTRESOURCEW(s_ButtonConfig[n].idb), IMAGE_BITMAP,
                                 TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
         }
 
@@ -942,7 +942,7 @@ ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
     }
-    return CallWindowProcW(g_PrevProc, hwnd, Message, wParam, lParam);
+    return CallWindowProcW(g_fnPrevProc, hwnd, Message, wParam, lParam);
 }
 
 static VOID
@@ -953,7 +953,7 @@ ImageView_InitControls(HWND hwnd)
                                  0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
 
     SetClassLongPtr(g_hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    g_PrevProc = (WNDPROC) SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
+    g_fnPrevProc = (WNDPROC) SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
 }
@@ -1000,11 +1000,11 @@ ImageView_Delete(HWND hwnd)
     }
 
     /* FileOp.pFrom must be double-null-terminated */
-    GetFullPathNameW(g_currentFile->FileName, _countof(szCurFile) - 1, szCurFile, NULL);
+    GetFullPathNameW(g_pCurrentFile->FileName, _countof(szCurFile) - 1, szCurFile, NULL);
     szCurFile[_countof(szCurFile) - 2] = UNICODE_NULL; /* Avoid buffer overrun */
     szCurFile[lstrlenW(szCurFile) + 1] = UNICODE_NULL;
 
-    GetFullPathNameW(g_currentFile->Next->FileName, _countof(szNextFile), szNextFile, NULL);
+    GetFullPathNameW(g_pCurrentFile->Next->FileName, _countof(szNextFile), szNextFile, NULL);
     szNextFile[_countof(szNextFile) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
     FileOp.pFrom = szCurFile;
@@ -1012,11 +1012,11 @@ ImageView_Delete(HWND hwnd)
     if (SHFileOperation(&FileOp) != 0)
         return 0;
 
-    pFreeFileList(g_currentFile);
-    g_currentFile = NULL;
+    pFreeFileList(g_pCurrentFile);
+    g_pCurrentFile = NULL;
 
-    g_currentFile = pBuildFileList(szNextFile);
-    pLoadImageFromNode(g_currentFile, hwnd);
+    g_pCurrentFile = pBuildFileList(szNextFile);
+    pLoadImageFromNode(g_pCurrentFile, hwnd);
 
     return 1;
 }
@@ -1024,7 +1024,7 @@ ImageView_Delete(HWND hwnd)
 static LRESULT
 ImageView_Modify(HWND hwnd)
 {
-    int nChars = GetFullPathNameW(g_currentFile->FileName, 0, NULL, NULL);
+    int nChars = GetFullPathNameW(g_pCurrentFile->FileName, 0, NULL, NULL);
     LPWSTR pszPathName;
     SHELLEXECUTEINFOW sei;
 
@@ -1041,7 +1041,7 @@ ImageView_Modify(HWND hwnd)
         return 1;
     }
 
-    GetFullPathNameW(g_currentFile->FileName, nChars, pszPathName, NULL);
+    GetFullPathNameW(g_pCurrentFile->FileName, nChars, pszPathName, NULL);
 
     sei.cbSize = sizeof(sei);
     sei.fMask = 0;
@@ -1079,13 +1079,13 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_PREV_PIC:
-                    g_currentFile = g_currentFile->Prev;
-                    pLoadImageFromNode(g_currentFile, hwnd);
+                    g_pCurrentFile = g_pCurrentFile->Prev;
+                    pLoadImageFromNode(g_pCurrentFile, hwnd);
                     break;
 
                 case IDC_NEXT_PIC:
-                    g_currentFile = g_currentFile->Next;
-                    pLoadImageFromNode(g_currentFile, hwnd);
+                    g_pCurrentFile = g_pCurrentFile->Next;
+                    pLoadImageFromNode(g_pCurrentFile, hwnd);
                     break;
 
                 case IDC_BEST_FIT:
@@ -1160,7 +1160,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     lpttt = (LPTOOLTIPTEXTW)lParam;
                     lpttt->hinst = g_hInstance;
 
-                    lpttt->lpszText = MAKEINTRESOURCEW(s_BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
+                    lpttt->lpszText = MAKEINTRESOURCEW(s_ButtonConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
                     return 0;
                 }
             }
@@ -1181,7 +1181,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             ImageView_SaveSettings(hwnd);
-            SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM)g_PrevProc);
+            SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM)g_fnPrevProc);
             PostQuitMessage(0);
             break;
         }
@@ -1247,10 +1247,10 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
     PathUnquoteSpacesW(szInitialFile);
 
-    g_currentFile = pBuildFileList(szInitialFile);
-    if (g_currentFile)
+    g_pCurrentFile = pBuildFileList(szInitialFile);
+    if (g_pCurrentFile)
     {
-        pLoadImageFromNode(g_currentFile, hMainWnd);
+        pLoadImageFromNode(g_pCurrentFile, hMainWnd);
     }
 
     /* Create accelerator table for keystrokes */
@@ -1276,7 +1276,7 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     /* Destroy accelerator table */
     DestroyAcceleratorTable(hKbdAccel);
 
-    pFreeFileList(g_currentFile);
+    pFreeFileList(g_pCurrentFile);
 
     if (g_pImage)
     {
