@@ -178,7 +178,11 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
             fgCol = comctl32_color.clrGrayText;
         }
 
+#ifdef __REACTOS__
+        FillRect(hdc, &rect, GetSysColorBrush(infoPtr->Enabled ? COLOR_WINDOW : COLOR_3DFACE));
+#else
         FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
+#endif
         DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
     }
     
