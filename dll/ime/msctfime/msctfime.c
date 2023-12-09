@@ -314,7 +314,10 @@ UIWndProc(
 }
 
 BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
+DllMain(
+    HINSTANCE hinstDLL,
+    DWORD dwReason,
+    LPVOID lpvReserved)
 {
     switch (dwReason)
     {
