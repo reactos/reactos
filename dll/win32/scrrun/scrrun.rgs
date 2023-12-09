@@ -2,4 +2,8 @@ HKCR
 {
     ForceRemove '.js' = s 'JSFile'
     ForceRemove '.vbs' = s 'VBSFile'
+    ForceRemove '.wsf' = s 'WSFFile'
+    {
+        val PerceivedType = s 'text'
+    }
 }

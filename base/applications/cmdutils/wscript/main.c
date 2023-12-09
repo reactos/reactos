@@ -388,6 +388,185 @@ static void run_script(const WCHAR *filename, IActiveScript *script, IActiveScri
         WINE_FIXME("SetScriptState failed: %08x\n", hres);
 }
 
+#ifdef __REACTOS__
+#include <msxml2.h>
+#include <shlwapi.h>
+
+static HRESULT xmldomnode_getattributevalue(IXMLDOMNode *pnode, LPCWSTR name, BSTR *pout)
+{
+    IXMLDOMNamedNodeMap *pmap;
+    HRESULT hr = E_OUTOFMEMORY;
+    BSTR bsname = SysAllocString(name);
+    *pout = NULL;
+    if (bsname && SUCCEEDED(hr = IXMLDOMNode_get_attributes(pnode, &pmap)))
+    {
+        if (SUCCEEDED(hr = IXMLDOMNamedNodeMap_getNamedItem(pmap, bsname, &pnode)))
+        {
+            hr = IXMLDOMNode_get_text(pnode, pout);
+            IXMLDOMNode_Release(pnode);
+        }
+        IXMLDOMNamedNodeMap_Release(pmap);
+    }
+    SysFreeString(bsname);
+    return hr;
+}
+
+static HRESULT xmldomelem_getelembytag(IXMLDOMElement *pelem, LPCWSTR name, long index, IXMLDOMNode**ppout)
+{
+    HRESULT hr = E_OUTOFMEMORY;
+    IXMLDOMNodeList *pnl;
+    BSTR bsname = SysAllocString(name);
+    *ppout = NULL;
+    if (bsname && SUCCEEDED(hr = IXMLDOMElement_getElementsByTagName(pelem, bsname, &pnl)))
+    {
+        if (SUCCEEDED(hr))
+        {
+            hr = IXMLDOMNodeList_get_item(pnl, index, ppout);
+        }
+        IUnknown_Release(pnl);
+    }
+    SysFreeString(bsname);
+    return hr;
+}
+
+static HRESULT xmldomelem_getelembytagasdomelem(IXMLDOMElement *pelem, LPCWSTR name, long index, IXMLDOMElement**ppout)
+{
+    IXMLDOMNode *pnode;
+    HRESULT hr = xmldomelem_getelembytag(pelem, name, index, &pnode);
+    *ppout = NULL;
+    if (SUCCEEDED(hr))
+    {
+        hr = IUnknown_QueryInterface(pnode, &IID_IXMLDOMElement, (void**)ppout);
+        IUnknown_Release(pnode);
+    }
+    return hr;
+}
+
+static HRESULT run_wsfjob(IXMLDOMElement *pjob)
+{
+    // FIXME: We are supposed to somehow handle multiple languages in the same IActiveScript.
+    IActiveScript *script;
+    LPCWSTR deflang = L"JScript";
+    IXMLDOMNode *pscript;
+    HRESULT hr = S_OK;
+    if (SUCCEEDED(xmldomelem_getelembytag(pjob, L"script", 0, &pscript)))
+    {
+        CLSID clsid;
+        IActiveScriptParse *parser;
+        BSTR lang, code;
+        if (FAILED(xmldomnode_getattributevalue(pscript, L"language", &lang)))
+            lang = NULL;
+        hr = CLSIDFromProgID(lang ? lang : deflang, &clsid);
+        SysFreeString(lang);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = E_FAIL;
+            if (create_engine(&clsid, &script, &parser))
+            {
+                if (init_engine(script, parser))
+                {
+                    if (SUCCEEDED(hr = IXMLDOMNode_get_text(pscript, &code)))
+                    {
+                        hr = IActiveScriptParse_ParseScriptText(parser, code, NULL, NULL, NULL, 1, 1,
+                                                                SCRIPTTEXT_HOSTMANAGESSOURCE|SCRIPTITEM_ISVISIBLE,
+                                                                NULL, NULL);
+                        if (SUCCEEDED(hr))
+                        {
+                            hr = IActiveScript_SetScriptState(script, SCRIPTSTATE_STARTED);
+                            IActiveScript_Close(script);
+                        }
+                        SysFreeString(code);
+                    }
+                    ITypeInfo_Release(host_ti);
+                }
+                IUnknown_Release(parser);
+                IUnknown_Release(script);
+            }
+        }
+        IUnknown_Release(pscript);
+    }
+    return hr;
+}
+
+/*
+.WSF files can contain a single job, or multiple jobs if contained in a package.
+Jobs are identified by their id and if no id is specified, the first job is used.
+Each job can contain multiple script tags and all scripts are merged into one.
+
+<job><script language="JScript">WScript.Echo("JS");</script></job>
+or
+<package>
+<job><script language="JScript">WScript.Echo("JS");</script></job>
+</package>
+or
+<?xml version="1.0" ?>
+<job>
+<script language="JScript"><![CDATA[function JS(s) {WScript.Echo(s)}]]></script>
+<script language="VBScript">JS "VB2JS"</script>
+</job>
+*/
+static HRESULT run_wsf(LPCWSTR xmlpath)
+{
+    WCHAR url[ARRAY_SIZE("file://") + ARRAY_SIZE(scriptFullName)];
+    DWORD cch = ARRAY_SIZE(url);
+    IXMLDOMDocument *pdoc;
+    HRESULT hr = UrlCreateFromPathW(xmlpath, url, &cch, 0), hrCom;
+    if (FAILED(hr))
+        return hr;
+
+    hrCom = CoInitialize(NULL);
+    hr = CoCreateInstance(&CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IXMLDOMDocument, (void**)&pdoc);
+    if (SUCCEEDED(hr))
+    {
+        VARIANT_BOOL succ = VARIANT_FALSE;
+        IXMLDOMElement *pdocelm;
+        BSTR bsurl = SysAllocString(url);
+        VARIANT v;
+        V_VT(&v) = VT_BSTR;
+        V_BSTR(&v) = bsurl;
+        if (!bsurl || (hr = IXMLDOMDocument_load(pdoc, v, &succ)) > 0 || (SUCCEEDED(hr) && !succ))
+        {
+            hr = E_FAIL;
+        }
+        if (SUCCEEDED(hr) && SUCCEEDED(hr = IXMLDOMDocument_get_documentElement(pdoc, &pdocelm)))
+        {
+            BSTR tagName = NULL;
+            if (SUCCEEDED(hr = IXMLDOMElement_get_tagName(pdocelm, &tagName)))
+            {
+                if (lstrcmpiW(tagName, L"package") == 0)
+                {
+                    // FIXME: Accept job id as a function parameter and find the job here
+                    IXMLDOMElement *p;
+                    if (SUCCEEDED(hr = xmldomelem_getelembytagasdomelem(pdocelm, L"job", 0, &p)))
+                    {
+                        IUnknown_Release(pdocelm);
+                        pdocelm = p;
+                    }
+                }
+                else if (lstrcmpiW(tagName, L"job") != 0)
+                {
+                    hr = 0x800400C0ul;
+                }
+                SysFreeString(tagName);
+            }
+            if (SUCCEEDED(hr))
+            {
+                // FIXME: Only support CDATA blocks if the xml tag is present?
+                hr = run_wsfjob(pdocelm);
+            }
+            IUnknown_Release(pdocelm);
+        }
+        VariantClear(&v);
+        IUnknown_Release(pdoc);
+    }
+    if (SUCCEEDED(hrCom))
+        CoUninitialize();
+    return hr;
+}
+#endif
+
 static BOOL set_host_properties(const WCHAR *prop)
 {
     static const WCHAR nologoW[] = {'n','o','l','o','g','o',0};
@@ -453,6 +632,11 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
         return 1;
 
     ext = wcsrchr(filepart, '.');
+#ifdef __REACTOS__
+    if (ext && !lstrcmpiW(ext, L".wsf")) {
+        return run_wsf(scriptFullName);
+    }
+#endif
     if(!ext || !get_engine_clsid(ext, &clsid)) {
         WINE_FIXME("Could not find engine for %s\n", wine_dbgstr_w(ext));
         return 1;

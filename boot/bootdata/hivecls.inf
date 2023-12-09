@@ -555,6 +555,14 @@ HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
 HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
+; WSH
+HKCR,"WSFFile","",0x00000000,%WSFFILE%
+HKCR,"WSFFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
+HKCR,"WSFFile\shell\Open\command","",0x00020000,"""%SystemRoot%\system32\WScript.exe"" ""%1"" %*"
+HKCR,"WSFFile\shell\Open2","",0x00000000,"Open &with Command Prompt"
+HKCR,"WSFFile\shell\Open2\command","",0x00020000,"""%SystemRoot%\system32\CScript.exe"" ""%1"" %*"
+
+
 HKCR,"CLSID",,0x00000012
 
 ; For Shell32.dll
@@ -791,6 +799,7 @@ AVIFILE="Video Clip"
 CSSFILE="Cascading Style Sheet"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
+WSFFILE="Windows Script File"
 
 ;; For .reg files, right-click menu
 MERGE="Merge"
