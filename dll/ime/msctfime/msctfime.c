@@ -291,7 +291,8 @@ CtfImeIsIME(HKL hKL)
     return FALSE;
 }
 
-HRESULT WINAPI CtfImeThreadDetach(VOID)
+HRESULT WINAPI
+CtfImeThreadDetach(VOID)
 {
     ImeDestroy(0);
     return S_OK;
