@@ -76,7 +76,7 @@ SATA_AHCI.DeviceDesc    = "標準 SATA AHCI 控制器"
 
 [Strings.0418]
 ROS                     = "ReactOS"
-DeviceDesc              = "Modúl-pilot SATA AHCI"
+DeviceDesc              = "Driver SATA AHCI"
 SATA_AHCI.DeviceDesc    = "Dispozitiv de control standard AHCI SATA"
 
 [Strings.041f]
