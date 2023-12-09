@@ -87,7 +87,6 @@ END
 IDD_PROGRESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Expert de adăugare de dispozitive"
-
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Căutarea dispozitivului poate dura câteva minute.", -1, 21, 8, 275, 15
