@@ -30,7 +30,7 @@ BEGIN
     IDS_RENDERER_RSWR "Implementare emulată"
     IDS_CPLNAME "Configurație OpenGL"
     IDS_CPLDESCRIPTION "Configurează motorul de redare OpenGL."
-    IDS_DEBUG_SET "instituie"
-    IDS_DEBUG_CLEAR "destituie"
-    IDS_DEBUG_DNM "nu modifica"
+    IDS_DEBUG_SET "Setează"
+    IDS_DEBUG_CLEAR "Șterge"
+    IDS_DEBUG_DNM "Nu modifica"
 END
