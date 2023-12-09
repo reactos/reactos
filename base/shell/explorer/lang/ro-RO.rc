@@ -168,7 +168,7 @@ CAPTION "Avansat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Opțiuni ale meniului „Pornire” ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "&Deschide submeniurile când mă opresc la ele cu indicatorul șoricelului", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "&Deschide submeniurile când mă opresc la ele cu indicatorul mouse-ului", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "&Evidențiază programele nou instalate", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "Elemente ale meniului „Pornire”:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
