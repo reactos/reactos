@@ -1,8 +1,9 @@
 /*
- * FILE:       base/applications/cmdutils/help/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * AUTHOR:     Magnus Olsen, 2005
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS help utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2014-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -21,7 +22,7 @@ HELP [comandă]\n\n\
   help comandă\n\
   comandă /?     Pentru mai multe informații referitoare la o anume comandă.\n\n\
 ?         Enumeră toate comenzile disponibile (fără descriere).\n\
-ALIAS     Instituie, destituie sau afișează alias.\n\
+ALIAS     Setează, șterge sau afișează aliasuri.\n\
 ASSOC     Modifică asocierile extensiilor de fișiere.\n\
 ATTRIB    Afișează sau modifică atributele fișierelor.\n\
 BEEP      Semnalizează utilizând difuzorul intern.\n\
