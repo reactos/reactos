@@ -415,11 +415,11 @@ interface ITfLangBarItemButton : IUnknown
 ]
 interface ITfMenu : IUnknown
 {
-    const DWORD TF_LBMENUF_CHECKED      = 0x01;
-    const DWORD TF_LBMENUF_SUBMENU      = 0x02;
-    const DWORD TF_LBMENUF_SEPARATOR    = 0x04;
-    const DWORD TF_LBMENUF_RADIOCHECKED = 0x08;
-    const DWORD TF_LBMENUF_GRAYED       = 0x10;
+    const DWORD TF_LBMENUF_CHECKED      = 0x00000001;
+    const DWORD TF_LBMENUF_SUBMENU      = 0x00000002;
+    const DWORD TF_LBMENUF_SEPARATOR    = 0x00000004;
+    const DWORD TF_LBMENUF_RADIOCHECKED = 0x00000008;
+    const DWORD TF_LBMENUF_GRAYED       = 0x00000010;
 
     HRESULT AddMenuItem(
         [in] UINT        uId,
