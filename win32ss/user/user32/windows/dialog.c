@@ -2624,7 +2624,19 @@ IsDialogMessageW(
              if (!(dlgCode & DLGC_WANTARROWS))
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
-                 HWND hwndNext = GetNextDlgGroupItem( hDlg, lpMsg->hwnd, fPrevious );
+                 HWND hwndFirst = NULL;
+                 HWND hwndNext = GetNextDlgGroupItem(hDlg, lpMsg->hwnd, fPrevious);
+
+                 /* Skip static elements when arrow-moving through a list of controls */
+                 /* hwndFirst to prevent infinite looping */
+                 while (hwndNext && (SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC) &&
+                        (hwndFirst != hwndNext))
+                 {
+                     hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious);
+                     if (!hwndFirst)
+                         hwndFirst = hwndNext;
+                 }
+
                  if (hwndNext && SendMessageW( hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
                  {
                      SetFocus( hwndNext );
