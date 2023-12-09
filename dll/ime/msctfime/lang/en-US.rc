@@ -1,0 +1,16 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_OK,               "OK"
+    IDS_CANCEL,           "Cancel"
+    IDS_ABORT,            "&Abort"
+    IDS_RETRY,            "&Retry"
+    IDS_IGNORE,           "&Ignore"
+    IDS_YES,              "&Yes"
+    IDS_NO,               "&No"
+
+    IDS_ENTER,            "Enter"
+    IDS_FINALIZE_STRING,  "Finalize the string"
+    IDS_CONVERSION,       "Conversion"
+END
