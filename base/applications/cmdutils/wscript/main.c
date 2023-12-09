@@ -66,7 +66,7 @@ EXTERN_C INT WINAPI DSA_DeleteItem(HDSA hdsa, INT nIndex);
 
 typedef struct {
     BSTR name;
-    IUnknown*punk;
+    IUnknown *punk;
 } GLOBAL_ITEM;
 
 HDSA g_global_items = NULL;
@@ -74,9 +74,9 @@ HDSA g_global_items = NULL;
 static void free_globals()
 {
     UINT i;
-    for (i = 0; g_global_items; ++i)
+    for (i = 0;; ++i)
     {
-        GLOBAL_ITEM *p = (GLOBAL_ITEM*) DSA_GetItemPtr(g_global_items, i);
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*)DSA_GetItemPtr(g_global_items, i);
         if (!p)
             break;
         IUnknown_Release(p->punk);
@@ -133,9 +133,9 @@ static HRESULT get_globalitem_info(LPCOLESTR Name, DWORD Mask, IUnknown **ppunk,
 {
     HRESULT hr = S_FALSE;
     UINT i;
-    for (i = 0; g_global_items; ++i)
+    for (i = 0;; ++i)
     {
-        GLOBAL_ITEM *p = (GLOBAL_ITEM*) DSA_GetItemPtr(g_global_items, i);
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*)DSA_GetItemPtr(g_global_items, i);
         if (!p)
             break;
         if (!lstrcmpiW(Name, p->name))
@@ -557,7 +557,7 @@ static HRESULT xmldomelem_getelembytagasdomelem(IXMLDOMElement *pelem, LPCWSTR n
 
 static void wsf_addobjectfromnode(IActiveScript *script, IXMLDOMNode *obj)
 {
-    BSTR bsid, bsclsid;
+    BSTR bsid, bsclsid = NULL;
     if (SUCCEEDED(xmldomnode_getattributevalue(obj, L"id", &bsid)))
     {
         CLSID clsid;
