@@ -170,7 +170,7 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
     IDS_CAT_DEVEL "Dezvoltare"
-    IDS_CAT_DRIVERS "Module pilot"
+    IDS_CAT_DRIVERS "Drivere"
     IDS_CAT_EDU "Educație"
     IDS_CAT_ENGINEER "Inginerie"
     IDS_CAT_FINANCE "Finanțe"

@@ -1,9 +1,11 @@
 /*
-    Translators:
-    Kudratov Olimjon (olim98@bk.ru)
-    Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
-    Stanislav Motylkov (binarymaster@mail.ru)
-*/
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2014-2016 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2018 Abdulganiev Rafael <abdulganiev.rafael@gmail.com>
+ *              Copyright 2018-2020 Stanislav Motylkov <binarymaster@mail.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 

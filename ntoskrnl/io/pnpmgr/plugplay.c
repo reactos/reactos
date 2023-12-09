@@ -94,6 +94,46 @@ IopQueueDeviceChangeEvent(
 }
 
 NTSTATUS
+IopQueueDeviceInstallEvent(
+    _In_ const GUID *EventGuid,
+    _In_ PUNICODE_STRING DeviceId)
+{
+    PPNP_EVENT_ENTRY EventEntry;
+    UNICODE_STRING Copy;
+    ULONG TotalSize;
+
+    /* Allocate a big enough buffer */
+    Copy.Length = 0;
+    Copy.MaximumLength = DeviceId->Length + sizeof(UNICODE_NULL);
+    TotalSize =
+        FIELD_OFFSET(PLUGPLAY_EVENT_BLOCK, InstallDevice.DeviceId) +
+        Copy.MaximumLength;
+
+    EventEntry = ExAllocatePool(NonPagedPool,
+                                TotalSize + FIELD_OFFSET(PNP_EVENT_ENTRY, Event));
+    if (!EventEntry)
+        return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(EventEntry, TotalSize + FIELD_OFFSET(PNP_EVENT_ENTRY, Event));
+
+    /* Fill the buffer with the event GUID */
+    RtlCopyMemory(&EventEntry->Event.EventGuid, EventGuid, sizeof(GUID));
+    EventEntry->Event.EventCategory = DeviceInstallEvent;
+    EventEntry->Event.TotalSize = TotalSize;
+
+    /* Fill the symbolic link name */
+    RtlCopyMemory(&EventEntry->Event.InstallDevice.DeviceId,
+                  DeviceId->Buffer, DeviceId->Length);
+    EventEntry->Event.InstallDevice.DeviceId[DeviceId->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    InsertHeadList(&IopPnpEventQueueHead, &EventEntry->ListEntry);
+
+    KeSetEvent(&IopPnpNotifyEvent, 0, FALSE);
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 IopQueueTargetDeviceEvent(const GUID *Guid,
                           PUNICODE_STRING DeviceIds)
 {
@@ -331,7 +371,8 @@ PiControlInitializeDevice(
     /* Insert as a root enumerated device node */
     PiInsertDevNode(DeviceNode, IopRootDeviceNode);
 
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED, &DeviceInstance);
+    /* Report the device to the user-mode pnp manager */
+    IopQueueDeviceInstallEvent(&GUID_DEVICE_ENUMERATED, &DeviceNode->InstancePath);
 
     ZwClose(InstanceKey);
 done:

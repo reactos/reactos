@@ -46,4 +46,12 @@ UINT RosGetProcessEffectiveVersion(VOID)
         return (peb->OSMajorVersion << 8) | (peb->OSMinorVersion);
 }
 
+BOOL
+WINAPI
+BaseCheckAppcompatCache(
+    _In_ PCWSTR ApplicationName,
+    _In_ HANDLE FileHandle,
+    _In_opt_ PCWSTR Environment,
+    _Out_opt_ PULONG pdwReason);
+
 #endif // COMPAT_UNDOC_H

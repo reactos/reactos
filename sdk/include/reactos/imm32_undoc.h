@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId);
+
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
 

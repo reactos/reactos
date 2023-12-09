@@ -2240,7 +2240,7 @@ PCI\VEN_3388&DEV_8013.DeviceDesc="Dispozitiv de control HiNT VXII EIDE IDE DMA"
 PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Dispozitiv de control IDE"
 
 ; Compatible adapters
-UniATA_Name="Modúl-pilot ATA universal"
+UniATA_Name="Driver ATA universal"
 *PNP0600.PriDeviceDesc="Dispozitiv de control IDE primar"
 *PNP0600.SecDeviceDesc="Dispozitiv de control IDE secundar"
 PCI\CC_0101.DeviceDesc="Dispozitiv de control Dual Channel PCI BusMaster IDE"

@@ -1,5 +1,11 @@
-// COPYRIGHT: Petru Dimitriu <petrimetri@gmail.com>
-//            Ștefan Fulea <stefan.fulea@mail.com>
+/*
+ * PROJECT:     ReactOS Accessibility Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -73,13 +79,13 @@ END
 
 IDD_PROPPAGEMOUSE DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Șoricel"
+CAPTION "Mouse"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "TasteȘoricel", -1, 6, 11, 234, 62
-    LTEXT "Folosiți această opțiune dacă sunteți constrânși să controlați indicatorul șoricelului folosind tastele numerice ale tastaturii.",
+    GROUPBOX "TasteMouse", -1, 6, 11, 234, 62
+    LTEXT "Folosiți această opțiune dacă sunteți constrânși să controlați indicatorul mouse-ului folosind tastele numerice ale tastaturii.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Doresc folosirea de TasteȘoricel", IDC_MOUSE_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "&Doresc folosirea de TasteMouse", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Opțiuni…", IDC_MOUSE_BUTTON, 144, 49, 90, 14
 END
 
@@ -88,7 +94,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Destituire automată", -1, 6, 11, 234, 47
+    GROUPBOX "Resetare automată", -1, 6, 11, 234, 47
     AUTOCHECKBOX "Oprește facilitățile din Accesi&bilitate după o perioadă inactivă de:",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
@@ -102,7 +108,7 @@ BEGIN
     LTEXT "Această opțiune vă permite conectarea dispozitivelor de intrare alternative tastaturii sau șoricelului.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "Permite &dispozitive alternative", IDC_SERIAL_BOX, 12, 142, 126, 14
-    PUSHBUTTON "&Opțiuni…", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+    PUSHBUTTON "&Setări…", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "Opțiuni administrative", -1, 6, 169, 234, 47
     AUTOCHECKBOX "Aplică preferințele de accesibilitate la a&utentificare", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14

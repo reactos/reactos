@@ -88,7 +88,7 @@ BEGIN
     DEFPUSHBUTTON "Î&nchide", 1, 97, 91, 60, 14
     ICON 563, 1046, 7, 7, 20, 20
     LTEXT "Conexiunea a fost realizată.", 1047, 40, 7, 212, 16
-    LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic-dreapta pe pictograma din dosarul „Conexiuni de rețea” sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
+    LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic dreapta pe pictograma din dosarul „Conexiuni de rețea” sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
     AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
 END
 
@@ -145,7 +145,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Retroapelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat.  Apăsați „Confirmă” pentru a fi apelat de către server la numărul de mai jos. Apăsați „Anulează” pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat. Apăsați „Confirmă” pentru a fi apelat de către server la numărul de mai jos. Apăsați „Anulează” pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "Int&roduceți numărul de telefon al modemului dumneavoastră:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Con&firmă", 1, 100, 85, 60, 14, WS_GROUP
@@ -202,7 +202,7 @@ CAPTION "Rețea comutată"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
-    LTEXT "Încercarea de apelare automată a eșuat.  Doriți dezactivarea apelării automate de la această locație?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    LTEXT "Încercarea de apelare automată a eșuat. Doriți dezactivarea apelării automate de la această locație?", 1099, 40, 6, 181, 34, NOT WS_GROUP
     PUSHBUTTON "D&a", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&Nu", 2, 115, 42, 50, 14
 END
@@ -411,7 +411,7 @@ CAPTION "Conexiuni NetWare sau compatibile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
-    LTEXT "Aveți conexiuni către o rețea compatibilă NetWare.  Aceste conexiuni vor fi închise când va fi activată conexiunea PPP IPX.", 1279, 42, 7, 215, 37
+    LTEXT "Aveți conexiuni către o rețea compatibilă NetWare. Aceste conexiuni vor fi închise când va fi activată conexiunea PPP IPX.", 1279, 42, 7, 215, 37
     LTEXT "Înainte de apelare, pentru a evita pierderile de date, fie închideți toate fișierele ce utilizează aceste conexiuni, fie debifați IPX din opțiunile protocolului de rețea pentru această înregistrare.", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "Con&firmă", 1, 65, 112, 60, 14, WS_GROUP
@@ -423,7 +423,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apelare manuală"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze).  După ce a fost inițiat apelul, apăsați pe „Confirmă”. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
+    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze). După ce a fost inițiat apelul, apăsați pe „Confirmă”. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
     LTEXT "Numărul de telefon:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "Con&firmă", 1, 104, 70, 60, 14, WS_GROUP
@@ -608,7 +608,7 @@ BEGIN
     AUTOCHECKBOX "La apelare, &pornește monitorizarea rețelei de linie comutată", 1138, 8, 44, 226, 10
     AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 61, 224, 10
     AUTOCHECKBOX "Asc&unde la apelare", 1137, 8, 79, 220, 10
-    AUTOCHECKBOX "Utili&zează asistentul de creare a noilor numere în agendă", 1144, 8, 97, 220, 10
+    AUTOCHECKBOX "Utili&zează expertul de creare a noilor numere în agendă", 1144, 8, 97, 220, 10
     AUTOCHECKBOX "Solicită &confirmare pentru autoapelări", 1136, 8, 114, 220, 10
 END
 
@@ -616,7 +616,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți un nume pentru această interfață de apelare la cerere.  Vă sugerăm numirea acestei interfețe după numele rețelei sau serverului la care este realizată conectarea.", 1158, 7, 5, 309, 29
+    LTEXT "Alegeți un nume pentru această interfață de apelare la cerere. Vă sugerăm numirea acestei interfețe după numele rețelei sau serverului la care este realizată conectarea.", 1158, 7, 5, 309, 29
     LTEXT "N&umele interfeței:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Cunosc totul despre interfețele de apel la cerere și prefer editarea directă a proprietăților", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
@@ -795,7 +795,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Asistentul de completare a interfeței de apel la cerere.", 1352, 122, 5, 192, 32
+    LTEXT "Expertul de completare a interfeței de apel la cerere.", 1352, 122, 5, 192, 32
     LTEXT "Ca să finalizați crearea aceastei interfețe și să o activați în serverul de redirecționare, apăsați „Sfârșit”.", 1354, 122, 41, 192, 26, NOT WS_GROUP
     LTEXT "Pentru a edita această interfață, mergeți în „Gestionarul de redirecționări și acces la distanță”, selectați-o în „Interfețe de redirecționare”, apoi apăsați Proprietăți.", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
@@ -1083,11 +1083,11 @@ END
 
 547 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Asistent pentru interfeța de apelare la cerere"
+CAPTION "Expert pentru interfața de apelare la cerere"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la asistentul pentru interfața de apelare la cerere.", 1530, 122, 8, 192, 32
-    LTEXT "Utilizând acest asistent veți putea crea o interfață de apelare la cerere pentru a conecta acest server de redirecționare la alte asemenea servere.", 1531, 122, 43, 192, 37
+    LTEXT "Bun venit la expertul pentru interfața de apelare la cerere.", 1530, 122, 8, 192, 32
+    LTEXT "Utilizând acest expert veți putea crea o interfață de apelare la cerere pentru a conecta acest server de redirecționare la alte asemenea servere.", 1531, 122, 43, 192, 37
     LTEXT "Apăsați „Înainte” pentru a continua.", 1532, 122, 85, 191, 29
 END
 
@@ -1765,7 +1765,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bifați căsuțele fiecărui utilizator căruia îi va fi permisă conectarea la acest calculator.  Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 10, 1, 275, 27
+    LTEXT "Bifați căsuțele fiecărui utilizator căruia îi va fi permisă conectarea la acest calculator. Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 10, 1, 275, 27
     LTEXT "&Utilizatori cu permisiune de conectare:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Adăugare…", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1844,20 +1844,20 @@ BEGIN
     193 "Introduceți un nume și parolă cu acces la un domeniu rețea.\0"
     194 "Conversia adreselor de rețea (NAT) este deocamdată instalată ca protocol de redirecționare,\nși trebuie eliminat înainte de a activa partajarea conexiunilor de Internet.\nPentru a elimina NAT, deschideți „Gestionarul de redirecționare și acces în rețea”\nși extindeți din panelul stâng înregistrările de la redirecționare.\nEliminați protocolul de redirecționare NAT din lista\nde protocoale de redirecționare.\0"
     195 "Codul regiunii trebuie să conțină doar cifrele 0-9.\0"
-    196 "Numele trebuie să conțină cel puțin un caracter în afară de spațiu și nu poate începe cu un punct.  Alegeți un alt nume.\0"
+    196 "Numele trebuie să conțină cel puțin un caracter în afară de spațiu și nu poate începe cu un punct. Alegeți un alt nume.\0"
     197 "Trebuie să alegeți o valoare între %1 și %2 pentru acest câmp.\0"
-    198 "Nu a putut fi deschisă biblioteca DLL pentru configurarea autentificării particularizate.  Verificați dacă pachetul de autentificare particularizată a fost instalat corect.\0"
+    198 "Nu a putut fi deschisă biblioteca DLL pentru configurarea autentificării particularizate. Verificați dacă pachetul de autentificare particularizată a fost instalat corect.\0"
     199 "Conexiunea aleasă a fost stabilită de către serverul de redirecționare multiprotocol.\nUtilizați „Gestionarul de redirecționare și acces în rețea” pentru a închide această conexiune.\0"
     200 "Comentariu\0"
     201 "Configurarea pachetului de autentificare particularizată a eșuat.\0"
-    202 "TCP/IP nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea.  În Panoul de control, deschideți Rețea, apoi în pagina Servicii, alegeți Proprietăți pentru „Redirecționare și acces în rețea” și apăsați butonul Rețea.\0"
-    203 "IPX nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea.  Puteți instala/activa IPX prin revizuirea proprietăților oricărei conexiuni din dosarul „Conexiuni”.\0"
+    202 "TCP/IP nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea. În Panoul de control, deschideți Rețea, apoi în pagina Servicii, alegeți Proprietăți pentru „Redirecționare și acces în rețea” și apăsați butonul Rețea.\0"
+    203 "IPX nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea. Puteți instala/activa IPX prin revizuirea proprietăților oricărei conexiuni din dosarul „Conexiuni”.\0"
     204 "Eliminați acest(e) dispozitiv(e) din listă?\0"
     205 "Eliminați %1 din agendă?\0"
     206 "Doriți deconectarea de la %1?\0"
     207 "Deja există un fișier numit %1.  Suprascrieți?\0"
     208 "Au fost depistate erori de sintaxă în script. Doriți un raport al erorilor?\0"
-    209 "Conectarea la '%1' a fost realizată.  \0"
+    209 "Conectarea la '%1' a fost realizată.\0"
     210 "Pentru a închide sau a verifica starea conexiunii, faceți clic pe Monitorul de rețea al liniei comutate din bara de activități.\0"
     212 "Conectarea a fost realizată.\0"
     213 "Procedura de autentificare particularizată trebuie pornită prin apăsarea butonului Proprietăți.\0"
@@ -1886,7 +1886,7 @@ BEGIN
     236 "Există deja o înregistrare %1.  Alegeți un alt nume.\0"
     237 "Puteți permite trimiterea parolei fără criptare.\0"
     238 "Criptarea parolei\0"
-    239 "Asistentul este pregătit pentru crearea conexiunii.\0"
+    239 "Expertul este pregătit pentru crearea conexiunii.\0"
     240 "Terminat\0"
     241 "Număr de telefon:\0"
     242 "Retroapel la\0"
@@ -1955,7 +1955,7 @@ BEGIN
     305 "Nu a fost selectată nici o agendă alternativă.\0"
     306 "Acest dispozitiv nu poate fi configurat dinamic.\0"
     307 "Înregistrarea nu poate fi ștearsă deoarece este conectată.\0"
-    308 "Nu este specificată nici o înregistrare.  Creați cel puțin o înregistrare nouă.\0"
+    308 "Nu este specificată nici o înregistrare. Creați cel puțin o înregistrare nouă.\0"
     309 "Este necesară furnizarea unei adrese IP nenule.\0"
     310 "Pentru liniile comutate/dispozitivele de tip X.25 este nevoie de o adrese X.25.\0"
     311 "(nespecificat)\0"
@@ -2217,7 +2217,7 @@ BEGIN
     1571 "Opțiunea curentă de criptare cere EAP sau o careva versiune de autentificare securizată MS-CHAP.\0"
     1572 "Protocoale și securitate\0"
     1573 "Alegeți transporturi și opțiuni de securitate pentru conexiune.\0"
-    1574 "Protocolul ales include PAP, SPAP, și/sau CHAP.  Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți păstrarea acestei configurații?\0"
+    1574 "Protocolul ales include PAP, SPAP, și/sau CHAP.  Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți să păstrați aceste setări?\0"
     1575 "Pentru conectarea la „%1”, este necesară mai întâi conectarea la „%2”.  Doriți conectarea la „%2”?\0"
     1576 "Conectarea prin cablu paralel…\0"
     1577 "Conectarea prin infraroșu…\0"
@@ -2295,40 +2295,40 @@ BEGIN
     7320 "Baze de date de protocoale\0"
     7321 "Introduceți un nume de autentificare pentru noul utilizator sau apăsați „Anulează”.\0"
     7322 "Parola introdusă este prea scurtă.\0"
-    7323 "Parolele introduse nu corespund.  Reintroduceți-le.\0"
-    7324 "A survenit o eroare internă.  \0"
+    7323 "Parolele introduse nu corespund. Reintroduceți-le.\0"
+    7324 "A apărut o eroare internă.\0"
     7325 "Listview\0"
-    7326 "A survenit o eroare la instituirea noilor modificări efectuate în baza de date locală de utilizatori.  \0"
-    7327 "Nu dețineți suficiente privilegii pentru a putea adăuga utilizatori în baza de date locală a sistemului.  \0"
+    7326 "A apărut o eroare la instituirea noilor modificări efectuate în baza de date locală de utilizatori.\0"
+    7327 "Nu dețineți suficiente privilegii pentru a putea adăuga utilizatori în baza de date locală a sistemului.\0"
     7328 "Utilizatorul pe care încercați să-l creați deja există în baza de date locală de utilizatori.\0"
     7329 "Utilizatorul nu a fost adăugat în baza de date locală de utilizatori deoarece parola introdusă a fost respinsă.\0"
     7330 "Baza de date de uzilizatori a sistemului nu poate fi reîncărcată din cauza unei erori interne.\0"
-    7331 "A survenit o eroare internă:  Accesul la baza de date locală de utilizatori a fost corupt.\0"
+    7331 "A apărut o eroare internă:  Accesul la baza de date locală de utilizatori a fost corupt.\0"
     7332 "Resursele necesare pentru a afișa datele de utilizator nu au putut fi încărcate.\0"
-    7333 "A survenit o eroare internă în încercarea de a anula modificările făcute în baza de date locală de utilizatori.  \0"
+    7333 "A apărut o eroare internă în încercarea de a anula modificările făcute în baza de date locală de utilizatori.\0"
     7334 "Accesul la dispozitivul bazei de date a fost corupt.\0"
     7335 "Resursele necesare pentru a afișa datele generale nu au putut fi încărcate.\0"
-    7336 "A survenit o eroare la încercarea de a institui modificări efectuate referitoare la dispozitive/vpn.  \0"
-    7337 "A survenit o eroare internă.\0"
-    7338 "A survenit o eroare internă: Accesul la componenta de rețea a bazei de date a fost corupt.\0"
-    7339 "A survenit o eroare internă.  \0"
-    7340 "A survenit o eroare în încercarea de a institui modificări efectuate la componentele de rețea.\0"
-    7341 "A survenit o eroare internă.\0"
-    7342 "Modificările efectuate la protocolul TCP/IP nu au putut fi instituite în sistem.  \0"
-    7343 "Modificările efectuate la protocolul IPX nu au putut fi instituite în sistem.  \0"
+    7336 "A apărut o eroare la încercarea de a institui modificări efectuate referitoare la dispozitive/vpn.\0"
+    7337 "A apărut o eroare internă.\0"
+    7338 "A apărut o eroare internă: Accesul la componenta de rețea a bazei de date a fost corupt.\0"
+    7339 "A apărut o eroare internă.\0"
+    7340 "A apărut o eroare în încercarea de a institui modificări efectuate la componentele de rețea.\0"
+    7341 "A apărut o eroare internă.\0"
+    7342 "Modificările efectuate la protocolul TCP/IP nu au putut fi instituite în sistem.\0"
+    7343 "Modificările efectuate la protocolul IPX nu au putut fi instituite în sistem.\0"
     7344 "Proprietățile TCP/IP nu au putut fi afișate.\0"
     7345 "Proprietățile IPX nu au putut fi afișate.\0"
-    7346 "Proprietățile TCP/IP nu au putut fi încărcate din sistem.  \0"
-    7347 "Proprietățile IPX nu au putut fi încărcate din sistem.  \0"
+    7346 "Proprietățile TCP/IP nu au putut fi încărcate din sistem.\0"
+    7347 "Proprietățile IPX nu au putut fi încărcate din sistem.\0"
     7348 "Conexiunile de intrare depind de serviciul de Redirecționare și acces în rețea, care nu a putut fi pornit.  Pentru informații adăugătoare, consultați jurnalul de evenimente al sistemului.\0"
     7349 "Modificarea componentelor de rețea nu este permisă la moment, deoarece sunt în curs de modificare altundeva.\0"
-    7350 "Noul utilizator introdus nu a fost adăugat la baza de date locală deoarece numele sau parola introdusă încalcă o politică a sistemului (este fie prea mare, fie prea mică, fie prost formată).  \0"
-    7351 "Sistemul nu poate șterge utilizatorul cerut.  \0"
+    7350 "Noul utilizator introdus nu a fost adăugat la baza de date locală deoarece numele sau parola introdusă încalcă o politică a sistemului (este fie prea mare, fie prea mică, fie prost formată).\0"
+    7351 "Sistemul nu poate șterge utilizatorul cerut.\0"
     7352 "Componenta selectată de rețea nu poate fi eliminată, deoarece încă este în uz.\0"
     7353 "Avertisment al conexiunilor de intrare\0"
-    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat „Anulează”.  Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
+    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat „Anulează”. Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
     7355 "Sunteți pe calea de a comuta în consola de gestiune a sistemului.  Formularul curent al conexiunilor de intrare va fi închis și toate modificările efectuate vor fi instituite în sistem.  Confirmați continuarea?\0"
-    7356 "Valoarea măștii de rețea s-a schimbat.  În mască, un bit de zero poate fi urmat doar de alți biți de zero.  De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
+    7356 "Valoarea măștii de rețea s-a schimbat.  În mască, un bit de zero poate fi urmat doar de alți biți de zero. De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
     7357 "Permisiuni de utilizator\0"
     7358 "Puteți specifica utilizatorii care se vor conecta la acest calculator.\0"
     7359 "Dispozitive pentru conexiunile de intrare\0"
@@ -2349,10 +2349,10 @@ BEGIN
     7377 "Ce dispozitiv doriți să-l utilzați pentru efectuarea acestei conexiuni?\0"
     7378 "Nu sunt prezente dispozitive instalate capabile de a accepta conexiuni directe.\0"
     7379 "Avertisment pentru conexiune nouă de intrare\0"
-    7380 "Deoarece acest server aparține sau deține un domeniu, este necesară utilizarea consolei „Redirecționare și acces în rețea” pentru a configura acestă mașină să recepționeze conexiuni de intrare.  Anulați modificările și comutați în acea consolă?\n\0"
+    7380 "Deoarece acest server aparține sau deține un domeniu, este necesară utilizarea consolei „Redirecționare și acces în rețea” pentru a configura acestă mașină să recepționeze conexiuni de intrare. Anulați modificările și comutați în acea consolă?\n\0"
     7381 "Alocă numărul de rețea în mod automat\0"
     7382 "Alocă numerele de rețea în mod automat\0"
-    7383 "Conexiunile de intrare nu pot emite numerele de rețea 00000000 sau FFFFFFFF.  Fie modificați numerele de rețea alocate sau utilizați alocarea automată de numere de rețea.\0"
+    7383 "Conexiunile de intrare nu pot emite numerele de rețea 00000000 sau FFFFFFFF. Fie modificați numerele de rețea alocate sau utilizați alocarea automată de numere de rețea.\0"
     7384 "la\0"
     7385 "Portul de conexiune (%s)\0"
     7386 "„Conexiuni de rețea” nu poate reprezenta unele opțiuni specializate ale conexiunilor de intrare care au fost stabilite utilizând „Gestionarul utilizatorului local” sau consola „Policici de acces în rețea”.  Pentru a completa sau corecta informații ale conexiunilor de intrare, va trebui să utilizați acele console.\0"
@@ -2360,15 +2360,15 @@ BEGIN
     7388 "ReactOS trebuie să se repornească pentru a completa această acțiune.  Permiteți această repornire acum?\0"
     7389 "Dispozitivul ales nu are disponibile opțiuni de configurare.\0"
     7390 "Domeniu nevalid\0"
-    7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare.  Pentru a dezactiva aceasta, e necesară oprirea serviciului „Server”.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare.  Doriți scoaterea unei console sistem care va permite oprirea serviciului „Server”?\r\n\nÎn „Gestionarea calculatorului”, clic pe „Instrumente de sistem”, apoi clic pe „Servicii”.  În panoul din dreapta, clic-dreapta pe „Server”, apoi alegeți oprirea lui.\0"
-    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator.  Acest asistent îl va activa.  Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
+    7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare. Pentru a dezactiva aceasta, e necesară oprirea serviciului „Server”.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare.  Doriți scoaterea unei console sistem care va permite oprirea serviciului „Server”?\r\n\nÎn „Gestionarea calculatorului”, clic pe „Instrumente de sistem”, apoi clic pe „Servicii”.  În panoul din dreapta, clic-dreapta pe „Server”, apoi alegeți oprirea lui.\0"
+    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator. Acest expert îl va activa. Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
     7393 "Conexiuni de intrare\0"
     7394 "Fondul de adrese IP introdus este nevalid.\0"
     7395 "Masca furnizată nu este validă.\0"
-    7396 "Valoarea de început a fondului de adrese TCP/IP nu este validă.  Trebuie să se încadreze între 1.0.0.0 și 224.0.0.0 și trebuie să excludă forma 127.x.x.x.\0"
+    7396 "Valoarea de început a fondului de adrese TCP/IP nu este validă. Trebuie să se încadreze între 1.0.0.0 și 224.0.0.0 și trebuie să excludă forma 127.x.x.x.\0"
     7397 "Fondul de adrese TCP/IP introdus este nevalid, deoarece adresa este mai bine definită decât masca.\0"
     7398 "Adresa de început trebuie să fie mai mică decât adresa de sfârșit.\0"
-    7399 "Serviciul de redirecționare și acces în rețea este în procesul de oprire.  Până nu se oprește (de tot), opțiunea „Conexiuni de intrare” nu va fi disponibilă.  Așteptați câteva momente, apoi încercați din nou.\0"
+    7399 "Serviciul de redirecționare și acces în rețea este în procesul de oprire.  Până nu se oprește (de tot), opțiunea „Conexiuni de intrare” nu va fi disponibilă. Așteptați câteva momente, apoi încercați din nou.\0"
     7400 "%s (%s)\0"
     7401 "%s (%d canale)\0"
     7402 "Conexiuni de intrare VPN (PPTP)\0"

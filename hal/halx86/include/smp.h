@@ -53,3 +53,32 @@ VOID
 NTAPI
 HalpRequestIpi(
     _In_ KAFFINITY TargetProcessors);
+
+VOID
+NTAPI
+HalpBroadcastIpiSpecifyVector(
+    _In_ UCHAR Vector,
+    _In_ BOOLEAN IncludeSelf);
+
+VOID
+NTAPI
+HalRequestIpiSpecifyVector(
+    _In_ KAFFINITY TargetSet,
+    _In_ UCHAR Vector);
+
+#ifdef _M_AMD64
+
+NTHALAPI
+VOID
+NTAPI
+HalpSendNMI(
+    _In_ KAFFINITY TargetSet);
+
+NTHALAPI
+VOID
+NTAPI
+HalpSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql);
+
+#endif // _M_AMD64

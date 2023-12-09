@@ -6,8 +6,8 @@ CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Az IP-beállításokat automatikusan is megkaphatja, ha hálózata támogatja ezt a képességet. Eltérõ esetben keresse meg hálózati rendszergazdáját a helyes IP-beállításokért.", -1, 9, 9, 235, 27
-    CONTROL "IP-cím automatikus lekérése", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
+    CONTROL "IP-cím automatikus lekérése", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     CONTROL "A &következõ IP-cím használata:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "IP cím:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
@@ -15,8 +15,8 @@ BEGIN
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
     LTEXT "Alapértelmezett átjáró:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "A DNS-kiszolgáló címének automatikus lekérése", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 129, 210, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
+    CONTROL "A DNS-kiszolgáló címének automatikus lekérése", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     CONTROL "A kö&vetkezõ DNS-kiszolgálók használata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
     LTEXT "Elsõdleges DNS-kiszolgáló:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
@@ -31,8 +31,8 @@ CAPTION "Alternate Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "If this computer is used on more than one network, enter the alternate IP settings below", -1, 9, 9, 220, 20
+    GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "Au&tomatic private IP address", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    GROUPBOX "", -1, 9, 55, 228, 125, BS_GROUPBOX
     CONTROL "U&ser configured", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
     LTEXT "&IP address:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12

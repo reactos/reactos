@@ -1,6 +1,6 @@
 /*
- * PROJECT:     ReactOS Shell
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
@@ -958,7 +958,7 @@ BEGIN
     IDS_PIF_FILE "Fișier de informații program NT VDM"
     IDS_SCR_FILE "Animație regim de inactivitate"
     IDS_SYS_FILE "Fișier de sistem"
-    IDS_VXD_FILE "Pilot dispozitiv virtual"
+    IDS_VXD_FILE "Driver de dispozitiv virtual"
     IDS_ANY_FILE "Fișier-%s"
 
     IDS_OPEN_VERB "Deschide"

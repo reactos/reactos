@@ -360,6 +360,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/procsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/amd64/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/stubs.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/traphandler.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall.c)
     if(BUILD_MP)
         list(APPEND SOURCE

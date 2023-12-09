@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -168,7 +168,7 @@ BEGIN
     IDS_HELP_ATTACH                    "Atașează un fișier de disc virtual.\n"
     IDS_HELP_ATTRIBUTES                "Manipulează volumul sau atributele de disc.\n"
     IDS_HELP_AUTOMOUNT                 "Activează sau Dezactivează montarea automată a volumelor de bază.\n"
-    IDS_HELP_BREAK                     "Destituie configurația în oglindă.\n"
+    IDS_HELP_BREAK                     "Șterge configurația în oglindă.\n"
     IDS_HELP_CLEAN                     "Elimină informațiile de configurare, sau toate informațiile,\n              de pe disc.\n"
     IDS_HELP_COMPACT                   "Încearcă reducerea dimensiunii fizice a fișierului.\n"
     IDS_HELP_CONVERT                   "Convertește în diverse formate de disc.\n"
@@ -220,7 +220,7 @@ BEGIN
     IDS_HELP_REPAIR                    "Repară un volum RAID-5 cu unul din membri deteriorat.\n"
     IDS_HELP_RESCAN                    "Rescanarea calculatorului căutând discuri și volume.\n"
     IDS_HELP_RETAIN                    "Reține și plasează o partiție ca simplu volum.\n"
-    IDS_HELP_SAN                       "Afișează sau instituie politica SAN pentru SO încărcat la moment.\n"
+    IDS_HELP_SAN                       "Afișează sau setează politica SAN pentru SO încărcat la moment.\n"
 
     IDS_HELP_SELECT                    "Schimbă obiectul viitoarelor acțiuni.\n"
     IDS_HELP_SELECT_DISK               "Mută focalizarea pe disc.\n"
@@ -231,8 +231,8 @@ BEGIN
     IDS_HELP_SETID                     "Modifică tipul partiției.\n"
     IDS_HELP_SHRINK                    "Micșorează dimensiunea volumului selectat.\n"
 
-    IDS_HELP_UNIQUEID                  "Afișează sau instituie identificatorul tabelei GUID a partiției\n              (GPT) sau semnătura de inițializare (MBR) a discului.\n"
-    IDS_HELP_UNIQUEID_DISK             "Afișează sau instituie identificatorul tabelei GUID a partiției\n              (GPT) sau semnătura de inițializare (MBR) a discului.\n"
+    IDS_HELP_UNIQUEID                  "Afișează sau setează identificatorul tabelei GUID a partiției\n              (GPT) sau semnătura de inițializare (MBR) a discului.\n"
+    IDS_HELP_UNIQUEID_DISK             "Afișează sau setează identificatorul tabelei GUID a partiției\n              (GPT) sau semnătura de inițializare (MBR) a discului.\n"
 END
 
 /* Common Error Messages */

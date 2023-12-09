@@ -126,6 +126,7 @@ KiInitializeHandBuiltThread(
     KeInitializeThread(Process, Thread, NULL, NULL, NULL, NULL, NULL, Stack);
 
     Thread->NextProcessor = Prcb->Number;
+    Thread->IdealProcessor = Prcb->Number;
     Thread->Priority = HIGH_PRIORITY;
     Thread->State = Running;
     Thread->Affinity = (ULONG_PTR)1 << Prcb->Number;
@@ -179,13 +180,6 @@ KiSystemStartupBootStack(VOID)
     {
         /* Initialize the startup thread */
         KiInitializeHandBuiltThread(Thread, Process, KernelStack);
-
-        /* Initialize cpu with HAL */
-        if (!HalInitSystem(0, LoaderBlock))
-        {
-            /* Initialization failed */
-            KeBugCheck(HAL_INITIALIZATION_FAILED);
-        }
     }
 
     /* Calculate the CPU frequency */

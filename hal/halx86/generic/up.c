@@ -32,3 +32,24 @@ HalStartNextProcessor(
     /* Always return false on UP systems */
     return FALSE;
 }
+
+#ifdef _M_AMD64
+
+VOID
+NTAPI
+HalSendNMI(
+    _In_ KAFFINITY TargetSet)
+{
+    NOTHING;
+}
+
+VOID
+NTAPI
+HalSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql)
+{
+    NOTHING;
+}
+
+#endif // _M_AMD64

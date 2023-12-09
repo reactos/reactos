@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2018 George Bișoc <george.bisoc@reactos.org>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -81,7 +81,7 @@ BEGIN
     IDS_DECOMPRESSERROR "Metoda de compresie %d nu este suportată. Doriți să continuați?"
     IDS_UNKNOWNERROR "Eroare necunoscută 0x%08x."
 
-    IDS_WIZ_TITLE "Asistent de extracție"
+    IDS_WIZ_TITLE "Expert de extracție"
     IDS_WIZ_DEST_TITLE "Selectați o Destinație"
     IDS_WIZ_DEST_SUBTITLE "Fișierele din arhiva zip vor fi extrase în destinația specificată."
     IDS_WIZ_COMPL_TITLE "Extragere Completă"

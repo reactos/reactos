@@ -48,7 +48,7 @@ BEGIN
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Urmărire", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Prezentare", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Urmărește &cursorul șoricelului", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Urmărește &cursorul mouse-ului", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
     CONTROL "Urmărește f&ocalizarea tastaturii", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10

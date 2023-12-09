@@ -1,7 +1,9 @@
-/* FILE:       dll/win32/shell32/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2015-04-12
- * THANKS TO:  navaraf, who translated major part of this file
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2003 Filip Navara (navaraf@reactos.org)
+ *              Copyright 2008-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

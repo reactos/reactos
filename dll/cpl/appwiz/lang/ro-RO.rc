@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, 380, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent pentru creare de legătură"
+CAPTION "Expertul pentru creare de legături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -19,7 +19,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, 380, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent pentru creare de legătură"
+CAPTION "Expertul pentru creare de legături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -29,10 +29,10 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent pentru creare de scurtătură"
+CAPTION "Expertul pentru creare de scurtături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Acest asistent vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+    LTEXT "Acest expert vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
     LTEXT "Scrieți adresa elementului:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -41,7 +41,7 @@ END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent pentru creare de scurtătură"
+CAPTION "Expertul pentru creare de scurtături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Scrieți un n&ume pentru scurtătură:", -1, 120, 15, 150, 10
@@ -77,7 +77,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Gestionar de programe"
     IDS_CPLSYSTEMDESCRIPTION "Instalează programe și crează scurtături."
-    IDS_CREATE_SHORTCUT "Asistent pentru creare de scurtătură"
+    IDS_CREATE_SHORTCUT "Expertul pentru creare de scurtături"
     IDS_ERROR_NOT_FOUND "Elementul „%s” nu poate fi localizat."
 END
 
@@ -87,7 +87,7 @@ BEGIN
     IDS_INSTALLING "În curs de instalare…"
     IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
     IDS_NEW_INTERNET_SHORTCUT "Creare scurtătură la Internet"
-    IDS_DWL_FAILED "Descărcarea pachetului Gecko a eșuat. Asigurați-vă că aveți conexiune la internet pentru a putea descărca. Asistentul va continua fără a instala pachetul Gecko."
+    IDS_DWL_FAILED "Descărcarea pachetului Gecko a eșuat. Asigurați-vă că aveți conexiune la internet pentru a putea descărca. Expertul va continua fără a instala pachetul Gecko."
     IDS_CANTMAKEINETSHORTCUT "Eșec în crearea scurtăturii la Internet."
     IDS_CANTMAKESHORTCUT "Eșec în crearea scurtăturii."
     IDS_NO_MEMORY "Nu a putut fi alocată memorie!"

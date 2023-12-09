@@ -17,6 +17,7 @@
 @ stdcall CtfImmSetAppCompatFlags(long)
 @ stdcall CtfImmSetCiceroStartInThread(long)
 @ stdcall CtfImmTIMActivate(ptr)
+@ stdcall GetKeyboardLayoutCP(long)
 @ stdcall ImmActivateLayout(ptr)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)
@@ -31,7 +32,6 @@
 @ stdcall ImmDestroySoftKeyboard(ptr)
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
-@ stdcall ImmDisableLegacyIME()
 @ stdcall ImmDisableTextFrameService(long)
 @ stdcall ImmEnumInputContext(long ptr long)
 @ stdcall ImmEnumRegisterWordA(long ptr str long str ptr)
@@ -105,7 +105,6 @@
 @ stdcall ImmRequestMessageW(ptr ptr ptr)
 @ stdcall ImmSendIMEMessageExA(ptr ptr)
 @ stdcall ImmSendIMEMessageExW(ptr ptr)
-@ stdcall ImmSendMessageToActiveDefImeWndW(long ptr ptr)
 @ stdcall ImmSetActiveContext(ptr ptr long)
 @ stdcall ImmSetActiveContextConsoleIME(ptr long)
 @ stdcall ImmSetCandidateWindow(ptr ptr)

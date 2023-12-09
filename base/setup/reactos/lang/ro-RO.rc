@@ -4,14 +4,14 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
@@ -21,7 +21,7 @@ END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Instalează ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
@@ -33,10 +33,10 @@ END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "Asistentul de instalare ReactOS poate actualiza una dintre instalările enumerate mai jos, sau, dacă o instalare ReactOS este deteriorată, să încerce să o repare.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "Expertul de instalare ReactOS poate actualiza una dintre instalările enumerate mai jos, sau, dacă o instalare ReactOS este deteriorată, să încerce să o repare.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "N&u actualiza", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Apăsați „Înainte” pentru a actualiza instalarea selectată, sau a continua cu o nouă instalare dacă aveți bifată opțiunea „Nu actualiza”.", IDC_STATIC, 7, 124, 222, 16
@@ -44,7 +44,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Calculator:", IDC_STATIC, 20, 15, 80, 10
@@ -58,13 +58,13 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Crează", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "Șt&erge", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "Mo&dul pilot", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "&Driver", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
     PUSHBUTTON "Opțiuni a&vansate…", IDC_PARTMOREOPTS, 230, 122, 80, 15
     // LTEXT "Apăsați pe „Înainte” pentru a verifica sumarul.", IDC_STATIC, 10, 180, 277, 20
 END
@@ -102,7 +102,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tip de instalare:", IDC_STATIC, 18, 5, 74, 11
@@ -128,7 +128,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fișiere în copiere…", IDC_ACTIVITY, 20, 50, 277, 10
@@ -138,7 +138,7 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Finalizarea instalării asistate a ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -165,7 +165,7 @@ BEGIN
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
     IDS_NO_TXTSETUP_SIF "Fișierului „txtsetup.sif” nu poate fi găsit.\nInstalarea nu poate continua."
-    IDS_CAPTION "Asistentul de instalare ReactOS"
+    IDS_CAPTION "Expertul de instalare ReactOS"
 END
 
 STRINGTABLE

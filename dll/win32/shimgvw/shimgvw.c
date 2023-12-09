@@ -35,24 +35,25 @@
 
 #include "shimgvw.h"
 
-HINSTANCE hInstance;
-SHIMGVW_SETTINGS shiSettings;
-SHIMGVW_FILENODE *currentFile;
-GpImage *image = NULL;
-WNDPROC PrevProc = NULL;
+HINSTANCE g_hInstance;
+SHIMGVW_SETTINGS g_Settings;
+SHIMGVW_FILENODE *g_pCurrentFile;
+GpImage *g_pImage = NULL;
+WNDPROC g_fnPrevProc = NULL;
 
-HWND hDispWnd, hToolBar;
+HWND g_hDispWnd = NULL;
+HWND g_hToolBar = NULL;
 
 /* zooming */
-UINT ZoomPercents = 100;
+static UINT s_nZoomPercents = 100;
 
-static const UINT ZoomSteps[] =
+static const UINT s_ZoomSteps[] =
 {
     10, 25, 50, 100, 200, 400, 800, 1600
 };
 
-#define MIN_ZOOM ZoomSteps[0]
-#define MAX_ZOOM ZoomSteps[_countof(ZoomSteps)-1]
+#define MIN_ZOOM s_ZoomSteps[0]
+#define MAX_ZOOM s_ZoomSteps[_countof(s_ZoomSteps) - 1]
 
 /* ToolBar Buttons */
 typedef struct {
@@ -68,7 +69,7 @@ typedef struct {
     { 15,             0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0 }
 
 /* ToolBar Buttons */
-static const TBBUTTON Buttons[] =
+static const TBBUTTON s_Buttons[] =
 {
     DEFINE_BTN_INFO(PREV_PIC),
     DEFINE_BTN_INFO(NEXT_PIC),
@@ -93,7 +94,7 @@ static const TBBUTTON Buttons[] =
 
 #define DEFINE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
 
-static const TB_BUTTON_CONFIG BtnConfig[] =
+static const TB_BUTTON_CONFIG s_ButtonConfig[] =
 {
     DEFINE_BTN_CONFIG(PREV_PIC),
     DEFINE_BTN_CONFIG(NEXT_PIC),
@@ -142,42 +143,42 @@ static BOOL Anime_LoadInfo(void)
     PropertyItem *pItem;
 
     Anime_FreeInfo();
-    KillTimer(hDispWnd, ANIME_TIMER_ID);
+    KillTimer(g_hDispWnd, ANIME_TIMER_ID);
 
-    if (!image)
+    if (!g_pImage)
         return FALSE;
 
-    GdipImageGetFrameDimensionsCount(image, &nDimCount);
+    GdipImageGetFrameDimensionsCount(g_pImage, &nDimCount);
     if (nDimCount)
     {
         dims = (GUID *)calloc(nDimCount, sizeof(GUID));
         if (dims)
         {
-            GdipImageGetFrameDimensionsList(image, dims, nDimCount);
-            GdipImageGetFrameCount(image, dims, &result);
+            GdipImageGetFrameDimensionsList(g_pImage, dims, nDimCount);
+            GdipImageGetFrameCount(g_pImage, dims, &result);
             m_nFrameCount = result;
             free(dims);
         }
     }
 
     result = 0;
-    GdipGetPropertyItemSize(image, PropertyTagFrameDelay, &result);
+    GdipGetPropertyItemSize(g_pImage, PropertyTagFrameDelay, &result);
     cbItem = result;
     if (cbItem)
     {
         m_pDelayItem = (PropertyItem *)malloc(cbItem);
-        GdipGetPropertyItem(image, PropertyTagFrameDelay, cbItem, m_pDelayItem);
+        GdipGetPropertyItem(g_pImage, PropertyTagFrameDelay, cbItem, m_pDelayItem);
     }
 
     result = 0;
-    GdipGetPropertyItemSize(image, PropertyTagLoopCount, &result);
+    GdipGetPropertyItemSize(g_pImage, PropertyTagLoopCount, &result);
     cbItem = result;
     if (cbItem)
     {
         pItem = (PropertyItem *)malloc(cbItem);
         if (pItem)
         {
-            if (GdipGetPropertyItem(image, PropertyTagLoopCount, cbItem, pItem) == Ok)
+            if (GdipGetPropertyItem(g_pImage, PropertyTagLoopCount, cbItem, pItem) == Ok)
             {
                 m_nLoopCount = *(WORD *)pItem->value;
             }
@@ -187,7 +188,7 @@ static BOOL Anime_LoadInfo(void)
 
     if (m_pDelayItem)
     {
-        SetTimer(hDispWnd, ANIME_TIMER_ID, 0, NULL);
+        SetTimer(g_hDispWnd, ANIME_TIMER_ID, 0, NULL);
     }
 
     return m_pDelayItem != NULL;
@@ -198,10 +199,10 @@ static void Anime_SetFrameIndex(UINT nFrameIndex)
     if (nFrameIndex < m_nFrameCount)
     {
         GUID guid = FrameDimensionTime;
-        if (Ok != GdipImageSelectActiveFrame(image, &guid, nFrameIndex))
+        if (Ok != GdipImageSelectActiveFrame(g_pImage, &guid, nFrameIndex))
         {
             guid = FrameDimensionPage;
-            GdipImageSelectActiveFrame(image, &guid, nFrameIndex);
+            GdipImageSelectActiveFrame(g_pImage, &guid, nFrameIndex);
         }
     }
     m_nFrameIndex = nFrameIndex;
@@ -242,15 +243,15 @@ BOOL Anime_Step(DWORD *pdwDelay)
     return FALSE;
 }
 
-static void UpdateZoom(UINT NewZoom)
+static void UpdateZoom(UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
     BOOL bEnableZoomIn, bEnableZoomOut;
 
     /* If zoom has not been changed, ignore it */
-    if (ZoomPercents == NewZoom)
+    if (s_nZoomPercents == NewZoom)
         return;
 
-    ZoomPercents = NewZoom;
+    s_nZoomPercents = NewZoom;
 
     /* Check if a zoom button of the toolbar must be grayed */
     bEnableZoomIn = bEnableZoomOut = TRUE;
@@ -265,50 +266,54 @@ static void UpdateZoom(UINT NewZoom)
     }
 
     /* Update the state of the zoom buttons */
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
 
     /* Redraw the display window */
-    InvalidateRect(hDispWnd, NULL, FALSE);
+    InvalidateRect(g_hDispWnd, NULL, FALSE);
+
+    /* Update toolbar buttons */
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
 }
 
 static void ZoomInOrOut(BOOL bZoomIn)
 {
     UINT i, NewZoom;
 
-    if (image == NULL)
+    if (g_pImage == NULL)
         return;
 
     if (bZoomIn)    /* zoom in */
     {
         /* find next step */
-        for (i = 0; i < _countof(ZoomSteps); ++i)
+        for (i = 0; i < _countof(s_ZoomSteps); ++i)
         {
-            if (ZoomPercents < ZoomSteps[i])
+            if (s_nZoomPercents < s_ZoomSteps[i])
                 break;
         }
-        if (i == _countof(ZoomSteps))
+        if (i == _countof(s_ZoomSteps))
             NewZoom = MAX_ZOOM;
         else
-            NewZoom = ZoomSteps[i];
+            NewZoom = s_ZoomSteps[i];
     }
     else            /* zoom out */
     {
         /* find previous step */
-        for (i = _countof(ZoomSteps); i > 0; )
+        for (i = _countof(s_ZoomSteps); i > 0; )
         {
             --i;
-            if (ZoomSteps[i] < ZoomPercents)
+            if (s_ZoomSteps[i] < s_nZoomPercents)
                 break;
         }
         if (i < 0)
             NewZoom = MIN_ZOOM;
         else
-            NewZoom = ZoomSteps[i];
+            NewZoom = s_ZoomSteps[i];
     }
 
     /* Update toolbar and refresh screen */
-    UpdateZoom(NewZoom);
+    UpdateZoom(NewZoom, TRUE, TRUE);
 }
 
 static void ResetZoom(void)
@@ -316,13 +321,13 @@ static void ResetZoom(void)
     RECT Rect;
     UINT ImageWidth, ImageHeight, NewZoom;
 
-    if (image == NULL)
+    if (g_pImage == NULL)
         return;
 
     /* get disp window size and image size */
-    GetClientRect(hDispWnd, &Rect);
-    GdipGetImageWidth(image, &ImageWidth);
-    GdipGetImageHeight(image, &ImageHeight);
+    GetClientRect(g_hDispWnd, &Rect);
+    GdipGetImageWidth(g_pImage, &ImageWidth);
+    GdipGetImageHeight(g_pImage, &ImageHeight);
 
     /* compare two aspect rates. same as
        (ImageHeight / ImageWidth < Rect.bottom / Rect.right) in real */
@@ -353,7 +358,7 @@ static void ResetZoom(void)
         }
     }
 
-    UpdateZoom(NewZoom);
+    UpdateZoom(NewZoom, FALSE, TRUE);
 }
 
 static void pLoadImage(LPCWSTR szOpenFileName)
@@ -366,8 +371,8 @@ static void pLoadImage(LPCWSTR szOpenFileName)
     }
 
     /* load now */
-    GdipLoadImageFromFile(szOpenFileName, &image);
-    if (!image)
+    GdipLoadImageFromFile(szOpenFileName, &g_pImage);
+    if (!g_pImage)
     {
         DPRINT1("GdipLoadImageFromFile() failed\n");
         return;
@@ -394,7 +399,7 @@ static void pSaveImageAs(HWND hwnd)
     UINT j;
     WCHAR *c;
 
-    if (image == NULL)
+    if (g_pImage == NULL)
         return;
 
     GdipGetImageEncodersSize(&num, &size);
@@ -406,7 +411,7 @@ static void pSaveImageAs(HWND hwnd)
     }
 
     GdipGetImageEncoders(num, size, codecInfo);
-    GdipGetImageRawFormat(image, &rawFormat);
+    GdipGetImageRawFormat(g_pImage, &rawFormat);
 
     sizeRemain = 0;
 
@@ -432,7 +437,7 @@ static void pSaveImageAs(HWND hwnd)
     ZeroMemory(&sfn, sizeof(sfn));
     sfn.lStructSize = sizeof(sfn);
     sfn.hwndOwner   = hwnd;
-    sfn.hInstance   = hInstance;
+    sfn.hInstance   = g_hInstance;
     sfn.lpstrFile   = szSaveFileName;
     sfn.lpstrFilter = szFilterMask;
     sfn.nMaxFile    = _countof(szSaveFileName);
@@ -466,20 +471,20 @@ static void pSaveImageAs(HWND hwnd)
         if (m_pDelayItem)
         {
             /* save animation */
-            KillTimer(hDispWnd, ANIME_TIMER_ID);
+            KillTimer(g_hDispWnd, ANIME_TIMER_ID);
 
             DPRINT1("FIXME: save animation\n");
-            if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+            if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
             {
                 DPRINT1("GdipSaveImageToFile() failed\n");
             }
 
-            SetTimer(hDispWnd, ANIME_TIMER_ID, 0, NULL);
+            SetTimer(g_hDispWnd, ANIME_TIMER_ID, 0, NULL);
         }
         else
         {
             /* save non-animation */
-            if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+            if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
             {
                 DPRINT1("GdipSaveImageToFile() failed\n");
             }
@@ -499,8 +504,8 @@ pPrintImage(HWND hwnd)
 static VOID
 EnableToolBarButtons(BOOL bEnable)
 {
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
 }
 
 static VOID
@@ -510,10 +515,10 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
     WCHAR szResStr[512];
     LPWSTR pchFileTitle;
 
-    if (image)
+    if (g_pImage)
     {
-        GdipDisposeImage(image);
-        image = NULL;
+        GdipDisposeImage(g_pImage);
+        g_pImage = NULL;
     }
 
     if (node == NULL)
@@ -524,7 +529,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 
     pLoadImage(node->FileName);
 
-    LoadStringW(hInstance, IDS_APPTITLE, szResStr, _countof(szResStr));
+    LoadStringW(g_hInstance, IDS_APPTITLE, szResStr, _countof(szResStr));
 
     pchFileTitle = PathFindFileNameW(node->FileName);
     if (pchFileTitle && *pchFileTitle) 
@@ -538,7 +543,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
         SetWindowTextW(hwnd, szResStr);
     }
 
-    EnableToolBarButtons(image != NULL);
+    EnableToolBarButtons(g_pImage != NULL);
 
     /* Redraw the display window */
     InvalidateRect(hwnd, NULL, FALSE);
@@ -735,11 +740,11 @@ ImageView_DrawImage(HWND hwnd)
     GetClientRect(hwnd, &rect);
     white = GetStockObject(WHITE_BRUSH);
 
-    if (image == NULL)
+    if (g_pImage == NULL)
     {
         FillRect(hdc, &rect, white);
 
-        LoadStringW(hInstance, IDS_NOPREVIEW, szText, _countof(szText));
+        LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
         SetTextColor(hdc, RGB(0, 0, 0));
         SetBkMode(hdc, TRANSPARENT);
@@ -751,11 +756,11 @@ ImageView_DrawImage(HWND hwnd)
     }
     else
     {
-        GdipGetImageWidth(image, &ImageWidth);
-        GdipGetImageHeight(image, &ImageHeight);
+        GdipGetImageWidth(g_pImage, &ImageWidth);
+        GdipGetImageHeight(g_pImage, &ImageHeight);
 
-        ZoomedWidth = (ImageWidth * ZoomPercents) / 100;
-        ZoomedHeight = (ImageHeight * ZoomPercents) / 100;
+        ZoomedWidth = (ImageWidth * s_nZoomPercents) / 100;
+        ZoomedHeight = (ImageHeight * s_nZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
@@ -780,10 +785,10 @@ ImageView_DrawImage(HWND hwnd)
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
-        DPRINT("ZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
-               ZoomPercents, ZoomedWidth, ZoomedWidth);
+        DPRINT("s_nZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
+               s_nZoomPercents, ZoomedWidth, ZoomedWidth);
 
-        if (ZoomPercents % 100 == 0)
+        if (s_nZoomPercents % 100 == 0)
         {
             GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
             GdipSetSmoothingMode(graphics, SmoothingModeNone);
@@ -795,7 +800,7 @@ ImageView_DrawImage(HWND hwnd)
         }
 
         uFlags = 0;
-        GdipGetImageFlags(image, &uFlags);
+        GdipGetImageFlags(g_pImage, &uFlags);
 
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
@@ -812,7 +817,7 @@ ImageView_DrawImage(HWND hwnd)
             SelectObject(hdc, hbrOld);
         }
 
-        GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
+        GdipDrawImageRectI(graphics, g_pImage, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
     EndPaint(hwnd, &ps);
@@ -825,12 +830,18 @@ ImageView_LoadSettings(VOID)
     DWORD dwSize;
     LONG nError;
 
+    g_Settings.Maximized = FALSE;
+    g_Settings.X         = CW_USEDEFAULT;
+    g_Settings.Y         = CW_USEDEFAULT;
+    g_Settings.Width     = 520;
+    g_Settings.Height    = 400;
+
     nError = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\shimgvw", 0, KEY_READ, &hKey);
     if (nError)
         return FALSE;
 
-    dwSize = sizeof(shiSettings);
-    nError = RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&shiSettings, &dwSize);
+    dwSize = sizeof(g_Settings);
+    nError = RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&g_Settings, &dwSize);
     RegCloseKey(hKey);
 
     return !nError;
@@ -841,21 +852,22 @@ ImageView_SaveSettings(HWND hwnd)
 {
     WINDOWPLACEMENT wp;
     HKEY hKey;
+    RECT *prc;
 
-    ShowWindow(hwnd, SW_HIDE);
     wp.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(hwnd, &wp);
 
-    shiSettings.Left = wp.rcNormalPosition.left;
-    shiSettings.Top  = wp.rcNormalPosition.top;
-    shiSettings.Right  = wp.rcNormalPosition.right;
-    shiSettings.Bottom = wp.rcNormalPosition.bottom;
-    shiSettings.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
+    prc = &wp.rcNormalPosition;
+    g_Settings.X = prc->left;
+    g_Settings.Y = prc->top;
+    g_Settings.Width = prc->right - prc->left;
+    g_Settings.Height = prc->bottom - prc->top;
+    g_Settings.Maximized = IsZoomed(hwnd);
 
     if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\ReactOS\\shimgvw"), 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueEx(hKey, _T("Settings"), 0, REG_BINARY, (LPBYTE)&shiSettings, sizeof(SHIMGVW_SETTINGS));
+        RegSetValueEx(hKey, _T("Settings"), 0, REG_BINARY, (LPBYTE)&g_Settings, sizeof(SHIMGVW_SETTINGS));
         RegCloseKey(hKey);
     }
 }
@@ -863,33 +875,33 @@ ImageView_SaveSettings(HWND hwnd)
 static BOOL
 ImageView_CreateToolBar(HWND hwnd)
 {
-    hToolBar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
-                              WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS,
-                              0, 0, 0, 0, hwnd,
-                              0, hInstance, NULL);
-    if (hToolBar != NULL)
+    g_hToolBar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
+                                WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS,
+                                0, 0, 0, 0, hwnd,
+                                0, g_hInstance, NULL);
+    if (g_hToolBar != NULL)
     {
         HIMAGELIST hImageList;
 
-        SendMessageW(hToolBar, TB_SETEXTENDEDSTYLE,
+        SendMessageW(g_hToolBar, TB_SETEXTENDEDSTYLE,
                      0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
 
-        SendMessageW(hToolBar, TB_BUTTONSTRUCTSIZE,
-                     sizeof(Buttons[0]), 0);
+        SendMessageW(g_hToolBar, TB_BUTTONSTRUCTSIZE,
+                     sizeof(s_Buttons[0]), 0);
 
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
         if (hImageList == NULL) return FALSE;
 
-        for (UINT n = 0; n < _countof(BtnConfig); n++)
+        for (UINT n = 0; n < _countof(s_ButtonConfig); n++)
         {
-            ImageList_AddMasked(hImageList, LoadImageW(hInstance, MAKEINTRESOURCEW(BtnConfig[n].idb), IMAGE_BITMAP,
+            ImageList_AddMasked(hImageList, LoadImageW(g_hInstance, MAKEINTRESOURCEW(s_ButtonConfig[n].idb), IMAGE_BITMAP,
                                 TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
         }
 
-        ImageList_Destroy((HIMAGELIST)SendMessageW(hToolBar, TB_SETIMAGELIST,
+        ImageList_Destroy((HIMAGELIST)SendMessageW(g_hToolBar, TB_SETIMAGELIST,
                                                    0, (LPARAM)hImageList));
 
-        SendMessageW(hToolBar, TB_ADDBUTTONS, _countof(Buttons), (LPARAM)Buttons);
+        SendMessageW(g_hToolBar, TB_ADDBUTTONS, _countof(s_Buttons), (LPARAM)s_Buttons);
 
         return TRUE;
     }
@@ -930,24 +942,18 @@ ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
         }
     }
-    return CallWindowProcW(PrevProc, hwnd, Message, wParam, lParam);
+    return CallWindowProcW(g_fnPrevProc, hwnd, Message, wParam, lParam);
 }
 
 static VOID
 ImageView_InitControls(HWND hwnd)
 {
-    MoveWindow(hwnd, shiSettings.Left, shiSettings.Top,
-               shiSettings.Right - shiSettings.Left,
-               shiSettings.Bottom - shiSettings.Top, TRUE);
+    g_hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
+                                 WS_CHILD | WS_VISIBLE,
+                                 0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
 
-    if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
-
-    hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
-                               WS_CHILD | WS_VISIBLE,
-                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
-
-    SetClassLongPtr(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    PrevProc = (WNDPROC) SetWindowLongPtr(hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
+    SetClassLongPtr(g_hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
+    g_fnPrevProc = (WNDPROC) SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
 }
@@ -957,7 +963,8 @@ ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
 {
     if (zDelta != 0)
     {
-        ZoomInOrOut(zDelta > 0);
+        if (GetKeyState(VK_CONTROL) < 0)
+            ZoomInOrOut(zDelta > 0);
     }
 }
 
@@ -966,11 +973,11 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 {
     RECT rc;
 
-    SendMessageW(hToolBar, TB_AUTOSIZE, 0, 0);
+    SendMessageW(g_hToolBar, TB_AUTOSIZE, 0, 0);
 
-    GetWindowRect(hToolBar, &rc);
+    GetWindowRect(g_hToolBar, &rc);
 
-    MoveWindow(hDispWnd, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
+    MoveWindow(g_hDispWnd, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
 
     /* is it maximized or restored? */
     if (state == SIZE_MAXIMIZED || state == SIZE_RESTORED)
@@ -983,14 +990,41 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 static LRESULT
 ImageView_Delete(HWND hwnd)
 {
-    DPRINT1("ImageView_Delete: unimplemented.\n");
-    return 0;
+    WCHAR szCurFile[MAX_PATH + 1], szNextFile[MAX_PATH];
+    SHFILEOPSTRUCT FileOp = { hwnd, FO_DELETE };
+
+    if (g_pImage)
+    {
+        GdipDisposeImage(g_pImage);
+        g_pImage = NULL;
+    }
+
+    /* FileOp.pFrom must be double-null-terminated */
+    GetFullPathNameW(g_pCurrentFile->FileName, _countof(szCurFile) - 1, szCurFile, NULL);
+    szCurFile[_countof(szCurFile) - 2] = UNICODE_NULL; /* Avoid buffer overrun */
+    szCurFile[lstrlenW(szCurFile) + 1] = UNICODE_NULL;
+
+    GetFullPathNameW(g_pCurrentFile->Next->FileName, _countof(szNextFile), szNextFile, NULL);
+    szNextFile[_countof(szNextFile) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+
+    FileOp.pFrom = szCurFile;
+    FileOp.fFlags = FOF_ALLOWUNDO;
+    if (SHFileOperation(&FileOp) != 0)
+        return 0;
+
+    pFreeFileList(g_pCurrentFile);
+    g_pCurrentFile = NULL;
+
+    g_pCurrentFile = pBuildFileList(szNextFile);
+    pLoadImageFromNode(g_pCurrentFile, hwnd);
+
+    return 1;
 }
 
 static LRESULT
 ImageView_Modify(HWND hwnd)
 {
-    int nChars = GetFullPathNameW(currentFile->FileName, 0, NULL, NULL);
+    int nChars = GetFullPathNameW(g_pCurrentFile->FileName, 0, NULL, NULL);
     LPWSTR pszPathName;
     SHELLEXECUTEINFOW sei;
 
@@ -1007,7 +1041,7 @@ ImageView_Modify(HWND hwnd)
         return 1;
     }
 
-    GetFullPathNameW(currentFile->FileName, nChars, pszPathName, NULL);
+    GetFullPathNameW(g_pCurrentFile->FileName, nChars, pszPathName, NULL);
 
     sei.cbSize = sizeof(sei);
     sei.fMask = 0;
@@ -1045,21 +1079,21 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_PREV_PIC:
-                    currentFile = currentFile->Prev;
-                    pLoadImageFromNode(currentFile, hwnd);
+                    g_pCurrentFile = g_pCurrentFile->Prev;
+                    pLoadImageFromNode(g_pCurrentFile, hwnd);
                     break;
 
                 case IDC_NEXT_PIC:
-                    currentFile = currentFile->Next;
-                    pLoadImageFromNode(currentFile, hwnd);
+                    g_pCurrentFile = g_pCurrentFile->Next;
+                    pLoadImageFromNode(g_pCurrentFile, hwnd);
                     break;
 
                 case IDC_BEST_FIT:
-                    DPRINT1("IDC_BEST_FIT unimplemented\n");
+                    ResetZoom();
                     break;
 
                 case IDC_REAL_SIZE:
-                    UpdateZoom(100);
+                    UpdateZoom(100, TRUE, FALSE);
                     return 0;
 
                 case IDC_SLIDE_SHOW:
@@ -1083,17 +1117,17 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_ROT_CLOCKW:
-                    if (image)
+                    if (g_pImage)
                     {
-                        GdipImageRotateFlip(image, Rotate270FlipNone);
+                        GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
 
                 case IDC_ROT_COUNCW:
-                    if (image)
+                    if (g_pImage)
                     {
-                        GdipImageRotateFlip(image, Rotate90FlipNone);
+                        GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
@@ -1124,23 +1158,20 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     LPTOOLTIPTEXTW lpttt;
 
                     lpttt = (LPTOOLTIPTEXTW)lParam;
-                    lpttt->hinst = hInstance;
+                    lpttt->hinst = g_hInstance;
 
-                    lpttt->lpszText = MAKEINTRESOURCEW(BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
+                    lpttt->lpszText = MAKEINTRESOURCEW(s_ButtonConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
                     return 0;
                 }
             }
             break;
         }
-        case WM_SIZING:
+        case WM_GETMINMAXINFO:
         {
-            LPRECT pRect = (LPRECT)lParam;
-            if (pRect->right-pRect->left < 350)
-                pRect->right = pRect->left + 350;
-
-            if (pRect->bottom-pRect->top < 290)
-                pRect->bottom = pRect->top + 290;
-            return TRUE;
+            MINMAXINFO *pMMI = (MINMAXINFO*)lParam;
+            pMMI->ptMinTrackSize.x = 350;
+            pMMI->ptMinTrackSize.y = 290;
+            return 0;
         }
         case WM_SIZE:
         {
@@ -1150,7 +1181,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             ImageView_SaveSettings(hwnd);
-            SetWindowLongPtr(hDispWnd, GWLP_WNDPROC, (LPARAM) PrevProc);
+            SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM)g_fnPrevProc);
             PostQuitMessage(0);
             break;
         }
@@ -1181,14 +1212,7 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
         DPRINT1("Warning, CoInitializeEx failed with code=%08X\n", (int)hComRes);
     }
 
-    if (!ImageView_LoadSettings())
-    {
-        shiSettings.Maximized = FALSE;
-        shiSettings.Left      = 0;
-        shiSettings.Top       = 0;
-        shiSettings.Right     = 520;
-        shiSettings.Bottom    = 400;
-    }
+    ImageView_LoadSettings();
 
     // Initialize GDI+
     gdiplusStartupInput.GdiplusVersion              = 1;
@@ -1200,34 +1224,37 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     pLoadImage(szFileName);
 
     // Create the window
-    WndClass.lpszClassName  = L"shimgvw_window";
+    WndClass.lpszClassName  = WC_SHIMGVW;
     WndClass.lpfnWndProc    = ImageView_WndProc;
-    WndClass.hInstance      = hInstance;
+    WndClass.hInstance      = g_hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
-    WndClass.hIcon          = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
-    WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    WndClass.hIcon          = LoadIconW(g_hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
+    WndClass.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
 
     if (!RegisterClassW(&WndClass)) return -1;
 
-    LoadStringW(hInstance, IDS_APPTITLE, szBuf, _countof(szBuf));
-    hMainWnd = CreateWindowExW(0, L"shimgvw_window", szBuf,
-                               WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
-                               CW_USEDEFAULT, CW_USEDEFAULT,
-                               0, 0, NULL, NULL, hInstance, NULL);
+    LoadStringW(g_hInstance, IDS_APPTITLE, szBuf, _countof(szBuf));
+    hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE, WC_SHIMGVW, szBuf,
+                               WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS,
+                               g_Settings.X, g_Settings.Y,
+                               g_Settings.Width, g_Settings.Height,
+                               NULL, NULL, g_hInstance, NULL);
+    if (g_Settings.Maximized)
+        ShowWindow(hMainWnd, SW_MAXIMIZE);
 
     // make sure the path has no quotes on it
     StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
     PathUnquoteSpacesW(szInitialFile);
 
-    currentFile = pBuildFileList(szInitialFile);
-    if (currentFile)
+    g_pCurrentFile = pBuildFileList(szInitialFile);
+    if (g_pCurrentFile)
     {
-        pLoadImageFromNode(currentFile, hMainWnd);
+        pLoadImageFromNode(g_pCurrentFile, hMainWnd);
     }
 
     /* Create accelerator table for keystrokes */
-    hKbdAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(IDR_ACCELERATOR));
+    hKbdAccel = LoadAcceleratorsW(g_hInstance, MAKEINTRESOURCEW(IDR_ACCELERATOR));
 
     // Show it
     ShowWindow(hMainWnd, SW_SHOW);
@@ -1249,12 +1276,12 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     /* Destroy accelerator table */
     DestroyAcceleratorTable(hKbdAccel);
 
-    pFreeFileList(currentFile);
+    pFreeFileList(g_pCurrentFile);
 
-    if (image)
+    if (g_pImage)
     {
-        GdipDisposeImage(image);
-        image = NULL;
+        GdipDisposeImage(g_pImage);
+        g_pImage = NULL;
     }
 
     Anime_FreeInfo();
@@ -1318,7 +1345,7 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
-            hInstance = hinstDLL;
+            g_hInstance = hinstDLL;
             break;
     }
 

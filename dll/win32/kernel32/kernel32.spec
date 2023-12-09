@@ -24,7 +24,7 @@
 @ stdcall BackupRead(ptr ptr long ptr long long ptr)
 @ stdcall BackupSeek(ptr long long ptr ptr ptr)
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
-@ stdcall BaseCheckAppcompatCache(long long long ptr)
+@ stdcall BaseCheckAppcompatCache(wstr ptr wstr ptr)
 @ stdcall BaseCheckRunApp(long ptr long long long long long long long long)
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()

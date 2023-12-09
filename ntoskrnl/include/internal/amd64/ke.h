@@ -385,8 +385,6 @@ Ki386PerfEnd(VOID)
 
 struct _KPCR;
 
-//VOID KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
-
 DECLSPEC_NORETURN VOID KiSwitchToBootStack(IN ULONG_PTR InitialStack);
 VOID KiDivideErrorFault(VOID);
 VOID KiDebugTrapOrFault(VOID);
@@ -475,13 +473,6 @@ KiSetTrapContext(
     _Out_ PKTRAP_FRAME TrapFrame,
     _In_ PCONTEXT Context,
     _In_ KPROCESSOR_MODE RequestorMode);
-
-VOID
-NTAPI
-KiInitializePcr(IN PKIPCR Pcr,
-                IN ULONG ProcessorNumber,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack);
 
 #ifdef __cplusplus
 } // extern "C"

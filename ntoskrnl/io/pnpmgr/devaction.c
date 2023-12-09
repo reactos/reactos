@@ -1331,8 +1331,8 @@ PiInitializeDevNode(
     if (!IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
     {
         /* Report the device to the user-mode pnp manager */
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
-                                  &DeviceNode->InstancePath);
+        IopQueueDeviceInstallEvent(&GUID_DEVICE_ENUMERATED,
+                                   &DeviceNode->InstancePath);
     }
 
     return STATUS_SUCCESS;
@@ -2580,6 +2580,10 @@ PipDeviceActionWorker(
             case PiActionResetDevice:
                 // TODO: the operation is a no-op for everything except removed nodes
                 // for removed nodes, it returns them back to DeviceNodeUninitialized
+                if (deviceNode->State == DeviceNodeRemoved)
+                {
+                    deviceNode->State = DeviceNodeUninitialized;
+                }
                 status = STATUS_SUCCESS;
                 break;
 

@@ -1,11 +1,17 @@
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+/*
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2016 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2023 Stanislav Motylkov <binarymaster@mail.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Power Meter"
+CAPTION "Индикатор батарей"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Статус электропитания", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
@@ -21,7 +27,7 @@ BEGIN
     IDS_PWR_METER             "&Открыть показатели питания"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%u%% осталось"
-    IDS_PWR_CHARGING          "%u%% and charging"
+    IDS_PWR_CHARGING          "%u%% и заряжается"
     IDS_PWR_UNKNOWN_REMAINING "Неизвестно"
     IDS_PWR_AC "От сети переменного тока"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! часов (%3!u!%%) осталось"

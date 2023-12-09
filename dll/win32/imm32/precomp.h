@@ -58,7 +58,6 @@
 #define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
 
 #define REGKEY_KEYBOARD_LAYOUTS     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
-#define REGKEY_IMM                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
@@ -201,3 +200,21 @@ HRESULT CtfImmCoInitialize(VOID);
 HRESULT CtfImeCreateThreadMgr(VOID);
 HRESULT CtfImeDestroyThreadMgr(VOID);
 HRESULT Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate);
+
+HRESULT
+CtfImeSetActiveContextAlways(
+    _In_ HIMC hIMC,
+    _In_ BOOL fActive,
+    _In_ HWND hWnd,
+    _In_ HKL hKL);
+
+BOOL
+CtfImeProcessCicHotkey(
+    _In_ HIMC hIMC,
+    _In_ UINT vKey,
+    _In_ LPARAM lParam);
+
+LRESULT
+CtfImmSetLangBand(
+    _In_ HWND hWnd,
+    _In_ BOOL fSet);
