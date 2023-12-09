@@ -197,7 +197,7 @@ typedef [uuid(12a1d29f-a065-440c-9746-eb2002c8bd19)] struct TF_LANGBARITEMINFO
 [
   object,
   uuid(ba468c55-9956-4fb1-a59d-52a7dd7cc6aa),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemMgr : IUnknown
 {
@@ -256,7 +256,7 @@ interface ITfLangBarItemMgr : IUnknown
 [
   object,
   uuid(583f34d0-de25-11d2-afdd-00105a2799b5),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface IEnumTfLangBarItems : IUnknown
 {
@@ -277,7 +277,7 @@ interface IEnumTfLangBarItems : IUnknown
 [
   object,
   uuid(73540d69-edeb-4ee9-96c9-23aa30b25916),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItem : IUnknown
 {
@@ -297,7 +297,7 @@ interface ITfLangBarItem : IUnknown
 [
   object,
   uuid(57dbe1a0-de25-11d2-afdd-00105a2799b5),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemSink : IUnknown
 {
@@ -308,7 +308,7 @@ interface ITfLangBarItemSink : IUnknown
 [
   object,
   uuid(01c2d285-d3c7-4b7b-b5b5-d97411d0c283),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemBalloon : IUnknown
 {
@@ -340,7 +340,7 @@ interface ITfLangBarItemBalloon : IUnknown
 [
   object,
   uuid(73830352-d722-4179-ada5-f045c98df355),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemBitmap : IUnknown
 {
@@ -362,7 +362,7 @@ interface ITfLangBarItemBitmap : IUnknown
 [
   object,
   uuid(a26a0525-3fae-4fa0-89ee-88a964f9f1b5),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemBitmapButton : IUnknown
 {
@@ -390,7 +390,7 @@ interface ITfLangBarItemBitmapButton : IUnknown
 [
   object,
   uuid(28c7f1d0-de25-11d2-afdd-00105a2799b5),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfLangBarItemButton : IUnknown
 {
@@ -411,7 +411,7 @@ interface ITfLangBarItemButton : IUnknown
 [
   object,
   uuid(6f8a98e4-aaa0-4f15-8c5b-07e0df0a3dd8),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfMenu : IUnknown
 {
@@ -434,7 +434,7 @@ interface ITfMenu : IUnknown
 [
   object,
   uuid(45672eb9-9059-46a2-838d-4530355f6a77),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfSystemDeviceTypeLangBarItem : IUnknown
 {
@@ -447,7 +447,7 @@ interface ITfSystemDeviceTypeLangBarItem : IUnknown
 [
   object,
   uuid(1e13e9ec-6b33-4d4a-b5eb-8a92f029f356),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfSystemLangBarItem : IUnknown
 {
@@ -461,7 +461,7 @@ interface ITfSystemLangBarItem : IUnknown
 [
   object,
   uuid(1449d9ab-13cf-4687-aa3e-8d8b18574396),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfSystemLangBarItemSink : IUnknown
 {
@@ -474,7 +474,7 @@ interface ITfSystemLangBarItemSink : IUnknown
 [
   object,
   uuid(5c4ce0e5-ba49-4b52-ac6b-3b397b4f701f),
-  pointer_default(unique),
+  pointer_default(unique)
 ]
 interface ITfSystemLangBarItemText : IUnknown
 {
