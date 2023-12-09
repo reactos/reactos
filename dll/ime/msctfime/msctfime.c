@@ -9,7 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
-HINSTANCE g_hInst = NULL;
+HINSTANCE g_hInst = NULL; /* The instance of this module */
 
 BOOL WINAPI
 ImeInquire(
@@ -29,7 +29,7 @@ ImeConversionList(
     DWORD dwBufLen,
     UINT uFlag)
 {
-    FIXME("stub:(%p, %p, %p, 0x%lX, %u)\n", hIMC, lpSrc, lpDst, dwBufLen, uFlag);
+    FIXME("stub:(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
     return 0;
 }
 
@@ -39,7 +39,7 @@ ImeRegisterWord(
     DWORD dwStyle,
     LPCWSTR lpszString)
 {
-    FIXME("stub:(%p, 0x%lX, %p)\n", lpszReading, dwStyle, lpszString);
+    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
@@ -49,7 +49,7 @@ ImeUnregisterWord(
     DWORD dwStyle,
     LPCWSTR lpszString)
 {
-    FIXME("stub:(%p, 0x%lX, %p)\n", lpszReading, dwStyle, lpszString);
+    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
@@ -62,7 +62,6 @@ ImeGetRegisterWordStyle(
     return 0;
 }
 
-//
 UINT WINAPI
 ImeEnumRegisterWord(
     REGISTERWORDENUMPROCW lpfnEnumProc,
@@ -71,7 +70,8 @@ ImeEnumRegisterWord(
     LPCWSTR lpszString,
     LPVOID lpData)
 {
-    FIXME("stub:(%p, %p, %lu, %p, %p)\n", lpfnEnumProc, lpszReading, dwStyle, lpszString, lpData);
+    FIXME("stub:(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
+          dwStyle, debugstr_w(lpszString), lpData);
     return 0;
 }
 
@@ -142,7 +142,8 @@ ImeToAsciiEx(
     UINT fuState,
     HIMC hIMC)
 {
-    FIXME("stub:(%u, %u, %p, %p, %u, %p)\n", uVirKey, uScanCode, lpbKeyState, lpTransMsgList, fuState, hIMC);
+    FIXME("stub:(%u, %u, %p, %p, %u, %p)\n", uVirKey, uScanCode, lpbKeyState, lpTransMsgList,
+          fuState, hIMC);
     return 0;
 }
 
@@ -166,7 +167,8 @@ ImeSetCompositionString(
     LPCVOID lpRead,
     DWORD dwReadLen)
 {
-    FIXME("stub:(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
+    FIXME("stub:(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
+          lpRead, dwReadLen);
     return FALSE;
 }
 
@@ -179,7 +181,8 @@ ImeGetImeMenuItems(
     LPIMEMENUITEMINFOW lpImeMenu,
     DWORD dwSize)
 {
-    FIXME("stub:(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n", hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
+    FIXME("stub:(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n", hIMC, dwFlags, dwType, lpImeParentMenu,
+          lpImeMenu, dwSize);
     return 0;
 }
 
@@ -290,7 +293,6 @@ CtfImeIsIME(HKL hKL)
 
 HRESULT WINAPI CtfImeThreadDetach(VOID)
 {
-    FIXME("stub:()\n");
     ImeDestroy(0);
     return S_OK;
 }
