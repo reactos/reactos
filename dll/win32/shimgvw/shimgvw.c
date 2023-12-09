@@ -1002,7 +1002,6 @@ ImageView_Delete(HWND hwnd)
 
     /* Reload the file list and go next file */
     pFreeFileList(g_pCurrentFile);
-    g_pCurrentFile = NULL;
     g_pCurrentFile = pBuildFileList(szNextFile);
     pLoadImageFromNode(g_pCurrentFile, hwnd);
 }
