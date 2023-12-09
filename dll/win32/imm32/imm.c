@@ -67,49 +67,45 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData, dwType;
-    HKEY hLayoutKey;
-    LONG error;
+    HKEY hKey;
+    LSTATUS error;
     WCHAR szLayout[MAX_PATH];
+    LPCWSTR pszSubKey;
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
-    ZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
-
-    if (IS_IME_HKL(hKL) || !IS_CICERO_MODE() || IS_16BIT_MODE())
+    /* Choose a key */
+    if (IS_IME_HKL(hKL) || !IS_CICERO_MODE() || IS_16BIT_MODE()) /* Non-Cicero? */
     {
         StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
                          REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
-
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
-        if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+        pszSubKey = szLayout;
     }
-    else
+    else /* Cicero */
     {
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
-        if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+        pszSubKey = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM";
     }
 
-    cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, &dwType,
-                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
-
-    RegCloseKey(hLayoutKey);
-
-    pImeInfoEx->fLoadFlag = 0;
-
+    /* Open the key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszSubKey, 0, KEY_READ, &hKey);
     if (IS_ERROR_UNEXPECTEDLY(error))
         return FALSE;
 
-    if (dwType != REG_SZ)
-    {
-        ERR("\n");
-        return FALSE;
-    }
+    /* Load "IME File" value */
+    cbData = sizeof(pImeInfoEx->wszImeFile);
+    error = RegQueryValueExW(hKey, L"IME File", NULL, &dwType,
+                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
+
+    /* Avoid buffer overrun */
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
+
+    RegCloseKey(hKey);
+
+    if (error != ERROR_SUCCESS || dwType != REG_SZ)
+        return FALSE; /* Failed */
 
     pImeInfoEx->hkl = hKL;
+    pImeInfoEx->fLoadFlag = 0;
     return Imm32LoadImeVerInfo(pImeInfoEx);
 }
 
