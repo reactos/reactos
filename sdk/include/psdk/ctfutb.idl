@@ -150,7 +150,7 @@ interface ITfLangBarMgr: IUnknown
 
     HRESULT GetShowFloatingStatus(
         [out] DWORD *pdwFlags);
-};
+}
 
 [
   object,
@@ -251,7 +251,7 @@ interface ITfLangBarItemMgr : IUnknown
     HRESULT UnadviseItemsSink(
         [in] ULONG ulCount,
         [in, size_is(ulCount)] DWORD *pdwCookie);
-};
+}
 
 [
   object,
@@ -335,7 +335,7 @@ interface ITfLangBarItemBalloon : IUnknown
 
     HRESULT GetBalloonInfo(
         [out] TF_LBBALLOONINFO *pInfo);
-};
+}
 
 [
   object,
@@ -357,7 +357,7 @@ interface ITfLangBarItemBitmap : IUnknown
         [in]  DWORD   dwFlags,
         [out] HBITMAP *phbmp,
         [out] HBITMAP *phbmpMask);
-};
+}
 
 [
   object,
@@ -385,7 +385,7 @@ interface ITfLangBarItemBitmapButton : IUnknown
         [out] HBITMAP *phbmpMask);
     HRESULT GetText(
         [out] BSTR *pbstrText);
-};
+}
 
 [
   object,
@@ -406,7 +406,7 @@ interface ITfLangBarItemButton : IUnknown
         [out] HICON *phIcon);
     HRESULT GetText(
         [out] BSTR *pbstrText);
-};
+}
 
 [
   object,
@@ -429,7 +429,7 @@ interface ITfMenu : IUnknown
         [in] const WCHAR *pch,
         [in] ULONG       cch,
              ITfMenu     **ppMenu);
-};
+}
 
 [
   object,
@@ -442,7 +442,7 @@ interface ITfSystemDeviceTypeLangBarItem : IUnknown
         [in] DWORD dwFlags);
     HRESULT GetIconMode(
         [out] DWORD *pdwFlags);
-};
+}
 
 [
   object,
@@ -456,7 +456,7 @@ interface ITfSystemLangBarItem : IUnknown
     HRESULT SetTooltipString(
         [in] WCHAR *pchToolTip,
         [in] ULONG cch);
-};
+}
 
 [
   object,
@@ -469,7 +469,7 @@ interface ITfSystemLangBarItemSink : IUnknown
         [in] ITfMenu *pMenu);
     HRESULT OnMenuSelect(
         [in] UINT wID);
-};
+}
 
 [
   object,
@@ -483,4 +483,4 @@ interface ITfSystemLangBarItemText : IUnknown
         [in] ULONG       cch);
     HRESULT GetItemText(
         [out] BSTR *pbstrText);
-};
+}
