@@ -316,6 +316,7 @@ interface ITfLangBarItemBalloon : IUnknown
         [in] TfLBIClick click,
         [in] POINT      pt,
         [in] const RECT *prcArea);
+
     HRESULT GetPreferredSize(
         [in]  const SIZE *pszDefault,
         [out] SIZE       *psz);
@@ -348,9 +349,11 @@ interface ITfLangBarItemBitmap : IUnknown
         [in] TfLBIClick click,
         [in] POINT      pt,
         [in] const RECT *prcArea);
+
     HRESULT GetPreferredSize(
         [in]  const SIZE *pszDefault,
         [out] SIZE       *psz);
+
     HRESULT DrawBitmap(
         [in]  LONG    bmWidth,
         [in]  LONG    bmHeight,
@@ -370,19 +373,24 @@ interface ITfLangBarItemBitmapButton : IUnknown
         [in] TfLBIClick click,
         [in] POINT      pt,
         [in] const RECT *prcArea);
+
     HRESULT InitMenu(
         [in] ITfMenu *pMenu);
+
     HRESULT OnMenuSelect(
         [in] UINT wID);
+
     HRESULT GetPreferredSize(
         [in]  const SIZE *pszDefault,
         [out] SIZE       *psz);
+
     HRESULT DrawBitmap(
         [in]  LONG    bmWidth,
         [in]  LONG    bmHeight,
         [in]  DWORD   dwFlags,
         [out] HBITMAP *phbmp,
         [out] HBITMAP *phbmpMask);
+
     HRESULT GetText(
         [out] BSTR *pbstrText);
 }
@@ -398,12 +406,16 @@ interface ITfLangBarItemButton : IUnknown
         [in] TfLBIClick click,
         [in] POINT      pt,
         [in] const RECT *prcArea);
+
     HRESULT InitMenu(
         [in] ITfMenu *pMenu);
+
     HRESULT OnMenuSelect(
         [in] UINT wID);
+
     HRESULT GetIcon(
         [out] HICON *phIcon);
+
     HRESULT GetText(
         [out] BSTR *pbstrText);
 }
@@ -440,6 +452,7 @@ interface ITfSystemDeviceTypeLangBarItem : IUnknown
 {
     HRESULT SetIconMode(
         [in] DWORD dwFlags);
+
     HRESULT GetIconMode(
         [out] DWORD *pdwFlags);
 }
@@ -453,6 +466,7 @@ interface ITfSystemLangBarItem : IUnknown
 {
     HRESULT SetIcon(
         [in] HICON hIcon);
+
     HRESULT SetTooltipString(
         [in] WCHAR *pchToolTip,
         [in] ULONG cch);
@@ -467,6 +481,7 @@ interface ITfSystemLangBarItemSink : IUnknown
 {
     HRESULT InitMenu(
         [in] ITfMenu *pMenu);
+
     HRESULT OnMenuSelect(
         [in] UINT wID);
 }
@@ -481,6 +496,7 @@ interface ITfSystemLangBarItemText : IUnknown
     HRESULT SetItemText(
         [in] const WCHAR *pch,
         [in] ULONG       cch);
+
     HRESULT GetItemText(
         [out] BSTR *pbstrText);
 }
