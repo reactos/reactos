@@ -795,7 +795,7 @@ ImageView_DrawImage(HWND hwnd)
 }
 
 static VOID
-ImageView_ResetSetting(VOID)
+ImageView_ResetSettings(VOID)
 {
     g_Settings.Maximized = FALSE;
     g_Settings.X         = CW_USEDEFAULT;
@@ -814,7 +814,7 @@ ImageView_LoadSettings(VOID)
     nError = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\shimgvw", 0, KEY_READ, &hKey);
     if (nError != ERROR_SUCCESS)
     {
-        ImageView_ResetSetting();
+        ImageView_ResetSettings();
         return FALSE;
     }
 
@@ -824,7 +824,7 @@ ImageView_LoadSettings(VOID)
 
     if (nError != ERROR_SUCCESS || dwSize != sizeof(g_Settings))
     {
-        ImageView_ResetSetting();
+        ImageView_ResetSettings();
         return FALSE;
     }
 
