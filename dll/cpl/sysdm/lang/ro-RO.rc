@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -39,15 +39,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gestionar de dispozitive", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "Gestionarul de dispozitive enumeră toate componentele fizice instalate în calculator. Utilizați acest instrument pentru configurarea oricărui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "Gestionarul de dispozitive enumeră toate dispozitivele instalate în calculator. Utilizați acest instrument pentru configurarea oricărui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "Deschide &Gestionar", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
-    GROUPBOX "Asistent de adăugare a componentelor fizice", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "Expert de adăugare a dispozitivelor", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "Acest instrument vă permite instalarea și depanarea componentelor fizice ale calculatorului.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "Acest instrument vă permite instalarea și depanarea dispozitivelor ale calculatorului.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "Deschide Asist&ent", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Profiluri ale dispozitivelor", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "Profiluri ale dispozitivelor oferă o modalitate de gestiune a grupurilor de configurații fizice ale calculatorului.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "Profiluri ale dispozitivelor oferă o modalitate de gestiune a grupurilor de setări hardware ale calculatorului.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "&Profiluri dispozitive…", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -66,7 +66,7 @@ BEGIN
     GROUPBOX "Pornire și recuperare", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Aceste opțiuni determină modul de încărcare a sistemului, acțiunile în caz de eroare, și alte informații de depanare.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Opți&uni…", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "&Configurare sistem…", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Setări sistem…", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "&Variabile de mediu…", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Raportează erori", IDC_ERRORREPORT, 170, 192, 80, 15
 END
@@ -88,7 +88,7 @@ CAPTION "Profiluri ale dispozitivelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT "Mulțimea configurațiilor componentelor fizice formează un profil al dispozitivelor. Astfel la pornire poate fi specificat un profil preferat din mai multe, stabilite anterior.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT "Puteți configura profilurile hardware pentru diferite configurații ale dispozitivelor. La pornire puteți alege profgilul pe care doriți să îl folosiți.", IDC_STATIC, 46, 11, 188, 25
     LTEXT "Profiluri disponibile:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
@@ -161,7 +161,7 @@ CAPTION "Profiluri de utilizator"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Mulțimea opțiunilor legate de conturile de utilizator (opțiunile de interfață și alte preferințe) formează un profil de utilizator. Gestionând aceste profiluri, puteți deține pe diferite calculatoare fie profiluri diferite, fie unul comun de „călător”.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Profilurile de utilizator conțin setări de birou și alte informații legate de logarea dvs. Un profil diferit poate fi creat la orice calculator folosiți sau puteți selecta un profil migrator care e același la fiecare calculator pe care îl folosiți.", IDC_STATIC, 40, 11, 211, 35
     LTEXT "Profiluri stocate în acest calculator:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -335,7 +335,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
-    IDS_CPLSYSTEMDESCRIPTION "Afișarea informațiilor de sistem și schimbarea configurației fizice sau de sistem."
+    IDS_CPLSYSTEMDESCRIPTION "Afișarea informațiilor de sistem și schimbarea setărilor hardware sau de sistem."
     IDS_MEGABYTE "Mo de memorie"
     IDS_GIGABYTE "Go de memorie"
     IDS_TERABYTE "To de memorie"
