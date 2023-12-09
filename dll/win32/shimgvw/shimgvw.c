@@ -989,6 +989,7 @@ ImageView_Delete(HWND hwnd)
         g_pImage = NULL;
     }
 
+    /* Confirm file deletion and delete if allowed */
     FileOp.pFrom = szCurFile;
     FileOp.fFlags = FOF_ALLOWUNDO;
     if (SHFileOperationW(&FileOp) != 0)
@@ -999,9 +1000,9 @@ ImageView_Delete(HWND hwnd)
         return;
     }
 
+    /* Reload the file list and go next file */
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = NULL;
-
     g_pCurrentFile = pBuildFileList(szNextFile);
     pLoadImageFromNode(g_pCurrentFile, hwnd);
 }
