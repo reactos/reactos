@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Registry Command Line Utils
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS Registry Console Tool
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2011 Claudia Cotună
- *              Copyright 2011-2015 Michael Stefaniuc
- *              Copyright 2011-2016 Ștefan Fulea <stefan.fulea@mail.com>
+ * TRANSLATORS: Copyright 2010 Claudia Cotună <special4ti@gmail.com>
+ *              Copyright 2010 Michael Stefaniuc <mstefani@redhat.com>
+ *              Copyright 2014-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
