@@ -60,6 +60,105 @@ ITypeInfo *arguments_ti;
 
 static HRESULT query_interface(REFIID,void**);
 
+#ifdef __REACTOS__
+#include <commctrl.h>
+EXTERN_C INT WINAPI DSA_DeleteItem(HDSA hdsa, INT nIndex);
+
+typedef struct {
+    BSTR name;
+    IUnknown*punk;
+} GLOBAL_ITEM;
+
+HDSA g_global_items = NULL;
+
+static void free_globals()
+{
+    UINT i;
+    for (i = 0; g_global_items; ++i)
+    {
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*) DSA_GetItemPtr(g_global_items, i);
+        if (!p)
+            break;
+        IUnknown_Release(p->punk);
+        SysFreeString(p->name);
+    }
+    DSA_Destroy(g_global_items);
+    g_global_items = NULL;
+}
+
+static HRESULT add_globalitem(IActiveScript *script, BSTR name, IUnknown *punk, DWORD siflags)
+{
+    int idx;
+    GLOBAL_ITEM gi;
+    if (!g_global_items)
+    {
+        g_global_items = DSA_Create(sizeof(GLOBAL_ITEM), 0);
+        if (!g_global_items)
+            return E_OUTOFMEMORY;
+    }
+    name = SysAllocString(name);
+    if (!name)
+        return E_OUTOFMEMORY;
+
+    gi.name = name;
+    gi.punk = punk;
+    idx = DSA_AppendItem(g_global_items, &gi);
+    if (idx >= 0)
+    {
+        HRESULT hr = IActiveScript_AddNamedItem(script, name, siflags);
+        if (SUCCEEDED(hr))
+        {
+            IUnknown_AddRef(punk);
+            return hr;
+        }
+        DSA_DeleteItem(g_global_items, idx);
+    }
+    SysFreeString(name);
+    return E_OUTOFMEMORY;
+}
+
+static HRESULT add_globalitem_from_clsid(IActiveScript *script, BSTR name, REFCLSID clsid, DWORD siflags)
+{
+    IUnknown *punk;
+    HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void**)&punk);
+    if (SUCCEEDED(hr))
+    {
+        hr = add_globalitem(script, name, punk, siflags);
+        IUnknown_Release(punk);
+    }
+    return hr;
+}
+
+static HRESULT get_globalitem_info(LPCOLESTR Name, DWORD Mask, IUnknown **ppunk, ITypeInfo **ppti, BOOL *pHandled)
+{
+    HRESULT hr = S_FALSE;
+    UINT i;
+    for (i = 0; g_global_items; ++i)
+    {
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*) DSA_GetItemPtr(g_global_items, i);
+        if (!p)
+            break;
+        if (!lstrcmpiW(Name, p->name))
+        {
+            if (ppti)
+                *ppti = NULL;
+            if (Mask & SCRIPTINFO_IUNKNOWN)
+            {
+                *ppunk = p->punk;
+                if (p->punk)
+                {
+                    IUnknown_AddRef(p->punk);
+                    *pHandled = TRUE;
+                }
+                return S_OK;
+            }
+            break;
+        }
+    }
+    return hr;
+}
+#endif
+
 static HRESULT WINAPI ActiveScriptSite_QueryInterface(IActiveScriptSite *iface,
                                                       REFIID riid, void **ppv)
 {
@@ -88,6 +187,15 @@ static HRESULT WINAPI ActiveScriptSite_GetItemInfo(IActiveScriptSite *iface,
         LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown **ppunkItem, ITypeInfo **ppti)
 {
     WINE_TRACE("(%s %x %p %p)\n", wine_dbgstr_w(pstrName), dwReturnMask, ppunkItem, ppti);
+
+#ifdef __REACTOS__
+    {
+        BOOL handled = FALSE;
+        HRESULT hr = get_globalitem_info(pstrName, dwReturnMask, ppunkItem, ppti, &handled);
+        if (handled)
+            return hr;
+    }
+#endif
 
     if(lstrcmpW(pstrName, wshW) && lstrcmpW(pstrName, wscriptW))
         return E_FAIL;
@@ -402,8 +510,14 @@ static HRESULT xmldomnode_getattributevalue(IXMLDOMNode *pnode, LPCWSTR name, BS
     {
         if (SUCCEEDED(hr = IXMLDOMNamedNodeMap_getNamedItem(pmap, bsname, &pnode)))
         {
-            hr = IXMLDOMNode_get_text(pnode, pout);
-            IXMLDOMNode_Release(pnode);
+            hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            if (pnode)
+            {
+                hr = IXMLDOMNode_get_text(pnode, pout);
+                if (SUCCEEDED(hr) && !*pout)
+                    hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+                IXMLDOMNode_Release(pnode);
+            }
         }
         IXMLDOMNamedNodeMap_Release(pmap);
     }
@@ -419,10 +533,9 @@ static HRESULT xmldomelem_getelembytag(IXMLDOMElement *pelem, LPCWSTR name, long
     *ppout = NULL;
     if (bsname && SUCCEEDED(hr = IXMLDOMElement_getElementsByTagName(pelem, bsname, &pnl)))
     {
-        if (SUCCEEDED(hr))
-        {
-            hr = IXMLDOMNodeList_get_item(pnl, index, ppout);
-        }
+        hr = IXMLDOMNodeList_get_item(pnl, index, ppout);
+        if (SUCCEEDED(hr) && !*ppout)
+            hr = HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
         IUnknown_Release(pnl);
     }
     SysFreeString(bsname);
@@ -442,19 +555,44 @@ static HRESULT xmldomelem_getelembytagasdomelem(IXMLDOMElement *pelem, LPCWSTR n
     return hr;
 }
 
-static HRESULT run_wsfjob(IXMLDOMElement *pjob)
+static void wsf_addobjectfromnode(IActiveScript *script, IXMLDOMNode *obj)
+{
+    BSTR bsid, bsclsid;
+    if (SUCCEEDED(xmldomnode_getattributevalue(obj, L"id", &bsid)))
+    {
+        CLSID clsid;
+        HRESULT hr;
+        hr = xmldomnode_getattributevalue(obj, L"clsid", &bsclsid);
+        if (FAILED(hr) || FAILED(CLSIDFromProgID(bsclsid, &clsid)))
+        {
+            SysFreeString(bsclsid);
+            if (SUCCEEDED(hr = xmldomnode_getattributevalue(obj, L"progid", &bsclsid)))
+            {
+                hr = CLSIDFromProgID(bsclsid, &clsid);
+                SysFreeString(bsclsid);
+            }
+        }
+        if (SUCCEEDED(hr))
+        {
+            hr = add_globalitem_from_clsid(script, bsid, &clsid, SCRIPTITEM_ISVISIBLE);
+        }
+        SysFreeString(bsid);
+    }
+}
+
+static HRESULT run_wsfjob(IXMLDOMElement *jobtag)
 {
     // FIXME: We are supposed to somehow handle multiple languages in the same IActiveScript.
     IActiveScript *script;
     LPCWSTR deflang = L"JScript";
-    IXMLDOMNode *pscript;
+    IXMLDOMNode *scripttag;
     HRESULT hr = S_OK;
-    if (SUCCEEDED(xmldomelem_getelembytag(pjob, L"script", 0, &pscript)))
+    if (SUCCEEDED(xmldomelem_getelembytag(jobtag, L"script", 0, &scripttag)))
     {
         CLSID clsid;
         IActiveScriptParse *parser;
         BSTR lang, code;
-        if (FAILED(xmldomnode_getattributevalue(pscript, L"language", &lang)))
+        if (FAILED(xmldomnode_getattributevalue(scripttag, L"language", &lang)))
             lang = NULL;
         hr = CLSIDFromProgID(lang ? lang : deflang, &clsid);
         SysFreeString(lang);
@@ -466,7 +604,22 @@ static HRESULT run_wsfjob(IXMLDOMElement *pjob)
             {
                 if (init_engine(script, parser))
                 {
-                    if (SUCCEEDED(hr = IXMLDOMNode_get_text(pscript, &code)))
+                    long index;
+                    for (index = 0; index < 0x7fffffff; ++index)
+                    {
+                        IXMLDOMNode *obj;
+                        if (SUCCEEDED(xmldomelem_getelembytag(jobtag, L"object", index, &obj)))
+                        {
+                            wsf_addobjectfromnode(script, obj);
+                            IUnknown_Release(obj);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if (SUCCEEDED(hr = IXMLDOMNode_get_text(scripttag, &code)))
                     {
                         hr = IActiveScriptParse_ParseScriptText(parser, code, NULL, NULL, NULL, 1, 1,
                                                                 SCRIPTTEXT_HOSTMANAGESSOURCE|SCRIPTITEM_ISVISIBLE,
@@ -484,7 +637,7 @@ static HRESULT run_wsfjob(IXMLDOMElement *pjob)
                 IUnknown_Release(script);
             }
         }
-        IUnknown_Release(pscript);
+        IUnknown_Release(scripttag);
     }
     return hr;
 }
@@ -508,7 +661,7 @@ or
 */
 static HRESULT run_wsf(LPCWSTR xmlpath)
 {
-    WCHAR url[ARRAY_SIZE("file://") + ARRAY_SIZE(scriptFullName)];
+    WCHAR url[ARRAY_SIZE("file://") + max(ARRAY_SIZE(scriptFullName), MAX_PATH)];
     DWORD cch = ARRAY_SIZE(url);
     IXMLDOMDocument *pdoc;
     HRESULT hr = UrlCreateFromPathW(xmlpath, url, &cch, 0), hrCom;
@@ -561,6 +714,7 @@ static HRESULT run_wsf(LPCWSTR xmlpath)
         VariantClear(&v);
         IUnknown_Release(pdoc);
     }
+    free_globals();
     if (SUCCEEDED(hrCom))
         CoUninitialize();
     return hr;
@@ -660,6 +814,10 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
 
     IActiveScript_Release(script);
     IActiveScriptParse_Release(parser);
+
+#ifdef __REACTOS__
+    free_globals();
+#endif
 
     CoUninitialize();
 
