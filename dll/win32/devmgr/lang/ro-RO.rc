@@ -330,7 +330,7 @@ BEGIN
   IDS_HINT_SCAN         " Scanare pentru depistarea schimbărilor în configurația sistemului."
   IDS_HINT_ENABLE       " Activare dispozitiv selectat."
   IDS_HINT_DISABLE      " Dezactivare dispozitiv selectat."
-  IDS_HINT_UPDATE       " Lansare asistent de actualizare a driverului pentru dispozitivul selestat."
+  IDS_HINT_UPDATE       " Lansarea expertului de actualizare a driverului pentru dispozitivul selestat."
   IDS_HINT_UNINSTALL    " Dezinstalare driver pentru dispozitivul selectat."
   IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator."
   IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
