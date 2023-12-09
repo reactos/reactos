@@ -982,18 +982,21 @@ ImageView_Delete(HWND hwnd)
     GetFullPathNameW(g_pCurrentFile->Next->FileName, _countof(szNextFile), szNextFile, NULL);
     szNextFile[_countof(szNextFile) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
+    /* FIXME: Our GdipLoadImageFromFile locks the image file */
+    if (g_pImage)
+    {
+        GdipDisposeImage(g_pImage);
+        g_pImage = NULL;
+    }
+
     FileOp.pFrom = szCurFile;
     FileOp.fFlags = FOF_ALLOWUNDO;
     if (SHFileOperationW(&FileOp) != 0)
     {
         DPRINT("ImageView_Delete: SHFileOperationW() failed or canceled\n");
-        return;
-    }
 
-    if (g_pImage)
-    {
-        GdipDisposeImage(g_pImage);
-        g_pImage = NULL;
+        pLoadImage(szCurFile);
+        return;
     }
 
     pFreeFileList(g_pCurrentFile);
