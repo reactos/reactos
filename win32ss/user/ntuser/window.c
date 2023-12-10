@@ -3037,28 +3037,23 @@ BOOLEAN APIENTRY
 NtUserDestroyWindow(HWND Wnd)
 {
    PWND Window;
-   DECLARE_RETURN(BOOLEAN);
-   BOOLEAN ret;
+   BOOLEAN ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserDestroyWindow\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(Wnd)))
+   Window = UserGetWindowObject(Wnd);
+   if (Window)
    {
-      RETURN(FALSE);
+      UserRefObjectCo(Window, &Ref); // FIXME: Dunno if win should be reffed during destroy...
+      ret = co_UserDestroyWindow(Window);
+      UserDerefObjectCo(Window); // FIXME: Dunno if win should be reffed during destroy...
    }
 
-   UserRefObjectCo(Window, &Ref); // FIXME: Dunno if win should be reffed during destroy...
-   ret = co_UserDestroyWindow(Window);
-   UserDerefObjectCo(Window); // FIXME: Dunno if win should be reffed during destroy...
-
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserDestroyWindow, ret=%u\n", _ret_);
+   TRACE("Leave NtUserDestroyWindow, ret=%u\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 
