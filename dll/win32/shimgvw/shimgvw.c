@@ -1036,6 +1036,10 @@ Preview_OnDestroy(HWND hwnd)
     SetWindowLongPtr(pData->m_hwndZoom, GWLP_USERDATA, 0);
     DestroyWindow(pData->m_hwndZoom);
     pData->m_hwndZoom = NULL;
+
+    DestroyWindow(pData->m_hwndToolBar);
+    pData->m_hwndToolBar = NULL;
+
     QuickFree(pData);
 
     PostQuitMessage(0);
