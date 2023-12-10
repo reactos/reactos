@@ -3410,25 +3410,23 @@ HWND APIENTRY
 NtUserGetAncestor(HWND hWnd, UINT Type)
 {
    PWND Window, Ancestor;
-   DECLARE_RETURN(HWND);
+   HWND Ret = NULL;
 
    TRACE("Enter NtUserGetAncestor\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   Window = UserGetWindowObject(hWnd);
+   if (Window)
    {
-      RETURN(NULL);
+      Ancestor = UserGetAncestor(Window, Type);
+      /* fixme: can UserGetAncestor ever return NULL for a valid window? */
+
+      Ret = (Ancestor ? Ancestor->head.h : NULL);
    }
 
-   Ancestor = UserGetAncestor(Window, Type);
-   /* faxme: can UserGetAncestor ever return NULL for a valid window? */
-
-   RETURN(Ancestor ? Ancestor->head.h : NULL);
-
-CLEANUP:
-   TRACE("Leave NtUserGetAncestor, ret=%p\n", _ret_);
+   TRACE("Leave NtUserGetAncestor, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 ////
