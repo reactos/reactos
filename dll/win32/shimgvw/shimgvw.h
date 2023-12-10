@@ -19,10 +19,6 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <wincon.h>
-#ifdef __RSHIMGVW__
-#include <winuser.h>
-#include <winnetwk.h>
-#endif
 #include <objbase.h>
 #include <gdiplus.h>
 #include <strsafe.h>
