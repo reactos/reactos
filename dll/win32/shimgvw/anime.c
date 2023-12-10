@@ -38,6 +38,41 @@ void Anime_Start(PANIME pAnime, DWORD dwDelay)
         SetTimer(pAnime->m_hwndTimer, ANIME_TIMER_ID, dwDelay, NULL);
 }
 
+DWORD Anime_GetFrameDelay(PANIME pAnime, UINT nFrameIndex)
+{
+    if (nFrameIndex < pAnime->m_nFrameCount && pAnime->m_pDelayItem)
+    {
+        return ((DWORD *)pAnime->m_pDelayItem->value)[pAnime->m_nFrameIndex] * 10;
+    }
+    return 0;
+}
+
+BOOL Anime_Step(PANIME pAnime, DWORD *pdwDelay)
+{
+    *pdwDelay = INFINITE;
+    if (pAnime->m_nLoopCount == (UINT)-1)
+        return FALSE;
+
+    if (pAnime->m_nFrameIndex + 1 < pAnime->m_nFrameCount)
+    {
+        *pdwDelay = Anime_GetFrameDelay(pAnime, pAnime->m_nFrameIndex);
+        Anime_SetFrameIndex(pAnime, pAnime->m_nFrameIndex);
+        ++pAnime->m_nFrameIndex;
+        return TRUE;
+    }
+
+    if (pAnime->m_nLoopCount == 0 || pAnime->m_nLoopIndex < pAnime->m_nLoopCount)
+    {
+        *pdwDelay = Anime_GetFrameDelay(pAnime, pAnime->m_nFrameIndex);
+        Anime_SetFrameIndex(pAnime, pAnime->m_nFrameIndex);
+        pAnime->m_nFrameIndex = 0;
+        ++pAnime->m_nLoopIndex;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam)
 {
     DWORD dwDelay;
@@ -118,39 +153,4 @@ void Anime_SetFrameIndex(PANIME pAnime, UINT nFrameIndex)
         }
     }
     pAnime->m_nFrameIndex = nFrameIndex;
-}
-
-DWORD Anime_GetFrameDelay(PANIME pAnime, UINT nFrameIndex)
-{
-    if (nFrameIndex < pAnime->m_nFrameCount && pAnime->m_pDelayItem)
-    {
-        return ((DWORD *)pAnime->m_pDelayItem->value)[pAnime->m_nFrameIndex] * 10;
-    }
-    return 0;
-}
-
-BOOL Anime_Step(PANIME pAnime, DWORD *pdwDelay)
-{
-    *pdwDelay = INFINITE;
-    if (pAnime->m_nLoopCount == (UINT)-1)
-        return FALSE;
-
-    if (pAnime->m_nFrameIndex + 1 < pAnime->m_nFrameCount)
-    {
-        *pdwDelay = Anime_GetFrameDelay(pAnime, pAnime->m_nFrameIndex);
-        Anime_SetFrameIndex(pAnime, pAnime->m_nFrameIndex);
-        ++pAnime->m_nFrameIndex;
-        return TRUE;
-    }
-
-    if (pAnime->m_nLoopCount == 0 || pAnime->m_nLoopIndex < pAnime->m_nLoopCount)
-    {
-        *pdwDelay = Anime_GetFrameDelay(pAnime, pAnime->m_nFrameIndex);
-        Anime_SetFrameIndex(pAnime, pAnime->m_nFrameIndex);
-        pAnime->m_nFrameIndex = 0;
-        ++pAnime->m_nLoopIndex;
-        return TRUE;
-    }
-
-    return FALSE;
 }
