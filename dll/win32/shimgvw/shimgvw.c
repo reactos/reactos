@@ -729,6 +729,8 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 {
+    DragAcceptFiles(hwnd, TRUE);
+
     g_hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
                                  WS_CHILD | WS_VISIBLE,
                                  0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
@@ -980,6 +982,20 @@ Preview_OnDestroy(HWND hwnd)
     PostQuitMessage(0);
 }
 
+static VOID
+Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
+{
+    WCHAR szFile[MAX_PATH];
+
+    DragQueryFileW(hDrop, 0, szFile, _countof(szFile));
+
+    pFreeFileList(g_pCurrentFile);
+    g_pCurrentFile = pBuildFileList(szFile);
+    pLoadImageFromNode(g_pCurrentFile, hwnd);
+
+    DragFinish(hDrop);
+}
+
 LRESULT CALLBACK
 PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1021,6 +1037,11 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_SIZE:
         {
             Preview_OnSize(hwnd, (UINT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            break;
+        }
+        case WM_DROPFILES:
+        {
+            Preview_OnDropFiles(hwnd, (HDROP)wParam);
             break;
         }
         case WM_DESTROY:
