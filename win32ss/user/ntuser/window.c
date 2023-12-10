@@ -3151,7 +3151,6 @@ NtUserFindWindowEx(HWND hwndParent,
    HWND Desktop, Ret = NULL;
    BOOL DoMessageWnd = FALSE;
    RTL_ATOM ClassAtom = (RTL_ATOM)0;
-   DECLARE_RETURN(HWND);
 
    TRACE("Enter NtUserFindWindowEx\n");
    UserEnterShared();
@@ -3197,7 +3196,7 @@ NtUserFindWindowEx(HWND hwndParent,
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
            SetLastNtError(_SEH2_GetExceptionCode());
-           _SEH2_YIELD(RETURN(NULL));
+           _SEH2_YIELD(goto Exit);
        }
        _SEH2_END;
 
@@ -3207,12 +3206,12 @@ NtUserFindWindowEx(HWND hwndParent,
                !IS_ATOM(ClassName.Buffer))
            {
                EngSetLastError(ERROR_INVALID_PARAMETER);
-               RETURN(NULL);
+               goto Exit;
            }
            else if (ClassAtom == (RTL_ATOM)0)
            {
                /* LastError code was set by IntGetAtomFromStringOrAtom */
-               RETURN(NULL);
+               goto Exit;
            }
        }
    }
@@ -3231,13 +3230,13 @@ NtUserFindWindowEx(HWND hwndParent,
 
    if(!(Parent = UserGetWindowObject(hwndParent)))
    {
-      RETURN( NULL);
+      goto Exit;
    }
 
    ChildAfter = NULL;
    if(hwndChildAfter && !(ChildAfter = UserGetWindowObject(hwndChildAfter)))
    {
-      RETURN( NULL);
+      goto Exit;
    }
 
    _SEH2_TRY
@@ -3329,12 +3328,10 @@ NtUserFindWindowEx(HWND hwndParent,
    }
    _SEH2_END;
 
-   RETURN( Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserFindWindowEx, ret %p\n", _ret_);
+Exit:
+   TRACE("Leave NtUserFindWindowEx, ret %p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 
