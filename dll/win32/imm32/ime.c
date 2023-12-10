@@ -904,7 +904,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 /***********************************************************************
  *		ImmNotifyIME (IMM32.@)
  */
-BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
+BOOL WINAPI ImmNotifyIME(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD_PTR dwValue)
 {
     HKL hKL;
     PIMEDPI pImeDpi;

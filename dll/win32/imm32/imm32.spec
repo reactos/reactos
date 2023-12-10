@@ -93,7 +93,7 @@
 @ stdcall ImmLockIMC(ptr)
 @ stdcall ImmLockIMCC(ptr)
 @ stdcall ImmLockImeDpi(ptr)
-@ stdcall ImmNotifyIME(ptr long long long)
+@ stdcall ImmNotifyIME(ptr long long ptr)
 @ stdcall ImmProcessKey(ptr long long long long)
 @ stdcall ImmPutImeMenuItemsIntoMappedFile(ptr)
 @ stdcall ImmReSizeIMCC(ptr long)

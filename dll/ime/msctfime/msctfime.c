@@ -13,9 +13,9 @@ HINSTANCE g_hInst = NULL; /* The instance of this module */
 
 BOOL WINAPI
 ImeInquire(
-    LPIMEINFO lpIMEInfo,
-    LPWSTR lpszWndClass,
-    DWORD dwSystemInfoFlags)
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags)
 {
     FIXME("stub:(%p, %p, 0x%lX)\n", lpIMEInfo, lpszWndClass, dwSystemInfoFlags);
     return FALSE;
@@ -23,11 +23,11 @@ ImeInquire(
 
 DWORD WINAPI
 ImeConversionList(
-    HIMC hIMC,
-    LPCWSTR lpSrc,
-    LPCANDIDATELIST lpDst,
-    DWORD dwBufLen,
-    UINT uFlag)
+    _In_ HIMC hIMC,
+    _In_ LPCWSTR lpSrc,
+    _Out_ LPCANDIDATELIST lpDst,
+    _In_ DWORD dwBufLen,
+    _In_ UINT uFlag)
 {
     FIXME("stub:(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
     return 0;
@@ -35,9 +35,9 @@ ImeConversionList(
 
 BOOL WINAPI
 ImeRegisterWord(
-    LPCWSTR lpszReading,
-    DWORD dwStyle,
-    LPCWSTR lpszString)
+    _In_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_ LPCWSTR lpszString)
 {
     FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
@@ -45,9 +45,9 @@ ImeRegisterWord(
 
 BOOL WINAPI
 ImeUnregisterWord(
-    LPCWSTR lpszReading,
-    DWORD dwStyle,
-    LPCWSTR lpszString)
+    _In_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_ LPCWSTR lpszString)
 {
     FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
@@ -55,8 +55,8 @@ ImeUnregisterWord(
 
 UINT WINAPI
 ImeGetRegisterWordStyle(
-    UINT nItem,
-    LPSTYLEBUFW lpStyleBuf)
+    _In_ UINT nItem,
+    _Out_ LPSTYLEBUFW lpStyleBuf)
 {
     FIXME("stub:(%u, %p)\n", nItem, lpStyleBuf);
     return 0;
@@ -64,11 +64,11 @@ ImeGetRegisterWordStyle(
 
 UINT WINAPI
 ImeEnumRegisterWord(
-    REGISTERWORDENUMPROCW lpfnEnumProc,
-    LPCWSTR lpszReading,
-    DWORD dwStyle,
-    LPCWSTR lpszString,
-    LPVOID lpData)
+    _In_ REGISTERWORDENUMPROCW lpfnEnumProc,
+    _In_opt_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_opt_ LPCWSTR lpszString,
+    _In_opt_ LPVOID lpData)
 {
     FIXME("stub:(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
           dwStyle, debugstr_w(lpszString), lpData);
@@ -77,10 +77,10 @@ ImeEnumRegisterWord(
 
 BOOL WINAPI
 ImeConfigure(
-    HKL hKL,
-    HWND hWnd,
-    DWORD dwMode,
-    LPVOID lpData)
+    _In_ HKL hKL,
+    _In_ HWND hWnd,
+    _In_ DWORD dwMode,
+    _Inout_opt_ LPVOID lpData)
 {
     FIXME("stub:(%p, %p, %lu, %p)\n", hKL, hWnd, dwMode, lpData);
     return FALSE;
@@ -88,7 +88,7 @@ ImeConfigure(
 
 BOOL WINAPI
 ImeDestroy(
-    UINT uReserved)
+    _In_ UINT uReserved)
 {
     FIXME("stub:(%u)\n", uReserved);
     return FALSE;
@@ -96,9 +96,9 @@ ImeDestroy(
 
 LRESULT WINAPI
 ImeEscape(
-    HIMC hIMC,
-    UINT uEscape,
-    LPVOID lpData)
+    _In_ HIMC hIMC,
+    _In_ UINT uEscape,
+    _Inout_opt_ LPVOID lpData)
 {
     FIXME("stub:(%p, %u, %p)\n", hIMC, uEscape, lpData);
     return 0;
@@ -106,10 +106,10 @@ ImeEscape(
 
 BOOL WINAPI
 ImeProcessKey(
-    HIMC hIMC,
-    UINT uVirKey,
-    LPARAM lParam,
-    CONST LPBYTE lpbKeyState)
+    _In_ HIMC hIMC,
+    _In_ UINT uVirKey,
+    _In_ LPARAM lParam,
+    _In_ CONST LPBYTE lpbKeyState)
 {
     FIXME("stub:(%p, %u, %p, lpbKeyState)\n", hIMC, uVirKey, lParam, lpbKeyState);
     return FALSE;
@@ -117,8 +117,8 @@ ImeProcessKey(
 
 BOOL WINAPI
 ImeSelect(
-    HIMC hIMC,
-    BOOL fSelect)
+    _In_ HIMC hIMC,
+    _In_ BOOL fSelect)
 {
     FIXME("stub:(%p, %u)\n", hIMC, fSelect);
     return FALSE;
@@ -126,8 +126,8 @@ ImeSelect(
 
 BOOL WINAPI
 ImeSetActiveContext(
-    HIMC hIMC,
-    BOOL fFlag)
+    _In_ HIMC hIMC,
+    _In_ BOOL fFlag)
 {
     FIXME("stub:(%p, %u)\n", hIMC, fFlag);
     return FALSE;
@@ -135,12 +135,12 @@ ImeSetActiveContext(
 
 UINT WINAPI
 ImeToAsciiEx(
-    UINT uVirKey,
-    UINT uScanCode,
-    CONST LPBYTE lpbKeyState,
-    LPTRANSMSGLIST lpTransMsgList,
-    UINT fuState,
-    HIMC hIMC)
+    _In_ UINT uVirKey,
+    _In_ UINT uScanCode,
+    _In_ CONST LPBYTE lpbKeyState,
+    _Out_ LPTRANSMSGLIST lpTransMsgList,
+    _In_ UINT fuState,
+    _In_ HIMC hIMC)
 {
     FIXME("stub:(%u, %u, %p, %p, %u, %p)\n", uVirKey, uScanCode, lpbKeyState, lpTransMsgList,
           fuState, hIMC);
@@ -149,23 +149,23 @@ ImeToAsciiEx(
 
 BOOL WINAPI
 NotifyIME(
-    HIMC hIMC,
-    DWORD dwAction,
-    DWORD dwIndex,
-    DWORD dwValue)
+    _In_ HIMC hIMC,
+    _In_ DWORD dwAction,
+    _In_ DWORD dwIndex,
+    _In_ DWORD_PTR dwValue)
 {
-    FIXME("stub:(%p, 0x%lX, 0x%lX, 0x%lX)\n", hIMC, dwAction, dwIndex, dwValue);
+    FIXME("stub:(%p, 0x%lX, 0x%lX, %p)\n", hIMC, dwAction, dwIndex, dwValue);
     return FALSE;
 }
 
 BOOL WINAPI
 ImeSetCompositionString(
-    HIMC hIMC,
-    DWORD dwIndex,
-    LPCVOID lpComp,
-    DWORD dwCompLen,
-    LPCVOID lpRead,
-    DWORD dwReadLen)
+    _In_ HIMC hIMC,
+    _In_ DWORD dwIndex,
+    _In_opt_ LPCVOID lpComp,
+    _In_ DWORD dwCompLen,
+    _In_opt_ LPCVOID lpRead,
+    _In_ DWORD dwReadLen)
 {
     FIXME("stub:(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
           lpRead, dwReadLen);
@@ -174,12 +174,12 @@ ImeSetCompositionString(
 
 DWORD WINAPI
 ImeGetImeMenuItems(
-    HIMC hIMC,
-    DWORD dwFlags,
-    DWORD dwType,
-    LPIMEMENUITEMINFOW lpImeParentMenu,
-    LPIMEMENUITEMINFOW lpImeMenu,
-    DWORD dwSize)
+    _In_ HIMC hIMC,
+    _In_ DWORD dwFlags,
+    _In_ DWORD dwType,
+    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFOW lpImeMenu,
+    _In_ DWORD dwSize)
 {
     FIXME("stub:(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n", hIMC, dwFlags, dwType, lpImeParentMenu,
           lpImeMenu, dwSize);
@@ -188,10 +188,10 @@ ImeGetImeMenuItems(
 
 BOOL WINAPI
 CtfImeInquireExW(
-    LPIMEINFO lpIMEInfo,
-    LPVOID lpszWndClass,
-    DWORD dwSystemInfoFlags,
-    HKL hKL)
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags,
+    _In_ HKL hKL)
 {
     FIXME("stub:(%p, %p, 0x%lX, %p)\n", lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
     return FALSE;
@@ -199,9 +199,9 @@ CtfImeInquireExW(
 
 BOOL WINAPI
 CtfImeSelectEx(
-    HIMC hIMC,
-    BOOL fSelect,
-    HKL hKL)
+    _In_ HIMC hIMC,
+    _In_ BOOL fSelect,
+    _In_ HKL hKL)
 {
     FIXME("stub:(%p, %d, %p)\n", hIMC, fSelect, hKL);
     return FALSE;
@@ -209,10 +209,10 @@ CtfImeSelectEx(
 
 LRESULT WINAPI
 CtfImeEscapeEx(
-    HIMC hIMC,
-    UINT uSubFunc,
-    LPVOID lpData,
-    HKL hKL)
+    _In_ HIMC hIMC,
+    _In_ UINT uSubFunc,
+    _Inout_opt_ LPVOID lpData,
+    _In_ HKL hKL)
 {
     FIXME("stub:(%p, %u, %p, %p)\n", hIMC, uSubFunc, lpData, hKL);
     return 0;
@@ -220,9 +220,9 @@ CtfImeEscapeEx(
 
 HRESULT WINAPI
 CtfImeGetGuidAtom(
-    HIMC hIMC,
-    DWORD dwUnknown,
-    LPDWORD pdwGuidAtom)
+    _In_ HIMC hIMC,
+    _In_ DWORD dwUnknown,
+    _Out_opt_ LPDWORD pdwGuidAtom)
 {
     FIXME("stub:(%p, 0x%lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
     return E_FAIL;
@@ -230,7 +230,7 @@ CtfImeGetGuidAtom(
 
 BOOL WINAPI
 CtfImeIsGuidMapEnable(
-    HIMC hIMC)
+    _In_ HIMC hIMC)
 {
     FIXME("stub:(%p)\n", hIMC);
     return FALSE;
@@ -251,41 +251,55 @@ CtfImeDestroyThreadMgr(VOID)
 }
 
 HRESULT WINAPI
-CtfImeCreateInputContext(HIMC hIMC)
+CtfImeCreateInputContext(
+    _In_ HIMC hIMC)
 {
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI
-CtfImeDestroyInputContext(HIMC hIMC)
+CtfImeDestroyInputContext(
+    _In_ HIMC hIMC)
 {
     FIXME("stub:(%p)\n", hIMC);
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI
-CtfImeSetActiveContextAlways(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
+CtfImeSetActiveContextAlways(
+    _In_ HIMC hIMC,
+    _In_ BOOL fActive,
+    _In_ HWND hWnd,
+    _In_ HKL hKL)
 {
     FIXME("stub:(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI
-CtfImeProcessCicHotkey(HIMC hIMC, UINT vKey, LPARAM lParam)
+CtfImeProcessCicHotkey(
+    _In_ HIMC hIMC,
+    _In_ UINT vKey,
+    _In_ LPARAM lParam)
 {
     FIXME("stub:(%p, %u, %p)\n", hIMC, vKey, lParam);
     return E_NOTIMPL;
 }
 
 LRESULT WINAPI
-CtfImeDispatchDefImeMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+CtfImeDispatchDefImeMessage(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     FIXME("stub:(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
     return 0;
 }
 
 BOOL WINAPI
-CtfImeIsIME(HKL hKL)
+CtfImeIsIME(
+    _In_ HKL hKL)
 {
     FIXME("stub:(%p)\n", hKL);
     return FALSE;
@@ -300,10 +314,10 @@ CtfImeThreadDetach(VOID)
 
 LRESULT CALLBACK
 UIWndProc(
-    HWND hWnd,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam)
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     if (uMsg == WM_CREATE)
     {
@@ -315,9 +329,9 @@ UIWndProc(
 
 BOOL WINAPI
 DllMain(
-    HINSTANCE hinstDLL,
-    DWORD dwReason,
-    LPVOID lpvReserved)
+    _In_ HINSTANCE hinstDLL,
+    _In_ DWORD dwReason,
+    _Inout_opt_ LPVOID lpvReserved)
 {
     switch (dwReason)
     {
