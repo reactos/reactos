@@ -2,6 +2,7 @@
 spec2def(shimgvw.dll shimgvw.spec)
 
 list(APPEND SOURCE
+    anime.c
     shimgvw.c
     comsup.c
     shimgvw.rc

@@ -1,36 +1,18 @@
 /*
- * PROJECT:         ReactOS Picture and Fax Viewer
- * FILE:            dll/win32/shimgvw/shimgvw.c
- * PURPOSE:         shimgvw.dll
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
+ * PURPOSE:     Image file browsing and manipulation
+ * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright 2018-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#define INITGUID
-
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <wincon.h>
+#include "shimgvw.h"
 #include <windowsx.h>
-#include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
-#include <gdiplus.h>
 #include <shlobj.h>
-#include <strsafe.h>
 #include <shlwapi.h>
 #include <shellapi.h>
-
-#define NDEBUG
-#include <debug.h>
-
-#include "shimgvw.h"
 
 HINSTANCE g_hInstance;
 SHIMGVW_SETTINGS g_Settings;
@@ -40,6 +22,8 @@ WNDPROC g_fnPrevProc = NULL;
 
 HWND g_hDispWnd = NULL;
 HWND g_hToolBar = NULL;
+
+ANIME g_Anime; /* Animation */
 
 /* zooming */
 static UINT s_nZoomPercents = 100;
@@ -108,135 +92,6 @@ static const TB_BUTTON_CONFIG s_ButtonConfig[] =
     DEFINE_BTN_CONFIG(MODIFY),
     DEFINE_BTN_CONFIG(HELP_TOC)
 };
-
-/* animation */
-UINT            m_nFrameIndex = 0;
-UINT            m_nFrameCount = 0;
-UINT            m_nLoopIndex = 0;
-UINT            m_nLoopCount = (UINT)-1;
-PropertyItem   *m_pDelayItem = NULL;
-
-#define ANIME_TIMER_ID  9999
-
-static void Anime_FreeInfo(void)
-{
-    if (m_pDelayItem)
-    {
-        free(m_pDelayItem);
-        m_pDelayItem = NULL;
-    }
-    m_nFrameIndex = 0;
-    m_nFrameCount = 0;
-    m_nLoopIndex = 0;
-    m_nLoopCount = (UINT)-1;
-}
-
-static BOOL Anime_LoadInfo(void)
-{
-    UINT nDimCount = 0;
-    UINT cbItem;
-    UINT result;
-
-    Anime_FreeInfo();
-    KillTimer(g_hDispWnd, ANIME_TIMER_ID);
-
-    if (!g_pImage)
-        return FALSE;
-
-    GdipImageGetFrameDimensionsCount(g_pImage, &nDimCount);
-    if (nDimCount)
-    {
-        GUID *dims = (GUID *)calloc(nDimCount, sizeof(GUID));
-        if (dims)
-        {
-            GdipImageGetFrameDimensionsList(g_pImage, dims, nDimCount);
-            GdipImageGetFrameCount(g_pImage, dims, &result);
-            m_nFrameCount = result;
-            free(dims);
-        }
-    }
-
-    result = 0;
-    GdipGetPropertyItemSize(g_pImage, PropertyTagFrameDelay, &result);
-    cbItem = result;
-    if (cbItem)
-    {
-        m_pDelayItem = (PropertyItem *)malloc(cbItem);
-        GdipGetPropertyItem(g_pImage, PropertyTagFrameDelay, cbItem, m_pDelayItem);
-    }
-
-    result = 0;
-    GdipGetPropertyItemSize(g_pImage, PropertyTagLoopCount, &result);
-    cbItem = result;
-    if (cbItem)
-    {
-        PropertyItem *pItem = (PropertyItem *)malloc(cbItem);
-        if (pItem)
-        {
-            if (GdipGetPropertyItem(g_pImage, PropertyTagLoopCount, cbItem, pItem) == Ok)
-            {
-                m_nLoopCount = *(WORD *)pItem->value;
-            }
-            free(pItem);
-        }
-    }
-
-    if (m_pDelayItem)
-    {
-        SetTimer(g_hDispWnd, ANIME_TIMER_ID, 0, NULL);
-    }
-
-    return m_pDelayItem != NULL;
-}
-
-static void Anime_SetFrameIndex(UINT nFrameIndex)
-{
-    if (nFrameIndex < m_nFrameCount)
-    {
-        GUID guid = FrameDimensionTime;
-        if (Ok != GdipImageSelectActiveFrame(g_pImage, &guid, nFrameIndex))
-        {
-            guid = FrameDimensionPage;
-            GdipImageSelectActiveFrame(g_pImage, &guid, nFrameIndex);
-        }
-    }
-    m_nFrameIndex = nFrameIndex;
-}
-
-DWORD Anime_GetFrameDelay(UINT nFrameIndex)
-{
-    if (nFrameIndex < m_nFrameCount && m_pDelayItem)
-    {
-        return ((DWORD *)m_pDelayItem->value)[m_nFrameIndex] * 10;
-    }
-    return 0;
-}
-
-BOOL Anime_Step(DWORD *pdwDelay)
-{
-    *pdwDelay = INFINITE;
-    if (m_nLoopCount == (UINT)-1)
-        return FALSE;
-
-    if (m_nFrameIndex + 1 < m_nFrameCount)
-    {
-        *pdwDelay = Anime_GetFrameDelay(m_nFrameIndex);
-        Anime_SetFrameIndex(m_nFrameIndex);
-        ++m_nFrameIndex;
-        return TRUE;
-    }
-
-    if (m_nLoopCount == 0 || m_nLoopIndex < m_nLoopCount)
-    {
-        *pdwDelay = Anime_GetFrameDelay(m_nFrameIndex);
-        Anime_SetFrameIndex(m_nFrameIndex);
-        m_nFrameIndex = 0;
-        ++m_nLoopIndex;
-        return TRUE;
-    }
-
-    return FALSE;
-}
 
 static void UpdateZoom(UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
@@ -356,7 +211,8 @@ static void pLoadImage(LPCWSTR szOpenFileName)
         DPRINT1("GdipLoadImageFromFile() failed\n");
         return;
     }
-    Anime_LoadInfo();
+
+    Anime_LoadInfo(&g_Anime);
 
     if (szOpenFileName && szOpenFileName[0])
         SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
@@ -447,27 +303,14 @@ static void pSaveImageAs(HWND hwnd)
 
     if (GetSaveFileNameW(&sfn))
     {
-        if (m_pDelayItem)
-        {
-            /* save animation */
-            KillTimer(g_hDispWnd, ANIME_TIMER_ID);
+        Anime_Pause(&g_Anime);
 
-            DPRINT1("FIXME: save animation\n");
-            if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
-            {
-                DPRINT1("GdipSaveImageToFile() failed\n");
-            }
-
-            SetTimer(g_hDispWnd, ANIME_TIMER_ID, 0, NULL);
-        }
-        else
+        if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
         {
-            /* save non-animation */
-            if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
-            {
-                DPRINT1("GdipSaveImageToFile() failed\n");
-            }
+            DPRINT1("GdipSaveImageToFile() failed\n");
         }
+
+        Anime_Start(&g_Anime, 0);
     }
 
     free(szFilterMask);
@@ -898,12 +741,13 @@ static void ImageView_OnTimer(HWND hwnd)
 {
     DWORD dwDelay;
 
-    KillTimer(hwnd, ANIME_TIMER_ID);
+    Anime_Pause(&g_Anime);
+
     InvalidateRect(hwnd, NULL, FALSE);
 
-    if (Anime_Step(&dwDelay))
+    if (Anime_Step(&g_Anime, &dwDelay))
     {
-        SetTimer(hwnd, ANIME_TIMER_ID, dwDelay, NULL);
+        Anime_Start(&g_Anime, dwDelay);
     }
 }
 
@@ -941,6 +785,7 @@ ImageView_InitControls(HWND hwnd)
     g_fnPrevProc = (WNDPROC) SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
+    Anime_SetTimerWnd(&g_Anime, g_hDispWnd);
 }
 
 static VOID
@@ -1244,7 +1089,7 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
         g_pImage = NULL;
     }
 
-    Anime_FreeInfo();
+    Anime_FreeInfo(&g_Anime);
 
     GdiplusShutdown(gdiplusToken);
 
