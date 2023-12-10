@@ -13,16 +13,14 @@
 #include <shlobj.h>
 #include <shellapi.h>
 
+/* Toolbar image size */
+#define TB_IMAGE_WIDTH  16
+#define TB_IMAGE_HEIGHT 16
+
 HINSTANCE g_hInstance;
 SHIMGVW_SETTINGS g_Settings;
 SHIMGVW_FILENODE *g_pCurrentFile;
 GpImage *g_pImage = NULL;
-WNDPROC g_fnPrevProc = NULL;
-
-HWND g_hDispWnd = NULL;
-HWND g_hToolBar = NULL;
-
-ANIME g_Anime; /* Animation */
 
 /* zooming */
 static UINT s_nZoomPercents = 100;
@@ -92,31 +90,49 @@ static const TB_BUTTON_CONFIG s_ButtonConfig[] =
     DEFINE_BTN_CONFIG(HELP_TOC)
 };
 
-static VOID UpdateZoom(UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
+typedef struct tagPREVIEW_DATA
+{
+    HWND m_hwnd;
+    HWND m_hwndZoom;
+    HWND m_hwndToolBar;
+    INT m_nZoomPercents;
+    WNDPROC m_fnPrevProc;
+    ANIME m_Anime; /* Animation */
+} PREVIEW_DATA, *PPREVIEW_DATA;
+
+PPREVIEW_DATA Preview_GetData(HWND hwnd)
+{
+    return (PPREVIEW_DATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+}
+
+static VOID
+Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
     BOOL bEnableZoomIn, bEnableZoomOut;
+    HWND hToolBar = pData->m_hwndToolBar;
 
     /* If zoom has not been changed, ignore it */
-    if (s_nZoomPercents == NewZoom)
+    if (pData->m_nZoomPercents == NewZoom)
         return;
 
-    s_nZoomPercents = NewZoom;
+    pData->m_nZoomPercents = NewZoom;
 
     /* Check if a zoom button of the toolbar must be grayed */
     bEnableZoomIn = (NewZoom < MAX_ZOOM);
     bEnableZoomOut = (NewZoom > MIN_ZOOM);
 
     /* Update toolbar buttons */
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
 
     /* Redraw the display window */
-    InvalidateRect(g_hDispWnd, NULL, FALSE);
+    InvalidateRect(pData->m_hwndZoom, NULL, FALSE);
 }
 
-static VOID ZoomInOrOut(BOOL bZoomIn)
+static VOID
+Preview_ZoomInOrOut(PPREVIEW_DATA pData, BOOL bZoomIn)
 {
     UINT i, NewZoom;
 
@@ -146,10 +162,11 @@ static VOID ZoomInOrOut(BOOL bZoomIn)
     }
 
     /* Update toolbar and refresh screen */
-    UpdateZoom(NewZoom, TRUE, TRUE);
+    Preview_UpdateZoom(pData, NewZoom, TRUE, TRUE);
 }
 
-static VOID ResetZoom(VOID)
+static VOID
+Preview_ResetZoom(PPREVIEW_DATA pData)
 {
     RECT Rect;
     UINT ImageWidth, ImageHeight, NewZoom;
@@ -158,7 +175,7 @@ static VOID ResetZoom(VOID)
         return;
 
     /* get disp window size and image size */
-    GetClientRect(g_hDispWnd, &Rect);
+    GetClientRect(pData->m_hwndZoom, &Rect);
     GdipGetImageWidth(g_pImage, &ImageWidth);
     GdipGetImageHeight(g_pImage, &ImageHeight);
 
@@ -191,12 +208,31 @@ static VOID ResetZoom(VOID)
         }
     }
 
-    UpdateZoom(NewZoom, FALSE, TRUE);
+    Preview_UpdateZoom(pData, NewZoom, FALSE, TRUE);
 }
 
-static VOID pLoadImage(LPCWSTR szOpenFileName)
+static VOID
+Preview_UpdateTitle(PPREVIEW_DATA pData, LPCWSTR FileName)
 {
-    Anime_FreeInfo(&g_Anime);
+    WCHAR szText[MAX_PATH + 100];
+    LPWSTR pchFileTitle;
+
+    LoadStringW(g_hInstance, IDS_APPTITLE, szText, _countof(szText));
+
+    pchFileTitle = PathFindFileNameW(FileName);
+    if (pchFileTitle && *pchFileTitle)
+    {
+        StringCchCatW(szText, _countof(szText), L" - ");
+        StringCchCatW(szText, _countof(szText), pchFileTitle);
+    }
+
+    SetWindowTextW(pData->m_hwnd, szText);
+}
+
+static VOID
+Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
+{
+    Anime_FreeInfo(&pData->m_Anime);
 
     if (g_pImage)
     {
@@ -208,6 +244,7 @@ static VOID pLoadImage(LPCWSTR szOpenFileName)
     if (!szOpenFileName || GetFileAttributesW(szOpenFileName) == 0xFFFFFFFF)
     {
         DPRINT1("File %s not found!\n", szOpenFileName);
+        Preview_UpdateTitle(pData, NULL);
         return;
     }
 
@@ -216,19 +253,29 @@ static VOID pLoadImage(LPCWSTR szOpenFileName)
     if (!g_pImage)
     {
         DPRINT1("GdipLoadImageFromFile() failed\n");
+        Preview_UpdateTitle(pData, NULL);
         return;
     }
 
-    Anime_LoadInfo(&g_Anime);
+    Anime_LoadInfo(&pData->m_Anime);
 
     if (szOpenFileName && szOpenFileName[0])
         SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
 
     /* Reset zoom and redraw display */
-    ResetZoom();
+    Preview_ResetZoom(pData);
+
+    Preview_UpdateTitle(pData, szOpenFileName);
 }
 
-static VOID pSaveImageAs(HWND hwnd)
+static VOID
+Preview_pLoadImageFromNode(PPREVIEW_DATA pData, SHIMGVW_FILENODE *pNode)
+{
+    return Preview_pLoadImage(pData, (pNode ? pNode->FileName : NULL));
+}
+
+static VOID
+Preview_pSaveImageAs(PPREVIEW_DATA pData)
 {
     OPENFILENAMEW sfn;
     ImageCodecInfo *codecInfo;
@@ -238,6 +285,7 @@ static VOID pSaveImageAs(HWND hwnd)
     UINT num, size, j;
     size_t sizeRemain;
     WCHAR *c;
+    HWND hwnd = pData->m_hwnd;
 
     if (g_pImage == NULL)
         return;
@@ -306,14 +354,14 @@ static VOID pSaveImageAs(HWND hwnd)
 
     if (GetSaveFileNameW(&sfn))
     {
-        Anime_Pause(&g_Anime);
+        Anime_Pause(&pData->m_Anime);
 
         if (GdipSaveImageToFile(g_pImage, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
         {
             DPRINT1("GdipSaveImageToFile() failed\n");
         }
 
-        Anime_Start(&g_Anime, 0);
+        Anime_Start(&pData->m_Anime, 0);
     }
 
     QuickFree(szFilterMask);
@@ -321,42 +369,18 @@ static VOID pSaveImageAs(HWND hwnd)
 }
 
 static VOID
-pPrintImage(HWND hwnd)
+Preview_pPrintImage(PPREVIEW_DATA pData)
 {
     /* FIXME */
 }
 
 static VOID
-Preview_UpdateUI(HWND hwnd)
+Preview_UpdateUI(PPREVIEW_DATA pData)
 {
     BOOL bEnable = (g_pImage != NULL);
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
-    SendMessageW(g_hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
-    InvalidateRect(g_hDispWnd, NULL, FALSE);
-}
-
-static BOOL
-pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
-{
-    WCHAR szText[MAX_PATH + 100];
-    LPWSTR pchFileTitle;
-
-    pLoadImage(node ? node->FileName : NULL);
-
-    if (node == NULL)
-        return FALSE;
-
-    LoadStringW(g_hInstance, IDS_APPTITLE, szText, _countof(szText));
-
-    pchFileTitle = PathFindFileNameW(node->FileName);
-    if (pchFileTitle && *pchFileTitle)
-    {
-        StringCchCatW(szText, _countof(szText), L" - ");
-        StringCchCatW(szText, _countof(szText), pchFileTitle);
-    }
-    SetWindowTextW(hwnd, szText);
-
-    return g_pImage != NULL;
+    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+    InvalidateRect(pData->m_hwndZoom, NULL, FALSE);
 }
 
 static SHIMGVW_FILENODE*
@@ -670,43 +694,45 @@ ImageView_SaveSettings(VOID)
 }
 
 static BOOL
-Preview_CreateToolBar(HWND hwnd)
+Preview_CreateToolBar(PPREVIEW_DATA pData)
 {
-    g_hToolBar = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
-                                 WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS,
-                                 0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
-    if (g_hToolBar != NULL)
+    HWND hwndToolBar;
+    HIMAGELIST hImageList, hOldImageList;
+    const DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS;
+
+    hwndToolBar = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style,
+                                  0, 0, 0, 0, pData->m_hwnd, NULL, g_hInstance, NULL);
+    if (!hwndToolBar)
+        return FALSE;
+
+    pData->m_hwndToolBar = hwndToolBar;
+
+    SendMessageW(hwndToolBar, TB_BUTTONSTRUCTSIZE, sizeof(s_Buttons[0]), 0);
+    SendMessageW(hwndToolBar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+
+    hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
+    if (hImageList == NULL)
+        return FALSE;
+
+    for (UINT n = 0; n < _countof(s_ButtonConfig); n++)
     {
-        HIMAGELIST hImageList;
-
-        SendMessageW(g_hToolBar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
-
-        SendMessageW(g_hToolBar, TB_BUTTONSTRUCTSIZE, sizeof(s_Buttons[0]), 0);
-
-        hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
-        if (hImageList == NULL)
-            return FALSE;
-
-        for (UINT n = 0; n < _countof(s_ButtonConfig); n++)
-        {
-            ImageList_AddMasked(hImageList, LoadImageW(g_hInstance, MAKEINTRESOURCEW(s_ButtonConfig[n].idb), IMAGE_BITMAP,
-                                TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-        }
-
-        ImageList_Destroy((HIMAGELIST)SendMessageW(g_hToolBar, TB_SETIMAGELIST,
-                                                   0, (LPARAM)hImageList));
-
-        SendMessageW(g_hToolBar, TB_ADDBUTTONS, _countof(s_Buttons), (LPARAM)s_Buttons);
-
-        return TRUE;
+        HBITMAP hBitmap = LoadBitmapW(g_hInstance, MAKEINTRESOURCEW(s_ButtonConfig[n].idb));
+        ImageList_AddMasked(hImageList, hBitmap, RGB(255, 255, 255));
+        DeleteObject(hBitmap);
     }
 
-    return FALSE;
+    hOldImageList = (HIMAGELIST)SendMessageW(hwndToolBar, TB_SETIMAGELIST, 0, (LPARAM)hImageList);
+    ImageList_Destroy(hOldImageList);
+
+    SendMessageW(hwndToolBar, TB_ADDBUTTONS, _countof(s_Buttons), (LPARAM)s_Buttons);
+
+    return TRUE;
 }
 
 LRESULT CALLBACK
 ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    PPREVIEW_DATA pData = (PPREVIEW_DATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     switch (uMsg)
     {
         case WM_PAINT:
@@ -716,12 +742,12 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_TIMER:
         {
-            if (Anime_OnTimer(&g_Anime, wParam))
+            if (Anime_OnTimer(&pData->m_Anime, wParam))
                 InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
         default:
-            return CallWindowProcW(g_fnPrevProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(pData->m_fnPrevProc, hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
@@ -729,17 +755,35 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 {
+    HWND hwndZoom;
+    PPREVIEW_DATA pData = QuickAlloc(sizeof(PREVIEW_DATA), TRUE);
+    pData->m_hwnd = hwnd;
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
+
     DragAcceptFiles(hwnd, TRUE);
 
-    g_hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
-                                 WS_CHILD | WS_VISIBLE,
-                                 0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
+    hwndZoom = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE,
+                               0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
+    if (!hwndZoom)
+    {
+        QuickFree(pData);
+        return FALSE;
+    }
 
-    SetClassLongPtr(g_hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    g_fnPrevProc = (WNDPROC)SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM)ZoomWndProc);
+    pData->m_hwndZoom = hwndZoom;
+    SetWindowLongPtrW(hwndZoom, GWLP_USERDATA, (LONG_PTR)pData);
 
-    Preview_CreateToolBar(hwnd);
-    Anime_SetTimerWnd(&g_Anime, g_hDispWnd);
+    SetClassLongPtr(pData->m_hwndZoom, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
+    pData->m_fnPrevProc = (WNDPROC)SetWindowLongPtr(pData->m_hwndZoom,
+                                                    GWLP_WNDPROC, (LPARAM)ZoomWndProc);
+
+    if (!Preview_CreateToolBar(pData))
+    {
+        QuickFree(pData);
+        return FALSE;
+    }
+
+    Anime_SetTimerWnd(&pData->m_Anime, pData->m_hwndZoom);
 
     if (pCS && pCS->lpCreateParams)
     {
@@ -751,8 +795,8 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
         PathUnquoteSpacesW(szFile);
 
         g_pCurrentFile = pBuildFileList(szFile);
-        pLoadImageFromNode(g_pCurrentFile, hwnd);
-        Preview_UpdateUI(hwnd);
+        Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+        Preview_UpdateUI(pData);
     }
 
     return TRUE;
@@ -761,10 +805,11 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 static VOID
 Preview_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
 {
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
     if (zDelta != 0)
     {
         if (GetKeyState(VK_CONTROL) < 0)
-            ZoomInOrOut(zDelta > 0);
+            Preview_ZoomInOrOut(pData, zDelta > 0);
     }
 }
 
@@ -792,23 +837,26 @@ static VOID
 Preview_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 {
     RECT rc;
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    HWND hToolBar = pData->m_hwndToolBar;
 
-    SendMessageW(g_hToolBar, TB_AUTOSIZE, 0, 0);
+    SendMessageW(hToolBar, TB_AUTOSIZE, 0, 0);
 
-    GetWindowRect(g_hToolBar, &rc);
+    GetWindowRect(hToolBar, &rc);
 
-    MoveWindow(g_hDispWnd, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
+    MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
 
     if (!IsIconic(hwnd)) /* Is it not minimized? */
-        ResetZoom();
+        Preview_ResetZoom(pData);
 
     Preview_OnMoveSize(hwnd);
 }
 
 static VOID
-Preview_Delete(HWND hwnd)
+Preview_Delete(PPREVIEW_DATA pData)
 {
     WCHAR szCurFile[MAX_PATH + 1], szNextFile[MAX_PATH];
+    HWND hwnd = pData->m_hwnd;
     SHFILEOPSTRUCTW FileOp = { hwnd, FO_DELETE };
 
     if (!g_pCurrentFile)
@@ -836,14 +884,14 @@ Preview_Delete(HWND hwnd)
     {
         DPRINT("Preview_Delete: SHFileOperationW() failed or canceled\n");
 
-        pLoadImage(szCurFile);
+        Preview_pLoadImage(pData, szCurFile);
         return;
     }
 
     /* Reload the file list and go next file */
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = pBuildFileList(szNextFile);
-    pLoadImageFromNode(g_pCurrentFile, hwnd);
+    Preview_pLoadImageFromNode(pData, g_pCurrentFile);
 }
 
 static VOID
@@ -872,14 +920,16 @@ Preview_Edit(HWND hwnd)
 static VOID
 Preview_OnCommand(HWND hwnd, UINT nCommandID)
 {
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+
     switch (nCommandID)
     {
         case IDC_PREV_PIC:
             if (g_pCurrentFile)
             {
                 g_pCurrentFile = g_pCurrentFile->Prev;
-                pLoadImageFromNode(g_pCurrentFile, hwnd);
-                Preview_UpdateUI(hwnd);
+                Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+                Preview_UpdateUI(pData);
             }
             break;
 
@@ -887,17 +937,17 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             if (g_pCurrentFile)
             {
                 g_pCurrentFile = g_pCurrentFile->Next;
-                pLoadImageFromNode(g_pCurrentFile, hwnd);
-                Preview_UpdateUI(hwnd);
+                Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+                Preview_UpdateUI(pData);
             }
             break;
 
         case IDC_BEST_FIT:
-            ResetZoom();
+            Preview_ResetZoom(pData);
             break;
 
         case IDC_REAL_SIZE:
-            UpdateZoom(100, TRUE, FALSE);
+            Preview_UpdateZoom(pData, 100, TRUE, FALSE);
             break;
 
         case IDC_SLIDE_SHOW:
@@ -905,19 +955,19 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_ZOOM_IN:
-            ZoomInOrOut(TRUE);
+            Preview_ZoomInOrOut(pData, TRUE);
             break;
 
         case IDC_ZOOM_OUT:
-            ZoomInOrOut(FALSE);
+            Preview_ZoomInOrOut(pData, FALSE);
             break;
 
         case IDC_SAVEAS:
-            pSaveImageAs(hwnd);
+            Preview_pSaveImageAs(pData);
             break;
 
         case IDC_PRINT:
-            pPrintImage(hwnd);
+            Preview_pPrintImage(pData);
             break;
 
         case IDC_ROT_CLOCKW:
@@ -937,13 +987,13 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_DELETE:
-            Preview_Delete(hwnd);
-            Preview_UpdateUI(hwnd);
+            Preview_Delete(pData);
+            Preview_UpdateUI(pData);
             break;
 
         case IDC_MODIFY:
             Preview_Edit(hwnd);
-            Preview_UpdateUI(hwnd);
+            Preview_UpdateUI(pData);
             break;
     }
 }
@@ -967,6 +1017,8 @@ Preview_OnNotify(HWND hwnd, LPNMHDR pnmhdr)
 static VOID
 Preview_OnDestroy(HWND hwnd)
 {
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = NULL;
 
@@ -976,9 +1028,14 @@ Preview_OnDestroy(HWND hwnd)
         g_pImage = NULL;
     }
 
-    Anime_FreeInfo(&g_Anime);
+    Anime_FreeInfo(&pData->m_Anime);
 
-    SetWindowLongPtr(g_hDispWnd, GWLP_WNDPROC, (LPARAM)g_fnPrevProc);
+    SetWindowLongPtr(pData->m_hwndZoom, GWLP_WNDPROC, (LPARAM)pData->m_fnPrevProc);
+    SetWindowLongPtr(pData->m_hwndZoom, GWLP_USERDATA, 0);
+    DestroyWindow(pData->m_hwndZoom);
+    pData->m_hwndZoom = NULL;
+    QuickFree(pData);
+
     PostQuitMessage(0);
 }
 
@@ -986,12 +1043,13 @@ static VOID
 Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
 {
     WCHAR szFile[MAX_PATH];
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
 
     DragQueryFileW(hDrop, 0, szFile, _countof(szFile));
 
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = pBuildFileList(szFile);
-    pLoadImageFromNode(g_pCurrentFile, hwnd);
+    Preview_pLoadImageFromNode(pData, g_pCurrentFile);
 
     DragFinish(hDrop);
 }

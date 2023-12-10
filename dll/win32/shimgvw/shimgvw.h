@@ -29,11 +29,7 @@
 
 #include "resource.h"
 
-#define TB_IMAGE_WIDTH  16
-#define TB_IMAGE_HEIGHT 16
-
 extern HINSTANCE g_hInstance;
-extern HWND g_hDispWnd;
 extern GpImage *g_pImage;
 
 typedef struct
