@@ -7,6 +7,8 @@
 
 #include "shimgvw.h"
 
+#define ANIME_TIMER_ID  9999
+
 void Anime_FreeInfo(PANIME pAnime)
 {
     if (pAnime->m_pDelayItem)
@@ -34,6 +36,19 @@ void Anime_Start(PANIME pAnime, DWORD dwDelay)
 {
     if (pAnime->m_pDelayItem)
         SetTimer(pAnime->m_hwndTimer, ANIME_TIMER_ID, dwDelay, NULL);
+}
+
+BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam)
+{
+    DWORD dwDelay;
+
+    if (wParam != ANIME_TIMER_ID)
+        return FALSE;
+
+    Anime_Pause(pAnime);
+    if (Anime_Step(pAnime, &dwDelay))
+        Anime_Start(pAnime, dwDelay);
+    return TRUE;
 }
 
 BOOL Anime_LoadInfo(PANIME pAnime)

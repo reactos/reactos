@@ -737,20 +737,6 @@ ImageView_CreateToolBar(HWND hwnd)
     return FALSE;
 }
 
-static void ImageView_OnTimer(HWND hwnd)
-{
-    DWORD dwDelay;
-
-    Anime_Pause(&g_Anime);
-
-    InvalidateRect(hwnd, NULL, FALSE);
-
-    if (Anime_Step(&g_Anime, &dwDelay))
-    {
-        Anime_Start(&g_Anime, dwDelay);
-    }
-}
-
 LRESULT CALLBACK
 ImageView_DispWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -763,11 +749,8 @@ ImageView_DispWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_TIMER:
         {
-            if (wParam == ANIME_TIMER_ID)
-            {
-                ImageView_OnTimer(hwnd);
-                return 0;
-            }
+            if (Anime_OnTimer(&g_Anime, wParam))
+                InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
     }

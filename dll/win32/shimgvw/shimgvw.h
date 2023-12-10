@@ -64,8 +64,6 @@ typedef struct tagANIME
     HWND           m_hwndTimer;
 } ANIME, *PANIME;
 
-#define ANIME_TIMER_ID  9999
-
 void Anime_FreeInfo(PANIME pAnime);
 BOOL Anime_LoadInfo(PANIME pAnime);
 void Anime_SetTimerWnd(PANIME pAnime, HWND hwndTimer);
@@ -74,3 +72,4 @@ DWORD Anime_GetFrameDelay(PANIME pAnime, UINT nFrameIndex);
 void Anime_Start(PANIME pAnime, DWORD dwDelay);
 void Anime_Pause(PANIME pAnime);
 BOOL Anime_Step(PANIME pAnime, DWORD *pdwDelay);
+BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
