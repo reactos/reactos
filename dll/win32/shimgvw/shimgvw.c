@@ -243,10 +243,10 @@ static VOID pSaveImageAs(HWND hwnd)
         return;
 
     GdipGetImageEncodersSize(&num, &size);
-    codecInfo = malloc(size);
+    codecInfo = QuickAlloc(size, FALSE);
     if (!codecInfo)
     {
-        DPRINT1("malloc() failed in pSaveImageAs()\n");
+        DPRINT1("QuickAlloc() failed in pSaveImageAs()\n");
         return;
     }
 
@@ -263,11 +263,11 @@ static VOID pSaveImageAs(HWND hwnd)
     /* Add two more chars for the last terminator */
     sizeRemain += (sizeof(WCHAR) * 2);
 
-    szFilterMask = malloc(sizeRemain);
+    szFilterMask = QuickAlloc(sizeRemain, FALSE);
     if (!szFilterMask)
     {
         DPRINT1("cannot allocate memory for filter mask in pSaveImageAs()");
-        free(codecInfo);
+        QuickFree(codecInfo);
         return;
     }
 
@@ -316,8 +316,8 @@ static VOID pSaveImageAs(HWND hwnd)
         Anime_Start(&g_Anime, 0);
     }
 
-    free(szFilterMask);
-    free(codecInfo);
+    QuickFree(szFilterMask);
+    QuickFree(codecInfo);
 }
 
 static VOID
@@ -380,20 +380,20 @@ pBuildFileList(LPCWSTR szFirstFile)
     PathRemoveFileSpecW(szSearchPath);
 
     GdipGetImageDecodersSize(&num, &size);
-    codecInfo = malloc(size);
+    codecInfo = QuickAlloc(size, FALSE);
     if (!codecInfo)
     {
-        DPRINT1("malloc() failed in pLoadFileList()\n");
+        DPRINT1("QuickAlloc() failed in pLoadFileList()\n");
         return NULL;
     }
 
     GdipGetImageDecoders(num, size, codecInfo);
 
-    root = malloc(sizeof(SHIMGVW_FILENODE));
+    root = QuickAlloc(sizeof(SHIMGVW_FILENODE), FALSE);
     if (!root)
     {
-        DPRINT1("malloc() failed in pLoadFileList()\n");
-        free(codecInfo);
+        DPRINT1("QuickAlloc() failed in pLoadFileList()\n");
+        QuickFree(codecInfo);
         return NULL;
     }
 
@@ -422,18 +422,18 @@ pBuildFileList(LPCWSTR szFirstFile)
                         currentNode = conductor;
                     }
 
-                    conductor->Next = malloc(sizeof(SHIMGVW_FILENODE));
+                    conductor->Next = QuickAlloc(sizeof(SHIMGVW_FILENODE), FALSE);
 
-                    // if malloc fails, make circular what we have and return it
+                    // if QuickAlloc fails, make circular what we have and return it
                     if (!conductor->Next)
                     {
-                        DPRINT1("malloc() failed in pLoadFileList()\n");
+                        DPRINT1("QuickAlloc() failed in pLoadFileList()\n");
 
                         conductor->Next = root;
                         root->Prev = conductor;
 
                         FindClose(hFindHandle);
-                        free(codecInfo);
+                        QuickFree(codecInfo);
                         return conductor;
                     }
 
@@ -459,7 +459,7 @@ pBuildFileList(LPCWSTR szFirstFile)
     else
     {
         conductor = conductor->Prev;
-        free(conductor->Next);
+        QuickFree(conductor->Next);
     }
 
     // link the last node with the first one to make the list circular
@@ -467,7 +467,7 @@ pBuildFileList(LPCWSTR szFirstFile)
     root->Prev = conductor;
     conductor = currentNode;
 
-    free(codecInfo);
+    QuickFree(codecInfo);
 
     return conductor;
 }
@@ -487,7 +487,7 @@ pFreeFileList(SHIMGVW_FILENODE *root)
     {
         conductor = root;
         root = conductor->Next;
-        free(conductor);
+        QuickFree(conductor);
     }
 }
 

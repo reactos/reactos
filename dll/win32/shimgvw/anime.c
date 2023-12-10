@@ -13,7 +13,7 @@ void Anime_FreeInfo(PANIME pAnime)
 {
     if (pAnime->m_pDelayItem)
     {
-        free(pAnime->m_pDelayItem);
+        QuickFree(pAnime->m_pDelayItem);
         pAnime->m_pDelayItem = NULL;
     }
     pAnime->m_nFrameIndex = 0;
@@ -101,13 +101,13 @@ BOOL Anime_LoadInfo(PANIME pAnime)
     GdipImageGetFrameDimensionsCount(g_pImage, &nDimCount);
     if (nDimCount)
     {
-        GUID *dims = (GUID *)calloc(nDimCount, sizeof(GUID));
+        GUID *dims = (GUID *)QuickAlloc(nDimCount * sizeof(GUID), TRUE);
         if (dims)
         {
             GdipImageGetFrameDimensionsList(g_pImage, dims, nDimCount);
             GdipImageGetFrameCount(g_pImage, dims, &result);
             pAnime->m_nFrameCount = result;
-            free(dims);
+            QuickFree(dims);
         }
     }
 
@@ -116,7 +116,7 @@ BOOL Anime_LoadInfo(PANIME pAnime)
     cbItem = result;
     if (cbItem)
     {
-        pAnime->m_pDelayItem = (PropertyItem *)malloc(cbItem);
+        pAnime->m_pDelayItem = (PropertyItem *)QuickAlloc(cbItem, FALSE);
         GdipGetPropertyItem(g_pImage, PropertyTagFrameDelay, cbItem, pAnime->m_pDelayItem);
     }
 
@@ -125,14 +125,14 @@ BOOL Anime_LoadInfo(PANIME pAnime)
     cbItem = result;
     if (cbItem)
     {
-        PropertyItem *pItem = (PropertyItem *)malloc(cbItem);
+        PropertyItem *pItem = (PropertyItem *)QuickAlloc(cbItem, FALSE);
         if (pItem)
         {
             if (GdipGetPropertyItem(g_pImage, PropertyTagLoopCount, cbItem, pItem) == Ok)
             {
                 pAnime->m_nLoopCount = *(WORD *)pItem->value;
             }
-            free(pItem);
+            QuickFree(pItem);
         }
     }
 
