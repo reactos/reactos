@@ -3583,19 +3583,19 @@ NtUserGetListBoxInfo(
    PPROCESSINFO ppi;
    BOOL NotSameppi = FALSE;
    DWORD Ret = 0;
-   DECLARE_RETURN(DWORD);
 
    TRACE("Enter NtUserGetListBoxInfo\n");
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( 0 );
+      goto Exit;
    }
 
    if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_LISTBOX]) && Wnd->fnid != FNID_LISTBOX)
    {
-      RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
+      Ret = (DWORD)co_IntSendMessage(Wnd->head.h, LB_GETLISTBOXINFO, 0, 0);
+      goto Exit;
    }
 
    // wine lisbox:test_GetListBoxInfo lb_getlistboxinfo = 0, should not send a message!
@@ -3619,13 +3619,11 @@ NtUserGetListBoxInfo(
    }
    _SEH2_END;
 
-   RETURN( Ret);
-
-CLEANUP:
+Exit:
    if (NotSameppi) KeDetachProcess();
-   TRACE("Leave NtUserGetListBoxInfo, ret=%lu\n", _ret_);
+   TRACE("Leave NtUserGetListBoxInfo, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
