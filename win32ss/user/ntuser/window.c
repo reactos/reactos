@@ -3646,7 +3646,7 @@ Exit:
 HWND APIENTRY
 NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter NtUserSetParent\n");
    UserEnterExclusive();
@@ -3663,12 +3663,11 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
       hWndNewParent = IntGetMessageWindow();
    }
 
-   RETURN( co_UserSetParent(hWndChild, hWndNewParent));
+   Ret = co_UserSetParent(hWndChild, hWndNewParent);
 
-CLEANUP:
-   TRACE("Leave NtUserSetParent, ret=%p\n", _ret_);
+   TRACE("Leave NtUserSetParent, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
