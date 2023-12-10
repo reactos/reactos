@@ -3473,14 +3473,14 @@ NtUserGetComboBoxInfo(
    PPROCESSINFO ppi;
    BOOL NotSameppi = FALSE;
    BOOL Ret = TRUE;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetComboBoxInfo\n");
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE );
+      Ret = FALSE;
+      goto Exit;
    }
    _SEH2_TRY
    {
@@ -3489,20 +3489,23 @@ NtUserGetComboBoxInfo(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
        SetLastNtError(_SEH2_GetExceptionCode());
-       _SEH2_YIELD(RETURN(FALSE));
+       Ret = FALSE;
+       _SEH2_YIELD(goto Exit);
    }
    _SEH2_END;
 
    if (pcbi->cbSize < sizeof(COMBOBOXINFO))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN(FALSE);
+      Ret = FALSE;
+      goto Exit;
    }
 
    // Pass the user pointer, it was already probed.
    if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_COMBOBOX]) && Wnd->fnid != FNID_COMBOBOX)
    {
-      RETURN( (BOOL) co_IntSendMessage( Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+      Ret = (BOOL)co_IntSendMessage(Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
+      goto Exit;
    }
 
    ppi = PsGetCurrentProcessWin32Process();
@@ -3533,13 +3536,11 @@ NtUserGetComboBoxInfo(
    }
    _SEH2_END;
 
-   RETURN( Ret);
-
-CLEANUP:
+Exit:
    if (NotSameppi) KeDetachProcess();
-   TRACE("Leave NtUserGetComboBoxInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetComboBoxInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 ////
