@@ -747,7 +747,9 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         }
         default:
+        {
             return CallWindowProcW(pData->m_fnPrevProc, hwnd, uMsg, wParam, lParam);
+        }
     }
     return 0;
 }
