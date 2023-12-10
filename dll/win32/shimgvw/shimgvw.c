@@ -271,7 +271,7 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
 static VOID
 Preview_pLoadImageFromNode(PPREVIEW_DATA pData, SHIMGVW_FILENODE *pNode)
 {
-    return Preview_pLoadImage(pData, (pNode ? pNode->FileName : NULL));
+    Preview_pLoadImage(pData, (pNode ? pNode->FileName : NULL));
 }
 
 static VOID
