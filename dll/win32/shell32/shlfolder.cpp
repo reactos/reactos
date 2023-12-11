@@ -373,17 +373,21 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
                            DWORD dwFlags)
 {
     ERR("SHOpenFolderAndSelectItems() is hackplemented\n");
+    CComHeapPtr<ITEMIDLIST> freeItem;
     PCIDLIST_ABSOLUTE pidlItem;
     if (cidl)
     {
         /* Firefox sends a full pidl here dispite the fact it is a PCUITEMID_CHILD_ARRAY -_- */
-        if (ILGetNext(apidl[0]) != NULL)
+        if (!ILIsSingle(apidl[0]))
         {
             pidlItem = apidl[0];
         }
         else
         {
-            pidlItem = ILCombine(pidlFolder, apidl[0]);
+            HRESULT hr = SHILCombine(pidlFolder, apidl[0], &pidlItem);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+            freeItem.Attach(const_cast<PIDLIST_ABSOLUTE>(pidlItem));
         }
     }
     else
