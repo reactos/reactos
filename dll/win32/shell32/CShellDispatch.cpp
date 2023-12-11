@@ -131,14 +131,13 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
     return CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_LOCAL_SERVER, IID_PPV_ARG(IDispatch, ppid));
 }
 
-static HRESULT SHELL_OpenFolder(LPCITEMIDLIST pidl, LPCWSTR Verb = NULL)
+static HRESULT SHELL_OpenFolder(LPCITEMIDLIST pidl, LPCWSTR verb = NULL)
 {
-    // Custom function because SHOpenFolderAndSelectItems does not support non-FS pidls nor verbs.
     SHELLEXECUTEINFOW sei;
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_IDLIST | SEE_MASK_FLAG_DDEWAIT;
     sei.hwnd = NULL;
-    sei.lpVerb = Verb;
+    sei.lpVerb = verb;
     sei.lpFile = sei.lpParameters = sei.lpDirectory = NULL;
     sei.nShow = SW_SHOW;
     sei.lpIDList = const_cast<LPITEMIDLIST>(pidl);
@@ -148,11 +147,11 @@ static HRESULT SHELL_OpenFolder(LPCITEMIDLIST pidl, LPCWSTR Verb = NULL)
     return HRESULT_FROM_WIN32(error);
 }
 
-static HRESULT OpenFolder(VARIANT vDir, LPCWSTR Verb = NULL)
+static HRESULT OpenFolder(VARIANT vDir, LPCWSTR verb = NULL)
 {
     CComHeapPtr<ITEMIDLIST> idlist;
     HRESULT hr = VariantToIdlist(&vDir, &idlist);
-    if (hr == S_OK && SHELL_OpenFolder(idlist, Verb) == S_OK)
+    if (hr == S_OK && SHELL_OpenFolder(idlist, verb) == S_OK)
     {
         return S_OK;
     }
@@ -346,22 +345,25 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSystemInformation(BSTR name, VARIAN
     return E_NOTIMPL;
 }
 
-static SC_HANDLE OpenServiceHelper(LPCWSTR name, DWORD access)
+static HRESULT OpenServiceHelper(LPCWSTR name, DWORD access, SC_HANDLE &hSvc)
 {
-    SC_HANDLE hSvc = NULL, hScm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
-    if (hScm)
-    {
-        hSvc = OpenServiceW(hScm, name, access);
-        CloseServiceHandle(hScm);
-    }
-    return hSvc;
+    hSvc = NULL;
+    SC_HANDLE hScm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hScm)
+        return HResultFromWin32(GetLastError());
+    HRESULT hr = S_OK;
+    hSvc = OpenServiceW(hScm, name, access);
+    if (!hSvc)
+        hr = HResultFromWin32(GetLastError());
+    CloseServiceHandle(hScm);
+    return hr;
 }
 
 static HRESULT SHELL32_ControlService(BSTR name, DWORD control, VARIANT &persistent)
 {
     BOOL persist = V_VT(&persistent) == VT_BOOL && V_BOOL(&persistent);
     DWORD access = persist ? SERVICE_CHANGE_CONFIG : 0;
-    switch(control)
+    switch (control)
     {
         case 0:
             access |= SERVICE_START;
@@ -370,9 +372,9 @@ static HRESULT SHELL32_ControlService(BSTR name, DWORD control, VARIANT &persist
             access |= SERVICE_STOP;
             break;
     }
-    HRESULT hr = HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
-    SC_HANDLE hSvc = OpenServiceHelper(name, access);
-    if (hSvc)
+    SC_HANDLE hSvc;
+    HRESULT hr = OpenServiceHelper(name, access, hSvc);
+    if (SUCCEEDED(hr))
     {
         BOOL success;
         DWORD error, already;
@@ -408,7 +410,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStart(BSTR service, VARIANT per
     HRESULT hr = SHELL32_ControlService(service, 0, persistent);
     V_VT(ret) = VT_BOOL;
     V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
-    return hr;
+    return hr == S_OK ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStop(BSTR service, VARIANT persistent, VARIANT *ret)
@@ -418,7 +420,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStop(BSTR service, VARIANT pers
     HRESULT hr = SHELL32_ControlService(service, SERVICE_CONTROL_STOP, persistent);
     V_VT(ret) = VT_BOOL;
     V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
-    return hr;
+    return hr == S_OK ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR name, VARIANT *running)
@@ -469,11 +471,12 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::CanStartStopService(BSTR service, VARI
 {
     TRACE("(%p, %ls, %p)\n", this, service, ret);
 
-    SC_HANDLE hSvc = OpenServiceHelper(service, SERVICE_START | SERVICE_STOP);
-    if (hSvc)
+    SC_HANDLE hSvc;
+    HRESULT hr = OpenServiceHelper(service, SERVICE_START | SERVICE_STOP, hSvc);
+    if (SUCCEEDED(hr))
         CloseServiceHandle(hSvc);
     V_VT(ret) = VT_BOOL;
-    V_BOOL(ret) = (hSvc ? VARIANT_TRUE : VARIANT_FALSE);
+    V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
     return S_OK;
 }
 
@@ -529,7 +532,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
     int flag = -1;
     SHELLSTATE ss = { };
     SHGetSetSettings(&ss, setting, FALSE);
-    switch(setting)
+    switch (setting)
     {
         case SSF_SHOWALLOBJECTS:   flag = ss.fShowAllObjects;     break;
         case SSF_SHOWEXTENSIONS:   flag = ss.fShowExtensions;     break;
@@ -547,7 +550,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
         return S_OK;
     }
 
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 
