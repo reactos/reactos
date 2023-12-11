@@ -4119,7 +4119,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 {
    PWND Window;
    WORD OldValue;
-   DECLARE_RETURN(WORD);
+   WORD Ret = 0;
 
    TRACE("Enter NtUserSetWindowWord\n");
    UserEnterExclusive();
@@ -4127,12 +4127,12 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
    if (hWnd == IntGetDesktopWindow())
    {
       EngSetLastError(STATUS_ACCESS_DENIED);
-      RETURN( 0);
+      goto Exit;
    }
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( 0);
+      goto Exit;
    }
 
    switch (Index)
@@ -4140,30 +4140,32 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       case GWL_ID:
       case GWL_HINSTANCE:
       case GWL_HWNDPARENT:
-         RETURN( (WORD)co_UserSetWindowLong(UserHMGetHandle(Window), Index, (UINT)NewValue, TRUE));
+         Ret = (WORD)co_UserSetWindowLong(UserHMGetHandle(Window), Index, (UINT)NewValue, TRUE);
+         goto Exit;
+
       default:
          if (Index < 0)
          {
             EngSetLastError(ERROR_INVALID_INDEX);
-            RETURN( 0);
+            goto Exit;
          }
    }
 
    if ((ULONG)Index > (Window->cbwndExtra - sizeof(WORD)))
    {
       EngSetLastError(ERROR_INVALID_INDEX);
-      RETURN( 0);
+      goto Exit;
    }
 
    OldValue = *((WORD *)((PCHAR)(Window + 1) + Index));
    *((WORD *)((PCHAR)(Window + 1) + Index)) = NewValue;
 
-   RETURN( OldValue);
+   Ret = OldValue;
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowWord, ret=%u\n", _ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowWord, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
