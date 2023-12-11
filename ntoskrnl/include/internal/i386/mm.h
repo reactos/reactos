@@ -163,7 +163,7 @@ C_ASSERT(PD_COUNT == 1);
 
 #define MI_SYSTEM_PTE_BASE (PVOID)MiAddressToPte(NULL)
 
-/* Base addreses for page directories */
+/* Base addresses for page directories */
 #define PDE_BASE (ULONG_PTR)MiPteToPde(PTE_BASE)
 #define PDE_TOP  (ULONG_PTR)(PDE_BASE + (PDE_PER_SYSTEM * sizeof(MMPDE)) - 1)
 #define PDE_MASK (PDE_TOP - PDE_BASE)
