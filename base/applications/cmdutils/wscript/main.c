@@ -563,7 +563,7 @@ static void wsf_addobjectfromnode(IActiveScript *script, IXMLDOMNode *obj)
         CLSID clsid;
         HRESULT hr;
         hr = xmldomnode_getattributevalue(obj, L"clsid", &bsclsid);
-        if (FAILED(hr) || FAILED(CLSIDFromProgID(bsclsid, &clsid)))
+        if (FAILED(hr) || FAILED(CLSIDFromString(bsclsid, &clsid)))
         {
             SysFreeString(bsclsid);
             if (SUCCEEDED(hr = xmldomnode_getattributevalue(obj, L"progid", &bsclsid)))
