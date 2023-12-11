@@ -905,6 +905,14 @@ Preview_Edit(HWND hwnd)
     if (!g_pCurrentFile)
         return;
 
+    /* Avoid file locking */
+    /* FIXME: Our GdipLoadImageFromFile locks the image file */
+    if (g_pImage)
+    {
+        GdipDisposeImage(g_pImage);
+        g_pImage = NULL;
+    }
+
     GetFullPathNameW(g_pCurrentFile->FileName, _countof(szPathName), szPathName, NULL);
     szPathName[_countof(szPathName) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
@@ -917,6 +925,9 @@ Preview_Edit(HWND hwnd)
     {
         DPRINT1("Preview_Edit: ShellExecuteExW() failed with code %ld\n", GetLastError());
     }
+
+    // Destroy the window to quit the application
+    DestroyWindow(hwnd);
 }
 
 static VOID
