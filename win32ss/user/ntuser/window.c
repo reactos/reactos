@@ -4588,8 +4588,7 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 {
    PWND Wnd;
    NTSTATUS Status;
-   INT Result;
-   DECLARE_RETURN(INT);
+   INT Result = 0;
 
    TRACE("Enter NtUserInternalGetWindowText\n");
    UserEnterShared();
@@ -4597,12 +4596,12 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
    if(lpString && (nMaxCount <= 1))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( 0);
+      goto Exit;
    }
 
    if(!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( 0);
+      goto Exit;
    }
 
    Result = Wnd->strName.Length / sizeof(WCHAR);
@@ -4619,7 +4618,8 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
          if(!NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
-            RETURN( 0);
+            Result = 0;
+            goto Exit;
          }
          Buffer += Copy;
       }
@@ -4628,18 +4628,17 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         RETURN( 0);
+         Result = 0;
+         goto Exit;
       }
 
       Result = Copy;
    }
 
-   RETURN( Result);
-
-CLEANUP:
-   TRACE("Leave NtUserInternalGetWindowText, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserInternalGetWindowText, ret=%i\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 /*
