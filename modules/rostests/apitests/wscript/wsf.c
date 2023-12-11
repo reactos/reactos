@@ -62,7 +62,7 @@ static DWORD runscriptfile(LPCWSTR path, LPCWSTR engine)
     si.cb = sizeof(si);
     if (CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
-        DWORD code = 42;
+        DWORD code = ERROR_INTERNAL_ERROR;
         WaitForSingleObject(pi.hProcess, INFINITE);
         GetExitCodeProcess(pi.hProcess, &code);
         CloseHandle(pi.hProcess);
