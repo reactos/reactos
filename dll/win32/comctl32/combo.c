@@ -1890,8 +1890,15 @@ static LRESULT CALLBACK COMBO_WindowProc( HWND hwnd, UINT message, WPARAM wParam
     case WM_SYSKEYDOWN:
         if ( KEYDATA_ALT & HIWORD(lParam) )
             if( wParam == VK_UP || wParam == VK_DOWN )
+#ifdef __REACTOS__
+            {
+#endif
                 COMBO_FlipListbox( lphc, FALSE, FALSE );
         return  0;
+#ifdef __REACTOS__
+            }
+        break;
+#endif
 
     case WM_KEYDOWN:
         if ((wParam == VK_RETURN || wParam == VK_ESCAPE) &&
