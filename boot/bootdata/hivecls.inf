@@ -556,6 +556,8 @@ HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224
 HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; WSH
+HKCR,".wsf","",0x00000000,"WSFFile"
+HKCR,".wsf","PerceivedType",0x00000000,"text"
 HKCR,"WSFFile","",0x00000000,%WSFFILE%
 HKCR,"WSFFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"WSFFile\shell\Open\command","",0x00020000,"""%SystemRoot%\system32\WScript.exe"" ""%1"" %*"
