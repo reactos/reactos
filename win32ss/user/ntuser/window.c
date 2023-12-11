@@ -4192,17 +4192,16 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-   DWORD_PTR Result;
+   DWORD_PTR Result = 0;
    PWND pWnd, pwndActive;
    PTHREADINFO pti, ptiActive;
-   DECLARE_RETURN(UINT);
 
    TRACE("Enter NtUserQueryWindow\n");
    UserEnterShared();
 
    if (!(pWnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( 0);
+      goto Exit;
    }
 
    switch(Index)
@@ -4260,19 +4259,14 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
       case QUERY_WINDOW_DEFAULT_IME: /* default IME window */
          if (pWnd->head.pti->spwndDefaultIme)
             Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
-         else
-            Result = 0;
          break;
 
       case QUERY_WINDOW_DEFAULT_ICONTEXT: /* default input context handle */
          if (pWnd->head.pti->spDefaultImc)
             Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
-         else
-            Result = 0;
          break;
 
       case QUERY_WINDOW_ACTIVE_IME:
-         Result = 0;
          if (gpqForeground && gpqForeground->spwndActive)
          {
              pwndActive = gpqForeground->spwndActive;
@@ -4285,18 +4279,12 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
              }
          }
          break;
-
-      default:
-         Result = 0;
-         break;
    }
 
-   RETURN( Result);
-
-CLEANUP:
-   TRACE("Leave NtUserQueryWindow, ret=%u\n", _ret_);
+Exit:
+   TRACE("Leave NtUserQueryWindow, ret=%u\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 /*
