@@ -1168,7 +1168,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    if (Wnd == Wnd->head.rpdesk->spwndMessage)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      return( NULL);
+      return NULL;
    }
 
    /* Some applications try to set a child as a parent */
@@ -1300,14 +1300,14 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
    if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( NULL);
+      return NULL;
    }
 
    if (hWndChild == IntGetDesktopWindow())
    {
       ERR("UserSetParent Access Denied!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
-      return( NULL);
+      return NULL;
    }
 
    if (hWndNewParent)
@@ -1315,21 +1315,21 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
       if (!(WndParent = UserGetWindowObject(hWndNewParent)))
       {
          ERR("UserSetParent Bad New Parent!\n");
-         return( NULL);
+         return NULL;
       }
    }
    else
    {
       if (!(WndParent = UserGetWindowObject(IntGetDesktopWindow())))
       {
-         return( NULL);
+         return NULL;
       }
    }
 
    if (!(Wnd = UserGetWindowObject(hWndChild)))
    {
       ERR("UserSetParent Bad Child!\n");
-      return( NULL);
+      return NULL;
    }
 
    UserRefObjectCo(Wnd, &Ref);
@@ -1346,7 +1346,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
       UserDereferenceObject(WndOldParent);
    }
 
-   return( hWndOldParent);
+   return hWndOldParent;
 }
 
 /* Unlink the window from siblings. Children and parent are kept in place. */
@@ -3692,13 +3692,13 @@ HWND FASTCALL UserGetShellWindow(VOID)
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( (HWND)0);
+      return (HWND)0;
    }
 
    Ret = (HWND)WinStaObject->ShellWindow;
 
    ObDereferenceObject(WinStaObject);
-   return( Ret);
+   return Ret;
 }
 
 /*
@@ -3831,7 +3831,7 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      return( 0);
+      return 0;
    }
 
    if ((INT)Index >= 0)
@@ -3839,7 +3839,7 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
       if ((Index + Size) > Window->cbwndExtra)
       {
          EngSetLastError(ERROR_INVALID_INDEX);
-         return( 0);
+         return 0;
       }
 
 #ifdef _WIN64
@@ -3974,7 +3974,7 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
                  Window->fnid & FNID_FREED)
             {
                EngSetLastError(ERROR_ACCESS_DENIED);
-               return( 0);
+               return 0;
             }
             OldValue = (LONG_PTR)IntSetWindowProc(Window,
                                                   (WNDPROC)NewValue,
@@ -4013,7 +4013,7 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
       }
    }
 
-   return( OldValue);
+   return OldValue;
 }
 
 LONG FASTCALL
