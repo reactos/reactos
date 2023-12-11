@@ -2800,7 +2800,11 @@ TAB_SetItemT (TAB_INFO *infoPtr, INT iItem, LPTCITEMW tabItem, BOOL bUnicode)
 
   /* Update and repaint tabs */
   TAB_SetItemBounds(infoPtr);
+#ifdef __REACTOS__
+  InvalidateRect(infoPtr->hwnd, NULL, TRUE);
+#else
   TAB_InvalidateTabArea(infoPtr);
+#endif
 
   return TRUE;
 }
