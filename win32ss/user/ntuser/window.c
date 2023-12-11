@@ -4295,8 +4295,7 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
    UNICODE_STRING SafeMessageName;
    NTSTATUS Status;
-   UINT Ret;
-   DECLARE_RETURN(UINT);
+   UINT Ret = 0;
 
    TRACE("Enter NtUserRegisterWindowMessage\n");
    UserEnterExclusive();
@@ -4304,25 +4303,24 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
    if(MessageNameUnsafe == NULL)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( 0);
+      goto Exit;
    }
 
    Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( 0);
+      goto Exit;
    }
 
    Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
    if (SafeMessageName.Buffer)
       ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
-   RETURN( Ret);
 
-CLEANUP:
-   TRACE("Leave NtUserRegisterWindowMessage, ret=%u\n", _ret_);
+Exit:
+   TRACE("Leave NtUserRegisterWindowMessage, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
