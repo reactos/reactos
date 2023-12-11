@@ -3715,7 +3715,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
    PWINSTATION_OBJECT WinStaObject;
    PWND WndShell, WndListView;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
    PTHREADINFO ti;
@@ -3725,12 +3725,12 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    if (!(WndShell = UserGetWindowObject(hwndShell)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if (!(WndListView = UserGetWindowObject(hwndListView)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
@@ -3742,7 +3742,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    /*
@@ -3751,7 +3751,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    if (WinStaObject->ShellWindow)
    {
       ObDereferenceObject(WinStaObject);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    /*
@@ -3770,14 +3770,14 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       if (WndListView->ExStyle & WS_EX_TOPMOST)
       {
          ObDereferenceObject(WinStaObject);
-         RETURN( FALSE);
+         goto Exit;
       }
    }
 
    if (WndShell->ExStyle & WS_EX_TOPMOST)
    {
       ObDereferenceObject(WinStaObject);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    UserRefObjectCo(WndShell, &Ref);
@@ -3801,12 +3801,12 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    UserDerefObjectCo(WndShell);
 
    ObDereferenceObject(WinStaObject);
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetShellWindowEx, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetShellWindowEx, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 // Fixes wine Win test_window_styles and todo tests...
