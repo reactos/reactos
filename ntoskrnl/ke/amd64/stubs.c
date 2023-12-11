@@ -105,6 +105,9 @@ KiIdleLoop(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD OldThread, NewThread;
 
+    /* Set idle summary bit */
+    InterlockedBitTestAndSetAffinity(&KiIdleSummary, Prcb->Number);
+
     /* Now loop forever */
     while (TRUE)
     {
@@ -148,8 +151,14 @@ KiIdleLoop(VOID)
             KfRaiseIrql(SYNCH_LEVEL);
 #endif
 
+            /* Clear idle summary bit */
+            InterlockedBitTestAndResetAffinity(&KiIdleSummary, Prcb->Number);
+
             /* Switch away from the idle thread */
             KiSwapContext(APC_LEVEL, OldThread);
+
+            /* Set idle summary bit */
+            InterlockedBitTestAndSetAffinity(&KiIdleSummary, Prcb->Number);
 
 #ifdef CONFIG_SMP
             /* Go back to DISPATCH_LEVEL */
