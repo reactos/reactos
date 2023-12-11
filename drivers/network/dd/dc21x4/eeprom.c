@@ -859,6 +859,8 @@ AddressRomChecksumValid(
     ULONG64 TestPatterm;
     ULONG Checksum, i;
 
+    PAGED_CODE();
+
     NdisMoveMemory(&TestPatterm, &Octet[24], 8);
     if (TestPatterm != EAR_TEST_PATTERN)
         return FALSE;
@@ -886,6 +888,8 @@ SRomReadMacAddress(
 {
     ULONG MacOffset;
 
+    PAGED_CODE();
+
     /* Check if we have a board with an old EAR format */
     if (NdisEqualMemory(SRom, &SRom[16], 8))
     {
@@ -912,7 +916,7 @@ SRomReadMacAddress(
     }
 
     /* Sanity check */
-    if (*(PULONG)SRom == 0xFFFFFFF || *(PULONG)SRom == 0)
+    if (*(PULONG)SRom == 0xFFFFFFFF || *(PULONG)SRom == 0)
         return FALSE;
 
     WARN("Legacy/unknown board found\n");
