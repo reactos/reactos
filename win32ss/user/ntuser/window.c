@@ -4331,20 +4331,20 @@ NtUserSetWindowFNID(HWND hWnd,
                     WORD fnID)
 {
    PWND Wnd;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetWindowFNID\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if (Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process())
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    // From user land we only set these.
@@ -4355,17 +4355,17 @@ NtUserSetWindowFNID(HWND hWnd,
           Wnd->fnid != 0)
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         RETURN( FALSE);
+         goto Exit;
       }
    }
 
    Wnd->fnid |= fnID;
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
+Exit:
    TRACE("Leave NtUserSetWindowFNID\n");
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL APIENTRY
