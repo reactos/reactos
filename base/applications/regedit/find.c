@@ -91,7 +91,7 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
 static BOOL MatchString(LPCWCH pch1, INT cch1, LPCWCH pch2, INT cch2)
 {
     INT i;
-    DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? NORM_IGNORECASE : 0);
+    DWORD dwNorm = ((s_dwFlags & RSF_MATCHCASE) ? 0 : NORM_IGNORECASE);
 
     if (s_dwFlags & RSF_WHOLESTRING)
         return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, dwNorm, pch1, cch1, pch2, cch2);
