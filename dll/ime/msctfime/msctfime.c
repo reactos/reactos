@@ -132,7 +132,7 @@ ImeDestroy(
 /***********************************************************************
  *      ImeEscape (MSCTFIME.@)
  *
- * MSCTFIME has no Escape feature.
+ * MSCTFIME has no IME Escape feature.
  *
  * @implemented
  */
