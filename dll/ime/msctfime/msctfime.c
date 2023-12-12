@@ -24,7 +24,7 @@ ImeInquire(
 /***********************************************************************
  *      ImeConversionList (MSCTFIME.@)
  *
- * MSCTFIME has no conversion-list feature.
+ * MSCTFIME has no IME conversion-list feature.
  *
  * @implemented
  */
