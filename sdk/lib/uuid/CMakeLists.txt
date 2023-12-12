@@ -205,7 +205,7 @@ list(APPEND SOURCE
 #    hnclsid.c
     ieguids.c
 #    iid.c
-#    msctf_g.c
+    msctf_g.c
 #    ncclsid.c
 #    ndisguid.c
     netfwv6clsid.c
