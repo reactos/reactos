@@ -42,7 +42,7 @@ cpp_quote("EXTERN_C HRESULT WINAPI TF_InvalidAssemblyListCache(VOID);")
 cpp_quote("EXTERN_C HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(VOID);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
-cpp_quote("DEFINE_GUID(GUID_PROP_ATTRIBUTE,0x34b45670,0x7526,0x11d2,0xa1,0x47,0x00,0x10,0x5a,0x27,0x99,0xb5);")
+cpp_quote("EXTERN_C const GUID GUID_PROP_ATTRIBUTE;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_LANGID;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_READING;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_COMPOSING;")
