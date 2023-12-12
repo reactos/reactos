@@ -21,6 +21,13 @@ ImeInquire(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeConversionList (MSCTFIME.@)
+ *
+ * MSCTFIME has no conversion-list feature.
+ *
+ * @implemented
+ */
 DWORD WINAPI
 ImeConversionList(
     _In_ HIMC hIMC,
@@ -29,7 +36,7 @@ ImeConversionList(
     _In_ DWORD dwBufLen,
     _In_ UINT uFlag)
 {
-    FIXME("stub:(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
+    TRACE("(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
     return 0;
 }
 
@@ -122,13 +129,20 @@ ImeDestroy(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeEscape (MSCTFIME.@)
+ *
+ * MSCTFIME has no Escape feature.
+ *
+ * @implemented
+ */
 LRESULT WINAPI
 ImeEscape(
     _In_ HIMC hIMC,
     _In_ UINT uEscape,
     _Inout_opt_ LPVOID lpData)
 {
-    FIXME("stub:(%p, %u, %p)\n", hIMC, uEscape, lpData);
+    TRACE("(%p, %u, %p)\n", hIMC, uEscape, lpData);
     return 0;
 }
 
@@ -143,21 +157,35 @@ ImeProcessKey(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeSelect (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeSelect does nothing.
+ *
+ * @implemented
+ */
 BOOL WINAPI
 ImeSelect(
     _In_ HIMC hIMC,
     _In_ BOOL fSelect)
 {
-    FIXME("stub:(%p, %u)\n", hIMC, fSelect);
+    TRACE("(%p, %u)\n", hIMC, fSelect);
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeSetActiveContext (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeSetActiveContext does nothing.
+ *
+ * @implemented
+ */
 BOOL WINAPI
 ImeSetActiveContext(
     _In_ HIMC hIMC,
     _In_ BOOL fFlag)
 {
-    FIXME("stub:(%p, %u)\n", hIMC, fFlag);
+    TRACE("(%p, %u)\n", hIMC, fFlag);
     return FALSE;
 }
 
