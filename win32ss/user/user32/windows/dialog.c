@@ -2628,9 +2628,10 @@ IsDialogMessageW(
                  HWND hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
 
                  /* Skip STATIC elements when arrow-moving through a list of controls */
-                 while (hwndNext && (hwndFirst != hwndNext) &&
-                        (SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
+                 while (hwndNext && (SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
                  {
+                     if (hwndFirst == hwndNext)
+                         return TRUE;
                      hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious);
                  }
 
