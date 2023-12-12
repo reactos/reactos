@@ -2624,16 +2624,16 @@ IsDialogMessageW(
              if (!(dlgCode & DLGC_WANTARROWS))
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
-                 HWND hwndFirst = lpMsg->hwnd;
-                 HWND hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
 
                  /* Skip STATIC elements when arrow-moving through a list of controls */
-                 while (hwndNext && (SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
-                 {
-                     if (hwndFirst == hwndNext)
-                         return TRUE;
-                     hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious);
-                 }
+                 HWND hwndNext, hwndFirst = lpMsg->hwnd;
+                 for (hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
+                      hwndNext && hwndFirst != hwndNext;
+                      hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious))
+                  {
+                      if (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
+                          break;
+                  }
 
                  if (hwndNext && SendMessageW( hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
                  {
