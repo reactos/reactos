@@ -3421,7 +3421,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
       Ancestor = UserGetAncestor(Window, Type);
       /* fixme: can UserGetAncestor ever return NULL for a valid window? */
 
-      Ret = (Ancestor ? Ancestor->head.h : NULL);
+      Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
    }
 
    TRACE("Leave NtUserGetAncestor, ret=%p\n", Ret);
@@ -3504,7 +3504,7 @@ NtUserGetComboBoxInfo(
    // Pass the user pointer, it was already probed.
    if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_COMBOBOX]) && Wnd->fnid != FNID_COMBOBOX)
    {
-      Ret = (BOOL)co_IntSendMessage(Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
+      Ret = (BOOL)co_IntSendMessage(UserHMGetHandle(Wnd), CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
       goto Exit;
    }
 
@@ -3594,7 +3594,7 @@ NtUserGetListBoxInfo(
 
    if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_LISTBOX]) && Wnd->fnid != FNID_LISTBOX)
    {
-      Ret = (DWORD)co_IntSendMessage(Wnd->head.h, LB_GETLISTBOXINFO, 0, 0);
+      Ret = (DWORD)co_IntSendMessage(UserHMGetHandle(Wnd), LB_GETLISTBOXINFO, 0, 0);
       goto Exit;
    }
 
@@ -3692,7 +3692,7 @@ HWND FASTCALL UserGetShellWindow(VOID)
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return (HWND)0;
+      return NULL;
    }
 
    Ret = (HWND)WinStaObject->ShellWindow;
