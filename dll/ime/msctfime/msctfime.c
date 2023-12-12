@@ -44,7 +44,7 @@ ImeConversionList(
 /***********************************************************************
  *      ImeRegisterWord (MSCTFIME.@)
  *
- * MSCTFIME has no feature of directly registering word.
+ * MSCTFIME's ImeRegisterWord does nothing.
  *
  * @implemented
  * @see ImeUnregisterWord
@@ -62,7 +62,7 @@ ImeRegisterWord(
 /***********************************************************************
  *      ImeUnregisterWord (MSCTFIME.@)
  *
- * MSCTFIME has no feature of directly registering word.
+ * MSCTFIME's ImeUnregisterWord does nothing.
  *
  * @implemented
  * @see ImeRegisterWord
@@ -80,7 +80,7 @@ ImeUnregisterWord(
 /***********************************************************************
  *      ImeGetRegisterWordStyle (MSCTFIME.@)
  *
- * MSCTFIME has no feature of directly registering word.
+ * MSCTFIME's ImeGetRegisterWordStyle does nothing.
  *
  * @implemented
  * @see ImeRegisterWord
@@ -97,7 +97,7 @@ ImeGetRegisterWordStyle(
 /***********************************************************************
  *      ImeEnumRegisterWord (MSCTFIME.@)
  *
- * MSCTFIME has no feature of directly registering word.
+ * MSCTFIME's ImeEnumRegisterWord does nothing.
  *
  * @implemented
  * @see ImeRegisterWord
