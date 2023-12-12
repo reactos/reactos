@@ -24,7 +24,7 @@ ImeInquire(
 /***********************************************************************
  *      ImeConversionList (MSCTFIME.@)
  *
- * MSCTFIME has no IME conversion-list feature.
+ * MSCTFIME's ImeConversionList does nothing.
  *
  * @implemented
  * @see ImmGetConversionListW
@@ -137,7 +137,7 @@ ImeDestroy(
 /***********************************************************************
  *      ImeEscape (MSCTFIME.@)
  *
- * MSCTFIME has no IME Escape feature.
+ * MSCTFIME's ImeEscape does nothing.
  *
  * @implemented
  * @see CtfImeEscapeEx
