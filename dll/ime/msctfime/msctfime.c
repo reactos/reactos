@@ -21,6 +21,14 @@ ImeInquire(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeConversionList (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeConversionList does nothing.
+ *
+ * @implemented
+ * @see ImmGetConversionListW
+ */
 DWORD WINAPI
 ImeConversionList(
     _In_ HIMC hIMC,
@@ -29,39 +37,71 @@ ImeConversionList(
     _In_ DWORD dwBufLen,
     _In_ UINT uFlag)
 {
-    FIXME("stub:(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
+    TRACE("(%p, %s, %p, 0x%lX, %u)\n", hIMC, debugstr_w(lpSrc), lpDst, dwBufLen, uFlag);
     return 0;
 }
 
+/***********************************************************************
+ *      ImeRegisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeRegisterWord does nothing.
+ *
+ * @implemented
+ * @see ImeUnregisterWord
+ */
 BOOL WINAPI
 ImeRegisterWord(
     _In_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCWSTR lpszString)
 {
-    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
+    TRACE("(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeUnregisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeUnregisterWord does nothing.
+ *
+ * @implemented
+ * @see ImeRegisterWord
+ */
 BOOL WINAPI
 ImeUnregisterWord(
     _In_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCWSTR lpszString)
 {
-    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
+    TRACE("(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeGetRegisterWordStyle (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeGetRegisterWordStyle does nothing.
+ *
+ * @implemented
+ * @see ImeRegisterWord
+ */
 UINT WINAPI
 ImeGetRegisterWordStyle(
     _In_ UINT nItem,
     _Out_ LPSTYLEBUFW lpStyleBuf)
 {
-    FIXME("stub:(%u, %p)\n", nItem, lpStyleBuf);
+    TRACE("(%u, %p)\n", nItem, lpStyleBuf);
     return 0;
 }
 
+/***********************************************************************
+ *      ImeEnumRegisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeEnumRegisterWord does nothing.
+ *
+ * @implemented
+ * @see ImeRegisterWord
+ */
 UINT WINAPI
 ImeEnumRegisterWord(
     _In_ REGISTERWORDENUMPROCW lpfnEnumProc,
@@ -70,7 +110,7 @@ ImeEnumRegisterWord(
     _In_opt_ LPCWSTR lpszString,
     _In_opt_ LPVOID lpData)
 {
-    FIXME("stub:(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
+    TRACE("(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
           dwStyle, debugstr_w(lpszString), lpData);
     return 0;
 }
@@ -94,13 +134,21 @@ ImeDestroy(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeEscape (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeEscape does nothing.
+ *
+ * @implemented
+ * @see CtfImeEscapeEx
+ */
 LRESULT WINAPI
 ImeEscape(
     _In_ HIMC hIMC,
     _In_ UINT uEscape,
     _Inout_opt_ LPVOID lpData)
 {
-    FIXME("stub:(%p, %u, %p)\n", hIMC, uEscape, lpData);
+    TRACE("(%p, %u, %p)\n", hIMC, uEscape, lpData);
     return 0;
 }
 
@@ -115,21 +163,37 @@ ImeProcessKey(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeSelect (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeSelect does nothing.
+ *
+ * @implemented
+ * @see CtfImeSelectEx
+ */
 BOOL WINAPI
 ImeSelect(
     _In_ HIMC hIMC,
     _In_ BOOL fSelect)
 {
-    FIXME("stub:(%p, %u)\n", hIMC, fSelect);
+    TRACE("(%p, %u)\n", hIMC, fSelect);
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeSetActiveContext (MSCTFIME.@)
+ *
+ * MSCTFIME's ImeSetActiveContext does nothing.
+ *
+ * @implemented
+ * @see CtfImeSetActiveContextAlways
+ */
 BOOL WINAPI
 ImeSetActiveContext(
     _In_ HIMC hIMC,
     _In_ BOOL fFlag)
 {
-    FIXME("stub:(%p, %u)\n", hIMC, fFlag);
+    TRACE("(%p, %u)\n", hIMC, fFlag);
     return FALSE;
 }
 
