@@ -4,8 +4,6 @@ import "msctf.idl";
 import "ctfutb.idl";
 #endif
 
-cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_SPEECH_OPENCLOSE;")
-
 typedef enum
 {
     STYLE_ACTIVE_SELECTION = 0,
