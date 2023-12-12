@@ -33,35 +33,63 @@ ImeConversionList(
     return 0;
 }
 
+/***********************************************************************
+ *      ImeRegisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME has no feature of directly registering word.
+ *
+ * @implemented
+ */
 BOOL WINAPI
 ImeRegisterWord(
     _In_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCWSTR lpszString)
 {
-    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
+    TRACE("(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeUnregisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME has no feature of directly registering word.
+ *
+ * @implemented
+ */
 BOOL WINAPI
 ImeUnregisterWord(
     _In_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCWSTR lpszString)
 {
-    FIXME("stub:(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
+    TRACE("(%s, 0x%lX, %s)\n", debugstr_w(lpszReading), dwStyle, debugstr_w(lpszString));
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeGetRegisterWordStyle (MSCTFIME.@)
+ *
+ * MSCTFIME has no feature of directly registering word.
+ *
+ * @implemented
+ */
 UINT WINAPI
 ImeGetRegisterWordStyle(
     _In_ UINT nItem,
     _Out_ LPSTYLEBUFW lpStyleBuf)
 {
-    FIXME("stub:(%u, %p)\n", nItem, lpStyleBuf);
+    TRACE("(%u, %p)\n", nItem, lpStyleBuf);
     return 0;
 }
 
+/***********************************************************************
+ *      ImeEnumRegisterWord (MSCTFIME.@)
+ *
+ * MSCTFIME has no feature of directly registering word.
+ *
+ * @implemented
+ */
 UINT WINAPI
 ImeEnumRegisterWord(
     _In_ REGISTERWORDENUMPROCW lpfnEnumProc,
@@ -70,7 +98,7 @@ ImeEnumRegisterWord(
     _In_opt_ LPCWSTR lpszString,
     _In_opt_ LPVOID lpData)
 {
-    FIXME("stub:(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
+    TRACE("(%p, %s, %lu, %s, %p)\n", lpfnEnumProc, debugstr_w(lpszReading),
           dwStyle, debugstr_w(lpszString), lpData);
     return 0;
 }
