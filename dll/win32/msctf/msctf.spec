@@ -9,14 +9,14 @@
 @ stub TF_CheckThreadInputIdle
 @ stub TF_ClearLangBarAddIns
 @ stub TF_CreateCategoryMgr
-@ stub TF_CreateCicLoadMutex
+@ stdcall -stub TF_CreateCicLoadMutex(ptr)
 @ stub TF_CreateDisplayAttributeMgr
 @ stdcall TF_CreateInputProcessorProfiles(ptr)
 @ stdcall TF_CreateLangBarItemMgr(ptr)
 @ stdcall TF_CreateLangBarMgr(ptr)
 @ stdcall TF_CreateThreadMgr(ptr)
 @ stub TF_DllDetachInOther
-@ stub TF_GetGlobalCompartment
+@ stdcall -stub TF_GetGlobalCompartment(ptr)
 @ stub TF_GetInputScope
 @ stub TF_GetLangIcon
 @ stub TF_GetMlngHKL
@@ -25,10 +25,12 @@
 @ stdcall TF_GetThreadMgr(ptr)
 @ stub TF_InatExtractIcon
 @ stdcall TF_InitMlngInfo()
-@ stub TF_InitSystem
-@ stub TF_InvalidAssemblyListCache
+@ stdcall -stub TF_InitSystem()
+@ stdcall -stub TF_UninitSystem()
+@ stdcall -stub TF_InvalidAssemblyListCache()
 @ stdcall TF_InvalidAssemblyListCacheIfExist()
 @ stub TF_IsCtfmonRunning
 @ stub TF_IsInMarshaling
 @ stub TF_MlngInfoCount
 @ stub TF_RunInputCPL
+@ stdcall -stub TF_PostAllThreadMsg(long long)
