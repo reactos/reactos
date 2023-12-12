@@ -27,6 +27,7 @@ ImeInquire(
  * MSCTFIME has no IME conversion-list feature.
  *
  * @implemented
+ * @see ImmGetConversionListW
  */
 DWORD WINAPI
 ImeConversionList(
@@ -46,6 +47,7 @@ ImeConversionList(
  * MSCTFIME has no feature of directly registering word.
  *
  * @implemented
+ * @see ImeUnregisterWord
  */
 BOOL WINAPI
 ImeRegisterWord(
@@ -63,6 +65,7 @@ ImeRegisterWord(
  * MSCTFIME has no feature of directly registering word.
  *
  * @implemented
+ * @see ImeRegisterWord
  */
 BOOL WINAPI
 ImeUnregisterWord(
@@ -80,6 +83,7 @@ ImeUnregisterWord(
  * MSCTFIME has no feature of directly registering word.
  *
  * @implemented
+ * @see ImeRegisterWord
  */
 UINT WINAPI
 ImeGetRegisterWordStyle(
@@ -96,6 +100,7 @@ ImeGetRegisterWordStyle(
  * MSCTFIME has no feature of directly registering word.
  *
  * @implemented
+ * @see ImeRegisterWord
  */
 UINT WINAPI
 ImeEnumRegisterWord(
@@ -135,6 +140,7 @@ ImeDestroy(
  * MSCTFIME has no IME Escape feature.
  *
  * @implemented
+ * @see CtfImeEscapeEx
  */
 LRESULT WINAPI
 ImeEscape(
@@ -163,6 +169,7 @@ ImeProcessKey(
  * MSCTFIME's ImeSelect does nothing.
  *
  * @implemented
+ * @see CtfImeSelectEx
  */
 BOOL WINAPI
 ImeSelect(
@@ -179,6 +186,7 @@ ImeSelect(
  * MSCTFIME's ImeSetActiveContext does nothing.
  *
  * @implemented
+ * @see CtfImeSetActiveContextAlways
  */
 BOOL WINAPI
 ImeSetActiveContext(
