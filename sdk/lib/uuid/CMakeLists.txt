@@ -22,7 +22,7 @@ list(APPEND IDL_SOURCES
     comcat.idl
     commoncontrols.idl
 #    confpriv.idl
-#    ctffunc.idl
+    ctffunc.idl
 #    ctfbui.idl
 #    ctfspui.idl
 #    ctfutb.idl
@@ -200,7 +200,7 @@ list(APPEND SOURCE
 #    bthguid.c
 #    cluscfgguids.c
     cmdtreeiid.c
-#    ctffunc_g.c
+    ctffunc_g.c
 #    ctfspui_g.c
 #    hnclsid.c
     ieguids.c
