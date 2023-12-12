@@ -31,6 +31,8 @@ typedef struct TF_LMLATTELEMENT
     BSTR  bstrText;
 } TF_LMLATTELEMENT;
 
+cpp_quote("EXTERN_C const CLSID CLSID_SapiLayr;")
+
 interface IEnumTfCandidates;
 interface IEnumTfLatticeElements;
 interface ITfCandidateList;
