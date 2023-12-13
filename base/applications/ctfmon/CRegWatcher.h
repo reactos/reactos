@@ -24,16 +24,22 @@ struct CRegWatcher
 
     static BOOL Init();
     static VOID Uninit();
-    static BOOL InitEvent(SIZE_T iEvent, BOOL bReset);
+    static BOOL InitEvent(_In_ SIZE_T iEvent, _In_ BOOL bReset);
     static VOID UpdateSpTip();
     static VOID KillInternat();
     static VOID StartSysColorChangeTimer();
-    static VOID OnEvent(INT iEvent);
+    static VOID OnEvent(_In_ INT iEvent);
 
 protected:
-    static BOOL CALLBACK EnumWndProc(HWND hWnd, LPARAM lParam);
+    static BOOL CALLBACK
+    EnumWndProc(_In_ HWND hWnd, _In_ LPARAM lParam);
 
-    static VOID CALLBACK KbdToggleTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
-    static VOID CALLBACK SysColorTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
-    static VOID CALLBACK RegImxTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+    static VOID CALLBACK
+    SysColorTimerProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ UINT_PTR idEvent, _In_ DWORD dwTime);
+
+    static VOID CALLBACK
+    KbdToggleTimerProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ UINT_PTR idEvent, _In_ DWORD dwTime);
+
+    static VOID CALLBACK
+    RegImxTimerProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ UINT_PTR idEvent, _In_ DWORD dwTime);
 };

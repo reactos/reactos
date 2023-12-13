@@ -18,28 +18,11 @@
 #include <ctfutb.h>
 #include <ctffunc.h>
 
+#include <cicero/cicbase.h>
+#include <cicero/OSInfo.h>
+#include <cicero/CModulePath.h>
+
 #include "resource.h"
-
-static inline LPVOID cicMemAllocClear(SIZE_T cbSize)
-{
-    return LocalAlloc(LMEM_ZEROINIT, cbSize);
-}
-
-static inline void cicMemFree(LPVOID ptr)
-{
-    if (ptr)
-        LocalFree(ptr);
-}
-
-inline void* operator new(size_t cbSize)
-{
-    return cicMemAllocClear(cbSize);
-}
-
-inline void operator delete(void* ptr)
-{
-    cicMemFree(ptr);
-}
 
 extern HINSTANCE g_hInst;
 extern BOOL g_bOnWow64;
@@ -47,12 +30,6 @@ extern BOOL g_fWinLogon;
 extern DWORD g_dwOsInfo;
 
 VOID UninitApp(VOID);
-
-// The flags for g_dwOsInfo
-#define OSINFO_NT    0x01
-#define OSINFO_CJK   0x10
-#define OSINFO_IMM   0x20
-#define OSINFO_DBCS  0x40
 
 typedef enum ENTRY_INDEX
 {
@@ -70,13 +47,3 @@ typedef enum ENTRY_INDEX
     EI_ASSEMBLIES        = 11,
     EI_DESKTOP_SWITCH    = 12,
 } ENTRY_INDEX;
-
-// FIXME: Use msutb.dll and header
-static inline void ClosePopupTipbar(void)
-{
-}
-
-// FIXME: Use msutb.dll and header
-static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
-{
-}

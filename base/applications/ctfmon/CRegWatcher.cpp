@@ -7,7 +7,6 @@
 
 #include "ctfmon.h"
 #include "CRegWatcher.h"
-#include "CModulePath.h"
 
 // The event handles to use in watching
 HANDLE CRegWatcher::s_ahWatchEvents[WATCHENTRY_MAX] = { NULL };
@@ -42,10 +41,11 @@ typedef LONG (WINAPI *FN_RegNotifyChangeKeyValue)(HKEY hKey,
                                                   BOOL fAsynchronous);
 FN_RegNotifyChangeKeyValue g_fnRegNotifyChangeKeyValue = NULL;
 
-// IME\\sptip.dll!TF_CreateLangProfileUtil
+// %WINDIR%/IME/sptip.dll!TF_CreateLangProfileUtil
 typedef HRESULT (WINAPI* FN_TF_CreateLangProfileUtil)(ITfFnLangProfileUtil**);
 
-BOOL CRegWatcher::Init()
+BOOL
+CRegWatcher::Init()
 {
     if (!(g_dwOsInfo & OSINFO_NT)) // Non-NT?
         s_WatchEntries[EI_RUN].hRootKey = HKEY_LOCAL_MACHINE;
@@ -72,7 +72,8 @@ BOOL CRegWatcher::Init()
     return TRUE;
 }
 
-VOID CRegWatcher::Uninit()
+VOID
+CRegWatcher::Uninit()
 {
     for (SIZE_T i = 0; i < _countof(s_ahWatchEvents); ++i)
     {
@@ -94,7 +95,10 @@ VOID CRegWatcher::Uninit()
     }
 }
 
-BOOL CRegWatcher::InitEvent(SIZE_T iEvent, BOOL bReset)
+BOOL
+CRegWatcher::InitEvent(
+    _In_ SIZE_T iEvent,
+    _In_ BOOL bReset)
 {
     // Reset the signal status
     if (bReset)
@@ -113,8 +117,8 @@ BOOL CRegWatcher::InitEvent(SIZE_T iEvent, BOOL bReset)
     error = ::RegOpenKeyExW(entry.hRootKey, entry.pszSubKey, 0, KEY_READ, &entry.hKey);
     if (error != ERROR_SUCCESS)
     {
-        error = RegCreateKeyExW(entry.hRootKey, entry.pszSubKey, 0, NULL, 0,
-                                KEY_ALL_ACCESS, NULL, &entry.hKey, NULL);
+        error = ::RegCreateKeyExW(entry.hRootKey, entry.pszSubKey, 0, NULL, 0,
+                                  KEY_ALL_ACCESS, NULL, &entry.hKey, NULL);
         if (error != ERROR_SUCCESS)
             return FALSE;
     }
@@ -128,15 +132,16 @@ BOOL CRegWatcher::InitEvent(SIZE_T iEvent, BOOL bReset)
     return error == ERROR_SUCCESS;
 }
 
-VOID CRegWatcher::UpdateSpTip()
+VOID
+CRegWatcher::UpdateSpTip()
 {
     // Post message 0x8002 to "SapiTipWorkerClass" windows
     ::EnumWindows(EnumWndProc, 0);
 
     // Clear "ProfileInitialized" value
     HKEY hKey;
-    LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\Sapilayr",
-                                  0, KEY_WRITE, &hKey);
+    LSTATUS error = ::RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\Sapilayr",
+                                    0, KEY_WRITE, &hKey);
     if (error == ERROR_SUCCESS)
     {
         DWORD dwValue = 0, cbValue = sizeof(dwValue);
@@ -144,7 +149,7 @@ VOID CRegWatcher::UpdateSpTip()
         ::RegCloseKey(hKey);
     }
 
-    // Get %WINDIR%\IME\sptip.dll!TF_CreateLangProfileUtil function
+    // Get %WINDIR%/IME/sptip.dll!TF_CreateLangProfileUtil function
     HINSTANCE hSPTIP = LoadSystemLibrary(L"IME\\sptip.dll", TRUE);
     FN_TF_CreateLangProfileUtil fnTF_CreateLangProfileUtil =
         (FN_TF_CreateLangProfileUtil)::GetProcAddress(hSPTIP, "TF_CreateLangProfileUtil");
@@ -165,10 +170,11 @@ VOID CRegWatcher::UpdateSpTip()
     }
 
     if (hSPTIP)
-        FreeLibrary(hSPTIP);
+        ::FreeLibrary(hSPTIP);
 }
 
-VOID CRegWatcher::KillInternat()
+VOID
+CRegWatcher::KillInternat()
 {
     HKEY hKey;
     WATCHENTRY& entry = s_WatchEntries[EI_RUN];
@@ -182,14 +188,17 @@ VOID CRegWatcher::KillInternat()
     }
 
     // Kill the "Indicator" window (that internat.exe creates)
-    HWND hwndInternat = FindWindowW(L"Indicator", NULL);
+    HWND hwndInternat = ::FindWindowW(L"Indicator", NULL);
     if (hwndInternat)
-        PostMessageW(hwndInternat, WM_CLOSE, 0, 0);
+        ::PostMessageW(hwndInternat, WM_CLOSE, 0, 0);
 }
 
 // Post message 0x8002 to every "SapiTipWorkerClass" window.
 // Called from CRegWatcher::UpdateSpTip
-BOOL CALLBACK CRegWatcher::EnumWndProc(HWND hWnd, LPARAM lParam)
+BOOL CALLBACK
+CRegWatcher::EnumWndProc(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam)
 {
     WCHAR ClassName[MAX_PATH];
     if (::GetClassNameW(hWnd, ClassName, _countof(ClassName)) &&
@@ -201,30 +210,12 @@ BOOL CALLBACK CRegWatcher::EnumWndProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
-VOID CRegWatcher::StartSysColorChangeTimer()
-{
-    // Call SysColorTimerProc 0.5 seconds later (Delayed)
-    if (s_nSysColorTimerId)
-    {
-        ::KillTimer(NULL, s_nSysColorTimerId);
-        s_nSysColorTimerId = 0;
-    }
-    s_nSysColorTimerId = ::SetTimer(NULL, 0, 500, SysColorTimerProc);
-}
-
-VOID CALLBACK CRegWatcher::KbdToggleTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
-{
-    // Cancel the timer
-    if (s_nKbdToggleTimerId)
-    {
-        ::KillTimer(NULL, s_nKbdToggleTimerId);
-        s_nKbdToggleTimerId = 0;
-    }
-
-    TF_PostAllThreadMsg(11, 16);
-}
-
-VOID CALLBACK CRegWatcher::SysColorTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+VOID CALLBACK
+CRegWatcher::SysColorTimerProc(
+    _In_ HWND hwnd,
+    _In_ UINT uMsg,
+    _In_ UINT_PTR idEvent,
+    _In_ DWORD dwTime)
 {
     // Cancel the timer
     if (s_nSysColorTimerId)
@@ -236,7 +227,24 @@ VOID CALLBACK CRegWatcher::SysColorTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
     TF_PostAllThreadMsg(15, 16);
 }
 
-VOID CALLBACK CRegWatcher::RegImxTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+VOID
+CRegWatcher::StartSysColorChangeTimer()
+{
+    // Call SysColorTimerProc 0.5 seconds later (Delayed)
+    if (s_nSysColorTimerId)
+    {
+        ::KillTimer(NULL, s_nSysColorTimerId);
+        s_nSysColorTimerId = 0;
+    }
+    s_nSysColorTimerId = ::SetTimer(NULL, 0, 500, SysColorTimerProc);
+}
+
+VOID CALLBACK
+CRegWatcher::RegImxTimerProc(
+    _In_ HWND hwnd,
+    _In_ UINT uMsg,
+    _In_ UINT_PTR idEvent,
+    _In_ DWORD dwTime)
 {
     // Cancel the timer
     if (s_nRegImxTimerId)
@@ -249,13 +257,32 @@ VOID CALLBACK CRegWatcher::RegImxTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEven
     TF_PostAllThreadMsg(12, 16);
 }
 
-VOID CRegWatcher::OnEvent(INT iEvent)
+VOID CALLBACK
+CRegWatcher::KbdToggleTimerProc(
+    _In_ HWND hwnd,
+    _In_ UINT uMsg,
+    _In_ UINT_PTR idEvent,
+    _In_ DWORD dwTime)
+{
+    // Cancel the timer
+    if (s_nKbdToggleTimerId)
+    {
+        ::KillTimer(NULL, s_nKbdToggleTimerId);
+        s_nKbdToggleTimerId = 0;
+    }
+
+    TF_PostAllThreadMsg(11, 16);
+}
+
+VOID
+CRegWatcher::OnEvent(
+    _In_ INT iEvent)
 {
 #ifndef NDEBUG
     WCHAR szMsg[MAX_PATH + 32];
     StringCchPrintfW(szMsg, _countof(szMsg), L"%s (%d): OnEvent(%d)\n",
                      __FILE__, __LINE__, iEvent);
-    OutputDebugStringW(szMsg);
+    ::OutputDebugStringW(szMsg);
 #endif
 
     InitEvent(iEvent, TRUE);
@@ -311,7 +338,7 @@ VOID CRegWatcher::OnEvent(INT iEvent)
             WCHAR szText[MAX_PATH + 32];
             StringCchPrintfW(szText, _countof(szText), L"%s (%d): ERROR: iEvent == %d\n",
                              __FILE__, __LINE__, iEvent);
-            OutputDebugStringW(szText);
+            ::OutputDebugStringW(szText);
 #endif
             break;
         }

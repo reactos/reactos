@@ -8,7 +8,6 @@
 #include "ctfmon.h"
 #include "CRegWatcher.h"
 #include "CTipBarWnd.h"
-#include "CModulePath.h"
 
 // ntdll!NtQueryInformationProcess
 typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
@@ -33,72 +32,6 @@ BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo below
 CTipBarWnd* g_pTipBarWnd    = NULL;     // TIP Bar window
 
-BOOL
-CModulePath::Init(
-    _In_ LPCWSTR pszFileName,
-    _In_ BOOL bSysWinDir)
-{
-    SIZE_T cchPath;
-    if (bSysWinDir)
-    {
-        // Usually C:\Windows or C:\ReactOS
-        cchPath = ::GetSystemWindowsDirectory(m_szPath, _countof(m_szPath));
-    }
-    else
-    {
-        // Usually C:\Windows\system32 or C:\ReactOS\system32
-        cchPath = ::GetSystemDirectoryW(m_szPath, _countof(m_szPath));
-    }
-
-    m_szPath[_countof(m_szPath) - 1] = UNICODE_NULL; // Avoid buffer overrun
-
-    if ((cchPath == 0) || (cchPath > _countof(m_szPath) - 2))
-        goto Failure;
-
-    // Add backslash if necessary
-    if ((cchPath > 0) && m_szPath[cchPath - 1] != L'\\')
-    {
-        m_szPath[cchPath + 0] = L'\\';
-        m_szPath[cchPath + 1] = UNICODE_NULL;
-    }
-
-    // Append pszFileName
-    if (FAILED(StringCchCatW(m_szPath, _countof(m_szPath), pszFileName)))
-        goto Failure;
-
-    m_cchPath = wcslen(m_szPath);
-    return TRUE;
-
-Failure:
-    m_szPath[0] = UNICODE_NULL;
-    m_cchPath = 0;
-    return FALSE;
-}
-
-// Get an instance handle that is already loaded
-HINSTANCE
-GetSystemModuleHandle(
-    _In_ LPCWSTR pszFileName,
-    _In_ BOOL bSysWinDir)
-{
-    CModulePath ModPath;
-    if (!ModPath.Init(pszFileName, bSysWinDir))
-        return NULL;
-    return GetModuleHandleW(ModPath.m_szPath);
-}
-
-// Load a system library
-HINSTANCE
-LoadSystemLibrary(
-    _In_ LPCWSTR pszFileName,
-    _In_ BOOL bSysWinDir)
-{
-    CModulePath ModPath;
-    if (!ModPath.Init(pszFileName, bSysWinDir))
-        return NULL;
-    return ::LoadLibraryW(ModPath.m_szPath);
-}
-
 // Is the system on WoW64?
 static BOOL
 IsWow64(VOID)
@@ -116,7 +49,7 @@ IsWow64(VOID)
     if (!g_fnNtQueryInformationProcess)
         return FALSE;
 
-    Status = g_fnNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information,
+    Status = g_fnNtQueryInformationProcess(::GetCurrentProcess(), ProcessWow64Information,
                                            &Value, sizeof(Value), 0);
     if (!NT_SUCCESS(Status))
         return FALSE;
@@ -166,9 +99,9 @@ static VOID
 WriteRegRun(VOID)
 {
     if (g_fNoRunKey) // If "/N" option is specified
-        return; // Don't add
+        return; // Don't write
 
-    // Open 'Run' key
+    // Open "Run" key
     HKEY hKey;
     LSTATUS error = ::RegCreateKeyW(HKEY_CURRENT_USER,
                                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
@@ -185,40 +118,6 @@ WriteRegRun(VOID)
     }
 
     ::RegCloseKey(hKey);
-}
-
-static VOID
-GetOSInfo(VOID)
-{
-    g_dwOsInfo = 0; // Clear all flags
-
-    // Check OS version info
-    OSVERSIONINFOW VerInfo = { sizeof(VerInfo) };
-    ::GetVersionExW(&VerInfo);
-    if (VerInfo.dwPlatformId == DLLVER_PLATFORM_NT)
-        g_dwOsInfo |= OSINFO_NT;
-
-    // Check codepage
-    g_uACP = ::GetACP();
-    switch (g_uACP)
-    {
-        case 932: // Japanese (Japan)
-        case 936: // Chinese (PRC, Singapore)
-        case 949: // Korean (Korea)
-        case 950: // Chinese (Taiwan, Hong Kong)
-            g_dwOsInfo |= OSINFO_CJK;
-            break;
-        default:
-            break;
-    }
-
-    if (::GetSystemMetrics(SM_IMMENABLED))
-        g_dwOsInfo |= OSINFO_IMM;
-
-    if (::GetSystemMetrics(SM_DBCSENABLED))
-        g_dwOsInfo |= OSINFO_DBCS;
-
-    // I'm not interested in other flags
 }
 
 static HRESULT
@@ -305,9 +204,11 @@ InitApp(
     _In_ HINSTANCE hInstance,
     _In_ LPWSTR lpCmdLine)
 {
-    g_hInst = hInstance;    // Save the instance handle
-    g_uACP = GetACP();      // Save the active codepage
-    g_bOnWow64 = IsWow64(); // Is the system on WoW64?
+    g_hInst     = hInstance;    // Save the instance handle
+
+    g_uACP      = ::GetACP();   // Save the active codepage
+    g_bOnWow64  = IsWow64();    // Is the system on WoW64?
+    g_dwOsInfo  = GetOSInfo();  // Get OS info
 
     // Create a mutex for Cicero
     g_hCicMutex = TF_CreateCicLoadMutex(&g_fWinLogon);
@@ -316,9 +217,6 @@ InitApp(
 
     // Write to "Run" registry key for starting up
     WriteRegRun();
-
-    // Get OS info
-    GetOSInfo();
 
     // Call SetProcessShutdownParameters if possible
     if (g_dwOsInfo & OSINFO_NT)
@@ -368,7 +266,7 @@ UninitApp(VOID)
     ClosePopupTipbar();
 
     // Close the mutex
-    CloseHandle(g_hCicMutex);
+    ::CloseHandle(g_hCicMutex);
     g_hCicMutex = NULL;
 
     // Quit watching registry if x86/x64 native
@@ -450,13 +348,10 @@ wWinMain(
     UNREFERENCED_PARAMETER(hPrevInst);
     UNREFERENCED_PARAMETER(nCmdShow);
 
-    /////////////////////////////////////////////////////////////////////////
-    // Prologue of wWinMain
-
     // Parse command line
     ParseCommandLine(lpCmdLine);
 
-    if (g_fJustRunKey) // If '/R' option is specified
+    if (g_fJustRunKey) // If "/R" option is specified
     {
         // Just write registry and exit
         WriteRegRun();
@@ -467,13 +362,8 @@ wWinMain(
     if (!InitApp(hInstance, lpCmdLine))
         return 0;
 
-    /////////////////////////////////////////////////////////////////////////
     // The main loop
-
     INT ret = DoMainLoop();
-
-    /////////////////////////////////////////////////////////////////////////
-    // Epilogue of wWinMain
 
     if (g_pTipBarWnd)
     {
