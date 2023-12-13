@@ -7,7 +7,7 @@
 
 #include "ctfmon.h"
 #include "CRegWatcher.h"
-#include "CTipBarWnd.h"
+#include "CLoaderWnd.h"
 
 // ntdll!NtQueryInformationProcess
 typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
@@ -30,7 +30,7 @@ BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo below
-CTipBarWnd* g_pTipBarWnd    = NULL;     // TIP Bar window
+CLoaderWnd* g_pTipBarWnd    = NULL;     // TIP Bar window
 
 // Is the system on WoW64?
 static BOOL
@@ -234,7 +234,7 @@ InitApp(
         CRegWatcher::Init();
 
     // Create TIP Bar window
-    g_pTipBarWnd = new CTipBarWnd();
+    g_pTipBarWnd = new CLoaderWnd();
     if (!g_pTipBarWnd || !g_pTipBarWnd->Init())
         return FALSE;
 
@@ -367,7 +367,7 @@ wWinMain(
     }
 
     // Un-initialize app and text framework
-    if (!CTipBarWnd::s_bUninitedSystem)
+    if (!CLoaderWnd::s_bUninitedSystem)
     {
         UninitApp();
         TF_UninitSystem();

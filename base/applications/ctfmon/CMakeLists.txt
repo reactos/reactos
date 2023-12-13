@@ -2,8 +2,8 @@
 add_rc_deps(ctfmon.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/ctfmon.ico)
 add_executable(ctfmon
     ctfmon.cpp
+    CLoaderWnd.cpp
     CRegWatcher.cpp
-    CTipBarWnd.cpp
     ctfmon.rc)
 set_module_type(ctfmon win32gui UNICODE)
 add_dependencies(ctfmon msctf)

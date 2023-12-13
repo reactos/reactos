@@ -1,18 +1,18 @@
 /*
  * PROJECT:     ReactOS CTF Monitor
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Cicero TIP Bar front-end
+ * PURPOSE:     Cicero TIP Bar loader window
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "ctfmon.h"
-#include "CTipBarWnd.h"
+#include "CLoaderWnd.h"
 #include "CRegWatcher.h"
 
-BOOL CTipBarWnd::s_bUninitedSystem = FALSE;
-BOOL CTipBarWnd::s_bWndClassRegistered = FALSE;
+BOOL CLoaderWnd::s_bUninitedSystem = FALSE;
+BOOL CLoaderWnd::s_bWndClassRegistered = FALSE;
 
-BOOL CTipBarWnd::Init()
+BOOL CLoaderWnd::Init()
 {
     if (s_bWndClassRegistered)
         return TRUE; // Already registered
@@ -33,7 +33,7 @@ BOOL CTipBarWnd::Init()
     return TRUE;
 }
 
-HWND CTipBarWnd::CreateWnd()
+HWND CLoaderWnd::CreateWnd()
 {
     m_hWnd = ::CreateWindowExW(0, L"CiCTipBarClass", NULL, WS_DISABLED,
                                0, 0, 0, 0, NULL, NULL, g_hInst, NULL);
@@ -41,7 +41,7 @@ HWND CTipBarWnd::CreateWnd()
 }
 
 LRESULT CALLBACK
-CTipBarWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+CLoaderWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
