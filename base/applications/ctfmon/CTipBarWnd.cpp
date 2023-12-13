@@ -53,14 +53,7 @@ CTipBarWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_QUERYENDSESSION:
-            // Is the system non-NT and (non-log-on or non-log-off)?
-            if (!(g_dwOsInfo & OSINFO_NT) && (!g_fWinLogon || !(lParam & ENDSESSION_LOGOFF)))
-            {
-                // Un-initialize now
-                ClosePopupTipbar();
-                TF_UninitSystem();
-                s_bUninitedSystem = TRUE;
-            }
+            // NOTE: We don't support non-NT
             return TRUE;
 
         case WM_ENDSESSION:

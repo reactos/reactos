@@ -47,8 +47,7 @@ typedef HRESULT (WINAPI* FN_TF_CreateLangProfileUtil)(ITfFnLangProfileUtil**);
 BOOL
 CRegWatcher::Init()
 {
-    if (!(g_dwOsInfo & OSINFO_NT)) // Non-NT?
-        s_WatchEntries[EI_RUN].hRootKey = HKEY_LOCAL_MACHINE;
+    // NOTE: We don't support non-NT
 
     // To watch registry, advapi32!RegNotifyChangeKeyValue is required
     HINSTANCE hAdvApi32 = LoadSystemLibrary(L"advapi32.dll", FALSE);

@@ -219,16 +219,12 @@ InitApp(
     WriteRegRun();
 
     // Call SetProcessShutdownParameters if possible
-    if (g_dwOsInfo & OSINFO_NT)
-    {
-        g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
-        g_fnSetProcessShutdownParameters =
-            (FN_SetProcessShutdownParameters)
-                ::GetProcAddress(g_hKernel32, "SetProcessShutdownParameters");
-
-        if (g_fnSetProcessShutdownParameters)
-            g_fnSetProcessShutdownParameters(0xF0, SHUTDOWN_NORETRY);
-    }
+    g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
+    g_fnSetProcessShutdownParameters =
+        (FN_SetProcessShutdownParameters)
+            ::GetProcAddress(g_hKernel32, "SetProcessShutdownParameters");
+    if (g_fnSetProcessShutdownParameters)
+        g_fnSetProcessShutdownParameters(0xF0, SHUTDOWN_NORETRY);
 
     // Start text framework
     TF_InitSystem();
