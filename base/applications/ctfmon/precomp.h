@@ -19,7 +19,7 @@
 #include <ctffunc.h>
 
 #include <cicero/cicbase.h>
-#include <cicero/OSInfo.h>
+#include <cicero/osinfo.h>
 #include <cicero/CModulePath.h>
 
 #include "resource.h"
