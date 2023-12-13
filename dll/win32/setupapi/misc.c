@@ -986,34 +986,32 @@ DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
 /**************************************************************************
  * pSetupGetFileTitle [SETUPAPI.@]
  *
- * Returns a pointer to the last part of a fully qualified file name.
+ * Returns a pointer to the last part (file name) of a full file path.
  *
  * PARAMS
- *     lpFileName [I] File name
+ *     pFilePath [I] The fully qualified file path.
  *
  * RETURNS
- *     Pointer to a files name.
+ *     Pointer to the file name, if any, or the terminating NULL.
  */
-LPWSTR WINAPI
-pSetupGetFileTitle(LPCWSTR lpFileName)
+PCWSTR WINAPI
+pSetupGetFileTitle(PCWSTR pFilePath)
 {
-    LPWSTR ptr;
-    LPWSTR ret;
+    PCWSTR ptr, ret;
     WCHAR c;
 
-    TRACE("%s\n", debugstr_w(lpFileName));
+    TRACE("%s\n", debugstr_w(pFilePath));
 
-    ptr = (LPWSTR)lpFileName;
-    ret = ptr;
-    while (TRUE)
+    /* Skip the drive letter if any */
+    ptr = pFilePath;
+    if (*ptr && ptr[1] == L':')
+        ptr += 2;
+
+    /* Find the last path separator preceding the file name */
+    for (ret = ptr; (c = *ptr);)
     {
-        c = *ptr;
-
-        if (c == 0)
-            break;
-
-        ptr++;
-        if (c == (WCHAR)'\\' || c == (WCHAR)'/' || c == (WCHAR)':')
+        ++ptr;
+        if (c == L'\\' || c == L'/')
             ret = ptr;
     }
 
