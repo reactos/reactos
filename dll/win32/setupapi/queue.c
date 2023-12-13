@@ -1237,6 +1237,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 #ifdef __REACTOS__
     INT hSource, hTemp;
     OFSTRUCT OfStruct;
+    PWSTR pTmpFile;
     WCHAR TempPath[MAX_PATH];
     WCHAR TempFile[MAX_PATH];
     LONG lRes;
@@ -1246,22 +1247,21 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
     TRACE("copy %s to %s style 0x%lx\n",debugstr_w(source),debugstr_w(target),style);
 
 #ifdef __REACTOS__
-    /* Get a temp file name */
-    if (!GetTempPathW(ARRAYSIZE(TempPath), TempPath))
-    {
-        ERR("GetTempPathW error\n");
-        return FALSE;
-    }
+    /* Generate a temporary file path and name based on the target path */
+    wcsncpy(TempPath, target, ARRAYSIZE(TempPath));
+    TempPath[ARRAYSIZE(TempPath) - 1] = UNICODE_NULL;
+    pTmpFile = (PWSTR)pSetupGetFileTitle(TempPath); // Remove the file name
+    *pTmpFile = UNICODE_NULL;
 
     /* Try to open the source file */
     hSource = LZOpenFileW((LPWSTR)source, &OfStruct, OF_READ);
     if (hSource < 0)
     {
-        TRACE("LZOpenFileW(1) error %d %s\n", (int)hSource, debugstr_w(source));
+        TRACE("LZOpenFileW(1) error %d (%s)\n", hSource, debugstr_w(source));
         return FALSE;
     }
 
-    if (!GetTempFileNameW(TempPath, L"", 0, TempFile))
+    if (!GetTempFileNameW(TempPath, L"SET", 0, TempFile))
     {
         dwLastError = GetLastError();
 
@@ -1282,7 +1282,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
     {
         dwLastError = GetLastError();
 
-        ERR("LZOpenFileW(2) error %d %s\n", (int)hTemp, debugstr_w(TempFile));
+        ERR("LZOpenFileW(2) error %d (%s)\n", hTemp, debugstr_w(TempFile));
 
         /* Close the source handle */
         LZClose(hSource);
@@ -1305,7 +1305,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
     if (lRes < 0)
     {
-        ERR("LZCopy error %d (%s, %s)\n", (int)lRes, debugstr_w(source), debugstr_w(TempFile));
+        ERR("LZCopy error %d (%s, %s)\n", lRes, debugstr_w(source), debugstr_w(TempFile));
 
         /* Delete temp file if copy was not successful */
         DeleteFileW(TempFile);
