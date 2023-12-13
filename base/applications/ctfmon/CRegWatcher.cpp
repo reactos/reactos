@@ -39,12 +39,10 @@ typedef HRESULT (WINAPI* FN_TF_CreateLangProfileUtil)(ITfFnLangProfileUtil**);
 BOOL
 CRegWatcher::Init()
 {
-    // NOTE: We don't support non-NT
-#ifdef SUPPORT_NONNT
+    // NOTE: We don't support Win95/98/Me
+#ifdef SUPPORT_WIN9X
     if (!(g_dwOsInfo & OSINFO_NT))
-    {
         s_WatchEntries[WI_RUN].hRootKey = HKEY_LOCAL_MACHINE;
-    }
 #endif
 
     // Create some nameless events and initialize them

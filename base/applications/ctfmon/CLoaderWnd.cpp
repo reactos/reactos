@@ -53,8 +53,8 @@ CLoaderWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_QUERYENDSESSION:
-            // NOTE: We don't support non-NT
-#ifdef SUPPORT_NONNT
+            // NOTE: We don't support Win95/98/Me
+#ifdef SUPPORT_WIN9X
             if (!(g_dwOsInfo & OSINFO_NT) && (!g_fWinLogon || (lParam & ENDSESSION_LOGOFF)))
             {
                 ClosePopupTipbar();
