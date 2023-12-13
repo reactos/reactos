@@ -30,17 +30,13 @@ BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo below
-CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar window
+CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar loader window
 
 // Is the current process on WoW64?
 static BOOL
 IsWow64(VOID)
 {
-    HMODULE hNTDLL;
-    ULONG_PTR Value;
-    NTSTATUS Status;
-
-    hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
+    HMODULE hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
     if (!hNTDLL)
         return FALSE;
 
@@ -49,8 +45,9 @@ IsWow64(VOID)
     if (!g_fnNtQueryInformationProcess)
         return FALSE;
 
-    Status = g_fnNtQueryInformationProcess(::GetCurrentProcess(), ProcessWow64Information,
-                                           &Value, sizeof(Value), 0);
+    ULONG_PTR Value = 0;
+    NTSTATUS Status = g_fnNtQueryInformationProcess(::GetCurrentProcess(), ProcessWow64Information,
+                                                    &Value, sizeof(Value), NULL);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
@@ -236,7 +233,7 @@ InitApp(
     if (!g_bOnWow64)
         CRegWatcher::Init();
 
-    // Create TIP Bar window
+    // Create TIP Bar loader window
     g_pLoaderWnd = new CLoaderWnd();
     if (!g_pLoaderWnd || !g_pLoaderWnd->Init())
         return FALSE;
