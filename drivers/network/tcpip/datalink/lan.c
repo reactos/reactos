@@ -750,10 +750,6 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
 
     Context->Adapter->CompletingReset = FALSE;
 
-    /* Update the IP and link status information cached in TCP */
-    TCPUpdateInterfaceIPInformation(Interface);
-    TCPUpdateInterfaceLinkStatus(Interface);
-
     if (Context->State == LAN_STATE_STARTED)
     {
         /* Get maximum link speed */
@@ -790,6 +786,10 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
     }
 
     Adapter->State = Context->State;
+
+    /* Update the IP and link status information cached in TCP */
+    TCPUpdateInterfaceIPInformation(Interface);
+    TCPUpdateInterfaceLinkStatus(Interface);
 
     return TRUE;
 }
