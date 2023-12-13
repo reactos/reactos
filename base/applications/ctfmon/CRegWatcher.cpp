@@ -179,7 +179,7 @@ CRegWatcher::KillInternat()
     HKEY hKey;
     WATCHENTRY& entry = s_WatchEntries[EI_RUN];
 
-    // Delete internat.exe from 'Run' key
+    // Delete internat.exe from registry "Run" key
     LSTATUS error = ::RegOpenKeyExW(entry.hRootKey, entry.pszSubKey, 0, KEY_ALL_ACCESS, &hKey);
     if (error == ERROR_SUCCESS)
     {
@@ -312,7 +312,7 @@ CRegWatcher::OnEvent(
             s_nRegImxTimerId = ::SetTimer(NULL, 0, 200, RegImxTimerProc);
             break;
         }
-        case EI_RUN: // 'Run' key is changed
+        case EI_RUN: // The "Run" key is changed
         {
             KillInternat(); // Deny internat.exe the right to live
             break;

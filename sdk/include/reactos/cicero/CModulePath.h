@@ -70,7 +70,7 @@ CModulePath::Init(
         goto Failure;
 
     // Add backslash if necessary
-    if ((cchPath > 0) && m_szPath[cchPath - 1] != L'\\')
+    if ((cchPath > 0) && (m_szPath[cchPath - 1] != L'\\'))
     {
         m_szPath[cchPath + 0] = L'\\';
         m_szPath[cchPath + 1] = UNICODE_NULL;
