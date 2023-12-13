@@ -1371,38 +1371,6 @@ BOOLEAN BindAdapter(
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
 
-    /* Get maximum link speed */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_LINK_SPEED,
-                          &IF->Speed,
-                          sizeof(UINT));
-
-    if (!NT_SUCCESS(NdisStatus))
-        IF->Speed = IP_DEFAULT_LINK_SPEED;
-
-    Adapter->Speed = IF->Speed * 100L;
-
-    /* Get maximum frame size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_FRAME_SIZE,
-                          &Adapter->MTU,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
-
-    IF->MTU = Adapter->MTU;
-
-    /* Get maximum packet size */
-    NdisStatus = NDISCall(Adapter,
-                          NdisRequestQueryInformation,
-                          OID_GEN_MAXIMUM_TOTAL_SIZE,
-                          &Adapter->MaxPacketSize,
-                          sizeof(UINT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS)
-        return FALSE;
-
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
 
