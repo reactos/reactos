@@ -31,19 +31,19 @@ extern DWORD g_dwOsInfo;
 
 VOID UninitApp(VOID);
 
-typedef enum ENTRY_INDEX
+typedef enum WATCH_INDEX
 {
-    EI_TOGGLE            = 0,
-    EI_MACHINE_TIF       = 1,
-    EI_PRELOAD           = 2,
-    EI_RUN               = 3,
-    EI_USER_TIF          = 4,
-    EI_USER_SPEECH       = 5,
-    EI_APPEARANCE        = 6,
-    EI_COLORS            = 7,
-    EI_WINDOW_METRICS    = 8,
-    EI_MACHINE_SPEECH    = 9,
-    EI_KEYBOARD_LAYOUT   = 10,
-    EI_ASSEMBLIES        = 11,
-    EI_DESKTOP_SWITCH    = 12,
-} ENTRY_INDEX;
+    WI_TOGGLE            = 0,
+    WI_MACHINE_TIF       = 1,
+    WI_PRELOAD           = 2,
+    WI_RUN               = 3,
+    WI_USER_TIF          = 4,
+    WI_USER_SPEECH       = 5,
+    WI_APPEARANCE        = 6,
+    WI_COLORS            = 7,
+    WI_WINDOW_METRICS    = 8,
+    WI_MACHINE_SPEECH    = 9,
+    WI_KEYBOARD_LAYOUT   = 10,
+    WI_ASSEMBLIES        = 11,
+    WI_DESKTOP_SWITCH    = 12,
+} WATCH_INDEX;

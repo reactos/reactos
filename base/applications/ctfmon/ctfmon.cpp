@@ -295,7 +295,7 @@ DoMainLoop(VOID)
     // Borrow some handles from CRegWatcher
     CopyMemory(ahEvents, CRegWatcher::s_ahWatchEvents, WATCHENTRY_MAX * sizeof(HANDLE));
 
-    ahEvents[EI_DESKTOP_SWITCH] = hSwitchEvent; // Add it
+    ahEvents[WI_DESKTOP_SWITCH] = hSwitchEvent; // Add it
 
     // Another message loop
     for (;;)
@@ -315,7 +315,7 @@ DoMainLoop(VOID)
                 ::DispatchMessageW(&msg);
             }
         }
-        else if (dwWait == (WAIT_OBJECT_0 + EI_DESKTOP_SWITCH)) // Desktop switch?
+        else if (dwWait == (WAIT_OBJECT_0 + WI_DESKTOP_SWITCH)) // Desktop switch?
         {
             SetGlobalCompartmentDWORD(GUID_COMPARTMENT_SPEECH_OPENCLOSE, 0);
             ::ResetEvent(hSwitchEvent);

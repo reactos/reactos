@@ -14,18 +14,18 @@ HANDLE CRegWatcher::s_ahWatchEvents[WATCHENTRY_MAX] = { NULL };
 // The registry entries to watch
 WATCHENTRY CRegWatcher::s_WatchEntries[WATCHENTRY_MAX] =
 {
-    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Toggle"                           }, // EI_TOGGLE
-    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // EI_MACHINE_TIF
-    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Preload"                          }, // EI_PRELOAD
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" }, // EI_RUN
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // EI_USER_TIF
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Speech"                       }, // EI_USER_SPEECH
-    { HKEY_CURRENT_USER,  L"Control Panel\\Appearance"                         }, // EI_APPEARANCE
-    { HKEY_CURRENT_USER,  L"Control Panel\\Colors"                             }, // EI_COLORS
-    { HKEY_CURRENT_USER,  L"Control Panel\\Desktop\\WindowMetrics"             }, // EI_WINDOW_METRICS
-    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Speech"                       }, // EI_MACHINE_SPEECH
-    { HKEY_CURRENT_USER,  L"Keyboard Layout"                                   }, // EI_KEYBOARD_LAYOUT
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\Assemblies"              }, // EI_ASSEMBLIES
+    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Toggle"                           }, // WI_TOGGLE
+    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // WI_MACHINE_TIF
+    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Preload"                          }, // WI_PRELOAD
+    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" }, // WI_RUN
+    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // WI_USER_TIF
+    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Speech"                       }, // WI_USER_SPEECH
+    { HKEY_CURRENT_USER,  L"Control Panel\\Appearance"                         }, // WI_APPEARANCE
+    { HKEY_CURRENT_USER,  L"Control Panel\\Colors"                             }, // WI_COLORS
+    { HKEY_CURRENT_USER,  L"Control Panel\\Desktop\\WindowMetrics"             }, // WI_WINDOW_METRICS
+    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Speech"                       }, // WI_MACHINE_SPEECH
+    { HKEY_CURRENT_USER,  L"Keyboard Layout"                                   }, // WI_KEYBOARD_LAYOUT
+    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\Assemblies"              }, // WI_ASSEMBLIES
 };
 
 // The timer IDs: For delaying ignitions
@@ -161,7 +161,7 @@ VOID
 CRegWatcher::KillInternat()
 {
     HKEY hKey;
-    WATCHENTRY& entry = s_WatchEntries[EI_RUN];
+    WATCHENTRY& entry = s_WatchEntries[WI_RUN];
 
     // Delete internat.exe from registry "Run" key
     LSTATUS error = ::RegOpenKeyExW(entry.hRootKey, entry.pszSubKey, 0, KEY_ALL_ACCESS, &hKey);
@@ -284,7 +284,7 @@ CRegWatcher::OnEvent(
 
     switch (iEvent)
     {
-        case EI_TOGGLE:
+        case WI_TOGGLE:
         {
             // Call KbdToggleTimerProc 0.5 seconds later (Delayed)
             if (s_nKbdToggleTimerId)
@@ -295,14 +295,14 @@ CRegWatcher::OnEvent(
             s_nKbdToggleTimerId = ::SetTimer(NULL, 0, 500, KbdToggleTimerProc);
             break;
         }
-        case EI_MACHINE_TIF:
-        case EI_PRELOAD:
-        case EI_USER_TIF:
-        case EI_MACHINE_SPEECH:
-        case EI_KEYBOARD_LAYOUT:
-        case EI_ASSEMBLIES:
+        case WI_MACHINE_TIF:
+        case WI_PRELOAD:
+        case WI_USER_TIF:
+        case WI_MACHINE_SPEECH:
+        case WI_KEYBOARD_LAYOUT:
+        case WI_ASSEMBLIES:
         {
-            if (iEvent == EI_MACHINE_SPEECH)
+            if (iEvent == WI_MACHINE_SPEECH)
                 UpdateSpTip();
 
             // Call RegImxTimerProc 0.2 seconds later (Delayed)
@@ -314,15 +314,15 @@ CRegWatcher::OnEvent(
             s_nRegImxTimerId = ::SetTimer(NULL, 0, 200, RegImxTimerProc);
             break;
         }
-        case EI_RUN: // The "Run" key is changed
+        case WI_RUN: // The "Run" key is changed
         {
             KillInternat(); // Deny internat.exe the right to live
             break;
         }
-        case EI_USER_SPEECH:
-        case EI_APPEARANCE:
-        case EI_COLORS:
-        case EI_WINDOW_METRICS:
+        case WI_USER_SPEECH:
+        case WI_APPEARANCE:
+        case WI_COLORS:
+        case WI_WINDOW_METRICS:
         {
             StartSysColorChangeTimer();
             break;
