@@ -32,7 +32,7 @@ BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo below
 CLoaderWnd* g_pTipBarWnd    = NULL;     // TIP Bar window
 
-// Is the system on WoW64?
+// Is the current process on WoW64?
 static BOOL
 IsWow64(VOID)
 {
@@ -207,7 +207,7 @@ InitApp(
     g_hInst     = hInstance;    // Save the instance handle
 
     g_uACP      = ::GetACP();   // Save the active codepage
-    g_bOnWow64  = IsWow64();    // Is the system on WoW64?
+    g_bOnWow64  = IsWow64();    // Is the current process on WoW64?
     g_dwOsInfo  = GetOSInfo();  // Get OS info
 
     // Create a mutex for Cicero
@@ -275,7 +275,7 @@ DoMainLoop(VOID)
 {
     MSG msg;
 
-    if (g_bOnWow64) // Is the system on WoW64?
+    if (g_bOnWow64) // Is the current process on WoW64?
     {
         // Just a simple message loop
         while (::GetMessageW(&msg, NULL, 0, 0))
