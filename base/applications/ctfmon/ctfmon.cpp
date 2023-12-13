@@ -30,7 +30,7 @@ BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo below
-CLoaderWnd* g_pTipBarWnd    = NULL;     // TIP Bar window
+CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar window
 
 // Is the current process on WoW64?
 static BOOL
@@ -234,20 +234,20 @@ InitApp(
         CRegWatcher::Init();
 
     // Create TIP Bar window
-    g_pTipBarWnd = new CLoaderWnd();
-    if (!g_pTipBarWnd || !g_pTipBarWnd->Init())
+    g_pLoaderWnd = new CLoaderWnd();
+    if (!g_pLoaderWnd || !g_pLoaderWnd->Init())
         return FALSE;
 
-    if (g_pTipBarWnd->CreateWnd())
+    if (g_pLoaderWnd->CreateWnd())
     {
         // Go to the bottom of the hell
-        ::SetWindowPos(g_pTipBarWnd->m_hWnd, HWND_BOTTOM, 0, 0, 0, 0,
+        ::SetWindowPos(g_pLoaderWnd->m_hWnd, HWND_BOTTOM, 0, 0, 0, 0,
                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 
     // Display TIP Bar Popup if x86/x64 native
     if (!g_bOnWow64)
-        GetPopupTipbar(g_pTipBarWnd->m_hWnd, g_fWinLogon);
+        GetPopupTipbar(g_pLoaderWnd->m_hWnd, g_fWinLogon);
 
     // Do x64 stuffs
     CheckX64System(lpCmdLine);
@@ -360,10 +360,11 @@ wWinMain(
     // The main loop
     INT ret = DoMainLoop();
 
-    if (g_pTipBarWnd)
+    // Clean up the loader
+    if (g_pLoaderWnd)
     {
-        delete g_pTipBarWnd;
-        g_pTipBarWnd = NULL;
+        delete g_pLoaderWnd;
+        g_pLoaderWnd = NULL;
     }
 
     // Un-initialize app and text framework
