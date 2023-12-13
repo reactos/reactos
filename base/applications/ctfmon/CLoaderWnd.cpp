@@ -20,12 +20,12 @@ BOOL CLoaderWnd::Init()
     // Register a window class
     WNDCLASSEXW wc;
     ZeroMemory(&wc, sizeof(wc));
-    wc.cbSize = sizeof(wc);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.hInstance = g_hInst;
-    wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-    wc.lpfnWndProc = WindowProc;
-    wc.lpszClassName = L"CiCTipBarClass";
+    wc.cbSize           = sizeof(wc);
+    wc.style            = CS_HREDRAW | CS_VREDRAW;
+    wc.hInstance        = g_hInst;
+    wc.hCursor          = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+    wc.lpfnWndProc      = WindowProc;
+    wc.lpszClassName    = L"CiCTipBarClass";
     if (!::RegisterClassExW(&wc))
         return FALSE;
 
@@ -54,6 +54,14 @@ CLoaderWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_QUERYENDSESSION:
             // NOTE: We don't support non-NT
+#ifdef SUPPORT_NONNT
+            if (!(g_dwOsInfo & OSINFO_NT) && (!g_fWinLogon || (lParam & ENDSESSION_LOGOFF)))
+            {
+                ClosePopupTipbar();
+                TF_UninitSystem();
+                CLoaderWnd::s_bUninitedSystem = TRUE;
+            }
+#endif
             return TRUE;
 
         case WM_ENDSESSION:
