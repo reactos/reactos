@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include "ctfmon.h"
+#include "precomp.h"
 #include "CLoaderWnd.h"
 #include "CRegWatcher.h"
 
