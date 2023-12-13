@@ -24,11 +24,11 @@ struct CRegWatcher
 
     static BOOL Init();
     static VOID Uninit();
-    static BOOL InitEvent(_In_ SIZE_T iEvent, _In_ BOOL bReset);
+    static BOOL InitEvent(_In_ SIZE_T iEvent, _In_ BOOL bResetEvent);
     static VOID UpdateSpTip();
     static VOID KillInternat();
     static VOID StartSysColorChangeTimer();
-    static VOID OnEvent(_In_ INT iEvent);
+    static VOID OnEvent(_In_ SIZE_T iEvent);
 
 protected:
     static BOOL CALLBACK

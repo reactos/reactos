@@ -327,7 +327,7 @@ DoMainLoop(VOID)
         }
         else // Do the other events
         {
-            CRegWatcher::OnEvent(INT(dwWait - WAIT_OBJECT_0));
+            CRegWatcher::OnEvent(dwWait - WAIT_OBJECT_0);
         }
     }
 

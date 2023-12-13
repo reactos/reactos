@@ -58,10 +58,10 @@ CRegWatcher::Init()
         return FALSE;
 
     // Create some nameless events and initialize them
-    for (SIZE_T i = 0; i < _countof(s_ahWatchEvents); ++i)
+    for (SIZE_T iEvent = 0; iEvent < _countof(s_ahWatchEvents); ++iEvent)
     {
-        s_ahWatchEvents[i] = ::CreateEventW(NULL, TRUE, FALSE, NULL);
-        InitEvent(i, FALSE);
+        s_ahWatchEvents[iEvent] = ::CreateEventW(NULL, TRUE, FALSE, NULL);
+        InitEvent(iEvent, FALSE);
     }
 
     // Internat.exe is an enemy of ctfmon.exe
@@ -75,10 +75,10 @@ CRegWatcher::Init()
 VOID
 CRegWatcher::Uninit()
 {
-    for (SIZE_T i = 0; i < _countof(s_ahWatchEvents); ++i)
+    for (SIZE_T iEvent = 0; iEvent < _countof(s_ahWatchEvents); ++iEvent)
     {
         // Close the key
-        WATCHENTRY& entry = s_WatchEntries[i];
+        WATCHENTRY& entry = s_WatchEntries[iEvent];
         if (entry.hKey)
         {
             ::RegCloseKey(entry.hKey);
@@ -86,7 +86,7 @@ CRegWatcher::Uninit()
         }
 
         // Close the event handle
-        HANDLE& hEvent = s_ahWatchEvents[i];
+        HANDLE& hEvent = s_ahWatchEvents[iEvent];
         if (hEvent)
         {
             ::CloseHandle(hEvent);
@@ -98,10 +98,10 @@ CRegWatcher::Uninit()
 BOOL
 CRegWatcher::InitEvent(
     _In_ SIZE_T iEvent,
-    _In_ BOOL bReset)
+    _In_ BOOL bResetEvent)
 {
     // Reset the signal status
-    if (bReset)
+    if (bResetEvent)
         ::ResetEvent(s_ahWatchEvents[iEvent]);
 
     // Close once to re-open
@@ -201,6 +201,9 @@ CRegWatcher::EnumWndProc(
     _In_ LPARAM lParam)
 {
     WCHAR ClassName[MAX_PATH];
+
+    UNREFERENCED_PARAMETER(lParam);
+
     if (::GetClassNameW(hWnd, ClassName, _countof(ClassName)) &&
         _wcsicmp(ClassName, L"SapiTipWorkerClass") == 0)
     {
@@ -217,6 +220,11 @@ CRegWatcher::SysColorTimerProc(
     _In_ UINT_PTR idEvent,
     _In_ DWORD dwTime)
 {
+    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(idEvent);
+    UNREFERENCED_PARAMETER(dwTime);
+
     // Cancel the timer
     if (s_nSysColorTimerId)
     {
@@ -246,6 +254,11 @@ CRegWatcher::RegImxTimerProc(
     _In_ UINT_PTR idEvent,
     _In_ DWORD dwTime)
 {
+    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(idEvent);
+    UNREFERENCED_PARAMETER(dwTime);
+
     // Cancel the timer
     if (s_nRegImxTimerId)
     {
@@ -264,6 +277,11 @@ CRegWatcher::KbdToggleTimerProc(
     _In_ UINT_PTR idEvent,
     _In_ DWORD dwTime)
 {
+    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(idEvent);
+    UNREFERENCED_PARAMETER(dwTime);
+
     // Cancel the timer
     if (s_nKbdToggleTimerId)
     {
@@ -276,7 +294,7 @@ CRegWatcher::KbdToggleTimerProc(
 
 VOID
 CRegWatcher::OnEvent(
-    _In_ INT iEvent)
+    _In_ SIZE_T iEvent)
 {
     InitEvent(iEvent, TRUE);
 
