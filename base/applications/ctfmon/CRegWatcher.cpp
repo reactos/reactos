@@ -33,14 +33,6 @@ UINT CRegWatcher::s_nSysColorTimerId    = 0;
 UINT CRegWatcher::s_nKbdToggleTimerId   = 0;
 UINT CRegWatcher::s_nRegImxTimerId      = 0;
 
-// advapi32!RegNotifyChangeKeyValue
-typedef LONG (WINAPI *FN_RegNotifyChangeKeyValue)(HKEY hKey,
-                                                  BOOL bWatchSubtree,
-                                                  DWORD dwNotifyFilter,
-                                                  HANDLE hEvent,
-                                                  BOOL fAsynchronous);
-FN_RegNotifyChangeKeyValue g_fnRegNotifyChangeKeyValue = NULL;
-
 // %WINDIR%/IME/sptip.dll!TF_CreateLangProfileUtil
 typedef HRESULT (WINAPI* FN_TF_CreateLangProfileUtil)(ITfFnLangProfileUtil**);
 
@@ -48,13 +40,6 @@ BOOL
 CRegWatcher::Init()
 {
     // NOTE: We don't support non-NT
-
-    // To watch registry, advapi32!RegNotifyChangeKeyValue is required
-    HINSTANCE hAdvApi32 = LoadSystemLibrary(L"advapi32.dll", FALSE);
-    g_fnRegNotifyChangeKeyValue =
-        (FN_RegNotifyChangeKeyValue)::GetProcAddress(hAdvApi32, "RegNotifyChangeKeyValue");
-    if (!g_fnRegNotifyChangeKeyValue)
-        return FALSE;
 
     // Create some nameless events and initialize them
     for (SIZE_T iEvent = 0; iEvent < _countof(s_ahWatchEvents); ++iEvent)
@@ -123,11 +108,11 @@ CRegWatcher::InitEvent(
     }
 
     // Start registry watching
-    error = g_fnRegNotifyChangeKeyValue(entry.hKey,
-                                        TRUE,
-                                        REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
-                                        s_ahWatchEvents[iEvent],
-                                        TRUE);
+    error = RegNotifyChangeKeyValue(entry.hKey,
+                                    TRUE,
+                                    REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
+                                    s_ahWatchEvents[iEvent],
+                                    TRUE);
     return error == ERROR_SUCCESS;
 }
 

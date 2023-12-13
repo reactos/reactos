@@ -317,7 +317,6 @@ DoMainLoop(VOID)
         }
         else if (dwWait == (WAIT_OBJECT_0 + EI_DESKTOP_SWITCH)) // Desktop switch?
         {
-#define GUID_COMPARTMENT_SPEECH_OPENCLOSE GUID_NULL // FIXME
             SetGlobalCompartmentDWORD(GUID_COMPARTMENT_SPEECH_OPENCLOSE, 0);
             ::ResetEvent(hSwitchEvent);
         }
@@ -334,7 +333,7 @@ Quit:
 }
 
 // The main function for Unicode Win32
-INT WINAPI
+EXTERN_C INT WINAPI
 wWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInst,

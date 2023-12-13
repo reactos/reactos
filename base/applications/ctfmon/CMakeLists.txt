@@ -8,5 +8,5 @@ add_executable(ctfmon
 set_module_type(ctfmon win32gui UNICODE)
 add_dependencies(ctfmon msctf)
 target_link_libraries(ctfmon uuid)
-add_importlibs(ctfmon msctf advapi32 imm32 user32 shell32 shlwapi gdi32 msvcrt kernel32)
+add_importlibs(ctfmon msctf advapi32 shell32 user32 gdi32 msvcrt kernel32)
 add_cd_file(TARGET ctfmon DESTINATION reactos/system32 FOR all)
