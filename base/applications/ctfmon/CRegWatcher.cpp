@@ -278,13 +278,6 @@ VOID
 CRegWatcher::OnEvent(
     _In_ INT iEvent)
 {
-#ifndef NDEBUG
-    WCHAR szMsg[MAX_PATH + 32];
-    StringCchPrintfW(szMsg, _countof(szMsg), L"%s (%d): OnEvent(%d)\n",
-                     __FILE__, __LINE__, iEvent);
-    ::OutputDebugStringW(szMsg);
-#endif
-
     InitEvent(iEvent, TRUE);
 
     switch (iEvent)
@@ -332,14 +325,8 @@ CRegWatcher::OnEvent(
             StartSysColorChangeTimer();
             break;
         }
-        default: // Invalid event
+        default:
         {
-#ifndef NDEBUG
-            WCHAR szText[MAX_PATH + 32];
-            StringCchPrintfW(szText, _countof(szText), L"%s (%d): ERROR: iEvent == %d\n",
-                             __FILE__, __LINE__, iEvent);
-            ::OutputDebugStringW(szText);
-#endif
             break;
         }
     }
