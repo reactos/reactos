@@ -24,6 +24,6 @@ add_library(userenv MODULE
 
 set_module_type(userenv win32dll)
 target_link_libraries(userenv uuid)
-add_importlibs(userenv advapi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(userenv advapi32 advapi32_vista user32 msvcrt kernel32 ntdll)
 add_pch(userenv precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET userenv DESTINATION reactos/system32 FOR all)
