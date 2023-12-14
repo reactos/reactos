@@ -551,7 +551,7 @@ static HBRUSH CreateCheckerBoardBrush(HDC hdc)
 }
 
 static VOID
-ZoomWnd_OnPaint(HWND hwnd)
+ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
 {
     GpGraphics *graphics;
     INT ZoomedWidth, ZoomedHeight, x, y;
@@ -579,7 +579,7 @@ ZoomWnd_OnPaint(HWND hwnd)
 
     GetClientRect(hwnd, &rect);
 
-    if (Preview_IsMainWnd(hwnd))
+    if (Preview_IsMainWnd(pData->m_hwnd))
     {
         hPen = (HPEN)GetStockObject(BLACK_PEN);
         hBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -765,12 +765,12 @@ Preview_CreateToolBar(PPREVIEW_DATA pData)
 LRESULT CALLBACK
 ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PPREVIEW_DATA pData = (PPREVIEW_DATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
     switch (uMsg)
     {
         case WM_PAINT:
         {
-            ZoomWnd_OnPaint(hwnd);
+            ZoomWnd_OnPaint(pData, hwnd);
             break;
         }
         case WM_TIMER:
