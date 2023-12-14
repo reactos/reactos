@@ -13,7 +13,6 @@ include_directories(
 list(APPEND SOURCE
     DllMain.c
     ../advapi32/reg/reg.c
-    RegLoadMUIString.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
 
 add_library(advapi32_vista MODULE ${SOURCE})
