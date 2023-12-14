@@ -174,8 +174,7 @@ NtUserCopyAcceleratorTable(
     ULONG EntriesCount)
 {
     PACCELERATOR_TABLE Accel;
-    ULONG Ret;
-    DECLARE_RETURN(int);
+    ULONG Ret = 0;
 
     TRACE("Enter NtUserCopyAcceleratorTable\n");
     UserEnterShared();
@@ -183,20 +182,19 @@ NtUserCopyAcceleratorTable(
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        RETURN(0);
+        goto Exit;
     }
 
     /* If Entries is NULL return table size */
     if (!Entries)
     {
-        RETURN(Accel->Count);
+        Ret = Accel->Count;
+        goto Exit;
     }
 
     /* Don't overrun */
     if (Accel->Count < EntriesCount)
         EntriesCount = Accel->Count;
-
-    Ret = 0;
 
     _SEH2_TRY
     {
@@ -216,12 +214,10 @@ NtUserCopyAcceleratorTable(
     }
     _SEH2_END;
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserCopyAcceleratorTable, ret=%i\n", _ret_);
+Exit:
+    TRACE("Leave NtUserCopyAcceleratorTable, ret=%lu\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 HACCEL
