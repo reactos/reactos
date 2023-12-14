@@ -17,7 +17,11 @@
 #define TB_IMAGE_WIDTH  16
 #define TB_IMAGE_HEIGHT 16
 
-HINSTANCE g_hInstance;
+#define SLIDESHOW_TIMER_ID 31415
+
+HINSTANCE g_hInstance = NULL;
+HWND g_hMainWnd = NULL;
+HWND g_hwndFullscreen = NULL;
 SHIMGVW_SETTINGS g_Settings;
 SHIMGVW_FILENODE *g_pCurrentFile;
 GpImage *g_pImage = NULL;
@@ -100,9 +104,16 @@ typedef struct tagPREVIEW_DATA
     ANIME m_Anime; /* Animation */
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
-PPREVIEW_DATA Preview_GetData(HWND hwnd)
+static inline PPREVIEW_DATA
+Preview_GetData(HWND hwnd)
 {
     return (PPREVIEW_DATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+}
+
+static inline BOOL
+Preview_IsMainWnd(HWND hwnd)
+{
+    return hwnd == g_hMainWnd;
 }
 
 static VOID
@@ -380,6 +391,10 @@ Preview_UpdateUI(PPREVIEW_DATA pData)
     BOOL bEnable = (g_pImage != NULL);
     SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
     SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+
+    if (!Preview_IsMainWnd(pData->m_hwnd))
+        Preview_ResetZoom(pData);
+
     InvalidateRect(pData->m_hwndZoom, NULL, FALSE);
 }
 
@@ -539,16 +554,14 @@ static VOID
 ZoomWnd_OnPaint(HWND hwnd)
 {
     GpGraphics *graphics;
-    UINT ImageWidth, ImageHeight;
     INT ZoomedWidth, ZoomedHeight, x, y;
     PAINTSTRUCT ps;
     RECT rect, margin;
     HDC hdc;
-    HBRUSH white;
-    HGDIOBJ hbrOld;
+    HBRUSH hBrush;
+    HPEN hPen;
+    HGDIOBJ hbrOld, hPenOld, hFontOld;
     UINT uFlags;
-    WCHAR szText[128];
-    HGDIOBJ hFontOld;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -565,24 +578,37 @@ ZoomWnd_OnPaint(HWND hwnd)
     }
 
     GetClientRect(hwnd, &rect);
-    white = GetStockObject(WHITE_BRUSH);
+
+    if (Preview_IsMainWnd(hwnd))
+    {
+        hPen = (HPEN)GetStockObject(BLACK_PEN);
+        hBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        SetTextColor(hdc, RGB(0, 0, 0)); /* Black text */
+    }
+    else
+    {
+        hPen = (HPEN)GetStockObject(WHITE_PEN);
+        hBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+        SetTextColor(hdc, RGB(255, 255, 255)); /* White text */
+    }
 
     if (g_pImage == NULL)
     {
-        FillRect(hdc, &rect, white);
-
+        WCHAR szText[128];
         LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
-        SetTextColor(hdc, RGB(0, 0, 0));
-        SetBkMode(hdc, TRANSPARENT);
+        FillRect(hdc, &rect, hBrush);
 
         hFontOld = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
+        SetBkMode(hdc, TRANSPARENT);
         DrawTextW(hdc, szText, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
                                           DT_NOPREFIX);
         SelectObject(hdc, hFontOld);
     }
     else
     {
+        UINT ImageWidth, ImageHeight;
+
         GdipGetImageWidth(g_pImage, &ImageWidth);
         GdipGetImageHeight(g_pImage, &ImageHeight);
 
@@ -595,20 +621,20 @@ ZoomWnd_OnPaint(HWND hwnd)
         // Fill top part
         margin = rect;
         margin.bottom = y - 1;
-        FillRect(hdc, &margin, white);
+        FillRect(hdc, &margin, hBrush);
         // Fill bottom part
         margin.top = y + ZoomedHeight + 1;
         margin.bottom = rect.bottom;
-        FillRect(hdc, &margin, white);
+        FillRect(hdc, &margin, hBrush);
         // Fill left part
         margin.top = y - 1;
         margin.bottom = y + ZoomedHeight + 1;
         margin.right = x - 1;
-        FillRect(hdc, &margin, white);
+        FillRect(hdc, &margin, hBrush);
         // Fill right part
         margin.left = x + ZoomedWidth + 1;
         margin.right = rect.right;
-        FillRect(hdc, &margin, white);
+        FillRect(hdc, &margin, hBrush);
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
@@ -629,6 +655,7 @@ ZoomWnd_OnPaint(HWND hwnd)
         uFlags = 0;
         GdipGetImageFlags(g_pImage, &uFlags);
 
+        hPenOld = SelectObject(hdc, hPen);
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
             HBRUSH hbr = CreateCheckerBoardBrush(hdc);
@@ -643,6 +670,7 @@ ZoomWnd_OnPaint(HWND hwnd)
             Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
             SelectObject(hdc, hbrOld);
         }
+        SelectObject(hdc, hPenOld);
 
         GdipDrawImageRectI(graphics, g_pImage, x, y, ZoomedWidth, ZoomedHeight);
     }
@@ -698,9 +726,14 @@ Preview_CreateToolBar(PPREVIEW_DATA pData)
 {
     HWND hwndToolBar;
     HIMAGELIST hImageList, hOldImageList;
-    const DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS;
+    DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS;
+    DWORD exstyle = 0;
 
-    hwndToolBar = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style,
+    if (!Preview_IsMainWnd(pData->m_hwnd))
+        return TRUE; /* FIXME */
+
+    style |= CCS_BOTTOM;
+    hwndToolBar = CreateWindowExW(exstyle, TOOLBARCLASSNAMEW, NULL, style,
                                   0, 0, 0, 0, pData->m_hwnd, NULL, g_hInstance, NULL);
     if (!hwndToolBar)
         return FALSE;
@@ -762,6 +795,13 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
     pData->m_hwnd = hwnd;
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
+    if (g_hMainWnd == NULL)
+        g_hMainWnd = hwnd;
+    else if (g_hwndFullscreen == NULL)
+        g_hwndFullscreen = hwnd;
+    else
+        return FALSE;
+
     DragAcceptFiles(hwnd, TRUE);
 
     hwndZoom = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE,
@@ -821,7 +861,7 @@ Preview_OnMoveSize(HWND hwnd)
     WINDOWPLACEMENT wp;
     RECT *prc;
 
-    if (IsIconic(hwnd))
+    if (IsIconic(hwnd) || !Preview_IsMainWnd(hwnd))
         return;
 
     wp.length = sizeof(WINDOWPLACEMENT);
@@ -842,16 +882,22 @@ Preview_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
     HWND hToolBar = pData->m_hwndToolBar;
 
-    SendMessageW(hToolBar, TB_AUTOSIZE, 0, 0);
+    if (Preview_IsMainWnd(pData->m_hwnd))
+    {
+        SendMessageW(hToolBar, TB_AUTOSIZE, 0, 0);
+        GetWindowRect(hToolBar, &rc);
 
-    GetWindowRect(hToolBar, &rc);
+        MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
 
-    MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
+        if (!IsIconic(hwnd)) /* Is it not minimized? */
+            Preview_ResetZoom(pData);
 
-    if (!IsIconic(hwnd)) /* Is it not minimized? */
-        Preview_ResetZoom(pData);
-
-    Preview_OnMoveSize(hwnd);
+        Preview_OnMoveSize(hwnd);
+    }
+    else
+    {
+        MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy, TRUE);
+    }
 }
 
 static VOID
@@ -931,6 +977,61 @@ Preview_Edit(HWND hwnd)
 }
 
 static VOID
+Preview_StartSlideShow(PPREVIEW_DATA pData)
+{
+    HWND hwnd = g_hwndFullscreen;
+    DWORD style = WS_POPUP | WS_CLIPSIBLINGS, exstyle = WS_EX_TOPMOST;
+
+    ShowWindow(pData->m_hwnd, SW_HIDE);
+
+    if (!IsWindow(hwnd))
+    {
+        WCHAR szTitle[256];
+        LoadStringW(g_hInstance, IDS_APPTITLE, szTitle, _countof(szTitle));
+        hwnd = CreateWindowExW(exstyle, WC_PREVIEW, szTitle, style,
+                               0, 0, 0, 0, NULL, NULL, g_hInstance, NULL);
+    }
+
+    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    UpdateWindow(hwnd);
+
+    SetTimer(hwnd, SLIDESHOW_TIMER_ID, 5000, NULL);
+}
+
+static VOID
+Preview_EndSlideShow(HWND hwnd)
+{
+    if (Preview_IsMainWnd(hwnd))
+        return;
+
+    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+    ShowWindow(hwnd, SW_HIDE);
+    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
+    Preview_ResetZoom(Preview_GetData(g_hMainWnd));
+}
+
+static VOID
+Preview_GoNextPic(PPREVIEW_DATA pData, BOOL bNext)
+{
+    HWND hwnd = pData->m_hwnd;
+    if (!Preview_IsMainWnd(hwnd))
+    {
+        KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+        SetTimer(hwnd, SLIDESHOW_TIMER_ID, 5000, NULL);
+    }
+
+    if (g_pCurrentFile)
+    {
+        if (bNext)
+            g_pCurrentFile = g_pCurrentFile->Next;
+        else
+            g_pCurrentFile = g_pCurrentFile->Prev;
+        Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+        Preview_UpdateUI(pData);
+    }
+}
+
+static VOID
 Preview_OnCommand(HWND hwnd, UINT nCommandID)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
@@ -938,21 +1039,11 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
     switch (nCommandID)
     {
         case IDC_PREV_PIC:
-            if (g_pCurrentFile)
-            {
-                g_pCurrentFile = g_pCurrentFile->Prev;
-                Preview_pLoadImageFromNode(pData, g_pCurrentFile);
-                Preview_UpdateUI(pData);
-            }
+            Preview_GoNextPic(pData, FALSE);
             break;
 
         case IDC_NEXT_PIC:
-            if (g_pCurrentFile)
-            {
-                g_pCurrentFile = g_pCurrentFile->Next;
-                Preview_pLoadImageFromNode(pData, g_pCurrentFile);
-                Preview_UpdateUI(pData);
-            }
+            Preview_GoNextPic(pData, TRUE);
             break;
 
         case IDC_BEST_FIT:
@@ -964,15 +1055,20 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_SLIDE_SHOW:
-            DPRINT1("IDC_SLIDE_SHOW unimplemented\n");
+            if (Preview_IsMainWnd(hwnd))
+                Preview_StartSlideShow(pData);
+            else
+                Preview_EndSlideShow(hwnd);
             break;
 
         case IDC_ZOOM_IN:
-            Preview_ZoomInOrOut(pData, TRUE);
+            if (Preview_IsMainWnd(hwnd))
+                Preview_ZoomInOrOut(pData, TRUE);
             break;
 
         case IDC_ZOOM_OUT:
-            Preview_ZoomInOrOut(pData, FALSE);
+            if (Preview_IsMainWnd(hwnd))
+                Preview_ZoomInOrOut(pData, FALSE);
             break;
 
         case IDC_SAVEAS:
@@ -984,18 +1080,18 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_ROT_CLOCKW:
-            if (g_pImage)
+            if (Preview_IsMainWnd(hwnd) && g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
-                InvalidateRect(hwnd, NULL, FALSE);
+                Preview_UpdateUI(pData);
             }
             break;
 
         case IDC_ROT_COUNCW:
-            if (g_pImage)
+            if (Preview_IsMainWnd(hwnd) && g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
-                InvalidateRect(hwnd, NULL, FALSE);
+                Preview_UpdateUI(pData);
             }
             break;
 
@@ -1007,6 +1103,10 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
         case IDC_MODIFY:
             Preview_Edit(hwnd);
             Preview_UpdateUI(pData);
+            break;
+
+        case IDC_ENDSLIDESHOW:
+            Preview_EndSlideShow(hwnd);
             break;
     }
 }
@@ -1071,6 +1171,16 @@ Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
     DragFinish(hDrop);
 }
 
+static VOID
+Preview_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (!Preview_IsMainWnd(hwnd))
+    {
+        ShowWindow(hwnd, SW_HIDE);
+        ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
+    }
+}
+
 LRESULT CALLBACK
 PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1119,10 +1229,25 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             Preview_OnDropFiles(hwnd, (HDROP)wParam);
             break;
         }
+        case WM_LBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        {
+            Preview_OnButtonDown(hwnd, uMsg, wParam, lParam);
+            break;
+        }
         case WM_DESTROY:
         {
             Preview_OnDestroy(hwnd);
             break;
+        }
+        case WM_TIMER:
+        {
+            if (wParam == SLIDESHOW_TIMER_ID)
+            {
+                PPREVIEW_DATA pData = Preview_GetData(hwnd);
+                Preview_GoNextPic(pData, TRUE);
+            }
         }
         default:
         {
@@ -1194,6 +1319,8 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     /* Message Loop */
     while (GetMessageW(&msg, NULL, 0, 0) > 0)
     {
+        if (g_hwndFullscreen && TranslateAcceleratorW(g_hwndFullscreen, hAccel, &msg))
+            continue;
         if (TranslateAcceleratorW(hMainWnd, hAccel, &msg))
             continue;
 

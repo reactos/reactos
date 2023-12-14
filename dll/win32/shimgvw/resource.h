@@ -40,6 +40,7 @@
 #define IDC_SAVEAS      (IDC_TOOL_BASE + 11)
 #define IDC_MODIFY      (IDC_TOOL_BASE + 12)
 #define IDC_HELP_TOC    (IDC_TOOL_BASE + 13)
+#define IDC_ENDSLIDESHOW (IDC_TOOL_BASE + 14)
 
 #define TBICON_PREV_PIC     0
 #define TBICON_NEXT_PIC     1
