@@ -28,12 +28,9 @@ SHIMGVW_SETTINGS g_Settings;
 SHIMGVW_FILENODE *g_pCurrentFile;
 GpImage *g_pImage = NULL;
 
-/* zooming */
-static UINT s_nZoomPercents = 100;
-
 static const UINT s_ZoomSteps[] =
 {
-    10, 25, 50, 100, 200, 400, 800, 1600
+    5, 10, 25, 50, 100, 125, 200, 300, 500, 1000
 };
 
 #define MIN_ZOOM s_ZoomSteps[0]
@@ -157,7 +154,7 @@ Preview_ZoomInOrOut(PPREVIEW_DATA pData, BOOL bZoomIn)
         /* find next step */
         for (i = 0; i < _countof(s_ZoomSteps); ++i)
         {
-            if (s_nZoomPercents < s_ZoomSteps[i])
+            if (pData->m_nZoomPercents < s_ZoomSteps[i])
                 break;
         }
         NewZoom = ((i >= _countof(s_ZoomSteps)) ? MAX_ZOOM : s_ZoomSteps[i]);
@@ -168,7 +165,7 @@ Preview_ZoomInOrOut(PPREVIEW_DATA pData, BOOL bZoomIn)
         for (i = _countof(s_ZoomSteps); i > 0; )
         {
             --i;
-            if (s_ZoomSteps[i] < s_nZoomPercents)
+            if (s_ZoomSteps[i] < pData->m_nZoomPercents)
                 break;
         }
         NewZoom = ((i < 0) ? MIN_ZOOM : s_ZoomSteps[i]);
@@ -614,8 +611,8 @@ ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
         GdipGetImageWidth(g_pImage, &ImageWidth);
         GdipGetImageHeight(g_pImage, &ImageHeight);
 
-        ZoomedWidth = (ImageWidth * s_nZoomPercents) / 100;
-        ZoomedHeight = (ImageHeight * s_nZoomPercents) / 100;
+        ZoomedWidth = (ImageWidth * pData->m_nZoomPercents) / 100;
+        ZoomedHeight = (ImageHeight * pData->m_nZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
@@ -640,10 +637,10 @@ ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
-        DPRINT("s_nZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
-               s_nZoomPercents, ZoomedWidth, ZoomedWidth);
+        DPRINT("m_nZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
+               pData->m_nZoomPercents, ZoomedWidth, ZoomedWidth);
 
-        if (s_nZoomPercents % 100 == 0)
+        if (pData->m_nZoomPercents % 100 == 0)
         {
             GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
             GdipSetSmoothingMode(graphics, SmoothingModeNone);
