@@ -17,7 +17,9 @@
 #define TB_IMAGE_WIDTH  16
 #define TB_IMAGE_HEIGHT 16
 
-#define SLIDESHOW_TIMER_ID 31415
+/* Slide show timer */
+#define SLIDESHOW_TIMER_ID          0xFACE
+#define SLIDESHOW_TIMER_INTERVAL    5000 /* 5 seconds */
 
 HINSTANCE g_hInstance = NULL;
 HWND g_hMainWnd = NULL;
@@ -1007,7 +1009,7 @@ Preview_StartSlideShow(PPREVIEW_DATA pData)
     ShowWindow(hwnd, SW_SHOWMAXIMIZED);
     UpdateWindow(hwnd);
 
-    SetTimer(hwnd, SLIDESHOW_TIMER_ID, 5000, NULL);
+    SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
 }
 
 static VOID
@@ -1017,7 +1019,7 @@ Preview_GoNextPic(PPREVIEW_DATA pData, BOOL bNext)
     if (!Preview_IsMainWnd(hwnd))
     {
         KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-        SetTimer(hwnd, SLIDESHOW_TIMER_ID, 5000, NULL);
+        SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
     }
 
     if (g_pCurrentFile)
