@@ -2296,25 +2296,18 @@ GetNextDlgGroupItem(
     {
         if (!IsChild (hDlg, hCtl)) return 0;
         /* Make sure hwndCtrl is a top-level child */
-
     }
     else
     {
         /* No ctrl specified -> start from the beginning */
         if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-        /* MSDN is wrong. fPrevious does not result in the last child */
-
-        /* No ctrl specified -> start from the beginning */
-        if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-
-        /* MSDN is wrong. fPrevious does not result in the last child */
+        /* MSDN is wrong. bPrevious does not result in the last child */
 
         /* Maybe that first one is valid.  If so then we don't want to skip it*/
         if ((GetWindowLongPtrW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
         {
             return hCtl;
         }
-
     }
 
     /* Always go forward around the group and list of controls; for the
