@@ -186,6 +186,6 @@ Pentru ajutor la o operațiune specifică, tastați:\n\
      Suprascrie toate datele registrului în <cheia2> fără să se necesite confirmare.\n\
      Această opțiune nu modifică subcheile și valorile ce există doar în <cheia2>.\n\n"
 
-    STRING_COPY_SRC_DEST_SAME, "reg:Cheile sursă și destinație nu pot fi aceleași\n"
+    STRING_COPY_SRC_DEST_SAME, "reg: Cheile sursă și destinație nu pot fi aceleași\n"
     STRING_COPY_CONFIRM, "Valoarea '%1\\%2' există deja în cheia de destinație. Doriți să o suprascrieți?"
 }
