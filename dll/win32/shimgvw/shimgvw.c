@@ -36,12 +36,6 @@ static const UINT s_ZoomSteps[] =
 #define MIN_ZOOM s_ZoomSteps[0]
 #define MAX_ZOOM s_ZoomSteps[_countof(s_ZoomSteps) - 1]
 
-/* ToolBar Buttons */
-typedef struct {
-    DWORD idb;  /* Index to bitmap */
-    DWORD ids;  /* Index to tooltip */
-} TB_BUTTON_CONFIG;
-
     /* iBitmap,       idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */
 #define DEFINE_BTN_INFO(_name) \
     { TBICON_##_name, IDC_##_name, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
@@ -72,6 +66,13 @@ static const TBBUTTON s_Buttons[] =
     DEFINE_BTN_SEPARATOR,
     DEFINE_BTN_INFO(HELP_TOC)
 };
+
+/* ToolBar Button configuration */
+typedef struct
+{
+    DWORD idb;  /* Index to bitmap */
+    DWORD ids;  /* Index to tooltip */
+} TB_BUTTON_CONFIG;
 
 #define DEFINE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
 
