@@ -74,7 +74,7 @@ jobs:
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -139,7 +139,7 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -147,7 +147,7 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
@@ -204,7 +204,7 @@ jobs:
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
     - name: Upload compiled binaries
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -227,7 +227,7 @@ jobs:
           !**/*.tlb
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -278,7 +278,7 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -286,7 +286,7 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
