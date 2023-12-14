@@ -374,7 +374,7 @@ NtUserTranslateAccelerator(
     ULONG i;
     MSG Message;
     USER_REFERENCE_ENTRY AccelRef, WindowRef;
-    DECLARE_RETURN(int);
+    int Ret = 0;
 
     TRACE("NtUserTranslateAccelerator(hWnd %p, hAccel %p, Message %p)\n",
           hWnd, hAccel, pUnsafeMessage);
@@ -382,7 +382,7 @@ NtUserTranslateAccelerator(
 
     if (hWnd == NULL)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     _SEH2_TRY
@@ -393,7 +393,7 @@ NtUserTranslateAccelerator(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        _SEH2_YIELD(RETURN( 0));
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 
@@ -402,13 +402,13 @@ NtUserTranslateAccelerator(
         (Message.message != WM_SYSCHAR) &&
         (Message.message != WM_CHAR))
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     UserRefObjectCo(Accel, &AccelRef);
@@ -416,7 +416,7 @@ NtUserTranslateAccelerator(
     Window = UserGetWindowObject(hWnd);
     if (!Window)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     UserRefObjectCo(Window, &WindowRef);
@@ -427,7 +427,8 @@ NtUserTranslateAccelerator(
     {
         if (co_IntTranslateAccelerator(Window, &Message, &Accel->Table[i]))
         {
-            RETURN( 1);
+            Ret = 1;
+            break;
         }
 
         /* Undocumented feature... */
@@ -435,13 +436,11 @@ NtUserTranslateAccelerator(
             break;
     }
 
-    RETURN( 0);
-
-CLEANUP:
+Cleanup:
     if (Window) UserDerefObjectCo(Window);
     if (Accel) UserDerefObjectCo(Accel);
 
-    TRACE("NtUserTranslateAccelerator returns %d\n", _ret_);
+    TRACE("NtUserTranslateAccelerator returns %d\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
