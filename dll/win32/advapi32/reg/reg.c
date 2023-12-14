@@ -2166,6 +2166,7 @@ RegGetValueA(HKEY hKey,
     return ret;
 }
 
+#endif // _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegSetKeyValueW
@@ -2236,6 +2237,7 @@ Cleanup:
     return Ret;
 }
 
+#ifndef _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegSetKeyValueA
