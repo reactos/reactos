@@ -901,6 +901,18 @@ Preview_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 }
 
 static VOID
+Preview_EndSlideShow(HWND hwnd)
+{
+    if (Preview_IsMainWnd(hwnd))
+        return;
+
+    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+    ShowWindow(hwnd, SW_HIDE);
+    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
+    Preview_ResetZoom(Preview_GetData(g_hMainWnd));
+}
+
+static VOID
 Preview_Delete(PPREVIEW_DATA pData)
 {
     WCHAR szCurFile[MAX_PATH + 1], szNextFile[MAX_PATH];
@@ -999,18 +1011,6 @@ Preview_StartSlideShow(PPREVIEW_DATA pData)
 }
 
 static VOID
-Preview_EndSlideShow(HWND hwnd)
-{
-    if (Preview_IsMainWnd(hwnd))
-        return;
-
-    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-    ShowWindow(hwnd, SW_HIDE);
-    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
-    Preview_ResetZoom(Preview_GetData(g_hMainWnd));
-}
-
-static VOID
 Preview_GoNextPic(PPREVIEW_DATA pData, BOOL bNext)
 {
     HWND hwnd = pData->m_hwnd;
@@ -1072,11 +1072,13 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_SAVEAS:
-            Preview_pSaveImageAs(pData);
+            if (Preview_IsMainWnd(hwnd))
+                Preview_pSaveImageAs(pData);
             break;
 
         case IDC_PRINT:
-            Preview_pPrintImage(pData);
+            if (Preview_IsMainWnd(hwnd))
+                Preview_pPrintImage(pData);
             break;
 
         case IDC_ROT_CLOCKW:
@@ -1096,8 +1098,11 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_DELETE:
-            Preview_Delete(pData);
-            Preview_UpdateUI(pData);
+            if (Preview_IsMainWnd(hwnd))
+            {
+                Preview_Delete(pData);
+                Preview_UpdateUI(pData);
+            }
             break;
 
         case IDC_MODIFY:
