@@ -875,11 +875,17 @@ Preview_OnMoveSize(HWND hwnd)
 }
 
 static VOID
-Preview_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
+Preview_OnSize(HWND hwnd)
 {
-    RECT rc;
+    RECT rc, rcClient;
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
     HWND hToolBar = pData->m_hwndToolBar;
+    INT cx, cy;
+
+    /* We want 32-bit values. Don't use WM_SIZE lParam */
+    GetClientRect(hwnd, &rcClient);
+    cx = rcClient.right;
+    cy = rcClient.bottom;
 
     if (Preview_IsMainWnd(pData->m_hwnd))
     {
@@ -1230,7 +1236,7 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_SIZE:
         {
-            Preview_OnSize(hwnd, (UINT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            Preview_OnSize(hwnd);
             break;
         }
         case WM_DROPFILES:
