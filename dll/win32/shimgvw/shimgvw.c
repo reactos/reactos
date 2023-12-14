@@ -1175,10 +1175,7 @@ static VOID
 Preview_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (!Preview_IsMainWnd(hwnd))
-    {
-        ShowWindow(hwnd, SW_HIDE);
-        ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
-    }
+        Preview_EndSlideShow(hwnd);
 }
 
 LRESULT CALLBACK
@@ -1248,6 +1245,7 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 PPREVIEW_DATA pData = Preview_GetData(hwnd);
                 Preview_GoNextPic(pData, TRUE);
             }
+            break;
         }
         default:
         {
