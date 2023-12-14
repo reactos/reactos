@@ -371,7 +371,7 @@ NtUserSetWinEventHook(
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
       GlobalEvents->Counts++;
 
-      UserHMGetHandle(pEH) = Handle;
+      UserHMSetHandle(pEH, Handle);
       pEH->eventMin  = eventMin;
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess; // These are cmp'ed

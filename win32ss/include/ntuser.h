@@ -228,6 +228,7 @@ typedef struct _PROCMARKHEAD
 } PROCMARKHEAD, *PPROCMARKHEAD;
 
 #define UserHMGetHandle(obj) ((obj)->head.h)
+#define UserHMSetHandle(obj, handle) ((obj)->head.h = (handle))
 
 /* Window Client Information structure */
 struct _ETHREAD;
