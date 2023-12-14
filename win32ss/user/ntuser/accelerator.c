@@ -341,7 +341,7 @@ NtUserDestroyAcceleratorTable(
     HACCEL hAccel)
 {
     PACCELERATOR_TABLE Accel;
-    DECLARE_RETURN(BOOLEAN);
+    BOOLEAN Ret = FALSE;
 
     /* FIXME: If the handle table is from a call to LoadAcceleratorTable, decrement it's
        usage count (and return TRUE).
@@ -351,19 +351,15 @@ NtUserDestroyAcceleratorTable(
     TRACE("NtUserDestroyAcceleratorTable(Table %p)\n", hAccel);
     UserEnterExclusive();
 
-    if (!(Accel = UserGetAccelObject(hAccel)))
+    Accel = UserGetAccelObject(hAccel);
+    if (Accel)
     {
-        RETURN( FALSE);
+        Ret = UserDestroyAccelTable(Accel);
     }
 
-    UserDestroyAccelTable(Accel);
-
-    RETURN( TRUE);
-
-CLEANUP:
-    TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, _ret_);
+    TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 int
