@@ -332,7 +332,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
         *New = FALSE;
     }
 
-    /* Check if we're sharing hives */
+    /* Check if the system hives are opened in shared mode */
     if (CmpShareSystemHives)
     {
         /* Then force using the primary hive */
@@ -928,11 +928,9 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM"))
         return FALSE;
 
-    /* Manually set the hive as volatile, if in Live CD mode */
+    /* Load the system hive as volatile, if opened in shared mode */
     if (HiveBase && CmpShareSystemHives)
-    {
         SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
-    }
 
     /* Save the boot type */
     CmpBootType = SystemHive->Hive.BaseBlock->BootType;
@@ -1508,7 +1506,7 @@ CmpInitializeHiveList(VOID)
         /* Make sure the list is set up */
         ASSERT(CmpMachineHiveList[i].Name != NULL);
 
-        /* Load the hive as volatile, if in LiveCD mode */
+        /* Load this root hive as volatile, if opened in shared mode */
         if (CmpShareSystemHives)
             CmpMachineHiveList[i].HHiveFlags |= HIVE_VOLATILE;
 
@@ -1630,7 +1628,7 @@ CmInitSystem1(VOID)
     /* Check if this is PE-boot */
     if (InitIsWinPEMode)
     {
-        /* Set registry to PE mode */
+        /* Set the registry in PE mode and load the system hives in shared mode */
         CmpMiniNTBoot = TRUE;
         CmpShareSystemHives = TRUE;
     }

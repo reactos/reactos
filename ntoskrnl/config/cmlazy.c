@@ -261,9 +261,14 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
     /* Testing: Force Lazy Flushing */
     CmpHoldLazyFlush = FALSE;
 
-    /* Setup the hive list if this is not a Setup boot */
+    /* Setup the system hives list if this is not a Setup boot */
     if (!SetupBoot)
         CmpInitializeHiveList();
+
+    /* Now that the system hives are loaded, if we are in PE mode,
+     * all other hives will be loaded with full access */
+    if (CmpMiniNTBoot)
+        CmpShareSystemHives = FALSE;
 }
 
 NTSTATUS

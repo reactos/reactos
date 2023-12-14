@@ -21,11 +21,7 @@ IoSetThreadHardErrorMode(
     _In_ BOOLEAN HardErrorEnabled);
 #endif
 
-/* GLOBALS *****************************************************************/
-
-#if !defined(CMLIB_HOST) && !defined(_BLDR_)
-extern BOOLEAN CmpMiniNTBoot;
-#endif
+/* GLOBALS ******************************************************************/
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
@@ -477,6 +473,13 @@ HvSyncHive(
     ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
 
+    /* Avoid any write operations on volatile hives */
+    if (RegistryHive->HiveFlags & HIVE_VOLATILE)
+    {
+        DPRINT("Hive 0x%p is volatile\n", RegistryHive);
+        return TRUE;
+    }
+
     /*
      * Check if there's any dirty data in the vector.
      * A space with clean blocks would be pointless for
@@ -487,26 +490,6 @@ HvSyncHive(
     if (RtlFindSetBits(&RegistryHive->DirtyVector, 1, 0) == ~HV_CLEAN_BLOCK)
     {
         DPRINT("The dirty vector has clean data, nothing to do\n");
-        return TRUE;
-    }
-
-    /*
-     * We are either in Live CD or we are sharing hives.
-     * In either of the cases, hives can only be read
-     * so don't do any writing operations on them.
-     */
-#if !defined(CMLIB_HOST) && !defined(_BLDR_)
-    if (CmpMiniNTBoot)
-    {
-        DPRINT("We are sharing hives or in Live CD mode, abort syncing\n");
-        return TRUE;
-    }
-#endif
-
-    /* Avoid any writing operations on volatile hives */
-    if (RegistryHive->HiveFlags & HIVE_VOLATILE)
-    {
-        DPRINT("The hive is volatile (hive 0x%p)\n", RegistryHive);
         return TRUE;
     }
 
