@@ -230,7 +230,7 @@ NtUserCreateAcceleratorTable(
     HACCEL hAccel;
     ULONG Index;
     NTSTATUS Status = STATUS_SUCCESS;
-    DECLARE_RETURN(HACCEL);
+    HACCEL Ret = NULL;
     PTHREADINFO pti;
 
     TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u)\n",
@@ -240,7 +240,7 @@ NtUserCreateAcceleratorTable(
     if (!Entries || EntriesCount <= 0)
     {
         SetLastNtError(STATUS_INVALID_PARAMETER);
-        RETURN( (HACCEL) NULL );
+        goto Exit;
     }
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -255,7 +255,7 @@ NtUserCreateAcceleratorTable(
     if (Accel == NULL)
     {
         SetLastNtError(STATUS_NO_MEMORY);
-        RETURN( (HACCEL) NULL );
+        goto Exit;
     }
 
     Accel->Count = EntriesCount;
@@ -265,7 +265,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(STATUS_NO_MEMORY);
-        RETURN( (HACCEL) NULL);
+        goto Exit;
     }
 
     _SEH2_TRY
@@ -303,7 +303,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(Status);
-        RETURN( (HACCEL) NULL);
+        goto Exit;
     }
 
     /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
@@ -311,13 +311,13 @@ NtUserCreateAcceleratorTable(
     /* Release the extra reference (UserCreateObject added 2 references) */
     UserDereferenceObject(Accel);
 
-    RETURN(hAccel);
+    Ret = hAccel;
 
-CLEANUP:
+Exit:
     TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u) = %p\n",
-          Entries, EntriesCount, _ret_);
+          Entries, EntriesCount, Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOLEAN
