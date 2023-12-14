@@ -1145,6 +1145,8 @@ Preview_OnDestroy(HWND hwnd)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
 
+    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = NULL;
 
