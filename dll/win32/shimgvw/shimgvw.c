@@ -1064,27 +1064,37 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_ZOOM_IN:
-            if (Preview_IsMainWnd(hwnd))
-                Preview_ZoomInOrOut(pData, TRUE);
+            Preview_ZoomInOrOut(pData, TRUE);
             break;
 
         case IDC_ZOOM_OUT:
-            if (Preview_IsMainWnd(hwnd))
-                Preview_ZoomInOrOut(pData, FALSE);
+            Preview_ZoomInOrOut(pData, FALSE);
             break;
 
+        case IDC_ENDSLIDESHOW:
+            Preview_EndSlideShow(hwnd);
+            break;
+
+        default:
+            break;
+    }
+
+    if (!Preview_IsMainWnd(hwnd))
+        return;
+
+    // The following commands are for main window only:
+    switch (nCommandID)
+    {
         case IDC_SAVEAS:
-            if (Preview_IsMainWnd(hwnd))
-                Preview_pSaveImageAs(pData);
+            Preview_pSaveImageAs(pData);
             break;
 
         case IDC_PRINT:
-            if (Preview_IsMainWnd(hwnd))
-                Preview_pPrintImage(pData);
+            Preview_pPrintImage(pData);
             break;
 
         case IDC_ROT_CLOCKW:
-            if (Preview_IsMainWnd(hwnd) && g_pImage)
+            if (g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
                 Preview_UpdateUI(pData);
@@ -1092,7 +1102,7 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_ROT_COUNCW:
-            if (Preview_IsMainWnd(hwnd) && g_pImage)
+            if (g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
                 Preview_UpdateUI(pData);
@@ -1100,11 +1110,8 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_DELETE:
-            if (Preview_IsMainWnd(hwnd))
-            {
-                Preview_Delete(pData);
-                Preview_UpdateUI(pData);
-            }
+            Preview_Delete(pData);
+            Preview_UpdateUI(pData);
             break;
 
         case IDC_MODIFY:
@@ -1112,8 +1119,7 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             Preview_UpdateUI(pData);
             break;
 
-        case IDC_ENDSLIDESHOW:
-            Preview_EndSlideShow(hwnd);
+        default:
             break;
     }
 }
