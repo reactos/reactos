@@ -1737,6 +1737,7 @@ Cleanup:
 }
 #endif
 
+#endif // _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegDeleteTreeW
@@ -1859,6 +1860,7 @@ RegDeleteTreeA(IN HKEY hKey,
     return Ret;
 }
 
+#ifndef _ADVAPI32_VISTA_
 
 /************************************************************************
  *  RegDisableReflectionKey
