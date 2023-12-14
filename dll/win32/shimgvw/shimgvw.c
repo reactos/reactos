@@ -818,7 +818,7 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
     SetWindowLongPtrW(hwndZoom, GWLP_USERDATA, (LONG_PTR)pData);
 
     SetClassLongPtr(pData->m_hwndZoom, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    pData->m_fnPrevProc = (WNDPROC)SetWindowLongPtr(pData->m_hwndZoom,
+    pData->m_fnPrevProc = (WNDPROC)SetWindowLongPtrW(pData->m_hwndZoom,
                                                     GWLP_WNDPROC, (LPARAM)ZoomWndProc);
 
     if (!Preview_CreateToolBar(pData))
@@ -1158,8 +1158,8 @@ Preview_OnDestroy(HWND hwnd)
 
     Anime_FreeInfo(&pData->m_Anime);
 
-    SetWindowLongPtr(pData->m_hwndZoom, GWLP_WNDPROC, (LPARAM)pData->m_fnPrevProc);
-    SetWindowLongPtr(pData->m_hwndZoom, GWLP_USERDATA, 0);
+    SetWindowLongPtrW(pData->m_hwndZoom, GWLP_WNDPROC, (LPARAM)pData->m_fnPrevProc);
+    SetWindowLongPtrW(pData->m_hwndZoom, GWLP_USERDATA, 0);
     DestroyWindow(pData->m_hwndZoom);
     pData->m_hwndZoom = NULL;
 
