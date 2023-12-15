@@ -753,13 +753,12 @@ Preview_CreateToolBar(PPREVIEW_DATA pData)
     HWND hwndToolBar;
     HIMAGELIST hImageList, hOldImageList;
     DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS;
-    DWORD exstyle = 0;
 
     if (!Preview_IsMainWnd(pData->m_hwnd))
         return TRUE; /* FIXME */
 
     style |= CCS_BOTTOM;
-    hwndToolBar = CreateWindowExW(exstyle, TOOLBARCLASSNAMEW, NULL, style,
+    hwndToolBar = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style,
                                   0, 0, 0, 0, pData->m_hwnd, NULL, g_hInstance, NULL);
     if (!hwndToolBar)
         return FALSE;
@@ -823,7 +822,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 {
-    DWORD exstyle;
+    DWORD exstyle = 0;
     HWND hwndZoom;
     PPREVIEW_DATA pData = QuickAlloc(sizeof(PREVIEW_DATA), TRUE);
     pData->m_hwnd = hwnd;
@@ -834,12 +833,11 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
     if (g_hMainWnd == NULL)
     {
         g_hMainWnd = hwnd;
-        exstyle = WS_EX_CLIENTEDGE;
+        exstyle |= WS_EX_CLIENTEDGE;
     }
     else if (g_hwndFullscreen == NULL)
     {
         g_hwndFullscreen = hwnd;
-        exstyle = 0;
     }
     else
     {
@@ -856,16 +854,13 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 
     pData->m_hwndZoom = hwndZoom;
     SetWindowLongPtrW(hwndZoom, GWLP_USERDATA, (LONG_PTR)pData);
-
-    SetClassLongPtr(pData->m_hwndZoom, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
+    Anime_SetTimerWnd(&pData->m_Anime, pData->m_hwndZoom);
 
     if (!Preview_CreateToolBar(pData))
     {
         QuickFree(pData);
         return FALSE;
     }
-
-    Anime_SetTimerWnd(&pData->m_Anime, pData->m_hwndZoom);
 
     if (pCS && pCS->lpCreateParams)
     {
@@ -907,6 +902,7 @@ Preview_OnMoveSize(HWND hwnd)
     wp.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(hwnd, &wp);
 
+    /* Remember window position and size */
     prc = &wp.rcNormalPosition;
     g_Settings.X = prc->left;
     g_Settings.Y = prc->top;
@@ -1218,7 +1214,6 @@ Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
     DragQueryFileW(hDrop, 0, szFile, _countof(szFile));
 
     pFreeFileList(g_pCurrentFile);
-    g_pCurrentFile = NULL;
     g_pCurrentFile = pBuildFileList(szFile);
     Preview_pLoadImageFromNode(pData, g_pCurrentFile);
 
