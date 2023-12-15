@@ -571,10 +571,11 @@ ZoomWnd_OnDraw(
     HDC hdcMem;
     HBRUSH hBrush;
     HPEN hPen;
-    HGDIOBJ hbrOld, hbmOld;
+    HGDIOBJ hbrOld, hbmOld, hPenOld;
     UINT uFlags;
     HBITMAP hbmMem;
     SIZE paintSize = { prcPaint->right - prcPaint->left, prcPaint->bottom - prcPaint->top };
+    COLORREF color0, color1;
 
     /* We use a memory bitmap to reduce flickering */
     hdcMem = CreateCompatibleDC(hdc);
@@ -584,22 +585,24 @@ ZoomWnd_OnDraw(
     /* Choose colors */
     if (Preview_IsMainWnd(pData->m_hwnd))
     {
-        hPen = GetStockPen(BLACK_PEN);
-        hBrush = GetStockBrush(WHITE_BRUSH);
-        SetTextColor(hdcMem, RGB(0, 0, 0)); /* Black text */
-        SetBkColor(hdcMem, RGB(255, 255, 255)); /* White back */
+        color0 = GetSysColor(COLOR_WINDOW);
+        color1 = GetSysColor(COLOR_WINDOWTEXT);
     }
     else
     {
-        hPen = GetStockPen(WHITE_PEN);
-        hBrush = GetStockBrush(BLACK_BRUSH);
-        SetTextColor(hdcMem, RGB(255, 255, 255)); /* White text */
-        SetBkColor(hdcMem, RGB(0, 0, 0)); /* Black back */
+        color0 = RGB(0, 0, 0);
+        color1 = RGB(255, 255, 255);
     }
+    hBrush = CreateSolidBrush(color0);
+    SetBkColor(hdcMem, color0);
+    hPen = CreatePen(PS_SOLID, 1, color1);
+    SetTextColor(hdcMem, color1);
 
     /* Fill background */
     SetRect(&rect, 0, 0, paintSize.cx, paintSize.cy);
     FillRect(hdcMem, &rect, hBrush);
+
+    DeleteObject(hBrush);
 
     if (g_pImage == NULL)
     {
@@ -646,7 +649,7 @@ ZoomWnd_OnDraw(
         OffsetRect(&rect, -prcPaint->left, -prcPaint->top);
 
         InflateRect(&rect, +1, +1); /* Add Rectangle() line width */
-        SelectObject(hdcMem, hPen);
+        hPenOld = SelectObject(hdcMem, hPen);
         GdipGetImageFlags(g_pImage, &uFlags);
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
@@ -660,6 +663,7 @@ ZoomWnd_OnDraw(
             Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
             SelectObject(hdcMem, hbrOld);
         }
+        SelectObject(hdcMem, hPenOld);
         InflateRect(&rect, -1, -1); /* Subtract Rectangle() line width */
 
         {
@@ -793,6 +797,13 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
     switch (uMsg)
     {
+        case WM_LBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        {
+            PostMessageW(GetParent(hwnd), uMsg, wParam, lParam);
+            break;
+        }
         case WM_PAINT:
         {
             ZoomWnd_OnPaint(pData, hwnd);
@@ -815,21 +826,30 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 {
+    DWORD exstyle;
     HWND hwndZoom;
     PPREVIEW_DATA pData = QuickAlloc(sizeof(PREVIEW_DATA), TRUE);
     pData->m_hwnd = hwnd;
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
-    if (g_hMainWnd == NULL)
-        g_hMainWnd = hwnd;
-    else if (g_hwndFullscreen == NULL)
-        g_hwndFullscreen = hwnd;
-    else
-        return FALSE;
-
     DragAcceptFiles(hwnd, TRUE);
 
-    hwndZoom = CreateWindowExW(WS_EX_CLIENTEDGE, WC_ZOOM, NULL, WS_CHILD | WS_VISIBLE,
+    if (g_hMainWnd == NULL)
+    {
+        g_hMainWnd = hwnd;
+        exstyle = WS_EX_CLIENTEDGE;
+    }
+    else if (g_hwndFullscreen == NULL)
+    {
+        g_hwndFullscreen = hwnd;
+        exstyle = 0;
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    hwndZoom = CreateWindowExW(exstyle, WC_ZOOM, NULL, WS_CHILD | WS_VISIBLE,
                                0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
     if (!hwndZoom)
     {
@@ -1268,6 +1288,13 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONDOWN:
         {
             Preview_OnButtonDown(hwnd, uMsg, wParam, lParam);
+            break;
+        }
+        case WM_SYSCOLORCHANGE:
+        {
+            PPREVIEW_DATA pData = Preview_GetData(hwnd);
+            InvalidateRect(pData->m_hwnd, NULL, TRUE);
+            InvalidateRect(pData->m_hwndZoom, NULL, TRUE);
             break;
         }
         case WM_DESTROY:
