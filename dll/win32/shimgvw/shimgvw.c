@@ -116,6 +116,16 @@ Preview_IsMainWnd(HWND hwnd)
 }
 
 static VOID
+Preview_RestartTimer(HWND hwnd)
+{
+    if (!Preview_IsMainWnd(hwnd))
+    {
+        KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+        SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
+    }
+}
+
+static VOID
 Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
     BOOL bEnableZoomIn, bEnableZoomOut;
@@ -135,6 +145,9 @@ Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL 
 
     /* Redraw the display window */
     InvalidateRect(pData->m_hwndZoom, NULL, TRUE);
+
+    /* Restart timer if necessary */
+    Preview_RestartTimer(pData->m_hwnd);
 }
 
 static VOID
@@ -1023,19 +1036,13 @@ Preview_StartSlideShow(PPREVIEW_DATA pData)
     ShowWindow(hwnd, SW_SHOWMAXIMIZED);
     UpdateWindow(hwnd);
 
-    SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
+    Preview_RestartTimer(hwnd);
 }
 
 static VOID
 Preview_GoNextPic(PPREVIEW_DATA pData, BOOL bNext)
 {
-    HWND hwnd = pData->m_hwnd;
-    if (!Preview_IsMainWnd(hwnd))
-    {
-        KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-        SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
-    }
-
+    Preview_RestartTimer(pData->m_hwnd);
     if (g_pCurrentFile)
     {
         if (bNext)
