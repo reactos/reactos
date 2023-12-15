@@ -787,6 +787,26 @@ Preview_CreateToolBar(PPREVIEW_DATA pData)
     return TRUE;
 }
 
+static VOID
+Preview_EndSlideShow(HWND hwnd)
+{
+    if (Preview_IsMainWnd(hwnd))
+        return;
+
+    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+    ShowWindow(hwnd, SW_HIDE);
+    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
+    Preview_ResetZoom(Preview_GetData(g_hMainWnd));
+}
+
+static VOID
+ZoomWnd_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hParent = GetParent(hwnd);
+    if (!Preview_IsMainWnd(hParent))
+        Preview_EndSlideShow(hParent);
+}
+
 LRESULT CALLBACK
 ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -797,7 +817,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
         {
-            PostMessageW(GetParent(hwnd), uMsg, wParam, lParam);
+            ZoomWnd_OnButtonDown(hwnd, uMsg, wParam, lParam);
             break;
         }
         case WM_PAINT:
@@ -940,18 +960,6 @@ Preview_OnSize(HWND hwnd)
     {
         MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy, TRUE);
     }
-}
-
-static VOID
-Preview_EndSlideShow(HWND hwnd)
-{
-    if (Preview_IsMainWnd(hwnd))
-        return;
-
-    KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-    ShowWindow(hwnd, SW_HIDE);
-    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
-    Preview_ResetZoom(Preview_GetData(g_hMainWnd));
 }
 
 static VOID
@@ -1220,13 +1228,6 @@ Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
     DragFinish(hDrop);
 }
 
-static VOID
-Preview_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    if (!Preview_IsMainWnd(hwnd))
-        Preview_EndSlideShow(hwnd);
-}
-
 LRESULT CALLBACK
 PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1273,13 +1274,6 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_DROPFILES:
         {
             Preview_OnDropFiles(hwnd, (HDROP)wParam);
-            break;
-        }
-        case WM_LBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        {
-            Preview_OnButtonDown(hwnd, uMsg, wParam, lParam);
             break;
         }
         case WM_SYSCOLORCHANGE:
