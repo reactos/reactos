@@ -2635,7 +2635,9 @@ IsDialogMessageW(
                           break;
                   }
 
-                 if (hwndNext && SendMessageW( hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+                 if (hwndNext &&
+                     ((SendMessageW(hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg) &
+                       (DLGC_BUTTON | DLGC_RADIOBUTTON)) == (DLGC_BUTTON | DLGC_RADIOBUTTON)))
                  {
                      SetFocus( hwndNext );
                      if ((GetWindowLongW( hwndNext, GWL_STYLE ) & BS_TYPEMASK) == BS_AUTORADIOBUTTON &&
