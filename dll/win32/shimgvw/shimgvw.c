@@ -21,12 +21,12 @@
 #define SLIDESHOW_TIMER_ID          0xFACE
 #define SLIDESHOW_TIMER_INTERVAL    5000 /* 5 seconds */
 
-HINSTANCE g_hInstance = NULL;
-HWND g_hMainWnd = NULL;
-HWND g_hwndFullscreen = NULL;
-SHIMGVW_SETTINGS g_Settings;
-SHIMGVW_FILENODE *g_pCurrentFile;
-GpImage *g_pImage = NULL;
+HINSTANCE           g_hInstance         = NULL;
+HWND                g_hMainWnd          = NULL;
+HWND                g_hwndFullscreen    = NULL;
+SHIMGVW_FILENODE *  g_pCurrentFile      = NULL;
+GpImage *           g_pImage            = NULL;
+SHIMGVW_SETTINGS    g_Settings;
 
 static const UINT s_ZoomSteps[] =
 {
