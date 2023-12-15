@@ -30,7 +30,7 @@ GpImage *g_pImage = NULL;
 
 static const UINT s_ZoomSteps[] =
 {
-    5, 10, 25, 50, 100, 125, 200, 300, 500, 1000
+    5, 10, 25, 50, 100, 200, 300, 500, 1000, 2000, 4000
 };
 
 #define MIN_ZOOM s_ZoomSteps[0]
@@ -100,7 +100,6 @@ typedef struct tagPREVIEW_DATA
     HWND m_hwndZoom;
     HWND m_hwndToolBar;
     INT m_nZoomPercents;
-    WNDPROC m_fnPrevProc;
     ANIME m_Anime; /* Animation */
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
@@ -122,24 +121,20 @@ Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL 
     BOOL bEnableZoomIn, bEnableZoomOut;
     HWND hToolBar = pData->m_hwndToolBar;
 
-    /* If zoom has not been changed, ignore it */
-    if (pData->m_nZoomPercents == NewZoom)
-        return;
-
     pData->m_nZoomPercents = NewZoom;
 
     /* Check if a zoom button of the toolbar must be grayed */
-    bEnableZoomIn = (NewZoom < MAX_ZOOM);
+    bEnableZoomIn  = (NewZoom < MAX_ZOOM);
     bEnableZoomOut = (NewZoom > MIN_ZOOM);
 
     /* Update toolbar buttons */
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
-    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
+    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
+    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
+    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
+    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
 
     /* Redraw the display window */
-    InvalidateRect(pData->m_hwndZoom, NULL, FALSE);
+    InvalidateRect(pData->m_hwndZoom, NULL, TRUE);
 }
 
 static VOID
@@ -389,8 +384,8 @@ static VOID
 Preview_UpdateUI(PPREVIEW_DATA pData)
 {
     BOOL bEnable = (g_pImage != NULL);
-    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
-    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+    PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
 
     if (!Preview_IsMainWnd(pData->m_hwnd))
         Preview_ResetZoom(pData);
@@ -530,7 +525,7 @@ pFreeFileList(SHIMGVW_FILENODE *root)
     }
 }
 
-static HBRUSH CreateCheckerBoardBrush(HDC hdc)
+static HBRUSH CreateCheckerBoardBrush(VOID)
 {
     static const CHAR pattern[] =
         "\x28\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01\x00\x04\x00\x00\x00"
@@ -551,59 +546,61 @@ static HBRUSH CreateCheckerBoardBrush(HDC hdc)
 }
 
 static VOID
-ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
+ZoomWnd_OnDraw(
+    PPREVIEW_DATA pData,
+    HDC hdc,
+    LPRECT prcPaint,
+    LPRECT prcClient)
 {
     GpGraphics *graphics;
-    INT ZoomedWidth, ZoomedHeight, x, y;
-    PAINTSTRUCT ps;
-    RECT rect, margin;
-    HDC hdc;
+    INT ZoomedWidth, ZoomedHeight, xDelta, yDelta;
+    RECT rect, rcClient = *prcClient;
+    HDC hdcMem;
     HBRUSH hBrush;
     HPEN hPen;
-    HGDIOBJ hbrOld, hPenOld, hFontOld;
+    HGDIOBJ hbrOld, hPenOld, hFontOld, hbmOld;
     UINT uFlags;
+    HBITMAP hbmMem;
+    SIZE paintSize = { prcPaint->right - prcPaint->left, prcPaint->bottom - prcPaint->top };
+    float start;
 
-    hdc = BeginPaint(hwnd, &ps);
-    if (!hdc)
-    {
-        DPRINT1("BeginPaint() failed\n");
-        return;
-    }
+    /* We use a memory bitmap to reduce flickering */
+    hdcMem = CreateCompatibleDC(hdc);
+    hbmMem = CreateCompatibleBitmap(hdc, paintSize.cx, paintSize.cy);
+    hbmOld = SelectObject(hdcMem, hbmMem);
 
-    GdipCreateFromHDC(hdc, &graphics);
-    if (!graphics)
-    {
-        DPRINT1("GdipCreateFromHDC() failed\n");
-        return;
-    }
-
-    GetClientRect(hwnd, &rect);
-
+    /* Choose colors */
     if (Preview_IsMainWnd(pData->m_hwnd))
     {
-        hPen = (HPEN)GetStockObject(BLACK_PEN);
-        hBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        SetTextColor(hdc, RGB(0, 0, 0)); /* Black text */
+        hPen = GetStockPen(BLACK_PEN);
+        hBrush = GetStockBrush(WHITE_BRUSH);
+        SetTextColor(hdcMem, RGB(0, 0, 0)); /* Black text */
+        SetBkColor(hdcMem, RGB(255, 255, 255)); /* White back */
     }
     else
     {
-        hPen = (HPEN)GetStockObject(WHITE_PEN);
-        hBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
-        SetTextColor(hdc, RGB(255, 255, 255)); /* White text */
+        hPen = GetStockPen(WHITE_PEN);
+        hBrush = GetStockBrush(BLACK_BRUSH);
+        SetTextColor(hdcMem, RGB(255, 255, 255)); /* White text */
+        SetBkColor(hdcMem, RGB(0, 0, 0)); /* Black back */
     }
+
+    /* Fill background */
+    SetRect(&rect, 0, 0, paintSize.cx, paintSize.cy);
+    FillRect(hdcMem, &rect, hBrush);
 
     if (g_pImage == NULL)
     {
         WCHAR szText[128];
         LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
-        FillRect(hdc, &rect, hBrush);
-
-        hFontOld = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
-        SetBkMode(hdc, TRANSPARENT);
-        DrawTextW(hdc, szText, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
-                                          DT_NOPREFIX);
-        SelectObject(hdc, hFontOld);
+        hFontOld = SelectObject(hdcMem, GetStockObject(DEFAULT_GUI_FONT));
+        xDelta = -prcPaint->left;
+        yDelta = -prcPaint->top;
+        OffsetRect(&rcClient, xDelta, yDelta);
+        DrawTextW(hdcMem, szText, -1, &rcClient, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
+                                                 DT_NOPREFIX);
+        SelectObject(hdcMem, hFontOld);
     }
     else
     {
@@ -612,34 +609,15 @@ ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
         GdipGetImageWidth(g_pImage, &ImageWidth);
         GdipGetImageHeight(g_pImage, &ImageHeight);
 
-        ZoomedWidth = (ImageWidth * pData->m_nZoomPercents) / 100;
+        ZoomedWidth  = (ImageWidth  * pData->m_nZoomPercents) / 100;
         ZoomedHeight = (ImageHeight * pData->m_nZoomPercents) / 100;
 
-        x = (rect.right - ZoomedWidth) / 2;
-        y = (rect.bottom - ZoomedHeight) / 2;
-
-        // Fill top part
-        margin = rect;
-        margin.bottom = y - 1;
-        FillRect(hdc, &margin, hBrush);
-        // Fill bottom part
-        margin.top = y + ZoomedHeight + 1;
-        margin.bottom = rect.bottom;
-        FillRect(hdc, &margin, hBrush);
-        // Fill left part
-        margin.top = y - 1;
-        margin.bottom = y + ZoomedHeight + 1;
-        margin.right = x - 1;
-        FillRect(hdc, &margin, hBrush);
-        // Fill right part
-        margin.left = x + ZoomedWidth + 1;
-        margin.right = rect.right;
-        FillRect(hdc, &margin, hBrush);
-
-        DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
-        DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
-        DPRINT("m_nZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
-               pData->m_nZoomPercents, ZoomedWidth, ZoomedWidth);
+        GdipCreateFromHDC(hdcMem, &graphics);
+        if (!graphics)
+        {
+            DPRINT1("error: GdipCreateFromHDC\n");
+            return;
+        }
 
         if (pData->m_nZoomPercents % 100 == 0)
         {
@@ -649,33 +627,73 @@ ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
         else
         {
             GdipSetInterpolationMode(graphics, InterpolationModeHighQualityBilinear);
-            GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
+        GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
 
-        uFlags = 0;
+        start = -0.5f;
+
         GdipGetImageFlags(g_pImage, &uFlags);
 
-        hPenOld = SelectObject(hdc, hPen);
+        rect.left   = (rcClient.right  - ZoomedWidth)  / 2;
+        rect.top    = (rcClient.bottom - ZoomedHeight) / 2;
+        rect.right  = rect.left + ZoomedWidth;
+        rect.bottom = rect.top  + ZoomedHeight;
+
+        InflateRect(&rect, +1, +1); /* Add Rectangle() line width */
+        hPenOld = SelectObject(hdcMem, hPen);
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
-            HBRUSH hbr = CreateCheckerBoardBrush(hdc);
-            hbrOld = SelectObject(hdc, hbr);
-            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-            SelectObject(hdc, hbrOld);
-            DeleteObject(hbr);
+            hbrOld = SelectObject(hdcMem, CreateCheckerBoardBrush());
+            Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
+            DeleteObject(SelectObject(hdcMem, hbrOld));
         }
         else
         {
-            hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-            SelectObject(hdc, hbrOld);
+            hbrOld = SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+            Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
+            SelectObject(hdcMem, hbrOld);
         }
-        SelectObject(hdc, hPenOld);
+        SelectObject(hdcMem, hPenOld);
+        InflateRect(&rect, -1, -1); /* Subtract Rectangle() line width */
 
-        GdipDrawImageRectI(graphics, g_pImage, x, y, ZoomedWidth, ZoomedHeight);
+        {
+            GpImageAttributes *imageAttributes;
+            GdipCreateImageAttributes(&imageAttributes);
+            GdipSetImageAttributesWrapMode(imageAttributes, WrapModeTile,
+                                           GetBkColor(hdcMem) | 0xFF000000, TRUE);
+
+            /* -0.5f is used for interpolation */
+            GdipDrawImageRectRect(graphics, g_pImage,
+                                  rect.left, rect.top,
+                                  rect.right - rect.left, rect.bottom - rect.top,
+                                  start, start, ImageWidth, ImageHeight,
+                                  UnitPixel, imageAttributes, NULL, NULL);
+
+            GdipDisposeImageAttributes(imageAttributes);
+        }
+
+        GdipDeleteGraphics(graphics);
     }
-    GdipDeleteGraphics(graphics);
-    EndPaint(hwnd, &ps);
+
+    BitBlt(hdc, prcPaint->left, prcPaint->top, paintSize.cx, paintSize.cy, hdcMem, 0, 0, SRCCOPY);
+    DeleteObject(SelectObject(hdcMem, hbmOld));
+    DeleteDC(hdcMem);
+}
+
+static VOID
+ZoomWnd_OnPaint(PPREVIEW_DATA pData, HWND hwnd)
+{
+    PAINTSTRUCT ps;
+    HDC hDC;
+    RECT rcClient;
+
+    hDC = BeginPaint(hwnd, &ps);
+    if (hDC)
+    {
+        GetClientRect(hwnd, &rcClient);
+        ZoomWnd_OnDraw(pData, hDC, &ps.rcPaint, &rcClient);
+        EndPaint(hwnd, &ps);
+    }
 }
 
 static VOID
@@ -781,7 +799,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         default:
         {
-            return CallWindowProcW(pData->m_fnPrevProc, hwnd, uMsg, wParam, lParam);
+            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
         }
     }
     return 0;
@@ -804,7 +822,7 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 
     DragAcceptFiles(hwnd, TRUE);
 
-    hwndZoom = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, NULL, WS_CHILD | WS_VISIBLE,
+    hwndZoom = CreateWindowExW(WS_EX_CLIENTEDGE, WC_ZOOM, NULL, WS_CHILD | WS_VISIBLE,
                                0, 0, 0, 0, hwnd, NULL, g_hInstance, NULL);
     if (!hwndZoom)
     {
@@ -816,8 +834,6 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
     SetWindowLongPtrW(hwndZoom, GWLP_USERDATA, (LONG_PTR)pData);
 
     SetClassLongPtr(pData->m_hwndZoom, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
-    pData->m_fnPrevProc = (WNDPROC)SetWindowLongPtrW(pData->m_hwndZoom,
-                                                    GWLP_WNDPROC, (LPARAM)ZoomWndProc);
 
     if (!Preview_CreateToolBar(pData))
     {
@@ -1162,7 +1178,6 @@ Preview_OnDestroy(HWND hwnd)
 
     Anime_FreeInfo(&pData->m_Anime);
 
-    SetWindowLongPtrW(pData->m_hwndZoom, GWLP_WNDPROC, (LPARAM)pData->m_fnPrevProc);
     SetWindowLongPtrW(pData->m_hwndZoom, GWLP_USERDATA, 0);
     DestroyWindow(pData->m_hwndZoom);
     pData->m_hwndZoom = NULL;
@@ -1170,6 +1185,7 @@ Preview_OnDestroy(HWND hwnd)
     DestroyWindow(pData->m_hwndToolBar);
     pData->m_hwndToolBar = NULL;
 
+    SetWindowLongPtrW(pData->m_hwnd, GWLP_USERDATA, 0);
     QuickFree(pData);
 
     PostQuitMessage(0);
@@ -1184,7 +1200,10 @@ Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
     DragQueryFileW(hDrop, 0, szFile, _countof(szFile));
 
     pFreeFileList(g_pCurrentFile);
+    g_pCurrentFile = NULL;
     g_pCurrentFile = pBuildFileList(szFile);
+    if (g_pCurrentFile == NULL)
+        MessageBoxW(NULL, L"OK", NULL, 0);
     Preview_pLoadImageFromNode(pData, g_pCurrentFile);
 
     DragFinish(hDrop);
@@ -1312,6 +1331,12 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     WndClass.hIcon          = LoadIconW(g_hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
     WndClass.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
+    if (!RegisterClassW(&WndClass))
+        return -1;
+    WndClass.lpszClassName  = WC_ZOOM;
+    WndClass.lpfnWndProc    = ZoomWndProc;
+    WndClass.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    WndClass.hbrBackground  = (HBRUSH)GetStockObject(NULL_BRUSH);
     if (!RegisterClassW(&WndClass))
         return -1;
 
