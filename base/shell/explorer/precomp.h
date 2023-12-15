@@ -212,12 +212,13 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
-    BOOL bCompactTrayIcons;
+    DWORD dwCompactTrayIcons;
     BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();
     BOOL Save();
+    BOOL UseCompactTrayIcons();
 };
 
 extern TaskbarSettings g_TaskbarSettings;

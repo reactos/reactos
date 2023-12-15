@@ -165,6 +165,7 @@ public:
     BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData);
     VOID ResizeImagelist();
     bool SendNotifyCallback(InternalIconData* notifyItem, UINT uMsg);
+    void RefreshToolbarMetrics(BOOL bForceRefresh);
 
 private:
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -1250,22 +1251,33 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
     m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
     SetImageList(m_ImageList);
 
-    TBMETRICS tbm = {sizeof(tbm)};
-    tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
-    tbm.cxPad = 1;
-    tbm.cyPad = 1;
-    if (!g_TaskbarSettings.bCompactTrayIcons)
-    {
-        tbm.cxPad = GetSystemMetrics(SM_CXSMICON) / 2;
-        tbm.cyPad = GetSystemMetrics(SM_CYSMICON) / 2;
-    }
-    tbm.cxBarPad = 1;
-    tbm.cyBarPad = 1;
-    tbm.cxButtonSpacing = 1;
-    tbm.cyButtonSpacing = 1;
-    SetMetrics(&tbm);
+    RefreshToolbarMetrics(TRUE);
 
     SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+}
+
+void CNotifyToolbar::RefreshToolbarMetrics(BOOL bForceRefresh = FALSE)
+{
+    // Toolbar metrics only needs to be refreshed for the automatic setting and first launch
+    if((g_TaskbarSettings.dwCompactTrayIcons != 1 &&
+        g_TaskbarSettings.dwCompactTrayIcons != 2) ||
+        bForceRefresh)
+    {
+        TBMETRICS tbm = {sizeof(tbm)};
+        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
+        tbm.cxPad = 1;
+        tbm.cyPad = 1;
+        if (!g_TaskbarSettings.UseCompactTrayIcons())
+        {
+            tbm.cxPad = GetSystemMetrics(SM_CXSMICON) / 2;
+            tbm.cyPad = GetSystemMetrics(SM_CYSMICON) / 2;
+        }
+        tbm.cxBarPad = 1;
+        tbm.cyBarPad = 1;
+        tbm.cxButtonSpacing = 1;
+        tbm.cyButtonSpacing = 1;
+        SetMetrics(&tbm);
+    }
 }
 
 /*
@@ -1404,7 +1416,7 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     INT columns = 0;
     INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
     INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
-    if (!g_TaskbarSettings.bCompactTrayIcons)
+    if (!g_TaskbarSettings.UseCompactTrayIcons())
     {
         cyButton = MulDiv(GetSystemMetrics(SM_CYSMICON), 3, 2);
         cxButton = MulDiv(GetSystemMetrics(SM_CXSMICON), 3, 2);
@@ -1413,7 +1425,7 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
 
     if (IsHorizontal)
     {
-        if (!g_TaskbarSettings.bCompactTrayIcons)
+        if (!g_TaskbarSettings.UseCompactTrayIcons())
             rows = max(size->cy / MulDiv(cyButton, 3, 2), 1);
         else
             rows = max(size->cy / cyButton, 1);
@@ -1522,6 +1534,7 @@ LRESULT CSysPagerWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
         INT yOff = (szClient.cy - szBar.cy) / 2;
 
         Toolbar.SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
+        Toolbar.RefreshToolbarMetrics();
     }
     return Ret;
 }

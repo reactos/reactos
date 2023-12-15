@@ -32,7 +32,7 @@ BOOL TaskbarSettings::Save()
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", REG_DWORD, &bAllowSizeMove, sizeof(bAllowSizeMove));
     sr.cbSize = sizeof(sr);
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
-    SHSetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", REG_DWORD, &bCompactTrayIcons, sizeof(bCompactTrayIcons));
+    SHSetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", REG_DWORD, &dwCompactTrayIcons, sizeof(dwCompactTrayIcons));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSd", REG_DWORD, &bShowDesktopButton, sizeof(bShowDesktopButton));
     SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
@@ -64,7 +64,7 @@ BOOL TaskbarSettings::Load()
     bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", NULL, &dwValue, &cbSize);
-    bCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : bSmallIcons;
+    dwCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? (dwValue) : 0;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSd", NULL, &dwValue, &cbSize);
     bShowDesktopButton = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
@@ -91,6 +91,19 @@ BOOL TaskbarSettings::Load()
     }
 
     return TRUE;
+}
+
+BOOL TaskbarSettings::UseCompactTrayIcons()
+{
+    switch(dwCompactTrayIcons)
+    {
+        case 1:
+            return FALSE;
+        case 2:
+            return TRUE;
+        default:
+            return bSmallIcons;
+    }
 }
 
 /* EOF */
