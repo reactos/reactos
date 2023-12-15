@@ -424,7 +424,7 @@ BEGIN
     AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&Ripristina come predefinite", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Ripristina come predefinite", IDC_FOLDER_OPTIONS_RESTORE, 157, 178, 100, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
