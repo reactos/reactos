@@ -553,7 +553,7 @@ ZoomWnd_OnDraw(
     LPRECT prcClient)
 {
     GpGraphics *graphics;
-    INT ZoomedWidth, ZoomedHeight, xDelta, yDelta;
+    INT ZoomedWidth, ZoomedHeight;
     RECT rect, rcClient = *prcClient;
     HDC hdcMem;
     HBRUSH hBrush;
@@ -562,7 +562,6 @@ ZoomWnd_OnDraw(
     UINT uFlags;
     HBITMAP hbmMem;
     SIZE paintSize = { prcPaint->right - prcPaint->left, prcPaint->bottom - prcPaint->top };
-    float start;
 
     /* We use a memory bitmap to reduce flickering */
     hdcMem = CreateCompatibleDC(hdc);
@@ -595,9 +594,7 @@ ZoomWnd_OnDraw(
         LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
         hFontOld = SelectObject(hdcMem, GetStockObject(DEFAULT_GUI_FONT));
-        xDelta = -prcPaint->left;
-        yDelta = -prcPaint->top;
-        OffsetRect(&rcClient, xDelta, yDelta);
+        OffsetRect(&rcClient, -prcPaint->left, -prcPaint->top);
         DrawTextW(hdcMem, szText, -1, &rcClient, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
                                                  DT_NOPREFIX);
         SelectObject(hdcMem, hFontOld);
@@ -630,14 +627,13 @@ ZoomWnd_OnDraw(
         }
         GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
 
-        start = -0.5f;
-
         GdipGetImageFlags(g_pImage, &uFlags);
 
         rect.left   = (rcClient.right  - ZoomedWidth)  / 2;
         rect.top    = (rcClient.bottom - ZoomedHeight) / 2;
         rect.right  = rect.left + ZoomedWidth;
         rect.bottom = rect.top  + ZoomedHeight;
+        OffsetRect(&rect, -prcPaint->left, -prcPaint->top);
 
         InflateRect(&rect, +1, +1); /* Add Rectangle() line width */
         hPenOld = SelectObject(hdcMem, hPen);
@@ -666,7 +662,7 @@ ZoomWnd_OnDraw(
             GdipDrawImageRectRect(graphics, g_pImage,
                                   rect.left, rect.top,
                                   rect.right - rect.left, rect.bottom - rect.top,
-                                  start, start, ImageWidth, ImageHeight,
+                                  -0.5f, -0.5f, ImageWidth, ImageHeight,
                                   UnitPixel, imageAttributes, NULL, NULL);
 
             GdipDisposeImageAttributes(imageAttributes);
@@ -1202,8 +1198,6 @@ Preview_OnDropFiles(HWND hwnd, HDROP hDrop)
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = NULL;
     g_pCurrentFile = pBuildFileList(szFile);
-    if (g_pCurrentFile == NULL)
-        MessageBoxW(NULL, L"OK", NULL, 0);
     Preview_pLoadImageFromNode(pData, g_pCurrentFile);
 
     DragFinish(hDrop);
