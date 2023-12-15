@@ -64,7 +64,7 @@ BOOL TaskbarSettings::Load()
     bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", NULL, &dwValue, &cbSize);
-    dwCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? (dwValue) : 0;
+    dwCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? dwValue : 0;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSd", NULL, &dwValue, &cbSize);
     bShowDesktopButton = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
@@ -95,7 +95,7 @@ BOOL TaskbarSettings::Load()
 
 BOOL TaskbarSettings::UseCompactTrayIcons()
 {
-    switch(dwCompactTrayIcons)
+    switch (dwCompactTrayIcons)
     {
         case 1:
             return FALSE;
