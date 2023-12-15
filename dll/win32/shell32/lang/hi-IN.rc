@@ -417,21 +417,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "सामान्य"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "कार्य", -1, 7, 10, 249, 45
+    GROUPBOX "कार्य", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "&फ़ोल्डर में सामान्य कार्यों को दिखाएं", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "रिऐक्ट ओएस &क्लासिक फ़ोल्डरों का उपयोग करें", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "फ़ोल्डर ब्राउज़ करें", -1, 7, 60, 249, 45, WS_TABSTOP
+    GROUPBOX "फ़ोल्डर ब्राउज़ करें", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "&एक ही विंडो में प्रत्येक फ़ोल्डर खोलें", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "प्रत्येक फ़ोल्डर को अपनी &विंडो में खोलें", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "निम्नलिखित में आइटम क्लिक करें", -1, 7, 110, 249, 60
+    GROUPBOX "निम्नलिखित में आइटम क्लिक करें", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "एक आइटम खोलने के लिए &सिंगल-क्लिक करें (चयन करने के लिए बिंदु)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&किसी आइटम को खोलने के लिए डबल-क्लिक करें (चयन करने के लिए सिंगल-क्लिक करें)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "मेरे &ब्राउज़र के साथ सुसंगत आइकन टाइटल खांकित करें", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "अंडरलाइन आइकन टाइटल केवल तभी जब मैं उन पर &इंगित करता हूं", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&डिफॉल्ट्स का पुनःस्थापन", IDC_FOLDER_OPTIONS_RESTORE, 167, 174, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&डिफॉल्ट्स का पुनःस्थापन", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
@@ -440,10 +440,10 @@ CAPTION "व्यू"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "फोल्डर व्यू", -1, 7, 10, 249, 60
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "आप व्यू (जैसे विवरण या टाइल्स) को लागू कर सकते हैं जिसका उपयोग आप इस फ़ोल्डर के लिए सभी फ़ोल्डर्स में कर रहे हैं।", -1, 60, 20, 180, 20
-    PUSHBUTTON "&सभी फ़ोल्डरों पर लागू करें", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "सभी फ़ोल्डरों को &रीसेट करें", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
+    LTEXT "आप व्यू (जैसे विवरण या टाइल्स) को लागू कर सकते हैं जिसका उपयोग आप इस फ़ोल्डर के लिए सभी फ़ोल्डर्स में कर रहे हैं।", -1, 40, 20, 213, 20
+    PUSHBUTTON "&सभी फ़ोल्डरों पर लागू करें", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "सभी फ़ोल्डरों को &रीसेट करें", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
     LTEXT "एडवांस सेटिंग:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
     PUSHBUTTON "डिफॉल्ट्स का पुनःस्थापन", IDC_VIEW_RESTORE_DEFAULTS, 177, 204, 80, 14, WS_TABSTOP
