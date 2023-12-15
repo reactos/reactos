@@ -410,21 +410,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Attività", -1, 7, 10, 249, 45
+    GROUPBOX "Attività", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 45, WS_TABSTOP
+    GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Click sugli elementi come segue", -1, 7, 110, 249, 60
+    GROUPBOX "Click sugli elementi come segue", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&Ripristina le impostazioni predefinite", IDC_FOLDER_OPTIONS_RESTORE, 167, 174, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Ripristina come predefinite", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
@@ -433,10 +433,10 @@ CAPTION "Visualizzazione"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vista delle cartelle", -1, 7, 10, 249, 60
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Potete applicare la modalità di visualizzazione attuale a tutte le cartelle.", -1, 60, 20, 180, 20
-    PUSHBUTTON "Applicare a &tutte le cartelle", IDC_VIEW_APPLY_TO_ALL, 40, 50, 100, 14, WS_TABSTOP
-    PUSHBUTTON "&Ripristina tutte le cartelle", IDC_VIEW_RESET_ALL, 150, 50, 100, 14, WS_TABSTOP
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
+    LTEXT "Potete applicare la modalità di visualizzazione attuale a tutte le cartelle.", -1, 40, 20, 213, 20
+    PUSHBUTTON "Applicare a &tutte le cartelle", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Ripristina tutte le cartelle", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
     LTEXT "Impostazioni avanzate:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
     PUSHBUTTON "Ripristina come predefinite", IDC_VIEW_RESTORE_DEFAULTS, 157, 204, 100, 14, WS_TABSTOP
