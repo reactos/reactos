@@ -2642,7 +2642,7 @@ IsDialogMessageW(
                      SetFocus( hwndNext );
                      if ((GetWindowLongW( hwndNext, GWL_STYLE ) & BS_TYPEMASK) == BS_AUTORADIOBUTTON &&
                          SendMessageW( hwndNext, BM_GETCHECK, 0, 0 ) != BST_CHECKED)
-                         SendMessageW( hwndNext, BM_CLICK, 1, 0 );
+                         SendMessageW(hwndNext, BM_CLICK, 0, 0);
                  }
                  else
                      SendMessageW( hDlg, WM_NEXTDLGCTL, (WPARAM)hwndNext, 1 );
