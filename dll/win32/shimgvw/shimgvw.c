@@ -624,8 +624,8 @@ ZoomWnd_OnDraw(
         else
         {
             GdipSetInterpolationMode(graphics, InterpolationModeHighQualityBilinear);
+            GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
-        GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
 
         GdipGetImageFlags(g_pImage, &uFlags);
 
