@@ -417,21 +417,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Orokorra"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Atazak", -1, 7, 10, 279, 45
+    GROUPBOX "Atazak", -1, 7, 10, 279, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "&Erakutsi ataza arruntak karpetetan", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Erabili &ReactOS-en karpeta klasikoak", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Arakatu karpetak", -1, 7, 60, 279, 45, WS_TABSTOP
+    GROUPBOX "Arakatu karpetak", -1, 7, 60, 279, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "&Ireki karpeta guztiak leiho berean", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "I&reki karpeta bakoitza bere leihoan", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Elementuetan klik egiteko modua", -1, 7, 110, 279, 60
+    GROUPBOX "Elementuetan klik egiteko modua", -1, 7, 110, 279, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Klik bakarra elementu bat irekitzeko (seinalatu hautatzeko)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Klik &bikoitza elementu bat irekitzeko (klik bakarra hautatzeko)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Az&pimarratu nire arakatzailearekin bat datozen ikono-tituluak", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Seinalatzen ditudanean bakarrik azpimarratu ikono-tituluak", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "Berre&zarri lehenetsiak", IDC_FOLDER_OPTIONS_RESTORE, 167, 174, 90, 14, WS_TABSTOP
+    PUSHBUTTON "Berre&zarri lehenetsiak", IDC_FOLDER_OPTIONS_RESTORE, 157, 178, 130, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 294, 220
@@ -440,13 +440,13 @@ CAPTION "Ikusi"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Karpetaren ikuspegiak", -1, 7, 10, 279, 60
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Karpeta honentzat erabiltzen duzun ikuspegia (Xehetasunak edo Lauza moduan, adibidez) karpeta guztiei aplika diezaiekezu.", -1, 60, 20, 200, 20
-    PUSHBUTTON "A&plikatu karpeta guztiei", IDC_VIEW_APPLY_TO_ALL, 60, 50, 100, 14, WS_TABSTOP
-    PUSHBUTTON "&Berrezarri karpeta guztiak", IDC_VIEW_RESET_ALL, 165, 50, 100, 14, WS_TABSTOP
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
+    LTEXT "Karpeta honentzat erabiltzen duzun ikuspegia (Xehetasunak edo Lauza moduan, adibidez) karpeta guztiei aplika diezaiekezu.", -1, 40, 20, 243, 20
+    PUSHBUTTON "A&plikatu karpeta guztiei", IDC_VIEW_APPLY_TO_ALL, 45, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Berrezarri karpeta guztiak", IDC_VIEW_RESET_ALL, 165, 50, 115, 14, WS_TABSTOP
     LTEXT "Ezarpen aurreratuak:", -1, 7, 80, 100, 10
-    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
-    PUSHBUTTON "Be&rrezarri lehenetsiak", IDC_VIEW_RESTORE_DEFAULTS, 156, 204, 130, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 279, 111
+    PUSHBUTTON "Be&rrezarri lehenetsiak", IDC_VIEW_RESTORE_DEFAULTS, 157, 204, 130, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 294, 220
@@ -463,7 +463,7 @@ BEGIN
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
     LTEXT "Aplikazioa", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
     PUSHBUTTON "Alda&tu...", IDC_FILETYPES_CHANGE, 230, 153, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 220, 40
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
     PUSHBUTTON "Au&rreratua", IDC_FILETYPES_ADVANCED, 190, 188, 90, 14, WS_TABSTOP
 END
 
