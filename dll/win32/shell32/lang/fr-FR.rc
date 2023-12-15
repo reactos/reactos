@@ -435,8 +435,8 @@ BEGIN
     GROUPBOX "Affichage des dossiers", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
     LTEXT "Vous pouvez appliquer l'affichage (tel que Détails ou Miniatures) que vous utilisez pour ce dossier à tous les dossiers.", -1, 40, 20, 213, 20
-    PUSHBUTTON "Appliquer à tous les dossiers", IDC_VIEW_APPLY_TO_ALL, 15, 50, 116, 14, WS_TABSTOP
-    PUSHBUTTON "&Réinitialiser tous les dossiers", IDC_VIEW_RESET_ALL, 135, 50, 114, 14, WS_TABSTOP
+    PUSHBUTTON "Appliquer à tous les dossiers", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Réinitialiser tous les dossiers", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
     LTEXT "Paramètres avancés :", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
     PUSHBUTTON "Paramètres par &défaut", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14, WS_TABSTOP
