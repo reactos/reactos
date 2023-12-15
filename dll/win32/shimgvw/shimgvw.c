@@ -1054,12 +1054,13 @@ Preview_ToggleSlideShow(PPREVIEW_DATA pData)
     {
         ShowWindow(g_hwndFullscreen, SW_HIDE);
         ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
-        Preview_RestartTimer(g_hMainWnd);
+        KillTimer(g_hwndFullscreen, SLIDESHOW_TIMER_ID);
     }
     else
     {
         ShowWindow(g_hMainWnd, SW_HIDE);
         ShowWindow(g_hwndFullscreen, SW_SHOWMAXIMIZED);
+        Preview_RestartTimer(g_hwndFullscreen);
     }
 }
 
