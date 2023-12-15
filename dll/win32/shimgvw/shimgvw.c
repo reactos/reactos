@@ -593,8 +593,10 @@ ZoomWnd_OnDraw(
         color0 = RGB(0, 0, 0);
         color1 = RGB(255, 255, 255);
     }
+
     hBrush = CreateSolidBrush(color0);
     SetBkColor(hdcMem, color0);
+
     hPen = CreatePen(PS_SOLID, 1, color1);
     SetTextColor(hdcMem, color1);
 
@@ -663,7 +665,7 @@ ZoomWnd_OnDraw(
             Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
             SelectObject(hdcMem, hbrOld);
         }
-        SelectObject(hdcMem, hPenOld);
+        DeleteObject(SelectObject(hdcMem, hPenOld));
         InflateRect(&rect, -1, -1); /* Subtract Rectangle() line width */
 
         {
