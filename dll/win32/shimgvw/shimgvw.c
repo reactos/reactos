@@ -558,7 +558,7 @@ ZoomWnd_OnDraw(
     HDC hdcMem;
     HBRUSH hBrush;
     HPEN hPen;
-    HGDIOBJ hbrOld, hPenOld, hFontOld, hbmOld;
+    HGDIOBJ hbrOld, hbmOld;
     UINT uFlags;
     HBITMAP hbmMem;
     SIZE paintSize = { prcPaint->right - prcPaint->left, prcPaint->bottom - prcPaint->top };
@@ -593,11 +593,10 @@ ZoomWnd_OnDraw(
         WCHAR szText[128];
         LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
-        hFontOld = SelectObject(hdcMem, GetStockObject(DEFAULT_GUI_FONT));
+        SelectObject(hdcMem, GetStockObject(DEFAULT_GUI_FONT));
         OffsetRect(&rcClient, -prcPaint->left, -prcPaint->top);
         DrawTextW(hdcMem, szText, -1, &rcClient, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
                                                  DT_NOPREFIX);
-        SelectObject(hdcMem, hFontOld);
     }
     else
     {
@@ -627,8 +626,6 @@ ZoomWnd_OnDraw(
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        GdipGetImageFlags(g_pImage, &uFlags);
-
         rect.left   = (rcClient.right  - ZoomedWidth)  / 2;
         rect.top    = (rcClient.bottom - ZoomedHeight) / 2;
         rect.right  = rect.left + ZoomedWidth;
@@ -636,7 +633,8 @@ ZoomWnd_OnDraw(
         OffsetRect(&rect, -prcPaint->left, -prcPaint->top);
 
         InflateRect(&rect, +1, +1); /* Add Rectangle() line width */
-        hPenOld = SelectObject(hdcMem, hPen);
+        SelectObject(hdcMem, hPen);
+        GdipGetImageFlags(g_pImage, &uFlags);
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
             hbrOld = SelectObject(hdcMem, CreateCheckerBoardBrush());
@@ -649,16 +647,16 @@ ZoomWnd_OnDraw(
             Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
             SelectObject(hdcMem, hbrOld);
         }
-        SelectObject(hdcMem, hPenOld);
         InflateRect(&rect, -1, -1); /* Subtract Rectangle() line width */
 
         {
+            /* Image attributes are required to draw image correctly */
             GpImageAttributes *imageAttributes;
             GdipCreateImageAttributes(&imageAttributes);
             GdipSetImageAttributesWrapMode(imageAttributes, WrapModeTile,
                                            GetBkColor(hdcMem) | 0xFF000000, TRUE);
 
-            /* -0.5f is used for interpolation */
+            /* Draw image. -0.5f is used for interpolation */
             GdipDrawImageRectRect(graphics, g_pImage,
                                   rect.left, rect.top,
                                   rect.right - rect.left, rect.bottom - rect.top,
