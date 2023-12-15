@@ -576,6 +576,7 @@ ZoomWnd_OnDraw(
     HBITMAP hbmMem;
     SIZE paintSize = { prcPaint->right - prcPaint->left, prcPaint->bottom - prcPaint->top };
     COLORREF color0, color1;
+    GpImageAttributes *imageAttributes;
 
     /* We use a memory bitmap to reduce flickering */
     hdcMem = CreateCompatibleDC(hdc);
@@ -633,6 +634,8 @@ ZoomWnd_OnDraw(
             return;
         }
 
+        GdipGetImageFlags(g_pImage, &uFlags);
+
         if (pData->m_nZoomPercents % 100 == 0)
         {
             GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
@@ -644,47 +647,39 @@ ZoomWnd_OnDraw(
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        rect.left   = (rcClient.right  - ZoomedWidth)  / 2;
+        rect.left   = (rcClient.right  - ZoomedWidth ) / 2;
         rect.top    = (rcClient.bottom - ZoomedHeight) / 2;
         rect.right  = rect.left + ZoomedWidth;
         rect.bottom = rect.top  + ZoomedHeight;
         OffsetRect(&rect, -prcPaint->left, -prcPaint->top);
 
-        InflateRect(&rect, +1, +1); /* Add Rectangle() line width */
-        hPenOld = SelectObject(hdcMem, hPen);
-        GdipGetImageFlags(g_pImage, &uFlags);
+        InflateRect(&rect, +1, +1); /* Add Rectangle() pen width */
+
+        /* Draw a rectangle. Fill by checker board if necessary */
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
-        {
             hbrOld = SelectObject(hdcMem, CreateCheckerBoardBrush());
-            Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
-            DeleteObject(SelectObject(hdcMem, hbrOld));
-        }
         else
-        {
             hbrOld = SelectObject(hdcMem, GetStockBrush(NULL_BRUSH));
-            Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
-            SelectObject(hdcMem, hbrOld);
-        }
+        hPenOld = SelectObject(hdcMem, hPen);
+        Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
+        DeleteObject(SelectObject(hdcMem, hbrOld));
         DeleteObject(SelectObject(hdcMem, hPenOld));
-        InflateRect(&rect, -1, -1); /* Subtract Rectangle() line width */
 
-        {
-            /* Image attributes are required to draw image correctly */
-            GpImageAttributes *imageAttributes;
-            GdipCreateImageAttributes(&imageAttributes);
-            GdipSetImageAttributesWrapMode(imageAttributes, WrapModeTile,
-                                           GetBkColor(hdcMem) | 0xFF000000, TRUE);
+        InflateRect(&rect, -1, -1); /* Subtract Rectangle() pen width */
 
-            /* Draw image. -0.5f is used for interpolation */
-            GdipDrawImageRectRect(graphics, g_pImage,
-                                  rect.left, rect.top,
-                                  rect.right - rect.left, rect.bottom - rect.top,
-                                  -0.5f, -0.5f, ImageWidth, ImageHeight,
-                                  UnitPixel, imageAttributes, NULL, NULL);
+        /* Image attributes are required to draw image correctly */
+        GdipCreateImageAttributes(&imageAttributes);
+        GdipSetImageAttributesWrapMode(imageAttributes, WrapModeTile,
+                                       GetBkColor(hdcMem) | 0xFF000000, TRUE);
 
-            GdipDisposeImageAttributes(imageAttributes);
-        }
+        /* Draw image. -0.5f is used for interpolation */
+        GdipDrawImageRectRect(graphics, g_pImage,
+                              rect.left, rect.top,
+                              rect.right - rect.left, rect.bottom - rect.top,
+                              -0.5f, -0.5f, ImageWidth, ImageHeight,
+                              UnitPixel, imageAttributes, NULL, NULL);
 
+        GdipDisposeImageAttributes(imageAttributes);
         GdipDeleteGraphics(graphics);
     }
 
