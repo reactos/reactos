@@ -1039,25 +1039,28 @@ Preview_Edit(HWND hwnd)
 }
 
 static VOID
-Preview_StartSlideShow(PPREVIEW_DATA pData)
+Preview_ToggleSlideShow(PPREVIEW_DATA pData)
 {
-    HWND hwnd = g_hwndFullscreen;
-    DWORD style = WS_POPUP | WS_CLIPSIBLINGS, exstyle = WS_EX_TOPMOST;
-
-    ShowWindow(pData->m_hwnd, SW_HIDE);
-
-    if (!IsWindow(hwnd))
+    if (!IsWindow(g_hwndFullscreen))
     {
+        DWORD style = WS_POPUP | WS_CLIPSIBLINGS, exstyle = WS_EX_TOPMOST;
         WCHAR szTitle[256];
         LoadStringW(g_hInstance, IDS_APPTITLE, szTitle, _countof(szTitle));
-        hwnd = CreateWindowExW(exstyle, WC_PREVIEW, szTitle, style,
-                               0, 0, 0, 0, NULL, NULL, g_hInstance, NULL);
+        g_hwndFullscreen = CreateWindowExW(exstyle, WC_PREVIEW, szTitle, style,
+                                           0, 0, 0, 0, NULL, NULL, g_hInstance, NULL);
     }
 
-    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
-    UpdateWindow(hwnd);
-
-    Preview_RestartTimer(hwnd);
+    if (IsWindowVisible(g_hwndFullscreen))
+    {
+        ShowWindow(g_hwndFullscreen, SW_HIDE);
+        ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
+        Preview_RestartTimer(g_hMainWnd);
+    }
+    else
+    {
+        ShowWindow(g_hMainWnd, SW_HIDE);
+        ShowWindow(g_hwndFullscreen, SW_SHOWMAXIMIZED);
+    }
 }
 
 static VOID
@@ -1099,10 +1102,7 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_SLIDE_SHOW:
-            if (Preview_IsMainWnd(hwnd))
-                Preview_StartSlideShow(pData);
-            else
-                Preview_EndSlideShow(hwnd);
+            Preview_ToggleSlideShow(pData);
             break;
 
         case IDC_ZOOM_IN:
