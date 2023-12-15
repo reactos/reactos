@@ -79,8 +79,8 @@ BEGIN
     AUTOCHECKBOX "&Ocultar automaticamente a barra de tarefas", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "&Manter a barra de tarefas sobre outras janelas", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Agrupar botões similares da barra de tarefas", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "&Mostrar Iniciação Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "Mostrar icones pequenos", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "Mostrar Iniciação &Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "Mostrar icones &pequenos", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
