@@ -593,7 +593,7 @@ ZoomWnd_OnDraw(
         WCHAR szText[128];
         LoadStringW(g_hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
-        SelectObject(hdcMem, GetStockObject(DEFAULT_GUI_FONT));
+        SelectObject(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
         OffsetRect(&rcClient, -prcPaint->left, -prcPaint->top);
         DrawTextW(hdcMem, szText, -1, &rcClient, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
                                                  DT_NOPREFIX);
@@ -643,7 +643,7 @@ ZoomWnd_OnDraw(
         }
         else
         {
-            hbrOld = SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+            hbrOld = SelectObject(hdcMem, GetStockBrush(NULL_BRUSH));
             Rectangle(hdcMem, rect.left, rect.top, rect.right, rect.bottom);
             SelectObject(hdcMem, hbrOld);
         }
@@ -1322,13 +1322,13 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIconW(g_hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
     WndClass.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-    WndClass.hbrBackground  = NULL;   /* less flicker */
+    WndClass.hbrBackground  = (HBRUSH)UlongToHandle(COLOR_3DFACE + 1);
     if (!RegisterClassW(&WndClass))
         return -1;
     WndClass.lpszClassName  = WC_ZOOM;
     WndClass.lpfnWndProc    = ZoomWndProc;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    WndClass.hbrBackground  = (HBRUSH)GetStockObject(NULL_BRUSH);
+    WndClass.hbrBackground  = GetStockBrush(NULL_BRUSH); /* less flicker */
     if (!RegisterClassW(&WndClass))
         return -1;
 
