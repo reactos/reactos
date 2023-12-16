@@ -427,13 +427,13 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Otwórz każdy katalog w tym &samym oknie", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 73
+    GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 20, BS_MULTILINE | WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Dwukrotne kliknięcie by otworzyć (pojedyncze by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 166, 210, 10 //FIXME: accelerator collision &D
-    AUTORADIOBUTTON "Podkreśl tytuły ikon zgodnych z używ&aną przeglądarką", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 142, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po ich wskazaniu", IDC_FOLDER_OPTIONS_ULPOINT, 50, 154, 200, 10
-    PUSHBUTTON "Przywróć &domyślne", IDC_FOLDER_OPTIONS_RESTORE, 167, 187, 90, 14, WS_TABSTOP //FIXME: accelerator collision &D
+    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 215, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Dwukrotne kliknięcie by otworzyć (pojedyncze by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10 //FIXME: accelerator collision &D
+    AUTORADIOBUTTON "Podkreśl tytuły ikon zgodnych z używ&aną przeglądarką", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po ich wskazaniu", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    PUSHBUTTON "Przywróć &domyślne", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP //FIXME: accelerator collision &D
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
