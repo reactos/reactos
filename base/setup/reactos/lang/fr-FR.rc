@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Bienvenue dans l'Assistant Installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "Cet assistant installe ou met à niveau ReactOS sur votre ordinateur, \
 et prépare la seconde étape d'installation.", IDC_STATIC, 115, 40, 195, 27
 ////
@@ -153,16 +153,30 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalisation de l'assistant d'installation de ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Vous avez complété avec succès la première étape d'installation de ReactOS.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "Si vous appuyez sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Redémarrage de votre ordinateur", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "La première étape d'installation de ReactOS a été complétée avec succès.", IDC_STATIC, 115, 40, 195, 24
+    // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Le programme d'installation va maintenant redémarrer votre ordinateur pour continuer avec la seconde étape d'installation.\n\nVotre ordinateur va redémarrer automatiquement dans 15 secondes ou si vous cliquez sur Redémarrer.", IDC_FINISHTEXT, 115, 70, 195, 64
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+END
+
+IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "L'Assistant Installation de ReactOS s'est terminé prématurément", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "La première étape d'installation de ReactOS s'est terminée prématurément à cause d'une erreur ou parce que vous l'avez annulée.\n\nVous pourrez exécuter le programme d'installation ultérieurement pour installer ou mettre à jour ReactOS.", IDC_STATIC, 115, 40, 195, 56
+    // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Votre ordinateur va redémarrer automatiquement dans 15 secondes ou si vous cliquez sur Redémarrer.", IDC_FINISHTEXT, 115, 102, 195, 32
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 /* Strings */
@@ -182,12 +196,14 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
     IDS_PROCESSSUBTITLE "Créer et formater la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
-    IDS_RESTARTTITLE "Première étape de configuration terminée"
-    IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
+    IDS_FINISH_NO_REBOOT "Le programme d'installation doit redémarrer votre ordinateur pour continuer avec la seconde étape d'installation.\n\nCliquez sur Redémarrer pour redémarrer immédiatement votre ordinateur.\nCliquez sur Différer pour quitter le programme d'installation et redémarrer votre ordinateur ultérieurement."
+    IDS_ABORT_NO_REBOOT "Cliquez sur Redémarrer pour redémarrer immédiatement votre ordinateur.\nCliquez sur Fermer pour quitter le programme d'installation."
     IDS_INSTALLBTN "&Installer"
+    IDS_RESTARTBTN "&Redémarrer"
+    IDS_POSTPONEBTN "&Différer"
     IDS_VOLUME_NOFORMAT "Non formaté"
 END
 
