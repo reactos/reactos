@@ -1196,7 +1196,11 @@ static void BUTTON_CheckAutoRadioButton( HWND hwnd )
     do
     {
         if (!sibling) break;
+#ifdef __REACTOS__
+        if ((SendMessageW(sibling, WM_GETDLGCODE, 0, 0) & (DLGC_BUTTON | DLGC_RADIOBUTTON)) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+#else
         if (SendMessageW( sibling, WM_GETDLGCODE, 0, 0 ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+#endif
             SendMessageW( sibling, BM_SETCHECK, sibling == hwnd ? BST_CHECKED : BST_UNCHECKED, 0 );
         sibling = GetNextDlgGroupItem( parent, sibling, FALSE );
     } while (sibling != start);
