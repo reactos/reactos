@@ -412,11 +412,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Aktiviteter", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
-    AUTORADIOBUTTON "Visa vanliga aktiviteter i &mappar", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Visa vanliga aktiviteter i &mappar", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &M
     AUTORADIOBUTTON "Använd ReactOS klass&iska mappar", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Bläddra mappar", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "Öppna varje mapp i sa&mma fönster", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Öppna varje mapp i sa&mma fönster", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &M
     AUTORADIOBUTTON "Öppna varje mapp i sitt eget &fönster", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Klicka på objekt enligt följande", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
