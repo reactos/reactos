@@ -435,8 +435,8 @@ BEGIN
     GROUPBOX "Ordneransicht", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
     LTEXT "Sie können die Ansicht (Details oder Kacheln), die Sie für diesen Ordner verwenden, auf alle Ordner anwenden.", -1, 40, 20, 213, 20
-    PUSHBUTTON "Auf a&lle Ordner anwenden", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
-    PUSHBUTTON "&Alle Ordner zurücksetzen", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "Auf &alle Ordner anwenden", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "Alle Ordner &zurücksetzen", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
     LTEXT "Erweiterte Einstellungen:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
     PUSHBUTTON "&Wiederherstellen", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14, WS_TABSTOP
