@@ -921,10 +921,10 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
             si.nPos = (SHORT)HIWORD(wParam);
             break;
         case SB_LINELEFT:
-            si.nPos -= si.nPage / 3;
+            si.nPos -= 48;
             break;
         case SB_LINERIGHT:
-            si.nPos += si.nPage / 3;
+            si.nPos += 48;
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;
@@ -973,16 +973,16 @@ ZoomWnd_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
     else if (GetKeyState(VK_SHIFT) < 0)
     {
         if (zDelta > 0)
-            SendMessageW(hwnd, WM_HSCROLL, SB_PAGELEFT, 0);
+            SendMessageW(hwnd, WM_HSCROLL, SB_LINELEFT, 0);
         else
-            SendMessageW(hwnd, WM_HSCROLL, SB_PAGERIGHT, 0);
+            SendMessageW(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
     }
     else
     {
         if (zDelta > 0)
-            SendMessageW(hwnd, WM_VSCROLL, SB_PAGEUP, 0);
+            SendMessageW(hwnd, WM_VSCROLL, SB_LINEUP, 0);
         else
-            SendMessageW(hwnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+            SendMessageW(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
     }
 }
 
