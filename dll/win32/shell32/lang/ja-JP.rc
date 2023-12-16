@@ -934,7 +934,7 @@ BEGIN
     IDS_EFI_FILE "Extensible Firmware Interface Executable"
     IDS_EXE_FILE "アプリケーション"
     IDS_NLS_FILE "各国語サポートファイル"
-    IDS_OCX_FILE "ActiveX Control"
+    IDS_OCX_FILE "ActiveX コントロール"
     IDS_TLB_FILE "型ライブラリ"
     IDS_FON_FILE "フォント ファイル"
     IDS_TTF_FILE "TrueType フォント ファイル"
@@ -947,7 +947,7 @@ BEGIN
     IDS_PIF_FILE "NT VDM プログラム情報ファイル"
     IDS_SCR_FILE "スクリーン セーバー"
     IDS_SYS_FILE "システム ファイル"
-    IDS_VXD_FILE "仮想 デバイス ドライバ"
+    IDS_VXD_FILE "仮想デバイス ドライバ"
     IDS_ANY_FILE "%s ファイル"
 
     IDS_OPEN_VERB "開く"
