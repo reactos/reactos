@@ -103,6 +103,8 @@ typedef struct tagPREVIEW_DATA
     ANIME m_Anime; /* Animation */
     INT m_xScrollOffset;
     INT m_yScrollOffset;
+    UINT m_nMouseDownMsg;
+    POINT m_ptOrigin;
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 static inline PPREVIEW_DATA
@@ -885,9 +887,56 @@ Preview_EndSlideShow(HWND hwnd)
 static VOID
 ZoomWnd_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
     HWND hParent = GetParent(hwnd);
-    if (!Preview_IsMainWnd(hParent))
-        Preview_EndSlideShow(hParent);
+    if ((uMsg == WM_LBUTTONDOWN) || (uMsg == WM_RBUTTONDOWN))
+    {
+        if (!Preview_IsMainWnd(hParent))
+            Preview_EndSlideShow(hParent);
+        return;
+    }
+
+    pData->m_nMouseDownMsg = uMsg;
+    pData->m_ptOrigin.x = GET_X_LPARAM(lParam);
+    pData->m_ptOrigin.y = GET_Y_LPARAM(lParam);
+    SetCapture(hwnd);
+    SetCursor(LoadCursorW(g_hInstance, MAKEINTRESOURCEW(IDC_HANDDRAG)));
+}
+
+static VOID
+ZoomWnd_OnMouseMove(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+    if (pData->m_nMouseDownMsg == WM_MBUTTONDOWN)
+    {
+        INT x = GetScrollPos(hwnd, SB_HORZ) - (pt.x - pData->m_ptOrigin.x);
+        INT y = GetScrollPos(hwnd, SB_VERT) - (pt.y - pData->m_ptOrigin.y);
+        SendMessageW(hwnd, WM_HSCROLL, MAKEWPARAM(SB_THUMBPOSITION, x), 0);
+        SendMessageW(hwnd, WM_VSCROLL, MAKEWPARAM(SB_THUMBPOSITION, y), 0);
+        pData->m_ptOrigin = pt;
+    }
+}
+
+static BOOL
+ZoomWnd_OnSetCursor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    if (pData->m_nMouseDownMsg == WM_MBUTTONDOWN)
+    {
+        SetCursor(LoadCursorW(g_hInstance, MAKEINTRESOURCEW(IDC_HANDDRAG)));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static VOID
+ZoomWnd_OnButtonUp(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    pData->m_nMouseDownMsg = 0;
+    ReleaseCapture();
 }
 
 static VOID
@@ -993,6 +1042,23 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONDOWN:
         {
             ZoomWnd_OnButtonDown(hwnd, uMsg, wParam, lParam);
+            break;
+        }
+        case WM_MOUSEMOVE:
+        {
+            ZoomWnd_OnMouseMove(hwnd, uMsg, wParam, lParam);
+            break;
+        }
+        case WM_SETCURSOR:
+        {
+            if (!ZoomWnd_OnSetCursor(hwnd, uMsg, wParam, lParam))
+                return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        }
+        case WM_LBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_RBUTTONUP:
+        {
+            ZoomWnd_OnButtonUp(hwnd, uMsg, wParam, lParam);
             break;
         }
         case WM_PAINT:
