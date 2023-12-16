@@ -32,7 +32,6 @@ BOOL TaskbarSettings::Save()
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", REG_DWORD, &bAllowSizeMove, sizeof(bAllowSizeMove));
     sr.cbSize = sizeof(sr);
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
-    SHSetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", REG_DWORD, &dwCompactTrayIcons, sizeof(dwCompactTrayIcons));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSd", REG_DWORD, &bShowDesktopButton, sizeof(bShowDesktopButton));
     SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
