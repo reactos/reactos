@@ -412,7 +412,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Tarefas", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
-    AUTORADIOBUTTON "Exibir tarefas comuns em &pastas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Exibir tarefas comuns em &pastas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &P
     AUTORADIOBUTTON "Usar pastas cláss&icas do ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Browse folders", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
@@ -423,7 +423,7 @@ BEGIN
     AUTORADIOBUTTON "Clique único para abrir um item (apontar para &selecionar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Clique &duplo para abrir um item (clique único para selecionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Underline icon titles consistent with my &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sublinhar títulos de ícones somente quando a&pontados", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "Sublinhar títulos de ícones somente quando a&pontados", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10 //FIXME: accelerator collision &P
     PUSHBUTTON "&Restaurar Padrões", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
 END
 
