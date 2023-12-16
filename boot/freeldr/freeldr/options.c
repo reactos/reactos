@@ -180,31 +180,32 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
 
 VOID DisplayBootTimeOptions(VOID)
 {
-    CHAR BootOptions[260] = "";
+    CHAR BootOptions[260];
 
     switch (BootOptionChoice)
     {
         case SAFE_MODE:
-            strcat(BootOptions, OptionsMenuList[0]);
+            strcpy(BootOptions, OptionsMenuList[0]);
             break;
 
         case SAFE_MODE_WITH_NETWORKING:
-            strcat(BootOptions, OptionsMenuList[1]);
+            strcpy(BootOptions, OptionsMenuList[1]);
             break;
 
         case SAFE_MODE_WITH_COMMAND_PROMPT:
-            strcat(BootOptions, OptionsMenuList[2]);
+            strcpy(BootOptions, OptionsMenuList[2]);
             break;
 
         case LAST_KNOWN_GOOD_CONFIGURATION:
-            strcat(BootOptions, OptionsMenuList[6]);
+            strcpy(BootOptions, OptionsMenuList[6]);
             break;
 
         case DIRECTORY_SERVICES_RESTORE_MODE:
-            strcat(BootOptions, OptionsMenuList[7]);
+            strcpy(BootOptions, OptionsMenuList[7]);
             break;
 
         default:
+            BootOptions[0] = ANSI_NULL;
             break;
     }
 
@@ -214,31 +215,23 @@ VOID DisplayBootTimeOptions(VOID)
              (BootOptionChoice != SAFE_MODE_WITH_NETWORKING) &&
              (BootOptionChoice != SAFE_MODE_WITH_COMMAND_PROMPT) )
         {
-            if (BootOptionChoice != NO_OPTION)
-            {
+            if (BootOptions[0] != ANSI_NULL)
                 strcat(BootOptions, ", ");
-            }
             strcat(BootOptions, OptionsMenuList[4]);
         }
     }
 
     if (VgaMode)
     {
-        if ((BootOptionChoice != NO_OPTION) ||
-             BootLogging)
-        {
+        if (BootOptions[0] != ANSI_NULL)
             strcat(BootOptions, ", ");
-        }
         strcat(BootOptions, OptionsMenuList[5]);
     }
 
     if (DebuggingMode)
     {
-        if ((BootOptionChoice != NO_OPTION) ||
-             BootLogging || VgaMode)
-        {
+        if (BootOptions[0] != ANSI_NULL)
             strcat(BootOptions, ", ");
-        }
         strcat(BootOptions, OptionsMenuList[8]);
     }
 
