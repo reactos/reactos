@@ -63,7 +63,7 @@ CsrpConnectToServer(
                      sizeof(CSR_PORT_NAME);
     if (PortNameLength > UNICODE_STRING_MAX_BYTES)
     {
-        DPRINT1("PortNameLength too big: %Iu", PortNameLength);
+        DPRINT1("PortNameLength too big: %Iu\n", PortNameLength);
         return STATUS_NAME_TOO_LONG;
     }
 
@@ -374,7 +374,7 @@ CsrClientCallServer(
     /* Make sure the length is valid */
     if (DataLength > (MAXSHORT - sizeof(CSR_API_MESSAGE)))
     {
-        DPRINT1("DataLength too big: %lu", DataLength);
+        DPRINT1("DataLength too big: %lu\n", DataLength);
         return STATUS_INVALID_PARAMETER;
     }
 
