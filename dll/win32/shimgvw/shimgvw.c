@@ -903,6 +903,17 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
     if (!g_pImage)
         return;
 
+    if (bVertical)
+    {
+        if (!(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_VSCROLL))
+            return;
+    }
+    else
+    {
+        if (!(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_HSCROLL))
+            return;
+    }
+
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
@@ -910,10 +921,10 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
             si.nPos = (SHORT)HIWORD(wParam);
             break;
         case SB_LINELEFT:
-            si.nPos -= 15;
+            si.nPos -= si.nPage / 3;
             break;
         case SB_LINERIGHT:
-            si.nPos += 15;
+            si.nPos += si.nPage / 3;
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;
