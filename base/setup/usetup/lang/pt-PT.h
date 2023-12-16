@@ -1432,7 +1432,7 @@ static MUI_ENTRY ptPTBootLoaderSelectPageEntries[] =
     {
         6,
         8,
-        "Por favor seleccione onde o instalador dever\240 instalar o gestor de arranque:",
+        "Por favor seleccione a unidade onde instalar o gestor de arranque:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
