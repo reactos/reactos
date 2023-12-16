@@ -895,10 +895,9 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
 {
     UINT ImageWidth, ImageHeight, ZoomedWidth, ZoomedHeight;
     RECT rcClient;
-    UINT nCode = (bVertical ? SB_VERT : SB_HORZ);
-    INT nOffset;
+    UINT nBar = (bVertical ? SB_VERT : SB_HORZ);
     SCROLLINFO si = { sizeof(si), SIF_ALL };
-    GetScrollInfo(hwnd, nCode, &si);
+    GetScrollInfo(hwnd, nBar, &si);
 
     if (!g_pImage)
         return;
@@ -935,9 +934,8 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
     }
 
     si.fMask = SIF_POS;
-    SetScrollInfo(hwnd, nCode, &si, TRUE);
-    si.fMask = SIF_ALL;
-    GetScrollInfo(hwnd, nCode, &si);
+    SetScrollInfo(hwnd, nBar, &si, TRUE);
+    GetScrollInfo(hwnd, nBar, &si);
 
     GetClientRect(hwnd, &rcClient);
 
@@ -945,15 +943,13 @@ ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical
     {
         GdipGetImageHeight(g_pImage, &ImageHeight);
         ZoomedHeight = (ImageHeight * pData->m_nZoomPercents) / 100;
-        nOffset = si.nPos - (ZoomedHeight - rcClient.bottom) / 2;
-        pData->m_yScrollOffset = nOffset;
+        pData->m_yScrollOffset = si.nPos - (ZoomedHeight - rcClient.bottom) / 2;
     }
     else
     {
         GdipGetImageWidth(g_pImage, &ImageWidth);
-        ZoomedWidth  = (ImageWidth  * pData->m_nZoomPercents) / 100;
-        nOffset = si.nPos - (ZoomedWidth - rcClient.right) / 2;
-        pData->m_xScrollOffset = nOffset;
+        ZoomedWidth = (ImageWidth  * pData->m_nZoomPercents) / 100;
+        pData->m_xScrollOffset = si.nPos - (ZoomedWidth - rcClient.right) / 2;
     }
 
     InvalidateRect(hwnd, NULL, TRUE);
