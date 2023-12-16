@@ -353,7 +353,10 @@ SearchDriverRecursive(
     BOOL retval = FALSE;
     HANDLE hFindFile = INVALID_HANDLE_VALUE;
 
-    wcscpy(DirPath, Path);
+    if (Path && Path[0])
+        wcscpy(DirPath, Path);
+    else
+        return retval;
 
     if (DirPath[wcslen(DirPath) - 1] != '\\')
         wcscat(DirPath, L"\\");
