@@ -802,6 +802,7 @@ UNINSTALL="Uninstall"
 REPAIR="Repair"
 TEST="Test"
 
+;------------------------------------------------------------------------
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
 ;; In shell32.dll
@@ -842,6 +843,7 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;REPAIR="Repair"
 ;TEST="Test"
 
+;------------------------------------------------------------------------
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
 ;; In shell32.dll
@@ -882,6 +884,7 @@ UNINSTALL="Desinstalar"
 REPAIR="Reparar"
 TEST="Probar"
 
+;------------------------------------------------------------------------
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
 ;; In shell32.dll
@@ -922,6 +925,7 @@ UNINSTALL="Désinstaller"
 REPAIR="Réparer"
 TEST="Tester"
 
+;------------------------------------------------------------------------
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
 ;; In shell32.dll
@@ -962,6 +966,7 @@ UNINSTALL="Rimuovi"
 REPAIR="Ripara"
 TEST="Prova"
 
+;------------------------------------------------------------------------
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 ;; In shell32.dll
@@ -1002,6 +1007,7 @@ UNINSTALL="Odinstaluj"
 REPAIR="Napraw"
 TEST="Testuj"
 
+;------------------------------------------------------------------------
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
 ;; In shell32.dll
@@ -1042,6 +1048,7 @@ UNINSTALL="Dezinstalează"
 REPAIR="Repară"
 TEST="Testează"
 
+;------------------------------------------------------------------------
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 ;; In shell32.dll
@@ -1082,6 +1089,7 @@ UNINSTALL="Удалить"
 REPAIR="Исправить"
 TEST="Тест"
 
+;------------------------------------------------------------------------
 ; LANG_CHINESE SUBLANG_CHINESE_TRADITIONAL
 [Strings.0404]
 ;; In shell32.dll
@@ -1122,6 +1130,7 @@ UNINSTALL="解除安裝"
 REPAIR="修復"
 TEST="測試"
 
+;------------------------------------------------------------------------
 ; LANG_TURKISH SUBLANG_DEFAULT
 [Strings.041F]
 ;; In shell32.dll
@@ -1162,6 +1171,7 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;REPAIR="Onar"
 ;TEST="Dene"
 
+;------------------------------------------------------------------------
 ; LANG_CHINESE SUBLANG_CHINESE_HONGKONG
 [Strings.0C04]
 ;; In shell32.dll
@@ -1201,5 +1211,47 @@ INSTALL="安裝"
 UNINSTALL="解除安裝"
 REPAIR="修復"
 TEST="測試"
+
+;------------------------------------------------------------------------
+; LANG_JAPANESE SUBLANG_DEFAULT
+[Strings.0411]
+
+;; In shell32.dll
+CPLFILE_OPENWITH="コントロール パネルで開く"
+
+;; In hhctrl.ocx
+CHMFILE="コンパイル済み HTML ヘルプ ファイル"
+
+;; In msxml3r.dll
+XMLFILE="XML 文書"
+XSLFILE="XSL スタイルシート"
+
+;; In msi.dll
+MSIPACK="ReactOS インストーラ パッケージ"
+
+;; In themeui.dll
+MSSTYLESFILE="視覚スタイル ファイル"
+THEMEFILE="テーマ ファイル"
+
+;; In some multimedia exe/dll
+WAVFILE="Wave 音声"
+MIDFILE="MIDI シーケンス"
+CDAFILE="CD 音声トラック"
+AVIFILE="ビデオ クリップ"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="カスケード スタイル シート"
+SCFFILE="ReactOS エクスプローラ コマンド"
+WMZFILE="圧縮済み拡張メタファイル"
+
+;; For .reg files, right-click menu
+MERGE="結合"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="設定"
+INSTALL="インストール"
+UNINSTALL="アンインストール"
+REPAIR="修復"
+TEST="テスト"
 
 ; EOF
