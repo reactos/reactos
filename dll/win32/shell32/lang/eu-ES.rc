@@ -420,11 +420,11 @@ BEGIN
     GROUPBOX "Atazak", -1, 7, 10, 279, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "&Erakutsi ataza arruntak karpetetan", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Erabili &ReactOS-en karpeta klasikoak", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Erabili &ReactOS-en karpeta klasikoak", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10 //FIXME: accelerator collision &R
     GROUPBOX "Arakatu karpetak", -1, 7, 60, 279, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "&Ireki karpeta guztiak leiho berean", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "I&reki karpeta bakoitza bere leihoan", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    AUTORADIOBUTTON "I&reki karpeta bakoitza bere leihoan", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10 //FIXME: accelerator collision &R
     GROUPBOX "Elementuetan klik egiteko modua", -1, 7, 110, 279, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Klik bakarra elementu bat irekitzeko (seinalatu hautatzeko)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
