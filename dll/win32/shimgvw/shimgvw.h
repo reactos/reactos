@@ -24,7 +24,6 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #include "resource.h"

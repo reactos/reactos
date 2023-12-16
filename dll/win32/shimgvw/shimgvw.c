@@ -101,6 +101,8 @@ typedef struct tagPREVIEW_DATA
     HWND m_hwndToolBar;
     INT m_nZoomPercents;
     ANIME m_Anime; /* Animation */
+    INT m_xScrollOffset;
+    INT m_yScrollOffset;
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 static inline PPREVIEW_DATA
@@ -126,6 +128,78 @@ Preview_RestartTimer(HWND hwnd)
 }
 
 static VOID
+ZoomWnd_UpdateScroll(PPREVIEW_DATA pData, HWND hwnd, BOOL bResetPos)
+{
+    RECT rcClient;
+    UINT ImageWidth, ImageHeight, ZoomedWidth, ZoomedHeight;
+    SCROLLINFO si;
+    BOOL bShowHorz, bShowVert;
+
+    if (bResetPos)
+        pData->m_xScrollOffset = pData->m_yScrollOffset = 0;
+
+    if (!g_pImage)
+    {
+        ShowScrollBar(hwnd, SB_BOTH, FALSE);
+        InvalidateRect(hwnd, NULL, TRUE);
+        return;
+    }
+
+    GdipGetImageWidth(g_pImage, &ImageWidth);
+    GdipGetImageHeight(g_pImage, &ImageHeight);
+
+    ZoomedWidth  = (ImageWidth  * pData->m_nZoomPercents) / 100;
+    ZoomedHeight = (ImageHeight * pData->m_nZoomPercents) / 100;
+
+    GetClientRect(hwnd, &rcClient);
+
+    bShowHorz = (rcClient.right < ZoomedWidth);
+    bShowVert = (rcClient.bottom < ZoomedHeight);
+    ShowScrollBar(hwnd, SB_HORZ, bShowHorz);
+    ShowScrollBar(hwnd, SB_VERT, bShowVert);
+
+    GetClientRect(hwnd, &rcClient);
+
+    ZeroMemory(&si, sizeof(si));
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+
+    if (bShowHorz)
+    {
+        GetScrollInfo(hwnd, SB_HORZ, &si);
+        si.nPage = rcClient.right;
+        si.nMin = 0;
+        si.nMax = ZoomedWidth;
+        si.nPos = (ZoomedWidth - rcClient.right) / 2 + pData->m_xScrollOffset;
+        si.nPos = max(min(si.nPos, si.nMax - (INT)si.nPage), si.nMin);
+        SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+        pData->m_xScrollOffset = si.nPos - (ZoomedWidth - rcClient.right) / 2;
+    }
+    else
+    {
+        pData->m_xScrollOffset = 0;
+    }
+
+    if (bShowVert)
+    {
+        GetScrollInfo(hwnd, SB_VERT, &si);
+        si.nPage = rcClient.bottom;
+        si.nMin = 0;
+        si.nMax = ZoomedHeight;
+        si.nPos = (ZoomedHeight - rcClient.bottom) / 2 + pData->m_yScrollOffset;
+        si.nPos = max(min(si.nPos, si.nMax - (INT)si.nPage), si.nMin);
+        SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+        pData->m_yScrollOffset = si.nPos - (ZoomedHeight - rcClient.bottom) / 2;
+    }
+    else
+    {
+        pData->m_yScrollOffset = 0;
+    }
+
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+static VOID
 Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL bEnableRealSize)
 {
     BOOL bEnableZoomIn, bEnableZoomOut;
@@ -148,6 +222,9 @@ Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL 
 
     /* Restart timer if necessary */
     Preview_RestartTimer(pData->m_hwnd);
+
+    /* Update scroll info */
+    ZoomWnd_UpdateScroll(pData, pData->m_hwndZoom, FALSE);
 }
 
 static VOID
@@ -399,11 +476,15 @@ Preview_UpdateUI(PPREVIEW_DATA pData)
     BOOL bEnable = (g_pImage != NULL);
     PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
     PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+}
 
+static VOID
+Preview_UpdateImage(PPREVIEW_DATA pData)
+{
     if (!Preview_IsMainWnd(pData->m_hwnd))
         Preview_ResetZoom(pData);
 
-    InvalidateRect(pData->m_hwndZoom, NULL, FALSE);
+    ZoomWnd_UpdateScroll(pData, pData->m_hwndZoom, TRUE);
 }
 
 static SHIMGVW_FILENODE*
@@ -651,7 +732,9 @@ ZoomWnd_OnDraw(
         rect.top    = (rcClient.bottom - ZoomedHeight) / 2;
         rect.right  = rect.left + ZoomedWidth;
         rect.bottom = rect.top  + ZoomedHeight;
-        OffsetRect(&rect, -prcPaint->left, -prcPaint->top);
+        OffsetRect(&rect,
+                   -prcPaint->left - pData->m_xScrollOffset,
+                   -prcPaint->top  - pData->m_yScrollOffset);
 
         InflateRect(&rect, +1, +1); /* Add Rectangle() pen width */
 
@@ -807,6 +890,98 @@ ZoomWnd_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         Preview_EndSlideShow(hParent);
 }
 
+static VOID
+ZoomWnd_OnHVScroll(PPREVIEW_DATA pData, HWND hwnd, WPARAM wParam, BOOL bVertical)
+{
+    UINT ImageWidth, ImageHeight, ZoomedWidth, ZoomedHeight;
+    RECT rcClient;
+    UINT nBar = (bVertical ? SB_VERT : SB_HORZ);
+    SCROLLINFO si = { sizeof(si), SIF_ALL };
+    GetScrollInfo(hwnd, nBar, &si);
+
+    if (!g_pImage)
+        return;
+
+    if (bVertical)
+    {
+        if (!(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_VSCROLL))
+            return;
+    }
+    else
+    {
+        if (!(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_HSCROLL))
+            return;
+    }
+
+    switch (LOWORD(wParam))
+    {
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION:
+            si.nPos = (SHORT)HIWORD(wParam);
+            break;
+        case SB_LINELEFT:
+            si.nPos -= 48;
+            break;
+        case SB_LINERIGHT:
+            si.nPos += 48;
+            break;
+        case SB_PAGELEFT:
+            si.nPos -= si.nPage;
+            break;
+        case SB_PAGERIGHT:
+            si.nPos += si.nPage;
+            break;
+    }
+
+    si.fMask = SIF_POS;
+    SetScrollInfo(hwnd, nBar, &si, TRUE);
+    GetScrollInfo(hwnd, nBar, &si);
+
+    GetClientRect(hwnd, &rcClient);
+
+    if (bVertical)
+    {
+        GdipGetImageHeight(g_pImage, &ImageHeight);
+        ZoomedHeight = (ImageHeight * pData->m_nZoomPercents) / 100;
+        pData->m_yScrollOffset = si.nPos - (ZoomedHeight - rcClient.bottom) / 2;
+    }
+    else
+    {
+        GdipGetImageWidth(g_pImage, &ImageWidth);
+        ZoomedWidth = (ImageWidth  * pData->m_nZoomPercents) / 100;
+        pData->m_xScrollOffset = si.nPos - (ZoomedWidth - rcClient.right) / 2;
+    }
+
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+static VOID
+ZoomWnd_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
+{
+    PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    if (zDelta == 0)
+        return;
+
+    if (GetKeyState(VK_CONTROL) < 0)
+    {
+        Preview_ZoomInOrOut(pData, zDelta > 0);
+    }
+    else if (GetKeyState(VK_SHIFT) < 0)
+    {
+        if (zDelta > 0)
+            SendMessageW(hwnd, WM_HSCROLL, SB_LINELEFT, 0);
+        else
+            SendMessageW(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
+    }
+    else
+    {
+        if (zDelta > 0)
+            SendMessageW(hwnd, WM_VSCROLL, SB_LINEUP, 0);
+        else
+            SendMessageW(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
+    }
+}
+
 LRESULT CALLBACK
 ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -825,6 +1000,16 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ZoomWnd_OnPaint(pData, hwnd);
             break;
         }
+        case WM_MOUSEWHEEL:
+        {
+            ZoomWnd_OnMouseWheel(hwnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
+                                 (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
+            break;
+        }
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+            ZoomWnd_OnHVScroll(pData, hwnd, wParam, uMsg == WM_VSCROLL);
+            break;
         case WM_TIMER:
         {
             if (Anime_OnTimer(&pData->m_Anime, wParam))
@@ -893,21 +1078,11 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
 
         g_pCurrentFile = pBuildFileList(szFile);
         Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+        Preview_UpdateImage(pData);
         Preview_UpdateUI(pData);
     }
 
     return TRUE;
-}
-
-static VOID
-Preview_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
-{
-    PPREVIEW_DATA pData = Preview_GetData(hwnd);
-    if (zDelta != 0)
-    {
-        if (GetKeyState(VK_CONTROL) < 0)
-            Preview_ZoomInOrOut(pData, zDelta > 0);
-    }
 }
 
 static VOID
@@ -1075,6 +1250,7 @@ Preview_GoNextPic(PPREVIEW_DATA pData, BOOL bNext)
         else
             g_pCurrentFile = g_pCurrentFile->Prev;
         Preview_pLoadImageFromNode(pData, g_pCurrentFile);
+        Preview_UpdateImage(pData);
         Preview_UpdateUI(pData);
     }
 }
@@ -1140,7 +1316,7 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             if (g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
-                Preview_UpdateUI(pData);
+                Preview_UpdateImage(pData);
             }
             break;
 
@@ -1148,18 +1324,18 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             if (g_pImage)
             {
                 GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
-                Preview_UpdateUI(pData);
+                Preview_UpdateImage(pData);
             }
             break;
 
         case IDC_DELETE:
             Preview_Delete(pData);
+            Preview_UpdateImage(pData);
             Preview_UpdateUI(pData);
             break;
 
         case IDC_MODIFY:
             Preview_Edit(hwnd);
-            Preview_UpdateUI(pData);
             break;
 
         default:
@@ -1243,12 +1419,6 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
         {
             Preview_OnCommand(hwnd, LOWORD(wParam));
-            break;
-        }
-        case WM_MOUSEWHEEL:
-        {
-            Preview_OnMouseWheel(hwnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
-                                 (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
             break;
         }
         case WM_NOTIFY:
