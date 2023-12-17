@@ -174,8 +174,7 @@ NtUserCopyAcceleratorTable(
     ULONG EntriesCount)
 {
     PACCELERATOR_TABLE Accel;
-    ULONG Ret;
-    DECLARE_RETURN(int);
+    ULONG Ret = 0;
 
     TRACE("Enter NtUserCopyAcceleratorTable\n");
     UserEnterShared();
@@ -183,20 +182,19 @@ NtUserCopyAcceleratorTable(
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        RETURN(0);
+        goto Exit;
     }
 
     /* If Entries is NULL return table size */
     if (!Entries)
     {
-        RETURN(Accel->Count);
+        Ret = Accel->Count;
+        goto Exit;
     }
 
     /* Don't overrun */
     if (Accel->Count < EntriesCount)
         EntriesCount = Accel->Count;
-
-    Ret = 0;
 
     _SEH2_TRY
     {
@@ -216,12 +214,10 @@ NtUserCopyAcceleratorTable(
     }
     _SEH2_END;
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserCopyAcceleratorTable, ret=%i\n", _ret_);
+Exit:
+    TRACE("Leave NtUserCopyAcceleratorTable, ret=%lu\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 HACCEL
@@ -234,7 +230,7 @@ NtUserCreateAcceleratorTable(
     HACCEL hAccel;
     ULONG Index;
     NTSTATUS Status = STATUS_SUCCESS;
-    DECLARE_RETURN(HACCEL);
+    HACCEL Ret = NULL;
     PTHREADINFO pti;
 
     TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u)\n",
@@ -244,7 +240,7 @@ NtUserCreateAcceleratorTable(
     if (!Entries || EntriesCount <= 0)
     {
         SetLastNtError(STATUS_INVALID_PARAMETER);
-        RETURN( (HACCEL) NULL );
+        goto Exit;
     }
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -259,7 +255,7 @@ NtUserCreateAcceleratorTable(
     if (Accel == NULL)
     {
         SetLastNtError(STATUS_NO_MEMORY);
-        RETURN( (HACCEL) NULL );
+        goto Exit;
     }
 
     Accel->Count = EntriesCount;
@@ -269,7 +265,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(STATUS_NO_MEMORY);
-        RETURN( (HACCEL) NULL);
+        goto Exit;
     }
 
     _SEH2_TRY
@@ -307,7 +303,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(Status);
-        RETURN( (HACCEL) NULL);
+        goto Exit;
     }
 
     /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
@@ -315,13 +311,13 @@ NtUserCreateAcceleratorTable(
     /* Release the extra reference (UserCreateObject added 2 references) */
     UserDereferenceObject(Accel);
 
-    RETURN(hAccel);
+    Ret = hAccel;
 
-CLEANUP:
+Exit:
     TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u) = %p\n",
-          Entries, EntriesCount, _ret_);
+          Entries, EntriesCount, Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOLEAN
@@ -345,7 +341,7 @@ NtUserDestroyAcceleratorTable(
     HACCEL hAccel)
 {
     PACCELERATOR_TABLE Accel;
-    DECLARE_RETURN(BOOLEAN);
+    BOOLEAN Ret = FALSE;
 
     /* FIXME: If the handle table is from a call to LoadAcceleratorTable, decrement it's
        usage count (and return TRUE).
@@ -355,19 +351,15 @@ NtUserDestroyAcceleratorTable(
     TRACE("NtUserDestroyAcceleratorTable(Table %p)\n", hAccel);
     UserEnterExclusive();
 
-    if (!(Accel = UserGetAccelObject(hAccel)))
+    Accel = UserGetAccelObject(hAccel);
+    if (Accel)
     {
-        RETURN( FALSE);
+        Ret = UserDestroyAccelTable(Accel);
     }
 
-    UserDestroyAccelTable(Accel);
-
-    RETURN( TRUE);
-
-CLEANUP:
-    TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, _ret_);
+    TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 int
@@ -382,7 +374,7 @@ NtUserTranslateAccelerator(
     ULONG i;
     MSG Message;
     USER_REFERENCE_ENTRY AccelRef, WindowRef;
-    DECLARE_RETURN(int);
+    int Ret = 0;
 
     TRACE("NtUserTranslateAccelerator(hWnd %p, hAccel %p, Message %p)\n",
           hWnd, hAccel, pUnsafeMessage);
@@ -390,7 +382,7 @@ NtUserTranslateAccelerator(
 
     if (hWnd == NULL)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     _SEH2_TRY
@@ -401,7 +393,7 @@ NtUserTranslateAccelerator(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        _SEH2_YIELD(RETURN( 0));
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 
@@ -410,13 +402,13 @@ NtUserTranslateAccelerator(
         (Message.message != WM_SYSCHAR) &&
         (Message.message != WM_CHAR))
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     UserRefObjectCo(Accel, &AccelRef);
@@ -424,7 +416,7 @@ NtUserTranslateAccelerator(
     Window = UserGetWindowObject(hWnd);
     if (!Window)
     {
-        RETURN( 0);
+        goto Cleanup;
     }
 
     UserRefObjectCo(Window, &WindowRef);
@@ -435,7 +427,8 @@ NtUserTranslateAccelerator(
     {
         if (co_IntTranslateAccelerator(Window, &Message, &Accel->Table[i]))
         {
-            RETURN( 1);
+            Ret = 1;
+            break;
         }
 
         /* Undocumented feature... */
@@ -443,13 +436,11 @@ NtUserTranslateAccelerator(
             break;
     }
 
-    RETURN( 0);
-
-CLEANUP:
+Cleanup:
     if (Window) UserDerefObjectCo(Window);
     if (Accel) UserDerefObjectCo(Accel);
 
-    TRACE("NtUserTranslateAccelerator returns %d\n", _ret_);
+    TRACE("NtUserTranslateAccelerator returns %d\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
