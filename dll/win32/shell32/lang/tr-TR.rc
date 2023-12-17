@@ -432,7 +432,7 @@ BEGIN
     AUTORADIOBUTTON "&Bir öge açmak için tek tıkla (seçmek için üzerine git)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Bi&r ögeyi açmak için çift tıkla (seçmek için tek tıkla)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "T&arayıcımla uyumlu olarak simge etiketlerinin altını çiz", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Yalnızca onların üzerine gittiğimde simge etiketlerinin altını çiz", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "&Yalnızca onların üzerine gittiğimde simge etiketlerinin altını çiz", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 205, 10
     PUSHBUTTON "&Varsayılanları Geri Getir", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
 END
 
