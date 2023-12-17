@@ -416,14 +416,14 @@ BEGIN
     AUTORADIOBUTTON "Gunakan folder kla&sik ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Jelajah folder", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &M
     AUTORADIOBUTTON "Buka setiap folder di jen&dela sendiri", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Klik item sebagai berikut", -1, 7, 110, 249, 80
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "S&atu klik untuk membuka butir (arahkan untuk pilih)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "D&ua klik untuk membuka butir (satu klik untuk pilih)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 172, 210, 10
     AUTORADIOBUTTON "Garis bawahi judul ikon yang konsisten dengan browser saya", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 20, BS_MULTILINE | WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Garis bawahi judul ikon hanya ketika saya &mengarahkan ke judul tersebut", IDC_FOLDER_OPTIONS_ULPOINT, 50, 152, 200, 20, BS_MULTILINE
+    AUTORADIOBUTTON "Garis bawahi judul ikon hanya ketika saya &mengarahkan ke judul tersebut", IDC_FOLDER_OPTIONS_ULPOINT, 50, 152, 200, 20, BS_MULTILINE //FIXME: accelerator collision &M
     PUSHBUTTON "&Kembalikan asal", IDC_FOLDER_OPTIONS_RESTORE, 167, 194, 90, 14, WS_TABSTOP
 END
 
