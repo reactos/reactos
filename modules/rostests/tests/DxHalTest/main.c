@@ -98,16 +98,16 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     DdAttachSurface          = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, LPDDRAWI_DDRAWSURFACE_LCL))GetProcAddress(lib, "GdiEntry11");
     DdResetVisrgn            = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, HWND))GetProcAddress(lib, "GdiEntry6");
 
-	printf("This apps showing how to start up directx draw/d3d interface and some other as well\n");
-	printf("This code have been releae to some close applactons with my premtions, if any company\n");
-    printf("want use part or whole code, you need contact the orginal author to ask for premtions\n");
-    printf("This code are release under alot of diffent licen\n");
-    printf("All GPL and LGPL project have right use and studing this code.\n");
-    printf("This code maybe need more comment to known how stuff working and maybe looking bit mesy\n");
-	printf("Bestreagds Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
+	printf("This app shows how to start up a DirectDraw/Direct3D interface and some others.\n");
+	printf("This code has been released to some closed applications with my permission. If any company\n");
+    printf("wants to use this code, you must contact the original author to ask for permission.\n");
+    printf("This code is released under many different licenses.\n");
+    printf("All GPL and LGPL projects have the right to use and study this code.\n");
+    printf("This code may require more comments to know how stuff works.\n");
+	printf("Best regards, Magnus Olsen magnus@greatlord.com or greatlord@reactos.org\n");
     printf("Copyright 2006 by Magnus Olsen\n\n");
-    printf("This demo showing how to  start dx draw hal and create a primary surface,\n");
-	printf("and a overlay sufrace and blt to the primary surface\n");
+    printf("This demo shows how to start DirectDraw, creating a primary surface\n");
+	printf("and an overlay surface, and a blt to the primary surface.\n");
 
 
     /*
@@ -208,11 +208,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
 	mDDrawGlobal.dwRefCnt = 1; //addref / remove ref
 
-    // Do not relase HDC it have been map in kernel mode
+    // Do not release HDC, it has been mapped in kernel mode
     // DeleteDC(hdc);
 
-    /* we need reanable it if screen res have changes, and some bad drv need be reanble very few
-	   to contiune */
+    /* we need to reenable it if the screen resolution has changed, and some
+       bad driver needs to be reenabled infrequently to continue */
 	/*
     if (!DdReenableDirectDrawObject(&mDDrawGlobal, &newmode))
     {
@@ -254,7 +254,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
-      // FIXME Close DX fristcall and second call
+      // FIXME Close DX first call and second call
       return DD_FALSE;
     }
 
@@ -265,8 +265,8 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
-      // FIXME Close DX fristcall and second call
-	  printf("Fail to QueryDirect Draw Object frist pass\n");
+      // FIXME Close DX first call and second call
+	  printf("Fail to QueryDirect Draw Object first pass\n");
       return DD_FALSE;
     }
 
@@ -291,7 +291,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
-      // FIXME Close DX fristcall and second call
+      // FIXME Close DX first call and second call
 	  printf("Fail QueryDirect Draw Object to Alloc mpTextures \n");
       return DD_FALSE;
     }
@@ -328,7 +328,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       Copy over from HalInfo to DirectDrawGlobal
    */
 
-  // this is wrong, cDriverName need be in ASC code not UNICODE
+  // this is wrong, cDriverName needs to be in ASCII not UNICODE
   //memcpy(mDDrawGlobal.cDriverName, mDisplayAdapter, sizeof(wchar)*MAX_DRIVER_NAME);
 
   memcpy(&mDDrawGlobal.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
@@ -350,7 +350,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
   /* Hal insate is down now */
 
-  /* cleare surface code now*/
+  /* clear surface code now */
 
   //  memset(&mGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
   //  memset(&mMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
@@ -361,9 +361,9 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
    mPrimaryLocal.lpSurfMore = &mPrimaryMore;
 
-  /* cleare surface ends now */
+  /* clear surface ends now */
 
-  /* create primare surface now */
+  /* create primary surface now */
 
    memset(&mddsdPrimary,   0, sizeof(DDSURFACEDESC));
    mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
@@ -453,7 +453,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   mDdBlt.lpDDDestSurface = mpPrimaryLocals[0];
 
 
-  /* create primare surface is down now */
+  /* create primary surface is down now */
 
   /* create overlay surface now */
 
