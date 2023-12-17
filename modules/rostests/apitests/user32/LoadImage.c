@@ -1,9 +1,8 @@
 
 #include "precomp.h"
 
-static void test_LoadImage_DataFile()
+static void test_LoadImage_DataFile(void)
 {
-    SIZE_T i;
     static const struct
     {
         int result;
@@ -21,6 +20,8 @@ static void test_LoadImage_DataFile()
         { 1, L"regedit.exe", 100,      0,         0, 0 },
         { 1, L"regedit.exe", 100,      LR_SHARED, 1, 1 }
     };
+
+    SIZE_T i;
     for (i = 0; i < ARRAY_SIZE(tests); ++i)
     {
         HANDLE handle1, handle2;
