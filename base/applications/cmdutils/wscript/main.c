@@ -62,56 +62,92 @@ static HRESULT query_interface(REFIID,void**);
 
 #ifdef __REACTOS__
 #include <commctrl.h>
-EXTERN_C INT WINAPI DSA_DeleteItem(HDSA hdsa, INT nIndex);
+
+typedef struct {
+    UINT itemsize, count;
+    void *mem;
+} SIMPLEVECTOR;
+
+static void SVect_Free(SIMPLEVECTOR *pV)
+{
+    if (pV->mem)
+        LocalFree(pV->mem);
+    pV->mem = NULL;
+}
+
+static void* SVect_Add(SIMPLEVECTOR *pV)
+{
+    void *p = NULL;
+    if (pV->mem)
+    {
+        p = LocalReAlloc(pV->mem, pV->itemsize * (pV->count + 1), LMEM_FIXED | LMEM_MOVEABLE);
+        if (p)
+        {
+            pV->mem = p;
+            p = (char*)p + (pV->count * pV->itemsize);
+            pV->count++;
+        }
+    }
+    else
+    {
+        p = pV->mem = LocalAlloc(LMEM_FIXED, pV->itemsize);
+        if (p)
+        {
+            pV->count = 1;
+        }
+    }
+    return p;
+}
+
+#define SVect_Delete(pV, pItem) ( (pV), (pItem) ) /* Should not be required for global items */
+
+static void* SVect_Get(SIMPLEVECTOR *pV, UINT i)
+{
+    return pV->mem && i < pV->count ? (char*)pV->mem + (i * pV->itemsize) : NULL;
+}
 
 typedef struct {
     BSTR name;
     IUnknown *punk;
 } GLOBAL_ITEM;
 
-HDSA g_global_items = NULL;
+SIMPLEVECTOR g_global_items = { sizeof(GLOBAL_ITEM) };
 
 static void free_globals()
 {
     UINT i;
     for (i = 0;; ++i)
     {
-        GLOBAL_ITEM *p = (GLOBAL_ITEM*)DSA_GetItemPtr(g_global_items, i);
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*)SVect_Get(&g_global_items, i);
         if (!p)
             break;
         IUnknown_Release(p->punk);
         SysFreeString(p->name);
     }
-    DSA_Destroy(g_global_items);
-    g_global_items = NULL;
+    SVect_Free(&g_global_items);
 }
 
 static HRESULT add_globalitem(IActiveScript *script, BSTR name, IUnknown *punk, DWORD siflags)
 {
-    int idx;
-    GLOBAL_ITEM gi;
-    if (!g_global_items)
-    {
-        g_global_items = DSA_Create(sizeof(GLOBAL_ITEM), 0);
-        if (!g_global_items)
-            return E_OUTOFMEMORY;
-    }
+    GLOBAL_ITEM *item;
+    HRESULT hr;
+
     name = SysAllocString(name);
     if (!name)
         return E_OUTOFMEMORY;
 
-    gi.name = name;
-    gi.punk = punk;
-    idx = DSA_AppendItem(g_global_items, &gi);
-    if (idx >= 0)
+    item = SVect_Add(&g_global_items);
+    if (item)
     {
-        HRESULT hr = IActiveScript_AddNamedItem(script, name, siflags);
+        item->name = name;
+        item->punk = punk;
+        hr = IActiveScript_AddNamedItem(script, name, siflags);
         if (SUCCEEDED(hr))
         {
             IUnknown_AddRef(punk);
             return hr;
         }
-        DSA_DeleteItem(g_global_items, idx);
+        SVect_Delete(&g_global_items, item);
     }
     SysFreeString(name);
     return E_OUTOFMEMORY;
@@ -135,7 +171,7 @@ static HRESULT get_globalitem_info(LPCOLESTR Name, DWORD Mask, IUnknown **ppunk,
     UINT i;
     for (i = 0;; ++i)
     {
-        GLOBAL_ITEM *p = (GLOBAL_ITEM*)DSA_GetItemPtr(g_global_items, i);
+        GLOBAL_ITEM *p = (GLOBAL_ITEM*)SVect_Get(&g_global_items, i);
         if (!p)
             break;
         if (!lstrcmpiW(Name, p->name))
