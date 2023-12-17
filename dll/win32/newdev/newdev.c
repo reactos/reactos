@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *           2005 Christoph von Wittich (Christoph@ActiveVB.de)
  *           2009 Colin Finck (colin@reactos.org)
  *
@@ -353,10 +353,10 @@ SearchDriverRecursive(
     BOOL retval = FALSE;
     HANDLE hFindFile = INVALID_HANDLE_VALUE;
 
-    if (Path && Path[0])
-        wcscpy(DirPath, Path);
-    else
+    if (!Path || !Path[0])
         return retval;
+
+    wcscpy(DirPath, Path);
 
     if (DirPath[wcslen(DirPath) - 1] != '\\')
         wcscat(DirPath, L"\\");
