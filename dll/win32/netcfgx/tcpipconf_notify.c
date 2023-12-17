@@ -2648,7 +2648,7 @@ TcpipBasicDlg(
                 switch (LOWORD(wParam))
                 {
                     case IDC_USEDHCP:
-                        if (IsDlgButtonChecked(hwndDlg, IDC_USEDHCP) == BST_CHECKED)
+                        if (SendMessageW(GetParent(hwndDlg), PSM_INDEXTOID, 1, 0) == 0)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
@@ -2662,7 +2662,7 @@ TcpipBasicDlg(
                         }
                         break;
                     case IDC_NODHCP:
-                        if (IsDlgButtonChecked(hwndDlg, IDC_NODHCP) == BST_CHECKED)
+                        if (SendMessageW(GetParent(hwndDlg), PSM_INDEXTOID, 1, 0) != 0)
                         {
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), TRUE);
@@ -2680,22 +2680,16 @@ TcpipBasicDlg(
                         }
                         break;
                     case IDC_AUTODNS:
-                        if (IsDlgButtonChecked(hwndDlg, IDC_AUTODNS) == BST_CHECKED)
-                        {
-                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                            SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
-                            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
-                        }
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
+                        SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
                         break;
                     case IDC_FIXEDDNS:
-                        if (IsDlgButtonChecked(hwndDlg, IDC_FIXEDDNS) == BST_CHECKED)
-                        {
-                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
-                        }
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
                         break;
                     case IDC_ADVANCED:
                         LaunchAdvancedTcpipSettings(hwndDlg, (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER));
