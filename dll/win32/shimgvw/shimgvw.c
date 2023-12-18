@@ -59,6 +59,9 @@ static const TBBUTTON s_Buttons[] =
     DEFINE_BTN_INFO(ROT_CLOCKW),
     DEFINE_BTN_INFO(ROT_COUNCW),
     DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(ROT_CWSAVE),
+    DEFINE_BTN_INFO(ROT_CCWSAVE),
+    DEFINE_BTN_SEPARATOR,
     DEFINE_BTN_INFO(DELETE),
     DEFINE_BTN_INFO(PRINT),
     DEFINE_BTN_INFO(SAVEAS),
@@ -87,11 +90,13 @@ static const TB_BUTTON_CONFIG s_ButtonConfig[] =
     DEFINE_BTN_CONFIG(ZOOM_OUT),
     DEFINE_BTN_CONFIG(ROT_CLOCKW),
     DEFINE_BTN_CONFIG(ROT_COUNCW),
+    DEFINE_BTN_CONFIG(ROT_CWSAVE),
+    DEFINE_BTN_CONFIG(ROT_CCWSAVE),
     DEFINE_BTN_CONFIG(DELETE),
     DEFINE_BTN_CONFIG(PRINT),
     DEFINE_BTN_CONFIG(SAVEAS),
     DEFINE_BTN_CONFIG(MODIFY),
-    DEFINE_BTN_CONFIG(HELP_TOC)
+    DEFINE_BTN_CONFIG(HELP_TOC),
 };
 
 typedef struct tagPREVIEW_DATA
@@ -1473,12 +1478,27 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             if (g_pImage && g_pCurrentFile)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
-                Preview_pSaveImage(pData, g_pCurrentFile->FileName);
                 Preview_UpdateImage(pData);
             }
             break;
 
         case IDC_ROT_COUNCW:
+            if (g_pImage && g_pCurrentFile)
+            {
+                GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
+                Preview_UpdateImage(pData);
+            }
+            break;
+
+        case IDC_ROT_CWSAVE:
+            if (g_pImage && g_pCurrentFile)
+            {
+                GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
+                Preview_UpdateImage(pData);
+            }
+            break;
+
+        case IDC_ROT_CCWSAVE:
             if (g_pImage && g_pCurrentFile)
             {
                 GdipImageRotateFlip(g_pImage, Rotate90FlipNone);

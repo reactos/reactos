@@ -21,6 +21,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "Oddálit (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Otočit po směru hodinových ručiček (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Otočit proti směru hodinových ručiček (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save"
     IDS_TOOLTIP_DELETE "Odstranit (DEL)"
     IDS_TOOLTIP_PRINT "Tisk (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Uložit jako... (Ctrl+S)"
