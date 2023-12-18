@@ -5807,26 +5807,26 @@ NtUserDestroyMenu(
    HMENU hMenu)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserDestroyMenu\n");
    UserEnterExclusive();
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
    if (Menu->head.rpdesk != gptiCurrent->rpdesk)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN( FALSE);
+      goto Exit;
    }
-   RETURN( IntDestroyMenuObject(Menu, TRUE));
+   Ret = IntDestroyMenuObject(Menu, TRUE);
 
-CLEANUP:
-   TRACE("Leave NtUserDestroyMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserDestroyMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
