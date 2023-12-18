@@ -105,7 +105,6 @@ typedef struct tagPREVIEW_DATA
     INT m_yScrollOffset;
     UINT m_nMouseDownMsg;
     POINT m_ptOrigin;
-    LPBYTE m_pbMemFile;
     IStream *m_pMemStream;
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
@@ -345,20 +344,14 @@ Preview_pFreeImage(PPREVIEW_DATA pData)
         pData->m_pMemStream->lpVtbl->Release(pData->m_pMemStream);
         pData->m_pMemStream = NULL;
     }
-
-    if (pData->m_pbMemFile)
-    {
-        QuickFree(pData->m_pbMemFile);
-        pData->m_pbMemFile = NULL;
-    }
 }
 
-IStream* MemStreamFromFile(LPCWSTR pszFileName, LPBYTE *ppbMemFile)
+IStream* MemStreamFromFile(LPCWSTR pszFileName)
 {
     HANDLE hFile;
     DWORD dwFileSize, dwRead;
-
-    *ppbMemFile = NULL;
+    LPBYTE pbMemFile = NULL;
+    IStream *pStream;
 
     hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, 0, NULL);
@@ -367,24 +360,25 @@ IStream* MemStreamFromFile(LPCWSTR pszFileName, LPBYTE *ppbMemFile)
 
     dwFileSize = GetFileSize(hFile, NULL);
 
-    *ppbMemFile = QuickAlloc(dwFileSize, FALSE);
-    if (!*ppbMemFile)
+    pbMemFile = QuickAlloc(dwFileSize, FALSE);
+    if (!pbMemFile)
     {
         CloseHandle(hFile);
         return NULL;
     }
 
-    if (!ReadFile(hFile, *ppbMemFile, dwFileSize, &dwRead, NULL) &&
+    if (!ReadFile(hFile, pbMemFile, dwFileSize, &dwRead, NULL) &&
         dwFileSize != dwRead)
     {
-        QuickFree(*ppbMemFile);
-        *ppbMemFile = NULL;
+        QuickFree(pbMemFile);
         CloseHandle(hFile);
         return NULL;
     }
 
     CloseHandle(hFile);
-    return SHCreateMemStream(*ppbMemFile, dwFileSize);
+    pStream = SHCreateMemStream(pbMemFile, dwFileSize);
+    QuickFree(pbMemFile);
+    return pStream;
 }
 
 static VOID
@@ -400,7 +394,7 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
         return;
     }
 
-    pData->m_pMemStream = MemStreamFromFile(szOpenFileName, &pData->m_pbMemFile);
+    pData->m_pMemStream = MemStreamFromFile(szOpenFileName);
     if (!pData->m_pMemStream)
     {
         DPRINT1("MemStreamFromFile() failed\n");
