@@ -1716,6 +1716,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
     SHEnableMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
 
+    pSettings->Load();
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, IsBandVisible(ITBBID_TOOLSBAND) == S_OK);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, IsBandVisible(ITBBID_ADDRESSBAND) == S_OK);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
