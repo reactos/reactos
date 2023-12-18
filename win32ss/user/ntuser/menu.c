@@ -5575,22 +5575,20 @@ NtUserCheckMenuItem(
    UINT uCheck)
 {
    PMENU Menu;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = (DWORD)-1;
 
    TRACE("Enter NtUserCheckMenuItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( (DWORD)-1);
+      Ret = IntCheckMenuItem(Menu, uIDCheckItem, uCheck);
    }
 
-   RETURN( IntCheckMenuItem(Menu, uIDCheckItem, uCheck));
-
-CLEANUP:
-   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n",_ret_);
+   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
