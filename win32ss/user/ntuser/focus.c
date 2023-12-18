@@ -1646,17 +1646,16 @@ IntAllowSetForegroundWindow(DWORD dwProcessId)
 HWND APIENTRY
 NtUserGetForegroundWindow(VOID)
 {
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter NtUserGetForegroundWindow\n");
    UserEnterExclusive();
 
-   RETURN( UserGetForegroundWindow());
+   Ret = UserGetForegroundWindow();
 
-CLEANUP:
-   TRACE("Leave NtUserGetForegroundWindow, ret=%p\n",_ret_);
+   TRACE("Leave NtUserGetForegroundWindow, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 HWND APIENTRY
