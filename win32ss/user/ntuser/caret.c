@@ -316,20 +316,20 @@ NtUserCreateCaret(
    PWND Window;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserCreateCaret\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if(Window->head.pti->pEThread != PsGetCurrentThread())
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -368,12 +368,12 @@ NtUserCreateCaret(
 
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_CARET, CHILDID_SELF, 0);
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserCreateCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserCreateCaret, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 UINT
