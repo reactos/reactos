@@ -140,9 +140,40 @@ Inquire(
     return S_OK;
 }
 
-/* FIXME */
-struct CicBridge : IUnknown
+DEFINE_GUID(IID_ITfSysHookSink, 0x495388DA, 0x21A5, 0x4852, 0x8B, 0xB1, 0xED, 0x2F, 0x29, 0xDA, 0x8D, 0x60);
+
+struct ITfSysHookSink : IUnknown
 {
+    STDMETHOD(OnPreFocusDIM)(HWND hwnd) = 0;
+    STDMETHOD(OnSysKeyboardProc)(UINT, LONG) = 0;
+    STDMETHOD(OnSysShellProc)(INT, UINT, LONG) = 0;
+};
+
+class TLS;
+
+/* FIXME */
+class CicBridge : public ITfSysHookSink
+{
+protected:
+    LONG m_cRefs;
+    DWORD m_dwImmxInit;
+    DWORD m_dwUnknown[10];
+
+public:
+    CicBridge();
+    virtual ~CicBridge();
+
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+    STDMETHODIMP OnPreFocusDIM(HWND hwnd) override;
+    STDMETHODIMP OnSysKeyboardProc(UINT, LONG) override;
+    STDMETHODIMP OnSysShellProc(INT, UINT, LONG) override;
+
+    HRESULT InitIMMX(TLS *pTLS);
+    BOOL UnInitIMMX(TLS *pTLS);
+    HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
+    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
 };
 
 /* FIXME */
@@ -251,6 +282,147 @@ BOOL TLS::InternalDestroyTLS()
     cicMemFree(pTLS);
     ::TlsSetValue(s_dwTlsIndex, NULL);
     return TRUE;
+}
+
+/***********************************************************************
+ *      CicBridge
+ */
+
+CicBridge::CicBridge()
+{
+    m_dwImmxInit &= ~1;
+    m_dwUnknown[0] &= ~1;
+    m_dwUnknown[1] &= ~1;
+    m_dwUnknown[9] &= ~1;
+    m_dwUnknown[3] = 0;
+    m_dwUnknown[4] = 0;
+    m_dwUnknown[5] = 0;
+    m_dwUnknown[6] = 0;
+    m_cRefs = 1;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    *ppvObj = NULL;
+
+    if (!IsEqualIID(riid, IID_ITfSysHookSink))
+        return E_NOINTERFACE;
+
+    *ppvObj = this;
+    AddRef();
+
+    return S_OK;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicBridge::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicBridge::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/**
+ * @implemented
+ */
+CicBridge::~CicBridge()
+{
+    TLS *pTLS = (TLS *)TlsGetValue(TLS::s_dwTlsIndex);
+    if (!pTLS || !pTLS->m_pThreadMgr)
+        return;
+
+    if (SUCCEEDED(DeactivateIMMX(pTLS, pTLS->m_pThreadMgr)))
+        UnInitIMMX(pTLS);
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CicBridge::InitIMMX(TLS *pTLS)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+BOOL CicBridge::UnInitIMMX(TLS *pTLS)
+{
+    //FIXME
+
+    if (pTLS->m_pProfile)
+    {
+        pTLS->m_pProfile->Release();
+        pTLS->m_pProfile = NULL;
+    }
+
+    //FIXME
+
+    if (pTLS->m_pThreadMgr)
+    {
+        pTLS->m_pThreadMgr->Release();
+        pTLS->m_pThreadMgr = NULL;
+    }
+
+    m_dwImmxInit &= ~1;
+
+    return TRUE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CicBridge::OnPreFocusDIM(HWND hwnd)
+{
+    return S_OK;
+}
+
+/**
+ * @unimplemented
+ */
+STDMETHODIMP CicBridge::OnSysKeyboardProc(UINT, LONG)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
+{
+    return S_OK;
 }
 
 /***********************************************************************
@@ -377,12 +549,31 @@ ImeConfigure(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeDestroy (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 ImeDestroy(
     _In_ UINT uReserved)
 {
-    FIXME("stub:(%u)\n", uReserved);
-    return FALSE;
+    TRACE("(%u)\n", uReserved);
+
+    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
+    if (pTLS)
+        return FALSE;
+
+    if (!pTLS->m_pBridge || !pTLS->m_pThreadMgr)
+        return FALSE;
+
+    if (pTLS->m_dwSystemInfoFlags & IME_SYSINFO_WINLOGON)
+        return TRUE;
+
+    if (pTLS->m_pBridge->DeactivateIMMX(pTLS, pTLS->m_pThreadMgr) != S_OK)
+        return FALSE;
+
+    return pTLS->m_pBridge->UnInitIMMX(pTLS);
 }
 
 /***********************************************************************
@@ -569,18 +760,79 @@ CtfImeIsGuidMapEnable(
     return FALSE;
 }
 
+
+/***********************************************************************
+ *      CtfImeCreateThreadMgr (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeCreateThreadMgr(VOID)
 {
-    FIXME("stub:()\n");
-    return E_NOTIMPL;
+    TRACE("()\n");
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+
+    if (!pTLS->m_pBridge)
+    {
+        pTLS->m_pBridge = new CicBridge();
+        if (!pTLS->m_pBridge)
+            return E_OUTOFMEMORY;
+    }
+
+    HRESULT hr = S_OK;
+    if (!g_bWinLogon && !(pTLS->m_dwSystemInfoFlags & IME_SYSINFO_WINLOGON))
+    {
+        hr = pTLS->m_pBridge->InitIMMX(pTLS);
+        if (SUCCEEDED(hr))
+        {
+            if (!pTLS->m_pThreadMgr)
+                return E_OUTOFMEMORY;
+
+            hr = pTLS->m_pBridge->ActivateIMMX(pTLS, pTLS->m_pThreadMgr);
+            if (FAILED(hr))
+                pTLS->m_pBridge->UnInitIMMX(pTLS);
+        }
+    }
+
+    return hr;
 }
 
+
+/***********************************************************************
+ *      CtfImeDestroyThreadMgr (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeDestroyThreadMgr(VOID)
 {
-    FIXME("stub:()\n");
-    return E_NOTIMPL;
+    TRACE("()\n");
+
+    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+
+    if (pTLS->m_pBridge)
+    {
+        pTLS->m_pBridge = new CicBridge();
+        if (!pTLS->m_pBridge)
+            return E_OUTOFMEMORY;
+    }
+
+    if (!pTLS->m_pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    if (pTLS->m_dwSystemInfoFlags & IME_SYSINFO_WINLOGON)
+        return S_OK;
+
+    HRESULT hr = pTLS->m_pBridge->DeactivateIMMX(pTLS, pTLS->m_pThreadMgr);
+    if (hr == S_OK)
+        pTLS->m_pBridge->UnInitIMMX(pTLS);
+
+    return hr;
 }
 
 EXTERN_C HRESULT WINAPI
