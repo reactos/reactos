@@ -359,21 +359,14 @@ IStream* MemStreamFromFile(LPCWSTR pszFileName)
         return NULL;
 
     dwFileSize = GetFileSize(hFile, NULL);
-    if (dwFileSize == INVALID_FILE_SIZE)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
     pbMemFile = QuickAlloc(dwFileSize, FALSE);
-    if (!pbMemFile)
+    if ((dwFileSize == INVALID_FILE_SIZE) || !pbMemFile)
     {
         CloseHandle(hFile);
         return NULL;
     }
 
-    if (!ReadFile(hFile, pbMemFile, dwFileSize, &dwRead, NULL) &&
-        dwFileSize != dwRead)
+    if (!ReadFile(hFile, pbMemFile, dwFileSize, &dwRead, NULL) || (dwRead != dwFileSize))
     {
         QuickFree(pbMemFile);
         CloseHandle(hFile);
