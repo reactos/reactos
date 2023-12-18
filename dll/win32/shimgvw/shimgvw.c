@@ -408,7 +408,8 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
         return;
     }
 
-    /* load now */
+    /* NOTE: GdipLoadImageFromFile locks the file.
+             Avoid file locking by using GdipLoadImageFromStream and memory stream. */
     GdipLoadImageFromStream(pData->m_pMemStream, &g_pImage);
     if (!g_pImage)
     {
