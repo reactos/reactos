@@ -318,8 +318,16 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     hr = psf->CompareIDs(0, pidl, pidlLastParsed);
 
     SHFree(pidl);
-    if (hr == 0)
+
+    if (hr == S_OK)
+    {
+        if (pidlLastParsed)
+        {
+            ILFree(pidlLastParsed);
+            pidlLastParsed = NULL;
+        }
         return S_OK;
+    }
 
     /*
      * Attempt to browse to the parsed pidl
