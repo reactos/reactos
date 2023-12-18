@@ -10,6 +10,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
 HINSTANCE g_hInst = NULL; /* The instance of this module */
+BOOL g_bWinLogon = FALSE;
 DWORD g_dwOSInfo = 0;
 BOOL gfTFInitLib = FALSE;
 CRITICAL_SECTION g_csLock;
@@ -506,12 +507,15 @@ CtfImeInquireExW(
     TLS *pTLS = TLS::GetTLS();
     if (!pTLS)
         return E_OUTOFMEMORY;
+
     if (!IsInteractiveUserLogon())
     {
         dwSystemInfoFlags |= IME_SYSINFO_WINLOGON;
         g_bWinLogon = TRUE;
     }
-    pTLS->dwSystemInfoFlags = dwSystemInfoFlags;
+
+    pTLS->m_dwSystemInfoFlags = dwSystemInfoFlags;
+
     return Inquire(lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
 }
 
