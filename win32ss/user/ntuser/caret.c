@@ -399,7 +399,7 @@ NtUserGetCaretPos(
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = TRUE;
 
    TRACE("Enter NtUserGetCaretPos\n");
    UserEnterShared();
@@ -411,15 +411,12 @@ NtUserGetCaretPos(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      Ret = FALSE;
    }
 
-   RETURN(TRUE);
-
-CLEANUP:
-   TRACE("Leave NtUserGetCaretPos, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetCaretPos, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
