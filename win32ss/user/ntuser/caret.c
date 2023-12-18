@@ -425,15 +425,14 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
-   BOOL ret;
+   BOOL ret = FALSE;
 
    TRACE("Enter NtUserShowCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
@@ -442,12 +441,10 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
 
    if (Window) UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowCaret, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 BOOL
