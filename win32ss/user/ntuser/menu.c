@@ -5898,12 +5898,11 @@ NtUserGetMenuBarInfo(
    PWND pWnd;
    HMENU hMenu;
    MENUBARINFO kmbi;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    PPOPUPMENU pPopupMenu;
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status = STATUS_SUCCESS;
    PMENU Menu = NULL;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetMenuBarInfo\n");
    UserEnterShared();
@@ -5911,7 +5910,7 @@ NtUserGetMenuBarInfo(
    if (!(pWnd = UserGetWindowObject(hwnd)))
    {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        RETURN(FALSE);
+        goto Cleanup;
    }
 
    UserRefObjectCo(pWnd, &Ref);
@@ -5926,12 +5925,12 @@ NtUserGetMenuBarInfo(
    {
     case OBJID_CLIENT:
         if (!pWnd->pcls->fnid)
-            RETURN(FALSE);
+            goto Cleanup;
         if (pWnd->pcls->fnid != FNID_MENU)
         {
             WARN("called on invalid window: %u\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-            RETURN(FALSE);
+            goto Cleanup;
         }
         // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
         hMenu = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
@@ -5945,21 +5944,21 @@ NtUserGetMenuBarInfo(
         }
         break;
     case OBJID_MENU:
-        if (pWnd->style & WS_CHILD) RETURN(FALSE);
+        if (pWnd->style & WS_CHILD) goto Cleanup;
         hMenu = UlongToHandle(pWnd->IDMenu);
         TRACE("GMBI: OBJID_MENU hMenu %p\n",hMenu);
         break;
     case OBJID_SYSMENU:
-        if (!(pWnd->style & WS_SYSMENU)) RETURN(FALSE);
+        if (!(pWnd->style & WS_SYSMENU)) goto Cleanup;
         Menu = IntGetSystemMenu(pWnd, FALSE);
         hMenu = UserHMGetHandle(Menu);
         break;
     default:
-        RETURN(FALSE);
+        goto Cleanup;
    }
 
    if (!hMenu)
-      RETURN(FALSE);
+      goto Cleanup;
 
    _SEH2_TRY
    {
@@ -5975,15 +5974,18 @@ NtUserGetMenuBarInfo(
    if (kmbi.cbSize != sizeof(MENUBARINFO))
    {
        EngSetLastError(ERROR_INVALID_PARAMETER);
-       RETURN(FALSE);
+       goto Cleanup;
    }
 
-   if (!Menu) Menu = UserGetMenuObject(hMenu);
    if (!Menu)
-       RETURN(FALSE);
+   {
+       Menu = UserGetMenuObject(hMenu);
+       if (!Menu)
+          goto Cleanup;
+   }
 
    if ((idItem < 0) || ((ULONG)idItem > Menu->cItems))
-       RETURN(FALSE);
+       goto Cleanup;
 
    if (idItem == 0)
    {
@@ -6028,16 +6030,17 @@ NtUserGetMenuBarInfo(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      Ret = FALSE;
+      goto Cleanup;
    }
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
+Cleanup:
    if (pWnd) UserDerefObjectCo(pWnd);
-   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
