@@ -68,6 +68,9 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 Inquire(
     _Out_ LPIMEINFO lpIMEInfo,
