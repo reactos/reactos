@@ -1259,8 +1259,7 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 void CNotifyToolbar::RefreshToolbarMetrics(BOOL bForceRefresh = FALSE)
 {
     // Toolbar metrics only needs to be refreshed for the automatic setting and first launch
-    if ((g_TaskbarSettings.dwCompactTrayIcons != 1 &&
-         g_TaskbarSettings.dwCompactTrayIcons != 2) ||
+    if (g_TaskbarSettings.eCompactTrayIcons == TrayIconsMode::TIM_Default ||
         bForceRefresh)
     {
         TBMETRICS tbm = {sizeof(tbm)};

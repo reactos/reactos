@@ -63,7 +63,10 @@ BOOL TaskbarSettings::Load()
     bSmallIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"CompactTrayIcons", NULL, &dwValue, &cbSize);
-    dwCompactTrayIcons = (dwRet == ERROR_SUCCESS) ? dwValue : 0;
+    if (dwRet == ERROR_SUCCESS && dwValue <= TIM_Max)
+        eCompactTrayIcons = static_cast<TrayIconsMode>(dwValue);
+    else
+        eCompactTrayIcons = TIM_Default;
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSd", NULL, &dwValue, &cbSize);
     bShowDesktopButton = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;

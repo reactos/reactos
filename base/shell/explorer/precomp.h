@@ -184,6 +184,14 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  * settings.c
  */
 
+enum TrayIconsMode
+{
+    TIM_Default,
+    TIM_NeverCompact,
+    TIM_AlwaysCompact,
+    TIM_Max = TIM_AlwaysCompact
+};
+
 typedef struct _TW_STUCKRECTS2
 {
     DWORD cbSize;
@@ -204,8 +212,6 @@ typedef struct _TW_STUCKRECTS2
     RECT Rect;
 } TW_STRUCKRECTS2, *PTW_STUCKRECTS2;
 
-#define NeverCompact 1
-#define AlwaysCompact 2
 struct TaskbarSettings
 {
     BOOL bLock;
@@ -214,7 +220,7 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
-    DWORD dwCompactTrayIcons;
+    TrayIconsMode eCompactTrayIcons;
     BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
 
@@ -222,11 +228,11 @@ struct TaskbarSettings
     BOOL Save();
     inline BOOL UseCompactTrayIcons()
     {
-        switch (dwCompactTrayIcons)
+        switch (eCompactTrayIcons)
         {
-            case NeverCompact:
+            case TIM_NeverCompact:
                 return FALSE;
-            case AlwaysCompact:
+            case TIM_AlwaysCompact:
                 return TRUE;
             default:
                 return bSmallIcons;
@@ -235,8 +241,6 @@ struct TaskbarSettings
 };
 
 extern TaskbarSettings g_TaskbarSettings;
-#undef NeverCompact
-#undef AlwaysCompact
 
 /*
  * shellservice.cpp
