@@ -1722,8 +1722,7 @@ NtUserSetFocus(HWND hWnd)
 {
    PWND Window;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(HWND);
-   HWND ret;
+   HWND ret = NULL;
 
    TRACE("Enter NtUserSetFocus(%p)\n", hWnd);
    UserEnterExclusive();
@@ -1733,24 +1732,22 @@ NtUserSetFocus(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetFocus: Invalid handle 0x%p!\n",hWnd);
-         RETURN(NULL);
+         goto Exit;
       }
 
       UserRefObjectCo(Window, &Ref);
       ret = co_UserSetFocus(Window);
       UserDerefObjectCo(Window);
-
-      RETURN(ret);
    }
    else
    {
-      RETURN( co_UserSetFocus(0));
+      ret = co_UserSetFocus(NULL);
    }
 
-CLEANUP:
-   TRACE("Leave NtUserSetFocus, ret=%p\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetFocus, ret=%p\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /* EOF */
