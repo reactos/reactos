@@ -453,15 +453,14 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
-   BOOL ret;
+   BOOL ret = FALSE;
 
    TRACE("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
@@ -470,10 +469,8 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
 
    if (Window) UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserHideCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserHideCaret, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
