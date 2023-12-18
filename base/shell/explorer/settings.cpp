@@ -92,17 +92,4 @@ BOOL TaskbarSettings::Load()
     return TRUE;
 }
 
-BOOL TaskbarSettings::UseCompactTrayIcons()
-{
-    switch (dwCompactTrayIcons)
-    {
-        case 1:
-            return FALSE;
-        case 2:
-            return TRUE;
-        default:
-            return bSmallIcons;
-    }
-}
-
 /* EOF */

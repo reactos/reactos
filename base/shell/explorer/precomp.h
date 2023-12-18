@@ -204,6 +204,8 @@ typedef struct _TW_STUCKRECTS2
     RECT Rect;
 } TW_STRUCKRECTS2, *PTW_STUCKRECTS2;
 
+#define NeverCompact 1
+#define AlwaysCompact 2
 struct TaskbarSettings
 {
     BOOL bLock;
@@ -218,10 +220,23 @@ struct TaskbarSettings
 
     BOOL Load();
     BOOL Save();
-    BOOL UseCompactTrayIcons();
+    inline BOOL UseCompactTrayIcons()
+    {
+        switch (dwCompactTrayIcons)
+        {
+            case NeverCompact:
+                return FALSE;
+            case AlwaysCompact:
+                return TRUE;
+            default:
+                return bSmallIcons;
+        }
+    }
 };
 
 extern TaskbarSettings g_TaskbarSettings;
+#undef NeverCompact
+#undef AlwaysCompact
 
 /*
  * shellservice.cpp
