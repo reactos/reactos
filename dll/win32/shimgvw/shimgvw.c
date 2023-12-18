@@ -387,7 +387,7 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
     /* check file presence */
     if (!szOpenFileName || GetFileAttributesW(szOpenFileName) == 0xFFFFFFFF)
     {
-        DPRINT1("File %s not found!\n", szOpenFileName);
+        DPRINT1("File %ls not found!\n", szOpenFileName);
         Preview_UpdateTitle(pData, NULL);
         return;
     }
@@ -500,7 +500,10 @@ Preview_pSaveImageAs(PPREVIEW_DATA pData)
     }
 
     GdipGetImageEncoders(num, size, codecInfo);
+
     GdipGetImageRawFormat(g_pImage, &rawFormat);
+    if (IsEqualGUID(&rawFormat, &ImageFormatMemoryBMP))
+        rawFormat = ImageFormatBMP;
 
     sizeRemain = 0;
     for (j = 0; j < num; ++j)
