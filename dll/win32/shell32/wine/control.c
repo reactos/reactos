@@ -1022,13 +1022,13 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             while (pchLastUnquotedSpace[nSpaces] == L' ')
                 nSpaces++;
 
-            StringCchCopyNW(buffer, nLen, wszCmd, pchLastUnquotedSpace - wszCmd);
-            StringCchCopyW(wszDialogBoxName, nLen, pchLastUnquotedSpace + nSpaces);
+            StringCchCopyNW(buffer, nLen + 1, wszCmd, pchLastUnquotedSpace - wszCmd);
+            StringCchCopyW(wszDialogBoxName, nLen + 1, pchLastUnquotedSpace + nSpaces);
         }
         /* No parameters were passed, the entire string is the CPL path. */
         else
         {
-            StringCchCopyW(buffer, nLen, wszCmd);
+            StringCchCopyW(buffer, nLen + 1, wszCmd);
         }
     }
     /* If an unquoted comma was found, there are at least two parts of the string:
@@ -1043,9 +1043,9 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         if (pchSecondComma == NULL)
             pchSecondComma = wszCmd + nLen;
 
-        StringCchCopyNW(buffer, nLen, wszCmd, pchFirstComma - wszCmd);
+        StringCchCopyNW(buffer, nLen + 1, wszCmd, pchFirstComma - wszCmd);
         StringCchCopyNW(wszDialogBoxName,
-                        nLen,
+                        nLen + 1,
                         pchFirstComma + 1,
                         pchSecondComma - pchFirstComma - 1);
 
