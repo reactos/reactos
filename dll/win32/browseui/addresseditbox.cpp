@@ -319,7 +319,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 
     SHFree(pidl);
 
-    if (hr == S_OK)
+    if (hr == 0)
     {
         if (pidlLastParsed)
         {
