@@ -1702,17 +1702,16 @@ Exit:
 HWND APIENTRY
 NtUserSetCapture(HWND hWnd)
 {
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter NtUserSetCapture(%p)\n", hWnd);
    UserEnterExclusive();
 
-   RETURN( co_UserSetCapture(hWnd));
+   Ret = co_UserSetCapture(hWnd);
 
-CLEANUP:
-   TRACE("Leave NtUserSetCapture, ret=%p\n", _ret_);
+   TRACE("Leave NtUserSetCapture, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
