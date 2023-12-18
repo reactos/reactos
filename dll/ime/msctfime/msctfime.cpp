@@ -152,12 +152,14 @@ struct ITfSysHookSink : IUnknown
 class TLS;
 
 /* FIXME */
-struct CicBridge : ITfSysHookSink
+class CicBridge : public ITfSysHookSink
 {
+protected:
     LONG m_cRefs;
     DWORD m_dwImmxInit;
     DWORD m_dwUnknown[10];
 
+public:
     CicBridge();
     virtual ~CicBridge();
 
@@ -280,6 +282,10 @@ BOOL TLS::InternalDestroyTLS()
     return TRUE;
 }
 
+/***********************************************************************
+ *      CicBridge
+ */
+
 CicBridge::CicBridge()
 {
     m_dwImmxInit &= ~1;
@@ -293,6 +299,9 @@ CicBridge::CicBridge()
     m_cRefs = 1;
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     *ppvObj = NULL;
@@ -306,11 +315,17 @@ STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return S_OK;
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP_(ULONG) CicBridge::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP_(ULONG) CicBridge::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -334,26 +349,41 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
+/**
+ * @unimplemented
+ */
 HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
 {
     return E_NOTIMPL;
 }
 
+/**
+ * @unimplemented
+ */
 BOOL CicBridge::UnInitIMMX(TLS *pTLS)
 {
     return FALSE;
 }
 
+/**
+ * @unimplemented
+ */
 STDMETHODIMP CicBridge::OnPreFocusDIM(HWND hwnd)
 {
     return E_NOTIMPL;
 }
 
+/**
+ * @unimplemented
+ */
 STDMETHODIMP CicBridge::OnSysKeyboardProc(UINT, LONG)
 {
     return E_NOTIMPL;
 }
 
+/**
+ * @unimplemented
+ */
 STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
 {
     return E_NOTIMPL;
@@ -733,7 +763,7 @@ CtfImeDestroyThreadMgr(VOID)
     if (hr == S_OK)
         pTLS->m_pBridge->UnInitIMMX(pTLS);
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 EXTERN_C HRESULT WINAPI
