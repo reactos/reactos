@@ -5839,22 +5839,20 @@ NtUserEnableMenuItem(
    UINT uEnable)
 {
    PMENU Menu;
-   DECLARE_RETURN(UINT);
+   UINT Ret = (UINT)-1;
 
    TRACE("Enter NtUserEnableMenuItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN(-1);
+      Ret = IntEnableMenuItem(Menu, uIDEnableItem, uEnable);
    }
 
-   RETURN( IntEnableMenuItem(Menu, uIDEnableItem, uEnable));
-
-CLEANUP:
-   TRACE("Leave NtUserEnableMenuItem, ret=%u\n",_ret_);
+   TRACE("Leave NtUserEnableMenuItem, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
