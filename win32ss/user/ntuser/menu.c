@@ -6175,7 +6175,7 @@ NtUserHiliteMenuItem(
 {
    PMENU Menu;
    PWND Window;
-   DECLARE_RETURN(BOOLEAN);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserHiliteMenuItem\n");
    UserEnterExclusive();
@@ -6183,21 +6183,21 @@ NtUserHiliteMenuItem(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      RETURN(FALSE);
+      goto Exit;
    }
 
-   RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
+   Ret = IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite);
 
-CLEANUP:
-   TRACE("Leave NtUserHiliteMenuItem, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserHiliteMenuItem, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
