@@ -5,7 +5,7 @@ include_directories(
 spec2def(msctfime.ime msctfime.spec)
 
 list(APPEND SOURCE
-    msctfime.c)
+    msctfime.cpp)
 
 file(GLOB msctfime_rc_deps res/*.*)
 add_rc_deps(msctfime.rc ${msctfime_rc_deps})

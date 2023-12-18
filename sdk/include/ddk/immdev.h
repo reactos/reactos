@@ -142,24 +142,15 @@ typedef struct INPUTCONTEXTDX
 {
     INPUTCONTEXT;
 #endif
-    UINT nVKey;
-    BOOL bNeedsTrans;
+    UINT nVKey;                 // +0x140
+    BOOL bNeedsTrans;           // +0x144
     DWORD dwUnknown1;
-    DWORD dwUIFlags;
+    DWORD dwUIFlags;            // +0x14c
     DWORD dwUnknown2;
-    struct IME_STATE *pState;
-    DWORD dwChange;
+    struct IME_STATE *pState;   // +0x154
+    DWORD dwChange;             // +0x158
     DWORD dwUnknown5;
 } INPUTCONTEXTDX, *PINPUTCONTEXTDX, *LPINPUTCONTEXTDX;
-
-#ifndef _WIN64
-C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
-C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
-C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
-C_ASSERT(offsetof(INPUTCONTEXTDX, pState) == 0x154);
-C_ASSERT(offsetof(INPUTCONTEXTDX, dwChange) == 0x158);
-C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
-#endif
 
 // bits of fdwInit of INPUTCONTEXT
 #define INIT_STATUSWNDPOS               0x00000001
