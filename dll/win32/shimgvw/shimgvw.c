@@ -360,7 +360,7 @@ IStream* MemStreamFromFile(LPCWSTR pszFileName)
 
     dwFileSize = GetFileSize(hFile, NULL);
     pbMemFile = QuickAlloc(dwFileSize, FALSE);
-    if ((dwFileSize == INVALID_FILE_SIZE) || !pbMemFile)
+    if (!dwFileSize || (dwFileSize == INVALID_FILE_SIZE) || !pbMemFile)
     {
         CloseHandle(hFile);
         return NULL;
