@@ -67,7 +67,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     }
     else if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
-        if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
+        if (pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL) != S_OK)
         {
             ERR("\n");
             return FALSE;

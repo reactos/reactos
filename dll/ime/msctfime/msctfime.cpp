@@ -45,6 +45,89 @@ DllShutDownInProgress(VOID)
     return s_fnDllShutDownInProgress();
 }
 
+static BOOL
+IsInteractiveUserLogon(VOID)
+{
+    BOOL bOK, IsMember = FALSE;
+    PSID pSid;
+    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
+
+    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
+                                  0, 0, 0, 0, 0, 0, 0, &pSid))
+    {
+        ERR("Error: %ld\n", GetLastError());
+        return FALSE;
+    }
+
+    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
+
+    if (pSid)
+        FreeSid(pSid);
+
+    return bOK && IsMember;
+}
+
+HRESULT
+Inquire(
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags,
+    _In_ HKL hKL)
+{
+    if (!lpIMEInfo)
+        return E_OUTOFMEMORY;
+
+    StringCchCopyW(lpszWndClass, 64, L"MSCTFIME UI");
+    lpIMEInfo->dwPrivateDataSize = 0;
+
+    switch (LOWORD(hKL)) // Language ID
+    {
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = IME_SMODE_CONVERSATION | IME_SMODE_PLAURALCLAUSE;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_SENTENCE | SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT):
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSelectCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        default:
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_AT_CARET;
+            lpIMEInfo->fdwConversionCaps = 0;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = 0;
+            lpIMEInfo->fdwUICaps = 0;
+            lpIMEInfo->fdwSelectCaps = 0;
+            break;
+        }
+    }
+
+    return S_OK;
+}
+
 /* FIXME */
 struct CicBridge : IUnknown
 {
@@ -406,15 +489,30 @@ ImeGetImeMenuItems(
     return 0;
 }
 
-EXTERN_C BOOL WINAPI
+/***********************************************************************
+ *      CtfImeInquireExW (MSCTFIME.@)
+ *
+ * @implemented
+ */
+EXTERN_C HRESULT WINAPI
 CtfImeInquireExW(
     _Out_ LPIMEINFO lpIMEInfo,
     _Out_ LPWSTR lpszWndClass,
     _In_ DWORD dwSystemInfoFlags,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %p, 0x%lX, %p)\n", lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
-    return FALSE;
+    TRACE("(%p, %p, 0x%lX, %p)\n", lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+    if (!IsInteractiveUserLogon())
+    {
+        dwSystemInfoFlags |= IME_SYSINFO_WINLOGON;
+        g_bWinLogon = TRUE;
+    }
+    pTLS->dwSystemInfoFlags = dwSystemInfoFlags;
+    return Inquire(lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
 }
 
 EXTERN_C BOOL WINAPI
