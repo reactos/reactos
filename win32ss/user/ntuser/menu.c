@@ -6272,19 +6272,19 @@ NtUserMenuItemFromPoint(
    PWND Window = NULL;
    PITEM mi;
    ULONG i;
-   DECLARE_RETURN(int);
+   int Ret = -1;
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
    UserEnterExclusive();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN( -1);
+      goto Exit;
    }
 
    if (!(Window = UserGetWindowObject(Menu->hWnd)))
    {
-      RETURN( -1);
+      goto Exit;
    }
 
    X -= Window->rcWindow.left;
@@ -6308,12 +6308,12 @@ NtUserMenuItemFromPoint(
       }
    }
 
-   RETURN( (mi ? i : NO_SELECTED_ITEM));
+   Ret = (mi ? i : NO_SELECTED_ITEM);
 
-CLEANUP:
-   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserMenuItemFromPoint, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 
