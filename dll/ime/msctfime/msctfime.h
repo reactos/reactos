@@ -15,7 +15,13 @@
 #include <windows.h>
 #include <imm.h>
 #include <ddk/immdev.h>
+#include <msctf.h>
+#include <shlwapi.h>
 #include <strsafe.h>
+
+#include <cicero/cicbase.h>
+#include <cicero/osinfo.h>
+#include <cicero/CModulePath.h>
 
 #include <wine/debug.h>
 
