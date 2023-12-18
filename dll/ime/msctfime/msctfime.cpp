@@ -83,7 +83,7 @@ Inquire(
 
     switch (LOWORD(hKL)) // Language ID
     {
-        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT): // Japanese
         {
             lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
                                      IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
@@ -97,7 +97,7 @@ Inquire(
             lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
             break;
         }
-        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT):
+        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT): // Korean
         {
             lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
                                      IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
@@ -109,8 +109,8 @@ Inquire(
             lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
             break;
         }
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): // Simplified Chinese
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL): // Traditional Chinese
         {
             lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET |
                                      IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
@@ -122,7 +122,7 @@ Inquire(
             lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
             break;
         }
-        default:
+        default: // Otherwise
         {
             lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_AT_CARET;
             lpIMEInfo->fdwConversionCaps = 0;
@@ -645,6 +645,9 @@ CtfImeThreadDetach(VOID)
     return S_OK;
 }
 
+/**
+ * @unimplemented
+ */
 EXTERN_C LRESULT CALLBACK
 UIWndProc(
     _In_ HWND hWnd,
@@ -661,7 +664,7 @@ UIWndProc(
 }
 
 /**
- * @implemented
+ * @unimplemented
  */
 BOOL RegisterImeClass(VOID)
 {
