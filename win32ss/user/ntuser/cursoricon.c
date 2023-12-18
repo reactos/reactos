@@ -650,7 +650,6 @@ NtUserGetCursorInfo(
     NTSTATUS Status = STATUS_SUCCESS;
     PCURICON_OBJECT CurIcon;
     BOOL Ret = FALSE;
-    DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserGetCursorInfo\n");
     UserEnterShared();
@@ -687,12 +686,9 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);
+    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOL
