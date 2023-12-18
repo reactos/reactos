@@ -85,17 +85,23 @@ Inquire(
     {
         case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
         {
-            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
-            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
+                                           IME_CMODE_NATIVE;
             lpIMEInfo->fdwSentenceCaps = IME_SMODE_CONVERSATION | IME_SMODE_PLAURALCLAUSE;
             lpIMEInfo->fdwSelectCaps = SELECT_CAP_SENTENCE | SELECT_CAP_CONVERSION;
-            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
             lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
             break;
         }
         case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT):
         {
-            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
             lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
             lpIMEInfo->fdwSentenceCaps = 0;
             lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_COMPSTR;
@@ -106,11 +112,13 @@ Inquire(
         case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
         case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
         {
-            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET |
+                                     IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
             lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
             lpIMEInfo->fdwSentenceCaps = SELECT_CAP_CONVERSION;
             lpIMEInfo->fdwSelectCaps = 0;
-            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
             lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
             break;
         }
