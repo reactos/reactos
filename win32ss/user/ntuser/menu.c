@@ -6430,22 +6430,20 @@ NtUserSetMenuContextHelpId(
    DWORD dwContextHelpId)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuContextHelpId\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntSetMenuContextHelpId(Menu, dwContextHelpId);
    }
 
-   RETURN(IntSetMenuContextHelpId(Menu, dwContextHelpId));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuContextHelpId, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
