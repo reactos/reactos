@@ -2938,7 +2938,7 @@ NtUserSwitchDesktop(HDESK hdesk)
     PDESKTOP pdesk;
     NTSTATUS Status;
     BOOL bRedrawDesktop;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     UserEnterExclusive();
     TRACE("Enter NtUserSwitchDesktop(0x%p)\n", hdesk);
@@ -2947,21 +2947,22 @@ NtUserSwitchDesktop(HDESK hdesk)
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hdesk);
-        RETURN(FALSE);
+        goto Exit;
     }
 
     if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
     {
         ObDereferenceObject(pdesk);
         ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
-        RETURN(FALSE);
+        goto Exit;
     }
 
     if (pdesk == gpdeskInputDesktop)
     {
         ObDereferenceObject(pdesk);
         WARN("NtUserSwitchDesktop called for active desktop\n");
-        RETURN(TRUE);
+        Ret = TRUE;
+        goto Exit;
     }
 
     /*
@@ -2973,14 +2974,14 @@ NtUserSwitchDesktop(HDESK hdesk)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
-        RETURN(FALSE);
+        goto Exit;
     }
 
     if (pdesk->rpwinstaParent != InputWindowStation)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
-        RETURN(FALSE);
+        goto Exit;
     }
 
     /* FIXME: Fail if the process is associated with a secured
@@ -3013,12 +3014,12 @@ NtUserSwitchDesktop(HDESK hdesk)
     TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n", gpdeskInputDesktop);
     ObDereferenceObject(pdesk);
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserSwitchDesktop, ret=%i\n", _ret_);
+Exit:
+    TRACE("Leave NtUserSwitchDesktop, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 /*
