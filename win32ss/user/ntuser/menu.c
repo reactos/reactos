@@ -5725,7 +5725,6 @@ NtUserGetTitleBarInfo(
 {
     PWND WindowObject;
     TITLEBARINFO bartitleinfo;
-    DECLARE_RETURN(BOOLEAN);
     BOOLEAN retValue = TRUE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
@@ -5774,12 +5773,9 @@ NtUserGetTitleBarInfo(
         }
     }
 
-    RETURN( retValue );
-
-CLEANUP:
-    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n",_ret_);
+    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
     UserLeave();
-    END_CLEANUP;
+    return retValue;
 }
 
 /*
