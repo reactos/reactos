@@ -428,6 +428,53 @@ Preview_pLoadImageFromNode(PPREVIEW_DATA pData, SHIMGVW_FILENODE *pNode)
     Preview_pLoadImage(pData, (pNode ? pNode->FileName : NULL));
 }
 
+static BOOL
+Preview_pSaveImage(PPREVIEW_DATA pData, LPCWSTR pszFile)
+{
+    ImageCodecInfo *codecInfo;
+    GUID rawFormat;
+    UINT j, num, nFilterIndex, size;
+    BOOL ret = FALSE;
+
+    if (g_pImage == NULL)
+        return FALSE;
+
+    GdipGetImageEncodersSize(&num, &size);
+    codecInfo = QuickAlloc(size, FALSE);
+    if (!codecInfo)
+    {
+        DPRINT1("QuickAlloc() failed in pSaveImage()\n");
+        return FALSE;
+    }
+    GdipGetImageEncoders(num, size, codecInfo);
+
+    GdipGetImageRawFormat(g_pImage, &rawFormat);
+    if (IsEqualGUID(&rawFormat, &ImageFormatMemoryBMP))
+        rawFormat = ImageFormatBMP;
+
+    nFilterIndex = 0;
+    for (j = 0; j < num; ++j)
+    {
+        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID))
+        {
+            nFilterIndex = j + 1;
+            break;
+        }
+    }
+
+    Anime_Pause(&pData->m_Anime);
+
+    ret = (nFilterIndex > 0) &&
+          (GdipSaveImageToFile(g_pImage, pszFile, &codecInfo[nFilterIndex - 1].Clsid, NULL) == Ok);
+    if (!ret)
+        DPRINT1("GdipSaveImageToFile() failed\n");
+
+    Anime_Start(&pData->m_Anime, 0);
+
+    QuickFree(codecInfo);
+    return ret;
+}
+
 static VOID
 Preview_pSaveImageAs(PPREVIEW_DATA pData)
 {
@@ -500,13 +547,13 @@ Preview_pSaveImageAs(PPREVIEW_DATA pData)
         c++;
         sizeRemain -= sizeof(*c);
 
-        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID) != FALSE)
+        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID))
         {
             sfn.nFilterIndex = j + 1;
         }
     }
 
-    if (GetSaveFileNameW(&sfn))
+    if (GetSaveFileNameW(&sfn) && sfn.nFilterIndex > 0)
     {
         Anime_Pause(&pData->m_Anime);
 
@@ -1420,17 +1467,19 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             break;
 
         case IDC_ROT_CLOCKW:
-            if (g_pImage)
+            if (g_pImage && g_pCurrentFile)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
+                Preview_pSaveImage(pData, g_pCurrentFile->FileName);
                 Preview_UpdateImage(pData);
             }
             break;
 
         case IDC_ROT_COUNCW:
-            if (g_pImage)
+            if (g_pImage && g_pCurrentFile)
             {
                 GdipImageRotateFlip(g_pImage, Rotate90FlipNone);
+                Preview_pSaveImage(pData, g_pCurrentFile->FileName);
                 Preview_UpdateImage(pData);
             }
             break;
