@@ -1664,7 +1664,7 @@ NtUserSetActiveWindow(HWND hWnd)
    USER_REFERENCE_ENTRY Ref;
    HWND hWndPrev;
    PWND Window, pwndPrev;
-   DECLARE_RETURN(HWND);
+   HWND Ret = NULL;
 
    TRACE("Enter NtUserSetActiveWindow(%p)\n", hWnd);
    UserEnterExclusive();
@@ -1675,7 +1675,7 @@ NtUserSetActiveWindow(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetActiveWindow: Invalid handle 0x%p!\n",hWnd);
-         RETURN( NULL);
+         goto Exit;
       }
    }
 
@@ -1687,14 +1687,13 @@ NtUserSetActiveWindow(HWND hWnd)
       if (Window) UserRefObjectCo(Window, &Ref);
       UserSetActiveWindow(Window);
       if (Window) UserDerefObjectCo(Window);
-      RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
+      Ret = (hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
    }
-   RETURN( NULL);
 
-CLEANUP:
-   TRACE("Leave NtUserSetActiveWindow, ret=%p\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetActiveWindow, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
