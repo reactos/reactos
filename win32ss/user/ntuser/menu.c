@@ -6480,22 +6480,20 @@ NtUserSetMenuFlagRtoL(
    HMENU hMenu)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuFlagRtoL\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntSetMenuFlagRtoL(Menu);
    }
 
-   RETURN(IntSetMenuFlagRtoL(Menu));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuFlagRtoL, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
