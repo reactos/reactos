@@ -1494,6 +1494,7 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             if (g_pImage && g_pCurrentFile)
             {
                 GdipImageRotateFlip(g_pImage, Rotate270FlipNone);
+                Preview_pSaveImage(pData, g_pCurrentFile->FileName);
                 Preview_UpdateImage(pData);
             }
             break;
