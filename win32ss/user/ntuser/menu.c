@@ -6216,7 +6216,7 @@ NtUserDrawMenuBarTemp(
    PWND Window;
    RECT Rect;
    NTSTATUS Status = STATUS_SUCCESS;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = 0;
 
    ERR("Enter NtUserDrawMenuBarTemp\n");
    UserEnterExclusive();
@@ -6224,13 +6224,13 @@ NtUserDrawMenuBarTemp(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      RETURN(0);
+      goto Exit;
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      RETURN(0);
+      goto Exit;
    }
 
    _SEH2_TRY
@@ -6247,15 +6247,15 @@ NtUserDrawMenuBarTemp(
    if (Status != STATUS_SUCCESS)
    {
       SetLastNtError(Status);
-      RETURN(0);
+      goto Exit;
    }
 
-   RETURN( IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont));
+   Ret = IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont);
 
-CLEANUP:
-   ERR("Leave NtUserDrawMenuBarTemp, ret=%u\n",_ret_);
+Exit:
+   ERR("Leave NtUserDrawMenuBarTemp, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
