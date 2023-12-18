@@ -136,6 +136,7 @@ ProcessDeviceInstallEvent(
     DeviceInstallParams* Params;
     DWORD len;
     DWORD DeviceIdLength;
+//    DWORD dwRecipient;
 
     DPRINT("ProcessDeviceInstallEvent(%p)\n", PnpEvent);
     DPRINT("Device enumerated: %S\n", PnpEvent->InstallDevice.DeviceId);
@@ -156,6 +157,14 @@ ProcessDeviceInstallEvent(
             ReleaseMutex(hDeviceInstallListMutex);
 
             SetEvent(hDeviceInstallListNotEmpty);
+
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
     }
 }
