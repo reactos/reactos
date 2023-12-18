@@ -1376,7 +1376,6 @@ NtUserCallNextHookEx( int Code,
     PHOOK HookObj, NextObj;
     PCLIENTINFO ClientInfo;
     LRESULT lResult = 0;
-    DECLARE_RETURN(LRESULT);
 
     TRACE("Enter NtUserCallNextHookEx\n");
     UserEnterExclusive();
@@ -1385,7 +1384,7 @@ NtUserCallNextHookEx( int Code,
 
     HookObj = pti->sphkCurrent;
 
-    if (!HookObj) RETURN( 0);
+    if (!HookObj) goto Exit;
 
     NextObj = HookObj->phkNext;
 
@@ -1407,12 +1406,11 @@ NtUserCallNextHookEx( int Code,
        NextObj->phkNext = IntGetNextHook(NextObj);
        lResult = co_UserCallNextHookEx( NextObj, Code, wParam, lParam, NextObj->Ansi);
     }
-    RETURN( lResult);
 
-CLEANUP:
-    TRACE("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
+Exit:
+    TRACE("Leave NtUserCallNextHookEx, ret=%i\n", lResult);
     UserLeave();
-    END_CLEANUP;
+    return lResult;
 }
 
 HHOOK
