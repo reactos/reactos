@@ -158,7 +158,7 @@ public:
      */
     static BOOL Initialize()
     {
-        s_dwTlsIndex = TlsAlloc();
+        s_dwTlsIndex = ::TlsAlloc();
         return s_dwTlsIndex != (DWORD)-1;
     }
 
@@ -169,7 +169,7 @@ public:
     {
         if (s_dwTlsIndex != (DWORD)-1)
         {
-            TlsFree(s_dwTlsIndex);
+            ::TlsFree(s_dwTlsIndex);
             s_dwTlsIndex = (DWORD)-1;
         }
     }
@@ -196,7 +196,7 @@ DWORD TLS::s_dwTlsIndex = (DWORD)-1;
  */
 TLS* TLS::InternalAllocateTLS()
 {
-    TLS *pTLS = (TLS *)TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
     if (pTLS)
         return pTLS;
 
@@ -226,7 +226,7 @@ BOOL TLS::InternalDestroyTLS()
     if (s_dwTlsIndex == (DWORD)-1)
         return FALSE;
 
-    TLS *pTLS = (TLS *)TlsGetValue(s_dwTlsIndex);
+    TLS *pTLS = (TLS *)::TlsGetValue(s_dwTlsIndex);
     if (!pTLS)
         return FALSE;
 
@@ -238,7 +238,7 @@ BOOL TLS::InternalDestroyTLS()
         pTLS->m_pThreadMgr->Release();
 
     cicMemFree(pTLS);
-    TlsSetValue(s_dwTlsIndex, 0);
+    ::TlsSetValue(s_dwTlsIndex, NULL);
     return TRUE;
 }
 
