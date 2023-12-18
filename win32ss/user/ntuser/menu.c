@@ -6362,23 +6362,20 @@ NtUserRemoveMenu(
    UINT uFlags)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserRemoveMenu\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE);
    }
 
-   RETURN(IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE));
-
-CLEANUP:
-   TRACE("Leave NtUserRemoveMenu, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRemoveMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
-
+   return Ret;
 }
 
 /*
