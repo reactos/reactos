@@ -170,8 +170,10 @@ public:
     STDMETHODIMP OnSysKeyboardProc(UINT, LONG) override;
     STDMETHODIMP OnSysShellProc(INT, UINT, LONG) override;
 
-    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
+    HRESULT InitIMMX(TLS *pTLS);
     BOOL UnInitIMMX(TLS *pTLS);
+    HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
+    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
 };
 
 /* FIXME */
@@ -352,6 +354,22 @@ CicBridge::~CicBridge()
 /**
  * @unimplemented
  */
+HRESULT CicBridge::InitIMMX(TLS *pTLS)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
 HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
 {
     return E_NOTIMPL;
@@ -362,15 +380,33 @@ HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
  */
 BOOL CicBridge::UnInitIMMX(TLS *pTLS)
 {
-    return FALSE;
+    //FIXME
+
+    if (pTLS->m_pProfile)
+    {
+        pTLS->m_pProfile->Release();
+        pTLS->m_pProfile = NULL;
+    }
+
+    //FIXME
+
+    if (pTLS->m_pThreadMgr)
+    {
+        pTLS->m_pThreadMgr->Release();
+        pTLS->m_pThreadMgr = NULL;
+    }
+
+    m_dwImmxInit &= ~1;
+
+    return TRUE;
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP CicBridge::OnPreFocusDIM(HWND hwnd)
 {
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 /**
@@ -382,11 +418,11 @@ STDMETHODIMP CicBridge::OnSysKeyboardProc(UINT, LONG)
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
 {
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 /***********************************************************************
@@ -727,7 +763,34 @@ CtfImeIsGuidMapEnable(
 EXTERN_C HRESULT WINAPI
 CtfImeCreateThreadMgr(VOID)
 {
-    FIXME("stub:()\n");
+    TRACE("()\n");
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+
+    if (!pTLS->m_pBridge)
+    {
+        pTLS->m_pBridge = new CicBridge();
+        if (!pTLS->m_pBridge)
+            return E_OUTOFMEMORY;
+    }
+
+    HRESULT hr = S_OK;
+    if (!g_bWinLogon && !(pTLS->m_dwSystemInfoFlags & IME_SYSINFO_WINLOGON))
+    {
+        hr = pTLS->m_pBridge->InitIMMX(pTLS);
+        if (SUCCEEDED(hr))
+        {
+            if (!pTLS->m_pThreadMgr)
+                return E_OUTOFMEMORY;
+
+            hr = pTLS->m_pBridge->ActivateIMMX(pTLS, pTLS->m_pThreadMgr);
+            if (FAILED(hr))
+                pTLS->m_pBridge->UnInitIMMX(pTLS);
+        }
+    }
+
     return E_NOTIMPL;
 }
 
