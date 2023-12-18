@@ -683,7 +683,7 @@ typedef struct _KUSER_SHARED_DATA
     ULONG SystemDllWowRelocation;                           // 0x3d8
     ULONG XStatePad[1];                                     // 0x3dc
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN7) || (defined(__REACTOS__) && defined(_M_AMD64))
+#if (NTDDI_VERSION >= NTDDI_WIN7) || (defined(__REACTOS__))
     XSTATE_CONFIGURATION XState;
 #endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;

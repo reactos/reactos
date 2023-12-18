@@ -4,11 +4,13 @@
 #include <apitest.h>
 
 extern void func_RtlCaptureContext(void);
+extern void func_RtlExContext(void);
 extern void func_RtlIntSafe(void);
 extern void func_RtlUnwind(void);
 
 const struct test winetest_testlist[] =
 {
+    { "RtlExContext",             func_RtlExContext },
     { "RtlIntSafe",               func_RtlIntSafe },
 
 #ifdef _M_IX86
