@@ -6536,7 +6536,7 @@ NtUserThunkedMenuItemInfo(
    PMENU Menu;
    NTSTATUS Status;
    UNICODE_STRING lstrCaption;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuItemInfo\n");
    UserEnterExclusive();
@@ -6548,7 +6548,7 @@ NtUserThunkedMenuItemInfo(
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
    /* Check if we got a Caption */
@@ -6562,23 +6562,27 @@ NtUserThunkedMenuItemInfo(
       {
          ERR("Failed to capture MenuItem Caption (status 0x%08x)\n",Status);
          SetLastNtError(Status);
-         RETURN(FALSE);
+         goto Cleanup;
       }
    }
 
-   if (bInsert) RETURN( UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption));
+   if (bInsert)
+   {
+      Ret = UserInsertMenuItem(Menu, uItem, fByPosition, lpmii, &lstrCaption);
+      goto Cleanup;
+   }
 
-   RETURN( UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption));
+   Ret = UserMenuItemInfo(Menu, uItem, fByPosition, (PROSMENUITEMINFO)lpmii, TRUE, &lstrCaption);
 
-CLEANUP:
+Cleanup:
    if (lstrCaption.Buffer)
    {
       ReleaseCapturedUnicodeString(&lstrCaption, UserMode);
    }
 
-   TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserThunkedMenuItemInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
