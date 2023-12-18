@@ -6054,27 +6054,29 @@ NtUserGetMenuIndex(
    PMENU Menu, SubMenu;
    PITEM MenuItem;
    UINT i;
-   DECLARE_RETURN(UINT);
+   UINT Ret = 0xFFFFFFFF;
 
    TRACE("Enter NtUserGetMenuIndex\n");
    UserEnterShared();
 
    if ( !(Menu = UserGetMenuObject(hMenu)) ||
         !(SubMenu = UserGetMenuObject(hSubMenu)) )
-      RETURN(0xFFFFFFFF);
+      goto Exit;
 
    MenuItem = Menu->rgItems;
    for (i = 0; i < Menu->cItems; i++, MenuItem++)
    {
        if (MenuItem->spSubMenu == SubMenu)
-          RETURN(MenuItem->wID);
+       {
+          Ret = MenuItem->wID;
+          break;
+       }
    }
-   RETURN(0xFFFFFFFF);
 
-CLEANUP:
-   TRACE("Leave NtUserGetMenuIndex, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetMenuIndex, ret=%u\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
