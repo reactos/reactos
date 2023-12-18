@@ -6095,14 +6095,14 @@ NtUserGetMenuItemRect(
    PMENU Menu;
    PITEM MenuItem;
    NTSTATUS Status = STATUS_SUCCESS;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetMenuItemRect\n");
    UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if ((MenuItem = MENU_FindItem (&Menu, &uItem, MF_BYPOSITION)))
@@ -6113,16 +6113,16 @@ NtUserGetMenuItemRect(
       Rect.bottom = MenuItem->cyItem;
    }
    else
-      RETURN(FALSE);
+      goto Exit;
 
    if(!hWnd)
    {
        hWnd = Menu->hWnd;
    }
 
-   if (lprcItem == NULL) RETURN( FALSE);
+   if (lprcItem == NULL) goto Exit;
 
-   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) goto Exit;
 
    if (Menu->fFlags & MNF_POPUP)
    {
@@ -6153,14 +6153,14 @@ NtUserGetMenuItemRect(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Exit;
    }
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetMenuItemRect, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
