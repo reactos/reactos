@@ -5601,22 +5601,20 @@ NtUserDeleteMenu(
    UINT uFlags)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserDeleteMenu\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = IntRemoveMenuItem(Menu, uPosition, uFlags, TRUE);
    }
 
-   RETURN( IntRemoveMenuItem(Menu, uPosition, uFlags, TRUE));
-
-CLEANUP:
-   TRACE("Leave NtUserDeleteMenu, ret=%i\n",_ret_);
+   TRACE("Leave NtUserDeleteMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
