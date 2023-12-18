@@ -5685,14 +5685,13 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
    BOOL Result = FALSE;
    PWND Window;
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserSetSystemMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if (hMenu)
@@ -5702,7 +5701,7 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
        */
       if (!(Menu = IntGetMenuObject(hMenu)))
       {
-         RETURN( FALSE);
+         goto Exit;
       }
 
       Result = IntSetSystemMenu(Window, Menu);
@@ -5710,12 +5709,10 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
    else
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
 
-   RETURN( Result);
-
-CLEANUP:
-   TRACE("Leave NtUserSetSystemMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetSystemMenu, ret=%i\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 /*
