@@ -1441,17 +1441,16 @@ IntGetCapture(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter IntGetCapture\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   RETURN( ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : 0) : 0);
+   Ret = (ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : NULL) : NULL);
 
-CLEANUP:
-   TRACE("Leave IntGetCapture, ret=%p\n", _ret_);
-   END_CLEANUP;
+   TRACE("Leave IntGetCapture, ret=%p\n", Ret);
+   return Ret;
 }
 
 HWND FASTCALL
