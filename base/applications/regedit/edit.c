@@ -23,6 +23,118 @@
 #define NTOS_MODE_USER
 #include <ndk/cmtypes.h>
 
+#if defined(NT_PROCESSOR_GROUPS)
+
+typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+enum _IRQ_DEVICE_POLICY_USHORT {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors = 1,
+  IrqPolicyOneCloseProcessor = 2,
+  IrqPolicyAllProcessorsInMachine = 3,
+  IrqPolicyAllProcessorsInGroup = 3,
+  IrqPolicySpecifiedProcessors = 4,
+  IrqPolicySpreadMessagesAcrossAllProcessors = 5};
+
+#else /* defined(NT_PROCESSOR_GROUPS) */
+
+typedef enum _IRQ_DEVICE_POLICY {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors,
+  IrqPolicyOneCloseProcessor,
+  IrqPolicyAllProcessorsInMachine,
+  IrqPolicySpecifiedProcessors,
+  IrqPolicySpreadMessagesAcrossAllProcessors
+} IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+#endif
+
+typedef enum _IRQ_PRIORITY {
+  IrqPriorityUndefined = 0,
+  IrqPriorityLow,
+  IrqPriorityNormal,
+  IrqPriorityHigh
+} IRQ_PRIORITY, *PIRQ_PRIORITY;
+typedef struct _IO_RESOURCE_DESCRIPTOR {
+  UCHAR Option;
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  UCHAR Spare1;
+  USHORT Flags;
+  USHORT Spare2;
+  union {
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Port;
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Memory;
+    struct {
+      ULONG MinimumVector;
+      ULONG MaximumVector;
+#if defined(NT_PROCESSOR_GROUPS)
+      IRQ_DEVICE_POLICY AffinityPolicy;
+      USHORT Group;
+#else
+      IRQ_DEVICE_POLICY AffinityPolicy;
+#endif
+      IRQ_PRIORITY PriorityPolicy;
+      KAFFINITY TargetedProcessors;
+    } Interrupt;
+    struct {
+      ULONG MinimumChannel;
+      ULONG MaximumChannel;
+    } Dma;
+    struct {
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Generic;
+    struct {
+      ULONG Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG Length;
+      ULONG MinBusNumber;
+      ULONG MaxBusNumber;
+      ULONG Reserved;
+    } BusNumber;
+    struct {
+      ULONG Priority;
+      ULONG Reserved1;
+      ULONG Reserved2;
+    } ConfigData;
+  } u;
+} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
+
+#define IO_RESOURCE_PREFERRED             0x01
+#define IO_RESOURCE_DEFAULT               0x02
+#define IO_RESOURCE_ALTERNATIVE           0x08
+
+typedef struct _IO_RESOURCE_LIST {
+  USHORT Version;
+  USHORT Revision;
+  ULONG Count;
+  IO_RESOURCE_DESCRIPTOR Descriptors[1];
+} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
+
+typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
+  ULONG ListSize;
+  INTERFACE_TYPE InterfaceType;
+  ULONG BusNumber;
+  ULONG SlotNumber;
+  ULONG Reserved[3];
+  ULONG AlternativeLists;
+  IO_RESOURCE_LIST List[1];
+} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
+
 typedef enum _EDIT_MODE
 {
     EDIT_MODE_DEC,
@@ -37,6 +149,8 @@ static DWORD dwordValueData;
 static PCM_RESOURCE_LIST resourceValueData;
 static INT fullResourceIndex = -1;
 static DWORD valueDataLen;
+static PIO_RESOURCE_REQUIREMENTS_LIST requirementsValueData;
+static INT requirementsIndex = -1;
 static EDIT_MODE dwordEditMode = EDIT_MODE_HEX;
 
 void error(HWND hwnd, INT resId, ...)
@@ -1068,6 +1182,476 @@ static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WP
     return FALSE;
 }
 
+static BOOL
+CreateRequirementsListColumns(HWND hWndListView)
+{
+    WCHAR szText[80];
+    RECT rc;
+    LVCOLUMN lvC;
+
+    ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT);
+
+    GetClientRect(hWndListView, &rc);
+
+    /* Create columns. */
+    lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvC.pszText = szText;
+    lvC.fmt = LVCFMT_LEFT;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQALTERNATIVELIST, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQRESOURCELIST, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    lvC.cx = (rc.right - rc.left) / 4;
+    LoadStringW(hInst, IDS_REQDESCRIPTOR, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 2, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 3;
+    lvC.cx = (rc.right - rc.left) - (3 * ((rc.right - rc.left) / 4));
+    LoadStringW(hInst, IDS_REQDEVICETYPE, szText, ARRAY_SIZE(szText));
+    if (ListView_InsertColumn(hWndListView, 3, &lvC) == -1)
+        return FALSE;
+
+    return TRUE;
+}
+
+static VOID
+GetResourceType(UCHAR ResourceType,
+                LPWSTR pBuffer,
+                DWORD dwLength)
+{
+    switch (ResourceType)
+    {
+        case CmResourceTypePort:
+            LoadStringW(hInst, IDS_TYPE_PORT, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeInterrupt:
+            LoadStringW(hInst, IDS_TYPE_INTERRUPT, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeMemory:
+            LoadStringW(hInst, IDS_TYPE_MEMORY, pBuffer, dwLength);
+            break;
+
+        case CmResourceTypeDma:
+            LoadStringW(hInst, IDS_TYPE_DMA, pBuffer, dwLength);
+            break;
+
+        default:
+            wsprintf(pBuffer, L"Unknown %u", ResourceType);
+            break;
+    }
+}
+
+static VOID
+GetShareDisposition(
+    UCHAR ShareDisposition,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    switch (ShareDisposition)
+    {
+        case CmResourceShareUndetermined:
+            LoadStringW(hInst, IDS_SHARE_UNDETERMINED, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareDeviceExclusive:
+            LoadStringW(hInst, IDS_SHARE_DEVICE_EXCLUSIVE, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareDriverExclusive:
+            LoadStringW(hInst, IDS_SHARE_DRIVER_EXCLUSIVE, pBuffer, dwLength);
+            break;
+
+        case CmResourceShareShared:
+            LoadStringW(hInst, IDS_SHARE_SHARED, pBuffer, dwLength);
+            break;
+    }
+}
+
+static VOID
+GetPortType(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & CM_RESOURCE_PORT_IO) == CM_RESOURCE_PORT_IO)
+    {
+        LoadStringW(hInst, IDS_PORT_PORT_IO, pBuffer, dwLength);
+    }
+    else if ((Flags & CM_RESOURCE_PORT_IO) == CM_RESOURCE_PORT_MEMORY)
+    {
+        LoadStringW(hInst, IDS_PORT_MEMORY_IO, pBuffer, dwLength);
+    }
+}
+
+static VOID
+GetMemoryAccess(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_READ_WRITE)
+    {
+        LoadStringW(hInst, IDS_MEMORY_READ_WRITE, pBuffer, dwLength);
+    }
+    else if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_READ_ONLY)
+    {
+        LoadStringW(hInst, IDS_MEMORY_READ_ONLY, pBuffer, dwLength);
+    }
+    else if ((Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY)) == CM_RESOURCE_MEMORY_WRITE_ONLY)
+    {
+        LoadStringW(hInst, IDS_MEMORY_WRITE_ONLY, pBuffer, dwLength);
+    }
+}
+
+static VOID
+GetInterruptType(
+    USHORT Flags,
+    LPWSTR pBuffer,
+    DWORD dwLength)
+{
+    if ((Flags & CM_RESOURCE_INTERRUPT_LEVEL_LATCHED_BITS) == CM_RESOURCE_INTERRUPT_LATCHED)
+    {
+        LoadStringW(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, pBuffer, dwLength);
+    }
+    else
+    {
+        LoadStringW(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, pBuffer, dwLength);
+    }
+}
+
+static VOID
+AddRequirementsToList(HWND hwndDlg, HWND hwnd)
+{
+    PIO_RESOURCE_LIST pResourceList;
+    PIO_RESOURCE_DESCRIPTOR pDescriptor; 
+    WCHAR buffer[80];
+    LVITEMW item;
+    ULONG i, j, index;
+    INT iItem;
+
+    index = 0;
+    pResourceList = &requirementsValueData->List[0];
+    for (i = 0; i < requirementsValueData->AlternativeLists; i++)
+    {
+        for (j = 0; j < pResourceList->Count; j++)
+        {
+            pDescriptor = &pResourceList->Descriptors[j];
+
+            wsprintf(buffer, L"%lu", i + 1);
+
+            item.mask = LVIF_TEXT | LVIF_PARAM;
+            item.iItem = index;
+            item.iSubItem = 0;
+            item.state = 0;
+            item.stateMask = 0;
+            item.pszText = buffer;
+            item.cchTextMax = (int)wcslen(item.pszText);
+            item.lParam = (LPARAM)pDescriptor;
+
+            iItem = ListView_InsertItem(hwnd, &item);
+            if (iItem != -1)
+            {
+                wsprintf(buffer, L"%lu", j + 1);
+                ListView_SetItemText(hwnd, iItem, 1, buffer);
+                wsprintf(buffer, L"%lu", 1);
+                ListView_SetItemText(hwnd, iItem, 2, buffer);
+
+                GetResourceType(pDescriptor->Type, buffer, 80);
+                ListView_SetItemText(hwnd, iItem, 3, buffer);
+            }
+
+            index++;
+        }
+
+
+        pResourceList = (PIO_RESOURCE_LIST)(pResourceList->Descriptors + pResourceList->Count);
+    }
+
+    GetInterfaceType(requirementsValueData->InterfaceType, buffer, 80);
+    SetDlgItemTextW(hwndDlg, IDC_REQINTERFACETYPE, buffer);
+    SetDlgItemInt(hwndDlg, IDC_REQBUSNUMBER, (UINT)requirementsValueData->BusNumber, FALSE);
+    SetDlgItemInt(hwndDlg, IDC_REQSLOTNUMBER, (UINT)requirementsValueData->SlotNumber, FALSE);
+}
+
+static INT_PTR CALLBACK show_requirements_port_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetPortType(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_TYPE, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Port.Length);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_LENGTH, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Port.Alignment);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_ALIGN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Port.MinimumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Port.MinimumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_MIN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Port.MaximumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Port.MaximumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_PORT_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_PORT_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_PORT_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_memory_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetMemoryAccess(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_ACCESS, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Memory.Length);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_LENGTH, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Memory.Alignment);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_ALIGN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Memory.MinimumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Memory.MinimumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_MIN, Buffer);
+#ifdef _M_AMD64
+        wsprintf(Buffer, L"0x%016I64x", pDescriptor->u.Memory.MaximumAddress.QuadPart);
+#else
+        wsprintf(Buffer, L"0x%08lx", pDescriptor->u.Memory.MaximumAddress.u.LowPart);
+#endif
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_MEMORY_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_MEMORY_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_MEMORY_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_interrupt_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+
+        GetInterruptType(pDescriptor->Flags, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_TYPE, Buffer);
+
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Interrupt.MinimumVector);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_MIN, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Interrupt.MaximumVector);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_INT_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_INT_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_INT_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK show_requirements_dma_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor;
+    WCHAR Buffer[80];
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        pDescriptor = (PIO_RESOURCE_DESCRIPTOR)lParam;
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Dma.MinimumChannel);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_MIN, Buffer);
+        wsprintf(Buffer, L"0x%lx", pDescriptor->u.Dma.MaximumChannel);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_MAX, Buffer);
+
+        GetShareDisposition(pDescriptor->ShareDisposition, Buffer, 80);
+        SetDlgItemTextW(hwndDlg, IDC_REQ_DMA_SHARE, Buffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_DMA_ALTERNATIVE), (pDescriptor->Option & IO_RESOURCE_ALTERNATIVE));
+        EnableWindow(GetDlgItem(hwndDlg, IDC_REQ_DMA_PREFERRED), (pDescriptor->Option & IO_RESOURCE_PREFERRED));
+        return FALSE;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+           EndDialog(hwndDlg, IDOK);
+            break;
+        }
+    }
+    return FALSE;
+}
+
+static VOID
+ShowRequirement(HWND hwndDlg)
+{
+    PIO_RESOURCE_DESCRIPTOR pDescriptor; 
+    LVITEMW item;
+
+    if (requirementsIndex == -1)
+        return;
+
+    item.mask = LVIF_PARAM;
+    item.iItem = requirementsIndex;
+    item.iSubItem = 0;
+    ListView_GetItem(GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST), &item);
+
+    pDescriptor = (PIO_RESOURCE_DESCRIPTOR)item.lParam; 
+    if (pDescriptor)
+    {
+        switch (pDescriptor->Type)
+        {
+        case CmResourceTypePort:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_PORT), hwndDlg, show_requirements_port_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeMemory:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_MEMORY), hwndDlg, show_requirements_memory_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeInterrupt:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_INT), hwndDlg, show_requirements_interrupt_dlgproc, (LPARAM)pDescriptor);
+            break;
+        case CmResourceTypeDma:
+            DialogBoxParamW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_DMA), hwndDlg, show_requirements_dma_dlgproc, (LPARAM)pDescriptor);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+static BOOL
+OnRequirementsListNotify(HWND hwndDlg, NMHDR *phdr)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
+
+    switch (phdr->idFrom)
+    {
+        case IDC_REQUIREMENTS_LIST:
+            switch(phdr->code)
+            {
+                case NM_CLICK:
+                    requirementsIndex = lpnmlv->iItem;
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_SHOW_REQUIREMENT), (lpnmlv->iItem != -1));
+                    break;
+
+                case NM_DBLCLK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        requirementsIndex = lpnmlv->iItem;
+                        ShowRequirement(hwndDlg);
+                    }
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK modify_requirements_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        CreateRequirementsListColumns(GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST));
+        AddRequirementsToList(hwndDlg, GetDlgItem(hwndDlg, IDC_REQUIREMENTS_LIST));
+        return FALSE;
+
+    case WM_NOTIFY:
+        return OnRequirementsListNotify(hwndDlg, (NMHDR *)lParam);
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_SHOW_REQUIREMENT:
+            if (requirementsIndex != -1)
+                ShowRequirement(hwndDlg);
+            break;
+        case IDOK:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
 {
@@ -1309,6 +1893,34 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
         }
     }
+    else if (EditBin == FALSE && type == REG_RESOURCE_REQUIREMENTS_LIST)
+    {
+        if (valueDataLen > 0)
+        {
+            requirementsValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + sizeof(ULONG));
+            if (requirementsValueData == NULL)
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
+            }
+
+            lRet = RegQueryValueExW(hKey, valueName, 0, 0, (LPBYTE)requirementsValueData, &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
+
+        }
+        else
+        {
+            requirementsValueData = NULL;
+        }
+
+        if (DialogBoxW(0, MAKEINTRESOURCEW(IDD_EDIT_REQUIREMENTS_LIST), hwnd, modify_requirements_list_dlgproc) == IDOK)
+        {
+        }
+    }
     else if ((EditBin != FALSE) || (type == REG_NONE) || (type == REG_BINARY))
     {
         if(valueDataLen > 0)
@@ -1358,6 +1970,10 @@ done:
     if (stringValueData)
         HeapFree(GetProcessHeap(), 0, stringValueData);
     stringValueData = NULL;
+
+    if (requirementsValueData)
+        HeapFree(GetProcessHeap(), 0, requirementsValueData);
+    requirementsValueData = NULL;
 
     return result;
 }
