@@ -760,6 +760,12 @@ CtfImeIsGuidMapEnable(
     return FALSE;
 }
 
+
+/***********************************************************************
+ *      CtfImeCreateThreadMgr (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeCreateThreadMgr(VOID)
 {
@@ -791,7 +797,7 @@ CtfImeCreateThreadMgr(VOID)
         }
     }
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 
