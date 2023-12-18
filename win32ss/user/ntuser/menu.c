@@ -6389,19 +6389,19 @@ NtUserSetMenu(
 {
    PWND Window;
    BOOL Changed;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if (!IntSetMenu(Window, Menu, &Changed))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    // Not minimized and please repaint!!!
@@ -6413,12 +6413,12 @@ NtUserSetMenu(
       UserDerefObjectCo(Window);
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetMenu, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetMenu, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
