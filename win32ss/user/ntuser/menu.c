@@ -5075,7 +5075,7 @@ IntMenuItemInfo(
    if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
    {
       EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
-      return( FALSE);
+      return FALSE;
    }
    if (SetOrGet)
    {
@@ -5085,7 +5085,7 @@ IntMenuItemInfo(
    {
       Ret = IntGetMenuItemInfo(Menu, MenuItem, ItemInfo);
    }
-   return( Ret);
+   return Ret;
 }
 
 BOOL FASTCALL
@@ -5107,20 +5107,20 @@ UserMenuItemInfo(
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    if ( Size != sizeof(MENUITEMINFOW) && 
         Size != FIELD_OFFSET(MENUITEMINFOW, hbmpItem) &&
         Size != sizeof(ROSMENUITEMINFO) )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
    Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, Size);
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    /* If this is a pre-0x0500 _WIN32_WINNT MENUITEMINFOW, you can't
       set/get hbmpItem */
@@ -5128,7 +5128,7 @@ UserMenuItemInfo(
          && 0 != (ItemInfo.fMask & MIIM_BITMAP))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
 
    if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
@@ -5138,7 +5138,7 @@ UserMenuItemInfo(
          return TRUE;
 
       EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
-      return( FALSE);
+      return FALSE;
    }
 
    if (SetOrGet)
@@ -5154,12 +5154,12 @@ UserMenuItemInfo(
          if (! NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
-            return( FALSE);
+            return FALSE;
          }
       }
    }
 
-   return( Ret);
+   return Ret;
 }
 
 BOOL FASTCALL
@@ -5177,18 +5177,18 @@ UserMenuInfo(
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
    if ( Size < sizeof(MENUINFO) || Size > sizeof(ROSMENUINFO) )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( FALSE);
+      return FALSE;
    }
    Status = MmCopyFromCaller(&MenuInfo, UnsafeMenuInfo, Size);
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return( FALSE);
+      return FALSE;
    }
 
    if(SetOrGet)
@@ -5206,12 +5206,12 @@ UserMenuInfo(
          if (! NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
-            return( FALSE);
+            return FALSE;
          }
       }
    }
 
-   return( Res);
+   return Res;
 }
 
 BOOL FASTCALL
