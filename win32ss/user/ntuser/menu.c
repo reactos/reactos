@@ -6456,22 +6456,20 @@ NtUserSetMenuDefaultItem(
    UINT fByPos)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserSetMenuDefaultItem\n");
    UserEnterExclusive();
 
-   if(!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN( FALSE);
+      Ret = UserSetMenuDefaultItem(Menu, uItem, fByPos);
    }
 
-   RETURN( UserSetMenuDefaultItem(Menu, uItem, fByPos));
-
-CLEANUP:
-   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetMenuDefaultItem, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
