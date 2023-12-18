@@ -995,18 +995,18 @@ NtUserGetClipCursor(
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("Enter NtUserGetClipCursor\n");
     UserEnterShared();
 
     if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
     {
-        RETURN(FALSE);
+        goto Exit;
     }
 
     if (!lpRect)
-        RETURN(FALSE);
+        goto Exit;
 
     CurInfo = IntGetSysCursorInfo();
     if (CurInfo->bClipped)
@@ -1025,15 +1025,15 @@ NtUserGetClipCursor(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        RETURN(FALSE);
+        goto Exit;
     }
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserGetClipCursor, ret=%i\n",_ret_);
+Exit:
+    TRACE("Leave NtUserGetClipCursor, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 
