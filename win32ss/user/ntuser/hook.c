@@ -1690,7 +1690,7 @@ APIENTRY
 NtUserUnhookWindowsHookEx(HHOOK Hook)
 {
     PHOOK HookObj;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("Enter NtUserUnhookWindowsHookEx\n");
     UserEnterExclusive();
@@ -1699,7 +1699,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
     {
         ERR("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
         /* SetLastNtError(Status); */
-        RETURN( FALSE);
+        goto Exit;
     }
 
     ASSERT(Hook == UserHMGetHandle(HookObj));
@@ -1708,12 +1708,12 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
 
     UserDereferenceObject(HookObj);
 
-    RETURN( TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserUnhookWindowsHookEx, ret=%i\n",_ret_);
+Exit:
+    TRACE("Leave NtUserUnhookWindowsHookEx, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOL
