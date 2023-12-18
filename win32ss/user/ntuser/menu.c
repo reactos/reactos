@@ -5649,27 +5649,27 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
 {
    PWND Window;
    PMENU Menu;
-   DECLARE_RETURN(HMENU);
+   HMENU Ret = NULL;
 
    TRACE("Enter NtUserGetSystemMenu\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(NULL);
+      goto Exit;
    }
 
    if (!(Menu = IntGetSystemMenu(Window, bRevert)))
    {
-      RETURN(NULL);
+      goto Exit;
    }
 
-   RETURN(Menu->head.h);
+   Ret = UserHMGetHandle(Menu);
 
-CLEANUP:
-   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", _ret_);
+Exit:
+   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
