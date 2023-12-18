@@ -6505,22 +6505,20 @@ NtUserThunkedMenuInfo(
    LPCMENUINFO lpcmi)
 {
    PMENU Menu;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserThunkedMenuInfo\n");
    UserEnterExclusive();
 
-   if (!(Menu = UserGetMenuObject(hMenu)))
+   Menu = UserGetMenuObject(hMenu);
+   if (Menu)
    {
-      RETURN(FALSE);
+      Ret = UserMenuInfo(Menu, (PROSMENUINFO)lpcmi, TRUE);
    }
 
-   RETURN(UserMenuInfo(Menu, (PROSMENUINFO)lpcmi, TRUE));
-
-CLEANUP:
-   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserThunkedMenuInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
