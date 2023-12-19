@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Ottieni automaticamente l'indirizzo dei server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &G
+    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &U
     LTEXT "Server DNS preferito:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Server DNS alternativo:", -1, 14, 176, 135, 8
