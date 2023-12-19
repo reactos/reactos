@@ -28,4 +28,6 @@
 
 #include "resource.h"
 
+#define IS_IME_HKL(hKL) ((((ULONG_PTR)(hKL)) & 0xF0000000) == 0xE0000000)
+
 extern HINSTANCE g_hInst;

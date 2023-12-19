@@ -26,6 +26,20 @@ UINT WM_MSIME_SHOWIMEPAD = 0;
 UINT WM_MSIME_MOUSE = 0;
 UINT WM_MSIME_KEYMAP = 0;
 
+BOOL IsMsImeMessage(UINT uMsg)
+{
+    return (uMsg == WM_MSIME_SERVICE ||
+            uMsg == WM_MSIME_UIREADY ||
+            uMsg == WM_MSIME_RECONVERTREQUEST ||
+            uMsg == WM_MSIME_RECONVERT ||
+            uMsg == WM_MSIME_DOCUMENTFEED ||
+            uMsg == WM_MSIME_QUERYPOSITION ||
+            uMsg == WM_MSIME_MODEBIAS ||
+            uMsg == WM_MSIME_SHOWIMEPAD ||
+            uMsg == WM_MSIME_MOUSE ||
+            uMsg == WM_MSIME_KEYMAP);
+}
+
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
 
 EXTERN_C BOOLEAN WINAPI
@@ -871,6 +885,11 @@ CtfImeProcessCicHotkey(
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *      CtfImeDispatchDefImeMessage (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C LRESULT WINAPI
 CtfImeDispatchDefImeMessage(
     _In_ HWND hWnd,
@@ -878,8 +897,29 @@ CtfImeDispatchDefImeMessage(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
-    FIXME("stub:(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hWnd, uMsg, wParam, lParam);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (pTLS)
+    {
+        if (uMsg == WM_CREATE)
+            ++pTLS->m_cWnds;
+        else if (uMsg == WM_DESTROY)
+            --pTLS->m_cWnds;
+    }
+
+    if (!IsMsImeMessage(uMsg))
+        return 0;
+
+    HKL hKL = GetKeyboardLayout(0);
+    if (IS_IME_HKL(hKL))
+        return 0;
+
+    HWND hImeWnd = (HWND)SendMessageW(hWnd, WM_IME_NOTIFY, 0x17, 0);
+    if (!IsWindow(hImeWnd))
+        return 0;
+
+    return SendMessageW(hImeWnd, uMsg, wParam, lParam);
 }
 
 EXTERN_C BOOL WINAPI
