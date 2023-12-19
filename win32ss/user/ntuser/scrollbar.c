@@ -1405,14 +1405,14 @@ NtUserSetScrollBarInfo(
    LPSCROLLINFO psi;
    NTSTATUS Status;
    LONG Obj;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetScrollBarInfo\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      RETURN(FALSE);
+      goto Cleanup;
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1421,17 +1421,17 @@ NtUserSetScrollBarInfo(
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
    if(!co_IntCreateScrollBars(Window))
-      RETURN(FALSE);
+      goto Cleanup;
 
    Status = MmCopyFromCaller(&Safeinfo, info, sizeof(SETSCROLLBARINFO));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
    sbi = IntGetScrollbarInfoFromWindow(Window, Obj);
@@ -1441,15 +1441,15 @@ NtUserSetScrollBarInfo(
    sbi->reserved = Safeinfo.reserved;
    RtlCopyMemory(&sbi->rgstate, &Safeinfo.rgstate, sizeof(Safeinfo.rgstate));
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /* EOF */
