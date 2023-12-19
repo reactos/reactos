@@ -684,13 +684,13 @@ CicBridge::ConfigureRegisterWord(
     if (FAILED(hr))
         return hr;
 
-    ITfFunctionProvider *pProvider;
+    ITfFunctionProvider *pProvider = NULL;
     hr = pThreadMgr->GetFunctionProvider(profile.clsid, &pProvider);
     if (FAILED(hr))
         return hr;
 
-    ITfFnConfigureRegisterWord *pFunction;
-    hr = pProvider->GetFunction(GUID_NULL, IID_ITfFnConfigureRegisterWord, (IUnknown**)pFunction);
+    ITfFnConfigureRegisterWord *pFunction = NULL;
+    hr = pProvider->GetFunction(GUID_NULL, IID_ITfFnConfigureRegisterWord, (IUnknown**)&pFunction);
     if (FAILED(hr))
     {
         pProvider->Release();
