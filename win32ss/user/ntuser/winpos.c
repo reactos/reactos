@@ -3703,7 +3703,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    PWND Wnd;
    WINDOWPLACEMENT Safepl;
    UINT Flags;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPlacement\n");
@@ -3712,7 +3712,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    if (!(Wnd = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    _SEH2_TRY
@@ -3723,13 +3723,13 @@ NtUserSetWindowPlacement(HWND hWnd,
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN( FALSE));
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
    if(Safepl.length != sizeof(WINDOWPLACEMENT))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    Flags = PLACE_MAX | PLACE_RECT;
@@ -3737,12 +3737,12 @@ NtUserSetWindowPlacement(HWND hWnd,
    UserRefObjectCo(Wnd, &Ref);
    IntSetWindowPlacement(Wnd, &Safepl, Flags);
    UserDerefObjectCo(Wnd);
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
