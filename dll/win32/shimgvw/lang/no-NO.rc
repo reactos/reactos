@@ -16,6 +16,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "Forminske (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Med urviseren (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Dreie mot urviseren (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
     IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Skriv ut (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Lagre som... (Ctrl+S)"

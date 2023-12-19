@@ -20,11 +20,13 @@
 #define IDB_ZOOM_OUT    56
 #define IDB_ROT_CLOCKW  57
 #define IDB_ROT_COUNCW  58
-#define IDB_DELETE      59
-#define IDB_PRINT       60
-#define IDB_SAVEAS      61
-#define IDB_MODIFY      62
-#define IDB_HELP_TOC    63
+#define IDB_ROT_CWSAVE  59
+#define IDB_ROT_CCWSAVE 60
+#define IDB_DELETE      61
+#define IDB_PRINT       62
+#define IDB_SAVEAS      63
+#define IDB_MODIFY      64
+#define IDB_HELP_TOC    65
 
 /* ToolBar buttons */
 #define IDC_TOOL_BASE   500
@@ -38,12 +40,14 @@
 #define IDC_ZOOM_OUT    (IDC_TOOL_BASE + 6)
 #define IDC_ROT_CLOCKW  (IDC_TOOL_BASE + 7)
 #define IDC_ROT_COUNCW  (IDC_TOOL_BASE + 8)
-#define IDC_DELETE      (IDC_TOOL_BASE + 9)
-#define IDC_PRINT       (IDC_TOOL_BASE + 10)
-#define IDC_SAVEAS      (IDC_TOOL_BASE + 11)
-#define IDC_MODIFY      (IDC_TOOL_BASE + 12)
-#define IDC_HELP_TOC    (IDC_TOOL_BASE + 13)
-#define IDC_ENDSLIDESHOW (IDC_TOOL_BASE + 14)
+#define IDC_ROT_CWSAVE  (IDC_TOOL_BASE + 9)
+#define IDC_ROT_CCWSAVE (IDC_TOOL_BASE + 10)
+#define IDC_DELETE      (IDC_TOOL_BASE + 11)
+#define IDC_PRINT       (IDC_TOOL_BASE + 12)
+#define IDC_SAVEAS      (IDC_TOOL_BASE + 13)
+#define IDC_MODIFY      (IDC_TOOL_BASE + 14)
+#define IDC_HELP_TOC    (IDC_TOOL_BASE + 15)
+#define IDC_ENDSLIDESHOW (IDC_TOOL_BASE + 16)
 
 #define TBICON_PREV_PIC     0
 #define TBICON_NEXT_PIC     1
@@ -54,11 +58,13 @@
 #define TBICON_ZOOM_OUT     6
 #define TBICON_ROT_CLOCKW   7
 #define TBICON_ROT_COUNCW   8
-#define TBICON_DELETE       9
-#define TBICON_PRINT        10
-#define TBICON_SAVEAS       11
-#define TBICON_MODIFY       12
-#define TBICON_HELP_TOC     13
+#define TBICON_ROT_CWSAVE   9
+#define TBICON_ROT_CCWSAVE  10
+#define TBICON_DELETE       11
+#define TBICON_PRINT        12
+#define TBICON_SAVEAS       13
+#define TBICON_MODIFY       14
+#define TBICON_HELP_TOC     15
 
 /* Strings */
 #define IDS_APPTITLE    100
@@ -90,6 +96,8 @@
 #define IDS_TOOLTIP_SAVEAS     411
 #define IDS_TOOLTIP_MODIFY     412
 #define IDS_TOOLTIP_HELP_TOC   413
+#define IDS_TOOLTIP_ROT_CWSAVE 414
+#define IDS_TOOLTIP_ROT_CCWSAVE 415
 
 /* Keyboard accelerators */
 #define IDR_ACCELERATOR 600
