@@ -915,7 +915,7 @@ CtfImeDispatchDefImeMessage(
         return 0;
 
     return SendMessageW(hImeWnd, uMsg, wParam, lParam);
-]}
+}
 
 EXTERN_C BOOL WINAPI
 CtfImeIsIME(
