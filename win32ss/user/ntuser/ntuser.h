@@ -1,10 +1,5 @@
 #pragma once
 
-#define DECLARE_RETURN(type) type _ret_
-#define RETURN(value) { _ret_ = value; goto _cleanup_; }
-#define CLEANUP /*unreachable*/ ASSERT(FALSE); _cleanup_
-#define END_CLEANUP return _ret_;
-
 #define UserEnterCo UserEnterExclusive
 #define UserLeaveCo UserLeave
 
