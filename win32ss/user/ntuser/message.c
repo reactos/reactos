@@ -1466,20 +1466,20 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
                                 ULONG_PTR *uResult )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PWND Window = NULL;
+    PWND Window;
     PMSGMEMORY MsgMemoryEntry;
     INT lParamBufferSize;
     LPARAM lParamPacked;
     PTHREADINFO Win32Thread, ptiSendTo = NULL;
     ULONG_PTR Result = 0;
-    DECLARE_RETURN(LRESULT);
+    LRESULT Ret = FALSE;
     USER_REFERENCE_ENTRY Ref;
     BOOL DoCallBack = TRUE;
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
         TRACE("SendMessageTimeoutSingle: Invalid handle 0x%p!\n",hWnd);
-        RETURN( FALSE);
+        return FALSE;
     }
 
     UserRefObjectCo(Window, &Ref);
@@ -1493,7 +1493,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
        if (!IntDdeSendMessageHook(Window, Msg, wParam, lParam))
        {
           ERR("Sending Exit DDE 0x%x\n",Msg);
-          RETURN( FALSE);
+          goto Cleanup;
        }
     }
 
@@ -1502,7 +1502,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
             /* Never send messages to exiting threads */
-            RETURN( FALSE);
+            goto Cleanup;
         }
 
         if (Msg & 0x80000000)
@@ -1510,7 +1510,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            TRACE("SMTS: Internal Message!\n");
            Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
            if (uResult) *uResult = Result;
-           RETURN( TRUE);
+           Ret = TRUE;
+           goto Cleanup;
         }
 
         // Only happens when calling the client!
@@ -1523,7 +1524,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            if (IoGetRemainingStackSize() < PAGE_SIZE)
            {
               ERR("Server Callback Exceeded Stack!\n");
-              RETURN( FALSE);
+              goto Cleanup;
            }
            /* Return after server side call, IntCallWndProcRet will not be called. */
            switch(Window->fnid)
@@ -1541,7 +1542,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            if (!DoCallBack)
            {
               if (uResult) *uResult = Result;
-              RETURN( TRUE);
+              Ret = TRUE;
+              goto Cleanup;
            }
         }
         /* See if this message type is present in the table */
@@ -1560,7 +1562,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
         {
            ERR("Failed to pack message parameters\n");
-           RETURN( FALSE);
+           goto Cleanup;
         }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
@@ -1578,20 +1580,22 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
             ERR("Failed to unpack message parameters\n");
-            RETURN( TRUE);
+            Ret = TRUE;
+            goto Cleanup;
         }
 
         // Only happens when calling the client!
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-        RETURN( TRUE);
+        Ret = TRUE;
+        goto Cleanup;
     }
 
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: Last error? */
         ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
-        RETURN( FALSE);
+        goto Cleanup;
     }
 
     if ((uFlags & SMTO_ABORTIFHUNG) && MsqIsHung(ptiSendTo, 4 * MSQ_HUNG))
@@ -1599,7 +1603,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         // FIXME: Set window hung and add to a list.
         /* FIXME: Set a LastError? */
         ERR("Window %p (%p) (pti %p) is hung!\n", hWnd, Window, ptiSendTo);
-        RETURN( FALSE);
+        goto Cleanup;
     }
 
     do
@@ -1634,19 +1638,19 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
  *  returns ERROR_TIMEOUT, then the function timed out.
  */
         EngSetLastError(ERROR_TIMEOUT);
-        RETURN( FALSE);
+        goto Cleanup;
     }
     else if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        RETURN( FALSE);
+        goto Cleanup;
     }
 
-    RETURN( TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    if (Window) UserDerefObjectCo(Window);
-    END_CLEANUP;
+Cleanup:
+    UserDerefObjectCo(Window);
+    return Ret;
 }
 
 LRESULT FASTCALL
