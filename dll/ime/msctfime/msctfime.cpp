@@ -82,6 +82,38 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
+class CicInputContext
+{
+public:
+    HRESULT
+    GetGuidAtom(
+        _Inout_ IMCLock& imcLock,
+        _In_ DWORD dwUnknown,
+        _Out_opt_ LPDWORD pdwGuidAtom);
+};
+
+/**
+ * @unimplemented
+ */
+HRESULT
+CicInputContext::GetGuidAtom(
+    _Inout_ IMCLock& imcLock,
+    _In_ DWORD dwUnknown,
+    _Out_opt_ LPDWORD pdwGuidAtom)
+{
+    InternalIMCCLock<CTFIMECONTEXT> imeContext(imcLock.m_pIC->hCompStr);
+
+    HRESULT hr = imeContext.m_hr;
+    if (!imeContext)
+        hr = E_FAIL;
+
+    if (FAILED(hr))
+        return hr;
+
+    // FIXME
+    return hr;
+}
+
 /**
  * @implemented
  */
@@ -756,14 +788,39 @@ CtfImeEscapeEx(
     return 0;
 }
 
+/***********************************************************************
+ *      CtfImeGetGuidAtom (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeGetGuidAtom(
     _In_ HIMC hIMC,
     _In_ DWORD dwUnknown,
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
-    FIXME("stub:(%p, 0x%lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
-    return E_FAIL;
+    TRACE("(%p, 0x%lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
+
+    IMCLock imcLock(hIMC);
+
+    HRESULT hr = imcLock.m_hr;
+    if (!imcLock)
+        hr = E_FAIL;
+    if (FAILED(hr))
+        return hr;
+
+    InternalIMCCLock<CTFIMECONTEXT> imccLock(imcLock.m_pIC->hCtfImeContext);
+    hr = imccLock.m_hr;
+    if (!imccLock)
+        hr = E_FAIL;
+    if (FAILED(hr))
+        return hr;
+
+    if (!imccLock.m_pIMCC->m_pCicIC)
+        return E_OUTOFMEMORY;
+
+    hr = imccLock.m_pIMCC->m_pCicIC->GetGuidAtom(imcLock, dwUnknown, pdwGuidAtom);
+    return hr;
 }
 
 /***********************************************************************
