@@ -3392,21 +3392,21 @@ NtUserGetWindowPlacement(HWND hWnd,
    PWND Wnd;
    WINDOWPLACEMENT Safepl;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetWindowPlacement\n");
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    Safepl.length = sizeof(WINDOWPLACEMENT);
@@ -3417,15 +3417,15 @@ NtUserGetWindowPlacement(HWND hWnd,
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit;
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD
