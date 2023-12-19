@@ -1607,19 +1607,19 @@ IntFillWindow(PWND pWndParent,
 HDC APIENTRY
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
-   PWND Window = NULL;
+   PWND Window;
    PAINTSTRUCT Ps;
    NTSTATUS Status;
    HDC hDC;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(HDC);
+   HDC Ret = NULL;
 
    TRACE("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( NULL);
+      goto Cleanup;
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1630,18 +1630,17 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(NULL);
+      goto Cleanup;
    }
 
-   RETURN(hDC);
+   Ret = hDC;
 
-CLEANUP:
+Cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserBeginPaint, ret=%p\n",_ret_);
+   TRACE("Leave NtUserBeginPaint, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
-
+   return Ret;
 }
 
 /*
