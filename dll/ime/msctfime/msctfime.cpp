@@ -785,7 +785,7 @@ CtfImeIsGuidMapEnable(
     if (!imcLock)
         hr = E_FAIL;
     if (SUCCEEDED(hr))
-        ret = !!(imcLock.m_pIC->fdwInit & INIT_GUIDMAPENABLED);
+        ret = !!(imcLock.m_pIC->fdwInit & INIT_GUIDMAP);
 
     return ret;
 }
