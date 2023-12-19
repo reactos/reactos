@@ -344,8 +344,17 @@ public:
         return InternalAllocateTLS();
     }
 
+    /**
+     * @implemented
+     */
+    static TLS* PeekTLS()
+    {
+        return (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
+    }
+
     static TLS* InternalAllocateTLS();
     static BOOL InternalDestroyTLS();
+
 };
 
 DWORD TLS::s_dwTlsIndex = (DWORD)-1;
@@ -355,7 +364,7 @@ DWORD TLS::s_dwTlsIndex = (DWORD)-1;
  */
 TLS* TLS::InternalAllocateTLS()
 {
-    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (pTLS)
         return pTLS;
 
@@ -382,10 +391,7 @@ TLS* TLS::InternalAllocateTLS()
  */
 BOOL TLS::InternalDestroyTLS()
 {
-    if (s_dwTlsIndex == (DWORD)-1)
-        return FALSE;
-
-    TLS *pTLS = (TLS *)::TlsGetValue(s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (!pTLS)
         return FALSE;
 
@@ -460,7 +466,7 @@ STDMETHODIMP_(ULONG) CicBridge::Release()
  */
 CicBridge::~CicBridge()
 {
-    TLS *pTLS = (TLS *)TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (!pTLS || !pTLS->m_pThreadMgr)
         return;
 
@@ -718,7 +724,7 @@ ImeDestroy(
 {
     TRACE("(%u)\n", uReserved);
 
-    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (pTLS)
         return FALSE;
 
@@ -1009,7 +1015,7 @@ CtfImeDestroyThreadMgr(VOID)
 {
     TRACE("()\n");
 
-    TLS *pTLS = (TLS *)::TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (!pTLS)
         return E_OUTOFMEMORY;
 
@@ -1051,7 +1057,7 @@ CtfImeDestroyInputContext(
 {
     TRACE("(%p)\n", hIMC);
 
-    TLS *pTLS = (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
+    TLS *pTLS = TLS::PeekTLS();
     if (!pTLS || !pTLS->m_pBridge)
         return E_OUTOFMEMORY;
 
