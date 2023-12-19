@@ -159,6 +159,7 @@ typedef struct INPUTCONTEXTDX
 #define INIT_LOGFONT                    0x00000008
 #define INIT_COMPFORM                   0x00000010
 #define INIT_SOFTKBDPOS                 0x00000020
+#define INIT_GUIDMAP                    0x00000040
 
 // bits for INPUTCONTEXTDX.dwChange
 #define INPUTCONTEXTDX_CHANGE_OPEN          0x1

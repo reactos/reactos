@@ -23,6 +23,7 @@
 #include <cicero/cicbase.h>
 #include <cicero/osinfo.h>
 #include <cicero/CModulePath.h>
+#include <cicero/imclock.h>
 
 #include <wine/debug.h>
 
