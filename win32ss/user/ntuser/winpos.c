@@ -3825,10 +3825,9 @@ HWND APIENTRY
 NtUserWindowFromPoint(LONG X, LONG Y)
 {
    POINT pt;
-   HWND Ret;
-   PWND DesktopWindow = NULL, Window = NULL;
+   HWND Ret = NULL;
+   PWND DesktopWindow, Window;
    USHORT hittest;
-   DECLARE_RETURN(HWND);
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserWindowFromPoint\n");
@@ -3847,23 +3846,17 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 
       //pti = PsGetCurrentThreadWin32Thread();
       Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest, FALSE);
-
       if (Window)
       {
          Ret = UserHMGetHandle(Window);
-
-         RETURN( Ret);
       }
+
+      UserDerefObjectCo(DesktopWindow);
    }
 
-   RETURN( NULL);
-
-CLEANUP:
-   if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
-
-   TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);
+   TRACE("Leave NtUserWindowFromPoint, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /* EOF */
