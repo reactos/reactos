@@ -1741,12 +1741,12 @@ co_IntSendMessageWithCallBack(HWND hWnd,
                               ULONG_PTR *uResult)
 {
     ULONG_PTR Result;
-    PWND Window = NULL;
+    PWND Window;
     PMSGMEMORY MsgMemoryEntry;
     INT lParamBufferSize;
     LPARAM lParamPacked;
     PTHREADINFO Win32Thread, ptiSendTo = NULL;
-    DECLARE_RETURN(LRESULT);
+    LRESULT Ret = FALSE;
     USER_REFERENCE_ENTRY Ref;
     PUSER_SENT_MESSAGE Message;
     BOOL DoCallBack = TRUE;
@@ -1754,7 +1754,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     if (!(Window = UserGetWindowObject(hWnd)))
     {
         TRACE("SendMessageWithCallBack: Invalid handle 0x%p\n",hWnd);
-        RETURN(FALSE);
+        return FALSE;
     }
 
     UserRefObjectCo(Window, &Ref);
@@ -1763,25 +1763,26 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     {
         /* FIXME: last error? */
         ERR("Attempted to send message to window %p that is being destroyed\n", hWnd);
-        RETURN(FALSE);
+        goto Cleanup;
     }
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
     if (Win32Thread == NULL || Win32Thread->TIF_flags & TIF_INCLEANUP)
-        RETURN(FALSE);
+        goto Cleanup;
 
     ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
 
     if (Msg & 0x80000000 &&
         !ptiSendTo)
     {
-        if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN(FALSE);
+        if (Win32Thread->TIF_flags & TIF_INCLEANUP) goto Cleanup;
 
         TRACE("SMWCB: Internal Message\n");
         Result = (ULONG_PTR)handle_internal_message(Window, Msg, wParam, lParam);
         if (uResult) *uResult = Result;
-        RETURN(TRUE);
+        Ret = TRUE;
+        goto Cleanup;
     }
 
     /* See if this message type is present in the table */
@@ -1799,7 +1800,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     if (!NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
     {
         ERR("Failed to pack message parameters\n");
-        RETURN(FALSE);
+        goto Cleanup;
     }
 
     /* If it can be sent now, then send it. */
@@ -1809,7 +1810,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
         {
             UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE);
             /* Never send messages to exiting threads */
-            RETURN(FALSE);
+            goto Cleanup;
         }
 
         IntCallWndProc(Window, hWnd, Msg, wParam, lParam);
@@ -1862,13 +1863,14 @@ co_IntSendMessageWithCallBack(HWND hWnd,
         {
             ERR("Failed to unpack message parameters\n");
         }
-        RETURN(TRUE);
+        Ret = TRUE;
+        goto Cleanup;
     }
 
     if(!(Message = AllocateUserMessage(FALSE)))
     {
         ERR("Failed to allocate message\n");
-        RETURN(FALSE);
+        goto Cleanup;
     }
 
     Message->Msg.hwnd = hWnd;
@@ -1894,11 +1896,11 @@ co_IntSendMessageWithCallBack(HWND hWnd,
         InsertTailList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
     MsqWakeQueue(ptiSendTo, QS_SENDMESSAGE, TRUE);
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    if (Window) UserDerefObjectCo(Window);
-    END_CLEANUP;
+Cleanup:
+    UserDerefObjectCo(Window);
+    return Ret;
 }
 
 #if 0
