@@ -578,8 +578,7 @@ NtUserScrollWindowEx(
    LPRECT prcUnsafeUpdate,
    UINT flags)
 {
-   DECLARE_RETURN(DWORD);
-   INT Result;
+   DWORD Result = ERROR;
    NTSTATUS Status = STATUS_SUCCESS;
    PWND Window = NULL;
    RECTL rcScroll, rcClip, rcUpdate;
@@ -592,7 +591,7 @@ NtUserScrollWindowEx(
    if (!Window || !IntIsWindowDrawable(Window))
    {
       Window = NULL; /* prevent deref at cleanup */
-      RETURN(ERROR);
+      goto Cleanup;
    }
    UserRefObjectCo(Window, &Ref);
 
@@ -619,7 +618,7 @@ NtUserScrollWindowEx(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(ERROR);
+      goto Cleanup;
    }
 
    Result = IntScrollWindowEx(Window,
@@ -647,19 +646,17 @@ NtUserScrollWindowEx(
       if (!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         RETURN(ERROR);
+         Result = ERROR;
       }
    }
 
-   RETURN(Result);
-
-CLEANUP:
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserScrollWindowEx, ret=%lu\n",_ret_);
+   TRACE("Leave NtUserScrollWindowEx, ret=%lu\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 /* EOF */
