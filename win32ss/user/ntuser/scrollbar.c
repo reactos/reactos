@@ -1337,14 +1337,14 @@ NtUserSetScrollInfo(
    PWND Window = NULL;
    NTSTATUS Status;
    SCROLLINFO ScrollInfo;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = 0;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      RETURN(0);
+      goto Cleanup;
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1352,18 +1352,18 @@ NtUserSetScrollInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(0);
+      goto Cleanup;
    }
 
-   RETURN(co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw));
+   Ret = co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw);
 
-CLEANUP:
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", _ret_);
+   TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD APIENTRY
