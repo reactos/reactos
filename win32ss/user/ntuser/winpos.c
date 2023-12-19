@@ -3512,9 +3512,8 @@ NtUserSetWindowPos(
    int cy,
    UINT uFlags)
 {
-   DECLARE_RETURN(BOOL);
    PWND Window, pWndIA;
-   BOOL ret;
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPos\n");
@@ -3524,7 +3523,7 @@ NtUserSetWindowPos(
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       ERR("NtUserSetWindowPos bad window handle!\n");
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if ( hWndInsertAfter != HWND_TOP &&
@@ -3536,7 +3535,7 @@ NtUserSetWindowPos(
             UserIsDesktopWindow(pWndIA) || UserIsMessageWindow(pWndIA))
       {
          ERR("NtUserSetWindowPos bad insert window handle!\n");
-         RETURN(FALSE);
+         goto Exit;
       }
    }
 
@@ -3560,12 +3559,10 @@ NtUserSetWindowPos(
    ret = co_WinPosSetWindowPos(Window, hWndInsertAfter, X, Y, cx, cy, uFlags);
    UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPos, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPos, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
