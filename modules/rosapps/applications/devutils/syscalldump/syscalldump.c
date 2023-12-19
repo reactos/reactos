@@ -39,9 +39,9 @@ ImageSymToVa(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name)
 	}
 #if defined(__GNUC__) && \
 	(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40400)
-	printf("looking up adress for %s: 0x%llx\n", Name, pSym->Address);
+	printf("looking up address for %s: 0x%llx\n", Name, pSym->Address);
 #else
-	printf("looking up adress for %s: 0x%I64x\n", Name, pSym->Address);
+	printf("looking up address for %s: 0x%I64x\n", Name, pSym->Address);
 #endif
 
 	NtHeaders = ImageNtHeader(pModule);
@@ -160,7 +160,7 @@ cont:
 
 	if (!pW32pServiceTable || !pW32pServiceLimit || !pW32pArgumentTable)
 	{
-		printf("Couldn't find adress!\n");
+		printf("Couldn't find address!\n");
 		goto cleanup;
 	}
 

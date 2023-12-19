@@ -98,7 +98,7 @@ struct __basic_iostring : public basic_string<_CharT, char_traits<_CharT>, __ios
   /*
    * A consequence of the non standard conformant allocator is that a string using it
    * must always be presized to the allocator static buffer size because the basic_string implementation
-   * do not manage an allocator returning always the same memory adress as long as the
+   * do not manage an allocator returning always the same memory address as long as the
    * requested memory block size is under a certain value.
    */
   typedef __basic_iostring<_CharT> _Self;

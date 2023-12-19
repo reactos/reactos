@@ -183,7 +183,7 @@ typedef enum _TIMER_DV
 } TIMER_DV;
 
 #include <pshpack1.h>
-typedef union _APIC_BASE_ADRESS_REGISTER
+typedef union _APIC_BASE_ADDRESS_REGISTER
 {
     UINT64 LongLong;
     struct
@@ -195,7 +195,7 @@ typedef union _APIC_BASE_ADRESS_REGISTER
         UINT64 BaseAddress:40;
         UINT64 ReservedMBZ:12;
     };
-} APIC_BASE_ADRESS_REGISTER;
+} APIC_BASE_ADDRESS_REGISTER;
 
 typedef union _APIC_SPURIOUS_INERRUPT_REGISTER
 {

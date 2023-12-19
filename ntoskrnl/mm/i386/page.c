@@ -904,7 +904,7 @@ MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
     MiMakePdeExistAndMakeValid(MiAddressToPde(Address), Process, MM_NOIRQL);
 
     PointerPte = MiAddressToPte(Address);
-    // We shouldnl't set dirty bit on non-mapped adresses
+    // We shouldnl't set dirty bit on non-mapped addresses
     if (!PointerPte->u.Hard.Valid && (FlagOn(PointerPte->u.Long, 0x800) || (PointerPte->u.Hard.PageFrameNumber == 0)))
     {
         DPRINT1("Invalid Pte %lx\n", PointerPte->u.Long);

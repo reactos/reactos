@@ -346,7 +346,7 @@ MmFreeMemoryArea(
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
 #endif
 
-            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
+            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAddressSpace) */
             ASSERT(MemoryArea->VadNode.u.VadFlags.Spare != 0);
             if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
             {
