@@ -101,7 +101,7 @@ CicInputContext::GetGuidAtom(
     _In_ DWORD dwUnknown,
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
-    InternalIMCCLock<CTFIMECONTEXT> imeContext(imcLock.m_pIC->hCompStr);
+    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
 
     HRESULT hr = imeContext.m_hr;
     if (!imeContext)
@@ -809,17 +809,17 @@ CtfImeGetGuidAtom(
     if (FAILED(hr))
         return hr;
 
-    InternalIMCCLock<CTFIMECONTEXT> imccLock(imcLock.m_pIC->hCtfImeContext);
+    IMCCLock<CTFIMECONTEXT> imccLock(imcLock.get().hCtfImeContext);
     hr = imccLock.m_hr;
     if (!imccLock)
         hr = E_FAIL;
     if (FAILED(hr))
         return hr;
 
-    if (!imccLock.m_pIMCC->m_pCicIC)
+    if (!imccLock.get().m_pCicIC)
         return E_OUTOFMEMORY;
 
-    hr = imccLock.m_pIMCC->m_pCicIC->GetGuidAtom(imcLock, dwUnknown, pdwGuidAtom);
+    hr = imccLock.get().m_pCicIC->GetGuidAtom(imcLock, dwUnknown, pdwGuidAtom);
     return hr;
 }
 
@@ -842,7 +842,7 @@ CtfImeIsGuidMapEnable(
     if (!imcLock)
         hr = E_FAIL;
     if (SUCCEEDED(hr))
-        ret = !!(imcLock.m_pIC->fdwInit & INIT_GUIDMAP);
+        ret = !!(imcLock.get().fdwInit & INIT_GUIDMAP);
 
     return ret;
 }

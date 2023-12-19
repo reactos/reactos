@@ -7,20 +7,22 @@
 
 #pragma once
 
-// class _IMCCLock<T_DATA>;
-// class InternalIMCCLock<T_DATA>;
+// class IMCCLOCK<T_DATA>;
+// class IMCCLock<T_DATA>;
 // class _IMCLock;
 // class IMCLock;
 
 template <typename T_DATA>
-class _IMCCLock
+class IMCCLOCK
 {
-public:
+protected:
     T_DATA *m_pIMCC;
+
+public:
     HIMCC m_hIMCC;
     HRESULT m_hr;
 
-    _IMCCLock(HIMCC hIMCC)
+    IMCCLOCK(HIMCC hIMCC)
     {
         m_pIMCC = NULL;
         m_hr = S_OK;
@@ -29,15 +31,15 @@ public:
 };
 
 template <typename T_DATA>
-class InternalIMCCLock : public _IMCCLock<T_DATA>
+class IMCCLock : public IMCCLOCK<T_DATA>
 {
 public:
-    InternalIMCCLock(HIMCC hIMCC) : _IMCCLock<T_DATA>(hIMCC)
+    IMCCLock(HIMCC hIMCC) : IMCCLOCK<T_DATA>(hIMCC)
     {
         if (hIMCC)
             _LockIMCC(this->m_hIMCC, &this->m_pIMCC);
     }
-    ~InternalIMCCLock()
+    ~IMCCLock()
     {
         if (this->m_pIMCC)
             _UnlockIMCC(this->m_hIMCC);
@@ -45,6 +47,10 @@ public:
     operator T_DATA*() const
     {
         return this->m_pIMCC;
+    }
+    T_DATA& get() const
+    {
+        return *this->m_pIMCC;
     }
 
 protected:
@@ -63,15 +69,17 @@ protected:
     }
 };
 
-class _IMCLock
+class IMCLOCK
 {
-public:
+protected:
     LPINPUTCONTEXTDX m_pIC;
+
+public:
     HIMC m_hIMC;
     HRESULT m_hr;
     DWORD m_dw3;
 
-    _IMCLock(HIMC hIMC)
+    IMCLOCK(HIMC hIMC)
     {
         m_pIC = NULL;
         m_hIMC = hIMC;
@@ -85,10 +93,10 @@ public:
     }
 };
 
-class IMCLock : public _IMCLock
+class IMCLock : public IMCLOCK
 {
 public:
-    IMCLock(HIMC hIMC) : _IMCLock(hIMC)
+    IMCLock(HIMC hIMC) : IMCLOCK(hIMC)
     {
         m_hr = _LockIMC(hIMC, &m_pIC);
     }
@@ -111,11 +119,11 @@ public:
         if (ImmGetIMCCSize(m_pIC->hCompStr) < sizeof(COMPOSITIONSTRING))
             return FALSE;
 
-        InternalIMCCLock<COMPOSITIONSTRING> imccLock(m_pIC->hCompStr);
+        IMCCLock<COMPOSITIONSTRING> imccLock(m_pIC->hCompStr);
         if (!imccLock)
             return FALSE;
 
-        return imccLock.m_pIMCC->dwCompStrLen > 0;
+        return imccLock.get().dwCompStrLen > 0;
     }
 
     BOOL UseVerticalCompWindow() const
@@ -126,6 +134,10 @@ public:
     operator INPUTCONTEXTDX*() const
     {
         return m_pIC;
+    }
+    INPUTCONTEXTDX& get() const
+    {
+        return *m_pIC;
     }
 
 protected:
