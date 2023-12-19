@@ -3789,8 +3789,7 @@ BOOL APIENTRY
 NtUserShowWindow(HWND hWnd, LONG nCmdShow)
 {
    PWND Window;
-   BOOL ret;
-   DECLARE_RETURN(BOOL);
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowWindow hWnd %p SW_ %d\n",hWnd, nCmdShow);
@@ -3799,25 +3798,23 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if ( nCmdShow > SW_MAX || Window->state2 & WNDS2_INDESTROY)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    UserRefObjectCo(Window, &Ref);
    ret = co_WinPosShowWindow(Window, nCmdShow);
    UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowWindow, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowWindow, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 
