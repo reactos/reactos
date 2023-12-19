@@ -2001,18 +2001,17 @@ NtUserRedrawWindow(
 {
    RECTL SafeUpdateRect;
    PWND Wnd;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status = STATUS_SUCCESS;
    PREGION RgnUpdate = NULL;
-   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if (lprcUpdate)
@@ -2030,7 +2029,7 @@ NtUserRedrawWindow(
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(RtlNtStatusToDosError(Status));
-         RETURN( FALSE);
+         goto Exit;
       }
    }
 
@@ -2040,7 +2039,7 @@ NtUserRedrawWindow(
    {
       /* RedrawWindow fails only in case that flags are invalid */
       EngSetLastError(ERROR_INVALID_FLAGS);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    /* We can't hold lock on GDI objects while doing roundtrips to user mode,
@@ -2052,7 +2051,7 @@ NtUserRedrawWindow(
        if (!RgnUpdate)
        {
            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-           RETURN(FALSE);
+           goto Exit;
        }
        REGION_UnlockRgn(RgnUpdate);
    }
@@ -2070,12 +2069,10 @@ NtUserRedrawWindow(
 
    UserDerefObjectCo(Wnd);
 
-   RETURN( Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserRedrawWindow, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
