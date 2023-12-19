@@ -1248,19 +1248,19 @@ NtUserEnableScrollBar(
    PWND Window = NULL;
    PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
    BOOL Chg = FALSE;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      RETURN(FALSE);
+      goto Cleanup;
 
    UserRefObjectCo(Window, &Ref);
 
    if (!co_IntCreateScrollBars(Window))
-      RETURN(FALSE);
+      goto Cleanup;
 
    OrigArrows = Window->pSBInfo->WSBflags;
    Window->pSBInfo->WSBflags = wArrows;
@@ -1270,14 +1270,15 @@ NtUserEnableScrollBar(
       if ((wArrows == ESB_DISABLE_BOTH || wArrows == ESB_ENABLE_BOTH))
          IntEnableWindow(hWnd, (wArrows == ESB_ENABLE_BOTH));
 
-      RETURN(TRUE);
+      Ret = TRUE;
+      goto Cleanup;
    }
 
    if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %u\n", wSBflags);
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
    switch(wSBflags)
@@ -1292,7 +1293,7 @@ NtUserEnableScrollBar(
          InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
          break;
       default:
-         RETURN(FALSE);
+         goto Cleanup;
    }
 
    if(InfoV)
@@ -1305,17 +1306,24 @@ NtUserEnableScrollBar(
 // Done in user32:
 //   SCROLL_RefreshScrollBar(hwnd, nBar, TRUE, TRUE);
 
-   RETURN(Chg);
-   if (OrigArrows == wArrows) RETURN(FALSE);
-   RETURN(TRUE);
+   Ret = Chg;
+   goto Cleanup; // FIXME
 
-CLEANUP:
+   if (OrigArrows == wArrows)
+   {
+      Ret = FALSE;
+      goto Cleanup;
+   }
+
+   Ret = TRUE;
+
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserEnableScrollBar, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEnableScrollBar, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD
