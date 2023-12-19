@@ -1187,9 +1187,8 @@ NtUserSBGetParms(
 {
    PWND Window;
    SCROLLINFO psi;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    SBDATA SBDataSafe;
-   DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserGetScrollInfo\n");
@@ -1205,14 +1204,14 @@ NtUserSBGetParms(
    {
       ERR("NtUserGetScrollInfo Failed size\n");
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN(FALSE));
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       ERR("NtUserGetScrollInfo Bad window\n");
-      RETURN(FALSE);
+      goto Exit;
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1227,16 +1226,15 @@ NtUserSBGetParms(
    {
       ERR("NtUserGetScrollInfo Failed copy to user\n");
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN(FALSE));
+      Ret = FALSE;
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetScrollInfo, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetScrollInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
