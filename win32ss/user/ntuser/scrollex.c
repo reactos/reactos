@@ -481,7 +481,7 @@ NtUserScrollDC(
    HRGN hrgnUpdate,
    LPRECT prcUnsafeUpdate)
 {
-   DECLARE_RETURN(DWORD);
+   BOOL Ret = FALSE;
    DWORD Result;
    NTSTATUS Status = STATUS_SUCCESS;
    RECTL rcScroll, rcClip, rcUpdate;
@@ -515,7 +515,7 @@ NtUserScrollDC(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    Result = UserScrollDC( hDC,
@@ -529,7 +529,7 @@ NtUserScrollDC(
    if(Result == ERROR)
    {
       /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if (prcUnsafeUpdate)
@@ -548,16 +548,16 @@ NtUserScrollDC(
       {
          /* FIXME: SetLastError? */
          /* FIXME: correct? We have already scrolled! */
-         RETURN(FALSE);
+         goto Exit;
       }
    }
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserScrollDC, ret=%lu\n",_ret_);
+Exit:
+   TRACE("Leave NtUserScrollDC, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
