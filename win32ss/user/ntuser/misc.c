@@ -539,7 +539,6 @@ NtUserGetGuiResources(
    PPROCESSINFO W32Process;
    NTSTATUS Status;
    DWORD Ret = 0;
-   DECLARE_RETURN(DWORD);
 
    TRACE("Enter NtUserGetGuiResources\n");
    UserEnterShared();
@@ -554,7 +553,7 @@ NtUserGetGuiResources(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( 0);
+      goto Exit;
    }
 
    W32Process = (PPROCESSINFO)Process->Win32Process;
@@ -562,7 +561,7 @@ NtUserGetGuiResources(
    {
       ObDereferenceObject(Process);
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( 0);
+      goto Exit;
    }
 
    switch(uiFlags)
@@ -586,12 +585,10 @@ NtUserGetGuiResources(
 
    ObDereferenceObject(Process);
 
-   RETURN( Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetGuiResources, ret=%lu\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetGuiResources, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 VOID FASTCALL
