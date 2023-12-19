@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Du kan erhålla en IP-adress automatiskt om ditt nätverk stödjer detta. Annars måste du kontakta nätverksadministratören för att få de korrekta inställningarna.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Erhåll en IP-adress automatiskt", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Använd följande IP-adress:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "&Använd följande IP-adress:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &A
     LTEXT "IP-adress:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Nätmask:", -1, 14, 90, 135, 8
@@ -17,12 +17,12 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Erhåll adress till DNS-server automatiskt", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Använd följande adress till DNS-server:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    CONTROL "&Använd följande adress till DNS-server:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &A
     LTEXT "Önskad DNS-server:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Alternativ DNS-server:", -1, 14, 176, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
-    PUSHBUTTON "&Avancerat", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Avancerat", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP //FIXME: accelerator collision &A
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 216

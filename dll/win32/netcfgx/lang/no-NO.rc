@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &B
     LTEXT "IP addresse:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Subnet maske:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &B
     LTEXT "Forvalgt DNS server:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Alternativ DNS server:", -1, 14, 176, 135, 8
@@ -76,22 +76,22 @@ BEGIN
     LTEXT "D&NS server addresser, i system etter bruk:", -1, 5, 5, 180, 12
     PUSHBUTTON "Opp", IDC_DNSADDRUP, 190, 18, 50, 14, WS_TABSTOP
     PUSHBUTTON "Ned", IDC_DNSADDRDOWN, 190, 35, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Legg til...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rediger...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Legg til...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &L
+    PUSHBUTTON "&Rediger...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &R
     PUSHBUTTON "&Fjern", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP
     LTEXT "Følgende tre innstillinger er brukt til alle tilkoblinger med TCP/IP aktivert. For beslutning av ukvalifisert navn:", -1, 5, 70, 220, 24
     CONTROL "Legg til &primær og tilkobling spesifikt DNS suffikser", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
-    CHECKBOX "Legg til forelder  suffi&kser for primær DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Legg til forelder suffi&kser for primær DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "Vis d&isse DNS suffikser (i system):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 115, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "Opp", IDC_DNSSUFFIXUP, 190, 128, 50, 14, WS_TABSTOP
     PUSHBUTTON "Ned", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Legg til...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rediger...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Legg til...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &L
+    PUSHBUTTON "&Rediger...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &R
     PUSHBUTTON "F&jern", IDC_DNSSUFFIXDEL, 135, 163, 50, 14, WS_TABSTOP
     LTEXT "DNS &suffiks for denne tilkoblingen:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
-    CHECKBOX "&Register denne tilkoblings addressen i DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Register denne tilkoblings addressen i DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP //FIXME: accelerator collision &R
     CHECKBOX "&Bruk denne tilkoblingens DNS suffiks i DNS registrasjon", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 

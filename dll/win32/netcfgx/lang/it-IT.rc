@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti è necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Ottieni automaticamente l'indirizzo IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &U
     LTEXT "Indirizzo IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Subnet mask:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Ottieni automaticamente l'indirizzo dei server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &G
     LTEXT "Server DNS preferito:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Server DNS alternativo:", -1, 14, 176, 135, 8
@@ -76,9 +76,9 @@ BEGIN
     LTEXT "Indirizzi D&NS server in ordine di utilizzo:", -1, 5, 5, 180, 12
     PUSHBUTTON "&Su", IDC_DNSADDRUP, 190, 18, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Giù", IDC_DNSADDRDOWN, 190, 35, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Aggiungi...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifica...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rimuovi", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Aggiungi...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &A
+    PUSHBUTTON "&Modifica...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &M
+    PUSHBUTTON "&Rimuovi", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &R
     LTEXT "Le tre impostazioni seguenti sono applicate a tutte le connessioni dotate di TCP/IP abilitato. Per la risoluzione di nomi non qualificati:", -1, 5, 70, 220, 24
     CONTROL "Aggiungere suffissi DNS principali e specifici della connessione", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
     CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -86,12 +86,12 @@ BEGIN
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "Su", IDC_DNSSUFFIXUP, 190, 128, 50, 14, WS_TABSTOP
     PUSHBUTTON "Giù", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Aggiungi...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifica...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Aggiungi...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &A
+    PUSHBUTTON "&Modifica...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &M
     PUSHBUTTON "Rimuovi", IDC_DNSSUFFIXDEL, 135, 163, 50, 14, WS_TABSTOP
     LTEXT "Suffisso DNS per questa connessione:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
-    CHECKBOX "&Registrare nel DNS gli indirizzi di questa connessione", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Registrare nel DNS gli indirizzi di questa connessione", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP //FIXME: accelerator collision &R
     CHECKBOX "&Usare i suffissi DNS di questa connessione nella registrazione DNS", IDC_USESUFFIX, 15, 207, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
