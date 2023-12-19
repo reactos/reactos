@@ -1144,8 +1144,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    NTSTATUS Status;
    SCROLLBARINFO sbi;
    PWND Window;
-   BOOL Ret;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserGetScrollBarInfo\n");
@@ -1155,11 +1154,11 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    if(!NT_SUCCESS(Status) || (sbi.cbSize != sizeof(SCROLLBARINFO)))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      RETURN(FALSE);
+      goto Exit;
 
    UserRefObjectCo(Window, &Ref);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
@@ -1172,12 +1171,10 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       Ret = FALSE;
    }
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetScrollBarInfo, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetScrollBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
