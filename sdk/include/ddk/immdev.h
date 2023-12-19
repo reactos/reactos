@@ -149,7 +149,7 @@ typedef struct INPUTCONTEXTDX
     DWORD dwUnknown2;
     struct IME_STATE *pState;   // +0x154
     DWORD dwChange;             // +0x158
-    DWORD dwUnknown5;
+    HIMCC hCtfImeContext;
 } INPUTCONTEXTDX, *PINPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 // bits of fdwInit of INPUTCONTEXT
