@@ -16,7 +16,9 @@
 #include <windows.h>
 #include <imm.h>
 #include <ddk/immdev.h>
+#include <cguid.h>
 #include <msctf.h>
+#include <ctffunc.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 

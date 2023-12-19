@@ -83,7 +83,7 @@ IsInteractiveUserLogon(VOID)
 }
 
 /* FIXME */
-class CicInputContext : public IUnknown
+class CicInputContext : public ITfContextOwnerCompositionSink
 {
     LONG m_cRefs;
 public:
@@ -95,9 +95,15 @@ public:
     {
     }
 
+    // IUnknown interface
     STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfContextOwnerCompositionSink interface
+    STDMETHODIMP OnStartComposition(ITfCompositionView *pComposition, BOOL *pfOk) override;
+    STDMETHODIMP OnUpdateComposition(ITfCompositionView *pComposition, ITfRange *pRangeNew) override;
+    STDMETHODIMP OnEndComposition(ITfCompositionView *pComposition) override;
 
     HRESULT
     GetGuidAtom(
@@ -150,6 +156,38 @@ STDMETHODIMP_(ULONG) CicInputContext::Release()
         return 0;
     }
     return m_cRefs;
+}
+
+/**
+ * @unimplemented
+ */
+STDMETHODIMP
+CicInputContext::OnStartComposition(
+    ITfCompositionView *pComposition,
+    BOOL *pfOk)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+STDMETHODIMP
+CicInputContext::OnUpdateComposition(
+    ITfCompositionView *pComposition,
+    ITfRange *pRangeNew)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+STDMETHODIMP
+CicInputContext::OnEndComposition(
+    ITfCompositionView *pComposition)
+{
+    return E_NOTIMPL;
 }
 
 /**
@@ -291,11 +329,15 @@ public:
     HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
     HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
+
+    HRESULT ConfigureGeneral(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd);
+    HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
 };
 
 /* FIXME */
 struct CicProfile : IUnknown
 {
+    HRESULT GetActiveLanguageProfile(HKL hKL, REFGUID rguid, TF_LANGUAGEPROFILE *pProfile);
 };
 
 class TLS
@@ -589,6 +631,112 @@ STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
     return S_OK;
 }
 
+HRESULT
+CicBridge::ConfigureGeneral(
+    TLS* pTLS,
+    ITfThreadMgr *pThreadMgr,
+    HKL hKL,
+    HWND hWnd)
+{
+    CicProfile *pProfile = pTLS->m_pProfile;
+    if (!pProfile)
+        return E_OUTOFMEMORY;
+
+    TF_LANGUAGEPROFILE profile;
+    HRESULT hr = pProfile->GetActiveLanguageProfile(hKL, GUID_TFCAT_TIP_KEYBOARD, &profile);
+    if (FAILED(hr))
+        return hr;
+
+    ITfFunctionProvider *pProvider = NULL;
+    hr = pThreadMgr->GetFunctionProvider(profile.clsid, &pProvider);
+    if (FAILED(hr))
+        return hr;
+
+    ITfFnConfigure *pFnConfigure = NULL;
+    hr = pProvider->GetFunction(GUID_NULL, IID_ITfFnConfigure, (IUnknown**)&pFnConfigure);
+    if (FAILED(hr))
+    {
+        pProvider->Release();
+        return hr;
+    }
+
+    hr = pFnConfigure->Show(hWnd, profile.langid, profile.guidProfile);
+
+    pFnConfigure->Release();
+    pProvider->Release();
+    return hr;
+}
+
+HRESULT
+CicBridge::ConfigureRegisterWord(
+    TLS* pTLS,
+    ITfThreadMgr *pThreadMgr,
+    HKL hKL,
+    HWND hWnd,
+    LPVOID lpData)
+{
+    CicProfile *pProfile = pTLS->m_pProfile;
+    if (!pProfile)
+        return E_OUTOFMEMORY;
+
+    TF_LANGUAGEPROFILE profile;
+    HRESULT hr = pProfile->GetActiveLanguageProfile(hKL, GUID_TFCAT_TIP_KEYBOARD, &profile);
+    if (FAILED(hr))
+        return hr;
+
+    ITfFunctionProvider *pProvider;
+    hr = pThreadMgr->GetFunctionProvider(profile.clsid, &pProvider);
+    if (FAILED(hr))
+        return hr;
+
+    ITfFnConfigureRegisterWord *pFunction;
+    hr = pProvider->GetFunction(GUID_NULL, IID_ITfFnConfigureRegisterWord, (IUnknown**)pFunction);
+    if (FAILED(hr))
+    {
+        pProvider->Release();
+        return hr;
+    }
+
+    REGISTERWORDW* pRegWord = (REGISTERWORDW*)lpData;
+    if (pRegWord)
+    {
+        if (pRegWord->lpWord)
+        {
+            hr = E_OUTOFMEMORY;
+            BSTR bstrWord = SysAllocString(pRegWord->lpWord);
+            if (bstrWord)
+            {
+                hr = pFunction->Show(hWnd, profile.langid, profile.guidProfile, bstrWord);
+                SysFreeString(bstrWord);
+            }
+        }
+        else
+        {
+            hr = pFunction->Show(hWnd, profile.langid, profile.guidProfile, NULL);
+        }
+    }
+
+    pProvider->Release();
+    pFunction->Release();
+    return hr;
+}
+
+/***********************************************************************
+ *      CicProfile
+ */
+
+/**
+ * @unimplemented
+ */
+HRESULT
+CicProfile::GetActiveLanguageProfile(
+    HKL hKL,
+    REFGUID rguid,
+    TF_LANGUAGEPROFILE *pProfile)
+{
+    return E_NOTIMPL;
+}
+
 /***********************************************************************
  *      ImeInquire (MSCTFIME.@)
  *
@@ -709,7 +857,21 @@ ImeConfigure(
     _In_ DWORD dwMode,
     _Inout_opt_ LPVOID lpData)
 {
-    FIXME("stub:(%p, %p, %lu, %p)\n", hKL, hWnd, dwMode, lpData);
+    TRACE("(%p, %p, %lu, %p)\n", hKL, hWnd, dwMode, lpData);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge || !pTLS->m_pThreadMgr)
+        return FALSE;
+
+    CicBridge *pBridge = pTLS->m_pBridge;
+    ITfThreadMgr *pThreadMgr = pTLS->m_pThreadMgr;
+
+    if (dwMode & 1)
+        return (pBridge->ConfigureGeneral(pTLS, pThreadMgr, hKL, hWnd) == S_OK);
+
+    if (dwMode & 2)
+        return (pBridge->ConfigureRegisterWord(pTLS, pThreadMgr, hKL, hWnd, lpData) == S_OK);
+
     return FALSE;
 }
 
