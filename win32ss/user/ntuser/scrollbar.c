@@ -1381,7 +1381,7 @@ NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
    {
       UserRefObjectCo(Window, &Ref);
       ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
-                                            (nBar == SB_HORZ) ? 0 : bShow);
+                                               (nBar == SB_HORZ) ? 0 : bShow);
       UserDerefObjectCo(Window);
    }
 

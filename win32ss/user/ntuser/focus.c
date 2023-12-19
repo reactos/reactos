@@ -1447,7 +1447,7 @@ IntGetCapture(VOID)
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   Ret = (ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : NULL) : NULL);
+   Ret = ((ThreadQueue && ThreadQueue->spwndCapture) ? UserHMGetHandle(ThreadQueue->spwndCapture) : NULL);
 
    TRACE("Leave IntGetCapture, ret=%p\n", Ret);
    return Ret;
@@ -1687,7 +1687,7 @@ NtUserSetActiveWindow(HWND hWnd)
       if (Window) UserRefObjectCo(Window, &Ref);
       UserSetActiveWindow(Window);
       if (Window) UserDerefObjectCo(Window);
-      Ret = (hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
+      Ret = ((hWndPrev && IntIsWindow(hWndPrev)) ? hWndPrev : NULL);
    }
 
 Exit:
