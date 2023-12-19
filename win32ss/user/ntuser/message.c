@@ -2162,7 +2162,7 @@ NtUserDragDetect(
     MSG msg;
     RECT rect;
     ULONG wDragWidth, wDragHeight;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("Enter NtUserDragDetect(%p)\n", hWnd);
     UserEnterExclusive();
@@ -2187,7 +2187,7 @@ NtUserDragDetect(
             if ( msg.message == WM_LBUTTONUP )
             {
                 co_UserSetCapture(NULL);
-                RETURN( FALSE);
+                goto Exit;
             }
             if ( msg.message == WM_MOUSEMOVE )
             {
@@ -2197,7 +2197,8 @@ NtUserDragDetect(
                 if( !RECTL_bPointInRect( &rect, tmp.x, tmp.y ) )
                 {
                     co_UserSetCapture(NULL);
-                    RETURN( TRUE);
+                    Ret = TRUE;
+                    goto Exit;
                 }
             }
             if ( msg.message == WM_KEYDOWN )
@@ -2205,7 +2206,8 @@ NtUserDragDetect(
                 if ( msg.wParam == VK_ESCAPE )
                 {
                    co_UserSetCapture(NULL);
-                   RETURN( TRUE);
+                   Ret = TRUE;
+                   goto Exit;
                 }
             }
             if ( msg.message == WM_QUEUESYNC )
@@ -2215,12 +2217,11 @@ NtUserDragDetect(
         }
         co_IntWaitMessage(NULL, 0, 0);
     }
-    RETURN( FALSE);
 
-CLEANUP:
-   TRACE("Leave NtUserDragDetect, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserDragDetect, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL APIENTRY
