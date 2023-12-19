@@ -1654,17 +1654,17 @@ BOOL APIENTRY
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   PWND Window = NULL;
+   PWND Window;
    PAINTSTRUCT Ps;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserEndPaint\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
    UserRefObjectCo(Window, &Ref); // Here for the exception.
@@ -1681,17 +1681,17 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    _SEH2_END
    if (!NT_SUCCESS(Status))
    {
-      RETURN(FALSE);
+      goto Cleanup;
    }
 
-   RETURN(IntEndPaint(Window, &Ps));
+   Ret = IntEndPaint(Window, &Ps);
 
-CLEANUP:
+Cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEndPaint, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
