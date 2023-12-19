@@ -1957,15 +1957,14 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    PWND Window;
    RECTL Rect;
    NTSTATUS Status;
-   BOOL Ret;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetUpdateRect\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    Ret = co_UserGetUpdateRect(Window, &Rect, bErase);
@@ -1976,16 +1975,14 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         RETURN(FALSE);
+         Ret = FALSE;
       }
    }
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetUpdateRect, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
