@@ -1927,26 +1927,21 @@ co_UserGetUpdateRect(PWND Window, PRECT pRect, BOOL bErase)
 INT APIENTRY
 NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 {
-   DECLARE_RETURN(INT);
    PWND Window;
-   INT ret;
+   INT ret = ERROR;
 
    TRACE("Enter NtUserGetUpdateRgn\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   Window = UserGetWindowObject(hWnd);
+   if (Window)
    {
-      RETURN(ERROR);
+      ret = co_UserGetUpdateRgn(Window, hRgn, bErase);
    }
 
-   ret = co_UserGetUpdateRgn(Window, hRgn, bErase);
-
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetUpdateRgn, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
