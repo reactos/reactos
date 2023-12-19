@@ -3634,7 +3634,7 @@ NtUserSetInternalWindowPos(
    PWND Wnd;
    RECT rect;
    POINT pt = {0};
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPlacement\n");
@@ -3643,7 +3643,7 @@ NtUserSetInternalWindowPos(
    if (!(Wnd = UserGetWindowObject(hwnd)) || // FIXME:
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      RETURN( FALSE);
+      goto Exit;
    }
 
    _SEH2_TRY
@@ -3662,7 +3662,7 @@ NtUserSetInternalWindowPos(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN( FALSE));
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
@@ -3685,12 +3685,12 @@ NtUserSetInternalWindowPos(
    UserRefObjectCo(Wnd, &Ref);
    IntSetWindowPlacement(Wnd, &wndpl, flags);
    UserDerefObjectCo(Wnd);
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
