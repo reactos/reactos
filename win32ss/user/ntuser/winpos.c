@@ -3577,8 +3577,7 @@ NtUserSetWindowRgn(
    HRGN hrgnCopy = NULL;
    PWND Window;
    INT flags = (SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
-   BOOLEAN Ret = FALSE;
-   DECLARE_RETURN(INT);
+   INT Ret = 0;
 
    TRACE("Enter NtUserSetWindowRgn\n");
    UserEnterExclusive();
@@ -3586,7 +3585,7 @@ NtUserSetWindowRgn(
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN( 0);
+      goto Exit;
    }
 
    if (hRgn) // The region will be deleted in user32.
@@ -3599,7 +3598,7 @@ NtUserSetWindowRgn(
          NtGdiCombineRgn( hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
-         RETURN( 0);
+         goto Exit;
    }
 
    //// HACK 1 : Work around the lack of supporting DeferWindowPos.
@@ -3612,14 +3611,12 @@ NtUserSetWindowRgn(
        Window->hrgnNewFrame = HRGN_WINDOW;
    }
    //// HACK 2
-   Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
+   Ret = (INT)co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
 
-   RETURN( (INT)Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserSetWindowRgn, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowRgn, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
