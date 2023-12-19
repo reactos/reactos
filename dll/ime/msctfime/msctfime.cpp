@@ -82,15 +82,75 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
-class CicInputContext
+/* FIXME */
+class CicInputContext : public IUnknown
 {
+    LONG m_cRefs;
 public:
+    CicInputContext()
+    {
+        m_cRefs = 1;
+    }
+    virtual ~CicInputContext()
+    {
+    }
+
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
     HRESULT
     GetGuidAtom(
         _Inout_ IMCLock& imcLock,
         _In_ DWORD dwUnknown,
         _Out_opt_ LPDWORD pdwGuidAtom);
+
+    HRESULT DestroyInputContext();
 };
+
+/**
+ * @unimplemented
+ */
+STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    *ppvObj = NULL;
+
+    if (IsEqualIID(riid, IID_ITfContextOwnerCompositionSink))
+    {
+        *ppvObj = (ITfContextOwnerCompositionSink*)this;
+        AddRef();
+        return S_OK;
+    }
+    if (IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicInputContext::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicInputContext::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
 
 /**
  * @unimplemented
@@ -112,6 +172,16 @@ CicInputContext::GetGuidAtom(
 
     // FIXME
     return hr;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT
+CicInputContext::DestroyInputContext()
+{
+    // FIXME
+    return E_NOTIMPL;
 }
 
 /**
@@ -220,6 +290,7 @@ public:
     BOOL UnInitIMMX(TLS *pTLS);
     HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
     HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
+    HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
 };
 
 /* FIXME */
@@ -395,6 +466,47 @@ CicBridge::~CicBridge()
 
     if (SUCCEEDED(DeactivateIMMX(pTLS, pTLS->m_pThreadMgr)))
         UnInitIMMX(pTLS);
+}
+
+/**
+ * @implemented
+ */
+HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
+{
+    IMCLock imcLock(hIMC);
+    HRESULT hr = imcLock.m_hr;
+    if (!imcLock)
+        hr = E_FAIL;
+    if (FAILED(hr))
+        return hr;
+
+    hr = E_FAIL;
+    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (imeContext)
+        hr = imeContext.m_hr;
+
+    if (SUCCEEDED(hr) && !(imeContext.get().m_dwCicFlags & 1))
+    {
+        imeContext.get().m_dwCicFlags |= 1;
+
+        CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+        if (pCicIC)
+        {
+            imeContext.get().m_pCicIC = NULL;
+            hr = pCicIC->DestroyInputContext();
+            pCicIC->Release();
+            imeContext.get().m_pCicIC = NULL;
+        }
+    }
+
+    if (imcLock.get().hCtfImeContext)
+    {
+        ImmDestroyIMCC(imcLock.get().hCtfImeContext);
+        imcLock.get().hCtfImeContext = NULL;
+        hr = S_OK;
+    }
+
+    return hr;
 }
 
 /**
@@ -928,12 +1040,22 @@ CtfImeCreateInputContext(
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *      CtfImeDestroyInputContext (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeDestroyInputContext(
     _In_ HIMC hIMC)
 {
-    FIXME("stub:(%p)\n", hIMC);
-    return E_NOTIMPL;
+    TRACE("(%p)\n", hIMC);
+
+    TLS *pTLS = (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
+    if (!pTLS || !pTLS->m_pBridge)
+        return E_OUTOFMEMORY;
+
+    return pTLS->m_pBridge->DestroyInputContext(pTLS, hIMC);
 }
 
 EXTERN_C HRESULT WINAPI
