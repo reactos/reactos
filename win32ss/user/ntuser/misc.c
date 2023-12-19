@@ -410,8 +410,7 @@ NtUserGetGUIThreadInfo(
    PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
    PTHREADINFO W32Thread, pti;
-
-   DECLARE_RETURN(BOOLEAN);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetGUIThreadInfo\n");
    UserEnterShared();
@@ -420,13 +419,13 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if(SafeGui.cbSize != sizeof(GUITHREADINFO))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
+      goto Exit;
    }
 
    if (idThread)
@@ -439,7 +438,7 @@ NtUserGetGUIThreadInfo(
       if ( !W32Thread )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          RETURN( FALSE);
+          goto Exit;
       }
 
       Desktop = W32Thread->rpdesk;
@@ -448,7 +447,7 @@ NtUserGetGUIThreadInfo(
       if ( !Desktop || Desktop != pti->rpdesk )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          RETURN( FALSE);
+          goto Exit;
       }
 
       if ( W32Thread->MessageQueue )
@@ -465,7 +464,7 @@ NtUserGetGUIThreadInfo(
       if(!MsgQueue)
       {
         EngSetLastError(ERROR_ACCESS_DENIED);
-        RETURN( FALSE);
+        goto Exit;
       }
    }
 
@@ -518,15 +517,15 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit;
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetGUIThreadInfo, ret=%u\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 
