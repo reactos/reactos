@@ -766,14 +766,29 @@ CtfImeGetGuidAtom(
     return E_FAIL;
 }
 
+/***********************************************************************
+ *      CtfImeIsGuidMapEnable (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 CtfImeIsGuidMapEnable(
     _In_ HIMC hIMC)
 {
-    FIXME("stub:(%p)\n", hIMC);
-    return FALSE;
-}
+    TRACE("(%p)\n", hIMC);
 
+    BOOL ret = FALSE;
+    HRESULT hr;
+    IMCLock imcLock(hIMC);
+
+    hr = imcLock.m_hr;
+    if (!imcLock)
+        hr = E_FAIL;
+    if (SUCCEEDED(hr))
+        ret = !!(imcLock.m_pIC->fdwInit & INIT_GUIDMAPENABLED);
+
+    return ret;
+}
 
 /***********************************************************************
  *      CtfImeCreateThreadMgr (MSCTFIME.@)
