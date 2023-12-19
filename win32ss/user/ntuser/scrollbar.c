@@ -1370,27 +1370,24 @@ DWORD APIENTRY
 NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
 {
    PWND Window;
-   DECLARE_RETURN(DWORD);
-   DWORD ret;
+   DWORD ret = 0;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowScrollBar\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-      RETURN(0);
-
-   UserRefObjectCo(Window, &Ref);
-   ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
+   Window = UserGetWindowObject(hWnd);
+   if (Window)
+   {
+      UserRefObjectCo(Window, &Ref);
+      ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
                                             (nBar == SB_HORZ) ? 0 : bShow);
-   UserDerefObjectCo(Window);
+      UserDerefObjectCo(Window);
+   }
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowScrollBar, ret%lu\n", _ret_);
+   TRACE("Leave NtUserShowScrollBar, ret=%lu\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 // Ugly NtUser API
