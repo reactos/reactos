@@ -885,6 +885,11 @@ CtfImeProcessCicHotkey(
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *      CtfImeDispatchDefImeMessage (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C LRESULT WINAPI
 CtfImeDispatchDefImeMessage(
     _In_ HWND hWnd,
