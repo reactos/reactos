@@ -3752,8 +3752,8 @@ BOOL APIENTRY
 NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 {
    PWND Window;
-   BOOL ret;
-   DECLARE_RETURN(BOOL);
+   LRESULT Result;
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowWindowAsync\n");
@@ -3762,26 +3762,24 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN(FALSE);
+      goto Exit;
    }
 
    if ( nCmdShow > SW_MAX )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN(FALSE);
+      goto Exit;
    }
 
    UserRefObjectCo(Window, &Ref);
-   ret = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
+   Result = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
    UserDerefObjectCo(Window);
-   if (-1 == (int) ret || !ret) ret = FALSE;
+   if (Result != -1 && Result != 0) ret = TRUE;
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowWindowAsync, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowWindowAsync, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
