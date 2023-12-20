@@ -147,6 +147,10 @@ KiSystemStartupBootStack(VOID)
     PKPROCESS Process = Thread->ApcState.Process;
     PVOID KernelStack = (PVOID)KeLoaderBlock->KernelStack;
 
+    /* Set Node Data */
+    Prcb->ParentNode = KeNodeBlock[0];
+    Prcb->ParentNode->ProcessorMask |= Prcb->SetMember;
+
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
 
@@ -227,11 +231,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG_PTR PageDirectory[2];
     PVOID DpcStack;
     ULONG i;
-
-    /* Set Node Data */
-    KeNodeBlock[0] = &KiNode0;
-    Prcb->ParentNode = KeNodeBlock[0];
-    KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
     /* Set boot-level flags */
     KeFeatureBits = Prcb->FeatureBits;
