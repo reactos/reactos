@@ -164,6 +164,146 @@ void TFUninitLib_Thread(PLIBTHREAD pLibThread)
     }
 }
 
+HRESULT
+GetCompartment(
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    ITfCompartment **ppComp,
+    BOOL bThread)
+{
+    ITfThreadMgr *pThreadMgr = NULL;
+    ITfCompartmentMgr *pCompMgr = NULL;
+
+    *ppComp = NULL;
+    HRESULT hr;
+    if (bThread)
+    {
+        hr = pUnknown->QueryInterface(IID_ITfThreadMgr, (void **)&pThreadMgr);
+        if (FAILED(hr))
+            return hr;
+
+        hr = pThreadMgr->GetGlobalCompartment(&pCompMgr);
+    }
+    else
+    {
+        hr = pUnknown->QueryInterface(IID_ITfCompartmentMgr, (void **)&pCompMgr);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        if (pCompMgr)
+            hr = pCompMgr->GetCompartment(rguid, ppComp);
+        else
+            hr = E_FAIL;
+    }
+
+    if (pThreadMgr)
+        pThreadMgr->Release();
+
+    return hr;
+}
+
+HRESULT
+SetCompartmentDWORD(
+    TfEditCookie cookie,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    VARTYPE type,
+    BOOL bThread)
+{
+    ITfCompartment *pComp = NULL;
+    HRESULT hr = GetCompartment(pUnknown, rguid, &pComp, bThread);
+    if (FAILED(hr))
+        return hr;
+
+    VARIANT vari;
+    V_I4(&vari) = type;
+    V_VT(&vari) = VT_I4;
+    hr = pComp->SetValue(cookie, &vari);
+    pComp->Release();
+
+    return hr;
+}
+
+HRESULT
+GetCompartmentDWORD(
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    ITfCompartment *pComp,
+    BOOL bThread)
+{
+    HRESULT hr = GetCompartment(pUnknown, rguid, &pComp, bThread);
+    if (FAILED(hr))
+        return hr;
+
+    VARIANT vari;
+    hr = pComp->GetValue(&vari);
+    pComp->Release();
+
+    return hr;
+}
+
+HRESULT
+SetCompartmentUnknown(
+    TfEditCookie cookie,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    IUnknown *pUnknown2)
+{
+    ITfCompartment *pComp = NULL;
+    HRESULT hr = GetCompartment(pUnknown, rguid, &pComp, FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    VARIANT vari;
+    V_UNKNOWN(&vari) = pUnknown2;
+    V_VT(&vari) = VT_UNKNOWN;
+    hr = pComp->SetValue(cookie, &vari);
+    pComp->Release();
+
+    return hr;
+}
+
+HRESULT
+ClearCompartment(
+    TfClientId tid,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    BOOL bThread)
+{
+    ITfCompartmentMgr *pCompMgr = NULL;
+    ITfThreadMgr *pThreadMgr = NULL;
+
+    HRESULT hr;
+    if (bThread)
+    {
+        hr = pUnknown->QueryInterface(IID_ITfThreadMgr, (void **)&pThreadMgr);
+        if (FAILED(hr))
+            return hr;
+
+        hr = pThreadMgr->GetGlobalCompartment(&pCompMgr);
+    }
+    else
+    {
+        hr = pUnknown->QueryInterface(IID_ITfCompartmentMgr, (void **)&pCompMgr);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        hr = E_FAIL;
+        if (pCompMgr)
+        {
+            hr = pCompMgr->ClearCompartment(tid, rguid);
+            pCompMgr->Release();
+        }
+    }
+
+    if (pThreadMgr)
+        pThreadMgr->Release();
+
+    return hr;
+}
+
 /* FIXME */
 class CicInputContext : public ITfContextOwnerCompositionSink
 {
@@ -2155,7 +2295,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 EXTERN_C BOOL WINAPI
 DllMain(
@@ -2182,7 +2322,7 @@ DllMain(
         }
         case DLL_THREAD_DETACH:
         {
-            // FIXME
+            TF_DllDetachInOther();
             CtfImeThreadDetach();
             TLS::InternalDestroyTLS();
             break;
