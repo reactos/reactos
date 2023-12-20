@@ -26,6 +26,9 @@ UINT WM_MSIME_SHOWIMEPAD = 0;
 UINT WM_MSIME_MOUSE = 0;
 UINT WM_MSIME_KEYMAP = 0;
 
+/**
+ * @implemented
+ */
 BOOL IsMsImeMessage(UINT uMsg)
 {
     return (uMsg == WM_MSIME_SERVICE ||
@@ -38,6 +41,33 @@ BOOL IsMsImeMessage(UINT uMsg)
             uMsg == WM_MSIME_SHOWIMEPAD ||
             uMsg == WM_MSIME_MOUSE ||
             uMsg == WM_MSIME_KEYMAP);
+}
+
+/**
+ * @implemented
+ */
+BOOL RegisterMSIMEMessage(VOID)
+{
+    WM_MSIME_SERVICE = RegisterWindowMessageW(L"MSIMEService");
+    WM_MSIME_UIREADY = RegisterWindowMessageW(L"MSIMEUIReady");
+    WM_MSIME_RECONVERTREQUEST = RegisterWindowMessageW(L"MSIMEReconvertRequest");
+    WM_MSIME_RECONVERT = RegisterWindowMessageW(L"MSIMEReconvert");
+    WM_MSIME_DOCUMENTFEED = RegisterWindowMessageW(L"MSIMEDocumentFeed");
+    WM_MSIME_QUERYPOSITION = RegisterWindowMessageW(L"MSIMEQueryPosition");
+    WM_MSIME_MODEBIAS = RegisterWindowMessageW(L"MSIMEModeBias");
+    WM_MSIME_SHOWIMEPAD = RegisterWindowMessageW(L"MSIMEShowImePad");
+    WM_MSIME_MOUSE = RegisterWindowMessageW(L"MSIMEMouseOperation");
+    WM_MSIME_KEYMAP = RegisterWindowMessageW(L"MSIMEKeyMap");
+    return (WM_MSIME_SERVICE &&
+            WM_MSIME_UIREADY &&
+            WM_MSIME_RECONVERTREQUEST &&
+            WM_MSIME_RECONVERT &&
+            WM_MSIME_DOCUMENTFEED &&
+            WM_MSIME_QUERYPOSITION &&
+            WM_MSIME_MODEBIAS &&
+            WM_MSIME_SHOWIMEPAD &&
+            WM_MSIME_MOUSE &&
+            WM_MSIME_KEYMAP);
 }
 
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
@@ -80,6 +110,58 @@ IsInteractiveUserLogon(VOID)
         FreeSid(pSid);
 
     return bOK && IsMember;
+}
+
+typedef struct LIBTHREAD
+{
+    IUnknown *m_pUnknown1;
+    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
+} LIBTHREAD, *PLIBTHREAD;
+
+HRESULT InitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return E_FAIL;
+
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
+
+    //FIXME
+    return E_NOTIMPL;
+}
+
+HRESULT UninitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return E_FAIL;
+
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
+
+    return S_OK;
+}
+
+void TFUninitLib_Thread(PLIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return;
+
+    if (pLibThread->m_pUnknown1)
+    {
+        pLibThread->m_pUnknown1->Release();
+        pLibThread->m_pUnknown1 = NULL;
+    }
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
 }
 
 /* FIXME */
@@ -305,21 +387,222 @@ struct ITfSysHookSink : IUnknown
 
 class TLS;
 
+typedef INT (CALLBACK *FN_INITDOCMGR)(UINT, ITfDocumentMgr *, ITfDocumentMgr *, LPVOID);
+typedef INT (CALLBACK *FN_PUSHPOP)(UINT, ITfContext *, LPVOID);
+
+class CThreadMgrEventSink : public ITfThreadMgrEventSink
+{
+protected:
+    ITfThreadMgr *m_pThreadMgr;
+    DWORD m_dwCookie;
+    FN_INITDOCMGR m_fnInit;
+    FN_PUSHPOP m_fnPushPop;
+    DWORD m_dw;
+    LPVOID m_pCallbackPV;
+    LONG m_cRefs;
+
+public:
+    CThreadMgrEventSink(
+        FN_INITDOCMGR fnInit,
+        FN_PUSHPOP fnPushPop = NULL,
+        LPVOID pvCallbackPV = NULL);
+    virtual ~CThreadMgrEventSink() { }
+
+    void SetCallbackPV(LPVOID pv);
+    HRESULT _Advise(ITfThreadMgr *pThreadMgr);
+    HRESULT _Unadvise();
+
+    // IUnknown interface
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfThreadMgrEventSink interface
+    STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pdim) override;
+    STDMETHODIMP OnUninitDocumentMgr(ITfDocumentMgr *pdim) override;
+    STDMETHODIMP OnSetFocus(ITfDocumentMgr *pdimFocus, ITfDocumentMgr *pdimPrevFocus) override;
+    STDMETHODIMP OnPushContext(ITfContext *pic) override;
+    STDMETHODIMP OnPopContext(ITfContext *pic) override;
+
+    static INT CALLBACK DIMCallback(
+        UINT nCode,
+        ITfDocumentMgr *pDocMgr1,
+        ITfDocumentMgr *pDocMgr2,
+        LPVOID pUserData);
+};
+
+/**
+ * @implemented
+ */
+CThreadMgrEventSink::CThreadMgrEventSink(
+    FN_INITDOCMGR fnInit,
+    FN_PUSHPOP fnPushPop,
+    LPVOID pvCallbackPV)
+{
+    m_fnInit = fnInit;
+    m_fnPushPop = fnPushPop;
+    m_pCallbackPV = pvCallbackPV;
+    m_cRefs = 1;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CThreadMgrEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfThreadMgrEventSink))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+    *ppvObj = NULL;
+    return E_NOINTERFACE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CThreadMgrEventSink::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CThreadMgrEventSink::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+INT CALLBACK
+CThreadMgrEventSink::DIMCallback(
+    UINT nCode,
+    ITfDocumentMgr *pDocMgr1,
+    ITfDocumentMgr *pDocMgr2,
+    LPVOID pUserData)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CThreadMgrEventSink::OnInitDocumentMgr(ITfDocumentMgr *pdim)
+{
+    if (!m_fnInit)
+        return S_OK;
+    return m_fnInit(0, pdim, NULL, m_pCallbackPV);
+}
+
+STDMETHODIMP CThreadMgrEventSink::OnUninitDocumentMgr(ITfDocumentMgr *pdim)
+{
+    if (!m_fnInit)
+        return S_OK;
+    return m_fnInit(1, pdim, NULL, m_pCallbackPV);
+}
+
+STDMETHODIMP
+CThreadMgrEventSink::OnSetFocus(ITfDocumentMgr *pdimFocus, ITfDocumentMgr *pdimPrevFocus)
+{
+    if (!m_fnInit)
+        return S_OK;
+    return m_fnInit(2, pdimFocus, pdimPrevFocus, m_pCallbackPV);
+}
+
+STDMETHODIMP CThreadMgrEventSink::OnPushContext(ITfContext *pic)
+{
+    if (!m_fnPushPop)
+        return S_OK;
+    return m_fnPushPop(3, pic, m_pCallbackPV);
+}
+
+STDMETHODIMP CThreadMgrEventSink::OnPopContext(ITfContext *pic)
+{
+    if (!m_fnPushPop)
+        return S_OK;
+    return m_fnPushPop(4, pic, m_pCallbackPV);
+}
+
+void CThreadMgrEventSink::SetCallbackPV(LPVOID pv)
+{
+    if (!m_pCallbackPV)
+        m_pCallbackPV = pv;
+}
+
+HRESULT CThreadMgrEventSink::_Advise(ITfThreadMgr *pThreadMgr)
+{
+    m_pThreadMgr = NULL;
+
+    HRESULT hr = E_FAIL;
+    ITfSource *pSource = NULL;
+    if (pThreadMgr->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK &&
+        pSource->AdviseSink(IID_ITfThreadMgrEventSink, this, &m_dwCookie) == S_OK)
+    {
+        m_pThreadMgr = pThreadMgr;
+        pThreadMgr->AddRef();
+        hr = S_OK;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+HRESULT CThreadMgrEventSink::_Unadvise()
+{
+    HRESULT hr = E_FAIL;
+    ITfSource *pSource = NULL;
+
+    if (m_pThreadMgr)
+    {
+        if (m_pThreadMgr->QueryInterface(IID_ITfSource, (void **)&pSource) == S_OK &&
+            pSource->UnadviseSink(m_dwCookie) == S_OK)
+        {
+            hr = S_OK;
+        }
+
+        if (pSource)
+            pSource->Release();
+    }
+
+    if (m_pThreadMgr)
+    {
+        m_pThreadMgr->Release();
+        m_pThreadMgr = NULL;
+    }
+
+    return hr;
+}
+
 /* FIXME */
 class CicBridge : public ITfSysHookSink
 {
 protected:
     LONG m_cRefs;
     DWORD m_dwImmxInit;
-    DWORD m_dwUnknown[10];
+    DWORD m_dw[3];
+    ITfKeystrokeMgr *m_pKeystrokeMgr;
+    ITfDocumentMgr *m_pDocMgr;
+    CThreadMgrEventSink *m_pThreadMgrEventSink;
+    TfClientId m_cliendId;
+    LIBTHREAD m_LibThread;
+    DWORD m_dw21;
 
 public:
     CicBridge();
     virtual ~CicBridge();
 
+    // IUnknown interface
     STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfSysHookSink interface
     STDMETHODIMP OnPreFocusDIM(HWND hwnd) override;
     STDMETHODIMP OnSysKeyboardProc(UINT, LONG) override;
     STDMETHODIMP OnSysShellProc(INT, UINT, LONG) override;
@@ -822,13 +1105,13 @@ CicProfile::InitProfileInstance(TLS *pTLS)
 CicBridge::CicBridge()
 {
     m_dwImmxInit &= ~1;
-    m_dwUnknown[0] &= ~1;
-    m_dwUnknown[1] &= ~1;
-    m_dwUnknown[9] &= ~1;
-    m_dwUnknown[3] = 0;
-    m_dwUnknown[4] = 0;
-    m_dwUnknown[5] = 0;
-    m_dwUnknown[6] = 0;
+    m_dw[0] &= ~1;
+    m_dw[1] &= ~1;
+    m_dw21 &= ~1;
+    m_pKeystrokeMgr = NULL;
+    m_pDocMgr = NULL;
+    m_pThreadMgrEventSink = NULL;
+    m_cliendId = 0;
     m_cRefs = 1;
 }
 
@@ -926,14 +1209,6 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
 /**
  * @unimplemented
  */
-HRESULT CicBridge::InitIMMX(TLS *pTLS)
-{
-    return E_NOTIMPL;
-}
-
-/**
- * @unimplemented
- */
 HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
 {
     return E_NOTIMPL;
@@ -948,11 +1223,87 @@ HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
 }
 
 /**
- * @unimplemented
+ * @implemented
+ */
+HRESULT CicBridge::InitIMMX(TLS *pTLS)
+{
+    if (m_dwImmxInit & 1)
+        return S_OK;
+
+    HRESULT hr;
+    if (!pTLS->m_pThreadMgr)
+    {
+        hr = TF_CreateThreadMgr(&pTLS->m_pThreadMgr);
+        if (FAILED(hr))
+            return E_FAIL;
+
+        hr = pTLS->m_pThreadMgr->QueryInterface(IID_ITfThreadMgr, (void **)&pTLS->m_pThreadMgr);
+        if (FAILED(hr))
+        {
+            pTLS->m_pThreadMgr->Release();
+            pTLS->m_pThreadMgr = NULL;
+            return E_FAIL;
+        }
+    }
+
+    if (!m_pThreadMgrEventSink)
+    {
+        m_pThreadMgrEventSink =
+            new CThreadMgrEventSink(CThreadMgrEventSink::DIMCallback, NULL, NULL);
+        if (!m_pThreadMgrEventSink)
+        {
+            UnInitIMMX(pTLS);
+            return E_FAIL;
+        }
+    }
+
+    m_pThreadMgrEventSink->SetCallbackPV(m_pThreadMgrEventSink);
+    m_pThreadMgrEventSink->_Advise(pTLS->m_pThreadMgr);
+
+    if (!pTLS->m_pProfile)
+    {
+        pTLS->m_pProfile = new CicProfile();
+        if (!pTLS->m_pProfile)
+            return E_OUTOFMEMORY;
+        hr = pTLS->m_pProfile->InitProfileInstance(pTLS);
+        if (FAILED(hr))
+        {
+            UnInitIMMX(pTLS);
+            return E_FAIL;
+        }
+    }
+
+    hr = pTLS->m_pThreadMgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&m_pKeystrokeMgr);
+    if (FAILED(hr))
+    {
+        UnInitIMMX(pTLS);
+        return E_FAIL;
+    }
+
+    hr = InitDisplayAttrbuteLib(&m_LibThread);
+    if (FAILED(hr))
+    {
+        UnInitIMMX(pTLS);
+        return E_FAIL;
+    }
+
+    m_dwImmxInit |= 1;
+    return S_OK;
+}
+
+/**
+ * @implemented
  */
 BOOL CicBridge::UnInitIMMX(TLS *pTLS)
 {
-    //FIXME
+    UninitDisplayAttrbuteLib(&m_LibThread);
+    TFUninitLib_Thread(&m_LibThread);
+
+    if (m_pKeystrokeMgr)
+    {
+        m_pKeystrokeMgr->Release();
+        m_pKeystrokeMgr = NULL;
+    }
 
     if (pTLS->m_pProfile)
     {
@@ -960,7 +1311,12 @@ BOOL CicBridge::UnInitIMMX(TLS *pTLS)
         pTLS->m_pProfile = NULL;
     }
 
-    //FIXME
+    if (m_pThreadMgrEventSink)
+    {
+        m_pThreadMgrEventSink->_Unadvise();
+        m_pThreadMgrEventSink->Release();
+        m_pThreadMgrEventSink = NULL;
+    }
 
     if (pTLS->m_pThreadMgr)
     {
@@ -969,7 +1325,6 @@ BOOL CicBridge::UnInitIMMX(TLS *pTLS)
     }
 
     m_dwImmxInit &= ~1;
-
     return TRUE;
 }
 
@@ -1744,33 +2099,6 @@ VOID UnregisterImeClass(VOID)
     UnregisterClassW(L"MSCTFIME Composition", g_hInst);
     DestroyIcon(wcx.hIcon);
     DestroyIcon(wcx.hIconSm);
-}
-
-/**
- * @implemented
- */
-BOOL RegisterMSIMEMessage(VOID)
-{
-    WM_MSIME_SERVICE = RegisterWindowMessageW(L"MSIMEService");
-    WM_MSIME_UIREADY = RegisterWindowMessageW(L"MSIMEUIReady");
-    WM_MSIME_RECONVERTREQUEST = RegisterWindowMessageW(L"MSIMEReconvertRequest");
-    WM_MSIME_RECONVERT = RegisterWindowMessageW(L"MSIMEReconvert");
-    WM_MSIME_DOCUMENTFEED = RegisterWindowMessageW(L"MSIMEDocumentFeed");
-    WM_MSIME_QUERYPOSITION = RegisterWindowMessageW(L"MSIMEQueryPosition");
-    WM_MSIME_MODEBIAS = RegisterWindowMessageW(L"MSIMEModeBias");
-    WM_MSIME_SHOWIMEPAD = RegisterWindowMessageW(L"MSIMEShowImePad");
-    WM_MSIME_MOUSE = RegisterWindowMessageW(L"MSIMEMouseOperation");
-    WM_MSIME_KEYMAP = RegisterWindowMessageW(L"MSIMEKeyMap");
-    return (WM_MSIME_SERVICE &&
-            WM_MSIME_UIREADY &&
-            WM_MSIME_RECONVERTREQUEST &&
-            WM_MSIME_RECONVERT &&
-            WM_MSIME_DOCUMENTFEED &&
-            WM_MSIME_QUERYPOSITION &&
-            WM_MSIME_MODEBIAS &&
-            WM_MSIME_SHOWIMEPAD &&
-            WM_MSIME_MOUSE &&
-            WM_MSIME_KEYMAP);
 }
 
 /**
