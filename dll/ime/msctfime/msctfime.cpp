@@ -502,7 +502,7 @@ class CicProfile : public IUnknown
 {
 protected:
     ITfInputProcessorProfiles *m_pIPProfiles;
-    CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySync;
+    CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySink;
     LANGID  m_LangID1;
     WORD    m_padding1;
     DWORD   m_dwFlags;
@@ -543,7 +543,7 @@ CicProfile::CicProfile()
     m_dwFlags &= 0xFFFFFFF0;
     m_cRefs = 1;
     m_pIPProfiles = NULL;
-    m_pActiveLanguageProfileNotifySync = NULL;
+    m_pActiveLanguageProfileNotifySink = NULL;
     m_LangID1 = 0;
     m_nCodePage = CP_ACP;
     m_LangID2 = 0;
@@ -564,12 +564,12 @@ CicProfile::~CicProfile()
         m_pIPProfiles = NULL;
     }
 
-    CActiveLanguageProfileNotifySink *pSink = m_pActiveLanguageProfileNotifySync;
+    CActiveLanguageProfileNotifySink *pSink = m_pActiveLanguageProfileNotifySink;
     if (pSink)
     {
         pSink->_Unadvise();
         pSink->Release();
-        m_pActiveLanguageProfileNotifySync = NULL;
+        m_pActiveLanguageProfileNotifySink = NULL;
     }
 }
 
@@ -786,6 +786,9 @@ BOOL TLS::InternalDestroyTLS()
     return TRUE;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 CicProfile::InitProfileInstance(TLS *pTLS)
 {
@@ -793,7 +796,7 @@ CicProfile::InitProfileInstance(TLS *pTLS)
     if (FAILED(hr))
         return hr;
 
-    if (!m_pActiveLanguageProfileNotifySync)
+    if (!m_pActiveLanguageProfileNotifySink)
     {
         CActiveLanguageProfileNotifySink *pSink =
             new CActiveLanguageProfileNotifySink(
@@ -804,11 +807,11 @@ CicProfile::InitProfileInstance(TLS *pTLS)
             m_pIPProfiles = NULL;
             return E_FAIL;
         }
-        m_pActiveLanguageProfileNotifySync = pSink;
+        m_pActiveLanguageProfileNotifySink = pSink;
     }
 
     if (pTLS->m_pThreadMgr)
-        m_pActiveLanguageProfileNotifySync->_Advise(pTLS->m_pThreadMgr);
+        m_pActiveLanguageProfileNotifySink->_Advise(pTLS->m_pThreadMgr);
 
     return hr;
 }
