@@ -3611,7 +3611,7 @@ NtUserSetWindowRgn(
        Window->hrgnNewFrame = HRGN_WINDOW;
    }
    //// HACK 2
-   Ret = (INT)co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
+   Ret = (INT)co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags | SWP_NOREDRAW));
 
 Exit:
    TRACE("Leave NtUserSetWindowRgn, ret=%i\n", Ret);
