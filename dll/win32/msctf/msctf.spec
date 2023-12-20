@@ -15,7 +15,7 @@
 @ stdcall TF_CreateLangBarItemMgr(ptr)
 @ stdcall TF_CreateLangBarMgr(ptr)
 @ stdcall TF_CreateThreadMgr(ptr)
-@ stub TF_DllDetachInOther
+@ stdcall -stub TF_DllDetachInOther()
 @ stdcall -stub TF_GetGlobalCompartment(ptr)
 @ stub TF_GetInputScope
 @ stub TF_GetLangIcon
