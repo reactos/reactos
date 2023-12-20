@@ -208,8 +208,7 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
                     }
 
                     /* Sanity check if this is a small key */
-                    ASSERT((IsSmallKey ?
-                           (Length <= CM_KEY_VALUE_SMALL) : TRUE));
+                    ASSERT(IsSmallKey ? (Length <= CM_KEY_VALUE_SMALL) : TRUE);
 
                     /* Copy the data in the buffer */
                     RtlCopyMemory(ControlVector->Buffer, Buffer, Length);

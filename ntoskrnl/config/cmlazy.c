@@ -92,9 +92,9 @@ CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
                 CmHive->FlushCount = CmpLazyFlushCount;
             }
         }
-        else if ((CmHive->Hive.DirtyCount) &&
-                 (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE)) &&
-                 (!(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH)))
+        else if (CmHive->Hive.DirtyCount &&
+                 !(CmHive->Hive.HiveFlags & HIVE_VOLATILE) &&
+                 !(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH))
         {
             /* Use another lazy flusher for this hive */
             ASSERT(CmHive->FlushCount == CmpLazyFlushCount);
@@ -145,7 +145,7 @@ CmpLazyFlushDpcRoutine(IN PKDPC Dpc,
 {
     /* Check if we should queue the lazy flush worker */
     DPRINT("Flush pending: %s, Holding lazy flush: %s.\n", CmpLazyFlushPending ? "yes" : "no", CmpHoldLazyFlush ? "yes" : "no");
-    if ((!CmpLazyFlushPending) && (!CmpHoldLazyFlush))
+    if (!CmpLazyFlushPending && !CmpHoldLazyFlush)
     {
         CmpLazyFlushPending = TRUE;
         ExQueueWorkItem(&CmpLazyWorkItem, DelayedWorkQueue);
@@ -160,7 +160,7 @@ CmpLazyFlush(VOID)
     PAGED_CODE();
 
     /* Check if we should set the lazy flush timer */
-    if ((!CmpNoWrite) && (!CmpHoldLazyFlush))
+    if (!CmpNoWrite && !CmpHoldLazyFlush)
     {
         /* Do it */
         DueTime.QuadPart = Int32x32To64(CmpLazyFlushIntervalInSeconds,
@@ -400,7 +400,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
          (Status == STATUS_ACCOUNT_EXPIRED) ||
          (Status == STATUS_ACCOUNT_DISABLED) ||
          (Status == STATUS_ACCOUNT_RESTRICTION)) &&
-        (ImpersonationContext))
+        ImpersonationContext)
     {
         /* We failed due to an account/security error, impersonate SYSTEM */
         Status = SeImpersonateClientEx(ImpersonationContext, NULL);

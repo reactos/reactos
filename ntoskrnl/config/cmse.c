@@ -40,7 +40,7 @@ CmpHiveRootSecurityDescriptor(VOID)
     Sid[3] = ExAllocatePoolWithTag(PagedPool, SidLength, TAG_CMSD);
 
     /* Make sure all SIDs were allocated */
-    if (!(Sid[0]) || !(Sid[1]) || !(Sid[2]) || !(Sid[3]))
+    if (!Sid[0] || !Sid[1] || !Sid[2] || !Sid[3])
     {
         /* Bugcheck */
         KeBugCheckEx(REGISTRY_ERROR, 11, 1, 0, 0);

@@ -49,14 +49,14 @@ CmpInitializeHive(
      * - An alternate hive that is not linked to a correct file type.
      * - A lonely alternate hive not backed up with its corresponding primary hive.
      */
-    if (((External) && ((Primary) || (Log))) ||
-        ((Log) && !(Primary)) ||
-        (!(CmpShareSystemHives) && (HiveFlags & HIVE_VOLATILE) &&
-            ((Primary) || (External) || (Log))) ||
-        ((OperationType == HINIT_MEMORY) && (!HiveData)) ||
-        ((Log) && (FileType != HFILE_TYPE_LOG)) ||
-        ((Alternate) && (FileType != HFILE_TYPE_ALTERNATE)) ||
-        ((Alternate) && !(Primary)))
+    if ((External && (Primary || Log)) ||
+        (Log && !Primary) ||
+        (!CmpShareSystemHives && (HiveFlags & HIVE_VOLATILE) &&
+            (Primary || External || Log)) ||
+        ((OperationType == HINIT_MEMORY) && !HiveData) ||
+        (Log && (FileType != HFILE_TYPE_LOG)) ||
+        (Alternate && (FileType != HFILE_TYPE_ALTERNATE)) ||
+        (Alternate && !Primary))
     {
         /* Fail the request */
         return STATUS_INVALID_PARAMETER;
@@ -338,7 +338,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                                NULL);
 
     /* Check if we can create the hive */
-    if ((CreateAllowed) && !(CmpShareSystemHives))
+    if (CreateAllowed && !CmpShareSystemHives)
     {
         /* Open only or create */
         CreateDisposition = FILE_OPEN_IF;
@@ -357,7 +357,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
               (NoBuffering ? FILE_NO_INTERMEDIATE_BUFFERING : 0);
 
     /* Set share and access modes */
-    if ((CmpMiniNTBoot) && (CmpShareSystemHives))
+    if (CmpMiniNTBoot && CmpShareSystemHives)
     {
         /* We're on Live CD or otherwise sharing */
         DesiredAccess = FILE_READ_DATA;
@@ -568,7 +568,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                           FILE_SYNCHRONOUS_IO_NONALERT | IoFlags,
                           NULL,
                           0);
-    if ((NT_SUCCESS(Status)) && (MarkAsSystemHive))
+    if (NT_SUCCESS(Status) && MarkAsSystemHive)
     {
         /* We opened it, mark it as a system hive */
         Status = ZwFsControlFile(*Log,

@@ -67,8 +67,7 @@ CmpIsHiveAlreadyLoaded(IN HANDLE KeyHandle,
         if (Hive->Frozen)
         {
             /* FIXME: TODO */
-            DPRINT1("ERROR: Hive is frozen\n");
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("ERROR: Hive is frozen\n");
         }
      }
 
@@ -105,22 +104,22 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
             CmpLockHiveFlusherExclusive(Hive);
 
             /* Check for illegal state */
-            if ((ForceFlush) && (Hive->UseCount))
+            if (ForceFlush && Hive->UseCount)
             {
                 /* Registry needs to be locked down */
                 CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
-                DPRINT1("FIXME: Hive is damaged and needs fixup\n");
-                while (TRUE);
+                UNIMPLEMENTED_DBGBREAK("FIXME: Hive is damaged and needs fixup\n");
             }
 
             /* Only sync if we are forced to or if it won't cause a hive shrink */
-            if ((ForceFlush) || (!HvHiveWillShrink(&Hive->Hive)))
+            if (ForceFlush || !HvHiveWillShrink(&Hive->Hive))
             {
                 /* Do the sync */
                 Status = HvSyncHive(&Hive->Hive);
 
                 /* If something failed - set the flag and continue looping */
-                if (!NT_SUCCESS(Status)) Result = FALSE;
+                if (!NT_SUCCESS(Status))
+                    Result = FALSE;
             }
             else
             {
@@ -708,8 +707,8 @@ DoAgain:
         }
 
         /* We need the exclusive KCB lock now */
-        if (!(CmpIsKcbLockedExclusive(Kcb)) &&
-            !(CmpTryToConvertKcbSharedToExclusive(Kcb)))
+        if (!CmpIsKcbLockedExclusive(Kcb) &&
+            !CmpTryToConvertKcbSharedToExclusive(Kcb))
         {
             /* Acquire exclusive lock */
             CmpConvertKcbSharedToExclusive(Kcb);
@@ -873,7 +872,7 @@ DoAgain:
         Kcb->KcbLastWriteTime = Parent->LastWriteTime;
 
         /* Check if the cell is cached */
-        if ((Found) && (CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList)))
+        if (Found && CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList))
         {
             /* Shouldn't happen */
             ASSERT(FALSE);
@@ -884,7 +883,7 @@ DoAgain:
             CmpCleanUpKcbValueCache(Kcb);
 
             /* Sanity checks */
-            ASSERT(!(CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList)));
+            ASSERT(!CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList));
             ASSERT(!(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND));
 
             /* Set the value cache */
@@ -901,8 +900,8 @@ DoAgain:
 
     /* Release the cells */
 Quickie:
-    if ((ParentCell != HCELL_NIL) && (Hive)) HvReleaseCell(Hive, ParentCell);
-    if ((ChildCell != HCELL_NIL) && (Hive)) HvReleaseCell(Hive, ChildCell);
+    if ((ParentCell != HCELL_NIL) && Hive) HvReleaseCell(Hive, ParentCell);
+    if ((ChildCell != HCELL_NIL) && Hive) HvReleaseCell(Hive, ChildCell);
 
     /* Release the locks */
     if (FlusherLocked) CmpUnlockHiveFlusher((PCMHIVE)Hive);
@@ -972,9 +971,9 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         if (ChildCell == HCELL_NIL) goto Quickie;
 
         /* We found the value, mark all relevant cells dirty */
-        if (!((HvMarkCellDirty(Hive, Cell, FALSE)) &&
-              (HvMarkCellDirty(Hive, Parent->ValueList.List, FALSE)) &&
-              (HvMarkCellDirty(Hive, ChildCell, FALSE))))
+        if (!(HvMarkCellDirty(Hive, Cell, FALSE) &&
+              HvMarkCellDirty(Hive, Parent->ValueList.List, FALSE) &&
+              HvMarkCellDirty(Hive, ChildCell, FALSE)))
         {
             /* Not enough log space, fail */
             Status = STATUS_NO_LOG_SPACE;
@@ -1037,7 +1036,7 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         CmpCleanUpKcbValueCache(Kcb);
 
         /* Sanity checks */
-        ASSERT(!(CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList)));
+        ASSERT(!CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList));
         ASSERT(!(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND));
 
         /* Set the value cache */

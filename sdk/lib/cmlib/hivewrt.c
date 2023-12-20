@@ -101,7 +101,7 @@ HvpWriteLog(
      * The hive log we are going to write data into
      * has to be writable and with a sane storage.
      */
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->BaseBlock->Length ==
            RegistryHive->Storage[Stable].Length * HBLOCK_SIZE);
 
@@ -109,12 +109,11 @@ HvpWriteLog(
     HvpValidateBaseHeader(RegistryHive);
 
     /*
-     * The sequences can diverge in an occurrence of forced
-     * shutdown of the system such as during a power failure,
-     * the hardware crapping itself or during a system crash
-     * when one of the sequences have been modified during
-     * writing into the log or hive. In such cases the hive
-     * needs a repair.
+     * The sequences can diverge during a forced system shutdown
+     * occurrence, such as during a power failure, a hardware
+     * failure or during a system crash, and when one of the
+     * sequences have been modified during writing into the log
+     * or hive. In such cases the hive needs a repair.
      */
     if (RegistryHive->BaseBlock->Sequence1 !=
         RegistryHive->BaseBlock->Sequence2)
@@ -324,7 +323,7 @@ HvpWriteHive(
     ULONG LastIndex;
     PVOID Block;
 
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->BaseBlock->Length ==
            RegistryHive->Storage[Stable].Length * HBLOCK_SIZE);
     ASSERT(RegistryHive->BaseBlock->RootCell != HCELL_NIL);
@@ -333,12 +332,11 @@ HvpWriteHive(
     HvpValidateBaseHeader(RegistryHive);
 
     /*
-     * The sequences can diverge in an occurrence of forced
-     * shutdown of the system such as during a power failure,
-     * the hardware crapping itself or during a system crash
-     * when one of the sequences have been modified during
-     * writing into the log or hive. In such cases the hive
-     * needs a repair.
+     * The sequences can diverge during a forced system shutdown
+     * occurrence, such as during a power failure, a hardware
+     * failure or during a system crash, and when one of the
+     * sequences have been modified during writing into the log
+     * or hive. In such cases the hive needs a repair.
      */
     if (RegistryHive->BaseBlock->Sequence1 !=
         RegistryHive->BaseBlock->Sequence2)
@@ -372,11 +370,11 @@ HvpWriteHive(
     while (BlockIndex < RegistryHive->Storage[Stable].Length)
     {
         /*
-         * If we have to syncrhonize the registry hive we
+         * If we have to synchronize the registry hive we
          * want to look for dirty blocks to reflect the new
          * updates done to the hive. Otherwise just write
          * all the blocks as if we were doing a regular
-         * writing of the hive.
+         * hive write.
          */
         if (OnlyDirty)
         {
@@ -420,9 +418,9 @@ HvpWriteHive(
 
     /*
      * Increment the secondary sequence number and
-     * update the checksum. A successful transaction
-     * writing of hive is both of sequences are the
-     * same indicating the writing operation didn't
+     * update the checksum. A successful hive write
+     * transaction is when both of sequences are the
+     * same, indicating the write operation didn't
      * fail.
      */
     RegistryHive->BaseBlock->Sequence2++;
@@ -476,7 +474,7 @@ HvSyncHive(
     BOOLEAN HardErrors;
 #endif
 
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
 
     /*
@@ -522,8 +520,8 @@ HvSyncHive(
     KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
 #endif
 
-    /* Update the log file of hive if present */
-    if (RegistryHive->Log == TRUE)
+    /* Update the hive log file if present */
+    if (RegistryHive->Log)
     {
         if (!HvpWriteLog(RegistryHive))
         {
@@ -546,7 +544,7 @@ HvSyncHive(
     }
 
     /* Update the alternate hive file if present */
-    if (RegistryHive->Alternate == TRUE)
+    if (RegistryHive->Alternate)
     {
         if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_ALTERNATE))
         {
@@ -615,7 +613,7 @@ CMAPI
 HvWriteHive(
     _In_ PHHIVE RegistryHive)
 {
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
 
 #if !defined(_BLDR_)
@@ -653,9 +651,9 @@ CMAPI
 HvWriteAlternateHive(
     _In_ PHHIVE RegistryHive)
 {
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
-    ASSERT(RegistryHive->Alternate == TRUE);
+    ASSERT(RegistryHive->Alternate);
 
 #if !defined(_BLDR_)
     /* Update hive header modification time */
@@ -691,7 +689,7 @@ CMAPI
 HvSyncHiveFromRecover(
     _In_ PHHIVE RegistryHive)
 {
-    ASSERT(RegistryHive->ReadOnly == FALSE);
+    ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
 
     /* Call the private API call to do the deed for us */
