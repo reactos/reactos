@@ -670,7 +670,7 @@ CMP_RegisterNotification(
     RpcTryExcept
     {
         ret = PNP_RegisterNotification(BindingHandle,
-                                       0,            /* ??? */
+                                       (DWORD_PTR)hRecipient,
                                        szNameBuffer,
                                        (BYTE*)lpvNotificationFilter,
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,

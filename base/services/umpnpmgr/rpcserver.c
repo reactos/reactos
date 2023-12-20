@@ -4689,13 +4689,13 @@ DWORD
 WINAPI
 PNP_RegisterNotification(
     handle_t hBinding,
-    DWORD ulUnknown2,
+    DWORD_PTR hRecipient,
     LPWSTR pszName,
     BYTE *pNotificationFilter,
     DWORD ulNotificationFilterSize,
     DWORD ulFlags,
     PNP_NOTIFY_HANDLE *pNotifyHandle,
-    DWORD ulUnknown8,
+    DWORD ulProcessId,
     DWORD *pulUnknown9)
 {
     PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
@@ -4703,8 +4703,8 @@ PNP_RegisterNotification(
     PNOTIFY_ENTRY pNotifyData = NULL;
 
     DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
-           hBinding, ulUnknown2, pszName, pNotificationFilter,
-           ulNotificationFilterSize, ulFlags, pNotifyHandle, ulUnknown8, pulUnknown9);
+           hBinding, hRecipient, pszName, pNotificationFilter,
+           ulNotificationFilterSize, ulFlags, pNotifyHandle, ulProcessId, pulUnknown9);
 
     if (pNotifyHandle == NULL)
         return CR_INVALID_POINTER;
