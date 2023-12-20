@@ -5,9 +5,23 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
+#pragma once
+
+static inline LPVOID cicMemAlloc(SIZE_T size)
+{
+    return LocalAlloc(0, size);
+}
+
 static inline LPVOID cicMemAllocClear(SIZE_T size)
 {
     return LocalAlloc(LMEM_ZEROINIT, size);
+}
+
+static inline LPVOID cicMemReAlloc(LPVOID ptr, SIZE_T newSize)
+{
+    if (!ptr)
+        return LocalAlloc(LMEM_ZEROINIT, newSize);
+    return LocalReAlloc(ptr, newSize, LMEM_ZEROINIT);
 }
 
 static inline void cicMemFree(LPVOID ptr)
