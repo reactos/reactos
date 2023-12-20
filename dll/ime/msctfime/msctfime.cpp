@@ -334,11 +334,347 @@ public:
     HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
 };
 
-/* FIXME */
-struct CicProfile : IUnknown
+class CActiveLanguageProfileNotifySink : public ITfActiveLanguageProfileNotifySink
 {
-    HRESULT GetActiveLanguageProfile(HKL hKL, REFGUID rguid, TF_LANGUAGEPROFILE *pProfile);
+protected:
+    typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, BOOL fActivated, LPVOID pUserData);
+    LONG m_cRefs;
+    ITfThreadMgr *m_pThreadMgr;
+    DWORD m_dwConnection;
+    FN_COMPARE m_fnCompare;
+    LPVOID m_pUserData;
+
+public:
+    CActiveLanguageProfileNotifySink(FN_COMPARE fnCompare, void *pUserData);
+    virtual ~CActiveLanguageProfileNotifySink();
+
+    HRESULT _Advise(ITfThreadMgr *pThreadMgr);
+    HRESULT _Unadvise();
+
+    // IUnknown interface
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfActiveLanguageProfileNotifySink interface
+    STDMETHODIMP
+    OnActivated(
+        REFCLSID clsid,
+        REFGUID guidProfile,
+        BOOL fActivated) override;
 };
+
+/**
+ * @implemented
+ */
+CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
+    FN_COMPARE fnCompare,
+    void *pUserData)
+{
+    m_dwConnection = (DWORD)-1;
+    m_fnCompare = fnCompare;
+    m_cRefs = 1;
+    m_pUserData = pUserData;
+}
+
+/**
+ * @implemented
+ */
+CActiveLanguageProfileNotifySink::~CActiveLanguageProfileNotifySink()
+{
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfActiveLanguageProfileNotifySink))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+    *ppvObj = NULL;
+    return E_NOINTERFACE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CActiveLanguageProfileNotifySink::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CActiveLanguageProfileNotifySink::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP
+CActiveLanguageProfileNotifySink::OnActivated(
+    REFCLSID clsid,
+    REFGUID guidProfile,
+    BOOL fActivated)
+{
+    if (!m_fnCompare)
+        return 0;
+
+    return m_fnCompare(clsid, guidProfile, fActivated, m_pUserData);
+}
+
+/**
+ * @implemented
+ */
+HRESULT
+CActiveLanguageProfileNotifySink::_Advise(
+    ITfThreadMgr *pThreadMgr)
+{
+    m_pThreadMgr = NULL;
+
+    ITfSource *pSource = NULL;
+    HRESULT hr = pThreadMgr->QueryInterface(IID_ITfSource, (void **)&pSource);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    hr = pSource->AdviseSink(IID_ITfActiveLanguageProfileNotifySink, this, &m_dwConnection);
+    if (SUCCEEDED(hr))
+    {
+        m_pThreadMgr = pThreadMgr;
+        pThreadMgr->AddRef();
+        hr = S_OK;
+    }
+    else
+    {
+        hr = E_FAIL;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+/**
+ * @implemented
+ */
+HRESULT
+CActiveLanguageProfileNotifySink::_Unadvise()
+{
+    if (!m_pThreadMgr)
+        return E_FAIL;
+
+    ITfSource *pSource = NULL;
+    HRESULT hr = m_pThreadMgr->QueryInterface(IID_ITfSource, (void **)&pSource);
+    if (SUCCEEDED(hr))
+    {
+        hr = pSource->UnadviseSink(m_dwConnection);
+        if (SUCCEEDED(hr))
+            hr = S_OK;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    if (m_pThreadMgr)
+    {
+        m_pThreadMgr->Release();
+        m_pThreadMgr = NULL;
+    }
+
+    return hr;
+}
+
+/* FIXME */
+class CicProfile : public IUnknown
+{
+protected:
+    ITfInputProcessorProfiles *m_pIPProfiles;
+    CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySink;
+    LANGID  m_LangID1;
+    WORD    m_padding1;
+    DWORD   m_dwFlags;
+    UINT    m_nCodePage;
+    LANGID  m_LangID2;
+    WORD    m_padding2;
+    DWORD   m_dw3[1];
+    LONG    m_cRefs;
+
+    static INT CALLBACK
+    ActiveLanguageProfileNotifySinkCallback(
+        REFGUID rguid1,
+        REFGUID rguid2,
+        BOOL fActivated,
+        LPVOID pUserData);
+
+public:
+    CicProfile();
+    virtual ~CicProfile();
+
+    // IUnknown interface
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    HRESULT GetActiveLanguageProfile(HKL hKL, REFGUID rguid, TF_LANGUAGEPROFILE *pProfile);
+    HRESULT GetLangId(LANGID *pLangID);
+    HRESULT GetCodePageA(UINT *puCodePage);
+
+    HRESULT InitProfileInstance(TLS *pTLS);
+};
+
+/**
+ * @implemented
+ */
+CicProfile::CicProfile()
+{
+    m_dwFlags &= 0xFFFFFFF0;
+    m_cRefs = 1;
+    m_pIPProfiles = NULL;
+    m_pActiveLanguageProfileNotifySink = NULL;
+    m_LangID1 = 0;
+    m_nCodePage = CP_ACP;
+    m_LangID2 = 0;
+    m_dw3[0] = 0;
+}
+
+/**
+ * @implemented
+ */
+CicProfile::~CicProfile()
+{
+    if (m_pIPProfiles)
+    {
+        if (m_LangID1)
+            m_pIPProfiles->ChangeCurrentLanguage(m_LangID1);
+
+        m_pIPProfiles->Release();
+        m_pIPProfiles = NULL;
+    }
+
+    if (m_pActiveLanguageProfileNotifySink)
+    {
+        m_pActiveLanguageProfileNotifySink->_Unadvise();
+        m_pActiveLanguageProfileNotifySink->Release();
+        m_pActiveLanguageProfileNotifySink = NULL;
+    }
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CicProfile::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    *ppvObj = NULL;
+    return E_NOINTERFACE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicProfile::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CicProfile::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/**
+ * @implemented
+ */
+INT CALLBACK
+CicProfile::ActiveLanguageProfileNotifySinkCallback(
+    REFGUID rguid1,
+    REFGUID rguid2,
+    BOOL fActivated,
+    LPVOID pUserData)
+{
+    CicProfile *pThis = (CicProfile *)pUserData;
+    pThis->m_dwFlags &= ~0xE;
+    return 0;
+}
+
+/**
+ * @implemented
+ */
+HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
+{
+    if (!puCodePage)
+        return E_INVALIDARG;
+
+    if (m_dwFlags & 2)
+    {
+        *puCodePage = m_nCodePage;
+        return S_OK;
+    }
+
+    *puCodePage = 0;
+
+    LANGID LangID;
+    HRESULT hr = GetLangId(&LangID);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    WCHAR szBuff[12];
+    INT cch = ::GetLocaleInfoW(LangID, LOCALE_IDEFAULTANSICODEPAGE, szBuff, _countof(szBuff));
+    if (cch)
+    {
+        szBuff[cch] = 0;
+        m_nCodePage = *puCodePage = wcstoul(szBuff, NULL, 10);
+        m_dwFlags |= 2;
+    }
+
+    return S_OK;
+}
+
+/**
+ * @implemented
+ */
+HRESULT CicProfile::GetLangId(LANGID *pLangID)
+{
+    *pLangID = 0;
+
+    if (!m_pIPProfiles)
+        return E_FAIL;
+
+    if (m_dwFlags & 4)
+    {
+        *pLangID = m_LangID2;
+        return S_OK;
+    }
+
+    HRESULT hr = m_pIPProfiles->GetCurrentLanguage(pLangID);
+    if (SUCCEEDED(hr))
+    {
+        m_dwFlags |= 4;
+        m_LangID2 = *pLangID;
+    }
+
+    return hr;
+}
 
 class TLS
 {
@@ -447,6 +783,36 @@ BOOL TLS::InternalDestroyTLS()
     cicMemFree(pTLS);
     ::TlsSetValue(s_dwTlsIndex, NULL);
     return TRUE;
+}
+
+/**
+ * @implemented
+ */
+HRESULT
+CicProfile::InitProfileInstance(TLS *pTLS)
+{
+    HRESULT hr = TF_CreateInputProcessorProfiles(&m_pIPProfiles);
+    if (FAILED(hr))
+        return hr;
+
+    if (!m_pActiveLanguageProfileNotifySink)
+    {
+        CActiveLanguageProfileNotifySink *pSink =
+            new CActiveLanguageProfileNotifySink(
+                CicProfile::ActiveLanguageProfileNotifySinkCallback, this);
+        if (!pSink)
+        {
+            m_pIPProfiles->Release();
+            m_pIPProfiles = NULL;
+            return E_FAIL;
+        }
+        m_pActiveLanguageProfileNotifySink = pSink;
+    }
+
+    if (pTLS->m_pThreadMgr)
+        m_pActiveLanguageProfileNotifySink->_Advise(pTLS->m_pThreadMgr);
+
+    return hr;
 }
 
 /***********************************************************************
