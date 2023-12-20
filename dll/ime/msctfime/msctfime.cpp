@@ -564,11 +564,10 @@ CicProfile::~CicProfile()
         m_pIPProfiles = NULL;
     }
 
-    CActiveLanguageProfileNotifySink *pSink = m_pActiveLanguageProfileNotifySink;
-    if (pSink)
+    if (m_pActiveLanguageProfileNotifySink)
     {
-        pSink->_Unadvise();
-        pSink->Release();
+        m_pActiveLanguageProfileNotifySink->_Unadvise();
+        m_pActiveLanguageProfileNotifySink->Release();
         m_pActiveLanguageProfileNotifySink = NULL;
     }
 }
