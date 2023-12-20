@@ -82,13 +82,13 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
-struct _LIBTHREAD
+typedef struct LIBTHREAD
 {
     IUnknown *m_pUnknown1;
     ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
-};
+} LIBTHREAD, *PLIBTHREAD;
 
-HRESULT InitDisplayAttrbuteLib(_LIBTHREAD *pLibThread)
+HRESULT InitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
 {
     if (!pLibThread)
         return E_FAIL;
@@ -103,7 +103,7 @@ HRESULT InitDisplayAttrbuteLib(_LIBTHREAD *pLibThread)
     return E_NOTIMPL;
 }
 
-HRESULT UninitDisplayAttrbuteLib(_LIBTHREAD *pLibThread)
+HRESULT UninitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
 {
     if (!pLibThread)
         return E_FAIL;
@@ -117,7 +117,7 @@ HRESULT UninitDisplayAttrbuteLib(_LIBTHREAD *pLibThread)
     return S_OK;
 }
 
-void TFUninitLib_Thread(_LIBTHREAD *pLibThread)
+void TFUninitLib_Thread(PLIBTHREAD pLibThread)
 {
     if (!pLibThread)
         return;
@@ -560,7 +560,7 @@ protected:
     ITfDocumentMgr *m_pDocMgr;
     CThreadMgrEventSink *m_pThreadMgrEventSink;
     TfClientId m_cliendId;
-    _LIBTHREAD m_LibThread;
+    LIBTHREAD m_LibThread;
     DWORD m_dw21;
 
 public:
