@@ -419,13 +419,13 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if(SafeGui.cbSize != sizeof(GUITHREADINFO))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (idThread)
@@ -438,7 +438,7 @@ NtUserGetGUIThreadInfo(
       if ( !W32Thread )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          goto Exit;
+          goto Exit; // Return FALSE
       }
 
       Desktop = W32Thread->rpdesk;
@@ -447,7 +447,7 @@ NtUserGetGUIThreadInfo(
       if ( !Desktop || Desktop != pti->rpdesk )
       {
           EngSetLastError(ERROR_ACCESS_DENIED);
-          goto Exit;
+          goto Exit; // Return FALSE
       }
 
       if ( W32Thread->MessageQueue )
@@ -464,7 +464,7 @@ NtUserGetGUIThreadInfo(
       if(!MsgQueue)
       {
         EngSetLastError(ERROR_ACCESS_DENIED);
-        goto Exit;
+        goto Exit; // Return FALSE
       }
    }
 
@@ -517,7 +517,7 @@ NtUserGetGUIThreadInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Ret = TRUE;
@@ -553,7 +553,7 @@ NtUserGetGuiResources(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    W32Process = (PPROCESSINFO)Process->Win32Process;
@@ -561,7 +561,7 @@ NtUserGetGuiResources(
    {
       ObDereferenceObject(Process);
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    switch(uiFlags)

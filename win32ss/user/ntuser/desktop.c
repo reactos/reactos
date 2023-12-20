@@ -2551,7 +2551,7 @@ NtUserCreateDesktop(
     {
         ERR("IntCreateDesktop failed, Status 0x%08lx\n", Status);
         // SetLastNtError(Status);
-        goto Exit;
+        goto Exit; // Return NULL
     }
 
     Ret = hDesk;
@@ -2732,14 +2732,14 @@ NtUserCloseDesktop(HDESK hDesktop)
     {
         ERR("Attempted to close thread desktop\n");
         EngSetLastError(ERROR_BUSY);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     Status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &pdesk);
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hDesktop);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     ObDereferenceObject(pdesk);
@@ -2749,7 +2749,7 @@ NtUserCloseDesktop(HDESK hDesktop)
     {
         ERR("Failed to close desktop handle 0x%p\n", hDesktop);
         SetLastNtError(Status);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     Ret = TRUE;
@@ -2947,14 +2947,14 @@ NtUserSwitchDesktop(HDESK hdesk)
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hdesk);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
     {
         ObDereferenceObject(pdesk);
         ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     if (pdesk == gpdeskInputDesktop)
@@ -2974,14 +2974,14 @@ NtUserSwitchDesktop(HDESK hdesk)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     if (pdesk->rpwinstaParent != InputWindowStation)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     /* FIXME: Fail if the process is associated with a secured

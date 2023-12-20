@@ -3399,14 +3399,14 @@ NtUserGetWindowPlacement(HWND hWnd,
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Safepl.length = sizeof(WINDOWPLACEMENT);
@@ -3417,7 +3417,7 @@ NtUserGetWindowPlacement(HWND hWnd,
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Ret = TRUE;
@@ -3523,7 +3523,7 @@ NtUserSetWindowPos(
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       ERR("NtUserSetWindowPos bad window handle!\n");
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if ( hWndInsertAfter != HWND_TOP &&
@@ -3535,7 +3535,7 @@ NtUserSetWindowPos(
             UserIsDesktopWindow(pWndIA) || UserIsMessageWindow(pWndIA))
       {
          ERR("NtUserSetWindowPos bad insert window handle!\n");
-         goto Exit;
+         goto Exit; // Return FALSE
       }
    }
 
@@ -3585,7 +3585,7 @@ NtUserSetWindowRgn(
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    if (hRgn) // The region will be deleted in user32.
@@ -3598,7 +3598,7 @@ NtUserSetWindowRgn(
          NtGdiCombineRgn( hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
-         goto Exit;
+         goto Exit; // Return 0
    }
 
    //// HACK 1 : Work around the lack of supporting DeferWindowPos.
@@ -3643,7 +3643,7 @@ NtUserSetInternalWindowPos(
    if (!(Wnd = UserGetWindowObject(hwnd)) || // FIXME:
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    _SEH2_TRY
@@ -3662,7 +3662,7 @@ NtUserSetInternalWindowPos(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(goto Exit);
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
@@ -3712,7 +3712,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    if (!(Wnd = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    _SEH2_TRY
@@ -3723,13 +3723,13 @@ NtUserSetWindowPlacement(HWND hWnd,
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(goto Exit);
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
    if(Safepl.length != sizeof(WINDOWPLACEMENT))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Flags = PLACE_MAX | PLACE_RECT;
@@ -3762,13 +3762,13 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if ( nCmdShow > SW_MAX )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -3798,13 +3798,13 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if ( nCmdShow > SW_MAX || Window->state2 & WNDS2_INDESTROY)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);

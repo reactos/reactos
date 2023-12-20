@@ -1619,7 +1619,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Cleanup;
+      goto Cleanup; // Return NULL
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1630,7 +1630,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Cleanup;
+      goto Cleanup; // Return NULL
    }
 
    Ret = hDC;
@@ -1664,7 +1664,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref); // Here for the exception.
@@ -1681,7 +1681,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    _SEH2_END
    if (!NT_SUCCESS(Status))
    {
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    Ret = IntEndPaint(Window, &Ps);
@@ -1964,7 +1964,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Ret = co_UserGetUpdateRect(Window, &Rect, bErase);
@@ -2011,7 +2011,7 @@ NtUserRedrawWindow(
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (lprcUpdate)
@@ -2029,7 +2029,7 @@ NtUserRedrawWindow(
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(RtlNtStatusToDosError(Status));
-         goto Exit;
+         goto Exit; // Return FALSE
       }
    }
 
@@ -2039,7 +2039,7 @@ NtUserRedrawWindow(
    {
       /* RedrawWindow fails only in case that flags are invalid */
       EngSetLastError(ERROR_INVALID_FLAGS);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    /* We can't hold lock on GDI objects while doing roundtrips to user mode,
@@ -2051,7 +2051,7 @@ NtUserRedrawWindow(
        if (!RgnUpdate)
        {
            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-           goto Exit;
+           goto Exit; // Return FALSE
        }
        REGION_UnlockRgn(RgnUpdate);
    }

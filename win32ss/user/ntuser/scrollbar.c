@@ -1154,11 +1154,11 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    if(!NT_SUCCESS(Status) || (sbi.cbSize != sizeof(SCROLLBARINFO)))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      goto Exit;
+      goto Exit; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
@@ -1204,14 +1204,14 @@ NtUserSBGetParms(
    {
       ERR("NtUserGetScrollInfo Failed size\n");
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(goto Exit);
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       ERR("NtUserGetScrollInfo Bad window\n");
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1255,12 +1255,12 @@ NtUserEnableScrollBar(
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
 
    if (!co_IntCreateScrollBars(Window))
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
 
    OrigArrows = Window->pSBInfo->WSBflags;
    Window->pSBInfo->WSBflags = wArrows;
@@ -1278,7 +1278,7 @@ NtUserEnableScrollBar(
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %u\n", wSBflags);
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    switch(wSBflags)
@@ -1293,7 +1293,7 @@ NtUserEnableScrollBar(
          InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
          break;
       default:
-         goto Cleanup;
+         goto Cleanup; // Return FALSE
    }
 
    if(InfoV)
@@ -1344,7 +1344,7 @@ NtUserSetScrollInfo(
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      goto Cleanup;
+      goto Cleanup; // Return 0
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1352,7 +1352,7 @@ NtUserSetScrollInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Cleanup;
+      goto Cleanup; // Return 0
    }
 
    Ret = co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw);
@@ -1412,7 +1412,7 @@ NtUserSetScrollBarInfo(
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1421,17 +1421,17 @@ NtUserSetScrollBarInfo(
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    if(!co_IntCreateScrollBars(Window))
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
 
    Status = MmCopyFromCaller(&Safeinfo, info, sizeof(SETSCROLLBARINFO));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    sbi = IntGetScrollbarInfoFromWindow(Window, Obj);

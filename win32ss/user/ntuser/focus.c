@@ -1675,7 +1675,7 @@ NtUserSetActiveWindow(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetActiveWindow: Invalid handle 0x%p!\n",hWnd);
-         goto Exit;
+         goto Exit; // Return NULL
       }
    }
 
@@ -1732,7 +1732,7 @@ NtUserSetFocus(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetFocus: Invalid handle 0x%p!\n",hWnd);
-         goto Exit;
+         goto Exit; // Return NULL
       }
 
       UserRefObjectCo(Window, &Ref);

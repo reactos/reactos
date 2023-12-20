@@ -1493,7 +1493,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
        if (!IntDdeSendMessageHook(Window, Msg, wParam, lParam))
        {
           ERR("Sending Exit DDE 0x%x\n",Msg);
-          goto Cleanup;
+          goto Cleanup; // Return FALSE
        }
     }
 
@@ -1502,7 +1502,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
             /* Never send messages to exiting threads */
-            goto Cleanup;
+            goto Cleanup; // Return FALSE
         }
 
         if (Msg & 0x80000000)
@@ -1524,7 +1524,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            if (IoGetRemainingStackSize() < PAGE_SIZE)
            {
               ERR("Server Callback Exceeded Stack!\n");
-              goto Cleanup;
+              goto Cleanup; // Return FALSE
            }
            /* Return after server side call, IntCallWndProcRet will not be called. */
            switch(Window->fnid)
@@ -1562,7 +1562,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
         {
            ERR("Failed to pack message parameters\n");
-           goto Cleanup;
+           goto Cleanup; // Return FALSE
         }
 
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
@@ -1595,7 +1595,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     {
         /* FIXME: Last error? */
         ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     if ((uFlags & SMTO_ABORTIFHUNG) && MsqIsHung(ptiSendTo, 4 * MSQ_HUNG))
@@ -1603,7 +1603,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         // FIXME: Set window hung and add to a list.
         /* FIXME: Set a LastError? */
         ERR("Window %p (%p) (pti %p) is hung!\n", hWnd, Window, ptiSendTo);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     do
@@ -1638,12 +1638,12 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
  *  returns ERROR_TIMEOUT, then the function timed out.
  */
         EngSetLastError(ERROR_TIMEOUT);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
     else if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     Ret = TRUE;
@@ -1763,20 +1763,21 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     {
         /* FIXME: last error? */
         ERR("Attempted to send message to window %p that is being destroyed\n", hWnd);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
     if (Win32Thread == NULL || Win32Thread->TIF_flags & TIF_INCLEANUP)
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
 
     ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
 
     if (Msg & 0x80000000 &&
         !ptiSendTo)
     {
-        if (Win32Thread->TIF_flags & TIF_INCLEANUP) goto Cleanup;
+        if (Win32Thread->TIF_flags & TIF_INCLEANUP)
+            goto Cleanup; // Return FALSE
 
         TRACE("SMWCB: Internal Message\n");
         Result = (ULONG_PTR)handle_internal_message(Window, Msg, wParam, lParam);
@@ -1800,7 +1801,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     if (!NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
     {
         ERR("Failed to pack message parameters\n");
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     /* If it can be sent now, then send it. */
@@ -1810,7 +1811,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
         {
             UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE);
             /* Never send messages to exiting threads */
-            goto Cleanup;
+            goto Cleanup; // Return FALSE
         }
 
         IntCallWndProc(Window, hWnd, Msg, wParam, lParam);
@@ -1870,7 +1871,7 @@ co_IntSendMessageWithCallBack(HWND hWnd,
     if(!(Message = AllocateUserMessage(FALSE)))
     {
         ERR("Failed to allocate message\n");
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
     }
 
     Message->Msg.hwnd = hWnd;
@@ -2187,7 +2188,7 @@ NtUserDragDetect(
             if ( msg.message == WM_LBUTTONUP )
             {
                 co_UserSetCapture(NULL);
-                goto Exit;
+                goto Exit; // Return FALSE
             }
             if ( msg.message == WM_MOUSEMOVE )
             {

@@ -323,13 +323,13 @@ NtUserCreateCaret(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if(Window->head.pti->pEThread != PsGetCurrentThread())
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -432,7 +432,7 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
@@ -460,7 +460,7 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);

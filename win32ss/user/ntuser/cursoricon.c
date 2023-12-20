@@ -1002,11 +1002,11 @@ NtUserGetClipCursor(
 
     if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
     {
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     if (!lpRect)
-        goto Exit;
+        goto Exit; // Return FALSE
 
     CurInfo = IntGetSysCursorInfo();
     if (CurInfo->bClipped)
@@ -1025,7 +1025,7 @@ NtUserGetClipCursor(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     Ret = TRUE;

@@ -1384,7 +1384,8 @@ NtUserCallNextHookEx( int Code,
 
     HookObj = pti->sphkCurrent;
 
-    if (!HookObj) goto Exit;
+    if (!HookObj)
+       goto Exit; // Return 0
 
     NextObj = HookObj->phkNext;
 
@@ -1458,13 +1459,13 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
         EngSetLastError(ERROR_INVALID_HOOK_FILTER);
-        goto Cleanup;
+        goto Cleanup; // Return NULL
     }
 
     if (!HookProc)
     {
         EngSetLastError(ERROR_INVALID_FILTER_PROC);
-        goto Cleanup;
+        goto Cleanup; // Return NULL
     }
 
     if (ThreadId)  /* thread-local hook */
@@ -1478,21 +1479,21 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
            TRACE("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
            EngSetLastError(ERROR_GLOBAL_ONLY_HOOK);
-           goto Cleanup;
+           goto Cleanup; // Return NULL
        }
 
        if ( !(ptiHook = IntTID2PTI( UlongToHandle(ThreadId) )))
        {
           ERR("Invalid thread id 0x%x\n", ThreadId);
           EngSetLastError(ERROR_INVALID_PARAMETER);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
 
        if ( ptiHook->rpdesk != pti->rpdesk) // gptiCurrent->rpdesk)
        {
           ERR("Local hook wrong desktop HookId: %d\n",HookId);
           EngSetLastError(ERROR_ACCESS_DENIED);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
 
        if (ptiHook->ppi != pti->ppi)
@@ -1509,7 +1510,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           {
              ERR("Local hook needs hMod HookId: %d\n",HookId);
              EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
-             goto Cleanup;
+             goto Cleanup; // Return NULL
           }
 
           if ( (ptiHook->TIF_flags & (TIF_CSRSSTHREAD|TIF_SYSTEMTHREAD)) &&
@@ -1523,7 +1524,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                 HookId == WH_CALLWNDPROCRET) )
           {
              EngSetLastError(ERROR_HOOK_TYPE_NOT_ALLOWED);
-             goto Cleanup;
+             goto Cleanup; // Return NULL
           }
        }
     }
@@ -1543,7 +1544,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        {
           ERR("Global hook needs hMod HookId: %d\n",HookId);
           EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
     }
 
@@ -1556,7 +1557,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     if (!NT_SUCCESS(Status))
     {
        SetLastNtError(Status);
-       goto Cleanup;
+       goto Cleanup; // Return NULL
     }
     ObDereferenceObject(WinStaObj);
 
@@ -1564,7 +1565,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
     if (!Hook)
     {
-       goto Cleanup;
+       goto Cleanup; // Return NULL
     }
 
     Hook->ihmod   = (INT_PTR)Mod; // Module Index from atom table, Do this for now.
@@ -1638,7 +1639,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        {
           IntRemoveHook(Hook);
           SetLastNtError(Status);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
 
        Hook->ModuleName.Buffer = ExAllocatePoolWithTag( PagedPool,
@@ -1648,7 +1649,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        {
           IntRemoveHook(Hook);
           EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
 
        Hook->ModuleName.MaximumLength = ModuleName.MaximumLength;
@@ -1661,7 +1662,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           Hook->ModuleName.Buffer = NULL;
           IntRemoveHook(Hook);
           SetLastNtError(Status);
-          goto Cleanup;
+          goto Cleanup; // Return NULL
        }
 
        Hook->ModuleName.Length = ModuleName.Length;
@@ -1699,7 +1700,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
     {
         ERR("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
         /* SetLastNtError(Status); */
-        goto Exit;
+        goto Exit; // Return FALSE
     }
 
     ASSERT(Hook == UserHMGetHandle(HookObj));

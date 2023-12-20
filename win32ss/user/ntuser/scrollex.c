@@ -515,7 +515,7 @@ NtUserScrollDC(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Result = UserScrollDC( hDC,
@@ -529,7 +529,7 @@ NtUserScrollDC(
    if(Result == ERROR)
    {
       /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (prcUnsafeUpdate)
@@ -548,7 +548,7 @@ NtUserScrollDC(
       {
          /* FIXME: SetLastError? */
          /* FIXME: correct? We have already scrolled! */
-         goto Exit;
+         goto Exit; // Return FALSE
       }
    }
 
@@ -591,7 +591,7 @@ NtUserScrollWindowEx(
    if (!Window || !IntIsWindowDrawable(Window))
    {
       Window = NULL; /* prevent deref at cleanup */
-      goto Cleanup;
+      goto Cleanup; // Return ERROR
    }
    UserRefObjectCo(Window, &Ref);
 
@@ -618,7 +618,7 @@ NtUserScrollWindowEx(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Cleanup;
+      goto Cleanup; // Return ERROR
    }
 
    Result = IntScrollWindowEx(Window,

@@ -802,7 +802,7 @@ NtUserValidateHandleSecure(
    if (!(entry = handle_to_entry(gHandleTable, handle )))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
    uType = entry->type;
    switch (uType)
@@ -824,7 +824,8 @@ NtUserValidateHandleSecure(
           break;
    }
 
-   if (!ppi) goto Exit;
+   if (!ppi)
+       goto Exit; // Return FALSE
 
    // Same process job returns TRUE.
    if (gptiCurrent->ppi->pW32Job == ppi->pW32Job) Ret = TRUE;

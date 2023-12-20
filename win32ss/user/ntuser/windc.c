@@ -982,7 +982,7 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-      goto Exit;
+      goto Exit; // Return NULL
   }
   Ret = UserGetDCEx(Wnd, ClipRegion, Flags);
 
