@@ -53,7 +53,7 @@ typedef enum _PNP_VETO_TYPE {
     PNP_VetoNonDisableable = 10,
     PNP_VetoLegacyDriver = 11,
     PNP_VetoInsufficientRights = 12,
-} *PPNP_VETO_TYPE;
+} PNP_VETO_TYPE, *PPNP_VETO_TYPE;
 
 cpp_quote("#endif")
 
