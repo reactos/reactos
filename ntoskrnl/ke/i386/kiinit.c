@@ -413,7 +413,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
     Cr0 &= ~(CR0_EM | CR0_MP);
     // Enable FPU exceptions.
     Cr0 |= CR0_NE;
-    
+
     __writecr0(Cr0);
 
     // Check for Pentium FPU bug.
@@ -492,14 +492,13 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Initialize spinlocks and DPC data */
     KiInitSpinLocks(Prcb, Number);
 
+    /* Set Node Data */
+    Prcb->ParentNode = KeNodeBlock[0];
+    Prcb->ParentNode->ProcessorMask |= Prcb->SetMember;
+
     /* Check if this is the Boot CPU */
     if (!Number)
     {
-        /* Set Node Data */
-        KeNodeBlock[0] = &KiNode0;
-        Prcb->ParentNode = KeNodeBlock[0];
-        KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
-
         /* Set boot-level flags */
         KeI386CpuType = Prcb->CpuType;
         KeI386CpuStep = Prcb->CpuStep;
