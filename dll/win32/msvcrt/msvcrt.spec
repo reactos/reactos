@@ -1,6 +1,6 @@
 # msvcrt.dll - MS VC++ Run Time Library
 
-@ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() I10_OUTPUT
 
 # **************** x86 C++ functions ****************
 @ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
@@ -180,7 +180,7 @@
 
 
 # **************** Common functions ****************
-@ cdecl -arch=i386 $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl -arch=i386 $I10_OUTPUT() I10_OUTPUT
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()
