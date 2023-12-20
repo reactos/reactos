@@ -336,10 +336,8 @@ public:
 
 class CActiveLanguageProfileNotifySink : public ITfActiveLanguageProfileNotifySink
 {
-public:
-    typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, int, void *);
-
 protected:
+    typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, BOOL fActivated, void *pUserData);
     LONG m_cRefs;
     ITfThreadMgr *m_pThreadMgr;
     DWORD m_dwConnection;
@@ -349,6 +347,9 @@ protected:
 public:
     CActiveLanguageProfileNotifySink(FN_COMPARE fnCompare, void *pUserData);
     virtual ~CActiveLanguageProfileNotifySink();
+
+    HRESULT _Advise(ITfThreadMgr *pThreadMgr);
+    HRESULT _Unadvise();
 
     // IUnknown interface
     STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
@@ -361,9 +362,6 @@ public:
         REFCLSID clsid,
         REFGUID guidProfile,
         BOOL fActivated) override;
-
-    HRESULT _Advise(ITfThreadMgr *pThreadMgr);
-    HRESULT _Unadvise();
 };
 
 /**
@@ -379,6 +377,9 @@ CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
     m_pUserData = pUserData;
 }
 
+/**
+ * @implemented
+ */
 CActiveLanguageProfileNotifySink::~CActiveLanguageProfileNotifySink()
 {
 }
@@ -430,6 +431,7 @@ CActiveLanguageProfileNotifySink::OnActivated(
 {
     if (!m_fnCompare)
         return 0;
+
     return m_fnCompare(clsid, guidProfile, fActivated, m_pUserData);
 }
 
@@ -440,11 +442,13 @@ HRESULT
 CActiveLanguageProfileNotifySink::_Advise(
     ITfThreadMgr *pThreadMgr)
 {
-    ITfSource *pSource = NULL;
     m_pThreadMgr = NULL;
+
+    ITfSource *pSource = NULL;
     HRESULT hr = pThreadMgr->QueryInterface(IID_ITfSource, (void **)&pSource);
     if (FAILED(hr))
         return E_FAIL;
+
     hr = pSource->AdviseSink(IID_ITfActiveLanguageProfileNotifySink, this, &m_dwConnection);
     if (SUCCEEDED(hr))
     {
@@ -456,8 +460,10 @@ CActiveLanguageProfileNotifySink::_Advise(
     {
         hr = E_FAIL;
     }
+
     if (pSource)
         pSource->Release();
+
     return hr;
 }
 
@@ -549,6 +555,7 @@ CicProfile::~CicProfile()
     {
         if (m_LangID1)
             m_pIPProfiles->ChangeCurrentLanguage(m_LangID1);
+
         m_pIPProfiles->Release();
         m_pIPProfiles = NULL;
     }
@@ -600,7 +607,7 @@ CicProfile::ActiveLanguageProfileNotifySinkCallback(
     void *pUserData)
 {
     CicProfile *pThis = (CicProfile *)pUserData;
-    pThis->m_dwFlags &= 0xFFFFFFF1;
+    pThis->m_dwFlags &= ~0xE;
     return 0;
 }
 
