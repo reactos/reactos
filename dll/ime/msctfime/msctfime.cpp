@@ -164,6 +164,10 @@ void TFUninitLib_Thread(PLIBTHREAD pLibThread)
     }
 }
 
+/***********************************************************************
+ *      Compartment
+ */
+
 HRESULT
 GetCompartment(
     IUnknown *pUnknown,
@@ -303,6 +307,154 @@ ClearCompartment(
 
     return hr;
 }
+
+typedef struct CESMAP
+{
+    ITfCompartment *m_pComp;
+    DWORD m_dwCookie;
+} CESMAP, *PCESMAP;
+
+typedef INT (CALLBACK *FN_EVENTSINK)(LPVOID, REFGUID);
+
+class CCompartmentEventSink : public ITfCompartmentEventSink
+{
+    CicArray m_array;
+    LONG m_cRefs;
+    FN_EVENTSINK m_fnEventSink;
+    LPVOID m_pUserData;
+
+public:
+    CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData);
+    virtual ~CCompartmentEventSink();
+
+    HRESULT _Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment *pComp);
+    HRESULT _Unadvise();
+
+    // IUnknown interface
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfCompartmentEventSink interface
+    STDMETHODIMP OnChange(REFGUID rguid) override;
+};
+
+CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData)
+    : m_array(8)
+    , m_cRefs(1)
+    , m_fnEventSink(fnEventSink)
+    , m_pUserData(pUserData)
+{
+}
+
+CCompartmentEventSink::~CCompartmentEventSink()
+{
+}
+
+STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCompartmentEventSink))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+
+    *ppvObj = NULL;
+    return E_NOINTERFACE;
+}
+
+STDMETHODIMP_(ULONG) CCompartmentEventSink::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+STDMETHODIMP_(ULONG) CCompartmentEventSink::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+STDMETHODIMP CCompartmentEventSink::OnChange(REFGUID rguid)
+{
+    return m_fnEventSink(m_pUserData, rguid);
+}
+
+HRESULT
+CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment *pComp)
+{
+    CESMAP *pCesMap = (CESMAP *)m_array.Append(1);
+    if (!pCesMap)
+        return E_OUTOFMEMORY;
+
+    ITfSource *pSource = NULL;
+
+    HRESULT hr = GetCompartment(pUnknown, rguid, &pCesMap->m_pComp, !!pComp);
+    if (FAILED(hr))
+    {
+        hr = pCesMap->m_pComp->QueryInterface(IID_ITfSource, (void **)&pSource);
+        if (FAILED(hr))
+        {
+            hr = pSource->AdviseSink(IID_ITfCompartmentEventSink, this, &pCesMap->m_dwCookie);
+            if (FAILED(hr))
+            {
+                if (pCesMap->m_pComp)
+                {
+                    pCesMap->m_pComp->Release();
+                    pCesMap->m_pComp = NULL;
+                }
+                m_array.Remove(m_array.m_cItems - 1, 1);
+            }
+            else
+            {
+                hr = S_OK;
+            }
+        }
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+HRESULT CCompartmentEventSink::_Unadvise()
+{
+    CESMAP *pCesMap = (CESMAP *)m_array.m_pb;
+    if (!m_array.m_cItems)
+        return S_OK;
+
+    INT cItems = m_array.m_cItems;
+    do
+    {
+        ITfSource *pSource = NULL;
+        HRESULT hr = pCesMap->m_pComp->QueryInterface(IID_ITfSource, (void **)&pSource);
+        if (SUCCEEDED(hr))
+            pSource->UnadviseSink(pCesMap->m_dwCookie);
+
+        if (pCesMap->m_pComp)
+        {
+            pCesMap->m_pComp->Release();
+            pCesMap->m_pComp = NULL;
+        }
+
+        if (pSource)
+            pSource->Release();
+
+        ++pCesMap;
+        --cItems;
+    } while (cItems);
+
+    return S_OK;
+}
+
+/***********************************************************************
+ *      CicInputContext
+ */
 
 /* FIXME */
 class CicInputContext : public ITfContextOwnerCompositionSink

@@ -11,18 +11,17 @@
 
 class CicArray
 {
-    LPVOID lpVtbl;
+public:
     LPBYTE m_pb;
     INT m_cItems;
     INT m_cbItem;
     INT m_cCapacity;
 
-public:
     CicArray(INT cbItem);
-    virtual CicArray();
+    virtual ~CicArray();
 
-    void Insert(INT iItem, INT cGrow);
-    void Append(INT cGrow);
+    BOOL Insert(INT iItem, INT cGrow);
+    LPVOID Append(INT cGrow);
     void Remove(INT iItem, INT cRemove);
 };
 
@@ -40,12 +39,14 @@ inline CicArray::~CicArray()
     cicMemFree(m_pb);
 }
 
-inline void CicArray::Append(INT cGrow)
+inline LPVOID CicArray::Append(INT cGrow)
 {
-    Insert(m_cItems, cGrow);
+    if (!Insert(m_cItems, cGrow))
+        return NULL;
+    return &m_pb[(m_cItems - cGrow) * m_cbItem];
 }
 
-inline void CicArray::Insert(INT iItem, INT cGrow)
+inline BOOL CicArray::Insert(INT iItem, INT cGrow)
 {
     INT cNewCapacity = m_cItems + cGrow;
     if (m_cCapacity < cNewCapacity)
@@ -60,7 +61,7 @@ inline void CicArray::Insert(INT iItem, INT cGrow)
             pbNew = (BYTE *)cicMemAlloc(cNewCapacity * m_cbItem);
 
         if (!pbNew)
-            return;
+            return FALSE;
 
         m_pb = pbNew;
         m_cCapacity = cNewCapacity;
@@ -74,6 +75,7 @@ inline void CicArray::Insert(INT iItem, INT cGrow)
     }
 
     m_cItems += cGrow;
+    return TRUE;
 }
 
 inline void CicArray::Remove(INT iItem, INT cRemove)
