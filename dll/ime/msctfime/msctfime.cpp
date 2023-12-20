@@ -337,7 +337,7 @@ public:
 class CActiveLanguageProfileNotifySink : public ITfActiveLanguageProfileNotifySink
 {
 protected:
-    typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, BOOL fActivated, void *pUserData);
+    typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, BOOL fActivated, LPVOID pUserData);
     LONG m_cRefs;
     ITfThreadMgr *m_pThreadMgr;
     DWORD m_dwConnection;
@@ -513,7 +513,11 @@ protected:
     LONG    m_cRefs;
 
     static INT CALLBACK
-    ActiveLanguageProfileNotifySinkCallback(REFGUID rguid1, REFGUID rguid2, int, void *pUserData);
+    ActiveLanguageProfileNotifySinkCallback(
+        REFGUID rguid1,
+        REFGUID rguid2,
+        BOOL fActivated,
+        LPVOID pUserData);
 
 public:
     CicProfile();
@@ -599,18 +603,24 @@ STDMETHODIMP_(ULONG) CicProfile::Release()
     return m_cRefs;
 }
 
+/**
+ * @implemented
+ */
 INT CALLBACK
 CicProfile::ActiveLanguageProfileNotifySinkCallback(
     REFGUID rguid1,
     REFGUID rguid2,
-    int,
-    void *pUserData)
+    BOOL fActivated,
+    LPVOID pUserData)
 {
     CicProfile *pThis = (CicProfile *)pUserData;
     pThis->m_dwFlags &= ~0xE;
     return 0;
 }
 
+/**
+ * @implemented
+ */
 HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
 {
     if (!puCodePage)
@@ -618,7 +628,7 @@ HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
 
     if (m_dwFlags & 2)
     {
-        *puCodePage = this->m_nCodePage;
+        *puCodePage = m_nCodePage;
         return S_OK;
     }
 
@@ -641,6 +651,9 @@ HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
     return S_OK;
 }
 
+/**
+ * @implemented
+ */
 HRESULT CicProfile::GetLangId(LANGID *pLangID)
 {
     *pLangID = 0;
