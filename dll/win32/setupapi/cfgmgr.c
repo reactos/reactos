@@ -636,6 +636,8 @@ CMP_RegisterNotification(
     pNotifyData->ulMagic = NOTIFY_MAGIC;
     pNotifyData->hNotifyHandle = NULL;
 
+    ZeroMemory(szNameBuffer, sizeof(szNameBuffer));
+
     if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
     {
         FIXME("Register a window\n");
@@ -645,8 +647,12 @@ CMP_RegisterNotification(
                                  ARRAYSIZE(szNameBuffer));
         if (nLength == 0)
         {
-            HeapFree(GetProcessHeap(), 0, pNotifyData);
-            return CR_INVALID_DATA;
+
+        }
+
+        if (nLength == 0)
+        {
+            szNameBuffer[0] = UNICODE_NULL;
         }
 
         FIXME("Register window: %S\n", szNameBuffer);
