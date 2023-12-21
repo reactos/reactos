@@ -974,7 +974,7 @@ HDC APIENTRY
 NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
   PWND Wnd=NULL;
-  DECLARE_RETURN(HDC);
+  HDC Ret = NULL;
 
   TRACE("Enter NtUserGetDCEx: hWnd %p, ClipRegion %p, Flags %x.\n",
       hWnd, ClipRegion, Flags);
@@ -982,14 +982,14 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-      RETURN(NULL);
+      goto Exit; // Return NULL
   }
-  RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
+  Ret = UserGetDCEx(Wnd, ClipRegion, Flags);
 
-CLEANUP:
-  TRACE("Leave NtUserGetDCEx, ret=%p\n", _ret_);
+Exit:
+  TRACE("Leave NtUserGetDCEx, ret=%p\n", Ret);
   UserLeave();
-  END_CLEANUP;
+  return Ret;
 }
 
 /*

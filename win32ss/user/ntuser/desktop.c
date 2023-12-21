@@ -2535,8 +2535,7 @@ NtUserCreateDesktop(
 {
     NTSTATUS Status;
     HDESK hDesk;
-
-    DECLARE_RETURN(HDESK);
+    HDESK Ret = NULL;
 
     TRACE("Enter NtUserCreateDesktop\n");
     UserEnterExclusive();
@@ -2552,15 +2551,15 @@ NtUserCreateDesktop(
     {
         ERR("IntCreateDesktop failed, Status 0x%08lx\n", Status);
         // SetLastNtError(Status);
-        RETURN(NULL);
+        goto Exit; // Return NULL
     }
 
-    RETURN(hDesk);
+    Ret = hDesk;
 
-CLEANUP:
-    TRACE("Leave NtUserCreateDesktop, ret=0x%p\n", _ret_);
+Exit:
+    TRACE("Leave NtUserCreateDesktop, ret=0x%p\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 /*
@@ -2724,7 +2723,7 @@ NtUserCloseDesktop(HDESK hDesktop)
 {
     PDESKTOP pdesk;
     NTSTATUS Status;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("NtUserCloseDesktop(0x%p) called\n", hDesktop);
     UserEnterExclusive();
@@ -2733,14 +2732,14 @@ NtUserCloseDesktop(HDESK hDesktop)
     {
         ERR("Attempted to close thread desktop\n");
         EngSetLastError(ERROR_BUSY);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     Status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &pdesk);
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hDesktop);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     ObDereferenceObject(pdesk);
@@ -2750,15 +2749,15 @@ NtUserCloseDesktop(HDESK hDesktop)
     {
         ERR("Failed to close desktop handle 0x%p\n", hDesktop);
         SetLastNtError(Status);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserCloseDesktop, ret=%i\n", _ret_);
+Exit:
+    TRACE("Leave NtUserCloseDesktop, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 /*
@@ -2939,7 +2938,7 @@ NtUserSwitchDesktop(HDESK hdesk)
     PDESKTOP pdesk;
     NTSTATUS Status;
     BOOL bRedrawDesktop;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     UserEnterExclusive();
     TRACE("Enter NtUserSwitchDesktop(0x%p)\n", hdesk);
@@ -2948,21 +2947,22 @@ NtUserSwitchDesktop(HDESK hdesk)
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hdesk);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
     {
         ObDereferenceObject(pdesk);
         ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     if (pdesk == gpdeskInputDesktop)
     {
         ObDereferenceObject(pdesk);
         WARN("NtUserSwitchDesktop called for active desktop\n");
-        RETURN(TRUE);
+        Ret = TRUE;
+        goto Exit;
     }
 
     /*
@@ -2974,14 +2974,14 @@ NtUserSwitchDesktop(HDESK hdesk)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     if (pdesk->rpwinstaParent != InputWindowStation)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     /* FIXME: Fail if the process is associated with a secured
@@ -3014,12 +3014,12 @@ NtUserSwitchDesktop(HDESK hdesk)
     TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n", gpdeskInputDesktop);
     ObDereferenceObject(pdesk);
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserSwitchDesktop, ret=%i\n", _ret_);
+Exit:
+    TRACE("Leave NtUserSwitchDesktop, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 /*

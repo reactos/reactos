@@ -1441,17 +1441,16 @@ IntGetCapture(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter IntGetCapture\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   RETURN( ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : 0) : 0);
+   Ret = ((ThreadQueue && ThreadQueue->spwndCapture) ? UserHMGetHandle(ThreadQueue->spwndCapture) : NULL);
 
-CLEANUP:
-   TRACE("Leave IntGetCapture, ret=%p\n", _ret_);
-   END_CLEANUP;
+   TRACE("Leave IntGetCapture, ret=%p\n", Ret);
+   return Ret;
 }
 
 HWND FASTCALL
@@ -1647,17 +1646,16 @@ IntAllowSetForegroundWindow(DWORD dwProcessId)
 HWND APIENTRY
 NtUserGetForegroundWindow(VOID)
 {
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter NtUserGetForegroundWindow\n");
    UserEnterExclusive();
 
-   RETURN( UserGetForegroundWindow());
+   Ret = UserGetForegroundWindow();
 
-CLEANUP:
-   TRACE("Leave NtUserGetForegroundWindow, ret=%p\n",_ret_);
+   TRACE("Leave NtUserGetForegroundWindow, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 HWND APIENTRY
@@ -1666,7 +1664,7 @@ NtUserSetActiveWindow(HWND hWnd)
    USER_REFERENCE_ENTRY Ref;
    HWND hWndPrev;
    PWND Window, pwndPrev;
-   DECLARE_RETURN(HWND);
+   HWND Ret = NULL;
 
    TRACE("Enter NtUserSetActiveWindow(%p)\n", hWnd);
    UserEnterExclusive();
@@ -1677,7 +1675,7 @@ NtUserSetActiveWindow(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetActiveWindow: Invalid handle 0x%p!\n",hWnd);
-         RETURN( NULL);
+         goto Exit; // Return NULL
       }
    }
 
@@ -1689,14 +1687,13 @@ NtUserSetActiveWindow(HWND hWnd)
       if (Window) UserRefObjectCo(Window, &Ref);
       UserSetActiveWindow(Window);
       if (Window) UserDerefObjectCo(Window);
-      RETURN(hWndPrev ? (IntIsWindow(hWndPrev) ? hWndPrev : NULL) : NULL);
+      Ret = ((hWndPrev && IntIsWindow(hWndPrev)) ? hWndPrev : NULL);
    }
-   RETURN( NULL);
 
-CLEANUP:
-   TRACE("Leave NtUserSetActiveWindow, ret=%p\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetActiveWindow, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -1705,17 +1702,16 @@ CLEANUP:
 HWND APIENTRY
 NtUserSetCapture(HWND hWnd)
 {
-   DECLARE_RETURN(HWND);
+   HWND Ret;
 
    TRACE("Enter NtUserSetCapture(%p)\n", hWnd);
    UserEnterExclusive();
 
-   RETURN( co_UserSetCapture(hWnd));
+   Ret = co_UserSetCapture(hWnd);
 
-CLEANUP:
-   TRACE("Leave NtUserSetCapture, ret=%p\n", _ret_);
+   TRACE("Leave NtUserSetCapture, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -1726,8 +1722,7 @@ NtUserSetFocus(HWND hWnd)
 {
    PWND Window;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(HWND);
-   HWND ret;
+   HWND ret = NULL;
 
    TRACE("Enter NtUserSetFocus(%p)\n", hWnd);
    UserEnterExclusive();
@@ -1737,24 +1732,22 @@ NtUserSetFocus(HWND hWnd)
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          ERR("NtUserSetFocus: Invalid handle 0x%p!\n",hWnd);
-         RETURN(NULL);
+         goto Exit; // Return NULL
       }
 
       UserRefObjectCo(Window, &Ref);
       ret = co_UserSetFocus(Window);
       UserDerefObjectCo(Window);
-
-      RETURN(ret);
    }
    else
    {
-      RETURN( co_UserSetFocus(0));
+      ret = co_UserSetFocus(NULL);
    }
 
-CLEANUP:
-   TRACE("Leave NtUserSetFocus, ret=%p\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetFocus, ret=%p\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /* EOF */

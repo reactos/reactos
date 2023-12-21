@@ -650,7 +650,6 @@ NtUserGetCursorInfo(
     NTSTATUS Status = STATUS_SUCCESS;
     PCURICON_OBJECT CurIcon;
     BOOL Ret = FALSE;
-    DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserGetCursorInfo\n");
     UserEnterShared();
@@ -687,12 +686,9 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);
+    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOL
@@ -999,18 +995,18 @@ NtUserGetClipCursor(
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("Enter NtUserGetClipCursor\n");
     UserEnterShared();
 
     if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
     {
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     if (!lpRect)
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
 
     CurInfo = IntGetSysCursorInfo();
     if (CurInfo->bClipped)
@@ -1029,15 +1025,15 @@ NtUserGetClipCursor(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserGetClipCursor, ret=%i\n",_ret_);
+Exit:
+    TRACE("Leave NtUserGetClipCursor, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 

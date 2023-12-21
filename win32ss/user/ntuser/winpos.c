@@ -3392,21 +3392,21 @@ NtUserGetWindowPlacement(HWND hWnd,
    PWND Wnd;
    WINDOWPLACEMENT Safepl;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetWindowPlacement\n");
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    Safepl.length = sizeof(WINDOWPLACEMENT);
@@ -3417,15 +3417,15 @@ NtUserGetWindowPlacement(HWND hWnd,
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserGetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD
@@ -3512,9 +3512,8 @@ NtUserSetWindowPos(
    int cy,
    UINT uFlags)
 {
-   DECLARE_RETURN(BOOL);
    PWND Window, pWndIA;
-   BOOL ret;
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPos\n");
@@ -3524,7 +3523,7 @@ NtUserSetWindowPos(
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       ERR("NtUserSetWindowPos bad window handle!\n");
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if ( hWndInsertAfter != HWND_TOP &&
@@ -3536,7 +3535,7 @@ NtUserSetWindowPos(
             UserIsDesktopWindow(pWndIA) || UserIsMessageWindow(pWndIA))
       {
          ERR("NtUserSetWindowPos bad insert window handle!\n");
-         RETURN(FALSE);
+         goto Exit; // Return FALSE
       }
    }
 
@@ -3560,12 +3559,10 @@ NtUserSetWindowPos(
    ret = co_WinPosSetWindowPos(Window, hWndInsertAfter, X, Y, cx, cy, uFlags);
    UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPos, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPos, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
@@ -3580,8 +3577,7 @@ NtUserSetWindowRgn(
    HRGN hrgnCopy = NULL;
    PWND Window;
    INT flags = (SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
-   BOOLEAN Ret = FALSE;
-   DECLARE_RETURN(INT);
+   INT Ret = 0;
 
    TRACE("Enter NtUserSetWindowRgn\n");
    UserEnterExclusive();
@@ -3589,7 +3585,7 @@ NtUserSetWindowRgn(
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN( 0);
+      goto Exit; // Return 0
    }
 
    if (hRgn) // The region will be deleted in user32.
@@ -3602,7 +3598,7 @@ NtUserSetWindowRgn(
          NtGdiCombineRgn( hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
-         RETURN( 0);
+         goto Exit; // Return 0
    }
 
    //// HACK 1 : Work around the lack of supporting DeferWindowPos.
@@ -3615,14 +3611,12 @@ NtUserSetWindowRgn(
        Window->hrgnNewFrame = HRGN_WINDOW;
    }
    //// HACK 2
-   Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
+   Ret = (INT)co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags | SWP_NOREDRAW));
 
-   RETURN( (INT)Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserSetWindowRgn, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowRgn, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -3640,7 +3634,7 @@ NtUserSetInternalWindowPos(
    PWND Wnd;
    RECT rect;
    POINT pt = {0};
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPlacement\n");
@@ -3649,7 +3643,7 @@ NtUserSetInternalWindowPos(
    if (!(Wnd = UserGetWindowObject(hwnd)) || // FIXME:
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    _SEH2_TRY
@@ -3668,7 +3662,7 @@ NtUserSetInternalWindowPos(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN( FALSE));
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
@@ -3691,12 +3685,12 @@ NtUserSetInternalWindowPos(
    UserRefObjectCo(Wnd, &Ref);
    IntSetWindowPlacement(Wnd, &wndpl, flags);
    UserDerefObjectCo(Wnd);
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -3709,7 +3703,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    PWND Wnd;
    WINDOWPLACEMENT Safepl;
    UINT Flags;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetWindowPlacement\n");
@@ -3718,7 +3712,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    if (!(Wnd = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    _SEH2_TRY
@@ -3729,13 +3723,13 @@ NtUserSetWindowPlacement(HWND hWnd,
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN( FALSE));
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
    if(Safepl.length != sizeof(WINDOWPLACEMENT))
    {
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
 
    Flags = PLACE_MAX | PLACE_RECT;
@@ -3743,12 +3737,12 @@ NtUserSetWindowPlacement(HWND hWnd,
    UserRefObjectCo(Wnd, &Ref);
    IntSetWindowPlacement(Wnd, &Safepl, Flags);
    UserDerefObjectCo(Wnd);
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -3758,8 +3752,8 @@ BOOL APIENTRY
 NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 {
    PWND Window;
-   BOOL ret;
-   DECLARE_RETURN(BOOL);
+   LRESULT Result;
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowWindowAsync\n");
@@ -3768,26 +3762,24 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if ( nCmdShow > SW_MAX )
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);
-   ret = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
+   Result = co_IntSendMessageNoWait( hWnd, WM_ASYNC_SHOWWINDOW, nCmdShow, 0 );
    UserDerefObjectCo(Window);
-   if (-1 == (int) ret || !ret) ret = FALSE;
+   if (Result != -1 && Result != 0) ret = TRUE;
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowWindowAsync, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowWindowAsync, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /*
@@ -3797,8 +3789,7 @@ BOOL APIENTRY
 NtUserShowWindow(HWND hWnd, LONG nCmdShow)
 {
    PWND Window;
-   BOOL ret;
-   DECLARE_RETURN(BOOL);
+   BOOL ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowWindow hWnd %p SW_ %d\n",hWnd, nCmdShow);
@@ -3807,25 +3798,23 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    if (!(Window = UserGetWindowObject(hWnd)) ||
         UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if ( nCmdShow > SW_MAX || Window->state2 & WNDS2_INDESTROY)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);
    ret = co_WinPosShowWindow(Window, nCmdShow);
    UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowWindow, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowWindow, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 
@@ -3836,10 +3825,9 @@ HWND APIENTRY
 NtUserWindowFromPoint(LONG X, LONG Y)
 {
    POINT pt;
-   HWND Ret;
-   PWND DesktopWindow = NULL, Window = NULL;
+   HWND Ret = NULL;
+   PWND DesktopWindow, Window;
    USHORT hittest;
-   DECLARE_RETURN(HWND);
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserWindowFromPoint\n");
@@ -3858,23 +3846,17 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 
       //pti = PsGetCurrentThreadWin32Thread();
       Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest, FALSE);
-
       if (Window)
       {
          Ret = UserHMGetHandle(Window);
-
-         RETURN( Ret);
       }
+
+      UserDerefObjectCo(DesktopWindow);
    }
 
-   RETURN( NULL);
-
-CLEANUP:
-   if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
-
-   TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);
+   TRACE("Leave NtUserWindowFromPoint, ret=%p\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /* EOF */
