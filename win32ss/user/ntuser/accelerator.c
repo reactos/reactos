@@ -182,7 +182,7 @@ NtUserCopyAcceleratorTable(
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        goto Exit;
+        goto Exit; // Return 0
     }
 
     /* If Entries is NULL return table size */
@@ -240,7 +240,7 @@ NtUserCreateAcceleratorTable(
     if (!Entries || EntriesCount <= 0)
     {
         SetLastNtError(STATUS_INVALID_PARAMETER);
-        goto Exit;
+        goto Exit; // Return NULL
     }
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -255,7 +255,7 @@ NtUserCreateAcceleratorTable(
     if (Accel == NULL)
     {
         SetLastNtError(STATUS_NO_MEMORY);
-        goto Exit;
+        goto Exit; // Return NULL
     }
 
     Accel->Count = EntriesCount;
@@ -265,7 +265,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(STATUS_NO_MEMORY);
-        goto Exit;
+        goto Exit; // Return NULL
     }
 
     _SEH2_TRY
@@ -303,7 +303,7 @@ NtUserCreateAcceleratorTable(
         UserDereferenceObject(Accel);
         UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(Status);
-        goto Exit;
+        goto Exit; // Return NULL
     }
 
     /* FIXME: Save HandleTable in a list somewhere so we can clean it up again */
@@ -382,7 +382,7 @@ NtUserTranslateAccelerator(
 
     if (hWnd == NULL)
     {
-        goto Cleanup;
+        goto Cleanup; // Return 0
     }
 
     _SEH2_TRY
@@ -393,7 +393,7 @@ NtUserTranslateAccelerator(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        _SEH2_YIELD(goto Cleanup);
+        _SEH2_YIELD(goto Cleanup); // Return 0
     }
     _SEH2_END;
 
@@ -402,13 +402,13 @@ NtUserTranslateAccelerator(
         (Message.message != WM_SYSCHAR) &&
         (Message.message != WM_CHAR))
     {
-        goto Cleanup;
+        goto Cleanup; // Return 0
     }
 
     Accel = UserGetAccelObject(hAccel);
     if (!Accel)
     {
-        goto Cleanup;
+        goto Cleanup; // Return 0
     }
 
     UserRefObjectCo(Accel, &AccelRef);
@@ -416,7 +416,7 @@ NtUserTranslateAccelerator(
     Window = UserGetWindowObject(hWnd);
     if (!Window)
     {
-        goto Cleanup;
+        goto Cleanup; // Return 0
     }
 
     UserRefObjectCo(Window, &WindowRef);
