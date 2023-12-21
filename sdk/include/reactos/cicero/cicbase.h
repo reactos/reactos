@@ -61,7 +61,7 @@ static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
 {
 }
 
-/* The flags of GetOSInfo() */
+/* The flags of cicGetOSInfo() */
 #define OSINFO_NT    0x01
 #define OSINFO_CJK   0x10
 #define OSINFO_IMM   0x20
