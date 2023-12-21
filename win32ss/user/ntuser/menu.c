@@ -5656,12 +5656,12 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return NULL
    }
 
    if (!(Menu = IntGetSystemMenu(Window, bRevert)))
    {
-      goto Exit;
+      goto Exit; // Return NULL
    }
 
    Ret = UserHMGetHandle(Menu);
@@ -5691,7 +5691,7 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (hMenu)
@@ -5701,7 +5701,7 @@ NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
        */
       if (!(Menu = IntGetMenuObject(hMenu)))
       {
-         goto Exit;
+         goto Exit; // Return FALSE
       }
 
       Result = IntSetSystemMenu(Window, Menu);
@@ -5814,12 +5814,12 @@ NtUserDestroyMenu(
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
    if (Menu->head.rpdesk != gptiCurrent->rpdesk)
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
    Ret = IntDestroyMenuObject(Menu, TRUE);
 
@@ -5910,7 +5910,7 @@ NtUserGetMenuBarInfo(
    if (!(pWnd = UserGetWindowObject(hwnd)))
    {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
    }
 
    UserRefObjectCo(pWnd, &Ref);
@@ -5925,12 +5925,12 @@ NtUserGetMenuBarInfo(
    {
     case OBJID_CLIENT:
         if (!pWnd->pcls->fnid)
-            goto Cleanup;
+            goto Cleanup; // Return FALSE
         if (pWnd->pcls->fnid != FNID_MENU)
         {
             WARN("called on invalid window: %u\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-            goto Cleanup;
+            goto Cleanup; // Return FALSE
         }
         // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
         hMenu = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
@@ -5944,21 +5944,23 @@ NtUserGetMenuBarInfo(
         }
         break;
     case OBJID_MENU:
-        if (pWnd->style & WS_CHILD) goto Cleanup;
+        if (pWnd->style & WS_CHILD)
+            goto Cleanup; // Return FALSE
         hMenu = UlongToHandle(pWnd->IDMenu);
         TRACE("GMBI: OBJID_MENU hMenu %p\n",hMenu);
         break;
     case OBJID_SYSMENU:
-        if (!(pWnd->style & WS_SYSMENU)) goto Cleanup;
+        if (!(pWnd->style & WS_SYSMENU))
+            goto Cleanup; // Return FALSE
         Menu = IntGetSystemMenu(pWnd, FALSE);
         hMenu = UserHMGetHandle(Menu);
         break;
     default:
-        goto Cleanup;
+        goto Cleanup; // Return FALSE
    }
 
    if (!hMenu)
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
 
    _SEH2_TRY
    {
@@ -5974,18 +5976,18 @@ NtUserGetMenuBarInfo(
    if (kmbi.cbSize != sizeof(MENUBARINFO))
    {
        EngSetLastError(ERROR_INVALID_PARAMETER);
-       goto Cleanup;
+       goto Cleanup; // Return FALSE
    }
 
    if (!Menu)
    {
        Menu = UserGetMenuObject(hMenu);
        if (!Menu)
-          goto Cleanup;
+          goto Cleanup; // Return FALSE
    }
 
    if ((idItem < 0) || ((ULONG)idItem > Menu->cItems))
-       goto Cleanup;
+       goto Cleanup; // Return FALSE
 
    if (idItem == 0)
    {
@@ -6061,7 +6063,7 @@ NtUserGetMenuIndex(
 
    if ( !(Menu = UserGetMenuObject(hMenu)) ||
         !(SubMenu = UserGetMenuObject(hSubMenu)) )
-      goto Exit;
+      goto Exit; // Return 0xFFFFFFFF
 
    MenuItem = Menu->rgItems;
    for (i = 0; i < Menu->cItems; i++, MenuItem++)
@@ -6102,7 +6104,7 @@ NtUserGetMenuItemRect(
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if ((MenuItem = MENU_FindItem (&Menu, &uItem, MF_BYPOSITION)))
@@ -6113,16 +6115,18 @@ NtUserGetMenuItemRect(
       Rect.bottom = MenuItem->cyItem;
    }
    else
-      goto Exit;
+      goto Exit; // Return FALSE
 
    if(!hWnd)
    {
        hWnd = Menu->hWnd;
    }
 
-   if (lprcItem == NULL) goto Exit;
+   if (lprcItem == NULL)
+       goto Exit; // Return FALSE
 
-   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) goto Exit;
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd)))
+       goto Exit; // Return FALSE
 
    if (Menu->fFlags & MNF_POPUP)
    {
@@ -6153,7 +6157,7 @@ NtUserGetMenuItemRect(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
    Ret = TRUE;
 
@@ -6183,13 +6187,13 @@ NtUserHiliteMenuItem(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Ret = IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite);
@@ -6224,13 +6228,13 @@ NtUserDrawMenuBarTemp(
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    _SEH2_TRY
@@ -6247,7 +6251,7 @@ NtUserDrawMenuBarTemp(
    if (Status != STATUS_SUCCESS)
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    Ret = IntDrawMenuBarTemp(Window, hDC, &Rect, Menu, hFont);
@@ -6279,12 +6283,12 @@ NtUserMenuItemFromPoint(
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      goto Exit;
+      goto Exit; // Return -1
    }
 
    if (!(Window = UserGetWindowObject(Menu->hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return -1
    }
 
    X -= Window->rcWindow.left;
@@ -6396,12 +6400,12 @@ NtUserSetMenu(
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (!IntSetMenu(Window, Menu, &Changed))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    // Not minimized and please repaint!!!
@@ -6548,7 +6552,7 @@ NtUserThunkedMenuItemInfo(
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
-      goto Cleanup;
+      goto Cleanup; // Return FALSE
    }
 
    /* Check if we got a Caption */
@@ -6562,7 +6566,7 @@ NtUserThunkedMenuItemInfo(
       {
          ERR("Failed to capture MenuItem Caption (status 0x%08x)\n",Status);
          SetLastNtError(Status);
-         goto Cleanup;
+         goto Cleanup; // Return FALSE
       }
    }
 
