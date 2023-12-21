@@ -25,10 +25,10 @@ public:
 };
 
 template <typename T_ITEM>
-class CicTypedArray : protected CicArrayBase
+class CicArray : protected CicArrayBase
 {
 public:
-    CicTypedArray() : CicArrayBase(sizeof(T_ITEM)) { }
+    CicArray() : CicArrayBase(sizeof(T_ITEM)) { }
 
     T_ITEM* data() const { return (T_ITEM*)m_pb; }
     size_t size() const  { return m_cItems;      }

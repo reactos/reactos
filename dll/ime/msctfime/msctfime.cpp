@@ -348,7 +348,7 @@ typedef INT (CALLBACK *FN_EVENTSINK)(LPVOID, REFGUID);
 
 class CCompartmentEventSink : public ITfCompartmentEventSink
 {
-    CicTypedArray<CESMAP> m_array;
+    CicArray<CESMAP> m_array;
     LONG m_cRefs;
     FN_EVENTSINK m_fnEventSink;
     LPVOID m_pUserData;
