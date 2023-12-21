@@ -503,10 +503,32 @@ HRESULT CCompartmentEventSink::_Unadvise()
  *      CicInputContext
  */
 
+class CInputContextOwnerCallBack;
+
 /* FIXME */
 class CicInputContext : public ITfContextOwnerCompositionSink
 {
+    DWORD m_dw[2];
     LONG m_cRefs;
+    HIMC m_hIMC;
+    ITfDocumentMgr *m_pDocumentMgr;
+    ITfContext *m_pContext;
+    DWORD m_dw0_0[1];
+    CInputContextOwnerCallBack *m_pICOwnerCallback;
+    DWORD m_dw0;
+    CCompartmentEventSink *m_pCompEventSink1;
+    CCompartmentEventSink *m_pCompEventSink2;
+    DWORD m_dw0_5[4];
+    DWORD m_dw1[2];
+    DWORD m_dwQueryPos;
+    DWORD m_dw1_5[1];
+    GUID m_guid;
+    DWORD m_dw2[19];
+    WORD m_cGuidAtoms;
+    WORD m_padding;
+    DWORD m_adwGuidAtoms[256];
+    DWORD m_dw3[19];
+
 public:
     CicInputContext()
     {
@@ -529,7 +551,7 @@ public:
     HRESULT
     GetGuidAtom(
         _Inout_ IMCLock& imcLock,
-        _In_ DWORD dwUnknown,
+        _In_ BYTE iAtom,
         _Out_opt_ LPDWORD pdwGuidAtom);
 
     HRESULT DestroyInputContext();
@@ -612,24 +634,28 @@ CicInputContext::OnEndComposition(
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 HRESULT
 CicInputContext::GetGuidAtom(
     _Inout_ IMCLock& imcLock,
-    _In_ DWORD dwUnknown,
+    _In_ BYTE iAtom,
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
     IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
-
     HRESULT hr = imeContext.m_hr;
     if (!imeContext)
         hr = E_FAIL;
-
     if (FAILED(hr))
         return hr;
 
-    // FIXME
+    hr = E_FAIL;
+    if (iAtom < m_cGuidAtoms)
+    {
+        *pdwGuidAtom = m_adwGuidAtoms[iAtom];
+        hr = S_OK;
+    }
+
     return hr;
 }
 
