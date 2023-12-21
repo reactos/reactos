@@ -29,7 +29,7 @@ HANDLE      g_hCicMutex     = NULL;     // The Cicero mutex
 BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
-DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo
+DWORD       g_dwOsInfo      = 0;        // The OS version info. See cicGetOSInfo
 CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar loader window
 
 // Is the current process on WoW64?
@@ -205,7 +205,7 @@ InitApp(
 
     g_uACP      = ::GetACP();   // Save the active codepage
     g_bOnWow64  = IsWow64();    // Is the current process on WoW64?
-    g_dwOsInfo  = GetOSInfo();  // Get OS info
+    g_dwOsInfo  = cicGetOSInfo(); // Get OS info
 
     // Create a mutex for Cicero
     g_hCicMutex = TF_CreateCicLoadMutex(&g_fWinLogon);

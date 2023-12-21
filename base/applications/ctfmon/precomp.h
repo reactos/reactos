@@ -20,7 +20,6 @@
 
 #include <cicero/cicbase.h>
 #include <cicero/cicpath.h>
-#include <cicero/osinfo.h>
 
 #include "resource.h"
 

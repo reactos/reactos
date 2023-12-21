@@ -56,3 +56,42 @@ static inline void ClosePopupTipbar(void)
 static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
 {
 }
+
+/* The flags of GetOSInfo() */
+#define OSINFO_NT    0x01
+#define OSINFO_CJK   0x10
+#define OSINFO_IMM   0x20
+#define OSINFO_DBCS  0x40
+
+static inline DWORD
+cicGetOSInfo(VOID)
+{
+    DWORD dwOsInfo = 0;
+
+    /* Check OS version info */
+    OSVERSIONINFOW VerInfo = { sizeof(VerInfo) };
+    GetVersionExW(&VerInfo);
+    if (VerInfo.dwPlatformId == DLLVER_PLATFORM_NT)
+        dwOsInfo |= OSINFO_NT;
+
+    /* Check codepage */
+    switch (GetACP())
+    {
+        case 932: /* Japanese (Japan) */
+        case 936: /* Chinese (PRC, Singapore) */
+        case 949: /* Korean (Korea) */
+        case 950: /* Chinese (Taiwan, Hong Kong) */
+            dwOsInfo |= OSINFO_CJK;
+            break;
+    }
+
+    if (GetSystemMetrics(SM_IMMENABLED))
+        dwOsInfo |= OSINFO_IMM;
+
+    if (GetSystemMetrics(SM_DBCSENABLED))
+        dwOsInfo |= OSINFO_DBCS;
+
+    /* I'm not interested in other flags */
+
+    return dwOsInfo;
+}

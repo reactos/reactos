@@ -2841,7 +2841,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     if (!TLS::Initialize())
         return FALSE;
 
-    g_dwOSInfo = GetOSInfo();
+    g_dwOSInfo = cicGetOSInfo();
 
     // FIXME
 
