@@ -30,22 +30,11 @@ template <typename T_ITEM>
 class CicTypedArray : protected CicArray
 {
 public:
-    CicTypedArray() : CicArray(sizeof(T_ITEM))
-    {
-    }
+    CicTypedArray() : CicArray(sizeof(T_ITEM)) { }
 
-    T_ITEM* data() const
-    {
-        return (T_ITEM*)m_pb;
-    }
-    size_t size() const
-    {
-        return m_cItems;
-    }
-    bool empty() const
-    {
-        return !size();
-    }
+    T_ITEM* data() const { return (T_ITEM*)m_pb; }
+    size_t size() const { return m_cItems; }
+    bool empty() const { return !size(); }
 
     T_ITEM& get_at(size_t iItem)
     {
@@ -99,12 +88,7 @@ inline BOOL CicArray::Insert(size_t iItem, size_t cGrow)
         if (cNewCapacity <= m_cItems + m_cItems / 2)
             cNewCapacity = m_cItems + m_cItems / 2;
 
-        BYTE *pbNew;
-        if (m_pb)
-            pbNew = (BYTE *)cicMemReAlloc(m_pb, cNewCapacity * m_cbItem);
-        else
-            pbNew = (BYTE *)cicMemAlloc(cNewCapacity * m_cbItem);
-
+        BYTE *pbNew = (BYTE *)cicMemReAlloc(m_pb, cNewCapacity * m_cbItem);
         if (!pbNew)
             return FALSE;
 
