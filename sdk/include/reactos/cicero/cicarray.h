@@ -11,23 +11,68 @@
 
 class CicArray
 {
-public:
+protected:
     LPBYTE m_pb;
-    INT m_cItems;
-    INT m_cbItem;
-    INT m_cCapacity;
+    size_t m_cItems;
+    size_t m_cbItem;
+    size_t m_cCapacity;
 
-    CicArray(INT cbItem);
+public:
+    CicArray(size_t cbItem);
     virtual ~CicArray();
 
-    BOOL Insert(INT iItem, INT cGrow);
-    LPVOID Append(INT cGrow);
-    void Remove(INT iItem, INT cRemove);
+    BOOL Insert(size_t iItem, size_t cGrow);
+    LPVOID Append(size_t cGrow);
+    void Remove(size_t iItem, size_t cRemove);
+};
+
+template <typename T_ITEM>
+class CicTypedArray : protected CicArray
+{
+public:
+    CicTypedArray() : CicArray(sizeof(T_ITEM))
+    {
+    }
+
+    T_ITEM* data() const
+    {
+        return (T_ITEM*)m_pb;
+    }
+    size_t size() const
+    {
+        return m_cItems;
+    }
+    bool empty() const
+    {
+        return !size();
+    }
+
+    T_ITEM& get_at(size_t iItem)
+    {
+        return *(T_ITEM*)&m_pb[iItem * m_cbItem];
+    }
+    const T_ITEM& get_at(size_t iItem) const
+    {
+        return *(T_ITEM*)&m_pb[iItem * m_cbItem];
+    }
+
+    void set_at(size_t iItem, const T_ITEM& item)
+    {
+        *(T_ITEM*)&m_pb[iItem * m_cbItem] = item;
+    }
+
+    T_ITEM* Append(size_t cGrow)
+    {
+        return (T_ITEM*)CicArray::Append(cGrow);
+    }
+
+    using CicArray::Insert;
+    using CicArray::Remove;
 };
 
 /******************************************************************************/
 
-inline CicArray::CicArray(INT cbItem)
+inline CicArray::CicArray(size_t cbItem)
 {
     m_cbItem = cbItem;
     m_pb = NULL;
@@ -39,16 +84,16 @@ inline CicArray::~CicArray()
     cicMemFree(m_pb);
 }
 
-inline LPVOID CicArray::Append(INT cGrow)
+inline LPVOID CicArray::Append(size_t cGrow)
 {
     if (!Insert(m_cItems, cGrow))
         return NULL;
     return &m_pb[(m_cItems - cGrow) * m_cbItem];
 }
 
-inline BOOL CicArray::Insert(INT iItem, INT cGrow)
+inline BOOL CicArray::Insert(size_t iItem, size_t cGrow)
 {
-    INT cNewCapacity = m_cItems + cGrow;
+    size_t cNewCapacity = m_cItems + cGrow;
     if (m_cCapacity < cNewCapacity)
     {
         if (cNewCapacity <= m_cItems + m_cItems / 2)
@@ -78,7 +123,7 @@ inline BOOL CicArray::Insert(INT iItem, INT cGrow)
     return TRUE;
 }
 
-inline void CicArray::Remove(INT iItem, INT cRemove)
+inline void CicArray::Remove(size_t iItem, size_t cRemove)
 {
     if (iItem + cRemove < m_cItems)
     {
@@ -89,7 +134,7 @@ inline void CicArray::Remove(INT iItem, INT cRemove)
 
     m_cItems -= cRemove;
 
-    INT cHalfCapacity = m_cCapacity / 2;
+    size_t cHalfCapacity = m_cCapacity / 2;
     if (cHalfCapacity > m_cItems)
     {
         BYTE *pb = (BYTE *)cicMemReAlloc(m_pb, cHalfCapacity * m_cbItem);

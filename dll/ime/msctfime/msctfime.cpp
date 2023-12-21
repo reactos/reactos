@@ -348,7 +348,7 @@ typedef INT (CALLBACK *FN_EVENTSINK)(LPVOID, REFGUID);
 
 class CCompartmentEventSink : public ITfCompartmentEventSink
 {
-    CicArray m_array;
+    CicTypedArray<CESMAP> m_array;
     LONG m_cRefs;
     FN_EVENTSINK m_fnEventSink;
     LPVOID m_pUserData;
@@ -373,7 +373,7 @@ public:
  * @implemented
  */
 CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData)
-    : m_array(8)
+    : m_array()
     , m_cRefs(1)
     , m_fnEventSink(fnEventSink)
     , m_pUserData(pUserData)
@@ -438,7 +438,7 @@ STDMETHODIMP CCompartmentEventSink::OnChange(REFGUID rguid)
 HRESULT
 CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
 {
-    CESMAP *pCesMap = (CESMAP *)m_array.Append(1);
+    CESMAP *pCesMap = m_array.Append(1);
     if (!pCesMap)
         return E_OUTOFMEMORY;
 
@@ -458,7 +458,7 @@ CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
                     pCesMap->m_pComp->Release();
                     pCesMap->m_pComp = NULL;
                 }
-                m_array.Remove(m_array.m_cItems - 1, 1);
+                m_array.Remove(m_array.size() - 1, 1);
             }
             else
             {
@@ -478,11 +478,11 @@ CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
  */
 HRESULT CCompartmentEventSink::_Unadvise()
 {
-    CESMAP *pCesMap = (CESMAP *)m_array.m_pb;
-    if (!m_array.m_cItems)
+    CESMAP *pCesMap = m_array.data();
+    size_t cItems = m_array.size();
+    if (!cItems)
         return S_OK;
 
-    INT cItems = m_array.m_cItems;
     do
     {
         ITfSource *pSource = NULL;
