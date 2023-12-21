@@ -18,7 +18,6 @@
 #include <ctffunc.h>
 
 #include <cicero/cicbase.h>
-#include <cicero/cicpath.h>
 
 #include "resource.h"
 
