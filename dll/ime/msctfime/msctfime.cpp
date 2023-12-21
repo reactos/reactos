@@ -168,6 +168,9 @@ void TFUninitLib_Thread(PLIBTHREAD pLibThread)
  *      Compartment
  */
 
+/**
+ * @implemented
+ */
 HRESULT
 GetCompartment(
     IUnknown *pUnknown,
@@ -175,10 +178,11 @@ GetCompartment(
     ITfCompartment **ppComp,
     BOOL bThread)
 {
+    *ppComp = NULL;
+
     ITfThreadMgr *pThreadMgr = NULL;
     ITfCompartmentMgr *pCompMgr = NULL;
 
-    *ppComp = NULL;
     HRESULT hr;
     if (bThread)
     {
@@ -195,10 +199,12 @@ GetCompartment(
 
     if (SUCCEEDED(hr))
     {
+        hr = E_FAIL;
         if (pCompMgr)
+        {
             hr = pCompMgr->GetCompartment(rguid, ppComp);
-        else
-            hr = E_FAIL;
+            pCompMgr->Release();
+        }
     }
 
     if (pThreadMgr)
@@ -207,12 +213,15 @@ GetCompartment(
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 SetCompartmentDWORD(
     TfEditCookie cookie,
     IUnknown *pUnknown,
     REFGUID rguid,
-    VARTYPE type,
+    DWORD dwValue,
     BOOL bThread)
 {
     ITfCompartment *pComp = NULL;
@@ -221,38 +230,49 @@ SetCompartmentDWORD(
         return hr;
 
     VARIANT vari;
-    V_I4(&vari) = type;
+    V_I4(&vari) = dwValue;
     V_VT(&vari) = VT_I4;
     hr = pComp->SetValue(cookie, &vari);
-    pComp->Release();
 
+    pComp->Release();
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 GetCompartmentDWORD(
     IUnknown *pUnknown,
     REFGUID rguid,
-    ITfCompartment *pComp,
+    LPDWORD pdwValue,
     BOOL bThread)
 {
+    *pdwValue = 0;
+
+    ITfCompartment *pComp = NULL;
     HRESULT hr = GetCompartment(pUnknown, rguid, &pComp, bThread);
     if (FAILED(hr))
         return hr;
 
     VARIANT vari;
     hr = pComp->GetValue(&vari);
-    pComp->Release();
+    if (hr == S_OK)
+        *pdwValue = V_I4(&vari);
 
+    pComp->Release();
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 SetCompartmentUnknown(
     TfEditCookie cookie,
     IUnknown *pUnknown,
     REFGUID rguid,
-    IUnknown *pUnknown2)
+    IUnknown *punkValue)
 {
     ITfCompartment *pComp = NULL;
     HRESULT hr = GetCompartment(pUnknown, rguid, &pComp, FALSE);
@@ -260,14 +280,17 @@ SetCompartmentUnknown(
         return hr;
 
     VARIANT vari;
-    V_UNKNOWN(&vari) = pUnknown2;
+    V_UNKNOWN(&vari) = punkValue;
     V_VT(&vari) = VT_UNKNOWN;
     hr = pComp->SetValue(cookie, &vari);
-    pComp->Release();
 
+    pComp->Release();
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 ClearCompartment(
     TfClientId tid,
@@ -327,7 +350,7 @@ public:
     CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData);
     virtual ~CCompartmentEventSink();
 
-    HRESULT _Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment *pComp);
+    HRESULT _Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread);
     HRESULT _Unadvise();
 
     // IUnknown interface
@@ -339,6 +362,9 @@ public:
     STDMETHODIMP OnChange(REFGUID rguid) override;
 };
 
+/**
+ * @implemented
+ */
 CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData)
     : m_array(8)
     , m_cRefs(1)
@@ -347,10 +373,16 @@ CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pU
 {
 }
 
+/**
+ * @implemented
+ */
 CCompartmentEventSink::~CCompartmentEventSink()
 {
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCompartmentEventSink))
@@ -364,11 +396,17 @@ STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP_(ULONG) CCompartmentEventSink::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP_(ULONG) CCompartmentEventSink::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -379,13 +417,19 @@ STDMETHODIMP_(ULONG) CCompartmentEventSink::Release()
     return m_cRefs;
 }
 
+/**
+ * @implemented
+ */
 STDMETHODIMP CCompartmentEventSink::OnChange(REFGUID rguid)
 {
     return m_fnEventSink(m_pUserData, rguid);
 }
 
+/**
+ * @implemented
+ */
 HRESULT
-CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment *pComp)
+CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
 {
     CESMAP *pCesMap = (CESMAP *)m_array.Append(1);
     if (!pCesMap)
@@ -393,7 +437,7 @@ CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment
 
     ITfSource *pSource = NULL;
 
-    HRESULT hr = GetCompartment(pUnknown, rguid, &pCesMap->m_pComp, !!pComp);
+    HRESULT hr = GetCompartment(pUnknown, rguid, &pCesMap->m_pComp, bThread);
     if (FAILED(hr))
     {
         hr = pCesMap->m_pComp->QueryInterface(IID_ITfSource, (void **)&pSource);
@@ -422,6 +466,9 @@ CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, ITfCompartment
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT CCompartmentEventSink::_Unadvise()
 {
     CESMAP *pCesMap = (CESMAP *)m_array.m_pb;
@@ -904,6 +951,8 @@ public:
     HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
     HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
+
+    void PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs);
 
     HRESULT ConfigureGeneral(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd);
     HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
@@ -1644,6 +1693,20 @@ STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
     return S_OK;
 }
 
+/**
+ * @implemented
+ */
+void CicBridge::PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs)
+{
+    for (INT i = 0; i < cTransMsgs; ++i, ++pTransMsgs)
+    {
+        ::PostMessageW(hWnd, pTransMsgs->message, pTransMsgs->wParam, pTransMsgs->lParam);
+    }
+}
+
+/**
+ * @implemented
+ */
 HRESULT
 CicBridge::ConfigureGeneral(
     TLS* pTLS,
@@ -1680,6 +1743,9 @@ CicBridge::ConfigureGeneral(
     return hr;
 }
 
+/**
+ * @implemented
+ */
 HRESULT
 CicBridge::ConfigureRegisterWord(
     TLS* pTLS,
