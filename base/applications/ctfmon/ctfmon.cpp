@@ -9,10 +9,6 @@
 #include "CRegWatcher.h"
 #include "CLoaderWnd.h"
 
-// ntdll!NtQueryInformationProcess
-typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
-FN_NtQueryInformationProcess g_fnNtQueryInformationProcess = NULL;
-
 // kernel32!SetProcessShutdownParameters
 typedef BOOL (WINAPI *FN_SetProcessShutdownParameters)(DWORD, DWORD);
 FN_SetProcessShutdownParameters g_fnSetProcessShutdownParameters = NULL;
@@ -31,28 +27,6 @@ BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See cicGetOSInfo
 CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar loader window
-
-// Is the current process on WoW64?
-static BOOL
-IsWow64(VOID)
-{
-    HMODULE hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
-    if (!hNTDLL)
-        return FALSE;
-
-    g_fnNtQueryInformationProcess =
-        (FN_NtQueryInformationProcess)::GetProcAddress(hNTDLL, "NtQueryInformationProcess");
-    if (!g_fnNtQueryInformationProcess)
-        return FALSE;
-
-    ULONG_PTR Value = 0;
-    NTSTATUS Status = g_fnNtQueryInformationProcess(::GetCurrentProcess(), ProcessWow64Information,
-                                                    &Value, sizeof(Value), NULL);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    return !!Value;
-}
 
 static VOID
 ParseCommandLine(
@@ -204,7 +178,7 @@ InitApp(
     g_hInst     = hInstance;    // Save the instance handle
 
     g_uACP      = ::GetACP();   // Save the active codepage
-    g_bOnWow64  = IsWow64();    // Is the current process on WoW64?
+    g_bOnWow64  = cicIsWow64();   // Is the current process on WoW64?
     g_dwOsInfo  = cicGetOSInfo(); // Get OS info
 
     // Create a mutex for Cicero

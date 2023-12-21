@@ -95,3 +95,34 @@ cicGetOSInfo(VOID)
 
     return dwOsInfo;
 }
+
+// ntdll!NtQueryInformationProcess
+typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+
+// Is the current process on WoW64?
+static inline BOOL cicIsWow64(VOID)
+{
+    static FN_NtQueryInformationProcess s_fnNtQueryInformationProcess = NULL;
+    ULONG_PTR Value;
+    NTSTATUS Status;
+
+    if (!s_fnNtQueryInformationProcess)
+    {
+        HMODULE hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
+        if (!hNTDLL)
+            return FALSE;
+
+        s_fnNtQueryInformationProcess =
+            (FN_NtQueryInformationProcess)GetProcAddress(hNTDLL, "NtQueryInformationProcess");
+        if (!s_fnNtQueryInformationProcess)
+            return FALSE;
+    }
+
+    Value = 0;
+    Status = s_fnNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information,
+                                           &Value, sizeof(Value), NULL);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    return !!Value;
+}
