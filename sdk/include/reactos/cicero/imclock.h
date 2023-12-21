@@ -41,9 +41,18 @@ public:
     }
     ~IMCCLock()
     {
-        if (this->m_pIMCC)
-            _UnlockIMCC(this->m_hIMCC);
+        unlock();
     }
+
+    void unlock()
+    {
+        if (this->m_pIMCC)
+        {
+            _UnlockIMCC(this->m_hIMCC);
+            this->m_pIMCC = NULL;
+        }
+    }
+
     operator T_DATA*() const
     {
         return this->m_pIMCC;
@@ -102,8 +111,16 @@ public:
     }
     ~IMCLock()
     {
+        unlock();
+    }
+
+    void unlock()
+    {
         if (m_pIC)
+        {
             _UnlockIMC(m_hIMC);
+            m_pIC = NULL;
+        }
     }
 
     void InitContext()
