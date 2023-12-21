@@ -1684,6 +1684,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SendMessage(fMainReBar, RB_HITTEST, 0, (LPARAM)&hitTestInfo);
     if (hitTestInfo.iBand == -1)
         return 0;
+
+    pSettings->Load();
     rebarBandInfo.cbSize = sizeof(rebarBandInfo);
     rebarBandInfo.fMask = RBBIM_ID;
     SendMessage(fMainReBar, RB_GETBANDINFOW, hitTestInfo.iBand, (LPARAM)&rebarBandInfo);
