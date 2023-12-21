@@ -24,8 +24,8 @@
 
 #include <cicero/cicbase.h>
 #include <cicero/cicarray.h>
+#include <cicero/cicpath.h>
 #include <cicero/osinfo.h>
-#include <cicero/CModulePath.h>
 #include <cicero/imclock.h>
 
 class CicInputContext;

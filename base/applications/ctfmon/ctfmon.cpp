@@ -107,7 +107,7 @@ WriteRegRun(VOID)
         return;
 
     // Write the module path
-    CModulePath ModPath;
+    CicSystemModulePath ModPath;
     if (ModPath.Init(L"ctfmon.exe", FALSE))
     {
         DWORD cbData = (ModPath.m_cchPath + 1) * sizeof(WCHAR);

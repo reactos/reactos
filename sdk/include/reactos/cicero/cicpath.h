@@ -7,12 +7,12 @@
 
 #pragma once
 
-struct CModulePath
+struct CicSystemModulePath
 {
     WCHAR m_szPath[MAX_PATH];
     SIZE_T m_cchPath;
 
-    CModulePath()
+    CicSystemModulePath()
     {
         m_szPath[0] = UNICODE_NULL;
         m_cchPath = 0;
@@ -27,7 +27,7 @@ GetSystemModuleHandle(
     _In_ LPCWSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
-    CModulePath ModPath;
+    CicSystemModulePath ModPath;
     if (!ModPath.Init(pszFileName, bSysWinDir))
         return NULL;
     return GetModuleHandleW(ModPath.m_szPath);
@@ -39,7 +39,7 @@ LoadSystemLibrary(
     _In_ LPCWSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
-    CModulePath ModPath;
+    CicSystemModulePath ModPath;
     if (!ModPath.Init(pszFileName, bSysWinDir))
         return NULL;
     return ::LoadLibraryW(ModPath.m_szPath);
@@ -48,7 +48,7 @@ LoadSystemLibrary(
 /******************************************************************************/
 
 inline BOOL
-CModulePath::Init(
+CicSystemModulePath::Init(
     _In_ LPCWSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
