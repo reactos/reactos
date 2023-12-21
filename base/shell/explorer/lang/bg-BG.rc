@@ -90,10 +90,10 @@ BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN, 7, 7, 183, 108
     AUTORADIOBUTTON "&Старт меню", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "Тази лента със задачите ви дава лесен достъп до папките ви, приложенията и търсенето.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
-    PUSHBUTTON "&Персонализиране...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
+    PUSHBUTTON "&Персонализиране...", IDC_TASKBARPROP_STARTMENUCUST, 172, 132, 73, 14
     AUTORADIOBUTTON "Класическо Старт меню", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Този изглед на лентата със задачите ви осигурява класически облик и начин на работа.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
-    PUSHBUTTON "&Персонализиране...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
+    PUSHBUTTON "&Персонализиране...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 172, 172, 73, 14
 END
 
 IDD_TASKBARPROP_NOTIFY DIALOGEX 0, 0, 252, 218
@@ -106,11 +106,11 @@ BEGIN
     LTEXT "Можете да поддържате лентата подредена, като скривате приложенията, върху които скоро не сте стартирали.", IDC_STATIC, 13, 48, 223, 16
     AUTOCHECKBOX "Скриване на неактивните иконки", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "Персонализиране...", IDC_TASKBARPROP_ICONCUST, 168, 70, 70, 14
-    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    GROUPBOX "Системни иконки", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Изберете системните иконки които винаги видими.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "&Часовник", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "Покажи секундите", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "&Работен плот", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
