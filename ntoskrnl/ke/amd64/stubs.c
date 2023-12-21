@@ -111,6 +111,8 @@ KiIdleLoop(VOID)
     /* Now loop forever */
     while (TRUE)
     {
+        ASSERT(KeGetCurrentThread()->SwapBusy == FALSE);
+
         /* Start of the idle loop: disable interrupts */
         _enable();
         YieldProcessor();
@@ -134,6 +136,9 @@ KiIdleLoop(VOID)
         {
             /* Enable interrupts */
             _enable();
+
+            // Do we need this?
+            KiSetThreadSwapBusy(Prcb->IdleThread);
 
             /* Capture current thread data */
             OldThread = Prcb->CurrentThread;
