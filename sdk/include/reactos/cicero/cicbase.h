@@ -116,7 +116,7 @@ struct CicSystemModulePath
 
 // Get an instance handle that is already loaded
 static inline HINSTANCE
-GetSystemModuleHandle(
+cicGetSystemModuleHandle(
     _In_ LPCWSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
@@ -128,7 +128,7 @@ GetSystemModuleHandle(
 
 // Load a system library
 static inline HINSTANCE
-LoadSystemLibrary(
+cicLoadSystemLibrary(
     _In_ LPCWSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
@@ -152,7 +152,7 @@ static inline BOOL cicIsWow64(VOID)
 
     if (!s_fnNtQueryInformationProcess)
     {
-        HMODULE hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
+        HMODULE hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
         if (!hNTDLL)
             return FALSE;
 

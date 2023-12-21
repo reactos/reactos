@@ -146,7 +146,7 @@ CheckX64System(
     }
 
     // Get GetSystemWow64DirectoryW function
-    g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
+    g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
     g_fnGetSystemWow64DirectoryW =
         (FN_GetSystemWow64DirectoryW)::GetProcAddress(g_hKernel32, "GetSystemWow64DirectoryW");
     if (!g_fnGetSystemWow64DirectoryW)
@@ -192,7 +192,7 @@ InitApp(
     // Call SetProcessShutdownParameters if possible
     if (g_dwOsInfo & OSINFO_NT)
     {
-        g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
+        g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
         g_fnSetProcessShutdownParameters =
             (FN_SetProcessShutdownParameters)
                 ::GetProcAddress(g_hKernel32, "SetProcessShutdownParameters");

@@ -88,7 +88,7 @@ DllShutDownInProgress(VOID)
     if (s_fnDllShutDownInProgress)
         return s_fnDllShutDownInProgress();
 
-    hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
+    hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
     s_fnDllShutDownInProgress =
         (FN_DllShutDownInProgress)GetProcAddress(hNTDLL, "RtlDllShutdownInProgress");
     if (!s_fnDllShutDownInProgress)

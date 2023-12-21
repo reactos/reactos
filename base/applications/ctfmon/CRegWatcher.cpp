@@ -138,7 +138,7 @@ CRegWatcher::UpdateSpTip()
     }
 
     // Get %WINDIR%/IME/sptip.dll!TF_CreateLangProfileUtil function
-    HINSTANCE hSPTIP = LoadSystemLibrary(L"IME\\sptip.dll", TRUE);
+    HINSTANCE hSPTIP = cicLoadSystemLibrary(L"IME\\sptip.dll", TRUE);
     FN_TF_CreateLangProfileUtil fnTF_CreateLangProfileUtil =
         (FN_TF_CreateLangProfileUtil)::GetProcAddress(hSPTIP, "TF_CreateLangProfileUtil");
     if (fnTF_CreateLangProfileUtil)
