@@ -3286,6 +3286,11 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 {
         BOOL control;
 
+#ifdef __REACTOS__
+	if (es->bCaptureState)
+		return 0;
+#endif
+
 	control = GetKeyState(VK_CONTROL) & 0x8000;
 
 	switch (c) {
