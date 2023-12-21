@@ -17,6 +17,11 @@ CRITICAL_SECTION g_csLock;
 
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS, 0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
 
+EXTERN_C void __cxa_pure_virtual(void)
+{
+    ERR("__cxa_pure_virtual\n");
+}
+
 UINT WM_MSIME_SERVICE = 0;
 UINT WM_MSIME_UIREADY = 0;
 UINT WM_MSIME_RECONVERTREQUEST = 0;
@@ -508,8 +513,12 @@ HRESULT CCompartmentEventSink::_Unadvise()
 class CInputContextOwnerCallBack;
 
 /* FIXME */
-class CicInputContext : public ITfContextOwnerCompositionSink
+class CicInputContext
+    : public ITfCleanupContextSink
+    , public ITfContextOwnerCompositionSink
+    , public ITfCompositionSink
 {
+public:
     DWORD m_dw[2];
     LONG m_cRefs;
     HIMC m_hIMC;
@@ -532,10 +541,7 @@ class CicInputContext : public ITfContextOwnerCompositionSink
     DWORD m_dw3[19];
 
 public:
-    CicInputContext()
-    {
-        m_cRefs = 1;
-    }
+    CicInputContext(TfClientId cliendId, LIBTHREAD *pLibThread, HIMC hIMC);
     virtual ~CicInputContext()
     {
     }
@@ -545,10 +551,16 @@ public:
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
 
+    // ITfCleanupContextSink interface
+    STDMETHODIMP OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic) override;
+
     // ITfContextOwnerCompositionSink interface
     STDMETHODIMP OnStartComposition(ITfCompositionView *pComposition, BOOL *pfOk) override;
     STDMETHODIMP OnUpdateComposition(ITfCompositionView *pComposition, ITfRange *pRangeNew) override;
     STDMETHODIMP OnEndComposition(ITfCompositionView *pComposition) override;
+
+    // ITfCompositionSink interface
+    STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition) override;
 
     HRESULT
     GetGuidAtom(
@@ -556,8 +568,20 @@ public:
         _In_ BYTE iAtom,
         _Out_opt_ LPDWORD pdwGuidAtom);
 
+    HRESULT CreateInputContext(ITfThreadMgr *pThreadMgr, IMCLock& imcLock);
     HRESULT DestroyInputContext();
 };
+
+/**
+ * @unimplemented
+ */
+CicInputContext::CicInputContext(TfClientId cliendId, LIBTHREAD *pLibThread, HIMC hIMC)
+{
+    m_hIMC = hIMC;
+    m_guid = GUID_NULL;
+    m_dwQueryPos = 0;
+    m_cRefs = 1;
+}
 
 /**
  * @unimplemented
@@ -665,10 +689,29 @@ CicInputContext::GetGuidAtom(
  * @unimplemented
  */
 HRESULT
+CicInputContext::CreateInputContext(ITfThreadMgr *pThreadMgr, IMCLock& imcLock)
+{
+    //FIXME
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT
 CicInputContext::DestroyInputContext()
 {
     // FIXME
     return E_NOTIMPL;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP
+CicInputContext::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition)
+{
+    return S_OK;
 }
 
 /**
@@ -1025,6 +1068,7 @@ public:
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
 
     void PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs);
+    void GetDocumentManager(IMCCLock<CTFIMECONTEXT>& imeContext);
 
     HRESULT ConfigureGeneral(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd);
     HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
@@ -1513,6 +1557,56 @@ CicProfile::InitProfileInstance(TLS *pTLS)
     return hr;
 }
 
+/**
+ * @implemented
+ */
+STDMETHODIMP CicInputContext::OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic)
+{
+    TLS *pTLS = TLS::PeekTLS();
+    if (!pTLS || !pTLS->m_pProfile)
+        return E_OUTOFMEMORY;
+
+    LANGID LangID;
+    pTLS->m_pProfile->GetLangId(&LangID);
+
+    IMEINFO IMEInfo;
+    WCHAR szPath[MAX_PATH];
+    if (Inquire(&IMEInfo, szPath, 0, (HKL)UlongToHandle(LangID)) != S_OK)
+        return E_FAIL;
+
+    ITfProperty *pProp = NULL;
+    if (!(IMEInfo.fdwProperty & IME_PROP_COMPLETE_ON_UNSELECT))
+        return S_OK;
+
+    HRESULT hr = pic->GetProperty(GUID_PROP_COMPOSING, &pProp);
+    if (FAILED(hr))
+        return S_OK;
+
+    IEnumTfRanges *pRanges = NULL;
+    hr = pProp->EnumRanges(ecWrite, &pRanges, NULL);
+    if (SUCCEEDED(hr))
+    {
+        ITfRange *pRange = NULL;
+        while (pRanges->Next(1, &pRange, 0) == S_OK)
+        {
+            VARIANT vari;
+            V_VT(&vari) = VT_EMPTY;
+            pProp->GetValue(ecWrite, pRange, &vari);
+            if (V_VT(&vari) == VT_I4)
+            {
+                if (V_I4(&vari))
+                    pProp->Clear(ecWrite, pRange);
+            }
+            pRange->Release();
+            pRange = NULL;
+        }
+        pRanges->Release();
+    }
+    pProp->Release();
+
+    return S_OK;
+}
+
 /***********************************************************************
  *      CicBridge
  */
@@ -1580,11 +1674,81 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
+void CicBridge::GetDocumentManager(IMCCLock<CTFIMECONTEXT>& imeContext)
+{
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+    {
+        m_pDocMgr = pCicIC->m_pDocumentMgr;
+        m_pDocMgr->AddRef();
+    }
+    else
+    {
+        m_pDocMgr->Release();
+        m_pDocMgr = NULL;
+    }
+}
+
 /**
  * @unimplemented
  */
 HRESULT CicBridge::CreateInputContext(TLS *pTLS, HIMC hIMC)
 {
+    IMCLock imcLock(hIMC);
+    HRESULT hr = imcLock.m_hr;
+    if (!imcLock)
+        hr = E_FAIL;
+    if (FAILED(hr))
+        return hr;
+
+    if (!imcLock.get().hCtfImeContext)
+    {
+        HIMCC hCtfImeContext = ImmCreateIMCC(sizeof(CTFIMECONTEXT));
+        if (!hCtfImeContext)
+            return E_OUTOFMEMORY;
+        imcLock.get().hCtfImeContext = hCtfImeContext;
+    }
+
+    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+    {
+        pCicIC = new CicInputContext(m_cliendId, &m_LibThread, hIMC);
+        if (!pCicIC)
+        {
+            imeContext.unlock();
+            imcLock.unlock();
+            DestroyInputContext(pTLS, hIMC);
+            return E_OUTOFMEMORY;
+        }
+
+        if (!pTLS->m_pThreadMgr)
+        {
+            pCicIC->Release();
+            imeContext.unlock();
+            imcLock.unlock();
+            DestroyInputContext(pTLS, hIMC);
+            return E_NOINTERFACE;
+        }
+
+        imeContext.get().m_pCicIC = pCicIC;
+    }
+
+    hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
+    if (FAILED(hr))
+    {
+        pCicIC->Release();
+        imeContext.get().m_pCicIC = NULL;
+    }
+    else
+    {
+        if (imcLock.get().hWnd && imcLock.get().hWnd == ::GetFocus())
+        {
+            GetDocumentManager(imeContext);
+            //FIXME
+        }
+    }
+
     return E_NOTIMPL;
 }
 
