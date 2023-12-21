@@ -547,7 +547,7 @@ public:
     STDMETHODIMP_(ULONG) Release() override;
 
     // ITfCleanupContextSink interface
-    STDMETHODIMP OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic);
+    STDMETHODIMP OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic) override;
 
     // ITfContextOwnerCompositionSink interface
     STDMETHODIMP OnStartComposition(ITfCompositionView *pComposition, BOOL *pfOk) override;
@@ -555,7 +555,7 @@ public:
     STDMETHODIMP OnEndComposition(ITfCompositionView *pComposition) override;
 
     // ITfCompositionSink interface
-    STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);
+    STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition) override;
 
     HRESULT
     GetGuidAtom(
