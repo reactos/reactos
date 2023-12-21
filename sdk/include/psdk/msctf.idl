@@ -106,6 +106,7 @@ interface ITfCompositionView;
 interface ITfKeyEventSink;
 interface ITfPersistentPropertyLoaderACP;
 interface ITfRangeACP;
+interface ITfCleanupContextSink;
 
 cpp_quote("#if 0")
 typedef [uuid(4f5d560f-5ab5-4dde-8c4d-404592857ab0)] UINT_PTR HKL;
@@ -1506,6 +1507,18 @@ interface ITfCompositionSink : IUnknown
     HRESULT OnCompositionTerminated(
             [in] TfEditCookie ecWrite,
             [in] ITfComposition *pComposition);
+}
+
+[
+    object,
+    uuid(01689689-7acb-4e9b-ab7c-7ea46b12b522),
+    pointer_default(unique)
+]
+interface ITfCleanupContextSink : IUnknown
+{
+    HRESULT OnCleanupContext(
+            [in] TfEditCookie ecWrite,
+            [in] ITfContext   *pic);
 }
 
 [
