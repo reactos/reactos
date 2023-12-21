@@ -3196,7 +3196,7 @@ NtUserFindWindowEx(HWND hwndParent,
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
            SetLastNtError(_SEH2_GetExceptionCode());
-           _SEH2_YIELD(goto Exit);
+           _SEH2_YIELD(goto Exit); // Return NULL
        }
        _SEH2_END;
 
@@ -3206,12 +3206,12 @@ NtUserFindWindowEx(HWND hwndParent,
                !IS_ATOM(ClassName.Buffer))
            {
                EngSetLastError(ERROR_INVALID_PARAMETER);
-               goto Exit;
+               goto Exit; // Return NULL
            }
            else if (ClassAtom == (RTL_ATOM)0)
            {
                /* LastError code was set by IntGetAtomFromStringOrAtom */
-               goto Exit;
+               goto Exit; // Return NULL
            }
        }
    }
@@ -3230,13 +3230,13 @@ NtUserFindWindowEx(HWND hwndParent,
 
    if(!(Parent = UserGetWindowObject(hwndParent)))
    {
-      goto Exit;
+      goto Exit; // Return NULL
    }
 
    ChildAfter = NULL;
    if(hwndChildAfter && !(ChildAfter = UserGetWindowObject(hwndChildAfter)))
    {
-      goto Exit;
+      goto Exit; // Return NULL
    }
 
    _SEH2_TRY
@@ -3589,7 +3589,7 @@ NtUserGetListBoxInfo(
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_LISTBOX]) && Wnd->fnid != FNID_LISTBOX)
@@ -3725,12 +3725,12 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    if (!(WndShell = UserGetWindowObject(hwndShell)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (!(WndListView = UserGetWindowObject(hwndListView)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
@@ -3742,7 +3742,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    /*
@@ -3751,7 +3751,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    if (WinStaObject->ShellWindow)
    {
       ObDereferenceObject(WinStaObject);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    /*
@@ -3770,14 +3770,14 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       if (WndListView->ExStyle & WS_EX_TOPMOST)
       {
          ObDereferenceObject(WinStaObject);
-         goto Exit;
+         goto Exit; // Return FALSE
       }
    }
 
    if (WndShell->ExStyle & WS_EX_TOPMOST)
    {
       ObDereferenceObject(WinStaObject);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(WndShell, &Ref);
@@ -4127,12 +4127,12 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
    if (hWnd == IntGetDesktopWindow())
    {
       EngSetLastError(STATUS_ACCESS_DENIED);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    switch (Index)
@@ -4147,14 +4147,14 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
          if (Index < 0)
          {
             EngSetLastError(ERROR_INVALID_INDEX);
-            goto Exit;
+            goto Exit; // Return 0
          }
    }
 
    if ((ULONG)Index > (Window->cbwndExtra - sizeof(WORD)))
    {
       EngSetLastError(ERROR_INVALID_INDEX);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    OldValue = *((WORD *)((PCHAR)(Window + 1) + Index));
@@ -4201,7 +4201,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
    if (!(pWnd = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    switch(Index)
@@ -4303,14 +4303,14 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
    if(MessageNameUnsafe == NULL)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
@@ -4338,13 +4338,13 @@ NtUserSetWindowFNID(HWND hWnd,
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    if (Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process())
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      goto Exit;
+      goto Exit; // Return FALSE
    }
 
    // From user land we only set these.
@@ -4355,7 +4355,7 @@ NtUserSetWindowFNID(HWND hWnd,
           Wnd->fnid != 0)
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         goto Exit;
+         goto Exit; // Return FALSE
       }
    }
 
@@ -4596,12 +4596,12 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
    if(lpString && (nMaxCount <= 1))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    if(!(Wnd = UserGetWindowObject(hWnd)))
    {
-      goto Exit;
+      goto Exit; // Return 0
    }
 
    Result = Wnd->strName.Length / sizeof(WCHAR);
