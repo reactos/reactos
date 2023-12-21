@@ -9,7 +9,6 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/pstypes.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <stdlib.h>
@@ -17,10 +16,7 @@
 #include <msctf.h>
 #include <ctfutb.h>
 #include <ctffunc.h>
-
 #include <cicero/cicbase.h>
-#include <cicero/osinfo.h>
-#include <cicero/CModulePath.h>
 
 #include "resource.h"
 

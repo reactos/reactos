@@ -9,10 +9,6 @@
 #include "CRegWatcher.h"
 #include "CLoaderWnd.h"
 
-// ntdll!NtQueryInformationProcess
-typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
-FN_NtQueryInformationProcess g_fnNtQueryInformationProcess = NULL;
-
 // kernel32!SetProcessShutdownParameters
 typedef BOOL (WINAPI *FN_SetProcessShutdownParameters)(DWORD, DWORD);
 FN_SetProcessShutdownParameters g_fnSetProcessShutdownParameters = NULL;
@@ -29,30 +25,8 @@ HANDLE      g_hCicMutex     = NULL;     // The Cicero mutex
 BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
-DWORD       g_dwOsInfo      = 0;        // The OS version info. See GetOSInfo
+DWORD       g_dwOsInfo      = 0;        // The OS version info. See cicGetOSInfo
 CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar loader window
-
-// Is the current process on WoW64?
-static BOOL
-IsWow64(VOID)
-{
-    HMODULE hNTDLL = GetSystemModuleHandle(L"ntdll.dll", FALSE);
-    if (!hNTDLL)
-        return FALSE;
-
-    g_fnNtQueryInformationProcess =
-        (FN_NtQueryInformationProcess)::GetProcAddress(hNTDLL, "NtQueryInformationProcess");
-    if (!g_fnNtQueryInformationProcess)
-        return FALSE;
-
-    ULONG_PTR Value = 0;
-    NTSTATUS Status = g_fnNtQueryInformationProcess(::GetCurrentProcess(), ProcessWow64Information,
-                                                    &Value, sizeof(Value), NULL);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    return !!Value;
-}
 
 static VOID
 ParseCommandLine(
@@ -107,7 +81,7 @@ WriteRegRun(VOID)
         return;
 
     // Write the module path
-    CModulePath ModPath;
+    CicSystemModulePath ModPath;
     if (ModPath.Init(L"ctfmon.exe", FALSE))
     {
         DWORD cbData = (ModPath.m_cchPath + 1) * sizeof(WCHAR);
@@ -172,7 +146,7 @@ CheckX64System(
     }
 
     // Get GetSystemWow64DirectoryW function
-    g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
+    g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
     g_fnGetSystemWow64DirectoryW =
         (FN_GetSystemWow64DirectoryW)::GetProcAddress(g_hKernel32, "GetSystemWow64DirectoryW");
     if (!g_fnGetSystemWow64DirectoryW)
@@ -204,8 +178,8 @@ InitApp(
     g_hInst     = hInstance;    // Save the instance handle
 
     g_uACP      = ::GetACP();   // Save the active codepage
-    g_bOnWow64  = IsWow64();    // Is the current process on WoW64?
-    g_dwOsInfo  = GetOSInfo();  // Get OS info
+    g_bOnWow64  = cicIsWow64();   // Is the current process on WoW64?
+    g_dwOsInfo  = cicGetOSInfo(); // Get OS info
 
     // Create a mutex for Cicero
     g_hCicMutex = TF_CreateCicLoadMutex(&g_fWinLogon);
@@ -218,7 +192,7 @@ InitApp(
     // Call SetProcessShutdownParameters if possible
     if (g_dwOsInfo & OSINFO_NT)
     {
-        g_hKernel32 = GetSystemModuleHandle(L"kernel32.dll", FALSE);
+        g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
         g_fnSetProcessShutdownParameters =
             (FN_SetProcessShutdownParameters)
                 ::GetProcAddress(g_hKernel32, "SetProcessShutdownParameters");
