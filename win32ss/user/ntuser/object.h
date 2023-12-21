@@ -34,6 +34,9 @@ UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
     UserReferenceEntry->obj = obj;
     UserReferenceObject(obj);
     PushEntryList(&W32Thread->ReferencesList, &UserReferenceEntry->Entry);
+#if DBG
+    W32Thread->cRefObjectCo++;
+#endif
 }
 
 static __inline VOID
@@ -53,6 +56,9 @@ UserDerefObjectCo(PVOID obj)
 
     ASSERT(obj == UserReferenceEntry->obj);
     UserDereferenceObject(obj);
+#if DBG
+    W32Thread->cRefObjectCo--;
+#endif
 }
 
 void FreeProcMarkObject(_In_ PVOID Object);

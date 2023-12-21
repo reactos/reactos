@@ -158,6 +158,7 @@ typedef struct _THREADINFO
     ULONG cExclusiveLocks;
 #if DBG
     USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
+    UINT cRefObjectCo;
 #endif
 #endif // __cplusplus
 } THREADINFO;
