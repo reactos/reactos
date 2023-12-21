@@ -1,4 +1,10 @@
-// COPYRIGHT: 2014 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+/*
+ * PROJECT:     ReactOS Configuration of network devices
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copytight 2014-2018 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copytight 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
