@@ -204,7 +204,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Администратор"
+    IDS_ADMINISTRATOR_NAME "Administrator" // FIXME: Should be "Администратор", but bg-BG translation missing in samsrv.dll
     IDS_MACHINE_OWNER_NAME "Собственик"
 END
 
