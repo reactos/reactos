@@ -11,8 +11,6 @@
     #error Cicero needs C++.
 #endif
 
-#include "cicpath.h"
-
 static inline LPVOID cicMemAlloc(SIZE_T size)
 {
     return LocalAlloc(0, size);
