@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <ndk/pstypes.h> /* for PROCESSINFOCLASS */
+
+#include "cicpath.h"
+
 static inline LPVOID cicMemAlloc(SIZE_T size)
 {
     return LocalAlloc(0, size);
@@ -31,20 +35,20 @@ static inline void cicMemFree(LPVOID ptr)
 }
 
 #ifdef __cplusplus
-inline void* __cdecl operator new(size_t size) noexcept
-{
-    return cicMemAllocClear(size);
-}
+    inline void* __cdecl operator new(size_t size) noexcept
+    {
+        return cicMemAllocClear(size);
+    }
 
-inline void __cdecl operator delete(void* ptr) noexcept
-{
-    cicMemFree(ptr);
-}
+    inline void __cdecl operator delete(void* ptr) noexcept
+    {
+        cicMemFree(ptr);
+    }
 
-inline void __cdecl operator delete(void* ptr, size_t size) noexcept
-{
-    cicMemFree(ptr);
-}
+    inline void __cdecl operator delete(void* ptr, size_t size) noexcept
+    {
+        cicMemFree(ptr);
+    }
 #endif // __cplusplus
 
 // FIXME: Use msutb.dll and header
@@ -96,10 +100,10 @@ cicGetOSInfo(VOID)
     return dwOsInfo;
 }
 
-// ntdll!NtQueryInformationProcess
+/* ntdll!NtQueryInformationProcess */
 typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
 
-// Is the current process on WoW64?
+/* Is the current process on WoW64? */
 static inline BOOL cicIsWow64(VOID)
 {
     static FN_NtQueryInformationProcess s_fnNtQueryInformationProcess = NULL;

@@ -9,7 +9,6 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ndk/pstypes.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <stdlib.h>
