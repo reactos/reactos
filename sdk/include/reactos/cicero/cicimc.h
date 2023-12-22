@@ -7,13 +7,13 @@
 
 #pragma once
 
-// class IMCCLOCK<T_DATA>;
-// class IMCCLock<T_DATA>;
-// class _IMCLock;
-// class IMCLock;
+// class CIC_IMCC_LOCK<T_DATA>;
+// class CicIMCCLock<T_DATA>;
+// class CIC_IMC_LOCK;
+// class CicIMCLock;
 
 template <typename T_DATA>
-class IMCCLOCK
+class CIC_IMCC_LOCK
 {
 protected:
     T_DATA *m_pIMCC;
@@ -22,7 +22,7 @@ public:
     HIMCC m_hIMCC;
     HRESULT m_hr;
 
-    IMCCLOCK(HIMCC hIMCC)
+    CIC_IMCC_LOCK(HIMCC hIMCC)
     {
         m_pIMCC = NULL;
         m_hr = S_OK;
@@ -31,15 +31,15 @@ public:
 };
 
 template <typename T_DATA>
-class IMCCLock : public IMCCLOCK<T_DATA>
+class CicIMCCLock : public CIC_IMCC_LOCK<T_DATA>
 {
 public:
-    IMCCLock(HIMCC hIMCC) : IMCCLOCK<T_DATA>(hIMCC)
+    CicIMCCLock(HIMCC hIMCC) : CIC_IMCC_LOCK<T_DATA>(hIMCC)
     {
         if (hIMCC)
             _LockIMCC(this->m_hIMCC, &this->m_pIMCC);
     }
-    ~IMCCLock()
+    ~CicIMCCLock()
     {
         unlock();
     }
@@ -78,7 +78,7 @@ protected:
     }
 };
 
-class IMCLOCK
+class CIC_IMC_LOCK
 {
 protected:
     LPINPUTCONTEXTDX m_pIC;
@@ -88,7 +88,7 @@ public:
     HRESULT m_hr;
     DWORD m_dw3;
 
-    IMCLOCK(HIMC hIMC)
+    CIC_IMC_LOCK(HIMC hIMC)
     {
         m_pIC = NULL;
         m_hIMC = hIMC;
@@ -102,14 +102,14 @@ public:
     }
 };
 
-class IMCLock : public IMCLOCK
+class CicIMCLock : public CIC_IMC_LOCK
 {
 public:
-    IMCLock(HIMC hIMC) : IMCLOCK(hIMC)
+    CicIMCLock(HIMC hIMC) : CIC_IMC_LOCK(hIMC)
     {
         m_hr = _LockIMC(hIMC, &m_pIC);
     }
-    ~IMCLock()
+    ~CicIMCLock()
     {
         unlock();
     }
@@ -136,7 +136,7 @@ public:
         if (ImmGetIMCCSize(m_pIC->hCompStr) < sizeof(COMPOSITIONSTRING))
             return FALSE;
 
-        IMCCLock<COMPOSITIONSTRING> imccLock(m_pIC->hCompStr);
+        CicIMCCLock<COMPOSITIONSTRING> imccLock(m_pIC->hCompStr);
         if (!imccLock)
             return FALSE;
 

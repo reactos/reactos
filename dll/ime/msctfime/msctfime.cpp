@@ -565,11 +565,11 @@ public:
 
     HRESULT
     GetGuidAtom(
-        _Inout_ IMCLock& imcLock,
+        _Inout_ CicIMCLock& imcLock,
         _In_ BYTE iAtom,
         _Out_opt_ LPDWORD pdwGuidAtom);
 
-    HRESULT CreateInputContext(ITfThreadMgr *pThreadMgr, IMCLock& imcLock);
+    HRESULT CreateInputContext(ITfThreadMgr *pThreadMgr, CicIMCLock& imcLock);
     HRESULT DestroyInputContext();
 };
 
@@ -665,11 +665,11 @@ CicInputContext::OnEndComposition(
  */
 HRESULT
 CicInputContext::GetGuidAtom(
-    _Inout_ IMCLock& imcLock,
+    _Inout_ CicIMCLock& imcLock,
     _In_ BYTE iAtom,
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
-    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
     HRESULT hr = imeContext.m_hr;
     if (!imeContext)
         hr = E_FAIL;
@@ -690,7 +690,7 @@ CicInputContext::GetGuidAtom(
  * @unimplemented
  */
 HRESULT
-CicInputContext::CreateInputContext(ITfThreadMgr *pThreadMgr, IMCLock& imcLock)
+CicInputContext::CreateInputContext(ITfThreadMgr *pThreadMgr, CicIMCLock& imcLock)
 {
     //FIXME
     return E_NOTIMPL;
@@ -1069,7 +1069,7 @@ public:
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
 
     void PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs);
-    void GetDocumentManager(IMCCLock<CTFIMECONTEXT>& imeContext);
+    void GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext);
 
     HRESULT ConfigureGeneral(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd);
     HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
@@ -1675,7 +1675,7 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
-void CicBridge::GetDocumentManager(IMCCLock<CTFIMECONTEXT>& imeContext)
+void CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (pCicIC)
@@ -1695,7 +1695,7 @@ void CicBridge::GetDocumentManager(IMCCLock<CTFIMECONTEXT>& imeContext)
  */
 HRESULT CicBridge::CreateInputContext(TLS *pTLS, HIMC hIMC)
 {
-    IMCLock imcLock(hIMC);
+    CicIMCLock imcLock(hIMC);
     HRESULT hr = imcLock.m_hr;
     if (!imcLock)
         hr = E_FAIL;
@@ -1710,7 +1710,7 @@ HRESULT CicBridge::CreateInputContext(TLS *pTLS, HIMC hIMC)
         imcLock.get().hCtfImeContext = hCtfImeContext;
     }
 
-    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (!pCicIC)
     {
@@ -1758,7 +1758,7 @@ HRESULT CicBridge::CreateInputContext(TLS *pTLS, HIMC hIMC)
  */
 HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
 {
-    IMCLock imcLock(hIMC);
+    CicIMCLock imcLock(hIMC);
     HRESULT hr = imcLock.m_hr;
     if (!imcLock)
         hr = E_FAIL;
@@ -1766,7 +1766,7 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
         return hr;
 
     hr = E_FAIL;
-    IMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
     if (imeContext)
         hr = imeContext.m_hr;
 
@@ -2515,7 +2515,7 @@ CtfImeGetGuidAtom(
 {
     TRACE("(%p, 0x%lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
 
-    IMCLock imcLock(hIMC);
+    CicIMCLock imcLock(hIMC);
 
     HRESULT hr = imcLock.m_hr;
     if (!imcLock)
@@ -2523,7 +2523,7 @@ CtfImeGetGuidAtom(
     if (FAILED(hr))
         return hr;
 
-    IMCCLock<CTFIMECONTEXT> imccLock(imcLock.get().hCtfImeContext);
+    CicIMCCLock<CTFIMECONTEXT> imccLock(imcLock.get().hCtfImeContext);
     hr = imccLock.m_hr;
     if (!imccLock)
         hr = E_FAIL;
@@ -2550,7 +2550,7 @@ CtfImeIsGuidMapEnable(
 
     BOOL ret = FALSE;
     HRESULT hr;
-    IMCLock imcLock(hIMC);
+    CicIMCLock imcLock(hIMC);
 
     hr = imcLock.m_hr;
     if (!imcLock)
