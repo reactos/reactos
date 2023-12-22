@@ -49,16 +49,6 @@ inline void __cdecl operator delete(void* ptr, size_t size) noexcept
     cicMemFree(ptr);
 }
 
-// FIXME: Use msutb.dll and header
-static inline void ClosePopupTipbar(void)
-{
-}
-
-// FIXME: Use msutb.dll and header
-static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
-{
-}
-
 /* The flags of cicGetOSInfo() */
 #define CIC_OSINFO_NT     0x01
 #define CIC_OSINFO_2KPLUS 0x02
