@@ -41,7 +41,7 @@ CRegWatcher::Init()
 {
     // NOTE: We don't support Win95/98/Me
 #ifdef SUPPORT_WIN9X
-    if (!(g_dwOsInfo & OSINFO_NT))
+    if (!(g_dwOsInfo & CIC_OSINFO_NT))
         s_WatchEntries[WI_RUN].hRootKey = HKEY_LOCAL_MACHINE;
 #endif
 

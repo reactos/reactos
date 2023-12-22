@@ -60,47 +60,64 @@ static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
 }
 
 /* The flags of cicGetOSInfo() */
-#define OSINFO_NT    0x01
-#define OSINFO_CJK   0x10
-#define OSINFO_IMM   0x20
-#define OSINFO_DBCS  0x40
+#define CIC_OSINFO_NT     0x01
+#define CIC_OSINFO_2KPLUS 0x02
+#define CIC_OSINFO_95     0x04
+#define CIC_OSINFO_98PLUS 0x08
+#define CIC_OSINFO_CJK    0x10
+#define CIC_OSINFO_IMM    0x20
+#define CIC_OSINFO_DBCS   0x40
+#define CIC_OSINFO_XPPLUS 0x80
 
-static inline DWORD
-cicGetOSInfo(VOID)
+static inline void
+cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
 {
-    DWORD dwOsInfo = 0;
+    *pdwOSInfo = 0;
 
     /* Check OS version info */
-    OSVERSIONINFOW VerInfo = { sizeof(VerInfo) };
+    OSVERSIONINFOW VerInfo;
+    VerInfo.dwOSVersionInfoSize = sizeof(VerInfo);
     GetVersionExW(&VerInfo);
     if (VerInfo.dwPlatformId == DLLVER_PLATFORM_NT)
-        dwOsInfo |= OSINFO_NT;
+    {
+        *pdwOSInfo |= CIC_OSINFO_NT;
+        if (VerInfo.dwMajorVersion >= 5)
+        {
+            *pdwOSInfo |= CIC_OSINFO_2KPLUS;
+            if (VerInfo.dwMinorVersion > 0)
+                *pdwOSInfo |= CIC_OSINFO_XPPLUS;
+        }
+    }
+    else
+    {
+        if (VerInfo.dwMinorVersion >= 10)
+            *pdwOSInfo |= CIC_OSINFO_98PLUS;
+        else
+            *pdwOSInfo |= CIC_OSINFO_95;
+    }
 
     /* Check codepage */
-    switch (GetACP())
+    *puACP = GetACP();
+    switch (*puACP)
     {
         case 932: /* Japanese (Japan) */
         case 936: /* Chinese (PRC, Singapore) */
         case 949: /* Korean (Korea) */
         case 950: /* Chinese (Taiwan, Hong Kong) */
-            dwOsInfo |= OSINFO_CJK;
+            *pdwOSInfo |= CIC_OSINFO_CJK;
             break;
     }
 
     if (GetSystemMetrics(SM_IMMENABLED))
-        dwOsInfo |= OSINFO_IMM;
+        *pdwOSInfo |= CIC_OSINFO_IMM;
 
     if (GetSystemMetrics(SM_DBCSENABLED))
-        dwOsInfo |= OSINFO_DBCS;
-
-    /* I'm not interested in other flags */
-
-    return dwOsInfo;
+        *pdwOSInfo |= CIC_OSINFO_DBCS;
 }
 
 struct CicSystemModulePath
 {
-    WCHAR m_szPath[MAX_PATH];
+    WCHAR m_szPath[MAX_PATH + 2];
     SIZE_T m_cchPath;
 
     CicSystemModulePath()

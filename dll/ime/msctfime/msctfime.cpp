@@ -11,6 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
 HINSTANCE g_hInst = NULL; /* The instance of this module */
 BOOL g_bWinLogon = FALSE;
+UINT g_uACP = CP_ACP;
 DWORD g_dwOSInfo = 0;
 BOOL gfTFInitLib = FALSE;
 CRITICAL_SECTION g_csLock;
@@ -2841,7 +2842,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     if (!TLS::Initialize())
         return FALSE;
 
-    g_dwOSInfo = cicGetOSInfo();
+    cicGetOSInfo(&g_uACP, &g_dwOSInfo);
 
     // FIXME
 

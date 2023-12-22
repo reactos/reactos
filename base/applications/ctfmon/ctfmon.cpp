@@ -177,9 +177,8 @@ InitApp(
 {
     g_hInst     = hInstance;    // Save the instance handle
 
-    g_uACP      = ::GetACP();   // Save the active codepage
     g_bOnWow64  = cicIsWow64();   // Is the current process on WoW64?
-    g_dwOsInfo  = cicGetOSInfo(); // Get OS info
+    cicGetOSInfo(&g_uACP, &g_dwOsInfo); // Get OS info
 
     // Create a mutex for Cicero
     g_hCicMutex = TF_CreateCicLoadMutex(&g_fWinLogon);
@@ -190,7 +189,7 @@ InitApp(
     WriteRegRun();
 
     // Call SetProcessShutdownParameters if possible
-    if (g_dwOsInfo & OSINFO_NT)
+    if (g_dwOsInfo & CIC_OSINFO_NT)
     {
         g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
         g_fnSetProcessShutdownParameters =
