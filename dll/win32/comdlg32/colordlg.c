@@ -1177,9 +1177,9 @@ static LRESULT CC_WMLButtonDown( CCPRIV *infoPtr, LPARAM lParam )
    if (i)
    {
 #ifdef __REACTOS__
-      RECT rect;
-      if(infoPtr->capturedGraph)
+      if (infoPtr->capturedGraph)
       {
+         RECT rect;
          GetWindowRect(GetDlgItem(infoPtr->hwndSelf, infoPtr->capturedGraph), &rect);
          ClipCursor(&rect);
       }
