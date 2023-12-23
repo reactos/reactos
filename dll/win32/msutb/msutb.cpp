@@ -20,7 +20,7 @@ class CMsUtbModule : public CComModule
 };
 
 BEGIN_OBJECT_MAP(ObjectMap)
-    //OBJECT_ENTRY(CLSID_..., C...)
+    //OBJECT_ENTRY(CLSID_MSUTBDeskBand, CDeskBand) // FIXME: Implement this
 END_OBJECT_MAP()
 
 CMsUtbModule gModule;
