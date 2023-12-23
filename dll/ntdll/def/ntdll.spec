@@ -184,7 +184,7 @@
 @ stdcall LdrUnloadAlternateResourceModule(ptr)
 @ stub -version=0x600+ LdrUnloadAlternateResourceModuleEx
 @ stdcall LdrUnloadDll(ptr)
-@ stdcall LdrUnlockLoaderLock(long long)
+@ stdcall LdrUnlockLoaderLock(long ptr)
 @ stdcall -stub -version=0x600+ LdrUnregisterDllNotification(ptr)
 @ stdcall LdrVerifyImageMatchesChecksum(ptr long long long)
 @ stdcall -stub -version=0x600+ LdrVerifyImageMatchesChecksumEx(ptr ptr)
