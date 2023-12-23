@@ -603,7 +603,7 @@ CMP_RegisterNotification(
     _Out_ PHDEVNOTIFY phDevNotify)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
-    PNOTIFY_DATA pNotifyData = NULL;
+    PNOTIFY_DATA pNotifyData;
     WCHAR szNameBuffer[256];
     INT nLength;
     DWORD ulUnknown9 = 0;
@@ -1465,7 +1465,7 @@ CM_Create_Range_List(
     _Out_ PRANGE_LIST prlh,
     _In_ ULONG ulFlags)
 {
-    PINTERNAL_RANGE_LIST pRangeList = NULL;
+    PINTERNAL_RANGE_LIST pRangeList;
 
     FIXME("CM_Create_Range_List(%p %lx)\n",
           prlh, ulFlags);
@@ -2904,7 +2904,7 @@ CM_Get_Class_Registry_PropertyA(
     ULONG ulFlags,
     HMACHINE hMachine)
 {
-    PWSTR BufferW = NULL;
+    PWSTR BufferW;
     ULONG ulLength = 0;
     ULONG ulType;
     CONFIGRET ret;
@@ -3190,7 +3190,7 @@ CM_Get_DevNode_Custom_Property_ExA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    LPWSTR pszPropertyNameW = NULL;
+    LPWSTR pszPropertyNameW;
     PVOID BufferW;
     ULONG ulLengthW;
     ULONG ulDataType = REG_NONE;
@@ -3421,7 +3421,6 @@ CM_Get_DevNode_Registry_Property_ExA(
 
     LengthW = *pulLength * sizeof(WCHAR);
     BufferW = HeapAlloc(GetProcessHeap(), 0, LengthW);
-
     if (!BufferW)
         return CR_OUT_OF_MEMORY;
 
@@ -7257,7 +7256,7 @@ CM_Register_Device_Interface_ExA(
     _In_opt_ HMACHINE hMachine)
 {
     LPWSTR pszReferenceW = NULL;
-    LPWSTR pszDeviceInterfaceW = NULL;
+    LPWSTR pszDeviceInterfaceW;
     ULONG ulLength;
     CONFIGRET ret;
 
