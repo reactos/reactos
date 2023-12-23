@@ -1159,7 +1159,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      * which will cause a GPF since the trap frame is a total mess (on purpose)
      * as built in KiEnterV86Mode.
      *
-     * The idea is to scan for IRET, scan for the known EIP adress, validate CS
+     * The idea is to scan for IRET, scan for the known EIP address, validate CS
      * and then manually issue a jump to the V8086 return EIP.
      */
     Instructions = (PUCHAR)TrapFrame->Eip;

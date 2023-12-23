@@ -39,7 +39,7 @@ OpenTnefStreamEx(
     ULONG ulFlags,
     LPMESSAGE lpMessage,
     WORD wKeyVal,
-    LPADDRESSBOOK lpAdressBook,
+    LPADDRESSBOOK lpAddressBook,
     LPSTREAM *lppTNEF)
 {
     UNIMPLEMENTED;
