@@ -22,8 +22,8 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG_PTR KiIdleSummary;
-ULONG_PTR KiIdleSMTSummary;
+KAFFINITY KiIdleSummary;
+KAFFINITY KiIdleSMTSummary;
 
 /* FUNCTIONS *****************************************************************/
 
