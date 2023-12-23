@@ -1,5 +1,5 @@
 
-spec2def(msutb.dll msutb.spec)
+spec2def(msutb.dll msutb.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     msutb.cpp)
