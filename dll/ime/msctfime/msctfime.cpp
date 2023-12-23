@@ -120,13 +120,7 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
-typedef struct LIBTHREAD
-{
-    IUnknown *m_pUnknown1;
-    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
-} LIBTHREAD, *PLIBTHREAD;
-
-HRESULT InitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
+HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
         return E_FAIL;
@@ -141,7 +135,7 @@ HRESULT InitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
     return E_NOTIMPL;
 }
 
-HRESULT UninitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
+HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
         return E_FAIL;
@@ -153,23 +147,6 @@ HRESULT UninitDisplayAttrbuteLib(PLIBTHREAD pLibThread)
     }
 
     return S_OK;
-}
-
-void TFUninitLib_Thread(PLIBTHREAD pLibThread)
-{
-    if (!pLibThread)
-        return;
-
-    if (pLibThread->m_pUnknown1)
-    {
-        pLibThread->m_pUnknown1->Release();
-        pLibThread->m_pUnknown1 = NULL;
-    }
-    if (pLibThread->m_pDisplayAttrMgr)
-    {
-        pLibThread->m_pDisplayAttrMgr->Release();
-        pLibThread->m_pDisplayAttrMgr = NULL;
-    }
 }
 
 /***********************************************************************
@@ -542,7 +519,7 @@ public:
     DWORD m_dw3[19];
 
 public:
-    CicInputContext(TfClientId cliendId, LIBTHREAD *pLibThread, HIMC hIMC);
+    CicInputContext(TfClientId cliendId, PCIC_LIBTHREAD pLibThread, HIMC hIMC);
     virtual ~CicInputContext()
     {
     }
@@ -576,7 +553,7 @@ public:
 /**
  * @unimplemented
  */
-CicInputContext::CicInputContext(TfClientId cliendId, LIBTHREAD *pLibThread, HIMC hIMC)
+CicInputContext::CicInputContext(TfClientId cliendId, PCIC_LIBTHREAD pLibThread, HIMC hIMC)
 {
     m_hIMC = hIMC;
     m_guid = GUID_NULL;
@@ -1040,7 +1017,7 @@ protected:
     ITfDocumentMgr *m_pDocMgr;
     CThreadMgrEventSink *m_pThreadMgrEventSink;
     TfClientId m_cliendId;
-    LIBTHREAD m_LibThread;
+    CIC_LIBTHREAD m_LibThread;
     DWORD m_dw21;
 
     static BOOL CALLBACK EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam);
@@ -2833,6 +2810,22 @@ VOID DetachIME(VOID)
 /**
  * @unimplemented
  */
+VOID InitUIFLib(VOID)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+VOID DoneUIFLib(VOID)
+{
+    //FIXME
+}
+
+/**
+ * @implemented
+ */
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     g_hInst = hinstDLL;
@@ -2844,7 +2837,10 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
 
     cicGetOSInfo(&g_uACP, &g_dwOSInfo);
 
-    // FIXME
+    InitUIFLib();
+
+    if (!TFInitLib())
+        return FALSE;
 
     gfTFInitLib = TRUE;
     return AttachIME();
@@ -2857,14 +2853,18 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
 {
     // FIXME
 
+    TF_DllDetachInOther();
+
     if (gfTFInitLib)
+    {
         DetachIME();
+        TFUninitLib();
+    }
 
     DeleteCriticalSection(&g_csLock);
     TLS::InternalDestroyTLS();
     TLS::Uninitialize();
-
-    // FIXME
+    DoneUIFLib();
 }
 
 /**

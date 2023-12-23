@@ -180,6 +180,9 @@ InitApp(
     g_bOnWow64  = cicIsWow64();   // Is the current process on WoW64?
     cicGetOSInfo(&g_uACP, &g_dwOsInfo); // Get OS info
 
+    // Initialize Cicero
+    TFInitLib();
+
     // Create a mutex for Cicero
     g_hCicMutex = TF_CreateCicLoadMutex(&g_fWinLogon);
     if (!g_hCicMutex)
@@ -233,6 +236,9 @@ UninitApp(VOID)
 {
     // Close TIP Bar Popup
     ClosePopupTipbar();
+
+    // Release Cicero
+    TFUninitLib();
 
     // Close the mutex
     ::CloseHandle(g_hCicMutex);

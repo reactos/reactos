@@ -49,6 +49,12 @@ inline void __cdecl operator delete(void* ptr, size_t size) noexcept
     cicMemFree(ptr);
 }
 
+typedef struct CIC_LIBTHREAD
+{
+    IUnknown *m_pUnknown1;
+    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
+} CIC_LIBTHREAD, *PCIC_LIBTHREAD;
+
 /* The flags of cicGetOSInfo() */
 #define CIC_OSINFO_NT     0x01
 #define CIC_OSINFO_2KPLUS 0x02
@@ -216,4 +222,94 @@ Failure:
     m_szPath[0] = UNICODE_NULL;
     m_cchPath = 0;
     return FALSE;
+}
+
+// ole32!CoCreateInstance
+typedef HRESULT (WINAPI *FN_CoCreateInstance)(
+    REFCLSID rclsid,
+    LPUNKNOWN pUnkOuter,
+    DWORD dwClsContext,
+    REFIID iid,
+    LPVOID *ppv);
+
+static inline FN_CoCreateInstance
+_cicGetSetUserCoCreateInstance(FN_CoCreateInstance fnUserCoCreateInstance)
+{
+    static FN_CoCreateInstance s_fn = NULL;
+    if (fnUserCoCreateInstance)
+        s_fn = fnUserCoCreateInstance;
+    return s_fn;
+}
+
+/**
+ * @implemented
+ */
+static inline HRESULT
+cicCoCreateInstance(
+    REFCLSID rclsid,
+    LPUNKNOWN pUnkOuter,
+    DWORD dwClsContext,
+    REFIID iid,
+    LPVOID *ppv)
+{
+    FN_CoCreateInstance fnUserCoCreateInstance = _cicGetSetUserCoCreateInstance(NULL);
+    if (fnUserCoCreateInstance)
+        return fnUserCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
+
+    static HINSTANCE s_hOle32 = NULL;
+    static FN_CoCreateInstance s_fnCoCreateInstance = NULL;
+    if (!s_fnCoCreateInstance)
+    {
+        if (!s_hOle32)
+            s_hOle32 = cicLoadSystemLibrary(L"ole32.dll", FALSE);
+        if (!s_hOle32)
+            return E_NOTIMPL;
+        s_fnCoCreateInstance = (FN_CoCreateInstance)GetProcAddress(s_hOle32, "CoCreateInstance");
+        if (!s_fnCoCreateInstance)
+            return E_NOTIMPL;
+    }
+
+    return s_fnCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
+}
+
+/**
+ * @implemented
+ */
+static inline BOOL
+TFInitLib(FN_CoCreateInstance fnCoCreateInstance = NULL)
+{
+    if (fnCoCreateInstance)
+        _cicGetSetUserCoCreateInstance(fnCoCreateInstance);
+    return TRUE;
+}
+
+/**
+ * @unimplemented
+ */
+static inline VOID
+TFUninitLib(VOID)
+{
+    //FIXME
+}
+
+/**
+ * @implemented
+ */
+static inline VOID
+TFUninitLib_Thread(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return;
+
+    if (pLibThread->m_pUnknown1)
+    {
+        pLibThread->m_pUnknown1->Release();
+        pLibThread->m_pUnknown1 = NULL;
+    }
+
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
 }
