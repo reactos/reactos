@@ -25,6 +25,11 @@ END_OBJECT_MAP()
 
 CMsUtbModule gModule;
 
+EXTERN_C void __cxa_pure_virtual(void)
+{
+    ERR("__cxa_pure_virtual\n");
+}
+
 /***********************************************************************
  *              GetLibTls (MSUTB.@)
  */
