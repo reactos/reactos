@@ -137,7 +137,7 @@ extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
 extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
-extern ULONG_PTR KiIdleSummary;
+extern KAFFINITY KiIdleSummary;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -379,7 +379,7 @@ UCHAR
 NTAPI
 KeFindNextRightSetAffinity(
     IN UCHAR Number,
-    IN ULONG Set
+    IN KAFFINITY Set
 );
 
 VOID
