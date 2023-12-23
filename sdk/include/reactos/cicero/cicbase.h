@@ -241,6 +241,28 @@ _cicGetSetUserCoCreateInstance(FN_CoCreateInstance fnUserCoCreateInstance)
     return s_fn;
 }
 
+static inline HRESULT
+cicRealCoCreateInstance(
+    REFCLSID rclsid,
+    LPUNKNOWN pUnkOuter,
+    DWORD dwClsContext,
+    REFIID iid,
+    LPVOID *ppv)
+{
+    static HINSTANCE s_hOle32 = NULL;
+    static FN_CoCreateInstance s_fnCoCreateInstance = NULL;
+    if (!s_fnCoCreateInstance)
+    {
+        if (!s_hOle32)
+            s_hOle32 = cicLoadSystemLibrary(L"ole32.dll", FALSE);
+        s_fnCoCreateInstance = (FN_CoCreateInstance)GetProcAddress(s_hOle32, "CoCreateInstance");
+        if (!s_fnCoCreateInstance)
+            return E_NOTIMPL;
+    }
+
+    return s_fnCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
+}
+
 /**
  * @implemented
  */
@@ -252,24 +274,12 @@ cicCoCreateInstance(
     REFIID iid,
     LPVOID *ppv)
 {
+    // NOTE: It looks like Cicero wants to hook CoCreateInstance
     FN_CoCreateInstance fnUserCoCreateInstance = _cicGetSetUserCoCreateInstance(NULL);
     if (fnUserCoCreateInstance)
         return fnUserCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
 
-    static HINSTANCE s_hOle32 = NULL;
-    static FN_CoCreateInstance s_fnCoCreateInstance = NULL;
-    if (!s_fnCoCreateInstance)
-    {
-        if (!s_hOle32)
-            s_hOle32 = cicLoadSystemLibrary(L"ole32.dll", FALSE);
-        if (!s_hOle32)
-            return E_NOTIMPL;
-        s_fnCoCreateInstance = (FN_CoCreateInstance)GetProcAddress(s_hOle32, "CoCreateInstance");
-        if (!s_fnCoCreateInstance)
-            return E_NOTIMPL;
-    }
-
-    return s_fnCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
+    return cicRealCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
 }
 
 /**
