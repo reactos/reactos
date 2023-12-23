@@ -13,6 +13,29 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifndef WINE_SETUPAPI_CAB_EXTRACTION_IS_NOT_SLOW_ANYMORE
+
+#define _USETUP_PCH_ // Disable USetup header inclusion
+
+#define NTOS_MODE_USER
+#include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+
+#include <ntstrsafe.h>
+
+#include "../../usetup/spapisup/cabinet.h"
+#include "../../usetup/spapisup/cabinet.c"
+
+#define SetupOpenFileQueue      _SetupOpenFileQueue
+#define SetupCloseFileQueue     _SetupCloseFileQueue
+#define SetupQueueDeleteW       _SetupQueueDeleteW
+#define SetupQueueRenameW       _SetupQueueRenameW
+#define SetupCommitFileQueueW   _SetupCommitFileQueueW
+
+#include "../../usetup/spapisup/fileqsup.c"
+
+#else
+
 /* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/
 
 /* A simplified version of SetupQueueCopyW that wraps Cabinet support around */
@@ -156,5 +179,7 @@ pSpFileQueueCopy   SpFileQueueCopy   = SpFileQueueCopy_NtToWin32;
 pSpFileQueueDelete SpFileQueueDelete = SpFileQueueDelete_NtToWin32;
 pSpFileQueueRename SpFileQueueRename = SpFileQueueRename_NtToWin32;
 pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
+
+#endif
 
 /* EOF */
