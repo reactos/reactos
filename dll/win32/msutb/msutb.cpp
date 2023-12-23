@@ -44,9 +44,9 @@ GetLibTls(VOID)
  *              GetPopupTipbar (MSUTB.@)
  */
 EXTERN_C BOOL WINAPI
-GetPopupTipbar(HWND hWnd, DWORD dwFlags)
+GetPopupTipbar(HWND hWnd, BOOL fWinLogon)
 {
-    FIXME("stub:(%p, 0x%lX)\n", hWnd, dwFlags);
+    FIXME("stub:(%p, %d)\n", hWnd, fWinLogon);
     return FALSE;
 }
 
