@@ -25,9 +25,9 @@ DriverPackageType = PlugAndPlay
 DriverPackageDisplayName = %kvmnet5.DeviceDesc%
 
 [Manufacturer]
-%VENDOR% = NetKVM, NTx86.5.1
+%VENDOR% = NetKVM
 
-[NetKVM.NTx86.5.1]
+[NetKVM]
 %kvmnet5.DeviceDesc%    = kvmnet5.ndi, PCI\VEN_1AF4&DEV_1000&SUBSYS_00011AF4&REV_00, PCI\VEN_1AF4&DEV_1000
 %kvmnet5.DeviceDesc%    = kvmnet5.ndi, PCI\VEN_1AF4&DEV_1041&SUBSYS_11001AF4&REV_01, PCI\VEN_1AF4&DEV_1041
 
