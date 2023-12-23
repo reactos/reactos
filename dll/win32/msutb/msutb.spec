@@ -1,0 +1,8 @@
+@ stdcall ClosePopupTipbar()
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
+@ stdcall GetLibTls()
+@ stdcall GetPopupTipbar(ptr long)
+@ stdcall SetRegisterLangBand(long)

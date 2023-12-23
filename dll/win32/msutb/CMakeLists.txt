@@ -1,0 +1,18 @@
+
+spec2def(msutb.dll msutb.spec)
+
+list(APPEND SOURCE
+    msutb.cpp)
+
+#file(GLOB msutb_rc_deps res/*.*)
+#add_rc_deps(msutb.rc ${msutb_rc_deps})
+
+add_library(msutb MODULE
+    ${SOURCE}
+    msutb.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msutb.def)
+set_module_type(msutb win32dll UNICODE)
+target_link_libraries(msutb wine uuid atl_classes)
+add_importlibs(msutb user32 gdi32 advapi32 comctl32 msvcrt kernel32 ntdll)
+add_delay_importlibs(msutb msctf ole32)
+add_cd_file(TARGET msutb DESTINATION reactos/system32 FOR all)

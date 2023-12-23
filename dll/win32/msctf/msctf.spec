@@ -8,9 +8,9 @@
 @ stub TF_CUASAppFix
 @ stub TF_CheckThreadInputIdle
 @ stub TF_ClearLangBarAddIns
-@ stub TF_CreateCategoryMgr
+@ stdcall -stub TF_CreateCategoryMgr(ptr)
 @ stdcall -stub TF_CreateCicLoadMutex(ptr)
-@ stub TF_CreateDisplayAttributeMgr
+@ stdcall -stub TF_CreateDisplayAttributeMgr(ptr)
 @ stdcall TF_CreateInputProcessorProfiles(ptr)
 @ stdcall TF_CreateLangBarItemMgr(ptr)
 @ stdcall TF_CreateLangBarMgr(ptr)
