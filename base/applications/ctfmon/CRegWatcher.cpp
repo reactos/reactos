@@ -112,11 +112,11 @@ CRegWatcher::InitEvent(
     }
 
     // Start registry watching
-    error = RegNotifyChangeKeyValue(entry.hKey,
-                                    TRUE,
-                                    REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
-                                    s_ahWatchEvents[iEvent],
-                                    TRUE);
+    error = ::RegNotifyChangeKeyValue(entry.hKey,
+                                      TRUE,
+                                      REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
+                                      s_ahWatchEvents[iEvent],
+                                      TRUE);
     return error == ERROR_SUCCESS;
 }
 
