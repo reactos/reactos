@@ -100,11 +100,11 @@ NTSTATUS
 NTAPI
 LdrUnlockLoaderLock(
     _In_ ULONG Flags,
-    _In_opt_ ULONG Cookie)
+    _In_opt_ ULONG_PTR Cookie)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("LdrUnlockLoaderLock(%x %x)\n", Flags, Cookie);
+    DPRINT("LdrUnlockLoaderLock(%x %Ix)\n", Flags, Cookie);
 
     /* Check for valid flags */
     if (Flags & ~LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
