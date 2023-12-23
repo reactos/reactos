@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Supporting TIP (Text Input Processor) Bar back-end
+ * PURPOSE:     Text Input Panel Bar (Tipbar) for on-screen keyboard and handwriting recognition
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
