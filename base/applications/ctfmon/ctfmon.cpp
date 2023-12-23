@@ -221,7 +221,7 @@ InitApp(
                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 
-    // Display Tipbar Popup if x86/x64 native
+    // Display Tipbar Popup if x86/x64 native and necessary
     if (!g_bOnWow64)
         GetPopupTipbar(g_pLoaderWnd->m_hWnd, g_fWinLogon);
 
