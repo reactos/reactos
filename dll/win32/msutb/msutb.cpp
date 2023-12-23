@@ -15,6 +15,11 @@ UINT g_uACP = CP_ACP;
 DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
 
+EXTERN_C void __cxa_pure_virtual(void)
+{
+    ERR("__cxa_pure_virtual\n");
+}
+
 class CMsUtbModule : public CComModule
 {
 };
@@ -25,13 +30,10 @@ END_OBJECT_MAP()
 
 CMsUtbModule gModule;
 
-EXTERN_C void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-}
-
 /***********************************************************************
  *              GetLibTls (MSUTB.@)
+ *
+ * @unimplemented
  */
 EXTERN_C LPVOID WINAPI
 GetLibTls(VOID)
@@ -42,6 +44,8 @@ GetLibTls(VOID)
 
 /***********************************************************************
  *              GetPopupTipbar (MSUTB.@)
+ *
+ * @unimplemented
  */
 EXTERN_C BOOL WINAPI
 GetPopupTipbar(HWND hWnd, BOOL fWinLogon)
@@ -52,6 +56,8 @@ GetPopupTipbar(HWND hWnd, BOOL fWinLogon)
 
 /***********************************************************************
  *              SetRegisterLangBand (MSUTB.@)
+ *
+ * @unimplemented
  */
 EXTERN_C HRESULT WINAPI
 SetRegisterLangBand(BOOL bRegister)
@@ -62,6 +68,8 @@ SetRegisterLangBand(BOOL bRegister)
 
 /***********************************************************************
  *              ClosePopupTipbar (MSUTB.@)
+ *
+ * @unimplemented
  */
 EXTERN_C VOID WINAPI
 ClosePopupTipbar(VOID)
@@ -71,6 +79,8 @@ ClosePopupTipbar(VOID)
 
 /***********************************************************************
  *              DllRegisterServer (MSUTB.@)
+ *
+ * @implemented
  */
 STDAPI DllRegisterServer(VOID)
 {
@@ -80,6 +90,8 @@ STDAPI DllRegisterServer(VOID)
 
 /***********************************************************************
  *              DllUnregisterServer (MSUTB.@)
+ *
+ * @implemented
  */
 STDAPI DllUnregisterServer(VOID)
 {
@@ -89,6 +101,8 @@ STDAPI DllUnregisterServer(VOID)
 
 /***********************************************************************
  *              DllCanUnloadNow (MSUTB.@)
+ *
+ * @implemented
  */
 STDAPI DllCanUnloadNow(VOID)
 {
@@ -98,6 +112,8 @@ STDAPI DllCanUnloadNow(VOID)
 
 /***********************************************************************
  *              DllGetClassObject (MSUTB.@)
+ *
+ * @implemented
  */
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
