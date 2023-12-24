@@ -57,7 +57,7 @@ CreateTimer(VOID)
   Ret = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_TIMER, sizeof(TIMER));
   if (Ret)
   {
-     Ret->head.h = Handle;
+     UserHMSetHandle(Ret, Handle);
      InsertTailList(&TimersListHead, &Ret->ptmrList);
   }
 
