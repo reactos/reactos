@@ -669,6 +669,10 @@ IStream * WINAPI SHCreateMemStream(const BYTE *lpbData, UINT dwDataLen)
     if (!strm)
       HeapFree(GetProcessHeap(), 0, lpbDup);
   }
+#ifdef __REACTOS__
+  if (!strm)
+    return NULL;
+#endif
   return &strm->IStream_iface;
 }
 
