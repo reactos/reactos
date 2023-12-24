@@ -47,8 +47,9 @@
 #define IDB_STORAGE_SERVER2 18
 
 /* ReactOS additions */
-#define IDB_ROTATING_LINE   19
-#define IDB_PROGRESS_BAR    20
-#define IDB_COPYRIGHT       21
+#define IDB_LOGO_XMAS       19
+#define IDB_ROTATING_LINE   20
+#define IDB_PROGRESS_BAR    21
+#define IDB_COPYRIGHT       22
 
 #define IDB_MAX_RESOURCES   IDB_COPYRIGHT
