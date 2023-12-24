@@ -1227,7 +1227,8 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 	                return CC_WMInitDialog(hDlg, wParam, lParam);
 	  case WM_NCDESTROY:
 #ifdef __REACTOS__
-	                ClipCursor(NULL); // In case closed before WM_LBUTTONUP received.
+	                // Ensure clipping is released, in case the dialog is closed before WM_LBUTTONUP is received.
+	                ClipCursor(NULL);
 #endif
 	                DeleteDC(lpp->hdcMem);
 	                DeleteObject(lpp->hbmMem);
