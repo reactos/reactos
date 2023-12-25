@@ -2017,6 +2017,10 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
         {
             HWND hwndTarget;
 
+#ifdef __REACTOS__
+            if (lphc->wState & CBF_DROPPED)
+                lphc->wState |= CBF_NOROLLUP;
+#endif
             if ( lphc->wState & CBF_EDIT )
                 hwndTarget = lphc->hWndEdit;
             else
