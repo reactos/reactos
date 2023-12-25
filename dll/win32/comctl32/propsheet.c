@@ -2787,6 +2787,10 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
   GlobalFree(psInfo);
 }
 
+#ifdef __REACTOS__
+static BOOL PROPSHEET_IsDialogMessage(HWND hwnd, LPMSG lpMsg);
+#endif
+
 static INT do_loop(const PropSheetInfo *psInfo)
 {
     MSG msg;
@@ -2799,7 +2803,11 @@ static INT do_loop(const PropSheetInfo *psInfo)
         if(ret == -1)
             break;
 
+#ifdef __REACTOS__
+        if (!PROPSHEET_IsDialogMessage(hwnd, &msg))
+#else
         if(!IsDialogMessageW(hwnd, &msg))
+#endif
         {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
