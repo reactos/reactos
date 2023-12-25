@@ -421,6 +421,9 @@ static int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
  value = atoi(buffer);
  if (value > maxval)       /* build a new string */
  {
+#ifdef __REACTOS__
+  value = maxval;
+#endif
   sprintf(buffer, "%d", maxval);
   result = 2;
  }
