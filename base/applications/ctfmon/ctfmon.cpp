@@ -26,7 +26,7 @@ BOOL        g_bOnWow64      = FALSE;    // Is the app running on WoW64?
 BOOL        g_fNoRunKey     = FALSE;    // Don't write registry key "Run"?
 BOOL        g_fJustRunKey   = FALSE;    // Just write registry key "Run"?
 DWORD       g_dwOsInfo      = 0;        // The OS version info. See cicGetOSInfo
-CLoaderWnd* g_pLoaderWnd    = NULL;     // TIP Bar loader window
+CLoaderWnd* g_pLoaderWnd    = NULL;     // Tipbar loader window
 
 static VOID
 ParseCommandLine(
@@ -209,7 +209,7 @@ InitApp(
     if (!g_bOnWow64)
         CRegWatcher::Init();
 
-    // Create TIP Bar loader window
+    // Create Tipbar loader window
     g_pLoaderWnd = new CLoaderWnd();
     if (!g_pLoaderWnd || !g_pLoaderWnd->Init())
         return FALSE;
@@ -221,7 +221,7 @@ InitApp(
                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
 
-    // Display TIP Bar Popup if x86/x64 native
+    // Display Tipbar Popup if x86/x64 native and necessary
     if (!g_bOnWow64)
         GetPopupTipbar(g_pLoaderWnd->m_hWnd, g_fWinLogon);
 
@@ -234,7 +234,7 @@ InitApp(
 VOID
 UninitApp(VOID)
 {
-    // Close TIP Bar Popup
+    // Close Tipbar Popup
     ClosePopupTipbar();
 
     // Release Cicero

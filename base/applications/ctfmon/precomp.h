@@ -17,6 +17,7 @@
 #include <ctfutb.h>
 #include <ctffunc.h>
 #include <cicero/cicbase.h>
+#include <cicero/cicutb.h>
 
 #include "resource.h"
 
@@ -43,13 +44,3 @@ typedef enum WATCH_INDEX
     WI_ASSEMBLIES        = 11,
     WI_DESKTOP_SWITCH    = 12,
 } WATCH_INDEX;
-
-// FIXME: Use msutb.dll and header
-static inline void ClosePopupTipbar(void)
-{
-}
-
-// FIXME: Use msutb.dll and header
-static inline void GetPopupTipbar(HWND hwnd, BOOL fWinLogon)
-{
-}
