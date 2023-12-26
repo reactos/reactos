@@ -39,8 +39,13 @@ TF_RegisterLangBarAddIn(
     _In_ LPCWSTR pszFilePath,
     _In_ DWORD dwFlags)
 {
+    TRACE("(%s, %s, 0x%lX)\n", debugstr_guid(&rguid), debugstr_w(pszFilePath), dwFlags);
+
     if (!pszFilePath || IsEqualGUID(rguid, GUID_NULL))
+    {
+        ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
+    }
 
     WCHAR szBuff[MAX_PATH], szGUID[40];
     StringCchCopyW(szBuff, _countof(szBuff), L"SOFTWARE\\Microsoft\\CTF\\LangBarAddIn\\");
@@ -70,8 +75,13 @@ TF_UnregisterLangBarAddIn(
     _In_ REFGUID rguid,
     _In_ DWORD dwFlags)
 {
+    TRACE("(%s, 0x%lX)\n", debugstr_guid(&rguid), dwFlags);
+
     if (IsEqualGUID(rguid, GUID_NULL))
+    {
+        ERR("E_INVALIDARG\n");
         return E_INVALIDARG;
+    }
 
     WCHAR szSubKey[MAX_PATH];
     StringCchCopyW(szSubKey, _countof(szSubKey), L"SOFTWARE\\Microsoft\\CTF\\LangBarAddIn\\");
