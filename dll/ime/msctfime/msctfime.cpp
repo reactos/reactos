@@ -56,16 +56,17 @@ BOOL IsMsImeMessage(UINT uMsg)
  */
 BOOL RegisterMSIMEMessage(VOID)
 {
-    WM_MSIME_SERVICE = RegisterWindowMessageW(L"MSIMEService");
-    WM_MSIME_UIREADY = RegisterWindowMessageW(L"MSIMEUIReady");
-    WM_MSIME_RECONVERTREQUEST = RegisterWindowMessageW(L"MSIMEReconvertRequest");
-    WM_MSIME_RECONVERT = RegisterWindowMessageW(L"MSIMEReconvert");
-    WM_MSIME_DOCUMENTFEED = RegisterWindowMessageW(L"MSIMEDocumentFeed");
-    WM_MSIME_QUERYPOSITION = RegisterWindowMessageW(L"MSIMEQueryPosition");
-    WM_MSIME_MODEBIAS = RegisterWindowMessageW(L"MSIMEModeBias");
-    WM_MSIME_SHOWIMEPAD = RegisterWindowMessageW(L"MSIMEShowImePad");
-    WM_MSIME_MOUSE = RegisterWindowMessageW(L"MSIMEMouseOperation");
-    WM_MSIME_KEYMAP = RegisterWindowMessageW(L"MSIMEKeyMap");
+    // Using ANSI (A) version here can reduce binary size.
+    WM_MSIME_SERVICE = RegisterWindowMessageA("MSIMEService");
+    WM_MSIME_UIREADY = RegisterWindowMessageA("MSIMEUIReady");
+    WM_MSIME_RECONVERTREQUEST = RegisterWindowMessageA("MSIMEReconvertRequest");
+    WM_MSIME_RECONVERT = RegisterWindowMessageA("MSIMEReconvert");
+    WM_MSIME_DOCUMENTFEED = RegisterWindowMessageA("MSIMEDocumentFeed");
+    WM_MSIME_QUERYPOSITION = RegisterWindowMessageA("MSIMEQueryPosition");
+    WM_MSIME_MODEBIAS = RegisterWindowMessageA("MSIMEModeBias");
+    WM_MSIME_SHOWIMEPAD = RegisterWindowMessageA("MSIMEShowImePad");
+    WM_MSIME_MOUSE = RegisterWindowMessageA("MSIMEMouseOperation");
+    WM_MSIME_KEYMAP = RegisterWindowMessageA("MSIMEKeyMap");
     return (WM_MSIME_SERVICE &&
             WM_MSIME_UIREADY &&
             WM_MSIME_RECONVERTREQUEST &&
