@@ -12,6 +12,7 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <stdlib.h>
+#include <tchar.h>
 #include <strsafe.h>
 #include <msctf.h>
 #include <ctfutb.h>

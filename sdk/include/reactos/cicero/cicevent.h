@@ -12,7 +12,7 @@
 class CicEvent
 {
     HANDLE m_hEvent;
-    LPCWSTR m_pszName;
+    LPCTSTR m_pszName;
 
 public:
     CicEvent() : m_hEvent(NULL), m_pszName(NULL)
@@ -23,20 +23,20 @@ public:
         Close();
     }
 
-    BOOL Create(LPSECURITY_ATTRIBUTES lpSA, LPCWSTR pszName)
+    BOOL Create(LPSECURITY_ATTRIBUTES lpSA, LPCTSTR pszName)
     {
         if (pszName)
             m_pszName = pszName;
         if (!m_pszName)
             return FALSE;
-        m_hEvent = ::CreateEventW(lpSA, FALSE, FALSE, m_pszName);
+        m_hEvent = ::CreateEvent(lpSA, FALSE, FALSE, m_pszName);
         return (m_hEvent != NULL);
     }
-    BOOL Open(LPCWSTR pszName)
+    BOOL Open(LPCTSTR pszName)
     {
         if (pszName)
             m_pszName = pszName;
-        m_hEvent = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, m_pszName);
+        m_hEvent = ::OpenEvent(EVENT_ALL_ACCESS, FALSE, m_pszName);
         return (m_hEvent != NULL);
     }
     void Close()

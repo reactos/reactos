@@ -18,15 +18,15 @@ BOOL CLoaderWnd::Init()
         return TRUE; // Already registered
 
     // Register a window class
-    WNDCLASSEXW wc;
+    WNDCLASSEX wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.cbSize           = sizeof(wc);
     wc.style            = CS_HREDRAW | CS_VREDRAW;
     wc.hInstance        = g_hInst;
-    wc.hCursor          = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+    wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
     wc.lpfnWndProc      = WindowProc;
-    wc.lpszClassName    = L"CiCTipBarClass";
-    if (!::RegisterClassExW(&wc))
+    wc.lpszClassName    = TEXT("CiCTipBarClass");
+    if (!::RegisterClassEx(&wc))
         return FALSE;
 
     s_bWndClassRegistered = TRUE; // Remember
@@ -35,8 +35,8 @@ BOOL CLoaderWnd::Init()
 
 HWND CLoaderWnd::CreateWnd()
 {
-    m_hWnd = ::CreateWindowExW(0, L"CiCTipBarClass", NULL, WS_DISABLED,
-                               0, 0, 0, 0, NULL, NULL, g_hInst, NULL);
+    m_hWnd = ::CreateWindowEx(0, TEXT("CiCTipBarClass"), NULL, WS_DISABLED,
+                              0, 0, 0, 0, NULL, NULL, g_hInst, NULL);
     return m_hWnd;
 }
 
@@ -93,7 +93,7 @@ CLoaderWnd::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         default:
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
     return 0;

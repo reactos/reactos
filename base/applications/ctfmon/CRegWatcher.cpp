@@ -14,18 +14,18 @@ HANDLE CRegWatcher::s_ahWatchEvents[WATCHENTRY_MAX] = { NULL };
 // The registry entries to watch
 WATCHENTRY CRegWatcher::s_WatchEntries[WATCHENTRY_MAX] =
 {
-    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Toggle"                           }, // WI_TOGGLE
-    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // WI_MACHINE_TIF
-    { HKEY_CURRENT_USER,  L"Keyboard Layout\\Preload"                          }, // WI_PRELOAD
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" }, // WI_RUN
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\TIP"                     }, // WI_USER_TIF
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\Speech"                       }, // WI_USER_SPEECH
-    { HKEY_CURRENT_USER,  L"Control Panel\\Appearance"                         }, // WI_APPEARANCE
-    { HKEY_CURRENT_USER,  L"Control Panel\\Colors"                             }, // WI_COLORS
-    { HKEY_CURRENT_USER,  L"Control Panel\\Desktop\\WindowMetrics"             }, // WI_WINDOW_METRICS
-    { HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Speech"                       }, // WI_MACHINE_SPEECH
-    { HKEY_CURRENT_USER,  L"Keyboard Layout"                                   }, // WI_KEYBOARD_LAYOUT
-    { HKEY_CURRENT_USER,  L"SOFTWARE\\Microsoft\\CTF\\Assemblies"              }, // WI_ASSEMBLIES
+    { HKEY_CURRENT_USER,  TEXT("Keyboard Layout\\Toggle")                           }, // WI_TOGGLE
+    { HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\CTF\\TIP")                     }, // WI_MACHINE_TIF
+    { HKEY_CURRENT_USER,  TEXT("Keyboard Layout\\Preload")                          }, // WI_PRELOAD
+    { HKEY_CURRENT_USER,  TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run") }, // WI_RUN
+    { HKEY_CURRENT_USER,  TEXT("SOFTWARE\\Microsoft\\CTF\\TIP")                     }, // WI_USER_TIF
+    { HKEY_CURRENT_USER,  TEXT("SOFTWARE\\Microsoft\\Speech")                       }, // WI_USER_SPEECH
+    { HKEY_CURRENT_USER,  TEXT("Control Panel\\Appearance")                         }, // WI_APPEARANCE
+    { HKEY_CURRENT_USER,  TEXT("Control Panel\\Colors")                             }, // WI_COLORS
+    { HKEY_CURRENT_USER,  TEXT("Control Panel\\Desktop\\WindowMetrics")             }, // WI_WINDOW_METRICS
+    { HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Speech")                       }, // WI_MACHINE_SPEECH
+    { HKEY_CURRENT_USER,  TEXT("Keyboard Layout")                                   }, // WI_KEYBOARD_LAYOUT
+    { HKEY_CURRENT_USER,  TEXT("SOFTWARE\\Microsoft\\CTF\\Assemblies")              }, // WI_ASSEMBLIES
 };
 
 // The timer IDs: For delaying ignitions
@@ -48,7 +48,7 @@ CRegWatcher::Init()
     // Create some nameless events and initialize them
     for (SIZE_T iEvent = 0; iEvent < _countof(s_ahWatchEvents); ++iEvent)
     {
-        s_ahWatchEvents[iEvent] = ::CreateEventW(NULL, TRUE, FALSE, NULL);
+        s_ahWatchEvents[iEvent] = ::CreateEvent(NULL, TRUE, FALSE, NULL);
         InitEvent(iEvent, FALSE);
     }
 
@@ -102,11 +102,11 @@ CRegWatcher::InitEvent(
 
     // Open or create a registry key to watch registry key
     LSTATUS error;
-    error = ::RegOpenKeyExW(entry.hRootKey, entry.pszSubKey, 0, KEY_READ, &entry.hKey);
+    error = ::RegOpenKeyEx(entry.hRootKey, entry.pszSubKey, 0, KEY_READ, &entry.hKey);
     if (error != ERROR_SUCCESS)
     {
-        error = ::RegCreateKeyExW(entry.hRootKey, entry.pszSubKey, 0, NULL, 0,
-                                  KEY_ALL_ACCESS, NULL, &entry.hKey, NULL);
+        error = ::RegCreateKeyEx(entry.hRootKey, entry.pszSubKey, 0, NULL, 0,
+                                 KEY_ALL_ACCESS, NULL, &entry.hKey, NULL);
         if (error != ERROR_SUCCESS)
             return FALSE;
     }
@@ -128,17 +128,18 @@ CRegWatcher::UpdateSpTip()
 
     // Clear "ProfileInitialized" value
     HKEY hKey;
-    LSTATUS error = ::RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\Sapilayr",
-                                    0, KEY_WRITE, &hKey);
+    LSTATUS error = ::RegOpenKeyEx(HKEY_CURRENT_USER,
+                                   TEXT("SOFTWARE\\Microsoft\\CTF\\Sapilayr"),
+                                   0, KEY_WRITE, &hKey);
     if (error == ERROR_SUCCESS)
     {
         DWORD dwValue = 0, cbValue = sizeof(dwValue);
-        ::RegSetValueExW(hKey, L"ProfileInitialized", NULL, REG_DWORD, (LPBYTE)&dwValue, cbValue);
+        ::RegSetValueEx(hKey, TEXT("ProfileInitialized"), NULL, REG_DWORD, (LPBYTE)&dwValue, cbValue);
         ::RegCloseKey(hKey);
     }
 
     // Get %WINDIR%/IME/sptip.dll!TF_CreateLangProfileUtil function
-    HINSTANCE hSPTIP = cicLoadSystemLibrary(L"IME\\sptip.dll", TRUE);
+    HINSTANCE hSPTIP = cicLoadSystemLibrary(TEXT("IME\\sptip.dll"), TRUE);
     FN_TF_CreateLangProfileUtil fnTF_CreateLangProfileUtil =
         (FN_TF_CreateLangProfileUtil)::GetProcAddress(hSPTIP, "TF_CreateLangProfileUtil");
     if (fnTF_CreateLangProfileUtil)
@@ -168,17 +169,17 @@ CRegWatcher::KillInternat()
     WATCHENTRY& entry = s_WatchEntries[WI_RUN];
 
     // Delete internat.exe from registry "Run" key
-    LSTATUS error = ::RegOpenKeyExW(entry.hRootKey, entry.pszSubKey, 0, KEY_ALL_ACCESS, &hKey);
+    LSTATUS error = ::RegOpenKeyEx(entry.hRootKey, entry.pszSubKey, 0, KEY_ALL_ACCESS, &hKey);
     if (error == ERROR_SUCCESS)
     {
-        ::RegDeleteValueW(hKey, L"internat.exe");
+        ::RegDeleteValue(hKey, TEXT("internat.exe"));
         ::RegCloseKey(hKey);
     }
 
     // Kill the "Indicator" window (that internat.exe creates)
-    HWND hwndInternat = ::FindWindowW(L"Indicator", NULL);
+    HWND hwndInternat = ::FindWindow(TEXT("Indicator"), NULL);
     if (hwndInternat)
-        ::PostMessageW(hwndInternat, WM_CLOSE, 0, 0);
+        ::PostMessage(hwndInternat, WM_CLOSE, 0, 0);
 }
 
 // Post message 0x8002 to every "SapiTipWorkerClass" window.
@@ -188,14 +189,14 @@ CRegWatcher::EnumWndProc(
     _In_ HWND hWnd,
     _In_ LPARAM lParam)
 {
-    WCHAR ClassName[MAX_PATH];
+    TCHAR ClassName[MAX_PATH];
 
     UNREFERENCED_PARAMETER(lParam);
 
-    if (::GetClassNameW(hWnd, ClassName, _countof(ClassName)) &&
-        _wcsicmp(ClassName, L"SapiTipWorkerClass") == 0)
+    if (::GetClassName(hWnd, ClassName, _countof(ClassName)) &&
+        _tcsicmp(ClassName, TEXT("SapiTipWorkerClass")) == 0)
     {
-        PostMessageW(hWnd, 0x8002, 0, 0); // FIXME: Magic number
+        PostMessage(hWnd, 0x8002, 0, 0); // FIXME: Magic number
     }
 
     return TRUE;

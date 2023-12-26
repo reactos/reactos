@@ -23,43 +23,48 @@ public:
 
     LSTATUS Open(
         HKEY hKey,
-        LPCWSTR lpSubKey,
+        LPCTSTR lpSubKey,
         REGSAM samDesired = KEY_READ);
 
     LSTATUS Create(
         HKEY hKey,
-        LPCWSTR lpSubKey,
-        LPWSTR lpClass = NULL,
+        LPCTSTR lpSubKey,
+        LPTSTR lpClass = NULL,
         DWORD dwOptions = REG_OPTION_NON_VOLATILE,
         REGSAM samDesired = KEY_ALL_ACCESS,
         LPSECURITY_ATTRIBUTES lpSecurityAttributes = NULL,
         LPDWORD pdwDisposition = NULL);
 
-    LSTATUS QueryDword(LPCWSTR pszValueName, LPDWORD pdwValue)
+    LSTATUS QueryDword(LPCTSTR pszValueName, LPDWORD pdwValue)
     {
         DWORD cbData = sizeof(DWORD);
-        return ::RegQueryValueExW(m_hKey, pszValueName, 0, NULL, (LPBYTE)pdwValue, &cbData);
+        return ::RegQueryValueEx(m_hKey, pszValueName, 0, NULL, (LPBYTE)pdwValue, &cbData);
     }
 
-    LSTATUS SetDword(LPCWSTR pszValueName, DWORD dwValue)
+    LSTATUS SetDword(LPCTSTR pszValueName, DWORD dwValue)
     {
-        return ::RegSetValueExW(m_hKey, pszValueName, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
+        return ::RegSetValueEx(m_hKey, pszValueName, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
     }
 
-    LSTATUS QuerySz(LPCWSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax);
+    LSTATUS QuerySz(LPCTSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax);
 
-    LSTATUS SetSz(LPCWSTR pszValueName, LPCWSTR pszValue)
+    LSTATUS SetSz(LPCTSTR pszValueName, LPCTSTR pszValue)
+    {
+        DWORD cbValue = (lstrlen(pszValue) + 1) * sizeof(TCHAR);
+        return ::RegSetValueEx(m_hKey, pszValueName, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
+    }
+    LSTATUS SetSzW(LPCWSTR pszValueName, LPCWSTR pszValue)
     {
         DWORD cbValue = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
         return ::RegSetValueExW(m_hKey, pszValueName, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
     }
 
-    LSTATUS DeleteSubKey(LPCWSTR lpSubKey)
+    LSTATUS DeleteSubKey(LPCTSTR lpSubKey)
     {
-        return ::RegDeleteKeyW(m_hKey, lpSubKey);
+        return ::RegDeleteKey(m_hKey, lpSubKey);
     }
 
-    LSTATUS RecurseDeleteKey(LPCWSTR lpSubKey);
+    LSTATUS RecurseDeleteKey(LPCTSTR lpSubKey);
 };
 
 /******************************************************************************/
@@ -77,11 +82,11 @@ CicRegKey::Close()
 inline LSTATUS
 CicRegKey::Open(
     HKEY hKey,
-    LPCWSTR lpSubKey,
+    LPCTSTR lpSubKey,
     REGSAM samDesired)
 {
     HKEY hNewKey = NULL;
-    LSTATUS error = ::RegOpenKeyExW(hKey, lpSubKey, 0, samDesired, &hNewKey);
+    LSTATUS error = ::RegOpenKeyEx(hKey, lpSubKey, 0, samDesired, &hNewKey);
     if (error != ERROR_SUCCESS)
         return error;
 
@@ -93,23 +98,23 @@ CicRegKey::Open(
 inline LSTATUS
 CicRegKey::Create(
     HKEY hKey,
-    LPCWSTR lpSubKey,
-    LPWSTR lpClass,
+    LPCTSTR lpSubKey,
+    LPTSTR lpClass,
     DWORD dwOptions,
     REGSAM samDesired,
     LPSECURITY_ATTRIBUTES lpSecurityAttributes,
     LPDWORD pdwDisposition)
 {
     HKEY hNewKey = NULL;
-    LSTATUS error = ::RegCreateKeyExW(hKey,
-                                      lpSubKey,
-                                      0,
-                                      lpClass,
-                                      dwOptions,
-                                      samDesired,
-                                      lpSecurityAttributes,
-                                      &hNewKey,
-                                      pdwDisposition);
+    LSTATUS error = ::RegCreateKeyEx(hKey,
+                                     lpSubKey,
+                                     0,
+                                     lpClass,
+                                     dwOptions,
+                                     samDesired,
+                                     lpSecurityAttributes,
+                                     &hNewKey,
+                                     pdwDisposition);
     if (error != ERROR_SUCCESS)
         return error;
 
@@ -119,13 +124,13 @@ CicRegKey::Create(
 }
 
 inline LSTATUS
-CicRegKey::QuerySz(LPCWSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax)
+CicRegKey::QuerySz(LPCTSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax)
 {
     DWORD cchSaveMax = cchValueMax;
 
-    cchValueMax *= sizeof(WCHAR);
-    LSTATUS error = ::RegQueryValueExW(m_hKey, pszValueName, 0, NULL,
-                                       (LPBYTE)pszValue, &cchValueMax);
+    cchValueMax *= sizeof(TCHAR);
+    LSTATUS error = ::RegQueryValueEx(m_hKey, pszValueName, 0, NULL,
+                                      (LPBYTE)pszValue, &cchValueMax);
     if (cchSaveMax > 0)
         pszValue[(error == ERROR_SUCCESS) ? (cchSaveMax - 1) : 0] = UNICODE_NULL;
 
@@ -133,19 +138,19 @@ CicRegKey::QuerySz(LPCWSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax)
 }
 
 inline LSTATUS
-CicRegKey::RecurseDeleteKey(LPCWSTR lpSubKey)
+CicRegKey::RecurseDeleteKey(LPCTSTR lpSubKey)
 {
     CicRegKey regKey;
     LSTATUS error = regKey.Open(m_hKey, lpSubKey, KEY_READ | KEY_WRITE);
     if (error != ERROR_SUCCESS)
         return error;
 
-    WCHAR szName[MAX_PATH];
+    TCHAR szName[MAX_PATH];
     DWORD cchName;
     do
     {
         cchName = _countof(szName);
-        error = ::RegEnumKeyExW(regKey, 0, szName, &cchName, NULL, NULL, NULL, NULL);
+        error = ::RegEnumKeyEx(regKey, 0, szName, &cchName, NULL, NULL, NULL, NULL);
         if (error != ERROR_SUCCESS)
             break;
 

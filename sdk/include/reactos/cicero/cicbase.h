@@ -71,9 +71,9 @@ cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
     *pdwOSInfo = 0;
 
     /* Check OS version info */
-    OSVERSIONINFOW VerInfo;
+    OSVERSIONINFO VerInfo;
     VerInfo.dwOSVersionInfoSize = sizeof(VerInfo);
-    GetVersionExW(&VerInfo);
+    GetVersionEx(&VerInfo);
     if (VerInfo.dwPlatformId == DLLVER_PLATFORM_NT)
     {
         *pdwOSInfo |= CIC_OSINFO_NT;
@@ -113,7 +113,7 @@ cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
 
 struct CicSystemModulePath
 {
-    WCHAR m_szPath[MAX_PATH + 2];
+    TCHAR m_szPath[MAX_PATH + 2];
     SIZE_T m_cchPath;
 
     CicSystemModulePath()
@@ -122,31 +122,31 @@ struct CicSystemModulePath
         m_cchPath = 0;
     }
 
-    BOOL Init(_In_ LPCWSTR pszFileName, _In_ BOOL bSysWinDir);
+    BOOL Init(_In_ LPCTSTR pszFileName, _In_ BOOL bSysWinDir);
 };
 
 // Get an instance handle that is already loaded
 static inline HINSTANCE
 cicGetSystemModuleHandle(
-    _In_ LPCWSTR pszFileName,
+    _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
     CicSystemModulePath ModPath;
     if (!ModPath.Init(pszFileName, bSysWinDir))
         return NULL;
-    return GetModuleHandleW(ModPath.m_szPath);
+    return GetModuleHandle(ModPath.m_szPath);
 }
 
 // Load a system library
 static inline HINSTANCE
 cicLoadSystemLibrary(
-    _In_ LPCWSTR pszFileName,
+    _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
     CicSystemModulePath ModPath;
     if (!ModPath.Init(pszFileName, bSysWinDir))
         return NULL;
-    return ::LoadLibraryW(ModPath.m_szPath);
+    return ::LoadLibrary(ModPath.m_szPath);
 }
 
 #include <ndk/pstypes.h> /* for PROCESSINFOCLASS */
@@ -163,7 +163,7 @@ static inline BOOL cicIsWow64(VOID)
 
     if (!s_fnNtQueryInformationProcess)
     {
-        HMODULE hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
+        HMODULE hNTDLL = cicGetSystemModuleHandle(TEXT("ntdll.dll"), FALSE);
         if (!hNTDLL)
             return FALSE;
 
@@ -184,38 +184,38 @@ static inline BOOL cicIsWow64(VOID)
 
 inline BOOL
 CicSystemModulePath::Init(
-    _In_ LPCWSTR pszFileName,
+    _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
 {
     SIZE_T cchPath;
     if (bSysWinDir)
     {
         // Usually C:\Windows or C:\ReactOS
-        cchPath = ::GetSystemWindowsDirectoryW(m_szPath, _countof(m_szPath));
+        cchPath = ::GetSystemWindowsDirectory(m_szPath, _countof(m_szPath));
     }
     else
     {
         // Usually C:\Windows\system32 or C:\ReactOS\system32
-        cchPath = ::GetSystemDirectoryW(m_szPath, _countof(m_szPath));
+        cchPath = ::GetSystemDirectory(m_szPath, _countof(m_szPath));
     }
 
-    m_szPath[_countof(m_szPath) - 1] = UNICODE_NULL; // Avoid buffer overrun
+    m_szPath[_countof(m_szPath) - 1] = TEXT('\0'); // Avoid buffer overrun
 
     if ((cchPath == 0) || (cchPath > _countof(m_szPath) - 2))
         goto Failure;
 
     // Add backslash if necessary
-    if ((cchPath > 0) && (m_szPath[cchPath - 1] != L'\\'))
+    if ((cchPath > 0) && (m_szPath[cchPath - 1] != TEXT('\\')))
     {
-        m_szPath[cchPath + 0] = L'\\';
-        m_szPath[cchPath + 1] = UNICODE_NULL;
+        m_szPath[cchPath + 0] = TEXT('\\');
+        m_szPath[cchPath + 1] = TEXT('\0');
     }
 
     // Append pszFileName
-    if (FAILED(StringCchCatW(m_szPath, _countof(m_szPath), pszFileName)))
+    if (FAILED(StringCchCat(m_szPath, _countof(m_szPath), pszFileName)))
         goto Failure;
 
-    m_cchPath = wcslen(m_szPath);
+    m_cchPath = _tcslen(m_szPath);
     return TRUE;
 
 Failure:
@@ -254,7 +254,7 @@ cicRealCoCreateInstance(
     if (!s_fnCoCreateInstance)
     {
         if (!s_hOle32)
-            s_hOle32 = cicLoadSystemLibrary(L"ole32.dll", FALSE);
+            s_hOle32 = cicLoadSystemLibrary(TEXT("ole32.dll"), FALSE);
         s_fnCoCreateInstance = (FN_CoCreateInstance)GetProcAddress(s_hOle32, "CoCreateInstance");
         if (!s_fnCoCreateInstance)
             return E_NOTIMPL;
