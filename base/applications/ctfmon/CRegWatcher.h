@@ -10,7 +10,7 @@
 struct WATCHENTRY
 {
     HKEY hRootKey;
-    LPCWSTR pszSubKey;
+    LPCTSTR pszSubKey;
     HKEY hKey;
 };
 

@@ -13,6 +13,9 @@
 typedef BOOL (WINAPI *FN_SetProcessShutdownParameters)(DWORD, DWORD);
 FN_SetProcessShutdownParameters g_fnSetProcessShutdownParameters = NULL;
 
+// kernel32!GetSystemWow64DirectoryA
+typedef UINT (WINAPI *FN_GetSystemWow64DirectoryA)(LPSTR, UINT);
+FN_GetSystemWow64DirectoryA g_fnGetSystemWow64DirectoryA = NULL;
 // kernel32!GetSystemWow64DirectoryW
 typedef UINT (WINAPI *FN_GetSystemWow64DirectoryW)(LPWSTR, UINT);
 FN_GetSystemWow64DirectoryW g_fnGetSystemWow64DirectoryW = NULL;
@@ -30,29 +33,29 @@ CLoaderWnd* g_pLoaderWnd    = NULL;     // Tipbar loader window
 
 static VOID
 ParseCommandLine(
-    _In_ LPCWSTR pszCmdLine)
+    _In_ LPCTSTR pszCmdLine)
 {
     g_fNoRunKey = g_fJustRunKey = FALSE;
 
-    for (LPCWSTR pch = pszCmdLine; *pch; ++pch)
+    for (LPCTSTR pch = pszCmdLine; *pch; ++pch)
     {
         // Skip space
-        while (*pch == L' ')
+        while (*pch == TEXT(' '))
             ++pch;
 
-        if (*pch == UNICODE_NULL)
+        if (*pch == TEXT('\0'))
             return;
 
-        if ((*pch == L'-') || (*pch == L'/'))
+        if ((*pch == TEXT('-')) || (*pch == TEXT('/')))
         {
             ++pch;
             switch (*pch)
             {
-                case L'N': case L'n': // Found "/N" option
+                case TEXT('N'): case TEXT('n'): // Found "/N" option
                     g_fNoRunKey = TRUE;
                     break;
 
-                case L'R': case L'r': // Found "/R" option
+                case TEXT('R'): case TEXT('r'): // Found "/R" option
                     g_fJustRunKey = TRUE;
                     break;
 
@@ -74,18 +77,18 @@ WriteRegRun(VOID)
 
     // Open "Run" key
     HKEY hKey;
-    LSTATUS error = ::RegCreateKeyW(HKEY_CURRENT_USER,
-                                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-                                    &hKey);
+    LSTATUS error = ::RegCreateKey(HKEY_CURRENT_USER,
+                                   TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+                                   &hKey);
     if (error != ERROR_SUCCESS)
         return;
 
     // Write the module path
     CicSystemModulePath ModPath;
-    if (ModPath.Init(L"ctfmon.exe", FALSE))
+    if (ModPath.Init(TEXT("ctfmon.exe"), FALSE))
     {
-        DWORD cbData = (ModPath.m_cchPath + 1) * sizeof(WCHAR);
-        ::RegSetValueExW(hKey, L"ctfmon.exe", 0, REG_SZ, (BYTE*)ModPath.m_szPath, cbData);
+        DWORD cbData = (ModPath.m_cchPath + 1) * sizeof(TCHAR);
+        ::RegSetValueEx(hKey, TEXT("ctfmon.exe"), 0, REG_SZ, (BYTE*)ModPath.m_szPath, cbData);
     }
 
     ::RegCloseKey(hKey);
@@ -134,7 +137,7 @@ SetGlobalCompartmentDWORD(
 
 static BOOL
 CheckX64System(
-    _In_ LPWSTR lpCmdLine)
+    _In_ LPTSTR lpCmdLine)
 {
     // Is the system x64?
     SYSTEM_INFO SystemInfo;
@@ -146,23 +149,34 @@ CheckX64System(
     }
 
     // Get GetSystemWow64DirectoryW function
-    g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
+    g_hKernel32 = cicGetSystemModuleHandle(TEXT("kernel32.dll"), FALSE);
+#ifdef UNICODE
     g_fnGetSystemWow64DirectoryW =
         (FN_GetSystemWow64DirectoryW)::GetProcAddress(g_hKernel32, "GetSystemWow64DirectoryW");
     if (!g_fnGetSystemWow64DirectoryW)
         return FALSE;
+#else
+    g_fnGetSystemWow64DirectoryA =
+        (FN_GetSystemWow64DirectoryA)::GetProcAddress(g_hKernel32, "GetSystemWow64DirectoryA");
+    if (!g_fnGetSystemWow64DirectoryA)
+        return FALSE;
+#endif
 
     // Build WoW64 ctfmon.exe pathname
-    WCHAR szPath[MAX_PATH];
+    TCHAR szPath[MAX_PATH];
+#ifdef UNICODE
     UINT cchPath = g_fnGetSystemWow64DirectoryW(szPath, _countof(szPath));
-    if (!cchPath && FAILED(StringCchCatW(szPath, _countof(szPath), L"\\ctfmon.exe")))
+#else
+    UINT cchPath = g_fnGetSystemWow64DirectoryA(szPath, _countof(szPath));
+#endif
+    if (!cchPath && FAILED(StringCchCat(szPath, _countof(szPath), TEXT("\\ctfmon.exe"))))
         return FALSE;
 
     // Create a WoW64 ctfmon.exe process
     PROCESS_INFORMATION pi;
-    STARTUPINFOW si = { sizeof(si) };
+    STARTUPINFO si = { sizeof(si) };
     si.wShowWindow = SW_SHOWMINNOACTIVE;
-    if (!::CreateProcessW(szPath, lpCmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    if (!::CreateProcess(szPath, lpCmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return FALSE;
 
     ::CloseHandle(pi.hThread);
@@ -173,7 +187,7 @@ CheckX64System(
 static BOOL
 InitApp(
     _In_ HINSTANCE hInstance,
-    _In_ LPWSTR lpCmdLine)
+    _In_ LPTSTR lpCmdLine)
 {
     g_hInst     = hInstance;    // Save the instance handle
 
@@ -194,7 +208,7 @@ InitApp(
     // Call SetProcessShutdownParameters if possible
     if (g_dwOsInfo & CIC_OSINFO_NT)
     {
-        g_hKernel32 = cicGetSystemModuleHandle(L"kernel32.dll", FALSE);
+        g_hKernel32 = cicGetSystemModuleHandle(TEXT("kernel32.dll"), FALSE);
         g_fnSetProcessShutdownParameters =
             (FN_SetProcessShutdownParameters)
                 ::GetProcAddress(g_hKernel32, "SetProcessShutdownParameters");
@@ -257,16 +271,16 @@ DoMainLoop(VOID)
     if (g_bOnWow64) // Is the current process on WoW64?
     {
         // Just a simple message loop
-        while (::GetMessageW(&msg, NULL, 0, 0))
+        while (::GetMessage(&msg, NULL, 0, 0))
         {
             ::TranslateMessage(&msg);
-            ::DispatchMessageW(&msg);
+            ::DispatchMessage(&msg);
         }
         return (INT)msg.wParam;
     }
 
     // Open the existing event by the name
-    HANDLE hSwitchEvent = ::OpenEventW(SYNCHRONIZE, FALSE, L"WinSta0_DesktopSwitch");
+    HANDLE hSwitchEvent = ::OpenEvent(SYNCHRONIZE, FALSE, TEXT("WinSta0_DesktopSwitch"));
 
     // The target events to watch
     HANDLE ahEvents[WATCHENTRY_MAX + 1];
@@ -285,13 +299,13 @@ DoMainLoop(VOID)
         if (dwWait == (WAIT_OBJECT_0 + _countof(ahEvents))) // Is input available?
         {
             // Do the events
-            while (::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+            while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             {
                 if (msg.message == WM_QUIT)
                     goto Quit;
 
                 ::TranslateMessage(&msg);
-                ::DispatchMessageW(&msg);
+                ::DispatchMessage(&msg);
             }
         }
         else if (dwWait == (WAIT_OBJECT_0 + WI_DESKTOP_SWITCH)) // Desktop switch?
@@ -313,10 +327,10 @@ Quit:
 
 // The main function for Unicode Win32
 EXTERN_C INT WINAPI
-wWinMain(
+_tWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInst,
-    LPWSTR lpCmdLine,
+    LPTSTR lpCmdLine,
     INT nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInst);

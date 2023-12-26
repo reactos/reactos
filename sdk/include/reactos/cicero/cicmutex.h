@@ -23,9 +23,9 @@ public:
         Uninit();
     }
 
-    void Init(LPSECURITY_ATTRIBUTES lpSA, LPCWSTR pszMutexName)
+    void Init(LPSECURITY_ATTRIBUTES lpSA, LPCTSTR pszMutexName)
     {
-        m_hMutex = ::CreateMutexW(lpSA, FALSE, pszMutexName);
+        m_hMutex = ::CreateMutex(lpSA, FALSE, pszMutexName);
         m_bInit = TRUE;
     }
     void Uninit()

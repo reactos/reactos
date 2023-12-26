@@ -11,7 +11,7 @@ add_library(msutb MODULE
     ${SOURCE}
     msutb.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msutb.def)
-set_module_type(msutb win32dll UNICODE)
+set_module_type(msutb win32dll)
 add_dependencies(msutb msctf psdk)
 target_link_libraries(msutb wine uuid atl_classes)
 add_importlibs(msutb user32 gdi32 advapi32 comctl32 msvcrt kernel32 ntdll)
