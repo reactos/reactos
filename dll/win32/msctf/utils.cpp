@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#define WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #define COBJMACROS
 #define INITGUID
@@ -29,6 +30,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 /***********************************************************************
  *      TF_RegisterLangBarAddIn (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C HRESULT WINAPI
 TF_RegisterLangBarAddIn(REFGUID rguid, LPCWSTR pszFilePath, DWORD dwFlags)
@@ -44,13 +47,11 @@ TF_RegisterLangBarAddIn(REFGUID rguid, LPCWSTR pszFilePath, DWORD dwFlags)
     CicRegKey regKey;
     HKEY hBaseKey = ((dwFlags & 1) ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER);
     LSTATUS error = regKey.Create(hBaseKey, szBuff);
-    if (error != ERROR_SUCCESS)
+    if (error == ERROR_SUCCESS)
     {
         error = regKey.SetSz(L"FilePath", pszFilePath);
-        if (error != ERROR_SUCCESS)
-        {
+        if (error == ERROR_SUCCESS)
             error = regKey.SetDword(L"Enable", !!(dwFlags & 4));
-        }
     }
 
     return ((error == ERROR_SUCCESS) ? S_OK : E_FAIL);
@@ -58,6 +59,8 @@ TF_RegisterLangBarAddIn(REFGUID rguid, LPCWSTR pszFilePath, DWORD dwFlags)
 
 /***********************************************************************
  *      TF_UnregisterLangBarAddIn (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C HRESULT WINAPI
 TF_UnregisterLangBarAddIn(REFGUID rguid, DWORD dwFlags)
