@@ -140,17 +140,18 @@ CicRegKey::RecurseDeleteKey(LPCWSTR lpSubKey)
     if (error != ERROR_SUCCESS)
         return error;
 
+    WCHAR szName[MAX_PATH];
+    DWORD cchName;
     do
     {
-        WCHAR szName[MAX_PATH];
-        DWORD cchName = _countof(szName);
+        cchName = _countof(szName);
         error = ::RegEnumKeyExW(regKey, 0, szName, &cchName, NULL, NULL, NULL, NULL);
         if (error != ERROR_SUCCESS)
             break;
 
         szName[_countof(szName) - 1] = UNICODE_NULL;
         error = regKey.RecurseDeleteKey(szName);
-    } while (error != ERROR_SUCCESS);
+    } while (error == ERROR_SUCCESS);
 
     regKey.Close();
 
