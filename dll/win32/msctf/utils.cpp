@@ -34,7 +34,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
  * @implemented
  */
 EXTERN_C HRESULT WINAPI
-TF_RegisterLangBarAddIn(REFGUID rguid, LPCWSTR pszFilePath, DWORD dwFlags)
+TF_RegisterLangBarAddIn(
+    _In_ REFGUID rguid,
+    _In_ LPCWSTR pszFilePath,
+    _In_ DWORD dwFlags)
 {
     if (!pszFilePath || IsEqualGUID(rguid, GUID_NULL))
         return E_INVALIDARG;
@@ -63,7 +66,9 @@ TF_RegisterLangBarAddIn(REFGUID rguid, LPCWSTR pszFilePath, DWORD dwFlags)
  * @implemented
  */
 EXTERN_C HRESULT WINAPI
-TF_UnregisterLangBarAddIn(REFGUID rguid, DWORD dwFlags)
+TF_UnregisterLangBarAddIn(
+    _In_ REFGUID rguid,
+    _In_ DWORD dwFlags)
 {
     if (IsEqualGUID(rguid, GUID_NULL))
         return E_INVALIDARG;
