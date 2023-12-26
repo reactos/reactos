@@ -55,7 +55,7 @@ BOOL FullPathExec(LPCTSTR pszExeFile, LPCTSTR pszCmdLine, UINT nCmdShow, BOOL bS
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     CicSystemModulePath ModPath;
-    TCHAR szCommandLine[MAX_PATH];
+    TCHAR szCommandLine[2 * MAX_PATH];
 
     ModPath.Init(pszExeFile, bSysWinDir);
     if (!ModPath.m_cchPath)
@@ -82,13 +82,13 @@ BOOL FullPathExec(LPCTSTR pszExeFile, LPCTSTR pszCmdLine, UINT nCmdShow, BOOL bS
     return TRUE;
 }
 
-BOOL RunCPLSetting(LPTSTR pszCmdLine)
+static inline BOOL
+RunCPLSetting(LPCTSTR pszCmdLine)
 {
-    TCHAR szExeFile[16];
-    StringCchCopy(szExeFile, _countof(szExeFile), TEXT("rundll32.exe"));
     if (!pszCmdLine)
         return FALSE;
-    return FullPathExec(szExeFile, pszCmdLine, SW_SHOWMINNOACTIVE, FALSE);
+
+    return FullPathExec(TEXT("rundll32.exe"), pszCmdLine, SW_SHOWMINNOACTIVE, FALSE);
 }
 
 /***********************************************************************
