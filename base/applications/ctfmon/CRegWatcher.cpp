@@ -83,6 +83,31 @@ CRegWatcher::Uninit()
     }
 }
 
+// advapi32!RegNotifyChangeKeyValue
+typedef LONG (WINAPI *FN_RegNotifyChangeKeyValue)(HKEY, BOOL, DWORD, HANDLE, BOOL);
+
+LONG WINAPI
+DelayedRegNotifyChangeKeyValue(
+    HKEY hKey,
+    BOOL bWatchSubtree,
+    DWORD dwNotifyFilter,
+    HANDLE hEvent,
+    BOOL fAsynchronous)
+{
+    static FN_RegNotifyChangeKeyValue s_fnRegNotifyChangeKeyValue = NULL;
+
+    if (!s_fnRegNotifyChangeKeyValue)
+    {
+        HINSTANCE hAdvApi32 = cicGetSystemModuleHandle(TEXT("advapi32.dll"), FALSE);
+        s_fnRegNotifyChangeKeyValue =
+            (FN_RegNotifyChangeKeyValue)GetProcAddress(hAdvApi32, "RegNotifyChangeKeyValue");
+        if (!s_fnRegNotifyChangeKeyValue)
+            return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+
+    return s_fnRegNotifyChangeKeyValue(hKey, bWatchSubtree, dwNotifyFilter, hEvent, fAsynchronous);
+}
+
 BOOL
 CRegWatcher::InitEvent(
     _In_ SIZE_T iEvent,
@@ -112,11 +137,15 @@ CRegWatcher::InitEvent(
     }
 
     // Start registry watching
-    error = ::RegNotifyChangeKeyValue(entry.hKey,
-                                      TRUE,
-                                      REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
-                                      s_ahWatchEvents[iEvent],
-                                      TRUE);
+    error = DelayedRegNotifyChangeKeyValue(entry.hKey,
+                                           TRUE,
+                                           REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_NAME,
+                                           s_ahWatchEvents[iEvent],
+                                           TRUE);
+#ifndef NDEBUG
+    if (error != ERROR_SUCCESS)
+        OutputDebugStringA("RegNotifyChangeKeyValue failed\n");
+#endif
     return error == ERROR_SUCCESS;
 }
 
