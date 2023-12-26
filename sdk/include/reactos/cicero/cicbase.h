@@ -191,7 +191,7 @@ CicSystemModulePath::Init(
     if (bSysWinDir)
     {
         // Usually C:\Windows or C:\ReactOS
-        cchPath = ::GetSystemWindowsDirectory(m_szPath, _countof(m_szPath));
+        cchPath = ::GetSystemWindowsDirectoryW(m_szPath, _countof(m_szPath));
     }
     else
     {

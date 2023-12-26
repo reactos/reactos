@@ -34,3 +34,5 @@
 @ stub TF_MlngInfoCount
 @ stub TF_RunInputCPL
 @ stdcall -stub TF_PostAllThreadMsg(long long)
+@ stdcall TF_RegisterLangBarAddIn(ptr wstr long)
+@ stdcall TF_UnregisterLangBarAddIn(ptr long)

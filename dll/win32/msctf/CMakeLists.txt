@@ -20,13 +20,18 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
+list(APPEND PCH_SKIP_SOURCE
+    utils.cpp)
+
 add_library(msctf MODULE
     ${SOURCE}
+    ${PCH_SKIP_SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
 
 set_module_type(msctf win32dll)
 target_link_libraries(msctf uuid wine)
-add_importlibs(msctf ole32 oleaut32 user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
+add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
+add_delay_importlibs(msctf ole32 oleaut32)
 add_pch(msctf precomp.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)
