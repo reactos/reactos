@@ -29,6 +29,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+DWORD g_dwOSInfo = 0; // See cicGetOSInfo
+
 BOOL StringFromGUID2A(REFGUID rguid, LPSTR pszGUID, INT cchGUID)
 {
     pszGUID[0] = ANSI_NULL;
@@ -42,9 +44,52 @@ BOOL StringFromGUID2A(REFGUID rguid, LPSTR pszGUID, INT cchGUID)
 
 #ifdef UNICODE
     #define StringFromGUID2T StringFromGUID2
+    #define debugstr_t debugstr_w
 #else
     #define StringFromGUID2T StringFromGUID2A
+    #define debugstr_t debugstr_a
 #endif
+
+BOOL FullPathExec(LPCTSTR pszExeFile, LPCTSTR pszCmdLine, UINT nCmdShow, BOOL bSysWinDir)
+{
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    CicSystemModulePath ModPath;
+    TCHAR szCommandLine[MAX_PATH];
+
+    ModPath.Init(pszExeFile, bSysWinDir);
+    if (!ModPath.m_cchPath)
+    {
+        ERR("%s\n", debugstr_t(pszExeFile));
+        return FALSE;
+    }
+
+    StringCchCopy(szCommandLine, _countof(szCommandLine), pszCmdLine);
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.wShowWindow = nCmdShow;
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    if (!CreateProcess(ModPath.m_szPath, szCommandLine, NULL, NULL, FALSE,
+                       NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi))
+    {
+        ERR("%s, %s\n", debugstr_t(ModPath.m_szPath), debugstr_t(szCommandLine));
+        return FALSE;
+    }
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return TRUE;
+}
+
+BOOL RunCPLSetting(LPTSTR pszCmdLine)
+{
+    TCHAR szExeFile[16];
+    StringCchCopy(szExeFile, _countof(szExeFile), TEXT("rundll32.exe"));
+    if (!pszCmdLine)
+        return FALSE;
+    return FullPathExec(szExeFile, pszCmdLine, SW_SHOWMINNOACTIVE, FALSE);
+}
 
 /***********************************************************************
  *      TF_RegisterLangBarAddIn (MSCTF.@)
@@ -117,4 +162,34 @@ TF_UnregisterLangBarAddIn(
     }
 
     return hr;
+}
+
+/***********************************************************************
+ *      TF_RunInputCPL (MSCTF.@)
+ *
+ * @implemented
+ */
+EXTERN_C HRESULT WINAPI
+TF_RunInputCPL(VOID)
+{
+    CicSystemModulePath ModPath;
+    TCHAR szCmdLine[2 * MAX_PATH];
+
+    TRACE("()\n");
+
+    // NOTE: We don't support Win95/98/Me
+    if (g_dwOSInfo & CIC_OSINFO_XPPLUS)
+        ModPath.Init(TEXT("input.dll"), FALSE);
+    else
+        ModPath.Init(TEXT("input.cpl"), FALSE);
+
+    if (!ModPath.m_cchPath)
+        return E_FAIL;
+
+    StringCchPrintf(szCmdLine, _countof(szCmdLine),
+                    TEXT("rundll32.exe shell32.dll,Control_RunDLL %s"), ModPath.m_szPath);
+    if (!RunCPLSetting(szCmdLine))
+        return E_FAIL;
+
+    return S_OK;
 }
