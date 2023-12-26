@@ -40,7 +40,7 @@ public:
     void Finalize();
 };
 
-class CicFileMapping : public CCicFileMappingStatic
+class CicFileMapping : public CicFileMappingStatic
 {
 public:
     CicFileMapping(LPCTSTR pszName, CicMutex *pMutex);
@@ -51,13 +51,13 @@ public:
 
 inline
 CicFileMapping::CicFileMapping(LPCTSTR pszName, CicMutex *pMutex)
-    : m_pszName(NULL)
-    , m_pView(NULL)
-    , m_hMapping(NULL)
-    , m_bCreated(FALSE)
-    , m_bHasMutex(FALSE)
-    , m_pMutex(NULL)
 {
+    m_pszName = NULL;
+    m_pView = NULL;
+    m_hMapping = NULL;
+    m_bCreated = FALSE;
+    m_bHasMutex = FALSE;
+    m_pMutex = NULL;
     Init(pszName, pMutex);
 }
 
@@ -148,7 +148,7 @@ inline void CicFileMappingStatic::Leave()
     m_pMutex->Leave();
 }
 
-inline BOOL CCicFileMappingStatic::Flush(SIZE_T dwNumberOfBytesToFlush)
+inline BOOL CicFileMappingStatic::Flush(SIZE_T dwNumberOfBytesToFlush)
 {
     if (!m_pView)
         return FALSE;

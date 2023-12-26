@@ -14,6 +14,7 @@
 #define _EXTYPES_H
 
 #include <windows.h>
+#include <sddl.h>
 #include <imm.h>
 #include <ddk/immdev.h>
 #include <cguid.h>
@@ -24,12 +25,143 @@
 #include <strsafe.h>
 
 #include <cicero/cicreg.h>
+#include <cicero/cicmutex.h>
+#include <cicero/cicfmap.h>
 
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
+BOOL gf_CRT_INIT = FALSE;
+BOOL g_fDllProcessDetached = FALSE;
+CRITICAL_SECTION g_cs;
+CRITICAL_SECTION g_csInDllMain;
+CRITICAL_SECTION g_csDelayLoad;
+HINSTANCE g_hInst = NULL;
+BOOL g_bOnWow64 = FALSE;
+UINT g_uACP = CP_ACP; // Active Code Page
 DWORD g_dwOSInfo = 0; // See cicGetOSInfo
+HKL g_hklDefault = NULL;
+DWORD g_dwTLSIndex = (DWORD)-1;
+BOOL gfSharedMemory = FALSE;
+LONG g_cRefDll = -1;
+
+// Messages
+UINT g_msgPrivate = 0;
+UINT g_msgSetFocus = 0;
+UINT g_msgThreadTerminate = 0;
+UINT g_msgThreadItemChange = 0;
+UINT g_msgLBarModal = 0;
+UINT g_msgRpcSendReceive = 0;
+UINT g_msgThreadMarshal = 0;
+UINT g_msgCheckThreadInputIdel = 0;
+UINT g_msgStubCleanUp = 0;
+UINT g_msgShowFloating = 0;
+UINT g_msgLBUpdate = 0;
+UINT g_msgNuiMgrDirtyUpdate = 0;
+
+// Unique names
+BOOL g_fUserSidString = FALSE;
+TCHAR g_szUserSidString[MAX_PATH] = { 0 };
+TCHAR g_szUserUnique[MAX_PATH] = { 0 };
+TCHAR g_szAsmListCache[MAX_PATH] = { 0 };
+TCHAR g_szTimListCache[MAX_PATH] = { 0 };
+TCHAR g_szLayoutsCache[MAX_PATH] = { 0 };
+
+// Mutexes
+CicMutex g_mutexLBES;
+CicMutex g_mutexCompart;
+CicMutex g_mutexAsm;
+CicMutex g_mutexLayouts;
+CicMutex g_mutexTMD;
+
+// File mapping
+CicFileMappingStatic g_SharedMemory;
+
+/**
+ * @implemented
+ */
+LPTSTR GetUserSIDString(void)
+{
+    HANDLE hToken = NULL;
+    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
+    if (!hToken)
+        return NULL;
+
+    DWORD dwLengthNeeded = 0;
+    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwLengthNeeded);
+    PTOKEN_USER pTokenUser = (PTOKEN_USER)cicMemAllocClear(dwLengthNeeded);
+    if (!pTokenUser)
+    {
+        CloseHandle(hToken);
+        return NULL;
+    }
+
+    LPTSTR StringSid = NULL;
+    if (!GetTokenInformation(hToken, TokenUser, pTokenUser, dwLengthNeeded, &dwLengthNeeded) ||
+        !ConvertSidToStringSid(pTokenUser->User.Sid, &StringSid))
+    {
+        if (StringSid)
+        {
+            LocalFree(StringSid);
+            StringSid = NULL;
+        }
+    }
+
+    cicMemFree(pTokenUser);
+    CloseHandle(hToken);
+    return StringSid;
+}
+
+/**
+ * @implemented
+ */
+BOOL InitUserSidString(void)
+{
+    if (g_fUserSidString)
+        return TRUE;
+
+    LPTSTR pszUserSID = GetUserSIDString();
+    if (!pszUserSID)
+        return FALSE;
+
+    StringCchCopy(g_szUserSidString, _countof(g_szUserSidString), pszUserSID);
+    g_fUserSidString = TRUE;
+    LocalFree(pszUserSID);
+    return TRUE;
+}
+
+/**
+ * @implemented
+ */
+BOOL InitUniqueString(void)
+{
+    g_szUserUnique[0] = TEXT('\0');
+
+    DWORD dwThreadId = GetCurrentThreadId();
+    HDESK hDesk = GetThreadDesktop(dwThreadId);
+
+    DWORD nLengthNeeded;
+    TCHAR szName[MAX_PATH];
+    if (hDesk && GetUserObjectInformation(hDesk, UOI_NAME, szName, _countof(szName), &nLengthNeeded))
+        StringCchCat(g_szUserUnique, _countof(g_szUserUnique), szName);
+
+    if (!InitUserSidString())
+        return FALSE;
+
+    StringCchCat(g_szUserUnique, _countof(g_szUserUnique), g_szUserSidString);
+    return TRUE;
+}
+
+void
+GetDesktopUniqueName(
+    _In_ LPCTSTR pszName,
+    _Out_ LPTSTR pszBuff,
+    _In_ UINT cchBuff)
+{
+    StringCchCopy(pszBuff, cchBuff, pszName);
+    StringCchCat(pszBuff, cchBuff, g_szUserUnique);
+}
 
 BOOL StringFromGUID2A(REFGUID rguid, LPSTR pszGUID, INT cchGUID)
 {
@@ -192,4 +324,161 @@ TF_RunInputCPL(VOID)
         return E_FAIL;
 
     return S_OK;
+}
+
+/***********************************************************************
+ *      TF_IsCtfmonRunning (MSCTF.@)
+ *
+ * @implemented
+ */
+BOOL WINAPI
+TF_IsCtfmonRunning(VOID)
+{
+    TCHAR szName[MAX_PATH];
+    GetDesktopUniqueName(TEXT("CtfmonInstMutex"), szName, _countof(szName));
+
+    HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, szName);
+    if (!hMutex)
+        return FALSE;
+
+    ::CloseHandle(hMutex);
+    return TRUE;
+}
+
+/**
+ * @unimplemented
+ */
+VOID InitLangChangeHotKey(VOID)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+VOID CheckAnchorStores(VOID)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+{
+    gf_CRT_INIT = TRUE;
+
+    ::InitializeCriticalSectionAndSpinCount(&g_cs, 0);
+    ::InitializeCriticalSectionAndSpinCount(&g_csInDllMain, 0);
+    ::InitializeCriticalSectionAndSpinCount(&g_csDelayLoad, 0);
+
+    g_bOnWow64 = cicIsWow64();
+    g_hInst = hinstDLL;
+    g_hklDefault = ::GetKeyboardLayout(0);
+    g_dwTLSIndex = ::TlsAlloc();
+    if (g_dwTLSIndex == (DWORD)-1)
+        return FALSE;
+
+    g_msgPrivate = ::RegisterWindowMessageA("MSUIM.Msg.Private");
+    g_msgSetFocus = ::RegisterWindowMessageA("MSUIM.Msg.SetFocus");
+    g_msgThreadTerminate = ::RegisterWindowMessageA("MSUIM.Msg.ThreadTerminate");
+    g_msgThreadItemChange = ::RegisterWindowMessageA("MSUIM.Msg.ThreadItemChange");
+    g_msgLBarModal = ::RegisterWindowMessageA("MSUIM.Msg.LangBarModal");
+    g_msgRpcSendReceive = ::RegisterWindowMessageA("MSUIM.Msg.RpcSendReceive");
+    g_msgThreadMarshal = ::RegisterWindowMessageA("MSUIM.Msg.ThreadMarshal");
+    g_msgCheckThreadInputIdel = ::RegisterWindowMessageA("MSUIM.Msg.CheckThreadInputIdel");
+    g_msgStubCleanUp = ::RegisterWindowMessageA("MSUIM.Msg.StubCleanUp");
+    g_msgShowFloating = ::RegisterWindowMessageA("MSUIM.Msg.ShowFloating");
+    g_msgLBUpdate = ::RegisterWindowMessageA("MSUIM.Msg.LBUpdate");
+    g_msgNuiMgrDirtyUpdate = ::RegisterWindowMessageA("MSUIM.Msg.MuiMgrDirtyUpdate");
+    if (!g_msgPrivate ||
+        !g_msgSetFocus ||
+        !g_msgThreadTerminate ||
+        !g_msgThreadItemChange ||
+        !g_msgLBarModal ||
+        !g_msgRpcSendReceive ||
+        !g_msgThreadMarshal ||
+        !g_msgCheckThreadInputIdel ||
+        !g_msgStubCleanUp ||
+        !g_msgShowFloating ||
+        !g_msgLBUpdate ||
+        !g_msgNuiMgrDirtyUpdate)
+    {
+        return FALSE;
+    }
+
+    cicGetOSInfo(&g_uACP, &g_dwOSInfo);
+    InitUniqueString();
+
+    //FIXME
+
+    gfSharedMemory = TRUE;
+
+    //FIXME
+
+    GetDesktopUniqueName(TEXT("CTF.AsmListCache.FMP"), g_szAsmListCache, _countof(g_szAsmListCache));
+    GetDesktopUniqueName(TEXT("CTF.TimListCache.FMP"), g_szTimListCache, _countof(g_szTimListCache));
+    GetDesktopUniqueName(TEXT("CTF.LayoutsCache.FMP"), g_szLayoutsCache, _countof(g_szLayoutsCache));
+
+    //FIXME
+
+    InitLangChangeHotKey();
+
+    //FIXME
+
+    CheckAnchorStores();
+
+    return TRUE;
+}
+
+/**
+ * @unimplemented
+ */
+VOID ProcessDetach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
+{
+    if (!gf_CRT_INIT)
+    {
+        g_fDllProcessDetached = TRUE;
+        return;
+    }
+
+    if (gfSharedMemory)
+    {
+        if (g_cRefDll != -1 )
+            TFUninitLib();
+        //FIXME
+    }
+    //FIXME
+
+    //TF_UninitThreadSystem();
+
+    //FIXME
+
+    if (g_dwTLSIndex != (DWORD)-1)
+    {
+        ::TlsFree(g_dwTLSIndex);
+        g_dwTLSIndex = (DWORD)-1;
+    }
+
+    //FIXME
+
+    if (gfSharedMemory)
+    {
+        g_mutexLBES.Uninit();
+        g_mutexCompart.Uninit();
+        g_mutexAsm.Uninit();
+        //FIXME
+        g_mutexLayouts.Uninit();
+        g_mutexTMD.Uninit();
+        //FIXME
+        g_SharedMemory.Close();
+    }
+
+    g_SharedMemory.Finalize();
+
+    ::DeleteCriticalSection(&g_cs);
+    ::DeleteCriticalSection(&g_csInDllMain);
+    ::DeleteCriticalSection(&g_csDelayLoad);
+
+    g_fDllProcessDetached = TRUE;
 }

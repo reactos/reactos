@@ -29,7 +29,7 @@
 @ stdcall -stub TF_UninitSystem()
 @ stdcall -stub TF_InvalidAssemblyListCache()
 @ stdcall TF_InvalidAssemblyListCacheIfExist()
-@ stub TF_IsCtfmonRunning
+@ stdcall TF_IsCtfmonRunning()
 @ stub TF_IsInMarshaling
 @ stub TF_MlngInfoCount
 @ stdcall TF_RunInputCPL()
