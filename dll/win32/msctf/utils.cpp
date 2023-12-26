@@ -331,7 +331,7 @@ TF_RunInputCPL(VOID)
  *
  * @implemented
  */
-BOOL WINAPI
+EXTERN_C BOOL WINAPI
 TF_IsCtfmonRunning(VOID)
 {
     TCHAR szName[MAX_PATH];
