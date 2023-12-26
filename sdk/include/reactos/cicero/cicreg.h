@@ -15,11 +15,7 @@ public:
     HKEY m_hKey;
 
     CicRegKey() : m_hKey(NULL) { }
-
-    virtual ~CicRegKey()
-    {
-        Close();
-    }
+    virtual ~CicRegKey() { Close(); }
 
     operator HKEY() { return m_hKey; }
 
@@ -156,8 +152,7 @@ CicRegKey::RecurseDeleteKey(LPCWSTR lpSubKey)
         error = regKey.RecurseDeleteKey(szName);
     } while (error != ERROR_SUCCESS);
 
-    if (error == ERROR_SUCCESS)
-        error = regKey.DeleteSubKey(lpSubKey);
+    regKey.Close();
 
-    return error;
+    return DeleteSubKey(lpSubKey);
 }
