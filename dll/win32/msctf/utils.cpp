@@ -45,6 +45,8 @@ HKL g_hklDefault = NULL;
 DWORD g_dwTLSIndex = (DWORD)-1;
 BOOL gfSharedMemory = FALSE;
 LONG g_cRefDll = -1;
+BOOL g_fCUAS = FALSE;
+TCHAR g_szCUASImeFile[16] = { 0 };
 
 // Messages
 UINT g_msgPrivate = 0;
@@ -484,6 +486,40 @@ VOID CheckAnchorStores(VOID)
     //FIXME
 }
 
+VOID InitCUASFlag(VOID)
+{
+    CicRegKey regKey1;
+    LSTATUS error;
+
+    error = regKey1.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\CTF\\SystemShared\\"));
+    if (error == ERROR_SUCCESS)
+    {
+        DWORD dwValue;
+        error = regKey1.QueryDword(TEXT("CUAS"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_fCUAS = !!dwValue;
+    }
+
+    g_szCUASImeFile[0] = TEXT('\0');
+
+    if (!g_fCUAS)
+        return;
+
+    TCHAR szImeFile[16];
+    CicRegKey regKey2;
+    error = regKey2.Open(HKEY_LOCAL_MACHINE,
+                         TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"));
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey2.QuerySz(TEXT("IME File"), szImeFile, _countof(szImeFile));
+        if (error == ERROR_SUCCESS)
+        {
+            g_szCUASImeFile[_countof(g_szCUASImeFile) - 1] = TEXT('\0'); // Avoid buffer overrun
+            StringCchCopy(g_szCUASImeFile, _countof(g_szCUASImeFile), szImeFile);
+        }
+    }
+}
+
 /**
  * @unimplemented
  */
@@ -538,6 +574,10 @@ BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
     //FIXME
 
     gfSharedMemory = TRUE;
+
+    //FIXME
+
+    InitCUASFlag();
 
     //FIXME
 
