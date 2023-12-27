@@ -2640,6 +2640,12 @@ CtfImeSetActiveContextAlways(
     return E_NOTIMPL;
 }
 
+
+/***********************************************************************
+ *      CtfImeProcessCicHotkey (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeProcessCicHotkey(
     _In_ HIMC hIMC,
