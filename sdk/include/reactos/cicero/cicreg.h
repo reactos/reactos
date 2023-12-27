@@ -46,7 +46,7 @@ public:
         return ::RegSetValueEx(m_hKey, pszValueName, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
     }
 
-    LSTATUS QuerySz(LPCTSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax);
+    LSTATUS QuerySz(LPCTSTR pszValueName, LPTSTR pszValue, DWORD cchValueMax);
 
     LSTATUS SetSz(LPCTSTR pszValueName, LPCTSTR pszValue)
     {
@@ -124,7 +124,7 @@ CicRegKey::Create(
 }
 
 inline LSTATUS
-CicRegKey::QuerySz(LPCTSTR pszValueName, LPWSTR pszValue, DWORD cchValueMax)
+CicRegKey::QuerySz(LPCTSTR pszValueName, LPTSTR pszValue, DWORD cchValueMax)
 {
     DWORD cchSaveMax = cchValueMax;
 

@@ -78,6 +78,14 @@ CicMutex g_mutexTMD;
 // File mapping
 CicFileMappingStatic g_SharedMemory;
 
+// Hot-Keys
+UINT g_uLangHotKeyModifiers = 0;
+UINT g_uLangHotKeyVKey = 0;
+UINT g_uLangHotKeyVKey2 = 0;
+UINT g_uKeyTipHotKeyModifiers = 0;
+UINT g_uKeyTipHotKeyVKey = 0;
+UINT g_uKeyTipHotKeyVKey2 = 0;
+
 /**
  * @implemented
  */
@@ -346,11 +354,126 @@ TF_IsCtfmonRunning(VOID)
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
-VOID InitLangChangeHotKey(VOID)
+BOOL InitLangChangeHotKey(VOID)
 {
-    //FIXME
+    CicRegKey regKey;
+    TCHAR szLanguage[2], szLayout[2];
+    LSTATUS error;
+
+    szLanguage[0] = szLayout[0] = TEXT('3');
+    szLanguage[1] = szLayout[1] = TEXT('\0');
+
+    error = regKey.Open(HKEY_CURRENT_USER, "Keyboard Layout\\Toggle");
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey.QuerySz(TEXT("Language Hotkey"), szLanguage, _countof(szLanguage));
+        if (error != ERROR_SUCCESS)
+        {
+            if (g_dwOSInfo & CIC_OSINFO_NT)
+            {
+                error = regKey.QuerySz(TEXT("Hotkey"), szLanguage, _countof(szLanguage));
+                if (error != ERROR_SUCCESS)
+                    szLanguage[0] = TEXT('1');
+            }
+            else
+            {
+                error = regKey.QuerySz(NULL, szLanguage, _countof(szLanguage));
+                if (error != ERROR_SUCCESS)
+                    szLanguage[0] = TEXT('1');
+            }
+
+            if (PRIMARYLANGID(GetSystemDefaultLCID()) == LANG_CHINESE)
+                szLanguage[0] = TEXT('1');
+        }
+
+        error = regKey.QuerySz(TEXT("Layout Hotkey"), szLayout, _countof(szLayout));
+        if (error != ERROR_SUCCESS)
+        {
+            szLayout[0] = TEXT('1');
+            if (szLanguage[0] != TEXT('2'))
+                szLayout[0] = TEXT('2');
+            if (GetSystemMetrics(SM_MIDEASTENABLED))
+                szLayout[0] = TEXT('3');
+        }
+
+        szLanguage[1] = TEXT('\0');
+        szLayout[1] = TEXT('\0');
+    }
+
+    if (szLanguage[0] == szLayout[0])
+    {
+        if (szLanguage[0] != TEXT('1'))
+        {
+            szLayout[0] = TEXT('1');
+            if (szLanguage[0] != TEXT('2'))
+                szLayout[0] = TEXT('3');
+        }
+        else
+        {
+            szLayout[0] = TEXT('2');
+        }
+    }
+
+    ::EnterCriticalSection(&g_csInDllMain);
+
+    switch (szLanguage[0])
+    {
+        case TEXT('2'):
+            g_uLangHotKeyModifiers = MOD_SHIFT | MOD_CONTROL;
+            g_uLangHotKeyVKey2 = VK_CONTROL;
+            g_uLangHotKeyVKey = VK_SHIFT;
+            break;
+
+        case TEXT('3'):
+            g_uLangHotKeyVKey = 0;
+            g_uLangHotKeyModifiers = 0;
+            g_uLangHotKeyVKey2 = 0;
+            break;
+
+        case TEXT('4'):
+            g_uLangHotKeyVKey = VK_NUMPAD0;
+            g_uLangHotKeyModifiers = 0;
+            g_uLangHotKeyVKey2 = 0;
+            break;
+
+        case TEXT('1'):
+        default:
+            g_uLangHotKeyModifiers = MOD_SHIFT | MOD_ALT;
+            g_uLangHotKeyVKey2 = VK_MENU;
+            g_uLangHotKeyVKey = VK_SHIFT;
+            break;
+    }
+
+    switch (szLayout[0])
+    {
+        case TEXT('2'):
+            g_uKeyTipHotKeyModifiers = MOD_SHIFT | MOD_CONTROL;
+            g_uKeyTipHotKeyVKey2 = VK_CONTROL;
+            g_uKeyTipHotKeyVKey = VK_SHIFT;
+            break;
+
+        case TEXT('3'):
+            g_uKeyTipHotKeyVKey = 0;
+            break;
+
+        case TEXT('4'):
+            g_uKeyTipHotKeyVKey = VK_OEM_3;
+            g_uKeyTipHotKeyModifiers = 0;
+            g_uKeyTipHotKeyVKey2 = 0;
+            break;
+
+        case TEXT('1'):
+        default:
+            g_uKeyTipHotKeyModifiers = 0x40 | MOD_SHIFT;
+            g_uKeyTipHotKeyVKey2 = VK_MENU;
+            g_uKeyTipHotKeyVKey = VK_SHIFT;
+            break;
+    }
+
+    ::LeaveCriticalSection(&g_csInDllMain);
+    return TRUE;
 }
 
 /**
