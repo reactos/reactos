@@ -1929,6 +1929,9 @@ typedef struct ENUM_CREATE_DESTROY_IC
     CicBridge *m_pBridge;
 } ENUM_CREATE_DESTROY_IC, *PENUM_CREATE_DESTROY_IC;
 
+/**
+ * @implemented
+ */
 BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
@@ -1936,6 +1939,9 @@ BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam
     return TRUE;
 }
 
+/**
+ * @implemented
+ */
 BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
