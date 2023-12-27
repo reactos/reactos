@@ -81,6 +81,9 @@ BOOL RegisterMSIMEMessage(VOID)
 
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
 
+/**
+ * @implemented
+ */
 EXTERN_C BOOLEAN WINAPI
 DllShutDownInProgress(VOID)
 {
@@ -99,6 +102,9 @@ DllShutDownInProgress(VOID)
     return s_fnDllShutDownInProgress();
 }
 
+/**
+ * @implemented
+ */
 static BOOL
 IsInteractiveUserLogon(VOID)
 {
@@ -136,6 +142,9 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     return E_NOTIMPL;
 }
 
+/**
+ * @implemented
+ */
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
