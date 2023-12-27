@@ -184,22 +184,24 @@ protected:
     }
 };
 
+#define CUSTOM_CAND_INFO_SIZE 1964
+
 inline BOOL CicIMCLock::ClearCand()
 {
     HIMCC hNewCandInfo, hCandInfo = m_pIC->hCandInfo;
     if (hCandInfo)
     {
-        hNewCandInfo = ImmReSizeIMCC(hCandInfo, 1964);
+        hNewCandInfo = ImmReSizeIMCC(hCandInfo, CUSTOM_CAND_INFO_SIZE);
         if (!hNewCandInfo)
         {
             ImmDestroyIMCC(m_pIC->hCandInfo);
-            m_pIC->hCandInfo = ImmCreateIMCC(1964);
+            m_pIC->hCandInfo = ImmCreateIMCC(CUSTOM_CAND_INFO_SIZE);
             return FALSE;
         }
     }
     else
     {
-        hNewCandInfo = ImmCreateIMCC(1964u);
+        hNewCandInfo = ImmCreateIMCC(CUSTOM_CAND_INFO_SIZE);
     }
 
     m_pIC->hCandInfo = hNewCandInfo;
@@ -210,24 +212,15 @@ inline BOOL CicIMCLock::ClearCand()
     if (!candInfo)
     {
         ImmDestroyIMCC(m_pIC->hCandInfo);
-        m_pIC->hCandInfo = ImmCreateIMCC(1964);
+        m_pIC->hCandInfo = ImmCreateIMCC(CUSTOM_CAND_INFO_SIZE);
         return FALSE;
     }
 
-    candInfo.get().dwSize = 1964;
+    candInfo.get().dwSize = CUSTOM_CAND_INFO_SIZE;
     candInfo.get().dwCount = 0;
     candInfo.get().dwOffset[0] = sizeof(CANDIDATEINFO);
 
-    LPBYTE pb = (LPBYTE)(&candInfo.get());
-    pb += sizeof(CANDIDATEINFO);
+    // FIXME: Something is trailing after CANDIDATEINFO...
 
-    LPDWORD pdwUnknown = (LPDWORD)pb;
-    pdwUnknown[0] = candInfo.get().dwSize - sizeof(CANDIDATEINFO); // +0x0
-    pdwUnknown[2] = 0;     // +0x08
-    pdwUnknown[3] = 0;     // +0x0c
-    pdwUnknown[4] = 0;     // +0x10
-    pdwUnknown[1] = 1;     // +0x04
-    pdwUnknown[5] = 9;     // +0x14
-    pdwUnknown[6] = 1048;  // +0x18
     return TRUE;
 }
