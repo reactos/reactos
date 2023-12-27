@@ -1536,7 +1536,8 @@ public:
     ITfThreadMgr_P *m_pThreadMgr;
     DWORD m_dwFlags1;
     DWORD m_dwFlags2;
-    DWORD m_dwUnknown2[2];
+    DWORD m_dwUnknown2;
+    BOOL m_bDestroyed;
     DWORD m_dwNowOpening;
     DWORD m_NonEAComposition;
     DWORD m_cWnds;
@@ -1611,7 +1612,7 @@ TLS* TLS::InternalAllocateTLS()
     }
 
     pTLS->m_dwFlags1 |= 1;
-    pTLS->m_dwUnknown2[0] |= 1;
+    pTLS->m_dwUnknown2 |= 1;
     return pTLS;
 }
 
@@ -2058,7 +2059,7 @@ CicBridge::ActivateIMMX(
     pThreadMgr->SetSysHookSink(this);
 
     hr = S_OK;
-    if (pTLS->m_dwUnknown2[1] & 1)
+    if (pTLS->m_bDestroyed)
     {
         ENUM_CREATE_DESTROY_IC Data = { pTLS, this };
         ImmEnumInputContext(0, CicBridge::EnumCreateInputContextCallback, (LPARAM)&Data);
@@ -2089,7 +2090,7 @@ CicBridge::DeactivateIMMX(
     {
         ENUM_CREATE_DESTROY_IC Data = { pTLS, this };
         ImmEnumInputContext(0, CicBridge::EnumDestroyInputContextCallback, (LPARAM)&Data);
-        pTLS->m_dwUnknown2[1] |= 1;
+        pTLS->m_bDestroyed = TRUE;
 
         ITfSourceSingle *pSource = NULL;
         if (pThreadMgr->QueryInterface(IID_ITfSourceSingle, (void **)&pSource) == S_OK)
