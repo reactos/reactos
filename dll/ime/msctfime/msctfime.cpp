@@ -81,6 +81,9 @@ BOOL RegisterMSIMEMessage(VOID)
 
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
 
+/**
+ * @implemented
+ */
 EXTERN_C BOOLEAN WINAPI
 DllShutDownInProgress(VOID)
 {
@@ -99,6 +102,9 @@ DllShutDownInProgress(VOID)
     return s_fnDllShutDownInProgress();
 }
 
+/**
+ * @implemented
+ */
 static BOOL
 IsInteractiveUserLogon(VOID)
 {
@@ -136,6 +142,9 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     return E_NOTIMPL;
 }
 
+/**
+ * @implemented
+ */
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
@@ -148,6 +157,86 @@ HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     }
 
     return S_OK;
+}
+
+/**
+ * @implemented
+ */
+BYTE GetCharsetFromLangId(DWORD dwValue)
+{
+    CHARSETINFO info;
+    if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
+        return 0;
+    return info.ciCharset;
+}
+
+/**
+ * @implemented
+ */
+HRESULT
+InternalSelectEx(HIMC hIMC, BOOL fSelect, LANGID LangID)
+{
+    CicIMCLock imcLock(hIMC);
+    if (!imcLock)
+        imcLock.m_hr = E_FAIL;
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    if (PRIMARYLANGID(LangID) == LANG_CHINESE)
+    {
+        imcLock.get().cfCandForm[0].dwStyle = 0;
+        imcLock.get().cfCandForm[0].dwIndex = (DWORD)-1;
+    }
+
+    if (!fSelect)
+    {
+        imcLock.get().fdwInit &= ~INIT_GUIDMAP;
+        return imcLock.m_hr;
+    }
+
+    if (!imcLock.ClearCand())
+        return imcLock.m_hr;
+
+    // Populate conversion mode
+    if (!(imcLock.get().fdwInit & INIT_CONVERSION))
+    {
+        DWORD dwConv = (imcLock.get().fdwConversion & IME_CMODE_SOFTKBD);
+        if (LangID)
+        {
+            if (PRIMARYLANGID(LangID) == LANG_JAPANESE)
+            {
+                dwConv |= IME_CMODE_ROMAN | IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            }
+            else if (PRIMARYLANGID(LangID) != LANG_KOREAN)
+            {
+                dwConv |= IME_CMODE_NATIVE;
+            }
+        }
+        imcLock.get().fdwConversion |= dwConv;
+        imcLock.get().fdwInit |= INIT_CONVERSION;
+    }
+
+    // Populate sentence mode
+    imcLock.get().fdwSentence |= IME_SMODE_PHRASEPREDICT;
+
+    // Populate LOGFONT
+    if (!(imcLock.get().fdwInit & INIT_LOGFONT))
+    {
+        // Get logical font
+        LOGFONTW lf;
+        HDC hDC = ::GetDC(imcLock.get().hWnd);
+        HGDIOBJ hFont = GetCurrentObject(hDC, OBJ_FONT);
+        ::GetObjectW(hFont, sizeof(LOGFONTW), &lf);
+        ::ReleaseDC(imcLock.get().hWnd, hDC);
+
+        imcLock.get().lfFont.W = lf;
+        imcLock.get().fdwInit |= INIT_LOGFONT;
+    }
+    imcLock.get().lfFont.W.lfCharSet = GetCharsetFromLangId(LangID);
+
+    imcLock.InitContext();
+
+    return imcLock.m_hr;
 }
 
 /***********************************************************************
@@ -1037,6 +1126,19 @@ public:
 
     HRESULT CreateInputContext(TLS *pTLS, HIMC hIMC);
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
+    ITfContext *GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext);
+
+    HRESULT SelectEx(
+        TLS *pTLS,
+        ITfThreadMgr_P *pThreadMgr,
+        HIMC hIMC,
+        BOOL fSelect,
+        HKL hKL);
+    HRESULT OnSetOpenStatus(
+        TLS *pTLS,
+        ITfThreadMgr_P *pThreadMgr,
+        CicIMCLock& imcLock,
+        CicInputContext *pCicIC);
 
     void PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs);
     void GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext);
@@ -1764,12 +1866,81 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
     return hr;
 }
 
+ITfContext *
+CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
+{
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return NULL;
+    return pCicIC->m_pContext;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CicBridge::OnSetOpenStatus(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    CicIMCLock& imcLock,
+    CicInputContext *pCicIC)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @implemented
+ */
+HRESULT
+CicBridge::SelectEx(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    HIMC hIMC,
+    BOOL fSelect,
+    HKL hKL)
+{
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (!imeContext)
+        imeContext.m_hr = E_FAIL;
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+        pCicIC->m_dw2[11] |= 1;
+
+    if (fSelect)
+    {
+        if (pCicIC)
+            pCicIC->m_dw2[1] &= ~1;
+        if (imcLock.get().fOpen)
+            OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
+    }
+    else
+    {
+        ITfContext *pContext = GetInputContext(imeContext);
+        pThreadMgr->RequestPostponedLock(pContext);
+        if (pCicIC)
+            pCicIC->m_dw2[11] &= ~1;
+        if (pContext)
+            pContext->Release();
+    }
+
+    return imeContext.m_hr;
+}
+
 typedef struct ENUM_CREATE_DESTROY_IC
 {
     TLS *m_pTLS;
     CicBridge *m_pBridge;
 } ENUM_CREATE_DESTROY_IC, *PENUM_CREATE_DESTROY_IC;
 
+/**
+ * @implemented
+ */
 BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
@@ -1777,6 +1948,9 @@ BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam
     return TRUE;
 }
 
+/**
+ * @implemented
+ */
 BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
@@ -2454,14 +2628,29 @@ CtfImeInquireExW(
     return Inquire(lpIMEInfo, lpszWndClass, dwSystemInfoFlags, hKL);
 }
 
+/***********************************************************************
+ *      CtfImeSelectEx (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 CtfImeSelectEx(
     _In_ HIMC hIMC,
     _In_ BOOL fSelect,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %d, %p)\n", hIMC, fSelect, hKL);
-    return FALSE;
+    TRACE("(%p, %d, %p)\n", hIMC, fSelect, hKL);
+
+    TLS *pTLS = TLS::PeekTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+
+    InternalSelectEx(hIMC, fSelect, LOWORD(hKL));
+
+    if (!pTLS->m_pBridge || !pTLS->m_pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    return pTLS->m_pBridge->SelectEx(pTLS, pTLS->m_pThreadMgr, hIMC, fSelect, hKL);
 }
 
 EXTERN_C LRESULT WINAPI

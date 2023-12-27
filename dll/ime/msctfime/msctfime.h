@@ -28,14 +28,6 @@
 #include <cicero/cicimc.h>
 #include <cicero/cictf.h>
 
-class CicInputContext;
-
-typedef struct tagCTFIMECONTEXT
-{
-    CicInputContext *m_pCicIC;
-    DWORD m_dwCicFlags;
-} CTFIMECONTEXT, *PCTFIMECONTEXT;
-
 #include <wine/debug.h>
 
 #include "resource.h"
