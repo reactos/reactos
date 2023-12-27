@@ -471,6 +471,8 @@ BOOL InitLangChangeHotKey(VOID)
     }
 
     ::LeaveCriticalSection(&g_csInDllMain);
+
+    TRACE("HotKey: %c, %c\n", szLanguage[0], szLayout[0]);
     return TRUE;
 }
 
@@ -529,6 +531,8 @@ BOOL ProcessAttach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
     }
 
     cicGetOSInfo(&g_uACP, &g_dwOSInfo);
+    TRACE("cicGetOSInfo: %u, 0x%lX\n", g_uACP, g_dwOSInfo);
+
     InitUniqueString();
 
     //FIXME
