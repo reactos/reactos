@@ -20,9 +20,9 @@ DEFINE_GUID(IID_ITfThreadMgr_P, 0x7C6247A1, 0x2884, 0x4B7C, 0xAF, 0x24, 0xF1, 0x
 
 struct ITfThreadMgr_P : ITfThreadMgr
 {
-    STDMETHOD(GetAssociated)(HWND, ITfDocumentMgr **) = 0;
-    STDMETHOD(SetSysHookSink)(ITfSysHookSink *) = 0;
-    STDMETHOD(RequestPostponedLock)(ITfContext *) = 0;
+    STDMETHOD(GetAssociated)(HWND hwnd, ITfDocumentMgr **ppDocMgr) = 0;
+    STDMETHOD(SetSysHookSink)(ITfSysHookSink *pSysHookSink) = 0;
+    STDMETHOD(RequestPostponedLock)(ITfContext *pContext) = 0;
     STDMETHOD(IsKeystrokeFeedEnabled)(int *) = 0;
     STDMETHOD(CallImm32HotkeyHandler)(UINT vKey, LPARAM lParam, HRESULT* phrResult) = 0;
     STDMETHOD(ActivateEx)(LPDWORD, DWORD) = 0;
