@@ -24,7 +24,7 @@ struct ITfThreadMgr_P : ITfThreadMgr
     STDMETHOD(SetSysHookSink)(ITfSysHookSink *) = 0;
     STDMETHOD(RequestPostponedLock)(ITfContext *) = 0;
     STDMETHOD(IsKeystrokeFeedEnabled)(int *) = 0;
-    STDMETHOD(CallImm32HotkeyHandler)(UINT, LONG, HRESULT*) = 0;
+    STDMETHOD(CallImm32HotkeyHandler)(UINT vKey, LPARAM lParam, HRESULT* phrResult) = 0;
     STDMETHOD(ActivateEx)(LPDWORD, DWORD) = 0;
 };
 
