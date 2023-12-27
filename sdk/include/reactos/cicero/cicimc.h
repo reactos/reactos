@@ -7,10 +7,19 @@
 
 #pragma once
 
+// struct CTFIMECONTEXT;
 // class CIC_IMCC_LOCK<T_DATA>;
 // class CicIMCCLock<T_DATA>;
 // class CIC_IMC_LOCK;
 // class CicIMCLock;
+
+class CicInputContext;
+
+typedef struct tagCTFIMECONTEXT
+{
+    CicInputContext *m_pCicIC;
+    DWORD m_dwCicFlags;
+} CTFIMECONTEXT, *PCTFIMECONTEXT;
 
 template <typename T_DATA>
 class CIC_IMCC_LOCK
@@ -143,6 +152,8 @@ public:
         return imccLock.get().dwCompStrLen > 0;
     }
 
+    BOOL ClearCand();
+
     BOOL UseVerticalCompWindow() const
     {
         return m_pIC->cfCompForm.dwStyle && ((m_pIC->lfFont.A.lfEscapement / 900) % 4 == 3);
@@ -172,3 +183,51 @@ protected:
         return ::ImmUnlockIMC(hIMC) ? S_OK : E_FAIL;
     }
 };
+
+inline BOOL CicIMCLock::ClearCand()
+{
+    HIMCC hNewCandInfo, hCandInfo = m_pIC->hCandInfo;
+    if (hCandInfo)
+    {
+        hNewCandInfo = ImmReSizeIMCC(hCandInfo, 1964);
+        if (!hNewCandInfo)
+        {
+            ImmDestroyIMCC(m_pIC->hCandInfo);
+            m_pIC->hCandInfo = ImmCreateIMCC(1964);
+            return FALSE;
+        }
+    }
+    else
+    {
+        hNewCandInfo = ImmCreateIMCC(1964u);
+    }
+
+    m_pIC->hCandInfo = hNewCandInfo;
+    if (!m_pIC->hCandInfo)
+        return FALSE;
+
+    CicIMCCLock<CANDIDATEINFO> candInfo(m_pIC->hCandInfo);
+    if (!candInfo)
+    {
+        ImmDestroyIMCC(m_pIC->hCandInfo);
+        m_pIC->hCandInfo = ImmCreateIMCC(1964);
+        return FALSE;
+    }
+
+    candInfo.get().dwSize = 1964;
+    candInfo.get().dwCount = 0;
+    candInfo.get().dwOffset[0] = sizeof(CANDIDATEINFO);
+
+    LPBYTE pb = (LPBYTE)(&candInfo.get());
+    pb += sizeof(CANDIDATEINFO);
+
+    LPDWORD pdwUnknown = (LPDWORD)pb;
+    pdwUnknown[0] = candInfo.get().dwSize - sizeof(CANDIDATEINFO); // +0x0
+    pdwUnknown[2] = 0;     // +0x08
+    pdwUnknown[3] = 0;     // +0x0c
+    pdwUnknown[4] = 0;     // +0x10
+    pdwUnknown[1] = 1;     // +0x04
+    pdwUnknown[5] = 9;     // +0x14
+    pdwUnknown[6] = 1048;  // +0x18
+    return TRUE;
+}
