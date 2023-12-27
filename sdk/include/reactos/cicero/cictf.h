@@ -25,7 +25,7 @@ struct ITfThreadMgr_P : ITfThreadMgr
     STDMETHOD(RequestPostponedLock)(ITfContext *pContext) = 0;
     STDMETHOD(IsKeystrokeFeedEnabled)(int *) = 0;
     STDMETHOD(CallImm32HotkeyHandler)(UINT vKey, LPARAM lParam, HRESULT* phrResult) = 0;
-    STDMETHOD(ActivateEx)(LPDWORD, DWORD) = 0;
+    STDMETHOD(ActivateEx)(TfClientId*, DWORD) = 0;
 };
 
 DEFINE_GUID(IID_ITfKeystrokeMgr_P, 0x53FA1BEC, 0x5BE1, 0x458E, 0xAE, 0x70, 0xA9, 0xF1, 0xDC, 0x84, 0x3E, 0x81);
