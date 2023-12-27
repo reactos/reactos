@@ -188,7 +188,7 @@ BEGIN
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
     AUTORADIOBUTTON  "Icones &grandes", IDC_CHOOSELARGE, 43, 25, 53, 10
-    AUTORADIOBUTTON  "icones &pequenos", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON  "Icones &pequenos", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programas ", IDC_STATIC, 7, 49, 238, 70
     LTEXT            "O menu 'Iniciar' comtém atalhos para os programas que usa frequentemente. Ao limpar a lista de atalhos, não elimina os programas.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "&Numero de programas no menu 'Iniciar':", IDC_STATIC, 14, 86, 112, 8
