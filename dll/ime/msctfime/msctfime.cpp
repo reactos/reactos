@@ -37,7 +37,7 @@ UINT WM_MSIME_KEYMAP = 0;
 /**
  * @implemented
  */
-BOOL IsMsImeMessage(UINT uMsg)
+BOOL IsMsImeMessage(_In_ UINT uMsg)
 {
     return (uMsg == WM_MSIME_SERVICE ||
             uMsg == WM_MSIME_UIREADY ||
@@ -82,6 +82,9 @@ BOOL RegisterMSIMEMessage(VOID)
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
 
 /**
+ * This function calls ntdll!RtlDllShutdownInProgress.
+ * It can detect the system is shutting down or not.
+ *
  * @implemented
  */
 EXTERN_C BOOLEAN WINAPI
@@ -103,6 +106,8 @@ DllShutDownInProgress(VOID)
 }
 
 /**
+ * This function checks if the current user logon session is interactive.
+ *
  * @implemented
  */
 static BOOL
@@ -160,9 +165,11 @@ HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 }
 
 /**
+ * Gets the charset from a language ID.
+ *
  * @implemented
  */
-BYTE GetCharsetFromLangId(DWORD dwValue)
+BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
 {
     CHARSETINFO info;
     if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
@@ -171,10 +178,15 @@ BYTE GetCharsetFromLangId(DWORD dwValue)
 }
 
 /**
+ * Selects or unselects the input context.
+ *
  * @implemented
  */
 HRESULT
-InternalSelectEx(HIMC hIMC, BOOL fSelect, LANGID LangID)
+InternalSelectEx(
+    _In_ HIMC hIMC,
+    _In_ BOOL fSelect,
+    _In_ LANGID LangID)
 {
     CicIMCLock imcLock(hIMC);
     if (!imcLock)
@@ -574,45 +586,46 @@ HRESULT CCompartmentEventSink::_Unadvise()
     return S_OK;
 }
 
-/***********************************************************************
- *      CicInputContext
- */
-
 class CInputContextOwnerCallBack;
 
-/* FIXME */
+/***********************************************************************
+ *      CicInputContext
+ *
+ * The msctfime.ime's input context.
+ */
 class CicInputContext
     : public ITfCleanupContextSink
     , public ITfContextOwnerCompositionSink
     , public ITfCompositionSink
 {
 public:
-    DWORD m_dw[2];
+    DWORD m_dwUnknown0[2];
     LONG m_cRefs;
     HIMC m_hIMC;
     ITfDocumentMgr *m_pDocumentMgr;
     ITfContext *m_pContext;
-    DWORD m_dw0_0[1];
+    DWORD m_dwUnknown1;
     CInputContextOwnerCallBack *m_pICOwnerCallback;
-    DWORD m_dw0;
+    DWORD m_dwUnknown2;
     CCompartmentEventSink *m_pCompEventSink1;
     CCompartmentEventSink *m_pCompEventSink2;
-    DWORD m_dw0_5[4];
-    DWORD m_dw1[2];
+    DWORD m_dwUnknown3[4];
+    DWORD m_dwUnknown4[2];
     DWORD m_dwQueryPos;
-    DWORD m_dw1_5[1];
+    DWORD m_dwUnknown5;
     GUID m_guid;
-    DWORD m_dw2[19];
+    DWORD m_dwUnknown6[19];
     WORD m_cGuidAtoms;
     WORD m_padding;
     DWORD m_adwGuidAtoms[256];
-    DWORD m_dw3[19];
+    DWORD m_dwUnknown7[19];
 
 public:
-    CicInputContext(TfClientId cliendId, PCIC_LIBTHREAD pLibThread, HIMC hIMC);
-    virtual ~CicInputContext()
-    {
-    }
+    CicInputContext(
+        _In_ TfClientId cliendId,
+        _Inout_ PCIC_LIBTHREAD pLibThread,
+        _In_ HIMC hIMC);
+    virtual ~CicInputContext() { }
 
     // IUnknown interface
     STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
@@ -620,7 +633,7 @@ public:
     STDMETHODIMP_(ULONG) Release() override;
 
     // ITfCleanupContextSink interface
-    STDMETHODIMP OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic) override;
+    STDMETHODIMP OnCleanupContext(_In_ TfEditCookie ecWrite, _Inout_ ITfContext *pic) override;
 
     // ITfContextOwnerCompositionSink interface
     STDMETHODIMP OnStartComposition(ITfCompositionView *pComposition, BOOL *pfOk) override;
@@ -636,14 +649,17 @@ public:
         _In_ BYTE iAtom,
         _Out_opt_ LPDWORD pdwGuidAtom);
 
-    HRESULT CreateInputContext(ITfThreadMgr *pThreadMgr, CicIMCLock& imcLock);
+    HRESULT CreateInputContext(_Inout_ ITfThreadMgr *pThreadMgr, _Inout_ CicIMCLock& imcLock);
     HRESULT DestroyInputContext();
 };
 
 /**
  * @unimplemented
  */
-CicInputContext::CicInputContext(TfClientId cliendId, PCIC_LIBTHREAD pLibThread, HIMC hIMC)
+CicInputContext::CicInputContext(
+    _In_ TfClientId cliendId,
+    _Inout_ PCIC_LIBTHREAD pLibThread,
+    _In_ HIMC hIMC)
 {
     m_hIMC = hIMC;
     m_guid = GUID_NULL;
@@ -757,7 +773,9 @@ CicInputContext::GetGuidAtom(
  * @unimplemented
  */
 HRESULT
-CicInputContext::CreateInputContext(ITfThreadMgr *pThreadMgr, CicIMCLock& imcLock)
+CicInputContext::CreateInputContext(
+    _Inout_ ITfThreadMgr *pThreadMgr,
+    _Inout_ CicIMCLock& imcLock)
 {
     //FIXME
     return E_NOTIMPL;
@@ -783,6 +801,8 @@ CicInputContext::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *p
 }
 
 /**
+ * Retrieves the IME information.
+ *
  * @implemented
  */
 HRESULT
@@ -872,12 +892,12 @@ protected:
 
 public:
     CThreadMgrEventSink(
-        FN_INITDOCMGR fnInit,
-        FN_PUSHPOP fnPushPop = NULL,
-        LPVOID pvCallbackPV = NULL);
+        _In_ FN_INITDOCMGR fnInit,
+        _In_ FN_PUSHPOP fnPushPop = NULL,
+        _Inout_ LPVOID pvCallbackPV = NULL);
     virtual ~CThreadMgrEventSink() { }
 
-    void SetCallbackPV(LPVOID pv);
+    void SetCallbackPV(_Inout_ LPVOID pv);
     HRESULT _Advise(ITfThreadMgr *pThreadMgr);
     HRESULT _Unadvise();
 
@@ -904,9 +924,9 @@ public:
  * @implemented
  */
 CThreadMgrEventSink::CThreadMgrEventSink(
-    FN_INITDOCMGR fnInit,
-    FN_PUSHPOP fnPushPop,
-    LPVOID pvCallbackPV)
+    _In_ FN_INITDOCMGR fnInit,
+    _In_ FN_PUSHPOP fnPushPop,
+    _Inout_ LPVOID pvCallbackPV)
 {
     m_fnInit = fnInit;
     m_fnPushPop = fnPushPop;
@@ -996,7 +1016,7 @@ STDMETHODIMP CThreadMgrEventSink::OnPopContext(ITfContext *pic)
     return m_fnPushPop(4, pic, m_pCallbackPV);
 }
 
-void CThreadMgrEventSink::SetCallbackPV(LPVOID pv)
+void CThreadMgrEventSink::SetCallbackPV(_Inout_ LPVOID pv)
 {
     if (!m_pCallbackPV)
         m_pCallbackPV = pv;
@@ -1052,7 +1072,7 @@ HRESULT CThreadMgrEventSink::_Unadvise()
 class CFunctionProvider : public IUnknown
 {
 public:
-    CFunctionProvider(TfClientId clientId)
+    CFunctionProvider(_In_ TfClientId clientId)
     {
     }
 
@@ -1091,8 +1111,8 @@ class CicBridge : public ITfSysHookSink
 {
 protected:
     LONG m_cRefs;
-    DWORD m_dwImmxInit;
-    DWORD m_dw[1];
+    BOOL m_bImmxInited;
+    BOOL m_bUnknown1;
     BOOL m_bDeactivating;
     DWORD m_cActivateLocks;
     ITfKeystrokeMgr *m_pKeystrokeMgr;
@@ -1100,7 +1120,7 @@ protected:
     CThreadMgrEventSink *m_pThreadMgrEventSink;
     TfClientId m_cliendId;
     CIC_LIBTHREAD m_LibThread;
-    DWORD m_dw21;
+    BOOL m_bUnknown2;
 
     static BOOL CALLBACK EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam);
     static BOOL CALLBACK EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam);
@@ -1119,32 +1139,41 @@ public:
     STDMETHODIMP OnSysKeyboardProc(UINT, LONG) override;
     STDMETHODIMP OnSysShellProc(INT, UINT, LONG) override;
 
-    HRESULT InitIMMX(TLS *pTLS);
-    BOOL UnInitIMMX(TLS *pTLS);
-    HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr);
-    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr);
+    HRESULT InitIMMX(_Inout_ TLS *pTLS);
+    BOOL UnInitIMMX(_Inout_ TLS *pTLS);
+    HRESULT ActivateIMMX(_Inout_ TLS *pTLS, _Inout_ ITfThreadMgr_P *pThreadMgr);
+    HRESULT DeactivateIMMX(_Inout_ TLS *pTLS, _Inout_ ITfThreadMgr_P *pThreadMgr);
 
     HRESULT CreateInputContext(TLS *pTLS, HIMC hIMC);
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
     ITfContext *GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext);
 
     HRESULT SelectEx(
-        TLS *pTLS,
-        ITfThreadMgr_P *pThreadMgr,
-        HIMC hIMC,
-        BOOL fSelect,
-        HKL hKL);
+        _Inout_ TLS *pTLS,
+        _Inout_ ITfThreadMgr_P *pThreadMgr,
+        _In_ HIMC hIMC,
+        _In_ BOOL fSelect,
+        _In_ HKL hKL);
     HRESULT OnSetOpenStatus(
         TLS *pTLS,
         ITfThreadMgr_P *pThreadMgr,
         CicIMCLock& imcLock,
         CicInputContext *pCicIC);
 
-    void PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs);
-    void GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext);
+    void PostTransMsg(_In_ HWND hWnd, _In_ INT cTransMsgs, _In_ const TRANSMSG *pTransMsgs);
+    void GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext);
 
-    HRESULT ConfigureGeneral(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd);
-    HRESULT ConfigureRegisterWord(TLS* pTLS, ITfThreadMgr *pThreadMgr, HKL hKL, HWND hWnd, LPVOID lpData);
+    HRESULT
+    ConfigureGeneral(_Inout_ TLS* pTLS,
+        _In_ ITfThreadMgr *pThreadMgr,
+        _In_ HKL hKL,
+        _In_ HWND hWnd);
+    HRESULT ConfigureRegisterWord(
+        _Inout_ TLS* pTLS,
+        _In_ ITfThreadMgr *pThreadMgr,
+        _In_ HKL hKL,
+        _In_ HWND hWnd,
+        _Inout_opt_ LPVOID lpData);
 };
 
 class CActiveLanguageProfileNotifySink : public ITfActiveLanguageProfileNotifySink
@@ -1158,7 +1187,7 @@ protected:
     LPVOID m_pUserData;
 
 public:
-    CActiveLanguageProfileNotifySink(FN_COMPARE fnCompare, void *pUserData);
+    CActiveLanguageProfileNotifySink(_In_ FN_COMPARE fnCompare, _Inout_opt_ void *pUserData);
     virtual ~CActiveLanguageProfileNotifySink();
 
     HRESULT _Advise(ITfThreadMgr *pThreadMgr);
@@ -1181,8 +1210,8 @@ public:
  * @implemented
  */
 CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
-    FN_COMPARE fnCompare,
-    void *pUserData)
+    _In_ FN_COMPARE fnCompare,
+    _Inout_opt_ void *pUserData)
 {
     m_dwConnection = (DWORD)-1;
     m_fnCompare = fnCompare;
@@ -1322,7 +1351,7 @@ protected:
     UINT    m_nCodePage;
     LANGID  m_LangID2;
     WORD    m_padding2;
-    DWORD   m_dw3[1];
+    DWORD   m_dwUnknown1;
     LONG    m_cRefs;
 
     static INT CALLBACK
@@ -1341,11 +1370,15 @@ public:
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
 
-    HRESULT GetActiveLanguageProfile(HKL hKL, REFGUID rguid, TF_LANGUAGEPROFILE *pProfile);
-    HRESULT GetLangId(LANGID *pLangID);
-    HRESULT GetCodePageA(UINT *puCodePage);
+    HRESULT
+    GetActiveLanguageProfile(
+        _In_ HKL hKL,
+        _In_ REFGUID rguid,
+        _Out_ TF_LANGUAGEPROFILE *pProfile);
+    HRESULT GetLangId(_Out_ LANGID *pLangID);
+    HRESULT GetCodePageA(_Out_ UINT *puCodePage);
 
-    HRESULT InitProfileInstance(TLS *pTLS);
+    HRESULT InitProfileInstance(_Inout_ TLS *pTLS);
 };
 
 /**
@@ -1360,7 +1393,7 @@ CicProfile::CicProfile()
     m_LangID1 = 0;
     m_nCodePage = CP_ACP;
     m_LangID2 = 0;
-    m_dw3[0] = 0;
+    m_dwUnknown1 = 0;
 }
 
 /**
@@ -1433,7 +1466,7 @@ CicProfile::ActiveLanguageProfileNotifySinkCallback(
 /**
  * @implemented
  */
-HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
+HRESULT CicProfile::GetCodePageA(_Out_ UINT *puCodePage)
 {
     if (!puCodePage)
         return E_INVALIDARG;
@@ -1466,7 +1499,7 @@ HRESULT CicProfile::GetCodePageA(UINT *puCodePage)
 /**
  * @implemented
  */
-HRESULT CicProfile::GetLangId(LANGID *pLangID)
+HRESULT CicProfile::GetLangId(_Out_ LANGID *pLangID)
 {
     *pLangID = 0;
 
@@ -1604,7 +1637,7 @@ BOOL TLS::InternalDestroyTLS()
  * @implemented
  */
 HRESULT
-CicProfile::InitProfileInstance(TLS *pTLS)
+CicProfile::InitProfileInstance(_Inout_ TLS *pTLS)
 {
     HRESULT hr = TF_CreateInputProcessorProfiles(&m_pIPProfiles);
     if (FAILED(hr))
@@ -1633,7 +1666,10 @@ CicProfile::InitProfileInstance(TLS *pTLS)
 /**
  * @implemented
  */
-STDMETHODIMP CicInputContext::OnCleanupContext(TfEditCookie ecWrite, ITfContext *pic)
+STDMETHODIMP
+CicInputContext::OnCleanupContext(
+    _In_ TfEditCookie ecWrite,
+    _Inout_ ITfContext *pic)
 {
     TLS *pTLS = TLS::PeekTLS();
     if (!pTLS || !pTLS->m_pProfile)
@@ -1686,10 +1722,10 @@ STDMETHODIMP CicInputContext::OnCleanupContext(TfEditCookie ecWrite, ITfContext 
 
 CicBridge::CicBridge()
 {
-    m_dwImmxInit &= ~1;
-    m_dw[0] &= ~1;
+    m_bImmxInited = FALSE;
+    m_bUnknown1 = FALSE;
     m_bDeactivating = FALSE;
-    m_dw21 &= ~1;
+    m_bUnknown2 = FALSE;
     m_pKeystrokeMgr = NULL;
     m_pDocMgr = NULL;
     m_pThreadMgrEventSink = NULL;
@@ -1747,7 +1783,7 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
-void CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
+void CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (pCicIC)
@@ -1765,7 +1801,10 @@ void CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 /**
  * @unimplemented
  */
-HRESULT CicBridge::CreateInputContext(TLS *pTLS, HIMC hIMC)
+HRESULT
+CicBridge::CreateInputContext(
+    _Inout_ TLS *pTLS,
+    _In_ HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
     HRESULT hr = imcLock.m_hr;
@@ -1892,11 +1931,11 @@ HRESULT CicBridge::OnSetOpenStatus(
  */
 HRESULT
 CicBridge::SelectEx(
-    TLS *pTLS,
-    ITfThreadMgr_P *pThreadMgr,
-    HIMC hIMC,
-    BOOL fSelect,
-    HKL hKL)
+    _Inout_ TLS *pTLS,
+    _Inout_ ITfThreadMgr_P *pThreadMgr,
+    _In_ HIMC hIMC,
+    _In_ BOOL fSelect,
+    _In_ HKL hKL)
 {
     CicIMCLock imcLock(hIMC);
     if (FAILED(imcLock.m_hr))
@@ -1910,12 +1949,12 @@ CicBridge::SelectEx(
 
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (pCicIC)
-        pCicIC->m_dw2[11] |= 1;
+        pCicIC->m_dwUnknown6[11] |= 1;
 
     if (fSelect)
     {
         if (pCicIC)
-            pCicIC->m_dw2[1] &= ~1;
+            pCicIC->m_dwUnknown6[1] &= ~1;
         if (imcLock.get().fOpen)
             OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
     }
@@ -1924,7 +1963,7 @@ CicBridge::SelectEx(
         ITfContext *pContext = GetInputContext(imeContext);
         pThreadMgr->RequestPostponedLock(pContext);
         if (pCicIC)
-            pCicIC->m_dw2[11] &= ~1;
+            pCicIC->m_dwUnknown6[11] &= ~1;
         if (pContext)
             pContext->Release();
     }
@@ -1961,7 +2000,10 @@ BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lPara
 /**
  * @implemented
  */
-HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr)
+HRESULT
+CicBridge::ActivateIMMX(
+    _Inout_ TLS *pTLS,
+    _Inout_ ITfThreadMgr_P *pThreadMgr)
 {
     HRESULT hr = pThreadMgr->ActivateEx(&m_cliendId, 1);
     if (hr != S_OK)
@@ -2023,7 +2065,10 @@ Finish:
 /**
  * @implemented
  */
-HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr)
+HRESULT
+CicBridge::DeactivateIMMX(
+    _Inout_ TLS *pTLS,
+    _Inout_ ITfThreadMgr_P *pThreadMgr)
 {
     if (m_bDeactivating)
         return TRUE;
@@ -2068,9 +2113,10 @@ HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr)
 /**
  * @implemented
  */
-HRESULT CicBridge::InitIMMX(TLS *pTLS)
+HRESULT
+CicBridge::InitIMMX(_Inout_ TLS *pTLS)
 {
-    if (m_dwImmxInit & 1)
+    if (m_bImmxInited)
         return S_OK;
 
     HRESULT hr = S_OK;
@@ -2130,14 +2176,14 @@ HRESULT CicBridge::InitIMMX(TLS *pTLS)
         return E_FAIL;
     }
 
-    m_dwImmxInit |= 1;
+    m_bImmxInited = TRUE;
     return S_OK;
 }
 
 /**
  * @implemented
  */
-BOOL CicBridge::UnInitIMMX(TLS *pTLS)
+BOOL CicBridge::UnInitIMMX(_Inout_ TLS *pTLS)
 {
     UninitDisplayAttrbuteLib(&m_LibThread);
     TFUninitLib_Thread(&m_LibThread);
@@ -2167,7 +2213,7 @@ BOOL CicBridge::UnInitIMMX(TLS *pTLS)
         pTLS->m_pThreadMgr = NULL;
     }
 
-    m_dwImmxInit &= ~1;
+    m_bImmxInited = FALSE;
     return TRUE;
 }
 
@@ -2198,7 +2244,11 @@ STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
 /**
  * @implemented
  */
-void CicBridge::PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs)
+void
+CicBridge::PostTransMsg(
+    _In_ HWND hWnd,
+    _In_ INT cTransMsgs,
+    _In_ const TRANSMSG *pTransMsgs)
 {
     for (INT i = 0; i < cTransMsgs; ++i, ++pTransMsgs)
     {
@@ -2211,10 +2261,10 @@ void CicBridge::PostTransMsg(HWND hWnd, INT cTransMsgs, LPTRANSMSG pTransMsgs)
  */
 HRESULT
 CicBridge::ConfigureGeneral(
-    TLS* pTLS,
-    ITfThreadMgr *pThreadMgr,
-    HKL hKL,
-    HWND hWnd)
+    _Inout_ TLS* pTLS,
+    _In_ ITfThreadMgr *pThreadMgr,
+    _In_ HKL hKL,
+    _In_ HWND hWnd)
 {
     CicProfile *pProfile = pTLS->m_pProfile;
     if (!pProfile)
@@ -2250,11 +2300,11 @@ CicBridge::ConfigureGeneral(
  */
 HRESULT
 CicBridge::ConfigureRegisterWord(
-    TLS* pTLS,
-    ITfThreadMgr *pThreadMgr,
-    HKL hKL,
-    HWND hWnd,
-    LPVOID lpData)
+    _Inout_ TLS* pTLS,
+    _In_ ITfThreadMgr *pThreadMgr,
+    _In_ HKL hKL,
+    _In_ HWND hWnd,
+    _Inout_opt_ LPVOID lpData)
 {
     CicProfile *pProfile = pTLS->m_pProfile;
     if (!pProfile)
@@ -2311,9 +2361,9 @@ CicBridge::ConfigureRegisterWord(
  */
 HRESULT
 CicProfile::GetActiveLanguageProfile(
-    HKL hKL,
-    REFGUID rguid,
-    TF_LANGUAGEPROFILE *pProfile)
+    _In_ HKL hKL,
+    _In_ REFGUID rguid,
+    _Out_ TF_LANGUAGEPROFILE *pProfile)
 {
     return E_NOTIMPL;
 }
@@ -2916,7 +2966,9 @@ CtfImeIsIME(
     return FALSE;
 }
 
-/**
+/***********************************************************************
+ *      CtfImeThreadDetach (MSCTFIME.@)
+ *
  * @implemented
  */
 EXTERN_C HRESULT WINAPI
