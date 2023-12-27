@@ -1610,8 +1610,8 @@ TLS* TLS::InternalAllocateTLS()
         return NULL;
     }
 
+    pTLS->m_dwFlags1 |= 1;
     pTLS->m_dwUnknown2[0] |= 1;
-    pTLS->m_dwUnknown2[2] |= 1;
     return pTLS;
 }
 
@@ -1930,6 +1930,7 @@ HRESULT CicBridge::OnSetOpenStatus(
 }
 
 /**
+ * Selects the IME context.
  * @implemented
  */
 HRESULT
@@ -1974,6 +1975,10 @@ CicBridge::SelectEx(
     return imeContext.m_hr;
 }
 
+/**
+ * Used in CicBridge::EnumCreateInputContextCallback and
+ * CicBridge::EnumDestroyInputContextCallback.
+ */
 typedef struct ENUM_CREATE_DESTROY_IC
 {
     TLS *m_pTLS;
@@ -1981,6 +1986,7 @@ typedef struct ENUM_CREATE_DESTROY_IC
 } ENUM_CREATE_DESTROY_IC, *PENUM_CREATE_DESTROY_IC;
 
 /**
+ * Creates input context for the current thread.
  * @implemented
  */
 BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam)
@@ -1991,6 +1997,7 @@ BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam
 }
 
 /**
+ * Destroys input context for the current thread.
  * @implemented
  */
 BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam)
