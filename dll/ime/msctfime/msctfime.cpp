@@ -2658,21 +2658,16 @@ CtfImeProcessCicHotkey(
     if (!pTLS)
         return S_OK;
 
+    HRESULT hr = S_OK;
     ITfThreadMgr *pThreadMgr = NULL;
     ITfThreadMgr_P *pThreadMgr_P = NULL;
-
-    HRESULT hr = S_OK;
-    if (TF_GetThreadMgr(&pThreadMgr) == S_OK)
+    if ((TF_GetThreadMgr(&pThreadMgr) == S_OK) &&
+        (pThreadMgr->QueryInterface(IID_ITfThreadMgr_P, (void**)&pThreadMgr_P) == S_OK) &&
+        CtfImmIsCiceroStartedInThread())
     {
-        if (pThreadMgr->QueryInterface(IID_ITfThreadMgr_P, (void**)&pThreadMgr_P) == S_OK)
-        {
-            if (CtfImmIsCiceroStartedInThread())
-            {
-                HRESULT hr2;
-                if (SUCCEEDED(pThreadMgr_P->CallImm32HotkeyHandler(vKey, lParam, &hr2)))
-                    hr = hr2;
-            }
-        }
+        HRESULT hr2;
+        if (SUCCEEDED(pThreadMgr_P->CallImm32HotkeyHandler(vKey, lParam, &hr2)))
+            hr = hr2;
     }
 
     if (pThreadMgr)
