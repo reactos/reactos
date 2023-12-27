@@ -1003,7 +1003,8 @@ class CicBridge : public ITfSysHookSink
 protected:
     LONG m_cRefs;
     DWORD m_dwImmxInit;
-    DWORD m_dw[2];
+    DWORD m_dw[1];
+    BOOL m_bDeactivating;
     DWORD m_cActivateLocks;
     ITfKeystrokeMgr *m_pKeystrokeMgr;
     ITfDocumentMgr *m_pDocMgr;
@@ -1031,8 +1032,8 @@ public:
 
     HRESULT InitIMMX(TLS *pTLS);
     BOOL UnInitIMMX(TLS *pTLS);
-    HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
-    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr);
+    HRESULT ActivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr);
+    HRESULT DeactivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr);
 
     HRESULT CreateInputContext(TLS *pTLS, HIMC hIMC);
     HRESULT DestroyInputContext(TLS *pTLS, HIMC hIMC);
@@ -1394,7 +1395,7 @@ public:
     DWORD m_dwSystemInfoFlags;
     CicBridge *m_pBridge;
     CicProfile *m_pProfile;
-    ITfThreadMgr *m_pThreadMgr;
+    ITfThreadMgr_P *m_pThreadMgr;
     DWORD m_dwFlags1;
     DWORD m_dwFlags2;
     DWORD m_dwUnknown2[2];
@@ -1585,7 +1586,7 @@ CicBridge::CicBridge()
 {
     m_dwImmxInit &= ~1;
     m_dw[0] &= ~1;
-    m_dw[1] &= ~1;
+    m_bDeactivating = FALSE;
     m_dw21 &= ~1;
     m_pKeystrokeMgr = NULL;
     m_pDocMgr = NULL;
@@ -1784,17 +1785,22 @@ BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lPara
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
-HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
+HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr)
 {
-    //FIXME
+    HRESULT hr = pThreadMgr->ActivateEx(&m_cliendId, 1);
+    if (hr != S_OK)
+    {
+        m_cliendId = 0;
+        return E_FAIL;
+    }
 
     if (m_cActivateLocks++ != 0)
         return S_OK;
 
     ITfSourceSingle *pSource = NULL;
-    HRESULT hr = pThreadMgr->QueryInterface(IID_ITfSourceSingle, (void**)&pSource);
+    hr = pThreadMgr->QueryInterface(IID_ITfSourceSingle, (void**)&pSource);
     if (FAILED(hr))
     {
         DeactivateIMMX(pTLS, pThreadMgr);
@@ -1823,7 +1829,7 @@ HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
         SetCompartmentDWORD(m_cliendId, m_pDocMgr, GUID_COMPARTMENT_CTFIME_DIMFLAGS, TRUE, FALSE);
     }
 
-    //FIXME
+    pThreadMgr->SetSysHookSink(this);
 
     hr = S_OK;
     if (pTLS->m_dwUnknown2[1] & 1)
@@ -1835,28 +1841,26 @@ HRESULT CicBridge::ActivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
 Finish:
     if (FAILED(hr))
         DeactivateIMMX(pTLS, pThreadMgr);
-
     if (pSource)
         pSource->Release();
-
     return hr;
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
-HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
+HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr_P *pThreadMgr)
 {
-    if (m_dw[1] & 1)
+    if (m_bDeactivating)
         return TRUE;
 
-    m_dw[1] |= 1;
+    m_bDeactivating = TRUE;
 
     if (m_cliendId)
     {
         ENUM_CREATE_DESTROY_IC Data = { pTLS, this };
         ImmEnumInputContext(0, CicBridge::EnumDestroyInputContextCallback, (LPARAM)&Data);
-        pTLS->m_dwUnknown2[1] |= 1u;
+        pTLS->m_dwUnknown2[1] |= 1;
 
         ITfSourceSingle *pSource = NULL;
         if (pThreadMgr->QueryInterface(IID_ITfSourceSingle, (void **)&pSource) == S_OK)
@@ -1880,9 +1884,9 @@ HRESULT CicBridge::DeactivateIMMX(TLS *pTLS, ITfThreadMgr *pThreadMgr)
         m_pDocMgr = NULL;
     }
 
-    //FIXME
+    pThreadMgr->SetSysHookSink(NULL);
 
-    m_dw[1] &= ~1;
+    m_bDeactivating = FALSE;
 
     return S_OK;
 }
@@ -1895,20 +1899,19 @@ HRESULT CicBridge::InitIMMX(TLS *pTLS)
     if (m_dwImmxInit & 1)
         return S_OK;
 
-    HRESULT hr;
+    HRESULT hr = S_OK;
     if (!pTLS->m_pThreadMgr)
     {
-        hr = TF_CreateThreadMgr(&pTLS->m_pThreadMgr);
+        ITfThreadMgr *pThreadMgr = NULL;
+        hr = TF_CreateThreadMgr(&pThreadMgr);
         if (FAILED(hr))
             return E_FAIL;
 
-        hr = pTLS->m_pThreadMgr->QueryInterface(IID_ITfThreadMgr, (void **)&pTLS->m_pThreadMgr);
+        hr = pThreadMgr->QueryInterface(IID_ITfThreadMgr_P, (void **)&pTLS->m_pThreadMgr);
+        if (pThreadMgr)
+            pThreadMgr->Release();
         if (FAILED(hr))
-        {
-            pTLS->m_pThreadMgr->Release();
-            pTLS->m_pThreadMgr = NULL;
             return E_FAIL;
-        }
     }
 
     if (!m_pThreadMgrEventSink)
@@ -1930,6 +1933,7 @@ HRESULT CicBridge::InitIMMX(TLS *pTLS)
         pTLS->m_pProfile = new CicProfile();
         if (!pTLS->m_pProfile)
             return E_OUTOFMEMORY;
+
         hr = pTLS->m_pProfile->InitProfileInstance(pTLS);
         if (FAILED(hr))
         {
@@ -1938,7 +1942,7 @@ HRESULT CicBridge::InitIMMX(TLS *pTLS)
         }
     }
 
-    hr = pTLS->m_pThreadMgr->QueryInterface(IID_ITfKeystrokeMgr, (void **)&m_pKeystrokeMgr);
+    hr = pTLS->m_pThreadMgr->QueryInterface(IID_ITfKeystrokeMgr_P, (void **)&m_pKeystrokeMgr);
     if (FAILED(hr))
     {
         UnInitIMMX(pTLS);
