@@ -404,16 +404,12 @@ BOOL InitLangChangeHotKey(VOID)
 
     if (szLanguage[0] == szLayout[0])
     {
-        if (szLanguage[0] != TEXT('1'))
-        {
-            szLayout[0] = TEXT('1');
-            if (szLanguage[0] != TEXT('2'))
-                szLayout[0] = TEXT('3');
-        }
-        else
-        {
+        if (szLanguage[0] == TEXT('1'))
             szLayout[0] = TEXT('2');
-        }
+        else if (szLanguage[0] == TEXT('2'))
+            szLayout[0] = TEXT('1');
+        else
+            szLayout[0] = TEXT('3');
     }
 
     ::EnterCriticalSection(&g_csInDllMain);
@@ -450,25 +446,27 @@ BOOL InitLangChangeHotKey(VOID)
     {
         case TEXT('2'):
             g_uKeyTipHotKeyModifiers = MOD_SHIFT | MOD_CONTROL;
-            g_uKeyTipHotKeyVKey2 = VK_CONTROL;
             g_uKeyTipHotKeyVKey = VK_SHIFT;
+            g_uKeyTipHotKeyVKey2 = VK_CONTROL;
             break;
 
         case TEXT('3'):
+            g_uKeyTipHotKeyModifiers = 0;
             g_uKeyTipHotKeyVKey = 0;
+            g_uKeyTipHotKeyVKey2 = 0;
             break;
 
         case TEXT('4'):
-            g_uKeyTipHotKeyVKey = VK_OEM_3;
             g_uKeyTipHotKeyModifiers = 0;
+            g_uKeyTipHotKeyVKey = VK_OEM_3;
             g_uKeyTipHotKeyVKey2 = 0;
             break;
 
         case TEXT('1'):
         default:
             g_uKeyTipHotKeyModifiers = 0x40 | MOD_SHIFT;
-            g_uKeyTipHotKeyVKey2 = VK_MENU;
             g_uKeyTipHotKeyVKey = VK_SHIFT;
+            g_uKeyTipHotKeyVKey2 = VK_MENU;
             break;
     }
 
