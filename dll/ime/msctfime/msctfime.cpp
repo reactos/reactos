@@ -765,15 +765,6 @@ Inquire(
     return S_OK;
 }
 
-DEFINE_GUID(IID_ITfSysHookSink, 0x495388DA, 0x21A5, 0x4852, 0x8B, 0xB1, 0xED, 0x2F, 0x29, 0xDA, 0x8D, 0x60);
-
-struct ITfSysHookSink : IUnknown
-{
-    STDMETHOD(OnPreFocusDIM)(HWND hwnd) = 0;
-    STDMETHOD(OnSysKeyboardProc)(UINT, LONG) = 0;
-    STDMETHOD(OnSysShellProc)(INT, UINT, LONG) = 0;
-};
-
 class TLS;
 
 typedef INT (CALLBACK *FN_INITDOCMGR)(UINT, ITfDocumentMgr *, ITfDocumentMgr *, LPVOID);
@@ -2649,14 +2640,42 @@ CtfImeSetActiveContextAlways(
     return E_NOTIMPL;
 }
 
+
+/***********************************************************************
+ *      CtfImeProcessCicHotkey (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeProcessCicHotkey(
     _In_ HIMC hIMC,
     _In_ UINT vKey,
     _In_ LPARAM lParam)
 {
-    FIXME("stub:(%p, %u, %p)\n", hIMC, vKey, lParam);
-    return E_NOTIMPL;
+    TRACE("(%p, %u, %p)\n", hIMC, vKey, lParam);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return S_OK;
+
+    HRESULT hr = S_OK;
+    ITfThreadMgr *pThreadMgr = NULL;
+    ITfThreadMgr_P *pThreadMgr_P = NULL;
+    if ((TF_GetThreadMgr(&pThreadMgr) == S_OK) &&
+        (pThreadMgr->QueryInterface(IID_ITfThreadMgr_P, (void**)&pThreadMgr_P) == S_OK) &&
+        CtfImmIsCiceroStartedInThread())
+    {
+        HRESULT hr2;
+        if (SUCCEEDED(pThreadMgr_P->CallImm32HotkeyHandler(vKey, lParam, &hr2)))
+            hr = hr2;
+    }
+
+    if (pThreadMgr)
+        pThreadMgr->Release();
+    if (pThreadMgr_P)
+        pThreadMgr_P->Release();
+
+    return hr;
 }
 
 /***********************************************************************

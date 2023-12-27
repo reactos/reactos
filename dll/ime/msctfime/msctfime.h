@@ -26,6 +26,7 @@
 #include <cicero/cicbase.h>
 #include <cicero/cicarray.h>
 #include <cicero/cicimc.h>
+#include <cicero/cictf.h>
 
 class CicInputContext;
 

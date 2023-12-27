@@ -18,6 +18,7 @@ extern "C" {
 #endif
 
 BOOL WINAPI ImmDisableTextFrameService(_In_ DWORD dwThreadId);
+BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 
 typedef struct tagSOFTKBDDATA
 {
