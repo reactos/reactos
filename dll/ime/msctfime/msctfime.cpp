@@ -599,14 +599,15 @@ class CicInputContext
     , public ITfCompositionSink
 {
 public:
-    DWORD m_dwUnknown0[2];
+    ITfContextOwnerCompositionSink *m_pContextOwnerCompositionSink;
+    DWORD m_dwUnknown0;
     LONG m_cRefs;
     HIMC m_hIMC;
     ITfDocumentMgr *m_pDocumentMgr;
     ITfContext *m_pContext;
     DWORD m_dwUnknown1;
     CInputContextOwnerCallBack *m_pICOwnerCallback;
-    DWORD m_dwUnknown2;
+    LPVOID m_pTextEventSink;
     CCompartmentEventSink *m_pCompEventSink1;
     CCompartmentEventSink *m_pCompEventSink2;
     DWORD m_dwUnknown3[4];
@@ -614,11 +615,13 @@ public:
     DWORD m_dwQueryPos;
     DWORD m_dwUnknown5;
     GUID m_guid;
-    DWORD m_dwUnknown6[19];
+    DWORD m_dwUnknown6[11];
+    BOOL m_bSelecting;
+    DWORD m_dwUnknown7[7];
     WORD m_cGuidAtoms;
     WORD m_padding;
     DWORD m_adwGuidAtoms[256];
-    DWORD m_dwUnknown7[19];
+    DWORD m_dwUnknown8[19];
 
 public:
     CicInputContext(
@@ -1949,7 +1952,7 @@ CicBridge::SelectEx(
 
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (pCicIC)
-        pCicIC->m_dwUnknown6[11] |= 1;
+        pCicIC->m_bSelecting = TRUE;
 
     if (fSelect)
     {
@@ -1963,7 +1966,7 @@ CicBridge::SelectEx(
         ITfContext *pContext = GetInputContext(imeContext);
         pThreadMgr->RequestPostponedLock(pContext);
         if (pCicIC)
-            pCicIC->m_dwUnknown6[11] &= ~1;
+            pCicIC->m_bSelecting = FALSE;
         if (pContext)
             pContext->Release();
     }
