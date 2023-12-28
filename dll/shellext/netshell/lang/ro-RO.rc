@@ -177,7 +177,7 @@ BEGIN
     IDS_NETWORKSETTINGSTITLE "Setări de rețea"
     IDS_NETWORKSETTINGSSUBTITLE "Instalează software-ul de rețea folosit pentru conectarea la alte rețele, calculatoare și Internet."
     IDS_NETWORKCOMPONENTTITLE "Componente de rețea"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determinare componente de rețea necesare calculatorului. Pentru adăugare de noi componente, apăsați „Instalare”."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determină ce componente de rețea sunt folosit la calculatorul dvs. Pentru adăugare de noi componente, apăsați „Instalare”."
     IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu de calculator"
     IDS_NETWORKDOMAINSUBTITLE "Specifică felul în care va fi folosit calculatorul  - ca parte a unui grup de lucru sau ca parte a unui domeniu de rețea."
     IDS_REACTOS_SETUP "Expert de instalare ReactOS"
