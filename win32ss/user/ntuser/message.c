@@ -777,7 +777,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
     if (!pWnd || UserIsDesktopWindow(pWnd) || UserIsMessageWindow(pWnd))
        return 0;
 
-    TRACE("Internal Event Msg 0x%x hWnd 0x%p\n", msg, pWnd->head.h);
+    TRACE("Internal Event Msg 0x%x hWnd 0x%p\n", msg, UserHMGetHandle(pWnd));
 
     switch(msg)
     {
@@ -1377,7 +1377,7 @@ UserPostMessage( HWND Wnd,
 
         if (List != NULL)
         {
-            UserPostMessage(DesktopWindow->head.h, Msg, wParam, lParam);
+            UserPostMessage(UserHMGetHandle(DesktopWindow), Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
                 PWND pwnd = UserGetWindowObject(List[i]);
@@ -1683,7 +1683,7 @@ co_IntSendMessageTimeout( HWND hWnd,
     if (hWnd != HWND_TOPMOST)
     {
        /* Send message to the desktop window too! */
-       co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+       co_IntSendMessageTimeoutSingle(UserHMGetHandle(DesktopWindow), Msg, wParam, lParam, uFlags, uTimeout, uResult);
     }
 
     Children = IntWinListChildren(DesktopWindow);
@@ -2062,7 +2062,7 @@ UserSendNotifyMessage( HWND hWnd,
 
         if (List != NULL)
         {
-            UserSendNotifyMessage(DesktopWindow->head.h, Msg, wParam, lParam);
+            UserSendNotifyMessage(UserHMGetHandle(DesktopWindow), Msg, wParam, lParam);
             for (i = 0; List[i]; i++)
             {
                PWND pwnd = UserGetWindowObject(List[i]);
