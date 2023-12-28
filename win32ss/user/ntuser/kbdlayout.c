@@ -362,7 +362,7 @@ cleanup:
     {
         /* We have failed - destroy created object */
         if (pkf)
-            UserDeleteObject(pkf->head.h, TYPE_KBDFILE);
+            UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
     }
 
     return pRet;
@@ -398,7 +398,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     if (!pKl->spkf)
     {
         ERR("UserLoadKbdFile(%wZ) failed!\n", pustrKLID);
-        UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+        UserDeleteObject(UserHMGetHandle(pKl), TYPE_KBDLAYOUT);
         return NULL;
     }
 
@@ -406,7 +406,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
     {
         ERR("RtlUnicodeStringToInteger failed for '%wZ'\n", pustrKLID);
-        UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+        UserDeleteObject(UserHMGetHandle(pKl), TYPE_KBDLAYOUT);
         return NULL;
     }
 
@@ -461,7 +461,7 @@ UnloadKbdFile(_In_ PKBDFILE pkf)
         *ppkfLink = pkf->pkfNext;
 
     EngUnloadImage(pkf->hBase);
-    UserDeleteObject(pkf->head.h, TYPE_KBDFILE);
+    UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
 }
 
 /*
@@ -501,7 +501,7 @@ UserUnloadKbl(PKL pKl)
     {
         ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
     }
-    UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+    UserDeleteObject(UserHMGetHandle(pKl), TYPE_KBDLAYOUT);
     return TRUE;
 }
 
