@@ -524,7 +524,7 @@ static void CC_PaintCross(CCPRIV *infoPtr)
  {
    HDC hDC;
 #ifdef __REACTOS__
-   int w = 10, wc = 5;
+   int w = 8, wc = 6;
    HRGN hRgn;
 #else
    int w = GetDialogBaseUnits() - 1;
