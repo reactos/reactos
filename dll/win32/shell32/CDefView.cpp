@@ -1784,7 +1784,7 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
 
     _DoFolderViewCB(SFVM_SIZE, 0, 0);
 
-    _HandleStatusBarResize(wWidth);
+    _ForceStatusBarResize();
     UpdateStatusbar();
 
     return 0;
