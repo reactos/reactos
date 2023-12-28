@@ -411,7 +411,7 @@ PostTimerMessages(PWND Window)
           (pTmr->pti == pti) &&
           ((pTmr->pWnd == Window) || (Window == NULL)) )
         {
-           Msg.hwnd    = (pTmr->pWnd) ? pTmr->pWnd->head.h : 0;
+           Msg.hwnd    = (pTmr->pWnd ? UserHMGetHandle(pTmr->pWnd) : NULL);
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
