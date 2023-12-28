@@ -1405,7 +1405,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
         TRACE("No active desktop\n");
         return NULL;
     }
-    return pdo->spwndMessage->head.h;
+    return UserHMGetHandle(pdo->spwndMessage);
 }
 
 // Win: _GetMessageWindow
@@ -2458,7 +2458,7 @@ IntCreateDesktop(
     }
 
     pdesk->dwSessionId = PsGetCurrentProcessSessionId();
-    pdesk->DesktopWindow = pWnd->head.h;
+    pdesk->DesktopWindow = UserHMGetHandle(pWnd);
     pdesk->pDeskInfo->spwnd = pWnd;
     pWnd->fnid = FNID_DESKTOP;
 
