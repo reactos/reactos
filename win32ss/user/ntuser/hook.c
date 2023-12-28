@@ -982,7 +982,7 @@ IntGetGlobalHookHandles(PDESKTOP pdo, int HookId)
     {
         pHook = CONTAINING_RECORD(pElem, HOOK, Chain);
         NT_ASSERT(i < cHooks);
-        pList[i++] = pHook->head.h;
+        pList[i++] = UserHMGetHandle(pHook);
     }
     pList[i] = NULL;
 
