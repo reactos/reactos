@@ -324,7 +324,7 @@ IntDestroyCurIconObject(
 
     /* We just mark the handle as being destroyed.
      * Deleting all the stuff will be deferred to the actual struct free. */
-    UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    UserDeleteObject(UserHMGetHandle(CurIcon), TYPE_CURSOR);
     return TRUE;
 }
 
@@ -659,7 +659,7 @@ NtUserGetCursorInfo(
 
     SafeCi.cbSize = sizeof(CURSORINFO);
     SafeCi.flags = ((CurIcon && CurInfo->ShowingCursor >= 0) ? CURSOR_SHOWING : 0);
-    SafeCi.hCursor = (CurIcon ? CurIcon->head.h : NULL);
+    SafeCi.hCursor = (CurIcon ? UserHMGetHandle(CurIcon) : NULL);
 
     SafeCi.ptScreenPos = gpsi->ptCursor;
 
@@ -973,7 +973,7 @@ NtUserFindExistingCursorIcon(
         }
     }
     if (CurIcon)
-        Ret = CurIcon->head.h;
+        Ret = UserHMGetHandle(CurIcon);
     UserLeave();
 
 done:
@@ -2145,7 +2145,7 @@ NtUserGetCursorFrameInfo(
         return NULL;
     }
 
-    ret = CurIcon->head.h;
+    ret = UserHMGetHandle(CurIcon);
 
     if (CurIcon->CURSORF_flags & CURSORF_ACON)
     {
@@ -2158,7 +2158,7 @@ NtUserGetCursorFrameInfo(
         }
         jiffies = AniCurIcon->ajifRate[istep];
         steps = AniCurIcon->cicur;
-        ret = AniCurIcon->aspcur[AniCurIcon->aicur[istep]]->head.h;
+        ret = UserHMGetHandle(AniCurIcon->aspcur[AniCurIcon->aicur[istep]]);
     }
 
     _SEH2_TRY
