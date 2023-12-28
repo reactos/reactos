@@ -773,3 +773,105 @@ HRESULT WINAPI CCPLItemMenu::HandleMenuMsg(
 
     return E_NOTIMPL;
 }
+
+/**************************************************************************
+* COpenControlPanel
+*/
+
+static LPCWSTR g_FmtCplParse = L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\%s%s";
+
+static HRESULT FindExeCplClass(LPCWSTR Canonical, HKEY hKey, BOOL Wow64, LPWSTR clsid)
+{
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+    HKEY hNSKey;
+    WCHAR key[MAX_PATH], buf[MAX_PATH];
+    wsprintfW(key, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\NameSpace",
+              Wow64 ? L"ControlPanelWOW64" : L"ControlPanel");
+    LSTATUS error = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hNSKey);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+    for (DWORD i = 0; RegEnumKeyW(hNSKey, i, key, _countof(key)) == ERROR_SUCCESS; ++i)
+    {
+        IID validate;
+        if (SUCCEEDED(IIDFromString(key, &validate)))
+        {
+            wsprintfW(buf, L"CLSID\\%s", key);
+            DWORD cb = sizeof(buf);
+            if (RegGetValueW(HKEY_CLASSES_ROOT, buf, L"System.ApplicationName",
+                             RRF_RT_REG_SZ, NULL, buf, &cb) == ERROR_SUCCESS)
+            {
+                if (!lstrcmpiW(buf, Canonical))
+                {
+                    lstrcpyW(clsid, key);
+                    hr = S_OK;
+                }
+            }
+        }
+    }
+    RegCloseKey(hNSKey);
+    return hr;
+}
+
+static HRESULT FindExeCplClass(LPCWSTR Canonical, LPWSTR clsid)
+{
+    HRESULT hr = E_FAIL;
+    if (FAILED(hr))
+        hr = FindExeCplClass(Canonical, HKEY_CURRENT_USER, FALSE, clsid);
+    if (FAILED(hr))
+        hr = FindExeCplClass(Canonical, HKEY_CURRENT_USER, TRUE, clsid);
+    if (FAILED(hr))
+        hr = FindExeCplClass(Canonical, HKEY_LOCAL_MACHINE, FALSE, clsid);
+    if (FAILED(hr))
+        hr = FindExeCplClass(Canonical, HKEY_LOCAL_MACHINE, TRUE, clsid);
+    return hr;
+}
+
+HRESULT WINAPI COpenControlPanel::Open(LPCWSTR pszName, LPCWSTR pszPage, IUnknown *punkSite)
+{
+    DWORD error = ERROR_NOT_FOUND;
+    WCHAR path[MAX_PATH], clspath[MAX_PATH], *clsid = clspath;
+    clsid += wsprintfW(clspath, L"CLSID\\");
+    HRESULT hr = pszName ? FindExeCplClass(pszName, clsid) : S_OK;
+    if (SUCCEEDED(hr))
+    {
+        // NT6 will execute "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{clsid}[\pszPage]"
+        // but we don't support parsing that so we force the class instead.
+        wsprintfW(path, g_FmtCplParse, L"::", clsid);
+        SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_CLASSNAME | SEE_MASK_FLAG_DDEWAIT };
+        sei.lpFile = path;
+        sei.lpClass = clspath;
+        sei.nShow = SW_SHOW;
+        if (!pszName)
+        {
+            sei.fMask &= ~(SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY | SEE_MASK_INVOKEIDLIST);
+            GetSystemDirectoryW(path, _countof(path));
+            PathAppendW(path, L"control.exe");
+        }
+        error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+    }
+    return HRESULT_FROM_WIN32(error);
+}
+
+HRESULT WINAPI COpenControlPanel::GetPath(LPCWSTR pszName, LPWSTR pszPath, UINT cchPath)
+{
+    WCHAR path[MAX_PATH], clsid[38 + 1];
+    if (!pszName)
+    {
+        lstrcpyW(path, g_FmtCplParse);
+        path[40] = UNICODE_NULL; // Truncate to "::{26EE0668-A00A-44D7-9371-BEB064C98683}"
+    }
+    else
+    {
+        HRESULT hr = FindExeCplClass(pszName, clsid);
+        if (FAILED(hr))
+            return hr;
+        wsprintfW(path, g_FmtCplParse, L"::", clsid);
+    }
+    return StringCchCopyW(pszPath, cchPath, path);
+}
+
+HRESULT WINAPI COpenControlPanel::GetCurrentView(CPVIEW *pView)
+{
+    *pView = CPVIEW_CLASSIC;
+    return S_OK;
+}

@@ -2360,6 +2360,39 @@ interface IExplorerCommandProvider : IUnknown
                     [out, iid_is(riid)] void **ppv);
 };
 
+
+/*****************************************************************************
+ * IOpenControlPanel interface (Vista+)
+ */
+[
+    object,
+    uuid(D11AD862-66DE-4DF4-BF6C-1F5621996AF1),
+    pointer_default(unique)
+]
+interface IOpenControlPanel : IUnknown
+{
+    typedef [v1_enum] enum CPVIEW
+    {
+        CPVIEW_CLASSIC = 0,
+        CPVIEW_CATEGORY = 1,
+        CPVIEW_ALLITEMS = CPVIEW_CLASSIC,
+        CPVIEW_HOME = CPVIEW_CATEGORY
+    } CPVIEW;
+
+    HRESULT Open(
+                    [in, optional] LPCWSTR pszName,
+                    [in, optional] LPCWSTR pszPage,
+                    [in, optional] IUnknown *punkSite);
+    HRESULT GetPath(
+                    [in, optional] LPCWSTR pszName,
+                    [out, string, size_is(cchPath)] LPWSTR pszPath,
+                    [in] UINT cchPath);
+    HRESULT GetCurrentView(
+                    [out] CPVIEW *pView);
+}
+
+
+
 #endif // __REACTOS__
 
 /*****************************************************************************
