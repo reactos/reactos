@@ -403,7 +403,7 @@ VOID FASTCALL
 co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 {
    HDC hDC;
-   HWND hWnd = Wnd->head.h;
+   HWND hWnd = UserHMGetHandle(Wnd);
    HRGN TempRegion = NULL;
 
    Wnd->state &= ~WNDS_PAINTNOTPROCESSED;
@@ -518,7 +518,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 VOID FASTCALL
 co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 {
-   HWND hWnd = Wnd->head.h;
+   HWND hWnd = UserHMGetHandle(Wnd);
 
    if ( Wnd->hrgnUpdate != NULL || Wnd->state & WNDS_INTERNALPAINT )
    {
