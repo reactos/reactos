@@ -94,7 +94,7 @@ BEGIN
     LTEXT "Alegeți o setare tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Setări tipice", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Setări particularizate", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Crează conexiuni de rețea utilizând Clientela de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Crează conexiuni de rețea utilizând Clientul de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
