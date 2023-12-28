@@ -525,13 +525,13 @@ static void CC_PaintCross(CCPRIV *infoPtr)
    HDC hDC;
 #ifdef __REACTOS__
    int w = 8, wc = 6;
-   HRGN hRgn;
 #else
    int w = GetDialogBaseUnits() - 1;
    int wc = GetDialogBaseUnits() * 3 / 4;
 #endif
    RECT rect;
    POINT point, p;
+   HRGN region;
    HPEN hPen;
    int x, y;
 
@@ -540,13 +540,9 @@ static void CC_PaintCross(CCPRIV *infoPtr)
 
    GetClientRect(hwnd, &rect);
    hDC = GetDC(hwnd);
-#ifdef __REACTOS__
-   hRgn = CreateRectRgnIndirect(&rect);
-   SelectClipRgn(hDC, hRgn); /* SelectClipRgn uses a copy of HRGN */
-   DeleteObject(hRgn);
-#else
-   SelectClipRgn( hDC, CreateRectRgnIndirect(&rect));
-#endif
+   region = CreateRectRgnIndirect(&rect);
+   SelectClipRgn(hDC, region);
+   DeleteObject(region);
 
    point.x = ((long)rect.right * (long)x) / (long)MAXHORI;
    point.y = rect.bottom - ((long)rect.bottom * (long)y) / (long)MAXVERT;
