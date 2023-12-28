@@ -239,7 +239,7 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != UserHMGetHandle(Window))
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -276,7 +276,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != UserHMGetHandle(Window))
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
