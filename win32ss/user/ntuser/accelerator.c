@@ -54,7 +54,7 @@ co_IntTranslateAccelerator(
 
     ASSERT_REFS_CO(Window);
 
-    hWnd = Window->head.h;
+    hWnd = UserHMGetHandle(Window);
 
     TRACE("IntTranslateAccelerator(hwnd %p, message %x, wParam %x, lParam %x, fVirt 0x%x, key %x, cmd %x)\n",
           hWnd, pMsg->message, pMsg->wParam, pMsg->lParam, pAccel->fVirt, pAccel->key, pAccel->cmd);
@@ -104,7 +104,7 @@ co_IntTranslateAccelerator(
     if (MenuObject)
     {
         if ((MENU_FindItem (&MenuObject, &nPos, MF_BYPOSITION)))
-            hSubMenu = MenuObject->head.h;
+            hSubMenu = UserHMGetHandle(MenuObject);
         else
             hMenu = NULL;
     }
@@ -118,7 +118,7 @@ co_IntTranslateAccelerator(
         if (MenuObject)
         {
             if ((MENU_FindItem (&MenuObject, &nPos, MF_BYPOSITION)))
-                hSubMenu = MenuObject->head.h;
+                hSubMenu = UserHMGetHandle(MenuObject);
             else
                 hMenu = NULL;
         }
@@ -331,7 +331,7 @@ UserDestroyAccelTable(PVOID Object)
         Accel->Table = NULL;
     }
 
-    UserDeleteObject(Accel->head.h, TYPE_ACCELTABLE);
+    UserDeleteObject(UserHMGetHandle(Accel), TYPE_ACCELTABLE);
     return TRUE;
 }
 
