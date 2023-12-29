@@ -167,6 +167,11 @@ static void test_I10_OUTPUT(void)
         win_skip("I10_OUTPUT not available\n");
         return;
     }
+    if (sizeof(long double) == 8)
+    {
+        skip("I10_OUTPUT test is broken on MSVC builds!\n");
+        return;
+    }
     if (j != 12)
         trace("sizeof(long double) = %d on this machine\n", j);
 

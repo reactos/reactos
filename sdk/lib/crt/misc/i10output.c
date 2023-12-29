@@ -38,7 +38,7 @@ int CDECL MSVCRT_I10_OUTPUT(_LDOUBLE ld80, int prec, int flag, struct _I10_OUTPU
     char buf[I10_OUTPUT_MAX_PREC+9]; /* 9 = strlen("0.e+0000") + '\0' */
     char *p;
 
-    memcpy(&ld, &ld80, 10);
+    memcpy(&ld, &ld80, min(sizeof(ld80), sizeof(ld))); // This is broken on MSVC builds!
     d = ld;
     TRACE("(%lf %d %x %p)\n", d, prec, flag, data);
 
