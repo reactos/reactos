@@ -4927,7 +4927,7 @@ BOOL WINAPI GetMonitorInfoW(_In_ HMONITOR, _Inout_ LPMONITORINFO);
 #define USER_DEFAULT_SCREEN_DPI 96
 #endif /*_WIN32_WINNT >= 0x0600*/
 
-#if (_WIN32_WINNT >= 0x0605)
+#if (_WIN32_WINNT >= 0x0605) /* MSFT winuser.h guards against the same version. */
 UINT WINAPI GetDpiForWindow(_In_ HWND hwnd);
 #endif /*_WIN32_WINNT >= 0x0605*/
 
