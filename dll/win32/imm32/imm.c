@@ -834,7 +834,6 @@ Fail:
     return FALSE;
 }
 
-// Win: InternalImmLockIMC
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
@@ -846,7 +845,7 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     PIMEDPI pImeDpi = NULL;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
         return NULL;
 
     RtlEnterCriticalSection(&pClientImc->cs);
@@ -946,7 +945,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
         return NULL;
 
     pIMC = ValidateHandle(hImc, TYPE_INPUTCONTEXT);
-    if (IS_NULL_UNEXPECTEDLY(pIMC) || !Imm32CheckImcProcess(pIMC))
+    if (!pIMC || !Imm32CheckImcProcess(pIMC))
         return NULL;
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
