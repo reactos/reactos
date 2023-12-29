@@ -162,7 +162,7 @@ VOID WINAPI MyFree(LPVOID lpMem)
  */
 LPVOID WINAPI MyMalloc(DWORD dwSize)
 {
-    TRACE("%lu\n", dwSize);
+    TRACE("%u\n", dwSize);
     return HeapAlloc(GetProcessHeap(), 0, dwSize);
 }
 
@@ -187,7 +187,7 @@ LPVOID WINAPI MyMalloc(DWORD dwSize)
  */
 LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 {
-    TRACE("%p %lu\n", lpSrc, dwSize);
+    TRACE("%p %u\n", lpSrc, dwSize);
 
     if (lpSrc == NULL)
         return HeapAlloc(GetProcessHeap(), 0, dwSize);
