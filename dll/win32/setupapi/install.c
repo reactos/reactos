@@ -1470,8 +1470,16 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
  */
 void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show )
 {
+#ifdef __REACTOS__
+    /* We use SetupDiGetActualSectionToInstallW() instead of hardcoded
+     * nt_platformW values like Wine. However, define a dummy nt_platformW
+     * here for a max size estimate needed for the section buffer below.
+     * Should be large enough for e.g. ".ntamd64" or ".ntarm64". */
+    static const WCHAR nt_platformW[] = L".ntXXXXX";
+#endif
+
     BOOL ret = FALSE;
-    WCHAR *s, *path, section[MAX_PATH];
+    WCHAR *s, *path, section[MAX_PATH + sizeof(nt_platformW)/sizeof(WCHAR)];
     void *callback_context = NULL;
     DWORD SectionNameLength;
     UINT mode;
