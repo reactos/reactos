@@ -879,7 +879,7 @@ co_IntSetForegroundMessageQueue(
               }
               else
               {
-                 //ERR("SFWAMQ : SAW I pti 0x%p hWnd 0x%p\n", ptiChg, UserHMGetHandle(Wnd));
+                 //ERR("SFWAMQ : SAW I pti 0x%p hWnd 0x%p\n", ptiChg, Wnd ? UserHMGetHandle(Wnd) : NULL);
                  Ret = co_IntSetActiveWindow(Wnd, MouseActivate, TRUE/*Type*/, FALSE);
                  //if (!Ret) ERR("SFWAMQ : ISAW : return error\n");
                  return Ret;
@@ -1287,7 +1287,7 @@ UserSetActiveWindow( _In_opt_ PWND Wnd )
       !(gpqForegroundPrev->spwndActivePrev->state2 & WNDS2_BOTTOMMOST) &&
        (Wnd = VerifyWnd(gpqForegroundPrev->spwndActivePrev)) != NULL )
   {
-     TRACE("USAW:PAW hwnd %p\n", Wnd ? UserHMGetHandle(Wnd) : NULL);
+     TRACE("USAW:PAW hwnd %p\n", UserHMGetHandle(Wnd));
      return IntUserSetActiveWindow(Wnd, FALSE, TRUE, FALSE);
   }
 
@@ -1295,7 +1295,7 @@ UserSetActiveWindow( _In_opt_ PWND Wnd )
   if ( pti->MessageQueue->spwndActive &&
       (Wnd = VerifyWnd(pti->MessageQueue->spwndActive)) != NULL )
   {
-      //ERR("USAW:AOWM hwnd %p\n", Wnd ? UserHMGetHandle(Wnd) : NULL);
+      //ERR("USAW:AOWM hwnd %p\n", UserHMGetHandle(Wnd));
       if (!ActivateOtherWindowMin(Wnd))
       {
          // Okay, now go find someone else to play with!
