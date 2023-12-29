@@ -20,10 +20,16 @@
 
 #include "setupapi_private.h"
 
+
+#define _PSETUP(func)   pSetup ## func
+
+#define RegistryDelnode                 _PSETUP(RegistryDelnode)
+
+
 /***********************************************************************
- *		pSetupRegistryDelnode(SETUPAPI.@)
+ *		RegistryDelnode(SETUPAPI.@)
  */
-BOOL WINAPI pSetupRegistryDelnode(DWORD x, DWORD y)
+BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
 {
     FIXME("%08x %08x: stub\n", x, y);
     return FALSE;
