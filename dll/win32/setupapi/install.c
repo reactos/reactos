@@ -2457,6 +2457,7 @@ BOOL WINAPI SetupCopyOEMInfW(
                                 debugstr_w(SourceInfFileName), debugstr_w(pFileName));
                             AlreadyExists = TRUE;
                         }
+                        CloseHandle(dest_file);
                     }
                 } while (!AlreadyExists && FindNextFileW(find_handle, &find_data));
             }
