@@ -143,7 +143,6 @@ FreeFunctionPointer(
  */
 VOID WINAPI MyFree(LPVOID lpMem)
 {
-    TRACE("%p\n", lpMem);
     HeapFree(GetProcessHeap(), 0, lpMem);
 }
 
@@ -162,7 +161,6 @@ VOID WINAPI MyFree(LPVOID lpMem)
  */
 LPVOID WINAPI MyMalloc(DWORD dwSize)
 {
-    TRACE("%u\n", dwSize);
     return HeapAlloc(GetProcessHeap(), 0, dwSize);
 }
 
@@ -187,8 +185,6 @@ LPVOID WINAPI MyMalloc(DWORD dwSize)
  */
 LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 {
-    TRACE("%p %u\n", lpSrc, dwSize);
-
     if (lpSrc == NULL)
         return HeapAlloc(GetProcessHeap(), 0, dwSize);
 
@@ -214,8 +210,6 @@ LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc)
 {
     LPWSTR lpDst;
-
-    TRACE("%s\n", debugstr_w(lpSrc));
 
     lpDst = MyMalloc((lstrlenW(lpSrc) + 1) * sizeof(WCHAR));
     if (lpDst == NULL)
@@ -299,8 +293,6 @@ LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
     LPWSTR lpUnicodeStr;
     int nLength;
 
-    TRACE("%s %d\n", debugstr_a(lpMultiByteStr), uCodePage);
-
     nLength = MultiByteToWideChar(uCodePage, 0, lpMultiByteStr,
                                   -1, NULL, 0);
     if (nLength == 0)
@@ -344,8 +336,6 @@ LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage)
 {
     LPSTR lpMultiByteStr;
     int nLength;
-
-    TRACE("%s %d\n", debugstr_w(lpUnicodeStr), uCodePage);
 
     nLength = WideCharToMultiByte(uCodePage, 0, lpUnicodeStr, -1,
                                   NULL, 0, NULL, NULL);
