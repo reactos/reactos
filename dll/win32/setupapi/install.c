@@ -2343,14 +2343,14 @@ BOOL WINAPI SetupCopyOEMInfW(
     }
     else
     {
-        HANDLE hSearch = INVALID_HANDLE_VALUE;
-        WIN32_FIND_DATAW FindFileData;
+        HANDLE find_handle = INVALID_HANDLE_VALUE;
+        WIN32_FIND_DATAW find_data;
         BOOL AlreadyExists;
         DWORD NextFreeNumber = 0;
         SIZE_T len;
         LPWSTR pFullFileName = NULL;
         LPWSTR pFileName; /* Pointer into pFullFileName buffer */
-        HANDLE hSourceFile = INVALID_HANDLE_VALUE;
+        HANDLE source_file = INVALID_HANDLE_VALUE;
 
         if (OEMSourceMediaType == SPOST_PATH || OEMSourceMediaType == SPOST_URL)
             FIXME("OEMSourceMediaType 0x%lx ignored\n", OEMSourceMediaType);
@@ -2368,7 +2368,7 @@ BOOL WINAPI SetupCopyOEMInfW(
                 return FALSE;
             }
             GetFullPathNameW(SourceInfFileName, len, path, NULL);
-            hSourceFile = CreateFileW(
+            source_file = CreateFileW(
                 path, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 NULL, OPEN_EXISTING, 0, NULL);
@@ -2390,22 +2390,22 @@ BOOL WINAPI SetupCopyOEMInfW(
             p = path + strlenW(path);
             strcpyW(p, Inf);
             strcatW(p, SourceInfFileName);
-            hSourceFile = CreateFileW(
+            source_file = CreateFileW(
                 path, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 NULL, OPEN_EXISTING, 0, NULL);
-            if (hSourceFile == INVALID_HANDLE_VALUE)
+            if (source_file == INVALID_HANDLE_VALUE)
             {
                 strcpyW(p, System32);
                 strcatW(p, SourceInfFileName);
-                hSourceFile = CreateFileW(
+                source_file = CreateFileW(
                     path, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                     NULL, OPEN_EXISTING, 0, NULL);
             }
             MyFree(path);
         }
-        if (hSourceFile == INVALID_HANDLE_VALUE)
+        if (source_file == INVALID_HANDLE_VALUE)
         {
             SetLastError(ERROR_FILE_NOT_FOUND);
             goto cleanup;
@@ -2430,38 +2430,38 @@ BOOL WINAPI SetupCopyOEMInfW(
         /* Search if the specified .inf file already exists in %WINDIR%\Inf */
         AlreadyExists = FALSE;
         strcpyW(pFileName, OemFileMask);
-        hSearch = FindFirstFileW(pFullFileName, &FindFileData);
-        if (hSearch != INVALID_HANDLE_VALUE)
+        find_handle = FindFirstFileW(pFullFileName, &find_data);
+        if (find_handle != INVALID_HANDLE_VALUE)
         {
-            LARGE_INTEGER SourceFileSize;
+            LARGE_INTEGER source_file_size;
 
-            if (GetFileSizeEx(hSourceFile, &SourceFileSize))
+            if (GetFileSizeEx(source_file, &source_file_size))
             {
                 do
                 {
-                    LARGE_INTEGER DestFileSize;
-                    HANDLE hDestFile;
+                    LARGE_INTEGER dest_file_size;
+                    HANDLE dest_file;
 
-                    strcpyW(pFileName, FindFileData.cFileName);
-                    hDestFile = CreateFileW(
+                    strcpyW(pFileName, find_data.cFileName);
+                    dest_file = CreateFileW(
                         pFullFileName, FILE_READ_DATA | FILE_READ_ATTRIBUTES,
                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                         NULL, OPEN_EXISTING, 0, NULL);
-                    if (hDestFile != INVALID_HANDLE_VALUE)
+                    if (dest_file != INVALID_HANDLE_VALUE)
                     {
-                        if (GetFileSizeEx(hDestFile, &DestFileSize)
-                         && DestFileSize.QuadPart == SourceFileSize.QuadPart
-                         && !compare_files(hSourceFile, hDestFile))
+                        if (GetFileSizeEx(dest_file, &dest_file_size)
+                         && dest_file_size.QuadPart == source_file_size.QuadPart
+                         && !compare_files(source_file, dest_file))
                         {
                             TRACE("%s already exists as %s\n",
                                 debugstr_w(SourceInfFileName), debugstr_w(pFileName));
                             AlreadyExists = TRUE;
                         }
                     }
-                } while (!AlreadyExists && FindNextFileW(hSearch, &FindFileData));
+                } while (!AlreadyExists && FindNextFileW(find_handle, &find_data));
             }
-            FindClose(hSearch);
-            hSearch = INVALID_HANDLE_VALUE;
+            FindClose(find_handle);
+            find_handle = INVALID_HANDLE_VALUE;
         }
 
         if (!AlreadyExists && CopyStyle & SP_COPY_REPLACEONLY)
@@ -2490,8 +2490,8 @@ BOOL WINAPI SetupCopyOEMInfW(
 
         /* Search the number to give to OEM??.INF */
         strcpyW(pFileName, OemFileMask);
-        hSearch = FindFirstFileW(pFullFileName, &FindFileData);
-        if (hSearch == INVALID_HANDLE_VALUE)
+        find_handle = FindFirstFileW(pFullFileName, &find_data);
+        if (find_handle == INVALID_HANDLE_VALUE)
         {
             if (GetLastError() != ERROR_FILE_NOT_FOUND)
                 goto cleanup;
@@ -2501,13 +2501,13 @@ BOOL WINAPI SetupCopyOEMInfW(
             do
             {
                 DWORD CurrentNumber;
-                if (swscanf(FindFileData.cFileName, OemFileSpecification, &CurrentNumber) == 1
+                if (swscanf(find_data.cFileName, OemFileSpecification, &CurrentNumber) == 1
                     && CurrentNumber <= OEM_INDEX_LIMIT)
                 {
                     if (CurrentNumber >= NextFreeNumber)
                         NextFreeNumber = CurrentNumber + 1;
                 }
-            } while (FindNextFileW(hSearch, &FindFileData));
+            } while (FindNextFileW(find_handle, &find_data));
         }
 
         if (NextFreeNumber > OEM_INDEX_LIMIT)
@@ -2557,10 +2557,10 @@ BOOL WINAPI SetupCopyOEMInfW(
         ret = TRUE;
 
 cleanup:
-        if (hSourceFile != INVALID_HANDLE_VALUE)
-            CloseHandle(hSourceFile);
-        if (hSearch != INVALID_HANDLE_VALUE)
-            FindClose(hSearch);
+        if (source_file != INVALID_HANDLE_VALUE)
+            CloseHandle(source_file);
+        if (find_handle != INVALID_HANDLE_VALUE)
+            FindClose(find_handle);
         MyFree(pFullFileName);
     }
 
