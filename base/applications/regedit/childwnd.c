@@ -272,8 +272,8 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
             EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
-                _wcsicmp(rootName, L"HKEY_USERS") != 0)
+            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") == 0 ||
+                _wcsicmp(rootName, L"HKEY_USERS") == 0)
             {
                 /*
                  * enable the unload menu item if at the root, otherwise
