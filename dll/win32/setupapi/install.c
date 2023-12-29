@@ -2351,6 +2351,10 @@ BOOL WINAPI SetupCopyOEMInfW(
         LPWSTR pFullFileName = NULL;
         LPWSTR pFileName; /* Pointer into pFullFileName buffer */
         HANDLE source_file = INVALID_HANDLE_VALUE;
+        WCHAR catalog_file[MAX_PATH], *p;
+        static const WCHAR wszVersion[] = { 'V','e','r','s','i','o','n',0 };
+        static const WCHAR wszCatalogFile[] = { 'C','a','t','a','l','o','g','F','i','l','e',0 };
+        HINF hinf;
 
         if (OEMSourceMediaType == SPOST_PATH || OEMSourceMediaType == SPOST_URL)
             FIXME("OEMSourceMediaType 0x%lx ignored\n", OEMSourceMediaType);
@@ -2521,6 +2525,25 @@ BOOL WINAPI SetupCopyOEMInfW(
         /* Create the full path: %WINDIR%\Inf\OEM{XXXXX}.inf */
         sprintfW(pFileName, OemFileSpecification, NextFreeNumber);
         TRACE("Next available file is %s\n", debugstr_w(pFileName));
+
+        hinf = SetupOpenInfFileW( SourceInfFileName, NULL, INF_STYLE_WIN4, NULL );
+        if (hinf == INVALID_HANDLE_VALUE) goto cleanup;
+
+        if (SetupGetLineTextW( NULL, hinf, wszVersion, wszCatalogFile, catalog_file,
+                               sizeof(catalog_file)/sizeof(catalog_file[0]), NULL ))
+        {
+            WCHAR source_cat[MAX_PATH];
+            strcpyW( source_cat, SourceInfFileName );
+
+            p = strrchrW( source_cat, '\\' );
+            if (p) p++;
+            else p = source_cat;
+
+            strcpyW( p, catalog_file );
+
+            FIXME("install catalog file %s\n", debugstr_w( source_cat ));
+        }
+        SetupCloseInfFile( hinf );
 
         if (!CopyFileW(SourceInfFileName, pFullFileName, TRUE))
         {
