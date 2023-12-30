@@ -1,8 +1,9 @@
 /*
- * FILE:       dll/shellext/deskmon/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-09-02  initial translation
+ * PROJECT:     ReactOS Advanced Display Monitor Properties
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,7 +18,7 @@ BEGIN
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
     PUSHBUTTON "&Proprietăți…", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Configurație ecran", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    GROUPBOX "Setări pentru ecran", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "&Rata de împrospătare:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
     AUTOCHECKBOX "Asc&unde modurile incompatibile", IDC_PRUNINGCHECK, 13, 106, 225, 10
@@ -25,6 +26,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Utilizează configurația fizică implicită"
+    IDS_USEDEFFRQUENCY "Folosește setările hardware implicite"
     IDS_FREQFMT "%u Hertz"
 END
