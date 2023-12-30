@@ -538,6 +538,16 @@ ScsiPortDeviceControl(
             status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        case IOCTL_ATA_PASS_THROUGH:
+            DPRINT1("IOCTL_ATA_PASS_THROUGH unimplemented!\n");
+            status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_ATA_PASS_THROUGH_DIRECT:
+            DPRINT1("IOCTL_ATA_PASS_THROUGH_DIRECT unimplemented!\n");
+            status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         default:
             DPRINT1("unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
             status = STATUS_NOT_SUPPORTED;
