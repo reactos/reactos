@@ -112,7 +112,7 @@ BEGIN
     GROUPBOX "Opțiuni administrative", -1, 6, 169, 234, 47
     AUTOCHECKBOX "Aplică preferințele de accesibilitate la a&utentificare", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "Instituie &configurația curentă ca implicită pentru noii utilizatori", IDC_ADMIN_USERS_BOX,
+    AUTOCHECKBOX "Aplică &toate setările implicite pentru noii utilizatori", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
 END
 
