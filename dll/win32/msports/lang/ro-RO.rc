@@ -1,14 +1,16 @@
-/*
- * FILE:       dll/win32/msports/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Ports Class Installer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
+ 
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_SERIALSETTINGS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurația portului"
+CAPTION "Setările portului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     RTEXT "&Biți pe secundă:", -1, 6, 19, 130, 8, WS_GROUP
@@ -27,7 +29,7 @@ END
 
 IDD_PARALLELSETTINGS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurația portului"
+CAPTION "Setările portului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Metoda de filtrare a resurselor", -1, 6, 6, 237, 75
