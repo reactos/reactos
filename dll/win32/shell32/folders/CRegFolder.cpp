@@ -669,7 +669,7 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
             }
         }
 
-        if (SUCCEEDED(hr) && pathlen + 2 + 38 < cchPath)
+        if (SUCCEEDED(hr) && pathlen + 2 + 38 + 1 < cchPath)
         {
             /* parsing name like ::{...} */
             pItemName[0] = L':';
