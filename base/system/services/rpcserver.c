@@ -4,7 +4,7 @@
  * FILE:        base/system/services/rpcserver.c
  * PURPOSE:     RPC server interface for the advapi32 calls
  * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
- *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006-2007 HervÃ© Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  */
 
@@ -6711,11 +6711,42 @@ RSendPnPMessage(
 /* Function 53 */
 DWORD
 WINAPI
-RValidatePnPService(
-    handle_t BindingHandle)  /* FIXME */
+RI_ScValidatePnPService(
+    _In_ SC_RPC_HANDLE hSCManager,
+    _In_ LPWSTR pszServiceName,
+    _Out_ RPC_SERVICE_STATUS_HANDLE *phServiceStatus)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PMANAGER_HANDLE hManager;
+    PSERVICE pService;
+
+    DPRINT("RI_ScValidatePnPService(%p %S %p)\n", hSCManager, pszServiceName, phServiceStatus);
+
+    /* Validate handle */
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
+    {
+        DPRINT1("Invalid handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: should check whether client is local */
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_CONNECT))
+    {
+        DPRINT1("No SC_MANAGER_CONNECT access!\n");
+        return ERROR_ACCESS_DENIED;
+    }
+
+    pService = ScmGetServiceEntryByName(pszServiceName);
+    DPRINT("pService: %p\n", pService);
+    if (pService == NULL)
+        return ERROR_SERVICE_DOES_NOT_EXIST;
+
+    *phServiceStatus = (RPC_SERVICE_STATUS_HANDLE)pService;
+
+    return ERROR_SUCCESS;
 }
 
 
