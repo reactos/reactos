@@ -268,6 +268,6 @@ BEGIN
     IDS_PRINTRES "%d x %d pixeli/cm"
     IDS_CANTPASTE "Nu s-a putut lipi din clipboard. Formatul de date este fie incorect, fie nesuportat."
     IDS_SAVEERROR "Nu s-a putut salva imaginea bitmap („hartă de biți”) în fișierul:\n\n%s"
-    IDS_CANTSENDMAIL "Nu s-a putut trimite o scrisoare."
-    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
+    IDS_CANTSENDMAIL "Nu s-a putut trimite un e-mail."
+    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sunteți sigur că veți continua?"
 END
