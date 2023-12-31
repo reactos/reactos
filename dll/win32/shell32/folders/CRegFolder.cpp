@@ -654,9 +654,11 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         PWCHAR pItemName = pszPath; // GET_SHGDN_RELATION(dwFlags) == SHGDN_INFOLDER
         if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
         {
-            if (SUCCEEDED(hr = StringCchCopyW(pszPath, cchPath, m_rootPath)))
+            hr = StringCchCopyW(pszPath, cchPath, m_rootPath);
+            if (SUCCEEDED(hr))
             {
-                pItemName = &pszPath[pathlen = wcslen(pszPath)];
+                pathlen = wcslen(pszPath);
+                pItemName = &pszPath[pathlen];
                 if (pathlen)
                 {
                     if (++pathlen < cchPath)
@@ -670,9 +672,9 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         if (SUCCEEDED(hr) && pathlen + 2 + 38 < cchPath)
         {
             /* parsing name like ::{...} */
-            pItemName[0] = ':';
-            pItemName[1] = ':';
-            SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
+            pItemName[0] = L':';
+            pItemName[1] = L':';
+            SHELL32_GUIDToStringW(*clsid, &pItemName[2]);
         }
         else
         {
@@ -682,7 +684,7 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
     else
     {
         /* user friendly name */
-        if (!HCR_GetClassNameW (*clsid, pszPath, cchPath))
+        if (!HCR_GetClassNameW(*clsid, pszPath, cchPath))
             hr = E_FAIL;
     }
 
