@@ -778,7 +778,32 @@ HRESULT WINAPI CCPLItemMenu::HandleMenuMsg(
 * COpenControlPanel
 */
 
-static LPCWSTR g_FmtCplParse = L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\%s%s";
+static HRESULT GetParsingName(PCIDLIST_ABSOLUTE pidl, PWSTR*Name)
+{
+    PIDLIST_ABSOLUTE pidlFree = NULL;
+    if (IS_INTRESOURCE(pidl))
+    {
+        HRESULT hr = SHGetSpecialFolderLocation(NULL, (UINT)(SIZE_T)pidl, &pidlFree);
+        if (FAILED(hr))
+            return hr;
+        pidl = pidlFree;
+    }
+    HRESULT hr = SHGetNameFromIDList(pidl, SIGDN_DESKTOPABSOLUTEPARSING, Name);
+    ILFree(pidlFree);
+    return hr;
+}
+
+static HRESULT CreateCplAbsoluteParsingPath(LPCWSTR Prefix, LPCWSTR InFolderParse, PWSTR Buf, UINT cchBuf)
+{
+    PWSTR cpfolder;
+    HRESULT hr = GetParsingName((PCIDLIST_ABSOLUTE)CSIDL_CONTROLS, &cpfolder);
+    if (SUCCEEDED(hr))
+    {
+        hr = StringCchPrintfW(Buf, cchBuf, L"%s\\%s%s", cpfolder, Prefix, InFolderParse);
+        SHFree(cpfolder);
+    }
+    return hr;
+}
 
 static HRESULT FindExeCplClass(LPCWSTR Canonical, HKEY hKey, BOOL Wow64, LPWSTR clsid)
 {
@@ -828,46 +853,60 @@ static HRESULT FindExeCplClass(LPCWSTR Canonical, LPWSTR clsid)
 
 HRESULT WINAPI COpenControlPanel::Open(LPCWSTR pszName, LPCWSTR pszPage, IUnknown *punkSite)
 {
-    DWORD error = ERROR_NOT_FOUND;
-    WCHAR path[MAX_PATH], clspath[MAX_PATH], *clsid = clspath;
-    clsid += wsprintfW(clspath, L"CLSID\\");
-    HRESULT hr = pszName ? FindExeCplClass(pszName, clsid) : S_OK;
+    WCHAR path[MAX_PATH], clspath[MAX_PATH];
+    HRESULT hr = S_OK;
+    SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_FLAG_DDEWAIT };
+    sei.lpFile = path;
+    sei.nShow = SW_SHOW;
+    if (!pszName)
+    {
+        GetSystemDirectoryW(path, _countof(path));
+        PathAppendW(path, L"control.exe");
+    }
+    else
+    {
+        LPWSTR clsid = clspath + wsprintfW(clspath, L"CLSID\\");
+        if (SUCCEEDED(hr = FindExeCplClass(pszName, clsid)))
+        {
+            if (SUCCEEDED(hr = CreateCplAbsoluteParsingPath(L"::", clsid, path, _countof(path))))
+            {
+                // NT6 will execute "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{clsid}[\pszPage]"
+                // but we don't support parsing that so we force the class instead.
+                sei.fMask |= SEE_MASK_CLASSNAME;
+                sei.lpClass = clspath;
+            }
+        }
+    }
+
     if (SUCCEEDED(hr))
     {
-        // NT6 will execute "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{clsid}[\pszPage]"
-        // but we don't support parsing that so we force the class instead.
-        wsprintfW(path, g_FmtCplParse, L"::", clsid);
-        SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_CLASSNAME | SEE_MASK_FLAG_DDEWAIT };
-        sei.lpFile = path;
-        sei.lpClass = clspath;
-        sei.nShow = SW_SHOW;
-        if (!pszName)
-        {
-            sei.fMask &= ~(SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY | SEE_MASK_INVOKEIDLIST);
-            GetSystemDirectoryW(path, _countof(path));
-            PathAppendW(path, L"control.exe");
-        }
-        error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+        DWORD error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+        hr = HRESULT_FROM_WIN32(error);
     }
-    return HRESULT_FROM_WIN32(error);
+    return hr;
 }
 
 HRESULT WINAPI COpenControlPanel::GetPath(LPCWSTR pszName, LPWSTR pszPath, UINT cchPath)
 {
-    WCHAR path[MAX_PATH], clsid[38 + 1];
+    HRESULT hr;
     if (!pszName)
     {
-        lstrcpyW(path, g_FmtCplParse);
-        path[40] = UNICODE_NULL; // Truncate to "::{26EE0668-A00A-44D7-9371-BEB064C98683}"
+        PWSTR cpfolder;
+        if (SUCCEEDED(hr = GetParsingName((PCIDLIST_ABSOLUTE)CSIDL_CONTROLS, &cpfolder)))
+        {
+            hr = StringCchCopyW(pszPath, cchPath, cpfolder);
+            SHFree(cpfolder);
+        }
     }
     else
     {
-        HRESULT hr = FindExeCplClass(pszName, clsid);
-        if (FAILED(hr))
-            return hr;
-        wsprintfW(path, g_FmtCplParse, L"::", clsid);
+        WCHAR clsid[38 + 1];
+        if (SUCCEEDED(hr = FindExeCplClass(pszName, clsid)))
+        {
+            hr = CreateCplAbsoluteParsingPath(L"::", clsid, pszPath, cchPath);
+        }
     }
-    return StringCchCopyW(pszPath, cchPath, path);
+    return hr;
 }
 
 HRESULT WINAPI COpenControlPanel::GetCurrentView(CPVIEW *pView)
