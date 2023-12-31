@@ -641,7 +641,8 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
     }
 
     /* Allocate the buffer for the result */
-    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+    SIZE_T cchPath = MAX_PATH + 1;
+    LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc(cchPath * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
 
@@ -649,18 +650,39 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
     {
-        wcscpy(pszPath, m_rootPath);
-        PWCHAR pItemName = &pszPath[wcslen(pszPath)];
+        SIZE_T pathlen = 0;
+        PWCHAR pItemName = pszPath; // GET_SHGDN_RELATION(dwFlags) == SHGDN_INFOLDER
+        if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
+        {
+            if (SUCCEEDED(hr = StringCchCopyW(pszPath, cchPath, m_rootPath)))
+            {
+                pItemName = &pszPath[pathlen = wcslen(pszPath)];
+                if (pathlen)
+                {
+                    if (++pathlen < cchPath)
+                        *pItemName++ = L'\\';
+                    else
+                        hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+                }
+            }
+        }
 
-        /* parsing name like ::{...} */
-        pItemName[0] = ':';
-        pItemName[1] = ':';
-        SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
+        if (SUCCEEDED(hr) && pathlen + 2 + 38 < cchPath)
+        {
+            /* parsing name like ::{...} */
+            pItemName[0] = ':';
+            pItemName[1] = ':';
+            SHELL32_GUIDToStringW (*clsid, &pItemName[2]);
+        }
+        else
+        {
+            hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        }
     }
     else
     {
         /* user friendly name */
-        if (!HCR_GetClassNameW (*clsid, pszPath, MAX_PATH))
+        if (!HCR_GetClassNameW (*clsid, pszPath, cchPath))
             hr = E_FAIL;
     }
 
