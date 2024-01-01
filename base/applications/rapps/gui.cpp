@@ -270,14 +270,12 @@ CMainWindow::RemoveSelectedAppFromRegistry()
     if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) || !szMsgTitle.LoadStringW(IDS_INFORMATION))
         return FALSE;
 
-    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-    {
-        CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
-        if (!InstalledApp)
-            return FALSE;
+    CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
+    if (!InstalledApp)
+        return FALSE;
 
+    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
         return m_Db->RemoveInstalledAppFromRegistry(InstalledApp);
-    }
 
     return FALSE;
 }
