@@ -532,6 +532,13 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         paint_button( hWnd, btn_type, ODA_FOCUS );
         if (style & BS_NOTIFY)
             BUTTON_NOTIFY_PARENT(hWnd, BN_SETFOCUS);
+#ifdef __REACTOS__
+        if (((btn_type == BS_RADIOBUTTON) || (btn_type == BS_AUTORADIOBUTTON)) &&
+            !(get_button_state(hWnd) & BST_CHECKED))
+        {
+            BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+        }
+#endif
         break;
 
     case WM_KILLFOCUS:
