@@ -282,6 +282,7 @@
 279 stdcall GetDlgItemTextA(long long ptr long)
 280 stdcall GetDlgItemTextW(long long ptr long)
 281 stdcall GetDoubleClickTime() NtUserGetDoubleClickTime
+@ stdcall -version=0xA00+ GetDpiForSystem()
 @ stdcall -version=0xA00+ GetDpiForWindow(ptr)
 282 stdcall GetFocus()
 283 stdcall GetForegroundWindow() NtUserGetForegroundWindow

@@ -8,8 +8,16 @@
 /*
  * @stub
 */
+UINT WINAPI GetDpiForSystem()
+{
+    return USER_DEFAULT_SCREEN_DPI;
+}
+
+/*
+ * @stub
+*/
 UINT WINAPI GetDpiForWindow(_In_ HWND hWnd)
 {
     UNREFERENCED_PARAMETER(hWnd);
-    return USER_DEFAULT_SCREEN_DPI;
+    return GetDpiForSystem();
 }
