@@ -117,6 +117,7 @@ SetupDiDestroyClassImageList(
     return ret;
 }
 
+// SETUPDI_EnumerateDevices
 LONG
 SETUP_CreateDevicesList(
     IN OUT struct DeviceInfoSet *list,

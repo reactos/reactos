@@ -308,6 +308,7 @@ CreateDeviceInfo(
     IN LPCGUID pClassGuid,
     OUT struct DeviceInfo **pDeviceInfo);
 
+// SETUPDI_EnumerateDevices
 LONG
 SETUP_CreateDevicesList(
     IN OUT struct DeviceInfoSet *list,
@@ -343,6 +344,7 @@ BOOL
 DestroyDeviceInterface(
     struct DeviceInterface* deviceInterface);
 
+// SETUPDI_EnumerateInterfaces
 LONG
 SETUP_CreateInterfaceList(
     struct DeviceInfoSet *list,

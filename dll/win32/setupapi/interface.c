@@ -64,6 +64,7 @@ DestroyDeviceInterface(
     return HeapFree(GetProcessHeap(), 0, deviceInterface);
 }
 
+// SETUPDI_EnumerateInterfaces
 LONG
 SETUP_CreateInterfaceList(
     struct DeviceInfoSet *list,
