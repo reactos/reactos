@@ -8,6 +8,11 @@ include_directories(
 list(APPEND SOURCE
     dpi.c)
 
+add_library(user32_vista_static
+    ${SOURCE})
+target_link_libraries(user32_vista_static win32ksys)
+add_dependencies(user32_vista_static psdk)
+
 add_library(user32_vista MODULE
     ${SOURCE}
     user32_vista.rc
