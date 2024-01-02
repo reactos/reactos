@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -29,19 +29,19 @@ Pentru a destitui un alias:\n\
   ALIAS da=\n"
     STRING_BEEP_HELP "Semnalizare sonoră utilizând difuzorul intern.\n\nBEEP\n"
     STRING_CALL_HELP "Apelează un program de comenzi din interiorul unui alt program de comenzi.\n\n\
-CALL [unitate:][cale]fișier [argument]\n\n\
+CALL [disc:][cale]fișier [argument]\n\n\
   argument      Informația necesară programului de comenzi apelat,\n\
                 transmis la linia de comandă.\n"
     STRING_CD_HELP "Schimbă directorul curent sau afișează numele acestuia.\n\n\
-CHDIR [/D][unitate:][cale]\n\
+CHDIR [/D][disc:][cale]\n\
 CHDIR[..|.]\n\
-CD [/D][unitate:][cale]\n\
+CD [/D][disc:][cale]\n\
 CD[..|.]\n\n\
   ..   directorul părinte\n\
   .    directorul curent\n\
-  /D   Schimbă odată cu directorul și unitatea curentă.\n\n\
-Tastați CD fără argumente pentru a afișa unitatea și directorul curent.\n\
-Tastați CD unitate: pentru a afișa conținutul directorului curent\n\
+  /D   Schimbă odată cu directorul și discul curent.\n\n\
+Tastați CD fără argumente pentru a afișa discul și directorul curent.\n\
+Tastați CD disc: pentru a afișa conținutul directorului curent\n\
 al unității specificate.\n"
     STRING_CHOICE_HELP "Cere utilizatorului să aleagă una din mai multe opțiuni.\n\n\
 CHOICE  [/C[:]opțiuni][/N][/S][/T[:]implicit,nn][text]\n\n\
@@ -63,8 +63,8 @@ ERRORLEVEL este calibrat pe deplasamentul tastei opțiunii alese de utilizator.\
 CMD [/[C|K] comandă][/P][/Q][/T:culori]\n\n\
   /C comandă  Execută comanda specificată, apoi închide instanța.\n\
   /K comandă  Execută comanda specificată menținând apoi instanța deschisă.\n\
-  /P          Permanentizează CMD și execută «autoexec.bat»\n\
-              (nu poate fi închis).\n\
+  /P          CMD devine permanent și execută «autoexec.bat»\n\
+              (nu se poate închide).\n\
   /T:culori   Stabilește culorile pentru text și fundal\n\
               (a se vedea comanda COLOR).\n"
     STRING_COLOR_HELP1 "Stabilește culorile implicite pentru text și fundal.\n\n\
@@ -154,10 +154,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fișier ...\n\n\
 DELAY [/m]n\n\n\
   /m          Specifică faptul că «n» sunt milisecunde\n\
               altfel «n» sunt considerate secunde.\n"
-    STRING_DIR_HELP1 "DIR [unitate:][cale][fișier] [/A[[:]atribute]] [/B] [/C] [/D] [/L] [/N]\n\
+    STRING_DIR_HELP1 "DIR [disc:][cale][fișier] [/A[[:]atribute]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]ordonare]] [/P] [/Q] [/R] [/S] [/T[[:]timp]] [/W] [/X] [/4]\n\n\
-  [unitate:][cale][fișier]\n\
-              Specifică unitatea, directorul și/sau fișierele de enumerat.\n\n\
+  [disc:][cale][fișier]\n\
+              Specifică discul, directorul și/sau fișierele de enumerat.\n\n\
   /A          Afișează fișierele după atributele specificate.\n\
   atribute      D  Directoare             R  Fișiere nemodificabile\n\
                 H  Fișiere ascunse        A  Fișiere arhivabile\n\
@@ -256,7 +256,7 @@ Numărul de serie este %s\n\
   %16s octeți pe disc în total\n\
   %16s octeți folosiți\n\
   %16s octeți liberi\n"
-    STRING_FREE_HELP2 "Afișează informația unei unități (de stocare).\n\nFREE [unitate: ...]\n"
+    STRING_FREE_HELP2 "Afișează informația unei unități (de stocare).\n\nFREE [disc: ...]\n"
     STRING_GOTO_HELP1 "Execută un salt către o linie etichetată în interiorul unui fișier de comenzi.\n\n\
 GOTO etichetă\n\n\
   etichetă      Specifică un șir text utilizat ca etichetă în\n\
@@ -282,7 +282,7 @@ O etichetă va fi definită pe un rând întreg, începând cu două puncte (:).
                     a fost anterior definită.\n"
     STRING_TIME_NOW "Ora curentă este: "
     STRING_MKDIR_HELP "Crează un director.\n\n\
-MD [unitate:]cale\nMKDIR [unitate:]cale\n"
+MD [disc:]cale\nMKDIR [disc:]cale\n"
     STRING_MKLINK_HELP "Creată o legătură obiect al sistemului de fișiere.\n\n\
 MKLINK [/D | /H | /J] ținta numelui legăturii\n\n\
   /D  Ținta legăturii simbolice este un director.\n\
@@ -302,15 +302,15 @@ legătură simbolică."
     STRING_MOVE_HELP1 "Suprascrieți «%s» (Da|Nu|Toate)?"
     STRING_MOVE_HELP2 "Mută sau redenumește fișiere și directoare.\n\n\
 Pentru a muta unul sau mai multe fișiere:\n\
-MOVE [/N][/Y|/-Y][unitate:][cale]fișier[,...] destinație\n\n\
+MOVE [/N][/Y|/-Y][disc:][cale]fișier[,...] destinație\n\n\
 Pentru a redenumi un director:\n\
-MOVE [/N][/Y|/-Y][unitate:][cale]nume_director_1 nume_director_2\n\n\
-  [unitate:][cale]fișier   Specică locul și numele fișierului sau fișierelor\n\
-                           pe care doriți să le mutați.\n\
+MOVE [/N][/Y|/-Y][disc:][cale]nume_director_1 nume_director_2\n\n\
+  [disc:][cale]fișier   Specifică locul și numele fișierului sau fișierelor\n\
+                        pe care doriți să le mutați.\n\
   /N                    Nimic. Execută orice în afară de mutarea fișiere\n\
                         sau directoare.\n\n\
 Limitări curente:\n\
-  - Nu pot fi mutate fișiere/directoare de pe o unitate de stocare pe alta.\n"
+  - Nu pot fi mutate fișiere/directoare de pe un disc de stocare pe alta.\n"
     STRING_MSGBOX_HELP "afișează o fereastră de dialog și obține răspunsul utilizatorului\n\n\
 MSGBOX tip ['titlu'] interogare\n\n\
 tip           butoanele afișate\n\
@@ -325,7 +325,7 @@ Valoarea variabilei de mediu ERRORLEVEL este dată de răspunsul utilizatorului:
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
     STRING_PATH_HELP1 "Afișează sau stabilește căile căutate pentru fișierele executabile.\n\n\
-PATH [[unitate:]cale[;...]]\nPATH ;\n\n\
+PATH [[disc:]cale[;...]]\nPATH ;\n\n\
 Tastați PATH ; pentru a curăța toate căile de căutare și a impune mediul de\n\
 comandă să caute doar în directorul curent.\n\
 Tastați PATH fără argumente pentru a afișa căile curente.\n"
@@ -346,8 +346,8 @@ PROMPT [text]\n\n\
   $H   Backspace (ștergerea caracterului precedent)\n\
   $I   Information line\n\
   $L   < (semnul mai mic decât)\n\
-  $N   Unitatea de stocare curentă\n\
-  $P   Unitatea de stocare și calea curentă\n\
+  $N   Discul de stocare curent\n\
+  $P   Discul de stocare și calea curentă\n\
   $Q   = (semnul egal)\n\
   $S   (space)\n\
   $T   Ora curentă\n\
@@ -358,7 +358,7 @@ PROMPT [text]\n\n\
     STRING_PROMPT_HELP3 "\nTastați PROMPT fără argumente pentru a readuce consola în starea implicită.\n"
     STRING_REM_HELP "Începe o linie de comentariu într-un fișier de comenzi.\n\nREM [comentariu]\n"
     STRING_RMDIR_HELP "Șterge un director.\n\n\
-RMDIR [/S] [/Q] [unitate:]cale\nRD [/S] [/Q] [unitate:]cale\n\
+RMDIR [/S] [/Q] [disc:]cale\nRD [/S] [/Q] [disc:]cale\n\
   /S    Șterge toate fișierele și directoarele țintă.\n\
   /Q    Omite cererile de confirmare.\n"
     STRING_RMDIR_HELP2 "Directorul nu este gol!\n"
@@ -372,15 +372,15 @@ REN [/E /N /P /Q /S /T] nume_vechi ... nume_nou\n\n\
   /Q    Suprimă mesajele.\n\
   /S    Redenumește subdirectoarele.\n\
   /T    Afișează numărul total de fișiere redenumite.\n\n\
-Rețineți că nu poate fi specificată o nouă unitate sau cale pentru destinație.\n\
+Rețineți că nu puteți specifica un nou disc sau o nouă cale pentru destinație.\n\
 Pentru o destinație diferită utilizați comanda MOVE.\n"
     STRING_REN_HELP2 "    %lu fișier redenumit\n"
     STRING_REN_HELP3 "    %lu fișiere redenumite\n"
     STRING_REPLACE_HELP1 "Înlocuiește fișiere.\n\n\
-REPLACE [unitate1:][cale1]fișier [unitate2:][cale2] [/A] [/P] [/R] [/W]\n\
-REPLACE [unitate1:][cale1]fișier [unitate2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [unitate1:][cale1]fișier Specifică fișierul sau fișierele sursă.\n\
-  [unitate2:][cale2]       Specifică directorul unde vor fi înlocuite fișiere.\n\
+REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/A] [/P] [/R] [/W]\n\
+REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [disc1:][cale1]fișier    Specifică fișierul sau fișierele sursă.\n\
+  [disc2:][cale2]          Specifică directorul unde vor fi înlocuite fișiere.\n\
   /A                       Adaugă fișiere noi în directorul destinație. Nu se\n\
                            poate folosi cu argumentele /S sau /U\n\
   /P                       Cere confirmare înaintea înlocuirii unui fișier sau\n\
@@ -388,11 +388,11 @@ REPLACE [unitate1:][cale1]fișier [unitate2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\
   /R                       Înlocuiește atât fișierele modificabile, cât și\n\
                            fișierele nemodificabile.\n\
   /S                       Înlocuiește fișierele în toate subdirectoarele\n\
-                           directorului destinație. Nu poate fi folosit\n\
+                           directorului destinație. Nu se poate folosi\n\
                            cu argumentul /A.\n\
   /W                       Așteaptă inserția unui disc înainte de a începe.\n\
   /U                       Înlocuiește (actualizează) doar fișierele mai vechi\n\
-                           decât fișierele sursă. Nu poate fi folosit cu /A.\n"
+                           decât fișierele sursă. Nu se poate folosi cu /A.\n"
     STRING_REPLACE_HELP2 "Este necesară calea sursă\n"
     STRING_REPLACE_HELP3 "Nu a fost înlocuit nici un fișier\n"
     STRING_REPLACE_HELP4 "A(u) fost înlocuit(e) %lu fișier(e)\n"
@@ -453,7 +453,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
            1    hh%cmm%css%czz\n\n\
 Dacă nu sunt specificate nici unul din argumentele ON, OFF sau /S\n\
 atunci comanda va schimba starea curentă de activare a cronometrului.\n"
-    STRING_TYPE_HELP1 "Afișează conținutul de fișiere text.\n\nTYPE [unitate:][cale]fișier\n\n\
+    STRING_TYPE_HELP1 "Afișează conținutul de fișiere text.\n\nTYPE [disc:][cale]fișier\n\n\
   /P     Afișare paginată, câte un ecran de informație odată.\n"
     STRING_VERIFY_HELP1 "Această comandă e doar o machetă!!\n\
 Stabilește dacă fișierele vă sunt stocate corect pe disc.\n\n\
@@ -485,7 +485,7 @@ Eventuale actualizări pot fi găsite la: https://reactos.org"
     STRING_VOL_HELP1 " Volumul unității %c este etichetat ca %s\n"
     STRING_VOL_HELP2 " Volumul unității %c nu este etichetat.\n"
     STRING_VOL_HELP3 " Numărul de serie al volumului este %04X-%04X\n"
-    STRING_VOL_HELP4 "Afișează eticheta și numărul de serie al volumului unei unități de stocare.\n\nVOL [unitate:]\n"
+    STRING_VOL_HELP4 "Afișează eticheta și numărul de serie al volumului unei unități de stocare.\n\nVOL [disc:]\n"
     STRING_WINDOW_HELP1 "Modifică aspectul ferestrei consolei.\n\n\
 WINDOW [/POS[=]stânga,sus,lățime,înălțime]\n\
               [MIN|MAX|RESTORE] ['titlu']\n\n\
@@ -505,7 +505,7 @@ titlu         Noul titlu.\n"
     STRING_CHOICE_OPTION "DN"
     STRING_COPY_OPTION "DNT"
     STRING_ALIAS_ERROR "Linia de comandă devine prea lungă după extinderea alias!\n"
-    STRING_ASSOC_ERROR "Nu poate fi găsită nici o aplicație asociată extensiei «%s»\n"
+    STRING_ASSOC_ERROR "Nu se poate găsi nici o aplicație asociată extensiei «%s»\n"
     STRING_BATCH_ERROR "Eroare la deschiderea fișierului de comenzi\n"
     STRING_CHOICE_ERROR "Opțiune eronată. Vedeți formatul: /C[:]opțiuni\n"
     STRING_CHOICE_ERROR_TXT "Opțiune eronată. Vedeți formatul: /T[:]implicit,nn\n"
@@ -518,8 +518,8 @@ titlu         Noul titlu.\n"
     STRING_COLOR_ERROR1 "Eroare de culoare identică! (Culorile nu trebuie să fie identice)\n"
     STRING_COLOR_ERROR2 "Eroare la specificarea culorii\n"
     STRING_CONSOLE_ERROR "Eroare necunoscută: %d\n"
-    STRING_COPY_ERROR1 "Eroare: Fișierul - «%s» nu a putut fi deschis!\n"
-    STRING_COPY_ERROR2 "Eroare: Nu poate fi copiat peste el însuși!\n"
+    STRING_COPY_ERROR1 "Eroare: Nu se poate deschide sursa - %s!\n"
+    STRING_COPY_ERROR2 "Eroare: Nu se poate copia pe sine!\n"
     STRING_COPY_ERROR3 "Eroare de scriere în destinație!\n"
     STRING_COPY_ERROR4 "Eroare: Încă nu a fost implementat!\n"
     STRING_DATE_ERROR "Dată nevalidă.\n"
@@ -532,7 +532,7 @@ titlu         Noul titlu.\n"
     STRING_FOR_ERROR2 "Nu au fost găsite paranteze.\n"
     STRING_FOR_ERROR3 "Lipsește «DO».\n"
     STRING_FOR_ERROR4 "Nici o comandă după «DO».\n"
-    STRING_FREE_ERROR1 "Unitate nevalidă"
+    STRING_FREE_ERROR1 "Disc nevalid"
     STRING_FREE_ERROR2 "neetichetat"
     STRING_GOTO_ERROR1 "Nu a fost specificată nici o etichetă pentru «GOTO»\n"
     STRING_GOTO_ERROR2 "Eticheta «%s» nu a fost găsită\n"
@@ -554,9 +554,9 @@ titlu         Noul titlu.\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Formatul argumentului este eronat - %s\n"
     STRING_ERROR_BADCOMMAND "Comandă eronată sau fișier inexistent - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Eroare de exces de memorie.\n"
-    STRING_ERROR_CANNOTPIPE "Eroare!  Nu datele nu pot fi canalizate!  Nu fișierul temporar nu a putut fi deschis!\n"
+    STRING_ERROR_CANNOTPIPE "Eroare! Nu se poate înlănțui! Nu se poate deschide fișierul temporar!\n"
     STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua... "
-    STRING_ERROR_DRIVER_NOT_READY "Unitatea de stocare nu e utilizabilă"
+    STRING_ERROR_DRIVER_NOT_READY "Discul de stocare nu e utilizabil"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Argument eronat - %s\n"
     STRING_REPLACE_ERROR2 "Calea nu este găsită - %s\n"
