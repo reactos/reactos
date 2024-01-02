@@ -978,7 +978,13 @@ CicInputContext::DestroyInputContext()
         pSource->UnadviseSingleSink(m_clientId, IID_ITfCleanupContextSink);
 
     //FIXME: m_dwUnknown5
-    //FIXME: m_pTextEventSink
+
+    if (m_pTextEventSink)
+    {
+        m_pTextEventSink->_Unadvise();
+        m_pTextEventSink->Release();
+        m_pTextEventSink = NULL;
+    }
 
     if (m_pCompEventSink2)
     {
