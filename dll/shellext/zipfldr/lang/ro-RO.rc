@@ -17,7 +17,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Răsfoiți...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "Parolă",IDC_PASSWORD,189,66,54,14
-    LTEXT           "Clic Înainte pentru a extrage",IDC_STATUSTEXT,86,114,100,8
+    LTEXT           "Apăsați Înainte pentru a extrage",IDC_STATUSTEXT,86,114,100,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
