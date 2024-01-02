@@ -1923,7 +1923,6 @@ interface ITfTransitoryExtensionSink : IUnknown
 
 [
     object,
-    local,
     uuid(2af2d06a-dd5b-4927-a0b4-54f19c91fade),
     pointer_default(unique)
 ]
