@@ -597,8 +597,165 @@ HRESULT CCompartmentEventSink::_Unadvise()
 }
 
 class CInputContextOwnerCallBack;
-class CTextEventSink;
 class CInputContextOwner;
+
+typedef INT (CALLBACK *FN_ENDEDIT)(INT, LPVOID, LPVOID);
+typedef INT (CALLBACK *FN_LAYOUTCHANGE)(UINT nType, FN_ENDEDIT fnEndEdit, ITfContextView *pView);
+
+class CTextEventSink : public ITfTextEditSink, ITfTextLayoutSink
+{
+protected:
+    LONG m_cRefs;
+    IUnknown *m_pUnknown;
+    DWORD m_dwEditSinkCookie;
+    DWORD m_dwLayoutSinkCookie;
+    FN_LAYOUTCHANGE m_fnLayoutChange;
+    FN_ENDEDIT m_fnEndEdit;
+    LPVOID m_pCallbackPV;
+
+public:
+    CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV);
+    virtual ~CTextEventSink();
+
+    HRESULT _Advise(IUnknown *pUnknown, UINT uFlags);
+    HRESULT _Unadvise();
+
+    // IUnknown interface
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfTextEditSink interface
+    STDMETHODIMP OnEndEdit(
+        ITfContext *pic,
+        TfEditCookie ecReadOnly,
+        ITfEditRecord *pEditRecord) override;
+
+    // ITfTextLayoutSink interface
+    STDMETHODIMP
+    OnLayoutChange(
+        ITfContext *pContext,
+        TfLayoutCode lcode,
+        ITfContextView *pContextView) override;
+};
+
+/**
+ * @implemented
+ */
+CTextEventSink::CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV)
+{
+    m_cRefs = 1;
+    m_pUnknown = NULL;
+    m_dwEditSinkCookie = (DWORD)-1;
+    m_dwLayoutSinkCookie = (DWORD)-1;
+    m_fnLayoutChange = NULL;
+    m_fnEndEdit = fnEndEdit;
+    m_pCallbackPV = pCallbackPV;
+}
+
+/**
+ * @implemented
+ */
+CTextEventSink::~CTextEventSink()
+{
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CTextEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextEditSink))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+    if (IsEqualIID(riid, IID_ITfTextLayoutSink))
+    {
+        *ppvObj = static_cast<ITfTextLayoutSink*>(this);
+        AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CTextEventSink::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP_(ULONG) CTextEventSink::Release()
+{
+    if (::InterlockedDecrement(&m_cRefs) == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+struct TEXT_EVENT_SINK_END_EDIT
+{
+    TfEditCookie m_ecReadOnly;
+    ITfEditRecord *m_pEditRecord;
+    ITfContext *m_pContext;
+};
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CTextEventSink::OnEndEdit(
+    ITfContext *pic,
+    TfEditCookie ecReadOnly,
+    ITfEditRecord *pEditRecord)
+{
+    TEXT_EVENT_SINK_END_EDIT Data = { ecReadOnly, pEditRecord, pic };
+    return m_fnEndEdit(1, m_pCallbackPV, (LPVOID)&Data);
+}
+
+/**
+ * @implemented
+ */
+STDMETHODIMP CTextEventSink::OnLayoutChange(
+    ITfContext *pContext,
+    TfLayoutCode lcode,
+    ITfContextView *pContextView)
+{
+    switch (lcode)
+    {
+        case TF_LC_CREATE:
+            return m_fnLayoutChange(3, m_fnEndEdit, pContextView);
+        case TF_LC_CHANGE:
+            return m_fnLayoutChange(2, m_fnEndEdit, pContextView);
+        case TF_LC_DESTROY:
+            return m_fnLayoutChange(4, m_fnEndEdit, pContextView);
+        default:
+            return E_INVALIDARG;
+    }
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CTextEventSink::_Advise(IUnknown *pUnknown, UINT uFlags)
+{
+    return E_NOTIMPL;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT CTextEventSink::_Unadvise()
+{
+    return E_NOTIMPL;
+}
 
 /***********************************************************************
  *      CicInputContext
