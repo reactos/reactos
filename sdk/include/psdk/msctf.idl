@@ -109,6 +109,7 @@ interface ITfKeyEventSink;
 interface ITfPersistentPropertyLoaderACP;
 interface ITfRangeACP;
 interface ITfCleanupContextSink;
+interface ITfTextLayoutSink;
 
 cpp_quote("#if 0")
 typedef [uuid(4f5d560f-5ab5-4dde-8c4d-404592857ab0)] UINT_PTR HKL;
@@ -1918,4 +1919,24 @@ interface ITfTransitoryExtensionSink : IUnknown
         [in] ITfRange *pResultRange,
         [in] ITfRange *pCompositionRange,
         [out] BOOL *pfDeleteResultRange);
+}
+
+[
+    object,
+    uuid(2af2d06a-dd5b-4927-a0b4-54f19c91fade),
+    pointer_default(unique)
+]
+interface ITfTextLayoutSink : IUnknown
+{
+    typedef [uuid(603553cf-9edd-4cc1-9ecc-069e4a427734)] enum
+    {
+        TF_LC_CREATE = 0,
+        TF_LC_CHANGE = 1,
+        TF_LC_DESTROY = 2
+    } TfLayoutCode;
+
+    HRESULT OnLayoutChange(
+        [in] ITfContext     *pic,
+        [in] TfLayoutCode   lcode,
+        [in] ITfContextView *pView);
 }
