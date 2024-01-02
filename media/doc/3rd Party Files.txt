@@ -76,7 +76,7 @@ URL: https://acpica.org/
 
 Title: VirtIO Windows guest driver library
 Path: sdk/lib/drivers/virtio
-Used Version: git commit 5e01b36
+Used Version: git commit 4c4d181
 License: BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
 URL: https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/VirtIO
 

@@ -24,7 +24,9 @@
 #endif
 
 #ifndef __REACTOS__
+#if !defined(ENOSPC)
 #define ENOSPC 1
+#endif
 #endif
 
 #if !defined(__cplusplus) && !defined(bool)
