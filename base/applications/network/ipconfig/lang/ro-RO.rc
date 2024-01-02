@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -139,6 +139,6 @@ BEGIN
                                          au numele începând cu ""EL"".\n\
         > ipconfig /release *Con*    ... Detașează conexiunile care conțin în\n\
                                          numele lor secvența ""Con"".\n\
-                                         ex. ""Local Area Connection 1"" sau\n\
-                                             ""Local Area Connection 2""\n"
+                                         ex. ""Conexiune locală 1"" sau\n\
+                                             ""Conexiune locală 2""\n"
 END
