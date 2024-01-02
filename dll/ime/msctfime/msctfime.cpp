@@ -17,7 +17,8 @@ DWORD g_dwOSInfo = 0;
 BOOL gfTFInitLib = FALSE;
 CRITICAL_SECTION g_csLock;
 
-DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS, 0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
+DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS,        0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
+DEFINE_GUID(GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0x85A688F7, 0x6DC8, 0x4F17, 0xA8, 0x3A, 0xB1, 0x1C, 0x09, 0xCD, 0xD7, 0xBF);
 
 EXTERN_C void __cxa_pure_virtual(void)
 {
@@ -146,6 +147,14 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 
     //FIXME
     return E_NOTIMPL;
+}
+
+HIMC GetActiveContext(VOID)
+{
+    HWND hwndFocus = ::GetFocus();
+    if (!hwndFocus)
+        hwndFocus = ::GetActiveWindow();
+    return ::ImmGetContext(hwndFocus);
 }
 
 /**
@@ -588,6 +597,8 @@ HRESULT CCompartmentEventSink::_Unadvise()
 }
 
 class CInputContextOwnerCallBack;
+class CTextEventSink;
+class CInputContextOwner;
 
 /***********************************************************************
  *      CicInputContext
@@ -600,29 +611,32 @@ class CicInputContext
     , public ITfCompositionSink
 {
 public:
-    ITfContextOwnerCompositionSink *m_pContextOwnerCompositionSink;
-    DWORD m_dwUnknown0;
     LONG m_cRefs;
     HIMC m_hIMC;
     ITfDocumentMgr *m_pDocumentMgr;
     ITfContext *m_pContext;
-    DWORD m_dwUnknown1;
+    IUnknown *m_pUnknown1;
     CInputContextOwnerCallBack *m_pICOwnerCallback;
-    LPVOID m_pTextEventSink;
+    CTextEventSink *m_pTextEventSink;
     CCompartmentEventSink *m_pCompEventSink1;
     CCompartmentEventSink *m_pCompEventSink2;
-    DWORD m_dwUnknown3[4];
+    CInputContextOwner *m_pInputContextOwner;
+    DWORD m_dwUnknown3[3];
     DWORD m_dwUnknown4[2];
     DWORD m_dwQueryPos;
     DWORD m_dwUnknown5;
     GUID m_guid;
     DWORD m_dwUnknown6[11];
     BOOL m_bSelecting;
-    DWORD m_dwUnknown7[7];
+    DWORD m_dwUnknown6_5;
+    LONG m_cCompLocks;
+    DWORD m_dwUnknown7[5];
     WORD m_cGuidAtoms;
     WORD m_padding;
     DWORD m_adwGuidAtoms[256];
-    DWORD m_dwUnknown8[19];
+    DWORD m_dwUnknown8[17];
+    TfClientId m_clientId;
+    DWORD m_dwUnknown9;
 
 public:
     CicInputContext(
@@ -672,7 +686,7 @@ CicInputContext::CicInputContext(
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
@@ -680,11 +694,11 @@ STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
 
     if (IsEqualIID(riid, IID_ITfContextOwnerCompositionSink))
     {
-        *ppvObj = (ITfContextOwnerCompositionSink*)this;
+        *ppvObj = static_cast<ITfContextOwnerCompositionSink*>(this);
         AddRef();
         return S_OK;
     }
-    if (IsEqualIID(riid, IID_IUnknown))
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCleanupContextSink))
     {
         *ppvObj = this;
         AddRef();
@@ -716,35 +730,45 @@ STDMETHODIMP_(ULONG) CicInputContext::Release()
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP
 CicInputContext::OnStartComposition(
     ITfCompositionView *pComposition,
     BOOL *pfOk)
 {
-    return E_NOTIMPL;
+    if ((m_cCompLocks <= 0) || m_dwUnknown6_5)
+    {
+        *pfOk = TRUE;
+        ++m_cCompLocks;
+    }
+    else
+    {
+        *pfOk = FALSE;
+    }
+    return S_OK;
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP
 CicInputContext::OnUpdateComposition(
     ITfCompositionView *pComposition,
     ITfRange *pRangeNew)
 {
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 STDMETHODIMP
 CicInputContext::OnEndComposition(
     ITfCompositionView *pComposition)
 {
-    return E_NOTIMPL;
+    --m_cCompLocks;
+    return S_OK;
 }
 
 /**
@@ -791,8 +815,58 @@ CicInputContext::CreateInputContext(
 HRESULT
 CicInputContext::DestroyInputContext()
 {
-    // FIXME
-    return E_NOTIMPL;
+    ITfSourceSingle *pSource = NULL;
+
+    if (m_pContext && m_pContext->QueryInterface(IID_ITfSourceSingle, (void **)&pSource) == S_OK)
+        pSource->UnadviseSingleSink(m_clientId, IID_ITfCleanupContextSink);
+
+    //FIXME: m_dwUnknown5
+    //FIXME: m_pTextEventSink
+
+    if (m_pCompEventSink2)
+    {
+        //FIXME: m_pCompEventSink2->_Unadvise();
+        m_pCompEventSink2->Release();
+        m_pCompEventSink2 = NULL;
+    }
+
+    if (m_pCompEventSink1)
+    {
+        //FIXME: m_pCompEventSink1->_Unadvise();
+        m_pCompEventSink1->Release();
+        m_pCompEventSink1 = NULL;
+    }
+
+    //FIXME: m_pInputContextOwner
+
+    if (m_pDocumentMgr)
+        m_pDocumentMgr->Pop(1);
+
+    if (m_pContext)
+    {
+        ClearCompartment(m_clientId, m_pContext, GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0);
+        m_pContext->Release();
+        m_pContext = NULL;
+    }
+
+    if (m_pUnknown1)
+    {
+        m_pUnknown1->Release();
+        m_pUnknown1 = NULL;
+    }
+
+    // FIXME: m_pICOwnerCallback
+
+    if (m_pDocumentMgr)
+    {
+        m_pDocumentMgr->Release();
+        m_pDocumentMgr = NULL;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return S_OK;
 }
 
 /**
