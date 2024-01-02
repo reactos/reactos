@@ -1367,7 +1367,7 @@ SetupDiEnumDriverInfoW(
 
     if (!DeviceInfoSet || !DriverInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1487,7 +1487,7 @@ SetupDiGetSelectedDriverW(
 
     if (!DeviceInfoSet || !DriverInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1598,7 +1598,7 @@ SetupDiSetSelectedDriverW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1891,7 +1891,7 @@ SetupDiGetDriverInfoDetailW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2014,7 +2014,7 @@ SetupDiGetDriverInstallParamsW(
 
     if (!DeviceInfoSet || !DriverInfoData || !DriverInstallParams)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -2100,7 +2100,7 @@ SetupDiInstallDriverFiles(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);

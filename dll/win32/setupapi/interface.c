@@ -423,7 +423,7 @@ SetupDiInstallDeviceInterfaces(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -555,7 +555,7 @@ SetupDiOpenDeviceInterfaceRegKey(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);

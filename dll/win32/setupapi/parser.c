@@ -1238,7 +1238,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     if (style & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return (HINF)INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
 
     if (strchrW( name, '\\' ) || strchrW( name, '/' ))

@@ -428,7 +428,7 @@ SetupDiGetActualSectionToInstallExW(
         AlternatePlatformInfo, InfSectionWithExt, InfSectionWithExtSize,
         RequiredSize, Extension, Reserved);
 
-    if (!InfHandle || InfHandle == (HINF)INVALID_HANDLE_VALUE)
+    if (!InfHandle || InfHandle == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!InfSectionName)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2968,7 +2968,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
     {
         sizeW = FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath)
             + (DeviceInterfaceDetailDataSize - FIELD_OFFSET(SP_DEVICE_INTERFACE_DETAIL_DATA_A, DevicePath)) * sizeof(WCHAR);
-        DeviceInterfaceDetailDataW = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)MyMalloc(sizeW);
+        DeviceInterfaceDetailDataW = MyMalloc(sizeW);
         if (!DeviceInterfaceDetailDataW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -4032,7 +4032,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -4540,7 +4540,7 @@ CheckDeviceInstallParameters(
         SetLastError(ERROR_INVALID_FLAGS);
     }
     else if ((DeviceInstallParams->Flags & DI_NOVCP)
-        && (DeviceInstallParams->FileQueue == NULL || DeviceInstallParams->FileQueue == (HSPFILEQ)INVALID_HANDLE_VALUE))
+        && (DeviceInstallParams->FileQueue == NULL || DeviceInstallParams->FileQueue == INVALID_HANDLE_VALUE))
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
@@ -5220,7 +5220,7 @@ SetupDiRegisterCoDeviceInstallers(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -5393,7 +5393,7 @@ SetupDiInstallDevice(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);

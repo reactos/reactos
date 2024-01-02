@@ -1361,7 +1361,7 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
 
         install_params.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
         use_custom_queue = SetupDiGetDeviceInstallParamsW(devinfo, devinfo_data, &install_params) && (install_params.Flags & DI_NOVCP);
-        if (!use_custom_queue && ((queue = SetupOpenFileQueue()) == (HSPFILEQ)INVALID_HANDLE_VALUE ))
+        if (!use_custom_queue && ((queue = SetupOpenFileQueue()) == INVALID_HANDLE_VALUE ))
             return FALSE;
         info.queue      = use_custom_queue ? install_params.FileQueue : queue;
         info.src_root   = src_root;
@@ -2104,7 +2104,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         TRACE("Unknown flags: 0x%08lx\n", flags & ~(SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME | SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL | SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES | SPSVCINST_STOPSERVICE));
         SetLastError(ERROR_INVALID_FLAGS);
     }
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    else if (DeviceInfoSet == INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoSet && (list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
