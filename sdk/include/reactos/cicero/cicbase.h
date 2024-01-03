@@ -34,17 +34,30 @@ static inline void cicMemFree(LPVOID ptr)
         LocalFree(ptr);
 }
 
-inline void* __cdecl operator new(size_t size) noexcept
+struct CicNoThrow { };
+#define cicNoThrow CicNoThrow{}
+
+inline void* operator new(size_t size, const CicNoThrow&) noexcept
 {
     return cicMemAllocClear(size);
 }
-
-inline void __cdecl operator delete(void* ptr) noexcept
+inline void* operator new[](size_t size, const CicNoThrow&) noexcept
+{
+    return cicMemAllocClear(size);
+}
+inline void operator delete(void* ptr) noexcept
 {
     cicMemFree(ptr);
 }
-
-inline void __cdecl operator delete(void* ptr, size_t size) noexcept
+inline void operator delete[](void* ptr) noexcept
+{
+    cicMemFree(ptr);
+}
+inline void operator delete(void* ptr, size_t size) noexcept
+{
+    cicMemFree(ptr);
+}
+inline void operator delete[](void* ptr, size_t size) noexcept
 {
     cicMemFree(ptr);
 }
