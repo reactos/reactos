@@ -1330,7 +1330,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     InitializeListHead(&list->DriverListHead);
     InitializeListHead(&list->ListHead);
 
-    return (HDEVINFO)list;
+    return list;
 
 cleanup:
     if (ret == INVALID_HANDLE_VALUE)
