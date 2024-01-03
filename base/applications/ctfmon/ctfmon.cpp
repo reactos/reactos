@@ -224,7 +224,7 @@ InitApp(
         CRegWatcher::Init();
 
     // Create Tipbar loader window
-    g_pLoaderWnd = new CLoaderWnd();
+    g_pLoaderWnd = new(cicNoThrow) CLoaderWnd();
     if (!g_pLoaderWnd || !g_pLoaderWnd->Init())
         return FALSE;
 
