@@ -35,7 +35,7 @@ static inline void cicMemFree(LPVOID ptr)
 }
 
 struct CicNoThrow { };
-#define cicNoThrow CicNoThrow()
+#define cicNoThrow CicNoThrow{}
 
 inline void* operator new(size_t size, const CicNoThrow&) noexcept
 {
