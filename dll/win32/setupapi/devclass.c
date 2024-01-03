@@ -936,7 +936,7 @@ SETUP_PropertyAddPropertyAdvancedHandler(
         PSP_ADDPROPERTYPAGE_DATA *CurrentAddPropertyPageData;
         if (!DeviceInfoData)
         {
-            struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
+            struct DeviceInfoSet *list = DeviceInfoSet;
             CurrentAddPropertyPageData = &list->ClassInstallParams.AddPropertyPageData;
         }
         else

@@ -244,7 +244,7 @@ BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
 */
 BOOL WINAPI SetupDestroyDiskSpaceList(HDSKSPC DiskSpace)
 {
-    LPDISKSPACELIST list = (LPDISKSPACELIST)DiskSpace;
+    LPDISKSPACELIST list = DiskSpace;
     HeapFree(GetProcessHeap(),0,list);
     return TRUE;
 }
