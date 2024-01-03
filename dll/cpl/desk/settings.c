@@ -859,7 +859,7 @@ FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBi
             (Current->dmPelsHeight == dmPelsHeight) &&
             (Current->dmBitsPerPel == dmBitsPerPel))
         {
-            return Current; /* Found */
+            return Current;
         }
 
         if (!Current->Flink)
