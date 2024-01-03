@@ -844,10 +844,8 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
 }
 
 PSETTINGS_ENTRY
-FindBestElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETTINGS_ENTRY List)
+FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBitsPerPel, _In_ PSETTINGS_ENTRY Current)
 {
-    PSETTINGS_ENTRY Current = List;
-
     /* Go back to 1st element */
     while (Current->Blink)
     {
