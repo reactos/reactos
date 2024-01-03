@@ -609,7 +609,11 @@ protected:
     IUnknown *m_pUnknown;
     DWORD m_dwEditSinkCookie;
     DWORD m_dwLayoutSinkCookie;
-    FN_LAYOUTCHANGE m_fnLayoutChange;
+    union
+    {
+        UINT m_uFlags;
+        FN_LAYOUTCHANGE m_fnLayoutChange;
+    };
     FN_ENDEDIT m_fnEndEdit;
     LPVOID m_pCallbackPV;
 
@@ -742,18 +746,63 @@ STDMETHODIMP CTextEventSink::OnLayoutChange(
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 HRESULT CTextEventSink::_Advise(IUnknown *pUnknown, UINT uFlags)
 {
-    return E_NOTIMPL;
+    m_pUnknown = NULL;
+    m_uFlags = uFlags;
+
+    ITfSource *pSource = NULL;
+    HRESULT hr = pUnknown->QueryInterface(IID_ITfSource, (void**)&pSource);
+    if (SUCCEEDED(hr))
+    {
+        ITfTextEditSink *pSink = static_cast<ITfTextEditSink*>(this);
+        if (uFlags & 1)
+            hr = pSource->AdviseSink(IID_ITfTextEditSink, pSink, &m_dwEditSinkCookie);
+        if (SUCCEEDED(hr) && (uFlags & 2))
+            hr = pSource->AdviseSink(IID_ITfTextLayoutSink, pSink, &m_dwLayoutSinkCookie);
+
+        if (SUCCEEDED(hr))
+        {
+            m_pUnknown = pUnknown;
+            pUnknown->AddRef();
+        }
+        else
+        {
+            pSource->UnadviseSink(m_dwEditSinkCookie);
+        }
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
 }
 
 /**
- * @unimplemented
+ * @implemented
  */
 HRESULT CTextEventSink::_Unadvise()
 {
+    if (!m_pUnknown)
+        return E_FAIL;
+
+    ITfSource *pSource = NULL;
+    HRESULT hr = m_pUnknown->QueryInterface(IID_ITfSource, (void**)&pSource);
+    if (SUCCEEDED(hr))
+    {
+        if (m_uFlags & 1)
+            hr = pSource->UnadviseSink(m_dwEditSinkCookie);
+        if (m_uFlags & 2)
+            hr = pSource->UnadviseSink(m_dwLayoutSinkCookie);
+
+        pSource->Release();
+    }
+
+    m_pUnknown->Release();
+    m_pUnknown = NULL;
+
     return E_NOTIMPL;
 }
 
