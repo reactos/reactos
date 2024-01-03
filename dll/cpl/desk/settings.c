@@ -849,9 +849,7 @@ FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBi
 {
     /* Go back to 1st element */
     while (Current->Blink)
-    {
         Current = Current->Blink;
-    }
 
     /* Go through the list */
     while (1)
