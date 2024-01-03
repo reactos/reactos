@@ -860,7 +860,7 @@ FindBestElement(
     /* Go through the list */
     while (Current)
     {
-        Penalty = 0x1000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
+        Penalty = 0x100000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
                   0x100 * labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
                   0x100 * labs(Current->dmPelsHeight - pInitialSettings->dmPelsHeight) +
                   labs(Current->dmDisplayFrequency - pInitialSettings->dmDisplayFrequency);
