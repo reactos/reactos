@@ -3486,8 +3486,340 @@ CtfImeThreadDetach(VOID)
     return S_OK;
 }
 
+/***********************************************************************
+ *      UIComposition
+ */
+struct UIComposition
+{
+    void OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd);
+    void OnImeCompositionUpdate(CicIMCLock& imcLock);
+    void OnImeEndComposition();
+    void OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam);
+    void OnPaintTheme(WPARAM wParam);
+    void OnDestroy();
+
+    static LRESULT CALLBACK CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+};
+
 /**
  * @unimplemented
+ */
+void UIComposition::OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+void UIComposition::OnImeCompositionUpdate(CicIMCLock& imcLock)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+void UIComposition::OnImeEndComposition()
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+void UIComposition::OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+void UIComposition::OnPaintTheme(WPARAM wParam)
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+void UIComposition::OnDestroy()
+{
+    //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_CREATE)
+        return -1; // FIXME
+    return 0;
+}
+
+/***********************************************************************
+ *      UI
+ */
+struct UI
+{
+    HWND m_hWnd;
+    UIComposition *m_pComp;
+
+    UI(HWND hWnd);
+    virtual ~UI();
+
+    HRESULT _Create();
+    void _Destroy();
+
+    static void OnCreate(HWND hWnd);
+    static void OnDestroy(HWND hWnd);
+    void OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam);
+};
+
+// For GetWindowLongPtr/SetWindowLongPtr
+#define UIGWLP_HIMC 0
+#define UIGWLP_UI   sizeof(HIMC)
+#define UIGWLP_SIZE (UIGWLP_UI + sizeof(UI*))
+
+/**
+ * @implemented
+ */
+UI::UI(HWND hWnd) : m_hWnd(hWnd)
+{
+}
+
+/**
+ * @implemented
+ */
+UI::~UI()
+{
+    delete m_pComp;
+}
+
+/**
+ * @unimplemented
+ */
+HRESULT UI::_Create()
+{
+    m_pComp = new UIComposition();
+    if (!m_pComp)
+        return E_OUTOFMEMORY;
+
+    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
+    //FIXME
+    return S_OK;
+}
+
+/**
+ * @implemented
+ */
+void UI::_Destroy()
+{
+    m_pComp->OnDestroy();
+    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
+}
+
+/**
+ * @implemented
+ */
+void UI::OnCreate(HWND hWnd)
+{
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    if (pUI)
+        return;
+    pUI = new UI(hWnd);
+    if (pUI)
+        pUI->_Create();
+}
+
+/**
+ * @implemented
+ */
+void UI::OnDestroy(HWND hWnd)
+{
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    if (!pUI)
+        return;
+
+    pUI->_Destroy();
+    delete pUI;
+}
+
+/**
+ * @implemented
+ */
+void UI::OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam)
+{
+    m_pComp->OnImeSetContext(imcLock, m_hWnd, wParam, lParam);
+}
+
+/***********************************************************************
+ *      CIMEUIWindowHandler
+ */
+
+struct CIMEUIWindowHandler
+{
+    static LRESULT CALLBACK ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+};
+
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    return 0; //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    return 0; //FIXME
+}
+
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    return 0; //FIXME
+}
+
+/**
+ * @implemented
+ */
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_MSIME_MOUSE)
+        return ImeUIMsImeMouseHandler(hWnd, wParam, lParam);
+    if (uMsg == WM_MSIME_MODEBIAS)
+        return ImeUIMsImeModeBiasHandler(hWnd, wParam, lParam);
+    if (uMsg == WM_MSIME_RECONVERTREQUEST)
+        return ImeUIMsImeReconvertRequest(hWnd, wParam, lParam);
+    if (uMsg == WM_MSIME_SERVICE)
+    {
+        TLS *pTLS = TLS::GetTLS();
+        if (pTLS && pTLS->m_pProfile)
+        {
+            LANGID LangID;
+            pTLS->m_pProfile->GetLangId(&LangID);
+            if (PRIMARYLANGID(LangID) == LANG_KOREAN)
+                return FALSE;
+        }
+        return TRUE;
+    }
+    return 0;
+}
+
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TLS *pTLS = TLS::GetTLS();
+    if (pTLS && (pTLS->m_dwSystemInfoFlags & IME_SYSINFO_WINLOGON))
+    {
+        if (uMsg == WM_CREATE)
+            return -1;
+        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+    }
+
+    switch (uMsg)
+    {
+        case WM_CREATE:
+        {
+            UI::OnCreate(hWnd);
+            break;
+        }
+        case WM_DESTROY:
+        case WM_ENDSESSION:
+        {
+            UI::OnDestroy(hWnd);
+            break;
+        }
+        case WM_IME_STARTCOMPOSITION:
+        case WM_IME_COMPOSITION:
+        case WM_IME_ENDCOMPOSITION:
+        case WM_IME_SETCONTEXT:
+        case WM_IME_NOTIFY:
+        case WM_IME_SELECT:
+        case WM_TIMER:
+        {
+            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UIGWLP_HIMC);
+            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+            CicIMCLock imcLock(hIMC);
+            switch (uMsg)
+            {
+                case WM_IME_STARTCOMPOSITION:
+                {
+                    pUI->m_pComp->OnImeStartComposition(imcLock, pUI->m_hWnd);
+                    break;
+                }
+                case WM_IME_COMPOSITION:
+                {
+                    if (lParam & GCS_COMPSTR)
+                    {
+                        pUI->m_pComp->OnImeCompositionUpdate(imcLock);
+                        ::SetTimer(hWnd, 0, 10, NULL);
+                        //FIXME
+                    }
+                    break;
+                }
+                case WM_IME_ENDCOMPOSITION:
+                {
+                    ::KillTimer(hWnd, 0);
+                    pUI->m_pComp->OnImeEndComposition();
+                    break;
+                }
+                case WM_IME_SETCONTEXT:
+                {
+                    pUI->OnImeSetContext(imcLock, wParam, lParam);
+                    ::KillTimer(hWnd, 1);
+                    ::SetTimer(hWnd, 1, 300, NULL);
+                    break;
+                }
+                case WM_TIMER:
+                {
+                    //FIXME
+                    ::KillTimer(hWnd, wParam);
+                    break;
+                }
+                case WM_IME_NOTIFY:
+                case WM_IME_SELECT:
+                default:
+                {
+                    pUI->m_pComp->OnPaintTheme(wParam);
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            if (IsMsImeMessage(uMsg))
+                return CIMEUIWindowHandler::ImeUIMsImeHandler(hWnd, uMsg, wParam, lParam);
+            return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @implemented
  */
 EXTERN_C LRESULT CALLBACK
 UIWndProc(
@@ -3496,12 +3828,7 @@ UIWndProc(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
-    if (uMsg == WM_CREATE)
-    {
-        FIXME("stub\n");
-        return -1;
-    }
-    return 0;
+    return CIMEUIWindowHandler::ImeUIWndProcWorker(hWnd, uMsg, wParam, lParam);
 }
 
 /**
@@ -3515,7 +3842,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = sizeof(DWORD) * 2;
+        wcx.cbWndExtra      = UIGWLP_SIZE;
         wcx.hIcon           = LoadIconW(0, (LPCWSTR)IDC_ARROW);
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
@@ -3537,7 +3864,7 @@ BOOL RegisterImeClass(VOID)
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_IBEAM);
         wcx.hbrBackground   = (HBRUSH)GetStockObject(NULL_BRUSH);
         wcx.style           = CS_IME | CS_HREDRAW | CS_VREDRAW;
-        //wcx.lpfnWndProc     = UIComposition::CompWndProc; // FIXME
+        wcx.lpfnWndProc     = UIComposition::CompWndProc;
         wcx.lpszClassName   = L"MSCTFIME Composition";
         if (!RegisterClassExW(&wcx))
             return FALSE;
