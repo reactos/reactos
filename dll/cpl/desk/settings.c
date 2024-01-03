@@ -843,6 +843,7 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
     }
 }
 
+static
 PSETTINGS_ENTRY
 FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBitsPerPel, _In_ PSETTINGS_ENTRY Current)
 {
