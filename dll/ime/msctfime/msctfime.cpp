@@ -3497,6 +3497,8 @@ struct UIComposition
     void OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam);
     void OnPaintTheme(WPARAM wParam);
     void OnDestroy();
+
+    static LRESULT CALLBACK CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 /**
@@ -3547,6 +3549,17 @@ void UIComposition::OnDestroy()
     //FIXME
 }
 
+/**
+ * @unimplemented
+ */
+LRESULT CALLBACK
+UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_CREATE)
+        return -1; // FIXME
+    return 0;
+}
+
 /***********************************************************************
  *      UI
  */
@@ -3565,6 +3578,11 @@ struct UI
     static void OnDestroy(HWND hWnd);
     void OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam);
 };
+
+// For GetWindowLongPtr/SetWindowLongPtr
+#define UIGWLP_HIMC 0
+#define UIGWLP_UI   sizeof(HIMC)
+#define UIGWLP_SIZE (UIGWLP_UI + sizeof(UI*))
 
 /**
  * @implemented
@@ -3590,7 +3608,7 @@ HRESULT UI::_Create()
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
-    SetWindowLongPtrW(m_hWnd, sizeof(LONG_PTR), (LONG_PTR)this);
+    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
     //FIXME
     return S_OK;
 }
@@ -3601,7 +3619,7 @@ HRESULT UI::_Create()
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
-    SetWindowLongPtrW(m_hWnd, sizeof(LONG_PTR), 0);
+    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
 }
 
 /**
@@ -3609,7 +3627,7 @@ void UI::_Destroy()
  */
 void UI::OnCreate(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
     if (pUI)
         return;
     pUI = new UI(hWnd);
@@ -3622,7 +3640,7 @@ void UI::OnCreate(HWND hWnd)
  */
 void UI::OnDestroy(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
     if (!pUI)
         return;
 
@@ -3740,8 +3758,8 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         case WM_IME_SELECT:
         case WM_TIMER:
         {
-            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
-            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, 0);
+            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UIGWLP_HIMC);
+            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
             CicIMCLock imcLock(hIMC);
             switch (uMsg)
             {
@@ -3824,7 +3842,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = sizeof(LONG_PTR) * 2;
+        wcx.cbWndExtra      = UIGWLP_SIZE;
         wcx.hIcon           = LoadIconW(0, (LPCWSTR)IDC_ARROW);
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
@@ -3846,7 +3864,7 @@ BOOL RegisterImeClass(VOID)
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_IBEAM);
         wcx.hbrBackground   = (HBRUSH)GetStockObject(NULL_BRUSH);
         wcx.style           = CS_IME | CS_HREDRAW | CS_VREDRAW;
-        //wcx.lpfnWndProc     = UIComposition::CompWndProc; // FIXME
+        wcx.lpfnWndProc     = UIComposition::CompWndProc;
         wcx.lpszClassName   = L"MSCTFIME Composition";
         if (!RegisterClassExW(&wcx))
             return FALSE;
