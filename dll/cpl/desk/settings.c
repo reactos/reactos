@@ -844,7 +844,7 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
 }
 
 PSETTINGS_ENTRY
-FindElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETTINGS_ENTRY List)
+FindBestElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETTINGS_ENTRY List)
 {
     PSETTINGS_ENTRY Current = List;
 
@@ -876,7 +876,7 @@ FindElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETTINGS
         return Current; /* Found */
     }
 
-    return NULL;
+    return NULL; /* Not found */
 }
 
 static VOID
@@ -903,12 +903,13 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
     else
     {
+        PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
         pData->CurrentDisplayDevice->CurrentSettings =
-            FindElement(pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth,
-                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight,
-                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel,
-                        pData->CurrentDisplayDevice->CurrentSettings);
-        /* Initial settings should be found */
+            FindBestElement(pInitialSettings->dmPelsWidth,
+                            pInitialSettings->dmPelsHeight,
+                            pInitialSettings->dmBitsPerPel,
+                            pData->CurrentDisplayDevice->CurrentSettings);
+        /* Initial entry should be found */
         ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
@@ -961,18 +962,20 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                     DEVMODE devmode;
                     ZeroMemory(&devmode, sizeof(devmode));
                     devmode.dmSize = (WORD)sizeof(devmode);
-                    if (EnumDisplaySettingsExW(pData->CurrentDisplayDevice->DeviceName, ENUM_CURRENT_SETTINGS, &devmode, 0))
+                    if (EnumDisplaySettingsExW(pData->CurrentDisplayDevice->DeviceName,
+                                               ENUM_CURRENT_SETTINGS, &devmode, 0))
                     {
-                        pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = devmode.dmPelsWidth;
-                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = devmode.dmPelsHeight;
-                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = devmode.dmBitsPerPel;
-                        pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency = devmode.dmDisplayFrequency;
+                        PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
+                        pInitialSettings->dmPelsWidth = devmode.dmPelsWidth;
+                        pInitialSettings->dmPelsHeight = devmode.dmPelsHeight;
+                        pInitialSettings->dmBitsPerPel = devmode.dmBitsPerPel;
+                        pInitialSettings->dmDisplayFrequency = devmode.dmDisplayFrequency;
                         pData->CurrentDisplayDevice->CurrentSettings =
-                            FindElement(pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth,
-                                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight,
-                                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel,
-                                        pData->CurrentDisplayDevice->CurrentSettings);
-                        /* Initial settings should be found */
+                            FindBestElement(pInitialSettings->dmPelsWidth,
+                                            pInitialSettings->dmPelsHeight,
+                                            pInitialSettings->dmBitsPerPel,
+                                            pData->CurrentDisplayDevice->CurrentSettings);
+                        /* Initial entry should be found */
                         ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
