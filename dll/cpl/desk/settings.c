@@ -855,7 +855,7 @@ FindBestElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETT
     }
 
     /* Go through the list */
-    while (Current->Flink)
+    while (1)
     {
         if ((Current->dmPelsWidth == dmPelsWidth) &&
             (Current->dmPelsHeight == dmPelsHeight) &&
@@ -865,15 +865,10 @@ FindBestElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETT
             return Current; /* Found */
         }
 
-        Current = Current->Flink;
-    }
+        if (!Current->Flink)
+            break;
 
-    if ((Current->dmPelsWidth == dmPelsWidth) &&
-        (Current->dmPelsHeight == dmPelsHeight) &&
-        (Current->dmPelsHeight == dmPelsHeight) &&
-        (Current->dmBitsPerPel == dmBitsPerPel))
-    {
-        return Current; /* Found */
+        Current = Current->Flink;
     }
 
     return NULL; /* Not found */
