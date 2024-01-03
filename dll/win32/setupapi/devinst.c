@@ -3085,7 +3085,7 @@ struct PropertyMapEntry
     LPCWSTR nameW;
 };
 
-static struct PropertyMapEntry PropertyMap[] = {
+static const struct PropertyMapEntry PropertyMap[] = {
     { REG_SZ, "DeviceDesc", REGSTR_VAL_DEVDESC },
     { REG_MULTI_SZ, "HardwareId", REGSTR_VAL_HARDWAREID },
     { REG_MULTI_SZ, "CompatibleIDs", REGSTR_VAL_COMPATIBLEIDS },
