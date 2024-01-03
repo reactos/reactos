@@ -1275,10 +1275,17 @@ DWORD WINAPI pSetupInstallCatalog( LPCWSTR catalog, LPCWSTR basename, LPWSTR ful
 {
     HCATADMIN admin;
     HCATINFO cat;
+#ifdef __REACTOS__
+    GUID msguid = DRIVER_ACTION_VERIFY;
+#endif
 
     TRACE ("%s, %s, %p\n", debugstr_w(catalog), debugstr_w(basename), fullname);
 
+#ifdef __REACTOS__
+    if (!CryptCATAdminAcquireContext(&admin, &msguid, 0))
+#else
     if (!CryptCATAdminAcquireContext(&admin,NULL,0))
+#endif
         return GetLastError();
 
     if (!(cat = CryptCATAdminAddCatalog( admin, (PWSTR)catalog, (PWSTR)basename, 0 )))
