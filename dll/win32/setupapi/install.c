@@ -2546,9 +2546,13 @@ BOOL WINAPI SetupCopyOEMInfW(
                                sizeof(catalog_file)/sizeof(catalog_file[0]), NULL ))
         {
             WCHAR source_cat[MAX_PATH];
+#ifdef __REACTOS__
+            DWORD rc;
+#else
             HCATADMIN handle;
             HCATINFO cat;
             GUID msguid = DRIVER_ACTION_VERIFY;
+#endif
 
             SetupCloseInfFile( hinf );
 
@@ -2560,6 +2564,14 @@ BOOL WINAPI SetupCopyOEMInfW(
 
             TRACE("installing catalog file %s\n", debugstr_w( source_cat ));
 
+#ifdef __REACTOS__
+            rc = pSetupInstallCatalog(source_cat, catalog_file, NULL);
+            if (rc != NO_ERROR)
+            {
+                ERR("Could not install catalog, error 0x%lx\n", rc);
+                goto cleanup;
+            }
+#else // __REACTOS__
             if (!CryptCATAdminAcquireContext(&handle, &msguid, 0))
             {
                 ERR("Could not acquire security context\n");
@@ -2575,6 +2587,7 @@ BOOL WINAPI SetupCopyOEMInfW(
 
             CryptCATAdminReleaseCatalogContext(handle, cat, 0);
             CryptCATAdminReleaseContext(handle, 0);
+#endif // __REACTOS__
         }
         else
             SetupCloseInfFile( hinf );
