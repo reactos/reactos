@@ -201,7 +201,7 @@ SETUP_CreateDevicesList(
         else
         {
             TRACE("Using default class GUID_NULL for device %S\n", InstancePath);
-            memcpy(&ClassGuid, &GUID_NULL, sizeof(GUID));
+            ClassGuid = GUID_NULL;
         }
 
         if (Class && !IsEqualIID(&ClassGuid, Class))

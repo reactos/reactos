@@ -51,7 +51,7 @@ CreateDeviceInterface(
     deviceInterface->DeviceInfo = deviceInfo;
     strcpyW(deviceInterface->SymbolicLink, SymbolicLink);
     deviceInterface->Flags = 0; /* Flags will be updated later */
-    memcpy(&deviceInterface->InterfaceClassGuid, pInterfaceGuid, sizeof(GUID));
+    deviceInterface->InterfaceClassGuid = *pInterfaceGuid;
 
     *pDeviceInterface = deviceInterface;
     return TRUE;
@@ -363,7 +363,7 @@ InstallOneInterface(
         return FALSE;
     }
 
-    memcpy(&DeviceInterfaceData.InterfaceClassGuid, &DevItf->InterfaceClassGuid, sizeof(GUID));
+    DeviceInterfaceData.InterfaceClassGuid = DevItf->InterfaceClassGuid;
     DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
     DeviceInterfaceData.Flags = DevItf->Flags;
     DeviceInterfaceData.Reserved = (ULONG_PTR)DevItf;

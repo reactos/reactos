@@ -179,7 +179,7 @@ AddKnownDriverToList(
 
     driverInfo->Params.Rank = Rank;
     memcpy(&driverInfo->DriverDate, &DriverDate, sizeof(FILETIME));
-    memcpy(&driverInfo->ClassGuid, ClassGuid, sizeof(GUID));
+    driverInfo->ClassGuid = *ClassGuid;
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
     lstrcpynW(driverInfo->Info.Description, driverInfo->Details.DrvDescription, LINE_LEN - 1);
@@ -444,9 +444,9 @@ GetVersionInformationFromInfFile(
             Build = atoiW(pBuild);
         }
         Major = atoiW(pVersion);
-        fullVersion.u.HighPart = Major << 16 | Minor;
-        fullVersion.u.LowPart = Revision << 16 | Build;
-        memcpy(DriverVersion, &fullVersion, sizeof(LARGE_INTEGER));
+        fullVersion.HighPart = Major << 16 | Minor;
+        fullVersion.LowPart = Revision << 16 | Build;
+        DriverVersion = fullVersion.QuadPart;
     }
 
     ret = TRUE;
@@ -1661,7 +1661,7 @@ SetupDiSetSelectedDriverW(
                 TRACE("Choosing driver whose rank is 0x%lx\n",
                     (*pDriverInfo)->Params.Rank);
                 if (DeviceInfoData)
-                    memcpy(&DeviceInfoData->ClassGuid, &(*pDriverInfo)->ClassGuid, sizeof(GUID));
+                    DeviceInfoData->ClassGuid = (*pDriverInfo)->ClassGuid;
             }
         }
     }

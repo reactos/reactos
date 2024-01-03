@@ -1210,7 +1210,7 @@ PARSER_GetInfClassW(
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 goto cleanup;
             }
-            memcpy(ClassGuid, &GUID_NULL, sizeof(GUID));
+            *ClassGuid = GUID_NULL;
             *ClassName = UNICODE_NULL;
         }
     }

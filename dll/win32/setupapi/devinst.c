@@ -559,7 +559,7 @@ CreateDeviceInfo(
     deviceInfo->instanceId = deviceInfo->Data;
     deviceInfo->UniqueId = strrchrW(deviceInfo->Data, '\\');
     deviceInfo->DeviceDescription = NULL;
-    memcpy(&deviceInfo->ClassGuid, pClassGuid, sizeof(GUID));
+    deviceInfo->ClassGuid = *pClassGuid;
     deviceInfo->CreationFlags = 0;
     InitializeListHead(&deviceInfo->DriverListHead);
     InitializeListHead(&deviceInfo->InterfaceListHead);
@@ -1299,9 +1299,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     ZeroMemory(list, FIELD_OFFSET(struct DeviceInfoSet, szData));
 
     list->magic = SETUP_DEVICE_INFO_SET_MAGIC;
-    memcpy(&list->ClassGuid,
-            ClassGuid ? ClassGuid : &GUID_NULL,
-            sizeof(list->ClassGuid));
+    list->ClassGuid = (ClassGuid ? *ClassGuid : GUID_NULL);
     list->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
     list->InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
     list->InstallParams.hwndParent = hwndParent;
@@ -1681,7 +1679,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             }
             else
             {
-                memcpy(&DeviceInfoData->ClassGuid, ClassGuid, sizeof(GUID));
+                DeviceInfoData->ClassGuid = *ClassGuid;
                 DeviceInfoData->DevInst = deviceInfo->dnDevInst;
                 DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
                 ret = TRUE;
@@ -1815,9 +1813,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
                 else
                 {
                     struct DeviceInfo *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
-                    memcpy(&info->ClassGuid,
-                        &DevInfo->ClassGuid,
-                        sizeof(GUID));
+                    info->ClassGuid = DevInfo->ClassGuid;
                     info->DevInst = DevInfo->dnDevInst;
                     info->Reserved = (ULONG_PTR)DevInfo;
                     ret = TRUE;
@@ -2444,7 +2440,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    memcpy(&DevInfoData->ClassGuid, &set->ClassGuid, sizeof(GUID));
+    DevInfoData->ClassGuid = set->ClassGuid;
     DevInfoData->RemoteMachineHandle = set->hMachine;
     if (set->MachineName)
     {
@@ -2485,7 +2481,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    memcpy(&DevInfoData->ClassGuid, &set->ClassGuid, sizeof(GUID));
+    DevInfoData->ClassGuid = set->ClassGuid;
     DevInfoData->RemoteMachineHandle = set->hMachine;
     if (set->MachineName)
         strcpyW(DevInfoData->RemoteMachineName, set->MachineName + 2);
@@ -2825,9 +2821,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
             if (MemberIndex-- == 0)
             {
                 /* return this item */
-                memcpy(&DeviceInterfaceData->InterfaceClassGuid,
-                    &DevItf->InterfaceClassGuid,
-                    sizeof(GUID));
+                DeviceInterfaceData->InterfaceClassGuid = DevItf->InterfaceClassGuid;
                 DeviceInterfaceData->Flags = DevItf->Flags;
                 DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
                 found = TRUE;
@@ -2859,9 +2853,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                 if (MemberIndex-- == 0)
                 {
                     /* return this item */
-                    memcpy(&DeviceInterfaceData->InterfaceClassGuid,
-                        &DevItf->InterfaceClassGuid,
-                        sizeof(GUID));
+                    DeviceInterfaceData->InterfaceClassGuid = DevItf->InterfaceClassGuid;
                     DeviceInterfaceData->Flags = DevItf->Flags;
                     DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
                     found = TRUE;
@@ -3076,9 +3068,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
             TRACE("DevicePath is %s\n", debugstr_w(DeviceInterfaceDetailData->DevicePath));
             if (DeviceInfoData)
             {
-                memcpy(&DeviceInfoData->ClassGuid,
-                    &deviceInterface->DeviceInfo->ClassGuid,
-                    sizeof(GUID));
+                DeviceInfoData->ClassGuid = deviceInterface->DeviceInfo->ClassGuid;
                 DeviceInfoData->DevInst = deviceInterface->DeviceInfo->dnDevInst;
                 DeviceInfoData->Reserved = (ULONG_PTR)deviceInterface->DeviceInfo;
             }
@@ -4883,7 +4873,7 @@ SetupDiOpenDeviceInfoW(
 
         if (ret && deviceInfo && DeviceInfoData)
         {
-            memcpy(&DeviceInfoData->ClassGuid, &deviceInfo->ClassGuid, sizeof(GUID));
+            DeviceInfoData->ClassGuid = deviceInfo->ClassGuid;
             DeviceInfoData->DevInst = deviceInfo->dnDevInst;
             DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
         }
@@ -4921,9 +4911,7 @@ SetupDiGetSelectedDevice(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        memcpy(&DeviceInfoData->ClassGuid,
-            &list->SelectedDevice->ClassGuid,
-            sizeof(GUID));
+        DeviceInfoData->ClassGuid = list->SelectedDevice->ClassGuid;
         DeviceInfoData->DevInst = list->SelectedDevice->dnDevInst;
         DeviceInfoData->Reserved = (ULONG_PTR)list->SelectedDevice;
         ret = TRUE;
@@ -5552,7 +5540,7 @@ SetupDiInstallDevice(
 
     /* Write information to driver key */
     *pSectionName = UNICODE_NULL;
-    memcpy(&fullVersion, &SelectedDriver->Info.DriverVersion, sizeof(LARGE_INTEGER));
+    fullVersion.QuadPart = SelectedDriver->Info.DriverVersion;
     TRACE("Write information to driver key\n");
     TRACE("DriverDate      : '%u-%u-%u'\n", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
     TRACE("DriverDesc      : '%s'\n", debugstr_w(SelectedDriver->Info.Description));
