@@ -862,7 +862,8 @@ FindBestElement(
     {
         Penalty = labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
                   labs(Current->dmPelsHeight - pInitialSettings->dmPelsHeight) +
-                  labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel);
+                  labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
+                  labs(Current->dmDisplayFrequency - pInitialSettings->dmDisplayFrequency);
         if (Penalty == 0)
             return Current;
 
