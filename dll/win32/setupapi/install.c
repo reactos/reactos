@@ -1479,7 +1479,7 @@ void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, I
 #endif
 
     BOOL ret = FALSE;
-    WCHAR *s, *path, section[MAX_PATH + sizeof(nt_platformW)/sizeof(WCHAR)];
+    WCHAR *s, *path, section[MAX_PATH + (sizeof(nt_platformW) + sizeof(DotServices))/sizeof(WCHAR)];
     void *callback_context = NULL;
     DWORD SectionNameLength;
     UINT mode;
