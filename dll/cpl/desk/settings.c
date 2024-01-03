@@ -9,6 +9,7 @@
  */
 
 #include "desk.h"
+
 #include <debug.h>
 
 typedef struct _SETTINGS_DATA
