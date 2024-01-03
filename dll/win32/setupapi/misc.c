@@ -1282,6 +1282,7 @@ DWORD WINAPI pSetupInstallCatalog( LPCWSTR catalog, LPCWSTR basename, LPWSTR ful
     TRACE ("%s, %s, %p\n", debugstr_w(catalog), debugstr_w(basename), fullname);
 
 #ifdef __REACTOS__
+    SetLastError(NO_ERROR);
     if (!CryptCATAdminAcquireContext(&admin, &msguid, 0))
 #else
     if (!CryptCATAdminAcquireContext(&admin,NULL,0))
