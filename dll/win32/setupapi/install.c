@@ -1408,13 +1408,13 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
         }
         else info.callback = NULL;
 
-        if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
-            return FALSE;
-
 #ifdef __WINESRC__
         if (!iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
             return FALSE;
-#endif // __WINESRC__
+#endif
+
+        if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
+            return FALSE;
     }
     if (flags & SPINST_UNREGSVR)
     {
