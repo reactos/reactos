@@ -846,29 +846,38 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
 
 static
 PSETTINGS_ENTRY
-FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBitsPerPel, _In_ PSETTINGS_ENTRY Current)
+FindBestElement(
+    _In_ PSETTINGS_ENTRY pInitialSettings,
+    _In_ PSETTINGS_ENTRY Current)
 {
+    LONG Penalty, SmallestPenalty = MAXLONG;
+    PSETTINGS_ENTRY pBestEntry = NULL;
+
     /* Go back to 1st element */
     while (Current->Blink)
         Current = Current->Blink;
 
     /* Go through the list */
-    while (1)
+    while (Current)
     {
-        if ((Current->dmPelsWidth == dmPelsWidth) &&
-            (Current->dmPelsHeight == dmPelsHeight) &&
-            (Current->dmBitsPerPel == dmBitsPerPel))
-        {
+        Penalty = labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
+                  labs(Current->dmPelsHeight - pInitialSettings->dmPelsHeight) +
+                  labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel);
+        if (Penalty == 0)
             return Current;
-        }
 
-        if (!Current->Flink)
-            break;
+        if (!pBestEntry || SmallestPenalty > Penalty)
+        {
+            SmallestPenalty = Penalty;
+            pBestEntry = Current;
+        }
 
         Current = Current->Flink;
     }
 
-    return NULL;
+    ASSERT(pBestEntry);
+
+    return pBestEntry;
 }
 
 static VOID
@@ -897,12 +906,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     {
         PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
         pData->CurrentDisplayDevice->CurrentSettings =
-            FindBestElement(pInitialSettings->dmPelsWidth,
-                            pInitialSettings->dmPelsHeight,
-                            pInitialSettings->dmBitsPerPel,
-                            pData->CurrentDisplayDevice->CurrentSettings);
-        /* Initial entry should be found */
-        ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
+            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->CurrentSettings);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
@@ -963,12 +967,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                         pInitialSettings->dmBitsPerPel = devmode.dmBitsPerPel;
                         pInitialSettings->dmDisplayFrequency = devmode.dmDisplayFrequency;
                         pData->CurrentDisplayDevice->CurrentSettings =
-                            FindBestElement(pInitialSettings->dmPelsWidth,
-                                            pInitialSettings->dmPelsHeight,
-                                            pInitialSettings->dmBitsPerPel,
-                                            pData->CurrentDisplayDevice->CurrentSettings);
-                        /* Initial entry should be found */
-                        ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
+                            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->CurrentSettings);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
                 }
