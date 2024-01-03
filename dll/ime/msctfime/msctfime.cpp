@@ -3590,7 +3590,7 @@ HRESULT UI::_Create()
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
-    SetWindowLongPtr(m_hWnd, sizeof(LONG_PTR), (LONG_PTR)this);
+    SetWindowLongPtrW(m_hWnd, sizeof(LONG_PTR), (LONG_PTR)this);
     //FIXME
     return S_OK;
 }
@@ -3601,7 +3601,7 @@ HRESULT UI::_Create()
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
-    SetWindowLongPtr(m_hWnd, sizeof(LONG_PTR), 0);
+    SetWindowLongPtrW(m_hWnd, sizeof(LONG_PTR), 0);
 }
 
 /**
@@ -3609,7 +3609,7 @@ void UI::_Destroy()
  */
 void UI::OnCreate(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtr(hWnd, sizeof(LONG_PTR));
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
     if (pUI)
         return;
     pUI = new UI(hWnd);
@@ -3622,7 +3622,7 @@ void UI::OnCreate(HWND hWnd)
  */
 void UI::OnDestroy(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtr(hWnd, sizeof(LONG_PTR));
+    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
     if (!pUI)
         return;
 
@@ -3645,26 +3645,35 @@ void UI::OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam)
 struct CIMEUIWindowHandler
 {
     static LRESULT CALLBACK ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK ImeUIMsImeMouseHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK ImeUIMsImeReconvertRequest(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
+/**
+ * @unimplemented
+ */
 LRESULT CALLBACK
-CIMEUIWindowHandler::ImeUIMsImeMouseHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+CIMEUIWindowHandler::ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
 
+/**
+ * @unimplemented
+ */
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
 
+/**
+ * @unimplemented
+ */
 LRESULT CALLBACK
-CIMEUIWindowHandler::ImeUIMsImeReconvertRequest(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+CIMEUIWindowHandler::ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
@@ -3676,23 +3685,20 @@ LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == WM_MSIME_MOUSE)
-        return ImeUIMsImeMouseHandler(hWnd, uMsg, wParam, lParam);
+        return ImeUIMsImeMouseHandler(hWnd, wParam, lParam);
     if (uMsg == WM_MSIME_MODEBIAS)
         return ImeUIMsImeModeBiasHandler(hWnd, wParam, lParam);
     if (uMsg == WM_MSIME_RECONVERTREQUEST)
-        return ImeUIMsImeReconvertRequest(hWnd, uMsg, wParam, lParam);
+        return ImeUIMsImeReconvertRequest(hWnd, wParam, lParam);
     if (uMsg == WM_MSIME_SERVICE)
     {
         TLS *pTLS = TLS::GetTLS();
-        if (pTLS)
+        if (pTLS && pTLS->m_pProfile)
         {
-            if (pTLS->m_pProfile)
-            {
-                LANGID LangID;
-                pTLS->m_pProfile->GetLangId(&LangID);
-                if (PRIMARYLANGID(LangID) == LANG_KOREAN)
-                    return FALSE;
-            }
+            LANGID LangID;
+            pTLS->m_pProfile->GetLangId(&LangID);
+            if (PRIMARYLANGID(LangID) == LANG_KOREAN)
+                return FALSE;
         }
         return TRUE;
     }
@@ -3710,7 +3716,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     {
         if (uMsg == WM_CREATE)
             return -1;
-        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
     }
 
     switch (uMsg)
@@ -3734,8 +3740,8 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         case WM_IME_SELECT:
         case WM_TIMER:
         {
-            UI* pUI = (UI*)GetWindowLongPtr(hWnd, sizeof(LONG_PTR));
-            HIMC hIMC = (HIMC)GetWindowLongPtr(hWnd, 0);
+            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, sizeof(LONG_PTR));
+            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, 0);
             CicIMCLock imcLock(hIMC);
             switch (uMsg)
             {
@@ -3787,7 +3793,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         {
             if (IsMsImeMessage(uMsg))
                 return CIMEUIWindowHandler::ImeUIMsImeHandler(hWnd, uMsg, wParam, lParam);
-            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+            return DefWindowProcW(hWnd, uMsg, wParam, lParam);
         }
     }
 
