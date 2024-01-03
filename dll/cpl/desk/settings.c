@@ -868,7 +868,7 @@ FindBestElement(_In_ DWORD dmPelsWidth, _In_ DWORD dmPelsHeight, _In_ DWORD dmBi
         Current = Current->Flink;
     }
 
-    return NULL; /* Not found */
+    return NULL;
 }
 
 static VOID
