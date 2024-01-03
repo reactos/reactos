@@ -821,7 +821,7 @@ public:
     HIMC m_hIMC;
     ITfDocumentMgr *m_pDocumentMgr;
     ITfContext *m_pContext;
-    IUnknown *m_pUnknown1;
+    ITfContextOwnerServices *m_pContextOwnerServices;
     CInputContextOwnerCallBack *m_pICOwnerCallback;
     CTextEventSink *m_pTextEventSink;
     CCompartmentEventSink *m_pCompEventSink1;
@@ -1061,10 +1061,10 @@ CicInputContext::DestroyInputContext()
         m_pContext = NULL;
     }
 
-    if (m_pUnknown1)
+    if (m_pContextOwnerServices)
     {
-        m_pUnknown1->Release();
-        m_pUnknown1 = NULL;
+        m_pContextOwnerServices->Release();
+        m_pContextOwnerServices = NULL;
     }
 
     // FIXME: m_pICOwnerCallback
