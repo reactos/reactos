@@ -859,7 +859,6 @@ FindBestElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETT
     {
         if ((Current->dmPelsWidth == dmPelsWidth) &&
             (Current->dmPelsHeight == dmPelsHeight) &&
-            (Current->dmPelsHeight == dmPelsHeight) &&
             (Current->dmBitsPerPel == dmBitsPerPel))
         {
             return Current; /* Found */
