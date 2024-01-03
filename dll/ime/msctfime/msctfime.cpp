@@ -1037,14 +1037,14 @@ CicInputContext::DestroyInputContext()
 
     if (m_pCompEventSink2)
     {
-        //FIXME: m_pCompEventSink2->_Unadvise();
+        m_pCompEventSink2->_Unadvise();
         m_pCompEventSink2->Release();
         m_pCompEventSink2 = NULL;
     }
 
     if (m_pCompEventSink1)
     {
-        //FIXME: m_pCompEventSink1->_Unadvise();
+        m_pCompEventSink1->_Unadvise();
         m_pCompEventSink1->Release();
         m_pCompEventSink1 = NULL;
     }
