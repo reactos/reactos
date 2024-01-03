@@ -27,6 +27,7 @@
 #include <cicero/cicarray.h>
 #include <cicero/cicimc.h>
 #include <cicero/cictf.h>
+#include <cicero/ciccaret.h>
 
 #include <wine/debug.h>
 
