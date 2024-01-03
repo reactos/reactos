@@ -1598,7 +1598,7 @@ CFunctionProvider::GetFunction(
     if (IsEqualGUID(guid, GUID_NULL) &&
         IsEqualIID(riid, IID_IAImmFnDocFeed))
     {
-        *func = new CFnDocFeed();
+        *func = new(cicNoThrow) CFnDocFeed();
         if (*func)
             return S_OK;
     }
@@ -2147,7 +2147,7 @@ CicProfile::InitProfileInstance(_Inout_ TLS *pTLS)
     if (!m_pActiveLanguageProfileNotifySink)
     {
         CActiveLanguageProfileNotifySink *pSink =
-            new CActiveLanguageProfileNotifySink(
+            new(cicNoThrow) CActiveLanguageProfileNotifySink(
                 CicProfile::ActiveLanguageProfileNotifySinkCallback, this);
         if (!pSink)
         {
@@ -2326,7 +2326,7 @@ CicBridge::CreateInputContext(
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (!pCicIC)
     {
-        pCicIC = new CicInputContext(m_cliendId, &m_LibThread, hIMC);
+        pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
         if (!pCicIC)
         {
             imeContext.unlock();
@@ -2531,7 +2531,7 @@ CicBridge::ActivateIMMX(
         return hr;
     }
 
-    CFunctionProvider *pProvider = new CFunctionProvider(m_cliendId);
+    CFunctionProvider *pProvider = new(cicNoThrow) CFunctionProvider(m_cliendId);
     if (!pProvider)
     {
         hr = E_FAIL;
@@ -2645,7 +2645,7 @@ CicBridge::InitIMMX(_Inout_ TLS *pTLS)
     if (!m_pThreadMgrEventSink)
     {
         m_pThreadMgrEventSink =
-            new CThreadMgrEventSink(CThreadMgrEventSink::DIMCallback, NULL, NULL);
+            new(cicNoThrow) CThreadMgrEventSink(CThreadMgrEventSink::DIMCallback, NULL, NULL);
         if (!m_pThreadMgrEventSink)
         {
             UnInitIMMX(pTLS);
@@ -2658,7 +2658,7 @@ CicBridge::InitIMMX(_Inout_ TLS *pTLS)
 
     if (!pTLS->m_pProfile)
     {
-        pTLS->m_pProfile = new CicProfile();
+        pTLS->m_pProfile = new(cicNoThrow) CicProfile();
         if (!pTLS->m_pProfile)
             return E_OUTOFMEMORY;
 
@@ -3297,7 +3297,7 @@ CtfImeCreateThreadMgr(VOID)
 
     if (!pTLS->m_pBridge)
     {
-        pTLS->m_pBridge = new CicBridge();
+        pTLS->m_pBridge = new(cicNoThrow) CicBridge();
         if (!pTLS->m_pBridge)
             return E_OUTOFMEMORY;
     }
@@ -3337,7 +3337,7 @@ CtfImeDestroyThreadMgr(VOID)
 
     if (pTLS->m_pBridge)
     {
-        pTLS->m_pBridge = new CicBridge();
+        pTLS->m_pBridge = new(cicNoThrow) CicBridge();
         if (!pTLS->m_pBridge)
             return E_OUTOFMEMORY;
     }
@@ -3604,7 +3604,7 @@ UI::~UI()
  */
 HRESULT UI::_Create()
 {
-    m_pComp = new UIComposition();
+    m_pComp = new(cicNoThrow) UIComposition();
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
@@ -3630,7 +3630,7 @@ void UI::OnCreate(HWND hWnd)
     UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
     if (pUI)
         return;
-    pUI = new UI(hWnd);
+    pUI = new(cicNoThrow) UI(hWnd);
     if (pUI)
         pUI->_Create();
 }
