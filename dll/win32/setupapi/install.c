@@ -2546,17 +2546,38 @@ BOOL WINAPI SetupCopyOEMInfW(
                                sizeof(catalog_file)/sizeof(catalog_file[0]), NULL ))
         {
             WCHAR source_cat[MAX_PATH];
-            strcpyW( source_cat, SourceInfFileName );
+            HCATADMIN handle;
+            HCATINFO cat;
+            GUID msguid = DRIVER_ACTION_VERIFY;
 
+            SetupCloseInfFile( hinf );
+
+            strcpyW( source_cat, SourceInfFileName );
             p = strrchrW( source_cat, '\\' );
             if (p) p++;
             else p = source_cat;
-
             strcpyW( p, catalog_file );
 
-            FIXME("install catalog file %s\n", debugstr_w( source_cat ));
+            TRACE("installing catalog file %s\n", debugstr_w( source_cat ));
+
+            if (!CryptCATAdminAcquireContext(&handle, &msguid, 0))
+            {
+                ERR("Could not acquire security context\n");
+                goto cleanup;
+            }
+
+            if (!(cat = CryptCATAdminAddCatalog(handle, source_cat, catalog_file, 0)))
+            {
+                ERR("Could not add catalog\n");
+                CryptCATAdminReleaseContext(handle, 0);
+                goto cleanup;
+            }
+
+            CryptCATAdminReleaseCatalogContext(handle, cat, 0);
+            CryptCATAdminReleaseContext(handle, 0);
         }
-        SetupCloseInfFile( hinf );
+        else
+            SetupCloseInfFile( hinf );
 
         if (!CopyFileW(SourceInfFileName, pFullFileName, TRUE))
         {
