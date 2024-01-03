@@ -1788,6 +1788,11 @@ static VOID FixupServiceBinaryPath(
     }
 }
 
+/***********************************************************************
+ *            add_service
+ *
+ * Create a new service. Helper for SetupInstallServicesFromInfSectionW.
+ */
 static BOOL InstallOneService(
     struct DeviceInfoSet *list,
     IN HINF hInf,
