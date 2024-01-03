@@ -9,6 +9,7 @@
  */
 
 #include "desk.h"
+#include <debug.h>
 
 typedef struct _SETTINGS_DATA
 {
@@ -842,6 +843,42 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
     }
 }
 
+PSETTINGS_ENTRY
+FindElement(DWORD dmPelsWidth, DWORD dmPelsHeight, DWORD dmBitsPerPel, PSETTINGS_ENTRY List)
+{
+    PSETTINGS_ENTRY Current = List;
+
+    /* Go back to 1st element */
+    while (Current->Blink)
+    {
+        Current = Current->Blink;
+    }
+
+    /* Go through the list */
+    while (Current->Flink)
+    {
+        if ((Current->dmPelsWidth == dmPelsWidth) &&
+            (Current->dmPelsHeight == dmPelsHeight) &&
+            (Current->dmPelsHeight == dmPelsHeight) &&
+            (Current->dmBitsPerPel == dmBitsPerPel))
+        {
+            return Current; /* Found */
+        }
+
+        Current = Current->Flink;
+    }
+
+    if ((Current->dmPelsWidth == dmPelsWidth) &&
+        (Current->dmPelsHeight == dmPelsHeight) &&
+        (Current->dmPelsHeight == dmPelsHeight) &&
+        (Current->dmBitsPerPel == dmBitsPerPel))
+    {
+        return Current; /* Found */
+    }
+
+    return NULL;
+}
+
 static VOID
 ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
 {
@@ -866,10 +903,13 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
     else
     {
-        pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
-        pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
-        pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
-        pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
+        pData->CurrentDisplayDevice->CurrentSettings =
+            FindElement(pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth,
+                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight,
+                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel,
+                        pData->CurrentDisplayDevice->CurrentSettings);
+        /* Initial settings should be found */
+        ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
@@ -927,10 +967,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                         pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = devmode.dmPelsHeight;
                         pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = devmode.dmBitsPerPel;
                         pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency = devmode.dmDisplayFrequency;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
+                        pData->CurrentDisplayDevice->CurrentSettings =
+                            FindElement(pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth,
+                                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight,
+                                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel,
+                                        pData->CurrentDisplayDevice->CurrentSettings);
+                        /* Initial settings should be found */
+                        ASSERT(pData->CurrentDisplayDevice->CurrentSettings);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
                 }
