@@ -112,7 +112,7 @@ BOOL WINAPI SetupLogFileW(
     PCWSTR OtherInfo,
     DWORD Flags )
 {
-    FIXME("(%p, %p, '%s', '%s', %d, %p, %p, %p, %d): stub\n", FileLogHandle,
+    FIXME("(%p, %s, '%s', '%s', %d, %s, %s, %s, %d): stub\n", FileLogHandle,
         debugstr_w(LogSectionName), debugstr_w(SourceFileName),
         debugstr_w(TargetFileName), Checksum, debugstr_w(DiskTagfile),
         debugstr_w(DiskDescription), debugstr_w(OtherInfo), Flags);
