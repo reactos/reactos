@@ -1706,10 +1706,20 @@ DWORD WINAPI SetupDecompressOrCopyFileW( PCWSTR source, PCWSTR target, PUINT typ
     UINT comp;
     DWORD ret = ERROR_INVALID_PARAMETER;
 
+    TRACE("(%s, %s, %p)\n", debugstr_w(source), debugstr_w(target), type);
+
     if (!source || !target) return ERROR_INVALID_PARAMETER;
 
-    if (!type) comp = detect_compression_type( source );
-    else comp = *type;
+    if (!type)
+    {
+        comp = detect_compression_type( source );
+        TRACE("Detected compression type %u\n", comp);
+    }
+    else
+    {
+        comp = *type;
+        TRACE("Using specified compression type %u\n", comp);
+    }
 
     switch (comp)
     {
