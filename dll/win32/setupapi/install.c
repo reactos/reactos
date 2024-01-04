@@ -793,7 +793,6 @@ static BOOL fake_dlls_callback( HINF hinf, PCWSTR field, void *arg )
         HeapFree( GetProcessHeap(), 0, path );
         if (!ret) break;
     }
-    cleanup_fake_dlls();
     return ret;
 }
 #endif // __WINESRC__
@@ -1445,7 +1444,9 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
         else info.callback = NULL;
 
 #ifdef __WINESRC__
-        if (!iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
+        if (iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
+            cleanup_fake_dlls();
+        else
             return FALSE;
 #endif
 
