@@ -14,6 +14,22 @@
 #include <uxtheme.h>
 
 // uxtheme.dll
+using FN_DrawThemeBackground = decltype(&DrawThemeBackground);
+using FN_DrawThemeParentBackground = decltype(&DrawThemeParentBackground);
+using FN_DrawThemeText = decltype(&DrawThemeText);
+using FN_DrawThemeIcon = decltype(&DrawThemeIcon);
+using FN_GetThemeBackgroundExtent = decltype(&GetThemeBackgroundExtent);
+using FN_GetThemeBackgroundContentRect = decltype(&GetThemeBackgroundContentRect);
+using FN_GetThemeTextExtent = decltype(&GetThemeTextExtent);
+using FN_GetThemePartSize = decltype(&GetThemePartSize);
+using FN_DrawThemeEdge = decltype(&DrawThemeEdge);
+using FN_GetThemeColor = decltype(&GetThemeColor);
+using FN_GetThemeMargins = decltype(&GetThemeMargins);
+using FN_GetThemeFont = decltype(&GetThemeFont);
+using FN_GetThemeSysColor = decltype(&GetThemeSysColor);
+using FN_GetThemeSysSize = decltype(&GetThemeSysSize);
+
+#if 0
 typedef HRESULT (WINAPI *FN_DrawThemeBackground)(
     HTHEME  hTheme,
     HDC     hdc,
@@ -111,6 +127,7 @@ typedef COLORREF (WINAPI *FN_GetThemeSysColor)(
 typedef int (WINAPI *FN_GetThemeSysSize)(
     HTHEME hTheme,
     int    iSizeId);
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -139,16 +156,16 @@ protected:
 
 public:
     STDMETHOD(DrawThemeBackground)(HDC hDC, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
-    STDMETHOD(DrawThemeParentBackground)(HWND hwnd, HDC hDC, LPCRECT prc);
+    STDMETHOD(DrawThemeParentBackground)(HWND hwnd, HDC hDC, LPRECT prc);
     STDMETHOD(DrawThemeText)(HDC hDC, int iStateId, LPCWSTR pszText, int cchText, DWORD dwTextFlags, DWORD dwTextFlags2, LPCRECT pRect);
     STDMETHOD(DrawThemeIcon)(HDC hDC, int iStateId, LPCRECT pRect, HIMAGELIST himl, int iImageIndex);
     STDMETHOD(GetThemeBackgroundExtent)(HDC hDC, int iStateId, LPCRECT pContentRect, LPRECT pExtentRect);
     STDMETHOD(GetThemeBackgroundContentRect)(HDC hDC, int iStateId, LPCRECT pBoundingRect, LPRECT pContentRect);
     STDMETHOD(GetThemeTextExtent)(HDC hDC, int iStateId, LPCWSTR pszText, int cchCharCount, DWORD dwTextFlags, LPCRECT pBoundingRect, LPRECT pExtentRect);
-    STDMETHOD(GetThemePartSize)(HDC hDC, int iStateId, LPCRECT prc, THEMESIZE eSize, SIZE *psz);
+    STDMETHOD(GetThemePartSize)(HDC hDC, int iStateId, LPRECT prc, THEMESIZE eSize, SIZE *psz);
     STDMETHOD(DrawThemeEdge)(HDC hDC, int iStateId, LPCRECT pDestRect, UINT uEdge, UINT uFlags, LPRECT pContentRect);
     STDMETHOD(GetThemeColor)(int iStateId, int iPropId, COLORREF *pColor);
-    STDMETHOD(GetThemeMargins)(HDC hDC, int iStateId, int iPropId, LPCRECT prc, MARGINS *pMargins);
+    STDMETHOD(GetThemeMargins)(HDC hDC, int iStateId, int iPropId, LPRECT prc, MARGINS *pMargins);
     STDMETHOD(GetThemeFont)(HDC hDC, int iStateId, int iPropId, LOGFONTW *pFont);
     STDMETHOD_(COLORREF, GetThemeSysColor)(INT iColorId);
     STDMETHOD_(int, GetThemeSysSize)(int iSizeId);
@@ -185,7 +202,7 @@ CUIFTheme::DrawThemeBackground(HDC hDC, int iStateId, LPCRECT pRect, LPCRECT pCl
 }
 
 inline STDMETHODIMP
-CUIFTheme::DrawThemeParentBackground(HWND hwnd, HDC hDC, LPCRECT prc)
+CUIFTheme::DrawThemeParentBackground(HWND hwnd, HDC hDC, LPRECT prc)
 {
     if (!cicGetFN(s_hUXTHEME, s_fnDrawThemeParentBackground, TEXT("uxtheme.dll"), "DrawThemeParentBackground"))
         return E_FAIL;
@@ -233,7 +250,7 @@ CUIFTheme::GetThemeTextExtent(HDC hDC, int iStateId, LPCWSTR pszText, int cchCha
 }
 
 inline STDMETHODIMP
-CUIFTheme::GetThemePartSize(HDC hDC, int iStateId, LPCRECT prc, THEMESIZE eSize, SIZE *psz)
+CUIFTheme::GetThemePartSize(HDC hDC, int iStateId, LPRECT prc, THEMESIZE eSize, SIZE *psz)
 {
     if (!cicGetFN(s_hUXTHEME, s_fnGetThemePartSize, TEXT("uxtheme.dll"), "GetThemePartSize"))
         return E_FAIL;
@@ -257,7 +274,7 @@ CUIFTheme::GetThemeColor(int iStateId, int iPropId, COLORREF *pColor)
 }
 
 inline STDMETHODIMP
-CUIFTheme::GetThemeMargins(HDC hDC, int iStateId, int iPropId, LPCRECT prc, MARGINS *pMargins)
+CUIFTheme::GetThemeMargins(HDC hDC, int iStateId, int iPropId, LPRECT prc, MARGINS *pMargins)
 {
     if (!cicGetFN(s_hUXTHEME, s_fnGetThemeMargins, TEXT("uxtheme.dll"), "GetThemeMargins"))
         return E_FAIL;
