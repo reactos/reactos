@@ -851,10 +851,10 @@ FindBestElement(
     _In_ PSETTINGS_ENTRY List)
 {
     LONG Penalty, SmallestPenalty = MAXLONG;
-    PSETTINGS_ENTRY pBestEntry = NULL, Current = List;
+    PSETTINGS_ENTRY pBestEntry = NULL, Current;
 
     /* Find the best entry in the list */
-    while (Current)
+    for (Current = List; Current; Current = Current->Flink)
     {
         Penalty = 0x100000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
                   0x100 * labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
@@ -868,8 +868,6 @@ FindBestElement(
             SmallestPenalty = Penalty;
             pBestEntry = Current;
         }
-
-        Current = Current->Flink;
     }
 
     assert(pBestEntry);
