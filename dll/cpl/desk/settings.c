@@ -853,7 +853,7 @@ FindBestElement(
     LONG Penalty, SmallestPenalty = MAXLONG;
     PSETTINGS_ENTRY pBestEntry = NULL, Current = List;
 
-    /* Find the best entry in list */
+    /* Find the best entry in the list */
     while (Current)
     {
         Penalty = 0x100000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
