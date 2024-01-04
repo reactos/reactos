@@ -606,7 +606,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     {
         /* file is an executable, not a dll */
         STARTUPINFOW startup;
-        PROCESS_INFORMATION info;
+        PROCESS_INFORMATION process_info;
         WCHAR *cmd_line;
         BOOL res;
         static const WCHAR format[] = {'"','%','s','"',' ','%','s',0};
@@ -620,7 +620,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         memset( &startup, 0, sizeof(startup) );
         startup.cb = sizeof(startup);
         TRACE( "executing %s\n", debugstr_w(cmd_line) );
-        res = CreateProcessW( NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info );
+        res = CreateProcessW( NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &process_info );
         HeapFree( GetProcessHeap(), 0, cmd_line );
         if (!res)
         {
@@ -628,16 +628,16 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
             status.Win32Error = GetLastError();
             goto done;
         }
-        CloseHandle( info.hThread );
+        CloseHandle( process_info.hThread );
 
-        if (WaitForSingleObject( info.hProcess, timeout*1000 ) == WAIT_TIMEOUT)
+        if (WaitForSingleObject( process_info.hProcess, timeout*1000 ) == WAIT_TIMEOUT)
         {
             /* timed out, kill the process */
-            TerminateProcess( info.hProcess, 1 );
+            TerminateProcess( process_info.hProcess, 1 );
             status.FailureCode = SPREG_TIMEOUT;
             status.Win32Error = ERROR_TIMEOUT;
         }
-        CloseHandle( info.hProcess );
+        CloseHandle( process_info.hProcess );
         goto done;
     }
 
