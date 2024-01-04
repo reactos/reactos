@@ -80,6 +80,50 @@ BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
     return FALSE;
 }
 
+/***********************************************************************
+ *              SetupLogFileW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupLogFileW(
+    HSPFILELOG FileLogHandle,
+    PCWSTR LogSectionName,
+    PCWSTR SourceFileName,
+    PCWSTR TargetFileName,
+    DWORD Checksum,
+    PCWSTR DiskTagfile,
+    PCWSTR DiskDescription,
+    PCWSTR OtherInfo,
+    DWORD Flags )
+{
+    FIXME("(%p, %p, '%s', '%s', %d, %p, %p, %p, %d): stub\n", FileLogHandle,
+        debugstr_w(LogSectionName), debugstr_w(SourceFileName),
+        debugstr_w(TargetFileName), Checksum, debugstr_w(DiskTagfile),
+        debugstr_w(DiskDescription), debugstr_w(OtherInfo), Flags);
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *              SetupLogFileA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupLogFileA(
+    HSPFILELOG FileLogHandle,
+    PCSTR LogSectionName,
+    PCSTR SourceFileName,
+    PCSTR TargetFileName,
+    DWORD Checksum,
+    PCSTR DiskTagfile,
+    PCSTR DiskDescription,
+    PCSTR OtherInfo,
+    DWORD Flags )
+{
+    FIXME("(%p, %p, '%s', '%s', %d, %p, %p, %p, %d): stub\n", FileLogHandle,
+        LogSectionName, SourceFileName, TargetFileName, Checksum, DiskTagfile,
+        DiskDescription, OtherInfo, Flags);
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
 
 /***********************************************************************
  *      SetupDiRemoveDevice(SETUPAPI.@)
