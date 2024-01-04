@@ -1270,7 +1270,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     TRACE("%s(%s %p %s %p)\n", __FUNCTION__, debugstr_guid(ClassGuid), hwndParent,
       debugstr_w(MachineName), Reserved);
 
-    if (MachineName != NULL)
+    if (MachineName && *MachineName)
     {
         SIZE_T len = strlenW(MachineName);
         if (len >= SP_MAX_MACHINENAME_LENGTH - 4)
@@ -1278,7 +1278,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
             SetLastError(ERROR_INVALID_MACHINENAME);
             goto cleanup;
         }
-        if(len > 0)
+        if (len > 0)
             size += (len + 3) * sizeof(WCHAR);
         else
             MachineName = NULL;
@@ -1303,7 +1303,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     list->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
     list->InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
     list->InstallParams.hwndParent = hwndParent;
-    if (MachineName)
+    if (MachineName && *MachineName)
     {
         rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
         if (rc != ERROR_SUCCESS)
@@ -3694,7 +3694,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     TRACE("%s(%s 0x%lx 0x%lx %s %p)\n", __FUNCTION__, debugstr_guid(ClassGuid), samDesired,
         Flags, debugstr_w(MachineName), Reserved);
 
-    if (MachineName != NULL)
+    if (MachineName && *MachineName)
     {
         l = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &HKLM);
         if (l != ERROR_SUCCESS)
@@ -3704,7 +3704,9 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         }
     }
     else
+    {
         HKLM = HKEY_LOCAL_MACHINE;
+    }
 
     if (Flags == DIOCR_INSTALLER)
     {
@@ -3718,7 +3720,8 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     {
         ERR("Invalid Flags parameter!\n");
         SetLastError(ERROR_INVALID_FLAGS);
-        if (MachineName != NULL) RegCloseKey(HKLM);
+        if (HKLM != NULL && HKLM != HKEY_LOCAL_MACHINE)
+            RegCloseKey(HKLM);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -3733,7 +3736,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
             SetLastError(ERROR_INVALID_CLASS);
             hClassesKey = INVALID_HANDLE_VALUE;
         }
-        if (MachineName != NULL)
+        if (HKLM != NULL && HKLM != HKEY_LOCAL_MACHINE)
             RegCloseKey(HKLM);
         key = hClassesKey;
     }
@@ -3749,7 +3752,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
                                 samDesired,
                                 &hClassesKey)))
         {
-            if (MachineName != NULL)
+            if (HKLM != NULL && HKLM != HKEY_LOCAL_MACHINE)
                 RegCloseKey(HKLM);
 
             if ((l = RegOpenKeyExW(hClassesKey,
@@ -3765,7 +3768,8 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         }
         else
         {
-            if (MachineName != NULL) RegCloseKey(HKLM);
+            if (HKLM != NULL && HKLM != HKEY_LOCAL_MACHINE)
+                RegCloseKey(HKLM);
             SetLastError(l);
             key = INVALID_HANDLE_VALUE;
         }
