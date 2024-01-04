@@ -899,9 +899,9 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
     else
     {
-        PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
         pData->CurrentDisplayDevice->CurrentSettings =
-            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->Settings);
+            FindBestElement(&pData->CurrentDisplayDevice->InitialSettings,
+                            pData->CurrentDisplayDevice->Settings);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
