@@ -144,6 +144,17 @@ BOOL WINAPI SetupLogFileA(
 }
 
 /***********************************************************************
+ *              SetupDiDrawMiniIcon  (SETUPAPI.@)
+ */
+INT WINAPI SetupDiDrawMiniIcon(HDC hdc, RECT rc, INT MiniIconIndex, DWORD Flags)
+{
+    FIXME("(%p, %s, %d, %x) stub\n", hdc, wine_dbgstr_rect(&rc), MiniIconIndex, Flags);
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/***********************************************************************
  *              SetupDiGetClassBitmapIndex  (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetClassBitmapIndex(const GUID *ClassGuid, PINT MiniIconIndex)
