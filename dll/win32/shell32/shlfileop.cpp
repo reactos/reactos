@@ -658,7 +658,6 @@ EXTERN_C DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
     return (SHNotifyDeleteFileW(NULL, path) == ERROR_SUCCESS);
 }
 
-#ifdef __REACTOS__
 /************************************************************************
  * CheckForError          [internal]
  *
@@ -698,7 +697,6 @@ static DWORD CheckForError(FILE_OPERATION *op, DWORD error, LPCWSTR src)
 exit:
     return error;
 }
-#endif
 
 /************************************************************************
  * SHNotifyMoveFile          [internal]
@@ -748,11 +746,7 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         return ERROR_SUCCESS;
     }
 
-#ifdef __REACTOS__
     return CheckForError(op, GetLastError(), src);
-#else
-    return GetLastError();
-#endif
 }
 
 static BOOL SHIsCdRom(LPCWSTR path)
@@ -822,11 +816,7 @@ static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         return ERROR_SUCCESS;
     }
 
-#ifdef __REACTOS__
     return CheckForError(op, GetLastError(), src);
-#else
-    return GetLastError();
-#endif
 }
 
 /*************************************************************************
@@ -1336,11 +1326,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-#ifdef __REACTOS__
     if (feFrom->szFilename && IsDotDir(feFrom->szFilename))
-#else
-    if (IsDotDir(feFrom->szFilename))
-#endif
         return;
 
     if (PathFileExistsW(szDestPath))
@@ -1348,7 +1334,6 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     else
         lstrcpyW(szTo, szDestPath);
 
-#ifdef __REACTOS__
     if (PathFileExistsW(szTo))
     {
         if (op->req->fFlags & FOF_RENAMEONCOLLISION)
@@ -1360,16 +1345,6 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
             }
         }
         else if (!(op->req->fFlags & FOF_NOCONFIRMATION))
-#else
-    if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
-    {
-        CStringW newPath;
-        if (lstrcmp(feFrom->szDirectory, szDestPath) == 0 && !(newPath = try_find_new_name(szTo)).IsEmpty())
-        {
-            StringCchCopyW(szTo, _countof(szTo), newPath);
-        }
-        else
-#endif
         {
             if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
             {
@@ -1400,7 +1375,6 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
 
 static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
 {
-#ifdef __REACTOS__
     if (PathFileExistsW(szTo))
     {
         if (op->req->fFlags & FOF_RENAMEONCOLLISION)
@@ -1416,18 +1390,6 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
             if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
                 return FALSE;
         }
-#else
-    if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
-    {
-        CStringW newPath;
-        if (lstrcmp(szFrom, szTo) == 0 && !(newPath = try_find_new_name(szTo)).IsEmpty())
-        {
-            return SHNotifyCopyFileW(op, szFrom, newPath, FALSE) == 0;
-        }
-
-        if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
-            return FALSE;
-#endif
     }
 
     return SHNotifyCopyFileW(op, szFrom, szTo, FALSE) == 0;
@@ -1723,11 +1685,7 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-#ifdef __REACTOS__
     if (feFrom->szFilename && IsDotDir(feFrom->szFilename))
-#else
-    if (IsDotDir(feFrom->szFilename))
-#endif
         return;
 
     SHNotifyCreateDirectoryW(szDestPath, NULL);
@@ -1752,7 +1710,6 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
         Win32RemoveDirectoryW(feFrom->szFullPath);
 }
 
-#ifdef __REACTOS__
 static BOOL move_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
 {
     if (PathFileExistsW(szTo))
@@ -1774,26 +1731,19 @@ static BOOL move_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
 
     return SHNotifyMoveFileW(op, szFrom, szTo, FALSE) == 0;
 }
-#endif
 
 /* moves a file or directory to another directory */
 static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE_ENTRY *feTo)
 {
     WCHAR szDestPath[MAX_PATH];
 
-#ifdef __REACTOS__
     if (!PathFileExistsW(feTo->szFullPath))
         SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
-#endif
 
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
     if (IsAttribFile(feFrom->attributes))
-#ifdef __REACTOS__
         move_file_to_file(op, feFrom->szFullPath, szDestPath);
-#else
-        SHNotifyMoveFileW(op, feFrom->szFullPath, szDestPath, FALSE);
-#endif
     else if (!(op->req->fFlags & FOF_FILESONLY && feFrom->bFromWildcard))
         move_dir_to_dir(op, feFrom, szDestPath);
 }
@@ -1854,7 +1804,6 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
             }
         }
 
-#ifdef __REACTOS__
         if ((flFrom->dwNumFiles > 1 && flTo->dwNumFiles == 1) ||
             IsAttribDir(fileDest->attributes))
         {
@@ -1872,12 +1821,6 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
                 return ERROR_CANCELLED;
             }
         }
-#else
-        if (fileDest->bExists && IsAttribDir(fileDest->attributes))
-            move_to_dir(op, entryToMove, fileDest);
-        else
-            SHNotifyMoveFileW(op, entryToMove->szFullPath, fileDest->szFullPath, IsAttribDir(entryToMove->attributes));
-#endif
 
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
@@ -1929,17 +1872,11 @@ static void check_flags(FILEOP_FLAGS fFlags)
 {
     WORD wUnsupportedFlags = FOF_NO_CONNECTED_ELEMENTS |
         FOF_NOCOPYSECURITYATTRIBS | FOF_NORECURSEREPARSE |
-#ifdef __REACTOS__
         FOF_WANTMAPPINGHANDLE;
-#else
-        FOF_RENAMEONCOLLISION | FOF_WANTMAPPINGHANDLE;
-#endif
 
     if (fFlags & wUnsupportedFlags)
         FIXME("Unsupported flags: %04x\n", fFlags);
 }
-
-#ifdef __REACTOS__
 
 static DWORD
 validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
@@ -2034,7 +1971,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
 
     return ERROR_SUCCESS;
 }
-#endif
+
 /*************************************************************************
  * SHFileOperationW          [SHELL32.@]
  *
@@ -2071,11 +2008,10 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     op.completedSize.QuadPart = 0ull;
     op.bManyItems = (flFrom.dwNumFiles > 1);
 
-#ifdef __REACTOS__
     ret = validate_operation(lpFileOp, &flFrom, &flTo);
     if (ret)
         goto cleanup;
-#endif
+
     if (lpFileOp->wFunc != FO_RENAME && !(lpFileOp->fFlags & FOF_SILENT)) {
         ret = CoCreateInstance(CLSID_ProgressDialog,
                                NULL,
