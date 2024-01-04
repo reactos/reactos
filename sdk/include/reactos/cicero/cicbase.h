@@ -62,6 +62,20 @@ inline void operator delete[](void* ptr, size_t size) noexcept
     cicMemFree(ptr);
 }
 
+template <typename T_FN>
+static inline BOOL
+cicGetFN(HINSTANCE& hinstDLL, T_FN& fn, LPCTSTR pszDllName, LPCSTR pszFuncName)
+{
+    if (fn)
+        return TRUE;
+    if (!hinstDLL)
+        hinstDLL = LoadLibrary(pszDllName);
+    if (!hinstDLL)
+        return FALSE;
+    fn = reinterpret_cast<T_FN>(GetProcAddress(hinstDLL, pszFuncName));
+    return !!fn;
+}
+
 typedef struct CIC_LIBTHREAD
 {
     IUnknown *m_pUnknown1;
