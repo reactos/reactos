@@ -129,6 +129,7 @@ static const WCHAR Needs[]           = {'N','e','e','d','s',0};
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
 #ifdef __WINESRC__
 static const WCHAR WineFakeDlls[]    = {'W','i','n','e','F','a','k','e','D','l','l','s',0};
+static const WCHAR WinePreInstall[]  = {'W','i','n','e','P','r','e','I','n','s','t','a','l','l',0};
 #endif
 
 
@@ -1409,6 +1410,17 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
     iterate_section_fields( hinf, section, Needs, needs_callback, &needs_info);
 #endif
 
+#ifdef __WINESRC__
+    if (flags & SPINST_REGISTRY)
+    {
+        struct registry_callback_info info;
+
+        info.default_root = key_root;
+        info.delete = FALSE;
+        if (!iterate_section_fields( hinf, section, WinePreInstall, registry_callback, &info ))
+            return FALSE;
+    }
+#endif
     if (flags & SPINST_FILES)
     {
         SP_DEVINSTALL_PARAMS_W install_params;
