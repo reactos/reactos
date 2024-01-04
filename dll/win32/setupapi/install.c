@@ -623,7 +623,7 @@ static BOOL do_register_dll( struct register_dll_info *info, const WCHAR *path,
         memset( &startup, 0, sizeof(startup) );
         startup.cb = sizeof(startup);
         TRACE( "executing %s\n", debugstr_w(cmd_line) );
-        res = CreateProcessW( NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &process_info );
+        res = CreateProcessW( path, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &process_info );
         HeapFree( GetProcessHeap(), 0, cmd_line );
         if (!res)
         {
