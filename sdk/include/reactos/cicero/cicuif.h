@@ -276,7 +276,7 @@ inline STDMETHODIMP_(COLORREF)
 CUIFTheme::GetThemeSysColor(INT iColorId)
 {
     if (!cicGetFN(s_hUXTHEME, s_fnGetThemeSysColor, TEXT("uxtheme.dll"), "GetThemeSysColor"))
-        return E_FAIL;
+        return RGB(0, 0, 0);
     return s_fnGetThemeSysColor(m_hTheme, iColorId);
 }
 
@@ -284,7 +284,7 @@ inline STDMETHODIMP_(int)
 CUIFTheme::GetThemeSysSize(int iSizeId)
 {
     if (!cicGetFN(s_hUXTHEME, s_fnGetThemeSysSize, TEXT("uxtheme.dll"), "GetThemeSysSize"))
-        return E_FAIL;
+        return 0;
     return s_fnGetThemeSysSize(m_hTheme, iSizeId);
 }
 
