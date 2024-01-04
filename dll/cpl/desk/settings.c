@@ -847,23 +847,23 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
 static
 PSETTINGS_ENTRY
 FindBestElement(
-    _In_ PSETTINGS_ENTRY pInitialSettings,
+    _In_ PSETTINGS_ENTRY pRequested,
     _In_ PSETTINGS_ENTRY List)
 {
-    LONG Penalty, SmallestPenalty = MAXLONG;
+    LONG Distance, NearestDistance = MAXLONG;
     PSETTINGS_ENTRY pBestEntry = NULL, Current;
 
     /* Find the best entry in the list */
     for (Current = List; Current; Current = Current->Flink)
     {
-        Penalty = 0x100000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
-                  0x100 * labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
-                  0x100 * labs(Current->dmPelsHeight - pInitialSettings->dmPelsHeight) +
-                  labs(Current->dmDisplayFrequency - pInitialSettings->dmDisplayFrequency);
-        if (SmallestPenalty > Penalty)
+        Distance = 0x100000 * labs(Current->dmBitsPerPel       - pRequested->dmBitsPerPel      ) +
+                      0x100 * labs(Current->dmPelsWidth        - pRequested->dmPelsWidth       ) +
+                      0x100 * labs(Current->dmPelsHeight       - pRequested->dmPelsHeight      ) +
+                              labs(Current->dmDisplayFrequency - pRequested->dmDisplayFrequency);
+        if (Distance < NearestDistance)
         {
             pBestEntry = Current;
-            SmallestPenalty = Penalty;
+            NearestDistance = Distance;
         }
     }
 
