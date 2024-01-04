@@ -848,16 +848,12 @@ static
 PSETTINGS_ENTRY
 FindBestElement(
     _In_ PSETTINGS_ENTRY pInitialSettings,
-    _In_ PSETTINGS_ENTRY Current)
+    _In_ PSETTINGS_ENTRY List)
 {
     LONG Penalty, SmallestPenalty = MAXLONG;
-    PSETTINGS_ENTRY pBestEntry = NULL;
+    PSETTINGS_ENTRY pBestEntry = NULL, Current = List;
 
-    /* Go back to 1st element */
-    while (Current->Blink)
-        Current = Current->Blink;
-
-    /* Go through the list */
+    /* Find the best entry in list */
     while (Current)
     {
         Penalty = 0x100000 * labs(Current->dmBitsPerPel - pInitialSettings->dmBitsPerPel) +
@@ -907,7 +903,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     {
         PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
         pData->CurrentDisplayDevice->CurrentSettings =
-            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->CurrentSettings);
+            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->Settings);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
@@ -968,7 +964,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                         pInitialSettings->dmBitsPerPel = devmode.dmBitsPerPel;
                         pInitialSettings->dmDisplayFrequency = devmode.dmDisplayFrequency;
                         pData->CurrentDisplayDevice->CurrentSettings =
-                            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->CurrentSettings);
+                            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->Settings);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
                 }
