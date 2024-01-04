@@ -2761,7 +2761,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 				abs(es->selection_end - es->selection_start) - strl, hrgn);
 			strl = 0;
 			e = s;
-			hrgn = CreateRectRgn(0, 0, 0, 0);
+			SetRectRgn(hrgn, 0, 0, 0, 0);
 			if (!notify_parent(es, EN_MAXTEXT)) return;
 		}
 	}
