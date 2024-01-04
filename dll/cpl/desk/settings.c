@@ -10,7 +10,7 @@
 
 #include "desk.h"
 
-#include <debug.h>
+#include <assert.h>
 
 typedef struct _SETTINGS_DATA
 {
@@ -872,7 +872,7 @@ FindBestElement(
         Current = Current->Flink;
     }
 
-    ASSERT(pBestEntry);
+    assert(pBestEntry);
 
     return pBestEntry;
 }
