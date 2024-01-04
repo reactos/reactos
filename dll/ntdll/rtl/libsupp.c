@@ -10,6 +10,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+#include <apisets.h>
+#include <compat_undoc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -861,7 +863,8 @@ RtlDosApplyFileIsolationRedirection_Ustr(IN ULONG Flags,
         return STATUS_SXS_KEY_NOT_FOUND;
     }
 
-    if (NtCurrentPeb()->ProcessParameters &&
+    if ((Flags & RTL_DOS_APPLY_FILE_REDIRECTION_USTR_FLAG_RESPECT_DOT_LOCAL) &&
+        NtCurrentPeb()->ProcessParameters &&
         (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH))
     {
         UNICODE_STRING RealName, LocalName;
@@ -985,6 +988,170 @@ RtlDosApplyFileIsolationRedirection_Ustr(IN ULONG Flags,
     else
     {
         *NewName = StaticString;
+    }
+
+    return Status;
+}
+
+#ifndef TAG_USTR
+#define TAG_USTR 'RTSU'
+#endif
+#ifndef RtlpAllocateStringMemory
+#define RtlpAllocateStringMemory(Bytes, Tag) RtlpAllocateMemory(Bytes, Tag)
+#endif
+
+static DWORD
+LdrpApisetVersion(VOID)
+{
+    static DWORD CachedApisetVersion = ~0u;
+
+    if (CachedApisetVersion == ~0u)
+    {
+        DWORD CompatVersion = RosGetProcessCompatVersion();
+
+        switch (CompatVersion)
+        {
+            case 0:
+                break;
+            case _WIN32_WINNT_VISTA:
+                /* No apisets in vista yet*/
+                CachedApisetVersion = 0;
+                break;
+            case _WIN32_WINNT_WIN7:
+                CachedApisetVersion = APISET_WIN7;
+                DPRINT1("Activating apisets for Win7\n");
+                break;
+            case _WIN32_WINNT_WIN8:
+                CachedApisetVersion = APISET_WIN8;
+                DPRINT1("Activating apisets for Win8\n");
+                break;
+            case _WIN32_WINNT_WINBLUE:
+                CachedApisetVersion = APISET_WIN81;
+                DPRINT1("Activating apisets for Win8.1\n");
+                break;
+            case _WIN32_WINNT_WIN10:
+                CachedApisetVersion = APISET_WIN10;
+                DPRINT1("Activating apisets for Win10\n");
+                break;
+            default:
+                DPRINT1("Unknown version 0x%x\n", CompatVersion);
+                CachedApisetVersion = 0;
+                break;
+        }
+    }
+
+    return CachedApisetVersion;
+}
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+LdrpApplyFileNameRedirection(
+    _In_ PUNICODE_STRING OriginalName,
+    _In_ PUNICODE_STRING Extension,
+    _Inout_opt_ PUNICODE_STRING StaticString,
+    _Inout_opt_ PUNICODE_STRING DynamicString,
+    _Inout_ PUNICODE_STRING *NewName,
+    _Out_ PBOOLEAN RedirectedDll)
+{
+
+    /* Check for invalid parameters */
+    if (!OriginalName)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!DynamicString && !StaticString)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!NewName)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *RedirectedDll = FALSE;
+    
+    PCUNICODE_STRING PrevNewName = *NewName;
+    UNICODE_STRING ApisetName = {0};
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DWORD ApisetVersion = LdrpApisetVersion();
+    if (ApisetVersion)
+    {
+        Status = ApiSetResolveToHost(ApisetVersion, OriginalName, RedirectedDll, &ApisetName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ApiSetResolveToHost FAILED: (Status 0x%x)\n", Status);
+            return Status;
+        }
+    }
+
+    if (*RedirectedDll)
+    {
+        UNICODE_STRING NtSystemRoot;
+        static const UNICODE_STRING System32 = RTL_CONSTANT_STRING(L"\\System32\\");
+        PUNICODE_STRING ResultPath = NULL;
+
+        /* This is an apiset we can use */
+        RtlInitUnicodeString(&NtSystemRoot, SharedUserData->NtSystemRoot);
+
+        SIZE_T Needed = System32.Length + ApisetName.Length + NtSystemRoot.Length + sizeof(UNICODE_NULL);
+
+        if (StaticString && StaticString->MaximumLength >= (USHORT)Needed)
+        {
+            StaticString->Length = 0;
+            ResultPath = StaticString;
+        }
+        else if (DynamicString)
+        {
+            DynamicString->Buffer = RtlpAllocateStringMemory(Needed, TAG_USTR);
+            if (DynamicString->Buffer == NULL)
+            {
+                DPRINT1("LdrpApplyFileNameRedirection out of memory\n");
+                return STATUS_NO_MEMORY;
+            }
+            DynamicString->MaximumLength = (USHORT)Needed;
+            DynamicString->Length = 0;
+
+            ResultPath = DynamicString;
+        }
+        else
+        {
+            DPRINT1("ERROR: LdrpApplyFileNameRedirection no inputbuffer valid\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        RtlAppendUnicodeStringToString(ResultPath, &NtSystemRoot);
+        RtlAppendUnicodeStringToString(ResultPath, &System32);
+        RtlAppendUnicodeStringToString(ResultPath, &ApisetName);
+        DPRINT1("ApiSetResolveToHost redirected %wZ to %wZ\n", OriginalName, ResultPath);
+        *NewName = ResultPath;
+    }
+    else
+    {
+        /* Check if the SxS Assemblies specify another file */
+        Status = RtlDosApplyFileIsolationRedirection_Ustr(RTL_DOS_APPLY_FILE_REDIRECTION_USTR_FLAG_RESPECT_DOT_LOCAL, OriginalName, Extension, StaticString, DynamicString, NewName, NULL, NULL, NULL);
+
+        /* Check success */
+        if (NT_SUCCESS(Status))
+        {
+            /* Let Ldrp know */
+            *RedirectedDll = TRUE;
+        }
+        else if (Status == STATUS_SXS_KEY_NOT_FOUND)
+        {
+            ASSERT(*NewName == PrevNewName);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Unrecoverable SxS failure; did we get a string? */
+            if (DynamicString && DynamicString->Buffer)
+                RtlFreeUnicodeString(DynamicString);
+            return Status;
+        }
     }
 
     return Status;
