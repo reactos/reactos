@@ -876,7 +876,7 @@ void WINAPI pSetupSetGlobalFlags( DWORD flags )
 }
 
 /***********************************************************************
- *		SetupGetNonInteractiveMode  (SETUPAPI.@)
+ *              SetupGetNonInteractiveMode  (SETUPAPI.@)
  */
 BOOL WINAPI SetupGetNonInteractiveMode(VOID)
 {
@@ -884,7 +884,7 @@ BOOL WINAPI SetupGetNonInteractiveMode(VOID)
 }
 
 /***********************************************************************
- *		SetupSetNonInteractiveMode  (SETUPAPI.@)
+ *              SetupSetNonInteractiveMode  (SETUPAPI.@)
  */
 BOOL WINAPI SetupSetNonInteractiveMode(BOOL NonInteractiveFlag)
 {
