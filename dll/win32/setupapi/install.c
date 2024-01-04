@@ -79,6 +79,9 @@ struct register_dll_info
     PSP_FILE_CALLBACK_W callback;
     PVOID               callback_context;
     BOOL                unregister;
+    int                 modules_size;
+    int                 modules_count;
+    HMODULE            *modules;
 };
 
 /* info passed to callback functions dealing with Needs directives */
@@ -566,7 +569,7 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
  *
  * Register or unregister a dll.
  */
-static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *path,
+static BOOL do_register_dll( struct register_dll_info *info, const WCHAR *path,
                              INT flags, INT timeout, const WCHAR *args )
 {
     HMODULE module;
@@ -690,7 +693,23 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     }
 
 done:
-    if (module) FreeLibrary( module );
+    if (module)
+    {
+        if (info->modules_count >= info->modules_size)
+        {
+            int new_size = max( 32, info->modules_size * 2 );
+            HMODULE *new = info->modules ?
+                HeapReAlloc( GetProcessHeap(), 0, info->modules, new_size * sizeof(*new) ) :
+                HeapAlloc( GetProcessHeap(), 0, new_size * sizeof(*new) );
+            if (new)
+            {
+                info->modules_size = new_size;
+                info->modules = new;
+            }
+        }
+        if (info->modules_count < info->modules_size) info->modules[info->modules_count++] = module;
+        else FreeLibrary( module );
+    }
     if (info->callback) info->callback( info->callback_context, SPFILENOTIFY_ENDREGISTRATION,
                                         (UINT_PTR)&status, !info->unregister );
     return TRUE;
@@ -1371,6 +1390,8 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
                                          PSP_FILE_CALLBACK_W callback, PVOID context,
                                          HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data )
 {
+    BOOL ret;
+    int i;
     struct needs_callback_info needs_info;
 
     /* Parse 'Include' and 'Needs' directives */
@@ -1393,7 +1414,6 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
         struct files_callback_info info;
         HSPFILEQ queue = NULL;
         BOOL use_custom_queue;
-        BOOL ret;
 
         install_params.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
         use_custom_queue = SetupDiGetDeviceInstallParamsW(devinfo, devinfo_data, &install_params) && (install_params.Flags & DI_NOVCP);
@@ -1435,7 +1455,10 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
     {
         struct register_dll_info info;
 
-        info.unregister = FALSE;
+        info.unregister    = FALSE;
+        info.modules_size  = 0;
+        info.modules_count = 0;
+        info.modules       = NULL;
         if (flags & SPINST_REGISTERCALLBACKAWARE)
         {
             info.callback         = callback;
@@ -1450,14 +1473,19 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
             return FALSE;
 #endif
 
-        if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
-            return FALSE;
+        ret = iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info );
+        for (i = 0; i < info.modules_count; i++) FreeLibrary( info.modules[i] );
+        HeapFree( GetProcessHeap(), 0, info.modules );
+        if (!ret) return FALSE;
     }
     if (flags & SPINST_UNREGSVR)
     {
         struct register_dll_info info;
 
-        info.unregister = TRUE;
+        info.unregister    = TRUE;
+        info.modules_size  = 0;
+        info.modules_count = 0;
+        info.modules       = NULL;
         if (flags & SPINST_REGISTERCALLBACKAWARE)
         {
             info.callback         = callback;
@@ -1465,8 +1493,10 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
         }
         else info.callback = NULL;
 
-        if (!iterate_section_fields( hinf, section, UnregisterDlls, register_dlls_callback, &info ))
-            return FALSE;
+        ret = iterate_section_fields( hinf, section, UnregisterDlls, register_dlls_callback, &info );
+        for (i = 0; i < info.modules_count; i++) FreeLibrary( info.modules[i] );
+        HeapFree( GetProcessHeap(), 0, info.modules );
+        if (!ret) return FALSE;
     }
     if (flags & SPINST_REGISTRY)
     {
