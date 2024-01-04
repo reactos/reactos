@@ -860,6 +860,9 @@ FindBestElement(
                       0x100 * labs(Current->dmPelsWidth        - pRequested->dmPelsWidth       ) +
                       0x100 * labs(Current->dmPelsHeight       - pRequested->dmPelsHeight      ) +
                               labs(Current->dmDisplayFrequency - pRequested->dmDisplayFrequency);
+        if (Distance == 0)
+            return Current;
+
         if (Distance < NearestDistance)
         {
             pBestEntry = Current;
