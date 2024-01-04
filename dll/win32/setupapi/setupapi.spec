@@ -467,8 +467,8 @@
 @ stdcall SetupPromptForDiskA(ptr str str str str str long ptr long ptr)
 @ stdcall SetupPromptForDiskW(ptr wstr wstr wstr wstr wstr long ptr long ptr)
 @ stdcall SetupPromptReboot(ptr ptr long)
-@ stdcall -stub SetupQueryDrivesInDiskSpaceListA(ptr ptr long ptr)
-@ stub SetupQueryDrivesInDiskSpaceListW
+@ stdcall SetupQueryDrivesInDiskSpaceListA(ptr ptr long ptr)
+@ stdcall SetupQueryDrivesInDiskSpaceListW(ptr ptr long ptr)
 @ stub SetupQueryFileLogA
 @ stub SetupQueryFileLogW
 @ stdcall SetupQueryInfFileInformationA(ptr long str long ptr)

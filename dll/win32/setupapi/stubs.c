@@ -63,6 +63,24 @@ BOOL WINAPI SetupAddToSourceListW(DWORD flags, PCWSTR source)
 }
 
 /***********************************************************************
+ *      SetupQueryDrivesInDiskSpaceListA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupQueryDrivesInDiskSpaceListA(HDSKSPC disk_space, PSTR return_buffer, DWORD return_buffer_size, PDWORD required_size)
+{
+    FIXME("%p, %p, %d, %p\n", disk_space, return_buffer, return_buffer_size, required_size);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      SetupQueryDrivesInDiskSpaceListW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupQueryDrivesInDiskSpaceListW(HDSKSPC disk_space, PWSTR return_buffer, DWORD return_buffer_size, PDWORD required_size)
+{
+    FIXME("%p, %p, %d, %p\n", disk_space, return_buffer, return_buffer_size, required_size);
+    return FALSE;
+}
+
+/***********************************************************************
  *      SetupSetSourceListA (SETUPAPI.@)
  */
 BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
