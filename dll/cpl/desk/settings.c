@@ -10,8 +10,6 @@
 
 #include "desk.h"
 
-#include <assert.h>
-
 typedef struct _SETTINGS_DATA
 {
     PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
@@ -847,11 +845,11 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
 static
 PSETTINGS_ENTRY
 FindBestElement(
-    _In_ PSETTINGS_ENTRY Request,
-    _In_ PSETTINGS_ENTRY List)
+    _In_ PDISPLAY_DEVICE_ENTRY pDevice)
 {
+    PSETTINGS_ENTRY Current, Request = &pDevice->InitialSettings, List = pDevice->Settings;
+    PSETTINGS_ENTRY pBestEntry = NULL;
     LONG Distance, NearestDistance = MAXLONG;
-    PSETTINGS_ENTRY pBestEntry = NULL, Current;
 
     /* Find the best entry in the list */
     for (Current = List; Current; Current = Current->Flink)
@@ -869,8 +867,6 @@ FindBestElement(
             NearestDistance = Distance;
         }
     }
-
-    assert(pBestEntry);
 
     return pBestEntry;
 }
@@ -899,9 +895,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
     else
     {
-        pData->CurrentDisplayDevice->CurrentSettings =
-            FindBestElement(&pData->CurrentDisplayDevice->InitialSettings,
-                            pData->CurrentDisplayDevice->Settings);
+        pData->CurrentDisplayDevice->CurrentSettings = FindBestElement(pData->CurrentDisplayDevice);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
@@ -962,7 +956,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                         pInitialSettings->dmBitsPerPel = devmode.dmBitsPerPel;
                         pInitialSettings->dmDisplayFrequency = devmode.dmDisplayFrequency;
                         pData->CurrentDisplayDevice->CurrentSettings =
-                            FindBestElement(pInitialSettings, pData->CurrentDisplayDevice->Settings);
+                            FindBestElement(pData->CurrentDisplayDevice);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
                 }
