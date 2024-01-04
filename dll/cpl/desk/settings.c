@@ -860,7 +860,7 @@ FindBestElement(
                   0x100 * labs(Current->dmPelsWidth - pInitialSettings->dmPelsWidth) +
                   0x100 * labs(Current->dmPelsHeight - pInitialSettings->dmPelsHeight) +
                   labs(Current->dmDisplayFrequency - pInitialSettings->dmDisplayFrequency);
-        if (!pBestEntry || SmallestPenalty > Penalty)
+        if (SmallestPenalty > Penalty)
         {
             pBestEntry = Current;
             SmallestPenalty = Penalty;
