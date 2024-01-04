@@ -847,12 +847,11 @@ PSETTINGS_ENTRY
 FindBestElement(
     _In_ PDISPLAY_DEVICE_ENTRY pDevice)
 {
-    PSETTINGS_ENTRY Current, Request = &pDevice->InitialSettings, List = pDevice->Settings;
-    PSETTINGS_ENTRY pBestEntry = NULL;
+    PSETTINGS_ENTRY Request = &pDevice->InitialSettings, pBestEntry = NULL, Current;
     LONG Distance, NearestDistance = MAXLONG;
 
     /* Find the best entry in the list */
-    for (Current = List; Current; Current = Current->Flink)
+    for (Current = pDevice->Settings; Current; Current = Current->Flink)
     {
         Distance = 0x100000 * labs(Current->dmBitsPerPel       - Request->dmBitsPerPel      ) +
                       0x100 * labs(Current->dmPelsWidth        - Request->dmPelsWidth       ) +
