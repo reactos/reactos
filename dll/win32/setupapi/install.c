@@ -425,14 +425,18 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
 static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
 {
     struct registry_callback_info *info = arg;
+#ifdef __REACTOS__
     LPWSTR security_key, security_descriptor;
-    INFCONTEXT context, security_context;
+    INFCONTEXT security_context;
     PSECURITY_DESCRIPTOR sd = NULL;
-    SECURITY_ATTRIBUTES security_attributes = { 0, };
+    SECURITY_ATTRIBUTES security_attributes = { 0 };
+#endif
+    INFCONTEXT context;
     HKEY root_key, hkey;
-    DWORD required;
 
     BOOL ok = SetupFindFirstLineW( hinf, field, NULL, &context );
+
+#ifdef __REACTOS__
     if (!ok)
         return TRUE;
 
@@ -449,6 +453,7 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
     MyFree(security_key);
     if (ok)
     {
+        DWORD required;
         if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
             return FALSE;
         security_descriptor = MyMalloc( required * sizeof(WCHAR) );
@@ -463,11 +468,13 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         MyFree( security_descriptor );
         if (!ok)
             return FALSE;
-        security_attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        security_attributes.nLength = sizeof(security_attributes);
         security_attributes.lpSecurityDescriptor = sd;
     }
+    ok = TRUE;
+#endif // __REACTOS__
 
-    for (ok = TRUE; ok; ok = SetupFindNextLine( &context, &context ))
+    for (; ok; ok = SetupFindNextLine( &context, &context ))
     {
         WCHAR buffer[MAX_INF_STRING_LENGTH];
         INT flags;
@@ -499,8 +506,12 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         {
             if (RegOpenKeyW( root_key, buffer, &hkey )) continue;  /* ignore if it doesn't exist */
         }
+#ifdef __REACTOS__
         else if (RegCreateKeyExW( root_key, buffer, 0, NULL, 0, MAXIMUM_ALLOWED,
             sd ? &security_attributes : NULL, &hkey, NULL ))
+#else
+        else if (RegCreateKeyW( root_key, buffer, &hkey ))
+#endif
         {
             ERR( "could not create key %p %s\n", root_key, debugstr_w(buffer) );
             continue;
@@ -515,12 +526,16 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         if (!do_reg_operation( hkey, buffer, &context, flags ))
         {
             if (hkey != root_key) RegCloseKey( hkey );
+#ifdef __REACTOS__
             if (sd) LocalFree( sd );
+#endif
             return FALSE;
         }
         if (hkey != root_key) RegCloseKey( hkey );
     }
+#ifdef __REACTOS__
     if (sd) LocalFree( sd );
+#endif
     return TRUE;
 }
 
