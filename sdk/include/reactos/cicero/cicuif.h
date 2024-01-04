@@ -69,7 +69,7 @@ public:
     STDMETHOD(GetThemeFont)(HDC hDC, int iStateId, int iPropId, LOGFONTW *pFont);
     STDMETHOD_(COLORREF, GetThemeSysColor)(INT iColorId);
     STDMETHOD_(int, GetThemeSysSize)(int iSizeId);
-    virtual void SetActiveTheme(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2);
+    STDMETHOD_(void, SetActiveTheme)(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ CUIFTheme::GetThemeSysSize(int iSizeId)
     return s_fnGetThemeSysSize(m_hTheme, iSizeId);
 }
 
-inline void
+inline STDMETHODIMP_(void)
 CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2)
 {
     m_iPartId = iPartId;
