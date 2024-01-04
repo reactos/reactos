@@ -757,6 +757,7 @@ static BOOL fake_dlls_callback( HINF hinf, PCWSTR field, void *arg )
         HeapFree( GetProcessHeap(), 0, path );
         if (!ret) break;
     }
+    cleanup_fake_dlls();
     return ret;
 }
 #endif // __WINESRC__
