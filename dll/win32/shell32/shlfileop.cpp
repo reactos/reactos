@@ -1336,7 +1336,11 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
+#ifdef __REACTOS__
+    if (feFrom->szFilename && IsDotDir(feFrom->szFilename))
+#else
     if (IsDotDir(feFrom->szFilename))
+#endif
         return;
 
     if (PathFileExistsW(szDestPath))
@@ -1719,7 +1723,11 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
+#ifdef __REACTOS__
+    if (feFrom->szFilename && IsDotDir(feFrom->szFilename))
+#else
     if (IsDotDir(feFrom->szFilename))
+#endif
         return;
 
     SHNotifyCreateDirectoryW(szDestPath, NULL);
