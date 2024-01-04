@@ -381,6 +381,9 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
             {
                 if (!(str = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) ))) return FALSE;
                 SetupGetStringFieldW( context, 5, str, size, NULL );
+#ifdef __WINESRC__
+                if (type == REG_LINK) size--;  /* no terminating null for symlinks */
+#endif
             }
         }
 
@@ -476,6 +479,7 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
 
     for (; ok; ok = SetupFindNextLine( &context, &context ))
     {
+        DWORD options = 0;
         WCHAR buffer[MAX_INF_STRING_LENGTH];
         INT flags;
 
@@ -501,20 +505,37 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
             if (!flags) flags = FLG_ADDREG_DELREG_BIT;
             else if (!(flags & FLG_ADDREG_DELREG_BIT)) continue;  /* ignore this entry */
         }
+#ifdef __WINESRC__
+        /* Wine extension: magic support for symlinks */
+        if (flags >> 16 == REG_LINK) options = REG_OPTION_OPEN_LINK | REG_OPTION_CREATE_LINK;
+#endif
 
         if (info->delete || (flags & FLG_ADDREG_OVERWRITEONLY))
         {
-            if (RegOpenKeyW( root_key, buffer, &hkey )) continue;  /* ignore if it doesn't exist */
+            if (RegOpenKeyExW( root_key, buffer, options, MAXIMUM_ALLOWED, &hkey ))
+                continue;  /* ignore if it doesn't exist */
         }
-#ifdef __REACTOS__
-        else if (RegCreateKeyExW( root_key, buffer, 0, NULL, 0, MAXIMUM_ALLOWED,
-            sd ? &security_attributes : NULL, &hkey, NULL ))
-#else
-        else if (RegCreateKeyW( root_key, buffer, &hkey ))
-#endif
+        else
         {
-            ERR( "could not create key %p %s\n", root_key, debugstr_w(buffer) );
-            continue;
+#ifdef __REACTOS__
+            DWORD res = RegCreateKeyExW( root_key, buffer, 0, NULL, options,
+                                         MAXIMUM_ALLOWED,
+                                         sd ? &security_attributes : NULL,
+                                         &hkey, NULL );
+#else
+            DWORD res = RegCreateKeyExW( root_key, buffer, 0, NULL, options,
+                                         MAXIMUM_ALLOWED, NULL, &hkey, NULL );
+#endif
+#ifdef __WINESRC__
+            if (res == ERROR_ALREADY_EXISTS && (options & REG_OPTION_CREATE_LINK))
+                res = RegCreateKeyExW( root_key, buffer, 0, NULL, REG_OPTION_OPEN_LINK,
+                                       MAXIMUM_ALLOWED, NULL, &hkey, NULL );
+#endif
+            if (res)
+            {
+                ERR( "could not create key %p %s\n", root_key, debugstr_w(buffer) );
+                continue;
+            }
         }
         TRACE( "key %p %s\n", root_key, debugstr_w(buffer) );
 
