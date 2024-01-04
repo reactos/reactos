@@ -14,4 +14,3 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/etc/protocol DESTINATION re
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/etc/services DESTINATION reactos/system32/drivers/etc FOR all)
 
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/systemcompatible.manifest DESTINATION reactos/winsxs/manifests FOR all)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/forwardcompatible.manifest DESTINATION reactos/winsxs/manifests FOR all)
