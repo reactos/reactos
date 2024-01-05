@@ -1526,7 +1526,7 @@ cleanup:
 BOOL WINAPI SetupDiCreateDeviceInfoA(
         HDEVINFO DeviceInfoSet,
         PCSTR DeviceName,
-        CONST GUID *ClassGuid,
+        const GUID *ClassGuid,
         PCSTR DeviceDescription,
         HWND hwndParent,
         DWORD CreationFlags,
@@ -1568,7 +1568,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoA(
 BOOL WINAPI SetupDiCreateDeviceInfoW(
         HDEVINFO DeviceInfoSet,
         PCWSTR DeviceName,
-        CONST GUID *ClassGuid,
+        const GUID *ClassGuid,
         PCWSTR DeviceDescription,
         HWND hwndParent,
         DWORD CreationFlags,
@@ -2256,7 +2256,7 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
  *		SetupDiGetClassDevsA (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsA(
-        CONST GUID *class,
+        const GUID *class,
         LPCSTR enumstr,
         HWND parent,
         DWORD flags)
@@ -2312,7 +2312,7 @@ end:
  *		SetupDiGetClassDevsW (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsW(
-        CONST GUID *class,
+        const GUID *class,
         LPCWSTR enumstr,
         HWND parent,
         DWORD flags)
@@ -2325,7 +2325,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsW(
  *              SetupDiGetClassDevsExW (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsExW(
-        CONST GUID *class,
+        const GUID *class,
         PCWSTR enumstr,
         HWND parent,
         DWORD flags,
@@ -2803,7 +2803,7 @@ BOOL WINAPI SetupDiDeleteDeviceInterfaceRegKey(
 BOOL WINAPI SetupDiEnumDeviceInterfaces(
         HDEVINFO DeviceInfoSet,
         PSP_DEVINFO_DATA DeviceInfoData,
-        CONST GUID * InterfaceClassGuid,
+        const GUID *InterfaceClassGuid,
         DWORD MemberIndex,
         PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
