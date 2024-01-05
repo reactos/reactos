@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2016-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -17,7 +17,7 @@ BEGIN
     GROUPBOX "Modul de compatibilitate", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Lansați acest program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 196, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Configurația de afișare", -1, 7, 99, 210, 61, BS_GROUPBOX
+    GROUPBOX "Setări de afișare", -1, 7, 99, 210, 61, BS_GROUPBOX
     CHECKBOX "Lansează în 256 culori", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Lansează în rezoluție de 640x480 pixeli", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Dezactivează temele vizuale", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
