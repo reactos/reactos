@@ -331,7 +331,11 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
             }
             else RegDeleteValueW( hkey, value );
         }
-        else NtDeleteKey( hkey );
+        else
+        {
+            RegDeleteTreeW( hkey, NULL );
+            NtDeleteKey( hkey );
+        }
         return TRUE;
     }
 
