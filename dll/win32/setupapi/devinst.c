@@ -2831,8 +2831,11 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
     /* In case application fails to check return value, clear output */
     memset(DeviceInterfaceData, 0, sizeof(*DeviceInterfaceData));
+    DeviceInterfaceData->cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
     if (DeviceInfoData)
     {
         struct DeviceInfo *devInfo =
