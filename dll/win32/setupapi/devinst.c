@@ -971,7 +971,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 
     for (dwIndex = 0; ; dwIndex++)
     {
-        dwLength = 40;
+        dwLength = sizeof(szKeyName) / sizeof(WCHAR);
         lError = RegEnumKeyExW(hClassesKey,
                                dwIndex,
                                szKeyName,
@@ -995,7 +995,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
                 return FALSE;
             }
 
-            dwLength = MAX_CLASS_NAME_LEN * sizeof(WCHAR);
+            dwLength = sizeof(szClassName);
             if (!RegQueryValueExW(hClassKey,
                                   REGSTR_VAL_CLASS,
                                   NULL,
