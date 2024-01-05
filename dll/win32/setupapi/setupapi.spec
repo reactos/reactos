@@ -284,7 +284,7 @@
 @ stdcall SetupDiDeleteDeviceInterfaceRegKey(ptr ptr long)
 @ stdcall SetupDiDestroyClassImageList(ptr)
 @ stdcall SetupDiDestroyDeviceInfoList(long)
-@ stdcall SetupDiDestroyDriverInfoList(long ptr long)
+@ stdcall SetupDiDestroyDriverInfoList(ptr ptr long)
 @ stdcall SetupDiDrawMiniIcon(ptr int128 long long)
 @ stdcall SetupDiEnumDeviceInfo(long long ptr)
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
