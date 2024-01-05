@@ -78,6 +78,13 @@ struct GetSectionCallbackInfo
 
 
 
+static inline void copy_device_data(SP_DEVINFO_DATA *data, const struct DeviceInfo *devinfo)
+{
+    data->ClassGuid = devinfo->ClassGuid;
+    data->DevInst = devinfo->dnDevInst;
+    data->Reserved = (ULONG_PTR)devinfo;
+}
+
 static void SETUPDI_GuidToString(const GUID *guid, LPWSTR guidStr)
 {
     static const WCHAR fmt[] = {'{','%','0','8','X','-','%','0','4','X','-',
@@ -1679,9 +1686,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             }
             else
             {
-                DeviceInfoData->ClassGuid = *ClassGuid;
-                DeviceInfoData->DevInst = deviceInfo->dnDevInst;
-                DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
+                copy_device_data(DeviceInfoData, deviceInfo);
                 ret = TRUE;
             }
         }
@@ -1849,9 +1854,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
                 else
                 {
                     struct DeviceInfo *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
-                    info->ClassGuid = DevInfo->ClassGuid;
-                    info->DevInst = DevInfo->dnDevInst;
-                    info->Reserved = (ULONG_PTR)DevInfo;
+                    copy_device_data(info, DevInfo);
                     ret = TRUE;
                 }
             }
@@ -3109,11 +3112,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
             strcpyW(DeviceInterfaceDetailData->DevicePath, devName);
             TRACE("DevicePath is %s\n", debugstr_w(DeviceInterfaceDetailData->DevicePath));
             if (DeviceInfoData)
-            {
-                DeviceInfoData->ClassGuid = deviceInterface->DeviceInfo->ClassGuid;
-                DeviceInfoData->DevInst = deviceInterface->DeviceInfo->dnDevInst;
-                DeviceInfoData->Reserved = (ULONG_PTR)deviceInterface->DeviceInfo;
-            }
+                copy_device_data(DeviceInfoData, deviceInterface->DeviceInfo);
             ret = TRUE;
         }
     }
@@ -4934,11 +4933,7 @@ SetupDiOpenDeviceInfoW(
         }
 
         if (ret && deviceInfo && DeviceInfoData)
-        {
-            DeviceInfoData->ClassGuid = deviceInfo->ClassGuid;
-            DeviceInfoData->DevInst = deviceInfo->dnDevInst;
-            DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
-        }
+            copy_device_data(DeviceInfoData, deviceInfo);
     }
 
 cleanup:
@@ -4973,9 +4968,7 @@ SetupDiGetSelectedDevice(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        DeviceInfoData->ClassGuid = list->SelectedDevice->ClassGuid;
-        DeviceInfoData->DevInst = list->SelectedDevice->dnDevInst;
-        DeviceInfoData->Reserved = (ULONG_PTR)list->SelectedDevice;
+        copy_device_data(DeviceInfoData, list->SelectedDevice);
         ret = TRUE;
     }
 
