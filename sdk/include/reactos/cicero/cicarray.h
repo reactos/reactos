@@ -50,6 +50,16 @@ public:
 
     using CicArrayBase::Insert;
     using CicArrayBase::Remove;
+
+    ssize_t Find(const T_ITEM& item) const
+    {
+        for (size_t iItem = 0; iItem < m_cItems; ++iItem)
+        {
+            if ((*this)[iItem] == item)
+                return iItem;
+        }
+        return -1;
+    }
 };
 
 /******************************************************************************/
