@@ -36,9 +36,7 @@ UINT WM_MSIME_SHOWIMEPAD = 0;
 UINT WM_MSIME_MOUSE = 0;
 UINT WM_MSIME_KEYMAP = 0;
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL IsMsImeMessage(_In_ UINT uMsg)
 {
     return (uMsg == WM_MSIME_SERVICE ||
@@ -53,9 +51,7 @@ BOOL IsMsImeMessage(_In_ UINT uMsg)
             uMsg == WM_MSIME_KEYMAP);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL RegisterMSIMEMessage(VOID)
 {
     // Using ANSI (A) version here can reduce binary size.
@@ -83,12 +79,9 @@ BOOL RegisterMSIMEMessage(VOID)
 
 typedef BOOLEAN (WINAPI *FN_DllShutDownInProgress)(VOID);
 
-/**
- * This function calls ntdll!RtlDllShutdownInProgress.
- * It can detect the system is shutting down or not.
- *
- * @implemented
- */
+/// This function calls ntdll!RtlDllShutdownInProgress.
+/// It can detect the system is shutting down or not.
+/// @implemented
 EXTERN_C BOOLEAN WINAPI
 DllShutDownInProgress(VOID)
 {
@@ -107,11 +100,8 @@ DllShutDownInProgress(VOID)
     return s_fnDllShutDownInProgress();
 }
 
-/**
- * This function checks if the current user logon session is interactive.
- *
- * @implemented
- */
+/// This function checks if the current user logon session is interactive.
+/// @implemented
 static BOOL
 IsInteractiveUserLogon(VOID)
 {
@@ -157,9 +147,7 @@ HIMC GetActiveContext(VOID)
     return ::ImmGetContext(hwndFocus);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
@@ -174,11 +162,8 @@ HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     return S_OK;
 }
 
-/**
- * Gets the charset from a language ID.
- *
- * @implemented
- */
+/// Gets the charset from a language ID.
+/// @implemented
 BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
 {
     CHARSETINFO info;
@@ -187,11 +172,8 @@ BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
     return info.ciCharset;
 }
 
-/**
- * Selects or unselects the input context.
- *
- * @implemented
- */
+/// Selects or unselects the input context.
+/// @implemented
 HRESULT
 InternalSelectEx(
     _In_ HIMC hIMC,
@@ -265,9 +247,7 @@ InternalSelectEx(
  *      Compartment
  */
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 GetCompartment(
     IUnknown *pUnknown,
@@ -310,9 +290,7 @@ GetCompartment(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 SetCompartmentDWORD(
     TfEditCookie cookie,
@@ -335,9 +313,7 @@ SetCompartmentDWORD(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 GetCompartmentDWORD(
     IUnknown *pUnknown,
@@ -361,9 +337,7 @@ GetCompartmentDWORD(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 SetCompartmentUnknown(
     TfEditCookie cookie,
@@ -385,9 +359,7 @@ SetCompartmentUnknown(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 ClearCompartment(
     TfClientId tid,
@@ -459,9 +431,7 @@ public:
     STDMETHODIMP OnChange(REFGUID rguid) override;
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData)
     : m_array()
     , m_cRefs(1)
@@ -470,16 +440,12 @@ CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pU
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CCompartmentEventSink::~CCompartmentEventSink()
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCompartmentEventSink))
@@ -493,17 +459,13 @@ STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CCompartmentEventSink::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CCompartmentEventSink::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -514,17 +476,13 @@ STDMETHODIMP_(ULONG) CCompartmentEventSink::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CCompartmentEventSink::OnChange(REFGUID rguid)
 {
     return m_fnEventSink(m_pUserData, rguid);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
 {
@@ -563,9 +521,7 @@ CCompartmentEventSink::_Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread)
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CCompartmentEventSink::_Unadvise()
 {
     CESMAP *pCesMap = m_array.data();
@@ -643,9 +599,7 @@ public:
         ITfContextView *pContextView) override;
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CTextEventSink::CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV)
 {
     m_cRefs = 1;
@@ -657,16 +611,12 @@ CTextEventSink::CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV)
     m_pCallbackPV = pCallbackPV;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CTextEventSink::~CTextEventSink()
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CTextEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextEditSink))
@@ -684,17 +634,13 @@ STDMETHODIMP CTextEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CTextEventSink::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CTextEventSink::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -712,9 +658,7 @@ struct TEXT_EVENT_SINK_END_EDIT
     ITfContext *m_pContext;
 };
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CTextEventSink::OnEndEdit(
     ITfContext *pic,
     TfEditCookie ecReadOnly,
@@ -724,9 +668,7 @@ STDMETHODIMP CTextEventSink::OnEndEdit(
     return m_fnEndEdit(1, m_pCallbackPV, (LPVOID)&Data);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CTextEventSink::OnLayoutChange(
     ITfContext *pContext,
     TfLayoutCode lcode,
@@ -745,9 +687,7 @@ STDMETHODIMP CTextEventSink::OnLayoutChange(
     }
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CTextEventSink::_Advise(IUnknown *pUnknown, UINT uFlags)
 {
     m_pUnknown = NULL;
@@ -780,9 +720,7 @@ HRESULT CTextEventSink::_Advise(IUnknown *pUnknown, UINT uFlags)
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CTextEventSink::_Unadvise()
 {
     if (!m_pUnknown)
@@ -877,9 +815,7 @@ public:
     HRESULT DestroyInputContext();
 };
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 CicInputContext::CicInputContext(
     _In_ TfClientId cliendId,
     _Inout_ PCIC_LIBTHREAD pLibThread,
@@ -891,9 +827,7 @@ CicInputContext::CicInputContext(
     m_cRefs = 1;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     *ppvObj = NULL;
@@ -914,17 +848,13 @@ STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicInputContext::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicInputContext::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -935,9 +865,7 @@ STDMETHODIMP_(ULONG) CicInputContext::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CicInputContext::OnStartComposition(
     ITfCompositionView *pComposition,
@@ -955,9 +883,7 @@ CicInputContext::OnStartComposition(
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CicInputContext::OnUpdateComposition(
     ITfCompositionView *pComposition,
@@ -966,9 +892,7 @@ CicInputContext::OnUpdateComposition(
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CicInputContext::OnEndComposition(
     ITfCompositionView *pComposition)
@@ -977,9 +901,7 @@ CicInputContext::OnEndComposition(
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicInputContext::GetGuidAtom(
     _Inout_ CicIMCLock& imcLock,
@@ -1003,9 +925,7 @@ CicInputContext::GetGuidAtom(
     return hr;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT
 CicInputContext::CreateInputContext(
     _Inout_ ITfThreadMgr *pThreadMgr,
@@ -1015,9 +935,7 @@ CicInputContext::CreateInputContext(
     return E_NOTIMPL;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT
 CicInputContext::DestroyInputContext()
 {
@@ -1081,20 +999,15 @@ CicInputContext::DestroyInputContext()
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CicInputContext::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition)
 {
     return S_OK;
 }
 
-/**
- * Retrieves the IME information.
- *
- * @implemented
- */
+/// Retrieves the IME information.
+/// @implemented
 HRESULT
 Inquire(
     _Out_ LPIMEINFO lpIMEInfo,
@@ -1210,9 +1123,7 @@ public:
         LPVOID pUserData);
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CThreadMgrEventSink::CThreadMgrEventSink(
     _In_ FN_INITDOCMGR fnInit,
     _In_ FN_PUSHPOP fnPushPop,
@@ -1224,9 +1135,7 @@ CThreadMgrEventSink::CThreadMgrEventSink(
     m_cRefs = 1;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CThreadMgrEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfThreadMgrEventSink))
@@ -1239,17 +1148,13 @@ STDMETHODIMP CThreadMgrEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CThreadMgrEventSink::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CThreadMgrEventSink::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -1383,9 +1288,7 @@ public:
     BOOL Init(_In_ REFGUID rguid, _In_ LPCWSTR psz);
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CFunctionProviderBase::CFunctionProviderBase(_In_ TfClientId clientId)
 {
     m_clientId = clientId;
@@ -1394,18 +1297,14 @@ CFunctionProviderBase::CFunctionProviderBase(_In_ TfClientId clientId)
     m_cRefs = 1;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CFunctionProviderBase::~CFunctionProviderBase()
 {
     if (!RtlDllShutdownInProgress())
         ::SysFreeString(m_bstr);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL
 CFunctionProviderBase::Init(
     _In_ REFGUID rguid,
@@ -1445,9 +1344,7 @@ CFnDocFeed::~CFnDocFeed()
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CFnDocFeed::QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IAImmFnDocFeed))
@@ -1459,17 +1356,13 @@ STDMETHODIMP CFnDocFeed::QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj)
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CFnDocFeed::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CFnDocFeed::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -1480,41 +1373,31 @@ STDMETHODIMP_(ULONG) CFnDocFeed::Release()
     return m_cRefs;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 STDMETHODIMP CFnDocFeed::DocFeed()
 {
     return E_NOTIMPL;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 STDMETHODIMP CFnDocFeed::ClearDocFeedBuffer()
 {
     return E_NOTIMPL;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 STDMETHODIMP CFnDocFeed::StartReconvert()
 {
     return E_NOTIMPL;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 STDMETHODIMP CFnDocFeed::StartUndoCompositionString()
 {
     return E_NOTIMPL;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CFunctionProviderBase::QueryInterface(
     _In_ REFIID riid,
@@ -1529,17 +1412,13 @@ CFunctionProviderBase::QueryInterface(
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CFunctionProviderBase::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CFunctionProviderBase::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -1550,18 +1429,14 @@ STDMETHODIMP_(ULONG) CFunctionProviderBase::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CFunctionProviderBase::GetType(_Out_ GUID *guid)
 {
     *guid = m_guid;
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CFunctionProviderBase::GetDescription(_Out_ BSTR *desc)
 {
     *desc = ::SysAllocString(m_bstr);
@@ -1576,17 +1451,13 @@ public:
     STDMETHODIMP GetFunction(_In_ REFGUID guid, _In_ REFIID riid, _Out_ IUnknown **func) override;
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CFunctionProvider::CFunctionProvider(_In_ TfClientId clientId) : CFunctionProviderBase(clientId)
 {
     Init(CLSID_CAImmLayer, L"MSCTFIME::Function Provider");
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CFunctionProvider::GetFunction(
     _In_ REFGUID guid,
@@ -1706,9 +1577,7 @@ public:
         BOOL fActivated) override;
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
     _In_ FN_COMPARE fnCompare,
     _Inout_opt_ void *pUserData)
@@ -1719,16 +1588,12 @@ CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
     m_pUserData = pUserData;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CActiveLanguageProfileNotifySink::~CActiveLanguageProfileNotifySink()
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfActiveLanguageProfileNotifySink))
@@ -1741,17 +1606,13 @@ STDMETHODIMP CActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, LPVOI
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CActiveLanguageProfileNotifySink::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CActiveLanguageProfileNotifySink::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -1762,9 +1623,7 @@ STDMETHODIMP_(ULONG) CActiveLanguageProfileNotifySink::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CActiveLanguageProfileNotifySink::OnActivated(
     REFCLSID clsid,
@@ -1777,9 +1636,7 @@ CActiveLanguageProfileNotifySink::OnActivated(
     return m_fnCompare(clsid, guidProfile, fActivated, m_pUserData);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CActiveLanguageProfileNotifySink::_Advise(
     ITfThreadMgr *pThreadMgr)
@@ -1809,9 +1666,7 @@ CActiveLanguageProfileNotifySink::_Advise(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CActiveLanguageProfileNotifySink::_Unadvise()
 {
@@ -1881,9 +1736,7 @@ public:
     HRESULT InitProfileInstance(_Inout_ TLS *pTLS);
 };
 
-/**
- * @implemented
- */
+/// @implemented
 CicProfile::CicProfile()
 {
     m_dwFlags &= 0xFFFFFFF0;
@@ -1896,9 +1749,7 @@ CicProfile::CicProfile()
     m_dwUnknown1 = 0;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CicProfile::~CicProfile()
 {
     if (m_pIPProfiles)
@@ -1918,26 +1769,20 @@ CicProfile::~CicProfile()
     }
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CicProfile::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     *ppvObj = NULL;
     return E_NOINTERFACE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicProfile::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicProfile::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -1948,9 +1793,7 @@ STDMETHODIMP_(ULONG) CicProfile::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 INT CALLBACK
 CicProfile::ActiveLanguageProfileNotifySinkCallback(
     REFGUID rguid1,
@@ -1963,9 +1806,7 @@ CicProfile::ActiveLanguageProfileNotifySinkCallback(
     return 0;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CicProfile::GetCodePageA(_Out_ UINT *puCodePage)
 {
     if (!puCodePage)
@@ -1996,9 +1837,7 @@ HRESULT CicProfile::GetCodePageA(_Out_ UINT *puCodePage)
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CicProfile::GetLangId(_Out_ LANGID *pLangID)
 {
     *pLangID = 0;
@@ -2086,9 +1925,7 @@ public:
 
 DWORD TLS::s_dwTlsIndex = (DWORD)-1;
 
-/**
- * @implemented
- */
+/// @implemented
 TLS* TLS::InternalAllocateTLS()
 {
     TLS *pTLS = TLS::PeekTLS();
@@ -2113,9 +1950,7 @@ TLS* TLS::InternalAllocateTLS()
     return pTLS;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL TLS::InternalDestroyTLS()
 {
     TLS *pTLS = TLS::PeekTLS();
@@ -2134,9 +1969,7 @@ BOOL TLS::InternalDestroyTLS()
     return TRUE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicProfile::InitProfileInstance(_Inout_ TLS *pTLS)
 {
@@ -2164,9 +1997,7 @@ CicProfile::InitProfileInstance(_Inout_ TLS *pTLS)
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP
 CicInputContext::OnCleanupContext(
     _In_ TfEditCookie ecWrite,
@@ -2234,9 +2065,7 @@ CicBridge::CicBridge()
     m_cRefs = 1;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     *ppvObj = NULL;
@@ -2250,17 +2079,13 @@ STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicBridge::AddRef()
 {
     return ::InterlockedIncrement(&m_cRefs);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP_(ULONG) CicBridge::Release()
 {
     if (::InterlockedDecrement(&m_cRefs) == 0)
@@ -2271,9 +2096,7 @@ STDMETHODIMP_(ULONG) CicBridge::Release()
     return m_cRefs;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 CicBridge::~CicBridge()
 {
     TLS *pTLS = TLS::PeekTLS();
@@ -2299,9 +2122,7 @@ void CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContex
     }
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT
 CicBridge::CreateInputContext(
     _Inout_ TLS *pTLS,
@@ -2365,9 +2186,7 @@ CicBridge::CreateInputContext(
     return E_NOTIMPL;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
@@ -2415,9 +2234,7 @@ CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
     return pCicIC->m_pContext;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT CicBridge::OnSetOpenStatus(
     TLS *pTLS,
     ITfThreadMgr_P *pThreadMgr,
@@ -2427,10 +2244,8 @@ HRESULT CicBridge::OnSetOpenStatus(
     return E_NOTIMPL;
 }
 
-/**
- * Selects the IME context.
- * @implemented
- */
+/// Selects the IME context.
+/// @implemented
 HRESULT
 CicBridge::SelectEx(
     _Inout_ TLS *pTLS,
@@ -2473,20 +2288,16 @@ CicBridge::SelectEx(
     return imeContext.m_hr;
 }
 
-/**
- * Used in CicBridge::EnumCreateInputContextCallback and
- * CicBridge::EnumDestroyInputContextCallback.
- */
+/// Used in CicBridge::EnumCreateInputContextCallback and
+/// CicBridge::EnumDestroyInputContextCallback.
 typedef struct ENUM_CREATE_DESTROY_IC
 {
     TLS *m_pTLS;
     CicBridge *m_pBridge;
 } ENUM_CREATE_DESTROY_IC, *PENUM_CREATE_DESTROY_IC;
 
-/**
- * Creates input context for the current thread.
- * @implemented
- */
+/// Creates input context for the current thread.
+/// @implemented
 BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
@@ -2494,10 +2305,8 @@ BOOL CALLBACK CicBridge::EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam
     return TRUE;
 }
 
-/**
- * Destroys input context for the current thread.
- * @implemented
- */
+/// Destroys input context for the current thread.
+/// @implemented
 BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam)
 {
     PENUM_CREATE_DESTROY_IC pData = (PENUM_CREATE_DESTROY_IC)lParam;
@@ -2505,9 +2314,7 @@ BOOL CALLBACK CicBridge::EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lPara
     return TRUE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicBridge::ActivateIMMX(
     _Inout_ TLS *pTLS,
@@ -2570,9 +2377,7 @@ Finish:
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicBridge::DeactivateIMMX(
     _Inout_ TLS *pTLS,
@@ -2618,9 +2423,7 @@ CicBridge::DeactivateIMMX(
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicBridge::InitIMMX(_Inout_ TLS *pTLS)
 {
@@ -2688,9 +2491,7 @@ CicBridge::InitIMMX(_Inout_ TLS *pTLS)
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL CicBridge::UnInitIMMX(_Inout_ TLS *pTLS)
 {
     UninitDisplayAttrbuteLib(&m_LibThread);
@@ -2725,33 +2526,25 @@ BOOL CicBridge::UnInitIMMX(_Inout_ TLS *pTLS)
     return TRUE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CicBridge::OnPreFocusDIM(HWND hwnd)
 {
     return S_OK;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 STDMETHODIMP CicBridge::OnSysKeyboardProc(UINT, LONG)
 {
     return E_NOTIMPL;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 STDMETHODIMP CicBridge::OnSysShellProc(INT, UINT, LONG)
 {
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 void
 CicBridge::PostTransMsg(
     _In_ HWND hWnd,
@@ -2764,9 +2557,7 @@ CicBridge::PostTransMsg(
     }
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicBridge::ConfigureGeneral(
     _Inout_ TLS* pTLS,
@@ -2803,9 +2594,7 @@ CicBridge::ConfigureGeneral(
     return hr;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT
 CicBridge::ConfigureRegisterWord(
     _Inout_ TLS* pTLS,
@@ -2864,9 +2653,7 @@ CicBridge::ConfigureRegisterWord(
  *      CicProfile
  */
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT
 CicProfile::GetActiveLanguageProfile(
     _In_ HKL hKL,
@@ -3501,57 +3288,43 @@ struct UIComposition
     static LRESULT CALLBACK CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd)
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnImeCompositionUpdate(CicIMCLock& imcLock)
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnImeEndComposition()
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam)
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnPaintTheme(WPARAM wParam)
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 void UIComposition::OnDestroy()
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 LRESULT CALLBACK
 UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3584,24 +3357,18 @@ struct UI
 #define UIGWLP_UI   sizeof(HIMC)
 #define UIGWLP_SIZE (UIGWLP_UI + sizeof(UI*))
 
-/**
- * @implemented
- */
+/// @implemented
 UI::UI(HWND hWnd) : m_hWnd(hWnd)
 {
 }
 
-/**
- * @implemented
- */
+/// @implemented
 UI::~UI()
 {
     delete m_pComp;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 HRESULT UI::_Create()
 {
     m_pComp = new(cicNoThrow) UIComposition();
@@ -3613,18 +3380,14 @@ HRESULT UI::_Create()
     return S_OK;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
     SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 void UI::OnCreate(HWND hWnd)
 {
     UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
@@ -3635,9 +3398,7 @@ void UI::OnCreate(HWND hWnd)
         pUI->_Create();
 }
 
-/**
- * @implemented
- */
+/// @implemented
 void UI::OnDestroy(HWND hWnd)
 {
     UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
@@ -3648,9 +3409,7 @@ void UI::OnDestroy(HWND hWnd)
     delete pUI;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 void UI::OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam)
 {
     m_pComp->OnImeSetContext(imcLock, m_hWnd, wParam, lParam);
@@ -3669,36 +3428,28 @@ struct CIMEUIWindowHandler
     static LRESULT CALLBACK ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     return 0; //FIXME
 }
 
-/**
- * @implemented
- */
+/// @implemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3723,9 +3474,7 @@ CIMEUIWindowHandler::ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return 0;
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3818,9 +3567,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     return 0;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 EXTERN_C LRESULT CALLBACK
 UIWndProc(
     _In_ HWND hWnd,
@@ -3831,9 +3578,7 @@ UIWndProc(
     return CIMEUIWindowHandler::ImeUIWndProcWorker(hWnd, uMsg, wParam, lParam);
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 BOOL RegisterImeClass(VOID)
 {
     WNDCLASSEXW wcx;
@@ -3873,9 +3618,7 @@ BOOL RegisterImeClass(VOID)
     return TRUE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 VOID UnregisterImeClass(VOID)
 {
     WNDCLASSEXW wcx;
@@ -3891,41 +3634,31 @@ VOID UnregisterImeClass(VOID)
     DestroyIcon(wcx.hIconSm);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL AttachIME(VOID)
 {
     return RegisterImeClass() && RegisterMSIMEMessage();
 }
 
-/**
- * @implemented
- */
+/// @implemented
 VOID DetachIME(VOID)
 {
     UnregisterImeClass();
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 VOID InitUIFLib(VOID)
 {
     //FIXME
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 VOID DoneUIFLib(VOID)
 {
     //FIXME
 }
 
-/**
- * @implemented
- */
+/// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     g_hInst = hinstDLL;
@@ -3946,9 +3679,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     return AttachIME();
 }
 
-/**
- * @unimplemented
- */
+/// @unimplemented
 VOID ProcessDetach(HINSTANCE hinstDLL)
 {
     // FIXME
@@ -3967,9 +3698,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
     DoneUIFLib();
 }
 
-/**
- * @implemented
- */
+/// @implemented
 EXTERN_C BOOL WINAPI
 DllMain(
     _In_ HINSTANCE hinstDLL,
