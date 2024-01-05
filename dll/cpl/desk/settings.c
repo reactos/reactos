@@ -847,7 +847,7 @@ PSETTINGS_ENTRY
 FindBestElement(
     _In_ PDISPLAY_DEVICE_ENTRY pDevice)
 {
-    PSETTINGS_ENTRY Request = &pDevice->InitialSettings, pBestEntry = NULL, Current;
+    PSETTINGS_ENTRY Request = &pDevice->InitialSettings, BestEntry = NULL, Current;
     LONG Distance, NearestDistance = MAXLONG;
 
     /* Find the best entry in the list */
@@ -862,12 +862,12 @@ FindBestElement(
 
         if (Distance < NearestDistance)
         {
-            pBestEntry = Current;
+            BestEntry = Current;
             NearestDistance = Distance;
         }
     }
 
-    return pBestEntry;
+    return BestEntry;
 }
 
 static VOID
