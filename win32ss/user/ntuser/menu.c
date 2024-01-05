@@ -347,7 +347,7 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
          /* Remove all menu items */
          IntDestroyMenu( Menu, bRecurse);
 
-         ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
+         ret = UserDeleteObject(UserHMGetHandle(Menu), TYPE_MENU);
          TRACE("IntDestroyMenuObject %d\n",ret);
          return ret;
       }
@@ -903,7 +903,7 @@ IntGetMenuInfo(PMENU Menu, PROSMENUINFO lpmi)
      lpmi->dwArrowsOn = Menu->dwArrowsOn;
 
      lpmi->fFlags = Menu->fFlags;
-     lpmi->Self = Menu->head.h;
+     lpmi->Self = UserHMGetHandle(Menu);
      lpmi->TimeToHide = Menu->TimeToHide;
      lpmi->Wnd = Menu->hWnd;
    }
@@ -991,7 +991,7 @@ IntGetMenuItemInfo(PMENU Menu, /* UNUSED PARAM!! */
    }
    if(lpmii->fMask & MIIM_SUBMENU)
    {
-      lpmii->hSubMenu = MenuItem->spSubMenu ? MenuItem->spSubMenu->head.h : NULL;
+      lpmii->hSubMenu = (MenuItem->spSubMenu ? UserHMGetHandle(MenuItem->spSubMenu) : NULL);
    }
 
    if ((lpmii->fMask & MIIM_STRING) ||
@@ -5939,7 +5939,7 @@ NtUserGetMenuBarInfo(
         {
            if (UserHMGetHandle(pPopupMenu->spmenu) != hMenu)
            {
-              ERR("Window Pop Up hMenu %p not the same as Get hMenu %p!\n",pPopupMenu->spmenu->head.h,hMenu);
+              ERR("Window Pop Up hMenu %p not the same as Get hMenu %p!\n", UserHMGetHandle(pPopupMenu->spmenu), hMenu);
            }
         }
         break;

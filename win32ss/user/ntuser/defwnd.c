@@ -613,7 +613,7 @@ IntDefWindowProc(
 
       case WM_SYSCOMMAND:
       {
-         TRACE("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         TRACE("hwnd %p WM_SYSCOMMAND %lx %lx\n", UserHMGetHandle(Wnd), wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
@@ -1285,7 +1285,7 @@ IntDefWindowProc(
                   _SEH2_END;
                }
                if (!lResult)
-                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Wnd->head.h, lParam ? (LPARAM)&rt : 0);
+                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)UserHMGetHandle(Wnd), lParam ? (LPARAM)&rt : 0);
            }
             break;
          }

@@ -634,7 +634,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    else
    {
        pwnd = IntTopLevelWindowFromPoint(Msg->pt.x, Msg->pt.y);
-       if (pwnd) Msg->hwnd = pwnd->head.h;
+       if (pwnd) Msg->hwnd = UserHMGetHandle(pwnd);
    }
 
    hdcScreen = IntGetScreenDC();
@@ -813,7 +813,7 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
    {
       PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
 
-      if (PostedMessage->Msg.hwnd == Window->head.h)
+      if (PostedMessage->Msg.hwnd == UserHMGetHandle(Window))
       {
          if (PostedMessage->Msg.message == WM_QUIT && pti->QuitPosted == 0)
          {
@@ -837,7 +837,7 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
    {
       SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
-      if(SentMessage->Msg.hwnd == Window->head.h)
+      if(SentMessage->Msg.hwnd == UserHMGetHandle(Window))
       {
          ERR("Remove Window Messages %p From Sent Queue\n",SentMessage);
 #if 0 // Should mark these as invalid and allow the rest clean up, so far no harm by just commenting out. See CORE-9210.
@@ -1984,7 +1984,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
  */
       if ( ( !Window || // 1
             ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) || // 3
+            ( Window != PWND_BOTTOM && UserHMGetHandle(Window) == CurrentMessage->Msg.hwnd ) || // 3
             ( is_mouse_message(CurrentMessage->Msg.message) ) ) && // Null window for anything mouse.
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
@@ -2072,7 +2072,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
  */
       if ( ( !Window || // 1
             ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window != PWND_BOTTOM && UserHMGetHandle(Window) == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {

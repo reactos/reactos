@@ -761,7 +761,7 @@ co_IntCreateScrollBars(PWND Window)
    Size = 3 * (sizeof(SBINFOEX));
    if(!(Window->pSBInfoex = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
-      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", UserHMGetHandle(Window));
       return FALSE;
    }
 
@@ -769,7 +769,7 @@ co_IntCreateScrollBars(PWND Window)
 
    if(!(Window->pSBInfo = DesktopHeapAlloc(Window->head.rpdesk, sizeof(SBINFO))))
    {
-      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", UserHMGetHandle(Window));
       return FALSE;
    }
 

@@ -540,7 +540,7 @@ NtUserCallTwoParam(
 
             if (fAltTab && (Window->style & WS_MINIMIZE))
             {
-                MSG msg = { Window->head.h, WM_SYSCOMMAND, SC_RESTORE, 0 };
+                MSG msg = { UserHMGetHandle(Window), WM_SYSCOMMAND, SC_RESTORE, 0 };
                 MsqPostMessage(Window->head.pti, &msg, FALSE, QS_POSTMESSAGE, 0, 0);
             }
             break;
