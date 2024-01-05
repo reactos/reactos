@@ -1671,6 +1671,8 @@ SetupDiGetDeviceInterfaceDetailW(
   _Out_opt_ _Out_range_(>=, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W)) PDWORD RequiredSize,
   _Out_opt_ PSP_DEVINFO_DATA DeviceInfoData);
 
+WINSETUPAPI BOOL WINAPI SetupDiGetDevicePropertyW(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ const DEVPROPKEY *, _Out_ DEVPROPTYPE *, _Out_opt_ PBYTE, _In_ DWORD, _Out_opt_ PDWORD, _In_ DWORD);
+
 _Success_(return != FALSE)
 _When_((*PropertyRegDataType == REG_SZ), _At_((PSTR) PropertyBuffer, _Post_valid_))
 _When_((*PropertyRegDataType == REG_MULTI_SZ), _At_((PZZSTR) PropertyBuffer, _Post_valid_))
@@ -2524,6 +2526,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 #define SetupDiGetDeviceInstanceId	SetupDiGetDeviceInstanceIdW
 #define SetupDiGetDeviceInterfaceDetail	SetupDiGetDeviceInterfaceDetailW
 #define SetupDiGetInterfaceDeviceDetail	SetupDiGetDeviceInterfaceDetailW
+#define SetupDiGetDeviceProperty	SetupDiGetDevicePropertyW
 #define SetupDiGetDeviceRegistryProperty	SetupDiGetDeviceRegistryPropertyW
 #define SetupDiGetDriverInfoDetail	SetupDiGetDriverInfoDetailW
 #define SetupDiGetDriverInstallParams	SetupDiGetDriverInstallParamsW
@@ -2648,6 +2651,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 #define SetupDiGetDeviceInstanceId	SetupDiGetDeviceInstanceIdA
 #define SetupDiGetDeviceInterfaceDetail	SetupDiGetDeviceInterfaceDetailA
 #define SetupDiGetInterfaceDeviceDetail	SetupDiGetDeviceInterfaceDetailA
+// NOTE: SetupDiGetDevicePropertyA does not exist!
 #define SetupDiGetDeviceRegistryProperty	SetupDiGetDeviceRegistryPropertyA
 #define SetupDiGetDriverInfoDetail	SetupDiGetDriverInfoDetailA
 #define SetupDiGetDriverInstallParams	SetupDiGetDriverInstallParamsA

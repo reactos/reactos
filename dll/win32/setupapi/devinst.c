@@ -6131,6 +6131,20 @@ BOOL WINAPI SetupDiDeleteDevRegKey(
 }
 
 /***********************************************************************
+ *              SetupDiGetDevicePropertyW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDevicePropertyW(HDEVINFO info_set, PSP_DEVINFO_DATA info_data,
+                const DEVPROPKEY *prop_key, DEVPROPTYPE *prop_type, BYTE *prop_buff,
+                DWORD prop_buff_size, DWORD *required_size, DWORD flags)
+{
+    FIXME("%p, %p, %p, %p, %p, %d, %p, 0x%08x stub\n", info_set, info_data, prop_key,
+               prop_type, prop_buff, prop_buff_size, required_size, flags);
+
+    SetLastError(ERROR_NOT_FOUND);
+    return FALSE;
+}
+
+/***********************************************************************
  *		SetupDiRestartDevices (SETUPAPI.@)
  */
 BOOL
