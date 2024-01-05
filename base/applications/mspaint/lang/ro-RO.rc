@@ -28,9 +28,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Transmite...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Decor de birou (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Fundal de desktop (în c&arou)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Fundal de desktop (&centrat)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Fundal de desktop (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "Cel mai recent fișier", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
