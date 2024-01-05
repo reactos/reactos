@@ -1247,7 +1247,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
  *   ClassGuid [I] if not NULL only devices with GUID ClassGuid are associated
  *                 with this list.
  *   hwndParent [I] hwnd needed for interface related actions.
- *   MachineName [I] name of machine to create emtpy DeviceInfoSet list, if NULL
+ *   MachineName [I] name of machine to create empty DeviceInfoSet list, if NULL
  *                   local registry will be used.
  *   Reserved [I] must be NULL
  *
