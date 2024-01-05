@@ -85,6 +85,14 @@ static inline void copy_device_data(SP_DEVINFO_DATA *data, const struct DeviceIn
     data->Reserved = (ULONG_PTR)devinfo;
 }
 
+static inline void copy_device_iface_data(SP_DEVICE_INTERFACE_DATA *data,
+    const struct DeviceInterface *iface)
+{
+    data->InterfaceClassGuid = iface->InterfaceClassGuid;
+    data->Flags = iface->Flags;
+    data->Reserved = (ULONG_PTR)iface;
+}
+
 static void SETUPDI_GuidToString(const GUID *guid, LPWSTR guidStr)
 {
     static const WCHAR fmt[] = {'{','%','0','8','X','-','%','0','4','X','-',
@@ -2866,9 +2874,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
             if (MemberIndex-- == 0)
             {
                 /* return this item */
-                DeviceInterfaceData->InterfaceClassGuid = DevItf->InterfaceClassGuid;
-                DeviceInterfaceData->Flags = DevItf->Flags;
-                DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
+                copy_device_iface_data(DeviceInterfaceData, DevItf);
                 found = TRUE;
                 ret = TRUE;
             }
@@ -2898,9 +2904,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                 if (MemberIndex-- == 0)
                 {
                     /* return this item */
-                    DeviceInterfaceData->InterfaceClassGuid = DevItf->InterfaceClassGuid;
-                    DeviceInterfaceData->Flags = DevItf->Flags;
-                    DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
+                    copy_device_iface_data(DeviceInterfaceData, DevItf);
                     found = TRUE;
                     ret = TRUE;
                 }
@@ -3910,18 +3914,12 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
             if (!wcsicmp(deviceInterface->SymbolicLink, DevicePath))
             {
                 if (DeviceInterfaceData)
-                {
-                    DeviceInterfaceData->Reserved = (ULONG_PTR)deviceInterface;
-                    DeviceInterfaceData->Flags = deviceInterface->Flags;
-                    CopyMemory(&DeviceInterfaceData->InterfaceClassGuid, &ClassId, sizeof(GUID));
-                }
+                    copy_device_iface_data(DeviceInterfaceData, deviceInterface);
 
                 return TRUE;
             }
-
         }
     }
-
 
     dwIndex = 0;
     do
@@ -3978,8 +3976,7 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
                     deviceInterface = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInterface) + (wcslen(SymBuffer) + 1) * sizeof(WCHAR));
                     if (deviceInterface)
                     {
-
-                        CopyMemory(&deviceInterface->InterfaceClassGuid, &ClassId, sizeof(GUID));
+                        deviceInterface->InterfaceClassGuid = ClassId;
                         deviceInterface->DeviceInfo = deviceInfo;
                         deviceInterface->Flags = SPINT_ACTIVE; //FIXME
 
@@ -3988,12 +3985,9 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
                         InsertTailList(&deviceInfo->InterfaceListHead, &deviceInterface->ListEntry);
                         InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
-
                         if (DeviceInterfaceData)
                         {
-                            DeviceInterfaceData->Reserved = (ULONG_PTR)deviceInterface;
-                            DeviceInterfaceData->Flags = deviceInterface->Flags;
-                            CopyMemory(&DeviceInterfaceData->InterfaceClassGuid, &ClassId, sizeof(GUID));
+                            copy_device_iface_data(DeviceInterfaceData, deviceInterface);
                         }
                         else
                         {

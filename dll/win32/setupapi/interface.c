@@ -363,8 +363,9 @@ InstallOneInterface(
         return FALSE;
     }
 
+    DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+    // copy_device_iface_data(&DeviceInterfaceData, DevItf);
     DeviceInterfaceData.InterfaceClassGuid = DevItf->InterfaceClassGuid;
-    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
     DeviceInterfaceData.Flags = DevItf->Flags;
     DeviceInterfaceData.Reserved = (ULONG_PTR)DevItf;
 
