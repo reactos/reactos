@@ -3312,11 +3312,26 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
         if (RequiredSize)
             *RequiredSize = size;
 
+#if 0 // Similar to Wine's code
+        if (lError == ERROR_FILE_NOT_FOUND)
+            lError = ERROR_INVALID_DATA;
+        else if (lError == ERROR_MORE_DATA || !PropertyBufferSize)
+            lError = ERROR_INSUFFICIENT_BUFFER;
+        /*
+        else if (lError == ERROR_SUCCESS)
+            ret = TRUE;
+        else
+            SetLastError(lError);
+        */
+#else
         switch (lError)
         {
             case ERROR_SUCCESS:
-                if (PropertyBuffer == NULL && size != 0)
+                if (!PropertyBuffer && size != 0)
                     lError = ERROR_INSUFFICIENT_BUFFER;
+                break;
+            case ERROR_FILE_NOT_FOUND:
+                lError = ERROR_INVALID_DATA;
                 break;
             case ERROR_MORE_DATA:
                 lError = ERROR_INSUFFICIENT_BUFFER;
@@ -3324,6 +3339,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
             default:
                 break;
         }
+#endif
     }
     else if (Property == SPDRP_PHYSICAL_DEVICE_OBJECT_NAME)
     {
@@ -3373,7 +3389,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                     lError = ERROR_INSUFFICIENT_BUFFER;
                     break;
 
-                default :
+                default:
                     lError = ERROR_INVALID_DATA;
                     break;
             }
