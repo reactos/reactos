@@ -43,7 +43,7 @@ struct CUIFTheme
 {
     LPCWSTR m_pszClassList;
     INT m_iPartId;
-    DWORD m_dwUnknown2;
+    DWORD m_dwUnknown2; //FIXME: name and type
     HTHEME m_hTheme;
     static HINSTANCE s_hUXTHEME;
     static FN_OpenThemeData s_fnOpenThemeData;
@@ -138,7 +138,7 @@ protected:
     CUIFWindow *m_pWindow;
     CUIFScheme *m_pScheme;
     CUIFObjectArray m_ObjectArray;
-    DWORD m_dwUnknown3;
+    DWORD m_dwUnknown3; //FIXME: name and type
     DWORD m_style;
     RECT m_rc;
     BOOL m_bEnable;
@@ -146,7 +146,7 @@ protected:
     HFONT m_hFont;
     BOOL m_bHasCustomFont;
     LPWSTR m_pszToolTip;
-    DWORD m_dwUnknown4[2];
+    DWORD m_dwUnknown4[2]; //FIXME: name and type
 
 public:
     CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD style);
@@ -164,7 +164,7 @@ public:
     STDMETHOD_(void, OnRButtonDown)(POINT pt);
     STDMETHOD_(void, OnRButtonDblClk)(POINT pt);
     STDMETHOD_(void, OnRButtonUp)(POINT pt);
-    STDMETHOD_(void, OnUnknown)(DWORD x1, DWORD x2, DWORD x3);
+    STDMETHOD_(void, OnUnknown)(DWORD x1, DWORD x2, DWORD x3); //FIXME: name and type
     STDMETHOD_(void, GetRect)(LPRECT prc);
     STDMETHOD_(void, SetRect)(LPCRECT prc);
     STDMETHOD_(BOOL, PtInObject)(POINT pt);
@@ -366,7 +366,7 @@ inline STDMETHODIMP_(void)
 CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2)
 {
     m_iPartId = iPartId;
-    m_dwUnknown2 = dwUnknown2;
+    m_dwUnknown2 = dwUnknown2; //FIXME: name and type
     m_pszClassList = pszClassList;
 }
 
@@ -379,7 +379,7 @@ CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD 
     m_pszClassList = NULL;
     m_hTheme = NULL;
     m_pParent = pParent;
-    m_dwUnknown3 = dwUnknown3;
+    m_dwUnknown3 = dwUnknown3; //FIXME: name and type
     m_style = style;
 
     if (prc)
