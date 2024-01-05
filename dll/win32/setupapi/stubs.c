@@ -40,7 +40,7 @@ BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
  */
 INT WINAPI SetupPromptReboot( HSPFILEQ file_queue, HWND owner, BOOL scan_only )
 {
-    FIXME("%p, %p, %d\n", file_queue, owner, scan_only);
+    FIXME("%p, %p, %d: stub\n", file_queue, owner, scan_only);
     return 0;
 }
 
@@ -67,7 +67,7 @@ BOOL WINAPI SetupAddToSourceListW(DWORD flags, PCWSTR source)
  */
 BOOL WINAPI SetupQueryDrivesInDiskSpaceListA(HDSKSPC disk_space, PSTR return_buffer, DWORD return_buffer_size, PDWORD required_size)
 {
-    FIXME("%p, %p, %d, %p\n", disk_space, return_buffer, return_buffer_size, required_size);
+    FIXME("%p, %p, %d, %p: stub\n", disk_space, return_buffer, return_buffer_size, required_size);
     return FALSE;
 }
 
@@ -76,7 +76,7 @@ BOOL WINAPI SetupQueryDrivesInDiskSpaceListA(HDSKSPC disk_space, PSTR return_buf
  */
 BOOL WINAPI SetupQueryDrivesInDiskSpaceListW(HDSKSPC disk_space, PWSTR return_buffer, DWORD return_buffer_size, PDWORD required_size)
 {
-    FIXME("%p, %p, %d, %p\n", disk_space, return_buffer, return_buffer_size, required_size);
+    FIXME("%p, %p, %d, %p: stub\n", disk_space, return_buffer, return_buffer_size, required_size);
     return FALSE;
 }
 
@@ -85,7 +85,7 @@ BOOL WINAPI SetupQueryDrivesInDiskSpaceListW(HDSKSPC disk_space, PWSTR return_bu
  */
 BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
 {
-    FIXME("0x%08x %p %d\n", flags, list, count);
+    FIXME("0x%08x %p %d: stub\n", flags, list, count);
     return FALSE;
 }
 
@@ -94,7 +94,7 @@ BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
  */
 BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
 {
-    FIXME("0x%08x %p %d\n", flags, list, count);
+    FIXME("0x%08x %p %d: stub\n", flags, list, count);
     return FALSE;
 }
 
