@@ -1579,7 +1579,8 @@ DWORD WINAPI SetupGetFileCompressionInfoW( PCWSTR source, PWSTR *name, PDWORD so
         return ERROR_INVALID_PARAMETER;
 
     ret = SetupGetFileCompressionInfoExW( source, NULL, 0, &required, NULL, NULL, NULL );
-    if (!(actual_name = MyMalloc( required*sizeof(WCHAR) ))) return ERROR_NOT_ENOUGH_MEMORY;
+    if (!(actual_name = MyMalloc( required * sizeof(WCHAR) )))
+        return ERROR_NOT_ENOUGH_MEMORY;
 
     ret = SetupGetFileCompressionInfoExW( source, actual_name, required, &required,
                                           source_size, target_size, type );
