@@ -2,6 +2,7 @@
  * Copyright 2005 Mike McCormack
  * Copyright 2009 Michael Stefaniuc
  *           2011 Ștefan Fulea
+ *           2023 Andrei Miloiu
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
+    4 "Pachetul de instalare menționat nu s-a putut deschide. Verificați calea și încercați din nou."
     5 "calea %s nu a fost găsită"
     9 "inserați discul %s"
     10 "Instalatorul Windows %s\n\nUtilizare:\nmsiexec command {parametru obligatoriu} [parametru opțional]\n\n \
