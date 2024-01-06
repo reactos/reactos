@@ -395,10 +395,10 @@ inline void CUIFSystemInfo::GetSystemMetrics()
 
     HIGHCONTRAST HighContrast = { sizeof(HighContrast) };
     ::SystemParametersInfo(SPI_GETHIGHCONTRAST, sizeof(HighContrast), &HighContrast, 0);
-    m_bHighContrast1 = !!(HighContrast.dwFlags & HCF_HIGHCONTRASTON)
+    m_bHighContrast1 = !!(HighContrast.dwFlags & HCF_HIGHCONTRASTON);
     COLORREF rgbBtnText = ::GetSysColor(COLOR_BTNTEXT);
     COLORREF rgbBtnFace = ::GetSysColor(COLOR_BTNFACE);
-    const black = RGB(0, 0, 0), white = RGB(255, 255, 255);
+    const COLORREF black = RGB(0, 0, 0), white = RGB(255, 255, 255);
     m_bHighContrast2 = (m_bHighContrast1 ||
                         (rgbBtnText == black && rgbBtnFace == white) ||
                         (rgbBtnText == white && rgbBtnFace == black));
@@ -408,7 +408,7 @@ inline void CUIFSystemInfo::GetSystemMetrics()
 inline void CUIFSystemInfo::Initialize()
 {
     dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(this);
+    ::GetVersionEx(this);
     GetSystemMetrics();
 }
 
