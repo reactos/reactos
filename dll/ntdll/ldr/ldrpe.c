@@ -26,7 +26,7 @@ NTAPI
 LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             IN PLDR_DATA_TABLE_ENTRY ImportLdrEntry,
             IN PIMAGE_IMPORT_DESCRIPTOR IatEntry,
-            IN BOOLEAN EntriesValid)
+            IN BOOLEAN SnapForwardersOnly)
 {
     PVOID Iat;
     NTSTATUS Status;
@@ -37,7 +37,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
     LPSTR ImportName;
     ULONG ForwarderChain, i, Rva, OldProtect, IatSize, ExportSize;
     SIZE_T ImportSize;
-    DPRINT("LdrpSnapIAT(%wZ %wZ %p %u)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
+    DPRINT("LdrpSnapIAT(%wZ %wZ %p %u)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, SnapForwardersOnly);
 
     /* Get export directory */
     ExportDirectory = RtlImageDirectoryEntryToData(ExportLdrEntry->DllBase,
@@ -131,8 +131,8 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         return Status;
     }
 
-    /* Check if the Thunks are already valid */
-    if (EntriesValid)
+    /* Check if the SnapForwardersOnly is Enabled */
+    if (SnapForwardersOnly)
     {
         /* We'll only do forwarders. Get the import name */
         ImportName = (LPSTR)((ULONG_PTR)ImportLdrEntry->DllBase + IatEntry->Name);
