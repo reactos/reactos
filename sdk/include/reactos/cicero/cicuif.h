@@ -13,6 +13,10 @@ struct CUIFTheme;
     class CUIFObject;
         class CUIFWindow;
 class CUIFObjectArray;
+class CUIFColorTable;
+    class CUIFColorTableSys;
+    class CUIFColorTableOff10;
+class CUIFBitmapDC;
 class CUIFScheme;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -83,6 +87,25 @@ struct CUIFTheme
     STDMETHOD_(int, GetThemeSysSize)(int iSizeId);
     STDMETHOD_(void, SetActiveTheme)(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2);
 };
+
+// static members
+DECLSPEC_SELECTANY HINSTANCE CUIFTheme::s_hUXTHEME = NULL;
+DECLSPEC_SELECTANY FN_OpenThemeData CUIFTheme::s_fnOpenThemeData = NULL;
+DECLSPEC_SELECTANY FN_CloseThemeData CUIFTheme::s_fnCloseThemeData = NULL;
+DECLSPEC_SELECTANY FN_DrawThemeBackground CUIFTheme::s_fnDrawThemeBackground = NULL;
+DECLSPEC_SELECTANY FN_DrawThemeParentBackground CUIFTheme::s_fnDrawThemeParentBackground = NULL;
+DECLSPEC_SELECTANY FN_DrawThemeText CUIFTheme::s_fnDrawThemeText = NULL;
+DECLSPEC_SELECTANY FN_DrawThemeIcon CUIFTheme::s_fnDrawThemeIcon = NULL;
+DECLSPEC_SELECTANY FN_GetThemeBackgroundExtent CUIFTheme::s_fnGetThemeBackgroundExtent = NULL;
+DECLSPEC_SELECTANY FN_GetThemeBackgroundContentRect CUIFTheme::s_fnGetThemeBackgroundContentRect = NULL;
+DECLSPEC_SELECTANY FN_GetThemeTextExtent CUIFTheme::s_fnGetThemeTextExtent = NULL;
+DECLSPEC_SELECTANY FN_GetThemePartSize CUIFTheme::s_fnGetThemePartSize = NULL;
+DECLSPEC_SELECTANY FN_DrawThemeEdge CUIFTheme::s_fnDrawThemeEdge = NULL;
+DECLSPEC_SELECTANY FN_GetThemeColor CUIFTheme::s_fnGetThemeColor = NULL;
+DECLSPEC_SELECTANY FN_GetThemeMargins CUIFTheme::s_fnGetThemeMargins = NULL;
+DECLSPEC_SELECTANY FN_GetThemeFont CUIFTheme::s_fnGetThemeFont = NULL;
+DECLSPEC_SELECTANY FN_GetThemeSysColor CUIFTheme::s_fnGetThemeSysColor = NULL;
+DECLSPEC_SELECTANY FN_GetThemeSysSize CUIFTheme::s_fnGetThemeSysSize = NULL;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -245,6 +268,55 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+class CUIFBitmapDC
+{
+protected:
+    HBITMAP m_hBitmap;
+    HGDIOBJ m_hOldBitmap;
+    HGDIOBJ m_hOldObject;
+    HDC m_hDC;
+
+public:
+    static BOOL s_fInitBitmapDCs;
+    static CUIFBitmapDC *s_phdcSrc;
+    static CUIFBitmapDC *s_phdcMask;
+    static CUIFBitmapDC *s_phdcDst;
+
+    CUIFBitmapDC(BOOL bMemory);
+    ~CUIFBitmapDC();
+    operator HDC() const { return m_hDC; }
+
+    void Uninit(BOOL bKeep);
+
+    BOOL SetBitmap(HBITMAP hBitmap);
+    BOOL SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
+    BOOL SetDIB(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
+
+    HBITMAP DetachBitmap()
+    {
+        HBITMAP hOldBitmap = m_hBitmap;
+        m_hBitmap = NULL;
+        return hOldBitmap;
+    }
+};
+
+DECLSPEC_SELECTANY BOOL CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcSrc = NULL;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcMask = NULL;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcDst = NULL;
+
+void cicInitUIFUtil(void);
+void cicDoneUIFUtil(void);
+
+BOOL cicSetLayout(HDC hDC, BOOL bLayout);
+HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack);
+HBRUSH cicCreateDitherBrush(VOID);
+HBITMAP cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2,
+                                BOOL bPressed);
+HBITMAP cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRUSH hbr2);
+
+/////////////////////////////////////////////////////////////////////////////
+
 class CUIFScheme
 {
 public:
@@ -265,27 +337,6 @@ class CUIFWindow : public CUIFObject
 {
     //FIXME
 };
-
-/////////////////////////////////////////////////////////////////////////////
-
-// static members
-DECLSPEC_SELECTANY HINSTANCE CUIFTheme::s_hUXTHEME = NULL;
-DECLSPEC_SELECTANY FN_OpenThemeData CUIFTheme::s_fnOpenThemeData = NULL;
-DECLSPEC_SELECTANY FN_CloseThemeData CUIFTheme::s_fnCloseThemeData = NULL;
-DECLSPEC_SELECTANY FN_DrawThemeBackground CUIFTheme::s_fnDrawThemeBackground = NULL;
-DECLSPEC_SELECTANY FN_DrawThemeParentBackground CUIFTheme::s_fnDrawThemeParentBackground = NULL;
-DECLSPEC_SELECTANY FN_DrawThemeText CUIFTheme::s_fnDrawThemeText = NULL;
-DECLSPEC_SELECTANY FN_DrawThemeIcon CUIFTheme::s_fnDrawThemeIcon = NULL;
-DECLSPEC_SELECTANY FN_GetThemeBackgroundExtent CUIFTheme::s_fnGetThemeBackgroundExtent = NULL;
-DECLSPEC_SELECTANY FN_GetThemeBackgroundContentRect CUIFTheme::s_fnGetThemeBackgroundContentRect = NULL;
-DECLSPEC_SELECTANY FN_GetThemeTextExtent CUIFTheme::s_fnGetThemeTextExtent = NULL;
-DECLSPEC_SELECTANY FN_GetThemePartSize CUIFTheme::s_fnGetThemePartSize = NULL;
-DECLSPEC_SELECTANY FN_DrawThemeEdge CUIFTheme::s_fnDrawThemeEdge = NULL;
-DECLSPEC_SELECTANY FN_GetThemeColor CUIFTheme::s_fnGetThemeColor = NULL;
-DECLSPEC_SELECTANY FN_GetThemeMargins CUIFTheme::s_fnGetThemeMargins = NULL;
-DECLSPEC_SELECTANY FN_GetThemeFont CUIFTheme::s_fnGetThemeFont = NULL;
-DECLSPEC_SELECTANY FN_GetThemeSysColor CUIFTheme::s_fnGetThemeSysColor = NULL;
-DECLSPEC_SELECTANY FN_GetThemeSysSize CUIFTheme::s_fnGetThemeSysSize = NULL;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -526,7 +577,7 @@ inline STDMETHODIMP_(void) CUIFObject::OnUnknown(DWORD x1, DWORD x2, DWORD x3)
 
 inline STDMETHODIMP_(void) CUIFObject::GetRect(LPRECT prc)
 {
-    *prc = this->m_rc;
+    *prc = m_rc;
 }
 
 /// @unimplemented
@@ -839,4 +890,240 @@ inline void cicDoneUIFScheme(void)
         delete CUIFScheme::s_pColorTableOff10;
         CUIFScheme::s_pColorTableOff10 = NULL;
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline CUIFBitmapDC::CUIFBitmapDC(BOOL bMemory)
+{
+    m_hBitmap = NULL;
+    m_hOldBitmap = NULL;
+    m_hOldObject = NULL;
+    if (bMemory)
+        m_hDC = ::CreateCompatibleDC(NULL);
+    else
+        m_hDC = ::CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);
+}
+
+inline CUIFBitmapDC::~CUIFBitmapDC()
+{
+    Uninit(FALSE);
+    ::DeleteDC(m_hDC);
+}
+
+inline void CUIFBitmapDC::Uninit(BOOL bKeep)
+{
+    if (m_hOldBitmap)
+    {
+        ::SelectObject(m_hDC, m_hOldBitmap);
+        m_hOldBitmap = NULL;
+    }
+    if (m_hOldObject)
+    {
+        ::SelectObject(m_hDC, m_hOldObject);
+        m_hOldObject = NULL;
+    }
+    if (!bKeep)
+    {
+        if (m_hBitmap)
+        {
+            ::DeleteObject(m_hBitmap);
+            m_hBitmap = NULL;
+        }
+    }
+}
+
+inline BOOL CUIFBitmapDC::SetBitmap(HBITMAP hBitmap)
+{
+    if (m_hDC)
+        m_hOldBitmap = ::SelectObject(m_hDC, hBitmap);
+    return TRUE;
+}
+
+inline BOOL CUIFBitmapDC::SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount)
+{
+    m_hBitmap = ::CreateBitmap(cx, cy, cPlanes, cBitCount, 0);
+    m_hOldBitmap = ::SelectObject(m_hDC, m_hBitmap);
+    return TRUE;
+}
+
+inline BOOL CUIFBitmapDC::SetDIB(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount)
+{
+    BITMAPINFO bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = cx;
+    bmi.bmiHeader.biHeight = cy;
+    bmi.bmiHeader.biPlanes = cPlanes;
+    bmi.bmiHeader.biBitCount = cBitCount;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    m_hBitmap = ::CreateDIBSection(m_hDC, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    m_hOldBitmap = ::SelectObject(m_hDC, m_hBitmap);
+    return TRUE;
+}
+
+inline void cicInitUIFUtil(void)
+{
+    if (!CUIFBitmapDC::s_phdcSrc)
+        CUIFBitmapDC::s_phdcSrc = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (!CUIFBitmapDC::s_phdcMask)
+        CUIFBitmapDC::s_phdcMask = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (!CUIFBitmapDC::s_phdcDst)
+        CUIFBitmapDC::s_phdcDst = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (CUIFBitmapDC::s_phdcSrc && CUIFBitmapDC::s_phdcMask && CUIFBitmapDC::s_phdcDst)
+        CUIFBitmapDC::s_fInitBitmapDCs = TRUE;
+}
+
+inline void cicDoneUIFUtil(void)
+{
+    if (CUIFBitmapDC::s_phdcSrc)
+    {
+        delete CUIFBitmapDC::s_phdcSrc;
+        CUIFBitmapDC::s_phdcSrc = NULL;
+    }
+    if (CUIFBitmapDC::s_phdcMask)
+    {
+        delete CUIFBitmapDC::s_phdcMask;
+        CUIFBitmapDC::s_phdcMask = NULL;
+    }
+    if (CUIFBitmapDC::s_phdcDst)
+    {
+        delete CUIFBitmapDC::s_phdcDst;
+        CUIFBitmapDC::s_phdcDst = NULL;
+    }
+
+    CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
+}
+
+inline BOOL cicSetLayout(HDC hDC, DWORD dwLayout)
+{
+    typedef BOOL (WINAPI *FN_SetLayout)(HDC hDC, DWORD dwLayout);
+    static HINSTANCE s_hGdi32 = NULL;
+    static FN_SetLayout s_fnSetLayout = NULL;
+
+    if (!cicGetFN(s_hGdi32, s_fnSetLayout, TEXT("gdi32.dll"), "SetLayout"))
+        return FALSE;
+
+    return s_fnSetLayout(hDC, dwLayout);
+}
+
+inline HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack)
+{
+    BITMAP bm;
+    if (!CUIFBitmapDC::s_fInitBitmapDCs || !::GetObject(hBitmap, sizeof(bm), &bm))
+        return NULL;
+
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hBitmap);
+    CUIFBitmapDC::s_phdcDst->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, bm.bmWidth, bm.bmHeight);
+    FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbrBack);
+
+    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_RTL);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcMask, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCCOPY);
+
+    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_LTR);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcMask, 1, 0, SRCCOPY);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBRUSH cicCreateDitherBrush(VOID)
+{
+    BYTE Bits[16];
+    ZeroMemory(&Bits, sizeof(Bits));
+    Bits[0] = Bits[4] = Bits[8] = Bits[12] = 'U';
+    Bits[2] = Bits[6] = Bits[10] = Bits[14] = 0xAA;
+    HBITMAP hBitmap = ::CreateBitmap(8, 8, 1, 1, Bits);
+    if (!hBitmap)
+        return NULL;
+
+    LOGBRUSH lb;
+    lb.lbHatch = (ULONG_PTR)hBitmap;
+    lb.lbStyle = BS_PATTERN;
+    HBRUSH hbr = ::CreateBrushIndirect(&lb);
+    ::DeleteObject(hBitmap);
+    return hbr;
+}
+
+inline HBITMAP
+cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2, BOOL bPressed)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    LONG width = prc->right - prc->left, height = prc->bottom - prc->top;
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbmMask);
+    CUIFBitmapDC::s_phdcSrc->SetDIB(width, height, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
+
+    HBRUSH hbrWhite = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, hbrWhite);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcSrc, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCINVERT);
+    if (bPressed)
+        BitBlt(*CUIFBitmapDC::s_phdcDst, 1, 1, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCPAINT);
+    else
+        BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCPAINT);
+
+    ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, hbr2);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcSrc, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCPAINT);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCAND);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBITMAP
+cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRUSH hbr2)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    --prc->left;
+    --prc->top;
+
+    LONG width = prc->right - prc->left;
+    LONG height = prc->bottom - prc->top;
+
+    CUIFBitmapDC bitmapDC(TRUE);
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbm1);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
+    bitmapDC.SetDIB(width, height, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
+    ::FillRect(bitmapDC, &rc, hbr2);
+
+    ::BitBlt(bitmapDC, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCPAINT);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 2, 2, width, height, bitmapDC, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
