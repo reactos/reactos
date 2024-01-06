@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Shutdown
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */ 
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -79,7 +85,7 @@ Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_HIBERNATE_LOCAL "Eroare: Hibernarea nu poate fi comandată la distanță.\n"
     IDS_ERROR_HIBERNATE_ENABLED "Eroare: Modul de hibernare nu este activat.\n"
     IDS_ERROR_DIALOG_CAPTION "Închidere la distanță"
-    IDS_ERROR_DIALOG_INIT "Interfața grafică de utilizator nu a putut fi afișată."
+    IDS_ERROR_DIALOG_INIT "Nu s-a putut afișa interfața grafică de utilizator."
 END
 
 /* Remote shutdown action strings */
