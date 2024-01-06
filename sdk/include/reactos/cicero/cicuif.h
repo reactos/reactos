@@ -13,6 +13,10 @@ struct CUIFTheme;
     class CUIFObject;
         class CUIFWindow;
 class CUIFObjectArray;
+class CUIFColorTable;
+    class CUIFColorTableSys;
+    class CUIFColorTableOff10;
+class CUIFBitmapDC;
 class CUIFScheme;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -242,6 +246,40 @@ public:
     STDMETHOD_(void, InitBrush)() override;
     STDMETHOD_(void, DoneBrush)() override;
 };
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFBitmapDC
+{
+protected:
+    HBITMAP m_hBitmap;
+    HGDIOBJ m_hOldBitmap;
+    HGDIOBJ m_hOldObject;
+    HDC m_hDC;
+
+public:
+    static BOOL s_fInitBitmapDCs;
+    static CUIFBitmapDC *s_phdcSrc;
+    static CUIFBitmapDC *s_phdcMask;
+    static CUIFBitmapDC *s_phdcDst;
+
+    CUIFBitmapDC(BOOL bMemory);
+    ~CUIFBitmapDC();
+
+    void Uninit(BOOL bKeep);
+
+    BOOL SetBitmap(HBITMAP hBitmap);
+    BOOL SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
+    BOOL SetDIB(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
+};
+
+DECLSPEC_SELECTANY BOOL CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcSrc = NULL;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcMask = NULL;
+DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcDst = NULL;
+
+void cicInitUIFUtil(void);
+void cicDoneUIFUtil(void);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -526,7 +564,7 @@ inline STDMETHODIMP_(void) CUIFObject::OnUnknown(DWORD x1, DWORD x2, DWORD x3)
 
 inline STDMETHODIMP_(void) CUIFObject::GetRect(LPRECT prc)
 {
-    *prc = this->m_rc;
+    *prc = m_rc;
 }
 
 /// @unimplemented
@@ -839,4 +877,110 @@ inline void cicDoneUIFScheme(void)
         delete CUIFScheme::s_pColorTableOff10;
         CUIFScheme::s_pColorTableOff10 = NULL;
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline CUIFBitmapDC::CUIFBitmapDC(BOOL bMemory)
+{
+    m_hBitmap = NULL;
+    m_hOldBitmap = NULL;
+    m_hOldObject = NULL;
+    if (bMemory)
+        m_hDC = ::CreateCompatibleDC(NULL);
+    else
+        m_hDC = ::CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);
+}
+
+inline CUIFBitmapDC::~CUIFBitmapDC()
+{
+    Uninit(FALSE);
+    ::DeleteDC(m_hDC);
+}
+
+inline void CUIFBitmapDC::Uninit(BOOL bKeep)
+{
+    if (m_hOldBitmap)
+    {
+        ::SelectObject(m_hDC, m_hOldBitmap);
+        m_hOldBitmap = NULL;
+    }
+    if (m_hOldObject)
+    {
+        ::SelectObject(m_hDC, m_hOldObject);
+        m_hOldObject = NULL;
+    }
+    if (!bKeep)
+    {
+        if (m_hBitmap)
+        {
+            ::DeleteObject(m_hBitmap);
+            m_hBitmap = NULL;
+        }
+    }
+}
+
+inline BOOL CUIFBitmapDC::SetBitmap(HBITMAP hBitmap)
+{
+    if (m_hDC)
+        m_hOldBitmap = ::SelectObject(m_hDC, hBitmap);
+    return TRUE;
+}
+
+inline BOOL CUIFBitmapDC::SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount)
+{
+    m_hBitmap = ::CreateBitmap(cx, cy, cPlanes, cBitCount, 0);
+    m_hOldBitmap = ::SelectObject(m_hDC, m_hBitmap);
+    return TRUE;
+}
+
+inline BOOL CUIFBitmapDC::SetDIB(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount)
+{
+    BITMAPINFO bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = cx;
+    bmi.bmiHeader.biHeight = cy;
+    bmi.bmiHeader.biPlanes = cPlanes;
+    bmi.bmiHeader.biBitCount = cBitCount;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    m_hBitmap = ::CreateDIBSection(m_hDC, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    m_hOldBitmap = ::SelectObject(m_hDC, m_hBitmap);
+    return TRUE;
+}
+
+inline void cicInitUIFUtil(void)
+{
+    if (!CUIFBitmapDC::s_phdcSrc)
+        CUIFBitmapDC::s_phdcSrc = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (!CUIFBitmapDC::s_phdcMask)
+        CUIFBitmapDC::s_phdcMask = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (!CUIFBitmapDC::s_phdcDst)
+        CUIFBitmapDC::s_phdcDst = new(cicNoThrow) CUIFBitmapDC(TRUE);
+
+    if (CUIFBitmapDC::s_phdcSrc && CUIFBitmapDC::s_phdcMask && CUIFBitmapDC::s_phdcDst)
+        CUIFBitmapDC::s_fInitBitmapDCs = TRUE;
+}
+
+inline void cicDoneUIFUtil(void)
+{
+    if (CUIFBitmapDC::s_phdcSrc)
+    {
+        delete CUIFBitmapDC::s_phdcSrc;
+        CUIFBitmapDC::s_phdcSrc = NULL;
+    }
+    if (CUIFBitmapDC::s_phdcMask)
+    {
+        delete CUIFBitmapDC::s_phdcMask;
+        CUIFBitmapDC::s_phdcMask = NULL;
+    }
+    if (CUIFBitmapDC::s_phdcDst)
+    {
+        delete CUIFBitmapDC::s_phdcDst;
+        CUIFBitmapDC::s_phdcDst = NULL;
+    }
+
+    CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
 }
