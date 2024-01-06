@@ -94,7 +94,7 @@ BEGIN
     LTEXT "Alegeți o setare tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Setări tipice", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Setări particularizate", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Crează conexiuni de rețea utilizând Clientela de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Crează conexiuni de rețea utilizând Clientul de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -177,9 +177,9 @@ BEGIN
     IDS_NETWORKSETTINGSTITLE "Setări de rețea"
     IDS_NETWORKSETTINGSSUBTITLE "Instalează software-ul de rețea folosit pentru conectarea la alte rețele, calculatoare și Internet."
     IDS_NETWORKCOMPONENTTITLE "Componente de rețea"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determinare componente de rețea necesare calculatorului. Pentru adăugare de noi componente, apăsați „Instalare”."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determină ce componente de rețea sunt folosite la calculatorul dvs. Pentru adăugare de noi componente, apăsați „Instalare”."
     IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu de calculator"
-    IDS_NETWORKDOMAINSUBTITLE "Un domeniu sau un grup de calculatoare definit de administratorul de rețea. Un grup de lucru este un grup de calculatoare având același nume de grup."
+    IDS_NETWORKDOMAINSUBTITLE "Specifică felul în care va fi folosit calculatorul - ca parte a unui grup de lucru sau ca parte a unui domeniu de rețea."
     IDS_REACTOS_SETUP "Expert de instalare ReactOS"
     IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\nnu veți introduce un nume de domeniu\nsau grup de lucru."
 END
