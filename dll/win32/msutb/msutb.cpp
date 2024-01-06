@@ -122,22 +122,6 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 }
 
 /**
- * @unimplemented
- */
-VOID InitUIFLib(VOID)
-{
-    //FIXME
-}
-
-/**
- * @unimplemented
- */
-VOID DoneUIFLib(VOID)
-{
-    //FIXME
-}
-
-/**
  * @implemented
  */
 HRESULT APIENTRY
@@ -167,7 +151,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     cicGetOSInfo(&g_uACP, &g_dwOSInfo);
 
     TFInitLib(MsUtbCoCreateInstance);
-    InitUIFLib();
+    cicInitUIFLib();
 
     //CTrayIconWnd::RegisterClassW(); //FIXME
 
@@ -184,7 +168,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
  */
 VOID ProcessDetach(HINSTANCE hinstDLL)
 {
-    DoneUIFLib();
+    cicDoneUIFLib();
     TFUninitLib();
     ::DeleteCriticalSection(&g_cs);
     gModule.Term();
