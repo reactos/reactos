@@ -9,6 +9,7 @@
 
 #include "cicarray.h"
 
+class CUIFSystemInfo;
 struct CUIFTheme;
     class CUIFObject;
         class CUIFWindow;
@@ -18,6 +19,27 @@ class CUIFColorTable;
     class CUIFColorTableOff10;
 class CUIFBitmapDC;
 class CUIFScheme;
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFSystemInfo : OSVERSIONINFO
+{
+public:
+    static CUIFSystemInfo *s_pSystemInfo;
+    DWORD m_cBitsPixels;
+    BOOL m_bHighContrast1;
+    BOOL m_bHighContrast2;
+
+    CUIFSystemInfo();
+    void GetSystemMetrics();
+    void Initialize();
+};
+
+DECLSPEC_SELECTANY CUIFSystemInfo *CUIFSystemInfo::s_pSystemInfo = NULL;
+
+void cicInitUIFSys(void);
+void cicDoneUIFSys(void);
+void cicUpdateUIFSys(void);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -337,6 +359,80 @@ class CUIFWindow : public CUIFObject
 {
     //FIXME
 };
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline void cicInitUIFLib(void)
+{
+    cicInitUIFSys();
+    cicInitUIFScheme();
+    cicInitUIFUtil();
+}
+
+inline void cicDoneUIFLib(void)
+{
+    cicDoneUIFScheme();
+    cicDoneUIFSys();
+    cicDoneUIFUtil();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline CUIFSystemInfo::CUIFSystemInfo()
+{
+    dwMajorVersion = 4;
+    dwMinorVersion = 0;
+    dwBuildNumber = 0;
+    dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+    m_cBitsPixels = 8;
+    m_bHighContrast1 = m_bHighContrast2 = FALSE;
+}
+
+inline void CUIFSystemInfo::GetSystemMetrics()
+{
+    HDC hDC = ::GetDC(NULL);
+    m_cBitsPixels = ::GetDeviceCaps(hDC, BITSPIXEL);
+    ::ReleaseDC(NULL, hDC);
+
+    HIGHCONTRAST HighContrast = { sizeof(HighContrast) };
+    ::SystemParametersInfo(SPI_GETHIGHCONTRAST, sizeof(HighContrast), &HighContrast, 0);
+    m_bHighContrast1 = !!(HighContrast.dwFlags & HCF_HIGHCONTRASTON);
+    COLORREF rgbBtnText = ::GetSysColor(COLOR_BTNTEXT);
+    COLORREF rgbBtnFace = ::GetSysColor(COLOR_BTNFACE);
+    const COLORREF black = RGB(0, 0, 0), white = RGB(255, 255, 255);
+    m_bHighContrast2 = (m_bHighContrast1 ||
+                        (rgbBtnText == black && rgbBtnFace == white) ||
+                        (rgbBtnText == white && rgbBtnFace == black));
+}
+
+inline void CUIFSystemInfo::Initialize()
+{
+    dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ::GetVersionEx(this);
+    GetSystemMetrics();
+}
+
+inline void cicInitUIFSys(void)
+{
+    CUIFSystemInfo::s_pSystemInfo = new(cicNoThrow) CUIFSystemInfo();
+    if (CUIFSystemInfo::s_pSystemInfo)
+        CUIFSystemInfo::s_pSystemInfo->Initialize();
+}
+
+inline void cicDoneUIFSys(void)
+{
+    if (CUIFSystemInfo::s_pSystemInfo)
+    {
+        delete CUIFSystemInfo::s_pSystemInfo;
+        CUIFSystemInfo::s_pSystemInfo = NULL;
+    }
+}
+
+inline void cicUpdateUIFSys(void)
+{
+    if (CUIFSystemInfo::s_pSystemInfo)
+        CUIFSystemInfo::s_pSystemInfo->GetSystemMetrics();
+}
 
 /////////////////////////////////////////////////////////////////////////////
 

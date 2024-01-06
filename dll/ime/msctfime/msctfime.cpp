@@ -3646,18 +3646,6 @@ VOID DetachIME(VOID)
     UnregisterImeClass();
 }
 
-/// @unimplemented
-VOID InitUIFLib(VOID)
-{
-    //FIXME
-}
-
-/// @unimplemented
-VOID DoneUIFLib(VOID)
-{
-    //FIXME
-}
-
 /// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
@@ -3670,7 +3658,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
 
     cicGetOSInfo(&g_uACP, &g_dwOSInfo);
 
-    InitUIFLib();
+    cicInitUIFLib();
 
     if (!TFInitLib())
         return FALSE;
@@ -3695,7 +3683,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
     DeleteCriticalSection(&g_csLock);
     TLS::InternalDestroyTLS();
     TLS::Uninitialize();
-    DoneUIFLib();
+    cicDoneUIFLib();
 }
 
 /// @implemented
