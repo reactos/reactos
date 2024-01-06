@@ -392,6 +392,7 @@ inline void CUIFSystemInfo::GetSystemMetrics()
 {
     HDC hDC = ::GetDC(NULL);
     m_cBitsPixels = ::GetDeviceCaps(hDC, BITSPIXEL);
+    ::ReleaseDC(NULL, hDC);
 
     HIGHCONTRAST HighContrast = { sizeof(HighContrast) };
     ::SystemParametersInfo(SPI_GETHIGHCONTRAST, sizeof(HighContrast), &HighContrast, 0);
@@ -402,7 +403,6 @@ inline void CUIFSystemInfo::GetSystemMetrics()
     m_bHighContrast2 = (m_bHighContrast1 ||
                         (rgbBtnText == black && rgbBtnFace == white) ||
                         (rgbBtnText == white && rgbBtnFace == black));
-    ::ReleaseDC(NULL, hDC);
 }
 
 inline void CUIFSystemInfo::Initialize()
