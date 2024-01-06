@@ -154,16 +154,16 @@ public:
 
     STDMETHOD_(void, Initialize)();
     STDMETHOD_(void, OnPaint)(HWND hWnd);
-    STDMETHOD_(void, OnHideToolTip)();
-    STDMETHOD_(void, OnLButtonDown)(POINT pt);
-    STDMETHOD_(void, OnLButtonDblClk)(POINT pt);
-    STDMETHOD_(void, OnLButtonUp)(POINT pt);
-    STDMETHOD_(void, OnMButtonDown)(POINT pt);
-    STDMETHOD_(void, OnMButtonDblClk)(POINT pt);
-    STDMETHOD_(void, OnMButtonUp)(POINT pt);
-    STDMETHOD_(void, OnRButtonDown)(POINT pt);
-    STDMETHOD_(void, OnRButtonDblClk)(POINT pt);
-    STDMETHOD_(void, OnRButtonUp)(POINT pt);
+    STDMETHOD_(void, OnHideToolTip)() { } // FIXME: name
+    STDMETHOD_(void, OnLButtonDown)(POINT pt) { }
+    STDMETHOD_(void, OnMButtonDown)(POINT pt) { }
+    STDMETHOD_(void, OnRButtonDown)(POINT pt) { }
+    STDMETHOD_(void, OnLButtonUp)(POINT pt) { }
+    STDMETHOD_(void, OnMButtonUp)(POINT pt) { }
+    STDMETHOD_(void, OnRButtonUp)(POINT pt) { }
+    STDMETHOD_(void, OnMouseMove)(POINT pt) { }
+    STDMETHOD_(void, OnRButtonDblClk)(POINT pt) { } //FIXME: name
+    STDMETHOD_(void, OnRButtonUp2)(POINT pt) { } //FIXME: name
     STDMETHOD_(void, OnUnknown)(DWORD x1, DWORD x2, DWORD x3); //FIXME: name and type
     STDMETHOD_(void, GetRect)(LPRECT prc);
     STDMETHOD_(void, SetRect)(LPCRECT prc);
@@ -181,13 +181,83 @@ public:
     STDMETHOD_(void, SetToolTip)(LPCWSTR pszToolTip);
     STDMETHOD_(LPCWSTR, GetToolTip)();
     STDMETHOD_(LRESULT, OnShowToolTip)();
-    STDMETHOD_(void, OnHideToolTip2)();
+    STDMETHOD_(void, OnHideToolTip2)() { } // FIXME: name
     STDMETHOD_(void, DetachWndObj)();
     STDMETHOD_(void, ClearWndObj)();
     STDMETHOD_(LRESULT, OnPaintTheme)(HWND hWnd);
     STDMETHOD_(void, OnSetFocus)(HWND hWnd);
     STDMETHOD_(void, ClearTheme)();
 };
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFColorTable
+{
+public:
+    CUIFColorTable() { }
+    virtual ~CUIFColorTable() { }
+
+    STDMETHOD_(void, InitColor)() = 0;
+    STDMETHOD_(void, DoneColor)() { }
+    STDMETHOD_(void, InitBrush)() = 0;
+    STDMETHOD_(void, DoneBrush)() = 0;
+
+    void Update()
+    {
+        DoneColor();
+        DoneBrush();
+        InitColor();
+        InitBrush();
+    }
+};
+
+class CUIFColorTableSys : public CUIFColorTable
+{
+protected:
+    COLORREF m_rgbColors[16];
+    HBRUSH m_hBrushes[16];
+
+public:
+    CUIFColorTableSys() { }
+
+    HBRUSH GetBrush(INT iColor);
+
+    STDMETHOD_(void, InitColor)() override;
+    STDMETHOD_(void, InitBrush)() override;
+    STDMETHOD_(void, DoneBrush)() override;
+};
+
+class CUIFColorTableOff10 : public CUIFColorTable
+{
+protected:
+    COLORREF m_rgbColors[32];
+    HBRUSH m_hBrushes[32];
+
+public:
+    CUIFColorTableOff10() { }
+
+    HBRUSH GetBrush(INT iColor);
+
+    STDMETHOD_(void, InitColor)() override;
+    STDMETHOD_(void, InitBrush)() override;
+    STDMETHOD_(void, DoneBrush)() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFScheme
+{
+public:
+    static CUIFColorTableSys *s_pColorTableSys;
+    static CUIFColorTableOff10 *s_pColorTableOff10;
+};
+
+DECLSPEC_SELECTANY CUIFColorTableSys *CUIFScheme::s_pColorTableSys = NULL;
+DECLSPEC_SELECTANY CUIFColorTableOff10 *CUIFScheme::s_pColorTableOff10 = NULL;
+
+void cicInitUIFScheme(void);
+void cicUpdateUIFScheme(void);
+void cicDoneUIFScheme(void);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -450,46 +520,6 @@ inline STDMETHODIMP_(void) CUIFObject::OnPaint(HWND hWnd)
         OnSetFocus(hWnd);
 }
 
-inline STDMETHODIMP_(void) CUIFObject::OnHideToolTip()
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnLButtonDown(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnLButtonDblClk(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnLButtonUp(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnMButtonDown(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnMButtonDblClk(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnMButtonUp(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnRButtonDown(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnRButtonDblClk(POINT pt)
-{
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnRButtonUp(POINT pt)
-{
-}
-
 inline STDMETHODIMP_(void) CUIFObject::OnUnknown(DWORD x1, DWORD x2, DWORD x3)
 {
 }
@@ -631,11 +661,6 @@ inline STDMETHODIMP_(LRESULT) CUIFObject::OnShowToolTip()
     return 0;
 }
 
-// FIXME: name
-inline STDMETHODIMP_(void) CUIFObject::OnHideToolTip2()
-{
-}
-
 /// @unimplemented
 inline STDMETHODIMP_(void) CUIFObject::DetachWndObj()
 {
@@ -664,4 +689,154 @@ inline STDMETHODIMP_(void) CUIFObject::ClearTheme()
     CloseThemeData();
     for (size_t iItem = 0; iItem < m_ObjectArray.size(); ++iItem)
         m_ObjectArray[iItem]->ClearTheme();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline STDMETHODIMP_(void) CUIFColorTableSys::InitColor()
+{
+    m_rgbColors[0] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[1] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[2] = GetSysColor(COLOR_ACTIVEBORDER);
+    m_rgbColors[3] = GetSysColor(COLOR_ACTIVECAPTION);
+    m_rgbColors[4] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[5] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[6] = GetSysColor(COLOR_BTNTEXT);
+    m_rgbColors[7] = GetSysColor(COLOR_CAPTIONTEXT);
+    m_rgbColors[8] = GetSysColor(COLOR_GRAYTEXT);
+    m_rgbColors[9] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[10] = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    m_rgbColors[11] = GetSysColor(COLOR_INACTIVECAPTION);
+    m_rgbColors[12] = GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+    m_rgbColors[13] = GetSysColor(COLOR_MENUTEXT);
+    m_rgbColors[14] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[15] = GetSysColor(COLOR_WINDOWTEXT);
+}
+
+inline STDMETHODIMP_(void) CUIFColorTableSys::InitBrush()
+{
+    ZeroMemory(m_hBrushes, sizeof(m_hBrushes));
+}
+
+inline STDMETHODIMP_(void) CUIFColorTableSys::DoneBrush()
+{
+    for (size_t i = 0; i < _countof(m_hBrushes); ++i)
+    {
+        if (m_hBrushes[i])
+        {
+            ::DeleteObject(m_hBrushes[i]);
+            m_hBrushes[i] = NULL;
+        }
+    }
+}
+
+inline HBRUSH CUIFColorTableSys::GetBrush(INT iColor)
+{
+    if (!m_hBrushes[iColor])
+        m_hBrushes[iColor] = ::CreateSolidBrush(m_rgbColors[iColor]);
+    return m_hBrushes[iColor];
+}
+
+inline HBRUSH CUIFColorTableOff10::GetBrush(INT iColor)
+{
+    if (!m_hBrushes[iColor])
+        m_hBrushes[iColor] = ::CreateSolidBrush(m_rgbColors[iColor]);
+    return m_hBrushes[iColor];
+}
+
+/// @unimplemented
+inline STDMETHODIMP_(void) CUIFColorTableOff10::InitColor()
+{
+    m_rgbColors[0] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[1] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[2] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[3] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[4] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[5] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[6] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[7] = GetSysColor(COLOR_WINDOWTEXT);
+    m_rgbColors[8] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[9] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[10] = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    m_rgbColors[11] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[12] = GetSysColor(COLOR_BTNTEXT);
+    m_rgbColors[13] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[14] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[15] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[16] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[17] = GetSysColor(COLOR_BTNTEXT);
+    m_rgbColors[18] = GetSysColor(COLOR_WINDOW);
+    m_rgbColors[19] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[20] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[21] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[22] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[23] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[24] = GetSysColor(COLOR_CAPTIONTEXT);
+    m_rgbColors[25] = GetSysColor(COLOR_HIGHLIGHT);
+    m_rgbColors[26] = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    m_rgbColors[27] = GetSysColor(COLOR_BTNFACE);
+    m_rgbColors[28] = GetSysColor(COLOR_BTNTEXT);
+    m_rgbColors[29] = GetSysColor(COLOR_BTNSHADOW);
+    m_rgbColors[30] = GetSysColor(COLOR_BTNTEXT);
+    m_rgbColors[31] = GetSysColor(COLOR_WINDOWTEXT);
+}
+
+inline STDMETHODIMP_(void) CUIFColorTableOff10::InitBrush()
+{
+    ZeroMemory(m_hBrushes, sizeof(m_hBrushes));
+}
+
+inline STDMETHODIMP_(void) CUIFColorTableOff10::DoneBrush()
+{
+    for (size_t i = 0; i < _countof(m_hBrushes); ++i)
+    {
+        if (m_hBrushes[i])
+        {
+            ::DeleteObject(m_hBrushes[i]);
+            m_hBrushes[i] = NULL;
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline void cicInitUIFScheme(void)
+{
+    CUIFColorTable *pColorTable;
+
+    pColorTable = CUIFScheme::s_pColorTableSys = new(cicNoThrow) CUIFColorTableSys();
+    if (pColorTable)
+    {
+        pColorTable->InitColor();
+        pColorTable->InitBrush();
+    }
+
+    pColorTable = CUIFScheme::s_pColorTableOff10 = new(cicNoThrow) CUIFColorTableOff10();
+    if (pColorTable)
+    {
+        pColorTable->InitColor();
+        pColorTable->InitBrush();
+    }
+}
+
+inline void cicUpdateUIFScheme(void)
+{
+    if (CUIFScheme::s_pColorTableSys)
+        CUIFScheme::s_pColorTableSys->Update();
+    if (CUIFScheme::s_pColorTableOff10)
+        CUIFScheme::s_pColorTableOff10->Update();
+}
+
+inline void cicDoneUIFScheme(void)
+{
+    if (CUIFScheme::s_pColorTableSys)
+    {
+        delete CUIFScheme::s_pColorTableSys;
+        CUIFScheme::s_pColorTableSys = NULL;
+    }
+    if (CUIFScheme::s_pColorTableOff10)
+    {
+        delete CUIFScheme::s_pColorTableOff10;
+        CUIFScheme::s_pColorTableOff10 = NULL;
+    }
 }
