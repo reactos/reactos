@@ -265,12 +265,20 @@ public:
 
     CUIFBitmapDC(BOOL bMemory);
     ~CUIFBitmapDC();
+    operator HDC() const { return m_hDC; }
 
     void Uninit(BOOL bKeep);
 
     BOOL SetBitmap(HBITMAP hBitmap);
     BOOL SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
     BOOL SetDIB(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
+
+    HBITMAP DetachBitmap()
+    {
+        HBITMAP hOldBitmap = m_hBitmap;
+        m_hBitmap = NULL;
+        return hOldBitmap;
+    }
 };
 
 DECLSPEC_SELECTANY BOOL CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
@@ -280,6 +288,13 @@ DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcDst = NULL;
 
 void cicInitUIFUtil(void);
 void cicDoneUIFUtil(void);
+
+BOOL cicSetLayout(HDC hDC, BOOL bLayout);
+HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack);
+HBRUSH cicCreateDitherBrush(VOID);
+HBITMAP cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2,
+                                BOOL bPressed);
+HBITMAP cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRUSH hbr2);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -983,4 +998,134 @@ inline void cicDoneUIFUtil(void)
     }
 
     CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
+}
+
+inline BOOL cicSetLayout(HDC hDC, DWORD dwLayout)
+{
+    typedef BOOL (WINAPI *FN_SetLayout)(HDC hDC, DWORD dwLayout);
+    static HINSTANCE s_hGdi32 = NULL;
+    static FN_SetLayout s_fnSetLayout = NULL;
+
+    if (!cicGetFN(s_hGdi32, s_fnSetLayout, TEXT("gdi32.dll"), "SetLayout"))
+        return FALSE;
+
+    return s_fnSetLayout(hDC, dwLayout);
+}
+
+inline HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack)
+{
+    BITMAP bm;
+    if (!CUIFBitmapDC::s_fInitBitmapDCs || !::GetObject(hBitmap, sizeof(bm), &bm))
+        return NULL;
+
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hBitmap);
+    CUIFBitmapDC::s_phdcDst->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, bm.bmWidth, bm.bmHeight);
+    FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbrBack);
+
+    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_RTL);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcMask, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCCOPY);
+
+    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_LTR);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcMask, 1, 0, SRCCOPY);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBRUSH cicCreateDitherBrush(VOID)
+{
+    BYTE Bits[16];
+    ZeroMemory(&Bits, sizeof(Bits));
+    Bits[0] = Bits[4] = Bits[8] = Bits[12] = 'U';
+    Bits[2] = Bits[6] = Bits[10] = Bits[14] = 0xAA;
+    HBITMAP hBitmap = ::CreateBitmap(8, 8, 1, 1, Bits);
+    if (!hBitmap)
+        return NULL;
+
+    LOGBRUSH lb;
+    lb.lbHatch = (ULONG_PTR)hBitmap;
+    lb.lbStyle = BS_PATTERN;
+    HBRUSH hbr = ::CreateBrushIndirect(&lb);
+    ::DeleteObject(hBitmap);
+    return hbr;
+}
+
+inline HBITMAP
+cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2, BOOL bPressed)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    LONG width = prc->right - prc->left, height = prc->bottom - prc->top;
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbmMask);
+    CUIFBitmapDC::s_phdcSrc->SetDIB(width, height, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
+
+    HBRUSH hbrWhite = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, hbrWhite);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcSrc, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCINVERT);
+    if (bPressed)
+        BitBlt(*CUIFBitmapDC::s_phdcDst, 1, 1, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCPAINT);
+    else
+        BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCPAINT);
+
+    ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, hbr2);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcSrc, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCPAINT);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCAND);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBITMAP
+cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRUSH hbr2)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    --prc->left;
+    --prc->top;
+
+    LONG width = prc->right - prc->left;
+    LONG height = prc->bottom - prc->top;
+
+    CUIFBitmapDC bitmapDC(TRUE);
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbm1);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
+    bitmapDC.SetDIB(width, height, 1, 32);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
+    ::FillRect(bitmapDC, &rc, hbr2);
+
+    ::BitBlt(bitmapDC, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCPAINT);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 2, 2, width, height, bitmapDC, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
