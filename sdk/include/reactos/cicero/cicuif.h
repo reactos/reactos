@@ -210,7 +210,7 @@ public:
 
     STDMETHOD_(void, Initialize)();
     STDMETHOD_(void, OnPaint)(HDC hDC);
-    STDMETHOD_(void, OnHideToolTip)() { } // FIXME: name
+    STDMETHOD_(void, OnUnknnown9)() { } // FIXME: name
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnMButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnRButtonDown)(LONG x, LONG y) { }
@@ -218,8 +218,8 @@ public:
     STDMETHOD_(void, OnMButtonUp)(LONG x, LONG y) { }
     STDMETHOD_(void, OnRButtonUp)(LONG x, LONG y) { }
     STDMETHOD_(void, OnMouseMove)(LONG x, LONG y) { }
-    STDMETHOD_(void, OnRButtonDblClk)(LONG x, LONG y) { } //FIXME: name
-    STDMETHOD_(void, OnRButtonUp2)(LONG x, LONG y) { } //FIXME: name
+    STDMETHOD_(void, OnPoint)(LONG x, LONG y) { }
+    STDMETHOD_(void, OnUnPoint)(LONG x, LONG y) { }
     STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y);
     STDMETHOD_(void, GetRect)(LPRECT prc);
     STDMETHOD_(void, SetRect)(LPCRECT prc);
@@ -237,11 +237,11 @@ public:
     STDMETHOD_(void, SetToolTip)(LPCWSTR pszToolTip);
     STDMETHOD_(LPCWSTR, GetToolTip)();
     STDMETHOD_(LRESULT, OnShowToolTip)();
-    STDMETHOD_(void, OnHideToolTip2)() { } // FIXME: name
+    STDMETHOD_(void, OnHideToolTip)() { }
     STDMETHOD_(void, DetachWndObj)();
     STDMETHOD_(void, ClearWndObj)();
     STDMETHOD_(LRESULT, OnPaintTheme)(HDC hDC);
-    STDMETHOD_(void, OnSetFocus)(HWND hWnd);
+    STDMETHOD_(void, DoPaint)(HDC hDC);
     STDMETHOD_(void, ClearTheme)();
 };
 
@@ -727,8 +727,8 @@ CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD 
 
     m_pszToolTip = NULL;
 
-    m_dwUnknown4[0] = -1; //FIXME
-    m_dwUnknown4[1] = -1; //FIXME
+    m_dwUnknown4[0] = -1; //FIXME: name
+    m_dwUnknown4[1] = -1; //FIXME: name
 }
 
 /// @unimplemented
@@ -766,11 +766,10 @@ inline STDMETHODIMP_(void) CUIFObject::Initialize()
 {
 }
 
-/// unimplemented
 inline STDMETHODIMP_(void) CUIFObject::OnPaint(HDC hDC)
 {
     if (!(m_pWindow->m_style & 0x80000000) || !OnPaintTheme(hDC))
-        ; //FIXME
+        DoPaint(hDC);
 }
 
 inline STDMETHODIMP_(BOOL) CUIFObject::OnSetCursor(UINT uMsg, LONG x, LONG y)
@@ -919,7 +918,7 @@ inline STDMETHODIMP_(LRESULT) CUIFObject::OnPaintTheme(HDC hDC)
     return 0;
 }
 
-inline STDMETHODIMP_(void) CUIFObject::OnSetFocus(HWND hWnd)
+inline STDMETHODIMP_(void) CUIFObject::DoPaint(HDC hDC)
 {
 }
 
@@ -1408,7 +1407,7 @@ cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRU
 /////////////////////////////////////////////////////////////////////////////
 
 inline CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
-    : CUIFObject(0, 0, 0, style)
+    : CUIFObject(NULL, 0, NULL, style)
 {
     m_hInst = hInst;
     m_nLeft = 200;
@@ -1696,7 +1695,6 @@ CUIFWindow::SetCapture(BOOL bSet)
         ::ReleaseCapture();
 }
 
-/// @unimplemented
 inline void CUIFWindow::SetObjectPointed(CUIFObject *pPointed, POINT pt)
 {
     if (pPointed == m_pPointed)
@@ -1707,28 +1705,30 @@ inline void CUIFWindow::SetObjectPointed(CUIFObject *pPointed, POINT pt)
         if (m_pCaptured == m_pPointed)
         {
             if (m_pPointed->m_bEnable)
-                m_pPointed->OnRButtonUp2(pt.x, pt.y); //FIXME
+                m_pPointed->OnUnPoint(pt.x, pt.y);
         }
     }
     else if (m_pPointed)
     {
-        if ( m_pPointed->m_bEnable )
-            m_pPointed->OnRButtonUp2(pt.x, pt.y); //FIXME
+        if (m_pPointed->m_bEnable)
+            m_pPointed->OnUnPoint(pt.x, pt.y);
     }
 
     m_pPointed = pPointed;
-    if ( m_pCaptured )
+
+    if (m_pCaptured)
     {
-        if (m_pCaptured != m_pPointed)
-            return;
+        if (m_pCaptured == m_pPointed)
+        {
+            if (m_pPointed->m_bEnable)
+                m_pPointed->OnPoint(pt.x, pt.y);
+        }
     }
     else if (!m_pPointed)
     {
-        return;
+        if (m_pPointed->m_bEnable)
+            m_pPointed->OnPoint(pt.x, pt.y);
     }
-
-    if (m_pPointed->m_bEnable)
-        m_pPointed->OnRButtonDblClk(pt.x, pt.y); //FIXME
 }
 
 inline STDMETHODIMP_(void)
