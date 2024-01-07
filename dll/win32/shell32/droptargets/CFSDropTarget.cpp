@@ -48,7 +48,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     for (UINT i = 0; i < cidl; i++)
     {
         SFGAOF rfg = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-        ret = pSFFrom->GetAttributesOf(i, apidl, &rfg);
+        ret = pSFFrom->GetAttributesOf(1, apidl[i], &rfg);
         if (FAILED(ret))
             goto cleanup;
 
