@@ -435,12 +435,12 @@ public:
     STDMETHOD_(void, OnNCDestroy)(HWND hWnd);
     STDMETHOD_(void, OnSetFocus)(HWND hWnd);
     STDMETHOD_(void, OnKillFocus)(HWND hWnd);
-    STDMETHOD_(void, OnNotify)(HWND, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(void, OnTimer)(HWND);
+    STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnTimer)(WPARAM wParam);
     STDMETHOD_(void, OnSysColorChange)();
-    STDMETHOD_(void, OnEndSession)(HWND, UINT, LONG);
-    STDMETHOD_(void, OnKeyDown)(HWND, UINT, LONG);
-    STDMETHOD_(void, OnKeyUp)(HWND, UINT, LONG);
+    STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnKeyUp)(HWND, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -452,7 +452,7 @@ public:
     STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, WindowProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(void, OnThemeChanged)(HWND, UINT, LONG);
+    STDMETHOD_(void, OnThemeChanged)(HWND hWnd, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, UpdateUI)(LPCRECT prc);
     STDMETHOD_(void, SetCapture)(int);
     STDMETHOD_(void, OnSetCapture)(HWND hWnd, UINT, LONG);
@@ -2190,7 +2190,7 @@ CUIFWindow::OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 /// @unimplemented
 inline STDMETHODIMP_(void)
-CUIFWindow::OnTimer(HWND hWnd)
+CUIFWindow::OnTimer(WPARAM wParam)
 {
     //FIXME
 }
@@ -2258,6 +2258,7 @@ CUIFWindow::OnEraseBkGnd(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFWindow::OnSetCapture(HWND hWnd, UINT, LONG)
 {
