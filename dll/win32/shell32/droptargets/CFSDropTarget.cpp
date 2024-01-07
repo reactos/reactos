@@ -54,7 +54,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
         if (!(rfg & (SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM)))
         {
-            ERR("Skipping item unless (SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM)\n");
+            WARN("Skipping item without SFGAO_FILESYSANCESTOR or SFGAO_FILESYSTEM\n");
             continue;
         }
 
