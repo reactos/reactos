@@ -178,6 +178,17 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+// Flags for CUIFObject::m_style
+enum
+{
+    UIF_STYLE_CHILD = 0x1,
+    UIF_STYLE_TOPMOST = 0x2,
+    UIF_STYLE_TOOLWINDOW = 0x4,
+    UIF_STYLE_TOOLTIP = 0x20,
+    UIF_STYLE_SHADOW = 0x40,
+    UIF_STYLE_RTL = 0x200,
+};
+
 class CUIFObject : public CUIFTheme
 {
 protected:
@@ -980,7 +991,7 @@ inline BOOL CUIFObject::IsRTL()
 {
     if (!m_pWindow)
         return FALSE;
-    return !!(m_pWindow->m_style & 0x200);
+    return !!(m_pWindow->m_style & UIF_STYLE_RTL);
 }
 
 inline CUIFObject* CUIFObject::ObjectFromPoint(POINT pt)
@@ -1484,11 +1495,11 @@ CUIFWindow::Initialize()
     cicUpdateUIFSys();
     cicUpdateUIFScheme();
 
-    if (m_style & 0x20)
+    if (m_style & UIF_STYLE_TOOLTIP)
     {
         //FIXME: Create m_pToolTip
     }
-    if (m_style & 0x40)
+    if (m_style & UIF_STYLE_SHADOW)
     {
         //FIXME: Create m_pShadow
     }
@@ -1584,22 +1595,17 @@ CUIFWindow::GetWndStyle()
 {
     DWORD ret;
 
-    if (m_style & 1)
+    if (m_style & UIF_STYLE_CHILD)
         ret = WS_CHILD | WS_CLIPSIBLINGS;
     else
         ret = WS_POPUP | WS_DISABLED;
 
     if (m_style & 0x10000000)
-    {
         ret |= WS_BORDER;
-    }
-    else
-    {
-        if (m_style & 8)
-            ret |= WS_DLGFRAME;
-        else if ((m_style & 0x20000000) || (m_style & 0x10))
-            ret |= WS_BORDER;
-    }
+    else if (m_style & 8)
+        ret |= WS_DLGFRAME;
+    else if ((m_style & 0x20000000) || (m_style & 0x10))
+        ret |= WS_BORDER;
 
     return ret;
 }
@@ -1608,11 +1614,11 @@ inline STDMETHODIMP_(DWORD)
 CUIFWindow::GetWndStyleEx()
 {
     DWORD ret = 0;
-    if (m_style & 2)
+    if (m_style & UIF_STYLE_TOPMOST)
         ret = WS_EX_TOPMOST;
-    if (m_style & 4)
+    if (m_style & UIF_STYLE_TOOLWINDOW)
         ret |= WS_EX_TOOLWINDOW;
-    if (m_style & 0x200)
+    if (m_style & UIF_STYLE_RTL)
         ret |= WS_EX_LAYOUTRTL;
     return ret;
 }
@@ -1648,11 +1654,9 @@ inline void CUIFWindow::Show(BOOL bVisible)
     if (!IsWindow(m_hWnd))
         return;
 
-    if (bVisible)
-    {
-        if (m_style & 2)
-            ::SetWindowPos(m_hWnd, 0, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-    }
+    if (bVisible && (m_style & 2))
+        ::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
     m_bVisible = bVisible;
     ::ShowWindow(m_hWnd, (bVisible ? SW_SHOWNOACTIVATE : 0));
 }
@@ -1997,7 +2001,8 @@ CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
     if (!hMon || !::GetMonitorInfo(hMon, &mi))
     {
         if (m_style & 0x80)
-            return ::SystemParametersInfoA(SPI_GETWORKAREA, 0, prcWorkArea, 0);
+            return ::SystemParametersInfo(SPI_GETWORKAREA, 0, prcWorkArea, 0);
+
         if (m_style & 0x100)
         {
             prcWorkArea->top = 0;
@@ -2006,6 +2011,7 @@ CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
             prcWorkArea->bottom = ::GetSystemMetrics(SM_CYSCREEN);
             return TRUE;
         }
+
         return FALSE;
     }
 
