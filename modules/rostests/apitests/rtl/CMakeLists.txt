@@ -7,6 +7,10 @@ list(APPEND SOURCE
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE
         i386/RtlCaptureContext.c
+        i386/RtlUnwind.c
+    )
+    list(APPEND ASM_SOURCE
+        i386/RtlUnwind-asm.s
     )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
