@@ -478,7 +478,7 @@ protected:
     LONG m_nDelayTimeType2;
     LONG m_nDelayTimeType3;
     LONG m_nDelayTimeType1;
-    RECT m_rcToolTip;
+    RECT m_rcToolTipMargin;
     LONG m_cxToolTipWidth;
     BOOL m_bToolTipHasBkColor;
     BOOL m_bToolTipHasTextColor;
@@ -2489,10 +2489,10 @@ CUIFToolTip::CUIFToolTip(HINSTANCE hInst, DWORD style, CUIFWindow *pToolTipOwner
     : CUIFWindow(hInst, style)
 {
     m_pShadowOrToolTipOwner = pToolTipOwner;
-    m_rcToolTip.left = 2;
-    m_rcToolTip.top = 2;
-    m_rcToolTip.right = 2;
-    m_rcToolTip.bottom = 2;
+    m_rcToolTipMargin.left = 2;
+    m_rcToolTipMargin.top = 2;
+    m_rcToolTipMargin.right = 2;
+    m_rcToolTipMargin.bottom = 2;
     m_pToolTipTarget = NULL;
     m_pszToolTipText = NULL;
     m_dwUnknown10 = 0; //FIXME: name and type
@@ -2548,7 +2548,7 @@ CUIFToolTip::GetDelayTime(UINT uType)
 inline void CUIFToolTip::GetMargin(LPRECT prc)
 {
     if (prc)
-        *prc = m_rcToolTip;
+        *prc = m_rcToolTipMargin;
 }
 
 inline COLORREF
