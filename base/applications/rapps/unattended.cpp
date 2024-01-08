@@ -242,7 +242,10 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         db.RemoveCached();
     }
-    db.UpdateAvailable();
+
+    if (!bAppwizMode)
+        db.UpdateAvailable();
+
     db.UpdateInstalled();
 
     if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
