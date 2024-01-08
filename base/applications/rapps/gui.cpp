@@ -356,92 +356,74 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                                 break;
 
                             case IDS_AVAILABLEFORINST:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_ALL_AVAILABLE);
+                                UpdateApplicationsList(ENUM_ALL_AVAILABLE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_AUDIO:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_AUDIO);
+                                UpdateApplicationsList(ENUM_CAT_AUDIO, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_DEVEL:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_DEVEL);
+                                UpdateApplicationsList(ENUM_CAT_DEVEL, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_DRIVERS:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_DRIVERS);
+                                UpdateApplicationsList(ENUM_CAT_DRIVERS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_EDU:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_EDU);
+                                UpdateApplicationsList(ENUM_CAT_EDU, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_ENGINEER:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_ENGINEER);
+                                UpdateApplicationsList(ENUM_CAT_ENGINEER, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_FINANCE:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_FINANCE);
+                                UpdateApplicationsList(ENUM_CAT_FINANCE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_GAMES:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_GAMES);
+                                UpdateApplicationsList(ENUM_CAT_GAMES, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_GRAPHICS:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_GRAPHICS);
+                                UpdateApplicationsList(ENUM_CAT_GRAPHICS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_INTERNET:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_INTERNET);
+                                UpdateApplicationsList(ENUM_CAT_INTERNET, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_LIBS:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_LIBS);
+                                UpdateApplicationsList(ENUM_CAT_LIBS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_OFFICE:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_OFFICE);
+                                UpdateApplicationsList(ENUM_CAT_OFFICE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_OTHER:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_OTHER);
+                                UpdateApplicationsList(ENUM_CAT_OTHER, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_SCIENCE:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_SCIENCE);
+                                UpdateApplicationsList(ENUM_CAT_SCIENCE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_TOOLS:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_TOOLS);
+                                UpdateApplicationsList(ENUM_CAT_TOOLS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_VIDEO:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_VIDEO);
+                                UpdateApplicationsList(ENUM_CAT_VIDEO, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_THEMES:
-                                CheckAvailable();
-                                UpdateApplicationsList(ENUM_CAT_THEMES);
+                                UpdateApplicationsList(ENUM_CAT_THEMES, FALSE, TRUE);
                                 break;
 
                             case IDS_SELECTEDFORINST:
-                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_SELECTED);
                                 break;
                         }
@@ -619,9 +601,12 @@ CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
 }
 
 VOID
-CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload)
+CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL bCheckAvailable)
 {
     bUpdating = TRUE;
+
+    if (bCheckAvailable)
+        CheckAvailable();
 
     if (SelectedEnumType != EnumType)
         SelectedEnumType = EnumType;
