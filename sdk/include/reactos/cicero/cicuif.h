@@ -71,7 +71,7 @@ struct CUIFTheme
 {
     LPCWSTR m_pszClassList;
     INT m_iPartId;
-    DWORD m_dwUnknown2; //FIXME: name and type
+    INT m_iStateId;
     HTHEME m_hTheme;
     static HINSTANCE s_hUXTHEME;
     static FN_OpenThemeData s_fnOpenThemeData;
@@ -109,7 +109,7 @@ struct CUIFTheme
     STDMETHOD(GetThemeFont)(HDC hDC, int iStateId, int iPropId, LOGFONTW *pFont);
     STDMETHOD_(COLORREF, GetThemeSysColor)(INT iColorId);
     STDMETHOD_(int, GetThemeSysSize)(int iSizeId);
-    STDMETHOD_(void, SetActiveTheme)(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2);
+    STDMETHOD_(void, SetActiveTheme)(LPCWSTR pszClassList, INT iPartId, INT iStateId);
 };
 
 // static members
@@ -757,10 +757,10 @@ CUIFTheme::GetThemeSysSize(int iSizeId)
 
 /// @unimplemented
 inline STDMETHODIMP_(void)
-CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, DWORD dwUnknown2)
+CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, INT iStateId)
 {
     m_iPartId = iPartId;
-    m_dwUnknown2 = dwUnknown2; //FIXME: name and type
+    m_iStateId = iStateId;
     m_pszClassList = pszClassList;
 }
 
@@ -2147,9 +2147,9 @@ CUIFWindow::PaintObject(HDC hDC, LPCRECT prc)
         ::SetViewportOrgEx(hMemDC, -pRect->left, -pRect->top, NULL);
 
         if ((FAILED(CUIFTheme::EnsureThemeData(m_hWnd)) ||
-             !(m_style & 1) ||
+             !(m_style & UIF_STYLE_CHILD) ||
              FAILED(DrawThemeParentBackground(m_hWnd, hMemDC, &m_rc))) &&
-            FAILED(DrawThemeBackground(hMemDC, m_dwUnknown2, &m_rc, 0)))
+            FAILED(DrawThemeBackground(hMemDC, m_iStateId, &m_rc, 0)))
         {
             //if (m_pScheme)
             //    m_pScheme->FillRect(hMemDC, pRect, 22); //FIXME
