@@ -1740,10 +1740,10 @@ static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE
     if (!PathFileExistsW(feTo->szFullPath))
         SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
 
-    PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
-
     if (feFrom->attributes == INVALID_FILE_ATTRIBUTES)
         return;
+
+    PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
     if (IsAttribFile(feFrom->attributes))
         move_file_to_file(op, feFrom->szFullPath, szDestPath);
