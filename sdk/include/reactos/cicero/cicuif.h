@@ -206,6 +206,7 @@ protected:
     LPWSTR m_pszToolTip;
     DWORD m_dwUnknown4[2]; //FIXME: name and type
     friend class CUIFWindow;
+    friend class CUIFToolTip;
 
 public:
     CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD style);
@@ -221,7 +222,7 @@ public:
 
     STDMETHOD_(void, Initialize)();
     STDMETHOD_(void, OnPaint)(HDC hDC);
-    STDMETHOD_(void, OnUnknnown9)() { } // FIXME: name
+    STDMETHOD_(void, OnUnknown9)() { } // FIXME: name
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnMButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnRButtonDown)(LONG x, LONG y) { }
@@ -397,9 +398,10 @@ protected:
     CUIFToolTip *m_pToolTip;
     CUIFShadow *m_pShadow;
     BOOL m_bShowShadow;
-    CUIFWindow *m_pShadowOwner;
+    CUIFWindow *m_pShadowOrToolTipOwner;
     friend class CUIFObject;
     friend class CUIFShadow;
+    friend class CUIFToolTip;
 
 public:
     CUIFWindow(HINSTANCE hInst, DWORD style);
@@ -468,7 +470,44 @@ public:
 
 class CUIFToolTip : public CUIFWindow
 {
-    //FIXME
+protected:
+    CUIFObject *m_pToolTipTarget;
+    LPWSTR m_pszToolTipText;
+    BOOL m_bShowToolTip;
+    DWORD m_dwUnknown10;
+    LONG m_nDelayTimeType2;
+    LONG m_nDelayTimeType3;
+    LONG m_nDelayTimeType1;
+    RECT m_rcToolTip;
+    LONG m_cxToolTipWidth;
+    BOOL m_bToolTipHasBkColor;
+    BOOL m_bToolTipHasTextColor;
+    COLORREF m_rgbToolTipBkColor;
+    COLORREF m_rgbToolTipTextColor;
+    friend class CUIFObject;
+
+public:
+    enum { TOOLTIP_TIMER_ID = 0x3216 };
+    CUIFToolTip(HINSTANCE hInst, DWORD style, CUIFWindow *pToolTipOwner);
+    ~CUIFToolTip() override;
+
+    LONG GetDelayTime(UINT uType);
+    void GetMargin(LPRECT prc);
+    COLORREF GetTipBkColor();
+    COLORREF GetTipTextColor();
+    CUIFObject* FindObject(HWND hWnd, POINT pt);
+
+    void ShowTip();
+    void HideTip();
+
+    void GetTipWindowSize(LPSIZE pSize);
+    void GetTipWindowRect(LPRECT pRect, SIZE toolTipSize, LPCRECT prc);
+
+    void RelayEvent(LPMSG pMsg);
+
+    STDMETHOD_(void, OnPaint)(HDC hDC) override;
+    STDMETHOD_(void, Enable)(BOOL bEnable) override;
+    STDMETHOD_(void, OnTimer)(WPARAM wParam) override;
 };
 
 class CUIFShadow : public CUIFWindow
@@ -770,7 +809,9 @@ CUIFObject::~CUIFObject()
 {
     if (m_pWindow)
     {
-        //FIXME
+        CUIFToolTip *pToolTip = m_pWindow->m_pToolTip;
+        if (pToolTip && pToolTip->m_pToolTipTarget == this)
+            pToolTip->m_pToolTipTarget = NULL;
     }
 
     if (m_pszToolTip)
@@ -994,16 +1035,14 @@ inline LRESULT CUIFObject::NotifyCommand(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-/// @unimplemented
 inline void CUIFObject::DetachWndObj()
 {
     if (m_pWindow)
     {
         CUIFToolTip *pToolTip = m_pWindow->m_pToolTip;
-        if (pToolTip)
-        {
-            //FIXME
-        }
+        if (pToolTip && pToolTip->m_pToolTipTarget == this)
+            pToolTip->m_pToolTipTarget = NULL;
+
         m_pWindow->RemoveUIObj(this);
         m_pWindow = NULL;
     }
@@ -1487,7 +1526,6 @@ inline CUIFWindow::~CUIFWindow()
     }
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFWindow::Initialize()
 {
@@ -1519,11 +1557,17 @@ CUIFWindow::Initialize()
 
     if (m_style & UIF_STYLE_TOOLTIP)
     {
-        //FIXME: Create m_pToolTip
+        DWORD style = (m_style & UIF_STYLE_RTL) | UIF_STYLE_TOPMOST | 0x10;
+        m_pToolTip = new(cicNoThrow) CUIFToolTip(m_hInst, style, this);
+        if (m_pToolTip)
+            m_pToolTip->Initialize();
     }
+
     if (m_style & UIF_STYLE_SHADOW)
     {
-        //FIXME: Create m_pShadow
+        m_pShadow = new(cicNoThrow) CUIFShadow(m_hInst, UIF_STYLE_TOPMOST, this);
+        if (m_pShadow)
+            m_pShadow->Initialize();
     }
 
     return CUIFObject::Initialize();
@@ -1935,14 +1979,14 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 m_pShadow->Show(FALSE);
             if (!(pwp->flags & SWP_NOZORDER) && pwp->hwndInsertAfter == m_pShadow->m_hWnd)
                 pwp->flags |= SWP_NOZORDER;
-            //m_pShadow->OnOwnerWndMoved(!(pwp->flags & SWP_NOSIZE)); //FIXME
+            m_pShadow->OnOwnerWndMoved(!(pwp->flags & SWP_NOSIZE));
             return OnWindowPosChanging(hWnd, WM_WINDOWPOSCHANGING, wParam, lParam);
         }
         case WM_WINDOWPOSCHANGED:
         {
-            //WINDOWPOS *pwp = (WINDOWPOS *)lParam;
-            //if (m_pShadow) //FIXME
-            //    m_pShadow->OnOwnerWndMoved(!(pwp->flags & SWP_NOSIZE));
+            WINDOWPOS *pwp = (WINDOWPOS *)lParam;
+            if (m_pShadow)
+                m_pShadow->OnOwnerWndMoved(!(pwp->flags & SWP_NOSIZE));
             return OnWindowPosChanged(hWnd, WM_WINDOWPOSCHANGED, wParam, lParam);
         }
         case WM_NOTIFY:
@@ -2052,11 +2096,27 @@ CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
     return FALSE;
 }
 
-/// @unimplemented
 inline void
 CUIFWindow::AdjustWindowPosition()
 {
-    //FIXME
+    RECT rc;
+    rc.left = m_nLeft;
+    rc.right = m_nLeft + m_nWidth;
+    rc.top = m_nTop;
+    rc.bottom = m_nTop + m_nHeight;
+
+    RECT rcWorkArea;
+    if (!GetWorkArea(&rc, &rcWorkArea))
+        return;
+
+    if (m_nLeft < rcWorkArea.left)
+        m_nLeft = rcWorkArea.left;
+    if (m_nTop < rcWorkArea.top)
+        m_nTop = rcWorkArea.top;
+    if (m_nLeft + m_nWidth >= rcWorkArea.right)
+        m_nLeft = rcWorkArea.right - m_nWidth;
+    if (m_nTop + m_nHeight >= rcWorkArea.bottom)
+        m_nTop = rcWorkArea.bottom - m_nHeight;
 }
 
 /// @unimplemented
@@ -2297,7 +2357,7 @@ CUIFWindow::OnAnimationStart()
 inline CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner)
     : CUIFWindow(hInst, (style | UIF_STYLE_TOOLWINDOW))
 {
-    m_pShadowOwner = pShadowOwner;
+    m_pShadowOrToolTipOwner = pShadowOwner;
     m_rgbShadowColor = RGB(0, 0, 0);
     m_dwUnknown11[0] = 0;
     m_dwUnknown11[1] = 0;
@@ -2307,8 +2367,8 @@ inline CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowO
 
 inline CUIFShadow::~CUIFShadow()
 {
-    if (m_pShadowOwner)
-        m_pShadowOwner->m_pShadow = NULL;
+    if (m_pShadowOrToolTipOwner)
+        m_pShadowOrToolTipOwner->m_pShadow = NULL;
 }
 
 /// @unimplemented
@@ -2330,7 +2390,7 @@ inline void CUIFShadow::InitShadow()
 
 inline void CUIFShadow::AdjustWindowPos()
 {
-    HWND hwndOwner = m_pShadowOwner->m_hWnd;
+    HWND hwndOwner = m_pShadowOrToolTipOwner->m_hWnd;
     if (!::IsWindow(m_hWnd))
         return;
 
@@ -2383,7 +2443,7 @@ inline STDMETHODIMP_(LRESULT)
 CUIFShadow::OnWindowPosChanging(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     WINDOWPOS *wp = (WINDOWPOS *)lParam;
-    wp->hwndInsertAfter = m_pShadowOwner->m_hWnd;
+    wp->hwndInsertAfter = m_pShadowOrToolTipOwner->m_hWnd;
     return ::DefWindowProc(hWnd, Msg, wParam, lParam);
 }
 
@@ -2420,4 +2480,368 @@ CUIFShadow::Show(BOOL bVisible)
         m_bVisible = bVisible;
         ::ShowWindow(m_hWnd, (bVisible ? SW_SHOWNOACTIVATE : SW_HIDE));
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFToolTip::CUIFToolTip(HINSTANCE hInst, DWORD style, CUIFWindow *pToolTipOwner)
+    : CUIFWindow(hInst, style)
+{
+    m_pShadowOrToolTipOwner = pToolTipOwner;
+    m_rcToolTip.left = 2;
+    m_rcToolTip.top = 2;
+    m_rcToolTip.right = 2;
+    m_rcToolTip.bottom = 2;
+    m_pToolTipTarget = NULL;
+    m_pszToolTipText = NULL;
+    m_dwUnknown10 = 0;
+    m_nDelayTimeType2 = -1;
+    m_nDelayTimeType3 = -1;
+    m_nDelayTimeType1 = -1;
+    m_cxToolTipWidth = -1;
+    m_bToolTipHasBkColor = 0;
+    m_bToolTipHasTextColor = 0;
+    m_rgbToolTipBkColor = 0;
+    m_rgbToolTipTextColor = 0;
+}
+
+inline
+CUIFToolTip::~CUIFToolTip()
+{
+    if (m_pShadowOrToolTipOwner)
+        m_pShadowOrToolTipOwner->m_pToolTip = NULL;
+    if (m_pszToolTipText)
+        delete m_pszToolTipText;
+}
+
+inline LONG
+CUIFToolTip::GetDelayTime(UINT uType)
+{
+    LONG nDelayTime;
+    switch (uType)
+    {
+        case 1:
+        {
+            nDelayTime = m_nDelayTimeType1;
+            if (nDelayTime == -1)
+                return ::GetDoubleClickTime() / 5;
+            return nDelayTime;
+        }
+        case 2:
+        {
+            nDelayTime = m_nDelayTimeType2;
+            if (nDelayTime == -1)
+                return 10 * ::GetDoubleClickTime();
+            return nDelayTime;
+        }
+        case 3:
+        {
+            nDelayTime = m_nDelayTimeType3;
+            if (nDelayTime == -1)
+                return ::GetDoubleClickTime();
+            return nDelayTime;
+        }
+    }
+}
+
+inline void CUIFToolTip::GetMargin(LPRECT prc)
+{
+    if (prc)
+        *prc = m_rcToolTip;
+}
+
+inline COLORREF
+CUIFToolTip::GetTipBkColor()
+{
+    if (m_bToolTipHasBkColor)
+        return m_rgbToolTipBkColor;
+    return ::GetSysColor(COLOR_INFOBK);
+}
+
+inline COLORREF
+CUIFToolTip::GetTipTextColor()
+{
+    if (m_bToolTipHasTextColor)
+        return m_rgbToolTipTextColor;
+    return ::GetSysColor(COLOR_INFOTEXT);
+}
+
+inline CUIFObject*
+CUIFToolTip::FindObject(HWND hWnd, POINT pt)
+{
+    if (hWnd == m_pShadowOrToolTipOwner->m_hWnd)
+        return m_pShadowOrToolTipOwner->ObjectFromPoint(pt);
+    return NULL;
+}
+
+/// @unimplemented
+inline void
+CUIFToolTip::ShowTip()
+{
+    ::KillTimer(m_hWnd, TOOLTIP_TIMER_ID);
+
+    if (!m_pToolTipTarget)
+        return;
+
+    LPCTSTR pszText = m_pToolTipTarget->GetToolTip();
+    if (!pszText)
+        return;
+
+    if (!m_pToolTipTarget || m_pToolTipTarget->OnShowToolTip())
+        return;
+
+    POINT Point;
+    ::GetCursorPos(&Point);
+    ::ScreenToClient(m_pToolTipTarget->m_pWindow->m_hWnd, &Point);
+
+    RECT rc;
+    m_pToolTipTarget->GetRect(&rc);
+    if (!::PtInRect(&rc, Point))
+        return;
+
+    INT cchText = lstrlen(pszText);
+    m_pszToolTipText = new(cicNoThrow) TCHAR[cchText + 1];
+    if (!m_pszToolTipText)
+        return;
+
+    lstrcpynW(m_pszToolTipText, pszText, cchText + 1);
+
+    SIZE size;
+    GetTipWindowSize(&size);
+
+    RECT rc2 = rc;
+    ::ClientToScreen(m_pToolTipTarget->m_pWindow->m_hWnd, (LPPOINT)&rc);
+    ::ClientToScreen(m_pToolTipTarget->m_pWindow->m_hWnd, (LPPOINT)&rc.right);
+    GetTipWindowRect(&rc2, size, &rc);
+
+    m_bShowToolTip = TRUE;
+    Move(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+    Show(TRUE);
+}
+
+inline void
+CUIFToolTip::HideTip()
+{
+    ::KillTimer(m_hWnd, TOOLTIP_TIMER_ID);
+    m_bShowToolTip = FALSE;
+
+    if (m_pToolTipTarget)
+        m_pToolTipTarget->OnHideToolTip();
+
+    if (m_bVisible)
+    {
+        if (m_pszToolTipText)
+        {
+            delete[] m_pszToolTipText;
+            m_pszToolTipText = NULL;
+        }
+        Show(FALSE);
+    }
+}
+
+inline void
+CUIFToolTip::GetTipWindowSize(LPSIZE pSize)
+{
+    if (!m_pszToolTipText)
+        return;
+
+    HDC hDC = ::GetDC(m_hWnd);
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+
+    RECT rcText = { 0, 0, 0, 0 };
+    INT cyText;
+    if (m_cxToolTipWidth <= 0)
+    {
+        cyText = ::DrawText(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_SINGLELINE);
+    }
+    else
+    {
+        rcText.right = m_cxToolTipWidth;
+        cyText = ::DrawText(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_WORDBREAK);
+    }
+
+    RECT rcMargin;
+    GetMargin(&rcMargin);
+
+    rcText.bottom = cyText + rcText.top;
+
+    RECT rc;
+    rc.left     = rcText.left - rcMargin.left;
+    rc.top      = rcText.top - rcMargin.top;
+    rc.right    = rcText.right + rcMargin.right;
+    rc.bottom   = rcText.top + cyText + rcMargin.bottom;
+    ClientRectToWindowRect(&rc);
+
+    pSize->cx = rc.right - rc.left;
+    pSize->cy = rc.bottom - rc.top;
+
+    ::SelectObject(hDC, hFontOld);
+    ::ReleaseDC(m_hWnd, hDC);
+}
+
+inline void
+CUIFToolTip::GetTipWindowRect(LPRECT pRect, SIZE toolTipSize, LPCRECT prc)
+{
+    POINT Point;
+    GetCursorPos(&Point);
+
+    HCURSOR hCursor = ::GetCursor();
+    ICONINFO IconInfo;
+    INT yHotspot = 0;
+    INT cyCursor = ::GetSystemMetrics(SM_CYCURSOR);
+    if (hCursor && ::GetIconInfo(hCursor, &IconInfo))
+    {
+        BITMAP bm;
+        ::GetObject(IconInfo.hbmMask, sizeof(bm), &bm);
+        if (!IconInfo.fIcon)
+        {
+            cyCursor = bm.bmHeight;
+            yHotspot = IconInfo.yHotspot;
+            if (!IconInfo.hbmColor)
+                cyCursor = bm.bmHeight / 2;
+        }
+        if (IconInfo.hbmColor)
+            ::DeleteObject(IconInfo.hbmColor);
+        if (IconInfo.hbmMask)
+            ::DeleteObject(IconInfo.hbmMask);
+    }
+
+    RECT rcMonitor;
+    rcMonitor.left = 0;
+    rcMonitor.top = 0;
+    rcMonitor.right = GetSystemMetrics(SM_CXSCREEN);
+    rcMonitor.bottom = GetSystemMetrics(SM_CYSCREEN);
+
+    HMONITOR hMon = ::MonitorFromPoint(Point, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi;
+    if (hMon)
+    {
+        mi.cbSize = sizeof(MONITORINFO);
+        if (::GetMonitorInfo(hMon, &mi))
+            rcMonitor = mi.rcMonitor;
+    }
+
+    pRect->left   = Point.x;
+    pRect->right  = pRect->left + toolTipSize.cx;
+    pRect->top    = Point.y + cyCursor - yHotspot;
+    pRect->bottom = pRect->top + toolTipSize.cy;
+
+    if (rcMonitor.right < pRect->right)
+    {
+        pRect->left = rcMonitor.right - toolTipSize.cx;
+        pRect->right = rcMonitor.right;
+    }
+    if (pRect->left < rcMonitor.left)
+    {
+        pRect->left = rcMonitor.left;
+        pRect->right = rcMonitor.left + toolTipSize.cx;
+    }
+    if (rcMonitor.bottom < pRect->bottom)
+    {
+        pRect->top = rcMonitor.bottom - toolTipSize.cy;
+        pRect->bottom = rcMonitor.bottom;
+    }
+    if (pRect->top < rcMonitor.top)
+    {
+        pRect->top = rcMonitor.top;
+        pRect->bottom = rcMonitor.top + toolTipSize.cy;
+    }
+}
+
+inline void
+CUIFToolTip::RelayEvent(LPMSG pMsg)
+{
+    if (!pMsg)
+        return;
+
+    switch (pMsg->message)
+    {
+        case WM_MOUSEMOVE:
+        {
+            if (m_bEnable &&
+                ::GetKeyState(VK_LBUTTON) >= 0 &&
+                ::GetKeyState(VK_MBUTTON) >= 0 &&
+                ::GetKeyState(VK_RBUTTON) >= 0)
+            {
+                POINT pt = { (SHORT)LOWORD(pMsg->lParam), (SHORT)HIWORD(pMsg->lParam) };
+                CUIFObject *pFound = CUIFToolTip::FindObject(pMsg->hwnd, pt);
+                if (pFound)
+                {
+                    if (m_pToolTipTarget != pFound)
+                    {
+                        HideTip();
+
+                        LONG DelayTime;
+                        if (!m_bVisible)
+                            DelayTime = GetDelayTime(3);
+                        else
+                            DelayTime = GetDelayTime(1);
+                        ::SetTimer(m_hWnd, TOOLTIP_TIMER_ID, DelayTime, NULL);
+                    }
+                }
+                else
+                {
+                    HideTip();
+                }
+                m_pToolTipTarget = pFound;
+            }
+            break;
+        }
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        {
+            HideTip();
+            break;
+        }
+    }
+}
+
+inline STDMETHODIMP_(void) CUIFToolTip::OnPaint(HDC hDC)
+{
+    HGDIOBJ hFontOld = SelectObject(hDC, m_hFont);
+    INT iBkModeOld = SetBkMode(hDC, TRANSPARENT);
+
+    COLORREF rgbTextColor = GetTipTextColor();
+    COLORREF rgbOldTextColor = ::SetTextColor(hDC, rgbTextColor);
+
+    COLORREF rgbBkColor = GetTipBkColor();
+    HBRUSH hbrBack = ::CreateSolidBrush(rgbBkColor);
+    RECT rc = m_rc;
+    if (hbrBack)
+    {
+        ::FillRect(hDC, &rc, hbrBack);
+        ::DeleteObject(hbrBack);
+    }
+
+    RECT rcMargin;
+    GetMargin(&rcMargin);
+
+    rc.left += rcMargin.left;
+    rc.top += rcMargin.top;
+    rc.right -= rcMargin.right;
+    rc.bottom -= rcMargin.bottom;
+
+    if (m_cxToolTipWidth <= 0)
+        ::DrawText(hDC, m_pszToolTipText, -1, &rc, DT_SINGLELINE);
+    else
+        ::DrawText(hDC, m_pszToolTipText, -1, &rc, DT_WORDBREAK);
+
+    ::SetTextColor(hDC, rgbOldTextColor);
+    ::SetBkMode(hDC, iBkModeOld);
+    ::SelectObject(hDC, hFontOld);
+}
+
+inline STDMETHODIMP_(void) CUIFToolTip::Enable(BOOL bEnable)
+{
+    if (!bEnable)
+        HideTip();
+    CUIFObject::Enable(bEnable);
+}
+
+inline STDMETHODIMP_(void) CUIFToolTip::OnTimer(WPARAM wParam)
+{
+    if (wParam == TOOLTIP_TIMER_ID)
+        ShowTip();
 }
