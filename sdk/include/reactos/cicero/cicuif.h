@@ -2301,8 +2301,7 @@ inline CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowO
     m_rgbShadowColor = RGB(0, 0, 0);
     m_dwUnknown11[0] = 0;
     m_dwUnknown11[1] = 0;
-    m_xShadowDelta = 0;
-    m_yShadowDelta = 0;
+    m_xShadowDelta = m_yShadowDelta = 0;
     m_bLayerAvailable = FALSE;
 }
 
