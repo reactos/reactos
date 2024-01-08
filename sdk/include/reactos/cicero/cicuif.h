@@ -203,7 +203,7 @@ protected:
     BOOL m_bVisible;
     HFONT m_hFont;
     BOOL m_bHasCustomFont;
-    LPTSTR m_pszToolTip;
+    LPWSTR m_pszToolTip;
     DWORD m_dwUnknown4[2]; //FIXME: name and type
     friend class CUIFWindow;
     friend class CUIFToolTip;
@@ -472,7 +472,7 @@ class CUIFToolTip : public CUIFWindow
 {
 protected:
     CUIFObject *m_pToolTipTarget;
-    LPTSTR m_pszToolTipText;
+    LPWSTR m_pszToolTipText;
     BOOL m_bShowToolTip;
     DWORD m_dwUnknown10; //FIXME: name and type
     LONG m_nDelayTimeType2;
@@ -964,9 +964,9 @@ inline STDMETHODIMP_(void) CUIFObject::SetToolTip(LPCWSTR pszToolTip)
     if (pszToolTip)
     {
         size_t cch = wcslen(pszToolTip);
-        m_pszToolTip = new(cicNoThrow) TCHAR[cch + 1];
+        m_pszToolTip = new(cicNoThrow) WCHAR[cch + 1];
         if (m_pszToolTip)
-            lstrcpyn(m_pszToolTip, pszToolTip, cch + 1);
+            lstrcpynW(m_pszToolTip, pszToolTip, cch + 1);
     }
 }
 
@@ -2584,7 +2584,7 @@ CUIFToolTip::ShowTip()
     if (!m_pToolTipTarget)
         return;
 
-    LPCTSTR pszText = m_pToolTipTarget->GetToolTip();
+    LPCWSTR pszText = m_pToolTipTarget->GetToolTip();
     if (!pszText)
         return;
 
@@ -2600,12 +2600,12 @@ CUIFToolTip::ShowTip()
     if (!::PtInRect(&rc, Point))
         return;
 
-    INT cchText = lstrlen(pszText);
-    m_pszToolTipText = new(cicNoThrow) TCHAR[cchText + 1];
+    size_t cchText = wcslen(pszText);
+    m_pszToolTipText = new(cicNoThrow) WCHAR[cchText + 1];
     if (!m_pszToolTipText)
         return;
 
-    lstrcpyn(m_pszToolTipText, pszText, cchText + 1);
+    lstrcpynW(m_pszToolTipText, pszText, cchText + 1);
 
     SIZE size;
     GetTipWindowSize(&size);
@@ -2653,12 +2653,12 @@ CUIFToolTip::GetTipWindowSize(LPSIZE pSize)
     INT cyText;
     if (m_cxToolTipWidth <= 0)
     {
-        cyText = ::DrawText(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_SINGLELINE);
+        cyText = ::DrawTextW(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_SINGLELINE);
     }
     else
     {
         rcText.right = m_cxToolTipWidth;
-        cyText = ::DrawText(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_WORDBREAK);
+        cyText = ::DrawTextW(hDC, m_pszToolTipText, -1, &rcText, DT_CALCRECT | DT_WORDBREAK);
     }
 
     RECT rcMargin;
@@ -2822,9 +2822,9 @@ inline STDMETHODIMP_(void) CUIFToolTip::OnPaint(HDC hDC)
     rc.bottom -= rcMargin.bottom;
 
     if (m_cxToolTipWidth <= 0)
-        ::DrawText(hDC, m_pszToolTipText, -1, &rc, DT_SINGLELINE);
+        ::DrawTextW(hDC, m_pszToolTipText, -1, &rc, DT_SINGLELINE);
     else
-        ::DrawText(hDC, m_pszToolTipText, -1, &rc, DT_WORDBREAK);
+        ::DrawTextW(hDC, m_pszToolTipText, -1, &rc, DT_WORDBREAK);
 
     ::SetTextColor(hDC, rgbOldTextColor);
     ::SetBkMode(hDC, iBkModeOld);
