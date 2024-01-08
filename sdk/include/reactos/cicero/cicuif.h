@@ -2664,8 +2664,6 @@ CUIFToolTip::GetTipWindowSize(LPSIZE pSize)
     RECT rcMargin;
     GetMargin(&rcMargin);
 
-    rcText.bottom = cyText + rcText.top;
-
     RECT rc;
     rc.left     = rcText.left - rcMargin.left;
     rc.top      = rcText.top - rcMargin.top;
