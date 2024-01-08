@@ -397,8 +397,9 @@ protected:
     CUIFToolTip *m_pToolTip;
     CUIFShadow *m_pShadow;
     BOOL m_bShowShadow;
-    DWORD m_dwUnknown10;
+    CUIFWindow *m_pShadowOwner;
     friend class CUIFObject;
+    friend class CUIFShadow;
 
 public:
     CUIFWindow(HINSTANCE hInst, DWORD style);
@@ -472,7 +473,28 @@ class CUIFToolTip : public CUIFWindow
 
 class CUIFShadow : public CUIFWindow
 {
-    //FIXME
+protected:
+    COLORREF m_rgbShadowColor;
+    DWORD m_dwUnknown11[2];
+    INT m_xShadowDelta;
+    INT m_yShadowDelta;
+    BOOL m_bLayerAvailable;
+
+public:
+    CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner);
+    ~CUIFShadow() override;
+
+    void InitSettings();
+    void InitShadow();
+    void AdjustWindowPos();
+    void OnOwnerWndMoved(BOOL bDoSize);
+
+    STDMETHOD_(void, Initialize)() override;
+    STDMETHOD_(DWORD, GetWndStyleEx)() override;
+    STDMETHOD_(void, OnPaint)(HDC hDC) override;
+    STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(void, Show)(BOOL bVisible) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2267,4 +2289,135 @@ CUIFWindow::OnSetCapture(HWND hWnd, UINT, LONG)
 inline STDMETHODIMP_(void)
 CUIFWindow::OnAnimationStart()
 {
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+/// @unimplemented
+inline CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner)
+    : CUIFWindow(hInst, (style | UIF_STYLE_TOOLWINDOW))
+{
+    m_pShadowOwner = pShadowOwner;
+    m_rgbShadowColor = RGB(0, 0, 0);
+    m_dwUnknown11[0] = 0;
+    m_dwUnknown11[1] = 0;
+    m_xShadowDelta = m_yShadowDelta = 0;
+    m_bLayerAvailable = FALSE;
+}
+
+inline CUIFShadow::~CUIFShadow()
+{
+    if (m_pShadowOwner)
+        m_pShadowOwner->m_pShadow = NULL;
+}
+
+/// @unimplemented
+inline void CUIFShadow::InitSettings()
+{
+    m_bLayerAvailable = FALSE;
+    m_rgbShadowColor = RGB(128, 128, 128);
+    m_xShadowDelta = m_yShadowDelta = 2;
+}
+
+/// @unimplemented
+inline void CUIFShadow::InitShadow()
+{
+    if (m_bLayerAvailable)
+    {
+        //FIXME
+    }
+}
+
+inline void CUIFShadow::AdjustWindowPos()
+{
+    HWND hwndOwner = m_pShadowOwner->m_hWnd;
+    if (!::IsWindow(m_hWnd))
+        return;
+
+    RECT rc;
+    ::GetWindowRect(hwndOwner, &rc);
+    ::SetWindowPos(m_hWnd, hwndOwner,
+                   rc.left + m_xShadowDelta,
+                   rc.top + m_yShadowDelta,
+                   rc.right - rc.left,
+                   rc.bottom - rc.top,
+                   SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+}
+
+inline void CUIFShadow::OnOwnerWndMoved(BOOL bDoSize)
+{
+    if (::IsWindow(m_hWnd) && ::IsWindowVisible(m_hWnd))
+    {
+        AdjustWindowPos();
+        if (bDoSize)
+            InitShadow();
+    }
+}
+
+inline STDMETHODIMP_(void)
+CUIFShadow::Initialize()
+{
+    InitSettings();
+    CUIFWindow::Initialize();
+}
+
+inline STDMETHODIMP_(DWORD)
+CUIFShadow::GetWndStyleEx()
+{
+    DWORD exstyle = CUIFWindow::GetWndStyleEx();
+    if (m_bLayerAvailable)
+        exstyle |= WS_EX_LAYERED;
+    return exstyle;
+}
+
+inline STDMETHODIMP_(void)
+CUIFShadow::OnPaint(HDC hDC)
+{
+    RECT rc = m_rc;
+    HBRUSH hBrush = ::CreateSolidBrush(m_rgbShadowColor);
+    ::FillRect(hDC, &rc, hBrush);
+    ::DeleteObject(hBrush);
+}
+
+inline STDMETHODIMP_(LRESULT)
+CUIFShadow::OnWindowPosChanging(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    WINDOWPOS *wp = (WINDOWPOS *)lParam;
+    wp->hwndInsertAfter = m_pShadowOwner->m_hWnd;
+    return ::DefWindowProc(hWnd, Msg, wParam, lParam);
+}
+
+inline STDMETHODIMP_(LRESULT)
+CUIFShadow::OnSettingChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    InitSettings();
+
+    DWORD exstyle;
+    if (m_bLayerAvailable)
+        exstyle = ::GetWindowLongPtr(m_hWnd, GWL_EXSTYLE) | WS_EX_LAYERED;
+    else
+        exstyle = ::GetWindowLongPtr(m_hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED;
+
+    ::SetWindowLongPtr(m_hWnd, GWL_EXSTYLE, exstyle);
+
+    AdjustWindowPos();
+    InitShadow();
+
+    return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+inline STDMETHODIMP_(void)
+CUIFShadow::Show(BOOL bVisible)
+{
+    if (bVisible && ::IsWindow(m_hWnd) && !::IsWindowVisible(m_hWnd))
+    {
+        AdjustWindowPos();
+        InitShadow();
+    }
+
+    if (::IsWindow(m_hWnd))
+    {
+        m_bVisible = bVisible;
+        ::ShowWindow(m_hWnd, (bVisible ? SW_SHOWNOACTIVATE : SW_HIDE));
+    }
 }
