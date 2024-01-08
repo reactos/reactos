@@ -203,7 +203,7 @@ protected:
     BOOL m_bVisible;
     HFONT m_hFont;
     BOOL m_bHasCustomFont;
-    LPWSTR m_pszToolTip;
+    LPTSTR m_pszToolTip;
     DWORD m_dwUnknown4[2]; //FIXME: name and type
     friend class CUIFWindow;
     friend class CUIFToolTip;
@@ -472,7 +472,7 @@ class CUIFToolTip : public CUIFWindow
 {
 protected:
     CUIFObject *m_pToolTipTarget;
-    LPWSTR m_pszToolTipText;
+    LPTSTR m_pszToolTipText;
     BOOL m_bShowToolTip;
     DWORD m_dwUnknown10; //FIXME: name and type
     LONG m_nDelayTimeType2;
@@ -964,9 +964,9 @@ inline STDMETHODIMP_(void) CUIFObject::SetToolTip(LPCWSTR pszToolTip)
     if (pszToolTip)
     {
         size_t cch = wcslen(pszToolTip);
-        m_pszToolTip = new(cicNoThrow) WCHAR[cch + 1];
+        m_pszToolTip = new(cicNoThrow) TCHAR[cch + 1];
         if (m_pszToolTip)
-            wcscpy(m_pszToolTip, pszToolTip);
+            lstrcpyn(m_pszToolTip, pszToolTip, cch + 1);
     }
 }
 
@@ -2512,7 +2512,7 @@ CUIFToolTip::~CUIFToolTip()
     if (m_pShadowOrToolTipOwner)
         m_pShadowOrToolTipOwner->m_pToolTip = NULL;
     if (m_pszToolTipText)
-        delete m_pszToolTipText;
+        delete[] m_pszToolTipText;
 }
 
 inline LONG
@@ -2605,7 +2605,7 @@ CUIFToolTip::ShowTip()
     if (!m_pszToolTipText)
         return;
 
-    lstrcpynW(m_pszToolTipText, pszText, cchText + 1);
+    lstrcpyn(m_pszToolTipText, pszText, cchText + 1);
 
     SIZE size;
     GetTipWindowSize(&size);
