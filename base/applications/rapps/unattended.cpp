@@ -222,7 +222,6 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
-    BOOL bAppwizMode = FALSE;
 
     if (!argv)
     {
@@ -233,18 +232,14 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     GetStorageDirectory(Directory);
     CAppDB db(Directory);
 
-    if (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ))
-    {
-        bAppwizMode = TRUE;
-    }
-
-    if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
-    {
-        db.RemoveCached();
-    }
-
+    BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
+    {
+        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
+            db.RemoveCached();
+
         db.UpdateAvailable();
+    }
 
     db.UpdateInstalled();
 
