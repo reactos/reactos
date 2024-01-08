@@ -222,11 +222,8 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
-
     if (!argv)
-    {
         return FALSE;
-    }
 
     CStringW Directory;
     GetStorageDirectory(Directory);
