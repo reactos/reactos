@@ -47,14 +47,14 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     /* Build a double null terminated list of C strings from source paths */
     for (UINT i = 0; i < cidl; i++)
     {
-        SFGAOF rfg = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-        ret = pSFFrom->GetAttributesOf(1, apidl[i], &rfg);
+        SFGAOF rfg = SFGAO_FILESYSTEM;
+        ret = pSFFrom->GetAttributesOf(1, &apidl[i], &rfg);
         if (FAILED(ret))
             goto cleanup;
 
         if (!(rfg & (SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM)))
         {
-            WARN("Skipping item without SFGAO_FILESYSANCESTOR or SFGAO_FILESYSTEM\n");
+            WARN("Skipping item without SFGAO_FILESYSTEM\n");
             continue;
         }
 
