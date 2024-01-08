@@ -293,6 +293,16 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     return InstalledApp->UninstallApplication(bModify);
 }
 
+VOID
+CMainWindow::CheckAvailable()
+{
+    if (m_Db->GetAvailableCount() == 0)
+    {
+        m_Db->RemoveCached();
+        m_Db->UpdateAvailable();
+    }
+}
+
 BOOL
 CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId)
 {
@@ -346,74 +356,92 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                                 break;
 
                             case IDS_AVAILABLEFORINST:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_ALL_AVAILABLE);
                                 break;
 
                             case IDS_CAT_AUDIO:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_AUDIO);
                                 break;
 
                             case IDS_CAT_DEVEL:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_DEVEL);
                                 break;
 
                             case IDS_CAT_DRIVERS:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_DRIVERS);
                                 break;
 
                             case IDS_CAT_EDU:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_EDU);
                                 break;
 
                             case IDS_CAT_ENGINEER:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_ENGINEER);
                                 break;
 
                             case IDS_CAT_FINANCE:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_FINANCE);
                                 break;
 
                             case IDS_CAT_GAMES:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_GAMES);
                                 break;
 
                             case IDS_CAT_GRAPHICS:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_GRAPHICS);
                                 break;
 
                             case IDS_CAT_INTERNET:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_INTERNET);
                                 break;
 
                             case IDS_CAT_LIBS:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_LIBS);
                                 break;
 
                             case IDS_CAT_OFFICE:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_OFFICE);
                                 break;
 
                             case IDS_CAT_OTHER:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_OTHER);
                                 break;
 
                             case IDS_CAT_SCIENCE:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_SCIENCE);
                                 break;
 
                             case IDS_CAT_TOOLS:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_TOOLS);
                                 break;
 
                             case IDS_CAT_VIDEO:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_VIDEO);
                                 break;
 
                             case IDS_CAT_THEMES:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_THEMES);
                                 break;
 
                             case IDS_SELECTEDFORINST:
+                                CheckAvailable();
                                 UpdateApplicationsList(ENUM_CAT_SELECTED);
                                 break;
                         }

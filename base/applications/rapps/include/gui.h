@@ -90,6 +90,9 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     VOID
     OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
+    VOID
+    CheckAvailable();
+
     BOOL
     RemoveSelectedAppFromRegistry();
     BOOL

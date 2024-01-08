@@ -32,4 +32,9 @@ class CAppDB
 
     BOOL
     RemoveInstalledAppFromRegistry(const CAppInfo *Info);
+
+    size_t GetAvailableCount() const
+    {
+        return m_Available.GetCount();
+    }
 };
