@@ -474,7 +474,7 @@ protected:
     CUIFObject *m_pToolTipTarget;
     LPWSTR m_pszToolTipText;
     BOOL m_bShowToolTip;
-    DWORD m_dwUnknown10;
+    DWORD m_dwUnknown10; //FIXME: name and type
     LONG m_nDelayTimeType2;
     LONG m_nDelayTimeType3;
     LONG m_nDelayTimeType1;
@@ -2495,7 +2495,7 @@ CUIFToolTip::CUIFToolTip(HINSTANCE hInst, DWORD style, CUIFWindow *pToolTipOwner
     m_rcToolTip.bottom = 2;
     m_pToolTipTarget = NULL;
     m_pszToolTipText = NULL;
-    m_dwUnknown10 = 0;
+    m_dwUnknown10 = 0; //FIXME: name and type
     m_nDelayTimeType2 = -1;
     m_nDelayTimeType3 = -1;
     m_nDelayTimeType1 = -1;
