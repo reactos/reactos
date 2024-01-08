@@ -94,6 +94,7 @@ extern void func_RtlRemovePrivileges(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUnicodeStringToCountedOemString(void);
 extern void func_RtlUnicodeToOemN(void);
+extern void func_RtlUnwind(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
 extern void func_RtlValidateUnicodeString(void);
 extern void func_RtlxUnicodeStringToAnsiSize(void);
@@ -201,6 +202,9 @@ const struct test winetest_testlist[] =
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
     { "UserModeException",              func_UserModeException },
+#ifdef _M_IX86
+    { "RtlUnwind",                      func_RtlUnwind },
+#endif
 #ifdef _M_AMD64
     { "RtlCaptureContext",              func_RtlCaptureContext },
 #endif
