@@ -349,6 +349,9 @@ TOOLTIPS_Refresh (const TOOLTIPS_INFO *infoPtr, HDC hdc)
     }
 
     /* draw text */
+#ifdef __REACTOS__
+    uFlags |= DT_EXPANDTABS;
+#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
 
     /* Custom draw - Call PostPaint after drawing */
@@ -562,6 +565,9 @@ TOOLTIPS_CalcTipSize (const TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
         title.cx += (rcTitle.right - rcTitle.left);
     }
     hOldFont = SelectObject (hdc, infoPtr->hFont);
+#ifdef __REACTOS__
+    uFlags |= DT_EXPANDTABS;
+#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
     SelectObject (hdc, hOldFont);
     ReleaseDC (infoPtr->hwndSelf, hdc);
