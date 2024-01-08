@@ -1737,11 +1737,11 @@ static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE
 {
     WCHAR szDestPath[MAX_PATH];
 
-    if (!PathFileExistsW(feTo->szFullPath))
-        SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
-
     if (feFrom->attributes == INVALID_FILE_ATTRIBUTES)
         return;
+
+    if (!PathFileExistsW(feTo->szFullPath))
+        SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
 
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
