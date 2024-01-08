@@ -1742,6 +1742,9 @@ static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE
 
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
+    if (feFrom->attributes == INVALID_FILE_ATTRIBUTES)
+        return;
+
     if (IsAttribFile(feFrom->attributes))
         move_file_to_file(op, feFrom->szFullPath, szDestPath);
     else if (!(op->req->fFlags & FOF_FILESONLY && feFrom->bFromWildcard))
@@ -1762,6 +1765,9 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
 
     if (!flTo->dwNumFiles)
         return ERROR_FILE_NOT_FOUND;
+
+    if (flFrom->bAnyDontExist)
+        return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
 
     if (!(multiDest) &&
         flTo->dwNumFiles > 1 && flFrom->dwNumFiles > 1)
