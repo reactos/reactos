@@ -615,6 +615,11 @@ protected:
     SIZE m_IconSize;
     SIZE m_TextSize;
 
+    void DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+    void DrawEdgeProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+    void DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed);
+    void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+
 public:
     CUIFButton(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
     ~CUIFButton() override;
@@ -626,11 +631,6 @@ public:
     void GetTextSize(LPCWSTR pszText, LPSIZE pSize);
     void OnMouseIn(POINT pt);
     void OnMouseOut(POINT pt);
-
-    void DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed);
-    void DrawEdgeProc(HDC hDC, LPCRECT prc, BOOL bPressed);
-    void DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed);
-    void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
 
     STDMETHOD_(void, Enable)(BOOL bEnable) override;
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) override;
