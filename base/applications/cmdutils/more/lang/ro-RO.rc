@@ -12,15 +12,15 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Afișarea datelor pe ecran, pagină cu pagină.\n\
 \n\
-MORE [/E [opțiuni]] < [disc:][cale]numele fișierului\n\
+MORE [/E [opțiuni]] < [dispozitiv:][cale]numele fișierului\n\
 command | MORE [/E [opțiuni]\n\
 \n\
-    [disc:][cale]numele fișierului        Un fișier al cărui conținut\n\
+    [dispozitiv:][cale]numele fișierului  Un fișier al cărui conținut\n\
                                           urmează să fie afișat.\n\
     comandă                               O comandă a cărei ieșire\n\
                                           urmează să fie afișată.\n\
 \n\
-Atunci când opțiunea Caracteristici extinse e activată,\n\
+Atunci când Caracteristicile extinse sunt activate,\n\
 următoarea formă este acceptată:\n\
 MORE [/E] [opțiuni] [fișiere]\n\
 \n\
