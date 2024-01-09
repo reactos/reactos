@@ -1,6 +1,9 @@
 name: Build
 on: [push, pull_request]
 
+env:
+  CHECKOUT_VERSION: v4
+
 jobs:
   build-linux:
     strategy:
@@ -46,7 +49,7 @@ jobs:
         sudo ./llvm.sh $LLVM_VERSION
         echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@${{CHECKOUT_VERSION}}
       with:
         path: src
     - name: Set up cache for ccache
@@ -129,7 +132,7 @@ jobs:
         arch: amd64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@${{CHECKOUT_VERSION}}
       with:
         path: src
     - name: Configure
@@ -183,7 +186,7 @@ jobs:
         arch: amd64_arm64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@${{CHECKOUT_VERSION}}
       with:
         path: src
     - name: Configure
@@ -268,7 +271,7 @@ jobs:
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@${{CHECKOUT_VERSION}}
       with:
         path: src
     - name: Configure
@@ -307,7 +310,7 @@ jobs:
 #      uses: ilammy/msvc-dev-cmd@v1
 #      with:
 #        arch: amd64_x86
-#    - uses: actions/checkout@v4
+#    - uses: actions/checkout@${{CHECKOUT_VERSION}}
 #      with:
 #        path: src
 #    - name: Configure
