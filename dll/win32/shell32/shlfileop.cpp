@@ -1735,11 +1735,13 @@ static BOOL move_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
 /* moves a file or directory to another directory */
 static void move_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, const FILE_ENTRY *feTo)
 {
-    WCHAR szDestPath[MAX_PATH];
+    if (feFrom->attributes == INVALID_FILE_ATTRIBUTES)
+        return;
 
     if (!PathFileExistsW(feTo->szFullPath))
         SHNotifyCreateDirectoryW(feTo->szFullPath, NULL);
 
+    WCHAR szDestPath[MAX_PATH];
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
     if (IsAttribFile(feFrom->attributes))
@@ -1762,6 +1764,9 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
 
     if (!flTo->dwNumFiles)
         return ERROR_FILE_NOT_FOUND;
+
+    if (flFrom->bAnyDontExist)
+        return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
 
     if (!(multiDest) &&
         flTo->dwNumFiles > 1 && flFrom->dwNumFiles > 1)
