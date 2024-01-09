@@ -392,7 +392,7 @@ public:
     ~CUIFBitmapDC();
     operator HDC() const { return m_hDC; }
 
-    void Uninit(BOOL bKeep);
+    void Uninit(BOOL bKeep = FALSE);
 
     BOOL SetBitmap(HBITMAP hBitmap);
     BOOL SetBitmap(LONG cx, LONG cy, WORD cPlanes, WORD cBitCount);
@@ -414,7 +414,6 @@ DECLSPEC_SELECTANY CUIFBitmapDC *CUIFBitmapDC::s_phdcDst = NULL;
 void cicInitUIFUtil(void);
 void cicDoneUIFUtil(void);
 
-BOOL cicSetLayout(HDC hDC, BOOL bLayout);
 HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack);
 HBRUSH cicCreateDitherBrush(VOID);
 HBITMAP cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2,
@@ -613,7 +612,7 @@ protected:
     DWORD m_dwUnknown9;
     HBITMAP m_hbmButton1;
     HBITMAP m_hbmButton2;
-    DWORD m_dwUnknown10;
+    BOOL m_bPressed;
     SIZE m_IconSize;
     SIZE m_TextSize;
 
@@ -860,7 +859,6 @@ CUIFTheme::GetThemeSysSize(int iSizeId)
     return s_fnGetThemeSysSize(m_hTheme, iSizeId);
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, INT iStateId)
 {
@@ -884,7 +882,7 @@ CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD
     if (prc)
         m_rc = *prc;
     else
-        ::SetRect(&m_rc, 0, 0, 0, 0);
+        m_rc = { 0, 0, 0, 0 };
 
     if (m_pParent)
     {
@@ -908,7 +906,6 @@ CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD
     m_dwUnknown4[1] = -1; //FIXME: name
 }
 
-/// @unimplemented
 inline
 CUIFObject::~CUIFObject()
 {
@@ -1401,7 +1398,7 @@ inline CUIFBitmapDC::CUIFBitmapDC(BOOL bMemory)
 
 inline CUIFBitmapDC::~CUIFBitmapDC()
 {
-    Uninit(FALSE);
+    Uninit();
     ::DeleteDC(m_hDC);
 }
 
@@ -1492,18 +1489,6 @@ inline void cicDoneUIFUtil(void)
     CUIFBitmapDC::s_fInitBitmapDCs = FALSE;
 }
 
-inline BOOL cicSetLayout(HDC hDC, DWORD dwLayout)
-{
-    typedef BOOL (WINAPI *FN_SetLayout)(HDC hDC, DWORD dwLayout);
-    static HINSTANCE s_hGdi32 = NULL;
-    static FN_SetLayout s_fnSetLayout = NULL;
-
-    if (!cicGetFN(s_hGdi32, s_fnSetLayout, TEXT("gdi32.dll"), "SetLayout"))
-        return FALSE;
-
-    return s_fnSetLayout(hDC, dwLayout);
-}
-
 inline HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack)
 {
     BITMAP bm;
@@ -1514,31 +1499,30 @@ inline HBITMAP cicMirrorBitmap(HBITMAP hBitmap, HBRUSH hbrBack)
     CUIFBitmapDC::s_phdcDst->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
     CUIFBitmapDC::s_phdcMask->SetDIB(bm.bmWidth, bm.bmHeight, 1, 32);
 
-    RECT rc;
-    ::SetRect(&rc, 0, 0, bm.bmWidth, bm.bmHeight);
+    RECT rc = { 0, 0, bm.bmWidth, bm.bmHeight };
     FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbrBack);
 
-    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_RTL);
+    ::SetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_RTL);
 
     ::BitBlt(*CUIFBitmapDC::s_phdcMask, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCCOPY);
 
-    cicSetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_LTR);
+    ::SetLayout(*CUIFBitmapDC::s_phdcMask, LAYOUT_LTR);
 
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, bm.bmWidth, bm.bmHeight, *CUIFBitmapDC::s_phdcMask, 1, 0, SRCCOPY);
 
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
 
 inline HBRUSH cicCreateDitherBrush(VOID)
 {
-    BYTE Bits[16];
-    ZeroMemory(&Bits, sizeof(Bits));
-    Bits[0] = Bits[4] = Bits[8] = Bits[12] = 'U';
-    Bits[2] = Bits[6] = Bits[10] = Bits[14] = 0xAA;
-    HBITMAP hBitmap = ::CreateBitmap(8, 8, 1, 1, Bits);
+    BYTE bytes[16];
+    ZeroMemory(&bytes, sizeof(bytes));
+    bytes[0] = bytes[4] = bytes[8] = bytes[12] = 0x55;
+    bytes[2] = bytes[6] = bytes[10] = bytes[14] = 0xAA;
+    HBITMAP hBitmap = ::CreateBitmap(8, 8, 1, 1, bytes);
     if (!hBitmap)
         return NULL;
 
@@ -1562,8 +1546,7 @@ cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2, 
     CUIFBitmapDC::s_phdcMask->SetBitmap(hbmMask);
     CUIFBitmapDC::s_phdcSrc->SetDIB(width, height, 1, 32);
 
-    RECT rc;
-    ::SetRect(&rc, 0, 0, width, height);
+    RECT rc = { 0, 0, width, height };
     ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
 
     HBRUSH hbrWhite = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -1580,8 +1563,8 @@ cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2, 
     ::BitBlt(*CUIFBitmapDC::s_phdcSrc, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCPAINT);
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCAND);
 
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
@@ -1605,8 +1588,7 @@ cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRU
     CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
     bitmapDC.SetDIB(width, height, 1, 32);
 
-    RECT rc;
-    ::SetRect(&rc, 0, 0, width, height);
+    RECT rc = { 0, 0, width, height };
 
     ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr1);
     ::FillRect(bitmapDC, &rc, hbr2);
@@ -1616,8 +1598,8 @@ cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRU
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
 
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
@@ -1646,8 +1628,8 @@ cicChangeBitmapColor(LPCRECT prc, HBITMAP hbm, COLORREF rgbBack, COLORREF rgbFor
     ::SetTextColor(*CUIFBitmapDC::s_phdcDst, RGB(0, 0, 0));
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, 0xE20746u);
 
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
@@ -1677,8 +1659,7 @@ cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hBrush)
     CUIFBitmapDC::s_phdcSrc->SetBitmap(hBitmap);
     CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
 
-    RECT rc;
-    ::SetRect(&rc, 0, 0, width, height);
+    RECT rc = { 0, 0, width, height };
 
     HBRUSH hbrWhite = (HBRUSH)GetStockObject(WHITE_BRUSH);
     ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbrWhite);
@@ -1686,8 +1667,8 @@ cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hBrush)
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, 0x660046u);
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, 0x8800C6u);
 
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
     ::DeleteObject(hBitmap);
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
@@ -1710,8 +1691,7 @@ cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2,
     CUIFBitmapDC::s_phdcSrc->SetBitmap(hbm1);
     CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
 
-    RECT rc;
-    ::SetRect(&rc, 0, 0, width, height);
+    RECT rc = { 0, 0, width, height };
 
     COLORREF OldTextColor = ::SetTextColor(*CUIFBitmapDC::s_phdcDst, rgbColor);
     COLORREF OldBkColor = ::SetBkColor(*CUIFBitmapDC::s_phdcDst, rgbBack);
@@ -1721,8 +1701,8 @@ cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2,
 
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
     ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
-    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
-    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcSrc->Uninit();
+    CUIFBitmapDC::s_phdcMask->Uninit();
     CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
 
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
@@ -2070,8 +2050,7 @@ CUIFWindow::OnObjectMoved(CUIFObject *pObject)
 inline STDMETHODIMP_(void)
 CUIFWindow::SetRect(LPCRECT prc)
 {
-    RECT Rect;
-    ::SetRectEmpty(&Rect);
+    RECT Rect = { 0, 0, 0, 0 };
 
     if (::IsWindow(m_hWnd))
         ::GetClientRect(m_hWnd, &Rect);
@@ -2099,8 +2078,7 @@ CUIFWindow::ClientRectToWindowRect(LPRECT lpRect)
 inline STDMETHODIMP_(void)
 CUIFWindow::GetWindowFrameSize(LPSIZE pSize)
 {
-    RECT rc;
-    ::SetRectEmpty(&rc);
+    RECT rc = { 0, 0, 0, 0 };
 
     ClientRectToWindowRect(&rc);
     pSize->cx = (rc.right - rc.left) / 2;
@@ -2827,7 +2805,6 @@ CUIFToolTip::FindObject(HWND hWnd, POINT pt)
     return NULL;
 }
 
-/// @unimplemented
 inline void
 CUIFToolTip::ShowTip()
 {
@@ -3109,7 +3086,7 @@ CUIFButton::CUIFButton(
     m_ButtonIcon.m_hImageList = NULL;
     m_dwUnknown9 = 0;
     m_uButtonStatus = 0;
-    m_dwUnknown10 = 0;
+    m_bPressed = FALSE;
     m_hbmButton1 = NULL;
     m_hbmButton2 = NULL;
     m_pszButtonText = NULL;
@@ -3379,7 +3356,7 @@ CUIFButton::OnLButtonUp(LONG x, LONG y)
 
     if (bCapture)
     {
-        m_dwUnknown10 = !m_dwUnknown10;
+        m_bPressed = !m_bPressed;
         NotifyCommand(1, 0);
     }
 }
@@ -3405,16 +3382,11 @@ inline void CUIFButton::OnMouseIn(POINT pt)
 inline void CUIFButton::OnMouseOut(POINT pt)
 {
     if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
-    {
         SetStatus(0);
-    }
+    else if (IsCapture())
+        SetStatus(3);
     else
-    {
-        if (IsCapture())
-            SetStatus(3);
-        else
-            SetStatus(0);
-    }
+        SetStatus(0);
 }
 
 inline STDMETHODIMP_(void)
@@ -3422,7 +3394,7 @@ CUIFButton::OnPaintNoTheme(HDC hDC)
 {
     ::FillRect(hDC, &m_rc, (HBRUSH)UlongToHandle(COLOR_BTNFACE + 1));
 
-    if (m_dwUnknown10 && ((m_uButtonStatus == 0) || (m_uButtonStatus == 3)))
+    if (m_bPressed && ((m_uButtonStatus == 0) || (m_uButtonStatus == 3)))
     {
         HBRUSH hbr = cicCreateDitherBrush();
         if (hbr)
@@ -3438,28 +3410,18 @@ CUIFButton::OnPaintNoTheme(HDC hDC)
         }
     }
 
-    BOOL bPressed = (m_dwUnknown10 || (m_uButtonStatus == 1));
+    BOOL bPressed = (m_bPressed || (m_uButtonStatus == 1));
     if (m_hbmButton1)
-    {
         DrawBitmapProc(hDC, &m_rc, bPressed);
-    }
     else if (m_ButtonIcon.m_hIcon)
-    {
         DrawIconProc(hDC, &m_rc, bPressed);
-    }
     else
-    {
         DrawTextProc(hDC, &m_rc, bPressed);
-    }
 
-    if (m_dwUnknown10 || (m_uButtonStatus == 1))
-    {
+    if (m_bPressed || (m_uButtonStatus == 1))
         DrawEdgeProc(hDC, &m_rc, TRUE);
-    }
     else if (2 <= m_uButtonStatus && m_uButtonStatus <= 3)
-    {
         DrawEdgeProc(hDC, &m_rc, FALSE);
-    }
 }
 
 inline void CUIFButton::SetIcon(HICON hIcon)
