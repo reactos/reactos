@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -36,7 +36,7 @@ BEGIN
     LTEXT "Cone&xiuni:", -1, 5, 46, 238, 10
     CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
     AUTOCHECKBOX "N&u mă interoga până la următoarea mea autentificare", 1022, 8, 125, 235, 10
-    PUSHBUTTON "&Opțiuni…", 1026, 7, 149, 60, 14
+    PUSHBUTTON "&Setări…", 1026, 7, 149, 60, 14
     DEFPUSHBUTTON "&Conectare…", 1024, 117, 149, 60, 14
     PUSHBUTTON "A&nulează", 1025, 183, 149, 60, 14
 END
@@ -57,7 +57,7 @@ END
 
 105 DIALOGEX 0, 0, 261, 253
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Opțiuni avansate de securitate"
+CAPTION "Setări avansate de securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Securitatea autentificării", 1547, 7, 33, 246, 191
@@ -412,7 +412,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
     LTEXT "Aveți conexiuni către o rețea compatibilă NetWare. Aceste conexiuni vor fi închise când va fi activată conexiunea PPP IPX.", 1279, 42, 7, 215, 37
-    LTEXT "Înainte de apelare, pentru a evita pierderile de date, fie închideți toate fișierele ce utilizează aceste conexiuni, fie debifați IPX din opțiunile protocolului de rețea pentru această înregistrare.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    LTEXT "Înainte de apelare, pentru a evita pierderile de date, fie închideți toate fișierele ce utilizează aceste conexiuni, fie debifați IPX din setările protocolului de rețea pentru această înregistrare.", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "Con&firmă", 1, 65, 112, 60, 14, WS_GROUP
     PUSHBUTTON "A&nulează", 2, 134, 112, 60, 14
@@ -444,7 +444,7 @@ END
 
 133 DIALOGEX 6, 18, 231, 211
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Opțiuni de autentificare X.25"
+CAPTION "Setări de autentificare X.25"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Alegeți furnizorul de Internet de tip X.25 apoi tastați adresa X.121 a serverului:", 1408, 7, 4, 220, 27
@@ -590,7 +590,7 @@ CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Afișează numerele de telefon înainte de apelare", 1142, 8, 10, 224, 10, WS_GROUP
-    AUTOCHECKBOX "Afișează &opțiunile de localizare înainte de apelare", 1139, 8, 27, 224, 10
+    AUTOCHECKBOX "Afișează &setările de localizare înainte de apelare", 1139, 8, 27, 224, 10
     AUTOCHECKBOX "&Permite editarea informațiilor de localizare la autentificare", 1140, 21, 43, 212, 10
     AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 59, 224, 10
     AUTOCHECKBOX "Asc&unde la apelare", 1137, 8, 76, 224, 10
@@ -604,7 +604,7 @@ CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Afișează numerele de telefon înainte de apelare", 1142, 8, 10, 223, 10, WS_GROUP
-    AUTOCHECKBOX "Afișează &opțiunile de localizare înainte de apelare", 1139, 8, 27, 206, 10
+    AUTOCHECKBOX "Afișează &setările de localizare înainte de apelare", 1139, 8, 27, 206, 10
     AUTOCHECKBOX "La apelare, &pornește monitorizarea rețelei de linie comutată", 1138, 8, 44, 226, 10
     AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 61, 224, 10
     AUTOCHECKBOX "Asc&unde la apelare", 1137, 8, 79, 220, 10
@@ -628,14 +628,14 @@ CAPTION "Securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Opțiuni de securitate", 1580, 8, 3, 215, 139
-    AUTORADIOBUTTON "O&bișnuită (configurație recomandată)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Avansată (configurație particularizată)", 1541, 14, 102, 198, 8, BS_NOTIFY
+    AUTORADIOBUTTON "O&bișnuite (setări recomandate)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "&Avansate (setări particularizate)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Validează identitatea mea astfel:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Utilizează automat datele de autentificare din ReactOS (și domeniul dacă e cazul)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Solicită c&riptarea datelor\n(deconectează dacă nu este posibil)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Utilizarea acestor opțiuni cere cunoștințe ale protocoalelor de securitate.", 1539, 15, 114, 134, 20
-    PUSHBUTTON "&Opțiuni…", 1180, 151, 115, 60, 14
+    LTEXT "Utilizarea acestor setări cere cunoștințe ale protocoalelor de securitate.", 1539, 15, 114, 134, 20
+    PUSHBUTTON "&Setări…", 1180, 151, 115, 60, 14
     GROUPBOX "Autentificare interactivă și automatizată", 1177, 8, 146, 215, 62, WS_GROUP
     AUTOCHECKBOX "Afișea&ză fereastra terminal", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "E&xecută script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
@@ -660,7 +660,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tipul ser&verului de linie comutată apelat:", 1583, 7, 4, 219, 8
     COMBOBOX 1418, 7, 17, 215, 46, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Opțiuni…", 1419, 160, 35, 60, 14
+    PUSHBUTTON "&Setări…", 1419, 160, 35, 60, 14
     LTEXT "Această cone&xiune utilizează următoarele articole:", 1684, 8, 64, 219, 10
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
     PUSHBUTTON "Inst&alare…", 1252, 7, 133, 67, 14
@@ -919,7 +919,7 @@ END
 
 502 DIALOGEX 20, 60, 245, 73
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Opțiuni PPP"
+CAPTION "Setări PPP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Activează extensiile LCP", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
@@ -1203,7 +1203,7 @@ END
 
 556 DIALOGEX 0, 0, 220, 165
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Opțiuni de program"
+CAPTION "Setări pentru programe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "D&escrierea aplicației ce utilizează resursele de rețea:", -1, 7, 5, 203, 8
@@ -1223,7 +1223,7 @@ END
 
 557 DIALOGEX 0, 0, 217, 164
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Configurare servicii"
+CAPTION "Setări pentru servicii"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "D&escrierea serviciului de rețea:", -1, 7, 5, 203, 8
@@ -1300,21 +1300,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Opțiuni de securitate", 1580, 8, 4, 213, 151
-    AUTORADIOBUTTON "O&bișnuită (opțiune recomandată)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Avansată (particularizată)", 1541, 14, 100, 197, 8, BS_NOTIFY
+    GROUPBOX "Setări de securitate", 1580, 8, 4, 213, 151
+    AUTORADIOBUTTON "O&bișnuite (setări recomandate)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "&Avansate (setări particularizate)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Validează-mi identitatea în felul următor:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Utilizează a&utomat numele și parola de utilizator ReactOS (și domeniul dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Solicită &criptarea datelor (deconectează dacă nu este posibil)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Utilizarea acestor opțiuni cere cunoștințe ale protocoalelor de securitate.", 1539, 26, 111, 182, 18
-    PUSHBUTTON "&Opțiuni…", 1180, 151, 134, 60, 14
-    PUSHBUTTON "Opțiuni I&PSec…", 1598, 126, 163, 85, 14
+    LTEXT "Utilizarea acestor setări cere cunoștințe ale protocoalelor de securitate.", 1539, 26, 111, 182, 18
+    PUSHBUTTON "&Setări…", 1180, 151, 134, 60, 14
+    PUSHBUTTON "Setări I&PSec…", 1598, 126, 163, 85, 14
 END
 
 570 DIALOGEX 0, 0, 265, 126
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Opțiuni IPSec "
+CAPTION "Setări IPSec "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Con&firmă", 1, 151, 104, 50, 14
@@ -1891,7 +1891,7 @@ BEGIN
     241 "Număr de telefon:\0"
     242 "Retroapel la\0"
     243 "Editează numărul alternativ de telefon\0"
-    244 "Deoarece această conexiune este la moment activă, unele modificări își vor face efectul abia la următoarea apelare.\0"
+    244 "Deoarece această conexiune este activă în prezent, unele setări nu vor intra în vigoare decât data viitoare când îl formați.\0"
     245 "Nu există conexiuni disponibile pentru toți utilizatorii.  Înainte de apelare este necesar să vă autentificați.\0"
     246 "Agenda de telefoane este goală.\n\nApăsați „Închide” și adăugați o înregistrare.\0"
     247 "Din cauza restricțiilor de importare/exportare, criptarea datelor nu este disponibilă în această versiune ReactOS.\0"
@@ -2016,7 +2016,7 @@ BEGIN
     366 "Prefixe de telefon\0"
     367 "A eșuat conectarea unuia sau mai multor protocoale de rețea cerute.\n\n\0"
     368 "Apăsați „Accept” pentru a utiliza conexiunea așa cum este sau „Închide” pentru a o deconecta.\0"
-    369 "Opțiunile utilizate ale protocolului Punct-la-Punct când %1 inițiază un apel pentru conexiune către interfața %2:\0"
+    369 "Setări ale protocolului Punct-la-Punct de folosit atunci când %1 inițiază un apel pentru conexiune către interfața %2:\0"
     370 "[Pentru a modifica parola salvată, apăsați aici]\0"
     405 "Protocolul NetBEUI este necesar pentru a apela vechile servere RAS.\0"
     406 "Înainte de a apela un server RAS, este necesară instalarea protocolului NetBEUI.  NetBEUI poate fi instalat în Panoul de control, la Rețea.\0"
@@ -2081,8 +2081,8 @@ BEGIN
     465 "Sufix n&ou:\0"
     466 "Sufi&xuri:\0"
     467 "Sufixe de telefon\0"
-    468 "Dacă este necesar, sunt disponibile opțiuni speciale.\0"
-    469 "Opțiuni particularizate\0"
+    468 "Dacă este necesar, puteți folosi setări speciale.\0"
+    469 "Setări particularizate\0"
     470 "Terminalul de comenzi manuale ale modemului\0"
     471 "Terminal de post-apel\0"
     472 "Terminal de pre-apel\0"
@@ -2105,7 +2105,7 @@ BEGIN
     489 "niciodată\0"
     490 "Noua conexiune poate fi disponibilă pentru oricine sau doar pentru dumneavoastră.\0"
     491 "Disponibilitatea conexiunii\0"
-    492 "Înlăturați configurarea pe linii multiple?\0"
+    492 "Anulați mai multe setări de rând pentru intrare?\0"
     493 "Dispozitiv indisponibil\0"
     494 "Preferințe de autentificare\0"
     495 "Opțiuni ale liniei comutate\0"
@@ -2148,10 +2148,10 @@ BEGIN
     532 "Dați un nume înregistrării.\0"
     533 "Criptază parolele și datele.\0"
     534 "Introduceți un număr de port între 1 și 65535.\0"
-    535 "Specificați o autentificare și criptare a datelor particularizată apăsând „Opțiuni”.\0"
-    536 "Utilizează orice formă de autentificare care necesită criptarea parolei.  Fără criptarea datelor.\0"
+    535 "Specificați o autentificare și criptare a datelor particularizată cu butonul Setări.\0"
+    536 "Folosește orice formă de autentificare care necesită criptarea parolei. Fără criptarea datelor.\0"
     537 "Criptează parolele și datele.\0"
-    538 "Specificați o autentificare și criptare a datelor particularizată apăsând „Opțiuni”.\0"
+    538 "Specificați o autentificare și criptare a datelor particularizată cu butonul Setări.\0"
     539 "Acest număr de port este utilizat într-o altă înregistrare.\nIntroduceți un număr de port unic.\0"
     540 "Introduceți unul sau mai multe porturi pentru recepția răspunsurilor.\0"
     541 "Selectați o înregistrare pentru ștergere.\0"
@@ -2160,13 +2160,13 @@ BEGIN
     549 "Care este numele celuilalt calculator la care vă conectați?\0"
     576 "20 minute\0"
     579 "Specificați un nume pentru această conexiune.\0"
-    581 "Opțiuni ale aplicațiilor de rețea\0"
+    581 "Setări ale aplicațiilor de rețea\0"
     582 "Introduceți un nume pentru această conexiune în următorul câmpul de text.\0"
     583 "Introduceți numele celuilalt calculator în următorul câmp de text.\0"
     584 "Introduceți numele furnizorului de servicii Internet (ISP) în următorul câmp de text.\0"
     585 "Care este numele serviciului care vă furnizează conexiunea de Internet?\0"
     586 "Introduceți adresa IP a serverului din rețeaua privată.\0"
-    587 "Opțiuni avansate\0"
+    587 "Setări avansate\0"
     588 "Numele înregistrării începe cu un punct sau conține careva caractere nepermise.\nAlegeți un alt nume.\0"
     589 "Proprietăți\0"
     1512 "Port de comunicații\0"
@@ -2200,8 +2200,8 @@ BEGIN
     1554 "Numele de interfață\0"
     1555 "Specificați numele sub care această interfață va fi cunoscută.\0"
     1556 "Nu există dispozitive disponibile\0"
-    1557 "În calculatorul local deja există cont de utilizator %1.  Configurați interfața de apelare la cerere pentru a utiliza acest cont de utilizator?\0"
-    1558 "Nu există opțiuni de securitate a protocolului pentru conexiuni la servere SLIP.\0"
+    1557 "În calculatorul local deja există cont de utilizator %1. Configurați interfața de apelare la cerere pentru a utiliza acest cont de utilizator?\0"
+    1558 "Nu există setări de securitate a protocolului pentru conexiuni la servere SLIP.\0"
     1559 "Permite parolă nesecurizată\0"
     1560 "Solicită parolă securizată\0"
     1561 "Utilizează smart card\0"
@@ -2217,7 +2217,7 @@ BEGIN
     1571 "Opțiunea curentă de criptare cere EAP sau o careva versiune de autentificare securizată MS-CHAP.\0"
     1572 "Protocoale și securitate\0"
     1573 "Alegeți transporturi și opțiuni de securitate pentru conexiune.\0"
-    1574 "Protocolul ales include PAP, SPAP, și/sau CHAP.  Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți să păstrați aceste setări?\0"
+    1574 "Protocoalele selectate includ PAP, SPAP și/sau CHAP. Dacă unul dintre acestea este negociat, criptarea datelor nu va avea loc. Doriți să păstrați aceste setări?\0"
     1575 "Pentru conectarea la „%1”, este necesară mai întâi conectarea la „%2”.  Doriți conectarea la „%2”?\0"
     1576 "Conectarea prin cablu paralel…\0"
     1577 "Conectarea prin infraroșu…\0"
