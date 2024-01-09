@@ -199,6 +199,8 @@ enum
     UIF_STYLE_TOOLTIP = 0x20,
     UIF_STYLE_SHADOW = 0x40,
     UIF_STYLE_RTL = 0x200,
+    UIF_STYLE_VERTICAL = 0x400,
+    UIF_STYLE_THEMED = 0x80000000,
 };
 
 class CUIFObject : public CUIFTheme
@@ -945,7 +947,7 @@ inline STDMETHODIMP_(void) CUIFObject::Initialize()
 
 inline STDMETHODIMP_(void) CUIFObject::OnPaint(HDC hDC)
 {
-    if (!(m_pWindow->m_style & 0x80000000) || !OnPaintTheme(hDC))
+    if (!(m_pWindow->m_style & UIF_STYLE_THEMED) || !OnPaintTheme(hDC))
         OnPaintNoTheme(hDC);
 }
 
@@ -1918,7 +1920,7 @@ CUIFWindow::GetWndStyle()
 
     if (m_style & 0x10000000)
         ret |= WS_BORDER;
-    else if (m_style & 8)
+    else if (m_style & 0x8)
         ret |= WS_DLGFRAME;
     else if ((m_style & 0x20000000) || (m_style & 0x10))
         ret |= WS_BORDER;
@@ -1970,7 +1972,7 @@ inline void CUIFWindow::Show(BOOL bVisible)
     if (!IsWindow(m_hWnd))
         return;
 
-    if (bVisible && (m_style & 2))
+    if (bVisible && (m_style & UIF_STYLE_TOPMOST))
         ::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 
     m_bVisible = bVisible;
@@ -3225,23 +3227,23 @@ CUIFButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
     ::GetTextExtentPoint32W(hDC, m_pszButtonText, cchText, &textSize);
 
     INT xText, yText;
-    if ((m_style & 3) == 1)
+    if ((m_style & (UIF_STYLE_CHILD | UIF_STYLE_TOPMOST)) == UIF_STYLE_CHILD)
         xText = (m_rc.right - m_rc.left - textSize.cx) / 2;
-    else if ((m_style & 3) == 2)
+    else if ((m_style & (UIF_STYLE_CHILD | UIF_STYLE_TOPMOST)) == UIF_STYLE_TOPMOST)
         xText = m_rc.right - m_rc.left - textSize.cx;
     else
         xText = 0;
 
-    if ((m_style & 0xC) == 4)
+    if ((m_style & 0xC) == UIF_STYLE_TOOLWINDOW)
         yText = (m_rc.bottom - m_rc.top - textSize.cy) / 2;
-    else if ((m_style & 0xC) == 8)
+    else if ((m_style & 0xC) == 0x8)
         yText = m_rc.bottom - m_rc.top - textSize.cy;
     else
         yText = 0;
 
     ::SetBkMode(hDC, TRANSPARENT);
 
-    if ( m_bEnable )
+    if (m_bEnable)
     {
         ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
         ::ExtTextOutW(hDC,
@@ -3318,7 +3320,7 @@ CUIFButton::GetTextSize(LPCWSTR pszText, LPSIZE pSize)
         ::GetTextExtentPoint32W(hDC, pszText, cchText, pSize);
     }
 
-    if (m_style & 0x400)
+    if (m_style & UIF_STYLE_VERTICAL)
     {
         INT tmp = pSize->cx;
         pSize->cx = pSize->cy;
@@ -3334,10 +3336,11 @@ CUIFButton::OnLButtonDown(LONG x, LONG y)
 {
     SetStatus(1);
     StartCapture();
-    if ((m_style & 0x30) == 0x20)
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
         NotifyCommand(1, 0);
 }
 
+/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFButton::OnLButtonUp(LONG x, LONG y)
 {
@@ -3346,7 +3349,7 @@ CUIFButton::OnLButtonUp(LONG x, LONG y)
     if (bCapture)
         EndCapture();
 
-    BOOL bNotInObject = (m_style & 0x30) == 0x20;
+    BOOL bNotInObject = (m_style & 0x30) == UIF_STYLE_TOOLTIP;
     if ((m_style & 0x30) != 0x10)
     {
         bNotInObject = !PtInObject(pt);
@@ -3383,7 +3386,7 @@ CUIFButton::OnLButtonUp(LONG x, LONG y)
 
 inline void CUIFButton::OnMouseIn(POINT pt)
 {
-    if ((m_style & 0x30) == 0x20)
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
     {
         if (IsCapture())
             SetStatus(0);
@@ -3401,7 +3404,7 @@ inline void CUIFButton::OnMouseIn(POINT pt)
 
 inline void CUIFButton::OnMouseOut(POINT pt)
 {
-    if ((m_style & 0x30) == 0x20)
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
     {
         SetStatus(0);
     }
