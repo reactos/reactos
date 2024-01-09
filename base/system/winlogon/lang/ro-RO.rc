@@ -36,7 +36,7 @@ CAPTION "Sistem de oprire"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Sistemul de oprire a fost inițializat. Salvați toate lucrările și închideți sesiunea. Toată treaba nesalvată va fi pierdută atunci când sistemul se va opri.", -1, 38, 7, 135, 40
+    LTEXT "Sistemul de oprire a fost inițializat. Salvați toate lucrările și închideți sesiunea. Toate lucrările nesalvate vor fi pierdute atunci când sistemul se va opri.", -1, 38, 7, 135, 40
     LTEXT "Sistemul se va opri în:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
     LTEXT "Mesaj:", -1, 38, 65, 135, 8
