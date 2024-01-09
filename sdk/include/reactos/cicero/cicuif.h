@@ -18,16 +18,18 @@
 //    directly.
 
 class CUIFSystemInfo;
-struct CUIFTheme;
+class CUIFTheme;
     class CUIFObject;
         class CUIFWindow;
             class CUIFToolTip;
             class CUIFShadow;
+        class CUIFButton;
 class CUIFObjectArray;
 class CUIFColorTable;
     class CUIFColorTableSys;
     class CUIFColorTableOff10;
 class CUIFBitmapDC;
+class CUIFIcon;
 class CUIFSolidBrush;
 class CUIFScheme;
 
@@ -76,8 +78,9 @@ using FN_GetThemeSysSize = decltype(&GetThemeSysSize);
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct CUIFTheme
+class CUIFTheme
 {
+public:
     LPCWSTR m_pszClassList;
     INT m_iPartId;
     INT m_iStateId;
@@ -345,8 +348,9 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct CUIFIcon
+class CUIFIcon
 {
+public:
     HICON m_hIcon;
     HIMAGELIST m_hImageList;
 
