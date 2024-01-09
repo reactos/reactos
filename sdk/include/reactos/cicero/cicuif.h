@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Cicero UI interface
+ * PURPOSE:     Cicero UIF Library
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -9,17 +9,28 @@
 
 #include "cicarray.h"
 
+// This is Cicero UIF Library to support the IME UI interface.
+// Cicero UIF Library implements some GUI parts for IMEs and Language Bar.
+// The GUI parts of UIF Library requires special handling because:
+//
+// 1. To avoid interfering with IME input, the GUI part should not receive focus.
+// 2. The IME popup window has WS_DISABLED style, so it cannot receive mouse messages
+//    directly.
+
 class CUIFSystemInfo;
-struct CUIFTheme;
+class CUIFTheme;
     class CUIFObject;
         class CUIFWindow;
             class CUIFToolTip;
             class CUIFShadow;
+        class CUIFButton;
 class CUIFObjectArray;
 class CUIFColorTable;
     class CUIFColorTableSys;
     class CUIFColorTableOff10;
 class CUIFBitmapDC;
+class CUIFIcon;
+class CUIFSolidBrush;
 class CUIFScheme;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -67,8 +78,9 @@ using FN_GetThemeSysSize = decltype(&GetThemeSysSize);
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct CUIFTheme
+class CUIFTheme
 {
+public:
     LPCWSTR m_pszClassList;
     INT m_iPartId;
     INT m_iStateId;
@@ -187,6 +199,8 @@ enum
     UIF_STYLE_TOOLTIP = 0x20,
     UIF_STYLE_SHADOW = 0x40,
     UIF_STYLE_RTL = 0x200,
+    UIF_STYLE_VERTICAL = 0x400,
+    UIF_STYLE_THEMED = 0x80000000,
 };
 
 class CUIFObject : public CUIFTheme
@@ -209,7 +223,7 @@ protected:
     friend class CUIFToolTip;
 
 public:
-    CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD style);
+    CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
     virtual ~CUIFObject();
 
     void StartCapture();
@@ -253,7 +267,7 @@ public:
     STDMETHOD_(void, DetachWndObj)();
     STDMETHOD_(void, ClearWndObj)();
     STDMETHOD_(LRESULT, OnPaintTheme)(HDC hDC);
-    STDMETHOD_(void, DoPaint)(HDC hDC);
+    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC);
     STDMETHOD_(void, ClearTheme)();
 };
 
@@ -313,6 +327,53 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+class CUIFSolidBrush
+{
+public:
+    HBRUSH m_hBrush;
+
+    operator HBRUSH() const { return m_hBrush; }
+
+    CUIFSolidBrush(COLORREF rgbColor)
+    {
+        m_hBrush = ::CreateSolidBrush(rgbColor);
+    }
+    ~CUIFSolidBrush()
+    {
+        if (m_hBrush)
+        {
+            ::DeleteObject(m_hBrush);
+            m_hBrush = NULL;
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFIcon
+{
+public:
+    HICON m_hIcon;
+    HIMAGELIST m_hImageList;
+
+    CUIFIcon& operator=(HICON hIcon)
+    {
+        m_hIcon = hIcon;
+        if (m_hImageList)
+        {
+            ImageList_Destroy(m_hImageList);
+            m_hImageList = NULL;
+        }
+        return *this;
+    }
+
+    HIMAGELIST GetImageList(BOOL bMirror);
+};
+
+BOOL cicGetIconSize(HICON hIcon, LPSIZE pSize);
+
+/////////////////////////////////////////////////////////////////////////////
+
 class CUIFBitmapDC
 {
 protected:
@@ -359,6 +420,10 @@ HBRUSH cicCreateDitherBrush(VOID);
 HBITMAP cicCreateDisabledBitmap(LPCRECT prc, HBITMAP hbmMask, HBRUSH hbr1, HBRUSH hbr2,
                                 BOOL bPressed);
 HBITMAP cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRUSH hbr2);
+HBITMAP cicChangeBitmapColor(LPCRECT prc, HBITMAP hbm, COLORREF rgbBack, COLORREF rgbFore);
+HBITMAP cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hBrush);
+HBITMAP cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr,
+                         COLORREF rgbColor, COLORREF rgbBack);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -402,6 +467,7 @@ protected:
     friend class CUIFObject;
     friend class CUIFShadow;
     friend class CUIFToolTip;
+    friend class CUIFButton;
 
 public:
     CUIFWindow(HINSTANCE hInst, DWORD style);
@@ -534,6 +600,45 @@ public:
     STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) override;
     STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
     STDMETHOD_(void, Show)(BOOL bVisible) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFButton : public CUIFObject
+{
+protected:
+    UINT m_uButtonStatus;
+    LPWSTR m_pszButtonText;
+    CUIFIcon m_ButtonIcon;
+    DWORD m_dwUnknown9;
+    HBITMAP m_hbmButton1;
+    HBITMAP m_hbmButton2;
+    DWORD m_dwUnknown10;
+    SIZE m_IconSize;
+    SIZE m_TextSize;
+
+    void DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+    void DrawEdgeProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+    void DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed);
+    void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
+
+public:
+    CUIFButton(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    ~CUIFButton() override;
+
+    void SetIcon(HICON hIcon);
+    void SetText(LPCWSTR pszText);
+
+    void GetIconSize(HICON hIcon, LPSIZE pSize);
+    void GetTextSize(LPCWSTR pszText, LPSIZE pSize);
+    void OnMouseIn(POINT pt);
+    void OnMouseOut(POINT pt);
+
+    STDMETHOD_(void, Enable)(BOOL bEnable) override;
+    STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+    STDMETHOD_(void, SetStatus)(UINT uStatus);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -768,7 +873,7 @@ CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, INT iStateId)
 
 /// @unimplemented
 inline
-CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPRECT prc, DWORD style)
+CUIFObject::CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style)
 {
     m_pszClassList = NULL;
     m_hTheme = NULL;
@@ -842,8 +947,8 @@ inline STDMETHODIMP_(void) CUIFObject::Initialize()
 
 inline STDMETHODIMP_(void) CUIFObject::OnPaint(HDC hDC)
 {
-    if (!(m_pWindow->m_style & 0x80000000) || !OnPaintTheme(hDC))
-        DoPaint(hDC);
+    if (!(m_pWindow->m_style & UIF_STYLE_THEMED) || !OnPaintTheme(hDC))
+        OnPaintNoTheme(hDC);
 }
 
 inline STDMETHODIMP_(BOOL) CUIFObject::OnSetCursor(UINT uMsg, LONG x, LONG y)
@@ -992,7 +1097,7 @@ inline STDMETHODIMP_(LRESULT) CUIFObject::OnPaintTheme(HDC hDC)
     return 0;
 }
 
-inline STDMETHODIMP_(void) CUIFObject::DoPaint(HDC hDC)
+inline STDMETHODIMP_(void) CUIFObject::OnPaintNoTheme(HDC hDC)
 {
 }
 
@@ -1242,6 +1347,47 @@ inline CUIFScheme::CUIFScheme(DWORD type)
 
 /////////////////////////////////////////////////////////////////////////////
 
+inline BOOL cicGetIconSize(HICON hIcon, LPSIZE pSize)
+{
+    ICONINFO IconInfo;
+    if (!GetIconInfo(hIcon, &IconInfo))
+        return FALSE;
+
+    BITMAP bm;
+    ::GetObject(IconInfo.hbmColor, sizeof(bm), &bm);
+    ::DeleteObject(IconInfo.hbmColor);
+    ::DeleteObject(IconInfo.hbmMask);
+    pSize->cx = bm.bmWidth;
+    pSize->cy = bm.bmHeight;
+    return TRUE;
+}
+
+inline HIMAGELIST CUIFIcon::GetImageList(BOOL bMirror)
+{
+    if (!m_hImageList)
+        return NULL;
+
+    if (m_hIcon)
+    {
+        SIZE iconSize;
+        cicGetIconSize(m_hIcon, &iconSize);
+
+        UINT flags = ILC_COLOR32 | ILC_MASK;
+        if (bMirror)
+            flags |= ILC_MIRROR;
+
+        m_hImageList = ImageList_Create(iconSize.cx, iconSize.cy, flags, 1, 0);
+        if (m_hImageList)
+            ImageList_ReplaceIcon(m_hImageList, -1, m_hIcon);
+
+        return m_hImageList;
+    }
+
+    return NULL;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 inline CUIFBitmapDC::CUIFBitmapDC(BOOL bMemory)
 {
     m_hBitmap = NULL;
@@ -1476,6 +1622,112 @@ cicCreateShadowMaskBmp(LPRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr1, HBRU
     return CUIFBitmapDC::s_phdcDst->DetachBitmap();
 }
 
+inline HBITMAP
+cicChangeBitmapColor(LPCRECT prc, HBITMAP hbm, COLORREF rgbBack, COLORREF rgbFore)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    INT width = prc->right - prc->left;
+    INT height = prc->bottom - prc->top;
+
+    CUIFSolidBrush brush(rgbFore);
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbm);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(width, height, 1, 1);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCCOPY);
+    ::SelectObject(*CUIFBitmapDC::s_phdcDst, (HBRUSH)brush);
+    ::SetBkColor(*CUIFBitmapDC::s_phdcDst, rgbBack);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcMask, 0, 0, width, height, *CUIFBitmapDC::s_phdcDst, 0, 0, MERGECOPY);
+    ::SetBkColor(*CUIFBitmapDC::s_phdcDst, RGB(255, 255, 255));
+    ::SetTextColor(*CUIFBitmapDC::s_phdcDst, RGB(0, 0, 0));
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, 0xE20746u);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBITMAP
+cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hBrush)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    if (IS_INTRESOURCE(hBrush))
+        hBrush = ::GetSysColorBrush(HandleToLong(hBrush) - 1);
+
+    LOGBRUSH lb;
+    ::GetObject(hBrush, sizeof(lb), &lb);
+    if (lb.lbStyle || lb.lbColor)
+        return NULL;
+
+    INT width = prc->right - prc->left;
+    INT height = prc->bottom - prc->top;
+
+    HBITMAP hBitmap = cicChangeBitmapColor(prc, hbm1, 0, RGB(255, 255, 255));
+    if ( !hBitmap )
+        return NULL;
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hBitmap);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+
+    HBRUSH hbrWhite = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbrWhite);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, 0x660046u);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, 0x8800C6u);
+
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+    ::DeleteObject(hBitmap);
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
+inline HBITMAP
+cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2,
+                 HBRUSH hbr, COLORREF rgbColor, COLORREF rgbBack)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return NULL;
+
+    INT width = prc->right - prc->left;
+    INT height = prc->bottom - prc->top;
+    HBITMAP hBitmap = cicConvertBlackBKGBitmap(prc, hbm1, hbm2, hbr);
+    if (hBitmap)
+        return hBitmap;
+
+    CUIFBitmapDC::s_phdcDst->SetDIB(width, height, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbm1);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbm2);
+
+    RECT rc;
+    ::SetRect(&rc, 0, 0, width, height);
+
+    COLORREF OldTextColor = ::SetTextColor(*CUIFBitmapDC::s_phdcDst, rgbColor);
+    COLORREF OldBkColor = ::SetBkColor(*CUIFBitmapDC::s_phdcDst, rgbBack);
+    ::FillRect(*CUIFBitmapDC::s_phdcDst, &rc, hbr);
+    ::SetTextColor(*CUIFBitmapDC::s_phdcDst, OldTextColor);
+    ::SetBkColor(*CUIFBitmapDC::s_phdcDst, OldBkColor);
+
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, width, height, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(TRUE);
+
+    return CUIFBitmapDC::s_phdcDst->DetachBitmap();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 inline CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
@@ -1668,7 +1920,7 @@ CUIFWindow::GetWndStyle()
 
     if (m_style & 0x10000000)
         ret |= WS_BORDER;
-    else if (m_style & 8)
+    else if (m_style & 0x8)
         ret |= WS_DLGFRAME;
     else if ((m_style & 0x20000000) || (m_style & 0x10))
         ret |= WS_BORDER;
@@ -1720,7 +1972,7 @@ inline void CUIFWindow::Show(BOOL bVisible)
     if (!IsWindow(m_hWnd))
         return;
 
-    if (bVisible && (m_style & 2))
+    if (bVisible && (m_style & UIF_STYLE_TOPMOST))
         ::SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 
     m_bVisible = bVisible;
@@ -2842,4 +3094,415 @@ inline STDMETHODIMP_(void) CUIFToolTip::OnTimer(WPARAM wParam)
 {
     if (wParam == TOOLTIP_TIMER_ID)
         ShowTip();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFButton::CUIFButton(
+    CUIFObject *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style) : CUIFObject(pParent, dwUnknown3, prc, style)
+{
+    m_ButtonIcon.m_hIcon = NULL;
+    m_ButtonIcon.m_hImageList = NULL;
+    m_dwUnknown9 = 0;
+    m_uButtonStatus = 0;
+    m_dwUnknown10 = 0;
+    m_hbmButton1 = NULL;
+    m_hbmButton2 = NULL;
+    m_pszButtonText = NULL;
+}
+
+inline CUIFButton::~CUIFButton()
+{
+    if (m_pszButtonText)
+    {
+        delete[] m_pszButtonText;
+        m_pszButtonText = NULL;
+    }
+
+    if (m_ButtonIcon.m_hImageList)
+        ImageList_Destroy(m_ButtonIcon.m_hImageList);
+}
+
+inline void
+CUIFButton::DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed)
+{
+    INT width = m_rc.right - m_rc.left;
+    INT height = m_rc.bottom - m_rc.top;
+    if (m_hbmButton2)
+    {
+        HBITMAP hbmMask = cicCreateMaskBmp(&m_rc, m_hbmButton1, m_hbmButton2,
+                                           (HBRUSH)UlongToHandle(COLOR_BTNFACE + 1), 0, 0);
+        ::DrawState(hDC, NULL, NULL, (LPARAM)hbmMask, 0,
+                    prc->left + bPressed, prc->top + bPressed,
+                    width - bPressed, height - bPressed,
+                    (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+        ::DeleteObject(hbmMask);
+    }
+    else
+    {
+        ::DrawState(hDC, NULL, NULL, (LPARAM)m_hbmButton1, 0,
+                    prc->left + bPressed, prc->top + bPressed,
+                    width - bPressed, height - bPressed,
+                    (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+    }
+}
+
+inline void
+CUIFButton::DrawEdgeProc(HDC hDC, LPCRECT prc, BOOL bPressed)
+{
+    RECT rc = *prc;
+    if (bPressed)
+        ::DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
+    else
+        ::DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT);
+}
+
+inline void CUIFButton::DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed)
+{
+    INT width = prc->right - prc->left;
+    INT height = prc->bottom - prc->top;
+    RECT rc = { 0, 0, width, height };
+
+    HDC hMemDC = ::CreateCompatibleDC(hDC);
+    if (!hMemDC)
+        return;
+
+    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC, width, height);
+    if (!hbmMem)
+    {
+        ::DeleteDC(hMemDC);
+        return;
+    }
+
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
+    if (m_bEnable)
+    {
+        ::BitBlt(hMemDC, rc.left, rc.top, width, height, hDC, prc->left, prc->top, SRCCOPY);
+    }
+    else
+    {
+        HBRUSH hbrWhite = (HBRUSH)::GetStockObject(WHITE_BRUSH);
+        ::FillRect(hMemDC, &rc, hbrWhite);
+    }
+
+    if (m_style & 0x100)
+    {
+        ::DrawIconEx(hMemDC,
+                     2 + bPressed, 2 + bPressed,
+                     m_ButtonIcon.m_hIcon,
+                     width - 4, height - 4,
+                     0, NULL, DI_NORMAL);
+    }
+    else
+    {
+        ::DrawIconEx(hMemDC,
+                     (width - 16) / 2 + bPressed,
+                     (height - 16) / 2 + bPressed,
+                     m_ButtonIcon.m_hIcon,
+                     16, 16,
+                     0, NULL, DI_NORMAL);
+    }
+
+    ::SelectObject(hMemDC, hbmOld);
+    ::DrawState(hDC, NULL, NULL, (LPARAM)hbmMem, 0,
+                prc->left, prc->top, width, height,
+                (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+    ::DeleteObject(hbmMem);
+    ::DeleteDC(hMemDC);
+}
+
+inline void
+CUIFButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
+{
+    if (!m_pszButtonText)
+        return;
+
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+    INT cchText = lstrlenW(m_pszButtonText);
+    SIZE textSize;
+    ::GetTextExtentPoint32W(hDC, m_pszButtonText, cchText, &textSize);
+
+    INT xText, yText;
+    if ((m_style & (UIF_STYLE_CHILD | UIF_STYLE_TOPMOST)) == UIF_STYLE_CHILD)
+        xText = (m_rc.right - m_rc.left - textSize.cx) / 2;
+    else if ((m_style & (UIF_STYLE_CHILD | UIF_STYLE_TOPMOST)) == UIF_STYLE_TOPMOST)
+        xText = m_rc.right - m_rc.left - textSize.cx;
+    else
+        xText = 0;
+
+    if ((m_style & 0xC) == UIF_STYLE_TOOLWINDOW)
+        yText = (m_rc.bottom - m_rc.top - textSize.cy) / 2;
+    else if ((m_style & 0xC) == 0x8)
+        yText = m_rc.bottom - m_rc.top - textSize.cy;
+    else
+        yText = 0;
+
+    ::SetBkMode(hDC, TRANSPARENT);
+
+    if (m_bEnable)
+    {
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
+        ::ExtTextOutW(hDC,
+                      xText + prc->left + bPressed, yText + prc->top + bPressed,
+                      ETO_CLIPPED, prc,
+                      m_pszButtonText, cchText, NULL);
+    }
+    else
+    {
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNHILIGHT));
+        ::ExtTextOutW(hDC,
+                      xText + prc->left + bPressed + 1, yText + prc->top + bPressed + 1,
+                      ETO_CLIPPED, prc,
+                      m_pszButtonText, cchText, NULL);
+
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNSHADOW));
+        ::ExtTextOutW(hDC,
+                      xText + prc->left + bPressed, yText + prc->top + bPressed,
+                      ETO_CLIPPED, prc,
+                      m_pszButtonText, cchText, NULL);
+    }
+
+    ::SelectObject(hDC, hFontOld);
+}
+
+inline STDMETHODIMP_(void)
+CUIFButton::Enable(BOOL bEnable)
+{
+    CUIFObject::Enable(bEnable);
+    if (!m_bEnable)
+    {
+        SetStatus(0);
+        if (IsCapture())
+            CUIFObject::EndCapture();
+    }
+}
+
+inline void
+CUIFButton::GetIconSize(HICON hIcon, LPSIZE pSize)
+{
+    ICONINFO IconInfo;
+    if (::GetIconInfo(hIcon, &IconInfo))
+    {
+        BITMAP bm;
+        ::GetObject(IconInfo.hbmColor, sizeof(bm), &bm);
+        ::DeleteObject(IconInfo.hbmColor);
+        ::DeleteObject(IconInfo.hbmMask);
+        pSize->cx = bm.bmWidth;
+        pSize->cy = bm.bmHeight;
+    }
+    else
+    {
+        pSize->cx = ::GetSystemMetrics(SM_CXSMICON);
+        pSize->cy = ::GetSystemMetrics(SM_CYSMICON);
+    }
+}
+
+inline void
+CUIFButton::GetTextSize(LPCWSTR pszText, LPSIZE pSize)
+{
+    HDC hDC = ::GetDC(NULL);
+    INT cchText = lstrlenW(pszText);
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+
+    if (!m_bHasCustomFont && SUCCEEDED(EnsureThemeData(m_pWindow->m_hWnd)))
+    {
+        RECT rc;
+        GetThemeTextExtent(hDC, 0, pszText, cchText, 0, NULL, &rc);
+        pSize->cx = rc.right;
+        pSize->cy = rc.bottom;
+    }
+    else
+    {
+        ::GetTextExtentPoint32W(hDC, pszText, cchText, pSize);
+    }
+
+    if (m_style & UIF_STYLE_VERTICAL)
+    {
+        INT tmp = pSize->cx;
+        pSize->cx = pSize->cy;
+        pSize->cy = tmp;
+    }
+
+    ::SelectObject(hDC, hFontOld);
+    ::ReleaseDC(NULL, hDC);
+}
+
+inline STDMETHODIMP_(void)
+CUIFButton::OnLButtonDown(LONG x, LONG y)
+{
+    SetStatus(1);
+    StartCapture();
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
+        NotifyCommand(1, 0);
+}
+
+/// @unimplemented
+inline STDMETHODIMP_(void)
+CUIFButton::OnLButtonUp(LONG x, LONG y)
+{
+    POINT pt = { x, y };
+    BOOL bCapture = IsCapture();
+    if (bCapture)
+        EndCapture();
+
+    BOOL bNotInObject = (m_style & 0x30) == UIF_STYLE_TOOLTIP;
+    if ((m_style & 0x30) != 0x10)
+    {
+        bNotInObject = !PtInObject(pt);
+        if (bNotInObject)
+        {
+            SetStatus(0);
+            return;
+        }
+    }
+    else
+    {
+        if (!bNotInObject)
+        {
+            bNotInObject = !PtInObject(pt);
+            if (!bNotInObject)
+            {
+                SetStatus(2);
+                NotifyCommand(1, 0);
+                return;
+            }
+        }
+        SetStatus(0);
+        return;
+    }
+
+    SetStatus(2);
+
+    if (bCapture)
+    {
+        m_dwUnknown10 = !m_dwUnknown10;
+        NotifyCommand(1, 0);
+    }
+}
+
+inline void CUIFButton::OnMouseIn(POINT pt)
+{
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
+    {
+        if (IsCapture())
+            SetStatus(0);
+        else
+            SetStatus(2);
+    }
+    else
+    {
+        if (IsCapture())
+            SetStatus(1);
+        else
+            SetStatus(2);
+    }
+}
+
+inline void CUIFButton::OnMouseOut(POINT pt)
+{
+    if ((m_style & 0x30) == UIF_STYLE_TOOLTIP)
+    {
+        SetStatus(0);
+    }
+    else
+    {
+        if (IsCapture())
+            SetStatus(3);
+        else
+            SetStatus(0);
+    }
+}
+
+inline STDMETHODIMP_(void)
+CUIFButton::OnPaintNoTheme(HDC hDC)
+{
+    ::FillRect(hDC, &m_rc, (HBRUSH)UlongToHandle(COLOR_BTNFACE + 1));
+
+    if (m_dwUnknown10 && ((m_uButtonStatus == 0) || (m_uButtonStatus == 3)))
+    {
+        HBRUSH hbr = cicCreateDitherBrush();
+        if (hbr)
+        {
+            COLORREF OldTextColor = ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNFACE));
+            COLORREF OldBkColor = ::SetBkColor(hDC, ::GetSysColor(COLOR_BTNHIGHLIGHT));
+            RECT rc = m_rc;
+            ::InflateRect(&rc, -2, -2);
+            ::FillRect(hDC, &rc, hbr);
+            ::SetTextColor(hDC, OldTextColor);
+            ::SetBkColor(hDC, OldBkColor);
+            ::DeleteObject(hbr);
+        }
+    }
+
+    BOOL bPressed = (m_dwUnknown10 || (m_uButtonStatus == 1));
+    if (m_hbmButton1)
+    {
+        DrawBitmapProc(hDC, &m_rc, bPressed);
+    }
+    else if (m_ButtonIcon.m_hIcon)
+    {
+        DrawIconProc(hDC, &m_rc, bPressed);
+    }
+    else
+    {
+        DrawTextProc(hDC, &m_rc, bPressed);
+    }
+
+    if (m_dwUnknown10 || (m_uButtonStatus == 1))
+    {
+        DrawEdgeProc(hDC, &m_rc, TRUE);
+    }
+    else if (2 <= m_uButtonStatus && m_uButtonStatus <= 3)
+    {
+        DrawEdgeProc(hDC, &m_rc, FALSE);
+    }
+}
+
+inline void CUIFButton::SetIcon(HICON hIcon)
+{
+    m_ButtonIcon = hIcon;
+
+    if (m_ButtonIcon.m_hIcon)
+        GetIconSize(m_ButtonIcon.m_hIcon, &m_IconSize);
+    else
+        m_IconSize.cx = m_IconSize.cy = 0;
+
+    CallOnPaint();
+}
+
+inline void CUIFButton::SetStatus(UINT uStatus)
+{
+    if (uStatus != m_uButtonStatus)
+    {
+        m_uButtonStatus = uStatus;
+        CallOnPaint();
+    }
+}
+
+inline void CUIFButton::SetText(LPCWSTR pszText)
+{
+    if (m_pszButtonText)
+    {
+        delete[] m_pszButtonText;
+        m_pszButtonText = NULL;
+    }
+
+    m_TextSize.cx = m_TextSize.cy = 0;
+
+    if (pszText)
+    {
+        INT cch = lstrlenW(pszText);
+        m_pszButtonText = new(cicNoThrow) WCHAR[cch + 1];
+        if (!m_pszButtonText)
+            return;
+
+        lstrcpynW(m_pszButtonText, pszText, cch + 1);
+        GetTextSize(m_pszButtonText, &m_TextSize);
+    }
+
+    CallOnPaint();
 }
