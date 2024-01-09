@@ -1,7 +1,7 @@
 /*
  * Copyright 1999 Eric Pouech
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ MCIERR_INTERNAL,                  "A apărut o problemă la inițializarea MCI. 
 MCIERR_DRIVER,                    "A apărut o problemă la driverul dispozitivului. Driverul este închis. Eroarea nu poate fi accesată."
 MCIERR_CANNOT_USE_ALL,            "În această comandă „all” ca nume de dispozitiv nu este permis."
 MCIERR_MULTIPLE,                  "Au apărut erori în mai mult de un dispozitiv. Specificați separat fiecare comandă și dispozitiv pentru a identifica dispozitivul care a cauzat eroarea."
-MCIERR_EXTENSION_NOT_FOUND,       "Nu a putut fi identificat tipul dispozitivului din extensia fișierului dat."
+MCIERR_EXTENSION_NOT_FOUND,       "Nu s-a putut identifica tipul dispozitivului din extensia fișierului dat."
 MCIERR_OUTOFRANGE,                "Parametrul este în afara valorilor permise pentru comanda specificată."
 MCIERR_FLAGS_NOT_COMPATIBLE,      "Parametrii specificați nu pot fi utilizați împreună."
 MCIERR_FILE_NOT_SAVED,            "Fișierul specificat nu poate fi stocat. Asigurați suficient spațiu disponibil pe unitatea de stocare precum și conectivitatea rețelei."
