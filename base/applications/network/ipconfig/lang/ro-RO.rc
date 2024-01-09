@@ -84,8 +84,8 @@ STRINGTABLE
 BEGIN
     IDS_DNSNORECORD         "\tNu sunt înregistrări de tipul %ls\n\n"
     IDS_DNSNONAME           "\tNumele nu există.\n\n"
-    IDS_DNSFLUSHERROR       "Memoria de depozitare a resolverului DNS nu a putut fi golită: "
-    IDS_DNSFLUSHSUCCESS     "Memoria de depozitare a resolverului DNS a fost golită cu succes.\n"
+    IDS_DNSFLUSHERROR       "Nu s-a putut goli memoria de depozitare a resolverului DNS: "
+    IDS_DNSFLUSHSUCCESS     "Memoria de depozitare a resolverului DNS s-a golit cu succes.\n"
     IDS_DHCPNOTCONNECTED    "Nu poate fi efectuată nicio operațiune %ls atât timp cât mediul este deconectat.\n"
     IDS_DHCPNOTENABLED      "Adaptorul %ls nu este activat pentru DHCP.\n"
     IDS_DHCPNOADAPTER       "Operațiunea a eșuat pentru că adaptorul nu este în stadiul admisibil \npentru această operațiune.\n"
