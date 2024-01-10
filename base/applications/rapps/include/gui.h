@@ -90,6 +90,9 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     VOID
     OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
+    VOID
+    CheckAvailable();
+
     BOOL
     RemoveSelectedAppFromRegistry();
     BOOL
@@ -105,7 +108,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     UpdateStatusBarText();
 
     VOID
-    UpdateApplicationsList(AppsCategories EnumType, BOOL bReload = FALSE);
+    UpdateApplicationsList(AppsCategories EnumType, BOOL bReload = FALSE, BOOL bCheckAvailable = FALSE);
     VOID
     AddApplicationsToView(CAtlList<CAppInfo *> &List);
 
