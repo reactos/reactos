@@ -523,7 +523,7 @@ protected:
     CUIFWindow *m_pUnknown7;
     CUIFObject *m_pCaptured;
     CUIFObject *m_pPointed;
-    BOOL m_bPointingStarted;
+    BOOL m_bPointing;
     CUIFWindow *m_pPointingWindow;
     CUIFToolTip *m_pToolTip;
     CUIFShadow *m_pShadow;
@@ -590,7 +590,7 @@ public:
     STDMETHOD_(void, OnThemeChanged)(HWND hWnd, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, UpdateUI)(LPCRECT prc);
     STDMETHOD_(void, SetCapture)(int);
-    STDMETHOD_(void, OnPointingStarted)(UINT uMsg, LONG x, LONG y);
+    STDMETHOD_(void, OnPointingMouse)(UINT uMsg, LONG x, LONG y);
     STDMETHOD_(void, OnAnimationStart)();
     STDMETHOD_(void, OnAnimationEnd)();
     STDMETHOD_(void, HandleMouseMsg)(UINT uMsg, LONG x, LONG y);
@@ -2078,7 +2078,7 @@ inline CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
     m_pCaptured = NULL;
     m_pUnknown7 = NULL;
     m_pPointed = NULL;
-    m_bPointingStarted = FALSE;
+    m_bPointing = FALSE;
     m_pToolTip = NULL;
     m_pShadow = NULL;
     m_bShowShadow = TRUE;
@@ -2466,14 +2466,14 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             if (m_pPointingWindow)
             {
-                m_pPointingWindow->OnPointingStarted(HIWORD(lParam), Point.x, Point.y);
+                m_pPointingWindow->OnPointingMouse(HIWORD(lParam), Point.x, Point.y);
                 return TRUE;
             }
 
-            if (!m_bPointingStarted)
+            if (!m_bPointing)
             {
                 ::SetTimer(m_hWnd, POINTING_TIMER_ID, 1000, NULL);
-                m_bPointingStarted = TRUE;
+                m_bPointing = TRUE;
             }
 
             if (m_pToolTip)
@@ -2560,12 +2560,12 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (::PtInRect(&rc, pt) && ::WindowFromPoint(pt) == m_hWnd)
                     {
-                        m_pPointingWindow->OnPointingStarted(WM_MOUSEMOVE, pt2.x, pt2.y);
+                        m_pPointingWindow->OnPointingMouse(WM_MOUSEMOVE, pt2.x, pt2.y);
                     }
                     else
                     {
                         ::KillTimer(m_hWnd, POINTING_TIMER_ID);
-                        m_bPointingStarted = FALSE;
+                        m_bPointing = FALSE;
                         SetObjectPointed(NULL, pt2);
                         OnPointingEnded(pt2.x, pt2.y);
                     }
@@ -2597,10 +2597,9 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONUP:
         {
             if (m_pPointingWindow)
-                m_pPointingWindow->OnPointingStarted(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+                m_pPointingWindow->OnPointingMouse(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
             else
                 HandleMouseMsg(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
-
             break;
         }
         case WM_KEYUP:
@@ -2975,7 +2974,7 @@ CUIFWindow::OnEraseBkGnd(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 inline STDMETHODIMP_(void)
-CUIFWindow::OnPointingStarted(UINT uMsg, LONG x, LONG y)
+CUIFWindow::OnPointingMouse(UINT uMsg, LONG x, LONG y)
 {
 }
 
