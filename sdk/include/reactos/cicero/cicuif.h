@@ -2346,32 +2346,24 @@ inline void CUIFWindow::SetObjectPointed(CUIFObject *pPointed, POINT pt)
 
     if (m_pCaptured)
     {
-        if (m_pCaptured == m_pPointed)
-        {
-            if (m_pPointed->m_bEnable)
-                m_pPointed->OnMouseOut(pt.x, pt.y);
-        }
-    }
-    else if (m_pPointed)
-    {
-        if (m_pPointed->m_bEnable)
+        if (m_pCaptured == m_pPointed && m_pPointed->m_bEnable)
             m_pPointed->OnMouseOut(pt.x, pt.y);
+    }
+    else if (m_pPointed && m_pPointed->m_bEnable)
+    {
+        m_pPointed->OnMouseOut(pt.x, pt.y);
     }
 
     m_pPointed = pPointed;
 
     if (m_pCaptured)
     {
-        if (m_pCaptured == m_pPointed)
-        {
-            if (m_pPointed->m_bEnable)
-                m_pPointed->OnMouseIn(pt.x, pt.y);
-        }
-    }
-    else if (!m_pPointed)
-    {
-        if (m_pPointed->m_bEnable)
+        if (m_pCaptured == m_pPointed && m_pPointed->m_bEnable)
             m_pPointed->OnMouseIn(pt.x, pt.y);
+    }
+    else if (m_pPointed && m_pPointed->m_bEnable)
+    {
+        m_pPointed->OnMouseIn(pt.x, pt.y);
     }
 }
 
