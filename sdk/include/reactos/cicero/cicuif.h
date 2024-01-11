@@ -466,8 +466,8 @@ public:
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) = 0;
-    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bFlag) = 0;
-    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bFlag) = 0;
+    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bVertical) = 0;
+    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bVertical) = 0;
 };
 
 class CUIFSchemeDef : public CUIFScheme
@@ -500,8 +500,8 @@ public:
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) override;
-    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bFlag) override;
-    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bFlag) override;
+    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bVertical) override;
+    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bVertical) override;
 };
 
 DECLSPEC_SELECTANY CUIFColorTableSys *CUIFScheme::s_pColorTableSys = NULL;
@@ -1651,10 +1651,10 @@ CUIFSchemeDef::DrawWndFrame(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWO
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bFlag)
+CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bVertical)
 {
     RECT rc;
-    if (bFlag)
+    if (bVertical)
         rc = { prc->left, prc->top + 1, prc->right, prc->top + 4 };
     else
         rc = { prc->left + 1, prc->top, prc->left + 4, prc->bottom };
@@ -1662,7 +1662,7 @@ CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bFlag)
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bFlag)
+CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bVertical)
 {
     HPEN hLightPen = ::CreatePen(PS_SOLID, 0, ::GetSysColor(COLOR_BTNHIGHLIGHT));
     if (!hLightPen)
@@ -1676,7 +1676,7 @@ CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bFlag)
     }
 
     HGDIOBJ hPenOld = ::SelectObject(hDC, hShadowPen);
-    if (bFlag)
+    if (bVertical)
     {
         ::MoveToEx(hDC, prc->left, prc->top + 1, NULL);
         ::LineTo(hDC, prc->right, prc->top + 1);
