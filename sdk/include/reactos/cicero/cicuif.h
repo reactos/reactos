@@ -23,8 +23,9 @@ class CUIFTheme;
         class CUIFWindow;
             class CUIFToolTip;
             class CUIFShadow;
-        class CUIFButton;
-            class CUIFButton2;
+    class CUIFButton;
+        class CUIFButton2;
+    class CUIFGripper;
 class CUIFObjectArray;
 class CUIFColorTable;
     class CUIFColorTableSys;
@@ -465,8 +466,8 @@ public:
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) = 0;
-    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bFlag) = 0;
-    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bFlag) = 0;
+    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bVertical) = 0;
+    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bVertical) = 0;
 };
 
 class CUIFSchemeDef : public CUIFScheme
@@ -499,8 +500,8 @@ public:
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) override;
-    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bFlag) override;
-    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bFlag) override;
+    STDMETHOD_(void, DrawDragHandle)(HDC hDC, LPCRECT prc, BOOL bVertical) override;
+    STDMETHOD_(void, DrawSeparator)(HDC hDC, LPCRECT prc, BOOL bVertical) override;
 };
 
 DECLSPEC_SELECTANY CUIFColorTableSys *CUIFScheme::s_pColorTableSys = NULL;
@@ -538,6 +539,7 @@ protected:
 
 public:
     enum { POINTING_TIMER_ID = 0x7982 };
+    operator HWND() const { return m_hWnd; }
     CUIFWindow(HINSTANCE hInst, DWORD style);
     ~CUIFWindow() override;
 
@@ -723,6 +725,26 @@ public:
     DWORD MakeDrawFlag();
     STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
     STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFGripper : public CUIFObject
+{
+protected:
+    POINT m_ptGripper;
+
+public:
+    CUIFGripper(CUIFObject *pParent, LPCRECT prc, DWORD style);
+    ~CUIFGripper() override;
+
+    STDMETHOD_(void, OnMouseMove)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
+    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+    STDMETHOD_(void, SetStyle)(DWORD style) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1629,10 +1651,10 @@ CUIFSchemeDef::DrawWndFrame(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWO
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bFlag)
+CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bVertical)
 {
     RECT rc;
-    if (bFlag)
+    if (bVertical)
         rc = { prc->left, prc->top + 1, prc->right, prc->top + 4 };
     else
         rc = { prc->left + 1, prc->top, prc->left + 4, prc->bottom };
@@ -1640,7 +1662,7 @@ CUIFSchemeDef::DrawDragHandle(HDC hDC, LPCRECT prc, BOOL bFlag)
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bFlag)
+CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bVertical)
 {
     HPEN hLightPen = ::CreatePen(PS_SOLID, 0, ::GetSysColor(COLOR_BTNHIGHLIGHT));
     if (!hLightPen)
@@ -1654,7 +1676,7 @@ CUIFSchemeDef::DrawSeparator(HDC hDC, LPCRECT prc, BOOL bFlag)
     }
 
     HGDIOBJ hPenOld = ::SelectObject(hDC, hShadowPen);
-    if (bFlag)
+    if (bVertical)
     {
         ::MoveToEx(hDC, prc->left, prc->top + 1, NULL);
         ::LineTo(hDC, prc->right, prc->top + 1);
@@ -2514,12 +2536,10 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             OnCreate(hWnd);
             return 0;
         case WM_DESTROY:
-            if (m_pToolTip && ::IsWindow(m_pToolTip->m_hWnd))
-                ::DestroyWindow(m_pToolTip->m_hWnd);
-            if (m_pShadow && ::IsWindow(m_pShadow->m_hWnd))
-            {
-                ::DestroyWindow(m_pShadow->m_hWnd);
-            }
+            if (m_pToolTip && ::IsWindow(*m_pToolTip))
+                ::DestroyWindow(*m_pToolTip);
+            if (m_pShadow && ::IsWindow(*m_pShadow))
+                ::DestroyWindow(*m_pShadow);
             OnDestroy(hWnd);
             return 0;
         case WM_SIZE:
@@ -3040,7 +3060,7 @@ inline void CUIFShadow::InitShadow()
 
 inline void CUIFShadow::AdjustWindowPos()
 {
-    HWND hwndOwner = m_pShadowOrToolTipOwner->m_hWnd;
+    HWND hwndOwner = *m_pShadowOrToolTipOwner;
     if (!::IsWindow(m_hWnd))
         return;
 
@@ -3093,7 +3113,7 @@ inline STDMETHODIMP_(LRESULT)
 CUIFShadow::OnWindowPosChanging(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     WINDOWPOS *wp = (WINDOWPOS *)lParam;
-    wp->hwndInsertAfter = m_pShadowOrToolTipOwner->m_hWnd;
+    wp->hwndInsertAfter = *m_pShadowOrToolTipOwner;
     return ::DefWindowProc(hWnd, Msg, wParam, lParam);
 }
 
@@ -3224,7 +3244,7 @@ CUIFToolTip::GetTipTextColor()
 inline CUIFObject*
 CUIFToolTip::FindObject(HWND hWnd, POINT pt)
 {
-    if (hWnd == m_pShadowOrToolTipOwner->m_hWnd)
+    if (hWnd == *m_pShadowOrToolTipOwner)
         return m_pShadowOrToolTipOwner->ObjectFromPoint(pt);
     return NULL;
 }
@@ -3246,7 +3266,7 @@ CUIFToolTip::ShowTip()
 
     POINT Point;
     ::GetCursorPos(&Point);
-    ::ScreenToClient(m_pToolTipTarget->m_pWindow->m_hWnd, &Point);
+    ::ScreenToClient(*m_pToolTipTarget->m_pWindow, &Point);
 
     RECT rc;
     m_pToolTipTarget->GetRect(&rc);
@@ -3264,8 +3284,8 @@ CUIFToolTip::ShowTip()
     GetTipWindowSize(&size);
 
     RECT rc2 = rc;
-    ::ClientToScreen(m_pToolTipTarget->m_pWindow->m_hWnd, (LPPOINT)&rc);
-    ::ClientToScreen(m_pToolTipTarget->m_pWindow->m_hWnd, (LPPOINT)&rc.right);
+    ::ClientToScreen(*m_pToolTipTarget->m_pWindow, (LPPOINT)&rc);
+    ::ClientToScreen(*m_pToolTipTarget->m_pWindow, (LPPOINT)&rc.right);
     GetTipWindowRect(&rc2, size, &rc);
 
     m_bShowToolTip = TRUE;
@@ -3709,7 +3729,7 @@ CUIFButton::GetTextSize(LPCWSTR pszText, LPSIZE pSize)
     INT cchText = lstrlenW(pszText);
     HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
 
-    if (!m_bHasCustomFont && SUCCEEDED(EnsureThemeData(m_pWindow->m_hWnd)))
+    if (!m_bHasCustomFont && SUCCEEDED(EnsureThemeData(*m_pWindow)))
     {
         RECT rc;
         GetThemeTextExtent(hDC, 0, pszText, cchText, 0, NULL, &rc);
@@ -4076,4 +4096,112 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     ::SelectObject(hdcMem, hFontOld);
     ::SelectObject(hdcMem, hbmOld);
     ::DeleteObject(hbmMem);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFGripper::CUIFGripper(CUIFObject *pParent, LPCRECT prc, DWORD style)
+    : CUIFObject(pParent, 0, prc, style)
+{
+    m_iStateId = 0;
+    m_pszClassList = L"REBAR";
+    if (m_style & 1)
+        m_iPartId = RP_GRIPPERVERT;
+    else
+        m_iPartId = RP_GRIPPER;
+}
+
+inline CUIFGripper::~CUIFGripper()
+{
+}
+
+inline STDMETHODIMP_(void)
+CUIFGripper::OnMouseMove(LONG x, LONG y)
+{
+    if (IsCapture())
+    {
+        POINT pt;
+        ::GetCursorPos(&pt);
+        m_pWindow->Move(pt.x - m_ptGripper.x, pt.y - m_ptGripper.y, -1, -1);
+    }
+}
+
+inline STDMETHODIMP_(void)
+CUIFGripper::OnLButtonDown(LONG x, LONG y)
+{
+    StartCapture();
+    m_ptGripper.x = x;
+    m_ptGripper.y = y;
+    ::ScreenToClient(*m_pWindow, &m_ptGripper);
+    RECT rc;
+    ::GetWindowRect(*m_pWindow, &rc);
+    m_ptGripper.x -= rc.left;
+    m_ptGripper.y -= rc.top;
+}
+
+inline STDMETHODIMP_(void)
+CUIFGripper::OnLButtonUp(LONG x, LONG y)
+{
+    if (IsCapture())
+        EndCapture();
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFGripper::OnPaintTheme(HDC hDC)
+{
+    if (FAILED(EnsureThemeData(*m_pWindow)))
+        return FALSE;
+
+    if (m_style & 1)
+    {
+        m_rc.top += 2;
+        m_rc.bottom -= 2;
+    }
+    else
+    {
+        m_rc.left += 2;
+        m_rc.right -= 2;
+    }
+
+    if (FAILED(DrawThemeBackground(hDC, 1, &m_rc, 0)))
+        return FALSE;
+
+    return TRUE;
+}
+
+inline STDMETHODIMP_(void)
+CUIFGripper::OnPaintNoTheme(HDC hDC)
+{
+    if (m_pScheme)
+    {
+        m_pScheme->DrawDragHandle(hDC, &m_rc, !!(m_style & 1));
+        return;
+    }
+
+    RECT rc;
+    if (m_style & 1)
+        rc = { m_rc.left, m_rc.top + 1, m_rc.right, m_rc.top + 4 };
+    else
+        rc = { m_rc.left + 1, m_rc.top, m_rc.left + 4, m_rc.bottom };
+
+    ::DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT);
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFGripper::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    HCURSOR hCursor = ::LoadCursor(NULL, IDC_SIZEALL);
+    ::SetCursor(hCursor);
+    return TRUE;
+}
+
+inline STDMETHODIMP_(void)
+CUIFGripper::SetStyle(DWORD style)
+{
+    m_style = style;
+    if (m_style & 1)
+        SetActiveTheme(L"REBAR", RP_GRIPPERVERT, 0);
+    else
+        SetActiveTheme(L"REBAR", RP_GRIPPER, 0);
 }
