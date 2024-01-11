@@ -513,12 +513,11 @@ OpenFile(LPCSTR lpFileName,
 	// FILE_SHARE_READ
 	// FILE_NO_INTERMEDIATE_BUFFERING
 
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = &FileNameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileNameString,
+                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                               NULL,
+                               NULL);
 
 	errCode = NtOpenFile (&FileHandle,
 	                      GENERIC_READ | SYNCHRONIZE,
