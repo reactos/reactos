@@ -1883,6 +1883,8 @@ static void check_flags(FILEOP_FLAGS fFlags)
         FIXME("Unsupported flags: %04x\n", fFlags);
 }
 
+#define GET_FILENAME(fe) ((fe)->szFilename[0] ? (fe)->szFilename : (fe)->szFullPath)
+
 static DWORD
 validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
 {
@@ -1922,14 +1924,14 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                     {
                         strTitle.LoadStringW(IDS_MOVEERRORTITLE);
                         if (IsAttribDir(feFrom->attributes))
-                            strText.Format(IDS_MOVEERRORSAMEFOLDER, feFrom->szFilename);
+                            strText.Format(IDS_MOVEERRORSAMEFOLDER, GET_FILENAME(feFrom));
                         else
-                            strText.Format(IDS_MOVEERRORSAME, feFrom->szFilename);
+                            strText.Format(IDS_MOVEERRORSAME, GET_FILENAME(feFrom));
                     }
                     else
                     {
                         strTitle.LoadStringW(IDS_COPYERRORTITLE);
-                        strText.Format(IDS_COPYERRORSAME, feFrom->szFilename);
+                        strText.Format(IDS_COPYERRORSAME, GET_FILENAME(feFrom));
                         return ERROR_SUCCESS;
                     }
                     MessageBoxW(hwnd, strText, strTitle, MB_ICONERROR);
@@ -1957,12 +1959,12 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                             if (wFunc == FO_MOVE)
                             {
                                 strTitle.LoadStringW(IDS_MOVEERRORTITLE);
-                                strText.Format(IDS_MOVEERRORSUBFOLDER, feFrom->szFilename);
+                                strText.Format(IDS_MOVEERRORSUBFOLDER, GET_FILENAME(feFrom));
                             }
                             else
                             {
                                 strTitle.LoadStringW(IDS_COPYERRORTITLE);
-                                strText.Format(IDS_COPYERRORSUBFOLDER, feFrom->szFilename);
+                                strText.Format(IDS_COPYERRORSUBFOLDER, GET_FILENAME(feFrom));
                             }
                             MessageBoxW(hwnd, strText, strTitle, MB_ICONERROR);
                             return DE_DESTSUBTREE;
