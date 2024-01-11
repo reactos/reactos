@@ -743,8 +743,8 @@ public:
     STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
     STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
     STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
-    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y);
-    STDMETHOD_(void, SetStyle)(DWORD style);
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+    STDMETHOD_(void, SetStyle)(DWORD style) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4107,9 +4107,9 @@ CUIFGripper::CUIFGripper(CUIFObject *pParent, LPCRECT prc, DWORD style)
     m_iStateId = 0;
     m_pszClassList = L"REBAR";
     if (m_style & 1)
-        m_iPartId = 2;
+        m_iPartId = RP_GRIPPERVERT;
     else
-        m_iPartId = 1;
+        m_iPartId = RP_GRIPPER;
 }
 
 inline CUIFGripper::~CUIFGripper()
@@ -4201,7 +4201,7 @@ CUIFGripper::SetStyle(DWORD style)
 {
     m_style = style;
     if (m_style & 1)
-        SetActiveTheme(L"REBAR", 2, 0);
+        SetActiveTheme(L"REBAR", RP_GRIPPERVERT, 0);
     else
-        SetActiveTheme(L"REBAR", 1, 0);
+        SetActiveTheme(L"REBAR", RP_GRIPPER, 0);
 }
