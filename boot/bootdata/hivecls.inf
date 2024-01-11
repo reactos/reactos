@@ -1008,6 +1008,49 @@ REPAIR="Napraw"
 TEST="Testuj"
 
 ;------------------------------------------------------------------------
+
+; LANG_PORTUGUESE SUBLANG_NEUTRAL
+[Strings.0016]
+;; In shell32.dll
+CPLFILE_OPENWITH="Abrir com o Painel de Control"
+
+;; In hhctrl.ocx
+CHMFILE="Ficheiro de ajuda HTML compilado"
+
+;; In msxml3r.dll
+XMLFILE="Documento XML"
+XSLFILE="Folha de estilos XSL"
+
+;; In msi.dll
+MSIPACK="Pacote de instalação do ReactOS"
+
+;; In themeui.dll
+MSSTYLESFILE="Ficheiro de estilo visual"
+THEMEFILE="Ficheiro de temas"
+
+;; In some multimedia exe/dll
+WAVFILE="Ficheiro de audio"
+MIDFILE="Sequência MIDI"
+CDAFILE="Pista de audio CD"
+AVIFILE="Sequência de vídeo"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="Folha de estilos em cascada"
+SCFFILE="Comando do Explorador ReactOS"
+WMZFILE="Metarquivo aprimorado compactado"
+
+;; For .reg files, right-click menu
+MERGE="Combinar"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="Configurar"
+INSTALL="Instalar"
+UNINSTALL="Desinstalar"
+REPAIR="Reparar"
+TEST="Testar"
+
+;------------------------------------------------------------------------
+
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
 ;; In shell32.dll

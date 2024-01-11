@@ -2746,7 +2746,7 @@ SECLOGON_SERVICE_DESCRIPTION="Activa processos de início sob credenciais altern
 SERVER_SERVICE="Servidor"
 SERVER_SERVICE_DESCRIPTION="Suporta a partilha de ficheiros, impressoras e recursos de rede."
 
-SPOOLER_SERVICE="Spooler de impressão"
+SPOOLER_SERVICE="Fila de impressão"
 SPOOLER_SERVICE_DESCRIPTION="Carrega ficheiros na memória para impressão posterior."
 
 TCPSVCS_SERVICE="Serviços TCP/IP simples"
