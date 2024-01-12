@@ -22,27 +22,27 @@ START_TEST(_mbsstr)
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     StartSeh()
-        haystack = "hello";
+        haystack = (unsigned char *)"hello";
         (void)_mbsstr(haystack, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     StartSeh()
-        haystack = "";
+        haystack = (unsigned char *)"";
         (void)_mbsstr(haystack, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     /* Empty needle returns haystack, empty haystack returns NULL... */
-    haystack = "hello";
-    ret = _mbsstr(haystack, "");
+    haystack = (unsigned char *)"hello";
+    ret = _mbsstr(haystack, (const unsigned char *)"");
     ok(ret == haystack, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "";
-    ret = _mbsstr(haystack, "a");
+    haystack = (unsigned char *)"";
+    ret = _mbsstr(haystack, (const unsigned char *)"a");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 
     /* ... but if both are empty, behavior differs */
-    haystack = "";
-    ret = _mbsstr(haystack, "");
+    haystack = (unsigned char *)"";
+    ret = _mbsstr(haystack, (const unsigned char *)"");
 #ifdef TEST_CRTDLL
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 #else
@@ -50,38 +50,38 @@ START_TEST(_mbsstr)
 #endif
 
     /* Simple "found" cases */
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "abc");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"abc");
     ok(ret == haystack, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "g");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"g");
     ok(ret == haystack + 6, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "abcdefg");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"abcdefg");
     ok(ret == haystack, "ret = %p, haystack = %p\n", ret, haystack);
 
     /* Simple "not found" cases */
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "h");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"h");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "gh");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"gh");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "abcD");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"abcD");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 
     /* Needle longer than haystack */
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "abcdefgh");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"abcdefgh");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 
-    haystack = "abcdefg";
-    ret = _mbsstr(haystack, "xxxxxxxx");
+    haystack = (unsigned char *)"abcdefg";
+    ret = _mbsstr(haystack, (const unsigned char *)"xxxxxxxx");
     ok(ret == NULL, "ret = %p, haystack = %p\n", ret, haystack);
 }
 

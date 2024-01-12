@@ -33,38 +33,38 @@ START_TEST(_mbsncmp)
     ret = _mbsncmp(NULL, NULL, 0);
     ok(ret == 0, "ret = %d\n", ret);
 
-    ret = _mbsncmp("a", "c", 0);
+    ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"c", 0);
     ok(ret == 0, "ret = %d\n", ret);
 
     /* No null checks - length 1 crashes */
     StartSeh()
-        (void)_mbsncmp("a", NULL, 1);
+        (void)_mbsncmp((const unsigned char *)"a", NULL, 1);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     StartSeh()
-        (void)_mbsncmp(NULL, "c", 1);
+        (void)_mbsncmp(NULL, (const unsigned char *)"c", 1);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     /* Strings longer than or equal to length */
-    ret = _mbsncmp("a", "c", 1);
+    ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"c", 1);
     ok(ret == DIFF_RETURN(-, 2), "ret = %d\n", ret);
 
-    ret = _mbsncmp("a", "a", 1);
+    ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"a", 1);
     ok(ret == 0, "ret = %d\n", ret);
 
-    ret = _mbsncmp("ab", "aB", 1);
+    ret = _mbsncmp((const unsigned char *)"ab", (const unsigned char *)"aB", 1);
     ok(ret == 0, "ret = %d\n", ret);
 
-    ret = _mbsncmp("aa", "ac", 2);
+    ret = _mbsncmp((const unsigned char *)"aa", (const unsigned char *)"ac", 2);
     ok(ret == DIFF_RETURN(-, 2), "ret = %d\n", ret);
 
     /* Length longer than one of the strings */
-    ret = _mbsncmp("a", "ac", 2);
+    ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"ac", 2);
     ok(ret == DIFF_RETURN(-, 'c'), "ret = %d\n", ret);
 
-    ret = _mbsncmp("aa", "a", 2);
+    ret = _mbsncmp((const unsigned char *)"aa", (const unsigned char *)"a", 2);
     ok(ret == DIFF_RETURN(+, 'a'), "ret = %d\n", ret);
 
-    ret = _mbsncmp("ab", "ab", 100);
+    ret = _mbsncmp((const unsigned char *)"ab", (const unsigned char *)"ab", 100);
     ok(ret == 0, "ret = %d\n", ret);
 }
