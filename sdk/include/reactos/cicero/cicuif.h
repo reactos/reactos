@@ -2353,7 +2353,7 @@ CUIFWindow::GetWndStyleEx()
 {
     DWORD ret = 0;
     if (m_style & UIF_WINDOW_TOPMOST)
-        ret = WS_EX_TOPMOST;
+        ret |= WS_EX_TOPMOST;
     if (m_style & UIF_WINDOW_TOOLWINDOW)
         ret |= WS_EX_TOOLWINDOW;
     if (m_style & UIF_WINDOW_LAYOUTRTL)
@@ -2777,7 +2777,7 @@ inline BOOL
 CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
 {
     if (!(m_style & (UIF_WINDOW_WORKAREA | UIF_WINDOW_MONITOR)))
-        return 0;
+        return FALSE;
 
     HMONITOR hMon = ::MonitorFromRect(prcWnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi;
@@ -2787,16 +2787,10 @@ CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
         if (m_style & UIF_WINDOW_WORKAREA)
             return ::SystemParametersInfo(SPI_GETWORKAREA, 0, prcWorkArea, 0);
 
-        if (m_style & UIF_WINDOW_MONITOR)
-        {
-            prcWorkArea->top = 0;
-            prcWorkArea->left = 0;
-            prcWorkArea->right = ::GetSystemMetrics(SM_CXSCREEN);
-            prcWorkArea->bottom = ::GetSystemMetrics(SM_CYSCREEN);
-            return TRUE;
-        }
-
-        return FALSE;
+        prcWorkArea->left = prcWorkArea->top = 0;
+        prcWorkArea->right = ::GetSystemMetrics(SM_CXSCREEN);
+        prcWorkArea->bottom = ::GetSystemMetrics(SM_CYSCREEN);
+        return TRUE;
     }
 
     if (m_style & UIF_WINDOW_WORKAREA)
@@ -2805,13 +2799,8 @@ CUIFWindow::GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea)
         return TRUE;
     }
 
-    if (m_style & UIF_WINDOW_MONITOR)
-    {
-        *prcWorkArea = mi.rcMonitor;
-        return TRUE;
-    }
-
-    return FALSE;
+    *prcWorkArea = mi.rcMonitor;
+    return TRUE;
 }
 
 inline void
