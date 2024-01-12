@@ -2237,7 +2237,7 @@ CUIFWindow::Initialize()
 
     if (m_style & UIF_WINDOW_SHADOW)
     {
-        m_pShadow = new(cicNoThrow) CUIFShadow(m_hInst, 0x2, this);
+        m_pShadow = new(cicNoThrow) CUIFShadow(m_hInst, UIF_WINDOW_TOPMOST, this);
         if (m_pShadow)
             m_pShadow->Initialize();
     }
@@ -3059,7 +3059,7 @@ CUIFWindow::OnAnimationStart()
 
 /// @unimplemented
 inline CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner)
-    : CUIFWindow(hInst, (style | 0x4))
+    : CUIFWindow(hInst, (style | UIF_WINDOW_TOOLWINDOW))
 {
     m_pShadowOrToolTipOwner = pShadowOwner;
     m_rgbShadowColor = RGB(0, 0, 0);
