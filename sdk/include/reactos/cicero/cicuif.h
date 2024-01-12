@@ -738,20 +738,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
-// m_style flags for CUIFButton2
-enum
-{
-    UIF_BUTTON2_H_ALIGN_LEFT = 0,
-    UIF_BUTTON2_H_ALIGN_CENTER = 0x1,
-    UIF_BUTTON2_H_ALIGN_RIGHT = 0x2,
-    UIF_BUTTON2_H_ALIGN_MASK = UIF_BUTTON2_H_ALIGN_CENTER | UIF_BUTTON2_H_ALIGN_RIGHT,
-    UIF_BUTTON2_V_ALIGN_TOP = 0,
-    UIF_BUTTON2_V_ALIGN_MIDDLE = 0x4,
-    UIF_BUTTON2_V_ALIGN_BOTTOM = 0x8,
-    UIF_BUTTON2_V_ALIGN_MASK = UIF_BUTTON2_V_ALIGN_MIDDLE | UIF_BUTTON2_V_ALIGN_BOTTOM,
-    UIF_BUTTON2_VERTICAL = 0x400,
-};
-
 class CUIFButton2 : public CUIFButton
 {
 protected:
@@ -4034,7 +4020,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
         cyContent = m_BitmapSize.cy;
     }
 
-    if (m_style & UIF_BUTTON2_VERTICAL)
+    if (m_style & UIF_BUTTON_VERTICAL)
     {
         cxyBorders = ((cyText && cyContent) ? 2 : 0);
 
@@ -4054,17 +4040,17 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     }
 
     INT xOffset, yOffset;
-    if ((m_style & UIF_BUTTON2_H_ALIGN_MASK) == UIF_BUTTON2_H_ALIGN_CENTER)
+    if ((m_style & UIF_BUTTON_H_ALIGN_MASK) == UIF_BUTTON_H_ALIGN_CENTER)
         xOffset = (rcBack.left + rcBack.right - cxButton) / 2;
-    else if ((m_style & UIF_BUTTON2_H_ALIGN_MASK) == UIF_BUTTON2_H_ALIGN_RIGHT)
+    else if ((m_style & UIF_BUTTON_H_ALIGN_MASK) == UIF_BUTTON_H_ALIGN_RIGHT)
         xOffset = rcBack.right - cxText - 2;
     else
         xOffset = rcBack.left + 2;
 
 
-    if ((m_style & UIF_BUTTON2_V_ALIGN_MASK) == UIF_BUTTON2_V_ALIGN_MIDDLE)
+    if ((m_style & UIF_BUTTON_V_ALIGN_MASK) == UIF_BUTTON_V_ALIGN_MIDDLE)
         yOffset = (rcBack.top + rcBack.bottom - cyButton) / 2;
-    else if ((m_style & UIF_BUTTON2_V_ALIGN_MASK) == UIF_BUTTON2_V_ALIGN_BOTTOM)
+    else if ((m_style & UIF_BUTTON_V_ALIGN_MASK) == UIF_BUTTON_V_ALIGN_BOTTOM)
         yOffset = rcBack.bottom - cyButton - 2;
     else
         yOffset = rcBack.top + 2;
@@ -4078,7 +4064,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     ::OffsetRect(&rc, offsetSize.cx, offsetSize.cy);
 
     RECT rcImage, rcText;
-    if (m_style & UIF_BUTTON2_VERTICAL)
+    if (m_style & UIF_BUTTON_VERTICAL)
     {
         rcImage.left    = (rc.left + rc.right - cxContent) / 2;
         rcImage.top     = rc.top;
@@ -4111,7 +4097,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     if (m_pszButtonText)
     {
         m_pScheme->DrawCtrlText(hdcMem, &rcText, m_pszButtonText, -1, dwDrawFlags,
-                                !!(m_style & UIF_BUTTON2_VERTICAL));
+                                !!(m_style & UIF_BUTTON_VERTICAL));
     }
 
     if (m_ButtonIcon.m_hIcon)
