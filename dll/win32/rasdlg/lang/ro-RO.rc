@@ -1057,7 +1057,7 @@ CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Partajarea conexiunii de Internet permite altor calculatoare din rețeaua locală să acceseze resurse externe prin această conexiune.", -1, 10, 5, 300, 22
-    AUTOCHECKBOX "&Activează Partajarea conexiunii de Internet” pentru această conexiune, 1512, 21, 31, 272, 10
+    AUTOCHECKBOX "&Activează Partajarea conexiunii de Internet” pentru această conexiune", 1512, 21, 31, 272, 10
     LTEXT "Bifați căsuța următoare pentru a apela această conexiune automat când un calculator din rețeaua locală va încearca accesarea de resurse externe.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "Acti&vează apelarea la cerere", 1513, 21, 86, 260, 10
 END
