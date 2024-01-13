@@ -39,7 +39,7 @@ BEGIN
     LTEXT       "Expertul de instalare ReactOS poate actualiza una dintre instalările enumerate mai jos, sau, dacă o instalare ReactOS este deteriorată, să încerce să o repare.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "N&u actualiza", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Apăsați Înainte pentru a actualiza instalarea selectată, sau a continua cu o nouă instalare dacă aveți bifată opțiunea Nu actualiza.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Apăsați Înainte pentru a actualiza instalarea selectată, sau a continua cu o nouă instalare dacă aveți bifată opțiunea „Nu actualiza”.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
