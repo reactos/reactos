@@ -714,6 +714,7 @@ protected:
     BOOL m_bPressed;
     SIZE m_IconSize;
     SIZE m_TextSize;
+    friend class CUIFToolbarButton;
 
     void DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed);
     void DrawEdgeProc(HDC hDC, LPCRECT prc, BOOL bPressed);
@@ -785,14 +786,35 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
-// FIXME
 class CUIFToolbarButton : public CUIFObject
 {
 public:
     CUIFToolbarButtonElement *m_pToolbarButtonElement;
     CUIFToolbarMenuButton *m_pToolbarMenuButton;
-    DWORD m_dwButtonFlags;
+    DWORD m_dwToolbarButtonFlags;
     LPCWSTR m_pszUnknownText;
+
+    CUIFToolbarButton(
+        CUIFObject *pParent,
+        DWORD dwUnknown3,
+        LPCRECT prc,
+        DWORD style,
+        DWORD dwToolbarButtonFlags,
+        LPCWSTR pszUnknownText);
+    ~CUIFToolbarButton() override { }
+
+    BOOL Init();
+    HICON GetIcon();
+    void SetIcon(HICON hIcon);
+
+    STDMETHOD_(void, ClearWndObj)() override;
+    STDMETHOD_(void, DetachWndObj)() override;
+    STDMETHOD_(void, Enable)(BOOL bEnable) override;
+    STDMETHOD_(LPCWSTR, GetToolTip)() override;
+    STDMETHOD_(void, SetActiveTheme)(LPCWSTR pszClassList, INT iPartId, INT iStateId) override;
+    STDMETHOD_(void, SetFont)(HFONT hFont) override;
+    STDMETHOD_(void, SetRect)(LPCRECT prc) override;
+    STDMETHOD_(void, SetToolTip)(LPCWSTR pszToolTip) override;
 
     STDMETHOD_(void, OnUnknownMouse0)() { }
     STDMETHOD_(void, OnUnknownMouse1)(LONG x, LONG y) { }
@@ -4337,7 +4359,7 @@ inline STDMETHODIMP_(void)
 CUIFToolbarButtonElement::OnLButtonUp(LONG x, LONG y)
 {
     CUIFButton::OnLButtonUp(x, y);
-    if ((m_pToolbarButton->m_dwButtonFlags & 0x30000) == 0x20000)
+    if ((m_pToolbarButton->m_dwToolbarButtonFlags & 0x30000) == 0x20000)
         m_pToolbarButton->OnUnknownMouse2(x, y);
     else
         m_pToolbarButton->OnUnknownMouse1(x, y);
@@ -4346,6 +4368,163 @@ CUIFToolbarButtonElement::OnLButtonUp(LONG x, LONG y)
 inline STDMETHODIMP_(void)
 CUIFToolbarButtonElement::OnRButtonUp(LONG x, LONG y)
 {
-    if ((m_pToolbarButton->m_dwButtonFlags & 0x30000) != 0x20000)
+    if ((m_pToolbarButton->m_dwToolbarButtonFlags & 0x30000) != 0x20000)
         m_pToolbarButton->OnUnknownMouse0();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline CUIFToolbarButton::CUIFToolbarButton(
+    CUIFObject *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style,
+    DWORD dwToolbarButtonFlags,
+    LPCWSTR pszUnknownText) : CUIFObject(pParent, dwUnknown3, prc, style)
+{
+    m_dwToolbarButtonFlags = dwToolbarButtonFlags;
+    m_pszUnknownText = pszUnknownText;
+}
+
+inline BOOL CUIFToolbarButton::Init()
+{
+    RECT rc1, rc2;
+    rc1 = rc2 = m_rc;
+
+    if ((m_dwToolbarButtonFlags & 0x30000) == 0x30000)
+    {
+        rc1.right -= 12;
+        rc2.left = rc1.right + 1;
+    }
+
+    DWORD style = UIF_BUTTON_LARGE_ICON | UIF_BUTTON_V_ALIGN_MIDDLE | UIF_BUTTON_H_ALIGN_CENTER;
+    if (m_dwToolbarButtonFlags & 0x2000)
+        style |= 0x10;
+    if (m_dwToolbarButtonFlags & 0x80000)
+        style |= UIF_BUTTON_VERTICAL;
+    m_pToolbarButtonElement = new(cicNoThrow) CUIFToolbarButtonElement(this, m_dwUnknown3, &rc1, style);
+    if (!m_pToolbarButtonElement)
+        return FALSE;
+
+    m_pToolbarButtonElement->Initialize();
+    AddUIObj(m_pToolbarButtonElement);
+
+    if (!m_bEnable)
+        m_pToolbarButtonElement->Enable(FALSE);
+
+    if ((m_dwToolbarButtonFlags & 0x30000) == 0x30000)
+    {
+        style = UIF_BUTTON_LARGE_ICON | UIF_BUTTON_H_ALIGN_CENTER;
+        if (m_dwToolbarButtonFlags & 0x80000)
+            style |= UIF_BUTTON_VERTICAL;
+
+        m_pToolbarMenuButton = new(cicNoThrow) CUIFToolbarMenuButton(this, 0, &rc2, style);
+        if (!m_pToolbarMenuButton)
+            return FALSE;
+
+        m_pToolbarMenuButton->Initialize();
+        AddUIObj(m_pToolbarMenuButton);
+
+        if (!m_bEnable)
+            m_pToolbarMenuButton->Enable(FALSE);
+    }
+
+    return TRUE;
+}
+
+inline HICON CUIFToolbarButton::GetIcon()
+{
+    return m_pToolbarButtonElement->m_ButtonIcon.m_hIcon;
+}
+
+inline void CUIFToolbarButton::SetIcon(HICON hIcon)
+{
+    m_pToolbarButtonElement->SetIcon(hIcon);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::ClearWndObj()
+{
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->ClearWndObj();
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->ClearWndObj();
+
+    CUIFObject::ClearWndObj();
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::DetachWndObj()
+{
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->DetachWndObj();
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->DetachWndObj();
+
+    CUIFObject::DetachWndObj();
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::Enable(BOOL bEnable)
+{
+    CUIFObject::Enable(bEnable);
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->Enable(bEnable);
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->Enable(bEnable);
+}
+
+inline STDMETHODIMP_(LPCWSTR)
+CUIFToolbarButton::GetToolTip()
+{
+    return CUIFObject::GetToolTip();
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, INT iStateId)
+{
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->SetActiveTheme(pszClassList, iPartId, iStateId);
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->SetActiveTheme(pszClassList, iPartId, iStateId);
+
+    m_pszClassList = pszClassList;
+    m_iPartId = iPartId;
+    m_iStateId = iStateId;
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::SetFont(HFONT hFont)
+{
+    m_pToolbarButtonElement->SetFont(hFont);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::SetRect(LPCRECT prc)
+{
+    CUIFObject::SetRect(prc);
+
+    RECT rc1, rc2;
+    rc1 = rc2 = m_rc;
+
+    if ((m_dwToolbarButtonFlags & 0x30000) == 0x30000)
+    {
+        rc1.right -= 12;
+        rc2.left = rc1.right + 1;
+    }
+
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->SetRect(&rc1);
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->SetRect(&rc2);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButton::SetToolTip(LPCWSTR pszToolTip)
+{
+    CUIFObject::SetToolTip(pszToolTip);
+    if (m_pToolbarButtonElement)
+        m_pToolbarButtonElement->SetToolTip(pszToolTip);
+    if (m_pToolbarMenuButton)
+        m_pToolbarMenuButton->SetToolTip(pszToolTip);
 }
