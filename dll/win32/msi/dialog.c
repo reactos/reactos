@@ -2943,7 +2943,7 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
 
     /* strip off the last directory */
     ptr = PathFindFileNameW( path );
-#if __REACTOS__
+#ifdef __REACTOS__
     if (ptr != path)
     {
         *(ptr - 1) = '\0';
