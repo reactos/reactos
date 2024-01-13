@@ -23,8 +23,11 @@ class CUIFTheme;
         class CUIFWindow;
             class CUIFToolTip;
             class CUIFShadow;
+        class CUIFToolbarButton;
     class CUIFButton;
         class CUIFButton2;
+            class CUIFToolbarMenuButton;
+            class CUIFToolbarButtonElement;
     class CUIFGripper;
 class CUIFObjectArray;
 class CUIFColorTable;
@@ -750,6 +753,50 @@ public:
     DWORD MakeDrawFlag();
     STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
     STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFToolbarMenuButton : public CUIFButton2
+{
+public:
+    CUIFToolbarButton *m_pToolbarButton;
+
+    CUIFToolbarMenuButton(CUIFToolbarButton *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    ~CUIFToolbarMenuButton() override;
+
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFToolbarButtonElement : public CUIFButton2
+{
+public:
+    CUIFToolbarButton *m_pToolbarButton;
+
+    CUIFToolbarButtonElement(CUIFToolbarButton *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+
+    STDMETHOD_(LPCWSTR, GetToolTip)() override;
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnRButtonUp)(LONG x, LONG y) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+// FIXME
+class CUIFToolbarButton : public CUIFObject
+{
+public:
+    CUIFToolbarButtonElement *m_pToolbarButtonElement;
+    CUIFToolbarMenuButton *m_pToolbarMenuButton;
+    DWORD m_dwButtonFlags;
+    LPCWSTR m_pszUnknownText;
+
+    STDMETHOD_(void, OnUnknownMouse0)() { }
+    STDMETHOD_(void, OnUnknownMouse1)(LONG x, LONG y) { }
+    STDMETHOD_(void, OnUnknownMouse2)(LONG x, LONG y) { }
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4225,4 +4272,80 @@ CUIFGripper::SetStyle(DWORD style)
         SetActiveTheme(L"REBAR", RP_GRIPPERVERT, 0);
     else
         SetActiveTheme(L"REBAR", RP_GRIPPER, 0);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFToolbarMenuButton::CUIFToolbarMenuButton(
+    CUIFToolbarButton *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style) : CUIFButton2(pParent, dwUnknown3, prc, style)
+{
+    m_pToolbarButton = pParent;
+
+    HFONT hFont = ::CreateFont(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, SYMBOL_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                               DEFAULT_PITCH | FF_DONTCARE, TEXT("Marlett"));
+    SetFont(hFont);
+    SetText(L"u");
+}
+
+inline
+CUIFToolbarMenuButton::~CUIFToolbarMenuButton()
+{
+    ::DeleteObject(m_hFont);
+    SetFont(NULL);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarMenuButton::OnLButtonUp(LONG x, LONG y)
+{
+    CUIFButton::OnLButtonUp(x, y);
+    m_pToolbarButton->OnUnknownMouse2(x, y);
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFToolbarMenuButton::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    m_pToolbarButton->OnSetCursor(uMsg, x, y);
+    return FALSE;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFToolbarButtonElement::CUIFToolbarButtonElement(
+    CUIFToolbarButton *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style) : CUIFButton2(pParent, dwUnknown3, prc, style)
+{
+    m_pToolbarButton = pParent;
+}
+
+inline STDMETHODIMP_(LPCWSTR)
+CUIFToolbarButtonElement::GetToolTip()
+{
+    if (m_pToolbarButton)
+        return m_pToolbarButton->GetToolTip();
+    return NULL;
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButtonElement::OnLButtonUp(LONG x, LONG y)
+{
+    CUIFButton::OnLButtonUp(x, y);
+    if ((m_pToolbarButton->m_dwButtonFlags & 0x30000) == 0x20000)
+        m_pToolbarButton->OnUnknownMouse2(x, y);
+    else
+        m_pToolbarButton->OnUnknownMouse1(x, y);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarButtonElement::OnRButtonUp(LONG x, LONG y)
+{
+    if ((m_pToolbarButton->m_dwButtonFlags & 0x30000) != 0x20000)
+        m_pToolbarButton->OnUnknownMouse0();
 }
