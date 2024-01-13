@@ -23,8 +23,10 @@ class CUIFTheme;
         class CUIFWindow;
             class CUIFToolTip;
             class CUIFShadow;
+        class CUIFToolbarButton;
     class CUIFButton;
         class CUIFButton2;
+            class CUIFToolbarMenuButton;
     class CUIFGripper;
 class CUIFObjectArray;
 class CUIFColorTable;
@@ -750,6 +752,27 @@ public:
     DWORD MakeDrawFlag();
     STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
     STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFToolbarMenuButton : public CUIFButton2
+{
+public:
+    CUIFToolbarButton *m_pToolbarButton;
+
+    CUIFToolbarMenuButton(CUIFToolbarButton *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    ~CUIFToolbarMenuButton() override;
+
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFToolbarButton : public CUIFObject
+{
+    //FIXME
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4225,4 +4248,43 @@ CUIFGripper::SetStyle(DWORD style)
         SetActiveTheme(L"REBAR", RP_GRIPPERVERT, 0);
     else
         SetActiveTheme(L"REBAR", RP_GRIPPER, 0);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFToolbarMenuButton::CUIFToolbarMenuButton(
+    CUIFToolbarButton *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style) : CUIFButton2(pParent, dwUnknown3, prc, style)
+{
+    m_pToolbarButton = pParent;
+
+    HFONT hFont = ::CreateFont(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, SYMBOL_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                               DEFAULT_PITCH | FF_DONTCARE, TEXT("Marlett"));
+    SetFont(hFont);
+    SetText(L"u");
+}
+
+inline
+CUIFToolbarMenuButton::~CUIFToolbarMenuButton()
+{
+    ::DeleteObject(m_hFont);
+    SetFont(NULL);
+}
+
+inline STDMETHODIMP_(void)
+CUIFToolbarMenuButton::OnLButtonUp(LONG x, LONG y)
+{
+    CUIFButton::OnLButtonUp(x, y);
+    OnMouseOut(x, y);
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFToolbarMenuButton::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    m_pToolbarButton->OnSetCursor(uMsg, x, y);
+    return FALSE;
 }
