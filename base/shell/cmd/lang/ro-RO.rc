@@ -72,12 +72,12 @@ COLOR [attr [/-F]]\n\n\
   attr        Atributele de culoare pentru consolă.\n\
   /-F         Omite umplerea spațiului gol al consolei.\n\n\
 Există trei moduri de formulare a atributelor de culoare:\n\
-1) nume_englez ON nume_englez\n\
+1) nume_englezesc ON nume_englezesc\n\
    (sunt suficiente doar primele trei litere per cuvânt)\n\
 2) cod_zecimal ON cod_zecimal\n\
 3) o combinație din două caractere (coduri) hexazecimale alăturate\n\n\
 Culorile disponibile:\n\
-CULOARE            ZEC.   HEX.  NUME ENGLEZ\n\
+CULOARE            ZEC.   HEX.  NUME ENGLEZESC\n\
 negru               0      0    Black\n\
 albastru naval      1      1    Blue\n\
 verde               2      2    Green\n\
@@ -197,7 +197,7 @@ De exemplu /-W.\n"
     STRING_DIR_HELP3 " Volumul unității %c nu este etichetat.\n"
     STRING_DIR_HELP4 " Numărul de serie al volumului este %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Numărul de fișiere enumerate:\n%16i fișier(e) %14s octeți\n"
-    STRING_DIR_HELP6 "%16i dir-re    %14s octeți liberi\n"
+    STRING_DIR_HELP6 "%16i director/directoare    %14s octeți liberi\n"
     STRING_DIR_HELP7 "\n Directorul %s\n\n"
     STRING_DIR_HELP8 "%16i fișier(e) %14s octeți\n"
     STRING_DIRSTACK_HELP1 "Înregistrează directorul curent în stivă, pentru a-l accesa\n\
@@ -233,8 +233,8 @@ Tastați ECHO fără argumente pentru afișarea stării curente a ecoului.\n"
 FOR %variablă IN (grup) DO comandă [argumente]\n\
 FOR /L %variablă IN (start,step,end) DO comandă [argumente]\n\
 FOR /D %variablă IN (grup) DO comandă [argumente]\n\
-FOR /R [[drive:]path] IN (grup) DO comandă [argumente]\n\
-FOR /F [""options""] IN (grup) DO comandă [argumente]\n\n\
+FOR /R [[disc:]cale] IN (grup) DO comandă [argumente]\n\
+FOR /F [""opțiuni""] IN (grup) DO comandă [argumente]\n\n\
   /L    Generates a number sequence from start to end incrementing by step.\n\
   /D    Modifies the set to refer to directories instead of files.\n\
   /R    Executes command for files in the set in the specified path (or current\n\
@@ -416,7 +416,7 @@ SET [variablă[=][șir]]\n\n\
 Tastați SET fără argumente pentru afișarea variabilelor curente.\n"
     STRING_START_HELP1 "Lansează o comandă.\n\n\
 START [""titlu""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [comaandă/program] [parametri]\n\n\
+      [comandă/program] [parametri]\n\n\
   ""titlu""     Titlul ferestrei.\n\
   path        Specifică un director curent.\n\
   I           Utilizează mediul original dat de cmd.exe,\n\
@@ -550,21 +550,21 @@ titlu         Noul titlu.\n"
     STRING_ERROR_PATH_NOT_FOUND "Calea nu este găsită\n"
     STRING_ERROR_FILE_NOT_FOUND "Fișierul nu este găsit\n"
     STRING_ERROR_REQ_PARAM_MISSING "Lipsește (cel puțin) un argument obligatoriu!\n"
-    STRING_ERROR_INVALID_DRIVE "Specificarea unității este eronată\n"
+    STRING_ERROR_INVALID_DRIVE "Specificarea discului este eronată\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Formatul argumentului este eronat - %s\n"
     STRING_ERROR_BADCOMMAND "Comandă eronată sau fișier inexistent - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Eroare de exces de memorie.\n"
     STRING_ERROR_CANNOTPIPE "Eroare! Nu se poate înlănțui! Nu se poate deschide fișierul temporar!\n"
     STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua... "
     STRING_ERROR_DRIVER_NOT_READY "Discul de stocare nu e utilizabil"
-    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
+    STRING_SET_ENV_ERROR "Variabila de mediu '%s' nu este definită\n"
     STRING_REPLACE_ERROR1 "Argument eronat - %s\n"
     STRING_REPLACE_ERROR2 "Calea nu este găsită - %s\n"
     STRING_REPLACE_ERROR3 "Numele fișierului, directorului sau eticheta volumului este incorectă.\n"
     STRING_REPLACE_ERROR4 "Combinația de argumente nu este validă!\n"
     STRING_REPLACE_ERROR5 "Acces respins - %s\n"
     STRING_REPLACE_ERROR6 "Fișierele nu au fost găsite - %s\n"
-    STRING_REPLACE_ERROR7 "Eroare Extinsă 32\n"
+    STRING_REPLACE_ERROR7 "Eroare extinsă 32\n"
     STRING_CMD_INFOLINE "  Interpretorul de comenzi ReactOS                       Tastați HELP = Ajutor  "
     STRING_REACTOS_VERSION "ReactOS [Versiunea %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpretorul de comenzi ReactOS\nVersiunea %s %s"
@@ -579,7 +579,7 @@ titlu         Noul titlu.\n"
     STRING_MKLINK_CREATED_SYMBOLIC "A fost creată o legătură simbolică pentru %s <<===>> %s\n"
     STRING_MKLINK_CREATED_HARD "A fost creată o legătură permanentă pentru %s <<===>> %s\n"
     STRING_MKLINK_CREATED_JUNCTION "A fost creată o joncțiune pentru %s <<===>> %s\n"
-    STRING_MORE "Mai mult? "
+    STRING_MORE "Mai mult?"
     STRING_CANCEL_BATCH_FILE "\r\nAți apăsat Ctrl-Break.  Anulați fișierul de comenzi? (Da/Nu/Toate)"
     STRING_INVALID_OPERAND "Operand eronat.\n"
     STRING_EXPECTED_CLOSE_PAREN "Este necesar «)».\n"
