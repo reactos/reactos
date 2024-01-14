@@ -30,12 +30,12 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Alegeți o imagine pentru a o folosi ca decor de birou.", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Selectați o imagine pentru a o folosi ca fundal de desktop.", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "Spe&cificare…", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "C&uloare…", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Amplasament", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "Plasare", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Personalizează &biroul...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Personalizează &desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -166,7 +166,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pictograme de birou", IDC_STATIC, 6, 4, 212, 40
+    GROUPBOX "Pictograme de desktop", IDC_STATIC, 6, 4, 212, 40
     CONTROL "&Documente", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
     CONTROL "Locurile din &rețeaua mea", IDC_ICONS_MYNET, "button",
@@ -242,7 +242,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Elemente de birou"
+    IDS_DESKTOP_ITEMS "Elemente de desktop"
 END
 
 STRINGTABLE
@@ -255,7 +255,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Afișaj"
-    IDS_CPLDESCRIPTION "Personalizează afișajului biroului și protectorului de ecran."
+    IDS_CPLDESCRIPTION "Personalizează afișajului desktopului și al protectorului de ecran."
     IDS_NONE "(nespecificată)"
     IDS_CENTER "Centrat"
     IDS_STRETCH "Extins"
