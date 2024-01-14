@@ -2,7 +2,8 @@
  * PROJECT:     Check Disk utility
  * LICENSE:     See COPYING in the top level directory
  * PURPOSE:     Romanian resource file
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
+ * COPYRIGHT:   Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -10,8 +11,8 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Uz: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
-[drive:]    Specifică unitatea de stocare pentru control.\n\
+Uz: %s [disc:] [-F] [-V] [-R] [-C]\n\n\
+[disc:]     Specifică unitatea de stocare pentru control.\n\
 -F          Rezolvă erorile discului.\n\
 -V          Vizualizează calea tuturor fișierelor de pe disc.\n\
 -R          Găsește sectoarele defecte și recuperează informațiile care pot fi citite.\n\
