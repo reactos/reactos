@@ -1,8 +1,8 @@
 /*
- * PROJECT:     Check Disk utility
- * LICENSE:     See COPYING in the top level directory
+ * PROJECT:     ReactOS Disk Checking Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
- * COPYRIGHT:   Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ * TRANSLATORS: Copyright 2018 George Bișoc <george.bisoc@reactos.org>
  *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
