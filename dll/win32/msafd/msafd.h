@@ -133,12 +133,38 @@ typedef struct _ASYNC_DATA {
 	AFD_POLL_INFO AsyncSelectInfo;
 } ASYNC_DATA, *PASYNC_DATA;
 
-typedef struct _AFDAPCCONTEXT
+typedef struct _AFDINFOAPCCONTEXT
+{
+    LPWSAOVERLAPPED lpOverlapped;
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
+} AFDINFOAPCCONTEXT, *PAFDINFOAPCCONTEXT;
+
+typedef struct _AFDSENDAPCCONTEXT
 {
     LPWSAOVERLAPPED lpOverlapped;
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
     PSOCKET_INFORMATION lpSocket;
-} AFDAPCCONTEXT, *PAFDAPCCONTEXT;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LPVOID lpSendInfo;
+    PTRANSPORT_ADDRESS lpRemoteAddress;
+} AFDSENDAPCCONTEXT, *PAFDSENDAPCCONTEXT;
+
+typedef struct _AFDRECVAPCCONTEXT
+{
+    LPWSAOVERLAPPED lpOverlapped;
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
+    PSOCKET_INFORMATION lpSocket;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LPVOID lpRecvInfo;
+} AFDRECVAPCCONTEXT, *PAFDRECVAPCCONTEXT;
+
+typedef struct _AFDCONNECTAPCCONTEXT
+{
+    PAFD_CONNECT_INFO lpConnectInfo;
+    PSOCKET_INFORMATION lpSocket;
+    IO_STATUS_BLOCK IoStatusBlock;
+} AFDCONNECTAPCCONTEXT, *PAFDCONNECTAPCCONTEXT;
+
 
 _Must_inspect_result_
 SOCKET
@@ -548,6 +574,9 @@ MsafdReturnWithErrno(NTSTATUS Status,
                      DWORD Received,
                      LPDWORD ReturnedBytes)
 {
+    /* Allow for APC to be processed */
+    SleepEx(0, TRUE);
+
     if (Errno)
     {
         *Errno = TranslateNtStatusError(Status);
@@ -559,7 +588,7 @@ MsafdReturnWithErrno(NTSTATUS Status,
     }
     else
     {
-        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
+        //DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
 
         if (ReturnedBytes)
             *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;
