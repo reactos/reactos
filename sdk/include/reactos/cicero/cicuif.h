@@ -3765,7 +3765,6 @@ inline void CUIFButton::DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed)
     ::DeleteDC(hMemDC);
 }
 
-/// @unimplemented
 inline void
 CUIFButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
 {
