@@ -820,10 +820,11 @@ PeLdrFreeDataTableEntry(
  * Addressing mode: physical.
  **/
 BOOLEAN
-PeLdrLoadImage(
+PeLdrLoadImageEx(
     _In_ PCSTR FilePath,
     _In_ TYPE_OF_MEMORY MemoryType,
-    _Out_ PVOID* ImageBasePA)
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping)
 {
     ULONG FileId;
     PVOID PhysicalBase;
@@ -895,7 +896,7 @@ PeLdrLoadImage(
     }
 
     /* This is the real image base, in form of a virtual address */
-    VirtualBase = PaToVa(PhysicalBase);
+    VirtualBase = KernelMapping ? PaToVa(PhysicalBase) : PhysicalBase;
 
     TRACE("Base PA: 0x%p, VA: 0x%p\n", PhysicalBase, VirtualBase);
 
@@ -1008,4 +1009,13 @@ Failure:
     /* Cleanup and bail out */
     MmFreeMemory(PhysicalBase);
     return FALSE;
+}
+
+BOOLEAN
+PeLdrLoadImage(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA)
+{
+    return PeLdrLoadImageEx(FilePath, MemoryType, ImageBasePA, TRUE);
 }
