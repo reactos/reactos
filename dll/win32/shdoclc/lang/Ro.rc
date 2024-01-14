@@ -40,7 +40,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "În&ainte",                           IDM_GOFORWARD
         MENUITEM SEPARATOR
         MENUITEM "Salvează imagi&nea de fundal ca…",   IDM_SAVEBACKGROUND
-        MENUITEM "Setează ca f&undal",                 IDM_SETWALLPAPER
+        MENUITEM "Stabilește ca f&undal",              IDM_SETWALLPAPER
         MENUITEM "&Copiază fundalul",                  IDM_COPYBACKGROUND
         MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -71,7 +71,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Transmitere imagine prin &email…",   IDM_MP_EMAILPICTURE
         MENUITEM "Imp&rimă imaginea…",                 IDM_MP_PRINTPICTURE
         MENUITEM "Desc&hide imagini",                  IDM_MP_MYPICS
-        MENUITEM "Setează ca &fundal",                 IDM_SETWALLPAPER
+        MENUITEM "Stabilește ca &fundal",              IDM_SETWALLPAPER
         MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                         IDM_CUT
@@ -151,7 +151,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Afișea&ză imaginea",               IDM_SHOWPICTURE
         MENUITEM "Salvează imaginea ca…",            IDM_SAVEPICTURE
-        MENUITEM "Setează ca &fundal",               IDM_SETWALLPAPER
+        MENUITEM "Stabilește ca &fundal",            IDM_SETWALLPAPER
         MENUITEM "Definire ca element pe des&ktop…", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                       IDM_CUT
