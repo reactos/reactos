@@ -451,15 +451,15 @@ public:
     STDMETHOD_(void, FrameRect)(HDC hDC, LPCRECT prc, INT iColor);
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) = 0;
     STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) = 0;
-    STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) = 0;
-    STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) = 0;
+    STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
+    STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) = 0;
     STDMETHOD_(void, DrawCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawMenuBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawMenuSeparator)(HDC hDC, LPCRECT prc) = 0;
-    STDMETHOD_(void, DrawFrameCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) = 0;
-    STDMETHOD_(void, DrawFrameCtrlEdge)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) = 0;
+    STDMETHOD_(void, DrawFrameCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
+    STDMETHOD_(void, DrawFrameCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) = 0;
@@ -485,15 +485,15 @@ public:
     STDMETHOD_(INT, CyWndBorder)() override;
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) override;
     STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) override;
-    STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) override;
-    STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) override;
+    STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
+    STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) override;
     STDMETHOD_(void, DrawCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawMenuBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawMenuSeparator)(HDC hDC, LPCRECT prc) override;
-    STDMETHOD_(void, DrawFrameCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) override;
-    STDMETHOD_(void, DrawFrameCtrlEdge)(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags) override;
+    STDMETHOD_(void, DrawFrameCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
+    STDMETHOD_(void, DrawFrameCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawFrameCtrlIcon)(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawFrameCtrlBitmap)(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawWndFrame)(HDC hDC, LPCRECT prc, DWORD type, DWORD unused1, DWORD unused2) override;
@@ -1606,7 +1606,7 @@ inline STDMETHODIMP_(INT) CUIFSchemeDef::GetCtrlFaceOffset(DWORD, DWORD dwDrawFl
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawCtrlBkgd(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags)
+CUIFSchemeDef::DrawCtrlBkgd(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags)
 {
     ::FillRect(hDC, prc, GetBrush(9));
 
@@ -1628,12 +1628,52 @@ CUIFSchemeDef::DrawCtrlBkgd(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlag
     ::DeleteObject(hbrDither);
 }
 
-/// @unimplemented
-inline STDMETHODIMP_(void) CUIFSchemeDef::DrawCtrlEdge(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags)
+inline STDMETHODIMP_(void)
+CUIFSchemeDef::DrawCtrlEdge(
+    HDC hDC,
+    LPCRECT prc,
+    DWORD dwUnknownFlags,
+    DWORD dwDrawFlags)
 {
-    //FIXME
+    UINT uEdge = BDR_RAISEDINNER;
+
+    if (dwDrawFlags & 0x10)
+    {
+        if (!(dwUnknownFlags & 0x40))
+        {
+            if (dwUnknownFlags & 0x80)
+                uEdge = BDR_SUNKENOUTER;
+            else
+                return;
+        }
+    }
+    else if (dwDrawFlags & 0x2)
+    {
+        if (!(dwUnknownFlags & 0x10))
+        {
+            if (dwUnknownFlags & 0x20)
+                uEdge = BDR_SUNKENOUTER;
+            else
+                return;
+        }
+    }
+    else if (dwDrawFlags & 0x1)
+    {
+        if (!(dwUnknownFlags & 0x4))
+        {
+            if (dwUnknownFlags & 0x8)
+                uEdge = BDR_SUNKENOUTER;
+            else
+                return;
+        }
+    }
+    else if (!(dwUnknownFlags & 0x1))
+    {
+        return;
+    }
+
     RECT rc = *prc;
-    ::DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT);
+    ::DrawEdge(hDC, &rc, uEdge, BF_RECT);
 }
 
 inline STDMETHODIMP_(void)
@@ -1772,15 +1812,15 @@ CUIFSchemeDef::DrawMenuSeparator(HDC hDC, LPCRECT prc)
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawFrameCtrlBkgd(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags)
+CUIFSchemeDef::DrawFrameCtrlBkgd(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags)
 {
-    DrawCtrlBkgd(hDC, prc, unused, dwDrawFlags);
+    DrawCtrlBkgd(hDC, prc, dwUnknownFlags, dwDrawFlags);
 }
 
 inline STDMETHODIMP_(void)
-CUIFSchemeDef::DrawFrameCtrlEdge(HDC hDC, LPCRECT prc, DWORD unused, DWORD dwDrawFlags)
+CUIFSchemeDef::DrawFrameCtrlEdge(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags)
 {
-    DrawCtrlEdge(hDC, prc, unused, dwDrawFlags);
+    DrawCtrlEdge(hDC, prc, dwUnknownFlags, dwDrawFlags);
 }
 
 inline STDMETHODIMP_(void)
@@ -3780,7 +3820,6 @@ inline void CUIFButton::DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed)
     ::DeleteDC(hMemDC);
 }
 
-/// @unimplemented
 inline void
 CUIFButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
 {
@@ -4182,7 +4221,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     RECT rc = { xOffset, yOffset, xOffset + cxButton, cyButton + yOffset };
     SIZE offsetSize = { 0, 0 };
     DWORD dwDrawFlags = MakeDrawFlag();
-    m_pScheme->GetCtrlFaceOffset(((m_style & 0x200) ? 165 : 84),
+    m_pScheme->GetCtrlFaceOffset(((m_style & 0x200) ? 0xA5 : 0x54),
                                  dwDrawFlags,
                                  &offsetSize);
     ::OffsetRect(&rc, offsetSize.cx, offsetSize.cy);
@@ -4216,7 +4255,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
 
     m_pScheme->DrawCtrlBkgd(hdcMem,
                             &rcBack,
-                            ((m_style & 0x200) ? 165 : 84),
+                            ((m_style & 0x200) ? 0xA5 : 0x54),
                             dwDrawFlags);
     if (m_pszButtonText)
     {
@@ -4234,7 +4273,7 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
 
     m_pScheme->DrawCtrlEdge(hdcMem,
                             &rcBack,
-                            ((m_style & 0x200) ? 165 : 84),
+                            ((m_style & 0x200) ? 0xA5 : 0x54),
                             dwDrawFlags);
 
     ::BitBlt(hDC, m_rc.left, m_rc.top, width, height, hdcMem, 0, 0, SRCCOPY);
