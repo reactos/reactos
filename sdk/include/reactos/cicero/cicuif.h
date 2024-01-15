@@ -1691,11 +1691,66 @@ CUIFSchemeDef::DrawCtrlIcon(HDC hDC, LPCRECT prc, HICON hIcon, DWORD dwDrawFlags
     }
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFSchemeDef::DrawCtrlBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, DWORD dwDrawFlags)
 {
-    //FIXME
+    if (m_bMirroring)
+    {
+        hbm1 = cicMirrorBitmap(hbm1, GetBrush(9));
+        hbm2 = cicMirrorBitmap(hbm2, (HBRUSH)GetStockObject(BLACK_BRUSH));
+    }
+
+    HBRUSH hBrush = (HBRUSH)UlongToHandle(COLOR_BTNFACE + 1);
+    BOOL bBrushCreated = FALSE;
+    if (hbm2)
+    {
+        HBITMAP hBitmap = NULL;
+        if (dwDrawFlags & UIF_DRAW_DISABLED)
+        {
+            hBitmap = cicCreateDisabledBitmap(prc, hbm2, GetBrush(9), GetBrush(11), TRUE);
+        }
+        else
+        {
+            if ((dwDrawFlags & UIF_DRAW_PRESSED) && !(dwDrawFlags & 0x2))
+            {
+                hBrush = cicCreateDitherBrush();
+                bBrushCreated = TRUE;
+            }
+
+            COLORREF rgbFace = ::GetSysColor(COLOR_BTNFACE);
+            COLORREF rgbHighlight = ::GetSysColor(COLOR_BTNHIGHLIGHT);
+            hBitmap = cicCreateMaskBmp(prc, hbm1, hbm2, hBrush, rgbFace, rgbHighlight);
+        }
+
+        if (hBitmap)
+        {
+            ::DrawState(hDC, NULL, NULL, (LPARAM)hBitmap, 0,
+                        prc->left, prc->top,
+                        prc->right - prc->left, prc->bottom - prc->top,
+                        DST_BITMAP);
+            ::DeleteObject(hBitmap);
+        }
+    }
+    else
+    {
+        UINT uFlags = DST_BITMAP;
+        if (dwDrawFlags & 0x20)
+            uFlags |= (DSS_MONO | DSS_DISABLED);
+
+        ::DrawState(hDC, NULL, NULL, (LPARAM)hbm1, 0,
+                    prc->left, prc->top,
+                    prc->right - prc->left, prc->bottom - prc->top,
+                    uFlags);
+    }
+
+    if (bBrushCreated)
+        ::DeleteObject(hBrush);
+
+    if (m_bMirroring)
+    {
+        ::DeleteObject(hbm1);
+        ::DeleteObject(hbm2);
+    }
 }
 
 inline STDMETHODIMP_(void)
