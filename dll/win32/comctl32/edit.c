@@ -75,6 +75,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(edit);
 					   wrapped line, instead of in front of the next character */
 #define EF_USE_SOFTBRK		0x0100	/* Enable soft breaks in text. */
 #define EF_DIALOGMODE           0x0200  /* Indicates that we are inside a dialog window */
+#ifdef __REACTOS__
+#define EF_IGNORENEXTWMMOUSEMOVE 0x400 /* Ignore next WM_MOUSEMOVE message. Hack for CORE-8394, CORE-19422 */
+#endif
 
 #define ID_CB_LISTBOX 1000
 
@@ -3497,6 +3500,10 @@ static LRESULT EDIT_WM_LButtonDblClk(EDITSTATE *es)
 	EDIT_EM_ScrollCaret(es);
 	es->region_posx = es->region_posy = 0;
 	SetTimer(es->hwndSelf, 0, 100, NULL);
+#ifdef __REACTOS__
+    /* set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+    es->flags |= EF_IGNORENEXTWMMOUSEMOVE;
+#endif
 	return 0;
 }
 
@@ -3519,6 +3526,10 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
 	EDIT_EM_ScrollCaret(es);
 	es->region_posx = es->region_posy = 0;
 	SetTimer(es->hwndSelf, 0, 100, NULL);
+#ifdef __REACTOS__
+    /* set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+    es->flags |= EF_IGNORENEXTWMMOUSEMOVE;
+#endif
 
 	if (!(es->flags & EF_FOCUSED))
             SetFocus(es->hwndSelf);
@@ -3572,6 +3583,14 @@ static LRESULT EDIT_WM_MouseMove(EDITSTATE *es, INT x, INT y)
         if (!es->bCaptureState || GetCapture() != es->hwndSelf)
 		return 0;
 
+#ifdef __REACTOS__
+        if (es->flags & EF_IGNORENEXTWMMOUSEMOVE)
+        {
+            /* clear flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+             es->flags &= ~EF_IGNORENEXTWMMOUSEMOVE;
+            return 0;
+        }
+#endif
 	/*
 	 *	FIXME: gotta do some scrolling if outside client
 	 *		area.  Maybe reset the timer ?
