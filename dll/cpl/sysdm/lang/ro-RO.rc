@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -161,7 +161,7 @@ CAPTION "Profiluri de utilizator"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Profilurile de utilizator conțin setări de birou și alte informații legate de logarea dvs. Un profil diferit poate fi creat la orice calculator folosiți sau puteți selecta un profil migrator care e același la fiecare calculator pe care îl folosiți.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Profilurile de utilizator conțin setări de desktop și alte informații legate de logarea dvs. Un profil diferit poate fi creat la orice calculator folosiți sau puteți selecta un profil migrator care e același la fiecare calculator pe care îl folosiți.", IDC_STATIC, 40, 11, 211, 35
     LTEXT "Profiluri stocate în acest calculator:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
