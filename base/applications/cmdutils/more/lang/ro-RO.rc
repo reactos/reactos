@@ -20,7 +20,7 @@ command | MORE [/E [opțiuni]\n\
     comandă                               O comandă a cărei ieșire\n\
                                           urmează să fie afișată.\n\
 \n\
-Atunci când opțiunea Caracteristici extinse e activată,\n\
+Atunci când Caracteristicile extinse sunt activate,\n\
 următoarea formă este acceptată:\n\
 MORE [/E] [opțiuni] [fișiere]\n\
 \n\
