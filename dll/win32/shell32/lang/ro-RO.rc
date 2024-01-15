@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -719,7 +719,7 @@ BEGIN
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Aplică acest șa&blon pentru toate subdosarele sale", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
     GROUPBOX "Dosar de imagini", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
-    LTEXT "Pentru aspect cu miniaturi puteți amplasa o imagine pe acest dosar care să vă amintească de conținutul său.", IDC_STATIC, 15, 87, 115, 33
+    LTEXT "Pentru aspect cu miniaturi puteți pune o imagine în acest dosar care să vă amintească de conținutul său.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "Spe&cificare imagine…", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
     PUSHBUTTON "&Restabilește implicite", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Previzualizare:", IDC_STATIC, 139, 85, 81, 11
@@ -770,7 +770,7 @@ BEGIN
     IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
-    IDS_DESKTOP "Birou"
+    IDS_DESKTOP "Desktop"
     IDS_MYCOMPUTER "Calculatorul meu"
     IDS_RECYCLEBIN_FOLDER_NAME "Coșul de gunoi"
     IDS_CONTROLPANEL "Panoul de control"
@@ -876,7 +876,7 @@ BEGIN
     IDS_STARTMENU "Meniul Pornire"
     IDS_MYMUSIC "Audio"
     IDS_MYVIDEO "Video"
-    IDS_DESKTOPDIRECTORY "Birou"
+    IDS_DESKTOPDIRECTORY "Desktop"
     IDS_NETHOOD "Rețele"
     IDS_TEMPLATES "Șabloane"
     IDS_APPDATA "Date de aplicație"
@@ -1019,7 +1019,7 @@ BEGIN
     IDS_ADVANCED_PERSIST_BROWSERS "Redeschide la autentificare dosarele precedente"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afișează Panoul de control în Calculatorul meu"
     IDS_ADVANCED_SHOW_COMP_COLOR "Afișează în culori fișierele NTFS criptate sau comprimate"
-    IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru dosare și elemente de birou"
+    IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru dosare și elemente de desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vansate"
     IDS_NEWEXT_ADVANCED_RIGHT "A&vansate >>"
