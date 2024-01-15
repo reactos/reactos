@@ -1,10 +1,16 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS WineMine
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Genist"
+    IDS_APPNAME "WineMine"
     IDS_NOBODY "Nimeni"
     IDS_ABOUT "Drept de autor 2000 Joshua Thielen"
 END
