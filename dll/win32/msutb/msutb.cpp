@@ -30,9 +30,7 @@ END_OBJECT_MAP()
 
 CMsUtbModule gModule;
 
-/***********************************************************************
- * CTrayIconWnd
- */
+/***********************************************************************/
 
 class CTrayIconWnd
 {
@@ -41,9 +39,7 @@ public:
     HWND GetNotifyWnd() { return NULL; };
 };
 
-/***********************************************************************
- * CTrayIconItem
- */
+/***********************************************************************/
 
 class CTrayIconItem
 {
@@ -69,6 +65,10 @@ protected:
     STDMETHOD_(LRESULT, OnMsg)(WPARAM wParam, LPARAM lParam) { return 0; };
     STDMETHOD_(LRESULT, OnDelayMsg)(LPARAM lParam) { return 0; };
 };
+
+/***********************************************************************
+ * CTrayIconItem
+ */
 
 CTrayIconItem::CTrayIconItem(CTrayIconWnd *pTrayIconWnd)
 {
