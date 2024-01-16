@@ -1332,21 +1332,21 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Para cambiar el directorio sugerido, Pulse RETROCESO para eliminar",
+        "Para cambiar el directorio sugerido, pulse las flechas o presione",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "car\240cteres y escriba el directorio donde quiere instalar",
+        "RETROCESO para eliminar caracteres y escriba el directorio",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "ReactOS.",
+        "donde quiere instalar ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
