@@ -1,7 +1,9 @@
 /*
- * FILE:        base/applications/mplay32/lang/ro-RO.rc
- *              ReactOS Project (https://reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Multimedia Player
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,14 +19,14 @@ BEGIN
     END
     POPUP "&Lectură"
     BEGIN
-        MENUITEM "Lecturează/&Pauză\tCtrl+P", IDC_PLAY
+        MENUITEM "Redare/&Pauză\tCtrl+P", IDC_PLAY
         MENUITEM "&Oprește\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "&Repetă\tCtrl+T", IDM_REPEAT
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "&Mod fereastră-solitară", IDM_SWITCHVIEW
+        MENUITEM "&Mod o singură fereastră", IDM_SWITCHVIEW
     END
     POPUP "&Dispozitiv"
     BEGIN
@@ -53,21 +55,21 @@ BEGIN
     IDS_MODE_UNKNOWN "Nespecificat"
     IDS_MODE_OPEN "Deschis"
     IDS_MODE_STOP "Oprit"
-    IDS_MODE_PLAY "În lectură"
+    IDS_MODE_PLAY "În redare"
     IDS_MODE_PAUSE "Întrerupt"
     IDS_MODE_RECORD "Înregistrare"
     IDS_MODE_SEEK "Derulare"
     IDS_MODE_NOT_READY "Nepregătit"
     IDS_ALL_TYPES_FILTER "Toate admisibile"
     IDS_TOOLTIP_PLAY "Redare conținut multimedia"
-    IDS_TOOLTIP_STOP "Oprire lectură"
+    IDS_TOOLTIP_STOP "Oprire redare"
     IDS_TOOLTIP_EJECT "Scoatere"
     IDS_TOOLTIP_BACKWARD "Salt la precedent"
     IDS_TOOLTIP_SEEKBACK "Derulare înapoi"
     IDS_TOOLTIP_SEEKFORW "Derulare înainte"
     IDS_TOOLTIP_FORWARD "Salt la următor"
     IDS_TOOLTIP_PAUSE "Întrerupere"
-    IDS_APPTITLE "Lector multimedia"
-    IDS_PLAY "Lecturare"
+    IDS_APPTITLE "Player multimedia"
+    IDS_PLAY "Redare"
     IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare."
 END
