@@ -1039,7 +1039,7 @@ BEGIN
     IDS_NO_ICONS "El archivo '%s' no contiene íconos.\n\nEscoja un ícono de la lista o seleccione otro archivo."
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
     IDS_LINK_INVALID "El elemento '%s' al que se refiere este acceso directo se ha movido o cambiado, por lo que no funcionará."
-    IDS_COPYTOMENU "Copar a la &carpeta..."
+    IDS_COPYTOMENU "Copiar a la &carpeta..."
     IDS_COPYTOTITLE "Selecciona el lugar al que quieres copiar '%s'. Luego pulsa en el botón Copiar."
     IDS_COPYITEMS "Copiar archivos"
     IDS_COPYBUTTON "Copiar"

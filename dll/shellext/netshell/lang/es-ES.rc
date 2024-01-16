@@ -123,7 +123,7 @@ BEGIN
     AUTORADIOBUTTON "Sí, este equipo será parte de un dominio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nombre del dominio o grupo de trabajo:", IDC_STATIC, 33, 72, 152, 20
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTE: Si este equipo no va a ser parte de una red, usted no tiene suficientes privilegios para unirse a un dominio, o si simplemente no sabe qué elejir, entonces seleccione ""Grupo de trabajo"" por ahora. Éstas opciones pueden ser cambiadas después.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "NOTE: Si este equipo no va a ser parte de una red, usted no tiene suficientes privilegios para unirse a un dominio, o si simplemente no sabe qué elegir, entonces seleccione ""Grupo de trabajo"" por ahora. Estas opciones pueden ser cambiadas después.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE

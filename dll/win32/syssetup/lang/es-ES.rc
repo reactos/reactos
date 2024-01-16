@@ -14,8 +14,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al asistente de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este asistente instalará ReactOS en su equipo.\n\nEl asistente necesita recopilar cierta información sobre usted y su equipo para poder configurarse de forma correcta.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bienvenido al asistente de la segunda fase de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Este asistente configurará ReactOS en su equipo.\n\nEl asistente necesita que aporte información sobre usted y su equipo para poder configurarlo de forma correcta.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -51,7 +51,7 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Escriba su nombre completo y el nombre de su compañía u organización.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Nombre:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Organización:", IDC_STATIC, 54, 57, 44, 8
@@ -121,9 +121,9 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registrando componentes", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Instalando elementos del menu de inicio", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Guardando la configuración", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Eliminando archivos temporales", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -187,12 +187,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
     IDS_LOCALETITLE "Opciones regionales"
     IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
-    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
-    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
+    IDS_LOCALETEXT "Los formatos y estándares están configurados como %s, y tu región está localizada en %s."
+    IDS_LAYOUTTEXT "Tu distribución de entrada de teclado es: La distribución %s "
     IDS_DATETIMETITLE "Fecha y hora"
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "Finalizando la instalación"
+    IDS_PROCESSSUBTITLE "Por favor, espere, la instalación está ultimando detalles."
     IDS_THEMESELECTIONTITLE "Apariencia"
     IDS_THEMESELECTIONSUBTITLE "Seleccione el estilo de su preferencia."
 END
@@ -258,7 +258,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Opciones de producto"
-    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto afectará al comportamiento del sistema."
+    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto. Afectará al comportamiento del sistema."
     IDS_PRODUCTSERVERNAME "ReactOS como Servidor"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS como Sobremesa"
     IDS_PRODUCTSERVERINFO "El sistema será reconocido como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
