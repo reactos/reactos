@@ -72,7 +72,7 @@ BEGIN
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Vizualizează Ajutor…", CMD_HELP_CONTENTS
+        MENUITEM "&Vizualizare Ajutor…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "&Despre Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
