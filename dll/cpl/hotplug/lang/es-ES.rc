@@ -47,7 +47,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Retirar hardware con seguridad"
-    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
-    IDS_UNKNOWN_DEVICE "Unknown Device"
-    IDS_EJECT_ERROR_FORMAT "Failed to remove device (0x%x)\0"
+    IDS_CPLDESCRIPTION "Retira tus dispositivos con seguridad del ordenador."
+    IDS_UNKNOWN_DEVICE "Dispositivo Desconocido"
+    IDS_EJECT_ERROR_FORMAT "Se falló al extraer el dispositivo (0x%x)\0"
 END
