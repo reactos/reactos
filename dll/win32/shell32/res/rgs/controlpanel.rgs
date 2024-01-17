@@ -51,3 +51,25 @@ HKLM
 		}
 	}
 }
+
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {06622D85-6856-4460-8DE1-A81921B41C4B} = s 'COpenControlPanel'
+		{
+			val AppID = s '{06622D85-6856-4460-8DE1-A81921B41C4B}'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+	NoRemove AppID
+	{
+		ForceRemove {06622D85-6856-4460-8DE1-A81921B41C4B} = s 'COpenControlPanel'
+		{
+			val DllSurrogate = s ''
+		}
+	}
+}
