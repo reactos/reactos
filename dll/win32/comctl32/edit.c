@@ -3501,7 +3501,7 @@ static LRESULT EDIT_WM_LButtonDblClk(EDITSTATE *es)
 	es->region_posx = es->region_posy = 0;
 	SetTimer(es->hwndSelf, 0, 100, NULL);
 #ifdef __REACTOS__
-    /* set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+    /* HACK: set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
     es->flags |= EF_IGNORENEXTWMMOUSEMOVE;
 #endif
 	return 0;
@@ -3527,7 +3527,7 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
 	es->region_posx = es->region_posy = 0;
 	SetTimer(es->hwndSelf, 0, 100, NULL);
 #ifdef __REACTOS__
-    /* set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+    /* HACK: set flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
     es->flags |= EF_IGNORENEXTWMMOUSEMOVE;
 #endif
 
@@ -3586,7 +3586,7 @@ static LRESULT EDIT_WM_MouseMove(EDITSTATE *es, INT x, INT y)
 #ifdef __REACTOS__
         if (es->flags & EF_IGNORENEXTWMMOUSEMOVE)
         {
-            /* clear flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
+            /* HACK: clear flags indicating WM_MOUSEMOVE to be ignored due to CORE-8394 */
              es->flags &= ~EF_IGNORENEXTWMMOUSEMOVE;
             return 0;
         }
