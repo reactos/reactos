@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -112,7 +112,7 @@ BEGIN
     LTEXT "Autentificat ca:", IDC_STATIC, 7, 7, 238, 8
     AUTORADIOBUTTON "&Cont de sistem local", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Acest c&ont:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
-    AUTOCHECKBOX "Per&mite serviciului să interacționeze cu aplicațiile de birou", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Per&mite serviciului să interacționeze cu aplicațiile de desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Spe&cificare…", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "&Parolă:", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
