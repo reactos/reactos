@@ -341,7 +341,7 @@ BEGIN
     GROUPBOX "Desfragmentação", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Esta opção vai desfragmentar os ficheiros no volume.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragmentar agora...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Desfragmentar agora...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Cópia de segurança", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Esta opção vai verificar os ficheiros do volume.", -1, 40, 150, 160, 20
@@ -447,7 +447,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipos de Ficheiro"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 180, 10
+    LTEXT "&Tipos de ficheiro registados:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 259, 99
     PUSHBUTTON "&Novo...", IDC_FILETYPES_NEW, 140, 123, 55, 14, WS_TABSTOP
     PUSHBUTTON "&Eliminar...", IDC_FILETYPES_DELETE, 200, 123, 65, 14, WS_TABSTOP
@@ -488,7 +488,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Pretende terminar a sessão?", -1, 49, 15, 156, 8
-    DEFPUSHBUTTON "&Terminar a sessão", IDOK, 49, 38, 67, 14
+    DEFPUSHBUTTON "&Terminar sessão", IDOK, 49, 38, 67, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 123, 38, 67, 14
 END
 
@@ -499,11 +499,11 @@ BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
     PUSHBUTTON "&Mudar de utilizador", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
-    PUSHBUTTON "&Terminar a sessão", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Terminar sessão", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Cancelar", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Terminar sessão ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 150, 19
     CTEXT "Mudar de utilizador", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
-    CTEXT "Terminar a sessão", IDC_LOG_OFF_STATIC, 116, 70, 55, 11
+    CTEXT "Terminar sessão", IDC_LOG_OFF_STATIC, 116, 70, 55, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -550,7 +550,7 @@ CAPTION "Conteúdo misto"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS pode executar a mesma acção de cada vez que inserir um disco ou um dispositivo com este tipo de ficheiro:", 1001, 30, 7, 193, 20
+    LTEXT "O ReactOS pode executar a mesma acção de cada vez que inserir um disco ou um dispositivo com este tipo de ficheiro:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 41, 190, 8
@@ -566,7 +566,7 @@ CAPTION "Autoplay"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS pode executar sempre a mesma acção de cada vez que inserir um disco ou um dispositivo.", 1001, 32, 7, 190, 22
+    LTEXT "O ReactOS pode executar sempre a mesma acção de cada vez que inserir um disco ou um dispositivo.", 1001, 32, 7, 190, 22
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Executar sempre a acção seleccionada", 1004, 32, 143, 190, 8
@@ -871,7 +871,7 @@ BEGIN
     IDS_NETHOOD "Vizinhança na rede"
     IDS_TEMPLATES "Modelos"
     IDS_APPDATA "Dados de Programas"
-    IDS_PRINTHOOD "PrintHood"
+    IDS_PRINTHOOD "Impressoras"
     IDS_LOCAL_APPDATA "Definições locais\\Dados de Programas"
     IDS_INTERNET_CACHE "Definições locais\\Ficheiros Temporários da Internet"
     IDS_COOKIES "Cookies"
@@ -891,7 +891,7 @@ BEGIN
     IDS_NEWITEMFORMAT "Novo %s"
 
     IDS_DRIVE_FIXED "Disco Local"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Unidade de CD-ROM"
     IDS_DRIVE_NETWORK "Disco de Rede"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
     IDS_DRIVE_REMOVABLE "Disco removível"
@@ -905,7 +905,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< &Retroceder"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "No&vo" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Pasta"
     FCIDM_SHVIEW_NEWLINK "&Atalho"
     IDS_FOLDER_OPTIONS "Opções das Pastas"
@@ -984,7 +984,7 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descrição:"
 
     IDS_MENU_EMPTY "(Vazio)"
-    IDS_OBJECTS "%d Objetos"
+    IDS_OBJECTS "%d Objectos"
     IDS_OBJECTS_SELECTED "%d Objectos seleccionados"
 
     IDS_TITLE_MYCOMP "O Meu Computador"
