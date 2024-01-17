@@ -849,6 +849,33 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+class CUIFWndFrame : public CUIFObject
+{
+protected:
+    DWORD m_dwHitTest;
+    POINT m_ptHit;
+    RECT m_rcWnd;
+    INT m_cxFrame;
+    INT m_cyFrame;
+    INT m_cxMin;
+    INT m_cyMin;
+
+public:
+    CUIFWndFrame(CUIFObject *pParent, LPCRECT prc, DWORD style);
+
+    void GetFrameSize(LPSIZE pSize);
+    DWORD HitTest(LONG x, LONG y);
+
+    STDMETHOD_(void, OnMouseMove)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
+    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
 inline void cicInitUIFLib(void)
 {
     cicInitUIFSys();
@@ -4621,4 +4648,192 @@ CUIFToolbarButton::SetToolTip(LPCWSTR pszToolTip)
         m_pToolbarButtonElement->SetToolTip(pszToolTip);
     if (m_pToolbarMenuButton)
         m_pToolbarMenuButton->SetToolTip(pszToolTip);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFWndFrame::CUIFWndFrame(
+    CUIFObject *pParent,
+    LPCRECT prc,
+    DWORD style) : CUIFObject(pParent, 0, prc, style)
+{
+    m_iPartId = 7;
+    m_iStateId = 0;
+    m_pszClassList = L"WINDOW";
+    m_dwHitTest = 0;
+    m_cxFrame = m_cyFrame = 0;
+
+    if (m_pScheme)
+    {
+        if ((m_style & 0xF) && (m_style & 0xF) <= 2)
+        {
+            m_cxFrame = m_pScheme->CxSizeFrame();
+            m_cyFrame = m_pScheme->CySizeFrame();
+        }
+        else
+        {
+            m_cxFrame = m_pScheme->CxWndBorder();
+            m_cyFrame = m_pScheme->CyWndBorder();
+        }
+    }
+
+    m_cxMin = GetSystemMetrics(SM_CXMIN);
+    m_cyMin = GetSystemMetrics(SM_CYMIN);
+}
+
+inline void CUIFWndFrame::GetFrameSize(LPSIZE pSize)
+{
+    pSize->cx = m_cxFrame;
+    pSize->cy = m_cyFrame;
+}
+
+inline DWORD CUIFWndFrame::HitTest(LONG x, LONG y)
+{
+    DWORD dwFlags = 0;
+    if ( m_rc.left <= x && x < m_rc.left + m_cxFrame)
+        dwFlags |= 0x10;
+    if (m_rc.top <= y && y < m_rc.top + m_cyFrame )
+        dwFlags |= 0x20;
+    if (m_rc.right - m_cxFrame <= x && x < m_rc.right)
+        dwFlags |= 0x40;
+    if (m_rc.bottom - m_cyFrame <= y && y < m_rc.bottom)
+        dwFlags |= 0x80;
+    return dwFlags;
+}
+
+inline STDMETHODIMP_(void)
+CUIFWndFrame::OnMouseMove(LONG x, LONG y)
+{
+    if (!IsCapture())
+        return;
+
+    POINT Point;
+    ::ClientToScreen(*m_pWindow, &Point);
+
+    RECT rc = m_rcWnd;
+
+    if (m_dwHitTest & 0x10)
+        rc.left = Point.x + m_rcWnd.left - m_ptHit.x;
+
+    if (m_dwHitTest & 0x20)
+        rc.top = Point.y + m_rcWnd.top - m_ptHit.y;
+
+    if (m_dwHitTest & 0x40)
+    {
+        rc.right = Point.x + m_rcWnd.right - m_ptHit.x;
+        if (rc.right <= rc.left + m_cxMin)
+            rc.right = rc.left + m_cxMin;
+    }
+
+    if (m_dwHitTest & 0x80)
+    {
+        rc.bottom = Point.y + m_rcWnd.bottom - m_ptHit.y;
+        if (rc.bottom <= rc.top + m_cyMin)
+            rc.bottom = rc.top + m_cyMin;
+    }
+
+    m_pWindow->Move(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+}
+
+inline STDMETHODIMP_(void)
+CUIFWndFrame::OnLButtonDown(LONG x, LONG y)
+{
+    POINT Point = { x, y };
+    DWORD hitTest = m_style & HitTest(x, y);
+    if (!hitTest)
+        return;
+
+    ::ClientToScreen(*m_pWindow, &Point);
+    m_ptHit = Point;
+    m_pWindow = m_pWindow;
+    m_dwHitTest = hitTest;
+    ::GetWindowRect(*m_pWindow, &m_rcWnd);
+    StartCapture();
+}
+
+inline STDMETHODIMP_(void)
+CUIFWndFrame::OnLButtonUp(LONG x, LONG y)
+{
+    if (IsCapture())
+        EndCapture();
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFWndFrame::OnPaintTheme(HDC hDC)
+{
+    if (FAILED(EnsureThemeData(*m_pWindow)))
+        return FALSE;
+
+    RECT rc = m_rc;
+    rc.right = m_cxFrame;
+    if (FAILED(DrawThemeEdge(hDC, 0, &rc, 5, 1, NULL)))
+        return FALSE;
+
+    rc = m_rc;
+    rc.left = rc.right - m_cxFrame;
+    if (FAILED(DrawThemeEdge(hDC, 0, &rc, 10, 4, NULL)))
+        return FALSE;
+
+    rc = m_rc;
+    rc.bottom = m_cyFrame;
+    if (FAILED(DrawThemeEdge(hDC, 0, &rc, 5, 2, NULL)))
+        return FALSE;
+
+    rc = m_rc;
+    rc.top = rc.bottom - m_cyFrame;
+    if (FAILED(DrawThemeEdge(hDC, 0, &rc, 10, 8, NULL)))
+        return FALSE;
+
+    return TRUE;
+}
+
+inline STDMETHODIMP_(void)
+CUIFWndFrame::OnPaintNoTheme(HDC hDC)
+{
+    if (!m_pScheme)
+        return;
+
+    DWORD type = 0;
+    if ((m_style & 0xF) == 1)
+        type = 1;
+    else if ( (m_style & 0xF) == 2 )
+        type = 2;
+
+    m_pScheme->DrawWndFrame(hDC, &m_rc, type, m_cxFrame, m_cyFrame);
+}
+
+inline STDMETHODIMP_(BOOL)
+CUIFWndFrame::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    DWORD dwHitTest = m_dwHitTest;
+    if (!IsCapture())
+        dwHitTest = m_style & HitTest(x, y);
+
+    LPTSTR pszCursor = NULL;
+    switch (dwHitTest)
+    {
+        case 0x30:
+        case 0xC0:
+            pszCursor = IDC_SIZENWSE;
+            break;
+        case 0x90:
+        case 0x60:
+            pszCursor = IDC_SIZENESW;
+            break;
+        case 0x10:
+        case 0x40:
+            pszCursor = IDC_SIZEWE;
+            break;
+        case 0x20:
+        case 0x80:
+            pszCursor = IDC_SIZENS;
+            break;
+        default:
+            return FALSE;
+    }
+
+    HCURSOR hCursor = ::LoadCursor(NULL, pszCursor);
+    ::SetCursor(hCursor);
+    return TRUE;
 }
