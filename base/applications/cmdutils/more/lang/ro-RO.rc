@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -12,10 +12,10 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Afișarea datelor pe ecran, pagină cu pagină.\n\
 \n\
-MORE [/E [opțiuni]] < [dispozitiv:][cale]numele fișierului\n\
+MORE [/E [opțiuni]] < [disc:][cale]numele fișierului\n\
 command | MORE [/E [opțiuni]\n\
 \n\
-    [dispozitiv:][cale]numele fișierului  Un fișier al cărui conținut\n\
+    [disc:][cale]numele fișierului        Un fișier al cărui conținut\n\
                                           urmează să fie afișat.\n\
     comandă                               O comandă a cărei ieșire\n\
                                           urmează să fie afișată.\n\
