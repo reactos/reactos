@@ -1218,7 +1218,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    if (WndOldParent) UserReferenceObject(WndOldParent); /* Caller must deref */
 
-   /* Even if WndNewParent == WndOldParent then contnue because the
+   /* Even if WndNewParent == WndOldParent contnue because the
     * child window (Wnd) should be moved to the top of the z-order */
 
    /* Unlink the window from the siblings list */
