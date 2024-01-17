@@ -184,6 +184,11 @@ static void vio_modern_reset(VirtIODevice *vdev)
      * including MSI-X interrupts, if any.
      */
     while (ioread8(vdev, &vdev->common->device_status)) {
+        u16 val;
+        if (pci_read_config_word(vdev, 0, &val) || val == 0xffff) {
+            DPrintf(0, "PCI config space is not readable, probably the device is removed\n", 0);
+            break;
+        }
         vdev_sleep(vdev, 1);
     }
 }
