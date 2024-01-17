@@ -4,14 +4,14 @@
  * PURPOSE:     ReactOS System Control Panel
  * COPYRIGHT:   Copyright 2004 Gero Kuehn (reactos.filter@gkware.com)
  *              Copyright 2008 Colin Finck (colin@reactos.org)
- *              Copyright 2014 Hermès Bélusca-Maïto (hermes.belusca-maito@reactos.org)
+ *              Copyright 2014 HermÃ¨s BÃ©lusca-MaÃ¯to (hermes.belusca-maito@reactos.org)
  */
-
-#define COBJMACROS
 
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
+#define COBJMACROS
+
 
 #include <windef.h>
 #include <winbase.h>

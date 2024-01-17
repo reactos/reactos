@@ -2391,8 +2391,6 @@ interface IOpenControlPanel : IUnknown
                     [out] CPVIEW *pView);
 }
 
-
-
 #endif // __REACTOS__
 
 /*****************************************************************************
