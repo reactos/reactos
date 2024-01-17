@@ -37,9 +37,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dispozitive"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Gestionar de dispozitive", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX "Manager de dispozitive", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "Gestionarul de dispozitive enumeră toate dispozitivele instalate în calculator. Utilizați acest instrument pentru configurarea oricărui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "Managerul de dispozitive enumeră toate dispozitivele instalate în calculator. Utilizați acest instrument pentru configurarea oricărui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Manager de activități", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Expert de adăugare a dispozitivelor", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
