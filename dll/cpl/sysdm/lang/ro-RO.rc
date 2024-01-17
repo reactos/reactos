@@ -40,7 +40,7 @@ BEGIN
     GROUPBOX "Gestionar de dispozitive", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "Gestionarul de dispozitive enumeră toate dispozitivele instalate în calculator. Utilizați acest instrument pentru configurarea oricărui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON "Deschide &Gestionar", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    PUSHBUTTON "&Manager de activități", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Expert de adăugare a dispozitivelor", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Acest instrument vă permite instalarea și depanarea dispozitivelor ale calculatorului.", IDC_STATIC, 42, 90, 204, 24
@@ -365,9 +365,9 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Specificare valori de sistem"
     IDS_WARNINITIALSIZE "Introduceți o valoare numerică pentru dimensiunea inițială a fișierului de paginare."
     IDS_WARNMAXIMUMSIZE "Introduceți o valoare numerică pentru dimensiunea maximă a fișierului de paginare."
-    IDS_WARNINITIALRANGE "The initial paging file size must be between 2 MB and %lu MB on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum paging file size must be larger than or equal to its initial size, and less than %lu MB on the selected drive."
-    IDS_PAGEFILE_MB "%lu MB"
+    IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginație trebuie să fie între 2 MO și %lu MO pe discul selectat."
+    IDS_WARNMAXIMUMRANGE "Dimensiunea maximă a fișierului de paginație trebuie să fi mai mare sau egală cu dimensiunea sa inițială și mai mică decât %lu MO pe discul selectat."
+    IDS_PAGEFILE_MB "%lu MO"
     IDS_PAGEFILE_NONE "Nespecificat"
     IDS_PAGEFILE_SYSTEM "Gestionat de sistem"
     IDS_INFOREBOOT "Pentru aplicarea modificărilor este necesară repornirea calculatorului."
