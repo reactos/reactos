@@ -1360,7 +1360,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 spațiu liber pe partiția extinsă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția e creată.
-                Dacă nu este dat niciun decalaj, partiția e plasată pe prima
+                Dacă nu este dat niciun decalaj, partiția e montată pe prima
                 expansiune a discului ce e suficient de mare ca să o țină.
 
     ALIGN=<N>   Folosită de obicei cu Numărul unității logice (LUN) RAID
@@ -2053,7 +2053,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 în regiunea curentă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
-                Dacă nu e dat niciun decalaj, partiția este plasată pe prima
+                Dacă nu e dat niciun decalaj, partiția este montată pe prima
                 expansiune de disc ce e suficient de mare ca să o țină.
 
     ID={<BYTE> | <GUID>}
