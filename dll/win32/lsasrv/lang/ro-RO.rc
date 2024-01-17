@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -46,8 +46,8 @@ BEGIN
     IDS_ALIAS_RID_BACKUP_OPS "Operatori de rezervă"
     IDS_ALIAS_RID_REPLICATOR "Replicatori"
     IDS_ALIAS_RID_RAS_SERVERS "Servere RAS și IAS"
-    IDS_ALIAS_RID_PREW2KCOMPACCESS "Acces compatibil ante-Windows 2000"
-    IDS_ALIAS_RID_REMOTE_DESKTOP_USERS "Utilizatori de birou la distanță"
+    IDS_ALIAS_RID_PREW2KCOMPACCESS "Acces compatibil pre-Windows 2000"
+    IDS_ALIAS_RID_REMOTE_DESKTOP_USERS "Utilizatori de desktop la distanță"
     IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS "Operatori de configurare rețea"
 END
 
