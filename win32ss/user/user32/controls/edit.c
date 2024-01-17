@@ -1907,6 +1907,11 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 #ifdef __REACTOS__
     HKL hKL = GetKeyboardLayout(0);
     POINT pt = { (short)LOWORD(res), (short)HIWORD(res) };
+
+    /* Don't set caret if not focused */
+    if ((es->flags & EF_FOCUSED) == 0)
+        return;
+
     SetCaretPos(pt.x, pt.y);
 
     if (!ImmIsIME(hKL))
