@@ -931,6 +931,7 @@ public:
     ~CUIFBalloonWindow() override;
 
     STDMETHOD_(void, Initialize)() override;
+    STDMETHOD_(LPCTSTR, GetClassName)() override;
     STDMETHOD_(LPCTSTR, GetWndTitle)() override;
     STDMETHOD_(void, OnCreate)(HWND hWnd) override;
     STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
@@ -5096,6 +5097,12 @@ CUIFBalloonWindow::Initialize()
         AddButton(IDYES);
         AddButton(IDNO);
     }
+}
+
+inline STDMETHODIMP_(LPCTSTR)
+CUIFBalloonWindow::GetClassName()
+{
+    return TEXT("MSIME_PopupMessage");
 }
 
 inline STDMETHODIMP_(LPCTSTR)
