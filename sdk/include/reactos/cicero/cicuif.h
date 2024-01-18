@@ -5430,7 +5430,7 @@ CUIFBalloonWindow::PaintMessageProc(HDC hDC, LPCRECT prc, LPCWSTR pszText)
     HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
     COLORREF rgbOldColor = ::SetTextColor(hDC, GetBalloonTextColor());
     INT nOldBkMode = ::SetBkMode(hDC, TRANSPARENT);
-    ::DrawText(hDC, pszText, -1, (RECT *)prc, DT_WORDBREAK);
+    ::DrawTextW(hDC, pszText, -1, (RECT *)prc, DT_WORDBREAK);
     ::SelectObject(hDC, hFontOld);
     ::SetTextColor(hDC, rgbOldColor);
     ::SetBkMode(hDC, nOldBkMode);
