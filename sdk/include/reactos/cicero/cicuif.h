@@ -896,6 +896,14 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+// m_style flags for CUIFBalloonWindow
+enum
+{
+    UIF_BALLOON_WINDOW_OK = 0x10000,
+    UIF_BALLOON_WINDOW_YESNO = 0x20000,
+    UIF_BALLOON_WINDOW_TYPE_MASK = 0xF0000,
+};
+
 class CUIFBalloonWindow : public CUIFWindow
 {
 protected:
@@ -5079,11 +5087,11 @@ CUIFBalloonWindow::Initialize()
 {
     CUIFWindow::Initialize();
 
-    if ((m_style & 0xF0000) == 0x10000)
+    if ((m_style & UIF_BALLOON_WINDOW_TYPE_MASK) == UIF_BALLOON_WINDOW_OK)
     {
         AddButton(IDOK);
     }
-    else if ((m_style & 0xF0000) == 0x20000)
+    else if ((m_style & UIF_BALLOON_WINDOW_TYPE_MASK) == UIF_BALLOON_WINDOW_YESNO)
     {
         AddButton(IDYES);
         AddButton(IDNO);
