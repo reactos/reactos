@@ -220,7 +220,7 @@ protected:
     friend class CUIFBalloonWindow;
 
 public:
-    CUIFObject(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFObject(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
     virtual ~CUIFObject();
 
     void StartCapture();
@@ -727,7 +727,7 @@ protected:
     void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
 
 public:
-    CUIFButton(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFButton(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
     ~CUIFButton() override;
 
     void SetIcon(HICON hIcon);
@@ -753,7 +753,7 @@ protected:
     SIZE m_BitmapSize;
 
 public:
-    CUIFButton2(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFButton2(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
     ~CUIFButton2() override;
 
     DWORD MakeDrawFlag();
@@ -768,7 +768,7 @@ class CUIFToolbarMenuButton : public CUIFButton2
 public:
     CUIFToolbarButton *m_pToolbarButton;
 
-    CUIFToolbarMenuButton(CUIFToolbarButton *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFToolbarMenuButton(CUIFToolbarButton *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
     ~CUIFToolbarMenuButton() override;
 
     STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
@@ -782,7 +782,7 @@ class CUIFToolbarButtonElement : public CUIFButton2
 public:
     CUIFToolbarButton *m_pToolbarButton;
 
-    CUIFToolbarButtonElement(CUIFToolbarButton *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFToolbarButtonElement(CUIFToolbarButton *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
 
     STDMETHOD_(LPCWSTR, GetToolTip)() override;
     STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
@@ -801,7 +801,7 @@ public:
 
     CUIFToolbarButton(
         CUIFObject *pParent,
-        DWORD dwUnknown3,
+        DWORD nObjectID,
         LPCRECT prc,
         DWORD style,
         DWORD dwToolbarButtonFlags,
@@ -888,7 +888,7 @@ protected:
     friend class CUIFBalloonWindow;
 
 public:
-    CUIFBalloonButton(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+    CUIFBalloonButton(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
 
     STDMETHOD_(void, OnPaint)(HDC hDC) override;
     void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
