@@ -948,7 +948,7 @@ public:
     void InitWindowRegion();
     void LayoutObject();
     void PaintFrameProc(HDC hDC, LPCRECT prc);
-    void PaintMessageProc(HDC hDC, LPCRECT prc, LPCWSTR pszText);
+    void PaintMessageProc(HDC hDC, LPRECT prc, LPCWSTR pszText);
     void SendNotification(WPARAM wParam);
 };
 
@@ -5425,12 +5425,12 @@ CUIFBalloonWindow::PaintFrameProc(HDC hDC, LPCRECT prc)
 }
 
 inline void
-CUIFBalloonWindow::PaintMessageProc(HDC hDC, LPCRECT prc, LPCWSTR pszText)
+CUIFBalloonWindow::PaintMessageProc(HDC hDC, LPRECT prc, LPCWSTR pszText)
 {
     HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
     COLORREF rgbOldColor = ::SetTextColor(hDC, GetBalloonTextColor());
     INT nOldBkMode = ::SetBkMode(hDC, TRANSPARENT);
-    ::DrawTextW(hDC, pszText, -1, (RECT *)prc, DT_WORDBREAK);
+    ::DrawTextW(hDC, pszText, -1, prc, DT_WORDBREAK);
     ::SelectObject(hDC, hFontOld);
     ::SetTextColor(hDC, rgbOldColor);
     ::SetBkMode(hDC, nOldBkMode);
