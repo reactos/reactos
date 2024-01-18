@@ -4519,7 +4519,7 @@ CUIFToolbarMenuButton::CUIFToolbarMenuButton(
                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                                DEFAULT_PITCH | FF_DONTCARE, TEXT("Marlett"));
     SetFont(hFont);
-    SetText(L":");
+    SetText(L"u"); // downward triangle
 }
 
 inline
@@ -5409,16 +5409,16 @@ CUIFBalloonWindow::LayoutObject()
     rc.right -= rcMargin.right;
     rc.bottom -= rcMargin.bottom;
 
-    LONG xLeft = (rc.left + rc.right - (size.cx * (m_cButtons - 1) / 2) - (size.cx * m_cButtons)) / 2;
+    LONG xLeft = (rc.left + rc.right - size.cx * (((m_cButtons - 1) / 2) - m_cButtons)) / 2;
     for (UINT iButton = 0; iButton < m_cButtons; ++iButton)
     {
         CUIFObject *UIObject = FindUIObject(iButton);
         if (!UIObject)
             continue;
 
-        rcMargin.left = xLeft + iButton * (size.cx + size.cx / 2);
+        rcMargin.left = xLeft + iButton * (size.cx * 3 / 2);
         rcMargin.top = rc.bottom - size.cy;
-        rcMargin.right = size.cx + rcMargin.left;
+        rcMargin.right = rcMargin.left + size.cx;
         rcMargin.bottom = rc.bottom;
 
         UIObject->SetRect(&rcMargin);
