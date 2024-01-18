@@ -5345,7 +5345,7 @@ CUIFBalloonWindow::SetText(LPCWSTR pszText)
         pszText = L"";
 
     size_t cch = wcslen(pszText);
-    m_pszBalloonText = new(cicNoThrow) TCHAR[cch + 1];
+    m_pszBalloonText = new(cicNoThrow) WCHAR[cch + 1];
     if (m_pszBalloonText)
         lstrcpynW(m_pszBalloonText, pszText, cch + 1);
 
