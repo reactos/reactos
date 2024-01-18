@@ -5196,7 +5196,7 @@ CUIFBalloonWindow::AddButton(UINT nCommandId)
     pButton->Initialize();
     pButton->m_nCommandID = nCommandId;
 
-    LPCWSTR pszText;
+    LPCWSTR pszText; // FIXME: Use resource strings
     switch (nCommandId)
     {
         case IDOK:
