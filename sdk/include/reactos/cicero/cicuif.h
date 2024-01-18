@@ -24,10 +24,12 @@ class CUIFTheme;
             class CUIFToolTip;
             class CUIFShadow;
         class CUIFToolbarButton;
-    class CUIFButton;
-        class CUIFButton2;
-            class CUIFToolbarMenuButton;
-            class CUIFToolbarButtonElement;
+        class CUIFButton;
+            class CUIFButton2;
+                class CUIFToolbarMenuButton;
+                class CUIFToolbarButtonElement;
+            class CUIFBalloonButton;
+        class CUIFWndFrame;
     class CUIFGripper;
 class CUIFObjectArray;
 class CUIFColorTable;
@@ -872,6 +874,20 @@ public:
     STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) override;
     STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) override;
     STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFBalloonButton : public CUIFButton
+{
+protected:
+    DWORD m_dwUnknown4[3];
+
+public:
+    CUIFBalloonButton(CUIFObject *pParent, DWORD dwUnknown3, LPCRECT prc, DWORD style);
+
+    STDMETHOD_(void, OnPaint)(HDC hDC);
+    void DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4836,4 +4852,118 @@ CUIFWndFrame::OnSetCursor(UINT uMsg, LONG x, LONG y)
     HCURSOR hCursor = ::LoadCursor(NULL, pszCursor);
     ::SetCursor(hCursor);
     return TRUE;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFBalloonButton::CUIFBalloonButton(
+    CUIFObject *pParent,
+    DWORD dwUnknown3,
+    LPCRECT prc,
+    DWORD style) : CUIFButton(pParent, dwUnknown3, prc, style)
+{
+    m_dwUnknown4[2] = 0;
+}
+
+inline STDMETHODIMP_(void)
+CUIFBalloonButton::OnPaint(HDC hDC)
+{
+    RECT rc = m_rc;
+    ::OffsetRect(&rc, -rc.left, -rc.top);
+
+    HDC hMemDC = ::CreateCompatibleDC(hDC);
+    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC, rc.right, rc.bottom);
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
+
+    BOOL bPressed;
+    COLORREF rgbShadow, rgbBorder;
+    if (m_uButtonStatus == 1)
+    {
+        bPressed = TRUE;
+        rgbShadow = ::GetSysColor(COLOR_BTNSHADOW);
+        rgbBorder = ::GetSysColor(COLOR_BTNHIGHLIGHT);
+    }
+    else
+    {
+        bPressed = FALSE;
+        if (m_uButtonStatus < 4)
+        {
+            rgbShadow = ::GetSysColor(COLOR_BTNHIGHLIGHT);
+            rgbBorder = ::GetSysColor(COLOR_BTNSHADOW);
+        }
+        else
+        {
+            rgbShadow = ::GetSysColor(COLOR_INFOBK);
+            rgbBorder = ::GetSysColor(COLOR_INFOBK);
+        }
+    }
+
+    COLORREF rgbInfoBk = ::GetSysColor(COLOR_INFOBK);
+    HBRUSH hbrBack = ::CreateSolidBrush(rgbInfoBk);
+    ::FillRect(hMemDC, &rc, hbrBack);
+    ::DeleteObject(hbrBack);
+
+    DrawTextProc(hMemDC, &rc, bPressed);
+
+    HBRUSH hNullBrush = (HBRUSH)::GetStockObject(NULL_BRUSH);
+    HGDIOBJ hbrOld = ::SelectObject(hMemDC, hNullBrush);
+
+    HPEN hPen = ::CreatePen(PS_SOLID, 0, rgbShadow);
+    HGDIOBJ hPenOld = ::SelectObject(hMemDC, hPen);
+    ::RoundRect(hMemDC, rc.left, rc.top, rc.right - 1, rc.bottom - 1, 6, 6);
+    ::SelectObject(hMemDC, hPenOld);
+    ::DeleteObject(hPen);
+
+    hPen = ::CreatePen(PS_SOLID, 0, rgbBorder);
+    hPenOld = ::SelectObject(hMemDC, hPen);
+    ::RoundRect(hMemDC, rc.left + 1, rc.top + 1, rc.right, rc.bottom, 6, 6);
+    ::SelectObject(hMemDC, hPenOld);
+    ::DeleteObject(hPen);
+
+    hPen = ::CreatePen(PS_SOLID, 0, ::GetSysColor(COLOR_BTNFACE));
+    hPenOld = ::SelectObject(hMemDC, hPen);
+    ::RoundRect(hMemDC, rc.left + 1, rc.top + 1, rc.right - 1, rc.bottom - 1, 6, 6);
+    ::SelectObject(hMemDC, hPenOld);
+    ::DeleteObject(hPen);
+
+    ::SelectObject(hMemDC, hbrOld);
+    ::BitBlt(hDC, m_rc.left, m_rc.top, m_rc.right - m_rc.left, m_rc.bottom - m_rc.top,
+             hMemDC, rc.left, rc.top, SRCCOPY);
+    ::SelectObject(hMemDC, hbmOld);
+    ::DeleteObject(hbmMem);
+    ::DeleteDC(hMemDC);
+}
+
+inline void
+CUIFBalloonButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
+{
+    if (!m_pszButtonText)
+        return;
+
+    UINT uFlags = DT_SINGLELINE;
+
+    if ((m_style & UIF_BUTTON_H_ALIGN_MASK) == UIF_BUTTON_H_ALIGN_CENTER)
+        uFlags |= DT_CENTER;
+    else if ((m_style & UIF_BUTTON_H_ALIGN_MASK) == UIF_BUTTON_H_ALIGN_RIGHT)
+        uFlags |= DT_RIGHT;
+
+    if ((m_style & UIF_BUTTON_V_ALIGN_MASK) == UIF_BUTTON_V_ALIGN_MIDDLE)
+        uFlags |= DT_VCENTER;
+    else if ((m_style & UIF_BUTTON_V_ALIGN_MASK) == UIF_BUTTON_V_ALIGN_BOTTOM)
+        uFlags |= DT_BOTTOM;
+
+    COLORREF rgbOldColor = ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNTEXT));
+    INT nOldBkMode = ::SetBkMode(hDC, TRANSPARENT);
+
+    RECT rc = *prc;
+    if (bPressed)
+        ::OffsetRect(&rc, 1, 1);
+
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+    ::DrawTextW(hDC, m_pszButtonText, -1, &rc, uFlags);
+    ::SelectObject(hDC, hFontOld);
+
+    ::SetBkMode(hDC, nOldBkMode);
+    ::SetTextColor(hDC, rgbOldColor);
 }
