@@ -197,7 +197,7 @@ WSPRecv(SOCKET Handle,
     IO_STATUS_BLOCK         DummyIOSB;
     PAFD_RECV_INFO          RecvInfo;
     NTSTATUS                Status;
-    PAFDRECVAPCCONTEXT                   APCContext;
+    PAFDRECVAPCCONTEXT      APCContext;
     PIO_APC_ROUTINE         APCFunction;
     HANDLE                  Event = NULL;
     HANDLE                  SockEvent;

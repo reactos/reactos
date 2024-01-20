@@ -1825,8 +1825,12 @@ WSPAccept(
     return AcceptSocket;
 }
 
-VOID NTAPI
-AfdConnectAPC(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
+VOID
+NTAPI
+AfdConnectAPC(
+    PVOID ApcContext,
+    PIO_STATUS_BLOCK IoStatusBlock,
+    ULONG Reserved)
 {
     PAFDCONNECTAPCCONTEXT Context = ApcContext;
 
@@ -1841,8 +1845,7 @@ AfdConnectAPC(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
     }
     if (IoStatusBlock->Status == STATUS_SUCCESS)
     {
-        Context->lpSocket->SharedData->ConnectTime =
-            (GetTickCount() - Context->lpSocket->SharedData->ConnectTime) / 1000;
+        Context->lpSocket->SharedData->ConnectTime = (GetTickCount() - Context->lpSocket->SharedData->ConnectTime) / 1000;
         Context->lpSocket->SharedData->State = SocketConnected;
         Context->lpSocket->TdiConnectionHandle = (HANDLE)IoStatusBlock->Information;
     }
@@ -1855,15 +1858,19 @@ AfdConnectAPC(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
 
     if (IoStatusBlock->Status == STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT))
     {
-        Context->lpSocket->HelperData->WSHNotify(
-            Context->lpSocket->HelperContext, Context->lpSocket->Handle, Context->lpSocket->TdiAddressHandle,
-            Context->lpSocket->TdiConnectionHandle, WSH_NOTIFY_CONNECT);
+        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
+                                                 Context->lpSocket->Handle,
+                                                 Context->lpSocket->TdiAddressHandle,
+                                                 Context->lpSocket->TdiConnectionHandle,
+                                                 WSH_NOTIFY_CONNECT);
     }
     else if (IoStatusBlock->Status != STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
     {
-        Context->lpSocket->HelperData->WSHNotify(
-            Context->lpSocket->HelperContext, Context->lpSocket->Handle, Context->lpSocket->TdiAddressHandle,
-            Context->lpSocket->TdiConnectionHandle, WSH_NOTIFY_CONNECT_ERROR);
+        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
+                                                 Context->lpSocket->Handle,
+                                                 Context->lpSocket->TdiAddressHandle,
+                                                 Context->lpSocket->TdiConnectionHandle,
+                                                 WSH_NOTIFY_CONNECT_ERROR);
     }
     HeapFree(GlobalHeap, 0, ApcContext);
 }
@@ -1879,8 +1886,8 @@ WSPConnect(SOCKET Handle,
            LPQOS lpGQOS,
            LPINT lpErrno)
 {
-    IO_STATUS_BLOCK DummyIOSB;
-    PIO_STATUS_BLOCK IOSB = &DummyIOSB;
+    IO_STATUS_BLOCK         DummyIOSB;
+    PIO_STATUS_BLOCK        IOSB = &DummyIOSB;
     PAFD_CONNECT_INFO       ConnectInfo = NULL;
     PSOCKET_INFORMATION     Socket;
     NTSTATUS                Status;
@@ -1891,8 +1898,8 @@ WSPConnect(SOCKET Handle,
     PSOCKADDR               BindAddress;
     HANDLE                  SockEvent;
     int                     SocketDataLength;
-    PAFDCONNECTAPCCONTEXT APCContext = NULL;
-    PIO_APC_ROUTINE APCFunction = NULL;
+    PAFDCONNECTAPCCONTEXT   APCContext = NULL;
+    PIO_APC_ROUTINE         APCFunction = NULL;
 
     TRACE("WSPConnect (%lx)\n", Handle);
 
@@ -1936,9 +1943,16 @@ WSPConnect(SOCKET Handle,
     if (lpCallerData != NULL)
     {
         ConnectDataLength = lpCallerData->len;
-        Status = NtDeviceIoControlFile(
-            (HANDLE)Handle, SockEvent, NULL, NULL, IOSB, IOCTL_AFD_SET_CONNECT_DATA, lpCallerData->buf,
-            ConnectDataLength, NULL, 0);
+        Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                        SockEvent,
+                                        NULL,
+                                        NULL,
+                                        IOSB,
+                                        IOCTL_AFD_SET_CONNECT_DATA,
+                                        lpCallerData->buf,
+                                        ConnectDataLength,
+                                        NULL,
+                                        0);
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
@@ -1954,8 +1968,9 @@ WSPConnect(SOCKET Handle,
     SocketDataLength = SocketAddressLength - FIELD_OFFSET(struct sockaddr, sa_data);
 
     /* Allocate a connection info buffer with SocketDataLength bytes of payload */
-    ConnectInfo =
-        HeapAlloc(GlobalHeap, 0, FIELD_OFFSET(AFD_CONNECT_INFO, RemoteAddress.Address[0].Address[SocketDataLength]));
+    ConnectInfo = HeapAlloc(GetProcessHeap(), 0,
+                            FIELD_OFFSET(AFD_CONNECT_INFO,
+                                         RemoteAddress.Address[0].Address[SocketDataLength]));
     if (!ConnectInfo)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1976,7 +1991,7 @@ WSPConnect(SOCKET Handle,
     * at the end of this function right after the Async Thread disables it.
     * This should only happen at the *next* WSPConnect
     */
-    if ((Socket->SharedData->AsyncEvents & FD_CONNECT) != 0)
+    if (Socket->SharedData->AsyncEvents & FD_CONNECT)
     {
         Socket->SharedData->AsyncDisabledEvents |= FD_CONNECT | FD_WRITE;
     }
@@ -1985,9 +2000,16 @@ WSPConnect(SOCKET Handle,
     if (lpCalleeData != NULL)
     {
         InConnectDataLength = lpCalleeData->len;
-        Status = NtDeviceIoControlFile(
-            (HANDLE)Handle, SockEvent, NULL, NULL, IOSB, IOCTL_AFD_SET_CONNECT_DATA_SIZE, &InConnectDataLength,
-            sizeof(InConnectDataLength), NULL, 0);
+        Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                        SockEvent,
+                                        NULL,
+                                        NULL,
+                                        IOSB,
+                                        IOCTL_AFD_SET_CONNECT_DATA_SIZE,
+                                        &InConnectDataLength,
+                                        sizeof(InConnectDataLength),
+                                        NULL,
+                                        0);
 
         /* Wait for return */
         if (Status == STATUS_PENDING)
@@ -2022,9 +2044,16 @@ WSPConnect(SOCKET Handle,
     IOSB->Status = STATUS_PENDING;
 
     /* Send IOCTL */
-    Status = NtDeviceIoControlFile(
-        (HANDLE)Handle, APCFunction != NULL ? NULL : SockEvent, APCFunction, APCContext, IOSB, IOCTL_AFD_CONNECT,
-        ConnectInfo, 0x22, NULL, 0);
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   APCFunction != NULL ? NULL : SockEvent,
+                                   APCFunction,
+                                   APCContext,
+                                   IOSB,
+                                   IOCTL_AFD_CONNECT,
+                                   ConnectInfo,
+                                   0x22,
+                                   NULL,
+                                   0);
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
@@ -2062,9 +2091,16 @@ WSPConnect(SOCKET Handle,
     /* Get any pending connect data */
     if (lpCalleeData != NULL)
     {
-        Status = NtDeviceIoControlFile(
-            (HANDLE)Handle, SockEvent, NULL, NULL, IOSB, IOCTL_AFD_GET_CONNECT_DATA, NULL, 0, lpCalleeData->buf,
-            lpCalleeData->len);
+        Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                       SockEvent,
+                                       NULL,
+                                       NULL,
+                                       IOSB,
+                                       IOCTL_AFD_GET_CONNECT_DATA,
+                                       NULL,
+                                       0,
+                                       lpCalleeData->buf,
+                                       lpCalleeData->len);
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
@@ -3327,7 +3363,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     IO_STATUS_BLOCK     DummyIOSB;
     AFD_INFO            InfoData;
     NTSTATUS            Status;
-    PAFDINFOAPCCONTEXT APCContext;
+    PAFDINFOAPCCONTEXT  APCContext;
     PIO_APC_ROUTINE     APCFunction;
     HANDLE              Event = NULL;
     HANDLE              SockEvent;
@@ -3452,7 +3488,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     IO_STATUS_BLOCK     DummyIOSB;
     AFD_INFO            InfoData;
     NTSTATUS            Status;
-    PAFDINFOAPCCONTEXT APCContext;
+    PAFDINFOAPCCONTEXT  APCContext;
     PIO_APC_ROUTINE     APCFunction;
     HANDLE              Event = NULL;
     HANDLE              SockEvent;
