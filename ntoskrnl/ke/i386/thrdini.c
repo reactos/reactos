@@ -300,8 +300,18 @@ KiIdleLoop(VOID)
             /* The thread is now running */
             NewThread->State = Running;
 
+#ifdef CONFIG_SMP
+            /* Do the swap at SYNCH_LEVEL */
+            KfRaiseIrql(SYNCH_LEVEL);
+#endif
+
             /* Switch away from the idle thread */
             KiSwapContext(APC_LEVEL, OldThread);
+
+#ifdef CONFIG_SMP
+            /* Go back to DISPATCH_LEVEL */
+            KeLowerIrql(DISPATCH_LEVEL);
+#endif
         }
         else
         {
