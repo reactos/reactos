@@ -1359,6 +1359,7 @@ KxQueueReadyThread(IN PKTHREAD Thread,
 
     /* Sanity checks */
     ASSERT(Prcb == KeGetCurrentPrcb());
+    ASSERT(Prcb->PrcbLock != 0);
     ASSERT(Thread->State == Running);
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
