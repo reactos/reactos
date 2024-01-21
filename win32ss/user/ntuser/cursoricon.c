@@ -264,13 +264,15 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     pt.x = x;
     pt.y = y;
 
-    /* 1. Generate a mouse move message, this sets the htEx and Track Window too. */
-    Msg.message = WM_MOUSEMOVE;
-    Msg.wParam = UserGetMouseButtonsState();
-    Msg.lParam = MAKELPARAM(x, y);
-    Msg.pt = pt;
-    co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
-
+    if ((gpsi->ptCursor.x != x) || (gpsi->ptCursor.y != y))
+    {
+        /* 1. Generate a mouse move message, this sets the htEx and Track Window too. */
+        Msg.message = WM_MOUSEMOVE;
+        Msg.wParam = UserGetMouseButtonsState();
+        Msg.lParam = MAKELPARAM(x, y);
+        Msg.pt = pt;
+        co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
+    }
     /* 2. Store the new cursor position */
     gpsi->ptCursor = pt;
 
