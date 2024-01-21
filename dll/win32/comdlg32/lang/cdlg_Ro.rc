@@ -5,7 +5,7 @@
  * Copyright 1999 Klaas van Gend
  * Copyright 2008 Michael Stefaniuc
  * Copyright 2012 Ștefan Fulea <stefan.fulea@mail.com>
- * Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ * Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,11 +42,11 @@ Doriți să îl suprascrieți?"
 
 STRINGTABLE
 {
-    IDS_UPFOLDER         "Nivelul dosarului părinte"
+    IDS_UPFOLDER         "Sus cu un nivel"
     IDS_NEWFOLDER        "Creează un dosar nou"
     IDS_LISTVIEW         "Listă"
     IDS_REPORTVIEW       "Detalii"
-    IDS_TODESKTOP        "Către birou"
+    IDS_TODESKTOP        "Către desktop"
 }
 
 STRINGTABLE
