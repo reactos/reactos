@@ -3587,12 +3587,6 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
 
     TRACE("Status %x Information %d\n", Status, IOSB->Information);
 
-    if (Status == STATUS_PENDING)
-    {
-        TRACE("Leaving (Pending)\n");
-        // return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
-    }
-
     return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
 }
 
