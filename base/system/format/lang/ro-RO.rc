@@ -10,9 +10,9 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_HELP "Utilizare: %s unitate: [-FS:sistem-de-fișiere] [-V:etichetă]\n\
+    STRING_HELP "Utilizare: %s disc: [-FS:sistem-de-fișiere] [-V:etichetă]\n\
                        [-Q] [-A:dimensiune] [-C]\n\n\
-  [unitate:]             Unitatea de stocare de formatat.\n\
+  [disc:]                Unitatea de stocare de formatat.\n\
   -FS:sistem-de-fișiere  Specifică tipul sistemului de fișiere\n\
                          (%s).\n\
   -V:etichetă            Eticheta volumului după formatare.\n\
