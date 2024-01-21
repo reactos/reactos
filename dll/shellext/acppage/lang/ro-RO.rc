@@ -28,7 +28,7 @@ END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 309, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Modurile de compatibilitate"
+CAPTION "Editează modurile de compatibilitate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX         IDC_NEWCOMPATIBILITYMODE,6,18,132,90,LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -45,7 +45,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilitate"
-    IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
-    IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece este parte din ReactOS."
+    IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
+    IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece este parte din ReactOS."
 END
 
