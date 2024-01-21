@@ -153,8 +153,10 @@ AfdRecvAPC(PVOID ApcContext,
 
     if (Context->lpCompletionRoutine)
         Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
-    if (Context->lpRecvInfo)
-        HeapFree(GlobalHeap, 0, Context->lpRecvInfo);
+
+    /* Free IOCTL input buffer */
+    HeapFree(GlobalHeap, 0, Context->lpRecvInfo);
+
     HeapFree(GlobalHeap, 0, ApcContext);
 }
 
@@ -174,10 +176,11 @@ AfdSendAPC(PVOID ApcContext,
     }
     if (Context->lpCompletionRoutine)
         Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
-    if (Context->lpSendInfo)
-        HeapFree(GlobalHeap, 0, Context->lpSendInfo);
-    if (Context->lpRemoteAddress)
-        HeapFree(GlobalHeap, 0, Context->lpRemoteAddress);
+
+    /* Free IOCTL input buffers */
+    HeapFree(GlobalHeap, 0, Context->lpSendInfo);
+    HeapFree(GlobalHeap, 0, Context->lpRemoteAddress);
+
     HeapFree(GlobalHeap, 0, ApcContext);
 }
 
