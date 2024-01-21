@@ -857,8 +857,6 @@ WSPSendTo(SOCKET Handle,
     PIO_APC_ROUTINE         APCFunction;
     HANDLE                  Event = NULL;
     PTRANSPORT_ADDRESS      RemoteAddress;
-    PSOCKADDR               BindAddress = NULL;
-    INT                     BindAddressLength;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
@@ -896,6 +894,10 @@ WSPSendTo(SOCKET Handle,
     /* Bind us First */
     if (Socket->SharedData->State == SocketOpen)
     {
+        INT BindAddressLength;
+        PSOCKADDR BindAddress;
+        INT BindError;
+
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
         BindAddress = HeapAlloc(GlobalHeap, 0, BindAddressLength);
@@ -909,17 +911,15 @@ WSPSendTo(SOCKET Handle,
                                                    BindAddress,
                                                    &BindAddressLength);
         /* Bind it */
-        if (WSPBind(Handle, BindAddress, BindAddressLength, lpErrno) == SOCKET_ERROR)
+        BindError = WSPBind(Handle, BindAddress, BindAddressLength, lpErrno);
+        HeapFree(GlobalHeap, 0, BindAddress);
+        if (BindError == SOCKET_ERROR)
             return SOCKET_ERROR;
     }
 
     RemoteAddress = HeapAlloc(GlobalHeap, 0, 0x6 + SocketAddressLength);
     if (!RemoteAddress)
     {
-        if (BindAddress != NULL)
-        {
-            HeapFree(GlobalHeap, 0, BindAddress);
-        }
         return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
     }
 
@@ -927,10 +927,6 @@ WSPSendTo(SOCKET Handle,
     if (!SendInfo)
     {
         HeapFree(GlobalHeap, 0, RemoteAddress);
-        if (BindAddress != NULL)
-        {
-            HeapFree(GlobalHeap, 0, BindAddress);
-        }
         return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
     }
 
@@ -942,10 +938,6 @@ WSPSendTo(SOCKET Handle,
     {
         HeapFree(GlobalHeap, 0, SendInfo);
         HeapFree(GlobalHeap, 0, RemoteAddress);
-        if (BindAddress != NULL)
-        {
-            HeapFree(GlobalHeap, 0, BindAddress);
-        }
         return SOCKET_ERROR;
     }
 
@@ -976,6 +968,9 @@ WSPSendTo(SOCKET Handle,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, SendInfo);
+            HeapFree(GlobalHeap, 0, RemoteAddress);
             return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, lpNumberOfBytesSent);
         }
         if (lpCompletionRoutine == NULL)
@@ -993,6 +988,9 @@ WSPSendTo(SOCKET Handle,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose(SockEvent);
+                HeapFree(GlobalHeap, 0, SendInfo);
+                HeapFree(GlobalHeap, 0, RemoteAddress);
                 return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesSent);
             }
             APCContext->lpCompletionRoutine = lpCompletionRoutine;
@@ -1031,10 +1029,11 @@ WSPSendTo(SOCKET Handle,
     }
 
     NtClose(SockEvent);
-
-    if (BindAddress != NULL)
+    if (!APCFunction)
     {
-        HeapFree(GlobalHeap, 0, BindAddress);
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, SendInfo);
+        HeapFree(GlobalHeap, 0, RemoteAddress);
     }
 
     if (Status == STATUS_PENDING)
@@ -1043,17 +1042,6 @@ WSPSendTo(SOCKET Handle,
         return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
     }
     
-    if (APCFunction)
-    {
-        APCContext->lpSendInfo = NULL;
-        APCContext->lpRemoteAddress = NULL;
-        APCContext->lpCompletionRoutine = NULL;
-        APCContext->lpSocket = NULL;
-        /* This will be freed by the APC */
-        //HeapFree(GlobalHeap, 0, APCContext);
-    }
-    HeapFree(GlobalHeap, 0, SendInfo);
-    HeapFree(GlobalHeap, 0, RemoteAddress);
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     TRACE("Leaving (%ld %ld)\n", Status, IOSB->Information);
