@@ -3,8 +3,8 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
- *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -16,7 +16,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la etapa secundă de instalare ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Acest expert va finaliza instalarea ReactOS. În cele ce urmează expertul va culege niște informații despre calculator pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
@@ -28,7 +28,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS este oferit sub licența GPL, astfel reutilizarea sau redistribuția sa (sau a părților sale componente), cere respectarea licenței GPL.", IDC_STATIC, 15, 110, 234, 19
     PUSHBUTTON "Afișează &GPL", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
@@ -134,9 +134,9 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Sfârșit de instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului „Sfârșit”, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului Sfârșit, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați „Sfârșit”.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați Sfârșit.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
