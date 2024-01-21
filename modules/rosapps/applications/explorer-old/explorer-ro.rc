@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Old Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2014 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Menus */
@@ -137,7 +146,7 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ordinea pe birou"
+CAPTION "Proprietăți desktop"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Alegeți modul de ordonare a pictogramelor:", IDC_STATIC, 7, 7, 196, 8
@@ -283,8 +292,8 @@ BEGIN
     IDS_SEARCH "Căutare"
     IDS_ABOUT_EXPLORER "&Despre Explorator…"
     IDS_LAUNCH_MANY_PROGRAMS "Ați ales mai mult de un program.\nSigur doriți să le porniți pe toate?"
-    IDS_DESKTOPBAR_SETTINGS "Configurare birou"
-    IDS_DESKTOP "Birou"
+    IDS_DESKTOPBAR_SETTINGS "Setări desktop"
+    IDS_DESKTOP "Desktop"
     IDS_TASKBAR "Bară de activități"
     IDS_NAMECOLUMN "Nume"
     IDS_PATHCOLUMN "Cale"
