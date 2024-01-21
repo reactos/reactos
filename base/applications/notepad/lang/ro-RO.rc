@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -39,14 +39,14 @@ BEGIN
         MENUITEM "S&alvează\tCtrl+S", CMD_SAVE
         MENUITEM "Sal&vare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Configurare pagină…", CMD_PAGE_SETUP
+        MENUITEM "Inițiali&zare pagină…", CMD_PAGE_SETUP
         MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Des&face\tCtrl+Z", CMD_UNDO
+        MENUITEM "Anula&re\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Decupează\tCtrl+X", CMD_CUT
         MENUITEM "&Copiază\tCtrl+C", CMD_COPY
@@ -54,12 +54,12 @@ BEGIN
         MENUITEM "Șt&erge\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Găsire…\tCtrl+F", CMD_SEARCH
-        MENUITEM "Găsește &următoarea\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Următorul găsit\tF3", CMD_SEARCH_NEXT
         MENUITEM "Î&nlocuire…\tCtrl+H", CMD_REPLACE
         MENUITEM "S&alt la…\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selectea&ză tot\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "Inserează &oră și dată\tF5", CMD_TIME_DATE
+        MENUITEM "Sele&ctare totală\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Dată/Oră\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatare"
     BEGIN
@@ -72,9 +72,9 @@ BEGIN
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", CMD_HELP_CONTENTS
+        MENUITEM "&Vizualizare Ajutor…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Carnețel", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Despre Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -82,7 +82,7 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Configurare pagină"
+CAPTION "Inițializare pagină"
 BEGIN
     GROUPBOX "Previzionare", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
@@ -154,7 +154,7 @@ STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&f"
     STRING_PAGESETUP_FOOTERVALUE "Pagină &p"
-    STRING_NOTEPAD "Carnețel"
+    STRING_NOTEPAD "Notepad"
     STRING_ERROR "EROARE"
     STRING_WARNING "ATENȚIONARE"
     STRING_INFO "Informație"
