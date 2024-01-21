@@ -292,6 +292,8 @@ WSPRecv(SOCKET Handle,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, RecvInfo);
             return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, lpNumberOfBytesRead);
         }
         if (lpCompletionRoutine == NULL)
@@ -309,6 +311,8 @@ WSPRecv(SOCKET Handle,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose(SockEvent);
+                HeapFree(GlobalHeap, 0, RecvInfo);
                 return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesRead);
             }
             APCContext->lpCompletionRoutine = lpCompletionRoutine;
@@ -354,23 +358,18 @@ WSPRecv(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    NtClose(SockEvent);
+    if (!APCFunction)
+    {
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, RecvInfo);
+    }
 
     if (Status == STATUS_PENDING)
     {
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
     }
-
-    if (APCFunction)
-    {
-        APCContext->lpRecvInfo = NULL;
-        APCContext->lpCompletionRoutine = NULL;
-        APCContext->lpSocket = NULL;
-        /* This will be freed by the APC */
-        //HeapFree(GlobalHeap, 0, APCContext);
-    }
-    HeapFree(GlobalHeap, 0, RecvInfo);
 
     /* Return the Flags */
     if (ReceiveFlags)
@@ -550,6 +549,8 @@ WSPRecvFrom(SOCKET Handle,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, RecvInfo);
             return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, lpNumberOfBytesRead);
         }
         if (lpCompletionRoutine == NULL)
@@ -567,6 +568,8 @@ WSPRecvFrom(SOCKET Handle,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose(SockEvent);
+                HeapFree(GlobalHeap, 0, RecvInfo);
                 return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesRead);
             }
             APCContext->lpCompletionRoutine = lpCompletionRoutine;
@@ -602,23 +605,18 @@ WSPRecvFrom(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    NtClose(SockEvent);
+    if (!APCFunction)
+    {
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, RecvInfo);
+    }
 
     if (Status == STATUS_PENDING)
     {
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
     }
-
-    if (APCFunction)
-    {
-        APCContext->lpRecvInfo = NULL;
-        APCContext->lpCompletionRoutine = NULL;
-        APCContext->lpSocket = NULL;
-        /* This will be freed by the APC */
-        //HeapFree(GlobalHeap, 0, APCContext);
-    }
-    HeapFree(GlobalHeap, 0, RecvInfo);
 
     if (ReceiveFlags)
     {
@@ -754,6 +752,8 @@ WSPSend(SOCKET Handle,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, SendInfo);
             return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, lpNumberOfBytesSent);
         }
         if (lpCompletionRoutine == NULL)
@@ -771,6 +771,8 @@ WSPSend(SOCKET Handle,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose(SockEvent);
+                HeapFree(GlobalHeap, 0, SendInfo);
                 return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesSent);
             }
             APCContext->lpCompletionRoutine = lpCompletionRoutine;
@@ -807,23 +809,18 @@ WSPSend(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    NtClose(SockEvent);
+    if (!APCFunction)
+    {
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, SendInfo);
+    }
 
     if (Status == STATUS_PENDING)
     {
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
     }
-
-    if (APCFunction)
-    {
-        APCContext->lpSendInfo = NULL;
-        APCContext->lpCompletionRoutine = NULL;
-        APCContext->lpSocket = NULL;
-        /* This will be freed by the APC */
-        //HeapFree(GlobalHeap, 0, APCContext);
-    }
-    HeapFree(GlobalHeap, 0, SendInfo);
 
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
