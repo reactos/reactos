@@ -298,7 +298,7 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
     struct
     {
         UINT64 Vector:8;
-        UINT64 DeliveryMode:3;
+        UINT64 MessageType:3;
         UINT64 DestinationMode:1;
         UINT64 DeliveryStatus:1;
         UINT64 Polarity:1;
