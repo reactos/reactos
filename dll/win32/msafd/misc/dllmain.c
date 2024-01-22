@@ -3155,9 +3155,6 @@ WSPAddressToString(IN LPSOCKADDR lpsaAddress,
     WCHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
     WCHAR *p;
 
-    /* Allow for APC to be processed */
-    SleepEx(0, TRUE);
-
     if (!lpsaAddress || !lpszAddressString || !lpdwAddressStringLength)
     {
         if (lpErrno) *lpErrno = WSAEFAULT;

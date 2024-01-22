@@ -574,9 +574,6 @@ MsafdReturnWithErrno(NTSTATUS Status,
                      DWORD Received,
                      LPDWORD ReturnedBytes)
 {
-    /* Allow for APC to be processed */
-    SleepEx(0, TRUE);
-
     if (Errno)
     {
         *Errno = TranslateNtStatusError(Status);
