@@ -348,13 +348,17 @@ WSPRecv(SOCKET Handle,
         return SOCKET_ERROR;
     }
 
-    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING)
     {
-        /* It's up to the protocol to time out recv.  We must wait
-         * until the protocol decides it's had enough.
-         */
-        WaitForSingleObject(SockEvent, (lpOverlapped || Socket->SharedData->NonBlocking) ? 0 : INFINITE);
+        /* Wait for completion of not overlapped */
+        if (!lpOverlapped && !Socket->SharedData->NonBlocking)
+        {
+            /* It's up to the protocol to time out recv.  We must wait
+             * until the protocol decides it's had enough.
+             */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 
@@ -597,11 +601,15 @@ WSPRecvFrom(SOCKET Handle,
                                     sizeof(AFD_RECV_INFO_UDP),
                                     NULL,
                                     0);
-
-    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, (lpOverlapped || Socket->SharedData->NonBlocking) ? 0 : INFINITE); // BUGBUG, shouldn wait infintely for receive...
+        /* Wait for completion of not overlapped */
+        if (!lpOverlapped && !Socket->SharedData->NonBlocking)
+        {
+            /* BUGBUG, shouldn wait infintely for receive... */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 
@@ -801,11 +809,15 @@ WSPSend(SOCKET Handle,
                                     sizeof(AFD_SEND_INFO),
                                     NULL,
                                     0);
-
-    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, (lpOverlapped || Socket->SharedData->NonBlocking) ? 0 : INFINITE); // BUGBUG, shouldn wait infintely for send...
+        /* Wait for completion of not overlapped */
+        if (!lpOverlapped && !Socket->SharedData->NonBlocking)
+        {
+            /* BUGBUG, shouldn wait infintely for send... */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 
@@ -1019,12 +1031,15 @@ WSPSendTo(SOCKET Handle,
                                    sizeof(AFD_SEND_INFO_UDP),
                                    NULL,
                                    0);
-
-    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING)
     {
-        /* BUGBUG, shouldn't wait infinitely for send... */
-        WaitForSingleObject(SockEvent, (lpOverlapped || Socket->SharedData->NonBlocking) ? 0 : INFINITE);
+        /* Wait for completion of not overlapped */
+        if (!lpOverlapped && !Socket->SharedData->NonBlocking)
+        {
+            /* BUGBUG, shouldn't wait infinitely for send... */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 

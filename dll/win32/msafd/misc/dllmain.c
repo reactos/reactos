@@ -3437,11 +3437,14 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
                                    sizeof(InfoData),
                                    &InfoData,
                                    sizeof(InfoData));
-
-    /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, Overlapped != NULL ? 0 : INFINITE);
+        if (Overlapped == NULL)
+        {
+            /* Wait for completion of not overlapped */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 
@@ -3576,11 +3579,14 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                                    sizeof(InfoData),
                                    NULL,
                                    0);
-
-    /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, Overlapped != NULL ? 0 : INFINITE);
+        if (Overlapped == NULL)
+        {
+            /* Wait for completion of not overlapped */
+            WaitForSingleObject(SockEvent, INFINITE);
+        }
+
         Status = IOSB->Status;
     }
 
