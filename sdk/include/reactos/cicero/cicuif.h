@@ -5619,11 +5619,8 @@ inline CUIFMenu::CUIFMenu(
 inline CUIFMenu::~CUIFMenu()
 {
     for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
-    {
-        CUIFMenuItem *pItem = m_MenuItems[iItem];
-        if (pItem)
-            delete pItem;
-    }
+        delete m_MenuItems[iItem];
+
     ::DeleteObject(m_hMenuFont);
     ClearMenuFont();
 }
@@ -5658,9 +5655,9 @@ CUIFMenu::GetNextItem(CUIFMenuItem *pItem)
     if (!m_pSelectedItem)
         return m_MenuItems[0];
 
-    for (iItem = 0; iItem < cItems; ++iItem)
+    for (iItem = 0; iItem < cItems; )
     {
-        if (m_MenuItems[iItem] == pItem)
+        if (m_MenuItems[iItem++] == pItem)
             break;
     }
 
@@ -5687,9 +5684,9 @@ CUIFMenu::GetPrevItem(CUIFMenuItem *pItem)
     if (!m_pSelectedItem)
         return m_MenuItems[cItems - 1];
 
-    for (iItem = cItems - 1; iItem >= 0; --iItem)
+    for (iItem = cItems - 1; iItem >= 0; )
     {
-        if (m_MenuItems[iItem] == pItem)
+        if (m_MenuItems[iItem--] == pItem)
             break;
     }
 
