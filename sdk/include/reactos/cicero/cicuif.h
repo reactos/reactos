@@ -1978,7 +1978,7 @@ CUIFSchemeDef::DrawCtrlBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, 
     else
     {
         UINT uFlags = DST_BITMAP;
-        if (dwDrawFlags & 0x20)
+        if (dwDrawFlags & UIF_DRAW_DISABLED)
             uFlags |= (DSS_MONO | DSS_DISABLED);
 
         ::DrawState(hDC, NULL, NULL, (LPARAM)hbm1, 0,
@@ -3833,7 +3833,7 @@ CUIFButton::DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed)
         ::DrawState(hDC, NULL, NULL, (LPARAM)hbmMask, 0,
                     prc->left + bPressed, prc->top + bPressed,
                     width - bPressed, height - bPressed,
-                    (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+                    DST_BITMAP | (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)));
         ::DeleteObject(hbmMask);
     }
     else
@@ -3841,7 +3841,7 @@ CUIFButton::DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed)
         ::DrawState(hDC, NULL, NULL, (LPARAM)m_hbmButton1, 0,
                     prc->left + bPressed, prc->top + bPressed,
                     width - bPressed, height - bPressed,
-                    (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+                    DST_BITMAP | (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)));
     }
 }
 
@@ -3904,7 +3904,7 @@ inline void CUIFButton::DrawIconProc(HDC hDC, LPRECT prc, BOOL bPressed)
     ::SelectObject(hMemDC, hbmOld);
     ::DrawState(hDC, NULL, NULL, (LPARAM)hbmMem, 0,
                 prc->left, prc->top, width, height,
-                (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)) | DST_BITMAP);
+                DST_BITMAP | (m_bEnable ? 0 : (DSS_MONO | DSS_DISABLED)));
     ::DeleteObject(hbmMem);
     ::DeleteDC(hMemDC);
 }
