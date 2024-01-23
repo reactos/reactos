@@ -53,7 +53,7 @@ public:
     BOOL m_bHighContrast1;
     BOOL m_bHighContrast2;
 
-    CUIFSystemInfo();
+    CUIFSystemInfo() { }
     void GetSystemMetrics();
     void Initialize();
 };
@@ -1092,16 +1092,6 @@ inline void cicDoneUIFLib(void)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-
-inline CUIFSystemInfo::CUIFSystemInfo()
-{
-    dwMajorVersion = 4;
-    dwMinorVersion = 0;
-    dwBuildNumber = 0;
-    dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
-    m_cBitsPixels = 8;
-    m_bHighContrast1 = m_bHighContrast2 = FALSE;
-}
 
 inline void CUIFSystemInfo::GetSystemMetrics()
 {
@@ -3915,8 +3905,8 @@ CUIFToolTip::RelayEvent(LPMSG pMsg)
 
 inline STDMETHODIMP_(void) CUIFToolTip::OnPaint(HDC hDC)
 {
-    HGDIOBJ hFontOld = SelectObject(hDC, m_hFont);
-    INT iBkModeOld = SetBkMode(hDC, TRANSPARENT);
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+    INT iBkModeOld = ::SetBkMode(hDC, TRANSPARENT);
 
     COLORREF rgbTextColor = GetTipTextColor();
     COLORREF rgbOldTextColor = ::SetTextColor(hDC, rgbTextColor);
@@ -5887,8 +5877,8 @@ CUIFMenuItem::CUIFMenuItem(
     m_nMenuItemVKey = 0;
     m_hbmColor = NULL;
     m_hbmMask = NULL;
-    m_bMenuItemChecked = 0;
-    m_bMenuItemGrayed = 0;
+    m_bMenuItemChecked = FALSE;
+    m_bMenuItemGrayed = FALSE;
     m_bMenuItemDisabled = bDisabled;
     m_pMenu = pMenu;
 }
@@ -5964,13 +5954,9 @@ inline void CUIFMenuItem::DrawCheck(HDC hDC, INT xLeft, INT yTop)
     if (!IsCheck())
         return;
 
-    HGDIOBJ hFontOld = SelectObject(hDC, m_pMenu->m_hMenuFont);
-    LPCWSTR psz;
-    if (m_bMenuItemChecked)
-        psz = L"a"; // checkmark
-    else
-        psz = L"h"; // bullet
-    ::TextOutW(hDC, xLeft, yTop, psz, 1);
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_pMenu->m_hMenuFont);
+    WCHAR wch = (m_bMenuItemChecked ? L'a' : L'h'); // checkmark or bullet
+    ::TextOutW(hDC, xLeft, yTop, &wch, 1);
     ::SelectObject(hDC, hFontOld);
 }
 
