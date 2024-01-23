@@ -604,22 +604,23 @@ public:
     STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnKeyUp)(HWND, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { }
-    STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
+    STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+        { return 0; }
     STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return 0; }
+        { return 0; }
     STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return 0; }
+        { return 0; }
     STDMETHOD_(LRESULT, OnNotifyFormat)(HWND hWnd, WPARAM wParam, LPARAM lParam) { return 0; }
     STDMETHOD_(LRESULT, OnShowWindow)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return 0; }
+        { return 0; }
     STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return 0; }
+        { return 0; }
     STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return 0; }
+        { return 0; }
     STDMETHOD_(LRESULT, WindowProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    { return FALSE; }
+        { return FALSE; }
     STDMETHOD_(void, OnThemeChanged)(HWND hWnd, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, UpdateUI)(LPCRECT prc);
     STDMETHOD_(void, SetCapture)(int);
