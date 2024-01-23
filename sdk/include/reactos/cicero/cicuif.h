@@ -1354,15 +1354,12 @@ CUIFObject::~CUIFObject()
         m_pszToolTip = NULL;
     }
 
-    for (;;)
+    for (size_t iObj = m_ObjectArray.size(); iObj > 0; )
     {
-        CUIFObject *pLast = m_ObjectArray.GetLast();
-        if (!pLast)
-            break;
-
-        m_ObjectArray.Remove(pLast);
-        delete pLast;
+        --iObj;
+        delete m_ObjectArray[iObj];
     }
+    m_ObjectArray.clear();
 
     if (m_pWindow)
         m_pWindow->RemoveUIObj(this);

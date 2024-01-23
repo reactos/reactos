@@ -33,6 +33,12 @@ public:
     T_ITEM* data() const { return (T_ITEM*)m_pb; }
     size_t size() const  { return m_cItems;      }
     bool empty() const   { return !size();       }
+    void clear()
+    {
+        cicMemFree(m_pb);
+        m_pb = NULL;
+        m_cItems = m_cCapacity = 0;
+    }
 
     T_ITEM& operator[](size_t iItem)
     {
