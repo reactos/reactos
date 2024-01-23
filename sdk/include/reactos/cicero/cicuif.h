@@ -5760,7 +5760,7 @@ CUIFMenu::ModalMessageLoop()
     while (::GetMessage(&msg, 0, 0, 0) && msg.message != WM_NULL &&
            (msg.hwnd == m_hWnd || msg.message <= WM_MOUSEFIRST || WM_MOUSELAST <= msg.message))
     {
-        if (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST && !msg.hwnd)
+        if (!msg.hwnd && WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST)
             msg.hwnd = GetTopSubMenu()->m_hWnd;
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
