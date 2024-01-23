@@ -237,7 +237,7 @@ public:
 
     STDMETHOD_(void, Initialize)();
     STDMETHOD_(void, OnPaint)(HDC hDC);
-    STDMETHOD_(void, OnTimer)() { } // FIXME: name
+    STDMETHOD_(void, OnTimer)() { }
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnMButtonDown)(LONG x, LONG y) { }
     STDMETHOD_(void, OnRButtonDown)(LONG x, LONG y) { }
@@ -548,7 +548,7 @@ protected:
     CUIFObject *m_pCaptured;
     CUIFObject *m_pPointed;
     BOOL m_bPointing;
-    CUIFWindow *m_pPointingWindow;
+    CUIFWindow *m_pBehindModal;
     CUIFToolTip *m_pToolTip;
     CUIFShadow *m_pShadow;
     BOOL m_bShowShadow;
@@ -578,7 +578,7 @@ public:
     void CreateScheme();
     BOOL GetWorkArea(LPCRECT prcWnd, LPRECT prcWorkArea);
     void AdjustWindowPosition();
-    void SetBehindModal(CUIFWindow *pPointing);
+    void SetBehindModal(CUIFWindow *pBehindModal);
     void SetTimerObject(CUIFObject *pTimerObject, UINT uElapse);
 
     static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -708,7 +708,7 @@ public:
     UINT m_nSelectedID;
     CicArray<CUIFMenuItem*> m_MenuItems;
     HFONT m_hMenuFont;
-    BOOL m_bPostKey;
+    BOOL m_bModal;
     BOOL m_bHasMargin;
     DWORD m_dwUnknown14;
     LONG m_cxyMargin;
@@ -2551,7 +2551,7 @@ inline CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
     m_pToolTip = NULL;
     m_pShadow = NULL;
     m_bShowShadow = TRUE;
-    m_pPointingWindow = NULL;
+    m_pBehindModal = NULL;
     CUIFWindow::CreateScheme();
 }
 
@@ -2933,9 +2933,9 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::GetCursorPos(&Point);
             ::ScreenToClient(m_hWnd, &Point);
 
-            if (m_pPointingWindow)
+            if (m_pBehindModal)
             {
-                m_pPointingWindow->ModalMouseNotify(HIWORD(lParam), Point.x, Point.y);
+                m_pBehindModal->ModalMouseNotify(HIWORD(lParam), Point.x, Point.y);
                 return TRUE;
             }
 
@@ -3027,7 +3027,7 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (::PtInRect(&rc, pt) && ::WindowFromPoint(pt) == m_hWnd)
                     {
-                        m_pPointingWindow->ModalMouseNotify(WM_MOUSEMOVE, pt2.x, pt2.y);
+                        m_pBehindModal->ModalMouseNotify(WM_MOUSEMOVE, pt2.x, pt2.y);
                     }
                     else
                     {
@@ -3063,8 +3063,8 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONDBLCLK:
         case WM_RBUTTONUP:
         {
-            if (m_pPointingWindow)
-                m_pPointingWindow->ModalMouseNotify(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+            if (m_pBehindModal)
+                m_pBehindModal->ModalMouseNotify(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
             else
                 HandleMouseMsg(uMsg, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
             break;
@@ -3210,9 +3210,9 @@ CUIFWindow::AdjustWindowPosition()
         m_nTop = rcWorkArea.bottom - m_nHeight;
 }
 
-inline void CUIFWindow::SetBehindModal(CUIFWindow *pPointing)
+inline void CUIFWindow::SetBehindModal(CUIFWindow *pBehindModal)
 {
-    m_pPointingWindow = pPointing;
+    m_pBehindModal = pBehindModal;
 }
 
 inline void CUIFWindow::SetTimerObject(CUIFObject *pTimerObject, UINT uElapse)
@@ -5628,10 +5628,10 @@ inline void CUIFMenu::CancelMenu()
     {
         UninitShow();
     }
-    else if (m_bPostKey)
+    else if (m_bModal)
     {
         SetSelectedId(0xFFFFFFFF);
-        ::PostMessage(m_hWnd, 0, 0, 0);
+        ::PostMessage(m_hWnd, WM_NULL, 0, 0);
     }
 }
 
@@ -5777,7 +5777,7 @@ CUIFMenu::OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 inline void CUIFMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
 {
-    if (m_bPostKey)
+    if (m_bModal)
     {
         // NOTE: hWnd parameter will be populated in CUIFMenu::ModalMessageLoop.
         if (bUp)
@@ -5828,12 +5828,12 @@ inline UINT CUIFMenu::ShowModalPopup(CUIFWindow *pWindow, LPCRECT prc, BOOL bFla
     UINT nSelectedID = -1;
     if (InitShow(pWindow, prc, bFlag, TRUE))
     {
-        m_bPostKey = TRUE;
+        m_bModal = TRUE;
         pWindow->SetBehindModal(this);
         ModalMessageLoop();
         nSelectedID = m_nSelectedID;
         pWindow->SetBehindModal(NULL);
-        m_bPostKey = FALSE;
+        m_bModal = FALSE;
     }
 
     UninitShow();
