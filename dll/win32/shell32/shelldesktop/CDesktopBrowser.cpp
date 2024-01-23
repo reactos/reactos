@@ -471,7 +471,7 @@ LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lPara
         case 2:
         case 7:
 #endif
-            ShowFolderOptionsDialog(PtrToUlong(wParam), TRUE);
+            ShowFolderOptionsDialog((UINT)(UINT_PTR)wParam, TRUE);
             break;
         case 1:
             _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
