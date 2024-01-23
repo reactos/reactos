@@ -489,8 +489,8 @@ public:
     STDMETHOD_(INT, CyMenuItem)(INT cyText) override;
     STDMETHOD_(INT, CxSizeFrame)() override;
     STDMETHOD_(INT, CySizeFrame)() override;
-    STDMETHOD_(INT, CxWndBorder)() override;
-    STDMETHOD_(INT, CyWndBorder)() override;
+    STDMETHOD_(INT, CxWndBorder)() override { return 1; }
+    STDMETHOD_(INT, CyWndBorder)() override { return 1; }
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) override;
     STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
@@ -583,8 +583,8 @@ public:
 
     static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    STDMETHOD_(LPCTSTR, GetClassName)();
-    STDMETHOD_(LPCTSTR, GetWndTitle)();
+    STDMETHOD_(LPCTSTR, GetClassName)() { return TEXT("CiceroUIWndFrame"); }
+    STDMETHOD_(LPCTSTR, GetWndTitle)() { return TEXT("CiceroUIWndFrame"); }
     STDMETHOD_(DWORD, GetWndStyle)();
     STDMETHOD_(DWORD, GetWndStyleEx)();
     STDMETHOD_(HWND, CreateWnd)(HWND hwndParent);
@@ -592,9 +592,9 @@ public:
     STDMETHOD_(BOOL, AnimateWnd)(DWORD dwTime, DWORD dwFlags);
     STDMETHOD_(void, OnObjectMoved)(CUIFObject *pObject);
     STDMETHOD_(void, OnPointingEnded)(LONG x, LONG y) { }
-    STDMETHOD_(void, OnCreate)(HWND hWnd);
-    STDMETHOD_(void, OnDestroy)(HWND hWnd);
-    STDMETHOD_(void, OnNCDestroy)(HWND hWnd);
+    STDMETHOD_(void, OnCreate)(HWND hWnd) { }
+    STDMETHOD_(void, OnDestroy)(HWND hWnd) { }
+    STDMETHOD_(void, OnNCDestroy)(HWND hWnd) { }
     STDMETHOD_(void, OnSetFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnKillFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
@@ -602,7 +602,7 @@ public:
     STDMETHOD_(void, OnSysColorChange)() { }
     STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
-    STDMETHOD_(void, OnKeyUp)(HWND, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnKeyUp)(HWND, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
     STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -790,12 +790,12 @@ public:
     BOOL Init(UINT nMenuItemID, LPCWSTR pszText);
 
     BOOL IsCheck();
-    void Check(BOOL bChecked);
-    void Gray(BOOL bGrayed);
+    void Check(BOOL bChecked) { m_bMenuItemChecked = bChecked; }
+    void Gray(BOOL bGrayed) { m_bMenuItemGrayed = bGrayed; }
 
-    void SetBitmap(HBITMAP hbmColor);
+    void SetBitmap(HBITMAP hbmColor) { m_hbmColor = hbmColor; }
     void SetBitmapMask(HBITMAP hbmMask);
-    void SetSub(CUIFMenu *pSubMenu);
+    void SetSub(CUIFMenu *pSubMenu) { m_pSubMenu = pSubMenu; }
 
     void ShowSubPopup();
 
@@ -807,7 +807,7 @@ public:
     STDMETHOD_(void, InitMenuExtent)();
     STDMETHOD_(void, OnPaintO10)(HDC hDC);
     STDMETHOD_(void, OnPaintDef)(HDC hDC);
-    STDMETHOD_(void, OnUnknownMethod)(); // FIXME: method name
+    STDMETHOD_(void, OnUnknownMethod)() { } // FIXME: method name
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1051,8 +1051,8 @@ public:
     ~CUIFBalloonWindow() override;
 
     STDMETHOD_(void, Initialize)() override;
-    STDMETHOD_(LPCTSTR, GetClassName)() override;
-    STDMETHOD_(LPCTSTR, GetWndTitle)() override;
+    STDMETHOD_(LPCTSTR, GetClassName)() override { return TEXT("MSIME_PopupMessage"); }
+    STDMETHOD_(LPCTSTR, GetWndTitle)() override { return TEXT("MSIME_PopupMessage"); }
     STDMETHOD_(void, OnCreate)(HWND hWnd) override;
     STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
     STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam) override;
@@ -1785,16 +1785,6 @@ inline STDMETHODIMP_(INT) CUIFSchemeDef::CxSizeFrame()
 inline STDMETHODIMP_(INT) CUIFSchemeDef::CySizeFrame()
 {
     return ::GetSystemMetrics(SM_CYSIZEFRAME);
-}
-
-inline STDMETHODIMP_(INT) CUIFSchemeDef::CxWndBorder()
-{
-    return 1;
-}
-
-inline STDMETHODIMP_(INT) CUIFSchemeDef::CyWndBorder()
-{
-    return 1;
 }
 
 inline STDMETHODIMP_(void) CUIFScheme::FillRect(HDC hDC, LPCRECT prc, INT iColor)
@@ -2620,31 +2610,10 @@ inline void CUIFWindow::UpdateUI(LPCRECT prc)
         ::InvalidateRect(m_hWnd, prc, FALSE);
 }
 
-inline STDMETHODIMP_(void)
-CUIFWindow::OnCreate(HWND hWnd)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnDestroy(HWND hWnd)
-{
-
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnNCDestroy(HWND hWnd)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnKeyUp(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-}
-
 inline CUIFWindow*
 CUIFWindow::GetThis(HWND hWnd)
 {
-    return (CUIFWindow *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    return (CUIFWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 }
 
 inline void
@@ -2673,16 +2642,6 @@ inline void CUIFWindow::CreateScheme()
 
     m_pScheme = cicCreateUIFScheme(iScheme);
     SetScheme(m_pScheme);
-}
-
-inline LPCTSTR CUIFWindow::GetClassName()
-{
-    return TEXT("CiceroUIWndFrame");
-}
-
-inline LPCTSTR CUIFWindow::GetWndTitle()
-{
-    return TEXT("CiceroUIWndFrame");
 }
 
 inline STDMETHODIMP_(DWORD)
@@ -5108,18 +5067,6 @@ CUIFBalloonWindow::Initialize()
     }
 }
 
-inline STDMETHODIMP_(LPCTSTR)
-CUIFBalloonWindow::GetClassName()
-{
-    return TEXT("MSIME_PopupMessage");
-}
-
-inline STDMETHODIMP_(LPCTSTR)
-CUIFBalloonWindow::GetWndTitle()
-{
-    return TEXT("MSIME_PopupMessage");
-}
-
 inline STDMETHODIMP_(void)
 CUIFBalloonWindow::OnCreate(HWND hWnd)
 {
@@ -5305,7 +5252,7 @@ CUIFBalloonWindow::FindUIObject(UINT nObjectID)
 inline COLORREF
 CUIFBalloonWindow::GetBalloonBkColor()
 {
-    if (m_bHasBkColor )
+    if (m_bHasBkColor)
         return m_rgbBkColor;
     else
         return ::GetSysColor(COLOR_INFOBK);
@@ -5796,16 +5743,6 @@ inline BOOL CUIFMenuItem::IsCheck()
     return m_bMenuItemChecked || m_bMenuItemForceChecked;
 }
 
-inline void CUIFMenuItem::Check(BOOL bChecked)
-{
-    m_bMenuItemChecked = bChecked;
-}
-
-inline void CUIFMenuItem::Gray(BOOL bGrayed)
-{
-    m_bMenuItemGrayed = bGrayed;
-}
-
 inline void CUIFMenuItem::DrawArrow(HDC hDC, INT xLeft, INT yTop)
 {
     if (!m_pSubMenu)
@@ -5899,26 +5836,10 @@ CUIFMenuItem::OnTimer()
         ShowSubPopup();
 }
 
-// FIXME: method name
-inline STDMETHODIMP_(void)
-CUIFMenuItem::OnUnknownMethod()
-{
-}
-
-inline void CUIFMenuItem::SetBitmap(HBITMAP hbmColor)
-{
-    m_hbmColor = hbmColor;
-}
-
 inline void CUIFMenuItem::SetBitmapMask(HBITMAP hbmMask)
 {
     m_hbmMask = hbmMask;
     CallOnPaint();
-}
-
-inline void CUIFMenuItem::SetSub(CUIFMenu *pSubMenu)
-{
-    m_pSubMenu = pSubMenu;
 }
 
 inline void CUIFMenuItem::ShowSubPopup()
