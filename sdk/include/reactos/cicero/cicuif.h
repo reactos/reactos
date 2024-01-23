@@ -699,12 +699,18 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 
+// m_style flags for CUIFMenu
+enum
+{
+    UIF_MENU_USE_OFF10 = 0x10000000,
+};
+
 class CUIFMenu : public CUIFWindow
 {
 public:
     CUIFMenu *m_pVisibleSubMenu;
     CUIFMenu *m_pParentMenu;
-    CUIFMenuItem *m_pMenuItem;
+    CUIFMenuItem *m_pSelectedItem;
     UINT m_nSelectedID;
     CicArray<CUIFMenuItem*> m_MenuItems;
     HFONT m_hMenuFont;
@@ -5649,7 +5655,7 @@ CUIFMenu::GetNextItem(CUIFMenuItem *pItem)
     if (cItems == 0)
         return NULL;
 
-    if (!m_pMenuItem)
+    if (!m_pSelectedItem)
         return m_MenuItems[0];
 
     for (iItem = 0; iItem < cItems; ++iItem)
@@ -5678,7 +5684,7 @@ CUIFMenu::GetPrevItem(CUIFMenuItem *pItem)
     if (cItems == 0)
         return NULL;
 
-    if (!m_pMenuItem)
+    if (!m_pSelectedItem)
         return m_MenuItems[cItems - 1];
 
     for (iItem = cItems - 1; iItem >= 0; --iItem)
@@ -5805,15 +5811,15 @@ inline void CUIFMenu::SetSelectedId(UINT nSelectID)
 
 inline void CUIFMenu::SetSelectedItem(CUIFMenuItem *pItem)
 {
-    CUIFMenuItem *pOldItem = m_pMenuItem;
+    CUIFMenuItem *pOldItem = m_pSelectedItem;
     if (pOldItem == pItem)
         return;
 
-    m_pMenuItem = pItem;
+    m_pSelectedItem = pItem;
     if (pOldItem)
         pOldItem->CallOnPaint();
-    if (m_pMenuItem)
-        m_pMenuItem->CallOnPaint();
+    if (m_pSelectedItem)
+        m_pSelectedItem->CallOnPaint();
 }
 
 inline UINT CUIFMenu::ShowModalPopup(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag)
@@ -5991,14 +5997,13 @@ CUIFMenuItem::OnLButtonUp(LONG x, LONG y)
 inline STDMETHODIMP_(void)
 CUIFMenuItem::OnMouseIn(LONG x, LONG y)
 {
-    DWORD Delay;
-
     if (m_pMenu->m_pParentMenu)
         m_pMenu->m_pParentMenu->CancelMenu();
 
     if (m_pSubMenu)
     {
-        if (!::SystemParametersInfoA(SPI_GETMENUSHOWDELAY, 0, &Delay, 0))
+        DWORD Delay;
+        if (!::SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &Delay, 0))
             Delay = 300;
 
         CUIFObject::StartTimer(Delay);
@@ -6010,7 +6015,7 @@ CUIFMenuItem::OnMouseIn(LONG x, LONG y)
 inline STDMETHODIMP_(void)
 CUIFMenuItem::OnPaint(HDC hDC)
 {
-    if (m_pMenu->m_style & 0x10000000)
+    if (m_pMenu->m_style & UIF_MENU_USE_OFF10)
         OnPaintO10(hDC);
     else
         OnPaintDef(hDC);
