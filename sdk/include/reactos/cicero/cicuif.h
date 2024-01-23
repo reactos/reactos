@@ -5691,15 +5691,11 @@ CUIFMenuItem::CUIFMenuItem(
 {
     m_ichMenuItemPrefix = -1;
     m_nMenuItemID = 0;
-    m_pszMenuItemLeft = NULL;
-    m_cchMenuItemLeft = 0;
-    m_pszMenuItemRight = NULL;
-    m_cchMenuItemRight = 0;
+    m_pszMenuItemLeft = m_pszMenuItemRight = NULL;
+    m_cchMenuItemLeft = m_cchMenuItemRight = 0;
     m_nMenuItemVKey = 0;
-    m_hbmColor = NULL;
-    m_hbmMask = NULL;
-    m_bMenuItemChecked = FALSE;
-    m_bMenuItemGrayed = FALSE;
+    m_hbmColor = m_hbmMask = NULL;
+    m_bMenuItemChecked = m_bMenuItemGrayed = FALSE;
     m_bMenuItemDisabled = bDisabled;
     m_pMenu = pMenu;
 }
