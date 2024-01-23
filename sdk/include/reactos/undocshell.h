@@ -55,6 +55,11 @@ typedef struct _TRAYNOTIFYDATAW
 #define TWM_CYCLEFOCUS (WM_USER + 348)
 
 /****************************************************************************
+ * ProgMan messages
+ */
+#define WM_PROGMAN_OPENSHELLSETTINGS (WM_USER + 22) /* wParam specifies the dialog (and tab page) */
+
+/****************************************************************************
  *  IDList Functions
  */
 BOOL WINAPI ILGetDisplayName(

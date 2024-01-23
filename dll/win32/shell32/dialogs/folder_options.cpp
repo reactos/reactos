@@ -275,7 +275,7 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
     pinfo.pszCaption = szOptions;
     pinfo.pfnCallback = PropSheetProc;
-    pinfo.nStartPage = (UINT)(UINT_PTR)param;
+    pinfo.nStartPage = PtrToUlong(param);
 
     PropertySheetW(&pinfo);
 
@@ -298,7 +298,7 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
         return;
     }
     
-    LPVOID param = (LPVOID)(UINT_PTR)Page;
+    LPVOID param = UlongToPtr(Page);
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
     else
@@ -314,8 +314,13 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
             ShowFolderOptionsDialog(PAGE_GENERAL);
             break;
 
-        case 1: // Show taskbar options dialog
-            PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
+        case 1: // Taskbar settings
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        case 3: // Start menu settings
+        case 4: // Tray icon settings
+        case 6: // Taskbar toolbars
+#endif
+            PostMessage(GetShellWindow(), WM_PROGMAN_OPENSHELLSETTINGS, fOptions, 0);
             break;
 
         case 7: // Windows 8, 10

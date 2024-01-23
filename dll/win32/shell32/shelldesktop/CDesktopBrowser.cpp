@@ -99,7 +99,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
-    MESSAGE_HANDLER(WM_USER+22, OnShowOptionsDlg)
+    MESSAGE_HANDLER(WM_PROGMAN_OPENSHELLSETTINGS, OnShowOptionsDlg)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -467,7 +467,11 @@ LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (wParam)
     {
         case 0:
-            ShowFolderOptionsDialog(0, TRUE);
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        case 2:
+        case 7:
+#endif
+            ShowFolderOptionsDialog(PtrToUlong(wParam), TRUE);
             break;
         case 1:
             _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
