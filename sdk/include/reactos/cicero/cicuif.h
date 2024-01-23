@@ -235,7 +235,7 @@ public:
     void StartTimer(WPARAM wParam);
     void EndTimer();
 
-    STDMETHOD_(void, Initialize)();
+    STDMETHOD_(void, Initialize)() { }
     STDMETHOD_(void, OnPaint)(HDC hDC);
     STDMETHOD_(void, OnTimer)() { }
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) { }
@@ -262,13 +262,13 @@ public:
     STDMETHOD_(void, RemoveUIObj)(CUIFObject *pObject);
     STDMETHOD_(LRESULT, OnObjectNotify)(CUIFObject *pObject, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, SetToolTip)(LPCWSTR pszToolTip);
-    STDMETHOD_(LPCWSTR, GetToolTip)();
-    STDMETHOD_(LRESULT, OnShowToolTip)();
+    STDMETHOD_(LPCWSTR, GetToolTip)() { return m_pszToolTip; }
+    STDMETHOD_(LRESULT, OnShowToolTip)() { return 0; }
     STDMETHOD_(void, OnHideToolTip)() { }
     STDMETHOD_(void, DetachWndObj)();
     STDMETHOD_(void, ClearWndObj)();
-    STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC);
-    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC);
+    STDMETHOD_(BOOL, OnPaintTheme)(HDC hDC) { return FALSE; }
+    STDMETHOD_(void, OnPaintNoTheme)(HDC hDC) { }
     STDMETHOD_(void, ClearTheme)();
 };
 
@@ -591,34 +591,40 @@ public:
     STDMETHOD_(void, Move)(INT x, INT y, INT nWidth, INT nHeight);
     STDMETHOD_(BOOL, AnimateWnd)(DWORD dwTime, DWORD dwFlags);
     STDMETHOD_(void, OnObjectMoved)(CUIFObject *pObject);
-    STDMETHOD_(void, OnPointingEnded)(LONG x, LONG y);
+    STDMETHOD_(void, OnPointingEnded)(LONG x, LONG y) { }
     STDMETHOD_(void, OnCreate)(HWND hWnd);
     STDMETHOD_(void, OnDestroy)(HWND hWnd);
     STDMETHOD_(void, OnNCDestroy)(HWND hWnd);
-    STDMETHOD_(void, OnSetFocus)(HWND hWnd);
-    STDMETHOD_(void, OnKillFocus)(HWND hWnd);
-    STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(void, OnTimer)(WPARAM wParam);
-    STDMETHOD_(void, OnSysColorChange)();
-    STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnSetFocus)(HWND hWnd) { }
+    STDMETHOD_(void, OnKillFocus)(HWND hWnd) { }
+    STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
+    STDMETHOD_(void, OnTimer)(WPARAM wParam) { }
+    STDMETHOD_(void, OnSysColorChange)() { }
+    STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
+    STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnKeyUp)(HWND, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnNotifyFormat)(HWND hWnd, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnShowWindow)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { }
+    STDMETHOD_(LRESULT, OnActivate)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
+    STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return 0; }
+    STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return 0; }
+    STDMETHOD_(LRESULT, OnNotifyFormat)(HWND hWnd, WPARAM wParam, LPARAM lParam) { return 0; }
+    STDMETHOD_(LRESULT, OnShowWindow)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return 0; }
     STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return 0; }
+    STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return 0; }
     STDMETHOD_(LRESULT, WindowProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    { return FALSE; }
     STDMETHOD_(void, OnThemeChanged)(HWND hWnd, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(void, UpdateUI)(LPCRECT prc);
     STDMETHOD_(void, SetCapture)(int);
-    STDMETHOD_(void, ModalMouseNotify)(UINT uMsg, LONG x, LONG y);
-    STDMETHOD_(void, OnAnimationStart)();
+    STDMETHOD_(void, ModalMouseNotify)(UINT uMsg, LONG x, LONG y) { }
+    STDMETHOD_(void, OnAnimationStart)() { }
     STDMETHOD_(void, OnAnimationEnd)();
     STDMETHOD_(void, HandleMouseMsg)(UINT uMsg, LONG x, LONG y);
     STDMETHOD_(void, ClientRectToWindowRect)(LPRECT pRect);
@@ -1363,10 +1369,6 @@ CUIFObject::~CUIFObject()
     CloseThemeData();
 }
 
-inline STDMETHODIMP_(void) CUIFObject::Initialize()
-{
-}
-
 inline STDMETHODIMP_(void) CUIFObject::OnPaint(HDC hDC)
 {
     if (!(m_pWindow->m_style & UIF_WINDOW_ENABLETHEMED) || !OnPaintTheme(hDC))
@@ -1497,30 +1499,11 @@ inline STDMETHODIMP_(void) CUIFObject::SetToolTip(LPCWSTR pszToolTip)
     }
 }
 
-inline STDMETHODIMP_(LPCWSTR) CUIFObject::GetToolTip()
-{
-    return m_pszToolTip;
-}
-
-inline STDMETHODIMP_(LRESULT) CUIFObject::OnShowToolTip()
-{
-    return 0;
-}
-
 inline STDMETHODIMP_(void) CUIFObject::ClearWndObj()
 {
     m_pWindow = NULL;
     for (size_t iItem = 0; iItem < m_ObjectArray.size(); ++iItem)
         m_ObjectArray[iItem]->ClearWndObj();
-}
-
-inline STDMETHODIMP_(BOOL) CUIFObject::OnPaintTheme(HDC hDC)
-{
-    return FALSE;
-}
-
-inline STDMETHODIMP_(void) CUIFObject::OnPaintNoTheme(HDC hDC)
-{
 }
 
 inline STDMETHODIMP_(void) CUIFObject::ClearTheme()
@@ -2625,12 +2608,6 @@ CUIFWindow::Initialize()
     return CUIFObject::Initialize();
 }
 
-inline STDMETHODIMP_(void)
-CUIFWindow::OnUser(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  ;
-}
-
 inline STDMETHODIMP_(LRESULT)
 CUIFWindow::OnSettingChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3355,104 +3332,6 @@ CUIFWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
                 break;
         }
     }
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnSetFocus(HWND hWnd)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnPointingEnded(LONG x, LONG y)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnKillFocus(HWND hWnd)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnTimer(WPARAM wParam)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnSysColorChange()
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnEndSession(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnActivate(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnWindowPosChanging(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnNotifyFormat(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnShowWindow(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnDisplayChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(LRESULT)
-CUIFWindow::OnGetObject(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-inline STDMETHODIMP_(BOOL)
-CUIFWindow::OnEraseBkGnd(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return FALSE;
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::ModalMouseNotify(UINT uMsg, LONG x, LONG y)
-{
-}
-
-inline STDMETHODIMP_(void)
-CUIFWindow::OnAnimationStart()
-{
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -5184,22 +5063,16 @@ CUIFBalloonWindow::CUIFBalloonWindow(HINSTANCE hInst, DWORD style) : CUIFWindow(
     m_nActionID = -1;
     m_hRgn = NULL;
     m_pszBalloonText = NULL;
-    m_bHasBkColor = FALSE;
-    m_bHasTextColor = FALSE;
+    m_bHasBkColor = m_bHasTextColor = FALSE;
     m_rgbBkColor = 0;
     m_rgbTextColor = 0;
-    m_ptTarget.x = 0;
-    m_ptTarget.y = 0;
-    m_rcExclude.left = 0;
-    m_rcExclude.right = 0;
-    m_rcExclude.top = 0;
-    m_rcExclude.bottom = 0;
+    m_ptTarget.x = m_ptTarget.y = 0;
+    ZeroMemory(&m_rcExclude, sizeof(m_rcExclude));
     m_dwUnknown7 = 0;
     m_nBalloonType = 0;
     m_dwUnknown8[0] = 0;
     m_dwUnknown8[1] = 0;
-    m_ptBalloon.x = 0;
-    m_ptBalloon.y = 0;
+    m_ptBalloon.x = m_ptBalloon.y = 0;
     m_cButtons = 0;
     m_hwndNotif = NULL;
     m_uNotifMsg = 0;
