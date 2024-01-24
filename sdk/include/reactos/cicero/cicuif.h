@@ -5940,10 +5940,38 @@ inline void CUIFMenuItem::DrawArrow(HDC hDC, INT xLeft, INT yTop)
     ::SelectObject(hDC, hFontOld);
 }
 
-/// @unimplemented
 inline void CUIFMenuItem::DrawBitmapProc(HDC hDC, INT xLeft, INT yTop)
 {
-    //FIXME
+    if (!m_pScheme || !m_hbmColor)
+        return;
+
+    BITMAP bm;
+    ::GetObject(m_hbmColor, sizeof(bm), &bm);
+
+    INT width = m_pMenu->m_cxyMargin, height = m_rc.bottom - m_rc.top;
+    if (width > bm.bmWidth)
+    {
+        width = bm.bmWidth;
+        xLeft += (width - bm.bmWidth) / 2;
+    }
+    if (height > bm.bmHeight)
+    {
+        height = bm.bmHeight;
+        yTop += (height - bm.bmHeight) / 2;
+    }
+
+    RECT rc = { xLeft, yTop, xLeft + width, yTop + height };
+
+    if (IsRTL())
+        m_pScheme->m_bMirroring = TRUE;
+
+    if (m_pMenu->m_pSelectedItem != this || m_bMenuItemDisabled)
+        m_pScheme->DrawFrameCtrlBitmap(hDC, &rc, m_hbmColor, m_hbmMask, 0);
+    else
+        m_pScheme->DrawFrameCtrlBitmap(hDC, &rc, m_hbmColor, m_hbmMask, UIF_DRAW_PRESSED);
+
+    if (IsRTL())
+        m_pScheme->m_bMirroring = FALSE;
 }
 
 inline void CUIFMenuItem::DrawCheck(HDC hDC, INT xLeft, INT yTop)
