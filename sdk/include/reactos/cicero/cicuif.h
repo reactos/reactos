@@ -762,11 +762,11 @@ class CUIFMenuItem : public CUIFObject
 protected:
     UINT m_nMenuItemID;
     LPWSTR m_pszMenuItemLeft;
-    INT m_cchMenuItemLeft;
+    UINT m_cchMenuItemLeft;
     LPWSTR m_pszMenuItemRight;
-    INT m_cchMenuItemRight;
+    UINT m_cchMenuItemRight;
     UINT m_nMenuItemVKey;
-    INT m_ichMenuItemPrefix;
+    UINT m_ichMenuItemPrefix;
     HBITMAP m_hbmColor;
     HBITMAP m_hbmMask;
     BOOL m_bMenuItemChecked;
