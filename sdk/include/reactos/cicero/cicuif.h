@@ -5598,10 +5598,29 @@ inline void CUIFMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
     }
 }
 
-/// @unimplemented
 inline void CUIFMenu::SetMenuFont()
 {
-    //FIXME
+    LONG height = 14;
+
+    NONCLIENTMETRICS ncm = { sizeof(ncm) };
+    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0))
+    {
+        HFONT hFont = ::CreateFontIndirect(&ncm.lfMenuFont);
+        SetFont(hFont);
+        LONG lfHeight = ncm.lfMenuFont.lfHeight;
+        if (ncm.lfMenuFont.lfHeight < 0)
+            lfHeight = -lfHeight;
+        height = (ncm.iMenuHeight + lfHeight) / 2;
+    }
+
+    m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET, 0, 0, 0, 0, L"Marlett");
+    m_cxyMargin = height;
+
+    INT cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
+    if (m_cxyMargin < cxSmallIcon)
+        m_cxyMargin = cxSmallIcon;
+
+    m_cxyMargin += 2;
 }
 
 inline void CUIFMenu::SetSelectedId(UINT nSelectID)
