@@ -5911,10 +5911,56 @@ inline CUIFMenuItem::~CUIFMenuItem()
     }
 }
 
-/// @unimplemented
 inline BOOL CUIFMenuItem::Init(UINT nMenuItemID, LPCWSTR pszText)
 {
-    //FIXME
+    m_nMenuItemID = nMenuItemID;
+
+    if (!pszText)
+    {
+        m_pszMenuItemLeft = NULL;
+        m_cchMenuItemLeft = 0;
+        return TRUE;
+    }
+
+    INT cch = lstrlenW(pszText);
+    m_pszMenuItemLeft = new(cicNoThrow) WCHAR[cch + 1];
+    if (!m_pszMenuItemLeft)
+        return FALSE;
+
+    const WCHAR *pch0 = pszText;
+    INT ich1, ich2;
+    for (ich1 = 0; *pch0 && *pch0 != L'\t'; ++ich1, ++pch0)
+    {
+        if (*pch0 == L'&' && *++pch0 != L'&')
+        {
+            m_nMenuItemVKey = ::VkKeyScanW(*pch0);
+            if (!m_nMenuItemVKey)
+                m_nMenuItemVKey = (BYTE)VkKeyScanA(*(BYTE*)pch0);
+            m_ichMenuItemPrefix = ich1;
+        }
+        m_pszMenuItemLeft[ich1] = *pch0;
+    }
+    m_pszMenuItemLeft[ich1] = 0;
+    m_cchMenuItemLeft = lstrlenW(m_pszMenuItemLeft);
+
+    if (*pch0 == L'\t')
+    {
+        m_cchMenuItemRight = 0;
+        m_pszMenuItemRight = new(cicNoThrow) WCHAR[cch + 1];
+        if (m_pszMenuItemRight)
+        {
+            ++pch0;
+            WCHAR wch = *pch0;
+            for (ich2 = 0; *pch0; ++ich2)
+            {
+                m_pszMenuItemRight[ich2] = wch;
+                wch = *++pch0;
+            }
+            m_pszMenuItemRight[ich2] = 0;
+            m_cchMenuItemRight = lstrlenW(m_pszMenuItemRight);
+        }
+    }
+
     return TRUE;
 }
 
