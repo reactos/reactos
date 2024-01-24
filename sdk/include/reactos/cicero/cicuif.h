@@ -4487,9 +4487,8 @@ CUIFToolbarMenuButton::CUIFToolbarMenuButton(
 {
     m_pToolbarButton = pParent;
 
-    HFONT hFont = ::CreateFont(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, SYMBOL_CHARSET,
-                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                               DEFAULT_PITCH | FF_DONTCARE, TEXT("Marlett"));
+    HFONT hFont = ::CreateFontW(8, 8, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
+                                0, 0, 0, 0, L"Marlett");
     SetFont(hFont);
     SetText(L"u"); // downward triangle
 }
@@ -5613,7 +5612,8 @@ inline void CUIFMenu::SetMenuFont()
         height = (ncm.iMenuHeight + lfHeight) / 2;
     }
 
-    m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET, 0, 0, 0, 0, L"Marlett");
+    m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
+                                0, 0, 0, 0, L"Marlett");
     m_cxyMargin = height;
 
     INT cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
