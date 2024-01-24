@@ -5204,12 +5204,60 @@ CUIFBalloonWindow::AdjustPos()
     //FIXME
 }
 
-/// @unimplemented
 inline HRGN
 CUIFBalloonWindow::CreateRegion(LPCRECT prc)
 {
-    //FIXME
-    return NULL;
+    POINT Points[4];
+    HRGN hRgn;
+    BOOL bFlag = FALSE;
+    LONG x, y;
+
+    switch (m_nBalloonType)
+    {
+        case 1:
+            hRgn = ::CreateRoundRectRgn(prc->left, prc->top + 16, prc->right, prc->bottom, 16, 16);
+            y = prc->top + 16;
+            bFlag = TRUE;
+            break;
+
+        case 2:
+            hRgn = ::CreateRoundRectRgn(prc->left, prc->top, prc->right - 16, prc->bottom, 16, 16);
+            x = prc->right - 17;
+            break;
+
+        case 3:
+            hRgn = ::CreateRoundRectRgn(prc->left + 16, prc->top, prc->right, prc->bottom, 16, 16);
+            x = prc->left + 16;
+            break;
+
+        default:
+            hRgn = ::CreateRoundRectRgn(prc->left, prc->top, prc->right, prc->bottom - 16, 16, 16);
+            y = prc->bottom - 17;
+            bFlag = TRUE;
+            break;
+    }
+
+    if (bFlag)
+    {
+        Points[1].x = x = m_ptBalloon.x;
+        Points[1].y = m_ptBalloon.y;
+        Points[0].y = Points[2].y = Points[3].y = y;
+        Points[2].x = x + 10 * (2 * (m_dwUnknown8[0] == 0) - 1);
+    }
+    else
+    {
+        Points[2].x = x;
+        Points[0].y = Points[1].y = Points[3].y = y = m_ptBalloon.y;
+        Points[1].x = m_ptBalloon.x;
+        Points[2].y = y + 10 * (2 * (m_dwUnknown8[0] == 2) - 1);
+    }
+
+    Points[0].x = Points[3].x = x;
+
+    HRGN hPolygonRgn = ::CreatePolygonRgn(Points, 4, WINDING);
+    ::CombineRgn(hRgn, hRgn, hPolygonRgn, RGN_OR);
+    ::DeleteObject(hPolygonRgn);
+    return hRgn;
 }
 
 inline void
