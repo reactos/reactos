@@ -5239,7 +5239,7 @@ CUIFBalloonWindow::CreateRegion(LPCRECT prc)
 
     if (bFlag)
     {
-        Points[1].x = x = m_ptBalloon.x;
+        x = Points[1].x = m_ptBalloon.x;
         Points[1].y = m_ptBalloon.y;
         Points[0].y = Points[2].y = Points[3].y = y;
         Points[2].x = x + 10 * (2 * (m_dwUnknown8[0] == 0) - 1);
@@ -5247,14 +5247,14 @@ CUIFBalloonWindow::CreateRegion(LPCRECT prc)
     else
     {
         Points[2].x = x;
-        Points[0].y = Points[1].y = Points[3].y = y = m_ptBalloon.y;
+        y = Points[0].y = Points[1].y = Points[3].y = m_ptBalloon.y;
         Points[1].x = m_ptBalloon.x;
         Points[2].y = y + 10 * (2 * (m_dwUnknown8[0] == 2) - 1);
     }
 
     Points[0].x = Points[3].x = x;
 
-    HRGN hPolygonRgn = ::CreatePolygonRgn(Points, 4, WINDING);
+    HRGN hPolygonRgn = ::CreatePolygonRgn(Points, _countof(Points), WINDING);
     ::CombineRgn(hRgn, hRgn, hPolygonRgn, RGN_OR);
     ::DeleteObject(hPolygonRgn);
     return hRgn;
