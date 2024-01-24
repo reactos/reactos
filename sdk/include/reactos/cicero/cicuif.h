@@ -5606,6 +5606,7 @@ inline void CUIFMenu::SetMenuFont()
     {
         HFONT hFont = ::CreateFontIndirect(&ncm.lfMenuFont);
         SetFont(hFont);
+
         LONG lfHeight = ncm.lfMenuFont.lfHeight;
         if (ncm.lfMenuFont.lfHeight < 0)
             lfHeight = -lfHeight;
@@ -5614,13 +5615,8 @@ inline void CUIFMenu::SetMenuFont()
 
     m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
                                 0, 0, 0, 0, L"Marlett");
-    m_cxyMargin = height;
-
     INT cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
-    if (m_cxyMargin < cxSmallIcon)
-        m_cxyMargin = cxSmallIcon;
-
-    m_cxyMargin += 2;
+    m_cxyMargin = max(height, cxSmallIcon) + 2;
 }
 
 inline void CUIFMenu::SetSelectedId(UINT nSelectID)
