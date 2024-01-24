@@ -766,7 +766,7 @@ protected:
     LPWSTR m_pszMenuItemRight;
     INT m_cchMenuItemRight;
     UINT m_nMenuItemVKey;
-    UINT m_ichMenuItemPrefix;
+    INT m_ichMenuItemPrefix;
     HBITMAP m_hbmColor;
     HBITMAP m_hbmMask;
     BOOL m_bMenuItemChecked;
