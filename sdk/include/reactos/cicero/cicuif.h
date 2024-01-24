@@ -5979,11 +5979,43 @@ inline BOOL CUIFMenuItem::Init(UINT nMenuItemID, LPCWSTR pszText)
     return TRUE;
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenuItem::InitMenuExtent()
 {
-    //FIXME
+    HDC hDC = ::GetDC(*m_pWindow);
+    if (!m_pszMenuItemLeft)
+    {
+        if (m_hbmColor)
+        {
+            BITMAP bm;
+            ::GetObject(m_hbmColor, sizeof(bm), &bm);
+            m_MenuLeftExtent.cx = bm.bmWidth + 2;
+            m_MenuLeftExtent.cy = bm.bmHeight + 4;
+        }
+        else
+        {
+            m_MenuLeftExtent.cx = m_MenuLeftExtent.cy = 0;
+        }
+        return;
+    }
+
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+    ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_cchMenuItemLeft, &m_MenuLeftExtent);
+    m_MenuLeftExtent.cx += 16;
+    m_MenuLeftExtent.cy += 8;
+    if (m_pszMenuItemRight)
+    {
+        ::GetTextExtentPoint32W(hDC, m_pszMenuItemRight, m_cchMenuItemRight, &m_MenuRightExtent);
+        m_MenuRightExtent.cy += 8;
+    }
+    ::SelectObject(hDC, hFontOld);
+
+    if (m_pSubMenu)
+        m_MenuLeftExtent.cx += m_MenuLeftExtent.cy + 2;
+    if (m_pMenu->m_style & UIF_MENU_USE_OFF10)
+        m_MenuLeftExtent.cx += 24;
+
+    ::ReleaseDC(*m_pWindow, hDC);
 }
 
 inline BOOL CUIFMenuItem::IsCheck()
