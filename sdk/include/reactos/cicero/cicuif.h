@@ -5982,7 +5982,6 @@ inline BOOL CUIFMenuItem::Init(UINT nMenuItemID, LPCWSTR pszText)
 inline STDMETHODIMP_(void)
 CUIFMenuItem::InitMenuExtent()
 {
-    HDC hDC = ::GetDC(*m_pWindow);
     if (!m_pszMenuItemLeft)
     {
         if (m_hbmColor)
@@ -5998,6 +5997,8 @@ CUIFMenuItem::InitMenuExtent()
         }
         return;
     }
+
+    HDC hDC = ::GetDC(*m_pWindow);
 
     HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
     ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_cchMenuItemLeft, &m_MenuLeftExtent);
