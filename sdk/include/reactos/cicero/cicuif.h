@@ -5771,11 +5771,85 @@ CUIFMenu::ModalMouseNotify(UINT uMsg, LONG x, LONG y)
         CancelMenu();
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenu::OnKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    //FIXME
+    CUIFMenuItem *pTargetItem;
+
+    BYTE vKey = (BYTE)wParam;
+
+    switch (vKey)
+    {
+        case VK_ESCAPE:
+            CancelMenu();
+            return;
+
+        case VK_LEFT:
+            if (!m_pVisibleSubMenu)
+                return;
+
+            CancelMenu();
+            return;
+
+        case VK_RIGHT:
+            if (m_pSelectedItem && m_pSelectedItem->m_pSubMenu)
+            {
+                m_pSelectedItem->ShowSubPopup();
+                CUIFMenu *pSubMenu = m_pSelectedItem->m_pSubMenu;
+                pTargetItem = pSubMenu->GetNextItem(NULL);
+                pSubMenu->SetSelectedItem(pTargetItem);
+            }
+            return;
+
+        case VK_UP:
+            pTargetItem = GetPrevItem(m_pSelectedItem);
+            SetSelectedItem(pTargetItem);
+            return;
+
+        case VK_DOWN:
+            pTargetItem = GetNextItem(m_pSelectedItem);
+            SetSelectedItem(pTargetItem);
+            return;
+
+        case VK_RETURN:
+            break;
+
+        default:
+        {
+            if (!(('A' <= vKey && vKey <= 'Z') || ('0' <= vKey && vKey <= '9')))
+                return;
+
+            size_t iItem;
+            for (iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+            {
+                CUIFMenuItem *pItem = m_MenuItems[iItem];
+                if (pItem->m_nMenuItemVKey == vKey)
+                {
+                    SetSelectedItem(pItem);
+                    break;
+                }
+            }
+
+            if (iItem == m_MenuItems.size())
+                return;
+        }
+    }
+
+    if (m_pSelectedItem && !m_pSelectedItem->m_bMenuItemGrayed)
+    {
+        CUIFMenu *pSubMenu = m_pSelectedItem->m_pSubMenu;
+        if (pSubMenu)
+        {
+            m_pSelectedItem->ShowSubPopup();
+            pTargetItem = pSubMenu->GetNextItem(NULL);
+            pSubMenu->SetSelectedItem(pTargetItem);
+        }
+        else
+        {
+            SetSelectedId(m_pSelectedItem->m_nMenuItemID);
+            ::PostMessage(m_hWnd, WM_NULL, 0, 0);
+        }
+    }
 }
 
 inline void CUIFMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
