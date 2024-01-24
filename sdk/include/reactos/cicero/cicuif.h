@@ -762,9 +762,9 @@ class CUIFMenuItem : public CUIFObject
 protected:
     UINT m_nMenuItemID;
     LPWSTR m_pszMenuItemLeft;
-    INT m_cchMenuItemLeft;
+    UINT m_cchMenuItemLeft;
     LPWSTR m_pszMenuItemRight;
-    INT m_cchMenuItemRight;
+    UINT m_cchMenuItemRight;
     UINT m_nMenuItemVKey;
     UINT m_ichMenuItemPrefix;
     HBITMAP m_hbmColor;
@@ -782,7 +782,7 @@ protected:
     void DrawArrow(HDC hDC, INT x, INT y);
     void DrawBitmapProc(HDC hDC, INT xLeft, INT yTop);
     void DrawCheck(HDC hDC, INT xLeft, INT yTop);
-    void DrawUnderline(HDC hDC, INT cxMargin, INT cyMargin, HBRUSH hbr);
+    void DrawUnderline(HDC hDC, INT xText, INT yText, HBRUSH hbr);
 
 public:
     CUIFMenuItem(CUIFMenu *pMenu, BOOL bDisabled);
@@ -6153,11 +6153,24 @@ inline void CUIFMenuItem::DrawCheck(HDC hDC, INT xLeft, INT yTop)
     ::SelectObject(hDC, hFontOld);
 }
 
-/// @unimplemented
 inline void
-CUIFMenuItem::DrawUnderline(HDC hDC, INT cxMargin, INT cyMargin, HBRUSH hbr)
+CUIFMenuItem::DrawUnderline(HDC hDC, INT xText, INT yText, HBRUSH hbr)
 {
-    //FIXME
+    if (m_ichMenuItemPrefix > m_cchMenuItemLeft)
+        return;
+
+    SIZE PrePrefixSize, PostPrefixSize;
+    ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_ichMenuItemPrefix, &PrePrefixSize);
+    ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_ichMenuItemPrefix + 1, &PostPrefixSize);
+
+    BOOL bHeadPrefix = (m_ichMenuItemPrefix == 0);
+
+    RECT rc;
+    rc.left   = xText + PrePrefixSize.cx + !bHeadPrefix;
+    rc.right  = xText + PostPrefixSize.cx;
+    rc.top    = (yText + PostPrefixSize.cy) - 1;
+    rc.bottom = yText + PostPrefixSize.cy;
+    ::FillRect(hDC, &rc, hbr);
 }
 
 inline STDMETHODIMP_(void)
