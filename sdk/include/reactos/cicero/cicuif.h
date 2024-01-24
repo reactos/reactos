@@ -5608,7 +5608,7 @@ inline void CUIFMenu::SetMenuFont()
         SetFont(hFont);
 
         LONG lfHeight = ncm.lfMenuFont.lfHeight;
-        if (ncm.lfMenuFont.lfHeight < 0)
+        if (lfHeight < 0)
             lfHeight = -lfHeight;
         height = (ncm.iMenuHeight + lfHeight) / 2;
     }
