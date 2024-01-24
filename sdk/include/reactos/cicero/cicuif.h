@@ -4487,9 +4487,8 @@ CUIFToolbarMenuButton::CUIFToolbarMenuButton(
 {
     m_pToolbarButton = pParent;
 
-    HFONT hFont = ::CreateFont(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, SYMBOL_CHARSET,
-                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                               DEFAULT_PITCH | FF_DONTCARE, TEXT("Marlett"));
+    HFONT hFont = ::CreateFontW(8, 8, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
+                                0, 0, 0, 0, L"Marlett");
     SetFont(hFont);
     SetText(L"u"); // downward triangle
 }
@@ -5791,10 +5790,26 @@ inline void CUIFMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
     }
 }
 
-/// @unimplemented
 inline void CUIFMenu::SetMenuFont()
 {
-    //FIXME
+    LONG height = 14;
+
+    NONCLIENTMETRICS ncm = { sizeof(ncm) };
+    if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0))
+    {
+        HFONT hFont = ::CreateFontIndirect(&ncm.lfMenuFont);
+        SetFont(hFont);
+
+        LONG lfHeight = ncm.lfMenuFont.lfHeight;
+        if (lfHeight < 0)
+            lfHeight = -lfHeight;
+        height = (ncm.iMenuHeight + lfHeight) / 2;
+    }
+
+    m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
+                                0, 0, 0, 0, L"Marlett");
+    INT cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
+    m_cxyMargin = max(height, cxSmallIcon) + 2;
 }
 
 inline void CUIFMenu::SetSelectedId(UINT nSelectID)
