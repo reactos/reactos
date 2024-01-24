@@ -5579,11 +5579,156 @@ inline void CUIFMenu::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
     CUIFWindow::HandleMouseMsg(uMsg, x, y);
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(BOOL)
 CUIFMenu::InitShow(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag, BOOL bDoAnimation)
 {
-    //FIXME
+    HWND hWnd = NULL;
+    if (pWindow)
+        hWnd = *pWindow;
+
+    CreateWnd(hWnd);
+
+    m_bHasMargin = FALSE;
+
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        if (m_MenuItems[iItem])
+            m_MenuItems[iItem]->InitMenuExtent();
+    }
+
+    INT cxMax = 0;
+
+    m_cxMenuExtent = 0;
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        CUIFMenuItem *pItem = m_MenuItems[iItem];
+        if (!pItem)
+            continue;
+
+        INT cxItem = m_cxyMargin + pItem->m_MenuLeftExtent.cx;
+        if (cxMax < cxItem)
+            cxMax = cxItem;
+        m_cxMenuExtent = max(m_cxMenuExtent, pItem->m_MenuRightExtent.cx);
+        if (!m_bHasMargin && pItem->m_hbmColor && pItem->IsCheck())
+            m_bHasMargin = TRUE;
+    }
+
+    RECT rcItem = { 0, 0, 0, 0 };
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        CUIFMenuItem *pItem = m_MenuItems[iItem];
+        if (!pItem)
+            continue;
+
+        INT cyItem = pItem->m_MenuLeftExtent.cy;
+        rcItem.right = rcItem.left + cxMax + m_cxMenuExtent;
+        rcItem.bottom = rcItem.top + cyItem;
+        pItem->SetRect(&rcItem);
+        rcItem.top += cyItem;
+        AddUIObj(pItem);
+    }
+
+    rcItem.top = 0;
+    DWORD style = ::GetWindowLongPtr(hWnd, GWL_STYLE);
+    cxMax = rcItem.right;
+    INT cyMax = rcItem.bottom;
+    if (style & WS_DLGFRAME)
+    {
+        cxMax = rcItem.right + 2 * ::GetSystemMetrics(SM_CXDLGFRAME);
+        cyMax += 2 * ::GetSystemMetrics(SM_CYDLGFRAME);
+    }
+    else if (style & WS_BORDER)
+    {
+        cxMax = rcItem.right + 2 * ::GetSystemMetrics(SM_CXBORDER);
+        cyMax += 2 * ::GetSystemMetrics(SM_CYBORDER);
+    }
+
+    RECT rc = { 0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN) };
+
+    RECT rc3 = *prc;
+    HMONITOR hMon = ::MonitorFromRect(&rc3, MONITOR_DEFAULTTONEAREST);
+    if (hMon)
+    {
+        MONITORINFO mi = { sizeof(mi) };
+        if (::GetMonitorInfo(hMon, &mi))
+            rc = mi.rcMonitor;
+    }
+
+    if (m_style & 0x200)
+        rcItem.left -= cxMax;
+
+    INT x, y;
+    DWORD dwFlags2 = 0;
+
+    if (bFlag)
+    {
+        INT bottom = prc->bottom;
+        x = rcItem.left + prc->left;
+        if (rcItem.top + bottom + cyMax > rc.bottom)
+        {
+            bottom = prc->top - cyMax;
+            dwFlags2 = 8;
+        }
+        else
+        {
+            dwFlags2 = 4;
+        }
+
+        y = rcItem.top + bottom;
+
+        if (rcItem.left + cxMax + prc->right > rc.right)
+            x = rc.right - cxMax;
+    }
+    else
+    {
+        y = rcItem.top + prc->top;
+        if (rcItem.left + prc->right + cxMax > rc.right)
+        {
+            x = rcItem.left + prc->left - cxMax;
+            dwFlags2 = 2;
+        }
+        else
+        {
+            x = rcItem.left + prc->right;
+            dwFlags2 = 1;
+        }
+        if (rcItem.top + cyMax + prc->bottom > rc.bottom)
+            y = rc.bottom - cyMax;
+    }
+
+    if (x > rc.right - cxMax)
+        x = rc.right - cxMax;
+    if (x < rc.left)
+        x = rc.left;
+    if (y > rc.bottom - cyMax)
+        y = rc.bottom - cyMax;
+    if (y < rc.top)
+        y = rc.top;
+
+    Move(x, y, cxMax, -1);
+
+    SetRect(NULL);
+
+    BOOL bAnimation = FALSE;
+    if (bDoAnimation &&
+        ::SystemParametersInfo(SPI_GETMENUANIMATION, 0, &bAnimation, 0) && bAnimation)
+    {
+        BOOL bMenuFade = FALSE;
+        if (!::SystemParametersInfoA(SPI_GETMENUFADE, 0, &bMenuFade, 0))
+            bMenuFade = FALSE;
+
+        DWORD dwFlags = (bMenuFade ? 0x80000 : dwFlags2) | 0x40000;
+        if (!AnimateWnd(200, dwFlags))
+            Show(TRUE);
+    }
+    else
+    {
+        Show(TRUE);
+    }
+
+    if (m_pVisibleSubMenu)
+        m_pVisibleSubMenu->m_pParentMenu = this;
+
     return TRUE;
 }
 
