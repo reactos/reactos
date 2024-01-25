@@ -34,6 +34,7 @@ class CUIFTheme;
         class CUIFWndFrame;
         class CUIFGripper;
         class CUIFMenuItem;
+            class CUIFMenuItemSeparator;
 class CUIFObjectArray;
 class CUIFColorTable;
     class CUIFColorTableSys;
@@ -806,9 +807,21 @@ public:
     STDMETHOD_(void, OnTimer)() override;
 
     STDMETHOD_(void, InitMenuExtent)();
-    STDMETHOD_(void, OnPaintO10)(HDC hDC);
     STDMETHOD_(void, OnPaintDef)(HDC hDC);
+    STDMETHOD_(void, OnPaintO10)(HDC hDC);
     STDMETHOD_(void, OnUnknownMethod)() { } // FIXME: method name
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+class CUIFMenuItemSeparator : public CUIFMenuItem
+{
+public:
+    CUIFMenuItemSeparator(CUIFMenu *pMenu);
+
+    STDMETHOD_(void, InitMenuExtent)() override;
+    STDMETHOD_(void, OnPaintDef)(HDC hDC) override;
+    STDMETHOD_(void, OnPaintO10)(HDC hDC) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -5733,20 +5746,27 @@ CUIFMenu::InitShow(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag, BOOL bDoAnimati
 
 inline BOOL CUIFMenu::InsertItem(CUIFMenuItem *pItem)
 {
-    CUIFMenuItem **ppAdded = m_MenuItems.Append(1);
-    if (!ppAdded)
+    if (!m_MenuItems.Add(pItem))
         return FALSE;
 
-    *ppAdded = pItem;
     pItem->SetFont(m_hFont);
     return TRUE;
 }
 
-/// @unimplemented
 inline BOOL CUIFMenu::InsertSeparator()
 {
-    //FIXME
-    return FALSE;
+    CUIFMenuItemSeparator *pSep = new(cicNoThrow) CUIFMenuItemSeparator(this);
+    if (!pSep)
+        return FALSE;
+
+    if (!m_MenuItems.Add(pSep))
+    {
+        delete pSep;
+        return FALSE;
+    }
+
+    pSep->Initialize();
+    return TRUE;
 }
 
 inline STDMETHODIMP_(void)
@@ -6369,4 +6389,40 @@ inline void CUIFMenuItem::ShowSubPopup()
     ::ClientToScreen(*m_pWindow, (LPPOINT)&rc);
     ::ClientToScreen(*m_pWindow, (LPPOINT)&rc.right);
     m_pSubMenu->ShowSubPopup(m_pMenu, &rc, FALSE);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+inline
+CUIFMenuItemSeparator::CUIFMenuItemSeparator(CUIFMenu *pMenu) : CUIFMenuItem(pMenu, TRUE)
+{
+    m_nMenuItemID = -1;
+}
+
+inline STDMETHODIMP_(void)
+CUIFMenuItemSeparator::InitMenuExtent()
+{
+    m_MenuLeftExtent.cx = 0;
+    m_MenuLeftExtent.cy = 6;
+}
+
+inline STDMETHODIMP_(void)
+CUIFMenuItemSeparator::OnPaintDef(HDC hDC)
+{
+    if (!m_pScheme)
+        return;
+
+    RECT rc;
+    rc.left   = m_rc.left + 2;
+    rc.top    = m_rc.top + (m_rc.bottom - m_rc.top - 2) / 2;
+    rc.right  = m_rc.right - 2;
+    rc.bottom = rc.top + 2;
+    m_pScheme->DrawMenuSeparator(hDC, &rc);
+}
+
+/// @unimplemented
+inline STDMETHODIMP_(void)
+CUIFMenuItemSeparator::OnPaintO10(HDC hDC)
+{
+    //FIXME
 }
