@@ -1694,7 +1694,9 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
        {
 	   /* drop down the listbox and start tracking */
 
+#ifndef __REACTOS__
            lphc->wState |= CBF_CAPTURE;
+#endif
            SetCapture( hWnd );
            CBDropDown( lphc );
        }
@@ -2039,6 +2041,10 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
     case WM_MOUSEMOVE:
         if ( lphc->wState & CBF_CAPTURE )
             COMBO_MouseMove( lphc, wParam, lParam );
+#ifdef __REACTOS__
+        if ( lphc->wState & CBF_DROPPED )
+             lphc->wState |= CBF_CAPTURE;
+#endif
         return  TRUE;
 
     case WM_MOUSEWHEEL:
