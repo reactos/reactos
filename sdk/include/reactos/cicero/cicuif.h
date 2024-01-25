@@ -6288,10 +6288,10 @@ CUIFMenuItemSeparator::OnPaintDef(HDC hDC)
         return;
 
     RECT rc;
-    rc.left = m_rc.left + 2;
-    rc.top = m_rc.top + (m_rc.bottom - m_rc.top - 2) / 2;
-    rc.right = m_rc.right - 2;
-    rc.bottom = m_rc.top + (m_rc.bottom - m_rc.top - 2) / 2 + 2;
+    rc.left   = m_rc.left + 2;
+    rc.top    = m_rc.top + (m_rc.bottom - m_rc.top - 2) / 2;
+    rc.right  = m_rc.right - 2;
+    rc.bottom = rc.top + 2;
     m_pScheme->DrawMenuSeparator(hDC, &rc);
 }
 
