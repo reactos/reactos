@@ -6217,11 +6217,69 @@ CUIFMenuItem::OnPaintO10(HDC hDC)
     //FIXME
 }
 
-/// unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenuItem::OnPaintDef(HDC hDC)
 {
-    //FIXME
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+
+    SIZE textSize;
+    ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_cchMenuItemLeft, &textSize);
+
+    LONG cxyMargin = (m_pMenu->m_bHasMargin ? m_pMenu->m_cxyMargin : 0);
+
+    LONG cySpace = m_rc.bottom - m_rc.top - textSize.cy;
+    LONG xCheck = m_rc.left, yCheck = m_rc.top + cySpace / 2;
+    LONG xBitmap = m_rc.left + cxyMargin, yBitmap = m_rc.top;
+    LONG xText = m_rc.left + cxyMargin + m_pMenu->m_cxyMargin + 2;
+    LONG yText = m_rc.top + cySpace / 2;
+
+    LONG xArrow = m_rc.right + m_rc.left - 10;
+
+    ::SetBkMode(hDC, TRANSPARENT);
+
+    if (m_bMenuItemGrayed)
+    {
+        UINT uOptions = ETO_CLIPPED;
+        if (m_bMenuItemDisabled || m_pMenu->m_pSelectedItem != this)
+        {
+            ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNHIGHLIGHT));
+            ::ExtTextOutW(hDC, xText + 1, yText + 1, ETO_CLIPPED, &m_rc, m_pszMenuItemLeft,
+                          m_cchMenuItemLeft, NULL);
+            DrawCheck(hDC, xCheck + 1, yCheck + 1);
+            DrawBitmapProc(hDC, xBitmap + 1, yBitmap + 1);
+            DrawArrow(hDC, xArrow + 1, yText + 1);
+        }
+        else
+        {
+            ::SetBkColor(hDC, ::GetSysColor(COLOR_HIGHLIGHT));
+            uOptions = ETO_CLIPPED | ETO_OPAQUE;
+        }
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_BTNSHADOW));
+        ::ExtTextOutW(hDC, xText, yText, uOptions, &m_rc, m_pszMenuItemLeft,
+                      m_cchMenuItemLeft, NULL);
+        DrawUnderline(hDC, xText, yText, (HBRUSH)UlongToHandle(COLOR_BTNSHADOW + 1));
+    }
+    else if (m_bMenuItemDisabled || m_pMenu->m_pSelectedItem != this)
+    {
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_MENUTEXT));
+        ::ExtTextOutW(hDC, xText, yText, ETO_CLIPPED, &m_rc, m_pszMenuItemLeft,
+                      m_cchMenuItemLeft, NULL);
+        DrawUnderline(hDC, xText, yText, (HBRUSH)UlongToHandle(COLOR_MENUTEXT + 1));
+    }
+    else
+    {
+        ::SetTextColor(hDC, ::GetSysColor(COLOR_HIGHLIGHTTEXT));
+        ::SetBkColor(hDC, ::GetSysColor(COLOR_HIGHLIGHT));
+        ::ExtTextOutW(hDC, xText, yText, ETO_CLIPPED | ETO_OPAQUE, &m_rc,
+                      m_pszMenuItemLeft, m_cchMenuItemLeft, NULL);
+        DrawUnderline(hDC, xText, yText, (HBRUSH)UlongToHandle(COLOR_HIGHLIGHTTEXT + 1));
+    }
+
+    DrawCheck(hDC, xCheck, yCheck);
+    DrawBitmapProc(hDC, xBitmap, yBitmap);
+    DrawArrow(hDC, xArrow, yText);
+
+    ::SelectObject(hDC, hFontOld);
 }
 
 inline STDMETHODIMP_(void)
