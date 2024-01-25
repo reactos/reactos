@@ -6210,11 +6210,78 @@ CUIFMenuItem::OnPaint(HDC hDC)
         OnPaintDef(hDC);
 }
 
-/// unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenuItem::OnPaintO10(HDC hDC)
 {
-    //FIXME
+    if (!m_pScheme)
+        return;
+
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
+
+    SIZE textSize;
+    ::GetTextExtentPoint32W(hDC, m_pszMenuItemLeft, m_cchMenuItemLeft, &textSize);
+
+    LONG cySpace = m_rc.bottom - m_rc.top - textSize.cy;
+    LONG xCheck = m_rc.left, yCheck = m_rc.top + cySpace / 2;
+    LONG cxyMargin = (m_pMenu->m_bHasMargin ? m_pMenu->m_cxyMargin : 0);
+
+    LONG xBitmap = m_rc.left + cxyMargin, yBitmap = m_rc.top;
+    LONG xText = m_rc.left + m_pMenu->m_cxyMargin + cxyMargin + 8;
+    LONG yText = m_rc.top + cySpace / 2;
+    LONG xArrow = m_rc.left - textSize.cy + m_rc.right - 2;
+    LONG xRightText = m_rc.right - m_pMenu->m_cxMenuExtent - 8;
+
+    RECT rc;
+    GetRect(&rc);
+
+    if (m_bMenuItemDisabled || m_pMenu->m_pSelectedItem != this)
+    {
+        rc.right = m_pMenu->m_cxyMargin + rc.left + 2;
+        if (m_pMenu->m_bHasMargin)
+            rc.right += m_pMenu->m_cxyMargin;
+
+        ::FillRect(hDC, &rc, m_pScheme->GetBrush(9));
+    }
+    else
+    {
+        m_pScheme->DrawCtrlBkgd(hDC, &rc, 0, UIF_DRAW_PRESSED);
+        m_pScheme->DrawCtrlEdge(hDC, &rc, 0, UIF_DRAW_PRESSED);
+    }
+
+    ::SetBkMode(hDC, TRANSPARENT);
+
+    if (m_bMenuItemGrayed)
+    {
+        ::SetTextColor(hDC, m_pScheme->GetColor(11));
+        ::ExtTextOutW(hDC, xText, yText, ETO_CLIPPED, &m_rc, m_pszMenuItemLeft,
+                      m_cchMenuItemLeft, NULL);
+    }
+    else if (m_bMenuItemDisabled || m_pMenu->m_pSelectedItem != this)
+    {
+        ::SetTextColor(hDC, m_pScheme->GetColor(10));
+        ::ExtTextOutW(hDC, xText, yText, ETO_CLIPPED, &m_rc, m_pszMenuItemLeft,
+                      m_cchMenuItemLeft, NULL);
+    }
+    else
+    {
+        ::SetTextColor(hDC, m_pScheme->GetColor(5));
+        ::ExtTextOutW(hDC, xText, yText, ETO_CLIPPED, &m_rc, m_pszMenuItemLeft,
+                      m_cchMenuItemLeft, NULL);
+    }
+
+    DrawUnderline(hDC, xText, yText, m_pScheme->GetBrush(5));
+
+    if (m_pszMenuItemRight)
+    {
+        ::ExtTextOutW(hDC, xRightText, yText, ETO_CLIPPED, &m_rc, m_pszMenuItemRight,
+                      m_cchMenuItemRight, NULL);
+    }
+
+    DrawCheck(hDC, xCheck, yCheck);
+    DrawBitmapProc(hDC, xBitmap, yBitmap);
+    DrawArrow(hDC, xArrow, yText);
+
+    ::SelectObject(hDC, hFontOld);
 }
 
 inline STDMETHODIMP_(void)
