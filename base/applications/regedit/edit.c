@@ -800,7 +800,7 @@ ParseResources(HWND hwnd)
     SetDlgItemTextW(hwnd, IDC_INTERFACETYPE, buffer);
 
     /* Busnumber */
-    SetDlgItemInt(hwnd, IDC_BUSNUMBER, (UINT)pFullDescriptor->BusNumber, FALSE);
+    SetDlgItemInt(hwnd, IDC_BUSNUMBER, (UINT)pFullDescriptor->BusNumber, TRUE);
 
     /* Version */
     SetDlgItemInt(hwnd, IDC_VERSION, (UINT)pPartialResourceList->Version, FALSE);
@@ -1383,7 +1383,7 @@ AddRequirementsToList(HWND hwndDlg, HWND hwnd)
 
     GetInterfaceType(requirementsValueData->InterfaceType, buffer, 80);
     SetDlgItemTextW(hwndDlg, IDC_REQINTERFACETYPE, buffer);
-    SetDlgItemInt(hwndDlg, IDC_REQBUSNUMBER, (UINT)requirementsValueData->BusNumber, FALSE);
+    SetDlgItemInt(hwndDlg, IDC_REQBUSNUMBER, (UINT)requirementsValueData->BusNumber, TRUE);
     SetDlgItemInt(hwndDlg, IDC_REQSLOTNUMBER, (UINT)requirementsValueData->SlotNumber, FALSE);
 }
 
