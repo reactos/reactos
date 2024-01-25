@@ -5746,11 +5746,9 @@ CUIFMenu::InitShow(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag, BOOL bDoAnimati
 
 inline BOOL CUIFMenu::InsertItem(CUIFMenuItem *pItem)
 {
-    CUIFMenuItem **ppAdded = m_MenuItems.Append(1);
-    if (!ppAdded)
+    if (!m_MenuItems.Add(pItem))
         return FALSE;
 
-    *ppAdded = pItem;
     pItem->SetFont(m_hFont);
     return TRUE;
 }
@@ -5761,14 +5759,13 @@ inline BOOL CUIFMenu::InsertSeparator()
     if (!pSep)
         return FALSE;
 
-    pSep->Initialize();
-    CUIFMenuItem **ppItem = m_MenuItems.Append(1);
-    if (!ppItem)
+    if (!m_MenuItems.Add(pSep))
     {
         delete pSep;
         return FALSE;
     }
-    *ppItem = pSep;
+
+    pSep->Initialize();
     return TRUE;
 }
 

@@ -57,6 +57,15 @@ public:
     using CicArrayBase::Insert;
     using CicArrayBase::Remove;
 
+    BOOL Add(const T_ITEM& item)
+    {
+        T_ITEM *pItem = Append(1);
+        if (!pItem)
+            return FALSE;
+        CopyMemory(pItem, &item, sizeof(T_ITEM));
+        return TRUE;
+    }
+
     ssize_t Find(const T_ITEM& item) const
     {
         for (size_t iItem = 0; iItem < m_cItems; ++iItem)
