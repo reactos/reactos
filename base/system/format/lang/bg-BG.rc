@@ -1,11 +1,19 @@
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Bulgarian resource file
+ * TRANSLATORS: Copyright 2007-2012 S. Stanev (CCTAHEB) <sstpr@narod.ru>
+ *              Copyright 2023 Nikolay Dimitrov <nikolay.dimitrov@extremesoft.eu>
+ */
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     STRING_HELP "Употреба: %s устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
-  [drive:]         Указва устройството за оразмеряване.\n\
+  [устройство:]        Указва устройството за оразмеряване.\n\
   -FS:файлова_система  Указва вида на файловата система (%s).\n\
-  -V:етикет         Указва етикет за тома.\n\
+  -V:етикет        Указва етикет за тома.\n\
   -Q               Извършва бързо оразмеряване (форматиране).\n\
   -A:размер        Потиска подразбрания размер на чепката. Подразбраните настройки\n\
                    са силно препоръчителни за обща употреба.\n\

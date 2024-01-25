@@ -1,8 +1,9 @@
 /*
- *    Translated by xrogers
- *    xxrogers@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011)
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007 Lech Groblewicz <xxrogers@users.sourceforge.net>
+ *              Copyright 2007 Janusz Tomczak <januszt29@interia.pl>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

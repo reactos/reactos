@@ -1,9 +1,8 @@
 /*
- * PROJECT:    ReactOS CMD Format
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/system/format/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for Format command
- * TRANSLATOR: Rostislav Zabolotny
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATOR:  Copyright 2007 Rostislav Zabolotny <rstzab@yandex.ru>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
