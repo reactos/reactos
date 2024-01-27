@@ -88,6 +88,32 @@ public:
 
 /***********************************************************************/
 
+// FIXME
+class CTipbarAccItem
+{
+public:
+    CTipbarAccItem() { }
+
+    STDMETHOD_(BSTR, GetAccName)()
+    {
+        return SysAllocString(L"");
+    }
+    STDMETHOD_(INT, GetAccRole)()
+    {
+        return 10;
+    }
+    STDMETHOD_(INT, GetAccState)()
+    {
+        return 256;
+    }
+    STDMETHOD_(void, GetAccLocation)(LPRECT lprc)
+    {
+        *lprc = { 0, 0, 0, 0 };
+    }
+};
+
+/***********************************************************************/
+
 class CTrayIconWnd
 {
 public:
