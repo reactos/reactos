@@ -93,10 +93,15 @@ class CTipbarAccItem
 {
 public:
     CTipbarAccItem() { }
+    virtual ~CTipbarAccItem() { }
 
     STDMETHOD_(BSTR, GetAccName)()
     {
         return SysAllocString(L"");
+    }
+    STDMETHOD(UnknownMethod1)()
+    {
+        return S_OK;
     }
     STDMETHOD_(INT, GetAccRole)()
     {
@@ -109,6 +114,18 @@ public:
     STDMETHOD_(void, GetAccLocation)(LPRECT lprc)
     {
         *lprc = { 0, 0, 0, 0 };
+    }
+    STDMETHOD(UnknownMethod2)()
+    {
+        return S_OK;
+    }
+    STDMETHOD(UnknownMethod3)()
+    {
+        return S_OK;
+    }
+    STDMETHOD(UnknownMethod4)()
+    {
+        return S_OK;
     }
 };
 
