@@ -188,7 +188,7 @@ STDMETHODIMP CCicLibMenu::AddMenuItem(
         *ppSubMenu = NULL;
 
     CCicLibMenu *pSubMenu = NULL;
-    if (dwFlags & 2)
+    if (dwFlags & TF_LBMENUF_SUBMENU)
     {
         if (!ppSubMenu)
             return E_INVALIDARG;
