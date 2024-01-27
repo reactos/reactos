@@ -88,6 +88,48 @@ public:
 
 /***********************************************************************/
 
+class CTipbarAccItem
+{
+public:
+    CTipbarAccItem() { }
+    virtual ~CTipbarAccItem() { }
+
+    STDMETHOD_(BSTR, GetAccName)()
+    {
+        return SysAllocString(L"");
+    }
+    STDMETHOD(UnknownMethod1)() // FIXME: Name
+    {
+        return S_OK;
+    }
+    STDMETHOD_(INT, GetAccRole)()
+    {
+        return 10;
+    }
+    STDMETHOD_(INT, GetAccState)()
+    {
+        return 256;
+    }
+    STDMETHOD_(void, GetAccLocation)(LPRECT lprc)
+    {
+        *lprc = { 0, 0, 0, 0 };
+    }
+    STDMETHOD(UnknownMethod2)() // FIXME: Name
+    {
+        return S_OK;
+    }
+    STDMETHOD(UnknownMethod3)() // FIXME: Name
+    {
+        return S_OK;
+    }
+    STDMETHOD(UnknownMethod4)() // FIXME: Name
+    {
+        return S_OK;
+    }
+};
+
+/***********************************************************************/
+
 class CTrayIconWnd
 {
 public:
