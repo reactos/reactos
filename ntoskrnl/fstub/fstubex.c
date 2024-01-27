@@ -67,6 +67,7 @@ typedef struct _PARTITION_TABLE_ENTRY
     ULONG PartitionSectorCount;
 } PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
+#include <pshpack1.h>
 typedef struct _MASTER_BOOT_RECORD
 {
     UCHAR MasterBootRecordCodeAndData[0x1B8]; // 0
@@ -75,6 +76,8 @@ typedef struct _MASTER_BOOT_RECORD
     PARTITION_TABLE_ENTRY PartitionTable[4];  // 446
     USHORT MasterBootRecordMagic;             // 510
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
+#include <poppack.h>
 
 /* Partition entry size (bytes) - FIXME: It's hardcoded as Microsoft does, but according to specs, it shouldn't be */
 #define PARTITION_ENTRY_SIZE 128
