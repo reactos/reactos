@@ -886,7 +886,7 @@ BEGIN
     IDS_COMMON_PICTURES "Documents\\Mes images"
     IDS_COMMON_VIDEO "Documents\\Mes vidéos"
     IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE "Mes emplacements réseau"
+    IDS_NETWORKPLACE "Mon réseau"
 
     IDS_NEWFOLDER "Nouveau dossier"
     IDS_NEWITEMFORMAT "New %s"
@@ -989,7 +989,7 @@ BEGIN
     IDS_OBJECTS_SELECTED "%d objet(s) sélectionné(s)"
 
     IDS_TITLE_MYCOMP "Poste de travail"
-    IDS_TITLE_MYNET "Mes emplacements réseau"
+    IDS_TITLE_MYNET "Mon réseau"
     IDS_TITLE_BIN_1 "Corbeille (pleine)"
     IDS_TITLE_BIN_0 "Corbeille (vide)"
 
