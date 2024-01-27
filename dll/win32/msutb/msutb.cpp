@@ -88,7 +88,6 @@ public:
 
 /***********************************************************************/
 
-// FIXME
 class CTipbarAccItem
 {
 public:
@@ -99,7 +98,7 @@ public:
     {
         return SysAllocString(L"");
     }
-    STDMETHOD(UnknownMethod1)()
+    STDMETHOD(UnknownMethod1)() // FIXME: Name
     {
         return S_OK;
     }
@@ -115,15 +114,15 @@ public:
     {
         *lprc = { 0, 0, 0, 0 };
     }
-    STDMETHOD(UnknownMethod2)()
+    STDMETHOD(UnknownMethod2)() // FIXME: Name
     {
         return S_OK;
     }
-    STDMETHOD(UnknownMethod3)()
+    STDMETHOD(UnknownMethod3)() // FIXME: Name
     {
         return S_OK;
     }
-    STDMETHOD(UnknownMethod4)()
+    STDMETHOD(UnknownMethod4)() // FIXME: Name
     {
         return S_OK;
     }
