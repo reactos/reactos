@@ -98,7 +98,7 @@ protected:
     IAccessible *m_pStdAccessible;
     ITypeInfo *m_pTypeInfo;
     BOOL m_bInitialized;
-    CicArray<CTipbarAccItem*> m_MenuItems;
+    CicArray<CTipbarAccItem*> m_AccItems;
     LONG m_cSelection;
 
 public:
@@ -461,7 +461,7 @@ CTipbarAccessible::CTipbarAccessible(CTipbarAccItem *pItem)
     m_pStdAccessible = NULL;
     m_bInitialized = FALSE;
     m_cSelection = 1;
-    m_MenuItems.Add(pItem);
+    m_AccItems.Add(pItem);
     ++g_DllRefCount;
 }
 
@@ -506,16 +506,16 @@ HRESULT CTipbarAccessible::Initialize()
 
 BOOL CTipbarAccessible::AddAccItem(CTipbarAccItem *pItem)
 {
-    return m_MenuItems.Add(pItem);
+    return m_AccItems.Add(pItem);
 }
 
 HRESULT CTipbarAccessible::RemoveAccItem(CTipbarAccItem *pItem)
 {
-    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    for (size_t iItem = 0; iItem < m_AccItems.size(); ++iItem)
     {
-        if (m_MenuItems[iItem] == pItem)
+        if (m_AccItems[iItem] == pItem)
         {
-            m_MenuItems.Remove(iItem, 1);
+            m_AccItems.Remove(iItem, 1);
             break;
         }
     }
@@ -524,21 +524,21 @@ HRESULT CTipbarAccessible::RemoveAccItem(CTipbarAccItem *pItem)
 
 void CTipbarAccessible::ClearAccItems()
 {
-    m_MenuItems.clear();
+    m_AccItems.clear();
 }
 
 CTipbarAccItem *CTipbarAccessible::AccItemFromID(INT iItem)
 {
-    if (iItem < 0 || (INT)m_MenuItems.size() <= iItem)
+    if (iItem < 0 || (INT)m_AccItems.size() <= iItem)
         return NULL;
-    return m_MenuItems[iItem];
+    return m_AccItems[iItem];
 }
 
 INT CTipbarAccessible::GetIDOfItem(CTipbarAccItem *pTarget)
 {
-    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    for (size_t iItem = 0; iItem < m_AccItems.size(); ++iItem)
     {
-        if (pTarget == m_MenuItems[iItem])
+        if (pTarget == m_AccItems[iItem])
             return (INT)iItem;
     }
     return -1;
@@ -669,7 +669,7 @@ STDMETHODIMP CTipbarAccessible::get_accChildCount(LONG *pcountChildren)
 {
     if (!pcountChildren)
         return E_INVALIDARG;
-    INT cItems = (INT)m_MenuItems.size();
+    INT cItems = (INT)m_AccItems.size();
     if (!cItems)
         return E_FAIL;
     *pcountChildren = cItems - 1;
@@ -786,7 +786,7 @@ STDMETHODIMP CTipbarAccessible::get_accSelection(VARIANT *pvarID)
 
     V_VT(pvarID) = VT_EMPTY;
 
-    INT cItems = (INT)m_MenuItems.size();
+    INT cItems = (INT)m_AccItems.size();
     if (cItems < m_cSelection)
         return S_FALSE;
 
@@ -868,7 +868,7 @@ STDMETHODIMP CTipbarAccessible::accNavigate(
     VARIANT varStart,
     VARIANT *pvarEnd)
 {
-    if (m_MenuItems.size() <= 1)
+    if (m_AccItems.size() <= 1)
     {
         V_VT(pvarEnd) = VT_EMPTY;
         return S_OK;
@@ -882,7 +882,7 @@ STDMETHODIMP CTipbarAccessible::accNavigate(
             V_VT(pvarEnd) = VT_I4;
             V_I4(pvarEnd) = V_I4(&varStart) - 1;
             if (V_I4(&varStart) - 1 <= 0)
-                V_I4(pvarEnd) = (INT)(m_MenuItems.size() - 1);
+                V_I4(pvarEnd) = (INT)(m_AccItems.size() - 1);
             return S_OK;
 
         case NAVDIR_DOWN:
@@ -890,7 +890,7 @@ STDMETHODIMP CTipbarAccessible::accNavigate(
         case NAVDIR_NEXT:
             V_VT(pvarEnd) = VT_I4;
             V_I4(pvarEnd) = V_I4(&varStart) + 1;
-            if ((INT)m_MenuItems.size() <= V_I4(&varStart) + 1)
+            if ((INT)m_AccItems.size() <= V_I4(&varStart) + 1)
                 V_I4(pvarEnd) = 1;
             return S_OK;
 
@@ -901,7 +901,7 @@ STDMETHODIMP CTipbarAccessible::accNavigate(
 
         case NAVDIR_LASTCHILD:
             V_VT(pvarEnd) = VT_I4;
-            V_I4(pvarEnd) = (INT)(m_MenuItems.size() - 1);
+            V_I4(pvarEnd) = (INT)(m_AccItems.size() - 1);
             return S_OK;
 
         default:
@@ -930,9 +930,9 @@ STDMETHODIMP CTipbarAccessible::accHitTest(LONG left, LONG top, VARIANT *pvarID)
     V_VT(pvarID) = VT_I4;
     V_I4(pvarID) = 0;
 
-    for (size_t iItem = 1; iItem < m_MenuItems.size(); ++iItem)
+    for (size_t iItem = 1; iItem < m_AccItems.size(); ++iItem)
     {
-        CTipbarAccItem *pItem = m_MenuItems[iItem];
+        CTipbarAccItem *pItem = m_AccItems[iItem];
         if (pItem)
         {
             pItem->GetAccLocation(&Rect);
