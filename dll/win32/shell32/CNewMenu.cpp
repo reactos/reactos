@@ -772,6 +772,6 @@ CNewMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 
     /* Load folder and shortcut icons */
     m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
-    m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
+    m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT - 1), IMAGE_ICON, 16, 16, LR_SHARED);
     return S_OK;
 }
