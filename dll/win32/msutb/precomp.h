@@ -14,6 +14,7 @@
 #define INITGUID
 
 #include <windows.h>
+#include <oleacc.h>
 #include <imm.h>
 #include <ddk/immdev.h>
 #include <cguid.h>
