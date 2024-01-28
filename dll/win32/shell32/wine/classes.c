@@ -239,11 +239,11 @@ BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 
 static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
-    DWORD dwType;
+    DWORD dwType, size = len * sizeof(WCHAR);
     WCHAR sTemp[MAX_PATH];
-    WCHAR sNum[7];
+    WCHAR sNum[5];
 
-    if (!RegQueryValueExW(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
+    if (!RegQueryValueExW(hkey, szName, 0, &dwType, (LPBYTE)szDest, &size))
     {
       if (dwType == REG_EXPAND_SZ)
       {
