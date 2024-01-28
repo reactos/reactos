@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Language Bar (Tipbar)
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -14,6 +14,7 @@ UINT g_wmTaskbarCreated = 0;
 UINT g_uACP = CP_ACP;
 DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
+LONG g_DllRefCount = 0;
 
 EXTERN_C void __cxa_pure_virtual(void)
 {
@@ -31,12 +32,13 @@ END_OBJECT_MAP()
 CMsUtbModule gModule;
 
 class CCicLibMenuItem;
+class CTipbarAccItem;
 
 /***********************************************************************/
 
 class CCicLibMenu : public ITfMenu
 {
-public:
+protected:
     CicArray<CCicLibMenuItem*> m_MenuItems;
     LONG m_cRefs;
 
@@ -63,7 +65,7 @@ public:
 
 class CCicLibMenuItem
 {
-public:
+protected:
     DWORD m_uId;
     DWORD m_dwFlags;
     HBITMAP m_hbmp;
@@ -88,6 +90,92 @@ public:
 
 /***********************************************************************/
 
+class CTipbarAccessible : public IAccessible
+{
+protected:
+    LONG m_cRefs;
+    HWND m_hWnd;
+    IAccessible *m_pStdAccessible;
+    ITypeInfo *m_pTypeInfo;
+    BOOL m_bInitialized;
+    CicArray<CTipbarAccItem*> m_MenuItems;
+    LONG m_cSelection;
+
+public:
+    CTipbarAccessible(CTipbarAccItem *pItem);
+    virtual ~CTipbarAccessible();
+
+    HRESULT Initialize();
+
+    BOOL AddAccItem(CTipbarAccItem *pItem);
+    HRESULT RemoveAccItem(CTipbarAccItem *pItem);
+    void ClearAccItems();
+    CTipbarAccItem *AccItemFromID(INT iItem);
+    INT GetIDOfItem(CTipbarAccItem *pTarget);
+
+    LONG_PTR CreateRefToAccObj(WPARAM wParam);
+    BOOL DoDefaultActionReal(INT nID);
+    void NotifyWinEvent(DWORD event, CTipbarAccItem *pItem);
+    void SetWindow(HWND hWnd);
+
+    // IUnknown methods
+    STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject);
+    STDMETHOD_(ULONG, AddRef)();
+    STDMETHOD_(ULONG, Release)();
+
+    // IDispatch methods
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo);
+    STDMETHOD(GetTypeInfo)(
+        UINT iTInfo,
+        LCID lcid,
+        ITypeInfo **ppTInfo);
+    STDMETHOD(GetIDsOfNames)(
+        REFIID riid,
+        LPOLESTR *rgszNames,
+        UINT cNames,
+        LCID lcid,
+        DISPID *rgDispId);
+    STDMETHOD(Invoke)(
+        DISPID dispIdMember,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS *pDispParams,
+        VARIANT *pVarResult,
+        EXCEPINFO *pExcepInfo,
+        UINT *puArgErr);
+
+    // IAccessible methods
+    STDMETHOD(get_accParent)(IDispatch **ppdispParent);
+    STDMETHOD(get_accChildCount)(LONG *pcountChildren);
+    STDMETHOD(get_accChild)(VARIANT varChildID, IDispatch **ppdispChild);
+    STDMETHOD(get_accName)(VARIANT varID, BSTR *pszName);
+    STDMETHOD(get_accValue)(VARIANT varID, BSTR *pszValue);
+    STDMETHOD(get_accDescription)(VARIANT varID, BSTR *description);
+    STDMETHOD(get_accRole)(VARIANT varID, VARIANT *role);
+    STDMETHOD(get_accState)(VARIANT varID, VARIANT *state);
+    STDMETHOD(get_accHelp)(VARIANT varID, BSTR *help);
+    STDMETHOD(get_accHelpTopic)(BSTR *helpfile, VARIANT varID, LONG *pidTopic);
+    STDMETHOD(get_accKeyboardShortcut)(VARIANT varID, BSTR *shortcut);
+    STDMETHOD(get_accFocus)(VARIANT *pvarID);
+    STDMETHOD(get_accSelection)(VARIANT *pvarID);
+    STDMETHOD(get_accDefaultAction)(VARIANT varID, BSTR *action);
+    STDMETHOD(accSelect)(LONG flagsSelect, VARIANT varID);
+    STDMETHOD(accLocation)(
+        LONG *left,
+        LONG *top,
+        LONG *width,
+        LONG *height,
+        VARIANT varID);
+    STDMETHOD(accNavigate)(LONG dir, VARIANT varStart, VARIANT *pvarEnd);
+    STDMETHOD(accHitTest)(LONG left, LONG top, VARIANT *pvarID);
+    STDMETHOD(accDoDefaultAction)(VARIANT varID);
+    STDMETHOD(put_accName)(VARIANT varID, BSTR name);
+    STDMETHOD(put_accValue)(VARIANT varID, BSTR value);
+};
+
+/***********************************************************************/
+
 class CTipbarAccItem
 {
 public:
@@ -98,9 +186,9 @@ public:
     {
         return SysAllocString(L"");
     }
-    STDMETHOD(UnknownMethod1)() // FIXME: Name
+    STDMETHOD_(LPWSTR, UnknownMethod1)()
     {
-        return S_OK;
+        return NULL;
     }
     STDMETHOD_(INT, GetAccRole)()
     {
@@ -114,17 +202,17 @@ public:
     {
         *lprc = { 0, 0, 0, 0 };
     }
-    STDMETHOD(UnknownMethod2)() // FIXME: Name
+    STDMETHOD_(LPWSTR, UnknownMethod2)()
     {
-        return S_OK;
+        return NULL;
     }
     STDMETHOD(UnknownMethod3)() // FIXME: Name
     {
         return S_OK;
     }
-    STDMETHOD(UnknownMethod4)() // FIXME: Name
+    STDMETHOD_(BOOL, UnknownMethod4)() // FIXME: Name
     {
-        return S_OK;
+        return FALSE;
     }
 };
 
@@ -362,6 +450,524 @@ HBITMAP CCicLibMenuItem::CreateBitmap(HANDLE hBitmap)
 }
 
 /***********************************************************************
+ * CTipbarAccessible
+ */
+
+CTipbarAccessible::CTipbarAccessible(CTipbarAccItem *pItem)
+{
+    m_cRefs = 1;
+    m_hWnd = NULL;
+    m_pTypeInfo = NULL;
+    m_pStdAccessible = NULL;
+    m_bInitialized = FALSE;
+    m_cSelection = 1;
+    m_MenuItems.Add(pItem);
+    ++g_DllRefCount;
+}
+
+CTipbarAccessible::~CTipbarAccessible()
+{
+    m_pTypeInfo = m_pTypeInfo;
+    if (m_pTypeInfo)
+    {
+        m_pTypeInfo->Release();
+        m_pTypeInfo = NULL;
+    }
+    if (m_pStdAccessible)
+    {
+        m_pStdAccessible->Release();
+        m_pStdAccessible = NULL;
+    }
+    --g_DllRefCount;
+}
+
+HRESULT CTipbarAccessible::Initialize()
+{
+    m_bInitialized = TRUE;
+
+    HRESULT hr = ::CreateStdAccessibleObject(m_hWnd, OBJID_CLIENT, IID_IAccessible,
+                                             (void **)&m_pStdAccessible);
+    if (FAILED(hr))
+        return hr;
+
+    ITypeLib *pTypeLib;
+    hr = ::LoadRegTypeLib(LIBID_Accessibility, 1, 0, 0, &pTypeLib);
+    if (FAILED(hr))
+        hr = ::LoadTypeLib(L"OLEACC.DLL", &pTypeLib);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = pTypeLib->GetTypeInfoOfGuid(IID_IAccessible, &m_pTypeInfo);
+        pTypeLib->Release();
+    }
+
+    return hr;
+}
+
+BOOL CTipbarAccessible::AddAccItem(CTipbarAccItem *pItem)
+{
+    return m_MenuItems.Add(pItem);
+}
+
+HRESULT CTipbarAccessible::RemoveAccItem(CTipbarAccItem *pItem)
+{
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        if (m_MenuItems[iItem] == pItem)
+        {
+            m_MenuItems.Remove(iItem, 1);
+            break;
+        }
+    }
+    return S_OK;
+}
+
+void CTipbarAccessible::ClearAccItems()
+{
+    m_MenuItems.clear();
+}
+
+CTipbarAccItem *CTipbarAccessible::AccItemFromID(INT iItem)
+{
+    if (iItem < 0 || (INT)m_MenuItems.size() <= iItem)
+        return NULL;
+    return m_MenuItems[iItem];
+}
+
+INT CTipbarAccessible::GetIDOfItem(CTipbarAccItem *pTarget)
+{
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        if (pTarget == m_MenuItems[iItem])
+            return (INT)iItem;
+    }
+    return -1;
+}
+
+LONG_PTR CTipbarAccessible::CreateRefToAccObj(WPARAM wParam)
+{
+    return ::LresultFromObject(IID_IAccessible, wParam, this);
+}
+
+BOOL CTipbarAccessible::DoDefaultActionReal(INT nID)
+{
+    CTipbarAccItem *pItem = AccItemFromID(nID);
+    if (!pItem)
+        return FALSE;
+    return pItem->UnknownMethod4();
+}
+
+void CTipbarAccessible::NotifyWinEvent(DWORD event, CTipbarAccItem *pItem)
+{
+    INT nID = GetIDOfItem(pItem);
+    if (nID < 0)
+        return;
+
+    ::NotifyWinEvent(event, m_hWnd, -4, nID);
+}
+
+void CTipbarAccessible::SetWindow(HWND hWnd)
+{
+    m_hWnd = hWnd;
+}
+
+STDMETHODIMP CTipbarAccessible::QueryInterface(
+    REFIID riid,
+    void **ppvObject)
+{
+    if (IsEqualIID(riid, IID_IUnknown) ||
+        IsEqualIID(riid, IID_IDispatch) ||
+        IsEqualIID(riid, IID_IAccessible))
+    {
+        *ppvObject = this;
+        AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+STDMETHODIMP_(ULONG) CTipbarAccessible::AddRef()
+{
+    return ::InterlockedIncrement(&m_cRefs);
+}
+
+STDMETHODIMP_(ULONG) CTipbarAccessible::Release()
+{
+    LONG count = ::InterlockedDecrement(&m_cRefs);
+    if (count == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return count;
+}
+
+STDMETHODIMP CTipbarAccessible::GetTypeInfoCount(UINT *pctinfo)
+{
+    if (!pctinfo)
+        return E_INVALIDARG;
+    *pctinfo = (m_pTypeInfo == NULL);
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::GetTypeInfo(
+    UINT iTInfo,
+    LCID lcid,
+    ITypeInfo **ppTInfo)
+{
+    if (!ppTInfo)
+        return E_INVALIDARG;
+    *ppTInfo = NULL;
+    if (iTInfo != 0)
+        return TYPE_E_ELEMENTNOTFOUND;
+    if (!m_pTypeInfo)
+        return E_NOTIMPL;
+    *ppTInfo = m_pTypeInfo;
+    m_pTypeInfo->AddRef();
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::GetIDsOfNames(
+    REFIID riid,
+    LPOLESTR *rgszNames,
+    UINT cNames,
+    LCID lcid,
+    DISPID *rgDispId)
+{
+    if (!m_pTypeInfo)
+        return E_NOTIMPL;
+    return m_pTypeInfo->GetIDsOfNames(rgszNames, cNames, rgDispId);
+}
+
+STDMETHODIMP CTipbarAccessible::Invoke(
+    DISPID dispIdMember,
+    REFIID riid,
+    LCID lcid,
+    WORD wFlags,
+    DISPPARAMS *pDispParams,
+    VARIANT *pVarResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
+{
+    if (!m_pTypeInfo)
+        return E_NOTIMPL;
+    return m_pTypeInfo->Invoke(this,
+                               dispIdMember,
+                               wFlags,
+                               pDispParams,
+                               pVarResult,
+                               pExcepInfo,
+                               puArgErr);
+}
+
+STDMETHODIMP CTipbarAccessible::get_accParent(IDispatch **ppdispParent)
+{
+    return m_pStdAccessible->get_accParent(ppdispParent);
+}
+
+STDMETHODIMP CTipbarAccessible::get_accChildCount(LONG *pcountChildren)
+{
+    if (!pcountChildren)
+        return E_INVALIDARG;
+    INT cItems = (INT)m_MenuItems.size();
+    if (!cItems)
+        return E_FAIL;
+    *pcountChildren = cItems - 1;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accChild(
+    VARIANT varChildID,
+    IDispatch **ppdispChild)
+{
+    if (!ppdispChild)
+        return E_INVALIDARG;
+    *ppdispChild = NULL;
+    return S_FALSE;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accName(
+    VARIANT varID,
+    BSTR *pszName)
+{
+    if (!pszName)
+        return E_INVALIDARG;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return E_INVALIDARG;
+    *pszName = pItem->GetAccName();
+    if (!*pszName)
+        return DISP_E_MEMBERNOTFOUND;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accValue(
+    VARIANT varID,
+    BSTR *pszValue)
+{
+    if (!pszValue)
+        return E_INVALIDARG;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return E_INVALIDARG;
+    *pszValue = pItem->UnknownMethod1();
+    if (!*pszValue)
+        return DISP_E_MEMBERNOTFOUND;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accDescription(
+    VARIANT varID,
+    BSTR *description)
+{
+    if (!description)
+        return E_INVALIDARG;
+    return m_pStdAccessible->get_accDescription(varID, description);
+}
+
+STDMETHODIMP CTipbarAccessible::get_accRole(
+    VARIANT varID,
+    VARIANT *role)
+{
+    if (!role)
+        return E_INVALIDARG;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return E_INVALIDARG;
+    V_VT(role) = VT_I4;
+    V_I4(role) = pItem->GetAccRole();
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accState(
+    VARIANT varID,
+    VARIANT *state)
+{
+    if (!state)
+        return E_INVALIDARG;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return E_INVALIDARG;
+    V_VT(state) = VT_I4;
+    V_I4(state) = pItem->GetAccState();
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accHelp(VARIANT varID, BSTR *help)
+{
+    return DISP_E_MEMBERNOTFOUND;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accHelpTopic(
+    BSTR *helpfile,
+    VARIANT varID,
+    LONG *pidTopic)
+{
+    return DISP_E_MEMBERNOTFOUND;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accKeyboardShortcut(VARIANT varID, BSTR *shortcut)
+{
+    return DISP_E_MEMBERNOTFOUND;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accFocus(VARIANT *pvarID)
+{
+    if (!pvarID)
+        return E_INVALIDARG;
+    V_VT(pvarID) = VT_EMPTY;
+    return S_FALSE;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accSelection(VARIANT *pvarID)
+{
+    if (!pvarID)
+        return E_INVALIDARG;
+
+    V_VT(pvarID) = VT_EMPTY;
+
+    INT cItems = (INT)m_MenuItems.size();
+    if (cItems < m_cSelection)
+        return S_FALSE;
+
+    if (cItems > m_cSelection)
+    {
+        V_VT(pvarID) = VT_I4;
+        V_I4(pvarID) = m_cSelection;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::get_accDefaultAction(
+    VARIANT varID,
+    BSTR *action)
+{
+    if (!action)
+        return E_INVALIDARG;
+    *action = NULL;
+
+    if (V_VT(&varID) != VT_I4)
+        return E_INVALIDARG;
+
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return DISP_E_MEMBERNOTFOUND;
+    *action = pItem->UnknownMethod2();
+    if (!*action)
+        return S_FALSE;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::accSelect(
+    LONG flagsSelect,
+    VARIANT varID)
+{
+    if ((flagsSelect & SELFLAG_ADDSELECTION) && (flagsSelect & SELFLAG_REMOVESELECTION))
+        return E_INVALIDARG;
+    if (flagsSelect & (SELFLAG_TAKEFOCUS | SELFLAG_ADDSELECTION | SELFLAG_EXTENDSELECTION))
+        return S_FALSE;
+    if (flagsSelect & SELFLAG_REMOVESELECTION)
+        return S_OK;
+    if (V_VT(&varID) != VT_I4)
+        return E_INVALIDARG;
+    if (flagsSelect & SELFLAG_TAKESELECTION)
+    {
+        m_cSelection = V_I4(&varID);
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
+STDMETHODIMP CTipbarAccessible::accLocation(
+    LONG *left,
+    LONG *top,
+    LONG *width,
+    LONG *height,
+    VARIANT varID)
+{
+    if (!left || !top || !width || !height)
+        return E_INVALIDARG;
+
+    if (!V_I4(&varID))
+        return m_pStdAccessible->accLocation(left, top, width, height, varID);
+
+    RECT rc;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    pItem->GetAccLocation(&rc);
+
+    *left = rc.left;
+    *top = rc.top;
+    *width = rc.right - rc.left;
+    *height = rc.bottom - rc.top;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::accNavigate(
+    LONG dir,
+    VARIANT varStart,
+    VARIANT *pvarEnd)
+{
+    if (m_MenuItems.size() <= 1)
+    {
+        V_VT(pvarEnd) = VT_EMPTY;
+        return S_OK;
+    }
+
+    switch (dir)
+    {
+        case NAVDIR_UP:
+        case NAVDIR_LEFT:
+        case NAVDIR_PREVIOUS:
+            V_VT(pvarEnd) = VT_I4;
+            V_I4(pvarEnd) = V_I4(&varStart) - 1;
+            if (V_I4(&varStart) - 1 <= 0)
+                V_I4(pvarEnd) = (INT)(m_MenuItems.size() - 1);
+            return S_OK;
+
+        case NAVDIR_DOWN:
+        case NAVDIR_RIGHT:
+        case NAVDIR_NEXT:
+            V_VT(pvarEnd) = VT_I4;
+            V_I4(pvarEnd) = V_I4(&varStart) + 1;
+            if ((INT)m_MenuItems.size() <= V_I4(&varStart) + 1)
+                V_I4(pvarEnd) = 1;
+            return S_OK;
+
+        case NAVDIR_FIRSTCHILD:
+            V_VT(pvarEnd) = VT_I4;
+            V_I4(pvarEnd) = 1;
+            return S_OK;
+
+        case NAVDIR_LASTCHILD:
+            V_VT(pvarEnd) = VT_I4;
+            V_I4(pvarEnd) = (INT)(m_MenuItems.size() - 1);
+            return S_OK;
+
+        default:
+            break;
+    }
+
+    V_VT(pvarEnd) = VT_EMPTY;
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::accHitTest(LONG left, LONG top, VARIANT *pvarID)
+{
+    if (!pvarID)
+        return E_INVALIDARG;
+    POINT Point = { left, top };
+    RECT Rect;
+    ::ScreenToClient(m_hWnd, &Point);
+    ::GetClientRect(m_hWnd, &Rect);
+
+    if (!::PtInRect(&Rect, Point))
+    {
+        V_VT(pvarID) = VT_EMPTY;
+        return S_OK;
+    }
+
+    V_VT(pvarID) = VT_I4;
+    V_I4(pvarID) = 0;
+
+    for (size_t iItem = 1; iItem < m_MenuItems.size(); ++iItem)
+    {
+        CTipbarAccItem *pItem = m_MenuItems[iItem];
+        if (pItem)
+        {
+            pItem->GetAccLocation(&Rect);
+            if (::PtInRect(&Rect, Point))
+            {
+                V_I4(pvarID) = iItem;
+                break;
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CTipbarAccessible::accDoDefaultAction(VARIANT varID)
+{
+    if (V_VT(&varID) != VT_I4)
+        return E_INVALIDARG;
+    CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
+    if (!pItem)
+        return DISP_E_MEMBERNOTFOUND;
+    return pItem->UnknownMethod3() == 0;
+}
+
+STDMETHODIMP CTipbarAccessible::put_accName(VARIANT varID, BSTR name)
+{
+    return S_FALSE;
+}
+
+STDMETHODIMP CTipbarAccessible::put_accValue(VARIANT varID, BSTR value)
+{
+    return S_FALSE;
+}
+
+/***********************************************************************
  * CTrayIconItem
  */
 
@@ -509,7 +1115,7 @@ STDAPI DllUnregisterServer(VOID)
 STDAPI DllCanUnloadNow(VOID)
 {
     TRACE("()\n");
-    return gModule.DllCanUnloadNow();
+    return gModule.DllCanUnloadNow() && (g_DllRefCount == 0);
 }
 
 /***********************************************************************
