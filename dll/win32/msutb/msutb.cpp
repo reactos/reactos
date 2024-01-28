@@ -186,7 +186,7 @@ public:
     {
         return SysAllocString(L"");
     }
-    STDMETHOD_(LPWSTR, UnknownMethod1)()
+    STDMETHOD_(BSTR, GetAccValue)()
     {
         return NULL;
     }
@@ -202,15 +202,15 @@ public:
     {
         *lprc = { 0, 0, 0, 0 };
     }
-    STDMETHOD_(LPWSTR, UnknownMethod2)()
+    STDMETHOD_(BSTR, GetAccDefaultAction)()
     {
         return NULL;
     }
-    STDMETHOD(UnknownMethod3)() // FIXME: Name
+    STDMETHOD(DoAccDefaultAction)()
     {
         return S_OK;
     }
-    STDMETHOD_(BOOL, UnknownMethod4)() // FIXME: Name
+    STDMETHOD_(BOOL, DoAccDefaultActionReal)()
     {
         return FALSE;
     }
@@ -554,7 +554,7 @@ BOOL CTipbarAccessible::DoDefaultActionReal(INT nID)
     CTipbarAccItem *pItem = AccItemFromID(nID);
     if (!pItem)
         return FALSE;
-    return pItem->UnknownMethod4();
+    return pItem->DoAccDefaultActionReal();
 }
 
 void CTipbarAccessible::NotifyWinEvent(DWORD event, CTipbarAccItem *pItem)
@@ -710,7 +710,7 @@ STDMETHODIMP CTipbarAccessible::get_accValue(
     CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
     if (!pItem)
         return E_INVALIDARG;
-    *pszValue = pItem->UnknownMethod1();
+    *pszValue = pItem->GetAccValue();
     if (!*pszValue)
         return DISP_E_MEMBERNOTFOUND;
     return S_OK;
@@ -813,7 +813,7 @@ STDMETHODIMP CTipbarAccessible::get_accDefaultAction(
     CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
     if (!pItem)
         return DISP_E_MEMBERNOTFOUND;
-    *action = pItem->UnknownMethod2();
+    *action = pItem->GetAccDefaultAction();
     if (!*action)
         return S_FALSE;
     return S_OK;
@@ -954,7 +954,7 @@ STDMETHODIMP CTipbarAccessible::accDoDefaultAction(VARIANT varID)
     CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
     if (!pItem)
         return DISP_E_MEMBERNOTFOUND;
-    return pItem->UnknownMethod3() == 0;
+    return pItem->DoAccDefaultAction() == 0;
 }
 
 STDMETHODIMP CTipbarAccessible::put_accName(VARIANT varID, BSTR name)
