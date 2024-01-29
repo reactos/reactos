@@ -210,7 +210,7 @@ public:
     }
     STDMETHOD_(BOOL, DoAccDefaultAction)()
     {
-        return S_OK;
+        return FALSE;
     }
     STDMETHOD_(BOOL, DoAccDefaultActionReal)()
     {
@@ -1046,7 +1046,7 @@ STDMETHODIMP CTipbarAccessible::accDoDefaultAction(VARIANT varID)
     CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
     if (!pItem)
         return DISP_E_MEMBERNOTFOUND;
-    return pItem->DoAccDefaultAction() == 0;
+    return (pItem->DoAccDefaultAction() ? S_OK : S_FALSE);
 }
 
 STDMETHODIMP CTipbarAccessible::put_accName(VARIANT varID, BSTR name)
