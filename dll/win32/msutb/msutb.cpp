@@ -1247,9 +1247,10 @@ STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccName()
     return ::SysAllocString(m_pszMenuItemLeft);
 }
 
+/// @unimplemented
 STDMETHODIMP_(INT) CUTBMenuItem::GetAccRole()
 {
-    if (m_pMenuWnd->GetWndStyleEx() & WS_EX_NOPARENTNOTIFY)
+    if (FALSE) //FIXME
         return 21;
     return 12;
 }
