@@ -1089,7 +1089,7 @@ BOOL CUTBMenuWnd::StartDoAccDefaultActionTimer(CUTBMenuItem *pTarget)
 STDMETHODIMP_(BSTR) CUTBMenuWnd::GetAccName()
 {
     WCHAR szText[64];
-    LoadStringW(g_hInst, 0x142, szText, _countof(szText));
+    LoadStringW(g_hInst, IDS_MENUWND, szText, _countof(szText));
     return ::SysAllocString(szText);
 }
 
@@ -1231,7 +1231,7 @@ STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultActionReal()
 STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccDefaultAction()
 {
     WCHAR szText[64];
-    ::LoadStringW(g_hInst, 0x143, szText, _countof(szText));
+    ::LoadStringW(g_hInst, IDS_LEFTCLICK, szText, _countof(szText));
     return ::SysAllocString(szText);
 }
 

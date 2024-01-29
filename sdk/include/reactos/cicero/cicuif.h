@@ -5176,31 +5176,24 @@ CUIFBalloonWindow::AddButton(UINT nCommandId)
     pButton->Initialize();
     pButton->m_nCommandID = nCommandId;
 
-    LPCWSTR pszText; // FIXME: Use resource strings
+    LPCWSTR pszText;
+#ifdef IDS_OK
+    extern HINSTANCE g_hInst;
+    WCHAR szText[64];
+    ::LoadStringW(g_hInst, IDS_OK + nCommandId, szText, _countof(szText));
+    pszText = szText;
+#else
     switch (nCommandId)
     {
-        case IDOK:
-            pszText = L"OK";
-            break;
-        case IDCANCEL:
-            pszText = L"Cancel";
-            break;
-        case IDABORT:
-            pszText = L"&Abort";
-            break;
-        case IDRETRY:
-            pszText = L"&Retry";
-            break;
-        case IDIGNORE:
-            pszText = L"&Ignore";
-            break;
-        case IDYES:
-            pszText = L"&Yes";
-            break;
-        default:
-            pszText = L"&No";
-            break;
+        case IDOK:      pszText = L"OK";      break;
+        case IDCANCEL:  pszText = L"Cancel";  break;
+        case IDABORT:   pszText = L"&Abort";  break;
+        case IDRETRY:   pszText = L"&Retry";  break;
+        case IDIGNORE:  pszText = L"&Ignore"; break;
+        case IDYES:     pszText = L"&Yes";    break;
+        default:        pszText = L"&No";     break;
     }
+#endif
 
     pButton->SetText(pszText);
 
