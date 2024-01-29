@@ -511,15 +511,45 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
         DriveType = DRIVE_FIXED;
 
     WCHAR wTemp[MAX_PATH];
-    int icon_idx;
+    int icon_idx, reg_idx;
     UINT flags = 0;
-    if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
-        (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
+    switch (DriveType)
+    {
+        case DRIVE_FIXED:
+        case DRIVE_UNKNOWN:
+            reg_idx = 8;
+            break;
+        case DRIVE_CDROM:
+            reg_idx = 11;
+            break;
+        case DRIVE_REMOTE:
+            reg_idx = 9;
+            break;
+        case DRIVE_REMOVABLE:
+            if (!IsDriveFloppyA(pszDrive))
+                reg_idx = 7;
+            else
+                reg_idx = 6;
+            break;
+        case DRIVE_RAMDISK:
+            reg_idx = 12;
+            break;
+        case DRIVE_NO_ROOT_DIR:
+        default:
+            reg_idx = 0;
+            break;
+    }
+    if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
+                                               &icon_idx, &flags)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
-    else if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
-                                               &icon_idx, &flags)))
+    else if (HLM_GetIconW(reg_idx, wTemp, MAX_PATH, &icon_idx))
+    {
+        initIcon->SetNormalIcon(wTemp, icon_idx);
+    }
+    else if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
+        (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
