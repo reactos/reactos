@@ -617,8 +617,8 @@ public:
     STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         { return 0; }
-    STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-        { return 0; }
+    STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+        { return S_OK; }
     STDMETHOD_(LRESULT, WindowProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         { return FALSE; }
@@ -786,7 +786,7 @@ protected:
     void DrawUnderline(HDC hDC, INT xText, INT yText, HBRUSH hbr);
 
 public:
-    CUIFMenuItem(CUIFMenu *pMenu, BOOL bDisabled);
+    CUIFMenuItem(CUIFMenu *pMenu, BOOL bDisabled = FALSE);
     ~CUIFMenuItem() override;
 
     BOOL Init(UINT nMenuItemID, LPCWSTR pszText);
