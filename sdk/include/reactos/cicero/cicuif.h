@@ -617,8 +617,8 @@ public:
     STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         { return 0; }
-    STDMETHOD_(LRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-        { return 0; }
+    STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+        { return S_OK; }
     STDMETHOD_(LRESULT, WindowProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         { return FALSE; }
@@ -786,7 +786,7 @@ protected:
     void DrawUnderline(HDC hDC, INT xText, INT yText, HBRUSH hbr);
 
 public:
-    CUIFMenuItem(CUIFMenu *pMenu, BOOL bDisabled);
+    CUIFMenuItem(CUIFMenu *pMenu, BOOL bDisabled = FALSE);
     ~CUIFMenuItem() override;
 
     BOOL Init(UINT nMenuItemID, LPCWSTR pszText);
@@ -2484,7 +2484,6 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
     if (!CUIFBitmapDC::s_fInitBitmapDCs)
         return NULL;
 
-    LONG cx, cy;
     SIZE size;
     if (pSize)
     {
@@ -2496,8 +2495,8 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
             return FALSE;
     }
 
-    CUIFBitmapDC::s_phdcSrc->SetDIB(cx, cy, 1, 32);
-    CUIFBitmapDC::s_phdcMask->SetBitmap(cx, cy, 1, 1);
+    CUIFBitmapDC::s_phdcSrc->SetDIB(size.cx, size.cy, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(size.cx, size.cy, 1, 1);
 
     RECT rc = { 0, 0, size.cx, size.cy };
     ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
@@ -5177,31 +5176,24 @@ CUIFBalloonWindow::AddButton(UINT nCommandId)
     pButton->Initialize();
     pButton->m_nCommandID = nCommandId;
 
-    LPCWSTR pszText; // FIXME: Use resource strings
+    LPCWSTR pszText;
+#ifdef IDS_OK
+    extern HINSTANCE g_hInst;
+    WCHAR szText[64];
+    ::LoadStringW(g_hInst, IDS_OK + nCommandId, szText, _countof(szText));
+    pszText = szText;
+#else
     switch (nCommandId)
     {
-        case IDOK:
-            pszText = L"OK";
-            break;
-        case IDCANCEL:
-            pszText = L"Cancel";
-            break;
-        case IDABORT:
-            pszText = L"&Abort";
-            break;
-        case IDRETRY:
-            pszText = L"&Retry";
-            break;
-        case IDIGNORE:
-            pszText = L"&Ignore";
-            break;
-        case IDYES:
-            pszText = L"&Yes";
-            break;
-        default:
-            pszText = L"&No";
-            break;
+        case IDOK:      pszText = L"OK";      break;
+        case IDCANCEL:  pszText = L"Cancel";  break;
+        case IDABORT:   pszText = L"&Abort";  break;
+        case IDRETRY:   pszText = L"&Retry";  break;
+        case IDIGNORE:  pszText = L"&Ignore"; break;
+        case IDYES:     pszText = L"&Yes";    break;
+        default:        pszText = L"&No";     break;
     }
+#endif
 
     pButton->SetText(pszText);
 

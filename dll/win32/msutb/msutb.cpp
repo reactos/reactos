@@ -33,6 +33,7 @@ CMsUtbModule gModule;
 
 class CCicLibMenuItem;
 class CTipbarAccItem;
+class CUTBMenuItem;
 
 /***********************************************************************/
 
@@ -100,6 +101,7 @@ protected:
     BOOL m_bInitialized;
     CicArray<CTipbarAccItem*> m_AccItems;
     LONG m_cSelection;
+    friend class CUTBMenuWnd;
 
 public:
     CTipbarAccessible(CTipbarAccItem *pItem);
@@ -206,14 +208,104 @@ public:
     {
         return NULL;
     }
-    STDMETHOD(DoAccDefaultAction)()
+    STDMETHOD_(BOOL, DoAccDefaultAction)()
     {
-        return S_OK;
+        return FALSE;
     }
     STDMETHOD_(BOOL, DoAccDefaultActionReal)()
     {
         return FALSE;
     }
+};
+
+/***********************************************************************/
+
+class CTipbarCoInitialize
+{
+public:
+    BOOL m_bCoInit;
+
+    CTipbarCoInitialize() : m_bCoInit(FALSE) { }
+    ~CTipbarCoInitialize() { CoUninit(); }
+
+    HRESULT EnsureCoInit()
+    {
+        if (m_bCoInit)
+            return S_OK;
+        HRESULT hr = ::CoInitialize(NULL);
+        if (FAILED(hr))
+            return hr;
+        m_bCoInit = TRUE;
+        return S_OK;
+    }
+
+    void CoUninit()
+    {
+        if (m_bCoInit)
+        {
+            ::CoUninitialize();
+            m_bCoInit = FALSE;
+        }
+    }
+};
+
+/***********************************************************************/
+
+class CUTBMenuWnd : public CTipbarAccItem, public CUIFMenu
+{
+protected:
+    CTipbarCoInitialize m_coInit;
+    CTipbarAccessible *m_pAccessible;
+    UINT m_nMenuWndID;
+    friend class CUTBMenuItem;
+
+public:
+    CUTBMenuWnd(HINSTANCE hInst, DWORD style, DWORD dwUnknown14);
+
+    BOOL StartDoAccDefaultActionTimer(CUTBMenuItem *pTarget);
+
+    CTipbarAccItem* GetAccItem()
+    {
+        return static_cast<CTipbarAccItem*>(this);
+    }
+    CUIFMenu* GetMenu()
+    {
+        return static_cast<CUIFMenu*>(this);
+    }
+
+    STDMETHOD_(BSTR, GetAccName)() override;
+    STDMETHOD_(INT, GetAccRole)() override;
+    STDMETHOD_(void, Initialize)() override;
+    STDMETHOD_(void, OnCreate)(HWND hWnd) override;
+    STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
+    STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnShowWindow)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(void, OnTimer)(WPARAM wParam) override;
+};
+
+/***********************************************************************/
+
+class CUTBMenuItem : public CTipbarAccItem, public CUIFMenuItem
+{
+protected:
+    CUTBMenuWnd *m_pMenuWnd;
+    friend class CUTBMenuWnd;
+
+public:
+    CUTBMenuItem(CUTBMenuWnd *pMenuWnd);
+    ~CUTBMenuItem() override;
+
+    CUIFMenuItem* GetMenuItem()
+    {
+        return static_cast<CUIFMenuItem*>(this);
+    }
+
+    STDMETHOD_(BOOL, DoAccDefaultAction)() override;
+    STDMETHOD_(BOOL, DoAccDefaultActionReal)() override;
+    STDMETHOD_(BSTR, GetAccDefaultAction)() override;
+    STDMETHOD_(void, GetAccLocation)(LPRECT lprc) override;
+    STDMETHOD_(BSTR, GetAccName)() override;
+    STDMETHOD_(INT, GetAccRole)() override;
 };
 
 /***********************************************************************/
@@ -954,7 +1046,7 @@ STDMETHODIMP CTipbarAccessible::accDoDefaultAction(VARIANT varID)
     CTipbarAccItem *pItem = AccItemFromID(V_I4(&varID));
     if (!pItem)
         return DISP_E_MEMBERNOTFOUND;
-    return pItem->DoAccDefaultAction() == 0;
+    return (pItem->DoAccDefaultAction() ? S_OK : S_FALSE);
 }
 
 STDMETHODIMP CTipbarAccessible::put_accName(VARIANT varID, BSTR name)
@@ -965,6 +1057,202 @@ STDMETHODIMP CTipbarAccessible::put_accName(VARIANT varID, BSTR name)
 STDMETHODIMP CTipbarAccessible::put_accValue(VARIANT varID, BSTR value)
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ * CUTBMenuWnd
+ */
+
+CUTBMenuWnd::CUTBMenuWnd(HINSTANCE hInst, DWORD style, DWORD dwUnknown14)
+    : CUIFMenu(hInst, style, dwUnknown14)
+{
+}
+
+BOOL CUTBMenuWnd::StartDoAccDefaultActionTimer(CUTBMenuItem *pTarget)
+{
+    if (!m_pAccessible)
+        return FALSE;
+
+    m_nMenuWndID = m_pAccessible->GetIDOfItem(pTarget);
+    if (!m_nMenuWndID || m_nMenuWndID == (UINT)-1)
+        return FALSE;
+
+    if (::IsWindow(m_hWnd))
+    {
+        ::KillTimer(m_hWnd, 11);
+        ::SetTimer(m_hWnd, 11, 200, NULL);
+    }
+
+    return TRUE;
+}
+
+STDMETHODIMP_(BSTR) CUTBMenuWnd::GetAccName()
+{
+    WCHAR szText[64];
+    LoadStringW(g_hInst, IDS_MENUWND, szText, _countof(szText));
+    return ::SysAllocString(szText);
+}
+
+STDMETHODIMP_(INT) CUTBMenuWnd::GetAccRole()
+{
+    return 9;
+}
+
+STDMETHODIMP_(void) CUTBMenuWnd::Initialize()
+{
+    CTipbarAccessible *pAccessible = new(cicNoThrow) CTipbarAccessible(GetAccItem());
+    if (pAccessible)
+        m_pAccessible = pAccessible;
+
+    return CUIFObject::Initialize();
+}
+
+STDMETHODIMP_(void) CUTBMenuWnd::OnCreate(HWND hWnd)
+{
+    if (m_pAccessible)
+        m_pAccessible->SetWindow(hWnd);
+}
+
+STDMETHODIMP_(void) CUTBMenuWnd::OnDestroy(HWND hWnd)
+{
+    if (m_pAccessible)
+    {
+        m_pAccessible->NotifyWinEvent(EVENT_OBJECT_DESTROY, GetAccItem());
+        m_pAccessible->ClearAccItems();
+        m_pAccessible->Release();
+        m_pAccessible = NULL;
+    }
+    m_coInit.CoUninit();
+}
+
+STDMETHODIMP_(HRESULT)
+CUTBMenuWnd::OnGetObject(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (lParam != -4)
+        return S_OK;
+
+    if (!m_pAccessible)
+        return E_OUTOFMEMORY;
+
+    if (m_pAccessible->m_bInitialized)
+        return m_pAccessible->CreateRefToAccObj(wParam);
+
+    if (SUCCEEDED(m_coInit.EnsureCoInit()))
+    {
+        HRESULT hr = m_pAccessible->Initialize();
+        if (FAILED(hr))
+        {
+            m_pAccessible->Release();
+            m_pAccessible = NULL;
+            return hr;
+        }
+
+        m_pAccessible->NotifyWinEvent(EVENT_OBJECT_CREATE, GetAccItem());
+        return m_pAccessible->CreateRefToAccObj(wParam);
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP_(LRESULT)
+CUTBMenuWnd::OnShowWindow(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (m_pAccessible)
+    {
+        if (wParam)
+        {
+            m_pAccessible->NotifyWinEvent(EVENT_OBJECT_SHOW, GetAccItem());
+            m_pAccessible->NotifyWinEvent(EVENT_OBJECT_FOCUS, GetAccItem());
+        }
+        else
+        {
+            m_pAccessible->NotifyWinEvent(EVENT_OBJECT_HIDE, GetAccItem());
+        }
+    }
+
+    return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+STDMETHODIMP_(void) CUTBMenuWnd::OnTimer(WPARAM wParam)
+{
+    if (wParam == 11)
+    {
+        ::KillTimer(m_hWnd, 11);
+        if (m_pAccessible && m_nMenuWndID)
+        {
+            m_pAccessible->DoDefaultActionReal(m_nMenuWndID);
+            m_nMenuWndID = 0;
+        }
+    }
+}
+
+/***********************************************************************
+ * CUTBMenuItem
+ */
+
+CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuWnd)
+    : CUIFMenuItem(pMenuWnd ? pMenuWnd->GetMenu() : NULL)
+{
+    m_pMenuWnd = pMenuWnd;
+}
+
+CUTBMenuItem::~CUTBMenuItem()
+{
+    if (m_hbmColor)
+    {
+        ::DeleteObject(m_hbmColor);
+        m_hbmColor = NULL;
+    }
+    if (m_hbmMask)
+    {
+        ::DeleteObject(m_hbmMask);
+        m_hbmMask = NULL;
+    }
+}
+
+STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultAction()
+{
+    if (!m_pMenuWnd)
+        return FALSE;
+
+    m_pMenuWnd->StartDoAccDefaultActionTimer(this);
+    return TRUE;
+}
+
+STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultActionReal()
+{
+    if (!m_pSubMenu)
+        OnLButtonUp(0, 0);
+    else
+        ShowSubPopup();
+    return TRUE;
+}
+
+STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccDefaultAction()
+{
+    WCHAR szText[64];
+    ::LoadStringW(g_hInst, IDS_LEFTCLICK, szText, _countof(szText));
+    return ::SysAllocString(szText);
+}
+
+STDMETHODIMP_(void) CUTBMenuItem::GetAccLocation(LPRECT lprc)
+{
+    GetRect(lprc);
+    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)lprc);
+    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)&lprc->right);
+}
+
+STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccName()
+{
+    return ::SysAllocString(m_pszMenuItemLeft);
+}
+
+/// @unimplemented
+STDMETHODIMP_(INT) CUTBMenuItem::GetAccRole()
+{
+    if (FALSE) //FIXME
+        return 21;
+    return 12;
 }
 
 /***********************************************************************

@@ -25,8 +25,8 @@
 #include <atlcom.h>
 #include <strsafe.h>
 #undef STATUS_NO_MEMORY
+
+#include "resource.h"
 #include <cicero/cicuif.h>
 
 #include <wine/debug.h>
-
-#include "resource.h"

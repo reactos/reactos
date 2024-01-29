@@ -16,4 +16,6 @@ BEGIN
     IDS_IGNORE           "&Ignore"
     IDS_YES              "&Yes"
     IDS_NO               "&No"
+    IDS_MENUWND          "Menu Window"
+    IDS_LEFTCLICK        "Left Click"
 END

@@ -7,3 +7,5 @@
 #define IDS_IGNORE          104
 #define IDS_YES             105
 #define IDS_NO              106
+#define IDS_MENUWND         322
+#define IDS_LEFTCLICK       323
