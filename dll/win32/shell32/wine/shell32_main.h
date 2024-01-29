@@ -50,6 +50,16 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
 BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len) DECLSPEC_HIDDEN;
 
+#ifdef __REACTOS__
+/* Curren User */
+BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
+BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
+
+/* Local Machine */
+BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
+BOOL HLM_GetIconA(int reg_idx, LPSTR szDest, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
+#endif
+
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
 BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot) DECLSPEC_HIDDEN;
 BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR sName, DWORD len, int* picon_idx);

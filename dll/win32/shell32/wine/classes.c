@@ -334,6 +334,112 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 	return ret;
 }
 
+#ifdef __REACTOS__
+BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
+{
+	HKEY	hkey;
+	WCHAR	sTemp[MAX_PATH];
+	BOOL	ret = FALSE;
+
+	TRACE("%s\n",debugstr_w(szClass) );
+
+	swprintf(sTemp, L"%s\\DefaultIcon", szClass);
+
+	if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
+	{
+	  ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
+	  RegCloseKey(hkey);
+	}
+
+        if(ret)
+            TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+        else
+            TRACE("-- not found\n");
+
+	return ret;
+}
+
+BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
+{
+	HKEY	hkey;
+	char	sTemp[MAX_PATH];
+	BOOL	ret = FALSE;
+
+	TRACE("%s\n",szClass );
+
+	sprintf(sTemp, "%s\\DefaultIcon", szClass);
+
+	if (!RegOpenKeyExA(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
+	{
+	  ret = HCR_RegGetIconA(hkey, szDest, szName, len, picon_idx);
+	  RegCloseKey(hkey);
+	}
+
+    if (ret)
+        TRACE("-- %s %i\n", szDest, *picon_idx);
+    else
+        TRACE("-- not found\n");
+
+	return ret;
+}
+
+BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
+{
+	HKEY	hkey;
+	WCHAR	sTemp[5];
+	BOOL	ret = FALSE;
+
+	TRACE("%d\n",reg_idx );
+
+	swprintf(sTemp, L"%d", reg_idx);
+
+	if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+	                   L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
+	                   0,
+	                   KEY_READ,
+	                   &hkey))
+	{
+	  ret = HCR_RegGetIconW(hkey, szDest, sTemp, len, picon_idx);
+	  RegCloseKey(hkey);
+	}
+
+        if(ret)
+            TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+        else
+            TRACE("-- not found\n");
+
+	return ret;
+}
+
+BOOL HLM_GetIconA(int reg_idx, LPSTR szDest, DWORD len, int* picon_idx)
+{
+	HKEY	hkey;
+	char	sTemp[5];
+	BOOL	ret = FALSE;
+
+	TRACE("%d\n",reg_idx );
+
+	sprintf(sTemp, "%d", reg_idx);
+
+	if (!RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+	                   "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
+	                   0,
+	                   KEY_READ,
+	                   &hkey))
+	{
+	  ret = HCR_RegGetIconA(hkey, szDest, sTemp, len, picon_idx);
+	  RegCloseKey(hkey);
+	}
+
+    if (ret)
+        TRACE("-- %s %i\n", szDest, *picon_idx);
+    else
+        TRACE("-- not found\n");
+
+	return ret;
+}
+#endif
+
 /***************************************************************************************
 *	HCR_GetClassName	[internal]
 *
