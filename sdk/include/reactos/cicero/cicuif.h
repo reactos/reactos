@@ -2484,7 +2484,6 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
     if (!CUIFBitmapDC::s_fInitBitmapDCs)
         return NULL;
 
-    LONG cx, cy;
     SIZE size;
     if (pSize)
     {
@@ -2496,8 +2495,8 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
             return FALSE;
     }
 
-    CUIFBitmapDC::s_phdcSrc->SetDIB(cx, cy, 1, 32);
-    CUIFBitmapDC::s_phdcMask->SetBitmap(cx, cy, 1, 1);
+    CUIFBitmapDC::s_phdcSrc->SetDIB(size.cx, size.cy, 1, 32);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(size.cx, size.cy, 1, 1);
 
     RECT rc = { 0, 0, size.cx, size.cy };
     ::FillRect(*CUIFBitmapDC::s_phdcSrc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
