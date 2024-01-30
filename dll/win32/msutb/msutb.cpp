@@ -37,6 +37,68 @@ class CUTBMenuItem;
 
 /***********************************************************************/
 
+class CUTBLangBarDlg
+{
+protected:
+    LPTSTR m_pszDialogName;
+    LONG m_cRefs;
+
+public:
+    CUTBLangBarDlg() { }
+    virtual ~CUTBLangBarDlg() { }
+
+    static CUTBLangBarDlg *GetThis(HWND hDlg);
+    static void SetThis(HWND hDlg, CUTBLangBarDlg *pThis);
+    static DWORD WINAPI s_ThreadProc(LPVOID pParam);
+    static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BOOL StartThread();
+    LONG _Release();
+
+    STDMETHOD_(BOOL, DoModal)(HWND hDlg) = 0;
+    STDMETHOD_(BOOL, OnCommand)(HWND hDlg, WPARAM wParam, LPARAM lParam) = 0;
+    STDMETHOD_(BOOL, IsDlgShown)() = 0;
+    STDMETHOD_(void, SetDlgShown)(BOOL bShown) = 0;
+    STDMETHOD_(BOOL, ThreadProc)();
+};
+
+/***********************************************************************/
+
+class CUTBCloseLangBarDlg : public CUTBLangBarDlg
+{
+public:
+    CUTBCloseLangBarDlg();
+
+    static BOOL s_bIsDlgShown;
+
+    STDMETHOD_(BOOL, DoModal)(HWND hDlg) override;
+    STDMETHOD_(BOOL, OnCommand)(HWND hDlg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(BOOL, IsDlgShown)() override;
+    STDMETHOD_(void, SetDlgShown)(BOOL bShown) override;
+};
+
+BOOL CUTBCloseLangBarDlg::s_bIsDlgShown = FALSE;
+
+/***********************************************************************/
+
+class CUTBMinimizeLangBarDlg : public CUTBLangBarDlg
+{
+public:
+    CUTBMinimizeLangBarDlg();
+
+    static BOOL s_bIsDlgShown;
+
+    STDMETHOD_(BOOL, DoModal)(HWND hDlg) override;
+    STDMETHOD_(BOOL, OnCommand)(HWND hDlg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(BOOL, IsDlgShown)() override;
+    STDMETHOD_(void, SetDlgShown)(BOOL bShown) override;
+    STDMETHOD_(BOOL, ThreadProc)() override;
+};
+
+BOOL CUTBMinimizeLangBarDlg::s_bIsDlgShown = FALSE;
+
+/***********************************************************************/
+
 class CCicLibMenu : public ITfMenu
 {
 protected:
@@ -343,6 +405,221 @@ protected:
     STDMETHOD_(LRESULT, OnMsg)(WPARAM wParam, LPARAM lParam) { return 0; };
     STDMETHOD_(LRESULT, OnDelayMsg)(LPARAM lParam) { return 0; };
 };
+
+/***********************************************************************
+ * CUTBLangBarDlg
+ */
+
+CUTBLangBarDlg *CUTBLangBarDlg::GetThis(HWND hDlg)
+{
+    return (CUTBLangBarDlg*)::GetWindowLongPtr(hDlg, DWLP_USER);
+}
+
+void CUTBLangBarDlg::SetThis(HWND hDlg, CUTBLangBarDlg *pThis)
+{
+    ::SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pThis);
+}
+
+DWORD WINAPI CUTBLangBarDlg::s_ThreadProc(LPVOID pParam)
+{
+    return ((CUTBLangBarDlg *)pParam)->ThreadProc();
+}
+
+BOOL CUTBLangBarDlg::StartThread()
+{
+    if (IsDlgShown())
+        return FALSE;
+
+    SetDlgShown(TRUE);
+
+    DWORD dwThreadId;
+    HANDLE hThread = ::CreateThread(NULL, 0, s_ThreadProc, this, 0, &dwThreadId);
+    if (!hThread)
+    {
+        SetDlgShown(FALSE);
+        return TRUE;
+    }
+
+    ++m_cRefs;
+    ::CloseHandle(hThread);
+    return TRUE;
+}
+
+LONG CUTBLangBarDlg::_Release()
+{
+    if (--m_cRefs == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+STDMETHODIMP_(BOOL) CUTBLangBarDlg::ThreadProc()
+{
+    extern HINSTANCE g_hInst;
+    ::DialogBoxParam(g_hInst, m_pszDialogName, NULL, DlgProc, (LPARAM)this);
+    SetDlgShown(FALSE);
+    _Release();
+    return TRUE;
+}
+
+INT_PTR CALLBACK
+CUTBLangBarDlg::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_INITDIALOG)
+    {
+        SetThis(hDlg, (CUTBLangBarDlg *)lParam);
+        ::ShowWindow(hDlg, SW_RESTORE);
+        ::UpdateWindow(hDlg);
+        return TRUE;
+    }
+
+    if (uMsg == WM_COMMAND)
+    {
+        CUTBLangBarDlg *pThis = CUTBLangBarDlg::GetThis(hDlg);
+        pThis->OnCommand(hDlg, wParam, lParam);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/***********************************************************************
+ * CUTBCloseLangBarDlg
+ */
+
+CUTBCloseLangBarDlg::CUTBCloseLangBarDlg()
+{
+    m_cRefs = 1;
+    m_pszDialogName = MAKEINTRESOURCE(IDD_CLOSELANGBAR);
+}
+
+STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::DoModal(HWND hDlg)
+{
+    CicRegKey regKey;
+    LSTATUS error;
+    DWORD dwValue = FALSE;
+    error = regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"));
+    if (error == ERROR_SUCCESS)
+        regKey.QueryDword(TEXT("DontShowCloseLangBarDlg"), &dwValue);
+
+    if (dwValue)
+        return FALSE;
+
+    StartThread();
+    return TRUE;
+}
+
+/// @unimplemented
+void DoCloseLangbar(void)
+{
+    //FIXME
+}
+
+STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::OnCommand(HWND hDlg, WPARAM wParam, LPARAM lParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case IDOK:
+            DoCloseLangbar();
+            if (::IsDlgButtonChecked(hDlg, IDC_CLOSELANGBAR_CHECK))
+            {
+                CicRegKey regKey;
+                LSTATUS error;
+                error = regKey.Create(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"));
+                if (error == ERROR_SUCCESS)
+                    regKey.SetDword(TEXT("DontShowCloseLangBarDlg"), TRUE);
+            }
+            ::EndDialog(hDlg, TRUE);
+            break;
+
+        case IDCANCEL:
+            ::EndDialog(hDlg, FALSE);
+            break;
+
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::IsDlgShown()
+{
+    return s_bIsDlgShown;
+}
+
+STDMETHODIMP_(void) CUTBCloseLangBarDlg::SetDlgShown(BOOL bShown)
+{
+    s_bIsDlgShown = bShown;
+}
+
+/***********************************************************************
+ * CUTBMinimizeLangBarDlg
+ */
+
+CUTBMinimizeLangBarDlg::CUTBMinimizeLangBarDlg()
+{
+    m_cRefs = 1;
+    m_pszDialogName = MAKEINTRESOURCE(IDD_MINIMIZELANGBAR);
+}
+
+STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::DoModal(HWND hDlg)
+{
+    CicRegKey regKey;
+    LSTATUS error;
+
+    DWORD dwValue = FALSE;
+    error = regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"));
+    if (error == ERROR_SUCCESS)
+        regKey.QueryDword(TEXT("DontShowMinimizeLangBarDlg"), &dwValue);
+
+    if (dwValue)
+        return FALSE;
+
+    StartThread();
+    return TRUE;
+}
+
+STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::OnCommand(HWND hDlg, WPARAM wParam, LPARAM lParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case IDOK:
+            if (::IsDlgButtonChecked(hDlg, IDC_MINIMIZELANGBAR_CHECK))
+            {
+                LSTATUS error;
+                CicRegKey regKey;
+                error = regKey.Create(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"));
+                if (error == ERROR_SUCCESS)
+                    regKey.SetDword(TEXT("DontShowMinimizeLangBarDlg"), TRUE);
+            }
+            ::EndDialog(hDlg, TRUE);
+            break;
+        case IDCANCEL:
+            ::EndDialog(hDlg, FALSE);
+            break;
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::IsDlgShown()
+{
+    return s_bIsDlgShown;
+}
+
+STDMETHODIMP_(void) CUTBMinimizeLangBarDlg::SetDlgShown(BOOL bShown)
+{
+    s_bIsDlgShown = bShown;
+}
+
+STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::ThreadProc()
+{
+    ::Sleep(700);
+    return CUTBLangBarDlg::ThreadProc();
+}
 
 /***********************************************************************
  * CCicLibMenu
