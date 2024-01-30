@@ -5180,7 +5180,7 @@ CUIFBalloonWindow::AddButton(UINT nCommandId)
 #ifdef IDS_OK
     extern HINSTANCE g_hInst;
     WCHAR szText[64];
-    ::LoadStringW(g_hInst, IDS_OK + nCommandId, szText, _countof(szText));
+    ::LoadStringW(g_hInst, IDS_OK + (nCommandId - IDOK), szText, _countof(szText));
     pszText = szText;
 #else
     switch (nCommandId)
