@@ -9,3 +9,9 @@
 #define IDS_NO              106
 #define IDS_MENUWND         322
 #define IDS_LEFTCLICK       323
+
+#define IDD_CLOSELANGBAR    1001
+#define IDD_MINIMIZELANGBAR 1004
+
+#define IDC_CLOSELANGBAR_CHECK 1002
+#define IDC_MINIMIZELANGBAR_CHECK 1002
