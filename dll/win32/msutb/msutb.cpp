@@ -856,7 +856,7 @@ STDMETHODIMP CCicLibMenu::AddMenuItem(
         pSubMenu->AddRef();
     }
 
-    *m_MenuItems.Append(1) = pMenuItem;
+    *m_MenuItems.Add(pMenuItem);
     return S_OK;
 }
 
@@ -1709,10 +1709,10 @@ BOOL CTrayIconItem::RemoveIcon()
 {
     if (m_dwIconAddOrModify == NIM_MODIFY)
     {
-        NOTIFYICONDATA NotifyIcon = { sizeof(NotifyIcon), m_hWnd, m_uNotifyIconID };
+        NOTIFYICONDATAW NotifyIcon = { sizeof(NotifyIcon), m_hWnd, m_uNotifyIconID };
         NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         NotifyIcon.uCallbackMessage = m_uCallbackMessage;
-        ::Shell_NotifyIcon(NIM_DELETE, &NotifyIcon);
+        ::Shell_NotifyIconW(NIM_DELETE, &NotifyIcon);
     }
 
     m_dwIconAddOrModify = NIM_ADD;
@@ -1798,7 +1798,7 @@ CMainIconItem::CMainIconItem(CTrayIconWnd *pWnd)
 
 BOOL CMainIconItem::Init(HWND hWnd)
 {
-    return CTrayIconItem::_Init(hWnd, 0x400, 0, GUID_LBI_TRAYMAIN);
+    return CTrayIconItem::_Init(hWnd, WM_USER, 0, GUID_LBI_TRAYMAIN);
 }
 
 /// @unimplemented
