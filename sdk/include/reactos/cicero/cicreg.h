@@ -65,6 +65,8 @@ public:
     }
 
     LSTATUS RecurseDeleteKey(LPCTSTR lpSubKey);
+
+    LSTATUS EnumValue(DWORD dwIndex, LPTSTR lpValueName, DWORD cchValueName);
 };
 
 /******************************************************************************/
@@ -161,4 +163,15 @@ CicRegKey::RecurseDeleteKey(LPCTSTR lpSubKey)
     regKey.Close();
 
     return DeleteSubKey(lpSubKey);
+}
+
+inline LSTATUS
+CicRegKey::EnumValue(DWORD dwIndex, LPTSTR lpValueName, DWORD cchValueName)
+{
+    DWORD dwSaveLen = cchValueName;
+    LSTATUS error = ::RegEnumValue(m_hKey, dwIndex, lpValueName, &cchValueName,
+                                   NULL, NULL, NULL, NULL);
+    if (dwSaveLen)
+        lpValueName[error == ERROR_SUCCESS ? dwSaveLen - 1 : 0] = 0;
+    return error;
 }

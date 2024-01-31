@@ -16,7 +16,42 @@ DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
 LONG g_DllRefCount = 0;
 
+BOOL g_bShowTipbar = TRUE;
+BOOL g_bShowDebugMenu = FALSE;
+BOOL g_bNewLook = TRUE;
+BOOL g_bIntelliSense = FALSE;
+BOOL g_bShowCloseMenu = FALSE;
+UINT g_uTimeOutNonIntentional = 60 * 1000;
+UINT g_uTimeOutIntentional = 10 * 60 * 1000;
+UINT g_uTimeOutMax = 60 * 60 * 1000;
+BOOL g_bShowMinimizedBalloon = TRUE;
+POINT g_ptTipbar = { -1, -1 };
+BOOL g_bExcludeCaptionButtons = TRUE;
+BOOL g_bShowShadow = FALSE;
+BOOL g_fTaskbarTheme = TRUE;
+BOOL g_fVertical = FALSE;
+UINT g_uTimerElapseSTUBSTART = 100;
+UINT g_uTimerElapseSTUBEND = 2 * 1000;
+UINT g_uTimerElapseBACKTOALPHA = 3 * 1000;
+UINT g_uTimerElapseONTHREADITEMCHANGE = 200;
+UINT g_uTimerElapseSETWINDOWPOS = 100;
+UINT g_uTimerElapseONUPDATECALLED = 50;
+UINT g_uTimerElapseSYSCOLORCHANGED = 20;
+UINT g_uTimerElapseDISPLAYCHANGE = 20;
+UINT g_uTimerElapseUPDATEUI = 70;
+UINT g_uTimerElapseSHOWWINDOW = 50;
+UINT g_uTimerElapseMOVETOTRAY = 50;
+UINT g_uTimerElapseTRAYWNDONDELAYMSG = 50;
 UINT g_uTimerElapseDOACCDEFAULTACTION = 200;
+UINT g_uTimerElapseENSUREFOCUS = 50;
+BOOL g_bShowDeskBand = FALSE;
+UINT g_uTimerElapseSHOWDESKBAND = 3 * 1000;
+BOOL g_fPolicyDisableCloseButton = FALSE;
+BOOL g_fPolicyEnableLanguagebarInFullscreen = FALSE;
+DWORD g_dwWndStyle = 0;
+DWORD g_dwMenuStyle = 0;
+DWORD g_dwChildWndStyle = 0;
+BOOL g_fRTL = FALSE;
 
 #define TIMER_ID_DOACCDEFAULTACTION 11
 
@@ -44,6 +79,76 @@ class CTipbarWnd;
 class CButtonIconItem;
 
 CTipbarWnd *g_pTipbarWnd = NULL;
+
+CicArray<HKL> *g_prghklSkipRedrawing = NULL;
+
+BOOL IsSkipRedrawHKL(HKL hSkipKL)
+{
+    if (LOWORD(hSkipKL) == MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT))
+        return FALSE; // Japanese HKL will be skipped
+    if (!g_prghklSkipRedrawing)
+        return FALSE;
+
+    for (size_t iItem = 0; iItem < g_prghklSkipRedrawing->size(); ++iItem)
+    {
+        if ((*g_prghklSkipRedrawing)[iItem] == hSkipKL)
+            return TRUE; // To be skipped
+    }
+
+    return FALSE; // To be not skipped
+}
+
+BOOL IsBiDiLocalizedSystem(void)
+{
+    LOCALESIGNATURE Sig;
+    LANGID LangID = ::GetUserDefaultUILanguage();
+    if (!LangID)
+        return FALSE;
+
+    INT size = sizeof(Sig) / sizeof(WCHAR);
+    if (!::GetLocaleInfoW(LangID, LOCALE_FONTSIGNATURE, (LPWSTR)&Sig, size))
+        return FALSE;
+    return (Sig.lsUsb[3] & 0x8000000) != 0;
+}
+
+void InitSkipRedrawHKLArray(void)
+{
+    g_prghklSkipRedrawing = new(cicNoThrow) CicArray<HKL>();
+    if (!g_prghklSkipRedrawing)
+        return;
+
+    g_prghklSkipRedrawing->Add((HKL)UlongToHandle(0xE0010411)); // Japanese IME will be skipped
+
+    CicRegKey regKey;
+    LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE,
+                                TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\SkipRedrawHKL"));
+    if (error != ERROR_SUCCESS)
+        return;
+
+    TCHAR szValueName[256];
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        error = regKey.EnumValue(dwIndex, szValueName, _countof(szValueName));
+        if (error != ERROR_SUCCESS)
+            break;
+
+        if (szValueName[0] == TEXT('0') &&
+            (szValueName[1] == TEXT('x') || szValueName[1] == TEXT('X')))
+        {
+            HKL hKL = (HKL)UlongToHandle(_tcstoul(szValueName, NULL, 16));
+            g_prghklSkipRedrawing->Add(hKL); // This hKL will be skipped
+        }
+    }
+}
+
+void UninitSkipRedrawHKLArray(void)
+{
+    if (g_prghklSkipRedrawing)
+    {
+        delete g_prghklSkipRedrawing;
+        g_prghklSkipRedrawing = NULL;
+    }
+}
 
 HRESULT GetGlobalCompartment(REFGUID rguid, ITfCompartment **ppComp)
 {
@@ -121,6 +226,166 @@ void DoCloseLangbar(void)
                                 KEY_ALL_ACCESS);
     if (error == ERROR_SUCCESS)
         ::RegDeleteValue(regKey, TEXT("ctfmon.exe"));
+}
+
+BOOL InitFromReg(void)
+{
+    DWORD dwValue;
+    LSTATUS error;
+
+    CicRegKey regKey1;
+    error = regKey1.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\"));
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey1.QueryDword(TEXT("ShowTipbar"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowTipbar = !!dwValue;
+    }
+
+    CicRegKey regKey2;
+    error = regKey2.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"));
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey2.QueryDword(TEXT("ShowDebugMenu"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowDebugMenu = !!dwValue;
+        error = regKey2.QueryDword(TEXT("NewLook"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bNewLook = !!dwValue;
+        error = regKey2.QueryDword(TEXT("IntelliSense"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bIntelliSense = !!dwValue;
+        error = regKey2.QueryDword(TEXT("ShowCloseMenu"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowCloseMenu = !!dwValue;
+        error = regKey2.QueryDword(TEXT("TimeOutNonIntentional"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimeOutNonIntentional = 1000 * dwValue;
+        error = regKey2.QueryDword(TEXT("TimeOutIntentional"), &dwValue);
+        if (error == ERROR_SUCCESS)
+        {
+            g_uTimeOutIntentional = 1000 * dwValue;
+            g_uTimeOutMax = 6000 * dwValue;
+        }
+        error = regKey2.QueryDword(TEXT("ShowMinimizedBalloon"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowMinimizedBalloon = !!dwValue;
+        error = regKey2.QueryDword(TEXT("Left"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_ptTipbar.x = dwValue;
+        error = regKey2.QueryDword(TEXT("Top"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_ptTipbar.y = dwValue;
+        error = regKey2.QueryDword(TEXT("ExcludeCaptionButtons"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bExcludeCaptionButtons = !!dwValue;
+        error = regKey2.QueryDword(TEXT("ShowShadow"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowShadow = !!dwValue;
+        error = regKey2.QueryDword(TEXT("TaskbarTheme"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_fTaskbarTheme = !!dwValue;
+        error = regKey2.QueryDword(TEXT("Vertical"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_fVertical = !!dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSTUBSTART"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSTUBSTART = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSTUBEND"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSTUBEND = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseBACKTOALPHA"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseBACKTOALPHA = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseONTHREADITEMCHANGE"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseONTHREADITEMCHANGE = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSETWINDOWPOS"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSETWINDOWPOS = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseONUPDATECALLED"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseONUPDATECALLED = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSYSCOLORCHANGED"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSYSCOLORCHANGED = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseDISPLAYCHANGE"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseDISPLAYCHANGE = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseUPDATEUI"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseUPDATEUI = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSHOWWINDOW"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSHOWWINDOW = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseMOVETOTRAY"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseMOVETOTRAY = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseTRAYWNDONDELAYMSG"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseTRAYWNDONDELAYMSG = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseDOACCDEFAULTACTION"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseDOACCDEFAULTACTION = dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseENSUREFOCUS"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseENSUREFOCUS = dwValue;
+        error = regKey2.QueryDword(TEXT("ShowDeskBand"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_bShowDeskBand = !!dwValue;
+        error = regKey2.QueryDword(TEXT("TimerElapseSHOWWDESKBAND"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_uTimerElapseSHOWDESKBAND = dwValue;
+    }
+
+    CicRegKey regKey3;
+    error = regKey3.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Policies\\Microsoft\\MSCTF"));
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey3.QueryDword(TEXT("DisableCloseButton"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_fPolicyDisableCloseButton = !!dwValue;
+    }
+
+    CicRegKey regKey4;
+    error = regKey4.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Policies\\Microsoft\\MSCTF"));
+    if (error == ERROR_SUCCESS)
+    {
+        error = regKey4.QueryDword(TEXT("EnableLanguagebarInFullscreen"), &dwValue);
+        if (error == ERROR_SUCCESS)
+            g_fPolicyEnableLanguagebarInFullscreen = !!dwValue;
+    }
+
+    InitSkipRedrawHKLArray();
+
+    if (g_bNewLook)
+    {
+        g_dwWndStyle = UIF_WINDOW_ENABLETHEMED | UIF_WINDOW_WORKAREA | UIF_WINDOW_TOOLTIP |
+                       UIF_WINDOW_TOOLWINDOW | UIF_WINDOW_TOPMOST;
+        if (g_bShowShadow)
+            g_dwWndStyle |= UIF_WINDOW_SHADOW;
+        g_dwMenuStyle = 0x10000000 | UIF_WINDOW_MONITOR | UIF_WINDOW_SHADOW |
+                        UIF_WINDOW_TOOLWINDOW | UIF_WINDOW_TOPMOST;
+    }
+    else
+    {
+        g_dwWndStyle = UIF_WINDOW_WORKAREA | UIF_WINDOW_TOOLTIP | UIF_WINDOW_DLGFRAME |
+                       UIF_WINDOW_TOPMOST;
+        g_dwMenuStyle = UIF_WINDOW_MONITOR | UIF_WINDOW_DLGFRAME | UIF_WINDOW_TOPMOST;
+    }
+
+    g_dwChildWndStyle =
+        UIF_WINDOW_ENABLETHEMED | UIF_WINDOW_NOMOUSEMSG | UIF_WINDOW_TOOLTIP | UIF_WINDOW_CHILD;
+
+    if (IsBiDiLocalizedSystem())
+    {
+        g_dwWndStyle |= UIF_WINDOW_LAYOUTRTL;
+        g_dwChildWndStyle |= UIF_WINDOW_LAYOUTRTL;
+        g_dwMenuStyle |= UIF_WINDOW_LAYOUTRTL;
+        g_fRTL = TRUE;
+    }
+
+    return TRUE;
 }
 
 /***********************************************************************/
@@ -487,7 +752,10 @@ public:
     CTrayIconWnd();
     ~CTrayIconWnd();
 
-    BOOL RegisterClass();
+    static BOOL RegisterClass();
+    static CTrayIconWnd *GetThis(HWND hWnd);
+    static void SetThis(HWND hWnd, LPCREATESTRUCT pCS);
+
     HWND CreateWnd();
     void DestroyWnd();
 
@@ -501,9 +769,6 @@ public:
     BOOL FindTrayEtc();
     HWND GetNotifyWnd();
     BOOL OnIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    static CTrayIconWnd *GetThis(HWND hWnd);
-    static void SetThis(HWND hWnd, LPCREATESTRUCT pCS);
 
     void CallOnDelayMsg();
 };
@@ -2188,9 +2453,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return gModule.DllGetClassObject(rclsid, riid, ppv);
 }
 
-/**
- * @implemented
- */
+/// @implemented
 HRESULT APIENTRY
 MsUtbCoCreateInstance(
     REFCLSID rclsid,
@@ -2206,9 +2469,7 @@ MsUtbCoCreateInstance(
     return cicRealCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
 }
 
-/**
- * @unimplemented
- */
+/// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     ::InitializeCriticalSectionAndSpinCount(&g_cs, 0);
@@ -2220,7 +2481,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     TFInitLib(MsUtbCoCreateInstance);
     cicInitUIFLib();
 
-    //CTrayIconWnd::RegisterClassW(); //FIXME
+    CTrayIconWnd::RegisterClass();
 
     g_wmTaskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
 
@@ -2230,9 +2491,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     return TRUE;
 }
 
-/**
- * @implemented
- */
+/// @implemented
 VOID ProcessDetach(HINSTANCE hinstDLL)
 {
     cicDoneUIFLib();
@@ -2241,9 +2500,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
     gModule.Term();
 }
 
-/**
- * @implemented
- */
+/// @implemented
 EXTERN_C BOOL WINAPI
 DllMain(
     _In_ HINSTANCE hinstDLL,
