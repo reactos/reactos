@@ -2362,9 +2362,6 @@ CTrayIconWnd::_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-/***********************************************************************/
-
-
 /***********************************************************************
  *              GetLibTls (MSUTB.@)
  *
