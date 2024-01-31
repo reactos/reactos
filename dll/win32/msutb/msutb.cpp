@@ -16,6 +16,10 @@ DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
 LONG g_DllRefCount = 0;
 
+UINT g_uTimerElapseDOACCDEFAULTACTION = 200;
+
+#define TIMER_ID_DOACCDEFAULTACTION 11
+
 EXTERN_C void __cxa_pure_virtual(void)
 {
     ERR("__cxa_pure_virtual\n");
@@ -1505,8 +1509,8 @@ BOOL CUTBMenuWnd::StartDoAccDefaultActionTimer(CUTBMenuItem *pTarget)
 
     if (::IsWindow(m_hWnd))
     {
-        ::KillTimer(m_hWnd, 11);
-        ::SetTimer(m_hWnd, 11, 200, NULL);
+        ::KillTimer(m_hWnd, TIMER_ID_DOACCDEFAULTACTION);
+        ::SetTimer(m_hWnd, TIMER_ID_DOACCDEFAULTACTION, g_uTimerElapseDOACCDEFAULTACTION, NULL);
     }
 
     return TRUE;
@@ -1601,9 +1605,9 @@ CUTBMenuWnd::OnShowWindow(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 STDMETHODIMP_(void) CUTBMenuWnd::OnTimer(WPARAM wParam)
 {
-    if (wParam == 11)
+    if (wParam == TIMER_ID_DOACCDEFAULTACTION)
     {
-        ::KillTimer(m_hWnd, 11);
+        ::KillTimer(m_hWnd, TIMER_ID_DOACCDEFAULTACTION);
         if (m_pAccessible && m_nMenuWndID)
         {
             m_pAccessible->DoDefaultActionReal(m_nMenuWndID);
