@@ -2040,8 +2040,8 @@ BOOL CTrayIconWnd::SetMainIcon(HKL hKL)
         }
         else
         {
-            ::LoadStringW(g_hInst, 308, szText, _countof(szText));
-            hIcon = ::LoadIconW(g_hInst, MAKEINTRESOURCEW(100));
+            ::LoadStringW(g_hInst, IDS_RESTORELANGBAR, szText, _countof(szText));
+            hIcon = ::LoadIconW(g_hInst, MAKEINTRESOURCEW(IDI_MAINICON));
             m_pMainIconItem->SetIcon(hIcon, szText);
         }
 
