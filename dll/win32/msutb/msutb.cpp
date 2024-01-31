@@ -1827,7 +1827,7 @@ STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
 
 CTrayIconWnd::CTrayIconWnd()
 {
-    m_uCallbackMsg = 0x1400;
+    m_uCallbackMsg = WM_USER + 0x1000;
     m_uNotifyIconID = 0x1000;
 }
 
