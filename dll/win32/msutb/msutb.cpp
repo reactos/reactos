@@ -1860,8 +1860,7 @@ void CTrayIconWnd::CallOnDelayMsg()
 HWND CTrayIconWnd::CreateWnd()
 {
     m_hWnd = ::CreateWindowEx(0, TEXT("CTrayIconWndClass"), NULL, WS_DISABLED,
-                              0, 0, 0, 0,
-                              NULL, NULL, g_hInst, this);
+                              0, 0, 0, 0, NULL, NULL, g_hInst, this);
     FindTrayEtc();
 
     m_pMainIconItem = new(cicNoThrow) CMainIconItem(this);
