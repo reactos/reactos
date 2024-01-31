@@ -1835,7 +1835,7 @@ CTrayIconWnd::~CTrayIconWnd()
 {
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        CButtonIconItem*& pItem = m_Items[iItem];
+        auto& pItem = m_Items[iItem];
         if (pItem)
         {
             delete pItem;
@@ -1848,14 +1848,11 @@ void CTrayIconWnd::CallOnDelayMsg()
 {
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        CTrayIconItem *pItem = m_Items[iItem];
-        if (pItem)
+        auto pItem = m_Items[iItem];
+        if (pItem && m_uCallbackMessage == pItem->m_uCallbackMessage)
         {
-            if (m_uCallbackMessage == pItem->m_uCallbackMessage)
-            {
-                pItem->OnDelayMsg(m_uMsg);
-                break;
-            }
+            pItem->OnDelayMsg(m_uMsg);
+            break;
         }
     }
 }
@@ -1900,7 +1897,7 @@ CButtonIconItem *CTrayIconWnd::FindIconItem(REFGUID rguid)
 {
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        CButtonIconItem *pItem = m_Items[iItem];
+        auto pItem = m_Items[iItem];
         if (IsEqualGUID(rguid, pItem->m_guid))
             return pItem;
     }
@@ -1938,7 +1935,7 @@ BOOL CTrayIconWnd::OnIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        CTrayIconItem *pItem = m_Items[iItem];
+        auto pItem = m_Items[iItem];
         if (pItem)
         {
             if (uMsg == pItem->m_uCallbackMessage)
@@ -1967,7 +1964,7 @@ void CTrayIconWnd::RemoveAllIcon(DWORD dwFlags)
 {
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        CTrayIconItem *pItem = m_Items[iItem];
+        auto pItem = m_Items[iItem];
         if (dwFlags & 0x1)
         {
             if (IsEqualGUID(pItem->m_guid, GUID_LBI_INATITEM) ||
