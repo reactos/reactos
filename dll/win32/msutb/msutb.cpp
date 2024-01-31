@@ -856,7 +856,7 @@ STDMETHODIMP CCicLibMenu::AddMenuItem(
         pSubMenu->AddRef();
     }
 
-    *m_MenuItems.Add(pMenuItem);
+    m_MenuItems.Add(pMenuItem);
     return S_OK;
 }
 
