@@ -111,7 +111,7 @@ BOOL IsBiDiLocalizedSystem(void)
     return (Sig.lsUsb[3] & 0x8000000) != 0;
 }
 
-void InitSkipRedrawHKLArray()
+void InitSkipRedrawHKLArray(void)
 {
     g_prghklSkipRedrawing = new(cicNoThrow) CicArray<HKL>();
     if (!g_prghklSkipRedrawing)
@@ -137,6 +137,15 @@ void InitSkipRedrawHKLArray()
             HKL hKL = (HKL)UlongToHandle(_tcstoul(szValueName, NULL, 16));
             g_prghklSkipRedrawing->Add(hKL);
         }
+    }
+}
+
+void UninitSkipRedrawHKLArray(void)
+{
+    if (g_prghklSkipRedrawing)
+    {
+        delete g_prghklSkipRedrawing;
+        g_prghklSkipRedrawing = NULL;
     }
 }
 
