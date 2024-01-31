@@ -488,7 +488,7 @@ public:
     void DestroyWnd();
 
     BOOL SetMainIcon(HKL hKL);
-    BOOL SetIcon(REFGUID rguid, int a3, HICON hIcon, LPCWSTR psz);
+    BOOL SetIcon(REFGUID rguid, DWORD dwUnknown24, HICON hIcon, LPCWSTR psz);
 
     void RemoveAllIcon(DWORD dwFlags);
     void RemoveUnusedIcons(int unknown);
@@ -1996,14 +1996,14 @@ void CTrayIconWnd::RemoveUnusedIcons(int unknown)
     //FIXME
 }
 
-BOOL CTrayIconWnd::SetIcon(REFGUID rguid, int a3, HICON hIcon, LPCWSTR psz)
+BOOL CTrayIconWnd::SetIcon(REFGUID rguid, DWORD dwUnknown24, HICON hIcon, LPCWSTR psz)
 {
     CButtonIconItem *pItem = FindIconItem(rguid);
     if (!pItem)
     {
         if (!hIcon)
             return FALSE;
-        pItem = new(cicNoThrow) CButtonIconItem(this, a3);
+        pItem = new(cicNoThrow) CButtonIconItem(this, dwUnknown24);
         if (!pItem)
             return FALSE;
 
