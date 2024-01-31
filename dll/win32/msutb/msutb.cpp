@@ -104,9 +104,8 @@ void DoCloseLangbar(void)
 
     if (pLangBarMgr)
     {
-        hr = pLangBarMgr->ShowFloating(8);
+        hr = pLangBarMgr->ShowFloating(TF_SFT_HIDDEN);
         pLangBarMgr->Release();
-        pLangBarMgr = NULL;
     }
 
     if (SUCCEEDED(hr))
@@ -1811,8 +1810,8 @@ STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
     if (uMsg == WM_LBUTTONDBLCLK)
     {
         //FIXME
-        //if (g_pTipbarWnd->m_dwUnknown20 )
-        //    g_pTipbarWnd->m_pLangBarMgr->ShowFloating(1);
+        //if (g_pTipbarWnd->m_dwUnknown20)
+        //    g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
     }
     else if (uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN)
     {
