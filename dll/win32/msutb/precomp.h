@@ -20,6 +20,7 @@
 #include <cguid.h>
 #include <msctf.h>
 #include <ctffunc.h>
+#include <ctfutb.h>
 #include <shlwapi.h>
 #include <atlbase.h>
 #include <atlcom.h>

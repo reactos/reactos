@@ -18,7 +18,7 @@
 @ stdcall -stub TF_DllDetachInOther()
 @ stdcall -stub TF_GetGlobalCompartment(ptr)
 @ stub TF_GetInputScope
-@ stub TF_GetLangIcon
+@ stdcall -stub TF_GetLangIcon(long ptr long)
 @ stub TF_GetMlngHKL
 @ stub TF_GetMlngIconIndex
 @ stub TF_GetThreadFlags

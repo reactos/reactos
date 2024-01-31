@@ -34,6 +34,12 @@ CMsUtbModule gModule;
 class CCicLibMenuItem;
 class CTipbarAccItem;
 class CUTBMenuItem;
+class CMainIconItem;
+class CTrayIconItem;
+class CTipbarWnd;
+class CButtonIconItem;
+
+CTipbarWnd *g_pTipbarWnd = NULL;
 
 HRESULT GetGlobalCompartment(REFGUID rguid, ITfCompartment **ppComp)
 {
@@ -453,9 +459,50 @@ public:
 
 class CTrayIconWnd
 {
+protected:
+    DWORD m_dwUnknown20;
+    BOOL m_bBusy;
+    UINT m_uCallbackMessage;
+    UINT m_uMsg;
+    HWND m_hWnd;
+    DWORD m_dwUnknown21[2];
+    HWND m_hTrayWnd;
+    HWND m_hNotifyWnd;
+    DWORD m_dwTrayWndThreadId;
+    DWORD m_dwUnknown22;
+    HWND m_hwndProgman;
+    DWORD m_dwProgmanThreadId;
+    CMainIconItem *m_pMainIconItem;
+    CicArray<CButtonIconItem*> m_Items;
+    UINT m_uCallbackMsg;
+    UINT m_uNotifyIconID;
+
+    static BOOL CALLBACK EnumChildWndProc(HWND hWnd, LPARAM lParam);
+    static LRESULT CALLBACK _WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 public:
-    //FIXME
-    HWND GetNotifyWnd() { return NULL; };
+    CTrayIconWnd();
+    ~CTrayIconWnd();
+
+    BOOL RegisterClass();
+    HWND CreateWnd();
+    void DestroyWnd();
+
+    BOOL SetMainIcon(HKL hKL);
+    BOOL SetIcon(REFGUID rguid, int a3, HICON hIcon, LPCWSTR psz);
+
+    void RemoveAllIcon(DWORD dwFlags);
+    void RemoveUnusedIcons(int unknown);
+
+    CButtonIconItem *FindIconItem(REFGUID rguid);
+    BOOL FindTrayEtc();
+    HWND GetNotifyWnd();
+    BOOL OnIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    static CTrayIconWnd *GetThis(HWND hWnd);
+    static void SetThis(HWND hWnd, LPCREATESTRUCT pCS);
+
+    void CallOnDelayMsg();
 };
 
 /***********************************************************************/
@@ -469,20 +516,50 @@ protected:
     DWORD m_dwIconAddOrModify;
     BOOL m_bIconAdded;
     CTrayIconWnd *m_pTrayIconWnd;
-    DWORD m_dw;
+    DWORD m_dwUnknown25;
     GUID m_guid;
     RECT m_rcMenu;
     POINT m_ptCursor;
+    friend class CTrayIconWnd;
 
+public:
     CTrayIconItem(CTrayIconWnd *pTrayIconWnd);
+    virtual ~CTrayIconItem() { }
 
     BOOL _Init(HWND hWnd, UINT uCallbackMessage, UINT uNotifyIconID, const GUID& rguid);
     BOOL UpdateMenuRectPoint();
     BOOL RemoveIcon();
 
-    STDMETHOD_(BOOL, SetIcon)(HICON hIcon, LPCTSTR pszTip);
-    STDMETHOD_(LRESULT, OnMsg)(WPARAM wParam, LPARAM lParam) { return 0; };
-    STDMETHOD_(LRESULT, OnDelayMsg)(LPARAM lParam) { return 0; };
+    STDMETHOD_(BOOL, SetIcon)(HICON hIcon, LPCWSTR pszTip);
+    STDMETHOD_(BOOL, OnMsg)(WPARAM wParam, LPARAM lParam) { return FALSE; };
+    STDMETHOD_(BOOL, OnDelayMsg)(UINT uMsg) { return 0; };
+};
+
+/***********************************************************************/
+
+class CButtonIconItem : public CTrayIconItem
+{
+protected:
+    DWORD m_dwUnknown24;
+    HKL m_hKL;
+    friend class CTrayIconWnd;
+
+public:
+    CButtonIconItem(CTrayIconWnd *pWnd, DWORD dwUnknown24);
+    
+    STDMETHOD_(BOOL, OnMsg)(WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(BOOL, OnDelayMsg)(UINT uMsg) override;
+};
+
+/***********************************************************************/
+
+class CMainIconItem : public CButtonIconItem
+{
+public:
+    CMainIconItem(CTrayIconWnd *pWnd);
+
+    BOOL Init(HWND hWnd);
+    STDMETHOD_(BOOL, OnDelayMsg)(UINT uMsg) override;
 };
 
 /***********************************************************************
@@ -1644,22 +1721,22 @@ BOOL CTrayIconItem::RemoveIcon()
     return TRUE;
 }
 
-BOOL CTrayIconItem::SetIcon(HICON hIcon, LPCTSTR pszTip)
+BOOL CTrayIconItem::SetIcon(HICON hIcon, LPCWSTR pszTip)
 {
     if (!hIcon)
         return FALSE;
 
-    NOTIFYICONDATA NotifyIcon = { sizeof(NotifyIcon), m_hWnd, m_uNotifyIconID };
+    NOTIFYICONDATAW NotifyIcon = { sizeof(NotifyIcon), m_hWnd, m_uNotifyIconID };
     NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE;
     NotifyIcon.uCallbackMessage = m_uCallbackMessage;
     NotifyIcon.hIcon = hIcon;
     if (pszTip)
     {
         NotifyIcon.uFlags |= NIF_TIP;
-        StringCchCopy(NotifyIcon.szTip, _countof(NotifyIcon.szTip), pszTip);
+        StringCchCopyW(NotifyIcon.szTip, _countof(NotifyIcon.szTip), pszTip);
     }
 
-    ::Shell_NotifyIcon(m_dwIconAddOrModify, &NotifyIcon);
+    ::Shell_NotifyIconW(m_dwIconAddOrModify, &NotifyIcon);
 
     m_dwIconAddOrModify = NIM_MODIFY;
     m_bIconAdded = NIM_MODIFY;
@@ -1674,6 +1751,351 @@ BOOL CTrayIconItem::UpdateMenuRectPoint()
     ::ClientToScreen(hNotifyWnd, (LPPOINT)&m_rcMenu.right);
     ::GetCursorPos(&m_ptCursor);
     return TRUE;
+}
+
+/***********************************************************************
+ * CButtonIconItem
+ */
+
+CButtonIconItem::CButtonIconItem(CTrayIconWnd *pWnd, DWORD dwUnknown24)
+    : CTrayIconItem(pWnd)
+{
+    m_dwUnknown24 = dwUnknown24;
+}
+
+/// @unimplemented
+STDMETHODIMP_(BOOL) CButtonIconItem::OnMsg(WPARAM wParam, LPARAM lParam)
+{
+    switch (lParam)
+    {
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
+            break;
+        default:
+            return TRUE;
+    }
+
+    //FIXME
+    return TRUE;
+}
+
+/// @unimplemented
+STDMETHODIMP_(BOOL) CButtonIconItem::OnDelayMsg(UINT uMsg)
+{
+    //FIXME
+    return FALSE;
+}
+
+/***********************************************************************
+ * CMainIconItem
+ */
+
+CMainIconItem::CMainIconItem(CTrayIconWnd *pWnd)
+    : CButtonIconItem(pWnd, 1)
+{
+}
+
+BOOL CMainIconItem::Init(HWND hWnd)
+{
+    return CTrayIconItem::_Init(hWnd, 0x400, 0, GUID_LBI_TRAYMAIN);
+}
+
+/// @unimplemented
+STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
+{
+    if (!CButtonIconItem::OnDelayMsg(uMsg))
+        return 0;
+
+    if (uMsg == WM_LBUTTONDBLCLK)
+    {
+        //FIXME
+        //if (g_pTipbarWnd->m_dwUnknown20 )
+        //    g_pTipbarWnd->m_pLangBarMgr->ShowFloating(1);
+    }
+    else if (uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN)
+    {
+        //FIXME
+        //g_pTipbarWnd->ShowContextMenu(m_ptCursor, &m_rcClient, uMsg == WM_RBUTTONDOWN);
+    }
+    return TRUE;
+}
+
+/***********************************************************************
+ * CTrayIconWnd
+ */
+
+CTrayIconWnd::CTrayIconWnd()
+{
+    m_uCallbackMsg = 0x1400;
+    m_uNotifyIconID = 0x1000;
+}
+
+CTrayIconWnd::~CTrayIconWnd()
+{
+    for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
+    {
+        CButtonIconItem*& pItem = m_Items[iItem];
+        if (pItem)
+        {
+            delete pItem;
+            pItem = NULL;
+        }
+    }
+}
+
+void CTrayIconWnd::CallOnDelayMsg()
+{
+    for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
+    {
+        CTrayIconItem *pItem = m_Items[iItem];
+        if (pItem)
+        {
+            if (m_uCallbackMessage == pItem->m_uCallbackMessage)
+            {
+                pItem->OnDelayMsg(m_uMsg);
+                break;
+            }
+        }
+    }
+}
+
+HWND CTrayIconWnd::CreateWnd()
+{
+    m_hWnd = ::CreateWindowEx(0, TEXT("CTrayIconWndClass"), NULL, WS_DISABLED,
+                              0, 0, 0, 0,
+                              NULL, NULL, g_hInst, this);
+    FindTrayEtc();
+
+    m_pMainIconItem = new(cicNoThrow) CMainIconItem(this);
+    if (m_pMainIconItem)
+    {
+        m_pMainIconItem->Init(m_hWnd);
+        m_Items.Add(m_pMainIconItem);
+    }
+
+    return m_hWnd;
+}
+
+void CTrayIconWnd::DestroyWnd()
+{
+    ::DestroyWindow(m_hWnd);
+    m_hWnd = NULL;
+}
+
+BOOL CALLBACK CTrayIconWnd::EnumChildWndProc(HWND hWnd, LPARAM lParam)
+{
+    CTrayIconWnd *pWnd = (CTrayIconWnd *)lParam;
+
+    TCHAR ClassName[60];
+    ::GetClassName(hWnd, ClassName, _countof(ClassName));
+    if (lstrcmp(ClassName, TEXT("TrayNotifyWnd")) != 0)
+        return TRUE;
+
+    pWnd->m_hNotifyWnd = hWnd;
+    return FALSE;
+}
+
+CButtonIconItem *CTrayIconWnd::FindIconItem(REFGUID rguid)
+{
+    for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
+    {
+        CButtonIconItem *pItem = m_Items[iItem];
+        if (IsEqualGUID(rguid, pItem->m_guid))
+            return pItem;
+    }
+    return NULL;
+}
+
+BOOL CTrayIconWnd::FindTrayEtc()
+{
+    m_hTrayWnd = ::FindWindow(TEXT("Shell_TrayWnd"), NULL);
+    if (!m_hTrayWnd)
+        return FALSE;
+
+    ::EnumChildWindows(m_hTrayWnd, EnumChildWndProc, (LPARAM)this);
+    if (!m_hNotifyWnd)
+        return FALSE;
+    m_dwTrayWndThreadId = ::GetWindowThreadProcessId(m_hTrayWnd, NULL);
+    m_hwndProgman = FindWindow(TEXT("Progman"), NULL);
+    m_dwProgmanThreadId = ::GetWindowThreadProcessId(m_hwndProgman, NULL);
+    return TRUE;
+}
+
+HWND CTrayIconWnd::GetNotifyWnd()
+{
+    if (!::IsWindow(m_hNotifyWnd))
+        FindTrayEtc();
+    return m_hNotifyWnd;
+}
+
+/// @unimplemented
+BOOL CTrayIconWnd::OnIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    //FIXME
+    //if (g_pTipbarWnd)
+    //    g_pTipbarWnd->AttachFocusThread();
+
+    for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
+    {
+        CTrayIconItem *pItem = m_Items[iItem];
+        if (pItem)
+        {
+            if (uMsg == pItem->m_uCallbackMessage)
+            {
+                pItem->OnMsg(wParam, lParam);
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+BOOL CTrayIconWnd::RegisterClass()
+{
+    WNDCLASSEX wc = { sizeof(wc) };
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.hInstance = g_hInst;
+    wc.hCursor = ::LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
+    wc.lpfnWndProc = CTrayIconWnd::_WndProc;
+    wc.lpszClassName = TEXT("CTrayIconWndClass");
+    ::RegisterClassEx(&wc);
+    return TRUE;
+}
+
+void CTrayIconWnd::RemoveAllIcon(DWORD dwFlags)
+{
+    for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
+    {
+        CTrayIconItem *pItem = m_Items[iItem];
+        if (dwFlags & 0x1)
+        {
+            if (IsEqualGUID(pItem->m_guid, GUID_LBI_INATITEM) ||
+                IsEqualGUID(pItem->m_guid, GUID_LBI_CTRL))
+            {
+                continue;
+            }
+        }
+
+        if (dwFlags & 0x2)
+        {
+            if (IsEqualGUID(pItem->m_guid, GUID_TFCAT_TIP_KEYBOARD))
+                continue;
+        }
+
+        if (pItem->m_uNotifyIconID < 0x1000)
+            continue;
+
+        pItem->RemoveIcon();
+    }
+}
+
+/// @unimplemented
+void CTrayIconWnd::RemoveUnusedIcons(int unknown)
+{
+    //FIXME
+}
+
+BOOL CTrayIconWnd::SetIcon(REFGUID rguid, int a3, HICON hIcon, LPCWSTR psz)
+{
+    CButtonIconItem *pItem = FindIconItem(rguid);
+    if (!pItem)
+    {
+        if (!hIcon)
+            return FALSE;
+        pItem = new(cicNoThrow) CButtonIconItem(this, a3);
+        if (!pItem)
+            return FALSE;
+
+        pItem->_Init(m_hWnd, m_uCallbackMsg, m_uNotifyIconID, rguid);
+        m_uCallbackMsg += 2;
+        ++m_uNotifyIconID;
+        m_Items.Add(pItem);
+    }
+
+    if (!hIcon)
+        return pItem->RemoveIcon();
+
+    return pItem->SetIcon(hIcon, psz);
+}
+
+BOOL CTrayIconWnd::SetMainIcon(HKL hKL)
+{
+    if (!hKL)
+    {
+        m_pMainIconItem->RemoveIcon();
+        m_pMainIconItem->m_hKL = NULL;
+        return TRUE;
+    }
+
+    if (hKL != m_pMainIconItem->m_hKL)
+    {
+        WCHAR szText[64];
+        HICON hIcon = TF_GetLangIcon(LOWORD(hKL), szText, _countof(szText));
+        if (hIcon)
+        {
+            m_pMainIconItem->SetIcon(hIcon, szText);
+            ::DestroyIcon(hIcon);
+        }
+        else
+        {
+            ::LoadStringW(g_hInst, 308, szText, _countof(szText));
+            hIcon = ::LoadIconW(g_hInst, MAKEINTRESOURCEW(100));
+            m_pMainIconItem->SetIcon(hIcon, szText);
+        }
+
+        m_pMainIconItem->m_hKL = hKL;
+    }
+
+    return TRUE;
+}
+
+CTrayIconWnd *CTrayIconWnd::GetThis(HWND hWnd)
+{
+    return (CTrayIconWnd *)::GetWindowLongPtr(hWnd, GWL_USERDATA);
+}
+
+void CTrayIconWnd::SetThis(HWND hWnd, LPCREATESTRUCT pCS)
+{
+    if (pCS)
+        ::SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)pCS->lpCreateParams);
+    else
+        ::SetWindowLongPtr(hWnd, GWL_USERDATA, 0);
+}
+
+LRESULT CALLBACK
+CTrayIconWnd::_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CTrayIconWnd *pThis;
+    switch (uMsg)
+    {
+        case WM_CREATE:
+            CTrayIconWnd::SetThis(hWnd, (LPCREATESTRUCT)lParam);
+            break;
+        case WM_DESTROY:
+            ::SetWindowLongPtr(hWnd, GWL_USERDATA, 0);
+            break;
+        case WM_TIMER:
+            if (wParam == 100)
+            {
+                ::KillTimer(hWnd, 100);
+                pThis = CTrayIconWnd::GetThis(hWnd);
+                if (pThis)
+                    pThis->CallOnDelayMsg();
+            }
+            break;
+        default:
+        {
+            if (uMsg < WM_USER)
+                return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+            pThis = CTrayIconWnd::GetThis(hWnd);
+            if (pThis && pThis->OnIconMessage(uMsg, wParam, lParam))
+                break;
+            return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+        }
+    }
+    return 0;
 }
 
 /***********************************************************************
