@@ -117,10 +117,11 @@ void InitSkipRedrawHKLArray(void)
     if (!g_prghklSkipRedrawing)
         return;
 
-    g_prghklSkipRedrawing->Add((HKL)UlongToHandle(0xE0010411)); // Japanese IME
+    g_prghklSkipRedrawing->Add((HKL)UlongToHandle(0xE0010411)); // Japanese IME will be skipped
 
     CicRegKey regKey;
-    LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\SkipRedrawHKL"));
+    LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE,
+                                TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\SkipRedrawHKL"));
     if (error != ERROR_SUCCESS)
         return;
 
@@ -135,7 +136,7 @@ void InitSkipRedrawHKLArray(void)
             (szValueName[1] == TEXT('x') || szValueName[1] == TEXT('X')))
         {
             HKL hKL = (HKL)UlongToHandle(_tcstoul(szValueName, NULL, 16));
-            g_prghklSkipRedrawing->Add(hKL);
+            g_prghklSkipRedrawing->Add(hKL); // This hKL will be skipped
         }
     }
 }
