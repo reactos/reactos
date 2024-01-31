@@ -28,6 +28,7 @@
 
 #include "resource.h"
 #include <cicero/cicreg.h>
+#include <cicero/cicutb.h>
 #include <cicero/cicuif.h>
 
 #include <wine/debug.h>

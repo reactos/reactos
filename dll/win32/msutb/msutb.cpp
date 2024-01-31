@@ -35,6 +35,85 @@ class CCicLibMenuItem;
 class CTipbarAccItem;
 class CUTBMenuItem;
 
+HRESULT GetGlobalCompartment(REFGUID rguid, ITfCompartment **ppComp)
+{
+    ITfCompartmentMgr *pCompMgr = NULL;
+    HRESULT hr = TF_GetGlobalCompartment(&pCompMgr);
+    if (FAILED(hr))
+        return hr;
+
+    if (!pCompMgr)
+        return E_FAIL;
+
+    hr = pCompMgr->GetCompartment(rguid, ppComp);
+    pCompMgr->Release();
+    return hr;
+}
+
+HRESULT GetGlobalCompartmentDWORD(REFGUID rguid, LPDWORD pdwValue)
+{
+    *pdwValue = 0;
+    ITfCompartment *pComp;
+    HRESULT hr = GetGlobalCompartment(rguid, &pComp);
+    if (SUCCEEDED(hr))
+    {
+        VARIANT vari;
+        hr = pComp->GetValue(&vari);
+        if (hr == S_OK)
+            *pdwValue = V_I4(&vari);
+        pComp->Release();
+    }
+    return hr;
+}
+
+HRESULT SetGlobalCompartmentDWORD(REFGUID rguid, DWORD dwValue)
+{
+    VARIANT vari;
+    ITfCompartment *pComp;
+    HRESULT hr = GetGlobalCompartment(rguid, &pComp);
+    if (SUCCEEDED(hr))
+    {
+        V_VT(&vari) = VT_I4;
+        V_I4(&vari) = dwValue;
+        hr = pComp->SetValue(0, &vari);
+        pComp->Release();
+    }
+    return hr;
+}
+
+void TurnOffSpeechIfItsOn(void)
+{
+    DWORD dwValue = 0;
+    HRESULT hr = GetGlobalCompartmentDWORD(GUID_COMPARTMENT_SPEECH_OPENCLOSE, &dwValue);
+    if (SUCCEEDED(hr) && dwValue)
+        SetGlobalCompartmentDWORD(GUID_COMPARTMENT_SPEECH_OPENCLOSE, 0);
+}
+
+void DoCloseLangbar(void)
+{
+    ITfLangBarMgr *pLangBarMgr = NULL;
+    HRESULT hr = TF_CreateLangBarMgr(&pLangBarMgr);
+    if (FAILED(hr))
+        return;
+
+    if (pLangBarMgr)
+    {
+        hr = pLangBarMgr->ShowFloating(8);
+        pLangBarMgr->Release();
+        pLangBarMgr = NULL;
+    }
+
+    if (SUCCEEDED(hr))
+        TurnOffSpeechIfItsOn();
+
+    CicRegKey regKey;
+    LSTATUS error = regKey.Open(HKEY_CURRENT_USER,
+                                TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+                                KEY_ALL_ACCESS);
+    if (error == ERROR_SUCCESS)
+        ::RegDeleteValue(regKey, TEXT("ctfmon.exe"));
+}
+
 /***********************************************************************/
 
 class CUTBLangBarDlg
@@ -509,12 +588,6 @@ STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::DoModal(HWND hDlg)
 
     StartThread();
     return TRUE;
-}
-
-/// @unimplemented
-void DoCloseLangbar(void)
-{
-    //FIXME
 }
 
 STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::OnCommand(HWND hDlg, WPARAM wParam, LPARAM lParam)
