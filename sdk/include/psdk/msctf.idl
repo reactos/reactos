@@ -43,6 +43,7 @@ cpp_quote("EXTERN_C HRESULT WINAPI TF_InvalidAssemblyListCacheIfExist(VOID);")
 cpp_quote("EXTERN_C HRESULT WINAPI TF_DllDetachInOther(VOID);")
 cpp_quote("EXTERN_C HRESULT WINAPI TF_CreateCategoryMgr(ITfCategoryMgr **ppcat);")
 cpp_quote("EXTERN_C HRESULT WINAPI TF_CreateDisplayAttributeMgr(ITfDisplayAttributeMgr **ppdam);")
+cpp_quote("EXTERN_C HICON WINAPI TF_GetLangIcon(LANGID LangID, LPWSTR pszText, INT cchText);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_ATTRIBUTE;")

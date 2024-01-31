@@ -20,6 +20,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/manifest_hosted.rc>
 
+IDI_MAINICON ICON "res/earth.ico"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
