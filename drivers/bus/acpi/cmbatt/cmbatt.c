@@ -1267,9 +1267,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Buffer allocated, copy the string */
     RtlCopyUnicodeString(&GlobalRegistryPath, RegistryPath);
     if (CmBattDebug & CMBATT_GENERIC_INFO)
-        DbgPrint("CmBatt DriverEntry - Obj (%08x) Path \"%ws\"\n",
+        DbgPrint("CmBatt DriverEntry - Obj (%08x) Path \"%wZ\"\n",
                  DriverObject,
-                 RegistryPath->Buffer);
+                 RegistryPath);
 
     /* Setup the major dispatchers */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = CmBattOpenClose;
