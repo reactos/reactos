@@ -510,7 +510,7 @@ HRESULT WINAPI CNetFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG *p
     return S_OK;
 }
 
-HRESULT WINAPI CNetFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
+HRESULT WINAPI CNetFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
 {
     TRACE("(%p)\n", this);
 

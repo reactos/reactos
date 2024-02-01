@@ -432,7 +432,7 @@ HRESULT WINAPI CPrinterFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG
     return S_OK;
 }
 
-HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
+HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
 {
     if (!pcsFlags || iColumn >= PrinterSHELLVIEWCOLUMNS)
         return E_INVALIDARG;

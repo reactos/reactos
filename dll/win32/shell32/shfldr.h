@@ -28,7 +28,7 @@
 
 typedef struct {
     WORD colnameid; // Column title text resource id passed to LoadString
-    WORD colstate;  // SHCOLSTATEF
+    WORD colstate;  // SHCOLSTATEF returned by IShellFolder2::GetDefaultColumnState
     WORD fmt;       // LVCFMT_*
     WORD cxChar;    // Column width hint
 } shvheader;

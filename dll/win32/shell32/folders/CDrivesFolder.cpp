@@ -1132,7 +1132,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG
     return S_OK;
 }
 
-HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFlags)
+HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF * pcsFlags)
 {
     TRACE ("(%p)\n", this);
 
