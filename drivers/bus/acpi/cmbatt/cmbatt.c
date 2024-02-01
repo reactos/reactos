@@ -358,7 +358,7 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 2) DbgPrint("CmBattIoctl\n");
 
     /* Acquire the remove lock */
-    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
     if (!NT_SUCCESS(Status))
     {
         /* It's too late, fail */
