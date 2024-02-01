@@ -410,7 +410,7 @@ PoInitSystem(IN ULONG BootPhase)
                                                 (PVOID)&GUID_DEVICE_SYS_BUTTON,
                                                 IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                                 PopAddRemoveSysCapsCallback,
-                                                NULL,
+                                                (PVOID)(ULONG_PTR)PolicyDeviceSystemButton,
                                                 &NotificationEntry);
         if (!NT_SUCCESS(Status))
             return FALSE;
@@ -421,7 +421,7 @@ PoInitSystem(IN ULONG BootPhase)
                                                 (PVOID)&GUID_DEVICE_LID,
                                                 IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                                 PopAddRemoveSysCapsCallback,
-                                                NULL,
+                                                (PVOID)(ULONG_PTR)PolicyDeviceSystemButton,
                                                 &NotificationEntry);
         return NT_SUCCESS(Status);
     }
