@@ -440,8 +440,7 @@ RtlpRemoveFreeBlock(PHEAP Heap,
     else
         HintIndex = FreeEntry->Size - 1;
 
-    if (FreeEntry->Size != Heap->FreeHintBitmap.SizeOfBitMap)
-        ASSERT(RtlTestBit(&Heap->FreeHintBitmap, HintIndex));
+    ASSERT(RtlTestBit(&Heap->FreeHintBitmap, HintIndex));
 
     /* Are we removing the hint entry for this size ? */
     if (Heap->FreeHints[HintIndex] == &FreeEntry->FreeList)
