@@ -361,6 +361,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     USHORT Size, PreviousSize;
     UCHAR SegmentOffset, Flags;
     PHEAP_SEGMENT Segment;
+    LONG FreeSize;
 
     DPRINT("RtlpInsertFreeBlock(%p %p %x)\n", Heap, FreeEntry, BlockSize);
 
@@ -368,6 +369,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     Heap->TotalFreeSize += BlockSize;
 
     /* Remember certain values */
+    FreeSize = FreeEntry->Size;
     Flags = FreeEntry->Flags;
     PreviousSize = FreeEntry->PreviousSize;
     SegmentOffset = FreeEntry->SegmentOffset;
@@ -406,12 +408,13 @@ RtlpInsertFreeBlock(PHEAP Heap,
         BlockSize -= Size;
 
         /* Go to the next entry */
+        FreeSize = FreeEntry->Size;
         FreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + Size);
 
         /* Check if that's all */
         if ((PHEAP_ENTRY)FreeEntry >= Segment->LastValidEntry)
         {
-            return FreeEntry->Size;
+            return FreeSize;
         }
     }
 
@@ -419,7 +422,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     if (!(Flags & HEAP_ENTRY_LAST_ENTRY))
         FreeEntry->PreviousSize = PreviousSize;
 
-    return FreeEntry->Size;
+    return FreeSize;
 }
 
 static
