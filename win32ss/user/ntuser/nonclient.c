@@ -394,11 +394,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
          break; // Exit on Return or Esc
 
-      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP))
+      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
+         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) != MK_LBUTTON)))
       { // If no WindowSnapEnabled: Exit on button-up immediately
          break;
       }
-      else if (g_bWindowSnapEnabled && msg.message == WM_LBUTTONUP)
+      else if (g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
+         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) != MK_LBUTTON)))
       { // If WindowSnapEnabled: Decide whether to snap before exiting
          DWORD ExStyleTB, StyleTB;
          BOOL IsTaskBar;
