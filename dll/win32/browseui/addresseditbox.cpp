@@ -388,6 +388,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
             if (hdr->code == CBEN_ENDEDIT)
             {
                 NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
+
+                if (pidlLastParsed)
+                {
+                    ILFree(pidlLastParsed);
+                    pidlLastParsed = NULL;
+                }
+
                 if (endEdit->iWhy == CBENF_RETURN)
                 {
                     Execute(0);
