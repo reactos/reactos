@@ -176,7 +176,7 @@ STRINGTABLE
     IDS_TEMP_REMOVEREGISTRYVALUES "Cheie: [1], Nume: [2]"
     IDS_TEMP_REMOVESHORTCUTS "Scurtătură: [1]"
     IDS_TEMP_SELFREGMODULES "Fișier: [1], Folder: [2]"
-    IDS_TEMP_SELFUNREGMODULES "File: [1], Folder: [2]"
+    IDS_TEMP_SELFUNREGMODULES "Fișier: [1], Folder: [2]"
     IDS_TEMP_STARTSERVICES "Serviciu: [1]"
     IDS_TEMP_STOPSERVICES "Serviciu: [1]"
     IDS_TEMP_UNPUBLISHCOMPONENTS "ID de componentă: [1], Calificator: [2]"
