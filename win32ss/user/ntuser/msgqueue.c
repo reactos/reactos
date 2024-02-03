@@ -1986,8 +1986,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
             ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
             ( Window != PWND_BOTTOM && UserHMGetHandle(Window) == CurrentMessage->Msg.hwnd ) || // 3
             ( is_mouse_message(CurrentMessage->Msg.message) ) ) && // Null window for anything mouse.
-            ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
-              ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
+            ( CurrentMessage->QS_Flags & QSflags ) )
       {
          idSave = MessageQueue->idSysPeek;
          MessageQueue->idSysPeek = (ULONG_PTR)CurrentMessage;
@@ -2000,6 +1999,13 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 
          UpdateKeyStateFromMsg(MessageQueue, &msg);
          AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, ExtraInfo, MsgFilterLow, MsgFilterHigh);
+         
+         if (MsgFilterLow != 0 || MsgFilterHigh != 0)
+         {
+             /* Don't return message if not in range. */
+             if (msg.message < MsgFilterLow || msg.message > MsgFilterHigh)
+                 AcceptMessage = FALSE;
+         }
 
          if (Remove)
          {
