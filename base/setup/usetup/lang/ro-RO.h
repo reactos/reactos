@@ -7,7 +7,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2018 George Bișoc <george.bisoc@reactos.org>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 #pragma once
@@ -1366,7 +1366,7 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Aici vor fi amplasate fi\272ierele sistemului ReactOS:",
+        "Alege\376i un director unde va fi instalat ReactOS:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
