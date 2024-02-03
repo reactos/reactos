@@ -1366,7 +1366,7 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Alege\376i un director unde va fi instalat ReactOS:",
+        "Alege\376i un director \356n care va fi instalat ReactOS:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
