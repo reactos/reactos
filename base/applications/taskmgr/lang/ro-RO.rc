@@ -1,5 +1,11 @@
-// COPYRIGHT: Petru Dimitriu <petrimetri@gmail.com>
-//            Ștefan Fulea <stefan.fulea@mail.com>
+/*
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-20188 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -14,7 +20,7 @@ BEGIN
     POPUP "&Opțiuni"
     BEGIN
         MENUITEM "Mereu &deasupra", ID_OPTIONS_ALWAYSONTOP, CHECKED
-        MENUITEM "&Minimizează la comutare", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Minimizare la utilizare", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ascunde la minimizare", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
@@ -42,24 +48,24 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "Aranjări &orizontale", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Aranjări &verticale", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "Mi&nimizează", ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximizează", ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjări în casca&dă", ID_WINDOWS_CASCADE
-        MENUITEM "Ad&uce în prim plan", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "Aranjare &orizontală", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Aranjare &verticală", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Mi&nimizare", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizare", ID_WINDOWS_MAXIMIZE
+        MENUITEM "Aranjare în casca&dă", ID_WINDOWS_CASCADE
+        MENUITEM "Ad&ucere în prim plan", ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "Î&nchidere calculator"
     BEGIN
-        MENUITEM "Intră în starea de &veche", ID_SHUTDOWN_STANDBY
-        MENUITEM "Intră în &hibernare", ID_SHUTDOWN_HIBERNATE
-        MENUITEM "Î&nchide calculatorul", ID_SHUTDOWN_POWEROFF
+        MENUITEM "Intrare în starea de &veche", ID_SHUTDOWN_STANDBY
+        MENUITEM "Intrare în &hibernare", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Î&nchidere calculatorul", ID_SHUTDOWN_POWEROFF
         MENUITEM "&Repornește calculatorul", ID_SHUTDOWN_REBOOT
-        MENUITEM "&Deautentifică-mă (%s)", ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Comută utilizator\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "&Blochează calculatorul\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "Deconectea&ză", ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Elimină calculator", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Deautentificare (%s)", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Comutare utilizator\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Blocare calculator\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "Deconecta&re", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eliminare calculator", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "Aj&utor"
     BEGIN
@@ -71,12 +77,12 @@ END
 
 IDR_WINDOWSMENU MENU
 BEGIN
-    MENUITEM "Aranjări &orizontale", ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Aranjări &verticale", ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "Mi&nimizează", ID_WINDOWS_MINIMIZE
-    MENUITEM "Ma&ximizează", ID_WINDOWS_MAXIMIZE
-    MENUITEM "Aranjări în casca&dă", ID_WINDOWS_CASCADE
-    MENUITEM "&Aduce în prim plan", ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "Aranjare &orizontală", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Aranjare &verticală", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "Mi&nimizare", ID_WINDOWS_MINIMIZE
+    MENUITEM "Ma&ximizare", ID_WINDOWS_MAXIMIZE
+    MENUITEM "Aranjare în casca&dă", ID_WINDOWS_CASCADE
+    MENUITEM "&Aducere în prim plan", ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
@@ -85,8 +91,8 @@ BEGIN
     BEGIN
         MENUITEM "Activitate nouă (E&xecutare…)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "D&ale", ID_VIEW_LARGE
-        MENUITEM "&Pictograme", ID_VIEW_SMALL
+        MENUITEM "Picto&grame mari", ID_VIEW_LARGE
+        MENUITEM "&Pictograme mici", ID_VIEW_SMALL
         MENUITEM "&Detalii", ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -95,16 +101,16 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Comută la", ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "Ad&uce în prim-plan", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Comutare la", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "Ad&ucere în prim plan", ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Aranjări &orizontale", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Aranjări &verticale", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "Mi&nimizează", ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximizează", ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjări în casca&dă", ID_WINDOWS_CASCADE
+        MENUITEM "Aranjare &orizontală", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Aranjare &verticală", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Mi&nimizare", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizare", ID_WINDOWS_MAXIMIZE
+        MENUITEM "Aranjare în casca&dă", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "Opr&ește", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Opri&re", ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "S&alt la proces", ID_APPLICATION_PAGE_GOTOPROCESS
     END
 END
@@ -113,8 +119,8 @@ IDR_TRAY_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Restabilește", ID_RESTORE
-        MENUITEM "Î&nchide", ID_FILE_EXIT
+        MENUITEM "&Restabilire", ID_RESTORE
+        MENUITEM "Î&nchidere", ID_FILE_EXIT
         MENUITEM SEPARATOR
         MENUITEM "Mereu &deasupra", ID_OPTIONS_ALWAYSONTOP
     END
@@ -124,9 +130,9 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Opr&ește procesul", ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Oprește &arborele de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
-        MENUITEM "&Depanează", ID_PROCESS_PAGE_DEBUG
+        MENUITEM "Opri&re proces", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Oprire &arbore de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Depanare", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "Sta&bilire prioritate"
         BEGIN
@@ -139,8 +145,8 @@ BEGIN
         END
         MENUITEM "A&finitate…", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "P&roprietăți", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "Desc&hidere locație fișier", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -151,7 +157,7 @@ END
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
-CAPTION "Gestionar de activități"
+CAPTION "Manager de activități"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -164,8 +170,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
-    PUSHBUTTON "Închid&e", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
-    PUSHBUTTON "&Comută la", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "Închid&ere", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Comutare la", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "E&xecutare…", IDC_NEWTASK, 187, 189, 53, 14
 END
 
@@ -175,9 +181,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 7, 235, 177
-    CONTROL "Afișea&ză procesele tuturor utilizatorilor", IDC_SHOWALLPROCESSES, "Button",
+    CONTROL "Afișa&re procese de la toți utilizatorii", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 5, 191, 150, 10
-    PUSHBUTTON "Opr&ește procesul", IDC_ENDPROCESS, 171, 189, 69, 14
+    PUSHBUTTON "Înc&hidere proces", IDC_ENDPROCESS, 171, 189, 69, 14
 END
 
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -187,7 +193,7 @@ BEGIN
     GROUPBOX "Uz procesor", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Uz memorie", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Totale", IDC_TOTALS_FRAME, 5, 122, 114, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Memorie încărcată (ko)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 114, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Memorie utlizată (ko)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 114, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memorie fizică (ko)", IDC_PHYSICAL_MEMORY_FRAME, 128, 122, 114, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memorie nucleu (ko)", IDC_KERNEL_MEMORY_FRAME, 128, 166, 114, 39, 0, WS_EX_TRANSPARENT
     LTEXT "Id. de gestiune", IDS_TOTALS_HANDLE_COUNT, 12, 131, 57, 8
@@ -226,12 +232,12 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 192, 193, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX "Istoricul încărcăturii de procesor", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Istoricul încărcăturii de memorie", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "Afișaj încărcătură procesor", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Afișaj încărcătură memorie", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Afișaj istoric încărcătură procesor", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Afișaj istoric încărcătură memorie", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    GROUPBOX "Istoricul utilizării de procesor", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Istoricul utilizării de memorie", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "Afișare utilizare procesor", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Afișare utilizare memorie", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Afișare istoric utlizare procesor", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Afișare istoric utlizare memorie", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
@@ -240,7 +246,7 @@ CAPTION "Afinitate procesor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Con&firmă", IDOK, 120, 133, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 174, 133, 50, 14
+    PUSHBUTTON "&Revocare", IDCANCEL, 174, 133, 50, 14
     LTEXT "Aici poate fi specificată repartiția calculelor efectuate de fiecare procesor în parte.", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
@@ -282,8 +288,8 @@ CAPTION "Alegere coloane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Con&firmă", IDOK, 124, 178, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 178, 178, 50, 14
-    LTEXT "Alegeți coloanele care vor apărea în compartimentul „Procese”.", IDC_STATIC, 7, 7, 181, 17
+    PUSHBUTTON "Re&vocare", IDCANCEL, 178, 178, 50, 14
+    LTEXT "Selectare coloane care vor apărea în pagina de Procese în Managerul de activități.", IDC_STATIC, 7, 7, 181, 17
     CONTROL "Nume proces", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 110, 10
     CONTROL "PID (Identificator de proces)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 110, 10
     CONTROL "Utilizare procesor", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 110, 10
@@ -293,8 +299,8 @@ BEGIN
     CONTROL "Maximul de memorie utilizată", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 110, 10
     CONTROL "Erori pagină", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 110, 10
     CONTROL "Obiecte utilizator", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 110, 10
-    CONTROL "In/Ex citiri", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 110, 10
-    CONTROL "In/Ex octeți citiți", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 110, 10
+    CONTROL "Citiri I/O", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 110, 10
+    CONTROL "Octeți citire I/O", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 110, 10
     CONTROL "ID sesiune", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 110, 10
     CONTROL "Nume utilizator", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 110, 10
     CONTROL "Delta pentru erori pagină", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 28, 110, 10
@@ -302,13 +308,13 @@ BEGIN
     CONTROL "Rezervă paginată", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 50, 110, 10
     CONTROL "Rezervă nepaginată", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 61, 110, 10
     CONTROL "Prioritate de bază", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 72, 110, 10
-    CONTROL "Numărul rutinelor de gestiune", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 83, 110, 10
-    CONTROL "Numărul firelor de execuție", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 94, 110, 10
+    CONTROL "Handle-uri", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 83, 110, 10
+    CONTROL "Fire de execuție", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 94, 110, 10
     CONTROL "Obiecte GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 105, 110, 10
-    CONTROL "In/Ex scrieri", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 116, 110, 10
-    CONTROL "In/Ex octeți scriși", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 127, 110, 10
-    CONTROL "In/Ex altceva", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 138, 110, 10
-    CONTROL "In/Ex octeți din altceva", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 149, 110, 10
+    CONTROL "Scrieri I/O", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 116, 110, 10
+    CONTROL "Octeți scriere I/O", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 127, 110, 10
+    CONTROL "Alte I/O", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 138, 110, 10
+    CONTROL "Octeți alte I/O", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 149, 110, 10
     CONTROL "Linie de comandă", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 160, 65, 10
 END
 
@@ -316,63 +322,63 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Gestionar de activități"
-    IDC_TASKMGR "Gestionar de activități"
+    IDS_APP_TITLE "Manager de activități"
+    IDC_TASKMGR "Manager de activități"
     IDS_IDLE_PROCESS "Proces de inactivitate sistem"
 END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "Pornește un nou program."
-    ID_OPTIONS_ALWAYSONTOP "Gestionarul rămâne deasupra celorlaltor ferestre până când e minimizat."
-    ID_OPTIONS_MINIMIZEONUSE "Gestionarul va fi minimizat automat la comutarea către o aplicație."
-    ID_OPTIONS_HIDEWHENMINIMIZED "La minimizare, ascunde Gestionarul de activități în zona de notificare."
-    ID_VIEW_REFRESH "Forțează actualizarea Gestionarului acum, indiferent Rata de împrospătare."
-    ID_VIEW_LARGE "Afișează aplicațiile reprezentându-le ca dale (pictograme mari)."
-    ID_VIEW_SMALL "Afișează aplicațiile reprezentându-le ca pictograme (mici)."
-    ID_VIEW_DETAILS "Afișează informații despre fiecare aplicație."
-    ID_VIEW_UPDATESPEED_HIGH "Actualizează fereastra de două ori pe secundă."
-    ID_VIEW_UPDATESPEED_NORMAL "Actualizează fereastra o dată la două secunde."
-    ID_VIEW_UPDATESPEED_LOW "Actualizează fereastra o dată la patru secunde."
+    ID_FILE_NEW "Pornire a unui nou program."
+    ID_OPTIONS_ALWAYSONTOP "Managerul de activități rămâne deasupra celorlaltor ferestre până când e minimizat."
+    ID_OPTIONS_MINIMIZEONUSE "Managerul de activități va fi minimizat automat la comutarea către o aplicație."
+    ID_OPTIONS_HIDEWHENMINIMIZED "La minimizare, ascunde Managerul de activități de activități în zona de notificare."
+    ID_VIEW_REFRESH "Forțare actualizare pentru Managerul de activitățiui acum, indiferent Rata de împrospătare."
+    ID_VIEW_LARGE "Afișare aplicații reprezentându-le ca pictograme mari."
+    ID_VIEW_SMALL "Afișare aplicații reprezentându-le ca pictograme mici."
+    ID_VIEW_DETAILS "Afișare informații despre fiecare aplicație."
+    ID_VIEW_UPDATESPEED_HIGH "Actualizare fereastră de două ori pe secundă."
+    ID_VIEW_UPDATESPEED_NORMAL "Actualizare fereastră o dată la două secunde."
+    ID_VIEW_UPDATESPEED_LOW "Actualizare fereastră o dată la patru secunde."
 END
 
 STRINGTABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Fără actualizare automată."
-    ID_WINDOWS_TILEHORIZONTALLY "Aranjează ferestrele orizontal pe ecran."
-    ID_WINDOWS_TILEVERTICALLY "Aranjează ferestrele vertical pe ecran."
-    ID_WINDOWS_MINIMIZE "Minimizază ferestrele."
-    ID_WINDOWS_MAXIMIZE "Maximizează ferestrele."
-    ID_WINDOWS_CASCADE "Amplasează ferestrele cu barele de titlu aranjate în cascadă."
-    ID_WINDOWS_BRINGTOFRONT "Aduce fereastra în prim plan, fără a o activa."
-    ID_HELP_TOPICS "Afișează Manualul de utilizare al Gestionarului."
-    ID_HELP_ABOUT "Afișează informații despre program, versiune și drepturi de autor."
-    ID_FILE_EXIT "Închide Gestionarul de activități."
-    ID_OPTIONS_SHOW16BITTASKS "Afișează programele pe 16 biți executate în mediul „ntvdm.exe”."
-    ID_VIEW_SELECTCOLUMNS "Specificarea informațiilor afișate în compartimentul „Procese”."
-    ID_VIEW_SHOWKERNELTIMES "Include și activitatea nucleului în graficele de performanță."
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Folosește un singur grafic pentru toate procesoarele."
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Folosește câte un grafic pentru fiecare procesor."
-    ID_APPLICATION_PAGE_SWITCHTO "Aduce fereastra aplicației selectate în prim plan, activând-o."
+    ID_WINDOWS_TILEHORIZONTALLY "Aranjare ferestre orizontal pe ecran."
+    ID_WINDOWS_TILEVERTICALLY "Aranjare ferestre vertical pe ecran."
+    ID_WINDOWS_MINIMIZE "Minimizare"
+    ID_WINDOWS_MAXIMIZE "Maximizare"
+    ID_WINDOWS_CASCADE "Aranjare în casacadă și în diagonală ferestre pe desktop."
+    ID_WINDOWS_BRINGTOFRONT "Aducere fereastră în prim plan, fără a o activa."
+    ID_HELP_TOPICS "Afișare subiecte de ajutor pentru Manager de actvități."
+    ID_HELP_ABOUT "Afișare informații despre program, versiune și drepturi de autor."
+    ID_FILE_EXIT "Închidere Manager de activități."
+    ID_OPTIONS_SHOW16BITTASKS "Afișare programe pe 16 biți executate în mediul ntvdm.exe."
+    ID_VIEW_SELECTCOLUMNS "Specificare informații afișate în pagina Procese."
+    ID_VIEW_SHOWKERNELTIMES "Afișare timp nucleu în graficele de performanță"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Un singur grafic istoric arată utilizarea totală a procesorului."
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Fiecare CPU are propriul grafic de istoric."
+    ID_APPLICATION_PAGE_SWITCHTO "Aduce o sarcină în prim plan, se comută pe sarcina respectivă"
 END
 
 STRINGTABLE
 BEGIN
     ID_ENDTASK "Comandă închiderea aplicației selectate."
     ID_GOTOPROCESS "Arată procesul aplicației selectate."
-    ID_RESTORE "Restabilește Gestionarul de activități."
+    ID_RESTORE "Restabilește Managerul de activități de activități."
     ID_PROCESS_PAGE_ENDPROCESS "Comandă închiderea procesului selectat."
     ID_PROCESS_PAGE_ENDPROCESSTREE "Închide procesul și toate procesele pornite de acesta."
     ID_PROCESS_PAGE_DEBUG "Atașează aplicația de depanare la acest proces."
     ID_PROCESS_PAGE_SETAFFINITY "Restricționează execuția procesului pe anumite procesoare."
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Desemnează prioritate maximă."
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Desemnează prioritate înaltă."
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Desemnează regim prioritar."
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Desemnează prioritate ordinară."
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Desemnează regim neprioritar."
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Desemnează prioritate minimă."
-    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Setare prioritate maximă."
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Setare prioritate înaltă."
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Setare regim prioritar."
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Setează prioritate normală."
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Setează regim neprioritar."
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Setează prioritate minimă."
+    ID_PROCESS_PAGE_PROPERTIES "Afișează proprietățile fișierului de proces"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Deschide locația fișierului de proces"
 END
 
 STRINGTABLE
@@ -397,22 +403,22 @@ BEGIN
     IDS_TAB_PAGEDPOOL "Rezervă paginată"
     IDS_TAB_NPPOOL "Rezervă nepaginată"
     IDS_TAB_BASEPRI "Prioritate"
-    IDS_TAB_HANDLES "Rutine de gestiune"
+    IDS_TAB_HANDLES "Handle-uri"
     IDS_TAB_THREADS "Fire de execuție"
     IDS_TAB_USERPBJECTS "Obiecte utilizator"
     IDS_TAB_GDIOBJECTS "Obiecte GDI"
-    IDS_TAB_IOREADS "In/Ex citiri"
-    IDS_TAB_IOWRITES "In/Ex scrieri"
-    IDS_TAB_IOOTHER "In/Ex altceva"
-    IDS_TAB_IOREADBYTES "In/Ex octeți citiți"
-    IDS_TAB_IOWRITESBYTES "In/Ex octeți scriși"
-    IDS_TAB_IOOTHERBYTES "In/Ex octeți din altceva"
+    IDS_TAB_IOREADS "Citiri I/O"
+    IDS_TAB_IOWRITES "Scrieri I/O"
+    IDS_TAB_IOOTHER "Alte I/O"
+    IDS_TAB_IOREADBYTES "Octeți citire I/O"
+    IDS_TAB_IOWRITESBYTES "Octeți scriere I/O"
+    IDS_TAB_IOOTHERBYTES "Octeți alte I/O"
     IDS_TAB_COMMANDLINE "Linie de comandă"
     IDS_MENU_SELECTCOLUMNS "Selectare &coloane…"
     IDS_MENU_16BITTASK "Afișează activități pe 16 &biți"
     IDS_MENU_WINDOWS "Fe&restre"
-    IDS_MENU_LARGEICONS "D&ale"
-    IDS_MENU_SMALLICONS "&Pictograme"
+    IDS_MENU_LARGEICONS "Picto&grame mari"
+    IDS_MENU_SMALLICONS "&Pictograme mici"
     IDS_MENU_DETAILS "&Detalii"
     IDS_MENU_ONEGRAPHALLCPUS "Grafic general &comun"
     IDS_MENU_ONEGRAPHPERCPU "Grafice indi&viduale"
@@ -428,8 +434,8 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Avertisment"
     IDS_MSG_WARNINGTERMINATING "Terminarea forțată a unui proces poate duce la pierderi\nde date sau la instabilitatea sistemului. Procesului nu-i\nva fi permisă îndeplinirea formalităților de închidere.\nSigur doriți terminarea forțată a procesului?"
     IDS_MSG_UNABLETERMINATEPRO "Procesul nu poate fi oprit"
-    IDS_MSG_CLOSESYSTEMPROCESS "Acesta este un proces critic de sistem. Gestionarul de aplicații nu va opri acest proces."
-    IDS_MSG_UNABLECHANGEPRIORITY "Prioritatea nu a putut fi schimbată"
+    IDS_MSG_CLOSESYSTEMPROCESS "Acesta este un proces critic de sistem. Managerul de activități de aplicații nu va opri acest proces."
+    IDS_MSG_UNABLECHANGEPRIORITY "Nu s-a putut schimba prioritatea"
     IDS_MSG_WARNINGCHANGEPRIORITY "Schimbarea priorității poate duce la efecte colaterale\nprecum instabilitatea sistemului.\nSigur doriți schimbarea priorității procesului?"
     IDS_MSG_TRAYICONCPUUSAGE "Utilizare procesor: %d%%"
     IDS_STATUS_MEMUSAGE "Utilizare memorie: %s / %s (%d%%)"
