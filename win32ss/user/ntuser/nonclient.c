@@ -400,7 +400,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          break;
       }
       else if (g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
-         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) == 0)))
+              (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) == 0)))
       { // If WindowSnapEnabled: Decide whether to snap before exiting
          DWORD ExStyleTB, StyleTB;
          BOOL IsTaskBar;
