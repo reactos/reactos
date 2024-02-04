@@ -2002,7 +2002,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          
          if (MsgFilterLow != 0 || MsgFilterHigh != 0)
          {
-             /* Don't return message if not in range. */
+             /* Don't return message if not in range */
              if (msg.message < MsgFilterLow || msg.message > MsgFilterHigh)
                  AcceptMessage = FALSE;
          }
