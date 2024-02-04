@@ -360,9 +360,7 @@ InstallNetDevice(
     }
 
     if (!LoadStringW(netcfgx_hInstance, IDS_NET_CONNECT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-    {
         wcscpy(szBuffer, L"Network Connection");
-    }
 
     rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
