@@ -101,10 +101,10 @@ static const IClassFactoryVtbl dclfvt =
 };
 
 
-IClassFactory * 
+IClassFactory *
 IClassFactory_fnConstructor(
-    LPFNCREATEINSTANCE lpfnCI, 
-    PLONG pcRefDll, 
+    LPFNCREATEINSTANCE lpfnCI,
+    PLONG pcRefDll,
     REFIID riidInst)
 {
     IClassFactoryImpl* lpclf;
