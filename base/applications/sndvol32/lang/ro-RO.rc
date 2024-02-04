@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -27,7 +27,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SNDVOL32 "Reglaj de volum"
+    IDS_SNDVOL32 "Mixer volum"
     IDS_NOMIXERDEVICES "Nu există dispozitive active de mixaj! Aplicația va fi închisă."
     IDS_SELECT "S&electează"
     IDS_ADVANCED_CONTROLS "Controale avansate pentru %s"
