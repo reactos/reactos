@@ -2,7 +2,7 @@
 
 typedef struct
 {
-    const INetCfgComponent * lpVtbl;
+    const INetCfgComponent *lpVtbl;
     LONG  ref;
     NetCfgComponentItem * pItem;
     INetCfgComponentPropertyUi * pProperty;
