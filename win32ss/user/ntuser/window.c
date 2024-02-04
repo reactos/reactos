@@ -1218,7 +1218,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    if (WndOldParent) UserReferenceObject(WndOldParent); /* Caller must deref */
 
-   /* Even if WndNewParent == WndOldParent contnue because the
+   /* Even if WndNewParent == WndOldParent continue because the
     * child window (Wnd) should be moved to the top of the z-order */
 
    /* Unlink the window from the siblings list */
@@ -1228,18 +1228,18 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    /* Set the new parent */
    WndSetParent(Wnd, WndNewParent);
 
-   if ( Wnd->style & WS_CHILD &&
-        Wnd->spwndOwner &&
-        Wnd->spwndOwner->ExStyle & WS_EX_TOPMOST )
+   if (Wnd->style & WS_CHILD &&
+       Wnd->spwndOwner &&
+       Wnd->spwndOwner->ExStyle & WS_EX_TOPMOST)
    {
-      ERR("SetParent Top Most from Pop up!\n");
+      ERR("SetParent Top Most from Pop up\n");
       Wnd->ExStyle |= WS_EX_TOPMOST;
    }
 
    /* Link the window with its new siblings */
-   IntLinkHwnd( Wnd,
+   IntLinkHwnd(Wnd,
                ((0 == (Wnd->ExStyle & WS_EX_TOPMOST) &&
-                 UserIsDesktopWindow(WndNewParent) ) ? HWND_TOP : HWND_TOPMOST ) );
+               UserIsDesktopWindow(WndNewParent)) ? HWND_TOP : HWND_TOPMOST));
 
    if ( WndNewParent == co_GetDesktopWindow(Wnd) &&
        !(Wnd->style & WS_CLIPSIBLINGS) )
