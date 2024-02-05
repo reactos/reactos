@@ -2719,11 +2719,7 @@ ChangePos:
 
     BOOL IsPointWithinStartButton(LPPOINT ppt, LPRECT prcStartBtn, WINDOWINFO* pwi)
     {
-        if (!ppt)
-            return FALSE;
-        if (!prcStartBtn)
-            return FALSE;
-        if (!pwi)
+        if (!ppt || !prcStartBtn || !pwi)
             return FALSE;
 
         switch (m_Position)
@@ -2766,9 +2762,7 @@ ChangePos:
 
     BOOL IsPointWithinShowDesktopButton(LPPOINT ppt, LPRECT prcShowDesktopBtn, WINDOWINFO* pwi)
     {
-        if (!ppt)
-            return FALSE;
-        if (!prcShowDesktopBtn)
+        if (!ppt || !prcShowDesktopBtn)
             return FALSE;
         UNREFERENCED_PARAMETER(pwi);
         /*if (!pwi)
@@ -2818,7 +2812,6 @@ ChangePos:
         RECT rcStartBtn;
         m_StartButton.GetWindowRect(&rcStartBtn);
         GetWindowInfo(m_hWnd, &wi);
-
 
         if (IsPointWithinStartButton(&pt, &rcStartBtn, &wi))
         {

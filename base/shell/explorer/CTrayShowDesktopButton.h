@@ -3,8 +3,9 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Show Desktop button
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
- * COPYRIGHT:   Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
 #pragma once
 
 #include "precomp.h"
@@ -36,7 +37,6 @@ public:
 
     DECLARE_WND_CLASS_EX(szTrayShowDesktopButton, CS_HREDRAW | CS_VREDRAW, COLOR_3DFACE)
 
-
     BEGIN_MSG_MAP(CTrayShowDesktopButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnLButtonDown)
@@ -54,8 +54,7 @@ public:
 
     CTrayShowDesktopButton();
     // This function is called from OnPaint and parent.
-    BOOL
-    GetTaskbar(OUT HWND *taskbarWnd);
+    BOOL GetTaskbar(OUT HWND *taskbarWnd);
     VOID OnDraw(HDC hdc, LPRECT prc);
     INT WidthOrHeight() const;
     HRESULT DoCreate(HWND hwndParent);

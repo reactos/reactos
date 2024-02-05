@@ -272,7 +272,7 @@ public:
                 rcClient.bottom - rcClient.top
             };
 
-            
+
             INT cxyShowDesktop = m_ShowDesktopButton.WidthOrHeight();
             if (IsHorizontal)
             {
@@ -410,10 +410,9 @@ public:
         if (Horizontal != IsHorizontal)
             IsHorizontal = Horizontal;
 
-        SetWindowTheme(m_hWnd, IsHorizontal
-            ? L"TrayNotifyHoriz"
-            : L"TrayNotifyVert"
-        , NULL);
+        SetWindowTheme(m_hWnd,
+            IsHorizontal ? L"TrayNotifyHoriz" : L"TrayNotifyVert",
+            NULL);
         m_ShowDesktopButton.IsHorizontal = Horizontal;
 
         return (LRESULT) GetMinimumSize((PSIZE) lParam);
