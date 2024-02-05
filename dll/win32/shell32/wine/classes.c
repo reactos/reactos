@@ -337,102 +337,102 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 #ifdef __REACTOS__
 BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
-	HKEY	hkey;
-	WCHAR	sTemp[MAX_PATH];
-	BOOL	ret = FALSE;
+    HKEY    hkey;
+	WCHAR   sTemp[MAX_PATH];
+	BOOL    ret = FALSE;
 
-	TRACE("%s\n",debugstr_w(szClass) );
+    TRACE("%s\n",debugstr_w(szClass) );
 
-	swprintf(sTemp, L"%s\\DefaultIcon", szClass);
+    swprintf(sTemp, L"%s\\DefaultIcon", szClass);
 
-	if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
-	{
-	  ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
-	  RegCloseKey(hkey);
+    if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
+    {
+        ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
+        RegCloseKey(hkey);
 	}
 
-        if(ret)
-            TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
-        else
-            TRACE("-- not found\n");
+    if (ret)
+        TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+    else
+        TRACE("-- not found\n");
 
-	return ret;
+    return ret;
 }
 
 BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
-	LPWSTR	wszClass, wszDest, wszName = NULL;
-	int		lenW;
-	BOOL	ret = FALSE;
+    LPWSTR  wszClass, wszDest, wszName = NULL;
+    int     lenW;
+    BOOL    ret = FALSE;
 
-	lenW = MultiByteToWideChar(CP_ACP, 0, szClass, -1, NULL, 0);
-	wszClass = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
-	if (wszClass)
-	{
-		MultiByteToWideChar(CP_ACP, 0, szClass, -1, wszClass, lenW);
-		if (szName)
-		{
-			lenW = MultiByteToWideChar(CP_ACP, 0, szName, -1, NULL, 0);
-			wszName = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
-			if (wszName)
-				MultiByteToWideChar(CP_ACP, 0, szName, -1, wszName, lenW);
-		}
-		wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-		if (wszDest)
-		{
-			ret = HCU_GetIconW(wszClass, wszDest, wszName, len, picon_idx);
-			WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
-			HeapFree(GetProcessHeap(), 0, wszDest);
-		}
-		if (wszName)
-			HeapFree(GetProcessHeap(), 0, wszName);
-		HeapFree(GetProcessHeap(), 0, wszClass);
-	}
-	return ret;
+    lenW = MultiByteToWideChar(CP_ACP, 0, szClass, -1, NULL, 0);
+    wszClass = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
+    if (wszClass)
+    {
+        MultiByteToWideChar(CP_ACP, 0, szClass, -1, wszClass, lenW);
+        if (szName)
+        {
+            lenW = MultiByteToWideChar(CP_ACP, 0, szName, -1, NULL, 0);
+            wszName = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
+            if (wszName)
+                MultiByteToWideChar(CP_ACP, 0, szName, -1, wszName, lenW);
+        }
+        wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (wszDest)
+        {
+            ret = HCU_GetIconW(wszClass, wszDest, wszName, len, picon_idx);
+            WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
+            HeapFree(GetProcessHeap(), 0, wszDest);
+        }
+        if (wszName)
+            HeapFree(GetProcessHeap(), 0, wszName);
+        HeapFree(GetProcessHeap(), 0, wszClass);
+    }
+    return ret;
 }
 
 BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
 {
-	HKEY	hkey;
-	WCHAR	sTemp[5];
-	BOOL	ret = FALSE;
+    HKEY    hkey;
+    WCHAR   sTemp[5];
+    BOOL    ret = FALSE;
 
-	TRACE("%d\n",reg_idx );
+    TRACE("%d\n",reg_idx );
 
-	swprintf(sTemp, L"%d", reg_idx);
+    swprintf(sTemp, L"%d", reg_idx);
 
-	if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-	                   L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
-	                   0,
-	                   KEY_READ,
-	                   &hkey))
-	{
-	  ret = HCR_RegGetIconW(hkey, szDest, sTemp, len, picon_idx);
-	  RegCloseKey(hkey);
-	}
+    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
+                       0,
+                       KEY_READ,
+                       &hkey))
+    {
+        ret = HCR_RegGetIconW(hkey, szDest, sTemp, len, picon_idx);
+        RegCloseKey(hkey);
+    }
 
-        if(ret)
-            TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
-        else
-            TRACE("-- not found\n");
+    if (ret)
+        TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+    else
+        TRACE("-- not found\n");
 
-	return ret;
+    return ret;
 }
 
 BOOL HLM_GetIconA(int reg_idx, LPSTR szDest, DWORD len, int* picon_idx)
 {
-	LPWSTR	wszDest;
-	BOOL	ret = FALSE;
+    LPWSTR  wszDest;
+    BOOL    ret = FALSE;
 
-	wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-	if (wszDest)
-	{
-		ret = HLM_GetIconW(reg_idx, wszDest, len, picon_idx);
-		WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
-		HeapFree(GetProcessHeap(), 0, wszDest);
-	}
+    wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (wszDest)
+    {
+        ret = HLM_GetIconW(reg_idx, wszDest, len, picon_idx);
+        WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
+        HeapFree(GetProcessHeap(), 0, wszDest);
+    }
 
-	return ret;
+    return ret;
 }
 #endif
 
