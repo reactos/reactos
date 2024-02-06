@@ -1,0 +1,20 @@
+diff --git "a/win32ss/user/ntuser/nonclient.c" "b/win32ss/user/ntuser/nonclient.c"
+index a3852066b69..c3be76119b3 100644
+--- "a/win32ss/user/ntuser/nonclient.c"
++++ "b/win32ss/user/ntuser/nonclient.c"
+@@ -394,11 +394,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
+       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
+          break; // Exit on Return or Esc
+ 
+-      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP))
++      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
++         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) != MK_LBUTTON)))
+       { // If no WindowSnapEnabled: Exit on button-up immediately
+          break;
+       }
+-      else if (g_bWindowSnapEnabled && msg.message == WM_LBUTTONUP)
++      else if (g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
++         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) != MK_LBUTTON)))
+       { // If WindowSnapEnabled: Decide whether to snap before exiting
+          DWORD ExStyleTB, StyleTB;
+          BOOL IsTaskBar;
