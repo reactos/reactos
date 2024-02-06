@@ -2531,10 +2531,12 @@ HRESULT
 CLBarItemBase::ShowInternal(BOOL bShow, BOOL bUpdate)
 {
     DWORD dwOldStatus = m_dwItemStatus;
+
     if (bShow)
-        m_dwItemStatus &= ~0x1;
+        m_dwItemStatus &= ~TF_LBI_STATUS_HIDDEN;
     else
-        m_dwItemStatus |= 0x1;
+        m_dwItemStatus |= TF_LBI_STATUS_HIDDEN;
+
     if (bUpdate && (dwOldStatus != m_dwItemStatus))
     {
         if (m_pLangBarItemSink)
