@@ -738,7 +738,7 @@ public:
     ~CUTBLBarMenu() override;
 
     CUTBMenuWnd *CreateMenuUI();
-    UINT ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude);
+    INT ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude);
 
     STDMETHOD_(CCicLibMenuItem*, CreateMenuItem)() override;
     STDMETHOD_(CCicLibMenu*, CreateSubMenu)() override;
@@ -2576,14 +2576,14 @@ STDMETHODIMP_(CCicLibMenu*) CUTBLBarMenu::CreateSubMenu()
     return new(cicNoThrow) CUTBLBarMenu(m_hInst);
 }
 
-UINT CUTBLBarMenu::ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude)
+INT CUTBLBarMenu::ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude)
 {
     if (m_pMenuUI)
         return 0;
 
     m_pMenuUI = CreateMenuUI();
     if (!m_pMenuUI)
-        return (UINT)-1;
+        return -1;
 
     UINT nCommandId = m_pMenuUI->ShowModalPopup(pWindow, prcExclude, TRUE);
     if (m_pMenuUI)
