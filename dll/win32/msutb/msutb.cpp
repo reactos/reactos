@@ -2407,6 +2407,7 @@ CLBarItemBase::CLBarItemBase()
     m_dwItemStatus = 0;
     m_szToolTipText[0] = 0;
     m_cRefs = 1;
+    m_pLangBarItemSink = NULL;
 }
 
 CLBarItemBase::~CLBarItemBase()
@@ -2417,7 +2418,7 @@ CLBarItemBase::~CLBarItemBase()
 
 STDMETHODIMP CLBarItemBase::QueryInterface(REFIID riid, void **ppvObject)
 {
-    if (IsEqualIID(riid, IID_ITfLangBarItem))
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfLangBarItem))
     {
         *ppvObject = this;
         AddRef();
