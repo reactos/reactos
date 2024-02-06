@@ -1,7 +1,15 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* Translated by ??? and Ismael Ferreras Morezuelas (Swyter) revised in 2024 by Julen Urizar Compains*/
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2007 Gabriel Ilardi <gabrielilardi@hotmail.it>
+ *              Copyright 2007 Marc Piulachs <marc.piulachs@live.com>
+ *              Copyright 2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2020-2024 Julen Urizar Compains <julenuri@hotmail.com>
+ */
 
 #pragma once
 
