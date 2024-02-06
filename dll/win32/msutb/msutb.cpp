@@ -244,7 +244,7 @@ void DoCloseLangbar(void)
         ::RegDeleteValue(regKey, TEXT("ctfmon.exe"));
 }
 
-INT GetIconIndexFromhKL(HKL hKL)
+INT GetIconIndexFromhKL(_In_ HKL hKL)
 {
     HKL hGotKL;
 
@@ -255,11 +255,10 @@ INT GetIconIndexFromhKL(HKL hKL)
             return TF_GetMlngIconIndex(iKL);
     }
 
-    iKL = 0;
-    if (!TF_GetMlngHKL(iKL, &hGotKL, NULL, 0))
+    if (!TF_GetMlngHKL(0, &hGotKL, NULL, 0))
         return -1;
 
-    return TF_GetMlngIconIndex(iKL);
+    return TF_GetMlngIconIndex(0);
 }
 
 BOOL GethKLDesc(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
@@ -273,10 +272,7 @@ BOOL GethKLDesc(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
             return TRUE;
     }
 
-    if (TF_GetMlngHKL(0, &hGotKL, pszDesc, cchDesc) && hKL == hGotKL)
-        return TRUE;
-
-    return FALSE;
+    return TF_GetMlngHKL(0, &hGotKL, pszDesc, cchDesc);
 }
 
 HRESULT
