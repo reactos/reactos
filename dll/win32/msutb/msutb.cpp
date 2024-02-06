@@ -279,7 +279,13 @@ BOOL GethKLDesc(HKL hKL, LPWSTR pszDesc, UINT cchDesc)
     return FALSE;
 }
 
-HRESULT __stdcall LangBarInsertMenu(struct ITfMenu *pMenu, UINT uId, wchar_t *pszText, BOOL bChecked, HICON hIcon)
+HRESULT
+LangBarInsertMenu(
+    _In_ ITfMenu *pMenu,
+    _In_ UINT uId,
+    _In_ LPCWSTR pszText,
+    _In_ BOOL bChecked,
+    _Inout_opt_ HICON hIcon)
 {
     HBITMAP hbmp = NULL, hbmpMask = NULL;
     if (hIcon)
