@@ -2881,10 +2881,10 @@ STDMETHODIMP CLBarItemButtonBase::UnadviseSink(DWORD dwCookie)
 CLBarInatItem::CLBarInatItem(DWORD dwThreadId)
 {
     WCHAR szText[256];
-    ::LoadStringW(g_hInst, 309, szText, _countof(szText));
+    ::LoadStringW(g_hInst, IDS_LANGUAGE, szText, _countof(szText));
     InitNuiInfo(CLSID_SYSTEMLANGBARITEM, GUID_LBI_INATITEM, 0x20001, 0, szText);
 
-    ::LoadStringW(g_hInst, 310, szText, _countof(szText));
+    ::LoadStringW(g_hInst, IDS_LANGUAGEBUTTON, szText, _countof(szText));
     StringCchCopyW(m_szToolTipText, _countof(m_szToolTipText), szText);
     m_dwThreadId = dwThreadId;
     m_hKL = ::GetKeyboardLayout(m_dwThreadId);
@@ -2945,7 +2945,7 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
     {
         LangBarInsertSeparator(pMenu);
         WCHAR szText[256];
-        ::LoadStringW(g_hInst, 321, szText, _countof(szText));
+        ::LoadStringW(g_hInst, IDS_RESTORELANGBAR2, szText, _countof(szText));
         LangBarInsertMenu(pMenu, 2000, szText, 0, 0);
     }
 #endif
