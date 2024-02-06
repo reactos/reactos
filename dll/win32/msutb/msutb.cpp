@@ -2949,7 +2949,7 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
 
         WCHAR szText[256];
         ::LoadStringW(g_hInst, IDS_RESTORELANGBAR2, szText, _countof(szText));
-        LangBarInsertMenu(pMenu, 2000, szText, 0, 0);
+        LangBarInsertMenu(pMenu, 2000, szText, FALSE, NULL);
     }
 #endif
 
