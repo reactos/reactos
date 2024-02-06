@@ -2943,16 +2943,11 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
 
     /* strip off the last directory */
     ptr = PathFindFileNameW( path );
-#ifdef __REACTOS__
     if (ptr != path)
     {
         *(ptr - 1) = '\0';
         PathAddBackslashW( path );
     }
-#else
-    if (ptr != path) *(ptr - 1) = '\0';
-    PathAddBackslashW( path );
-#endif
 
     msi_dialog_set_property( dialog->package, prop, path );
 
