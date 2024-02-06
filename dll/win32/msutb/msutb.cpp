@@ -262,18 +262,18 @@ INT GetIconIndexFromhKL(HKL hKL)
     return TF_GetMlngIconIndex(iKL);
 }
 
-BOOL GethKLDesc(HKL hKL, LPWSTR pszDesc, UINT cchDesc)
+BOOL GethKLDesc(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
     HKL hGotKL;
 
     INT iKL, cKLs = TF_MlngInfoCount();
     for (iKL = 0; iKL < cKLs; ++iKL)
     {
-        if (TF_GetMlngHKL(iKL, &hGotKL, NULL, 0) && hKL == hGotKL)
+        if (TF_GetMlngHKL(iKL, &hGotKL, pszDesc, cchDesc) && hKL == hGotKL)
             return TRUE;
     }
 
-    if (TF_GetMlngHKL(0, &hGotKL, NULL, 0) && hKL == hGotKL)
+    if (TF_GetMlngHKL(0, &hGotKL, pszDesc, cchDesc) && hKL == hGotKL)
         return TRUE;
 
     return FALSE;
