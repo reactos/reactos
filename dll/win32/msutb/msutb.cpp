@@ -2922,19 +2922,19 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
 {
     TF_InitMlngInfo();
 
-    INT iItem, cItems = TF_MlngInfoCount();
-    for (iItem = 0; iItem < cItems; ++iItem)
+    INT iKL, cKLs = TF_MlngInfoCount();
+    for (iKL = 0; iKL < cKLs; ++iKL)
     {
         HKL hKL;
         WCHAR szDesc[128];
-        if (TF_GetMlngHKL(iItem, &hKL, szDesc, _countof(szDesc)))
+        if (TF_GetMlngHKL(iKL, &hKL, szDesc, _countof(szDesc)))
         {
             HICON hIcon = NULL;
             INT iIndex = GetIconIndexFromhKL(hKL);
             if (iIndex != -1)
                 hIcon = TF_InatExtractIcon(iIndex);
 
-            LangBarInsertMenu(pMenu, iItem, szDesc, (hKL == m_hKL), hIcon);
+            LangBarInsertMenu(pMenu, iKL, szDesc, (hKL == m_hKL), hIcon);
         }
     }
 
