@@ -854,10 +854,8 @@ public:
         DWORD ulSort,
         LPCWSTR Source);
 
-    // IUnknown methods
-    STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override;
-    STDMETHOD_(ULONG, AddRef)() override;
-    STDMETHOD_(ULONG, Release)() override;
+    HRESULT AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie);
+    HRESULT UnadviseSink(DWORD dwCookie);
 
     // ITfLangBarItem methods
     STDMETHOD(GetInfo)(TF_LANGBARITEMINFO *pInfo) override;
@@ -2416,31 +2414,32 @@ CLBarItemBase::~CLBarItemBase()
         m_pLangBarItemSink->Release();
 }
 
-STDMETHODIMP CLBarItemBase::QueryInterface(REFIID riid, void **ppvObject)
+HRESULT
+CLBarItemBase::AdviseSink(
+    REFIID riid,
+    IUnknown *punk,
+    DWORD *pdwCookie)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfLangBarItem))
-    {
-        *ppvObject = this;
-        AddRef();
-        return S_OK;
-    }
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
+    if (IsEqualIID(riid, IID_ITfLangBarItemSink) || m_pLangBarItemSink)
+        return TF_E_NOOBJECT;
+
+    HRESULT hr = punk->QueryInterface(IID_ITfLangBarItemSink, (void **)&m_pLangBarItemSink);
+    if (SUCCEEDED(hr))
+        *pdwCookie = 0x8000001;
+    return hr;
 }
 
-STDMETHODIMP_(ULONG) CLBarItemBase::AddRef()
+HRESULT CLBarItemBase::UnadviseSink(DWORD dwCookie)
 {
-    return ++m_cRefs;
-}
+    if (dwCookie != 0x8000001)
+        return E_FAIL;
 
-STDMETHODIMP_(ULONG) CLBarItemBase::Release()
-{
-    if (--m_cRefs == 0)
-    {
-        delete this;
-        return 0;
-    }
-    return m_cRefs;
+    if (!m_pLangBarItemSink)
+        return E_UNEXPECTED;
+
+    m_pLangBarItemSink->Release();
+    m_pLangBarItemSink = NULL;
+    return S_OK;
 }
 
 void
