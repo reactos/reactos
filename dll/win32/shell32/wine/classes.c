@@ -338,8 +338,8 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
     HKEY    hkey;
-	WCHAR   sTemp[MAX_PATH];
-	BOOL    ret = FALSE;
+    WCHAR   sTemp[MAX_PATH];
+    BOOL    ret = FALSE;
 
     TRACE("%s\n", debugstr_w(szClass));
 
