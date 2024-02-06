@@ -1015,6 +1015,7 @@ public:
 
 /***********************************************************************/
 
+/// Language Bar international item
 class CLBarInatItem : public CLBarItemButtonBase
 {
 protected:
@@ -1023,7 +1024,6 @@ protected:
 
 public:
     CLBarInatItem(DWORD dwThreadId);
-    ~CLBarInatItem() override { }
 
     STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
     STDMETHOD(OnMenuSelect)(INT nCommandId);
