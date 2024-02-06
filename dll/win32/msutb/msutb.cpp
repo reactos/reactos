@@ -865,7 +865,7 @@ public:
 
 /***********************************************************************/
 
-class CLBarItemBase : public ITfLangBarItem
+class CLBarItemBase
 {
 protected:
     DWORD m_dwItemStatus;
@@ -887,14 +887,51 @@ public:
         DWORD ulSort,
         LPCWSTR Source);
 
+    HRESULT GetInfo(TF_LANGBARITEMINFO *pInfo);
+    HRESULT GetStatus(DWORD *pdwStatus);
+    HRESULT Show(BOOL fShow);
+    HRESULT GetTooltipString(BSTR *pbstrToolTip);
+
     HRESULT AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie);
     HRESULT UnadviseSink(DWORD dwCookie);
+};
+
+/***********************************************************************/
+
+class CLBarItemButtonBase
+    : public CLBarItemBase
+    , public ITfLangBarItem
+    , public ITfLangBarItemButton
+    , public ITfSource
+{
+public:
+    HICON m_hIcon;
+
+public:
+    CLBarItemButtonBase() { m_hIcon = NULL; }
+    ~CLBarItemButtonBase() override;
+
+    // IUnknown methods
+    STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override;
+    STDMETHOD_(ULONG, AddRef)() override;
+    STDMETHOD_(ULONG, Release)() override;
 
     // ITfLangBarItem methods
     STDMETHOD(GetInfo)(TF_LANGBARITEMINFO *pInfo) override;
     STDMETHOD(GetStatus)(DWORD *pdwStatus) override;
     STDMETHOD(Show)(BOOL fShow) override;
     STDMETHOD(GetTooltipString)(BSTR *pbstrToolTip) override;
+
+    // ITfLangBarItemButton methods
+    STDMETHOD(OnClick)(TfLBIClick click, POINT pt, LPCRECT prc) override;
+    STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
+    STDMETHOD(OnMenuSelect)(UINT wID) override;
+    STDMETHOD(GetIcon)(HICON *phIcon) override;
+    STDMETHOD(GetText)(BSTR *pbstr) override;
+
+    // ITfSource methods
+    STDMETHOD(AdviseSink)(REFIID riid, IUnknown *punk, DWORD *pdwCookie) override;
+    STDMETHOD(UnadviseSink)(DWORD dwCookie) override;
 };
 
 /***********************************************************************
@@ -2494,10 +2531,12 @@ HRESULT
 CLBarItemBase::ShowInternal(BOOL bShow, BOOL bUpdate)
 {
     DWORD dwOldStatus = m_dwItemStatus;
+
     if (bShow)
-        m_dwItemStatus &= ~0x1;
+        m_dwItemStatus &= ~TF_LBI_STATUS_HIDDEN;
     else
-        m_dwItemStatus |= 0x1;
+        m_dwItemStatus |= TF_LBI_STATUS_HIDDEN;
+
     if (bUpdate && (dwOldStatus != m_dwItemStatus))
     {
         if (m_pLangBarItemSink)
@@ -2507,24 +2546,24 @@ CLBarItemBase::ShowInternal(BOOL bShow, BOOL bUpdate)
     return S_OK;
 }
 
-STDMETHODIMP CLBarItemBase::GetInfo(TF_LANGBARITEMINFO *pInfo)
+HRESULT CLBarItemBase::GetInfo(TF_LANGBARITEMINFO *pInfo)
 {
     CopyMemory(pInfo, &m_NewUIInfo, sizeof(*pInfo));
     return S_OK;
 }
 
-STDMETHODIMP CLBarItemBase::GetStatus(DWORD *pdwStatus)
+HRESULT CLBarItemBase::GetStatus(DWORD *pdwStatus)
 {
     *pdwStatus = m_dwItemStatus;
     return S_OK;
 }
 
-STDMETHODIMP CLBarItemBase::Show(BOOL fShow)
+HRESULT CLBarItemBase::Show(BOOL fShow)
 {
     return ShowInternal(fShow, TRUE);
 }
 
-STDMETHODIMP CLBarItemBase::GetTooltipString(BSTR *pbstrToolTip)
+HRESULT CLBarItemBase::GetTooltipString(BSTR *pbstrToolTip)
 {
     if (!pbstrToolTip)
         return E_INVALIDARG;
@@ -2617,6 +2656,127 @@ BOOL CUTBLBarMenuItem::InsertToUI(CUTBMenuWnd *pMenuUI)
         //FIXME
     }
     return FALSE;
+}
+
+/***********************************************************************
+ * CLBarItemButtonBase
+ */
+
+CLBarItemButtonBase::~CLBarItemButtonBase()
+{
+    if (m_hIcon)
+    {
+        ::DestroyIcon(m_hIcon);
+        m_hIcon = NULL;
+    }
+}
+
+STDMETHODIMP CLBarItemButtonBase::QueryInterface(REFIID riid, void **ppvObject)
+{
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfLangBarItem))
+    {
+        *ppvObject = static_cast<ITfLangBarItem*>(this);
+        AddRef();
+        return S_OK;
+    }
+    if (IsEqualIID(riid, IID_ITfLangBarItemButton))
+    {
+        *ppvObject = static_cast<ITfLangBarItemButton*>(this);
+        AddRef();
+        return S_OK;
+    }
+    if (IsEqualIID(riid, IID_ITfSource))
+    {
+        *ppvObject = static_cast<ITfSource*>(this);
+        AddRef();
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+STDMETHODIMP_(ULONG) CLBarItemButtonBase::AddRef()
+{
+    return ++m_cRefs;
+}
+
+STDMETHODIMP_(ULONG) CLBarItemButtonBase::Release()
+{
+    if (--m_cRefs == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/// @unimplemented
+STDMETHODIMP CLBarItemButtonBase::OnClick(TfLBIClick click, POINT pt, LPCRECT prc)
+{
+    if (click == TF_LBI_CLK_RIGHT)
+    {
+        return E_NOTIMPL; //FIXME
+    }
+    if (click == TF_LBI_CLK_LEFT)
+    {
+        return E_NOTIMPL; //FIXME
+    }
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CLBarItemButtonBase::InitMenu(ITfMenu *pMenu)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CLBarItemButtonBase::OnMenuSelect(UINT wID)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CLBarItemButtonBase::GetIcon(HICON *phIcon)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CLBarItemButtonBase::GetText(BSTR *pbstr)
+{
+    if (!pbstr)
+        return E_INVALIDARG;
+    *pbstr = ::SysAllocString(m_NewUIInfo.szDescription);
+    return (*pbstr ? S_OK : E_OUTOFMEMORY);
+}
+
+STDMETHODIMP CLBarItemButtonBase::GetInfo(TF_LANGBARITEMINFO *pInfo)
+{
+    return CLBarItemBase::GetInfo(pInfo);
+}
+
+STDMETHODIMP CLBarItemButtonBase::GetStatus(DWORD *pdwStatus)
+{
+    return CLBarItemBase::GetStatus(pdwStatus);
+}
+
+STDMETHODIMP CLBarItemButtonBase::Show(BOOL fShow)
+{
+    return CLBarItemBase::Show(fShow);
+}
+
+STDMETHODIMP CLBarItemButtonBase::GetTooltipString(BSTR *pbstrToolTip)
+{
+    return CLBarItemBase::GetTooltipString(pbstrToolTip);
+}
+
+STDMETHODIMP CLBarItemButtonBase::AdviseSink(
+    REFIID riid,
+    IUnknown *punk,
+    DWORD *pdwCookie)
+{
+    return CLBarItemBase::AdviseSink(riid, punk, pdwCookie);
+}
+
+STDMETHODIMP CLBarItemButtonBase::UnadviseSink(DWORD dwCookie)
+{
+    return CLBarItemBase::UnadviseSink(dwCookie);
 }
 
 /***********************************************************************
