@@ -2932,7 +2932,7 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
             if (iIndex != -1)
                 hIcon = TF_InatExtractIcon(iIndex);
 
-            LangBarInsertMenu(pMenu, iItem, szDesc, hKL == *(HKL *)&m_szToolTipText[204], hIcon);
+            LangBarInsertMenu(pMenu, iItem, szDesc, (hKL == m_hKL), hIcon);
         }
     }
 
