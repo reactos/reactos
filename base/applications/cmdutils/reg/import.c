@@ -772,9 +772,16 @@ invalid:
 static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *line = pos;
+#ifdef __REACTOS__
+    BOOL is_unicode_save = parser->is_unicode;
+#endif
 
     if (!*line)
         goto set_value;
+
+#ifdef __REACTOS__
+    parser->is_unicode = TRUE;
+#endif
 
     if (!convert_hex_csv_to_hex(parser, &line))
         goto invalid;
@@ -782,6 +789,9 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
     if (parser->backslash)
     {
         set_state(parser, EOL_BACKSLASH);
+#ifdef __REACTOS__
+        parser->is_unicode = is_unicode_save;
+#endif
         return line;
     }
 
@@ -789,10 +799,16 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
 
 set_value:
     set_state(parser, SET_VALUE);
+#ifdef __REACTOS__
+    parser->is_unicode = is_unicode_save;
+#endif
     return line;
 
 invalid:
     free_parser_data(parser);
+#ifdef __REACTOS__
+    parser->is_unicode = is_unicode_save;
+#endif
     set_state(parser, LINE_START);
     return line;
 }
