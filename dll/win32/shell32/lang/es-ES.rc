@@ -4,7 +4,7 @@
  * PURPOSE:     Spanish resource file
  * TRANSLATORS: Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
- *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ *              Copyright 2024 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -898,7 +898,7 @@ BEGIN
     IDS_NETWORKPLACE "Mis sitios de red"
 
     IDS_NEWFOLDER "Nueva carpeta"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Nuevo %s"
 
     IDS_DRIVE_FIXED "Disco local"
     IDS_DRIVE_CDROM "Unidad de CD"
@@ -915,7 +915,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< A&trás"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "N&uevo" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nueva &carpeta"
     FCIDM_SHVIEW_NEWLINK "Nuevo &acceso directo"
     IDS_FOLDER_OPTIONS "Opciones de carpeta"
