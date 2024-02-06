@@ -2946,6 +2946,7 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
         (dwStatus & TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
     {
         LangBarInsertSeparator(pMenu);
+
         WCHAR szText[256];
         ::LoadStringW(g_hInst, IDS_RESTORELANGBAR2, szText, _countof(szText));
         LangBarInsertMenu(pMenu, 2000, szText, 0, 0);
