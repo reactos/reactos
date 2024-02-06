@@ -2425,13 +2425,13 @@ CLBarItemBase::AdviseSink(
 
     HRESULT hr = punk->QueryInterface(IID_ITfLangBarItemSink, (void **)&m_pLangBarItemSink);
     if (SUCCEEDED(hr))
-        *pdwCookie = 0x8000001;
+        *pdwCookie = 0x80000001;
     return hr;
 }
 
 HRESULT CLBarItemBase::UnadviseSink(DWORD dwCookie)
 {
-    if (dwCookie != 0x8000001)
+    if (dwCookie != 0x80000001)
         return E_FAIL;
 
     if (!m_pLangBarItemSink)
