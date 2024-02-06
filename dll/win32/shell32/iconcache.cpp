@@ -654,34 +654,15 @@ void SIC_Destroy(void)
  */
 static int SIC_LoadOverlayIcon(int icon_idx)
 {
-    WCHAR buffer[1024], wszIdx[8];
-    HKEY hKeyShellIcons;
-    LPCWSTR iconPath;
+    LPWSTR iconPath;
     int iconIdx;
 
     iconPath = swShell32Name;    /* default: load icon from shell32.dll */
     iconIdx = icon_idx;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
-                      0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
+    if (!HLM_GetIconW(icon_idx, iconPath, MAX_PATH, &iconIdx))
     {
-        DWORD count = sizeof(buffer);
-
-        swprintf(wszIdx, L"%d", icon_idx);
-
-        /* read icon path and index */
-        if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
-        {
-            LPWSTR p = wcschr(buffer, ',');
-
-            if (p)
-                *p++ = 0;
-
-            iconPath = buffer;
-            iconIdx = _wtoi(p);
-        }
-
-        RegCloseKey(hKeyShellIcons);
+        WARN("Failed to load icon with index %d, using default one\n", icon_idx);
     }
 
     if (!sic_hdpa)
