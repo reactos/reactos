@@ -19,11 +19,11 @@
 @ stdcall -stub TF_GetGlobalCompartment(ptr)
 @ stub TF_GetInputScope
 @ stdcall -stub TF_GetLangIcon(long ptr long)
-@ stub TF_GetMlngHKL
-@ stub TF_GetMlngIconIndex
+@ stdcall -stub TF_GetMlngHKL(long ptr ptr long)
+@ stdcall -stub TF_GetMlngIconIndex(long)
 @ stub TF_GetThreadFlags
 @ stdcall TF_GetThreadMgr(ptr)
-@ stub TF_InatExtractIcon
+@ stdcall -stub TF_InatExtractIcon(long)
 @ stdcall TF_InitMlngInfo()
 @ stdcall -stub TF_InitSystem()
 @ stdcall -stub TF_UninitSystem()
@@ -31,7 +31,7 @@
 @ stdcall TF_InvalidAssemblyListCacheIfExist()
 @ stdcall TF_IsCtfmonRunning()
 @ stub TF_IsInMarshaling
-@ stub TF_MlngInfoCount
+@ stdcall -stub TF_MlngInfoCount()
 @ stdcall TF_RunInputCPL()
 @ stdcall -stub TF_PostAllThreadMsg(long long)
 @ stdcall TF_RegisterLangBarAddIn(ptr wstr long)

@@ -111,6 +111,22 @@ BOOL IsBiDiLocalizedSystem(void)
     return (Sig.lsUsb[3] & 0x8000000) != 0;
 }
 
+BOOL GetFontSig(HWND hWnd, HKL hKL)
+{
+    LOCALESIGNATURE Sig;
+    INT size = sizeof(Sig) / sizeof(WCHAR);
+    if (!::GetLocaleInfoW(LOWORD(hKL), LOCALE_FONTSIGNATURE, (LPWSTR)&Sig, size))
+        return FALSE;
+
+    HDC hDC = ::GetDC(hWnd);
+    DWORD CharSet = ::GetTextCharsetInfo(hDC, NULL, 0);
+    CHARSETINFO CharSetInfo;
+    ::TranslateCharsetInfo((DWORD*)(DWORD_PTR)CharSet, &CharSetInfo, TCI_SRCCHARSET);
+    ::ReleaseDC(hWnd, hDC);
+
+    return !!(CharSetInfo.fs.fsCsb[0] & Sig.lsCsbSupported[0]);
+}
+
 void InitSkipRedrawHKLArray(void)
 {
     g_prghklSkipRedrawing = new(cicNoThrow) CicArray<HKL>();
@@ -226,6 +242,61 @@ void DoCloseLangbar(void)
                                 KEY_ALL_ACCESS);
     if (error == ERROR_SUCCESS)
         ::RegDeleteValue(regKey, TEXT("ctfmon.exe"));
+}
+
+INT GetIconIndexFromhKL(HKL hKL)
+{
+    HKL hGotKL;
+
+    INT iKL, cKLs = TF_MlngInfoCount();
+    for (iKL = 0; iKL < cKLs; ++iKL)
+    {
+        if (TF_GetMlngHKL(iKL, &hGotKL, NULL, 0) && hKL == hGotKL)
+            return TF_GetMlngIconIndex(iKL);
+    }
+
+    iKL = 0;
+    if (!TF_GetMlngHKL(iKL, &hGotKL, NULL, 0))
+        return -1;
+
+    return TF_GetMlngIconIndex(iKL);
+}
+
+BOOL GethKLDesc(HKL hKL, LPWSTR pszDesc, UINT cchDesc)
+{
+    HKL hGotKL;
+
+    INT iKL, cKLs = TF_MlngInfoCount();
+    for (iKL = 0; iKL < cKLs; ++iKL)
+    {
+        if (TF_GetMlngHKL(iKL, &hGotKL, NULL, 0) && hKL == hGotKL)
+            return TRUE;
+    }
+
+    if (TF_GetMlngHKL(0, &hGotKL, NULL, 0) && hKL == hGotKL)
+        return TRUE;
+
+    return FALSE;
+}
+
+HRESULT __stdcall LangBarInsertMenu(struct ITfMenu *pMenu, UINT uId, wchar_t *pszText, BOOL bChecked, HICON hIcon)
+{
+    HBITMAP hbmp = NULL, hbmpMask = NULL;
+    if (hIcon)
+    {
+        HICON hIconNew = (HICON)::CopyImage(hIcon, IMAGE_ICON, 16, 16, LR_COPYFROMRESOURCE);
+        SIZE iconSize = { 16, 16 };
+        if (!hIconNew)
+            hIconNew = hIcon;
+        if (!cicGetIconBitmaps(hIconNew, &hbmp, &hbmpMask, &iconSize))
+            return E_FAIL;
+        if (hIconNew)
+            ::DestroyIcon(hIconNew);
+        ::DestroyIcon(hIcon);
+    }
+
+    INT cchText = lstrlenW(pszText);
+    return pMenu->AddMenuItem(uId, bChecked, hbmp, hbmpMask, pszText, cchText, NULL);
 }
 
 BOOL InitFromReg(void)
@@ -932,6 +1003,24 @@ public:
     // ITfSource methods
     STDMETHOD(AdviseSink)(REFIID riid, IUnknown *punk, DWORD *pdwCookie) override;
     STDMETHOD(UnadviseSink)(DWORD dwCookie) override;
+};
+
+/***********************************************************************/
+
+class CLBarInatItem : public CLBarItemButtonBase
+{
+protected:
+    HKL m_hKL;
+    DWORD m_dwThreadId;
+
+public:
+    CLBarInatItem(DWORD dwThreadId);
+    ~CLBarInatItem() override { }
+
+    STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
+    STDMETHOD(OnMenuSelect)(INT nCommandId);
+    STDMETHOD(GetIcon)(HICON *phIcon) override;
+    STDMETHOD(GetText)(BSTR *pbstr) override;
 };
 
 /***********************************************************************
@@ -2777,6 +2866,116 @@ STDMETHODIMP CLBarItemButtonBase::AdviseSink(
 STDMETHODIMP CLBarItemButtonBase::UnadviseSink(DWORD dwCookie)
 {
     return CLBarItemBase::UnadviseSink(dwCookie);
+}
+
+/***********************************************************************
+ * CLBarInatItem
+ */
+
+CLBarInatItem::CLBarInatItem(DWORD dwThreadId)
+{
+    WCHAR szText[256];
+    ::LoadStringW(g_hInst, 309, szText, _countof(szText));
+    InitNuiInfo(CLSID_SYSTEMLANGBARITEM, GUID_LBI_INATITEM, 0x20001, 0, szText);
+
+    ::LoadStringW(g_hInst, 310, szText, _countof(szText));
+    StringCchCopyW(m_szToolTipText, _countof(m_szToolTipText), szText);
+    m_dwThreadId = dwThreadId;
+    m_hKL = ::GetKeyboardLayout(m_dwThreadId);
+
+    TF_InitMlngInfo();
+    ShowInternal(TF_MlngInfoCount() > 1, 0);
+}
+
+STDMETHODIMP CLBarInatItem::GetIcon(HICON *phIcon)
+{
+    HICON hIcon = NULL;
+    INT iIndex = GetIconIndexFromhKL(m_hKL);
+    if (iIndex != -1)
+        hIcon = TF_InatExtractIcon(iIndex);
+    *phIcon = hIcon;
+    return S_OK;
+}
+
+STDMETHODIMP CLBarInatItem::GetText(BSTR *pbstr)
+{
+    if (!pbstr)
+        return E_INVALIDARG;
+
+    WCHAR szText[256];
+    if (!GethKLDesc(m_hKL, szText, _countof(szText)))
+        return GetText(pbstr);
+
+    *pbstr = ::SysAllocString(szText);
+    return S_OK;
+}
+
+STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
+{
+    TF_InitMlngInfo();
+
+    INT iItem, cItems = TF_MlngInfoCount();
+    for (iItem = 0; iItem < cItems; ++iItem)
+    {
+        HKL hKL;
+        WCHAR szDesc[128];
+        if (TF_GetMlngHKL(iItem, &hKL, szDesc, _countof(szDesc)))
+        {
+            HICON hIcon = NULL;
+            INT iIndex = GetIconIndexFromhKL(hKL);
+            if (iIndex != -1)
+                hIcon = TF_InatExtractIcon(iIndex);
+
+            LangBarInsertMenu(pMenu, iItem, szDesc, hKL == *(HKL *)&m_szToolTipText[204], hIcon);
+        }
+    }
+
+#if 0 // FIXME: g_pTipbarWnd
+    DWORD dwStatus;
+    if (g_pTipbarWnd &&
+        g_pTipbarWnd->m_pLangBarMgr &&
+        SUCCEEDED(g_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus)) &&
+        (dwStatus & TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
+    {
+        LangBarInsertSeparator(pMenu);
+        WCHAR szText[256];
+        ::LoadStringW(g_hInst, 321, szText, _countof(szText));
+        LangBarInsertMenu(pMenu, 2000, szText, 0, 0);
+    }
+#endif
+
+    return S_OK;
+}
+
+STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
+{
+    HKL hKL;
+
+    if (nCommandId == 2000)
+    {
+        if (g_pTipbarWnd)
+        {
+#if 0 // FIXME: g_pTipbarWnd
+            ITfLangBarMgr *pLangBarMgr = g_pTipbarWnd->m_pLangBarMgr;
+            if (pLangBarMgr)
+                pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
+#endif
+        }
+    }
+    else if (TF_GetMlngHKL(nCommandId, &hKL, NULL, 0))
+    {
+#if 0 // FIXME: g_pTipbarWnd
+        g_pTipbarWnd->RestoreLastFocus(0, (g_pTipbarWnd->m_dwTipbarWndFlags & 2) != 0);
+#endif
+        HWND hwndFore = GetForegroundWindow();
+        if (m_dwThreadId == ::GetWindowThreadProcessId(hwndFore, NULL))
+        {
+            BOOL FontSig = GetFontSig(hwndFore, hKL);
+            ::PostMessage(hwndFore, WM_INPUTLANGCHANGEREQUEST, FontSig, (LPARAM)hKL);
+        }
+    }
+
+    return S_OK;
 }
 
 /***********************************************************************
