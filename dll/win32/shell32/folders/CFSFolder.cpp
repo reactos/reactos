@@ -136,7 +136,7 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
 static HRESULT
 getDefaultIconLocation(LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT uFlags)
 {
-    if (!HLM_GetIconW(3, szIconFile, cchMax, piIndex))
+    if (!HLM_GetIconW(IDI_SHELL_FOLDER - 1, szIconFile, cchMax, piIndex))
     {
         if (!HCR_GetIconW(L"Folder", szIconFile, NULL, cchMax, piIndex))
         {

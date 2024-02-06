@@ -517,26 +517,26 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     {
         case DRIVE_FIXED:
         case DRIVE_UNKNOWN:
-            reg_idx = 8;
+            reg_idx = IDI_SHELL_DRIVE - 1;
             break;
         case DRIVE_CDROM:
-            reg_idx = 11;
+            reg_idx = IDI_SHELL_CDROM - 1;
             break;
         case DRIVE_REMOTE:
-            reg_idx = 9;
+            reg_idx = IDI_SHELL_NETDRIVE - 1;
             break;
         case DRIVE_REMOVABLE:
             if (!IsDriveFloppyA(pszDrive))
-                reg_idx = 7;
+                reg_idx = IDI_SHELL_REMOVEABLE - 1;
             else
-                reg_idx = 6;
+                reg_idx = IDI_SHELL_3_14_FLOPPY - 1;
             break;
         case DRIVE_RAMDISK:
-            reg_idx = 12;
+            reg_idx = IDI_SHELL_RAMDISK - 1;
             break;
         case DRIVE_NO_ROOT_DIR:
         default:
-            reg_idx = 0;
+            reg_idx = IDI_SHELL_DOCUMENT - 1;
             break;
     }
     if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),

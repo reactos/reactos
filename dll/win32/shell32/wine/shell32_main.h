@@ -51,7 +51,7 @@ BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len) DECLSPEC_HIDDEN;
 
 #ifdef __REACTOS__
-/* Curren User */
+/* Current User */
 BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
 BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx) DECLSPEC_HIDDEN;
 

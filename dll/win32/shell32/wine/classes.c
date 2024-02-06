@@ -341,7 +341,7 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 	WCHAR   sTemp[MAX_PATH];
 	BOOL    ret = FALSE;
 
-    TRACE("%s\n",debugstr_w(szClass) );
+    TRACE("%s\n", debugstr_w(szClass));
 
     swprintf(sTemp, L"%s\\DefaultIcon", szClass);
 
