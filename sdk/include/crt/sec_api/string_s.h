@@ -19,15 +19,6 @@ extern "C" {
   _CRTIMP
   errno_t
   __cdecl
-  _strset_s(
-    _Inout_updates_z_(_DstSize) char *_Dst,
-    _In_ size_t _DstSize,
-    _In_ int _Value);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
   _strerror_s(
     _Out_writes_z_(_SizeInBytes) char *_Buf,
     _In_ size_t _SizeInBytes,
@@ -49,6 +40,15 @@ extern "C" {
     _Inout_updates_z_(_Size) char *_Str,
     _In_ size_t _Size,
     _In_opt_ _locale_t _Locale);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  _strset_s(
+    _Inout_updates_z_(_DstSize) char *_Dst,
+    _In_ size_t _DstSize,
+    _In_ int _Value);
 
   _Check_return_wat_
   _CRTIMP
@@ -76,6 +76,15 @@ extern "C" {
     _Inout_updates_z_(_Size) char *_Str,
     _In_ size_t _Size,
     _In_opt_ _locale_t _Locale);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  strcat_s(
+    _Inout_updates_z_(_Size) char *_Dst,
+    _In_ size_t _Size,
+    _In_z_ const char *_Src);
 
   _Check_return_wat_
   _CRTIMP
@@ -149,6 +158,30 @@ extern "C" {
 
 #ifndef _WSTRING_S_DEFINED
 #define _WSTRING_S_DEFINED
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcscat_s(
+    wchar_t *Dest,
+    size_t SizeInWords,
+    const wchar_t *_Source);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcscpy_s(
+    _Out_writes_z_(SizeInWords) wchar_t *Dest,
+    _In_ size_t SizeInWords,
+    _In_z_ const wchar_t *_Source);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  wcsnlen_s(
+    wchar_t **_Src,
+    size_t _MaxCount);
 
   _Check_return_
   _CRTIMP
@@ -244,22 +277,22 @@ extern "C" {
   _CRTIMP
   errno_t
   __cdecl
+  wcsncpy_s(
+    _Out_writes_z_(_DstSizeInChars) wchar_t *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const wchar_t *_Src,
+    _In_ size_t _MaxCount);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
   _wcsncat_s_l(
     _Inout_updates_z_(_DstSizeInChars) wchar_t *_Dst,
     _In_ size_t _DstSizeInChars,
     _In_z_ const wchar_t *_Src,
     _In_ size_t _MaxCount,
     _In_opt_ _locale_t _Locale);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  wcsncpy_s(
-    _Out_writes_z_(_DstSizeInChars) wchar_t *_Dst,
-    _In_ size_t _DstSizeInChars,
-    _In_z_ const wchar_t *_Src,
-    _In_ size_t _MaxCount);
 
   _Check_return_wat_
   _CRTIMP
