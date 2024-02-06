@@ -2586,6 +2586,7 @@ INT CUTBLBarMenu::ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude)
         return -1;
 
     UINT nCommandId = m_pMenuUI->ShowModalPopup(pWindow, prcExclude, TRUE);
+
     if (m_pMenuUI)
     {
         delete m_pMenuUI;
