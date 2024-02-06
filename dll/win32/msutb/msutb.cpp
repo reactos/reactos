@@ -737,10 +737,11 @@ public:
     CUTBLBarMenu(HINSTANCE hInst);
     ~CUTBLBarMenu() override;
 
-    STDMETHOD_(CCicLibMenuItem*, CreateMenuItem)() override;
     CUTBMenuWnd *CreateMenuUI();
-    STDMETHOD_(CCicLibMenu*, CreateSubMenu)() override;
     UINT ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude);
+
+    STDMETHOD_(CCicLibMenuItem*, CreateMenuItem)() override;
+    STDMETHOD_(CCicLibMenu*, CreateSubMenu)() override;
 };
 
 /***********************************************************************/
@@ -751,7 +752,7 @@ public:
     CUTBLBarMenu *m_pLBarMenu;
 
 public:
-    CUTBLBarMenuItem() { }
+    CUTBLBarMenuItem() { m_pLBarMenu = NULL; }
     BOOL InsertToUI(CUTBMenuWnd *pMenuUI);
 };
 
