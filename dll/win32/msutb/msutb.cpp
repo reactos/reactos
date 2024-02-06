@@ -830,6 +830,40 @@ public:
     STDMETHOD_(BOOL, OnDelayMsg)(UINT uMsg) override;
 };
 
+/***********************************************************************/
+
+class CLBarItemBase : public ITfLangBarItem
+{
+protected:
+    DWORD m_dwItemStatus;
+    TF_LANGBARITEMINFO m_NewUIInfo;
+    WCHAR m_szToolTipText[256];
+    LONG m_cRefs;
+    ITfLangBarItemSink *m_pLangBarItemSink;
+
+public:
+    CLBarItemBase();
+    virtual ~CLBarItemBase();
+
+    HRESULT ShowInternal(BOOL bShow, BOOL bUpdate);
+
+    void InitNuiInfo(
+        REFIID clsidService,
+        REFGUID guidItem,
+        DWORD dwStyle,
+        DWORD ulSort,
+        LPCWSTR Source);
+
+    HRESULT AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie);
+    HRESULT UnadviseSink(DWORD dwCookie);
+
+    // ITfLangBarItem methods
+    STDMETHOD(GetInfo)(TF_LANGBARITEMINFO *pInfo) override;
+    STDMETHOD(GetStatus)(DWORD *pdwStatus) override;
+    STDMETHOD(Show)(BOOL fShow) override;
+    STDMETHOD(GetTooltipString)(BSTR *pbstrToolTip) override;
+};
+
 /***********************************************************************
  * CUTBLangBarDlg
  */
@@ -2360,6 +2394,110 @@ CTrayIconWnd::_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
     return 0;
+}
+
+/***********************************************************************
+ * CLBarItemBase
+ */
+
+CLBarItemBase::CLBarItemBase()
+{
+    m_dwItemStatus = 0;
+    m_szToolTipText[0] = 0;
+    m_cRefs = 1;
+    m_pLangBarItemSink = NULL;
+}
+
+CLBarItemBase::~CLBarItemBase()
+{
+    if (m_pLangBarItemSink)
+        m_pLangBarItemSink->Release();
+}
+
+HRESULT
+CLBarItemBase::AdviseSink(
+    REFIID riid,
+    IUnknown *punk,
+    DWORD *pdwCookie)
+{
+    if (IsEqualIID(riid, IID_ITfLangBarItemSink) || m_pLangBarItemSink)
+        return TF_E_NOOBJECT;
+
+    HRESULT hr = punk->QueryInterface(IID_ITfLangBarItemSink, (void **)&m_pLangBarItemSink);
+    if (SUCCEEDED(hr))
+        *pdwCookie = 0x80000001;
+    return hr;
+}
+
+HRESULT CLBarItemBase::UnadviseSink(DWORD dwCookie)
+{
+    if (dwCookie != 0x80000001)
+        return E_FAIL;
+
+    if (!m_pLangBarItemSink)
+        return E_UNEXPECTED;
+
+    m_pLangBarItemSink->Release();
+    m_pLangBarItemSink = NULL;
+    return S_OK;
+}
+
+void
+CLBarItemBase::InitNuiInfo(
+    REFIID clsidService,
+    REFGUID guidItem,
+    DWORD dwStyle,
+    DWORD ulSort,
+    LPCWSTR Source)
+{
+    m_NewUIInfo.clsidService = clsidService;
+    m_NewUIInfo.guidItem = guidItem;
+    m_NewUIInfo.dwStyle = dwStyle;
+    m_NewUIInfo.ulSort = ulSort;
+    StringCchCopyW(m_NewUIInfo.szDescription, _countof(m_NewUIInfo.szDescription), Source);
+}
+
+HRESULT
+CLBarItemBase::ShowInternal(BOOL bShow, BOOL bUpdate)
+{
+    DWORD dwOldStatus = m_dwItemStatus;
+    if (bShow)
+        m_dwItemStatus &= ~0x1;
+    else
+        m_dwItemStatus |= 0x1;
+    if (bUpdate && (dwOldStatus != m_dwItemStatus))
+    {
+        if (m_pLangBarItemSink)
+            m_pLangBarItemSink->OnUpdate(TF_LBI_STATUS);
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CLBarItemBase::GetInfo(TF_LANGBARITEMINFO *pInfo)
+{
+    CopyMemory(pInfo, &m_NewUIInfo, sizeof(*pInfo));
+    return S_OK;
+}
+
+STDMETHODIMP CLBarItemBase::GetStatus(DWORD *pdwStatus)
+{
+    *pdwStatus = m_dwItemStatus;
+    return S_OK;
+}
+
+STDMETHODIMP CLBarItemBase::Show(BOOL fShow)
+{
+    return ShowInternal(fShow, TRUE);
+}
+
+STDMETHODIMP CLBarItemBase::GetTooltipString(BSTR *pbstrToolTip)
+{
+    if (!pbstrToolTip)
+        return E_INVALIDARG;
+    BSTR bstr = ::SysAllocString(m_szToolTipText);
+    *pbstrToolTip = bstr;
+    return bstr ? S_OK : E_OUTOFMEMORY;
 }
 
 /***********************************************************************
