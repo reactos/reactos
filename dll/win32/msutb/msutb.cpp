@@ -2943,7 +2943,7 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
     if (g_pTipbarWnd &&
         g_pTipbarWnd->m_pLangBarMgr &&
         SUCCEEDED(g_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus)) &&
-        (dwStatus & TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
+        (dwStatus & (TF_SFT_DESKBAND | TF_SFT_MINIMIZED)))
     {
         LangBarInsertSeparator(pMenu);
 
