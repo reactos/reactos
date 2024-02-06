@@ -302,7 +302,13 @@ LangBarInsertMenu(
     }
 
     INT cchText = lstrlenW(pszText);
-    return pMenu->AddMenuItem(uId, bChecked, hbmp, hbmpMask, pszText, cchText, NULL);
+    DWORD dwFlags = (bChecked ? TF_LBMENUF_CHECKED : 0);
+    return pMenu->AddMenuItem(uId, dwFlags, hbmp, hbmpMask, pszText, cchText, NULL);
+}
+
+HRESULT LangBarInsertSeparator(_In_ ITfMenu *pMenu)
+{
+    return pMenu->AddMenuItem(-1, TF_LBMENUF_SEPARATOR, NULL, NULL, NULL, 0, NULL);
 }
 
 BOOL InitFromReg(void)
