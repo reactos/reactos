@@ -18,6 +18,9 @@ BEGIN
     IDS_NO               "&No"
 
     IDS_RESTORELANGBAR   "Restore Language Bar"
+    IDS_LANGUAGE         "Language"
+    IDS_RESTORELANGBAR2  "&Restore Language Bar"
+    IDS_LANGUAGEBUTTON   "Language Button"
     IDS_MENUWND          "Menu Window"
     IDS_LEFTCLICK        "Left Click"
 END
