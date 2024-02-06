@@ -725,6 +725,39 @@ public:
 
 /***********************************************************************/
 
+class CUTBLBarMenuItem;
+
+class CUTBLBarMenu : public CCicLibMenu
+{
+protected:
+    CUTBMenuWnd *m_pMenuUI;
+    HINSTANCE m_hInst;
+
+public:
+    CUTBLBarMenu(HINSTANCE hInst);
+    ~CUTBLBarMenu() override;
+
+    CUTBMenuWnd *CreateMenuUI();
+    INT ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude);
+
+    STDMETHOD_(CCicLibMenuItem*, CreateMenuItem)() override;
+    STDMETHOD_(CCicLibMenu*, CreateSubMenu)() override;
+};
+
+/***********************************************************************/
+
+class CUTBLBarMenuItem : public CCicLibMenuItem
+{
+public:
+    CUTBLBarMenu *m_pLBarMenu;
+
+public:
+    CUTBLBarMenuItem() { m_pLBarMenu = NULL; }
+    BOOL InsertToUI(CUTBMenuWnd *pMenuUI);
+};
+
+/***********************************************************************/
+
 class CTrayIconWnd
 {
 protected:
@@ -2498,6 +2531,92 @@ STDMETHODIMP CLBarItemBase::GetTooltipString(BSTR *pbstrToolTip)
     BSTR bstr = ::SysAllocString(m_szToolTipText);
     *pbstrToolTip = bstr;
     return bstr ? S_OK : E_OUTOFMEMORY;
+}
+
+/***********************************************************************
+ * CUTBLBarMenu
+ */
+
+CUTBLBarMenu::CUTBLBarMenu(HINSTANCE hInst) : CCicLibMenu()
+{
+    m_hInst = hInst;
+}
+
+CUTBLBarMenu::~CUTBLBarMenu()
+{
+}
+
+STDMETHODIMP_(CCicLibMenuItem*) CUTBLBarMenu::CreateMenuItem()
+{
+    CUTBLBarMenuItem *pItem = new(cicNoThrow) CUTBLBarMenuItem();
+    if (!pItem)
+        return NULL;
+    pItem->m_pLBarMenu = this;
+    return pItem;
+}
+
+CUTBMenuWnd *CUTBLBarMenu::CreateMenuUI()
+{
+    CUTBMenuWnd *pMenuUI = new(cicNoThrow) CUTBMenuWnd(m_hInst, g_dwMenuStyle, 0);
+    if (!pMenuUI)
+        return NULL;
+
+    pMenuUI->Initialize();
+    for (size_t iItem = 0; iItem < m_MenuItems.size(); ++iItem)
+    {
+        CUTBLBarMenuItem *pItem = (CUTBLBarMenuItem *)m_MenuItems[iItem];
+        pItem->InsertToUI(pMenuUI);
+    }
+
+    return pMenuUI;
+}
+
+STDMETHODIMP_(CCicLibMenu*) CUTBLBarMenu::CreateSubMenu()
+{
+    return new(cicNoThrow) CUTBLBarMenu(m_hInst);
+}
+
+INT CUTBLBarMenu::ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude)
+{
+    if (m_pMenuUI)
+        return 0;
+
+    m_pMenuUI = CreateMenuUI();
+    if (!m_pMenuUI)
+        return -1;
+
+    INT nCommandId = m_pMenuUI->ShowModalPopup(pWindow, prcExclude, TRUE);
+
+    if (m_pMenuUI)
+    {
+        delete m_pMenuUI;
+        m_pMenuUI = NULL;
+    }
+
+    return nCommandId;
+}
+
+/***********************************************************************
+ * CUTBLBarMenuItem
+ */
+
+/// @unimplemented
+BOOL CUTBLBarMenuItem::InsertToUI(CUTBMenuWnd *pMenuUI)
+{
+    if ((m_dwFlags & 4) != 0)
+    {
+        pMenuUI->InsertSeparator();
+        return TRUE;
+    }
+    if (m_dwFlags & 2)
+    {
+        //FIXME
+    }
+    else
+    {
+        //FIXME
+    }
+    return FALSE;
 }
 
 /***********************************************************************
