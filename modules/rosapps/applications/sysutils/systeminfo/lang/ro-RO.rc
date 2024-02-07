@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS System Information
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        rosapps/applications/sysutils/systeminfo/lang/ro-RO.rc
- * PURPOSE:     Romanian Language File for System Information
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS DX System Information
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -66,13 +66,13 @@ IDS_AVAIL_PHISICAL_MEM,      "Memorie fizică disponibilă"
 IDS_VIRT_MEM_MAX,            "Memorie virtuală: Maximă"
 IDS_VIRT_MEM_AVAIL,          "Memorie virtuală: Disponibilă"
 IDS_VIRT_MEM_INUSE,          "Memorie virtuală: În uz"
-IDS_PAGEFILE_LOC,            "Amplasare fișiere de paginare"
+IDS_PAGEFILE_LOC,            "Locația(iile) fișierelor de paginare"
 IDS_DOMAIN,                  "Domeniu"
 IDS_NETWORK_CARDS,           "Plăci de rețea"
 IDS_NETWORK_CARDS_FORMAT,    "%u instalate."
 IDS_CONNECTION_NAME,         "Nume conexiune"
 IDS_STATUS,                  "Stare"
-IDS_MEDIA_DISCONNECTED,      "Media deconectat"
+IDS_MEDIA_DISCONNECTED,      "Dispozitiv deconectat"
 IDS_DHCP_ENABLED,            "DHCP activat"
 IDS_NO,                      "Nu"
 IDS_IP_ADDRESSES,            "Adrese IP"
