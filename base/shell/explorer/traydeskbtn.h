@@ -27,6 +27,7 @@ class CTrayShowDesktopButton :
     MARGINS m_ContentMargins;
     SIZE m_inset;
     HICON m_icon;
+    SIZE m_szIcon;
     BOOL m_highContrastMode;
     BOOL m_drawWithDedicatedBackground;
     BOOL m_bHovering;

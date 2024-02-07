@@ -87,7 +87,32 @@ HRESULT CTrayShowDesktopButton::DoCreate(HWND hwndParent)
     bool bIconRetrievalFailed = ExtractIconExW(L"imageres.dll", -IDI_IMAGERES_DESKTOP, NULL, &m_icon, 1) == UINT_MAX;
     if (bIconRetrievalFailed || !m_icon)
         ExtractIconExW(L"shell32.dll", -IDI_SHELL32_DESKTOP, NULL, &m_icon, 1);
-
+    
+    m_szIcon.cx = 16;
+    m_szIcon.cy = 16;
+    
+    if (m_icon)
+    {
+        ICONINFO iconInfo;
+        if (GetIconInfo(m_icon, &iconInfo))
+        {
+            BITMAP bmpIcon;
+            if (GetObjectW(iconInfo.hbmMask, sizeof(bmpIcon), &bmpIcon))
+            {
+                m_szIcon.cx = bmpIcon.bmWidth;
+                m_szIcon.cy = bmpIcon.bmHeight;
+                /*
+                If this structure defines a black and white icon, this bitmask is formatted
+                so that the upper half is the icon AND bitmask and the lower half is
+                the icon XOR bitmask.
+                */
+                if (!iconInfo.hbmColor)
+                    m_szIcon.cy /= 2;
+            }
+            DeleteObject(iconInfo.hbmMask);
+            DeleteObject(iconInfo.hbmColor);
+        }
+    }
     EnsureWindowTheme(TRUE);
 
     return S_OK;
@@ -356,32 +381,26 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
     {
         /* Prepare to draw icon */
 
-        int iconSize = 16;
-        // Used for icon centering further down
-        int iconHalfSize = iconSize / 2;
-
         // Determine X-position of icon's top-left corner
         int iconX = rc.left;
-        int width = (rc.right - iconX);
-        iconX += (width / 2);
-        iconX -= iconHalfSize;
+        iconX += (rc.right - iconX) / 2;
+        iconX -= m_szIcon.cx / 2;
 
         // Determine Y-position of icon's top-left corner
         int iconY = rc.top;
-        int height = (rc.bottom - iconY);
-        iconY += (height / 2);
-        iconY -= iconHalfSize;
+        iconY += (rc.bottom - iconY) / 2;
+        iconY -= m_szIcon.cy / 2;
 
         // Ok now actually draw the icon itself
         if (m_icon)
         {
             DrawIconEx(hdc, iconX, iconY,
-                m_icon, iconSize, iconSize,
+                m_icon, 0, 0,
                 0, hbrBackground, DI_NORMAL);
         }
         else // Fallback for if icon isn't available or something idk lol
         {
-            RECT rcIconFallback = { iconX, iconY, iconX + iconSize, iconY + iconSize };
+            RECT rcIconFallback = { iconX, iconY, iconX + m_szIcon.cx, iconY + m_szIcon.cy };
             HBRUSH hbrFallback;
 
             // Border - #808080
