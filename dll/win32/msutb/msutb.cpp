@@ -2325,17 +2325,17 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
     }
     else
     {
-        InsertItem(pMenuUI, 212, 314);
+        InsertItem(pMenuUI, 212, IDS_MINIMIZE);
 
         if (bFlag)
         {
             if (!(dwStatus & TF_SFT_LABELS))
             {
-                InsertItem(pMenuUI, 210, 313);
+                InsertItem(pMenuUI, 210, IDS_TEXTLABELS);
             }
             else
             {
-                CUTBMenuItem *pItem0 = CModalMenu::InsertItem(pMenuUI, 211, 313);
+                CUTBMenuItem *pItem0 = InsertItem(pMenuUI, 211, IDS_TEXTLABELS);
                 if (pItem0)
                     pItem0->Check(TRUE);
             }
@@ -2355,13 +2355,13 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 
         if (dwStatus & TF_SFT_EXTRAICONSONMINIMIZED)
         {
-            pItem3 = InsertItem(pMenuUI, 215, 318);
+            pItem3 = InsertItem(pMenuUI, 215, IDS_ADDITIONICONS);
             if (pItem3)
                 pItem3->Check(TRUE);
         }
         else
         {
-            pItem3 = CModalMenu::InsertItem(pMenuUI, 214, 318);
+            pItem3 = CModalMenu::InsertItem(pMenuUI, 214, IDS_ADDITIONICONS);
         }
 
         if (::GetKeyboardLayoutList(0, NULL) == 1)
@@ -2378,12 +2378,12 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
         }
 
         if (dwStatus & TF_SFT_DESKBAND)
-            InsertItem(pMenuUI, 219, 326);
+            InsertItem(pMenuUI, 219, IDS_ADJUSTLANGBAND);
 
-        InsertItem(pMenuUI, 2000, 300);
+        InsertItem(pMenuUI, 2000, IDS_SETTINGS);
 
         if (CheckCloseMenuAvailable())
-            InsertItem(pMenuUI, 213, 315);
+            InsertItem(pMenuUI, 213, IDS_CLOSELANGBAR);
     }
 
     return pMenuUI;
