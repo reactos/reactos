@@ -32,7 +32,7 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
     LTEXT "请在下面列表中选择游戏控制器并单击“确定”。如果您的游戏控制器不在列表中，单击“自定义”。", -1, 35, 7, 210, 33
-    LTEXT "游戏控制器(&G)::", -1, 8, 45, 126, 8
+    LTEXT "游戏控制器(&G):", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "启用方向舵和脚踏板(&E)", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
     LTEXT "游戏端口(&G):", -1, 7, 134, 38, 8, NOT WS_VISIBLE
