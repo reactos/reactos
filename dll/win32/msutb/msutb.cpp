@@ -15,6 +15,7 @@ UINT g_uACP = CP_ACP;
 DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
 LONG g_DllRefCount = 0;
+BOOL g_bWinLogon = FALSE;
 
 BOOL g_bShowTipbar = TRUE;
 BOOL g_bShowDebugMenu = FALSE;
@@ -305,6 +306,12 @@ LangBarInsertMenu(
 HRESULT LangBarInsertSeparator(_In_ ITfMenu *pMenu)
 {
     return pMenu->AddMenuItem(-1, TF_LBMENUF_SEPARATOR, NULL, NULL, NULL, 0, NULL);
+}
+
+/// @unimplemented
+BOOL CheckCloseMenuAvailable(void)
+{
+    return FALSE;
 }
 
 BOOL InitFromReg(void)
@@ -814,9 +821,34 @@ public:
     CModalMenu() { }
     virtual ~CModalMenu() { }
 
-    CUTBMenuItem *InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID);
+    CUTBMenuItem *InsertItem(CUTBMenuWnd *pMenuUI, INT nCommandId, INT nStringID);
     void PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam);
     void CancelMenu();
+};
+
+/***********************************************************************/
+
+class CTipbarThread;
+
+class CUTBContextMenu : public CModalMenu
+{
+public:
+    CTipbarWnd *m_pTipbarWnd;
+    CTipbarThread *m_pTipbarThread;
+
+public:
+    CUTBContextMenu(CTipbarWnd *pTipbarWnd);
+
+    BOOL Init();
+    CUTBMenuWnd *CreateMenuUI(BOOL bFlag);
+
+    UINT ShowPopup(
+        CUIFWindow *pWindow,
+        POINT pt,
+        LPCRECT prc,
+        BOOL bFlag);
+
+    BOOL SelectMenuItem(UINT nCommandId);
 };
 
 /***********************************************************************/
@@ -2173,7 +2205,7 @@ STDMETHODIMP_(INT) CUTBMenuItem::GetAccRole()
  */
 
 CUTBMenuItem *
-CModalMenu::InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID)
+CModalMenu::InsertItem(CUTBMenuWnd *pMenuUI, INT nCommandId, INT nStringID)
 {
     CUTBMenuItem *pMenuItem = new(cicNoThrow) CUTBMenuItem(pMenuUI);
     if (!pMenuItem)
@@ -2183,7 +2215,7 @@ CModalMenu::InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID)
     ::LoadStringW(g_hInst, nStringID, szText, _countof(szText));
 
     if (pMenuItem->Initialize() &&
-        pMenuItem->Init(uBytes, szText) &&
+        pMenuItem->Init(nCommandId, szText) &&
         pMenuUI->InsertItem(pMenuItem))
     {
         return pMenuItem;
@@ -2202,6 +2234,232 @@ void CModalMenu::CancelMenu()
 {
     if (m_pMenuUI)
         m_pMenuUI->CancelMenu();
+}
+
+/***********************************************************************
+ * CUTBContextMenu
+ */
+
+CUTBContextMenu::CUTBContextMenu(CTipbarWnd *pTipbarWnd)
+{
+    m_pTipbarWnd = pTipbarWnd;
+}
+
+/// @unimplemented
+BOOL CUTBContextMenu::Init()
+{
+#if 0 // FIXME: m_pTipbarWnd
+    m_pTipbarThread = m_pTipbarWnd->m_pFocusThread;
+    return !!m_pTipbarThread;
+#else
+    return TRUE;
+#endif
+}
+
+/// @unimplemented
+CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
+{
+    DWORD dwStatus = 0;
+
+#if 0 // FIXME: m_pTipbarWnd
+    if (FAILED(m_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus)))
+        return NULL;
+#endif
+    
+    CUTBMenuWnd *pMenuUI = new (cicNoThrow) CUTBMenuWnd(g_hInst, g_dwMenuStyle, 0);
+    if (!pMenuUI)
+        return NULL;
+
+    pMenuUI->Initialize();
+
+    if (dwStatus & (TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
+    {
+        CUTBMenuItem *pItem3 = InsertItem(pMenuUI, 216, 321);
+#if 0 // FIXME: m_pTipbarWnd
+        if (pItem3 && !m_pTipbarWnd->m_dwUnknown20)
+            pItem3->Gray(TRUE);
+#endif
+        pItem3 = pItem3;
+    }
+    else
+    {
+        InsertItem(pMenuUI, 212, 314);
+
+        if (bFlag)
+        {
+            if (!(dwStatus & TF_SFT_LABELS))
+            {
+                InsertItem(pMenuUI, 210, 313);
+            }
+            else
+            {
+                CUTBMenuItem *pItem0 = CModalMenu::InsertItem(pMenuUI, 211, 313);
+                if (pItem0)
+                    pItem0->Check(TRUE);
+            }
+
+            CUTBMenuItem *pItem1 = InsertItem(pMenuUI, 217, 324);
+#if 0 // FIXME: m_pTipbarWnd
+            if (pItem1)
+                pItem1->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));
+#endif
+            pItem1 = pItem1;
+        }
+    }
+
+    if (bFlag)
+    {
+        CUTBMenuItem *pItem3 = NULL;
+
+        if (dwStatus & TF_SFT_EXTRAICONSONMINIMIZED)
+        {
+            pItem3 = InsertItem(pMenuUI, 215, 318);
+            if (pItem3)
+                pItem3->Check(TRUE);
+        }
+        else
+        {
+            pItem3 = CModalMenu::InsertItem(pMenuUI, 214, 318);
+        }
+
+        if (::GetKeyboardLayoutList(0, NULL) == 1)
+        {
+            if (pItem3)
+            {
+                pItem3->Check(TRUE);
+                pItem3->Gray(TRUE);
+            }
+        }
+        else if (pItem3)
+        {
+            pItem3->Gray(FALSE);
+        }
+
+        if (dwStatus & TF_SFT_DESKBAND)
+            InsertItem(pMenuUI, 219, 326);
+
+        InsertItem(pMenuUI, 2000, 300);
+
+        if (CheckCloseMenuAvailable())
+            InsertItem(pMenuUI, 213, 315);
+    }
+
+    return pMenuUI;
+}
+
+UINT
+CUTBContextMenu::ShowPopup(
+    CUIFWindow *pWindow,
+    POINT pt,
+    LPCRECT prc,
+    BOOL bFlag)
+{
+    if (g_bWinLogon)
+        return 0;
+
+    if (m_pMenuUI)
+        return -1;
+
+    m_pMenuUI = CreateMenuUI(bFlag);
+    if (!m_pMenuUI)
+        return 0;
+
+    UINT nCommandId = m_pMenuUI->ShowModalPopup(pWindow, prc, TRUE);
+
+    if (m_pMenuUI)
+    {
+        delete m_pMenuUI;
+        m_pMenuUI = NULL;
+    }
+
+    return nCommandId;
+}
+
+/// @unimplemented
+BOOL CUTBContextMenu::SelectMenuItem(UINT nCommandId)
+{
+    switch (nCommandId)
+    {
+#if 0 // FIXME: g_pTipbarWnd
+        case 208:
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_LOWTRANSPARENCY);
+            break;
+
+        case 209:
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_NOTRANSPARENCY);
+            break;
+
+        case 210:
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_LABELS);
+            break;
+
+        case 211:
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_NOLABELS);
+            break;
+
+        case 212:
+        {
+            m_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus);
+
+            if (dwStatus & TF_SFT_DESKBAND)
+                break;
+
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND);
+
+            CUTBMinimizeLangBarDlg *pDialog = new(cicNoThrow) CUTBMinimizeLangBarDlg();
+            if (pDialog)
+            {
+                pDialog->DoModal(m_pTipbarWnd->m_Window);
+                pDialog->_Release();
+            }
+            break;
+        }
+
+        case 213:
+        {
+            CUTBCloseLangBarDlg *pDialog = new(cicNoThrow) CUTBCloseLangBarDlg();
+            if (pDialog)
+            {
+                BOOL bOK = pDialog->DoModal(m_pTipbarWnd->m_Window);
+                pDialog->_Release();
+                if (!bOK)
+                    DoCloseLangbar();
+            }
+            break;
+        }
+
+        case 214:
+            m_pTipbarWnd->m_dwTipbarWndFlags &= ~0x4000;
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_EXTRAICONSONMINIMIZED);
+            break;
+
+        case 215:
+            m_pTipbarWnd->m_dwTipbarWndFlags &= ~0x4000;
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_NOEXTRAICONSONMINIMIZED);
+            break;
+
+        case 216:
+            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_LBI_ICON);
+            break;
+
+        case 217:
+            m_pTipbarWnd->SetVertical((m_pTipbarWnd->m_dwTipbarWndFlags & 4) ? TRUE : FALSE);
+            break;
+
+        case 219:
+            m_pTipbarWnd->AdjustDeskBandSize(TRUE);
+            break;
+#endif
+
+        case 2000:
+            TF_RunInputCPL();
+            break;
+
+        default:
+            break;
+    }
+
+    return TRUE;
 }
 
 /***********************************************************************

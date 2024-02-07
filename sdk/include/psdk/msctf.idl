@@ -67,6 +67,7 @@ cpp_quote("EXTERN_C INT WINAPI TF_MlngInfoCount(VOID);")
 cpp_quote("EXTERN_C BOOL WINAPI TF_GetMlngHKL(INT iKL, HKL *phKL, LPWSTR pszText, INT cchText);")
 cpp_quote("EXTERN_C INT WINAPI TF_GetMlngIconIndex(INT iKL);")
 cpp_quote("EXTERN_C HICON WINAPI TF_InatExtractIcon(INT iKL);")
+cpp_quote("EXTERN_C HRESULT WINAPI TF_RunInputCPL(VOID);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_ATTRIBUTE;")
