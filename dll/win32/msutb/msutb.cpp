@@ -3029,7 +3029,7 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
 #if 0 // FIXME: g_pTipbarWnd
         g_pTipbarWnd->RestoreLastFocus(0, (g_pTipbarWnd->m_dwTipbarWndFlags & 2) != 0);
 #endif
-        HWND hwndFore = GetForegroundWindow();
+        HWND hwndFore = ::GetForegroundWindow();
         if (m_dwThreadId == ::GetWindowThreadProcessId(hwndFore, NULL))
         {
             BOOL FontSig = GetFontSig(hwndFore, hKL);
