@@ -356,6 +356,12 @@ BOOL CheckCloseMenuAvailable(void)
     return ret;
 }
 
+/// @unimplemented
+BOOL IsTransparecyAvailable(void)
+{
+    return FALSE;
+}
+
 BOOL InitFromReg(void)
 {
     DWORD dwValue;
@@ -2329,6 +2335,20 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 
         if (bFlag)
         {
+            if (IsTransparecyAvailable())
+            {
+                if (dwStatus & TF_LBI_BALLOON)
+                {
+                    InsertItem(pMenuUI, 208, IDS_TRANSPARENCY);
+                }
+                else
+                {
+                    CUTBMenuItem *pTransparency = InsertItem(pMenuUI, 209, IDS_TRANSPARENCY);
+                    if (pTransparency)
+                        pTransparency->Check(TRUE);
+                }
+            }
+
             if (!(dwStatus & TF_SFT_LABELS))
             {
                 InsertItem(pMenuUI, 210, IDS_TEXTLABELS);
