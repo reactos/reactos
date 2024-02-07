@@ -782,11 +782,11 @@ public:
 class CUTBMenuItem : public CTipbarAccItem, public CUIFMenuItem
 {
 protected:
-    CUTBMenuWnd *m_pMenuWnd;
+    CUTBMenuWnd *m_pMenuUI;
     friend class CUTBMenuWnd;
 
 public:
-    CUTBMenuItem(CUTBMenuWnd *pMenuWnd);
+    CUTBMenuItem(CUTBMenuWnd *pMenuUI);
     ~CUTBMenuItem() override;
 
     CUIFMenuItem* GetMenuItem()
@@ -2103,10 +2103,10 @@ STDMETHODIMP_(void) CUTBMenuWnd::OnTimer(WPARAM wParam)
  * CUTBMenuItem
  */
 
-CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuWnd)
-    : CUIFMenuItem(pMenuWnd ? pMenuWnd->GetMenu() : NULL)
+CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuUI)
+    : CUIFMenuItem(pMenuUI ? pMenuUI->GetMenu() : NULL)
 {
-    m_pMenuWnd = pMenuWnd;
+    m_pMenuUI = pMenuUI;
 }
 
 CUTBMenuItem::~CUTBMenuItem()
@@ -2125,10 +2125,10 @@ CUTBMenuItem::~CUTBMenuItem()
 
 STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultAction()
 {
-    if (!m_pMenuWnd)
+    if (!m_pMenuUI)
         return FALSE;
 
-    m_pMenuWnd->StartDoAccDefaultActionTimer(this);
+    m_pMenuUI->StartDoAccDefaultActionTimer(this);
     return TRUE;
 }
 
@@ -2151,8 +2151,8 @@ STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccDefaultAction()
 STDMETHODIMP_(void) CUTBMenuItem::GetAccLocation(LPRECT lprc)
 {
     GetRect(lprc);
-    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)lprc);
-    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)&lprc->right);
+    ::ClientToScreen(m_pMenuUI->m_hWnd, (LPPOINT)lprc);
+    ::ClientToScreen(m_pMenuUI->m_hWnd, (LPPOINT)&lprc->right);
 }
 
 STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccName()
