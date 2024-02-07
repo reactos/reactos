@@ -279,7 +279,8 @@ Cleanup:
 static BOOLEAN
 IopSuffixUnicodeString(
     _In_ PCUNICODE_STRING String1,
-    _In_ PCUNICODE_STRING String2)
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive)
 {
     PWCHAR pc1, pc2;
     ULONG NumChars;
@@ -293,13 +294,29 @@ IopSuffixUnicodeString(
 
     if (pc1 && pc2)
     {
-        while (NumChars--)
+        if (CaseInSensitive)
         {
-            if (*pc1++ != *pc2++)
-                return FALSE;
+            while (NumChars--)
+            {
+                if (RtlUpcaseUnicodeChar(*pc1++) !=
+                    RtlUpcaseUnicodeChar(*pc2++))
+                {
+                    return FALSE;
+                }
+            }
         }
+        else
+        {
+            while (NumChars--)
+            {
+                if (*pc1++ != *pc2++)
+                    return FALSE;
+            }
+        }
+
         return TRUE;
     }
+
     return FALSE;
 }
 
@@ -309,7 +326,7 @@ IopSuffixUnicodeString(
 static VOID
 FASTCALL
 IopDisplayLoadingMessage(
-    _In_ PUNICODE_STRING ServiceName)
+    _In_ PCUNICODE_STRING ServiceName)
 {
     extern BOOLEAN SosEnabled; // See ex/init.c
     static const UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
@@ -317,13 +334,13 @@ IopDisplayLoadingMessage(
 
     if (!SosEnabled) return;
     if (!KeLoaderBlock) return;
-    RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
     RtlStringCbPrintfA(TextBuffer, sizeof(TextBuffer),
                        "%s%sSystem32\\Drivers\\%wZ%s\r\n",
                        KeLoaderBlock->ArcBootDeviceName,
                        KeLoaderBlock->NtBootPathName,
                        ServiceName,
-                       IopSuffixUnicodeString(&DotSys, ServiceName) ? "" : ".SYS");
+                       IopSuffixUnicodeString(&DotSys, ServiceName, TRUE)
+                           ? "" : ".SYS");
     HalDisplayString(TextBuffer);
 }
 
