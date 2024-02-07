@@ -2478,7 +2478,7 @@ ChangePos:
     // We have to draw non-client area because the 'Show Desktop' button is beyond client area.
     void DrawShowDesktopButton()
     {
-        if (!m_pShowDesktopButton->IsWindow())
+        if (!m_pShowDesktopButton || !m_pShowDesktopButton->IsWindow())
             return;
         ::RedrawWindow(m_TrayNotify, NULL, NULL, RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW);
     }
@@ -2525,7 +2525,7 @@ ChangePos:
             pt.x = GET_X_LPARAM(lParam);
             pt.y = GET_Y_LPARAM(lParam);
 
-            if (::IsWindow(m_pShowDesktopButton->m_hWnd) && m_pShowDesktopButton->PtInButton(&pt))
+            if (m_pShowDesktopButton && ::IsWindow(m_pShowDesktopButton->m_hWnd) && m_pShowDesktopButton->PtInButton(&pt))
                 return HTBORDER;
 
             if (PtInRect(&rcClient, pt))
@@ -2819,6 +2819,7 @@ ChangePos:
         {
             bHandled = TRUE;
             PopupStartMenu();
+            return 0;
         }
 
         if (m_pShowDesktopButton && m_pShowDesktopButton->PtInButton(&pt))
