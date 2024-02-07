@@ -258,6 +258,9 @@ extern KMUTEX VideoPortInt10Mutex;
 extern KSPIN_LOCK HwResetAdaptersLock;
 extern LIST_ENTRY HwResetAdaptersList;
 
+BOOLEAN
+IntIsVgaSaveDriver(PDEVICE_OBJECT DeviceObject);
+
 VOID FASTCALL
 IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
