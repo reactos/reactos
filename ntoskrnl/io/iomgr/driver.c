@@ -273,32 +273,30 @@ Cleanup:
     return status;
 }
 
-/*
- * RETURNS
- *  TRUE if String2 contains String1 as a suffix.
- */
-BOOLEAN
-NTAPI
+/**
+ * @brief   Determines whether String1 may be a suffix of String2.
+ * @return  TRUE if String2 contains String1 as a suffix.
+ **/
+static BOOLEAN
 IopSuffixUnicodeString(
-    IN PCUNICODE_STRING String1,
-    IN PCUNICODE_STRING String2)
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2)
 {
-    PWCHAR pc1;
-    PWCHAR pc2;
-    ULONG Length;
+    PWCHAR pc1, pc2;
+    ULONG NumChars;
 
     if (String2->Length < String1->Length)
         return FALSE;
 
-    Length = String1->Length / 2;
+    NumChars = String1->Length / sizeof(WCHAR);
     pc1 = String1->Buffer;
-    pc2 = &String2->Buffer[String2->Length / sizeof(WCHAR) - Length];
+    pc2 = &String2->Buffer[String2->Length / sizeof(WCHAR) - NumChars];
 
     if (pc1 && pc2)
     {
-        while (Length--)
+        while (NumChars--)
         {
-            if( *pc1++ != *pc2++ )
+            if (*pc1++ != *pc2++)
                 return FALSE;
         }
         return TRUE;
@@ -306,17 +304,16 @@ IopSuffixUnicodeString(
     return FALSE;
 }
 
-/*
- * IopDisplayLoadingMessage
- *
- * Display 'Loading XXX...' message.
- */
-VOID
+/**
+ * @brief   Displays a driver loading message on the screen.
+ **/
+static VOID
 FASTCALL
-IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
+IopDisplayLoadingMessage(
+    _In_ PUNICODE_STRING ServiceName)
 {
+    static const UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
     CHAR TextBuffer[256];
-    UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
 
     if (ExpInTextModeSetup) return;
     if (!KeLoaderBlock) return;
