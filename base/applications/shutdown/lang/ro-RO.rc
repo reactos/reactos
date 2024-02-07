@@ -61,7 +61,7 @@ Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /t xxx  Setează cronometrarea unei perioade de xxx secunde înainte de\n\
             închidere. Domeniul de valori valide este de la 0 la 315360000\n\
             (10 ani), 30 fiind valoarea implicită.\n\
-    /c «comentariu»  Comentarea motivului pentru închidere sau repornire.\n\
+    /c „comentariu”  Comentarea motivului pentru închidere sau repornire.\n\
             Sunt permise maxim 512 caractere.\n\
     /f      Forțarea închiderii aplicațiilor curente fără avertizarea\n\
             utilizatorilor. Dacă nu sunt specificați alți parametri, această\n\
