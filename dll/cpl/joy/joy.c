@@ -203,7 +203,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            AddColumns(GetDlgItem(hwndDlg,IDC_CONTROLLER_LIST));
+            AddColumns(GetDlgItem(hwndDlg, IDC_CONTROLLER_LIST));
             break;
 
         case WM_COMMAND:
@@ -224,6 +224,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDOK:
+                case IDCANCEL:
                     EndDialog(hwndDlg,LOWORD(wParam));
                     break;
             }
@@ -287,10 +288,8 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
-            {
-                MainDlg = hwndCPl;
-                Applets[i].AppletProc();
-            }
+            MainDlg = hwndCPl;
+            Applets[i].AppletProc();
             break;
     }
 
