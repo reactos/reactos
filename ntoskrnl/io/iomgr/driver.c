@@ -939,7 +939,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         {
             WCHAR num[11];
             UNICODE_STRING instancePath;
-            RtlStringCchPrintfW(num, sizeof(num), L"%u", i);
+            RtlStringCbPrintfW(num, sizeof(num), L"%u", i);
 
             Status = IopGetRegistryValue(enumServiceHandle, num, &kvInfo);
             if (!NT_SUCCESS(Status))
