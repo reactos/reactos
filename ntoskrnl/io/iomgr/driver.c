@@ -33,7 +33,6 @@ static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentCon
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
-extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 extern BOOLEAN PnPBootDriversLoaded;
 extern KEVENT PiEnumerationFinished;
@@ -305,25 +304,26 @@ IopSuffixUnicodeString(
 }
 
 /**
- * @brief   Displays a driver loading message on the screen.
+ * @brief   Displays a driver-loading message in SOS mode.
  **/
 static VOID
 FASTCALL
 IopDisplayLoadingMessage(
     _In_ PUNICODE_STRING ServiceName)
 {
+    extern BOOLEAN SosEnabled; // See ex/init.c
     static const UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
     CHAR TextBuffer[256];
 
-    if (ExpInTextModeSetup) return;
+    if (!SosEnabled) return;
     if (!KeLoaderBlock) return;
     RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
-    snprintf(TextBuffer, sizeof(TextBuffer),
-            "%s%sSystem32\\Drivers\\%wZ%s\r\n",
-            KeLoaderBlock->ArcBootDeviceName,
-            KeLoaderBlock->NtBootPathName,
-            ServiceName,
-            IopSuffixUnicodeString(&DotSys, ServiceName) ? "" : ".SYS");
+    RtlStringCbPrintfA(TextBuffer, sizeof(TextBuffer),
+                       "%s%sSystem32\\Drivers\\%wZ%s\r\n",
+                       KeLoaderBlock->ArcBootDeviceName,
+                       KeLoaderBlock->NtBootPathName,
+                       ServiceName,
+                       IopSuffixUnicodeString(&DotSys, ServiceName) ? "" : ".SYS");
     HalDisplayString(TextBuffer);
 }
 
@@ -1196,8 +1196,8 @@ IopInitializeSystemDrivers(VOID)
 
     PiPerformSyncDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumDeviceTree);
 
-    /* No system drivers on the boot cd */
-    if (KeLoaderBlock->SetupLdrBlock) return; // ExpInTextModeSetup
+    /* HACK: No system drivers on the BootCD */
+    if (KeLoaderBlock->SetupLdrBlock) return;
 
     /* Get the driver list */
     SavedList = DriverList = CmGetSystemDriverList();
