@@ -7,6 +7,3 @@ Signature = "$Windows NT$"
 ;
 ; Display driver section
 ;
-
-; VGA miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Start",0x00010001,0x00000001
