@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */ 
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -58,7 +58,7 @@ Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /h      Hibernarea calculatorului local. Utilizabilă cu /f.\n\
     /e      Documentarea motivului pentru închiderea neprevăzută.\n\
     /m \\\\calculator  Specificarea unui calculator țintă (adresă UNC/IP).\n\
-    /t xxx  Instituie cronometrarea unei perioade de xxx secunde înainte de\n\
+    /t xxx  Setează cronometrarea unei perioade de xxx secunde înainte de\n\
             închidere. Domeniul de valori valide este de la 0 la 315360000\n\
             (10 ani), 30 fiind valoarea implicită.\n\
     /c «comentariu»  Comentarea motivului pentru închidere sau repornire.\n\
