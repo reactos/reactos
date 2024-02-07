@@ -121,6 +121,7 @@ VOID CTrayShowDesktopButton::Click()
 LRESULT CTrayShowDesktopButton::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     m_bPressed = FALSE;
+    ReleaseCapture();
     Invalidate(TRUE);
     POINT pt;
     ::GetCursorPos(&pt);
@@ -133,6 +134,7 @@ LRESULT CTrayShowDesktopButton::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lPa
 LRESULT CTrayShowDesktopButton::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     m_bPressed = TRUE;
+    SetCapture();
     Invalidate(TRUE);
 
     return 0;
