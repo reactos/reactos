@@ -6,8 +6,9 @@
  *              Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include "CTrayShowDesktopButton.h"
 #include <limits.h>
+
+#include "traydeskbtn.h"
 
 #define IDI_SHELL32_DESKTOP 35
 #define IDI_IMAGERES_DESKTOP 110
