@@ -2384,17 +2384,17 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
             pExtraIcons = CModalMenu::InsertItem(pMenuUI, 214, IDS_EXTRAICONS);
         }
 
-        if (::GetKeyboardLayoutList(0, NULL) == 1)
+        if (pExtraIcons)
         {
-            if (pExtraIcons)
+            if (::GetKeyboardLayoutList(0, NULL) == 1)
             {
                 pExtraIcons->Check(TRUE);
                 pExtraIcons->Gray(TRUE);
             }
-        }
-        else if (pExtraIcons)
-        {
-            pExtraIcons->Gray(FALSE);
+            else
+            {
+                pExtraIcons->Gray(FALSE);
+            }
         }
 
         if (dwStatus & TF_SFT_DESKBAND)
