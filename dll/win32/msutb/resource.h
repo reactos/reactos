@@ -20,6 +20,7 @@
 #define IDS_ADDITIONICONS   318
 #define IDS_RESTORELANGBAR2 321
 #define IDS_MENUWND         322
+#define IDS_VERTICAL        324
 #define IDS_ADJUSTLANGBAND  326
 #define IDS_LEFTCLICK       323
 

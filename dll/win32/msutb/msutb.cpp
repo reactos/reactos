@@ -2316,7 +2316,7 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 
     if (dwStatus & (TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
     {
-        CUTBMenuItem *pItem3 = InsertItem(pMenuUI, 216, 321);
+        CUTBMenuItem *pItem3 = InsertItem(pMenuUI, 216, IDS_RESTORELANGBAR2);
 #if 0 // FIXME: m_pTipbarWnd
         if (pItem3 && !m_pTipbarWnd->m_dwUnknown20)
             pItem3->Gray(TRUE);
@@ -2340,7 +2340,7 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
                     pItem0->Check(TRUE);
             }
 
-            CUTBMenuItem *pItem1 = InsertItem(pMenuUI, 217, 324);
+            CUTBMenuItem *pItem1 = InsertItem(pMenuUI, 217, IDS_VERTICAL);
 #if 0 // FIXME: m_pTipbarWnd
             if (pItem1)
                 pItem1->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));

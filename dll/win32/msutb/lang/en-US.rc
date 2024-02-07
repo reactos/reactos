@@ -27,6 +27,7 @@ BEGIN
     IDS_ADDITIONICONS    "Additional icons in taskbar"
     IDS_RESTORELANGBAR2  "&Restore Language Bar"
     IDS_MENUWND          "Menu Window"
+    IDS_VERTICAL         "&Vertical"
     IDS_ADJUSTLANGBAND   "&Adjust Language Band position"
     IDS_LEFTCLICK        "Left Click"
 END
