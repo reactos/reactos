@@ -7,7 +7,7 @@ CAPTION "Игрови управления"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Това са настройките за игровите управления на компютъра ви.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "Това са настройките за джойстиците на компютъра ви.", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "Сложени игрови управления", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 35, 129, 65, 14
