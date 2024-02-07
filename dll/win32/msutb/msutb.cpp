@@ -2316,12 +2316,12 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 
     if (dwStatus & (TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
     {
-        CUTBMenuItem *pItem3 = InsertItem(pMenuUI, 216, IDS_RESTORELANGBAR2);
+        CUTBMenuItem *pRestoreLangBar = InsertItem(pMenuUI, 216, IDS_RESTORELANGBAR2);
 #if 0 // FIXME: m_pTipbarWnd
-        if (pItem3 && !m_pTipbarWnd->m_dwUnknown20)
-            pItem3->Gray(TRUE);
+        if (pRestoreLangBar && !m_pTipbarWnd->m_dwUnknown20)
+            pRestoreLangBar->Gray(TRUE);
 #endif
-        pItem3 = pItem3;
+        pRestoreLangBar = pRestoreLangBar;
     }
     else
     {
@@ -2335,46 +2335,46 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
             }
             else
             {
-                CUTBMenuItem *pItem0 = InsertItem(pMenuUI, 211, IDS_TEXTLABELS);
-                if (pItem0)
-                    pItem0->Check(TRUE);
+                CUTBMenuItem *pTextLabels = InsertItem(pMenuUI, 211, IDS_TEXTLABELS);
+                if (pTextLabels)
+                    pTextLabels->Check(TRUE);
             }
 
-            CUTBMenuItem *pItem1 = InsertItem(pMenuUI, 217, IDS_VERTICAL);
+            CUTBMenuItem *pVertical = InsertItem(pMenuUI, 217, IDS_VERTICAL);
 #if 0 // FIXME: m_pTipbarWnd
-            if (pItem1)
-                pItem1->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));
+            if (pVertical)
+                pVertical->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));
 #endif
-            pItem1 = pItem1;
+            pVertical = pVertical;
         }
     }
 
     if (bFlag)
     {
-        CUTBMenuItem *pItem3 = NULL;
+        CUTBMenuItem *pExtraIcons = NULL;
 
         if (dwStatus & TF_SFT_EXTRAICONSONMINIMIZED)
         {
-            pItem3 = InsertItem(pMenuUI, 215, IDS_ADDITIONICONS);
-            if (pItem3)
-                pItem3->Check(TRUE);
+            pExtraIcons = InsertItem(pMenuUI, 215, IDS_EXTRAICONS);
+            if (pExtraIcons)
+                pExtraIcons->Check(TRUE);
         }
         else
         {
-            pItem3 = CModalMenu::InsertItem(pMenuUI, 214, IDS_ADDITIONICONS);
+            pExtraIcons = CModalMenu::InsertItem(pMenuUI, 214, IDS_EXTRAICONS);
         }
 
         if (::GetKeyboardLayoutList(0, NULL) == 1)
         {
-            if (pItem3)
+            if (pExtraIcons)
             {
-                pItem3->Check(TRUE);
-                pItem3->Gray(TRUE);
+                pExtraIcons->Check(TRUE);
+                pExtraIcons->Gray(TRUE);
             }
         }
-        else if (pItem3)
+        else if (pExtraIcons)
         {
-            pItem3->Gray(FALSE);
+            pExtraIcons->Gray(FALSE);
         }
 
         if (dwStatus & TF_SFT_DESKBAND)

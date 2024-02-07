@@ -24,7 +24,7 @@ BEGIN
     IDS_TEXTLABELS       "Tex&t Labels"
     IDS_MINIMIZE         "&Minimize"
     IDS_CLOSELANGBAR     "&Close Language Bar"
-    IDS_ADDITIONICONS    "Additional icons in taskbar"
+    IDS_EXTRAICONS       "&Additional icons in taskbar"
     IDS_RESTORELANGBAR2  "&Restore Language Bar"
     IDS_MENUWND          "Menu Window"
     IDS_VERTICAL         "&Vertical"
