@@ -769,7 +769,7 @@ public:
 
     STDMETHOD_(BSTR, GetAccName)() override;
     STDMETHOD_(INT, GetAccRole)() override;
-    STDMETHOD_(void, Initialize)() override;
+    STDMETHOD_(BOOL, Initialize)() override;
     STDMETHOD_(void, OnCreate)(HWND hWnd) override;
     STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
     STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -782,11 +782,11 @@ public:
 class CUTBMenuItem : public CTipbarAccItem, public CUIFMenuItem
 {
 protected:
-    CUTBMenuWnd *m_pMenuWnd;
+    CUTBMenuWnd *m_pMenuUI;
     friend class CUTBMenuWnd;
 
 public:
-    CUTBMenuItem(CUTBMenuWnd *pMenuWnd);
+    CUTBMenuItem(CUTBMenuWnd *pMenuUI);
     ~CUTBMenuItem() override;
 
     CUIFMenuItem* GetMenuItem()
@@ -800,6 +800,23 @@ public:
     STDMETHOD_(void, GetAccLocation)(LPRECT lprc) override;
     STDMETHOD_(BSTR, GetAccName)() override;
     STDMETHOD_(INT, GetAccRole)() override;
+};
+
+/***********************************************************************/
+
+class CModalMenu
+{
+public:
+    DWORD m_dwUnknown26;
+    CUTBMenuWnd *m_pMenuUI;
+
+public:
+    CModalMenu() { }
+    virtual ~CModalMenu() { }
+
+    CUTBMenuItem *InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID);
+    void PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam);
+    void CancelMenu();
 };
 
 /***********************************************************************/
@@ -1994,7 +2011,7 @@ STDMETHODIMP_(INT) CUTBMenuWnd::GetAccRole()
     return 9;
 }
 
-STDMETHODIMP_(void) CUTBMenuWnd::Initialize()
+STDMETHODIMP_(BOOL) CUTBMenuWnd::Initialize()
 {
     CTipbarAccessible *pAccessible = new(cicNoThrow) CTipbarAccessible(GetAccItem());
     if (pAccessible)
@@ -2086,10 +2103,10 @@ STDMETHODIMP_(void) CUTBMenuWnd::OnTimer(WPARAM wParam)
  * CUTBMenuItem
  */
 
-CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuWnd)
-    : CUIFMenuItem(pMenuWnd ? pMenuWnd->GetMenu() : NULL)
+CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuUI)
+    : CUIFMenuItem(pMenuUI ? pMenuUI->GetMenu() : NULL)
 {
-    m_pMenuWnd = pMenuWnd;
+    m_pMenuUI = pMenuUI;
 }
 
 CUTBMenuItem::~CUTBMenuItem()
@@ -2108,10 +2125,10 @@ CUTBMenuItem::~CUTBMenuItem()
 
 STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultAction()
 {
-    if (!m_pMenuWnd)
+    if (!m_pMenuUI)
         return FALSE;
 
-    m_pMenuWnd->StartDoAccDefaultActionTimer(this);
+    m_pMenuUI->StartDoAccDefaultActionTimer(this);
     return TRUE;
 }
 
@@ -2134,8 +2151,8 @@ STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccDefaultAction()
 STDMETHODIMP_(void) CUTBMenuItem::GetAccLocation(LPRECT lprc)
 {
     GetRect(lprc);
-    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)lprc);
-    ::ClientToScreen(m_pMenuWnd->m_hWnd, (LPPOINT)&lprc->right);
+    ::ClientToScreen(m_pMenuUI->m_hWnd, (LPPOINT)lprc);
+    ::ClientToScreen(m_pMenuUI->m_hWnd, (LPPOINT)&lprc->right);
 }
 
 STDMETHODIMP_(BSTR) CUTBMenuItem::GetAccName()
@@ -2149,6 +2166,42 @@ STDMETHODIMP_(INT) CUTBMenuItem::GetAccRole()
     if (FALSE) //FIXME
         return 21;
     return 12;
+}
+
+/***********************************************************************
+ * CModalMenu
+ */
+
+CUTBMenuItem *
+CModalMenu::InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID)
+{
+    CUTBMenuItem *pMenuItem = new(cicNoThrow) CUTBMenuItem(pMenuUI);
+    if (!pMenuItem)
+        return NULL;
+
+    WCHAR szText[256];
+    ::LoadStringW(g_hInst, nStringID, szText, _countof(szText));
+
+    if (pMenuItem->Initialize() &&
+        pMenuItem->Init(uBytes, szText) &&
+        pMenuUI->InsertItem(pMenuItem))
+    {
+        return pMenuItem;
+    }
+
+    delete pMenuItem;
+    return NULL;
+}
+
+void CModalMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
+{
+    m_pMenuUI->PostKey(bUp, wParam, lParam);
+}
+
+void CModalMenu::CancelMenu()
+{
+    if (m_pMenuUI)
+        m_pMenuUI->CancelMenu();
 }
 
 /***********************************************************************
@@ -2976,7 +3029,7 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
 #if 0 // FIXME: g_pTipbarWnd
         g_pTipbarWnd->RestoreLastFocus(0, (g_pTipbarWnd->m_dwTipbarWndFlags & 2) != 0);
 #endif
-        HWND hwndFore = GetForegroundWindow();
+        HWND hwndFore = ::GetForegroundWindow();
         if (m_dwThreadId == ::GetWindowThreadProcessId(hwndFore, NULL))
         {
             BOOL FontSig = GetFontSig(hwndFore, hKL);
