@@ -25,6 +25,19 @@
 #define IDS_ADJUSTLANGBAND  326
 #define IDS_LEFTCLICK       323
 
+#define ID_TRANS            208
+#define ID_NOTRANS          209
+#define ID_LABELS           210
+#define ID_NOLABELS         211
+#define ID_DESKBAND         212
+#define ID_CLOSELANGBAR     213
+#define ID_EXTRAICONS       214
+#define ID_NOEXTRAICONS     215
+#define ID_RESTORELANGBAR   216
+#define ID_VERTICAL         217
+#define ID_ADJUSTDESKBAND   219
+#define ID_SETTINGS         2000
+
 #define IDD_CLOSELANGBAR    1001
 #define IDD_MINIMIZELANGBAR 1004
 
