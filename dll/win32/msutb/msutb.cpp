@@ -769,7 +769,7 @@ public:
 
     STDMETHOD_(BSTR, GetAccName)() override;
     STDMETHOD_(INT, GetAccRole)() override;
-    STDMETHOD_(void, Initialize)() override;
+    STDMETHOD_(BOOL, Initialize)() override;
     STDMETHOD_(void, OnCreate)(HWND hWnd) override;
     STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
     STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -800,6 +800,23 @@ public:
     STDMETHOD_(void, GetAccLocation)(LPRECT lprc) override;
     STDMETHOD_(BSTR, GetAccName)() override;
     STDMETHOD_(INT, GetAccRole)() override;
+};
+
+/***********************************************************************/
+
+class CModalMenu
+{
+public:
+    DWORD m_dwUnknown26;
+    CUTBMenuWnd *m_pMenuUI;
+
+public:
+    CModalMenu() { }
+    virtual ~CModalMenu() { }
+
+    CUTBMenuItem *InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID);
+    void PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam);
+    void CancelMenu();
 };
 
 /***********************************************************************/
@@ -1994,7 +2011,7 @@ STDMETHODIMP_(INT) CUTBMenuWnd::GetAccRole()
     return 9;
 }
 
-STDMETHODIMP_(void) CUTBMenuWnd::Initialize()
+STDMETHODIMP_(BOOL) CUTBMenuWnd::Initialize()
 {
     CTipbarAccessible *pAccessible = new(cicNoThrow) CTipbarAccessible(GetAccItem());
     if (pAccessible)
@@ -2149,6 +2166,42 @@ STDMETHODIMP_(INT) CUTBMenuItem::GetAccRole()
     if (FALSE) //FIXME
         return 21;
     return 12;
+}
+
+/***********************************************************************
+ * CModalMenu
+ */
+
+CUTBMenuItem *
+CModalMenu::InsertItem(CUTBMenuWnd *pMenuUI, SIZE_T uBytes, INT nStringID)
+{
+    CUTBMenuItem *pMenuItem = new(cicNoThrow) CUTBMenuItem(pMenuUI);
+    if (!pMenuItem)
+        return NULL;
+
+    WCHAR szText[256];
+    ::LoadStringW(g_hInst, nStringID, szText, _countof(szText));
+
+    if (pMenuItem->Initialize() &&
+        pMenuItem->Init(uBytes, szText) &&
+        pMenuUI->InsertItem(pMenuItem))
+    {
+        return pMenuItem;
+    }
+
+    delete pMenuItem;
+    return NULL;
+}
+
+void CModalMenu::PostKey(BOOL bUp, WPARAM wParam, LPARAM lParam)
+{
+    m_pMenuUI->PostKey(bUp, wParam, lParam);
+}
+
+void CModalMenu::CancelMenu()
+{
+    if (m_pMenuUI)
+        m_pMenuUI->CancelMenu();
 }
 
 /***********************************************************************
