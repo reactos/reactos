@@ -308,10 +308,42 @@ HRESULT LangBarInsertSeparator(_In_ ITfMenu *pMenu)
     return pMenu->AddMenuItem(-1, TF_LBMENUF_SEPARATOR, NULL, NULL, NULL, 0, NULL);
 }
 
-/// @unimplemented
+BOOL IsFELangId(LANGID LangID)
+{
+    return LangID == 1041 || LangID == 1028 || LangID == 1042 || LangID == 2052;
+}
+
 BOOL CheckCloseMenuAvailable(void)
 {
-    return FALSE;
+    BOOL ret = FALSE;
+    ITfInputProcessorProfiles *pProfiles = NULL;
+    LANGID *pLangIds = NULL;
+    ULONG iItem, cItems;
+
+    if (g_fPolicyDisableCloseButton)
+        return FALSE;
+
+    if (g_bShowCloseMenu)
+        return TRUE;
+
+    if (SUCCEEDED(TF_CreateInputProcessorProfiles(&pProfiles)) &&
+        SUCCEEDED(pProfiles->GetLanguageList(&pLangIds, &cItems)))
+    {
+        for (iItem = 0; iItem < cItems; ++iItem)
+        {
+            if (IsFELangId(pLangIds[iItem]))
+                break;
+        }
+
+        ret = (iItem == cItems);
+    }
+
+    if (pLangIds)
+        CoTaskMemFree(pLangIds);
+    if (pProfiles)
+        pProfiles->Release();
+
+    return ret;
 }
 
 BOOL InitFromReg(void)
