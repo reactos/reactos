@@ -128,11 +128,11 @@ public:
         hr = IUnknown_GetWindow(m_pager, &m_hwndPager);
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
-        
+
         /* Create the 'Show Desktop' button */
         m_ShowDesktopButton.DoCreate(m_hWnd);
         m_hwndShowDesktop = m_ShowDesktopButton.m_hWnd;
-        
+
         return TRUE;
     }
 
@@ -201,7 +201,7 @@ public:
 
             if (!g_TaskbarSettings.sr.HideClock)
                 pSize->cx += TRAY_NOTIFY_WND_SPACING_X + szTrayClockMin.cx;
-            
+
             if (g_TaskbarSettings.bShowDesktopButton)
                 pSize->cx += showDesktopButtonExtent;
 
@@ -214,7 +214,7 @@ public:
 
             if (!g_TaskbarSettings.sr.HideClock)
                 pSize->cy += TRAY_NOTIFY_WND_SPACING_Y + szTrayClockMin.cy;
-            
+
             if (g_TaskbarSettings.bShowDesktopButton)
                 pSize->cy += showDesktopButtonExtent;
 
@@ -233,31 +233,20 @@ public:
         pszClient->cy = rcClient.bottom - rcClient.top;
     }
 
-    VOID AlignControls(IN PRECT prcClient OPTIONAL)
+    VOID AlignControls(IN CONST PRECT prcClient OPTIONAL)
     {
         RECT rcClient;
         if (prcClient != NULL)
-        {
-            rcClient.left = prcClient->left;
-            rcClient.top = prcClient->top;
-            rcClient.right = prcClient->right;
-            rcClient.bottom = prcClient->bottom;
-        }
+            rcClient = *prcClient;
         else
-        {
-            if (!GetClientRect(&rcClient))
-            {
-                ERR("Could not get client rect lastErr=%d\n", GetLastError());
-                return;
-            }
-        }
+            GetClientRect(&rcClient);
 
         rcClient.left += ContentMargin.cxLeftWidth;
         rcClient.top += ContentMargin.cyTopHeight;
         rcClient.right -= ContentMargin.cxRightWidth;
         rcClient.bottom -= ContentMargin.cyBottomHeight;
 
-        UINT swpFlags = SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOZORDER;
+        CONST UINT swpFlags = SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOZORDER;
 
         if (g_TaskbarSettings.bShowDesktopButton)
         {
@@ -373,7 +362,7 @@ public:
             szTrayNotify.cx,
             szTrayNotify.cy,
             swpFlags);
-        
+
         if (prcClient != NULL)
         {
             prcClient->left = rcClient.left - ContentMargin.cxLeftWidth;
@@ -452,7 +441,7 @@ public:
 
         if (m_ShowDesktopButton && m_ShowDesktopButton.PtInButton(&pt))
             return HTCLIENT;
-        
+
         return HTTRANSPARENT;
     }
 
@@ -491,7 +480,7 @@ public:
         {
             g_TaskbarSettings.bShowDesktopButton = newSettings->bShowDesktopButton;
             ::ShowWindow(m_hwndShowDesktop, g_TaskbarSettings.bShowDesktopButton ? SW_SHOW : SW_HIDE);
-            
+
             /* Ask the parent to resize */
             NMHDR nmh = {m_hWnd, 0, NTNWM_REALIGN};
             SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);

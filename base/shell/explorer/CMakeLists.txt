@@ -6,7 +6,6 @@ endif()
 
 list(APPEND SOURCE
     appbar.cpp
-    CTrayShowDesktopButton.cpp
     desktop.cpp
     explorer.cpp
     notifyiconscust.cpp
@@ -23,6 +22,7 @@ list(APPEND SOURCE
     taskswnd.cpp
     tbsite.cpp
     trayclock.cpp
+    traydeskbtn.cpp
     trayntfy.cpp
     trayprop.cpp
     traywnd.cpp

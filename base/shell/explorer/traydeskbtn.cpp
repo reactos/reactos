@@ -1,12 +1,19 @@
 /*
  * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Show Desktop button
+ * PURPOSE:     Show Desktop tray button implementation
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
 #include "CTrayShowDesktopButton.h"
 #include <limits.h>
+
+#define IDI_SHELL32_DESKTOP 35
+#define IDI_IMAGERES_DESKTOP 110
+
+#define SHOW_DESKTOP_TIMER_ID 999
+#define SHOW_DESKTOP_TIMER_INTERVAL 200
 
 CTrayShowDesktopButton::CTrayShowDesktopButton() :
     m_nClickedTime(0),
@@ -27,11 +34,11 @@ CTrayShowDesktopButton::GetTaskbar(OUT HWND* taskbarWnd)
     auto parent = GetParent();
     if (!parent)
         return FALSE;
-        
+
     parent = parent.GetParent();
     if (!parent)
         return FALSE;
-    
+
     HWND wnd = parent.m_hWnd;
     *taskbarWnd = wnd;
     return wnd != NULL;
@@ -68,9 +75,6 @@ INT CTrayShowDesktopButton::WidthOrHeight() const
     }
 }
 
-#define IDI_SHELL32_DESKTOP 35
-#define IDI_IMAGERES_DESKTOP 110
-
 HRESULT CTrayShowDesktopButton::DoCreate(HWND hwndParent)
 {
     DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_DEFPUSHBUTTON;
@@ -84,7 +88,7 @@ HRESULT CTrayShowDesktopButton::DoCreate(HWND hwndParent)
         ExtractIconExW(L"shell32.dll", -IDI_SHELL32_DESKTOP, NULL, &m_icon, 1);
 
     EnsureWindowTheme(TRUE);
-    
+
     return S_OK;
 }
 
@@ -120,7 +124,7 @@ LRESULT CTrayShowDesktopButton::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lPa
     ::GetCursorPos(&pt);
     if (PtInButton(&pt))
         Click(); // Left-click
-    
+
     return 0;
 }
 
@@ -128,7 +132,7 @@ LRESULT CTrayShowDesktopButton::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM l
 {
     m_bPressed = TRUE;
     Invalidate(TRUE);
-    
+
     return 0;
 }
 
@@ -158,7 +162,7 @@ LRESULT CTrayShowDesktopButton::OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM 
     }
 
     EnsureWindowTheme(FALSE);
-    
+
     Invalidate(TRUE);
     return 0;
 }
@@ -173,7 +177,7 @@ VOID CTrayShowDesktopButton::EnsureWindowTheme(BOOL setTheme)
 {
     if (setTheme)
         SetWindowTheme(m_hWnd, IsHorizontal ? L"ShowDesktop" : L"VerticalShowDesktop", NULL);
-    
+
     HWND taskbarWnd;
     if (GetTaskbar(&taskbarWnd))
     {
@@ -182,7 +186,7 @@ VOID CTrayShowDesktopButton::EnsureWindowTheme(BOOL setTheme)
     }
     else
         m_hFallbackTheme = NULL;
-    
+
     MARGINS contentMargins;
     if (GetThemeMargins(GetWindowTheme(GetParent().m_hWnd), NULL, TNP_BACKGROUND, 0, TMT_CONTENTMARGINS, NULL, &contentMargins) == S_OK)
     {
@@ -194,13 +198,12 @@ VOID CTrayShowDesktopButton::EnsureWindowTheme(BOOL setTheme)
         m_inset.cx = 2;
         m_inset.cy = 2;
     }
-    
 
     m_drawWithDedicatedBackground = FALSE;
     if (IsThemeActive())
     {
         m_hTheme = OpenThemeData(m_hWnd, L"Button");
-        
+
         if (m_hTheme != NULL)
             m_drawWithDedicatedBackground = !IsThemePartDefined(m_hTheme, BP_PUSHBUTTON, 0);
     }
@@ -220,22 +223,17 @@ LRESULT CTrayShowDesktopButton::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 BOOL CTrayShowDesktopButton::PtInButton(LPPOINT ppt)
 {
-    if (!ppt)
+    if (!ppt || !IsWindow())
         return FALSE;
-    if (!IsWindow())
-        return FALSE;
+
     RECT rc;
     GetWindowRect(&rc);
     INT cxEdge = ::GetSystemMetrics(SM_CXEDGE), cyEdge = ::GetSystemMetrics(SM_CYEDGE);
     ::InflateRect(&rc, max(cxEdge, 1), max(cyEdge, 1));
     return IsHorizontal
         ? (ppt->x > rc.left)
-        : (ppt->y > rc.top)
-    ;
+        : (ppt->y > rc.top);
 }
-
-#define SHOW_DESKTOP_TIMER_ID 999
-#define SHOW_DESKTOP_TIMER_INTERVAL 200
 
 VOID CTrayShowDesktopButton::StartHovering()
 {
@@ -270,7 +268,7 @@ LRESULT CTrayShowDesktopButton::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
         m_bHovering = FALSE;
         KillTimer(SHOW_DESKTOP_TIMER_ID);
         Invalidate(TRUE);
-        
+
         HWND taskbarWnd;
         if (GetTaskbar(&taskbarWnd))
             ::PostMessage(taskbarWnd, WM_NCPAINT, 0, 0);
@@ -286,6 +284,7 @@ LRESULT CTrayShowDesktopButton::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lPara
         CloseThemeData(m_hTheme);
         m_hTheme = NULL;
     }
+
     return 0;
 }
 
@@ -294,6 +293,7 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
     RECT rc = { prc->left, prc->top, prc->right, prc->bottom };
     LPRECT lpRc = &rc;
     HBRUSH hbrBackground = NULL;
+
     if (m_hTheme)
     {
         HTHEME theme;
@@ -302,6 +302,7 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
         if (m_drawWithDedicatedBackground)
         {
             theme = m_hTheme;
+
             if (m_bPressed)
                 state = PBS_PRESSED;
             else if (m_bHovering)
@@ -320,13 +321,13 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
                 state = TS_HOT;
             else
                 state = TS_NORMAL;
-            
+
             if (IsHorizontal)
                 rc.right -= m_inset.cx;
             else
                 rc.bottom -= m_inset.cy;
         }
-        
+
         if (::IsThemeBackgroundPartiallyTransparent(theme, part, state))
             ::DrawThemeParentBackground(m_hWnd, hdc, NULL);
 
@@ -351,7 +352,6 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
         int iconSize = 16;
         // Used for icon centering further down
         int iconHalfSize = iconSize / 2;
-        
 
         // Determine X-position of icon's top-left corner
         int iconX = rc.left;
@@ -383,7 +383,7 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
         {
             RECT rcIconFallback = { iconX, iconY, iconX + iconSize, iconY + iconSize };
             HBRUSH hbrFallback;
-            
+
             // Border - #808080
             hbrFallback = CreateSolidBrush(RGB(0x80, 0x80, 0x80));
             ::FillRect(hdc, &rcIconFallback, hbrFallback);

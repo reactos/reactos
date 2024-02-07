@@ -328,7 +328,7 @@ class CTrayWindow :
     public IContextMenu
 {
     CStartButton m_StartButton;
-    CTrayShowDesktopButton* m_ptShowDesktopButton;
+    CTrayShowDesktopButton* m_pShowDesktopButton;
 
     CComPtr<IMenuBand>  m_StartMenuBand;
     CComPtr<IMenuPopup> m_StartMenuPopup;
@@ -383,7 +383,7 @@ public:
 public:
     CTrayWindow() :
         m_StartButton(),
-        m_ptShowDesktopButton(NULL),
+        m_pShowDesktopButton(NULL),
         m_Theme(NULL),
         m_Font(NULL),
         m_DesktopWnd(NULL),
@@ -2358,9 +2358,9 @@ ChangePos:
         hRet = IUnknown_GetWindow(m_TrayNotifyInstance, &m_TrayNotify);
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
-        
-        ::SendMessage(m_TrayNotify, TNWM_GETSHOWDESKTOPBUTTON, (WPARAM)&m_ptShowDesktopButton, 0);
-        if (!m_ptShowDesktopButton)
+
+        ::SendMessage(m_TrayNotify, TNWM_GETSHOWDESKTOPBUTTON, (WPARAM)&m_pShowDesktopButton, 0);
+        if (!m_pShowDesktopButton)
             return FALSE;
 
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
@@ -2478,7 +2478,7 @@ ChangePos:
     // We have to draw non-client area because the 'Show Desktop' button is beyond client area.
     void DrawShowDesktopButton()
     {
-        if (!m_ptShowDesktopButton->IsWindow())
+        if (!m_pShowDesktopButton->IsWindow())
             return;
         ::RedrawWindow(m_TrayNotify, NULL, NULL, RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW);
     }
@@ -2525,7 +2525,7 @@ ChangePos:
             pt.x = GET_X_LPARAM(lParam);
             pt.y = GET_Y_LPARAM(lParam);
 
-            if (::IsWindow(m_ptShowDesktopButton->m_hWnd) && m_ptShowDesktopButton->PtInButton(&pt))
+            if (::IsWindow(m_pShowDesktopButton->m_hWnd) && m_pShowDesktopButton->PtInButton(&pt))
                 return HTBORDER;
 
             if (PtInRect(&rcClient, pt))
@@ -2799,10 +2799,12 @@ ChangePos:
         return TRUE;
     }
 
+    /**
+     * This handler implements the trick that makes the start button to
+     * get pressed when the user clicked left or below the button.
+     */
     LRESULT OnNcLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        /* This handler implements the trick that makes  the start button to
-           get pressed when the user clicked left or below the button */
 
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
         WINDOWINFO wi = {sizeof(WINDOWINFO)};
@@ -2819,8 +2821,8 @@ ChangePos:
             PopupStartMenu();
         }
 
-        if (m_ptShowDesktopButton && m_ptShowDesktopButton->PtInButton(&pt))
-            m_ptShowDesktopButton->OnLButtonDown(WM_LBUTTONDOWN, 0, 0, bHandled);
+        if (m_pShowDesktopButton && m_pShowDesktopButton->PtInButton(&pt))
+            m_pShowDesktopButton->OnLButtonDown(WM_LBUTTONDOWN, 0, 0, bHandled);
 
         return 0;
     }
@@ -2949,24 +2951,21 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (!m_ptShowDesktopButton)
-            return FALSE;
-        
-        if (m_ptShowDesktopButton->m_bPressed) // Did you click the button?
+        if (m_pShowDesktopButton && m_pShowDesktopButton->m_bPressed) // Did you click the button?
         {
-            m_ptShowDesktopButton->Click();
-            m_ptShowDesktopButton->OnLButtonUp(WM_LBUTTONUP, 0, 0, bHandled);
+            m_pShowDesktopButton->Click();
+            m_pShowDesktopButton->OnLButtonUp(WM_LBUTTONUP, 0, 0, bHandled);
             bHandled = TRUE;
             //return TRUE;
         }
 
         return FALSE;
     }
-    
+
     LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (m_ptShowDesktopButton)
-            m_ptShowDesktopButton->OnLButtonUp(uMsg, wParam, lParam, bHandled);
+        if (m_pShowDesktopButton)
+            m_pShowDesktopButton->OnLButtonUp(uMsg, wParam, lParam, bHandled);
         return FALSE;
     }
 
@@ -3197,12 +3196,12 @@ HandleTrayContextMenu:
     {
         RECT *rc = NULL;
         /* Ignore WM_NCCALCSIZE if we are not themed or locked */
-        if(!m_Theme || g_TaskbarSettings.bLock)
+        if (!m_Theme || g_TaskbarSettings.bLock)
         {
             bHandled = FALSE;
             return 0;
         }
-        if(!wParam)
+        if (!wParam)
         {
             rc = (RECT*)wParam;
         }
