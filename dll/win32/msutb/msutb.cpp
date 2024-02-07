@@ -308,9 +308,19 @@ HRESULT LangBarInsertSeparator(_In_ ITfMenu *pMenu)
     return pMenu->AddMenuItem(-1, TF_LBMENUF_SEPARATOR, NULL, NULL, NULL, 0, NULL);
 }
 
+// Is it a Far-East language ID?
 BOOL IsFELangId(LANGID LangID)
 {
-    return LangID == 1041 || LangID == 1028 || LangID == 1042 || LangID == 2052;
+    switch (LangID)
+    {
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): // Chinese (Simplified)
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL): // Chinese (Traditional)
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT): // Japanese
+        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT): // Korean
+            return TRUE;
+        default:
+            return FALSE;
+    }
 }
 
 BOOL CheckCloseMenuAvailable(void)
