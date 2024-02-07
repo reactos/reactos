@@ -203,7 +203,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            AddColumns(GetDlgItem(hwndDlg,IDC_CONTROLLER_LIST));
+            AddColumns(GetDlgItem(hwndDlg, IDC_CONTROLLER_LIST));
             s_hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             s_hIconSm = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM),
                                           IMAGE_ICON,
@@ -231,6 +231,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDOK:
+                case IDCANCEL:
                     DestroyIcon(s_hIcon);
                     DestroyIcon(s_hIconSm);
                     EndDialog(hwndDlg,LOWORD(wParam));
