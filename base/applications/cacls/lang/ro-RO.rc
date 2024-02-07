@@ -1,4 +1,11 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Cacls Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -34,7 +41,7 @@ Abrevieri:\n\
    OI - Moștenire obiecte.\n\
         ACE moștenită de fișiere.\n\
    IO - Moștenire simplă.\n\
-        ACE neaplicată dosarelor/fișierelor curente.\n"
+        ACE neaplicată folderelor/fișierelor curente.\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"
