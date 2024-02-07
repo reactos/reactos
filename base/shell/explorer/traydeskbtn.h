@@ -4,6 +4,7 @@
  * PURPOSE:     Show Desktop tray button header file
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2023 Ethan Rodensky <splitwirez@gmail.com>
  */
 
 #pragma once
@@ -11,7 +12,6 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 #include <uxtheme.h>
-
 
 // This window class name is CONFIRMED on Win10 by WinHier.
 static const WCHAR szTrayShowDesktopButton[] = L"TrayShowDesktopButtonWClass";

@@ -4,11 +4,11 @@
  * PURPOSE:     Show Desktop tray button implementation
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2023 Ethan Rodensky <splitwirez@gmail.com>
  */
 
-#include <limits.h>
-
 #include "traydeskbtn.h"
+#include <limits.h>
 
 #define IDI_SHELL32_DESKTOP 35
 #define IDI_IMAGERES_DESKTOP 110
@@ -106,6 +106,7 @@ LRESULT CTrayShowDesktopButton::OnClick(UINT uMsg, WPARAM wParam, LPARAM lParam,
     HWND taskbarWnd;
     if (GetTaskbar(&taskbarWnd))
         ::SendMessage(taskbarWnd, WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
+
     return 0;
 }
 
@@ -141,6 +142,7 @@ LRESULT CTrayShowDesktopButton::OnSettingChanged(UINT uMsg, WPARAM wParam, LPARA
 {
     LRESULT ret = OnThemeChanged(uMsg, wParam, lParam, bHandled);
     EnsureWindowTheme(TRUE);
+
     return ret;
 }
 
@@ -219,6 +221,7 @@ LRESULT CTrayShowDesktopButton::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
     HDC hdc = BeginPaint(&ps);
     OnDraw(hdc, &rc);
     EndPaint(&ps);
+
     return 0;
 }
 
@@ -231,6 +234,7 @@ BOOL CTrayShowDesktopButton::PtInButton(LPPOINT ppt)
     GetWindowRect(&rc);
     INT cxEdge = ::GetSystemMetrics(SM_CXEDGE), cyEdge = ::GetSystemMetrics(SM_CYEDGE);
     ::InflateRect(&rc, max(cxEdge, 1), max(cyEdge, 1));
+
     return IsHorizontal
         ? (ppt->x > rc.left)
         : (ppt->y > rc.top);
@@ -369,16 +373,9 @@ VOID CTrayShowDesktopButton::OnDraw(HDC hdc, LPRECT prc)
         // Ok now actually draw the icon itself
         if (m_icon)
         {
-            DrawIconEx(hdc
-                , iconX
-                , iconY
-                , m_icon
-                , iconSize
-                , iconSize
-                , 0
-                , hbrBackground
-                , DI_NORMAL
-            );
+            DrawIconEx(hdc, iconX, iconY,
+                m_icon, iconSize, iconSize,
+                0, hbrBackground, DI_NORMAL);
         }
         else // Fallback for if icon isn't available or something idk lol
         {

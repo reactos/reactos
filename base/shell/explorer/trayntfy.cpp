@@ -307,16 +307,8 @@ public:
 
         if (!g_TaskbarSettings.sr.HideClock)
         {
-            POINT ptClock =
-            {
-                rcClient.left,
-                rcClient.top
-            };
-            SIZE szClock =
-            {
-                rcClient.right - rcClient.left,
-                rcClient.bottom - rcClient.top
-            };
+            POINT ptClock = { rcClient.left, rcClient.top };
+            SIZE szClock = { rcClient.right - rcClient.left, rcClient.bottom - rcClient.top };
 
             if (IsHorizontal)
             {
@@ -347,11 +339,11 @@ public:
         if (IsHorizontal)
         {
             ptPager.x = ContentMargin.cxLeftWidth;
-            ptPager.y = ((rcClient.bottom - rcClient.top) - szTrayNotify.cy)/2;
+            ptPager.y = ((rcClient.bottom - rcClient.top) - szTrayNotify.cy) / 2;
         }
         else
         {
-            ptPager.x = ((rcClient.right - rcClient.left) - szTrayNotify.cx)/2;
+            ptPager.x = ((rcClient.right - rcClient.left) - szTrayNotify.cx) / 2;
             ptPager.y = ContentMargin.cyTopHeight;
         }
 
@@ -517,9 +509,7 @@ public:
     {
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
         Create(hwndParent, 0, NULL, dwStyle, WS_EX_STATICEDGE);
-        if (!m_hWnd)
-            return E_FAIL;
-        return S_OK;
+        return m_hWnd ? S_OK : E_FAIL;
     }
 
     DECLARE_NOT_AGGREGATABLE(CTrayNotifyWnd)
