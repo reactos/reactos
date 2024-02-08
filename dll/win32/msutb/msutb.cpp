@@ -524,6 +524,28 @@ BOOL InitFromReg(void)
 
 /***********************************************************************/
 
+struct CShellWndThread
+{
+    HWND m_hTrayWnd = NULL;
+    HWND m_hProgmanWnd = NULL;
+
+    HWND GetWndTray()
+    {
+        if (!m_hTrayWnd || !::IsWindow(m_hTrayWnd))
+            m_hTrayWnd = ::FindWindowW(L"Shell_TrayWnd", NULL);
+        return m_hTrayWnd;
+    }
+
+    HWND GetWndProgman()
+    {
+        if (!m_hProgmanWnd || !::IsWindow(m_hProgmanWnd))
+            m_hProgmanWnd = ::FindWindowW(L"Progman", NULL);
+        return m_hProgmanWnd;
+    }
+};
+
+/***********************************************************************/
+
 class CUTBLangBarDlg
 {
 protected:
