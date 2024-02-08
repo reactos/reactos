@@ -592,7 +592,7 @@ public:
     STDMETHOD_(void, Move)(INT x, INT y, INT nWidth, INT nHeight);
     STDMETHOD_(BOOL, AnimateWnd)(DWORD dwTime, DWORD dwFlags);
     STDMETHOD_(void, OnObjectMoved)(CUIFObject *pObject);
-    STDMETHOD_(void, OnPointingEnded)(LONG x, LONG y) { }
+    STDMETHOD_(void, OnMouseOutFromWindow)(LONG x, LONG y) { }
     STDMETHOD_(void, OnCreate)(HWND hWnd) { }
     STDMETHOD_(void, OnDestroy)(HWND hWnd) { }
     STDMETHOD_(void, OnNCDestroy)(HWND hWnd) { }
@@ -2976,7 +2976,7 @@ CUIFWindow::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         ::KillTimer(m_hWnd, POINTING_TIMER_ID);
                         m_bPointing = FALSE;
                         SetObjectPointed(NULL, pt2);
-                        OnPointingEnded(pt2.x, pt2.y);
+                        OnMouseOutFromWindow(pt2.x, pt2.y);
                     }
 
                     if (m_pToolTip)
