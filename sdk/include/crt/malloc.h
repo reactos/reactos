@@ -3,8 +3,8 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#ifndef _MALLOC_H_
-#define _MALLOC_H_
+#ifndef _INC_MALLOC
+#define _INC_MALLOC
 
 #include <crtdefs.h>
 
@@ -383,4 +383,4 @@ extern "C" {
 
 #pragma pack(pop)
 
-#endif /* _MALLOC_H_ */
+#endif /* _INC_MALLOC */
