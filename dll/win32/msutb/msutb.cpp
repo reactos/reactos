@@ -526,13 +526,8 @@ BOOL InitFromReg(void)
 
 struct CShellWndThread
 {
-    HWND m_hTrayWnd;
-    HWND m_hProgmanWnd;
-
-    CShellWndThread()
-    {
-        m_hTrayWnd = m_hProgmanWnd = NULL;
-    }
+    HWND m_hTrayWnd = NULL;
+    HWND m_hProgmanWnd = NULL;
 
     HWND GetWndTray()
     {
