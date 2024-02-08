@@ -3406,7 +3406,7 @@ STDMETHODIMP_(void) CTipbarGripper::OnLButtonUp(LONG x, LONG y)
             g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND | TF_SFT_EXTRAICONSONMINIMIZED);
     }
 
-    OnLButtonUp(x, y);
+    CUIFGripper::OnLButtonUp(x, y);
     m_pTipbarWnd->UpdatePosFlags();
 #endif
 }
