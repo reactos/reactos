@@ -934,6 +934,22 @@ public:
 
 /***********************************************************************/
 
+class CTipbarGripper : public CUIFGripper
+{
+protected:
+    CTipbarWnd *m_pTipbarWnd;
+    BOOL m_bInDebugMenu;
+
+public:
+    CTipbarGripper(CTipbarWnd *pTipbarWnd, LPCRECT prc, DWORD style);
+
+    STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnRButtonUp)(LONG x, LONG y) override;
+    STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/***********************************************************************/
+
 class CTrayIconWnd
 {
 protected:
@@ -3358,6 +3374,58 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
     }
 
     return S_OK;
+}
+
+/***********************************************************************
+ * CTipbarGripper
+ */
+
+/// @unimplemented
+CTipbarGripper::CTipbarGripper(CTipbarWnd *pTipbarWnd, LPCRECT prc, DWORD style)
+    // : CUIFGripper((pTipbarWnd ? pTipbarWnd->GetWindow() : NULL), prc, style)
+    : CUIFGripper(NULL, prc, style)
+{
+    m_bInDebugMenu = FALSE;
+    m_pTipbarWnd = pTipbarWnd;
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarGripper::OnLButtonUp(LONG x, LONG y)
+{
+#if 0 // FIXME: m_pTipbarWnd
+    m_pTipbarWnd->RestoreFromStub();
+
+    APPBARDATA AppBar = { sizeof(AppBar) };
+    AppBar.hWnd = ::FindWindowW(L"Shell_TrayWnd", NULL);
+    if (::SHAppBarMessage(ABM_GETTASKBARPOS, &AppBar))
+    {
+        RECT rc = AppBar.rc;
+        POINT pt;
+        ::GetCursorPos(&pt);
+        if (g_pTipbarWnd && ::PtInRect(&rc, pt))
+            g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND | TF_SFT_EXTRAICONSONMINIMIZED);
+    }
+
+    OnLButtonUp(x, y);
+    m_pTipbarWnd->UpdatePosFlags();
+#endif
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarGripper::OnRButtonUp(LONG x, LONG y)
+{
+    if (g_bShowDebugMenu)
+    {
+        // FIXME: Debugging feature
+    }
+}
+
+STDMETHODIMP_(BOOL) CTipbarGripper::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    if (m_bInDebugMenu)
+        return FALSE;
+
+    return CUIFGripper::OnSetCursor(uMsg, x, y);
 }
 
 /***********************************************************************
