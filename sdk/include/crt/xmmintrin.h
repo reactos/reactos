@@ -29,7 +29,7 @@
 #endif
 
 #if !defined _VCRT_BUILD && !defined _INC_MALLOC
-//#include <malloc.h> // FIXME: This breaks build
+#include <malloc.h> // For _mm_malloc() and _mm_free()
 #endif
 
 #ifdef __cplusplus
