@@ -47,8 +47,8 @@ UserDrawWindowFrame(HDC hdc,
    HBRUSH hbrush = NtGdiSelectBrush( hdc, gpsi->hbrGray );
    NtGdiPatBlt( hdc, rect->left, rect->top, rect->right - rect->left - width, height, PATINVERT );
    NtGdiPatBlt( hdc, rect->left, rect->top + height, width, rect->bottom - rect->top - height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -(LONG)height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->left + width, rect->bottom, rect->right - rect->left - width, -(LONG)height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->right, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
    NtGdiSelectBrush( hdc, hbrush );
 }
 
@@ -891,8 +891,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
       /* Draw frame */
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
 
       RECTL_vInflateRect(CurrentRect, -Width, -Height);
    }
@@ -912,8 +912,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
       /* Draw frame */
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
 
       RECTL_vInflateRect(CurrentRect, -Width, -Height);
    }

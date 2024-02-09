@@ -2,11 +2,15 @@
 spec2def(shimgvw.dll shimgvw.spec)
 
 list(APPEND SOURCE
+    anime.c
     shimgvw.c
     comsup.c
     shimgvw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
+
+file(GLOB_RECURSE shimgvw_rc_deps res/*.*)
+add_rc_deps(shimgvw.rc ${shimgvw_rc_deps})
 
 add_library(shimgvw MODULE ${SOURCE})
 set_module_type(shimgvw win32dll UNICODE)

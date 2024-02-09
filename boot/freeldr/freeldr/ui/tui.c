@@ -626,6 +626,7 @@ VOID TuiRestoreScreen(PUCHAR Buffer)
     {
         ScreenMemory[i] = Buffer[i];
     }
+    VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID TuiMessageBox(PCSTR MessageText)

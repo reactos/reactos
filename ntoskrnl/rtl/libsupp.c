@@ -506,7 +506,6 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
 #endif
 
-#if defined(_M_AMD64) || defined(_M_ARM)
 VOID
 NTAPI
 RtlpGetStackLimits(
@@ -514,10 +513,14 @@ RtlpGetStackLimits(
     OUT PULONG_PTR HighLimit)
 {
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack;
     *LowLimit = (ULONG_PTR)CurrentThread->StackLimit;
-}
+#ifdef _M_IX86
+    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack -
+        sizeof(FX_SAVE_AREA);
+#else
+    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack;
 #endif
+}
 
 /* RTL Atom Tables ************************************************************/
 

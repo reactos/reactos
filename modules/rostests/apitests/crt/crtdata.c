@@ -24,6 +24,20 @@ int IsLocalSymbol(void* Address)
     return ((Address >= (void*)&__ImageBase) && (Address <= s_ImageEnd));
 }
 
+// Dynamically imported functions (Vista+)
+int* (__cdecl *p__daylight)(void);
+long* (__cdecl *p__dstbias)(void);
+errno_t (__cdecl *p_get_fmode)(int* _PMode);
+errno_t (__cdecl *p_get_osplatform)(unsigned int *pValue);
+int (__cdecl *p_get_pgmptr)(char** p);
+errno_t (__cdecl *p_get_wpgmptr)(_Outptr_result_z_ wchar_t **_Value);
+errno_t (__cdecl *p_get_winver)(_Out_ unsigned int *_Value);
+errno_t (__cdecl *p_get_winmajor)(_Out_ unsigned int *_Value);
+errno_t (__cdecl *p_get_winminor)(_Out_ unsigned int *_Value);
+errno_t (__cdecl *p_get_environ)(_Out_ char***);
+errno_t (__cdecl *p_get_wenviron)(_Out_ wchar_t***);
+
+
 #ifndef TEST_STATIC
 #define test_is_local_symbol(addr, is) ok_int(IsLocalSymbol(addr), (is))
 #else
@@ -293,10 +307,10 @@ void Test__daylight(void)
     _CRTIMP void* __p__daylight(void);
     ok_ptr(__p__daylight(), &_daylight);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP int* __cdecl __daylight(void);
-    ok_ptr(&__daylight, &_daylight);
-#endif
+    if (p__daylight != NULL)
+    {
+        ok_ptr(p__daylight(), &_daylight);
+    }
 }
 
 #ifndef _M_ARM
@@ -312,10 +326,10 @@ void Test__dstbias(void)
     _CRTIMP long* __cdecl __p__dstbias(void);
     ok_ptr(__p__dstbias(), &_dstbias);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP long* __cdecl __dstbias(void);
-    ok_ptr(&__dstbias, &_dstbias);
-#endif
+    if (p__dstbias != NULL)
+    {
+        ok_ptr(p__dstbias(), &_dstbias);
+    }
 }
 
 void Test__environ(void)
@@ -329,6 +343,12 @@ void Test__environ(void)
 #ifdef _M_IX86
     ok_ptr(__p__environ(), &_environ);
 #endif
+    if (p_get_environ != NULL)
+    {
+        char** result_environ;
+        ok_int(p_get_environ(&result_environ), 0);
+        ok_ptr(result_environ, _environ);
+    }
 }
 
 void Test__fileinfo(void)
@@ -358,14 +378,15 @@ void Test__fmode(void)
     ok_ptr(__p__fmode(), p);
 #endif
 
-#if (_WIN32_WINNT >= 0x600)
-    _fmode = 1234;
-    _CRTIMP errno_t __cdecl _get_fmode(_Out_ int* _PMode);
-    int mode;
-    ok_int(_get_fmode(&mode), 0);
-    ok_int(mode, _fmode);
-    _fmode = 0;
-#endif
+    if (p_get_fmode != NULL)
+    {
+        _fmode = 1234;
+
+        int mode;
+        ok_int(p_get_fmode(&mode), 0);
+        ok_int(mode, _fmode);
+        _fmode = 0;
+    }
 }
 
 void Test__iob(void)
@@ -420,10 +441,12 @@ void Test__mbctype(void)
 void Test__osplatform(void)
 {
     ok_int(_osplatform, s_osvi.dwPlatformId);
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_osplatform(void);
-    ok_ptr(_get_osplatform(), _osplatform);
-#endif
+    if (p_get_osplatform != NULL)
+    {
+        unsigned int result_osplatform;
+        ok_int(p_get_osplatform(&result_osplatform), 0);
+        ok_int(result_osplatform, _osplatform);
+    }
 }
 #endif
 
@@ -448,10 +471,12 @@ void Test__pgmptr(void)
 #ifdef _M_IX86
     ok_ptr(__p__pgmptr(), &_pgmptr);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP char* __cdecl _get_pgmptr(void);
-    ok_ptr(_get_pgmptr(), _pgmptr);
-#endif
+    if (p_get_pgmptr != NULL)
+    {
+        char *result_pgmptr;
+        ok_int(p_get_pgmptr(&result_pgmptr), 0);
+        ok_ptr(result_pgmptr, _pgmptr);
+    }
 }
 
 void Test__sys_errlist(void)
@@ -505,10 +530,6 @@ void Test__tzname(void)
     _CRTIMP char** __p__tzname();
     ok_ptr(__p__tzname(), &_tzname);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP char* __cdecl __tzname(void);
-    ok_ptr(__tzname(), _wenviron);
-#endif
 }
 
 void Test__wcmdln(void)
@@ -532,9 +553,14 @@ void Test__wenviron(void)
 #ifdef _M_IX86
     ok_ptr(__p__wenviron(), &_wenviron);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_wenviron(void);
-    ok_int(_get_wenviron(), _wenviron);
+
+#if 0 // FIXME: This returns an error / NULL on Windows 10
+    if (p_get_wenviron != NULL)
+    {
+        wchar_t** result_wenviron;
+        ok_int(p_get_wenviron(&result_wenviron), 0);
+        ok_ptr(result_wenviron, _wenviron);
+    }
 #endif
 }
 #endif
@@ -546,10 +572,12 @@ void Test__winmajor(void)
     _CRTIMP unsigned int* __cdecl __p__winmajor();
     ok_ptr(__p__winmajor(), &_winmajor);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_winmajor(void);
-    ok_int(_get_winmajor(), _winmajor);
-#endif
+    if (p_get_winmajor != NULL)
+    {
+        unsigned int result_winmajor;
+        ok_int(p_get_winmajor(&result_winmajor), 0);
+        ok_int(result_winmajor, _winmajor);
+    }
 }
 
 void Test__winminor(void)
@@ -559,10 +587,12 @@ void Test__winminor(void)
     _CRTIMP unsigned int* __cdecl __p__winminor();
     ok_ptr(__p__winminor(), &_winminor);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_winminor(void);
-    ok_int(_get_winminor(), _winminor);
-#endif
+    if (p_get_winminor != NULL)
+    {
+        unsigned int result_winminor;
+        ok_int(p_get_winminor(&result_winminor), 0);
+        ok_int(result_winminor, _winminor);
+    }
 }
 
 #ifndef _M_ARM
@@ -573,10 +603,12 @@ void Test__winver(void)
     _CRTIMP unsigned int* __cdecl __p__winver();
     ok_ptr(__p__winver(), &_winver);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_winver(void);
-    ok_int(_get_winver(), _winver);
-#endif
+    if (p_get_winver != NULL)
+    {
+        unsigned int result_winver;
+        ok_int(p_get_winver(&result_winver), 0);
+        ok_int(result_winver, _winver);
+    }
 }
 #endif
 
@@ -592,9 +624,14 @@ void Test__wpgmptr(void)
     _CRTIMP wchar_t ** __cdecl __p__wpgmptr();
     ok_ptr(__p__wpgmptr(), &_wpgmptr);
 #endif
-#if (WINVER >= 0x600)
-    _CRTIMP unsigned int __cdecl _get_wpgmptr(void);
-    ok_int(_get_wpgmptr(), _wpgmptr);
+
+#if 0 // FIXME: This returns an error on Windows 10
+    if (p_get_wpgmptr != NULL)
+    {
+        wchar_t* result_wpgmptr;
+        ok_int(p_get_wpgmptr(&result_wpgmptr), 0);
+        ok_ptr(result_wpgmptr, _wpgmptr);
+    }
 #endif
 }
 
@@ -608,6 +645,34 @@ START_TEST(crtdata)
     /* initialize version info */
     s_osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
     GetVersionExW(&s_osvi);
+
+    HMODULE hmsvcrt = GetModuleHandleA("msvcrt.dll");
+    p__daylight = (void*)GetProcAddress(hmsvcrt, "__daylight");
+    p__dstbias = (void*)GetProcAddress(hmsvcrt, "__dstbias");
+    p_get_fmode = (void*)GetProcAddress(hmsvcrt, "_get_fmode");
+    p_get_osplatform = (void*)GetProcAddress(hmsvcrt, "_get_osplatform");
+    p_get_pgmptr = (void*)GetProcAddress(hmsvcrt, "_get_pgmptr");
+    p_get_wpgmptr = (void*)GetProcAddress(hmsvcrt, "_get_wpgmptr");
+    p_get_winver = (void*)GetProcAddress(hmsvcrt, "_get_winver");
+    p_get_winmajor = (void*)GetProcAddress(hmsvcrt, "_get_winmajor");
+    p_get_winminor = (void*)GetProcAddress(hmsvcrt, "_get_winminor");
+    p_get_environ = (void*)GetProcAddress(hmsvcrt, "_get_environ");
+    p_get_wenviron = (void*)GetProcAddress(hmsvcrt, "_get_wenviron");
+
+    if (s_osvi.dwMajorVersion >= 6)
+    {
+        ok(p__daylight != NULL, "__daylight is NULL\n");
+        ok(p__dstbias != NULL, "__dstbias is NULL\n");
+        ok(p_get_fmode != NULL, "_get_fmode is NULL\n");
+        ok(p_get_osplatform != NULL, "_get_osplatform is NULL\n");
+        ok(p_get_pgmptr != NULL, "_get_pgmptr is NULL\n");
+        ok(p_get_wpgmptr != NULL, "_get_wpgmptr is NULL\n");
+        ok(p_get_winver != NULL, "_get_winver is NULL\n");
+        ok(p_get_winmajor != NULL, "_get_winmajor is NULL\n");
+        ok(p_get_winminor != NULL, "_get_winminor is NULL\n");
+        ok(p_get_environ != NULL, "_get_environ is NULL\n");
+        ok(p_get_wenviron != NULL, "_get_wenviron is NULL\n");
+    }
 
     Test___argc();
     Test___argv();

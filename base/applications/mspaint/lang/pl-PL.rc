@@ -10,7 +10,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-pl-PL.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-pl-PL.bmp"
 
 ID_MENU MENU
 BEGIN

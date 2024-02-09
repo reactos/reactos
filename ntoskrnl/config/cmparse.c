@@ -39,7 +39,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     }
 
     /* Check if we have a path separator */
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Skip it */
@@ -50,7 +50,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 
     /* Start loop at where the current buffer is */
     NextName->Buffer = RemainingName->Buffer;
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (*RemainingName->Buffer != OBJ_NAME_PATH_SEPARATOR))
     {
         /* Move to the next character */
@@ -1873,7 +1873,7 @@ CmpParseKey(IN PVOID ParseObject,
     PAGED_CODE();
 
     /* Loop path separators at the end */
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (RemainingName->Buffer[(RemainingName->Length / sizeof(WCHAR)) - 1] ==
             OBJ_NAME_PATH_SEPARATOR))
     {
@@ -1888,7 +1888,7 @@ CmpParseKey(IN PVOID ParseObject,
     Current = *RemainingName;
 
     /* Check if this is a create */
-    if (!(ParseContext) || !(ParseContext->CreateOperation))
+    if (!ParseContext || !ParseContext->CreateOperation)
     {
         /* It isn't, so no context */
         ParseContext = NULL;
@@ -2043,7 +2043,7 @@ CmpParseKey(IN PVOID ParseObject,
     {
         /* Get the next component */
         Result = CmpGetNextName(&Current, &NextName, &Last);
-        if ((Result) && (NextName.Length))
+        if (Result && NextName.Length)
         {
             /* See if this is a sym link */
             if (!(Kcb->Flags & KEY_SYM_LINK))
@@ -2150,7 +2150,7 @@ KeyCachedOpenNow:
                 else
                 {
                     /* Check if this was the last key for a create */
-                    if ((Last) && (ParseContext))
+                    if (Last && ParseContext)
                     {
                         /* Check if we're doing a link node */
                         if (ParseContext->CreateLink)
@@ -2246,7 +2246,7 @@ KeyCachedOpenNow:
                 break;
             }
         }
-        else if ((Result) && (Last))
+        else if (Result && Last)
         {
             /* Opening the root. Is this an exit node? */
             if (Node->Flags & KEY_HIVE_EXIT)

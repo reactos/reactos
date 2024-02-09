@@ -25,16 +25,12 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-#ifdef CONFIG_SMP
     if (ProcessorNumber == 0)
     {
-#endif
         HalpParseApicTables(LoaderBlock);
-#ifdef CONFIG_SMP
     }
 
     HalpSetupProcessorsTable(ProcessorNumber);
-#endif
 
     /* Initialize the local APIC for this cpu */
     ApicInitializeLocalApic(ProcessorNumber);

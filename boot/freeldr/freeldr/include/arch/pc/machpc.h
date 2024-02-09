@@ -67,7 +67,11 @@ ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 TIMEINFO* PcGetTime(VOID);
 
 BOOLEAN PcInitializeBootDevices(VOID);
-PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
+
+PCONFIGURATION_COMPONENT_DATA
+PcHwDetect(
+    _In_opt_ PCSTR Options);
+
 VOID PcHwIdle(VOID);
 
 extern BIOS_MEMORY_MAP PcBiosMemoryMap[];

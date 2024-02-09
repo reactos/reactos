@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 Tomoya Kitagawa <jptomoya@yahoo.co.jp>
+ *              Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
@@ -11,31 +12,31 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "ログ(&L)"
     BEGIN
-        MENUITEM "Open...(&O)", IDM_OPEN_EVENTLOG
-        MENUITEM "Save Event Log as...(&E)", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "開く(&O)...", IDM_OPEN_EVENTLOG
+        MENUITEM "イベントログに名前を付けて保存(&E)...", IDM_SAVE_EVENTLOG
+        MENUITEM "閉じる(&C)", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "Clear all Events (&L)", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Settings...(&T)", IDM_EVENTLOG_SETTINGS
+        MENUITEM "すべてのイベントをクリア(&L)", IDM_CLEAR_EVENTS
+        MENUITEM "名前の変更(&R)\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "ログ設定(&T)...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "終了(&X)", IDM_EXIT
     END
     POPUP "表示(&V)"
     BEGIN
-        MENUITEM "Newest first (&N)", IDM_LIST_NEWEST
-        MENUITEM "Oldest first (&O)", IDM_LIST_OLDEST
+        MENUITEM "新しい順(&N)", IDM_LIST_NEWEST
+        MENUITEM "古い順(&O)", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "Details... (&D)\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "詳細(&D)...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)\tF5", IDM_REFRESH
     END
     POPUP "オプション(&O)"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "イベントの詳細表示(&V)", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "グリッド線(&G)", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "終了時に設定を保存(&S)", IDM_SAVE_SETTINGS
     END
     POPUP "ヘルプ(&H)"
     BEGIN
@@ -49,12 +50,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM "イベントログを開く(&O)...", IDM_OPEN_EVENTLOG
+        MENUITEM "イベントログに名前を付けて保存(&S)...", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "すべてのイベントをクリア(&C)", IDM_CLEAR_EVENTS
+        MENUITEM "名前の変更(&R)\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "ログ設定(&T)...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -113,40 +114,40 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "一般設定"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "表示名(&D):", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "ログ名(&L):", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "ログファイル(&F):", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "サイズ(&S):", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "作成日時(&C):", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "変更日時(&M):", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "アクセス日時(&A):", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "ログサイズ", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "最大ログサイズ(&M):", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    LTEXT "最大ログサイズに達したとき:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "必要に応じてイベントを上書きする(&O)", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "次のものより古いイベントを上書き(&V)", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+    LTEXT "日", IDC_STATIC, 162, 168, 20, 8
+    CONTROL "イベントを上書きしない(&N)\n(手動でログをクリアする)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "デフォルトに戻す(&R)", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "低速の接続を使用する(&W)", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "ログをクリア(&C)", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
@@ -154,35 +155,35 @@ BEGIN
     IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "イベント ビューア"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
-    IDS_LOADING_WAIT "イベント ログを読み込んでいます。 お待ちください..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
-    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。\n\nThe following information is part of the event:\n\n"
+    IDS_STATUS_MSG "%s には %lu 個のイベントがあります (総数: %lu)"
+    IDS_LOADING_WAIT "イベント ログを読み込んでいます。お待ちください..."
+    IDS_NO_ITEMS "このビューで表示する項目がありません。" // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "システム ログ"
+    IDS_EVENTLOG_APP "アプリ ログ"
+    IDS_EVENTLOG_USER "ユーザー ログ"
+    IDS_SAVE_FILTER "イベントログ (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "このイベントをクリアする前に保存したいですか？"
+    IDS_RESTOREDEFAULTS "すべての設定をデフォルトに戻しますか？"
+    IDS_EVENTSTRINGIDNOTFOUND "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。\n\n次の情報はイベントの一部です:\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "ReactOS イベント ビュア\n\
 \n\
-EventVwr [computer name] [/L:<event log file>] [/?]\n\
+EventVwr [コンピューター名] [/L:<イベント ログ ファイル>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""コンピューター名"" : 表示するイベントを取得するために接続する\n\
+\tリモートコンピューターを指定します。名前が未指定の場合は\n\
+\tローカル コンピューターが使われます。\n\
 \n\
-/L:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/L:<イベント ログ ファイル> : 開きたいイベント ログ ファイルを指定\n\
+\tします。.evt 形式（≦NT 5.2）のファイルのみをサポートしています。\n\
 \n\
-/? : Displays this help message.\n\
+/? : このヘルプメッセージを表示します。\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "イベント ログ ファイル"
 END
 
 STRINGTABLE
@@ -198,37 +199,37 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "バイト" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE "Type"
-    IDS_COLUMNDATE "Date"
-    IDS_COLUMNTIME "Time"
-    IDS_COLUMNSOURCE "Source"
-    IDS_COLUMNCATEGORY "Category"
-    IDS_COLUMNEVENT "Event"
-    IDS_COLUMNUSER "User"
-    IDS_COLUMNCOMPUTER "Computer"
+    IDS_COLUMNTYPE "タイプ"
+    IDS_COLUMNDATE "日付"
+    IDS_COLUMNTIME "時間"
+    IDS_COLUMNSOURCE "ソース"
+    IDS_COLUMNCATEGORY "カテゴリ"
+    IDS_COLUMNEVENT "イベント"
+    IDS_COLUMNUSER "ユーザー"
+    IDS_COLUMNCOMPUTER "コンピューター"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY "イベントの種類:     %s\r\n\
+イベントのソース:   %s\r\n\
+イベントのカテゴリ: %s\r\n\
+イベント ID:        %s\r\n\
+日付:               %s\r\n\
+時刻:               %s\r\n\
+ユーザー:           %s\r\n\
+コンピューター:     %s\r\n\
+説明:\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "None"
-    IDS_NOT_AVAILABLE "N/A"
+    IDS_NONE "なし"
+    IDS_NOT_AVAILABLE "利用不可"
 END

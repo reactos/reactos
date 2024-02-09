@@ -47,6 +47,7 @@ WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
 #ifdef __REACTOS__
 #include <comctl32_undoc.h>
+#include <shlwapi_undoc.h>
 #else
 /* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
 /*        !!! it is in both here and comctl32undoc.c      !!! */
@@ -1918,19 +1919,63 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 /*************************************************************************
  *      PathIsTemporaryA    [SHELL32.713]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryA.php */
+BOOL WINAPI PathIsTemporaryA(_In_ LPCSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szWide[MAX_PATH];
+
+    TRACE("(%s)\n", debugstr_a(Str));
+
+    SHAnsiToUnicode(Str, szWide, _countof(szWide));
+    return PathIsTemporaryW(szWide);
+#else
     FIXME("(%s)stub\n", debugstr_a(Str));
     return FALSE;
+#endif
 }
 
 /*************************************************************************
  *      PathIsTemporaryW    [SHELL32.714]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryW.php */
+BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szLongPath[MAX_PATH], szTempPath[MAX_PATH];
+    DWORD attrs;
+    LPCWSTR pszTarget = Str;
+
+    TRACE("(%s)\n", debugstr_w(Str));
+
+    attrs = GetFileAttributesW(Str);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_TEMPORARY))
+        return TRUE;
+
+    if (!GetTempPathW(_countof(szTempPath), szTempPath) ||
+        !GetLongPathNameW(szTempPath, szTempPath, _countof(szTempPath)))
+    {
+        return FALSE;
+    }
+
+    if (GetLongPathNameW(Str, szLongPath, _countof(szLongPath)))
+        pszTarget = szLongPath;
+
+    return (PathIsEqualOrSubFolder(szTempPath, pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_INTERNET_CACHE), pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_CDBURN_AREA), pszTarget));
+#else
     FIXME("(%s)stub\n", debugstr_w(Str));
     return FALSE;
+#endif
 }
 
 typedef struct _PSXA
@@ -2348,9 +2393,15 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
+#ifdef __REACTOS__
+    if (SHELL_OsIsUnicode())
+        return SHStartNetConnectionDialogW(hwnd, (LPCWSTR)pszRemoteName, dwType);
+    return SHStartNetConnectionDialogA(hwnd, pszRemoteName, dwType);
+#else
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
+#endif
 }
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)

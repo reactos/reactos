@@ -1015,7 +1015,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tasta\376i P pentru a crea o parti\376ie primar\343.",
+        "\x07  Tasta\376i C pentru a crea o parti\376ie primar\343/logic\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1029,13 +1029,6 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tasta\376i L pentru a crea o parti\376ie logic\343.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tasta\376i D pentru a \272terge o parti\376ie existent\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1297,6 +1290,13 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         8,
+        "Urmeaz\343 formatarea parti\376iei.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        16,
         "Urmeaz\343 formatarea parti\376iei. Tasta\376i ENTER pentru a continua.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1989,14 +1989,6 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "A\376i \356ncercat \272tergerea de spa\376iu neparti\376ionat,\n"
-        "\356ns\343 doar spa\376iul parti\376ionat poate fi \272ters!\n"
-        "\n"
-        "  * Tasta\376i pentru a continua.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "E\272ec la instalarea codului %S de ini\376ializare\n"
         "pe parti\376ia de sistem.",
@@ -2279,25 +2271,27 @@ MUI_STRING roROStrings[] =
     {STRING_PLEASEWAIT,
      "   A\272tepta\376i..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalare   P/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalare   L = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_DELETEPARTITION,
      "   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_PARTITIONSIZE,
      "M\343rimea noii parti\376ii:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "A\376i ales crearea unei parti\376ii primare pe"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "A\376i ales crearea unei parti\376ii extinse pe"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "A\376i ales crearea unei parti\376ii logice pe"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Introduce\376i m\343rimea noii parti\376ii \356n megaocte\376i."},
     {STRING_CREATEPARTITION,
      "   ENTER = Creare parti\376ie   ESC = Anulare   F3 = Ie\272ire"},
+    {STRING_NEWPARTITION,
+    "O nou\343 parti\376ie a fost creat\343 \356n"},
     {STRING_PARTFORMAT,
     "Aceast\343 parti\376ie urmeaz\343 s\343 fie formatat\343."},
     {STRING_NONFORMATTEDPART,
@@ -2348,8 +2342,8 @@ MUI_STRING roROStrings[] =
     "Cea mai frecvent\343 cauz\343 pentru asta este utilizarea unei tastaturi USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Tastaturile USB nu sunt \356nc\343 toate acceptate\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Disc \356n curs de formatare..."},
+    {STRING_FORMATTINGPART,
+    "Parti\376ia \356n curs de formatare..."},
     {STRING_CHECKINGDISK,
     "Disc \356n curs de verificare..."},
     {STRING_FORMATDISK1,
@@ -2358,20 +2352,18 @@ MUI_STRING roROStrings[] =
     " Formateaz\343 parti\376ia ca sistem de fi\272iere %S "},
     {STRING_KEEPFORMAT,
     " P\343streaz\343 sistemul de fi\272iere actual (f\343r\343 schimb\343ri) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "de pe %s."},
     {STRING_PARTTYPE,
     "Tip 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Discul %lu (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu [%s]"
     "%I64u %s Discul %lu (Port=%hu, Magistrala=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "O nou\343 parti\376ie a fost creat\343 \356n"},
     {STRING_UNPSPACE,
     "Spa\376iu neparti\376ionat"},
     {STRING_MAXSIZE,

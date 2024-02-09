@@ -111,4 +111,25 @@ public:
     END_COM_MAP()
 };
 
+class COpenControlPanel :
+    public CComCoClass<COpenControlPanel, &CLSID_OpenControlPanel>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IOpenControlPanel
+{
+    public:
+        // IOpenControlPanel
+        virtual HRESULT WINAPI Open(LPCWSTR pszName, LPCWSTR pszPage, IUnknown *punkSite);
+        virtual HRESULT WINAPI GetPath(LPCWSTR pszName, LPWSTR pszPath, UINT cchPath);
+        virtual HRESULT WINAPI GetCurrentView(CPVIEW *pView);
+
+        static HRESULT WINAPI UpdateRegistry(BOOL bRegister) { return S_OK; } // CControlPanelFolder does it for us
+        DECLARE_NOT_AGGREGATABLE(COpenControlPanel)
+
+        DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+        BEGIN_COM_MAP(COpenControlPanel)
+        COM_INTERFACE_ENTRY_IID(IID_IOpenControlPanel, IOpenControlPanel)
+        END_COM_MAP()
+};
+
 #endif /* _SHFLDR_CPANEL_H_ */

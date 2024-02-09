@@ -78,7 +78,7 @@ class COpenWithList
 
         SApp *AddInternal(LPCWSTR pwszFilename);
         static BOOL LoadInfo(SApp *pApp);
-        static VOID GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
+        static BOOL GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd);
         BOOL LoadProgIdList(HKEY hKey, LPCWSTR pwszExt);
         static HANDLE OpenMRUList(HKEY hKey);
         BOOL LoadMRUList(HKEY hKey);
@@ -217,6 +217,12 @@ LPCWSTR COpenWithList::GetName(SApp *pApp)
         {
             WARN("Failed to load %ls info\n", pApp->wszFilename);
             StringCbCopyW(pApp->wszName, sizeof(pApp->wszName), pApp->wszFilename);
+
+            WCHAR wszPath[MAX_PATH];
+            if (!GetPathFromCmd(wszPath, pApp->wszCmd))
+            {
+                return NULL;
+            }
         }
     }
 
@@ -231,7 +237,17 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         WCHAR wszPath[MAX_PATH];
 
         GetPathFromCmd(wszPath, pApp->wszCmd);
-        ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1);
+        if (!ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1))
+        {
+            SHFILEINFO fi;
+            /* FIXME: Ideally we should include SHGFI_USEFILEATTRIBUTES because we already
+            ** know the file has no icons but SHGetFileInfo is broken in that case (CORE-19122).
+            ** Without SHGFI_USEFILEATTRIBUTES we needlessly hit the disk again but it will
+            ** return the correct default .exe icon.
+            */
+            SHGetFileInfoW(wszPath, 0, &fi, sizeof(fi), SHGFI_ICON|SHGFI_SMALLICON|SHGFI_SHELLICONSIZE);
+            pApp->hIcon = fi.hIcon;
+        }
     }
 
     TRACE("%ls icon: %p\n", pApp->wszFilename, pApp->hIcon);
@@ -321,6 +337,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     WCHAR wszBuf[100];
     WCHAR *pResult;
     WCHAR wszPath[MAX_PATH];
+    BOOL success = FALSE;
 
     GetPathFromCmd(wszPath, pApp->wszCmd);
     TRACE("LoadInfo %ls\n", wszPath);
@@ -362,7 +379,8 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
     /* Query name */
     swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
-    if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
+    success = VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen) && (cchLen > 1);
+    if (success)
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);
     else
         ERR("Cannot get app name\n");
@@ -373,10 +391,10 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     if (VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen))
         StringCchCopyNW(pApp->wszManufacturer, _countof(pApp->wszManufacturer), pResult, cchLen);*/
     HeapFree(GetProcessHeap(), 0, pBuf);
-    return TRUE;
+    return success;
 }
 
-VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
+BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
     WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
 
@@ -397,7 +415,8 @@ VOID COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
     /* Expand evn vers and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
-        SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    return TRUE;
 }
 
 BOOL COpenWithList::LoadRecommended(LPCWSTR pwszFilePath)
@@ -862,6 +881,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
 VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
 {
     LPCWSTR pwszName = m_pAppList->GetName(pApp);
+    if (!pwszName) return;
     HICON hIcon = m_pAppList->GetIcon(pApp);
 
     TRACE("AddApp Cmd %ls Name %ls\n", pApp->wszCmd, pwszName);
@@ -875,7 +895,7 @@ VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
         tvins.hParent = tvins.hInsertAfter = m_hOther;
 
     tvins.item.mask = TVIF_TEXT|TVIF_PARAM;
-    tvins.item.pszText = (LPWSTR)pwszName;
+    tvins.item.pszText = const_cast<LPWSTR>(pwszName);
     tvins.item.lParam = (LPARAM)pApp;
 
     if (hIcon)
@@ -1189,6 +1209,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
 {
     MENUITEMINFOW mii;
     LPCWSTR pwszName = m_pAppList->GetName((COpenWithList::SApp*)pApp);
+    if (!pwszName) return;
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
@@ -1196,7 +1217,7 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
     mii.wID = m_idCmdLast;
-    mii.dwTypeData = (LPWSTR)pwszName;
+    mii.dwTypeData = const_cast<LPWSTR>(pwszName);
     mii.cch = wcslen(mii.dwTypeData);
     mii.dwItemData = (ULONG_PTR)pApp;
 

@@ -11,7 +11,7 @@ BEGIN
     IDS_USAGE_LOAD      "Загружает драйвер фильтра\n"
     IDS_USAGE_UNLOAD    "Выгружает драйвер фильтра\n"
     IDS_USAGE_FILTERS   "Выводит список всех зарегистрированных фильтров\n"
-    IDS_USAGE_VOLUMES   "Lists all volumes\n"
+    IDS_USAGE_VOLUMES   "Выводит список всех томов\n"
 END
 
 STRINGTABLE
@@ -27,5 +27,5 @@ BEGIN
     IDS_ERROR_FILTERS   "Не удалось получить список фильтров (0x%X)\n"
     IDS_ERROR_LOAD      "Не удалось загрузить фильтр (0x%X)\n"
     IDS_ERROR_UNLOAD    "Не удалось выгрузить фильтр (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Не удалось получить список томов (0x%X)\n"
 END

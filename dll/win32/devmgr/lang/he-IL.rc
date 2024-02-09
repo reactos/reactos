@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "מנהלי ההתקנים של התקן זה אינם מותקנים."
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
     IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
-    IDS_DEV_FAILED_ADD "This device is not working properly because %1 is not working properly."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
     IDS_DEV_TRANSLATION_FAILED "This device isn't responding to its driver."
     IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."

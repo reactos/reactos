@@ -973,7 +973,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Pulse P para crear una Partici\242n Primaria.",
+        "\x07  Pulse C para crear una Partici\242n Primaria/L\242gica.",
 //        "\x07  Pulse C para crear una Nueva Partici\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -988,13 +988,6 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Pulse L para crear una Partici\242n L\242gica.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Pulse D para eliminar una Partici\242n existente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1262,7 +1255,7 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "El instalador formatear\240 la partici\242n. Pulse INTRO para continuar.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1949,13 +1942,6 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "\255No se puede eliminar un espacio de disco sin particionar!\n"
-        "\n"
-        "  * Pulse cualquier tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "El instalador fall\242 al instalar el c\242digo de arranque %S en la partici\242n del sistema.",
         "INTRO = Reiniciar el equipo"
@@ -2231,7 +2217,7 @@ MUI_STRING esESStrings[] =
     {STRING_PLEASEWAIT,
      "   Espere un momento..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   INTRO = Instalar  P = Crear Primaria   E = Crear Extendida   F3 = Salir"},
+     "   INTRO = Instalar  C = Crear Primaria   E = Crear Extendida   F3 = Salir"},
     {STRING_INSTALLCREATELOGICAL,
      "   INTRO = Instalar  C = Crear Partici\242n L\242gica   F3 = Salir"},
     {STRING_DELETEPARTITION,
@@ -2240,16 +2226,18 @@ MUI_STRING esESStrings[] =
      "   INTRO = Instalar   D = Eliminar partici\242n   F3 = Salir"},
     {STRING_PARTITIONSIZE,
      "Tama\244o de la nueva Partici\242n:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Ha elegido crear una nueva Partici\242n Primaria en"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Ha elegido crear una nueva Partici\242n Extendida en"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Ha elegido crear una nueva Partici\242n L\242gica en"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Escriba el tama\244o de la nueva Partici\242n en megabytes."},
     {STRING_CREATEPARTITION,
      "   INTRO = Crear Partici\242n   ESC = Cancelar   F3 = Salir"},
+    {STRING_NEWPARTITION,
+    "El instalador ha creado una nueva Partici\242n en"},
     {STRING_PARTFORMAT,
     "A continuaci\242n se formatear\240 esta partici\242n."},
     {STRING_NONFORMATTEDPART,
@@ -2300,30 +2288,28 @@ MUI_STRING esESStrings[] =
     "La causa m\240s com\243n es la utilizaci\242n de un teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Todav\241a no hay soporte del todo para los teclados USB\r\n"},
-    {STRING_FORMATTINGDISK,
-    "El instalador est\240 formateando el disco"},
+    {STRING_FORMATTINGPART,
+    "El instalador est\240 formateando la partici\242n..."},
     {STRING_CHECKINGDISK,
-    "El instalador est\240 verificando el disco"},
+    "El instalador est\240 verificando el disco..."},
     {STRING_FORMATDISK1,
     " Formatear la partici\242n con sistema de archivos %S (formato r\240pido) "},
     {STRING_FORMATDISK2,
     " Formatear la partici\242n con sistema de archivos %S "},
     {STRING_KEEPFORMAT,
     " Mantener el sistema de archivos actual (sin cambios) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "en %s."},
     {STRING_PARTTYPE,
     "Tipo 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Disco duro %lu (Puerto=%hu, Bus=%hu, Id=%hu) en %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Disco duro %lu (Puerto=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "El instalador ha creado una nueva Partici\242n en"},
     {STRING_UNPSPACE,
     "Espacio sin particionar"},
     {STRING_MAXSIZE,

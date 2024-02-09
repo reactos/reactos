@@ -1,14 +1,16 @@
 
 spec2def(custom.dll custom.spec)
-add_library(custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
-target_link_libraries(custom uuid)
-set_module_type(custom win32dll)
-add_importlibs(custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
+add_library(msi_custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
+set_target_properties(msi_custom PROPERTIES OUTPUT_NAME "custom")
+target_link_libraries(msi_custom uuid)
+set_module_type(msi_custom win32dll)
+add_importlibs(msi_custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
 
 spec2def(selfreg.dll selfreg.spec)
-add_library(selfreg MODULE selfreg.c ${CMAKE_CURRENT_BINARY_DIR}/selfreg.def)
-set_module_type(selfreg win32dll)
-add_importlibs(selfreg advapi32 msvcrt kernel32)
+add_library(msi_selfreg MODULE selfreg.c ${CMAKE_CURRENT_BINARY_DIR}/selfreg.def)
+set_target_properties(msi_selfreg PROPERTIES OUTPUT_NAME "selfreg")
+set_module_type(msi_selfreg win32dll)
+add_importlibs(msi_selfreg advapi32 msvcrt kernel32)
 
 list(APPEND SOURCE
     action.c
@@ -45,12 +47,12 @@ target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(msi_winetest PRIVATE -Wno-format-overflow -Wno-format)
-    target_compile_options(custom PRIVATE -Wno-format)
+    target_compile_options(msi_custom PRIVATE -Wno-format)
 endif()
 
 # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
 if (MSVC_IDE)
-    target_include_directories(msi_winetest PRIVATE $<$<COMPILE_LANGUAGE:RC>:$<TARGET_FILE_DIR:custom>>)
+    target_include_directories(msi_winetest PRIVATE $<$<COMPILE_LANGUAGE:RC>:$<TARGET_FILE_DIR:msi_custom>>)
 endif()
 
 target_link_libraries(msi_winetest uuid)
@@ -58,4 +60,4 @@ set_module_type(msi_winetest win32cui)
 add_importlibs(msi_winetest secur32 cabinet msi shell32 ole32 oleaut32 odbccp32 user32 advapi32 version msvcrt kernel32)
 add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
-add_dependencies(msi_winetest custom selfreg msi_winetest_idlheader stdole2)
+add_dependencies(msi_winetest msi_custom msi_selfreg msi_winetest_idlheader stdole2)

@@ -25,6 +25,7 @@ list(APPEND SOURCE
 list(APPEND PCH_SKIP_SOURCE
     assoc.c
     propbag.cpp
+    utils.cpp
     wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 

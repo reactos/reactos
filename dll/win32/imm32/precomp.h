@@ -58,7 +58,6 @@
 #define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
 
 #define REGKEY_KEYBOARD_LAYOUTS     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
-#define REGKEY_IMM                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
@@ -75,6 +74,7 @@ extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
 extern HANDLE ghImmHeap;
+extern DWORD g_aimm_compat_flags;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
@@ -111,12 +111,17 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
  * --- Examine the condition, and then generate trace log if necessary.
  */
 #ifdef NDEBUG /* on Release */
+#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr))
 #define IS_NULL_UNEXPECTEDLY(p) (!(p))
 #define IS_ZERO_UNEXPECTEDLY(p) (!(p))
 #define IS_TRUE_UNEXPECTEDLY(x) (x)
 #define IS_FALSE_UNEXPECTEDLY(x) (!(x))
 #define IS_ERROR_UNEXPECTEDLY(x) (!(x))
 #else /* on Debug */
+#define FAILED_UNEXPECTEDLY(hr) \
+    (FAILED(hr) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
+                   __FILE__, __FUNCTION__, __LINE__, "FAILED(%s)\n", #hr), UNEXPECTED(), TRUE) \
+                : FALSE)
 #define IS_NULL_UNEXPECTEDLY(p) \
     (!(p) ? (ros_dbg_log(__WINE_DBCL_ERR, __wine_dbch___default, \
                          __FILE__, __FUNCTION__, __LINE__, "%s was NULL\n", #p), UNEXPECTED(), TRUE) \
@@ -143,7 +148,6 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 #define IS_CROSS_THREAD_HIMC(hIMC)     IS_TRUE_UNEXPECTEDLY(Imm32IsCrossThreadAccess(hIMC))
 #define IS_CROSS_PROCESS_HWND(hWnd)    IS_TRUE_UNEXPECTEDLY(Imm32IsCrossProcessAccess(hWnd))
 #define ImeDpi_IsUnicode(pImeDpi)      ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define IS_16BIT_MODE()                (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
@@ -189,3 +193,28 @@ PTHREADINFO FASTCALL Imm32CurrentPti(VOID);
 
 HBITMAP Imm32LoadBitmapFromBytes(const BYTE *pb);
 BOOL Imm32StoreBitmapToBytes(HBITMAP hbm, LPBYTE pbData, DWORD cbDataMax);
+
+HRESULT CtfImmTIMCreateInputContext(_In_ HIMC hIMC);
+HRESULT CtfImmTIMDestroyInputContext(_In_ HIMC hIMC);
+HRESULT CtfImmCoInitialize(VOID);
+HRESULT CtfImeCreateThreadMgr(VOID);
+HRESULT CtfImeDestroyThreadMgr(VOID);
+HRESULT Imm32ActivateOrDeactivateTIM(_In_ BOOL bCreate);
+
+HRESULT
+CtfImeSetActiveContextAlways(
+    _In_ HIMC hIMC,
+    _In_ BOOL fActive,
+    _In_ HWND hWnd,
+    _In_ HKL hKL);
+
+BOOL
+CtfImeProcessCicHotkey(
+    _In_ HIMC hIMC,
+    _In_ UINT vKey,
+    _In_ LPARAM lParam);
+
+LRESULT
+CtfImmSetLangBand(
+    _In_ HWND hWnd,
+    _In_ BOOL fSet);

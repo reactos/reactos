@@ -45,9 +45,8 @@ tcp_setup(void)
 static void
 tcp_teardown(void)
 {
-  tcp_remove_all();
   netif_list = NULL;
-  netif_default = NULL;
+  tcp_remove_all();
 }
 
 
@@ -78,19 +77,16 @@ START_TEST(test_tcp_recv_inseq)
   struct tcp_pcb* pcb;
   struct pbuf* p;
   char data[] = {1, 2, 3, 4};
-  ip_addr_t remote_ip, local_ip, netmask;
+  ip_addr_t remote_ip, local_ip;
   u16_t data_len;
   u16_t remote_port = 0x100, local_port = 0x101;
   struct netif netif;
-  struct test_tcp_txcounters txcounters;
   LWIP_UNUSED_ARG(_i);
 
   /* initialize local vars */
   memset(&netif, 0, sizeof(netif));
   IP4_ADDR(&local_ip, 192, 168, 1, 1);
   IP4_ADDR(&remote_ip, 192, 168, 1, 2);
-  IP4_ADDR(&netmask,   255, 255, 255, 0);
-  test_tcp_init_netif(&netif, &txcounters, &local_ip, &netmask);
   data_len = sizeof(data);
   /* initialize counter struct */
   memset(&counters, 0, sizeof(counters));
@@ -211,7 +207,7 @@ START_TEST(test_tcp_fast_retx_recover)
   EXPECT_RET(pcb->dupacks == 3);
   memset(&txcounters, 0, sizeof(txcounters));
   /* TODO: check expected data?*/
-
+  
   /* send data5, not output yet */
   err = tcp_write(pcb, data5, sizeof(data5), TCP_WRITE_FLAG_COPY);
   EXPECT_RET(err == ERR_OK);

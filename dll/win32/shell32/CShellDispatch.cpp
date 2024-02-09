@@ -245,7 +245,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ShellExecute(BSTR file, VARIANT v_args
 {
     CComVariant args_str, dir_str, op_str, show_int;
     WCHAR *args = NULL, *dir = NULL, *op = NULL;
-    INT show = 0;
+    INT show = SW_SHOW;
     HINSTANCE ret;
 
     TRACE("(%s, %s, %s, %s, %s)\n", debugstr_w(file), debugstr_variant(&v_args),

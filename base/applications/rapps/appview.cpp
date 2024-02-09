@@ -1289,23 +1289,23 @@ CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
         /* Load icon from registry */
         HICON hIcon = NULL;
         CStringW szIconPath;
+        int IconIndex;
         if (AppInfo->RetrieveIcon(szIconPath))
         {
-            PathParseIconLocationW((LPWSTR)szIconPath.GetString());
+            IconIndex = PathParseIconLocationW(szIconPath.GetBuffer());
+            szIconPath.ReleaseBuffer();
 
-            /* Load only the 1st icon from the application executable,
-             * because all apps provide the executables which have the main icon
-             * as 1st in the index , so we don't need other icons here */
-            hIcon = ExtractIconW(hInst, szIconPath.GetString(), 0);
+            ExtractIconExW(szIconPath.GetString(), IconIndex, &hIcon, NULL, 1);
         }
 
-        if (!hIcon)
+        /* Use the default icon if none were found in the file, or if it is not supported (returned 1) */
+        if (!hIcon || (hIcon == (HICON)1))
         {
             /* Load default icon */
             hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
         }
 
-        int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
+        IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
         DestroyIcon(hIcon);
 
         int Index = AddItem(ItemCount, IconIndex, AppInfo->szDisplayName, (LPARAM)AppInfo);

@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -65,8 +65,8 @@ BEGIN
     END
     POPUP "Fa&vorite", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Adăugare la „Favorite”…", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Organizare „Favorite”…", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Adăugare la Favorite…", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizare Favorite…", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(gol)", IDM_FAVORITES_EMPTY
     END
@@ -88,7 +88,7 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
     POPUP "Bare de i&nstrumente", -1, MFT_STRING, MFS_ENABLED, 0
     BEGIN
-        MENUITEM "&Birou", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
         MENUITEM "&Lansări rapide", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
         MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Bară &nouă…", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
@@ -239,14 +239,14 @@ STRINGTABLE
 BEGIN
     9281 "Navigare la pagina precedentă."
     9282 "Navigare la pagina următoare."
-    9283 "Permite modificarea preferințelor."
+    9283 "Permite modificarea setărilor."
     9285 "Navigare la pagina inițială."
 END
 
 STRINGTABLE
 BEGIN
-    9362 "Deschide dosarul „Favorite”."
-    9363 "Adaugă pagina curentă în lista „Favorite”."
+    9362 "Deschide dosarul Favorite."
+    9363 "Adaugă pagina curentă în lista Favorite."
 END
 
 STRINGTABLE
@@ -266,12 +266,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9552 "Afișează sau ascunde panoul „Explorare”."
-    9553 "Afișează panoul „Căutare”."
-    9554 "Afișează panoul „Favorite”."
-    9555 "Afișează panoul „Istoric”."
-    9557 "Afișează panoul „Dosare”."
-    9559 "Afișează panoul „Media”."
+    9552 "Afișează sau ascunde panoul Explorare."
+    9553 "Afișează panoul Căutare."
+    9554 "Afișează panoul Favorite."
+    9555 "Afișează panoul Istoric."
+    9557 "Afișează panoul Dosare."
+    9559 "Afișează panoul Media."
 END
 
 STRINGTABLE

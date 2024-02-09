@@ -655,7 +655,7 @@ PrepareCopyInfFile(
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
             {
                 INF_FreeData(DirKeyValue);
-                DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+                DPRINT1("Creating directory '%S' failed: Status = 0x%08lx\n", PathBuffer, Status);
                 pSetupData->LastErrorNumber = ERROR_CREATE_DIR;
                 if (pSetupData->ErrorRoutine)
                     pSetupData->ErrorRoutine(pSetupData, PathBuffer);

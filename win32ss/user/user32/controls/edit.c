@@ -1907,6 +1907,11 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 #ifdef __REACTOS__
     HKL hKL = GetKeyboardLayout(0);
     POINT pt = { (short)LOWORD(res), (short)HIWORD(res) };
+
+    /* Don't set caret if not focused */
+    if ((es->flags & EF_FOCUSED) == 0)
+        return;
+
     SetCaretPos(pt.x, pt.y);
 
     if (!ImmIsIME(hKL))
@@ -2761,7 +2766,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 				abs(es->selection_end - es->selection_start) - strl, hrgn);
 			strl = 0;
 			e = s;
-			hrgn = CreateRectRgn(0, 0, 0, 0);
+			SetRectRgn(hrgn, 0, 0, 0, 0);
 			if (!notify_parent(es, EN_MAXTEXT)) return;
 		}
 	}
@@ -3285,6 +3290,11 @@ static inline void EDIT_WM_Cut(EDITSTATE *es)
 static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 {
         BOOL control;
+
+#ifdef __REACTOS__
+	if (es->bCaptureState)
+		return 0;
+#endif
 
 	control = GetKeyState(VK_CONTROL) & 0x8000;
 

@@ -85,7 +85,7 @@ ProcessLocaleRegistry(
 
 BOOLEAN
 SetGeoID(
-    IN PCWSTR Id);
+    _In_ GEOID GeoId);
 
 BOOLEAN
 SetDefaultPagefile(

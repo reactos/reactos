@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 #include <pseh/pseh2.h>
 
 typedef BOOL (APIENTRY *FN_NtUserGetKeyboardLayoutName)(PVOID);

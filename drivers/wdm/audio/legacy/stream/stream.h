@@ -1,7 +1,8 @@
 #pragma once
 
 #include <strmini.h>
-#define YDEBUG
+
+// #define NDEBUG
 #include <debug.h>
 
 #define STREAMDEBUG_LEVEL DebugLevelMaximum

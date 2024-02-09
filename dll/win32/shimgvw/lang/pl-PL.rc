@@ -21,6 +21,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "Pomniejsz (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Obróć zgodnie z ruchem wskazówek zegara (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Obróć przeciwnie do ruchu wskazówek zegara (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
     IDS_TOOLTIP_DELETE "Usuń (Delete)"
     IDS_TOOLTIP_PRINT "Drukuj (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Zapisz jako... (Ctrl+S)"

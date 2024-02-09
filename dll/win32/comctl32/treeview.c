@@ -5482,6 +5482,7 @@ static BOOL TREEVIEW_NCPaint (const TREEVIEW_INFO *infoPtr, HRGN region, LPARAM 
 
     /* Call default proc to get the scrollbars etc. painted */
     DefWindowProcW (infoPtr->hwnd, WM_NCPAINT, (WPARAM)cliprgn, 0);
+    DeleteObject(cliprgn);
 
     return TRUE;
 }

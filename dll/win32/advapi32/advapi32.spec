@@ -306,6 +306,7 @@
 @ stub I_ScSendTSMessage
 @ stdcall I_ScSetServiceBitsA(ptr long long long str)
 @ stdcall I_ScSetServiceBitsW(ptr long long long wstr)
+@ stdcall I_ScValidatePnpService(wstr wstr ptr)
 @ stub IdentifyCodeAuthzLevelW
 @ stdcall ImpersonateAnonymousToken(ptr)
 @ stdcall ImpersonateLoggedOnUser(long)

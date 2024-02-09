@@ -39,11 +39,11 @@ CAPTION "Cài đặt ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Máy tính:", IDC_STATIC, 20, 15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Màn hình:", IDC_STATIC, 20, 35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Bàn phím:", IDC_STATIC, 20, 55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Ấn Tiếp để thiết lập thiết bị cài đặt.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -133,8 +133,8 @@ CAPTION "Đang hoàn tất cài đặt Reactos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Bạn đã hoàn thành giai đoạn đầu của việc thiết lập ReactOS.", IDC_STATIC, 115, 50, 195, 10
-    LTEXT "bạn Khi bạn ấn Hoàn tất,máy tính của bạn sẽ khởi động lại.", IDC_STATIC, 115, 80, 195, 10
+    LTEXT "Bạn đã hoàn thành giai đoạn đầu của việc thiết lập ReactOS.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "bạn Khi bạn ấn Hoàn tất,máy tính của bạn sẽ khởi động lại.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "Nếu ổ đĩa của bạn còn chứa dĩa CD cài đặt, hãy lấy nó ra. Sau đó, ấn Hoàn tất để khởi động lại máy tính của bạn.", IDC_STATIC, 115, 169, 195, 17
 END

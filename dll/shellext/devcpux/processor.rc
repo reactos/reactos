@@ -24,6 +24,9 @@
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif

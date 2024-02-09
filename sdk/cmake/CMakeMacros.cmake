@@ -642,8 +642,11 @@ function(set_module_type MODULE TYPE)
     endif()
 
     # Set base address
+    # Use 'IMAGEBASE default' to skip these set_image_base(), especially for win32dll test files
     if(__module_IMAGEBASE)
-        set_image_base(${MODULE} ${__module_IMAGEBASE})
+        if(NOT ${__module_IMAGEBASE} STREQUAL "default")
+            set_image_base(${MODULE} ${__module_IMAGEBASE})
+        endif()
     elseif(${TYPE} STREQUAL win32dll)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})

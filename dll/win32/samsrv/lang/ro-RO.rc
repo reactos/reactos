@@ -1,6 +1,10 @@
-/* TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
-*/
+/*
+ * PROJECT:     Security Account Manager (SAM) Server
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -14,7 +18,7 @@ BEGIN
     IDS_ALIAS_GUESTS_NAME "Oaspeți"
     IDS_ALIAS_GUESTS_COMMENT "Oaspeții au în mod implicit aceleași drepturi ca membrii grupului Utilizatori."
     IDS_ALIAS_POWER_USERS_NAME "Utilizatori avansați"
-    IDS_ALIAS_POWER_USERS_COMMENT "Utilizatorii avansați posedă majoritatea drepturilor administrative cu unele restricții."
+    IDS_ALIAS_POWER_USERS_COMMENT "Utilizatorii avansați au cele mai multe drepturi administrative cu unele restricții."
     IDS_ALIAS_USERS_NAME "Utilizatori"
     IDS_ALIAS_USERS_COMMENT "Utilizatorilor le este limitată capacitatea de a aduce modificări în sistem."
     IDS_ALIAS_PRINT_OPS_NAME "Operatori de imprimare"
@@ -23,7 +27,7 @@ BEGIN
     IDS_ALIAS_BACKUP_OPS_COMMENT "Operatorii de copii de rezervă pot trece peste restricțiile de securitate pentru singurul scop de a face o copie de rezervă sau de a restaura fișiere"
     IDS_ALIAS_REPLICATOR_NAME "Replicator"
     IDS_ALIAS_REPLICATOR_COMMENT "Acceptă replicarea fișierelor într-un domeniu"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Utilizatori de birou de la distanță"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Utilizatori de desktop de la distanță"
     IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Membrilor acestui grup li se acordă dreptul de a se conecta de la distanță"
     IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Operatori de configurație a rețelei"
     IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Membrii acestui grup pot avea privilegii administrative pentru a administra configurația caracteristicilor de rețea"

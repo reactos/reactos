@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 NTSTATUS
@@ -150,9 +147,7 @@ PcUnregisterIoTimeout(
     if (!pDeviceObject || !pDeviceObject->DeviceExtension)
         return STATUS_INVALID_PARAMETER;
 
-
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
-
 
     KeAcquireSpinLock(&DeviceExtension->TimerListLock, &OldIrql);
 
@@ -180,8 +175,6 @@ PcUnregisterIoTimeout(
     else
         return STATUS_NOT_FOUND;
 }
-
-
 
 NTSTATUS
 NTAPI
@@ -263,4 +256,3 @@ PcDmaSlaveDescription(
 
     return STATUS_SUCCESS;
 }
-

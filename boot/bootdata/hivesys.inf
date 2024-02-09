@@ -2746,7 +2746,7 @@ SECLOGON_SERVICE_DESCRIPTION="Activa processos de início sob credenciais altern
 SERVER_SERVICE="Servidor"
 SERVER_SERVICE_DESCRIPTION="Suporta a partilha de ficheiros, impressoras e recursos de rede."
 
-SPOOLER_SERVICE="Spooler de impressão"
+SPOOLER_SERVICE="Fila de impressão"
 SPOOLER_SERVICE_DESCRIPTION="Carrega ficheiros na memória para impressão posterior."
 
 TCPSVCS_SERVICE="Serviços TCP/IP simples"
@@ -2869,8 +2869,8 @@ AUDIO_SERVICE_DESCRIPTION="Oferă aplicațiilor funcționalități audio."
 BITS_SERVICE="Serviciu de transfer inteligent în fundal"
 BITS_SERVICE_DESCRIPTION="Transferă fișiere în fundal utilizând lățimea de bandă nefolosită a rețelei."
 
-DCOMLAUNCH_SERVICE="DcomLaunch service"
-DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
+DCOMLAUNCH_SERVICE="Serviciul DcomLaunch"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Serviciu simulat de lansare Dcom."
 
 EVENTLOG_SERVICE="Jurnal de evenimente"
 EVENTLOG_SERVICE_DESCRIPTION="Jurnalizează mesajele sau evenimentele transmise de sistemul de operare într-o bază de date accesibilă cu instrumentul „observator de evenimente”."
@@ -2879,22 +2879,22 @@ MSISERVER_SERVICE="Instalare ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Controlează instalarea, mentenanța, și eliminarea de programe de instalare MSI (Windows Installer)."
 
 NETLOGON_SERVICE="Autentificare în rețea"
-NETLOGON_SERVICE_DESCRIPTION="Stabilește un canal securizat către un controlor de domentiu pentru autentificarea domeniului."
+NETLOGON_SERVICE_DESCRIPTION="Stabilește un canal securizat către un dispozitiv de control de domeniu pentru autentificarea domeniului."
 
 PLUGPLAY_SERVICE="Plug and Play"
-PLUGPLAY_SERVICE_DESCRIPTION="Detectează schimbările în configurația fizică și instalează programele necesare dacă este posibil."
+PLUGPLAY_SERVICE_DESCRIPTION="Detectează schimbările hardware și instalează software-ul necesar dacă este posibil."
 
 RPCSS_SERVICE="Apel procedural la distanță"
 RPCSS_SERVICE_DESCRIPTION="Subsistemul responsabil pentru apel procedural la distanță în calculatorul local."
 
-SAMSS_SERVICE="Security Accounts Manager"
-SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
+SAMSS_SERVICE="Manager de conturi de securitate"
+SAMSS_SERVICE_DESCRIPTION="Pornirea acestui serviciu semnalează altor servicii că Managerul de conturi de securitate (SAM) este gata să accepte cereri. Dezactivarea acestui serviciu va împiedica alte servicii din sistem să fie notificate atunci când SAM e gata ceea ce, la rândul său, poate face ca acele servicii să nu pornească corect. Acest serviciu nu ar trebui dezactivat."
 
 SCHEDULE_SERVICE="Serviciu de planificare"
 SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
 
-SECLOGON_SERVICE="Secondary Logon"
-SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+SECLOGON_SERVICE="Conectare secundară"
+SECLOGON_SERVICE_DESCRIPTION="Permite pornirea proceselor cu acreditări alternative."
 
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
@@ -2920,8 +2920,8 @@ WLANSVC_SERVICE_DESCRIPTION="Serviciu pentru rețele locale fără fir."
 WORKSTATION_SERVICE="Stație de lucru"
 WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și menținerea conexiunilor la servere în rețea."
 
-WUAUSERV_SERVICE="Automatic Updates"
-WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+WUAUSERV_SERVICE="Actualizări autmoate"
+WUAUSERV_SERVICE_DESCRIPTION="Un înlocuitor pentru serviciul de actualizări automate."
 
 ; Keyboard layouts
 ALBANIAN = "Albaneză"

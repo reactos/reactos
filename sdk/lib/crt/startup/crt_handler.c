@@ -11,7 +11,7 @@
 #include <memory.h>
 #include <signal.h>
 #include <stdio.h>
-
+#define _NTSYSTEM_
 #include <windef.h>
 #include <winbase.h>
 

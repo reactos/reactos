@@ -161,12 +161,12 @@ BEGIN
     STRING_TEXT_FILES_TXT "Tekstne datoteke (*.txt)"
     STRING_TOOLARGE "Datoteka '%s' je prevelik za program Blok za pisanje.\n\
 Molimo Vas da koristite drugu aplikaciju."
-    STRING_NOTEXT "Niste unijeli tekst. \
+    STRING_NOTEXT "Niste unijeli tekst.\
 \nMolimo Vas da nešto unesete i ponovo pokušate."
     STRING_DOESNOTEXIST "Datoteka '%s'\nne postoji\n\n\
-Želite li stvoriti novu datoteku ?"
+Želite li stvoriti novu datoteku?"
     STRING_NOTSAVED "Datoteka '%s'\nje bila promijenjena\n\n\
-Želite li spremiti te promjene ?"
+Želite li spremiti te promjene?"
     STRING_NOTFOUND "'%s' ne može biti pronađena."
     STRING_OUT_OF_MEMORY "Nema dovoljno memorije da se dovrši \
 zadatak.\nZatvorite jednu ili više aplikacija da povećate\nslobodnu memoriju."

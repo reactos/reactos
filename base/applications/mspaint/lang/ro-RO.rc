@@ -4,12 +4,12 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ro-RO.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-ro-RO.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -17,8 +17,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
         MENUITEM "&Deschidere...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Păst&rare în...", IDM_FILESAVEAS
+        MENUITEM "&Salvează\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Salvea&ză ca...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Din aparat media...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
@@ -28,9 +28,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Transmite...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Decor de birou (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Fundal de desktop (în c&arou)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Fundal de desktop (&centrat)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Fundal de desktop (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "Cel mai recent fișier", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
@@ -230,11 +230,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME "Pictare"
-    IDS_WINDOWTITLE "%s - Pictare"
-    IDS_INFOTITLE "Pictare pentru ReactOS"
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
+    IDS_SAVEPROMPTTEXT "Doriți salvarea modificărilor din %s?"
     IDS_DEFAULTFILENAME "Fără nume"
     IDS_MINIATURETITLE "Miniatură"
     IDS_TOOLTIP1 "Golire selecție"
@@ -266,8 +266,8 @@ BEGIN
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
-    IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
-    IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
-    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
+    IDS_CANTPASTE "Nu s-a putut lipi din clipboard. Formatul de date este fie incorect, fie nesuportat."
+    IDS_SAVEERROR "Nu s-a putut salva imaginea bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_CANTSENDMAIL "Nu s-a putut trimite un e-mail."
+    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sunteți sigur că veți continua?"
 END

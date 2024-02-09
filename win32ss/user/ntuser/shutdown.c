@@ -46,7 +46,7 @@ IntClientShutdown(IN PWND pWindow,
 
             if (wParam & MCS_QUERYENDSESSION)
             {
-                if (!co_IntSendMessage(WndChild->head.h, WM_QUERYENDSESSION, 0, lParams))
+                if (!co_IntSendMessage(UserHMGetHandle(WndChild), WM_QUERYENDSESSION, 0, lParams))
                 {
                     lResult = MCSR_DONOTSHUTDOWN;
                     break;
@@ -54,7 +54,7 @@ IntClientShutdown(IN PWND pWindow,
             }
             else
             {
-                co_IntSendMessage(WndChild->head.h, WM_ENDSESSION, KillTimers, lParams);
+                co_IntSendMessage(UserHMGetHandle(WndChild), WM_ENDSESSION, KillTimers, lParams);
                 if (KillTimers)
                 {
                     DestroyTimersForWindow(WndChild->head.pti, WndChild);
@@ -70,14 +70,14 @@ IntClientShutdown(IN PWND pWindow,
     /* Send to the caller */
     if (wParam & MCS_QUERYENDSESSION)
     {
-        if (!co_IntSendMessage(pWindow->head.h, WM_QUERYENDSESSION, 0, lParams))
+        if (!co_IntSendMessage(UserHMGetHandle(pWindow), WM_QUERYENDSESSION, 0, lParams))
         {
             lResult = MCSR_DONOTSHUTDOWN;
         }
     }
     else
     {
-        co_IntSendMessage(pWindow->head.h, WM_ENDSESSION, KillTimers, lParams);
+        co_IntSendMessage(UserHMGetHandle(pWindow), WM_ENDSESSION, KillTimers, lParams);
         if (KillTimers)
         {
             DestroyTimersForWindow(pWindow->head.pti, pWindow);

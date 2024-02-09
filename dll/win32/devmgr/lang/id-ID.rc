@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Driver untuk perangkat ini tidak dipasang."
     IDS_DEV_HARDWARE_DISABLED "Perangkat ini dimatikan karena BIOS untuk perangkat ini tidak memberikan sumber dayanya."
     IDS_DEV_CANT_SHARE_IRQ "Perangkat ini menggunakan sumber daya Interrupt Request (IRQ) yang dipakai oleh perangkat lain dan tidak bisa berbagi.\nAnda harus mengubah setelan yang konflik atau menghapus real-mode driver penyebab konflik."
-    IDS_DEV_FAILED_ADD "Perangkat ini tidak bekerja dengan benar karena %1 tidak bekerja dengan baik."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS tidak bisa memasang driver untuk perangkat ini karena ia tidak bisa mengakses drive atau lokasi jaringan di mana berkas setelannya berada di dalamnya."
     IDS_DEV_TRANSLATION_FAILED "Perangkat ini tidak merespon terhadap driver-nya."
     IDS_DEV_NO_SOFTCONFIG "ReactOS tidak bisa memeriksa setelan untuk perangkat ini. Lihat dokumentasi yang terdapat pada perangkat ini dan gunakan tab Sumber Daya untuk menyetel konfigurasi."

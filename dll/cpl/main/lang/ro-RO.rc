@@ -1,6 +1,10 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS Main Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -59,17 +63,17 @@ BEGIN
     GROUPBOX "Configurație butoane", -1, 5, 5, 236, 70
     CHECKBOX "&Comută funcția butoanelor primar și secundar", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 159, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Bifați pentru interschimbarea funcției butoanelor principale ale șoricelului. Astfel butonul drept va fi cel folosit pentru selectare sau agățare și trasare.", -1, 10, 32, 156, 36
+    LTEXT "Bifați pentru interschimbarea funcției butoanelor principale ale mouse-ului. Astfel butonul drept va fi cel folosit pentru selectare sau agățare și trasare.", -1, 10, 32, 156, 36
     GROUPBOX "Viteza pentru dublu-clic", -1, 5, 78, 236, 70
-    LTEXT "Executați dublu-clic pe dosarul mostră pentru a testa. Dacă dosarul nu reacționează, ajustați viteza pentru o execuție mai lentă.", -1, 10, 90, 156, 28
+    LTEXT "Dați dublu clic pe dosar pentru a vă testa setările. Dacă dosarul nu se deschide sau nu se închide, încercați să folosiți o setare mai lentă.", -1, 10, 90, 156, 28
     LTEXT "&Viteză:   Mică", -1, 10, 123, 50, 10
     LTEXT "Mare", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
-    GROUPBOX "ImobilizareClic", -1, 5, 150, 236, 70
-    CHECKBOX "Doresc folosirea de I&mobilizareClic", IDC_CHECK_CLICK_LOCK, 10, 160, 150, 20
-    PUSHBUTTON "&Parametri…", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "Această funcționalitate vă permite activarea sau trasarea elementelor fără a ține apăsat încontinuu butonul de șoricel. Pentru a activa/dezactiva, mențineți un pic apăsat butonul de șoricel.", -1, 10, 180, 224, 30
+    GROUPBOX "Blocatorul de clicuri", -1, 5, 150, 236, 70
+    CHECKBOX "Pornește blocatorul de clicuri", IDC_CHECK_CLICK_LOCK, 10, 160, 150, 20
+    PUSHBUTTON "&Setări…", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
+    LTEXT "Această funcționalitate vă permite activarea sau trasarea elementelor fără a ține apăsat încontinuu butonul de mouse. Pentru a o activa/dezactiva, mențineți un pic apăsat butonul de mouse.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
@@ -79,7 +83,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Colecție", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Păstrare…", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "&Salvează ca…", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "Șt&erge", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
     LTEXT "Pa&rticularizare", -1, 5, 57, 70, 10
@@ -91,10 +95,10 @@ END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Păstrare colecție"
+CAPTION "Salvează schema"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Păstrează această colecție de indicatoare sub numele:", -1, 5, 5, 181, 10
+    LTEXT "Salvează această schemă de indicatoare sub numele:", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "Con&firmă", IDOK, 63, 35, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 126, 35, 60, 14
@@ -145,10 +149,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Șoricel"
-    IDS_CPLDESCRIPTION_1 "Ajustarea opțiunilor pentru șoricel"
+    IDS_CPLNAME_1 "Mouse"
+    IDS_CPLDESCRIPTION_1 "Schimbarea setărilor mouse-ului"
     IDS_CPLNAME_2 "Tastatură"
-    IDS_CPLDESCRIPTION_2 "Ajustarea opțiunilor pentru tastatură"
+    IDS_CPLDESCRIPTION_2 "Schimbarea setărilor tastaturii"
     IDS_ARROW "Selectare normală"
     IDS_HELP "Selectare pentru informații"
     IDS_APPSTARTING "Lucru în fundal"
@@ -167,7 +171,7 @@ BEGIN
     IDS_NONE "(nespecificată)"
     IDS_SYSTEM_SCHEME "(de sistem)"
     IDS_BROWSE_FILTER "Indicatoare (*.ani, *.cur)\0*.ani;*.cur\0Indicatoare animate (*.ani)\0*.ani\0Indicatoare statice (*.cur)\0*.cur\0Orice fișier (*.*)\0*.*\0\0"
-    IDS_BROWSE_TITLE "Căutare indicatoare de șoricel"
+    IDS_BROWSE_TITLE "Căutare indicatoare de mouse"
     IDS_REMOVE_TITLE "Confirmare eliminare colecție"
     IDS_REMOVE_TEXT "Sigur doriți eliminarea colecției „%s”?"
     IDS_OVERWRITE_TITLE "Confirmare suprascre colecție"

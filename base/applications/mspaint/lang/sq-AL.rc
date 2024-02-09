@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-sq-AL.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-sq-AL.bmp"
 
 ID_MENU MENU
 BEGIN

@@ -15,6 +15,7 @@
 static LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 
 HINSTANCE hApplet = NULL;
+BOOL g_bRebootNeeded = FALSE;
 
 /* Applets */
 static APPLET Applets[NUM_APPLETS] =
@@ -35,17 +36,42 @@ InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
     page->pfnDlgProc  = DlgProc;
 }
 
+static BOOL AskForReboot(HWND hwndDlg)
+{
+    WCHAR szText[128], szCaption[64];
+    LoadStringW(hApplet, IDS_REBOOT_NOW, szText, _countof(szText));
+    LoadStringW(hApplet, IDS_LANGUAGE, szCaption, _countof(szCaption));
+    return (MessageBoxW(hwndDlg, szText, szCaption, MB_ICONINFORMATION | MB_YESNO) == IDYES);
+}
+
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
-    // NOTE: This callback is needed to set large icon correctly.
-    HICON hIcon;
     switch (uMsg)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            /* Set large icon correctly */
+            HICON hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+
+        case PSCB_BUTTONPRESSED:
+        {
+            switch (lParam)
+            {
+                case PSBTN_OK:
+                case PSBTN_APPLYNOW:
+                {
+                    if (g_bRebootNeeded && AskForReboot(hwndDlg))
+                    {
+                        EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
+                        ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+                    }
+                    break;
+                }
+            }
             break;
         }
     }

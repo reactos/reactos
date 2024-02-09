@@ -275,7 +275,7 @@ IntSetDIBits(
     else
     {
         /* Compressed format without a size. This is invalid. */
-        DPRINT1("Compressed format without a size!");
+        DPRINT1("Compressed format without a size\n");
         return 0;
     }
 
@@ -710,7 +710,6 @@ Exit:
 
     return ret;
 }
-
 
 /* Converts a device-dependent bitmap to a DIB */
 INT
@@ -1218,7 +1217,6 @@ cleanup:
     return iResult;
 }
 
-
 W32KAPI
 INT
 APIENTRY
@@ -1536,7 +1534,6 @@ NtGdiStretchDIBitsInternal(
 
     return LinesCopied;
 }
-
 
 HBITMAP
 FASTCALL
@@ -2018,7 +2015,6 @@ DIB_CreateDIBSection(
 
 //  hSecure = MmSecureVirtualMemory(bm.bmBits, totalSize, PAGE_READWRITE);
     hSecure = (HANDLE)0x1; // HACK OF UNIMPLEMENTED KERNEL STUFF !!!!
-
 
     // Create Device Dependent Bitmap and add DIB pointer
     //Size.cx = bm.bmWidth;

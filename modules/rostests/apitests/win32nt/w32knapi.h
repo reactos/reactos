@@ -27,7 +27,6 @@
 #include <ntgdihdl.h>
 
 #include "../apitest.h"
-#include "resource.h"
 
 typedef struct
 {

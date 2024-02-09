@@ -5,7 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 void
 Test_HwndRoutine_DeregisterShellHookWindow(HWND hWnd)

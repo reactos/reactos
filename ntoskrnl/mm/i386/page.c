@@ -637,9 +637,6 @@ MmCreateVirtualMappingUnsafeEx(
     PMMPTE PointerPte;
     MMPTE TempPte;
     ULONG_PTR Pte;
-#ifdef _M_AMD64
-    BOOLEAN LockReleased = FALSE;
-#endif
 
     DPRINT("MmCreateVirtualMappingUnsafe(%p, %p, %lu, %x)\n",
            Process, Address, flProtect, Page);
@@ -667,15 +664,6 @@ MmCreateVirtualMappingUnsafeEx(
 #if _MI_PAGING_LEVELS == 2
         if (!MiSynchronizeSystemPde(MiAddressToPde(Address)))
             MiFillSystemPageDirectory(Address, PAGE_SIZE);
-#endif
-
-#ifdef _M_AMD64
-        /* This is a temporary hack, because we can incur a recursive page fault when accessing the PDE */
-        if (PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread())
-        {
-            MmUnlockAddressSpace(MmGetKernelAddressSpace());
-            LockReleased = TRUE;
-        }
 #endif
     }
     else
@@ -727,15 +715,6 @@ MmCreateVirtualMappingUnsafeEx(
         MiIncrementPageTableReferences(Address);
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
     }
-#ifdef _M_AMD64
-    else
-    {
-        if (LockReleased)
-        {
-            MmLockAddressSpace(MmGetKernelAddressSpace());
-        }
-    }
-#endif
 
     return(STATUS_SUCCESS);
 }
@@ -925,7 +904,7 @@ MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
     MiMakePdeExistAndMakeValid(MiAddressToPde(Address), Process, MM_NOIRQL);
 
     PointerPte = MiAddressToPte(Address);
-    // We shouldnl't set dirty bit on non-mapped adresses
+    // We shouldnl't set dirty bit on non-mapped addresses
     if (!PointerPte->u.Hard.Valid && (FlagOn(PointerPte->u.Long, 0x800) || (PointerPte->u.Hard.PageFrameNumber == 0)))
     {
         DPRINT1("Invalid Pte %lx\n", PointerPte->u.Long);

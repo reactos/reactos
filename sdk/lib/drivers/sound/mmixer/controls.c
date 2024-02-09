@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 const GUID KSNODETYPE_DESKTOP_MICROPHONE = {0xDFF21BE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -55,7 +55,6 @@ MMixerAddMixerControl(
         /* no memory */
         return MM_STATUS_NO_MEMORY;
     }
-
 
     /* initialize mixer control */
     MixerControl->hDevice = hMixer;
@@ -262,7 +261,6 @@ MMixerCreateDestinationLine(
     DestinationLine->Line.dwSource = MAXULONG;
     DestinationLine->Line.dwUser = 0;
     DestinationLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE;
-
 
     if (LineName)
     {
@@ -564,7 +562,6 @@ MMixerGetChannelCountEnhanced(
     Request.Property.Flags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_TOPOLOGY;
     Request.Property.Id = KSPROPERTY_AUDIO_VOLUMELEVEL;
 
-
     /* get description */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSP_NODE), (PVOID)&Description, sizeof(KSPROPERTY_DESCRIPTION), &BytesReturned);
     if (Status == MM_STATUS_SUCCESS)
@@ -771,7 +768,6 @@ MMixerGetComponentAndTargetType(
     Request.Property.Flags = KSPROPERTY_TYPE_GET;
     Request.Property.Set = KSPROPSETID_Pin;
     Request.Property.Id = KSPROPERTY_PIN_CATEGORY;
-
 
     /* get pin category */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSP_PIN), &Guid, sizeof(GUID), &BytesReturned);
@@ -1162,7 +1158,6 @@ MMixerAddMixerSourceLines(
 
     return MM_STATUS_SUCCESS;
 }
-
 
 MIXER_STATUS
 MMixerAddMixerControlsToDestinationLine(
@@ -1623,7 +1618,6 @@ MMixerInitializeFilter(
         }
     }
 
-
     /* now get the bridge pin which is at the end of node path
      * For sink pins (wave out) search down stream
      * For source pins (wave in) search up stream
@@ -1828,7 +1822,6 @@ MMixerSetupFilter(
     /* done */
     return Status;
 }
-
 
 MIXER_STATUS
 MMixerAddEvent(

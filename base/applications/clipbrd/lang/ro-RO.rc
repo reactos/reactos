@@ -1,4 +1,11 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Clipboard
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
@@ -11,7 +18,7 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Deschidere…", CMD_OPEN
-        MENUITEM "Păst&rare ca…", CMD_SAVE_AS
+        MENUITEM "S&alvează ca…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END

@@ -109,9 +109,10 @@ extern BOOLEAN RtlpUse16ByteSLists;
  */
 NTSTATUS
 NTAPI
-LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
-                           IN BOOLEAN Wow64,
-                           OUT PHANDLE NewKeyHandle)
+LdrOpenImageFileOptionsKey(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ BOOLEAN Wow64,
+    _Out_ PHANDLE NewKeyHandle)
 {
     PHANDLE RootKeyLocation;
     HANDLE RootKey;
@@ -181,12 +182,13 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
-                           IN PCWSTR ValueName,
-                           IN ULONG Type,
-                           OUT PVOID Buffer,
-                           IN ULONG BufferSize,
-                           OUT PULONG ReturnedLength OPTIONAL)
+LdrQueryImageFileKeyOption(
+    _In_ HANDLE KeyHandle,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength)
 {
     ULONG KeyInfo[256];
     UNICODE_STRING ValueNameString, IntegerString;
@@ -345,13 +347,14 @@ LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
-                                    IN PCWSTR ValueName,
-                                    IN ULONG Type,
-                                    OUT PVOID Buffer,
-                                    IN ULONG BufferSize,
-                                    OUT PULONG ReturnedLength OPTIONAL,
-                                    IN BOOLEAN Wow64)
+LdrQueryImageFileExecutionOptionsEx(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength,
+    _In_ BOOLEAN Wow64)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
@@ -383,12 +386,13 @@ LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileExecutionOptions(IN PUNICODE_STRING SubKey,
-                                  IN PCWSTR ValueName,
-                                  IN ULONG Type,
-                                  OUT PVOID Buffer,
-                                  IN ULONG BufferSize,
-                                  OUT PULONG ReturnedLength OPTIONAL)
+LdrQueryImageFileExecutionOptions(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength)
 {
     /* Call the newer function */
     return LdrQueryImageFileExecutionOptionsEx(SubKey,
@@ -1879,7 +1883,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     HeapParameters.Length = sizeof(HeapParameters);
 
     /* Check if we have Configuration Data */
-#define VALID_CONFIG_FIELD(Name) (ConfigSize >= (FIELD_OFFSET(IMAGE_LOAD_CONFIG_DIRECTORY, Name) + sizeof(LoadConfig->Name)))
+#define VALID_CONFIG_FIELD(Name) (ConfigSize >= RTL_SIZEOF_THROUGH_FIELD(IMAGE_LOAD_CONFIG_DIRECTORY, Name))
     /* The 'original' load config ends after SecurityCookie */
     if ((LoadConfig) && ConfigSize && (VALID_CONFIG_FIELD(SecurityCookie) || ConfigSize == LoadConfig->Size))
     {
@@ -2327,7 +2331,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (!NT_SUCCESS(Status))
         {
             if (ShowSnaps)
-                DPRINT1("LDR: Unable to find post-import process init function, Status=0x%08lx\n", &Kernel32String, Status);
+                DPRINT1("LDR: Unable to find post-import process init function, Status=0x%08lx\n", Status);
             return Status;
         }
         Kernel32ProcessInitPostImportFunction = FunctionAddress;
@@ -2340,7 +2344,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (!NT_SUCCESS(Status))
         {
             if (ShowSnaps)
-                DPRINT1("LDR: Unable to find BaseQueryModuleData, Status=0x%08lx\n", &Kernel32String, Status);
+                DPRINT1("LDR: Unable to find BaseQueryModuleData, Status=0x%08lx\n", Status);
             return Status;
         }
         Kernel32BaseQueryModuleData = FunctionAddress;
@@ -2400,6 +2404,11 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Check whether all static imports were properly loaded and return here */
     if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
+
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    /* Initialize the keyed event for condition variables */
+    RtlpInitializeKeyedEvent();
+#endif
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();

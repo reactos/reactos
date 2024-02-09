@@ -129,6 +129,8 @@ typedef struct tagGLOBALS
 
     HBITMAP hbmpThemePreview;
     HDC hdcThemePreview;
+
+    COLORREF crCustom[16];
 } GLOBALS;
 
 /* prototypes for theme.c */

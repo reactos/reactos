@@ -1,10 +1,4 @@
-/*
- *  Notepad (Slovak resources)
- *
- *  TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- *  DATE OF TR.: xx-xx-2007
- *  LAST CHANGE: 27-12-2008
- */
+// COPYRIGHT: 2007-2008 Mario Kacmar <kario@szm.sk>
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
@@ -162,8 +156,8 @@ BEGIN
     STRING_TEXT_FILES_TXT "Textové súbory (*.txt)"
     STRING_TOOLARGE "Súbor '%s' je pre Poznámkový blok príliš veľký.\n\
 Na otvorenie súboru použite iný editor."
-    STRING_NOTEXT "Nevložili ste žiadny text. \
-\nProsím, napíšte niečo a skúste to znova."
+    STRING_NOTEXT "Nevložili ste žiadny text.\n\
+Prosím, napíšte niečo a skúste to znova."
     STRING_DOESNOTEXIST "Nie je možné nájsť súbor '%s'\n\n\
 Chcete vytvoriť nový súbor?"
     STRING_NOTSAVED "Text súboru '%s'\nsa zmenil.\n\n\

@@ -540,7 +540,7 @@ NAME_TRUSTED="Situri sigure"
 DESC_TRUSTED="Această zonă conține toate siturile web care credeți că nu vor aduce daune calculatorului dumneavoastră."
 
 NAME_INTERNET="Internet"
-DESC_INTERNET="Această zonă conține toate siturile web pe care nu le-ați plasat în alte zone."
+DESC_INTERNET="Această zonă conține toate site-urile web pe care nu le-ați postat în alte zone."
 
 NAME_UNTRUSTED="Situri restricționate"
 DESC_UNTRUSTED="Această zonă conține siturile web care reprezintă un potențial risc pentru calculatorul dumneavoastră."

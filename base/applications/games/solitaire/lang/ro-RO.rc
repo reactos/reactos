@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -25,7 +25,7 @@ BEGIN
     AUTORADIOBUTTON "Fă&ră", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "&Afișează timp", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Bară de stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Păstrează scorul", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "Salvea&ză scorul", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "Con&firmă", IDOK, 35, 97, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 101, 97, 50, 14
 END
@@ -55,8 +55,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME "Pasiență"
-    IDS_SOL_ABOUT "Pasiență de J Brown; Tradus de Petru Dimitriu\nCardLib versiunea 1.0"
+    IDS_SOL_NAME "Solitaire"
+    IDS_SOL_ABOUT "Solitaire de J Brown; Tradus de Petru Dimitriu\nCardLib versiunea 1.0"
     IDS_SOL_QUIT "Abandonați jocul curent?"
     IDS_SOL_WIN "Felicitări, ați câștigat!"
     IDS_SOL_DEAL "O nouă rundă?"

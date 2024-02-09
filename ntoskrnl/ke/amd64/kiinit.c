@@ -29,10 +29,10 @@ KSPIN_LOCK KiFreezeExecutionLock;
 KIPCR KiInitialPcr;
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR DECLSPEC_ALIGN(16) P0BootStackData[KERNEL_STACK_SIZE] = {0};
-UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
-ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
-ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
+UCHAR DECLSPEC_ALIGN(16) KiP0BootStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(16) KiP0DoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
+PVOID KiP0BootStack = &KiP0BootStackData[KERNEL_STACK_SIZE];
+PVOID KiP0DoubleFaultStack = &KiP0DoubleFaultStackData[KERNEL_STACK_SIZE];
 
 ULONGLONG BootCycles, BootCyclesEnd;
 
@@ -87,17 +87,17 @@ KiInitMachineDependent(VOID)
 
 }
 
+static
 VOID
-NTAPI
-KiInitializePcr(IN PKIPCR Pcr,
-                IN ULONG ProcessorNumber,
-                IN PKTHREAD IdleThread,
-                IN PVOID DpcStack)
+KiInitializePcr(
+    _Out_ PKIPCR Pcr,
+    _In_ ULONG ProcessorNumber,
+    _In_ PKGDTENTRY64 GdtBase,
+    _In_ PKIDTENTRY64 IdtBase,
+    _In_ PKTSS64 TssBase,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID DpcStack)
 {
-    KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
-    PKGDTENTRY64 TssEntry;
-    USHORT Tr = 0;
-
     /* Zero out the PCR */
     RtlZeroMemory(Pcr, sizeof(KIPCR));
 
@@ -126,21 +126,12 @@ KiInitializePcr(IN PKIPCR Pcr,
     Pcr->Prcb.Number = (UCHAR)ProcessorNumber;
     Pcr->Prcb.SetMember = 1ULL << ProcessorNumber;
 
-    /* Get GDT and IDT descriptors */
-    __sgdt(&GdtDescriptor.Limit);
-    __sidt(&IdtDescriptor.Limit);
-    Pcr->GdtBase = (PVOID)GdtDescriptor.Base;
-    Pcr->IdtBase = (PKIDTENTRY)IdtDescriptor.Base;
+    /* Set GDT and IDT base */
+    Pcr->GdtBase = GdtBase;
+    Pcr->IdtBase = IdtBase;
 
-    /* Get TSS Selector */
-    __str(&Tr);
-    ASSERT(Tr == KGDT64_SYS_TSS);
-
-    /* Get TSS Entry */
-    TssEntry = KiGetGdtEntry(Pcr->GdtBase, Tr);
-
-    /* Get the KTSS itself */
-    Pcr->TssBase = KiGetGdtDescriptorBase(TssEntry);
+    /* Set TssBase */
+    Pcr->TssBase = TssBase;
 
     Pcr->Prcb.RspBase = Pcr->TssBase->Rsp0; // FIXME
 
@@ -162,7 +153,6 @@ KiInitializePcr(IN PKIPCR Pcr,
 
     /* Start us out at PASSIVE_LEVEL */
     Pcr->Irql = PASSIVE_LEVEL;
-    KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
 VOID
@@ -240,17 +230,23 @@ KiInitializeCpu(PKIPCR Pcr)
 
     /* Initialize MXCSR */
     _mm_setcsr(INITIAL_MXCSR);
+
+    KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
+static
 VOID
-FASTCALL
-KiInitializeTss(IN PKTSS64 Tss,
-                IN UINT64 Stack)
+KiInitializeTss(
+    _In_ PKIPCR Pcr,
+    _Out_ PKTSS64 Tss,
+    _In_ PVOID InitialStack,
+    _In_ PVOID DoubleFaultStack,
+    _In_ PVOID NmiStack)
 {
     PKGDTENTRY64 TssEntry;
 
     /* Get pointer to the GDT entry */
-    TssEntry = KiGetGdtEntry(KeGetPcr()->GdtBase, KGDT64_SYS_TSS);
+    TssEntry = KiGetGdtEntry(Pcr->GdtBase, KGDT64_SYS_TSS);
 
     /* Initialize the GDT entry */
     KiInitGdtEntry(TssEntry, (ULONG64)Tss, sizeof(KTSS64), AMD64_TSS, 0);
@@ -262,19 +258,85 @@ KiInitializeTss(IN PKTSS64 Tss,
     Tss->IoMapBase = 0x68;
 
     /* Setup ring 0 stack pointer */
-    Tss->Rsp0 = Stack;
+    Tss->Rsp0 = (ULONG64)InitialStack;
 
     /* Setup a stack for Double Fault Traps */
-    Tss->Ist[1] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[1] = (ULONG64)DoubleFaultStack;
 
     /* Setup a stack for CheckAbort Traps */
-    Tss->Ist[2] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[2] = (ULONG64)DoubleFaultStack;
 
     /* Setup a stack for NMI Traps */
-    Tss->Ist[3] = (ULONG64)KiDoubleFaultStack;
+    Tss->Ist[3] = (ULONG64)NmiStack;
+}
 
-    /* Load the task register */
-    __ltr(KGDT64_SYS_TSS);
+CODE_SEG("INIT")
+VOID
+KiInitializeProcessorBootStructures(
+    _In_ ULONG ProcessorNumber,
+    _Out_ PKIPCR Pcr,
+    _In_ PKGDTENTRY64 GdtBase,
+    _In_ PKIDTENTRY64 IdtBase,
+    _In_ PKTSS64 TssBase,
+    _In_ PKTHREAD IdleThread,
+    _In_ PVOID KernelStack,
+    _In_ PVOID DpcStack,
+    _In_ PVOID DoubleFaultStack,
+    _In_ PVOID NmiStack)
+{
+    /* Initialize the PCR */
+    KiInitializePcr(Pcr,
+                    ProcessorNumber,
+                    GdtBase,
+                    IdtBase,
+                    TssBase,
+                    IdleThread,
+                    DpcStack);
+
+
+    /* Setup the TSS descriptor and entries */
+    KiInitializeTss(Pcr,
+                    TssBase,
+                    KernelStack,
+                    DoubleFaultStack,
+                    NmiStack);
+}
+
+CODE_SEG("INIT")
+static
+VOID
+KiInitializeP0BootStructures(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
+    PKGDTENTRY64 TssEntry;
+    PKTSS64 TssBase;
+
+    /* Set the initial stack, idle thread and process for processor 0 */
+    LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
+    LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
+    LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
+    LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
+
+    /* Get GDT and IDT descriptors */
+    __sgdt(&GdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
+
+    /* Get the boot TSS from the GDT */
+    TssEntry = KiGetGdtEntry(GdtDescriptor.Base, KGDT64_SYS_TSS);
+    TssBase = KiGetGdtDescriptorBase(TssEntry);
+
+    /* Initialize PCR and TSS */
+    KiInitializeProcessorBootStructures(0,
+                                        &KiInitialPcr,
+                                        GdtDescriptor.Base,
+                                        IdtDescriptor.Base,
+                                        TssBase,
+                                        &KiInitialThread.Tcb,
+                                        KiP0BootStack,
+                                        KiP0DoubleFaultStack,
+                                        KiP0DoubleFaultStack,
+                                        KiP0DoubleFaultStack);
 }
 
 CODE_SEG("INIT")
@@ -425,20 +487,17 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
     //FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
-    /* Save the loader block */
-    KeLoaderBlock = LoaderBlock;
-
     /* Get the current CPU number */
     Cpu = KeNumberProcessors++; // FIXME
 
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
     {
-        /* Set the initial stack, idle thread and process */
-        LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
-        LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
-        LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
-        LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
+        /* Save the loader block */
+        KeLoaderBlock = LoaderBlock;
+
+        /* Prepare LoaderBlock, PCR, TSS with the P0 boot data */
+        KiInitializeP0BootStructures(LoaderBlock);
     }
 
     /* Get Pcr from loader block */
@@ -457,9 +516,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set us as the current process */
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
-    /* Initialize the PCR */
-    KiInitializePcr(Pcr, Cpu, InitialThread, (PVOID)KiDoubleFaultStack);
-
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
 
@@ -468,9 +524,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Initialize the module list (ntos, hal, kdcom) */
         KiInitModuleList(LoaderBlock);
-
-        /* Setup the TSS descriptors and entries */
-        KiInitializeTss(Pcr->TssBase, InitialStack);
 
         /* Setup the IDT */
         KeInitExceptions();

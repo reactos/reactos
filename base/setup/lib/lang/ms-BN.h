@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS msBNLayouts[] =
 {
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    { 0x0409, 0x00000409 },
+    { 0, 0 }
 };

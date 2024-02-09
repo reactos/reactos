@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CDrmPort2 : public CUnknownImpl<IDrmPort2>
@@ -134,5 +131,3 @@ NewIDrmPort(
     *OutPort = (PDRMPORT2)This;
     return STATUS_SUCCESS;
 }
-
-

@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Driveren for denne enheten er ikke installert."
     IDS_DEV_HARDWARE_DISABLED "Denne enheten er deaktivert fordi BIOS for enheten gir ikke andre ressurser."
     IDS_DEV_CANT_SHARE_IRQ "Denne enheten bruker en Interrupt Request (IRQ) ressurs som er i bruk av en annen enhet og kan ikke bli delt.\nDu må endre konflikt innstillingen eller fjerne ekte-modus driver som forårsaker konflikten."
-    IDS_DEV_FAILED_ADD "Denne enheten vil ikke fungere som den skal fordi %1 vil ikke fungere som den skal."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS kan ikke installere driveren for denne enheten, fordi den får ikke tilgang til driveren eller nettverks plasseringen som har installering filen."
     IDS_DEV_TRANSLATION_FAILED "Denne enheten vil ikke svare på grunn av driveren."
     IDS_DEV_NO_SOFTCONFIG "ReactOS kan ikke oppdage innstillingene for denne enheten. Ta hensyn til dokumentasjon som kommer med denne enheten og bruker ressursen tab for å sette konfigurasjonen."

@@ -139,21 +139,9 @@ VOID
 NTAPI
 KeSetSystemAffinityThread(
   _In_ KAFFINITY Affinity);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetTargetProcessorDpc(
-  _Inout_ PRKDPC Dpc,
-  _In_ CCHAR Number);
-
-NTKERNELAPI
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(VOID);
 $endif (_WDMDDK_)
-$if (_NTDDK_)
 
+$if (_WDMDDK_ || _NTDDK_)
 NTKERNELAPI
 VOID
 NTAPI
@@ -165,8 +153,6 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-$endif (_NTDDK_)
-$if (_WDMDDK_ || _NTDDK_)
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
 $endif (_WDMDDK_ || _NTDDK_)
 

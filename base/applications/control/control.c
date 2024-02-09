@@ -4,12 +4,14 @@
  * PURPOSE:     ReactOS System Control Panel
  * COPYRIGHT:   Copyright 2004 Gero Kuehn (reactos.filter@gkware.com)
  *              Copyright 2008 Colin Finck (colin@reactos.org)
- *              Copyright 2014 Hermès Bélusca-Maïto (hermes.belusca-maito@reactos.org)
+ *              Copyright 2014 HermÃ¨s BÃ©lusca-MaÃ¯to (hermes.belusca-maito@reactos.org)
  */
 
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
+#define COBJMACROS
+
 
 #include <windef.h>
 #include <winbase.h>
@@ -17,6 +19,9 @@
 #include <winreg.h>
 #include <shellapi.h>
 #include <strsafe.h>
+#include <objbase.h>
+#include <shobjidl.h>
+#include <shlguid.h>
 
 #include "resource.h"
 
@@ -33,6 +38,35 @@
 VOID
 WINAPI
 Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
+
+static BOOL
+IsSwitch(LPCWSTR Switch, LPCWSTR Arg)
+{
+    if (*Arg == '/' || *Arg == '-')
+    {
+        return !lstrcmpiW(Arg+1, Switch);
+    }
+    return FALSE;
+}
+
+static HRESULT
+OpenControlPanelItem(LPCWSTR Name, LPCWSTR Page)
+{
+    HRESULT hr = CoInitialize(0);
+    if (SUCCEEDED(hr))
+    {
+        IOpenControlPanel *pOCP;
+        hr = CoCreateInstance(&CLSID_OpenControlPanel, NULL, CLSCTX_INPROC_SERVER,
+                              &IID_IOpenControlPanel, (void**)&pOCP);
+        if (SUCCEEDED(hr))
+        {
+            hr = IOpenControlPanel_Open(pOCP, Name, Page, NULL);
+            IOpenControlPanel_Release(pOCP);
+        }
+        CoUninitialize();
+    }
+    return hr;
+}
 
 static INT
 OpenShellFolder(LPWSTR lpFolderCLSID)
@@ -73,10 +107,15 @@ wWinMain(HINSTANCE hInstance,
          INT nCmdShow)
 {
     HKEY hKey;
+    LPWSTR *argv;
+    int argc;
 
     /* Show the control panel window if no argument or "panel" was passed */
     if (*lpCmdLine == 0 || !_wcsicmp(lpCmdLine, L"panel"))
         return OpenShellFolder(L"");
+
+    /* Map legacy control panels */
+    if (!_wcsicmp(lpCmdLine, L"sticpl.cpl")) lpCmdLine = (LPWSTR) L"scannercamera";
 
     /* Check one of the built-in control panel handlers */
     if (!_wcsicmp(lpCmdLine, L"admintools"))           return OpenShellFolder(L"\\::{D20EA4E1-3957-11d2-A40B-0C5020524153}");
@@ -98,6 +137,28 @@ wWinMain(HINSTANCE hInstance,
     else if (!_wcsicmp(lpCmdLine, L"telephony"))       return RunControlPanel(L"telephon.cpl");
     else if (!_wcsicmp(lpCmdLine, L"userpasswords"))   return RunControlPanel(L"nusrmgr.cpl");       /* Graphical User Account Manager */
     else if (!_wcsicmp(lpCmdLine, L"userpasswords2"))  return RUNDLL(L"netplwiz.dll,UsersRunDll");   /* Dialog based advanced User Account Manager */
+
+    /* https://learn.microsoft.com/en-us/windows/win32/shell/executing-control-panel-items#windows-vista-canonical-names */
+    argv = CommandLineToArgvW(lpCmdLine, &argc);
+    if (argv)
+    {
+        UINT argi = 0;
+        HRESULT hr = -1;
+        if (argc >= 2 && IsSwitch(L"name", argv[argi + 0]))
+        {
+            LPCWSTR pszPage = NULL;
+            if (argc >= 4 && IsSwitch(L"page", argv[argi + 2]))
+            {
+                pszPage = argv[argi + 3];
+            }
+            hr = OpenControlPanelItem(argv[argi + 1], pszPage);
+        }
+        LocalFree(argv);
+        if (hr != -1)
+        {
+            return SUCCEEDED(hr);
+        }
+    }
 
     /* It is none of them, so look for a handler in the registry */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,

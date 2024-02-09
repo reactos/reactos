@@ -1269,7 +1269,7 @@ CreateKeyboardLayoutList(
 
         uIndex++;
 
-    } while (LayoutsList[uIndex].LangID != NULL);
+    } while (LayoutsList[uIndex].LangID != 0);
 
     /* Check whether some keyboard layouts have been found */
     /* FIXME: Handle this case */
@@ -1290,9 +1290,10 @@ ProcessKeyboardLayoutRegistry(
     IN PCWSTR LanguageId)
 {
     PGENERIC_LIST_ENTRY Entry;
-    PCWSTR LayoutId;
+    PCWSTR pszLayoutId;
+    KLID LayoutId;
     const MUI_LAYOUTS* LayoutsList;
-    MUI_LAYOUTS NewLayoutsList[20];
+    MUI_LAYOUTS NewLayoutsList[20]; // HACK: Hardcoded fixed size "20" is a hack. Please verify against lang/*.h
     ULONG uIndex;
     ULONG uOldPos = 0;
 
@@ -1300,18 +1301,21 @@ ProcessKeyboardLayoutRegistry(
     if (Entry == NULL)
         return FALSE;
 
-    LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-    if (LayoutId == NULL)
+    pszLayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+    LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
+    if (LayoutId == 0)
         return FALSE;
 
     LayoutsList = MUIGetLayoutsList(LanguageId);
 
-    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) == 0)
+    /* If the keyboard layout is already at the top of the list, we are done */
+    if (LayoutsList[0].LayoutID == LayoutId)
         return TRUE;
 
-    for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
+    /* Otherwise, move it up to the top of the list */
+    for (uIndex = 1; LayoutsList[uIndex].LangID != 0; ++uIndex)
     {
-        if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
+        if (LayoutsList[uIndex].LayoutID == LayoutId)
         {
             uOldPos = uIndex;
             continue;
@@ -1321,8 +1325,8 @@ ProcessKeyboardLayoutRegistry(
         NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
     }
 
-    NewLayoutsList[uIndex].LangID    = NULL;
-    NewLayoutsList[uIndex].LayoutID  = NULL;
+    NewLayoutsList[uIndex].LangID    = 0;
+    NewLayoutsList[uIndex].LayoutID  = 0;
     NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
     NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
     NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;
@@ -1342,12 +1346,20 @@ ProcessKeyboardLayoutFiles(
 
 BOOLEAN
 SetGeoID(
-    IN PCWSTR Id)
+    _In_ GEOID GeoId)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
     HANDLE KeyHandle;
+    /*
+     * Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    WCHAR Value[sizeof("4294967295")];
+
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", GeoId);
+    ASSERT(NT_SUCCESS(Status));
 
     RtlInitUnicodeString(&Name,
                          L".DEFAULT\\Control Panel\\International\\Geo");
@@ -1356,9 +1368,9 @@ SetGeoID(
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_SET_VALUE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -1370,12 +1382,12 @@ SetGeoID(
                            &Name,
                            0,
                            REG_SZ,
-                           (PVOID)Id,
-                           (wcslen(Id) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
         return FALSE;
     }
 

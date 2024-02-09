@@ -36,9 +36,10 @@ public:
     // *** IEnumIDList methods ***
     STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
     {
-        if (!pceltFetched || !rgelt)
+        if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
 
+        HRESULT hr = S_OK;
         ULONG Fetched = 0;
 
         while (celt)
@@ -48,15 +49,25 @@ public:
             if (m_Index < g_FontCache->Size())
             {
                 CStringW Name = g_FontCache->Name(m_Index);
-                rgelt[Fetched] = _ILCreate(Name, m_Index);
-
+                LPITEMIDLIST item = _ILCreate(Name, m_Index);
+                if (!item)
+                {
+                    hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
+                    break;
+                }
+                rgelt[Fetched] = item;
                 m_Index++;
                 Fetched++;
             }
+            else
+            {
+                hr = S_FALSE;
+            }
         }
 
-        *pceltFetched = Fetched;
-        return Fetched ? S_OK : S_FALSE;
+        if (pceltFetched)
+            *pceltFetched = Fetched;
+        return hr;
     }
     STDMETHODIMP Skip(ULONG celt)
     {

@@ -18,26 +18,24 @@ ToolsModel::ToolsModel()
     m_shapeStyle = 0;
     m_brushStyle = BrushStyleRound;
     m_oldActiveTool = m_activeTool = TOOL_PEN;
-    m_airBrushWidth = 5;
+    m_airBrushRadius = 5;
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    ZeroMemory(&m_tools, sizeof(m_tools));
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
 ToolsModel::~ToolsModel()
 {
-    for (size_t i = 0; i < _countof(m_tools); ++i)
-        delete m_tools[i];
+    delete m_pToolObject;
+    m_pToolObject = NULL;
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
 {
-    if (!m_tools[nTool])
-        m_tools[nTool] = ToolBase::createToolObject(nTool);
-
-    return m_tools[nTool];
+    delete m_pToolObject;
+    m_pToolObject = ToolBase::createToolObject(nTool);
+    return m_pToolObject;
 }
 
 BOOL ToolsModel::IsSelection() const
@@ -101,8 +99,8 @@ void ToolsModel::MakeBrushThickerOrThinner(BOOL bThinner)
 
 void ToolsModel::MakeAirBrushThickerOrThinner(BOOL bThinner)
 {
-    INT thickness = GetAirBrushWidth();
-    SetAirBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    INT thickness = GetAirBrushRadius();
+    SetAirBrushRadius(bThinner ? max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakeRubberThickerOrThinner(BOOL bThinner)
@@ -145,7 +143,7 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
-    OnFinishDraw();
+    OnEndDraw(FALSE);
 
     selectionModel.Landing();
 
@@ -182,14 +180,14 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
     NotifyToolChanged();
 }
 
-int ToolsModel::GetAirBrushWidth() const
+INT ToolsModel::GetAirBrushRadius() const
 {
-    return m_airBrushWidth;
+    return m_airBrushRadius;
 }
 
-void ToolsModel::SetAirBrushWidth(int nAirBrushWidth)
+void ToolsModel::SetAirBrushRadius(INT nAirBrushRadius)
 {
-    m_airBrushWidth = nAirBrushWidth;
+    m_airBrushRadius = nAirBrushRadius;
     NotifyToolSettingsChanged();
 }
 
@@ -202,6 +200,50 @@ void ToolsModel::SetRubberRadius(int nRubberRadius)
 {
     m_rubberRadius = nRubberRadius;
     NotifyToolSettingsChanged();
+}
+
+SIZE ToolsModel::GetToolSize() const
+{
+    SIZE size;
+    switch (m_activeTool)
+    {
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+            size.cx = selectionModel.m_rc.Width();
+            size.cy = selectionModel.m_rc.Height();
+            break;
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_TEXT:
+        case TOOL_FILL:
+            size.cx = size.cy = 1;
+            break;
+        case TOOL_LINE:
+        case TOOL_BEZIER:
+        case TOOL_RECT:
+        case TOOL_RRECT:
+        case TOOL_SHAPE:
+        case TOOL_ELLIPSE:
+            size.cx = size.cy = GetLineWidth();
+            break;
+        case TOOL_AIRBRUSH:
+            size.cx = size.cy = GetAirBrushRadius() * 2;
+            break;
+        case TOOL_RUBBER:
+            size.cx = size.cy = GetRubberRadius() * 2;
+            break;
+        case TOOL_BRUSH:
+            size.cx = size.cy = GetBrushWidth();
+            break;
+        case TOOL_PEN:
+            size.cx = size.cy = GetPenWidth();
+            break;
+    }
+    if (size.cx < 1)
+        size.cx = 1;
+    if (size.cy < 1)
+        size.cy = 1;
+    return size;
 }
 
 BOOL ToolsModel::IsBackgroundTransparent() const
@@ -257,63 +299,6 @@ void ToolsModel::NotifyZoomChanged()
         canvasWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
-void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-{
-    m_pToolObject->beginEvent();
-    g_ptStart.x = g_ptEnd.x = x;
-    g_ptStart.y = g_ptEnd.y = y;
-    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-{
-    m_pToolObject->beginEvent();
-    if (m_pToolObject->OnMouseMove(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-{
-    m_pToolObject->beginEvent();
-    if (m_pToolObject->OnButtonUp(bLeftButton, x, y))
-    {
-        g_ptEnd.x = x;
-        g_ptEnd.y = y;
-    }
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnCancelDraw()
-{
-    ATLTRACE("ToolsModel::OnCancelDraw()\n");
-    m_pToolObject->beginEvent();
-    m_pToolObject->OnCancelDraw();
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnFinishDraw()
-{
-    ATLTRACE("ToolsModel::OnFinishDraw()\n");
-    m_pToolObject->beginEvent();
-    m_pToolObject->OnFinishDraw();
-    m_pToolObject->endEvent();
-}
-
-void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
-{
-    m_pToolObject->OnDrawOverlayOnImage(hdc);
-}
-
-void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)
-{
-    m_pToolObject->OnDrawOverlayOnCanvas(hdc);
-}
-
 void ToolsModel::resetTool()
 {
     m_pToolObject->reset();
@@ -325,9 +310,4 @@ void ToolsModel::selectAll()
     OnButtonDown(TRUE, 0, 0, FALSE);
     OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
-}
-
-void ToolsModel::SpecialTweak(BOOL bMinus)
-{
-    m_pToolObject->OnSpecialTweak(bMinus);
 }

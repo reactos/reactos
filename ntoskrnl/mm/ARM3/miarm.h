@@ -862,7 +862,7 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
 
     /*
      * Prototype PTEs are only valid in paged pool by design, this little trick
-     * lets us only use 30 bits for the adress of the PTE, as long as the area
+     * lets us only use 30 bits for the address of the PTE, as long as the area
      * stays 1024MB At most.
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;

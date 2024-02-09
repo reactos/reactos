@@ -978,27 +978,20 @@ static MUI_ENTRY hrHRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Pritisnite P da biste stvorili primarnu particiju.",
+        "\x07  Pritisnite C da biste stvorili primarnu/logi\237ku particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Pritisnite P da biste stvorili pro\347irenu particiju.",
+        "\x07  Pritisnite E da biste stvorili pro\347irenu particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Pritisnite P da biste stvorili logi\237ku particiju.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Pritisnite D da biste izbrisali postoje\206u particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1266,7 +1259,7 @@ static MUI_ENTRY hrHRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalacijski program \206e sada formatirati particiju.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1967,13 +1960,6 @@ MUI_ERROR hrHRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ne mo\247ete obriati neparticionirani diskovni prostor!\n"
-        "\n"
-        "  * Pritisnite bilo koju tipku za nastavak.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalacijski program je neuspje\347no instalirao %S bootcode na sistemsku particiju.",
         "ENTER = Ponovno pokreni ra\237unalo"
@@ -2249,25 +2235,27 @@ MUI_STRING hrHRStrings[] =
     {STRING_PLEASEWAIT,
      "   Molimo pri\237ekajte..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instaliraj   P = Stvori Primarnu   E = Stvori Pro\347irenu   F3 = Iza\320i"},
+     "   ENTER = Instaliraj   C = Stvori Primarnu   E = Stvori Pro\347irenu   F3 = Iza\320i"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instaliraj   L = Stvori Logi\237ku particiju  F3 = Iza\320i"},
+     "   ENTER = Instaliraj   C = Stvori Logi\237ku particiju  F3 = Iza\320i"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instaliraj   D = Izbri\347i particiju   F3 = Iza\320i"},
     {STRING_DELETEPARTITION,
      "   D = Izbri\347i particiju   F3 = Iza\320i"},
     {STRING_PARTITIONSIZE,
      "Veli\237ina nove particije:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Odabrali ste stvoriti primarnu particiju na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Odabrali ste stvoriti pro\347irenu particiju na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Odabrali ste stvoriti logi\237ku particiju na"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Molimo da unesite veli\237inu nove particije u MB."},
     {STRING_CREATEPARTITION,
      "   ENTER = Stvori particiju   ESC = Odustani   F3 = Iza\320i"},
+    {STRING_NEWPARTITION,
+    "Instalacijski program je stvorio novu particiju na"},
     {STRING_PARTFORMAT,
     "Ova \206e particija biti sljede\206a formatirana."},
     {STRING_NONFORMATTEDPART,
@@ -2318,30 +2306,28 @@ MUI_STRING hrHRStrings[] =
     "Naj\237e\347\206i uzrok tome je kori\347tenje USB tipkovnice\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB tipkovnice nisu jo\347 potupuno podr\247ane\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Instalacijski program formatira va\347 disk"},
+    {STRING_FORMATTINGPART,
+    "Instalacijski program formatira particiju..."},
     {STRING_CHECKINGDISK,
-    "Instalacijski sustav provjerava va\347 disk"},
+    "Instalacijski program provjerava disk..."},
     {STRING_FORMATDISK1,
     " Formatiraj particiju kao %S sustav datoteka (brzo formatiranje) "},
     {STRING_FORMATDISK2,
     " Formatiraj particiju kao %S sustav datoteka "},
     {STRING_KEEPFORMAT,
     " \254uvaj trenutni sustav datoteka (bez promjene) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "na %s."},
     {STRING_PARTTYPE,
     "Vrsta 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Instalacijski program je stvorio novu particiju na"},
     {STRING_UNPSPACE,
     "neparticiranom prostoru"},
     {STRING_MAXSIZE,

@@ -1,6 +1,9 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TR:  29-11-2013
-*/
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Albanian resource file
+ * TRANSLATOR:  Copyright 2013 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
+ */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 

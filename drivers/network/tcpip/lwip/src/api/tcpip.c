@@ -46,7 +46,9 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcpip.h"
 #include "lwip/init.h"
+#ifdef __REACTOS__
 #include "lwip/ip.h"
+#endif
 #include "netif/etharp.h"
 #include "netif/ppp_oe.h"
 
@@ -311,7 +313,7 @@ tcpip_apimsg(struct api_msg *apimsg)
   /* catch functions that don't set err */
   apimsg->msg.err = ERR_VAL;
 #endif
-
+  
   if (sys_mbox_valid(&mbox)) {
     msg.type = TCPIP_MSG_API;
     msg.msg.apimsg = apimsg;
@@ -361,14 +363,14 @@ err_t
 tcpip_netifapi(struct netifapi_msg* netifapimsg)
 {
   struct tcpip_msg msg;
-
+  
   if (sys_mbox_valid(&mbox)) {
     err_t err = sys_sem_new(&netifapimsg->msg.sem, 0);
     if (err != ERR_OK) {
       netifapimsg->msg.err = err;
       return err;
     }
-
+    
     msg.type = TCPIP_MSG_NETIFAPI;
     msg.msg.netifapimsg = netifapimsg;
     sys_mbox_post(&mbox, &msg);
@@ -390,7 +392,7 @@ tcpip_netifapi(struct netifapi_msg* netifapimsg)
 err_t
 tcpip_netifapi_lock(struct netifapi_msg* netifapimsg)
 {
-  LOCK_TCPIP_CORE();
+  LOCK_TCPIP_CORE();  
   netifapimsg->function(&(netifapimsg->msg));
   UNLOCK_TCPIP_CORE();
   return netifapimsg->msg.err;

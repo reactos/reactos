@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ja-JP.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-ja-JP.bmp"
 
 ID_MENU MENU
 BEGIN

@@ -4,6 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -13,12 +14,12 @@ BEGIN
     POPUP "&Jurnal"
     BEGIN
         MENUITEM "&Deschidere…", IDM_OPEN_EVENTLOG
-        MENUITEM "&Păstrare jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
+        MENUITEM "&Salvează jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
         MENUITEM "Î&nchide", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&ură toate evenimentele", IDM_CLEAR_EVENTS
         MENUITEM "&Redenumire\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "&Configurare jurnal…", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Setări pentru jurnal…", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
@@ -36,7 +37,7 @@ BEGIN
         MENUITEM "Afișează detalii de e&venimente", IDM_EVENT_DETAILS_VIEW
         MENUITEM "Afișează linii de g&rilaj", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Păstrează configurația la ieșire", IDM_SAVE_SETTINGS
+        MENUITEM "&Salvează setările la ieșire", IDM_SAVE_SETTINGS
     END
     POPUP "Aj&utor"
     BEGIN
@@ -50,12 +51,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Deschide jurnalul de evenimente...", IDM_OPEN_EVENTLOG
+        MENUITEM "Salv&ează jurnalul de evenimente ca...", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "Șter&ge toate evenimentele", IDM_CLEAR_EVENTS
+        MENUITEM "&Redenumește\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Setări de &jurnal...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -129,7 +130,7 @@ BEGIN
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Modificat:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessat:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Accesat:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Dimensiune jurnal", IDC_STATIC, 7, 106, 238, 99
     LTEXT "Dimensiune ma&ximă pentru jurnal:", IDC_STATIC, 17, 122, 58, 8
@@ -162,8 +163,8 @@ BEGIN
     IDS_EVENTLOG_APP "Jurnale de aplicație"
     IDS_EVENTLOG_USER "Jurnale de utilizator"
     IDS_SAVE_FILTER "Jurnal de evenimente (*.evt)\0*.evt\0"
-    IDS_CLEAREVENTS_MSG "Doriți păstrarea acestui jurnal de evenimente înainte de a-l închide?"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
+    IDS_CLEAREVENTS_MSG "Doriți să salvați acest jurnal de evenimente înainte de a-l închide?"
+    IDS_RESTOREDEFAULTS "Doriți să restaurați toate setările pentru acest jurnal la valorile lor implicite?"
     IDS_EVENTSTRINGIDNOTFOUND "Descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ) nu a fost găsită. Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
 END
 

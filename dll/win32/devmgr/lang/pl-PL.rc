@@ -85,7 +85,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Nie zainstalowano sterownika dla tego urządzenia."
     IDS_DEV_HARDWARE_DISABLED "Urządzenie jest wyłączone, ponieważ BIOS nie przydzielił żadnych zasobów dla tego urządzenia."
     IDS_DEV_CANT_SHARE_IRQ "Urządzenie żąda przerwania (IRQ), którego używa inne urządzenia i którego nie można współdzielić. Musisz zmienić ustawienia lub usunąć sterownik powodujący konflikt."
-    IDS_DEV_FAILED_ADD "Urządzenie nie działa prawidłowo, ponieważ %1 również nie działa poprawnie."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nie mógł zainstalować sterownika dla urządzenia, ponieważ nie mógł uzyskać dostępu do lokacji zawartej w pliku instalacyjnym."
     IDS_DEV_TRANSLATION_FAILED "Sterownik nie jest przeznaczony dla tego urządzenia."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nie mógł określić ustawień dla tego urządzenia. Poszukaj rozwiązania w dokumentacji urządzenia i użyj ustawień zasobów, aby skonfigurować je ręcznie."

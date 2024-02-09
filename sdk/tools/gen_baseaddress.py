@@ -15,6 +15,9 @@ Specify the build output dir as commandline argument to the script:
 
 Multiple directories can be specified:
 `python gen_baseaddress r:/build/msvc r:/build/gcc`
+
+Specify -64 as first argument to use 64-bit addresses:
+`python gen_baseaddress -64 r:\\build\\msvc-x64`
 """
 
 import os
@@ -102,9 +105,7 @@ EXCLUDE = (
     'bmfd.dll',
     'bootvid.dll',
     'framebuf.dll',
-    'framebuf_new.dll',
     'ftfd.dll',
-    'fusion.dll',
     'genincdata.dll',
     'hal.dll',
     'halaacpi.dll',
@@ -206,10 +207,14 @@ EXCLUDE = (
     'dllexport_test_dll1.dll',
     'dllexport_test_dll2.dll',
     'dllimport_test.dll',
+    'localspl_apitest.dll',
     'MyEventProvider.dll',
-    'w32kdll_2k3sp2.dll',
-    'w32kdll_ros.dll',
-    'w32kdll_xpsp2.dll',
+    'redirtest1.dll',
+    'redirtest2.dll',
+    'win32u_2k3sp2.dll',
+    'win32u_vista.dll',
+    'win32u_xpsp2.dll',
+    'testvdd.dll',
 )
 
 IMAGE_NT_OPTIONAL_HDR32_MAGIC = 0x10b
@@ -220,10 +225,11 @@ IMAGE_TYPES = {
     IMAGE_NT_OPTIONAL_HDR64_MAGIC: 0
 }
 
-def is_x64():
-    return IMAGE_TYPES[IMAGE_NT_OPTIONAL_HDR64_MAGIC] > IMAGE_TYPES[IMAGE_NT_OPTIONAL_HDR32_MAGIC]
+IS_64_BIT = False
 
 def size_of_image(filename):
+    if IS_64_BIT:
+        return 0xFE0000 # This results in 0x1000000 / 16MB space
     with open(filename, 'rb') as fin:
         if fin.read(2) != b'MZ':
             print(filename, 'No dos header found!')
@@ -294,7 +300,7 @@ class MemoryLayout(object):
 
     def _next_address(self, size):
         if self.start_at:
-            addr = (self.start_at - size - self.module_padding - 0xffff) & 0xffff0000
+            addr = (self.start_at - size - self.module_padding - 0xffff) & 0xffffffffffff0000
             self.start_at = addr
         else:
             addr = self.start_at = self.initial
@@ -348,10 +354,10 @@ def get_target_file(ntdll_path):
         ntdll_pe = pefile.PE(ntdll_path, fast_load=True)
         names = [sect.Name.strip(b'\0') for sect in ntdll_pe.sections]
         count = b'|'.join(names).count(b'/')
-        if b'.rossym' in names:
+        if IS_64_BIT:
+            return 'baseaddress64.cmake'
+        elif b'.rossym' in names:
             return 'baseaddress.cmake'
-        elif is_x64():
-            return 'baseaddress_msvc_x64.cmake'
         elif count == 0:
             return 'baseaddress_msvc.cmake'
         elif count > 3:
@@ -361,8 +367,11 @@ def get_target_file(ntdll_path):
     return None
 
 def run_dir(target):
-    layout = MemoryLayout(0x7c920000)
-    layout.add_reserved('user32.dll', 0x77a20000)
+    if IS_64_BIT:
+        layout = MemoryLayout(0x7FFB7000000)
+    else:
+        layout = MemoryLayout(0x7c920000)
+        layout.add_reserved('user32.dll', 0x77a20000)
     IMAGE_TYPES[IMAGE_NT_OPTIONAL_HDR64_MAGIC] = 0
     IMAGE_TYPES[IMAGE_NT_OPTIONAL_HDR32_MAGIC] = 0
     for root, _, files in os.walk(target):
@@ -385,6 +394,12 @@ def run_dir(target):
 
 def main():
     dirs = sys.argv[1:]
+
+    if len(dirs) > 0 and dirs[0] == '-64':
+        print('Using 64-bit addresses')
+        global IS_64_BIT
+        IS_64_BIT = True
+        dirs = sys.argv[2:]
     if len(dirs) < 1:
         trydir = os.getcwd()
         print(USAGE)

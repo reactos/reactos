@@ -1,8 +1,9 @@
 /*
- * PROJECT:   Registry manipulation library
- * LICENSE:   GPL - See COPYING in the top level directory
- * COPYRIGHT: Copyright 2005 Filip Navara <navaraf@reactos.org>
- *            Copyright 2001 - 2005 Eric Kohl
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Configuration Manager Library - CMLIB header
+ * COPYRIGHT:   Copyright 2001 - 2005 Eric Kohl
+ *              Copyright 2022 George Bișoc <george.bisoc@reactos.org>
  */
 
 #ifndef _CMLIB_H_
@@ -59,7 +60,9 @@
     #define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
     #define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
     #define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
+    #define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000D)
     #define STATUS_REGISTRY_CORRUPT          ((NTSTATUS)0xC000014C)
+    #define STATUS_REGISTRY_IO_FAILED        ((NTSTATUS)0xC000014D)
     #define STATUS_NOT_REGISTRY_FILE         ((NTSTATUS)0xC000015C)
     #define STATUS_REGISTRY_RECOVERED        ((NTSTATUS)0x40000009)
 
@@ -116,6 +119,10 @@
         IN PRTL_BITMAP BitMapHeader,
         IN ULONG StartingIndex,
         IN ULONG NumberToSet);
+
+    VOID NTAPI
+    RtlSetAllBits(
+        IN PRTL_BITMAP BitMapHeader);
 
     VOID NTAPI
     RtlClearAllBits(
@@ -202,12 +209,76 @@
 #endif
 #endif
 
-#define TAG_CM     '  MC'
-#define TAG_KCB    'bkMC'
-#define TAG_CMHIVE 'vHMC'
-#define TAG_CMSD   'DSMC'
+#define TAG_CM             '  MC'
+#define TAG_KCB            'bkMC'
+#define TAG_CMHIVE         'vHMC'
+#define TAG_CMSD           'DSMC'
+#define TAG_REGISTRY_STACK 'sRMC'
 
 #define CMAPI NTAPI
+
+//
+// Check Registry status type definition
+//
+typedef ULONG CM_CHECK_REGISTRY_STATUS;
+
+//
+// Check Registry flags
+//
+#define CM_CHECK_REGISTRY_DONT_PURGE_VOLATILES        0x0
+#define CM_CHECK_REGISTRY_PURGE_VOLATILES             0x2
+#define CM_CHECK_REGISTRY_BOOTLOADER_PURGE_VOLATILES  0x4
+#define CM_CHECK_REGISTRY_VALIDATE_HIVE               0x8
+#define CM_CHECK_REGISTRY_FIX_HIVE                    0x10
+
+//
+// Check Registry status codes
+//
+#define CM_CHECK_REGISTRY_GOOD                         0
+#define CM_CHECK_REGISTRY_INVALID_PARAMETER            1
+#define CM_CHECK_REGISTRY_SD_INVALID                   2
+#define CM_CHECK_REGISTRY_HIVE_CORRUPT_SIGNATURE       3
+#define CM_CHECK_REGISTRY_BIN_SIZE_OR_OFFSET_CORRUPT   4
+#define CM_CHECK_REGISTRY_BIN_SIGNATURE_HEADER_CORRUPT 5
+#define CM_CHECK_REGISTRY_BAD_FREE_CELL                6
+#define CM_CHECK_REGISTRY_BAD_ALLOC_CELL               7
+#define CM_CHECK_REGISTRY_ALLOCATE_MEM_STACK_FAIL      8
+#define CM_CHECK_REGISTRY_ROOT_CELL_NOT_FOUND          9
+#define CM_CHECK_REGISTRY_BAD_LEXICOGRAPHICAL_ORDER    10
+#define CM_CHECK_REGISTRY_NODE_NOT_FOUND               11
+#define CM_CHECK_REGISTRY_SUBKEY_NOT_FOUND             12
+#define CM_CHECK_REGISTRY_TREE_TOO_MANY_LEVELS         13
+#define CM_CHECK_REGISTRY_KEY_CELL_NOT_ALLOCATED       14
+#define CM_CHECK_REGISTRY_CELL_DATA_NOT_FOUND          15
+#define CM_CHECK_REGISTRY_CELL_SIZE_NOT_SANE           16
+#define CM_CHECK_REGISTRY_KEY_NAME_LENGTH_ZERO         17
+#define CM_CHECK_REGISTRY_KEY_TOO_BIG_THAN_CELL        18
+#define CM_CHECK_REGISTRY_BAD_KEY_NODE_PARENT          19
+#define CM_CHECK_REGISTRY_BAD_KEY_NODE_SIGNATURE       20
+#define CM_CHECK_REGISTRY_KEY_CLASS_UNALLOCATED        21
+#define CM_CHECK_REGISTRY_VALUE_LIST_UNALLOCATED       22
+#define CM_CHECK_REGISTRY_VALUE_LIST_DATA_NOT_FOUND    23
+#define CM_CHECK_REGISTRY_VALUE_LIST_SIZE_NOT_SANE     24
+#define CM_CHECK_REGISTRY_VALUE_CELL_NIL               25
+#define CM_CHECK_REGISTRY_VALUE_CELL_UNALLOCATED       26
+#define CM_CHECK_REGISTRY_VALUE_CELL_DATA_NOT_FOUND    27
+#define CM_CHECK_REGISTRY_VALUE_CELL_SIZE_NOT_SANE     28
+#define CM_CHECK_REGISTRY_CORRUPT_VALUE_DATA           29
+#define CM_CHECK_REGISTRY_DATA_CELL_NOT_ALLOCATED      30
+#define CM_CHECK_REGISTRY_BAD_KEY_VALUE_SIGNATURE      31
+#define CM_CHECK_REGISTRY_STABLE_KEYS_ON_VOLATILE      32
+#define CM_CHECK_REGISTRY_SUBKEYS_LIST_UNALLOCATED     33
+#define CM_CHECK_REGISTRY_CORRUPT_SUBKEYS_INDEX        34
+#define CM_CHECK_REGISTRY_BAD_SUBKEY_COUNT             35
+#define CM_CHECK_REGISTRY_KEY_INDEX_CELL_UNALLOCATED   36
+#define CM_CHECK_REGISTRY_CORRUPT_LEAF_ON_ROOT         37
+#define CM_CHECK_REGISTRY_CORRUPT_LEAF_SIGNATURE       38
+#define CM_CHECK_REGISTRY_CORRUPT_KEY_INDEX_SIGNATURE  39
+
+//
+// Check Registry success macro
+//
+#define CM_CHECK_REGISTRY_SUCCESS(StatusCode) ((ULONG)(StatusCode) == CM_CHECK_REGISTRY_GOOD)
 
 #include <wine/unicode.h>
 #include <wchar.h>
@@ -444,6 +515,16 @@ HvWriteHive(
 
 BOOLEAN
 CMAPI
+HvWriteAlternateHive(
+    _In_ PHHIVE RegistryHive);
+
+BOOLEAN
+CMAPI
+HvSyncHiveFromRecover(
+    _In_ PHHIVE RegistryHive);
+
+BOOLEAN
+CMAPI
 HvTrackCellRef(
     IN OUT PHV_TRACK_CELL_REF CellRef,
     IN PHHIVE Hive,
@@ -479,6 +560,84 @@ ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
 
+BOOLEAN CMAPI
+HvpVerifyHiveHeader(
+    _In_ PHBASE_BLOCK BaseBlock,
+    _In_ ULONG FileType);
+
+//
+// Registry Self-Heal Routines
+//
+BOOLEAN
+CMAPI
+CmIsSelfHealEnabled(
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairParentKey(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX TargetKey,
+    _In_ HCELL_INDEX ParentKey,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairParentNode(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _In_ HCELL_INDEX ParentCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairKeyNodeSignature(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairClassOfNodeKey(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX DirtyCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairValueList(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairValueListCount(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ ULONG ListCountIndex,
+    _Inout_ PCELL_DATA ValueListData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairSubKeyCounts(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _In_ ULONG Count,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
+
+BOOLEAN
+CMAPI
+CmpRepairSubKeyList(
+    _Inout_ PHHIVE Hive,
+    _In_ HCELL_INDEX CurrentCell,
+    _Inout_ PCELL_DATA CellData,
+    _In_ BOOLEAN FixHive);
 
 /* Old-style Public "Cmlib" functions */
 
@@ -487,12 +646,27 @@ CmCreateRootNode(
    PHHIVE Hive,
    PCWSTR Name);
 
-VOID CMAPI
-CmPrepareHive(
-   PHHIVE RegistryHive);
-
-
 /* NT-style Public Cm functions */
+
+//
+// Check Registry Routines
+//
+CM_CHECK_REGISTRY_STATUS
+NTAPI
+HvValidateBin(
+    _In_ PHHIVE Hive,
+    _In_ PHBIN Bin);
+
+CM_CHECK_REGISTRY_STATUS
+NTAPI
+HvValidateHive(
+    _In_ PHHIVE Hive);
+
+CM_CHECK_REGISTRY_STATUS
+NTAPI
+CmCheckRegistry(
+    _In_ PCMHIVE RegistryHive,
+    _In_ ULONG Flags);
 
 //
 // Cell Index Routines

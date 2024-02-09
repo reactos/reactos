@@ -50,6 +50,7 @@ typedef struct _GUI_CONSOLE_DATA
     HDESK   Desktop;
 
     BOOLEAN IsWindowVisible;
+    BOOLEAN IsWindowActive;
 
     POINT OldCursor;
 

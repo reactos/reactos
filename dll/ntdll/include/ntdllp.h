@@ -226,4 +226,9 @@ RtlDoesFileExists_UStr(
     IN PUNICODE_STRING FileName
 );
 
+VOID
+NTAPI
+RtlpInitializeKeyedEvent(
+    VOID);
+
 /* EOF */

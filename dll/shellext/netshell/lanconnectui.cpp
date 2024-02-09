@@ -17,20 +17,25 @@ CNetConnectionPropertyUi::~CNetConnectionPropertyUi()
     if (m_pNCfg)
         m_pNCfg->Uninitialize();
 
+    // Note: MSDN says we can only unlock after INetCfg::Uninitialize
+    if (m_NCfgLock)
+        m_NCfgLock->ReleaseWriteLock();
+
     if (m_pProperties)
         NcFreeNetconProperties(m_pProperties);
 }
 
 VOID
-AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName, BOOL bChecked)
+AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName, BOOL bChecked, UINT Image)
 {
     LVITEMW lvItem;
 
-    ZeroMemory(&lvItem, sizeof(lvItem));
-    lvItem.mask  = LVIF_TEXT | LVIF_PARAM;
+    lvItem.mask  = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     lvItem.pszText = szName;
     lvItem.lParam = (LPARAM)pItem;
-    lvItem.iItem = ListView_GetItemCount(hDlgCtrl);
+    lvItem.iImage = Image;
+    lvItem.iItem = 0x7fffffff; // Append at the end of the list.
+    lvItem.iSubItem = 0;
     lvItem.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
     ListView_SetCheckState(hDlgCtrl, lvItem.iItem, bChecked);
 }
@@ -69,7 +74,7 @@ CNetConnectionPropertyUi::GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent *
 }
 
 VOID
-CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type)
+CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type, PSP_CLASSIMAGELIST_DATA pCILD)
 {
     HRESULT hr;
     CComPtr<IEnumNetCfgComponent> pENetCfg;
@@ -123,7 +128,10 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
         pItem->pNCfgComp = pNCfgComp.Detach();
         pItem->NumPropDialogOpen = 0;
 
-        AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked);
+        INT image;
+        if (!pCILD->ImageList || !SetupDiGetClassImageIndex(pCILD, CompGuid, &image))
+            image = I_IMAGENONE;
+        AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked, image);
         CoTaskMemFree(pDisplayName);
     }
 }
@@ -139,7 +147,6 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
     RECT rc;
     DWORD dwStyle;
     LPWSTR pDisplayName;
-    LVITEMW li;
 
     SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)m_pProperties->pszwDeviceName);
     if (m_pProperties->dwCharacter & NCCF_SHOW_ICON)
@@ -181,20 +188,34 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
 
     hr = pNCfg->Initialize(NULL);
     if (FAILED_UNEXPECTEDLY(hr))
+    {
+        pNCfgLock->ReleaseWriteLock();
         return;
+    }
 
     m_pNCfg = pNCfg;
     m_NCfgLock = pNCfgLock;
 
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
+    SP_CLASSIMAGELIST_DATA spcid;
+    spcid.cbSize = sizeof(spcid);
+    if (SetupDiGetClassImageList(&spcid))
+    {
+        HIMAGELIST hIL = ImageList_Duplicate(spcid.ImageList);
+        ListView_SetImageList(hDlgCtrl, hIL, LVSIL_SMALL);
+    }
+    else
+    {
+        spcid.ImageList = NULL;
+    }
 
-    ZeroMemory(&li, sizeof(li));
-    li.mask = LVIF_STATE;
-    li.stateMask = (UINT)-1;
-    li.state = LVIS_FOCUSED|LVIS_SELECTED;
-    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT, &spcid);
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE, &spcid);
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL, &spcid);
+
+    if (spcid.ImageList)
+        SetupDiDestroyClassImageList(&spcid);
+
+    ListView_SetItemState(hDlgCtrl, 0, -1, LVIS_FOCUSED | LVIS_SELECTED);
 }
 
 VOID
@@ -320,6 +341,13 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 return PSNRET_NOERROR;
             }
 #endif
+            if (lppl->hdr.code == NM_DBLCLK)
+            {
+                This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                This->ShowNetworkComponentProperties(hwndDlg);
+                return FALSE;
+            }
+
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                 ZeroMemory(&li, sizeof(li));

@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATORS: Copyright 2007 Zaenal Mutaqin <ade999@gmail.com>
+ *              Copyright 2019 Mas Ahmad Muhammad <m.charly81@gmail.com>
+ */
+
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE

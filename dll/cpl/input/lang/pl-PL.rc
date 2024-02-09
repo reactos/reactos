@@ -119,7 +119,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Lewy Alt+Shift"
     IDS_SWITCH_BET_INLANG "Przełącza pomiędzy układami klawiatury"
-    IDS_REBOOT_NOW, "Uruchomić ponownie system?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE

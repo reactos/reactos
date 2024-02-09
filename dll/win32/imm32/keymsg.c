@@ -158,7 +158,6 @@ BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 }
 
 /* Open or close Japanese IME */
-/* Win: JCloseOpen */
 BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     BOOL fOpen;
@@ -177,7 +176,7 @@ BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
-            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN; /* Notify open change */
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_FORCE_OPEN;
             ImmUnlockIMC(hIMC);
         }
     }
@@ -331,85 +330,23 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
     return TRUE;
 }
 
-typedef struct IMM_DELAY_SET_LANG_BAND
-{
-    HWND hWnd;
-    BOOL fSet;
-} IMM_DELAY_SET_LANG_BAND, *PIMM_DELAY_SET_LANG_BAND;
-
-/* Sends a message to set the language band with delay. */
-/* Win: DelaySetLangBand */
-static DWORD APIENTRY Imm32DelaySetLangBandProc(LPVOID arg)
-{
-    HWND hwndDefIME;
-    WPARAM wParam;
-    DWORD_PTR lResult;
-    PIMM_DELAY_SET_LANG_BAND pSetBand = arg;
-
-    Sleep(3000); /* Delay 3 seconds! */
-
-    hwndDefIME = ImmGetDefaultIMEWnd(pSetBand->hWnd);
-    if (hwndDefIME)
-    {
-        wParam = (pSetBand->fSet ? IMS_SETLANGBAND : IMS_UNSETLANGBAND);
-        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, wParam, (LPARAM)pSetBand->hWnd,
-                            SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
-    }
-    ImmLocalFree(pSetBand);
-    return FALSE;
-}
-
-/* Updates the language band. */
-/* Win: CtfImmSetLangBand */
-LRESULT APIENTRY CtfImmSetLangBand(HWND hWnd, BOOL fSet)
-{
-    HANDLE hThread;
-    PWND pWnd = NULL;
-    PIMM_DELAY_SET_LANG_BAND pSetBand;
-    DWORD_PTR lResult = 0;
-
-    if (hWnd && gpsi)
-        pWnd = ValidateHwndNoErr(hWnd);
-
-    if (IS_NULL_UNEXPECTEDLY(pWnd))
-        return 0;
-
-    if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
-    {
-        SendMessageTimeoutW(hWnd, WM_USER + 0x105, 0, fSet, SMTO_BLOCK | SMTO_ABORTIFHUNG,
-                            5000, &lResult);
-        return lResult;
-    }
-
-    pSetBand = ImmLocalAlloc(0, sizeof(IMM_DELAY_SET_LANG_BAND));
-    if (IS_NULL_UNEXPECTEDLY(pSetBand))
-        return 0;
-
-    pSetBand->hWnd = hWnd;
-    pSetBand->fSet = fSet;
-
-    hThread = CreateThread(NULL, 0, Imm32DelaySetLangBandProc, pSetBand, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
-    return 0;
-}
-
-/* Win: SendNotificationProc */
-static BOOL CALLBACK Imm32SendNotificationProc(HIMC hIMC, LPARAM lParam)
+static BOOL CALLBACK
+Imm32SendNotificationProc(
+    _In_ HIMC hIMC,
+    _In_ LPARAM lParam)
 {
     HWND hWnd;
     LPINPUTCONTEXTDX pIC;
+
+    UNREFERENCED_PARAMETER(lParam);
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pIC))
         return TRUE;
 
     hWnd = pIC->hWnd;
-    if (hWnd == NULL || !IsWindow(hWnd))
-    {
-        ERR("\n");
+    if (!IsWindow(hWnd))
         goto Quit;
-    }
 
     TRACE("dwChange: 0x%08X\n", pIC->dwChange);
 
@@ -427,7 +364,6 @@ Quit:
     return TRUE;
 }
 
-/* Win: ImmSendNotification */
 BOOL APIENTRY Imm32SendNotification(BOOL bProcess)
 {
     return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendNotificationProc, 0);
@@ -752,10 +688,15 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     return ret;
 }
 
+/***********************************************************************
+ *		ImmGetAppCompatFlags (IMM32.@)
+ */
 DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
 {
     PCLIENTIMC pClientIMC;
     DWORD dwFlags;
+
+    TRACE("(%p)\n", hIMC);
 
     pClientIMC = ImmLockClientImc(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pClientIMC))
@@ -763,7 +704,7 @@ DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC)
 
     dwFlags = pClientIMC->dwCompatFlags;
     ImmUnlockClientImc(pClientIMC);
-    return dwFlags;
+    return (dwFlags | g_aimm_compat_flags);
 }
 
 /***********************************************************************
@@ -778,11 +719,11 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
     PIMEDPI pImeDpi;
     LPINPUTCONTEXTDX pIC;
     BYTE KeyState[256];
-    UINT vk;
-    BOOL bUseIme = TRUE, bSkipThisKey = FALSE, bLowWordOnly = FALSE;
+    BOOL bLowWordOnly = FALSE, bSkipThisKey = FALSE, bHotKeyDone = TRUE;
 
     TRACE("(%p, %p, 0x%X, %p, 0x%lX)\n", hWnd, hKL, vKey, lParam, dwHotKeyID);
 
+    /* Process the key by the IME */
     hIMC = ImmGetContext(hWnd);
     pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi)
@@ -790,7 +731,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
-            if (LOBYTE(vKey) == VK_PACKET &&
+            if ((LOBYTE(vKey) == VK_PACKET) &&
                 !(pImeDpi->ImeInfo.fdwProperty & IME_PROP_ACCEPT_WIDE_VKEY))
             {
                 if (ImeDpi_IsUnicode(pImeDpi))
@@ -799,28 +740,22 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
                 }
                 else
                 {
-                    bUseIme = FALSE;
                     if (pIC->fOpen)
-                        bSkipThisKey = TRUE;
+                        ret |= IPHK_SKIPTHISKEY;
+
+                    bSkipThisKey = TRUE;
                 }
             }
 
-            if (bUseIme)
+            if (!bSkipThisKey && GetKeyboardState(KeyState))
             {
-                if (GetKeyboardState(KeyState))
+                UINT vk = (bLowWordOnly ? LOWORD(vKey) : vKey);
+                if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
                 {
-                    vk = (bLowWordOnly ? LOWORD(vKey) : vKey);
-                    if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
-                    {
-                        pIC->bNeedsTrans = TRUE;
-                        pIC->nVKey = vKey;
-                        ret |= IPHK_PROCESSBYIME;
-                    }
+                    pIC->bNeedsTrans = TRUE;
+                    pIC->nVKey = vKey;
+                    ret |= IPHK_PROCESSBYIME;
                 }
-            }
-            else if (bSkipThisKey)
-            {
-                ret |= IPHK_SKIPTHISKEY;
             }
 
             ImmUnlockIMC(hIMC);
@@ -829,21 +764,32 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    if (dwHotKeyID != INVALID_HOTKEY_ID) /* Valid Hot-key */
+    /* Process the hot-key if necessary */
+    if (!CtfImmIsCiceroStartedInThread()) /* Not Cicero? */
     {
-        if (Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
+        /* Process IMM IME hotkey */
+        if ((dwHotKeyID == INVALID_HOTKEY_ID) || !Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
+            bHotKeyDone = FALSE;
+    }
+    else if (!CtfImeProcessCicHotkey(hIMC, vKey, lParam)) /* CTF IME not processed the hotkey? */
+    {
+        /* Process IMM IME hotkey */
+        if (!IS_IME_HKL(hKL) ||
+            ((dwHotKeyID == INVALID_HOTKEY_ID) || !Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID)))
         {
-            if (vKey != VK_KANJI || dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)
-                ret |= IPHK_HOTKEY;
+            bHotKeyDone = FALSE;
         }
     }
+
+    if (bHotKeyDone && ((vKey != VK_KANJI) || (dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)))
+        ret |= IPHK_HOTKEY;
 
     if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
     {
         /* The key has been processed by IME's ImeProcessKey */
         LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        if (PRIMARYLANGID(wLangID) == LANG_KOREAN &&
-            (vKey == VK_PROCESSKEY || (ret & IPHK_HOTKEY)))
+        if ((PRIMARYLANGID(wLangID) == LANG_KOREAN) &&
+            ((vKey == VK_PROCESSKEY) || (ret & IPHK_HOTKEY)))
         {
             /* Korean don't want VK_PROCESSKEY and IME hot-keys */
         }
@@ -851,6 +797,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
         {
             /* Add WM_KEYDOWN:VK_PROCESSKEY message */
             ImmTranslateMessage(hWnd, WM_KEYDOWN, VK_PROCESSKEY, lParam);
+
             ret &= ~IPHK_PROCESSBYIME;
             ret |= IPHK_SKIPTHISKEY;
         }
@@ -1177,24 +1124,6 @@ LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
     return ImmRequestMessageAW(hIMC, wParam, lParam, FALSE);
-}
-
-/***********************************************************************
- *              ImmSendMessageToActiveDefImeWndW (IMM32.@)
- */
-LRESULT WINAPI
-ImmSendMessageToActiveDefImeWndW(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    HWND hwndIME;
-
-    if (uMsg != WM_COPYDATA)
-        return 0;
-
-    hwndIME = (HWND)NtUserQueryWindow((HWND)wParam, QUERY_WINDOW_DEFAULT_IME);
-    if (IS_NULL_UNEXPECTEDLY(hwndIME))
-        return 0;
-
-    return SendMessageW(hwndIME, uMsg, wParam, lParam);
 }
 
 /***********************************************************************

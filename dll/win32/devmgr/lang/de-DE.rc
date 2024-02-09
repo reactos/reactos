@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Die Treiber für dieses Gerät sind nicht installiert."
     IDS_DEV_HARDWARE_DISABLED "Dieses Gerät ist deaktiviert, weil das BIOS für dieses Gerät keine Ressourcen zugeteilt hat."
     IDS_DEV_CANT_SHARE_IRQ "Dieses Gerät benutzt einen Interrupt (IRQ), der bereits von einem anderen Gerät benutzt wird und nicht geteilt werden kann. Sie müssen die kollidierenden Einstellungen ändern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
-    IDS_DEV_FAILED_ADD "Dieses Gerät arbeitet nicht korrekt, weil %1 nicht korrekt funktioniert."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber für dieses Gerät nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
     IDS_DEV_TRANSLATION_FAILED "Dieses Gerät reagiert nicht auf seinen Treiber."
     IDS_DEV_NO_SOFTCONFIG "ReactOS kann die Einstellungen für dieses Gerät nicht feststellen. Lesen Sie die Dokumentation, die mit diesem Gerät kam und benutzen Sie den Reiter ""Ressourcen"" umd die Konfiguration vorzunehmen."

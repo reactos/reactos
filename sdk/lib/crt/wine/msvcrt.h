@@ -1489,6 +1489,19 @@ typedef struct {
 #ifdef __REACTOS__
 #define __wine_longjmp longjmp
 #define __wine_jmp_buf _JBTYPE
+
+#ifdef _M_IX86
+// ASM wrapper for Wine code. See rosglue_i386.s for implementation.
+void
+WINAPI
+__wine__RtlUnwind(
+    struct _EXCEPTION_REGISTRATION_RECORD* pEndFrame,
+    PVOID targetIp,
+    struct _EXCEPTION_RECORD* pRecord,
+    PVOID retval);
+#define RtlUnwind __wine__RtlUnwind
+#endif /* _M_IX86 */
+
 #endif
 
 #endif /* __WINE_MSVCRT_H */

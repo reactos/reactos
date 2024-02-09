@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enGBLayouts[] =
 {
-    { L"0809", L"00000809" },
-    { NULL, NULL }
+    { 0x0809, 0x00000809 },
+    { 0, 0 }
 };

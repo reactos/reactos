@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 VOID
@@ -50,12 +47,9 @@ protected:
     friend VOID NTAPI IServiceGroupDpc(IN struct _KDPC  *Dpc, IN PVOID  DeferredContext, IN PVOID  SystemArgument1, IN PVOID  SystemArgument2);
 };
 
-
-
 //---------------------------------------------------------------
 // IUnknown methods
 //
-
 
 NTSTATUS
 NTAPI

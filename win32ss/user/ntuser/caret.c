@@ -239,7 +239,7 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != UserHMGetHandle(Window))
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -276,7 +276,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if(Window && ThreadQueue->CaretInfo.hWnd != Window->head.h)
+   if(Window && ThreadQueue->CaretInfo.hWnd != UserHMGetHandle(Window))
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -316,20 +316,20 @@ NtUserCreateCaret(
    PWND Window;
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
 
    TRACE("Enter NtUserCreateCaret\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if(Window->head.pti->pEThread != PsGetCurrentThread())
    {
       EngSetLastError(ERROR_ACCESS_DENIED);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -368,12 +368,12 @@ NtUserCreateCaret(
 
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_CARET, CHILDID_SELF, 0);
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   TRACE("Leave NtUserCreateCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserCreateCaret, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 UINT
@@ -399,7 +399,7 @@ NtUserGetCaretPos(
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = TRUE;
 
    TRACE("Enter NtUserGetCaretPos\n");
    UserEnterShared();
@@ -411,15 +411,12 @@ NtUserGetCaretPos(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      Ret = FALSE;
    }
 
-   RETURN(TRUE);
-
-CLEANUP:
-   TRACE("Leave NtUserGetCaretPos, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetCaretPos, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
@@ -428,15 +425,14 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
-   BOOL ret;
+   BOOL ret = FALSE;
 
    TRACE("Enter NtUserShowCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
@@ -445,12 +441,10 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
 
    if (Window) UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserShowCaret, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 BOOL
@@ -459,15 +453,14 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
 {
    PWND Window = NULL;
    USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
-   BOOL ret;
+   BOOL ret = FALSE;
 
    TRACE("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
    if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
@@ -476,10 +469,8 @@ NtUserHideCaret(HWND hWnd OPTIONAL)
 
    if (Window) UserDerefObjectCo(Window);
 
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserHideCaret, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserHideCaret, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }

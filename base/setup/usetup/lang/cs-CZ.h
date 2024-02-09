@@ -976,7 +976,7 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Stistknut\241m P vytvo\375\241te prim\240rn\241 odd\241l.",
+        "\x07  Stistknut\241m C vytvo\375\241te prim\240rn\241/logick\354 odd\241l.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -990,13 +990,6 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Stisknut\241m D umo\247n\241te smaz\240n\241 existuj\241c\241ho odd\241lu.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1264,7 +1257,7 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Tento odd\241l bude nyn\241 zform\240tov\240n. Stisknut\241m kl\240vesy ENTER za\237nete.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1944,13 +1937,6 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nelze vymazat m\241sto na disku, kter\202 nepat\375\241 \247\240dn\202mu odd\241lu!\n"
-        "\n"
-        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Nepoda\375ilo se nainstalovat %S zavad\330\237 na syst\202mov\354 odd\241l.",
         "ENTER = Restartovat po\237\241ta\237"
@@ -2226,25 +2212,27 @@ MUI_STRING csCZStrings[] =
     {STRING_PLEASEWAIT,
      "   \254ekejte, pros\241m..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalovat   P = Nov\354 prim\240rn\241   E = Nov\354 roz\347\241\375en\354   F3 = Ukon\237it"},
+     "   ENTER = Instalovat   C = Nov\354 prim\240rn\241   E = Nov\354 roz\347\241\375en\354   F3 = Ukon\237it"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalovat   L = Vytvo\375it logick\354 odd\241l   F3 = Ukon\237it"},
+     "   ENTER = Instalovat   C = Vytvo\375it logick\354 odd\241l   F3 = Ukon\237it"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalovat   D = Odstranit odd\241l   F3 = Ukon\237it"},
     {STRING_DELETEPARTITION,
      "   D = Odstranit odd\241l   F3 = Ukon\237it"},
     {STRING_PARTITIONSIZE,
      "Velikost nov\202ho odd\241lu:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Zvolili jste vytvo\375en\241 nov\202ho prim\240rn\241ho odd\241lu na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Zvolili jste vytvo\375en\241 nov\202ho roz\347\241\375en\202ho odd\241lu na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Zvolili jste vytvo\375en\241 nov\202ho logick\202ho odd\241lu na"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Zadejte velikost nov\202ho odd\241lu v megabajtech."},
     {STRING_CREATEPARTITION,
      "   ENTER = Vytvo\375it odd\241l   ESC = Zru\347it   F3 = Ukon\237it"},
+    {STRING_NEWPARTITION,
+    "Instalace vytvo\375ila nov\354 odd\241l na"},
     {STRING_PARTFORMAT,
     "Tento odd\241l bude zform\240tov\240n."},
     {STRING_NONFORMATTEDPART,
@@ -2295,30 +2283,28 @@ MUI_STRING csCZStrings[] =
     "Nejb\330\247n\330j\347\241 p\375\241\237inou je pou\247\241v\240n\241 USB kl\240vesnice\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB kl\240vesnice zat\241m nejsou pln\330 podporov\240ny\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Instalace form\240tuje disk"},
+    {STRING_FORMATTINGPART,
+    "Instalace form\240tuje odd\241l..."},
     {STRING_CHECKINGDISK,
-    "Instalace kontroluje disk"},
+    "Instalace kontroluje disk..."},
     {STRING_FORMATDISK1,
     " Zform\240tovat odd\241l na souborov\354 syst\202m %S (rychle) "},
     {STRING_FORMATDISK2,
     " Zform\240tovat odd\241l na souborov\354 syst\202m %S "},
     {STRING_KEEPFORMAT,
     " Ponechat sou\237asn\354 souborov\354 syst\202m (bez zm\330ny) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "na: %s."},
     {STRING_PARTTYPE,
     "Typ 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Instalace vytvo\375ila nov\354 odd\241l na"},
     {STRING_UNPSPACE,
     "M\241sto bez odd\241l\205"},
     {STRING_MAXSIZE,

@@ -83,7 +83,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Los controladores para este dispositivo no están instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo se ha deshabilitado porque la BIOS no ha proporcionado ningún recurso al dispositivo."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo está utilizando un recurso de petición de interrupción (IRQ) que usa otro dispositivo y no puede compartirlo. Cambie la opción conflictiva o desinstale el controlador en tiempo real que causa el conflicto."
-    IDS_DEV_FAILED_ADD "Este dispositivo no está funcionando correctamente porque %1 no funciona."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS no puede instalar los controladores porque no se puede acceder al disco o ubicación en red que contiene los archivos de instalación."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo no está respondiendo a su controlador."
     IDS_DEV_NO_SOFTCONFIG "ReactOS no puede determinar las propiedades de este dispositivo. Consulte la documentación proporcionada por el dispositivo y utilice la pestaña de recursos para establecer la configuración correcta."

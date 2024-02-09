@@ -15,7 +15,7 @@
 
 #define STATUS_WINDOW	2001
 #define STATUS_SIZE1	85
-#define STATUS_SIZE2	190
+#define STATUS_SIZE2	157 // he-IL.rc determines minimum width: 72 == 157 - 85
 #define STATUS_SIZE3	400
 
 typedef struct
@@ -36,15 +36,14 @@ typedef struct
 	BOOL	HideWhenMinimized;
 	BOOL	Show16BitTasks;
 
-	/* Update speed settings */
-	/* How many half-seconds in between updates (i.e. 0 - Paused, 1 - High, 2 - Normal, 4 - Low) */
+	/* 0 - Paused, 1 - High, 2 - Normal, 4 - Low */
 	DWORD	UpdateSpeed;
 
 	/* Applications page settings */
 	DWORD	ViewMode;
 
 	/* Processes page settings */
-	BOOL	ShowProcessesFromAllUsers; /* Server-only? */
+	BOOL	ShowProcessesFromAllUsers;
 	BOOL	Columns[COLUMN_NMAX];
 	int		ColumnOrderArray[COLUMN_NMAX];
 	int		ColumnSizeArray[COLUMN_NMAX];
@@ -54,7 +53,6 @@ typedef struct
 	/* Performance page settings */
 	BOOL	CPUHistory_OneGraphPerCPU;
 	BOOL	ShowKernelTimes;
-
 } TASKMANAGER_SETTINGS, *LPTASKMANAGER_SETTINGS;
 
 /* Global Variables: */
@@ -80,6 +78,7 @@ void TaskManager_OnRestoreMainWindow(void);
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);
 void TaskManager_OnViewUpdateSpeed(DWORD);
 void TaskManager_OnTabWndSelChange(void);
+BOOL ConfirmMessageBox(HWND hWnd, LPCWSTR Text, LPCWSTR Title, UINT Type);
 VOID ShowWin32Error(DWORD dwError);
-LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
+LPTSTR GetLastErrorText(LPTSTR lpszBuf, DWORD dwSize);
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);

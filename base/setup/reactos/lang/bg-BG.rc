@@ -39,11 +39,11 @@ CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Компютър:", IDC_STATIC, 20, 15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 150, 80
+    COMBOBOX IDC_COMPUTER, 100, 15, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "  Екран:", IDC_STATIC, 20, 35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 150, 80
+    COMBOBOX IDC_DISPLAY, 100, 35, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Клавиатура", IDC_STATIC, 20, 55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 150, 80
+    COMBOBOX IDC_KEYBOARD, 100, 55, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Натиснете „Напред“ за избор на устройство за слагане.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -70,7 +70,7 @@ BEGIN
     LTEXT "Размер:", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "ГБ", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Файлова уредба:", IDC_STATIC, 13, 46, 42, 9
+    LTEXT "Файлова система:", IDC_STATIC, 13, 46, 42, 9
     CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
     PUSHBUTTON "&Добре", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Отказ", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
@@ -133,10 +133,10 @@ CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Първата степен от настройването на РеактОС приключи успешно.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Когато натиснете „Край”, компютърът ви ще се презапусне.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Ако в устройството има КД, го извадете. След това натиснете „Приключване“, за да презапуснете компютъра.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Първата степен от настройването на РеактОС приключи успешно.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Когато натиснете „Край”, компютърът ви ще се презапусне.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Ако в устройството има КД, го извадете. След това натиснете „Приключване“, за да презапуснете компютъра.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE
@@ -147,7 +147,7 @@ BEGIN
     IDS_DEVICESUBTITLE "Настройка на екрана и клавиатурата."
     IDS_DRIVETITLE "Приготвяне на дял за слагане и системна папка"
     IDS_DRIVESUBTITLE "Приготвяне на дял за слагане, системна папка и зареждач."
-    IDS_PROCESSTITLE "Подготвяне на дял, презапис на файлове и настройване на уредбата"
+    IDS_PROCESSTITLE "Подготвяне на дял, презапис на файлове и настройване на системата"
     IDS_PROCESSSUBTITLE "Създаване и оразмеряване на дял, презапис на файлове, слагане и настройка на зареждач"
     IDS_RESTARTTITLE "Първата степен на настройването приключи"
     IDS_RESTARTSUBTITLE "Първата степен приключи, презапуснете, за да продължите към втора степен"

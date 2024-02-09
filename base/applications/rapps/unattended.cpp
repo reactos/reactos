@@ -222,27 +222,22 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
-    BOOL bAppwizMode = FALSE;
-
     if (!argv)
-    {
         return FALSE;
-    }
 
     CStringW Directory;
     GetStorageDirectory(Directory);
     CAppDB db(Directory);
 
-    if (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ))
+    BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
+    if (!bAppwizMode)
     {
-        bAppwizMode = TRUE;
+        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
+            db.RemoveCached();
+
+        db.UpdateAvailable();
     }
 
-    if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
-    {
-        db.RemoveCached();
-    }
-    db.UpdateAvailable();
     db.UpdateInstalled();
 
     if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested

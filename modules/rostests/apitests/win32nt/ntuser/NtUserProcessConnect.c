@@ -6,7 +6,7 @@
  *              Copyright 2021 Hermes Belusca-Maito
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>

@@ -28,6 +28,10 @@ Author:
 #include <ntimage.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Resource Functions
 //
@@ -58,7 +62,6 @@ LdrEnumResources(
     _Inout_ ULONG *ResourceCount,
     _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources
 );
-
 
 NTSTATUS
 NTAPI
@@ -97,8 +100,8 @@ LdrGetProcedureAddress(
 ULONG
 NTAPI
 LdrRelocateImage(
-    _In_ PVOID NewBase,
-    _In_ PCCH LoaderName,
+    _In_ PVOID BaseAddress,
+    _In_opt_ PCSTR LoaderName,
     _In_ ULONG Success,
     _In_ ULONG Conflict,
     _In_ ULONG Invalid
@@ -116,7 +119,7 @@ NTSTATUS
 NTAPI
 LdrUnlockLoaderLock(
     _In_ ULONG Flags,
-    _In_opt_ ULONG Cookie
+    _In_opt_ ULONG_PTR Cookie
 );
 
 BOOLEAN
@@ -139,9 +142,22 @@ LdrProcessRelocationBlockLongLong(
 NTSTATUS
 NTAPI
 LdrEnumerateLoadedModules(
-    _In_ BOOLEAN ReservedFlag,
+    _Reserved_ ULONG ReservedFlag,
     _In_ PLDR_ENUM_CALLBACK EnumProc,
-    _In_ PVOID Context
+    _In_opt_ PVOID Context
 );
+
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDllShutdownInProgress(
+    VOID
+);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -159,13 +159,18 @@ CAvailableApplicationInfo::LicenseString()
     m_Parser->GetString(L"License", szLicenseString);
     LicenseType licenseType;
 
-    if (IsLicenseType(IntBuffer))
+    if (IsKnownLicenseType(IntBuffer))
     {
         licenseType = static_cast<LicenseType>(IntBuffer);
     }
     else
     {
         licenseType = LICENSE_NONE;
+        if (szLicenseString.CompareNoCase(L"Freeware") == 0)
+        {
+            licenseType = LICENSE_FREEWARE;
+            szLicenseString = L"";
+        }
     }
 
     CStringW szLicense;
@@ -184,7 +189,9 @@ CAvailableApplicationInfo::LicenseString()
             return szLicenseString;
     }
 
-    return szLicense + L" (" + szLicenseString + L")";
+    if (!szLicenseString.IsEmpty())
+        szLicense += L" (" + szLicenseString + L")";
+    return szLicense;
 }
 
 VOID

@@ -10,6 +10,9 @@ if(ARCH STREQUAL "i386")
     list(APPEND CRT_WINE_SOURCE
         wine/except_i386.c
     )
+    list(APPEND CRT_WINE_ASM_SOURCE
+        wine/rosglue_i386.s
+    )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND CRT_WINE_SOURCE
         wine/except_x86_64.c

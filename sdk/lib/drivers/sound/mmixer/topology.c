@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 VOID
@@ -37,10 +37,7 @@ MMixerPrintTopology(
             Topology->TopologyNodes[Index].NodeConnectedFromCount, Topology->TopologyNodes[Index].NodeConnectedToCount, Topology->TopologyNodes[Index].Visited,
             Topology->TopologyNodes[Index].PinConnectedFromCount, Topology->TopologyNodes[Index].PinConnectedToCount);
     }
-
-
 }
-
 
 MIXER_STATUS
 MMixerAllocateTopology(
@@ -708,7 +705,6 @@ MMixerGetNodeIndexFromGuid(
     return MAXULONG;
 }
 
-
 VOID
 MMixerGetAllUpOrDownstreamPinsFromNodeIndex(
     IN PMIXER_CONTEXT MixerContext,
@@ -848,7 +844,6 @@ MMixerGetAllUpOrDownstreamPinsFromPinIndex(
         TopologyPinsCount = Pin->PinConnectedToCount;
     }
 
-
     /* reset visited status */
     MMixerResetTopologyVisitStatus(Topology);
 
@@ -906,7 +901,6 @@ MMixerGetAllUpOrDownstreamNodesFromPinIndex(
         TopologyNodesCount = Pin->NodesConnectedToCount;
     }
 
-
     /* reset visited status */
     MMixerResetTopologyVisitStatus(Topology);
 
@@ -923,7 +917,6 @@ MMixerGetAllUpOrDownstreamNodesFromPinIndex(
         MMixerGetAllUpOrDownstreamNodesFromNodeIndex(MixerContext, Topology, TopologyNodes[Index]->NodeIndex, bUpStream, OutNodesCount, OutNodes);
     }
 }
-
 
 VOID
 MMixerGetNextNodesFromPinIndex(
@@ -1247,7 +1240,6 @@ MMixerIsTopologyNodeReserved(
     /* get reserved status */
     *bReserved = Topology->TopologyNodes[NodeIndex].Reserved;
 }
-
 
 MIXER_STATUS
 MMixerCreateTopology(

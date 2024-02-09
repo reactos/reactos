@@ -22,7 +22,7 @@ void DoSetPriority(DWORD priority)
 
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
     LoadStringW(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szText, 260);
-    if (MessageBoxW(hMainWnd, szText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, szText, szTitle, MB_YESNO|MB_ICONWARNING))
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);

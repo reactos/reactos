@@ -73,7 +73,7 @@ CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Местната стойност на уредбата трябва да отговаря на езика на приложенията, които ще използвате. Местната стойност определя как се изобразават паричните стойности и датите.", IDC_STATIC, 53, 2, 253, 26
+    LTEXT "Езика на системата трябва да отговаря на езика на приложенията, които ще използвате. Езикът определя как се изобразават паричните стойности и датите.", IDC_STATIC, 53, 2, 253, 26
     LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "За промяна на уредбените или местните настройки, натиснете „Нагласяване“.", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "&Нагласяване...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
@@ -132,7 +132,7 @@ END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Отворено разрешително споразумение GNU"
+CAPTION "Лицензно споразумение GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
@@ -151,7 +151,7 @@ END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
 STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Разширени настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
@@ -182,8 +182,8 @@ BEGIN
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата и време"
     IDS_DATETIMESUBTITLE "Задайте правилните дата и време."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "Завършване на инсталацията"
+    IDS_PROCESSSUBTITLE "Моля изчакайте докато инсталацията приключи."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -204,7 +204,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Administrator" // FIXME: Should be "Администратор", but bg-BG translation missing in samsrv.dll
     IDS_MACHINE_OWNER_NAME "Собственик"
 END
 
@@ -254,5 +254,5 @@ BEGIN
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_DEFAULT "(По подразбиране)"
 END

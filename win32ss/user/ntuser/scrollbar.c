@@ -761,7 +761,7 @@ co_IntCreateScrollBars(PWND Window)
    Size = 3 * (sizeof(SBINFOEX));
    if(!(Window->pSBInfoex = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
-      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", UserHMGetHandle(Window));
       return FALSE;
    }
 
@@ -769,7 +769,7 @@ co_IntCreateScrollBars(PWND Window)
 
    if(!(Window->pSBInfo = DesktopHeapAlloc(Window->head.rpdesk, sizeof(SBINFO))))
    {
-      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", UserHMGetHandle(Window));
       return FALSE;
    }
 
@@ -1144,8 +1144,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    NTSTATUS Status;
    SCROLLBARINFO sbi;
    PWND Window;
-   BOOL Ret;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserGetScrollBarInfo\n");
@@ -1155,11 +1154,11 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    if(!NT_SUCCESS(Status) || (sbi.cbSize != sizeof(SCROLLBARINFO)))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
@@ -1172,12 +1171,10 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       Ret = FALSE;
    }
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetScrollBarInfo, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetScrollBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
@@ -1190,9 +1187,8 @@ NtUserSBGetParms(
 {
    PWND Window;
    SCROLLINFO psi;
-   BOOL Ret;
+   BOOL Ret = FALSE;
    SBDATA SBDataSafe;
-   DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserGetScrollInfo\n");
@@ -1208,14 +1204,14 @@ NtUserSBGetParms(
    {
       ERR("NtUserGetScrollInfo Failed size\n");
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN(FALSE));
+      _SEH2_YIELD(goto Exit); // Return FALSE
    }
    _SEH2_END
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
       ERR("NtUserGetScrollInfo Bad window\n");
-      RETURN(FALSE);
+      goto Exit; // Return FALSE
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1230,16 +1226,15 @@ NtUserSBGetParms(
    {
       ERR("NtUserGetScrollInfo Failed copy to user\n");
       SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(RETURN(FALSE));
+      Ret = FALSE;
+      _SEH2_YIELD(goto Exit);
    }
    _SEH2_END
 
-   RETURN(Ret);
-
-CLEANUP:
-   TRACE("Leave NtUserGetScrollInfo, ret=%i\n",_ret_);
+Exit:
+   TRACE("Leave NtUserGetScrollInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 BOOL
@@ -1253,19 +1248,19 @@ NtUserEnableScrollBar(
    PWND Window = NULL;
    PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
    BOOL Chg = FALSE;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
 
    if (!co_IntCreateScrollBars(Window))
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
 
    OrigArrows = Window->pSBInfo->WSBflags;
    Window->pSBInfo->WSBflags = wArrows;
@@ -1275,14 +1270,15 @@ NtUserEnableScrollBar(
       if ((wArrows == ESB_DISABLE_BOTH || wArrows == ESB_ENABLE_BOTH))
          IntEnableWindow(hWnd, (wArrows == ESB_ENABLE_BOTH));
 
-      RETURN(TRUE);
+      Ret = TRUE;
+      goto Cleanup;
    }
 
    if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %u\n", wSBflags);
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
    switch(wSBflags)
@@ -1297,7 +1293,7 @@ NtUserEnableScrollBar(
          InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
          break;
       default:
-         RETURN(FALSE);
+         goto Cleanup; // Return FALSE
    }
 
    if(InfoV)
@@ -1310,17 +1306,24 @@ NtUserEnableScrollBar(
 // Done in user32:
 //   SCROLL_RefreshScrollBar(hwnd, nBar, TRUE, TRUE);
 
-   RETURN(Chg);
-   if (OrigArrows == wArrows) RETURN(FALSE);
-   RETURN(TRUE);
+   Ret = Chg;
+   goto Cleanup; // FIXME
 
-CLEANUP:
+   if (OrigArrows == wArrows)
+   {
+      Ret = FALSE;
+      goto Cleanup;
+   }
+
+   Ret = TRUE;
+
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserEnableScrollBar, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEnableScrollBar, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD
@@ -1334,14 +1337,14 @@ NtUserSetScrollInfo(
    PWND Window = NULL;
    NTSTATUS Status;
    SCROLLINFO ScrollInfo;
-   DECLARE_RETURN(DWORD);
+   DWORD Ret = 0;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)) || UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
-      RETURN(0);
+      goto Cleanup; // Return 0
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1349,45 +1352,42 @@ NtUserSetScrollInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(0);
+      goto Cleanup; // Return 0
    }
 
-   RETURN(co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw));
+   Ret = co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw);
 
-CLEANUP:
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", _ret_);
+   TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 DWORD APIENTRY
 NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
 {
    PWND Window;
-   DECLARE_RETURN(DWORD);
-   DWORD ret;
+   DWORD ret = 0;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserShowScrollBar\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-      RETURN(0);
+   Window = UserGetWindowObject(hWnd);
+   if (Window)
+   {
+      UserRefObjectCo(Window, &Ref);
+      ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
+                                               (nBar == SB_HORZ) ? 0 : bShow);
+      UserDerefObjectCo(Window);
+   }
 
-   UserRefObjectCo(Window, &Ref);
-   ret = co_UserShowScrollBar(Window, nBar, (nBar == SB_VERT) ? 0 : bShow,
-                                            (nBar == SB_HORZ) ? 0 : bShow);
-   UserDerefObjectCo(Window);
-
-   RETURN(ret);
-
-CLEANUP:
-   TRACE("Leave NtUserShowScrollBar, ret%lu\n", _ret_);
+   TRACE("Leave NtUserShowScrollBar, ret=%lu\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 // Ugly NtUser API
@@ -1405,14 +1405,14 @@ NtUserSetScrollBarInfo(
    LPSCROLLINFO psi;
    NTSTATUS Status;
    LONG Obj;
-   DECLARE_RETURN(BOOL);
+   BOOL Ret = FALSE;
    USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserSetScrollBarInfo\n");
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
 
    UserRefObjectCo(Window, &Ref);
 
@@ -1421,17 +1421,17 @@ NtUserSetScrollBarInfo(
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
    if(!co_IntCreateScrollBars(Window))
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
 
    Status = MmCopyFromCaller(&Safeinfo, info, sizeof(SETSCROLLBARINFO));
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN(FALSE);
+      goto Cleanup; // Return FALSE
    }
 
    sbi = IntGetScrollbarInfoFromWindow(Window, Obj);
@@ -1441,15 +1441,15 @@ NtUserSetScrollBarInfo(
    sbi->reserved = Safeinfo.reserved;
    RtlCopyMemory(&sbi->rgstate, &Safeinfo.rgstate, sizeof(Safeinfo.rgstate));
 
-   RETURN(TRUE);
+   Ret = TRUE;
 
-CLEANUP:
+Cleanup:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetScrollBarInfo, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /* EOF */

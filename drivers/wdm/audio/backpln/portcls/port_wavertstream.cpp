@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortWaveRTStreamInit : public CUnknownImpl<IPortWaveRTStreamInit>
@@ -43,7 +40,6 @@ CPortWaveRTStreamInit::QueryInterface(
     }
     return STATUS_UNSUCCESSFUL;
 }
-
 
 PMDL
 NTAPI
@@ -156,7 +152,6 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
 
     return Result;
 }
-
 
 NTSTATUS
 NewPortWaveRTStream(

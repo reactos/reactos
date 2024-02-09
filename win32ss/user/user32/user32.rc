@@ -1,4 +1,5 @@
 #include <windef.h>
+#define OEMRESOURCE
 #include <winuser.h>
 
 #include "include/resource.h"

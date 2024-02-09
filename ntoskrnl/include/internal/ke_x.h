@@ -1359,6 +1359,9 @@ KxQueueReadyThread(IN PKTHREAD Thread,
 
     /* Sanity checks */
     ASSERT(Prcb == KeGetCurrentPrcb());
+#ifdef CONFIG_SMP
+    ASSERT(Prcb->PrcbLock != 0);
+#endif
     ASSERT(Thread->State == Running);
     ASSERT(Thread->NextProcessor == Prcb->Number);
 

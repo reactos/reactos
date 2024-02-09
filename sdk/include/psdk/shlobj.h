@@ -190,7 +190,35 @@ SHGetFolderPathAndSubDirW(
   _In_opt_ LPCWSTR,
   _Out_writes_(MAX_PATH) LPWSTR);
 
-#define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir);
+#define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir)
+
+HRESULT WINAPI
+SHSetFolderPathA(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_ LPCSTR pszPath);
+
+HRESULT WINAPI
+SHSetFolderPathW(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_ LPCWSTR pszPath);
+
+#define SHSetFolderPath WINELIB_NAME_AW(SHSetFolderPath)
+
+BOOL WINAPI
+PathIsSlowA(
+    _In_ LPCSTR pszFile,
+    _In_ DWORD dwAttr);
+
+BOOL WINAPI
+PathIsSlowW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwAttr);
+
+#define PathIsSlow WINELIB_NAME_AW(PathIsSlow)
 
 _Success_(return != 0)
 BOOL
@@ -242,7 +270,7 @@ SHPathPrepareForWriteW(
   _In_opt_ IUnknown*,
   _In_ LPCWSTR, DWORD);
 
-#define SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite);
+#define SHPathPrepareForWrite WINELIB_NAME_AW(SHPathPrepareForWrite)
 
 UINT
 WINAPI
@@ -339,6 +367,40 @@ int WINAPI PathCleanupSpec(_In_opt_ LPCWSTR, _Inout_ LPWSTR);
 #if (_WIN32_WINNT >= _WIN32_WINNT_WINXP) && (_WIN32_WINNT <= _WIN32_WINNT_WS03)
 HINSTANCE WINAPI SHGetShellStyleHInstance(VOID);
 #endif
+
+BOOL WINAPI
+SHOpenPropSheetA(
+    _In_opt_ LPCSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_ LPCSTR pszStartPage);
+
+BOOL WINAPI
+SHOpenPropSheetW(
+    _In_opt_ LPCWSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_ LPCWSTR pszStartPage);
+
+#define SHOpenPropSheet WINELIB_NAME_AW(SHOpenPropSheet)
+
+HRESULT WINAPI
+SHStartNetConnectionDialogA(
+    _In_ HWND hwnd,
+    _In_ LPCSTR pszRemoteName,
+    _In_ DWORD dwType);
+
+HRESULT WINAPI
+SHStartNetConnectionDialogW(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszRemoteName,
+    _In_ DWORD dwType);
 
 /*****************************************************************************
  * IContextMenu interface

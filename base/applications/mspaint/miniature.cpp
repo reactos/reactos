@@ -36,8 +36,8 @@ HWND CMiniatureWindow::DoCreate(HWND hwndParent)
         (LONG)(registrySettings.ThumbYPos + registrySettings.ThumbHeight)
     };
 
-    TCHAR strTitle[100];
-    ::LoadString(g_hinstExe, IDS_MINIATURETITLE, strTitle, _countof(strTitle));
+    WCHAR strTitle[100];
+    ::LoadStringW(g_hinstExe, IDS_MINIATURETITLE, strTitle, _countof(strTitle));
 
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
     return Create(hwndParent, rc, strTitle, style, WS_EX_PALETTEWINDOW);
@@ -122,7 +122,6 @@ LRESULT CMiniatureWindow::OnGetMinMaxInfo(UINT nMsg, WPARAM wParam, LPARAM lPara
 {
     // Avoid too small
     LPMINMAXINFO pInfo = (LPMINMAXINFO)lParam;
-    pInfo->ptMinTrackSize.x = 100;
-    pInfo->ptMinTrackSize.y = 75;
+    pInfo->ptMinTrackSize = { 100, 75 };
     return 0;
 }

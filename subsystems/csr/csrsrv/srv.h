@@ -48,9 +48,9 @@
 #define CSR_PORT_NAME       L"ApiPort"
 #define UNICODE_PATH_SEP    L"\\"
 
-#define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
-#define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
-#define InterlockedIncrementUL(Value) _InterlockedIncrement((PLONG)Value)
-#define InterlockedDecrementUL(Value) _InterlockedDecrement((PLONG)Value)
+#define ROUND_UP(n, align)              ROUND_DOWN(((ULONG)(n)) + (align) - 1, (align))
+#define ROUND_DOWN(n, align)            (((ULONG)(n)) & ~((align) - 1l))
+#define InterlockedIncrementUL(Value)   (ULONG)_InterlockedIncrement((PLONG)(Value))
+#define InterlockedDecrementUL(Value)   (ULONG)_InterlockedDecrement((PLONG)(Value))
 
 #endif /* _SRV_H */

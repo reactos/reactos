@@ -126,6 +126,7 @@ KiInitializeHandBuiltThread(
     KeInitializeThread(Process, Thread, NULL, NULL, NULL, NULL, NULL, Stack);
 
     Thread->NextProcessor = Prcb->Number;
+    Thread->IdealProcessor = Prcb->Number;
     Thread->Priority = HIGH_PRIORITY;
     Thread->State = Running;
     Thread->Affinity = (ULONG_PTR)1 << Prcb->Number;
@@ -145,6 +146,10 @@ KiSystemStartupBootStack(VOID)
     PKTHREAD Thread = (PKTHREAD)KeLoaderBlock->Thread;
     PKPROCESS Process = Thread->ApcState.Process;
     PVOID KernelStack = (PVOID)KeLoaderBlock->KernelStack;
+
+    /* Set Node Data */
+    Prcb->ParentNode = KeNodeBlock[0];
+    Prcb->ParentNode->ProcessorMask |= Prcb->SetMember;
 
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
@@ -179,13 +184,6 @@ KiSystemStartupBootStack(VOID)
     {
         /* Initialize the startup thread */
         KiInitializeHandBuiltThread(Thread, Process, KernelStack);
-
-        /* Initialize cpu with HAL */
-        if (!HalInitSystem(0, LoaderBlock))
-        {
-            /* Initialization failed */
-            KeBugCheck(HAL_INITIALIZATION_FAILED);
-        }
     }
 
     /* Calculate the CPU frequency */
@@ -233,11 +231,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG_PTR PageDirectory[2];
     PVOID DpcStack;
     ULONG i;
-
-    /* Set Node Data */
-    KeNodeBlock[0] = &KiNode0;
-    Prcb->ParentNode = KeNodeBlock[0];
-    KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
     /* Set boot-level flags */
     KeFeatureBits = Prcb->FeatureBits;
@@ -298,7 +291,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PageDirectory[1] = 0;
     KeInitializeProcess(InitProcess,
                         0,
-                        0xFFFFFFFF,
+                        MAXULONG_PTR,
                         PageDirectory,
                         FALSE);
     InitProcess->QuantumReset = MAXCHAR;

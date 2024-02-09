@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -14,8 +14,8 @@ CAPTION "Opțiuni regionale"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standarde și formate", -1, 5, 5, 234, 162
-    LTEXT "Această opțiune afectează modul în care numerele, valutele, data și ora sunt reprezentare în anumite aplicații.", -1, 14, 17, 220, 25
-    LTEXT "Alegeți o configurație prestabilită sau specificați una particularizată pentru formatele de afișare:", -1, 14, 37, 220, 22
+    LTEXT "Această opțiune afectează modul în care numerele, valutele, datele și orele sunt reprezentare în anumite aplicații.", -1, 14, 17, 220, 25
+    LTEXT "Selectați un element care să se potrivească cu proprietățile sale sau dați clic pe „Personalizează” pentru a vă alege propriile formate:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 150, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Particularizare…", IDC_SETUP_BUTTON, 168, 56, 62, 13
     LTEXT "Exemple", -1, 14, 73, 70, 10
@@ -189,7 +189,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Particularizarea opțiunilor regionale"
-    IDS_SPAIN "Spaniolă (Spainia)"
+    IDS_SPAIN "Spaniolă (Spania)"
     IDS_METRIC "Metric"
     IDS_IMPERIAL "Imperial"
 END
@@ -197,13 +197,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME         "Opțiuni regionale"
-    IDS_CPLDESCRIPTION  "Configurarea limbii și formatarea numerelor, valutelor, datei și orei."
+    IDS_CPLDESCRIPTION  "Selectează limbile și formatarea numerelor, valutelor, orelor și datei."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Modificarea configurației implicite"
-    IDS_APPLY_DEFAULT_TEXT "Configurația va fi aplicată contului implicit de utilizator.\n\n\
+    IDS_APPLY_DEFAULT_TITLE "Schimbarea setărilor implicite"
+    IDS_APPLY_DEFAULT_TEXT "Setările vor fi aplicate contului implicit de utilizator.\n\n\
 Aceste modificări se referă la ecranul de autentificare și la noile conturi de utilizator.\n\
 Calculatorul trebuie repornit pentru a institui modificări în unele servicii de sistem."
 END
@@ -220,6 +220,6 @@ BEGIN
     IDS_ERROR_DEF_INT_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_CODE_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_INPUT_DLL "„input.dll” nu a putut fi încărcat!"
-    IDS_ERROR_UNICODE "Nu a putut fi instalată o nouă limbă pentru programele ce nu suportă Unicode!"
+    IDS_ERROR_INPUT_DLL "Nu s-a putut încărca „input.dll”!"
+    IDS_ERROR_UNICODE "Nu s-a putut instala o nouă limbă pentru programele ce nu suportă Unicode!"
 END

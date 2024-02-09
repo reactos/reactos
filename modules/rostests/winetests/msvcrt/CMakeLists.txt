@@ -28,7 +28,7 @@ target_compile_definitions(msvcrt_winetest PRIVATE
     __msvcrt_ulong=ULONG)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(msvcrt_winetest PRIVATE -Wno-format -Wno-stringop-truncation)
+    target_compile_options(msvcrt_winetest PRIVATE -Wno-format -Wno-stringop-truncation -Wno-overflow)
 endif()
 
 set_module_type(msvcrt_winetest win32cui)

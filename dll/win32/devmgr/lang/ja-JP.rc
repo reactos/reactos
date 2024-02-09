@@ -74,7 +74,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "このデバイスに対するドライバは、インストールされていません。"
     IDS_DEV_HARDWARE_DISABLED "このデバイスは、BIOS がリソースを提供しなかったため、無効になっています。"
     IDS_DEV_CANT_SHARE_IRQ "このデバイスは、他のデバイスが使用中のIRQ (Interrupt Request) リソースを使っており、共有できません。\nあなたは、競合する設定を変更するか、競合を引き起こしているリアルモード ドライバを除去する必要があります。"
-    IDS_DEV_FAILED_ADD "%1 が正しく動作していないため、このデバイスは、正しく動作していません。"
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "セットアップ ファイルがあるドライブかネットワークの場所にアクセスできないため、ReactOS は、このデバイスに対するドライバをインストールできません。"
     IDS_DEV_TRANSLATION_FAILED "このデバイスは、このドライバに応答していません。"
     IDS_DEV_NO_SOFTCONFIG "ReactOS は、このデバイスに対する設定を決定できません。このデバイスに付属する文書と相談するか、構成をセットするためにリソース タブを使用して下さい。"

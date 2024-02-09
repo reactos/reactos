@@ -270,14 +270,12 @@ CMainWindow::RemoveSelectedAppFromRegistry()
     if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) || !szMsgTitle.LoadStringW(IDS_INFORMATION))
         return FALSE;
 
-    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-    {
-        CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
-        if (!InstalledApp)
-            return FALSE;
+    CAppInfo *InstalledApp = (CAppInfo *)m_ApplicationView->GetFocusedItemData();
+    if (!InstalledApp)
+        return FALSE;
 
+    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
         return m_Db->RemoveInstalledAppFromRegistry(InstalledApp);
-    }
 
     return FALSE;
 }
@@ -293,6 +291,16 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
         return FALSE;
 
     return InstalledApp->UninstallApplication(bModify);
+}
+
+VOID
+CMainWindow::CheckAvailable()
+{
+    if (m_Db->GetAvailableCount() == 0)
+    {
+        m_Db->RemoveCached();
+        m_Db->UpdateAvailable();
+    }
 }
 
 BOOL
@@ -348,71 +356,71 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                                 break;
 
                             case IDS_AVAILABLEFORINST:
-                                UpdateApplicationsList(ENUM_ALL_AVAILABLE);
+                                UpdateApplicationsList(ENUM_ALL_AVAILABLE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_AUDIO:
-                                UpdateApplicationsList(ENUM_CAT_AUDIO);
+                                UpdateApplicationsList(ENUM_CAT_AUDIO, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_DEVEL:
-                                UpdateApplicationsList(ENUM_CAT_DEVEL);
+                                UpdateApplicationsList(ENUM_CAT_DEVEL, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_DRIVERS:
-                                UpdateApplicationsList(ENUM_CAT_DRIVERS);
+                                UpdateApplicationsList(ENUM_CAT_DRIVERS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_EDU:
-                                UpdateApplicationsList(ENUM_CAT_EDU);
+                                UpdateApplicationsList(ENUM_CAT_EDU, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_ENGINEER:
-                                UpdateApplicationsList(ENUM_CAT_ENGINEER);
+                                UpdateApplicationsList(ENUM_CAT_ENGINEER, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_FINANCE:
-                                UpdateApplicationsList(ENUM_CAT_FINANCE);
+                                UpdateApplicationsList(ENUM_CAT_FINANCE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_GAMES:
-                                UpdateApplicationsList(ENUM_CAT_GAMES);
+                                UpdateApplicationsList(ENUM_CAT_GAMES, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_GRAPHICS:
-                                UpdateApplicationsList(ENUM_CAT_GRAPHICS);
+                                UpdateApplicationsList(ENUM_CAT_GRAPHICS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_INTERNET:
-                                UpdateApplicationsList(ENUM_CAT_INTERNET);
+                                UpdateApplicationsList(ENUM_CAT_INTERNET, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_LIBS:
-                                UpdateApplicationsList(ENUM_CAT_LIBS);
+                                UpdateApplicationsList(ENUM_CAT_LIBS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_OFFICE:
-                                UpdateApplicationsList(ENUM_CAT_OFFICE);
+                                UpdateApplicationsList(ENUM_CAT_OFFICE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_OTHER:
-                                UpdateApplicationsList(ENUM_CAT_OTHER);
+                                UpdateApplicationsList(ENUM_CAT_OTHER, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_SCIENCE:
-                                UpdateApplicationsList(ENUM_CAT_SCIENCE);
+                                UpdateApplicationsList(ENUM_CAT_SCIENCE, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_TOOLS:
-                                UpdateApplicationsList(ENUM_CAT_TOOLS);
+                                UpdateApplicationsList(ENUM_CAT_TOOLS, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_VIDEO:
-                                UpdateApplicationsList(ENUM_CAT_VIDEO);
+                                UpdateApplicationsList(ENUM_CAT_VIDEO, FALSE, TRUE);
                                 break;
 
                             case IDS_CAT_THEMES:
-                                UpdateApplicationsList(ENUM_CAT_THEMES);
+                                UpdateApplicationsList(ENUM_CAT_THEMES, FALSE, TRUE);
                                 break;
 
                             case IDS_SELECTEDFORINST:
@@ -593,9 +601,12 @@ CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
 }
 
 VOID
-CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload)
+CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL bCheckAvailable)
 {
     bUpdating = TRUE;
+
+    if (bCheckAvailable)
+        CheckAvailable();
 
     if (SelectedEnumType != EnumType)
         SelectedEnumType = EnumType;

@@ -149,9 +149,6 @@ VOID
 NTAPI
 PopShutdownHandler(VOID)
 {
-    PUCHAR Logo1, Logo2;
-    ULONG i;
-
     /* Stop all interrupts */
     KeRaiseIrqlToDpcLevel();
     _disable();
@@ -162,25 +159,13 @@ PopShutdownHandler(VOID)
         /* Yes we do, cleanup for shutdown screen */
         if (!InbvCheckDisplayOwnership()) InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
-        InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
-
-        /* Display shutdown logo and message */
-        Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
-        Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
-        if ((Logo1) && (Logo2))
-        {
-            InbvBitBlt(Logo1, VID_SHUTDOWN_MSG_LEFT, VID_SHUTDOWN_MSG_TOP);
-            InbvBitBlt(Logo2, VID_SHUTDOWN_LOGO_LEFT, VID_SHUTDOWN_LOGO_TOP);
-        }
+        // InbvEnableDisplayString(TRUE);
+        DisplayShutdownBitmap();
     }
     else
     {
         /* Do it in text-mode */
-        for (i = 0; i < 25; i++) InbvDisplayString("\r\n");
-        InbvDisplayString("                       ");
-        InbvDisplayString("The system may be powered off now.\r\n");
+        DisplayShutdownText();
     }
 
     /* Hang the system */

@@ -17,6 +17,7 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+#define OEMRESOURCE
 
 #include <windef.h>
 #include <winbase.h>
@@ -183,6 +184,14 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  * settings.c
  */
 
+enum TrayIconsMode
+{
+    TIM_Default,
+    TIM_NeverCompact,
+    TIM_AlwaysCompact,
+    TIM_Max = TIM_AlwaysCompact
+};
+
 typedef struct _TW_STUCKRECTS2
 {
     DWORD cbSize;
@@ -211,12 +220,24 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
-    BOOL bCompactTrayIcons;
+    TrayIconsMode eCompactTrayIcons;
     BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();
     BOOL Save();
+    inline BOOL UseCompactTrayIcons()
+    {
+        switch (eCompactTrayIcons)
+        {
+            case TIM_NeverCompact:
+                return FALSE;
+            case TIM_AlwaysCompact:
+                return TRUE;
+            default:
+                return bSmallIcons;
+        }
+    }
 };
 
 extern TaskbarSettings g_TaskbarSettings;

@@ -57,8 +57,8 @@ BEGIN
     END
     POPUP "&Любимки", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "Добавяне към &любимките...", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Подреждане на любимките", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "Добавяне към &любими...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Подреждане на любими", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(Празно)", IDM_FAVORITES_EMPTY
     END
@@ -80,8 +80,8 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
     POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
     BEGIN
-        MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
-        MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
+        MENUITEM "&Работен плот", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Бързо стартиране", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
         MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
     END
@@ -89,7 +89,7 @@ END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-    MENUITEM "Sho&w Title", IDM_BAND_TITLE
+    MENUITEM "Пока&жи Заглавие", IDM_BAND_TITLE
     MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
 END
 
@@ -99,11 +99,11 @@ BEGIN
     BEGIN
         POPUP "&View", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Големи икони", IDM_LARGE_ICONS
+            MENUITEM "&Малки икони", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Отвори папка", IDM_OPEN_FOLDER
+        MENUITEM "&Покажи текст", IDM_SHOW_TEXT
     END
 END
 
@@ -136,21 +136,21 @@ IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 85
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Search by any or all of the criteria below.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+    LTEXT "Търсене по всеки или всички критерии заедно.", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
     LTEXT "All or part &of the file name:", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "A &word or phrase in the file:", -1, 10, 50, 500, 10
+    LTEXT "&Дума или фраза във файл:", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "&Look in:", -1, 10, 75, 500, 10
+    LTEXT "&Търси в:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "Sea&rch", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Stop", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Тър&сене", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Спри", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "Търси в скрити файлове и папки",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -180,7 +180,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
+    IDS_CANCELLING "Прекрати..."
     IDS_REMAINING  "Remaining"
 END
 
@@ -298,7 +298,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ADDRESSMENUTEXT "&Address"
+    IDS_ADDRESSMENUTEXT "&Адрес"
     IDS_HISTORYTEXT "&Дневник\tCtrl+H"
 END
 
@@ -309,37 +309,37 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Back to %s"
-    IDS_FORWARD "Forward to %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_BACK "Назад в %s"
+    IDS_FORWARD "Напред към %s"
+    IDS_FOLDER_OPTIONS "Опции на папката"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Назад|Напред|Нагоре|Търси|Папки|Премести в|Копирай в|Изтрий|Отмени|Изгледи|Стоп|Обнови|Начало|Свързване на устройство|Разкачи|Избрани|История|Пълен екран|Свойства|Изрежи|Копирай|Постави|Настройки на папките||"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "Избери папка"
+    IDS_TOOLBAR_ERR_TITLE "Лента с инструменти"
+    IDS_TOOLBAR_ERR_TEXT "Не може да се създаде лента с инструменти."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
-    IDS_SEARCHINVALID "'%1' is not a valid folder."
-    IDS_SEARCH_FOLDER "Searching %s"
-    IDS_SEARCH_FILES_FOUND "%u files found"
-    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
-    IDS_COL_NAME "Name"
-    IDS_COL_LOCATION "In Folder"
+    IDS_SEARCH_RESULTS "Резултати от търсенето"
+    IDS_SEARCHINVALID "'%1' не е валидна папка."
+    IDS_SEARCH_FOLDER "Търсене в %s"
+    IDS_SEARCH_FILES_FOUND "%u намерени файлове"
+    IDS_SEARCH_OPEN_FOLDER "Отвори файла в &Папката"
+    IDS_COL_NAME "Име"
+    IDS_COL_LOCATION "В папка"
     IDS_COL_RELEVANCE "Relevance"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer не намира '%1'. Проверете правописа и опитайте отново."
 END

@@ -347,7 +347,7 @@ BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
 BOOL CExplorerBand::OnTreeItemDeleted(LPNMTREEVIEW pnmtv)
 {
     /* Destroy memory associated to our node */
-    NodeInfo* ptr = GetNodeInfo(pnmtv->itemNew.hItem);
+    NodeInfo* ptr = GetNodeInfo(pnmtv->itemOld.hItem);
     if (ptr)
     {
         ILFree(ptr->relativePidl);
@@ -566,7 +566,7 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
         return NULL;
 
     /* Ignore streams */
-    if ((attrs & SFGAO_STREAM))
+    if (attrs & SFGAO_STREAM)
     {
         TRACE("Ignoring stream\n");
         return NULL;

@@ -313,7 +313,7 @@ Standard = "Processador padrão"
 ProcessorClassName = "Procesoare"
 
 Processor.DeviceDesc = "Procesor"
-Processor.ServiceDesc = "Modúl-pilot de processor"
+Processor.ServiceDesc = "Driver de processor"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
 IntelProcessor.DeviceDesc = "Procesor Intel Pentium"
 IntelMMXProcessor.DeviceDesc = "Procesor Intel Pentium MMX"

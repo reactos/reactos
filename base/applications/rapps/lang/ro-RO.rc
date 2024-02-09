@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2017-2018 George Bișoc <george.bisoc@reactos.org>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -170,7 +170,7 @@ STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
     IDS_CAT_DEVEL "Dezvoltare"
-    IDS_CAT_DRIVERS "Module pilot"
+    IDS_CAT_DRIVERS "Drivere"
     IDS_CAT_EDU "Educație"
     IDS_CAT_ENGINEER "Inginerie"
     IDS_CAT_FINANCE "Finanțe"
@@ -204,15 +204,15 @@ BEGIN
     IDS_URL_INVALID "Adresa URL specificată de dumneavoastră este fie nevalidă, fie nesuportată. Vă rugăm să o corectați!"
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
-    IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
-    IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
-    IDS_UNABLE_TO_INSTALL "Programul de instalare nu poate fi executat!"
+    IDS_UNABLE_TO_DOWNLOAD "Pachetul nu se poate descărca! Adresa nu este găsită!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu se poate descărca! Verificați conexiunea de Internet!"
+    IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu s-au putut elimina!"
+    IDS_UNABLE_TO_INSTALL "Programul de instalare nu se poate executa!"
     IDS_UNABLE_TO_QUERY_CERT "Regăsirea informații despre certificat a eșuat.\n\nVreți să continuați oricum?"
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
-    IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
+    IDS_UNABLE_TO_WRITE "Nu se poate scrie pe disc. Discul poate fi la capacitate maximă."
     IDS_INSTALL_SELECTED "Instalează selecționate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
@@ -267,6 +267,6 @@ BEGIN
     IDS_CMD_NEED_PARAMS "Eroare: opțiunea %1 așteaptă unul sau mai mulți parametri.\n"
     IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
     IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Nu a putut fi găsit pachetul %1.\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
     IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
 END

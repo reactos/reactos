@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -53,7 +53,7 @@ BEGIN
             MENUITEM "S&ecuritate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "Conexiuni la &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "I&mprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Bara de activități și Meniul „Pornire”", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Bara de activități și Meniul Pornire", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         MENUITEM "Căut&are", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Manuale de utilizare", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
@@ -78,20 +78,20 @@ BEGIN
     AUTOCHECKBOX "Auto-ascun&de bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Menține &bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "Afișează bara „&Lansări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "Afișează bara &Lansări rapide", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     AUTOCHECKBOX "Folos&ește pictograme mici", IDC_TASKBARPROP_SMALLICONS, 13, 110, 240, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Meniul de „Pornire”"
+CAPTION "Meniul de Pornire"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "Meniul de „&Pornire”", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    AUTORADIOBUTTON "Meniul de &Pornire", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
     LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
-    AUTORADIOBUTTON "Meniul de „Pornire” &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    AUTORADIOBUTTON "Meniul de Pornire &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Acest model de meniu vă oferă aspectul și funcționalitatea clasică", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Pa&rticularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
@@ -133,17 +133,17 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW
 CAPTION "Particularizarea meniului de Pornire clasic"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Meniul de „Pornire”", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "Meniul de Pornire", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "Puteți particulariza meniul „Pornire” prin adăugarea sau eliminarea de elemente.", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "Puteți particulariza meniul Pornire prin adăugarea sau eliminarea de elemente.", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "A&dăugare…", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "&Eliminare…", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "A&vansate", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "&Ordonare", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "Pentru a elimina înregistrări ale documentelor, programelor, și siturilor Web recent accesate, apăsați „Curăță”.", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "Pentru a elimina înregistrări ale documentelor, programelor, și siturilor Web recent accesate, apăsați Curăță.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Curăță", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "Opțiuni avansate ale meniului „Pornire”:", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "Opțiuni avansate ale meniului Pornire:", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Con&firmă", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "A&nulează", IDCANCEL, 176, 220, 50, 14
@@ -167,10 +167,10 @@ STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Avansat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Opțiuni ale meniului „Pornire” ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "&Deschide submeniurile când mă opresc la ele cu indicatorul șoricelului", IDC_AUTOOPEN, 14, 21, 224, 10
+    GROUPBOX         "Opțiuni ale meniului Pornire ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Deschide submeniurile când mă opresc la ele cu indicatorul mouse-ului", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "&Evidențiază programele nou instalate", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "Elemente ale meniului „Pornire”:", IDC_STATIC, 7, 53, 238, 8
+    LTEXT            "Elemente ale meniului Pornire:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Documente recente ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "Selectați această opțiune pentru a oferi un acces rapid la documentele recent accesate.  Curățarea acestei liste nu va șterge documentele.", IDC_STATIC, 14, 144, 224, 21
@@ -189,12 +189,12 @@ BEGIN
     AUTORADIOBUTTON  "Pictograme m&ari", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "Pictograme &mici", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programe ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "Meniul de „Pornire” conține scurtături la programele cele mai utilizate.  Curățând lista de scurtături nu va șterge programele.", IDC_STATIC, 14, 63, 224, 20
-    LTEXT            "N&umărul de programe în meniul „Pornire”:", IDC_STATIC, 14, 86, 112, 8
+    LTEXT            "Meniul de Pornire conține scurtături la programele cele mai utilizate.  Curățând lista de scurtături nu va șterge programele.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "N&umărul de programe în meniul Pornire:", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
     PUSHBUTTON       "&Curăță lista", IDC_CLEARLIST, 182, 98, 57, 14
-    GROUPBOX         "Afișare în meniul „Pornire” ", IDC_STATIC, 7, 126, 238, 63
+    GROUPBOX         "Afișare în meniul Pornire ", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
@@ -205,14 +205,14 @@ STRINGTABLE
 BEGIN
     IDS_START "Pornire"
     IDS_PROPERTIES "P&referințe"
-    IDS_OPEN_ALL_USERS "&Deschide „Toți utilizatorii”"
-    IDS_EXPLORE_ALL_USERS "E&xplorează „Toți utilizatorii”"
+    IDS_OPEN_ALL_USERS "&Deschide Toți utilizatorii"
+    IDS_EXPLORE_ALL_USERS "E&xplorează Toți utilizatorii"
     IDS_STARTUP_ERROR "Pornirea exploratorului a eșuat din cauza informațiilor lipsă sau corupte din registru."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul Pornire"
     IDS_RESTORE_ALL "&Afișează ferestrele deschise"
     IDS_TRAYWND_UNDO_CASCADE "A&nulează cascada"
     IDS_TRAYWND_UNDO_TILE "An&ulează aranjarea"
