@@ -1269,7 +1269,7 @@ CreateKeyboardLayoutList(
 
         uIndex++;
 
-    } while (LayoutsList[uIndex].LangID != NULL);
+    } while (LayoutsList[uIndex].LangID != 0);
 
     /* Check whether some keyboard layouts have been found */
     /* FIXME: Handle this case */
@@ -1290,9 +1290,10 @@ ProcessKeyboardLayoutRegistry(
     IN PCWSTR LanguageId)
 {
     PGENERIC_LIST_ENTRY Entry;
-    PCWSTR LayoutId;
+    PCWSTR pszLayoutId;
+    KLID LayoutId;
     const MUI_LAYOUTS* LayoutsList;
-    MUI_LAYOUTS NewLayoutsList[20];
+    MUI_LAYOUTS NewLayoutsList[20]; // HACK: Hardcoded fixed size "20" is a hack. Please verify against lang/*.h
     ULONG uIndex;
     ULONG uOldPos = 0;
 
@@ -1300,18 +1301,21 @@ ProcessKeyboardLayoutRegistry(
     if (Entry == NULL)
         return FALSE;
 
-    LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-    if (LayoutId == NULL)
+    pszLayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+    LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
+    if (LayoutId == 0)
         return FALSE;
 
     LayoutsList = MUIGetLayoutsList(LanguageId);
 
-    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) == 0)
+    /* If the keyboard layout is already at the top of the list, we are done */
+    if (LayoutsList[0].LayoutID == LayoutId)
         return TRUE;
 
-    for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
+    /* Otherwise, move it up to the top of the list */
+    for (uIndex = 1; LayoutsList[uIndex].LangID != 0; ++uIndex)
     {
-        if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
+        if (LayoutsList[uIndex].LayoutID == LayoutId)
         {
             uOldPos = uIndex;
             continue;
@@ -1321,8 +1325,8 @@ ProcessKeyboardLayoutRegistry(
         NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
     }
 
-    NewLayoutsList[uIndex].LangID    = NULL;
-    NewLayoutsList[uIndex].LayoutID  = NULL;
+    NewLayoutsList[uIndex].LangID    = 0;
+    NewLayoutsList[uIndex].LayoutID  = 0;
     NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
     NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
     NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;

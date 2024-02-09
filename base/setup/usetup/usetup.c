@@ -460,14 +460,14 @@ static VOID
 UpdateKBLayout(VOID)
 {
     PGENERIC_LIST_ENTRY ListEntry;
-    PCWSTR pszNewLayout;
+    KLID newLayout;
 
-    pszNewLayout = MUIDefaultKeyboardLayout(SelectedLanguageId);
+    newLayout = MUIDefaultKeyboardLayout(SelectedLanguageId);
 
-    if (USetupData.LayoutList == NULL)
+    if (!USetupData.LayoutList)
     {
         USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (USetupData.LayoutList == NULL)
+        if (!USetupData.LayoutList)
         {
             /* FIXME: Handle error! */
             return;
@@ -475,12 +475,14 @@ UpdateKBLayout(VOID)
     }
 
     /* Search for default layout (if provided) */
-    if (pszNewLayout != NULL)
+    if (newLayout != 0)
     {
         for (ListEntry = GetFirstListEntry(USetupData.LayoutList); ListEntry;
              ListEntry = GetNextListEntry(ListEntry))
         {
-            if (!wcscmp(pszNewLayout, ((PGENENTRY)GetListEntryData(ListEntry))->Id))
+            PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
+            KLID LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
+            if (newLayout == LayoutId)
             {
                 SetCurrentListEntry(USetupData.LayoutList, ListEntry);
                 break;
@@ -1249,10 +1251,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     }
 
     /* Initialize the keyboard layout list */
-    if (USetupData.LayoutList == NULL)
+    if (!USetupData.LayoutList)
     {
         USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (USetupData.LayoutList == NULL)
+        if (!USetupData.LayoutList)
         {
             /* FIXME: report error */
             MUIDisplayError(ERROR_LOAD_KBLAYOUT, Ir, POPUP_WAIT_ENTER);

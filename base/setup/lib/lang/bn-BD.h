@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS bnBDLayouts[] =
 {
-    { L"0845", L"00000845" },
-    { NULL, NULL }
+    { 0x0845, 0x00000845 },
+    { 0, 0 }
 };

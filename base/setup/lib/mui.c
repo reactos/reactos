@@ -84,11 +84,11 @@ IsLanguageAvailable(
 }
 
 
-PCWSTR
+KLID
 MUIDefaultKeyboardLayout(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
@@ -96,7 +96,7 @@ PCWSTR
 MUIGetOEMCodePage(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].OEMCPage;
 }
 
@@ -104,7 +104,7 @@ PCWSTR
 MUIGetGeoID(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].GeoID;
 }
 
@@ -112,7 +112,7 @@ const MUI_LAYOUTS*
 MUIGetLayoutsList(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts;
 }
 
@@ -206,7 +206,7 @@ AddHotkeySettings(
 
 BOOLEAN
 AddKbLayoutsToRegistry(
-    IN const MUI_LAYOUTS *MuiLayouts)
+    _In_ const MUI_LAYOUTS* MuiLayouts)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -215,13 +215,14 @@ AddKbLayoutsToRegistry(
     HANDLE SubKeyHandle;
     NTSTATUS Status;
     ULONG Disposition;
-    ULONG uIndex = 0;
-    ULONG uCount = 0;
+    ULONG uIndex;
+    ULONG uCount;
     WCHAR szKeyName[48] = L".DEFAULT\\Keyboard Layout";
     WCHAR szValueName[3 + 1];
-    WCHAR szLangID[8 + 1];
+    WCHAR szSubstID[8 + 1];
+    WCHAR szLayoutID[8 + 1];
 
-    // Open the keyboard layout key
+    /* Open the keyboard layout key */
     RtlInitUnicodeString(&KeyName, szKeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -246,11 +247,9 @@ AddKbLayoutsToRegistry(
 
     KeyName.MaximumLength = sizeof(szKeyName);
     Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
-
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppend failed! (%lx)\n", Status);
-        DPRINT1("String is %wZ\n", &KeyName);
+        DPRINT1("RtlAppend() failed (%lx), string is '%wZ'\n", Status, &KeyName);
         return FALSE;
     }
 
@@ -290,80 +289,73 @@ AddKbLayoutsToRegistry(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        NtClose(SubKeyHandle);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    while (MuiLayouts[uIndex].LangID != NULL)
+    uCount = 0;
+    for (uIndex = 0; (uIndex <= 19) && (MuiLayouts[uIndex].LangID != 0); ++uIndex)
     {
-        if (uIndex > 19) break;
-
-        RtlStringCchPrintfW(szValueName, ARRAYSIZE(szValueName), L"%u", uIndex + 1);
+        RtlStringCchPrintfW(szValueName, _countof(szValueName), L"%u", uIndex + 1);
         RtlInitUnicodeString(&ValueName, szValueName);
 
-        RtlStringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"0000%s", MuiLayouts[uIndex].LangID);
+        RtlStringCchPrintfW(szLayoutID, _countof(szLayoutID), L"%08lx", MuiLayouts[uIndex].LayoutID);
 
-        if (_wcsicmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
+        if ((KLID)MuiLayouts[uIndex].LangID == MuiLayouts[uIndex].LayoutID)
         {
+            /* Main keyboard layout */
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
+                                   (PVOID)szLayoutID,
+                                   (wcslen(szLayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
+                goto Quit;
             }
         }
         else
         {
-            RtlStringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
+            /* Generate a substitute keyboard layout ID */
+            RtlStringCchPrintfW(szSubstID, _countof(szSubstID), L"%08lx",
+                                (0xD0000000/*SUBST_MASK*/ | ((USHORT)uCount << 4) | MuiLayouts[uIndex].LangID));
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)szLangID,
-                                   (wcslen(szLangID)+1) * sizeof(WCHAR));
+                                   (PVOID)szSubstID,
+                                   (wcslen(szSubstID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
+                goto Quit;
             }
 
-            RtlInitUnicodeString(&ValueName, szLangID);
-
+            /* Link the substitute layout with the original one */
+            RtlInitUnicodeString(&ValueName, szSubstID);
             Status = NtSetValueKey(SubKeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
+                                   (PVOID)szLayoutID,
+                                   (wcslen(szLayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                goto Quit;
             }
 
-            uCount++;
+            ++uCount;
         }
-
-        uIndex++;
     }
 
     AddHotkeySettings(L"1", L"1", L"2");
 
+Quit:
     NtClose(SubKeyHandle);
     NtClose(KeyHandle);
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 BOOLEAN
