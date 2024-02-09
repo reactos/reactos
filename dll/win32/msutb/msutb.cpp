@@ -1182,7 +1182,7 @@ class CTipbarWnd
     DWORD m_dwUnknown19[2];
     CModalMenu *m_pModalMenu;
     CTipbarThread *m_pThread;
-    CicArray<GUID*> m_LangBarGUIDArray;
+    CicArray<GUID*> m_TipbarGUIDArray;
     DWORD m_dwUnknown20;
     CUIFWndFrame *m_pWndFrame;
     CTipbarGripper *m_pTipbarGripper;
