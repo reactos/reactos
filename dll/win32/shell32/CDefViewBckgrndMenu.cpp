@@ -256,10 +256,6 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:
     case FCIDM_SHVIEW_REPORTVIEW:
-    case 0x30: /* FIX IDS in resource files */
-    case 0x31:
-    case 0x32:
-    case 0x33:
     case FCIDM_SHVIEW_AUTOARRANGE:
     case FCIDM_SHVIEW_SNAPTOGRID:
     case FCIDM_SHVIEW_REFRESH:
