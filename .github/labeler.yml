@@ -10,8 +10,9 @@ drivers:
   - any-glob-to-any-file:
     - drivers/**
     - sdk/lib/drivers/**
+  - all-globs-to-any-file:
     - win32ss/drivers/**
-  - all-globs-to-all-files: '!win32ss/drivers/font/**'
+    - '!win32ss/drivers/font/**'
 
 freeldr:
 - changed-files:
