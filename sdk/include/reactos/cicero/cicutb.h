@@ -18,3 +18,8 @@ EXTERN_C LPVOID WINAPI GetLibTls(VOID);
 EXTERN_C BOOL WINAPI GetPopupTipbar(HWND hWnd, BOOL fWinLogon);
 EXTERN_C HRESULT WINAPI SetRegisterLangBand(BOOL bRegister);
 EXTERN_C VOID WINAPI ClosePopupTipbar(VOID);
+
+struct ITfLangBarEventSink_P : IUnknown
+{
+    STDMETHOD(OnLangBarUpdate)(TfLBIClick click, BOOL bFlag) = 0;
+};
