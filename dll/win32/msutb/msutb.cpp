@@ -1166,6 +1166,177 @@ public:
     STDMETHOD(GetText)(BSTR *pbstr) override;
 };
 
+/***********************************************************************/
+
+class CTipbarItem;
+class CTipbarThread;
+class CTipbarCtrlButtonHolder;
+class CDeskBand;
+
+class CTipbarWnd
+    : public ITfLangBarEventSink
+    , public ITfLangBarEventSink_P
+    , public CTipbarAccItem
+    , public CUIFWindow
+{
+    DWORD m_dwUnknown19[2];
+    CModalMenu *m_pModalMenu;
+    CTipbarThread *m_pThread;
+    CicArray<GUID*> m_LangBarGUIDArray;
+    DWORD m_dwUnknown20;
+    CUIFWndFrame *m_pWndFrame;
+    CTipbarGripper *m_pTipbarGripper;
+    CTipbarThread *m_pFocusThread;
+    CicArray<CTipbarThread*> m_Threads;
+    CicArray<CTipbarThread*> m_ThreadCreatingList;
+    DWORD m_dwAlphaValue;
+    DWORD m_dwTipbarWndFlags;
+    LONG m_ButtonWidth;
+    DWORD m_dwShowType;
+    DWORD m_dwUnknown21;
+    INT m_cxSmallIcon;
+    INT m_cySmallIcon;
+    INT m_cxDlgFrameX2;
+    INT m_cyDlgFrameX2;
+    HFONT m_hMarlettFont;
+    HFONT m_hTextFont;
+    ITfLangBarMgr *m_pLangBarMgr;
+    DWORD m_dwUnknown23;
+    CTipbarCtrlButtonHolder *m_pTipbarCtrlButtonHolder;
+    DWORD m_dwUnknown23_1[8];
+    CUIFWindow *m_pBalloon;
+    DWORD m_dwChangingThreadId;
+    LONG m_bInCallOn;
+    LONG m_X;
+    LONG m_Y;
+    LONG m_CX;
+    LONG m_CY;
+    CTipbarAccessible *m_pTipbarAccessible;
+    UINT m_nID;
+    MARGINS m_Margins;
+    DWORD m_dwUnknown23_5[4];
+    CTipbarThread *m_pUnknownThread;
+    CDeskBand *m_pDeskBand;
+    CShellWndThread m_ShellWndThread;
+    LONG m_cRefs;
+    friend class CUTBContextMenu;
+    friend class CTipbarGripper;
+
+public:
+    CTipbarWnd(DWORD style);
+    ~CTipbarWnd() override;
+
+    void Init(BOOL bFlag, CDeskBand *pDeskBand);
+    void InitHighContrast();
+    void InitMetrics();
+    void InitThemeMargins();
+    void UnInit();
+
+    BOOL IsFullScreenWindow(HWND hWnd);
+    BOOL IsHKLToSkipRedrawOnNoItem();
+    BOOL IsInItemChangeOrDirty(CTipbarThread *pTarget);
+
+    void AddThreadToThreadCreatingList(CTipbarThread *pThread);
+    void RemoveThredFromThreadCreatingList(CTipbarThread *pTarget);
+
+    void MoveToStub(BOOL bFlag);
+    void RestoreFromStub();
+
+    INT GetCtrlButtonWidth();
+    INT GetGripperWidth();
+    INT GetTipbarHeight();
+    BOOL AutoAdjustDeskBandSize();
+    INT AdjustDeskBandSize(BOOL bFlag);
+    void LocateCtrlButtons();
+    void AdjustPosOnDisplayChange();
+    void SetVertical(BOOL bVertical);
+    void UpdatePosFlags();
+
+    void CancelMenu();
+    BOOL CheckExcludeCaptionButtonMode(LPRECT prc1, LPCRECT prc2);
+    void ClearLBItemList();
+
+    HFONT CreateVerticalFont();
+    void UpdateVerticalFont();
+
+    void ShowOverScreenSizeBalloon();
+    void DestroyOverScreenSizeBalloon();
+    void DestroyWnd();
+
+    HKL GetFocusKeyboardLayout();
+    void KillOnTheadItemChangeTimer();
+
+    UINT_PTR SetTimer(UINT_PTR nIDEvent, UINT uElapse);
+    BOOL KillTimer(UINT_PTR uIDEvent);
+
+    void MoveToTray();
+    void MyClientToScreen(LPPOINT lpPoint, LPRECT prc);
+    void SavePosition();
+    void SetAlpha(BYTE bAlpha, BOOL bFlag);
+    BOOL SetLangBand(BOOL bFlag1, BOOL bFlag2);
+    void SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight);
+    void SetShowText(BOOL bShow);
+    void SetShowTrayIcon(BOOL bShow);
+
+    void ShowContextMenu(POINT pt, LPCRECT prc, BOOL bFlag);
+    void StartBackToAlphaTimer();
+    BOOL StartDoAccDefaultActionTimer(CTipbarItem *pTarget);
+
+    void StartModalInput(ITfLangBarEventSink *pSink, DWORD dwFlags);
+    void StopModalInput(DWORD dwThreadId);
+    
+    CTipbarThread *_CreateThread(DWORD dwThreadId);
+    CTipbarThread *_FindThread(DWORD dwThreadId);
+    void EnsureFocusThread();
+    HRESULT SetFocusThread(CTipbarThread *pFocusThread);
+    HRESULT AttachFocusThread();
+    void RestoreLastFocus(DWORD *pdwThreadId, BOOL fPrev);
+    void CleanUpThreadPointer(CTipbarThread *pThread, BOOL bRemove);
+    void TerminateAllThreads(BOOL bFlag);
+
+    // IUnknown methods
+    STDMETHOD(QueryInterface)(REFIID riid, void **ppvObj);
+    STDMETHOD_(ULONG, AddRef)();
+    STDMETHOD_(ULONG, Release)();
+
+    // ITfLangBarEventSink methods
+    STDMETHOD(OnSetFocus)(DWORD dwThreadId) override;
+    STDMETHOD(OnThreadTerminate)(DWORD dwThreadId) override;
+    STDMETHOD(OnThreadItemChange)(DWORD dwThreadId) override;
+    STDMETHOD(OnModalInput)(DWORD dwThreadId, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD(ShowFloating)(DWORD dwFlags) override;
+    STDMETHOD(GetItemFloatingRect)(DWORD dwThreadId, REFGUID rguid, RECT *prc) override;
+
+    // ITfLangBarEventSink_P methods
+    STDMETHOD(OnLangBarUpdate)(TfLBIClick click, BOOL bFlag) override;
+
+    // CTipbarAccItem methods
+    STDMETHOD_(BSTR, GetAccName)() override;
+    STDMETHOD_(void, GetAccLocation)(LPRECT lprc) override;
+
+    // CUIFWindow methods
+    STDMETHOD_(void, PaintObject)(HDC hDC, LPCRECT prc) override;
+    STDMETHOD_(DWORD, GetWndStyle)() override;
+    STDMETHOD_(void, Move)(INT x, INT y, INT nWidth, INT nHeight) override;
+    STDMETHOD_(void, OnMouseOutFromWindow)(LONG x, LONG y) override;
+    STDMETHOD_(void, OnCreate)(HWND hWnd) override;
+    STDMETHOD_(void, OnDestroy)(HWND hWnd) override;
+    STDMETHOD_(void, OnTimer)(WPARAM wParam) override;
+    STDMETHOD_(void, OnSysColorChange)() override;
+    STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(void, OnUser)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnWindowPosChanged)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnWindowPosChanging)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnShowWindow)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnSettingChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(LRESULT, OnDisplayChange)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(HRESULT, OnGetObject)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(BOOL, OnEraseBkGnd)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(void, OnThemeChanged)(HWND hWnd, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD_(void, UpdateUI)(LPCRECT prc) override;
+    STDMETHOD_(void, HandleMouseMsg)(UINT uMsg, LONG x, LONG y) override;
+};
+
 /***********************************************************************
  * CUTBLangBarDlg
  */
@@ -2334,12 +2505,8 @@ CUTBContextMenu::CUTBContextMenu(CTipbarWnd *pTipbarWnd)
 /// @unimplemented
 BOOL CUTBContextMenu::Init()
 {
-#if 0 // FIXME: m_pTipbarWnd
     m_pTipbarThread = m_pTipbarWnd->m_pFocusThread;
     return !!m_pTipbarThread;
-#else
-    return TRUE;
-#endif
 }
 
 /// @unimplemented
@@ -2347,11 +2514,9 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 {
     DWORD dwStatus = 0;
 
-#if 0 // FIXME: m_pTipbarWnd
     if (FAILED(m_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus)))
         return NULL;
-#endif
-    
+
     CUTBMenuWnd *pMenuUI = new (cicNoThrow) CUTBMenuWnd(g_hInst, g_dwMenuStyle, 0);
     if (!pMenuUI)
         return NULL;
@@ -2361,11 +2526,8 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
     if (dwStatus & (TF_SFT_DESKBAND | TF_SFT_MINIMIZED))
     {
         CUTBMenuItem *pRestoreLangBar = InsertItem(pMenuUI, ID_RESTORELANGBAR, IDS_RESTORELANGBAR2);
-#if 0 // FIXME: m_pTipbarWnd
         if (pRestoreLangBar && !m_pTipbarWnd->m_dwUnknown20)
             pRestoreLangBar->Gray(TRUE);
-#endif
-        pRestoreLangBar = pRestoreLangBar;
     }
     else
     {
@@ -2399,11 +2561,8 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
             }
 
             CUTBMenuItem *pVertical = InsertItem(pMenuUI, ID_VERTICAL, IDS_VERTICAL);
-#if 0 // FIXME: m_pTipbarWnd
             if (pVertical)
                 pVertical->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));
-#endif
-            pVertical = pVertical;
         }
     }
 
@@ -3414,7 +3573,6 @@ CTipbarGripper::CTipbarGripper(CTipbarWnd *pTipbarWnd, LPCRECT prc, DWORD style)
 /// @unimplemented
 STDMETHODIMP_(void) CTipbarGripper::OnLButtonUp(LONG x, LONG y)
 {
-#if 0 // FIXME: m_pTipbarWnd
     m_pTipbarWnd->RestoreFromStub();
 
     APPBARDATA AppBar = { sizeof(AppBar) };
@@ -3430,7 +3588,6 @@ STDMETHODIMP_(void) CTipbarGripper::OnLButtonUp(LONG x, LONG y)
 
     CUIFGripper::OnLButtonUp(x, y);
     m_pTipbarWnd->UpdatePosFlags();
-#endif
 }
 
 /// @unimplemented
@@ -3448,6 +3605,495 @@ STDMETHODIMP_(BOOL) CTipbarGripper::OnSetCursor(UINT uMsg, LONG x, LONG y)
         return FALSE;
 
     return CUIFGripper::OnSetCursor(uMsg, x, y);
+}
+
+/***********************************************************************
+ * CTipbarWnd
+ */
+
+/// @unimplemented
+CTipbarWnd::CTipbarWnd(DWORD style)
+    : CUIFWindow(g_hInst, style)
+{
+}
+
+/// @unimplemented
+CTipbarWnd::~CTipbarWnd()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::Init(BOOL bFlag, CDeskBand *pDeskBand)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::InitHighContrast()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::InitMetrics()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::InitThemeMargins()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::UnInit()
+{
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::IsFullScreenWindow(HWND hWnd)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::IsHKLToSkipRedrawOnNoItem()
+{
+    return FALSE;
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::IsInItemChangeOrDirty(CTipbarThread *pTarget)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+void CTipbarWnd::AddThreadToThreadCreatingList(CTipbarThread *pThread)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::RemoveThredFromThreadCreatingList(CTipbarThread *pTarget)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::MoveToStub(BOOL bFlag)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::RestoreFromStub()
+{
+}
+
+/// @unimplemented
+INT CTipbarWnd::GetCtrlButtonWidth()
+{
+    return 0;
+}
+
+/// @unimplemented
+INT CTipbarWnd::GetGripperWidth()
+{
+    return 0;
+}
+
+/// @unimplemented
+INT CTipbarWnd::GetTipbarHeight()
+{
+    return 0;
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::AutoAdjustDeskBandSize()
+{
+    return FALSE;
+}
+
+/// @unimplemented
+INT CTipbarWnd::AdjustDeskBandSize(BOOL bFlag)
+{
+    return 0;
+}
+
+/// @unimplemented
+void CTipbarWnd::LocateCtrlButtons()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::AdjustPosOnDisplayChange()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::SetVertical(BOOL bVertical)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::UpdatePosFlags()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::CancelMenu()
+{
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::CheckExcludeCaptionButtonMode(LPRECT prc1, LPCRECT prc2)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+void CTipbarWnd::ClearLBItemList()
+{
+}
+
+/// @unimplemented
+HFONT CTipbarWnd::CreateVerticalFont()
+{
+    return NULL;
+}
+
+/// @unimplemented
+void CTipbarWnd::UpdateVerticalFont()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::ShowOverScreenSizeBalloon()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::DestroyOverScreenSizeBalloon()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::DestroyWnd()
+{
+}
+
+/// @unimplemented
+HKL CTipbarWnd::GetFocusKeyboardLayout()
+{
+    return NULL;
+}
+
+/// @unimplemented
+void CTipbarWnd::KillOnTheadItemChangeTimer()
+{
+}
+
+/// @unimplemented
+UINT_PTR CTipbarWnd::SetTimer(UINT_PTR nIDEvent, UINT uElapse)
+{
+    return 0;
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::KillTimer(UINT_PTR uIDEvent)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+void CTipbarWnd::MoveToTray()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::MyClientToScreen(LPPOINT lpPoint, LPRECT prc)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::SavePosition()
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::SetAlpha(BYTE bAlpha, BOOL bFlag)
+{
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::SetLangBand(BOOL bFlag1, BOOL bFlag2)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+void CTipbarWnd::SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::SetShowText(BOOL bShow)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::SetShowTrayIcon(BOOL bShow)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::ShowContextMenu(POINT pt, LPCRECT prc, BOOL bFlag)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::StartBackToAlphaTimer()
+{
+}
+
+/// @unimplemented
+BOOL CTipbarWnd::StartDoAccDefaultActionTimer(CTipbarItem *pTarget)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+void CTipbarWnd::StartModalInput(ITfLangBarEventSink *pSink, DWORD dwFlags)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::StopModalInput(DWORD dwThreadId)
+{
+}
+
+/// @unimplemented
+CTipbarThread *CTipbarWnd::_CreateThread(DWORD dwThreadId)
+{
+    return NULL;
+}
+
+/// @unimplemented
+CTipbarThread *CTipbarWnd::_FindThread(DWORD dwThreadId)
+{
+    return NULL;
+}
+
+/// @unimplemented
+void CTipbarWnd::EnsureFocusThread()
+{
+}
+
+/// @unimplemented
+HRESULT CTipbarWnd::SetFocusThread(CTipbarThread *pFocusThread)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT CTipbarWnd::AttachFocusThread()
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+void CTipbarWnd::RestoreLastFocus(DWORD *pdwThreadId, BOOL fPrev)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::CleanUpThreadPointer(CTipbarThread *pThread, BOOL bRemove)
+{
+}
+
+/// @unimplemented
+void CTipbarWnd::TerminateAllThreads(BOOL bFlag)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::QueryInterface(REFIID riid, void **ppvObj)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP_(ULONG) CTipbarWnd::AddRef()
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(ULONG) CTipbarWnd::Release()
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::OnSetFocus(DWORD dwThreadId)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::OnThreadTerminate(DWORD dwThreadId)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::OnThreadItemChange(DWORD dwThreadId)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::OnModalInput(DWORD dwThreadId, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::ShowFloating(DWORD dwFlags)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::GetItemFloatingRect(DWORD dwThreadId, REFGUID rguid, RECT *prc)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CTipbarWnd::OnLangBarUpdate(TfLBIClick click, BOOL bFlag)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP_(BSTR) CTipbarWnd::GetAccName()
+{
+    return NULL;
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::GetAccLocation(LPRECT lprc)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::PaintObject(HDC hDC, LPCRECT prc)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(DWORD) CTipbarWnd::GetWndStyle()
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::Move(INT x, INT y, INT nWidth, INT nHeight)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnMouseOutFromWindow(LONG x, LONG y)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnCreate(HWND hWnd)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnDestroy(HWND hWnd)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnTimer(WPARAM wParam)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnSysColorChange()
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnEndSession(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnUser(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(LRESULT)
+CTipbarWnd::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(LRESULT)
+CTipbarWnd::OnWindowPosChanging(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(LRESULT)
+CTipbarWnd::OnShowWindow(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(LRESULT)
+CTipbarWnd::OnSettingChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(LRESULT)
+CTipbarWnd::OnDisplayChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
+}
+
+/// @unimplemented
+STDMETHODIMP_(HRESULT)
+CTipbarWnd::OnGetObject(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP_(BOOL) CTipbarWnd::OnEraseBkGnd(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::OnThemeChanged(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::UpdateUI(LPCRECT prc)
+{
+}
+
+/// @unimplemented
+STDMETHODIMP_(void) CTipbarWnd::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
+{
 }
 
 /***********************************************************************
