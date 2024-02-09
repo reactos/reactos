@@ -92,7 +92,7 @@ MUIDefaultKeyboardLayout(
     return MUILanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
-PCWSTR
+UINT
 MUIGetOEMCodePage(
     IN PCWSTR LanguageId)
 {
@@ -380,21 +380,25 @@ AddKeyboardLayouts(
 static
 BOOLEAN
 AddCodepageToRegistry(
-    IN PCWSTR ACPage,
-    IN PCWSTR OEMCPage,
-    IN PCWSTR MACCPage)
+    _In_ UINT ACPage,
+    _In_ UINT OEMCPage,
+    _In_ UINT MACCPage)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
-    HANDLE KeyHandle;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE KeyHandle;
+    /*
+     * Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    WCHAR Value[sizeof("4294967295")];
 
-    // Open the nls codepage key
-    RtlInitUnicodeString(&KeyName,
+    /* Open the NLS CodePage key */
+    RtlInitUnicodeString(&Name,
                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
+                               &Name,
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
@@ -407,54 +411,60 @@ AddCodepageToRegistry(
         return FALSE;
     }
 
-    // Set ANSI codepage
-    RtlInitUnicodeString(&ValueName, L"ACP");
+    /* Set ANSI codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", ACPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"ACP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)ACPage,
-                           (wcslen(ACPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    // Set OEM codepage
-    RtlInitUnicodeString(&ValueName, L"OEMCP");
+    /* Set OEM codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", OEMCPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"OEMCP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)OEMCPage,
-                           (wcslen(OEMCPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    // Set MAC codepage
-    RtlInitUnicodeString(&ValueName, L"MACCP");
+    /* Set MAC codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", MACCPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"MACCP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)MACCPage,
-                           (wcslen(MACCPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
+Quit:
     NtClose(KeyHandle);
-
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 static

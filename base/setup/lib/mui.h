@@ -11,7 +11,7 @@ typedef ULONG KLID;
 
 /*
  * See http://archives.miloush.net/michkap/archive/2006/10/14/825404.html
- * and the intl.inf file map:
+ * and the intl.inf LCID map:
  *
  * ; List of locales.
  * ; <LCID> = <Description>,<OEMCP>,<Language Group>,<langID:HKL pair>,<langID:HKL pair>,...
@@ -28,9 +28,9 @@ typedef struct
 typedef struct
 {
     PCWSTR LanguageID;
-    PCWSTR ACPage;
-    PCWSTR OEMCPage;
-    PCWSTR MACCPage;
+    UINT ACPage;
+    UINT OEMCPage;
+    UINT MACCPage;
     PCWSTR LanguageDescriptor;
     PCWSTR GeoID;
     const MUI_SUBFONT* MuiSubFonts;
@@ -46,7 +46,7 @@ KLID
 MUIDefaultKeyboardLayout(
     IN PCWSTR LanguageId);
 
-PCWSTR
+UINT
 MUIGetOEMCodePage(
     IN PCWSTR LanguageId);
 
