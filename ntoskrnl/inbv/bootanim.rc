@@ -23,7 +23,7 @@ IDB_SERVER_HEADER   BITMAP "inbv/resources/hserver.bmp"
 IDB_SERVER_FOOTER   BITMAP "inbv/resources/fserver.bmp"
 
 /* ReactOS additions */
-IDB_LOGO_XMAS       BITMAP "inbv/resources/logo_xmas.bmp"
+//IDB_LOGO_XMAS       BITMAP "inbv/resources/logo_xmas.bmp"
 IDB_ROTATING_LINE   BITMAP "inbv/resources/line.bmp"
 IDB_PROGRESS_BAR    BITMAP "inbv/resources/progress.bmp"
 IDB_COPYRIGHT       BITMAP "inbv/resources/copyright.bmp"
