@@ -16,6 +16,22 @@ endif()
 
 project(REACTOS)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_C_COMPILER_VERSION VERSION_LESS "13.0.1")
+        message(FATAL_ERROR "Unsupported old ${CMAKE_C_COMPILER_ID} compiler: ${CMAKE_C_COMPILER_VERSION}")
+    endif()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_C_COMPILER_VERSION VERSION_LESS "8.4")
+        message(FATAL_ERROR "Unsupported old ${CMAKE_C_COMPILER_ID} compiler: ${CMAKE_C_COMPILER_VERSION}")
+    endif()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    if(CMAKE_C_COMPILER_VERSION VERSION_LESS "19.0") # v14 (2015)
+        message(FATAL_ERROR "Unsupported old ${CMAKE_C_COMPILER_ID} compiler: ${CMAKE_C_COMPILER_VERSION}")
+    endif()
+else()
+    message(WARNING "Unknown ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION} compiler, skipping compiler version check...")
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -76,9 +92,9 @@ add_definitions(
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
-if (NOT MSVC AND ((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0.0")
-               OR (CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "10.0.0")))
-    # Thankfully, GCC has this
+if(NOT MSVC AND (CMAKE_C_COMPILER_ID STREQUAL "GNU"
+              OR CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    # Thankfully, CLANG and GCC have this
     add_compile_options(-ffile-prefix-map=${REACTOS_SOURCE_DIR}=)
     add_compile_options(-ffile-prefix-map=${_PATH_PREFIX}=)
 else()
@@ -141,9 +157,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         elseif(ARCH STREQUAL "amd64")
             add_definitions(-D_AMD64_ -D__x86_64__ /DWIN32 -D_WINDOWS)
         endif()
-        if(MSVC_VERSION GREATER 1699)
-            add_definitions(/D_ALLOW_KEYWORD_MACROS)
-        endif()
+        add_definitions(/D_ALLOW_KEYWORD_MACROS)
     endif()
     add_subdirectory(sdk/include/host)
 
