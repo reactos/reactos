@@ -19,6 +19,7 @@
 #define IDS_MINIMIZE        314
 #define IDS_CLOSELANGBAR    315
 #define IDS_EXTRAICONS      318
+#define IDS_LANGUAGEBAR     320
 #define IDS_RESTORELANGBAR2 321
 #define IDS_MENUWND         322
 #define IDS_VERTICAL        324

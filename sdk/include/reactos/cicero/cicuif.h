@@ -653,6 +653,7 @@ protected:
     COLORREF m_rgbToolTipBkColor;
     COLORREF m_rgbToolTipTextColor;
     friend class CUIFObject;
+    friend class CTipbarWnd;
 
 public:
     enum { TOOLTIP_TIMER_ID = 0x3216 };
@@ -1109,6 +1110,28 @@ inline void cicDoneUIFLib(void)
     cicDoneUIFScheme();
     cicDoneUIFSys();
     cicDoneUIFUtil();
+}
+
+inline void cicGetScreenRect(POINT pt, LPRECT prc)
+{
+    *prc = { 0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN) };
+    HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    if (hMon)
+    {
+        MONITORINFO mi = { sizeof(mi) };
+        GetMonitorInfo(hMon, &mi);
+            *prc = mi.rcMonitor;
+    }
+}
+
+inline BOOL cicIsFullScreenSize(HWND hWnd)
+{
+    RECT rc;
+
+    ::GetWindowRect(hWnd, &rc);
+    return (rc.left <= 0) && (rc.top <= 0) &&
+           (rc.right >= GetSystemMetrics(SM_CXFULLSCREEN)) &&
+           (rc.bottom >= GetSystemMetrics(SM_CYFULLSCREEN));
 }
 
 /////////////////////////////////////////////////////////////////////////////

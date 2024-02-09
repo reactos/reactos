@@ -21,7 +21,7 @@ public:
 
     BOOL Insert(size_t iItem, size_t cGrow);
     LPVOID Append(size_t cGrow);
-    void Remove(size_t iItem, size_t cRemove);
+    void Remove(size_t iItem, size_t cRemove = 1);
 };
 
 template <typename T_ITEM>
