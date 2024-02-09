@@ -1346,12 +1346,20 @@ ProcessKeyboardLayoutFiles(
 
 BOOLEAN
 SetGeoID(
-    IN PCWSTR Id)
+    _In_ GEOID GeoId)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
     HANDLE KeyHandle;
+    /*
+     * Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    WCHAR Value[sizeof("4294967295")];
+
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", GeoId);
+    ASSERT(NT_SUCCESS(Status));
 
     RtlInitUnicodeString(&Name,
                          L".DEFAULT\\Control Panel\\International\\Geo");
@@ -1360,9 +1368,9 @@ SetGeoID(
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_SET_VALUE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -1374,12 +1382,12 @@ SetGeoID(
                            &Name,
                            0,
                            REG_SZ,
-                           (PVOID)Id,
-                           (wcslen(Id) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
         return FALSE;
     }
 

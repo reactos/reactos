@@ -100,7 +100,7 @@ MUIGetOEMCodePage(
     return MUILanguageList[lngIndex].OEMCPage;
 }
 
-PCWSTR
+GEOID
 MUIGetGeoID(
     IN PCWSTR LanguageId)
 {

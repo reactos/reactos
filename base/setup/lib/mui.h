@@ -25,6 +25,8 @@ typedef struct
     KLID LayoutID; // Layout ID (like 0x00000409)
 } MUI_LAYOUTS;
 
+typedef ULONG GEOID; // See winnls.h
+
 typedef struct
 {
     PCWSTR LanguageID;
@@ -32,7 +34,7 @@ typedef struct
     UINT OEMCPage;
     UINT MACCPage;
     PCWSTR LanguageDescriptor;
-    PCWSTR GeoID;
+    GEOID GeoID;
     const MUI_SUBFONT* MuiSubFonts;
     const MUI_LAYOUTS* MuiLayouts;
 } MUI_LANGUAGE;
@@ -50,7 +52,7 @@ UINT
 MUIGetOEMCodePage(
     IN PCWSTR LanguageId);
 
-PCWSTR
+GEOID
 MUIGetGeoID(
     IN PCWSTR LanguageId);
 
