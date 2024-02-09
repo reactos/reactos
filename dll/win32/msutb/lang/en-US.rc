@@ -26,6 +26,7 @@ BEGIN
     IDS_MINIMIZE         "&Minimize"
     IDS_CLOSELANGBAR     "&Close Language Bar"
     IDS_EXTRAICONS       "&Additional icons in taskbar"
+    IDS_LANGUAGEBAR      "Language Bar"
     IDS_RESTORELANGBAR2  "&Restore Language Bar"
     IDS_MENUWND          "Menu Window"
     IDS_VERTICAL         "&Vertical"
