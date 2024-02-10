@@ -16,6 +16,7 @@ DWORD g_dwOSInfo = 0;
 CRITICAL_SECTION g_cs;
 LONG g_DllRefCount = 0;
 BOOL g_bWinLogon = FALSE;
+BOOL g_fInClosePopupTipbar = FALSE;
 
 BOOL g_bShowTipbar = TRUE;
 BOOL g_bShowDebugMenu = FALSE;
@@ -1250,6 +1251,7 @@ class CTipbarWnd
     LONG m_cRefs;
     friend class CUTBContextMenu;
     friend class CTipbarGripper;
+    friend VOID WINAPI ClosePopupTipbar(VOID);
 
 public:
     CTipbarWnd(DWORD style);
@@ -4757,12 +4759,39 @@ SetRegisterLangBand(BOOL bRegister)
 /***********************************************************************
  *              ClosePopupTipbar (MSUTB.@)
  *
- * @unimplemented
+ * @implemented
  */
 EXTERN_C VOID WINAPI
 ClosePopupTipbar(VOID)
 {
-    FIXME("stub:()\n");
+    TRACE("()\n");
+
+    if (g_fInClosePopupTipbar)
+        return;
+
+    g_fInClosePopupTipbar = TRUE;
+
+    if (g_pTipbarWnd)
+    {
+        g_pTipbarWnd->m_pDeskBand = NULL;
+        g_pTipbarWnd->DestroyWnd();
+        g_pTipbarWnd->Release();
+        g_pTipbarWnd = NULL;
+    }
+
+    if (g_pTrayIconWnd)
+    {
+        g_pTrayIconWnd->DestroyWnd();
+        if (g_pTrayIconWnd)
+        {
+            delete g_pTrayIconWnd;
+            g_pTrayIconWnd = NULL;
+        }
+    }
+
+    UninitSkipRedrawHKLArray();
+
+    g_fInClosePopupTipbar = FALSE;
 }
 
 /***********************************************************************
