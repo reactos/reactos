@@ -9,6 +9,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msutb);
 
+//#define ENABLE_DESKBAND
+
 HINSTANCE g_hInst = NULL;
 UINT g_wmTaskbarCreated = 0;
 UINT g_uACP = CP_ACP;
@@ -18,6 +20,11 @@ LONG g_DllRefCount = 0;
 BOOL g_bWinLogon = FALSE;
 BOOL g_fInClosePopupTipbar = FALSE;
 HWND g_hwndParent = NULL;
+#ifdef ENABLE_DESKBAND
+BOOL g_bEnableDeskBand = TRUE;
+#else
+BOOL g_bEnableDeskBand = FALSE;
+#endif
 
 BOOL g_bShowTipbar = TRUE;
 BOOL g_bShowDebugMenu = FALSE;
@@ -66,10 +73,6 @@ EXTERN_C void __cxa_pure_virtual(void)
 class CMsUtbModule : public CComModule
 {
 };
-
-BEGIN_OBJECT_MAP(ObjectMap)
-    //OBJECT_ENTRY(CLSID_MSUTBDeskBand, CDeskBand) // FIXME: Implement this
-END_OBJECT_MAP()
 
 CMsUtbModule gModule;
 
@@ -138,7 +141,11 @@ void InitSkipRedrawHKLArray(void)
     if (!g_prghklSkipRedrawing)
         return;
 
-    g_prghklSkipRedrawing->Add((HKL)UlongToHandle(0xE0010411)); // Japanese IME will be skipped
+    if (g_bEnableDeskBand && (g_dwOSInfo & CIC_OSINFO_XPPLUS))
+    {
+        // Japanese IME will be skipped
+        g_prghklSkipRedrawing->Add((HKL)UlongToHandle(0xE0010411));
+    }
 
     CicRegKey regKey;
     LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE,
@@ -387,7 +394,7 @@ BOOL CheckEAFonts(void)
 
 BOOL IsDeskBandFromReg()
 {
-    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
+    if (!g_bEnableDeskBand || !(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
         return FALSE;
 
     CicRegKey regKey;
@@ -536,12 +543,15 @@ BOOL InitFromReg(void)
         error = regKey2.QueryDword(TEXT("TimerElapseENSUREFOCUS"), &dwValue);
         if (error == ERROR_SUCCESS)
             g_uTimerElapseENSUREFOCUS = dwValue;
-        error = regKey2.QueryDword(TEXT("ShowDeskBand"), &dwValue);
-        if (error == ERROR_SUCCESS)
-            g_bShowDeskBand = !!dwValue;
-        error = regKey2.QueryDword(TEXT("TimerElapseSHOWWDESKBAND"), &dwValue);
-        if (error == ERROR_SUCCESS)
-            g_uTimerElapseSHOWDESKBAND = dwValue;
+        if (g_bEnableDeskBand && (g_dwOSInfo & CIC_OSINFO_XPPLUS))
+        {
+            error = regKey2.QueryDword(TEXT("ShowDeskBand"), &dwValue);
+            if (error == ERROR_SUCCESS)
+                g_bShowDeskBand = !!dwValue;
+            error = regKey2.QueryDword(TEXT("TimerElapseSHOWWDESKBAND"), &dwValue);
+            if (error == ERROR_SUCCESS)
+                g_uTimerElapseSHOWDESKBAND = dwValue;
+        }
     }
 
     CicRegKey regKey3;
@@ -1432,6 +1442,16 @@ public:
     STDMETHOD_(void, HandleMouseMsg)(UINT uMsg, LONG x, LONG y) override;
 };
 
+/***********************************************************************/
+
+#ifdef ENABLE_DESKBAND
+class CDeskBand
+{
+public:
+    // FIXME: Implement this
+};
+#endif
+
 /***********************************************************************
  * CUTBLangBarDlg
  */
@@ -1518,7 +1538,11 @@ CUTBLangBarDlg::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 CUTBCloseLangBarDlg::CUTBCloseLangBarDlg()
 {
     m_cRefs = 1;
-    m_pszDialogName = MAKEINTRESOURCE(IDD_CLOSELANGBAR);
+
+    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+        m_pszDialogName = MAKEINTRESOURCE(IDD_CLOSELANGBARNOBAND);
+    else
+        m_pszDialogName = MAKEINTRESOURCE(IDD_CLOSELANGBAR);
 }
 
 STDMETHODIMP_(BOOL) CUTBCloseLangBarDlg::DoModal(HWND hDlg)
@@ -1581,7 +1605,10 @@ STDMETHODIMP_(void) CUTBCloseLangBarDlg::SetDlgShown(BOOL bShown)
 CUTBMinimizeLangBarDlg::CUTBMinimizeLangBarDlg()
 {
     m_cRefs = 1;
-    m_pszDialogName = MAKEINTRESOURCE(IDD_MINIMIZELANGBAR);
+    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+        m_pszDialogName = MAKEINTRESOURCE(IDD_MINIMIZELANGBARNOBAND);
+    else
+        m_pszDialogName = MAKEINTRESOURCE(IDD_MINIMIZELANGBAR);
 }
 
 STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::DoModal(HWND hDlg)
@@ -2752,13 +2779,20 @@ BOOL CUTBContextMenu::SelectMenuItem(UINT nCommandId)
 
         case ID_DESKBAND:
         {
-            DWORD dwStatus;
-            m_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus);
+            if (!g_bEnableDeskBand || !(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+            {
+                m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_MINIMIZED);
+            }
+            else
+            {
+                DWORD dwStatus;
+                m_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus);
 
-            if (dwStatus & TF_SFT_DESKBAND)
-                break;
+                if (dwStatus & TF_SFT_DESKBAND)
+                    break;
 
-            m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND);
+                m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND);
+            }
 
             CUTBMinimizeLangBarDlg *pDialog = new(cicNoThrow) CUTBMinimizeLangBarDlg();
             if (pDialog)
@@ -3667,15 +3701,19 @@ STDMETHODIMP_(void) CTipbarGripper::OnLButtonUp(LONG x, LONG y)
 {
     m_pTipbarWnd->RestoreFromStub();
 
-    APPBARDATA AppBar = { sizeof(AppBar) };
-    AppBar.hWnd = ::FindWindowW(L"Shell_TrayWnd", NULL);
-    if (::SHAppBarMessage(ABM_GETTASKBARPOS, &AppBar))
+    if (g_bEnableDeskBand && (g_dwOSInfo & CIC_OSINFO_XPPLUS))
     {
-        RECT rc = AppBar.rc;
-        POINT pt;
-        ::GetCursorPos(&pt);
-        if (g_pTipbarWnd && ::PtInRect(&rc, pt))
-            g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND | TF_SFT_EXTRAICONSONMINIMIZED);
+        APPBARDATA AppBar = { sizeof(AppBar) };
+        AppBar.hWnd = ::FindWindowW(L"Shell_TrayWnd", NULL);
+        if (::SHAppBarMessage(ABM_GETTASKBARPOS, &AppBar))
+        {
+            RECT rc = AppBar.rc;
+            POINT pt;
+            ::GetCursorPos(&pt);
+            if (g_pTipbarWnd && ::PtInRect(&rc, pt))
+                g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND |
+                                                          TF_SFT_EXTRAICONSONMINIMIZED);
+        }
     }
 
     CUIFGripper::OnLButtonUp(x, y);
@@ -4159,6 +4197,10 @@ BOOL CTipbarWnd::KillTimer(UINT_PTR uIDEvent)
 /// @unimplemented
 void CTipbarWnd::MoveToTray()
 {
+    if (!g_bEnableDeskBand || !(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+    {
+        //FIXME
+    }
 }
 
 void CTipbarWnd::MyClientToScreen(LPPOINT lpPoint, LPRECT prc)
@@ -4858,7 +4900,7 @@ SetRegisterLangBand(BOOL bRegister)
 {
     TRACE("(%d)\n", bRegister);
 
-    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
+    if (!g_bEnableDeskBand || !(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
         return E_FAIL;
 
     BOOL bDeskBand = IsDeskBandFromReg();
@@ -4967,6 +5009,12 @@ MsUtbCoCreateInstance(
         return TF_CreateDisplayAttributeMgr((ITfDisplayAttributeMgr **)ppv);
     return cicRealCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
 }
+
+BEGIN_OBJECT_MAP(ObjectMap)
+#ifdef ENABLE_DESKBAND
+    OBJECT_ENTRY(CLSID_MSUTBDeskBand, CDeskBand) // FIXME: Implement this
+#endif
+END_OBJECT_MAP()
 
 /// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
