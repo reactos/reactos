@@ -375,6 +375,7 @@ FindEAEnumFontProc(ENUMLOGFONT *pLF, NEWTEXTMETRIC *pTM, INT nFontType, LPARAM l
     return FALSE;
 }
 
+/// Are there East-Asian vertical fonts?
 BOOL CheckEAFonts(void)
 {
     BOOL bHasVertical = FALSE;
@@ -382,6 +383,55 @@ BOOL CheckEAFonts(void)
     ::EnumFonts(hDC, NULL, (FONTENUMPROC)FindEAEnumFontProc, (LPARAM)&bHasVertical);
     ::ReleaseDC(NULL, hDC);
     return bHasVertical;
+}
+
+BOOL IsDeskBandFromReg()
+{
+    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+        return FALSE;
+
+    CicRegKey regKey;
+    if (regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\")))
+    {
+        DWORD dwValue = 0;
+        regKey.QueryDword(TEXT("ShowDeskBand"), &dwValue);
+        return !!dwValue;
+    }
+
+    return FALSE;
+}
+
+void SetDeskBandToReg(BOOL bShow)
+{
+    CicRegKey regKey;
+    if (regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\MSUTB\\"), KEY_ALL_ACCESS))
+        regKey.SetDword(TEXT("ShowDeskBand"), bShow);
+}
+
+BOOL RegisterComCat(REFCLSID rclsid, REFCATID rcatid, BOOL bRegister)
+{
+    if (FAILED(::CoInitialize(NULL)))
+        return FALSE;
+
+    ICatRegister *pCat;
+    HRESULT hr = ::CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER,
+                                    IID_ICatRegister, (void**)&pCat);
+    if (SUCCEEDED(hr))
+    {
+        if (bRegister)
+            hr = pCat->RegisterClassImplCategories(rclsid, 1, const_cast<CATID*>(&rcatid));
+        else
+            hr = pCat->UnRegisterClassImplCategories(rclsid, 1, const_cast<CATID*>(&rcatid));
+
+        pCat->Release();
+    }
+
+    ::CoUninitialize();
+
+    //if (IsIE5())
+    //    ::RegDeleteKey(HKEY_CLASSES_ROOT, TEXT("Component Categories\\{00021492-0000-0000-C000-000000000046}\\Enum"));
+
+    return SUCCEEDED(hr);
 }
 
 BOOL InitFromReg(void)
@@ -4801,13 +4851,26 @@ GetPopupTipbar(HWND hWnd, BOOL fWinLogon)
 /***********************************************************************
  *              SetRegisterLangBand (MSUTB.@)
  *
- * @unimplemented
+ * @implemented
  */
 EXTERN_C HRESULT WINAPI
 SetRegisterLangBand(BOOL bRegister)
 {
-    FIXME("stub:(%d)\n", bRegister);
-    return E_NOTIMPL;
+    TRACE("(%d)\n", bRegister);
+
+    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
+        return E_FAIL;
+
+    BOOL bDeskBand = IsDeskBandFromReg();
+    if (bDeskBand == bRegister)
+        return S_OK;
+
+    SetDeskBandToReg(bRegister);
+
+    if (!RegisterComCat(CLSID_MSUTBDeskBand, CATID_DeskBand, bRegister))
+        return TF_E_NOLOCK;
+
+    return S_OK;
 }
 
 /***********************************************************************
