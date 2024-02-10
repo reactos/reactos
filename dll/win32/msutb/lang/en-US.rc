@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     English (United States) resource file
- * TRANSLATOR:  Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * TRANSLATOR:  Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -18,61 +18,61 @@ BEGIN
     IDS_NO               "&No"
 
     IDS_SETTINGS         "S&ettings..."
-    IDS_RESTORELANGBAR   "Restore Language Bar"
+    IDS_RESTORELANGBAR   "Restore the Language bar"
     IDS_LANGUAGE         "Language"
     IDS_LANGUAGEBUTTON   "Language Button"
     IDS_TRANSPARENCY     "&Transparency"
     IDS_TEXTLABELS       "Tex&t Labels"
     IDS_MINIMIZE         "&Minimize"
-    IDS_CLOSELANGBAR     "&Close Language Bar"
+    IDS_CLOSELANGBAR     "&Close the the Language bar"
     IDS_EXTRAICONS       "&Additional icons in taskbar"
-    IDS_LANGUAGEBAR      "Language Bar"
-    IDS_RESTORELANGBAR2  "&Restore Language Bar"
+    IDS_LANGUAGEBAR      "The Language bar"
+    IDS_RESTORELANGBAR2  "&Restore the Language bar"
     IDS_MENUWND          "Menu Window"
     IDS_VERTICAL         "&Vertical"
-    IDS_ADJUSTLANGBAND   "&Adjust Language Band position"
+    IDS_ADJUSTLANGBAND   "&Adjust the Language band position"
     IDS_LEFTCLICK        "Left Click"
 END
 
 IDD_CLOSELANGBARNOBAND DIALOGEX 0, 0, 200, 105
-CAPTION "Language Bar"
+CAPTION "The Language bar"
 STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "You have closed Language Bar.\r\n\r\nTo use Language Bar later, check ""Show Language Bar on the desktop"" in Language Bar Settings dialog, which you can find within Text Services control panel.", -1, 5, 5, 190, 60
+    LTEXT "You have closed the Language bar.\r\n\r\nTo use the Language bar later, check ""Show the Language bar on the desktop"" in the Language bar Settings dialog, which you can find within the Text Services control panel.", -1, 5, 5, 190, 60
     AUTOCHECKBOX "&Don't show me this message again", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 80, 85, 55, 15
     PUSHBUTTON "Cancel", IDCANCEL, 140, 85, 55, 15
 }
 
 IDD_CLOSELANGBAR DIALOGEX 0, 0, 200, 105
-CAPTION "Language Bar"
+CAPTION "The Language bar"
 STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "You have closed Language Bar.\r\n\r\nTo use Language Bar later, check ""Show Language Bar on the desktop"" in Language Bar Settings dialog, which you can find within Regional and Language Options control panel.", -1, 5, 5, 190, 60
+    LTEXT "You have closed the Language bar.\r\n\r\nTo use the Language bar later, check ""Show the Language bar on the desktop"" in the Language bar Settings dialog, which you can find within the Regional and Language Options control panel.", -1, 5, 5, 190, 60
     AUTOCHECKBOX "&Don't show me this message again", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 80, 85, 55, 15
     PUSHBUTTON "Cancel", IDCANCEL, 140, 85, 55, 15
 }
 
 IDD_MINIMIZELANGBARNOBAND DIALOGEX 0, 0, 205, 124
-CAPTION "Language Bar"
+CAPTION "The Language bar"
 STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "You have minimized Language Bar. To restore it, just click Language Bar icon (near the clock) and select ""Restore Language Bar"" from the pop-up menu.", -1, 5, 5, 190, 50
+    LTEXT "You have minimized the Language bar. To restore it, just click the Language bar icon (near the clock) and select ""Restore the Language bar"" from the pop-up menu.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP154, -1, "STATIC", SS_BITMAP, 72, 63, 60, 60, WS_EX_STATICEDGE
     AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
 }
 
 IDD_MINIMIZELANGBAR DIALOGEX 0, 0, 205, 124
-CAPTION "Language Bar"
+CAPTION "The Language bar"
 STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "You have minimized Language Bar. To restore it, just click Language Bar icon (near the clock) and select ""Restore Language Bar"" from the pop-up menu.", -1, 5, 5, 190, 50
+    LTEXT "You have minimized the Language bar. To restore it, just click the Language bar icon (near the clock) and select ""Restore the Language bar"" from the pop-up menu.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP155, -1, "STATIC", SS_BITMAP, 53, 67, 60, 60, WS_EX_STATICEDGE
     AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
