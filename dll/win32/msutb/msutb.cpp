@@ -387,7 +387,7 @@ BOOL CheckEAFonts(void)
 
 BOOL IsDeskBandFromReg()
 {
-    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
+    if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS)) // Desk band is for XP+
         return FALSE;
 
     CicRegKey regKey;
