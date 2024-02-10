@@ -17,6 +17,7 @@
 #include <oleacc.h>
 #include <imm.h>
 #include <ddk/immdev.h>
+#include <undocuser.h>
 #include <cguid.h>
 #include <msctf.h>
 #include <ctffunc.h>
