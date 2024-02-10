@@ -1,5 +1,8 @@
 #pragma once
 
+#define IDB_BITMAP154       154
+#define IDB_BITMAP155       155
+
 #define IDS_OK              100
 #define IDS_CANCEL          101
 #define IDS_ABORT           102
@@ -39,7 +42,9 @@
 #define ID_ADJUSTDESKBAND   219
 #define ID_SETTINGS         2000
 
+#define IDD_CLOSELANGBARNOBAND 1000
 #define IDD_CLOSELANGBAR    1001
+#define IDD_MINIMIZELANGBARNOBAND 1003
 #define IDD_MINIMIZELANGBAR 1004
 
 #define IDC_CLOSELANGBAR_CHECK 1002

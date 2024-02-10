@@ -21,6 +21,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/manifest_hosted.rc>
 
 IDI_MAINICON ICON "res/earth.ico"
+IDB_BITMAP154 BITMAP "res/Bitmap-154.bmp"
+IDB_BITMAP155 BITMAP "res/Bitmap-155.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)
