@@ -24,7 +24,7 @@ BEGIN
     IDS_TRANSPARENCY     "&Transparency"
     IDS_TEXTLABELS       "Tex&t Labels"
     IDS_MINIMIZE         "&Minimize"
-    IDS_CLOSELANGBAR     "&Close the the Language bar"
+    IDS_CLOSELANGBAR     "&Close the Language bar"
     IDS_EXTRAICONS       "&Additional icons in taskbar"
     IDS_LANGUAGEBAR      "The Language bar"
     IDS_RESTORELANGBAR2  "&Restore the Language bar"
