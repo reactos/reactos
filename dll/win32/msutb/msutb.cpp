@@ -4782,11 +4782,8 @@ ClosePopupTipbar(VOID)
     if (g_pTrayIconWnd)
     {
         g_pTrayIconWnd->DestroyWnd();
-        if (g_pTrayIconWnd)
-        {
-            delete g_pTrayIconWnd;
-            g_pTrayIconWnd = NULL;
-        }
+        delete g_pTrayIconWnd;
+        g_pTrayIconWnd = NULL;
     }
 
     UninitSkipRedrawHKLArray();
