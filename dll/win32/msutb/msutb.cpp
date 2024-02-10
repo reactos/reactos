@@ -17,6 +17,7 @@ CRITICAL_SECTION g_cs;
 LONG g_DllRefCount = 0;
 BOOL g_bWinLogon = FALSE;
 BOOL g_fInClosePopupTipbar = FALSE;
+HWND g_hwndParent = NULL;
 
 BOOL g_bShowTipbar = TRUE;
 BOOL g_bShowDebugMenu = FALSE;
@@ -1252,6 +1253,7 @@ class CTipbarWnd
     friend class CUTBContextMenu;
     friend class CTipbarGripper;
     friend VOID WINAPI ClosePopupTipbar(VOID);
+    friend BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand);
 
 public:
     CTipbarWnd(DWORD style);
@@ -1267,7 +1269,7 @@ public:
         return static_cast<CTipbarAccItem*>(this);
     }
 
-    void Init(BOOL bFlag, CDeskBand *pDeskBand);
+    void Init(BOOL bChild, CDeskBand *pDeskBand);
     void InitHighContrast();
     void InitMetrics();
     void InitThemeMargins();
@@ -3713,7 +3715,7 @@ CTipbarWnd::~CTipbarWnd()
 }
 
 /// @unimplemented
-void CTipbarWnd::Init(BOOL bFlag, CDeskBand *pDeskBand)
+void CTipbarWnd::Init(BOOL bChild, CDeskBand *pDeskBand)
 {
 }
 
@@ -4721,6 +4723,54 @@ STDMETHODIMP_(void) CTipbarWnd::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
 }
 
 /***********************************************************************
+ *              GetTipbarInternal
+ */
+BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand)
+{
+    BOOL bParent = !!(dwFlags & 0x80000000);
+    g_bWinLogon = !!(dwFlags & 0x1);
+
+    InitFromReg();
+
+    if (!g_bShowTipbar)
+        return FALSE;
+
+    if (bParent)
+    {
+        g_pTrayIconWnd = new(cicNoThrow) CTrayIconWnd();
+        if (!g_pTrayIconWnd)
+            return FALSE;
+        g_pTrayIconWnd->CreateWnd();
+    }
+
+    g_pTipbarWnd = new(cicNoThrow) CTipbarWnd(bParent ? g_dwWndStyle : g_dwChildWndStyle);
+    if (!g_pTipbarWnd || !g_pTipbarWnd->Initialize())
+        return FALSE;
+
+    g_pTipbarWnd->Init(!bParent, pDeskBand);
+    g_pTipbarWnd->CreateWnd(hWnd);
+
+    ::SetWindowText(*g_pTipbarWnd, TEXT("TF_FloatingLangBar_WndTitle"));
+
+    DWORD dwOldStatus = 0;
+    if (!bParent)
+    {
+        g_pTipbarWnd->m_pLangBarMgr->GetPrevShowFloatingStatus(&dwOldStatus);
+        g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_DESKBAND);
+    }
+
+    DWORD dwStatus;
+    g_pTipbarWnd->m_pLangBarMgr->GetShowFloatingStatus(&dwStatus);
+    g_pTipbarWnd->ShowFloating(dwStatus);
+
+    if (!bParent && (dwOldStatus & TF_SFT_DESKBAND))
+        g_pTipbarWnd->m_dwTipbarWndFlags |= 0x4000;
+
+    g_hwndParent = hWnd;
+    return TRUE;
+}
+
+/***********************************************************************
  *              GetLibTls (MSUTB.@)
  *
  * @unimplemented
@@ -4735,13 +4785,17 @@ GetLibTls(VOID)
 /***********************************************************************
  *              GetPopupTipbar (MSUTB.@)
  *
- * @unimplemented
+ * @implemented
  */
 EXTERN_C BOOL WINAPI
 GetPopupTipbar(HWND hWnd, BOOL fWinLogon)
 {
-    FIXME("stub:(%p, %d)\n", hWnd, fWinLogon);
-    return FALSE;
+    TRACE("(%p, %d)\n", hWnd, fWinLogon);
+
+    if (!fWinLogon)
+        TurnOffSpeechIfItsOn();
+
+    return GetTipbarInternal(hWnd, fWinLogon | 0x80000000, NULL);
 }
 
 /***********************************************************************
