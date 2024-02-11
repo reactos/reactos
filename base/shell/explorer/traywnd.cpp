@@ -2770,30 +2770,26 @@ ChangePos:
         {
             case ABE_LEFT:
             {
-                if (ppt->x > prcShowDesktopBtn->right || ppt->y < prcShowDesktopBtn->top)
-                    return FALSE;
+                return !(ppt->x > prcShowDesktopBtn->right || ppt->y < prcShowDesktopBtn->top);
                 break;
             }
             case ABE_TOP:
             {
-                if (ppt->x < prcShowDesktopBtn->left || ppt->y > prcShowDesktopBtn->bottom)
-                    return FALSE;
+                return !(ppt->x < prcShowDesktopBtn->left || ppt->y > prcShowDesktopBtn->bottom);
                 break;
             }
             case ABE_RIGHT:
             {
-                if (ppt->x < prcShowDesktopBtn->left || ppt->y < prcShowDesktopBtn->top)
-                    return FALSE;
+                return !(ppt->x < prcShowDesktopBtn->left || ppt->y < prcShowDesktopBtn->top);
                 break;
             }
             case ABE_BOTTOM:
             {
-                if (ppt->x < prcShowDesktopBtn->left || ppt->y < prcShowDesktopBtn->top)
-                    return FALSE;
+                return !(ppt->x < prcShowDesktopBtn->left || ppt->y < prcShowDesktopBtn->top);
                 break;
             }
         }
-        return TRUE;
+        return FALSE;
     }
 
     /**
