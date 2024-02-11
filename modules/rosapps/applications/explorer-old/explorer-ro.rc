@@ -218,7 +218,7 @@ BEGIN
     CONTROL "&SDI (Interfață de Document Solitar)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 180, 10
     CONTROL 190, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 190, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "&Deschide subdosarele în ferestre separate", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 180, 10
+    CONTROL "&Deschide subfolderele în ferestre separate", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 180, 10
     LTEXT "Aceste opțiuni vor fi mai departe utilizate ca implicite pentru toate ferestrele Exploratorului.", IDC_STATIC, 7, 111, 174, 22
     DEFPUSHBUTTON "Con&firmă", IDOK, 29, 136, 50, 14, WS_GROUP
     PUSHBUTTON "A&nulează", IDCANCEL, 106, 136, 50, 14
