@@ -1,30 +1,28 @@
-/*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot com)
- */
+// COPYRIGHT: Petru Dimitriu <petrimetri@gmail.com>
+//            Ștefan Fulea <stefan.fulea@mail.com>
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Conexiune realizată prin:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Configurare…", IDC_CONFIGURE, 179, 38, 60, 14
-    LTEXT "Componente utilizate în această conexiune:", -1, 9, 59, 217, 8
-    PUSHBUTTON "Instala&re…", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Dezinstalează", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Proprietăți…", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Descriere", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Descrierea componentelor…", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Afișează pictogramă în zona de notificare", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "N&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Configurare…", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Componente utilizate în această conexiune:", -1, 9, 39, 217, 8
+    PUSHBUTTON "Instala&re…", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Dezinstalează", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Proprietăți…", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Descriere", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "&Afișează pictogramă în zona de notificare", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "N&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
@@ -83,20 +81,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Alegeți o configurație tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Configurație tipică", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Configurație particularizată", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Crează conexiuni de rețea utilizând Clientela de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Alegeți o setare tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Setări tipice", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Setări particularizate", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
+    LTEXT "Crează conexiuni de rețea utilizând Clientul de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pentru dispozitiv:", IDC_STATIC, 33, 2, 160, 20
@@ -111,7 +109,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistent de instalare ReactOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Doriți ca acest calculator să fie membru al unui domeniu?\n\
@@ -153,7 +151,6 @@ BEGIN
     IDS_NET_ACTIVATE "Activare"
     IDS_NET_DEACTIVATE "Dezactivare"
     IDS_NET_STATUS "Stare"
-    IDS_NET_REPAIR "Repară"
     IDS_NET_CREATELINK "Crează legătură"
     IDS_NET_DELETE "Șterge"
     IDS_NET_RENAME "Redenumește"
@@ -170,12 +167,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKSETTINGSTITLE "Configurație de rețea"
+    IDS_NETWORKSETTINGSTITLE "Setări de rețea"
     IDS_NETWORKSETTINGSSUBTITLE "Instalare și configurare rețea pentru conectarea la alte rețele, calculatoare și Internet."
     IDS_NETWORKCOMPONENTTITLE "Componente de rețea"
     IDS_NETWORKCOMPONENTSUBTITLE "Determinare componente de rețea necesare calculatorului. Pentru adăugare de noi componente, apăsați „Instalare”."
     IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu de calculator"
-    IDS_NETWORKDOMAINSUBTITLE "Un domeniu sau un grup de calculatoare definit de administratorul de rețea. Un grup de lucru este un grup de calculatoare având același nume de grup."
-    IDS_REACTOS_SETUP "Asistent de instalare ReactOS"
-    IDS_WZD_DOMAIN_NAME "Asistentul nu poate continua până\nnu veți introduce un nume de domeniu\nsau grup de lucru."
+    IDS_NETWORKDOMAINSUBTITLE "Specifică felul în care va fi folosit calculatorul - ca parte a unui grup de lucru sau ca parte a unui domeniu de rețea."
+    IDS_REACTOS_SETUP "Expert de instalare ReactOS"
+    IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\nnu veți introduce un nume de domeniu\nsau grup de lucru."
 END
