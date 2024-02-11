@@ -3362,8 +3362,14 @@ AfdInfoAPC(PVOID ApcContext,
 {
     PAFDINFOAPCCONTEXT Context = ApcContext;
 
+    TRACE("AfdInfoAPC %p %lx %lx\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
+
     if (Context->lpCompletionRoutine)
         Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
+
+    /* Free IOCTL buffer */
+    HeapFree(GlobalHeap, 0, Context->lpInfoData);
+
     HeapFree(GlobalHeap, 0, ApcContext);
 }
 
@@ -3378,27 +3384,33 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
 {
     PIO_STATUS_BLOCK    IOSB;
     IO_STATUS_BLOCK     DummyIOSB;
-    AFD_INFO            InfoData;
+    PAFD_INFO           InfoData;
     NTSTATUS            Status;
     PAFDINFOAPCCONTEXT  APCContext;
     PIO_APC_ROUTINE     APCFunction;
     HANDLE              Event = NULL;
     HANDLE              SockEvent;
 
+    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(AFD_INFO));
+    if (!InfoData)
+        return SOCKET_ERROR;
+
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
                            SynchronizationEvent,
                            FALSE);
-
-    if( !NT_SUCCESS(Status) )
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GlobalHeap, 0, InfoData);
         return SOCKET_ERROR;
+    }
 
     /* Set Info Class */
-    InfoData.InformationClass = AfdInformationClass;
+    InfoData->InformationClass = AfdInformationClass;
 
     /* Verify if we should use APC */
-    if (Overlapped == NULL)
+    if (!Overlapped)
     {
         /* Not using Overlapped structure, so use normal blocking on event */
         APCContext = NULL;
@@ -3412,30 +3424,26 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
-            NtClose( SockEvent );
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, InfoData);
             return MsafdReturnWithErrno(STATUS_SUCCESS, NULL, 0, NULL);
         }
-        if (CompletionRoutine == NULL)
+
+        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
+        if (!APCContext)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
-            APCContext = (PAFDINFOAPCCONTEXT)Overlapped;
-            APCFunction = NULL;
+            ERR("Not enough memory for APC Context\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, InfoData);
+            return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, NULL, 0, NULL);
+        }
+        APCContext->lpCompletionRoutine = CompletionRoutine;
+        APCContext->lpOverlapped = Overlapped;
+        APCContext->lpInfoData = InfoData;
+        APCFunction = &AfdInfoAPC;
+
+        if (!CompletionRoutine)
             Event = Overlapped->hEvent;
-        }
-        else
-        {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = &AfdInfoAPC; // should be a private io completition function inside us
-            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
-            if (!APCContext)
-            {
-                ERR("Not enough memory for APC Context\n");
-                NtClose( SockEvent );
-                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, NULL, 0, NULL);
-            }
-            APCContext->lpCompletionRoutine = CompletionRoutine;
-            APCContext->lpOverlapped = Overlapped;
-        }
 
         IOSB = (PIO_STATUS_BLOCK)&Overlapped->Internal;
     }
@@ -3449,49 +3457,51 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
                                    APCContext,
                                    IOSB,
                                    IOCTL_AFD_GET_INFO,
-                                   &InfoData,
-                                   sizeof(InfoData),
-                                   &InfoData,
-                                   sizeof(InfoData));
+                                   InfoData,
+                                   sizeof(AFD_INFO),
+                                   InfoData,
+                                   sizeof(AFD_INFO));
     if (Status == STATUS_PENDING)
     {
-        if (Overlapped == NULL)
-        {
-            /* Wait for completion of not overlapped */
+        /* Wait for completion if not overlapped */
+        if (!Overlapped)
             WaitForSingleObject(SockEvent, INFINITE);
-        }
 
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    TRACE("Status %lx\n", Status);
 
-    TRACE("Status %x Information %d\n", Status, IOSB->Information);
-
-    if (Status == STATUS_PENDING)
+    if (Status == STATUS_SUCCESS)
     {
-        TRACE("Leaving (Pending)\n");
-        return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
+        /* Return Information */
+        if (Ulong != NULL)
+        {
+            *Ulong = InfoData->Information.Ulong;
+        }
+        if (LargeInteger != NULL)
+        {
+            *LargeInteger = InfoData->Information.LargeInteger;
+        }
+        if (Boolean != NULL)
+        {
+            *Boolean = InfoData->Information.Boolean;
+        }
     }
 
-    if (Status != STATUS_SUCCESS)
-        return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
-
-    /* Return Information */
-    if (Ulong != NULL)
+    NtClose(SockEvent);
+    if (Overlapped && Status != STATUS_PENDING)
     {
-        *Ulong = InfoData.Information.Ulong;
+        /* Allow APC to be processed */
+        SleepEx(0, TRUE);
     }
-    if (LargeInteger != NULL)
+    else if (!Overlapped)
     {
-        *LargeInteger = InfoData.Information.LargeInteger;
-    }
-    if (Boolean != NULL)
-    {
-        *Boolean = InfoData.Information.Boolean;
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, InfoData);
     }
 
-    return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
+    return MsafdReturnWithErrno(Status, NULL, 0, NULL);
 }
 
 
@@ -3506,41 +3516,47 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
 {
     PIO_STATUS_BLOCK    IOSB;
     IO_STATUS_BLOCK     DummyIOSB;
-    AFD_INFO            InfoData;
+    PAFD_INFO           InfoData;
     NTSTATUS            Status;
     PAFDINFOAPCCONTEXT  APCContext;
     PIO_APC_ROUTINE     APCFunction;
     HANDLE              Event = NULL;
     HANDLE              SockEvent;
 
+    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(AFD_INFO));
+    if (!InfoData)
+        return SOCKET_ERROR;
+
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
                            SynchronizationEvent,
                            FALSE);
-
-    if( !NT_SUCCESS(Status) )
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GlobalHeap, 0, InfoData);
         return SOCKET_ERROR;
+    }
 
     /* Set Info Class */
-    InfoData.InformationClass = AfdInformationClass;
+    InfoData->InformationClass = AfdInformationClass;
 
     /* Set Information */
     if (Ulong != NULL)
     {
-        InfoData.Information.Ulong = *Ulong;
+        InfoData->Information.Ulong = *Ulong;
     }
     if (LargeInteger != NULL)
     {
-        InfoData.Information.LargeInteger = *LargeInteger;
+        InfoData->Information.LargeInteger = *LargeInteger;
     }
     if (Boolean != NULL)
     {
-        InfoData.Information.Boolean = *Boolean;
+        InfoData->Information.Boolean = *Boolean;
     }
 
     /* Verify if we should use APC */
-    if (Overlapped == NULL)
+    if (!Overlapped)
     {
         /* Not using Overlapped structure, so use normal blocking on event */
         APCContext = NULL;
@@ -3554,30 +3570,26 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
-            NtClose( SockEvent );
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, InfoData);
             return MsafdReturnWithErrno(STATUS_SUCCESS, NULL, 0, NULL);
         }
-        if (CompletionRoutine == NULL)
+
+        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
+        if (!APCContext)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
-            APCContext = (PAFDINFOAPCCONTEXT)Overlapped;
-            APCFunction = NULL;
+            ERR("Not enough memory for APC Context\n");
+            NtClose(SockEvent);
+            HeapFree(GlobalHeap, 0, InfoData);
+            return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, NULL, 0, NULL);
+        }
+        APCContext->lpCompletionRoutine = CompletionRoutine;
+        APCContext->lpOverlapped = Overlapped;
+        APCContext->lpInfoData = InfoData;
+        APCFunction = &AfdInfoAPC;
+
+        if (!CompletionRoutine)
             Event = Overlapped->hEvent;
-        }
-        else
-        {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = &AfdInfoAPC; // should be a private io completition function inside us
-            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
-            if (!APCContext)
-            {
-                ERR("Not enough memory for APC Context\n");
-                NtClose( SockEvent );
-                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, NULL, 0, NULL);
-            }
-            APCContext->lpCompletionRoutine = CompletionRoutine;
-            APCContext->lpOverlapped = Overlapped;
-        }
 
         IOSB = (PIO_STATUS_BLOCK)&Overlapped->Internal;
     }
@@ -3591,26 +3603,34 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                                    APCContext,
                                    IOSB,
                                    IOCTL_AFD_SET_INFO,
-                                   &InfoData,
-                                   sizeof(InfoData),
+                                   InfoData,
+                                   sizeof(AFD_INFO),
                                    NULL,
                                    0);
     if (Status == STATUS_PENDING)
     {
-        if (Overlapped == NULL)
-        {
-            /* Wait for completion of not overlapped */
+        /* Wait for completion if not overlapped */
+        if (!Overlapped)
             WaitForSingleObject(SockEvent, INFINITE);
-        }
 
         Status = IOSB->Status;
     }
 
-    NtClose( SockEvent );
+    TRACE("Status %lx\n", Status);
 
-    TRACE("Status %x Information %d\n", Status, IOSB->Information);
+    NtClose(SockEvent);
+    if (Overlapped && Status != STATUS_PENDING)
+    {
+        /* Allow APC to be processed */
+        SleepEx(0, TRUE);
+    }
+    else if (!Overlapped)
+    {
+        /* When using APC, this will be freed by the APC function */
+        HeapFree(GlobalHeap, 0, InfoData);
+    }
 
-    return MsafdReturnWithErrno(Status, NULL, IOSB->Information, NULL);
+    return MsafdReturnWithErrno(Status, NULL, 0, NULL);
 }
 
 PSOCKET_INFORMATION
