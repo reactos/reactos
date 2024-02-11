@@ -252,6 +252,20 @@ LRESULT CTrayShowDesktopButton::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
     return 0;
 }
 
+LRESULT CTrayShowDesktopButton::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if ((lParam & PRF_CHECKVISIBLE) && !IsWindowVisible())
+        return 0;
+
+    RECT rc;
+    GetClientRect(&rc);
+
+    HDC hdc = (HDC)wParam;
+    OnDraw(hdc, &rc);
+
+    return 0;
+}
+
 BOOL CTrayShowDesktopButton::PtInButton(LPPOINT ppt)
 {
     if (!ppt || !IsWindow())
@@ -313,8 +327,13 @@ LRESULT CTrayShowDesktopButton::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lPara
 {
     if (m_hTheme)
     {
-        CloseThemeData(m_hTheme);
+        ::CloseThemeData(m_hTheme);
         m_hTheme = NULL;
+    }
+    if (m_hFallbackTheme)
+    {
+        ::CloseThemeData(m_hFallbackTheme);
+        m_hFallbackTheme = NULL;
     }
 
     return 0;

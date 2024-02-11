@@ -2765,9 +2765,6 @@ ChangePos:
         if (!ppt || !prcShowDesktopBtn)
             return FALSE;
         UNREFERENCED_PARAMETER(pwi);
-        /*if (!pwi)
-            return FALSE;*/
-        //InflateRect(prcShowDesktopBtn, (int)pwi->cxWindowBorders * 2 + 1, (int)pwi->cyWindowBorders * 2 + 1);
 
         switch (m_Position)
         {
