@@ -65,6 +65,19 @@ void cicInitUIFSys(void);
 void cicDoneUIFSys(void);
 void cicUpdateUIFSys(void);
 
+inline void cicGetWorkAreaRect(POINT pt, LPRECT prc)
+{
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, prc, 0);
+
+    HMONITOR hMon = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    if (hMon)
+    {
+        MONITORINFO mi = { sizeof(mi) };
+        if (::GetMonitorInfo(hMon, &mi))
+            *prc = mi.rcWork;
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 #include <uxtheme.h>
