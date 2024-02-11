@@ -18,7 +18,13 @@ DEFINE_GUID(IID_ITfLangBarEventSink_P,         0x7A460360, 0xDA21, 0x4B09, 0xA8,
 DEFINE_GUID(CLSID_MSUTBDeskBand,               0x540D8A8B, 0x1C3F, 0x4E32, 0x81, 0x32, 0x53, 0x0F, 0x6A, 0x50, 0x20, 0x90);
 DEFINE_GUID(CATID_DeskBand,                    0x00021492, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
-EXTERN_C LPVOID WINAPI GetLibTls(VOID);
+typedef struct LIBTHREAD
+{
+    IUnknown *m_pUnknown1;
+    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
+} LIBTHREAD, *PLIBTHREAD;
+
+EXTERN_C PLIBTHREAD WINAPI GetLibTls(VOID);
 EXTERN_C BOOL WINAPI GetPopupTipbar(HWND hWnd, BOOL fWinLogon);
 EXTERN_C HRESULT WINAPI SetRegisterLangBand(BOOL bRegister);
 EXTERN_C VOID WINAPI ClosePopupTipbar(VOID);
