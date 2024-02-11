@@ -1802,7 +1802,13 @@ inline void cicDoneUIFScheme(void)
 /// @unimplemented
 inline CUIFScheme *cicCreateUIFScheme(DWORD type)
 {
-    return new(cicNoThrow) CUIFSchemeDef(type);
+    switch (type)
+    {
+        //case 1:  return new(cicNoThrow) CUIFSchemeOff10(1);
+        //case 2:  return new(cicNoThrow) CUIFSchemeOff10(2);
+        //case 3:  return new(cicNoThrow) CUIFSchemeOff10(3);
+        default: return new(cicNoThrow) CUIFSchemeDef(type);
+    }
 }
 
 inline STDMETHODIMP_(DWORD) CUIFSchemeDef::GetType()
