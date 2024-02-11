@@ -2554,7 +2554,6 @@ inline void cicDrawMaskBmpOnDC(HDC hDC, LPCRECT prc, HBITMAP hbmp, HBITMAP hbmpM
         return;
 
     LONG cx = prc->right - prc->left, cy = prc->bottom - prc->top;
-    RECT rc = { 0, 0, cx, cy };
     CUIFBitmapDC::s_phdcDst->SetDIB(cx, cy, 1, 32);
     CUIFBitmapDC::s_phdcSrc->SetBitmap(hbmp);
     CUIFBitmapDC::s_phdcMask->SetBitmap(hbmpMask);
