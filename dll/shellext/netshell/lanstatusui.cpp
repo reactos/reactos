@@ -479,7 +479,6 @@ LANStatusUiDetailsDlg(
                 {
                     if (GetPerAdapterInfo(pContext->dwAdapterIndex, pPerAdapter, &dwSize) == ERROR_SUCCESS)
                     {
-                        li.iItem = InsertItemToListView(hDlgCtrl, IDS_DNS_SERVERS);
                         if (li.iItem >= 0)
                             AddIPAddressToListView(hDlgCtrl, &pPerAdapter->DnsServerList, li.iItem);
                     }

@@ -1,25 +1,25 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Ligar com:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "Con&figurar", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Esta ligação utiliza os seguintes items:", -1, 9, 59, 217, 8
-    PUSHBUTTON "Inst&alar", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Desinstalar", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Propiedades", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Descrição ", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "A descrição dos componentes...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "Notificar-me quando a conectividade esta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "Con&figurar", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Esta ligação utiliza os seguintes items:", -1, 9, 39, 217, 8
+    PUSHBUTTON "Inst&alar", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Desinstalar", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Propiedades", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Descrição", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Notificar-me quando a conectividade esta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
@@ -31,11 +31,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ligação ", -1, 9, 8, 190, 58, BS_GROUPBOX
+    GROUPBOX "Ligação", -1, 9, 8, 190, 58, BS_GROUPBOX
     LTEXT "Estado:", -1, 22, 20, 65, 8
     LTEXT "Duração:", -1, 22, 34, 65, 8
     LTEXT "Velocidade:", -1, 22, 48, 65, 8
-    GROUPBOX "Actividade ", -1, 9, 74, 190, 70, BS_GROUPBOX
+    GROUPBOX "Actividade", -1, 9, 74, 190, 70, BS_GROUPBOX
     LTEXT "Enviados", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
     RTEXT "Recebidos", -1, 146, 90, 44, 8
@@ -54,7 +54,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suporte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Estado de ligação ", -1, 9, 8, 190, 88, BS_GROUPBOX
+    GROUPBOX "Estado de ligação", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Tipo de endereço:", -1, 22, 20, 80, 8
     LTEXT "Endereço IP:", -1, 22, 34, 80, 8
     LTEXT "Máscara de sub-rede:", -1, 22, 48, 80, 8
@@ -110,7 +110,7 @@ CAPTION "Instalador de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Deseja que este computador faça parte  de um domínio?\n\
-(Pode obter máis informações do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
+(Pode obter esta informação do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Este computador faz parte de um grupo de trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Este computador é parte de um domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nome do domínio ou grupo de trabalho:", IDC_STATIC, 33, 72, 152, 20
@@ -148,7 +148,6 @@ BEGIN
     IDS_NET_ACTIVATE "Habilitar"
     IDS_NET_DEACTIVATE "Desabilitar"
     IDS_NET_STATUS "Estado"
-    IDS_NET_REPAIR "Reparar"
     IDS_NET_CREATELINK "Criar acesso directo"
     IDS_NET_DELETE "Apagar"
     IDS_NET_RENAME "Renomear"
@@ -165,10 +164,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKSETTINGSTITLE "Configuração de rede"
+    IDS_NETWORKSETTINGSTITLE "Definições de rede"
     IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à Internet."
     IDS_NETWORKCOMPONENTTITLE "Componetes de rede"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar no seu equipamento. Para adicionar novos componentes, clice em Instalar."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clice em Instalar."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
     IDS_NETWORKDOMAINSUBTITLE "Um domínio é um grupo de computadores gerido por um administrador de rede. Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome."
     IDS_REACTOS_SETUP "Instalador de ReactOS"
