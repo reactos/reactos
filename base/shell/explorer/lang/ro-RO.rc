@@ -89,10 +89,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "Meniul de &Pornire", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    LTEXT "Acest stil de meniu oferă acces ușor la foldere, programele favorite, și căutare.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Meniul de Pornire &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Acest model de meniu vă oferă aspectul și funcționalitatea clasică", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    LTEXT "Acest stil de meniu vă oferă aspectul și funcționalitatea clasică", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Pa&rticularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 
@@ -159,7 +159,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "N&u efectua această verificare la pornire", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "În calculator există un fișier sau dosar numit %s care poate cauza probleme în funcționarea corectă a anumitor aplicații. Redenumirea sa în %s ar rezolva această problemă. Doriți să-l redenumiți acum?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "În calculator există un fișier sau folder numit %s care poate cauza probleme în funcționarea corectă a anumitor aplicații. Redenumirea sa în %s ar rezolva această problemă. Doriți să-l redenumiți acum?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
