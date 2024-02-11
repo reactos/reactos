@@ -441,6 +441,7 @@ HBITMAP cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH
 HBITMAP cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr,
                          COLORREF rgbColor, COLORREF rgbBack);
 BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const SIZE *pSize);
+void cicDrawMaskBmpOnDC(HDC hDC, LPCRECT prc, HBITMAP hbmp, HBITMAP hbmpMask);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -2545,6 +2546,25 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
     *hbm1 = CUIFBitmapDC::s_phdcSrc->DetachBitmap();
     *hbm2 = CUIFBitmapDC::s_phdcMask->DetachBitmap();
     return TRUE;
+}
+
+inline void cicDrawMaskBmpOnDC(HDC hDC, LPCRECT prc, HBITMAP hbmp, HBITMAP hbmpMask)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return;
+
+    LONG cx = prc->right - prc->left, cy = prc->bottom - prc->top;
+    RECT rc = { 0, 0, cx, cy };
+    CUIFBitmapDC::s_phdcDst->SetDIB(cx, cy, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbmp);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbmpMask);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, hDC, prc->left, prc->top, SRCCOPY);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
+    ::BitBlt(hDC, prc->left, prc->top, cx, cy, *CUIFBitmapDC::s_phdcDst, 0, 0, SRCCOPY);
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(FALSE);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -6450,9 +6470,29 @@ CUIFMenuItemSeparator::OnPaintDef(HDC hDC)
     m_pScheme->DrawMenuSeparator(hDC, &rc);
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenuItemSeparator::OnPaintO10(HDC hDC)
 {
-    //FIXME
+    if (!m_pScheme)
+        return;
+
+    LONG cx = m_rc.right - m_rc.left - 4;
+    LONG cy = (m_rc.bottom - m_rc.top - 2) / 2;
+
+    RECT rc;
+    GetRect(&rc);
+
+    rc.right = rc.left + m_pMenu->m_cxyMargin + 2;
+    if (m_pMenu->m_bHasMargin)
+        rc.right += m_pMenu->m_cxyMargin;
+
+    HBRUSH hBrush = m_pScheme->GetBrush(9);
+    ::FillRect(hDC, &rc, hBrush);
+    rc = {
+        m_rc.left + m_pMenu->m_cxyMargin + 4,
+        m_rc.top + cy,
+        m_rc.left + cx + 2,
+        m_rc.top + cy + 1
+    };
+    m_pScheme->DrawMenuSeparator(hDC, &rc);
 }
