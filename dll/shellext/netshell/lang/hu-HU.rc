@@ -1,25 +1,25 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Kapcsolódás ezzel:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Beállítás", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Ez a kapcsolat a következő elemeket használja:", -1, 9, 59, 217, 8
-    PUSHBUTTON "&Telepítés", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Eltávolítás", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Tulajdonságok", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Leírás", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Alkotóelem leírása ide kerül...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "Ikon megjelenítése a tálcán a kapcsolat ideje alatt", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "&Értesítsen amikor a kapcsolat korlátozott vagy nem elérhető", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Beállítás", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Ez a kapcsolat a következő elemeket használja:", -1, 9, 39, 217, 8
+    PUSHBUTTON "Telepítés", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Eltávolítás", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Tulajdonságok", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Leírás", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "Ikon megjelenítése a tálcán a kapcsolat ideje alatt", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Értesítsen amikor a kapcsolat korlátozott vagy nem elérhető", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
@@ -55,8 +55,8 @@ CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Connection Status", -1, 9, 8, 190, 88, BS_GROUPBOX
-    LTEXT "Address type:", -1, 22, 20, 80, 8
-    LTEXT "IP Address:", -1, 22, 34, 80, 8
+    LTEXT "Cím típusa:", -1, 22, 20, 80, 8
+    LTEXT "IP-cím:", -1, 22, 34, 80, 8
     LTEXT "Subnet Mask:", -1, 22, 48, 80, 8
     LTEXT "Default Gateway:", -1, 22, 62, 80, 8
     RTEXT "N/A", IDC_DETAILSTYPE, 110, 20, 80, 8
@@ -96,12 +96,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
     LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "A kijelölt elemeket használja ez a kapcsolat:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Install...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Uninstall", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Properties", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    GROUPBOX "Description", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+    GROUPBOX "Leírás", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
@@ -120,8 +120,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS "Physical Address"
-    IDS_IP_ADDRESS "IP Address"
+    IDS_PHYSICAL_ADDRESS "Fizikai cím"
+    IDS_IP_ADDRESS "IP cím"
     IDS_SUBNET_MASK "Subnet Mask"
     IDS_DEF_GATEWAY "Default Gateway"
     IDS_DHCP_SERVER "DHCP Server"
@@ -132,23 +132,22 @@ BEGIN
     IDS_PROPERTY "Property"
     IDS_VALUE "Value"
     IDS_NETWORKCONNECTION "Network Connections"
-    IDS_SHV_COLUMN_NAME "Name"
+    IDS_SHV_COLUMN_NAME "Név"
     IDS_SHV_COLUMN_TYPE "Type"
     IDS_SHV_COLUMN_STATE "Status"
-    IDS_SHV_COLUMN_DEVNAME "Device Name"
+    IDS_SHV_COLUMN_DEVNAME "Eszköznév"
     IDS_SHV_COLUMN_PHONE "Phone # or Host Address"
     IDS_SHV_COLUMN_OWNER "Owner"
     IDS_TYPE_ETHERNET "LAN or High-Speed Internet"
     IDS_STATUS_NON_OPERATIONAL "Disabled"
     IDS_STATUS_UNREACHABLE "Not Connected"
     IDS_STATUS_DISCONNECTED "Network cable unplugged"
-    IDS_STATUS_CONNECTING "Acquiring network address"
+    IDS_STATUS_CONNECTING "Hálózati cím lekérése"
     IDS_STATUS_CONNECTED "Connected"
     IDS_STATUS_OPERATIONAL "Connected"
     IDS_NET_ACTIVATE "Enable"
     IDS_NET_DEACTIVATE "Disable"
     IDS_NET_STATUS "Status"
-    IDS_NET_REPAIR "Repair"
     IDS_NET_CREATELINK "Create Shortcut"
     IDS_NET_DELETE "Delete"
     IDS_NET_RENAME "Rename"
@@ -157,10 +156,10 @@ BEGIN
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
     IDS_FORMAT_GBIT "%u GBit/s"
-    IDS_DURATION_DAY "%d Day %s"
-    IDS_DURATION_DAYS "%d Days %s"
+    IDS_DURATION_DAY "%d nap %s"
+    IDS_DURATION_DAYS "%d nap %s"
     IDS_ASSIGNED_DHCP "Assigned by DHCP"
-    IDS_ASSIGNED_MANUAL "Manually configured"
+    IDS_ASSIGNED_MANUAL "Kézzel konfigurált"
 END
 
 STRINGTABLE

@@ -322,6 +322,13 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 return PSNRET_NOERROR;
             }
 #endif
+            if (lppl->hdr.code == NM_DBLCLK)
+            {
+                This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                This->ShowNetworkComponentProperties(hwndDlg);
+                return FALSE;
+            }
+
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                 ZeroMemory(&li, sizeof(li));
@@ -404,12 +411,12 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
     StringCbPrintfW(szKeyName, sizeof(szKeyName), L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
     CoTaskMemFree(pStr);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         // failed to open key
         return FALSE;
     }
-    
+
     dwInstanceID = sizeof(szInstanceID);
     if (RegGetValueW(hKey, NULL, L"PnpInstanceId", RRF_RT_REG_SZ, NULL, (PVOID)szInstanceID, &dwInstanceID) == ERROR_SUCCESS)
     {
