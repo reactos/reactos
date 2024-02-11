@@ -37,13 +37,13 @@ Doriți să îl suprascrieți?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Calea nu există"
     IDS_FILENOTEXISTING     "Fișierul nu există"
-    IDS_INVALID_FOLDERNAME  "Selecția nu conține un dosar"
+    IDS_INVALID_FOLDERNAME  "Selecția nu conține un folder"
 }
 
 STRINGTABLE
 {
     IDS_UPFOLDER         "Sus cu un nivel"
-    IDS_NEWFOLDER        "Creează un dosar nou"
+    IDS_NEWFOLDER        "Creează un folder nou"
     IDS_LISTVIEW         "Listă"
     IDS_REPORTVIEW       "Detalii"
     IDS_TODESKTOP        "Către desktop"
@@ -140,7 +140,7 @@ STRINGTABLE
     IDS_SAVE        "Salvează"
     IDS_SAVE_AS     "Salvează ca…"
     IDS_OPEN_FILE   "Deschidere fișier"
-    IDS_SELECT_FOLDER "Selectează dosar"
+    IDS_SELECT_FOLDER "Selectează folder"
     IDS_FONT_SIZE_INPUT "Dimensiunea fontului trebuie să fie un număr."
 }
 
