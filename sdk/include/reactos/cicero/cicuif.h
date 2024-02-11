@@ -473,7 +473,7 @@ public:
     STDMETHOD_(void, FillRect)(HDC hDC, LPCRECT prc, INT iColor);
     STDMETHOD_(void, FrameRect)(HDC hDC, LPCRECT prc, INT iColor);
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) = 0;
-    STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) = 0;
+    STDMETHOD_(void, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) = 0;
@@ -507,7 +507,7 @@ public:
     STDMETHOD_(INT, CxWndBorder)() override { return 1; }
     STDMETHOD_(INT, CyWndBorder)() override { return 1; }
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) override;
-    STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) override;
+    STDMETHOD_(void, GetCtrlFaceOffset)(DWORD dwUnknownFlags, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) override;
@@ -1856,10 +1856,44 @@ inline STDMETHODIMP_(void) CUIFSchemeDef::DrawSelectionRect(HDC hDC, LPCRECT prc
     ::FillRect(hDC, prc, GetBrush(6));
 }
 
-/// @unimplemented
-inline STDMETHODIMP_(INT) CUIFSchemeDef::GetCtrlFaceOffset(DWORD, DWORD dwDrawFlags, LPSIZE pSize)
+inline STDMETHODIMP_(void)
+CUIFSchemeDef::GetCtrlFaceOffset(DWORD dwUnknownFlags, DWORD dwDrawFlags, LPSIZE pSize)
 {
-    return 0;
+    if (!(dwDrawFlags & UIF_DRAW_PRESSED))
+    {
+        if (dwDrawFlags & 0x2)
+        {
+            if (dwUnknownFlags & 0x10)
+            {
+                pSize->cx = pSize->cy = -1;
+                return;
+            }
+            pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x20);
+        }
+        else
+        {
+            if (!(dwDrawFlags & 0x1))
+            {
+                pSize->cx = pSize->cy = -((dwUnknownFlags & 1) != 0);
+                return;
+            }
+            if (dwUnknownFlags & 0x4)
+            {
+                pSize->cx = pSize->cy = -1;
+                return;
+            }
+            pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x8);
+        }
+        return;
+    }
+
+    if (!(dwUnknownFlags & 0x40))
+    {
+        pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x80);
+        return;
+    }
+
+    pSize->cx = pSize->cy = -1;
 }
 
 inline STDMETHODIMP_(void)
