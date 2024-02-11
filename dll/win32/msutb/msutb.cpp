@@ -1423,7 +1423,7 @@ enum
     TIPBAR_TRAYICON = 0x20,
     TIPBAR_UPDATING = 0x400,
     TIPBAR_NODESKBAND = 0x4000,
-    TIPBAR_ENDTOOLBAR = 0x10000,
+    TIPBAR_TOOLBARENDED = 0x10000,
     TIPBAR_TOPFIT = 0x40000,
     TIPBAR_BOTTOMFIT = 0x80000,
     TIPBAR_RIGHTFIT = 0x100000,
@@ -4979,7 +4979,7 @@ HRESULT CTipbarWnd::OnThreadTerminateInternal(DWORD dwThreadId)
 
 STDMETHODIMP CTipbarWnd::OnThreadItemChange(DWORD dwThreadId)
 {
-    if (m_dwTipbarWndFlags & TIPBAR_ENDTOOLBAR)
+    if (m_dwTipbarWndFlags & TIPBAR_TOOLBARENDED)
         return S_OK;
     if (!(m_dwTipbarWndFlags & TIPBAR_CHILD) && (m_dwShowType & TF_SFT_DESKBAND))
         return S_OK;
@@ -5318,7 +5318,7 @@ STDMETHODIMP_(void) CTipbarWnd::OnSysColorChange()
 
 void CTipbarWnd::OnTerminateToolbar()
 {
-    m_dwTipbarWndFlags |= TIPBAR_ENDTOOLBAR;
+    m_dwTipbarWndFlags |= TIPBAR_TOOLBARENDED;
     DestroyOverScreenSizeBalloon();
     TerminateAllThreads(TRUE);
     if (!(m_dwTipbarWndFlags & TIPBAR_CHILD))
