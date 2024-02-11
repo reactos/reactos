@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standarde și formate", -1, 5, 5, 234, 162
     LTEXT "Această opțiune afectează modul în care numerele, valutele, datele și orele sunt reprezentare în anumite aplicații.", -1, 14, 17, 220, 25
-    LTEXT "Selectați un element care să se potrivească cu proprietățile sale sau dați clic pe „Personalizează” pentru a vă alege propriile formate:", -1, 14, 37, 220, 22
+    LTEXT "Selectați un element care să se potrivească cu proprietățile sale sau dați clic pe Personalizează pentru a vă alege propriile formate:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 150, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Particularizare…", IDC_SETUP_BUTTON, 168, 56, 62, 13
     LTEXT "Exemple", -1, 14, 73, 70, 10
@@ -29,8 +29,8 @@ BEGIN
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX "Amplasare geografică", -1, 5, 172, 234, 55
-    LTEXT "Specificați poziția geografică pentru a permite servicii localizate, cum ar fi știri locale sau informații meteo.", -1, 14, 184, 210, 24
+    GROUPBOX "Locație geografică", -1, 5, 172, 234, 55
+    LTEXT "Specificați locația astfel încât unele ser&vicii să vă poată furniza informații locale; de exemplu, știri și rapoarte meteo.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -40,10 +40,10 @@ CAPTION "Limbi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Limbi de introducere și servicii de text", -1, 5, 5, 234, 52
-    LTEXT "Pentru a vedea/modifica limbile de introducere și serviciile de text, apăsați „Detalii”", -1, 12, 15, 220, 18
+    LTEXT "Pentru a vedea/modifica limbile de introducere și serviciile de text, apăsați Detalii", -1, 12, 15, 220, 18
     PUSHBUTTON "&Detalii…", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Compatibilitate lingvistică suplimentară", -1, 5, 62, 234, 82
-    LTEXT "ReactOS posedă în mod implicit compatibilitate pentru majoritatea limbilor. În caz de necesitate, această compatibilitate poate fi extinsă prin instalarea de fișiere suplimentare.", -1, 12, 72, 220, 25
+    LTEXT "Cele mai multe limbi sunt instalate implicit. Pentru a instala mai multe limbi, selectați căsuța de selecție apropiată de mai jos.", -1, 12, 72, 220, 25
     CHECKBOX "Instalează fișierele pentru script-uri comple&xe și pentru limbile cu scriere inversă", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22, BS_MULTILINE | BS_TOP
     CHECKBOX "Instalează fișierele pentru limbile din &estul Asiei", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE | BS_TOP
 END
@@ -131,13 +131,13 @@ BEGIN
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Sepa&ratorul din reprezentarea orei:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Simbolul „ant&e meridiem”:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Simbolul A.&M.:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Simbolul „p&ost meridiem”:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Sim&bolul P.M.:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Notația orei:\n\n\
-h = oră     m = minut    s = secundă\nt = „ante meridiem” sau „post meridiem”\n\
+h = oră     m = minut    s = secundă\nt = am sau pm\n\
 h = 12 ore    H = 24 ore\n\
 hh, mm, ss = cu zerouri   h, m, s = fără zerouri", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
@@ -181,14 +181,14 @@ CAPTION "Ordonare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ordonare", -1, 7, 7, 230, 74
-    LTEXT "Metodele de ordonare determină ordinea caracterelor, cuvintelor, fișierelor și dosarelor.", -1, 14, 17, 220, 25
+    LTEXT "Metodele de ordonare determină ordinea caracterelor, cuvintelor, fișierelor și folderelor.", -1, 14, 17, 220, 25
     LTEXT "Selectați o metodă de ordonare pentru limba dvs.:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Particularizarea opțiunilor regionale"
+    IDS_CUSTOMIZE_TITLE "Particularizare opțiuni regionale"
     IDS_SPAIN "Spaniolă (Spania)"
     IDS_METRIC "Metric"
     IDS_IMPERIAL "Imperial"
@@ -205,7 +205,7 @@ BEGIN
     IDS_APPLY_DEFAULT_TITLE "Schimbarea setărilor implicite"
     IDS_APPLY_DEFAULT_TEXT "Setările vor fi aplicate contului implicit de utilizator.\n\n\
 Aceste modificări se referă la ecranul de autentificare și la noile conturi de utilizator.\n\
-Calculatorul trebuie repornit pentru a institui modificări în unele servicii de sistem."
+Calculatorul trebuie repornit pentru a aplica schimbările la unele servicii de sistem."
 END
 
 STRINGTABLE
@@ -220,6 +220,6 @@ BEGIN
     IDS_ERROR_DEF_INT_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_CODE_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_INPUT_DLL "Nu s-a putut încărca „input.dll”!"
+    IDS_ERROR_INPUT_DLL "Nu s-a putut încărca input.dll!"
     IDS_ERROR_UNICODE "Nu s-a putut instala o nouă limbă pentru programele ce nu suportă Unicode!"
 END
