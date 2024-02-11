@@ -1,33 +1,27 @@
-/*
- * PROJECT:     Network Connections Shell Folder
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/netshell/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for netshell
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
- */
+// COPYRIGHT: Artem Reznikov, Igor Paliychuk
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Підключення через:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Налаштувати", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Відмічені компоненти використовуються цим підключенням:", -1, 9, 59, 217, 8
-    PUSHBUTTON "Вст&ановити", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "В&идалити", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Властивості", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Опис", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Опис компонентів...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "Вивести значок підключення на панель завдань", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "Сповіщати мене, якщо це підключення обмежене чи відсутнє", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Налаштувати", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Відмічені компоненти використовуються цим підключенням:", -1, 9, 39, 217, 8
+    PUSHBUTTON "Вст&ановити", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "В&идалити", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Властивості", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Опис", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "Вивести значок підключення на панель завдань", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Сповіщати мене, якщо це підключення обмежене чи відсутнє", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
@@ -90,10 +84,10 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Choose whether to use typical or custom settings:", IDC_STATIC, 53, 7, 240, 20
+    LTEXT "Виберіть режим налаштування мережі:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Creates network connections using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Створює мережеві з'єднання, використовуючи клієнт для мереж ReactOS, загальні файли і принтери для мереж ReactOS і транспортний протокол TCP/IP з автоматичною адресацією.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -104,12 +98,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
     LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "Це з'єднання використовує наступні компоненти:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Install...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Uninstall", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "В&идалити", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Properties", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    GROUPBOX "Description", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+    GROUPBOX "Опис", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
@@ -156,7 +150,6 @@ BEGIN
     IDS_NET_ACTIVATE "Увімкнути"
     IDS_NET_DEACTIVATE "Вимкнути"
     IDS_NET_STATUS "Стан"
-    IDS_NET_REPAIR "Виправити"
     IDS_NET_CREATELINK "Створити ярлик"
     IDS_NET_DELETE "Видалити"
     IDS_NET_RENAME "Rename"
@@ -178,7 +171,7 @@ BEGIN
     IDS_NETWORKCOMPONENTTITLE "Network Components"
     IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
     IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
+    IDS_NETWORKDOMAINSUBTITLE "Домен - це група комп'ютерів, визначена мережевим адміністратором, а робоча група складається з комп'ютерів з однаковою назвою групи."
     IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
 END

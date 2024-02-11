@@ -1,27 +1,27 @@
-/* TRANSLATOR: 2014-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+// COPYRIGHT: 2014-2016 Erdem Ersoy, 2018 Ercan Ersoy (ercanersoy) <ercanersoy@ercanersoy.net>
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Şunu Kullanarak Bağlan:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Yapılandır", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Bu bağlantıyla kullanılan seçili bileşenler:", -1, 9, 59, 217, 8
-    PUSHBUTTON "&Kur", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "K&aldır", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Tanım", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Bileşen tanımı buraya gelecek.", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Bağlandığında görev çubuğunda simge göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "B&u bağlantı kısıtlıysa veya bağlanamıyorsa beni uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Yapılandır", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Bu bağlantıyla kullanılan seçili bileşenler:", -1, 9, 39, 217, 8
+    PUSHBUTTON "&Kur", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "K&aldır", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Tanım", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "&Bağlandığında görev çubuğunda simge göster", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "B&u bağlantı kısıtlıysa veya bağlanamıyorsa beni uyar", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
@@ -60,7 +60,7 @@ BEGIN
     LTEXT "Adres Türü:", -1, 22, 20, 80, 8
     LTEXT "IP Adresi:", -1, 22, 34, 80, 8
     LTEXT "Alt Ağ Maskesi:", -1, 22, 48, 80, 8
-    LTEXT "Ön Tanımlı Geçit:", -1, 22, 62, 80, 8
+    LTEXT "Varsayılan Geçit:", -1, 22, 62, 80, 8
     RTEXT "Yok", IDC_DETAILSTYPE, 110, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
@@ -113,7 +113,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu bilgisayarın bir etki alanının bir üyesi olmasını ister misiniz?\n\
 (Ağ yöneticinizden bu bilgiyi edinebilirsiniz.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma takımının parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma grubunun parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Evet, bu bilgisayar bir etki alanının parçası olacak.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Çalışma Takımı ya da Etki Alanı Adı:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
@@ -125,7 +125,7 @@ BEGIN
     IDS_PHYSICAL_ADDRESS "Fizîkî Adres"
     IDS_IP_ADDRESS "IP Adresi"
     IDS_SUBNET_MASK "Alt Ağ Maskesi"
-    IDS_DEF_GATEWAY "Ön Tanımlı Geçit"
+    IDS_DEF_GATEWAY "Varsayılan Geçit"
     IDS_DHCP_SERVER "DHCP Sunucusu"
     IDS_LEASE_OBTAINED "Elde Edilen Kirâ"
     IDS_LEASE_EXPIRES "Kirâ Bitişi"
@@ -150,7 +150,6 @@ BEGIN
     IDS_NET_ACTIVATE "Etkinleştir"
     IDS_NET_DEACTIVATE "Etkisizleştir"
     IDS_NET_STATUS "Durum"
-    IDS_NET_REPAIR "Onar"
     IDS_NET_CREATELINK "Kısayol Oluştur"
     IDS_NET_DELETE "Sil"
     IDS_NET_RENAME "Yeniden Adlandır"
@@ -171,8 +170,8 @@ BEGIN
     IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve İnternet'e bağlanmak için kullanılacak ağ yazılımını kurar."
     IDS_NETWORKCOMPONENTTITLE "Ağ Bileşenleri"
     IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
-    IDS_NETWORKDOMAINTITLE "Çalışma Takımı ya da Bilgisayar Etki Alanı"
-    IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi eliyle tanımlanmış bir takım bilgisayardır. Bir çalışma takımı, aynı çalışma takımı adını paylaşan bir takım bilgisayardır."
+    IDS_NETWORKDOMAINTITLE "Çalışma Grubu ya da Bilgisayar Etki Alanı"
+    IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi eliyle tanımlanmış bir grup bilgisayardır. Bir çalışma grubu, aynı çalışma grubu adını paylaşan bir grup bilgisayardır."
     IDS_REACTOS_SETUP "ReactOS Kur"
     IDS_WZD_DOMAIN_NAME "Kur, etki alanınızın ya da\nçalışma takımınızın adını\ngirene dek sürdüremez."
 END
