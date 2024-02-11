@@ -56,7 +56,7 @@ class CNetConnectionPropertyUi final :
         VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
-        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
+        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID);
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         INetConnection * m_pCon;
@@ -137,9 +137,7 @@ CNetConnectionPropertyUi::GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent *
 
     hr = pNCfg->EnumComponents(&GUID_DEVCLASS_NET, &pEnumCfg);
     if (FAILED(hr))
-    {
         return FALSE;
-    }
 
     while (pEnumCfg->Next(1, &pNCg, &Fetched) == S_OK)
     {
@@ -411,6 +409,13 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 return PSNRET_NOERROR;
             }
 #endif
+            if (lppl->hdr.code == NM_DBLCLK)
+            {
+                This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                This->ShowNetworkComponentProperties(hwndDlg);
+                return FALSE;
+            }
+
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                 ZeroMemory(&li, sizeof(li));
@@ -493,12 +498,12 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
     StringCbPrintfW(szKeyName, sizeof(szKeyName), L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
     CoTaskMemFree(pStr);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         // failed to open key
         return FALSE;
     }
-    
+
     dwInstanceID = sizeof(szInstanceID);
     if (RegGetValueW(hKey, NULL, L"PnpInstanceId", RRF_RT_REG_SZ, NULL, (PVOID)szInstanceID, &dwInstanceID) == ERROR_SUCCESS)
     {
@@ -647,7 +652,6 @@ CNetConnectionPropertyUi::Connect(
 {
     if (!m_pCon)
         return E_POINTER; //FIXME
-
 
     if (dwFlags & NCUC_NO_UI)
         return m_pCon->Connect();
