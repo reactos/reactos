@@ -68,6 +68,9 @@ cpp_quote("EXTERN_C BOOL WINAPI TF_GetMlngHKL(_In_ INT iKL, _Out_ HKL *phKL, _Ou
 cpp_quote("EXTERN_C INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL);")
 cpp_quote("EXTERN_C HICON WINAPI TF_InatExtractIcon(_In_ INT iKL);")
 cpp_quote("EXTERN_C HRESULT WINAPI TF_RunInputCPL(VOID);")
+cpp_quote("EXTERN_C BOOL WINAPI TF_GetThreadFlags(DWORD dwThreadId, LPDWORD pdwFlags1, LPDWORD pdwFlags2, LPDWORD pdwFlags3);")
+cpp_quote("EXTERN_C LONG WINAPI TF_CheckThreadInputIdle(DWORD dwThreadId, DWORD dwMilliseconds);")
+cpp_quote("EXTERN_C BOOL WINAPI TF_IsInMarshaling(DWORD dwThreadId);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
 cpp_quote("EXTERN_C const GUID GUID_PROP_ATTRIBUTE;")
