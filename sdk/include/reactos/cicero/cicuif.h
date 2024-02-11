@@ -3266,7 +3266,6 @@ inline void CUIFWindow::SetTimerObject(CUIFObject *pTimerObject, UINT uElapse)
     }
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFWindow::PaintObject(HDC hDC, LPCRECT prc)
 {
@@ -3277,40 +3276,28 @@ CUIFWindow::PaintObject(HDC hDC, LPCRECT prc)
         bGotDC = TRUE;
     }
 
-    LPCRECT pRect = prc;
-    if (!pRect)
-        pRect = &m_rc;
+    if (!prc)
+        prc = &m_rc;
 
     HDC hMemDC = ::CreateCompatibleDC(hDC);
-    if (!hMemDC)
-        return;
+    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC, prc->right - prc->left, prc->bottom - prc->top);
 
-    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC,
-                                              pRect->right - pRect->left,
-                                              pRect->bottom - pRect->top);
-    if (hbmMem)
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
+    ::SetViewportOrgEx(hMemDC, -prc->left, -prc->top, NULL);
+    if (FAILED(EnsureThemeData(m_hWnd)) ||
+        ((!(m_style & UIF_WINDOW_CHILD) || FAILED(DrawThemeParentBackground(m_hWnd, hMemDC, &m_rc))) &&
+         FAILED(DrawThemeBackground(hMemDC, m_iStateId, &m_rc, NULL))))
     {
-        HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
-        ::SetViewportOrgEx(hMemDC, -pRect->left, -pRect->top, NULL);
-
-        if ((FAILED(CUIFTheme::EnsureThemeData(m_hWnd)) ||
-             !(m_style & UIF_WINDOW_CHILD) ||
-             FAILED(DrawThemeParentBackground(m_hWnd, hMemDC, &m_rc))) &&
-            FAILED(DrawThemeBackground(hMemDC, m_iStateId, &m_rc, 0)))
-        {
-            if (m_pScheme)
-                m_pScheme->FillRect(hMemDC, pRect, 22);
-        }
-        CUIFObject::PaintObject(hMemDC, pRect);
-        ::BitBlt(hDC,
-                 pRect->left, pRect->top,
-                 pRect->right - pRect->left, pRect->bottom - pRect->top,
-                 hMemDC,
-                 pRect->left, pRect->top,
-                 SRCCOPY);
-        ::SelectObject(hMemDC, hbmOld);
-        ::DeleteObject(hbmMem);
+        if (m_pScheme)
+            m_pScheme->FillRect(hMemDC, prc, 22);
     }
+
+    CUIFObject::PaintObject(hMemDC, prc);
+    ::BitBlt(hDC, prc->left, prc->top,
+                  prc->right - prc->left, prc->bottom - prc->top,
+             hMemDC, prc->left, prc->top, SRCCOPY);
+    ::SelectObject(hMemDC, hbmOld);
+    ::DeleteObject(hbmMem);
     ::DeleteDC(hMemDC);
 
     if (bGotDC)
