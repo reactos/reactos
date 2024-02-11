@@ -2,27 +2,7 @@
  * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     CNetworkConnections Shell Folder
- * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
- */
-
-/*
- * Network Connections Shell Folder
- *
- * Copyright 2008       Johannes Anderwald <johannes.anderwald@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "precomp.h"
@@ -256,7 +236,7 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD
     PWCHAR pwchName = ILGetConnName(pidl);
     if (!pwchName)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_INVALIDARG;
     }
 
@@ -473,7 +453,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -511,7 +491,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     if (pdata->Status == NCS_CONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_DEFAULT);
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
@@ -542,7 +522,7 @@ ShowNetConnectionStatus(
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -758,7 +738,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -832,7 +812,7 @@ HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
