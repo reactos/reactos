@@ -1417,11 +1417,13 @@ class CDeskBand;
 // Flags for m_dwTipbarWndFlags
 enum
 {
+    TIPBAR_ATTACHED = 0x1,
     TIPBAR_CHILD = 0x2,
     TIPBAR_VERTICAL = 0x4,
     TIPBAR_HIGHCONTRAST = 0x10,
     TIPBAR_TRAYICON = 0x20,
     TIPBAR_UPDATING = 0x400,
+    TIPBAR_ENSURING = 0x2000,
     TIPBAR_NODESKBAND = 0x4000,
     TIPBAR_TOOLBARENDED = 0x10000,
     TIPBAR_TOPFIT = 0x40000,
@@ -4246,7 +4248,7 @@ BOOL CTipbarWnd::AutoAdjustDeskBandSize()
     if (!AdjustDeskBandSize(!(dwOldWndFlags & 0x8000)))
         return FALSE;
 
-    m_dwTipbarWndFlags |= 0x4000;
+    m_dwTipbarWndFlags |= TIPBAR_NODESKBAND;
     return TRUE;
 }
 
@@ -4799,13 +4801,10 @@ CTipbarThread *CTipbarWnd::_FindThread(DWORD dwThreadId)
 
 void CTipbarWnd::EnsureFocusThread()
 {
-    if (m_pFocusThread)
+    if (m_pFocusThread || (m_dwTipbarWndFlags & (TIPBAR_TOOLBARENDED | TIPBAR_ENSURING)))
         return;
 
-    if (m_dwTipbarWndFlags & 0x12000)
-        return;
-
-    m_dwTipbarWndFlags |= 0x2000;
+    m_dwTipbarWndFlags |= TIPBAR_ENSURING;
 
     HWND hwndFore = ::GetForegroundWindow();
     if (!hwndFore)
@@ -4815,7 +4814,7 @@ void CTipbarWnd::EnsureFocusThread()
     if (dwThreadId)
         OnSetFocus(dwThreadId);
 
-    m_dwTipbarWndFlags &= ~0x2000;
+    m_dwTipbarWndFlags &= ~TIPBAR_ENSURING;
 }
 
 HRESULT CTipbarWnd::SetFocusThread(CTipbarThread *pFocusThread)
@@ -4832,21 +4831,21 @@ HRESULT CTipbarWnd::SetFocusThread(CTipbarThread *pFocusThread)
         ::AttachThreadInput(dwThreadId, m_pFocusThread->m_dwThreadId, FALSE);
     }
 
-    m_dwTipbarWndFlags &= ~0x1;
+    m_dwTipbarWndFlags &= ~TIPBAR_ATTACHED;
     m_pFocusThread = pFocusThread;
     return S_OK;
 }
 
 HRESULT CTipbarWnd::AttachFocusThread()
 {
-    if (m_dwTipbarWndFlags & 0x1)
+    if (m_dwTipbarWndFlags & TIPBAR_ATTACHED)
         return S_FALSE;
 
     if (m_pFocusThread)
     {
         DWORD dwThreadId = ::GetCurrentThreadId();
         ::AttachThreadInput(dwThreadId, m_pFocusThread->m_dwThreadId, TRUE);
-        m_dwTipbarWndFlags |= 0x1;
+        m_dwTipbarWndFlags |= TIPBAR_ATTACHED;
     }
 
     return S_OK;
@@ -5072,7 +5071,7 @@ STDMETHODIMP CTipbarWnd::ShowFloating(DWORD dwFlags)
 
 STDMETHODIMP CTipbarWnd::GetItemFloatingRect(DWORD dwThreadId, REFGUID rguid, RECT *prc)
 {
-    if (m_dwTipbarWndFlags & 0x20)
+    if (m_dwTipbarWndFlags & TIPBAR_TRAYICON)
         return E_UNEXPECTED;
 
     if (!m_pFocusThread || (m_pFocusThread->m_dwThreadId != dwThreadId))
