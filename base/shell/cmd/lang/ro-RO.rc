@@ -25,7 +25,7 @@ Pentru a afișa toate alias:\n\
   ALIAS\n\n\
 Pentru a seta sau a înlocui un alias:\n\
   ALIAS da=dir a:\n\n\
-Pentru a destitui un alias:\n\
+Pentru a reseta un alias:\n\
   ALIAS da=\n"
     STRING_BEEP_HELP "Semnalizare sonoră utilizând difuzorul intern.\n\nBEEP\n"
     STRING_CALL_HELP "Apelează un program de comenzi din interiorul unui alt program de comenzi.\n\n\
@@ -168,7 +168,7 @@ DELAY [/m]n\n\n\
   /D          La fel ca /W însă enumerarea e ordonată după coloane.\n\
   /L          Folosește minuscule.\n\
   /N          Preferă formatul lung, cu numele de fișiere în extrema dreaptă.\n\
-  /O          Enumerare ordonată după numele fișierelor/dosarelor.\n\
+  /O          Enumerare ordonată după numele fișierelor/folderelor.\n\
   ordonare      N  După nume (alfabetică)\n\
                 S  După dimensiune (de la mic la mare)\n\
                 E  După extensie (alfabetică)\n\
