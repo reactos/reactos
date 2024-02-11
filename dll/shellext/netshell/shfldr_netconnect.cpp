@@ -2,27 +2,7 @@
  * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     CNetworkConnections Shell Folder
- * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
- */
-
-/*
- * Network Connections Shell Folder
- *
- * Copyright 2008       Johannes Anderwald <johannes.anderwald@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "precomp.h"
@@ -256,7 +236,7 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD
     PWCHAR pwchName = ILGetConnName(pidl);
     if (!pwchName)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_INVALIDARG;
     }
 
@@ -363,17 +343,17 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
         case COLUMN_STATUS:
             switch(pdata->Status)
             {
-                case NCS_HARDWARE_DISABLED: 
+                case NCS_HARDWARE_DISABLED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_NON_OPERATIONAL);
-                case NCS_DISCONNECTED: 
+                case NCS_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_UNREACHABLE);
-                case NCS_MEDIA_DISCONNECTED: 
+                case NCS_MEDIA_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_DISCONNECTED);
-                case NCS_CONNECTING: 
+                case NCS_CONNECTING:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTING);
-                case NCS_CONNECTED: 
+                case NCS_CONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTED);
-                default: 
+                default:
                     return SHSetStrRet(&psd->str, "");
             }
             break;
@@ -473,7 +453,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -489,29 +469,24 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_ENABLED);
 
-    if (pdata->Status == NCS_HARDWARE_DISABLED || pdata->Status == NCS_MEDIA_DISCONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_GRAYED);
-    else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_ENABLED);
-
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 4, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
 
     if (pdata->dwCharacter & NCCF_ALLOW_REMOVAL)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 4, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 4, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
 
     if (pdata->dwCharacter & NCCF_ALLOW_RENAME)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
     if (pdata->Status == NCS_CONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_DEFAULT);
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
@@ -542,7 +517,7 @@ ShowNetConnectionStatus(
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -639,7 +614,6 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             return ShowNetConnectionStatus(m_lpOleCmd, m_pidl, lpcmi->hwnd);
         }
-        case IDS_NET_REPAIR:
         case IDS_NET_CREATELINK:
         case IDS_NET_DELETE:
             FIXME("Command %u is not implemented\n", CmdId);
@@ -737,7 +711,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
     PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
@@ -811,7 +785,7 @@ HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
     PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
     if (!pdata)
     {
-        ERR("Got invalid pidl!\n");
+        ERR("Got invalid pidl\n");
         return E_FAIL;
     }
 
