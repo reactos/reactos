@@ -2088,7 +2088,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
-        "E\272ec la instituirea sistemului de localizare.\n",
+        "Instalatoprul nu a putut seta loca\376ia sistemului.\n",
         "ENTER = Repornire calculator"
     },
     {
@@ -2099,7 +2099,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_UPDATE_GEOID,
-        "E\272ec la instituirea de geo id.",
+        "Instalatorul nu a putut seta geo id.",
         "ENTER = Repornire calculator"
     },
     {
