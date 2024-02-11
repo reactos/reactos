@@ -1414,6 +1414,22 @@ public:
 class CTipbarCtrlButtonHolder;
 class CDeskBand;
 
+// Flags for m_dwTipbarWndFlags
+enum
+{
+    TIPBAR_CHILD = 0x2,
+    TIPBAR_VERTICAL = 0x4,
+    TIPBAR_HIGHCONTRAST = 0x10,
+    TIPBAR_TRAYICON = 0x20,
+    TIPBAR_UPDATING = 0x400,
+    TIPBAR_NODESKBAND = 0x4000,
+    TIPBAR_ENDTOOLBAR = 0x10000,
+    TIPBAR_TOPFIT = 0x40000,
+    TIPBAR_BOTTOMFIT = 0x80000,
+    TIPBAR_RIGHTFIT = 0x100000,
+    TIPBAR_LEFTFIT = 0x200000,
+};
+
 class CTipbarWnd
     : public ITfLangBarEventSink
     , public ITfLangBarEventSink_P
@@ -1465,6 +1481,7 @@ class CTipbarWnd
     friend class CTipbarGripper;
     friend class CTipbarThread;
     friend class CTipbarItem;
+    friend class CLBarInatItem;
     friend VOID WINAPI ClosePopupTipbar(VOID);
     friend BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand);
     friend LONG MyWaitForInputIdle(DWORD dwThreadId, DWORD dwMilliseconds);
@@ -2844,7 +2861,7 @@ CUTBMenuWnd *CUTBContextMenu::CreateMenuUI(BOOL bFlag)
 
             CUTBMenuItem *pVertical = InsertItem(pMenuUI, ID_VERTICAL, IDS_VERTICAL);
             if (pVertical)
-                pVertical->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x800000));
+                pVertical->Check(!!(m_pTipbarWnd->m_dwTipbarWndFlags & TIPBAR_VERTICAL));
         }
     }
 
@@ -2977,12 +2994,12 @@ BOOL CUTBContextMenu::SelectMenuItem(UINT nCommandId)
         }
 
         case ID_EXTRAICONS:
-            m_pTipbarWnd->m_dwTipbarWndFlags &= ~0x4000;
+            m_pTipbarWnd->m_dwTipbarWndFlags &= ~TIPBAR_NODESKBAND;
             m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_EXTRAICONSONMINIMIZED);
             break;
 
         case ID_NOEXTRAICONS:
-            m_pTipbarWnd->m_dwTipbarWndFlags &= ~0x4000;
+            m_pTipbarWnd->m_dwTipbarWndFlags &= ~TIPBAR_NODESKBAND;
             m_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_NOEXTRAICONSONMINIMIZED);
             break;
 
@@ -2991,7 +3008,7 @@ BOOL CUTBContextMenu::SelectMenuItem(UINT nCommandId)
             break;
 
         case ID_VERTICAL:
-            m_pTipbarWnd->SetVertical((m_pTipbarWnd->m_dwTipbarWndFlags & 0x4) ? TRUE : FALSE);
+            m_pTipbarWnd->SetVertical(!!(m_pTipbarWnd->m_dwTipbarWndFlags & TIPBAR_VERTICAL));
             break;
 
         case ID_ADJUSTDESKBAND:
@@ -3796,7 +3813,6 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
         }
     }
 
-#if 0 // FIXME: g_pTipbarWnd
     DWORD dwStatus;
     if (g_pTipbarWnd &&
         g_pTipbarWnd->m_pLangBarMgr &&
@@ -3809,7 +3825,6 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
         ::LoadStringW(g_hInst, IDS_RESTORELANGBAR2, szText, _countof(szText));
         LangBarInsertMenu(pMenu, 2000, szText, FALSE, NULL);
     }
-#endif
 
     return S_OK;
 }
@@ -3822,18 +3837,14 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
     {
         if (g_pTipbarWnd)
         {
-#if 0 // FIXME: g_pTipbarWnd
             ITfLangBarMgr *pLangBarMgr = g_pTipbarWnd->m_pLangBarMgr;
             if (pLangBarMgr)
                 pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
-#endif
         }
     }
     else if (TF_GetMlngHKL(nCommandId, &hKL, NULL, 0))
     {
-#if 0 // FIXME: g_pTipbarWnd
-        g_pTipbarWnd->RestoreLastFocus(0, (g_pTipbarWnd->m_dwTipbarWndFlags & 2) != 0);
-#endif
+        g_pTipbarWnd->RestoreLastFocus(NULL, !!(g_pTipbarWnd->m_dwTipbarWndFlags & TIPBAR_CHILD));
         HWND hwndFore = ::GetForegroundWindow();
         if (m_dwThreadId == ::GetWindowThreadProcessId(hwndFore, NULL))
         {
@@ -3965,12 +3976,12 @@ CTipbarWnd::~CTipbarWnd()
 void CTipbarWnd::Init(BOOL bChild, CDeskBand *pDeskBand)
 {
     if (bChild)
-        m_dwTipbarWndFlags |= 0x2;
+        m_dwTipbarWndFlags |= TIPBAR_CHILD;
     else
-        m_dwTipbarWndFlags &= ~0x2;
+        m_dwTipbarWndFlags &= ~TIPBAR_CHILD;
 
-    if (m_dwTipbarWndFlags & 2)
-        m_dwTipbarWndFlags &= 0x10;
+    if (m_dwTipbarWndFlags & TIPBAR_CHILD)
+        m_dwTipbarWndFlags &= TIPBAR_HIGHCONTRAST;
 
     m_pDeskBand = pDeskBand;
 
@@ -3986,9 +3997,10 @@ void CTipbarWnd::Init(BOOL bChild, CDeskBand *pDeskBand)
         }
     }
 
-    if (!m_pTipbarGripper && !(m_dwTipbarWndFlags & 0x2))
+    if (!m_pTipbarGripper && !(m_dwTipbarWndFlags & TIPBAR_CHILD))
     {
-        m_pTipbarGripper = new(cicNoThrow) CTipbarGripper(this, &rc, !!(m_dwTipbarWndFlags & 0x4));
+        m_pTipbarGripper =
+            new(cicNoThrow) CTipbarGripper(this, &rc, !!(m_dwTipbarWndFlags & TIPBAR_VERTICAL));
         if (m_pTipbarGripper)
         {
             m_pTipbarGripper->Initialize();
@@ -3998,7 +4010,7 @@ void CTipbarWnd::Init(BOOL bChild, CDeskBand *pDeskBand)
 
     //FIXME: CTipbarCtrlButtonHolder
 
-    if (m_dwTipbarWndFlags & 0x4)
+    if (m_dwTipbarWndFlags & TIPBAR_VERTICAL)
     {
         Move(m_nLeft, m_nTop, GetTipbarHeight(), 0);
     }
@@ -4010,13 +4022,13 @@ void CTipbarWnd::Init(BOOL bChild, CDeskBand *pDeskBand)
 
 void CTipbarWnd::InitHighContrast()
 {
-    m_dwTipbarWndFlags &= ~0x10;
+    m_dwTipbarWndFlags &= ~TIPBAR_HIGHCONTRAST;
 
     HIGHCONTRAST HiCon = { sizeof(HiCon) };
     if (::SystemParametersInfo(SPI_GETHIGHCONTRAST, sizeof(HiCon), &HiCon, 0))
     {
         if (HiCon.dwFlags & HCF_HIGHCONTRASTON)
-            m_dwTipbarWndFlags |= 0x10;
+            m_dwTipbarWndFlags |= TIPBAR_HIGHCONTRAST;
     }
 }
 
@@ -4221,8 +4233,12 @@ INT CTipbarWnd::GetTipbarHeight()
 
 BOOL CTipbarWnd::AutoAdjustDeskBandSize()
 {
-    if ((m_dwTipbarWndFlags & 0x4000) || !m_pFocusThread || (m_pFocusThread->m_dwFlags1 & 0x800))
+    if ((m_dwTipbarWndFlags & TIPBAR_NODESKBAND) ||
+        !m_pFocusThread ||
+        (m_pFocusThread->m_dwFlags1 & 0x800))
+    {
         return FALSE;
+    }
 
     DWORD dwOldWndFlags = m_dwTipbarWndFlags;
     m_dwTipbarWndFlags &= ~0x8000;
@@ -4253,13 +4269,13 @@ void CTipbarWnd::AdjustPosOnDisplayChange()
         return;
 
     INT x = m_nLeft, y = m_nTop;
-    if (m_dwTipbarWndFlags & 0x200000)
+    if (m_dwTipbarWndFlags & TIPBAR_LEFTFIT)
         x = rcWorkArea.left;
-    if (m_dwTipbarWndFlags & 0x40000)
+    if (m_dwTipbarWndFlags & TIPBAR_TOPFIT)
         y = rcWorkArea.top;
-    if (m_dwTipbarWndFlags & 0x100000)
+    if (m_dwTipbarWndFlags & TIPBAR_RIGHTFIT)
         x = rcWorkArea.right - m_nWidth;
-    if (m_dwTipbarWndFlags & 0x80000)
+    if (m_dwTipbarWndFlags & TIPBAR_BOTTOMFIT)
         y = rcWorkArea.bottom - m_nHeight;
     if (x != m_nLeft || y != m_nTop)
         Move(x, y, m_nWidth, m_nHeight);
@@ -4268,9 +4284,9 @@ void CTipbarWnd::AdjustPosOnDisplayChange()
 void CTipbarWnd::SetVertical(BOOL bVertical)
 {
     if (bVertical)
-        m_dwTipbarWndFlags |= 0x4;
+        m_dwTipbarWndFlags |= TIPBAR_VERTICAL;
     else
-        m_dwTipbarWndFlags &= ~0x4;
+        m_dwTipbarWndFlags &= ~TIPBAR_VERTICAL;
 
     if (m_pTipbarGripper)
     {
@@ -4283,11 +4299,11 @@ void CTipbarWnd::SetVertical(BOOL bVertical)
     }
 
     if (g_fTaskbarTheme)
-        SetActiveTheme(L"TASKBAR", !!(m_dwTipbarWndFlags & 0x4), 1);
+        SetActiveTheme(L"TASKBAR", !!(m_dwTipbarWndFlags & TIPBAR_VERTICAL), 1);
 
-    if (!(m_dwTipbarWndFlags & 2))
+    if (!(m_dwTipbarWndFlags & TIPBAR_CHILD))
     {
-        if (m_dwTipbarWndFlags & 4)
+        if (m_dwTipbarWndFlags & TIPBAR_VERTICAL)
         {
             Move(m_nLeft, m_nTop, GetTipbarHeight(), 0);
         }
@@ -4306,32 +4322,32 @@ void CTipbarWnd::SetVertical(BOOL bVertical)
 
 void CTipbarWnd::UpdatePosFlags()
 {
-    if (m_dwTipbarWndFlags & 0x2)
+    if (m_dwTipbarWndFlags & TIPBAR_CHILD)
         return;
 
     RECT rc = { m_nLeft, m_nTop, m_nLeft + m_nWidth, m_nTop + m_nHeight }, rcWorkArea;
     if (!GetWorkArea(&rc, &rcWorkArea))
         return;
 
-    if (m_nLeft > rcWorkArea.left + 2)
-        m_dwTipbarWndFlags &= ~0x200000;
+    if (rcWorkArea.left + 2 < m_nLeft)
+        m_dwTipbarWndFlags &= ~TIPBAR_LEFTFIT;
     else
-        m_dwTipbarWndFlags |= 0x200000;
+        m_dwTipbarWndFlags |= TIPBAR_LEFTFIT;
 
-    if ( m_nTop> rcWorkArea.top + 2 )
-        m_dwTipbarWndFlags &= ~0x40000;
+    if (rcWorkArea.top + 2 < m_nTop)
+        m_dwTipbarWndFlags &= ~TIPBAR_TOPFIT;
     else
-        m_dwTipbarWndFlags |= 0x40000;
+        m_dwTipbarWndFlags |= TIPBAR_TOPFIT;
 
     if (m_nLeft + m_nWidth < rcWorkArea.right - 2)
-        m_dwTipbarWndFlags &= ~0x100000;
+        m_dwTipbarWndFlags &= ~TIPBAR_RIGHTFIT;
     else
-        m_dwTipbarWndFlags |= 0x100000;
+        m_dwTipbarWndFlags |= TIPBAR_RIGHTFIT;
 
     if (m_nTop + m_nHeight < rcWorkArea.bottom - 2)
-        m_dwTipbarWndFlags &= ~0x80000;
+        m_dwTipbarWndFlags &= ~TIPBAR_BOTTOMFIT;
     else
-        m_dwTipbarWndFlags |= 0x80000;
+        m_dwTipbarWndFlags |= TIPBAR_BOTTOMFIT;
 }
 
 void CTipbarWnd::CancelMenu()
@@ -4395,7 +4411,7 @@ HFONT CTipbarWnd::CreateVerticalFont()
 
 void CTipbarWnd::UpdateVerticalFont()
 {
-    if (m_dwTipbarWndFlags & 4)
+    if (m_dwTipbarWndFlags & TIPBAR_VERTICAL)
     {
         if (m_hTextFont)
         {
@@ -4501,7 +4517,7 @@ void CTipbarWnd::SavePosition()
         ::ClientToScreen(m_hWnd, &pt);
         regKey.SetDword(TEXT("Left"), pt.x);
         regKey.SetDword(TEXT("Top"), pt.y);
-        regKey.SetDword(TEXT("Vertical"), !!(m_dwTipbarWndFlags & 4));
+        regKey.SetDword(TEXT("Vertical"), !!(m_dwTipbarWndFlags & TIPBAR_VERTICAL));
     }
 }
 
@@ -4533,13 +4549,10 @@ BOOL CTipbarWnd::SetLangBand(BOOL bDeskBand, BOOL bFlag2)
         ret = FALSE;
     }
 
-    if (!(m_dwTipbarWndFlags & 2))
+    if (!(m_dwTipbarWndFlags & TIPBAR_CHILD) && bDeskBand)
     {
-        if (bDeskBand)
-        {
-            KillTimer(7);
-            SetTimer(7, g_uTimerElapseSYSCOLORCHANGED);
-        }
+        KillTimer(7);
+        SetTimer(7, g_uTimerElapseSYSCOLORCHANGED);
     }
 
     return ret;
@@ -4547,7 +4560,7 @@ BOOL CTipbarWnd::SetLangBand(BOOL bDeskBand, BOOL bFlag2)
 
 void CTipbarWnd::SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight)
 {
-    if (m_dwTipbarWndFlags & 0x2)
+    if (m_dwTipbarWndFlags & TIPBAR_CHILD)
     {
         m_nWidth = nWidth;
         m_nHeight = nHeight;
@@ -4556,7 +4569,7 @@ void CTipbarWnd::SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight)
 
     ++m_bInCallOn;
 
-    m_dwTipbarWndFlags |= 0x400;
+    m_dwTipbarWndFlags |= TIPBAR_UPDATING;
 
     m_X = X;
     m_Y = Y;
@@ -4574,7 +4587,7 @@ void CTipbarWnd::SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight)
 
     if (m_pTipbarGripper)
     {
-        if (m_dwTipbarWndFlags & 4)
+        if (m_dwTipbarWndFlags & TIPBAR_VERTICAL)
         {
             INT GripperWidth = GetGripperWidth();
             ::SetRect(&rc, size.cx, size.cy, nWidth - m_cxDlgFrameX2 - size.cx, size.cy + GripperWidth);
@@ -4594,9 +4607,9 @@ void CTipbarWnd::SetMoveRect(INT X, INT Y, INT nWidth, INT nHeight)
 void CTipbarWnd::SetShowText(BOOL bShow)
 {
     if (bShow)
-        m_dwTipbarWndFlags |= 0x10;
+        m_dwTipbarWndFlags |= TIPBAR_HIGHCONTRAST;
     else
-        m_dwTipbarWndFlags &= ~0x10;
+        m_dwTipbarWndFlags &= ~TIPBAR_HIGHCONTRAST;
 
     if (m_pFocusThread)
         OnThreadItemChange(m_pFocusThread->m_dwThreadId);
@@ -4606,12 +4619,12 @@ void CTipbarWnd::SetShowText(BOOL bShow)
 
 void CTipbarWnd::SetShowTrayIcon(BOOL bShow)
 {
-    if (m_dwTipbarWndFlags & 0x20)
-        m_dwTipbarWndFlags &= ~0x20;
+    if (m_dwTipbarWndFlags & TIPBAR_TRAYICON)
+        m_dwTipbarWndFlags &= ~TIPBAR_TRAYICON;
     else
-        m_dwTipbarWndFlags |= 0x20;
+        m_dwTipbarWndFlags |= TIPBAR_TRAYICON;
 
-    if ((m_dwTipbarWndFlags & 0x20) && m_pFocusThread)
+    if ((m_dwTipbarWndFlags & TIPBAR_TRAYICON) && m_pFocusThread)
     {
         KillTimer(10);
         SetTimer(10, g_uTimerElapseMOVETOTRAY);
@@ -4833,7 +4846,7 @@ HRESULT CTipbarWnd::AttachFocusThread()
     {
         DWORD dwThreadId = ::GetCurrentThreadId();
         ::AttachThreadInput(dwThreadId, m_pFocusThread->m_dwThreadId, TRUE);
-        m_dwTipbarWndFlags |= 01;
+        m_dwTipbarWndFlags |= 0x1;
     }
 
     return S_OK;
@@ -4966,9 +4979,9 @@ HRESULT CTipbarWnd::OnThreadTerminateInternal(DWORD dwThreadId)
 
 STDMETHODIMP CTipbarWnd::OnThreadItemChange(DWORD dwThreadId)
 {
-    if (m_dwTipbarWndFlags & 0x10000)
+    if (m_dwTipbarWndFlags & TIPBAR_ENDTOOLBAR)
         return S_OK;
-    if (!(m_dwTipbarWndFlags & 0x2) && (m_dwShowType & TF_SFT_DESKBAND))
+    if (!(m_dwTipbarWndFlags & TIPBAR_CHILD) && (m_dwShowType & TF_SFT_DESKBAND))
         return S_OK;
 
     CTipbarThread *pThread = _FindThread(dwThreadId);
@@ -5101,10 +5114,10 @@ STDMETHODIMP_(void) CTipbarWnd::GetAccLocation(LPRECT lprc)
 
 STDMETHODIMP_(void) CTipbarWnd::PaintObject(HDC hDC, LPCRECT prc)
 {
-    if (m_dwTipbarWndFlags & 0x400)
+    if (m_dwTipbarWndFlags & TIPBAR_UPDATING)
     {
         Move(m_X, m_Y, m_CX, m_CY);
-        m_dwTipbarWndFlags &= ~0x400;
+        m_dwTipbarWndFlags &= ~TIPBAR_UPDATING;
     }
 
     if (!m_pFocusThread || !m_pFocusThread->IsDirtyItem())
@@ -5305,10 +5318,10 @@ STDMETHODIMP_(void) CTipbarWnd::OnSysColorChange()
 
 void CTipbarWnd::OnTerminateToolbar()
 {
-    m_dwTipbarWndFlags |= 0x10000;
+    m_dwTipbarWndFlags |= TIPBAR_ENDTOOLBAR;
     DestroyOverScreenSizeBalloon();
     TerminateAllThreads(TRUE);
-    if (!(m_dwTipbarWndFlags & 0x2))
+    if (!(m_dwTipbarWndFlags & TIPBAR_CHILD))
         SavePosition();
 }
 
@@ -5409,7 +5422,7 @@ CTipbarWnd::OnSettingChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 STDMETHODIMP_(LRESULT)
 CTipbarWnd::OnDisplayChange(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!(m_dwTipbarWndFlags & 2))
+    if (!(m_dwTipbarWndFlags & TIPBAR_CHILD))
     {
         KillTimer(12);
         SetTimer(12, g_uTimerElapseDISPLAYCHANGE);
@@ -5466,11 +5479,11 @@ STDMETHODIMP_(void) CTipbarWnd::UpdateUI(LPCRECT prc)
         return;
     }
 
-    if (m_dwTipbarWndFlags & 0x400)
+    if (m_dwTipbarWndFlags & TIPBAR_UPDATING)
     {
         ++m_bInCallOn;
         Move(m_X, m_Y, m_CX, m_CY);
-        m_dwTipbarWndFlags &= ~0x400;
+        m_dwTipbarWndFlags &= ~TIPBAR_UPDATING;
         --m_bInCallOn;
     }
 
@@ -5705,7 +5718,7 @@ BOOL CTipbarThread::IsVertical()
 {
     if (!m_pTipbarWnd)
         return FALSE;
-    return !!(m_pTipbarWnd->m_dwTipbarWndFlags & 0x20000000);
+    return !!(m_pTipbarWnd->m_dwTipbarWndFlags & TIPBAR_VERTICAL);
 }
 
 /// @unimplemented
@@ -6052,7 +6065,7 @@ BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand)
     g_pTipbarWnd->ShowFloating(dwStatus);
 
     if (!bParent && (dwOldStatus & TF_SFT_DESKBAND))
-        g_pTipbarWnd->m_dwTipbarWndFlags |= 0x4000;
+        g_pTipbarWnd->m_dwTipbarWndFlags |= TIPBAR_NODESKBAND;
 
     g_hwndParent = hWnd;
     return TRUE;
