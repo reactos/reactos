@@ -52,7 +52,7 @@ BEGIN
     AUTOCHECKBOX "N&u mai încerca numerele de telefon eșuate", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Acceptă", 1, 135, 242, 60, 14
     PUSHBUTTON "Î&nchide", 2, 201, 242, 60, 14
-    LTEXT "Serverul nu trebuie configurat pentru apeluri multiple în cazul conexiunilor simple, pe o singură linie. Bifați „Nu mai încerca numerele de telefon eșuate” pentru a evita în acest caz eventuale costuri de conectare inutile.", -1, 37, 36, 224, 44
+    LTEXT "Dacă este conectată doar o singură linie, este posibil ca serverul să nu fie configurat să accepte apeluri cu mai multe legături. Bifați „Nu încercați linii eșuate” pentru a evita taxele de conectare inutile într-un astfel de caz.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -88,7 +88,7 @@ BEGIN
     DEFPUSHBUTTON "Î&nchide", 1, 97, 91, 60, 14
     ICON 563, 1046, 7, 7, 20, 20
     LTEXT "Conexiunea a fost realizată.", 1047, 40, 7, 212, 16
-    LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic dreapta pe pictograma din dosarul Conexiuni de rețea sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
+    LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic dreapta pe pictograma din folderul Conexiuni de rețea sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
     AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
 END
 
@@ -467,7 +467,7 @@ CAPTION "Autoapelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Funcția de autoapelare va demara conectarea în cazul în care veți încerca accesarea de informații din rețea.", -1, 7, 4, 219, 32
-    LTEXT "&Activează autoapelarea conform amplasării:", 1006, 8, 42, 213, 8
+    LTEXT "&Activare apelare automată în funcție de locație:", 1006, 8, 42, 213, 8
     CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
     AUTOCHECKBOX "Solicită &confirmarea autoapelării de fiecare dată", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Dezactivează autoapelarea cât timp sunt autentificat", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
@@ -797,7 +797,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Expertul de completare a interfeței de apel la cerere.", 1352, 122, 5, 192, 32
     LTEXT "Ca să finalizați crearea aceastei interfețe și să o activați în serverul de redirecționare, apăsați Sfârșit.", 1354, 122, 41, 192, 26, NOT WS_GROUP
-    LTEXT "Pentru a edita această interfață, mergeți în Gestionarul de redirecționări și acces la distanță, selectați-o în Interfețe de redirecționare, apoi apăsați Proprietăți.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+    LTEXT "Pentru a edita această interfață, mergeți în Managerul de redirecționări și acces la distanță, selectați-o în Interfețe de redirecționare, apoi apăsați Proprietăți.", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
 
 179 DIALOGEX 6, 18, 317, 143
@@ -1842,16 +1842,16 @@ BEGIN
     191 "Apelează toate dispozitivele\0"
     192 "Apelează dispozitivele doar când este nevoie\0"
     193 "Introduceți un nume și parolă cu acces la un domeniu rețea.\0"
-    194 "Conversia adreselor de rețea (NAT) este deocamdată instalată ca protocol de redirecționare,\nși trebuie eliminat înainte de a activa partajarea conexiunilor de Internet.\nPentru a elimina NAT, deschideți Gestionarul de redirecționare și acces în rețea\nși extindeți din panelul stâng înregistrările de la redirecționare.\nEliminați protocolul de redirecționare NAT din lista\nde protocoale de redirecționare.\0"
+    194 "Conversia adreselor de rețea (NAT) este deocamdată instalată ca protocol de redirecționare,\nși trebuie eliminat înainte de a activa partajarea conexiunilor de Internet.\nPentru a elimina NAT, deschideți Managerul de redirecționare și acces în rețea\nși extindeți din panelul stâng înregistrările de la redirecționare.\nEliminați protocolul de redirecționare NAT din lista\nde protocoale de redirecționare.\0"
     195 "Codul regiunii trebuie să conțină doar cifrele 0-9.\0"
     196 "Numele trebuie să conțină cel puțin un caracter în afară de spațiu și nu poate începe cu un punct. Alegeți un alt nume.\0"
     197 "Trebuie să alegeți o valoare între %1 și %2 pentru acest câmp.\0"
     198 "Nu a putut fi deschisă biblioteca DLL pentru configurarea autentificării particularizate. Verificați dacă pachetul de autentificare particularizată a fost instalat corect.\0"
-    199 "Conexiunea aleasă a fost stabilită de către serverul de redirecționare multiprotocol.\nUtilizați Gestionarul de redirecționare și acces în rețea pentru a închide această conexiune.\0"
+    199 "Conexiunea aleasă a fost stabilită de către serverul de redirecționare multiprotocol.\nUtilizați Managerul de redirecționare și acces în rețea pentru a închide această conexiune.\0"
     200 "Comentariu\0"
     201 "Configurarea pachetului de autentificare particularizată a eșuat.\0"
     202 "TCP/IP nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea. În Panoul de control, deschideți Rețea, apoi în pagina Servicii, alegeți Proprietăți pentru Redirecționare și acces în rețea și apăsați butonul Rețea.\0"
-    203 "IPX nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea. Puteți instala/activa IPX prin revizuirea proprietăților oricărei „conexiuni” din dosarul Conexiuni.\0"
+    203 "IPX nu este instalat sau este dezactivat pentru redirecționări și accesul în rețea. Puteți instala/activa IPX prin revizuirea proprietăților oricărei conexiuni din folderul Conexiuni.\0"
     204 "Eliminați acest(e) dispozitiv(e) din listă?\0"
     205 "Eliminați %1 din agendă?\0"
     206 "Doriți deconectarea de la %1?\0"
@@ -1969,7 +1969,7 @@ BEGIN
     319 "Accesul partajat nu a putut fi dezactivat.\0"
     320 "Pagina de proprietăți nu a putut fi încărcată.\0"
     321 "Agenda de telefoane nu a putut fi încărcată.\0"
-    322 "Informația portului din Gestionarul RAS nu a putut fi încărcată.\0"
+    322 "Informația portului din Managerul RAS nu a putut fi încărcată.\0"
     323 "Preferințele de utilizator din registru nu au putut fi citite.\0"
     324 "Informațiile script nu au putut fi încărcate.\0"
     325 "script.log nu poate fi afișat cu notepad.exe\0"
@@ -2021,7 +2021,7 @@ BEGIN
     405 "Protocolul NetBEUI este necesar pentru a apela vechile servere RAS.\0"
     406 "Înainte de a apela un server RAS, este necesară instalarea protocolului NetBEUI.  NetBEUI poate fi instalat în Panoul de control, la Rețea.\0"
     407 "&Reapelează\0"
-    408 "Ați ales să dezactivați unul sau mai multe transporturi. Aceasta solicită gestionarilor și protocoalelor de redirecționare să elimine transporturile dezactivate din această interfață de apel la cerere.\nApăsați Da dacă doriți să continuați, sau No dacă preferați reactivarea transporturilor.\0"
+    408 "Ați ales să dezactivați unul sau mai multe transporturi. Aceasta solicită managerilor și protocoalelor de redirecționare să elimine transporturile dezactivate din această interfață de apel la cerere.\nApăsați Da dacă doriți să continuați, sau No dacă preferați reactivarea transporturilor.\0"
     409 "Partajarea conexiunii de Internet\0"
     410 "Contul de apelare al interfaței de apel la cerere.\0"
     411 "Este necesară stabilirea informațiilor de autentificare pe care interfața „%1” le va utiliza în conectarea la serverul de redirecționare. Aceste informații de autentificare trebuie să corespundă cu informațiile de autentificare configurate în serverul de redirecționare. La conectarea la un server de redirecționare Win NT4/2000, numele de utilizator trebuie să corespundă cu numele interfeței din serverul de redirecționare.\0"
@@ -2243,8 +2243,8 @@ BEGIN
     1611 "Conexiune de bandă largă\0"
     1612 "Ați ales să utilizați o cheie prepartajată dar nu ați specificat nici una.\nIntroduceți o cheie prepartajată.\0"
     1613 "Eșec la transmiterea informațiilor de autentificare\0"
-    1634 "Deoarece serviciul instrumentației de gestionare ReactOS (WMI) a fost dezactivat, ReactOS nu poate afișa proprietățile acestei conexiuni sau ale rețelei locale.\n\nPentru a configura proprietățile acestei conexiuni sau ale rețelei locale, este necesară activarea serviciului WMI. Pentru a realiza asta, mergeți în Panoul de control, deschideți Servicii, executați clic dreapta pe Instrumentația de Gestionare ReactOS, și alegeți Pornește.\0"
-    1635 "Proprietățile acestei conexiuni nu pot fi reprezentate. E posibil ca informațiile instrumentației de gestionare a ReactOS (WMI) să fie corupte. Pentru a corecta, folosiți Restaurare sistem pentru a readuce sistemul la o stare precedentă (numită punct de restaurare). Restaurare sistem se află în Instrumente de sistem, la Accesorii.\0"
+    1634 "Deoarece serviciul instrumentației de managere ReactOS (WMI) a fost dezactivat, ReactOS nu poate afișa proprietățile acestei conexiuni sau ale rețelei locale.\n\nPentru a configura proprietățile acestei conexiuni sau ale rețelei locale, este necesară activarea serviciului WMI. Pentru a realiza asta, mergeți în Panoul de control, deschideți Servicii, executați clic dreapta pe Instrumentația de Managere ReactOS, și alegeți Pornește.\0"
+    1635 "Proprietățile acestei conexiuni nu pot fi reprezentate. E posibil ca informațiile instrumentației de managere a ReactOS (WMI) să fie corupte. Pentru a corecta, folosiți Restaurare sistem pentru a readuce sistemul la o stare precedentă (numită punct de restaurare). Restaurare sistem se află în Instrumente de sistem, la Accesorii.\0"
     1646 "Acceptă cererea de ecou\0"
     1647 "Acceptă cererea de marcaj temporal\0"
     1648 "Acceptă cererea de mască\0"
@@ -2298,24 +2298,24 @@ BEGIN
     7323 "Parolele introduse nu corespund. Reintroduceți-le.\0"
     7324 "A apărut o eroare internă.\0"
     7325 "Listview\0"
-    7326 "A apărut o eroare la instituirea noilor modificări efectuate în baza de date locală de utilizatori.\0"
+       7326 "A apărut o eroare la încercarea de a aplica modificările pe care le-ați făcut în baza de date locală a utilizatorilor.\0"
     7327 "Nu dețineți suficiente privilegii pentru a putea adăuga utilizatori în baza de date locală a sistemului.\0"
     7328 "Utilizatorul pe care încercați să-l creați deja există în baza de date locală de utilizatori.\0"
     7329 "Utilizatorul nu a fost adăugat în baza de date locală de utilizatori deoarece parola introdusă a fost respinsă.\0"
     7330 "Baza de date de uzilizatori a sistemului nu poate fi reîncărcată din cauza unei erori interne.\0"
-    7331 "A apărut o eroare internă:  Accesul la baza de date locală de utilizatori a fost corupt.\0"
+    7331 "A apărut o eroare internă: Accesul la baza de date locală de utilizatori a fost corupt.\0"
     7332 "Resursele necesare pentru a afișa datele de utilizator nu au putut fi încărcate.\0"
     7333 "A apărut o eroare internă în încercarea de a anula modificările făcute în baza de date locală de utilizatori.\0"
     7334 "Accesul la dispozitivul bazei de date a fost corupt.\0"
     7335 "Resursele necesare pentru a afișa datele generale nu au putut fi încărcate.\0"
-    7336 "A apărut o eroare la încercarea de a institui modificări efectuate referitoare la dispozitive/vpn.\0"
+    7336 "A apărut o eroare la încercarea de a aplica unele dintre modificările pe care le-ați făcut legate de dispozitiv/vpn.\0"
     7337 "A apărut o eroare internă.\0"
     7338 "A apărut o eroare internă: Accesul la componenta de rețea a bazei de date a fost corupt.\0"
     7339 "A apărut o eroare internă.\0"
-    7340 "A apărut o eroare în încercarea de a institui modificări efectuate la componentele de rețea.\0"
+    7340 "A apărut o eroare la încercarea de a aplica modificările pe care le-ați făcut componentelor de rețea.\0"
     7341 "A apărut o eroare internă.\0"
-    7342 "Modificările efectuate la protocolul TCP/IP nu au putut fi instituite în sistem.\0"
-    7343 "Modificările efectuate la protocolul IPX nu au putut fi instituite în sistem.\0"
+    7342 "Nu se pot aplica în sistem modificările pe care le-ați făcut protocolului TCP/IP.\0"
+    7343 "Nu se pot salva în sistem modificările pe care le-ați făcut protocolului IPX.\0"
     7344 "Proprietățile TCP/IP nu au putut fi afișate.\0"
     7345 "Proprietățile IPX nu au putut fi afișate.\0"
     7346 "Proprietățile TCP/IP nu au putut fi încărcate din sistem.\0"
@@ -2327,8 +2327,8 @@ BEGIN
     7352 "Componenta selectată de rețea nu poate fi eliminată, deoarece încă este în uz.\0"
     7353 "Avertisment al conexiunilor de intrare\0"
     7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat Anulează. Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
-    7355 "Sunteți pe calea de a comuta în consola de gestiune a sistemului.  Formularul curent al conexiunilor de intrare va fi închis și toate modificările efectuate vor fi instituite în sistem.  Confirmați continuarea?\0"
-    7356 "Valoarea măștii de rețea s-a schimbat.  În mască, un bit de zero poate fi urmat doar de alți biți de zero. De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
+    7355 "Sunteți pe cale să treceți la o consolă de gestionare a sistemului. Această foaie de proprietăți Conexiuni primite va fi închisă și orice modificări pe care le-ați făcut vor fi trimise în sistem. Sunteți de acord să continuați?\0"
+    7356 "Valoarea măștii de rețea s-a schimbat. În mască, un bit de zero poate fi urmat doar de alți biți de zero. De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
     7357 "Permisiuni de utilizator\0"
     7358 "Puteți specifica utilizatorii care se vor conecta la acest calculator.\0"
     7359 "Dispozitive pentru conexiunile de intrare\0"
@@ -2355,12 +2355,12 @@ BEGIN
     7383 "Conexiunile de intrare nu pot emite numerele de rețea 00000000 sau FFFFFFFF. Fie modificați numerele de rețea alocate sau utilizați alocarea automată de numere de rețea.\0"
     7384 "la\0"
     7385 "Portul de conexiune (%s)\0"
-    7386 "Conexiunile de rețea nu pot reprezenta unele opțiuni specializate ale conexiunilor de intrare care au fost stabilite utilizând Gestionarul utilizatorului local sau consola Politici de acces în rețea. Pentru a completa sau corecta informații ale conexiunilor de intrare, va trebui să utilizați acele console.\0"
+    7386 "Conexiunile de rețea nu pot reprezenta unele opțiuni specializate ale conexiunilor de intrare care au fost stabilite utilizând Managerul utilizatorului local sau consola Politici de acces în rețea. Pentru a completa sau corecta informații ale conexiunilor de intrare, va trebui să utilizați acele console.\0"
     7387 "Opțiunea de retroapelare a utilizatorului necesită introducerea unui număr valid de retroapelare.\0"
     7388 "ReactOS trebuie să se repornească pentru a completa această acțiune.  Permiteți această repornire acum?\0"
     7389 "Dispozitivul ales nu are disponibile opțiuni de configurare.\0"
     7390 "Domeniu nevalid\0"
-    7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare. Pentru a dezactiva aceasta, e necesară oprirea serviciului Server.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare. Doriți scoaterea unei console sistem care va permite oprirea serviciului Server?\r\n\nÎn Gestionarea calculatorului, apăsați pe Instrumente de sistem, apoi apăsați pe Servicii. În panoul din dreapta, clic dreapta pe Server, apoi alegeți oprirea lui.\0"
+    7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare. Pentru a dezactiva aceasta, e necesară oprirea serviciului Server.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare. Doriți scoaterea unei console sistem care va permite oprirea serviciului Server?\r\n\nÎn Managerea calculatorului, apăsați pe Instrumente de sistem, apoi apăsați pe Servicii. În panoul din dreapta, clic dreapta pe Server, apoi alegeți oprirea lui.\0"
     7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator. Acest expert îl va activa. Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
     7393 "Conexiuni de intrare\0"
     7394 "Fondul de adrese IP introdus este nevalid.\0"
@@ -2376,6 +2376,6 @@ BEGIN
     7404 "Securitate IP (IKE)\0"
     7405 "127.0.0.1\0"
     7406 "Nu dețineți suficiente drepturi pentru a stabili conexiuni de intrare\0"
-    29900 "Serviciul gestionarului conexiunilor de acces în rețea nu a putut fi încărcat.\0"
+    29900 "Serviciul managerului conexiunilor de acces în rețea nu a putut fi încărcat.\0"
     29901 "Fișierul MPRAPI.DLL din directorul system32 nu poate fi deschis.\0"
 END
