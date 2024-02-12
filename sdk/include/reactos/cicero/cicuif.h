@@ -441,6 +441,7 @@ HBITMAP cicConvertBlackBKGBitmap(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH
 HBITMAP cicCreateMaskBmp(LPCRECT prc, HBITMAP hbm1, HBITMAP hbm2, HBRUSH hbr,
                          COLORREF rgbColor, COLORREF rgbBack);
 BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const SIZE *pSize);
+void cicDrawMaskBmpOnDC(HDC hDC, LPCRECT prc, HBITMAP hbmp, HBITMAP hbmpMask);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -472,7 +473,7 @@ public:
     STDMETHOD_(void, FillRect)(HDC hDC, LPCRECT prc, INT iColor);
     STDMETHOD_(void, FrameRect)(HDC hDC, LPCRECT prc, INT iColor);
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) = 0;
-    STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) = 0;
+    STDMETHOD_(void, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) = 0;
     STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) = 0;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) = 0;
@@ -506,7 +507,7 @@ public:
     STDMETHOD_(INT, CxWndBorder)() override { return 1; }
     STDMETHOD_(INT, CyWndBorder)() override { return 1; }
     STDMETHOD_(void, DrawSelectionRect)(HDC hDC, LPCRECT prc, int) override;
-    STDMETHOD_(INT, GetCtrlFaceOffset)(DWORD, DWORD dwDrawFlags, LPSIZE pSize) override;
+    STDMETHOD_(void, GetCtrlFaceOffset)(DWORD dwUnknownFlags, DWORD dwDrawFlags, LPSIZE pSize) override;
     STDMETHOD_(void, DrawCtrlBkgd)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawCtrlEdge)(HDC hDC, LPCRECT prc, DWORD dwUnknownFlags, DWORD dwDrawFlags) override;
     STDMETHOD_(void, DrawCtrlText)(HDC hDC, LPCRECT prc, LPCWSTR pszText, INT cchText, DWORD dwDrawFlags, BOOL bRight) override;
@@ -546,6 +547,9 @@ enum
     UIF_WINDOW_MONITOR = 0x100,
     UIF_WINDOW_LAYOUTRTL = 0x200,
     UIF_WINDOW_NOMOUSEMSG = 0x400,
+    UIF_WINDOW_USESCHEME1 = 0x10000000,
+    UIF_WINDOW_USESCHEME2 = 0x20000000,
+    UIF_WINDOW_USESCHEME3 = 0x40000000,
     UIF_WINDOW_ENABLETHEMED = 0x80000000,
 };
 
@@ -1801,7 +1805,13 @@ inline void cicDoneUIFScheme(void)
 /// @unimplemented
 inline CUIFScheme *cicCreateUIFScheme(DWORD type)
 {
-    return new(cicNoThrow) CUIFSchemeDef(type);
+    switch (type)
+    {
+        //case 1:  return new(cicNoThrow) CUIFSchemeOff10(1);
+        //case 2:  return new(cicNoThrow) CUIFSchemeOff10(2);
+        //case 3:  return new(cicNoThrow) CUIFSchemeOff10(3);
+        default: return new(cicNoThrow) CUIFSchemeDef(type);
+    }
 }
 
 inline STDMETHODIMP_(DWORD) CUIFSchemeDef::GetType()
@@ -1849,10 +1859,44 @@ inline STDMETHODIMP_(void) CUIFSchemeDef::DrawSelectionRect(HDC hDC, LPCRECT prc
     ::FillRect(hDC, prc, GetBrush(6));
 }
 
-/// @unimplemented
-inline STDMETHODIMP_(INT) CUIFSchemeDef::GetCtrlFaceOffset(DWORD, DWORD dwDrawFlags, LPSIZE pSize)
+inline STDMETHODIMP_(void)
+CUIFSchemeDef::GetCtrlFaceOffset(DWORD dwUnknownFlags, DWORD dwDrawFlags, LPSIZE pSize)
 {
-    return 0;
+    if (!(dwDrawFlags & UIF_DRAW_PRESSED))
+    {
+        if (dwDrawFlags & 0x2)
+        {
+            if (dwUnknownFlags & 0x10)
+            {
+                pSize->cx = pSize->cy = -1;
+                return;
+            }
+            pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x20);
+        }
+        else
+        {
+            if (!(dwDrawFlags & 0x1))
+            {
+                pSize->cx = pSize->cy = -((dwUnknownFlags & 1) != 0);
+                return;
+            }
+            if (dwUnknownFlags & 0x4)
+            {
+                pSize->cx = pSize->cy = -1;
+                return;
+            }
+            pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x8);
+        }
+        return;
+    }
+
+    if (!(dwUnknownFlags & 0x40))
+    {
+        pSize->cx = pSize->cy = !!(dwUnknownFlags & 0x80);
+        return;
+    }
+
+    pSize->cx = pSize->cy = -1;
 }
 
 inline STDMETHODIMP_(void)
@@ -2547,6 +2591,24 @@ inline BOOL cicGetIconBitmaps(HICON hIcon, HBITMAP *hbm1, HBITMAP *hbm2, const S
     return TRUE;
 }
 
+inline void cicDrawMaskBmpOnDC(HDC hDC, LPCRECT prc, HBITMAP hbmp, HBITMAP hbmpMask)
+{
+    if (!CUIFBitmapDC::s_fInitBitmapDCs)
+        return;
+
+    LONG cx = prc->right - prc->left, cy = prc->bottom - prc->top;
+    CUIFBitmapDC::s_phdcDst->SetDIB(cx, cy, 1, 32);
+    CUIFBitmapDC::s_phdcSrc->SetBitmap(hbmp);
+    CUIFBitmapDC::s_phdcMask->SetBitmap(hbmpMask);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, hDC, prc->left, prc->top, SRCCOPY);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, *CUIFBitmapDC::s_phdcMask, 0, 0, SRCAND);
+    ::BitBlt(*CUIFBitmapDC::s_phdcDst, 0, 0, cx, cy, *CUIFBitmapDC::s_phdcSrc, 0, 0, SRCINVERT);
+    ::BitBlt(hDC, prc->left, prc->top, cx, cy, *CUIFBitmapDC::s_phdcDst, 0, 0, SRCCOPY);
+    CUIFBitmapDC::s_phdcSrc->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcMask->Uninit(FALSE);
+    CUIFBitmapDC::s_phdcDst->Uninit(FALSE);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 inline CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
@@ -2677,14 +2739,12 @@ inline void CUIFWindow::CreateScheme()
     }
 
     INT iScheme = 0;
-    if (m_style & 0x10000000)
+    if (m_style & UIF_WINDOW_USESCHEME1)
         iScheme = 1;
-    else if (m_style & 0x20000000)
+    else if (m_style & UIF_WINDOW_USESCHEME2)
         iScheme = 2;
-    else if (m_style & 0x40000000)
+    else if (m_style & UIF_WINDOW_USESCHEME3)
         iScheme = 3;
-    else
-        iScheme = 0;
 
     m_pScheme = cicCreateUIFScheme(iScheme);
     SetScheme(m_pScheme);
@@ -2700,11 +2760,11 @@ CUIFWindow::GetWndStyle()
     else
         ret = WS_POPUP | WS_DISABLED;
 
-    if (m_style & 0x10000000)
+    if (m_style & UIF_WINDOW_USESCHEME1)
         ret |= WS_BORDER;
     else if (m_style & UIF_WINDOW_DLGFRAME)
         ret |= WS_DLGFRAME;
-    else if ((m_style & 0x20000000) || (m_style & 0x10))
+    else if ((m_style & UIF_WINDOW_USESCHEME2) || (m_style & 0x10))
         ret |= WS_BORDER;
 
     return ret;
@@ -3207,7 +3267,6 @@ inline void CUIFWindow::SetTimerObject(CUIFObject *pTimerObject, UINT uElapse)
     }
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFWindow::PaintObject(HDC hDC, LPCRECT prc)
 {
@@ -3218,40 +3277,28 @@ CUIFWindow::PaintObject(HDC hDC, LPCRECT prc)
         bGotDC = TRUE;
     }
 
-    LPCRECT pRect = prc;
-    if (!pRect)
-        pRect = &m_rc;
+    if (!prc)
+        prc = &m_rc;
 
     HDC hMemDC = ::CreateCompatibleDC(hDC);
-    if (!hMemDC)
-        return;
+    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC, prc->right - prc->left, prc->bottom - prc->top);
 
-    HBITMAP hbmMem = ::CreateCompatibleBitmap(hDC,
-                                              pRect->right - pRect->left,
-                                              pRect->bottom - pRect->top);
-    if (hbmMem)
+    HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
+    ::SetViewportOrgEx(hMemDC, -prc->left, -prc->top, NULL);
+    if (FAILED(EnsureThemeData(m_hWnd)) ||
+        ((!(m_style & UIF_WINDOW_CHILD) || FAILED(DrawThemeParentBackground(m_hWnd, hMemDC, &m_rc))) &&
+         FAILED(DrawThemeBackground(hMemDC, m_iStateId, &m_rc, NULL))))
     {
-        HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmMem);
-        ::SetViewportOrgEx(hMemDC, -pRect->left, -pRect->top, NULL);
-
-        if ((FAILED(CUIFTheme::EnsureThemeData(m_hWnd)) ||
-             !(m_style & UIF_WINDOW_CHILD) ||
-             FAILED(DrawThemeParentBackground(m_hWnd, hMemDC, &m_rc))) &&
-            FAILED(DrawThemeBackground(hMemDC, m_iStateId, &m_rc, 0)))
-        {
-            if (m_pScheme)
-                m_pScheme->FillRect(hMemDC, pRect, 22);
-        }
-        CUIFObject::PaintObject(hMemDC, pRect);
-        ::BitBlt(hDC,
-                 pRect->left, pRect->top,
-                 pRect->right - pRect->left, pRect->bottom - pRect->top,
-                 hMemDC,
-                 pRect->left, pRect->top,
-                 SRCCOPY);
-        ::SelectObject(hMemDC, hbmOld);
-        ::DeleteObject(hbmMem);
+        if (m_pScheme)
+            m_pScheme->FillRect(hMemDC, prc, 22);
     }
+
+    CUIFObject::PaintObject(hMemDC, prc);
+    ::BitBlt(hDC, prc->left, prc->top,
+                  prc->right - prc->left, prc->bottom - prc->top,
+             hMemDC, prc->left, prc->top, SRCCOPY);
+    ::SelectObject(hMemDC, hbmOld);
+    ::DeleteObject(hbmMem);
     ::DeleteDC(hMemDC);
 
     if (bGotDC)
@@ -6450,9 +6497,29 @@ CUIFMenuItemSeparator::OnPaintDef(HDC hDC)
     m_pScheme->DrawMenuSeparator(hDC, &rc);
 }
 
-/// @unimplemented
 inline STDMETHODIMP_(void)
 CUIFMenuItemSeparator::OnPaintO10(HDC hDC)
 {
-    //FIXME
+    if (!m_pScheme)
+        return;
+
+    LONG cx = m_rc.right - m_rc.left - 4;
+    LONG cy = (m_rc.bottom - m_rc.top - 2) / 2;
+
+    RECT rc;
+    GetRect(&rc);
+
+    rc.right = rc.left + m_pMenu->m_cxyMargin + 2;
+    if (m_pMenu->m_bHasMargin)
+        rc.right += m_pMenu->m_cxyMargin;
+
+    HBRUSH hBrush = m_pScheme->GetBrush(9);
+    ::FillRect(hDC, &rc, hBrush);
+    rc = {
+        m_rc.left + m_pMenu->m_cxyMargin + 4,
+        m_rc.top + cy,
+        m_rc.left + cx + 2,
+        m_rc.top + cy + 1
+    };
+    m_pScheme->DrawMenuSeparator(hDC, &rc);
 }
