@@ -547,6 +547,9 @@ enum
     UIF_WINDOW_MONITOR = 0x100,
     UIF_WINDOW_LAYOUTRTL = 0x200,
     UIF_WINDOW_NOMOUSEMSG = 0x400,
+    UIF_WINDOW_USESCHEME1 = 0x10000000,
+    UIF_WINDOW_USESCHEME2 = 0x20000000,
+    UIF_WINDOW_USESCHEME3 = 0x40000000,
     UIF_WINDOW_ENABLETHEMED = 0x80000000,
 };
 
@@ -2736,14 +2739,12 @@ inline void CUIFWindow::CreateScheme()
     }
 
     INT iScheme = 0;
-    if (m_style & 0x10000000)
+    if (m_style & UIF_WINDOW_USESCHEME1)
         iScheme = 1;
-    else if (m_style & 0x20000000)
+    else if (m_style & UIF_WINDOW_USESCHEME2)
         iScheme = 2;
-    else if (m_style & 0x40000000)
+    else if (m_style & UIF_WINDOW_USESCHEME3)
         iScheme = 3;
-    else
-        iScheme = 0;
 
     m_pScheme = cicCreateUIFScheme(iScheme);
     SetScheme(m_pScheme);
@@ -2759,11 +2760,11 @@ CUIFWindow::GetWndStyle()
     else
         ret = WS_POPUP | WS_DISABLED;
 
-    if (m_style & 0x10000000)
+    if (m_style & UIF_WINDOW_USESCHEME1)
         ret |= WS_BORDER;
     else if (m_style & UIF_WINDOW_DLGFRAME)
         ret |= WS_DLGFRAME;
-    else if ((m_style & 0x20000000) || (m_style & 0x10))
+    else if ((m_style & UIF_WINDOW_USESCHEME2) || (m_style & 0x10))
         ret |= WS_BORDER;
 
     return ret;
