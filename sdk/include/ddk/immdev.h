@@ -219,7 +219,16 @@ HIMCC  WINAPI ImmReSizeIMCC(_In_ HIMCC imcc, _In_ DWORD size);
 DWORD  WINAPI ImmGetIMCCSize(_In_ HIMCC imcc);
 
 /* Messaging */
+
 BOOL WINAPI ImmGenerateMessage(_In_ HIMC hIMC);
+
+BOOL WINAPI
+ImmTranslateMessage(
+    _In_ HWND hwnd,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lKeyData);
+
 LRESULT WINAPI ImmRequestMessageA(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
 LRESULT WINAPI ImmRequestMessageW(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
@@ -229,12 +238,18 @@ LRESULT WINAPI ImmRequestMessageW(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARA
     #define ImmRequestMessage ImmRequestMessageA
 #endif
 
-BOOL WINAPI
-ImmTranslateMessage(
-    _In_ HWND hwnd,
-    _In_ UINT msg,
-    _In_ WPARAM wParam,
-    _In_ LPARAM lKeyData);
+typedef struct _tagTRANSMSG
+{
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+} TRANSMSG, *PTRANSMSG, NEAR *NPTRANSMSG, FAR *LPTRANSMSG;
+
+typedef struct _tagTRANSMSGLIST
+{
+    UINT     uMsgCount;
+    TRANSMSG TransMsg[ANYSIZE_ARRAY];
+} TRANSMSGLIST, *PTRANSMSGLIST, NEAR *NPTRANSMSGLIST, FAR *LPTRANSMSGLIST;
 
 /* Soft keyboard */
 HWND WINAPI
@@ -252,19 +267,6 @@ ImmShowSoftKeyboard(
 BOOL WINAPI
 ImmDestroySoftKeyboard(
     _In_ HWND hwndSoftKBD);
-
-typedef struct _tagTRANSMSG
-{
-    UINT message;
-    WPARAM wParam;
-    LPARAM lParam;
-} TRANSMSG, *PTRANSMSG, NEAR *NPTRANSMSG, FAR *LPTRANSMSG;
-
-typedef struct _tagTRANSMSGLIST
-{
-    UINT     uMsgCount;
-    TRANSMSG TransMsg[ANYSIZE_ARRAY];
-} TRANSMSGLIST, *PTRANSMSGLIST, NEAR *NPTRANSMSGLIST, FAR *LPTRANSMSGLIST;
 
 /* IME file interface */
 
