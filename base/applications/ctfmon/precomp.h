@@ -17,8 +17,8 @@
 #include <msctf.h>
 #include <ctfutb.h>
 #include <ctffunc.h>
-#include <cicero/cicbase.h>
-#include <cicero/cicutb.h>
+#include <cicbase.h>
+#include <cicutb.h>
 
 #include "resource.h"
 

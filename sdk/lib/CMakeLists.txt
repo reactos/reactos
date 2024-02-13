@@ -1,5 +1,6 @@
 
 add_subdirectory(atl)
+add_subdirectory(cicero)
 add_subdirectory(cmlib)
 add_subdirectory(inflib)
 

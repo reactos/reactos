@@ -69,18 +69,6 @@ public:
     LSTATUS EnumValue(DWORD dwIndex, LPTSTR lpValueName, DWORD cchValueName);
 };
 
-/******************************************************************************/
-
-inline void
-CicRegKey::Close()
-{
-    if (!m_hKey)
-        return;
-
-    ::RegCloseKey(m_hKey);
-    m_hKey = NULL;
-}
-
 inline LSTATUS
 CicRegKey::Open(
     HKEY hKey,
@@ -136,42 +124,5 @@ CicRegKey::QuerySz(LPCTSTR pszValueName, LPTSTR pszValue, DWORD cchValueMax)
     if (cchSaveMax > 0)
         pszValue[(error == ERROR_SUCCESS) ? (cchSaveMax - 1) : 0] = UNICODE_NULL;
 
-    return error;
-}
-
-inline LSTATUS
-CicRegKey::RecurseDeleteKey(LPCTSTR lpSubKey)
-{
-    CicRegKey regKey;
-    LSTATUS error = regKey.Open(m_hKey, lpSubKey, KEY_READ | KEY_WRITE);
-    if (error != ERROR_SUCCESS)
-        return error;
-
-    TCHAR szName[MAX_PATH];
-    DWORD cchName;
-    do
-    {
-        cchName = _countof(szName);
-        error = ::RegEnumKeyEx(regKey, 0, szName, &cchName, NULL, NULL, NULL, NULL);
-        if (error != ERROR_SUCCESS)
-            break;
-
-        szName[_countof(szName) - 1] = UNICODE_NULL;
-        error = regKey.RecurseDeleteKey(szName);
-    } while (error == ERROR_SUCCESS);
-
-    regKey.Close();
-
-    return DeleteSubKey(lpSubKey);
-}
-
-inline LSTATUS
-CicRegKey::EnumValue(DWORD dwIndex, LPTSTR lpValueName, DWORD cchValueName)
-{
-    DWORD dwSaveLen = cchValueName;
-    LSTATUS error = ::RegEnumValue(m_hKey, dwIndex, lpValueName, &cchValueName,
-                                   NULL, NULL, NULL, NULL);
-    if (dwSaveLen)
-        lpValueName[error == ERROR_SUCCESS ? dwSaveLen - 1 : 0] = 0;
     return error;
 }

@@ -23,9 +23,9 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
-#include <cicero/cicreg.h>
-#include <cicero/cicmutex.h>
-#include <cicero/cicfmap.h>
+#include <cicreg.h>
+#include <cicmutex.h>
+#include <cicfmap.h>
 
 #include <wine/debug.h>
 

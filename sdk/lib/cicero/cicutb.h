@@ -18,13 +18,13 @@ DEFINE_GUID(IID_ITfLangBarEventSink_P,         0x7A460360, 0xDA21, 0x4B09, 0xA8,
 DEFINE_GUID(CLSID_MSUTBDeskBand,               0x540D8A8B, 0x1C3F, 0x4E32, 0x81, 0x32, 0x53, 0x0F, 0x6A, 0x50, 0x20, 0x90);
 DEFINE_GUID(CATID_DeskBand,                    0x00021492, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
-typedef struct LIBTHREAD
+typedef struct CIC_LIBTHREAD
 {
     IUnknown *m_pUnknown1;
     ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
-} LIBTHREAD, *PLIBTHREAD;
+} CIC_LIBTHREAD, *PCIC_LIBTHREAD;
 
-EXTERN_C PLIBTHREAD WINAPI GetLibTls(VOID);
+EXTERN_C PCIC_LIBTHREAD WINAPI GetLibTls(VOID);
 EXTERN_C BOOL WINAPI GetPopupTipbar(HWND hWnd, BOOL fWinLogon);
 EXTERN_C HRESULT WINAPI SetRegisterLangBand(BOOL bRegister);
 EXTERN_C VOID WINAPI ClosePopupTipbar(VOID);
@@ -38,3 +38,20 @@ struct ITfLangBarEventSink_P : IUnknown
 {
     STDMETHOD(OnLangBarUpdate)(TfLBIClick click, BOOL bFlag) = 0;
 };
+
+inline void TFUninitLib_Thread(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return;
+
+    if (pLibThread->m_pUnknown1)
+    {
+        pLibThread->m_pUnknown1->Release();
+        pLibThread->m_pUnknown1 = NULL;
+    }
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
+}

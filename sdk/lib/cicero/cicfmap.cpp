@@ -5,51 +5,9 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#pragma once
+#include "precomp.h"
+#include "cicfmap.h"
 
-#include "cicmutex.h"
-
-// class CicFileMappingStatic;
-// class CicFileMapping;
-
-class CicFileMappingStatic
-{
-protected:
-    LPCTSTR m_pszName;
-    LPVOID m_pView;
-    HANDLE m_hMapping;
-    BOOL m_bCreated;
-    BOOL m_bHasMutex;
-    CicMutex *m_pMutex;
-
-    LPVOID _Map();
-
-public:
-    CicFileMappingStatic() { }
-    ~CicFileMappingStatic() { }
-
-    void Init(LPCTSTR pszName, CicMutex *pMutex);
-
-    LPVOID Create(LPSECURITY_ATTRIBUTES pSA, DWORD dwMaximumSizeLow, LPBOOL pbAlreadyExists);
-    LPVOID Open();
-    void Close();
-
-    BOOL Enter();
-    void Leave();
-    BOOL Flush(SIZE_T dwNumberOfBytesToFlush);
-    void Finalize();
-};
-
-class CicFileMapping : public CicFileMappingStatic
-{
-public:
-    CicFileMapping(LPCTSTR pszName, CicMutex *pMutex);
-    virtual ~CicFileMapping() { Finalize(); }
-};
-
-/******************************************************************************/
-
-inline
 CicFileMapping::CicFileMapping(LPCTSTR pszName, CicMutex *pMutex)
 {
     m_pszName = NULL;
@@ -61,7 +19,7 @@ CicFileMapping::CicFileMapping(LPCTSTR pszName, CicMutex *pMutex)
     Init(pszName, pMutex);
 }
 
-inline void CicFileMappingStatic::Close()
+void CicFileMappingStatic::Close()
 {
     if (m_pView)
     {
@@ -78,7 +36,7 @@ inline void CicFileMappingStatic::Close()
     m_bCreated = FALSE;
 }
 
-inline void CicFileMappingStatic::Init(LPCTSTR pszName, CicMutex *pMutex)
+void CicFileMappingStatic::Init(LPCTSTR pszName, CicMutex *pMutex)
 {
     if (pMutex)
         m_pMutex = pMutex;
@@ -88,7 +46,7 @@ inline void CicFileMappingStatic::Init(LPCTSTR pszName, CicMutex *pMutex)
     m_bHasMutex = (pMutex != NULL);
 }
 
-inline LPVOID
+LPVOID
 CicFileMappingStatic::Create(
     LPSECURITY_ATTRIBUTES pSA,
     DWORD dwMaximumSizeLow,
@@ -112,7 +70,7 @@ CicFileMappingStatic::Create(
     return _Map();
 }
 
-inline LPVOID CicFileMappingStatic::Open()
+LPVOID CicFileMappingStatic::Open()
 {
     if (!m_pszName)
         return NULL;
@@ -123,7 +81,7 @@ inline LPVOID CicFileMappingStatic::Open()
     return _Map();
 }
 
-inline LPVOID CicFileMappingStatic::_Map()
+LPVOID CicFileMappingStatic::_Map()
 {
     m_pView = ::MapViewOfFile(m_hMapping, FILE_MAP_WRITE, 0, 0, 0);
     if (!m_pView)
@@ -134,28 +92,28 @@ inline LPVOID CicFileMappingStatic::_Map()
     return m_pView;
 }
 
-inline BOOL CicFileMappingStatic::Enter()
+BOOL CicFileMappingStatic::Enter()
 {
     if (!m_bHasMutex)
         return TRUE;
     return m_pMutex->Enter();
 }
 
-inline void CicFileMappingStatic::Leave()
+void CicFileMappingStatic::Leave()
 {
     if (!m_bHasMutex)
         return;
     m_pMutex->Leave();
 }
 
-inline BOOL CicFileMappingStatic::Flush(SIZE_T dwNumberOfBytesToFlush)
+BOOL CicFileMappingStatic::Flush(SIZE_T dwNumberOfBytesToFlush)
 {
     if (!m_pView)
         return FALSE;
     return ::FlushViewOfFile(m_pView, dwNumberOfBytesToFlush);
 }
 
-inline void CicFileMappingStatic::Finalize()
+void CicFileMappingStatic::Finalize()
 {
     if (!m_bHasMutex)
         return;

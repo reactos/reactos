@@ -13,7 +13,9 @@ add_library(msutb MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msutb.def)
 set_module_type(msutb win32dll)
 add_dependencies(msutb msctf psdk)
-target_link_libraries(msutb wine uuid atl_classes)
+target_include_directories(msutb BEFORE PRIVATE
+    ${REACTOS_SOURCE_DIR}/sdk/lib/cicero)
+target_link_libraries(msutb wine uuid atl_classes cicero_a)
 add_importlibs(msutb user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_delay_importlibs(msutb uxtheme imm32 comctl32 msctf ole32 oleacc oleaut32 shell32)
 add_cd_file(TARGET msutb DESTINATION reactos/system32 FOR all)

@@ -5,38 +5,13 @@
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#pragma once
-
-class CicCaret
-{
-protected:
-    HWND m_hWnd;
-    UINT m_uCaretBlinkTimerID;
-    POINT m_pt;
-    SIZE m_size;
-    BOOL m_bCaretBlinking;
-    BOOL m_bCaretVisible;
-
-public:
-    enum { TIMER_ID = 0x4F83AF91 };
-    CicCaret();
-    virtual ~CicCaret();
-
-    void CreateCaret(HWND hWnd, SIZE size);
-    void DestroyCaret();
-    void HideCaret();
-    void InvertCaret();
-    void OnTimer();
-    void SetCaretPos(POINT pt);
-    void SetBlinking(BOOL bBlinking);
-};
-
-/***********************************************************************/
+#include "precomp.h"
+#include "ciccaret.h"
 
 /**
  * @implemented
  */
-inline CicCaret::CicCaret()
+CicCaret::CicCaret()
 {
     m_bCaretBlinking = FALSE;
     m_bCaretVisible = FALSE;
@@ -48,7 +23,7 @@ inline CicCaret::CicCaret()
 /**
  * @implemented
  */
-inline CicCaret::~CicCaret()
+CicCaret::~CicCaret()
 {
     HideCaret();
     ::KillTimer(m_hWnd, m_uCaretBlinkTimerID);
@@ -58,7 +33,7 @@ inline CicCaret::~CicCaret()
 /**
  * @implemented
  */
-inline void CicCaret::CreateCaret(HWND hWnd, SIZE size)
+void CicCaret::CreateCaret(HWND hWnd, SIZE size)
 {
     m_hWnd = hWnd;
     m_size = size;
@@ -69,7 +44,7 @@ inline void CicCaret::CreateCaret(HWND hWnd, SIZE size)
 /**
  * @implemented
  */
-inline void CicCaret::DestroyCaret()
+void CicCaret::DestroyCaret()
 {
     HideCaret();
     ::KillTimer(m_hWnd, m_uCaretBlinkTimerID);
@@ -79,7 +54,7 @@ inline void CicCaret::DestroyCaret()
 /**
  * @implemented
  */
-inline void CicCaret::HideCaret()
+void CicCaret::HideCaret()
 {
     if (m_bCaretVisible)
     {
@@ -92,7 +67,7 @@ inline void CicCaret::HideCaret()
 /**
  * @implemented
  */
-inline void CicCaret::InvertCaret()
+void CicCaret::InvertCaret()
 {
     HDC hDC = ::GetDC(m_hWnd);
     ::PatBlt(hDC, m_pt.x, m_pt.y, m_size.cx, m_size.cy, DSTINVERT);
@@ -102,7 +77,7 @@ inline void CicCaret::InvertCaret()
 /**
  * @implemented
  */
-inline void CicCaret::OnTimer()
+void CicCaret::OnTimer()
 {
     if (m_bCaretBlinking)
     {
@@ -114,7 +89,7 @@ inline void CicCaret::OnTimer()
 /**
  * @implemented
  */
-inline void CicCaret::SetCaretPos(POINT pt)
+void CicCaret::SetCaretPos(POINT pt)
 {
     BOOL bCaretVisible = m_bCaretVisible;
     if (bCaretVisible)
@@ -129,7 +104,7 @@ inline void CicCaret::SetCaretPos(POINT pt)
 /**
  * @implemented
  */
-inline void CicCaret::SetBlinking(BOOL bBlinking)
+void CicCaret::SetBlinking(BOOL bBlinking)
 {
     m_bCaretBlinking = bBlinking;
 }
