@@ -156,22 +156,22 @@ C_ASSERT(offsetof(INPUTCONTEXT, fOpen) == 0x4);
 C_ASSERT(offsetof(INPUTCONTEXT, ptStatusWndPos) == 0x8);
 C_ASSERT(offsetof(INPUTCONTEXT, ptSoftKbdPos) == 0x10);
 C_ASSERT(offsetof(INPUTCONTEXT, fdwConversion) == 0x18);
-C_ASSERT(offsetof(INPUTCONTEXT, fdwSentence) == 0x1c);
+C_ASSERT(offsetof(INPUTCONTEXT, fdwSentence) == 0x1C);
 C_ASSERT(offsetof(INPUTCONTEXT, lfFont) == 0x20);
-C_ASSERT(offsetof(INPUTCONTEXT, cfCompForm) == 0x7c);
+C_ASSERT(offsetof(INPUTCONTEXT, cfCompForm) == 0x7C);
 C_ASSERT(offsetof(INPUTCONTEXT, cfCandForm) == 0x98);
 C_ASSERT(offsetof(INPUTCONTEXT, hCompStr) == 0x118);
-C_ASSERT(offsetof(INPUTCONTEXT, hCandInfo) == 0x11c);
+C_ASSERT(offsetof(INPUTCONTEXT, hCandInfo) == 0x11C);
 C_ASSERT(offsetof(INPUTCONTEXT, hGuideLine) == 0x120);
 C_ASSERT(offsetof(INPUTCONTEXT, hPrivate) == 0x124);
 C_ASSERT(offsetof(INPUTCONTEXT, dwNumMsgBuf) == 0x128);
-C_ASSERT(offsetof(INPUTCONTEXT, hMsgBuf) == 0x12c);
+C_ASSERT(offsetof(INPUTCONTEXT, hMsgBuf) == 0x12C);
 C_ASSERT(offsetof(INPUTCONTEXT, fdwInit) == 0x130);
 C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
-// bits of fdwInit of INPUTCONTEXT
+/* bits of fdwInit of INPUTCONTEXT */
 #define INIT_STATUSWNDPOS               0x00000001
 #define INIT_CONVERSION                 0x00000002
 #define INIT_SENTENCE                   0x00000004
@@ -180,7 +180,7 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #define INIT_SOFTKBDPOS                 0x00000020
 #define INIT_GUIDMAP                    0x00000040
 
-// bits for INPUTCONTEXTDX.dwChange
+/* bits for INPUTCONTEXTDX.dwChange */
 #define INPUTCONTEXTDX_CHANGE_OPEN          0x1
 #define INPUTCONTEXTDX_CHANGE_CONVERSION    0x2
 #define INPUTCONTEXTDX_CHANGE_SENTENCE      0x4
@@ -190,7 +190,7 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
     #define WM_IME_REPORT 0x280
 #endif
 
-// WM_IME_REPORT wParam
+/* WM_IME_REPORT wParam */
 #define IR_STRINGSTART   0x100
 #define IR_STRINGEND     0x101
 #define IR_OPENCONVERT   0x120
@@ -378,7 +378,7 @@ ImeGetImeMenuItems(
     _In_ DWORD dwSize);
 
 #ifdef __cplusplus
-} // extern "C"
+} /* extern "C" */
 #endif
 
 /* IME Property bits */

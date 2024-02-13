@@ -143,7 +143,7 @@ typedef struct tagIMECHARPOSITION {
 
 typedef BOOL (CALLBACK *IMCENUMPROC)(_In_ HIMC hIMC, _In_ LPARAM lParam);
 
-#endif // (WINVER >= 0x040A)
+#endif /* WINVER >= 0x040A */
 
 typedef struct _tagCOMPOSITIONFORM
 {
@@ -307,15 +307,15 @@ typedef struct _tagCOMPOSITIONFORM
 #define IGP_GETIMEVERSION               (DWORD)(-4)
 #define IGP_PROPERTY                    0x00000004
 #define IGP_CONVERSION                  0x00000008
-#define IGP_SENTENCE                    0x0000000c
+#define IGP_SENTENCE                    0x0000000C
 #define IGP_UI                          0x00000010
 #define IGP_SETCOMPSTR                  0x00000014
 #define IGP_SELECT                      0x00000018
 
 /* dwIndex for ImmSetCompositionString API */
-#define SCS_SETSTR                      (GCS_COMPREADSTR|GCS_COMPSTR)
-#define SCS_CHANGEATTR                  (GCS_COMPREADATTR|GCS_COMPATTR)
-#define SCS_CHANGECLAUSE                (GCS_COMPREADCLAUSE|GCS_COMPCLAUSE)
+#define SCS_SETSTR                      (GCS_COMPREADSTR | GCS_COMPSTR)
+#define SCS_CHANGEATTR                  (GCS_COMPREADATTR | GCS_COMPATTR)
+#define SCS_CHANGECLAUSE                (GCS_COMPREADCLAUSE | GCS_COMPCLAUSE)
 #define SCS_SETRECONVERTSTRING          0x00010000
 #define SCS_QUERYRECONVERTSTRING        0x00020000
 
@@ -428,8 +428,8 @@ typedef struct _tagCOMPOSITIONFORM
 #define IME_ESC_SYNC_HOTKEY             0x1007
 #define IME_ESC_HANJA_MODE              0x1008
 #define IME_ESC_AUTOMATA                0x1009
-#define IME_ESC_PRIVATE_HOTKEY          0x100a
-#define IME_ESC_GETHELPFILENAME         0x100b
+#define IME_ESC_PRIVATE_HOTKEY          0x100A
+#define IME_ESC_GETHELPFILENAME         0x100B
 
 /* style of word registration */
 #define IME_REGWORD_STYLE_EUDC          0x00000001
@@ -690,7 +690,7 @@ ImmGetImeMenuItemsW(
     #define ImmGetImeMenuItems ImmGetImeMenuItemsA
 #endif
 
-#endif /* (WINVER >= 0x040A) */
+#endif /* WINVER >= 0x040A */
 
 BOOL WINAPI ImmGetOpenStatus(_In_ HIMC hIMC);
 DWORD WINAPI ImmGetProperty(_In_ HKL hKL, _In_ DWORD fdwIndex);
