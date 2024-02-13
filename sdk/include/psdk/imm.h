@@ -47,16 +47,16 @@ typedef struct tagREGISTERWORDW {
 } REGISTERWORDW, *PREGISTERWORDW, NEAR *NPREGISTERWORDW, FAR *LPREGISTERWORDW;
 
 typedef INT (CALLBACK *REGISTERWORDENUMPROCA)(
-    _In_ LPCSTR,
-    _In_ DWORD,
-    _In_ LPCSTR,
-    _In_ LPVOID);
+    _In_ LPCSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_ LPCSTR lpszRegister,
+    _Inout_opt LPVOID lpData);
 
 typedef INT (CALLBACK *REGISTERWORDENUMPROCW)(
-    _In_ LPCWSTR,
-    _In_ DWORD,
-    _In_ LPCWSTR,
-    _In_ LPVOID);
+    _In_ LPCWSTR lpszReading,
+    _In_ DWORD dwStyle,
+    _In_ LPCWSTR lpszRegister,
+    _Inout_opt LPVOID lpData);
 
 typedef struct tagCANDIDATEFORM
 {
