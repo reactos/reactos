@@ -366,7 +366,7 @@ BOOL InitLangChangeHotKey(VOID)
     szLanguage[0] = szLayout[0] = TEXT('3');
     szLanguage[1] = szLayout[1] = TEXT('\0');
 
-    error = regKey.Open(HKEY_CURRENT_USER, "Keyboard Layout\\Toggle");
+    error = regKey.Open(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Toggle"));
     if (error == ERROR_SUCCESS)
     {
         error = regKey.QuerySz(TEXT("Language Hotkey"), szLanguage, _countof(szLanguage));

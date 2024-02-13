@@ -7,10 +7,6 @@
 
 #pragma once
 
-#ifndef __cplusplus
-    #error Cicero needs C++.
-#endif
-
 static inline LPVOID cicMemAlloc(SIZE_T size)
 {
     return LocalAlloc(0, size);

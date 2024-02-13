@@ -3152,16 +3152,12 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     HGDIOBJ hFontOld = ::SelectObject(hdcMem, m_hFont);
     RECT rcBack = { 0, 0, width, height };
 
-    INT cxText, cyText, cxContent, cyContent, cxyBorders, cxButton, cyButton;
+    INT cxText = 0, cyText = 0, cxContent = 0, cyContent = 0;
+    INT cxyBorders, cxButton, cyButton;
     if (m_pszButtonText)
     {
         cxText = m_TextSize.cx;
         cyText = m_TextSize.cy;
-    }
-    else
-    {
-        cxText = 0;
-        cyText = cyText;
     }
 
     if (m_ButtonIcon.m_hIcon)
@@ -3188,8 +3184,8 @@ CUIFButton2::OnPaintNoTheme(HDC hDC)
     {
         cxyBorders = ((cxText && cxContent) ? 2 : 0);
 
-        cyButton = cyContent;
         cxButton = cxText + cxContent + cxyBorders;
+        cyButton = cyContent;
         if (cyText > cyButton)
             cyButton = cyText;
     }

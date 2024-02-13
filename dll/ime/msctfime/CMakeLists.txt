@@ -18,7 +18,7 @@ set_module_type(msctfime win32dll UNICODE)
 set_target_properties(msctfime PROPERTIES SUFFIX ".ime")
 target_include_directories(msctfime BEFORE PRIVATE
     ${REACTOS_SOURCE_DIR}/sdk/lib/cicero)
-target_link_libraries(msctfime wine uuid cicero_w)
+target_link_libraries(msctfime wine uuid cicero)
 add_importlibs(msctfime user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_delay_importlibs(msctfime comctl32 msctf oleaut32 imm32)
 add_cd_file(TARGET msctfime DESTINATION reactos/system32 FOR all)
