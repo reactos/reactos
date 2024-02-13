@@ -222,6 +222,13 @@ DWORD  WINAPI ImmGetIMCCSize(_In_ HIMCC imcc);
 BOOL WINAPI ImmGenerateMessage(_In_ HIMC hIMC);
 LRESULT WINAPI ImmRequestMessageA(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
 LRESULT WINAPI ImmRequestMessageW(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
+
+#ifdef UNICODE
+    #define ImmRequestMessage ImmRequestMessageW
+#else
+    #define ImmRequestMessage ImmRequestMessageA
+#endif
+
 BOOL WINAPI
 ImmTranslateMessage(
     _In_ HWND hwnd,

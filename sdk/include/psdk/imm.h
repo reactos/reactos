@@ -835,7 +835,6 @@ ImmUnregisterWordW(
     #define ImmInstallIME ImmInstallIMEW
     #define ImmIsUIMessage ImmIsUIMessageW
     #define ImmRegisterWord ImmRegisterWordW
-    #define ImmRequestMessage ImmRequestMessageW
     #define ImmSetCompositionFont ImmSetCompositionFontW
     #define ImmSetCompositionString ImmSetCompositionStringW
     #define ImmUnregisterWord ImmUnregisterWordW
@@ -859,7 +858,6 @@ ImmUnregisterWordW(
     #define ImmInstallIME ImmInstallIMEA
     #define ImmIsUIMessage ImmIsUIMessageA
     #define ImmRegisterWord ImmRegisterWordA
-    #define ImmRequestMessage ImmRequestMessageA
     #define ImmSetCompositionFont ImmSetCompositionFontA
     #define ImmSetCompositionString ImmSetCompositionStringA
     #define ImmUnregisterWord ImmUnregisterWordA
