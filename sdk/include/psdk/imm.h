@@ -46,16 +46,14 @@ typedef INT (CALLBACK *REGISTERWORDENUMPROCW)(
     _In_ LPCWSTR lpszRegister,
     _Inout_opt_ LPVOID lpData);
 
-typedef struct tagCANDIDATEFORM
-{
+typedef struct tagCANDIDATEFORM {
     DWORD dwIndex;
     DWORD dwStyle;
     POINT ptCurrentPos;
     RECT  rcArea;
 } CANDIDATEFORM, *PCANDIDATEFORM, NEAR *NPCANDIDATEFORM, FAR *LPCANDIDATEFORM;
 
-typedef struct tagCANDIDATELIST
-{
+typedef struct tagCANDIDATELIST {
     DWORD dwSize;
     DWORD dwStyle;
     DWORD dwCount;
@@ -67,22 +65,19 @@ typedef struct tagCANDIDATELIST
 
 #define STYLE_DESCRIPTION_SIZE 32
 
-typedef struct tagSTYLEBUFA
-{
+typedef struct tagSTYLEBUFA {
     DWORD dwStyle;
     CHAR  szDescription[STYLE_DESCRIPTION_SIZE];
 } STYLEBUFA, *PSTYLEBUFA, NEAR *NPSTYLEBUFA, FAR *LPSTYLEBUFA;
 
-typedef struct tagSTYLEBUFW
-{
+typedef struct tagSTYLEBUFW {
     DWORD dwStyle;
     WCHAR  szDescription[STYLE_DESCRIPTION_SIZE];
 } STYLEBUFW, *PSTYLEBUFW, NEAR *NPSTYLEBUFW, FAR *LPSTYLEBUFW;
 
 #if (WINVER >= 0x040A)
 
-typedef struct tagRECONVERTSTRING
-{
+typedef struct tagRECONVERTSTRING {
     DWORD dwSize;
     DWORD dwVersion;
     DWORD dwStrLen;
@@ -95,8 +90,7 @@ typedef struct tagRECONVERTSTRING
 
 #define IMEMENUITEM_STRING_SIZE 80
 
-typedef struct tagIMEMENUITEMINFOA
-{
+typedef struct tagIMEMENUITEMINFOA {
     UINT        cbSize;
     UINT        fType;
     UINT        fState;
@@ -108,8 +102,7 @@ typedef struct tagIMEMENUITEMINFOA
     HBITMAP     hbmpItem;
 } IMEMENUITEMINFOA, *PIMEMENUITEMINFOA, NEAR *NPIMEMENUITEMINFOA, FAR *LPIMEMENUITEMINFOA;
 
-typedef struct tagIMEMENUITEMINFOW
-{
+typedef struct tagIMEMENUITEMINFOW {
     UINT        cbSize;
     UINT        fType;
     UINT        fState;
@@ -145,8 +138,7 @@ typedef BOOL (CALLBACK *IMCENUMPROC)(_In_ HIMC hIMC, _In_ LPARAM lParam);
 
 #endif /* WINVER >= 0x040A */
 
-typedef struct _tagCOMPOSITIONFORM
-{
+typedef struct _tagCOMPOSITIONFORM {
     DWORD   dwStyle;
     POINT ptCurrentPos;
     RECT  rcArea;
@@ -272,7 +264,7 @@ typedef struct _tagCOMPOSITIONFORM
 #define SELECT_CAP_CONVERSION           0x00000001
 #define SELECT_CAP_SENTENCE             0x00000002
 
-/* ID for deIndex of ImmGetGuideLine */
+/* ID for dwIndex of ImmGetGuideLine */
 #define GGL_LEVEL                       0x00000001
 #define GGL_INDEX                       0x00000002
 #define GGL_STRING                      0x00000003
@@ -472,13 +464,9 @@ typedef struct _tagCOMPOSITIONFORM
 
 #endif /* WINVER >= 0x040A */
 
-/*
- * type of soft keyboard
- * for Windows Tranditional Chinese Edition
- */
-#define SOFTKEYBOARD_TYPE_T1            0x0001
-/* for Windows Simplified Chinese Edition */
-#define SOFTKEYBOARD_TYPE_C1            0x0002
+/* types of soft keyboard */
+#define SOFTKEYBOARD_TYPE_T1    0x0001 /* for Tranditional Chinese */
+#define SOFTKEYBOARD_TYPE_C1    0x0002 /* for Simplified Chinese */
 
 HIMC WINAPI ImmAssociateContext(_In_ HWND hWnd, _In_ HIMC hIMC);
 #if (WINVER >= 0x040A)

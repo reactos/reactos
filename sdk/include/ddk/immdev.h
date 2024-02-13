@@ -39,14 +39,12 @@ typedef struct tagCANDIDATEINFO {
 BOOL WINAPI ImmDisableTextFrameService(_In_ DWORD dwThreadId);
 #endif
 
-typedef struct tagSOFTKBDDATA
-{
+typedef struct tagSOFTKBDDATA {
     UINT uCount;
     WORD wCode[ANYSIZE_ARRAY][256];
 } SOFTKBDDATA, *PSOFTKBDDATA, NEAR *NPSOFTKBDDATA, FAR *LPSOFTKBDDATA;
 
-typedef struct tagCOMPOSITIONSTRING
-{
+typedef struct tagCOMPOSITIONSTRING {
     DWORD dwSize;
     DWORD dwCompReadAttrLen;
     DWORD dwCompReadAttrOffset;
@@ -205,11 +203,13 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #define IR_MODEINFO      0x190
 
 /* IMC */
+
 LPINPUTCONTEXT WINAPI ImmLockIMC(_In_ HIMC hIMC);
 BOOL  WINAPI ImmUnlockIMC(_In_ HIMC hIMC);
 DWORD WINAPI ImmGetIMCLockCount(_In_ HIMC hIMC);
 
 /* IMCC */
+
 HIMCC  WINAPI ImmCreateIMCC(_In_ DWORD size);
 HIMCC  WINAPI ImmDestroyIMCC(_In_ HIMCC block);
 LPVOID WINAPI ImmLockIMCC(_In_ HIMCC imcc);
@@ -238,20 +238,19 @@ LRESULT WINAPI ImmRequestMessageW(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARA
     #define ImmRequestMessage ImmRequestMessageA
 #endif
 
-typedef struct _tagTRANSMSG
-{
+typedef struct _tagTRANSMSG {
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
 } TRANSMSG, *PTRANSMSG, NEAR *NPTRANSMSG, FAR *LPTRANSMSG;
 
-typedef struct _tagTRANSMSGLIST
-{
+typedef struct _tagTRANSMSGLIST {
     UINT     uMsgCount;
     TRANSMSG TransMsg[ANYSIZE_ARRAY];
 } TRANSMSGLIST, *PTRANSMSGLIST, NEAR *NPTRANSMSGLIST, FAR *LPTRANSMSGLIST;
 
 /* Soft keyboard */
+
 HWND WINAPI
 ImmCreateSoftKeyboard(
     _In_ UINT uType,
