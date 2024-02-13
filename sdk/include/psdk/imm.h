@@ -50,13 +50,13 @@ typedef INT (CALLBACK *REGISTERWORDENUMPROCA)(
     _In_ LPCSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCSTR lpszRegister,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 typedef INT (CALLBACK *REGISTERWORDENUMPROCW)(
     _In_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_ LPCWSTR lpszRegister,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 typedef struct tagCANDIDATEFORM
 {
@@ -517,7 +517,7 @@ ImmEnumRegisterWordA(
     _In_opt_ LPCSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_opt_ LPCSTR lpszRegister,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 UINT
 WINAPI
@@ -527,21 +527,21 @@ ImmEnumRegisterWordW(
     _In_opt_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
     _In_opt_ LPCWSTR lpszRegister,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 LRESULT WINAPI
 ImmEscapeA(
     _In_ HKL hKL,
     _In_ HIMC hIMC,
     _In_ UINT uSubFunc,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 LRESULT WINAPI
 ImmEscapeW(
     _In_ HKL hKL,
     _In_ HIMC hIMC,
     _In_ UINT uSubFunc,
-    _Inout_opt LPVOID lpData);
+    _Inout_opt_ LPVOID lpData);
 
 DWORD
 WINAPI
