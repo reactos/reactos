@@ -8,7 +8,7 @@
  */
 
 #include <win32k.h>
-#include <ddk/immdev.h>
+#include <immdev.h>
 DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;

@@ -59,10 +59,13 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <winddi.h>
 #define OEMRESOURCE
 #include <winuser.h>
+#include <ndk/rtltypes.h>
 #include <prntfont.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 #include <imm.h>
+#include <immdev.h>
+#include <imm32_undoc.h>
 #include <dbt.h>
 
 /* NDK headers */

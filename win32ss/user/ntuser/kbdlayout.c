@@ -10,7 +10,7 @@
  */
 
 #include <win32k.h>
-#include <ddk/immdev.h>
+#include <immdev.h>
 
 // Was included only because of CP_ACP and required  the
 // definition of SYSTEMTIME in ndk\rtltypes.h

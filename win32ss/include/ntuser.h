@@ -1206,34 +1206,6 @@ typedef struct tagCURSORDATA
 #define CURSORF_LINKED       0x0100
 #define CURSORF_CURRENT      0x0200
 
-typedef struct tagIMEINFOEX
-{
-    HKL hkl;
-    IMEINFO ImeInfo;
-    WCHAR wszUIClass[16];
-    ULONG fdwInitConvMode;
-    INT fInitOpen;
-    INT fLoadFlag;
-    DWORD dwProdVersion;
-    DWORD dwImeWinVersion;
-    WCHAR wszImeDescription[50];
-    WCHAR wszImeFile[80];
-    struct
-    {
-        INT fSysWow64Only:1;
-        INT fCUASLayer:1;
-    };
-} IMEINFOEX, *PIMEINFOEX;
-
-typedef enum IMEINFOEXCLASS
-{
-    ImeInfoExKeyboardLayout,
-    ImeInfoExKeyboardLayoutTFS,
-    ImeInfoExImeWindow,
-    ImeInfoExImeFileName
-} IMEINFOEXCLASS;
-
-#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
 #define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
 #define IS_CICERO_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 #define IS_16BIT_MODE() (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)

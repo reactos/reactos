@@ -16,7 +16,6 @@
 #include <windows.h>
 #include <sddl.h>
 #include <imm.h>
-#include <ddk/immdev.h>
 #include <cguid.h>
 #include <tchar.h>
 #include <msctf.h>
