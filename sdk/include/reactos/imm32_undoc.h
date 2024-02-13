@@ -98,8 +98,8 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #define IMEDPI_FLAG_UNLOADED 0x1
 #define IMEDPI_FLAG_LOCKED 0x2
 
-PIMEDPI WINAPI ImmLockImeDpi(HKL hKL);
-VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi);
+PIMEDPI WINAPI ImmLockImeDpi(_In_ HKL hKL);
+VOID WINAPI ImmUnlockImeDpi(_Inout_ PIMEDPI pImeDpi);
 
 /* unconfirmed */
 typedef struct tagCLIENTIMC
@@ -133,8 +133,8 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 #define CLIENTIMC_DISABLEIME 0x80
 #define CLIENTIMC_UNKNOWN2 0x100
 
-PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
-VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
+PCLIENTIMC WINAPI ImmLockClientImc(_In_ HIMC hImc);
+VOID WINAPI ImmUnlockClientImc(_Inout_ PCLIENTIMC pClientImc);
 
 struct IME_STATE;
 
@@ -205,13 +205,16 @@ typedef struct tagUNDETERMINESTRUCT
 UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId);
 
 BOOL WINAPI
-ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
+ImmGetImeInfoEx(
+    _Out_ PIMEINFOEX pImeInfoEx,
+    _In_ IMEINFOEXCLASS SearchType,
+    _In_ PVOID pvSearchKey);
 
-BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx);
-DWORD WINAPI ImmGetAppCompatFlags(HIMC hIMC);
-BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag);
-BOOL WINAPI ImmLoadIME(HKL hKL);
-DWORD WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
+BOOL WINAPI ImmLoadLayout(_In_ HKL hKL, _Inout_ PIMEINFOEX pImeInfoEx);
+DWORD WINAPI ImmGetAppCompatFlags(_In_ HIMC hIMC);
+BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_ HIMC hIMC, _In_ BOOL fFlag);
+BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
+DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
 
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
@@ -227,7 +230,7 @@ VOID WINAPI CtfImmEnterCoInitCountSkipMode(VOID);
 BOOL WINAPI CtfImmLeaveCoInitCountSkipMode(VOID);
 HRESULT WINAPI CtfImmLastEnabledWndDestroy(_In_ BOOL bCreate);
 BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
-HRESULT WINAPI CtfImmTIMActivate(HKL hKL);
+HRESULT WINAPI CtfImmTIMActivate(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
 LRESULT WINAPI
