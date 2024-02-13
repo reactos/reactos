@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Providing DDK-compatible <immdev.h> and IME/IMM development helper
- * COPYRIGHT:   Copyright 2021-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2021-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #ifndef _IMMDEV_
