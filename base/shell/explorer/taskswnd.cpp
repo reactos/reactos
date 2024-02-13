@@ -1047,6 +1047,8 @@ public:
 
         TaskGroup->IsCollapsed = TRUE;
 
+        m_TaskBar.EndUpdate();
+
         return TRUE;
     }
 
@@ -2599,7 +2601,7 @@ public:
                 else
                     oldFont = SelectObject(nmtbcd->nmcd.hdc, normalFont);
 
-                DrawTextW(nmtbcd->nmcd.hdc, buttonText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+                DrawThemeText(m_Theme, nmtbcd->nmcd.hdc, TP_BUTTON, 0, buttonText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 0, &rcText);
             }
             SetBkMode(nmtbcd->nmcd.hdc, oldBkMode);
 
