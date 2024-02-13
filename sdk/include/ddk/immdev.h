@@ -205,24 +205,29 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #define IR_MODEINFO      0x190
 
 /* IMC */
-LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
-BOOL  WINAPI ImmUnlockIMC(HIMC);
-DWORD WINAPI ImmGetIMCLockCount(HIMC);
+LPINPUTCONTEXT WINAPI ImmLockIMC(_In_ HIMC hIMC);
+BOOL  WINAPI ImmUnlockIMC(_In_ HIMC hIMC);
+DWORD WINAPI ImmGetIMCLockCount(_In_ HIMC hIMC);
 
 /* IMCC */
-HIMCC  WINAPI ImmCreateIMCC(DWORD);
-HIMCC  WINAPI ImmDestroyIMCC(HIMCC);
-LPVOID WINAPI ImmLockIMCC(HIMCC);
-BOOL   WINAPI ImmUnlockIMCC(HIMCC);
-DWORD  WINAPI ImmGetIMCCLockCount(HIMCC);
-HIMCC  WINAPI ImmReSizeIMCC(HIMCC, DWORD);
-DWORD  WINAPI ImmGetIMCCSize(HIMCC);
+HIMCC  WINAPI ImmCreateIMCC(_In_ DWORD size);
+HIMCC  WINAPI ImmDestroyIMCC(_In_ HIMCC block);
+LPVOID WINAPI ImmLockIMCC(_In_ HIMCC imcc);
+BOOL   WINAPI ImmUnlockIMCC(_In_ HIMCC imcc);
+DWORD  WINAPI ImmGetIMCCLockCount(_In_ HIMCC imcc);
+HIMCC  WINAPI ImmReSizeIMCC(_In_ HIMCC imcc, _In_ DWORD size);
+DWORD  WINAPI ImmGetIMCCSize(_In_ HIMCC imcc);
 
 /* Messaging */
-BOOL WINAPI ImmGenerateMessage(HIMC);
-LRESULT WINAPI ImmRequestMessageA(HIMC, WPARAM, LPARAM);
-LRESULT WINAPI ImmRequestMessageW(HIMC, WPARAM, LPARAM);
-BOOL WINAPI ImmTranslateMessage(HWND, UINT, WPARAM, LPARAM);
+BOOL WINAPI ImmGenerateMessage(_In_ HIMC hIMC);
+LRESULT WINAPI ImmRequestMessageA(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
+LRESULT WINAPI ImmRequestMessageW(_In_ HIMC hIMC, _In_ WPARAM wParam, _In_ LPARAM lParam);
+BOOL WINAPI
+ImmTranslateMessage(
+    _In_ HWND hwnd,
+    _In_ UINT msg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lKeyData);
 
 /* Soft keyboard */
 HWND WINAPI
