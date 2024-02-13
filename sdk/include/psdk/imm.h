@@ -153,7 +153,7 @@ typedef struct tagIMECHARPOSITION {
     RECT        rcDocument;
 } IMECHARPOSITION, *PIMECHARPOSITION, *NPIMECHARPOSITION, *LPIMECHARPOSITION;
 
-typedef BOOL (CALLBACK* IMCENUMPROC)(HIMC, LPARAM);
+typedef BOOL (CALLBACK* IMCENUMPROC)(_In_ HIMC hIMC, _In_ LPARAM lParam);
 
 #endif // (WINVER >= 0x040A)
 
@@ -546,7 +546,7 @@ ImmEscapeW(
 DWORD
 WINAPI
 ImmGetCandidateListA(
-    _In_ HIMC,
+    _In_ HIMC hIMC,
     _In_ DWORD deIndex,
     _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
     _In_ DWORD dwBufLen);
@@ -554,7 +554,7 @@ ImmGetCandidateListA(
 DWORD
 WINAPI
 ImmGetCandidateListW(
-    _In_ HIMC,
+    _In_ HIMC hIMC,
     _In_ DWORD deIndex,
     _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
     _In_ DWORD dwBufLen);
