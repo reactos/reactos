@@ -183,6 +183,25 @@ typedef struct IME_STATE
 C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
+/* for WM_IME_REPORT IR_UNDETERMINE */
+typedef struct tagUNDETERMINESTRUCT
+{
+    DWORD dwSize;
+    UINT  uDefIMESize;
+    UINT  uDefIMEPos;
+    UINT  uUndetTextLen;
+    UINT  uUndetTextPos;
+    UINT  uUndetAttrPos;
+    UINT  uCursorPos;
+    UINT  uDeltaStart;
+    UINT  uDetermineTextLen;
+    UINT  uDetermineTextPos;
+    UINT  uDetermineDelimPos;
+    UINT  uYomiTextLen;
+    UINT  uYomiTextPos;
+    UINT  uYomiDelimPos;
+} UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
+
 UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId);
 
 BOOL WINAPI
