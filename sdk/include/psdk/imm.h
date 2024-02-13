@@ -176,10 +176,7 @@ typedef struct _tagCOMPOSITIONFORM
 #define IMC_CLOSESTATUSWINDOW           0x0021
 #define IMC_OPENSTATUSWINDOW            0x0022
 
-/*
- * wParam for WM_IME_CONTROL to the soft keyboard
- * dwAction for ImmNotifyIME
- */
+/* dwAction for ImmNotifyIME  */
 #define NI_OPENCANDIDATE                0x0010
 #define NI_CLOSECANDIDATE               0x0011
 #define NI_SELECTCANDIDATESTR           0x0012
