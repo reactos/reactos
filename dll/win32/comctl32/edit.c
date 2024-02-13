@@ -47,6 +47,7 @@
 #include "imm.h"
 #ifdef __REACTOS__
     #include <immdev.h>
+    #include <imm32_undoc.h>
 #endif
 #include "usp10.h"
 #include "commctrl.h"

@@ -17,14 +17,72 @@
 extern "C" {
 #endif
 
+typedef struct _tagIMEINFO {
+    DWORD dwPrivateDataSize;
+    DWORD fdwProperty;
+    DWORD fdwConversionCaps;
+    DWORD fdwSentenceCaps;
+    DWORD fdwUICaps;
+    DWORD fdwSCSCaps;
+    DWORD fdwSelectCaps;
+} IMEINFO, *PIMEINFO, NEAR *NPIMEINFO, FAR *LPIMEINFO;
+
+typedef struct tagCANDIDATEINFO {
+    DWORD dwSize;
+    DWORD dwCount;
+    DWORD dwOffset[32];
+    DWORD dwPrivateSize;
+    DWORD dwPrivateOffset;
+} CANDIDATEINFO, *PCANDIDATEINFO, NEAR *NPCANDIDATEINFO, FAR *LPCANDIDATEINFO;
+
+#if (WINVER >= 0x040A)
 BOOL WINAPI ImmDisableTextFrameService(_In_ DWORD dwThreadId);
-BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
+#endif
 
 typedef struct tagSOFTKBDDATA
 {
     UINT uCount;
-    WORD wCode[1][256];
-} SOFTKBDDATA, *PSOFTKBDDATA, *LPSOFTKBDDATA;
+    WORD wCode[ANYSIZE_ARRAY][256];
+} SOFTKBDDATA, *PSOFTKBDDATA, NEAR *NPSOFTKBDDATA, FAR *LPSOFTKBDDATA;
+
+typedef struct tagCOMPOSITIONSTRING
+{
+    DWORD dwSize;
+    DWORD dwCompReadAttrLen;
+    DWORD dwCompReadAttrOffset;
+    DWORD dwCompReadClauseLen;
+    DWORD dwCompReadClauseOffset;
+    DWORD dwCompReadStrLen;
+    DWORD dwCompReadStrOffset;
+    DWORD dwCompAttrLen;
+    DWORD dwCompAttrOffset;
+    DWORD dwCompClauseLen;
+    DWORD dwCompClauseOffset;
+    DWORD dwCompStrLen;
+    DWORD dwCompStrOffset;
+    DWORD dwCursorPos;
+    DWORD dwDeltaStart;
+    DWORD dwResultReadClauseLen;
+    DWORD dwResultReadClauseOffset;
+    DWORD dwResultReadStrLen;
+    DWORD dwResultReadStrOffset;
+    DWORD dwResultClauseLen;
+    DWORD dwResultClauseOffset;
+    DWORD dwResultStrLen;
+    DWORD dwResultStrOffset;
+    DWORD dwPrivateSize;
+    DWORD dwPrivateOffset;
+} COMPOSITIONSTRING, *PCOMPOSITIONSTRING, NEAR *NPCOMPOSITIONSTRING, FAR *LPCOMPOSITIONSTRING;
+
+typedef struct tagGUIDELINE {
+    DWORD dwSize;
+    DWORD dwLevel;
+    DWORD dwIndex;
+    DWORD dwStrLen;
+    DWORD dwStrOffset;
+    DWORD dwPrivateSize;
+    DWORD dwPrivateOffset;
+} GUIDELINE, *PGUIDELINE, NEAR *NPGUIDELINE, FAR *LPGUIDELINE;
 
 /* wParam for WM_IME_CONTROL */
 #define IMC_GETCONVERSIONMODE           0x0001
@@ -90,28 +148,9 @@ typedef struct _tagINPUTCONTEXT {
     HIMCC               hMsgBuf;
     DWORD               fdwInit;
     DWORD               dwReserve[3];
-} INPUTCONTEXT, *PINPUTCONTEXT, *LPINPUTCONTEXT;
+} INPUTCONTEXT, *PINPUTCONTEXT, NEAR *NPINPUTCONTEXT, FAR *LPINPUTCONTEXT;
 
-#ifdef _WIN64
-C_ASSERT(offsetof(INPUTCONTEXT, hWnd) == 0x0);
-C_ASSERT(offsetof(INPUTCONTEXT, fOpen) == 0x8);
-C_ASSERT(offsetof(INPUTCONTEXT, ptStatusWndPos) == 0xc);
-C_ASSERT(offsetof(INPUTCONTEXT, ptSoftKbdPos) == 0x14);
-C_ASSERT(offsetof(INPUTCONTEXT, fdwConversion) == 0x1c);
-C_ASSERT(offsetof(INPUTCONTEXT, fdwSentence) == 0x20);
-C_ASSERT(offsetof(INPUTCONTEXT, lfFont) == 0x24);
-C_ASSERT(offsetof(INPUTCONTEXT, cfCompForm) == 0x80);
-C_ASSERT(offsetof(INPUTCONTEXT, cfCandForm) == 0x9c);
-C_ASSERT(offsetof(INPUTCONTEXT, hCompStr) == 0x120);
-C_ASSERT(offsetof(INPUTCONTEXT, hCandInfo) == 0x128);
-C_ASSERT(offsetof(INPUTCONTEXT, hGuideLine) == 0x130);
-C_ASSERT(offsetof(INPUTCONTEXT, hPrivate) == 0x138);
-C_ASSERT(offsetof(INPUTCONTEXT, dwNumMsgBuf) == 0x140);
-C_ASSERT(offsetof(INPUTCONTEXT, hMsgBuf) == 0x148);
-C_ASSERT(offsetof(INPUTCONTEXT, fdwInit) == 0x150);
-C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x154);
-C_ASSERT(sizeof(INPUTCONTEXT) == 0x160);
-#else
+#ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXT, hWnd) == 0x0);
 C_ASSERT(offsetof(INPUTCONTEXT, fOpen) == 0x4);
 C_ASSERT(offsetof(INPUTCONTEXT, ptStatusWndPos) == 0x8);
@@ -131,27 +170,6 @@ C_ASSERT(offsetof(INPUTCONTEXT, fdwInit) == 0x130);
 C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
-
-struct IME_STATE;
-
-/* unconfirmed */
-#ifdef __cplusplus
-typedef struct INPUTCONTEXTDX : INPUTCONTEXT
-{
-#else
-typedef struct INPUTCONTEXTDX
-{
-    INPUTCONTEXT;
-#endif
-    UINT nVKey;                 // +0x140
-    BOOL bNeedsTrans;           // +0x144
-    DWORD dwUnknown1;
-    DWORD dwUIFlags;            // +0x14c
-    DWORD dwUnknown2;
-    struct IME_STATE *pState;   // +0x154
-    DWORD dwChange;             // +0x158
-    HIMCC hCtfImeContext;
-} INPUTCONTEXTDX, *PINPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 // bits of fdwInit of INPUTCONTEXT
 #define INIT_STATUSWNDPOS               0x00000001
@@ -205,174 +223,95 @@ typedef struct tagUNDETERMINESTRUCT
     UINT  uYomiDelimPos;
 } UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
 
+/* IMC */
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
+BOOL  WINAPI ImmUnlockIMC(HIMC);
+DWORD WINAPI ImmGetIMCLockCount(HIMC);
 
-typedef struct IME_SUBSTATE
-{
-    struct IME_SUBSTATE *pNext;
-    HKL hKL;
-    DWORD dwValue;
-} IME_SUBSTATE, *PIME_SUBSTATE;
+/* IMCC */
+HIMCC  WINAPI ImmCreateIMCC(DWORD);
+HIMCC  WINAPI ImmDestroyIMCC(HIMCC);
+LPVOID WINAPI ImmLockIMCC(HIMCC);
+BOOL   WINAPI ImmUnlockIMCC(HIMCC);
+DWORD  WINAPI ImmGetIMCCLockCount(HIMCC);
+HIMCC  WINAPI ImmReSizeIMCC(HIMCC, DWORD);
+DWORD  WINAPI ImmGetIMCCSize(HIMCC);
 
-#ifndef _WIN64
-C_ASSERT(sizeof(IME_SUBSTATE) == 0xc);
-#endif
+/* Messaging */
+BOOL WINAPI ImmGenerateMessage(HIMC);
+LRESULT WINAPI ImmRequestMessageA(HIMC, WPARAM, LPARAM);
+LRESULT WINAPI ImmRequestMessageW(HIMC, WPARAM, LPARAM);
+BOOL WINAPI ImmTranslateMessage(HWND, UINT, WPARAM, LPARAM);
 
-typedef struct IME_STATE
-{
-    struct IME_STATE *pNext;
-    WORD wLang;
-    WORD fOpen;
-    DWORD dwConversion;
-    DWORD dwSentence;
-    DWORD dwInit;
-    PIME_SUBSTATE pSubState;
-} IME_STATE, *PIME_STATE;
+/* Soft keyboard */
+HWND WINAPI
+ImmCreateSoftKeyboard(
+    _In_ UINT uType,
+    _In_ HWND hwndParent,
+    _In_ INT x,
+    _In_ INT y);
 
-#ifndef _WIN64
-C_ASSERT(sizeof(IME_STATE) == 0x18);
-#endif
+BOOL WINAPI
+ImmShowSoftKeyboard(
+    _In_ HWND hwndSoftKBD,
+    _In_ INT nCmdShow);
+
+BOOL WINAPI
+ImmDestroySoftKeyboard(
+    _In_ HWND hwndSoftKBD);
 
 typedef struct _tagTRANSMSG
 {
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
-} TRANSMSG, *PTRANSMSG, *LPTRANSMSG;
+} TRANSMSG, *PTRANSMSG, NEAR *NPTRANSMSG, FAR *LPTRANSMSG;
 
 typedef struct _tagTRANSMSGLIST
 {
     UINT     uMsgCount;
     TRANSMSG TransMsg[ANYSIZE_ARRAY];
-} TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
-
-#define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
-#include <imetable.h>
-#undef DEFINE_IME_ENTRY
-
-typedef struct IMEDPI
-{
-    struct IMEDPI *pNext;
-    HINSTANCE      hInst;
-    HKL            hKL;
-    IMEINFO        ImeInfo;
-    UINT           uCodePage;
-    WCHAR          szUIClass[16];
-    DWORD          cLockObj;
-    DWORD          dwFlags;
-#define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;
-#include <imetable.h>
-#undef DEFINE_IME_ENTRY
-} IMEDPI, *PIMEDPI;
-
-#ifndef _WIN64
-C_ASSERT(offsetof(IMEDPI, pNext) == 0x0);
-C_ASSERT(offsetof(IMEDPI, hInst) == 0x4);
-C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
-C_ASSERT(offsetof(IMEDPI, ImeInfo) == 0xc);
-C_ASSERT(offsetof(IMEDPI, uCodePage) == 0x28);
-C_ASSERT(offsetof(IMEDPI, szUIClass) == 0x2c);
-C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
-C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
-C_ASSERT(offsetof(IMEDPI, ImeInquire) == 0x54);
-C_ASSERT(offsetof(IMEDPI, ImeConversionList) == 0x58);
-C_ASSERT(offsetof(IMEDPI, ImeRegisterWord) == 0x5c);
-C_ASSERT(offsetof(IMEDPI, ImeUnregisterWord) == 0x60);
-C_ASSERT(offsetof(IMEDPI, ImeGetRegisterWordStyle) == 0x64);
-C_ASSERT(offsetof(IMEDPI, ImeEnumRegisterWord) == 0x68);
-C_ASSERT(offsetof(IMEDPI, ImeConfigure) == 0x6c);
-C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
-C_ASSERT(offsetof(IMEDPI, ImeEscape) == 0x74);
-C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x78);
-C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x7c);
-C_ASSERT(offsetof(IMEDPI, ImeSetActiveContext) == 0x80);
-C_ASSERT(offsetof(IMEDPI, ImeToAsciiEx) == 0x84);
-C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
-C_ASSERT(offsetof(IMEDPI, ImeSetCompositionString) == 0x8c);
-C_ASSERT(offsetof(IMEDPI, ImeGetImeMenuItems) == 0x90);
-C_ASSERT(offsetof(IMEDPI, CtfImeInquireExW) == 0x94);
-C_ASSERT(offsetof(IMEDPI, CtfImeSelectEx) == 0x98);
-C_ASSERT(offsetof(IMEDPI, CtfImeEscapeEx) == 0x9c);
-C_ASSERT(offsetof(IMEDPI, CtfImeGetGuidAtom) == 0xa0);
-C_ASSERT(offsetof(IMEDPI, CtfImeIsGuidMapEnable) == 0xa4);
-C_ASSERT(sizeof(IMEDPI) == 0xa8);
-#endif
-
-/* flags for IMEDPI.dwFlags */
-#define IMEDPI_FLAG_UNLOADED 0x1
-#define IMEDPI_FLAG_LOCKED 0x2
-
-/* unconfirmed */
-typedef struct tagCLIENTIMC
-{
-    HANDLE hInputContext;   /* LocalAlloc'ed LHND */
-    LONG cLockObj;
-    DWORD dwFlags;
-    DWORD dwCompatFlags;
-    RTL_CRITICAL_SECTION cs;
-    UINT uCodePage;
-    HKL hKL;
-    BOOL bCtfIme;
-} CLIENTIMC, *PCLIENTIMC;
-
-#ifndef _WIN64
-C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
-C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
-C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
-C_ASSERT(offsetof(CLIENTIMC, dwCompatFlags) == 0xc);
-C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
-C_ASSERT(offsetof(CLIENTIMC, uCodePage) == 0x28);
-C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
-C_ASSERT(sizeof(CLIENTIMC) == 0x34);
-#endif
-
-/* flags for CLIENTIMC */
-#define CLIENTIMC_WIDE 0x1
-#define CLIENTIMC_ACTIVE 0x2
-#define CLIENTIMC_UNKNOWN4 0x20
-#define CLIENTIMC_DESTROY 0x40
-#define CLIENTIMC_DISABLEIME 0x80
-#define CLIENTIMC_UNKNOWN2 0x100
+} TRANSMSGLIST, *PTRANSMSGLIST, NEAR *NPTRANSMSGLIST, FAR *LPTRANSMSGLIST;
 
 /* IME file interface */
 
 BOOL WINAPI
 ImeInquire(
     _Out_ LPIMEINFO lpIMEInfo,
-    _Out_ LPWSTR lpszWndClass,
+    _Out_ LPTSTR lpszWndClass,
     _In_ DWORD dwSystemInfoFlags);
 
 DWORD WINAPI
 ImeConversionList(
     _In_ HIMC hIMC,
-    _In_ LPCWSTR lpSrc,
+    _In_ LPCTSTR lpSrc,
     _Out_ LPCANDIDATELIST lpDst,
     _In_ DWORD dwBufLen,
     _In_ UINT uFlag);
 
 BOOL WINAPI
 ImeRegisterWord(
-    _In_ LPCWSTR lpszReading,
+    _In_ LPCTSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCWSTR lpszString);
+    _In_ LPCTSTR lpszString);
 
 BOOL WINAPI
 ImeUnregisterWord(
-    _In_ LPCWSTR lpszReading,
+    _In_ LPCTSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCWSTR lpszString);
+    _In_ LPCTSTR lpszString);
 
 UINT WINAPI
 ImeGetRegisterWordStyle(
     _In_ UINT nItem,
-    _Out_ LPSTYLEBUFW lpStyleBuf);
+    _Out_ LPSTYLEBUF lpStyleBuf);
 
 UINT WINAPI
 ImeEnumRegisterWord(
-    _In_ REGISTERWORDENUMPROCW lpfnEnumProc,
-    _In_opt_ LPCWSTR lpszReading,
+    _In_ REGISTERWORDENUMPROC lpfnEnumProc,
+    _In_opt_ LPCTSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_opt_ LPCWSTR lpszString,
+    _In_opt_ LPCTSTR lpszString,
     _In_opt_ LPVOID lpData);
 
 BOOL WINAPI
@@ -439,12 +378,41 @@ ImeGetImeMenuItems(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeMenu,
+    _Inout_opt_ LPIMEMENUITEMINFO lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFO lpImeMenu,
     _In_ DWORD dwSize);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+/* IME Property bits */
+#define IME_PROP_END_UNLOAD             0x0001
+#define IME_PROP_KBD_CHAR_FIRST         0x0002
+#define IME_PROP_IGNORE_UPKEYS          0x0004
+#define IME_PROP_NEED_ALTKEY            0x0008
+#define IME_PROP_NO_KEYS_ON_CLOSE       0x0010
+#define IME_PROP_ACCEPT_WIDE_VKEY       0x0020
+
+/* for NI_CONTEXTUPDATED */
+#define IMC_SETCONVERSIONMODE           0x0002
+#define IMC_SETSENTENCEMODE             0x0004
+#define IMC_SETOPENSTATUS               0x0006
+
+/* dwAction for ImmNotifyIME */
+#define NI_CONTEXTUPDATED               0x0003
+#define NI_OPENCANDIDATE                0x0010
+#define NI_CLOSECANDIDATE               0x0011
+#define NI_SELECTCANDIDATESTR           0x0012
+#define NI_CHANGECANDIDATELIST          0x0013
+#define NI_FINALIZECONVERSIONRESULT     0x0014
+#define NI_COMPOSITIONSTR               0x0015
+#define NI_SETCANDIDATE_PAGESTART       0x0016
+#define NI_SETCANDIDATE_PAGESIZE        0x0017
+#define NI_IMEMENUSELECTED              0x0018
+
+/* dwSystemInfoFlags bits */
+#define IME_SYSINFO_WINLOGON            0x0001
+#define IME_SYSINFO_WOW16               0x0002
 
 #endif  /* ndef _IMMDEV_ */

@@ -234,7 +234,8 @@
 #include "rtf.h"
 #include "imm.h"
 #ifdef __REACTOS__
-  #include "immdev.h"
+  #include <immdev.h>
+  #include <imm32_undoc.h>
 #endif
 #include "res.h"
 
