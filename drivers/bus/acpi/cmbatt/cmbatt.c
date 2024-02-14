@@ -1120,7 +1120,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryDeviceName:
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1142,7 +1142,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryManufactureName:
 
             /* Build the OEM info string */
-            RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1157,7 +1157,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryUniqueID:
 
             /* Build the serial number string */
-            RtlInitAnsiString(&TempString, FdoExtension->SerialNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.SerialNumber);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1169,10 +1169,10 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             TempString2.MaximumLength = sizeof(TempBuffer);
 
             /* Check if there's an OEM string */
-            if (FdoExtension->OemInfo[0])
+            if (FdoExtension->BifData.OemInfo[0])
             {
                 /* Build the OEM info string */
-                RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
+                RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
 
                 /* Convert it to Unicode and append it */
                 RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
@@ -1180,7 +1180,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             }
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
 
             /* Convert it to Unicode and append it */
             RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
