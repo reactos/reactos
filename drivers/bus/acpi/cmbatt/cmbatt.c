@@ -278,8 +278,38 @@ NTAPI
 CmBattVerifyStaticInfo(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                        ULONG BatteryTag)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ACPI_BIF_DATA BifData;
+    PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
+    NTSTATUS Status;
+
+    Status = CmBattGetBifData(DeviceExtension, &BifData);
+    if (NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(Info, sizeof(*Info));
+        Info->Capabilities = BATTERY_SYSTEM_BATTERY;
+        Info->Technology = BifData.BatteryTechnology;
+        RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
+        // FIXME: take from _BIX method: Info->CycleCount
+        DeviceExtension->BifData = BifData;
+
+        if (BifData.PowerUnit == 1)
+        {
+            DPRINT1("FIXME: need to convert mAh into mWh\n");
+            Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+        }
+        else
+        {
+            Info->DesignedCapacity = BifData.DesignCapacity;
+            Info->FullChargedCapacity = BifData.LastFullCapacity;
+            Info->DefaultAlert1 = BifData.DesignCapacityLow;
+            Info->DefaultAlert2 = BifData.DesignCapacityWarning;
+        }
+    }
+
+    return Status;
 }
 
 NTSTATUS
