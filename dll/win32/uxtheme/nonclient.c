@@ -1193,6 +1193,28 @@ DrawWindowForNCPreview(
     }
 }
 
+VOID
+SetWindowResourceText(
+    _In_ HWND hwnd,
+    _In_ UINT uID)
+{
+    LPWSTR lpszDestBuf = NULL, lpszResourceString = NULL;
+    size_t iStrSize = 0;
+
+    /* When passing a zero-length buffer size, LoadString() returns
+     * a read-only pointer buffer to the program's resource string. */
+    iStrSize = LoadStringW(hDllInst, uID, (LPWSTR)&lpszResourceString, 0);
+
+    if (lpszResourceString && ((lpszDestBuf = HeapAlloc(GetProcessHeap(), 0, (iStrSize + 1) * sizeof(WCHAR))) != NULL))
+    {
+        wcsncpy(lpszDestBuf, lpszResourceString, iStrSize);
+        lpszDestBuf[iStrSize] = UNICODE_NULL; // NULL-terminate the string
+
+        SetWindowTextW(hwnd, lpszDestBuf);
+        HeapFree(GetProcessHeap(), 0, lpszDestBuf);
+    }
+}
+
 HRESULT WINAPI DrawNCPreview(HDC hDC,
                              DWORD DNCP_Flag,
                              LPRECT prcPreview,
@@ -1207,6 +1229,8 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     HRESULT hres;
     HTHEMEFILE hThemeFile;
     DRAW_CONTEXT context;
+    LPWSTR szText;
+    int len;
 
     /* Create a dummy window that will be used to trick the paint funtions */
     memset(&DummyPreviewWindowClass, 0, sizeof(DummyPreviewWindowClass));
@@ -1218,7 +1242,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (!RegisterClassExW(&DummyPreviewWindowClass))
         return E_FAIL;
 
-    hwndDummy = CreateWindowExW(0, L"DummyPreviewWindowClass", L"Active window", WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
+    hwndDummy = CreateWindowExW(0, L"DummyPreviewWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
     if (!hwndDummy)
         return E_FAIL;
 
@@ -1247,12 +1271,12 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
 
     /* Draw inactive preview window */
     context.Active = FALSE;
-    SetWindowTextW(hwndDummy, L"Inactive Window");
+    SetWindowResourceText(hwndDummy, IDS_INACTIVEWIN);
     DrawWindowForNCPreview(hDC, &context, rcAdjPreview.left, rcAdjPreview.top, rcAdjPreview.right - 17, rcAdjPreview.bottom - 20, TRUE, NULL);
 
     /* Draw active preview window */
     context.Active = TRUE;
-    SetWindowTextW(hwndDummy, L"Active Window");
+    SetWindowResourceText(hwndDummy, IDS_ACTIVEWIN);
 
     DWORD textDrawFlags = DT_NOPREFIX | DT_SINGLELINE | DT_WORDBREAK;
     RECT rcWindowClient;
@@ -1266,10 +1290,12 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
         SelectFont(hDC, textFont);
 
     SetTextColor(hDC, GetThemeSysColor(context.theme, TMT_WINDOWTEXT));
-    DrawThemeText(context.theme, hDC, WP_DIALOG, 0, L"Window Text", -1, DT_LEFT | DT_TOP | textDrawFlags, 0, &rcWindowClient);
+    len = LoadStringW(hDllInst, IDS_WINTEXT, (LPWSTR)&szText, 0);
+    if (len > 0)
+        DrawThemeText(context.theme, hDC, WP_DIALOG, 0, szText, len, DT_LEFT | DT_TOP | textDrawFlags, 0, &rcWindowClient);
 
     /* Draw preview dialog window */
-    SetWindowTextW(hwndDummy, L"Message Box");
+    SetWindowResourceText(hwndDummy, IDS_MESSAGEBOX);
     DWORD dwStyleNew = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
     SetWindowLongPtr(hwndDummy, GWL_STYLE, dwStyleNew);
     DWORD dwExStyleNew = WS_EX_DLGMODALFRAME;
@@ -1306,12 +1332,13 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
             rcBtn.bottom -= btnContentMargins.cyBottomHeight;
         }
 
-        LPCWSTR btnText = L"OK";
         LOGFONTW lfBtn;
         if ((GetThemeFont(hBtnTheme, hDC, btnPart, btnState, TMT_FONT, &lfBtn) != S_OK) && textFont)
             SelectFont(hDC, textFont);
 
-        DrawThemeText(hBtnTheme, hDC, btnPart, btnState, btnText, -1, DT_CENTER | DT_VCENTER | textDrawFlags, 0, &rcBtn);
+        len = LoadStringW(hDllInst, IDS_OK, (LPWSTR)&szText, 0);
+        if (len > 0)
+            DrawThemeText(hBtnTheme, hDC, btnPart, btnState, szText, len, DT_CENTER | DT_VCENTER | textDrawFlags, 0, &rcBtn);
         CloseThemeData(hBtnTheme);
     }
 
