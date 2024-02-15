@@ -9,9 +9,9 @@
 
 #include "cicarray.h"
 
-// This is Cicero UIF Library to support the IME UI interface.
-// Cicero UIF Library implements some GUI parts for IMEs and Language Bar.
-// The GUI parts of UIF Library requires special handling because:
+// This is the Cicero UIF Library, used to support the IME UI interface.
+// The Cicero UIF Library implements some GUI parts for IMEs and Language Bar.
+// The GUI parts of the UIF Library requires special handling because:
 //
 // 1. To avoid interfering with IME input, the GUI part should not receive focus.
 // 2. The IME popup window has WS_DISABLED style, so it cannot receive mouse messages
