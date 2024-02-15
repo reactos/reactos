@@ -5,14 +5,14 @@
  * PURPOSE:         uxtheme non client area management
  * PROGRAMMER:      Giannis Adamopoulos
  */
- 
+
 #include "uxthemep.h"
 
 #define NC_PREVIEW_MSGBOX_HALF_WIDTH 75
 #define NC_PREVIEW_MSGBOX_OFFSET_X -29
 #define NC_PREVIEW_MSGBOX_OFFSET_Y 71
 
-static BOOL 
+static BOOL
 IsWindowActive(HWND hWnd, DWORD ExStyle)
 {
     BOOL ret;
@@ -35,13 +35,14 @@ BOOL
 IsScrollBarVisible(HWND hWnd, INT hBar)
 {
   SCROLLBARINFO sbi = {sizeof(SCROLLBARINFO)};
-  if(!GetScrollBarInfo(hWnd, hBar, &sbi))
+
+  if (!GetScrollBarInfo(hWnd, hBar, &sbi))
     return FALSE;
 
   return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
 }
 
-static BOOL 
+static BOOL
 UserHasWindowEdge(DWORD Style, DWORD ExStyle)
 {
     if (Style & WS_MINIMIZE)
@@ -115,12 +116,12 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
     InternalGetWindowText(pcontext->hWnd, pszText, len);
 
     hr = GetThemeSysFont(pcontext->theme, TMT_CAPTIONFONT, &logfont);
-    if(SUCCEEDED(hr))
+    if (SUCCEEDED(hr))
         hFont = CreateFontIndirectW(&logfont);
 
-    if(hFont)
+    if (hFont)
         oldFont = SelectObject(pcontext->hDC, hFont);
-        
+
     textColor = GetThemeSysColor(pcontext->theme, pcontext->Active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT);
 
     GetThemeEnumValue(pcontext->theme, iPartId, iStateId, TMT_CONTENTALIGNMENT, &align);
@@ -130,14 +131,14 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
         drawStyles |= DT_RIGHT;
 
     oldTextColor = SetTextColor(pcontext->hDC, textColor);
-    DrawThemeText(pcontext->theme, 
-                  pcontext->hDC, 
-                  iPartId, 
-                  iStateId, 
-                  pszText, 
-                  len - 1, 
-                  drawStyles, 
-                  0, 
+    DrawThemeText(pcontext->theme,
+                  pcontext->hDC,
+                  iPartId,
+                  iStateId,
+                  pszText,
+                  len - 1,
+                  drawStyles,
+                  0,
                   pRect);
     SetTextColor(pcontext->hDC, oldTextColor);
 
@@ -168,7 +169,7 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     pcontext->CaptionHeight = pcontext->wi.cyWindowBorders;
     pcontext->CaptionHeight += GetSystemMetrics(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
 
-    if(hRgn <= (HRGN)1)
+    if (hRgn <= (HRGN)1)
     {
         hRgn = CreateRectRgnIndirect(&pcontext->wi.rcWindow);
     }
@@ -182,20 +183,20 @@ ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext)
 {
     ReleaseDC(pcontext->hWnd ,pcontext->hDC);
 
-    if(pcontext->hRgn != NULL)
+    if (pcontext->hRgn != NULL)
     {
         DeleteObject(pcontext->hRgn);
     }
 }
 
-static void 
+static void
 ThemeStartBufferedPaint(PDRAW_CONTEXT pcontext, int cx, int cy)
 {
     HBITMAP hbmp;
 
     pcontext->hDCScreen = pcontext->hDC;
     pcontext->hDC = CreateCompatibleDC(pcontext->hDCScreen);
-    hbmp = CreateCompatibleBitmap(pcontext->hDCScreen, cx, cy); 
+    hbmp = CreateCompatibleBitmap(pcontext->hDCScreen, cx, cy);
     pcontext->hbmpOld = (HBITMAP)SelectObject(pcontext->hDC, hbmp);
 }
 
@@ -221,7 +222,7 @@ static void ThemeCalculateCaptionButtonsPosEx(WINDOWINFO* wi, HWND hWnd, HTHEME 
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
-    if((style & (WS_CAPTION | WS_SYSMENU)) != (WS_CAPTION | WS_SYSMENU))
+    if ((style & (WS_CAPTION | WS_SYSMENU)) != (WS_CAPTION | WS_SYSMENU))
         return;
 
     /* Get theme data for this window */
@@ -242,7 +243,7 @@ static void ThemeCalculateCaptionButtonsPosEx(WINDOWINFO* wi, HWND hWnd, HTHEME 
     rcCurrent.bottom = wi->rcWindow.bottom - wi->rcWindow.top;
 
     /* Add a padding around the objects of the caption */
-    InflateRect(&rcCurrent, -(int)wi->cyWindowBorders-BUTTON_GAP_SIZE, 
+    InflateRect(&rcCurrent, -(int)wi->cyWindowBorders-BUTTON_GAP_SIZE,
                             -(int)wi->cyWindowBorders-BUTTON_GAP_SIZE);
 
     iPartId = wi->dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
@@ -270,17 +271,18 @@ void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
 {
     INT btnHeight;
     WINDOWINFO wi = {sizeof(wi)};
-    if(!GetWindowInfo(hWnd, &wi))
+
+    if (!GetWindowInfo(hWnd, &wi))
         return;
     btnHeight = GetSystemMetrics(wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
-    
+
     ThemeCalculateCaptionButtonsPosEx(&wi, hWnd, htheme, btnHeight);
 }
 
-static void 
-ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext, 
+static void
+ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
                        RECT* prcCurrent,
-                       CAPTIONBUTTON buttonId, 
+                       CAPTIONBUTTON buttonId,
                        INT iStateId)
 {
     INT iPartId;
@@ -323,12 +325,12 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
             else
                 iStateId = (pcontext->Active ? BUTTON_DISABLED : BUTTON_INACTIVE_DISABLED);
         }
- 
+
         iPartId = pcontext->wi.dwStyle & WS_MINIMIZE ? WP_RESTOREBUTTON : WP_MINBUTTON;
         break;
 
     default:
-        //FIXME: Implement Help Button 
+        //FIXME: Implement Help Button
         return;
     }
 
@@ -350,13 +352,13 @@ ThemeGetButtonState(DWORD htCurrect, DWORD htHot, DWORD htDown, BOOL Active)
 }
 
 /* Used only from mouse event handlers */
-static void 
+static void
 ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
 {
     /* Draw the buttons */
-    ThemeDrawCaptionButton(pcontext, NULL, CLOSEBUTTON, 
+    ThemeDrawCaptionButton(pcontext, NULL, CLOSEBUTTON,
                            ThemeGetButtonState(HTCLOSE, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, NULL, MAXBUTTON,  
+    ThemeDrawCaptionButton(pcontext, NULL, MAXBUTTON,
                            ThemeGetButtonState(HTMAXBUTTON, htHot, htDown, pcontext->Active));
     ThemeDrawCaptionButton(pcontext, NULL, MINBUTTON,
                            ThemeGetButtonState(HTMINBUTTON, htHot, htDown, pcontext->Active));
@@ -365,7 +367,7 @@ ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
 }
 
 /* Used from WM_NCPAINT and WM_NCACTIVATE handlers */
-static void 
+static void
 ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
     RECT rcPart;
@@ -398,7 +400,7 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     DrawThemeBackground(pcontext->theme, pcontext->hDC,iPart,iState,&rcPart,NULL);
 
     /* Add a padding around the objects of the caption */
-    InflateRect(&rcPart, -(int)pcontext->wi.cyWindowBorders-BUTTON_GAP_SIZE, 
+    InflateRect(&rcPart, -(int)pcontext->wi.cyWindowBorders-BUTTON_GAP_SIZE,
                          -(int)pcontext->wi.cyWindowBorders-BUTTON_GAP_SIZE);
 
     /* Draw the caption buttons */
@@ -411,7 +413,7 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
         ThemeDrawCaptionButton(pcontext, &rcPart, MINBUTTON, iState);
         ThemeDrawCaptionButton(pcontext, &rcPart, HELPBUTTON, iState);
     }
-    
+
     rcPart.top += 3 ;
 
     /* Draw the icon */
@@ -429,7 +431,7 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     ThemeDrawCaptionText(pcontext, &rcPart, iPart, iState);
 }
 
-static void 
+static void
 ThemeDrawBorders(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
     RECT rcPart;
@@ -454,14 +456,14 @@ ThemeDrawBorders(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     DrawThemeBackground(pcontext->theme, pcontext->hDC,WP_FRAMERIGHT, iState, &rcPart, NULL);
 }
 
-static void 
+static void
 DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
 {
     /* Draw outer edge */
     if (UserHasWindowEdge(context->wi.dwStyle, context->wi.dwExStyle))
     {
         DrawEdge(context->hDC, prcCurrent, EDGE_RAISED, BF_RECT | BF_ADJUST);
-    } 
+    }
     else if (context->wi.dwExStyle & WS_EX_STATICEDGE)
     {
         DrawEdge(context->hDC, prcCurrent, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
@@ -481,13 +483,13 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
                      context->Active ? COLOR_ACTIVEBORDER : COLOR_INACTIVEBORDER));
 
         /* Draw frame */
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top,
                prcCurrent->right - prcCurrent->left, Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top,
                Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1,
                prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top,
                -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
 
         InflateRect(prcCurrent, -Width, -Height);
@@ -506,13 +508,13 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
             COLOR_WINDOWFRAME));
 
         /* Draw frame */
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top,
                prcCurrent->right - prcCurrent->left, Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top,
                Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1,
                prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top,
               -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
 
         InflateRect(prcCurrent, -Width, -Height);
@@ -522,11 +524,11 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
 static void ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
     /* Let the window manager paint the menu */
-    prcCurrent->top += PaintMenuBar(pcontext->hWnd, 
-                                    pcontext->hDC, 
-                                    pcontext->wi.cxWindowBorders, 
+    prcCurrent->top += PaintMenuBar(pcontext->hWnd,
+                                    pcontext->hDC,
                                     pcontext->wi.cxWindowBorders,
-                                    prcCurrent->top, 
+                                    pcontext->wi.cxWindowBorders,
+                                    prcCurrent->top,
                                     pcontext->Active);
 }
 
@@ -563,13 +565,13 @@ static void ThemeDrawScrollBarsGrip(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     }
 }
 
-static void 
+static void
 ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBuffering)
 {
-    if(!(pcontext->wi.dwStyle & WS_VISIBLE))
+    if (!(pcontext->wi.dwStyle & WS_VISIBLE))
         return;
 
-    if((pcontext->wi.dwStyle & WS_CAPTION)==WS_CAPTION)
+    if ((pcontext->wi.dwStyle & WS_CAPTION)==WS_CAPTION)
     {
         if (bDoDoubleBuffering)
             ThemeStartBufferedPaint(pcontext, prcCurrent->right, pcontext->CaptionHeight);
@@ -583,24 +585,24 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
         DrawClassicFrame(pcontext, prcCurrent);
     }
 
-    if(pcontext->wi.dwStyle & WS_MINIMIZE)
+    if (pcontext->wi.dwStyle & WS_MINIMIZE)
         return;
 
-    if(HAS_MENU(pcontext->hWnd, pcontext->wi.dwStyle))
+    if (HAS_MENU(pcontext->hWnd, pcontext->wi.dwStyle))
         ThemeDrawMenuBar(pcontext, prcCurrent);
 
     if (pcontext->wi.dwExStyle & WS_EX_CLIENTEDGE)
         DrawEdge(pcontext->hDC, prcCurrent, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
-    if((pcontext->wi.dwStyle & WS_HSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL))
+    if ((pcontext->wi.dwStyle & WS_HSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL))
         ThemeDrawScrollBar(pcontext, SB_HORZ , NULL);
 
-    if((pcontext->wi.dwStyle & WS_VSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
+    if ((pcontext->wi.dwStyle & WS_VSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
         ThemeDrawScrollBar(pcontext, SB_VERT, NULL);
 
-    if((pcontext->wi.dwStyle & (WS_HSCROLL|WS_VSCROLL)) == (WS_HSCROLL|WS_VSCROLL) &&
-       IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL) &&
-       IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
+    if ((pcontext->wi.dwStyle & (WS_HSCROLL|WS_VSCROLL)) == (WS_HSCROLL|WS_VSCROLL) &&
+        IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL) &&
+        IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
     {
         ThemeDrawScrollBarsGrip(pcontext, prcCurrent);
     }
@@ -610,7 +612,7 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
  * Message handlers
  */
 
-static LRESULT 
+static LRESULT
 ThemeHandleNCPaint(HWND hWnd, HRGN hRgn)
 {
     DRAW_CONTEXT context;
@@ -627,7 +629,7 @@ ThemeHandleNCPaint(HWND hWnd, HRGN hRgn)
     return 0;
 }
 
-static LRESULT 
+static LRESULT
 ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
 {
     DRAW_CONTEXT context;
@@ -637,7 +639,7 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
-    if((style & (WS_CAPTION|WS_HSCROLL|WS_VSCROLL))==0)
+    if ((style & (WS_CAPTION|WS_HSCROLL|WS_VSCROLL))==0)
         return 0;
 
     /* Get theme data for this window */
@@ -682,7 +684,7 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
     return 0;
 }
 
-static LRESULT 
+static LRESULT
 ThemeHandleNcMouseLeave(HWND hWnd)
 {
     DRAW_CONTEXT context;
@@ -691,7 +693,7 @@ ThemeHandleNcMouseLeave(HWND hWnd)
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
-    if((style & (WS_CAPTION|WS_HSCROLL|WS_VSCROLL))==0)
+    if ((style & (WS_CAPTION|WS_HSCROLL|WS_VSCROLL))==0)
         return 0;
 
     /* Get theme data for this window */
@@ -794,7 +796,6 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
         SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
 }
 
-
 static LRESULT
 DefWndNCHitTest(HWND hWnd, POINT Point)
 {
@@ -825,9 +826,9 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             ThickFrame = (wi.dwStyle & WS_THICKFRAME);
             if (Point.y < WindowRect.top)
             {
-                if(wi.dwStyle & WS_MINIMIZE)
+                if (wi.dwStyle & WS_MINIMIZE)
                     return HTCAPTION;
-                if(!ThickFrame)
+                if (!ThickFrame)
                     return HTBORDER;
                 if (Point.x < (WindowRect.left + XSize))
                     return HTTOPLEFT;
@@ -837,9 +838,9 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             if (Point.y >= WindowRect.bottom)
             {
-                if(wi.dwStyle & WS_MINIMIZE)
+                if (wi.dwStyle & WS_MINIMIZE)
                     return HTCAPTION;
-                if(!ThickFrame)
+                if (!ThickFrame)
                     return HTBORDER;
                 if (Point.x < (WindowRect.left + XSize))
                     return HTBOTTOMLEFT;
@@ -849,9 +850,9 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             if (Point.x < WindowRect.left)
             {
-                if(wi.dwStyle & WS_MINIMIZE)
+                if (wi.dwStyle & WS_MINIMIZE)
                     return HTCAPTION;
-                if(!ThickFrame)
+                if (!ThickFrame)
                     return HTBORDER;
                 if (Point.y < (WindowRect.top + YSize))
                     return HTTOPLEFT;
@@ -861,9 +862,9 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             if (Point.x >= WindowRect.right)
             {
-                if(wi.dwStyle & WS_MINIMIZE)
+                if (wi.dwStyle & WS_MINIMIZE)
                     return HTCAPTION;
-                if(!ThickFrame)
+                if (!ThickFrame)
                     return HTBORDER;
                 if (Point.y < (WindowRect.top + YSize))
                     return HTTOPRIGHT;
@@ -897,7 +898,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
                 if (!(wi.dwExStyle & WS_EX_TOOLWINDOW))
                 {
-                    // if(!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
+                    // if (!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
                     // FIXME: The real test should check whether there is
                     // an icon for the system window, and if so, do the
                     // rect.left increase.
@@ -924,7 +925,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         }
     }
 
-    if(!(wi.dwStyle & WS_MINIMIZE))
+    if (!(wi.dwStyle & WS_MINIMIZE))
     {
         HMENU menu;
 
@@ -973,7 +974,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
             TempRect.top = TempRect2.top;
             TempRect.bottom = TempRect2.bottom;
-            if(Parent)
+            if (Parent)
                 GetClientRect(Parent, &ParentRect);
             if (PtInRect(&TempRect, Point) && HASSIZEGRIP(wi.dwStyle, wi.dwExStyle,
                       GetWindowLongW(Parent, GWL_STYLE), wi.rcWindow, ParentRect))
@@ -996,7 +997,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
                     TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
                 if (PtInRect(&TempRect, Point))
                     return HTVSCROLL;
-            } 
+            }
             else if (wi.dwStyle & WS_HSCROLL)
             {
                 RECT TempRect = WindowRect;
@@ -1010,7 +1011,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
     return HTNOWHERE;
 }
 
-LRESULT CALLBACK 
+LRESULT CALLBACK
 ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc)
 {
     switch(Msg)
@@ -1063,8 +1064,8 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     }
     case WM_SYSCOMMAND:
     {
-        if((wParam & 0xfff0) == SC_VSCROLL ||
-           (wParam & 0xfff0) == SC_HSCROLL)
+        if ((wParam & 0xfff0) == SC_VSCROLL ||
+            (wParam & 0xfff0) == SC_HSCROLL)
         {
             POINT Pt;
             Pt.x = (short)LOWORD(lParam);
@@ -1132,7 +1133,6 @@ DrawWindowForNCPreview(
     OffsetRect(&rcWindowNew, offsetX, offsetY);
     ThemeCalculateCaptionButtonsPosEx(&pcontext->wi, pcontext->hWnd, pcontext->theme, pcontext->CaptionHeight - pcontext->wi.cyWindowBorders);
 
-
     INT leftBorderInset = pcontext->wi.cxWindowBorders;
     INT titleBarInset = pcontext->CaptionHeight; // + pcontext->wi.cyWindowBorders;
     INT rightBorderInset = pcontext->wi.cxWindowBorders;
@@ -1171,7 +1171,7 @@ DrawWindowForNCPreview(
     pcontext->wi.rcClient = rcClientNew;
 
     OffsetRect(&rcClientNew, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-    
+
     if (drawClientAreaColor)
     {
         HBRUSH hbrWindow = GetThemeSysColorBrush(pcontext->theme, COLOR_WINDOW);
@@ -1193,10 +1193,10 @@ DrawWindowForNCPreview(
     }
 }
 
-HRESULT WINAPI DrawNCPreview(HDC hDC, 
+HRESULT WINAPI DrawNCPreview(HDC hDC,
                              DWORD DNCP_Flag,
-                             LPRECT prcPreview, 
-                             LPCWSTR pszThemeFileName, 
+                             LPRECT prcPreview,
+                             LPCWSTR pszThemeFileName,
                              LPCWSTR pszColorName,
                              LPCWSTR pszSizeName,
                              PNONCLIENTMETRICSW pncMetrics,
@@ -1264,7 +1264,6 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
 
     if (textFont)
         SelectFont(hDC, textFont);
-
 
     SetTextColor(hDC, GetThemeSysColor(context.theme, TMT_WINDOWTEXT));
     DrawThemeText(context.theme, hDC, WP_DIALOG, 0, L"Window Text", -1, DT_LEFT | DT_TOP | textDrawFlags, 0, &rcWindowClient);
