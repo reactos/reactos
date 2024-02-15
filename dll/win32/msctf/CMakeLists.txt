@@ -31,8 +31,7 @@ add_library(msctf MODULE
 
 set_module_type(msctf win32dll UNICODE)
 target_link_libraries(msctf uuid wine cicero)
-target_include_directories(msctf PRIVATE
-    ${REACTOS_SOURCE_DIR}/sdk/lib/cicero)
+target_include_directories(msctf PRIVATE ${REACTOS_SOURCE_DIR}/sdk/lib/cicero)
 add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_delay_importlibs(msctf ole32 oleaut32)
 add_pch(msctf precomp.h SOURCE)

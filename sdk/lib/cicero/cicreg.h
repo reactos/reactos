@@ -37,7 +37,7 @@ public:
 
 /***********************************************************************/
 
-// Here, directly using C++ methods causes compile errors... Why?
+// FIXME: Here, directly using C++ methods causes compile errors... Why?
 EXTERN_C LSTATUS _cicRegKey_Open(CicRegKey& self, HKEY hKey, LPCTSTR lpSubKey, REGSAM samDesired);
 EXTERN_C LSTATUS _cicRegKey_Create(CicRegKey& self, HKEY hKey, LPCTSTR lpSubKey);
 EXTERN_C LSTATUS _cicRegKey_RecurseDeleteKey(CicRegKey& self, LPCTSTR lpSubKey);
