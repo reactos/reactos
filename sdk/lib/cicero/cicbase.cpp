@@ -13,6 +13,31 @@
 #include <tchar.h>
 #include <strsafe.h>
 
+void* operator new(size_t size, const CicNoThrow&) noexcept
+{
+    return cicMemAllocClear(size);
+}
+void* operator new[](size_t size, const CicNoThrow&) noexcept
+{
+    return cicMemAllocClear(size);
+}
+void operator delete(void* ptr) noexcept
+{
+    cicMemFree(ptr);
+}
+void operator delete[](void* ptr) noexcept
+{
+    cicMemFree(ptr);
+}
+void operator delete(void* ptr, size_t size) noexcept
+{
+    cicMemFree(ptr);
+}
+void operator delete[](void* ptr, size_t size) noexcept
+{
+    cicMemFree(ptr);
+}
+
 // FIXME
 typedef enum _PROCESSINFOCLASS
 {

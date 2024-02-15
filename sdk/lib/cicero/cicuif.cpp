@@ -627,13 +627,17 @@ STDMETHODIMP_(void) CUIFColorTableOff10::DoneBrush()
 /// @unimplemented
 CUIFScheme *cicCreateUIFScheme(DWORD type)
 {
+#if 1
+    return new(cicNoThrow) CUIFSchemeDef(type);
+#else
     switch (type)
     {
-        //case 1:  return new(cicNoThrow) CUIFSchemeOff10(1);
-        //case 2:  return new(cicNoThrow) CUIFSchemeOff10(2);
-        //case 3:  return new(cicNoThrow) CUIFSchemeOff10(3);
+        case 1:  return new(cicNoThrow) CUIFSchemeOff10(1);
+        case 2:  return new(cicNoThrow) CUIFSchemeOff10(2);
+        case 3:  return new(cicNoThrow) CUIFSchemeOff10(3);
         default: return new(cicNoThrow) CUIFSchemeDef(type);
     }
+#endif
 }
 
 STDMETHODIMP_(DWORD) CUIFSchemeDef::GetType()

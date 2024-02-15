@@ -33,30 +33,12 @@ static inline void cicMemFree(LPVOID ptr)
 struct CicNoThrow { };
 #define cicNoThrow CicNoThrow{}
 
-inline void* operator new(size_t size, const CicNoThrow&) noexcept
-{
-    return cicMemAllocClear(size);
-}
-inline void* operator new[](size_t size, const CicNoThrow&) noexcept
-{
-    return cicMemAllocClear(size);
-}
-inline void operator delete(void* ptr) noexcept
-{
-    cicMemFree(ptr);
-}
-inline void operator delete[](void* ptr) noexcept
-{
-    cicMemFree(ptr);
-}
-inline void operator delete(void* ptr, size_t size) noexcept
-{
-    cicMemFree(ptr);
-}
-inline void operator delete[](void* ptr, size_t size) noexcept
-{
-    cicMemFree(ptr);
-}
+void* operator new(size_t size, const CicNoThrow&) noexcept;
+void* operator new[](size_t size, const CicNoThrow&) noexcept;
+void operator delete(void* ptr) noexcept;
+void operator delete[](void* ptr) noexcept;
+void operator delete(void* ptr, size_t size) noexcept;
+void operator delete[](void* ptr, size_t size) noexcept;
 
 /* The flags of cicGetOSInfo() */
 #define CIC_OSINFO_NT     0x01
