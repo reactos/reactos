@@ -538,7 +538,11 @@ static LRESULT CRAM_GetInfo( const Msvideo1Context *info, ICINFO *icinfo, DWORD 
 
     icinfo->dwSize = sizeof(ICINFO);
     icinfo->fccType = ICTYPE_VIDEO;
+#ifdef __REACTOS__
+    icinfo->fccHandler = MSVC_MAGIC;
+#else
     icinfo->fccHandler = info ? info->dwMagic : CRAM_MAGIC;
+#endif
     icinfo->dwFlags = 0;
     icinfo->dwVersion = ICVERSION;
     icinfo->dwVersionICM = ICVERSION;
@@ -583,11 +587,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
         if( info )
         {
             memset( info, 0, sizeof *info );
-#ifdef __REACTOS__
-            info->dwMagic = MSVC_MAGIC;
-#else
             info->dwMagic = CRAM_MAGIC;
-#endif
         }
         r = (LRESULT) info;
         break;
