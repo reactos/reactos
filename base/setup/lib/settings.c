@@ -785,33 +785,29 @@ CreateDisplayDriverList(
 
 BOOLEAN
 ProcessComputerFiles(
-    IN HINF InfFile,
-    IN PGENERIC_LIST List,
-    OUT PWSTR* AdditionalSectionName)
+    _In_ HINF InfFile,
+    _In_ PCWSTR ComputerType,
+    _Out_ PWSTR* AdditionalSectionName)
 {
-    PGENERIC_LIST_ENTRY Entry;
     static WCHAR SectionName[128];
 
-    DPRINT("ProcessComputerFiles() called\n");
+    DPRINT("ProcessComputerFiles(%S) called\n", ComputerType);
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    RtlStringCchPrintfW(SectionName, ARRAYSIZE(SectionName),
-                        L"Files.%s", ((PGENENTRY)GetListEntryData(Entry))->Id);
+    RtlStringCchPrintfW(SectionName, _countof(SectionName),
+                        L"Files.%s", ComputerType);
     *AdditionalSectionName = SectionName;
+
+    // TODO: More things to do?
 
     return TRUE;
 }
 
 BOOLEAN
 ProcessDisplayRegistry(
-    IN HINF InfFile,
-    IN PGENERIC_LIST List)
+    _In_ HINF InfFile,
+    _In_ PCWSTR DisplayType)
 {
     NTSTATUS Status;
-    PGENERIC_LIST_ENTRY Entry;
     INFCONTEXT Context;
     PCWSTR Buffer;
     PCWSTR ServiceName;
@@ -822,15 +818,9 @@ ProcessDisplayRegistry(
     HANDLE KeyHandle;
     WCHAR RegPath[255];
 
-    DPRINT("ProcessDisplayRegistry() called\n");
+    DPRINT("ProcessDisplayRegistry(%S) called\n", DisplayType);
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    if (!SpInfFindFirstLine(InfFile, L"Display",
-                            ((PGENENTRY)GetListEntryData(Entry))->Id,
-                            &Context))
+    if (!SpInfFindFirstLine(InfFile, L"Display", DisplayType, &Context))
     {
         DPRINT1("SpInfFindFirstLine() failed\n");
         return FALSE;
@@ -935,7 +925,7 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    Height = wcstoul(Buffer, 0, 0);
+    Height = wcstoul(Buffer, NULL, 10);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.YResolution",
                                    REG_DWORD,
@@ -955,7 +945,7 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    Bpp = wcstoul(Buffer, 0, 0);
+    Bpp = wcstoul(Buffer, NULL, 10);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.BitsPerPel",
                                    REG_DWORD,
@@ -977,24 +967,13 @@ ProcessDisplayRegistry(
 
 BOOLEAN
 ProcessLocaleRegistry(
-    IN PGENERIC_LIST List)
+    _In_ PCWSTR LanguageId)
 {
-    PGENERIC_LIST_ENTRY Entry;
-    PCWSTR LanguageId;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
-
     HANDLE KeyHandle;
     NTSTATUS Status;
-
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-    if (LanguageId == NULL)
-        return FALSE;
 
     DPRINT("LanguageId: %S\n", LanguageId);
 
@@ -1286,22 +1265,15 @@ CreateKeyboardLayoutList(
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(
-    IN PGENERIC_LIST List,
-    IN PCWSTR LanguageId)
+    _In_ PCWSTR pszLayoutId,
+    _In_ PCWSTR LanguageId)
 {
-    PGENERIC_LIST_ENTRY Entry;
-    PCWSTR pszLayoutId;
     KLID LayoutId;
     const MUI_LAYOUTS* LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20]; // HACK: Hardcoded fixed size "20" is a hack. Please verify against lang/*.h
     ULONG uIndex;
     ULONG uOldPos = 0;
 
-    Entry = GetCurrentListEntry(List);
-    if (Entry == NULL)
-        return FALSE;
-
-    pszLayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
     LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
     if (LayoutId == 0)
         return FALSE;
@@ -1394,10 +1366,9 @@ SetGeoID(
     return TRUE;
 }
 
-
 BOOLEAN
 SetDefaultPagefile(
-    IN WCHAR Drive)
+    _In_ WCHAR Drive)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;

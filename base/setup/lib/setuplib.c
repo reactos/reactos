@@ -789,12 +789,6 @@ InitializeSetup(
     {
         RtlZeroMemory(pSetupData, sizeof(*pSetupData));
 
-        // pSetupData->ComputerList = NULL;
-        // pSetupData->DisplayList  = NULL;
-        // pSetupData->KeyboardList = NULL;
-        // pSetupData->LayoutList   = NULL;
-        // pSetupData->LanguageList = NULL;
-
         /* Initialize error handling */
         pSetupData->LastErrorNumber = ERROR_SUCCESS;
         pSetupData->ErrorRoutine = NULL;
@@ -1059,23 +1053,36 @@ DoUpdate:
     {
         /* See the explanation for this test above */
 
+        PGENERIC_LIST_ENTRY Entry;
+        PCWSTR LanguageId; // LocaleID;
+
+        Entry = GetCurrentListEntry(pSetupData->DisplayList);
+        ASSERT(Entry);
+        pSetupData->DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(pSetupData->DisplayType);
+
         /* Update display registry settings */
         if (StatusRoutine) StatusRoutine(DisplaySettingsUpdate);
-        if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayList))
+        if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayType))
         {
             ErrorNumber = ERROR_UPDATE_DISPLAY_SETTINGS;
             goto Cleanup;
         }
 
+        Entry = GetCurrentListEntry(pSetupData->LanguageList);
+        ASSERT(Entry);
+        LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(LanguageId);
+
         /* Set the locale */
         if (StatusRoutine) StatusRoutine(LocaleSettingsUpdate);
-        if (!ProcessLocaleRegistry(pSetupData->LanguageList))
+        if (!ProcessLocaleRegistry(/*pSetupData->*/LanguageId))
         {
             ErrorNumber = ERROR_UPDATE_LOCALESETTINGS;
             goto Cleanup;
         }
 
-        /* Add keyboard layouts */
+        /* Add the keyboard layouts for the given language (without user override) */
         if (StatusRoutine) StatusRoutine(KeybLayouts);
         if (!AddKeyboardLayouts(SelectedLanguageId))
         {
@@ -1083,22 +1090,29 @@ DoUpdate:
             goto Cleanup;
         }
 
+        if (!IsUnattendedSetup)
+        {
+            Entry = GetCurrentListEntry(pSetupData->LayoutList);
+            ASSERT(Entry);
+            pSetupData->LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
+            ASSERT(pSetupData->LayoutId);
+
+            /* Update keyboard layout settings with user-overridden values */
+            // FIXME: Wouldn't it be better to do it all at once
+            // with the AddKeyboardLayouts() step?
+            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
+            if (!ProcessKeyboardLayoutRegistry(pSetupData->LayoutId, SelectedLanguageId))
+            {
+                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
+                goto Cleanup;
+            }
+        }
+
         /* Set GeoID */
         if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
         {
             ErrorNumber = ERROR_UPDATE_GEOID;
             goto Cleanup;
-        }
-
-        if (!IsUnattendedSetup)
-        {
-            /* Update keyboard layout settings */
-            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
-            if (!ProcessKeyboardLayoutRegistry(pSetupData->LayoutList, SelectedLanguageId))
-            {
-                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
-                goto Cleanup;
-            }
         }
 
         /* Add codepage information to registry */
