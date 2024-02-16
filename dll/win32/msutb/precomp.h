@@ -9,7 +9,6 @@
 
 #include <stdlib.h>
 
-#define WIN32_NO_STATUS
 #define COBJMACROS
 #define INITGUID
 

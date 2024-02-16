@@ -4712,10 +4712,6 @@ LONG MyWaitForInputIdle(DWORD dwThreadId, DWORD dwMilliseconds)
     if (g_pTipbarWnd && (g_pTipbarWnd->m_dwShowType & TF_SFT_DESKBAND))
         return 0;
 
-// FIXME
-#ifndef STATUS_TIMEOUT
-#define STATUS_TIMEOUT 0x00000102
-#endif
     if (TF_IsInMarshaling(dwThreadId))
         return STATUS_TIMEOUT;
 
