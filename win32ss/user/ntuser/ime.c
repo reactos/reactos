@@ -638,7 +638,7 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
         if (!pIMC)
             return 0;
 
-        if ((lParam & 0x80000000) &&
+        if ((lParam & (KF_UP << 16)) &&
             (pKL->piiex->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
         {
             return 0;

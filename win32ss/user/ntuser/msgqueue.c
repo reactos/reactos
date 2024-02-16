@@ -1871,7 +1871,13 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 
     if (pWnd && Ret && *RemoveMessages && !(pti->TIF_flags & TIF_DISABLEIME))
     {
-        if ( (ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, Msg->message, Msg->wParam, Msg->lParam)) )
+        UINT uMsg = Msg->message;
+        LPARAM lParam = Msg->lParam;
+        if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
+            lParam |= KF_UP << 16;
+
+        ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, uMsg, Msg->wParam, lParam);
+        if (ImmRet)
         {
             if ( ImmRet & (IPHK_HOTKEY|IPHK_SKIPTHISKEY) )
             {
