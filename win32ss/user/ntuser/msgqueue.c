@@ -1769,16 +1769,16 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     USER_REFERENCE_ENTRY Ref;
     PWND pWnd;
     UINT ImmRet;
-    BOOL Ret = TRUE;
+    BOOL Ret = TRUE, bKeyUpDown = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    UINT uMsg = Msg->message;
 
-    if (Msg->message == VK_PACKET)
+    if (uMsg == VK_PACKET)
     {
-       pti->wchInjected = HIWORD(Msg->wParam);
+        pti->wchInjected = HIWORD(Msg->wParam);
     }
 
-    if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN ||
-        Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
+    if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN || uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
     {
         switch (Msg->wParam)
         {
@@ -1792,12 +1792,13 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                 Msg->wParam = VK_MENU;
                 break;
         }
+        bKeyUpDown = TRUE;
     }
 
     pWnd = ValidateHwndNoErr(Msg->hwnd);
     if (pWnd) UserRefObjectCo(pWnd, &Ref);
 
-    Event.message = Msg->message;
+    Event.message = uMsg;
     Event.hwnd    = Msg->hwnd;
     Event.time    = Msg->time;
     Event.paramL  = (Msg->wParam & 0xFF) | (HIWORD(Msg->lParam) << 8);
@@ -1807,7 +1808,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 
     if (*RemoveMessages)
     {
-        if ((Msg->message == WM_KEYDOWN) &&
+        if ((uMsg == WM_KEYDOWN) &&
             (Msg->hwnd != IntGetDesktopWindow()))
         {
             /* Handle F1 key by sending out WM_HELP message */
@@ -1822,7 +1823,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                 co_IntSendMessage(Msg->hwnd, WM_APPCOMMAND, (WPARAM)Msg->hwnd, MAKELPARAM(0, (FAPPCOMMAND_KEY | (Msg->wParam - VK_BROWSER_BACK + 1))));
             }
         }
-        else if (Msg->message == WM_KEYUP)
+        else if (uMsg == WM_KEYUP)
         {
             /* Handle VK_APPS key by posting a WM_CONTEXTMENU message */
             if (Msg->wParam == VK_APPS && pti->MessageQueue->MenuOwner == NULL)
@@ -1831,7 +1832,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     }
 
     //// Key Down!
-    if ( *RemoveMessages && Msg->message == WM_SYSKEYDOWN )
+    if ( *RemoveMessages && uMsg == WM_SYSKEYDOWN )
     {
         if ( HIWORD(Msg->lParam) & KF_ALTDOWN )
         {
@@ -1869,9 +1870,8 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         Ret = FALSE;
     }
 
-    if (pWnd && Ret && *RemoveMessages && !(pti->TIF_flags & TIF_DISABLEIME))
+    if (pWnd && Ret && *RemoveMessages && bKeyUpDown && !(pti->TIF_flags & TIF_DISABLEIME))
     {
-        UINT uMsg = Msg->message;
         LPARAM lParam = Msg->lParam;
         if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
             lParam |= KF_UP << 16;
