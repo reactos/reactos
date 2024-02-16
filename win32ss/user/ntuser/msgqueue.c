@@ -1869,7 +1869,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         Ret = FALSE;
     }
 
-    if ( pWnd && Ret && *RemoveMessages && Msg->message == WM_KEYDOWN && !(pti->TIF_flags & TIF_DISABLEIME))
+    if (pWnd && Ret && *RemoveMessages && !(pti->TIF_flags & TIF_DISABLEIME))
     {
         if ( (ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, Msg->message, Msg->wParam, Msg->lParam)) )
         {

@@ -565,15 +565,14 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
     return dwRealCount;
 }
 
-// Win: xxxImmProcessKey
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
                  WPARAM wParam, LPARAM lParam)
 {
-    UINT uVirtualKey, ret = 0;
+    UINT uVirtualKey, ret;
     DWORD dwHotKeyId;
     PKL pKL;
-    PIMC pIMC = NULL;
+    PIMC pIMC;
     PIMEHOTKEY pImeHotKey;
     HKL hKL;
     HWND hWnd;
@@ -592,6 +591,7 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
             return 0;
     }
 
+    pIMC = NULL;
     hWnd = UserHMGetHandle(pWnd);
     pKL = pWnd->head.pti->KeyboardLayout;
     if (!pKL)
