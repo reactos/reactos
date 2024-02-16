@@ -1774,12 +1774,11 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     const UINT uMsg = Msg->message;
 
     if (uMsg == VK_PACKET)
-    {
         pti->wchInjected = HIWORD(Msg->wParam);
-    }
 
     if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN || uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
     {
+        bKeyUpDown = TRUE;
         switch (Msg->wParam)
         {
             case VK_LSHIFT: case VK_RSHIFT:
@@ -1792,7 +1791,6 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                 Msg->wParam = VK_MENU;
                 break;
         }
-        bKeyUpDown = TRUE;
     }
 
     pWnd = ValidateHwndNoErr(Msg->hwnd);
