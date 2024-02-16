@@ -1771,7 +1771,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     UINT ImmRet;
     BOOL Ret = TRUE, bKeyUpDown = FALSE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-    UINT uMsg = Msg->message;
+    const UINT uMsg = Msg->message;
 
     if (uMsg == VK_PACKET)
     {
@@ -1832,7 +1832,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     }
 
     //// Key Down!
-    if ( *RemoveMessages && uMsg == WM_SYSKEYDOWN )
+    if (*RemoveMessages && uMsg == WM_SYSKEYDOWN)
     {
         if ( HIWORD(Msg->lParam) & KF_ALTDOWN )
         {
@@ -1872,11 +1872,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 
     if (pWnd && Ret && *RemoveMessages && bKeyUpDown && !(pti->TIF_flags & TIF_DISABLEIME))
     {
-        LPARAM lParam = Msg->lParam;
-        if (uMsg == WM_KEYUP || uMsg == WM_SYSKEYUP)
-            lParam |= KF_UP << 16;
-
-        ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, uMsg, Msg->wParam, lParam);
+        ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, uMsg, Msg->wParam, Msg->lParam);
         if (ImmRet)
         {
             if ( ImmRet & (IPHK_HOTKEY|IPHK_SKIPTHISKEY) )
