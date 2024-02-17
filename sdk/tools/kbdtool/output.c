@@ -714,6 +714,7 @@ kbd_c(IN ULONG StateCount,
         if ((Layout->Entry[i].ScanCode & 0xFF00) == 0xE000)
         {
             /* Which are valid */
+            // FIXME: This check is always true.
             if (Layout->Entry[i].ScanCode != 0xFF)
             {
                 /* And mapped */
@@ -743,6 +744,7 @@ kbd_c(IN ULONG StateCount,
         if ((Layout->Entry[i].ScanCode & 0xFF00) == 0xE100)
         {
             /* Which are valid */
+            // FIXME: This check is always true.
             if (Layout->Entry[i].ScanCode != 0xFF)
             {
                 /* And mapped */
