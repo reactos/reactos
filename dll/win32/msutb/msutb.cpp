@@ -20,7 +20,7 @@ LONG g_DllRefCount = 0;
 BOOL g_bWinLogon = FALSE;
 BOOL g_fInClosePopupTipbar = FALSE;
 HWND g_hwndParent = NULL;
-LIBTHREAD g_libTLS = { NULL, NULL };
+CIC_LIBTHREAD g_libTLS = { NULL, NULL };
 #ifdef ENABLE_DESKBAND
 BOOL g_bEnableDeskBand = TRUE;
 #else
@@ -76,23 +76,6 @@ class CMsUtbModule : public CComModule
 };
 
 CMsUtbModule gModule;
-
-void TFUninitLib_Thread(LIBTHREAD *libThread)
-{
-    if (!libThread)
-        return;
-
-    if (libThread->m_pUnknown1)
-    {
-        libThread->m_pUnknown1->Release();
-        libThread->m_pUnknown1 = NULL;
-    }
-    if (libThread->m_pDisplayAttrMgr)
-    {
-        libThread->m_pDisplayAttrMgr->Release();
-        libThread->m_pDisplayAttrMgr = NULL;
-    }
-}
 
 class CCicLibMenuItem;
 class CTipbarAccItem;
@@ -6075,7 +6058,7 @@ BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand)
  *
  * @implemented
  */
-EXTERN_C PLIBTHREAD WINAPI
+EXTERN_C PCIC_LIBTHREAD WINAPI
 GetLibTls(VOID)
 {
     TRACE("()\n");
