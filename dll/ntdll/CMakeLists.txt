@@ -21,7 +21,7 @@ add_library(rtl_um OBJECT
     rtl/libsupp.c
     rtl/uilist.c
     rtl/version.c)
-target_link_libraries(rtl_um ${PSEH_LIB})
+target_link_libraries(rtl_um apisets ${PSEH_LIB})
 add_dependencies(rtl_um psdk)
 
 list(APPEND SOURCE
