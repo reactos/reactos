@@ -673,6 +673,7 @@ WCHAR *get_dos_file_name(const WCHAR *filename)
     WCHAR *dos_path;
     size_t len;
 
+#ifndef __REACTOS__
     if (*filename == '/')
     {
         char *unix_path;
@@ -683,6 +684,7 @@ WCHAR *get_dos_file_name(const WCHAR *filename)
         heap_free(unix_path);
     }
     else
+#endif
     {
         len = lstrlenW(filename);
         dos_path = heap_alloc((len + 1) * sizeof(WCHAR));
