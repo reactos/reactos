@@ -57,11 +57,11 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     /* Make sure we have a valid CPU count */
     if (!Count) return STATUS_INVALID_PARAMETER;
 
-    /* Allocate the array of I/O Interrupts */
-    IoInterrupt = ExAllocatePoolWithTag(NonPagedPool,
-                                        (Count - 1) * sizeof(KINTERRUPT) +
-                                        sizeof(IO_INTERRUPT),
-                                        TAG_KINTERRUPT);
+    /* Allocate the array of I/O interrupts */
+    IoInterrupt = ExAllocatePoolZero(NonPagedPool,
+                                     (Count - 1) * sizeof(KINTERRUPT) +
+                                     sizeof(IO_INTERRUPT),
+                                     TAG_KINTERRUPT);
     if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Select which Spinlock to use */
@@ -71,9 +71,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     *InterruptObject = &IoInterrupt->FirstInterrupt;
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
     FirstRun = TRUE;
-
-    /* Start with a fresh structure */
-    RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
 
     /* Now create all the interrupts */
     Affinity = ProcessorEnableMask & KeActiveProcessors;
