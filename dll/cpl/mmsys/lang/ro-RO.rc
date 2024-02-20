@@ -22,7 +22,7 @@ BEGIN
     LTEXT "Redus", IDC_VOLUME_LOW, 62, 66, 30, 17
     LTEXT "Ridicat", IDC_VOLUME_HIGH, 195, 66, 30, 17
     AUTOCHECKBOX "A&muțește tot", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Afișează pictogramă în &zona de notificare", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
+    AUTOCHECKBOX "Afișare pictogramă în &zona de notificare", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "A&vansate…", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Setări difuzoare", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
@@ -39,8 +39,8 @@ BEGIN
     LTEXT "O colecție de sunete conținele semnalele sonore emise atunci când au loc evenimente în ReactOS și în programe. Puteți alege una dintre colecțiile prezente, sau a vă gestiona propriile colecții.", -1, 8, 7, 230, 40
     LTEXT "C&olecție de sunete:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Salvează…", IDC_SAVEAS_BTN, 134, 70, 50, 15
-    PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 188, 70, 50, 15
+    PUSHBUTTON "&Salvare…", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "Șt&ergere", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Pentru a schimba sunetele, selectați un eveniment din lista de mai jos, apoi alegeți sunetul corespunzător care va fi emis. Modificările pot fi salvate într-o nouă colecție de sunete.", -1, 8, 90, 230, 40
     LTEXT "E&venimente:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
@@ -106,7 +106,7 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Salvează colecția"
+CAPTION "Salvare colecție"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Salvați colecția sub numele:", -1, 7, 7, 212, 9
@@ -177,7 +177,7 @@ BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
     LTEXT "Acest calculator nu poate emite sunete deoarece serviciul ReactOS Audio este inactiv.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Activează ReactOS Audio", 10253, 60, 68, 150, 9
+    AUTOCHECKBOX "&Activare ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Note", 10246, 58, 87, 150, 11
     LTEXT "1. Trebuie să fiți administrator pentru a porni acest serviciu. Dacă nu sunteți, vă vor fi solicitate un nume și o parolă de administarator.", 10247, 60, 100, 150, 40
     LTEXT "2. După ce porniți serviciul, trebuie să reporniți calculatorul.", 10248, 60, 140, 150, 40
@@ -221,8 +221,8 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 162, 108, 17
     LTEXT "Ridicat", 9502, 202, 164, 23, 8
-    AUTOCHECKBOX "Sinc&ronizează mișcarea indicatorilor", 9504, 5, 185, 216, 9
-    PUSHBUTTON "Restabilește i&mplicite", 9505, 110, 199, 110, 14
+    AUTOCHECKBOX "Sinc&ronizare a mișcării indicatorilor", 9504, 5, 185, 216, 9
+    PUSHBUTTON "Restabilire i&mplicite", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOGEX 0, 0, 227, 206
@@ -233,7 +233,7 @@ BEGIN
     GROUPBOX "Sunet ReactOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "Serviciul audio ReactOS acum este activ. Totuși, ar putea să nu funcționeze corect până când nu reporniți sistemul. Dacă reporniți acum, salvați-vă documentele în calculator și închideți toate programele curente.", 10261, 60, 25, 150, 50
-    LTEXT "Pentru a reporni ReactOS, apăsați „Confirmă”.", 10262, 60, 75, 150, 20
+    LTEXT "Pentru a reporni ReactOS, apăsați OK.", 10262, 60, 75, 150, 20
     LTEXT "Anularea operației de repornire presupune amânarea până la un moment oportun. Sistemul va trebui eventual repornit pentru ca sunetul să funcționeze corect.", 10263, 60, 100, 150, 40
 END
 
@@ -258,10 +258,10 @@ BEGIN
     5830 "Eșec conectare dispozitiv"
     5831 "Golește Coșul de gunoi"
     5832 "Alarmă baterie decongestionată"
-    5833 "Maximizează"
+    5833 "Maximizare"
     5834 "Comandă meniu"
     5835 "Afișare meniu"
-    5836 "Minimizează"
+    5836 "Minimizare"
     5837 "E-mail nou"
     5838 "Navigare adresă"
     5839 "Pornire program"
