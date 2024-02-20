@@ -5,7 +5,15 @@ include_directories(
 spec2def(msctfime.ime msctfime.spec)
 
 list(APPEND SOURCE
-    msctfime.cpp)
+    bridge.cpp
+    compartment.cpp
+    functions.cpp
+    inputcontext.cpp
+    msctfime.cpp
+    profile.cpp
+    sink.cpp
+    tls.cpp
+    ui.cpp)
 
 file(GLOB msctfime_rc_deps res/*.*)
 add_rc_deps(msctfime.rc ${msctfime_rc_deps})
