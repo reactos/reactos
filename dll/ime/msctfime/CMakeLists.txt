@@ -11,7 +11,7 @@ list(APPEND SOURCE
     inputcontext.cpp
     msctfime.cpp
     profile.cpp
-    sink.cpp
+    sinks.cpp
     tls.cpp
     ui.cpp)
 

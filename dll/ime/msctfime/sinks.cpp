@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Sinks of msctfime.ime
+ * PURPOSE:     The sinks of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 

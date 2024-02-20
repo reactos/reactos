@@ -43,12 +43,13 @@ DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS,        0xA94C5FD2, 0xC471, 0x4031,
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0x85A688F7, 0x6DC8, 0x4F17, 0xA8, 0x3A, 0xB1, 0x1C, 0x09, 0xCD, 0xD7, 0xBF);
 
 #include "resource.h"
+
 #include "bridge.h"
 #include "compartment.h"
 #include "functions.h"
 #include "inputcontext.h"
 #include "profile.h"
-#include "sink.h"
+#include "sinks.h"
 #include "tls.h"
 #include "ui.h"
 

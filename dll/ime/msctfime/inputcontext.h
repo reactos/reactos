@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "sink.h"
+#include "sinks.h"
 
 class CInputContextOwnerCallBack;
 class CInputContextOwner;

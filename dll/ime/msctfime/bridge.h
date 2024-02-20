@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "sink.h"
+#include "sinks.h"
 #include "tls.h"
 
 class CicBridge : public ITfSysHookSink
