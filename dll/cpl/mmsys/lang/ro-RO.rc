@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -111,8 +111,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Salvați colecția sub numele:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 93, 36, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 157, 36, 60, 14
+    DEFPUSHBUTTON "&OK", IDOK, 93, 36, 60, 14
+    PUSHBUTTON "&Revocare", IDCANCEL, 157, 36, 60, 14
 END
 
 IDD_SPEAKERS DIALOGEX 0, 0, 257, 204
@@ -123,7 +123,7 @@ BEGIN
     ICON 4379, -1, 7, 8, 20, 20
     LTEXT "Alegeți modul de așezare a difuzoarelor conectate la acest calculator.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "Amplasament:", 8502, 53, 169, 55, 10
+    LTEXT "Configurarea difuzoarelor:", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
