@@ -491,7 +491,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
     {
         hr = pDataObject->GetData(&fmt, &medium);
-        TRACE("CFSTR_SHELLIDLIST.\n");
+        TRACE("CFSTR_SHELLIDLIST\n");
         if (FAILED(hr))
         {
             ERR("CFSTR_SHELLIDLIST failed\n");
@@ -721,7 +721,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     }
     else
     {
-        ERR("No viable drop format.\n");
+        ERR("No viable drop format\n");
         hr = E_FAIL;
     }
     return hr;

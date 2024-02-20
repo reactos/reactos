@@ -1193,7 +1193,7 @@ CDefaultContextMenu::TryToBrowse(
     hr = SHILCombine(m_pidlFolder, pidlChild, &pidl);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    
+
     hr = psb->BrowseObject(pidl, wFlags & ~SBSP_RELATIVE);
     ILFree(pidl);
     return hr;

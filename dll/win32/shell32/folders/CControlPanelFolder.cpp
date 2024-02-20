@@ -411,7 +411,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
             else if (_ILIsSpecialFolder(*apidl))
                 m_regFolder->GetAttributesOf(1, apidl, rgfInOut);
             else
-                ERR("Got an unknown pidl here!\n");
+                ERR("Got unknown pidl\n");
             apidl++;
             cidl--;
         }
@@ -448,7 +448,6 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         *ppvOut = NULL;
 
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1)) {
-
             /* HACK: We should use callbacks from CDefaultContextMenu instead of creating one on our own */
             BOOL bHasCpl = FALSE;
             for (UINT i = 0; i < cidl; i++)
