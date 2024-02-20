@@ -17,10 +17,12 @@ DEFINE_GUID(IID_ITfLangBarMgr_P,               0xD72C0FA9, 0xADD5, 0x4AF0, 0x87,
 DEFINE_GUID(IID_ITfLangBarEventSink_P,         0x7A460360, 0xDA21, 0x4B09, 0xA8, 0xA0, 0x8A, 0x69, 0xE7, 0x28, 0xD8, 0x93);
 DEFINE_GUID(CLSID_MSUTBDeskBand,               0x540D8A8B, 0x1C3F, 0x4E32, 0x81, 0x32, 0x53, 0x0F, 0x6A, 0x50, 0x20, 0x90);
 DEFINE_GUID(CATID_DeskBand,                    0x00021492, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+DEFINE_GUID(
+    GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY,       0xB95F181B, 0xEA4C, 0x4AF1, 0x80, 0x56, 0x7C, 0x32, 0x1A, 0xBB, 0xB0, 0x91);
 
 typedef struct CIC_LIBTHREAD
 {
-    IUnknown *m_pUnknown1;
+    ITfCategoryMgr *m_pCategoryMgr;
     ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
 } CIC_LIBTHREAD, *PCIC_LIBTHREAD;
 
@@ -44,10 +46,10 @@ inline void TFUninitLib_Thread(PCIC_LIBTHREAD pLibThread)
     if (!pLibThread)
         return;
 
-    if (pLibThread->m_pUnknown1)
+    if (pLibThread->m_pCategoryMgr)
     {
-        pLibThread->m_pUnknown1->Release();
-        pLibThread->m_pUnknown1 = NULL;
+        pLibThread->m_pCategoryMgr->Release();
+        pLibThread->m_pCategoryMgr = NULL;
     }
     if (pLibThread->m_pDisplayAttrMgr)
     {

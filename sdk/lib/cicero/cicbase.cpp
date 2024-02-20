@@ -254,13 +254,3 @@ TFInitLib(FN_CoCreateInstance fnCoCreateInstance)
         _cicGetSetUserCoCreateInstance(fnCoCreateInstance);
     return TRUE;
 }
-
-/**
- * @unimplemented
- */
-EXTERN_C
-VOID
-TFUninitLib(VOID)
-{
-    //FIXME
-}
