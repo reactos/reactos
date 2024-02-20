@@ -32,7 +32,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Expertul pentru creare de scurtături"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Acest expert vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+    LTEXT "Acest expert vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, foldere, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
     LTEXT "Scrieți adresa elementului:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -51,7 +51,7 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Eliminare dosare/scurtături"
+CAPTION "Eliminare foldere/scurtături"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pentru a elimina un element din meniul Pornire, selectați elementul și apăsați Elimină.", -1, 10, 10, 192, 16
