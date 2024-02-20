@@ -41,6 +41,9 @@ HANDLE ProcessHeap;
 BOOLEAN IsUnattendedSetup = FALSE;
 SETUPDATA SetupData;
 
+/* UI elements */
+UI_CONTEXT UiContext;
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1104,8 +1107,6 @@ SummaryDlgProc(
 typedef struct _COPYCONTEXT
 {
     PSETUPDATA pSetupData;
-    HWND hWndItem;
-    HWND hWndProgress;
     ULONG TotalOperations;
     ULONG CompletedOperations;
 } COPYCONTEXT, *PCOPYCONTEXT;
@@ -1133,10 +1134,10 @@ FileCopyCallback(PVOID Context,
             CopyContext->TotalOperations = (ULONG)Param2;
             CopyContext->CompletedOperations = 0;
 
-            SendMessageW(CopyContext->hWndProgress,
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETRANGE, 0,
                          MAKELPARAM(0, CopyContext->TotalOperations));
-            SendMessageW(CopyContext->hWndProgress,
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETSTEP, 1, 0);
             break;
         }
@@ -1158,7 +1159,7 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_DELETING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -1179,7 +1180,7 @@ FileCopyCallback(PVOID Context,
                 else
                     StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
 
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -1192,7 +1193,7 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_COPYING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             break;
         }
@@ -1207,7 +1208,7 @@ FileCopyCallback(PVOID Context,
             if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
                 DPRINT1("CHECKPOINT:HALF_COPIED\n");
 
-            SendMessageW(CopyContext->hWndProgress, PBM_STEPIT, 0, 0);
+            SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
             break;
         }
     }
@@ -1234,6 +1235,12 @@ PrepareAndDoCopyThread(
     /* Get the progress handle */
     hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
 
+    /* Setup global UI context */
+    UiContext.hwndDlg = hwndDlg;
+    UiContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
+    UiContext.hWndProgress = hWndProgress;
+    UiContext.dwPbStyle = 0;
+
 
     /*
      * Preparation of the list of files to be copied
@@ -1243,26 +1250,23 @@ PrepareAndDoCopyThread(
     SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
-    /* Set progress marquee style */
+    /* Set progress marquee style and start it up */
     dwStyle = GetWindowLongPtrW(hWndProgress, GWL_STYLE);
     SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle | PBS_MARQUEE);
-
-    /* Start it up */
     SendMessageW(hWndProgress, PBM_SETMARQUEE, TRUE, 0);
 
     /* Prepare the list of files */
     /* ErrorNumber = */ Success = PrepareFileCopy(&pSetupData->USetupData, NULL);
+
+    /* Stop progress and restore its style */
+    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
+
     if (/*ErrorNumber != ERROR_SUCCESS*/ !Success)
     {
         /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
             MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the list of files!", L"Error", MB_ICONERROR);
-
-        /* Stop it */
-        SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-        /* Restore progress style */
-        SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
         /*
          * If we failed due to an unexpected error, keep on the copy page to view the current state,
@@ -1273,12 +1277,6 @@ PrepareAndDoCopyThread(
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
         return 1;
     }
-
-    /* Stop it */
-    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-    /* Restore progress style */
-    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
 
     /*
@@ -1291,8 +1289,6 @@ PrepareAndDoCopyThread(
 
     /* Create context for the copy process */
     CopyContext.pSetupData = pSetupData;
-    CopyContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
-    CopyContext.hWndProgress = hWndProgress;
     CopyContext.TotalOperations = 0;
     CopyContext.CompletedOperations = 0;
 

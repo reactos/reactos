@@ -69,14 +69,17 @@
 // #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>
 
-#if 0
-typedef struct _KBLAYOUT
+
+/* UI elements */
+typedef struct _UI_CONTEXT
 {
-    TCHAR LayoutId[9];
-    TCHAR LayoutName[128];
-    TCHAR DllName[128];
-} KBLAYOUT, *PKBLAYOUT;
-#endif
+    HWND hwndDlg;   // Install progress page
+    HWND hWndItem;  // Progress action
+    HWND hWndProgress;  // Progress gauge
+    LONG_PTR dwPbStyle; // Progress gauge style
+} UI_CONTEXT, *PUI_CONTEXT;
+
+extern UI_CONTEXT UiContext;
 
 
 /*
@@ -107,6 +110,15 @@ typedef struct _NT_WIN32_PATH_MAPPING_LIST
     ULONG MappingsCount;
 } NT_WIN32_PATH_MAPPING_LIST, *PNT_WIN32_PATH_MAPPING_LIST;
 
+
+#if 0
+typedef struct _KBLAYOUT
+{
+    TCHAR LayoutId[9];
+    TCHAR LayoutName[128];
+    TCHAR DllName[128];
+} KBLAYOUT, *PKBLAYOUT;
+#endif
 
 typedef struct _SETUPDATA
 {
