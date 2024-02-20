@@ -6207,6 +6207,11 @@ BEGIN_OBJECT_MAP(ObjectMap)
 #endif
 END_OBJECT_MAP()
 
+EXTERN_C VOID TFUninitLib(VOID)
+{
+    // Do nothing
+}
+
 /// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {

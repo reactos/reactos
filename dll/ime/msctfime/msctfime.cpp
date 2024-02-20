@@ -10,12 +10,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+typedef CicArray<GUID> CDispAttrPropCache;
+
 HINSTANCE g_hInst = NULL; /* The instance of this module */
 BOOL g_bWinLogon = FALSE;
 UINT g_uACP = CP_ACP;
 DWORD g_dwOSInfo = 0;
 BOOL gfTFInitLib = FALSE;
 CRITICAL_SECTION g_csLock;
+CDispAttrPropCache *g_pPropCache = NULL;
 
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS,        0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0x85A688F7, 0x6DC8, 0x4F17, 0xA8, 0x3A, 0xB1, 0x1C, 0x09, 0xCD, 0xD7, 0xBF);
@@ -124,6 +127,33 @@ IsInteractiveUserLogon(VOID)
     return bOK && IsMember;
 }
 
+/// @implemented
+ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return NULL;
+
+    if (pLibThread->m_pCategoryMgr)
+        return pLibThread->m_pCategoryMgr;
+
+    if (FAILED(cicCoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
+                                   IID_ITfCategoryMgr, (void **)&pLibThread->m_pCategoryMgr)))
+    {
+        return NULL;
+    }
+    return pLibThread->m_pCategoryMgr;
+}
+
+/// @implemented
+HRESULT LibEnumItemsInCategory(PCIC_LIBTHREAD pLibThread, REFGUID rguid, IEnumGUID **ppEnum)
+{
+    ITfCategoryMgr *pCat = GetUIMCat(pLibThread);
+    if (!pCat)
+        return E_FAIL;
+    return pCat->EnumItemsInCategory(rguid, ppEnum);
+}
+
+/// @implemented
 HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
     if (!pLibThread)
@@ -135,8 +165,37 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
         pLibThread->m_pDisplayAttrMgr = NULL;
     }
 
-    //FIXME
-    return E_NOTIMPL;
+    if (FAILED(cicCoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL, CLSCTX_INPROC_SERVER,
+                                   IID_ITfDisplayAttributeMgr,
+                                   (void **)&pLibThread->m_pDisplayAttrMgr)))
+    {
+        return E_FAIL;
+    }
+
+    IEnumGUID *pEnumGuid;
+    LibEnumItemsInCategory(pLibThread, GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY, &pEnumGuid);
+
+    HRESULT hr = E_OUTOFMEMORY;
+
+    ::EnterCriticalSection(&g_csLock);
+    if (pEnumGuid && !g_pPropCache)
+    {
+        g_pPropCache = new(cicNoThrow) CDispAttrPropCache();
+        if (g_pPropCache)
+        {
+            g_pPropCache->Add(GUID_PROP_ATTRIBUTE);
+            GUID guid;
+            while (pEnumGuid->Next(1, &guid, NULL) == S_OK)
+            {
+                if (!IsEqualGUID(guid, GUID_PROP_ATTRIBUTE))
+                    g_pPropCache->Add(guid);
+            }
+            hr = S_OK;
+        }
+    }
+    ::LeaveCriticalSection(&g_csLock);
+
+    return hr;
 }
 
 HIMC GetActiveContext(VOID)
@@ -3646,6 +3705,15 @@ VOID DetachIME(VOID)
     UnregisterImeClass();
 }
 
+EXTERN_C VOID TFUninitLib(VOID)
+{
+    if (g_pPropCache)
+    {
+        delete g_pPropCache;
+        g_pPropCache = NULL;
+    }
+}
+
 /// @implemented
 BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
@@ -3667,11 +3735,9 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
     return AttachIME();
 }
 
-/// @unimplemented
+/// @implemented
 VOID ProcessDetach(HINSTANCE hinstDLL)
 {
-    // FIXME
-
     TF_DllDetachInOther();
 
     if (gfTFInitLib)

@@ -519,6 +519,11 @@ VOID InitCUASFlag(VOID)
     }
 }
 
+EXTERN_C VOID TFUninitLib(VOID)
+{
+    // Do nothing
+}
+
 /**
  * @unimplemented
  */
