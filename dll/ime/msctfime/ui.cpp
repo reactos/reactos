@@ -65,6 +65,7 @@ BOOL RegisterMSIMEMessage(VOID)
 
 /***********************************************************************/
 
+/// @implemented
 CDefCompFrameGripper::CDefCompFrameGripper(
     CDefCompFrameWindow *pDefCompFrameWindow,
     LPCRECT prc,
@@ -75,6 +76,7 @@ CDefCompFrameGripper::CDefCompFrameGripper(
 
 /***********************************************************************/
 
+/// @implemented
 CCompFinalizeButton::CCompFinalizeButton(
     CCompFrameWindow *pParent,
     DWORD nObjectID,
@@ -87,6 +89,7 @@ CCompFinalizeButton::CCompFinalizeButton(
     m_pCompFrameWindow = pParent;
 }
 
+/// @implemented
 CCompFinalizeButton::~CCompFinalizeButton()
 {
     HICON hIcon = CUIFToolbarButton::GetIcon();
@@ -97,6 +100,7 @@ CCompFinalizeButton::~CCompFinalizeButton()
     }
 }
 
+/// @implemented
 void CCompFinalizeButton::OnLeftClick()
 {
     HIMC hIMC = m_pCompFrameWindow->m_hIMC;
@@ -106,6 +110,7 @@ void CCompFinalizeButton::OnLeftClick()
 
 /***********************************************************************/
 
+/// @implemented
 CCompFrameWindow::CCompFrameWindow(HIMC hIMC, DWORD style)
     : CUIFWindow(g_hInst, style)
 {
@@ -114,11 +119,13 @@ CCompFrameWindow::CCompFrameWindow(HIMC hIMC, DWORD style)
 
 /***********************************************************************/
 
+/// @implemented
 CCompButtonFrameWindow::CCompButtonFrameWindow(HIMC hIMC, DWORD style)
     : CCompFrameWindow(hIMC, style)
 {
 }
 
+/// @implemented
 void CCompButtonFrameWindow::Init()
 {
     if (m_pFinalizeButton)
@@ -140,6 +147,7 @@ void CCompButtonFrameWindow::Init()
     AddUIObj(m_pFinalizeButton);
 }
 
+/// @implemented
 void CCompButtonFrameWindow::MoveShow(LONG x, LONG y, BOOL bShow)
 {
     INT nWidth = m_Margins.cxRightWidth + m_Margins.cxLeftWidth + 18;
@@ -155,6 +163,7 @@ void CCompButtonFrameWindow::MoveShow(LONG x, LONG y, BOOL bShow)
     Show(bShow);
 }
 
+/// @implemented
 STDMETHODIMP_(void) CCompButtonFrameWindow::OnCreate(HWND hWnd)
 {
     ::SetWindowTheme(hWnd, L"TOOLBAR", NULL);
@@ -172,6 +181,7 @@ STDMETHODIMP_(void) CCompButtonFrameWindow::OnCreate(HWND hWnd)
 
 /***********************************************************************/
 
+/// @implemented
 CDefCompFrameWindow::CDefCompFrameWindow(HIMC hIMC, DWORD style)
     : CCompFrameWindow(hIMC, style)
 {
@@ -181,14 +191,17 @@ CDefCompFrameWindow::CDefCompFrameWindow(HIMC hIMC, DWORD style)
     m_pszClassList = L"TASKBAR";
 }
 
+/// @implemented
 CDefCompFrameWindow::~CDefCompFrameWindow()
 {
     SavePosition();
 }
 
+/// @implemented
 void CDefCompFrameWindow::Init()
 {
     RECT rc;
+
     if (!m_pGripper)
     {
         ZeroMemory(&rc, sizeof(rc));
@@ -215,6 +228,7 @@ void CDefCompFrameWindow::Init()
     }
 }
 
+/// @implemented
 INT CDefCompFrameWindow::GetGripperWidth()
 {
     if (!m_pGripper || FAILED(m_pGripper->EnsureThemeData(m_hWnd)))
@@ -231,6 +245,7 @@ INT CDefCompFrameWindow::GetGripperWidth()
     return ((ret < 0) ? 5 : ret);
 }
 
+/// @implemented
 void CDefCompFrameWindow::MyScreenToClient(LPPOINT ppt, LPRECT prc)
 {
     if (ppt)
@@ -243,6 +258,7 @@ void CDefCompFrameWindow::MyScreenToClient(LPPOINT ppt, LPRECT prc)
     }
 }
 
+/// @implemented
 void CDefCompFrameWindow::SetCompStrRect(INT nWidth, INT nHeight, BOOL bShow)
 {
     INT GripperWidth = GetGripperWidth();
@@ -275,6 +291,7 @@ void CDefCompFrameWindow::SetCompStrRect(INT nWidth, INT nHeight, BOOL bShow)
     ::ShowWindow(m_hwndDefCompFrame, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
 }
 
+/// @implemented
 void CDefCompFrameWindow::LoadPosition()
 {
     DWORD x = 0, y = 0;
@@ -292,6 +309,7 @@ void CDefCompFrameWindow::LoadPosition()
     Move(x, y, 0, 0);
 }
 
+/// @implemented
 void CDefCompFrameWindow::SavePosition()
 {
     LSTATUS error;
@@ -305,6 +323,7 @@ void CDefCompFrameWindow::SavePosition()
     }
 }
 
+/// @implemented
 STDMETHODIMP_(void) CDefCompFrameWindow::OnCreate(HWND hWnd)
 {
     ::SetWindowTheme(hWnd, L"TASKBAR", NULL);
@@ -320,6 +339,7 @@ STDMETHODIMP_(void) CDefCompFrameWindow::OnCreate(HWND hWnd)
         GetThemeMargins(NULL, 1, 3602, NULL, &m_Margins);
 }
 
+/// @implemented
 STDMETHODIMP_(BOOL) CDefCompFrameWindow::OnSetCursor(UINT uMsg, LONG x, LONG y)
 {
     if (!::IsWindow(m_hwndDefCompFrame))
@@ -332,6 +352,7 @@ STDMETHODIMP_(BOOL) CDefCompFrameWindow::OnSetCursor(UINT uMsg, LONG x, LONG y)
     return ::PtInRect(&rc, pt);
 }
 
+/// @implemented
 STDMETHODIMP_(LRESULT)
 CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -343,6 +364,7 @@ CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+/// @implemented
 STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
 {
     if (::IsWindow(m_hwndDefCompFrame))
