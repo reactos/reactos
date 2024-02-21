@@ -513,38 +513,40 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     WCHAR wTemp[MAX_PATH];
     int icon_idx, reg_idx;
     UINT flags = 0;
+
     switch (DriveType)
     {
         case DRIVE_FIXED:
         case DRIVE_UNKNOWN:
-            reg_idx = IDI_SHELL_DRIVE - 1;
+            reg_idx = IDI_SHELL_DRIVE;
             break;
         case DRIVE_CDROM:
-            reg_idx = IDI_SHELL_CDROM - 1;
+            reg_idx = IDI_SHELL_CDROM;
             break;
         case DRIVE_REMOTE:
-            reg_idx = IDI_SHELL_NETDRIVE - 1;
+            reg_idx = IDI_SHELL_NETDRIVE;
             break;
         case DRIVE_REMOVABLE:
             if (!IsDriveFloppyA(pszDrive))
-                reg_idx = IDI_SHELL_REMOVEABLE - 1;
+                reg_idx = IDI_SHELL_REMOVEABLE;
             else
-                reg_idx = IDI_SHELL_3_14_FLOPPY - 1;
+                reg_idx = IDI_SHELL_3_14_FLOPPY;
             break;
         case DRIVE_RAMDISK:
-            reg_idx = IDI_SHELL_RAMDISK - 1;
+            reg_idx = IDI_SHELL_RAMDISK;
             break;
         case DRIVE_NO_ROOT_DIR:
         default:
-            reg_idx = IDI_SHELL_DOCUMENT - 1;
+            reg_idx = IDI_SHELL_DOCUMENT;
             break;
     }
+
     if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
                                                &icon_idx, &flags)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
-    else if (HLM_GetIconW(reg_idx, wTemp, MAX_PATH, &icon_idx))
+    else if (HLM_GetIconW(reg_idx - 1, wTemp, MAX_PATH, &icon_idx))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }

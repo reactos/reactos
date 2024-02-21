@@ -397,7 +397,7 @@ BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
     WCHAR   sTemp[5];
     BOOL    ret = FALSE;
 
-    TRACE("%d\n",reg_idx );
+    TRACE("%d\n", reg_idx);
 
     swprintf(sTemp, L"%d", reg_idx);
 

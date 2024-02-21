@@ -123,6 +123,16 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
+HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
+{
+    WCHAR xriid[40];
+
+    if (!StringFromGUID2(*riid, xriid, _countof(xriid) - 1))
+        return E_FAIL;
+
+    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
+}
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -173,24 +183,24 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     }
 
     /* Prepare registry path for loading icons of My Computer and other shell extensions */
-    WCHAR xriid[MAX_PATH];
+    WCHAR KeyName[MAX_PATH];
 
-    swprintf(xriid, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             riid->Data1, riid->Data2, riid->Data3,
-             riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-             riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+    hr = FormatGUIDKey(KeyName, _countof(KeyName),
+                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s",
+                       riid);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     /* Load icon for the current user */
-    BOOL ret = HCU_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx);
+    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, MAX_PATH, &icon_idx);
     if (!ret)
     {
         /* Failed, load default system-wide icon */
-        swprintf(xriid, L"CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                 riid->Data1, riid->Data2, riid->Data3,
-                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+        hr = FormatGUIDKey(KeyName, _countof(KeyName), L"CLSID\\%s", riid);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-        ret = HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx);
+        ret = HCR_GetIconW(KeyName, wTemp, iconname, MAX_PATH, &icon_idx);
     }
 
     if (ret)
