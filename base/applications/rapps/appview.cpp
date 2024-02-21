@@ -1481,15 +1481,6 @@ CApplicationView::ProcessWindowMessage(
                         }
                     }
                     break;
-
-                    case NM_RCLICK:
-                    {
-                        if (((LPNMLISTVIEW)lParam)->iItem != -1)
-                        {
-                            ShowPopupMenuEx(m_hWnd, m_hWnd, 0, ID_INSTALL);
-                        }
-                    }
-                    break;
                 }
             }
             else if (pNotifyHeader->hwndFrom == m_Toolbar->GetWindow())
@@ -1523,6 +1514,30 @@ CApplicationView::ProcessWindowMessage(
         case WM_COMMAND:
         {
             OnCommand(wParam, lParam);
+        }
+        break;
+
+        case WM_CONTEXTMENU:
+        {
+            bool kbd = -1 == (int)(INT_PTR)lParam;
+            if ((HWND)wParam == m_ListView->m_hWnd)
+            {
+                int item = ListView_GetNextItem((HWND)wParam, -1, LVNI_FOCUSED|LVNI_SELECTED);
+                if (item != -1)
+                {
+                    POINT *ppt = NULL, pt;
+                    if (kbd)
+                    {
+                        RECT r;
+                        ListView_GetItemRect((HWND)wParam, item, &r, LVIR_LABEL);
+                        pt.x = r.left + (r.right - r.left) / 2;
+                        pt.y = r.top + (r.bottom - r.top) / 2;
+                        ::ClientToScreen((HWND)wParam, ppt = &pt);
+                    }
+                    ShowPopupMenuEx(m_hWnd, m_hWnd, 0, ID_INSTALL, ppt);
+                    return TRUE;
+                }
+            }
         }
         break;
     }
