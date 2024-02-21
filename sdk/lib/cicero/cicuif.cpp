@@ -3409,7 +3409,7 @@ STDMETHODIMP_(void)
 CUIFToolbarMenuButton::OnLButtonUp(LONG x, LONG y)
 {
     CUIFButton::OnLButtonUp(x, y);
-    m_pToolbarButton->OnUnknownMouse2(x, y);
+    m_pToolbarButton->OnUnknownMouse0();
 }
 
 STDMETHODIMP_(BOOL)
@@ -3444,16 +3444,16 @@ CUIFToolbarButtonElement::OnLButtonUp(LONG x, LONG y)
 {
     CUIFButton::OnLButtonUp(x, y);
     if ((m_pToolbarButton->m_dwToolbarButtonFlags & 0x30000) == 0x20000)
-        m_pToolbarButton->OnUnknownMouse2(x, y);
+        m_pToolbarButton->OnUnknownMouse0();
     else
-        m_pToolbarButton->OnUnknownMouse1(x, y);
+        m_pToolbarButton->OnLeftClick();
 }
 
 STDMETHODIMP_(void)
 CUIFToolbarButtonElement::OnRButtonUp(LONG x, LONG y)
 {
     if ((m_pToolbarButton->m_dwToolbarButtonFlags & 0x30000) != 0x20000)
-        m_pToolbarButton->OnUnknownMouse0();
+        m_pToolbarButton->OnRightClick();
 }
 
 /////////////////////////////////////////////////////////////////////////////
