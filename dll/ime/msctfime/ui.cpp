@@ -9,6 +9,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+/***********************************************************************/
+
 UINT WM_MSIME_SERVICE = 0;
 UINT WM_MSIME_UIREADY = 0;
 UINT WM_MSIME_RECONVERTREQUEST = 0;
@@ -60,6 +62,326 @@ BOOL RegisterMSIMEMessage(VOID)
             WM_MSIME_MOUSE &&
             WM_MSIME_KEYMAP);
 }
+
+/***********************************************************************/
+
+/// @implemented
+CDefCompFrameGripper::CDefCompFrameGripper(
+    CDefCompFrameWindow *pDefCompFrameWindow,
+    LPCRECT prc,
+    DWORD style) : CUIFGripper(pDefCompFrameWindow, prc, style)
+{
+    m_pDefCompFrameWindow = pDefCompFrameWindow;
+}
+
+/***********************************************************************/
+
+/// @implemented
+CCompFinalizeButton::CCompFinalizeButton(
+    CCompFrameWindow *pParent,
+    DWORD nObjectID,
+    LPCRECT prc,
+    DWORD style,
+    DWORD dwButtonFlags,
+    LPCWSTR pszText)
+    : CUIFToolbarButton(pParent, nObjectID, prc, style, dwButtonFlags, pszText)
+{
+    m_pCompFrameWindow = pParent;
+}
+
+/// @implemented
+CCompFinalizeButton::~CCompFinalizeButton()
+{
+    HICON hIcon = CUIFToolbarButton::GetIcon();
+    if (hIcon)
+    {
+        ::DestroyIcon(hIcon);
+        CUIFToolbarButton::SetIcon(NULL);
+    }
+}
+
+/// @implemented
+void CCompFinalizeButton::OnLeftClick()
+{
+    HIMC hIMC = m_pCompFrameWindow->m_hIMC;
+    if (hIMC)
+        ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+}
+
+/***********************************************************************/
+
+/// @implemented
+CCompFrameWindow::CCompFrameWindow(HIMC hIMC, DWORD style)
+    : CUIFWindow(g_hInst, style)
+{
+    m_hIMC = hIMC;
+}
+
+/***********************************************************************/
+
+/// @implemented
+CCompButtonFrameWindow::CCompButtonFrameWindow(HIMC hIMC, DWORD style)
+    : CCompFrameWindow(hIMC, style)
+{
+}
+
+/// @implemented
+void CCompButtonFrameWindow::Init()
+{
+    if (m_pFinalizeButton)
+        return;
+
+    RECT rc = { 0, 0, 0, 0 };
+    m_pFinalizeButton = new(cicNoThrow) CCompFinalizeButton(this, 0, &rc, 0, 0x10000, NULL);
+
+    m_pFinalizeButton->Initialize();
+    m_pFinalizeButton->Init();
+
+    HICON hIcon = (HICON)::LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_DOWN), IMAGE_ICON, 16, 16, 0);
+    m_pFinalizeButton->SetIcon(hIcon);
+
+    WCHAR szText[256];
+    LoadStringW(g_hInst, IDS_FINALIZE_STRING, szText, _countof(szText));
+    m_pFinalizeButton->SetToolTip(szText);
+
+    AddUIObj(m_pFinalizeButton);
+}
+
+/// @implemented
+void CCompButtonFrameWindow::MoveShow(LONG x, LONG y, BOOL bShow)
+{
+    INT nWidth = m_Margins.cxRightWidth + m_Margins.cxLeftWidth + 18;
+    INT nHeight = m_Margins.cyBottomHeight + m_Margins.cyTopHeight + 18;
+    Move(x, y, nWidth + 4, nHeight + 4);
+
+    if (m_pFinalizeButton)
+    {
+        RECT rc = { 1, 1, nWidth + 1, nHeight + 1 };
+        m_pFinalizeButton->SetRect(&rc);
+    }
+
+    Show(bShow);
+}
+
+/// @implemented
+STDMETHODIMP_(void) CCompButtonFrameWindow::OnCreate(HWND hWnd)
+{
+    ::SetWindowTheme(hWnd, L"TOOLBAR", NULL);
+
+    ZeroMemory(&m_Margins, sizeof(m_Margins));
+
+    CUIFTheme theme;
+    theme.m_hTheme = NULL;
+    theme.m_iPartId = 1;
+    theme.m_iStateId = 0;
+    theme.m_pszClassList = L"TOOLBAR";
+    if (SUCCEEDED(theme.InternalOpenThemeData(hWnd)))
+        theme.GetThemeMargins(NULL, 1, 3602, NULL, &m_Margins);
+}
+
+/***********************************************************************/
+
+/// @implemented
+CDefCompFrameWindow::CDefCompFrameWindow(HIMC hIMC, DWORD style)
+    : CCompFrameWindow(hIMC, style)
+{
+    LoadPosition();
+    m_iPartId = 1;
+    m_iStateId = 1;
+    m_pszClassList = L"TASKBAR";
+}
+
+/// @implemented
+CDefCompFrameWindow::~CDefCompFrameWindow()
+{
+    SavePosition();
+}
+
+/// @implemented
+void CDefCompFrameWindow::Init()
+{
+    RECT rc;
+
+    if (!m_pGripper)
+    {
+        ZeroMemory(&rc, sizeof(rc));
+        m_pGripper = new(cicNoThrow) CDefCompFrameGripper(this, &rc, 0);
+        m_pGripper->Initialize();
+        AddUIObj(m_pGripper);
+    }
+
+    if (!m_pFinalizeButton)
+    {
+        ZeroMemory(&rc, sizeof(rc));
+        m_pFinalizeButton = new(cicNoThrow) CCompFinalizeButton(this, 0, &rc, 0, 0x10000, NULL);
+        m_pFinalizeButton->Initialize();
+        m_pFinalizeButton->Init();
+
+        HICON hIcon = (HICON)LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_DOWN), IMAGE_ICON, 16, 16, 0);
+        m_pFinalizeButton->SetIcon(hIcon);
+
+        WCHAR szText[256];
+        ::LoadStringW(g_hInst, IDS_FINALIZE_STRING, szText, _countof(szText));
+        SetToolTip(szText);
+
+        AddUIObj(m_pFinalizeButton);
+    }
+}
+
+/// @implemented
+INT CDefCompFrameWindow::GetGripperWidth()
+{
+    if (!m_pGripper || FAILED(m_pGripper->EnsureThemeData(m_hWnd)))
+        return 5;
+
+    INT ret = -1;
+    HDC hDC = ::GetDC(m_hWnd);
+    SIZE partSize;
+    if (SUCCEEDED(m_pGripper->GetThemePartSize(hDC, 1, 0, TS_TRUE, &partSize)))
+        ret = partSize.cx + 4;
+
+    ::ReleaseDC(m_hWnd, hDC);
+
+    return ((ret < 0) ? 5 : ret);
+}
+
+/// @implemented
+void CDefCompFrameWindow::MyScreenToClient(LPPOINT ppt, LPRECT prc)
+{
+    if (ppt)
+        ::ScreenToClient(m_hWnd, ppt);
+
+    if (prc)
+    {
+        ::ScreenToClient(m_hWnd, (LPPOINT)prc);
+        ::ScreenToClient(m_hWnd, (LPPOINT)&prc->right);
+    }
+}
+
+/// @implemented
+void CDefCompFrameWindow::SetCompStrRect(INT nWidth, INT nHeight, BOOL bShow)
+{
+    INT GripperWidth = GetGripperWidth();
+
+    RECT rc;
+    ::GetWindowRect(m_hWnd, &rc);
+
+    Move(rc.left, rc.top, GripperWidth + nWidth + 24, nHeight + 10);
+
+    if (m_pGripper)
+    {
+        rc = { 2, 3, GripperWidth + 2, nHeight + 7 };
+        m_pGripper->SetRect(&rc);
+    }
+
+    if (m_pFinalizeButton)
+    {
+        rc = {
+            GripperWidth + nWidth + 4,
+            3,
+            m_Margins.cxLeftWidth + m_Margins.cxRightWidth + GripperWidth + nWidth + 22,
+            m_Margins.cyBottomHeight + m_Margins.cyTopHeight + 21
+        };
+        m_pFinalizeButton->SetRect(&rc);
+    }
+
+    Show(bShow);
+
+    ::MoveWindow(m_hwndDefCompFrame, GripperWidth + 2, 7, nWidth, nHeight, TRUE);
+    ::ShowWindow(m_hwndDefCompFrame, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
+}
+
+/// @implemented
+void CDefCompFrameWindow::LoadPosition()
+{
+    DWORD x = 0, y = 0;
+
+    LSTATUS error;
+    CicRegKey regKey;
+    error = regKey.Open(HKEY_CURRENT_USER,
+                        TEXT("SOFTWARE\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow"));
+    if (error == ERROR_SUCCESS)
+    {
+        regKey.QueryDword(TEXT("Left"), &x);
+        regKey.QueryDword(TEXT("Top"), &y);
+    }
+
+    Move(x, y, 0, 0);
+}
+
+/// @implemented
+void CDefCompFrameWindow::SavePosition()
+{
+    LSTATUS error;
+    CicRegKey regKey;
+    error = regKey.Create(HKEY_CURRENT_USER,
+                          TEXT("SOFTWARE\\Microsoft\\CTF\\CUAS\\DefaultCompositionWindow"));
+    if (error == ERROR_SUCCESS)
+    {
+        regKey.SetDword(TEXT("Left"), m_nLeft);
+        regKey.SetDword(TEXT("Top"), m_nTop);
+    }
+}
+
+/// @implemented
+STDMETHODIMP_(void) CDefCompFrameWindow::OnCreate(HWND hWnd)
+{
+    ::SetWindowTheme(hWnd, L"TASKBAR", NULL);
+
+    ZeroMemory(&m_Margins, sizeof(m_Margins));
+
+    CUIFTheme theme;
+    theme.m_hTheme = NULL;
+    theme.m_iPartId = 1;
+    theme.m_iStateId = 0;
+    theme.m_pszClassList = L"TOOLBAR";
+    if (SUCCEEDED(theme.InternalOpenThemeData(hWnd)))
+        GetThemeMargins(NULL, 1, 3602, NULL, &m_Margins);
+}
+
+/// @implemented
+STDMETHODIMP_(BOOL) CDefCompFrameWindow::OnSetCursor(UINT uMsg, LONG x, LONG y)
+{
+    if (!::IsWindow(m_hwndDefCompFrame))
+        return FALSE;
+
+    RECT rc;
+    ::GetWindowRect(m_hwndDefCompFrame, &rc);
+    MyScreenToClient(NULL, &rc);
+    POINT pt = { x, y };
+    return ::PtInRect(&rc, pt);
+}
+
+/// @implemented
+STDMETHODIMP_(LRESULT)
+CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CicIMCLock imcLock(m_hIMC);
+    if (!imcLock)
+        imcLock.m_hr = E_FAIL;
+    if (SUCCEEDED(imcLock.m_hr))
+        ::SendMessage(imcLock.get().hWnd, WM_IME_NOTIFY, 0xF, (LPARAM)m_hIMC);
+    return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+/// @implemented
+STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
+{
+    if (::IsWindow(m_hwndDefCompFrame))
+    {
+        RECT rc;
+        ::GetWindowRect(m_hwndDefCompFrame, &rc);
+        MyScreenToClient(NULL, &rc);
+
+        POINT pt = { x, y };
+        if (::PtInRect(&rc, pt))
+            ::SendMessage(m_hwndDefCompFrame, 0x7E8, 0, 0);
+    }
+
+    CUIFWindow::HandleMouseMsg(uMsg, x, y);
+}
+
+/***********************************************************************/
 
 // For GetWindowLongPtr/SetWindowLongPtr
 #define UIGWLP_HIMC 0

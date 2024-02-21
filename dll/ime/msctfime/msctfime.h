@@ -28,6 +28,7 @@
 #include <cicarray.h>
 #include <cicimc.h>
 #include <cictf.h>
+#include <cicreg.h>
 #include <ciccaret.h>
 #include <cicuif.h>
 #include <cicutb.h>
