@@ -444,15 +444,14 @@ UI::~UI()
     delete m_pComp;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT UI::_Create()
 {
     m_pComp = new(cicNoThrow) UIComposition();
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
-    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
-    //FIXME
+    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
     return S_OK;
 }
 
@@ -460,13 +459,13 @@ HRESULT UI::_Create()
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
-    SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
+    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
 }
 
 /// @implemented
 void UI::OnCreate(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
     if (pUI)
         return;
     pUI = new(cicNoThrow) UI(hWnd);
@@ -477,7 +476,7 @@ void UI::OnCreate(HWND hWnd)
 /// @implemented
 void UI::OnDestroy(HWND hWnd)
 {
-    UI *pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
     if (!pUI)
         return;
 
