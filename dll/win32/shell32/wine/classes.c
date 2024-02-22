@@ -34,6 +34,9 @@
 #include <shlwapi.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#ifdef __REACTOS__
+#include <strsafe.h>
+#endif
 
 #include "pidl.h"
 #include "shell32_main.h"
