@@ -65,7 +65,7 @@ CicInputContext::OnStartComposition(
     ITfCompositionView *pComposition,
     BOOL *pfOk)
 {
-    if ((m_cCompLocks <= 0) || m_dwUnknown6_5)
+    if ((m_cCompLocks <= 0) || m_bReconverting)
     {
         *pfOk = TRUE;
         ++m_cCompLocks;
@@ -249,6 +249,36 @@ CicInputContext::OnCleanupContext(
     pProp->Release();
 
     return S_OK;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT
+CicInputContext::SetupReconvertString(
+    CicIMCLock& imcLock,
+    ITfThreadMgr_P *pThreadMgr,
+    UINT uCodePage,
+    DWORD dwUnknown61,
+    BOOL bUndo)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::EndReconvertString(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
 }
 
 /// Retrieves the IME information.

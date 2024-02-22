@@ -47,7 +47,7 @@ public:
     GUID m_guid;
     DWORD m_dwUnknown6[11];
     BOOL m_bSelecting;
-    DWORD m_dwUnknown6_5;
+    BOOL m_bReconverting;
     LONG m_cCompLocks;
     DWORD m_dwUnknown7[5];
     WORD m_cGuidAtoms;
@@ -88,4 +88,14 @@ public:
 
     HRESULT CreateInputContext(_Inout_ ITfThreadMgr *pThreadMgr, _Inout_ CicIMCLock& imcLock);
     HRESULT DestroyInputContext();
+
+    HRESULT SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage);
+    HRESULT EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag);
+    HRESULT SetupReconvertString(
+        CicIMCLock& imcLock,
+        ITfThreadMgr_P *pThreadMgr,
+        UINT uCodePage,
+        DWORD dwUnknown61,
+        BOOL bUndo);
+    HRESULT EndReconvertString(CicIMCLock& imcLock);
 };

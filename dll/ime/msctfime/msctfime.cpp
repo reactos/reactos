@@ -142,14 +142,6 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     return hr;
 }
 
-HIMC GetActiveContext(VOID)
-{
-    HWND hwndFocus = ::GetFocus();
-    if (!hwndFocus)
-        hwndFocus = ::GetActiveWindow();
-    return ::ImmGetContext(hwndFocus);
-}
-
 /// @implemented
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
