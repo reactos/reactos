@@ -150,26 +150,112 @@ STDMETHODIMP_(ULONG) CFnDocFeed::Release()
     return m_cRefs;
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CFnDocFeed::DocFeed()
 {
-    return E_NOTIMPL;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+
+    HIMC hIMC = GetActiveContext();
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_FAIL;
+
+    UINT uCodePage = CP_ACP;
+    pTLS->m_pProfile->GetCodePageA(&uCodePage);
+    pCicIC->SetupDocFeedString(imcLock, uCodePage);
+    return S_OK;
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CFnDocFeed::ClearDocFeedBuffer()
 {
-    return E_NOTIMPL;
+    if (!TLS::GetTLS())
+        return E_OUTOFMEMORY;
+
+    HIMC hIMC = GetActiveContext();
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_FAIL;
+
+    pCicIC->EscbClearDocFeedBuffer(imcLock, TRUE);
+    return S_OK;
 }
 
 /// @unimplemented
 STDMETHODIMP CFnDocFeed::StartReconvert()
 {
-    return E_NOTIMPL;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+    auto *pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    HIMC hIMC = GetActiveContext();
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_FAIL;
+
+    UINT uCodePage = CP_ACP;
+    pTLS->m_pProfile->GetCodePageA(&uCodePage);
+
+    pCicIC->m_bReconverting = TRUE;
+    pCicIC->SetupReconvertString(imcLock, pThreadMgr, uCodePage, 0, 0);
+    pCicIC->EndReconvertString(imcLock);
+    pCicIC->m_bReconverting = FALSE;
+    return S_OK;
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CFnDocFeed::StartUndoCompositionString()
 {
-    return E_NOTIMPL;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return E_OUTOFMEMORY;
+    auto *pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    HIMC hIMC = GetActiveContext();
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_FAIL;
+
+    UINT uCodePage = CP_ACP;
+    pTLS->m_pProfile->GetCodePageA(&uCodePage);
+
+    pCicIC->SetupReconvertString(imcLock, pThreadMgr, uCodePage, 0, TRUE);
+    pCicIC->EndReconvertString(imcLock);
+    return S_OK;
 }

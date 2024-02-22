@@ -142,14 +142,6 @@ HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     return hr;
 }
 
-HIMC GetActiveContext(VOID)
-{
-    HWND hwndFocus = ::GetFocus();
-    if (!hwndFocus)
-        hwndFocus = ::GetActiveWindow();
-    return ::ImmGetContext(hwndFocus);
-}
-
 /// @implemented
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
 {
@@ -184,8 +176,6 @@ InternalSelectEx(
     _In_ LANGID LangID)
 {
     CicIMCLock imcLock(hIMC);
-    if (!imcLock)
-        imcLock.m_hr = E_FAIL;
     if (FAILED(imcLock.m_hr))
         return imcLock.m_hr;
 
@@ -608,25 +598,17 @@ CtfImeGetGuidAtom(
     TRACE("(%p, 0x%lX, %p)\n", hIMC, dwUnknown, pdwGuidAtom);
 
     CicIMCLock imcLock(hIMC);
-
-    HRESULT hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imccLock(imcLock.get().hCtfImeContext);
-    hr = imccLock.m_hr;
-    if (!imccLock)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imccLock.m_hr))
+        return imccLock.m_hr;
 
     if (!imccLock.get().m_pCicIC)
         return E_OUTOFMEMORY;
 
-    hr = imccLock.get().m_pCicIC->GetGuidAtom(imcLock, dwUnknown, pdwGuidAtom);
-    return hr;
+    return imccLock.get().m_pCicIC->GetGuidAtom(imcLock, dwUnknown, pdwGuidAtom);
 }
 
 /***********************************************************************
@@ -641,13 +623,8 @@ CtfImeIsGuidMapEnable(
     TRACE("(%p)\n", hIMC);
 
     BOOL ret = FALSE;
-    HRESULT hr;
     CicIMCLock imcLock(hIMC);
-
-    hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
-    if (SUCCEEDED(hr))
+    if (SUCCEEDED(imcLock.m_hr))
         ret = !!(imcLock.get().fdwInit & INIT_GUIDMAP);
 
     return ret;

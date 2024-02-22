@@ -87,11 +87,8 @@ CicBridge::CreateInputContext(
     _In_ HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
-    HRESULT hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
 
     if (!imcLock.get().hCtfImeContext)
     {
@@ -126,7 +123,7 @@ CicBridge::CreateInputContext(
         imeContext.get().m_pCicIC = pCicIC;
     }
 
-    hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
+    HRESULT hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
     if (FAILED(hr))
     {
         pCicIC->Release();
@@ -149,8 +146,6 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
     HRESULT hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
     if (FAILED(hr))
         return hr;
 
@@ -217,8 +212,6 @@ CicBridge::SelectEx(
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
 
