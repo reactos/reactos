@@ -192,7 +192,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         return hr;
 
     /* Load icon for the current user */
-    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, MAX_PATH, &icon_idx);
+    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
     if (!ret)
     {
         /* Failed, load default system-wide icon */
@@ -200,7 +200,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        ret = HCR_GetIconW(KeyName, wTemp, iconname, MAX_PATH, &icon_idx);
+        ret = HCR_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
     }
 
     if (ret)

@@ -542,16 +542,16 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     }
 
     if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
-                                               &icon_idx, &flags)))
+                                          &icon_idx, &flags)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
-    else if (HLM_GetIconW(reg_idx - 1, wTemp, MAX_PATH, &icon_idx))
+    else if (HLM_GetIconW(reg_idx - 1, wTemp, _countof(wTemp), &icon_idx))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
-        (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
+        (HCR_GetIconW(L"Drive", wTemp, NULL, _countof(wTemp), &icon_idx)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }

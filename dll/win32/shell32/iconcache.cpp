@@ -654,13 +654,18 @@ void SIC_Destroy(void)
  */
 static int SIC_LoadOverlayIcon(int icon_idx)
 {
+    WCHAR buffer[1024];
     LPWSTR iconPath;
     int iconIdx;
 
     iconPath = swShell32Name;    /* default: load icon from shell32.dll */
     iconIdx = icon_idx;
 
-    if (!HLM_GetIconW(icon_idx, iconPath, MAX_PATH, &iconIdx))
+    if (HLM_GetIconW(icon_idx, buffer, _countof(buffer), &iconIdx))
+    {
+        iconPath = buffer;
+    }
+    else
     {
         WARN("Failed to load icon with index %d, using default one\n", icon_idx);
     }

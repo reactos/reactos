@@ -337,9 +337,9 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 #ifdef __REACTOS__
 BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
-    HKEY    hkey;
-    WCHAR   sTemp[MAX_PATH];
-    BOOL    ret = FALSE;
+    HKEY hkey;
+    WCHAR sTemp[MAX_PATH];
+    BOOL ret = FALSE;
 
     TRACE("%s\n", debugstr_w(szClass));
 
@@ -361,9 +361,9 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 
 BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
-    LPWSTR  wszClass, wszDest, wszName = NULL;
-    int     lenW;
-    BOOL    ret = FALSE;
+    LPWSTR wszClass, wszDest, wszName = NULL;
+    int lenW;
+    BOOL ret = FALSE;
 
     lenW = MultiByteToWideChar(CP_ACP, 0, szClass, -1, NULL, 0);
     wszClass = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
@@ -393,9 +393,9 @@ BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 
 BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
 {
-    HKEY    hkey;
-    WCHAR   sTemp[5];
-    BOOL    ret = FALSE;
+    HKEY hkey;
+    WCHAR sTemp[5];
+    BOOL ret = FALSE;
 
     TRACE("%d\n", reg_idx);
 
@@ -421,8 +421,8 @@ BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
 
 BOOL HLM_GetIconA(int reg_idx, LPSTR szDest, DWORD len, int* picon_idx)
 {
-    LPWSTR  wszDest;
-    BOOL    ret = FALSE;
+    LPWSTR wszDest;
+    BOOL ret = FALSE;
 
     wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (wszDest)
