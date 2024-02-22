@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Supporting compartments
+ * PURPOSE:     Miscellaneous of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -160,4 +160,51 @@ ClearCompartment(
         pThreadMgr->Release();
 
     return hr;
+}
+
+/***********************************************************************/
+
+struct MODEBIAS
+{
+    REFGUID m_guid;
+    LONG m_bias;
+};
+
+static const MODEBIAS g_ModeBiasMap[] =
+{
+    { GUID_MODEBIAS_FILENAME,   0x00000001 },
+    { GUID_MODEBIAS_NUMERIC,    0x00000004 },
+    { GUID_MODEBIAS_URLHISTORY, 0x00010000 },
+    { GUID_MODEBIAS_DEFAULT,    0x00000000 },
+    { GUID_MODEBIAS_NONE,       0x00000000 },
+};
+
+void CModeBias::SetModeBias(REFGUID rguid)
+{
+    m_guid = rguid;
+}
+
+GUID CModeBias::ConvertModeBias(LONG bias)
+{
+    const GUID *pguid = &GUID_NULL;
+    for (auto& item : g_ModeBiasMap)
+    {
+        if (item.m_bias == bias)
+        {
+            pguid = &item.m_guid;
+            break;
+        }
+    }
+
+    return *pguid;
+}
+
+LONG CModeBias::ConvertModeBias(REFGUID guid)
+{
+    for (auto& item : g_ModeBiasMap)
+    {
+        if (IsEqualGUID(guid, item.m_guid))
+            return item.m_bias;
+    }
+    return 0;
 }
