@@ -541,8 +541,9 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
             break;
     }
 
-    if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
-                                          &icon_idx, &flags)))
+    hr = getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
+                                 &icon_idx, &flags);
+    if (SUCCEEDED(hr))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
