@@ -359,38 +359,6 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
     return ret;
 }
 
-BOOL HCU_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
-{
-    LPWSTR wszClass, wszDest, wszName = NULL;
-    int lenW;
-    BOOL ret = FALSE;
-
-    lenW = MultiByteToWideChar(CP_ACP, 0, szClass, -1, NULL, 0);
-    wszClass = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
-    if (wszClass)
-    {
-        MultiByteToWideChar(CP_ACP, 0, szClass, -1, wszClass, lenW);
-        if (szName)
-        {
-            lenW = MultiByteToWideChar(CP_ACP, 0, szName, -1, NULL, 0);
-            wszName = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
-            if (wszName)
-                MultiByteToWideChar(CP_ACP, 0, szName, -1, wszName, lenW);
-        }
-        wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (wszDest)
-        {
-            ret = HCU_GetIconW(wszClass, wszDest, wszName, len, picon_idx);
-            WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
-            HeapFree(GetProcessHeap(), 0, wszDest);
-        }
-        if (wszName)
-            HeapFree(GetProcessHeap(), 0, wszName);
-        HeapFree(GetProcessHeap(), 0, wszClass);
-    }
-    return ret;
-}
-
 BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
 {
     HKEY hkey;
@@ -415,22 +383,6 @@ BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
         TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
     else
         TRACE("-- not found\n");
-
-    return ret;
-}
-
-BOOL HLM_GetIconA(int reg_idx, LPSTR szDest, DWORD len, int* picon_idx)
-{
-    LPWSTR wszDest;
-    BOOL ret = FALSE;
-
-    wszDest = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (wszDest)
-    {
-        ret = HLM_GetIconW(reg_idx, wszDest, len, picon_idx);
-        WideCharToMultiByte(CP_ACP, 0, wszDest, -1, szDest, len, NULL, NULL);
-        HeapFree(GetProcessHeap(), 0, wszDest);
-    }
 
     return ret;
 }
