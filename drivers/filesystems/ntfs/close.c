@@ -59,12 +59,17 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
+
+DPRINT1("DeviceExt->OpenHandleCount = 0x%lx\n", DeviceExt->OpenHandleCount);
+DPRINT1("Fcb->OpenHandleCount = 0x%lx\n", Fcb->OpenHandleCount);
+
+    ASSERT(DeviceExt->OpenHandleCount > 0);
     DeviceExt->OpenHandleCount--;
 
     if (FileObject->FileName.Buffer)
     {
         // This a FO, that was created outside from FSD.
-        // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
+        // Some FO's are created with IoCreateStreamFileObject() inside from FSD.
         // This FO's don't have a FileName.
         NtfsReleaseFCB(DeviceExt, Fcb);
     }
