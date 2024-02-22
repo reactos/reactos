@@ -343,7 +343,7 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 
     TRACE("%s\n", debugstr_w(szClass));
 
-    swprintf(sTemp, L"%s\\DefaultIcon", szClass);
+    StringCchPrintfW(sTemp, _countof(sTemp), L"%s\\DefaultIcon", szClass);
 
     if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
     {
@@ -399,7 +399,7 @@ BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
 
     TRACE("%d\n", reg_idx);
 
-    swprintf(sTemp, L"%d", reg_idx);
+    StringCchPrintfW(sTemp, _countof(sTemp), L"%d", reg_idx);
 
     if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",

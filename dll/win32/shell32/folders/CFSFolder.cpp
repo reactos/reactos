@@ -140,7 +140,7 @@ getDefaultIconLocation(LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT uFlags
     {
         if (!HCR_GetIconW(L"Folder", szIconFile, NULL, cchMax, piIndex))
         {
-            lstrcpynW(szIconFile, swShell32Name, cchMax);
+            StringCchCopyW(szIconFile, cchMax, swShell32Name);
             *piIndex = -IDI_SHELL_FOLDER;
         }
     }
