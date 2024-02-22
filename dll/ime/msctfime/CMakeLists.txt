@@ -6,9 +6,9 @@ spec2def(msctfime.ime msctfime.spec)
 
 list(APPEND SOURCE
     bridge.cpp
-    compartment.cpp
     functions.cpp
     inputcontext.cpp
+    misc.cpp
     msctfime.cpp
     profile.cpp
     sinks.cpp

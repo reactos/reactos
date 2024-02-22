@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Supporting compartments
+ * PURPOSE:     Miscellaneous of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -42,3 +42,15 @@ ClearCompartment(
     IUnknown *pUnknown,
     REFGUID rguid,
     BOOL bThread);
+
+/***********************************************************************/
+
+class CModeBias
+{
+public:
+    GUID m_guid;
+
+    GUID ConvertModeBias(LONG bias);
+    LONG ConvertModeBias(REFGUID guid);
+    void SetModeBias(REFGUID rguid);
+};
