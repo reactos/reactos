@@ -503,8 +503,8 @@ int wmain(int argc, WCHAR* argv[])
     LogfListInitialize();
     InitEventSourceList();
 
+__debugbreak();
     GetSystemWindowsDirectoryW(LogPath, ARRAYSIZE(LogPath));
-
     if (GetDriveTypeW(LogPath) == DRIVE_CDROM)
     {
         DPRINT("LiveCD detected\n");
