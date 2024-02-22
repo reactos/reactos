@@ -357,8 +357,6 @@ STDMETHODIMP_(LRESULT)
 CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CicIMCLock imcLock(m_hIMC);
-    if (!imcLock)
-        imcLock.m_hr = E_FAIL;
     if (SUCCEEDED(imcLock.m_hr))
         ::SendMessage(imcLock.get().hWnd, WM_IME_NOTIFY, 0xF, (LPARAM)m_hIMC);
     return ::DefWindowProc(hWnd, uMsg, wParam, lParam);

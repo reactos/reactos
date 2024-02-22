@@ -46,7 +46,7 @@ public:
     CicIMCCLock(HIMCC hIMCC) : CIC_IMCC_LOCK<T_DATA>(hIMCC)
     {
         if (hIMCC)
-            _LockIMCC(this->m_hIMCC, &this->m_pIMCC);
+            this->m_hr = _LockIMCC(this->m_hIMCC, &this->m_pIMCC);
     }
     ~CicIMCCLock()
     {

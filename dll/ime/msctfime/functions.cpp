@@ -163,8 +163,6 @@ STDMETHODIMP CFnDocFeed::DocFeed()
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
@@ -189,8 +187,6 @@ STDMETHODIMP CFnDocFeed::ClearDocFeedBuffer()
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
 
@@ -218,8 +214,6 @@ STDMETHODIMP CFnDocFeed::StartReconvert()
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
@@ -252,8 +246,6 @@ STDMETHODIMP CFnDocFeed::StartUndoCompositionString()
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;

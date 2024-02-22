@@ -103,13 +103,10 @@ CicInputContext::GetGuidAtom(
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
-    HRESULT hr = imeContext.m_hr;
-    if (!imeContext)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
 
-    hr = E_FAIL;
+    HRESULT hr = E_FAIL;
     if (iAtom < m_cGuidAtoms)
     {
         *pdwGuidAtom = m_adwGuidAtoms[iAtom];
