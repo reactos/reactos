@@ -1,7 +1,7 @@
 The following material is addressed (in Romanian) to Romanian translators.
 
 Copyright 2014 Ștefan Fulea
-Copyright 2023 Miloiu Andrei
+Copyright 2023-2024 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
@@ -15,35 +15,32 @@ Normele de traducere curente conțin în mare parte normele de traducere adoptat
 Astfel:
  1. Sunt folosite diacriticele corecte ale limbii române.
  2. Traducerile trebuiesc adaptate respectând topica limbii române.
- 3. În relația utilizator - calculator este adoptată o atitudine informal-autoritară (cu verbe la modul imperativ singular).
- 4. În relația utilizator - calculator, în cazul etapelor intermediare (având texte delimitate de puncte de suspensie), (în cazul verbelor) este folosit modul infinitiv lung.
- 5. În relația calculator - utilizator este adoptată o atitudine formal-politicoasă (cu verbe la modul indicativ/conjunctiv, persoana a 2-a, plural).
- 6. Este evitată politețea excesivă prin omiterea expresiilor de politețe explicite.
- 7. Este evitată utilizarea diacriticelor ca taste active (acceleratori sau taste de acces).
- 8. Este evitată utilizarea diacriticelor ca taste active (acceleratori sau taste de acces).
- 9. Este recomandată o formulare independentă de gen (gramatical) dacă nu se cununoaște genul substantivului.
- 10. Pentru tastele de acces (care răspund la combinația de taste «Alt» + «tastă», evidențiate prin sublinierea tastei respective):
+ 3. În relația utilizator - calculator este folosit modul infinitiv lung.
+ 4. În relația calculator - utilizator este adoptată o atitudine formal-politicoasă (cu verbe la modul indicativ/conjunctiv, persoana a 2-a, plural).
+ 5. Este evitată politețea excesivă prin omiterea expresiilor de politețe explicite.
+ 6. Este evitată utilizarea diacriticelor ca taste active (acceleratori sau taste de acces).
+ 7. Este recomandată o formulare independentă de gen (gramatical) dacă nu se cununoaște genul substantivului.
+ 8. Pentru tastele de acces (care răspund la combinația de taste «Alt» + «tastă», evidențiate prin sublinierea tastei respective):
   - Sunt folosite doar litere sau cifre (recomandare de la Microsoft [2]: „Access keys are alphanumeric keys”). Sunt deci de evitat alte simboluri sau semne de punctuație.
   - Sunt de evitat (tot conform aceiași recomandări [2]) literele sau cifrele care fac reperarea lor un exercițiu dificil, cum e grupul „l”, „1”, „i” și „I” (din cauza lățimii lor reduse), sau „g”, „j”, „p”, „q” și „y” (care intersectează marcajul de evidențiere).
- 11. Ghilimelele folosite în limba română sunt perechea ghilimelele-deschise (99 jos) cu ghilimele-închise (99 sus), și ghilimelele unghiulare.
+ 9. Ghilimelele folosite în limba română sunt perechea ghilimelele-deschise (99 jos) cu ghilimele-închise (99 sus), și ghilimelele unghiulare.
 La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” raportate tot la i18n.ro [3].
- 12. Nu sunt traduse numele proprii (cu excepția numelor traductibile ale componentelor/subcomponentelor unui program sau pachet de programe).
- 13. Nu este capitalizată decât prima literă dintr-un text.
+ 10. Nu sunt traduse numele proprii (cu excepția numelor traductibile ale componentelor/subcomponentelor unui program sau pachet de programe).
+ 11. Nu este capitalizată decât prima literă dintr-un text.
 
 * Particularizări locale
 
 În resursele românești din ReactOS există și o serie de particularizări care fie nu se regăsesc în alte traduceri fie din cauza diferențelor de natură ale proiectelor, fie e vorba de termeni încă disputați sau neadoptați în localizările altor proiecte din diverse motive. Multe dintre acestea au fost menționate/discutate în grupul „Diacritice” [4]. Câteva dintre cele mai relevante:
- 14. În glosar sunt preferate:
-  - „Confirmă”/„Anulează” vs. „OK”/„Renunță”
- 15. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
- 16. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
+ 12. În glosar se preferă:
+  - „OK”/„Revocare”
+ 13. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
+ 14. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
   - „f” și „n” sunt rezervate pentru „Confirmă” și respectiv „Anulează”; „a” pentru „Aplică” (dacă există în aceiași fereastră). În cazul ferestrelor de tip asistent, „a”, „o”, „f” și „n” sunt rezervate respectiv pentru „Înainte”, „Înapoi”, „Sfârșit” și „Anulează”. [NOTĂ]
   - În cazul interfețelor grafice opțiunilor „Da” și „Nu” le corespund tastele de acces „a” și „u”. (În cazul interfețelor linie-de-comandă, corespunzătoare opțiunilor „Da/Nu”, care NU sunt taste de acces, rămân „d” și „n”.)
- 17. Din considerente de lizibilitate, în cazul programelor executate în linie-de-comandă sunt folosite doar ghilimele unghiulare. Tot ghilimelele unghiulare sunt preferate și pentru citarea tastelor fizice în mesajele elementelor GUI.
- 18. Enunțul de la convenția 2 poate fi extins la „traducerile trebuiesc adaptate respectând (și beneficiind de) particularitățile limbii române”, iar următoarele zece coonvenții ce urmează după el (3-13) definesc de fapt reguli implicite aplicabile în lipsa unui context bine definit în toate aspectele sale. Unde este posibil, o adaptare la context este dezirabilă:
+ 15. Enunțul de la convenția 2 poate fi extins la „traducerile trebuiesc adaptate respectând (și beneficiind de) particularitățile limbii române”, iar următoarele zece coonvenții ce urmează după el (3-13) definesc de fapt reguli implicite aplicabile în lipsa unui context bine definit în toate aspectele sale. Unde este posibil, o adaptare la context este dezirabilă:
   - În cazul opțiunilor despre care există suficiente informații de context, este recomandată flexionarea. De exemplu, opțiunea nulă pentru lista de animații pentru ecran inactiv se poate flexiona în siguranță specificându-i-se genul gramatical feminin - „(nespecificată)”.
   - În cazul unor subiecte unice (dintr-un context local sau global), este folosită forma articulată. Exemple: „Calculatorul meu” (numai unul, conținut concret), „Sistemul de operare” (unic în cadrul său), „Documentele mele” (conținut concret) vs. „Locații în rețea” (nedefinit), „Linie de comandă” (cu multiple posibile instanțe distincte/independente), etc.
- 19. Diateza reflexivă va fi folosită doar atunci când e necesar.
+ 16. Diateza reflexivă va fi folosită doar atunci când e necesar.
 
 [1] https://web.archive.org/web/20170307094948/http://i18n.ro/Ghidul_traduc%C4%83torului_de_software
 [2] https://msdn.microsoft.com/en-us/library/ms971323.aspx#atg_keyboardshortcuts_selecting_access_keys
