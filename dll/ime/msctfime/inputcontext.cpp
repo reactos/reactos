@@ -261,6 +261,12 @@ HRESULT CicInputContext::EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag)
 }
 
 /// @unimplemented
+HRESULT CicInputContext::EscbCompComplete(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
 HRESULT
 CicInputContext::SetupReconvertString(
     CicIMCLock& imcLock,

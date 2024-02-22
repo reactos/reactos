@@ -178,6 +178,7 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
     return hr;
 }
 
+/// @implemented
 ITfContext *
 CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
@@ -187,14 +188,22 @@ CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
     return pCicIC->m_pContext;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT CicBridge::OnSetOpenStatus(
     TLS *pTLS,
     ITfThreadMgr_P *pThreadMgr,
     CicIMCLock& imcLock,
     CicInputContext *pCicIC)
 {
-    return E_NOTIMPL;
+    if (!imcLock.get().fOpen && imcLock.ValidCompositionString())
+        pCicIC->EscbCompComplete(imcLock);
+
+    pTLS->m_bNowOpening = TRUE;
+    HRESULT hr = SetCompartmentDWORD(m_cliendId, pThreadMgr,
+                                     GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
+                                     imcLock.get().fOpen, FALSE);
+    pTLS->m_bNowOpening = FALSE;
+    return hr;
 }
 
 /// Selects the IME context.
