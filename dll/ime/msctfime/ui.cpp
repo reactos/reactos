@@ -655,7 +655,7 @@ UIWndProc(
 
 /***********************************************************************/
 
-/// @unimplemented
+/// @implemented
 BOOL RegisterImeClass(VOID)
 {
     WNDCLASSEXW wcx;
