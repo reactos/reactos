@@ -24,7 +24,7 @@ EXTERN_C void __cxa_pure_virtual(void)
 
 /// Selects or unselects the input context.
 /// @implemented
-HRESULT
+static HRESULT
 InternalSelectEx(
     _In_ HIMC hIMC,
     _In_ BOOL fSelect,
@@ -77,7 +77,7 @@ InternalSelectEx(
         // Get logical font
         LOGFONTW lf;
         HDC hDC = ::GetDC(imcLock.get().hWnd);
-        HGDIOBJ hFont = GetCurrentObject(hDC, OBJ_FONT);
+        HGDIOBJ hFont = ::GetCurrentObject(hDC, OBJ_FONT);
         ::GetObjectW(hFont, sizeof(LOGFONTW), &lf);
         ::ReleaseDC(imcLock.get().hWnd, hDC);
 
@@ -89,6 +89,77 @@ InternalSelectEx(
     imcLock.InitContext();
 
     return imcLock.m_hr;
+}
+
+/// Retrieves the IME information.
+/// @implemented
+HRESULT
+Inquire(
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags,
+    _In_ HKL hKL)
+{
+    if (!lpIMEInfo)
+        return E_OUTOFMEMORY;
+
+    StringCchCopyW(lpszWndClass, 64, L"MSCTFIME UI");
+    lpIMEInfo->dwPrivateDataSize = 0;
+
+    switch (LOWORD(hKL)) // Language ID
+    {
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT): // Japanese
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
+                                           IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = IME_SMODE_CONVERSATION | IME_SMODE_PLAURALCLAUSE;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_SENTENCE | SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT): // Korean
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): // Simplified Chinese
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL): // Traditional Chinese
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET |
+                                     IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSelectCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        default: // Otherwise
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_AT_CARET;
+            lpIMEInfo->fdwConversionCaps = 0;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = 0;
+            lpIMEInfo->fdwUICaps = 0;
+            lpIMEInfo->fdwSelectCaps = 0;
+            break;
+        }
+    }
+
+    return S_OK;
 }
 
 /***********************************************************************
@@ -229,13 +300,13 @@ ImeConfigure(
     if (!pTLS || !pTLS->m_pBridge || !pTLS->m_pThreadMgr)
         return FALSE;
 
-    CicBridge *pBridge = pTLS->m_pBridge;
-    ITfThreadMgr *pThreadMgr = pTLS->m_pThreadMgr;
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
 
-    if (dwMode & 1)
+    if (dwMode & 0x1)
         return (pBridge->ConfigureGeneral(pTLS, pThreadMgr, hKL, hWnd) == S_OK);
 
-    if (dwMode & 2)
+    if (dwMode & 0x2)
         return (pBridge->ConfigureRegisterWord(pTLS, pThreadMgr, hKL, hWnd, lpData) == S_OK);
 
     return FALSE;
@@ -288,15 +359,55 @@ ImeEscape(
     return 0;
 }
 
+/***********************************************************************
+ *      ImeProcessKey (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeProcessKey.html
+ */
 EXTERN_C BOOL WINAPI
 ImeProcessKey(
     _In_ HIMC hIMC,
-    _In_ UINT uVirKey,
+    _In_ UINT uVirtKey,
     _In_ LPARAM lParam,
     _In_ CONST LPBYTE lpbKeyState)
 {
-    FIXME("stub:(%p, %u, %p, lpbKeyState)\n", hIMC, uVirKey, lParam, lpbKeyState);
-    return FALSE;
+    TRACE("(%p, %u, %p, lpbKeyState)\n", hIMC, uVirtKey, lParam, lpbKeyState);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    if (pTLS->m_dwFlags1 & 0x1)
+    {
+        ITfDocumentMgr *pDocMgr = NULL;
+        pThreadMgr->GetFocus(&pDocMgr);
+        if (pDocMgr && !CicBridge::IsOwnDim(pDocMgr))
+        {
+            pDocMgr->Release();
+            return FALSE;
+        }
+
+        if (pDocMgr)
+            pDocMgr->Release();
+    }
+
+    LANGID LangID = LOWORD(::GetKeyboardLayout(0));
+    if (((pTLS->m_dwFlags2 & 1) && MsimtfIsGuidMapEnable(hIMC, NULL)) ||
+        ((lParam & (KF_ALTDOWN << 16)) &&
+         (LangID == MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)) &&
+         IsVKDBEKey(uVirtKey)))
+    {
+        return FALSE;
+    }
+
+    INT nUnknown60 = 0;
+    return pBridge->ProcessKey(pTLS, pThreadMgr, hIMC, uVirtKey, lParam, lpbKeyState, &nUnknown60);
 }
 
 /***********************************************************************
@@ -335,18 +446,37 @@ ImeSetActiveContext(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeToAsciiEx (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeToAsciiEx.html
+ */
 EXTERN_C UINT WINAPI
 ImeToAsciiEx(
-    _In_ UINT uVirKey,
+    _In_ UINT uVirtKey,
     _In_ UINT uScanCode,
     _In_ CONST LPBYTE lpbKeyState,
     _Out_ LPTRANSMSGLIST lpTransMsgList,
     _In_ UINT fuState,
     _In_ HIMC hIMC)
 {
-    FIXME("stub:(%u, %u, %p, %p, %u, %p)\n", uVirKey, uScanCode, lpbKeyState, lpTransMsgList,
+    TRACE("(%u, %u, %p, %p, %u, %p)\n", uVirtKey, uScanCode, lpbKeyState, lpTransMsgList,
           fuState, hIMC);
-    return 0;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return 0;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return 0;
+
+    UINT ret = 0;
+    HRESULT hr = pBridge->ToAsciiEx(pTLS, pThreadMgr, uVirtKey, uScanCode, lpbKeyState,
+                                    lpTransMsgList, fuState, hIMC, &ret);
+    return ((hr == S_OK) ? ret : 0);
 }
 
 /***********************************************************************
@@ -377,6 +507,12 @@ NotifyIME(
     return (hr == S_OK);
 }
 
+/***********************************************************************
+ *      ImeSetCompositionString (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSetCompositionString.html
+ */
 EXTERN_C BOOL WINAPI
 ImeSetCompositionString(
     _In_ HIMC hIMC,
@@ -386,23 +522,20 @@ ImeSetCompositionString(
     _In_opt_ LPCVOID lpRead,
     _In_ DWORD dwReadLen)
 {
-    FIXME("stub:(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
+    TRACE("(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
           lpRead, dwReadLen);
-    return FALSE;
-}
 
-EXTERN_C DWORD WINAPI
-ImeGetImeMenuItems(
-    _In_ HIMC hIMC,
-    _In_ DWORD dwFlags,
-    _In_ DWORD dwType,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeMenu,
-    _In_ DWORD dwSize)
-{
-    FIXME("stub:(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n", hIMC, dwFlags, dwType, lpImeParentMenu,
-          lpImeMenu, dwSize);
-    return 0;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    return pBridge->SetCompositionString(pTLS, pThreadMgr, hIMC, dwIndex,
+                                         lpComp, dwCompLen, lpRead, dwReadLen);
 }
 
 /***********************************************************************
@@ -459,6 +592,11 @@ CtfImeSelectEx(
     return pTLS->m_pBridge->SelectEx(pTLS, pTLS->m_pThreadMgr, hIMC, fSelect, hKL);
 }
 
+/***********************************************************************
+ *      CtfImeEscapeEx (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C LRESULT WINAPI
 CtfImeEscapeEx(
     _In_ HIMC hIMC,
@@ -466,8 +604,16 @@ CtfImeEscapeEx(
     _Inout_opt_ LPVOID lpData,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %u, %p, %p)\n", hIMC, uSubFunc, lpData, hKL);
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hIMC, uSubFunc, lpData, hKL);
+
+    if (LOWORD(hKL) != MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT))
+        return 0;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return 0;
+
+    return pTLS->m_pBridge->EscapeKorean(pTLS, hIMC, uSubFunc, lpData);
 }
 
 /***********************************************************************
@@ -554,7 +700,6 @@ CtfImeCreateThreadMgr(VOID)
 
     return hr;
 }
-
 
 /***********************************************************************
  *      CtfImeDestroyThreadMgr (MSCTFIME.@)
@@ -709,23 +854,37 @@ CtfImeDispatchDefImeMessage(
     if (!IsMsImeMessage(uMsg))
         return 0;
 
-    HKL hKL = GetKeyboardLayout(0);
+    HKL hKL = ::GetKeyboardLayout(0);
     if (IS_IME_HKL(hKL))
         return 0;
 
-    HWND hImeWnd = (HWND)SendMessageW(hWnd, WM_IME_NOTIFY, 0x17, 0);
+    HWND hImeWnd = (HWND)::SendMessageW(hWnd, WM_IME_NOTIFY, 0x17, 0);
     if (!IsWindow(hImeWnd))
         return 0;
 
-    return SendMessageW(hImeWnd, uMsg, wParam, lParam);
+    return ::SendMessageW(hImeWnd, uMsg, wParam, lParam);
 }
 
+/***********************************************************************
+ *      CtfImeIsIME (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 CtfImeIsIME(
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p)\n", hKL);
-    return FALSE;
+    TRACE("(%p)\n", hKL);
+
+    if (IS_IME_HKL(hKL))
+        return TRUE;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pProfile)
+        return FALSE;
+
+    // The return value of CicProfile::IsIME is brain-damaged
+    return !pTLS->m_pProfile->IsIME(hKL);
 }
 
 /***********************************************************************
@@ -766,7 +925,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     g_hInst = hinstDLL;
 
-    InitializeCriticalSectionAndSpinCount(&g_csLock, 0);
+    ::InitializeCriticalSectionAndSpinCount(&g_csLock, 0);
 
     if (!TLS::Initialize())
         return FALSE;
@@ -793,7 +952,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
         TFUninitLib();
     }
 
-    DeleteCriticalSection(&g_csLock);
+    ::DeleteCriticalSection(&g_csLock);
     TLS::InternalDestroyTLS();
     TLS::Uninitialize();
     cicDoneUIFLib();

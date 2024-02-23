@@ -94,4 +94,42 @@ public:
         DWORD dwAction,
         DWORD dwIndex,
         DWORD_PTR dwValue);
+
+    BOOL ProcessKey(
+        TLS *pTLS,
+        ITfThreadMgr_P *pThreadMgr,
+        HIMC hIMC,
+        WPARAM wParam,
+        LPARAM lParam,
+        CONST LPBYTE lpbKeyState,
+        INT *pnUnknown60);
+
+    HRESULT ToAsciiEx(
+        TLS *pTLS,
+        ITfThreadMgr_P *pThreadMgr,
+        UINT uVirtKey,
+        UINT uScanCode,
+        CONST LPBYTE lpbKeyState,
+        LPTRANSMSGLIST lpTransBuf,
+        UINT fuState,
+        HIMC hIMC,
+        UINT *pResult);
+
+    BOOL SetCompositionString(
+        TLS *pTLS,
+        ITfThreadMgr_P *pThreadMgr,
+        HIMC hIMC,
+        DWORD dwIndex,
+        LPCVOID lpComp,
+        DWORD dwCompLen,
+        LPCVOID lpRead,
+        DWORD dwReadLen);
+
+    LRESULT EscapeKorean(
+        TLS *pTLS,
+        HIMC hIMC,
+        UINT uSubFunc,
+        LPVOID lpData);
+
+    static BOOL IsOwnDim(ITfDocumentMgr *pDocMgr);
 };

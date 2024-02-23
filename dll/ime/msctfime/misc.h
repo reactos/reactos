@@ -8,10 +8,13 @@
 #pragma once
 
 BOOLEAN DllShutdownInProgress(VOID);
-BOOL IsEALang(LANGID LangID);
+BOOL IsEALang(_In_opt_ LANGID LangID);
 BOOL IsInteractiveUserLogon(VOID);
 BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
 HIMC GetActiveContext(VOID);
+BOOL MsimtfIsGuidMapEnable(_In_ HIMC hIMC, _Out_opt_ LPBOOL pbValue);
+BOOL IsVKDBEKey(_In_ UINT uVirtKey);
+
 ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread);
 HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
