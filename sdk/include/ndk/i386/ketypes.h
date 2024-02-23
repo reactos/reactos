@@ -75,8 +75,10 @@ Author:
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                     ((KPCR *)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
-#undef  KeGetPcr
+//#undef  KeGetPcr
 #define KeGetPcr()              ((KPCR *)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
+#else
+#define KeGetPcr()              PCR
 #endif
 
 //
