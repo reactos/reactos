@@ -67,7 +67,7 @@ CicBridge::~CicBridge()
 
 /// @implemented
 ITfDocumentMgr*
-CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
+CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
     if (!pCicIC)
