@@ -450,6 +450,7 @@ void COMPWND::_ClientToScreen(LPRECT prc)
 
 /***********************************************************************/
 
+// For GetWindowLongPtr/SetWindowLongPtr
 #define UICOMP_GWLP_INDEX 0
 
 /// @unimplemented
@@ -785,9 +786,9 @@ UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /***********************************************************************/
 
 // For GetWindowLongPtr/SetWindowLongPtr
-#define UIGWLP_HIMC 0
-#define UIGWLP_UI   sizeof(HIMC)
-#define UIGWLP_SIZE (UIGWLP_UI + sizeof(UI*))
+#define UI_GWLP_HIMC 0
+#define UI_GWLP_UI   sizeof(HIMC)
+#define UI_GWLP_SIZE (UI_GWLP_UI + sizeof(UI*))
 
 /// @implemented
 UI::UI(HWND hWnd) : m_hWnd(hWnd)
@@ -807,7 +808,7 @@ HRESULT UI::_Create()
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
-    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
+    ::SetWindowLongPtrW(m_hWnd, UI_GWLP_UI, (LONG_PTR)this);
     return S_OK;
 }
 
@@ -815,13 +816,13 @@ HRESULT UI::_Create()
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
-    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
+    ::SetWindowLongPtrW(m_hWnd, UI_GWLP_UI, 0);
 }
 
 /// @implemented
 void UI::OnCreate(HWND hWnd)
 {
-    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UI_GWLP_UI);
     if (pUI)
         return;
     pUI = new(cicNoThrow) UI(hWnd);
@@ -832,7 +833,7 @@ void UI::OnCreate(HWND hWnd)
 /// @implemented
 void UI::OnDestroy(HWND hWnd)
 {
-    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UI_GWLP_UI);
     if (!pUI)
         return;
 
@@ -936,8 +937,8 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         case WM_IME_SELECT:
         case WM_TIMER:
         {
-            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UIGWLP_HIMC);
-            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UI_GWLP_HIMC);
+            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UI_GWLP_UI);
             CicIMCLock imcLock(hIMC);
             switch (uMsg)
             {
@@ -1020,7 +1021,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = UIGWLP_SIZE;
+        wcx.cbWndExtra      = UI_GWLP_SIZE;
         wcx.hIcon           = LoadIconW(0, (LPCWSTR)IDC_ARROW);
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
