@@ -54,7 +54,9 @@ public:
     WORD m_cGuidAtoms;
     WORD m_padding;
     DWORD m_adwGuidAtoms[256];
-    DWORD m_dwUnknown8[17];
+    DWORD m_dwUnknown8[5];
+    CANDIDATEFORM m_CandForm;
+    DWORD m_dwUnknown8_5[4];
     TfClientId m_clientId;
     DWORD m_dwUnknown9;
 

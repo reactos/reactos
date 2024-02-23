@@ -301,11 +301,11 @@ void CicInputContext::ClearPrevCandidatePos()
     m_dwUnknown8[2] = 0;
     m_dwUnknown8[3] = 0;
     m_dwUnknown8[4] = 0;
-    ZeroMemory(&m_dwUnknown8[5], sizeof(m_dwUnknown8));
-    m_dwUnknown8[13] = 0;
-    m_dwUnknown8[14] = 0;
-    m_dwUnknown8[15] = 0;
-    m_dwUnknown8[16] = 0;
+    ZeroMemory(&m_CandForm, sizeof(m_CandForm));
+    m_dwUnknown8_5[0] = 0;
+    m_dwUnknown8_5[1] = 0;
+    m_dwUnknown8_5[2] = 0;
+    m_dwUnknown8_5[3] = 0;
     m_dwQueryPos = 0;
 }
 
