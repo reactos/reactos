@@ -573,11 +573,22 @@ CtfImeDestroyThreadMgr(VOID)
     return hr;
 }
 
+/***********************************************************************
+ *      CtfImeCreateInputContext (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeCreateInputContext(
     _In_ HIMC hIMC)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)\n", hIMC);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return E_OUTOFMEMORY;
+
+    return pTLS->m_pBridge->CreateInputContext(pTLS, hIMC);
 }
 
 /***********************************************************************
