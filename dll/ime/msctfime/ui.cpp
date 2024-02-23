@@ -287,8 +287,8 @@ void CDefCompFrameWindow::SetCompStrRect(INT nWidth, INT nHeight, BOOL bShow)
 
     Show(bShow);
 
-    ::MoveWindow(m_hwndDefCompFrame, GripperWidth + 2, 7, nWidth, nHeight, TRUE);
-    ::ShowWindow(m_hwndDefCompFrame, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
+    ::MoveWindow(m_hwndCompStr, GripperWidth + 2, 7, nWidth, nHeight, TRUE);
+    ::ShowWindow(m_hwndCompStr, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
 }
 
 /// @implemented
@@ -342,11 +342,11 @@ STDMETHODIMP_(void) CDefCompFrameWindow::OnCreate(HWND hWnd)
 /// @implemented
 STDMETHODIMP_(BOOL) CDefCompFrameWindow::OnSetCursor(UINT uMsg, LONG x, LONG y)
 {
-    if (!::IsWindow(m_hwndDefCompFrame))
+    if (!::IsWindow(m_hwndCompStr))
         return FALSE;
 
     RECT rc;
-    ::GetWindowRect(m_hwndDefCompFrame, &rc);
+    ::GetWindowRect(m_hwndCompStr, &rc);
     MyScreenToClient(NULL, &rc);
     POINT pt = { x, y };
     return ::PtInRect(&rc, pt);
@@ -365,15 +365,15 @@ CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 /// @implemented
 STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
 {
-    if (::IsWindow(m_hwndDefCompFrame))
+    if (::IsWindow(m_hwndCompStr))
     {
         RECT rc;
-        ::GetWindowRect(m_hwndDefCompFrame, &rc);
+        ::GetWindowRect(m_hwndCompStr, &rc);
         MyScreenToClient(NULL, &rc);
 
         POINT pt = { x, y };
         if (::PtInRect(&rc, pt))
-            ::SendMessage(m_hwndDefCompFrame, 0x7E8, 0, 0);
+            ::SendMessage(m_hwndCompStr, 0x7E8, 0, 0);
     }
 
     CUIFWindow::HandleMouseMsg(uMsg, x, y);
@@ -604,7 +604,7 @@ HRESULT UIComposition::CreateCompositionWindow(CicIMCLock& imcLock, HWND hwndPar
     }
 
     m_CompStrs[3].m_hWnd = hwndCompStr;
-    m_pDefCompFrameWindow->m_hwndDefCompFrame = hwndCompStr;
+    m_pDefCompFrameWindow->m_hwndCompStr = hwndCompStr;
     ::SetWindowLongPtrW(hwndCompStr, GWLP_USERDATA, (LONG_PTR)this);
     ::SetWindowLongPtrW(hwndCompStr, UICOMP_GWLP_INDEX, -1);
     m_CompStrs[3].m_Caret.CreateCaret(hwndCompStr, m_CaretSize);

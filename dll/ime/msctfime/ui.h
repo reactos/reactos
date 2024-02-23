@@ -94,7 +94,7 @@ public:
 class CDefCompFrameWindow : public CCompFrameWindow
 {
 public:
-    HWND m_hwndDefCompFrame;
+    HWND m_hwndCompStr;
     CDefCompFrameGripper *m_pGripper;
     CCompFinalizeButton *m_pFinalizeButton;
     MARGINS m_Margins;
