@@ -54,3 +54,7 @@ public:
     LONG ConvertModeBias(REFGUID guid);
     void SetModeBias(REFGUID rguid);
 };
+
+/***********************************************************************/
+
+BOOL IsEALang(VOID);

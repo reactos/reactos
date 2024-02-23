@@ -287,8 +287,8 @@ void CDefCompFrameWindow::SetCompStrRect(INT nWidth, INT nHeight, BOOL bShow)
 
     Show(bShow);
 
-    ::MoveWindow(m_hwndDefCompFrame, GripperWidth + 2, 7, nWidth, nHeight, TRUE);
-    ::ShowWindow(m_hwndDefCompFrame, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
+    ::MoveWindow(m_hwndCompStr, GripperWidth + 2, 7, nWidth, nHeight, TRUE);
+    ::ShowWindow(m_hwndCompStr, (bShow ? SW_SHOWNOACTIVATE : SW_HIDE));
 }
 
 /// @implemented
@@ -342,11 +342,11 @@ STDMETHODIMP_(void) CDefCompFrameWindow::OnCreate(HWND hWnd)
 /// @implemented
 STDMETHODIMP_(BOOL) CDefCompFrameWindow::OnSetCursor(UINT uMsg, LONG x, LONG y)
 {
-    if (!::IsWindow(m_hwndDefCompFrame))
+    if (!::IsWindow(m_hwndCompStr))
         return FALSE;
 
     RECT rc;
-    ::GetWindowRect(m_hwndDefCompFrame, &rc);
+    ::GetWindowRect(m_hwndCompStr, &rc);
     MyScreenToClient(NULL, &rc);
     POINT pt = { x, y };
     return ::PtInRect(&rc, pt);
@@ -365,15 +365,15 @@ CDefCompFrameWindow::OnWindowPosChanged(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 /// @implemented
 STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
 {
-    if (::IsWindow(m_hwndDefCompFrame))
+    if (::IsWindow(m_hwndCompStr))
     {
         RECT rc;
-        ::GetWindowRect(m_hwndDefCompFrame, &rc);
+        ::GetWindowRect(m_hwndCompStr, &rc);
         MyScreenToClient(NULL, &rc);
 
         POINT pt = { x, y };
         if (::PtInRect(&rc, pt))
-            ::SendMessage(m_hwndDefCompFrame, 0x7E8, 0, 0);
+            ::SendMessage(m_hwndCompStr, 0x7E8, 0, 0);
     }
 
     CUIFWindow::HandleMouseMsg(uMsg, x, y);
@@ -381,10 +381,361 @@ STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG 
 
 /***********************************************************************/
 
+/// @implemented
+POLYTEXTW *CPolyText::GetPolyAt(INT iItem)
+{
+    return &m_PolyTextArray[iItem];
+}
+
+/// @implemented
+HRESULT CPolyText::ShiftPolyText(INT xDelta, INT yDelta)
+{
+    for (size_t iItem = 0; iItem < m_PolyTextArray.size(); ++iItem)
+    {
+        POLYTEXTW *pPolyText = &m_PolyTextArray[iItem];
+        pPolyText->x += xDelta;
+        pPolyText->y += yDelta;
+        ::OffsetRect((LPRECT)&pPolyText->rcl, xDelta, yDelta);
+    }
+    return S_OK;
+}
+
+/// @implemented
+HRESULT CPolyText::RemoveLastLine(BOOL bHorizontal)
+{
+    size_t iItem, cItems = m_PolyTextArray.size();
+    if (!cItems)
+        return E_FAIL;
+
+    POLYTEXTW *pData1 = &m_PolyTextArray[cItems - 1];
+
+    for (iItem = 0; iItem < cItems; ++iItem)
+    {
+        POLYTEXTW *pData2 = &m_PolyTextArray[iItem];
+        if (bHorizontal)
+        {
+            if (pData1->x == pData2->x)
+                break;
+        }
+        else
+        {
+            if (pData1->y == pData2->y)
+                break;
+        }
+    }
+
+    if (iItem >= cItems)
+        return E_FAIL;
+
+    m_PolyTextArray.Remove(iItem, cItems - iItem);
+    m_ValueArray.Remove(iItem, cItems - iItem);
+    return S_OK;
+}
+
+/// @implemented
+void CPolyText::RemoveAll()
+{
+    m_PolyTextArray.clear();
+    m_ValueArray.clear();
+}
+
+/***********************************************************************/
+
+/// @implemented
+void COMPWND::_ClientToScreen(LPRECT prc)
+{
+    ::ClientToScreen(m_hWnd, (LPPOINT)prc);
+    ::ClientToScreen(m_hWnd, (LPPOINT)&prc->right);
+}
+
+/***********************************************************************/
+
 // For GetWindowLongPtr/SetWindowLongPtr
-#define UIGWLP_HIMC 0
-#define UIGWLP_UI   sizeof(HIMC)
-#define UIGWLP_SIZE (UIGWLP_UI + sizeof(UI*))
+#define UICOMP_GWLP_INDEX 0
+#define UICOMP_GWLP_SIZE  (UICOMP_GWLP_INDEX + sizeof(INT))
+
+/// @unimplemented
+UIComposition::UIComposition(HWND hwndParent)
+{
+}
+
+/// @implemented
+UIComposition::~UIComposition()
+{
+    DestroyCompositionWindow();
+
+    if (m_hFont1)
+    {
+        ::DeleteObject(m_hFont1);
+        m_hFont1 = NULL;
+    }
+
+    if (m_hFont2)
+    {
+        ::DeleteObject(m_hFont2);
+        m_hFont2 = NULL;
+    }
+
+    if (m_strCompStr)
+    {
+        cicMemFree(m_strCompStr);
+        m_strCompStr = NULL;
+    }
+
+    m_cchCompStr = 0;
+}
+
+// @implemented
+BOOL UIComposition::SendMessageToUI(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam)
+{
+    HWND hImeWnd = ImmGetDefaultIMEWnd(0);
+    if (!::IsWindow(hImeWnd))
+        return TRUE;
+    TLS *pTLS = TLS::GetTLS();
+    LRESULT ret;
+    if (pTLS && pTLS->m_cWnds > 1)
+        ret = ::SendMessage(imcLock.get().hWnd, WM_IME_NOTIFY, wParam, lParam);
+    else
+        ret = ::SendMessage(hImeWnd, WM_IME_NOTIFY, wParam, lParam);
+    return !ret;
+}
+
+/// @implemented
+HRESULT UIComposition::CreateDefFrameWnd(HWND hwndParent, HIMC hIMC)
+{
+    if (!m_pDefCompFrameWindow)
+    {
+        m_pDefCompFrameWindow = new(cicNoThrow) CDefCompFrameWindow(hIMC, 0x800000A4);
+        if (!m_pDefCompFrameWindow)
+            return E_OUTOFMEMORY;
+        if (!m_pDefCompFrameWindow->Initialize())
+        {
+            delete m_pDefCompFrameWindow;
+            m_pDefCompFrameWindow = NULL;
+            return E_FAIL;
+        }
+
+        m_pDefCompFrameWindow->Init();
+    }
+
+    m_pDefCompFrameWindow->CreateWnd(hwndParent);
+    return S_OK;
+}
+
+/// @implemented
+HRESULT UIComposition::CreateCompButtonWnd(HWND hwndParent, HIMC hIMC)
+{
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->NonEACompositionEnabled())
+        return S_OK;
+
+    if (IsEALang())
+    {
+        if (m_pCompButtonFrameWindow)
+        {
+            delete m_pCompButtonFrameWindow;
+            m_pCompButtonFrameWindow = NULL;
+        }
+        return S_OK;
+    }
+
+    if (!m_pCompButtonFrameWindow)
+    {
+        m_pCompButtonFrameWindow = new(cicNoThrow) CCompButtonFrameWindow(hIMC, 0x800000B4);
+        if (!m_pCompButtonFrameWindow)
+            return E_OUTOFMEMORY;
+
+        if (!m_pCompButtonFrameWindow->Initialize())
+        {
+            if (m_pCompButtonFrameWindow)
+            {
+                delete m_pCompButtonFrameWindow;
+                m_pCompButtonFrameWindow = NULL;
+            }
+            return E_FAIL;
+        }
+
+        m_pCompButtonFrameWindow->Init();
+    }
+
+    m_pCompButtonFrameWindow->CreateWnd(hwndParent);
+    return S_OK;
+}
+
+/// @implemented
+HRESULT UIComposition::CreateCompositionWindow(CicIMCLock& imcLock, HWND hwndParent)
+{
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    if (!::IsWindow(hwndParent) || m_bHasCompWnd)
+        return E_FAIL;
+
+    for (INT iCompStr = 0; iCompStr < 3; ++iCompStr)
+    {
+        DWORD style = WS_POPUP | WS_DISABLED;
+        HWND hwndCompStr = ::CreateWindowExW(0, L"MSCTFIME Composition", NULL, style,
+                                             0, 0, 0, 0, hwndParent, NULL, g_hInst, NULL);
+        m_CompStrs[iCompStr].m_hWnd = hwndCompStr;
+        ::SetWindowLongPtrW(hwndCompStr, GWLP_USERDATA, (LONG_PTR)this);
+        ::SetWindowLongPtrW(hwndCompStr, UICOMP_GWLP_INDEX, iCompStr);
+        m_CompStrs[iCompStr].m_Caret.CreateCaret(hwndCompStr, m_CaretSize);
+    }
+
+    HRESULT hr = CreateCompButtonWnd(hwndParent, imcLock.m_hIMC);
+    if (FAILED(hr))
+    {
+        DestroyCompositionWindow();
+        return E_OUTOFMEMORY;
+    }
+
+    hr = CreateDefFrameWnd(hwndParent, imcLock.m_hIMC);
+    if (FAILED(hr))
+    {
+        DestroyCompositionWindow();
+        return E_OUTOFMEMORY;
+    }
+
+    DWORD style = WS_CHILD | WS_DISABLED;
+    HWND hwndCompStr = ::CreateWindowExW(WS_EX_CLIENTEDGE, L"MSCTFIME Composition", NULL, style,
+                                         0, 0, 0, 0, *m_pDefCompFrameWindow, NULL, g_hInst, NULL);
+    if (!hwndCompStr)
+    {
+        DestroyCompositionWindow();
+        return E_OUTOFMEMORY;
+    }
+
+    m_CompStrs[3].m_hWnd = hwndCompStr;
+    m_pDefCompFrameWindow->m_hwndCompStr = hwndCompStr;
+    ::SetWindowLongPtrW(hwndCompStr, GWLP_USERDATA, (LONG_PTR)this);
+    ::SetWindowLongPtrW(hwndCompStr, UICOMP_GWLP_INDEX, -1);
+    m_CompStrs[3].m_Caret.CreateCaret(hwndCompStr, m_CaretSize);
+    m_bHasCompWnd = TRUE;
+
+    return S_OK;
+}
+
+/// @implemented
+HRESULT UIComposition::DestroyCompositionWindow()
+{
+    for (INT i = 0; i < 4; ++i)
+    {
+        COMPWND *pCompStr = &m_CompStrs[i];
+        pCompStr->m_Caret.DestroyCaret();
+        if (::IsWindow(pCompStr->m_hWnd))
+        {
+            DestroyWindow(pCompStr->m_hWnd);
+            pCompStr->m_PolyText.RemoveAll();
+        }
+        pCompStr->m_hWnd = NULL;
+    }
+
+    if (m_pCompButtonFrameWindow)
+    {
+        ::DestroyWindow(*m_pCompButtonFrameWindow);
+        delete m_pCompButtonFrameWindow;
+        m_pCompButtonFrameWindow = NULL;
+    }
+
+    if (m_pDefCompFrameWindow)
+    {
+        ::DestroyWindow(*m_pDefCompFrameWindow);
+        delete m_pDefCompFrameWindow;
+        m_pDefCompFrameWindow = NULL;
+    }
+
+    return 0;
+}
+
+// @implemented
+BOOL UIComposition::InquireImeUIWndState(CicIMCLock& imcLock)
+{
+    BOOL bValue = FALSE;
+    UIComposition::SendMessageToUI(imcLock, 0x11u, (LPARAM)&bValue);
+    return bValue;
+}
+
+/// @implemented
+HRESULT UIComposition::UpdateShowCompWndFlag(CicIMCLock& imcLock, DWORD *pdwCompStrLen)
+{
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+    if (!::IsWindow(imcLock.get().hWnd))
+        return E_FAIL;
+
+    CicIMCCLock<COMPOSITIONSTRING> compStr(imcLock.get().hCompStr);
+    if (FAILED(compStr.m_hr))
+        return compStr.m_hr;
+
+    if ((m_dwUnknown56[0] & 0x80000000) && compStr.get().dwCompStrLen)
+        m_bHasCompStr = TRUE;
+    else
+        m_bHasCompStr = FALSE;
+
+    if (pdwCompStrLen)
+        *pdwCompStrLen = compStr.get().dwCompStrLen;
+
+    return S_OK;
+}
+
+/// @implemented
+HRESULT UIComposition::UpdateFont(CicIMCLock& imcLock)
+{
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    if (m_hFont1)
+        ::DeleteObject(m_hFont1);
+    if (m_hFont2)
+        ::DeleteObject(m_hFont2);
+
+    LOGFONTW lf = imcLock.get().lfFont.W;
+    m_hFont2 = ::CreateFontIndirectW(&lf);
+
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+    BOOL bVertical = (lf.lfFaceName[0] == L'@');
+    if (bVertical)
+    {
+        MoveMemory(lf.lfFaceName, &lf.lfFaceName[1], sizeof(lf.lfFaceName) - sizeof(WCHAR));
+        lf.lfFaceName[_countof(lf.lfFaceName) - 1] = UNICODE_NULL;
+    }
+    m_hFont1 = ::CreateFontIndirectW(&lf);
+
+    return S_OK;
+}
+
+// @implemented
+void UIComposition::OnTimer(HWND hWnd)
+{
+    INT iCompStr = (INT)::GetWindowLongPtrW(hWnd, UICOMP_GWLP_INDEX);
+    if (iCompStr == -1)
+        m_CompStrs[3].m_Caret.OnTimer();
+    else
+        m_CompStrs[iCompStr].m_Caret.OnTimer();
+}
+
+/// @implemented
+BOOL UIComposition::GetImeUIWndTextExtent(CicIMCLock& imcLock, LPARAM lParam)
+{
+    return !UIComposition::SendMessageToUI(imcLock, 0x14, lParam);
+}
+
+/// @implemented
+LPWSTR UIComposition::GetCompStrBuffer(INT cchStr)
+{
+    if (!m_strCompStr)
+    {
+        m_strCompStr = (LPWSTR)cicMemAllocClear((cchStr + 1) * sizeof(WCHAR));
+        m_cchCompStr = cchStr;
+    }
+    if (m_cchCompStr < cchStr)
+    {
+        m_strCompStr = (LPWSTR)cicMemReAlloc(m_strCompStr, (cchStr + 1) * sizeof(WCHAR));
+        m_cchCompStr = cchStr;
+    }
+    return m_strCompStr;
+}
 
 /// @unimplemented
 void UIComposition::OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd)
@@ -392,16 +743,18 @@ void UIComposition::OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd)
     //FIXME
 }
 
-/// @unimplemented
-void UIComposition::OnImeCompositionUpdate(CicIMCLock& imcLock)
+/// @implemented
+HRESULT UIComposition::OnImeCompositionUpdate(CicIMCLock& imcLock)
 {
-    //FIXME
+    m_dwUnknown56[0] |= 0x8000;
+    return UIComposition::UpdateShowCompWndFlag(imcLock, NULL);
 }
 
 /// @unimplemented
-void UIComposition::OnImeEndComposition()
+HRESULT UIComposition::OnImeEndComposition()
 {
-    //FIXME
+    m_dwUnknown56[0] = 0;
+    return DestroyCompositionWindow();
 }
 
 /// @unimplemented
@@ -416,10 +769,10 @@ void UIComposition::OnPaintTheme(WPARAM wParam)
     //FIXME
 }
 
-/// @unimplemented
-void UIComposition::OnDestroy()
+/// @implemented
+HRESULT UIComposition::OnDestroy()
 {
-    //FIXME
+    return DestroyCompositionWindow();
 }
 
 /// @unimplemented
@@ -432,6 +785,11 @@ UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /***********************************************************************/
+
+// For GetWindowLongPtr/SetWindowLongPtr
+#define UI_GWLP_HIMC 0
+#define UI_GWLP_UI   sizeof(HIMC)
+#define UI_GWLP_SIZE (UI_GWLP_UI + sizeof(UI*))
 
 /// @implemented
 UI::UI(HWND hWnd) : m_hWnd(hWnd)
@@ -447,11 +805,11 @@ UI::~UI()
 /// @implemented
 HRESULT UI::_Create()
 {
-    m_pComp = new(cicNoThrow) UIComposition();
+    m_pComp = new(cicNoThrow) UIComposition(m_hWnd);
     if (!m_pComp)
         return E_OUTOFMEMORY;
 
-    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, (LONG_PTR)this);
+    ::SetWindowLongPtrW(m_hWnd, UI_GWLP_UI, (LONG_PTR)this);
     return S_OK;
 }
 
@@ -459,13 +817,13 @@ HRESULT UI::_Create()
 void UI::_Destroy()
 {
     m_pComp->OnDestroy();
-    ::SetWindowLongPtrW(m_hWnd, UIGWLP_UI, 0);
+    ::SetWindowLongPtrW(m_hWnd, UI_GWLP_UI, 0);
 }
 
 /// @implemented
 void UI::OnCreate(HWND hWnd)
 {
-    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UI_GWLP_UI);
     if (pUI)
         return;
     pUI = new(cicNoThrow) UI(hWnd);
@@ -476,7 +834,7 @@ void UI::OnCreate(HWND hWnd)
 /// @implemented
 void UI::OnDestroy(HWND hWnd)
 {
-    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UIGWLP_UI);
+    UI *pUI = (UI*)::GetWindowLongPtrW(hWnd, UI_GWLP_UI);
     if (!pUI)
         return;
 
@@ -580,8 +938,8 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         case WM_IME_SELECT:
         case WM_TIMER:
         {
-            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UIGWLP_HIMC);
-            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UIGWLP_UI);
+            HIMC hIMC = (HIMC)GetWindowLongPtrW(hWnd, UI_GWLP_HIMC);
+            UI* pUI = (UI*)GetWindowLongPtrW(hWnd, UI_GWLP_UI);
             CicIMCLock imcLock(hIMC);
             switch (uMsg)
             {
@@ -664,7 +1022,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = UIGWLP_SIZE;
+        wcx.cbWndExtra      = UI_GWLP_SIZE;
         wcx.hIcon           = LoadIconW(0, (LPCWSTR)IDC_ARROW);
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
@@ -680,7 +1038,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = sizeof(DWORD);
+        wcx.cbWndExtra      = UICOMP_GWLP_SIZE;
         wcx.hIcon           = NULL;
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_IBEAM);

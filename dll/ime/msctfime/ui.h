@@ -94,7 +94,7 @@ public:
 class CDefCompFrameWindow : public CCompFrameWindow
 {
 public:
-    HWND m_hwndDefCompFrame;
+    HWND m_hwndCompStr;
     CDefCompFrameGripper *m_pGripper;
     CCompFinalizeButton *m_pFinalizeButton;
     MARGINS m_Margins;
@@ -120,14 +120,74 @@ public:
 
 /***********************************************************************/
 
-struct UIComposition
+struct CPolyText
 {
+    CicArray<POLYTEXTW> m_PolyTextArray;
+    CicArray<DWORD> m_ValueArray;
+
+    HRESULT ShiftPolyText(INT xDelta, INT yDelta);
+    POLYTEXTW *GetPolyAt(INT iItem);
+    HRESULT RemoveLastLine(BOOL bHorizontal);
+    void RemoveAll();
+};
+
+/***********************************************************************/
+
+struct COMPWND
+{
+    HWND m_hWnd;
+    CPolyText m_PolyText;
+    CicCaret m_Caret;
+    DWORD m_dwUnknown57[3];
+
+    void _ClientToScreen(LPRECT prc);
+};
+
+/***********************************************************************/
+
+class UIComposition
+{
+public:
+    HWND m_hwndParent;
+    BOOL m_bHasCompWnd;
+    COMPWND m_CompStrs[4];
+    HFONT m_hFont1;
+    DWORD m_dwUnknown54;
+    HFONT m_hFont2;
+    DWORD m_dwUnknown55;
+    SIZE m_CaretSize;
+    DWORD m_dwUnknown56[2];
+    LPWSTR m_strCompStr;
+    INT m_cchCompStr;
+    BOOL m_bInComposition;
+    BOOL m_bHasCompStr;
+    CDefCompFrameWindow *m_pDefCompFrameWindow;
+    CCompButtonFrameWindow *m_pCompButtonFrameWindow;
+
+public:
+    UIComposition(HWND hwndParent);
+    virtual ~UIComposition();
+
+    HRESULT CreateDefFrameWnd(HWND hwndParent, HIMC hIMC);
+    HRESULT CreateCompButtonWnd(HWND hwndParent, HIMC hIMC);
+    HRESULT CreateCompositionWindow(CicIMCLock& imcLock, HWND hwndParent);
+    HRESULT DestroyCompositionWindow();
+
+    HRESULT UpdateShowCompWndFlag(CicIMCLock& imcLock, DWORD *pdwCompStrLen);
+    HRESULT UpdateFont(CicIMCLock& imcLock);
+    LPWSTR GetCompStrBuffer(INT cchStr);
+
     void OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd);
-    void OnImeCompositionUpdate(CicIMCLock& imcLock);
-    void OnImeEndComposition();
+    HRESULT OnImeCompositionUpdate(CicIMCLock& imcLock);
+    HRESULT OnImeEndComposition();
     void OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam);
     void OnPaintTheme(WPARAM wParam);
-    void OnDestroy();
+    void OnTimer(HWND hWnd);
+    HRESULT OnDestroy();
+
+    static BOOL SendMessageToUI(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam);
+    static BOOL InquireImeUIWndState(CicIMCLock& imcLock);
+    static BOOL GetImeUIWndTextExtent(CicIMCLock& imcLock, LPARAM lParam);
 
     static LRESULT CALLBACK CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
@@ -147,6 +207,7 @@ struct UI
 
     static void OnCreate(HWND hWnd);
     static void OnDestroy(HWND hWnd);
+
     void OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam);
 };
 
