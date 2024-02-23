@@ -2,6 +2,7 @@
  * Copyright 2003 Mike McCormack for CodeWeavers
  * Copyright 2008 Michael Stefaniuc
  *           2011 Ștefan Fulea
+ *           2023-2024 Miloiu Andrei <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,10 +57,10 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Păstrează această parolă (nerecomandat)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Salvare a acestei parole (nerecomandat)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Con&firmă", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "A&nulează", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Revocare", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
@@ -76,10 +77,10 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Sal&vează această parolă (nerecomandat)", IDC_SAVEPASSWORD,
+ CHECKBOX "Sal&vare a aceastei parole (nerecomandat)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Con&firmă", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "A&nulează", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Revocare", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
