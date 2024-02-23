@@ -29,7 +29,14 @@ BOOL FASTCALL UserIsIMMEnabled(VOID)
 
 BOOL FASTCALL UserIsCiceroEnabled(VOID)
 {
+#if 1
     return FALSE; /* FIXME: Cicero is not supported yet */
+#else
+    if (RegGetSectionDWORD(L"IMM", L"DontLoadCTFIME", FALSE))
+        return FALSE;
+
+    return UserIsIMMEnabled();
+#endif
 }
 
 BOOL
