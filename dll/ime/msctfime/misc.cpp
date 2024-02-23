@@ -179,11 +179,13 @@ static const MODEBIAS g_ModeBiasMap[] =
     { GUID_MODEBIAS_NONE,       0x00000000 },
 };
 
+/// @implemented
 void CModeBias::SetModeBias(REFGUID rguid)
 {
     m_guid = rguid;
 }
 
+/// @implemented
 GUID CModeBias::ConvertModeBias(LONG bias)
 {
     const GUID *pguid = &GUID_NULL;
@@ -199,6 +201,7 @@ GUID CModeBias::ConvertModeBias(LONG bias)
     return *pguid;
 }
 
+/// @implemented
 LONG CModeBias::ConvertModeBias(REFGUID guid)
 {
     for (auto& item : g_ModeBiasMap)
@@ -208,6 +211,8 @@ LONG CModeBias::ConvertModeBias(REFGUID guid)
     }
     return 0;
 }
+
+/***********************************************************************/
 
 /// @implemented
 CFunctionProviderBase::CFunctionProviderBase(_In_ TfClientId clientId)
