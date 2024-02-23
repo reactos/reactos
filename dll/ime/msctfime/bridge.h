@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Bridge
+ * PURPOSE:     The bridge of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -64,7 +64,7 @@ public:
         CicInputContext *pCicIC);
 
     void PostTransMsg(_In_ HWND hWnd, _In_ INT cTransMsgs, _In_ const TRANSMSG *pTransMsgs);
-    void GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext);
+    ITfDocumentMgr* GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext);
 
     HRESULT
     ConfigureGeneral(_Inout_ TLS* pTLS,
@@ -77,4 +77,21 @@ public:
         _In_ HKL hKL,
         _In_ HWND hWnd,
         _Inout_opt_ LPVOID lpData);
+
+    HRESULT SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL);
+
+    void SetAssociate(
+        TLS *pTLS,
+        HWND hWnd,
+        HIMC hIMC,
+        ITfThreadMgr_P *pThreadMgr,
+        ITfDocumentMgr *pDocMgr);
+
+    HRESULT Notify(
+        TLS *pTLS,
+        ITfThreadMgr *pThreadMgr,
+        HIMC hIMC,
+        DWORD dwAction,
+        DWORD dwIndex,
+        DWORD_PTR dwValue);
 };

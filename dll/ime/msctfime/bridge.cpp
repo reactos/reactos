@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Bridge
+ * PURPOSE:     The bridge of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -65,22 +65,19 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
-void CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
+/// @implemented
+ITfDocumentMgr*
+CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
-    if (pCicIC)
-    {
-        m_pDocMgr = pCicIC->m_pDocumentMgr;
-        m_pDocMgr->AddRef();
-    }
-    else
-    {
-        m_pDocMgr->Release();
-        m_pDocMgr = NULL;
-    }
+    if (!pCicIC)
+        return NULL;
+
+    pCicIC->m_pDocumentMgr->AddRef();
+    return pCicIC->m_pDocumentMgr;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT
 CicBridge::CreateInputContext(
     _Inout_ TLS *pTLS,
@@ -100,45 +97,49 @@ CicBridge::CreateInputContext(
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+        return S_OK;
+
+    pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
     if (!pCicIC)
     {
-        pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
-        if (!pCicIC)
-        {
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_OUTOFMEMORY;
-        }
-
-        if (!pTLS->m_pThreadMgr)
-        {
-            pCicIC->Release();
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_NOINTERFACE;
-        }
-
-        imeContext.get().m_pCicIC = pCicIC;
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_OUTOFMEMORY;
     }
+
+    if (!pTLS->m_pThreadMgr)
+    {
+        pCicIC->Release();
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_NOINTERFACE;
+    }
+
+    imeContext.get().m_pCicIC = pCicIC;
 
     HRESULT hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
     if (FAILED(hr))
     {
         pCicIC->Release();
         imeContext.get().m_pCicIC = NULL;
+        return hr;
     }
-    else
+
+    HWND hWnd = imcLock.get().hWnd;
+    if (hWnd && hWnd == ::GetFocus())
     {
-        if (imcLock.get().hWnd && imcLock.get().hWnd == ::GetFocus())
+        ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+        if (pDocMgr)
         {
-            GetDocumentManager(imeContext);
-            //FIXME
+            SetAssociate(pTLS, hWnd, hIMC, pTLS->m_pThreadMgr, pDocMgr);
+            pDocMgr->Release();
         }
     }
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 /// @implemented
@@ -607,4 +608,84 @@ CicBridge::ConfigureRegisterWord(
     pProvider->Release();
     pFunction->Release();
     return hr;
+}
+
+/// @unimplemented
+void CicBridge::SetAssociate(
+    TLS *pTLS,
+    HWND hWnd,
+    HIMC hIMC,
+    ITfThreadMgr_P *pThreadMgr,
+    ITfDocumentMgr *pDocMgr)
+{
+    //FIXME
+}
+
+HRESULT
+CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
+{
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    if (fActive)
+    {
+        if (!hIMC)
+        {
+            SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+            return S_OK;
+        }
+
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        if (hIMC == ::ImmGetContext(hWnd))
+        {
+            ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+            if (pDocMgr)
+            {
+                SetAssociate(pTLS, imcLock.get().hWnd, hIMC, pThreadMgr, pDocMgr);
+                pDocMgr->Release();
+            }
+        }
+
+        return S_OK;
+    }
+
+    if (hIMC && !IsEALang(LOWORD(hKL)))
+    {
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+        if (!pCicIC->m_dwUnknown6_5[2] && !pCicIC->m_dwUnknown6_5[3])
+            ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+    }
+
+    if (!hIMC || (::GetFocus() != hWnd) || (hIMC != ::ImmGetContext(hWnd)))
+        SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+
+    return S_OK;
+}
+
+/// @unimplemented
+HRESULT CicBridge::Notify(
+    TLS *pTLS,
+    ITfThreadMgr *pThreadMgr,
+    HIMC hIMC,
+    DWORD dwAction,
+    DWORD dwIndex,
+    DWORD_PTR dwValue)
+{
+    return E_NOTIMPL; // FIXME
 }

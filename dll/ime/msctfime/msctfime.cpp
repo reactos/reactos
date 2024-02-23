@@ -6,11 +6,8 @@
  */
 
 #include "msctfime.h"
-#include <ndk/ldrfuncs.h> /* for RtlDllShutdownInProgress */
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
-
-typedef CicArray<GUID> CDispAttrPropCache;
 
 HINSTANCE g_hInst = NULL; /* The instance of this module */
 BOOL g_bWinLogon = FALSE;
@@ -23,148 +20,6 @@ CDispAttrPropCache *g_pPropCache = NULL;
 EXTERN_C void __cxa_pure_virtual(void)
 {
     ERR("__cxa_pure_virtual\n");
-}
-
-typedef BOOLEAN (WINAPI *FN_DllShutdownInProgress)(VOID);
-
-/// This function calls ntdll!RtlDllShutdownInProgress.
-/// It can detect the system is shutting down or not.
-/// @implemented
-EXTERN_C BOOLEAN WINAPI DllShutdownInProgress(VOID)
-{
-    HMODULE hNTDLL;
-    static FN_DllShutdownInProgress s_fnDllShutdownInProgress = NULL;
-
-    if (s_fnDllShutdownInProgress)
-        return s_fnDllShutdownInProgress();
-
-    hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
-    s_fnDllShutdownInProgress =
-        (FN_DllShutdownInProgress)GetProcAddress(hNTDLL, "RtlDllShutdownInProgress");
-    if (!s_fnDllShutdownInProgress)
-        return FALSE;
-
-    return s_fnDllShutdownInProgress();
-}
-
-/// This function checks if the current user logon session is interactive.
-/// @implemented
-static BOOL
-IsInteractiveUserLogon(VOID)
-{
-    BOOL bOK, IsMember = FALSE;
-    PSID pSid;
-    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
-
-    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
-                                  0, 0, 0, 0, 0, 0, 0, &pSid))
-    {
-        ERR("Error: %ld\n", GetLastError());
-        return FALSE;
-    }
-
-    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
-
-    if (pSid)
-        FreeSid(pSid);
-
-    return bOK && IsMember;
-}
-
-/// @implemented
-ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread)
-{
-    if (!pLibThread)
-        return NULL;
-
-    if (pLibThread->m_pCategoryMgr)
-        return pLibThread->m_pCategoryMgr;
-
-    if (FAILED(cicCoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
-                                   IID_ITfCategoryMgr, (void **)&pLibThread->m_pCategoryMgr)))
-    {
-        return NULL;
-    }
-    return pLibThread->m_pCategoryMgr;
-}
-
-/// @implemented
-HRESULT LibEnumItemsInCategory(PCIC_LIBTHREAD pLibThread, REFGUID rguid, IEnumGUID **ppEnum)
-{
-    ITfCategoryMgr *pCat = GetUIMCat(pLibThread);
-    if (!pCat)
-        return E_FAIL;
-    return pCat->EnumItemsInCategory(rguid, ppEnum);
-}
-
-/// @implemented
-HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
-{
-    if (!pLibThread)
-        return E_FAIL;
-
-    if (pLibThread->m_pDisplayAttrMgr)
-    {
-        pLibThread->m_pDisplayAttrMgr->Release();
-        pLibThread->m_pDisplayAttrMgr = NULL;
-    }
-
-    if (FAILED(cicCoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL, CLSCTX_INPROC_SERVER,
-                                   IID_ITfDisplayAttributeMgr,
-                                   (void **)&pLibThread->m_pDisplayAttrMgr)))
-    {
-        return E_FAIL;
-    }
-
-    IEnumGUID *pEnumGuid;
-    LibEnumItemsInCategory(pLibThread, GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY, &pEnumGuid);
-
-    HRESULT hr = E_OUTOFMEMORY;
-
-    ::EnterCriticalSection(&g_csLock);
-    if (pEnumGuid && !g_pPropCache)
-    {
-        g_pPropCache = new(cicNoThrow) CDispAttrPropCache();
-        if (g_pPropCache)
-        {
-            g_pPropCache->Add(GUID_PROP_ATTRIBUTE);
-            GUID guid;
-            while (pEnumGuid->Next(1, &guid, NULL) == S_OK)
-            {
-                if (!IsEqualGUID(guid, GUID_PROP_ATTRIBUTE))
-                    g_pPropCache->Add(guid);
-            }
-            hr = S_OK;
-        }
-    }
-    ::LeaveCriticalSection(&g_csLock);
-
-    return hr;
-}
-
-/// @implemented
-HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
-{
-    if (!pLibThread)
-        return E_FAIL;
-
-    if (pLibThread->m_pDisplayAttrMgr)
-    {
-        pLibThread->m_pDisplayAttrMgr->Release();
-        pLibThread->m_pDisplayAttrMgr = NULL;
-    }
-
-    return S_OK;
-}
-
-/// Gets the charset from a language ID.
-/// @implemented
-BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
-{
-    CHARSETINFO info;
-    if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
-        return 0;
-    return info.ciCharset;
 }
 
 /// Selects or unselects the input context.
@@ -236,8 +91,6 @@ InternalSelectEx(
     return imcLock.m_hr;
 }
 
-class TLS;
-
 /***********************************************************************
  *      ImeInquire (MSCTFIME.@)
  *
@@ -245,6 +98,7 @@ class TLS;
  *
  * @implemented
  * @see CtfImeInquireExW
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeInquire.html
  */
 EXTERN_C
 BOOL WINAPI
@@ -264,6 +118,7 @@ ImeInquire(
  *
  * @implemented
  * @see ImmGetConversionListW
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeConversionList.html
  */
 EXTERN_C DWORD WINAPI
 ImeConversionList(
@@ -284,6 +139,7 @@ ImeConversionList(
  *
  * @implemented
  * @see ImeUnregisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeRegisterWord.html
  */
 EXTERN_C BOOL WINAPI
 ImeRegisterWord(
@@ -302,6 +158,7 @@ ImeRegisterWord(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeUnregisterWord.html
  */
 EXTERN_C BOOL WINAPI
 ImeUnregisterWord(
@@ -320,6 +177,7 @@ ImeUnregisterWord(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeGetRegisterWordStyle.html
  */
 EXTERN_C UINT WINAPI
 ImeGetRegisterWordStyle(
@@ -337,6 +195,7 @@ ImeGetRegisterWordStyle(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeEnumRegisterWord.html
  */
 EXTERN_C UINT WINAPI
 ImeEnumRegisterWord(
@@ -351,6 +210,12 @@ ImeEnumRegisterWord(
     return 0;
 }
 
+/***********************************************************************
+ *      ImeConfigure (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeConfigure.html
+ */
 EXTERN_C BOOL WINAPI
 ImeConfigure(
     _In_ HKL hKL,
@@ -380,6 +245,7 @@ ImeConfigure(
  *      ImeDestroy (MSCTFIME.@)
  *
  * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeDestroy.html
  */
 EXTERN_C BOOL WINAPI
 ImeDestroy(
@@ -410,6 +276,7 @@ ImeDestroy(
  *
  * @implemented
  * @see CtfImeEscapeEx
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeEscape.html
  */
 EXTERN_C LRESULT WINAPI
 ImeEscape(
@@ -439,6 +306,7 @@ ImeProcessKey(
  *
  * @implemented
  * @see CtfImeSelectEx
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSelect.html
  */
 EXTERN_C BOOL WINAPI
 ImeSelect(
@@ -456,6 +324,7 @@ ImeSelect(
  *
  * @implemented
  * @see CtfImeSetActiveContextAlways
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSetActiveContext.html
  */
 EXTERN_C BOOL WINAPI
 ImeSetActiveContext(
@@ -480,6 +349,12 @@ ImeToAsciiEx(
     return 0;
 }
 
+/***********************************************************************
+ *      NotifyIME (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/NotifyIME.html
+ */
 EXTERN_C BOOL WINAPI
 NotifyIME(
     _In_ HIMC hIMC,
@@ -487,8 +362,19 @@ NotifyIME(
     _In_ DWORD dwIndex,
     _In_ DWORD_PTR dwValue)
 {
-    FIXME("stub:(%p, 0x%lX, 0x%lX, %p)\n", hIMC, dwAction, dwIndex, dwValue);
-    return FALSE;
+    TRACE("(%p, 0x%lX, 0x%lX, %p)\n", hIMC, dwAction, dwIndex, dwValue);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    HRESULT hr = pBridge->Notify(pTLS, pThreadMgr, hIMC, dwAction, dwIndex, dwValue);
+    return (hr == S_OK);
 }
 
 EXTERN_C BOOL WINAPI
@@ -704,11 +590,22 @@ CtfImeDestroyThreadMgr(VOID)
     return hr;
 }
 
+/***********************************************************************
+ *      CtfImeCreateInputContext (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeCreateInputContext(
     _In_ HIMC hIMC)
 {
-    return E_NOTIMPL;
+    TRACE("(%p)\n", hIMC);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return E_OUTOFMEMORY;
+
+    return pTLS->m_pBridge->CreateInputContext(pTLS, hIMC);
 }
 
 /***********************************************************************
@@ -729,6 +626,11 @@ CtfImeDestroyInputContext(
     return pTLS->m_pBridge->DestroyInputContext(pTLS, hIMC);
 }
 
+/***********************************************************************
+ *      CtfImeSetActiveContextAlways (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeSetActiveContextAlways(
     _In_ HIMC hIMC,
@@ -736,10 +638,13 @@ CtfImeSetActiveContextAlways(
     _In_ HWND hWnd,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
-    return E_NOTIMPL;
-}
+    TRACE("(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
 
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return E_OUTOFMEMORY;
+    return pTLS->m_pBridge->SetActiveContextAlways(pTLS, hIMC, fActive, hWnd, hKL);
+}
 
 /***********************************************************************
  *      CtfImeProcessCicHotkey (MSCTFIME.@)
