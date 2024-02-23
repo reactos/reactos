@@ -44,8 +44,6 @@ public:
 
 /***********************************************************************/
 
-class CCompFrameWindow;
-
 class CCompFinalizeButton : public CUIFToolbarButton
 {
 public:

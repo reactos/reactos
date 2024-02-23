@@ -99,6 +99,93 @@ HIMC GetActiveContext(VOID)
     return ::ImmGetContext(hwndFocus);
 }
 
+/// @implemented
+ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return NULL;
+
+    if (pLibThread->m_pCategoryMgr)
+        return pLibThread->m_pCategoryMgr;
+
+    if (FAILED(cicCoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
+                                   IID_ITfCategoryMgr, (void **)&pLibThread->m_pCategoryMgr)))
+    {
+        return NULL;
+    }
+    return pLibThread->m_pCategoryMgr;
+}
+
+/// @implemented
+static HRESULT
+LibEnumItemsInCategory(PCIC_LIBTHREAD pLibThread, REFGUID rguid, IEnumGUID **ppEnum)
+{
+    ITfCategoryMgr *pCat = GetUIMCat(pLibThread);
+    if (!pCat)
+        return E_FAIL;
+    return pCat->EnumItemsInCategory(rguid, ppEnum);
+}
+
+/// @implemented
+HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return E_FAIL;
+
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
+
+    if (FAILED(cicCoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL, CLSCTX_INPROC_SERVER,
+                                   IID_ITfDisplayAttributeMgr,
+                                   (void **)&pLibThread->m_pDisplayAttrMgr)))
+    {
+        return E_FAIL;
+    }
+
+    IEnumGUID *pEnumGuid;
+    LibEnumItemsInCategory(pLibThread, GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY, &pEnumGuid);
+
+    HRESULT hr = E_OUTOFMEMORY;
+
+    ::EnterCriticalSection(&g_csLock);
+    if (pEnumGuid && !g_pPropCache)
+    {
+        g_pPropCache = new(cicNoThrow) CDispAttrPropCache();
+        if (g_pPropCache)
+        {
+            g_pPropCache->Add(GUID_PROP_ATTRIBUTE);
+            GUID guid;
+            while (pEnumGuid->Next(1, &guid, NULL) == S_OK)
+            {
+                if (!IsEqualGUID(guid, GUID_PROP_ATTRIBUTE))
+                    g_pPropCache->Add(guid);
+            }
+            hr = S_OK;
+        }
+    }
+    ::LeaveCriticalSection(&g_csLock);
+
+    return hr;
+}
+
+/// @implemented
+HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
+{
+    if (!pLibThread)
+        return E_FAIL;
+
+    if (pLibThread->m_pDisplayAttrMgr)
+    {
+        pLibThread->m_pDisplayAttrMgr->Release();
+        pLibThread->m_pDisplayAttrMgr = NULL;
+    }
+
+    return S_OK;
+}
+
 /***********************************************************************/
 
 /// @implemented

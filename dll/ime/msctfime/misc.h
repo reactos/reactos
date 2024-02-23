@@ -12,6 +12,9 @@ BOOL IsEALang(LANGID LangID);
 BOOL IsInteractiveUserLogon(VOID);
 BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
 HIMC GetActiveContext(VOID);
+ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread);
+HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
+HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
 
 /***********************************************************************/
 

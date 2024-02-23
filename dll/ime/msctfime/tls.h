@@ -7,8 +7,6 @@
 
 #pragma once
 
-class TLS;
-
 class CicBridge;
 class CicProfile;
 
