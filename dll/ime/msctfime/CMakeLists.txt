@@ -6,7 +6,6 @@ spec2def(msctfime.ime msctfime.spec)
 
 list(APPEND SOURCE
     bridge.cpp
-    functions.cpp
     inputcontext.cpp
     misc.cpp
     msctfime.cpp

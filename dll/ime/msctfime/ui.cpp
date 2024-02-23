@@ -529,7 +529,7 @@ HRESULT UIComposition::CreateCompButtonWnd(HWND hwndParent, HIMC hIMC)
     if (!pTLS || !pTLS->NonEACompositionEnabled())
         return S_OK;
 
-    if (IsEALang())
+    if (IsEALang(0))
     {
         if (m_pCompButtonFrameWindow)
         {

@@ -65,19 +65,15 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
-void CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
+ITfDocumentMgr*
+CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
-    if (pCicIC)
-    {
-        m_pDocMgr = pCicIC->m_pDocumentMgr;
-        m_pDocMgr->AddRef();
-    }
-    else
-    {
-        m_pDocMgr->Release();
-        m_pDocMgr = NULL;
-    }
+    if (!pCicIC)
+        return NULL;
+
+    pCicIC->m_pDocumentMgr->AddRef();
+    return pCicIC->m_pDocumentMgr;
 }
 
 /// @unimplemented
@@ -607,4 +603,77 @@ CicBridge::ConfigureRegisterWord(
     pProvider->Release();
     pFunction->Release();
     return hr;
+}
+
+/// @unimplemented
+void CicBridge::SetAssociate(
+    TLS *pTLS,
+    HWND hWnd,
+    HIMC hIMC,
+    ITfThreadMgr_P *pThreadMgr,
+    ITfDocumentMgr *pDocMgr)
+{
+    //FIXME
+}
+
+HRESULT
+CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
+{
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    if (fActive)
+    {
+        if (!hIMC)
+        {
+            SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+            return S_OK;
+        }
+
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        if (hIMC == ::ImmGetContext(hWnd))
+        {
+            ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+            if (pDocMgr)
+            {
+                SetAssociate(pTLS, imcLock.get().hWnd, hIMC, pThreadMgr, pDocMgr);
+                pDocMgr->Release();
+            }
+        }
+
+        return S_OK;
+    }
+
+    if (hIMC && !IsEALang(LOWORD(hKL)))
+    {
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+        if (!pCicIC->m_dwUnknown6_5[2] && !pCicIC->m_dwUnknown6_5[3])
+        {
+            ::ImmNotifyIME(hIMC, 0x15, 1, 0);
+        }
+    }
+
+    if (::GetFocus() != hWnd || !hIMC || hIMC != ::ImmGetContext(hWnd))
+    {
+        SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+        return S_OK;
+    }
+
+    return S_OK;
 }

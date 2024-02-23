@@ -25,52 +25,6 @@ EXTERN_C void __cxa_pure_virtual(void)
     ERR("__cxa_pure_virtual\n");
 }
 
-typedef BOOLEAN (WINAPI *FN_DllShutdownInProgress)(VOID);
-
-/// This function calls ntdll!RtlDllShutdownInProgress.
-/// It can detect the system is shutting down or not.
-/// @implemented
-EXTERN_C BOOLEAN WINAPI DllShutdownInProgress(VOID)
-{
-    HMODULE hNTDLL;
-    static FN_DllShutdownInProgress s_fnDllShutdownInProgress = NULL;
-
-    if (s_fnDllShutdownInProgress)
-        return s_fnDllShutdownInProgress();
-
-    hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
-    s_fnDllShutdownInProgress =
-        (FN_DllShutdownInProgress)GetProcAddress(hNTDLL, "RtlDllShutdownInProgress");
-    if (!s_fnDllShutdownInProgress)
-        return FALSE;
-
-    return s_fnDllShutdownInProgress();
-}
-
-/// This function checks if the current user logon session is interactive.
-/// @implemented
-static BOOL
-IsInteractiveUserLogon(VOID)
-{
-    BOOL bOK, IsMember = FALSE;
-    PSID pSid;
-    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
-
-    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
-                                  0, 0, 0, 0, 0, 0, 0, &pSid))
-    {
-        ERR("Error: %ld\n", GetLastError());
-        return FALSE;
-    }
-
-    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
-
-    if (pSid)
-        FreeSid(pSid);
-
-    return bOK && IsMember;
-}
-
 /// @implemented
 ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread)
 {
@@ -155,16 +109,6 @@ HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread)
     }
 
     return S_OK;
-}
-
-/// Gets the charset from a language ID.
-/// @implemented
-BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
-{
-    CHARSETINFO info;
-    if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
-        return 0;
-    return info.ciCharset;
 }
 
 /// Selects or unselects the input context.
@@ -729,6 +673,12 @@ CtfImeDestroyInputContext(
     return pTLS->m_pBridge->DestroyInputContext(pTLS, hIMC);
 }
 
+
+/***********************************************************************
+ *      CtfImeSetActiveContextAlways (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C HRESULT WINAPI
 CtfImeSetActiveContextAlways(
     _In_ HIMC hIMC,
@@ -736,10 +686,13 @@ CtfImeSetActiveContextAlways(
     _In_ HWND hWnd,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
-    return E_NOTIMPL;
-}
+    TRACE("(%p, %d, %p, %p)\n", hIMC, fActive, hWnd, hKL);
 
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return E_OUTOFMEMORY;
+    return pTLS->m_pBridge->SetActiveContextAlways(pTLS, hIMC, fActive, hWnd, hKL);
+}
 
 /***********************************************************************
  *      CtfImeProcessCicHotkey (MSCTFIME.@)

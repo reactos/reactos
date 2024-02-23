@@ -35,18 +35,8 @@
 
 #include <wine/debug.h>
 
-EXTERN_C BOOLEAN WINAPI DllShutdownInProgress(VOID);
-
 HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
 HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
-
-static inline HIMC GetActiveContext(VOID)
-{
-    HWND hwndFocus = ::GetFocus();
-    if (!hwndFocus)
-        hwndFocus = ::GetActiveWindow();
-    return ::ImmGetContext(hwndFocus);
-}
 
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS,        0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0x85A688F7, 0x6DC8, 0x4F17, 0xA8, 0x3A, 0xB1, 0x1C, 0x09, 0xCD, 0xD7, 0xBF);
@@ -61,7 +51,6 @@ DEFINE_GUID(GUID_PROP_MODEBIAS,                      0x372E0716, 0x974F, 0x40AC,
 #include "resource.h"
 
 #include "bridge.h"
-#include "functions.h"
 #include "inputcontext.h"
 #include "misc.h"
 #include "profile.h"
