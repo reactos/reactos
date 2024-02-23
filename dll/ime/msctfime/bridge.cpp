@@ -76,7 +76,7 @@ CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
     return pCicIC->m_pDocumentMgr;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT
 CicBridge::CreateInputContext(
     _Inout_ TLS *pTLS,
@@ -96,45 +96,49 @@ CicBridge::CreateInputContext(
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+        return S_OK;
+
+    pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
     if (!pCicIC)
     {
-        pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
-        if (!pCicIC)
-        {
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_OUTOFMEMORY;
-        }
-
-        if (!pTLS->m_pThreadMgr)
-        {
-            pCicIC->Release();
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_NOINTERFACE;
-        }
-
-        imeContext.get().m_pCicIC = pCicIC;
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_OUTOFMEMORY;
     }
+
+    if (!pTLS->m_pThreadMgr)
+    {
+        pCicIC->Release();
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_NOINTERFACE;
+    }
+
+    imeContext.get().m_pCicIC = pCicIC;
 
     HRESULT hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
     if (FAILED(hr))
     {
         pCicIC->Release();
         imeContext.get().m_pCicIC = NULL;
+        return hr;
     }
-    else
+
+    HWND hWnd = imcLock.get().hWnd;
+    if (hWnd && hWnd == ::GetFocus())
     {
-        if (imcLock.get().hWnd && imcLock.get().hWnd == ::GetFocus())
+        ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+        if (pDocMgr)
         {
-            GetDocumentManager(imeContext);
-            //FIXME
+            SetAssociate(pTLS, hWnd, hIMC, pTLS->m_pThreadMgr, pDocMgr);
+            pDocMgr->Release();
         }
     }
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 /// @implemented
