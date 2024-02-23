@@ -492,7 +492,7 @@ typedef BOOLEAN (WINAPI *FN_DllShutdownInProgress)(VOID);
 /// This function calls ntdll!RtlDllShutdownInProgress.
 /// It can detect the system is shutting down or not.
 /// @implemented
-EXTERN_C BOOLEAN WINAPI DllShutdownInProgress(VOID)
+EXTERN_C BOOLEAN DllShutdownInProgress(VOID)
 {
     HMODULE hNTDLL;
     static FN_DllShutdownInProgress s_fnDllShutdownInProgress = NULL;
