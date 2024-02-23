@@ -175,11 +175,15 @@ public:
 
     HRESULT UpdateShowCompWndFlag(CicIMCLock& imcLock, DWORD *pdwCompStrLen);
     HRESULT UpdateFont(CicIMCLock& imcLock);
+    HRESULT UpdateCompositionRect(CicIMCLock& imcLock);
     LPWSTR GetCompStrBuffer(INT cchStr);
+    INT GetLevelFromIMC(CicIMCLock& imcLock);
 
     void OnImeStartComposition(CicIMCLock& imcLock, HWND hUIWnd);
     HRESULT OnImeCompositionUpdate(CicIMCLock& imcLock);
     HRESULT OnImeEndComposition();
+    HRESULT OnImeNotifySetCompositionWindow(CicIMCLock& imcLock);
+    HRESULT OnImeSetContextAfter(CicIMCLock& imcLock);
     void OnImeSetContext(CicIMCLock& imcLock, HWND hUIWnd, WPARAM wParam, LPARAM lParam);
     void OnPaintTheme(WPARAM wParam);
     void OnTimer(HWND hWnd);

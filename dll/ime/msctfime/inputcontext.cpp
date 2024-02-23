@@ -16,7 +16,6 @@ CicInputContext::CicInputContext(
     _In_ HIMC hIMC)
 {
     m_hIMC = hIMC;
-    m_guid = GUID_NULL;
     m_dwQueryPos = 0;
     m_cRefs = 1;
 }
@@ -267,15 +266,41 @@ HRESULT CicInputContext::EscbCompComplete(CicIMCLock& imcLock)
 }
 
 /// @unimplemented
+HRESULT CicInputContext::DelayedReconvertFuncCall(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT
+CicInputContext::MsImeMouseHandler(
+    DWORD dwUnknown58,
+    DWORD dwUnknown59,
+    UINT keys,
+    CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
 HRESULT
 CicInputContext::SetupReconvertString(
     CicIMCLock& imcLock,
     ITfThreadMgr_P *pThreadMgr,
     UINT uCodePage,
-    DWORD dwUnknown61,
+    UINT uMsg,
     BOOL bUndo)
 {
     return E_NOTIMPL;
+}
+
+void CicInputContext::ClearPrevCandidatePos()
+{
+    m_dwUnknown8 = 0;
+    ZeroMemory(&m_rcCandidate1, sizeof(m_rcCandidate1));
+    ZeroMemory(&m_CandForm, sizeof(m_CandForm));
+    ZeroMemory(&m_rcCandidate2, sizeof(m_rcCandidate2));
+    m_dwQueryPos = 0;
 }
 
 /// @unimplemented
