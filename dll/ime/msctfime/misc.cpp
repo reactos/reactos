@@ -9,6 +9,98 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+/// East-Asian language?
+/// @implemented
+BOOL IsEALang(LANGID LangID)
+{
+    if (LangID == 0)
+    {
+        TLS *pTLS = TLS::GetTLS();
+        if (!pTLS || !pTLS->m_pProfile)
+            return FALSE;
+
+        pTLS->m_pProfile->GetLangId(&LangID);
+    }
+
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+typedef BOOLEAN (WINAPI *FN_DllShutdownInProgress)(VOID);
+
+/// This function calls ntdll!RtlDllShutdownInProgress.
+/// It can detect the system is shutting down or not.
+/// @implemented
+BOOLEAN DllShutdownInProgress(VOID)
+{
+    HMODULE hNTDLL;
+    static FN_DllShutdownInProgress s_fnDllShutdownInProgress = NULL;
+
+    if (s_fnDllShutdownInProgress)
+        return s_fnDllShutdownInProgress();
+
+    hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
+    s_fnDllShutdownInProgress =
+        (FN_DllShutdownInProgress)GetProcAddress(hNTDLL, "RtlDllShutdownInProgress");
+    if (!s_fnDllShutdownInProgress)
+        return FALSE;
+
+    return s_fnDllShutdownInProgress();
+}
+
+/// This function checks if the current user logon session is interactive.
+/// @implemented
+BOOL IsInteractiveUserLogon(VOID)
+{
+    BOOL bOK, IsMember = FALSE;
+    PSID pSid;
+    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
+
+    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
+                                  0, 0, 0, 0, 0, 0, 0, &pSid))
+    {
+        ERR("Error: %ld\n", GetLastError());
+        return FALSE;
+    }
+
+    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
+
+    if (pSid)
+        FreeSid(pSid);
+
+    return bOK && IsMember;
+}
+
+/// Gets the charset from a language ID.
+/// @implemented
+BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
+{
+    CHARSETINFO info;
+    if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
+        return 0;
+    return info.ciCharset;
+}
+
+/// Get the active input context.
+/// @implemented
+HIMC GetActiveContext(VOID)
+{
+    HWND hwndFocus = ::GetFocus();
+    if (!hwndFocus)
+        hwndFocus = ::GetActiveWindow();
+    return ::ImmGetContext(hwndFocus);
+}
+
+/***********************************************************************/
+
 /// @implemented
 HRESULT
 GetCompartment(
@@ -463,96 +555,4 @@ STDMETHODIMP CFnDocFeed::StartUndoCompositionString()
     pCicIC->SetupReconvertString(imcLock, pThreadMgr, uCodePage, 0, TRUE);
     pCicIC->EndReconvertString(imcLock);
     return S_OK;
-}
-
-/***********************************************************************/
-
-/// East-Asian language?
-/// @implemented
-EXTERN_C BOOL IsEALang(LANGID LangID)
-{
-    if (LangID == 0)
-    {
-        TLS *pTLS = TLS::GetTLS();
-        if (!pTLS || !pTLS->m_pProfile)
-            return FALSE;
-
-        pTLS->m_pProfile->GetLangId(&LangID);
-    }
-
-    switch (PRIMARYLANGID(LangID))
-    {
-        case LANG_CHINESE:
-        case LANG_JAPANESE:
-        case LANG_KOREAN:
-            return TRUE;
-
-        default:
-            return FALSE;
-    }
-}
-
-typedef BOOLEAN (WINAPI *FN_DllShutdownInProgress)(VOID);
-
-/// This function calls ntdll!RtlDllShutdownInProgress.
-/// It can detect the system is shutting down or not.
-/// @implemented
-EXTERN_C BOOLEAN DllShutdownInProgress(VOID)
-{
-    HMODULE hNTDLL;
-    static FN_DllShutdownInProgress s_fnDllShutdownInProgress = NULL;
-
-    if (s_fnDllShutdownInProgress)
-        return s_fnDllShutdownInProgress();
-
-    hNTDLL = cicGetSystemModuleHandle(L"ntdll.dll", FALSE);
-    s_fnDllShutdownInProgress =
-        (FN_DllShutdownInProgress)GetProcAddress(hNTDLL, "RtlDllShutdownInProgress");
-    if (!s_fnDllShutdownInProgress)
-        return FALSE;
-
-    return s_fnDllShutdownInProgress();
-}
-
-/// This function checks if the current user logon session is interactive.
-/// @implemented
-EXTERN_C BOOL IsInteractiveUserLogon(VOID)
-{
-    BOOL bOK, IsMember = FALSE;
-    PSID pSid;
-    SID_IDENTIFIER_AUTHORITY IdentAuth = { SECURITY_NT_AUTHORITY };
-
-    if (!AllocateAndInitializeSid(&IdentAuth, 1, SECURITY_INTERACTIVE_RID,
-                                  0, 0, 0, 0, 0, 0, 0, &pSid))
-    {
-        ERR("Error: %ld\n", GetLastError());
-        return FALSE;
-    }
-
-    bOK = CheckTokenMembership(NULL, pSid, &IsMember);
-
-    if (pSid)
-        FreeSid(pSid);
-
-    return bOK && IsMember;
-}
-
-/// Gets the charset from a language ID.
-/// @implemented
-EXTERN_C BYTE GetCharsetFromLangId(_In_ DWORD dwValue)
-{
-    CHARSETINFO info;
-    if (!::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwValue, &info, TCI_SRCLOCALE))
-        return 0;
-    return info.ciCharset;
-}
-
-/// Get the active input context.
-/// @implemented
-EXTERN_C HIMC GetActiveContext(VOID)
-{
-    HWND hwndFocus = ::GetFocus();
-    if (!hwndFocus)
-        hwndFocus = ::GetActiveWindow();
-    return ::ImmGetContext(hwndFocus);
 }

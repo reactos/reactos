@@ -7,11 +7,11 @@
 
 #pragma once
 
-EXTERN_C BOOL IsEALang(LANGID LangID);
-EXTERN_C BOOLEAN DllShutdownInProgress(VOID);
-EXTERN_C BOOL IsInteractiveUserLogon(VOID);
-EXTERN_C BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
-EXTERN_C HIMC GetActiveContext(VOID);
+BOOLEAN DllShutdownInProgress(VOID);
+BOOL IsEALang(LANGID LangID);
+BOOL IsInteractiveUserLogon(VOID);
+BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
+HIMC GetActiveContext(VOID);
 
 /***********************************************************************/
 
