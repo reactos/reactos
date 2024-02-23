@@ -25,6 +25,7 @@
  */
 
 #include "reactos.h"
+#include <winnls.h> // For GetUserDefaultLCID()
 
 #define NTOS_MODE_USER
 #include <ndk/obfuncs.h>
@@ -1401,11 +1402,16 @@ RestartDlgProc(
 BOOL LoadSetupData(
     IN OUT PSETUPDATA pSetupData)
 {
-    BOOL ret = TRUE;
-    // INFCONTEXT InfContext;
-    // TCHAR tmp[10];
-    // DWORD LineLength;
-    // LONG Count;
+    pSetupData->PartitionList = CreatePartitionList();
+    if (!pSetupData->PartitionList)
+    {
+        DPRINT1("Could not enumerate available disks; failing installation\n");
+        return FALSE;
+    }
+
+    pSetupData->NtOsInstallsList = CreateNTOSInstallationsList(pSetupData->PartitionList);
+    if (!pSetupData->NtOsInstallsList)
+        DPRINT1("Failed to get a list of NTOS installations; continue installation...\n");
 
     /* Load the hardware, language and keyboard layout lists */
 
@@ -1415,54 +1421,73 @@ BOOL LoadSetupData(
 
     pSetupData->USetupData.LanguageList = CreateLanguageList(pSetupData->USetupData.SetupInf, pSetupData->DefaultLanguage);
 
-    pSetupData->PartitionList = CreatePartitionList();
+    /* If not unattended, overwrite language and locale with
+     * the current ones of the running ReactOS instance */
+    if (!IsUnattendedSetup)
+    {
+        LCID LocaleID = GetUserDefaultLCID();
 
-    pSetupData->NtOsInstallsList = CreateNTOSInstallationsList(pSetupData->PartitionList);
-    if (!pSetupData->NtOsInstallsList)
-        DPRINT1("Failed to get a list of NTOS installations; continue installation...\n");
+        StringCchPrintfW(pSetupData->DefaultLanguage,
+                         _countof(pSetupData->DefaultLanguage),
+                         L"%08lx", LocaleID);
 
+        StringCchPrintfW(pSetupData->USetupData.LocaleID,
+                         _countof(pSetupData->USetupData.LocaleID),
+                         L"%08lx", LocaleID);
+    }
 
     /* new part */
     pSetupData->SelectedLanguageId = pSetupData->DefaultLanguage;
-    wcscpy(pSetupData->DefaultLanguage, pSetupData->USetupData.LocaleID);
+    wcscpy(pSetupData->DefaultLanguage, pSetupData->USetupData.LocaleID); // FIXME: In principle, only when unattended.
     pSetupData->USetupData.LanguageId = (LANGID)(wcstol(pSetupData->SelectedLanguageId, NULL, 16) & 0xFFFF);
 
-    pSetupData->USetupData.LayoutList = CreateKeyboardLayoutList(pSetupData->USetupData.SetupInf, pSetupData->SelectedLanguageId, pSetupData->DefaultKBLayout);
+    pSetupData->USetupData.LayoutList = CreateKeyboardLayoutList(pSetupData->USetupData.SetupInf,
+                                                                 pSetupData->SelectedLanguageId,
+                                                                 pSetupData->DefaultKBLayout);
 
-#if 0
-    // get default for keyboard and language
-    pSetupData->DefaultKBLayout = -1;
-    pSetupData->DefaultLang = -1;
-
-    // TODO: get defaults from underlaying running system
-    if (SetupFindFirstLine(pSetupData->USetupData.SetupInf, _T("NLS"), _T("DefaultLayout"), &InfContext))
+    /* If not unattended, overwrite keyboard layout with
+     * the current one of the running ReactOS instance */
+    if (!IsUnattendedSetup)
     {
-        SetupGetStringField(&InfContext, 1, tmp, ARRAYSIZE(tmp), &LineLength);
-        for (Count = 0; Count < pSetupData->KbLayoutCount; Count++)
+        C_ASSERT(_countof(pSetupData->DefaultKBLayout) >= KL_NAMELENGTH);
+        /* If the call fails, keep the default already stored in the buffer */
+        GetKeyboardLayoutNameW(pSetupData->DefaultKBLayout);
+    }
+
+    /* Change the default entries in the language and keyboard layout lists */
+    {
+    PGENERIC_LIST LanguageList = pSetupData->USetupData.LanguageList;
+    PGENERIC_LIST LayoutList = pSetupData->USetupData.LayoutList;
+    PGENERIC_LIST_ENTRY ListEntry;
+
+    /* Search for default language */
+    for (ListEntry = GetFirstListEntry(LanguageList); ListEntry;
+         ListEntry = GetNextListEntry(ListEntry))
+    {
+        PCWSTR LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
+        if (!wcsicmp(pSetupData->DefaultLanguage, LocaleId))
         {
-            if (_tcscmp(tmp, pSetupData->pKbLayouts[Count].LayoutId) == 0)
-            {
-                pSetupData->DefaultKBLayout = Count;
-                break;
-            }
+            DPRINT("found %S in LanguageList\n", LocaleId);
+            SetCurrentListEntry(LanguageList, ListEntry);
+            break;
         }
     }
 
-    if (SetupFindFirstLine(pSetupData->USetupData.SetupInf, _T("NLS"), _T("DefaultLanguage"), &InfContext))
+    /* Search for default layout */
+    for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
+         ListEntry = GetNextListEntry(ListEntry))
     {
-        SetupGetStringField(&InfContext, 1, tmp, ARRAYSIZE(tmp), &LineLength);
-        for (Count = 0; Count < pSetupData->LangCount; Count++)
+        PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
+        if (!wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
         {
-            if (_tcscmp(tmp, pSetupData->pLanguages[Count].LangId) == 0)
-            {
-                pSetupData->DefaultLang = Count;
-                break;
-            }
+            DPRINT("Found %S in LayoutList\n", pszLayoutId);
+            SetCurrentListEntry(LayoutList, ListEntry);
+            break;
         }
     }
-#endif
+    }
 
-    return ret;
+    return TRUE;
 }
 
 VOID
@@ -1875,14 +1900,15 @@ _tWinMain(HINSTANCE hInst,
         goto Quit;
     }
 
+    /* Retrieve any supplemental options from the unattend file */
+    CheckUnattendedSetup(&SetupData.USetupData);
+    SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
+
     /* Load extra setup data (HW lists etc...) */
     if (!LoadSetupData(&SetupData))
         goto Quit;
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
-
-    CheckUnattendedSetup(&SetupData.USetupData);
-    SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
 
     /* Cache commonly-used strings */
     LoadStringW(hInst, IDS_ABORTSETUP, SetupData.szAbortMessage, ARRAYSIZE(SetupData.szAbortMessage));
