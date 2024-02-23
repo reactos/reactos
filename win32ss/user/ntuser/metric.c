@@ -21,12 +21,10 @@ BOOL FASTCALL UserIsDBCSEnabled(VOID)
 
 BOOL FASTCALL UserIsIMMEnabled(VOID)
 {
-    static WCHAR s_szLoadIMM[] = L"LoadIMM";
-
     if (NLS_MB_CODE_PAGE_TAG)
         return TRUE;
 
-    return !!RegGetSectionDWORD(L"IMM", s_szLoadIMM, TRUE);
+    return !!RegGetSectionDWORD(L"IMM", L"LoadIMM", FALSE);
 }
 
 BOOL FASTCALL UserIsCiceroEnabled(VOID)
