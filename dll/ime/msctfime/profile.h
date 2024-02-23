@@ -48,4 +48,6 @@ public:
     HRESULT GetCodePageA(_Out_ UINT *puCodePage);
 
     HRESULT InitProfileInstance(_Inout_ TLS *pTLS);
+
+    BOOL IsIME(HKL hKL);
 };

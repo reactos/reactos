@@ -689,3 +689,65 @@ HRESULT CicBridge::Notify(
 {
     return E_NOTIMPL; // FIXME
 }
+
+/// @unimplemented
+BOOL CicBridge::ProcessKey(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    HIMC hIMC,
+    WPARAM wParam,
+    LPARAM lParam,
+    CONST LPBYTE lpbKeyState,
+    INT *pnUnknown60)
+{
+    return FALSE; // FIXME
+}
+
+/// @unimplemented
+HRESULT
+CicBridge::ToAsciiEx(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    UINT uVirtKey,
+    UINT uScanCode,
+    CONST LPBYTE lpbKeyState,
+    LPTRANSMSGLIST lpTransBuf,
+    UINT fuState,
+    HIMC hIMC,
+    UINT *pResult)
+{
+    return E_NOTIMPL; // FIXME
+}
+
+/// @unimplemented
+BOOL
+CicBridge::SetCompositionString(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    HIMC hIMC,
+    DWORD dwIndex,
+    LPCVOID lpComp,
+    DWORD dwCompLen,
+    LPCVOID lpRead,
+    DWORD dwReadLen)
+{
+    return FALSE; // FIXME
+}
+
+/// @unimplemented
+LRESULT
+CicBridge::EscapeKorean(TLS *pTLS, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+{
+    return 0; // FIXME
+}
+
+/// @implemented
+BOOL CicBridge::IsOwnDim(ITfDocumentMgr *pDocMgr)
+{
+    DWORD dwDimFlags = 0;
+    HRESULT hr = ::GetCompartmentDWORD(pDocMgr, GUID_COMPARTMENT_CTFIME_DIMFLAGS,
+                                       &dwDimFlags, FALSE);
+    if (FAILED(hr))
+        return FALSE;
+    return !!(dwDimFlags & 0x1);
+}

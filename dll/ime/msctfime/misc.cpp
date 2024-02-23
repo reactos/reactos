@@ -99,6 +99,32 @@ HIMC GetActiveContext(VOID)
     return ::ImmGetContext(hwndFocus);
 }
 
+// MSIMTF.dll!MsimtfIsGuidMapEnable
+typedef BOOL (WINAPI *FN_MsimtfIsGuidMapEnable)(HIMC hIMC, LPBOOL pbValue);
+HINSTANCE g_hMSIMTF = NULL;
+
+/// @implemented
+BOOL MsimtfIsGuidMapEnable(_In_ HIMC hIMC, _Out_opt_ LPBOOL pbValue)
+{
+    static FN_MsimtfIsGuidMapEnable s_fn = NULL;
+    if (!cicGetFN(g_hMSIMTF, s_fn, L"msimtf.dll", "MsimtfIsGuidMapEnable"))
+        return FALSE;
+    return s_fn(hIMC, pbValue);
+}
+
+/// @implemented
+BOOL IsVKDBEKey(_In_ UINT uVirtKey)
+{
+    switch (uVirtKey)
+    {
+        case VK_KANJI:
+        case VK_CONVERT:
+            return TRUE;
+        default:
+            return (VK_OEM_ATTN <= uVirtKey && uVirtKey <= VK_PA1);
+    }
+}
+
 /// @implemented
 ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread)
 {

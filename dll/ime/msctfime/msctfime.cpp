@@ -288,15 +288,54 @@ ImeEscape(
     return 0;
 }
 
+/***********************************************************************
+ *      ImeProcessKey (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeProcessKey.html
+ */
 EXTERN_C BOOL WINAPI
 ImeProcessKey(
     _In_ HIMC hIMC,
-    _In_ UINT uVirKey,
+    _In_ UINT uVirtKey,
     _In_ LPARAM lParam,
     _In_ CONST LPBYTE lpbKeyState)
 {
-    FIXME("stub:(%p, %u, %p, lpbKeyState)\n", hIMC, uVirKey, lParam, lpbKeyState);
-    return FALSE;
+    TRACE("(%p, %u, %p, lpbKeyState)\n", hIMC, uVirtKey, lParam, lpbKeyState);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    if (pTLS->m_dwFlags1 & 0x1)
+    {
+        ITfDocumentMgr *pDocMgr = NULL;
+        pThreadMgr->GetFocus(&pDocMgr);
+        if (pDocMgr && !CicBridge::IsOwnDim(pDocMgr))
+        {
+            pDocMgr->Release();
+            return FALSE;
+        }
+
+        if (pDocMgr)
+            pDocMgr->Release();
+    }
+
+    if (((pTLS->m_dwFlags2 & 1) && MsimtfIsGuidMapEnable(hIMC, 0)) ||
+        ((lParam & 0x20000000) &&
+         LOWORD(::GetKeyboardLayout(0)) == MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) &&
+         IsVKDBEKey(uVirtKey)))
+    {
+        return FALSE;
+    }
+
+    INT nUnknown60 = 0;
+    return pBridge->ProcessKey(pTLS, pThreadMgr, hIMC, uVirtKey, lParam, lpbKeyState, &nUnknown60);
 }
 
 /***********************************************************************
@@ -335,18 +374,37 @@ ImeSetActiveContext(
     return FALSE;
 }
 
+/***********************************************************************
+ *      ImeToAsciiEx (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeToAsciiEx.html
+ */
 EXTERN_C UINT WINAPI
 ImeToAsciiEx(
-    _In_ UINT uVirKey,
+    _In_ UINT uVirtKey,
     _In_ UINT uScanCode,
     _In_ CONST LPBYTE lpbKeyState,
     _Out_ LPTRANSMSGLIST lpTransMsgList,
     _In_ UINT fuState,
     _In_ HIMC hIMC)
 {
-    FIXME("stub:(%u, %u, %p, %p, %u, %p)\n", uVirKey, uScanCode, lpbKeyState, lpTransMsgList,
+    TRACE("(%u, %u, %p, %p, %u, %p)\n", uVirtKey, uScanCode, lpbKeyState, lpTransMsgList,
           fuState, hIMC);
-    return 0;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return 0;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return 0;
+
+    UINT ret = 0;
+    HRESULT hr = pBridge->ToAsciiEx(pTLS, pThreadMgr, uVirtKey, uScanCode, lpbKeyState,
+                                    lpTransMsgList, fuState, hIMC, &ret);
+    return ((hr == S_OK) ? ret : 0);
 }
 
 /***********************************************************************
@@ -377,6 +435,12 @@ NotifyIME(
     return (hr == S_OK);
 }
 
+/***********************************************************************
+ *      ImeSetCompositionString (MSCTFIME.@)
+ *
+ * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSetCompositionString.html
+ */
 EXTERN_C BOOL WINAPI
 ImeSetCompositionString(
     _In_ HIMC hIMC,
@@ -386,23 +450,20 @@ ImeSetCompositionString(
     _In_opt_ LPCVOID lpRead,
     _In_ DWORD dwReadLen)
 {
-    FIXME("stub:(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
+    TRACE("(%p, 0x%lX, %p, 0x%lX, %p, 0x%lX)\n", hIMC, dwIndex, lpComp, dwCompLen,
           lpRead, dwReadLen);
-    return FALSE;
-}
 
-EXTERN_C DWORD WINAPI
-ImeGetImeMenuItems(
-    _In_ HIMC hIMC,
-    _In_ DWORD dwFlags,
-    _In_ DWORD dwType,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
-    _Inout_opt_ LPIMEMENUITEMINFOW lpImeMenu,
-    _In_ DWORD dwSize)
-{
-    FIXME("stub:(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n", hIMC, dwFlags, dwType, lpImeParentMenu,
-          lpImeMenu, dwSize);
-    return 0;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    return pBridge->SetCompositionString(pTLS, pThreadMgr, hIMC, dwIndex,
+                                         lpComp, dwCompLen, lpRead, dwReadLen);
 }
 
 /***********************************************************************
@@ -459,6 +520,11 @@ CtfImeSelectEx(
     return pTLS->m_pBridge->SelectEx(pTLS, pTLS->m_pThreadMgr, hIMC, fSelect, hKL);
 }
 
+/***********************************************************************
+ *      CtfImeEscapeEx (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C LRESULT WINAPI
 CtfImeEscapeEx(
     _In_ HIMC hIMC,
@@ -466,8 +532,16 @@ CtfImeEscapeEx(
     _Inout_opt_ LPVOID lpData,
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p, %u, %p, %p)\n", hIMC, uSubFunc, lpData, hKL);
-    return 0;
+    TRACE("(%p, %u, %p, %p)\n", hIMC, uSubFunc, lpData, hKL);
+
+    if (LOWORD(hKL) != MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT))
+        return 0;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pBridge)
+        return 0;
+
+    return pTLS->m_pBridge->EscapeKorean(pTLS, hIMC, uSubFunc, lpData);
 }
 
 /***********************************************************************
@@ -554,7 +628,6 @@ CtfImeCreateThreadMgr(VOID)
 
     return hr;
 }
-
 
 /***********************************************************************
  *      CtfImeDestroyThreadMgr (MSCTFIME.@)
@@ -720,12 +793,26 @@ CtfImeDispatchDefImeMessage(
     return SendMessageW(hImeWnd, uMsg, wParam, lParam);
 }
 
+/***********************************************************************
+ *      CtfImeIsIME (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 CtfImeIsIME(
     _In_ HKL hKL)
 {
-    FIXME("stub:(%p)\n", hKL);
-    return FALSE;
+    TRACE("(%p)\n", hKL);
+
+    if (IS_IME_HKL(hKL))
+        return TRUE;
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pProfile)
+        return FALSE;
+
+    // The return value of CicProfile::IsIME is brain-damaged
+    return !pTLS->m_pProfile->IsIME(hKL);
 }
 
 /***********************************************************************

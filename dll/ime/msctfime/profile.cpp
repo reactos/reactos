@@ -171,3 +171,10 @@ CicProfile::GetActiveLanguageProfile(
 {
     return E_NOTIMPL;
 }
+
+/// The return value of CicProfile::IsIME is brain-damaged.
+/// @unimplemented
+BOOL CicProfile::IsIME(HKL hKL)
+{
+    return TRUE;
+}
