@@ -664,16 +664,11 @@ CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd,
 
         CicInputContext *pCicIC = imeContext.get().m_pCicIC;
         if (!pCicIC->m_dwUnknown6_5[2] && !pCicIC->m_dwUnknown6_5[3])
-        {
-            ::ImmNotifyIME(hIMC, 0x15, 1, 0);
-        }
+            ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
     }
 
-    if (::GetFocus() != hWnd || !hIMC || hIMC != ::ImmGetContext(hWnd))
-    {
+    if (!hIMC || (::GetFocus() != hWnd) || (hIMC != ::ImmGetContext(hWnd)))
         SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
-        return S_OK;
-    }
 
     return S_OK;
 }
