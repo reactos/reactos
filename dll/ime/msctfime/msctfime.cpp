@@ -98,6 +98,7 @@ InternalSelectEx(
  *
  * @implemented
  * @see CtfImeInquireExW
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeInquire.html
  */
 EXTERN_C
 BOOL WINAPI
@@ -117,6 +118,7 @@ ImeInquire(
  *
  * @implemented
  * @see ImmGetConversionListW
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeConversionList.html
  */
 EXTERN_C DWORD WINAPI
 ImeConversionList(
@@ -137,6 +139,7 @@ ImeConversionList(
  *
  * @implemented
  * @see ImeUnregisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeRegisterWord.html
  */
 EXTERN_C BOOL WINAPI
 ImeRegisterWord(
@@ -155,6 +158,7 @@ ImeRegisterWord(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeUnregisterWord.html
  */
 EXTERN_C BOOL WINAPI
 ImeUnregisterWord(
@@ -173,6 +177,7 @@ ImeUnregisterWord(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeGetRegisterWordStyle.html
  */
 EXTERN_C UINT WINAPI
 ImeGetRegisterWordStyle(
@@ -190,6 +195,7 @@ ImeGetRegisterWordStyle(
  *
  * @implemented
  * @see ImeRegisterWord
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeEnumRegisterWord.html
  */
 EXTERN_C UINT WINAPI
 ImeEnumRegisterWord(
@@ -208,6 +214,7 @@ ImeEnumRegisterWord(
  *      ImeConfigure (MSCTFIME.@)
  *
  * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeConfigure.html
  */
 EXTERN_C BOOL WINAPI
 ImeConfigure(
@@ -238,6 +245,7 @@ ImeConfigure(
  *      ImeDestroy (MSCTFIME.@)
  *
  * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeDestroy.html
  */
 EXTERN_C BOOL WINAPI
 ImeDestroy(
@@ -268,6 +276,7 @@ ImeDestroy(
  *
  * @implemented
  * @see CtfImeEscapeEx
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeEscape.html
  */
 EXTERN_C LRESULT WINAPI
 ImeEscape(
@@ -297,6 +306,7 @@ ImeProcessKey(
  *
  * @implemented
  * @see CtfImeSelectEx
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSelect.html
  */
 EXTERN_C BOOL WINAPI
 ImeSelect(
@@ -314,6 +324,7 @@ ImeSelect(
  *
  * @implemented
  * @see CtfImeSetActiveContextAlways
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/ImeSetActiveContext.html
  */
 EXTERN_C BOOL WINAPI
 ImeSetActiveContext(
@@ -342,6 +353,7 @@ ImeToAsciiEx(
  *      NotifyIME (MSCTFIME.@)
  *
  * @implemented
+ * @see https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/NotifyIME.html
  */
 EXTERN_C BOOL WINAPI
 NotifyIME(
