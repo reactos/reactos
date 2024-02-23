@@ -204,6 +204,11 @@ ImeEnumRegisterWord(
     return 0;
 }
 
+/***********************************************************************
+ *      ImeConfigure (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 ImeConfigure(
     _In_ HKL hKL,
