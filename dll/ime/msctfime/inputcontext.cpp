@@ -296,16 +296,10 @@ CicInputContext::SetupReconvertString(
 
 void CicInputContext::ClearPrevCandidatePos()
 {
-    m_dwUnknown8[0] = 0;
-    m_dwUnknown8[1] = 0;
-    m_dwUnknown8[2] = 0;
-    m_dwUnknown8[3] = 0;
-    m_dwUnknown8[4] = 0;
+    m_dwUnknown8 = 0;
+    ZeroMemory(&m_rcCandidate1, sizeof(m_rcCandidate1));
     ZeroMemory(&m_CandForm, sizeof(m_CandForm));
-    m_dwUnknown8_5[0] = 0;
-    m_dwUnknown8_5[1] = 0;
-    m_dwUnknown8_5[2] = 0;
-    m_dwUnknown8_5[3] = 0;
+    ZeroMemory(&m_rcCandidate2, sizeof(m_rcCandidate2));
     m_dwQueryPos = 0;
 }
 
