@@ -452,6 +452,7 @@ void COMPWND::_ClientToScreen(LPRECT prc)
 
 // For GetWindowLongPtr/SetWindowLongPtr
 #define UICOMP_GWLP_INDEX 0
+#define UICOMP_GWLP_SIZE  (UICOMP_GWLP_INDEX + sizeof(INT))
 
 /// @unimplemented
 UIComposition::UIComposition(HWND hwndParent)
@@ -1037,7 +1038,7 @@ BOOL RegisterImeClass(VOID)
     {
         ZeroMemory(&wcx, sizeof(wcx));
         wcx.cbSize          = sizeof(WNDCLASSEXW);
-        wcx.cbWndExtra      = sizeof(DWORD);
+        wcx.cbWndExtra      = UICOMP_GWLP_SIZE;
         wcx.hIcon           = NULL;
         wcx.hInstance       = g_hInst;
         wcx.hCursor         = LoadCursorW(NULL, (LPCWSTR)IDC_IBEAM);
