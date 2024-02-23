@@ -12,6 +12,38 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 DWORD TLS::s_dwTlsIndex = (DWORD)-1;
 
 /// @implemented
+BOOL TLS::Initialize()
+{
+    s_dwTlsIndex = ::TlsAlloc();
+    return s_dwTlsIndex != (DWORD)-1;
+}
+
+/// @implemented
+VOID TLS::Uninitialize()
+{
+    if (s_dwTlsIndex != (DWORD)-1)
+    {
+        ::TlsFree(s_dwTlsIndex);
+        s_dwTlsIndex = (DWORD)-1;
+    }
+}
+
+/// @implemented
+TLS* TLS::GetTLS()
+{
+    if (s_dwTlsIndex == (DWORD)-1)
+        return NULL;
+
+    return InternalAllocateTLS();
+}
+
+/// @implemented
+TLS* TLS::PeekTLS()
+{
+    return (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
+}
+
+/// @implemented
 TLS* TLS::InternalAllocateTLS()
 {
     TLS *pTLS = TLS::PeekTLS();
