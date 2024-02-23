@@ -300,13 +300,13 @@ ImeConfigure(
     if (!pTLS || !pTLS->m_pBridge || !pTLS->m_pThreadMgr)
         return FALSE;
 
-    CicBridge *pBridge = pTLS->m_pBridge;
-    ITfThreadMgr *pThreadMgr = pTLS->m_pThreadMgr;
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
 
-    if (dwMode & 1)
+    if (dwMode & 0x1)
         return (pBridge->ConfigureGeneral(pTLS, pThreadMgr, hKL, hWnd) == S_OK);
 
-    if (dwMode & 2)
+    if (dwMode & 0x2)
         return (pBridge->ConfigureRegisterWord(pTLS, pThreadMgr, hKL, hWnd, lpData) == S_OK);
 
     return FALSE;
