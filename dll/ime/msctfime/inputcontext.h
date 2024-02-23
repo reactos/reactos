@@ -8,6 +8,7 @@
 #pragma once
 
 #include "sinks.h"
+#include "misc.h"
 
 class CInputContextOwnerCallBack;
 class CInputContextOwner;
@@ -44,7 +45,7 @@ public:
     DWORD m_dwUnknown4[2];
     DWORD m_dwQueryPos;
     DWORD m_dwUnknown5;
-    GUID m_guid;
+    CModeBias m_ModeBias;
     DWORD m_dwUnknown6[11];
     BOOL m_bSelecting;
     BOOL m_bReconverting;
@@ -96,7 +97,15 @@ public:
         CicIMCLock& imcLock,
         ITfThreadMgr_P *pThreadMgr,
         UINT uCodePage,
-        DWORD dwUnknown61,
+        UINT uMsg,
         BOOL bUndo);
+    HRESULT MsImeMouseHandler(
+        DWORD dwUnknown58,
+        DWORD dwUnknown59,
+        UINT keys,
+        CicIMCLock& imcLock);
+
     HRESULT EndReconvertString(CicIMCLock& imcLock);
+    HRESULT DelayedReconvertFuncCall(CicIMCLock& imcLock);
+    void ClearPrevCandidatePos();
 };

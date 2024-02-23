@@ -50,6 +50,8 @@ class CModeBias
 public:
     GUID m_guid;
 
+    CModeBias() : m_guid(GUID_NULL) { }
+
     GUID ConvertModeBias(LONG bias);
     LONG ConvertModeBias(REFGUID guid);
     void SetModeBias(REFGUID rguid);

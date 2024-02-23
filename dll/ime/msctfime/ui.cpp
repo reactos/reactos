@@ -784,6 +784,88 @@ UIComposition::CompWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+/// @implemented
+HRESULT UIComposition::OnImeNotifySetCompositionWindow(CicIMCLock& imcLock)
+{
+    return UpdateCompositionRect(imcLock);
+}
+
+/// @unimplemented
+HRESULT UIComposition::UpdateCompositionRect(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @implemented
+INT UIComposition::GetLevelFromIMC(CicIMCLock& imcLock)
+{
+    DWORD dwStyle = imcLock.get().cfCompForm.dwStyle;
+    if (dwStyle == CFS_DEFAULT)
+        return 1;
+    if (!(dwStyle & (CFS_FORCE_POSITION | CFS_POINT | CFS_RECT)))
+        return 0;
+
+    RECT rc;
+    ::GetClientRect(imcLock.get().hWnd, &rc);
+    if (!::PtInRect(&rc, imcLock.get().cfCompForm.ptCurrentPos))
+        return 1;
+
+    INPUTCONTEXT *pIC = &imcLock.get();
+    if ((pIC->cfCompForm.dwStyle & CFS_RECT) &&
+        (pIC->cfCompForm.rcArea.top == pIC->cfCompForm.rcArea.bottom) &&
+        (pIC->cfCompForm.rcArea.left == pIC->cfCompForm.rcArea.right))
+    {
+        return 1;
+    }
+
+    return 2;
+}
+
+/// @implemented
+HRESULT UIComposition::OnImeSetContextAfter(CicIMCLock& imcLock)
+{
+    if ((!m_pDefCompFrameWindow || !::IsWindow(*m_pDefCompFrameWindow)) && !::IsWindow(m_CompStrs[0].m_hWnd))
+    {
+        m_dwUnknown56[0] &= ~0x8000;
+        return S_OK;
+    }
+
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    INT Level = GetLevelFromIMC(imcLock);
+    if ((Level == 1 || Level == 2) && (m_dwUnknown56[0] & 0x80000000) && m_dwUnknown56[1])
+    {
+        DWORD dwCompStrLen = 0;
+        UpdateShowCompWndFlag(imcLock, &dwCompStrLen);
+
+        if (Level == 1)
+        {
+            ::ShowWindow(*m_pDefCompFrameWindow, (m_bHasCompStr ? SW_SHOWNOACTIVATE : SW_HIDE));
+        }
+        else if (Level == 2 && !m_bHasCompStr && dwCompStrLen)
+        {
+            for (INT iCompStr = 0; iCompStr < 3; ++iCompStr)
+            {
+                m_CompStrs[iCompStr].m_Caret.HideCaret();
+                ::ShowWindow(m_CompStrs[iCompStr].m_Caret, SW_HIDE);
+            }
+        }
+    }
+    else
+    {
+        ::ShowWindow(*m_pDefCompFrameWindow, SW_HIDE);
+
+        for (INT iCompStr = 0; iCompStr < 3; ++iCompStr)
+        {
+            m_CompStrs[iCompStr].m_Caret.HideCaret();
+            ::ShowWindow(m_CompStrs[iCompStr].m_Caret, SW_HIDE);
+        }
+    }
+
+    return S_OK;
+}
+
 /***********************************************************************/
 
 // For GetWindowLongPtr/SetWindowLongPtr
@@ -853,31 +935,166 @@ void UI::OnImeSetContext(CicIMCLock& imcLock, WPARAM wParam, LPARAM lParam)
 struct CIMEUIWindowHandler
 {
     static LRESULT CALLBACK ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
+    static HRESULT CALLBACK ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static HRESULT CALLBACK ImeUIDelayedReconvertFuncCall(HWND hWnd);
+    static HRESULT CALLBACK ImeUIOnLayoutChange(LPARAM lParam);
+    static HRESULT CALLBACK ImeUIPrivateHandler(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ImeUINotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
-/// @unimplemented
-LRESULT CALLBACK
+/// @implemented
+HRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeMouseHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    return 0; //FIXME
+    if ((BYTE)wParam == 0xFF)
+        return TRUE;
+
+    CicIMCLock imcLock((HIMC)lParam);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return FALSE;
+
+    HRESULT hr = E_FAIL;
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+    {
+        UINT keys = 0;
+        if (wParam & MK_LBUTTON)
+            keys |= 0x1;
+        if (wParam & MK_SHIFT)
+            keys |= 0x10;
+        if (wParam & MK_RBUTTON)
+            keys |= 0x2;
+        if (wParam & MK_MBUTTON)
+            keys |= 0x780000;
+        else if (wParam & MK_ALT)
+            keys |= 0xFF880000;
+        hr = pCicIC->MsImeMouseHandler(HIWORD(wParam), HIBYTE(LOWORD(wParam)), keys, imcLock);
+    }
+
+    return hr;
 }
 
-/// @unimplemented
+/// @implemented
+HRESULT CALLBACK CIMEUIWindowHandler::ImeUIOnLayoutChange(LPARAM lParam)
+{
+    CicIMCLock imcLock((HIMC)lParam);
+    if (FAILED(imcLock.m_hr))
+        return S_OK;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return S_OK;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+    {
+        auto pContextOwnerServices = pCicIC->m_pContextOwnerServices;
+        pContextOwnerServices->AddRef();
+        pContextOwnerServices->OnLayoutChange();
+        pContextOwnerServices->Release();
+    }
+
+    return S_OK;
+}
+
+/// @implemented
+HRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIPrivateHandler(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CicIMCLock imcLock((HIMC)lParam);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC && wParam == 0x10)
+        pCicIC->EscbClearDocFeedBuffer(imcLock, TRUE);
+
+    return S_OK;
+}
+
+/// @implemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeModeBiasHandler(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    return 0; //FIXME
+    if (!wParam)
+        return TRUE;
+
+    CicIMCLock imcLock((HIMC)lParam);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return FALSE;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return FALSE;
+
+    if (wParam == 1)
+    {
+        if (lParam == 0 || lParam == 1 || lParam == 4 || lParam == 0x10000)
+        {
+            GUID guid = pCicIC->m_ModeBias.ConvertModeBias((DWORD)lParam);
+            pCicIC->m_ModeBias.SetModeBias(guid);
+
+            pCicIC->m_dwUnknown7[2] |= 1;
+            pCicIC->m_pContextOwnerServices->AddRef();
+            pCicIC->m_pContextOwnerServices->OnAttributeChange(GUID_PROP_MODEBIAS);
+            pCicIC->m_pContextOwnerServices->Release();
+            return TRUE;
+        }
+    }
+    else if (wParam == 2)
+    {
+        return pCicIC->m_ModeBias.ConvertModeBias(pCicIC->m_ModeBias.m_guid);
+    }
+
+    return FALSE;
 }
 
-/// @unimplemented
+/// @implemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIMsImeReconvertRequest(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    return 0; //FIXME
+    if (wParam == 0x10000000)
+        return TRUE;
+
+    HIMC hIMC = (HIMC)::GetWindowLongPtrW(hWnd, UI_GWLP_HIMC);
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return FALSE;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return FALSE;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    TLS *pTLS = TLS::GetTLS();
+    if (!pCicIC || !pTLS)
+        return FALSE;
+
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    auto pProfile = pTLS->m_pProfile;
+    if (!pThreadMgr || !pProfile)
+        return FALSE;
+
+    UINT uCodePage = 0;
+    pProfile->GetCodePageA(&uCodePage);
+    pCicIC->SetupReconvertString(imcLock, pThreadMgr, uCodePage, WM_MSIME_RECONVERT, FALSE);
+    pCicIC->EndReconvertString(imcLock);
+    return TRUE;
 }
 
 /// @implemented
@@ -905,7 +1122,113 @@ CIMEUIWindowHandler::ImeUIMsImeHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return 0;
 }
 
+/// @implemented
+HRESULT CALLBACK
+CIMEUIWindowHandler::ImeUIDelayedReconvertFuncCall(HWND hWnd)
+{
+    HIMC hIMC = (HIMC)::GetWindowLongPtrW(hWnd, UI_GWLP_HIMC);
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+        pCicIC->DelayedReconvertFuncCall(imcLock);
+    return S_OK;
+}
+
 /// @unimplemented
+LRESULT CALLBACK
+CIMEUIWindowHandler::ImeUINotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HIMC hIMC = (HIMC)::GetWindowLongPtrW(hWnd, UI_GWLP_HIMC);
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+    {
+        switch (wParam)
+        {
+            case IMN_CLOSECANDIDATE:
+            {
+                pCicIC->m_dwUnknown6[1] &= ~0x1;
+                HWND hImeWnd = ::ImmGetDefaultIMEWnd(NULL);
+                if (::IsWindow(hImeWnd))
+                    ::PostMessage(hImeWnd, WM_IME_NOTIFY, 0x10, (LPARAM)hIMC);
+                break;
+            }
+            case IMN_OPENCANDIDATE:
+            {
+                pCicIC->m_dwUnknown6[1] |= 0x1;
+                pCicIC->ClearPrevCandidatePos();
+                break;
+            }
+            case IMN_SETCANDIDATEPOS:
+            {
+                //FIXME
+                break;
+            }
+            case IMN_SETCOMPOSITIONFONT:
+            {
+                //FIXME
+                break;
+            }
+            case IMN_SETCOMPOSITIONWINDOW:
+            {
+                //FIXME
+                break;
+            }
+            case 0xF:
+            {
+                CIMEUIWindowHandler::ImeUIOnLayoutChange(lParam);
+                break;
+            }
+            case 0x10:
+            {
+                CIMEUIWindowHandler::ImeUIPrivateHandler(uMsg, 0x10, lParam);
+                break;
+            }
+            case 0x13:
+            {
+                CIMEUIWindowHandler::ImeUIOnLayoutChange(lParam);
+                break;
+            }
+            case 0x14:
+            {
+                //FIXME
+                break;
+            }
+            case 0x16:
+            {
+                ::SetTimer(hWnd, 2, 100, NULL);
+                break;
+            }
+            case 0x17:
+            {
+                return (LRESULT)hWnd;
+            }
+            case 0x10D:
+            {
+                //FIXME
+                break;
+            }
+            case 0x10E:
+                pCicIC->m_dwQueryPos = 0;
+                break;
+        }
+    }
+
+    return 0;
+}
+
+/// @implemented
 LRESULT CALLBACK
 CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -914,7 +1237,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     {
         if (uMsg == WM_CREATE)
             return -1;
-        return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+        return ::DefWindowProcW(hWnd, uMsg, wParam, lParam);
     }
 
     switch (uMsg)
@@ -954,7 +1277,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
                     {
                         pUI->m_pComp->OnImeCompositionUpdate(imcLock);
                         ::SetTimer(hWnd, 0, 10, NULL);
-                        //FIXME
+                        pUI->m_pComp->m_bInComposition = TRUE;
                     }
                     break;
                 }
@@ -973,8 +1296,24 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
                 }
                 case WM_TIMER:
                 {
-                    //FIXME
-                    ::KillTimer(hWnd, wParam);
+                    switch (wParam)
+                    {
+                        case 0:
+                            ::KillTimer(hWnd, wParam);
+                            pUI->m_pComp->m_bInComposition = FALSE;
+                            pUI->m_pComp->OnImeNotifySetCompositionWindow(imcLock);
+                            break;
+                        case 1:
+                            ::KillTimer(hWnd, wParam);
+                            pUI->m_pComp->OnImeSetContextAfter(imcLock);
+                            break;
+                        case 2:
+                            ::KillTimer(hWnd, wParam);
+                            CIMEUIWindowHandler::ImeUIDelayedReconvertFuncCall(hWnd);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 }
                 case WM_IME_NOTIFY:
@@ -991,7 +1330,7 @@ CIMEUIWindowHandler::ImeUIWndProcWorker(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         {
             if (IsMsImeMessage(uMsg))
                 return CIMEUIWindowHandler::ImeUIMsImeHandler(hWnd, uMsg, wParam, lParam);
-            return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+            return ::DefWindowProcW(hWnd, uMsg, wParam, lParam);
         }
     }
 

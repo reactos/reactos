@@ -21,6 +21,7 @@ public:
     enum { TIMER_ID = 0x4F83AF91 };
     CicCaret();
     virtual ~CicCaret();
+    operator HWND() const { return m_hWnd; }
 
     void CreateCaret(HWND hWnd, SIZE size);
     void DestroyCaret();
