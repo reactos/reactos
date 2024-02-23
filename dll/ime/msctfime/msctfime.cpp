@@ -6,7 +6,6 @@
  */
 
 #include "msctfime.h"
-#include <ndk/ldrfuncs.h> /* for RtlDllShutdownInProgress */
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
