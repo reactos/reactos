@@ -35,6 +35,7 @@
 
 #include <wine/debug.h>
 
+extern HINSTANCE g_hInst;
 extern CRITICAL_SECTION g_csLock;
 
 typedef CicArray<GUID> CDispAttrPropCache;
@@ -65,5 +66,3 @@ DEFINE_GUID(GUID_PROP_MODEBIAS,                      0x372E0716, 0x974F, 0x40AC,
 #include "sinks.h"
 #include "tls.h"
 #include "ui.h"
-
-extern HINSTANCE g_hInst;
