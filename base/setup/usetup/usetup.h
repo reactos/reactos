@@ -71,7 +71,13 @@
 
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
-extern PCWSTR SelectedLanguageId;
+
+/* Settings lists *****/
+extern PGENERIC_LIST ComputerList;
+extern PGENERIC_LIST DisplayList;
+extern PGENERIC_LIST KeyboardList;
+extern PGENERIC_LIST LanguageList;
+extern PGENERIC_LIST LayoutList;
 
 typedef enum _PAGE_NUMBER
 {

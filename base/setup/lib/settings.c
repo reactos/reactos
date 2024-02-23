@@ -322,34 +322,45 @@ GetComputerIdentifier(
 }
 
 
-/*
- * Return values:
- * 0x00: Failure, stop the enumeration;
- * 0x01: Add the entry and continue the enumeration;
- * 0x02: Skip the entry but continue the enumeration.
- */
-typedef UCHAR
-(NTAPI *PPROCESS_ENTRY_ROUTINE)(
-    IN PCWSTR KeyName,
-    IN PCWSTR KeyValue,
-    OUT PVOID* UserData,
-    OUT PBOOLEAN Current,
-    IN PVOID Parameter OPTIONAL);
-
+/**
+ * @brief
+ * Enumerate "KeyName=KeyValue" entries from under a specified section
+ * from the given TXTSETUP.SIF file.
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in]   SectionName
+ * The name of the section whose entries are to be enumerated.
+ *
+ * @param[in]   pContext
+ * Pointer to the INF parsing context.
+ *
+ * @param[in]   DefaultEntry
+ * TODO TODO TODO
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each enumerated entry.
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return
+ * The total count of entries found in the section, or zero if none.
+ * Returns -1 in case of failure.
+ **/
 static LONG
-AddEntriesFromInfSection(
-    IN OUT PGENERIC_LIST List,
-    IN HINF InfFile,
-    IN PCWSTR SectionName,
-    IN PINFCONTEXT pContext,
-    IN PPROCESS_ENTRY_ROUTINE ProcessEntry,
-    IN PVOID Parameter OPTIONAL)
+EnumEntriesFromInfSection(
+    _In_ HINF InfFile,
+    _In_ PCWSTR SectionName,
+    _In_ PINFCONTEXT pContext,
+    /**/_In_opt_ ULONG_PTR DefaultEntry,/**/ // PCWSTR DefaultKeyName
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
 {
     LONG TotalCount = 0;
     PCWSTR KeyName;
     PCWSTR KeyValue;
-    PVOID UserData;
-    BOOLEAN Current;
     UCHAR RetVal;
 
     if (!SpInfFindFirstLine(InfFile, SectionName, NULL, pContext))
@@ -376,24 +387,18 @@ AddEntriesFromInfSection(
             return -1;
         }
 
-        UserData = NULL;
-        Current  = FALSE;
-        RetVal = ProcessEntry(KeyName,
-                              KeyValue,
-                              &UserData,
-                              &Current,
-                              Parameter);
+        RetVal = EnumEntryProc(KeyName, KeyValue, DefaultEntry, Parameter);
+
         INF_FreeData(KeyName);
         INF_FreeData(KeyValue);
 
         if (RetVal == 0)
         {
-            DPRINT("ProcessEntry() failed\n");
+            DPRINT("EnumEntryProc() failed\n");
             return -1;
         }
         else if (RetVal == 1)
         {
-            AppendGenericListEntry(List, UserData, Current);
             ++TotalCount;
         }
         // else if (RetVal == 2), skip the entry.
@@ -403,144 +408,131 @@ AddEntriesFromInfSection(
     return TotalCount;
 }
 
-static UCHAR
-NTAPI
-DefaultProcessEntry(
-    IN PCWSTR KeyName,
-    IN PCWSTR KeyValue,
-    OUT PVOID* UserData,
-    OUT PBOOLEAN Current,
-    IN PVOID Parameter OPTIONAL)
-{
-    PWSTR CompareKey = (PWSTR)Parameter;
 
-    PGENENTRY GenEntry;
-    SIZE_T IdSize, ValueSize;
-
-    IdSize    = (wcslen(KeyName)  + 1) * sizeof(WCHAR);
-    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
-
-    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
-                               sizeof(*GenEntry) + IdSize + ValueSize);
-    if (GenEntry == NULL)
-    {
-        /* Failure, stop enumeration */
-        DPRINT1("RtlAllocateHeap() failed\n");
-        return 0;
-    }
-
-    GenEntry->Id    = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
-    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry) + IdSize);
-    RtlStringCbCopyW((PWSTR)GenEntry->Id, IdSize, KeyName);
-    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
-
-    *UserData = GenEntry;
-    *Current  = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
-
-    /* Add the entry */
-    return 1;
-}
-
-
-BOOLEAN
+static BOOLEAN
 AddComputerTypeEntries(
     _In_ HINF InfFile,
-    PGENERIC_LIST List,
-    _In_ PWSTR SectionName)
+    _In_ PCWSTR SectionName,
+    _Inout_opt_ PCWSTR* CurrentComputerType,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
 {
     INFCONTEXT Context;
-    PCWSTR KeyName;
-    PCWSTR KeyValue;
     WCHAR ComputerIdentifier[128];
     WCHAR ComputerKey[32];
     ULONG Count1, Count2;
 
     /* Get the computer identification */
-    if (!GetComputerIdentifier(ComputerIdentifier, 128))
-    {
+    if (!GetComputerIdentifier(ComputerIdentifier, _countof(ComputerIdentifier)))
         ComputerIdentifier[0] = 0;
-    }
 
     DPRINT("Computer identifier: '%S'\n", ComputerIdentifier);
 
-    /* Search for matching device identifier */
-    if (!SpInfFindFirstLine(InfFile, SectionName, NULL, &Context))
+    if (!CurrentComputerType || !*CurrentComputerType)
     {
-        /* FIXME: error message */
-        return FALSE;
+        /* Search for matching device identifier (that should be the default one) */
+        if (!SpInfFindFirstLine(InfFile, SectionName, NULL, &Context))
+            return FALSE;
+
+        do
+        {
+            PCWSTR KeyName;
+            PCWSTR KeyValue;
+            BOOLEAN FoundId;
+
+            if (!INF_GetDataField(&Context, 1, &KeyValue))
+            {
+                /* FIXME: Handle error! */
+                DPRINT("INF_GetDataField() failed\n");
+                return FALSE;
+            }
+
+            DPRINT("KeyValue: %S\n", KeyValue);
+            FoundId = !!wcsstr(ComputerIdentifier, KeyValue);
+            INF_FreeData(KeyValue);
+
+            if (!FoundId)
+                continue;
+
+            if (!INF_GetDataField(&Context, 0, &KeyName))
+            {
+                /* FIXME: Handle error! */
+                DPRINT("INF_GetDataField() failed\n");
+                return FALSE;
+            }
+
+            DPRINT("Computer key: %S\n", KeyName);
+            RtlStringCchCopyW(ComputerKey, ARRAYSIZE(ComputerKey), KeyName);
+            INF_FreeData(KeyName);
+        } while (SpInfFindNextLine(&Context, &Context));
+
+        CurrentComputerType = &ComputerKey;
     }
 
-    do
-    {
-        BOOLEAN FoundId;
-
-        if (!INF_GetDataField(&Context, 1, &KeyValue))
-        {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetDataField() failed\n");
-            return FALSE;
-        }
-
-        DPRINT("KeyValue: %S\n", KeyValue);
-        FoundId = !!wcsstr(ComputerIdentifier, KeyValue);
-        INF_FreeData(KeyValue);
-
-        if (!FoundId)
-            continue;
-
-        if (!INF_GetDataField(&Context, 0, &KeyName))
-        {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetDataField() failed\n");
-            return FALSE;
-        }
-
-        DPRINT("Computer key: %S\n", KeyName);
-        RtlStringCchCopyW(ComputerKey, ARRAYSIZE(ComputerKey), KeyName);
-        INF_FreeData(KeyName);
-    } while (SpInfFindNextLine(&Context, &Context));
-
-    Count1 = AddEntriesFromInfSection(List,
-                                      InfFile,
-                                      L"Computer",
-                                      &Context,
-                                      DefaultProcessEntry,
-                                      ComputerKey);
-    Count2 = AddEntriesFromInfSection(List,
-                                      InfFile,
-                                      L"Computer.NT" INF_ARCH,
-                                      &Context,
-                                      DefaultProcessEntry,
-                                      ComputerKey);
+    Count1 = EnumEntriesFromInfSection(InfFile,
+                                       L"Computer",
+                                       &Context,
+                                       (ULONG_PTR)ComputerKey,
+                                       EnumEntryProc,
+                                       Parameter);
+    Count2 = EnumEntriesFromInfSection(InfFile,
+                                       L"Computer.NT" INF_ARCH,
+                                       &Context,
+                                       (ULONG_PTR)ComputerKey,
+                                       EnumEntryProc,
+                                       Parameter);
     if ((Count1 == -1) && (Count2 == -1))
     {
         return FALSE;
     }
 
+    // *CurrentComputerType;
+
     return TRUE;
 }
 
-PGENERIC_LIST
-CreateComputerTypeList(
-    IN HINF InfFile)
+/**
+ * @brief
+ * Enumerate computer type entries from the given TXTSETUP.SIF file.
+ * The examined sections are: "Map.Computer", "Computer", as well as
+ * the platform-specific "Map.Computer.NT**" and "Computer.NT**".
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in,out]   CurrentComputerType
+ * Optional parameter, pointing to a string pointer which:
+ * - in input, provides the computer type to look for (if it is NULL,
+ *   the current computer type is determined at runtime);
+ * - in output, receives the current computer type, or NULL if it is
+ *   not described in the TXTSETUP.SIF file.
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each computer type listed in TXTSETUP.SIF
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return  TRUE if entries have been successfully enumerated; FALSE if not.
+ **/
+BOOLEAN
+EnumComputerTypeEntries(
+    _In_ HINF InfFile,
+    _Inout_opt_ PCWSTR* CurrentComputerType,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
 {
-    PGENERIC_LIST List;
     BOOLEAN Success;
 
-    List = CreateGenericList();
-    if (List == NULL)
-        return NULL;
-
-    Success = AddComputerTypeEntries(InfFile, List, L"Map.Computer");
-    Success |= AddComputerTypeEntries(InfFile, List, L"Map.Computer.NT" INF_ARCH);
-    if (!Success)
-    {
-        DestroyGenericList(List, TRUE);
-        return NULL;
-    }
-
-    return List;
+    Success =  AddComputerTypeEntries(InfFile, L"Map.Computer",
+                                      CurrentComputerType,
+                                      EnumEntryProc, Parameter);
+    Success |= AddComputerTypeEntries(InfFile, L"Map.Computer.NT" INF_ARCH,
+                                      CurrentComputerType,
+                                      EnumEntryProc, Parameter);
+    return Success;
 }
+
 
 static
 BOOLEAN
@@ -704,83 +696,644 @@ GetDisplayIdentifier(
     return FALSE;
 }
 
-PGENERIC_LIST
-CreateDisplayDriverList(
-    IN HINF InfFile)
+/**
+ * @brief
+ * Enumerate display driver entries from the given TXTSETUP.SIF file.
+ * The examined sections are: "Map.Display" and "Display".
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in,out]   CurrentDisplayType
+ * Optional parameter, pointing to a string pointer which:
+ * - in input, provides the display type to look for (if it is NULL,
+ *   the current display type is determined at runtime);
+ * - in output, receives the current display type, or NULL if it is
+ *   not described in the TXTSETUP.SIF file.
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each display type listed in TXTSETUP.SIF
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return  TRUE if entries have been successfully enumerated; FALSE if not.
+ **/
+BOOLEAN
+EnumDisplayDriverEntries(
+    _In_ HINF InfFile,
+    _Inout_opt_ PCWSTR* CurrentDisplayType,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
 {
-    PGENERIC_LIST List;
     INFCONTEXT Context;
-    PCWSTR KeyName;
-    PCWSTR KeyValue;
     WCHAR DisplayIdentifier[128];
     WCHAR DisplayKey[32];
 
     /* Get the display identification */
-    if (!GetDisplayIdentifier(DisplayIdentifier, 128))
-    {
+    if (!GetDisplayIdentifier(DisplayIdentifier, _countof(DisplayIdentifier)))
         DisplayIdentifier[0] = 0;
-    }
 
     DPRINT("Display identifier: '%S'\n", DisplayIdentifier);
 
-    /* Search for matching device identifier */
-    if (!SpInfFindFirstLine(InfFile, L"Map.Display", NULL, &Context))
+    if (!CurrentDisplayType || !*CurrentDisplayType)
     {
-        /* FIXME: error message */
-        return NULL;
+        /* Search for matching device identifier (that should be the default one) */
+        if (!SpInfFindFirstLine(InfFile, L"Map.Display", NULL, &Context))
+            return FALSE;
+
+        do
+        {
+            PCWSTR KeyName;
+            PCWSTR KeyValue;
+            BOOLEAN FoundId;
+
+            if (!INF_GetDataField(&Context, 1, &KeyValue))
+            {
+                /* FIXME: Handle error! */
+                DPRINT("INF_GetDataField() failed\n");
+                return FALSE;
+            }
+
+            DPRINT("KeyValue: %S\n", KeyValue);
+            FoundId = !!wcsstr(DisplayIdentifier, KeyValue);
+            INF_FreeData(KeyValue);
+
+            if (!FoundId)
+                continue;
+
+            if (!INF_GetDataField(&Context, 0, &KeyName))
+            {
+                /* FIXME: Handle error! */
+                DPRINT("INF_GetDataField() failed\n");
+                return FALSE;
+            }
+
+            DPRINT("Display key: %S\n", KeyName);
+            RtlStringCchCopyW(DisplayKey, ARRAYSIZE(DisplayKey), KeyName);
+            INF_FreeData(KeyName);
+        } while (SpInfFindNextLine(&Context, &Context));
+
+        CurrentDisplayType = &DisplayKey;
     }
 
-    do
+    if (EnumEntriesFromInfSection(InfFile,
+                                  L"Display",
+                                  &Context,
+                                  (ULONG_PTR)DisplayKey,
+                                  EnumEntryProc,
+                                  Parameter) == -1)
     {
-        BOOLEAN FoundId;
+        return FALSE;
+    }
 
-        if (!INF_GetDataField(&Context, 1, &KeyValue))
+#if 0
+    // FIXME: How to express that this one should be the default one?
+    EnumEntryProc(L"Other display driver", NULL, /*DisplayKey*/NULL, Parameter);
+    // AppendGenericListEntry(List, L"Other display driver", NULL, TRUE);
+#endif
+
+    return TRUE;
+}
+
+
+/**
+ * @brief
+ * Enumerate keyboard driver entries from the given TXTSETUP.SIF file.
+ * The examined sections are: "Map.Keyboard" and "Keyboard".
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in,out]   CurrentKeyboardType
+ * Optional parameter, pointing to a string pointer which:
+ * - in input, provides the keyboard type to look for (if it is NULL,
+ *   the current keyboard type is determined at runtime);
+ * - in output, receives the current keyboard type, or NULL if it is
+ *   not described in the TXTSETUP.SIF file.
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each keyboard type listed in TXTSETUP.SIF
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return  TRUE if entries have been successfully enumerated; FALSE if not.
+ **/
+BOOLEAN
+EnumKeyboardDriverEntries(
+    _In_ HINF InfFile,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
+{
+    INFCONTEXT Context;
+
+    // TODO: Handle "Map.Keyboard"
+
+    return (EnumEntriesFromInfSection(InfFile,
+                                      L"Keyboard",
+                                      &Context,
+                                      (ULONG_PTR)NULL,
+                                      EnumEntryProc,
+                                      Parameter) != -1);
+}
+
+
+/**
+ * @brief
+ * Enumerate language entries from the given TXTSETUP.SIF file.
+ * The examined values are: "NLS\DefaultLanguage" (ReactOS-specific)
+ * and "NLS\DefaultLayout", and the examined sections are: "Language".
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in,out]   CurrentKeyboardType
+ * Optional parameter, pointing to a string pointer which:
+ * - in input, provides the language to look for (if it is NULL,
+ *   the current language is determined at runtime);
+ * - in output, receives the current language, or NULL if it is
+ *   not described in the TXTSETUP.SIF file.
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each language listed in TXTSETUP.SIF
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return  TRUE if entries have been successfully enumerated; FALSE if not.
+ **/
+BOOLEAN
+EnumLanguageEntries(
+    _In_ HINF InfFile,
+    _Out_opt_ LANGID* DefaultLanguage,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
+{
+    INFCONTEXT Context;
+
+    if (DefaultLanguage)
+    {
+        /* Get default language ID (ReactOS-specific);
+         * if none, use the one from "DefaultLayout" */
+        if (SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLanguage", &Context) ||
+            SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLayout", &Context))
         {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetDataField() failed\n");
-            return NULL;
+            /* This is a <= 8-character long hexadecimal string */
+            PCWSTR KeyValue;
+            if (!INF_GetData(&Context, NULL, &KeyValue))
+                return FALSE;
+            *DefaultLanguage = (LANGID)(wcstoul(KeyValue, NULL, 16) & 0xFFFF);
         }
-
-        DPRINT("KeyValue: %S\n", KeyValue);
-        FoundId = !!wcsstr(DisplayIdentifier, KeyValue);
-        INF_FreeData(KeyValue);
-
-        if (!FoundId)
-            continue;
-
-        if (!INF_GetDataField(&Context, 0, &KeyName))
+        else
         {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetDataField() failed\n");
-            return NULL;
+            /* None, default to en-US */
+            DPRINT1("No NLS\\DefaultLayout value, default to en-US\n");
+            *DefaultLanguage = 0x0409;
         }
+    }
 
-        DPRINT("Display key: %S\n", KeyName);
-        RtlStringCchCopyW(DisplayKey, ARRAYSIZE(DisplayKey), KeyName);
-        INF_FreeData(KeyName);
-    } while (SpInfFindNextLine(&Context, &Context));
+    if (EnumEntriesFromInfSection(InfFile,
+                                  L"Language",
+                                  &Context,
+                                  (ULONG_PTR)*DefaultLanguage,
+                                  EnumEntryProc,
+                                  Parameter) == -1)
+    {
+        // FIXME: Just fall back to en-US
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/**
+ * @brief
+ * Enumerate keyboard layout entries from the given TXTSETUP.SIF file.
+ * The examined values are: "NLS\DefaultLayout", and the examined sections
+ * are: "KeyboardLayout" (NOTE: ReactOS-specific; on Windows it is named
+ * "Keyboard Layout" instead).
+ *
+ * @param[in]   InfFile
+ * An INF file handle to TXTSETUP.SIF.
+ *
+ * @param[in]   LanguageId
+ * The language ID for which to enumerate corresponding keyboard layouts.
+ *
+ * @param[in,out]   CurrentKeyboardType
+ * Optional parameter, pointing to a string pointer which:
+ * - in input, provides the keyboard layout to look for (if it is NULL,
+ *   the current keyboard layout is determined at runtime);
+ * - in output, receives the current keyboard layout, or NULL if it is
+ *   not described in the TXTSETUP.SIF file.
+ *
+ * @param[in]   EnumEntryProc
+ * User-provided callback invoked for each keyboard layout listed in TXTSETUP.SIF
+ *
+ * @param[in]   Parameter
+ * Optional parameter for the callback.
+ *
+ * @return  TRUE if entries have been successfully enumerated; FALSE if not.
+ **/
+BOOLEAN
+EnumKeyboardLayoutEntries(
+    _In_ HINF InfFile,
+    _In_ LANGID LanguageId,
+    _Out_ KLID* DefaultKBLayout,
+    _In_ PENUM_ENTRY_PROC EnumEntryProc,
+    _In_opt_ PVOID Parameter)
+{
+    INFCONTEXT Context;
+    const MUI_LAYOUTS* LayoutsList;
+    ULONG uIndex;
+
+    /* Get default layout ID */
+    if (SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLayout", &Context))
+    {
+        /* This is a <= 8-character long hexadecimal string */
+        PCWSTR KeyValue;
+        if (!INF_GetData(&Context, NULL, &KeyValue))
+            return FALSE;
+        *DefaultKBLayout = (KLID)wcstoul(KeyValue, NULL, 16);
+    }
+    else
+    {
+        /* None, default to en-US */
+        DPRINT1("No NLS\\DefaultLayout value, default to en-US\n");
+        *DefaultKBLayout = 0x00000409;
+    }
+
+    LayoutsList = MUIGetLayoutsList(LanguageId);
+    for (uIndex = 0; LayoutsList[uIndex].LangID != 0; ++uIndex)
+    {
+        // NOTE: See https://git.reactos.org/?p=reactos.git;a=commit;h=785b2eb8b8c6222bb961f5368d51f1a50640dc96
+        // "Make the keyboard layouts selection not dependent on the selected language." r68354 CORE-9630
+        if (EnumEntriesFromInfSection(InfFile,
+                                      L"KeyboardLayout", // NOTE: Windows TXTSETUP.SIF names this: "Keyboard Layout"
+                                      &Context,
+                                      (ULONG_PTR)DefaultKBLayout,
+                                      EnumEntryProc,
+                                      Parameter) == -1)
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+
+ULONG
+GetDefaultLanguageIndex(VOID)
+{
+    return DefaultLanguageIndex;
+}
+
+
+
+
+//
+// Callback to add an entry to a PGENERIC_LIST -- For USETUP only
+//
+static UCHAR
+NTAPI
+DefaultProcessEntry(
+    _In_ PCWSTR KeyName,
+    _In_opt_ PCWSTR KeyValue,
+    /**/_In_ ULONG_PTR DefaultEntry,/**/ // PCWSTR DefaultKeyName
+    _In_opt_ PVOID Parameter)
+{
+    PCWSTR CompareKey = (PCWSTR)DefaultEntry;
+    PGENERIC_LIST List = (PGENERIC_LIST)Parameter;
+    PGENENTRY GenEntry;
+    SIZE_T IdSize, ValueSize;
+    BOOLEAN Current;
+
+    IdSize    = (wcslen(KeyName)  + 1) * sizeof(WCHAR);
+    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
+
+    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
+                               sizeof(*GenEntry) + IdSize + ValueSize);
+    if (!GenEntry)
+    {
+        /* Failure, stop enumeration */
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return 0;
+    }
+
+    GenEntry->Id.Str = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
+    GenEntry->Value  = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry) + IdSize);
+    RtlStringCbCopyW((PWSTR)GenEntry->Id.Str, IdSize, KeyName);
+    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
+
+    Current = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
+
+    /* Add the entry */
+    if (AppendGenericListEntry(List, GenEntry, Current))
+    {
+        return 1;
+    }
+    else
+    {
+        /* Failure, stop enumeration */
+        RtlFreeHeap(ProcessHeap, 0, GenEntry);
+        return 0;
+    }
+}
+
+//
+// This is for USETUP. GUI setup can enumerate within a combolist.
+//
+PGENERIC_LIST
+CreateComputerTypeList(
+    _In_ HINF InfFile)
+{
+    PGENERIC_LIST List;
 
     List = CreateGenericList();
-    if (List == NULL)
+    if (!List)
         return NULL;
 
-    if (AddEntriesFromInfSection(List,
-                                 InfFile,
-                                 L"Display",
-                                 &Context,
-                                 DefaultProcessEntry,
-                                 DisplayKey) == -1)
+    if (!EnumComputerTypeEntries(InfFile, DefaultProcessEntry, List))
     {
         DestroyGenericList(List, TRUE);
         return NULL;
     }
 
+    return List;
+}
+
+//
+// This is for USETUP. GUI setup can enumerate within a combolist.
+//
+PGENERIC_LIST
+CreateDisplayDriverList(
+    _In_ HINF InfFile)
+{
+    PGENERIC_LIST List;
+
+    List = CreateGenericList();
+    if (!List)
+        return NULL;
+
+    if (!EnumDisplayDriverEntries(InfFile, DefaultProcessEntry, List))
+    {
+        DestroyGenericList(List, TRUE);
+        return NULL;
+    }
+
+    return List;
+}
+
+//
+// This is for USETUP. GUI setup can enumerate within a combolist.
+//
+PGENERIC_LIST
+CreateKeyboardDriverList(
+    _In_ HINF InfFile)
+{
+    PGENERIC_LIST List;
+
+    List = CreateGenericList();
+    if (!List)
+        return NULL;
+
+    if (!EnumKeyboardDriverEntries(InfFile, DefaultProcessEntry, List))
+    {
+        DestroyGenericList(List, TRUE);
+        return NULL;
+    }
+
+    return List;
+}
+
+
+typedef struct _LANG_ENTRY_PARAM
+{
+    PGENERIC_LIST List;
+    ULONG uIndex;
+    LANGID DefaultLanguage;
+} LANG_ENTRY_PARAM, *PLANG_ENTRY_PARAM;
+
+static UCHAR
+NTAPI
+ProcessLangEntry(
+    _In_ PCWSTR KeyName,
+    _In_opt_ PCWSTR KeyValue,
+    /**/_In_ ULONG_PTR DefaultEntry,/**/ // PCWSTR DefaultKeyName
+    _In_opt_ PVOID Parameter)
+{
+    PLANG_ENTRY_PARAM LangEntryParam = (PLANG_ENTRY_PARAM)Parameter;
+    PGENERIC_LIST List = LangEntryParam->List;
+    PGENENTRY GenEntry;
+    SIZE_T ValueSize;
+    LANGID LangId;
+    BOOLEAN Current;
+
+    LangId = (LANGID)(wcstoul(KeyName, NULL, 16) & 0xFFFF);
+    if (!IsLanguageAvailable(LangId))
+    {
+        /* The specified language is unavailable, skip the entry */
+        return 2;
+    }
+
+    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
+
+    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
+                               sizeof(*GenEntry) + ValueSize);
+    if (!GenEntry)
+    {
+        /* Failure, stop enumeration */
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return 0;
+    }
+
+    GenEntry->Id.Ul = (ULONG_PTR)LangId;
+    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
+    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
+
+    Current = FALSE;
+
+    if (LangId == LangEntryParam->DefaultLanguage)
+    {
+        DefaultLanguageIndex = LangEntryParam->uIndex;
+        Current = TRUE;
+    }
+
+    LangEntryParam->uIndex++;
+
+    /* Add the entry */
+    if (AppendGenericListEntry(List, GenEntry, Current))
+    {
+        return 1;
+    }
+    else
+    {
+        /* Failure, stop enumeration */
+        RtlFreeHeap(ProcessHeap, 0, GenEntry);
+        return 0;
+    }
+}
+
+//
+// This is for USETUP. GUI setup can enumerate within a combolist.
+//
+PGENERIC_LIST
+CreateLanguageList(
+    _In_ HINF InfFile,
+    _Inout_ LANGID* DefaultLanguage)
+{
+    PGENERIC_LIST List;
+    LANG_ENTRY_PARAM LangEntryParam;
 #if 0
-    AppendGenericListEntry(List, L"Other display driver", NULL, TRUE);
+    LANGID OrigDefaultLanguage = *DefaultLanguage;
+#endif
+
+    List = CreateGenericList();
+    if (!List)
+        return NULL;
+
+    LangEntryParam.List = List;
+    LangEntryParam.uIndex = 0;
+    LangEntryParam.DefaultLanguage = *DefaultLanguage;
+
+    if (!EnumLanguageEntries(InfFile, DefaultLanguage,
+                             ProcessLangEntry/*DefaultProcessEntry*/,
+                             &LangEntryParam))
+    {
+        // FIXME: Just fall back to en-US
+        DestroyGenericList(List, TRUE);
+        return NULL;
+    }
+
+    /* Only one language available, make it the default one */
+    if (LangEntryParam.uIndex == 1)
+    {
+        DefaultLanguageIndex = 0;
+        SetCurrentListEntry(List, GetFirstListEntry(List));
+        *DefaultLanguage = (LANGID)(((PGENENTRY)GetListEntryData(GetFirstListEntry(List)))->Id.Ul);
+    }
+
+
+//
+// FIXME: Check whether such a hack (inspired from
+// the IsUnattendedSetup thing) is still necessary...
+//
+#if 0
+    if (OrigDefaultLanguage != 0)
+    {
+        PGENERIC_LIST_ENTRY ListEntry;
+        LCID LocaleId;
+
+        /* first we hack LanguageList */
+        for (ListEntry = GetFirstListEntry(List); ListEntry;
+             ListEntry = GetNextListEntry(ListEntry))
+        {
+            LocaleId = (LCID)(((PGENENTRY)GetListEntryData(ListEntry))->Id.Ul);
+            if (OrigDefaultLanguage == (LANGID)LocaleId)
+            {
+                DPRINT("Found 0x%08lx in LanguageList\n", LocaleId);
+                SetCurrentListEntry(List, ListEntry);
+                break;
+            }
+        }
+    }
+#endif
+
+
+    return List;
+}
+
+
+static UCHAR
+NTAPI
+ProcessLayoutEntry(
+    _In_ PCWSTR KeyName,
+    _In_opt_ PCWSTR KeyValue,
+    /**/_In_ ULONG_PTR DefaultEntry,/**/ // PCWSTR DefaultKeyName
+    _In_opt_ PVOID Parameter)
+{
+    PGENERIC_LIST List = (PGENERIC_LIST)Parameter;
+    PGENENTRY GenEntry;
+    SIZE_T ValueSize;
+    KLID LayoutId;
+    BOOLEAN Current;
+
+    LayoutId = (KLID)wcstoul(KeyName, NULL, 16);
+
+    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
+
+    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
+                               sizeof(*GenEntry) + ValueSize);
+    if (!GenEntry)
+    {
+        /* Failure, stop enumeration */
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return 0;
+    }
+
+    GenEntry->Id.Ul = (ULONG_PTR)LayoutId;
+    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
+    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
+
+    Current = FALSE; // (LayoutId == (KLID)DefaultEntry);
+
+    /* Add the entry */
+    if (AppendGenericListEntry(List, GenEntry, Current))
+    {
+        return 1;
+    }
+    else
+    {
+        /* Failure, stop enumeration */
+        RtlFreeHeap(ProcessHeap, 0, GenEntry);
+        return 0;
+    }
+}
+
+//
+// This is for USETUP. GUI setup can enumerate within a combolist.
+//
+PGENERIC_LIST
+CreateKeyboardLayoutList(
+    _In_ HINF InfFile,
+    _In_ LANGID LanguageId,
+    _Out_ KLID* DefaultKBLayout) // FIXME: Investigate whether this could be Inout (see usetup.c!UpdateKBLayout)
+{
+    PGENERIC_LIST List;
+
+    List = CreateGenericList();
+    if (!List)
+        return NULL;
+
+    if (!EnumKeyboardLayoutEntries(InfFile,
+                                   LanguageId,
+                                   DefaultKBLayout,
+                                   ProcessLayoutEntry,
+                                   List))
+    {
+        // FIXME: Just fall back to en-US
+        DestroyGenericList(List, TRUE);
+        return NULL;
+    }
+
+    /* Check whether some keyboard layouts have been found */
+    /* FIXME: Handle this case */
+#if 0 // Actually this code is useless.
+    if (GetNumberOfListEntries(List) == 0)
+    {
+        DPRINT1("No keyboard layouts have been found\n");
+        DestroyGenericList(List, TRUE);
+        return NULL;
+    }
 #endif
 
     return List;
 }
+
+
+
 
 
 BOOLEAN
@@ -967,15 +1520,19 @@ ProcessDisplayRegistry(
 
 BOOLEAN
 ProcessLocaleRegistry(
-    _In_ PCWSTR LanguageId)
+    _In_ LCID LocaleId)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    WCHAR Value[sizeof("FFFFFFFF")];
 
-    DPRINT("LanguageId: %S\n", LanguageId);
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%08lx", LocaleId);
+    ASSERT(NT_SUCCESS(Status));
+
+    DPRINT("LocaleId: %S\n", Value);
 
     /* Open the default users locale key */
     RtlInitUnicodeString(&KeyName,
@@ -1002,8 +1559,8 @@ ProcessLocaleRegistry(
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)LanguageId,
-                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -1011,9 +1568,9 @@ ProcessLocaleRegistry(
         return FALSE;
     }
 
-    /* Skip first 4 zeroes */
-    if (wcslen(LanguageId) >= 4)
-        LanguageId += 4;
+    /* Just get the language ID */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%04lx", LANGIDFROMLCID(LocaleId));
+    ASSERT(NT_SUCCESS(Status));
 
     /* Open the NLS language key */
     RtlInitUnicodeString(&KeyName,
@@ -1040,8 +1597,8 @@ ProcessLocaleRegistry(
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)LanguageId,
-                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -1055,8 +1612,8 @@ ProcessLocaleRegistry(
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)LanguageId,
-                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -1067,222 +1624,23 @@ ProcessLocaleRegistry(
     return TRUE;
 }
 
-
-PGENERIC_LIST
-CreateKeyboardDriverList(
-    IN HINF InfFile)
-{
-    PGENERIC_LIST List;
-    INFCONTEXT Context;
-
-    List = CreateGenericList();
-    if (List == NULL)
-        return NULL;
-
-    if (AddEntriesFromInfSection(List,
-                                 InfFile,
-                                 L"Keyboard",
-                                 &Context,
-                                 DefaultProcessEntry,
-                                 NULL) == -1)
-    {
-        DestroyGenericList(List, TRUE);
-        return NULL;
-    }
-
-    return List;
-}
-
-
-ULONG
-GetDefaultLanguageIndex(VOID)
-{
-    return DefaultLanguageIndex;
-}
-
-typedef struct _LANG_ENTRY_PARAM
-{
-    ULONG uIndex;
-    PWCHAR DefaultLanguage;
-} LANG_ENTRY_PARAM, *PLANG_ENTRY_PARAM;
-
-static UCHAR
-NTAPI
-ProcessLangEntry(
-    IN PCWSTR KeyName,
-    IN PCWSTR KeyValue,
-    OUT PVOID* UserData,
-    OUT PBOOLEAN Current,
-    IN PVOID Parameter OPTIONAL)
-{
-    PLANG_ENTRY_PARAM LangEntryParam = (PLANG_ENTRY_PARAM)Parameter;
-
-    PGENENTRY GenEntry;
-    SIZE_T IdSize, ValueSize;
-
-    if (!IsLanguageAvailable(KeyName))
-    {
-        /* The specified language is unavailable, skip the entry */
-        return 2;
-    }
-
-    IdSize    = (wcslen(KeyName)  + 1) * sizeof(WCHAR);
-    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
-
-    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
-                               sizeof(*GenEntry) + IdSize + ValueSize);
-    if (GenEntry == NULL)
-    {
-        /* Failure, stop enumeration */
-        DPRINT1("RtlAllocateHeap() failed\n");
-        return 0;
-    }
-
-    GenEntry->Id    = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
-    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry) + IdSize);
-    RtlStringCbCopyW((PWSTR)GenEntry->Id, IdSize, KeyName);
-    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
-
-    *UserData = GenEntry;
-    *Current  = FALSE;
-
-    if (!_wcsicmp(KeyName, LangEntryParam->DefaultLanguage))
-        DefaultLanguageIndex = LangEntryParam->uIndex;
-
-    LangEntryParam->uIndex++;
-
-    /* Add the entry */
-    return 1;
-}
-
-PGENERIC_LIST
-CreateLanguageList(
-    IN HINF InfFile,
-    OUT PWSTR DefaultLanguage)
-{
-    PGENERIC_LIST List;
-    INFCONTEXT Context;
-    PCWSTR KeyValue;
-
-    LANG_ENTRY_PARAM LangEntryParam;
-
-    LangEntryParam.uIndex = 0;
-    LangEntryParam.DefaultLanguage = DefaultLanguage;
-
-    /* Get default language id */
-    if (!SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLanguage", &Context))
-        return NULL;
-
-    if (!INF_GetData(&Context, NULL, &KeyValue))
-        return NULL;
-
-    wcscpy(DefaultLanguage, KeyValue);
-
-    List = CreateGenericList();
-    if (List == NULL)
-        return NULL;
-
-    if (AddEntriesFromInfSection(List,
-                                 InfFile,
-                                 L"Language",
-                                 &Context,
-                                 ProcessLangEntry,
-                                 &LangEntryParam) == -1)
-    {
-        DestroyGenericList(List, TRUE);
-        return NULL;
-    }
-
-    /* Only one language available, make it the default one */
-    if (LangEntryParam.uIndex == 1)
-    {
-        DefaultLanguageIndex = 0;
-        wcscpy(DefaultLanguage,
-               ((PGENENTRY)GetListEntryData(GetFirstListEntry(List)))->Id);
-    }
-
-    return List;
-}
-
-
-PGENERIC_LIST
-CreateKeyboardLayoutList(
-    IN HINF InfFile,
-    IN PCWSTR LanguageId,
-    OUT PWSTR DefaultKBLayout)
-{
-    PGENERIC_LIST List;
-    INFCONTEXT Context;
-    PCWSTR KeyValue;
-    const MUI_LAYOUTS* LayoutsList;
-    ULONG uIndex = 0;
-
-    /* Get default layout id */
-    if (!SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLayout", &Context))
-        return NULL;
-
-    if (!INF_GetData(&Context, NULL, &KeyValue))
-        return NULL;
-
-    wcscpy(DefaultKBLayout, KeyValue);
-
-    List = CreateGenericList();
-    if (List == NULL)
-        return NULL;
-
-    LayoutsList = MUIGetLayoutsList(LanguageId);
-
-    do
-    {
-        // NOTE: See https://svn.reactos.org/svn/reactos?view=revision&revision=68354
-        if (AddEntriesFromInfSection(List,
-                                     InfFile,
-                                     L"KeyboardLayout",
-                                     &Context,
-                                     DefaultProcessEntry,
-                                     DefaultKBLayout) == -1)
-        {
-            DestroyGenericList(List, TRUE);
-            return NULL;
-        }
-
-        uIndex++;
-
-    } while (LayoutsList[uIndex].LangID != 0);
-
-    /* Check whether some keyboard layouts have been found */
-    /* FIXME: Handle this case */
-    if (GetNumberOfListEntries(List) == 0)
-    {
-        DPRINT1("No keyboard layouts have been found\n");
-        DestroyGenericList(List, TRUE);
-        return NULL;
-    }
-
-    return List;
-}
-
-
 BOOLEAN
 ProcessKeyboardLayoutRegistry(
-    _In_ PCWSTR pszLayoutId,
-    _In_ PCWSTR LanguageId)
+    _In_ KLID LayoutId,
+    _In_ LANGID LanguageId)
 {
-    KLID LayoutId;
     const MUI_LAYOUTS* LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20]; // HACK: Hardcoded fixed size "20" is a hack. Please verify against lang/*.h
     ULONG uIndex;
     ULONG uOldPos = 0;
-
-    LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
-    if (LayoutId == 0)
-        return FALSE;
 
     LayoutsList = MUIGetLayoutsList(LanguageId);
 
     /* If the keyboard layout is already at the top of the list, we are done */
     if (LayoutsList[0].LayoutID == LayoutId)
         return TRUE;
+    // TODO: Shouldn't we add it to the registry as well?
+    // Note that AddKeyboardLayouts() also calls AddKbLayoutsToRegistry().
 
     /* Otherwise, move it up to the top of the list */
     for (uIndex = 1; LayoutsList[uIndex].LangID != 0; ++uIndex)
@@ -1310,7 +1668,7 @@ ProcessKeyboardLayoutRegistry(
 #if 0
 BOOLEAN
 ProcessKeyboardLayoutFiles(
-    IN PGENERIC_LIST List)
+    IN PGENERIC_LIST List) // _In_ PCWSTR KeyboardDriver
 {
     return TRUE;
 }

@@ -25,7 +25,6 @@
  */
 
 #include "reactos.h"
-#include <winnls.h> // For GetUserDefaultLCID()
 
 #define NTOS_MODE_USER
 #include <ndk/obfuncs.h>
@@ -914,16 +913,16 @@ DeviceDlgProc(
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
-            InitGenericComboList(hList, pSetupData->USetupData.ComputerList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->ComputerList, GetSettingDescription);
 
             hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
-            InitGenericComboList(hList, pSetupData->USetupData.DisplayList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->DisplayList, GetSettingDescription);
 
             hList = GetDlgItem(hwndDlg, IDC_KEYBOARD);
-            InitGenericComboList(hList, pSetupData->USetupData.KeyboardList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->KeyboardList, GetSettingDescription);
 
             // hList = GetDlgItem(hwndDlg, IDC_KEYBOARD_LAYOUT);
-            // InitGenericComboList(hList, pSetupData->USetupData.LayoutList, GetSettingDescription);
+            // InitGenericComboList(hList, pSetupData->LayoutList, GetSettingDescription);
 
             break;
         }
@@ -964,19 +963,19 @@ DeviceDlgProc(
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
                     hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
-                    SetCurrentListEntry(pSetupData->USetupData.ComputerList,
+                    SetCurrentListEntry(pSetupData->ComputerList,
                                         GetSelectedComboListItem(hList));
 
                     hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
-                    SetCurrentListEntry(pSetupData->USetupData.DisplayList,
+                    SetCurrentListEntry(pSetupData->DisplayList,
                                         GetSelectedComboListItem(hList));
 
                     hList = GetDlgItem(hwndDlg, IDC_KEYBOARD);
-                    SetCurrentListEntry(pSetupData->USetupData.KeyboardList,
+                    SetCurrentListEntry(pSetupData->KeyboardList,
                                         GetSelectedComboListItem(hList));
 
                     // hList = GetDlgItem(hwndDlg, IDC_KEYBOARD_LAYOUT);
-                    // SetCurrentListEntry(pSetupData->USetupData.LayoutList,
+                    // SetCurrentListEntry(pSetupData->LayoutList,
                     //                     GetSelectedComboListItem(hList));
 
                     return TRUE;
@@ -1063,17 +1062,17 @@ SummaryDlgProc(
                     SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, L"n/a");
                     SetDlgItemTextW(hwndDlg, IDC_ARCHITECTURE, L"n/a");
 
-                    GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.ComputerList),
+                    GetSettingDescription(GetCurrentListEntry(pSetupData->ComputerList),
                                           CurrentItemText,
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_COMPUTER, CurrentItemText);
 
-                    GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.DisplayList),
+                    GetSettingDescription(GetCurrentListEntry(pSetupData->DisplayList),
                                           CurrentItemText,
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_DISPLAY, CurrentItemText);
 
-                    GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.KeyboardList),
+                    GetSettingDescription(GetCurrentListEntry(pSetupData->KeyboardList),
                                           CurrentItemText,
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
@@ -1997,7 +1996,6 @@ PrepareAndDoCopyThread(
                                  pSetupData->RepairUpdateFlag,
                                  pSetupData->PartitionList,
                                  InstallVolume->Info.DriveLetter,
-                                 pSetupData->SelectedLanguageId,
                                  RegistryStatus,
                                  NULL /* SubstSettings */);
     DBG_UNREFERENCED_PARAMETER(ErrorNumber);
@@ -2348,12 +2346,10 @@ RestartDlgProc(
 BOOL LoadSetupData(
     IN OUT PSETUPDATA pSetupData)
 {
+    BOOL ret = TRUE;
+    LANGID NewLanguageId = pSetupData->USetupData.LocaleID;
+
     pSetupData->PartitionList = CreatePartitionList();
-    if (!pSetupData->PartitionList)
-    {
-        DPRINT1("Could not enumerate available disks; failing installation\n");
-        return FALSE;
-    }
 
     pSetupData->NtOsInstallsList = CreateNTOSInstallationsList(pSetupData->PartitionList);
     if (!pSetupData->NtOsInstallsList)
@@ -2361,79 +2357,20 @@ BOOL LoadSetupData(
 
     /* Load the hardware, language and keyboard layout lists */
 
-    pSetupData->USetupData.ComputerList = CreateComputerTypeList(pSetupData->USetupData.SetupInf);
-    pSetupData->USetupData.DisplayList = CreateDisplayDriverList(pSetupData->USetupData.SetupInf);
-    pSetupData->USetupData.KeyboardList = CreateKeyboardDriverList(pSetupData->USetupData.SetupInf);
+    pSetupData->ComputerList = CreateComputerTypeList(pSetupData->USetupData.SetupInf);
+    pSetupData->DisplayList = CreateDisplayDriverList(pSetupData->USetupData.SetupInf);
+    pSetupData->KeyboardList = CreateKeyboardDriverList(pSetupData->USetupData.SetupInf);
 
-    pSetupData->USetupData.LanguageList = CreateLanguageList(pSetupData->USetupData.SetupInf, pSetupData->DefaultLanguage);
-
-    /* If not unattended, overwrite language and locale with
-     * the current ones of the running ReactOS instance */
-    if (!IsUnattendedSetup)
-    {
-        LCID LocaleID = GetUserDefaultLCID();
-
-        StringCchPrintfW(pSetupData->DefaultLanguage,
-                         _countof(pSetupData->DefaultLanguage),
-                         L"%08lx", LocaleID);
-
-        StringCchPrintfW(pSetupData->USetupData.LocaleID,
-                         _countof(pSetupData->USetupData.LocaleID),
-                         L"%08lx", LocaleID);
-    }
+    pSetupData->LanguageList = CreateLanguageList(pSetupData->USetupData.SetupInf, &NewLanguageId);
 
     /* new part */
-    pSetupData->SelectedLanguageId = pSetupData->DefaultLanguage;
-    wcscpy(pSetupData->DefaultLanguage, pSetupData->USetupData.LocaleID); // FIXME: In principle, only when unattended.
-    pSetupData->USetupData.LanguageId = (LANGID)(wcstol(pSetupData->SelectedLanguageId, NULL, 16) & 0xFFFF);
+    pSetupData->USetupData.LocaleID = (LCID)NewLanguageId;
 
-    pSetupData->USetupData.LayoutList = CreateKeyboardLayoutList(pSetupData->USetupData.SetupInf,
-                                                                 pSetupData->SelectedLanguageId,
-                                                                 pSetupData->DefaultKBLayout);
+    pSetupData->LayoutList = CreateKeyboardLayoutList(pSetupData->USetupData.SetupInf,
+                                                      LANGIDFROMLCID(pSetupData->USetupData.LocaleID),
+                                                      &pSetupData->USetupData.LayoutId);
 
-    /* If not unattended, overwrite keyboard layout with
-     * the current one of the running ReactOS instance */
-    if (!IsUnattendedSetup)
-    {
-        C_ASSERT(_countof(pSetupData->DefaultKBLayout) >= KL_NAMELENGTH);
-        /* If the call fails, keep the default already stored in the buffer */
-        GetKeyboardLayoutNameW(pSetupData->DefaultKBLayout);
-    }
-
-    /* Change the default entries in the language and keyboard layout lists */
-    {
-    PGENERIC_LIST LanguageList = pSetupData->USetupData.LanguageList;
-    PGENERIC_LIST LayoutList = pSetupData->USetupData.LayoutList;
-    PGENERIC_LIST_ENTRY ListEntry;
-
-    /* Search for default language */
-    for (ListEntry = GetFirstListEntry(LanguageList); ListEntry;
-         ListEntry = GetNextListEntry(ListEntry))
-    {
-        PCWSTR LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!_wcsicmp(pSetupData->DefaultLanguage, LocaleId))
-        {
-            DPRINT("found %S in LanguageList\n", LocaleId);
-            SetCurrentListEntry(LanguageList, ListEntry);
-            break;
-        }
-    }
-
-    /* Search for default layout */
-    for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
-         ListEntry = GetNextListEntry(ListEntry))
-    {
-        PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!_wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
-        {
-            DPRINT("Found %S in LayoutList\n", pszLayoutId);
-            SetCurrentListEntry(LayoutList, ListEntry);
-            break;
-        }
-    }
-    }
-
-    return TRUE;
+    return ret;
 }
 
 VOID

@@ -63,11 +63,16 @@ static PPARTENTRY SystemPartition = NULL;
 #define SystemVolume (SystemPartition->Volume)
 
 
-/* OTHER Stuff *****/
+/* Settings lists *****/
+PGENERIC_LIST ComputerList;
+PGENERIC_LIST DisplayList;
+PGENERIC_LIST KeyboardList;
+PGENERIC_LIST LanguageList;
+PGENERIC_LIST LayoutList;
 
-PCWSTR SelectedLanguageId;
-static WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
-static WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
+
+/* OTHER Stuff *****/
+static LANGID DefaultLanguage;
 
 static BOOLEAN RepairUpdateFlag = FALSE;
 
@@ -460,15 +465,16 @@ ConfirmQuit(PINPUT_RECORD Ir)
 static VOID
 UpdateKBLayout(VOID)
 {
-    PGENERIC_LIST_ENTRY ListEntry;
     KLID newLayout;
 
-    newLayout = MUIDefaultKeyboardLayout(SelectedLanguageId);
+    newLayout = MUIDefaultKeyboardLayout(LANGIDFROMLCID(USetupData.LocaleID));
 
-    if (!USetupData.LayoutList)
+    if (!LayoutList)
     {
-        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (!USetupData.LayoutList)
+        LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf,
+                                              LANGIDFROMLCID(USetupData.LocaleID),
+                                              &USetupData.LayoutId);
+        if (!LayoutList)
         {
             /* FIXME: Handle error! */
             return;
@@ -478,14 +484,17 @@ UpdateKBLayout(VOID)
     /* Search for default layout (if provided) */
     if (newLayout != 0)
     {
-        for (ListEntry = GetFirstListEntry(USetupData.LayoutList); ListEntry;
+        PGENERIC_LIST_ENTRY ListEntry;
+        KLID LayoutId;
+
+        for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
              ListEntry = GetNextListEntry(ListEntry))
         {
-            PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            KLID LayoutId = (KLID)(pszLayoutId ? wcstoul(pszLayoutId, NULL, 16) : 0);
+            LayoutId = (KLID)(((PGENENTRY)GetListEntryData(ListEntry))->Id.Ul);
             if (newLayout == LayoutId)
             {
-                SetCurrentListEntry(USetupData.LayoutList, ListEntry);
+                DPRINT("Found 0x%08lx in LayoutList\n", newLayout);
+                SetCurrentListEntry(LayoutList, ListEntry);
                 break;
             }
         }
@@ -543,16 +552,9 @@ GetNTOSInstallationName(
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Init Sdi
- *  Init USetupData.SourcePath
- *  Init USetupData.SourceRootPath
- *  Init USetupData.SourceRootDir
- *  Init USetupData.SetupInf
- *  Init USetupData.RequiredPartitionDiskSpace
+ *  Init PnpMgr
+ *  Init USetupData
  *  Init IsUnattendedSetup
- *  If unattended, init *List and sets the Codepage
- *  If unattended, init SelectedLanguageId
- *  If unattended, init USetupData.LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -561,8 +563,6 @@ static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
     ULONG Error;
-    PGENERIC_LIST_ENTRY ListEntry;
-    PCWSTR LocaleId;
 
     MUIDisplayPage(SETUP_INIT_PAGE);
 
@@ -582,56 +582,8 @@ SetupStartPage(PINPUT_RECORD Ir)
     if (WaitNoPendingInstallEvents(NULL) != STATUS_WAIT_0)
         DPRINT1("WaitNoPendingInstallEvents() failed to wait!\n");
 
+    /* Retrieve any supplemental options from the unattend file */
     CheckUnattendedSetup(&USetupData);
-
-    if (IsUnattendedSetup)
-    {
-        // TODO: Read options from inf
-        /* Load the hardware, language and keyboard layout lists */
-
-        USetupData.ComputerList = CreateComputerTypeList(USetupData.SetupInf);
-        USetupData.DisplayList = CreateDisplayDriverList(USetupData.SetupInf);
-        USetupData.KeyboardList = CreateKeyboardDriverList(USetupData.SetupInf);
-
-        USetupData.LanguageList = CreateLanguageList(USetupData.SetupInf, DefaultLanguage);
-
-        /* new part */
-        SelectedLanguageId = DefaultLanguage;
-        wcscpy(DefaultLanguage, USetupData.LocaleID);
-        USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
-
-        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
-
-        /* first we hack LanguageList */
-        for (ListEntry = GetFirstListEntry(USetupData.LanguageList); ListEntry;
-             ListEntry = GetNextListEntry(ListEntry))
-        {
-            LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
-            {
-                DPRINT("found %S in LanguageList\n", LocaleId);
-                SetCurrentListEntry(USetupData.LanguageList, ListEntry);
-                break;
-            }
-        }
-
-        /* now LayoutList */
-        for (ListEntry = GetFirstListEntry(USetupData.LayoutList); ListEntry;
-             ListEntry = GetNextListEntry(ListEntry))
-        {
-            LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
-            {
-                DPRINT("found %S in LayoutList\n", LocaleId);
-                SetCurrentListEntry(USetupData.LayoutList, ListEntry);
-                break;
-            }
-        }
-
-        SetConsoleCodePage();
-
-        return INSTALL_INTRO_PAGE;
-    }
 
     return LANGUAGE_PAGE;
 }
@@ -642,10 +594,6 @@ SetupStartPage(PINPUT_RECORD Ir)
  *
  * Next pages: WelcomePage, QuitPage
  *
- * SIDEEFFECTS
- *  Init SelectedLanguageId
- *  Init USetupData.LanguageId
- *
  * RETURNS
  *   Number of the next page.
  */
@@ -653,46 +601,49 @@ static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
     GENERIC_LIST_UI ListUi;
-    PCWSTR NewLanguageId;
     BOOL RefreshPage = FALSE;
 
-    /* Initialize the computer settings list */
-    if (USetupData.LanguageList == NULL)
+    /* Initialize the language settings list */
+    LANGID NewLanguageId = USetupData.LocaleID;
+    if (!LanguageList)
     {
-        USetupData.LanguageList = CreateLanguageList(USetupData.SetupInf, DefaultLanguage);
-        if (USetupData.LanguageList == NULL)
+        LanguageList = CreateLanguageList(USetupData.SetupInf, &NewLanguageId);
+        if (!LanguageList)
         {
-           PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
-           return WELCOME_PAGE;
+            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
+            return WELCOME_PAGE;
         }
     }
 
-    SelectedLanguageId = DefaultLanguage;
-    USetupData.LanguageId = 0;
+    USetupData.LocaleID = (LCID)NewLanguageId;
+/******/DefaultLanguage = LANGIDFROMLCID(USetupData.LocaleID);/*****/ // FIXME: Deprecate DefaultLanguage
+    SelectedLanguageId = LANGIDFROMLCID(USetupData.LocaleID); // FIXME: Should we keep SelectedLanguageId ?
 
     /* Load the font */
     SetConsoleCodePage();
     UpdateKBLayout();
 
+
+    if (IsUnattendedSetup)
+        return INSTALL_INTRO_PAGE;
+
+
     /*
      * If there is no language or just a single one in the list,
      * skip the language selection process altogether.
      */
-    if (GetNumberOfListEntries(USetupData.LanguageList) <= 1)
-    {
-        USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+    if (GetNumberOfListEntries(LanguageList) <= 1)
         return WELCOME_PAGE;
-    }
 
-    InitGenericListUi(&ListUi, USetupData.LanguageList, GetSettingDescription);
+    MUIDisplayPage(LANGUAGE_PAGE);
+
+    InitGenericListUi(&ListUi, LanguageList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
                     yScreen - 3);
 
-    ScrollToPositionGenericList(&ListUi, GetDefaultLanguageIndex());
-
-    MUIDisplayPage(LANGUAGE_PAGE);
+    // ScrollToPositionGenericList(&ListUi, GetDefaultLanguageIndex());
 
     while (TRUE)
     {
@@ -732,17 +683,15 @@ LanguagePage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            ASSERT(GetNumberOfListEntries(USetupData.LanguageList) >= 1);
+            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
 
             SelectedLanguageId =
-                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(USetupData.LanguageList)))->Id;
+                (LCID)(((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id.Ul);
 
-            USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+            USetupData.LocaleID = SelectedLanguageId;
 
-            if (wcscmp(SelectedLanguageId, DefaultLanguage))
-            {
+            if (SelectedLanguageId != DefaultLanguage)
                 UpdateKBLayout();
-            }
 
             /* Load the font */
             SetConsoleCodePage();
@@ -758,12 +707,12 @@ LanguagePage(PINPUT_RECORD Ir)
 
         if (RefreshPage)
         {
-            ASSERT(GetNumberOfListEntries(USetupData.LanguageList) >= 1);
+            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
 
             NewLanguageId =
-                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(USetupData.LanguageList)))->Id;
+                (LCID)(((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id.Ul);
 
-            if (wcscmp(SelectedLanguageId, NewLanguageId))
+            if (SelectedLanguageId != NewLanguageId)
             {
                 /* Clear the language page */
                 MUIClearPage(LANGUAGE_PAGE);
@@ -773,14 +722,14 @@ LanguagePage(PINPUT_RECORD Ir)
                 /* Load the font */
                 SetConsoleCodePage();
 
+                /* Redraw language selection page in native language */
+                MUIDisplayPage(LANGUAGE_PAGE);
+
                 /* Redraw the list */
                 DrawGenericList(&ListUi,
                                 2, 18,
                                 xScreen - 3,
                                 yScreen - 3);
-
-                /* Redraw language selection page in native language */
-                MUIDisplayPage(LANGUAGE_PAGE);
             }
 
             RefreshPage = FALSE;
@@ -1201,10 +1150,10 @@ OemDriverPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Init USetupData.ComputerList
- *  Init USetupData.DisplayList
- *  Init USetupData.KeyboardList
- *  Init USetupData.LayoutList
+ *  Init ComputerList
+ *  Init DisplayList
+ *  Init KeyboardList
+ *  Init LayoutList
  *
  * RETURNS
  *   Number of the next page.
@@ -1212,65 +1161,78 @@ OemDriverPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
+    PGENERIC_LIST_ENTRY Entry;
+
     static ULONG Line = 16;
 
     /* Initialize the computer settings list */
-    if (USetupData.ComputerList == NULL)
+    if (!ComputerList)
     {
-        USetupData.ComputerList = CreateComputerTypeList(USetupData.SetupInf);
-        if (USetupData.ComputerList == NULL)
+        ComputerList = CreateComputerTypeList(USetupData.SetupInf);
+        if (!ComputerList)
         {
             MUIDisplayError(ERROR_LOAD_COMPUTER, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
     }
+    Entry = GetCurrentListEntry(ComputerList);
+    ASSERT(Entry);
+    USetupData.ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
 
     /* Initialize the display settings list */
-    if (USetupData.DisplayList == NULL)
+    if (!DisplayList)
     {
-        USetupData.DisplayList = CreateDisplayDriverList(USetupData.SetupInf);
-        if (USetupData.DisplayList == NULL)
+        DisplayList = CreateDisplayDriverList(USetupData.SetupInf);
+        if (!DisplayList)
         {
             MUIDisplayError(ERROR_LOAD_DISPLAY, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
     }
+    Entry = GetCurrentListEntry(DisplayList);
+    ASSERT(Entry);
+    USetupData.DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
 
     /* Initialize the keyboard settings list */
-    if (USetupData.KeyboardList == NULL)
+    if (!KeyboardList)
     {
-        USetupData.KeyboardList = CreateKeyboardDriverList(USetupData.SetupInf);
-        if (USetupData.KeyboardList == NULL)
+        KeyboardList = CreateKeyboardDriverList(USetupData.SetupInf);
+        if (!KeyboardList)
         {
             MUIDisplayError(ERROR_LOAD_KEYBOARD, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
     }
+    Entry = GetCurrentListEntry(KeyboardList);
+    ASSERT(Entry);
+    USetupData.KeyboardDriver = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
 
     /* Initialize the keyboard layout list */
-    if (!USetupData.LayoutList)
+    if (!LayoutList)
     {
-        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (!USetupData.LayoutList)
+        LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf,
+                                              LANGIDFROMLCID(USetupData.LocaleID),
+                                              &USetupData.LayoutId);
+        if (!LayoutList)
         {
             /* FIXME: report error */
             MUIDisplayError(ERROR_LOAD_KBLAYOUT, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
     }
+    Entry = GetCurrentListEntry(LayoutList);
+    ASSERT(Entry);
+    USetupData.LayoutId = (KLID)(((PGENENTRY)GetListEntryData(Entry))->Id.Ul);
 
-    if (RepairUpdateFlag)
+    if (RepairUpdateFlag || IsUnattendedSetup)
         return SELECT_PARTITION_PAGE;
-
-    // if (IsUnattendedSetup)
-        // return SELECT_PARTITION_PAGE;
 
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-    DrawGenericListCurrentItem(USetupData.ComputerList, GetSettingDescription, 25, 11);
-    DrawGenericListCurrentItem(USetupData.DisplayList , GetSettingDescription, 25, 12);
-    DrawGenericListCurrentItem(USetupData.KeyboardList, GetSettingDescription, 25, 13);
-    DrawGenericListCurrentItem(USetupData.LayoutList  , GetSettingDescription, 25, 14);
+    DrawGenericListCurrentItem(ComputerList, GetSettingDescription, 25, 11);
+    DrawGenericListCurrentItem(DisplayList , GetSettingDescription, 25, 12);
+    DrawGenericListCurrentItem(KeyboardList, GetSettingDescription, 25, 13);
+    DrawGenericListCurrentItem(LayoutList  , GetSettingDescription, 25, 14);
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
 
@@ -1325,7 +1287,30 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
             else if (Line == 14)
                 return LAYOUT_SETTINGS_PAGE;
             else if (Line == 16)
+            {
+                /* Retrieve the computer settings */
+                Entry = GetCurrentListEntry(ComputerList);
+                ASSERT(Entry);
+                USetupData.ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+
+                /* Retrieve the display settings */
+                Entry = GetCurrentListEntry(DisplayList);
+                ASSERT(Entry);
+                USetupData.DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+
+                /* Retrieve the keyboard settings */
+                Entry = GetCurrentListEntry(KeyboardList);
+                ASSERT(Entry);
+                USetupData.KeyboardDriver = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+
+                /* Retrieve the keyboard layout */
+                Entry = GetCurrentListEntry(LayoutList);
+                ASSERT(Entry);
+                USetupData.LayoutId = (KLID)(((PGENENTRY)GetListEntryData(Entry))->Id.Ul);
+
+                /* The user has accepted the settings; we continue installation */
                 return SELECT_PARTITION_PAGE;
+            }
         }
     }
 
@@ -1412,7 +1397,7 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(COMPUTER_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, USetupData.ComputerList, GetSettingDescription);
+    InitGenericListUi(&ListUi, ComputerList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1438,7 +1423,7 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(DISPLAY_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, USetupData.DisplayList, GetSettingDescription);
+    InitGenericListUi(&ListUi, DisplayList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1464,7 +1449,7 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(KEYBOARD_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, USetupData.KeyboardList, GetSettingDescription);
+    InitGenericListUi(&ListUi, KeyboardList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1490,7 +1475,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(LAYOUT_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, USetupData.LayoutList, GetSettingDescription);
+    InitGenericListUi(&ListUi, LayoutList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -3416,11 +3401,60 @@ RegistryPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(REGISTRY_PAGE);
 
+/******************/
+//
+// TEMPTEMP : Sanity checks for lists consistency
+//
+{
+    PGENERIC_LIST_ENTRY Entry;
+
+    {
+        PCWSTR ComputerType;
+        Entry = GetCurrentListEntry(ComputerList);
+        ASSERT(Entry);
+        ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+        ASSERT(ComputerType);
+        ASSERT(USetupData.ComputerType == ComputerType);
+    }
+    {
+        PCWSTR DisplayType;
+        Entry = GetCurrentListEntry(DisplayList);
+        ASSERT(Entry);
+        DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+        ASSERT(DisplayType);
+        ASSERT(USetupData.DisplayType == DisplayType);
+    }
+    {
+        PCWSTR KeyboardDriver;
+        Entry = GetCurrentListEntry(KeyboardList);
+        ASSERT(Entry);
+        KeyboardDriver = ((PGENENTRY)GetListEntryData(Entry))->Id.Str;
+        ASSERT(KeyboardDriver);
+        ASSERT(USetupData.KeyboardDriver == KeyboardDriver);
+    }
+    {
+        LCID LocaleId;
+        Entry = GetCurrentListEntry(LanguageList);
+        ASSERT(Entry);
+        LocaleId = (LCID)(((PGENENTRY)GetListEntryData(Entry))->Id.Ul);
+        ASSERT(LocaleId != 0);
+        ASSERT(USetupData.LocaleID == LocaleId);
+    }
+    {
+        KLID LayoutId;
+        Entry = GetCurrentListEntry(LayoutList);
+        ASSERT(Entry);
+        LayoutId = (KLID)(((PGENENTRY)GetListEntryData(Entry))->Id.Ul);
+        ASSERT(LayoutId != 0);
+        ASSERT(USetupData.LayoutId == LayoutId);
+    }
+}
+/******************/
+
     Error = UpdateRegistry(&USetupData,
                            RepairUpdateFlag,
                            PartitionList,
                            InstallVolume->Info.DriveLetter,
-                           SelectedLanguageId,
                            RegistryStatus,
                            &s_SubstSettings);
     if (Error != ERROR_SUCCESS)
@@ -4075,6 +4109,8 @@ RunUSetup(VOID)
         return STATUS_APP_INIT_FAILURE;
     }
 
+__debugbreak();
+
     /* Initialize Setup, phase 0 */
     InitializeSetup(&USetupData, 0);
     USetupData.ErrorRoutine = USetupErrorRoutine;
@@ -4233,6 +4269,33 @@ RunUSetup(VOID)
 
     /* Terminate the user-mode PnP manager */
     TerminateUserModePnpManager();
+
+    /* Destroy the settings lists */
+    if (ComputerList)
+    {
+        DestroyGenericList(ComputerList, TRUE);
+        ComputerList = NULL;
+    }
+    if (DisplayList)
+    {
+        DestroyGenericList(DisplayList, TRUE);
+        DisplayList = NULL;
+    }
+    if (KeyboardList)
+    {
+        DestroyGenericList(KeyboardList, TRUE);
+        KeyboardList = NULL;
+    }
+    if (LanguageList)
+    {
+        DestroyGenericList(LanguageList, FALSE);
+        LanguageList = NULL;
+    }
+    if (LayoutList)
+    {
+        DestroyGenericList(LayoutList, TRUE);
+        LayoutList = NULL;
+    }
 
     /* Setup has finished */
     FinishSetup(&USetupData);
