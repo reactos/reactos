@@ -333,6 +333,11 @@ ImeToAsciiEx(
     return 0;
 }
 
+/***********************************************************************
+ *      NotifyIME (MSCTFIME.@)
+ *
+ * @implemented
+ */
 EXTERN_C BOOL WINAPI
 NotifyIME(
     _In_ HIMC hIMC,
@@ -340,8 +345,19 @@ NotifyIME(
     _In_ DWORD dwIndex,
     _In_ DWORD_PTR dwValue)
 {
-    FIXME("stub:(%p, 0x%lX, 0x%lX, %p)\n", hIMC, dwAction, dwIndex, dwValue);
-    return FALSE;
+    TRACE("(%p, 0x%lX, 0x%lX, %p)\n", hIMC, dwAction, dwIndex, dwValue);
+
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS)
+        return FALSE;
+
+    auto pBridge = pTLS->m_pBridge;
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pBridge || !pThreadMgr)
+        return FALSE;
+
+    HRESULT hr = pBridge->Notify(pTLS, pThreadMgr, hIMC, dwAction, dwIndex, dwValue);
+    return (hr == S_OK);
 }
 
 EXTERN_C BOOL WINAPI
@@ -581,7 +597,6 @@ CtfImeDestroyInputContext(
 
     return pTLS->m_pBridge->DestroyInputContext(pTLS, hIMC);
 }
-
 
 /***********************************************************************
  *      CtfImeSetActiveContextAlways (MSCTFIME.@)

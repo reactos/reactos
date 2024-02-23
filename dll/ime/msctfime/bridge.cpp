@@ -65,6 +65,7 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
+/// @implemented
 ITfDocumentMgr*
 CicBridge::GetDocumentManager(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
@@ -675,4 +676,16 @@ CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd,
         SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
 
     return S_OK;
+}
+
+/// @unimplemented
+HRESULT CicBridge::Notify(
+    TLS *pTLS,
+    ITfThreadMgr *pThreadMgr,
+    HIMC hIMC,
+    DWORD dwAction,
+    DWORD dwIndex,
+    DWORD_PTR dwValue)
+{
+    return E_NOTIMPL; // FIXME
 }

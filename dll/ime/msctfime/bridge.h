@@ -86,4 +86,12 @@ public:
         HIMC hIMC,
         ITfThreadMgr_P *pThreadMgr,
         ITfDocumentMgr *pDocMgr);
+
+    HRESULT Notify(
+        TLS *pTLS,
+        ITfThreadMgr *pThreadMgr,
+        HIMC hIMC,
+        DWORD dwAction,
+        DWORD dwIndex,
+        DWORD_PTR dwValue);
 };
