@@ -71,4 +71,6 @@ public:
 
     static TLS* InternalAllocateTLS();
     static BOOL InternalDestroyTLS();
+
+    BOOL NonEACompositionEnabled();
 };

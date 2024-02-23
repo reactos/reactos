@@ -54,3 +54,25 @@ BOOL TLS::InternalDestroyTLS()
     ::TlsSetValue(s_dwTlsIndex, NULL);
     return TRUE;
 }
+
+/// @implemented
+BOOL TLS::NonEACompositionEnabled()
+{
+    if (!m_NonEAComposition)
+    {
+        DWORD dwValue = 1;
+
+        CicRegKey regKey;
+        LSTATUS error = regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\CUAS"));
+        if (error == ERROR_SUCCESS)
+        {
+            error = regKey.QueryDword(TEXT("NonEAComposition"), &dwValue);
+            if (error != ERROR_SUCCESS)
+                dwValue = 1;
+        }
+
+        m_NonEAComposition = dwValue;
+    }
+
+    return (m_NonEAComposition == 2);
+}

@@ -208,3 +208,27 @@ LONG CModeBias::ConvertModeBias(REFGUID guid)
     }
     return 0;
 }
+
+/***********************************************************************/
+
+// East-Asian language?
+BOOL IsEALang(VOID)
+{
+    TLS *pTLS = TLS::GetTLS();
+    if (!pTLS || !pTLS->m_pProfile)
+        return FALSE;
+
+    LANGID LangID;
+    pTLS->m_pProfile->GetLangId(&LangID);
+
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
