@@ -46,7 +46,9 @@ public:
     DWORD m_dwQueryPos;
     DWORD m_dwUnknown5;
     CModeBias m_ModeBias;
-    DWORD m_dwUnknown6[11];
+    DWORD m_dwUnknown6;
+    BOOL m_bCandidateOpen;
+    DWORD m_dwUnknown6_5[9];
     BOOL m_bSelecting;
     BOOL m_bReconverting;
     LONG m_cCompLocks;

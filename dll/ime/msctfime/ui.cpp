@@ -1158,7 +1158,7 @@ CIMEUIWindowHandler::ImeUINotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         {
             case IMN_CLOSECANDIDATE:
             {
-                pCicIC->m_dwUnknown6[1] &= ~0x1;
+                pCicIC->m_bCandidateOpen = FALSE;
                 HWND hImeWnd = ::ImmGetDefaultIMEWnd(NULL);
                 if (::IsWindow(hImeWnd))
                     ::PostMessage(hImeWnd, WM_IME_NOTIFY, 0x10, (LPARAM)hIMC);
@@ -1166,7 +1166,7 @@ CIMEUIWindowHandler::ImeUINotifyHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
             }
             case IMN_OPENCANDIDATE:
             {
-                pCicIC->m_dwUnknown6[1] |= 0x1;
+                pCicIC->m_bCandidateOpen = TRUE;
                 pCicIC->ClearPrevCandidatePos();
                 break;
             }

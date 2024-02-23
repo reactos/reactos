@@ -231,7 +231,7 @@ CicBridge::SelectEx(
     if (fSelect)
     {
         if (pCicIC)
-            pCicIC->m_dwUnknown6[1] &= ~1;
+            pCicIC->m_bCandidateOpen = FALSE;
         if (imcLock.get().fOpen)
             OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
     }
