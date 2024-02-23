@@ -397,9 +397,10 @@ ImeProcessKey(
             pDocMgr->Release();
     }
 
-    if (((pTLS->m_dwFlags2 & 1) && MsimtfIsGuidMapEnable(hIMC, 0)) ||
-        ((lParam & 0x20000000) &&
-         LOWORD(::GetKeyboardLayout(0)) == MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) &&
+    LANGID LangID = LOWORD(::GetKeyboardLayout(0));
+    if (((pTLS->m_dwFlags2 & 1) && MsimtfIsGuidMapEnable(hIMC, NULL)) ||
+        ((lParam & (KF_ALTDOWN << 16)) &&
+         (LangID == MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)) &&
          IsVKDBEKey(uVirtKey)))
     {
         return FALSE;
