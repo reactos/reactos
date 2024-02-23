@@ -381,11 +381,13 @@ STDMETHODIMP_(void) CDefCompFrameWindow::HandleMouseMsg(UINT uMsg, LONG x, LONG 
 
 /***********************************************************************/
 
+/// @implemented
 POLYTEXTW *CPolyText::GetPolyAt(INT iItem)
 {
     return &m_PolyTextArray[iItem];
 }
 
+/// @implemented
 HRESULT CPolyText::ShiftPolyText(INT xDelta, INT yDelta)
 {
     for (size_t iItem = 0; iItem < m_PolyTextArray.size(); ++iItem)
@@ -398,6 +400,7 @@ HRESULT CPolyText::ShiftPolyText(INT xDelta, INT yDelta)
     return S_OK;
 }
 
+/// @implemented
 HRESULT CPolyText::RemoveLastLine(BOOL bHorizontal)
 {
     size_t iItem, cItems = m_PolyTextArray.size();
@@ -429,6 +432,7 @@ HRESULT CPolyText::RemoveLastLine(BOOL bHorizontal)
     return S_OK;
 }
 
+/// @implemented
 void CPolyText::RemoveAll()
 {
     m_PolyTextArray.clear();
@@ -437,6 +441,7 @@ void CPolyText::RemoveAll()
 
 /***********************************************************************/
 
+/// @implemented
 void COMPWND::_ClientToScreen(LPRECT prc)
 {
     ::ClientToScreen(m_hWnd, (LPPOINT)prc);
@@ -474,6 +479,7 @@ UIComposition::~UIComposition()
         cicMemFree(m_strCompStr);
         m_strCompStr = NULL;
     }
+
     m_cchCompStr = 0;
 }
 
@@ -560,7 +566,7 @@ HRESULT UIComposition::CreateCompositionWindow(CicIMCLock& imcLock, HWND hwndPar
     if (FAILED(imcLock.m_hr))
         return imcLock.m_hr;
 
-    if (!::IsWindow(hwndParent) || this->m_dwUnknown51)
+    if (!::IsWindow(hwndParent) || m_bHasCompWnd)
         return E_FAIL;
 
     for (INT iCompStr = 0; iCompStr < 3; ++iCompStr)
@@ -602,7 +608,7 @@ HRESULT UIComposition::CreateCompositionWindow(CicIMCLock& imcLock, HWND hwndPar
     ::SetWindowLongPtrW(hwndCompStr, GWLP_USERDATA, (LONG_PTR)this);
     ::SetWindowLongPtrW(hwndCompStr, UICOMP_GWLP_INDEX, -1);
     m_CompStrs[3].m_Caret.CreateCaret(hwndCompStr, m_CaretSize);
-    m_dwUnknown51 = TRUE;
+    m_bHasCompWnd = TRUE;
 
     return S_OK;
 }

@@ -211,7 +211,8 @@ LONG CModeBias::ConvertModeBias(REFGUID guid)
 
 /***********************************************************************/
 
-// East-Asian language?
+/// East-Asian language?
+/// @implemented
 BOOL IsEALang(VOID)
 {
     TLS *pTLS = TLS::GetTLS();

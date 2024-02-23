@@ -149,7 +149,7 @@ class UIComposition
 {
 public:
     HWND m_hwndParent;
-    DWORD m_dwUnknown51;
+    BOOL m_bHasCompWnd;
     COMPWND m_CompStrs[4];
     HFONT m_hFont1;
     DWORD m_dwUnknown54;
