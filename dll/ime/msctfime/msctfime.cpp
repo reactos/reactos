@@ -24,7 +24,7 @@ EXTERN_C void __cxa_pure_virtual(void)
 
 /// Selects or unselects the input context.
 /// @implemented
-HRESULT
+static HRESULT
 InternalSelectEx(
     _In_ HIMC hIMC,
     _In_ BOOL fSelect,
@@ -89,6 +89,77 @@ InternalSelectEx(
     imcLock.InitContext();
 
     return imcLock.m_hr;
+}
+
+/// Retrieves the IME information.
+/// @implemented
+HRESULT
+Inquire(
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags,
+    _In_ HKL hKL)
+{
+    if (!lpIMEInfo)
+        return E_OUTOFMEMORY;
+
+    StringCchCopyW(lpszWndClass, 64, L"MSCTFIME UI");
+    lpIMEInfo->dwPrivateDataSize = 0;
+
+    switch (LOWORD(hKL)) // Language ID
+    {
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT): // Japanese
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
+                                           IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = IME_SMODE_CONVERSATION | IME_SMODE_PLAURALCLAUSE;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_SENTENCE | SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT): // Korean
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
+                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
+                                     IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwSelectCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): // Simplified Chinese
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL): // Traditional Chinese
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET |
+                                     IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
+            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
+            lpIMEInfo->fdwSentenceCaps = SELECT_CAP_CONVERSION;
+            lpIMEInfo->fdwSelectCaps = 0;
+            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
+                                    SCS_CAP_COMPSTR;
+            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
+            break;
+        }
+        default: // Otherwise
+        {
+            lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_AT_CARET;
+            lpIMEInfo->fdwConversionCaps = 0;
+            lpIMEInfo->fdwSentenceCaps = 0;
+            lpIMEInfo->fdwSCSCaps = 0;
+            lpIMEInfo->fdwUICaps = 0;
+            lpIMEInfo->fdwSelectCaps = 0;
+            break;
+        }
+    }
+
+    return S_OK;
 }
 
 /***********************************************************************

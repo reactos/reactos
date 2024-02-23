@@ -11,7 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
 /// East-Asian language?
 /// @implemented
-BOOL IsEALang(LANGID LangID)
+BOOL IsEALang(_In_opt_ LANGID LangID)
 {
     if (LangID == 0)
     {

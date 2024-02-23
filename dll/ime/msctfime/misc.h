@@ -8,7 +8,7 @@
 #pragma once
 
 BOOLEAN DllShutdownInProgress(VOID);
-BOOL IsEALang(LANGID LangID);
+BOOL IsEALang(_In_opt_ LANGID LangID);
 BOOL IsInteractiveUserLogon(VOID);
 BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
 HIMC GetActiveContext(VOID);

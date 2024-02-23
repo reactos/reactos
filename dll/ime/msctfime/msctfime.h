@@ -40,6 +40,13 @@ extern CRITICAL_SECTION g_csLock;
 typedef CicArray<GUID> CDispAttrPropCache;
 extern CDispAttrPropCache *g_pPropCache;
 
+HRESULT
+Inquire(
+    _Out_ LPIMEINFO lpIMEInfo,
+    _Out_ LPWSTR lpszWndClass,
+    _In_ DWORD dwSystemInfoFlags,
+    _In_ HKL hKL);
+
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_DIMFLAGS,        0xA94C5FD2, 0xC471, 0x4031, 0x95, 0x46, 0x70, 0x9C, 0x17, 0x30, 0x0C, 0xB9);
 DEFINE_GUID(GUID_COMPARTMENT_CTFIME_CICINPUTCONTEXT, 0x85A688F7, 0x6DC8, 0x4F17, 0xA8, 0x3A, 0xB1, 0x1C, 0x09, 0xCD, 0xD7, 0xBF);
 DEFINE_GUID(GUID_MODEBIAS_FILENAME,                  0xD7F707FE, 0x44C6, 0x4FCA, 0x8E, 0x76, 0x86, 0xAB, 0x50, 0xC7, 0x93, 0x1B);

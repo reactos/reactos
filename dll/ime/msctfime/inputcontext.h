@@ -13,13 +13,6 @@
 class CInputContextOwnerCallBack;
 class CInputContextOwner;
 
-HRESULT
-Inquire(
-    _Out_ LPIMEINFO lpIMEInfo,
-    _Out_ LPWSTR lpszWndClass,
-    _In_ DWORD dwSystemInfoFlags,
-    _In_ HKL hKL);
-
 /***********************************************************************
  *      CicInputContext
  *
