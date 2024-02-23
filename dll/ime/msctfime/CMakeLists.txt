@@ -1,7 +1,4 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
-
 spec2def(msctfime.ime msctfime.spec)
 
 list(APPEND SOURCE
