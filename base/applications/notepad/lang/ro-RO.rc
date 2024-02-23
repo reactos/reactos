@@ -36,7 +36,7 @@ BEGIN
         MENUITEM "&Nou\tCtrl+N", CMD_NEW
         MENUITEM "Fereastră &nouă\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
-        MENUITEM "S&alvează\tCtrl+S", CMD_SAVE
+        MENUITEM "S&alvare\tCtrl+S", CMD_SAVE
         MENUITEM "Sal&vare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Inițiali&zare pagină…", CMD_PAGE_SETUP
@@ -46,12 +46,12 @@ BEGIN
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Anula&re\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Revocare\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează\tCtrl+X", CMD_CUT
-        MENUITEM "&Copiază\tCtrl+C", CMD_COPY
-        MENUITEM "&Lipește\tCtrl+V", CMD_PASTE
-        MENUITEM "Șt&erge\tDel", CMD_DELETE
+        MENUITEM "&Decupare\tCtrl+X", CMD_CUT
+        MENUITEM "&Copiere\tCtrl+C", CMD_COPY
+        MENUITEM "&Lipire\tCtrl+V", CMD_PASTE
+        MENUITEM "Șt&ergere\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Găsire…\tCtrl+F", CMD_SEARCH
         MENUITEM "&Următorul găsit\tF3", CMD_SEARCH_NEXT
@@ -94,8 +94,8 @@ BEGIN
     LTEXT "&Tip:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientare", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Verticală", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "Ori&zontală", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Portret", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Vedere", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
     GROUPBOX "Margini", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "Stâng&a:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -110,8 +110,8 @@ BEGIN
     LTEXT "Su&bsol:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "&Manual…", IDHELP, 8, 170, 50, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 254, 170, 50, 14
+    DEFPUSHBUTTON "&OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "&Revocare", IDCANCEL, 254, 170, 50, 14
     PUSHBUTTON "Imp&rimantă…", psh3, 310, 170, 50, 14
 END
 
@@ -135,8 +135,8 @@ CAPTION "Salt la poziție"
 BEGIN
     LTEXT "Număr linie:", 0x155, 5, 12, 41, 12
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
-    DEFPUSHBUTTON "Con&firmă", IDOK, 75, 30, 40, 15
-    PUSHBUTTON "A&nulează", IDCANCEL, 120, 30, 40, 15
+    DEFPUSHBUTTON "&OK", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "&Revocare", IDCANCEL, 120, 30, 40, 15
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
@@ -147,7 +147,7 @@ BEGIN
     CTEXT "Începe sarcina imprimării...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Numele fișierului)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Pagină %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
-    PUSHBUTTON "A&nulează", IDCANCEL, 50, 75, 60, 20
+    PUSHBUTTON "&Revocare", IDCANCEL, 50, 75, 60, 20
 END
 
 STRINGTABLE
@@ -172,7 +172,7 @@ Păstrați modificările aduse?"
     STRING_NOTFOUND "„%s” nu poate fi găsit."
     STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație.\
 \nÎnchideți una sau mai multe aplicații pentru a elibera memorie."
-    STRING_CANNOTFIND "„%s” nu poate fi găsit"
+    STRING_CANNOTFIND "Nu se poate găsi „%s”"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (endian mare)"
