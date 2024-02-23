@@ -77,7 +77,7 @@ InternalSelectEx(
         // Get logical font
         LOGFONTW lf;
         HDC hDC = ::GetDC(imcLock.get().hWnd);
-        HGDIOBJ hFont = GetCurrentObject(hDC, OBJ_FONT);
+        HGDIOBJ hFont = ::GetCurrentObject(hDC, OBJ_FONT);
         ::GetObjectW(hFont, sizeof(LOGFONTW), &lf);
         ::ReleaseDC(imcLock.get().hWnd, hDC);
 
@@ -854,15 +854,15 @@ CtfImeDispatchDefImeMessage(
     if (!IsMsImeMessage(uMsg))
         return 0;
 
-    HKL hKL = GetKeyboardLayout(0);
+    HKL hKL = ::GetKeyboardLayout(0);
     if (IS_IME_HKL(hKL))
         return 0;
 
-    HWND hImeWnd = (HWND)SendMessageW(hWnd, WM_IME_NOTIFY, 0x17, 0);
+    HWND hImeWnd = (HWND)::SendMessageW(hWnd, WM_IME_NOTIFY, 0x17, 0);
     if (!IsWindow(hImeWnd))
         return 0;
 
-    return SendMessageW(hImeWnd, uMsg, wParam, lParam);
+    return ::SendMessageW(hImeWnd, uMsg, wParam, lParam);
 }
 
 /***********************************************************************
@@ -925,7 +925,7 @@ BOOL ProcessAttach(HINSTANCE hinstDLL)
 {
     g_hInst = hinstDLL;
 
-    InitializeCriticalSectionAndSpinCount(&g_csLock, 0);
+    ::InitializeCriticalSectionAndSpinCount(&g_csLock, 0);
 
     if (!TLS::Initialize())
         return FALSE;
@@ -952,7 +952,7 @@ VOID ProcessDetach(HINSTANCE hinstDLL)
         TFUninitLib();
     }
 
-    DeleteCriticalSection(&g_csLock);
+    ::DeleteCriticalSection(&g_csLock);
     TLS::InternalDestroyTLS();
     TLS::Uninitialize();
     cicDoneUIFLib();
