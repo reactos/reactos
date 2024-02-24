@@ -107,6 +107,7 @@
 #include "CUserNotification.h"
 #include "dialogs/folder_options.h"
 #include "shelldesktop/CChangeNotifyServer.h"
+#include "utils.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
