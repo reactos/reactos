@@ -296,7 +296,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "Gestionar de dispozitive"
+  IDS_APPNAME               "Manager de dispozitive"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Dezactivarea acestui dispozitiv va cauza oprirea funcționării sale.\nSigur doriți dezactivarea sa?"
   IDS_CONFIRM_UNINSTALL     "Avertisment: Urmează să dezinstalați acest dispozitiv din sistem.\nContinuați?"
@@ -307,7 +307,7 @@ BEGIN
   IDS_MENU_ENABLE           "Activare"
   IDS_MENU_DISABLE          "Dezactivare"
   IDS_MENU_UNINSTALL        "Dezinstalare"
-  IDS_MENU_SCAN             "Scanare configurație harware"
+  IDS_MENU_SCAN             "Scanare configurație hardware"
   IDS_MENU_ADD              "Adăugare dispozitiv…"
   IDS_MENU_PROPERTIES       "Proprietăți"
 END
@@ -315,7 +315,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Proprietăți"
-  IDS_TOOLTIP_SCAN          "Scanare configurație fizică"
+  IDS_TOOLTIP_SCAN          "Scanare configurație hardware"
   IDS_TOOLTIP_ENABLE        "Activare"
   IDS_TOOLTIP_DISABLE       "Dezactivare"
   IDS_TOOLTIP_UPDATE        "Actualizare driver…"
@@ -333,11 +333,11 @@ BEGIN
   IDS_HINT_UPDATE       " Lansarea expertului de actualizare a driverului pentru dispozitivul selestat."
   IDS_HINT_UNINSTALL    " Dezinstalare driver pentru dispozitivul selectat."
   IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator."
-  IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
+  IDS_HINT_ABOUT        " Despre Managerul de dispozitive."
   IDS_HINT_EXIT         " Ieșire din program."
 
-  IDS_HINT_DEV_BY_TYPE  " Afișare dispozitive fizice după tip."
-  IDS_HINT_DEV_BY_CONN  " Afișare dispozitive fizice după conexiune."
+  IDS_HINT_DEV_BY_TYPE  " Afișare dispozitive hardware după tip."
+  IDS_HINT_DEV_BY_CONN  " Afișare dispozitive hardware după conexiune."
   IDS_HINT_RES_BY_TYPE  " Afișare resurse după tip."
   IDS_HINT_RES_BY_CONN  " Afișare dispozitive după tipul conexiunii."
   IDS_HINT_SHOW_HIDDEN  " Afișare dispozitive de tipul celor fără autodetecție PNP (Plug-and-Play) care nu sunt acum instalate."
