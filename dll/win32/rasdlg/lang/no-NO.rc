@@ -39,7 +39,7 @@ CAPTION "Linje bundling feil"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "En eller flere tilleggs linjer ville ikke koble til. ", 1033, 37, 8, 216, 20
+    LTEXT "En eller flere tilleggs linjer ville ikke koble til.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Ikke koble til mislykket linjer i fremtiden", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Godta", 1, 135, 242, 60, 14
@@ -703,7 +703,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ny tilkobling veiviser"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velg telefonummer under. ", -1, 7, 4, 306, 14
+    LTEXT "Velg telefonummer under.", -1, 7, 4, 306, 14
     LTEXT "&Telefonnummer:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Du skulle kanskje trenge å inkludere en ""1"" eller område, eller begge. Hvis du ikke er sikker på om du trenger ekstra nummer, ring telefonnummer til din telefon. Hvis du hører en modem lyd, nummeret oppringt som er riktig.", -1, 20, 50, 291, 53

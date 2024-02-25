@@ -711,7 +711,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Introduceți mai jos numărul de telefon. ", -1, 7, 4, 306, 14
+    LTEXT "Introduceți mai jos numărul de telefon.", -1, 7, 4, 306, 14
     LTEXT "N&umărul de telefon:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Aici poate fi necesară introducerea unui prefix sau cod de regiune. Dacă nu aveți certitudinea necesității unui prefix, apelați numărul de la telefonul dumneavoastră. Dacă auziți un sunet de modem, atunci numărul apelat este corect.", -1, 20, 50, 291, 53

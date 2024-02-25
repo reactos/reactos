@@ -39,7 +39,7 @@ CAPTION "Line Bundling Errors"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "One or more additional lines did not connect. ", 1033, 37, 8, 216, 20
+    LTEXT "One or more additional lines did not connect.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Do not attempt failed lines in the future", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Accept", 1, 135, 242, 60, 14
@@ -703,7 +703,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "New Connection Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the phone number below. ", -1, 7, 4, 306, 14
+    LTEXT "Type the phone number below.", -1, 7, 4, 306, 14
     LTEXT "&Phone number:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "You might need to include a ""1"" or the area code, or both. If you are not sure you need the extra numbers, dial the phone number on your telephone. If you hear a modem sound, the number dialed is correct.", -1, 20, 50, 291, 53

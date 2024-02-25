@@ -43,7 +43,7 @@ CAPTION "Gabimet bundling Linje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Një ose më shumë linja të tjera nuk e lidhën. ", 1033, 37, 8, 216, 20
+    LTEXT "Një ose më shumë linja të tjera nuk e lidhën.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Mos u përpjek me linja të dështuara në të ardhmen", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Prano", 1, 135, 242, 60, 14
@@ -707,7 +707,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Magjistari Lidhjes T're"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Shkruaj numrin e telefonit poshtë. ", -1, 7, 4, 306, 14
+    LTEXT "Shkruaj numrin e telefonit poshtë.", -1, 7, 4, 306, 14
     LTEXT "&Numri telefonit:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Ju mund të kenë nevojë për të përfshirë një ""1"" ose kodin e zonës, ose të dyja. Nëse ju nuk jeni të sigurt që ju duhen numra shtesë, thirrni numrin e telefonit në telefonin tuaj. Nëse ju dëgjoni një tingull modemi, numri i thirrur është e saktë.", -1, 20, 50, 291, 53

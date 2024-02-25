@@ -703,7 +703,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Assistent für neue Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Telefonnummer unten eingeben. ", -1, 7, 4, 306, 14
+    LTEXT "Telefonnummer unten eingeben.", -1, 7, 4, 306, 14
     LTEXT "&Telefonnummer:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Sie müssen eventuell eine ""1"", eine Vorwahl oder beides einbeziehen. Wenn Sie nicht sicher sind, ob zusätzliche Nummern erforderlich sind, wählen Sie die Telefonnummer auf Ihrem Telefon. Wenn Sie ein Modem hören, ist die gewählte Nummer richtig.", -1, 20, 50, 291, 53
@@ -1849,7 +1849,7 @@ BEGIN
     206 "Von %1 trennen?"
     207 "Eine Datei %1 ist bereits vorhanden. Soll Sie überschrieben werden?"
     208 "Syntaxfehler im Skript. Möchten Sie das Fehlerprotokoll ansehen?"
-    209 "Die Verbindung mit %1 wurde hergestellt. "
+    209 "Die Verbindung mit %1 wurde hergestellt."
     210 "Klicken Sie mit der rechten Maustaste auf den DFÜ-Monitor in der Taskleiste, um die Verbindung zu unterbrechen oder deren Status zu überprüfen."
     212 "Verbindung hergestellt."
     213 "Die benutzerdefinierte Authentifizierungsmethode wird initialisiert, indem Sie auf Eigenschaften klicken."
@@ -2288,7 +2288,7 @@ BEGIN
     7321 "Sie müssen einen Anmeldenamen für den neuen Benutzer eingeben oder auf Abbrechen klicken."
     7322 "Das eingegebene Passwort ist zu kurz."
     7323 "Die eingegebenen Kennwörter stimmen nicht überein. Geben Sie diese erneut ein."
-    7324 "Ein interner Fehler ist aufgetreten. "
+    7324 "Ein interner Fehler ist aufgetreten."
     7325 "Listenansicht"
     7326 "Beim Übertragen der Änderungen, die Sie an der lokalen Benutzerdatenbank durchgeführt haben, ist ein Fehler aufgetreten."
     7327 "Sie haben keine ausreichenden Benutzerrechte, um einen Benutzer zu der lokalen Systemdatenbank hinzufügen zu können."
@@ -2314,7 +2314,7 @@ BEGIN
     7347 "Die IPX-Eigenschaften können nicht vom System geladen werden."
     7348 "Eingehende Verbindungen erfordern den Routing- und RAS-Dienst, der nicht gestartet werden konnte. Weitere Information erhalten Sie im Ereignisprotokoll des Systems."
     7349 "Das System gestattet momentan nicht das Bearbeiten von Netzwerkkomponenten, da diese gerade von einer anderen Anwendung geändert werden."
-    7350 "Der neue Benutzer, den Sie eingegeben haben, wurde nicht zu der lokalen Benutzerdatenbank hinzugefügt, da der Name oder das Passwort die Systemrichtlinien verletzt hat (entweder zu lang, zu kurz oder ein sonstiges falsches Format). "
+    7350 "Der neue Benutzer, den Sie eingegeben haben, wurde nicht zu der lokalen Benutzerdatenbank hinzugefügt, da der Name oder das Passwort die Systemrichtlinien verletzt hat (entweder zu lang, zu kurz oder ein sonstiges falsches Format)."
     7351 "Das System kann den angeforderten Benutzer nicht löschen."
     7352 "Die ausgewählte Netzwerkkomponente kann nicht entfernt werden, da Sie verwendet wird."
     7353 "Warnung bei eingehender Verbindung"
