@@ -25,8 +25,6 @@
 #include <atlcoll.h>
 #endif
 
-
-
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -104,7 +102,7 @@ END_COM_MAP()
 };
 
 CDesktopBrowser::CDesktopBrowser():
-    m_hAccel(NULL),    
+    m_hAccel(NULL),
     m_hWndShellView(NULL)
 {
 }
@@ -184,7 +182,7 @@ HRESULT CDesktopBrowser::_Resize()
 }
 
 HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
-{  
+{
     CComPtr<IShellFolder> psfDesktop;
     HRESULT hRet;
     hRet = SHGetDesktopFolder(&psfDesktop);
@@ -284,7 +282,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT
      * find an open shell window that shows the requested pidl and activate it
      */
 
-    DWORD dwFlags = ((wFlags & SBSP_EXPLOREMODE) != 0) ? SH_EXPLORER_CMDLINE_FLAG_E : 0; 
+    DWORD dwFlags = ((wFlags & SBSP_EXPLOREMODE) != 0) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
     return SHOpenNewFrame(ILClone(pidl), NULL, 0, dwFlags);
 }
 

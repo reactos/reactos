@@ -355,12 +355,12 @@ int ShellMessageBoxW(
 	    hInstance,hWnd,lpText,lpCaption,uType);
 
 	if (IS_INTRESOURCE(lpCaption))
-	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, ARRAY_SIZE(szTitle));
 	else
 	  pszTitle = lpCaption;
 
 	if (IS_INTRESOURCE(lpText))
-	  LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
+	  LoadStringW(hInstance, LOWORD(lpText), szText, ARRAY_SIZE(szText));
 	else
 	  pszText = lpText;
 
@@ -1826,7 +1826,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 {
-    FIXME("%p %p\n", pidlFolder, pidlSaveFile );
+    FIXME("%p %p\n", pidlFolder, pidlSaveFile);
     return FALSE;
 }
 
