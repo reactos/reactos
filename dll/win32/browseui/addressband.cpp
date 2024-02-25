@@ -300,9 +300,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
             WCHAR chAccess = GetAddressBarAccessKey(L'D');
             if (lpMsg->wParam == chAccess)
             {
-                ::SendMessage(fEditControl, EM_SETSEL, 0, -1);
+                ::PostMessageW(fEditControl, EM_SETSEL, 0, -1);
                 ::SetFocus(fEditControl);
-                return S_OK;
+                return S_FALSE;
             }
             break;
         }
