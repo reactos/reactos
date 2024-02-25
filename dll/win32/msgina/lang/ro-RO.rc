@@ -43,7 +43,7 @@ BEGIN
     EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Vă autentificați la:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_DOMAIN, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "O&K", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "&Revocare", IDCANCEL, 160, 122, 50, 14
     PUSHBUTTON "&Oprire", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
 END
@@ -91,7 +91,7 @@ BEGIN
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Parola:", IDC_STATIC, 36, 125, 42, 8
     EDITTEXT IDC_UNLOCK_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "&OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "O&K", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "&Revocare", IDCANCEL, 144, 154, 50, 14
 END
 
@@ -111,7 +111,7 @@ BEGIN
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Confirmați parola:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "&OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "O&K", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "&Revocare", IDCANCEL, 218, 145, 50, 14
 END
 
@@ -137,10 +137,10 @@ BEGIN
     LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
-    DEFPUSHBUTTON "&OK", IDOK, 143, 122, 55, 14, WS_GROUP
+    DEFPUSHBUTTON "O&K", IDOK, 143, 122, 55, 14, WS_GROUP
     PUSHBUTTON "&Revocare", IDCANCEL, 204, 122, 55, 14
 
-    // DEFPUSHBUTTON "&OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    // DEFPUSHBUTTON "O&K", IDOK, 80, 122, 55, 14, WS_GROUP
     // PUSHBUTTON "&Revocare", IDCANCEL, 143, 122, 55, 14
     // PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
 END
@@ -167,7 +167,7 @@ BEGIN
     DEFPUSHBUTTON "O&K", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "&Revocare", IDCANCEL, 211, 276, 55, 14
 
-    // DEFPUSHBUTTON "&OK", IDOK, 87, 276, 55, 14, WS_GROUP
+    // DEFPUSHBUTTON "O&K", IDOK, 87, 276, 55, 14, WS_GROUP
     // PUSHBUTTON "&Revocare", IDCANCEL, 150, 276, 55, 14
     // PUSHBUTTON "&Manual…", IDHELP, 211, 276, 55, 14
 END
@@ -242,7 +242,7 @@ BEGIN
     IDS_ACCOUNTLOCKED "Nu vă pot conecta deoarece contul dumneavoastră. a fost blocat. Consultați administratorul de sistem."
     IDS_INVALIDLOGONHOURS "Contul dumneavoastră are restricții de timp care vă împiedică să vă conectați în acest moment. Încercați mai târziu."
     IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
-    IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
+    IDS_ACCOUNTRESTRICTION "Nu v-ați putut conecta din cauza unei restricții a contului."
     IDS_EMERGENCYLOGOFFTITLE "Deautentificare din ReactOS"
     IDS_EMERGENCYLOGOFF "Apăsați OK pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
