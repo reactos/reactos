@@ -1306,7 +1306,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
         IShellFolder_Release(psfFolder);
         return FALSE;
     }
-                
+
     hr = IShellFolder_GetDisplayNameOf(psfFolder, pidlLast, SHGDN_FORPARSING, &strret);
     IShellFolder_Release(psfFolder);
     if (FAILED(hr)) return FALSE;

@@ -50,7 +50,6 @@ struct _StaticInvokeCommandMap_
     { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER }
 };
 
-
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
@@ -152,7 +151,6 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_iIdCBLast(0),
     m_iIdDfltFirst(0),
     m_iIdDfltLast(0)
-
 {
 }
 
@@ -501,7 +499,7 @@ UINT
 CDefaultContextMenu::AddStaticContextMenusToMenu(
     HMENU hMenu,
     UINT* pIndexMenu,
-    UINT iIdCmdFirst, 
+    UINT iIdCmdFirst,
     UINT iIdCmdLast)
 {
     MENUITEMINFOW mii;
@@ -759,7 +757,7 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
                 dwKey = MK_SHIFT;
         }
         else {
-            ERR("No drop effect obtained");
+            ERR("No drop effect obtained\n");
         }
         GlobalUnlock(medium2.hGlobal);
     }

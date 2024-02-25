@@ -663,8 +663,6 @@
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
 
-
-
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
 #define IDR_CONTROLPANEL        130

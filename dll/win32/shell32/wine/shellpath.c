@@ -59,7 +59,7 @@ BOOL IsWow64()
 
     if (!fnIsWow64Process)
     {
-        fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+        fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
             GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
     }
 
@@ -71,7 +71,6 @@ BOOL IsWow64()
 
     return bIsWow64;
 }
-
 
 /*
 	########## Combining and Constructing paths ##########
@@ -548,8 +547,6 @@ LONG WINAPI PathProcessCommandAW (
 static const WCHAR szCurrentVersion[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\0'};
 static const WCHAR Administrative_ToolsW[] = {'A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
 static const WCHAR AppDataW[] = {'A','p','p','D','a','t','a','\0'};
-static const WCHAR AppData_LocalLowW[] = {'A','p','p','D','a','t','a','\\','L','o','c','a','l','L','o','w','\0'};
-static const WCHAR Application_DataW[] = {'A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
 static const WCHAR CacheW[] = {'C','a','c','h','e','\0'};
 static const WCHAR CD_BurningW[] = {'C','D',' ','B','u','r','n','i','n','g','\0'};
 static const WCHAR Common_Administrative_ToolsW[] = {'C','o','m','m','o','n',' ','A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
@@ -566,40 +563,20 @@ static const WCHAR Common_StartUpW[] = {'C','o','m','m','o','n',' ','S','t','a',
 static const WCHAR Common_Start_MenuW[] = {'C','o','m','m','o','n',' ','S','t','a','r','t',' ','M','e','n','u','\0'};
 static const WCHAR Common_TemplatesW[] = {'C','o','m','m','o','n',' ','T','e','m','p','l','a','t','e','s','\0'};
 static const WCHAR CommonVideoW[] = {'C','o','m','m','o','n','V','i','d','e','o','\0'};
-static const WCHAR ContactsW[] = {'C','o','n','t','a','c','t','s','\0'};
 static const WCHAR CookiesW[] = {'C','o','o','k','i','e','s','\0'};
 static const WCHAR DesktopW[] = {'D','e','s','k','t','o','p','\0'};
-static const WCHAR DocumentsW[] = {'D','o','c','u','m','e','n','t','s','\0'};
-static const WCHAR DownloadsW[] = {'D','o','w','n','l','o','a','d','s','\0'};
 static const WCHAR FavoritesW[] = {'F','a','v','o','r','i','t','e','s','\0'};
 static const WCHAR FontsW[] = {'F','o','n','t','s','\0'};
 static const WCHAR HistoryW[] = {'H','i','s','t','o','r','y','\0'};
-static const WCHAR LinksW[] = {'L','i','n','k','s','\0'};
 static const WCHAR Local_AppDataW[] = {'L','o','c','a','l',' ','A','p','p','D','a','t','a','\0'};
-static const WCHAR Local_Settings_Application_DataW[] = {'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\','A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\0'};
 static const WCHAR Local_Settings_CD_BurningW[] = {'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\','A','p','p','l','i','c','a','t','i','o','n',' ','D','a','t','a','\\','M','i','c','r','o','s','o','f','t','\\','C','D',' ','B','u','r','n','i','n','g','\0'};
-static const WCHAR Local_Settings_HistoryW[] = {'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\','H','i','s','t','o','r','y','\0'};
-static const WCHAR Local_Settings_Temporary_Internet_FilesW[] = {'L','o','c','a','l',' ','S','e','t','t','i','n','g','s','\\','T','e','m','p','o','r','a','r','y',' ','I','n','t','e','r','n','e','t',' ','F','i','l','e','s','\0'};
-static const WCHAR Microsoft_Windows_GameExplorerW[] = {'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','G','a','m','e','E','x','p','l','o','r','e','r','\0'};
-static const WCHAR Microsoft_Windows_LibrariesW[] = {'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','L','i','b','r','a','r','i','e','s','\0'};
-static const WCHAR Microsoft_Windows_RingtonesW[] = {'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','R','i','n','g','t','o','n','e','s','\0'};
-static const WCHAR MusicW[] = {'M','u','s','i','c','\0'};
-static const WCHAR Music_PlaylistsW[] = {'M','u','s','i','c','\\','P','l','a','y','l','i','s','t','s','\0'};
-static const WCHAR Music_Sample_MusicW[] = {'M','u','s','i','c','\\','S','a','m','p','l','e',' ','M','u','s','i','c','\0'};
-static const WCHAR Music_Sample_PlaylistsW[] = {'M','u','s','i','c','\\','S','a','m','p','l','e',' ','P','l','a','y','l','i','s','t','s','\0'};
-static const WCHAR My_DocumentsW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\0'};
 static const WCHAR My_MusicW[] = {'M','y',' ','M','u','s','i','c','\0'};
 static const WCHAR My_PicturesW[] = {'M','y',' ','P','i','c','t','u','r','e','s','\0'};
 static const WCHAR My_VideoW[] = {'M','y',' ','V','i','d','e','o','\0'};
 static const WCHAR NetHoodW[] = {'N','e','t','H','o','o','d','\0'};
 static const WCHAR OEM_LinksW[] = {'O','E','M',' ','L','i','n','k','s','\0'};
 static const WCHAR PersonalW[] = {'P','e','r','s','o','n','a','l','\0'};
-static const WCHAR PicturesW[] = {'P','i','c','t','u','r','e','s','\0'};
-static const WCHAR Pictures_Sample_PicturesW[] = {'P','i','c','t','u','r','e','s','\\','S','a','m','p','l','e',' ','P','i','c','t','u','r','e','s','\0'};
-static const WCHAR Pictures_Slide_ShowsW[] = {'P','i','c','t','u','r','e','s','\\','S','l','i','d','e',' ','S','h','o','w','s','\0'};
 static const WCHAR PrintHoodW[] = {'P','r','i','n','t','H','o','o','d','\0'};
-static const WCHAR Program_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\0'};
-static const WCHAR Program_Files_Common_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\\','C','o','m','m','o','n',' ','F','i','l','e','s','\0'};
 static const WCHAR Program_Files_x86W[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s',' ','(','x','8','6',')','\0'};
 static const WCHAR Program_Files_x86_Common_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s',' ','(','x','8','6',')','\\','C','o','m','m','o','n',' ','F','i','l','e','s','\0'};
 static const WCHAR ProgramFilesDirW[] = {'P','r','o','g','r','a','m','F','i','l','e','s','D','i','r','\0'};
@@ -607,19 +584,10 @@ static const WCHAR ProgramFilesDirX86W[] = {'P','r','o','g','r','a','m','F','i',
 static const WCHAR ProgramsW[] = {'P','r','o','g','r','a','m','s','\0'};
 static const WCHAR RecentW[] = {'R','e','c','e','n','t','\0'};
 static const WCHAR ResourcesW[] = {'R','e','s','o','u','r','c','e','s','\0'};
-static const WCHAR Saved_GamesW[] = {'S','a','v','e','d',' ','G','a','m','e','s','\0'};
-static const WCHAR SearchesW[] = {'S','e','a','r','c','h','e','s','\0'};
 static const WCHAR SendToW[] = {'S','e','n','d','T','o','\0'};
 static const WCHAR StartUpW[] = {'S','t','a','r','t','U','p','\0'};
 static const WCHAR Start_MenuW[] = {'S','t','a','r','t',' ','M','e','n','u','\0'};
-static const WCHAR Start_Menu_ProgramsW[] = {'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\0'};
-static const WCHAR Start_Menu_Admin_ToolsW[] = {'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\\','A','d','m','i','n','i','s','t','r','a','t','i','v','e',' ','T','o','o','l','s','\0'};
-static const WCHAR Start_Menu_StartupW[] = {'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\\','S','t','a','r','t','U','p','\0'};
 static const WCHAR TemplatesW[] = {'T','e','m','p','l','a','t','e','s','\0'};
-static const WCHAR UsersW[] = {'U','s','e','r','s','\0'};
-static const WCHAR UsersPublicW[] = {'U','s','e','r','s','\\','P','u','b','l','i','c','\0'};
-static const WCHAR VideosW[] = {'V','i','d','e','o','s','\0'};
-static const WCHAR Videos_Sample_VideosW[] = {'V','i','d','e','o','s','\\','S','a','m','p','l','e',' ','V','i','d','e','o','s','\0'};
 static const WCHAR DefaultW[] = {'.','D','e','f','a','u','l','t','\0'};
 static const WCHAR AllUsersProfileW[] = {'%','A','L','L','U','S','E','R','S','P','R','O','F','I','L','E','%','\0'};
 static const WCHAR UserProfileW[] = {'%','U','S','E','R','P','R','O','F','I','L','E','%','\0'};
@@ -630,8 +598,6 @@ static const WCHAR AllUsersProfileValueW[] = {'A','l','l','U','s','e','r','s','P
 static const WCHAR szSHFolders[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','S','h','e','l','l',' ','F','o','l','d','e','r','s','\0'};
 static const WCHAR szSHUserFolders[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','U','s','e','r',' ','S','h','e','l','l',' ','F','o','l','d','e','r','s','\0'};
 static const WCHAR szDefaultProfileDirW[] = {'u','s','e','r','s',0};
-static const WCHAR szKnownFolderDescriptions[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','F','o','l','d','e','r','D','e','s','c','r','i','p','t','i','o','n','s','\0'};
-static const WCHAR szKnownFolderRedirections[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','U','s','e','r',' ','S','h','e','l','l',' ','F','o','l','d','e','r','s',0};
 static const WCHAR AllUsersW[] = {'P','u','b','l','i','c',0};
 
 typedef enum _CSIDL_Type {
@@ -1482,7 +1448,7 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (!pszPath)
         return E_INVALIDARG;
@@ -1557,7 +1523,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
 
     TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_CurrVer)
         return E_INVALIDARG;
@@ -1661,7 +1627,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     TRACE("%p,0x%08x,0x%02x,%p\n", hToken, dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_User)
         return E_INVALIDARG;
@@ -1728,7 +1694,7 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
 
     TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_AllUsers)
         return E_INVALIDARG;
@@ -1952,7 +1918,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirA(
     HRESULT hr = S_OK;
     LPWSTR pszSubPathW = NULL;
     LPWSTR pszPathW = NULL;
-    TRACE("%08x,%08x,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
 
     if(pszPath) {
         pszPathW = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
@@ -2004,8 +1969,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
-    
-    TRACE("%p,%p,nFolder=0x%04x,%s\n", hwndOwner,pszPath,nFolder,debugstr_w(pszSubPath));
 
     /* Windows always NULL-terminates the resulting path regardless of success
      * or failure, so do so first
@@ -2013,7 +1976,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     if (pszPath)
         *pszPath = '\0';
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if ((SHGFP_TYPE_CURRENT != dwFlags) && (SHGFP_TYPE_DEFAULT != dwFlags))
         return E_INVALIDARG;
@@ -2140,8 +2103,6 @@ HRESULT WINAPI SHGetFolderPathA(
 {
     WCHAR szTemp[MAX_PATH];
     HRESULT hr;
-
-    TRACE("%p,%p,nFolder=0x%04x\n",hwndOwner,pszPath,nFolder);
 
     if (pszPath)
         *pszPath = '\0';
@@ -2309,7 +2270,7 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
     }
 
     hr = _SHRegisterFolders(hRootKey, hToken, pUserShellFolderPath,
-     pShellFolderPath, folders, sizeof(folders) / sizeof(folders[0]));
+     pShellFolderPath, folders, ARRAY_SIZE(folders));
     TRACE("returning 0x%08x\n", hr);
     return hr;
 }
@@ -2334,7 +2295,7 @@ static HRESULT _SHRegisterCommonShellFolders(void)
 
     TRACE("\n");
     hr = _SHRegisterFolders(HKEY_LOCAL_MACHINE, NULL, szSHUserFolders,
-     szSHFolders, folders, sizeof(folders) / sizeof(folders[0]));
+     szSHFolders, folders, ARRAY_SIZE(folders));
     TRACE("returning 0x%08x\n", hr);
     return hr;
 }

@@ -712,7 +712,7 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                         ERR("MoveFileW failed\n");
                 }
 
-                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;
@@ -767,7 +767,7 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     AddVersionString(hwndDlg, L"ProductVersion");
 
     /* Attach file version to dialog window */
-    SetWindowLongPtr(hwndDlg, DWL_USER, (LONG_PTR)this);
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)this);
 
     /* Select first item */
     HWND hDlgCtrl = GetDlgItem(hwndDlg, 14009);

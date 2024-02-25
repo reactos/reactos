@@ -255,7 +255,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
 END_OBJECT_MAP()
 
-CShell32Module                                gModule;
+CShell32Module  gModule;
 
 
 /***********************************************************************
@@ -311,7 +311,7 @@ STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
  * all are once per process
  *
  */
-HINSTANCE    shell32_hInstance;
+HINSTANCE   shell32_hInstance;
 
 /*************************************************************************
  * SHELL32 DllMain

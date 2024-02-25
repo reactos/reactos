@@ -31,8 +31,8 @@ list(APPEND SOURCE
     dialogs/dialogs.cpp
     dialogs/drive.cpp
     dialogs/drvdefext.cpp
-    dialogs/folder_options.cpp
     dialogs/filedefext.cpp
+    dialogs/folder_options.cpp
     dialogs/fprop.cpp
     dialogs/recycler_prop.cpp
     CDropTargetHelper.cpp

@@ -11,8 +11,6 @@
  *                  20050502 Fireball imported some stuff from WINE
  */
 
-/* FIXME: This file should go away once we properly handle Vista+ APIs */
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

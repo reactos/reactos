@@ -1,24 +1,7 @@
-
-/*
- * file system folder
- *
- * Copyright 1997             Marcus Meissner
- * Copyright 1998, 1999, 2002 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
+// LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+// PURPOSE:   file system folder
+// COPYRIGHT: 1997 Marcus Meissner
+//            1998-2002 Juergen Schmied
 
 #include <precomp.h>
 
@@ -129,8 +112,9 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
     return S_OK;
 }
 
-static HRESULT getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
-                                        LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+static HRESULT
+getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
+                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
     static const WCHAR iconFile[] = { 'I', 'c', 'o', 'n', 'F', 'i', 'l', 'e', 0 };
@@ -206,32 +190,32 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
 
     if (_ILIsFolder (pidl))
     {
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, 0, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
-            // FIXME: if/when getIconLocationForFolder does something for 
+            // FIXME: if/when getIconLocationForFolder does something for
             //        GIL_FORSHORTCUT, code below should be uncommented. and
             //        the following line removed.
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_DEFAULTICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
-        // if (SUCCEEDED(getIconLocationForFolder(psf, 
+        // if (SUCCEEDED(getIconLocationForFolder(psf,
         //                   pidl, GIL_FORSHORTCUT, wTemp, _countof(wTemp),
         //                   &icon_idx,
         //                   &flags)))
         // {
         //     initIcon->SetShortcutIcon(wTemp, icon_idx);
         // }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_OPENICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
@@ -283,9 +267,6 @@ including formatting a drive, reconnecting a network share drive, and requesting
 be inserted in a removable drive.
 */
 
-/***********************************************************************
-*   IShellFolder implementation
-*/
 
 class CFileSysEnum :
     public CEnumIDListBase
@@ -445,11 +426,11 @@ void SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, CLSID* pclsidFolder)
     StringCchCopyW(wszDesktopIni, MAX_PATH, pwszDir);
     StringCchCatW(wszDesktopIni, MAX_PATH, L"\\desktop.ini");
 
-    if (GetPrivateProfileStringW(L".ShellClassInfo", 
-                                 L"CLSID", 
+    if (GetPrivateProfileStringW(L".ShellClassInfo",
+                                 L"CLSID",
                                  L"",
-                                 wszCLSIDValue, 
-                                 CHARS_IN_GUID, 
+                                 wszCLSIDValue,
+                                 CHARS_IN_GUID,
                                  wszDesktopIni))
     {
         CLSIDFromString (wszCLSIDValue, pclsidFolder);
@@ -607,7 +588,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
         if (pidlTemp != NULL)
         {
             /* We are creating an id list without ensuring that the items exist.
-               If we have a remaining path, this must be a folder. 
+               If we have a remaining path, this must be a folder.
                We have to do it now because it is set as a file by default */
             if (szNext)
             {
@@ -799,7 +780,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case 2: /* Type */
             pExtension1 = PathFindExtensionW(pDataW1->wszName);
             pExtension2 = PathFindExtensionW(pDataW2->wszName);
-            result = wcsicmp(pExtension1, pExtension2); 
+            result = wcsicmp(pExtension1, pExtension2);
             break;
         case 3: /* Size */
             result = pData1->u.file.dwFileSize - pData2->u.file.dwFileSize;
@@ -996,7 +977,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         }
         else if (IsEqualIID (riid, IID_IDataObject))
         {
-            if (cidl >= 1) 
+            if (cidl >= 1)
             {
                 hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
             }
@@ -1059,7 +1040,7 @@ BOOL SHELL_FS_HideExtension(LPWSTR szPath)
     if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
         if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
             doHide = dwData;
-        RegCloseKey (hKey);
+        RegCloseKey(hKey);
     }
 
     if (!doHide) {
@@ -1102,7 +1083,6 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 * FIXME
 *  if the name is in the pidl the ret value should be a STRRET_OFFSET
 */
-
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         DWORD dwFlags, LPSTRRET strRet)
 {
@@ -1117,7 +1097,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
     else if (pidl && !pidl->mkid.cb) /* empty pidl */
     {
         /* If it is an empty pidl return only the path of the folder */
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
             (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
             sPathTarget)
         {
@@ -1125,7 +1105,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         }
         return E_INVALIDARG;
     }
-    
+
     int len = 0;
     LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
@@ -1495,7 +1475,7 @@ HRESULT CFSFolder::_CreateExtensionUIObject(PCUIDLIST_RELATIVE pidl, REFIID riid
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
 {
     HRESULT hr;
 
@@ -1523,7 +1503,7 @@ HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut)
 {
     CLSID clsid;
     HRESULT hr;

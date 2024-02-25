@@ -67,8 +67,6 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     //Double NULL terminate.
     wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
 
-    TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
-
     STRRET strretFrom;
     hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -446,7 +444,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
     {
         hr = pDataObject->GetData(&fmt, &medium);
-        TRACE("CFSTR_SHELLIDLIST.\n");
+        TRACE("CFSTR_SHELLIDLIST\n");
 
         /* lock the handle */
         LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
@@ -500,33 +498,26 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
         if (bLinking)
         {
-            WCHAR wszTargetPath[MAX_PATH];
             WCHAR wszPath[MAX_PATH];
             WCHAR wszTarget[MAX_PATH];
 
-            wcscpy(wszTargetPath, m_sPathTarget);
-
-            TRACE("target path = %s", debugstr_w(wszTargetPath));
+            TRACE("target path = %s\n", debugstr_w(m_sPathTarget));
 
             /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
             for (UINT i = 0; i < lpcida->cidl; i++)
             {
-                //Find out which file we're copying
+                //Find out which file we're linking
                 STRRET strFile;
                 hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
                 if (FAILED(hr))
-                {
-                    ERR("Error source obtaining path");
                     break;
-                }
 
                 hr = StrRetToBufW(&strFile, apidl[i], wszPath, _countof(wszPath));
                 if (FAILED(hr))
                 {
-                    ERR("Error putting source path into buffer");
+                    ERR("Error to put source path into buffer\n");
                     break;
                 }
-                TRACE("source path = %s", debugstr_w(wszPath));
 
                 // Creating a buffer to hold the combined path
                 WCHAR buffer_1[MAX_PATH] = L"";
@@ -544,20 +535,20 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     //It's a link so, we create a new one which copies the old.
                     if(!_GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE))
                     {
-                        ERR("Error getting unique file name");
+                        ERR("Error to get unique filename\n");
                         hr = E_FAIL;
                         break;
                     }
                     hr = IShellLink_ConstructFromPath(wszPath, IID_PPV_ARG(IPersistFile, &ppf));
                     if (FAILED(hr)) {
-                        ERR("Error constructing link from file");
+                        ERR("Error constructing link from file\n");
                         break;
                     }
 
                     hr = ppf->Save(wszTarget, FALSE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
                 else
                 {
@@ -565,7 +556,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     //Create a file name for the link
                     if (!_GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
                     {
-                        ERR("Error creating unique file name");
+                        ERR("Error creating unique filename\n");
                         hr = E_FAIL;
                         break;
                     }
@@ -573,7 +564,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     CComPtr<IShellLinkW> pLink;
                     hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
                     if (FAILED(hr)) {
-                        ERR("Error instantiating IShellLinkW");
+                        ERR("Error instantiating IShellLinkW\n");
                         break;
                     }
 
@@ -594,9 +585,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                         break;
 
                     hr = ppf->Save(wszTarget, TRUE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
             }
         }
@@ -646,7 +637,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     }
     else
     {
-        ERR("No viable drop format.\n");
+        ERR("No viable drop format\n");
         hr = E_FAIL;
     }
     return hr;

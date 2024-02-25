@@ -1203,7 +1203,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCSTR pszArgs)
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1940,7 +1939,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
         }
     }
 
-    /* Store the original icon path location (this one may contain unexpanded environment strings) */
+    /* Store the original icon path location (may contain unexpanded environment strings) */
     if (pszIconPath)
     {
         m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
@@ -2428,7 +2427,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetPath(LPCWSTR pszFile)
             if (hr == S_OK)
                 m_Header.dwFlags |= SLDF_HAS_EXP_SZ;
 
-            /* Now, make pszFile point to the expanded buffer */
+            /* Now, make pszFile point to the expanded path */
             pszFile = szPath;
         }
         else
@@ -2608,7 +2607,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = Resolve(lpici->hwnd, 0);
     if (FAILED(hr))
     {
-        TRACE("failed to resolve component with error 0x%08x", hr);
+        TRACE("failed to resolve component error 0x%08x\n", hr);
         return hr;
     }
 
@@ -2869,7 +2868,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 {
                     // FIXME load localized error msg
                     MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return TRUE;
                 }
 
@@ -2877,7 +2876,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 {
                     // FIXME load localized error msg
                     MessageBoxW(hwndDlg, L"The specified file name in the target box is invalid", L"Error", MB_ICONERROR);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return TRUE;
                 }
 
@@ -2891,7 +2890,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
                 TRACE("This %p m_sLinkPath %S\n", pThis, pThis->m_sLinkPath);
                 pThis->Save(pThis->m_sLinkPath, TRUE);
-                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;
