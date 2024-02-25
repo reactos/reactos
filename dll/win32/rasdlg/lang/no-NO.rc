@@ -527,7 +527,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Velg et navn som du ønsker for denne tilkoblingen:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Trykk på fullført for å lagre det  i nettverk tilkobling mappen.", -1, 8, 38, 193, 8
+    LTEXT "Trykk på fullført for å lagre det i nettverk tilkobling mappen.", -1, 8, 38, 193, 8
     LTEXT "For å redigere denne tilkoblingen senere, velg denne, trykk på Fil meny, og så trykk på Egenskaper.", -1, 8, 58, 193, 16
 END
 
