@@ -259,9 +259,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
-WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
+static WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
 {
-    for (const WCHAR *pch = pszText; *pch; ++pch)
+    for (const WCHAR *pch = pszText; *pch != UNICODE_NULL; ++pch)
     {
         if (*pch == L'&' && pch[1] == L'&')
         {
@@ -280,15 +280,18 @@ WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
     return chAccess;
 }
 
-WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+static WCHAR GetAddressBarAccessKey(WCHAR chAccess)
 {
     static WCHAR s_chCache = 0;
     if (s_chCache)
         return s_chCache;
 
     WCHAR szText[80];
-    LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
-                szText, _countof(szText));
+    if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
+                     szText, _countof(szText)))
+    {
+        return chAccess;
+    }
 
     s_chCache = GetAccessKeyFromText(chAccess, szText);
     return s_chCache;
