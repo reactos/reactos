@@ -2335,7 +2335,7 @@ BEGIN
     7371 "Ingen maskinvare kabel av godtatt samtaler er installert.\0"
     7372 " \0"
     7373 "Bestem spesifisert &nettverk nummer:\0"
-    7374 "Bestem  &nettverk nummer sekvensiell fra:\0"
+    7374 "Bestem &nettverk nummer sekvensiell fra:\0"
     7375 "Ny bruker\0"
     7376 "Tilkobling enhet\0"
     7377 "Hvilken enheter ønsker du å bruke for å lage denne tilkoblingen?\0"
