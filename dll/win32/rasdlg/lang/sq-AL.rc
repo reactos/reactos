@@ -141,7 +141,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "ThirreMbrapa "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ju keni 'Vendoset nga telefonuesi'  privilegjet e thirre mbrapa në server. Shtypni OK dhe serveri do t'ju thirrë mbrapa në numrin e mëposhtëm. Shtypni Anulo për të kaluar së thirruri mbrapa.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Ju keni 'Vendoset nga telefonuesi' privilegjet e thirre mbrapa në server. Shtypni OK dhe serveri do t'ju thirrë mbrapa në numrin e mëposhtëm. Shtypni Anulo për të kaluar së thirruri mbrapa.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "&Enter your modem's phone number:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
