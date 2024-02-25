@@ -1769,7 +1769,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velg i markering boksene neste for hver enhet som du ønsker å bruke  for innkommene tilkoblinger.", -1, 10, 4, 299, 10
+    LTEXT "Velg i markering boksene neste for hver enhet som du ønsker å bruke for innkommene tilkoblinger.", -1, 10, 4, 299, 10
     LTEXT "&Tilkobling enhet:", -1, 10, 16, 275, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
     PUSHBUTTON "E&genskaper", 7013, 243, 120, 65, 14, WS_GROUP
