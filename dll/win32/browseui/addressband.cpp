@@ -259,17 +259,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
-WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
 {
-    static WCHAR s_chCache = 0;
-    if (s_chCache)
-        return s_chCache;
-
-    WCHAR szText[80], *pch;
-    LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
-                szText, _countof(szText));
-
-    for (pch = szText; *pch; ++pch)
+    for (const WCHAR *pch = pszText; *pch; ++pch)
     {
         if (*pch == L'&' && pch[1] == L'&')
         {
@@ -285,8 +277,21 @@ WCHAR GetAddressBarAccessKey(WCHAR chAccess)
     }
 
     ::CharUpperBuffW(&chAccess, 1);
-    s_chCache = chAccess;
     return chAccess;
+}
+
+WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+{
+    static WCHAR s_chCache = 0;
+    if (s_chCache)
+        return s_chCache;
+
+    WCHAR szText[80];
+    LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
+                szText, _countof(szText));
+
+    s_chCache = GetAccessKeyFromText(chAccess, szText);
+    return s_chCache;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
