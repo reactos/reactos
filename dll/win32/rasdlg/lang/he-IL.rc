@@ -1615,7 +1615,7 @@ BEGIN
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirm password:", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "U&se this account  name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "U&se this account name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Make this the default Internet connection", 1595, 23, 112, 288, 14
     AUTOCHECKBOX "&Turn on Internet Connection Firewall for this connection", 1682, 23, 133, 290, 14
 END
