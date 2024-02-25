@@ -31,7 +31,7 @@ typedef struct REGSHELLSTATE
 
 #define REGSHELLSTATE_SIZE 0x24
 
-static const LPCWSTR s_pszExplorerKey = 
+static const LPCWSTR s_pszExplorerKey =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
 
 extern "C"
@@ -48,7 +48,7 @@ IntGetDefaultShellState(REGSHELLSTATE& rss)
 
     rss.ss.fShowAllObjects = TRUE;
     rss.ss.fShowExtensions = TRUE;
- 
+
     rss.ss.fShowCompColor = TRUE;
     rss.ss.fDoubleClickInWebView = TRUE;
     rss.ss.fShowInfoTip = TRUE;
@@ -74,7 +74,7 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
     LSTATUS nStatus;
 
     // read ShellState
-    nStatus = SHGetValueW(HKEY_CURRENT_USER, 
+    nStatus = SHGetValueW(HKEY_CURRENT_USER,
                           s_pszExplorerKey,
                           L"ShellState",
                           NULL,
@@ -141,7 +141,7 @@ static BOOL IntSetUnderlineState(BOOL bIconUnderline)
 {
     LSTATUS Status;
     DWORD dwValue = (bIconUnderline ? 3 : 2), dwSize = sizeof(DWORD);
-    Status = SHRegSetUSValue(s_pszExplorerKey, L"IconUnderline", REG_NONE, 
+    Status = SHRegSetUSValue(s_pszExplorerKey, L"IconUnderline", REG_NONE,
                              &dwValue, dwSize, SHREGSET_FORCE_HKCU | SHREGSET_HKLM);
     if (Status != ERROR_SUCCESS)
         return FALSE;

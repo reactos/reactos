@@ -1311,7 +1311,6 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 * FIXME
 *  if the name is in the pidl the ret value should be a STRRET_OFFSET
 */
-
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         DWORD dwFlags, LPSTRRET strRet)
 {

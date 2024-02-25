@@ -2659,7 +2659,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = Resolve(lpici->hwnd, 0);
     if (FAILED(hr))
     {
-        TRACE("failed to resolve component with error 0x%08x", hr);
+        TRACE("failed to resolve component error 0x%08x\n", hr);
         return hr;
     }
 

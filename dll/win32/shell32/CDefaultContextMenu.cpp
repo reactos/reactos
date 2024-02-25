@@ -770,7 +770,7 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
                 dwKey = MK_SHIFT;
         }
         else {
-            ERR("No drop effect obtained");
+            ERR("No drop effect obtained\n");
         }
         GlobalUnlock(medium2.hGlobal);
     }

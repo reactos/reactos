@@ -211,7 +211,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
         return E_OUTOFMEMORY;
 
     /* Create the inner fs folder */
-    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+    hr = SHELL32_CoCreateInitSF(pidlRoot,
                                 &CLSID_ShellFSFolder,
                                 CSIDL_DESKTOPDIRECTORY,
                                 IID_PPV_ARG(IShellFolder2, &m_DesktopFSFolder));
@@ -219,7 +219,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
         return hr;
 
     /* Create the inner shared fs folder. Dont fail on failure. */
-    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+    hr = SHELL32_CoCreateInitSF(pidlRoot,
                                 &CLSID_ShellFSFolder,
                                 CSIDL_COMMON_DESKTOPDIRECTORY,
                                 IID_PPV_ARG(IShellFolder2, &m_SharedDesktopFSFolder));
@@ -229,7 +229,7 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
     /* Create the inner reg folder */
     hr = CRegFolder_CreateInstance(&CLSID_ShellDesktop,
                                    pidlRoot,
-                                   L"", 
+                                   L"",
                                    L"Desktop",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
@@ -832,7 +832,7 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    if (!pidl) 
+    if (!pidl)
         return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
     *pidl = ILClone (pidlRoot);
     return S_OK;

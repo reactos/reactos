@@ -293,7 +293,7 @@ static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, i
 
 BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
-        static const WCHAR swDefaultIcon[] = {'\\','D','e','f','a','u','l','t','I','c','o','n',0};
+    static const WCHAR swDefaultIcon[] = {'\\','D','e','f','a','u','l','t','I','c','o','n',0};
 	HKEY	hkey;
 	WCHAR	sTemp[MAX_PATH];
 	BOOL	ret = FALSE;
@@ -376,7 +376,7 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 #endif
 	{
-          static const WCHAR wszLocalizedString[] = 
+          static const WCHAR wszLocalizedString[] =
             { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
           if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
               !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
@@ -525,7 +525,7 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
     LONG lResult;
     DWORD dwTemp, dwLen;
     static const WCHAR wszAttributes[] = { 'A','t','t','r','i','b','u','t','e','s',0 };
-    static const WCHAR wszCallForAttributes[] = { 
+    static const WCHAR wszCallForAttributes[] = {
         'C','a','l','l','F','o','r','A','t','t','r','i','b','u','t','e','s',0 };
     WCHAR wszShellFolderKey[] = { 'C','L','S','I','D','\\','{','0','0','0','2','1','4','0','0','-',
         '0','0','0','0','-','0','0','0','0','-','C','0','0','0','-','0','0','0','0','0','0','0',

@@ -82,7 +82,7 @@ HRESULT WINAPI SHRegQueryValueExA(
 	LPDWORD lpcbData)
 {
 	TRACE("%p %s %p %p %p %p\n", hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
-	return RegQueryValueExA (hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+	return RegQueryValueExA(hkey, lpValueName, lpReserved, lpType, lpData, lpcbData);
 }
 
 /*************************************************************************
@@ -107,7 +107,7 @@ HRESULT WINAPI SHRegQueryValueW(
  *  if the datatype REG_EXPAND_SZ then expand the string and change
  *  *pdwType to REG_SZ.
  */
-HRESULT WINAPI SHRegQueryValueExW (
+HRESULT WINAPI SHRegQueryValueExW(
 	HKEY hkey,
 	LPWSTR pszValue,
 	LPDWORD pdwReserved,
@@ -116,9 +116,9 @@ HRESULT WINAPI SHRegQueryValueExW (
 	LPDWORD pcbData)
 {
 	DWORD ret;
-	WARN("%p %s %p %p %p %p semi-stub\n",
+	TRACE("%p %s %p %p %p %p\n",
 		hkey, debugstr_w(pszValue), pdwReserved, pdwType, pvData, pcbData);
-	ret = RegQueryValueExW ( hkey, pszValue, pdwReserved, pdwType, pvData, pcbData);
+	ret = RegQueryValueExW(hkey, pszValue, pdwReserved, pdwType, pvData, pcbData);
 	return ret;
 }
 

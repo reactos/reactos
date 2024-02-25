@@ -60,7 +60,7 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, const GUID* clsid,
 
 HRESULT SHELL32_BindToSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
                 LPCITEMIDLIST pidl, const GUID* clsid, REFIID riid, LPVOID *ppvOut);
-                
+
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 

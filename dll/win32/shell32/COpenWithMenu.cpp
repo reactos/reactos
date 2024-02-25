@@ -111,7 +111,7 @@ COpenWithList::~COpenWithList()
 BOOL COpenWithList::Load()
 {
     HKEY hKey;
-    WCHAR wszName[256], wszBuf[100];;
+    WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
 
@@ -676,7 +676,7 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
     /* Create file extension key */
     if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
     {
-        ERR("Cannot open ext key");
+        ERR("Can't open ext key\n");
         return FALSE;
     }
 
@@ -830,7 +830,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
             return TRUE;
         else if (dReturnValue == -1)
         {
-            ERR("IsNoOpen failed to load the dialog box.");
+            ERR("IsNoOpen failed to load dialog box\n");
             return TRUE;
         }
     }

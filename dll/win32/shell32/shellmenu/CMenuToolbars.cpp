@@ -162,7 +162,6 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         return S_OK;
 
     case CDDS_ITEMPREPAINT:
-        
         HWND tlw;
         m_menuBand->_GetTopLevelWindow(&tlw);
 
@@ -424,7 +423,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         m_pager.SubclassWindow(hwndPager);
 
         ::SetParent(m_hWnd, hwndPager);
-        
+
         m_pager.SendMessageW(PGM_SETCHILD, 0, reinterpret_cast<LPARAM>(m_hWnd));
     }
 
@@ -712,7 +711,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
 
     if (!GetItemRect(index, &rc))
         return E_FAIL;
-    
+
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
@@ -844,7 +843,7 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
 
     GetButton(iIndex, &btn);
 
-    if ((m_initFlags & SMINIT_VERTICAL) 
+    if ((m_initFlags & SMINIT_VERTICAL)
         || m_popupBar
         || m_cancelingPopup)
     {
@@ -1039,7 +1038,7 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
 {
     TBBUTTON tbb = { 0 };
     WCHAR MenuString[128];
-    
+
     LoadStringW(GetModuleHandle(L"shell32.dll"), IDS_MENU_EMPTY, MenuString, _countof(MenuString));
 
     tbb.fsState = 0;
@@ -1248,7 +1247,7 @@ HRESULT CMenuStaticToolbar::OnDeletingButton(const NMTOOLBAR * tb)
 HRESULT CMenuStaticToolbar::InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt)
 {
     CComPtr<IContextMenu> contextMenu;
-    HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT, 
+    HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT,
         reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
     if (hr != S_OK)
         return hr;

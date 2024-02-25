@@ -133,8 +133,8 @@ CDefViewBckgrndMenu::SetSite(IUnknown *pUnkSite)
     return S_OK;
 }
 
-HRESULT 
-WINAPI 
+HRESULT
+WINAPI
 CDefViewBckgrndMenu::GetSite(REFIID riid, void **ppvSite)
 {
     if (!m_site)
@@ -152,12 +152,12 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
     UINT cIds = 0;
 
     /* This is something the implementations of IContextMenu should never really do.
-       However CDefViewBckgrndMenu is more or less an overengineering result, its code could really be part of the 
+       However CDefViewBckgrndMenu is more or less an overengineering result, its code could really be part of the
        CDefView. Given this, I think that abusing the interface here is not that bad since only CDefView is the ony
-       user of this class. Here we need to do two things to keep things as simple as possible. 
+       user of this class. Here we need to do two things to keep things as simple as possible.
        First we want the menu part added by the shell folder to be the first to add so as to make as few id translations
-       as possible. Second, we want to add the default part of the background menu without shifted ids, so as 
-       to let the CDefView fill some parts like filling the arrange modes or checking the view mode. In order 
+       as possible. Second, we want to add the default part of the background menu without shifted ids, so as
+       to let the CDefView fill some parts like filling the arrange modes or checking the view mode. In order
        for that to work we need to save idCmdFirst because our caller will pass id offsets to InvokeCommand.
        This makes it impossible to concatenate the CDefViewBckgrndMenu with other menus since it abuses IContextMenu
        but as stated above, its sole user is CDefView and should really be that way. */
