@@ -2303,7 +2303,7 @@ BEGIN
     7328 "Użytkownik, którego chcesz stworzyć, już istnieje w lokalnej bazie danych użytkowników.\0"
     7329 "Użytkownik nie został dodany do lokalnej bazy danych użytkowników, dlatego, że jego hasło zostało odrzucone.\0"
     7330 "Nie można przeładować systemowej bazy danych użytkowników z powodu błędu wewnętrznego.\0"
-    7331 "Wystąpił błąd wewnętrzny:  Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
+    7331 "Wystąpił błąd wewnętrzny: Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
     7332 "Nie można załadować zasobów potrzebnych do wyświetlenia zakładki Użytkownicy.\0"
     7333 "Wystąpił błąd wewnęytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych użytkowników.\0"
     7334 "Dojście do bazy danych urządzeniach jest uszkodzone.\0"

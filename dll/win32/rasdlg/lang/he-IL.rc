@@ -2295,7 +2295,7 @@ BEGIN
     7328 "The user you are trying create already exists in the local user database.\0"
     7329 "The user was not added to the local user database because the password you entered was rejected.\0"
     7330 "Unable to reload the system user database because of an internal error.\0"
-    7331 "An internal error has occurred:  The local user database handle is corrupt.\0"
+    7331 "An internal error has occurred: The local user database handle is corrupt.\0"
     7332 "Unable to load the resources neccessary to display the user tab.\0"
     7333 "An internal error occured while attempting to rollback the changes you made to the local user database.\0"
     7334 "The device database handle is corrupt.\0"
