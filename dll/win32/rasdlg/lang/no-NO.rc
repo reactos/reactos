@@ -2314,7 +2314,7 @@ BEGIN
     7347 "Ikke mulig å laste IPX egenskaper fra systemet.\0"
     7348 "Innkommende kommer ann på Routing og fjern tilgang tjeneste som ikke var mulig å starte. For mere informasjon, sjekk systemets logg.\0"
     7349 "Ikke mulig å godta å redigere på nettverk komponeneter på dette tidspunktet fordi det var for øyeblikket blitt endret et annet sted.\0"
-    7350 "Nye brukeren du skrev inn ble ikke lagret til lokal bruker database fordi  navnet eller passord som du skrev inn er et brudd på system policy (det var for langt, eller dårlig-formet).\0"
+    7350 "Nye brukeren du skrev inn ble ikke lagret til lokal bruker database fordi navnet eller passord som du skrev inn er et brudd på system policy (det var for langt, eller dårlig-formet).\0"
     7351 "Systemet er ikke stand til å slette valgte bruker.\0"
     7352 "Ikke mulig å fjerne valgte nettverk komponent fordi det er i bruk.\0"
     7353 "Innkommende tilkobling advarsel\0"
