@@ -58,10 +58,10 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Ce acțiune preferați?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "Bloca&re calculator", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    PUSHBUTTON "&Blocare calculator", IDC_SECURITY_LOCK, 7, 124, 80, 14
     PUSHBUTTON "&Deautentificare…", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
     PUSHBUTTON "Închid&ere…", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
-    PUSHBUTTON "Schim&bare parolă…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
+    PUSHBUTTON "Schimba&re parolă…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
     PUSHBUTTON "&Manager de activități", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
     PUSHBUTTON "&Revocare", IDCANCEL, 188, 143, 80, 14
 END
