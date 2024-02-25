@@ -1615,7 +1615,7 @@ BEGIN
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Bekreft passord:", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "B&ruk dette konto  navnet og passord når noen kobler til internett fra denne datamaskinen", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "B&ruk dette konto navnet og passord når noen kobler til internett fra denne datamaskinen", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Gjør denne som standard internett tilkobling", 1595, 23, 112, 288, 14
     AUTOCHECKBOX "&Skru på internett tilkobling brannmur for denne tilkoblingen", 1682, 23, 133, 290, 14
 END
