@@ -1971,7 +1971,7 @@ BEGIN
     325 "Nuk mund të vëzhgojë script.log me notepad.exe\0"
     326 "Nuk mund të modifikojë switch.inf me notepad.exe\0"
     327 "Nuk mund të ngarkojë informacionet TAPI.\0"
-    328 "Nuk mund të ngarkojë informacionet  X.25.\0"
+    328 "Nuk mund të ngarkojë informacionet X.25.\0"
     329 "Nuk mund të krijojë një LibërKontaktesh të ri.\0"
     330 "Nuk mund të  mundësojë akses shpërndarës.\0"
     331 "Nuk mund të lidhet me hyrjen e LibritKontakteve.\0"
