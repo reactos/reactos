@@ -2114,7 +2114,7 @@ BEGIN
     506 "Internet Connection Sharing\0"
     507 "You can let a local network access resources through this dial-up connection.\0"
     508 "Host or Guest?\0"
-    509 "Internet Connection Sharing  is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
+    509 "Internet Connection Sharing is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
     510 "To connect two computers, your computer must be identified as either a host or a guest.\0"
     511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically. Are you sure you want to enable Internet Connection Sharing?\0"
     512 "Select a Device\0"
