@@ -115,7 +115,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Schimbare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați Confirmă pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 210, 24
+    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați OK pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 210, 24
     LTEXT "&Parola nouă:", 1064, 8, 43, 108, 8
     EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirmați parola:", 1061, 8, 61, 102, 8
@@ -129,7 +129,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Schimbare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați Confirmă pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 212, 29
+    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați OK pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 212, 29
     LTEXT "&Vechea parolă:", 1063, 7, 42, 108, 8
     EDITTEXT 1059, 116, 38, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Noua parolă:", 1064, 7, 60, 108, 8
@@ -145,7 +145,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Retroapelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat. Apăsați Confirmă pentru a fi apelat de către server la numărul de mai jos. Apăsați Anulează pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat. Apăsați OK pentru a fi apelat de către server la numărul de mai jos. Apăsați Revocare pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "Int&roduceți numărul de telefon al modemului dumneavoastră:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "&OK", 1, 100, 85, 60, 14, WS_GROUP
@@ -344,8 +344,8 @@ BEGIN
     LTEXT "Tip&ul de linie:", 1155, 9, 11, 55, 8
     COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "N&egociere tip de linie", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "Con&firmă", 1, 90, 49, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 154, 49, 60, 14
+    PUSHBUTTON "&OK", 1, 90, 49, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 154, 49, 60, 14
 END
 
 123 DIALOGEX 11, 20, 350, 275
@@ -356,7 +356,7 @@ BEGIN
     LTEXT "Adresă I&P:", 1163, 7, 253, 68, 8
     CONTROL "", 1160, "RASIPADDRESS", WS_TABSTOP, 76, 250, 117, 14
     DEFPUSHBUTTON "", 1162, 197, 252, 16, 13, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "Con&firmă", 1, 219, 252, 60, 14, WS_GROUP
+    PUSHBUTTON "&OK", 1, 219, 252, 60, 14, WS_GROUP
     PUSHBUTTON "A&nuleză", 2, 283, 252, 60, 14
 END
 
@@ -366,8 +366,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT 1161, 5, 4, 340, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
     DEFPUSHBUTTON "", 1162, 7, 247, 50, 14, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "Con&firmă", 1, 222, 247, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 286, 247, 60, 14
+    PUSHBUTTON "&OK", 1, 222, 247, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 286, 247, 60, 14
 END
 
 125 DIALOGEX 12, 16, 261, 190
@@ -388,8 +388,8 @@ BEGIN
     AUTOCHECKBOX "Activează co&mpresia oferită de modem", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Afișează fe&reastra terminalului", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Activează &difuzorul modemului", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", 1, 129, 171, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 194, 171, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 129, 171, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 194, 171, 60, 14
 END
 
 126 DIALOGEX 0, 0, 270, 117
@@ -402,7 +402,7 @@ BEGIN
     GROUPBOX "", -1, 8, 81, 188, 30
     LTEXT "", 1250, 12, 90, 177, 17
     DEFPUSHBUTTON "&Adăugare…", 1252, 205, 20, 60, 14
-    PUSHBUTTON "A&nulează", 2, 205, 38, 60, 14
+    PUSHBUTTON "&Revocare", 2, 205, 38, 60, 14
 END
 
 127 DIALOGEX 16, 20, 260, 135
@@ -414,8 +414,8 @@ BEGIN
     LTEXT "Aveți conexiuni către o rețea compatibilă NetWare. Aceste conexiuni vor fi închise când va fi activată conexiunea PPP IPX.", 1279, 42, 7, 215, 37
     LTEXT "Înainte de apelare, pentru a evita pierderile de date, fie închideți toate fișierele ce utilizează aceste conexiuni, fie debifați IPX din setările protocolului de rețea pentru această înregistrare.", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", 1, 65, 112, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 134, 112, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 65, 112, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 134, 112, 60, 14
 END
 
 128 DIALOGEX 7, 22, 236, 90
@@ -423,11 +423,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apelare manuală"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze). După ce a fost inițiat apelul, apăsați pe Confirmă. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
+    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze). După ce a fost inițiat apelul, apăsați pe OK. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
     LTEXT "Numărul de telefon:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", 1, 104, 70, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 168, 70, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 104, 70, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 168, 70, 60, 14
 END
 
 129 DIALOGEX 6, 20, 260, 85
@@ -457,8 +457,8 @@ BEGIN
     EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
     LTEXT "F&acilități:", 1409, 19, 138, 182, 8, NOT WS_GROUP
     EDITTEXT 1403, 19, 149, 193, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 100, 189, 60, 14
-    PUSHBUTTON "A&nulează", 2, 164, 189, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 100, 189, 60, 14
+    PUSHBUTTON "&Revocare", 2, 164, 189, 60, 14
 END
 
 146 DIALOGEX 6, 18, 230, 210
@@ -894,8 +894,8 @@ BEGIN
     EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
     AUTOCHECKBOX "Păstrea&ză parola", 1391, 66, 84, 143, 10
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
-    DEFPUSHBUTTON "Con&firmă", 1, 81, 104, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 145, 104, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 81, 104, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 145, 104, 60, 14
 END
 
 500 DIALOGEX 12, 16, 215, 173
@@ -911,8 +911,8 @@ BEGIN
     LTEXT "&Domeniu:", 1395, 7, 108, 53, 8, NOT WS_GROUP
     EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     AUTOCHECKBOX "Păstrea&ză numele și parola de utilizator", 1391, 65, 125, 143, 10, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "Con&firmă", 1, 87, 146, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 151, 146, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 87, 146, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
     LTEXT "Specificați (opțional) un nume de domeniu.\nNumele de domenii nu sunt obligatorii pentru conexiunile la Internet.", -1, 8, 38, 209, 26
 END
@@ -925,8 +925,8 @@ BEGIN
     AUTOCHECKBOX "&Activează extensiile LCP", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "A&ctivează rutina de compresie", 1424, 9, 22, 201, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "N&egociază legături simple în cazul legăturilor multiple", 1557, 9, 37, 202, 10, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "Con&firmă", 1, 102, 53, 60, 14
-    PUSHBUTTON "A&nulează", 2, 178, 53, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 102, 53, 60, 14
+    PUSHBUTTON "&Revocare", 2, 178, 53, 60, 14
 END
 
 509 DIALOGEX 0, 0, 317, 143
@@ -971,8 +971,8 @@ BEGIN
     PUSHBUTTON "E&ditare…", 1504, 131, 213, 60, 14
     PUSHBUTTON "Șt&erge", 1505, 194, 213, 60, 14
     CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
-    DEFPUSHBUTTON "Con&firmă", 1, 132, 242, 60, 14
-    PUSHBUTTON "A&nulează", 2, 196, 242, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 132, 242, 60, 14
+    PUSHBUTTON "&Revocare", 2, 196, 242, 60, 14
 END
 
 534 DIALOGEX 0, 0, 230, 215
@@ -1007,7 +1007,7 @@ BEGIN
     EDITTEXT 1104, 102, 62, 154, 14, ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
     DEFPUSHBUTTON "&Apelează", 1590, 8, 89, 60, 14
-    PUSHBUTTON "A&nulează", 1591, 71, 89, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 71, 89, 60, 14
     PUSHBUTTON "&Proprietăți", 1107, 133, 89, 60, 14
     PUSHBUTTON "&Manual…", 1592, 195, 89, 60, 14
 END
@@ -1025,7 +1025,7 @@ BEGIN
     COMBOBOX 1416, 105, 88, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 107, 251, 1
     DEFPUSHBUTTON "&Apelează", 1590, 8, 113, 60, 14
-    PUSHBUTTON "A&nulează", 1591, 71, 113, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 71, 113, 60, 14
     PUSHBUTTON "&Proprietăți", 1107, 134, 113, 60, 14
     PUSHBUTTON "&Manual…", 1592, 197, 113, 60, 14
 END
@@ -1046,7 +1046,7 @@ BEGIN
     PUSHBUTTON "&Reguli de apel", 1108, 193, 110, 64, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
     DEFPUSHBUTTON "&Apelează", 1590, 6, 136, 60, 14
-    PUSHBUTTON "A&nulează", 1591, 69, 136, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 69, 136, 60, 14
     PUSHBUTTON "&Proprietăți", 1107, 132, 136, 60, 14
     PUSHBUTTON "&Manual…", 1592, 196, 136, 60, 14
 END
@@ -1121,7 +1121,7 @@ BEGIN
     EDITTEXT 1102, 104, 79, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 99, 248, 1
     DEFPUSHBUTTON "&Apelează", 1590, 9, 106, 61, 14
-    PUSHBUTTON "A&nulează", 1591, 72, 106, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 72, 106, 60, 14
     PUSHBUTTON "&Proprietăți", 1107, 135, 106, 60, 14
     PUSHBUTTON "&Manual…", 1592, 198, 106, 60, 14
 END
@@ -1217,8 +1217,8 @@ BEGIN
     EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
     LTEXT "U&DP:", -1, 7, 121, 30, 8
     EDITTEXT 1551, 51, 117, 162, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 90, 144, 60, 14
-    PUSHBUTTON "A&nulează", 2, 154, 144, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 90, 144, 60, 14
+    PUSHBUTTON "&Revocare", 2, 154, 144, 60, 14
 END
 
 557 DIALOGEX 0, 0, 217, 164
@@ -1234,8 +1234,8 @@ BEGIN
     EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
     AUTORADIOBUTTON "T&CP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&UDP", 1555, 166, 99, 31, 10, NOT WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", 1, 86, 143, 60, 14
-    PUSHBUTTON "A&nulează", 2, 150, 143, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 86, 143, 60, 14
+    PUSHBUTTON "&Revocare", 2, 150, 143, 60, 14
 END
 
 558 DIALOGEX 0, 0, 230, 215
@@ -1317,8 +1317,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Setări IPSec "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Con&firmă", 1, 151, 104, 50, 14
-    PUSHBUTTON "A&nulează", 2, 207, 104, 50, 14
+    DEFPUSHBUTTON "&OK", 1, 151, 104, 50, 14
+    PUSHBUTTON "&Revocare", 2, 207, 104, 50, 14
     AUTOCHECKBOX "&Utilizează cheie de autentificare pre-partajată", 1604, 21, 15, 217, 10
     LTEXT "C&heie:", 1602, 20, 31, 44, 12
     EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
@@ -1395,7 +1395,7 @@ BEGIN
     COMBOBOX 1416, 104, 60, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
     DEFPUSHBUTTON "&Apelează", 1590, 9, 87, 60, 14
-    PUSHBUTTON "A&nulează", 1591, 72, 87, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 72, 87, 60, 14
     PUSHBUTTON "&Proprietăți", 1107, 135, 87, 60, 14
     PUSHBUTTON "&Manual…", 1592, 198, 87, 60, 14
 END
@@ -1451,7 +1451,7 @@ BEGIN
     PUSHBUTTON "Reguli de apel", 1108, 193, 195, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
     DEFPUSHBUTTON "&Apelează", 1590, 8, 221, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 1591, 71, 221, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 71, 221, 60, 14
     PUSHBUTTON "P&roprietăți", 1107, 134, 221, 60, 14
     PUSHBUTTON "&Manual…", 1592, 198, 221, 60, 14
 END
@@ -1528,7 +1528,7 @@ BEGIN
     LTEXT "&Alegeți o conexiune de rețea:", 1456, 7, 7, 251, 10
     COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     DEFPUSHBUTTON "&Conectare…", 1449, 7, 50, 60, 14
-    PUSHBUTTON "A&nulează", 1455, 70, 50, 60, 14
+    PUSHBUTTON "&Revocare", 1455, 70, 50, 60, 14
     PUSHBUTTON "N&ouă…", 1459, 134, 50, 60, 14
     PUSHBUTTON "&Proprietăți", 1460, 198, 50, 60, 14
 END
@@ -1547,8 +1547,8 @@ BEGIN
     PUSHBUTTON "J&os", 1476, 206, 86, 51, 14, BS_BITMAP
     PUSHBUTTON "&Elimină", 1477, 141, 215, 60, 14
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
-    PUSHBUTTON "Con&firmă", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 196, 242, 60, 14
+    PUSHBUTTON "&OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 196, 242, 60, 14
 END
 
 1467 DIALOGEX 6, 18, 263, 263
@@ -1565,8 +1565,8 @@ BEGIN
     PUSHBUTTON "J&os", 1476, 206, 86, 51, 14, BS_BITMAP
     PUSHBUTTON "&Elimină", 1477, 141, 204, 60, 14
     AUTOCHECKBOX "Te&xt exemplu", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Con&firmă", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 196, 242, 60, 14
+    PUSHBUTTON "&OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 196, 242, 60, 14
 END
 
 1468 DIALOGEX 6, 18, 263, 263
@@ -1581,8 +1581,8 @@ BEGIN
     LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
     PUSHBUTTON "&Elimină", 1477, 196, 214, 60, 14, WS_GROUP
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
-    PUSHBUTTON "Con&firmă", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 196, 242, 60, 14
+    PUSHBUTTON "&OK", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 196, 242, 60, 14
 END
 
 1469 DIALOGEX 0, 0, 317, 143
@@ -1607,8 +1607,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Introduceți un nou n&umăr de telefon:", 1481, 7, 7, 218, 8
     EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 99, 40, 60, 14
-    PUSHBUTTON "A&nulează", 2, 163, 40, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 99, 40, 60, 14
+    PUSHBUTTON "&Revocare", 2, 163, 40, 60, 14
 END
 
 1481 DIALOGEX 0, 0, 321, 157
@@ -1653,8 +1653,8 @@ BEGIN
     EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirmarea parolei:", -1, 7, 62, 91, 12
     EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    PUSHBUTTON "Con&firmă", 1, 84, 82, 60, 14
-    PUSHBUTTON "A&nulează", 2, 149, 82, 60, 14
+    PUSHBUTTON "&OK", 1, 84, 82, 60, 14
+    PUSHBUTTON "&Revocare", 2, 149, 82, 60, 14
 END
 
 7005 DIALOGEX 0, 0, 230, 215
@@ -1701,8 +1701,8 @@ BEGIN
     LTEXT "Total:", -1, 29, 124, 53, 10
     LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
     AUTOCHECKBOX "Pe&rmite calculatorului apelator specificarea unei adrese IP proprii", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", 1, 133, 169, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 197, 169, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 133, 169, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 197, 169, 60, 14
 END
 
 7025 DIALOGEX 0, 0, 250, 157
@@ -1718,8 +1718,8 @@ BEGIN
     AUTORADIOBUTTON "Specifică nume&rele de rețea:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
     AUTOCHECKBOX "P&ermite apelatorilor specificarea propriilor numere", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", 1, 116, 136, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 181, 136, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 116, 136, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 181, 136, 60, 14
 END
 
 7033 DIALOGEX 0, 0, 220, 50
@@ -1728,8 +1728,8 @@ CAPTION "Proprietățile protocoalelor primite"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Permite apelatorilor să-mi acceseze rețeaua locală", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "Con&firmă", 1, 86, 30, 60, 14
-    PUSHBUTTON "A&nulează", 2, 151, 30, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 86, 30, 60, 14
+    PUSHBUTTON "&Revocare", 2, 151, 30, 60, 14
 END
 
 7035 DIALOGEX 0, 0, 230, 215
@@ -1994,7 +1994,7 @@ BEGIN
     344 "Agenda telefonică nu a putut fi scrisă.\0"
     345 "Scriere preferințe în registru\0"
     346 "Fișierul scurtătură nu a putut fi scris.\0"
-    347 "Con&firmă\0"
+    347 "&OK\0"
     348 "Care este numărul de telefon al furnizorului de Internet?\0"
     349 "Numărul de telefon apelat\0"
     350 "Câmpurile Parolă și Confirmare parolă diferă în conținut.\0"
@@ -2293,7 +2293,7 @@ BEGIN
     7318 "Baze de date mixte\0"
     7319 "Baze de date de utilizatori\0"
     7320 "Baze de date de protocoale\0"
-    7321 "Introduceți un nume de autentificare pentru noul utilizator sau apăsați Anulează.\0"
+    7321 "Introduceți un nume de autentificare pentru noul utilizator sau apăsați Revocare.\0"
     7322 "Parola introdusă este prea scurtă.\0"
     7323 "Parolele introduse nu corespund. Reintroduceți-le.\0"
     7324 "A apărut o eroare internă.\0"
@@ -2326,7 +2326,7 @@ BEGIN
     7351 "Sistemul nu poate șterge utilizatorul cerut.\0"
     7352 "Componenta selectată de rețea nu poate fi eliminată, deoarece încă este în uz.\0"
     7353 "Avertisment al conexiunilor de intrare\0"
-    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat Anulează. Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
+    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat Revocare. Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
     7355 "Sunteți pe cale să treceți la o consolă de gestionare a sistemului. Această foaie de proprietăți Conexiuni primite va fi închisă și orice modificări pe care le-ați făcut vor fi trimise în sistem. Sunteți de acord să continuați?\0"
     7356 "Valoarea măștii de rețea s-a schimbat. În mască, un bit de zero poate fi urmat doar de alți biți de zero. De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
     7357 "Permisiuni de utilizator\0"
