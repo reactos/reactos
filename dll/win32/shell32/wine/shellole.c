@@ -144,7 +144,7 @@ HRESULT WINAPI SHCoCreateInstance(
         }
 
 	/* we look up the dll path in the registry */
-        SHStringFromGUIDW(myclsid, sClassID, sizeof(sClassID)/sizeof(WCHAR));
+	SHStringFromGUIDW(myclsid, sClassID, ARRAY_SIZE(sClassID));
 	lstrcpyW(sKeyName, sCLSID);
 	lstrcatW(sKeyName, sClassID);
 	lstrcatW(sKeyName, sInProcServer32);

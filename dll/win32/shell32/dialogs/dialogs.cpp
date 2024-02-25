@@ -53,8 +53,7 @@ typedef struct
 BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     LPCWSTR lpszType,
     LPWSTR lpszName,
-    LONG_PTR lParam
-)
+    LONG_PTR lParam)
 {
     WCHAR szName[100];
     int index;
@@ -97,8 +96,7 @@ DestroyIconList(HWND hDlgCtrl)
 INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmis;
     LPDRAWITEMSTRUCT lpdis;
@@ -147,7 +145,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             break;
         case IDC_PICKICON_LIST:
             if (HIWORD(wParam) == LBN_SELCHANGE)
-                InvalidateRect((HWND)lParam, NULL, TRUE); // FIXME USE UPDATE RECT
+                InvalidateRect((HWND)lParam, NULL, TRUE);
             break;
         case IDC_BUTTON_PATH:
             szText[0] = 0;
@@ -157,9 +155,9 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             ofn.hwndOwner = hwndDlg;
             ofn.lpstrFile = szText;
             ofn.nMaxFile = MAX_PATH;
-            LoadStringW(shell32_hInstance, IDS_PICK_ICON_TITLE, szTitle, sizeof(szTitle) / sizeof(WCHAR));
+            LoadStringW(shell32_hInstance, IDS_PICK_ICON_TITLE, szTitle, _countof(szTitle));
             ofn.lpstrTitle = szTitle;
-            LoadStringW(shell32_hInstance, IDS_PICK_ICON_FILTER, szFilter, sizeof(szFilter) / sizeof(WCHAR));
+            LoadStringW(shell32_hInstance, IDS_PICK_ICON_FILTER, szFilter, _countof(szFilter));
             ofn.lpstrFilter = szFilter;
             if (GetOpenFileNameW(&ofn))
             {
@@ -188,16 +186,14 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         }
         break;
         case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam;
+            lpmis = (LPMEASUREITEMSTRUCT)lParam;
             lpmis->itemHeight = 32;
             lpmis->itemWidth = 64;
             return TRUE;
         case WM_DRAWITEM:
-            lpdis = (LPDRAWITEMSTRUCT) lParam;
+            lpdis = (LPDRAWITEMSTRUCT)lParam;
             if (lpdis->itemID == (UINT)-1)
-            {
                 break;
-            }
             switch (lpdis->itemAction)
             {
                 case ODA_SELECT:
