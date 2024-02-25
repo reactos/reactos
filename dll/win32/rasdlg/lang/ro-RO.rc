@@ -68,7 +68,7 @@ BEGIN
     COMBOBOX 1034, 63, 62, 181, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "P&roprietăți", 1035, 184, 77, 60, 14
     AUTORADIOBUTTON "P&ermite aceste protocoale", 1545, 17, 92, 224, 10
-    AUTOCHECKBOX "&Parolă necriptată  (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Parolă necriptată (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTOCHECKBOX "Protocolul S&hiva de Autentificare a Parolei (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Protocolul de &Autentificare Challenge Handshake (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
