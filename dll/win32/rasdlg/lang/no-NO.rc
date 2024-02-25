@@ -44,7 +44,7 @@ BEGIN
     AUTOCHECKBOX "&Ikke koble til mislykket linjer i fremtiden", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Godta", 1, 135, 242, 60, 14
     PUSHBUTTON "&Legg på", 2, 201, 242, 60, 14
-    LTEXT "Hvis det er bare en enkelt linje tilkoblet, serveren kan ikke ha blitt konfigurert til å godta multi-linke samtaler.  Sjekk 'Ikke koble til mislykket linjer' for å unngå unødvendig tilkobling endringer i slike saker.", -1, 37, 36, 224, 44
+    LTEXT "Hvis det er bare en enkelt linje tilkoblet, serveren kan ikke ha blitt konfigurert til å godta multi-linke samtaler. Sjekk 'Ikke koble til mislykket linjer' for å unngå unødvendig tilkobling endringer i slike saker.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -137,7 +137,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Tilbakeringing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Du har 'Slått av innringer' tilbakeringing privilegium på serveren.  Trykk på OK og serveren vil tilbakeringe nummeret under.  Trykk på Avbryt for å droppe tilbakeringing.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Du har 'Slått av innringer' tilbakeringing privilegium på serveren. Trykk på OK og serveren vil tilbakeringe nummeret under. Trykk på Avbryt for å droppe tilbakeringing.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "&Skriv inn modem telefonnummer:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
@@ -194,7 +194,7 @@ CAPTION "Tilkobler nettverk"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
-    LTEXT "Autooppringing forsøket mislykkes.  Vil du deaktivere autooppringing fra denne plasseringen?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    LTEXT "Autooppringing forsøket mislykkes. Vil du deaktivere autooppringing fra denne plasseringen?", 1099, 40, 6, 181, 34, NOT WS_GROUP
     PUSHBUTTON "&Ja", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&Nei", 2, 115, 42, 50, 14
 END
@@ -415,7 +415,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Manuelt nummerslåing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Plukk opp handset og ring (eller spør operatør om å ringe).  Etter at ringingen er fullført, trykk på OK.  Hør på handset inntil det blir stille, og så legge på telefonrøret .", 1281, 8, 8, 219, 32
+    LTEXT "Plukk opp handset og ring (eller spør operatør om å ringe). Etter at ringingen er fullført, trykk på OK. Hør på handset inntil det blir stille, og så legge på telefonrøret .", 1281, 8, 8, 219, 32
     LTEXT "Telefonnummer:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
@@ -470,7 +470,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Nummerslåing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Disse innstillinger brukes for å 'Logge på ved å bruke tilkoblet nettverk' når du bruker Ctrl-Alt-Del pålogging.  Du, som en administrator, har tilgang til dette.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "Disse innstillinger brukes for å 'Logge på ved å bruke tilkoblet nettverk' når du bruker Ctrl-Alt-Del pålogging. Du, som en administrator, har tilgang til dette.", 1007, 7, 4, 221, 40, NOT WS_GROUP
     LTEXT "&Nummer av slå nummeret igjen forsøk:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
     LTEXT "&Sekunder mellom ringe opp på nytt forsøk:", 1009, 7, 73, 156, 8, NOT WS_GROUP
@@ -484,7 +484,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Tilbakeringing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Når du ringer til serveren, kan det tilby å ringe deg tilbake for å redusere din telefon omkostninger.  Spessielt hvis du ønsker tilbakeringing.  (Tilbakeringing er ikke støttet for virtuelt privat nettverk (VPN) tilkoblinger.)", 1043, 8, 4, 219, 43
+    LTEXT "Når du ringer til serveren, kan det tilby å ringe deg tilbake for å redusere din telefon omkostninger. Spessielt hvis du ønsker tilbakeringing. (Tilbakeringing er ikke støttet for virtuelt privat nettverk (VPN) tilkoblinger.)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&Ingen tilbakeringing", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "S&pør meg under nummerslåing når serveren spør", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "All&tid ring meg tilbake til nummer(et) under:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
@@ -510,7 +510,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Du trenger å sette opp ringe ut credentials slik at dette grensesnittet vil bruke det når tilkoblet til ekstern router.  Disse credentials må passe for at ringingen i credentials konfigurert på eksternt router.", 1094, 8, 5, 308, 33
+    LTEXT "Du trenger å sette opp ringe ut credentials slik at dette grensesnittet vil bruke det når tilkoblet til ekstern router. Disse credentials må passe for at ringingen i credentials konfigurert på eksternt router.", 1094, 8, 5, 308, 33
     LTEXT "&Brukernavn:", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
     LTEXT "&Domene:", 1093, 8, 63, 130, 8, NOT WS_GROUP
@@ -608,7 +608,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velg et navn for denne demand dial interface.  En common practice er for å gi navn på grensensitt etter nettverket eller router for å velge hvem som er tilkoblet.", 1158, 7, 5, 309, 29
+    LTEXT "Velg et navn for denne demand dial interface. En common practice er for å gi navn på grensensitt etter nettverket eller router for å velge hvem som er tilkoblet.", 1158, 7, 5, 309, 29
     LTEXT "&Grensesnitt navn:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Jeg &vet alt om demand-dial grensesnitt og vil heller redigere egenskapene direkte", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
@@ -956,7 +956,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Router tilbakeringing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Når du ringer til en router, kan det tilby deg å ringe tilbake for å redusere din telefon omkostninger eller å øke sikkerheten.  Spessielt om du ønsker tilbakeringing eller ikke.", 1043, 7, 5, 253, 24
+    LTEXT "Når du ringer til en router, kan det tilby deg å ringe tilbake for å redusere din telefon omkostninger eller å øke sikkerheten. Spessielt om du ønsker tilbakeringing eller ikke.", 1043, 7, 5, 253, 24
     AUTORADIOBUTTON "&Ingen tilbakeringing", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Al&ltid ring meg tilbake til nummer(et) under:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
     CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
@@ -1068,7 +1068,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Du kan konfigurere denne tilkoblingen for å bruke ditt smartkort for å logge deg til et eksternt nettverk.  Velg for å bruke ditt smartkort for denne tilkoblingen.", -1, 10, 5, 303, 22
+    LTEXT "Du kan konfigurere denne tilkoblingen for å bruke ditt smartkort for å logge deg til et eksternt nettverk. Velg for å bruke ditt smartkort for denne tilkoblingen.", -1, 10, 5, 303, 22
     AUTORADIOBUTTON "&Bruk mitt smartkort ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Ikke bruk mitt smartkort ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
@@ -1757,7 +1757,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velg i markering boksen neste for hver bruker som skal bli godtatt å koble til denne datamaskinen.  Vær oppmerksom på at andre faktorer, som å deaktivert brukerkonto, kan påvirke brukerens evne å koble til.", -1, 10, 1, 275, 27
+    LTEXT "Velg i markering boksen neste for hver bruker som skal bli godtatt å koble til denne datamaskinen. Vær oppmerksom på at andre faktorer, som å deaktivert brukerkonto, kan påvirke brukerens evne å koble til.", -1, 10, 1, 275, 27
     LTEXT "&Brukere som er tilatt å koble til:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Legg til...", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1836,18 +1836,18 @@ BEGIN
     193 "Skriv inn et brukernavn og passord med tilgang til ekstern nettverk domene.\0"
     194 "Nettverk Adresse Oversetting (NAO) er for øyeblikket installert som en router protokoll,\nog må bli fjernet før aktivering av Internett tilkobling deling.\nFor å fjerne Nettverk Adresse Oversetting, åpne Routing og Fjern tilgang behandling\nsnapin and expand the router's entry in the left pane.\nSlett Nettverk Adresse oversetting routing protokoll fra listen av IP\nrouting protokoller.\0"
     195 "Området koden må inneholde bare digitale siffer fra 0 til 9.\0"
-    196 "Enhetsnavnet må inneholde minst en ikke-blank bokstav og kan ikke begynne med et punktum.  Velg et annet navn.\0"
+    196 "Enhetsnavnet må inneholde minst en ikke-blank bokstav og kan ikke begynne med et punktum. Velg et annet navn.\0"
     197 "Du må velge en verdi fra %1 til %2 for dette feltet.\0"
-    198 "Tilpasset authentication konfigurasjon DLL kunne ikke lastes.  Vær sikker på at tilpasset authentication pakken er riktig installert.\0"
+    198 "Tilpasset authentication konfigurasjon DLL kunne ikke lastes. Vær sikker på at tilpasset authentication pakken er riktig installert.\0"
     199 "Tilkobling valgt var etablert av flere protokoll router.\nVenligst bruk 'Routing og RAS Admin' verktøy for å avslutte tilkoblingen.\0"
     200 "Kommentarer\0"
     201 "Tilpasset authentication pakke konfigurasjon mislykkes.\0"
-    202 "TCP/IP er ikke installert eller er deaktivert for Routing og fjern tilgang.  I Kontrollpanel, start Nettverk, gå til tjeneste siden, velg 'Routing og fjern tilgang tjeneste' Egenskaper, og trykk på Nettverk knappen.\0"
-    203 "IPX er ikke installert eller er deaktivert for Routing og fjern tilgang.  Du kan installere/aktivere IPX ved å vise egenskapene for alle tilkoblinger i ""Tilkoblinger"" mappen.\0"
+    202 "TCP/IP er ikke installert eller er deaktivert for Routing og fjern tilgang. I Kontrollpanel, start Nettverk, gå til tjeneste siden, velg 'Routing og fjern tilgang tjeneste' Egenskaper, og trykk på Nettverk knappen.\0"
+    203 "IPX er ikke installert eller er deaktivert for Routing og fjern tilgang. Du kan installere/aktivere IPX ved å vise egenskapene for alle tilkoblinger i ""Tilkoblinger"" mappen.\0"
     204 "Fjern valgte enhet(er) fra listen?\0"
     205 "Slett %1 fra telefonboken?\0"
     206 "Koble fra %1?\0"
-    207 "En fil som heter %1 finnes allerede.  Overskrive denne?\0"
+    207 "En fil som heter %1 finnes allerede. Overskrive denne?\0"
     208 "Syntaks feil er funnet i skriptet. Ønsker du å vise feil loggen?\0"
     209 "'%1' er nå tilkoblet.\0"
     210 "Høyre-klikk Dial-Up Nettverk Monitor på oppgavelinjen for å avslutte eller sjekke statusen for din tilkobling.\0"
@@ -1857,7 +1857,7 @@ BEGIN
     215 "Dial-up snarvei filer (*.rnk)\0"
     216 "*.rnk\0"
     217 "Opprett Dial-Up snarvei\0"
-    218 "Lenke til %1 mislykkes.  Gjentilkobling pågår...\0"
+    218 "Lenke til %1 mislykkes. Gjentilkobling pågår...\0"
     219 "Kan ikke gjenopprette montering informasjon.\0"
     220 "Kan ikke gjenopprette port informasjon.\0"
     221 "Kan ikke gjenopprette planlegging informasjon.\0"
@@ -1875,7 +1875,7 @@ BEGIN
     233 "Ekstern Router\0"
     234 "Modem eller enhet\0"
     235 "Venligst sett inn et brukernavn for denne grensesnitt kontoen på ekstern router.\0"
-    236 "En enhet som heter %1 finnes allerede.  Velg et annet navn.\0"
+    236 "En enhet som heter %1 finnes allerede. Velg et annet navn.\0"
     237 "Du kan velge å godta å sende ditt passord uten kryptering.\0"
     238 "Passord kryptering\0"
     239 "Veiviseren er klar for å opprette din tilkobling.\0"
@@ -1884,7 +1884,7 @@ BEGIN
     242 "Kontakt meg tilbake ved\0"
     243 "Rediger alternativer telefonnummer\0"
     244 "Siden denne tilkoblingen er nå aktiv, noen innstillinger vil ikke ta effekt til neste gangen du ringer denne.\0"
-    245 "Det er ingen tilkoblinger tilgjengelig for alle brukere.  Du må logge på før du ringer.\0"
+    245 "Det er ingen tilkoblinger tilgjengelig for alle brukere. Du må logge på før du ringer.\0"
     246 "Telefonboken er tom.\n\nTrykk OK for å legge til enheter.\0"
     247 "Direkte å importere/ekportere restriksjoner, data kryptering er ikke tilgjengelig for denne versjonen av ReactOS.\0"
     248 "Venligst sett inn en X.25 addresse på neste skjermbildet.\0"
@@ -1910,7 +1910,7 @@ BEGIN
     268 "Telefonnummere\0"
     269 "Du kan skrive inn en fikset IP addresse.\0"
     270 "IP Addresse\0"
-    271 "Internett protokoller (TCP/IP), er ikke installert eller er deaktivert for Fjern tilgang.  I Kontrollpanel, start Nettverk, gå til tjeneste siden, velg 'Fjern tilgang tjenste' Egenskaper, og trykk på Nettverk knappen.\0"
+    271 "Internett protokoller (TCP/IP), er ikke installert eller er deaktivert for Fjern tilgang. I Kontrollpanel, start Nettverk, gå til tjeneste siden, velg 'Fjern tilgang tjenste' Egenskaper, og trykk på Nettverk knappen.\0"
     272 "TCP/IP\0"
     273 "IPSec, standard policy\0"
     274 "IPX/SPX eller kompatibelt\0"
@@ -1953,7 +1953,7 @@ BEGIN
     311 "(ingen)\0"
     312 "'%1' er allerede i listen.\0"
     313 "Sikre mitt passord og min data\0"
-    314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access.  To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
+    314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access. To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
     315 "Kan ikke lagre vise data.\0"
     316 "Cannot display data.\0"
     317 "Kan ikke få auto-dial informasjon.\0"
@@ -2011,7 +2011,7 @@ BEGIN
     369 "Point-to-point protocol settings to use when %1 initiates a demand dial connection on interface %2:\0"
     370 "[For å endre lagret passord, trykk her]\0"
     405 "NetBEUI protocol is required to call older RAS servers.\0"
-    406 "Before you can call older RAS servers you must install the NetBEUI protocol.  NetBEUI can be installed with the Control Panel Network applet.\0"
+    406 "Before you can call older RAS servers you must install the NetBEUI protocol. NetBEUI can be installed with the Control Panel Network applet.\0"
     407 "&Redial\0"
     408 "You have chosen to disable one or more transports. Doing so requires the routing managers and routing protocols for the disabled transports to be removed from this demand-dial interface.\nClick Yes if you want to continue, or No if you want to re-enable the transports.\0"
     409 "Internett tilkobling deling\0"
@@ -2068,7 +2068,7 @@ BEGIN
     460 "You must check at least one modem or adapter.\0"
     461 "Telefonnummer\0"
     462 "TCP/IP protocol is required to call SLIP servers.\0"
-    463 "Before you can call SLIP servers you must install the TCP/IP protocol.  TCP/IP can be installed with the Control Panel Network applet.\0"
+    463 "Before you can call SLIP servers you must install the TCP/IP protocol. TCP/IP can be installed with the Control Panel Network applet.\0"
     464 "Status\0"
     465 "&Ny suffiks:\0"
     466 "&Suffiks:\0"
@@ -2116,7 +2116,7 @@ BEGIN
     508 "Host eller Gjest?\0"
     509 "Internet Connection Sharing  is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
     510 "To connect two computers, your computer must be identified as either a host or a guest.\0"
-    511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically.  Are you sure you want to enable Internet Connection Sharing?\0"
+    511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically. Are you sure you want to enable Internet Connection Sharing?\0"
     512 "Velg en enhet\0"
     513 "Dette er enheten som vil bli brukt for å lage tilkoblingen.\0"
     514 "&Koble til\0"
@@ -2135,13 +2135,13 @@ BEGIN
     527 "Typen av tilkoblingen\0"
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
     529 "Virtual Private Connection\0"
-    530 "Use any form of authentication required including clear text.  Do not encrypt data.\0"
-    531 "Use any form of authentication that requires passwords to be encrypted.  Do not encrypt data.\0"
+    530 "Use any form of authentication required including clear text. Do not encrypt data.\0"
+    531 "Use any form of authentication that requires passwords to be encrypted. Do not encrypt data.\0"
     532 "Please type a name for the entry.\0"
     533 "Encrypt passwords and data.\0"
     534 "Please type a port number between 1 and 65535.\0"
     535 "Specify custom authentication and data encryption with the Settings button.\0"
-    536 "Use any form of authentication that requires encrypted passwords.  Do not encrypt data.\0"
+    536 "Use any form of authentication that requires encrypted passwords. Do not encrypt data.\0"
     537 "Krypter passordet og data.\0"
     538 "Specify custom authentication and data encryption with the Settings button.\0"
     539 "The port number is already used by another entry.\nPlease enter a unique port number.\0"
@@ -2192,7 +2192,7 @@ BEGIN
     1554 "Interface Navn\0"
     1555 "velg navnet etter hvem denne nye interface vil bli kjent som.\0"
     1556 "Ingen tilgjengelig enheter\0"
-    1557 "En brukerkonto som heter %1 finnes allerede på lokal datamaskin.  skal demand dial interface bli konfigurert for å bruke denne brukerkontoen?\0"
+    1557 "En brukerkonto som heter %1 finnes allerede på lokal datamaskin. skal demand dial interface bli konfigurert for å bruke denne brukerkontoen?\0"
     1558 "Det er ingen sikkerhet protokoll instillinger for SLIP server tilkoblinger.\0"
     1559 "Godta usikkert passord\0"
     1560 "Krev sikkert passord\0"
@@ -2205,20 +2205,20 @@ BEGIN
     1567 " (kryptering aktivert)\0"
     1568 "Internett konto Informasjon\0"
     1569 "Du vil trenge et konto navn og passord for å logge på din Internett konto.\0"
-    1570 "The selected EAP package does not provide encryption keys.  Select an EAP package that does provide keys or select not to encrypt.\0"
+    1570 "The selected EAP package does not provide encryption keys. Select an EAP package that does provide keys or select not to encrypt.\0"
     1571 "The current encryption selection requires EAP or some version of MS-CHAP logon security methods.\0"
     1572 "Protokoller og Sikkerhet\0"
     1573 "Select transports and security options for this connection.\0"
-    1574 "The protocols you have selected include PAP, SPAP, and/or CHAP.  If one of these is negotiated, data encryption will not occur.  Do you want to keep these settings?\0"
-    1575 "For å koble til '%1', må du først være koblet til '%2'.  Vil du  koble til '%2' nå?\0"
+    1574 "The protocols you have selected include PAP, SPAP, and/or CHAP. If one of these is negotiated, data encryption will not occur. Do you want to keep these settings?\0"
+    1575 "For å koble til '%1', må du først være koblet til '%2'. Vil du  koble til '%2' nå?\0"
     1576 "Koble til med paraell kabel...\0"
     1577 "Koble til med infrarød...\0"
     1578 "Parallel kabel tilkoblet.\0"
     1579 "Infrarød tilkoblet.\0"
-    1580 "This connection was configured to use a data encryption strength that is not supported by the installed software.  The security properties of this connection have been reset to the available encryption strengths.\0"
+    1580 "This connection was configured to use a data encryption strength that is not supported by the installed software. The security properties of this connection have been reset to the available encryption strengths.\0"
     1581 "Typ&en av VPN:\0"
     1582 "Venligst skriv inn et brukernavn.\0"
-    1583 "This user name and password will be saved for your own use.  There is already a user name and password saved for all other users of this connection.  Do you want to delete the user name and password saved for all other users?\0"
+    1583 "This user name and password will be saved for your own use. There is already a user name and password saved for all other users of this connection. Do you want to delete the user name and password saved for all other users?\0"
     1584 "For example, you could type the name of your workplace or the name of a server you will connect to.\0"
     1585 "Konto informajon\0"
     1586 "The controls on this property sheet are disabled because the system must first be rebooted before any configuration changes can be made.\0"
@@ -2262,7 +2262,7 @@ BEGIN
     1672 "When this computer discards an incomplete data transmission because the entire transmission required more time than allowed, it will reply to the sender with a ""time expired"" message.\0"
     1673 "Data sent from this computer will be rerouted if the default path changes.\0"
     1675 "The value entered for the log file size is not valid. Enter a value between 1 and 32767 k.\0"
-    1685 "Your user account does not have permission to use this connection.  Usually, this is because you are logged in as Guest.\0"
+    1685 "Your user account does not have permission to use this connection. Usually, this is because you are logged in as Guest.\0"
     1686 "Skriv inn kontonavn og passord. (Hvis du har glemt en eksistende kontonavn eller passord, kontakt din nettverk administrator.)\0"
     1687 "Datamaskin Na&vn\0"
     1688 "ISP N&avn\0"
@@ -2287,7 +2287,7 @@ BEGIN
     7320 "Protokoll database\0"
     7321 "Du må sette inn påloggings navn for nye brukeren eller trykke på avbryt.\0"
     7322 "Passordet som du skrev var for kort.\0"
-    7323 "Passordet du skrev er ikke det samme.  Venligst skriv passordet på nytt.\0"
+    7323 "Passordet du skrev er ikke det samme. Venligst skriv passordet på nytt.\0"
     7324 "En internal feil har oppstått.\0"
     7325 "Listview\0"
     7326 "An error has occurred while attempting to commit the changes you have made to the local user database.\0"
@@ -2312,15 +2312,15 @@ BEGIN
     7345 "Ikke mulig å vise IPX egenskaper.\0"
     7346 "Ikke mulig å laste TCP/IP egenskaper fra systemet.\0"
     7347 "Ikke mulig å laste IPX egenskaper fra systemet.\0"
-    7348 "Innkommende kommer ann på Routing og fjern tilgang tjeneste som ikke var mulig å starte.  For mere informasjon, sjekk systemets logg.\0"
+    7348 "Innkommende kommer ann på Routing og fjern tilgang tjeneste som ikke var mulig å starte. For mere informasjon, sjekk systemets logg.\0"
     7349 "Ikke mulig å godta å redigere på nettverk komponeneter på dette tidspunktet fordi det var for øyeblikket blitt endret et annet sted.\0"
     7350 "Nye brukeren du skrev inn ble ikke lagret til lokal bruker database fordi  navnet eller passord som du skrev inn er et brudd på system policy (det var for langt, eller dårlig-formet).\0"
     7351 "Systemet er ikke stand til å slette valgte bruker.\0"
     7352 "Ikke mulig å fjerne valgte nettverk komponent fordi det er i bruk.\0"
     7353 "Innkommende tilkobling advarsel\0"
-    7354 "Alle brukere som deg  vil bli sletter fullstendig og fjernet fra systemet nettopp hvis avbryt er trykket.  Er du sikker på at du ønsker å fullstendig fjerne %s? \0"
-    7355 "Du er cirka til å bytte til et system behandling konsoll.  Denne innkommende tilkobling egenskap sheet vil bli lukket og andre endringer du har gjort vil bli committed til systemet.  Er det greit å fortsette?\0"
-    7356 "Din nettverk maske verdi har blitt endret.  Et null bit i en maske kan bare bli følgt etter andre null bits.  For eksempel, et Nettverk Mask verdi, uttrykt i desimal prikket notation, av 255.255.0.0, er gyldig, men 255.0.255.0 er ikke gyldig.\n\0"
+    7354 "Alle brukere som deg  vil bli sletter fullstendig og fjernet fra systemet nettopp hvis avbryt er trykket. Er du sikker på at du ønsker å fullstendig fjerne %s? \0"
+    7355 "Du er cirka til å bytte til et system behandling konsoll. Denne innkommende tilkobling egenskap sheet vil bli lukket og andre endringer du har gjort vil bli committed til systemet. Er det greit å fortsette?\0"
+    7356 "Din nettverk maske verdi har blitt endret. Et null bit i en maske kan bare bli følgt etter andre null bits. For eksempel, et Nettverk Mask verdi, uttrykt i desimal prikket notation, av 255.255.0.0, er gyldig, men 255.0.255.0 er ikke gyldig.\n\0"
     7357 "Bruker rettigheter\0"
     7358 "Du kan bestemme brukere som kan koble til denne datamaskinen.\0"
     7359 "Enheter for Innkommende tilkoblinger\0"
@@ -2341,26 +2341,26 @@ BEGIN
     7377 "Hvilken enheter ønsker du å bruke for å lage denne tilkoblingen?\0"
     7378 "Ingen enhets kabel som er godtatt direkte tilkobling er for øyeblikket installert.\0"
     7379 "Nye innkommende tilkobling advarsel\0"
-    7380 "Fordi dette er Win 2000 Server høre til eller kontrollere et domene, må du bruke Routing og fjern tilgang system konsoll for å konfigurere denne datamaskinen å motta innkommene tilkoblinger.  Avbryt endringer og bytt til denne Konsoll?\n\0"
+    7380 "Fordi dette er Win 2000 Server høre til eller kontrollere et domene, må du bruke Routing og fjern tilgang system konsoll for å konfigurere denne datamaskinen å motta innkommene tilkoblinger. Avbryt endringer og bytt til denne Konsoll?\n\0"
     7381 "G&i nettverk nummer automatisk\0"
     7382 "G&i nettverk nummer automatisk\0"
-    7383 "Innkommene tilkoblinger kan ikke levere ipx nettverk nummere 00000000 eller FFFFFFFF.  Venligst heller endre utpekt nettverk nummere eller bruk automatisk nettverk nummer tildeling.\0"
+    7383 "Innkommene tilkoblinger kan ikke levere ipx nettverk nummere 00000000 eller FFFFFFFF. Venligst heller endre utpekt nettverk nummere eller bruk automatisk nettverk nummer tildeling.\0"
     7384 "Til\0"
     7385 "Komminikasjon Port (%s)\0"
-    7386 "Nettverk tilkoblinger viser ikke noen spesielle valg for inngående tilkoblinger som har blitt satt ved å bruke Lokal bruker behandling eller Fjern tilgang Policy konsoll.  For riktig og rette informasjon på innkommende tilkoblinger, trenger du å bruke disse konsollene.\0"
+    7386 "Nettverk tilkoblinger viser ikke noen spesielle valg for inngående tilkoblinger som har blitt satt ved å bruke Lokal bruker behandling eller Fjern tilgang Policy konsoll. For riktig og rette informasjon på innkommende tilkoblinger, trenger du å bruke disse konsollene.\0"
     7387 "Brukeren tilbakeringing modus som du har valg trenger at du skriver inn et gyldig tilbakeringing nummer.\0"
-    7388 "ReactOS må starte på nytt for å fullføre oppgaven.  Er det greit å starte på nytt?\0"
+    7388 "ReactOS må starte på nytt for å fullføre oppgaven. Er det greit å starte på nytt?\0"
     7389 "Nåværende valgte enhet har ingen konfigurasjon valg tilgjengelig.\0"
     7390 "Ugyldig rekke\0"
-    7391 "Du har spurt om at '%1' skal være deaktivert for innkommende tilkoblinger.  For å deaktivere denne, må du stoppe 'Server' tjenesten.  Mens den er stoppet, alle delte mapper eller skrivere på denne datamaskinen vil ikke lenger bli tilgjengelig for alle andre datamaskiner.  Ønsker du å bringe opp en system konsoll slik at det vil la deg stoppe 'Server' tjenesten?\r\n\nUnder datamaskin behandling, trykk på Systemverktøy også trykk på tjenester.  På høyre side, høyre-klikk Server også trykk på stopp knappen.\0"
-    7392 "Denne serial port er ikke aktivert for bruk i en direkte tilkobling til en annen datamaskin. Det vil bli aktivert etter du fullfører denne veiviseren.  Du kan så konfigurere port hastigheten og andre egenskaper ved å høyre-klikke ikonet for denne tilkoblingen og velge egenskaper.\n\0"
+    7391 "Du har spurt om at '%1' skal være deaktivert for innkommende tilkoblinger. For å deaktivere denne, må du stoppe 'Server' tjenesten. Mens den er stoppet, alle delte mapper eller skrivere på denne datamaskinen vil ikke lenger bli tilgjengelig for alle andre datamaskiner. Ønsker du å bringe opp en system konsoll slik at det vil la deg stoppe 'Server' tjenesten?\r\n\nUnder datamaskin behandling, trykk på Systemverktøy også trykk på tjenester. På høyre side, høyre-klikk Server også trykk på stopp knappen.\0"
+    7392 "Denne serial port er ikke aktivert for bruk i en direkte tilkobling til en annen datamaskin. Det vil bli aktivert etter du fullfører denne veiviseren. Du kan så konfigurere port hastigheten og andre egenskaper ved å høyre-klikke ikonet for denne tilkoblingen og velge egenskaper.\n\0"
     7393 "Innkommende tilkoblinger\0"
     7394 "IP addressen pool som du skrev inn er ugyldig.\0"
     7395 "Masken som er gitt er ugyldig.\0"
-    7396 "Start addressen som er skrevet for TCP/IP pool er ugyldig.  Det må være mellom 1.0.0.0 og 224.0.0.0 og det må ikke være i formen 127.x.x.x.\0"
+    7396 "Start addressen som er skrevet for TCP/IP pool er ugyldig. Det må være mellom 1.0.0.0 og 224.0.0.0 og det må ikke være i formen 127.x.x.x.\0"
     7397 "TCP/IP pool som er skrevet er ugyldig fordi adressen er mere spesiell enn masken.\0"
     7398 "Start addressen må være mindre enn slutt adressen.\0"
-    7399 "Routing og Fjern tilgang tjeneste er i prosess for å stoppe.  Til det stopper, innkommende tilkobling valg er ikke tilgjenlig.  Vennligst vent et øyeblikk eller prøv igjen.\0"
+    7399 "Routing og Fjern tilgang tjeneste er i prosess for å stoppe. Til det stopper, innkommende tilkobling valg er ikke tilgjenlig. Vennligst vent et øyeblikk eller prøv igjen.\0"
     7400 "%s (%s)\0"
     7401 "%s (%d kanaler)\0"
     7402 "Innkommende tilkoblinger VPN (PPTP)\0"

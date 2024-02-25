@@ -492,7 +492,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Oddzwanianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania.  (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
+    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania. (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&Bez Oddzwaniania", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Pytaj mnie podczas próby połączenia, gdy serwer oferuje odddzwanianie", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "&Oddzwanianie zawsze włączone, w przypadku połączeń z numerami z listy:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
@@ -1765,7 +1765,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
+    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem. Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
     LTEXT "&Użytkownicy, którzy mogą się połączyć:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Dodaj", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1865,7 +1865,7 @@ BEGIN
     215 "Skrót połączenia Dial-up(*.rnk)\0"
     216 "*.rnk\0"
     217 "Utwórz skrót połączenia Dial-Up\0"
-    218 "Połączenie z %1 nieudane.  Ponowne połączenie w toku...\0"
+    218 "Połączenie z %1 nieudane. Ponowne połączenie w toku...\0"
     219 "Nie można uzyskać informacji o ramkach.\0"
     220 "Nie można uzyskać informacji o portach.\0"
     221 "Nie można uzyskać informacji o projekcji.\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7377 "Którego urządzenia chcesz użyć w tym połączeniu?\0"
     7378 "Nie ma obecnie żadnych urządzeń zainstalowanych, które byłyby w stanie przyjąć połączenia przychodzące.\0"
     7379 "Ostrzeżenie o nowym połączeniu przychodzącym\0"
-    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące.  Anulować zmiany i włączyć tę konsolę?\n\0"
+    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące. Anulować zmiany i włączyć tę konsolę?\n\0"
     7381 "Przydziel &numer adresu automagicznie\0"
     7382 "Przydziel n&umer adresu automagicznie\0"
     7383 "Połączenia przychodzące nie mogą używać adresów IPX o numerach 00000000 lub FFFFFFFF. Proszę zmienić przydzielone numery adresów albo ustawić automagiczne przydzielanie numerów.\0"
