@@ -14,7 +14,7 @@ BEGIN
     POPUP "&Jurnal"
     BEGIN
         MENUITEM "&Deschidere…", IDM_OPEN_EVENTLOG
-        MENUITEM "&Salaew jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
+        MENUITEM "&Salvare jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
         MENUITEM "Î&nchidere", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&urare a tuturor evenimentelor", IDM_CLEAR_EVENTS
