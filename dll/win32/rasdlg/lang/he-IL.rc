@@ -13,7 +13,7 @@ BEGIN
     PUSHBUTTON "הוסף...", 1013, 7, 187, 70, 14
     PUSHBUTTON "ערוך...", 1016, 81, 187, 70, 14
     PUSHBUTTON "מחק", 1014, 154, 187, 70, 14
-    AUTOCHECKBOX "אם המספר זה  נכשל, עבור למספר הבא", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "אם המספר זה נכשל, עבור למספר הבא", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "העבר מספר מוצלח לראש הרשימה", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "אישור", 1, 122, 245, 60, 14
     PUSHBUTTON "ביטול", 2, 188, 245, 60, 14
