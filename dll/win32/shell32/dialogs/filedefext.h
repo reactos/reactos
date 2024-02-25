@@ -27,7 +27,7 @@ class CFileVersionInfo
         PVOID m_pInfo;
         WORD m_wLang, m_wCode;
         WCHAR m_wszLang[64];
-        
+
         typedef struct _LANGANDCODEPAGE_
         {
             WORD wLang;

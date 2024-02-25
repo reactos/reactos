@@ -51,14 +51,12 @@ public:
     /* Link file formats */
 
     #include "pshpack1.h"
-
     struct volume_info
     {
         DWORD type;
         DWORD serial;
         WCHAR label[12];  /* assume 8.3 */
     };
-
     #include "poppack.h"
 
 private:

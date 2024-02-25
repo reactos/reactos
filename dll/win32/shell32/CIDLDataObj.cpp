@@ -1,24 +1,5 @@
-/*
- *    IEnumFORMATETC, IDataObject
- *
- * selecting and droping objects within the shell and/or common dialogs
- *
- *    Copyright 1998, 1999    <juergen.schmied@metronet.de>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
+// LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+// COPYRIGHT: 1998-1999 <juergen.schmied@metronet.de>
 
 #include "precomp.h"
 
@@ -65,7 +46,7 @@ IEnumFORMATETCImpl::~IEnumFORMATETCImpl()
 
 HRESULT WINAPI IEnumFORMATETCImpl::Initialize(UINT cfmt, const FORMATETC afmt[])
 {
-    DWORD                        size;
+    DWORD size;
 
     size = cfmt * sizeof(FORMATETC);
     countFmt = cfmt;
@@ -89,7 +70,7 @@ HRESULT WINAPI IEnumFORMATETCImpl::Next(ULONG celt, FORMATETC *rgelt, ULONG *pce
 
     for(i = 0; posFmt < countFmt && celt > i; i++)
     {
-      *rgelt++ = pFmt[posFmt++];
+        *rgelt++ = pFmt[posFmt++];
     }
 
     if (pceltFethed) *pceltFethed = i;
@@ -110,13 +91,13 @@ HRESULT WINAPI IEnumFORMATETCImpl::Reset()
 {
     TRACE("(%p)->()\n", this);
 
-        posFmt = 0;
-        return S_OK;
+    posFmt = 0;
+    return S_OK;
 }
 
 HRESULT WINAPI IEnumFORMATETCImpl::Clone(LPENUMFORMATETC* ppenum)
 {
-    HRESULT                                    hResult;
+    HRESULT hResult;
 
     TRACE("(%p)->(ppenum=%p)\n", this, ppenum);
 
@@ -143,7 +124,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 class CIDLDataObj :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject,
-    public IAsyncOperation 
+    public IAsyncOperation
 {
 private:
     LPITEMIDLIST    pidl;
@@ -245,7 +226,7 @@ static HGLOBAL RenderPREFEREDDROPEFFECT (DWORD dwFlags)
 */
 HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium)
 {
-    char    szTemp[256];
+    char szTemp[256];
 
     szTemp[0] = 0;
     GetClipboardFormatNameA (pformatetcIn->cfFormat, szTemp, 256);
@@ -256,22 +237,22 @@ HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderSHELLIDLIST(pidl, apidl, cidl);
     }
-    else if    (pformatetcIn->cfFormat == CF_HDROP)
+    else if (pformatetcIn->cfFormat == CF_HDROP)
     {
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderHDROP(pidl, apidl, cidl);
     }
-    else if    (pformatetcIn->cfFormat == cfFileNameA)
+    else if (pformatetcIn->cfFormat == cfFileNameA)
     {
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderFILENAMEA(pidl, apidl, cidl);
     }
-    else if    (pformatetcIn->cfFormat == cfFileNameW)
+    else if (pformatetcIn->cfFormat == cfFileNameW)
     {
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderFILENAMEW(pidl, apidl, cidl);
     }
-    else if    (pformatetcIn->cfFormat == cfPreferredDropEffect)
+    else if (pformatetcIn->cfFormat == cfPreferredDropEffect)
     {
       pmedium->hGlobal = RenderPREFEREDDROPEFFECT(dropeffect);
     }
@@ -385,7 +366,7 @@ HRESULT WINAPI CIDLDataObj::InOperation(BOOL *pfInAsyncOp)
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync) 
+HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 {
     TRACE("(%p)->()\n", this);
     doasync = fDoOpAsync;

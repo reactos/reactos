@@ -45,7 +45,7 @@ class CFolderOptions :
         // IShellPropSheetExt
         virtual HRESULT STDMETHODCALLTYPE AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
         virtual HRESULT STDMETHODCALLTYPE ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
-        
+
         // IShellExtInit
         virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
