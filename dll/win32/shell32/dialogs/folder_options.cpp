@@ -23,8 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
-#define MAX_PROPERTY_SHEET_PAGE (32)
-
 /// Folder Options:
 /// CLASSKEY = HKEY_CLASSES_ROOT\CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}
 /// DefaultIcon = %SystemRoot%\system32\SHELL32.dll,-210

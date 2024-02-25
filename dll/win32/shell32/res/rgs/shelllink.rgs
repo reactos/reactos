@@ -19,25 +19,25 @@ HKCR
 				MayChangeDefaultMenu = s ''
 			}
 		}
-		NoRemove Interface
+	}
+	NoRemove Interface
+	{
+		ForceRemove {000214EE-0000-0000-C000-000000000046} = s 'IShellLinkA'
 		{
-			ForceRemove {000214EE-0000-0000-C000-000000000046} = s 'IShellLinkA'
+			NumMethods = s '21'
 			{
-				NumMethods = s '21'
-				{
-				}
-				ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
-				{
-				}
 			}
-			ForceRemove {000214F9-0000-0000-C000-000000000046} = s 'IShellLinkW'
+			ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
 			{
-				NumMethods = s '21'
-				{
-				}
-				ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
-				{
-				}
+			}
+		}
+		ForceRemove {000214F9-0000-0000-C000-000000000046} = s 'IShellLinkW'
+		{
+			NumMethods = s '21'
+			{
+			}
+			ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
+			{
 			}
 		}
 	}

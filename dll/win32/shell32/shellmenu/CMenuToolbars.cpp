@@ -105,8 +105,7 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case NM_TOOLTIPSCREATED:
             break;
 
-            // Unknown
-        case -714: return S_FALSE;
+        case TBN_DRAGOUT: return S_FALSE;
 
         default:
             TRACE("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
