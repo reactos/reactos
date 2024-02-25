@@ -259,8 +259,55 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
+WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+{
+    static WCHAR s_chCache = 0;
+    if (s_chCache)
+        return s_chCache;
+
+    WCHAR szText[80], *pch;
+    LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
+                szText, _countof(szText));
+
+    for (pch = szText; *pch; ++pch)
+    {
+        if (*pch == L'&' && pch[1] == L'&')
+        {
+            ++pch;
+            continue;
+        }
+        if (*pch == L'&')
+        {
+            ++pch;
+            chAccess = *pch;
+            break;
+        }
+    }
+
+    ::CharUpperBuffW(&chAccess, 1);
+    s_chCache = chAccess;
+    return chAccess;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
+    // Enable Address bar access key (Alt+D)
+    switch (lpMsg->message)
+    {
+        case WM_SYSKEYDOWN:
+        case WM_SYSCHAR:
+        {
+            WCHAR chAccess = GetAddressBarAccessKey(L'D');
+            if (lpMsg->wParam == chAccess)
+            {
+                ::SendMessage(fEditControl, EM_SETSEL, 0, -1);
+                ::SetFocus(fEditControl);
+                return S_OK;
+            }
+            break;
+        }
+    }
+
     if (lpMsg->hwnd == fEditControl)
     {
         switch (lpMsg->message)
