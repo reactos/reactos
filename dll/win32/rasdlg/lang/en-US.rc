@@ -1050,7 +1050,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Internet Connection Sharing allows other computers on your local network to access external resources through this connection.", -1, 10, 5, 300, 22
     AUTOCHECKBOX "&Enable Internet Connection Sharing for this connection", 1512, 21, 31, 272, 10
-    LTEXT "To dial this connection automatically  when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
+    LTEXT "To dial this connection automatically when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "Enab&le on-demand dialing", 1513, 21, 86, 260, 10
 END
 
