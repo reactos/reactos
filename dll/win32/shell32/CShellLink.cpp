@@ -1202,7 +1202,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCSTR pszArgs)
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1939,7 +1938,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
         }
     }
 
-    /* Store the original icon path location (this one may contain unexpanded environment strings) */
+    /* Store the original icon path location (may contain unexpanded environment strings) */
     if (pszIconPath)
     {
         m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
@@ -2427,7 +2426,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetPath(LPCWSTR pszFile)
             if (hr == S_OK)
                 m_Header.dwFlags |= SLDF_HAS_EXP_SZ;
 
-            /* Now, make pszFile point to the expanded buffer */
+            /* Now, make pszFile point to the expanded path */
             pszFile = szPath;
         }
         else
@@ -2607,7 +2606,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = Resolve(lpici->hwnd, 0);
     if (FAILED(hr))
     {
-        TRACE("failed to resolve component with error 0x%08x", hr);
+        TRACE("failed to resolve component error 0x%08x\n", hr);
         return hr;
     }
 

@@ -777,11 +777,11 @@ UpdateGeneralIcons(HWND hDlg)
     if (lpTaskIconName)
     {
         hTaskIcon = (HICON)LoadImage(shell32_hInstance,
-                                              lpTaskIconName,
-                                              IMAGE_ICON,
-                                              0,
-                                              0,
-                                              LR_DEFAULTCOLOR);
+                                     lpTaskIconName,
+                                     IMAGE_ICON,
+                                     0,
+                                     0,
+                                     LR_DEFAULTCOLOR);
         if (hTaskIcon)
         {
             hwndTaskIcon = GetDlgItem(hDlg,
@@ -795,21 +795,21 @@ UpdateGeneralIcons(HWND hDlg)
             }
         }
     }
-    
+
     // show Folder setting icons
     if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW) == BST_CHECKED)
         lpFolderIconName = MAKEINTRESOURCE(IDI_SHELL_OPEN_IN_SOME_WINDOW);
     else if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_OWNWINDOW) == BST_CHECKED)
         lpFolderIconName = MAKEINTRESOURCE(IDI_SHELL_OPEN_IN_NEW_WINDOW);
-    
+
     if (lpFolderIconName)
     {
         hFolderIcon = (HICON)LoadImage(shell32_hInstance,
-                                              lpFolderIconName,
-                                              IMAGE_ICON,
-                                              0,
-                                              0,
-                                              LR_DEFAULTCOLOR);
+                                       lpFolderIconName,
+                                       IMAGE_ICON,
+                                       0,
+                                       0,
+                                       LR_DEFAULTCOLOR);
         if (hFolderIcon)
         {
             hwndFolderIcon = GetDlgItem(hDlg,
@@ -833,11 +833,11 @@ UpdateGeneralIcons(HWND hDlg)
     if (lpClickIconName)
     {
         hClickIcon = (HICON)LoadImage(shell32_hInstance,
-                                              lpClickIconName,
-                                              IMAGE_ICON,
-                                              0,
-                                              0,
-                                              LR_DEFAULTCOLOR);
+                                      lpClickIconName,
+                                      IMAGE_ICON,
+                                      0,
+                                      0,
+                                      LR_DEFAULTCOLOR);
         if (hClickIcon)
         {
             hwndClickIcon = GetDlgItem(hDlg,
@@ -859,8 +859,6 @@ UpdateGeneralIcons(HWND hDlg)
         DeleteObject(hFolderIcon);
     if(hClickIcon)
         DeleteObject(hClickIcon);
-    
-    return;
 }
 
 INT_PTR
@@ -877,7 +875,6 @@ FolderOptionsGeneralDlg(
         case WM_INITDIALOG:
             // FIXME
             break;
-            
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -897,7 +894,6 @@ FolderOptionsGeneralDlg(
                     break;
             }
             break;
-
         case WM_NOTIFY:
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
@@ -912,12 +908,10 @@ FolderOptionsGeneralDlg(
             }
             break;
         }
-        
         case WM_DESTROY:
             break;
-         
-         default: 
-             return FALSE;
+        default:
+            return FALSE;
     }
     return FALSE;
 }
@@ -1168,7 +1162,7 @@ static BOOL CALLBACK RefreshBrowsersCallback (HWND hWnd, LPARAM msg)
     WCHAR ClassName[100];
     if (GetClassName(hWnd, ClassName, 100))
     {
-        if (!wcscmp(ClassName, L"Progman") || 
+        if (!wcscmp(ClassName, L"Progman") ||
             !wcscmp(ClassName, L"CabinetWClass") ||
             !wcscmp(ClassName, L"ExploreWClass"))
         {
@@ -1236,7 +1230,7 @@ ViewDlg_Apply(HWND hwndDlg)
 
     // notify all
     SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0, 0);
-    
+
     EnumWindows(RefreshBrowsersCallback, NULL);
 }
 
@@ -1951,7 +1945,6 @@ FolderOptionsFileTypesDlg(
             if (pItem == NULL || (pItem->EditFlags & 0x00000010)) // FTA_NoRemove
                 EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
             return TRUE;
-
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
@@ -1984,7 +1977,6 @@ FolderOptionsFileTypesDlg(
                     break;
             }
             break;
-
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
 
@@ -2065,8 +2057,8 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
         hppages[num_pages++] = hpage;
 
     szOptions[0] = L'\0';
-    LoadStringW(shell32_hInstance, IDS_FOLDER_OPTIONS, szOptions, sizeof(szOptions) / sizeof(WCHAR));
-    szOptions[(sizeof(szOptions)/sizeof(WCHAR))-1] = L'\0';
+    LoadStringW(shell32_hInstance, IDS_FOLDER_OPTIONS, szOptions, _countof(szOptions));
+    szOptions[_countof(szOptions) - 1] = L'\0';
 
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
@@ -2089,7 +2081,7 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
             break;
         case 1:
             // show taskbar options dialog
-            FIXME("notify explorer to show taskbar options dialog");
+            FIXME("notify explorer to show taskbar options dlg\n");
             //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
             break;
         default:
@@ -2100,7 +2092,8 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
 /*************************************************************************
  *              Options_RunDLL (SHELL32.@)
  */
-EXTERN_C VOID WINAPI Options_RunDLL(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
+EXTERN_C VOID WINAPI
+Options_RunDLL(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
 {
     Options_RunDLLCommon(hWnd, hInst, StrToIntA(cmd), nCmdShow);
 }
@@ -2108,7 +2101,8 @@ EXTERN_C VOID WINAPI Options_RunDLL(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWOR
 /*************************************************************************
  *              Options_RunDLLA (SHELL32.@)
  */
-EXTERN_C VOID WINAPI Options_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
+EXTERN_C VOID WINAPI
+Options_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
 {
     Options_RunDLLCommon(hWnd, hInst, StrToIntA(cmd), nCmdShow);
 }
@@ -2116,7 +2110,8 @@ EXTERN_C VOID WINAPI Options_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWO
 /*************************************************************************
  *              Options_RunDLLW (SHELL32.@)
  */
-EXTERN_C VOID WINAPI Options_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
+EXTERN_C VOID WINAPI
+Options_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
     Options_RunDLLCommon(hWnd, hInst, StrToIntW(cmd), nCmdShow);
 }

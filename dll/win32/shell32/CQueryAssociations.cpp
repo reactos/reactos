@@ -80,17 +80,17 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
                                     debugstr_w(pszAssoc),
                                     hkeyProgid,
                                     hWnd);
-                                    
+
     if (hWnd != NULL)
     {
         FIXME("hwnd != NULL not supported\n");
     }
-    
+
     if (cfFlags != 0)
     {
         FIXME("unsupported flags: %x\n", cfFlags);
     }
-    
+
     RegCloseKey(this->hkeySource);
     RegCloseKey(this->hkeyProgID);
     this->hkeySource = this->hkeyProgID = NULL;
@@ -98,7 +98,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
     {
         WCHAR *progId;
         HRESULT hr;
-        
+
         LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
                             pszAssoc,
                             0,
@@ -108,7 +108,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
         {
             return S_OK;
         }
-        
+
         /* if this is a progid */
         if (*pszAssoc != '.' && *pszAssoc != '{')
         {
@@ -195,12 +195,12 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
     {
         FIXME("%08x: unimplemented flags\n", flags & unimplemented_flags);
     }
-    
+
     if (!pcchOut)
     {
         return E_UNEXPECTED;
     }
-    
+
     if (!this->hkeySource && !this->hkeyProgID)
     {
         return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
@@ -395,7 +395,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
 
             hr = CLSIDFromString(pszExtra, &clsid);
             if (FAILED(hr))
-            {            
+            {
                 return hr;
             }
             strcpyW(keypath, shellexW);
@@ -414,7 +414,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             }
             return this->ReturnString(flags, pszOut, pcchOut, guid, size / sizeof(WCHAR));
         }
-        
+
         default:
         {
             FIXME("assocstr %d unimplemented!\n", str);
@@ -476,8 +476,8 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
     {
         FIXME("Unsupported flags: %x\n", cfFlags);
     }
-    
-    switch(assocdata) 
+
+    switch(assocdata)
     {
         case ASSOCDATA_EDITFLAGS:
         {
@@ -485,7 +485,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
             {
                 return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
             }
-            
+
             void *data;
             DWORD size;
             HRESULT hres = this->GetValue(this->hkeyProgID, edit_flags, &data, &size);
@@ -493,13 +493,13 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
             {
                 return hres;
             }
-            
+
             if (!pcbOut)
             {
                 HeapFree(GetProcessHeap(), 0, data);
                 return hres;
             }
-            
+
             hres = this->ReturnData(pvOut, pcbOut, data, size);
             HeapFree(GetProcessHeap(), 0, data);
             return hres;
@@ -609,12 +609,12 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     {
         ret = RegOpenKeyExW(this->hkeySource, shellW, 0, KEY_READ, &hkeyShell);
     }
-    
+
     if (ret)
-    {    
+    {
         return HRESULT_FROM_WIN32(ret);
     }
-    
+
     if (!extra)
     {
         /* check for default verb */
@@ -654,7 +654,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     ret = RegOpenKeyExW(hkeyShell, extra, 0, KEY_READ, &hkeyVerb);
     HeapFree(GetProcessHeap(), 0, extra_from_reg);
     RegCloseKey(hkeyShell);
-    if (ret) 
+    if (ret)
     {
         return HRESULT_FROM_WIN32(ret);
     }
@@ -662,7 +662,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     ret = RegOpenKeyExW(hkeyVerb, commandW, 0, KEY_READ, &hkeyCommand);
     RegCloseKey(hkeyVerb);
     if (ret)
-    {    
+    {
         return HRESULT_FROM_WIN32(ret);
     }
     hr = this->GetValue(hkeyCommand, NULL, (void**)command, NULL);
@@ -681,7 +681,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
     {
         return hr;
     }
-    
+
     DWORD expLen = ExpandEnvironmentStringsW(pszCommand, NULL, 0);
     if (expLen > 0)
     {
@@ -691,7 +691,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
         HeapFree(GetProcessHeap(), 0, pszCommand);
         pszCommand = buf;
     }
-    
+
     /* cleanup pszCommand */
     if (pszCommand[0] == '"')
     {
@@ -782,11 +782,11 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
     {
         len = datalen;
     }
-    
+
     if (len)
     {
         memcpy(out, data, len*sizeof(WCHAR));
     }
-    
+
     return hr;
 }

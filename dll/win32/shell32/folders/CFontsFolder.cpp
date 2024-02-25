@@ -68,9 +68,9 @@ HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOI
 HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     static const DWORD dwFontsAttributes =
-        SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | 
+        SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR |
         SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-    
+
     if(cidl)
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
 

@@ -372,7 +372,7 @@
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
 #define IDD_NOOPEN       27
-#define IDD_NEWEXTENSION      28
+#define IDD_NEWEXTENSION 28
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29
@@ -701,8 +701,6 @@
 #define IDM_COPYHERE 0x7
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
-
-
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128

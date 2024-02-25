@@ -61,7 +61,6 @@ class CShellMenuCallback :
     public IShellMenuCallback
 {
 private:
-
     HWND m_hwndTray;
     CComPtr<IShellMenu> m_pShellMenu;
     CComPtr<IBandSite> m_pBandSite;
@@ -198,7 +197,6 @@ private:
             hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
-
         }
         else
         {
@@ -461,7 +459,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
         hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
         if (FAILED_UNEXPECTEDLY(hr))
         {
-            WARN("USER Programs folder not found.");
+            WARN("USER Programs folder not found\n");
             hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;

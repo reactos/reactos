@@ -38,14 +38,14 @@ typedef struct
 
 static const columninfo RecycleBinColumns[] =
 {
-    {IDS_SHV_COLUMN_NAME,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELDATE, &FMTID_Displaced, PID_DISPLACED_DATE, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN_SIZE,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
-    {IDS_SHV_COLUMN_TYPE,        &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN_MODIFIED,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    /*    {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE,                        LVCFMT_LEFT,  20}, */
-    /*    {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,                         LVCFMT_LEFT,  20},       */
+    {IDS_SHV_COLUMN_NAME,     &FMTID_Storage,   PID_STG_NAME,        SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
+    {IDS_SHV_COLUMN_DELFROM,  &FMTID_Displaced, PID_DISPLACED_FROM,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
+    {IDS_SHV_COLUMN_DELDATE,  &FMTID_Displaced, PID_DISPLACED_DATE,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN_SIZE,     &FMTID_Storage,   PID_STG_SIZE,        SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
+    {IDS_SHV_COLUMN_TYPE,     &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN_MODIFIED, &FMTID_Storage,   PID_STG_WRITETIME,   SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
+    /* {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT,  20}, */
+    /* {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,  LVCFMT_LEFT,  20}, */
 };
 
 #define COLUMN_NAME    0
@@ -319,30 +319,30 @@ HRESULT WINAPI CRecycleBinItemContextMenu::QueryContextMenu(HMENU hMenu, UINT in
 
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n", this, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, _countof(szBuffer)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        szBuffer[_countof(szBuffer)-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
         Count++;
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, _countof(szBuffer)))
     {
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        szBuffer[_countof(szBuffer)-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, _countof(szBuffer)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        szBuffer[_countof(szBuffer)-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, _countof(szBuffer)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        szBuffer[_countof(szBuffer)-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
     }
@@ -795,7 +795,7 @@ HRESULT WINAPI CRecycleBin::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT i
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
     mii.fState = RecycleBinIsEmpty() ? MFS_DISABLED : MFS_ENABLED;
     szBuffer[0] = L'\0';
-    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, _countof(szBuffer));
     mii.dwTypeData = szBuffer;
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdFirst + id++;
@@ -883,7 +883,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    // Only keep the base path.
+    // Only keep the base path
     WCHAR wszRootPathName[MAX_PATH];
     strcpyW(wszRootPathName, wszPath);
     PathRemoveFileSpecW(wszRootPathName);
@@ -1110,7 +1110,7 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         if (dwType != REG_EXPAND_SZ) /* type dismatch */
             return S_OK;
 
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        szPath[_countof(szPath)-1] = L'\0';
         PlaySoundW(szPath, NULL, SND_FILENAME);
     }
     return S_OK;
@@ -1149,8 +1149,8 @@ HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryR
 {
     FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
 
-    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
-        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    if (!pszRootPath || (pszRootPath[0] == 0) ||
+        !pSHQueryRBInfo || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
     {
         return E_INVALIDARG;
     }

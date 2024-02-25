@@ -373,11 +373,11 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         return;
     }
 
-    if( ( ( wEventId & SHCNE_NOITEMEVENTS ) && 
+    if( ( ( wEventId & SHCNE_NOITEMEVENTS ) &&
           ( wEventId & ~(SHCNE_NOITEMEVENTS | SHCNE_INTERRUPT) ) ) ||
-        ( ( wEventId & SHCNE_ONEITEMEVENTS ) && 
+        ( ( wEventId & SHCNE_ONEITEMEVENTS ) &&
           ( wEventId & ~(SHCNE_ONEITEMEVENTS | SHCNE_INTERRUPT) ) ) ||
-        ( ( wEventId & SHCNE_TWOITEMEVENTS ) && 
+        ( ( wEventId & SHCNE_TWOITEMEVENTS ) &&
           ( wEventId & ~(SHCNE_TWOITEMEVENTS | SHCNE_INTERRUPT) ) ) )
     {
         WARN("mutually incompatible events listed\n");

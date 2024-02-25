@@ -46,7 +46,6 @@ static void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
     }
 }
 
-
 static VOID
 InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
 {
@@ -70,12 +69,12 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
 
     hDlgCtrl = GetDlgItem(hwndDlg, 14000);
 
-    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_LOCATION, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_LOCATION, szVolume, _countof(szVolume)))
         szVolume[0] = 0;
 
     GetClientRect(hDlgCtrl, &rect);
 
-    memset(&lc, 0, sizeof(LV_COLUMN) );
+    memset(&lc, 0, sizeof(lc));
     lc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
 
     columnSize = 140; //FIXME
@@ -86,7 +85,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
     lc.pszText    = szVolume;
     (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&lc);
 
-    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, _countof(szVolume)))
         szVolume[0] = 0;
 
     lc.iSubItem   = 1;
@@ -99,29 +98,28 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
     itemCount = 0;
     do
     {
-        if ((dwDrives & 0x1))
+        if (dwDrives & 0x1)
         {
             UINT Type = GetDriveTypeW(szDrive);
             if (Type == DRIVE_FIXED) //FIXME
             {
-                if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), &dwSerial, &MaxComponent, &Flags, NULL, 0))
+                if (!GetVolumeInformationW(szDrive, szName, _countof(szName), &dwSerial, &MaxComponent, &Flags, NULL, 0))
                 {
                     szName[0] = 0;
                     dwSerial = -1;
                 }
 
                 swprintf(szVolume, L"%s (%c:)", szName, szDrive[0]);
-                memset(&li, 0x0, sizeof(LVITEMW));
+                memset(&li, 0x0, sizeof(li));
                 li.mask = LVIF_TEXT | LVIF_PARAM;
                 li.iSubItem = 0;
                 li.pszText = szVolume;
                 li.iItem = itemCount;
                 SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
-                if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
+                if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
                 {
-                    if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
+                    if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, _countof(szVolume)))
                     {
-
                         pItem = (DRIVE_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
                         if (pItem)
                         {
@@ -167,11 +165,10 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
     }
     ZeroMemory(&li, sizeof(li));
     li.mask = LVIF_STATE;
-    li.stateMask = (UINT) - 1;
+    li.stateMask = (UINT)-1;
     li.state = LVIS_FOCUSED | LVIS_SELECTED;
     li.iItem = defIndex;
     (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
-
 }
 
 static BOOL StoreDriveSettings(HWND hwndDlg)
@@ -183,7 +180,6 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
     HKEY hKey, hSubKey;
     WCHAR szSerial[20];
     DWORD dwSize;
-
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return FALSE;
@@ -212,7 +208,6 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
     }
     RegCloseKey(hKey);
     return TRUE;
-
 }
 
 static VOID FreeDriveItemContext(HWND hwndDlg)
@@ -231,13 +226,13 @@ static VOID FreeDriveItemContext(HWND hwndDlg)
         li.iItem = iIndex;
         if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
         {
-            HeapFree(GetProcessHeap(), 0, (LPVOID)li.lParam);
+            HeapFree(GetProcessHeap(), 0, (PVOID)li.lParam);
         }
     }
 }
 
 static INT
-GetDefaultItem(HWND hwndDlg, LVITEMW * li)
+GetDefaultItem(HWND hwndDlg, LVITEMW* li)
 {
     HWND hDlgCtrl;
     UINT iItemCount, iIndex;
@@ -252,7 +247,7 @@ GetDefaultItem(HWND hwndDlg, LVITEMW * li)
 
     ZeroMemory(li, sizeof(LVITEMW));
     li->mask = LVIF_PARAM | LVIF_STATE;
-    li->stateMask = (UINT) - 1;
+    li->stateMask = (UINT)-1;
     for (iIndex = 0; iIndex < iItemCount; iIndex++)
     {
         li->iItem = iIndex;
@@ -263,7 +258,6 @@ GetDefaultItem(HWND hwndDlg, LVITEMW * li)
         }
     }
     return -1;
-
 }
 
 static INT_PTR CALLBACK
@@ -271,8 +265,7 @@ RecycleBinDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LPPSHNOTIFY lppsn;
     LPNMLISTVIEW lppl;
@@ -383,12 +376,10 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
     HPROPSHEETPAGE hpsp[1];
     PROPSHEETHEADERW psh;
     HPROPSHEETPAGE hprop;
-
     BOOL ret;
 
-
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
-    psh.dwSize = sizeof(PROPSHEETHEADERW);
+    ZeroMemory(&psh, sizeof(psh));
+    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
     psh.pszCaption = MAKEINTRESOURCEW(IDS_RECYCLEBIN_FOLDER_NAME);
     psh.hwndParent = NULL;
@@ -404,10 +395,6 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
     hpsp[psh.nPages] = hprop;
     psh.nPages++;
 
-
     ret = PropertySheetW(&psh);
-    if (ret < 0)
-        return FALSE;
-    else
-        return TRUE;
+    return (ret >= 0);
 }
