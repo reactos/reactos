@@ -284,7 +284,8 @@ static WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
 static WCHAR GetAddressBarAccessKey(WCHAR chAccess)
 {
     static WCHAR s_chCache = 0;
-    if (s_chCache)
+    static LANGID s_ThreadLocale = 0;
+    if (s_chCache && s_ThreadLocale == ::GetThreadLocale())
         return s_chCache;
 
     WCHAR szText[80];
@@ -295,6 +296,7 @@ static WCHAR GetAddressBarAccessKey(WCHAR chAccess)
     }
 
     s_chCache = GetAccessKeyFromText(chAccess, szText);
+    s_ThreadLocale = ::GetThreadLocale();
     return s_chCache;
 }
 
