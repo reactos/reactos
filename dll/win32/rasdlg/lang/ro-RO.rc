@@ -22,9 +22,9 @@ BEGIN
     PUSHBUTTON "&Modificare…", 1016, 81, 187, 70, 14
     PUSHBUTTON "&Elimină", 1014, 154, 187, 70, 14
     AUTOCHECKBOX "&Dacă numărul eșuează, încearcă următorul", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Mută numărul &bun în capul listei", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "Con&firmă", 1, 122, 245, 60, 14
-    PUSHBUTTON "A&nulează", 2, 188, 245, 60, 14
+    AUTOCHECKBOX "Mutare număr &bun în capul listei", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "&OK", 1, 122, 245, 60, 14
+    PUSHBUTTON "Re&vocare", 2, 188, 245, 60, 14
 END
 
 103 DIALOGEX 6, 18, 250, 170
@@ -38,7 +38,7 @@ BEGIN
     AUTOCHECKBOX "N&u mă interoga până la următoarea mea autentificare", 1022, 8, 125, 235, 10
     PUSHBUTTON "&Setări…", 1026, 7, 149, 60, 14
     DEFPUSHBUTTON "&Conectare…", 1024, 117, 149, 60, 14
-    PUSHBUTTON "A&nulează", 1025, 183, 149, 60, 14
+    PUSHBUTTON "&Revocare", 1025, 183, 149, 60, 14
 END
 
 104 DIALOGEX 6, 18, 269, 263
@@ -76,8 +76,8 @@ BEGIN
     AUTOCHECKBOX "Micr&osoft CHAP versiunea 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
     AUTOCHECKBOX "Pentru protocoalele &bazate pe MS-CHAP, utilizează nume și parole de autentificare în ReactOS (și eventual, domenii)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "Con&firmă", 1, 127, 232, 60, 14
-    PUSHBUTTON "A&nulează", 2, 192, 232, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 127, 232, 60, 14
+    PUSHBUTTON "&Revocare", 2, 192, 232, 60, 14
 END
 
 106 DIALOGEX 6, 18, 255, 109
@@ -106,8 +106,8 @@ BEGIN
     AUTOCHECKBOX "&Aplică regulile de formare a numerelor", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Co&mentariu", 1052, 7, 102, 243, 36
     EDITTEXT 1050, 17, 115, 224, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 127, 147, 60, 14
-    PUSHBUTTON "A&nulează", 2, 191, 147, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 127, 147, 60, 14
+    PUSHBUTTON "&Revocare", 2, 191, 147, 60, 14
 END
 
 108 DIALOGEX 6, 18, 222, 104
@@ -120,8 +120,8 @@ BEGIN
     EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirmați parola:", 1061, 8, 61, 102, 8
     EDITTEXT 1058, 118, 57, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 90, 84, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 154, 84, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 90, 84, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 154, 84, 60, 14
 END
 
 109 DIALOGEX 6, 18, 223, 122
@@ -136,8 +136,8 @@ BEGIN
     EDITTEXT 1060, 116, 56, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirmați parola:", 1061, 7, 78, 108, 8
     EDITTEXT 1058, 116, 74, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 92, 101, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 156, 101, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 92, 101, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 156, 101, 60, 14
 END
 
 110 DIALOGEX 12, 16, 230, 105
@@ -148,8 +148,8 @@ BEGIN
     LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat. Apăsați Confirmă pentru a fi apelat de către server la numărul de mai jos. Apăsați Anulează pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "Int&roduceți numărul de telefon al modemului dumneavoastră:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", 1, 100, 85, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 164, 85, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 100, 85, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 164, 85, 60, 14
 END
 
 111 DIALOGEX 6, 19, 265, 135
@@ -160,7 +160,7 @@ BEGIN
     ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
     LTEXT "", 1070, 34, 7, 226, 105
     DEFPUSHBUTTON "N&u reapela=88", 1, 4, 117, 128, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 136, 117, 60, 14
+    PUSHBUTTON "&Revocare", 2, 136, 117, 60, 14
     PUSHBUTTON "Inf&ormații", 1069, 200, 117, 60, 14
 END
 
@@ -171,7 +171,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS poate apela/închide automat dispozitivele în funcție de cantitatea de informație transmisă și recepționată.", 1085, 9, 7, 253, 30
     GROUPBOX "Apelare automată", -1, 6, 38, 249, 71
-    LTEXT "Apelează o altă linie când conexiunea satisface condițiile următoare:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+    LTEXT "Apelare a unei o alte linii când conexiunea satisface condițiile următoare:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Este activă de cel &puțin:", -1, 16, 73, 100, 8
     COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Durează de cel puțin:", 1084, 16, 92, 99, 8, NOT WS_GROUP
@@ -182,8 +182,8 @@ BEGIN
     COMBOBOX 1081, 115, 146, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "D&urează de cel puțin:", 1087, 16, 168, 92, 8, NOT WS_GROUP
     COMBOBOX 1082, 115, 166, 90, 151, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", 1, 131, 199, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 194, 199, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 131, 199, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 194, 199, 60, 14
 END
 
 113 DIALOGEX 21, 46, 225, 65
@@ -193,7 +193,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1417, 7, 7, 20, 20
     LTEXT "", 1097, 36, 7, 185, 35, SS_NOPREFIX
-    PUSHBUTTON "A&nulează", 2, 83, 47, 60, 14
+    PUSHBUTTON "&Revocare", 2, 83, 47, 60, 14
 END
 
 114 DIALOGEX 6, 18, 225, 60
@@ -213,14 +213,14 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 263, 50
-    LTEXT "A&pelează:", 1412, 9, 60, 68, 8
+    LTEXT "A&pelare:", 1412, 9, 60, 68, 8
     COMBOBOX 1416, 88, 56, 165, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Apelează &din:", 1415, 9, 77, 71, 8
+    LTEXT "Apelare &din:", 1415, 9, 77, 71, 8
     COMBOBOX 1414, 88, 75, 89, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Reguli de apel", 1108, 181, 75, 72, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 96, 245, 1
-    DEFPUSHBUTTON "&Apelează", 1590, 8, 103, 61, 14
-    PUSHBUTTON "A&nulează", 1591, 70, 103, 60, 14
+    DEFPUSHBUTTON "&Apelare", 1590, 8, 103, 61, 14
+    PUSHBUTTON "&Revocare", 1591, 70, 103, 60, 14
     PUSHBUTTON "Pr&oprietăți", 1107, 132, 103, 60, 14
     PUSHBUTTON "&Manual…", 1592, 194, 103, 60, 14
 END
@@ -236,12 +236,12 @@ BEGIN
     LTEXT "&Parola:", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "Păstrea&ză acest nume și parolă pentru acești utilizatori:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Sal&vare a acestui nume și parolă pentru acești utilizatori:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
     DEFPUSHBUTTON "&Apelează", 1590, 8, 156, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 1591, 71, 156, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 71, 156, 60, 14
     PUSHBUTTON "P&roprietăți", 1107, 133, 156, 60, 14
     PUSHBUTTON "&Manual…", 1592, 195, 156, 60, 14
 END
@@ -259,12 +259,12 @@ BEGIN
     LTEXT "&Domeniul:", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "Păstrea&ză acest nume și parolă pentru acești utilizatori:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Sal&vare a acestui nume și parolă pentru acești utilizatori:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
     DEFPUSHBUTTON "&Apelează", 1590, 8, 173, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 1591, 71, 173, 60, 14
+    PUSHBUTTON "&Revocare", 1591, 71, 173, 60, 14
     PUSHBUTTON "P&roprietăți", 1107, 133, 173, 60, 14
     PUSHBUTTON "&Manual…", 1592, 195, 173, 60, 14
 END
@@ -289,8 +289,8 @@ BEGIN
     LTEXT "Apelea&ză:", 1412, 10, 177, 90, 8
     COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
-    DEFPUSHBUTTON "&Apelează", 1590, 10, 199, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 1591, 72, 199, 60, 14
+    DEFPUSHBUTTON "&Apelare", 1590, 10, 199, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 1591, 72, 199, 60, 14
     PUSHBUTTON "P&roprietăți", 1107, 134, 199, 60, 14
     PUSHBUTTON "&Manual…", 1592, 196, 199, 60, 14
 END
@@ -306,15 +306,15 @@ BEGIN
     LTEXT "&Parola:", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "Păstrea&ză acest nume și parolă pentru acești utilizatori:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Sal&vare a acestui nume și parolă pentru acești utilizatori:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
     LTEXT "Ap&elează:", 1412, 13, 157, 88, 8
     COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
-    DEFPUSHBUTTON "&Apelează", 1590, 10, 180, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 1591, 72, 180, 60, 14
+    DEFPUSHBUTTON "&Apelare", 1590, 10, 180, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 1591, 72, 180, 60, 14
     PUSHBUTTON "P&roprietăți", 1107, 134, 180, 60, 14
     PUSHBUTTON "&Manual…", 1592, 197, 180, 60, 14
 END
@@ -328,12 +328,12 @@ BEGIN
     COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "N&egociază tipul liniei", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
-    AUTOCHECKBOX "Utili&zează protocol proprietar vechi", 1149, 17, 48, 112, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Utili&zare protocol proprietar vechi", 1149, 17, 48, 112, 10, BS_TOP | BS_MULTILINE
     LTEXT "&Canale de utilizare:", 1154, 16, 65, 100, 8, NOT WS_GROUP
     EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Activează compresia oferită de modem", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Con&firmă", 1, 99, 109, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", 2, 163, 109, 60, 14
+    AUTOCHECKBOX "&Activeare a compresiei hardware", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&OK", 1, 99, 109, 60, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", 2, 163, 109, 60, 14
 END
 
 122 DIALOGEX 6, 18, 220, 68
@@ -343,7 +343,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tip&ul de linie:", 1155, 9, 11, 55, 8
     COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "N&egociază tipul de linie", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "N&egociere tip de linie", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     PUSHBUTTON "Con&firmă", 1, 90, 49, 60, 14, WS_GROUP
     PUSHBUTTON "A&nulează", 2, 154, 49, 60, 14
 END
