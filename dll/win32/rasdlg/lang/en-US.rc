@@ -624,7 +624,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Settings...", 1180, 151, 115, 60, 14
@@ -902,7 +902,7 @@ BEGIN
     EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Domain:", 1395, 7, 108, 53, 8, NOT WS_GROUP
     EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Save user name and  password", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Save user name and password", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "Cancel", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
@@ -1297,7 +1297,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Settings...", 1180, 151, 134, 60, 14
