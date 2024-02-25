@@ -2210,7 +2210,7 @@ BEGIN
     1572 "Protocols and Security\0"
     1573 "Select transports and security options for this connection.\0"
     1574 "The protocols you have selected include PAP, SPAP, and/or CHAP. If one of these is negotiated, data encryption will not occur. Do you want to keep these settings?\0"
-    1575 "To connect to '%1', you must first be connected to '%2'. Do you want  to connect to '%2' now?\0"
+    1575 "To connect to '%1', you must first be connected to '%2'. Do you want to connect to '%2' now?\0"
     1576 "Connecting over parallel cable...\0"
     1577 "Connecting over infrared...\0"
     1578 "Parallel cable connected.\0"
