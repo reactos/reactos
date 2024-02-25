@@ -2314,7 +2314,7 @@ BEGIN
     7347 "Unable to load IPX properties from the system.\0"
     7348 "Incoming Connections depend on the Routing and Remote Access service which was unable to start. For more information, check the system event log.\0"
     7349 "Unable to allow the editing of networking components at this time because they are currently being modified elsewhere.\0"
-    7350 "The new user you entered was not added to the local user database because  the name or password entered violated a system policy (it was too large, too small, or ill-formed).\0"
+    7350 "The new user you entered was not added to the local user database because the name or password entered violated a system policy (it was too large, too small, or ill-formed).\0"
     7351 "The system is unable to delete the requested user.\0"
     7352 "Unable to remove the selected network component because it is in use.\0"
     7353 "Incoming Connections Warning\0"
