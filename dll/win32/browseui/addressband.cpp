@@ -265,6 +265,7 @@ static WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
     {
         if (*pch == L'&' && pch[1] == L'&')
         {
+            /* Skip the first '&', the second is skipped by the for-loop */
             ++pch;
             continue;
         }
