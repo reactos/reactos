@@ -565,7 +565,7 @@ done:
     return Result;
 }
 
-#if WIN32_WINNT < 0x0600
+#if _WIN32_WINNT < 0x0600
 /* WARNING:
  * This code has been copied from advapi32/reg/reg.c,
  * so this dll can be tested as is on Windows XP
