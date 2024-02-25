@@ -125,7 +125,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     }
     else
     {
-        // *.ico
+        // .ico
         pIconContext->nIcons = 1;
         pIconContext->phIcons = new HICON[1];
 
@@ -175,8 +175,7 @@ static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
 INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmis;
     LPDRAWITEMSTRUCT lpdis;
@@ -199,9 +198,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 
         // load icons
         if (!DoLoadIcons(hwndDlg, pIconContext, pIconContext->szPath))
-        {
             NoIconsInFile(hwndDlg, pIconContext);
-        }
 
         // set selection
         count = SendMessageW(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
@@ -272,9 +269,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 
             // load icons
             if (!DoLoadIcons(hwndDlg, pIconContext, szText))
-            {
                 NoIconsInFile(hwndDlg, pIconContext);
-            }
 
             // set selection
             SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
@@ -283,16 +278,14 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         break;
 
         case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam;
+            lpmis = (LPMEASUREITEMSTRUCT)lParam;
             lpmis->itemHeight = CY_ITEM;
             return TRUE;
 
         case WM_DRAWITEM:
-            lpdis = (LPDRAWITEMSTRUCT) lParam;
+            lpdis = (LPDRAWITEMSTRUCT)lParam;
             if (lpdis->itemID == (UINT)-1)
-            {
                 break;
-            }
             switch (lpdis->itemAction)
             {
                 case ODA_SELECT:

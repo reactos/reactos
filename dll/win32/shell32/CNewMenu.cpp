@@ -65,7 +65,6 @@ void CNewMenu::UnloadAllItems()
     {
         pCurItem = m_pItems;
         m_pItems = m_pItems->pNext;
-
         UnloadItem(pCurItem);
     }
 
@@ -201,9 +200,9 @@ CNewMenu::CacheItems()
             }
         }
     }
-    
+
     dwSize++;
-    
+
     lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
     if (!lpValues)
         return FALSE;
@@ -222,17 +221,17 @@ CNewMenu::CacheItems()
         HeapFree(GetProcessHeap(), 0, lpValues);
         return FALSE;
     }
-    
+
     if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
         RegCloseKey(hKey);
         return FALSE;
     }
-    
+
     HeapFree(GetProcessHeap(), 0, lpValues);
     RegCloseKey(hKey);
-    
+
     return TRUE;
 }
 
@@ -245,17 +244,17 @@ CNewMenu::LoadCachedItems()
     HKEY hKey;
     SHELLNEW_ITEM *pNewItem;
     SHELLNEW_ITEM *pCurItem = NULL;
-    
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, ShellNewKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, ShellNewKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
-    
+
     if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, NULL, &dwSize) != ERROR_SUCCESS)
         return FALSE;
-    
+
     lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (!lpValues)
         return FALSE;
-    
+
     if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, (LPBYTE)lpValues, &dwSize) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
@@ -287,10 +286,10 @@ CNewMenu::LoadCachedItems()
             }
         }
     }
-    
+
     HeapFree(GetProcessHeap(), 0, lpValues);
     RegCloseKey(hKey);
-    
+
     return TRUE;
 }
 
@@ -299,12 +298,12 @@ CNewMenu::LoadAllItems()
 {
     /* If there are any unload them */
     UnloadAllItems();
-    
+
     if (!LoadCachedItems())
     {
         CacheItems();
     }
-    
+
     if (!m_pLinkItem)
     {
         m_pLinkItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));
@@ -445,7 +444,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
     WCHAR wszName[MAX_PATH];
     WCHAR wszNewFolder[25];
     HRESULT hr;
-    
+
     /* Get folder path */
     hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -708,7 +707,7 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             DWORD id = LOWORD(lpdis->itemID);
             HICON hIcon = 0;
             if (id == 0)
-                hIcon = m_hiconFolder;  
+                hIcon = m_hiconFolder;
             else if (id == 1)
                 hIcon = m_hiconLink;
             else
@@ -721,12 +720,12 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!hIcon)
                 break;
 
-            DrawIconEx(lpdis->hDC, 
-                       2, 
-                       lpdis->rcItem.top + (lpdis->rcItem.bottom - lpdis->rcItem.top - 16) / 2, 
-                       hIcon, 
-                       16, 
-                       16, 
+            DrawIconEx(lpdis->hDC,
+                       2,
+                       lpdis->rcItem.top + (lpdis->rcItem.bottom - lpdis->rcItem.top - 16) / 2,
+                       hIcon,
+                       16,
+                       16,
                        0, NULL, DI_NORMAL);
 
             if(plResult)

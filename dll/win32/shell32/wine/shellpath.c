@@ -578,7 +578,6 @@ static const WCHAR MusicW[] = {'M','u','s','i','c','\0'};
 static const WCHAR Music_PlaylistsW[] = {'M','u','s','i','c','\\','P','l','a','y','l','i','s','t','s','\0'};
 static const WCHAR Music_Sample_MusicW[] = {'M','u','s','i','c','\\','S','a','m','p','l','e',' ','M','u','s','i','c','\0'};
 static const WCHAR Music_Sample_PlaylistsW[] = {'M','u','s','i','c','\\','S','a','m','p','l','e',' ','P','l','a','y','l','i','s','t','s','\0'};
-static const WCHAR My_DocumentsW[] = {'M','y',' ','D','o','c','u','m','e','n','t','s','\0'};
 #endif
 static const WCHAR My_MusicW[] = {'M','y',' ','M','u','s','i','c','\0'};
 static const WCHAR My_PicturesW[] = {'M','y',' ','P','i','c','t','u','r','e','s','\0'};
@@ -1544,7 +1543,7 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (!pszPath)
         return E_INVALIDARG;
@@ -1629,7 +1628,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
 
     TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_CurrVer)
         return E_INVALIDARG;
@@ -1741,7 +1740,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     TRACE("%p,0x%08x,0x%02x,%p\n", hToken, dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_User)
         return E_INVALIDARG;
@@ -1820,7 +1819,7 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
 
     TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if (CSIDL_Data[folder].type != CSIDL_Type_AllUsers)
         return E_INVALIDARG;
@@ -2100,7 +2099,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirA(
     HRESULT hr = S_OK;
     LPWSTR pszSubPathW = NULL;
     LPWSTR pszPathW = NULL;
-    TRACE("%08x,%08x,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
 
     if(pszPath) {
         pszPathW = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
@@ -2152,8 +2150,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
-    
-    TRACE("%p,%p,nFolder=0x%04x,%s\n", hwndOwner,pszPath,nFolder,debugstr_w(pszSubPath));
 
     /* Windows always NULL-terminates the resulting path regardless of success
      * or failure, so do so first
@@ -2161,7 +2157,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     if (pszPath)
         *pszPath = '\0';
 
-    if (folder >= sizeof(CSIDL_Data) / sizeof(CSIDL_Data[0]))
+    if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
     if ((SHGFP_TYPE_CURRENT != dwFlags) && (SHGFP_TYPE_DEFAULT != dwFlags))
         return E_INVALIDARG;
@@ -2324,8 +2320,6 @@ HRESULT WINAPI SHGetFolderPathA(
 {
     WCHAR szTemp[MAX_PATH];
     HRESULT hr;
-
-    TRACE("%p,%p,nFolder=0x%04x\n",hwndOwner,pszPath,nFolder);
 
     if (pszPath)
         *pszPath = '\0';
@@ -2494,7 +2488,7 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
     }
 
     hr = _SHRegisterFolders(hRootKey, hToken, pUserShellFolderPath,
-     pShellFolderPath, folders, sizeof(folders) / sizeof(folders[0]));
+     pShellFolderPath, folders, ARRAY_SIZE(folders));
     TRACE("returning 0x%08x\n", hr);
     return hr;
 }
@@ -2519,7 +2513,7 @@ static HRESULT _SHRegisterCommonShellFolders(void)
 
     TRACE("\n");
     hr = _SHRegisterFolders(HKEY_LOCAL_MACHINE, NULL, szSHUserFolders,
-     szSHFolders, folders, sizeof(folders) / sizeof(folders[0]));
+     szSHFolders, folders, ARRAY_SIZE(folders));
     TRACE("returning 0x%08x\n", hr);
     return hr;
 }
