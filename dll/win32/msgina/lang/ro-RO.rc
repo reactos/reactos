@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -43,9 +43,9 @@ BEGIN
     EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Vă autentificați la:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_DOMAIN, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Con&firmă", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 160, 122, 50, 14
-    PUSHBUTTON "&Oprește", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
+    PUSHBUTTON "&OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "&Revocare", IDCANCEL, 160, 122, 50, 14
+    PUSHBUTTON "&Oprire", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
 END
 
 IDD_SECURITY DIALOGEX 0, 0, 275, 164
@@ -58,12 +58,12 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Ce acțiune preferați?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "&Blochează calculatorul", IDC_SECURITY_LOCK, 7, 124, 80, 14
-    PUSHBUTTON "&Deautentifică-mă…", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
-    PUSHBUTTON "Închid&e calculatorul…", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
-    PUSHBUTTON "Schim&bă parola…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
-    PUSHBUTTON "&Gestionar de activități", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 188, 143, 80, 14
+    PUSHBUTTON "&Blocare calculator", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    PUSHBUTTON "&Deautentificare…", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
+    PUSHBUTTON "Închid&erer…", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
+    PUSHBUTTON "Schim&bare parolă…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
+    PUSHBUTTON "&Manager de activități", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
+    PUSHBUTTON "&Revocare", IDCANCEL, 188, 143, 80, 14
 END
 
 IDD_LOCKED DIALOGEX 0, 0, 275, 121
@@ -91,8 +91,8 @@ BEGIN
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Parola:", IDC_STATIC, 36, 125, 42, 8
     EDITTEXT IDC_UNLOCK_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "Con&firmă", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 144, 154, 50, 14
+    PUSHBUTTON "&OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "&Revocare", IDCANCEL, 144, 154, 50, 14
 END
 
 IDD_CHANGEPWD DIALOGEX 0, 0, 275, 166
@@ -111,8 +111,8 @@ BEGIN
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Confirmați parola:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "Con&firmă", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "&OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "&Revocare", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
@@ -137,11 +137,11 @@ BEGIN
     LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
-    DEFPUSHBUTTON "Con&firmă", IDOK, 143, 122, 55, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", IDCANCEL, 204, 122, 55, 14
+    DEFPUSHBUTTON "&OK", IDOK, 143, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", IDCANCEL, 204, 122, 55, 14
 
-    // DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
-    // PUSHBUTTON "A&nulează", IDCANCEL, 143, 122, 55, 14
+    // DEFPUSHBUTTON "&OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    // PUSHBUTTON "&Revocare", IDCANCEL, 143, 122, 55, 14
     // PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
 END
 
@@ -164,11 +164,11 @@ BEGIN
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
     LTEXT "Co&mentariu:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 150, 276, 55, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", IDCANCEL, 211, 276, 55, 14
+    DEFPUSHBUTTON "&OK", IDOK, 150, 276, 55, 14, WS_GROUP
+    PUSHBUTTON "&Revocare", IDCANCEL, 211, 276, 55, 14
 
-    // DEFPUSHBUTTON "Con&firmă", IDOK, 87, 276, 55, 14, WS_GROUP
-    // PUSHBUTTON "A&nulează", IDCANCEL, 150, 276, 55, 14
+    // DEFPUSHBUTTON "&OK", IDOK, 87, 276, 55, 14, WS_GROUP
+    // PUSHBUTTON "&Revocare", IDCANCEL, 150, 276, 55, 14
     // PUSHBUTTON "&Manual…", IDHELP, 211, 276, 55, 14
 END
 
@@ -190,8 +190,8 @@ BEGIN
     PUSHBUTTON "&Hibernare", IDC_BUTTON_HIBERNATE, 30093, 30049, 22, 20, BS_OWNERDRAW | WS_DISABLED
     PUSHBUTTON "&Stare de veghe", IDC_BUTTON_SLEEP, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
     PUSHBUTTON "Închi&dere", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "A&nulează", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
+    PUSHBUTTON "R&epornire", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Revocare", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Închidere", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
@@ -207,8 +207,8 @@ BEGIN
     PUSHBUTTON "&Hibernare", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
     PUSHBUTTON "&Stare de veghe", IDC_BUTTON_SLEEP, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Închi&dere", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "A&nulează", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
+    PUSHBUTTON "R&epornire", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Revocare", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Hibernare", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 79, 70, 51, 11
@@ -236,7 +236,7 @@ BEGIN
     IDS_LOGONTITLE "Mesaj de autentificare"
     IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă este făcută distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
-    IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
+    IDS_PASSWORDMUSTCHANGE "Trebuie să vă schimbați parola la prima autentificare."
     IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."
     IDS_ACCOUNTEXPIRED "Contul v-a expirat, adresați-vă administratorului."
     IDS_ACCOUNTLOCKED "Nu vă pot conecta deoarece contul dumneavoastră. a fost blocat. Consultați administratorul de sistem."
@@ -244,9 +244,9 @@ BEGIN
     IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
     IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
     IDS_EMERGENCYLOGOFFTITLE "Deautentificare din ReactOS"
-    IDS_EMERGENCYLOGOFF "Apăsați Confirmă pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYLOGOFF "Apăsați OK pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
-    IDS_EMERGENCYRESTART "Apăsați Confirmă pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYRESTART "Apăsați OK pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
 END
 
 /* Shutdown Dialog Strings */
