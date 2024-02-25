@@ -1050,7 +1050,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Internett tilkobling deling godtar andre datamaskiner på din lokale nettverk å få tilgang til eksterne ressurser gjennom denne tilkoblingen.", -1, 10, 5, 300, 22
     AUTOCHECKBOX "&Aktiver internett tilkobling deling for denne tilkoblingen", 1512, 21, 31, 272, 10
-    LTEXT "For å ringe denne tilkoblingen automatisk  når en datamaskin på ditt lokale nettverk forsøker å få tilgang til eksterne ressurser, velg følgende markeringsbokser.", 1514, 10, 56, 294, 22
+    LTEXT "For å ringe denne tilkoblingen automatisk når en datamaskin på ditt lokale nettverk forsøker å få tilgang til eksterne ressurser, velg følgende markeringsbokser.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "akti&vere on-demand nummerslåing", 1513, 21, 86, 260, 10
 END
 
