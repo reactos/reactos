@@ -2322,7 +2322,7 @@ BEGIN
     7351 "Sistemi nuk është në gjendje të fshi përdoruesit e kërkuar.\0"
     7352 "Në pamundësi për të hequr komponentin e zgjedhur të rrjetit për shkak se ajo është në përdorim.\0"
     7353 "Paralajmërim Lidhjet Hyrëse\0"
-    7354 "Çdo përdoruesit që ju fshini do të hiqet përgjithmonë nga sistemi edhe nëse anulo është shtypur. Jeni te sigurte qe doni ta hiqni përherë %s? \0"
+    7354 "Çdo përdoruesit që ju fshini do të hiqet përgjithmonë nga sistemi edhe nëse anulo është shtypur. Jeni te sigurte qe doni ta hiqni përherë %s?\0"
     7355 "Ju jeni gati për të kaluar në një sistem menaxhimi konsol. Kjo lidhje e cilësuar do të mbyllet dhe çdo ndryshim që mund të keni bërë do të angazhohen në sistemin. A jeni dakord për të vazhduar?\0"
     7356 "Vlera juaj Maskës Rrjetit ka ndryshuar. Një zero bit në një maskë mund të ndiqet vetëm nga zero copa të tjera. Për shembull, një vlerë Rrjeti maskë, e shprehur në simbol dhjetore me pika, e 255.255.0.0, është i vlefshëm, por nuk është 255.0.255.0.\n\0"
     7357 "Lejet Përdoruesi\0"
