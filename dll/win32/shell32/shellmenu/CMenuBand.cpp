@@ -1001,7 +1001,7 @@ HRESULT CMenuBand::_MenuItemSelect(DWORD changeType)
             break;
         default:
             if (('A' <= changeType && changeType <= 'Z') ||
-                ('1' <= changeType && changeType <= '9'))
+                ('0' <= changeType && changeType <= '9'))
             {
                 hr = _KeyboardItemChange(changeType);
                 if (hr != S_FALSE)
