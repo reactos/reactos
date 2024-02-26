@@ -3671,10 +3671,11 @@ CreateShortcut(
         return hr;
 
     hr = CoCreateInstance(CLSID_ShellLink, NULL,
-                          CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pSL);
+                          CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID*)&pSL);
     if (SUCCEEDED(hr))
     {
         pSL->SetIDList(pidl);
+
         if (pszDescription)
             pSL->SetDescription(pszDescription);
 
