@@ -3692,12 +3692,7 @@ CreateShortcut(
     return SUCCEEDED(hr);
 }
 
-VOID ShowFavError(INT nStringID)
-{
-    // FIXME: Show error messsage
-}
-
-HRESULT GetFavLocations(HWND hWnd, LPITEMIDLIST *pPidl)
+HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 {
     HRESULT hr = SHGetSpecialFolderLocation(hWnd, CSIDL_FAVORITES, pPidl);
     if (FAILED(hr))
@@ -3709,18 +3704,14 @@ HRESULT GetFavLocations(HWND hWnd, LPITEMIDLIST *pPidl)
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     LPITEMIDLIST pidlFavs;
-    HRESULT hr = GetFavLocations(m_hWnd, &pidlFavs);
-    if (FAILED(hr))
-    {
-        ShowFavError(0);
+    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
-    }
 
     SHFILEINFOW fileInfo = { NULL };
     if (!SHGetFileInfoW((LPCWSTR)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
                         SHGFI_PIDL | SHGFI_DISPLAYNAME))
     {
-        ShowFavError(0);
         return 0;
     }
 
@@ -3729,16 +3720,7 @@ LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl
     PathAppendW(szPath, fileInfo.szDisplayName);
     PathAddExtensionW(szPath, L".LNK");
 
-    // FIXME: Localize
-    WCHAR szText[MAX_PATH];
-    StringCchPrintfW(szText, _countof(szText), L"Shortcut to %s", fileInfo.szDisplayName);
-
-    if (!CreateShortcut(szPath, fCurrentDirectoryPIDL, szText))
-    {
-        ShowFavError(0);
-        return 0;
-    }
-
+    CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
     return 0;
 }
 
@@ -3746,28 +3728,21 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 {
     CComPtr<IShellFolder> psfDesktop;
     LPITEMIDLIST pidlFavs;
-    HRESULT hr = GetFavLocations(m_hWnd, &pidlFavs);
-    if (FAILED(hr))
-    {
-        ShowFavError(0);
+    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
-    }
 
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        ShowFavError(0);
         ILFree(pidlFavs);
         return 0;
     }
 
     hr = SHInvokeDefaultCommand(m_hWnd, psfDesktop, pidlFavs);
+    ILFree(pidlFavs);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        ShowFavError(0);
-        ILFree(pidlFavs);
         return 0;
-    }
 
     return 0;
 }
