@@ -2318,7 +2318,7 @@ BEGIN
     7351 "Das System kann den angeforderten Benutzer nicht löschen."
     7352 "Die ausgewählte Netzwerkkomponente kann nicht entfernt werden, da Sie verwendet wird."
     7353 "Warnung bei eingehender Verbindung"
-    7354 "Alle Benutzer, die Sie löschen, werden unwiderruflich vom System entfernt, auch wenn Sie auf Abbrechen klicken. Möchten Sie %s löschen? "
+    7354 "Alle Benutzer, die Sie löschen, werden unwiderruflich vom System entfernt, auch wenn Sie auf Abbrechen klicken. Möchten Sie %s löschen?"
     7355 "Sie sind im Begriff zur Systemverwaltungskonsole zu wechseln. Die Eigenschaftenseite für eingehende Verbindungen wird geschlossen und alle Änderungen werden an das System übertragen. Möchten Sie den Vorgang fortsetzen?"
     7356 "Der Wert der Netzwerkmaske hat sich geändert. Auf ein Nullbit können nur weitere Nullbits folgen. Zum Beispiel ist ein Netzwerkmaskenwert von 255.255.0.0 gültig, aber 255.0.255.0 ist ungültig.\n"
     7357 "Benutzerberechtigungen"
