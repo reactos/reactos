@@ -3719,7 +3719,7 @@ LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl
     WCHAR szPath[MAX_PATH];
     SHGetPathFromIDListW(pidlFavs, szPath);
     PathAppendW(szPath, fileInfo.szDisplayName);
-    PathAddExtensionW(szPath, L".LNK");
+    PathAddExtensionW(szPath, L".lnk");
 
     CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
     return 0;
