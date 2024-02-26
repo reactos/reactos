@@ -913,7 +913,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
             index = count - 1;
             dwSelectType = VK_UP;
         }
-        else
+        else if (dwSelectType == VK_UP || dwSelectType == VK_DOWN)
         {
             if (m_hotItem >= 0)
             {
@@ -945,6 +945,21 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                     index++;
                 }
             }
+        }
+        else
+        {
+            UINT_PTR id = 0;
+            if (::SendMessage(m_hWnd, TB_MAPACCELERATOR, dwSelectType, (LPARAM)&id))
+            {
+                INT nIndex = (INT)::SendMessage(m_hWnd, TB_COMMANDTOINDEX, id, 0);
+                if (nIndex != -1)
+                {
+                    m_menuBand->_ChangeHotItem(NULL, -1, 0);
+                    ProcessClick(id);
+                    return S_OK;
+                }
+            }
+            return S_FALSE;
         }
 
         TBBUTTON btn = { 0 };

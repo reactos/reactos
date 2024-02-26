@@ -657,6 +657,17 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
                 msg->lParam = 0;
                 msg->wParam = 0;
             }
+            else
+            {
+                if (msg->message == WM_SYSKEYDOWN &&
+                    m_current->type == MenuBarEntry &&
+                    (('A' <= msg->wParam && msg->wParam <= 'Z') ||
+                     ('0' <= msg->wParam && msg->wParam <= '9'))
+                {
+                    if (m_current->mb->_MenuItemSelect(msg->wParam) == S_OK)
+                        msg->message = WM_NULL;
+                }
+            }
             break;
         }
 

@@ -930,7 +930,17 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
             else
                 tb = m_staticToolbar;
         }
+        else
+        {
+            if (m_staticToolbar)
+                tb = m_staticToolbar;
+            else
+                tb = m_SFToolbar;
+        }
     }
+
+    if (!tb)
+        return E_FAIL;
 
     // Ask the first toolbar to change
     hr = tb->KeyboardItemChange(change);
@@ -983,10 +993,21 @@ HRESULT CMenuBand::_MenuItemSelect(DWORD changeType)
             hr = _KeyboardItemChange(VK_UP);
             if (hr != S_FALSE)
                 return hr;
+            break;
         case VK_RIGHT:
             hr = _KeyboardItemChange(VK_DOWN);
             if (hr != S_FALSE)
                 return hr;
+            break;
+        default:
+            if (('A' <= changeType && changeType <= 'Z') ||
+                ('1' <= changeType && changeType <= '9'))
+            {
+                hr = _KeyboardItemChange(changeType);
+                if (hr != S_FALSE)
+                    return hr;
+            }
+            break;
         }
     }
 
