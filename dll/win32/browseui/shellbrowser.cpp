@@ -3670,8 +3670,8 @@ CreateShortcut(
     if (FAILED(hr))
         return hr;
 
-    hr = CoCreateInstance(CLSID_ShellLink, NULL,
-                          CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID*)&pSL);
+    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          IID_IShellLinkW, (LPVOID*)&pSL);
     if (SUCCEEDED(hr))
     {
         pSL->SetIDList(pidl);
