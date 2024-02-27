@@ -140,70 +140,27 @@ FormatMenuString(IN HMENU hMenu,
     return FALSE;
 }
 
-DWORD
-GetExplorerRegDWORD(IN HKEY hKey,
-                    IN LPCWSTR lpSubKey,
-                    IN LPCWSTR lpValue,
-                    IN DWORD dwDefaultValue)
+BOOL GetRegBool(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN BOOL bDefaultValue)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HKEY hkSubKey;
-    DWORD dwType, dwSize, Ret = dwDefaultValue;
-
-    StringCbCopyW(szBuffer, sizeof(szBuffer),
-                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
-    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
-    StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey);
-
-    if (RegOpenKeyExW(hKey,
-                      szBuffer,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hkSubKey) == ERROR_SUCCESS)
-    {
-        ZeroMemory(szBuffer, sizeof(szBuffer));
-
-        dwSize = sizeof(szBuffer);
-        if (RegQueryValueExW(hkSubKey,
-                             lpValue,
-                             0,
-                             &dwType,
-                             (LPBYTE)szBuffer,
-                             &dwSize) == ERROR_SUCCESS)
-        {
-            szBuffer[_countof(szBuffer) - 1] = UNICODE_NULL; // Avoid buffer overrun
-            if ((dwType == REG_DWORD) && (dwSize == sizeof(DWORD)))
-                Ret = *((PDWORD)szBuffer);
-            else if (dwType == REG_SZ)
-                Ret = _wtoi(szBuffer);
-        }
-
-        RegCloseKey(hkSubKey);
-    }
-    return Ret;
+    return SHRegGetBoolUSValueW(pszSubKey, pszValueName, FALSE, bDefaultValue);
 }
 
-BOOL
-SetExplorerRegDWORD(IN HKEY hKey,
-                    IN LPCWSTR lpSubKey,
-                    IN LPCWSTR lpValue,
-                    IN DWORD dwValue)
+BOOL SetRegDword(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN DWORD dwValue)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HKEY hkSubKey;
+    return (SHRegSetUSValueW(pszSubKey, pszValueName, REG_DWORD, &dwValue,
+                             sizeof(dwValue), SHREGSET_FORCE_HKCU) == ERROR_SUCCESS);
+}
 
-    StringCbCopyW(szBuffer, sizeof(szBuffer),
-                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
-    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
-    StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey);
+#define REGKEY_ADVANCED L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
 
-    if (RegCreateKeyW(hKey, szBuffer, &hkSubKey) == ERROR_SUCCESS)
-    {
-        RegSetValueExW(hkSubKey, lpValue, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
-        RegCloseKey(hkSubKey);
-    }
+BOOL GetAdvancedBool(IN LPCWSTR pszValueName, IN BOOL bDefaultValue)
+{
+    return GetRegBool(REGKEY_ADVANCED, pszValueName, bDefaultValue);
+}
 
-    return TRUE;
+BOOL SetAdvancedDword(IN LPCWSTR pszValueName, IN DWORD dwValue)
+{
+    return SetRegDword(REGKEY_ADVANCED, pszValueName, dwValue);
 }
 
 BOOL
