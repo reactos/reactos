@@ -208,6 +208,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "&Arakatu erabiltzaile guztiak"
     IDS_STARTUP_ERROR "Sistema ez du exploradorea hasi erregistro ustela dago-eta edo ez dago erabilgarri."
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

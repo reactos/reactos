@@ -135,12 +135,14 @@ public:
                        SHRestricted(REST_FORCESTARTMENULOGOFF) ||
                        GetExplorerRegValueSet(HKEY_CURRENT_USER,
                                               L"Advanced",
-                                              L"StartMenuLogoff"));
+                                              L"StartMenuLogoff",
+                                              FALSE));
 
         /* Favorites */
         if (!GetExplorerRegValueSet(HKEY_CURRENT_USER,
                                     L"Advanced",
-                                    L"StartMenuFavorites"))
+                                    L"StartMenuFavorites",
+                                    FALSE))
         {
             DeleteMenu(hMenu,
                        IDM_FAVORITES,

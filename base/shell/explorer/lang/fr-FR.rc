@@ -209,6 +209,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "E&xplorer tous les utilisateurs"
     IDS_STARTUP_ERROR "Le système ne peut pas démarrer explorer parce que le registre est corrompu ou indisponible."
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

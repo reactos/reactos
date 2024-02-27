@@ -106,10 +106,11 @@ FormatMenuString(IN HMENU hMenu,
                  IN UINT uFlags,
                  ...);
 
-BOOL
+DWORD
 GetExplorerRegValueSet(IN HKEY hKey,
                        IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue);
+                       IN LPCWSTR lpValue,
+                       IN DWORD dwDefaultValue);
 
 BOOL
 SetExplorerRegValueSet(IN HKEY hKey,

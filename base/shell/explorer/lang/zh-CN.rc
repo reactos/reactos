@@ -210,6 +210,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "浏览所有用户(&X)"
     IDS_STARTUP_ERROR "由于注册表损坏或不可用，系统无法启动资源管理器。"
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

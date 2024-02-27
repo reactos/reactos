@@ -209,6 +209,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "E&xplorează Toți utilizatorii"
     IDS_STARTUP_ERROR "Pornirea exploratorului a eșuat din cauza informațiilor lipsă sau corupte din registru."
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

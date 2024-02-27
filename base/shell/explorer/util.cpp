@@ -140,24 +140,21 @@ FormatMenuString(IN HMENU hMenu,
     return FALSE;
 }
 
-BOOL
+DWORD
 GetExplorerRegValueSet(IN HKEY hKey,
                        IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue)
+                       IN LPCWSTR lpValue,
+                       IN DWORD dwDefaultValue)
 {
     WCHAR szBuffer[MAX_PATH];
     HKEY hkSubKey;
-    DWORD dwType, dwSize;
-    BOOL Ret = FALSE;
+    DWORD dwType, dwSize, Ret = dwDefaultValue;
 
     StringCbCopyW(szBuffer, sizeof(szBuffer),
                   L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
-        return FALSE;
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
-        return FALSE;
+    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
+    StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey);
 
-    dwSize = sizeof(szBuffer);
     if (RegOpenKeyExW(hKey,
                       szBuffer,
                       0,
@@ -166,6 +163,7 @@ GetExplorerRegValueSet(IN HKEY hKey,
     {
         ZeroMemory(szBuffer, sizeof(szBuffer));
 
+        dwSize = sizeof(szBuffer);
         if (RegQueryValueExW(hkSubKey,
                              lpValue,
                              0,
@@ -173,10 +171,11 @@ GetExplorerRegValueSet(IN HKEY hKey,
                              (LPBYTE)szBuffer,
                              &dwSize) == ERROR_SUCCESS)
         {
+            szBuffer[_countof(szBuffer) - 1] = UNICODE_NULL; // Avoid buffer overrun
             if ((dwType == REG_DWORD) && (dwSize == sizeof(DWORD)))
-                Ret = *((PDWORD)szBuffer) != 0;
-            else if (dwSize > 0)
-                Ret = *((PWCHAR)szBuffer) != 0;
+                Ret = *((PDWORD)szBuffer);
+            else if (dwType == REG_SZ)
+                Ret = _wtoi(szBuffer);
         }
 
         RegCloseKey(hkSubKey);

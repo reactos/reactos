@@ -209,6 +209,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "&Telusuri Semua Pengguna"
     IDS_STARTUP_ERROR "Sistem tidak bisa memulai penjelajah karena registri rusak atau tidak tersedia."
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

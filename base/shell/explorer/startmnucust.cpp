@@ -74,33 +74,50 @@ static VOID OnClearRecentItems(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
 }
 
+struct CUSTOMIZE_ENTRY;
+typedef DWORD (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
+typedef BOOL (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, DWORD dwValue);
+
 struct CUSTOMIZE_ENTRY
 {
-    INT nStringID;
-    LPCWSTR pszSettings;
+    LPARAM id;
+    LPCWSTR name;
+    FN_CUSTOMIZE_READ fnRead;
+    FN_CUSTOMIZE_WRITE fnWrite;
 };
+
+static DWORD CALLBACK CustomizeRead0(const CUSTOMIZE_ENTRY *entry)
+{
+    return GetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry->name, FALSE);
+}
+
+static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+{
+    return SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry->name, dwValue);
+}
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    // TODO: Add items more
-    { IDS_DISPLAY_FAVORITES, L"StartMenuFavorites" },
+    { IDS_DISPLAY_FAVORITES, L"StartMenuFavorites", CustomizeRead0, CustomizeWrite0 },
+    { IDS_DISPLAY_LOG_OFF,   L"StartMenuLogoff",    CustomizeRead0, CustomizeWrite0 },
+    // FIXME: SHRestricted is buggy!
+    //{ IDS_DISPLAY_RUN,       L"NoRun",              CustomizeRead1, CustomizeWrite1 },
 };
 
-static VOID AddCustomizeItem(HWND hTreeView, INT nStringID, LPCWSTR pszSettings)
+static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
 {
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
 
-    CStringW strText(MAKEINTRESOURCEW(nStringID));
+    CStringW strText(MAKEINTRESOURCEW(entry->id));
     Insert.item.pszText = const_cast<LPWSTR>((LPCWSTR)strText);
-    Insert.item.lParam = nStringID;
+    Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    if (GetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", pszSettings))
+    if (entry->fnRead(entry))
         Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
-
     TreeView_InsertItem(hTreeView, &Insert);
 
-    strText = strText;
+    strText.Empty(); // Keep variable alive
 }
 
 static void CustomizeClassic_OnInitDialog(HWND hwnd)
@@ -114,7 +131,7 @@ static void CustomizeClassic_OnInitDialog(HWND hwnd)
 
     for (auto& entry : s_CustomizeEntries)
     {
-        AddCustomizeItem(hTreeView, entry.nStringID, entry.pszSettings);
+        AddCustomizeItem(hTreeView, &entry);
     }
 }
 
@@ -134,9 +151,9 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
         for (auto& entry : s_CustomizeEntries)
         {
-            if (item.lParam == entry.nStringID)
+            if (item.lParam == entry.id)
             {
-                SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry.pszSettings, bChecked);
+                entry.fnWrite(&entry, bChecked);
                 break;
             }
         }

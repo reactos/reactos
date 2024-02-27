@@ -97,6 +97,8 @@
 
 #define IDS_STARTUP_ERROR                  105
 #define IDS_DISPLAY_FAVORITES              106
+#define IDS_DISPLAY_LOG_OFF                107
+#define IDS_DISPLAY_RUN                    108
 #define IDS_START                          595
 #define IDS_OPEN_ALL_USERS                 718
 #define IDS_EXPLORE_ALL_USERS              719

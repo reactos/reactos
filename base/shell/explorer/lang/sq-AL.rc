@@ -208,6 +208,8 @@ BEGIN
     IDS_EXPLORE_ALL_USERS "E&ksploro të gjith përdoruesit"
     IDS_STARTUP_ERROR "Sistemi nuk mund të fillojë explorer sepse regjistrit është e korruptuar ose padisponueshëm."
     IDS_DISPLAY_FAVORITES "Display Favorites"
+    IDS_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE
