@@ -63,15 +63,11 @@ ExecuteKill(char *lpPid)
 int
 main(int argc, char *argv[])
 {
-    char tail;
-    DBG_UNREFERENCED_LOCAL_VARIABLE(tail);
-
-    if (argc < 2)
+    if (argc != 2)
     {
-        fprintf(stderr, "Usage: %s PID (Process ID) \n", argv[0]);
+        fprintf(stderr, "Usage: %s PID (Process ID)\n", argv[0]);
         return 1;
     }
 
-    tail = ExecuteKill(argv[1]);
-    return 0;
+    return ExecuteKill(argv[1]);
 }
