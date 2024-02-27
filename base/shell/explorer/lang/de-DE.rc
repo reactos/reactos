@@ -147,7 +147,7 @@ BEGIN
     LTEXT            "Löschen Sie kürzlich verwendete Dokumente, Programme und Webseiten.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Löschen", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Erweiterte Startmenü&optionen:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Abbrechen", IDCANCEL, 176, 220, 50, 14
 END
@@ -211,6 +211,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "Öffnen (&Alle Benutzer)"
     IDS_EXPLORE_ALL_USERS "Explorer (A&lle Benutzer)"
     IDS_STARTUP_ERROR "Das System kann den Explorer nicht starten, weil die Registrierung nicht verfügbar bzw. fehlerhaft ist."
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

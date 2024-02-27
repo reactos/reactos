@@ -111,6 +111,12 @@ GetExplorerRegValueSet(IN HKEY hKey,
                        IN LPCWSTR lpSubKey,
                        IN LPCWSTR lpValue);
 
+BOOL
+SetExplorerRegValueSet(IN HKEY hKey,
+                       IN LPCWSTR lpSubKey,
+                       IN LPCWSTR lpValue,
+                       IN DWORD dwValue);
+
 /*
  *  rshell.c
  */

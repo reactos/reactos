@@ -143,7 +143,7 @@ BEGIN
     LTEXT            "Poistaaksesi tiedot viimeksi käytetyistä tiedostoista, ohjelmista, nettisivuista, klikkaa Tyhjennä.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Tyhjennä", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "K&äynnistä valikko lisäasetukset:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Peruuta", IDCANCEL, 176, 220, 50, 14
 END
@@ -207,6 +207,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Avaa kaikki käyttäjät"
     IDS_EXPLORE_ALL_USERS "&Selaa kaikkia käyttäjiä"
     IDS_STARTUP_ERROR "Tämä järjestelmä ei voi käynnistää resurssienhallintaa koska rekisteri on vioittunut tai ei saatavilla."
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

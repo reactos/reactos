@@ -21,6 +21,8 @@
 
 #include "precomp.h"
 
+#define I_CHECKED   2
+
 // TODO: Windows Explorer appears to be calling NewLinkHere / ConfigStartMenu directly for both items.
 VOID OnAddStartMenuItems(HWND hDlg)
 {
@@ -49,25 +51,88 @@ VOID OnAdvancedStartMenuItems()
     }
 }
 
-VOID OnClearRecentItems()
+static BOOL RecentHasShortcut(HWND hwnd)
 {
-   WCHAR szPath[MAX_PATH], szFile[MAX_PATH];
-   WIN32_FIND_DATAW info;
-   HANDLE hPath;
+    WCHAR szPath[MAX_PATH];
+    if (FAILED(SHGetFolderPathW(hwnd, CSIDL_RECENT | CSIDL_FLAG_CREATE, NULL, 0, szPath)))
+        return FALSE;
 
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
+    // Find shortcut files in Recent
+    WIN32_FIND_DATAW find;
+    PathAppendW(szPath, L"*.lnk");
+    HANDLE hFind = FindFirstFileW(szPath, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    FindClose(hFind);
+    return TRUE;
+}
+
+static VOID OnClearRecentItems(HWND hwnd)
+{
+    SHAddToRecentDocs(SHARD_PIDL, NULL);
+    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+}
+
+static VOID AddTreeViewItem(HWND hTreeView, INT nStringID, LPCWSTR pszSettings)
+{
+    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
+    Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
+
+    CStringW strText(MAKEINTRESOURCEW(nStringID));
+    Insert.item.pszText = const_cast<LPWSTR>((LPCWSTR)strText);
+    Insert.item.lParam = nStringID;
+    Insert.item.stateMask = TVIS_STATEIMAGEMASK;
+    if (GetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", pszSettings))
+        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
+
+    TreeView_InsertItem(hTreeView, &Insert);
+
+    strText = strText;
+}
+
+static void OnInitDialog(HWND hwnd)
+{
+    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+
+    HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
+
+    DWORD_PTR style = GetWindowLongPtrW(hTreeView, GWL_STYLE);
+    SetWindowLongPtrW(hTreeView, GWL_STYLE, style | TVS_CHECKBOXES);
+
+    // TODO: Add items more
+    AddTreeViewItem(hTreeView, IDS_DISPLAY_FAVORITES, L"StartMenuFavorites");
+}
+
+static BOOL OnOK(HWND hwnd)
+{
+    HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
+
+    for (HTREEITEM hItem = TreeView_GetFirstVisible(hTreeView);
+         hItem != NULL;
+         hItem = TreeView_GetNextVisible(hTreeView, hItem))
     {
-        StringCchPrintfW(szFile, _countof(szFile), L"%s\\*.*", szPath);
-        hPath = FindFirstFileW(szFile, &info);
-        do
+        TV_ITEM item = { TVIF_PARAM | TVIF_STATE };
+        item.hItem = hItem;
+        item.stateMask = TVIS_STATEIMAGEMASK;
+        TreeView_GetItem(hTreeView, &item);
+
+        BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
+        switch (item.lParam)
         {
-            StringCchPrintfW(szFile, _countof(szFile), L"%s\\%s", szPath, info.cFileName);
-            DeleteFileW(szFile);
+            // TODO: Add items more
+            case IDS_DISPLAY_FAVORITES:
+                SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", L"StartMenuFavorites",
+                                       bChecked);
+                break;
+            default:
+                break;
         }
-        while (FindNextFileW(hPath, &info));
-        FindClose(hPath);
-        /* FIXME: Disable the button*/
+
+        SendMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"TraySettings");
     }
+
+    return TRUE;
 }
 
 INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -75,7 +140,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     switch (Message)
     {
         case WM_INITDIALOG:
-            /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
+            OnInitDialog(hwnd);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -90,10 +155,13 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     OnAdvancedStartMenuItems();
                     break;
                 case IDC_CLASSICSTART_CLEAR:
-                    OnClearRecentItems();
+                    OnClearRecentItems(hwnd);
                     break;
                 case IDOK:
-                    EndDialog(hwnd, IDOK);
+                    if (OnOK(hwnd))
+                    {
+                        EndDialog(hwnd, IDOK);
+                    }
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);

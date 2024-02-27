@@ -145,7 +145,7 @@ BEGIN
     LTEXT            "最近アクセスした文書、プログラム、Webサイトの記録を消すには、[クリア] をクリックして下さい。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "クリア(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "上級者向けスタートメニューのオプション(&T):", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "キャンセル", IDCANCEL, 176, 220, 50, 14
 END
@@ -209,6 +209,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "開く - すべてのユーザー(&P)"
     IDS_EXPLORE_ALL_USERS "エクスプローラ - すべてのユーザー(&E)"
     IDS_STARTUP_ERROR "システムは、エクスプローラを起動できません。レジストリが壊れているか、利用不可だからです。"
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

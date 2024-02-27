@@ -143,7 +143,7 @@ BEGIN
     LTEXT            "Azkenaldian erabilitako dokumentu, programa eta web orrien erregistroak kentzeko, egin klik 'Garbitu'n.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Garbitu", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "&Hasi' menuko aukera aurreratuak:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "Hasi-menuko &aukerak", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "Hasi-menuko &aukerak", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Ados", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Utzi", IDCANCEL, 176, 220, 50, 14
 END
@@ -207,6 +207,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "Ireki &erabiltzaile guztiak"
     IDS_EXPLORE_ALL_USERS "&Arakatu erabiltzaile guztiak"
     IDS_STARTUP_ERROR "Sistema ez du exploradorea hasi erregistro ustela dago-eta edo ez dago erabilgarri."
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

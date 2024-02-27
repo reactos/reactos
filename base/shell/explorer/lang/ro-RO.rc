@@ -144,7 +144,7 @@ BEGIN
     LTEXT            "Pentru a elimina înregistrări ale documentelor, programelor, și siturilor Web recent accesate, apăsați Curăță.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Curăță", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Opțiuni avansate ale meniului Pornire:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Con&firmă", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "A&nulează", IDCANCEL, 176, 220, 50, 14
 END
@@ -208,6 +208,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Deschide Toți utilizatorii"
     IDS_EXPLORE_ALL_USERS "E&xplorează Toți utilizatorii"
     IDS_STARTUP_ERROR "Pornirea exploratorului a eșuat din cauza informațiilor lipsă sau corupte din registru."
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

@@ -143,7 +143,7 @@ BEGIN
     LTEXT            "To remove records of recently accessed documents, programs, and Web sites, click Clear.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Clear", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Advanced S&tart menu options:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
 END
@@ -207,6 +207,7 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Atverti visus vartotojus"
     IDS_EXPLORE_ALL_USERS "&Naršyti visus vartotojus"
     IDS_STARTUP_ERROR "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_DISPLAY_FAVORITES "Display Favorites"
 END
 
 STRINGTABLE

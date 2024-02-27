@@ -185,6 +185,31 @@ GetExplorerRegValueSet(IN HKEY hKey,
 }
 
 BOOL
+SetExplorerRegValueSet(IN HKEY hKey,
+                       IN LPCWSTR lpSubKey,
+                       IN LPCWSTR lpValue,
+                       IN DWORD dwValue)
+{
+    WCHAR szBuffer[MAX_PATH];
+    HKEY hkSubKey;
+
+    StringCbCopyW(szBuffer, sizeof(szBuffer),
+                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
+    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
+        return FALSE;
+    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
+        return FALSE;
+
+    if (RegCreateKeyW(hKey, szBuffer, &hkSubKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hkSubKey, lpValue, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
+        RegCloseKey(hkSubKey);
+    }
+
+    return TRUE;
+}
+
+BOOL
 GetVersionInfoString(IN LPCWSTR szFileName,
                      IN LPCWSTR szVersionInfo,
                      OUT LPWSTR szBuffer,
