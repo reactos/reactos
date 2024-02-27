@@ -209,9 +209,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "開啟所有使用者(&P)"
     IDS_EXPLORE_ALL_USERS "瀏覽所有使用者(&X)"
     IDS_STARTUP_ERROR "因為登錄檔損毀或無法使用，所以系統無法啟動檔案總管。"
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

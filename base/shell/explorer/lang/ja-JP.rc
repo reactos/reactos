@@ -209,9 +209,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "開く - すべてのユーザー(&P)"
     IDS_EXPLORE_ALL_USERS "エクスプローラ - すべてのユーザー(&E)"
     IDS_STARTUP_ERROR "システムは、エクスプローラを起動できません。レジストリが壊れているか、利用不可だからです。"
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

@@ -207,9 +207,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Avaa kaikki käyttäjät"
     IDS_EXPLORE_ALL_USERS "&Selaa kaikkia käyttäjiä"
     IDS_STARTUP_ERROR "Tämä järjestelmä ei voi käynnistää resurssienhallintaa koska rekisteri on vioittunut tai ei saatavilla."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

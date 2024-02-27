@@ -207,9 +207,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Megnyitás - All Users"
     IDS_EXPLORE_ALL_USERS "&Tallózás - All Users"
     IDS_STARTUP_ERROR "A rendszer nem tudja elindítani az explorert, mert a regisztrációs adatbázis megsérült vagy nem elérhető."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

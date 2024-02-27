@@ -211,9 +211,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Все пользователи"
     IDS_EXPLORE_ALL_USERS "&Обзор Всех пользователей"
     IDS_STARTUP_ERROR "Система не может запустить Проводник, потому что данные реестра повреждены или недоступны."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

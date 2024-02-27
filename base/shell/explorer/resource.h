@@ -96,9 +96,6 @@
 \*******************************************************************************/
 
 #define IDS_STARTUP_ERROR                  105
-#define IDS_DISPLAY_FAVORITES              106
-#define IDS_DISPLAY_LOG_OFF                107
-#define IDS_DISPLAY_RUN                    108
 #define IDS_START                          595
 #define IDS_OPEN_ALL_USERS                 718
 #define IDS_EXPLORE_ALL_USERS              719
@@ -108,6 +105,11 @@
 #define IDS_RESTORE_ALL                    811
 #define IDS_TRAYWND_UNDO_CASCADE           812
 #define IDS_TRAYWND_UNDO_TILE              813
+
+/* These values must be synchronized with shell32 */
+#define IDS_ADVANCED_DISPLAY_FAVORITES              30466
+#define IDS_ADVANCED_DISPLAY_LOG_OFF                30467
+#define IDS_ADVANCED_DISPLAY_RUN                    30474
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

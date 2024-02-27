@@ -207,9 +207,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&सभी उपयोगकर्ताओं को खोलें"
     IDS_EXPLORE_ALL_USERS "सभी उपयोगकर्ताओं को समन्वेषण करे"
     IDS_STARTUP_ERROR "सिस्टम एक्सप्लोरर शुरू नहीं कर सकता क्योंकि रजिस्ट्री अनुपयोगी या अनुपलब्ध है।"
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

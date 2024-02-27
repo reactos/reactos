@@ -209,9 +209,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "A&brir Todos os Utilizadores"
     IDS_EXPLORE_ALL_USERS "E&xplorar Todos os Utilizadores"
     IDS_STARTUP_ERROR "O sistema não pode iniciar o Explorador porque o registo está corrompido ou inacessível."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

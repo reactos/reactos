@@ -207,9 +207,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Ava kaust Kõik Kasutajad"
     IDS_EXPLORE_ALL_USERS "&Uuri Exploreris kaust Kõiki Kasutajaid"
     IDS_STARTUP_ERROR "Süsteem ei suuda explorer'it käivitada, sest register on kas korrupteerinud või ei ole saadaval."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

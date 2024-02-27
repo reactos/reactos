@@ -208,9 +208,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Tüm Kullanıcılar'da Aç"
     IDS_EXPLORE_ALL_USERS "T&üm Kullanıcılar'da Araştır"
     IDS_STARTUP_ERROR "Sistem, kayıt defterinin, bozuk ya da kaybolmuş olmasından dolayı gezgini başlatamadı."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

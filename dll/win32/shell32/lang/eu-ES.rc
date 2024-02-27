@@ -1017,6 +1017,9 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Erakutsi kontrol-panela nire ordenagailuan"
     IDS_ADVANCED_SHOW_COMP_COLOR "Erakutsi koloretan konprimitutako edo enkriptatutako NTFS fitxategiak"
     IDS_ADVANCED_SHOW_INFO_TIP "Erakutsi ikonoen eta karpeten deskribapena mahaigainean"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Aurreratua"
     IDS_NEWEXT_ADVANCED_RIGHT "&Aurreratua >>"

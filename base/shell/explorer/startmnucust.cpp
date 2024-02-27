@@ -98,10 +98,10 @@ static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    { IDS_DISPLAY_FAVORITES, L"StartMenuFavorites", CustomizeRead0, CustomizeWrite0 },
-    { IDS_DISPLAY_LOG_OFF,   L"StartMenuLogoff",    CustomizeRead0, CustomizeWrite0 },
+    { IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", CustomizeRead0, CustomizeWrite0 },
+    { IDS_ADVANCED_DISPLAY_LOG_OFF,   L"StartMenuLogoff",    CustomizeRead0, CustomizeWrite0 },
     // FIXME: SHRestricted is buggy!
-    //{ IDS_DISPLAY_RUN,       L"NoRun",              CustomizeRead1, CustomizeWrite1 },
+    //{ IDS_ADVANCED_DISPLAY_RUN,       L"NoRun",              CustomizeRead1, CustomizeWrite1 },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
@@ -109,15 +109,14 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
 
-    CStringW strText(MAKEINTRESOURCEW(entry->id));
-    Insert.item.pszText = const_cast<LPWSTR>((LPCWSTR)strText);
+    WCHAR szText[MAX_PATH];
+    LoadStringW(GetModuleHandleW(L"shell32.dll"), entry->id, szText, _countof(szText));
+    Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
     if (entry->fnRead(entry))
         Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
     TreeView_InsertItem(hTreeView, &Insert);
-
-    strText.Empty(); // Keep variable alive
 }
 
 static void CustomizeClassic_OnInitDialog(HWND hwnd)

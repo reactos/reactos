@@ -207,9 +207,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "Å&pne alle brukere"
     IDS_EXPLORE_ALL_USERS "U&tforsk alle brukere"
     IDS_STARTUP_ERROR "The system cannot start explorer because the registry is corrupted or unavailable."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

@@ -1012,6 +1012,9 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Показувати панель керування в моєму комп'ютері"
     IDS_ADVANCED_SHOW_COMP_COLOR "Показувати зашифровані або зжаті файли NTFS іншим кольором"
     IDS_ADVANCED_SHOW_INFO_TIP "Показувати спливаючий опис для елементів папки та робочого столу"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Додатково"
     IDS_NEWEXT_ADVANCED_RIGHT "&Додатково >>"

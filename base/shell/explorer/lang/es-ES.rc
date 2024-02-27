@@ -211,9 +211,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "A&brir todos los usuarios"
     IDS_EXPLORE_ALL_USERS "E&xplorar todos los usuarios"
     IDS_STARTUP_ERROR "El sistema no ha podido iniciar el explorador porque el Registro se ha corrompido o no está disponible."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

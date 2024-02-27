@@ -210,9 +210,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Otwórz - wszystkich użytkowników"
     IDS_EXPLORE_ALL_USERS "&Eksploruj - wszystkich użytkowników"
     IDS_STARTUP_ERROR "System nie może uruchomić eksploratora, ponieważ rejestr jest niedostępny lub uszkodzony."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

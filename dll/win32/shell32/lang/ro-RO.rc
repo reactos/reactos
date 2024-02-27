@@ -1020,6 +1020,9 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afișează Panoul de control în Calculatorul meu"
     IDS_ADVANCED_SHOW_COMP_COLOR "Afișează în culori fișierele NTFS criptate sau comprimate"
     IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru foldere și elemente de desktop"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vansate"
     IDS_NEWEXT_ADVANCED_RIGHT "A&vansate >>"

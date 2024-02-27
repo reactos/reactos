@@ -1014,6 +1014,9 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "मेरा कंप्यूटर में नियंत्रण कक्ष दिखाएं"
     IDS_ADVANCED_SHOW_COMP_COLOR "एनक्रिप्टेड या कम्प्रेस्ट NTFS फ़ाइलों को रंग में दिखाएं"
     IDS_ADVANCED_SHOW_INFO_TIP "फ़ोल्डर और डेस्कटॉप आइटम के लिए पॉप-अप विवरण दिखाएं"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &उन्नत"
     IDS_NEWEXT_ADVANCED_RIGHT "&उन्नत >>"

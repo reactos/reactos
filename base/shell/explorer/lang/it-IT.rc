@@ -208,9 +208,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Apri tutti gli utenti"
     IDS_EXPLORE_ALL_USERS "&Esplora tutti gli utenti"
     IDS_STARTUP_ERROR "Impossibile avviare explorer perché il registro è danneggiato o non disponibile."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE

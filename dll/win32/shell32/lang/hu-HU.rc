@@ -1011,6 +1011,9 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Vezérlőpult megjelenítése a Sajátgépben"
     IDS_ADVANCED_SHOW_COMP_COLOR "Titkosított vagy tömörített NTFS fájlok színezése"
     IDS_ADVANCED_SHOW_INFO_TIP "Felugró leírások megjelenítése a mappákhoz és az asztalon lévő elemekhez"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Haladó"
     IDS_NEWEXT_ADVANCED_RIGHT "&Haladó >>"

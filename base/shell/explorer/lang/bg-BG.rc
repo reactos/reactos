@@ -208,9 +208,6 @@ BEGIN
     IDS_OPEN_ALL_USERS "&Отваряне на всички потребители"
     IDS_EXPLORE_ALL_USERS "&Показване на всички потребители"
     IDS_STARTUP_ERROR "Системата не може да стартира Explorer, защото регистърът е повреден или недостъпен."
-    IDS_DISPLAY_FAVORITES "Display Favorites"
-    IDS_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_DISPLAY_RUN "Display Run"
 END
 
 STRINGTABLE
