@@ -147,7 +147,7 @@ BEGIN
     LTEXT            "Для удаления записей о недавних документах, программах и сайтах нажмите ""Очистить"".", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "О&чистить", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "До&полнительные параметры меню ""Пуск"":", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Отмена", IDCANCEL, 176, 220, 50, 14
 END

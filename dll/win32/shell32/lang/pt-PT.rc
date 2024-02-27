@@ -1011,6 +1011,10 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Mostrar painel de controle no meu computador"
     IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar ficheiros NTFS criptografados ou compactados a cores"
     IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descrição pop-up para itens de pastas e área de trabalho"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"

@@ -1021,6 +1021,10 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Pokaż Panel sterowania w oknie Mój komputer"
     IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Zaawansowane"
     IDS_NEWEXT_ADVANCED_RIGHT "&Zaawansowane >>"

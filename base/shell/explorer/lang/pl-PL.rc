@@ -146,7 +146,7 @@ BEGIN
     LTEXT            "Kliknij przycisk Wyczyść, aby usunąć informacje o ostatnio otwieranych dokumentach, programach i witrynach sieci Web.", IDC_STATIC, 49, 61, 100, 33
     PUSHBUTTON       "&Wyczyść", IDC_CLASSICSTART_CLEAR, 150, 94, 70, 14
     LTEXT            "Zaawansowane opcje menu Start:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Anuluj", IDCANCEL, 176, 220, 50, 14
 END
