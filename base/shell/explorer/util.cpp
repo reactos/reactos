@@ -194,10 +194,8 @@ SetExplorerRegValueSet(IN HKEY hKey,
 
     StringCbCopyW(szBuffer, sizeof(szBuffer),
                   L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
-        return FALSE;
-    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
-        return FALSE;
+    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
+    StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey);
 
     if (RegCreateKeyW(hKey, szBuffer, &hkSubKey) == ERROR_SUCCESS)
     {
