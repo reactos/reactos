@@ -35,25 +35,26 @@
 #include <stdlib.h>
 
 int
-ExecuteKill(char *lpPid)
+ExecuteKill(const char *lpPid)
 {
     HANDLE hProcess;
     DWORD dwProcessId;
 
-    dwProcessId = (DWORD)atol(lpPid);
-    fprintf(stderr, "Killing PID %ld...\n", dwProcessId);
+    dwProcessId = strtoul(lpPid, NULL, 10);
+    fprintf(stderr, "Killing the process with PID %lu...\n", dwProcessId);
 
     hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessId);
     if (hProcess == NULL)
     {
-        fprintf(stderr, "Could not open the process with PID = %ld\n", dwProcessId);
-        return 0;
+        fprintf(stderr, "Could not open the process with PID %lu\n", dwProcessId);
+        return 1;
     }
 
     if (!TerminateProcess(hProcess, 0))
     {
-        fprintf(stderr, "Could not terminate the process with PID = %ld\n", dwProcessId);
-        return 0;
+        fprintf(stderr, "Could not terminate the process with PID %lu\n", dwProcessId);
+        CloseHandle(hProcess);
+        return 1;
     }
 
     CloseHandle(hProcess);
