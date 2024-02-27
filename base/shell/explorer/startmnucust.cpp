@@ -74,7 +74,19 @@ static VOID OnClearRecentItems(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
 }
 
-static VOID AddTreeViewItem(HWND hTreeView, INT nStringID, LPCWSTR pszSettings)
+struct CUSTOMIZE_ENTRY
+{
+    INT nStringID;
+    LPCWSTR pszSettings;
+};
+
+static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
+{
+    // TODO: Add items more
+    { IDS_DISPLAY_FAVORITES, L"StartMenuFavorites" },
+};
+
+static VOID AddCustomizeItem(HWND hTreeView, INT nStringID, LPCWSTR pszSettings)
 {
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
@@ -91,7 +103,7 @@ static VOID AddTreeViewItem(HWND hTreeView, INT nStringID, LPCWSTR pszSettings)
     strText = strText;
 }
 
-static void OnInitDialog(HWND hwnd)
+static void CustomizeClassic_OnInitDialog(HWND hwnd)
 {
     EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
 
@@ -100,11 +112,13 @@ static void OnInitDialog(HWND hwnd)
     DWORD_PTR style = GetWindowLongPtrW(hTreeView, GWL_STYLE);
     SetWindowLongPtrW(hTreeView, GWL_STYLE, style | TVS_CHECKBOXES);
 
-    // TODO: Add items more
-    AddTreeViewItem(hTreeView, IDS_DISPLAY_FAVORITES, L"StartMenuFavorites");
+    for (auto& entry : s_CustomizeEntries)
+    {
+        AddCustomizeItem(hTreeView, entry.nStringID, entry.pszSettings);
+    }
 }
 
-static BOOL OnOK(HWND hwnd)
+static BOOL CustomizeClassic_OnOK(HWND hwnd)
 {
     HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
 
@@ -118,20 +132,18 @@ static BOOL OnOK(HWND hwnd)
         TreeView_GetItem(hTreeView, &item);
 
         BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
-        switch (item.lParam)
+        for (auto& entry : s_CustomizeEntries)
         {
-            // TODO: Add items more
-            case IDS_DISPLAY_FAVORITES:
-                SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", L"StartMenuFavorites",
-                                       bChecked);
+            if (item.lParam == entry.nStringID)
+            {
+                SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry.pszSettings, bChecked);
                 break;
-            default:
-                break;
+            }
         }
-
-        SendMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"TraySettings");
     }
 
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"TraySettings",
+                        SMTO_ABORTIFHUNG, 200, NULL);
     return TRUE;
 }
 
@@ -140,7 +152,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     switch (Message)
     {
         case WM_INITDIALOG:
-            OnInitDialog(hwnd);
+            CustomizeClassic_OnInitDialog(hwnd);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -158,7 +170,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     OnClearRecentItems(hwnd);
                     break;
                 case IDOK:
-                    if (OnOK(hwnd))
+                    if (CustomizeClassic_OnOK(hwnd))
                     {
                         EndDialog(hwnd, IDOK);
                     }

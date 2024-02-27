@@ -2658,12 +2658,14 @@ ChangePos:
             CheckTrayWndPosition();
         }
 
-        HideStartMenu();
-
-        /* Re-create the start menu */
-        m_StartMenuBand.Release();
-        HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
-        m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, FALSE);
+        if (m_StartMenuPopup && lstrcmpiW((LPCWSTR)lParam, L"TraySettings") == 0)
+        {
+            /* Re-create the start menu */
+            HideStartMenu();
+            m_StartMenuBand.Release();
+            HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
+            m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, FALSE);
+        }
 
         return 0;
     }
