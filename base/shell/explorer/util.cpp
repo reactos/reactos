@@ -141,10 +141,10 @@ FormatMenuString(IN HMENU hMenu,
 }
 
 DWORD
-GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue,
-                       IN DWORD dwDefaultValue)
+GetExplorerRegDWORD(IN HKEY hKey,
+                    IN LPCWSTR lpSubKey,
+                    IN LPCWSTR lpValue,
+                    IN DWORD dwDefaultValue)
 {
     WCHAR szBuffer[MAX_PATH];
     HKEY hkSubKey;
@@ -184,10 +184,10 @@ GetExplorerRegValueSet(IN HKEY hKey,
 }
 
 BOOL
-SetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue,
-                       IN DWORD dwValue)
+SetExplorerRegDWORD(IN HKEY hKey,
+                    IN LPCWSTR lpSubKey,
+                    IN LPCWSTR lpValue,
+                    IN DWORD dwValue)
 {
     WCHAR szBuffer[MAX_PATH];
     HKEY hkSubKey;

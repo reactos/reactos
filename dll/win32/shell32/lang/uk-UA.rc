@@ -1015,6 +1015,7 @@ BEGIN
     IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
     IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Додатково"
     IDS_NEWEXT_ADVANCED_RIGHT "&Додатково >>"

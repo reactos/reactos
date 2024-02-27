@@ -133,16 +133,12 @@ public:
         dwLogoff = SHRestricted(REST_STARTMENULOGOFF);
         bWantLogoff = (dwLogoff == 2 ||
                        SHRestricted(REST_FORCESTARTMENULOGOFF) ||
-                       GetExplorerRegValueSet(HKEY_CURRENT_USER,
-                                              L"Advanced",
-                                              L"StartMenuLogoff",
-                                              FALSE));
+                       GetExplorerRegDWORD(HKEY_CURRENT_USER, L"Advanced", L"StartMenuLogoff",
+                                           FALSE));
 
         /* Favorites */
-        if (!GetExplorerRegValueSet(HKEY_CURRENT_USER,
-                                    L"Advanced",
-                                    L"StartMenuFavorites",
-                                    FALSE))
+        if (!GetExplorerRegDWORD(HKEY_CURRENT_USER, L"Advanced",
+                                 L"StartMenuFavorites", FALSE))
         {
             DeleteMenu(hMenu,
                        IDM_FAVORITES,

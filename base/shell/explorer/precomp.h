@@ -107,16 +107,16 @@ FormatMenuString(IN HMENU hMenu,
                  ...);
 
 DWORD
-GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue,
-                       IN DWORD dwDefaultValue);
+GetExplorerRegDWORD(IN HKEY hKey,
+                    IN LPCWSTR lpSubKey,
+                    IN LPCWSTR lpValue,
+                    IN DWORD dwDefaultValue);
 
 BOOL
-SetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue,
-                       IN DWORD dwValue);
+SetExplorerRegDWORD(IN HKEY hKey,
+                    IN LPCWSTR lpSubKey,
+                    IN LPCWSTR lpValue,
+                    IN DWORD dwValue);
 
 /*
  *  rshell.c

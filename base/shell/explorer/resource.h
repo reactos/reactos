@@ -110,6 +110,7 @@
 #define IDS_ADVANCED_DISPLAY_FAVORITES              30466
 #define IDS_ADVANCED_DISPLAY_LOG_OFF                30467
 #define IDS_ADVANCED_DISPLAY_RUN                    30474
+#define IDS_ADVANCED_DISPLAY_ADMINTOOLS             30476
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

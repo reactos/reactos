@@ -88,20 +88,21 @@ struct CUSTOMIZE_ENTRY
 
 static DWORD CALLBACK CustomizeRead0(const CUSTOMIZE_ENTRY *entry)
 {
-    return GetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry->name, FALSE);
+    return GetExplorerRegDWORD(HKEY_CURRENT_USER, L"Advanced", entry->name, FALSE);
 }
 
 static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
 {
-    return SetExplorerRegValueSet(HKEY_CURRENT_USER, L"Advanced", entry->name, dwValue);
+    return SetExplorerRegDWORD(HKEY_CURRENT_USER, L"Advanced", entry->name, dwValue);
 }
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    { IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", CustomizeRead0, CustomizeWrite0 },
-    { IDS_ADVANCED_DISPLAY_LOG_OFF,   L"StartMenuLogoff",    CustomizeRead0, CustomizeWrite0 },
+    //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
+    { IDS_ADVANCED_DISPLAY_FAVORITES,  L"StartMenuFavorites",  CustomizeRead0, CustomizeWrite0 },
+    { IDS_ADVANCED_DISPLAY_LOG_OFF,    L"StartMenuLogoff",     CustomizeRead0, CustomizeWrite0 },
     // FIXME: SHRestricted is buggy!
-    //{ IDS_ADVANCED_DISPLAY_RUN,       L"NoRun",              CustomizeRead1, CustomizeWrite1 },
+    //{ IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeRead2, CustomizeWrite2 },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
