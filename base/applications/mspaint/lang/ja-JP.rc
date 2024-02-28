@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "コピー(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼り付け(&P)\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "選択範囲でトリミング(&S)", IDM_CROPSELECTION
         MENUITEM "選択範囲の削除(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "選択範囲の反転(&I)", IDM_EDITINVERTSELECTION
         MENUITEM "すべて選択(&A)\tCtrl+A", IDM_EDITSELECTALL
@@ -111,7 +111,7 @@ BEGIN
         MENUITEM "コピー(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼り付け(&P)\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "選択範囲でトリミング(&S)", IDM_CROPSELECTION
         MENUITEM "選択範囲の削除(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "すべて選択(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
