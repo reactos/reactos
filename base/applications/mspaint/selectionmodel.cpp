@@ -103,7 +103,7 @@ void SelectionModel::setMask(const CRect& rc, HBITMAP hbmMask)
 HBITMAP SelectionModel::GetSelectionContents()
 {
     HBITMAP hbmWhole = imageModel.LockBitmap();
-    HBITMAP hbmPart = getSubImage(hbmWhole, m_rc);
+    HBITMAP hbmPart = getSubImage(hbmWhole, m_rcOld);
     imageModel.UnlockBitmap(hbmWhole);
     if (!hbmPart)
         return NULL;
@@ -111,10 +111,11 @@ HBITMAP SelectionModel::GetSelectionContents()
     if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
         return hbmPart;
 
-    HDC hdcMem = ::CreateCompatibleDC(NULL);
-    HBITMAP hbmNew = CreateColorDIB(m_rc.Width(), m_rc.Height(), paletteModel.GetBgColor());
-    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
     CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
+
+    HDC hdcMem = ::CreateCompatibleDC(NULL);
+    HBITMAP hbmNew = CreateColorDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
     selectionModel.DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
     ::SelectObject(hdcMem, hbmOld);
     ::DeleteDC(hdcMem);

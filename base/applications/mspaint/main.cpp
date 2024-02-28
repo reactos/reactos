@@ -1056,8 +1056,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HBITMAP hbmSelection = selectionModel.GetSelectionContents();
             if (hbmSelection)
             {
-                selectionModel.HideSelection();
                 imageModel.PushImageForUndo(hbmSelection);
+                selectionModel.HideSelection();
                 imageModel.NotifyImageChanged();
             }
             break;
