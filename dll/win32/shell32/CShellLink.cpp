@@ -2627,11 +2627,19 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
-    sei.lpFile = path;
+    if (m_pPidl)
+    {
+        sei.lpIDList = m_pPidl;
+        sei.fMask |= SEE_MASK_IDLIST;
+    }
+    else
+    {
+        sei.lpFile = path;
+        sei.lpParameters = args;
+    }
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
     sei.lpDirectory = m_sWorkDir;
-    sei.lpParameters = args;
     sei.lpVerb = L"open";
 
     // HACK for ShellExecuteExW
