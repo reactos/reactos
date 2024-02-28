@@ -27,8 +27,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(appwiz);
 
 typedef struct
 {
+   LPITEMIDLIST pidlTarget;
    WCHAR szTarget[2 * MAX_PATH];
-   WCHAR szWorkingDirectory[MAX_PATH];
    WCHAR szDescription[MAX_PATH];
    WCHAR szArguments[2 * MAX_PATH];
    WCHAR szOrigin[MAX_PATH];
