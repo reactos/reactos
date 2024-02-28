@@ -2635,8 +2635,8 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     else
     {
         sei.lpFile = path;
-        sei.lpParameters = args;
     }
+    sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
     sei.lpDirectory = m_sWorkDir;
