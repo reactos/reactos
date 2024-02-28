@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "От&рязване\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Запомняне\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Поставяне\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Изтриване на избраното\tDel", IDM_EDITDELETESELECTION
         MENUITEM "О&бръщане на избора", IDM_EDITINVERTSELECTION
         MENUITEM "Избиране на &всичко\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "От&рязване\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Запомняне\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Поставяне\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Изтриване на избраното\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Избиране на &всичко\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
