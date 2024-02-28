@@ -58,18 +58,6 @@ void SelectionModel::DrawBackground(HDC hDCImage, COLORREF crBg)
         DrawBackgroundRect(hDCImage, crBg);
 }
 
-void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
-{
-    CRect rc = m_rc;
-    DrawSelection(hDCImage, crBg, bBgTransparent, rc);
-}
-
-void
-SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc)
-{
-    DrawSelection(hDCImage, crBg, bBgTransparent, rc, m_hbmColor);
-}
-
 void
 SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc,
                               HBITMAP hbm)

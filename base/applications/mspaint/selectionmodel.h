@@ -41,10 +41,18 @@ public:
     void DrawBackground(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
-    void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
-    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc);
-    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc,
-                       HBITMAP hbm);
+
+    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc, HBITMAP hbm);
+
+    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
+    {
+        return DrawSelection(hDCImage, crBg, bBgTransparent, m_rc);
+    }
+
+    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc)
+    {
+        return DrawSelection(hDCImage, crBg, bBgTransparent, rc, m_hbmColor);
+    }
 
     void InsertFromHBITMAP(HBITMAP hbmColor, INT x = 0, INT y = 0, HBITMAP hbmMask = NULL);
 
