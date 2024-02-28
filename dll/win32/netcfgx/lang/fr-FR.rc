@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "&Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &U
+    CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Adresse IP :", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
