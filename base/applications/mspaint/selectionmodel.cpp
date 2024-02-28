@@ -91,13 +91,10 @@ void SelectionModel::setMask(const CRect& rc, HBITMAP hbmMask)
 HBITMAP SelectionModel::GetSelectionContents()
 {
     HBITMAP hbmWhole = imageModel.LockBitmap();
-    HBITMAP hbmPart = getSubImage(hbmWhole, m_rcOld);
+    HBITMAP hbmPart = getSubImage(hbmWhole, (IsLanded() ? m_rc : m_rcOld));
     imageModel.UnlockBitmap(hbmWhole);
     if (!hbmPart)
         return NULL;
-
-    if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
-        return hbmPart;
 
     CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
 
