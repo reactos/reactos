@@ -36,7 +36,7 @@ BEGIN
     CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 120, 12 //FIXME: accelerator collision &U
     LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "Masque de so&us-réseau :", -1, 14, 95, 135, 8 //FIXME: accelerator collision &U
+    LTEXT "&Masque de sous-réseau :", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
     LTEXT "Passerelle par &défaut :", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
