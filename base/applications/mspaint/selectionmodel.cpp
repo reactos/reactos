@@ -108,6 +108,9 @@ HBITMAP SelectionModel::GetSelectionContents()
     if (!hbmPart)
         return NULL;
 
+    if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
+        return hbmPart;
+
     HDC hdcMem = ::CreateCompatibleDC(NULL);
     HBITMAP hbmNew = CreateColorDIB(m_rc.Width(), m_rc.Height(), paletteModel.GetBgColor());
     HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
