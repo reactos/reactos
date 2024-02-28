@@ -91,7 +91,11 @@ RtlRaiseStatus(IN NTSTATUS Status)
     RtlCaptureContext(&Context);
 
     /* Create an exception record */
+#ifdef _M_AMD64
+    ExceptionRecord.ExceptionAddress = (PVOID)Context.Rip; // FIXME: Use RtlGetContextPc()
+#else
     ExceptionRecord.ExceptionAddress = _ReturnAddress();
+#endif
     ExceptionRecord.ExceptionCode  = Status;
     ExceptionRecord.ExceptionRecord = NULL;
     ExceptionRecord.NumberParameters = 0;
