@@ -42,6 +42,10 @@ public:
     void DrawBackgroundPoly(HDC hDCImage, COLORREF crBg);
     void DrawBackgroundRect(HDC hDCImage, COLORREF crBg);
     void DrawSelection(HDC hDCImage, COLORREF crBg = 0, BOOL bBgTransparent = FALSE);
+    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc);
+    void DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc,
+                       HBITMAP hbm);
+
     void InsertFromHBITMAP(HBITMAP hbmColor, INT x = 0, INT y = 0, HBITMAP hbmMask = NULL);
 
     // operation
