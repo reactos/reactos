@@ -1052,7 +1052,19 @@ static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
             info->pidlRet = _ILCreateDesktop();
         pdump( info->pidlRet );
         if (lpBrowseInfo->pszDisplayName)
+#ifdef __REACTOS__
+        {
+            SHFILEINFOW fileInfo = { NULL };
+            lpBrowseInfo->pszDisplayName[0] = UNICODE_NULL;
+            if (SHGetFileInfoW((LPCWSTR)info->pidlRet, 0, &fileInfo, sizeof(fileInfo),
+                               SHGFI_PIDL | SHGFI_DISPLAYNAME))
+            {
+                lstrcpynW(lpBrowseInfo->pszDisplayName, fileInfo.szDisplayName, MAX_PATH);
+            }
+        }
+#else
             SHGetPathFromIDListW( info->pidlRet, lpBrowseInfo->pszDisplayName );
+#endif
         EndDialog( info->hWnd, 1 );
         return TRUE;
 
