@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&Копировать\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Вст&авить\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Обре&зать выделенное", IDM_CROPSELECTION
         MENUITEM "О&чистить выделение\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Обратить в&ыделение", IDM_EDITINVERTSELECTION
         MENUITEM "Выделить в&се\tCtrl+A", IDM_EDITSELECTALL
@@ -113,7 +113,7 @@ BEGIN
         MENUITEM "&Копировать\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Вст&авить\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Обре&зать выделенное", IDM_CROPSELECTION
         MENUITEM "О&чистить выделение\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Выделить в&се\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
