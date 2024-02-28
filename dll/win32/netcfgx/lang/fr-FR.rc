@@ -18,7 +18,7 @@ BEGIN
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "O&btenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     CONTROL "U&tiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
-    LTEXT "Serveur DNS primaire :", -1, 14, 161, 135, 8
+    LTEXT "Serveur DNS &primaire :", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Serveur DNS secondaire :", -1, 14, 176, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
