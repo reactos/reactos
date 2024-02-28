@@ -33,7 +33,7 @@ BEGIN
     LTEXT "Si cet ordinateur est utilisé sur plusieurs réseaux, entrez les paramètres alternatifs IP ci-dessous", -1, 9, 9, 220, 20
     GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
     CONTROL "&Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 120, 12 //FIXME: accelerator collision &U
+    CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 120, 12
     LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "&Masque de sous-réseau :", -1, 14, 95, 135, 8
