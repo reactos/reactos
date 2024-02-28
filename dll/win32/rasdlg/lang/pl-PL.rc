@@ -47,7 +47,7 @@ CAPTION "Błędy grupowania linii"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Jedna lub więcej dodatkowych linii nie została połączona. ", 1033, 37, 8, 216, 20
+    LTEXT "Jedna lub więcej dodatkowych linii nie została połączona.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Nie używaj tej/tych linii w przyszłości", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Akceptuj", 1, 135, 242, 60, 14
@@ -492,7 +492,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Oddzwanianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania.  (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
+    LTEXT "Niektóre serwery oferują możliwość oddzwonienia do ciebie, w celu redukcji twoich opłat za połączenie. Określ czy chcesz skorzystać z Oddzwaniania. (Oddzwanianie nie działa w przypadku połączeń z Wirtualnymi Sieciami Prywatnymi (VPN).)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&Bez Oddzwaniania", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Pytaj mnie podczas próby połączenia, gdy serwer oferuje odddzwanianie", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "&Oddzwanianie zawsze włączone, w przypadku połączeń z numerami z listy:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
@@ -711,7 +711,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połaczenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wpisz numer telefoniczny poniżej. ", -1, 7, 4, 306, 14
+    LTEXT "Wpisz numer telefoniczny poniżej.", -1, 7, 4, 306, 14
     LTEXT "&Numer telefoniczny:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Prawdopodobnie będzie trzeba użyć cyfry ""1"", numeru kierunkowego, albo obydwu. Jeśli nie jesteś pewien, wypróbuj żądany numer na swoim telefonie. Jeśli usłyszysz sygnał modemu, numer jest poprawny.", -1, 20, 50, 291, 53
@@ -1765,7 +1765,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
+    LTEXT "Wybierz użytkowników, którym chcesz zezwolić na łączenie się z tym komputerem. Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
     LTEXT "&Użytkownicy, którzy mogą się połączyć:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Dodaj", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1857,7 +1857,7 @@ BEGIN
     206 "Czy rozłączyć z %1?\0"
     207 "Plik o nazwie %1 już istnieje. Czy chcesz go nadpisać?\0"
     208 "W skrypcie znajdują się błędy składni. Czy chcesz przejrzeć komunikaty o błędach?\0"
-    209 "'%1' jest teraz połączony.  \0"
+    209 "'%1' jest teraz połączony.\0"
     210 "Naciśnij prawy przycisk myszki na Monitorze Sieci Dial-Up w zasobniku systemowym, aby rozłączyć się lub sprawdzić stan twojego połączenia.\0"
     212 "Połączenie udane.\0"
     213 "Wybrana metoda uwierzytelniania własnego musi zostać uaktywniona we Właściwościach.\0"
@@ -1865,7 +1865,7 @@ BEGIN
     215 "Skrót połączenia Dial-up(*.rnk)\0"
     216 "*.rnk\0"
     217 "Utwórz skrót połączenia Dial-Up\0"
-    218 "Połączenie z %1 nieudane.  Ponowne połączenie w toku...\0"
+    218 "Połączenie z %1 nieudane. Ponowne połączenie w toku...\0"
     219 "Nie można uzyskać informacji o ramkach.\0"
     220 "Nie można uzyskać informacji o portach.\0"
     221 "Nie można uzyskać informacji o projekcji.\0"
@@ -2296,37 +2296,37 @@ BEGIN
     7321 "Musisz wprowadzić nazwę logowania nowego użytkownika albo nacisnąć Anuluj.\0"
     7322 "Wprowadzone hasło jest zbyt krótkie.\0"
     7323 "Oba wprowadzone hasła nie są identyczne. Proszę je poprawić.\0"
-    7324 "Wystąpił błąd wewnętrzny.  \0"
+    7324 "Wystąpił błąd wewnętrzny.\0"
     7325 "Widok listy\0"
-    7326 "Wystąpił błąd podczas przesyłania wprowadzonych zmian do bazy danych użytkownika lokalnego.  \0"
-    7327 "Nie masz dostatecznych przywilejów by dodać użytkownika do lokalnej systemowej bazy danych.  \0"
+    7326 "Wystąpił błąd podczas przesyłania wprowadzonych zmian do bazy danych użytkownika lokalnego.\0"
+    7327 "Nie masz dostatecznych przywilejów by dodać użytkownika do lokalnej systemowej bazy danych.\0"
     7328 "Użytkownik, którego chcesz stworzyć, już istnieje w lokalnej bazie danych użytkowników.\0"
     7329 "Użytkownik nie został dodany do lokalnej bazy danych użytkowników, dlatego, że jego hasło zostało odrzucone.\0"
     7330 "Nie można przeładować systemowej bazy danych użytkowników z powodu błędu wewnętrznego.\0"
-    7331 "Wystąpił błąd wewnętrzny:  Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
+    7331 "Wystąpił błąd wewnętrzny: Handle lokalnej bazy danych użytkowników jest uszkodzony.\0"
     7332 "Nie można załadować zasobów potrzebnych do wyświetlenia zakładki Użytkownicy.\0"
-    7333 "Wystąpił błąd wewnęytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych użytkowników.  \0"
+    7333 "Wystąpił błąd wewnęytrzny podczas odwracania zmian, uczynionych w lokalnej bazie danych użytkowników.\0"
     7334 "Dojście do bazy danych urządzeniach jest uszkodzone.\0"
     7335 "Nie udało się załadować zasobów, niezbędnych do wyświetlenia zakładki Ogólne.\0"
-    7336 "Wystąpił błąd podczas zapisywania zmian jakie dokonane zostały w Urządzeniach/VPN.  \0"
+    7336 "Wystąpił błąd podczas zapisywania zmian jakie dokonane zostały w Urządzeniach/VPN.\0"
     7337 "Wystąpił błąd wewnętrzny.\0"
     7338 "Wystąpił błąd wewnętrzny: dojście do bazy danych komponentów sieci jest uszkodzone.\0"
-    7339 "Wystąpił błąd wewnętrzny.  \0"
+    7339 "Wystąpił błąd wewnętrzny.\0"
     7340 "Wystąpił błąd pocdczas zapisywania zmian, uczynionych w komponentach sieci.\0"
     7341 "Wystąpił błąd wewnętrzny.\0"
-    7342 "Nie można zapisać zmian dokonanych w protokole TCP/IP.  \0"
-    7343 "Nie można zapisać zmian dokonanych w protokole IPX.  \0"
+    7342 "Nie można zapisać zmian dokonanych w protokole TCP/IP.\0"
+    7343 "Nie można zapisać zmian dokonanych w protokole IPX.\0"
     7344 "Nie można wyświetlić właściwości protokołu TCP/IP.\0"
     7345 "Nie można wyświetlić właściwości protokołu IPX.\0"
-    7346 "Nie można załadować właściwości TCP/IP z systemu.  \0"
-    7347 "Nie można załadować właściwości protokołu IPX z systemu.  \0"
+    7346 "Nie można załadować właściwości TCP/IP z systemu.\0"
+    7347 "Nie można załadować właściwości protokołu IPX z systemu.\0"
     7348 "Usługa płączenia przychodzące jest zależna od usługi Routing i dostęp zdalny, której nie można uruchomić. Więcej informacji znajdziesz w logach Zdarzeń Systemowych.\0"
     7349 "Nie można zezwolić na edycję komponentów sieci w danej chwili, gdyż właśnie są modyfikowane przez kogoś innego.\0"
-    7350 "Nowo wprowadzony użytkownik nie został dodany do lokalnej bazy danych użytkowników dlatego, że jego nazwa albo hasło nie było zgodne z wymaganiami systemu (było zbyt duże, za małe, albo źle sformułowane).  \0"
-    7351 "System nie może usunąć wybranego użytkownika.  \0"
+    7350 "Nowo wprowadzony użytkownik nie został dodany do lokalnej bazy danych użytkowników dlatego, że jego nazwa albo hasło nie było zgodne z wymaganiami systemu (było zbyt duże, za małe, albo źle sformułowane).\0"
+    7351 "System nie może usunąć wybranego użytkownika.\0"
     7352 "Nie można usunąć wybranego komponentu sieci, ponieważ jest on obecnie używany.\0"
     7353 "Ostrzeżenie o połączeniu przychodzącym\0"
-    7354 "Każdy skasowany użytkownik zostanie trwale usunięty z systemu, nawet jeśli naciśniesz później Anuluj. Czy na pewno chcesz trwale usunąć %s? \0"
+    7354 "Każdy skasowany użytkownik zostanie trwale usunięty z systemu, nawet jeśli naciśniesz później Anuluj. Czy na pewno chcesz trwale usunąć %s?\0"
     7355 "Masz zamiar się przełączyć na konsolę zarządzania systemem. Te okno właściwości Połączeń przychodzących zostanie zamknięte a wszystkie dokonane zmiany - zapisane w systemie. Czy kontynuować?\0"
     7356 "Twoja Maska Podsieci uległa zmianie. Po bicie zerowym w Masce mogą nastąpić wyłącznie bity zerowe. Na przykład, Maska, wyrażona w zapisie dziesiętnym jako 255.255.0.0, jest prawidłowa, ale 255.0.255.0 już nie.\n\0"
     7357 "Uprawnienia Użytkowników\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7377 "Którego urządzenia chcesz użyć w tym połączeniu?\0"
     7378 "Nie ma obecnie żadnych urządzeń zainstalowanych, które byłyby w stanie przyjąć połączenia przychodzące.\0"
     7379 "Ostrzeżenie o nowym połączeniu przychodzącym\0"
-    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące.  Anulować zmiany i włączyć tę konsolę?\n\0"
+    7380 "Ponieważ ten Serwer Win 2000 należy do, albo kontroluje domenę, musisz użyć konsoli Routingu i Dostępu Zdalnego by skonfigurować tę maszynę tak by akceptowała połączenia przychodzące. Anulować zmiany i włączyć tę konsolę?\n\0"
     7381 "Przydziel &numer adresu automagicznie\0"
     7382 "Przydziel n&umer adresu automagicznie\0"
     7383 "Połączenia przychodzące nie mogą używać adresów IPX o numerach 00000000 lub FFFFFFFF. Proszę zmienić przydzielone numery adresów albo ustawić automagiczne przydzielanie numerów.\0"
