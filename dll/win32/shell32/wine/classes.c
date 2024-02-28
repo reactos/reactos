@@ -34,6 +34,9 @@
 #include <shlwapi.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#ifdef __REACTOS__
+#include <strsafe.h>
+#endif
 
 #include "pidl.h"
 #include "shell32_main.h"
@@ -333,6 +336,60 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 
 	return ret;
 }
+
+#ifdef __REACTOS__
+BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
+{
+    HKEY hkey;
+    WCHAR sTemp[MAX_PATH];
+    BOOL ret = FALSE;
+
+    TRACE("%s\n", debugstr_w(szClass));
+
+    StringCchPrintfW(sTemp, _countof(sTemp), L"%s\\DefaultIcon", szClass);
+
+    if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
+    {
+        ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
+        RegCloseKey(hkey);
+	}
+
+    if (ret)
+        TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+    else
+        TRACE("-- not found\n");
+
+    return ret;
+}
+
+BOOL HLM_GetIconW(int reg_idx, LPWSTR szDest, DWORD len, int* picon_idx)
+{
+    HKEY hkey;
+    WCHAR sTemp[5];
+    BOOL ret = FALSE;
+
+    TRACE("%d\n", reg_idx);
+
+    StringCchPrintfW(sTemp, _countof(sTemp), L"%d", reg_idx);
+
+    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Icons",
+                       0,
+                       KEY_READ,
+                       &hkey))
+    {
+        ret = HCR_RegGetIconW(hkey, szDest, sTemp, len, picon_idx);
+        RegCloseKey(hkey);
+    }
+
+    if (ret)
+        TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
+    else
+        TRACE("-- not found\n");
+
+    return ret;
+}
+#endif
 
 /***************************************************************************************
 *	HCR_GetClassName	[internal]
