@@ -78,17 +78,15 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     IShellLinkW *pShellLink, *pSourceShellLink;
     IPersistFile *pPersistFile;
     HRESULT hr;
-    WCHAR Path[MAX_PATH];
+    WCHAR Path[MAX_PATH], IconPath[MAX_PATH] = L"";
     LPWSTR lpExtension;
+    INT iIcon = 0;
 
     /* get the extension */
     lpExtension = PathFindExtensionW(pContext->szTarget);
 
-    if (pContext->pidlTarget)
-    {
-        Path[0] = UNICODE_NULL;
-    }
-    else if (IsExtensionAShortcut(lpExtension))
+    /* FIXME: This code is unnecessary if shell32 CShellLink was correct */
+    if (IsExtensionAShortcut(lpExtension))
     {
         hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
 
@@ -112,6 +110,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
         }
 
         hr = IShellLinkW_GetPath(pSourceShellLink, Path, _countof(Path), NULL, 0);
+        hr = IShellLinkW_GetIconLocation(pSourceShellLink, IconPath, _countof(IconPath), &iIcon);
         IUnknown_Release(pSourceShellLink);
 
         if (FAILED(hr))
@@ -134,6 +133,9 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
         pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
     else
         pShellLink->lpVtbl->SetPath(pShellLink, Path);
+
+    if (IconPath[0])
+        pShellLink->lpVtbl->SetIconLocation(pShellLink, IconPath, iIcon);
 
     if (pContext->szArguments[0])
         pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
@@ -411,7 +413,7 @@ FinishDlgProc(HWND hwndDlg,
     LPPROPSHEETPAGEW ppsp;
     PCREATE_LINK_CONTEXT pContext;
     LPPSHNOTIFY lppsn;
-    WCHAR szText[MAX_PATH];
+    WCHAR szText[MAX_PATH], szPath[MAX_PATH];
     WCHAR szMessage[128];
 
     switch(uMsg)
@@ -447,8 +449,33 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_SETACTIVE)
             {
-                /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
+                /* Remove invalid characters */
                 DoConvertNameForFileSystem(pContext->szDescription);
+
+                /* Is it empty? (rare case) */
+                if (!pContext->szDescription[0])
+                {
+                    HMODULE hShell32 = GetModuleHandleW(L"shell32.dll");
+#define IDS_NEWITEMFORMAT 150
+#define IDS_LNK_FILE 215
+                    LoadStringW(hShell32, IDS_NEWITEMFORMAT, szText, _countof(szText));
+                    LoadStringW(hShell32, IDS_LNK_FILE, szMessage, _countof(szMessage));
+                    StringCchPrintfW(pContext->szDescription, _countof(pContext->szDescription),
+                                     szText, szMessage);
+                }
+
+                /* Build a path from szOldFile */
+                StringCchCopyW(szText, _countof(szText), pContext->szOldFile);
+                PathRemoveFileSpecW(szText);
+
+                /* Rename duplicate if necessary */
+                PathAddExtensionW(pContext->szDescription,
+                                  (IsInternetLocation(pContext->szTarget) ? L".url" : L".lnk"));
+                PathYetAnotherMakeUniqueName(szPath, szText, NULL, pContext->szDescription);
+                StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription),
+                               PathFindFileNameW(szPath));
+                PathRemoveExtensionW(pContext->szDescription);
+
                 SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
                 SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, EM_SETSEL, 0, -1);
                 SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_NAME));
@@ -483,7 +510,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     /* change extension if any */
                     PathRemoveExtensionW(pContext->szLinkName);
-                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".url");
+                    PathAddExtensionW(pContext->szLinkName, L".url");
 
                     if (!CreateInternetShortcut(pContext))
                     {
@@ -500,7 +527,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     /* change extension if any */
                     PathRemoveExtensionW(pContext->szLinkName);
-                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".lnk");
+                    PathAddExtensionW(pContext->szLinkName, L".lnk");
 
                     if (!CreateShortcut(pContext))
                     {
