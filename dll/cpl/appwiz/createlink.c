@@ -411,6 +411,7 @@ FinishDlgProc(HWND hwndDlg,
             {
                 /* Remove invalid characters */
                 DoConvertNameForFileSystem(pContext->szDescription);
+                PathCleanupSpec(NULL, pContext->szDescription);
 
                 /* Is it empty? (rare case) */
                 if (!pContext->szDescription[0])
