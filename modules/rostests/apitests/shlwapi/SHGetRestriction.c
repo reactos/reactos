@@ -63,6 +63,15 @@ TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fnSHGetRestriction)
     ok_long(value1, value2);
 }
 
+#define DELETE_VALUE(hBaseKey) \
+    SHDeleteValueW((hBaseKey), REGKEY_POLICIES_EXPLORER, L"NoRun")
+
+#define SET_VALUE(hBaseKey, value) do { \
+    dwValue = (value); \
+    SHSetValueW((hBaseKey), REGKEY_POLICIES_EXPLORER, L"NoRun", \
+                REG_DWORD, &dwValue, sizeof(dwValue)); \
+} while (0)
+
 static void
 TEST_SHGetRestriction_Stage(
     INT iStage,
@@ -76,48 +85,32 @@ TEST_SHGetRestriction_Stage(
     switch (iStage)
     {
         case 0:
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            DELETE_VALUE(HKEY_CURRENT_USER);
+            DELETE_VALUE(HKEY_LOCAL_MACHINE);
             break;
         case 1:
-            dwValue = 0;
-            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            SET_VALUE(HKEY_CURRENT_USER, 0);
+            DELETE_VALUE(HKEY_LOCAL_MACHINE);
             break;
         case 2:
-            dwValue = 1;
-            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            SET_VALUE(HKEY_CURRENT_USER, 1);
+            DELETE_VALUE(HKEY_LOCAL_MACHINE);
             break;
         case 3:
-            dwValue = 0;
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
+            DELETE_VALUE(HKEY_CURRENT_USER);
+            SET_VALUE(HKEY_LOCAL_MACHINE, 0);
             break;
         case 4:
-            dwValue = 1;
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
+            DELETE_VALUE(HKEY_CURRENT_USER);
+            SET_VALUE(HKEY_LOCAL_MACHINE, 1);
             break;
         case 5:
-            dwValue = 0;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
-            dwValue = 1;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
+            SET_VALUE(HKEY_CURRENT_USER, 0);
+            SET_VALUE(HKEY_LOCAL_MACHINE, 1);
             break;
         case 6:
-            dwValue = 1;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
-            dwValue = 0;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
-                        REG_DWORD, &dwValue, sizeof(dwValue));
+            SET_VALUE(HKEY_CURRENT_USER, 1);
+            SET_VALUE(HKEY_LOCAL_MACHINE, 0);
             break;
     }
 
