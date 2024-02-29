@@ -62,7 +62,9 @@ TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fn2)
 
 static void
 TEST_SHGetRestriction_Stage(
-    FN_SHSettingsChanged fn1, FN_SHGetRestriction fn2, INT iStage)
+    INT iStage,
+    FN_SHSettingsChanged fn1,
+    FN_SHGetRestriction fn2)
 {
     size_t iItem;
     DWORD dwValue;
@@ -132,11 +134,11 @@ START_TEST(SHGetRestriction)
     FN_SHSettingsChanged fn1 = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
     FN_SHGetRestriction fn2 = (FN_SHGetRestriction)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(271));
 
-    if (fn2 && fn1)
+    if (fn1 && fn2)
     {
         INT iStage;
         for (iStage = 0; iStage < 7; ++iStage)
-            TEST_SHGetRestriction_Stage(fn1, fn2, iStage);
+            TEST_SHGetRestriction_Stage(iStage, fn1, fn2);
 
         SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1");
         SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1");
