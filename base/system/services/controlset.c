@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
+#include <ndk/cmfuncs.h> // For NtInitializeRegistry()
 
 #define NDEBUG
 #include <debug.h>
@@ -281,6 +282,9 @@ ScmCreateLastKnownGoodControlSet(VOID)
     DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
     DWORD dwNewControlSet;
     DWORD dwError;
+    NTSTATUS Status;
+
+    ASSERT(!bBootAccepted);
 
     /* Get the control set values */
     dwError = ScmGetControlSetValues(&dwCurrentControlSet,
@@ -322,14 +326,23 @@ ScmCreateLastKnownGoodControlSet(VOID)
 
         /* Set the new 'LastKnownGood' control set */
         dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
-        if (dwError == ERROR_SUCCESS)
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+
+        /* Tell the kernel that the CurrentControlSet is good */
+        Status = NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED + dwNewControlSet);
+        if (!NT_SUCCESS(Status))
         {
-            /*
-             * Accept the boot here in order to prevent the creation of
-             * another control set when a user is going to get logged on.
-             */
-            bBootAccepted = TRUE;
+            DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
+            return RtlNtStatusToDosError(Status);
         }
+
+        /*
+         * Accept the boot here in order to prevent the creation of
+         * another control set when a user is going to get logged on.
+         */
+        bBootAccepted = TRUE;
+        dwError = ERROR_SUCCESS;
     }
 
     return dwError;
@@ -342,6 +355,7 @@ ScmAcceptBoot(VOID)
     DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
     DWORD dwNewControlSet;
     DWORD dwError;
+    NTSTATUS Status;
 
     DPRINT("ScmAcceptBoot()\n");
 
@@ -396,8 +410,15 @@ ScmAcceptBoot(VOID)
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    bBootAccepted = TRUE;
+    /* Tell the kernel that the CurrentControlSet is good */
+    Status = NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED + dwNewControlSet);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
 
+    bBootAccepted = TRUE;
     return ERROR_SUCCESS;
 }
 
