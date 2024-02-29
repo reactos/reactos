@@ -76,9 +76,9 @@ BEGIN
     LTEXT "Адреси D&NS серверів в порядку використання:", -1, 5, 5, 180, 12
     PUSHBUTTON "Вверх", IDC_DNSADDRUP, 190, 18, 50, 14, WS_TABSTOP
     PUSHBUTTON "Вниз", IDC_DNSADDRDOWN, 190, 35, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Додати...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &Д
+    PUSHBUTTON "&Редагувати...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &P
+    PUSHBUTTON "&Видалити", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &B
     LTEXT "Наступні три параметри застосовуються для всіх підключень, що використовують TCP/IP. Для дозволу невідомих імен:", -1, 5, 70, 220, 24
     CONTROL "Додавати &основний DNS-суфікс і суфікс підключення", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
     CHECKBOX "Додавати &батьківські суфікси основного DNS-суфікса", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -86,9 +86,9 @@ BEGIN
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "Вверх", IDC_DNSSUFFIXUP, 190, 128, 50, 14, WS_TABSTOP
     PUSHBUTTON "Вниз", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSSUFFIXDEL, 135, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Додати...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &Д
+    PUSHBUTTON "&Редагувати...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &P
+    PUSHBUTTON "&Видалити", IDC_DNSSUFFIXDEL, 135, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &B
     LTEXT "DNS-&суфікс цього підключення:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
     CHECKBOX "&Зареєструвати адреси цього підключення в DNS", IDC_REGSUFFIX, 15, 195, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP

@@ -7,20 +7,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
-    CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    CONTROL "&Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
-    LTEXT "Adresse IP :", -1, 14, 75, 135, 8
+    LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
-    LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
+    LTEXT "&Masque de sous-réseau :", -1, 14, 90, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
-    LTEXT "Passerelle par défaut :", -1, 14, 105, 135, 8
+    LTEXT "Passerelle par &défaut :", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
-    CONTROL "Obtenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Utiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
-    LTEXT "Serveur DNS primaire :", -1, 14, 161, 135, 8
+    CONTROL "O&btenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
+    CONTROL "U&tiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    LTEXT "Serveur DNS &primaire :", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
-    LTEXT "Serveur DNS secondaire :", -1, 14, 176, 135, 8
+    LTEXT "Serveur DNS &secondaire :", -1, 14, 176, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
     PUSHBUTTON "&Avancé", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP
 END
@@ -32,11 +32,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Si cet ordinateur est utilisé sur plusieurs réseaux, entrez les paramètres alternatifs IP ci-dessous", -1, 9, 9, 220, 20
     GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
-    CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    CONTROL "&Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 120, 12
     LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "Masque de so&us-réseau :", -1, 14, 95, 135, 8
+    LTEXT "&Masque de sous-réseau :", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
     LTEXT "Passerelle par &défaut :", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
