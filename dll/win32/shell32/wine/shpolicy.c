@@ -43,1276 +43,229 @@
 #include <windef.h>
 #include <winbase.h>
 #include <shlobj.h>
+#include <initguid.h>
+#include <shlwapi_undoc.h>
 #include <wine/debug.h>
 
 #include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#define SHELL_NO_POLICY 0xffffffff
+#define REGKEY_POLICIES L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies"
 
-typedef struct tagPOLICYDAT
+DEFINE_GUID(GUID_Restrictions, 0xA48F1A32, 0xA340, 0x11D1, 0xBC, 0x6B, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
+
+static const POLICYDATA s_PolicyTable[] =
 {
-  DWORD policy;          /* policy value passed to SHRestricted */
-  LPCSTR appstr;         /* application str such as "Explorer" */
-  LPCSTR keystr;         /* name of the actual registry key / policy */
-  DWORD cache;           /* cached value or 0xffffffff for invalid */
-} POLICYDATA, *LPPOLICYDATA;
-
-/* application strings */
-
-static const char strExplorer[] = {"Explorer"};
-static const char strActiveDesk[] = {"ActiveDesktop"};
-static const char strWinOldApp[] = {"WinOldApp"};
-#if (WINE_FILEVERSION_MAJOR < 6)
-/* Windows 2000/Me SHELL32 uses "AddRemoveProgs" */
-static const char strAddRemoveProgs[] = {"AddRemoveProgs"};
-#else
-static const char strAddRemoveProgs[] = {"Uninstall"};
-#endif
-#ifdef __REACTOS__
-static const char strSystem[] = {"System"};
-#endif
-
-/* key strings */
-
-#ifndef __REACTOS__
-static const char strNoFileURL[] = {"NoFileUrl"};
-#endif
-static const char strNoFolderOptions[] = {"NoFolderOptions"};
-static const char strNoChangeStartMenu[] = {"NoChangeStartMenu"};
-static const char strNoWindowsUpdate[] = {"NoWindowsUpdate"};
-static const char strNoSetActiveDesktop[] = {"NoSetActiveDesktop"};
-static const char strNoForgetSoftwareUpdate[] = {"NoForgetSoftwareUpdate"};
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-static const char strNoMSAppLogo[] = {"NoMSAppLogo5ChannelNotify"};
-#endif
-static const char strForceCopyACLW[] = {"ForceCopyACLWithFile"};
-static const char strNoResolveTrk[] = {"NoResolveTrack"};
-static const char strNoResolveSearch[] = {"NoResolveSearch"};
-static const char strNoEditComponent[] = {"NoEditingComponents"};
-static const char strNoMovingBand[] = {"NoMovingBands"};
-static const char strNoCloseDragDrop[] = {"NoCloseDragDropBands"};
-static const char strNoCloseComponent[] = {"NoClosingComponents"};
-static const char strNoDelComponent[] = {"NoDeletingComponents"};
-static const char strNoAddComponent[] = {"NoAddingComponents"};
-static const char strNoComponent[] = {"NoComponents"};
-static const char strNoChangeWallpaper[] = {"NoChangingWallpaper"};
-static const char strNoHTMLWallpaper[] = {"NoHTMLWallpaper"};
-static const char strNoCustomWebView[] = {"NoCustomizeWebView"};
-static const char strClassicShell[] = {"ClassicShell"};
-static const char strClearRecentDocs[] = {"ClearRecentDocsOnExit"};
-static const char strNoFavoritesMenu[] = {"NoFavoritesMenu"};
-static const char strNoActiveDesktopChanges[] = {"NoActiveDesktopChanges"};
-static const char strNoActiveDesktop[] = {"NoActiveDesktop"};
-static const char strNoRecentDocMenu[] = {"NoRecentDocsMenu"};
-static const char strNoRecentDocHistory[] = {"NoRecentDocsHistory"};
-static const char strNoInetIcon[] = {"NoInternetIcon"};
-static const char strNoSettingsWizard[] = {"NoSettingsWizards"};
-#if (WINE_FILEVERSION_MAJOR < 5)
-// NOTE: This value now only controls the LogOff capability in the TaskMgr.
-static const char strNoLogoff[] = {"NoLogoff"};
-#else
-// NOTE: This is the new value that controls the presence/absence
-// of the LogOff item in the Start Menu.
-static const char strNoLogoff[] = {"StartMenuLogoff"};
-#endif
-static const char strNoNetConDis[] = {"NoNetConnectDisconnect"};
-static const char strNoViewContextMenu[] = {"NoViewContextMenu"};
-static const char strNoTrayContextMenu[] = {"NoTrayContextMenu"};
-static const char strNoWebMenu[] = {"NoWebMenu"};
-static const char strLnkResolveIgnoreLnkInfo[] = {"LinkResolveIgnoreLinkInfo"};
-static const char strNoCommonGroups[] = {"NoCommonGroups"};
-static const char strEnforceShlExtSecurity[] = {"EnforceShellExtensionSecurity"};
-static const char strNoRealMode[] = {"NoRealMode"};             // REGSTR_VAL_WINOLDAPP_NOREALMODE
-static const char strMyDocsOnNet[] = {"MyDocsOnNet"};
-static const char strNoStartMenuSubfolder[] = {"NoStartMenuSubFolders"};
-static const char strNoAddPrinters[] = {"NoAddPrinter"};        // REGSTR_VAL_PRINTERS_NOADD
-static const char strNoDeletePrinters[] = {"NoDeletePrinter"};  // REGSTR_VAL_PRINTERS_NODELETE
-static const char strNoPrintTab[] = {"NoPrinterTabs"};          // REGSTR_VAL_PRINTERS_HIDETABS
-static const char strRestrictRun[] = {"RestrictRun"};           // REGSTR_VAL_RESTRICTRUN
-static const char strNoStartBanner[] = {"NoStartBanner"};
-static const char strNoNetworkNeighborhood[] = {"NoNetHood"};
-static const char strNoDriveTypeAtRun[] = {"NoDriveTypeAutoRun"};
-static const char strNoDrivesAutoRun[] = {"NoDriveAutoRun"};
-static const char strSeparateProcess[] = {"SeparateProcess"};
-static const char strNoDrives[] = {"NoDrives"};
-static const char strNoFind[] = {"NoFind"};
-static const char strNoDesktop[] = {"NoDesktop"};
-static const char strNoSetTaskBar[] = {"NoSetTaskbar"};
-static const char strNoSetFld[] = {"NoSetFolders"};
-static const char strNoFileMenu[] = {"NoFileMenu"};
-static const char strNoSaveSetting[] = {"NoSaveSettings"};
-static const char strNoClose[] = {"NoClose"};
-static const char strNoRun[] = {"NoRun"};
-
-/* policy data array */
-static POLICYDATA sh32_policy_table[] =
-{
-  {
-    REST_NORUN,
-    strExplorer,
-    strNoRun,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCLOSE,
-    strExplorer,
-    strNoClose,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSAVESET,
-    strExplorer,
-    strNoSaveSetting,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOFILEMENU,
-    strExplorer,
-    strNoFileMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSETFOLDERS,
-    strExplorer,
-    strNoSetFld,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSETTASKBAR,
-    strExplorer,
-    strNoSetTaskBar,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODESKTOP,
-    strExplorer,
-    strNoDesktop,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOFIND,
-    strExplorer,
-    strNoFind,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODRIVES,
-    strExplorer,
-    strNoDrives,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODRIVEAUTORUN,
-    strExplorer,
-    strNoDrivesAutoRun,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODRIVETYPEAUTORUN,
-    strExplorer,
-    strNoDriveTypeAtRun,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NONETHOOD,
-    strExplorer,
-    strNoNetworkNeighborhood,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_STARTBANNER,
-    strExplorer,
-    strNoStartBanner,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_RESTRICTRUN,
-    strExplorer,
-    strRestrictRun,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOPRINTERTABS,
-    strExplorer,
-    strNoPrintTab,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOPRINTERDELETE,
-    strExplorer,
-    strNoDeletePrinters,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOPRINTERADD,
-    strExplorer,
-    strNoAddPrinters,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSTARTMENUSUBFOLDERS,
-    strExplorer,
-    strNoStartMenuSubfolder,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_MYDOCSONNET,
-    strExplorer,
-    strMyDocsOnNet,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOEXITTODOS,
-    strWinOldApp,
-    strNoRealMode,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ENFORCESHELLEXTSECURITY,
-    strExplorer,
-    strEnforceShlExtSecurity,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_LINKRESOLVEIGNORELINKINFO,
-    strExplorer,
-    strLnkResolveIgnoreLnkInfo,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCOMMONGROUPS,
-    strExplorer,
-    strNoCommonGroups,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_SEPARATEDESKTOPPROCESS,
-    strExplorer,
-    strSeparateProcess,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOWEB,
-    strExplorer,
-    strNoWebMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTRAYCONTEXTMENU,
-    strExplorer,
-    strNoTrayContextMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOVIEWCONTEXTMENU,
-    strExplorer,
-    strNoViewContextMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NONETCONNECTDISCONNECT,
-    strExplorer,
-    strNoNetConDis,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_STARTMENULOGOFF,
-    strExplorer,
-    strNoLogoff,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSETTINGSASSIST,
-    strExplorer,
-    strNoSettingsWizard,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOINTERNETICON,
-    strExplorer,
-    strNoInetIcon,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NORECENTDOCSHISTORY,
-    strExplorer,
-    strNoRecentDocHistory,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NORECENTDOCSMENU,
-    strExplorer,
-    strNoRecentDocMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOACTIVEDESKTOP,
-    strExplorer,
-    strNoActiveDesktop,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOACTIVEDESKTOPCHANGES,
-    strExplorer,
-    strNoActiveDesktopChanges,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOFAVORITESMENU,
-    strExplorer,
-    strNoFavoritesMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_CLEARRECENTDOCSONEXIT,
-    strExplorer,
-    strClearRecentDocs,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_CLASSICSHELL,
-    strExplorer,
-    strClassicShell,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCUSTOMIZEWEBVIEW,
-    strExplorer,
-    strNoCustomWebView,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOHTMLWALLPAPER,
-    strActiveDesk,
-    strNoHTMLWallpaper,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCHANGINGWALLPAPER,
-    strActiveDesk,
-    strNoChangeWallpaper,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODESKCOMP,
-    strActiveDesk,
-    strNoComponent,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOADDDESKCOMP,
-    strActiveDesk,
-    strNoAddComponent,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODELDESKCOMP,
-    strActiveDesk,
-    strNoDelComponent,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCLOSEDESKCOMP,
-    strActiveDesk,
-    strNoCloseComponent,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCLOSE_DRAGDROPBAND,
-#if (WINE_FILEVERSION_MAJOR < 5)
-    strActiveDesk,
-#else
-    strExplorer,
-#endif
-    strNoCloseDragDrop,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOMOVINGBAND,
-#if (WINE_FILEVERSION_MAJOR < 5)
-    strActiveDesk,
-#else
-    strExplorer,
-#endif
-    strNoMovingBand,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOEDITDESKCOMP,
-    strActiveDesk,
-    strNoEditComponent,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NORESOLVESEARCH,
-    strExplorer,
-    strNoResolveSearch,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NORESOLVETRACK,
-    strExplorer,
-    strNoResolveTrk,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_FORCECOPYACLWITHFILE,
-    strExplorer,
-    strForceCopyACLW,
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NOLOGO3CHANNELNOTIFY,
-    strExplorer,
-    strNoMSAppLogo,
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_NOFORGETSOFTWAREUPDATE,
-    strExplorer,
-    strNoForgetSoftwareUpdate,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSETACTIVEDESKTOP,
-    strExplorer,
-    strNoSetActiveDesktop,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOUPDATEWINDOWS,
-    strExplorer,
-    strNoWindowsUpdate,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCHANGESTARMENU,
-    strExplorer,
-    strNoChangeStartMenu,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOFOLDEROPTIONS,
-    strExplorer,
-    strNoFolderOptions,
-    SHELL_NO_POLICY
-  },
-  {
-    REST_HASFINDCOMPUTERS,
-    strExplorer,
-    "FindComputers",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_INTELLIMENUS,
-    strExplorer,
-    "IntelliMenus",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_RUNDLGMEMCHECKBOX,
-    strExplorer,
-    "MemCheckBoxInRunDlg",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_ShowPostSetup,
-    strAddRemoveProgs,
-    "ShowPostSetup",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCSC,
-    strExplorer,
-    "NoSyncAll",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCONTROLPANEL,
-    strExplorer,
-    "NoControlPanel",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ENUMWORKGROUP,
-    strExplorer,
-    "EnumWorkgroup",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_NOARP,
-    strAddRemoveProgs,
-    "NoAddRemovePrograms",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_NOREMOVEPAGE,
-    strAddRemoveProgs,
-    "NoRemovePage",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_NOADDPAGE,
-    strAddRemoveProgs,
-    "NoAddPage",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_NOWINSETUPPAGE,
-    strAddRemoveProgs,
-    "NoWindowsSetupPage",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_GREYMSIADS,
-    strExplorer,
-#ifndef __REACTOS__
-// NOTE: Wine buggy
-    "",
-#else
-    "GreyMSIAds",
-#endif
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCHANGEMAPPEDDRIVELABEL,
-    strExplorer,
-    "NoChangeMappedDriveLabel",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCHANGEMAPPEDDRIVECOMMENT,
-    strExplorer,
-    "NoChangeMappedDriveComment",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_MaxRecentDocs,
-    strExplorer,
-    "MaxRecentDocs",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NONETWORKCONNECTIONS,
-    strExplorer,
-    "NoNetworkConnections",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_FORCESTARTMENULOGOFF,
-    strExplorer,
-    "ForceStartMenuLogoff",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOWEBVIEW,
-    strExplorer,
-     "NoWebView",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCUSTOMIZETHISFOLDER,
-    strExplorer,
-    "NoCustomizeThisFolder",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOENCRYPTION,
-    strExplorer,
-    "NoEncryption",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR == 5) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_ALLOWFRENCHENCRYPTION,
-    strExplorer,
-    "AllowFrenchEncryption",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_DONTSHOWSUPERHIDDEN,
-    strExplorer,
-    "DontShowSuperHidden",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSHELLSEARCHBUTTON,
-    strExplorer,
-    "NoShellSearchButton",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOHARDWARETAB,
-    strExplorer,
-    "NoHardwareTab",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NORUNASINSTALLPROMPT,
-    strExplorer,
-    "NoRunasInstallPrompt",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_PROMPTRUNASINSTALLNETPATH,
-    strExplorer,
-    "PromptRunasInstallNetPath",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_NOMANAGEMYCOMPUTERVERB,
-    strExplorer,
-    "NoManageMyComputerVerb",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NORECENTDOCSNETHOOD,
-    strExplorer,
-    "NoRecentDocsNetHood",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_DISALLOWRUN,
-    strExplorer,
-    "DisallowRun",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOWELCOMESCREEN,
-    strExplorer,
-    "NoWelcomeScreen",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_RESTRICTCPL,
-    strExplorer,
-    "RestrictCpl",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_DISALLOWCPL,
-    strExplorer,
-    "DisallowCpl",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMBALLOONTIP,
-    strExplorer,
-    "NoSMBalloonTip",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMHELP,
-    strExplorer,
-    "NoSMHelp",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOWINKEYS,
-    strExplorer,
-    "NoWinKeys",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOENCRYPTONMOVE,
-    strExplorer,
-    "NoEncryptOnMove",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOLOCALMACHINERUN,
-    strExplorer,
-    "DisableLocalMachineRun",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCURRENTUSERRUN,
-    strExplorer,
-    "DisableCurrentUserRun",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOLOCALMACHINERUNONCE,
-    strExplorer,
-    "DisableLocalMachineRunOnce",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCURRENTUSERRUNONCE,
-    strExplorer,
-    "DisableCurrentUserRunOnce",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_FORCEACTIVEDESKTOPON,
-    strExplorer,
-    "ForceActiveDesktopOn",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NOCOMPUTERSNEARME,
-    strExplorer,
-    "NoComputersNearMe",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_NOVIEWONDRIVE,
-    strExplorer,
-    "NoViewOnDrive",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NONETCRAWL,
-    strExplorer,
-#ifndef __REACTOS__
-// NOTE: Wine buggy
-    "NoNetCrawl",
-#else
-    "NoNetCrawling",
-#endif
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSHAREDDOCUMENTS,
-    strExplorer,
-#ifndef __REACTOS__
-// NOTE: Wine buggy
-    "NoSharedDocs",
-#else
-    "NoSharedDocuments",
-#endif
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMMYDOCS,
-    strExplorer,
-    "NoSMMyDocs",
-    SHELL_NO_POLICY
-  },
-
-#ifdef __REACTOS__
-  {
-    REST_NOSMMYPICS,
-    strExplorer,
-    "NoSMMyPictures",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ALLOWBITBUCKDRIVES,
-    strExplorer,
-    "RecycleBinDrives",
-    SHELL_NO_POLICY
-  },
-#endif
-
-/* 0x4000050 - 0x4000060 */
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_NONLEGACYSHELLMODE,
-    strExplorer,
-    "NoneLegacyShellMode",
-    SHELL_NO_POLICY
-  },
-#endif
-
-#ifdef __REACTOS__
-
-  {
-    REST_NOCONTROLPANELBARRICADE,
-    strExplorer,
-    "NoControlPanelBarricade",
-    SHELL_NO_POLICY
-  },
-
-// NOTE: REST_NOSTARTPAGE never really existed.
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_NOAUTOTRAYNOTIFY,
-    strExplorer,
-    "NoAutoTrayNotify",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTASKGROUPING,
-    strExplorer,
-    "NoTaskGrouping",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCDBURNING,
-    strExplorer,
-    "NoCDBurning",
-    SHELL_NO_POLICY
-  },
-#endif // WINE_FILEVERSION_MAJOR
-  {
-    REST_MYCOMPNOPROP,
-    strExplorer,
-    "NoPropertiesMyComputer",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_MYDOCSNOPROP,
-    strExplorer,
-    "NoPropertiesMyDocuments",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_NOSTARTPANEL,
-    strExplorer,
-    "NoSimpleStartMenu",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPLAYAPPEARANCEPAGE,
-    strSystem,
-    "NoDispAppearancePage", // REGSTR_VAL_DISPCPL_NOAPPEARANCEPAGE
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTHEMESTAB,
-    strExplorer,
-    "NoThemesTab",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOVISUALSTYLECHOICE,
-    strSystem,
-    "NoVisualStyleChoice",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSIZECHOICE,
-    strSystem,
-    "NoSizeChoice",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOCOLORCHOICE,
-    strSystem,
-    "NoColorChoice",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_SETVISUALSTYLE,
-    strSystem,
-    "SetVisualStyle",
-    SHELL_NO_POLICY
-  },
-#endif // WINE_FILEVERSION_MAJOR
-
-#endif // __REACTOS__
-
-  {
-    REST_STARTRUNNOHOMEPATH,
-    strExplorer,
-    "StartRunNoHOMEPATH",
-    SHELL_NO_POLICY
-  },
-
-#ifdef __REACTOS__
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_NOUSERNAMEINSTARTPANEL,
-    strExplorer,
-    "NoUserNameInStartMenu",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOMYCOMPUTERICON,
-    "NonEnum",
-    "{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMNETWORKPLACES,
-    strExplorer,
-    "NoStartMenuNetworkPlaces",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMPINNEDLIST,
-    strExplorer,
-    "NoStartMenuPinnedList",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMMYMUSIC,
-    strExplorer,
-    "NoStartMenuMyMusic",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMEJECTPC,
-    strExplorer,
-    "NoStartMenuEjectPC",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMMOREPROGRAMS,
-    strExplorer,
-    "NoStartMenuMorePrograms",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSMMFUPROGRAMS,
-    strExplorer,
-    "NoStartMenuMFUprogramsList",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTRAYITEMSDISPLAY,
-    strExplorer,
-    "NoTrayItemsDisplay",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTOOLBARSONTASKBAR,
-    strExplorer,
-    "NoToolbarsOnTaskbar",
-    SHELL_NO_POLICY
-  },
-#endif // WINE_FILEVERSION_MAJOR
-
-  {
-    REST_NOSMCONFIGUREPROGRAMS,
-    strExplorer,
-    "NoSMConfigurePrograms",
-    SHELL_NO_POLICY
-  },
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_HIDECLOCK,
-    strExplorer,
-    "HideClock",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOLOWDISKSPACECHECKS,
-    strExplorer,
-    "NoLowDiskSpaceChecks",
-    SHELL_NO_POLICY
-  },
-#endif
-
-#if (WINE_FILEVERSION_MAJOR <= 6) && (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NOENTIRENETWORK,
-    "Network",
-    "NoEntireNetwork",      // REGSTR_VAL_NOENTIRENETWORK
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODESKTOPCLEANUP,
-    strExplorer,
-    "NoDesktopCleanupWizard",
-    SHELL_NO_POLICY
-  },
-#endif
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_BITBUCKNUKEONDELETE,
-    strExplorer,
-    "NoRecycleFiles",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_BITBUCKCONFIRMDELETE,
-    strExplorer,
-    "ConfirmFileDelete",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_BITBUCKNOPROP,
-    strExplorer,
-    "NoPropertiesRecycleBin",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPBACKGROUND,
-    strSystem,
-    "NoDispBackgroundPage", // REGSTR_VAL_DISPCPL_NOBACKGROUNDPAGE
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPSCREENSAVEPG,
-    strSystem,
-    "NoDispScrSavPage",     // REGSTR_VAL_DISPCPL_NOSCRSAVPAGE
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPSETTINGSPG,
-    strSystem,
-    "NoDispSettingsPage",   // REGSTR_VAL_DISPCPL_NOSETTINGSPAGE
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPSCREENSAVEPREVIEW,
-    strSystem,
-    "NoScreenSavePreview",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NODISPLAYCPL,
-    strSystem,
-    "NoDispCPL",            // REGSTR_VAL_DISPCPL_NODISPCPL
-    SHELL_NO_POLICY
-  },
-  {
-    REST_HIDERUNASVERB,
-    strExplorer,
-    "HideRunAsVerb",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOTHUMBNAILCACHE,
-    strExplorer,
-    "NoThumbnailCache",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSTRCMPLOGICAL,
-    strExplorer,
-    "NoStrCmpLogical",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOPUBLISHWIZARD,
-    strExplorer,
-    "NoPublishingWizard",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOONLINEPRINTSWIZARD,
-    strExplorer,
-    "NoOnlinePrintsWizard",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOWEBSERVICES,
-    strExplorer,
-    "NoWebServices",
-    SHELL_NO_POLICY
-  },
-#endif // WINE_FILEVERSION_MAJOR
-
-  {
-    REST_ALLOWUNHASHEDWEBVIEW,
-    strExplorer,
-    "AllowUnhashedWebView",
-    SHELL_NO_POLICY
-  },
-#if (WINE_FILEVERSION_MAJOR >= 6)
-  {
-    REST_ALLOWLEGACYWEBVIEW,
-    strExplorer,
-    "AllowLegacyWebView",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_REVERTWEBVIEWSECURITY,
-    strExplorer,
-    "RevertWebViewSecurity",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_INHERITCONSOLEHANDLES,
-    strExplorer,
-    "InheritConsoleHandles",
-    SHELL_NO_POLICY
-  },
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-
+    /* { policy, appstr, keystr }, */
+    { REST_NORUN, L"Explorer", L"NoRun" },
+    { REST_NOCLOSE, L"Explorer", L"NoClose" },
+    { REST_NOSAVESET, L"Explorer", L"NoSaveSettings" },
+    { REST_NOFILEMENU, L"Explorer", L"NoFileMenu" },
+    { REST_NOSETFOLDERS, L"Explorer", L"NoSetFolders" },
+    { REST_NOSETTASKBAR, L"Explorer", L"NoSetTaskbar" },
+    { REST_NODESKTOP, L"Explorer", L"NoDesktop" },
+    { REST_NOFIND, L"Explorer", L"NoFind" },
+    { REST_NODRIVES, L"Explorer", L"NoDrives" },
+    { REST_NODRIVEAUTORUN, L"Explorer", L"NoDriveAutoRun" },
+    { REST_NODRIVETYPEAUTORUN, L"Explorer", L"NoDriveTypeAutoRun" },
+    { REST_NONETHOOD, L"Explorer", L"NoNetHood" },
+    { REST_STARTBANNER, L"Explorer", L"NoStartBanner" },
+    { REST_RESTRICTRUN, L"Explorer", L"RestrictRun" },
+    { REST_NOPRINTERTABS, L"Explorer", L"NoPrinterTabs" },
+    { REST_NOPRINTERDELETE, L"Explorer", L"NoDeletePrinter" },
+    { REST_NOPRINTERADD, L"Explorer", L"NoAddPrinter" },
+    { REST_NOSTARTMENUSUBFOLDERS, L"Explorer", L"NoStartMenuSubFolders" },
+    { REST_MYDOCSONNET, L"Explorer", L"MyDocsOnNet" },
+    { REST_NOEXITTODOS, L"WinOldApp", L"NoRealMode" },
+    { REST_ENFORCESHELLEXTSECURITY, L"Explorer", L"EnforceShellExtensionSecurity" },
+    { REST_NOCOMMONGROUPS, L"Explorer", L"NoCommonGroups" },
+    { REST_LINKRESOLVEIGNORELINKINFO, L"Explorer", L"LinkResolveIgnoreLinkInfo" },
+    { REST_NOWEB, L"Explorer", L"NoWebMenu" },
+    { REST_NOTRAYCONTEXTMENU, L"Explorer", L"NoTrayContextMenu" },
+    { REST_NOVIEWCONTEXTMENU, L"Explorer", L"NoViewContextMenu" },
+    { REST_NONETCONNECTDISCONNECT, L"Explorer", L"NoNetConnectDisconnect" },
+    { REST_STARTMENULOGOFF, L"Explorer", L"StartMenuLogoff" },
+    { REST_NOSETTINGSASSIST, L"Explorer", L"NoSettingsWizards" },
+    { REST_NODISCONNECT, L"Explorer", L"NoDisconnect" },
+    { REST_NOSECURITY, L"Explorer", L"NoNTSecurity" },
+    { REST_NOFILEASSOCIATE, L"Explorer", L"NoFileAssociate" },
+    { REST_NOINTERNETICON, L"Explorer", L"NoInternetIcon" },
+    { REST_NORECENTDOCSHISTORY, L"Explorer", L"NoRecentDocsHistory" },
+    { REST_NORECENTDOCSMENU, L"Explorer", L"NoRecentDocsMenu" },
+    { REST_NOACTIVEDESKTOP, L"Explorer", L"NoActiveDesktop" },
+    { REST_NOACTIVEDESKTOPCHANGES, L"Explorer", L"NoActiveDesktopChanges" },
+    { REST_NOFAVORITESMENU, L"Explorer", L"NoFavoritesMenu" },
+    { REST_CLEARRECENTDOCSONEXIT, L"Explorer", L"ClearRecentDocsOnExit" },
+    { REST_CLASSICSHELL, L"Explorer", L"ClassicShell" },
+    { REST_NOCUSTOMIZEWEBVIEW, L"Explorer", L"NoCustomizeWebView" },
+    { REST_NOHTMLWALLPAPER, L"ActiveDesktop", L"NoHTMLWallPaper" },
+    { REST_NOCHANGINGWALLPAPER, L"ActiveDesktop", L"NoChangingWallPaper" },
+    { REST_NODESKCOMP, L"ActiveDesktop", L"NoComponents" },
+    { REST_NOADDDESKCOMP, L"ActiveDesktop", L"NoAddingComponents" },
+    { REST_NODELDESKCOMP, L"ActiveDesktop", L"NoDeletingComponents" },
+    { REST_NOCLOSEDESKCOMP, L"ActiveDesktop", L"NoClosingComponents" },
+    { REST_NOCLOSE_DRAGDROPBAND, L"Explorer", L"NoCloseDragDropBands" },
+    { REST_NOMOVINGBAND, L"Explorer", L"NoMovingBands" },
+    { REST_NOEDITDESKCOMP, L"ActiveDesktop", L"NoEditingComponents" },
+    { REST_NORESOLVESEARCH, L"Explorer", L"NoResolveSearch" },
+    { REST_NORESOLVETRACK, L"Explorer", L"NoResolveTrack" },
+    { REST_FORCECOPYACLWITHFILE, L"Explorer", L"ForceCopyACLWithFile" },
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_SORTMAXITEMCOUNT,
-    strExplorer,
-    "SortMaxItemCount",
-    SHELL_NO_POLICY
-  },
+    { REST_NOLOGO3CHANNELNOTIFY, L"Explorer", L"NoMSAppLogo5ChannelNotify" },
 #endif
-  {
-    REST_NOREMOTERECURSIVEEVENTS,
-    strExplorer,
-    "NoRemoteRecursiveEvents",
-    SHELL_NO_POLICY
-  },
-
-#endif // WINE_FILEVERSION_MAJOR
-
-  {
-    REST_NOREMOTECHANGENOTIFY,
-    strExplorer,
-    "NoRemoteChangeNotify",
-    SHELL_NO_POLICY
-  },
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NOSIMPLENETIDLIST,
-    strExplorer,
-    "NoSimpleNetIDList",
-    SHELL_NO_POLICY
-  },
-#endif
-// #if (NTDDI_VERSION < NTDDI_LONGHORN)
-// NOTE: Geoff Chappell is inacurrate here.
-  {
-    REST_NOENUMENTIRENETWORK,
-    strExplorer,
-    "NoEnumEntireNetwork",
-    SHELL_NO_POLICY
-  },
-// #endif
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_NODETAILSTHUMBNAILONNETWORK,
-    strExplorer,
-    "NoDetailsThumbnailOnNetwork",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_NOINTERNETOPENWITH,
-    strExplorer,
-    "NoInternetOpenWith",
-    SHELL_NO_POLICY
-  },
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_ALLOWLEGACYLMZBEHAVIOR,
-    strExplorer,
-    "AllowLegacyLMZBehavior",
-    SHELL_NO_POLICY
-  },
-#endif
-  {
-    REST_DONTRETRYBADNETNAME,
-    strExplorer,
-    "DontRetryBadNetName",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ALLOWFILECLSIDJUNCTIONS,
-    strExplorer,
-    "AllowFileCLSIDJunctions",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOUPNPINSTALL,
-    strExplorer,
-    "NoUPnPInstallTask",
-    SHELL_NO_POLICY
-  },
-
-// "NormalizeLinkNetPidls" only in version 6.0 from Windows XP SP3.
-
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-  {
-    REST_ARP_DONTGROUPPATCHES,
-    strAddRemoveProgs,
-    "DontGroupPatches",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_ARP_NOCHOOSEPROGRAMSPAGE,
-    strAddRemoveProgs,
-    "NoChooseProgramsPage",
-    SHELL_NO_POLICY
-  },
-#endif
-
-// "AllowCLSIDPROGIDMapping" in Windows XP SP3 and Windows Server 2003 SP2 only.
-// Maybe in Vista+ too?
-
-#endif // WINE_FILEVERSION_MAJOR
-
-#endif // __REACTOS__
-
-/* 0x4000061 - 0x4000086 */
-  {
-    REST_NODISCONNECT,
-    strExplorer,
-    "NoDisconnect",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOSECURITY,
-    strExplorer,
-    "NoNTSecurity",
-    SHELL_NO_POLICY
-  },
-  {
-    REST_NOFILEASSOCIATE,
-    strExplorer,
-    "NoFileAssociate",
-    SHELL_NO_POLICY
-  },
-
-#ifdef __REACTOS__
-
-#if (WINE_FILEVERSION_MAJOR >= 6)
-// #if (NTDDI_VERSION < NTDDI_LONGHORN)
-// NOTE: Either Geoff Chappell or MSDN is inacurrate here.
-  {
-    REST_ALLOWCOMMENTTOGGLE,
-    strExplorer,
-    "ToggleCommentPosition",
-    SHELL_NO_POLICY
-  },
-// #endif
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-  {
-    REST_USEDESKTOPINICACHE,
-    strExplorer,
-    "UseDesktopIniCache",
-    SHELL_NO_POLICY
-  },
-#endif
-
-// "NoNetFolderInfoTip" only in version 6.0 from Windows XP SP3.
-
-#endif // WINE_FILEVERSION_MAJOR
-
-#endif // __REACTOS__
-
-#ifndef __REACTOS__
-// NOTE: This is a SHDOCVW-only policy.
-  {
-    0x50000024,
-    strExplorer,
-    strNoFileURL,
-    SHELL_NO_POLICY
-  },
-#endif
-
-  {
-    0,
-    0,
-    0,
-    SHELL_NO_POLICY
-  }
+    { REST_NOFORGETSOFTWAREUPDATE, L"Explorer", L"NoForgetSoftwareUpdate" },
+    { REST_GREYMSIADS, L"Explorer", L"GreyMSIAds" },
+    { REST_NOSETACTIVEDESKTOP, L"Explorer", L"NoSetActiveDesktop" },
+    { REST_NOUPDATEWINDOWS, L"Explorer", L"NoWindowsUpdate" },
+    { REST_NOCHANGESTARMENU, L"Explorer", L"NoChangeStartMenu" },
+    { REST_NOFOLDEROPTIONS, L"Explorer", L"NoFolderOptions" },
+    { REST_NOCSC, L"Explorer", L"NoSyncAll" },
+    { REST_HASFINDCOMPUTERS, L"Explorer", L"FindComputers" },
+    { REST_RUNDLGMEMCHECKBOX, L"Explorer", L"MemCheckBoxInRunDlg" },
+    { REST_INTELLIMENUS, L"Explorer", L"IntelliMenus" },
+    { REST_SEPARATEDESKTOPPROCESS, L"Explorer", L"SeparateProcess" },
+    { REST_MaxRecentDocs, L"Explorer", L"MaxRecentDocs" },
+    { REST_NOCONTROLPANEL, L"Explorer", L"NoControlPanel" },
+    { REST_ENUMWORKGROUP, L"Explorer", L"EnumWorkgroup" },
+    { REST_ARP_ShowPostSetup, L"Uninstall", L"ShowPostSetup" },
+    { REST_ARP_NOARP, L"Uninstall", L"NoAddRemovePrograms" },
+    { REST_ARP_NOREMOVEPAGE, L"Uninstall", L"NoRemovePage" },
+    { REST_ARP_NOADDPAGE, L"Uninstall", L"NoAddPage" },
+    { REST_GREYMSIADS, L"Uninstall", L"NoWindowsSetupPage" },
+    { REST_NOCHANGEMAPPEDDRIVELABEL, L"Explorer", L"NoChangeMappedDriveLabel" },
+    { REST_NOCHANGEMAPPEDDRIVECOMMENT, L"Explorer", L"NoChangeMappedDriveComment" },
+    { REST_NONETWORKCONNECTIONS, L"Explorer", L"NoNetworkConnections" },
+    { REST_FORCESTARTMENULOGOFF, L"Explorer", L"ForceStartMenuLogoff" },
+    { REST_NOWEBVIEW, L"Explorer", L"NoWebView" },
+    { REST_NOCUSTOMIZETHISFOLDER, L"Explorer", L"NoCustomizeThisFolder" },
+    { REST_NOENCRYPTION, L"Explorer", L"NoEncryption" },
+    { REST_DONTSHOWSUPERHIDDEN, L"Explorer", L"DontShowSuperHidden" },
+    { REST_NOSHELLSEARCHBUTTON, L"Explorer", L"NoShellSearchButton" },
+    { REST_NOHARDWARETAB, L"Explorer", L"NoHardwareTab" },
+    { REST_NORUNASINSTALLPROMPT, L"Explorer", L"NoRunasInstallPrompt" },
+    { REST_PROMPTRUNASINSTALLNETPATH, L"Explorer", L"PromptRunasInstallNetPath" },
+    { REST_NOMANAGEMYCOMPUTERVERB, L"Explorer", L"NoManageMyComputerVerb" },
+    { REST_NORECENTDOCSNETHOOD, L"Explorer", L"NoRecentDocsNetHood" },
+    { REST_DISALLOWRUN, L"Explorer", L"DisallowRun" },
+    { REST_NOWELCOMESCREEN, L"Explorer", L"NoWelcomeScreen" },
+    { REST_RESTRICTCPL, L"Explorer", L"RestrictCpl" },
+    { REST_DISALLOWCPL, L"Explorer", L"DisallowCpl" },
+    { REST_NOSMBALLOONTIP, L"Explorer", L"NoSMBalloonTip" },
+    { REST_NOSMHELP, L"Explorer", L"NoSMHelp" },
+    { REST_NOWINKEYS, L"Explorer", L"NoWinKeys" },
+    { REST_NOENCRYPTONMOVE, L"Explorer", L"NoEncryptOnMove" },
+    { REST_NOLOCALMACHINERUN, L"Explorer", L"DisableLocalMachineRun" },
+    { REST_NOCURRENTUSERRUN, L"Explorer", L"DisableCurrentUserRun" },
+    { REST_NOLOCALMACHINERUNONCE, L"Explorer", L"DisableLocalMachineRunOnce" },
+    { REST_NOCURRENTUSERRUNONCE, L"Explorer", L"DisableCurrentUserRunOnce" },
+    { REST_FORCEACTIVEDESKTOPON, L"Explorer", L"ForceActiveDesktopOn" },
+    { REST_NOCOMPUTERSNEARME, L"Explorer", L"NoComputersNearMe" },
+    { REST_NOVIEWONDRIVE, L"Explorer", L"NoViewOnDrive" },
+    { REST_NONETCRAWL, L"Explorer", L"NoNetCrawling" },
+    { REST_NOSHAREDDOCUMENTS, L"Explorer", L"NoSharedDocuments" },
+    { REST_NOSMMYDOCS, L"Explorer", L"NoSMMyDocs" },
+    { REST_NOSMMYPICS, L"Explorer", L"NoSMMyPictures" },
+    { REST_ALLOWBITBUCKDRIVES, L"Explorer", L"RecycleBinDrives" },
+    { REST_NONLEGACYSHELLMODE, L"Explorer", L"NoneLegacyShellMode" },
+    { REST_NOCONTROLPANELBARRICADE, L"Explorer", L"NoControlPanelBarricade" },
+    { REST_NOAUTOTRAYNOTIFY, L"Explorer", L"NoAutoTrayNotify" },
+    { REST_NOTASKGROUPING, L"Explorer", L"NoTaskGrouping" },
+    { REST_NOCDBURNING, L"Explorer", L"NoCDBurning" },
+    { REST_MYCOMPNOPROP, L"Explorer", L"NoPropertiesMyComputer" },
+    { REST_MYDOCSNOPROP, L"Explorer", L"NoPropertiesMyDocuments" },
+    { REST_NODISPLAYAPPEARANCEPAGE, L"System", L"NoDispAppearancePage" },
+    { REST_NOTHEMESTAB, L"Explorer", L"NoThemesTab" },
+    { REST_NOVISUALSTYLECHOICE, L"System", L"NoVisualStyleChoice" },
+    { REST_NOSIZECHOICE, L"System", L"NoSizeChoice" },
+    { REST_NOCOLORCHOICE, L"System", L"NoColorChoice" },
+    { REST_SETVISUALSTYLE, L"System", L"SetVisualStyle" },
+    { REST_STARTRUNNOHOMEPATH, L"Explorer", L"StartRunNoHOMEPATH" },
+    { REST_NOSTARTPANEL, L"Explorer", L"NoSimpleStartMenu" },
+    { REST_NOUSERNAMEINSTARTPANEL, L"Explorer", L"NoUserNameInStartMenu" },
+    { REST_NOMYCOMPUTERICON, L"NonEnum", L"{20D04FE0-3AEA-1069-A2D8-08002B30309D}" },
+    { REST_NOSMNETWORKPLACES, L"Explorer", L"NoStartMenuNetworkPlaces" },
+    { REST_NOSMPINNEDLIST, L"Explorer", L"NoStartMenuPinnedList" },
+    { REST_NOSMMYMUSIC, L"Explorer", L"NoStartMenuMyMusic" },
+    { REST_NOSMEJECTPC, L"Explorer", L"NoStartMenuEjectPC" },
+    { REST_NOSMMOREPROGRAMS, L"Explorer", L"NoStartMenuMorePrograms" },
+    { REST_NOSMMFUPROGRAMS, L"Explorer", L"NoStartMenuMFUprogramsList" },
+    { REST_HIDECLOCK, L"Explorer", L"HideClock" },
+    { REST_NOLOWDISKSPACECHECKS, L"Explorer", L"NoLowDiskSpaceChecks" },
+    { REST_NODESKTOPCLEANUP, L"Explorer", L"NoDesktopCleanupWizard" },
+    { REST_NOENTIRENETWORK, L"Network", L"NoEntireNetwork" },
+    { REST_BITBUCKNUKEONDELETE, L"Explorer", L"NoRecycleFiles" },
+    { REST_BITBUCKCONFIRMDELETE, L"Explorer", L"ConfirmFileDelete" },
+    { REST_BITBUCKNOPROP, L"Explorer", L"NoPropertiesRecycleBin" },
+    { REST_NOTRAYITEMSDISPLAY, L"Explorer", L"NoTrayItemsDisplay" },
+    { REST_NOTOOLBARSONTASKBAR, L"Explorer", L"NoToolbarsOnTaskbar" },
+    { 0x4000006C, L"Explorer", L"NoDriveTypeAutoRunCommandAndVerb" },   /* FIXME: name */
+    { REST_NODISPBACKGROUND, L"System", L"NoDispBackgroundPage" },
+    { REST_NODISPSCREENSAVEPG, L"System", L"NoDispScrSavPage" },
+    { REST_NODISPSETTINGSPG, L"System", L"NoDispSettingsPage" },
+    { REST_NODISPSCREENSAVEPREVIEW, L"System", L"NoScreenSavePreview" },
+    { REST_NODISPLAYCPL, L"System", L"NoDispCPL" },
+    { REST_HIDERUNASVERB, L"Explorer", L"HideRunAsVerb" },
+    { REST_NOTHUMBNAILCACHE, L"Explorer", L"NoThumbnailCache" },
+    { REST_NOSTRCMPLOGICAL, L"Explorer", L"NoStrCmpLogical" },
+    { 0x40000095, L"Explorer", L"NoInternetOpenWith" },                 /* FIXME: name */
+    { REST_NOSMCONFIGUREPROGRAMS, L"Explorer", L"NoSMConfigurePrograms" },
+    { REST_NOPUBLISHWIZARD, L"Explorer", L"NoPublishingWizard" },
+    { REST_NOONLINEPRINTSWIZARD, L"Explorer", L"NoOnlinePrintsWizard" },
+    { REST_NOWEBSERVICES, L"Explorer", L"NoWebServices" },
+    { REST_ALLOWUNHASHEDWEBVIEW, L"Explorer", L"AllowUnhashedWebView" },
+    { REST_ALLOWLEGACYWEBVIEW, L"Explorer", L"AllowLegacyWebView" },
+    { REST_REVERTWEBVIEWSECURITY, L"Explorer", L"RevertWebViewSecurity" },
+    { REST_INHERITCONSOLEHANDLES, L"Explorer", L"InheritConsoleHandles" },
+    { 0x40000089, L"Explorer", L"NoRemoteRecursiveEvents" },            /* FIXME: name */
+    { 0x40000087, L"Explorer", L"SortMaxItemCount" },                   /* FIXME: name */
+    { 0x40000091, L"Explorer", L"NoRemoteChangeNotify" },               /* FIXME: name */
+    { 0x4000009C, L"Explorer", L"AllowFileCLSIDJunctions" },            /* FIXME: name */
+    { 0x41000004, L"Explorer", L"ToggleCommentPosition" },              /* FIXME: name */
+    { 0x40000093, L"Explorer", L"NoEnumEntireNetwork" },                /* FIXME: name */
+    { 0x40000094, L"Explorer", L"NoDetailsThumbnailOnNetwork" },        /* FIXME: name */
+    { 0x4000009B, L"Explorer", L"DontRetryBadNetName" },                /* FIXME: name */
+    { 0x4000009C, L"Explorer", L"AllowFileCLSIDJunctions" },            /* FIXME: name */
+    { 0x4000009D, L"Explorer", L"NoUPnPInstallTask" },                  /* FIXME: name */
+    { 0x4000009A, L"Explorer", L"AllowLegacyLMZBehavior" }              /* FIXME: name */
+    { 0x41000005, L"Explorer", L"UseDesktopIniCache" },                 /* FIXME: name */
+    { 0x400000FF, L"Explorer", L"AllowCLSIDPROGIDMapping" },            /* FIXME: name */
+    { 0x40000092, L"Explorer", L"NoSimpleNetIDList" },                  /* FIXME: name */
 };
+
+/*
+ * The restriction-related variables
+ */
+HANDLE g_hRestGlobalCounter = NULL;
+LONG g_nRestCountValue = -1;
+DWORD g_RestValues[_countof(s_PolicyTable)] = { 0 };
+
+static HANDLE
+SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid)
+{
+    HANDLE hGlobalCounter;
+    if (*phGlobalCounter)
+        return *phGlobalCounter;
+    hGlobalCounter = SHGlobalCounterCreate(rguid);
+    if (SHInterlockedCompareExchange(phGlobalCounter, hGlobalCounter, NULL))
+        CloseHandle(hGlobalCounter);
+    return *phGlobalCounter;
+}
+
+static HANDLE SHELL_GetRestrictionsCounter(VOID)
+{
+    return SHELL_GetCachedGlobalCounter(&g_hRestGlobalCounter, &GUID_Restrictions);
+}
+
+static BOOL SHELL_QueryRestrictionsChanged(VOID)
+{
+    LONG Value = SHGlobalCounterGetValue(SHELL_GetRestrictionsCounter());
+    if (g_nRestCountValue == Value)
+        return FALSE;
+
+    g_nRestCountValue = Value;
+    return TRUE;
+}
 
 /*************************************************************************
  * SHRestricted				 [SHELL32.100]
@@ -1335,64 +288,14 @@ static POLICYDATA sh32_policy_table[] =
  *     b: 98Lite 2.0 (which uses many of these policy keys) http://www.98lite.net/
  *     c: 'The Windows 95 Registry', by John Woram, 1996 MIS: Press
  */
-DWORD WINAPI SHRestricted (RESTRICTIONS policy)
+DWORD WINAPI SHRestricted (RESTRICTIONS rest)
 {
-	char regstr[256];
-	HKEY    xhkey;
-	DWORD   retval, datsize = 4;
-	LPPOLICYDATA p;
+    TRACE("(0x%08lX)\n", rest);
 
-	TRACE("(%08x)\n", policy);
+    if (SHELL_QueryRestrictionsChanged())
+        FillMemory(&g_RestValues, sizeof(g_RestValues), 0xFF);
 
-	/* scan to see if we know this policy ID */
-	for (p = sh32_policy_table; p->policy; p++)
-	{
-	  if (policy == p->policy)
-	  {
-	    break;
-	  }
-	}
-
-	if (p->policy == 0)
-	{
-	    /* we don't know this policy, return 0 */
-	    TRACE("unknown policy: (%08x)\n", policy);
-		return 0;
-	}
-
-	/* we have a known policy */
-
-	/* first check if this policy has been cached, return it if so */
-	if (p->cache != SHELL_NO_POLICY)
-	{
-	    return p->cache;
-	}
-
-	lstrcpyA(regstr, "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\");
-	lstrcatA(regstr, p->appstr);
-
-	/* return 0 and don't set the cache if any registry errors occur */
-#ifndef __REACTOS__
-	retval = 0;
-	if (RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey) == ERROR_SUCCESS)
-#else // FIXME: Actually this *MUST* use shlwapi!SHRestrictionLookup()
-      // See http://www.geoffchappell.com/studies/windows/shell/shell32/api/util/shrestricted.htm
-    retval = RegOpenKeyExA(HKEY_LOCAL_MACHINE, regstr, 0, KEY_READ, &xhkey);
-    if (retval != ERROR_SUCCESS)
-    {
-        retval = RegOpenKeyExA(HKEY_CURRENT_USER, regstr, 0, KEY_READ, &xhkey);
-        if (retval != ERROR_SUCCESS)
-            return 0;
-    }
-#endif
-	{
-	  if (RegQueryValueExA(xhkey, p->keystr, NULL, NULL, (LPBYTE)&retval, &datsize) == ERROR_SUCCESS)
-	  {
-	    p->cache = retval;
-	  }
-	  RegCloseKey(xhkey);
-	}
-	return retval;
+    return SHRestrictionLookup(rest, NULL, &s_PolicyTable, &g_RestValues);
 }
 
 /*************************************************************************
@@ -1402,7 +305,7 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
  *
  * PARAMS
  *  unused    [I] Reserved.
- *  inpRegKey [I] Registry key to scan.
+ *  pszKey    [I] Registry key to scan.
  *
  * RETURNS
  *  Success: -1. The policy cache is initialised.
@@ -1412,30 +315,16 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
  * NOTES
  *  Exported by ordinal. Introduced in Win98.
  */
-BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCVOID inpRegKey)
+BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCWSTR pszKey)
 {
-	TRACE("(%p, %p)\n", unused, inpRegKey);
+    TRACE("(%p, %s)\n", unused, debugstr_w(pszKey));
 
-	/* first check - if input is non-NULL and points to the secret
-	   key string, then pass. Otherwise return 0.
-	 */
-	if (inpRegKey != NULL)
-	{
-	  if (SHELL_OsIsUnicode())
-	  {
-            if (lstrcmpiW(inpRegKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies") &&
-                lstrcmpiW(inpRegKey, L"Policy"))
-	      /* doesn't match, fail */
-	      return FALSE;
-	  }
-	  else
-	  {
-            if (lstrcmpiA(inpRegKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Policies") &&
-                lstrcmpiA(inpRegKey, "Policy"))
-	      /* doesn't match, fail */
-	      return FALSE;
-	  }
-	}
+    if (pszKey &&
+        lstrcmpiW(L"Policy", pszKey) != 0 &&
+        lstrcmpiW(REGKEY_POLICIES, pszKey) != 0)
+    {
+        return FALSE;
+    }
 
-	return TRUE;
+    return SHGlobalCounterIncrement(SHELL_GetRestrictionsCounter());
 }

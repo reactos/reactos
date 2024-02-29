@@ -2695,6 +2695,25 @@ static const WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\',
  */
 DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpValue)
 {
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+    DWORD dwSize, dwValue = 0;
+
+    TRACE("(%s, %s, %s)\n", debugstr_w(lpSubKey), debugstr_w(lpSubName), debugstr_w(lpValue));
+
+    if (!lpSubKey)
+        lpSubKey = REGKEY_POLICIES;
+
+    PathCchCombine(szPath, _countof(szPath), lpSubKey, lpSubName);
+
+    dwSize = sizeof(dwValue);
+    if (SHGetValueW(HKEY_LOCAL_MACHINE, szPath, lpValue, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+        return dwValue;
+
+    dwSize = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER, szPath, lpValue, NULL, &dwValue, &dwSize);
+    return dwValue;
+#else
 	DWORD retval, datsize = sizeof(retval);
 	HKEY hKey;
 
@@ -2710,6 +2729,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
         SHGetValueW(hKey, lpSubName, lpValue, NULL, &retval, &datsize);
 	RegCloseKey(hKey);
 	return retval;
+#endif
 }
 
 /*************************************************************************
@@ -2732,6 +2752,36 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
  *  different POLICYDATA structure and implements a similar algorithm adapted to
  *  that structure.
  */
+#ifdef __REACTOS__
+DWORD WINAPI
+SHRestrictionLookup(
+    _In_ DWORD policy,
+    _In_ LPCWSTR key,
+    _In_ const POLICYDATA *polTable,
+    _Inout_ LPDWORD polArr)
+{
+    DWORD ret;
+    size_t iItem = 0;
+    const POLICYDATA *entry;
+
+    TRACE("(0x%08lX, %s, %p, %p)\n", policy, debugstr_w(initial), polTable, polArr);
+
+    if (!polTable->appstr)
+        return 0;
+
+    for (entry = polTable; entry->appstr != NULL; ++entry, ++iItem)
+    {
+        if (policy == entry->policy)
+            break;
+    }
+
+    ret = polArr[iItem];
+    if (ret == SHELL_NO_POLICY)
+        ret = polArr[iItem] = SHGetRestriction(key, entry->appstr, entry->keystr);
+
+    return ret;
+}
+#else
 DWORD WINAPI SHRestrictionLookup(
 	DWORD policy,
 	LPCWSTR initial,
@@ -2759,6 +2809,7 @@ DWORD WINAPI SHRestrictionLookup(
 	TRACE("unknown policy: (%08x)\n", policy);
 	return 0;
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.267]
