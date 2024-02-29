@@ -28,7 +28,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Bu sihirbaz, yerel ya da ağdaki programlara, dosyalara,\ndizinlere, bilgisayarlara ve İnternet adreslerine\nkısayollar oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
     LTEXT "Ögenin konumunu yazınız:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
+    EDITTEXT IDC_APPWIZ_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Devam etmek için ""İleri""ye tıklayınız.", -1, 120, 97, 162, 10
 END
