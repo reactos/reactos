@@ -601,9 +601,9 @@ SeAppendPrivileges(
 
     /* Calculate the size of the old privilege set */
     OldPrivilegeSetSize = sizeof(PRIVILEGE_SET) +
-                          (AuxData->PrivilegeSet->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+                          (AuxData->PrivilegesUsed->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
 
-    if (AuxData->PrivilegeSet->PrivilegeCount +
+    if (AuxData->PrivilegesUsed->PrivilegeCount +
         Privileges->PrivilegeCount > INITIAL_PRIVILEGE_COUNT)
     {
         /* Calculate the size of the new privilege set */
@@ -619,7 +619,7 @@ SeAppendPrivileges(
 
         /* Copy original privileges from the acess state */
         RtlCopyMemory(PrivilegeSet,
-                      AuxData->PrivilegeSet,
+                      AuxData->PrivilegesUsed,
                       OldPrivilegeSetSize);
 
         /* Append privileges from the privilege set*/
@@ -632,23 +632,23 @@ SeAppendPrivileges(
 
         /* Free the old privilege set if it was allocated */
         if (AccessState->PrivilegesAllocated != FALSE)
-            ExFreePoolWithTag(AuxData->PrivilegeSet, TAG_PRIVILEGE_SET);
+            ExFreePoolWithTag(AuxData->PrivilegesUsed, TAG_PRIVILEGE_SET);
 
         /* Now we are using an allocated privilege set */
         AccessState->PrivilegesAllocated = TRUE;
 
         /* Assign the new privileges to the access state */
-        AuxData->PrivilegeSet = PrivilegeSet;
+        AuxData->PrivilegesUsed = PrivilegeSet;
     }
     else
     {
         /* Append privileges */
-        RtlCopyMemory((PVOID)((ULONG_PTR)AuxData->PrivilegeSet + OldPrivilegeSetSize),
+        RtlCopyMemory((PVOID)((ULONG_PTR)AuxData->PrivilegesUsed + OldPrivilegeSetSize),
                       (PVOID)((ULONG_PTR)Privileges + sizeof(PRIVILEGE_SET) - sizeof(LUID_AND_ATTRIBUTES)),
                       Privileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
 
         /* Adjust the number of privileges in the target privilege set */
-        AuxData->PrivilegeSet->PrivilegeCount += Privileges->PrivilegeCount;
+        AuxData->PrivilegesUsed->PrivilegeCount += Privileges->PrivilegeCount;
     }
 
     return STATUS_SUCCESS;
