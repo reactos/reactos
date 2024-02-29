@@ -84,7 +84,11 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     /* get the extension */
     lpExtension = PathFindExtensionW(pContext->szTarget);
 
-    if (IsExtensionAShortcut(lpExtension))
+    if (pContext->pidlTarget)
+    {
+        Path[0] = UNICODE_NULL;
+    }
+    else if (IsExtensionAShortcut(lpExtension))
     {
         hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
 
@@ -126,11 +130,16 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     if (hr != S_OK)
         return FALSE;
 
-    pShellLink->lpVtbl->SetPath(pShellLink, Path);
+    if (pContext->pidlTarget)
+        pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
+    else
+        pShellLink->lpVtbl->SetPath(pShellLink, Path);
+
     if (pContext->szArguments[0])
         pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
-    pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
-    pShellLink->lpVtbl->SetWorkingDirectory(pShellLink, pContext->szWorkingDirectory);
+
+    if (pContext->szDescription[0])
+        pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
 
     hr = IUnknown_QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
     if (hr != S_OK)
@@ -233,9 +242,9 @@ WelcomeDlgProc(HWND hwndDlg,
                LPARAM lParam)
 {
     LPPROPSHEETPAGEW ppsp;
-    PCREATE_LINK_CONTEXT pContext;
+    PCREATE_LINK_CONTEXT pContext = (PCREATE_LINK_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
     LPPSHNOTIFY lppsn;
-    WCHAR szPath[MAX_PATH * 2];
+    WCHAR szPath[MAX_PATH * 2], szDisplayName[MAX_PATH];
     WCHAR szDesc[100];
     WCHAR szTitle[100];
     BROWSEINFOW brws;
@@ -253,54 +262,61 @@ WelcomeDlgProc(HWND hwndDlg,
             break;
         case WM_COMMAND:
         {
-            switch(HIWORD(wParam))
+            switch (LOWORD(wParam))
             {
-                case EN_CHANGE:
-                    if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                case IDC_SHORTCUT_LOCATION:
+                {
+                    if (HIWORD(wParam) == EN_CHANGE)
                     {
-                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
-                    }
-                    else
-                    {
-                        PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+                        /* The text was changed by user. Invalidate pidlTarget. */
+                        if (pContext->pidlTarget)
+                        {
+                            CoTaskMemFree(pContext->pidlTarget);
+                            pContext->pidlTarget = NULL;
+                        }
+
+                        if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                        else
+                            PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
                     }
                     break;
-            }
-            switch(LOWORD(wParam))
-            {
+                }
                 case IDC_SHORTCUT_BROWSE:
+                {
                     LoadStringW(hApplet, IDS_BROWSE_FOR_TARGET, szTitle, _countof(szTitle));
                     ZeroMemory(&brws, sizeof(brws));
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
-                    brws.pszDisplayName = szPath;
+                    brws.pszDisplayName = szDisplayName;
                     brws.lpszTitle = szTitle;
-                    brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_RETURNONLYFSDIRS |
-                                   BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
+                    brws.ulFlags = BIF_BROWSEINCLUDEFILES | BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
                     brws.lpfn = NULL;
                     pidllist = SHBrowseForFolderW(&brws);
                     if (!pidllist)
                         break;
 
-                    if (SHGetPathFromIDListW(pidllist, szPath))
-                    {
-                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szPath);
-                        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETFOCUS, 0, 0);
-                        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
-                    }
-                    else
-                    {
-                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, NULL);
-                    }
+                    StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription),
+                                   szDisplayName);
 
-                    /* Free memory, if possible */
-                    CoTaskMemFree(pidllist);
+                    SHGetPathFromIDListW(pidllist, szPath);
+
+                    if (PathFileExistsW(szPath) && !PathIsRelativeW(szPath))
+                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szPath);
+                    else
+                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szDisplayName);
+
+                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+
+                    if (pContext->pidlTarget)
+                        CoTaskMemFree(pContext->pidlTarget);
+                    pContext->pidlTarget = pidllist;
                     break;
+                }
             }
             break;
         case WM_NOTIFY:
             lppsn  = (LPPSHNOTIFY) lParam;
-            pContext = (PCREATE_LINK_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_SETACTIVE)
             {
                 SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget);
@@ -316,10 +332,18 @@ WelcomeDlgProc(HWND hwndDlg,
                     WCHAR szName[128];
                     LoadStringW(hApplet, IDS_NEW_INTERNET_SHORTCUT, szName, _countof(szName));
                     StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), szName);
-                    pContext->szWorkingDirectory[0] = 0;
                     pContext->szArguments[0] = 0;
                     return FALSE;
                 }
+
+                if (pContext->pidlTarget) /* The result of SHBrowseForFolderW */
+                {
+                    SHGetPathFromIDListW(pContext->pidlTarget, pContext->szTarget);
+                    pContext->szArguments[0] = 0;
+                    return FALSE;
+                }
+
+                /* Otherwise, the target is a command line or pathname */
 
                 /* Split and build args */
                 LPWSTR pszArgs = PathGetArgsW(szPath);
@@ -334,10 +358,8 @@ WelcomeDlgProc(HWND hwndDlg,
                 }
 
                 /* Find the file */
-                WCHAR szFound[MAX_PATH];
-                StringCchCopyW(szFound, _countof(szFound), szPath);
-                if (!PathFindOnPathExW(szFound, NULL, WHICH_DEFAULT) &&
-                    FindExecutableW(szPath, NULL, szFound) <= (HINSTANCE)(INT_PTR)32)
+                if (!PathFindOnPathExW(szPath, NULL, WHICH_DEFAULT) &&
+                    !PathFileExistsW(szPath))
                 {
                     /* Not found */
                     SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
@@ -355,20 +377,17 @@ WelcomeDlgProc(HWND hwndDlg,
                 }
 
                 /* Rebuild target */
-                StringCchCopyW(pContext->szTarget, _countof(pContext->szTarget), szFound);
+                if (PathIsRelativeW(szPath))
+                    GetFullPathNameW(szPath, _countof(pContext->szTarget), pContext->szTarget, NULL);
+                else
+                    StringCchCopyW(pContext->szTarget, _countof(pContext->szTarget), szPath);
 
                 /* Get display name */
-                FileInfo.szDisplayName[0] = 0;
-                if (SHGetFileInfoW(szFound, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
+                FileInfo.szDisplayName[0] = UNICODE_NULL;
+                if (SHGetFileInfoW(pContext->szTarget, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
                     StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), FileInfo.szDisplayName);
 
-                /* Set working directory */
-                StringCchCopyW(pContext->szWorkingDirectory, _countof(pContext->szWorkingDirectory), szFound);
-                PathRemoveBackslashW(pContext->szWorkingDirectory);
-                PathRemoveFileSpecW(pContext->szWorkingDirectory);
-                PathRemoveBackslashW(pContext->szWorkingDirectory);
-
-                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+                break;
             }
             else if (lppsn->hdr.code == PSN_RESET && !lppsn->lParam)
             {
@@ -618,6 +637,8 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
 
     /* Display the wizard */
     PropertySheet(&psh);
+
+    CoTaskMemFree(pContext->pidlTarget);
     HeapFree(GetProcessHeap(), 0, pContext);
     return TRUE;
 }

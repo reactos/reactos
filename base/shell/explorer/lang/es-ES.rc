@@ -147,7 +147,7 @@ BEGIN
     LTEXT            "Para eliminar registros de documentos, programas y sitios web abiertos recientemente, haga click en Borrar.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Borrar", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "&Opciones avanzadas del Menú Inicio:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "A&justes del Menú Inicio", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "A&justes del Menú Inicio", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Aceptar", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Cancelar", IDCANCEL, 176, 220, 50, 14
 END

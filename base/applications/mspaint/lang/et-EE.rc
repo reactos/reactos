@@ -42,6 +42,8 @@ BEGIN
         MENUITEM "&Lõika\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopeeri\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Kl&eebi\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Kustuta &valik\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Pööra valikut", IDM_EDITINVERTSELECTION
         MENUITEM "Vali k&õik\tCtrl+A", IDM_EDITSELECTALL
@@ -106,6 +108,8 @@ BEGIN
         MENUITEM "&Lõika\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopeeri\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Kl&eebi\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Kustuta &valik\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Vali k&õik\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

@@ -42,6 +42,8 @@ BEGIN
         MENUITEM "&Knippen\tCtrl+X", IDM_EDITCUT
         MENUITEM "K&opiëren\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Plakken\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Selectie &wissen\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectie o&mkeren", IDM_EDITINVERTSELECTION
         MENUITEM "&Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
@@ -106,6 +108,8 @@ BEGIN
         MENUITEM "&Knippen\tCtrl+X", IDM_EDITCUT
         MENUITEM "K&opiëren\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Plakken\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Selectie &wissen\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

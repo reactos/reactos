@@ -144,7 +144,7 @@ BEGIN
     LTEXT            "Pour vider la liste des documents, programmes et sites web récemment accédés, cliquez sur Nettoyer.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Nettoyer", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "&Options avancées du Menu démarrer :", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "&Paramètres du Menu Démarrer", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "&Paramètres du Menu Démarrer", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Annuler", IDCANCEL, 176, 220, 50, 14
 END

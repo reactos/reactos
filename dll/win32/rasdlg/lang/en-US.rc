@@ -39,12 +39,12 @@ CAPTION "Line Bundling Errors"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "One or more additional lines did not connect. ", 1033, 37, 8, 216, 20
+    LTEXT "One or more additional lines did not connect.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Do not attempt failed lines in the future", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Accept", 1, 135, 242, 60, 14
     PUSHBUTTON "&Hang Up", 2, 201, 242, 60, 14
-    LTEXT "If only a single line connected, the server may not be configured to accept multi-link calls.  Check 'Do not attempt failed lines' to avoid unnecessary connection charges in such a case.", -1, 37, 36, 224, 44
+    LTEXT "If only a single line connected, the server may not be configured to accept multi-link calls. Check 'Do not attempt failed lines' to avoid unnecessary connection charges in such a case.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -137,7 +137,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Callback"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You have 'Set By Caller' callback privilege on the server.  Press OK and the server will call you back at the number below.  Press Cancel to skip callback.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "You have 'Set By Caller' callback privilege on the server. Press OK and the server will call you back at the number below. Press Cancel to skip callback.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "&Enter your modem's phone number:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
@@ -194,7 +194,7 @@ CAPTION "Dial-Up Networking"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
-    LTEXT "The autodial attempt failed.  Do you want to disable autodial from this location?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    LTEXT "The autodial attempt failed. Do you want to disable autodial from this location?", 1099, 40, 6, 181, 34, NOT WS_GROUP
     PUSHBUTTON "&Yes", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&No", 2, 115, 42, 50, 14
 END
@@ -403,7 +403,7 @@ CAPTION "NetWare or Compatible Connections"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
-    LTEXT "You have connections to a NetWare compatible network.  These connections will be closed when the PPP IPX connection is established.", 1279, 42, 7, 215, 37
+    LTEXT "You have connections to a NetWare compatible network. These connections will be closed when the PPP IPX connection is established.", 1279, 42, 7, 215, 37
     LTEXT "Before dialing, to avoid data loss, either close all files using these connections or uncheck IPX on this entry's Network Protocol settings.", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "&Do not display this message in the future", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
@@ -415,7 +415,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Manual Dial"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pick up the handset and dial (or ask the operator to dial).  After dialing is complete, click OK.  Listen to handset until silent, and then hang up.", 1281, 8, 8, 219, 32
+    LTEXT "Pick up the handset and dial (or ask the operator to dial). After dialing is complete, click OK. Listen to handset until silent, and then hang up.", 1281, 8, 8, 219, 32
     LTEXT "Phone number:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
@@ -470,7 +470,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Dialing"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These preferences apply to 'Login using Dial-Up Networking' at Ctrl-Alt-Del login.  You, as an administrator, have access to this sheet.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "These preferences apply to 'Login using Dial-Up Networking' at Ctrl-Alt-Del login. You, as an administrator, have access to this sheet.", 1007, 7, 4, 221, 40, NOT WS_GROUP
     LTEXT "&Number of redial attempts:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
     LTEXT "&Seconds between redial attempts:", 1009, 7, 73, 156, 8, NOT WS_GROUP
@@ -484,7 +484,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Callback"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "When you dial into a server, it may offer to call you back to reduce your phone charges.  Specify whether you want callback.  (Callback is not supported for virtual private network (VPN) connections.)", 1043, 8, 4, 219, 43
+    LTEXT "When you dial into a server, it may offer to call you back to reduce your phone charges. Specify whether you want callback. (Callback is not supported for virtual private network (VPN) connections.)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&No callback", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "A&sk me during dialing when the server offers", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "Al&ways call me back at the number(s) below:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
@@ -510,7 +510,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You need to set the dial out credentials that this interface will use when connecting to the remote router.  These credentials must match the dial in credentials configured on the remote router.", 1094, 8, 5, 308, 33
+    LTEXT "You need to set the dial out credentials that this interface will use when connecting to the remote router. These credentials must match the dial in credentials configured on the remote router.", 1094, 8, 5, 308, 33
     LTEXT "&User name:", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
     LTEXT "&Domain:", 1093, 8, 63, 130, 8, NOT WS_GROUP
@@ -608,7 +608,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select a name for this demand dial interface.  A common practice is to name interfaces after the network or router to which they connect.", 1158, 7, 5, 309, 29
+    LTEXT "Select a name for this demand dial interface. A common practice is to name interfaces after the network or router to which they connect.", 1158, 7, 5, 309, 29
     LTEXT "&Interface name:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "I &know all about demand-dial interfaces and would rather edit the properties directly", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
@@ -624,7 +624,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Settings...", 1180, 151, 115, 60, 14
@@ -703,7 +703,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "New Connection Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the phone number below. ", -1, 7, 4, 306, 14
+    LTEXT "Type the phone number below.", -1, 7, 4, 306, 14
     LTEXT "&Phone number:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "You might need to include a ""1"" or the area code, or both. If you are not sure you need the extra numbers, dial the phone number on your telephone. If you hear a modem sound, the number dialed is correct.", -1, 20, 50, 291, 53
@@ -902,7 +902,7 @@ BEGIN
     EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Domain:", 1395, 7, 108, 53, 8, NOT WS_GROUP
     EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Save user name and  password", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Save user name and password", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "Cancel", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
@@ -956,7 +956,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Router Callback"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "When you dial into a router, it may offer to call you back to reduce your phone charges or to increase security.  Specify whether you want callback or not.", 1043, 7, 5, 253, 24
+    LTEXT "When you dial into a router, it may offer to call you back to reduce your phone charges or to increase security. Specify whether you want callback or not.", 1043, 7, 5, 253, 24
     AUTORADIOBUTTON "&No callback", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Al&ways call me back at the number(s) below:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
     CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
@@ -1050,7 +1050,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Internet Connection Sharing allows other computers on your local network to access external resources through this connection.", -1, 10, 5, 300, 22
     AUTOCHECKBOX "&Enable Internet Connection Sharing for this connection", 1512, 21, 31, 272, 10
-    LTEXT "To dial this connection automatically  when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
+    LTEXT "To dial this connection automatically when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "Enab&le on-demand dialing", 1513, 21, 86, 260, 10
 END
 
@@ -1068,7 +1068,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You can configure this connection to use your smart card to log you into the remote network.  Select whether to use your smart card with this connection.", -1, 10, 5, 303, 22
+    LTEXT "You can configure this connection to use your smart card to log you into the remote network. Select whether to use your smart card with this connection.", -1, 10, 5, 303, 22
     AUTORADIOBUTTON "&Use my smart card ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Do not use my smart card ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
@@ -1297,7 +1297,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Settings...", 1180, 151, 134, 60, 14
@@ -1615,7 +1615,7 @@ BEGIN
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Confirm password:", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "U&se this account  name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "U&se this account name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Make this the default Internet connection", 1595, 23, 112, 288, 14
     AUTOCHECKBOX "&Turn on Internet Connection Firewall for this connection", 1682, 23, 133, 290, 14
 END
@@ -1757,7 +1757,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the check box next to each user who should be allowed a connection to this computer.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
+    LTEXT "Select the check box next to each user who should be allowed a connection to this computer. Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
     LTEXT "&Users allowed to connect:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Add...", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1836,20 +1836,20 @@ BEGIN
     193 "Enter a user name and password with access to the remote network domain.\0"
     194 "Network Address Translation (NAT) is currently installed as a routing protocol,\nand must be removed before enabling Internet Connection Sharing.\nTo remove Network Address Translation, open the Routing and Remote Access Manager\nsnapin and expand the router's entry in the left pane.\nDelete the Network Address Translation routing protocol from the list of IP\nrouting protocols.\0"
     195 "The area code must contain only the digits 0 to 9.\0"
-    196 "The entry name must contain at least one non-blank character and cannot begin with a period.  Choose a different name.\0"
+    196 "The entry name must contain at least one non-blank character and cannot begin with a period. Choose a different name.\0"
     197 "You must choose a value from %1 to %2 for this field.\0"
-    198 "The custom authentication configuration DLL could not be loaded.  Make sure the custom authentication package is correctly installed.\0"
+    198 "The custom authentication configuration DLL could not be loaded. Make sure the custom authentication package is correctly installed.\0"
     199 "The connection selected was established by the Multiprotocol router.\nPlease use the 'Routing and RAS Admin' tool to hang up the connection.\0"
     200 "Comment\0"
     201 "The custom authentication package configuration failed.\0"
-    202 "TCP/IP is not installed or is disabled for Routing and Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Routing and Remote Access Service' Properties, and press the Network button.\0"
-    203 "IPX is not installed or is disabled for Routing and Remote Access.  You can install/enable IPX by viewing the properties of any connection in ""Connections"" folder.\0"
+    202 "TCP/IP is not installed or is disabled for Routing and Remote Access. In Control Panel, start Network, go to the Services page, choose 'Routing and Remote Access Service' Properties, and press the Network button.\0"
+    203 "IPX is not installed or is disabled for Routing and Remote Access. You can install/enable IPX by viewing the properties of any connection in ""Connections"" folder.\0"
     204 "Remove the selected device(s) from the list?\0"
     205 "Delete %1 from the phonebook?\0"
     206 "Disconnect from %1?\0"
-    207 "A file named %1 already exists.  Overwrite it?\0"
+    207 "A file named %1 already exists. Overwrite it?\0"
     208 "Syntax errors were found in the script. Do you wish to view the error log?\0"
-    209 "'%1' is now connected.  \0"
+    209 "'%1' is now connected.\0"
     210 "Right-click the Dial-Up Networking Monitor on the task bar to hang up or check the status of your connection.\0"
     212 "Connected successfully.\0"
     213 "The custom authentication method selected must be initialized by pressing Properties.\0"
@@ -1857,7 +1857,7 @@ BEGIN
     215 "Dial-up shortcut files (*.rnk)\0"
     216 "*.rnk\0"
     217 "Create Dial-Up Shortcut\0"
-    218 "Link to %1 failed.  Reconnect pending...\0"
+    218 "Link to %1 failed. Reconnect pending...\0"
     219 "Cannot retrieve framing information.\0"
     220 "Cannot retrieve port information.\0"
     221 "Cannot retrieve projection information.\0"
@@ -1875,7 +1875,7 @@ BEGIN
     233 "Remote Router\0"
     234 "Modem or device\0"
     235 "Please enter a username for this interface's account on the remote router.\0"
-    236 "An entry named %1 already exists.  Choose a different name.\0"
+    236 "An entry named %1 already exists. Choose a different name.\0"
     237 "You may want to allow sending your password without encryption.\0"
     238 "Password Encryption\0"
     239 "The wizard is ready to create your connection.\0"
@@ -1884,7 +1884,7 @@ BEGIN
     242 "Call Me Back At\0"
     243 "Edit Alternate Phone Number\0"
     244 "Since this connection is currently active, some settings will not take effect until the next time you dial it.\0"
-    245 "There are no connections available to all users.  You must logon before dialing.\0"
+    245 "There are no connections available to all users. You must logon before dialing.\0"
     246 "The phonebook is empty.\n\nPress OK to add an entry.\0"
     247 "Due to import/export restrictions, data encryption is not available in this version of ReactOS.\0"
     248 "Please enter an X.25 address on the next screen.\0"
@@ -1910,7 +1910,7 @@ BEGIN
     268 "Phone Numbers\0"
     269 "You may enter a fixed IP address.\0"
     270 "IP Address\0"
-    271 "The Internet protocols (TCP/IP), are not installed or are disabled for Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Remote Access Service' Properties, and press the Network button.\0"
+    271 "The Internet protocols (TCP/IP), are not installed or are disabled for Remote Access. In Control Panel, start Network, go to the Services page, choose 'Remote Access Service' Properties, and press the Network button.\0"
     272 "TCP/IP\0"
     273 "IPSec, default policy\0"
     274 "IPX/SPX or compatible\0"
@@ -1947,13 +1947,13 @@ BEGIN
     305 "No alternate phonebook is selected.\0"
     306 "That device cannot be dynamically configured.\0"
     307 "The entry cannot be deleted because it is connected.\0"
-    308 "No entry is selected.  Press the New button to create an entry.\0"
+    308 "No entry is selected. Press the New button to create an entry.\0"
     309 "A non-zero IP address must be supplied when 'specify an IP address' is selected.\0"
     310 "An X.25 Address is required when an X.25 dial-up network or X.25 device is selected.\0"
     311 "(none)\0"
     312 "'%1' is already in the list.\0"
     313 "Secure my password and my data\0"
-    314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access.  To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
+    314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access. To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
     315 "Cannot save password.\0"
     316 "Cannot display data.\0"
     317 "Cannot get auto-dial information.\0"
@@ -2011,7 +2011,7 @@ BEGIN
     369 "Point-to-point protocol settings to use when %1 initiates a demand dial connection on interface %2:\0"
     370 "[To change the saved password, click here]\0"
     405 "NetBEUI protocol is required to call older RAS servers.\0"
-    406 "Before you can call older RAS servers you must install the NetBEUI protocol.  NetBEUI can be installed with the Control Panel Network applet.\0"
+    406 "Before you can call older RAS servers you must install the NetBEUI protocol. NetBEUI can be installed with the Control Panel Network applet.\0"
     407 "&Redial\0"
     408 "You have chosen to disable one or more transports. Doing so requires the routing managers and routing protocols for the disabled transports to be removed from this demand-dial interface.\nClick Yes if you want to continue, or No if you want to re-enable the transports.\0"
     409 "Internet Connection Sharing\0"
@@ -2068,7 +2068,7 @@ BEGIN
     460 "You must check at least one modem or adapter.\0"
     461 "Phone number\0"
     462 "TCP/IP protocol is required to call SLIP servers.\0"
-    463 "Before you can call SLIP servers you must install the TCP/IP protocol.  TCP/IP can be installed with the Control Panel Network applet.\0"
+    463 "Before you can call SLIP servers you must install the TCP/IP protocol. TCP/IP can be installed with the Control Panel Network applet.\0"
     464 "Status\0"
     465 "&New suffix:\0"
     466 "&Suffixes:\0"
@@ -2114,9 +2114,9 @@ BEGIN
     506 "Internet Connection Sharing\0"
     507 "You can let a local network access resources through this dial-up connection.\0"
     508 "Host or Guest?\0"
-    509 "Internet Connection Sharing  is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
+    509 "Internet Connection Sharing is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
     510 "To connect two computers, your computer must be identified as either a host or a guest.\0"
-    511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically.  Are you sure you want to enable Internet Connection Sharing?\0"
+    511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically. Are you sure you want to enable Internet Connection Sharing?\0"
     512 "Select a Device\0"
     513 "This is the device that will be used to make the connection.\0"
     514 "&Connect\0"
@@ -2135,13 +2135,13 @@ BEGIN
     527 "Type of Connection\0"
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
     529 "Virtual Private Connection\0"
-    530 "Use any form of authentication required including clear text.  Do not encrypt data.\0"
-    531 "Use any form of authentication that requires passwords to be encrypted.  Do not encrypt data.\0"
+    530 "Use any form of authentication required including clear text. Do not encrypt data.\0"
+    531 "Use any form of authentication that requires passwords to be encrypted. Do not encrypt data.\0"
     532 "Please type a name for the entry.\0"
     533 "Encrypt passwords and data.\0"
     534 "Please type a port number between 1 and 65535.\0"
     535 "Specify custom authentication and data encryption with the Settings button.\0"
-    536 "Use any form of authentication that requires encrypted passwords.  Do not encrypt data.\0"
+    536 "Use any form of authentication that requires encrypted passwords. Do not encrypt data.\0"
     537 "Encrypt passwords and data.\0"
     538 "Specify custom authentication and data encryption with the Settings button.\0"
     539 "The port number is already used by another entry.\nPlease enter a unique port number.\0"
@@ -2192,7 +2192,7 @@ BEGIN
     1554 "Interface Name\0"
     1555 "Select the name by which this new interface will be known.\0"
     1556 "No available devices\0"
-    1557 "A user account named %1 already exists on the local computer.  Should the demand dial interface be configured to use this user account?\0"
+    1557 "A user account named %1 already exists on the local computer. Should the demand dial interface be configured to use this user account?\0"
     1558 "There are no security protocol settings for SLIP server connections.\0"
     1559 "Allow unsecured password\0"
     1560 "Require secured password\0"
@@ -2205,20 +2205,20 @@ BEGIN
     1567 " (encryption enabled)\0"
     1568 "Internet Account Information\0"
     1569 "You will need an account name and password to sign in to your Internet account.\0"
-    1570 "The selected EAP package does not provide encryption keys.  Select an EAP package that does provide keys or select not to encrypt.\0"
+    1570 "The selected EAP package does not provide encryption keys. Select an EAP package that does provide keys or select not to encrypt.\0"
     1571 "The current encryption selection requires EAP or some version of MS-CHAP logon security methods.\0"
     1572 "Protocols and Security\0"
     1573 "Select transports and security options for this connection.\0"
-    1574 "The protocols you have selected include PAP, SPAP, and/or CHAP.  If one of these is negotiated, data encryption will not occur.  Do you want to keep these settings?\0"
-    1575 "To connect to '%1', you must first be connected to '%2'.  Do you want  to connect to '%2' now?\0"
+    1574 "The protocols you have selected include PAP, SPAP, and/or CHAP. If one of these is negotiated, data encryption will not occur. Do you want to keep these settings?\0"
+    1575 "To connect to '%1', you must first be connected to '%2'. Do you want to connect to '%2' now?\0"
     1576 "Connecting over parallel cable...\0"
     1577 "Connecting over infrared...\0"
     1578 "Parallel cable connected.\0"
     1579 "Infrared connected.\0"
-    1580 "This connection was configured to use a data encryption strength that is not supported by the installed software.  The security properties of this connection have been reset to the available encryption strengths.\0"
+    1580 "This connection was configured to use a data encryption strength that is not supported by the installed software. The security properties of this connection have been reset to the available encryption strengths.\0"
     1581 "Typ&e of VPN:\0"
     1582 "Please enter a user name.\0"
-    1583 "This user name and password will be saved for your own use.  There is already a user name and password saved for all other users of this connection.  Do you want to delete the user name and password saved for all other users?\0"
+    1583 "This user name and password will be saved for your own use. There is already a user name and password saved for all other users of this connection. Do you want to delete the user name and password saved for all other users?\0"
     1584 "For example, you could type the name of your workplace or the name of a server you will connect to.\0"
     1585 "Account Information\0"
     1586 "The controls on this property sheet are disabled because the system must first be rebooted before any configuration changes can be made.\0"
@@ -2262,7 +2262,7 @@ BEGIN
     1672 "When this computer discards an incomplete data transmission because the entire transmission required more time than allowed, it will reply to the sender with a ""time expired"" message.\0"
     1673 "Data sent from this computer will be rerouted if the default path changes.\0"
     1675 "The value entered for the log file size is not valid. Enter a value between 1 and 32767 k.\0"
-    1685 "Your user account does not have permission to use this connection.  Usually, this is because you are logged in as Guest.\0"
+    1685 "Your user account does not have permission to use this connection. Usually, this is because you are logged in as Guest.\0"
     1686 "Type an account name and password. (If you have forgotten an existing account name or password, contact your network administrator.)\0"
     1687 "Computer N&ame\0"
     1688 "ISP N&ame\0"
@@ -2287,40 +2287,40 @@ BEGIN
     7320 "Protocol Database\0"
     7321 "You must enter a logon name for the new user or press cancel.\0"
     7322 "The password you entered was too short.\0"
-    7323 "The passwords entered are not the same.  Please re-enter them.\0"
-    7324 "An internal error has occured.  \0"
+    7323 "The passwords entered are not the same. Please re-enter them.\0"
+    7324 "An internal error has occured.\0"
     7325 "Listview\0"
-    7326 "An error has occurred while attempting to commit the changes you have made to the local user database.  \0"
-    7327 "You have insufficient privileges to add a user to the local system database.  \0"
+    7326 "An error has occurred while attempting to commit the changes you have made to the local user database.\0"
+    7327 "You have insufficient privileges to add a user to the local system database.\0"
     7328 "The user you are trying create already exists in the local user database.\0"
     7329 "The user was not added to the local user database because the password you entered was rejected.\0"
     7330 "Unable to reload the system user database because of an internal error.\0"
-    7331 "An internal error has occurred:  The local user database handle is corrupt.\0"
+    7331 "An internal error has occurred: The local user database handle is corrupt.\0"
     7332 "Unable to load the resources necessary to display the user tab.\0"
-    7333 "An internal error occured while attempting to rollback the changes you made to the local user database.  \0"
+    7333 "An internal error occured while attempting to rollback the changes you made to the local user database.\0"
     7334 "The device database handle is corrupt.\0"
     7335 "Unable to load the resources necessary to display the general tab.\0"
-    7336 "An error has occurred while attempting to commit some of the device/vpn related changes you have made.  \0"
+    7336 "An error has occurred while attempting to commit some of the device/vpn related changes you have made.\0"
     7337 "An internal error occured.\0"
     7338 "An internal error occurred: The networking component database handle is corrupt.\0"
-    7339 "An internal error has occurred.  \0"
+    7339 "An internal error has occurred.\0"
     7340 "An error has occurred while attempting to commit the changes you have made to the networking components.\0"
     7341 "An internal error occured.\0"
-    7342 "Unable to commit the changes you made to the TCP/IP protocol to the system.  \0"
-    7343 "Unable to save the changes you made to the IPX protocol to the system.  \0"
+    7342 "Unable to commit the changes you made to the TCP/IP protocol to the system.\0"
+    7343 "Unable to save the changes you made to the IPX protocol to the system.\0"
     7344 "Unable to display the TCP/IP properties.\0"
     7345 "Unable to display the IPX properties.\0"
-    7346 "Unable to load TCP/IP properties from the system.  \0"
-    7347 "Unable to load IPX properties from the system.  \0"
-    7348 "Incoming Connections depend on the Routing and Remote Access service which was unable to start.  For more information, check the system event log.\0"
+    7346 "Unable to load TCP/IP properties from the system.\0"
+    7347 "Unable to load IPX properties from the system.\0"
+    7348 "Incoming Connections depend on the Routing and Remote Access service which was unable to start. For more information, check the system event log.\0"
     7349 "Unable to allow the editing of networking components at this time because they are currently being modified elsewhere.\0"
-    7350 "The new user you entered was not added to the local user database because  the name or password entered violated a system policy (it was too large, too small, or ill-formed).  \0"
-    7351 "The system is unable to delete the requested user.  \0"
+    7350 "The new user you entered was not added to the local user database because the name or password entered violated a system policy (it was too large, too small, or ill-formed).\0"
+    7351 "The system is unable to delete the requested user.\0"
     7352 "Unable to remove the selected network component because it is in use.\0"
     7353 "Incoming Connections Warning\0"
-    7354 "Any users that you delete will be permanently removed from the system even if cancel is pressed.  Are you sure you want to permanently remove %s? \0"
-    7355 "You are about to switch to a system management console.  This Incoming Connections property sheet will be closed and any changes you may have made will be committed to the system.  Is it ok to continue?\0"
-    7356 "Your Network Mask value has been changed.  A zero bit in a mask can only be followed by other zero bits.  For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.\n\0"
+    7354 "Any users that you delete will be permanently removed from the system even if cancel is pressed. Are you sure you want to permanently remove %s?\0"
+    7355 "You are about to switch to a system management console. This Incoming Connections property sheet will be closed and any changes you may have made will be committed to the system. Is it ok to continue?\0"
+    7356 "Your Network Mask value has been changed. A zero bit in a mask can only be followed by other zero bits. For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.\n\0"
     7357 "User Permissions\0"
     7358 "You can specify the users who can connect to this computer.\0"
     7359 "Devices for Incoming Connections\0"
@@ -2341,26 +2341,26 @@ BEGIN
     7377 "What device do you want to use to make this connection?\0"
     7378 "No devices capable of accepting direct connections are currently installed.\0"
     7379 "New Incoming Connection Warning\0"
-    7380 "Because this Win 2000 Server belongs to or controls a domain, you must use the Routing and Remote Access system console to configure this machine to receive incoming connections.  Cancel changes and switch to this console?\n\0"
+    7380 "Because this Win 2000 Server belongs to or controls a domain, you must use the Routing and Remote Access system console to configure this machine to receive incoming connections. Cancel changes and switch to this console?\n\0"
     7381 "A&ssign network number automatically\0"
     7382 "A&ssign network numbers automatically\0"
-    7383 "Incoming Connections can not issue the ipx network numbers 00000000 or FFFFFFFF.  Please either change the assigned network numbers or use automatic network number assignment.\0"
+    7383 "Incoming Connections can not issue the ipx network numbers 00000000 or FFFFFFFF. Please either change the assigned network numbers or use automatic network number assignment.\0"
     7384 "to\0"
     7385 "Communications Port (%s)\0"
-    7386 "Network Connections does not display some specialized options for inbound connections that have been set using the Local User Manager or Remote Access Policy consoles.  For complete and correct information on incoming connections, you will need to use these consoles.\0"
+    7386 "Network Connections does not display some specialized options for inbound connections that have been set using the Local User Manager or Remote Access Policy consoles. For complete and correct information on incoming connections, you will need to use these consoles.\0"
     7387 "The user callback mode you have selected requires you to enter a valid callback number.\0"
-    7388 "ReactOS must reboot to complete the operation.  Is it ok to reboot now?\0"
+    7388 "ReactOS must reboot to complete the operation. Is it ok to reboot now?\0"
     7389 "The currently selected device has no configuration options available.\0"
     7390 "Invalid Range\0"
-    7391 "You have requested that '%1' be disabled for Incoming Connections.  In order to disable this, you must stop the 'Server' service.  Once stopped, any shared directories or printers on this computer will no longer be available to any other computer.  Do you want to bring up a system console that will allow you to stop the 'Server' service?\r\n\nUnder Computer Management, click System Tools and then click Services.  In the right pane, right-click Server and click stop.\0"
-    7392 "This serial port is not enabled for use in a direct connection to another computer.  It will be enabled after you complete this wizard.  You can then configure the port speed and other properties by right-clicking the icon for this connection and selecting Properties.\n\0"
+    7391 "You have requested that '%1' be disabled for Incoming Connections. In order to disable this, you must stop the 'Server' service. Once stopped, any shared directories or printers on this computer will no longer be available to any other computer. Do you want to bring up a system console that will allow you to stop the 'Server' service?\r\n\nUnder Computer Management, click System Tools and then click Services. In the right pane, right-click Server and click stop.\0"
+    7392 "This serial port is not enabled for use in a direct connection to another computer. It will be enabled after you complete this wizard. You can then configure the port speed and other properties by right-clicking the icon for this connection and selecting Properties.\n\0"
     7393 "Incoming Connections\0"
     7394 "The IP address pool you've entered is invalid.\0"
     7395 "The mask provided is invalid.\0"
-    7396 "The start address entered for the TCP/IP pool is invalid.  It must lie between 1.0.0.0 and 224.0.0.0 and it must not be in the form 127.x.x.x.\0"
+    7396 "The start address entered for the TCP/IP pool is invalid. It must lie between 1.0.0.0 and 224.0.0.0 and it must not be in the form 127.x.x.x.\0"
     7397 "The TCP/IP pool entered is invalid because the address is more specific than the mask.\0"
     7398 "The start address must be less than the end address.\0"
-    7399 "The Routing and Remote Access Service is in the process of stopping.  Until it stops, the Incoming Connections option is not available.  Please wait a few moments and retry.\0"
+    7399 "The Routing and Remote Access Service is in the process of stopping. Until it stops, the Incoming Connections option is not available. Please wait a few moments and retry.\0"
     7400 "%s (%s)\0"
     7401 "%s (%d channels)\0"
     7402 "Incoming Connection VPN (PPTP)\0"
