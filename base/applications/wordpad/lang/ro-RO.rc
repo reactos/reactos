@@ -33,11 +33,11 @@ BEGIN
         MENUITEM "&Nou…\tCtrl+N",            ID_FILE_NEW
         MENUITEM "&Deschidere…\tCtrl+O",     ID_FILE_OPEN
         MENUITEM "S&alvare\tCtrl+S",         ID_FILE_SAVE
-        MENUITEM "Sal&vare ca…",             ID_FILE_SAVEAS
+        MENUITEM "&Salvare ca…",             ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "I&mprimare…\tCtrl+P",      ID_PRINT
-        MENUITEM "Previ&zionare imprimare…", ID_PREVIEW
-        MENUITEM "&Inițializare pagină…",     ID_PRINTSETUP
+        MENUITEM "Pre&vizionare imprimare…", ID_PREVIEW
+        MENUITEM "&Inițializare pagină…",    ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                  ID_FILE_EXIT
     END
