@@ -11,6 +11,7 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
+#include <winsvc.h> // For NotifyBootConfigStatus()
 #include <ndk/exfuncs.h>
 #include <ndk/setypes.h>
 
@@ -1094,6 +1095,58 @@ GUILoggedOnSAS(
 }
 
 
+static VOID
+ReportBootOk(VOID)
+{
+    static BOOL bBootReported = FALSE;
+    HKEY hKey;
+    DWORD dwValue, dwType, dwSize;
+    LONG rc;
+
+    /* Report successful boot only once */
+    if (bBootReported)
+        return;
+    bBootReported = TRUE;
+
+    TRACE("ReportBootOk()\n");
+
+    /* Open key */
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("RegOpenKeyExW() failed with error %lu\n", rc);
+        return;
+    }
+
+    /* Read value */
+    dwSize = sizeof(dwValue);
+    rc = RegQueryValueExW(hKey,
+                          L"ReportBootOk",
+                          NULL,
+                          &dwType,
+                          (PBYTE)&dwValue,
+                          &dwSize);
+    RegCloseKey(hKey);
+    if (rc == ERROR_FILE_NOT_FOUND || dwSize == 0 || (dwType != REG_SZ && dwType != REG_DWORD))
+        return;
+    if (dwType == REG_SZ)
+    {
+        WCHAR ch = *(PWCHAR)&dwValue;
+        dwValue = (ch && ch != L'0');
+    }
+
+    if (dwValue != 0)
+    {
+        /* Report successful boot to the Service Control Manager, so that
+         * it saves the configuration as the last-known good configuration */
+        NotifyBootConfigStatus(TRUE);
+    }
+}
+
 static
 BOOL
 DoLogon(
@@ -1231,6 +1284,9 @@ DoLogon(
 
     ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
     wcscpy(pgContext->Password, Password);
+
+    /* Report successful boot if necessary */
+    ReportBootOk();
 
     result = TRUE;
 
