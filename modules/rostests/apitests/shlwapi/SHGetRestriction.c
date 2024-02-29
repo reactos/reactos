@@ -48,8 +48,10 @@ static const TEST_ENTRY s_Entries[] =
     { L"Explorer", L"NoDisconnect" },
     { L"Explorer", L"NoRecentDocsHistory" },
     { L"Explorer", L"NoDriveTypeAutoRun" },
+    { L"Explorer", L"NoSimpleStartMenu" },
     { L"System", L"DontDisplayLastUserName" },
-    { L"System", L"ShutdownWithoutLogOn" },
+    { L"System", L"ShutdownWithoutLogon" },
+    { L"System", L"UndockWithoutLogon" },
 };
 
 static void
