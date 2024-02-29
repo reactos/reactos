@@ -95,7 +95,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
             case EIP:
                 KDDBGPRINT("Returning NULL for register %d.\n", reg_name);
                 *size = 4;
-                return &NullValue;
+                return (void*)&NullValue;
             default:
                 return NULL;
         }
@@ -139,7 +139,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
         {
             case EBP: return &Esp[3];
             case ESP: return &Esp;
-            case EIP: return &NullValue;
+            case EIP: return (void*)&NullValue;
             default:
                 return NULL;
         }

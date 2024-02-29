@@ -4,7 +4,7 @@ tasks:
     init: >
       mkdir -p /workspace/reactos/build &&
       cd /workspace/reactos/build &&
-      cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DGDB:BOOL=TRUE -DSEPARATE_DBG:BOOL=TRUE -D_WINKD_:BOOL=TRUE -DKDBG:BOOL=FALSE -DENABLE_ROSTESTS:BOOL=TRUE -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -G "Ninja" &&
+      cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSEPARATE_DBG:BOOL=TRUE -D_WINKD_:BOOL=TRUE -DKDBG:BOOL=FALSE -DENABLE_ROSTESTS:BOOL=TRUE -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -G "Ninja" &&
       ninja xdk psdk 
     command: >
       cd /workspace/reactos/build &&
