@@ -59,7 +59,7 @@ TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fnSHGetRestriction)
 {
     DWORD value1 = fnSHGetRestriction(NULL, entry->lpSubName, entry->lpValue);
     DWORD value2 = Candidate_SHGetRestriction(NULL, entry->lpSubName, entry->lpValue);
-    trace("%ld vs %ld\n", value1, value2);
+    //trace("%ld vs %ld\n", value1, value2);
     ok_long(value1, value2);
 }
 
