@@ -33,46 +33,46 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou\tCtrl+N", CMD_NEW
+        MENUITEM "No&u\tCtrl+N", CMD_NEW
         MENUITEM "Fereastră &nouă\tCtrl+Shift+N", CMD_NEW_WINDOW
-        MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
-        MENUITEM "S&alvare\tCtrl+S", CMD_SAVE
-        MENUITEM "Sal&vare în…", CMD_SAVE_AS
+        MENUITEM "&Deschidere...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Salvare\tCtrl+S", CMD_SAVE
+        MENUITEM "S&alvare ca...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Inițiali&zare pagină…", CMD_PAGE_SETUP
-        MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
+        MENUITEM "Iniţiali&zare pagină...", CMD_PAGE_SETUP
+        MENUITEM "I&mprimare...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", CMD_EXIT
+        MENUITEM "&Ieşire", CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Revocare\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Anulare\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Decupare\tCtrl+X", CMD_CUT
         MENUITEM "&Copiere\tCtrl+C", CMD_COPY
-        MENUITEM "&Lipire\tCtrl+V", CMD_PASTE
-        MENUITEM "Șt&ergere\tDel", CMD_DELETE
+        MENUITEM "Li&pire\tCtrl+V", CMD_PASTE
+        MENUITEM "Şt&ergere\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Găsire…\tCtrl+F", CMD_SEARCH
+        MENUITEM "Cău&tare...\tCtrl+F", CMD_SEARCH
         MENUITEM "&Următorul găsit\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Î&nlocuire…\tCtrl+H", CMD_REPLACE
-        MENUITEM "S&alt la…\tCtrl+G", CMD_GOTO
+        MENUITEM "Î&nlocui&re...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Salt &la...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Sele&ctare totală\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "&Dată/Oră\tF5", CMD_TIME_DATE
+        MENUITEM "&Selectare totală\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Dată/&Oră\tF5", CMD_TIME_DATE
     END
-    POPUP "F&ormatare"
+    POPUP "F&ormat"
     BEGIN
-        MENUITEM "În&cadrează liniile lungi", CMD_WRAP
-        MENUITEM "&Font…", CMD_FONT
+        MENUITEM "&Încadrare cuvânt", CMD_WRAP
+        MENUITEM "&Font...", CMD_FONT
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
         MENUITEM "&Bară de stare", CMD_STATUSBAR
     END
-    POPUP "Aj&utor"
+    POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Vizualizare Ajutor…", CMD_HELP_CONTENTS
+        MENUITEM "&Termeni din Ajutor", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "&Despre Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
@@ -82,24 +82,24 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Inițializare pagină"
+CAPTION "Iniţializare pagină"
 BEGIN
-    GROUPBOX "Previzionare", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Examinare", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Hârtie", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "F&ormat:", stc2, 16, 22, 36, 8
+    LTEXT "&Dimensiune:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tip:", stc3, 16, 42, 36, 8
+    LTEXT "&Sursă:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientare", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portret", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Vedere", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "Tip p&ortret", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "Tip &vedere", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
     GROUPBOX "Margini", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "Stâng&a:", stc15, 88, 82, 30, 8
+    LTEXT "Stâ&nga::", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Dreapta:", stc16, 159, 82, 30, 8
+    LTEXT "D&reapta:", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "S&us:", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -109,10 +109,10 @@ BEGIN
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Su&bsol:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Manual…", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "&Ajutor...", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "Revocare", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "Imp&rimantă…", psh3, 310, 170, 50, 14
+    PUSHBUTTON "&Imprimantă...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -133,14 +133,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Salt la poziție"
 BEGIN
-    LTEXT "Număr linie:", 0x155, 5, 12, 41, 12
+    LTEXT "Număr de linie:", 0x155, 5, 12, 41, 12
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15
     PUSHBUTTON "Revocare", IDCANCEL, 120, 30, 40, 15
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "În curs de imprimare"
+CAPTION "Se imprimă"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -161,18 +161,18 @@ BEGIN
     STRING_UNTITLED "Fără titlu"
     STRING_ALL_FILES "Orice fișier (*.*)"
     STRING_TEXT_FILES_TXT "Fișiere text (*.txt)"
-    STRING_TOOLARGE "Fișierul „%s” este prea mare.\n\
-Încercați un alt editor."
+    STRING_TOOLARGE "Fișierul „%s” este prea lung pentru Notepad..\n\
+Utilizaţi alt editor pentru acest fişier."
     STRING_NOTEXT "Nu ați scris nimic.\
 \nScrieți ceva apoi încercați din nou."
     STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n\
 Creați un nou fișier?"
     STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
 Păstrați modificările aduse?"
-    STRING_NOTFOUND "„%s” nu poate fi găsit."
-    STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație.\
-\nÎnchideți una sau mai multe aplicații pentru a elibera memorie."
-    STRING_CANNOTFIND "Nu se poate găsi „%s”"
+    STRING_NOTFOUND "Nu s-a găsit „%s”"
+    STRING_OUT_OF_MEMORY "Memoria disponibilă nu este suficientă pentru a termina operaţia.\
+\nnchideţi una sau mai multe aplicaţii pentru a creşte memoria disponibilă şi reîncercaţi."
+    STRING_CANNOTFIND "Nu s-a găsit „%s”"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (endian mare)"
