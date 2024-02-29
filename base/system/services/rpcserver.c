@@ -252,6 +252,7 @@ ScmCheckAccess(SC_HANDLE Handle,
 
         hMgr->Handle.DesiredAccess = dwDesiredAccess;
 
+        // TODO: Perform the actual privileges check and object audit
         return ERROR_SUCCESS;
     }
     else if (hMgr->Handle.Tag == SERVICE_TAG)
@@ -261,6 +262,7 @@ ScmCheckAccess(SC_HANDLE Handle,
 
         hMgr->Handle.DesiredAccess = dwDesiredAccess;
 
+        // TODO: Perform the actual privileges check and object audit
         return ERROR_SUCCESS;
     }
 
