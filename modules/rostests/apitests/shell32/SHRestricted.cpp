@@ -24,51 +24,57 @@ typedef BOOL (WINAPI *FN_SHSettingsChanged)(LPCVOID unused, LPCVOID inpRegKey);
 } while (0)
 
 static VOID
-TEST_SHRestricted(FN_SHRestricted fn1, FN_SHSettingsChanged fn2)
+TEST_SHRestricted(FN_SHRestricted fnGetValue, FN_SHSettingsChanged fnRefresh)
 {
     DWORD dwValue;
 
     DELETE_VALUE(HKEY_CURRENT_USER);
     DELETE_VALUE(HKEY_LOCAL_MACHINE);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 0);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 0);
 
     SET_VALUE(HKEY_CURRENT_USER, 0);
     DELETE_VALUE(HKEY_LOCAL_MACHINE);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 0);
+    ok_long(fnGetValue(REST_NORUN), 0);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 0);
 
     SET_VALUE(HKEY_CURRENT_USER, 1);
     DELETE_VALUE(HKEY_LOCAL_MACHINE);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 1);
+    ok_long(fnGetValue(REST_NORUN), 0);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 1);
 
     DELETE_VALUE(HKEY_CURRENT_USER);
     SET_VALUE(HKEY_LOCAL_MACHINE, 0);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 0);
+    ok_long(fnGetValue(REST_NORUN), 1);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 0);
 
     DELETE_VALUE(HKEY_CURRENT_USER);
     SET_VALUE(HKEY_LOCAL_MACHINE, 1);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 1);
+    ok_long(fnGetValue(REST_NORUN), 0);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 1);
 
     SET_VALUE(HKEY_CURRENT_USER, 2);
     SET_VALUE(HKEY_LOCAL_MACHINE, 1);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 1);
+    ok_long(fnGetValue(REST_NORUN), 1);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 1);
 
     DELETE_VALUE(HKEY_CURRENT_USER);
     DELETE_VALUE(HKEY_LOCAL_MACHINE);
 
-    fn2(NULL, NULL);
-    ok_long(fn1(REST_NORUN), 0);
+    ok_long(fnGetValue(REST_NORUN), 1);
+    fnRefresh(NULL, NULL);
+    ok_long(fnGetValue(REST_NORUN), 0);
 }
 
 START_TEST(SHRestricted)
@@ -80,21 +86,21 @@ START_TEST(SHRestricted)
     }
 
     HMODULE hSHELL32 = LoadLibraryW(L"shell32.dll");
-    FN_SHRestricted fn1;
-    FN_SHSettingsChanged fn2;
+    FN_SHRestricted fnGetValue;
+    FN_SHSettingsChanged fnRefresh;
 
-    fn1 = (FN_SHRestricted)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(100));
-    fn2 = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
+    fnGetValue = (FN_SHRestricted)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(100));
+    fnRefresh = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
 
-    if (fn1 && fn2)
+    if (fnGetValue && fnRefresh)
     {
-        TEST_SHRestricted(fn1, fn2);
+        TEST_SHRestricted(fnGetValue, fnRefresh);
     }
     else
     {
-        if (!fn1)
+        if (!fnGetValue)
             skip("SHRestricted not found\n");
-        if (!fn2)
+        if (!fnRefresh)
             skip("SHSettingsChanged not found\n");
     }
 
