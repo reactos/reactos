@@ -392,9 +392,9 @@ ScmAcceptBoot(VOID)
 }
 
 DWORD
-ScmRunLastKnownGood(VOID)
+ScmRestoreLastKnownGood(VOID)
 {
-    DPRINT("ScmRunLastKnownGood()\n");
+    DPRINT("ScmRestoreLastKnownGood()\n");
 
     if (bBootAccepted)
     {
@@ -402,8 +402,7 @@ ScmRunLastKnownGood(VOID)
         return ERROR_BOOT_ALREADY_ACCEPTED;
     }
 
-    /* FIXME */
-
+    // FIXME: Restore the LKG and reboot.
     return ERROR_SUCCESS;
 }
 

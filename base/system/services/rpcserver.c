@@ -1858,7 +1858,7 @@ RNotifyBootConfigStatus(
     if (BootAcceptable)
         return ScmAcceptBoot();
 
-    return ScmRunLastKnownGood();
+    return ScmRestoreLastKnownGood();
 }
 
 

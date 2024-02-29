@@ -172,7 +172,7 @@ DWORD
 ScmAcceptBoot(VOID);
 
 DWORD
-ScmRunLastKnownGood(VOID);
+ScmRestoreLastKnownGood(VOID);
 
 
 /* database.c */
