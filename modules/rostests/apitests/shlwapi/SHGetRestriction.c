@@ -131,8 +131,8 @@ START_TEST(SHGetRestriction)
         for (iStage = 0; iStage < 7; ++iStage)
             TEST_SHGetRestriction_Stage(iStage, fn);
 
-        SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
-        SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
+        DELETE_VALUE(HKEY_CURRENT_USER);
+        DELETE_VALUE(HKEY_LOCAL_MACHINE);
     }
     else
     {
