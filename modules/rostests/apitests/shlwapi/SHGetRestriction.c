@@ -136,8 +136,7 @@ START_TEST(SHGetRestriction)
     }
     else
     {
-        if (!fn)
-            skip("SHGetRestriction not found\n");
+        skip("SHGetRestriction not found\n");
     }
 
     FreeLibrary(hSHLWAPI);
