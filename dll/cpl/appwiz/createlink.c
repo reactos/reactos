@@ -221,13 +221,13 @@ WelcomeDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-            SHAutoComplete(GetDlgItem(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION), SHACF_DEFAULT);
+            SHAutoComplete(GetDlgItem(hwndDlg, IDC_LINK_LOCATION), SHACF_DEFAULT);
             break;
         case WM_COMMAND:
         {
             switch (LOWORD(wParam))
             {
-                case IDC_APPWIZ_SHORTCUT_LOCATION:
+                case IDC_LINK_LOCATION:
                 {
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
@@ -238,7 +238,7 @@ WelcomeDlgProc(HWND hwndDlg,
                             pContext->pidlTarget = NULL;
                         }
 
-                        if (SendDlgItemMessage(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                        if (SendDlgItemMessage(hwndDlg, IDC_LINK_LOCATION, WM_GETTEXTLENGTH, 0, 0))
                             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                         else
                             PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
@@ -265,11 +265,11 @@ WelcomeDlgProc(HWND hwndDlg,
                     SHGetPathFromIDListW(pidllist, szPath);
 
                     if (PathFileExistsW(szPath) && !PathIsRelativeW(szPath))
-                        SetDlgItemTextW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, szPath);
+                        SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, szPath);
                     else
-                        SetDlgItemTextW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, szDisplayName);
+                        SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, szDisplayName);
 
-                    SendDlgItemMessageW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    SendDlgItemMessageW(hwndDlg, IDC_LINK_LOCATION, EM_SETSEL, 0, -1);
 
                     if (pContext->pidlTarget)
                         CoTaskMemFree(pContext->pidlTarget);
@@ -282,11 +282,11 @@ WelcomeDlgProc(HWND hwndDlg,
             lppsn  = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_SETACTIVE)
             {
-                SetDlgItemTextW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, pContext->szTarget);
+                SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, pContext->szTarget);
             }
             else if (lppsn->hdr.code == PSN_WIZNEXT)
             {
-                GetDlgItemTextW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
+                GetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
                 StrTrimW(pContext->szTarget, L" \t");
                 ExpandEnvironmentStringsW(pContext->szTarget, szPath, _countof(szPath));
 
@@ -325,7 +325,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     !PathFileExistsW(szPath))
                 {
                     /* Not found */
-                    SendDlgItemMessageW(hwndDlg, IDC_APPWIZ_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    SendDlgItemMessageW(hwndDlg, IDC_LINK_LOCATION, EM_SETSEL, 0, -1);
 
                     LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
