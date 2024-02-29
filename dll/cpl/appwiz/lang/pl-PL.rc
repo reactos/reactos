@@ -6,7 +6,7 @@
  *         UTF-8 conversion by Caemyr (May, 2011)
  *         Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
  *         Updated by Zcooger - M. St. Ciuńczyk (October, 2018)
- *         Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2020)
+ *         Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (2020-2024)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -97,5 +97,5 @@ BEGIN
     IDS_NO_DIRECTORY "Nie podano ścieżki!"
     IDS_INVALID_PATH "Podana ścieżka jest niepoprawna!"
     IDS_INVALID_NAME "Wprowadzona nazwa skrótu zawiera nieprawidłowe znaki lub jest za długa."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Wybierz element docelowy dla poniższego skrótu:"
 END
