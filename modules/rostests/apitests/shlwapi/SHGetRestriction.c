@@ -55,9 +55,9 @@ static const TEST_ENTRY s_Entries[] =
 };
 
 static void
-TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fn2)
+TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fnSHGetRestriction)
 {
-    DWORD value1 = fn2(NULL, entry->lpSubName, entry->lpValue);
+    DWORD value1 = fnSHGetRestriction(NULL, entry->lpSubName, entry->lpValue);
     DWORD value2 = Candidate_SHGetRestriction(NULL, entry->lpSubName, entry->lpValue);
     trace("%ld vs %ld\n", value1, value2);
     ok_long(value1, value2);
@@ -66,8 +66,8 @@ TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fn2)
 static void
 TEST_SHGetRestriction_Stage(
     INT iStage,
-    FN_SHSettingsChanged fn1,
-    FN_SHGetRestriction fn2)
+    FN_SHSettingsChanged fnSHSettingsChanged,
+    FN_SHGetRestriction fnSHGetRestriction)
 {
     size_t iItem;
     DWORD dwValue;
@@ -122,11 +122,11 @@ TEST_SHGetRestriction_Stage(
             break;
     }
 
-    fn1(NULL, NULL);
+    fnSHSettingsChanged(NULL, NULL);
 
     for (iItem = 0; iItem < _countof(s_Entries); ++iItem)
     {
-        TEST_DoEntry(&s_Entries[iItem], fn2);
+        TEST_DoEntry(&s_Entries[iItem], fnSHGetRestriction);
     }
 }
 
@@ -134,8 +134,11 @@ START_TEST(SHGetRestriction)
 {
     HMODULE hSHELL32 = LoadLibraryW(L"shell32.dll");
     HMODULE hSHLWAPI = LoadLibraryW(L"shlwapi.dll");
-    FN_SHSettingsChanged fn1 = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
-    FN_SHGetRestriction fn2 = (FN_SHGetRestriction)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(271));
+    FN_SHSettingsChanged fn1;
+    FN_SHGetRestriction fn2;
+
+    fn1 = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
+    fn2 = (FN_SHGetRestriction)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(271));
 
     if (fn1 && fn2)
     {
