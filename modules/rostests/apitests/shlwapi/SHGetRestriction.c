@@ -66,7 +66,6 @@ TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fnSHGetRestriction)
 static void
 TEST_SHGetRestriction_Stage(
     INT iStage,
-    FN_SHSettingsChanged fnSHSettingsChanged,
     FN_SHGetRestriction fnSHGetRestriction)
 {
     size_t iItem;
@@ -122,8 +121,6 @@ TEST_SHGetRestriction_Stage(
             break;
     }
 
-    fnSHSettingsChanged(NULL, NULL);
-
     for (iItem = 0; iItem < _countof(s_Entries); ++iItem)
     {
         TEST_DoEntry(&s_Entries[iItem], fnSHGetRestriction);
@@ -132,31 +129,23 @@ TEST_SHGetRestriction_Stage(
 
 START_TEST(SHGetRestriction)
 {
-    HMODULE hSHELL32 = LoadLibraryW(L"shell32.dll");
     HMODULE hSHLWAPI = LoadLibraryW(L"shlwapi.dll");
-    FN_SHSettingsChanged fn1;
-    FN_SHGetRestriction fn2;
+    FN_SHGetRestriction fn = (FN_SHGetRestriction)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(271));
+    INT iStage;
 
-    fn1 = (FN_SHSettingsChanged)GetProcAddress(hSHELL32, MAKEINTRESOURCEA(244));
-    fn2 = (FN_SHGetRestriction)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(271));
-
-    if (fn1 && fn2)
+    if (fn)
     {
-        INT iStage;
         for (iStage = 0; iStage < 7; ++iStage)
-            TEST_SHGetRestriction_Stage(iStage, fn1, fn2);
+            TEST_SHGetRestriction_Stage(iStage, fn);
 
         SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
         SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
     }
     else
     {
-        if (!fn1)
-            skip("SHSetingsChanged not found\n");
-        if (!fn2)
+        if (!fn)
             skip("SHGetRestriction not found\n");
     }
 
-    FreeLibrary(hSHELL32);
     FreeLibrary(hSHLWAPI);
 }
