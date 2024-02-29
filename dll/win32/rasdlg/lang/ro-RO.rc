@@ -2326,7 +2326,7 @@ BEGIN
     7351 "Sistemul nu poate șterge utilizatorul cerut.\0"
     7352 "Componenta selectată de rețea nu poate fi eliminată, deoarece încă este în uz.\0"
     7353 "Avertisment al conexiunilor de intrare\0"
-    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat Revocare. Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
+    7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat Revocare. Sigur doriți eliminarea irevocabilă a utilizatorului %s?\0"
     7355 "Sunteți pe cale să treceți la o consolă de gestionare a sistemului. Această foaie de proprietăți Conexiuni primite va fi închisă și orice modificări pe care le-ați făcut vor fi trimise în sistem. Sunteți de acord să continuați?\0"
     7356 "Valoarea măștii de rețea s-a schimbat. În mască, un bit de zero poate fi urmat doar de alți biți de zero. De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
     7357 "Permisiuni de utilizator\0"
