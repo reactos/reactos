@@ -42,9 +42,7 @@ typedef struct tagTEST_ENTRY
 
 static const TEST_ENTRY s_Entries[] =
 {
-    { L"Explorer", L"RosTests1" },
-    { L"Explorer", L"RosTests2" },
-
+    { L"Explorer", L"NoRun" },
     { L"Explorer", L"ForceActiveDesktopOn" },
     { L"Explorer", L"NoActiveDesktop" },
     { L"Explorer", L"NoDisconnect" },
@@ -57,8 +55,10 @@ static const TEST_ENTRY s_Entries[] =
 static void
 TEST_DoEntry(const TEST_ENTRY *entry, FN_SHGetRestriction fn2)
 {
-    ok_long(fn2(NULL, entry->lpSubName, entry->lpValue),
-            Candidate_SHGetRestriction(NULL, entry->lpSubName, entry->lpValue));
+    DWORD value1 = fn2(NULL, entry->lpSubName, entry->lpValue);
+    DWORD value2 = Candidate_SHGetRestriction(NULL, entry->lpSubName, entry->lpValue);
+    trace("%ld vs %ld\n", value1, value2);
+    ok_long(value1, value2);
 }
 
 static void
@@ -75,47 +75,47 @@ TEST_SHGetRestriction_Stage(
     switch (iStage)
     {
         case 0:
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1");
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1");
+            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
             break;
         case 1:
             dwValue = 0;
-            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1");
+            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
             break;
         case 2:
             dwValue = 1;
-            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
-            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1");
+            SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
             break;
         case 3:
             dwValue = 0;
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1");
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             break;
         case 4:
             dwValue = 1;
-            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1");
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             break;
         case 5:
             dwValue = 0;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             dwValue = 1;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             break;
         case 6:
             dwValue = 1;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             dwValue = 0;
-            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1",
+            SHSetValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun",
                         REG_DWORD, &dwValue, sizeof(dwValue));
             break;
     }
@@ -141,8 +141,8 @@ START_TEST(SHGetRestriction)
         for (iStage = 0; iStage < 7; ++iStage)
             TEST_SHGetRestriction_Stage(iStage, fn1, fn2);
 
-        SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"RosTests1");
-        SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"RosTests1");
+        SHDeleteValueW(HKEY_CURRENT_USER, REGKEY_POLICIES_EXPLORER, L"NoRun");
+        SHDeleteValueW(HKEY_LOCAL_MACHINE, REGKEY_POLICIES_EXPLORER, L"NoRun");
     }
     else
     {
