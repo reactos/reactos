@@ -1828,16 +1828,17 @@ WSPAccept(
     return AcceptSocket;
 }
 
+static
 VOID
 NTAPI
-AfdConnectAPC(
-    PVOID ApcContext,
-    PIO_STATUS_BLOCK IoStatusBlock,
-    ULONG Reserved)
+MsafdConnectAPC(
+    _In_ PVOID ApcContext,
+    _In_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG Reserved)
 {
-    PAFDCONNECTAPCCONTEXT Context = ApcContext;
+    PMSAFD_CONNECT_APC_CONTEXT Context = ApcContext;
 
-    TRACE("AfdConnectAPC %p %lx %lx\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
+    TRACE("MsafdConnectAPC(%p %lx %lx)\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
 
     Context->lpSocket->SharedData->SocketLastError = TranslateNtStatusError(IoStatusBlock->Status);
     if (IoStatusBlock->Status == STATUS_SUCCESS)
@@ -1887,20 +1888,20 @@ WSPConnect(SOCKET Handle,
            LPQOS lpGQOS,
            LPINT lpErrno)
 {
-    IO_STATUS_BLOCK         DummyIOSB;
-    PIO_STATUS_BLOCK        IOSB = &DummyIOSB;
-    PAFD_CONNECT_INFO       ConnectInfo = NULL;
-    PSOCKET_INFORMATION     Socket;
-    NTSTATUS                Status;
-    INT                     Errno;
-    ULONG                   ConnectDataLength;
-    ULONG                   InConnectDataLength;
-    HANDLE                  SockEvent;
-    int                     SocketDataLength;
-    PAFDCONNECTAPCCONTEXT   APCContext = NULL;
-    PIO_APC_ROUTINE         APCFunction = NULL;
+    IO_STATUS_BLOCK            DummyIOSB;
+    PIO_STATUS_BLOCK           IOSB = &DummyIOSB;
+    PAFD_CONNECT_INFO          ConnectInfo = NULL;
+    PSOCKET_INFORMATION        Socket;
+    NTSTATUS                   Status;
+    INT                        Errno;
+    ULONG                      ConnectDataLength;
+    ULONG                      InConnectDataLength;
+    HANDLE                     SockEvent;
+    int                        SocketDataLength;
+    PMSAFD_CONNECT_APC_CONTEXT APCContext = NULL;
+    PIO_APC_ROUTINE            APCFunction = NULL;
 
-    TRACE("WSPConnect (%lx)\n", Handle);
+    TRACE("WSPConnect(%x)\n", Handle);
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -2033,7 +2034,7 @@ WSPConnect(SOCKET Handle,
     /* Verify if we should use APC */
     if (Socket->SharedData->NonBlocking)
     {
-        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDCONNECTAPCCONTEXT));
+        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(*APCContext));
         if (!APCContext)
         {
             ERR("Not enough memory for APC Context\n");
@@ -2042,7 +2043,7 @@ WSPConnect(SOCKET Handle,
         }
         APCContext->lpConnectInfo = ConnectInfo;
         APCContext->lpSocket = Socket;
-        APCFunction = &AfdConnectAPC;
+        APCFunction = &MsafdConnectAPC;
 
         IOSB = &APCContext->IoStatusBlock;
     }
@@ -3345,15 +3346,17 @@ WSPCleanup(OUT LPINT lpErrno)
     return 0;
 }
 
+static
 VOID
 NTAPI
-AfdInfoAPC(PVOID ApcContext,
-    PIO_STATUS_BLOCK IoStatusBlock,
-    ULONG Reserved)
+MsafdInfoAPC(
+    _In_ PVOID ApcContext,
+    _In_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG Reserved)
 {
-    PAFDINFOAPCCONTEXT Context = ApcContext;
+    PMSAFD_INFO_APC_CONTEXT Context = ApcContext;
 
-    TRACE("AfdInfoAPC %p %lx %lx\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
+    TRACE("MsafdInfoAPC(%p %lx %lx)\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
 
     if (Context->lpCompletionRoutine)
         Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
@@ -3373,16 +3376,16 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
                      LPWSAOVERLAPPED Overlapped OPTIONAL,
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL)
 {
-    PIO_STATUS_BLOCK    IOSB;
-    IO_STATUS_BLOCK     DummyIOSB;
-    PAFD_INFO           InfoData;
-    NTSTATUS            Status;
-    PAFDINFOAPCCONTEXT  APCContext;
-    PIO_APC_ROUTINE     APCFunction;
-    HANDLE              Event = NULL;
-    HANDLE              SockEvent;
+    PIO_STATUS_BLOCK        IOSB;
+    IO_STATUS_BLOCK         DummyIOSB;
+    PAFD_INFO               InfoData;
+    NTSTATUS                Status;
+    PMSAFD_INFO_APC_CONTEXT APCContext;
+    PIO_APC_ROUTINE         APCFunction;
+    HANDLE                  Event = NULL;
+    HANDLE                  SockEvent;
 
-    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(AFD_INFO));
+    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(*InfoData));
     if (!InfoData)
         return SOCKET_ERROR;
 
@@ -3420,7 +3423,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
             return MsafdReturnWithErrno(STATUS_SUCCESS, NULL, 0, NULL);
         }
 
-        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
+        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(*APCContext));
         if (!APCContext)
         {
             ERR("Not enough memory for APC Context\n");
@@ -3431,7 +3434,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         APCContext->lpCompletionRoutine = CompletionRoutine;
         APCContext->lpOverlapped = Overlapped;
         APCContext->lpInfoData = InfoData;
-        APCFunction = &AfdInfoAPC;
+        APCFunction = &MsafdInfoAPC;
 
         if (!CompletionRoutine)
             Event = Overlapped->hEvent;
@@ -3449,9 +3452,9 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
                                    IOSB,
                                    IOCTL_AFD_GET_INFO,
                                    InfoData,
-                                   sizeof(AFD_INFO),
+                                   sizeof(*InfoData),
                                    InfoData,
-                                   sizeof(AFD_INFO));
+                                   sizeof(*InfoData));
     if (Status == STATUS_PENDING)
     {
         /* Wait for completion if not overlapped */
@@ -3500,16 +3503,16 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                      LPWSAOVERLAPPED Overlapped OPTIONAL,
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL)
 {
-    PIO_STATUS_BLOCK    IOSB;
-    IO_STATUS_BLOCK     DummyIOSB;
-    PAFD_INFO           InfoData;
-    NTSTATUS            Status;
-    PAFDINFOAPCCONTEXT  APCContext;
-    PIO_APC_ROUTINE     APCFunction;
-    HANDLE              Event = NULL;
-    HANDLE              SockEvent;
+    PIO_STATUS_BLOCK        IOSB;
+    IO_STATUS_BLOCK         DummyIOSB;
+    PAFD_INFO               InfoData;
+    NTSTATUS                Status;
+    PMSAFD_INFO_APC_CONTEXT APCContext;
+    PIO_APC_ROUTINE         APCFunction;
+    HANDLE                  Event = NULL;
+    HANDLE                  SockEvent;
 
-    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(AFD_INFO));
+    InfoData = HeapAlloc(GlobalHeap, 0, sizeof(*InfoData));
     if (!InfoData)
         return SOCKET_ERROR;
 
@@ -3561,7 +3564,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
             return MsafdReturnWithErrno(STATUS_SUCCESS, NULL, 0, NULL);
         }
 
-        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDINFOAPCCONTEXT));
+        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(*APCContext));
         if (!APCContext)
         {
             ERR("Not enough memory for APC Context\n");
@@ -3572,7 +3575,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         APCContext->lpCompletionRoutine = CompletionRoutine;
         APCContext->lpOverlapped = Overlapped;
         APCContext->lpInfoData = InfoData;
-        APCFunction = &AfdInfoAPC;
+        APCFunction = &MsafdInfoAPC;
 
         if (!CompletionRoutine)
             Event = Overlapped->hEvent;
@@ -3590,7 +3593,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                                    IOSB,
                                    IOCTL_AFD_SET_INFO,
                                    InfoData,
-                                   sizeof(AFD_INFO),
+                                   sizeof(*InfoData),
                                    NULL,
                                    0);
     if (Status == STATUS_PENDING)
