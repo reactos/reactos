@@ -21,7 +21,6 @@ LSTATUS WINAPI RegDeleteTreeW(_In_ HKEY, _In_opt_ LPCWSTR);
 
 static BOOL bBootAccepted = FALSE;
 
-
 /* FUNCTIONS *****************************************************************/
 
 static
@@ -106,7 +105,6 @@ ScmGetControlSetValues(
     return dwError;
 }
 
-
 static
 DWORD
 ScmSetLastKnownGoodControlSet(
@@ -135,7 +133,6 @@ ScmSetLastKnownGoodControlSet(
 
     return dwError;
 }
-
 
 static
 DWORD
@@ -171,7 +168,6 @@ ScmGetSetupInProgress(VOID)
     DPRINT("SetupInProgress: %lu\n", dwSetupInProgress);
     return dwSetupInProgress;
 }
-
 
 static
 DWORD
@@ -226,15 +222,14 @@ ScmCopyControlSet(
     RegFlushKey(hDestinationControlSetKey);
 
 done:
-    if (hDestinationControlSetKey != NULL)
+    if (hDestinationControlSetKey)
         RegCloseKey(hDestinationControlSetKey);
 
-    if (hSourceControlSetKey != NULL)
+    if (hSourceControlSetKey)
         RegCloseKey(hSourceControlSetKey);
 
     return dwError;
 }
-
 
 static
 DWORD
@@ -261,15 +256,13 @@ ScmDeleteControlSet(
         return dwError;
 
     /* Delete the control set */
-    dwError = RegDeleteTreeW(hControlSetKey,
-                             NULL);
+    dwError = RegDeleteTreeW(hControlSetKey, NULL);
 
-    /* Open the system key */
+    /* Close the system key */
     RegCloseKey(hControlSetKey);
 
     return dwError;
 }
-
 
 DWORD
 ScmCreateLastKnownGoodControlSet(VOID)
@@ -300,10 +293,12 @@ ScmCreateLastKnownGoodControlSet(VOID)
                 (dwNewControlSet != dwDefaultControlSet) &&
                 (dwNewControlSet != dwFailedControlSet) &&
                 (dwNewControlSet != dwLastKnownGoodControlSet))
+            {
                 break;
+            }
         }
 
-        /* Fail if we did not find an unused control set!*/
+        /* Fail if we did not find an unused control set */
         if (dwNewControlSet >= 1000)
         {
             DPRINT1("Too many control sets\n");
@@ -311,8 +306,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
         }
 
         /* Copy the current control set */
-        dwError = ScmCopyControlSet(dwCurrentControlSet,
-                                    dwNewControlSet);
+        dwError = ScmCopyControlSet(dwCurrentControlSet, dwNewControlSet);
         if (dwError != ERROR_SUCCESS)
             return dwError;
 
@@ -322,7 +316,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
         {
             /*
              * Accept the boot here in order to prevent the creation of
-             * another control set when a user is going to get logged on
+             * another control set when a user is going to get logged on.
              */
             bBootAccepted = TRUE;
         }
@@ -330,7 +324,6 @@ ScmCreateLastKnownGoodControlSet(VOID)
 
     return dwError;
 }
-
 
 DWORD
 ScmAcceptBoot(VOID)
@@ -363,10 +356,12 @@ ScmAcceptBoot(VOID)
             (dwNewControlSet != dwDefaultControlSet) &&
             (dwNewControlSet != dwFailedControlSet) &&
             (dwNewControlSet != dwLastKnownGoodControlSet))
+        {
             break;
+        }
     }
 
-    /* Fail if we did not find an unused control set!*/
+    /* Fail if we did not find an unused control set */
     if (dwNewControlSet >= 1000)
     {
         DPRINT1("Too many control sets\n");
@@ -374,12 +369,11 @@ ScmAcceptBoot(VOID)
     }
 
     /* Copy the current control set */
-    dwError = ScmCopyControlSet(dwCurrentControlSet,
-                                dwNewControlSet);
+    dwError = ScmCopyControlSet(dwCurrentControlSet, dwNewControlSet);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    /* Delete the current last known good contol set, if it is not used anywhere else */
+    /* Delete the current last known good control set, if it is not used anywhere else */
     if ((dwLastKnownGoodControlSet != dwCurrentControlSet) &&
         (dwLastKnownGoodControlSet != dwDefaultControlSet) &&
         (dwLastKnownGoodControlSet != dwFailedControlSet))
@@ -396,7 +390,6 @@ ScmAcceptBoot(VOID)
 
     return ERROR_SUCCESS;
 }
-
 
 DWORD
 ScmRunLastKnownGood(VOID)
