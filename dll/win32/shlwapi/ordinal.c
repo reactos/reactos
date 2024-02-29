@@ -2665,6 +2665,7 @@ HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExSt
   return hWnd;
 }
 
+#ifndef __REACTOS__ /* The followings are defined in <shlwapi_undoc.h> */
 typedef struct tagPOLICYDATA
 {
   DWORD policy;        /* flags value passed to SHRestricted */
@@ -2679,6 +2680,7 @@ static const WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\',
                                       's','o','f','t','\\','W','i','n','d','o','w','s','\\',
                                       'C','u','r','r','e','n','t','V','e','r','s','i','o','n',
                                       '\\','P','o','l','i','c','i','e','s',0};
+#endif /* ndef __REACTOS__ */
 
 /*************************************************************************
  * @                          [SHLWAPI.271]
@@ -2702,9 +2704,9 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
     TRACE("(%s, %s, %s)\n", debugstr_w(lpSubKey), debugstr_w(lpSubName), debugstr_w(lpValue));
 
     if (!lpSubKey)
-        lpSubKey = REGKEY_POLICIES;
+        lpSubKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
 
-    PathCchCombine(szPath, _countof(szPath), lpSubKey, lpSubName);
+    PathCombineW(szPath, lpSubKey, lpSubName);
 
     dwSize = sizeof(dwValue);
     if (SHGetValueW(HKEY_LOCAL_MACHINE, szPath, lpValue, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
@@ -2759,12 +2761,19 @@ SHRestrictionLookup(
     _In_ LPCWSTR key,
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr)
+#else
+DWORD WINAPI SHRestrictionLookup(
+	DWORD policy,
+	LPCWSTR initial,
+	LPPOLICYDATA polTable,
+	LPDWORD polArr)
+#endif
 {
-    DWORD ret;
+#ifdef __REACTOS__
     size_t iItem = 0;
     const POLICYDATA *entry;
 
-    TRACE("(0x%08lX, %s, %p, %p)\n", policy, debugstr_w(initial), polTable, polArr);
+    TRACE("(0x%08lX, %s, %p, %p)\n", policy, debugstr_w(key), polTable, polArr);
 
     if (!polTable->appstr)
         return 0;
@@ -2772,22 +2781,14 @@ SHRestrictionLookup(
     for (entry = polTable; entry->appstr != NULL; ++entry, ++iItem)
     {
         if (policy == entry->policy)
-            break;
+        {
+            DWORD ret = polArr[iItem];
+            if (ret == SHELL_NO_POLICY)
+                ret = polArr[iItem] = SHGetRestriction(key, entry->appstr, entry->keystr);
+            return ret;
+        }
     }
-
-    ret = polArr[iItem];
-    if (ret == SHELL_NO_POLICY)
-        ret = polArr[iItem] = SHGetRestriction(key, entry->appstr, entry->keystr);
-
-    return ret;
-}
 #else
-DWORD WINAPI SHRestrictionLookup(
-	DWORD policy,
-	LPCWSTR initial,
-	LPPOLICYDATA polTable,
-	LPDWORD polArr)
-{
 	TRACE("(0x%08x %s %p %p)\n", policy, debugstr_w(initial), polTable, polArr);
 
 	if (!polTable || !polArr)
@@ -2805,11 +2806,11 @@ DWORD WINAPI SHRestrictionLookup(
 	    return *polArr;
 	  }
 	}
+#endif
 	/* we don't know this policy, return 0 */
 	TRACE("unknown policy: (%08x)\n", policy);
 	return 0;
 }
-#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.267]

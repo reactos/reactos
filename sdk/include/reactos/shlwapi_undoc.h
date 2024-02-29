@@ -25,6 +25,27 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#define SHELL_NO_POLICY 0xFFFFFFFF
+
+typedef struct tagPOLICYDATA
+{
+    DWORD policy;    /* flags value passed to SHRestricted */
+    LPCWSTR appstr;  /* application str such as "Explorer" */
+    LPCWSTR keystr;  /* name of the actual registry key / policy */
+} POLICYDATA, *LPPOLICYDATA;
+
+HANDLE WINAPI SHGlobalCounterCreate(REFGUID guid);
+PVOID WINAPI SHInterlockedCompareExchange(PVOID *dest, PVOID xchg, PVOID compare);
+LONG WINAPI SHGlobalCounterGetValue(HANDLE hGlobalCounter);
+LONG WINAPI SHGlobalCounterIncrement(HANDLE hGlobalCounter);
+
+DWORD WINAPI
+SHRestrictionLookup(
+    _In_ DWORD policy,
+    _In_ LPCWSTR key,
+    _In_ const POLICYDATA *polTable,
+    _Inout_ LPDWORD polArr);
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 #ifdef UNICODE
