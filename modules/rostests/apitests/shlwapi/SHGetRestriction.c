@@ -44,6 +44,7 @@ static const TEST_ENTRY s_Entries[] =
 {
     { L"Explorer", L"RosTests1" },
     { L"Explorer", L"RosTests2" },
+
     { L"Explorer", L"ForceActiveDesktopOn" },
     { L"Explorer", L"NoActiveDesktop" },
     { L"Explorer", L"NoDisconnect" },
