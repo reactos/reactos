@@ -15,6 +15,7 @@
 #include <shellapi.h>
 #include <strsafe.h>
 #include <shlwapi_undoc.h> // for PathFindOnPathExW
+#include "../../win32/shell32/shresdef.h" // for IDS_NEWITEMFORMAT and IDS_LNK_FILE
 
 BOOL
 IsShortcut(HKEY hKey)
@@ -75,83 +76,45 @@ IsExtensionAShortcut(LPWSTR lpExtension)
 BOOL
 CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 {
-    IShellLinkW *pShellLink, *pSourceShellLink;
+    IShellLinkW *pShellLink;
     IPersistFile *pPersistFile;
     HRESULT hr;
-    WCHAR Path[MAX_PATH];
-    LPWSTR lpExtension;
 
-    /* get the extension */
-    lpExtension = PathFindExtensionW(pContext->szTarget);
-
-    if (pContext->pidlTarget)
-    {
-        Path[0] = UNICODE_NULL;
-    }
-    else if (IsExtensionAShortcut(lpExtension))
-    {
-        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
-
-        if (FAILED(hr))
-            return FALSE;
-
-        hr = IUnknown_QueryInterface(pSourceShellLink, &IID_IPersistFile, (void**)&pPersistFile);
-        if (FAILED(hr))
-        {
-            IUnknown_Release(pSourceShellLink);
-            return FALSE;
-        }
-
-        hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
-        IUnknown_Release(pPersistFile);
-
-        if (FAILED(hr))
-        {
-            IUnknown_Release(pSourceShellLink);
-            return FALSE;
-        }
-
-        hr = IShellLinkW_GetPath(pSourceShellLink, Path, _countof(Path), NULL, 0);
-        IUnknown_Release(pSourceShellLink);
-
-        if (FAILED(hr))
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        StringCchCopyW(Path, _countof(Path), pContext->szTarget);
-    }
-
-    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
-                          &IID_IShellLinkW, (void**)&pShellLink);
-
-    if (hr != S_OK)
+    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pShellLink);
+    if (FAILED(hr))
         return FALSE;
 
-    if (pContext->pidlTarget)
-        pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
-    else
-        pShellLink->lpVtbl->SetPath(pShellLink, Path);
-
-    if (pContext->szArguments[0])
-        pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
-
-    if (pContext->szDescription[0])
-        pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
-
     hr = IUnknown_QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
-    if (hr != S_OK)
+    if (FAILED(hr))
     {
         IUnknown_Release(pShellLink);
         return FALSE;
     }
 
-    hr = pPersistFile->lpVtbl->Save(pPersistFile, pContext->szLinkName, TRUE);
+    if (IsExtensionAShortcut(PathFindExtensionW(pContext->szTarget)))
+    {
+        hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
+    }
+    else
+    {
+        if (pContext->pidlTarget)
+            pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
+        else
+            pShellLink->lpVtbl->SetPath(pShellLink, pContext->szTarget);
+
+        if (pContext->szArguments[0])
+            pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
+
+        if (pContext->szDescription[0])
+            pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
+    }
+
+    if (SUCCEEDED(hr))
+        hr = pPersistFile->lpVtbl->Save(pPersistFile, pContext->szLinkName, TRUE);
+
     IUnknown_Release(pPersistFile);
     IUnknown_Release(pShellLink);
-    return (hr == S_OK);
+    return SUCCEEDED(hr);
 }
 
 BOOL
@@ -258,13 +221,13 @@ WelcomeDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-            SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_LOCATION), SHACF_DEFAULT);
+            SHAutoComplete(GetDlgItem(hwndDlg, IDC_LINK_LOCATION), SHACF_DEFAULT);
             break;
         case WM_COMMAND:
         {
             switch (LOWORD(wParam))
             {
-                case IDC_SHORTCUT_LOCATION:
+                case IDC_LINK_LOCATION:
                 {
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
@@ -275,7 +238,7 @@ WelcomeDlgProc(HWND hwndDlg,
                             pContext->pidlTarget = NULL;
                         }
 
-                        if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                        if (SendDlgItemMessage(hwndDlg, IDC_LINK_LOCATION, WM_GETTEXTLENGTH, 0, 0))
                             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                         else
                             PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
@@ -302,11 +265,11 @@ WelcomeDlgProc(HWND hwndDlg,
                     SHGetPathFromIDListW(pidllist, szPath);
 
                     if (PathFileExistsW(szPath) && !PathIsRelativeW(szPath))
-                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szPath);
+                        SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, szPath);
                     else
-                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szDisplayName);
+                        SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, szDisplayName);
 
-                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    SendDlgItemMessageW(hwndDlg, IDC_LINK_LOCATION, EM_SETSEL, 0, -1);
 
                     if (pContext->pidlTarget)
                         CoTaskMemFree(pContext->pidlTarget);
@@ -319,11 +282,11 @@ WelcomeDlgProc(HWND hwndDlg,
             lppsn  = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_SETACTIVE)
             {
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget);
+                SetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, pContext->szTarget);
             }
             else if (lppsn->hdr.code == PSN_WIZNEXT)
             {
-                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
+                GetDlgItemTextW(hwndDlg, IDC_LINK_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
                 StrTrimW(pContext->szTarget, L" \t");
                 ExpandEnvironmentStringsW(pContext->szTarget, szPath, _countof(szPath));
 
@@ -362,7 +325,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     !PathFileExistsW(szPath))
                 {
                     /* Not found */
-                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    SendDlgItemMessageW(hwndDlg, IDC_LINK_LOCATION, EM_SETSEL, 0, -1);
 
                     LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
@@ -411,7 +374,7 @@ FinishDlgProc(HWND hwndDlg,
     LPPROPSHEETPAGEW ppsp;
     PCREATE_LINK_CONTEXT pContext;
     LPPSHNOTIFY lppsn;
-    WCHAR szText[MAX_PATH];
+    WCHAR szText[MAX_PATH], szPath[MAX_PATH];
     WCHAR szMessage[128];
 
     switch(uMsg)
@@ -447,8 +410,32 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_SETACTIVE)
             {
-                /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
+                /* Remove invalid characters */
                 DoConvertNameForFileSystem(pContext->szDescription);
+                PathCleanupSpec(NULL, pContext->szDescription);
+
+                /* Is it empty? (rare case) */
+                if (!pContext->szDescription[0])
+                {
+                    HMODULE hShell32 = GetModuleHandleW(L"shell32.dll");
+                    LoadStringW(hShell32, IDS_NEWITEMFORMAT, szText, _countof(szText));
+                    LoadStringW(hShell32, IDS_LNK_FILE, szMessage, _countof(szMessage));
+                    StringCchPrintfW(pContext->szDescription, _countof(pContext->szDescription),
+                                     szText, szMessage);
+                }
+
+                /* Build a path from szOldFile */
+                StringCchCopyW(szText, _countof(szText), pContext->szOldFile);
+                PathRemoveFileSpecW(szText);
+
+                /* Rename duplicate if necessary */
+                PathAddExtensionW(pContext->szDescription,
+                                  (IsInternetLocation(pContext->szTarget) ? L".url" : L".lnk"));
+                PathYetAnotherMakeUniqueName(szPath, szText, NULL, pContext->szDescription);
+                StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription),
+                               PathFindFileNameW(szPath));
+                PathRemoveExtensionW(pContext->szDescription);
+
                 SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
                 SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, EM_SETSEL, 0, -1);
                 SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_NAME));
@@ -483,7 +470,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     /* change extension if any */
                     PathRemoveExtensionW(pContext->szLinkName);
-                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".url");
+                    PathAddExtensionW(pContext->szLinkName, L".url");
 
                     if (!CreateInternetShortcut(pContext))
                     {
@@ -500,7 +487,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     /* change extension if any */
                     PathRemoveExtensionW(pContext->szLinkName);
-                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".lnk");
+                    PathAddExtensionW(pContext->szLinkName, L".lnk");
 
                     if (!CreateShortcut(pContext))
                     {
