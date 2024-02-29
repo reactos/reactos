@@ -75,85 +75,45 @@ IsExtensionAShortcut(LPWSTR lpExtension)
 BOOL
 CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 {
-    IShellLinkW *pShellLink, *pSourceShellLink;
+    IShellLinkW *pShellLink;
     IPersistFile *pPersistFile;
     HRESULT hr;
-    WCHAR Path[MAX_PATH], IconPath[MAX_PATH] = L"";
-    LPWSTR lpExtension;
-    INT iIcon = 0;
 
-    /* get the extension */
-    lpExtension = PathFindExtensionW(pContext->szTarget);
-
-    /* FIXME: This code is unnecessary if shell32 CShellLink was correct */
-    if (IsExtensionAShortcut(lpExtension))
-    {
-        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
-
-        if (FAILED(hr))
-            return FALSE;
-
-        hr = IUnknown_QueryInterface(pSourceShellLink, &IID_IPersistFile, (void**)&pPersistFile);
-        if (FAILED(hr))
-        {
-            IUnknown_Release(pSourceShellLink);
-            return FALSE;
-        }
-
-        hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
-        IUnknown_Release(pPersistFile);
-
-        if (FAILED(hr))
-        {
-            IUnknown_Release(pSourceShellLink);
-            return FALSE;
-        }
-
-        hr = IShellLinkW_GetPath(pSourceShellLink, Path, _countof(Path), NULL, 0);
-        hr = IShellLinkW_GetIconLocation(pSourceShellLink, IconPath, _countof(IconPath), &iIcon);
-        IUnknown_Release(pSourceShellLink);
-
-        if (FAILED(hr))
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        StringCchCopyW(Path, _countof(Path), pContext->szTarget);
-    }
-
-    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
-                          &IID_IShellLinkW, (void**)&pShellLink);
-
-    if (hr != S_OK)
+    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pShellLink);
+    if (FAILED(hr))
         return FALSE;
 
-    if (pContext->pidlTarget)
-        pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
-    else
-        pShellLink->lpVtbl->SetPath(pShellLink, Path);
-
-    if (IconPath[0])
-        pShellLink->lpVtbl->SetIconLocation(pShellLink, IconPath, iIcon);
-
-    if (pContext->szArguments[0])
-        pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
-
-    if (pContext->szDescription[0])
-        pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
-
     hr = IUnknown_QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
-    if (hr != S_OK)
+    if (FAILED(hr))
     {
         IUnknown_Release(pShellLink);
         return FALSE;
     }
 
-    hr = pPersistFile->lpVtbl->Save(pPersistFile, pContext->szLinkName, TRUE);
+    if (IsExtensionAShortcut(PathFindExtensionW(pContext->szTarget)))
+    {
+        hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
+    }
+    else
+    {
+        if (pContext->pidlTarget)
+            pShellLink->lpVtbl->SetIDList(pShellLink, pContext->pidlTarget);
+        else
+            pShellLink->lpVtbl->SetPath(pShellLink, pContext->szTarget);
+
+        if (pContext->szArguments[0])
+            pShellLink->lpVtbl->SetArguments(pShellLink, pContext->szArguments);
+
+        if (pContext->szDescription[0])
+            pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
+    }
+
+    if (SUCCEEDED(hr))
+        hr = pPersistFile->lpVtbl->Save(pPersistFile, pContext->szLinkName, TRUE);
+
     IUnknown_Release(pPersistFile);
     IUnknown_Release(pShellLink);
-    return (hr == S_OK);
+    return SUCCEEDED(hr);
 }
 
 BOOL
