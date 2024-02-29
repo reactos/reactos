@@ -135,16 +135,23 @@ ScmSetLastKnownGoodControlSet(
 }
 
 static
-DWORD
-ScmGetSetupInProgress(VOID)
+BOOL
+ScmIsSetupInProgress(VOID)
 {
-    DWORD dwError;
+    /* Cached value so as not to call the registry every time */
+    static DWORD dwSetupInProgress = (DWORD)-1;
+
     HKEY hKey;
+    DWORD dwError;
     DWORD dwType;
     DWORD dwSize;
-    DWORD dwSetupInProgress = (DWORD)-1;
 
-    DPRINT("ScmGetSetupInProgress()\n");
+    /* Return the cached value if applicable */
+    if (dwSetupInProgress != (DWORD)-1)
+        return (BOOL)dwSetupInProgress;
+
+    /* Assume no Setup is in progress */
+    dwSetupInProgress = FALSE;
 
     /* Open key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -152,21 +159,24 @@ ScmGetSetupInProgress(VOID)
                             0,
                             KEY_QUERY_VALUE,
                             &hKey);
-    if (dwError == ERROR_SUCCESS)
-    {
-        /* Read key */
-        dwSize = sizeof(DWORD);
-        RegQueryValueExW(hKey,
-                         L"SystemSetupInProgress",
-                         NULL,
-                         &dwType,
-                         (LPBYTE)&dwSetupInProgress,
-                         &dwSize);
-        RegCloseKey(hKey);
-    }
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
 
-    DPRINT("SetupInProgress: %lu\n", dwSetupInProgress);
-    return dwSetupInProgress;
+    /* Read value */
+    dwSize = sizeof(dwSetupInProgress);
+    dwError = RegQueryValueExW(hKey,
+                               L"SystemSetupInProgress",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)&dwSetupInProgress,
+                               &dwSize);
+    RegCloseKey(hKey);
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
+
+    /* Normalize the value and return it */
+    dwSetupInProgress = !!dwSetupInProgress;
+    return (BOOL)dwSetupInProgress;
 }
 
 static
@@ -281,7 +291,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
         return dwError;
 
     /* First boot after setup? */
-    if ((ScmGetSetupInProgress() == 0) &&
+    if (!ScmIsSetupInProgress() &&
         (dwCurrentControlSet == dwLastKnownGoodControlSet))
     {
         DPRINT("First boot after setup\n");
