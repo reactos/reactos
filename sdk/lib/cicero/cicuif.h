@@ -928,8 +928,8 @@ public:
     STDMETHOD_(void, SetToolTip)(LPCWSTR pszToolTip) override;
 
     STDMETHOD_(void, OnUnknownMouse0)() { }
-    STDMETHOD_(void, OnUnknownMouse1)(LONG x, LONG y) { }
-    STDMETHOD_(void, OnUnknownMouse2)(LONG x, LONG y) { }
+    STDMETHOD_(void, OnLeftClick)() { }
+    STDMETHOD_(void, OnRightClick)() { }
 };
 
 /////////////////////////////////////////////////////////////////////////////

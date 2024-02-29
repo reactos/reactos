@@ -7,8 +7,6 @@
 
 #pragma once
 
-class TLS;
-
 class CicBridge;
 class CicProfile;
 
@@ -25,50 +23,18 @@ public:
     DWORD m_dwFlags2;
     DWORD m_dwUnknown2;
     BOOL m_bDestroyed;
-    DWORD m_dwNowOpening;
+    BOOL m_bNowOpening;
     DWORD m_NonEAComposition;
     DWORD m_cWnds;
 
-    /**
-     * @implemented
-     */
-    static BOOL Initialize()
-    {
-        s_dwTlsIndex = ::TlsAlloc();
-        return s_dwTlsIndex != (DWORD)-1;
-    }
+    static BOOL Initialize();
+    static VOID Uninitialize();
 
-    /**
-     * @implemented
-     */
-    static VOID Uninitialize()
-    {
-        if (s_dwTlsIndex != (DWORD)-1)
-        {
-            ::TlsFree(s_dwTlsIndex);
-            s_dwTlsIndex = (DWORD)-1;
-        }
-    }
-
-    /**
-     * @implemented
-     */
-    static TLS* GetTLS()
-    {
-        if (s_dwTlsIndex == (DWORD)-1)
-            return NULL;
-
-        return InternalAllocateTLS();
-    }
-
-    /**
-     * @implemented
-     */
-    static TLS* PeekTLS()
-    {
-        return (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
-    }
+    static TLS* GetTLS();
+    static TLS* PeekTLS();
 
     static TLS* InternalAllocateTLS();
     static BOOL InternalDestroyTLS();
+
+    BOOL NonEACompositionEnabled();
 };

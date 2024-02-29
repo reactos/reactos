@@ -16,7 +16,6 @@ CicInputContext::CicInputContext(
     _In_ HIMC hIMC)
 {
     m_hIMC = hIMC;
-    m_guid = GUID_NULL;
     m_dwQueryPos = 0;
     m_cRefs = 1;
 }
@@ -65,7 +64,7 @@ CicInputContext::OnStartComposition(
     ITfCompositionView *pComposition,
     BOOL *pfOk)
 {
-    if ((m_cCompLocks <= 0) || m_dwUnknown6_5)
+    if ((m_cCompLocks <= 0) || m_bReconverting)
     {
         *pfOk = TRUE;
         ++m_cCompLocks;
@@ -103,13 +102,10 @@ CicInputContext::GetGuidAtom(
     _Out_opt_ LPDWORD pdwGuidAtom)
 {
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCompStr);
-    HRESULT hr = imeContext.m_hr;
-    if (!imeContext)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
 
-    hr = E_FAIL;
+    HRESULT hr = E_FAIL;
     if (iAtom < m_cGuidAtoms)
     {
         *pdwGuidAtom = m_adwGuidAtoms[iAtom];
@@ -251,73 +247,64 @@ CicInputContext::OnCleanupContext(
     return S_OK;
 }
 
-/// Retrieves the IME information.
-/// @implemented
-HRESULT
-Inquire(
-    _Out_ LPIMEINFO lpIMEInfo,
-    _Out_ LPWSTR lpszWndClass,
-    _In_ DWORD dwSystemInfoFlags,
-    _In_ HKL hKL)
+/// @unimplemented
+HRESULT CicInputContext::SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage)
 {
-    if (!lpIMEInfo)
-        return E_OUTOFMEMORY;
+    return E_NOTIMPL;
+}
 
-    StringCchCopyW(lpszWndClass, 64, L"MSCTFIME UI");
-    lpIMEInfo->dwPrivateDataSize = 0;
+/// @unimplemented
+HRESULT CicInputContext::EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag)
+{
+    return E_NOTIMPL;
+}
 
-    switch (LOWORD(hKL)) // Language ID
-    {
-        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT): // Japanese
-        {
-            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
-                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
-                                     IME_PROP_KBD_CHAR_FIRST;
-            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
-                                           IME_CMODE_NATIVE;
-            lpIMEInfo->fdwSentenceCaps = IME_SMODE_CONVERSATION | IME_SMODE_PLAURALCLAUSE;
-            lpIMEInfo->fdwSelectCaps = SELECT_CAP_SENTENCE | SELECT_CAP_CONVERSION;
-            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
-                                    SCS_CAP_COMPSTR;
-            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
-            break;
-        }
-        case MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT): // Korean
-        {
-            lpIMEInfo->fdwProperty = IME_PROP_COMPLETE_ON_UNSELECT | IME_PROP_SPECIAL_UI |
-                                     IME_PROP_AT_CARET | IME_PROP_NEED_ALTKEY |
-                                     IME_PROP_KBD_CHAR_FIRST;
-            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
-            lpIMEInfo->fdwSentenceCaps = 0;
-            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_COMPSTR;
-            lpIMEInfo->fdwSelectCaps = SELECT_CAP_CONVERSION;
-            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
-            break;
-        }
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): // Simplified Chinese
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL): // Traditional Chinese
-        {
-            lpIMEInfo->fdwProperty = IME_PROP_SPECIAL_UI | IME_PROP_AT_CARET |
-                                     IME_PROP_NEED_ALTKEY | IME_PROP_KBD_CHAR_FIRST;
-            lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
-            lpIMEInfo->fdwSentenceCaps = SELECT_CAP_CONVERSION;
-            lpIMEInfo->fdwSelectCaps = 0;
-            lpIMEInfo->fdwSCSCaps = SCS_CAP_SETRECONVERTSTRING | SCS_CAP_MAKEREAD |
-                                    SCS_CAP_COMPSTR;
-            lpIMEInfo->fdwUICaps = UI_CAP_ROT90;
-            break;
-        }
-        default: // Otherwise
-        {
-            lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_AT_CARET;
-            lpIMEInfo->fdwConversionCaps = 0;
-            lpIMEInfo->fdwSentenceCaps = 0;
-            lpIMEInfo->fdwSCSCaps = 0;
-            lpIMEInfo->fdwUICaps = 0;
-            lpIMEInfo->fdwSelectCaps = 0;
-            break;
-        }
-    }
+/// @unimplemented
+HRESULT CicInputContext::EscbCompComplete(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
 
-    return S_OK;
+/// @unimplemented
+HRESULT CicInputContext::DelayedReconvertFuncCall(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT
+CicInputContext::MsImeMouseHandler(
+    DWORD dwUnknown58,
+    DWORD dwUnknown59,
+    UINT keys,
+    CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT
+CicInputContext::SetupReconvertString(
+    CicIMCLock& imcLock,
+    ITfThreadMgr_P *pThreadMgr,
+    UINT uCodePage,
+    UINT uMsg,
+    BOOL bUndo)
+{
+    return E_NOTIMPL;
+}
+
+void CicInputContext::ClearPrevCandidatePos()
+{
+    m_dwUnknown8 = 0;
+    ZeroMemory(&m_rcCandidate1, sizeof(m_rcCandidate1));
+    ZeroMemory(&m_CandForm, sizeof(m_CandForm));
+    ZeroMemory(&m_rcCandidate2, sizeof(m_rcCandidate2));
+    m_dwQueryPos = 0;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::EndReconvertString(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
 }

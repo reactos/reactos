@@ -49,7 +49,7 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
         /* Terminate this process */
 #if DBG
         WCHAR buffer[MAX_PATH];
-        if (!GetProcessImageFileNameW(Process->ProcessHandle, buffer, MAX_PATH))
+        if (!GetProcessImageFileNameW(Process->ProcessHandle, buffer, ARRAYSIZE(buffer)))
         {
             DPRINT1("Terminating process %x\n", Process->ClientId.UniqueProcess);
         }
@@ -58,7 +58,6 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
             DPRINT1("Terminating process %x (%S)\n", Process->ClientId.UniqueProcess, buffer);
         }
 #endif
-
         NtTerminateProcess(Process->ProcessHandle, 0);
         WaitForSingleObject(Process->ProcessHandle, ShutdownSettings.ProcessTerminateTimeout);
     }

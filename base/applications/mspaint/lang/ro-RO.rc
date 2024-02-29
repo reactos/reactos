@@ -44,6 +44,8 @@ BEGIN
         MENUITEM "Dec&upare\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiere\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Trunchiere selecţie", IDM_CROPSELECTION       
         MENUITEM "&Golire selecţie\tDel", IDM_EDITDELETESELECTION
         MENUITEM "In&versare selecție", IDM_EDITINVERTSELECTION
         MENUITEM "&Selectare totală\tCtrl+A", IDM_EDITSELECTALL
@@ -108,6 +110,8 @@ BEGIN
         MENUITEM "Dec&upare\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiere\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Trunchiere selecție", IDM_CROPSELECTION        
         MENUITEM "G&olire selecţie\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectare &totală\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

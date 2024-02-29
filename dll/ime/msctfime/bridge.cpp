@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Bridge
+ * PURPOSE:     The bridge of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -65,33 +65,27 @@ CicBridge::~CicBridge()
         UnInitIMMX(pTLS);
 }
 
-void CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
+/// @implemented
+ITfDocumentMgr*
+CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
-    if (pCicIC)
-    {
-        m_pDocMgr = pCicIC->m_pDocumentMgr;
-        m_pDocMgr->AddRef();
-    }
-    else
-    {
-        m_pDocMgr->Release();
-        m_pDocMgr = NULL;
-    }
+    if (!pCicIC)
+        return NULL;
+
+    pCicIC->m_pDocumentMgr->AddRef();
+    return pCicIC->m_pDocumentMgr;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT
 CicBridge::CreateInputContext(
     _Inout_ TLS *pTLS,
     _In_ HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
-    HRESULT hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
-    if (FAILED(hr))
-        return hr;
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
 
     if (!imcLock.get().hCtfImeContext)
     {
@@ -103,45 +97,49 @@ CicBridge::CreateInputContext(
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
     CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (pCicIC)
+        return S_OK;
+
+    pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
     if (!pCicIC)
     {
-        pCicIC = new(cicNoThrow) CicInputContext(m_cliendId, &m_LibThread, hIMC);
-        if (!pCicIC)
-        {
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_OUTOFMEMORY;
-        }
-
-        if (!pTLS->m_pThreadMgr)
-        {
-            pCicIC->Release();
-            imeContext.unlock();
-            imcLock.unlock();
-            DestroyInputContext(pTLS, hIMC);
-            return E_NOINTERFACE;
-        }
-
-        imeContext.get().m_pCicIC = pCicIC;
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_OUTOFMEMORY;
     }
 
-    hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
+    if (!pTLS->m_pThreadMgr)
+    {
+        pCicIC->Release();
+        imeContext.unlock();
+        imcLock.unlock();
+        DestroyInputContext(pTLS, hIMC);
+        return E_NOINTERFACE;
+    }
+
+    imeContext.get().m_pCicIC = pCicIC;
+
+    HRESULT hr = pCicIC->CreateInputContext(pTLS->m_pThreadMgr, imcLock);
     if (FAILED(hr))
     {
         pCicIC->Release();
         imeContext.get().m_pCicIC = NULL;
+        return hr;
     }
-    else
+
+    HWND hWnd = imcLock.get().hWnd;
+    if (hWnd && hWnd == ::GetFocus())
     {
-        if (imcLock.get().hWnd && imcLock.get().hWnd == ::GetFocus())
+        ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+        if (pDocMgr)
         {
-            GetDocumentManager(imeContext);
-            //FIXME
+            SetAssociate(pTLS, hWnd, hIMC, pTLS->m_pThreadMgr, pDocMgr);
+            pDocMgr->Release();
         }
     }
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 /// @implemented
@@ -149,8 +147,6 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
 {
     CicIMCLock imcLock(hIMC);
     HRESULT hr = imcLock.m_hr;
-    if (!imcLock)
-        hr = E_FAIL;
     if (FAILED(hr))
         return hr;
 
@@ -183,6 +179,7 @@ HRESULT CicBridge::DestroyInputContext(TLS *pTLS, HIMC hIMC)
     return hr;
 }
 
+/// @implemented
 ITfContext *
 CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
@@ -192,14 +189,22 @@ CicBridge::GetInputContext(CicIMCCLock<CTFIMECONTEXT>& imeContext)
     return pCicIC->m_pContext;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT CicBridge::OnSetOpenStatus(
     TLS *pTLS,
     ITfThreadMgr_P *pThreadMgr,
     CicIMCLock& imcLock,
     CicInputContext *pCicIC)
 {
-    return E_NOTIMPL;
+    if (!imcLock.get().fOpen && imcLock.ValidCompositionString())
+        pCicIC->EscbCompComplete(imcLock);
+
+    pTLS->m_bNowOpening = TRUE;
+    HRESULT hr = SetCompartmentDWORD(m_cliendId, pThreadMgr,
+                                     GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,
+                                     imcLock.get().fOpen, FALSE);
+    pTLS->m_bNowOpening = FALSE;
+    return hr;
 }
 
 /// Selects the IME context.
@@ -217,8 +222,6 @@ CicBridge::SelectEx(
         return imcLock.m_hr;
 
     CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
-    if (!imeContext)
-        imeContext.m_hr = E_FAIL;
     if (FAILED(imeContext.m_hr))
         return imeContext.m_hr;
 
@@ -229,7 +232,7 @@ CicBridge::SelectEx(
     if (fSelect)
     {
         if (pCicIC)
-            pCicIC->m_dwUnknown6[1] &= ~1;
+            pCicIC->m_bCandidateOpen = FALSE;
         if (imcLock.get().fOpen)
             OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
     }
@@ -605,4 +608,146 @@ CicBridge::ConfigureRegisterWord(
     pProvider->Release();
     pFunction->Release();
     return hr;
+}
+
+/// @unimplemented
+void CicBridge::SetAssociate(
+    TLS *pTLS,
+    HWND hWnd,
+    HIMC hIMC,
+    ITfThreadMgr_P *pThreadMgr,
+    ITfDocumentMgr *pDocMgr)
+{
+    //FIXME
+}
+
+HRESULT
+CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
+{
+    auto pThreadMgr = pTLS->m_pThreadMgr;
+    if (!pThreadMgr)
+        return E_OUTOFMEMORY;
+
+    if (fActive)
+    {
+        if (!hIMC)
+        {
+            SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+            return S_OK;
+        }
+
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        if (hIMC == ::ImmGetContext(hWnd))
+        {
+            ITfDocumentMgr *pDocMgr = GetDocumentManager(imeContext);
+            if (pDocMgr)
+            {
+                SetAssociate(pTLS, imcLock.get().hWnd, hIMC, pThreadMgr, pDocMgr);
+                pDocMgr->Release();
+            }
+        }
+
+        return S_OK;
+    }
+
+    if (hIMC && !IsEALang(LOWORD(hKL)))
+    {
+        CicIMCLock imcLock(hIMC);
+        if (FAILED(imcLock.m_hr))
+            return imcLock.m_hr;
+
+        CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+        if (FAILED(imeContext.m_hr))
+            return imeContext.m_hr;
+
+        CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+        if (!pCicIC->m_dwUnknown6_5[2] && !pCicIC->m_dwUnknown6_5[3])
+            ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+    }
+
+    if (!hIMC || (::GetFocus() != hWnd) || (hIMC != ::ImmGetContext(hWnd)))
+        SetAssociate(pTLS, hWnd, hIMC, pThreadMgr, m_pDocMgr);
+
+    return S_OK;
+}
+
+/// @unimplemented
+HRESULT CicBridge::Notify(
+    TLS *pTLS,
+    ITfThreadMgr *pThreadMgr,
+    HIMC hIMC,
+    DWORD dwAction,
+    DWORD dwIndex,
+    DWORD_PTR dwValue)
+{
+    return E_NOTIMPL; // FIXME
+}
+
+/// @unimplemented
+BOOL CicBridge::ProcessKey(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    HIMC hIMC,
+    WPARAM wParam,
+    LPARAM lParam,
+    CONST LPBYTE lpbKeyState,
+    INT *pnUnknown60)
+{
+    return FALSE; // FIXME
+}
+
+/// @unimplemented
+HRESULT
+CicBridge::ToAsciiEx(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    UINT uVirtKey,
+    UINT uScanCode,
+    CONST LPBYTE lpbKeyState,
+    LPTRANSMSGLIST lpTransBuf,
+    UINT fuState,
+    HIMC hIMC,
+    UINT *pResult)
+{
+    return E_NOTIMPL; // FIXME
+}
+
+/// @unimplemented
+BOOL
+CicBridge::SetCompositionString(
+    TLS *pTLS,
+    ITfThreadMgr_P *pThreadMgr,
+    HIMC hIMC,
+    DWORD dwIndex,
+    LPCVOID lpComp,
+    DWORD dwCompLen,
+    LPCVOID lpRead,
+    DWORD dwReadLen)
+{
+    return FALSE; // FIXME
+}
+
+/// @unimplemented
+LRESULT
+CicBridge::EscapeKorean(TLS *pTLS, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+{
+    return 0; // FIXME
+}
+
+/// @implemented
+BOOL CicBridge::IsOwnDim(ITfDocumentMgr *pDocMgr)
+{
+    DWORD dwDimFlags = 0;
+    HRESULT hr = ::GetCompartmentDWORD(pDocMgr, GUID_COMPARTMENT_CTFIME_DIMFLAGS,
+                                       &dwDimFlags, FALSE);
+    if (FAILED(hr))
+        return FALSE;
+    return !!(dwDimFlags & 0x1);
 }

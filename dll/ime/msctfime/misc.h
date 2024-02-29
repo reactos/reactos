@@ -1,9 +1,77 @@
 /*
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     The functions of msctfime.ime
+ * PURPOSE:     Miscellaneous of msctfime.ime
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
+#pragma once
+
+BOOLEAN DllShutdownInProgress(VOID);
+BOOL IsEALang(_In_opt_ LANGID LangID);
+BOOL IsInteractiveUserLogon(VOID);
+BYTE GetCharsetFromLangId(_In_ DWORD dwValue);
+HIMC GetActiveContext(VOID);
+BOOL MsimtfIsGuidMapEnable(_In_ HIMC hIMC, _Out_opt_ LPBOOL pbValue);
+BOOL IsVKDBEKey(_In_ UINT uVirtKey);
+
+ITfCategoryMgr *GetUIMCat(PCIC_LIBTHREAD pLibThread);
+HRESULT InitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
+HRESULT UninitDisplayAttrbuteLib(PCIC_LIBTHREAD pLibThread);
+
+/***********************************************************************/
+
+HRESULT
+GetCompartment(
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    ITfCompartment **ppComp,
+    BOOL bThread);
+
+HRESULT
+SetCompartmentDWORD(
+    TfEditCookie cookie,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    DWORD dwValue,
+    BOOL bThread);
+
+HRESULT
+GetCompartmentDWORD(
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    LPDWORD pdwValue,
+    BOOL bThread);
+
+HRESULT
+SetCompartmentUnknown(
+    TfEditCookie cookie,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    IUnknown *punkValue);
+
+HRESULT
+ClearCompartment(
+    TfClientId tid,
+    IUnknown *pUnknown,
+    REFGUID rguid,
+    BOOL bThread);
+
+/***********************************************************************/
+
+class CModeBias
+{
+public:
+    GUID m_guid;
+
+    CModeBias() : m_guid(GUID_NULL) { }
+
+    GUID ConvertModeBias(LONG bias);
+    LONG ConvertModeBias(REFGUID guid);
+    void SetModeBias(REFGUID rguid);
+};
+
+/***********************************************************************/
 
 class CFunctionProviderBase : public ITfFunctionProvider
 {

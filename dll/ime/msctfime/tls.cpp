@@ -12,6 +12,38 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 DWORD TLS::s_dwTlsIndex = (DWORD)-1;
 
 /// @implemented
+BOOL TLS::Initialize()
+{
+    s_dwTlsIndex = ::TlsAlloc();
+    return s_dwTlsIndex != (DWORD)-1;
+}
+
+/// @implemented
+VOID TLS::Uninitialize()
+{
+    if (s_dwTlsIndex != (DWORD)-1)
+    {
+        ::TlsFree(s_dwTlsIndex);
+        s_dwTlsIndex = (DWORD)-1;
+    }
+}
+
+/// @implemented
+TLS* TLS::GetTLS()
+{
+    if (s_dwTlsIndex == (DWORD)-1)
+        return NULL;
+
+    return InternalAllocateTLS();
+}
+
+/// @implemented
+TLS* TLS::PeekTLS()
+{
+    return (TLS*)::TlsGetValue(TLS::s_dwTlsIndex);
+}
+
+/// @implemented
 TLS* TLS::InternalAllocateTLS()
 {
     TLS *pTLS = TLS::PeekTLS();
@@ -53,4 +85,26 @@ BOOL TLS::InternalDestroyTLS()
     cicMemFree(pTLS);
     ::TlsSetValue(s_dwTlsIndex, NULL);
     return TRUE;
+}
+
+/// @implemented
+BOOL TLS::NonEACompositionEnabled()
+{
+    if (!m_NonEAComposition)
+    {
+        DWORD dwValue = 1;
+
+        CicRegKey regKey;
+        LSTATUS error = regKey.Open(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\CTF\\CUAS"));
+        if (error == ERROR_SUCCESS)
+        {
+            error = regKey.QueryDword(TEXT("NonEAComposition"), &dwValue);
+            if (error != ERROR_SUCCESS)
+                dwValue = 1;
+        }
+
+        m_NonEAComposition = dwValue;
+    }
+
+    return (m_NonEAComposition == 2);
 }

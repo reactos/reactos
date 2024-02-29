@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Ju mund të merrni cilësimet e IP've të caktuara automatikisht në qoftë se rrjeti juaj mbështet këtë aftësi. Përndryshe, ju duhet të pyesni administratorin e rrjetit tuaj për cilësimet e duhura të IP've.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Marrë adresë IP'sh automatikisht", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Përdor adresën e mëposhtme IP'së:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "&Përdor adresën e mëposhtme IP'së:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &P
     LTEXT "Adresa IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Subnet mask:", -1, 14, 90, 135, 8
@@ -19,12 +19,12 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Merr adresën e serverit DNS automatikisht", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Përdorni adresen DNS të server-it të mëposhtme", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    CONTROL "&Përdorni adresen DNS të server-it të mëposhtme", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &P
     LTEXT "DNS'ja serverit e preferuar:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Alterno DNS'në e server-it:", -1, 14, 176, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
-    PUSHBUTTON "&Përparuar", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Përparuar", IDC_ADVANCED, 186, 199, 50, 14, WS_TABSTOP //FIXME: accelerator collision &P
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 216
@@ -78,8 +78,8 @@ BEGIN
     LTEXT "Adresa D&NS server, në rend përdorimi:", -1, 5, 5, 180, 12
     PUSHBUTTON "Lart", IDC_DNSADDRUP, 190, 18, 50, 14, WS_TABSTOP
     PUSHBUTTON "Poshtë", IDC_DNSADDRDOWN, 190, 35, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Shto...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifiko...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Shto...", IDC_DNSADDRADD, 15, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &S
+    PUSHBUTTON "&Modifiko...", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP //FIXME: accelerator collision &M
     PUSHBUTTON "Heq", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP
     LTEXT "Tre cilësimet e mëposhtme zbatohen për të gjitha lidhjeve me TCP/IP të aktivizuara. Për zgjidhjen e emrave të pakualifikuar:", -1, 5, 70, 220, 24
     CONTROL "Shto lidhjen primare dhe specifike suffixes për DNS'në", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
@@ -88,8 +88,8 @@ BEGIN
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "Lart", IDC_DNSSUFFIXUP, 190, 128, 50, 14, WS_TABSTOP
     PUSHBUTTON "Poshtë", IDC_DNSSUFFIXDOWN, 190, 145, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Shto...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifiko...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Shto...", IDC_DNSSUFFIXADD, 15, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &S
+    PUSHBUTTON "&Modifiko...", IDC_DNSSUFFIXMOD, 75, 163, 50, 14, WS_TABSTOP //FIXME: accelerator collision &M
     PUSHBUTTON "Heq", IDC_DNSSUFFIXDEL, 135, 163, 50, 14, WS_TABSTOP
     LTEXT "Prapashtesa DNS'së për këtë lidhje:", -1, 5, 183, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 180, 100, 12, WS_TABSTOP
