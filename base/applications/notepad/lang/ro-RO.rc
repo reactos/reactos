@@ -170,8 +170,8 @@ Creați un nou fișier?"
     STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
 Păstrați modificările aduse?"
     STRING_NOTFOUND "Nu s-a găsit „%s”"
-    STRING_OUT_OF_MEMORY "Memoria disponibilă nu este suficientă pentru a termina operaţia.\
-\nnchideţi una sau mai multe aplicaţii pentru a creşte memoria disponibilă şi reîncercaţi."
+    STRING_OUT_OF_MEMORY "Memoria disponibilă nu este suficientă pentru a termina operaţia.
+\nÎnchideţi una sau mai multe aplicaţii pentru a creşte memoria disponibilă şi reîncercaţi."
     STRING_CANNOTFIND "Nu s-a găsit „%s”"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
