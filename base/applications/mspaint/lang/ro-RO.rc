@@ -85,7 +85,7 @@ BEGIN
         MENUITEM "Trunc&hiere", IDM_IMAGECROP
         MENUITEM "&Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "&Golire imagine\", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Golire imagine", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Desenare opacă", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Culori"
