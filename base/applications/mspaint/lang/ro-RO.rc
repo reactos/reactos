@@ -54,11 +54,11 @@ BEGIN
     POPUP "&Vizualizare"
     BEGIN
         MENUITEM "&Casetă de instrumente\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Paletă de &culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "C&asetă de culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
         MENUITEM "&Bară de stare", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Instrumente pentru te&xt", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "Ba&ră de instrumente text", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Sca&ră"
+        POPUP "&Panoramare"
         BEGIN
             POPUP "&Definită de utilizator"
             BEGIN
@@ -78,26 +78,26 @@ BEGIN
     END
     POPUP "I&magine"
     BEGIN
-        MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Întin&dere/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Recoltea&ză", IDM_IMAGECROP
-        MENUITEM "In&versează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Răsturnare/Rotire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Lărgire/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Trunc&hiere", IDM_IMAGECROP
+        MENUITEM "&Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Mod &opac", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Golire imagine\", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Desenare opacă", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Culori"
     BEGIN
-        MENUITEM "&Editare paletă...", IDM_COLORSEDITPALETTE
+        MENUITEM "&Editare culori...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
         MENUITEM "Paletă &modernă", IDM_COLORSMODERNPALETTE
         MENUITEM "Paletă &veche", IDM_COLORSOLDPALETTE
     END
-    POPUP "Aj&utor"
+    POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Manual...", IDM_HELPHELPTOPICS
+        MENUITEM "&Termeni din Ajutor", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...", IDM_HELPINFO
+        MENUITEM "&Despre Paint", IDM_HELPINFO
     END
 END
 
@@ -105,18 +105,18 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Dec&upare\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiere\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "G&olire selecţie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selectare &totală\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "Lipire di&n...", IDM_EDITPASTEFROM
+        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
