@@ -6,6 +6,13 @@
  *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
+/*
+ * NOTE: Up to date as of SHELL32 v6.00 (Win2k3).
+ * References:
+ * https://www.geoffchappell.com/studies/windows/shell/shell32/api/util/restrictions.htm
+ * https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-restrictions
+ */
+
 DEFINE_POLICY( REST_NORUN,                          "Explorer",         "NoRun"                            ),
 DEFINE_POLICY( REST_NOCLOSE,                        "Explorer",         "NoClose"                          ),
 DEFINE_POLICY( REST_NOSAVESET,                      "Explorer",         "NoSaveSettings"                   ),
