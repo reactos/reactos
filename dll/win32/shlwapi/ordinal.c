@@ -2758,7 +2758,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 DWORD WINAPI
 SHRestrictionLookup(
     _In_ DWORD policy,
-    _In_ LPCWSTR key,
+    _In_ LPCWSTR initial,
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr)
 #else
@@ -2769,29 +2769,18 @@ DWORD WINAPI SHRestrictionLookup(
 	LPDWORD polArr)
 #endif
 {
-#ifdef __REACTOS__
-    size_t iItem = 0;
-    const POLICYDATA *entry;
-
-    TRACE("(0x%08lX, %s, %p, %p)\n", policy, debugstr_w(key), polTable, polArr);
-
-    for (entry = polTable; entry->appstr; ++entry, ++iItem)
-    {
-        if (policy == entry->policy)
-        {
-            DWORD ret = polArr[iItem];
-            if (ret == SHELL_NO_POLICY)
-                ret = polArr[iItem] = SHGetRestriction(key, entry->appstr, entry->keystr);
-            return ret;
-        }
-    }
-#else
 	TRACE("(0x%08x %s %p %p)\n", policy, debugstr_w(initial), polTable, polArr);
 
+#ifndef __REACTOS__
 	if (!polTable || !polArr)
 	  return 0;
+#endif
 
+#ifndef __REACTOS__
+	for (;polTable->appstr; polTable++, polArr++)
+#else
 	for (;polTable->policy; polTable++, polArr++)
+#endif
 	{
 	  if (policy == polTable->policy)
 	  {
