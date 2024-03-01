@@ -168,7 +168,7 @@ Scrieți ceva apoi încercați din nou."
     STRING_DOESNOTEXIST "Fișierul „%s”\n\nu există.\n\n\
 Doriți să creați un nou fișier?"
     STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
-Doriți să salvați modificările aduse?"
+Salvați modificările aduse?"
     STRING_NOTFOUND "Nu s-a găsit „%s”"
     STRING_OUT_OF_MEMORY "Memoria disponibilă nu este suficientă pentru a termina operaţia.\n\
 Închideţi una sau mai multe aplicaţii pentru a creşte memoria disponibilă şi reîncercaţi."
