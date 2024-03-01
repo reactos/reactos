@@ -251,7 +251,6 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         str[charcount] = _T('\0');
                         ConOutChar (_T('\n'));
                         bReturn = TRUE;
-                        break;
                     }
                     break;
 
