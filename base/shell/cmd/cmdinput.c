@@ -233,8 +233,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         GetCursorXY (&curx, &cury);
                         //bContinue=TRUE;
                     }
-#endif /*FEATURE_HISTORY*/
                     break;
+#endif /*FEATURE_HISTORY*/
 
                 case _T('M'):
                     /* ^M does the same as return */
