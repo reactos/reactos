@@ -2775,9 +2775,6 @@ DWORD WINAPI SHRestrictionLookup(
 
     TRACE("(0x%08lX, %s, %p, %p)\n", policy, debugstr_w(key), polTable, polArr);
 
-    if (!polTable->appstr)
-        return 0;
-
     for (entry = polTable; entry->appstr; ++entry, ++iItem)
     {
         if (policy == entry->policy)
