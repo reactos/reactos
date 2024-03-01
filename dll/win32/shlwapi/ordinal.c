@@ -2778,7 +2778,7 @@ DWORD WINAPI SHRestrictionLookup(
     if (!polTable->appstr)
         return 0;
 
-    for (entry = polTable; entry->appstr != NULL; ++entry, ++iItem)
+    for (entry = polTable; entry->appstr; ++entry, ++iItem)
     {
         if (policy == entry->policy)
         {
