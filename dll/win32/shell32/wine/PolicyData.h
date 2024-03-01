@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Defining shell policy data
- * COPYRIGHT:   Copyright 2022 Herm?s B?lusca-Ma?to
+ * COPYRIGHT:   Copyright 2022 Hermès Bélusca-Maïto
  *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
