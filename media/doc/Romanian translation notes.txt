@@ -5,10 +5,6 @@ Copyright 2023-2024 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
-* Notă introductivă
-
-Resursele în română din ReactOS au suferit în timp o serie de modificări - de la „plombarea” (inițial rudimentară) cu resurse românești a primelor aplicații care au apărut între resursele (deja traduse) moștenite din Wine până la sistematizarea și consecventizarea traducerilor acestor resurse în întreg volumul de surse al sistemului de operare. Prezenta notă explicitează normele adoptate pentru această sistematizare/consecventizare.
-
 * Convenții adoptate
 
 Normele de traducere curente conțin în mare parte normele de traducere adoptate și în alte traduceri și localizări de logică computațională. Cele mai importante în această privință se regăsesc la i18n.ro și anume în „ghidul traducătorului” [1]:
@@ -16,31 +12,27 @@ Astfel:
  1. Sunt folosite diacriticele corecte ale limbii române.
  2. Traducerile trebuiesc adaptate respectând topica limbii române.
  3. În relația utilizator - calculator este folosit modul infinitiv lung.
- 4. În relația calculator - utilizator este adoptată o atitudine formal-politicoasă (cu verbe la modul indicativ/conjunctiv, persoana a 2-a, plural).
+ 4. În relația calculator - utilizator este adoptată o atitudine formal-politicoasă.
  5. Este evitată politețea excesivă prin omiterea expresiilor de politețe explicite.
- 6. Este evitată utilizarea diacriticelor ca taste active (acceleratori sau taste de acces).
- 7. Este recomandată o formulare independentă de gen (gramatical) dacă nu se cununoaște genul substantivului.
- 8. Pentru tastele de acces (care răspund la combinația de taste «Alt» + «tastă», evidențiate prin sublinierea tastei respective):
+ 6. Este recomandată o formulare independentă de gen (gramatical) dacă nu se cununoaște genul substantivului.
+ 7. Pentru tastele de acces (care răspund la combinația de taste «Alt» + «tastă», evidențiate prin sublinierea tastei respective):
   - Sunt folosite doar litere sau cifre (recomandare de la Microsoft [2]: „Access keys are alphanumeric keys”). Sunt deci de evitat alte simboluri sau semne de punctuație.
-  - Sunt de evitat (tot conform aceiași recomandări [2]) literele sau cifrele care fac reperarea lor un exercițiu dificil, cum e grupul „l”, „1”, „i” și „I” (din cauza lățimii lor reduse), sau „g”, „j”, „p”, „q” și „y” (care intersectează marcajul de evidențiere).
- 9. Ghilimelele folosite în limba română sunt perechea ghilimelele-deschise (99 jos) cu ghilimele-închise (99 sus), și ghilimelele unghiulare.
+ 8. Ghilimelele folosite în limba română sunt perechea ghilimelele-deschise (99 jos) cu ghilimele-închise (99 sus), și ghilimelele unghiulare.
 La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” raportate tot la i18n.ro [3].
- 10. Nu sunt traduse numele proprii (cu excepția numelor traductibile ale componentelor/subcomponentelor unui program sau pachet de programe).
- 11. Nu este capitalizată decât prima literă dintr-un text.
+ 9. Nu sunt traduse numele proprii (cu excepția numelor traductibile ale componentelor/subcomponentelor unui program sau pachet de programe).
+ 10. Nu este capitalizată decât prima literă dintr-un text.
 
 * Particularizări locale
 
-În resursele românești din ReactOS există și o serie de particularizări care fie nu se regăsesc în alte traduceri fie din cauza diferențelor de natură ale proiectelor, fie e vorba de termeni încă disputați sau neadoptați în localizările altor proiecte din diverse motive. Multe dintre acestea au fost menționate/discutate în grupul „Diacritice” [4]. Câteva dintre cele mai relevante:
- 12. În glosar se preferă:
+ 11. În glosar se preferă:
   - „OK”/„Revocare”
- 13. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
- 14. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
-  - „f” și „n” sunt rezervate pentru „Confirmă” și respectiv „Anulează”; „a” pentru „Aplică” (dacă există în aceiași fereastră). În cazul ferestrelor de tip asistent, „a”, „o”, „f” și „n” sunt rezervate respectiv pentru „Înainte”, „Înapoi”, „Sfârșit” și „Anulează”. [NOTĂ]
+ 12. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
+ 13. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
   - În cazul interfețelor grafice opțiunilor „Da” și „Nu” le corespund tastele de acces „a” și „u”. (În cazul interfețelor linie-de-comandă, corespunzătoare opțiunilor „Da/Nu”, care NU sunt taste de acces, rămân „d” și „n”.)
- 15. Enunțul de la convenția 2 poate fi extins la „traducerile trebuiesc adaptate respectând (și beneficiind de) particularitățile limbii române”, iar următoarele zece coonvenții ce urmează după el (3-13) definesc de fapt reguli implicite aplicabile în lipsa unui context bine definit în toate aspectele sale. Unde este posibil, o adaptare la context este dezirabilă:
+ 14. Enunțul de la convenția 2 poate fi extins la „traducerile trebuiesc adaptate respectând (și beneficiind de) particularitățile limbii române”, iar următoarele zece coonvenții ce urmează după el (3-13) definesc de fapt reguli implicite aplicabile în lipsa unui context bine definit în toate aspectele sale. Unde este posibil, o adaptare la context este dezirabilă:
   - În cazul opțiunilor despre care există suficiente informații de context, este recomandată flexionarea. De exemplu, opțiunea nulă pentru lista de animații pentru ecran inactiv se poate flexiona în siguranță specificându-i-se genul gramatical feminin - „(nespecificată)”.
   - În cazul unor subiecte unice (dintr-un context local sau global), este folosită forma articulată. Exemple: „Calculatorul meu” (numai unul, conținut concret), „Sistemul de operare” (unic în cadrul său), „Documentele mele” (conținut concret) vs. „Locații în rețea” (nedefinit), „Linie de comandă” (cu multiple posibile instanțe distincte/independente), etc.
- 16. Diateza reflexivă va fi folosită doar atunci când e necesar.
+ 15. Diateza reflexivă va fi folosită doar atunci când e necesar.
 
 [1] https://web.archive.org/web/20170307094948/http://i18n.ro/Ghidul_traduc%C4%83torului_de_software
 [2] https://msdn.microsoft.com/en-us/library/ms971323.aspx#atg_keyboardshortcuts_selecting_access_keys
