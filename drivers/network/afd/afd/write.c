@@ -381,7 +381,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             {
                 if (SendReq->BufferCount > 1)
                 {
-                    AFD_DbgPrint(MIN_TRACE,("WARN: More than one buffer %ld!\n", SendReq->BufferCount));
+                    AFD_DbgPrint(MIN_TRACE,("WARN: More than one buffer %ld\n", SendReq->BufferCount));
                 }
                 Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
                                          FCB->AddressFile.Object,
@@ -651,7 +651,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         {
             if (SendReq->BufferCount > 1)
             {
-                AFD_DbgPrint(MIN_TRACE,("WARN: More than one buffer %ld!\n", SendReq->BufferCount));
+                AFD_DbgPrint(MIN_TRACE,("WARN: More than one buffer %ld\n", SendReq->BufferCount));
             }
             Status = TdiSendDatagram(&FCB->SendIrp.InFlightRequest,
                                      FCB->AddressFile.Object,
