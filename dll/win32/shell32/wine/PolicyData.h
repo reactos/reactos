@@ -11,6 +11,7 @@
  * References:
  * https://www.geoffchappell.com/studies/windows/shell/shell32/api/util/restrictions.htm
  * https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-restrictions
+ * https://abi-laboratory.pro/compatibility/Windows_5.0_to_Windows_6.0/x86_64/headers_diff/shell32.dll/diff.html
  */
 
 DEFINE_POLICY( REST_NORUN,                          "Explorer",         "NoRun"                            ),
