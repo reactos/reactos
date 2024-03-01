@@ -77,14 +77,14 @@ DEFINE_POLICY( REST_NOFOLDEROPTIONS,                "Explorer",         "NoFolde
 DEFINE_POLICY( REST_HASFINDCOMPUTERS,               "Explorer",         "FindComputers"                    ),
 DEFINE_POLICY( REST_INTELLIMENUS,                   "Explorer",         "IntelliMenus"                     ),
 DEFINE_POLICY( REST_RUNDLGMEMCHECKBOX,              "Explorer",         "MemCheckBoxInRunDlg"              ),
-DEFINE_POLICY( REST_ARP_ShowPostSetup,              strAddRemoveProgs,  "ShowPostSetup"                   ),
+DEFINE_POLICY( REST_ARP_ShowPostSetup,              "Uninstall",        "ShowPostSetup"                    ),
 DEFINE_POLICY( REST_NOCSC,                          "Explorer",         "NoSyncAll"                        ),
 DEFINE_POLICY( REST_NOCONTROLPANEL,                 "Explorer",         "NoControlPanel"                   ),
 DEFINE_POLICY( REST_ENUMWORKGROUP,                  "Explorer",         "EnumWorkgroup"                    ),
-DEFINE_POLICY( REST_ARP_NOARP,                      strAddRemoveProgs,  "NoAddRemovePrograms"             ),
-DEFINE_POLICY( REST_ARP_NOREMOVEPAGE,               strAddRemoveProgs,  "NoRemovePage"                    ),
-DEFINE_POLICY( REST_ARP_NOADDPAGE,                  strAddRemoveProgs,  "NoAddPage"                       ),
-DEFINE_POLICY( REST_ARP_NOWINSETUPPAGE,             strAddRemoveProgs,  "NoWindowsSetupPage"              ),
+DEFINE_POLICY( REST_ARP_NOARP,                      "Uninstall",        "NoAddRemovePrograms"              ),
+DEFINE_POLICY( REST_ARP_NOREMOVEPAGE,               "Uninstall",        "NoRemovePage"                     ),
+DEFINE_POLICY( REST_ARP_NOADDPAGE,                  "Uninstall",        "NoAddPage"                        ),
+DEFINE_POLICY( REST_ARP_NOWINSETUPPAGE,             "Uninstall",        "NoWindowsSetupPage"               ),
 DEFINE_POLICY( REST_GREYMSIADS,                     "Explorer",         "GreyMSIAds"                       ),
 DEFINE_POLICY( REST_NOCHANGEMAPPEDDRIVELABEL,       "Explorer",         "NoChangeMappedDriveLabel"         ),
 DEFINE_POLICY( REST_NOCHANGEMAPPEDDRIVECOMMENT,     "Explorer",         "NoChangeMappedDriveComment"       ),
@@ -259,8 +259,8 @@ DEFINE_POLICY( REST_NOUPNPINSTALL,                  "Explorer",         "NoUPnPI
 // "NormalizeLinkNetPidls" only in version 6.0 from Windows XP SP3.
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-DEFINE_POLICY( REST_ARP_DONTGROUPPATCHES,           strAddRemoveProgs,  "DontGroupPatches"                ),
-DEFINE_POLICY( REST_ARP_NOCHOOSEPROGRAMSPAGE,       strAddRemoveProgs,  "NoChooseProgramsPage"            ),
+DEFINE_POLICY( REST_ARP_DONTGROUPPATCHES,           "Uninstall",        "DontGroupPatches"                 ),
+DEFINE_POLICY( REST_ARP_NOCHOOSEPROGRAMSPAGE,       "Uninstall",        "NoChooseProgramsPage"             ),
 #endif
 
 // "AllowCLSIDPROGIDMapping" in Windows XP SP3 and Windows Server 2003 SP2 only.
