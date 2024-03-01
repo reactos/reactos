@@ -253,11 +253,12 @@ ScmDeleteControlSet(
 
     DPRINT("ScmDeleteControSet(%lu)\n", dwControlSet);
 
+__debugbreak();
     /* Create the control set name */
     swprintf(szControlSetName, L"SYSTEM\\ControlSet%03lu", dwControlSet);
     DPRINT("Control set: %S\n", szControlSetName);
 
-    /* Open the system key */
+    /* Open the control set key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             szControlSetName,
                             0,
@@ -267,10 +268,22 @@ ScmDeleteControlSet(
         return dwError;
 
     /* Delete the control set */
-    dwError = RegDeleteTreeW(hControlSetKey, NULL);
+#if 0
+    dwError = RegDeleteTreeW(hControlSetKey, L"");
+#else
+    dwError = RegDeleteTreeW(hControlSetKey, NULL);   // Delete the values and subkeys.
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(hControlSetKey, L""); // And delete the key itself.
+#endif
 
-    /* Close the system key */
+    /* Close the control set key */
     RegCloseKey(hControlSetKey);
+
+#if 0
+    /* Finally delete the key */
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(HKEY_LOCAL_MACHINE, szControlSetName);
+#endif
 
     return dwError;
 }
@@ -286,6 +299,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
 
     ASSERT(!bBootAccepted);
 
+__debugbreak();
     /* Get the control set values */
     dwError = ScmGetControlSetValues(&dwCurrentControlSet,
                                      &dwDefaultControlSet,
@@ -358,6 +372,8 @@ ScmAcceptBoot(VOID)
     NTSTATUS Status;
 
     DPRINT("ScmAcceptBoot()\n");
+
+__debugbreak();
 
     if (bBootAccepted)
     {
