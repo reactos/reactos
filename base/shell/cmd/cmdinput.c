@@ -218,7 +218,6 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         curx = orgx;
                         cury = orgy;
                         //bContinue=TRUE;
-                        break;
                     }
                     break;
 
