@@ -257,8 +257,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                     }
                     break;
 
-                case _T('H'):
-                    /* ^H does the same as VK_BACK */
+                case _T('H'): /* ^H does the same as VK_BACK */
                     if (dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
                     {
                         bCharInput = FALSE;
