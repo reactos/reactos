@@ -1,0 +1,101 @@
+/*
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Test for LdrLoadDll
+ * COPYRIGHT:   Copyright 2017 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+#include "precomp.h"
+#include <ntstrsafe.h>
+
+/*
+
+NTSTATUS
+NTAPI
+LdrLoadDll(
+    IN PWSTR SearchPath OPTIONAL,
+    IN PULONG DllCharacteristics OPTIONAL,
+    IN PUNICODE_STRING DllName,
+    OUT PVOID *BaseAddress
+);
+
+*/
+
+START_TEST(LdrLoadDll)
+{
+    NTSTATUS Status;
+    UNICODE_STRING DllName;
+    PVOID BaseAddress, BaseAddress2;
+    WCHAR szWinDir[MAX_PATH], szSysDir[MAX_PATH], szPath[MAX_PATH];
+    WCHAR *pch;
+
+    RtlInitEmptyUnicodeString(&DllName, NULL, 0);
+    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+    GetSystemDirectoryW(szSysDir, _countof(szSysDir));
+
+    StartSeh() LdrLoadDll(NULL, NULL, &DllName, NULL);          EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() LdrLoadDll(NULL, NULL, &DllName, &BaseAddress);  EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() LdrLoadDll(L"", NULL, &DllName, NULL);           EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() LdrLoadDll(L"", NULL, &DllName, &BaseAddress);   EndSeh(STATUS_ACCESS_VIOLATION);
+
+    RtlInitUnicodeString(&DllName, L"advapi32.dll");
+    StartSeh()
+        Status = LdrLoadDll(NULL, NULL, &DllName, NULL);
+        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+
+    RtlInitUnicodeString(&DllName, L"advapi32.dll");
+    StartSeh()
+        BaseAddress = InvalidPointer;
+        Status = LdrLoadDll(NULL, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        ok(BaseAddress != NULL && BaseAddress != InvalidPointer, "BaseAddress = %p\n", BaseAddress);
+        if (NT_SUCCESS(Status))
+        {
+            BaseAddress2 = InvalidPointer;
+            Status = LdrLoadDll(NULL, NULL, &DllName, &BaseAddress2);
+            ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+            ok(BaseAddress2 == BaseAddress, "BaseAddress2 = %p, expected %p\n", BaseAddress2, BaseAddress);
+            LdrUnloadDll(BaseAddress);
+        }
+    EndSeh(STATUS_SUCCESS);
+
+    RtlInitUnicodeString(&DllName, L"advapi32.dll");
+    StartSeh()
+        Status = LdrLoadDll(L"\\SystemRoot\\System32", NULL, &DllName, NULL);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+
+    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+
+    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32", szSysDir);
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+
+    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
+
+    for (pch = szPath; *pch != UNICODE_NULL; ++pch)
+    {
+        if (*pch == L'\\')
+            *pch = L'/';
+    }
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+}
