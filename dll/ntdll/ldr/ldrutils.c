@@ -2448,11 +2448,21 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     UNICODE_STRING RawDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
+    SIZE_T ich, cch;
 
     /* Save the Raw DLL Name */
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
     RtlInitEmptyUnicodeString(&RawDllName, NameBuffer, sizeof(NameBuffer));
     RtlCopyUnicodeString(&RawDllName, DllName);
+
+    /* Convert backslashes to forward slashes */
+    p = RawDllName.Buffer;
+    cch = RawDllName.Length / sizeof(WCHAR) - 1;
+    for (ich = 0; ich < cch; ++ich)
+    {
+        if (*p == L'/')
+            *p = L'\\';
+    }
 
     /* Find the extension, if present */
     p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
