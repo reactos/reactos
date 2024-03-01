@@ -116,6 +116,19 @@
 #   S: Abandoned
 /ntoskrnl/cache/
 
+# Client/Server Runtime Subsystem
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/sdk/include/reactos/subsys/csr/    @HBelusca
+/subsystems/csr/                    @HBelusca
+
+# Clipboard Viewer
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   R: Mondgestein, Ricardo Hanke
+#   S: Maintained
+/base/applications/clipbrd/         @HBelusca @Mondgestein
+/base/applications/cmdutils/clip/   @HBelusca @Mondgestein
+
 # CMake Build Scripts
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
@@ -123,6 +136,52 @@
 #   S: Maintained
 /sdk/cmake/
 *.cmake
+
+# Command-line Utilities
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/applications/cmdutils/chcp/           @HBelusca
+/base/applications/cmdutils/doskey/         @HBelusca
+/base/applications/cmdutils/eventcreate/    @HBelusca
+/base/applications/cmdutils/help/           @HBelusca
+/base/applications/cmdutils/mode/           @HBelusca
+/base/applications/cmdutils/more/           @HBelusca
+/base/applications/cmdutils/timeout/        @HBelusca
+/sdk/lib/conutils/                          @HBelusca
+
+# Command-line Prompt Interpreter
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/shell/cmd/    @HBelusca
+
+# Console Terminal / Text-Mode
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/dll/cpl/console/                           @HBelusca
+/dll/win32/kernel32/client/console/         @HBelusca
+/dll/win32/kernel32/include/console.h       @HBelusca
+/drivers/base/condrv/                       @HBelusca
+/drivers/setup/blue/                        @HBelusca
+/modules/rostests/winetests/kernel32/console.c  @HBelusca
+/sdk/include/reactos/drivers/condrv/        @HBelusca
+/sdk/include/reactos/drivers/blue/          @HBelusca
+/sdk/include/reactos/subsys/win/conmsg.h    @HBelusca
+/sdk/include/reactos/subsys/win/console.h   @HBelusca
+/win32ss/user/winsrv/concfg                 @HBelusca
+/win32ss/user/winsrv/consrv                 @HBelusca
+
+# Event Log Subsystem
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   M: ekohl, Eric Kohl
+#   S: Maintained
+/base/services/eventlog/                @ekohl @HBelusca
+/dll/win32/advapi32/service/eventlog.c  @ekohl @HBelusca
+/sdk/lib/evtlib/                        @HBelusca
+
+# Event Log Viewer
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/applications/mscutils/eventvwr/   @HBelusca
 
 # File Patch API
 #   M: learn-more, learn_more, Mark Jansen
@@ -150,11 +209,11 @@
 /sdk/lib/drivers/ntoskrnl_vista/fsrtl.c     @HeisSpiter
 
 # Freeloader
-#   M:
+#   M: HBelusca, Hermès Bélusca-Maïto
 #   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
-/boot/freeldr/freeldr/  @tkreuzer @Extravert-ir
+/boot/freeldr/freeldr/  @HBelusca @tkreuzer @Extravert-ir
 
 # HAL / APIC
 #   M: tkreuzer, ThePhysicist, Timo Kreuzer
@@ -187,6 +246,12 @@
 #   S: Maintained
 /drivers/storage/mountmgr/ @HeisSpiter
 
+# MSConfig
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/applications/msconfig/        @HBelusca
+/base/applications/msconfig_new/    @HBelusca
+
 # Network Drivers
 #   M:
 #   R: ThFabba, Thomas Faber
@@ -215,10 +280,28 @@
 #   S: Maintained
 /dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
 
+# NT Virtual DOS Machine
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   R: reactos573, aandrejevic, Aleksandar Andrejevic
+#   S: Maintained
+/dll/win32/kernel32/client/vdm.c        @reactos573 @HBelusca
+/dll/win32/kernel32/include/vdm.h       @reactos573 @HBelusca
+/sdk/include/reactos/subsys/win/vdm.h   @reactos573 @HBelusca
+/ntoskrnl/vdm                           @reactos573 @HBelusca
+/sdk/include/reactos/libs/fast486/      @reactos573 @HBelusca
+/sdk/lib/fast486/                       @reactos573 @HBelusca
+/subsystems/mvdm/                       @reactos573 @HBelusca
+/subsystems/win/basesrv/vdm.*           @reactos573 @HBelusca
+
 # Printing
 #   M: ColinFinck, Colin Finck
 #   S: Maintained
 /win32ss/printing/ @ColinFinck
+
+# Program Manager
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/shell/progman/    @HBelusca
 
 # ReactOS API Tests
 #   M:
@@ -231,6 +314,16 @@
 #   M: ThFabba, Thomas Faber
 #   S: Maintained
 /modules/rostests/kmtests/  @ThFabba
+
+# ReactOS Setup
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   R: ekohl, Eric Kohl
+#   S: Maintained
+/base/setup/                        @HBelusca
+/dll/win32/setupapi/
+/dll/win32/syssetup/                @ekohl
+/drivers/setup/                     @HBelusca
+/sdk/include/reactos/libs/syssetup/ @ekohl
 
 # ROS internals tools
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
@@ -252,15 +345,25 @@
 /modules/rostests/kmtests/ntos_se/   @GeoB99
 /ntoskrnl/se/                        @GeoB99
 
+# Session Manager Subsystem
+#   M: HBelusca, Hermès Bélusca-Maïto
+#   S: Maintained
+/base/system/smss/              @HBelusca
+/sdk/include/reactos/subsys/sm/ @HBelusca
+/sdk/lib/smlib/                 @HBelusca
+
 # Shell
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
 #   R: yagoulas, Giannis Adamopoulos
+#   R: HBelusca, Hermès Bélusca-Maïto
 #   S: Maintained
 /base/shell/explorer/   @learn-more @yagoulas
 /base/shell/rshell/     @learn-more @yagoulas
 /dll/win32/browseui/    @learn-more @yagoulas
 /dll/win32/shell32/     @learn-more @yagoulas
+/dll/win32/shell32/CShellLink.*         @HBelusca
+/dll/win32/shell32/CUserNotification.*  @HBelusca
 
 # Shell Extensions
 #   M:
@@ -311,8 +414,10 @@
 
 # Win32 file functions
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
+#   R: HBelusca, Hermès Bélusca-Maïto
 #   S: Maintained
 /dll/win32/kernel32/client/file/    @HeisSpiter
+/dll/win32/kernel32/client/file/find.c  @HBelusca
 
 # Windows Network File Systems functions
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
