@@ -2,7 +2,6 @@
  * shpolicy.c - Data for shell/system policies.
  *
  * Copyright 1999 Ian Schmidt <ischmidt@cfl.rr.com>
- * Copyright 2022 Hermes Belusca-Maito
  * Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
