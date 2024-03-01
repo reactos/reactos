@@ -232,7 +232,6 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         ConOutPrintf (_T("%s"), str);
                         GetCursorXY (&curx, &cury);
                         //bContinue=TRUE;
-                        break;
                     }
 #endif /*FEATURE_HISTORY*/
                     break;
