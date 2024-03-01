@@ -60,6 +60,7 @@ DEFINE_GUID(GUID_Restrictions, 0xA48F1A32, 0xA340, 0x11D1, 0xBC, 0x6B, 0x00, 0xA
 static const POLICYDATA s_PolicyTable[] =
 {
 #include "PolicyData.h"
+    { 0, NULL, NULL }
 };
 
 #undef DEFINE_POLICY
