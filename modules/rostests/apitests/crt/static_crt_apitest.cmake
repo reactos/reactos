@@ -40,7 +40,7 @@ endif()
 
 add_executable(static_crt_apitest EXCLUDE_FROM_ALL testlist.c ${SOURCE_STATIC})
 target_compile_definitions(static_crt_apitest PRIVATE TEST_STATIC_CRT _CRTBLD wine_dbgstr_an=wine_dbgstr_an_ wine_dbgstr_wn=wine_dbgstr_wn_)
-target_link_libraries(static_crt_apitest crt wine ${PSEH_LIB})
+target_link_libraries(static_crt_apitest chkstk crt wine ${PSEH_LIB})
 set_module_type(static_crt_apitest win32cui)
 add_importlibs(static_crt_apitest kernel32 ntdll)
 add_rostests_file(TARGET static_crt_apitest)
