@@ -7,7 +7,6 @@
  */
 
 #include "precomp.h"
-#include <ntstrsafe.h>
 
 /*
 
@@ -66,7 +65,7 @@ START_TEST(LdrLoadDll)
         Status = LdrLoadDll(L"\\SystemRoot\\System32", NULL, &DllName, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
-    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
+    StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
 
     RtlInitUnicodeString(&DllName, szPath);
     StartSeh()
@@ -75,7 +74,7 @@ START_TEST(LdrLoadDll)
         if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 
-    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32", szSysDir);
+    StringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32", szSysDir);
 
     RtlInitUnicodeString(&DllName, szPath);
     StartSeh()
@@ -84,7 +83,7 @@ START_TEST(LdrLoadDll)
         if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 
-    RtlStringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
+    StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
 
     for (pch = szPath; *pch != UNICODE_NULL; ++pch)
     {
