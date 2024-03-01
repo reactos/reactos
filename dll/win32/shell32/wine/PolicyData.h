@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Defining shell policy data
+ * COPYRIGHT:   Copyright 2022 Herm?s B?lusca-Ma?to
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 DEFINE_POLICY( REST_NORUN,                          "Explorer",         "NoRun"                            ),
 DEFINE_POLICY( REST_NOCLOSE,                        "Explorer",         "NoClose"                          ),
 DEFINE_POLICY( REST_NOSAVESET,                      "Explorer",         "NoSaveSettings"                   ),
