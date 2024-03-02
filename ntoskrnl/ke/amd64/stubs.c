@@ -156,8 +156,14 @@ KiIdleLoop(VOID)
         {
             Prcb->IdleHalt = 1;
 
+            /* Lower IRQL to passive */
+            KeLowerIrql(PASSIVE_LEVEL);
+
             /* Continue staying idle. Note the HAL returns with interrupts on */
             Prcb->PowerState.IdleFunction(&Prcb->PowerState);
+
+            /* Raise IRQL back to DISPATCH_LEVEL */
+            KfRaiseIrql(DISPATCH_LEVEL);
 
             Prcb->IdleHalt = 0;
         }
