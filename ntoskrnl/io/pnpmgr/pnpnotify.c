@@ -263,6 +263,7 @@ PiNotifyTargetDeviceChange(
     PAGED_CODE();
 
     PVOID notificationStruct;
+    PTARGET_DEVICE_REMOVAL_NOTIFICATION notifStruct = NULL;
     // just in case our device is removed during the operation
     ObReferenceObject(DeviceObject);
 
@@ -271,7 +272,6 @@ PiNotifyTargetDeviceChange(
 
     if (!IsEqualGUID(Event, &GUID_PNP_CUSTOM_NOTIFICATION))
     {
-        PTARGET_DEVICE_REMOVAL_NOTIFICATION notifStruct;
         notifStruct = ExAllocatePoolWithTag(PagedPool, sizeof(*notifStruct), TAG_PNP_NOTIFY);
         if (!notifStruct)
         {
@@ -315,7 +315,8 @@ PiNotifyTargetDeviceChange(
     }
 
     KeReleaseGuardedMutex(&PiNotifyTargetDeviceLock);
-    ExFreePoolWithTag(notificationStruct, TAG_PNP_NOTIFY);
+    if (notifStruct)
+        ExFreePoolWithTag(notifStruct, TAG_PNP_NOTIFY);
     ObDereferenceObject(DeviceObject);
 }
 
