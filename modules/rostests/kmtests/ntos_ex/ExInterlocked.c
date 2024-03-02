@@ -155,8 +155,8 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Ret##Type, ExpectedRet, Print);                             \
-    ok_eq_print(Value##Type, ExpectedValue, Print);                         \
+    ok_eq_print(Ret##Type, ExpectedRet, #ExpectedRet, Print);               \
+    ok_eq_print(Value##Type, ExpectedValue, #ExpectedValue, Print);         \
 } while (0)
 
 #define CheckInterlockedCmpXchgI(Function, Type, Print, Val, Cmp, Xchg,     \
@@ -177,10 +177,10 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Ret##Type, ExpectedRet, Print);                             \
-    ok_eq_print(Value##Type, ExpectedValue, Print);                         \
-    ok_eq_print(Exchange##Type, Xchg, Print);                               \
-    ok_eq_print(Compare##Type, Cmp, Print);                                 \
+    ok_eq_print(Ret##Type, ExpectedRet, #ExpectedRet, Print);               \
+    ok_eq_print(Value##Type, ExpectedValue, #ExpectedValue, Print);         \
+    ok_eq_print(Exchange##Type, Xchg, #Xchg, Print);                        \
+    ok_eq_print(Compare##Type, Cmp, #Cmp, Print);                           \
 } while(0)
 
 #define CheckInterlockedOp(Function, Type, Print, Val, Op,                  \
@@ -198,8 +198,8 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Ret##Type, ExpectedRet, Print);                             \
-    ok_eq_print(Value##Type, ExpectedValue, Print);                         \
+    ok_eq_print(Ret##Type, ExpectedRet, #ExpectedRet, Print);               \
+    ok_eq_print(Value##Type, ExpectedValue, #ExpectedValue, Print);         \
 } while (0)
 
 #define CheckInterlockedOpNoArg(Function, Type, Print, Val,                 \
@@ -217,8 +217,8 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Ret##Type, ExpectedRet, Print);                             \
-    ok_eq_print(Value##Type, ExpectedValue, Print);                         \
+    ok_eq_print(Ret##Type, ExpectedRet, #ExpectedRet, Print);               \
+    ok_eq_print(Value##Type, ExpectedValue, #ExpectedValue, Print);         \
 } while (0)
 
 #define CheckInterlockedOpLarge(Function, Type, Print, Val, Op,             \
@@ -236,8 +236,8 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Ret##Type.QuadPart, ExpectedRet, Print);                    \
-    ok_eq_print(Value##Type.QuadPart, ExpectedValue, Print);                \
+    ok_eq_print(Ret##Type.QuadPart, ExpectedRet, #ExpectedRet, Print);      \
+    ok_eq_print(Value##Type.QuadPart, ExpectedValue, #ExpectedValue, Print);\
 } while (0)
 
 #define CheckInterlockedOpLargeNoRet(Function, Type, Print, Val, Op,        \
@@ -254,7 +254,7 @@ Large(
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
     ok_eq_hex(Status, STATUS_SUCCESS);                                      \
-    ok_eq_print(Value##Type.QuadPart, ExpectedValue, Print);                \
+    ok_eq_print(Value##Type.QuadPart, ExpectedValue, #ExpectedValue, Print);\
 } while (0)
 
 static

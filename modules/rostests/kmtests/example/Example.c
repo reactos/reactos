@@ -29,7 +29,7 @@ START_TEST(Example)
     ok_eq_bool(FALSE, TRUE);
     ok_bool_true(FALSE, "foo");
     ok_bool_false(TRUE, "bar");
-    ok_eq_print(1, 2, "%i");
+    ok_eq_print(1, 2, "2", "%i");
     ok_eq_str("Hello", "world");
     ok_eq_wstr(L"ABC", L"DEF");
 

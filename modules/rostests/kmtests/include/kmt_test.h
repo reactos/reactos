@@ -235,26 +235,26 @@ VOID KmtFreeGuarded(PVOID Pointer);
 #ifdef KMT_KERNEL_MODE
 #define ok_irql(irql)                       ok(KeGetCurrentIrql() == irql, "IRQL is %d, expected %d\n", KeGetCurrentIrql(), irql)
 #endif /* defined KMT_KERNEL_MODE */
-#define ok_eq_print(value, expected, spec)  ok((value) == (expected), #value " = " spec ", expected " spec "\n", value, expected)
-#define ok_eq_pointer(value, expected)      ok_eq_print(value, expected, "%p")
-#define ok_eq_int(value, expected)          ok_eq_print(value, expected, "%d")
-#define ok_eq_uint(value, expected)         ok_eq_print(value, expected, "%u")
-#define ok_eq_long(value, expected)         ok_eq_print(value, expected, "%ld")
-#define ok_eq_ulong(value, expected)        ok_eq_print(value, expected, "%lu")
-#define ok_eq_longlong(value, expected)     ok_eq_print(value, expected, "%I64d")
-#define ok_eq_ulonglong(value, expected)    ok_eq_print(value, expected, "%I64u")
-#define ok_eq_char(value, expected)         ok_eq_print(value, expected, "%c")
-#define ok_eq_wchar(value, expected)        ok_eq_print(value, expected, "%C")
+#define ok_eq_print(value, expected, expected_str, spec)  ok((value) == (expected), #value " = " spec ", expected " expected_str " (" spec ")\n", value, expected)
+#define ok_eq_pointer(value, expected)      ok_eq_print(value, expected, #expected, "%p")
+#define ok_eq_int(value, expected)          ok_eq_print(value, expected, #expected, "%d")
+#define ok_eq_uint(value, expected)         ok_eq_print(value, expected, #expected, "%u")
+#define ok_eq_long(value, expected)         ok_eq_print(value, expected, #expected, "%ld")
+#define ok_eq_ulong(value, expected)        ok_eq_print(value, expected, #expected, "%lu")
+#define ok_eq_longlong(value, expected)     ok_eq_print(value, expected, #expected, "%I64d")
+#define ok_eq_ulonglong(value, expected)    ok_eq_print(value, expected, #expected, "%I64u")
+#define ok_eq_char(value, expected)         ok_eq_print(value, expected, #expected, "%c")
+#define ok_eq_wchar(value, expected)        ok_eq_print(value, expected, #expected, "%C")
 #ifndef _WIN64
-#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), "%lu")
-#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%ld")
-#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%lu")
+#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), #expected, "%lu")
+#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), #expected, "%ld")
+#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), #expected, "%lu")
 #elif defined _WIN64
-#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), "%I64u")
-#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%I64d")
-#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%I64u")
+#define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), #expected, "%I64u")
+#define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), #expected, "%I64d")
+#define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), #expected, "%I64u")
 #endif /* defined _WIN64 */
-#define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
+#define ok_eq_hex(value, expected)          ok_eq_print(value, expected, #expected, "0x%08lx")
 #define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE\n")
 #define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE\n")
 #define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s\n",    \
@@ -262,7 +262,7 @@ VOID KmtFreeGuarded(PVOID Pointer);
                                                 (expected) ? "TRUE" : "FALSE")
 #define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
-#define ok_eq_tag(value, expected)          ok_eq_print(value, expected, "0x%08lx")
+#define ok_eq_tag(value, expected)          ok_eq_print(value, expected, #expected, "0x%08lx")
 
 #define ok_eq_hex64(value, expected)        ok_eq_print(value, expected, "%I64x")
 #define ok_eq_xmm(value, expected)          ok((value).Low == (expected).Low, #value " = %I64x'%08I64x, expected %I64x'%08I64x\n", (value).Low, (value).High, (expected).Low, (expected).High)
@@ -285,15 +285,21 @@ VOID KmtFreeGuarded(PVOID Pointer);
     _SEH2_TRY                                       \
     {
 
-#define KmtEndSeh(ExpectedStatus)                   \
+#define KmtEndSeh_(Line, ExpectedStatus)            \
     }                                               \
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)         \
     {                                               \
         ExceptionStatus = _SEH2_GetExceptionCode(); \
     }                                               \
     _SEH2_END;                                      \
-    ok_eq_hex(ExceptionStatus, (ExpectedStatus));   \
+    KmtOk((ExceptionStatus) == (ExpectedStatus),    \
+        __FILE__ ":" #Line ":",                     \
+        "ExceptionStatus = 0x%08lx, expected "      \
+        #ExpectedStatus " (0x%08lx)\n",             \
+        ExceptionStatus, ExpectedStatus);           \
 }
+
+#define KmtEndSeh(ExpectedStatus) KmtEndSeh_(__LINE__, ExpectedStatus)
 
 #define KmtGetSystemOrEmbeddedRoutineAddress(RoutineName)           \
     p##RoutineName = KmtGetSystemRoutineAddress(L ## #RoutineName); \
