@@ -464,9 +464,9 @@ IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ASSERT(notifyStruct->FileObject == NULL);
 
     /* Do not handle system PnP events */
-    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    if (IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_QUERY_REMOVE) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_CANCELLED) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_COMPLETE))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -515,9 +515,9 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ASSERT(notifyStruct->FileObject == NULL);
 
     /* Do not handle system PnP events */
-    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    if (IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_QUERY_REMOVE) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_CANCELLED) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_COMPLETE))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
