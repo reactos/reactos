@@ -21,15 +21,15 @@
 
 interface IAugmentedShellFolder : public IShellFolder
 {
-    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
-    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) = 0;
-    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) = 0;
-    STDMETHOD(EnumNameSpace)(ULONG, PULONG) = 0;
+    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) PURE;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) PURE;
+    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) PURE;
+    STDMETHOD(EnumNameSpace)(ULONG, PULONG) PURE;
 };
 
 interface IAugmentedShellFolder2 : public IAugmentedShellFolder
 {
-    STDMETHOD(UnWrapIDList)(LPCITEMIDLIST, LONG, IShellFolder **, LPITEMIDLIST *, LPITEMIDLIST *, LONG *) = 0;
+    STDMETHOD(UnWrapIDList)(LPCITEMIDLIST, LONG, IShellFolder **, LPITEMIDLIST *, LPITEMIDLIST *, LONG *) PURE;
 };
 
 /* No idea what QUERYNAMESPACEINFO struct contains, yet */
@@ -40,7 +40,7 @@ struct QUERYNAMESPACEINFO
 
 interface IAugmentedShellFolder3 : public IAugmentedShellFolder2
 {
-    STDMETHOD(QueryNameSpace2)(ULONG, QUERYNAMESPACEINFO *) = 0;
+    STDMETHOD(QueryNameSpace2)(ULONG, QUERYNAMESPACEINFO *) PURE;
 };
 
 class CEnumMergedFolder;
