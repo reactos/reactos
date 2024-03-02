@@ -128,7 +128,7 @@ public:
     STDMETHOD_(IStream *, v_GetViewStream)(LPCITEMIDLIST pidl, DWORD grfMode, LPCWSTR pwszName) override;
     STDMETHOD_(LRESULT, ForwardViewMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
     STDMETHOD(SetAcceleratorMenu)(HACCEL hacc) override;
-    STDMETHOD_(INT, _GetToolbarCount)() override;
+    STDMETHOD_(int, _GetToolbarCount)() override;
     STDMETHOD_(LPTOOLBARITEM, _GetToolbarItem)(int itb) override;
     STDMETHOD(_SaveToolbars)(IStream *pstm) override;
     STDMETHOD(_LoadToolbars)(IStream *pstm) override;
