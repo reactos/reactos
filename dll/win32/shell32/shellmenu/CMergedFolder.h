@@ -21,15 +21,15 @@
 
 interface IAugmentedShellFolder : public IShellFolder
 {
-    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST, LPGUID) = 0;
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG, LPGUID, IShellFolder **) = 0;
-    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG, PULONG) = 0;
+    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) = 0;
+    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) = 0;
+    STDMETHOD(EnumNameSpace)(ULONG, PULONG) = 0;
 };
 
 interface IAugmentedShellFolder2 : public IAugmentedShellFolder
 {
-    virtual HRESULT STDMETHODCALLTYPE UnWrapIDList(LPCITEMIDLIST, LONG, IShellFolder **, LPITEMIDLIST *, LPITEMIDLIST *, LONG *) = 0;
+    STDMETHOD(UnWrapIDList)(LPCITEMIDLIST, LONG, IShellFolder **, LPITEMIDLIST *, LPITEMIDLIST *, LONG *) = 0;
 };
 
 /* No idea what QUERYNAMESPACEINFO struct contains, yet */
@@ -40,7 +40,7 @@ struct QUERYNAMESPACEINFO
 
 interface IAugmentedShellFolder3 : public IAugmentedShellFolder2
 {
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace2(ULONG, QUERYNAMESPACEINFO *) = 0;
+    STDMETHOD(QueryNameSpace2)(ULONG, QUERYNAMESPACEINFO *) = 0;
 };
 
 class CEnumMergedFolder;
@@ -99,115 +99,113 @@ public:
     END_COM_MAP()
 
     // IShellFolder
-    virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(
+    STDMETHOD(ParseDisplayName)(
         HWND hwndOwner,
         LPBC pbcReserved,
         LPOLESTR lpszDisplayName,
         ULONG *pchEaten,
         LPITEMIDLIST *ppidl,
-        ULONG *pdwAttributes);
+        ULONG *pdwAttributes) override;
 
-    virtual HRESULT STDMETHODCALLTYPE EnumObjects(
+    STDMETHOD(EnumObjects)(
         HWND hwndOwner,
         SHCONTF grfFlags,
-        IEnumIDList **ppenumIDList);
+        IEnumIDList **ppenumIDList) override;
 
-    virtual HRESULT STDMETHODCALLTYPE BindToObject(
+    STDMETHOD(BindToObject)(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
-        void **ppvOut);
+        void **ppvOut) override;
 
-    virtual HRESULT STDMETHODCALLTYPE BindToStorage(
+    STDMETHOD(BindToStorage)(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
-        void **ppvObj);
+        void **ppvObj) override;
 
-    virtual HRESULT STDMETHODCALLTYPE CompareIDs(
+    STDMETHOD(CompareIDs)(
         LPARAM lParam,
         LPCITEMIDLIST pidl1,
-        LPCITEMIDLIST pidl2);
+        LPCITEMIDLIST pidl2) override;
 
-    virtual HRESULT STDMETHODCALLTYPE CreateViewObject(
+    STDMETHOD(CreateViewObject)(
         HWND hwndOwner,
         REFIID riid,
-        void **ppvOut);
+        void **ppvOut) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetAttributesOf(
+    STDMETHOD(GetAttributesOf)(
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
-        SFGAOF *rgfInOut);
+        SFGAOF *rgfInOut) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetUIObjectOf(
+    STDMETHOD(GetUIObjectOf)(
         HWND hwndOwner,
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid,
         UINT *prgfInOut,
-        void **ppvOut);
+        void **ppvOut) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDisplayNameOf(
+    STDMETHOD(GetDisplayNameOf)(
         LPCITEMIDLIST pidl,
         SHGDNF uFlags,
-        STRRET *lpName);
+        STRRET *lpName) override;
 
-    virtual HRESULT STDMETHODCALLTYPE SetNameOf(
+    STDMETHOD(SetNameOf)(
         HWND hwnd,
         LPCITEMIDLIST pidl,
         LPCOLESTR lpszName,
         SHGDNF uFlags,
-        LPITEMIDLIST *ppidlOut);
+        LPITEMIDLIST *ppidlOut) override;
 
     // IShellFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultSearchGUID(
-        GUID *lpguid);
+    STDMETHOD(GetDefaultSearchGUID)(
+        GUID *lpguid) override;
 
-    virtual HRESULT STDMETHODCALLTYPE EnumSearches(
-        IEnumExtraSearch **ppenum);
+    STDMETHOD(EnumSearches)(
+        IEnumExtraSearch **ppenum) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumn(
+    STDMETHOD(GetDefaultColumn)(
         DWORD dwReserved,
         ULONG *pSort,
-        ULONG *pDisplay);
+        ULONG *pDisplay) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
+    STDMETHOD(GetDefaultColumnState)(
         UINT iColumn,
-        SHCOLSTATEF *pcsFlags);
+        SHCOLSTATEF *pcsFlags) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsEx(
+    STDMETHOD(GetDetailsEx)(
         LPCITEMIDLIST pidl,
         const SHCOLUMNID *pscid,
-        VARIANT *pv);
+        VARIANT *pv) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsOf(
+    STDMETHOD(GetDetailsOf)(
         LPCITEMIDLIST pidl,
         UINT iColumn,
-        SHELLDETAILS *psd);
+        SHELLDETAILS *psd) override;
 
-    virtual HRESULT STDMETHODCALLTYPE MapColumnToSCID(
+    STDMETHOD(MapColumnToSCID)(
         UINT iColumn,
-        SHCOLUMNID *pscid);
+        SHCOLUMNID *pscid) override;
 
     // IPersist
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *lpClassId);
+    STDMETHOD(GetClassID)(CLSID *lpClassId) override;
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override;
 
     // IPersistFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(PIDLIST_ABSOLUTE * pidl);
+    STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override;
 
     /*** IItemNameLimits methods ***/
 
-    STDMETHODIMP
-    GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+    STDMETHOD(GetMaxLength)(LPCWSTR pszName, int *piMaxNameLen) override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP
-    GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+    STDMETHOD(GetValidCharacters)(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars) override
     {
         if (ppwszValidChars)
         {
@@ -221,12 +219,12 @@ public:
     }
 
     // IAugmentedShellFolder2
-    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown);
-    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST pcidl, LPGUID lpGuid);
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG dwUnknown, LPGUID lpGuid, IShellFolder ** ppsf);
-    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG dwUnknown, PULONG lpUnknown);
-    virtual HRESULT STDMETHODCALLTYPE UnWrapIDList(LPCITEMIDLIST pcidl, LONG lUnknown, IShellFolder ** ppsf, LPITEMIDLIST * ppidl1, LPITEMIDLIST *ppidl2, LONG * lpUnknown);
+    STDMETHOD(AddNameSpace)(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown) override;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST pcidl, LPGUID lpGuid) override;
+    STDMETHOD(QueryNameSpace)(ULONG dwUnknown, LPGUID lpGuid, IShellFolder ** ppsf) override;
+    STDMETHOD(EnumNameSpace)(ULONG dwUnknown, PULONG lpUnknown) override;
+    STDMETHOD(UnWrapIDList)(LPCITEMIDLIST pcidl, LONG lUnknown, IShellFolder ** ppsf, LPITEMIDLIST * ppidl1, LPITEMIDLIST *ppidl2, LONG * lpUnknown) override;
 
     // IAugmentedShellFolder3
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace2(ULONG, QUERYNAMESPACEINFO *);
+    STDMETHOD(QueryNameSpace2)(ULONG, QUERYNAMESPACEINFO *) override;
 };

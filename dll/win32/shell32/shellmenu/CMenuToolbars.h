@@ -102,13 +102,13 @@ public:
     HRESULT BeforeCancelPopup();
 
 protected:
-    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
+    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) = 0;
 
-    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) = 0;
-    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData) = 0;
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) = 0;
-    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) = 0;
-    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt) = 0;
+    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) = 0;
+    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) = 0;
+    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) = 0;
+    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) = 0;
+    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) = 0;
 
     HRESULT AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData, BOOL last);
     HRESULT AddSeparator(BOOL last);
@@ -152,16 +152,16 @@ public:
     HRESULT SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags);
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
-    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
+    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) override;
 
 protected:
-    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
+    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) override;
 
-    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax);
-    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated);
-    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt);
+    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
+    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) override;
+    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
+    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) override;
+    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
 };
 
 class CMenuSFToolbar :
@@ -179,14 +179,14 @@ public:
     HRESULT SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags);
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
-    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
+    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) override;
 
 protected:
-    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
+    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) override;
 
-    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax);
-    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated);
-    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt);
+    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
+    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) override;
+    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
+    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) override;
+    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
 };

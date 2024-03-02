@@ -137,8 +137,8 @@ public:
     HRESULT Initialize(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInstx);
 
     // IClassFactory
-    virtual HRESULT WINAPI CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject);
-    virtual HRESULT WINAPI LockServer(BOOL fLock);
+    STDMETHOD(CreateInstance)(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject) override;
+    STDMETHOD(LockServer)(BOOL fLock) override;
 
 BEGIN_COM_MAP(IDefClFImpl)
     COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)

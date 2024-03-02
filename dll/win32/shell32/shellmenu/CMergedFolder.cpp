@@ -70,14 +70,14 @@ public:
     HRESULT FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo);
     HRESULT FindByName(HWND hwndOwner, LPCWSTR strParsingName, LocalPidlInfo * pinfo);
 
-    virtual HRESULT STDMETHODCALLTYPE Next(
+    STDMETHOD(Next)(
         ULONG celt,
         LPITEMIDLIST *rgelt,
-        ULONG *pceltFetched);
+        ULONG *pceltFetched) override;
 
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
-    virtual HRESULT STDMETHODCALLTYPE Reset();
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+    STDMETHOD(Skip)(ULONG celt) override;
+    STDMETHOD(Reset)() override;
+    STDMETHOD(Clone)(IEnumIDList **ppenum) override;
 };
 
 CEnumMergedFolder::CEnumMergedFolder() :

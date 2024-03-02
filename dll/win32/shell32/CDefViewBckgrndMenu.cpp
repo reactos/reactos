@@ -31,19 +31,19 @@ class CDefViewBckgrndMenu :
         HRESULT Initialize(IShellFolder* psf);
 
         // IContextMenu
-        virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+        STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+        STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpcmi) override;
+        STDMETHOD(GetCommandString)(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;
 
         // IContextMenu2
-        virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
         // IContextMenu3
-        virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+        STDMETHOD(HandleMenuMsg2)(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) override;
 
         // IObjectWithSite
-        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+        STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         BEGIN_COM_MAP(CDefViewBckgrndMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)

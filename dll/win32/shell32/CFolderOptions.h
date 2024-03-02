@@ -43,15 +43,15 @@ class CFolderOptions :
         ~CFolderOptions();
 
         // IShellPropSheetExt
-        virtual HRESULT STDMETHODCALLTYPE AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-        virtual HRESULT STDMETHODCALLTYPE ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
+        STDMETHOD(AddPages)(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
+        STDMETHOD(ReplacePage)(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam) override;
 
         // IShellExtInit
-        virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+        STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID) override;
 
         // IObjectWithSite
-        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+        STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         DECLARE_REGISTRY_RESOURCEID(IDR_FOLDEROPTIONS)
         DECLARE_NOT_AGGREGATABLE(CFolderOptions)
