@@ -37,7 +37,7 @@ public:
 	virtual HRESULT WINAPI InitializeFromBitmap(LPSHDRAGIMAGE pshdi, IDataObject *pDataObject);
 	virtual HRESULT WINAPI InitializeFromWindow(HWND hwnd, POINT *ppt, IDataObject *pDataObject);
 
-	STDMETHOD(DragEnter )(HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) override;
+	STDMETHOD(DragEnter)(HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) override;
 	STDMETHOD(DragLeave)() override;
 	STDMETHOD(DragOver)(POINT *ppt, DWORD dwEffect) override;
 	STDMETHOD(Drop)(IDataObject* pDataObject, POINT* ppt, DWORD dwEffect) override;
