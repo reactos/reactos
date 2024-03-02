@@ -51,18 +51,18 @@ public:
     HRESULT WINAPI FinalConstruct();
 
     // *** IShellService methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
+    STDMETHOD(SetOwner)(IUnknown *) override;
 
     // *** IContextMenu methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
-    virtual HRESULT STDMETHODCALLTYPE GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
+    STDMETHOD(QueryContextMenu)(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici) override;
+    STDMETHOD(GetCommandString)(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax) override;
 
     // *** IContextMenu2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
     // *** IContextMenu3 methods ***
-    virtual HRESULT STDMETHODCALLTYPE HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+    STDMETHOD(HandleMenuMsg2)(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_BANDSITEMENU)
     DECLARE_NOT_AGGREGATABLE(CBandSiteMenu)

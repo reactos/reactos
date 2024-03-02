@@ -222,12 +222,13 @@ class CSHEnumClassesOfCategories :
     public:
         CSHEnumClassesOfCategories();
         virtual ~CSHEnumClassesOfCategories();
-        virtual HRESULT STDMETHODCALLTYPE Initialize(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired);
+        STDMETHOD(Initialize)(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired);
+
         // *** IEnumGUID methods ***
-        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumCLSID **ppvOut);
-        virtual HRESULT STDMETHODCALLTYPE Next(ULONG cElt, CLSID *pElts, ULONG *pFetched);
-        virtual HRESULT STDMETHODCALLTYPE Reset();
-        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG nbElts);
+        STDMETHOD(Clone)(IEnumCLSID **ppvOut) override;
+        STDMETHOD(Next)(ULONG cElt, CLSID *pElts, ULONG *pFetched) override;
+        STDMETHOD(Reset)() override;
+        STDMETHOD(Skip)(ULONG nbElts) override;
 
         BEGIN_COM_MAP(CSHEnumClassesOfCategories)
             COM_INTERFACE_ENTRY_IID(IID_IEnumGUID, IEnumGUID)

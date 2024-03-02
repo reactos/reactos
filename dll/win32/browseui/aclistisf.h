@@ -62,32 +62,30 @@ public:
                      CComHeapPtr<WCHAR>& pszExpanded);
 
     // *** IEnumString methods ***
-    STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
-    STDMETHODIMP Skip(ULONG celt) override;
-    STDMETHODIMP Reset() override;
-    STDMETHODIMP Clone(IEnumString **ppenum) override;
+    STDMETHOD(Next)(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
+    STDMETHOD(Skip)(ULONG celt) override;
+    STDMETHOD(Reset)() override;
+    STDMETHOD(Clone)(IEnumString **ppenum) override;
 
     // *** IACList methods ***
-    STDMETHODIMP Expand(LPCOLESTR pszExpand) override;
+    STDMETHOD(Expand)(LPCOLESTR pszExpand) override;
 
     // *** IACList2 methods ***
-    STDMETHODIMP SetOptions(DWORD dwFlag) override;
-    STDMETHODIMP GetOptions(DWORD* pdwFlag) override;
-
-    // FIXME: These virtual keywords below should be removed.
+    STDMETHOD(SetOptions)(DWORD dwFlag) override;
+    STDMETHOD(GetOptions)(DWORD* pdwFlag) override;
 
     // *** IShellService methods ***
-    virtual STDMETHODIMP SetOwner(IUnknown *punkOwner) override;
+    STDMETHOD(SetOwner)(IUnknown *punkOwner) override;
 
     // *** IPersist methods ***
-    virtual STDMETHODIMP GetClassID(CLSID *pClassID) override;
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistFolder methods ***
-    virtual STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override;
 
     // *** ICurrentWorkingDirectory methods ***
-    STDMETHODIMP GetDirectory(LPWSTR pwzPath, DWORD cchSize) override;
-    STDMETHODIMP SetDirectory(LPCWSTR pwzPath) override;
+    STDMETHOD(GetDirectory)(LPWSTR pwzPath, DWORD cchSize) override;
+    STDMETHOD(SetDirectory)(LPCWSTR pwzPath) override;
 
 public:
     DECLARE_REGISTRY_RESOURCEID(IDR_ACLISTISF)
