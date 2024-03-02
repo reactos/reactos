@@ -252,21 +252,21 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "Numele de &utilizator:", 1413, 9, 61, 92, 8
+    LTEXT "Nu&me utilizator:", 1413, 9, 61, 92, 8
     EDITTEXT 1104, 102, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1112, 9, 80, 92, 8
+    LTEXT "&Parolă:", 1112, 9, 80, 92, 8
     EDITTEXT 1103, 102, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Domeniul:", 1110, 9, 99, 91, 8
+    LTEXT "&Domeniu:", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "Salvar&e a acestor nume și parole pentru acești utilizatori:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Salvare nume utilizator şi parolă pentru următorii utilizatori:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Numai eu", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Oricine utilizează computerul", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
-    DEFPUSHBUTTON "&Apelează", 1590, 8, 173, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "&Formare număr", 1590, 8, 173, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 1591, 71, 173, 60, 14
-    PUSHBUTTON "P&roprietăți", 1107, 133, 173, 60, 14
-    PUSHBUTTON "&Manual…", 1592, 195, 173, 60, 14
+    PUSHBUTTON "P&roprietăţi", 1107, 133, 173, 60, 14
+    PUSHBUTTON "Aj&utor", 1592, 195, 173, 60, 14
 END
 
 118 DIALOGEX 0, 0, 265, 220
@@ -275,24 +275,24 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "Numele de &utilizator:", 1413, 10, 61, 92, 8
+    LTEXT "Nu&me utilizator:", 1413, 10, 61, 92, 8
     EDITTEXT 1104, 104, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1112, 10, 80, 92, 8
+    LTEXT "P&arolă:", 1112, 10, 80, 92, 8
     EDITTEXT 1103, 104, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Domeniul:", 1110, 10, 100, 92, 8
+    LTEXT "&Domeniu:", 1110, 10, 100, 92, 8
     EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
-    AUTOCHECKBOX "Salvar&e a acestor nume și parole pentru acești utilizatori:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Salvare nume utilizator şi parolă pentru următorii utilizatori:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Numai eu", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "O&ricine utilizează computerul", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
-    LTEXT "Apelea&ză:", 1412, 10, 177, 90, 8
+    LTEXT "F&ormare număr:", 1412, 10, 177, 90, 8
     COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
-    DEFPUSHBUTTON "&Apelare", 1590, 10, 199, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "&Formare număr", 1590, 10, 199, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 1591, 72, 199, 60, 14
-    PUSHBUTTON "P&roprietăți", 1107, 134, 199, 60, 14
-    PUSHBUTTON "&Manual…", 1592, 196, 199, 60, 14
+    PUSHBUTTON "&Proprietăţi", 1107, 134, 199, 60, 14
+    PUSHBUTTON "Aj&utor", 1592, 196, 199, 60, 14
 END
 
 119 DIALOGEX 0, 0, 265, 200
@@ -301,37 +301,37 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "Numele de &utilizator:", 1413, 10, 62, 91, 8
+    LTEXT "Nu&me utilizator:", 1413, 10, 62, 91, 8
     EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1112, 10, 81, 92, 8
+    LTEXT "P&arolă:", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "Salvar&e a acestor nume și parole pentru acești utilizatori:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Salvare nume utilizator şi parolă pentru următorii utilizatori:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Numai eu", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "O&ricine utilizează computerul", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
-    LTEXT "Ap&elează:", 1412, 13, 157, 88, 8
+    LTEXT "F&ormare număr:", 1412, 13, 157, 88, 8
     COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
-    DEFPUSHBUTTON "&Apelare", 1590, 10, 180, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "&Formare număr", 1590, 10, 180, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 1591, 72, 180, 60, 14
-    PUSHBUTTON "P&roprietăți", 1107, 134, 180, 60, 14
-    PUSHBUTTON "&Manual…", 1592, 197, 180, 60, 14
+    PUSHBUTTON "&Proprietăţi", 1107, 134, 180, 60, 14
+    PUSHBUTTON "Aj&utor", 1592, 197, 180, 60, 14
 END
 
 121 DIALOGEX 6, 18, 230, 131
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configurare ISDN"
+CAPTION "Configuraţie ISDN"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tip&ul de linie:", 1155, 9, 9, 65, 8
+    LTEXT "Tip de &linie:", 1155, 9, 9, 65, 8
     COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "N&egociază tipul liniei", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
-    AUTOCHECKBOX "Utili&zare protocol proprietar vechi", 1149, 17, 48, 112, 10, BS_TOP | BS_MULTILINE
-    LTEXT "&Canale de utilizare:", 1154, 16, 65, 100, 8, NOT WS_GROUP
+    AUTOCHECKBOX "&Negociere tip de linie", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    GROUPBOX "     ", 1152, 8, 48, 214, 51, WS_GROUP
+    AUTOCHECKBOX "&Utilizarea vechiului protocol brevetat", 1149, 17, 48, 112, 10, BS_TOP | BS_MULTILINE
+    LTEXT "&Canale de utilizat:", 1154, 16, 65, 100, 8, NOT WS_GROUP
     EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Activeare a compresiei hardware", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Activare comprimare hardware", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
     PUSHBUTTON "OK", 1, 99, 109, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 163, 109, 60, 14
 END
@@ -341,9 +341,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Configurare ISDN"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tip&ul de linie:", 1155, 9, 11, 55, 8
+    LTEXT "&Tip de linie:", 1155, 9, 11, 55, 8
     COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "N&egociere tip de linie", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Negociere tip de linie", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     PUSHBUTTON "OK", 1, 90, 49, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 154, 49, 60, 14
 END
@@ -356,8 +356,8 @@ BEGIN
     LTEXT "Adresă I&P:", 1163, 7, 253, 68, 8
     CONTROL "", 1160, "RASIPADDRESS", WS_TABSTOP, 76, 250, 117, 14
     DEFPUSHBUTTON "", 1162, 197, 252, 16, 13, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "OK", 1, 219, 252, 60, 14, WS_GROUP
-    PUSHBUTTON "A&nuleză", 2, 283, 252, 60, 14
+    PUSHBUTTON "T&erminat", 1, 219, 252, 60, 14, WS_GROUP
+    PUSHBUTTON "Revocare", 2, 283, 252, 60, 14
 END
 
 124 DIALOGEX 6, 17, 350, 266
@@ -366,42 +366,42 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT 1161, 5, 4, 340, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
     DEFPUSHBUTTON "", 1162, 7, 247, 50, 14, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "OK", 1, 222, 247, 60, 14, WS_GROUP
+    PUSHBUTTON "T&erminat", 1, 222, 247, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 286, 247, 60, 14
 END
 
 125 DIALOGEX 12, 16, 261, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configurare modem"
+CAPTION "Configuraţie modem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 15102, 1238, 7, 7, 20, 20
     LTEXT "Modem", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
     EDITTEXT 1235, 40, 7, 214, 16, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
-    LTEXT "Viteză ma&ximă (bps):", 1243, 7, 36, 110, 8
+    LTEXT "Viteză &maximă (bps):", 1243, 7, 36, 110, 8
     COMBOBOX 1239, 119, 34, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Protocolul modemului", 1244, 7, 52, 111, 8
+    LTEXT "&Protocol modem", 1244, 7, 52, 111, 8
     COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    GROUPBOX "Funcționalități implementate fizic", 1237, 6, 70, 248, 61, WS_GROUP
-    AUTOCHECKBOX "Activează controlul fi&zic al transmisiei", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Activează controlul &erorilor de modem", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Activează co&mpresia oferită de modem", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Afișează fe&reastra terminalului", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Activează &difuzorul modemului", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    GROUPBOX "Caracteristici hardware", 1237, 6, 70, 248, 61, WS_GROUP
+    AUTOCHECKBOX "Acti&vare control hardware de flux", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Activare control erori la modem", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Activare comprimare la m&odem", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&fişare fereastră terminal", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Activare difuzor mo&dem", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 129, 171, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 194, 171, 60, 14
 END
 
 126 DIALOGEX 0, 0, 270, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Alegere tip de componentă de rețea"
+CAPTION "Selectare tip componentă de reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Selectați tipul componentei de rețea pe care o doriți instalată:", -1, 8, 7, 258, 8
+    LTEXT "Faceţi clic pe tipul componentei de reţea de instalat:", -1, 8, 7, 258, 8
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 8, 20, 188, 58
     GROUPBOX "", -1, 8, 81, 188, 30
     LTEXT "", 1250, 12, 90, 177, 17
-    DEFPUSHBUTTON "&Adăugare…", 1252, 205, 20, 60, 14
+    DEFPUSHBUTTON "&Adăugare...", 1252, 205, 20, 60, 14
     PUSHBUTTON "Revocare", 2, 205, 38, 60, 14
 END
 
@@ -411,20 +411,20 @@ CAPTION "Conexiuni NetWare sau compatibile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
-    LTEXT "Aveți conexiuni către o rețea compatibilă NetWare. Aceste conexiuni vor fi închise când va fi activată conexiunea PPP IPX.", 1279, 42, 7, 215, 37
-    LTEXT "Înainte de apelare, pentru a evita pierderile de date, fie închideți toate fișierele ce utilizează aceste conexiuni, fie debifați IPX din setările protocolului de rețea pentru această înregistrare.", 1280, 42, 46, 215, 38, NOT WS_GROUP
-    AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    LTEXT "Aveţi conexiuni la o reţea compatibilă NetWare. Când se stabileşte conexiunea PPP IPX aceste conexiuni se închid.", 1279, 42, 7, 215, 37
+    LTEXT "Înaintea apelării, pentru a evita pierderi de date, închideţi toate fişierele care utilizează aceste conexiuni sau deselectaţi IPX din setările de Protocol reţea ale acestei intrări.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    AUTOCHECKBOX "Nu se mai a&fişează acest mesaj în viitor", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 134, 112, 60, 14
 END
 
 128 DIALOGEX 7, 22, 236, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Apelare manuală"
+CAPTION "Formarea manuală a numărului"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze). După ce a fost inițiat apelul, apăsați pe OK. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
-    LTEXT "Numărul de telefon:", 1282, 8, 46, 91, 8
+    LTEXT "Ridicaţi receptorul şi formaţi numărul (sau cereţi operatorului să îl formeze).  După ce apelarea s-a terminat, faceţi clic pe OK. Ascultaţi la receptor până devine silenţios, apoi suspendaţi.", 1281, 8, 8, 219, 32
+    LTEXT "Număr de telefon:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 168, 70, 60, 14
@@ -432,19 +432,19 @@ END
 
 129 DIALOGEX 6, 20, 260, 85
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Rezultatele conexiunii protocolului de rețea"
+CAPTION "Rezultat conexiune protocol de reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1328, 7, 7, 21, 20, WS_GROUP
     LTEXT "", 1329, 38, 7, 216, 24, NOT WS_GROUP
-    AUTOCHECKBOX "N&u mai doresc rezultate pentru protocoalele eșuate", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "&Acceptă", 1, 129, 64, 60, 14
-    PUSHBUTTON "Î&nchide", 2, 193, 64, 60, 14
+    AUTOCHECKBOX "&Nu se mai solicită protocoalele care nu au reuşit", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "&Acceptare", 1, 129, 64, 60, 14
+    PUSHBUTTON "S&uspendare", 2, 193, 64, 60, 14
 END
 
 133 DIALOGEX 6, 18, 231, 211
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Setări de autentificare X.25"
+CAPTION "Setări X.25 de Log on"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Alegeți furnizorul de Internet de tip X.25 apoi tastați adresa X.121 a serverului:", 1408, 7, 4, 220, 27
