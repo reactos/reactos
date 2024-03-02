@@ -102,15 +102,14 @@ class CRecyclerDropTarget :
         }
 
     public:
-
         CRecyclerDropTarget()
         {
             fAcceptFmt = FALSE;
             cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
         }
 
-        STDMETHOD(DragEnter)(IDataObject *pDataObject,
-                             DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
+        STDMETHODIMP
+        DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("Recycle bin drag over (%p)\n", this);
             /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
@@ -120,7 +119,8 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
+        STDMETHODIMP
+        DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("(%p)\n", this);
 
@@ -132,7 +132,8 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        STDMETHOD(DragLeave)() override
+        STDMETHODIMP
+        DragLeave() override
         {
             TRACE("(%p)\n", this);
 
@@ -141,8 +142,8 @@ class CRecyclerDropTarget :
             return S_OK;
         }
 
-        STDMETHOD(Drop)(IDataObject *pDataObject,
-                        DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override
+        STDMETHODIMP
+        Drop(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override
         {
             TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
 
