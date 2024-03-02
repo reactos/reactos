@@ -2792,7 +2792,6 @@ DWORD WINAPI SHRestrictionLookup(
 	    return *polArr;
 	  }
 	}
-#endif
 	/* we don't know this policy, return 0 */
 	TRACE("unknown policy: (%08x)\n", policy);
 	return 0;
