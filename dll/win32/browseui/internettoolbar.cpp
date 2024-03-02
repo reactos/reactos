@@ -29,10 +29,10 @@ toolbar, and address band for an explorer window
 
 interface IAugmentedShellFolder : public IShellFolder
 {
-    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
-    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) = 0;
-    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) = 0;
-    STDMETHOD(EnumNameSpace)(ULONG, PULONG) = 0;
+    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) PURE;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) PURE;
+    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) PURE;
+    STDMETHOD(EnumNameSpace)(ULONG, PULONG) PURE;
 };
 
 #endif
