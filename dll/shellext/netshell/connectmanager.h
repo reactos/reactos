@@ -18,13 +18,13 @@ class CNetConnectionManager:
         HRESULT EnumerateINetConnections();
 
         // INetConnectionManager
-        virtual HRESULT WINAPI EnumConnections(NETCONMGR_ENUM_FLAGS Flags, IEnumNetConnection **ppEnum);
+        STDMETHOD(EnumConnections)(NETCONMGR_ENUM_FLAGS Flags, IEnumNetConnection **ppEnum) override;
 
         // IEnumNetConnection
-        virtual HRESULT WINAPI Next(ULONG celt, INetConnection **rgelt, ULONG *pceltFetched);
-        virtual HRESULT WINAPI Skip(ULONG celt);
-        virtual HRESULT WINAPI Reset();
-        virtual HRESULT WINAPI Clone(IEnumNetConnection **ppenum);
+        STDMETHOD(Next)(ULONG celt, INetConnection **rgelt, ULONG *pceltFetched) override;
+        STDMETHOD(Skip)(ULONG celt) override;
+        STDMETHOD(Reset)() override;
+        STDMETHOD(Clone)(IEnumNetConnection **ppenum) override;
 
     private:
         PINetConnectionItem m_pHead;
@@ -54,13 +54,13 @@ class CNetConnection:
         HRESULT WINAPI Initialize(PINetConnectionItem pItem);
 
         // INetConnection
-        HRESULT WINAPI Connect();
-        HRESULT WINAPI Disconnect();
-        HRESULT WINAPI Delete();
-        HRESULT WINAPI Duplicate(LPCWSTR pszwDuplicateName, INetConnection **ppCon);
-        HRESULT WINAPI GetProperties(NETCON_PROPERTIES **ppProps);
-        HRESULT WINAPI GetUiObjectClassId(CLSID *pclsid);
-        HRESULT WINAPI Rename(LPCWSTR pszwDuplicateName);
+        STDMETHOD(Connect)() override;
+        STDMETHOD(Disconnect)() override;
+        STDMETHOD(Delete)() override;
+        STDMETHOD(Duplicate)(LPCWSTR pszwDuplicateName, INetConnection **ppCon) override;
+        STDMETHOD(GetProperties)(NETCON_PROPERTIES **ppProps) override;
+        STDMETHOD(GetUiObjectClassId)(CLSID *pclsid) override;
+        STDMETHOD(Rename)(LPCWSTR pszwDuplicateName) override;
 
         DECLARE_NOT_AGGREGATABLE(CNetConnection)
         DECLARE_PROTECT_FINAL_CONSTRUCT()
