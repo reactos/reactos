@@ -100,7 +100,7 @@ public:
     STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override;
 
     // Internal
-    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath);
+    HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath);
 
 protected:
     STDMETHOD(CompareIDs)(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second) override;
