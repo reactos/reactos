@@ -243,7 +243,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Next)(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (pceltFetched)
             *pceltFetched = 0;
@@ -263,7 +263,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Skip)(ULONG celt) override
+    STDMETHODIMP Skip(ULONG celt) override
     {
         while (celt > 0)
         {
@@ -277,12 +277,12 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Reset)() override
+    STDMETHODIMP Reset() override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHOD(Clone)(IEnumIDList **ppenum) override
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }
@@ -495,7 +495,7 @@ public:
         return NextValue(ppidl);
     }
 
-    STDMETHOD(Next)(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (pceltFetched)
             *pceltFetched = 0;
@@ -515,7 +515,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Skip)(ULONG celt) override
+    STDMETHODIMP Skip(ULONG celt) override
     {
         while (celt > 0)
         {
@@ -529,12 +529,12 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Reset)() override
+    STDMETHODIMP Reset() override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHOD(Clone)(IEnumIDList **ppenum) override
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }
@@ -672,7 +672,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Next)(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (pceltFetched)
             *pceltFetched = 0;
@@ -692,7 +692,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Skip)(ULONG celt) override
+    STDMETHODIMP Skip(ULONG celt) override
     {
         while (celt > 0)
         {
@@ -706,12 +706,12 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(Reset)() override
+    STDMETHODIMP Reset() override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHOD(Clone)(IEnumIDList **ppenum) override
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }

@@ -20,7 +20,7 @@ public:
     CFolderViewCB() : m_View(NULL) {}
     virtual ~CFolderViewCB() {}
 
-    STDMETHOD(MessageSFVCB)(UINT uMsg, WPARAM wParam, LPARAM lParam) override
+    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam) override
     {
         switch (uMsg)
         {
@@ -42,7 +42,7 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHOD(Initialize)(IShellView* psv)
+    STDMETHODIMP Initialize(IShellView* psv)
     {
         m_View = psv;
         return S_OK;
@@ -81,7 +81,7 @@ public:
     }
 
     // IShellFolder
-    STDMETHOD(ParseDisplayName)(
+    STDMETHODIMP ParseDisplayName(
         HWND hwndOwner,
         LPBC pbcReserved,
         LPOLESTR lpszDisplayName,
@@ -165,7 +165,7 @@ public:
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList) PURE;
 
-    STDMETHOD(BindToObject)(
+    STDMETHODIMP BindToObject(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
@@ -222,7 +222,7 @@ protected:
         LPBC pbcReserved,
         IShellFolder** ppsfChild) PURE;
 
-    STDMETHOD(ResolveSymLink)(
+    STDMETHODIMP ResolveSymLink(
         const TItemId * info,
         LPITEMIDLIST * fullPidl)
     {
@@ -230,8 +230,7 @@ protected:
     }
 
 public:
-
-    STDMETHOD(BindToStorage)(
+    STDMETHODIMP BindToStorage(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
@@ -241,7 +240,7 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHOD(CompareIDs)(
+    STDMETHODIMP CompareIDs(
         LPARAM lParam,
         LPCITEMIDLIST pidl1,
         LPCITEMIDLIST pidl2) override
@@ -288,7 +287,7 @@ public:
     }
 
 protected:
-    STDMETHOD(CompareName)(
+    virtual STDMETHODIMP CompareName(
         LPARAM lParam,
         const TItemId * first,
         const TItemId * second)
@@ -331,7 +330,7 @@ protected:
     }
 
 public:
-    STDMETHOD(CreateViewObject)(
+    STDMETHODIMP CreateViewObject(
         HWND hwndOwner,
         REFIID riid,
         void **ppvOut) override
@@ -368,7 +367,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(GetAttributesOf)(
+    STDMETHODIMP GetAttributesOf(
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
         SFGAOF *rgfInOut) override
@@ -398,7 +397,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(GetUIObjectOf)(
+    STDMETHODIMP GetUIObjectOf(
         HWND hwndOwner,
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
@@ -499,7 +498,7 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHOD(GetDisplayNameOf)(
+    STDMETHODIMP GetDisplayNameOf(
         LPCITEMIDLIST pidl,
         SHGDNF uFlags,
         STRRET *lpName) override
@@ -566,7 +565,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(SetNameOf)(
+    STDMETHODIMP SetNameOf(
         HWND hwnd,
         LPCITEMIDLIST pidl,
         LPCOLESTR lpszName,
@@ -578,21 +577,19 @@ public:
     }
 
     // IShellFolder2
-    STDMETHOD(GetDefaultSearchGUID)(
-        GUID *lpguid) override
+    STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    STDMETHOD(EnumSearches)(
-        IEnumExtraSearch **ppenum) override
+    STDMETHODIMP EnumSearches(IEnumExtraSearch **ppenum) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    STDMETHOD(GetDefaultColumn)(
+    STDMETHODIMP GetDefaultColumn(
         DWORD dwReserved,
         ULONG *pSort,
         ULONG *pDisplay) override
@@ -623,7 +620,7 @@ public:
         SHCOLUMNID *pscid) PURE;
 
     // IPersist
-    STDMETHOD(GetClassID)(CLSID *lpClassId) override
+    STDMETHODIMP GetClassID(CLSID *lpClassId) override
     {
         if (!lpClassId)
             return E_POINTER;
@@ -633,7 +630,7 @@ public:
     }
 
     // IPersistFolder
-    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl) override
     {
         m_shellPidl = ILClone(pidl);
 
@@ -643,7 +640,7 @@ public:
     }
 
     // IPersistFolder2
-    STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override
+    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE * pidl) override
     {
         if (pidl)
             *pidl = ILClone(m_shellPidl);
