@@ -23,19 +23,19 @@ public:
 
     HRESULT Initialize(LPCWSTR ntPath, PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
 
-    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(
+    STDMETHOD(GetIconLocation)(
         UINT uFlags,
         LPWSTR szIconFile,
         UINT cchMax,
         INT *piIndex,
-        UINT *pwFlags);
+        UINT *pwFlags) override;
 
-    virtual HRESULT STDMETHODCALLTYPE Extract(
+    STDMETHOD(Extract)(
         LPCWSTR pszFile,
         UINT nIconIndex,
         HICON *phiconLarge,
         HICON *phiconSmall,
-        UINT nIconSize);
+        UINT nIconSize) override;
 
     DECLARE_NOT_AGGREGATABLE(CNtObjectFolderExtractIcon)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -58,55 +58,55 @@ public:
 
     // IShellFolder
 
-    virtual HRESULT STDMETHODCALLTYPE EnumObjects(
+    STDMETHOD(EnumObjects)(
         HWND hwndOwner,
         SHCONTF grfFlags,
-        IEnumIDList **ppenumIDList);
+        IEnumIDList **ppenumIDList) override;
 
 protected:
-    virtual HRESULT STDMETHODCALLTYPE InternalBindToObject(
+    STDMETHOD(InternalBindToObject)(
         PWSTR path,
         const NtPidlEntry * info,
         LPITEMIDLIST first,
         LPCITEMIDLIST rest,
         LPITEMIDLIST fullPidl,
         LPBC pbcReserved,
-        IShellFolder** ppsfChild);
+        IShellFolder** ppsfChild) override;
 
-    virtual HRESULT STDMETHODCALLTYPE ResolveSymLink(
+    STDMETHOD(ResolveSymLink)(
         const NtPidlEntry * info,
-        LPITEMIDLIST * fullPidl);
+        LPITEMIDLIST * fullPidl) override;
 
 public:
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
+    STDMETHOD(GetDefaultColumnState)(
         UINT iColumn,
-        SHCOLSTATEF *pcsFlags);
+        SHCOLSTATEF *pcsFlags) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsEx(
+    STDMETHOD(GetDetailsEx)(
         LPCITEMIDLIST pidl,
         const SHCOLUMNID *pscid,
-        VARIANT *pv);
+        VARIANT *pv) override;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsOf(
+    STDMETHOD(GetDetailsOf)(
         LPCITEMIDLIST pidl,
         UINT iColumn,
-        SHELLDETAILS *psd);
+        SHELLDETAILS *psd) override;
 
-    virtual HRESULT STDMETHODCALLTYPE MapColumnToSCID(
+    STDMETHOD(MapColumnToSCID)(
         UINT iColumn,
-        SHCOLUMNID *pscid);
+        SHCOLUMNID *pscid) override;
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override;
 
     // Internal
-    HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath);
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath);
 
 protected:
-    virtual HRESULT STDMETHODCALLTYPE CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second);
-    virtual ULONG STDMETHODCALLTYPE ConvertAttributes(const NtPidlEntry * entry, PULONG inMask);
-    virtual BOOL STDMETHODCALLTYPE IsFolder(const NtPidlEntry * info);
-    virtual BOOL STDMETHODCALLTYPE IsSymLink(const NtPidlEntry * info);
+    STDMETHOD(CompareIDs)(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second) override;
+    STDMETHOD_(ULONG, ConvertAttributes)(const NtPidlEntry * entry, PULONG inMask) override;
+    STDMETHOD_(BOOL, IsFolder)(const NtPidlEntry * info) override;
+    STDMETHOD_(BOOL, IsSymLink)(const NtPidlEntry * info) override;
 
     virtual HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry);
 

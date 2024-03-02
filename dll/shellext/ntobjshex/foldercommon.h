@@ -20,7 +20,7 @@ public:
     CFolderViewCB() : m_View(NULL) {}
     virtual ~CFolderViewCB() {}
 
-    virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+    STDMETHOD(MessageSFVCB)(UINT uMsg, WPARAM wParam, LPARAM lParam) override
     {
         switch (uMsg)
         {
@@ -42,7 +42,7 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Initialize(IShellView* psv)
+    STDMETHOD(Initialize)(IShellView* psv)
     {
         m_View = psv;
         return S_OK;
@@ -81,13 +81,13 @@ public:
     }
 
     // IShellFolder
-    virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(
+    STDMETHOD(ParseDisplayName)(
         HWND hwndOwner,
         LPBC pbcReserved,
         LPOLESTR lpszDisplayName,
         ULONG *pchEaten,
         LPITEMIDLIST *ppidl,
-        ULONG *pdwAttributes)
+        ULONG *pdwAttributes) override
     {
         if (!ppidl)
             return E_POINTER;
@@ -160,16 +160,16 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE EnumObjects(
+    STDMETHOD(EnumObjects)(
         HWND hwndOwner,
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList) PURE;
 
-    virtual HRESULT STDMETHODCALLTYPE BindToObject(
+    STDMETHOD(BindToObject)(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
-        void **ppvOut)
+        void **ppvOut) override
     {
         const TItemId * info;
 
@@ -213,7 +213,7 @@ public:
     }
 
 protected:
-    virtual HRESULT STDMETHODCALLTYPE InternalBindToObject(
+    STDMETHOD(InternalBindToObject)(
         PWSTR path,
         const TItemId * info,
         LPITEMIDLIST first,
@@ -222,7 +222,7 @@ protected:
         LPBC pbcReserved,
         IShellFolder** ppsfChild) PURE;
 
-    virtual HRESULT STDMETHODCALLTYPE ResolveSymLink(
+    STDMETHOD(ResolveSymLink)(
         const TItemId * info,
         LPITEMIDLIST * fullPidl)
     {
@@ -231,20 +231,20 @@ protected:
 
 public:
 
-    virtual HRESULT STDMETHODCALLTYPE BindToStorage(
+    STDMETHOD(BindToStorage)(
         LPCITEMIDLIST pidl,
         LPBC pbcReserved,
         REFIID riid,
-        void **ppvObj)
+        void **ppvObj) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE CompareIDs(
+    STDMETHOD(CompareIDs)(
         LPARAM lParam,
         LPCITEMIDLIST pidl1,
-        LPCITEMIDLIST pidl2)
+        LPCITEMIDLIST pidl2) override
     {
         HRESULT hr;
 
@@ -288,7 +288,7 @@ public:
     }
 
 protected:
-    virtual HRESULT STDMETHODCALLTYPE CompareName(
+    STDMETHOD(CompareName)(
         LPARAM lParam,
         const TItemId * first,
         const TItemId * second)
@@ -331,10 +331,10 @@ protected:
     }
 
 public:
-    virtual HRESULT STDMETHODCALLTYPE CreateViewObject(
+    STDMETHOD(CreateViewObject)(
         HWND hwndOwner,
         REFIID riid,
-        void **ppvOut)
+        void **ppvOut) override
     {
         if (!IsEqualIID(riid, IID_IShellView))
             return E_NOINTERFACE;
@@ -368,10 +368,10 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetAttributesOf(
+    STDMETHOD(GetAttributesOf)(
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
-        SFGAOF *rgfInOut)
+        SFGAOF *rgfInOut) override
     {
         const TItemId * info;
 
@@ -398,13 +398,13 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetUIObjectOf(
+    STDMETHOD(GetUIObjectOf)(
         HWND hwndOwner,
         UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid,
         UINT *prgfInOut,
-        void **ppvOut)
+        void **ppvOut) override
     {
         DWORD res;
         TRACE("GetUIObjectOf\n");
@@ -499,10 +499,10 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetDisplayNameOf(
+    STDMETHOD(GetDisplayNameOf)(
         LPCITEMIDLIST pidl,
         SHGDNF uFlags,
-        STRRET *lpName)
+        STRRET *lpName) override
     {
         const TItemId * info;
 
@@ -566,36 +566,36 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE SetNameOf(
+    STDMETHOD(SetNameOf)(
         HWND hwnd,
         LPCITEMIDLIST pidl,
         LPCOLESTR lpszName,
         SHGDNF uFlags,
-        LPITEMIDLIST *ppidlOut)
+        LPITEMIDLIST *ppidlOut) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
     // IShellFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultSearchGUID(
-        GUID *lpguid)
+    STDMETHOD(GetDefaultSearchGUID)(
+        GUID *lpguid) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE EnumSearches(
-        IEnumExtraSearch **ppenum)
+    STDMETHOD(EnumSearches)(
+        IEnumExtraSearch **ppenum) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumn(
+    STDMETHOD(GetDefaultColumn)(
         DWORD dwReserved,
         ULONG *pSort,
-        ULONG *pDisplay)
+        ULONG *pDisplay) override
     {
         if (pSort)
             *pSort = 0;
@@ -604,26 +604,26 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
+    STDMETHOD(GetDefaultColumnState)(
         UINT iColumn,
         SHCOLSTATEF *pcsFlags) PURE;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsEx(
+    STDMETHOD(GetDetailsEx)(
         LPCITEMIDLIST pidl,
         const SHCOLUMNID *pscid,
         VARIANT *pv) PURE;
 
-    virtual HRESULT STDMETHODCALLTYPE GetDetailsOf(
+    STDMETHOD(GetDetailsOf)(
         LPCITEMIDLIST pidl,
         UINT iColumn,
         SHELLDETAILS *psd) PURE;
 
-    virtual HRESULT STDMETHODCALLTYPE MapColumnToSCID(
+    STDMETHOD(MapColumnToSCID)(
         UINT iColumn,
         SHCOLUMNID *pscid) PURE;
 
     // IPersist
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *lpClassId)
+    STDMETHOD(GetClassID)(CLSID *lpClassId) override
     {
         if (!lpClassId)
             return E_POINTER;
@@ -633,7 +633,7 @@ public:
     }
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl)
+    STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override
     {
         m_shellPidl = ILClone(pidl);
 
@@ -643,7 +643,7 @@ public:
     }
 
     // IPersistFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(PIDLIST_ABSOLUTE * pidl)
+    STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override
     {
         if (pidl)
             *pidl = ILClone(m_shellPidl);
@@ -654,16 +654,16 @@ public:
 
     // Internal
 protected:
-    virtual HRESULT STDMETHODCALLTYPE CompareIDs(
+    STDMETHOD(CompareIDs)(
         LPARAM lParam,
         const TItemId * first,
         const TItemId * second) PURE;
 
-    virtual ULONG STDMETHODCALLTYPE ConvertAttributes(
+    STDMETHOD_(ULONG, ConvertAttributes)(
         const TItemId * entry,
         PULONG inMask) PURE;
 
-    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl)
+    STDMETHOD_(BOOL, IsFolder)(LPCITEMIDLIST pcidl)
     {
         const TItemId * info;
 
@@ -674,9 +674,9 @@ protected:
         return IsFolder(info);
     }
 
-    virtual BOOL STDMETHODCALLTYPE IsFolder(const TItemId * info) PURE;
+    STDMETHOD_(BOOL, IsFolder)(const TItemId * info) PURE;
 
-    virtual BOOL STDMETHODCALLTYPE IsSymLink(LPCITEMIDLIST pcidl)
+    STDMETHOD_(BOOL, IsSymLink)(LPCITEMIDLIST pcidl)
     {
         const TItemId * info;
 
@@ -687,7 +687,7 @@ protected:
         return IsSymLink(info);
     }
 
-    virtual BOOL STDMETHODCALLTYPE IsSymLink(const TItemId * info)
+    STDMETHOD_(BOOL, IsSymLink)(const TItemId * info)
     {
         return FALSE;
     }
