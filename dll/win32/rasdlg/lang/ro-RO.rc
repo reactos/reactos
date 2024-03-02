@@ -463,54 +463,54 @@ END
 
 146 DIALOGEX 6, 18, 230, 210
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Autoapelare"
+CAPTION "Formare automată a numărului"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Funcția de autoapelare va demara conectarea în cazul în care veți încerca accesarea de informații din rețea.", -1, 7, 4, 219, 32
-    LTEXT "&Activare apelare automată în funcție de locație:", 1006, 8, 42, 213, 8
+    LTEXT "Dacă vă deconectaţi de la o reţea, formarea automată încearcă să facă conectarea la o reţea de fiecare dată când încercaţi să accesaţi informaţii la distanţă.", -1, 7, 4, 219, 32
+    LTEXT "&Activare formare automată a numărului după amplasare:", 1006, 8, 42, 213, 8
     CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
-    AUTOCHECKBOX "Solicită &confirmarea autoapelării de fiecare dată", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Dezactivează autoapelarea cât timp sunt autentificat", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Întotdeauna se cere confirmare înaintea apelării automate", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se &dezactivează formarea automată a numărului după Log on", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
 END
 
 147 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Apelare"
+CAPTION "Se formează numărul"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste preferințe sunt aplicate pentru „Autentificare utilizând rețeaua comutată” la autentificarea Ctrl-Alt-Del. Ca administrator, veți avea acces la această pagină.", 1007, 7, 4, 221, 40, NOT WS_GROUP
-    LTEXT "Numărul de &reapelări încercate:", 1005, 7, 55, 154, 8
+    LTEXT "Aceste preferinţe se aplică la 'Log on utilizând Lucru în reţea pe linie comutată', când conectarea se face prin Ctrl-Alt-Del. Ca administrator, aveţi acces la această foaie.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "&Număr încercări de reapelare:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
-    LTEXT "Numărul de s&ecunde între apeluri:", 1009, 7, 73, 156, 8, NOT WS_GROUP
+    LTEXT "Nr. &secunde între încercări de reapelare:", 1009, 7, 73, 156, 8, NOT WS_GROUP
     EDITTEXT 1003, 164, 70, 60, 14, ES_AUTOHSCROLL
-    LTEXT "&Perioada inactivă menținută (în secunde):", 1008, 7, 91, 154, 8, NOT WS_GROUP
+    LTEXT "Secun&de de inactivitate înaintea suspendării:", 1008, 7, 91, 154, 8, NOT WS_GROUP
     EDITTEXT 1002, 164, 88, 60, 14, ES_AUTOHSCROLL
 END
 
 148 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Retroapelare"
+CAPTION "Apelare inversă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Unele servere vă pot oferi un retroapel în scopul sporirii securității sau pentru a vă reduce din cheltuieli. Specificați dacă doriți retroapelare.\nRetroapelarea nu este admisă în cazul conexiunilor la rețelele virtuale private (VPN).", 1043, 8, 4, 219, 43
-    AUTORADIOBUTTON "&Omite retroapelarea", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Cere oferta serverului în timpul apelării", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
-    AUTORADIOBUTTON "Oferă pentru &retroapelare aceste numere:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Când sunaţi la un server, poate exista oferta de apelare inversă, pentru a reduce factura telefonică. Precizaţi dacă solicitaţi apelare inversă. (Apelarea inversă nu este acceptată pentru conexiuni la reţele private virtuale (VPN).)", 1043, 8, 4, 219, 43
+    AUTORADIOBUTTON "&Fără apelare inversă", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Interogare în timpul apelării când serverul o propune", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "\xCEntotdeauna apelare in&versă la numerele de mai jos:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
     CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
-    PUSHBUTTON "E&ditare…", 1039, 96, 190, 60, 14
-    PUSHBUTTON "&Elimină", 1038, 159, 190, 60, 14
+    PUSHBUTTON "E&ditare...", 1039, 96, 190, 60, 14
+    PUSHBUTTON "Şt&ergere", 1038, 159, 190, 60, 14
 END
 
 149 DIALOGEX 6, 18, 317, 142
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Este necesară stabilirea datelor de autentificare pe care serverul de redirecționare le va folosi pentru conectarea la această interfață. În consecință, din informațiile oferite aici va fi creat un nou cont de utilizator în serverul de redirecționare.", 1094, 8, 5, 307, 35
-    LTEXT "Numele de &utilizator:", 1078, 8, 47, 124, 8, NOT WS_GROUP
+    LTEXT "Este necesar să stabiliţi acreditările pentru apeluri dinspre exterior, pe care le vor utiliza distribuitoarele la distanţă când se conectează la interfaţă. Cu informaţiile pe care le introduceţi aici se creează un cont utilizator pentru acest distribuitor.", 1094, 8, 5, 307, 35
+    LTEXT "Nume &utilizator:", 1078, 8, 47, 124, 8, NOT WS_GROUP
     EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "&Parola:", 1077, 8, 68, 124, 8, NOT WS_GROUP
+    LTEXT "&Parolă:", 1077, 8, 68, 124, 8, NOT WS_GROUP
     EDITTEXT 1073, 135, 66, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmarea parolei:", 1075, 8, 90, 124, 8, NOT WS_GROUP
+    LTEXT "&Confirmare parolă:", 1075, 8, 90, 124, 8, NOT WS_GROUP
     EDITTEXT 1071, 135, 87, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -518,14 +518,14 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Este necesară stabilirea datelor de autentificare pe care această interfață le va folosi pentru conectarea la serverul de redirecționare. Aceste date trebuie să corespundă cu datele de autentificare configurate în serverul de redirecționare.", 1094, 8, 5, 308, 33
-    LTEXT "Numele de &utilizator:", 1096, 8, 43, 130, 8, NOT WS_GROUP
+    LTEXT "Este necesar să stabiliţi acreditările pentru apeluri dinspre interior, pe care le va utiliza interfaţa când se conectează la distribuitorul la distanţă. Aceste acreditări trebuie să concorde cu acreditările pentru apeluri dinspre exterior configurate pe distribuitorul la distanţă.", 1094, 8, 5, 308, 33
+    LTEXT "Nume &utilizator:", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
-    LTEXT "&Domeniul:", 1093, 8, 63, 130, 8, NOT WS_GROUP
+    LTEXT "&Domeniu:", 1093, 8, 63, 130, 8, NOT WS_GROUP
     EDITTEXT 1089, 140, 60, 175, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1095, 8, 81, 130, 8, NOT WS_GROUP
+    LTEXT "&Parolă:", 1095, 8, 81, 130, 8, NOT WS_GROUP
     EDITTEXT 1090, 140, 78, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmarea parolei:", 1092, 8, 99, 130, 8, NOT WS_GROUP
+    LTEXT "&Confirmare parolă:", 1092, 8, 99, 130, 8, NOT WS_GROUP
     EDITTEXT 1088, 140, 96, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -533,54 +533,54 @@ END
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tastați numele pe care îl dați acestei conexiuni:", -1, 8, 4, 190, 8
+    LTEXT "Tastaţi numele dorit pentru conexiune:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Apăsați Sfârșit pentru a o salva în Conexiuni de rețea.", -1, 8, 38, 193, 8
-    LTEXT "Puteți edita această conexiune mai târziu, alegând Proprietăți din meniul Fișier.", -1, 8, 58, 193, 16
+    LTEXT "Faceţi clic pe Terminare pentru a o salva în folderul Conexiuni la reţea.", -1, 8, 38, 193, 8
+    LTEXT "Pentru a edita mai târziu conexiunea, selectaţi-o, faceţi clic pe meniul Fişier, apoi faceţi clic pe Proprietăţi.", -1, 8, 58, 193, 16
 END
 
 155 DIALOGEX 0, 0, 231, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Conectează utilizând:", 1124, 7, 5, 219, 8
+    LTEXT "Conec&tare utilizând:", 1124, 7, 5, 219, 8
     CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 198, 44, WS_EX_CLIENTEDGE
-    PUSHBUTTON "S&us", 1132, 210, 18, 16, 14, BS_ICON
-    PUSHBUTTON "J&os", 1131, 210, 36, 16, 14, BS_ICON
-    AUTOCHECKBOX "&Apelează din toate dispozitivele", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Configurare…", 1130, 144, 66, 60, 14
-    GROUPBOX "Mostră", 1125, 8, 84, 215, 100, WS_GROUP
-    LTEXT "Codul &regiunii:", 1133, 17, 102, 52, 8
+    PUSHBUTTON "În &sus", 1132, 210, 18, 16, 14, BS_ICON
+    PUSHBUTTON "În j&os", 1131, 210, 36, 16, 14, BS_ICON
+    AUTOCHECKBOX "Toate &dispozitivele apelează aceleaşi numere", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Co&nfigurare...", 1130, 144, 66, 60, 14
+    GROUPBOX "Tip eşantion", 1125, 8, 84, 215, 100, WS_GROUP
+    LTEXT "Cod &zonal:", 1133, 17, 102, 52, 8
     COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Numă&rul de telefon:", 1135, 71, 102, 139, 8
+    LTEXT "Nu&măr de telefon:", 1135, 71, 102, 139, 8
     EDITTEXT 1123, 73, 112, 79, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alternati&ve…", 1129, 154, 112, 60, 14
-    LTEXT "Codul țării/&regiunii:", 1134, 17, 132, 197, 8
+    PUSHBUTTON "&Alternative", 1129, 154, 112, 60, 14
+    LTEXT "&Cod ţară/regiune:", 1134, 17, 132, 197, 8
     COMBOBOX 1126, 17, 143, 193, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Utili&zează reguli de apel", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "R&eguli de apel…", 1136, 151, 161, 60, 14
-    AUTOCHECKBOX "Afișează pe &durata conectării o pictogramă în zona de notificare", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "S&e utilizează reguli de apelare", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Reguli apelare", 1136, 151, 161, 60, 14
+    AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
 END
 
 156 DIALOGEX 0, 0, 231, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "&Configurare…", 1130, 164, 38, 60, 14
-    GROUPBOX "Destinație", 1125, 8, 55, 217, 100, WS_GROUP
-    LTEXT "C&odul regiunii:", 1133, 17, 72, 48, 8
+    PUSHBUTTON "C&onfigurare...", 1130, 164, 38, 60, 14
+    GROUPBOX "Text model", 1125, 8, 55, 217, 100, WS_GROUP
+    LTEXT "Cod &zonal:", 1133, 17, 72, 48, 8
     COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Nu&măr telefon:", 1135, 71, 72, 146, 8
+    LTEXT "&Număr de telefon:", 1135, 71, 72, 146, 8
     EDITTEXT 1123, 71, 83, 81, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Alternative", 1129, 155, 83, 63, 14
-    LTEXT "Co&dul țării/regiunii:", 1134, 17, 103, 193, 8
+    LTEXT "&Cod ţară/regiune:", 1134, 17, 103, 193, 8
     COMBOBOX 1126, 17, 114, 201, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Utilizează reguli de apel", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Reguli de apel", 1136, 157, 132, 60, 14
-    AUTOCHECKBOX "Afișea&ză pictogramă în zona de notificare pe durata conectării", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Con&ectează utilizând:", 1124, 8, 5, 217, 8
+    AUTOCHECKBOX "Se &utilizează reguli de apelare", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Reguli apelare", 1136, 157, 132, 60, 14
+    AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
+    LTEXT "Conectare utilizând:", 1124, 8, 5, 217, 8
     CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 217, 15
 END
 
@@ -589,13 +589,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Afișează numerele de telefon înainte de apelare", 1142, 8, 10, 224, 10, WS_GROUP
-    AUTOCHECKBOX "Afișează &setările de localizare înainte de apelare", 1139, 8, 27, 224, 10
-    AUTOCHECKBOX "&Permite editarea informațiilor de localizare la autentificare", 1140, 21, 43, 212, 10
-    AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 59, 224, 10
-    AUTOCHECKBOX "Asc&unde la apelare", 1137, 8, 76, 224, 10
-    AUTOCHECKBOX "Pe&rmite la autentificare editarea numerelor din agendă", 1141, 8, 94, 224, 10
-    AUTOCHECKBOX "Utilizează e&xpertul de creare a noilor numere în agendă", 1144, 22, 111, 210, 10
+    AUTOCHECKBOX "E&xaminare numere de telefon înaintea apelării", 1142, 8, 10, 224, 10, WS_GROUP
+    AUTOCHECKBOX "&Afişare setare amplasare înaintea apelării", 1139, 8, 27, 224, 10
+    AUTOCHECKBOX "&Se permit editări ale amplasării în timpul operaţiei de Log in", 1140, 21, 43, 212, 10
+    AUTOCHECKBOX "Afişare progres &conexiune la apelare", 1143, 8, 59, 224, 10
+    AUTOCHECKBOX "Înc&hidere la formare număr", 1137, 8, 76, 224, 10
+    AUTOCHECKBOX "Se per&mit editări ale agendei telefonice în timpul operaţiei de Log in", 1141, 8, 94, 224, 10
+    AUTOCHECKBOX "&Utilizare expert pentru crearea de noi intrări în agenda telefonică", 1144, 22, 111, 210, 10
 END
 
 158 DIALOGEX 6, 18, 235, 160
@@ -603,23 +603,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Afișează numerele de telefon înainte de apelare", 1142, 8, 10, 223, 10, WS_GROUP
-    AUTOCHECKBOX "Afișează &setările de localizare înainte de apelare", 1139, 8, 27, 206, 10
-    AUTOCHECKBOX "La apelare, &pornește monitorizarea rețelei de linie comutată", 1138, 8, 44, 226, 10
-    AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 61, 224, 10
-    AUTOCHECKBOX "Asc&unde la apelare", 1137, 8, 79, 220, 10
-    AUTOCHECKBOX "Utili&zează expertul de creare a noilor numere în agendă", 1144, 8, 97, 220, 10
-    AUTOCHECKBOX "Solicită &confirmare pentru autoapelări", 1136, 8, 114, 220, 10
+    AUTOCHECKBOX "E&xaminare numere de telefon înaintea apelării", 1142, 8, 10, 223, 10, WS_GROUP
+    AUTOCHECKBOX "&Afişare setare amplasare înaintea apelării", 1139, 8, 27, 206, 10
+    AUTOCHECKBOX "Pornire &monitor pentru lucru în reţea pe linie telefonică, înaintea apelării", 1138, 8, 44, 226, 10
+    AUTOCHECKBOX "Afişare progres &conexiune la apelare", 1143, 8, 61, 224, 10
+    AUTOCHECKBOX "Înc&hidere la formare număr", 1137, 8, 79, 220, 10
+    AUTOCHECKBOX "&Utilizare expert pentru crearea de noi intrări în agenda telefonică", 1144, 8, 97, 220, 10
+    AUTOCHECKBOX "Î&ntotdeauna confirmare înainte de apelarea automată", 1136, 8, 114, 220, 10
 END
 
 160 DIALOGEX 6, 18, 320, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți un nume pentru această interfață de apelare la cerere. Vă sugerăm numirea acestei interfețe după numele rețelei sau serverului la care este realizată conectarea.", 1158, 7, 5, 309, 29
-    LTEXT "N&umele interfeței:", 1159, 17, 41, 285, 8, NOT WS_GROUP
+    LTEXT "Selectaţi un nume pentru interfaţa de apelare la cerere. O practică obişnuită este să se numească interfeţele după reţeaua sau distribuitorul la care se conectează.", 1158, 7, 5, 309, 29
+    LTEXT "Nume &interfaţă:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Cunosc totul despre interfețele de apel la cerere și prefer editarea directă a proprietăților", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "Se ştie &totul despre interfeţe de apelare la cerere şi se doreşte în continuare editarea directă a proprietăţilor", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 162 DIALOGEX 0, 0, 230, 215
@@ -627,45 +627,45 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Opțiuni de securitate", 1580, 8, 3, 215, 139
-    AUTORADIOBUTTON "O&bișnuite (setări recomandate)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Avansate (setări particularizate)", 1541, 14, 102, 198, 8, BS_NOTIFY
-    LTEXT "&Validează identitatea mea astfel:", 1537, 26, 29, 187, 8, NOT WS_GROUP
+    GROUPBOX "Opţiuni de securitate", 1580, 8, 3, 215, 139
+    AUTORADIOBUTTON "&Tipic (setări recomandate)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "&Complex (setări particularizate)", 1541, 14, 102, 198, 8, BS_NOTIFY
+    LTEXT "&Validare identitate după cum urmează:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Utilizează automat datele de autentificare din ReactOS (și domeniul dacă e cazul)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Solicită c&riptarea datelor\n(deconectează dacă nu este posibil)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Utilizarea acestor setări cere cunoștințe ale protocoalelor de securitate.", 1539, 15, 114, 134, 20
-    PUSHBUTTON "&Setări…", 1180, 151, 115, 60, 14
-    GROUPBOX "Autentificare interactivă și automatizată", 1177, 8, 146, 215, 62, WS_GROUP
-    AUTOCHECKBOX "Afișea&ză fereastra terminal", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "E&xecută script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în Windows (şi domeniu, dacă există)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se s&olicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
+    LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 15, 114, 134, 20
+    PUSHBUTTON "&Setări...", 1180, 151, 115, 60, 14
+    GROUPBOX "Log on şi script interactive", 1177, 8, 146, 215, 62, WS_GROUP
+    AUTOCHECKBOX "A&fişare fereastră terminal", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "E&xecutare script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
     COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Editare…", 1182, 87, 187, 60, 14
-    PUSHBUTTON "Spe&cificare…", 1181, 151, 187, 60, 14
+    PUSHBUTTON "&Editare...", 1182, 87, 187, 60, 14
+    PUSHBUTTON "&Răsfoire...", 1181, 151, 187, 60, 14
 END
 
 163 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sunt conectate mai multe dispozitive de linie comutată.", -1, 6, 3, 307, 13
-    LTEXT "&Alegeți dispozitivele utilizate de această conexiune:", -1, 6, 15, 307, 11
+    LTEXT "Pe computer aveţi mai mult de un dispozitiv pentru linie telefonică comutată.", -1, 6, 3, 307, 13
+    LTEXT "&Selectaţi dispozitivele de utilizat cu această conexiune:", -1, 6, 15, 307, 11
     CONTROL "", 1228, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 7, 28, 304, 77
 END
 
 165 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Rețelistică"
+CAPTION "Lucru în reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tipul ser&verului de linie comutată apelat:", 1583, 7, 4, 219, 8
+    LTEXT "Tip s&erver pentru linii comutate, la care se face apel:", 1583, 7, 4, 219, 8
     COMBOBOX 1418, 7, 17, 215, 46, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Setări…", 1419, 160, 35, 60, 14
-    LTEXT "Această cone&xiune utilizează următoarele articole:", 1684, 8, 64, 219, 10
+    PUSHBUTTON "&Setări", 1419, 160, 35, 60, 14
+    LTEXT "C&onexiunea utilizează următoarele elemente:", 1684, 8, 64, 219, 10
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
-    PUSHBUTTON "Inst&alare…", 1252, 7, 133, 67, 14
-    PUSHBUTTON "&Dezinstalează", 1254, 80, 133, 67, 14
-    PUSHBUTTON "&Proprietăți", 1253, 153, 133, 67, 14
+    PUSHBUTTON "&Instalare...", 1252, 7, 133, 67, 14
+    PUSHBUTTON "De&zinstalare", 1254, 80, 133, 67, 14
+    PUSHBUTTON "&Proprietăţi", 1253, 153, 133, 67, 14
     GROUPBOX "Descriere", 1585, 9, 158, 213, 43
     LTEXT "", 1250, 18, 167, 195, 25
 END
