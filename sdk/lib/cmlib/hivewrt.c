@@ -130,7 +130,7 @@ HvpWriteLog(
      * Now calculate the bitmap and buffer sizes to hold up our
      * contents in a buffer.
      */
-    BitmapSize = ROUND_UP(sizeof(ULONG) + RegistryHive->DirtyVector.SizeOfBitMap / 8, HSECTOR_SIZE);
+    BitmapSize = ROUND_UP(sizeof(ULONG) + RegistryHive->DirtyVector.SizeOfBitMap, HSECTOR_SIZE);
     BufferSize = HV_LOG_HEADER_SIZE + BitmapSize;
 
     /* Now allocate the base header block buffer */
