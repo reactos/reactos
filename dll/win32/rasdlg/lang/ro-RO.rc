@@ -10,82 +10,82 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 102 DIALOGEX 0, 0, 255, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Numere de telefon alternative"
+CAPTION "Numere alternative de telefon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Specificați numerele de telefon alternative pentru crearea acestei conexiuni.", 1018, 7, 5, 243, 16
-    LTEXT "Nume&re de telefon:", 1019, 7, 27, 238, 8
+    LTEXT "Specificaţi numere alternative de telefon pe care să le utilizaţi pentru a efectua conexiunea.", 1018, 7, 5, 243, 16
+    LTEXT "&Numere de telefon:", 1019, 7, 27, 238, 8
     CONTROL "", 1012, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000848D, 7, 38, 217, 144
-    PUSHBUTTON "S&us", 1017, 230, 40, 18, 16, BS_ICON
-    PUSHBUTTON "J&os", 1015, 230, 61, 18, 16, BS_ICON
-    PUSHBUTTON "&Adăugare…", 1013, 7, 187, 70, 14
-    PUSHBUTTON "&Modificare…", 1016, 81, 187, 70, 14
-    PUSHBUTTON "&Elimină", 1014, 154, 187, 70, 14
-    AUTOCHECKBOX "&Dacă numărul eșuează, încearcă următorul", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Mutare număr &bun în capul listei", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "M&utare în sus", 1017, 230, 40, 18, 16, BS_ICON
+    PUSHBUTTON "&Mutare în jos", 1015, 230, 61, 18, 16, BS_ICON
+    PUSHBUTTON "&Adăugare...", 1013, 7, 187, 70, 14
+    PUSHBUTTON "E&ditare...", 1016, 81, 187, 70, 14
+    PUSHBUTTON "Şt&ergere", 1014, 154, 187, 70, 14
+    AUTOCHECKBOX "Se î&cearcă următorul număr, în caz de nereuşită", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Se mută în capul listei numărul cu care s-a reuşit", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 122, 245, 60, 14
     PUSHBUTTON "Revocare", 2, 188, 245, 60, 14
 END
 
 103 DIALOGEX 6, 18, 250, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Conexiuni de rețea"
+CAPTION "Conexiuni în rețea"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1029, 5, 5, 241, 35, NOT WS_GROUP
-    LTEXT "Cone&xiuni:", -1, 5, 46, 238, 10
+    LTEXT "C&onexiuni:", -1, 5, 46, 238, 10
     CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
-    AUTOCHECKBOX "N&u mă interoga până la următoarea mea autentificare", 1022, 8, 125, 235, 10
-    PUSHBUTTON "&Setări…", 1026, 7, 149, 60, 14
-    DEFPUSHBUTTON "&Conectare…", 1024, 117, 149, 60, 14
+    AUTOCHECKBOX "&Nu se mai întreabă până la următorul Log on", 1022, 8, 125, 235, 10
+    PUSHBUTTON "&Setări", 1026, 7, 149, 60, 14
+    DEFPUSHBUTTON "&Conectare...", 1024, 117, 149, 60, 14
     PUSHBUTTON "Revocare", 1025, 183, 149, 60, 14
 END
 
 104 DIALOGEX 6, 18, 269, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Tratare erori de conectare"
+CAPTION "Erori de concentrare linii"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Conectarea pe una sau mai multe linii.", 1033, 37, 8, 216, 20
+    LTEXT "Una sau mai multe linii suplimentare nu s-au conectat.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
-    AUTOCHECKBOX "N&u mai încerca numerele de telefon eșuate", 1030, 38, 226, 222, 10
-    DEFPUSHBUTTON "&Acceptă", 1, 135, 242, 60, 14
-    PUSHBUTTON "Î&nchide", 2, 201, 242, 60, 14
-    LTEXT "Dacă este conectată doar o singură linie, este posibil ca serverul să nu fie configurat să accepte apeluri cu mai multe legături. Bifați „Nu încercați linii eșuate” pentru a evita taxele de conectare inutile într-un astfel de caz.", -1, 37, 36, 224, 44
+    AUTOCHECKBOX "&Fără încercare linii defecte îEn viitor", 1030, 38, 226, 222, 10
+    DEFPUSHBUTTON "&Acceptare", 1, 135, 242, 60, 14
+    PUSHBUTTON "S&uspendare", 2, 201, 242, 60, 14
+    LTEXT "Dacă o singură linie este conectată, este posibil ca serverul să nu poată fi configurat pentru a accepta apeluri cu legături multiple. Selectaţi 'Fără încercare linii defecte' pentru a evita în acest caz încărcarea de conexiuni nenecesare.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Setări avansate de securitate"
+CAPTION "Setări complexe de securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Securitatea autentificării", 1547, 7, 33, 246, 191
-    LTEXT "&Criptarea datelor:", 1546, 7, 5, 247, 10
+    GROUPBOX "Securitate la Log on", 1547, 7, 33, 246, 191
+    LTEXT "Criptare &date:", 1546, 7, 5, 247, 10
     COMBOBOX 1495, 7, 17, 247, 76, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Protocolul de Autentificare E&xtensibil (EAP)", 1544, 17, 47, 226, 8, WS_GROUP
-    LTEXT "Tipul de EAP", -1, 18, 64, 45, 8, NOT WS_VISIBLE | NOT WS_GROUP
+    AUTORADIOBUTTON "&Utilizare Protocol extensibil de autorizare (EAP)", 1544, 17, 47, 226, 8, WS_GROUP
+    LTEXT "Tip EAP", -1, 18, 64, 45, 8, NOT WS_VISIBLE | NOT WS_GROUP
     COMBOBOX 1034, 63, 62, 181, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "P&roprietăți", 1035, 184, 77, 60, 14
-    AUTORADIOBUTTON "P&ermite aceste protocoale", 1545, 17, 92, 224, 10
-    AUTOCHECKBOX "&Parolă necriptată (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTOCHECKBOX "Protocolul S&hiva de Autentificare a Parolei (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Protocolul de &Autentificare Challenge Handshake (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Permite MS-CHAP vechi (pentru servere &Win 95)", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Micr&osoft CHAP versiunea 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Proprietăţi", 1035, 184, 77, 60, 14
+    AUTORADIOBUTTON "Se permit &aceste protocoale", 1545, 17, 92, 224, 10
+    AUTOCHECKBOX "Parolă &necriptată (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Protocol &Shiva de autorizare parolă (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "P&rotocol de autorizare acord de interogare (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Microsoft CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se permit versiuni anterioare MS-CHAP pentru servere &Windows 95", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mi&crosoft CHAP Versiunea 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "Pentru protocoalele &bazate pe MS-CHAP, utilizează nume și parole de autentificare în ReactOS (și eventual, domenii)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se u&tilizează nume şi parolă proprii de Log on în ReactOS (şi domeniu, dacă există) pentru protocoale bazate pe MS-CHAP", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Revocare", 2, 192, 232, 60, 14
 END
 
 106 DIALOGEX 6, 18, 255, 109
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Conectare realizată"
+CAPTION "Conectare terminată"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Î&nchide", 1, 97, 91, 60, 14
+    DEFPUSHBUTTON "OK", 1, 97, 91, 60, 14
     ICON 563, 1046, 7, 7, 20, 20
     LTEXT "Conexiunea a fost realizată.", 1047, 40, 7, 212, 16
     LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic dreapta pe pictograma din folderul Conexiuni de rețea sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
