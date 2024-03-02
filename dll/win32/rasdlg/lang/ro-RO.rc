@@ -87,23 +87,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 97, 91, 60, 14
     ICON 563, 1046, 7, 7, 20, 20
-    LTEXT "Conexiunea a fost realizată.", 1047, 40, 7, 212, 16
-    LTEXT "Pentru a verifica statutul acestei conexiuni sau pentru deconectare, clic dreapta pe pictograma din folderul Conexiuni de rețea sau clic pe pictograma din bara de activități (dacă este prezentă).", -1, 40, 30, 212, 34
-    AUTOCHECKBOX "N&u doresc recurența acestui mesaj", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Acum s-a conectat 'Nume conexiune'.", 1047, 40, 7, 212, 16
+    LTEXT "Pentru verificarea stării conexiunii sau pentru deconectare, faceţi clic cu butonul din dreapta pe pictograma conexiunii din folderul Conexiuni la reţea sau faceţi clic pe pictograma ei din bara de activităţi (dacă există).", -1, 40, 30, 212, 34
+    AUTOCHECKBOX "Nu se mai a&fişează acest mesaj", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
 END
 
 107 DIALOGEX 0, 0, 258, 167
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Numărul de telefon", 1053, 7, 5, 243, 92
-    LTEXT "Codul &regiunii:", 1055, 18, 17, 54, 8
+    GROUPBOX "Număr de telefon", 1053, 7, 5, 243, 92
+    LTEXT "Cod &zonal:", 1055, 18, 17, 54, 8
     COMBOBOX 1049, 17, 30, 55, 129, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Numărul propriu-&zis:", 1057, 77, 17, 166, 8, NOT WS_GROUP
+    LTEXT "&Număr de telefon:", 1057, 77, 17, 166, 8, NOT WS_GROUP
     EDITTEXT 1051, 77, 30, 163, 14, ES_AUTOHSCROLL
-    LTEXT "&Codul țării/regiunii:", 1056, 18, 48, 221, 8, NOT WS_GROUP
+    LTEXT "&Cod ţară/regiune:", 1056, 18, 48, 221, 8, NOT WS_GROUP
     COMBOBOX 1054, 17, 61, 224, 93, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Aplică regulile de formare a numerelor", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se &utilizează reguli de apelare", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Co&mentariu", 1052, 7, 102, 243, 36
     EDITTEXT 1050, 17, 115, 224, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 127, 147, 60, 14
@@ -112,13 +112,13 @@ END
 
 108 DIALOGEX 6, 18, 222, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Schimbare parolă"
+CAPTION "Modificare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați OK pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 210, 24
-    LTEXT "&Parola nouă:", 1064, 8, 43, 108, 8
+    LTEXT "Parola pentru reţeaua la distanţă a expirat. Intraţi la parole, apoi apăsaţi pe OK pentru a stabili una nouă.", 1062, 7, 5, 210, 24
+    LTEXT "&Parolă nouă:", 1064, 8, 43, 108, 8
     EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmați parola:", 1061, 8, 61, 102, 8
+    LTEXT "&Confirmare parolă nouă:", 1061, 8, 61, 102, 8
     EDITTEXT 1058, 118, 57, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 90, 84, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 154, 84, 60, 14
@@ -126,15 +126,15 @@ END
 
 109 DIALOGEX 6, 18, 223, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Schimbare parolă"
+CAPTION "Modificare parolă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Parola de conectare la rețea a expirat.\nIntroduceți o parolă nouă, apoi apăsați OK pentru a actualiza informațiile de autentificare.", 1062, 7, 5, 212, 29
-    LTEXT "Vec&hea parolă:", 1063, 7, 42, 108, 8
+    LTEXT "Parola pentru reţeaua la distanţă a expirat. Intraţi la parole, apoi apăsaţi pe OK pentru a stabili una nouă.", 1062, 7, 5, 212, 29
+    LTEXT "Parolă &veche:", 1063, 7, 42, 108, 8
     EDITTEXT 1059, 116, 38, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Noua parolă:", 1064, 7, 60, 108, 8
+    LTEXT "&Parolă nouă:", 1064, 7, 60, 108, 8
     EDITTEXT 1060, 116, 56, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmați parola:", 1061, 7, 78, 108, 8
+    LTEXT "&Confirmare parolă nouă:", 1061, 7, 78, 108, 8
     EDITTEXT 1058, 116, 74, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 92, 101, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 156, 101, 60, 14
@@ -142,11 +142,11 @@ END
 
 110 DIALOGEX 12, 16, 230, 105
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Retroapelare"
+CAPTION "Apelare inversă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aveți aleasă opțiunea numărului specificat de către apelat. Apăsați OK pentru a fi apelat de către server la numărul de mai jos. Apăsați Revocare pentru a omite retroapelarea.", 1066, 5, 5, 221, 39, SS_NOPREFIX
-    LTEXT "Int&roduceți numărul de telefon al modemului dumneavoastră:", 1067, 5, 46, 222, 8, NOT WS_GROUP
+    LTEXT "Aveţi pe server privilegiul de apelare inversă 'Stabilit de apelant'. Apăsaţi pe OK, iar serverul vă va apela la numărul de mai jos.  Pentru a ignora apelarea inversă, apăsaţi pe Revocare.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "&Introduceţi numărul de telefon al modemului:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 164, 85, 60, 14
@@ -159,28 +159,28 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
     LTEXT "", 1070, 34, 7, 226, 105
-    DEFPUSHBUTTON "N&u reapela=88", 1, 4, 117, 128, 14, WS_GROUP
+    DEFPUSHBUTTON "Nu se formează=88", 1, 4, 117, 128, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 136, 117, 60, 14
-    PUSHBUTTON "Inf&ormații", 1069, 200, 117, 60, 14
+    PUSHBUTTON "&Mai multe informaţii", 1069, 200, 117, 60, 14
 END
 
 112 DIALOGEX 6, 18, 263, 219
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Apelare și închidere automată"
+CAPTION "Apelare şi suspendare automată"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS poate apela/închide automat dispozitivele în funcție de cantitatea de informație transmisă și recepționată.", 1085, 9, 7, 253, 30
+    LTEXT "ReactOS are posibilitatea să apeleze şi să suspende automat dispozitivele în funcţie de câte informaţii sunt de trimis şi de primit.", 1085, 9, 7, 253, 30
     GROUPBOX "Apelare automată", -1, 6, 38, 249, 71
-    LTEXT "Apelare a unei o alte linii când conexiunea satisface condițiile următoare:", 1083, 16, 51, 237, 16, NOT WS_GROUP
-    LTEXT "Este activă de cel &puțin:", -1, 16, 73, 100, 8
+    LTEXT "Se apelează altă linie, atunci când se îndeplinesc următoarele două condiţii:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+    LTEXT "Activitate de &cel puţin:", -1, 16, 73, 100, 8
     COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Durează de cel puțin:", 1084, 16, 92, 99, 8, NOT WS_GROUP
+    LTEXT "&Durată de cel puţin:", 1084, 16, 92, 99, 8, NOT WS_GROUP
     COMBOBOX 1080, 117, 89, 90, 162, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    GROUPBOX "Închidere automată", -1, 6, 113, 248, 81
-    LTEXT "Închide orice dispozitiv utilizat pentru această conexiune când sunt satisfăcute următoarele condiții:", 1086, 16, 127, 230, 18, NOT WS_GROUP
-    LTEXT "Este &activ de cel puțin:", -1, 16, 150, 92, 8
+    GROUPBOX "Suspendare automată", -1, 6, 113, 248, 81
+    LTEXT "Se suspendă orice dispozitiv utilizat pentru această conexiune, atunci când se îndeplinesc următoarele două condiţii:", 1086, 16, 127, 230, 18, NOT WS_GROUP
+    LTEXT "Activitate nu mai &mult de:", -1, 16, 150, 92, 8
     COMBOBOX 1081, 115, 146, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "D&urează de cel puțin:", 1087, 16, 168, 92, 8, NOT WS_GROUP
+    LTEXT "D&urată de cel puţin:", 1087, 16, 168, 92, 8, NOT WS_GROUP
     COMBOBOX 1082, 115, 166, 90, 151, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", 1, 131, 199, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 194, 199, 60, 14
@@ -188,7 +188,7 @@ END
 
 113 DIALOGEX 21, 46, 225, 65
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Conectare la %1…"
+CAPTION "Conectare %1..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1417, 7, 7, 20, 20
@@ -198,12 +198,12 @@ END
 
 114 DIALOGEX 6, 18, 225, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Rețea comutată"
+CAPTION "Lucru în reţea pe linie comutată"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
-    LTEXT "Încercarea de apelare automată a eșuat. Doriți dezactivarea apelării automate de la această locație?", 1099, 40, 6, 181, 34, NOT WS_GROUP
-    PUSHBUTTON "D&a", 1, 60, 42, 50, 14
+    LTEXT "Încercarea de formare automată nu a reuşit. Dezactivaţi formarea automată din această amplasare?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    PUSHBUTTON "&Da", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&Nu", 2, 115, 42, 50, 14
 END
 
@@ -213,16 +213,16 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 263, 50
-    LTEXT "A&pelare:", 1412, 9, 60, 68, 8
+    LTEXT "F&ormare număr:", 1412, 9, 60, 68, 8
     COMBOBOX 1416, 88, 56, 165, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Apelare &din:", 1415, 9, 77, 71, 8
+    LTEXT "&Apelare de la:", 1415, 9, 77, 71, 8
     COMBOBOX 1414, 88, 75, 89, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Reguli de apel", 1108, 181, 75, 72, 14
+    PUSHBUTTON "&Reguli de apelare", 1108, 181, 75, 72, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 96, 245, 1
-    DEFPUSHBUTTON "&Apelare", 1590, 8, 103, 61, 14
+    DEFPUSHBUTTON "&Formare număr", 1590, 8, 103, 61, 14
     PUSHBUTTON "Revocare", 1591, 70, 103, 60, 14
-    PUSHBUTTON "Pr&oprietăți", 1107, 132, 103, 60, 14
-    PUSHBUTTON "&Manual…", 1592, 194, 103, 60, 14
+    PUSHBUTTON "&Proprietăţi", 1107, 132, 103, 60, 14
+    PUSHBUTTON "Aj&utor", 1592, 194, 103, 60, 14
 END
 
 116 DIALOGEX 0, 0, 265, 176
@@ -231,19 +231,19 @@ CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "Numele de &utilizator:", 1413, 8, 60, 88, 8
+    LTEXT "Nu&me utilizator:", 1413, 8, 60, 88, 8
     EDITTEXT 1104, 103, 57, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1112, 8, 79, 88, 8
+    LTEXT "&Parolă:", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "Salvar&e a acestor nume și parole pentru acești utilizatori:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru mine, e&xclusiv", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Pentru &oricine din acest calculator", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Salvare nume utilizator şi parolă pentru următorii utilizatori:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Numai eu", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Oricine utilizează computerul", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
-    DEFPUSHBUTTON "&Apelare", 1590, 8, 156, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "&Formare număr", 1590, 8, 156, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 1591, 71, 156, 60, 14
-    PUSHBUTTON "P&roprietăți", 1107, 133, 156, 60, 14
-    PUSHBUTTON "&Manual…", 1592, 195, 156, 60, 14
+    PUSHBUTTON "P&roprietăţi", 1107, 133, 156, 60, 14
+    PUSHBUTTON "Aj&utor", 1592, 195, 156, 60, 14
 END
 
 117 DIALOGEX 0, 0, 263, 192
