@@ -8,7 +8,7 @@
 @ stdcall FormatEx(wstr ptr wstr wstr long long ptr)
 @ stub FormatEx2
 @ stdcall QueryAvailableFileSystemFormat(long wstr str str ptr)
-@ stub QueryDeviceInformation
+@ stdcall QueryDeviceInformation(wstr ptr long)
 @ stub QueryDeviceInformationByHandle
 @ stub QueryFileSystemName
 @ stub QueryLatestFileSystemVersion
