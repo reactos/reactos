@@ -8,6 +8,12 @@
  */
 
 #include "precomp.h"
+#include <ntddstor.h>
+#include <ntstrsafe.h>
+
+#define NTOS_MODE_USER
+#include <iofuncs.h>
+#include <obfuncs.h>
 
 BOOLEAN
 NTAPI
@@ -41,5 +47,157 @@ QueryAvailableFileSystemFormat(
     *Minor = 0; /* FIXME */
     *LatestVersion = TRUE; /* FIXME */
 
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Retrieves disk device information.
+ *
+ * @param[in] DriveRoot
+ * String which contains a DOS device name,
+ *
+ * @param[in,out] DeviceInformation
+ * Pointer to buffer with DEVICE_INFORMATION structure which will receive data.
+ *
+ * @param[in] BufferSize
+ * Size of buffer in bytes.
+ *
+ * @return
+ * TRUE if the buffer was large enough and was filled with
+ * the requested information, FALSE otherwise.
+ *
+ * @remarks
+ * The returned information is mostly related to Sony Memory Stick devices.
+ * On Vista+ the returned information is disk sector size and volume length in sectors,
+ * regardless of the type of disk.
+ * ReactOS implementation returns DEVICE_HOTPLUG flag if inspected device is a hotplug device
+ * as well as sector size and volume length of disk device.
+ */
+BOOL
+NTAPI
+QueryDeviceInformation(
+    _In_ PWCHAR DriveRoot,
+    _Out_ PVOID DeviceInformation,
+    _In_ ULONG BufferSize)
+{
+    PDEVICE_INFORMATION DeviceInfo = DeviceInformation;
+    IO_STATUS_BLOCK Iosb;
+    DISK_GEOMETRY DiskGeometry;
+    STORAGE_HOTPLUG_INFO HotplugInfo;
+    GET_LENGTH_INFORMATION LengthInformation;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DeviceName;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+    WCHAR DiskDevice[64];
+    WCHAR DosPath[16];
+
+    /* Sanity checks, buffer should be able to at least hold DeviceFlags */
+    if (DriveRoot == NULL || BufferSize < sizeof(ULONG))
+    {
+        return FALSE;
+    }
+
+    RtlStringCchCopyW(DosPath, ARRAYSIZE(DosPath), DriveRoot);
+
+    /* Trim trailing backslash if there is one */
+    if (DosPath[wcslen(DosPath)-1] == L'\\')
+    {
+        DosPath[wcslen(DosPath)-1] = UNICODE_NULL;
+    }
+
+    QueryDosDeviceW(DosPath, DiskDevice, ARRAYSIZE(DiskDevice));
+    RtlInitUnicodeString(&DeviceName, DiskDevice);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DeviceName,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    Status = NtDeviceIoControlFile(FileHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   IOCTL_STORAGE_GET_HOTPLUG_INFO,
+                                   NULL,
+                                   0,
+                                   &HotplugInfo,
+                                   sizeof(HotplugInfo));
+
+    if (!NT_SUCCESS(Status))
+    {
+        NtClose(FileHandle);
+        return FALSE;
+    }
+
+    DeviceInfo->DeviceFlags = 0;
+    if (HotplugInfo.MediaHotplug || HotplugInfo.DeviceHotplug)
+    {
+        /* This is a hotplug device */
+        DeviceInfo->DeviceFlags |= DEVICE_HOTPLUG;
+    }
+
+    /* Other flags that would be set here are related to Sony "Memory Stick"
+     * type of devices which we do not have any special support for */
+
+    if (BufferSize >= sizeof(DEVICE_INFORMATION))
+    {
+        /* This is the Vista+ version of structure.
+         * We need to also provide disk sector size and volume length in sectors */
+        Status = NtDeviceIoControlFile(FileHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Iosb,
+                                       IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                       NULL,
+                                       0,
+                                       &DiskGeometry,
+                                       sizeof(DiskGeometry));
+
+        if (!NT_SUCCESS(Status))
+        {
+            NtClose(FileHandle);
+            return FALSE;
+        }
+
+        Status = NtDeviceIoControlFile(FileHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Iosb,
+                                       IOCTL_DISK_GET_LENGTH_INFO,
+                                       NULL,
+                                       0,
+                                       &LengthInformation,
+                                       sizeof(LengthInformation));
+
+        if (!NT_SUCCESS(Status))
+        {
+            NtClose(FileHandle);
+            return FALSE;
+        }
+
+        LengthInformation.Length.QuadPart /= DiskGeometry.BytesPerSector;
+        DeviceInfo->SectorSize = DiskGeometry.BytesPerSector;
+        DeviceInfo->SectorCount = LengthInformation.Length;
+    }
+
+    NtClose(FileHandle);
     return TRUE;
 }
