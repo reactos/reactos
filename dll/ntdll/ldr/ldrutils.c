@@ -2441,7 +2441,8 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 {
     PPEB Peb = NtCurrentPeb();
     NTSTATUS Status = STATUS_SUCCESS;
-    PWSTR p, endptr;
+    const WCHAR *p;
+    PWSTR pch, endptr;
     BOOLEAN GotExtension;
     WCHAR c, NameBuffer[MAX_PATH + 6];
     UNICODE_STRING RawDllName;
@@ -2454,7 +2455,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     RtlCopyUnicodeString(&RawDllName, DllName);
 
     /* Find the extension, if present */
-    /* NOTE: Access violation is expected here in some cases */
+    /* NOTE: Access violation is expected here in some cases (Buffer[-1]) */
     p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
     GotExtension = FALSE;
     while (p >= DllName->Buffer)
@@ -2473,10 +2474,10 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
     /* Convert forward slashes to backslashes */
     endptr = &RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)];
-    for (p = RawDllName.Buffer; p != endptr; ++p)
+    for (pch = RawDllName.Buffer; pch != endptr; ++pch)
     {
-        if (*p == L'/')
-            *p == L'\\';
+        if (*pch == L'/')
+            *pch == L'\\';
     }
 
     /* If no extension was found, add the default extension */
