@@ -2453,26 +2453,30 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     RtlInitEmptyUnicodeString(&RawDllName, NameBuffer, sizeof(NameBuffer));
     RtlCopyUnicodeString(&RawDllName, DllName);
 
-    /* Convert forward slashes to backslashes */
     /* Find the extension, if present */
-    endptr = &RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)];
+    /* NOTE: Access violation is expected here in some cases */
+    p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
     GotExtension = FALSE;
-    for (p = RawDllName.Buffer; p != endptr; ++p)
+    while (p >= DllName->Buffer)
     {
-        c = *p;
-        if (c == L'\\')
-        {
-            GotExtension = FALSE;
-        }
-        else if (c == L'.')
+        c = *p--;
+        if (c == L'.')
         {
             GotExtension = TRUE;
+            break;
         }
-        else if (c == L'/')
+        else if (c == L'\\' || c == L'/')
         {
-            *p = L'\\';
-            GotExtension = FALSE;
+            break;
         }
+    }
+
+    /* Convert forward slashes to backslashes */
+    endptr = &RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)];
+    for (p = RawDllName.Buffer; p != endptr; ++p)
+    {
+        if (*p == L'/')
+            *p == L'\\';
     }
 
     /* If no extension was found, add the default extension */
