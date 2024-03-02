@@ -91,11 +91,10 @@ public:
     // IServiceProvider
     STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
-
     // Using custom message map instead
     virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD mapId = 0);
 
-    // UNIMPLEMENTED
+    // IDeskBarClient
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
     STDMETHOD(GetBandSiteInfo)(BANDSITEINFO *pbsinfo) override;
     STDMETHOD(RemoveBand)(DWORD dwBandID) override;

@@ -82,12 +82,14 @@ class CDesktopFolder :
 
         /*** IItemNameLimits methods ***/
 
-        STDMETHOD(GetMaxLength)(LPCWSTR pszName, int *piMaxNameLen) override
+        STDMETHODIMP
+        GetMaxLength(LPCWSTR pszName, int *piMaxNameLen) override
         {
             return E_NOTIMPL;
         }
 
-        STDMETHOD(GetValidCharacters)(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars) override
+        STDMETHODIMP
+        GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars) override
         {
             if (ppwszValidChars)
             {

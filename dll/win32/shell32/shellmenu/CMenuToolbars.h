@@ -102,13 +102,13 @@ public:
     HRESULT BeforeCancelPopup();
 
 protected:
-    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) = 0;
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) PURE;
 
-    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) = 0;
-    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) = 0;
-    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) = 0;
-    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) = 0;
-    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) = 0;
+    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) PURE;
+    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData) PURE;
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) PURE;
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) PURE;
+    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt) PURE;
 
     HRESULT AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData, BOOL last);
     HRESULT AddSeparator(BOOL last);
@@ -155,13 +155,13 @@ public:
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) override;
 
 protected:
-    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) override;
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) override;
 
-    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
-    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) override;
-    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
-    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) override;
-    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
+    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
+    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData) override;
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) override;
+    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
 };
 
 class CMenuSFToolbar :
@@ -182,11 +182,11 @@ public:
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) override;
 
 protected:
-    STDMETHOD(OnDeletingButton)(const NMTOOLBAR * tb) override;
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) override;
 
-    STDMETHOD(InternalGetTooltip)(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
-    STDMETHOD(InternalExecuteItem)(INT iItem, INT index, DWORD_PTR dwData) override;
-    STDMETHOD(InternalPopupItem)(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
-    STDMETHOD(InternalHasSubMenu)(INT iItem, INT index, DWORD_PTR dwData) override;
-    STDMETHOD(InternalContextMenu)(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
+    virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) override;
+    virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData) override;
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) override;
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) override;
+    virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt) override;
 };
