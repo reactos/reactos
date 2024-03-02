@@ -2441,9 +2441,9 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 {
     PPEB Peb = NtCurrentPeb();
     NTSTATUS Status = STATUS_SUCCESS;
-    PWSTR pch, endptr;
+    PWSTR p, endptr;
     BOOLEAN GotExtension;
-    WCHAR ch, NameBuffer[MAX_PATH + 6];
+    WCHAR c, NameBuffer[MAX_PATH + 6];
     UNICODE_STRING RawDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
@@ -2455,26 +2455,26 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
     /* Convert forward slashes to backslashes */
     endptr = &RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)];
-    for (pch = RawDllName.Buffer; pch != endptr; ++pch)
+    for (p = RawDllName.Buffer; p != endptr; ++p)
     {
-        if (*pch == L'/')
-            *pch = L'\\';
+        if (*p == L'/')
+            *p = L'\\';
     }
 
     /* Find the extension, if present */
     GotExtension = FALSE;
     if (RawDllName.Length > 0)
     {
-        pch = RawDllName.Buffer + RawDllName.Length / sizeof(WCHAR) - 1;
-        while (RawDllName.Buffer <= pch)
+        p = RawDllName.Buffer + RawDllName.Length / sizeof(WCHAR) - 1;
+        while (RawDllName.Buffer <= p)
         {
-            ch = *pch--;
-            if (ch == L'.')
+            c = *p--;
+            if (c == L'.')
             {
                 GotExtension = TRUE;
                 break;
             }
-            else if (ch == L'\\')
+            else if (c == L'\\')
             {
                 break;
             }
