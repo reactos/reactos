@@ -375,7 +375,7 @@ public:
 
     void Preallocate(_In_ int nLength)
     {
-        PrepareWrite( nLength );
+        PrepareWrite(nLength);
     }
 
     void ReleaseBufferSetLength(_In_ int nNewLength)
