@@ -373,6 +373,11 @@ public:
         return m_pszData;
     }
 
+    void Preallocate(_In_ int nLength)
+    {
+        PrepareWrite( nLength );
+    }
+
     void ReleaseBufferSetLength(_In_ int nNewLength)
     {
         ATLASSERT(nNewLength >= 0);
