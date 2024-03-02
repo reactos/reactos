@@ -103,23 +103,23 @@ class CNetConUiObject:
         HRESULT WINAPI Initialize(PCUITEMID_CHILD pidl, IOleCommandTarget *lpOleCmd);
 
         // IContextMenu3
-        virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
-        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
-        virtual HRESULT WINAPI HandleMenuMsg( UINT uMsg, WPARAM wParam, LPARAM lParam);
-        virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+        STDMETHOD(QueryContextMenu)(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+        STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici) override;
+        STDMETHOD(GetCommandString)(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax) override;
+        STDMETHOD(HandleMenuMsg)( UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+        STDMETHOD(HandleMenuMsg2)(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) override;
 
         // IObjectWithSite
-        virtual HRESULT WINAPI SetSite(IUnknown *punk);
-        virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *punk) override;
+        STDMETHOD(GetSite)(REFIID iid, void **ppvSite) override;
 
         // IQueryInfo
-        virtual HRESULT WINAPI GetInfoFlags(DWORD *pdwFlags);
-        virtual HRESULT WINAPI GetInfoTip(DWORD dwFlags, WCHAR **ppwszTip);
+        STDMETHOD(GetInfoFlags)(DWORD *pdwFlags) override;
+        STDMETHOD(GetInfoTip)(DWORD dwFlags, WCHAR **ppwszTip) override;
 
         // IExtractIconW
-        virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-        virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+        STDMETHOD(GetIconLocation)(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags) override;
+        STDMETHOD(Extract)(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) override;
 
         BEGIN_COM_MAP(CNetConUiObject)
             COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu3)

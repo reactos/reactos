@@ -137,10 +137,10 @@ class CEnumIDList:
         HRESULT Initialize();
 
         // IEnumIDList
-        virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, PITEMID_CHILD *rgelt, ULONG *pceltFetched);
-        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
-        virtual HRESULT STDMETHODCALLTYPE Reset();
-        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+        STDMETHOD(Next)(ULONG celt, PITEMID_CHILD *rgelt, ULONG *pceltFetched) override;
+        STDMETHOD(Skip)(ULONG celt) override;
+        STDMETHOD(Reset)() override;
+        STDMETHOD(Clone)(IEnumIDList **ppenum) override;
 
     private:
         BOOL AddToEnumList(PITEMID_CHILD pidl);
