@@ -131,6 +131,7 @@ START_TEST(LdrLoadDll)
             LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 
+    /* Test with only forward slashes in path; no file extension */
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
     for (pch = szPath; *pch != UNICODE_NULL; ++pch)
     {
