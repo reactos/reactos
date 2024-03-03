@@ -296,7 +296,7 @@ PreloadGlobalMessageTable(IN PVOID ImageBase)
     {
         /* Find this message ID in the string table*/
         Status2 = RtlFindMessage(ImageBase,
-                                 11,
+                                 RT_MESSAGETABLE,
                                  LANG_NEUTRAL,
                                  MessageId,
                                  &MessageEntry);
@@ -341,7 +341,7 @@ PreloadGlobalMessageTable(IN PVOID ImageBase)
     {
         /* Make sure the message is still there...! */
         Status2 = RtlFindMessage(ImageBase,
-                                 11,
+                                 RT_MESSAGETABLE,
                                  LANG_NEUTRAL,
                                  MessageId,
                                  &MessageEntry);
