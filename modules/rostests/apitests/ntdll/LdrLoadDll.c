@@ -130,6 +130,7 @@ START_TEST(LdrLoadDll)
     ok_ntstatus(Status, STATUS_SUCCESS);
     ok(BaseAddress != NULL, "BaseAddress was NULL\n");
 
+    /* Test with one forward slash in path; no file extension */
     StringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32", szSysDir);
     RtlInitUnicodeString(&DllName, szPath);
     Status = 0xDEADFACE;
