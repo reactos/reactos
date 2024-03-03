@@ -475,9 +475,16 @@ int wmain(int argc, WCHAR *argv[])
                                &serialNumber, &maxComponent, &flags,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
-        return -1;
+        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        {
+            wcscpy(fileSystem, L"RAW");
+        }
+        else
+        {
+            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
+            PrintWin32Error(szMsg, GetLastError());
+            return -1;
+        }
     }
 
     /* Get the volume size */
