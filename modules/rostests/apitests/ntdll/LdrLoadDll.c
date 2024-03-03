@@ -146,7 +146,6 @@ START_TEST(LdrLoadDll)
 
     /* Test with one forward slash in path; with file extension */
     StringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32.dll", szSysDir);
-
     RtlInitUnicodeString(&DllName, szPath);
     Status = 0xDEADFACE;
     BaseAddress = InvalidPointer;
