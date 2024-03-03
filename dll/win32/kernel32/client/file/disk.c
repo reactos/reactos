@@ -608,6 +608,9 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
         return DRIVE_NO_ROOT_DIR;
     }
 
+    /* We will work with a device object, so trim the trailing backslash now */
+    PathName.Length -= sizeof(WCHAR);
+
     /* Let's probe for it, by forcing open failure! */
     RetryOpen = TRUE;
     InitializeObjectAttributes(&ObjectAttributes, &PathName,
