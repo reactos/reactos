@@ -364,7 +364,7 @@ int wmain(int argc, WCHAR *argv[])
     FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
-    WCHAR volumeName[1024];
+    WCHAR volumeName[1024] = {0};
     WCHAR input[1024];
     DWORD serialNumber;
     DWORD flags, maxComponent;
@@ -475,9 +475,16 @@ int wmain(int argc, WCHAR *argv[])
                                &serialNumber, &maxComponent, &flags,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
-        return -1;
+        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        {
+            wcscpy(fileSystem, L"RAW");
+        }
+        else
+        {
+            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
+            PrintWin32Error(szMsg, GetLastError());
+            return -1;
+        }
     }
 
     if (QueryDeviceInformation(RootDirectory,
