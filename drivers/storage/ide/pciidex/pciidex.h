@@ -16,6 +16,8 @@
 #include <wdmguid.h>
 #include <ide.h>
 
+#include <reactos/drivers/ntddata.h>
+
 #define TAG_PCIIDEX    'XedI'
 
 #define IS_FDO(p)    (((PCOMMON_DEVICE_EXTENSION)(p))->IsFDO)
@@ -43,8 +45,6 @@
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE            0x04
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE_CAPABLE    0x08
 #define PCIIDE_PROGIF_DMA_CAPABLE                              0x80
-
-#define BM_SECONDARY_CHANNEL_OFFSET      8
 
 typedef struct _PDO_DEVICE_EXTENSION    PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
@@ -75,9 +75,12 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Ldo;
 
     ULONG ControllerNumber;
-    BOOLEAN InNativeMode;
-    BOOLEAN IoBaseMapped;
-    BOOLEAN MiniportStarted;
+    ULONG Flags;
+#define FDO_IN_NATIVE_MODE     0x00000001
+#define FDO_DMA_CAPABLE        0x00000002
+#define FDO_IO_BASE_MAPPED     0x00000004
+
+    BOOLEAN MiniportStarted; // TODO move to flags
 
     FAST_MUTEX DeviceSyncMutex;
     _Guarded_by_(DeviceSyncMutex)
@@ -104,6 +107,15 @@ typedef struct _PDO_DEVICE_EXTENSION
     PFDO_DEVICE_EXTENSION ParentController;
     BOOLEAN ReportedMissing;
     PUCHAR IoBase;
+    ULONG Flags;
+#define PDO_PIO_ONLY              0x00000001
+#define PDO_DRIVE0_DMA_CAPABLE    0x00000002
+#define PDO_DRIVE1_DMA_CAPABLE    0x00000004
+
+    PVOID PrdTable;
+    ULONG PrdTablePhysicalAddress;
+    ULONG MapRegisterCount;
+    PDMA_ADAPTER AdapterObject;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 CODE_SEG("PAGE")
