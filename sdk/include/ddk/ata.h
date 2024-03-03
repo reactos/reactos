@@ -720,4 +720,8 @@ typedef struct _GP_LOG_NCQ_COMMAND_ERROR {
 #define IDE_FEATURE_DISABLE_SATA_FEATURE        0x90
 #define IDE_FEATURE_ENABLE_MSN                  0x95
 
+#define IDE_GP_LOG_NCQ_COMMAND_ERROR_ADDRESS        0x10
+
+#define IDE_GP_LOG_SECTOR_SIZE                      0x200
+
 #endif
