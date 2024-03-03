@@ -1226,13 +1226,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Setări servicii"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "D&escrierea serviciului de rețea:", -1, 7, 5, 203, 8
+    LTEXT "&Descriere serviciu:", -1, 7, 5, 203, 8
     EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
-    LTEXT "Nu&mele sau adresa IP (de ex. 192.168.0.12) a calculatorului ce găzduiește serviciul de rețea:", -1, 7, 37, 208, 16
+    LTEXT "&Numele sau adresa IP (de exemplu 192.168.0.12) ale computerului care găzduieşte serviciul în reţea:", -1, 7, 37, 208, 16
     EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
-    LTEXT "Numă&rul portului pe care rezidă serviciul:", -1, 7, 85, 203, 8
+    LTEXT "Nu&mărul port-ului unde se află acest serviciu:", -1, 7, 85, 203, 8
     EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
-    AUTORADIOBUTTON "T&CP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&TCP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&UDP", 1555, 166, 99, 31, 10, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", 1, 86, 143, 60, 14
     PUSHBUTTON "Revocare", 2, 150, 143, 60, 14
@@ -1240,14 +1240,14 @@ END
 
 558 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Aplicații"
+CAPTION "Programe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Conexiunea la Internet a calculatorului a fost particularizată pentru a permite următoarelor aplicații o execuție și utilizare corespunzătoare a resurselor de rețea:", -1, 7, 7, 218, 28
+    LTEXT "Conexiunea Internet din computer s-a particularizat, pentru a permite executarea corespunzătoare în reţeaua proprie a următoarelor programe:", -1, 7, 7, 218, 28
     CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Adăugare…", 1538, 7, 197, 67, 14
-    PUSHBUTTON "E&ditare…", 1559, 80, 197, 67, 14
-    PUSHBUTTON "Șt&erge", 1568, 153, 197, 67, 14
+    PUSHBUTTON "&Adăugare...", 1538, 7, 197, 67, 14
+    PUSHBUTTON "E&ditare...", 1559, 80, 197, 67, 14
+    PUSHBUTTON "Şt&ergere", 1568, 153, 197, 67, 14
 END
 
 559 DIALOGEX 0, 0, 230, 215
@@ -1255,44 +1255,44 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Servicii"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți serviciile e&xecutate în rețea pe care utilizatorii le vor putea accesa.", -1, 7, 5, 216, 22
+    LTEXT "&Selectaţi servicii care se execută în reţeaua proprie şi pe care utilizatorii Internet au posibilitatea să le acceseze.", -1, 7, 5, 216, 22
     LTEXT "Servicii:", -1, 7, 27, 143, 8
     CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Adăugare…", 1561, 7, 197, 67, 14
-    PUSHBUTTON "E&ditare…", 1563, 80, 197, 67, 14
-    PUSHBUTTON "Șt&erge", 1562, 153, 197, 67, 14
+    PUSHBUTTON "&Adăugare...", 1561, 7, 197, 67, 14
+    PUSHBUTTON "E&ditare...", 1563, 80, 197, 67, 14
+    PUSHBUTTON "Şt&ergere", 1562, 153, 197, 67, 14
 END
 
 560 DIALOGEX 6, 18, 240, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Conectare inițială"
+CAPTION "Conexiune iniţială"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "D&a", 6, 68, 68, 50, 14
-    PUSHBUTTON "N&u", 7, 125, 68, 50, 14
+    DEFPUSHBUTTON "&Da", 6, 68, 68, 50, 14
+    PUSHBUTTON "&Nu", 7, 125, 68, 50, 14
     ICON 32516, 1575, 7, 7, 20, 20
     LTEXT "", 1576, 40, 7, 190, 33
-    AUTOCHECKBOX "Nu dor&esc recurența acestui mesaj", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Nu se mai a&fişează acest memento", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
 END
 
 567 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Creare conexiune nouă"
+CAPTION "Expert conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Scrieți numele serviciului în următorul câmp de text. Dacă veți lăsa acet câmp necompletat, ReactOS va detecta și va configura automat serviciul în momentul conectării efective.", -1, 10, 7, 301, 25
-    LTEXT "N&umele serviciului (opțional):", -1, 22, 32, 229, 8
+    LTEXT "Tastaţi numele serviciului în caseta text următoare. Dacă lăsaţi necompletată caseta text, Windows detectează şi configurează automat serviciul atunci când vă conectaţi.", -1, 10, 7, 301, 25
+    LTEXT "Nume &serviciu (opţional):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
 
 568 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N&umele serviciului:", 1686, 7, 5, 217, 10
+    LTEXT "Nume &serviciu:", 1686, 7, 5, 217, 10
     EDITTEXT 1594, 7, 17, 217, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "Afișea&ză pictogramă în zona de notificare pe durata conectării", 1120, 9, 196, 215, 8
+    AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 1120, 9, 196, 215, 8
 END
 
 569 DIALOGEX 0, 0, 230, 215
@@ -1300,37 +1300,37 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Setări de securitate", 1580, 8, 4, 213, 151
-    AUTORADIOBUTTON "O&bișnuite (setări recomandate)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Avansate (setări particularizate)", 1541, 14, 100, 197, 8, BS_NOTIFY
-    LTEXT "&Validează-mi identitatea în felul următor:", 1537, 26, 29, 183, 8, NOT WS_GROUP
+    GROUPBOX "Opţiuni de securitate", 1580, 8, 4, 213, 151
+    AUTORADIOBUTTON "&Tipic (setări recomandate)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "Comple&x (setări particularizate)", 1541, 14, 100, 197, 8, BS_NOTIFY
+    LTEXT "&Validare identitate după cum urmează:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Utilizează a&utomat numele și parola de utilizator ReactOS (și domeniul dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Solicită &criptarea datelor (deconectează dacă nu este posibil)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Utilizarea acestor setări cere cunoștințe ale protocoalelor de securitate.", 1539, 26, 111, 182, 18
-    PUSHBUTTON "&Setări…", 1180, 151, 134, 60, 14
-    PUSHBUTTON "Setări I&PSec…", 1598, 126, 163, 85, 14
+    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în ReactOS (şi domeniu, dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "S&e solicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
+    LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 26, 111, 182, 18
+    PUSHBUTTON "&Setări...", 1180, 151, 134, 60, 14
+    PUSHBUTTON "Setări I&PSec...", 1598, 126, 163, 85, 14
 END
 
 570 DIALOGEX 0, 0, 265, 126
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Setări IPSec "
+CAPTION "Setări IPSec"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
     PUSHBUTTON "Revocare", 2, 207, 104, 50, 14
-    AUTOCHECKBOX "&Utilizează cheie de autentificare pre-partajată", 1604, 21, 15, 217, 10
-    LTEXT "C&heie:", 1602, 20, 31, 44, 12
+    AUTOCHECKBOX "&Utilizare chei predistribuite pentru autorizare", 1604, 21, 15, 217, 10
+    LTEXT "&Cheie:", 1602, 20, 31, 44, 12
     EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Permite certificate din stocul de utilizator alături de certificatele mașinii", 1606, 20, 50, 242, 13, WS_DISABLED
-    AUTOCHECKBOX "Utilizează un &certificat anume", 1607, 20, 67, 239, 10, WS_DISABLED
-    PUSHBUTTON "&Alege", 1608, 31, 84, 50, 14, WS_DISABLED
+    AUTOCHECKBOX "Se permit certificate utilizator adăugate la certificatele calculatorului", 1606, 20, 50, 242, 13, WS_DISABLED
+    AUTOCHECKBOX "Utilizare certificat specific", 1607, 20, 67, 239, 10, WS_DISABLED
+    PUSHBUTTON "Selectare", 1608, 31, 84, 50, 14, WS_DISABLED
     COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 571 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Jurnalul de securitate"
+CAPTION "Înregistrare în jurnal de securitate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Opțiuni de înregistrare:", -1, 6, 8, 216, 47
