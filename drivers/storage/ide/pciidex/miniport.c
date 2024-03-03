@@ -32,6 +32,20 @@ PciIdeXStartMiniport(
                                                  FdoExtension->DriverObject);
     ASSERT(DriverExtension);
 
+    if (FdoExtension->Flags & FDO_AHCI)
+    {
+        PAHCI_DEVICE_EXTENSION DeviceExtension =
+            (PAHCI_DEVICE_EXTENSION)FdoExtension->MiniControllerExtension;
+
+        DeviceExtension->Hba = FdoExtension->Abar;
+
+        FdoExtension->MaxDevices = MAX_AHCI_DEVICES;
+    }
+    else
+    {
+        FdoExtension->MaxDevices = MAX_IDE_CHANNEL;
+    }
+
     FdoExtension->Properties.Size = sizeof(IDE_CONTROLLER_PROPERTIES);
     FdoExtension->Properties.ExtensionSize = DriverExtension->MiniControllerExtensionSize;
     Status = DriverExtension->HwGetControllerProperties(FdoExtension->MiniControllerExtension,

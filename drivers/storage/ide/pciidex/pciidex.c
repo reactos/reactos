@@ -127,16 +127,27 @@ PciIdeXGetConfigurationInfo(
 
     if (PciConfig->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR)
     {
+        if (PciConfig->ProgIf & PCIIDE_PROGIF_DMA_CAPABLE)
+        {
+            FdoExtension->Flags |= FDO_DMA_CAPABLE;
+        }
+
         if (PciConfig->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR)
         {
             /* Both IDE channels in native mode */
-            FdoExtension->InNativeMode =
-                (PciConfig->ProgIf & PCIIDE_PROGIF_PRIMARY_CHANNEL_NATIVE_MODE) &&
-                (PciConfig->ProgIf & PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE);
+            if ((PciConfig->ProgIf & PCIIDE_PROGIF_PRIMARY_CHANNEL_NATIVE_MODE) &&
+                (PciConfig->ProgIf & PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE))
+            {
+                FdoExtension->Flags |= FDO_IN_NATIVE_MODE;
+            }
+        }
+        else if (PciConfig->SubClass == PCI_SUBCLASS_MSC_AHCI_CTLR)
+        {
+            FdoExtension->Flags |= FDO_AHCI | FDO_IN_NATIVE_MODE;
         }
         else if (PciConfig->SubClass == PCI_SUBCLASS_MSC_RAID_CTLR)
         {
-            FdoExtension->InNativeMode = TRUE;
+            FdoExtension->Flags |= FDO_IN_NATIVE_MODE;
         }
     }
 
@@ -144,7 +155,7 @@ PciIdeXGetConfigurationInfo(
            FdoExtension->VendorId,
            FdoExtension->DeviceId,
            PciConfig->ProgIf,
-           FdoExtension->InNativeMode);
+           !!(FdoExtension->Flags & FDO_IN_NATIVE_MODE));
 
     return STATUS_SUCCESS;
 }
@@ -236,6 +247,12 @@ PciIdeXAddDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to retrieve the configuration info %lx\n", Status);
+        goto Failure;
+    }
+
+    if (FdoExtension->Flags & FDO_AHCI)
+    {
+        DPRINT1("ACHI support not implemented yet\n");
         goto Failure;
     }
 
