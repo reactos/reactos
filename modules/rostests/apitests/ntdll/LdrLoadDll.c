@@ -148,7 +148,6 @@ START_TEST(LdrLoadDll)
     EndSeh(STATUS_SUCCESS);
 
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32.dll", szSysDir);
-
     for (pch = szPath; *pch != UNICODE_NULL; ++pch)
     {
         if (*pch == L'\\')
