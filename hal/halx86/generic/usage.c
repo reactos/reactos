@@ -541,8 +541,8 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
                              ListSize);
 
     /* Free our lists */
-    ExFreePool(RawList);
-    ExFreePool(TranslatedList);
+    ExFreePoolWithTag(RawList, TAG_HAL);
+    ExFreePoolWithTag(TranslatedList, TAG_HAL);
 
     /* Get the machine's serial number */
     HalpReportSerialNumber();

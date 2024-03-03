@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -768,8 +769,10 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
     SlotNumber.u.AsULONG = (*pResourceList)->SlotNumber;
 
     /* Get the IRQ supported range */
+    // FIXME: Isn't BusData->GetIrqRange NULL for _MINIHAL_?
     Status = BusData->GetIrqRange(BusHandler, RootHandler, SlotNumber, &Interrupt);
     if (!NT_SUCCESS(Status)) return Status;
+
 #ifndef _MINIHAL_
     /* Handle the /PCILOCK feature */
     if (HalpPciLockSettings)
@@ -778,6 +781,7 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
         UNIMPLEMENTED_DBGBREAK("/PCILOCK boot switch is not yet supported.");
     }
 #endif
+
     /* Now create the correct resource list based on the supported bus ranges */
 #if 0
     Status = HaliAdjustResourceListRange(BusHandler->BusAddresses,
@@ -789,7 +793,7 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
 #endif
 
     /* Return to caller */
-    ExFreePool(Interrupt);
+    ExFreePoolWithTag(Interrupt, TAG_HAL);
     return Status;
 }
 
@@ -803,6 +807,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
                            IN PDEVICE_OBJECT DeviceObject OPTIONAL,
                            IN ULONG Slot,
                            IN OUT PCM_RESOURCE_LIST *AllocatedResources)
+// FIXME: AllocatedResources is OUT only. Check and fix callers too.
 {
     PCI_COMMON_CONFIG PciConfig;
     SIZE_T Address;
@@ -902,6 +907,8 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
             else
             {
                 ASSERT(FALSE);
+                ExFreePoolWithTag(*AllocatedResources, TAG_HAL);
+                *AllocatedResources = NULL;
                 return STATUS_UNSUCCESSFUL;
             }
             Descriptor++;

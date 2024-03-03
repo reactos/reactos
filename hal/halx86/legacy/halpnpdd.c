@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -220,7 +221,7 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 /* Free existing structure */
-                ExFreePool(*DeviceRelations);
+                ExFreePoolWithTag(*DeviceRelations, 0); // Tag is unknown.
             }
 
             /* Now check if we have a PDO list */
@@ -335,12 +336,17 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
                    OUT PCM_RESOURCE_LIST *Resources)
 {
     PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+#if 0
     NTSTATUS Status;
+#endif
     PCM_RESOURCE_LIST ResourceList;
-//    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-//    PIO_RESOURCE_DESCRIPTOR Descriptor;
-//    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
-//    ULONG i;
+#if 0
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
+    ULONG i;
+#endif
+
     PAGED_CODE();
 
     /* Only the ACPI PDO has requirements */
@@ -354,16 +360,17 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ASSERT(RequirementsList->AlternativeLists == 1);
 #endif
 
-        /* Allocate the resourcel ist */
+        /* Allocate the resource list */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(CM_RESOURCE_LIST),
                                              TAG_HAL);
         if (!ResourceList )
         {
             /* Fail, no memory */
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-//            ExFreePoolWithTag(RequirementsList, TAG_HAL);
-            return Status;
+#if 0
+            ExFreePoolWithTag(RequirementsList, TAG_HAL);
+#endif
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         /* Initialize it */
@@ -377,11 +384,11 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         ResourceList->List[0].PartialResourceList.Revision = 1;
         ResourceList->List[0].PartialResourceList.Count = 0;
 
+#if 0
         /* Setup the first descriptor */
-        //PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+        PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
         /* Find the requirement descriptor for the SCI */
-#if 0
         for (i = 0; i < RequirementsList->List[0].Count; i++)
         {
             /* Get this descriptor */
@@ -408,7 +415,9 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
         /* Return resources and success */
         *Resources = ResourceList;
 
-//        ExFreePoolWithTag(RequirementsList, TAG_HAL);
+#if 0
+        ExFreePoolWithTag(RequirementsList, TAG_HAL);
+#endif
 
         return STATUS_SUCCESS;
     }
