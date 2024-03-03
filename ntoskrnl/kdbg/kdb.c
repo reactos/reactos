@@ -1484,8 +1484,13 @@ KdbEnterDebuggerException(
     {
         if (KdbInitFileBuffer)
         {
+            // FIXME? Should we do that call at the same place
+            // where we currently call KdbpInternalEnter?
+            // InterlockedIncrement(&KdbEntryCount);
             KdbpCliInterpretInitFile();
+            // InterlockedDecrement(&KdbEntryCount);
             EnterConditionMet = FALSE;
+            goto continue_execution; /* return */
         }
         if (!EnterConditionMet)
         {
