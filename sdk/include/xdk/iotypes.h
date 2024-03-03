@@ -4130,6 +4130,7 @@ typedef struct _PCI_EXPRESS_SRIOV_CAPABILITY {
 #define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
 #define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
 #define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
+#define PCI_SUBCLASS_MSC_AHCI_CTLR          0x06
 #define PCI_SUBCLASS_MSC_OTHER              0x80
 
 /* PCI device subclasses for class 2 (network controllers)*/
