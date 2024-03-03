@@ -23,7 +23,7 @@ LdrLoadDll(
 
 START_TEST(LdrLoadDll)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DllName;
     PVOID BaseAddress, BaseAddress2;
     WCHAR szWinDir[MAX_PATH], szSysDir[MAX_PATH], szPath[MAX_PATH];
@@ -33,15 +33,40 @@ START_TEST(LdrLoadDll)
     GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
     GetSystemDirectoryW(szSysDir, _countof(szSysDir));
 
-    StartSeh() LdrLoadDll(NULL, NULL, &DllName, NULL);          EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh() LdrLoadDll(NULL, NULL, &DllName, &BaseAddress);  EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh() LdrLoadDll(L"", NULL, &DllName, NULL);           EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh() LdrLoadDll(L"", NULL, &DllName, &BaseAddress);   EndSeh(STATUS_ACCESS_VIOLATION);
-
-    RtlInitUnicodeString(&DllName, L"advapi32.dll");
+    Status = 0xDEADFACE;
     StartSeh()
         Status = LdrLoadDll(NULL, NULL, &DllName, NULL);
-        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+    ok_long(Status, 0xDEADFACE);
+
+    Status = 0xDEADFACE;
+    BaseAddress = InvalidPointer;
+    StartSeh()
+        Status = LdrLoadDll(NULL, NULL, &DllName, &BaseAddress);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+    ok_long(Status, 0xDEADFACE);
+    ok_ptr(BaseAddress, InvalidPointer);
+
+    Status = 0xDEADFACE;
+    StartSeh()
+        Status = LdrLoadDll(L"", NULL, &DllName, NULL);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+    ok_long(Status, 0xDEADFACE);
+
+    Status = 0xDEADFACE;
+    BaseAddress = InvalidPointer;
+    StartSeh()
+        Status = LdrLoadDll(L"", NULL, &DllName, &BaseAddress);
+    EndSeh(STATUS_ACCESS_VIOLATION);
+    ok_long(Status, 0xDEADFACE);
+    ok_ptr(BaseAddress, InvalidPointer);
+
+    RtlInitUnicodeString(&DllName, L"advapi32.dll");
+
+    StartSeh()
+        Status = LdrLoadDll(NULL, NULL, &DllName, NULL);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     RtlInitUnicodeString(&DllName, L"advapi32.dll");
@@ -71,7 +96,18 @@ START_TEST(LdrLoadDll)
     StartSeh()
         Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
         ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+
+    StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32.dll", szSysDir);
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 
     StringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32", szSysDir);
@@ -80,7 +116,18 @@ START_TEST(LdrLoadDll)
     StartSeh()
         Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
         ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+
+    StringCchPrintfW(szPath, _countof(szPath), L"%s/advapi32.dll", szSysDir);
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
@@ -95,6 +142,23 @@ START_TEST(LdrLoadDll)
     StartSeh()
         Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
         ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-        if (NT_SUCCESS(Status)) LdrUnloadDll(BaseAddress);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
+    EndSeh(STATUS_SUCCESS);
+
+    StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32.dll", szSysDir);
+
+    for (pch = szPath; *pch != UNICODE_NULL; ++pch)
+    {
+        if (*pch == L'\\')
+            *pch = L'/';
+    }
+
+    RtlInitUnicodeString(&DllName, szPath);
+    StartSeh()
+        Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
+        ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        if (NT_SUCCESS(Status))
+            LdrUnloadDll(BaseAddress);
     EndSeh(STATUS_SUCCESS);
 }
