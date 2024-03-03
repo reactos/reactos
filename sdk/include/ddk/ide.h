@@ -294,6 +294,7 @@ PciIdeXSetBusData(
 #define UDMA_MODE3  (1 << 14)
 #define UDMA_MODE4  (1 << 15)
 #define UDMA_MODE5  (1 << 16)
+#define UDMA_MODE6  (1 << 17)
 
 #ifdef __cplusplus
 }
