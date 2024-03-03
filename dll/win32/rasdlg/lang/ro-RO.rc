@@ -701,7 +701,7 @@ BEGIN
     AUTOCHECKBOX "&Formare din nou dacă linia a căzut", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Dispozitive multiple", 1288, 7, 156, 213, 32
     COMBOBOX 1551, 16, 169, 128, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON &Configurare...", 1293, 150, 168, 60, 14
+    PUSHBUTTON "&Configurare...", 1293, 150, 168, 60, 14
     PUSHBUTTON "&X.25", 1295, 7, 194, 50, 14
     PUSHBUTTON "Conexiune prin „tunel” &virtual", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
 END
