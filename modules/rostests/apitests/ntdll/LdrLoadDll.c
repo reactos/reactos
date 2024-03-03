@@ -90,6 +90,7 @@ START_TEST(LdrLoadDll)
         Status = LdrLoadDll(L"\\SystemRoot\\System32", NULL, &DllName, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
+    /* Test with only backslashes in path; no file extension */
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
     RtlInitUnicodeString(&DllName, szPath);
     StartSeh()
