@@ -1077,7 +1077,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Configuraţi această conexiune pentru a utiliza cartela inteligentă la conectare în reţeaua de la distanţă. Selectaţi dacă utilizaţi cartela inteligentă cu această conexiune.", -1, 10, 5, 303, 22
-    AUTORADIOBUTTON "&Utilizare cartelă inteligentă ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Utilizare cartelă inteligentă", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Fără utilizare cartelă inteligentă", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
@@ -1087,7 +1087,7 @@ CAPTION "Expert interfaţă de formare la cerere"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit în Expert interfaţă de formare la cerere.", 1530, 122, 8, 192, 32
-    LTEXT Utilizând acest expert creaţi o interfaţă de formare la cerere pentru a conecta acest distribuitor la alte distribuitoare.", 1531, 122, 43, 192, 37
+    LTEXT "Utilizând acest expert creaţi o interfaţă de formare la cerere pentru a conecta acest distribuitor la alte distribuitoare.", 1531, 122, 43, 192, 37
     LTEXT "Pentru a continua, apăsaţi pe Următorul.", 1532, 122, 85, 191, 29
 END
 
