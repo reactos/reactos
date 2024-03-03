@@ -16,6 +16,9 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+IDI_MYDOCS ICON "res/mydocs.ico"
+IDI_MYPICS ICON "res/mypics.ico"
+
 IDR_MYDOCS REGISTRY "res/mydocs.rgs"
 
 #ifdef LANGUAGE_DE_DE
