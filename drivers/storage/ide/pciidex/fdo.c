@@ -71,7 +71,7 @@ PciIdeXFdoParseResources(
         if (!IoBase)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        FdoExtension->IoBaseMapped = TRUE;
+        FdoExtension->Flags |= FDO_IO_BASE_MAPPED;
     }
     FdoExtension->BusMasterPortBase = IoBase;
 
@@ -128,10 +128,10 @@ PciIdeXFdoFreeResources(
 {
     PAGED_CODE();
 
-    if (FdoExtension->IoBaseMapped)
+    if (FdoExtension->Flags & FDO_IO_BASE_MAPPED)
     {
         MmUnmapIoSpace(FdoExtension->BusMasterPortBase, 16);
-        FdoExtension->IoBaseMapped = FALSE;
+        FdoExtension->Flags &= ~FDO_IO_BASE_MAPPED;
     }
 }
 
@@ -397,7 +397,7 @@ PciIdeXFdoQueryInterface(
         ResourceType = (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData;
 
         /* In native mode the IDE controller does not use any legacy interrupt resources */
-        if (FdoExtension->InNativeMode ||
+        if ((FdoExtension->Flags & FDO_IN_NATIVE_MODE) ||
             ResourceType != CmResourceTypeInterrupt ||
             IoStack->Parameters.QueryInterface.Size < sizeof(TRANSLATOR_INTERFACE))
         {
