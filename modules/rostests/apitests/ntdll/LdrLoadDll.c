@@ -91,7 +91,6 @@ START_TEST(LdrLoadDll)
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32", szSysDir);
-
     RtlInitUnicodeString(&DllName, szPath);
     StartSeh()
         Status = LdrLoadDll(szWinDir, NULL, &DllName, &BaseAddress);
