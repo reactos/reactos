@@ -461,8 +461,13 @@ AtaTimSelectTimingsWithDriver(
     PATAPORT_DEVICE_EXTENSION Devices[MAX_IDE_DEVICE];
     PCIIDE_TRANSFER_MODE_SELECT XferMode;
     ULONG i;
+    CHANNEL_DEVICE_DATA DevData[MAX_IDE_DEVICE] = { 0 };
+    PCHANNEL_DEVICE_DATA DeviceList[MAX_IDE_DEVICE];
 
-    ASSERT(PciIdeInterface->ProgramTimingMode != NULL);
+    DeviceList[0] = &DevData[0];
+    DeviceList[1] = &DevData[1];
+
+    /* ASSERT(PciIdeInterface->ProgramTimingMode != NULL); */
 
     RtlZeroMemory(&XferMode, sizeof(XferMode));
     XferMode.TransferModeTimingTable = (PULONG)AtapTimingTable;
@@ -477,7 +482,10 @@ AtaTimSelectTimingsWithDriver(
                                         NULL);
         Devices[i] = DevExt;
         if (!DevExt)
+        {
+            DeviceList[i] = NULL;
             continue;
+        }
 
         RtlCopyMemory(&XferMode.IdentifyData[i],
                       &DevExt->IdentifyDeviceData,
@@ -493,10 +501,18 @@ AtaTimSelectTimingsWithDriver(
         XferMode.BestUDmaCycleTime[i] = DevExt->UltraDmaCycleTime;
         XferMode.DeviceTransferModeCurrent[i] = DevExt->TransferModeCurrentBitmap;
         XferMode.DeviceTransferModeSupported[i] = DevExt->TransferModeSupportedBitmap;
+
+        DevData[i].FixedDisk = !IS_ATAPI(&DevExt->Device);
+        DevData[i].IoReadySupported = !!DevExt->IdentifyDeviceData.Capabilities.IordySupported;
+        DevData[i].PioCycleTime = DevExt->PioCycleTime;
+        DevData[i].SwDmaCycleTime = DevExt->SingleWordDmaCycleTime;
+        DevData[i].MwDmaCycleTime = DevExt->MultiWordDmaCycleTime;
+        DevData[i].SupportedModes = DevExt->TransferModeSupportedBitmap;
+        DevData[i].CurrentModes = DevExt->TransferModeCurrentBitmap;
     }
 
     /* Call the chipset driver */
-    PciIdeInterface->ProgramTimingMode(PciIdeInterface->DeviceObject->DeviceExtension, &XferMode);
+    PciIdeInterface->SetTransferMode(PciIdeInterface->ChanData, DeviceList);
 
     /* Save the result */
     for (i = 0; i < MAX_IDE_DEVICE; ++i)
@@ -506,7 +522,9 @@ AtaTimSelectTimingsWithDriver(
         if (!DevExt)
             continue;
 
-        DevExt->TransferModeSelectedBitmap = XferMode.DeviceTransferModeSelected[i];
+        DevExt->TransferModeSelectedBitmap = 1 << DeviceList[i]->PioMode;
+        if (DeviceList[i]->DmaMode != 0)
+            DevExt->TransferModeSelectedBitmap |= 1 << DeviceList[i]->DmaMode;
 
         AtaTimDumpTimingInfo(DevExt);
     }

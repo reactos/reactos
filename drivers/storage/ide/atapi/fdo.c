@@ -269,7 +269,7 @@ Exit:
     *InterruptDesc = InterruptDescriptor;
 }
 
-static
+/* static */
 CODE_SEG("PAGE")
 VOID
 AtaFdoParsePataControllerResources(
@@ -407,11 +407,11 @@ AtaFdoParsePataResources(
     {
         INFO("Trying to parse controller resources\n");
 
-        AtaFdoParsePataControllerResources(PortData,
-                                           PortData->Pata.PciIdeInterface.ControllerResources,
-                                           &CommandPortDesc,
-                                           &ControlPortDesc,
-                                           &InterruptDesc);
+        /* AtaFdoParsePataControllerResources(PortData, */
+                                           /* PortData->Pata.PciIdeInterface.ControllerResources, */
+                                           /* &CommandPortDesc, */
+                                           /* &ControlPortDesc, */
+                                           /* &InterruptDesc); */
     }
 
     if (!CommandPortDesc || !ControlPortDesc || !InterruptDesc)
@@ -861,12 +861,12 @@ AtaPciIdeDmaInit(
 
     /* The hardware is a PCI IDE controller */
     ChanExt->Common.Flags |= DO_IS_PCIIDE;
-    PortData->PortNumber = PciIdeInterface->ChannelNumber;
+    PortData->PortNumber = PciIdeInterface->Channel;
 
     if (!PciIdeInterface->PrdTable)
         goto FallbackToPio;
 
-    if (PciIdeInterface->ControllerObject)
+    if (PciIdeInterface->HwSyncObject)
     {
         INFO("Sync access for DMA hardware is required\n");
         PortData->PortFlags |= PORT_FLAG_SIMPLEX_DMA;
@@ -877,8 +877,8 @@ AtaPciIdeDmaInit(
 
     /* The hardware can use DMA */
     ChanExt->AdapterObject = PciIdeInterface->AdapterObject;
-    ChanExt->AdapterDeviceObject = PciIdeInterface->DeviceObject;
-    ChanExt->MapRegisterCount = PciIdeInterface->MapRegisterCount;
+    ChanExt->AdapterDeviceObject = PciIdeInterface->AdapterDeviceObject;
+    ChanExt->MapRegisterCount = PciIdeInterface->MaximumPhysicalPages;
     return;
 
 FallbackToPio:

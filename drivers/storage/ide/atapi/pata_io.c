@@ -98,7 +98,7 @@ UCHAR
 AtaPciIdeDmaReadStatus(
     _In_ PATAPORT_PORT_DATA PortData)
 {
-    return ATA_READ(PortData->Pata.PciIdeInterface.IoBase + PCIIDE_DMA_STATUS);
+    return ATA_READ(PortData->Pata.PciIdeInterface.Regs.Dma + PCIIDE_DMA_STATUS);
 }
 
 static
@@ -106,7 +106,7 @@ VOID
 AtaPciIdeDmaPrepare(
     _In_ PATAPORT_PORT_DATA PortData)
 {
-    PUCHAR IoBase = PortData->Pata.PciIdeInterface.IoBase;
+    PUCHAR IoBase = PortData->Pata.PciIdeInterface.Regs.Dma;
 
     /* Clear the interrupt and error bits in the status register */
     ATA_WRITE(IoBase + PCIIDE_DMA_COMMAND, PCIIDE_DMA_COMMAND_STOP);
@@ -135,7 +135,7 @@ AtaPciIdeDmaStart(
     Command |= PCIIDE_DMA_COMMAND_START;
 
     /* Begin transaction */
-    ATA_WRITE(PortData->Pata.PciIdeInterface.IoBase + PCIIDE_DMA_COMMAND, Command);
+    ATA_WRITE(PortData->Pata.PciIdeInterface.Regs.Dma + PCIIDE_DMA_COMMAND, Command);
 }
 
 static
@@ -143,7 +143,7 @@ VOID
 AtaPciIdeDmaStop(
     _In_ PATAPORT_PORT_DATA PortData)
 {
-    PUCHAR IoBase = PortData->Pata.PciIdeInterface.IoBase;
+    PUCHAR IoBase = PortData->Pata.PciIdeInterface.Regs.Dma;
 
     /* Wait one PIO transfer cycle */
     (VOID)ATA_READ(IoBase + PCIIDE_DMA_STATUS);
@@ -159,7 +159,7 @@ AtaPciIdeDmaClear(
     _In_ PATAPORT_PORT_DATA PortData,
     _In_ UCHAR DmaStatus)
 {
-    ATA_WRITE(PortData->Pata.PciIdeInterface.IoBase + PCIIDE_DMA_STATUS, DmaStatus);
+    ATA_WRITE(PortData->Pata.PciIdeInterface.Regs.Dma + PCIIDE_DMA_STATUS, DmaStatus);
 }
 
 static
@@ -780,7 +780,7 @@ AtaPciIdePreparePrdTable(
             ASSERT((TransferLength % sizeof(USHORT)) == 0);
 
             /* Make sure we do not write beyond the end of the PRD table */
-            ASSERT(DescriptorNumber++ < PortData->Pata.PciIdeInterface.MapRegisterCount);
+            ASSERT(DescriptorNumber++ < PortData->Pata.PciIdeInterface.MaximumPhysicalPages);
 
             PrdTableEntry->Address = Address;
             PrdTableEntry->Length = TransferLength & PCIIDE_PRD_LENGTH_MASK;

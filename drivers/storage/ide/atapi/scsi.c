@@ -263,6 +263,11 @@ AtaReqCompleteRequest(
 
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
+    if (Device->PortData->PortFlags & PORT_FLAG_SIMPLEX_DMA)
+    {
+        IoFreeController(Device->PortData->Pata.PciIdeInterface.HwSyncObject);
+    }
+
     if (Request->InternalState != REQUEST_STATE_NOT_STARTED)
     {
         if (Request->Complete)
@@ -579,8 +584,8 @@ AtaReqPreparePrdTable(
 
     if (PortData->PortFlags & PORT_FLAG_SIMPLEX_DMA)
     {
-        IoAllocateController(PortData->Pata.PciIdeInterface.ControllerObject,
-                             PortData->Pata.PciIdeInterface.DeviceObject,
+        IoAllocateController(PortData->Pata.PciIdeInterface.HwSyncObject,
+                             PortData->Pata.PciIdeInterface.HwSyncContext,
                              AtaReqStartIoSerialized,
                              Request);
     }

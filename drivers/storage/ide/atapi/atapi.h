@@ -26,7 +26,7 @@
 #include <sptilib.h>
 #include <section_attribs.h>
 #include <debug/driverdbg.h>
-#include <reactos/drivers/ntddata.h>
+#include <reactos/drivers/ata/ntddata.h>
 
 typedef struct _ATAPORT_CHANNEL_EXTENSION ATAPORT_CHANNEL_EXTENSION, *PATAPORT_CHANNEL_EXTENSION;
 typedef struct _ATAPORT_DEVICE_EXTENSION ATAPORT_DEVICE_EXTENSION, *PATAPORT_DEVICE_EXTENSION;
@@ -80,45 +80,6 @@ typedef union _ATA_SCSI_ADDRESS
     };
     ULONG AsULONG;
 } ATA_SCSI_ADDRESS, *PATA_SCSI_ADDRESS;
-
-typedef struct _IDE_REGISTERS
-{
-    PUCHAR Data;
-    union
-    {
-        PUCHAR Features;
-        PUCHAR Error;
-    };
-    union
-    {
-        PUCHAR SectorCount;
-        PUCHAR InterruptReason;
-    };
-    PUCHAR LbaLow;             ///< LBA bits 0-7, 24-31
-    union
-    {
-        PUCHAR LbaMid;         ///< LBA bits 8-15, 32-39
-        PUCHAR ByteCountLow;
-        PUCHAR SignatureLow;
-    };
-    union
-    {
-        PUCHAR LbaHigh;        ///< LBA bits 16-23, 40-47
-        PUCHAR ByteCountHigh;
-        PUCHAR SignatureHigh;
-    };
-    PUCHAR Device;
-    union
-    {
-        PUCHAR Command;
-        PUCHAR Status;
-    };
-    union
-    {
-        PUCHAR Control;
-        PUCHAR AlternateStatus;
-    };
-} IDE_REGISTERS, *PIDE_REGISTERS;
 
 typedef VOID
 (STOP_IO_CALLBACK)(
