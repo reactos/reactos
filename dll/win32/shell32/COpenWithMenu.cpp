@@ -221,50 +221,30 @@ HICON COpenWithList::GetIcon(SApp *pApp)
 
 BOOL COpenWithList::Execute(COpenWithList::SApp *pApp, LPCWSTR pwszFilePath)
 {
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    WCHAR wszBuf[MAX_PATH * 2 + 8], *pszEnd = wszBuf;
-    size_t cchRemaining = _countof(wszBuf);
-
-    /* setup path with argument */
-    ZeroMemory(&si, sizeof(STARTUPINFOW));
-    si.cb = sizeof(STARTUPINFOW);
-
-    /* Build the command line */
-    for (UINT i = 0; pApp->wszCmd[i] && cchRemaining > 1; ++i)
-    {
-        if (pApp->wszCmd[i] != '%')
-        {
-            *(pszEnd++) = pApp->wszCmd[i];
-            --cchRemaining;
-        }
-        else if (pApp->wszCmd[++i] == '1')
-        {
-            if (StrChrW(pwszFilePath, L' ') && cchRemaining > 3)
-                StringCchPrintfExW(pszEnd, cchRemaining, &pszEnd, &cchRemaining, 0, L"\"%ls\"", pwszFilePath);
-            else
-                StringCchCopyExW(pszEnd, cchRemaining, pwszFilePath, &pszEnd, &cchRemaining, 0);
-        }
-    }
-    /* NULL-terminate the command string */
-    if (cchRemaining > 0)
-        *pszEnd = L'\0';
-
-    /* Start the application now */
-    TRACE("Starting process %ls\n", wszBuf);
-    if (!CreateProcessW(NULL, wszBuf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    {
-        ERR("CreateProcessW %ls failed\n", wszBuf);
-        return FALSE;
-    }
+    WCHAR wszBuf[256];
+    HKEY hKey;
 
     /* Add app to registry if it wasnt there before */
     SaveApp(pApp);
     if (!pApp->bMRUList)
         AddAppToMRUList(pApp, pwszFilePath);
 
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
+    /* Get a handle to the reg key */
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Applications\\%s", pApp->wszFilename);
+    if (RegCreateKeyEx(HKEY_CLASSES_ROOT, wszBuf, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyEx failed\n");
+        return FALSE;
+    }
+
+    /* Let ShellExecuteExW do the work */
+    SHELLEXECUTEINFOW sei = {sizeof(SHELLEXECUTEINFOW), SEE_MASK_CLASSKEY};
+    sei.nShow = SW_SHOWNORMAL;
+    sei.hkeyClass = hKey;
+    sei.lpFile = pwszFilePath;
+
+    ShellExecuteExW(&sei);
+
     return TRUE;
 }
 
@@ -1035,7 +1015,7 @@ VOID COpenWithDialog::Accept()
         if (m_pInfo->oaifInFlags & OAIF_EXEC)
             m_pAppList->Execute(pApp, m_pInfo->pcszFile);
 
-        DestroyWindow(m_hDialog);
+        EndDialog(m_hDialog, 1);
     }
 }
 
@@ -1066,7 +1046,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                     return TRUE;
                 }
                 case IDCANCEL: /* cancel */
-                    DestroyWindow(hwndDlg);
+                    EndDialog(hwndDlg, 0);
                     return TRUE;
                 default:
                     break;
@@ -1085,7 +1065,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
              }
             break;
         case WM_CLOSE:
-            DestroyWindow(hwndDlg);
+            EndDialog(hwndDlg, 0);
             return TRUE;
         default:
             break;
@@ -1427,8 +1407,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
 HRESULT WINAPI
 SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 {
-    MSG msg;
-    HWND hwnd;
+    INT_PTR ret;
 
     TRACE("SHOpenWithDialog hwndParent %p poainfo %p\n", hwndParent, poainfo);
 
@@ -1439,25 +1418,16 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 
     COpenWithDialog pDialog(poainfo);
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)&pDialog);
-    if (hwnd == NULL)
-    {
-        ERR("Failed to create dialog\n");
-        return E_FAIL;
-    }
-
     if (pDialog.IsNoOpen(hwndParent))
         return S_OK;
 
-    ShowWindow(hwnd, SW_SHOWNORMAL);
+    ret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent,
+                          COpenWithDialog::DialogProc, (LPARAM)&pDialog);
 
-    while (GetMessage(&msg, NULL, 0, 0) && IsWindow(hwnd))
+    if (ret == (INT_PTR)-1)
     {
-        if (!IsDialogMessage(hwnd, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        ERR("Failed to create dialog\n");
+        return E_FAIL;
     }
 
     return S_OK;
