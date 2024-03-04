@@ -1085,6 +1085,7 @@ void CFileDefExt::UpdateFolderIcon(HWND hwndDlg)
     // create the icon
     if (m_szFolderIconPath[0] == 0 && m_nFolderIconIndex == 0)
     {
+        // Windows ignores shell customization here and uses the default icon
         m_hFolderIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER));
     }
     else
