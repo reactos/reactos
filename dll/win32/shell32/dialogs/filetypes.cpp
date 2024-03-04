@@ -660,12 +660,11 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFil
     }
 
     // add icon to imagelist
-    INT iLargeImage = -1, iSmallImage = -1;
+    INT iSmallImage = -1;
     if (Entry->hIconLarge && Entry->hIconSmall)
     {
-        iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
+        ImageList_AddIcon(himlLarge, Entry->hIconLarge);
         iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
-        ASSERT(iLargeImage == iSmallImage);
     }
 
     // Do not add excluded entries
@@ -1037,9 +1036,8 @@ EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
     HIMAGELIST himlSmall = ListView_GetImageList(hListView, LVSIL_SMALL);
 
-    INT iLargeImage = ImageList_AddIcon(himlLarge, pEntry->hIconLarge);
+    ImageList_AddIcon(himlLarge, pEntry->hIconLarge);
     INT iSmallImage = ImageList_AddIcon(himlSmall, pEntry->hIconSmall);
-    ASSERT(iLargeImage == iSmallImage);
 
     INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
     if (iItem != -1)
