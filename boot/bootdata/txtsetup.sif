@@ -90,7 +90,7 @@ FreeSysPartDiskSpace=450
 acpi.sys     = 1,,,,,,,4,1,,,1,4
 nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
-uniata.sys   = 1,,,,,,x,4,,,,1,4
+atapi.sys    = 1,,,,,,x,4,,,,1,4
 buslogic.sys = 1,,,,,,x,4,,,,1,4
 blue.sys     = 1,,,,,,x,4,,,,1,4
 vgafonts.cab = 1,,,,,,,1,,,,1,1
@@ -126,7 +126,7 @@ storport.sys = 1,,,,,,,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
-pciide.sys   = 1,,,,,,,4,,,,1,4
+pciide.sys   = 1,,,,,,x,4,,,,1,4
 pciidex.sys  = 1,,,,,,,4,,,,1,4
 pcix.sys     = 1,,,,,,,4,,,,1,4
 pcmcia.sys   = 1,,,,,,,4,,,,1,4
@@ -156,11 +156,9 @@ PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 PCI\VEN_104B&CC_0100 = buslogic
 PCI\CC_0101 = pciide
-PCI\CC_0104 = uniata
-PCI\CC_0105 = uniata
-PCI\CC_0106 = uniata
+PCI\CC_0106 = atapi
 ;PCI\CC_0106 = storahci
-*PNP0600 = uniata
+*PNP0600 = atapi
 USB\CLASS_09 = usbhub
 USB\ROOT_HUB = usbhub
 USB\ROOT_HUB20 = usbhub
@@ -199,9 +197,10 @@ i8042prt = i8042prt.sys
 
 [BusExtenders.Load]
 pciide = pciide.sys
+atapi = atapi.sys
 
 [SCSI.Load]
-uniata = uniata.sys
+atapi = atapi.sys
 buslogic = buslogic.sys
 storahci = storahci.sys
 disk = disk.sys
