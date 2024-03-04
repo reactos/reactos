@@ -287,7 +287,7 @@ public:
     }
 
 protected:
-    virtual STDMETHODIMP CompareName(
+    STDMETHOD(CompareName)(
         LPARAM lParam,
         const TItemId * first,
         const TItemId * second)
