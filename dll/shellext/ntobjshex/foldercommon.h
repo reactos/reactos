@@ -222,7 +222,7 @@ protected:
         LPBC pbcReserved,
         IShellFolder** ppsfChild) PURE;
 
-    STDMETHODIMP ResolveSymLink(
+    STDMETHOD(ResolveSymLink)(
         const TItemId * info,
         LPITEMIDLIST * fullPidl) override
     {
