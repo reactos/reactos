@@ -75,7 +75,7 @@ protected:
 
     STDMETHOD(ResolveSymLink)(
         const NtPidlEntry * info,
-        LPITEMIDLIST * fullPidl);
+        LPITEMIDLIST * fullPidl) override;
 
 public:
     STDMETHOD(GetDefaultColumnState)(
