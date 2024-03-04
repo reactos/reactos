@@ -1525,27 +1525,27 @@ STYLE DS_SHELLFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Conexiuni în reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Alegeți o conexiune de rețea:", 1456, 7, 7, 251, 10
+    LTEXT "&Selectaţi o conexiune la reţea:", 1456, 7, 7, 251, 10
     COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    DEFPUSHBUTTON "&Conectare…", 1449, 7, 50, 60, 14
+    DEFPUSHBUTTON "&Conectare...", 1449, 7, 50, 60, 14
     PUSHBUTTON "Revocare", 1455, 70, 50, 60, 14
-    PUSHBUTTON "N&ouă…", 1459, 134, 50, 60, 14
-    PUSHBUTTON "&Proprietăți", 1460, 198, 50, 60, 14
+    PUSHBUTTON "&Nou...", 1459, 134, 50, 60, 14
+    PUSHBUTTON "Propr&ietăţi", 1460, 198, 50, 60, 14
 END
 
 1466 DIALOGEX 6, 18, 265, 262
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Text exemplu", 1469, 7, 7, 251, 8
+    LTEXT "Text model", 1469, 7, 7, 251, 8
     EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Adaugă", 1471, 77, 36, 60, 14
-    PUSHBUTTON "Înlo&cuiește", 1472, 141, 36, 60, 14
-    LTEXT "Text exemplu", 1473, 7, 57, 193, 8
+    PUSHBUTTON "&Adăugare", 1471, 77, 36, 60, 14
+    PUSHBUTTON "Înlocui&re", 1472, 141, 36, 60, 14
+    LTEXT "Text model", 1473, 7, 57, 193, 8
     LISTBOX 1474, 7, 68, 193, 145, WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "S&us", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-    PUSHBUTTON "J&os", 1476, 206, 86, 51, 14, BS_BITMAP
-    PUSHBUTTON "&Elimină", 1477, 141, 215, 60, 14
+    PUSHBUTTON "", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+    PUSHBUTTON "&În jos", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "Şt&ergere", 1477, 141, 215, 60, 14
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
     PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 196, 242, 60, 14
@@ -1555,16 +1555,16 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Text exemplu", 1469, 7, 7, 197, 8
+    LTEXT "Text model", 1469, 7, 7, 197, 8
     EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Adaugă", 1471, 76, 36, 60, 14
-    PUSHBUTTON "Înlo&cuiește", 1472, 141, 36, 60, 14
-    LTEXT "Text exemplu", 1473, 7, 57, 193, 8
+    PUSHBUTTON "&Adăugare", 1471, 76, 36, 60, 14
+    PUSHBUTTON "Înlocui&re", 1472, 141, 36, 60, 14
+    LTEXT "Text model", 1473, 7, 57, 193, 8
     LISTBOX 1474, 7, 68, 193, 135, WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "S&us", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-    PUSHBUTTON "J&os", 1476, 206, 86, 51, 14, BS_BITMAP
-    PUSHBUTTON "&Elimină", 1477, 141, 204, 60, 14
-    AUTOCHECKBOX "Te&xt exemplu", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Î&n sus", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+    PUSHBUTTON "&În jos", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "Şt&ergere", 1477, 141, 204, 60, 14
+    AUTOCHECKBOX "Text model", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
     PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 196, 242, 60, 14
 END
@@ -1573,13 +1573,13 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Text exemplu", 1469, 7, 5, 249, 8
+    LTEXT "Text model", 1469, 7, 5, 249, 8
     EDITTEXT 1470, 7, 17, 249, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Adaugă", 1471, 132, 36, 60, 14
-    PUSHBUTTON "Înlo&cuiește", 1472, 196, 36, 60, 14
-    LTEXT "Text exemplu", 1473, 7, 55, 251, 8
+    PUSHBUTTON "&Adăugare", 1471, 132, 36, 60, 14
+    PUSHBUTTON "Înlocui&re", 1472, 196, 36, 60, 14
+    LTEXT "Text model", 1473, 7, 55, 251, 8
     LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Elimină", 1477, 196, 214, 60, 14, WS_GROUP
+    PUSHBUTTON "Şt&ergere", 1477, 196, 214, 60, 14, WS_GROUP
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
     PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 196, 242, 60, 14
@@ -1587,25 +1587,25 @@ END
 
 1469 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Creare conexiune nouă"
+CAPTION "Expert conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Rețea privată prin linie &comutată.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Rețea privată prin Int&ernet.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Conectare &directă la un alt calculator.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Conectare prin legătură de &bandă largă.", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
-    LTEXT "Conectează utilizând linia telefonică (modem sau ISDN).", -1, 45, 21, 256, 8
-    LTEXT "Crează o conexiune de Rețea Virtuală Privată (VPN) prin Internet.", -1, 45, 46, 266, 8
-    LTEXT "Conectare prin portul serial, paralel sau infraroșu.", -1, 45, 71, 266, 8
-    LTEXT "Conectare prin legătura de bandă largă.", -1, 45, 95, 266, 8
+    AUTORADIOBUTTON "&Apel pe linie comutată la reţea privată.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Conec&tare la o reţea privată prin Internet.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Conectare directă la un alt computer.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Conectare la &reţea îEn bandă largă", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+    LTEXT "Conectare utilizând propria linie telefonică (modem sau ISDN).", -1, 45, 21, 256, 8
+    LTEXT "Creare conexiune de reţea virtuală privată (VPN) sau tunel prin internet.", -1, 45, 46, 266, 8
+    LTEXT "Conectare utilizând port-ul serial, paralel sau în infraroşu.", -1, 45, 71, 266, 8
+    LTEXT "Conectare prin conexiune proprie de bandă largă.", -1, 45, 95, 266, 8
 END
 
 1480 DIALOGEX 0, 0, 230, 61
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Editor de numere telefonice"
+CAPTION "Editor număr de telefon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Introduceți un nou n&umăr de telefon:", 1481, 7, 7, 218, 8
+    LTEXT "&Introduceţi noul număr de telefon:", 1481, 7, 7, 218, 8
     EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 99, 40, 60, 14
     PUSHBUTTON "Revocare", 2, 163, 40, 60, 14
@@ -1613,45 +1613,45 @@ END
 
 1481 DIALOGEX 0, 0, 321, 157
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Creare conexiune nouă"
+CAPTION "Expert conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Introduceți numele și parola contului unui furnizor de Internet, apoi scrieți aceste informații și salvați-le.\n(Dacă ați uitat o parolă sau un nume de cont, contactați furnizorul de servicii de Internet)", 1689, 10, 4, 308, 25
-    LTEXT "N&umele de utilizator:", 1636, 23, 35, 89, 15
+    LTEXT "Tastaţi numele unui cont ISP şi o parolă, apoi scrieţi pe ceva aceste informaţii şi păstraţi-le într-un loc sigur. (Dacă aţi uitat numele unui cont sau o parolă, contactaţi furnizorul ISP.)", 1689, 10, 4, 308, 25
+    LTEXT "Nume &utilizator:", 1636, 23, 35, 89, 15
     EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
-    LTEXT "&Parola:", 1637, 23, 55, 90, 13
+    LTEXT "&Parolă:", 1637, 23, 55, 90, 13
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmarea parolei:", 1638, 23, 74, 88, 13
+    LTEXT "&Confirmare parolă:", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Utilizează aceste informații de autentificare ori de câte ori cineva din acest calculator va încerca să se conecteze la Internet.", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Sta&bilește aceasta ca fiind conexiunea de Internet implicită", 1595, 23, 112, 288, 14
-    AUTOCHECKBOX "&Activați un paravan pentru această conexiune", 1682, 23, 133, 290, 14
+    AUTOCHECKBOX "U&tilizare nume de cont şi parolă actuale pentru oricine se conectează la Internet din acest computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Se stabileşte această conexiune la Internet ca implicită", 1595, 23, 112, 288, 14
+    AUTOCHECKBOX "&Activare Paravan de protecţie conexiune la Internet", 1682, 23, 133, 290, 14
 END
 
 1660 DIALOGEX 0, 0, 258, 78
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Paravanul pentru conexiunea la Internet"
+CAPTION "Paravan de protecţie a conexiunii la Internet"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, -1, 7, 7, 20, 20
-    LTEXT "Dezactivarea paravanului conexiunii la Internet poate expune calculatorul unui risc de acces neautorizat (din Inernet). Sigur doriți dezactivarrea lui?", -1, 44, 5, 212, 24
-    AUTOCHECKBOX "Nu dor&esc recurența acestui mesaj", 1662, 42, 40, 210, 10
-    DEFPUSHBUTTON "D&a", 6, 74, 60, 50, 14
-    PUSHBUTTON "N&u", 7, 128, 60, 50, 14
+    LTEXT "Dezactivarea Paravanului de protecţie a conexiunii la Internet vă poate expune computerul la acces neautorizat pe Internet. Sigur dezactivaţi?", -1, 44, 5, 212, 24
+    AUTOCHECKBOX "N&u se mai afişează acest dialog", 1662, 42, 40, 210, 10
+    DEFPUSHBUTTON "&Da", 6, 74, 60, 50, 14
+    PUSHBUTTON "&Nu", 7, 128, 60, 50, 14
 END
 
 7000 DIALOGEX 0, 0, 215, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N&umele de utilizator:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+    LTEXT "Nume &utilizator:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
     EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
-    LTEXT "Nu&me real complet:", -1, 7, 26, 90, 12
+    LTEXT "&Nume complet:", -1, 7, 26, 90, 12
     EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
-    LTEXT "&Parola:", -1, 7, 44, 90, 12
+    LTEXT "&Parolă:", -1, 7, 44, 90, 12
     EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirmarea parolei:", -1, 7, 62, 91, 12
+    LTEXT "&Confirmare parolă:", -1, 7, 62, 91, 12
     EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
     PUSHBUTTON "OK", 1, 84, 82, 60, 14
     PUSHBUTTON "Revocare", 2, 149, 82, 60, 14
@@ -1659,89 +1659,89 @@ END
 
 7005 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Retroapelare"
+CAPTION "Apelare inversă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "N&u permite retroapelarea", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Permite apelatorului stabilirea numărului de retroapel", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Utili&zează întotdeauna următorul număr de retroapel:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Nu se permite apelare inversă", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "Se per&mite apelantului să stabilească număr de apelare inversă", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Utilizaţi întotdeauna următorul număr pentru apelare inversă:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
 END
 
 7010 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Conexiuni de intrare", -1, 7, 4, 214, 110, WS_GROUP
-    LTEXT "Permite conexiuni de intrare pe aceste dispozitive.", -1, 17, 17, 195, 8
+    LTEXT "Se permit conexiuni dinspre exterior pe aceste dispozitive.", -1, 17, 17, 195, 8
     LTEXT "&Dispozitive:", -1, 17, 29, 29, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
-    AUTOCHECKBOX "Permite &multi-legăruri", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "&Proprietăți", 7013, 145, 94, 65, 14, WS_GROUP
-    GROUPBOX "Rețeaua virtuală privată", -1, 6, 122, 214, 49, WS_GROUP
-    AUTOCHECKBOX "P&ermite crearea de conexiuni private către acest calculator prin tunelizare prin Internet (sau o altă rețea)", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTOCHECKBOX "Afișea&ză pictogramă în zona de notificare pe durata conectării", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Acti&vare legătură multiplă", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "Propr&ietăţi", 7013, 145, 94, 65, 14, WS_GROUP
+    GROUPBOX "Reţea virtuală privată", -1, 6, 122, 214, 49, WS_GROUP
+    AUTOCHECKBOX "&Se permite altora să facă pe computer conexiuni private prin procedeu tunel la Internet sau la altă reţea", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
 7016 DIALOGEX 0, 0, 265, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Proprietăți ale TCP/IP de intrare"
+CAPTION "Proprietăţi TCP/IP dinspre exterior"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Accesul la rețea", -1, 6, 5, 252, 32
-    AUTOCHECKBOX "&Permite apelatorilor să-mi acceseze rețeaua locală", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
-    GROUPBOX "Alocarea adresei TCP/IP", -1, 6, 42, 250, 122
-    AUTORADIOBUTTON "Alocă a&utomat adresele TCP/IP utilizând DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Specifică &adresele TCP/IP", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+    GROUPBOX "Acces în reţea", -1, 6, 5, 252, 32
+    AUTOCHECKBOX "S&e permite apelanţilor să acceseze reţeaua locală", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "Asociere adrese TCP/IP", -1, 6, 42, 250, 122
+    AUTORADIOBUTTON "&Atribuire automată de adrese TCP/IP utilizând DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "S&pecificare adrese TCP/IP", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
     LTEXT "&De la:", -1, 29, 88, 53, 8
     CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
-    LTEXT "&La:", -1, 29, 105, 53, 8
+    LTEXT "&Către:", -1, 29, 105, 53, 8
     CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
     LTEXT "Total:", -1, 29, 124, 53, 10
     LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Pe&rmite calculatorului apelator specificarea unei adrese IP proprii", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Se permite apelarea computerului ca să-şi precizeze propria adresă IP", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 197, 169, 60, 14
 END
 
 7025 DIALOGEX 0, 0, 250, 157
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Proprietăți ale TCP/IP primite"
+CAPTION "Proprietăţi IPX dinspre exterior"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Accesul la rețea", -1, 8, 6, 234, 32
-    AUTOCHECKBOX "&Permite apelatorilor să-mi acceseze rețeaua locală", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
-    GROUPBOX "Alocarea numerelor de rețea", -1, 8, 43, 234, 87
-    AUTOCHECKBOX "Alocă aceleași n&umere de rețea pentru toate calculatoarele", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Alocă nu&merele de rețea în mod automat", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Specifică nume&rele de rețea:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    GROUPBOX "Acces în reţea", -1, 8, 6, 234, 32
+    AUTOCHECKBOX "S&e permite apelanţilor să acceseze reţeaua locală", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "Asociere număr de reţea", -1, 8, 43, 234, 87
+    AUTOCHECKBOX "Se atri&buie acelaşi număr de reţea tuturor computerelor", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Atribuire automată a numerelor de reţea", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Precizare numere de reţea:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
-    AUTOCHECKBOX "P&ermite apelatorilor specificarea propriilor numere", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Se permite apelanţilor să precizeze numerele lor de nod", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
     PUSHBUTTON "Revocare", 2, 181, 136, 60, 14
 END
 
 7033 DIALOGEX 0, 0, 220, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Proprietățile protocoalelor primite"
+CAPTION "Proprietăţi protocol dinspre exterior"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Permite apelatorilor să-mi acceseze rețeaua locală", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se permite &apelanţilor să acceseze reţeaua locală", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
     PUSHBUTTON "Revocare", 2, 151, 30, 60, 14
 END
 
 7035 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Rețelistică"
+CAPTION "Lucru în reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Componente de rețea:", -1, 7, 7, 217, 9
+    LTEXT "&Componente de reţea:", -1, 7, 7, 217, 9
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Instala&re…", 7037, 9, 110, 67, 14, WS_GROUP
-    PUSHBUTTON "&Dezinstalează", 7038, 80, 110, 67, 14, WS_GROUP
-    PUSHBUTTON "&Proprietăți", 7039, 153, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "I&nstalare...", 7037, 9, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "&Dezinstalare", 7038, 80, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "&Proprietăţi", 7039, 153, 110, 67, 14, WS_GROUP
     GROUPBOX "Descriere", -1, 7, 138, 213, 69
     LTEXT "<descriere protocol>", 7040, 17, 150, 193, 48
 END
@@ -1751,48 +1751,48 @@ STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
 CAPTION "Utilizatori"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Permite conectarea &utilizatorilor:", -1, 7, 5, 213, 8
+    LTEXT "&Utilizatori cărora le este permis să se conecteze:", -1, 7, 5, 213, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
-    PUSHBUTTON "N&ou…", 7044, 7, 107, 67, 14, WS_GROUP
-    PUSHBUTTON "&Elimină", 7045, 80, 107, 67, 14, WS_GROUP
-    PUSHBUTTON "P&roperietăți", 7046, 153, 107, 67, 14, WS_GROUP
-    AUTOCHECKBOX "Solicită tuturor utili&zatorilor securizarea parolelor și datelor", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Permite conectarea fără a furniza o parolă pentru dispozitivele conectate direct (cum ar fi calculatoarele palmtop)", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-    LTEXT "Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 9, 126, 212, 23
+    PUSHBUTTON "&Nou...", 7044, 7, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "Şt&ergere", 7045, 80, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Proprietăţi", 7046, 153, 107, 67, 14, WS_GROUP
+    AUTOCHECKBOX "&Se solicită tuturor utilizatorilor să-şi securizeze parolele şi datele.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se per&mite întotdeauna dispozitivelor cu conectare directă cum ar fi computerele palmtop să se conecteze fără furnizarea unei parole.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+    LTEXT "Reţineţi că şi alţi factori pot afecta abilitatea utilizatorului la conectare, cum ar fi un cont utilizator dezactivat.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bifați căsuțele fiecărui utilizator căruia îi va fi permisă conectarea la acest calculator. Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 10, 1, 275, 27
-    LTEXT "&Utilizatori cu permisiune de conectare:", -1, 10, 28, 275, 8
+    LTEXT "Selectaţi caseta de selectare de lângă fiecare utilizator căruia i se permite o conexiune la acest computer. Reţineţi că şi alţi factori pot afecta abilitatea utilizatorului la conectare, cum ar fi un cont utilizator dezactivat.", -1, 10, 1, 275, 27
+    LTEXT "&Utilizatori cărora le este permis să se conecteze:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
-    PUSHBUTTON "&Adăugare…", 7044, 10, 122, 65, 14, WS_GROUP
-    PUSHBUTTON "&Elimină", 7045, 79, 122, 65, 14, WS_GROUP
-    PUSHBUTTON "&Proprietăți", 7046, 147, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Adăugare...", 7044, 10, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Eliminare", 7045, 79, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "Propr&ietăţi", 7046, 147, 122, 65, 14, WS_GROUP
 END
 
 7050 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bifați căsuțele dispozitivelor pe care doriți să le utilizați pentru recepția conexiunilor.", -1, 10, 4, 299, 10
-    LTEXT "&Dispozitive conectate:", -1, 10, 16, 275, 8
+    LTEXT "Selectaţi caseta de selectare de lângă fiecare dispozitiv utilizat pentru conexiuni dinspre exterior.", -1, 10, 4, 299, 10
+    LTEXT "&Dispozitive pentru conexiune:", -1, 10, 16, 275, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
-    PUSHBUTTON "&Proprietăți", 7013, 243, 120, 65, 14, WS_GROUP
+    PUSHBUTTON "Propr&ietăţi", 7013, 243, 120, 65, 14, WS_GROUP
 END
 
 7051 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bifați căsuțele fiecărui tip de aplicație care trebuie activat pentru conexiunile recepționate.", -1, 10, 1, 288, 20
-    LTEXT "&Aplicații de rețea:", -1, 10, 24, 274, 8
+    LTEXT "Selectaţi caseta de selectare de lângă fiecare tip de software de lucru în reţea ce trebuie activat pentru legături dinspre exterior.", -1, 10, 1, 288, 20
+    LTEXT "&Software pentru lucrul în reţea:", -1, 10, 24, 274, 8
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
-    PUSHBUTTON "Instala&re…", 7037, 108, 71, 60, 14, WS_GROUP
-    PUSHBUTTON "&Dezinstalează", 7038, 172, 71, 60, 14, WS_GROUP
-    PUSHBUTTON "&Proprietăți", 7039, 236, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Instalare...", 7037, 108, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "De&zinstalare", 7038, 172, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Proprietăţi", 7039, 236, 71, 60, 14, WS_GROUP
     LTEXT "<descriere protocol>", 7040, 21, 105, 273, 38
     LTEXT "Descriere:", -1, 21, 95, 275, 8
 END
@@ -1801,21 +1801,21 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Conexiunile virtuale private din Internet către acest calculator sunt posibile doar dacă dețineți un nume cunoscut sau o adresă IP în Internet.", -1, 10, 4, 290, 20
-    AUTORADIOBUTTON "&Permite conexiuni virtuale private", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "N&u permite conexiuni virtuale private", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    LTEXT "Doriți permiterea conexiunilor virtuale private (VPN) către acest calculator?", -1, 17, 49, 275, 8
-    LTEXT " Dacă veți permite conexiuni VPN, ReactOS va modifica paravanul conexiunilor pentru a permite calculatorului să transmită și să recepționeze pachete VPN.", -1, 10, 25, 293, 25
+    LTEXT "Conexiunile vituale private prin Internet către computer sunt posibile numai dacă computerul are un nume sau o adresă IP cunoscută pe Internet.", -1, 10, 4, 290, 20
+    AUTORADIOBUTTON "&Se permit conexiuni virtuale private", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Nu se permit conexiuni virtuale private", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "Acceptaţi conexiuni virtuale private către acest computer?", -1, 17, 49, 275, 8
+    LTEXT " Dacă acceptaţi conexiuni VPN, Windows modifică Paravanul protector al conexiunilor la Internet, pentru a permite computerului să trimită şi să primească pachete VPN.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Dispozitive pentru această conexiune:", -1, 23, 24, 275, 8
+    LTEXT "&Dispozitiv pentru conexiune:", -1, 23, 24, 275, 8
     COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Dispozitivele în afara celor alese nu vor fi afectate și pot fi folosite în alte scopuri.", -1, 10, 4, 275, 17
-    PUSHBUTTON "&Proprietăți", 7061, 232, 53, 65, 14, WS_GROUP
+    LTEXT "Cu excepţia dispozitivului selectat, celelalte dispozitive nu vor fi afectate şi se pot utiliza în alte scopuri.", -1, 10, 4, 275, 17
+    PUSHBUTTON "Propr&ietăţi", 7061, 232, 53, 65, 14, WS_GROUP
 END
 
 7379 DIALOGEX 0, 0, 317, 143
@@ -1826,20 +1826,20 @@ END
 
 19900 DIALOGEX 0, 0, 156, 44
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Rețelistica liniei comutate"
+CAPTION "Lucru în reţea pe linie comutată"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 19901, 10, 10, 18, 20
-    LTEXT "Așteptarea repornirii serviciilor…", 19902, 34, 16, 120, 8
+    LTEXT "Se aşteaptă pornirea serviciilor...", 19902, 34, 16, 120, 8
 END
 
 STRINGTABLE
 BEGIN
-    187 "N&u, nu apela\0"
-    188 "Dumneavoastră (sau o aplicație) solicitați informații din %1. Care dintre conexiuni doriți să o utilizați?\0"
-    189 "Adaugă număr alternativ de telefon\0"
-    190 "Apelează doar primul dispozitiv disponibil\0"
-    191 "Apelează toate dispozitivele\0"
+    187 "&Nu, nu se formează numărul\x00"
+    188 "Dumneavoastră (sau un program) aţi solicitat informaţii de la %1. Ce conexiune utilizaţi?\x00"
+    189 "Adăugare număr telefon alternativ\x00"
+    190 "Se apelează numai primul dispozitiv disponibil\x00"
+    191 "Se apelează toate dispozitivele\x00"
     192 "Apelează dispozitivele doar când este nevoie\0"
     193 "Introduceți un nume și parolă cu acces la un domeniu rețea.\0"
     194 "Conversia adreselor de rețea (NAT) este deocamdată instalată ca protocol de redirecționare,\nși trebuie eliminat înainte de a activa partajarea conexiunilor de Internet.\nPentru a elimina NAT, deschideți Managerul de redirecționare și acces în rețea\nși extindeți din panelul stâng înregistrările de la redirecționare.\nEliminați protocolul de redirecționare NAT din lista\nde protocoale de redirecționare.\0"
