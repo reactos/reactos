@@ -30,212 +30,212 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 
 [GenericMfg]
 ;Well-known adapters
-%PCI\VEN_1191&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0005
-%PCI\VEN_1191&DEV_0006.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0006
-%PCI\VEN_1191&DEV_0007.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0007
-%PCI\VEN_1191&DEV_0008.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0008
-%PCI\VEN_1191&DEV_0009.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0009
-%PCI\VEN_10b9&DEV_5289.DeviceDesc%=uniata_Inst, PCI\VEN_10b9&DEV_5289
-%PCI\VEN_10b9&DEV_5288.DeviceDesc%=uniata_Inst, PCI\VEN_10b9&DEV_5288
-%PCI\VEN_10b9&DEV_5287.DeviceDesc%=uniata_Inst, PCI\VEN_10b9&DEV_5287
-%PCI\VEN_10b9&DEV_5281.DeviceDesc%=uniata_Inst, PCI\VEN_10b9&DEV_5281
-%PCI\VEN_10b9&DEV_5229&REV_c5.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c5
-%PCI\VEN_10b9&DEV_5229&REV_c4.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c4
-%PCI\VEN_10b9&DEV_5229&REV_c2.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c2
-%PCI\VEN_10b9&DEV_5229&REV_20.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_20
-%PCI\VEN_10b9&DEV_5229.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229
-%PCI\VEN_1022&DEV_7401.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7401
-%PCI\VEN_1022&DEV_7409.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7409
-%PCI\VEN_1022&DEV_7411.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7411
-%PCI\VEN_1022&DEV_7441.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7441
-%PCI\VEN_1022&DEV_7469.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7469
-%PCI\VEN_1022&DEV_209a.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_209a
-%PCI\VEN_1002&DEV_4349.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4349
-%PCI\VEN_1002&DEV_4369.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4369
-%PCI\VEN_1002&DEV_4376.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4376
-%PCI\VEN_1002&DEV_436e.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_436e
-%PCI\VEN_1002&DEV_4379.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_4379
-%PCI\VEN_1002&DEV_437a.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_437a
-%PCI\VEN_1002&DEV_438c.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_438c
-%PCI\VEN_1002&DEV_4380.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_4380
-%PCI\VEN_1002&DEV_439c.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_439c
-%PCI\VEN_1002&DEV_4390.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_4390
-%PCI\VEN_1002&DEV_4391.DeviceDesc%=uniata_Inst, PCI\VEN_1002&DEV_4391
-%PCI\VEN_1103&DEV_0004&REV_05.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_05
-%PCI\VEN_1103&DEV_0004&REV_03.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_03
-%PCI\VEN_1103&DEV_0004&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_02
-%PCI\VEN_1103&DEV_0004.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004
-%PCI\VEN_1103&DEV_0005&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005&REV_01
-%PCI\VEN_1103&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005
-%PCI\VEN_1103&DEV_0006&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0006&REV_01
-%PCI\VEN_1103&DEV_0007&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0007&REV_01
-%PCI\VEN_1103&DEV_0008&REV_07.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0008&REV_07
-%PCI\VEN_8086&DEV_1230.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_1230
-%PCI\VEN_8086&DEV_7010.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7010
-%PCI\VEN_8086&DEV_7111.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7111
-%PCI\VEN_8086&DEV_7199.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7199
-%PCI\VEN_8086&DEV_84ca.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_84ca
-%PCI\VEN_8086&DEV_7601.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7601
-%PCI\VEN_8086&DEV_2421.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2421
-%PCI\VEN_8086&DEV_2411.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2411
-%PCI\VEN_8086&DEV_244a.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_244a
-%PCI\VEN_8086&DEV_244b.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_244b
-%PCI\VEN_8086&DEV_248a.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_248a
-%PCI\VEN_8086&DEV_248b.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_248b
-%PCI\VEN_8086&DEV_24cb.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24cb
-%PCI\VEN_8086&DEV_24ca.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24ca
-%PCI\VEN_8086&DEV_24db.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24db
-%PCI\VEN_8086&DEV_24d1.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_24d1
-%PCI\VEN_8086&DEV_24df.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_24df
-%PCI\VEN_8086&DEV_25a2.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_25a2
-%PCI\VEN_8086&DEV_25a3.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_25a3
-%PCI\VEN_8086&DEV_25b0.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_25b0
-%PCI\VEN_8086&DEV_266f.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_266f
-%PCI\VEN_8086&DEV_2651.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2651
-%PCI\VEN_8086&DEV_2652.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2652
-%PCI\VEN_8086&DEV_2653.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2653
-%PCI\VEN_8086&DEV_27df.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27df
-%PCI\VEN_8086&DEV_27c0.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c0
-%PCI\VEN_8086&DEV_27c1.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c1
-%PCI\VEN_8086&DEV_27c3.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c3
-%PCI\VEN_8086&DEV_27c4.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c4
-%PCI\VEN_8086&DEV_27c5.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c5
-%PCI\VEN_8086&DEV_27c6.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_27c6
-%PCI\VEN_8086&DEV_269e.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_269e
-%PCI\VEN_8086&DEV_2680.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2680
-%PCI\VEN_8086&DEV_2681.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2681
-%PCI\VEN_8086&DEV_2682.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2682
-%PCI\VEN_8086&DEV_2683.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2683
-%PCI\VEN_8086&DEV_2820.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2820
-%PCI\VEN_8086&DEV_2821.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2821
-%PCI\VEN_8086&DEV_2822.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2822
-%PCI\VEN_8086&DEV_2824.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2824
-%PCI\VEN_8086&DEV_2825.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2825
-%PCI\VEN_8086&DEV_2828.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2828
-%PCI\VEN_8086&DEV_2829.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2829
-%PCI\VEN_8086&DEV_2850.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2850
-%PCI\VEN_8086&DEV_282a.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_282a
-%PCI\VEN_8086&DEV_2920.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2920
-%PCI\VEN_8086&DEV_2921.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2921
-%PCI\VEN_8086&DEV_2926.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2926
-%PCI\VEN_8086&DEV_2923.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2923
-%PCI\VEN_8086&DEV_2922.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2922
-%PCI\VEN_8086&DEV_2928.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2928
-%PCI\VEN_8086&DEV_2929.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_2929
-%PCI\VEN_8086&DEV_292d.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_292d
-%PCI\VEN_8086&DEV_292e.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_292e
-%PCI\VEN_8086&DEV_3a00.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a00
-%PCI\VEN_8086&DEV_3a02.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a02
-%PCI\VEN_8086&DEV_3a03.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a03
-%PCI\VEN_8086&DEV_3a06.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a06
-%PCI\VEN_8086&DEV_3a20.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a20
-%PCI\VEN_8086&DEV_3a22.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a22
-%PCI\VEN_8086&DEV_3a23.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a23
-%PCI\VEN_8086&DEV_3a26.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3a26
-%PCI\VEN_8086&DEV_3b20.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b20
-%PCI\VEN_8086&DEV_3b21.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b21
-%PCI\VEN_8086&DEV_3b22.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b22
-%PCI\VEN_8086&DEV_3b23.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b23
-%PCI\VEN_8086&DEV_3b26.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b26
-%PCI\VEN_8086&DEV_3b28.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b28
-%PCI\VEN_8086&DEV_3b29.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b29
-%PCI\VEN_8086&DEV_3b2d.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2d
-%PCI\VEN_8086&DEV_3b2e.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2e
-%PCI\VEN_8086&DEV_3b2f.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3b2f
-; %PCI\VEN_8086&DEV_3200.DeviceDesc%=uniata_Inst, PCI\VEN_8086&DEV_3200
+; %PCI\VEN_1191&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0005
+; %PCI\VEN_1191&DEV_0006.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0006
+; %PCI\VEN_1191&DEV_0007.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0007
+; %PCI\VEN_1191&DEV_0008.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0008
+; %PCI\VEN_1191&DEV_0009.DeviceDesc%=PciIde_Inst, PCI\VEN_1191&DEV_0009
+; %PCI\VEN_10b9&DEV_5289.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5289
+; %PCI\VEN_10b9&DEV_5288.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5288
+; %PCI\VEN_10b9&DEV_5287.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5287
+; %PCI\VEN_10b9&DEV_5281.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5281
+; %PCI\VEN_10b9&DEV_5229&REV_c5.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c5
+; %PCI\VEN_10b9&DEV_5229&REV_c4.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c4
+; %PCI\VEN_10b9&DEV_5229&REV_c2.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_c2
+; %PCI\VEN_10b9&DEV_5229&REV_20.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229&REV_20
+; %PCI\VEN_10b9&DEV_5229.DeviceDesc%=PciIde_Inst, PCI\VEN_10b9&DEV_5229
+; %PCI\VEN_1022&DEV_7401.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7401
+; %PCI\VEN_1022&DEV_7409.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7409
+; %PCI\VEN_1022&DEV_7411.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7411
+; %PCI\VEN_1022&DEV_7441.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7441
+; %PCI\VEN_1022&DEV_7469.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_7469
+; %PCI\VEN_1022&DEV_209a.DeviceDesc%=PciIde_Inst, PCI\VEN_1022&DEV_209a
+; %PCI\VEN_1002&DEV_4349.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4349
+; %PCI\VEN_1002&DEV_4369.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4369
+; %PCI\VEN_1002&DEV_4376.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4376
+; %PCI\VEN_1002&DEV_436e.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_436e
+; %PCI\VEN_1002&DEV_4379.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4379
+; %PCI\VEN_1002&DEV_437a.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_437a
+; %PCI\VEN_1002&DEV_438c.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_438c
+; %PCI\VEN_1002&DEV_4380.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4380
+; %PCI\VEN_1002&DEV_439c.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_439c
+; %PCI\VEN_1002&DEV_4390.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4390
+; %PCI\VEN_1002&DEV_4391.DeviceDesc%=PciIde_Inst, PCI\VEN_1002&DEV_4391
+; %PCI\VEN_1103&DEV_0004&REV_05.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_05
+; %PCI\VEN_1103&DEV_0004&REV_03.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_03
+; %PCI\VEN_1103&DEV_0004&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004&REV_02
+; %PCI\VEN_1103&DEV_0004.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0004
+; %PCI\VEN_1103&DEV_0005&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005&REV_01
+; %PCI\VEN_1103&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005
+; %PCI\VEN_1103&DEV_0006&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0006&REV_01
+; %PCI\VEN_1103&DEV_0007&REV_01.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0007&REV_01
+; %PCI\VEN_1103&DEV_0008&REV_07.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0008&REV_07
+; %PCI\VEN_8086&DEV_1230.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_1230
+; %PCI\VEN_8086&DEV_7010.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7010
+; %PCI\VEN_8086&DEV_7111.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7111
+; %PCI\VEN_8086&DEV_7199.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7199
+; %PCI\VEN_8086&DEV_84ca.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_84ca
+; %PCI\VEN_8086&DEV_7601.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_7601
+; %PCI\VEN_8086&DEV_2421.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2421
+; %PCI\VEN_8086&DEV_2411.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2411
+; %PCI\VEN_8086&DEV_244a.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_244a
+; %PCI\VEN_8086&DEV_244b.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_244b
+; %PCI\VEN_8086&DEV_248a.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_248a
+; %PCI\VEN_8086&DEV_248b.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_248b
+; %PCI\VEN_8086&DEV_24cb.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24cb
+; %PCI\VEN_8086&DEV_24ca.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24ca
+; %PCI\VEN_8086&DEV_24db.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24db
+; %PCI\VEN_8086&DEV_24d1.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24d1
+; %PCI\VEN_8086&DEV_24df.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_24df
+; %PCI\VEN_8086&DEV_25a2.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_25a2
+; %PCI\VEN_8086&DEV_25a3.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_25a3
+; %PCI\VEN_8086&DEV_25b0.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_25b0
+; %PCI\VEN_8086&DEV_266f.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_266f
+; %PCI\VEN_8086&DEV_2651.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2651
+; %PCI\VEN_8086&DEV_2652.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2652
+; %PCI\VEN_8086&DEV_2653.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2653
+; %PCI\VEN_8086&DEV_27df.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27df
+; %PCI\VEN_8086&DEV_27c0.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c0
+; %PCI\VEN_8086&DEV_27c1.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c1
+; %PCI\VEN_8086&DEV_27c3.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c3
+; %PCI\VEN_8086&DEV_27c4.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c4
+; %PCI\VEN_8086&DEV_27c5.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c5
+; %PCI\VEN_8086&DEV_27c6.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_27c6
+; %PCI\VEN_8086&DEV_269e.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_269e
+; %PCI\VEN_8086&DEV_2680.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2680
+; %PCI\VEN_8086&DEV_2681.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2681
+; %PCI\VEN_8086&DEV_2682.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2682
+; %PCI\VEN_8086&DEV_2683.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2683
+; %PCI\VEN_8086&DEV_2820.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2820
+; %PCI\VEN_8086&DEV_2821.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2821
+; %PCI\VEN_8086&DEV_2822.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2822
+; %PCI\VEN_8086&DEV_2824.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2824
+; %PCI\VEN_8086&DEV_2825.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2825
+; %PCI\VEN_8086&DEV_2828.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2828
+; %PCI\VEN_8086&DEV_2829.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2829
+; %PCI\VEN_8086&DEV_2850.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2850
+; %PCI\VEN_8086&DEV_282a.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_282a
+; %PCI\VEN_8086&DEV_2920.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2920
+; %PCI\VEN_8086&DEV_2921.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2921
+; %PCI\VEN_8086&DEV_2926.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2926
+; %PCI\VEN_8086&DEV_2923.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2923
+; %PCI\VEN_8086&DEV_2922.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2922
+; %PCI\VEN_8086&DEV_2928.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2928
+; %PCI\VEN_8086&DEV_2929.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_2929
+; %PCI\VEN_8086&DEV_292d.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_292d
+; %PCI\VEN_8086&DEV_292e.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_292e
+; %PCI\VEN_8086&DEV_3a00.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a00
+; %PCI\VEN_8086&DEV_3a02.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a02
+; %PCI\VEN_8086&DEV_3a03.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a03
+; %PCI\VEN_8086&DEV_3a06.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a06
+; %PCI\VEN_8086&DEV_3a20.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a20
+; %PCI\VEN_8086&DEV_3a22.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a22
+; %PCI\VEN_8086&DEV_3a23.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a23
+; %PCI\VEN_8086&DEV_3a26.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3a26
+; %PCI\VEN_8086&DEV_3b20.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b20
+; %PCI\VEN_8086&DEV_3b21.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b21
+; %PCI\VEN_8086&DEV_3b22.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b22
+; %PCI\VEN_8086&DEV_3b23.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b23
+; %PCI\VEN_8086&DEV_3b26.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b26
+; %PCI\VEN_8086&DEV_3b28.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b28
+; %PCI\VEN_8086&DEV_3b29.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b29
+; %PCI\VEN_8086&DEV_3b2d.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b2d
+; %PCI\VEN_8086&DEV_3b2e.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b2e
+; %PCI\VEN_8086&DEV_3b2f.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3b2f
+; %PCI\VEN_8086&DEV_3200.DeviceDesc%=PciIde_Inst, PCI\VEN_8086&DEV_3200
 
-%PCI\VEN_11ab&DEV_5040.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5040
-%PCI\VEN_11ab&DEV_5041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5041
-%PCI\VEN_11ab&DEV_5080.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5080
-%PCI\VEN_11ab&DEV_5081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5081
-%PCI\VEN_11ab&DEV_6041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6041
-%PCI\VEN_11ab&DEV_6081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6081
-%PCI\VEN_11ab&DEV_6101.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6101
-%PCI\VEN_11ab&DEV_6145.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6145
+; %PCI\VEN_11ab&DEV_5040.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5040
+; %PCI\VEN_11ab&DEV_5041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5041
+; %PCI\VEN_11ab&DEV_5080.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5080
+; %PCI\VEN_11ab&DEV_5081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_5081
+; %PCI\VEN_11ab&DEV_6041.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6041
+; %PCI\VEN_11ab&DEV_6081.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6081
+; %PCI\VEN_11ab&DEV_6101.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6101
+; %PCI\VEN_11ab&DEV_6145.DeviceDesc%=PciIde_Inst, PCI\VEN_11ab&DEV_6145
 
-%PCI\VEN_10de&DEV_01bc.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_01bc
-%PCI\VEN_10de&DEV_0065.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0065
-%PCI\VEN_10de&DEV_0085.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0085
-%PCI\VEN_10de&DEV_008e.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_008e
-%PCI\VEN_10de&DEV_00d5.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00d5
-%PCI\VEN_10de&DEV_00e5.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00e5
-%PCI\VEN_10de&DEV_00e3.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_00e3
-%PCI\VEN_10de&DEV_00ee.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_00ee
-%PCI\VEN_10de&DEV_0035.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0035
-%PCI\VEN_10de&DEV_0036.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_0036
-%PCI\VEN_10de&DEV_003e.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_003e
-%PCI\VEN_10de&DEV_0053.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0053
-%PCI\VEN_10de&DEV_0054.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_0054
-%PCI\VEN_10de&DEV_0055.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_0055
-%PCI\VEN_10de&DEV_0265.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0265
-%PCI\VEN_10de&DEV_0266.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_0266
-%PCI\VEN_10de&DEV_0267.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_0267
-%PCI\VEN_10de&DEV_036e.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_036e
-%PCI\VEN_10de&DEV_037e.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_037e
-%PCI\VEN_10de&DEV_037f.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_037f
-%PCI\VEN_10de&DEV_03ec.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_03ec
-%PCI\VEN_10de&DEV_03e7.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_03e7
-%PCI\VEN_10de&DEV_03f6.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_03f6
-%PCI\VEN_10de&DEV_03f7.DeviceDesc%=uniata_Inst, PCI\VEN_10de&DEV_03f7
-%PCI\VEN_10de&DEV_0448.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0448
-%PCI\VEN_10de&DEV_0560.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0560
-%PCI\VEN_10de&DEV_056c.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_056c
-%PCI\VEN_10de&DEV_0759.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0759
+; %PCI\VEN_10de&DEV_01bc.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_01bc
+; %PCI\VEN_10de&DEV_0065.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0065
+; %PCI\VEN_10de&DEV_0085.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0085
+; %PCI\VEN_10de&DEV_008e.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_008e
+; %PCI\VEN_10de&DEV_00d5.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00d5
+; %PCI\VEN_10de&DEV_00e5.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00e5
+; %PCI\VEN_10de&DEV_00e3.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00e3
+; %PCI\VEN_10de&DEV_00ee.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_00ee
+; %PCI\VEN_10de&DEV_0035.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0035
+; %PCI\VEN_10de&DEV_0036.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0036
+; %PCI\VEN_10de&DEV_003e.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_003e
+; %PCI\VEN_10de&DEV_0053.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0053
+; %PCI\VEN_10de&DEV_0054.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0054
+; %PCI\VEN_10de&DEV_0055.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0055
+; %PCI\VEN_10de&DEV_0265.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0265
+; %PCI\VEN_10de&DEV_0266.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0266
+; %PCI\VEN_10de&DEV_0267.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0267
+; %PCI\VEN_10de&DEV_036e.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_036e
+; %PCI\VEN_10de&DEV_037e.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_037e
+; %PCI\VEN_10de&DEV_037f.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_037f
+; %PCI\VEN_10de&DEV_03ec.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_03ec
+; %PCI\VEN_10de&DEV_03e7.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_03e7
+; %PCI\VEN_10de&DEV_03f6.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_03f6
+; %PCI\VEN_10de&DEV_03f7.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_03f7
+; %PCI\VEN_10de&DEV_0448.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0448
+; %PCI\VEN_10de&DEV_0560.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0560
+; %PCI\VEN_10de&DEV_056c.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_056c
+; %PCI\VEN_10de&DEV_0759.DeviceDesc%=PciIde_Inst, PCI\VEN_10de&DEV_0759
 
-%PCI\VEN_100b&DEV_0502.DeviceDesc%=PciIde_Inst, PCI\VEN_100b&DEV_0502
+; %PCI\VEN_100b&DEV_0502.DeviceDesc%=PciIde_Inst, PCI\VEN_100b&DEV_0502
 
-%PCI\VEN_105a&DEV_4d33.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d33
-%PCI\VEN_105a&DEV_4d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d38
-%PCI\VEN_105a&DEV_0d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d38
-%PCI\VEN_105a&DEV_0d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d30
-%PCI\VEN_105a&DEV_4d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d30
-%PCI\VEN_105a&DEV_4d68.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d68
-%PCI\VEN_105a&DEV_4d69.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d69
-%PCI\VEN_105a&DEV_6268.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6268
-%PCI\VEN_105a&DEV_6269.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6269
-%PCI\VEN_105a&DEV_1275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_1275
-%PCI\VEN_105a&DEV_5275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_5275
-%PCI\VEN_105a&DEV_7275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_7275
-%PCI\VEN_105a&DEV_3318.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3318
-%PCI\VEN_105a&DEV_3319.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3319
-%PCI\VEN_105a&DEV_3371.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3371
-%PCI\VEN_105a&DEV_3375.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3375
-%PCI\VEN_105a&DEV_3376.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3376
-%PCI\VEN_105a&DEV_3377.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3377
-%PCI\VEN_105a&DEV_3373.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3373
-%PCI\VEN_105a&DEV_3372.DeviceDesc%=uniata_Inst, PCI\VEN_105a&DEV_3372
-%PCI\VEN_105a&DEV_6617.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6617
-%PCI\VEN_105a&DEV_6626.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6626
-%PCI\VEN_105a&DEV_6629.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6629
-%PCI\VEN_105a&DEV_6620.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6620
-%PCI\VEN_105a&DEV_6621.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6621
-%PCI\VEN_105a&DEV_6622.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6622
+; %PCI\VEN_105a&DEV_4d33.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d33
+; %PCI\VEN_105a&DEV_4d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d38
+; %PCI\VEN_105a&DEV_0d38.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d38
+; %PCI\VEN_105a&DEV_0d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_0d30
+; %PCI\VEN_105a&DEV_4d30.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d30
+; %PCI\VEN_105a&DEV_4d68.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d68
+; %PCI\VEN_105a&DEV_4d69.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d69
+; %PCI\VEN_105a&DEV_6268.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6268
+; %PCI\VEN_105a&DEV_6269.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6269
+; %PCI\VEN_105a&DEV_1275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_1275
+; %PCI\VEN_105a&DEV_5275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_5275
+; %PCI\VEN_105a&DEV_7275.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_7275
+; %PCI\VEN_105a&DEV_3318.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3318
+; %PCI\VEN_105a&DEV_3319.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3319
+; %PCI\VEN_105a&DEV_3371.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3371
+; %PCI\VEN_105a&DEV_3375.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3375
+; %PCI\VEN_105a&DEV_3376.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3376
+; %PCI\VEN_105a&DEV_3377.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3377
+; %PCI\VEN_105a&DEV_3373.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3373
+; %PCI\VEN_105a&DEV_3372.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_3372
+; %PCI\VEN_105a&DEV_6617.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6617
+; %PCI\VEN_105a&DEV_6626.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6626
+; %PCI\VEN_105a&DEV_6629.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6629
+; %PCI\VEN_105a&DEV_6620.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6620
+; %PCI\VEN_105a&DEV_6621.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6621
+; %PCI\VEN_105a&DEV_6622.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6622
 
-%PCI\VEN_1166&DEV_0211.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0211
-%PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0212&REV_92
-%PCI\VEN_1166&DEV_0212.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0212
-%PCI\VEN_1166&DEV_0213.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0213
-%PCI\VEN_1166&DEV_0217.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0217
-%PCI\VEN_1166&DEV_0214.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0214
-%PCI\VEN_1166&DEV_024b.DeviceDesc%=uniata_Inst, PCI\VEN_1166&DEV_024b
-%PCI\VEN_1166&DEV_024a.DeviceDesc%=uniata_Inst, PCI\VEN_1166&DEV_024a
-%PCI\VEN_1166&DEV_0240.DeviceDesc%=uniata_Inst, PCI\VEN_1166&DEV_0240
-%PCI\VEN_1166&DEV_0241.DeviceDesc%=uniata_Inst, PCI\VEN_1166&DEV_0241
-%PCI\VEN_1166&DEV_0242.DeviceDesc%=uniata_Inst, PCI\VEN_1166&DEV_0242
+; %PCI\VEN_1166&DEV_0211.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0211
+; %PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0212&REV_92
+; %PCI\VEN_1166&DEV_0212.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0212
+; %PCI\VEN_1166&DEV_0213.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0213
+; %PCI\VEN_1166&DEV_0217.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0217
+; %PCI\VEN_1166&DEV_0214.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0214
+; %PCI\VEN_1166&DEV_024b.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_024b
+; %PCI\VEN_1166&DEV_024a.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_024a
+; %PCI\VEN_1166&DEV_0240.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0240
+; %PCI\VEN_1166&DEV_0241.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0241
+; %PCI\VEN_1166&DEV_0242.DeviceDesc%=PciIde_Inst, PCI\VEN_1166&DEV_0242
 
-%PCI\VEN_1095&DEV_3114.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_3114
-%PCI\VEN_1095&DEV_3512&REV_02.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_3512&REV_02
-%PCI\VEN_1095&DEV_3112&REV_02.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_3112&REV_02
-%PCI\VEN_1095&DEV_0240&REV_02.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_0240&REV_02
-%PCI\VEN_1095&DEV_3512.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_3512
-%PCI\VEN_1095&DEV_3112.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_3112
-%PCI\VEN_1095&DEV_0240.DeviceDesc%=uniata_Inst, PCI\VEN_1095&DEV_0240
-%PCI\VEN_1095&DEV_0680.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0680
-%PCI\VEN_1095&DEV_0649.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0649
-%PCI\VEN_1095&DEV_0648.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0648
-%PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646&REV_07
-%PCI\VEN_1095&DEV_0646.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646
-%PCI\VEN_1095&DEV_0640.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0640
+; %PCI\VEN_1095&DEV_3114.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_3114
+; %PCI\VEN_1095&DEV_3512&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_3512&REV_02
+; %PCI\VEN_1095&DEV_3112&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_3112&REV_02
+; %PCI\VEN_1095&DEV_0240&REV_02.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0240&REV_02
+; %PCI\VEN_1095&DEV_3512.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_3512
+; %PCI\VEN_1095&DEV_3112.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_3112
+; %PCI\VEN_1095&DEV_0240.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0240
+; %PCI\VEN_1095&DEV_0680.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0680
+; %PCI\VEN_1095&DEV_0649.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0649
+; %PCI\VEN_1095&DEV_0648.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0648
+; %PCI\VEN_1095&DEV_0646&REV_07.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646&REV_07
+; %PCI\VEN_1095&DEV_0646.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0646
+; %PCI\VEN_1095&DEV_0640.DeviceDesc%=PciIde_Inst, PCI\VEN_1095&DEV_0640
 
 ; %PCI\VEN_1039&DEV_0963.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0963
 ; %PCI\VEN_1039&DEV_0962.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0962
@@ -266,9 +266,9 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1039&DEV_0550.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0550
 ; %PCI\VEN_1039&DEV_0540.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0540
 ; %PCI\VEN_1039&DEV_0530.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0530
-%PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513&REV_c2
-%PCI\VEN_1039&DEV_5513.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513
-%PCI\VEN_1039&DEV_0601.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0601
+; %PCI\VEN_1039&DEV_5513&REV_c2.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513&REV_c2
+; %PCI\VEN_1039&DEV_5513.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_5513
+; %PCI\VEN_1039&DEV_0601.DeviceDesc%=PciIde_Inst, PCI\VEN_1039&DEV_0601
 
 ; %PCI\VEN_1106&DEV_0586&REV_41.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0586&REV_41
 ; %PCI\VEN_1106&DEV_0586&REV_40.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0586&REV_40
@@ -284,15 +284,15 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1106&DEV_3109.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3109
 ; %PCI\VEN_1106&DEV_3147.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3147
 ; %PCI\VEN_1106&DEV_3177.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3177
-%PCI\VEN_1106&DEV_0571.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0571
-%PCI\VEN_1106&DEV_3164.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3164
-%PCI\VEN_1106&DEV_3149.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3149
-%PCI\VEN_1106&DEV_3249.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3249
-%PCI\VEN_1106&DEV_0591.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0591
-%PCI\VEN_1106&DEV_5337.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_5337
-%PCI\VEN_1106&DEV_3349.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3349
+; %PCI\VEN_1106&DEV_0571.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0571
+; %PCI\VEN_1106&DEV_3164.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3164
+; %PCI\VEN_1106&DEV_3149.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3149
+; %PCI\VEN_1106&DEV_3249.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3249
+; %PCI\VEN_1106&DEV_0591.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_0591
+; %PCI\VEN_1106&DEV_5337.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_5337
+; %PCI\VEN_1106&DEV_3349.DeviceDesc%=PciIde_Inst, PCI\VEN_1106&DEV_3349
 
-%PCI\VEN_1080&DEV_c693.DeviceDesc%=PciIde_Inst, PCI\VEN_1080&DEV_c693
+; %PCI\VEN_1080&DEV_c693.DeviceDesc%=PciIde_Inst, PCI\VEN_1080&DEV_c693
 
 ; %PCI\VEN_105a&DEV_4d68.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_4d68
 ; %PCI\VEN_105a&DEV_6268.DeviceDesc%=PciIde_Inst, PCI\VEN_105a&DEV_6268
@@ -310,36 +310,42 @@ HKR, , Installer32,    0, "syssetup.dll,HdcClassInstaller"
 ; %PCI\VEN_1103&DEV_0005.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0005
 ; %PCI\VEN_1103&DEV_0008.DeviceDesc%=PciIde_Inst, PCI\VEN_1103&DEV_0008
 
-%PCI\VEN_16ca&DEV_0001.DeviceDesc%=PciIde_Inst, PCI\VEN_16ca&DEV_0001
-%PCI\VEN_1078&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1078&DEV_0102
-%PCI\VEN_1042&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1042&DEV_0102
+; %PCI\VEN_16ca&DEV_0001.DeviceDesc%=PciIde_Inst, PCI\VEN_16ca&DEV_0001
+; %PCI\VEN_1078&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1078&DEV_0102
+; %PCI\VEN_1042&DEV_0102.DeviceDesc%=PciIde_Inst, PCI\VEN_1042&DEV_0102
 
-%PCI\VEN_1283&DEV_8172.DeviceDesc%=PciIde_Inst, PCI\VEN_1283&DEV_8172
-%PCI\VEN_1283&DEV_8212.DeviceDesc%=PciIde_Inst, PCI\VEN_1283&DEV_8212
+; %PCI\VEN_1283&DEV_8172.DeviceDesc%=PciIde_Inst, PCI\VEN_1283&DEV_8172
+; %PCI\VEN_1283&DEV_8212.DeviceDesc%=PciIde_Inst, PCI\VEN_1283&DEV_8212
 
-%PCI\VEN_169c&DEV_0044.DeviceDesc%=PciIde_Inst, PCI\VEN_169c&DEV_0044
-%PCI\VEN_3388&DEV_8013.DeviceDesc%=PciIde_Inst, PCI\VEN_3388&DEV_8013
+; %PCI\VEN_169c&DEV_0044.DeviceDesc%=PciIde_Inst, PCI\VEN_169c&DEV_0044
+; %PCI\VEN_3388&DEV_8013.DeviceDesc%=PciIde_Inst, PCI\VEN_3388&DEV_8013
 
-%PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc%=PciIde_Inst, PCI\VEN_ffff&DEV_ffff&REV_ff
+; %PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc%=PciIde_Inst, PCI\VEN_ffff&DEV_ffff&REV_ff
 
 ; Compatible adapters
 %PCI\CC_0101.DeviceDesc%=PciIde_Inst,PCI\CC_0101                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0104.DeviceDesc%=uniata_Inst,PCI\CC_0104                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0105.DeviceDesc%=uniata_Inst,PCI\CC_0105                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%PCI\CC_0106.DeviceDesc%=uniata_Inst,PCI\CC_0106                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
-%*PNP0600.PriDeviceDesc%=uniata_Inst, Primary_IDE_Channel
-%*PNP0600.SecDeviceDesc%=uniata_Inst, Secondary_IDE_Channel
-%*PNP0600.DeviceDesc%=uniata_Inst, *PNP0600                            ; Generic_ESDI_Hard_Disk_Controller   (BAD_IDE)
-%UniATA_Name%=uniata_Inst
+%PCI\CC_0104.DeviceDesc%=PciIde_Inst,PCI\CC_0104                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%PCI\CC_0105.DeviceDesc%=PciIde_Inst,PCI\CC_0105                       ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%PCI\CC_0106.DeviceDesc%=AtapiAhci_Inst,PCI\CC_0106                     ; Device ID for generic Dual PCI IDE  (UNKNOWN_PCI_IDE)
+%*PNP0600.PriDeviceDesc%=Atapi_Inst, Primary_IDE_Channel
+%*PNP0600.SecDeviceDesc%=Atapi_Inst, Secondary_IDE_Channel
+%*PNP0600.DeviceDesc%=Atapi_Inst, *PNP0600                            ; Generic_ESDI_Hard_Disk_Controller   (BAD_IDE)
+%UniATA_Name%=PciIde_Inst
 
-;---------------------------- PCI IDE DRIVER ----------------------------
+;---------------------------- PCI PATA DRIVER ---------------------------
 
 [PciIde_Inst.NT]
 CopyFiles = PciIde_CopyFiles.NT
+AddReg = StorPropAddReg
+
+[StorPropAddReg]
+HKR,,EnumPropPages32,,"storprop.dll,IdePropPageProvider"
 
 [PciIde_CopyFiles.NT]
+atapi.sys
 pciide.sys
 pciidex.sys
+storprop.dll
 
 [PciIde_Inst.NT.Services]
 AddService = pciide, 0x00000002, pciide_Service_Inst
@@ -351,23 +357,43 @@ ErrorControl   = 1
 ServiceBinary  = %12%\pciide.sys
 LoadOrderGroup = System Bus Extender
 
-;----------------------------- UNIATA DRIVER ----------------------------
+;---------------------------- PCI AHCI DRIVER ---------------------------
 
-[uniata_Inst.NT]
-CopyFiles = uniata_CopyFiles.NT
+[AtapiAhci_Inst.NT]
+CopyFiles = AtapiAhci_CopyFiles.NT
 
-[uniata_CopyFiles.NT]
-uniata.sys
+[AtapiAhci_CopyFiles.NT]
+atapi.sys
 
-[uniata_Inst.NT.Services]
-AddService = UniATA, 0x00000002, uniata_Service_Inst
+[AtapiAhci_Inst.NT.Services]
+AddService = atapi, 0x00000002, AtapiAhci_Service_Inst
 
-[uniata_Service_Inst]
+[AtapiAhci_Service_Inst]
 ServiceType    = 1
 StartType      = 0
 ErrorControl   = 1
-ServiceBinary  = %12%\uniata.sys
+ServiceBinary  = %12%\atapi.sys
 LoadOrderGroup = System Bus Extender
+
+;---------------------------- ATA PORT DRIVER ----------------------------
+
+[Atapi_Inst.NT]
+CopyFiles = Atapi_CopyFiles.NT
+AddReg = StorPropAddReg
+
+[Atapi_CopyFiles.NT]
+atapi.sys
+storprop.dll
+
+[Atapi_Inst.NT.Services]
+AddService = atapi, 0x00000002, atapi_Service_Inst
+
+[atapi_Service_Inst]
+ServiceType    = 1
+StartType      = 0
+ErrorControl   = 1
+ServiceBinary  = %12%\atapi.sys
+LoadOrderGroup = SCSI Miniport
 
 ;-------------------------------- STRINGS -------------------------------
 
