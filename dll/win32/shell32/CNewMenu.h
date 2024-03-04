@@ -59,6 +59,7 @@ private:
     CComPtr<IUnknown> m_pSite;
     HMENU m_hSubMenu;
     UINT m_idCmdFirst, m_idCmdFolder, m_idCmdLink;
+    BOOL m_bCustomIconFolder, m_bCustomIconLink;
     HICON m_hIconFolder, m_hIconLink;
 
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);

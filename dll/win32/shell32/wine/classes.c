@@ -352,7 +352,7 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
     {
         ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
         RegCloseKey(hkey);
-	}
+    }
 
     if (ret)
         TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);

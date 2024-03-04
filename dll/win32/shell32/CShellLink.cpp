@@ -3155,11 +3155,21 @@ HICON CShellLink::CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex)
 {
     const INT cx = GetSystemMetrics(SM_CXICON), cy = GetSystemMetrics(SM_CYICON);
     const COLORREF crMask = GetSysColor(COLOR_3DFACE);
+    WCHAR wszLnkIcon[MAX_PATH];
+    int lnk_idx;
     HDC hDC;
     HIMAGELIST himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 1, 1);
-    HICON hIcon = NULL, hNewIcon = NULL;
-    HICON hShortcut = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT),
-                                        IMAGE_ICON, cx, cy, 0);
+    HICON hIcon = NULL, hNewIcon = NULL, hShortcut;
+
+    if (HLM_GetIconW(IDI_SHELL_SHORTCUT - 1, wszLnkIcon, _countof(wszLnkIcon), &lnk_idx))
+    {
+        ::ExtractIconExW(wszLnkIcon, lnk_idx, &hShortcut, NULL, 1);
+    }
+    else
+    {
+        hShortcut = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT),
+                                      IMAGE_ICON, cx, cy, 0);
+    }
 
     ::ExtractIconExW(wszIconPath, IconIndex, &hIcon, NULL, 1);
     if (!hIcon || !hShortcut || !himl)

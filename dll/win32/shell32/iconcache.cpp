@@ -122,10 +122,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 
     /* search for the shortcut icon only once */
     if (s_imgListIdx == -1)
-        s_imgListIdx = SIC_LoadOverlayIcon(- IDI_SHELL_SHORTCUT);
-                           /* FIXME should use icon index 29 instead of the
-                              resource id, but not all icons are present yet
-                              so we can't use icon indices */
+        s_imgListIdx = SIC_LoadOverlayIcon(IDI_SHELL_SHORTCUT - 1);
 
     if (s_imgListIdx != -1)
     {
