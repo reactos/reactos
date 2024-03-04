@@ -10,9 +10,6 @@
 
 #define IDR_MYDOCS 100
 
-#define IDI_MYDOCS 100
-#define IDI_MYPICS 101
-
 #define IDS_NOSRCFILEFOUND 100
 
 #endif
