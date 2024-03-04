@@ -100,86 +100,86 @@ public:
     END_COM_MAP()
 
     // *** IDeskBand methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);
+    STDMETHOD(GetBandInfo)(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
+    STDMETHOD(ShowDW)(BOOL fShow) override;
+    STDMETHOD(CloseDW)(DWORD dwReserved) override;
+    STDMETHOD(ResizeBorderDW)(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) override;
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *phwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, PVOID *ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, PVOID *ppvSite) override;
 
     // *** IInputObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IMenuPopup methods ***
-    virtual HRESULT STDMETHODCALLTYPE Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE OnSelect(DWORD dwSelectType);
-    virtual HRESULT STDMETHODCALLTYPE SetSubMenu(IMenuPopup *pmp, BOOL fSet);
+    STDMETHOD(Popup)(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags) override;
+    STDMETHOD(OnSelect)(DWORD dwSelectType) override;
+    STDMETHOD(SetSubMenu)(IMenuPopup *pmp, BOOL fSet) override;
 
     // *** IDeskBar methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetClient(IUnknown *punkClient);
-    virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown **ppunkClient);
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(RECT *prc);
+    STDMETHOD(SetClient)(IUnknown *punkClient) override;
+    STDMETHOD(GetClient)(IUnknown **ppunkClient) override;
+    STDMETHOD(OnPosRectChangeDB)(RECT *prc) override;
 
     // *** IMenuBand methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsMenuMessage(MSG *pmsg);
-    virtual HRESULT STDMETHODCALLTYPE TranslateMenuMessage(MSG *pmsg, LRESULT *plRet);
+    STDMETHOD(IsMenuMessage)(MSG *pmsg) override;
+    STDMETHOD(TranslateMenuMessage)(MSG *pmsg, LRESULT *plRet) override;
 
     // *** IShellMenu methods ***
-    virtual HRESULT STDMETHODCALLTYPE Initialize(IShellMenuCallback *psmc, UINT uId, UINT uIdAncestor, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetMenuInfo(IShellMenuCallback **ppsmc, UINT *puId, UINT *puIdAncestor, DWORD *pdwFlags);
-    virtual HRESULT STDMETHODCALLTYPE SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
-    virtual HRESULT STDMETHODCALLTYPE InvalidateItem(LPSMDATA psmd, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetState(LPSMDATA psmd);
-    virtual HRESULT STDMETHODCALLTYPE SetMenuToolbar(IUnknown *punk, DWORD dwFlags);
+    STDMETHOD(Initialize)(IShellMenuCallback *psmc, UINT uId, UINT uIdAncestor, DWORD dwFlags) override;
+    STDMETHOD(GetMenuInfo)(IShellMenuCallback **ppsmc, UINT *puId, UINT *puIdAncestor, DWORD *pdwFlags) override;
+    STDMETHOD(SetShellFolder)(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags) override;
+    STDMETHOD(GetShellFolder)(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv) override;
+    STDMETHOD(SetMenu)(HMENU hmenu, HWND hwnd, DWORD dwFlags) override;
+    STDMETHOD(GetMenu)(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags) override;
+    STDMETHOD(InvalidateItem)(LPSMDATA psmd, DWORD dwFlags) override;
+    STDMETHOD(GetState)(LPSMDATA psmd) override;
+    STDMETHOD(SetMenuToolbar)(IUnknown *punk, DWORD dwFlags) override;
 
     // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    STDMETHOD(OnWinEvent)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
     // *** IShellMenu2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetSubMenu(THIS);
-    virtual HRESULT STDMETHODCALLTYPE SetToolbar(THIS);
-    virtual HRESULT STDMETHODCALLTYPE SetMinWidth(THIS);
-    virtual HRESULT STDMETHODCALLTYPE SetNoBorder(THIS);
-    virtual HRESULT STDMETHODCALLTYPE SetTheme(THIS);
+    STDMETHOD(GetSubMenu)(THIS) override;
+    STDMETHOD(SetToolbar)(THIS) override;
+    STDMETHOD(SetMinWidth)(THIS) override;
+    STDMETHOD(SetNoBorder)(THIS) override;
+    STDMETHOD(SetTheme)(THIS) override;
 
     // *** IShellMenuAcc methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTop(THIS);
-    virtual HRESULT STDMETHODCALLTYPE GetBottom(THIS);
-    virtual HRESULT STDMETHODCALLTYPE GetTracked(THIS);
-    virtual HRESULT STDMETHODCALLTYPE GetParentSite(THIS);
-    virtual HRESULT STDMETHODCALLTYPE GetState(THIS);
-    virtual HRESULT STDMETHODCALLTYPE DoDefaultAction(THIS);
-    virtual HRESULT STDMETHODCALLTYPE IsEmpty(THIS);
+    STDMETHOD(GetTop)(THIS) override;
+    STDMETHOD(GetBottom)(THIS) override;
+    STDMETHOD(GetTracked)(THIS) override;
+    STDMETHOD(GetParentSite)(THIS) override;
+    STDMETHOD(GetState)(THIS) override;
+    STDMETHOD(DoDefaultAction)(THIS) override;
+    STDMETHOD(IsEmpty)(THIS) override;
 
     HRESULT _CallCBWithItemId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);

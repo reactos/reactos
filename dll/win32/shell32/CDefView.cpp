@@ -97,7 +97,7 @@ struct MenuCleanup
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellView2,
+    public IShellView3,
     public IFolderView,
     public IShellFolderView,
     public IOleCommandTarget,
@@ -200,103 +200,112 @@ public:
     LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IShellView methods ***
-    virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(MSG *pmsg);
-    virtual HRESULT STDMETHODCALLTYPE EnableModeless(BOOL fEnable);
-    virtual HRESULT STDMETHODCALLTYPE UIActivate(UINT uState);
-    virtual HRESULT STDMETHODCALLTYPE Refresh();
-    virtual HRESULT STDMETHODCALLTYPE CreateViewWindow(IShellView *psvPrevious, LPCFOLDERSETTINGS pfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd);
-    virtual HRESULT STDMETHODCALLTYPE DestroyViewWindow();
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentInfo(LPFOLDERSETTINGS pfs);
-    virtual HRESULT STDMETHODCALLTYPE AddPropertySheetPages(DWORD dwReserved, LPFNSVADDPROPSHEETPAGE pfn, LPARAM lparam);
-    virtual HRESULT STDMETHODCALLTYPE SaveViewState();
-    virtual HRESULT STDMETHODCALLTYPE SelectItem(PCUITEMID_CHILD pidlItem, SVSIF uFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetItemObject(UINT uItem, REFIID riid, void **ppv);
+    STDMETHOD(TranslateAccelerator)(MSG *pmsg) override;
+    STDMETHOD(EnableModeless)(BOOL fEnable) override;
+    STDMETHOD(UIActivate)(UINT uState) override;
+    STDMETHOD(Refresh)() override;
+    STDMETHOD(CreateViewWindow)(IShellView *psvPrevious, LPCFOLDERSETTINGS pfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd) override;
+    STDMETHOD(DestroyViewWindow)() override;
+    STDMETHOD(GetCurrentInfo)(LPFOLDERSETTINGS pfs) override;
+    STDMETHOD(AddPropertySheetPages)(DWORD dwReserved, LPFNSVADDPROPSHEETPAGE pfn, LPARAM lparam) override;
+    STDMETHOD(SaveViewState)() override;
+    STDMETHOD(SelectItem)(PCUITEMID_CHILD pidlItem, SVSIF uFlags) override;
+    STDMETHOD(GetItemObject)(UINT uItem, REFIID riid, void **ppv) override;
 
     // *** IShellView2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetView(SHELLVIEWID *view_guid, ULONG view_type);
-    virtual HRESULT STDMETHODCALLTYPE CreateViewWindow2(LPSV2CVW2_PARAMS view_params);
-    virtual HRESULT STDMETHODCALLTYPE HandleRename(LPCITEMIDLIST new_pidl);
-    virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItem(LPCITEMIDLIST item, UINT flags, POINT *point);
+    STDMETHOD(GetView)(SHELLVIEWID *view_guid, ULONG view_type) override;
+    STDMETHOD(CreateViewWindow2)(LPSV2CVW2_PARAMS view_params) override;
+    STDMETHOD(HandleRename)(LPCITEMIDLIST new_pidl) override;
+    STDMETHOD(SelectAndPositionItem)(LPCITEMIDLIST item, UINT flags, POINT *point) override;
 
     // *** IShellView3 methods ***
-    virtual HRESULT STDMETHODCALLTYPE CreateViewWindow3(IShellBrowser *psb, IShellView *psvPrevious, SV3CVW3_FLAGS view_flags, FOLDERFLAGS mask, FOLDERFLAGS flags, FOLDERVIEWMODE mode, const SHELLVIEWID *view_id, RECT *prcView, HWND *hwnd);
+    STDMETHOD(CreateViewWindow3)(
+        IShellBrowser *psb,
+        IShellView *psvPrevious,
+        SV3CVW3_FLAGS view_flags,
+        FOLDERFLAGS mask,
+        FOLDERFLAGS flags,
+        FOLDERVIEWMODE mode,
+        const SHELLVIEWID *view_id,
+        const RECT *prcView,
+        HWND *hwnd) override;
 
     // *** IFolderView methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentViewMode(UINT *pViewMode);
-    virtual HRESULT STDMETHODCALLTYPE SetCurrentViewMode(UINT ViewMode);
-    virtual HRESULT STDMETHODCALLTYPE GetFolder(REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE Item(int iItemIndex, PITEMID_CHILD *ppidl);
-    virtual HRESULT STDMETHODCALLTYPE ItemCount(UINT uFlags, int *pcItems);
-    virtual HRESULT STDMETHODCALLTYPE Items(UINT uFlags, REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE GetSelectionMarkedItem(int *piItem);
-    virtual HRESULT STDMETHODCALLTYPE GetFocusedItem(int *piItem);
-    virtual HRESULT STDMETHODCALLTYPE GetItemPosition(PCUITEMID_CHILD pidl, POINT *ppt);
-    virtual HRESULT STDMETHODCALLTYPE GetSpacing(POINT *ppt);
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultSpacing(POINT *ppt);
-    virtual HRESULT STDMETHODCALLTYPE GetAutoArrange();
-    virtual HRESULT STDMETHODCALLTYPE SelectItem(int iItem, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags);
+    STDMETHOD(GetCurrentViewMode)(UINT *pViewMode) override;
+    STDMETHOD(SetCurrentViewMode)(UINT ViewMode) override;
+    STDMETHOD(GetFolder)(REFIID riid, void **ppv) override;
+    STDMETHOD(Item)(int iItemIndex, PITEMID_CHILD *ppidl) override;
+    STDMETHOD(ItemCount)(UINT uFlags, int *pcItems) override;
+    STDMETHOD(Items)(UINT uFlags, REFIID riid, void **ppv) override;
+    STDMETHOD(GetSelectionMarkedItem)(int *piItem) override;
+    STDMETHOD(GetFocusedItem)(int *piItem) override;
+    STDMETHOD(GetItemPosition)(PCUITEMID_CHILD pidl, POINT *ppt) override;
+    STDMETHOD(GetSpacing)(POINT *ppt) override;
+    STDMETHOD(GetDefaultSpacing)(POINT *ppt) override;
+    STDMETHOD(GetAutoArrange)() override;
+    STDMETHOD(SelectItem)(int iItem, DWORD dwFlags) override;
+    STDMETHOD(SelectAndPositionItems)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags) override;
 
     // *** IShellFolderView methods ***
-    virtual HRESULT STDMETHODCALLTYPE Rearrange(LPARAM sort);
-    virtual HRESULT STDMETHODCALLTYPE GetArrangeParam(LPARAM *sort);
-    virtual HRESULT STDMETHODCALLTYPE ArrangeGrid();
-    virtual HRESULT STDMETHODCALLTYPE AutoArrange();
-    virtual HRESULT STDMETHODCALLTYPE AddObject(PITEMID_CHILD pidl, UINT *item);
-    virtual HRESULT STDMETHODCALLTYPE GetObject(PITEMID_CHILD *pidl, UINT item);
-    virtual HRESULT STDMETHODCALLTYPE RemoveObject(PITEMID_CHILD pidl, UINT *item);
-    virtual HRESULT STDMETHODCALLTYPE GetObjectCount(UINT *count);
-    virtual HRESULT STDMETHODCALLTYPE SetObjectCount(UINT count, UINT flags);
-    virtual HRESULT STDMETHODCALLTYPE UpdateObject(PITEMID_CHILD pidl_old, PITEMID_CHILD pidl_new, UINT *item);
-    virtual HRESULT STDMETHODCALLTYPE RefreshObject(PITEMID_CHILD pidl, UINT *item);
-    virtual HRESULT STDMETHODCALLTYPE SetRedraw(BOOL redraw);
-    virtual HRESULT STDMETHODCALLTYPE GetSelectedCount(UINT *count);
-    virtual HRESULT STDMETHODCALLTYPE GetSelectedObjects(PCUITEMID_CHILD **pidl, UINT *items);
-    virtual HRESULT STDMETHODCALLTYPE IsDropOnSource(IDropTarget *drop_target);
-    virtual HRESULT STDMETHODCALLTYPE GetDragPoint(POINT *pt);
-    virtual HRESULT STDMETHODCALLTYPE GetDropPoint(POINT *pt);
-    virtual HRESULT STDMETHODCALLTYPE MoveIcons(IDataObject *obj);
-    virtual HRESULT STDMETHODCALLTYPE SetItemPos(PCUITEMID_CHILD pidl, POINT *pt);
-    virtual HRESULT STDMETHODCALLTYPE IsBkDropTarget(IDropTarget *drop_target);
-    virtual HRESULT STDMETHODCALLTYPE SetClipboard(BOOL move);
-    virtual HRESULT STDMETHODCALLTYPE SetPoints(IDataObject *obj);
-    virtual HRESULT STDMETHODCALLTYPE GetItemSpacing(ITEMSPACING *spacing);
-    virtual HRESULT STDMETHODCALLTYPE SetCallback(IShellFolderViewCB *new_cb, IShellFolderViewCB **old_cb);
-    virtual HRESULT STDMETHODCALLTYPE Select(UINT flags);
-    virtual HRESULT STDMETHODCALLTYPE QuerySupport(UINT *support);
-    virtual HRESULT STDMETHODCALLTYPE SetAutomationObject(IDispatch *disp);
+    STDMETHOD(Rearrange)(LPARAM sort) override;
+    STDMETHOD(GetArrangeParam)(LPARAM *sort) override;
+    STDMETHOD(ArrangeGrid)() override;
+    STDMETHOD(AutoArrange)() override;
+    STDMETHOD(AddObject)(PITEMID_CHILD pidl, UINT *item) override;
+    STDMETHOD(GetObject)(PITEMID_CHILD *pidl, UINT item) override;
+    STDMETHOD(RemoveObject)(PITEMID_CHILD pidl, UINT *item) override;
+    STDMETHOD(GetObjectCount)(UINT *count) override;
+    STDMETHOD(SetObjectCount)(UINT count, UINT flags) override;
+    STDMETHOD(UpdateObject)(PITEMID_CHILD pidl_old, PITEMID_CHILD pidl_new, UINT *item) override;
+    STDMETHOD(RefreshObject)(PITEMID_CHILD pidl, UINT *item) override;
+    STDMETHOD(SetRedraw)(BOOL redraw) override;
+    STDMETHOD(GetSelectedCount)(UINT *count) override;
+    STDMETHOD(GetSelectedObjects)(PCUITEMID_CHILD **pidl, UINT *items) override;
+    STDMETHOD(IsDropOnSource)(IDropTarget *drop_target) override;
+    STDMETHOD(GetDragPoint)(POINT *pt) override;
+    STDMETHOD(GetDropPoint)(POINT *pt) override;
+    STDMETHOD(MoveIcons)(IDataObject *obj) override;
+    STDMETHOD(SetItemPos)(PCUITEMID_CHILD pidl, POINT *pt) override;
+    STDMETHOD(IsBkDropTarget)(IDropTarget *drop_target) override;
+    STDMETHOD(SetClipboard)(BOOL move) override;
+    STDMETHOD(SetPoints)(IDataObject *obj) override;
+    STDMETHOD(GetItemSpacing)(ITEMSPACING *spacing) override;
+    STDMETHOD(SetCallback)(IShellFolderViewCB *new_cb, IShellFolderViewCB **old_cb) override;
+    STDMETHOD(Select)(UINT flags) override;
+    STDMETHOD(QuerySupport)(UINT *support) override;
+    STDMETHOD(SetAutomationObject)(IDispatch *disp) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IDropTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragLeave();
-    virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragLeave)() override;
+    STDMETHOD(Drop)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
 
     // *** IDropSource methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState);
-    virtual HRESULT STDMETHODCALLTYPE GiveFeedback(DWORD dwEffect);
+    STDMETHOD(QueryContinueDrag)(BOOL fEscapePressed, DWORD grfKeyState) override;
+    STDMETHOD(GiveFeedback)(DWORD dwEffect) override;
 
     // *** IViewObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE Draw(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
+    STDMETHOD(Draw)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
                                            HDC hdcTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds,
-                                           BOOL (STDMETHODCALLTYPE *pfnContinue)(ULONG_PTR dwContinue), ULONG_PTR dwContinue);
-    virtual HRESULT STDMETHODCALLTYPE GetColorSet(DWORD dwDrawAspect, LONG lindex, void *pvAspect,
-            DVTARGETDEVICE *ptd, HDC hicTargetDev, LOGPALETTE **ppColorSet);
-    virtual HRESULT STDMETHODCALLTYPE Freeze(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze);
-    virtual HRESULT STDMETHODCALLTYPE Unfreeze(DWORD dwFreeze);
-    virtual HRESULT STDMETHODCALLTYPE SetAdvise(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink);
-    virtual HRESULT STDMETHODCALLTYPE GetAdvise(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **ppAdvSink);
+                                           BOOL (STDMETHODCALLTYPE *pfnContinue)(ULONG_PTR dwContinue), ULONG_PTR dwContinue) override;
+    STDMETHOD(GetColorSet)(DWORD dwDrawAspect, LONG lindex, void *pvAspect,
+            DVTARGETDEVICE *ptd, HDC hicTargetDev, LOGPALETTE **ppColorSet) override;
+    STDMETHOD(Freeze)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze) override;
+    STDMETHOD(Unfreeze)(DWORD dwFreeze) override;
+    STDMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink) override;
+    STDMETHOD(GetAdvise)(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **ppAdvSink) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // Message handlers
     LRESULT OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -383,6 +392,7 @@ public:
     COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
     COM_INTERFACE_ENTRY_IID(IID_CDefView, IShellView)
     COM_INTERFACE_ENTRY_IID(IID_IShellView2, IShellView2)
+    COM_INTERFACE_ENTRY_IID(IID_IShellView3, IShellView3)
     COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
     COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
     COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
@@ -2901,7 +2911,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_para
         (FOLDERVIEWMODE)view_params->pfs->ViewMode, view_params->pvid, view_params->prcView, &view_params->hwndView);
 }
 
-HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShellView *psvPrevious, SV3CVW3_FLAGS view_flags, FOLDERFLAGS mask, FOLDERFLAGS flags, FOLDERVIEWMODE mode, const SHELLVIEWID *view_id, RECT *prcView, HWND *hwnd)
+HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShellView *psvPrevious, SV3CVW3_FLAGS view_flags, FOLDERFLAGS mask, FOLDERFLAGS flags, FOLDERVIEWMODE mode, const SHELLVIEWID *view_id, const RECT *prcView, HWND *hwnd)
 {
     OLEMENUGROUPWIDTHS omw = { { 0, 0, 0, 0, 0, 0 } };
 
@@ -2953,7 +2963,8 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
         TRACE("-- CommDlgBrowser\n");
     }
 
-    Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
+    RECT rcView = *prcView;
+    Create(m_hWndParent, rcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
     if (m_hWnd == NULL)
         return E_FAIL;
 

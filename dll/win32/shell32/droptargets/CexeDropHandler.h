@@ -35,21 +35,20 @@ public:
     ~CExeDropHandler();
 
     // IDropTarget
-    virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT WINAPI DragLeave();
-    virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragLeave)() override;
+    STDMETHOD(Drop)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
 
     // IPersist
-    virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
+    STDMETHOD(GetClassID)(CLSID *lpClassId) override;
 
     //////// IPersistFile
-    virtual HRESULT WINAPI GetCurFile(LPOLESTR *ppszFileName);
-    virtual HRESULT WINAPI IsDirty();
-    virtual HRESULT WINAPI Load(LPCOLESTR pszFileName, DWORD dwMode);
-    virtual HRESULT WINAPI Save(LPCOLESTR pszFileName, BOOL fRemember);
-    virtual HRESULT WINAPI SaveCompleted(LPCOLESTR pszFileName);
-
+    STDMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(LPCOLESTR pszFileName, DWORD dwMode) override;
+    STDMETHOD(Save)(LPCOLESTR pszFileName, BOOL fRemember) override;
+    STDMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_EXEDROPHANDLER)
 DECLARE_NOT_AGGREGATABLE(CExeDropHandler)
