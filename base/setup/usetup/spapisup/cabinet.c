@@ -8,7 +8,9 @@
  *   CSH 15/08-2003 Created
  */
 
+#ifndef _USETUP_PCH_
 #include "usetup.h"
+#endif
 
 #define Z_SOLO
 #include <zlib.h>
@@ -136,6 +138,8 @@ typedef struct _CFDATA
 
 /* FUNCTIONS ****************************************************************/
 
+#if !defined(_INC_MALLOC) && !defined(_INC_STDLIB)
+
 /* Needed by zlib, but we don't want the dependency on the CRT */
 void *__cdecl
 malloc(size_t size)
@@ -154,6 +158,8 @@ calloc(size_t nmemb, size_t size)
 {
     return (void *)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nmemb * size);
 }
+
+#endif // !_INC_MALLOC && !_INC_STDLIB
 
 
 /* Codecs */

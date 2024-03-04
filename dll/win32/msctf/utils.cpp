@@ -16,7 +16,6 @@
 #include <windows.h>
 #include <sddl.h>
 #include <imm.h>
-#include <ddk/immdev.h>
 #include <cguid.h>
 #include <tchar.h>
 #include <msctf.h>
@@ -24,9 +23,9 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
-#include <cicero/cicreg.h>
-#include <cicero/cicmutex.h>
-#include <cicero/cicfmap.h>
+#include <cicreg.h>
+#include <cicmutex.h>
+#include <cicfmap.h>
 
 #include <wine/debug.h>
 
@@ -367,7 +366,7 @@ BOOL InitLangChangeHotKey(VOID)
     szLanguage[0] = szLayout[0] = TEXT('3');
     szLanguage[1] = szLayout[1] = TEXT('\0');
 
-    error = regKey.Open(HKEY_CURRENT_USER, "Keyboard Layout\\Toggle");
+    error = regKey.Open(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Toggle"));
     if (error == ERROR_SUCCESS)
     {
         error = regKey.QuerySz(TEXT("Language Hotkey"), szLanguage, _countof(szLanguage));
@@ -518,6 +517,11 @@ VOID InitCUASFlag(VOID)
             StringCchCopy(g_szCUASImeFile, _countof(g_szCUASImeFile), szImeFile);
         }
     }
+}
+
+EXTERN_C VOID TFUninitLib(VOID)
+{
+    // Do nothing
 }
 
 /**

@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Virtual CD Control Tool
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
- * COPYRIGHT:   Copyright 2019 George Bișoc (george.bisoc@reactos.org)
+ * TRANSLATORS: Copyright 2019 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -10,7 +11,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 IDD_MAINWINDOW DIALOGEX 0, 0, 320, 200
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Panou de control de la unitatea virtuală CDRom"
+CAPTION "Panou de control pentru CDRom"
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "OK", IDC_MAINOK, 211, 179, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -18,7 +19,7 @@ BEGIN
     GROUPBOX "Geometria unități de stocare", IDC_STATIC, 7, 101, 153, 74, BS_GROUPBOX | WS_CHILD | WS_VISIBLE
     LTEXT "Numărul de sectoare", IDC_STATIC, 15, 115, 60, 9, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Dimensiune sector", IDC_STATIC, 15, 127, 49, 9, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Cluster libere", IDC_STATIC, 15, 139, 49, 9, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Clustere libere", IDC_STATIC, 15, 139, 49, 9, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Total cluster", IDC_STATIC, 15, 151, 49, 9, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_MAINSECTORS, 88, 115, 49, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     EDITTEXT IDC_MAINSIZE, 88, 127, 49, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
@@ -29,7 +30,7 @@ BEGIN
     PUSHBUTTON "Montează", IDC_MAINMOUNT, 183, 142, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Scoate", IDC_MAINEJECT, 183, 161, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Remontează", IDC_MAINREMOUNT, 242, 142, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Controlează unitatea de stocare ...", IDC_MAINCONTROL, 183, 105, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Control pentru driver ...", IDC_MAINCONTROL, 183, 105, 109, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_MOUNTWINDOW DIALOG 0, 0, 187, 97
@@ -52,18 +53,18 @@ CAPTION "Controlul unități de stocare virtuală CDRom"
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "OK", IDC_DRIVEROK, 43, 98, 103, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Instalează unitate de stocare ...", IDC_DRIVERINSTALL, 43, 61, 51, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Start", IDC_DRIVERSTART, 43, 79, 51, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON  "Stop", IDC_DRIVERSTOP, 96, 79, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON  "Șterge unitate de stocare", IDC_DRIVERREMOVE, 96, 61, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Instalează driverul ...", IDC_DRIVERINSTALL, 43, 61, 51, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Pornire", IDC_DRIVERSTART, 43, 79, 51, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON  "Oprire", IDC_DRIVERSTOP, 96, 79, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON  "Șterge driverul", IDC_DRIVERREMOVE, 96, 61, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT IDC_DRIVERINFO, 7, 7, 175, 50, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DRIVE       "Unitate de stocare"
+    IDS_DRIVE       "Driver"
     IDS_MAPPEDIMAGE "Imagine mapată"
-    IDS_NOMOUNTED   "Nu este nici o imagine montată. Ultimul era - %s"
+    IDS_NOMOUNTED   "Nu este nici o imagine montată. Ultima era - %s"
     IDS_NONE        "Nici una"
     IDS_FILTER      "Toate imaginile suportate (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
 END

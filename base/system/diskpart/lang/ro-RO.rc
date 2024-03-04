@@ -19,7 +19,7 @@ Utilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
 /?\t\tAfișează acest manual.\n\n"
     IDS_APP_LICENSE "Licențiere în termenii GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER "Pe calculatorul: %s\n\n"
-    IDS_APP_LEAVING "\nÎnchiderea DiskPart...\n"
+    IDS_APP_LEAVING "\nÎnchidere DiskPart...\n"
     IDS_APP_PROMPT "DISKPART> "
 END
 
@@ -219,7 +219,7 @@ BEGIN
     IDS_HELP_REMOVE                    "Elimină un punct de montaj sau litera unei unități.\n"
     IDS_HELP_REPAIR                    "Repară un volum RAID-5 cu unul din membri deteriorat.\n"
     IDS_HELP_RESCAN                    "Rescanarea calculatorului căutând discuri și volume.\n"
-    IDS_HELP_RETAIN                    "Reține și plasează o partiție ca simplu volum.\n"
+    IDS_HELP_RETAIN                    "Fixează o partiție reținută sub un volum simplu.\n"
     IDS_HELP_SAN                       "Afișează sau setează politica SAN pentru SO încărcat la moment.\n"
 
     IDS_HELP_SELECT                    "Schimbă obiectul viitoarelor acțiuni.\n"

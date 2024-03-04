@@ -2,7 +2,7 @@
 
 MUI_LAYOUTS zhHKLayouts[] =
 {
-    { L"0409", L"00000409" },
-//    { L"0C04", L"E0080404" }, // We don't have preinstalled IMEs.
-    { NULL, NULL }
+    { 0x0409, 0x00000409 },
+//    { 0x0C04, 0xE0080404 }, // We don't have preinstalled IMEs.
+    { 0, 0 }
 };

@@ -2,6 +2,7 @@
 #define _USBSTOR_H_
 
 #include <wdm.h>
+#include <ntstrsafe.h>
 #include <usbdi.h>
 #include <usbbusif.h>
 #include <usbdlib.h>

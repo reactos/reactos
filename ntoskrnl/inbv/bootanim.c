@@ -32,7 +32,7 @@
  * Enable this define for having fancy features
  * in the boot and shutdown screens.
  */
-#define REACTOS_FANCY_BOOT
+// #define REACTOS_FANCY_BOOT
 
 /*
  * BitBltAligned() alignments

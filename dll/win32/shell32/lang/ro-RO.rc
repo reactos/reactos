@@ -10,8 +10,8 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "D&ale", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Pictograme", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "Picto&grame mari", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Pictograme mici", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -52,15 +52,15 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Anulează\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Revocare\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
     MENUITEM "&Decupează\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copie\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "&Lipește\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Lipește sc&urtătură", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copi&ere în dosarul…", FCIDM_SHVIEW_COPYTO
-    MENUITEM "&Mutare în dosarul…", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Copi&ere în folderul…", FCIDM_SHVIEW_COPYTO
+    MENUITEM "&Mutare în folderul…", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
     MENUITEM "Selectează t&ot\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "Inversea&ză selecția", FCIDM_SHVIEW_INVERTSELECTION
@@ -92,17 +92,17 @@ BEGIN
         MENUITEM "&Mută aici", IDM_MOVEHERE
         MENUITEM "Crea&ză scurtătură aici", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Anulează", 0
+        MENUITEM "Revocare", 0
     END
 END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Specificare dosar"
+CAPTION "Specificare folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Con&firmă", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "A&nulează", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Re&vocare", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -110,16 +110,16 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Specificare dosar"
+CAPTION "Specificare folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
-    PUSHBUTTON "&Crează dosar nou", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Creare folder nou", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "Con&firmă", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "A&nulează", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Re&vocare", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -171,7 +171,7 @@ CAPTION "Executare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS.", 12289, 36, 4, 185, 26
+    LTEXT "Tastați numele unui program, folder, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS.", 12289, 36, 4, 185, 26
     LTEXT "&Deschide:", 12305, 7, 39, 33, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 41, 37, 179, 100
     DEFPUSHBUTTON "Con&firmă", IDOK, 36, 70, 59, 14, WS_TABSTOP
@@ -229,7 +229,7 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
     LTEXT "Tip fișier:", 14004, 8, 40, 55, 10
-    CONTROL "Dosar", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
+    CONTROL "Folder", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Locație:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -393,7 +393,7 @@ BEGIN
     RADIOBUTTON "&Dimensiune specificată:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "Dimensiune maximă (Mo):", -1, 20, 105, 84, 10
-    RADIOBUTTON "N&u arunca fișierele în Coșul de gunoi, elimină-le direct.", 14003, 20, 117, 200, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "N&u arunca fișierele în Coșul de reciclare, elimină-le direct.", 14003, 20, 117, 200, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Afișea&ză dialog de confirmare pentru ștergeri", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
@@ -420,12 +420,12 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Activități", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
-    AUTORADIOBUTTON "Incl&ude în ferestrele dosarelor și activiățile comune", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Prefer aspectul &clasic pentru dosare", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Parcurgere dosare", -1, 7, 60, 249, 40, WS_TABSTOP
+    AUTORADIOBUTTON "Incl&ude în ferestrele folderelor și activiățile comune", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Prefer aspectul &clasic pentru foldere", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    GROUPBOX "Parcurgere foldere", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "&Parcurge dosarele în aceiași fereastră", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "D&eschide fiecare dosar în fereastră proprie", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    AUTORADIOBUTTON "&Parcurge folderele în aceiași fereastră", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "D&eschide fiecare folder în fereastră proprie", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Interacțiune elemente", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "Deschide prin acțiune si&mplă (selecare prin indicare)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
@@ -440,9 +440,9 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Afișare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Afișare dosare", -1, 7, 10, 249, 60
+    GROUPBOX "Afișare foldere", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
-    LTEXT "Puteți aplica afișarea curentă (ce include Detalii sau Pictograme mari) pentru toate dosarele.", -1, 40, 20, 213, 20
+    LTEXT "Puteți aplica afișarea curentă (ce include Detalii sau Pictograme mari) pentru toate folderele.", -1, 40, 20, 213, 20
     PUSHBUTTON "Apli&că pentru toate", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
     PUSHBUTTON "Restabilește t&oate", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
     LTEXT "Opțiuni avansate:", -1, 7, 80, 100, 10
@@ -452,10 +452,10 @@ END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Tipuri de fișier"
+CAPTION "Tipuri de fișiere"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Tipurile de fișier înregistrate:", -1, 7, 10, 180, 10
+    LTEXT "Tipurile de fișiere înregistrate:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
     PUSHBUTTON "N&ou…", IDC_FILETYPES_NEW, 140, 123, 55, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", IDC_FILETYPES_DELETE, 200, 123, 55, 14, WS_TABSTOP
@@ -476,11 +476,11 @@ BEGIN
     DEFPUSHBUTTON "D&a", IDYES, 20, 122, 60, 14
     PUSHBUTTON "Da pentru t&oate", 12807, 85, 122, 60, 14
     PUSHBUTTON "N&u", IDNO, 150, 122, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 215, 122, 60, 14
+    PUSHBUTTON "Re&vocare", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Dosarul curent deja conține un fișier cu numele „%2”.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "Dosarul curent deja conține un fișier nemodificabil cu numele „%2”.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "Dosarul curent deja conține un fișier de sistem cu numele „%2”.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Folderul curent deja conține un fișier cu numele „%2”.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "Folderul curent deja conține un fișier nemodificabil cu numele „%2”.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Folderul curent deja conține un fișier de sistem cu numele „%2”.", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Doriți să înlocuiți acest fișier?", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(mărime/dată necunoscută)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
@@ -497,7 +497,7 @@ BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Sigur doriți să vă deautentificați?", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "&Deautentifică", IDOK, 49, 38, 53, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 109, 38, 53, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 109, 38, 53, 14
 END
 
 IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
@@ -714,18 +714,18 @@ CAPTION "Particularizare"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ce tip de dosar doriți?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "&Utilizați acest tip de dosar ca șablon:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Ce tip de folder doriți?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "&Utilizați acest tip de folder ca șablon:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Aplică acest șa&blon pentru toate subdosarele sale", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Dosar de imagini", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
-    LTEXT "Pentru aspect cu miniaturi puteți pune o imagine în acest dosar care să vă amintească de conținutul său.", IDC_STATIC, 15, 87, 115, 33
+    AUTOCHECKBOX "Aplică acest șa&blon pentru toate subfolderele sale", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Folder de imagini", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
+    LTEXT "Pentru aspect cu miniaturi puteți pune o imagine în acest folder care să vă amintească de conținutul său.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "Spe&cificare imagine…", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
     PUSHBUTTON "&Restabilește implicite", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
     LTEXT "Previzualizare:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Pictograme de dosar", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
-    LTEXT "Pentru alte aspecte în afara miniaturilor, puteți schimba pictograma „dosar” cu altceva.", IDC_STATIC, 15, 175, 210, 25
+    GROUPBOX "Pictograme de folder", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "Pentru alte aspecte în afara miniaturilor, puteți schimba pictograma „folder” cu altceva.", IDC_STATIC, 15, 175, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
     PUSHBUTTON "Schi&mbare pictogramă…", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
@@ -736,12 +736,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "Elementul '%s' la care această scurtătură face referire a fost schimbată sau mutată, așa că scurtătura nu va mai funcționa corect.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Elementul „%s” la care această scurtătură face referire a fost schimbată sau mutată, așa că scurtătura nu va mai funcționa corect.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Cea mai apropiată potrivire, bazată pe nume, tip, mărime și dată:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "Vreți să reparați scurtătura pentru a atinge ținta sau doar vreți să o ștergeți?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Repar-o", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Șterge-o", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Anulează", IDCANCEL, 185, 120, 60, 15
+    PUSHBUTTON "Revocare", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -772,13 +772,13 @@ BEGIN
     /* special folders */
     IDS_DESKTOP "Desktop"
     IDS_MYCOMPUTER "Calculatorul meu"
-    IDS_RECYCLEBIN_FOLDER_NAME "Coșul de gunoi"
+    IDS_RECYCLEBIN_FOLDER_NAME "Coș de reciclare"
     IDS_CONTROLPANEL "Panoul de control"
     IDS_ADMINISTRATIVETOOLS "Instrumente administrative"
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configurarea administrativă a calculatorului."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Particularizarea afișării de fișiere și dosare și definirea asocierilor tipurilor de fișiere."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Particularizarea afișării de fișiere și foldere și definirea asocierilor tipurilor de fișiere."
     IDS_FONTS_DESCRIPTION "Adăugarea, modificarea, și gestiunea fonturilor din calculator."
     IDS_PRINTERS_DESCRIPTION "Prezentarea imprimantelor și faxurilor, precum și asistență la instalarea unora noi."
 
@@ -803,35 +803,35 @@ BEGIN
     IDS_PASTE "&Lipește"
     IDS_EJECT "S&coate"
     IDS_DISCONNECT "Deconectea&ză"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "&Deschide locația fișierului"
+    IDS_SENDTO_MENU "T&rimitere la"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERRORTITLE "Nu s-a putut muta fișierul sau folderul"
+    IDS_COPYERRORTITLE "Nu s-a putut copia fișierul sau folderul"
+    IDS_MOVEERRORSAMEFOLDER "Nu se poate muta „%s”: Folderul destinație este identic cu folderul sursă."
+    IDS_MOVEERRORSAME "Nu se poate muta „%s”: Numele de fișier al sursei și destinației sunt identice."
+    IDS_COPYERRORSAME "Nu se poate copia „%s”: Numele de fișier al sursei și destinației sunt identice."
+    IDS_MOVEERRORSUBFOLDER "Nu se poate muta „%s”: Folderul destinație este un subfolder al folderului sursă."
+    IDS_COPYERRORSUBFOLDER "Nu se poate copia „%s”: Folderul destinație este un subfolder al folderului sursă."
+    IDS_MOVEERROR "Nu se poate muta „%s”: %s"
+    IDS_COPYERROR "Nu se poate copia „%s”: %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
-    IDS_CREATEFOLDER_DENIED "Nu poate fi creat un dosar cu numele „%1”"
-    IDS_CREATEFOLDER_CAPTION "Nu poate fi creat dosar"
+    IDS_CREATEFILE_DENIED "Nu s-a putut crea fișierul %1"
+    IDS_CREATEFILE_CAPTION "Nu s-a putut crea fișierul"
+    IDS_CREATEFOLDER_DENIED "Nu poate fi creat un folder cu numele „%1”"
+    IDS_CREATEFOLDER_CAPTION "Nu poate fi creat folder"
     IDS_DELETEITEM_CAPTION "Confirmarea ștergerii fișierului"
-    IDS_DELETEFOLDER_CAPTION "Confirmarea ștergerii dosarului"
+    IDS_DELETEFOLDER_CAPTION "Confirmarea ștergerii folderului"
     IDS_DELETEITEM_TEXT "Sigur doriți să ștergeți „%1”?"
     IDS_DELETEMULTIPLE_TEXT "Sigur doriți să ștergeți aceste %1 elemente?"
     IDS_DELETESELECTED_TEXT "Sigur doriți să ștergeți acest(e) element(e) selectat(e)?"
-    IDS_TRASHITEM_TEXT "Sigur doriți să aruncați „%1” în Coșul de gunoi?"
-    IDS_TRASHFOLDER_TEXT "Sigur doriți să aruncați dosarul „%1” cu tot conținutul său la Coșul de gunoi?"
-    IDS_TRASHMULTIPLE_TEXT "Sigur doriți să aruncați aceste %1 elemente la Coșul de gunoi?"
-    IDS_CANTTRASH_TEXT "Elementul „%1” nu poate fi aruncat la gunoi. Doriți să-l ștergeți definitiv?"
-    IDS_OVERWRITEFILE_TEXT "Acest dosar deja conține un fișier numit „%1”.\n\nDoriți să îl înlocuiți"
+    IDS_TRASHITEM_TEXT "Sigur doriți să aruncați „%1” în Coșul de reciclare?"
+    IDS_TRASHFOLDER_TEXT "Sigur doriți să aruncați folderul „%1” cu tot conținutul său la Coșul de reciclare?"
+    IDS_TRASHMULTIPLE_TEXT "Sigur doriți să aruncați aceste %1 elemente la Coșul de reciclare?"
+    IDS_CANTTRASH_TEXT "Elementul „%1” nu poate fi aruncat la reciclare. Doriți să-l ștergeți definitiv?"
+    IDS_OVERWRITEFILE_TEXT "Acest folder deja conține un fișier numit „%1”.\n\nDoriți să îl înlocuiți"
     IDS_OVERWRITEFILE_CAPTION "Confirmarea înlocuirii fișierului"
-    IDS_OVERWRITEFOLDER_TEXT "Acest dosar deja conține un sub-dosar cu numele „%1”.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați dosarul?"
+    IDS_OVERWRITEFOLDER_TEXT "Acest folder deja conține un sub-folder cu numele „%1”.\n\nDacă fișierele din folderul de destinație au același nume ca cele din\nfolderul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați folderul?"
 
     IDS_FILEOOP_COPYING "În curs de copiere…"
     IDS_FILEOOP_MOVING "În curs de mutare…"
@@ -862,9 +862,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Fișiere executabile (*.exe)\0*.exe\0Orice fișier (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Fereastră normală"
+    IDS_SHORTCUT_RUN_MIN "Minimizată"
+    IDS_SHORTCUT_RUN_MAX "Maximizată"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Meniul Pornire\\Programe"
@@ -896,8 +896,8 @@ BEGIN
     IDS_CDBURN_AREA "Preferințe locale\\Date de aplicație\\Microsoft\\Inscripționare CD"
     IDS_NETWORKPLACE "Locații în rețea"
 
-    IDS_NEWFOLDER "Dosar nou"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWFOLDER "Folder nou"
+    IDS_NEWITEMFORMAT "Nou %s"
 
     IDS_DRIVE_FIXED "Disc local"
     IDS_DRIVE_CDROM "Unitate CD"
@@ -915,12 +915,12 @@ BEGIN
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
     IDS_SHELL_ABOUT_BACK "< Înap&oi"
     FCIDM_SHVIEW_NEW "&Crează" /* A menu item with an ampersand */
-    FCIDM_SHVIEW_NEWFOLDER "&Dosar"
+    FCIDM_SHVIEW_NEWFOLDER "&Folder"
     FCIDM_SHVIEW_NEWLINK "Sc&urtătură"
-    IDS_FOLDER_OPTIONS "Opțiuni dosare"
-    IDS_RECYCLEBIN_LOCATION "Locația pentru Coșul de gunoi"
+    IDS_FOLDER_OPTIONS "Opțiuni foldere"
+    IDS_RECYCLEBIN_LOCATION "Locația pentru Coșul de reciclare"
     IDS_RECYCLEBIN_DISKSPACE "Spațiul disponibil"
-    IDS_EMPTY_BITBUCKET "Golește Coșul de gunoi"
+    IDS_EMPTY_BITBUCKET "Golește Coșul de reciclare"
     IDS_PICK_ICON_TITLE "Alegerea pictogramei"
     IDS_PICK_ICON_FILTER "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Orice fișier (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Fișiere executabile (*.exe)\0*.exe\0Orice fișier (*.*)\0*.*\0"
@@ -933,7 +933,7 @@ BEGIN
     IDS_NONE "(Nimic)"
 
     /* Friendly File Type Names */
-    IDS_DIRECTORY "Dosar"
+    IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Fișier de comenzi ReactOS"
     IDS_CMD_FILE "Script de comenzi ReactOS"
     IDS_COM_FILE "Executabil DOS"
@@ -969,7 +969,7 @@ BEGIN
     IDS_PRINT_VERB "Imprimă"
     IDS_CMD_VERB "Deschide Panoul de control aici"
 
-    IDS_FILE_FOLDER "%u fișiere, %u dosare"
+    IDS_FILE_FOLDER "%u fișiere, %u foldere"
     IDS_PRINTERS "Imprimante"
     IDS_FONTS "Fonturi"
     IDS_INSTALLNEWFONT "Instalare font nou…"
@@ -998,28 +998,32 @@ BEGIN
 
     IDS_TITLE_MYCOMP "Calculatorul meu"
     IDS_TITLE_MYNET "Locații în rețea"
-    IDS_TITLE_BIN_1 "Coșul de gunoi (plin)"
-    IDS_TITLE_BIN_0 "Coșul de gunoi (gol)"
+    IDS_TITLE_BIN_1 "Coșul de reciclare (plin)"
+    IDS_TITLE_BIN_0 "Coșul de reciclare (gol)"
 
-    IDS_ADVANCED_FOLDER "Fișiere și Dosare"
-    IDS_ADVANCED_NET_CRAWLER "Caută automat în rețea dosare și imprimante"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Afișează dimensiunea fișierulor la indicii de dosar"
-    IDS_ADVANCED_FRIENDLY_TREE "Permite afișare simplă de dosare pentru lista dosarelor în Explorator"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afișează conținutul dosarelor de sistem"
+    IDS_ADVANCED_FOLDER "Fișiere și Foldere"
+    IDS_ADVANCED_NET_CRAWLER "Caută automat în rețea foldere și imprimante"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Afișează dimensiunea fișierulor la indicii de folder"
+    IDS_ADVANCED_FRIENDLY_TREE "Permite afișare simplă de foldere pentru lista folderelor în Explorator"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afișează conținutul folderelor de sistem"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Afișează cale completă în bara de adrese"
     IDS_ADVANCED_SHOW_FULL_PATH "Afișează cale completă în bara de titlu"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Nu prememora miniaturi"
-    IDS_ADVANCED_HIDDEN "Fișiere și dosare ascunse"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Nu afișa fișierele și dosarele ascunse"
-    IDS_ADVANCED_SHOW_HIDDEN "Afișează fișierele și dosarele ascunse"
+    IDS_ADVANCED_HIDDEN "Fișiere și foldere ascunse"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Nu afișa fișierele și folderele ascunse"
+    IDS_ADVANCED_SHOW_HIDDEN "Afișează fișierele și folderele ascunse"
     IDS_ADVANCED_HIDE_FILE_EXT "Ascunde extensiile pentru tipurile cunoscute de fișiere"
     IDS_ADVANCED_SUPER_HIDDEN "Ascunde fișierele protejate ale sistemului de operare (este recomandat)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Lansează ferestrele de dosar în procese separate"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Păstrează particularitățile fiecărei afișări de dosar"
-    IDS_ADVANCED_PERSIST_BROWSERS "Redeschide la autentificare dosarele precedente"
+    IDS_ADVANCED_DESKTOP_PROCESS "Lansează ferestrele de folder în procese separate"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Păstrează particularitățile fiecărei afișări de folder"
+    IDS_ADVANCED_PERSIST_BROWSERS "Redeschide la autentificare folderele precedente"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afișează Panoul de control în Calculatorul meu"
     IDS_ADVANCED_SHOW_COMP_COLOR "Afișează în culori fișierele NTFS criptate sau comprimate"
-    IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru dosare și elemente de desktop"
+    IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru foldere și elemente de desktop"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vansate"
     IDS_NEWEXT_ADVANCED_RIGHT "A&vansate >>"
@@ -1037,17 +1041,17 @@ BEGIN
     IDS_EDITING_ACTION "Editează acțiune pentru tipul: "
     IDS_NO_ICONS "Fișierul „%s” nu conține pictograme.\n\nAlegeți o pictogramă din listă sau specificați un alt fișier."
     IDS_FILE_NOT_FOUND "Fișierul „%s” nu a fost găsit."
-    IDS_LINK_INVALID "Elementul '%s' ca această scurtătură face referire la faptul ca a fost schimbat sau mutat, deci această scurtătură nu va mai funcționa în mod corespunzător."
-    IDS_COPYTOMENU "Copiază în &dosarul..."
-    IDS_COPYTOTITLE "Selectați locul unde vreți să copiați '%s'. Apoi, apăsați pe butonul Copiază."
+    IDS_LINK_INVALID "Elementul „%s” ca această scurtătură face referire la faptul ca a fost schimbat sau mutat, deci această scurtătură nu va mai funcționa în mod corespunzător."
+    IDS_COPYTOMENU "Copiază în &folderul..."
+    IDS_COPYTOTITLE "Selectați locul unde vreți să copiați „%s”. Apoi, apăsați pe butonul Copiază."
     IDS_COPYITEMS "Copiază elementele"
     IDS_COPYBUTTON "Copiază"
-    IDS_MOVETOMENU "Mu&tă în dosarul..."
-    IDS_MOVETOTITLE "Selectați locul în care vreți să mutați '%s'. Apoi, apăsați butonul Mută."
+    IDS_MOVETOMENU "Mu&tă în folderul..."
+    IDS_MOVETOTITLE "Selectați locul în care vreți să mutați „%s”. Apoi, apăsați butonul Mută."
     IDS_MOVEITEMS "Mută elementele"
     IDS_MOVEBUTTON "Mută"
 
-    IDS_SYSTEMFOLDER "Dosar de sistem"
+    IDS_SYSTEMFOLDER "Folder de sistem"
 
     /* For IDD_LOG_OFF_FANCY */
     IDS_LOG_OFF_DESC "Vă închide programele și vă încheie sesiunea ReactOS."

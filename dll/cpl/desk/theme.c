@@ -997,7 +997,8 @@ DrawThemePreview(IN HDC hdcMem, IN PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSe
     FillRect(hdcMem, prcWindow, hbrBack);
     DeleteObject(hbrBack);
 
-    InflateRect(prcWindow, -10, -10);
+    InflateRect(prcWindow, -8, -8);
+    prcWindow->bottom -= 12;
 
     hres = DrawNCPreview(hdcMem,
                          DNCP_DRAW_ALL,

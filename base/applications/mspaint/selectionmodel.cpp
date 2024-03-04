@@ -58,20 +58,21 @@ void SelectionModel::DrawBackground(HDC hDCImage, COLORREF crBg)
         DrawBackgroundRect(hDCImage, crBg);
 }
 
-void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
+void
+SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent, const CRect& rc,
+                              HBITMAP hbm)
 {
-    CRect rc = m_rc;
     if (rc.IsRectEmpty())
         return;
 
     BITMAP bm;
-    if (!GetObjectW(m_hbmColor, sizeof(BITMAP), &bm))
+    if (!GetObjectW(hbm, sizeof(BITMAP), &bm))
         return;
 
     COLORREF keyColor = (bBgTransparent ? crBg : CLR_INVALID);
 
     HDC hMemDC = CreateCompatibleDC(hDCImage);
-    HGDIOBJ hbmOld = SelectObject(hMemDC, m_hbmColor);
+    HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
     ColorKeyedMaskBlt(hDCImage, rc.left, rc.top, rc.Width(), rc.Height(),
                       hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, m_hbmMask, keyColor);
     SelectObject(hMemDC, hbmOld);
@@ -89,13 +90,23 @@ void SelectionModel::setMask(const CRect& rc, HBITMAP hbmMask)
 
 HBITMAP SelectionModel::GetSelectionContents()
 {
-    if (m_hbmColor)
-        return CopyDIBImage(m_hbmColor, m_rc.Width(), m_rc.Height());
-
     HBITMAP hbmWhole = imageModel.LockBitmap();
-    HBITMAP hbmPart = getSubImage(hbmWhole, m_rc);
+    HBITMAP hbmPart = getSubImage(hbmWhole, (IsLanded() ? m_rc : m_rcOld));
     imageModel.UnlockBitmap(hbmWhole);
-    return hbmPart;
+    if (!hbmPart)
+        return NULL;
+
+    CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
+
+    HDC hdcMem = ::CreateCompatibleDC(NULL);
+    HBITMAP hbmNew = CreateColorDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
+    HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
+    selectionModel.DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
+    ::SelectObject(hdcMem, hbmOld);
+    ::DeleteDC(hdcMem);
+
+    ::DeleteObject(hbmPart);
+    return hbmNew;
 }
 
 BOOL SelectionModel::IsLanded() const

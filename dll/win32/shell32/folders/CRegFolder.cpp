@@ -123,6 +123,16 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
+HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
+{
+    WCHAR xriid[40];
+
+    if (!StringFromGUID2(*riid, xriid, _countof(xriid) - 1))
+        return E_FAIL;
+
+    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
+}
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -145,14 +155,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     if (!riid)
         return E_FAIL;
 
-    /* my computer and other shell extensions */
-    WCHAR xriid[50];
-
-    swprintf(xriid, L"CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             riid->Data1, riid->Data2, riid->Data3,
-             riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-             riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
+    /* Choose a correct icon for Recycle Bin (full or empty) */
     const WCHAR* iconname = NULL;
     if (_ILIsBitBucket(pidl))
     {
@@ -179,23 +182,37 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         }
     }
 
-    if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
+    /* Prepare registry path for loading icons of My Computer and other shell extensions */
+    WCHAR KeyName[MAX_PATH];
+
+    hr = FormatGUIDKey(KeyName, _countof(KeyName),
+                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s",
+                       riid);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    /* Load icon for the current user */
+    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    if (!ret)
     {
+        /* Failed, load default system-wide icon */
+        hr = FormatGUIDKey(KeyName, _countof(KeyName), L"CLSID\\%s", riid);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        ret = HCR_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    }
+
+    if (ret)
+    {
+        /* Success, set loaded icon */
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else
     {
-        // FIXME: Delete these hacks and make HCR_GetIconW and registry working
-        if (IsEqualGUID(*riid, CLSID_MyComputer))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-        else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-        else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-        else if (IsEqualGUID(*riid, CLSID_Internet))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_WEB_BROWSER);
-        else
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
+        /* Everything has failed, set blank paper icon */
+        WARN("Failed to load an icon for the item, setting blank icon\n");
+        initIcon->SetNormalIcon(swShell32Name, IDI_SHELL_DOCUMENT - 1);
     }
 
     return initIcon->QueryInterface(iid, ppvOut);
@@ -513,7 +530,7 @@ HRESULT WINAPI CRegFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         if (_ILIsSpecialFolder(*apidl))
             GetGuidItemAttributes(*apidl, rgfInOut);
         else
-            ERR("Got an unknown pidl here!\n");
+            ERR("Got unknown pidl\n");
         apidl++;
         cidl--;
     }

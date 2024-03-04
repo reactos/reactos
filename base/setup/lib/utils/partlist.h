@@ -70,9 +70,6 @@ typedef struct _PARTENTRY
     /* Partition is new, table does not exist on disk yet */
     BOOLEAN New;
 
-    /* Partition was created automatically */
-    BOOLEAN AutoCreate;
-
     /* Partition must be checked */
     BOOLEAN NeedsCheck;
 
@@ -227,6 +224,16 @@ RoundingDivide(
    IN ULONGLONG Divisor);
 
 
+#define GetPartEntryOffsetInBytes(PartEntry) \
+    ((PartEntry)->StartSector.QuadPart * (PartEntry)->DiskEntry->BytesPerSector)
+
+#define GetPartEntrySizeInBytes(PartEntry) \
+    ((PartEntry)->SectorCount.QuadPart * (PartEntry)->DiskEntry->BytesPerSector)
+
+#define GetDiskSizeInBytes(DiskEntry) \
+    ((DiskEntry)->SectorCount.QuadPart * (DiskEntry)->BytesPerSector)
+
+
 BOOLEAN
 IsSuperFloppy(
     IN PDISKENTRY DiskEntry);
@@ -306,14 +313,13 @@ BOOLEAN
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_ ULONGLONG SectorCount,
-    _In_ BOOLEAN AutoCreate);
+    _In_opt_ ULONGLONG SizeBytes);
 
 BOOLEAN
 CreateExtendedPartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_ ULONGLONG SectorCount);
+    _In_opt_ ULONGLONG SizeBytes);
 
 NTSTATUS
 DismountVolume(

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Resource of msutb.dll
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <windef.h>
@@ -19,6 +19,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 
 #include <reactos/manifest_hosted.rc>
+
+IDI_MAINICON ICON "res/earth.ico"
+
+IDB_BITMAP154 BITMAP "res/Bitmap-154.bmp"
+IDB_BITMAP155 BITMAP "res/Bitmap-155.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)

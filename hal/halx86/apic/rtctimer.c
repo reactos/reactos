@@ -13,6 +13,7 @@
 
 #include <hal.h>
 #include "apicp.h"
+#include <smp.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -182,8 +183,38 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
         HalpSetClockRate = FALSE;
     }
 
+    /* Send the clock IPI to all other CPUs */
+    HalpBroadcastClockIpi(CLOCK_IPI_VECTOR);
+
     /* Update the system time -- on x86 the kernel will exit this trap  */
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+}
+
+VOID
+FASTCALL
+HalpClockIpiHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL Irql;
+
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+#ifdef _M_AMD64
+    /* This is for debugging */
+    TrapFrame->ErrorCode = 0xc10c4;
+#endif
+
+    /* Start the interrupt */
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, CLOCK_IPI_VECTOR, &Irql))
+    {
+        /* Spurious, just end the interrupt */
+        KiEoiHelper(TrapFrame);
+    }
+
+    /* Call the kernel to update runtimes */
+    KeUpdateRunTime(TrapFrame, Irql);
+
+    /* End the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 ULONG

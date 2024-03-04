@@ -2572,7 +2572,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = Resolve(lpici->hwnd, 0);
     if (FAILED(hr))
     {
-        TRACE("failed to resolve component with error 0x%08x\n", hr);
+        TRACE("failed to resolve component error 0x%08x\n", hr);
         return hr;
     }
 
@@ -2627,11 +2627,19 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
-    sei.lpFile = path;
+    if (m_pPidl)
+    {
+        sei.lpIDList = m_pPidl;
+        sei.fMask |= SEE_MASK_IDLIST;
+    }
+    else
+    {
+        sei.lpFile = path;
+    }
+    sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
     sei.lpDirectory = m_sWorkDir;
-    sei.lpParameters = args;
     sei.lpVerb = L"open";
 
     // HACK for ShellExecuteExW

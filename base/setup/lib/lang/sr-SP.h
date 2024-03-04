@@ -2,7 +2,7 @@
 
 MUI_LAYOUTS srSPLayouts[] =
 {
-    { L"0C1A", L"00000C1A" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    { 0x0C1A, 0x00000C1A },
+    { 0x0409, 0x00000409 },
+    { 0, 0 }
 };

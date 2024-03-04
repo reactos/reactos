@@ -79,7 +79,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Ovladače tohoto zařízení nejsou naintalovány."
     IDS_DEV_HARDWARE_DISABLED "Toto zařízení je vypnuto, protože mu BIOS nepřiřadil žádné zdroje."
     IDS_DEV_CANT_SHARE_IRQ "Toto zařízení využívá IRQ, které je využíváno jiným zařízením a nemůže být sdíleno.\nJe potřeba změnit konfliktní nastavení nebo odebrat ovladač způsobující konflikt."
-    IDS_DEV_FAILED_ADD "Toto zařízení nepracuje správně, protože %1 nepracuje správně."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nemůže nainstalovat ovladače tohoto zařízení, protože nemá přístup na disk nebo síťové umístění, na kterém se nacházejí instalační soubory."
     IDS_DEV_TRANSLATION_FAILED "Toto zařízení neodpovídá svému ovladači."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáže určit nastavení tohoto zařízení. Konzultujte manuál, který byl přibalen k zařízení a použijte záložku ""Zdroje"" k vybrání nastavení."

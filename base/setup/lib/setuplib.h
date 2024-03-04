@@ -122,6 +122,13 @@ typedef struct _USETUP_DATA
     PGENERIC_LIST LayoutList;
     PGENERIC_LIST LanguageList;
 
+/* Settings *****/
+    PCWSTR ComputerType;
+    PCWSTR DisplayType;
+    // PCWSTR KeyboardDriver;
+    // PCWSTR MouseDriver;
+    PCWSTR LayoutId; // DefaultKBLayout
+
 /* Other stuff *****/
     WCHAR LocaleID[9];
     LANGID LanguageId;

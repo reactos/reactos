@@ -143,8 +143,6 @@ HalInitializeBios(
         //DbgDumpPage(x86BiosMemoryMapping, 0xc351);
 
         x86BiosIsInitialized = TRUE;
-
-        HalpBiosDisplayReset();
     }
 }
 

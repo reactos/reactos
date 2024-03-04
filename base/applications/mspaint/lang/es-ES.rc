@@ -45,6 +45,8 @@ BEGIN
         MENUITEM "Cor&tar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Pegar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Borrar selección\tSupr", IDM_EDITDELETESELECTION
         MENUITEM "&Invertir selección", IDM_EDITINVERTSELECTION
         MENUITEM "Seleccionar t&odo\tCtrl+E", IDM_EDITSELECTALL
@@ -109,6 +111,8 @@ BEGIN
         MENUITEM "Cor&tar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Pegar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Borrar selección\tSupr", IDM_EDITDELETESELECTION
         MENUITEM "Seleccionar t&odo\tCtrl+E", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

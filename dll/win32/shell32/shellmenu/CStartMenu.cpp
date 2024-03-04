@@ -533,7 +533,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
         hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
         if (FAILED_UNEXPECTEDLY(hr))
         {
-            WARN("USER Programs folder not found.\n");
+            WARN("USER Programs folder not found\n");
             hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;

@@ -777,7 +777,7 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
 #if DBG
     {
         WCHAR buffer[MAX_PATH];
-        if (!GetProcessImageFileNameW(CsrProcess->ProcessHandle, buffer, MAX_PATH))
+        if (!GetProcessImageFileNameW(CsrProcess->ProcessHandle, buffer, ARRAYSIZE(buffer)))
         {
             DPRINT1("Terminating process %x\n", CsrProcess->ClientId.UniqueProcess);
         }
@@ -788,7 +788,6 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     }
 #endif
     NtTerminateProcess(CsrProcess->ProcessHandle, 0);
-
     WaitForSingleObject(CsrProcess->ProcessHandle, ShutdownSettings.ProcessTerminateTimeout);
 
     /* We are done */

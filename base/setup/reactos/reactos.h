@@ -136,10 +136,6 @@ typedef struct _SETUPDATA
 
     /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
-    LONG FSType;       // file system type on partition
-    LONG FormatPart;   // type of format the partition
-
-    LONG SelectedLangId; // selected language (table index)
 
     /* txtsetup.sif data */
     // LONG DefaultLang;     // default language (table index)

@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enZWLayouts[] =
 {
-    { L"3009", L"00000409" },
-    { NULL, NULL }
+    { 0x3009, 0x00000409 },
+    { 0, 0 }
 };

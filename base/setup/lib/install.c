@@ -538,8 +538,16 @@ PrepareCopyInfFile(
         }
 
         /* Add specific files depending of computer type */
-        if (!ProcessComputerFiles(InfFile, pSetupData->ComputerList, &AdditionalSectionName))
+        {
+        PGENERIC_LIST_ENTRY Entry;
+        Entry = GetCurrentListEntry(pSetupData->ComputerList);
+        ASSERT(Entry);
+        pSetupData->ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(pSetupData->ComputerType);
+
+        if (!ProcessComputerFiles(InfFile, pSetupData->ComputerType, &AdditionalSectionName))
             return FALSE;
+        }
 
         if (AdditionalSectionName &&
             !AddSectionToCopyQueue(pSetupData, InfFile,

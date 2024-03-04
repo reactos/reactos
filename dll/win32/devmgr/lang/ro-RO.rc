@@ -83,7 +83,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Driverele ale acestui dispozitiv nu sunt instalate."
     IDS_DEV_HARDWARE_DISABLED "Acest dispozitiv este dezactivat deoarece BIOS nu i-a alocat resursele necesare."
     IDS_DEV_CANT_SHARE_IRQ "Acest dispozitiv necesită o cerere de întrerupere (IRQ) care este folosită deja de alt dispozitiv și care nu poate fi folosită în comun.\nFie modificați configurația dispozitivelor pentru a rezolva problema gestiunii cererilor de întreruperi, fie eliminați Driverul de mod-real care provoacă acest conflict."
-    IDS_DEV_FAILED_ADD "Acest dispozitiv nu funcționează corect deoarcere %1 nu funcționează corect."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nu poate instala driverele pentru acest dispozitiv deoarece locația de stocare a fișierelor necesare pentru instalare nu a putut fi accesată."
     IDS_DEV_TRANSLATION_FAILED "Acest dispozitiv nu răspunde la comenzile driverului."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nu poate determina setările acestui dispozitiv. Consultați-i documentația din dotare și utilizați compartimentul „Resurse” pentru a-i stabili configurația corectă."

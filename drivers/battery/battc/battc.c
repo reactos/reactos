@@ -214,14 +214,14 @@ BatteryClassIoctl(PVOID ClassData,
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_BATTERY_QUERY_TAG:
-            if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ULONG) ||
+            if ((IrpSp->Parameters.DeviceIoControl.InputBufferLength != sizeof(ULONG) && IrpSp->Parameters.DeviceIoControl.InputBufferLength != 0) ||
                 IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
             {
                 Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
 
-            WaitTime = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
+            WaitTime = IrpSp->Parameters.DeviceIoControl.InputBufferLength == sizeof(ULONG) ? *(PULONG)Irp->AssociatedIrp.SystemBuffer : 0;
 
             Timeout.QuadPart = Int32x32To64(WaitTime, -1000);
 

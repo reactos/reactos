@@ -70,6 +70,7 @@ BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
 BOOLEAN InitIsWinPEMode, InitWinPEModeType;
+BOOLEAN SosEnabled; // Used by driver.c!IopDisplayLoadingMessage()
 
 /* NT Boot Path */
 UNICODE_STRING NtSystemRoot;
@@ -1344,7 +1345,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     NTSTATUS Status, MsgStatus;
     TIME_FIELDS TimeFields;
     LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime, Timeout;
-    BOOLEAN SosEnabled, NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
+    BOOLEAN NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PMESSAGE_RESOURCE_ENTRY MsgEntry;
     PCHAR CommandLine, Y2KHackRequired, SafeBoot, Environment;

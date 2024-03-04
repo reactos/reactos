@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -31,9 +31,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_PRIV      "Eșec la instituirea dreptului de încărcare pentru driverul (0x%X)\n"
-    IDS_ERROR_FILTERS   "Eșec la afișarea filtrelor (0x%X)\n"
-    IDS_ERROR_LOAD      "Eșec la încărcarea filtrului (0x%X)\n"
-    IDS_ERROR_UNLOAD    "Eșec la descărcarea filtrului (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Eșec la afișarea volumelor (0x%X)\n"
+    IDS_ERROR_PRIV      "Nu s-a putut seta dreptul de încărcare pentru driverul (0x%X)\n"
+    IDS_ERROR_FILTERS   "Nu s-au putut afișa filtrele (0x%X)\n"
+    IDS_ERROR_LOAD      "Nu s-a putut încărca filtrul (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Nu s-a putut descărca filtrul (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Nu s-au putut afișa volumele (0x%X)\n"
 END

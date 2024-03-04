@@ -173,25 +173,25 @@ BEGIN
     LTEXT "pachete", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "Inițiere &rapidă", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "Inițializare &rapidă", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "I&mplicite", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE "Conștientizări"
-    IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
+    IDS_ACKTITLE "Mulțumiri"
+    IDS_ACKSUBTITLE "Contribuții aduse ReactOS și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
-    IDS_OWNERSUBTITLE "Prelevare informații pentru a personaliza sistemul de operare"
+    IDS_OWNERSUBTITLE "Instalatorul folosește aceste in formații despre dvs. pentru a personaliza ReactOS"
     IDS_COMPUTERTITLE "Nume calculator și parolă pentru contul Administrator"
     IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
-    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
-    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
+    IDS_LOCALETEXT "Standardele și formatele sunt setate pe %s și locațioa e setată pe %s."
+    IDS_LAYOUTTEXT "Limba și metoda implicită de introducere a textului sunt: dispunerea tastaturii %s"
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
-    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSTITLE "Se termină instalarea"
     IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Aspect"
     IDS_THEMESELECTIONSUBTITLE "Selectați tema preferată"
@@ -219,13 +219,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Continuarea nu este posibilă fără un nume."
-    IDS_WZD_SETCOMPUTERNAME "Eșec în instituirea numelui de calculator."
-    IDS_WZD_COMPUTERNAME "Continuarea nu este posibilă fără un nume de calculator."
+    IDS_WZD_NAME "Instalatorul nu poate continua până când nu vă introduceți numele."
+    IDS_WZD_SETCOMPUTERNAME "Instalatorul nu a putut seta un nume de calculator."
+    IDS_WZD_COMPUTERNAME "Instalatorul nu poate constinua până când nu se introduce un nume pentru calculator."
     IDS_WZD_PASSWORDEMPTY "Trebuie să introduceți o parolă!"
-    IDS_WZD_PASSWORDMATCH "Mostrele pentru parolă nu se potrivesc. Încercați să reintroduceți parolele."
-    IDS_WZD_PASSWORDCHAR "Parola introdusă de dumneavoastră conține caractere invalide. încercați rescrierea parolei."
-    IDS_WZD_LOCALTIME "Eșec la instituirea orei locale."
+    IDS_WZD_PASSWORDMATCH "Parolele introduse nu se potrivesc. Încercați să reintroduceți parolele."
+    IDS_WZD_PASSWORDCHAR "Parola introdusă de dumneavoastră conține caractere invalide. Încercați rescrierea parolei."
+    IDS_WZD_LOCALTIME "Instalatorul nu a putut seta ora locală."
 END
 
 STRINGTABLE
@@ -244,7 +244,7 @@ STRINGTABLE
 BEGIN
     IDS_DETECTIONDISABLED "Detecție dezactivată"
     IDS_LOOKFORWHEEL "Caută rotiță"
-    IDS_ASSUMEPRESENT "Consideră roatiță prezentă"
+    IDS_ASSUMEPRESENT "Consideră rotița prezentă"
 END
 
 STRINGTABLE
@@ -261,7 +261,7 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Puteți alege o opțiune de produs care afectează comportamentul sistemului."
     IDS_PRODUCTSERVERNAME "Server ReactOS"
     IDS_PRODUCTWORKSTATIONNAME "Stație de lucru ReactOS"
-    IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Dosarele private ""Imagini"", ""Video"" și ""Audio"" vor fi independente de ""Documentele mele""."
-    IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Dosarele private ""Imagini"", ""Video"" și ""Audio"" sunt în ""Documentele mele""."
+    IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" vor fi independente de ""Documentele mele""."
+    IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" sunt în ""Documentele mele""."
     IDS_DEFAULT "(Implicit)"
 END

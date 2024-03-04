@@ -42,6 +42,8 @@ BEGIN
         MENUITEM "&Gunting\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Salin\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Te&mpel\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Hapus &Pilihan\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Balikkan Pilihan", IDM_EDITINVERTSELECTION
         MENUITEM "Pilih S&emua\tCtrl+A", IDM_EDITSELECTALL
@@ -106,6 +108,8 @@ BEGIN
         MENUITEM "&Gunting\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Salin\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Te&mpel\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Hapus &Pilihan\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Pilih S&emua\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

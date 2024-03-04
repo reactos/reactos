@@ -3,6 +3,8 @@
 
 #include <stdarg.h>
 
+#include "resource.h"
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -258,7 +260,9 @@ typedef enum {
 
 LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
 void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme);
-void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
+LONG SCROLL_getObjectId(INT nBar);
+void ThemeDrawScrollBarEx(PDRAW_CONTEXT pcontext, INT nBar, PSCROLLBARINFO psbi, POINT* pt);
+void ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);

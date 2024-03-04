@@ -2,84 +2,84 @@
  * PROJECT:     ReactOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Cicero base
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#pragma once
+#include "precomp.h"
+#include "cicbase.h"
+#include <shlwapi.h>
+#include <stdlib.h>
+#include <string.h>
+#include <tchar.h>
+#include <strsafe.h>
 
-#ifndef __cplusplus
-    #error Cicero needs C++.
-#endif
-
-static inline LPVOID cicMemAlloc(SIZE_T size)
-{
-    return LocalAlloc(0, size);
-}
-
-static inline LPVOID cicMemAllocClear(SIZE_T size)
-{
-    return LocalAlloc(LMEM_ZEROINIT, size);
-}
-
-static inline LPVOID cicMemReAlloc(LPVOID ptr, SIZE_T newSize)
-{
-    if (!ptr)
-        return LocalAlloc(LMEM_ZEROINIT, newSize);
-    return LocalReAlloc(ptr, newSize, LMEM_ZEROINIT);
-}
-
-static inline void cicMemFree(LPVOID ptr)
-{
-    if (ptr)
-        LocalFree(ptr);
-}
-
-struct CicNoThrow { };
-#define cicNoThrow CicNoThrow{}
-
-inline void* operator new(size_t size, const CicNoThrow&) noexcept
+void* operator new(size_t size, const CicNoThrow&) noexcept
 {
     return cicMemAllocClear(size);
 }
-inline void* operator new[](size_t size, const CicNoThrow&) noexcept
+void* operator new[](size_t size, const CicNoThrow&) noexcept
 {
     return cicMemAllocClear(size);
 }
-inline void operator delete(void* ptr) noexcept
+void operator delete(void* ptr) noexcept
 {
     cicMemFree(ptr);
 }
-inline void operator delete[](void* ptr) noexcept
+void operator delete[](void* ptr) noexcept
 {
     cicMemFree(ptr);
 }
-inline void operator delete(void* ptr, size_t size) noexcept
+void operator delete(void* ptr, size_t size) noexcept
 {
     cicMemFree(ptr);
 }
-inline void operator delete[](void* ptr, size_t size) noexcept
+void operator delete[](void* ptr, size_t size) noexcept
 {
     cicMemFree(ptr);
 }
 
-typedef struct CIC_LIBTHREAD
+// FIXME
+typedef enum _PROCESSINFOCLASS
 {
-    IUnknown *m_pUnknown1;
-    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
-} CIC_LIBTHREAD, *PCIC_LIBTHREAD;
+    ProcessBasicInformation = 0,
+    ProcessDebugPort = 7,
+    ProcessWow64Information = 26,
+    ProcessImageFileName = 27,
+    ProcessBreakOnTermination = 29
+} PROCESSINFOCLASS;
 
-/* The flags of cicGetOSInfo() */
-#define CIC_OSINFO_NT     0x01
-#define CIC_OSINFO_2KPLUS 0x02
-#define CIC_OSINFO_95     0x04
-#define CIC_OSINFO_98PLUS 0x08
-#define CIC_OSINFO_CJK    0x10
-#define CIC_OSINFO_IMM    0x20
-#define CIC_OSINFO_DBCS   0x40
-#define CIC_OSINFO_XPPLUS 0x80
+// FIXME
+typedef LONG NTSTATUS;
 
-static inline void
-cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
+/* ntdll!NtQueryInformationProcess */
+typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+
+EXTERN_C
+BOOL cicIsWow64(VOID)
+{
+    static FN_NtQueryInformationProcess s_fnNtQueryInformationProcess = NULL;
+    ULONG_PTR Value;
+
+    if (!s_fnNtQueryInformationProcess)
+    {
+        HMODULE hNTDLL = cicGetSystemModuleHandle(TEXT("ntdll.dll"), FALSE);
+        if (!hNTDLL)
+            return FALSE;
+
+        s_fnNtQueryInformationProcess =
+            (FN_NtQueryInformationProcess)GetProcAddress(hNTDLL, "NtQueryInformationProcess");
+        if (!s_fnNtQueryInformationProcess)
+            return FALSE;
+    }
+
+    Value = 0;
+    s_fnNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information,
+                                  &Value, sizeof(Value), NULL);
+    return !!Value;
+}
+
+EXTERN_C
+void cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
 {
     *pdwOSInfo = 0;
 
@@ -124,22 +124,9 @@ cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
         *pdwOSInfo |= CIC_OSINFO_DBCS;
 }
 
-struct CicSystemModulePath
-{
-    TCHAR m_szPath[MAX_PATH + 2];
-    SIZE_T m_cchPath;
-
-    CicSystemModulePath()
-    {
-        m_szPath[0] = UNICODE_NULL;
-        m_cchPath = 0;
-    }
-
-    BOOL Init(_In_ LPCTSTR pszFileName, _In_ BOOL bSysWinDir);
-};
-
 // Get an instance handle that is already loaded
-static inline HINSTANCE
+EXTERN_C
+HINSTANCE
 cicGetSystemModuleHandle(
     _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
@@ -151,7 +138,8 @@ cicGetSystemModuleHandle(
 }
 
 // Load a system library
-static inline HINSTANCE
+EXTERN_C
+HINSTANCE
 cicLoadSystemLibrary(
     _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
@@ -162,54 +150,7 @@ cicLoadSystemLibrary(
     return ::LoadLibrary(ModPath.m_szPath);
 }
 
-template <typename T_FN>
-static inline BOOL
-cicGetFN(HINSTANCE& hinstDLL, T_FN& fn, LPCTSTR pszDllName, LPCSTR pszFuncName)
-{
-    if (fn)
-        return TRUE;
-    if (!hinstDLL)
-        hinstDLL = cicLoadSystemLibrary(pszDllName, FALSE);
-    if (!hinstDLL)
-        return FALSE;
-    fn = reinterpret_cast<T_FN>(GetProcAddress(hinstDLL, pszFuncName));
-    return !!fn;
-}
-
-#include <ndk/pstypes.h> /* for PROCESSINFOCLASS */
-
-/* ntdll!NtQueryInformationProcess */
-typedef NTSTATUS (WINAPI *FN_NtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
-
-/* Is the current process on WoW64? */
-static inline BOOL cicIsWow64(VOID)
-{
-    static FN_NtQueryInformationProcess s_fnNtQueryInformationProcess = NULL;
-    ULONG_PTR Value;
-    NTSTATUS Status;
-
-    if (!s_fnNtQueryInformationProcess)
-    {
-        HMODULE hNTDLL = cicGetSystemModuleHandle(TEXT("ntdll.dll"), FALSE);
-        if (!hNTDLL)
-            return FALSE;
-
-        s_fnNtQueryInformationProcess =
-            (FN_NtQueryInformationProcess)GetProcAddress(hNTDLL, "NtQueryInformationProcess");
-        if (!s_fnNtQueryInformationProcess)
-            return FALSE;
-    }
-
-    Value = 0;
-    Status = s_fnNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information,
-                                           &Value, sizeof(Value), NULL);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    return !!Value;
-}
-
-inline BOOL
+BOOL
 CicSystemModulePath::Init(
     _In_ LPCTSTR pszFileName,
     _In_ BOOL bSysWinDir)
@@ -251,15 +192,7 @@ Failure:
     return FALSE;
 }
 
-// ole32!CoCreateInstance
-typedef HRESULT (WINAPI *FN_CoCreateInstance)(
-    REFCLSID rclsid,
-    LPUNKNOWN pUnkOuter,
-    DWORD dwClsContext,
-    REFIID iid,
-    LPVOID *ppv);
-
-static inline FN_CoCreateInstance
+static FN_CoCreateInstance
 _cicGetSetUserCoCreateInstance(FN_CoCreateInstance fnUserCoCreateInstance)
 {
     static FN_CoCreateInstance s_fn = NULL;
@@ -268,13 +201,14 @@ _cicGetSetUserCoCreateInstance(FN_CoCreateInstance fnUserCoCreateInstance)
     return s_fn;
 }
 
-static inline HRESULT
+EXTERN_C
+HRESULT
 cicRealCoCreateInstance(
-    REFCLSID rclsid,
-    LPUNKNOWN pUnkOuter,
-    DWORD dwClsContext,
-    REFIID iid,
-    LPVOID *ppv)
+    _In_ REFCLSID rclsid,
+    _In_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsContext,
+    _In_ REFIID iid,
+    _Out_ LPVOID *ppv)
 {
     static HINSTANCE s_hOle32 = NULL;
     static FN_CoCreateInstance s_fnCoCreateInstance = NULL;
@@ -293,13 +227,13 @@ cicRealCoCreateInstance(
 /**
  * @implemented
  */
-static inline HRESULT
+HRESULT
 cicCoCreateInstance(
-    REFCLSID rclsid,
-    LPUNKNOWN pUnkOuter,
-    DWORD dwClsContext,
-    REFIID iid,
-    LPVOID *ppv)
+    _In_ REFCLSID rclsid,
+    _In_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsContext,
+    _In_ REFIID iid,
+    _Out_ LPVOID *ppv)
 {
     // NOTE: It looks like Cicero wants to hook CoCreateInstance
     FN_CoCreateInstance fnUserCoCreateInstance = _cicGetSetUserCoCreateInstance(NULL);
@@ -312,41 +246,11 @@ cicCoCreateInstance(
 /**
  * @implemented
  */
-static inline BOOL
-TFInitLib(FN_CoCreateInstance fnCoCreateInstance = NULL)
+EXTERN_C
+BOOL
+TFInitLib(FN_CoCreateInstance fnCoCreateInstance)
 {
     if (fnCoCreateInstance)
         _cicGetSetUserCoCreateInstance(fnCoCreateInstance);
     return TRUE;
-}
-
-/**
- * @unimplemented
- */
-static inline VOID
-TFUninitLib(VOID)
-{
-    //FIXME
-}
-
-/**
- * @implemented
- */
-static inline VOID
-TFUninitLib_Thread(PCIC_LIBTHREAD pLibThread)
-{
-    if (!pLibThread)
-        return;
-
-    if (pLibThread->m_pUnknown1)
-    {
-        pLibThread->m_pUnknown1->Release();
-        pLibThread->m_pUnknown1 = NULL;
-    }
-
-    if (pLibThread->m_pDisplayAttrMgr)
-    {
-        pLibThread->m_pDisplayAttrMgr->Release();
-        pLibThread->m_pDisplayAttrMgr = NULL;
-    }
 }

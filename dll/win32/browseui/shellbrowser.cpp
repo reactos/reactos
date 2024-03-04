@@ -612,6 +612,7 @@ public:
     LRESULT OnGoUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -660,6 +661,7 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_FORWARD, OnGoForward)
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnGoUpLevel)
         COMMAND_ID_HANDLER(IDM_GOTO_HOMEPAGE, OnGoHome)
+        COMMAND_ID_HANDLER(IDM_FAVORITES_ADDTOFAVORITES, OnAddToFavorites)
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
         COMMAND_ID_HANDLER(IDM_VIEW_REFRESH, OnRefresh)
@@ -3656,24 +3658,90 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     return 0;
 }
 
+static BOOL
+CreateShortcut(
+    IN LPCWSTR pszLnkFileName,
+    IN LPCITEMIDLIST pidl,
+    IN LPCWSTR pszDescription OPTIONAL)
+{
+    IPersistFile *pPF;
+    IShellLinkW *pSL;
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          IID_IShellLinkW, (LPVOID*)&pSL);
+    if (SUCCEEDED(hr))
+    {
+        pSL->SetIDList(pidl);
+
+        if (pszDescription)
+            pSL->SetDescription(pszDescription);
+
+        hr = pSL->QueryInterface(IID_IPersistFile, (LPVOID*)&pPF);
+        if (SUCCEEDED(hr))
+        {
+            hr = pPF->Save(pszLnkFileName, TRUE);
+            pPF->Release();
+        }
+        pSL->Release();
+    }
+
+    CoUninitialize();
+
+    return SUCCEEDED(hr);
+}
+
+HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
+{
+    HRESULT hr = SHGetSpecialFolderLocation(hWnd, CSIDL_FAVORITES, pPidl);
+    if (FAILED(hr))
+        hr = SHGetSpecialFolderLocation(hWnd, CSIDL_COMMON_FAVORITES, pPidl);
+
+    return hr;
+}
+
+LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    LPITEMIDLIST pidlFavs;
+    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    SHFILEINFOW fileInfo = { NULL };
+    if (!SHGetFileInfoW((LPCWSTR)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
+                        SHGFI_PIDL | SHGFI_DISPLAYNAME))
+    {
+        return 0;
+    }
+
+    WCHAR szPath[MAX_PATH];
+    SHGetPathFromIDListW(pidlFavs, szPath);
+    PathAppendW(szPath, fileInfo.szDisplayName);
+    PathAddExtensionW(szPath, L".lnk");
+
+    CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
+    return 0;
+}
+
 LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     CComPtr<IShellFolder> psfDesktop;
     LPITEMIDLIST pidlFavs;
-    HRESULT hr;
-    hr = SHGetSpecialFolderLocation(m_hWnd, CSIDL_FAVORITES, &pidlFavs);
-    if (FAILED(hr))
-    {
-        hr = SHGetSpecialFolderLocation(m_hWnd, CSIDL_COMMON_FAVORITES, &pidlFavs);
-        if (FAILED(hr))
-            return 0;
-    }
-
-    hr = SHGetDesktopFolder(&psfDesktop);
+    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        ILFree(pidlFavs);
+        return 0;
+    }
+
     hr = SHInvokeDefaultCommand(m_hWnd, psfDesktop, pidlFavs);
+    ILFree(pidlFavs);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 

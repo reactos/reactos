@@ -832,7 +832,8 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         return E_FAIL;
 
     TRACE("Before Query\n");
-    hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
+    const INT idCmdFirst = 100;
+    hr = contextMenu->QueryContextMenu(popup, 0, idCmdFirst, UINT_MAX, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         TRACE("Query failed\n");
@@ -854,10 +855,8 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         _MenuItemSelect(MPOS_FULLCANCEL);
 
         TRACE("Before InvokeCommand\n");
-        CMINVOKECOMMANDINFO cmi = { 0 };
-        cmi.cbSize = sizeof(cmi);
-        cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
-        cmi.hwnd = hwnd;
+        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, hwnd };
+        cmi.lpVerb = MAKEINTRESOURCEA(uCommand - idCmdFirst);
         hr = contextMenu->InvokeCommand(&cmi);
         TRACE("InvokeCommand returned hr=%08x\n", hr);
     }

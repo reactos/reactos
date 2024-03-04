@@ -81,7 +81,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Draiverid selle seadme jaoks ei ole installitud."
     IDS_DEV_HARDWARE_DISABLED "See seade on keelatud, sest BIOS ei andnud sellele ühtegi ressursi."
     IDS_DEV_CANT_SHARE_IRQ "See seade kasutab IRQ ressursi, mis on teise seadme poolt kasutuses ja ei saa jagada.\nTe peate muutma konflikteeriva sätte või eemaldama reealajas draiveri mis põhjustab seda konflikti."
-    IDS_DEV_FAILED_ADD "See seade ei tööta korralikult, sest %1 ei tööta korralikult."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS ei saa installida draivereid selle seadme jaoks, sest juurdepääs kettale või võrgukohale kus paigalduse failid asuvad puudub."
     IDS_DEV_TRANSLATION_FAILED "See seade ei reageeri draiverile."
     IDS_DEV_NO_SOFTCONFIG "ReactOS ei saanud määrata seadistada seda seadet. Uuri dokumentatsiooni, mis kaasnes seadmega ja kasuta ressursi vahekaarti selle seadistamiseks."
