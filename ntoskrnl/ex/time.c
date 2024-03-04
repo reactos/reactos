@@ -457,7 +457,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    RTL_TIME_ZONE_INFORMATION TimeZoneInformation = { 0 };
+    RTL_TIME_ZONE_INFORMATION TimeZoneInformation;
     ULONG ExpTimeZoneIdSave;
 
     PAGED_CODE();
@@ -469,6 +469,9 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         UNIMPLEMENTED;
         return STATUS_NOT_IMPLEMENTED;
     }
+
+    // Initialize all fields of TimeZoneInformation to zeroes
+    memset(TimeZoneInformation, 0, sizeof(TimeZoneInformation));
 
     /* Check if we were called from user-mode */
     if (PreviousMode != KernelMode)
