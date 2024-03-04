@@ -3222,6 +3222,71 @@ SetFirmwareEnvironmentVariableW(
 
 #endif /* _WIN32_WINNT >= 0x0502 */
 
+#if (_WIN32_WINNT >= 0x0602)
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
+
+#ifdef UNICODE
+#define GetFirmwareEnvironmentVariableEx GetFirmwareEnvironmentVariableExW
+#else
+#define GetFirmwareEnvironmentVariableEx GetFirmwareEnvironmentVariableExA
+#endif
+
+WINBASEAPI
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+#ifdef UNICODE
+#define SetFirmwareEnvironmentVariableEx SetFirmwareEnvironmentVariableExW
+#else
+#define SetFirmwareEnvironmentVariableEx SetFirmwareEnvironmentVariableExA
+#endif
+
+_Success_(return)
+WINBASEAPI
+BOOL
+WINAPI
+GetFirmwareType(
+    _Out_ PFIRMWARE_TYPE FirmwareType);
+
+#endif /* _WIN32_WINNT >= 0x0602 */
+
 UINT WINAPI SetHandleCount(UINT);
 BOOL WINAPI SetHandleInformation(HANDLE,DWORD,DWORD);
 
