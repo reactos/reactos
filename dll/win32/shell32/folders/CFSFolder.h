@@ -117,6 +117,11 @@ class CFSFolder :
 
     protected:
         HRESULT WINAPI GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_DATA *data);
+
+    public:
+        // Helper functions shared with CDesktopFolder
+        static HRESULT GetFSColumnDetails(UINT iColumn, SHELLDETAILS &sd);
+        static HRESULT GetDefaultFSColumnState(UINT iColumn, SHCOLSTATEF &csFlags);
 };
 
 #endif /* _CFSFOLDER_H_ */
