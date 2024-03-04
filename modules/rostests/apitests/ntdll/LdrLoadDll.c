@@ -179,6 +179,7 @@ START_TEST(LdrLoadDll)
     ok(BaseAddress != NULL, "BaseAddress was NULL\n");
 
     /* Test with only forward slashes in path; with file extension */
+    /* Test with only forward slashes in path; with file extension */
     StringCchPrintfW(szPath, _countof(szPath), L"%s\\advapi32.dll", szSysDir);
     for (pch = szPath; *pch != UNICODE_NULL; ++pch)
     {
