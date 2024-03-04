@@ -224,7 +224,7 @@ protected:
 
     STDMETHOD(ResolveSymLink)(
         const TItemId * info,
-        LPITEMIDLIST * fullPidl) override
+        LPITEMIDLIST * fullPidl)
     {
         return E_NOTIMPL;
     }
