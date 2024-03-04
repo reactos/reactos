@@ -32,14 +32,14 @@ public:
     ~CRegTreeOptions();
 
     // *** IRegTreeOptions methods ***
-    virtual HRESULT STDMETHODCALLTYPE InitTree(HWND paramC, HKEY param10, char const *param14, char const *param18);
-    virtual HRESULT STDMETHODCALLTYPE WalkTree(WALK_TREE_CMD paramC);
-    virtual HRESULT STDMETHODCALLTYPE ToggleItem(HTREEITEM paramC);
-    virtual HRESULT STDMETHODCALLTYPE ShowHelp(HTREEITEM paramC, unsigned long param10);
+    STDMETHOD(InitTree)(HWND paramC, HKEY param10, char const *param14, char const *param18) override;
+    STDMETHOD(WalkTree)(WALK_TREE_CMD paramC) override;
+    STDMETHOD(ToggleItem)(HTREEITEM paramC) override;
+    STDMETHOD(ShowHelp)(HTREEITEM paramC, unsigned long param10) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_REGTREEOPTIONS)
     DECLARE_NOT_AGGREGATABLE(CRegTreeOptions)

@@ -353,246 +353,246 @@ public:
     void UpdateWindowTitle();
 
 /*    // *** IDockingWindowFrame methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
-    virtual HRESULT STDMETHODCALLTYPE RemoveToolbar(IUnknown *punkSrc, DWORD dwRemoveFlags);
-    virtual HRESULT STDMETHODCALLTYPE FindToolbar(LPCWSTR pwszItem, REFIID riid, void **ppv);
+    STDMETHOD(AddToolbar)(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags) override;
+    STDMETHOD(RemoveToolbar)(IUnknown *punkSrc, DWORD dwRemoveFlags) override;
+    STDMETHOD(FindToolbar)(LPCWSTR pwszItem, REFIID riid, void **ppv) override;
     */
 
     // *** IDockingWindowSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetBorderDW(IUnknown* punkObj, LPRECT prcBorder);
-    virtual HRESULT STDMETHODCALLTYPE RequestBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
-    virtual HRESULT STDMETHODCALLTYPE SetBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
+    STDMETHOD(GetBorderDW)(IUnknown* punkObj, LPRECT prcBorder) override;
+    STDMETHOD(RequestBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
+    STDMETHOD(SetBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds,
+        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID,
+        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IShellBrowser methods ***
-    virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths);
-    virtual HRESULT STDMETHODCALLTYPE SetMenuSB(HMENU hmenuShared, HOLEMENU holemenuRes, HWND hwndActiveObject);
-    virtual HRESULT STDMETHODCALLTYPE RemoveMenusSB(HMENU hmenuShared);
-    virtual HRESULT STDMETHODCALLTYPE SetStatusTextSB(LPCOLESTR pszStatusText);
-    virtual HRESULT STDMETHODCALLTYPE EnableModelessSB(BOOL fEnable);
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorSB(MSG *pmsg, WORD wID);
-    virtual HRESULT STDMETHODCALLTYPE BrowseObject(LPCITEMIDLIST pidl, UINT wFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetViewStateStream(DWORD grfMode, IStream **ppStrm);
-    virtual HRESULT STDMETHODCALLTYPE GetControlWindow(UINT id, HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE SendControlMsg(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret);
-    virtual HRESULT STDMETHODCALLTYPE QueryActiveShellView(IShellView **ppshv);
-    virtual HRESULT STDMETHODCALLTYPE OnViewWindowActive(IShellView *ppshv);
-    virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags);
+    STDMETHOD(InsertMenusSB)(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths) override;
+    STDMETHOD(SetMenuSB)(HMENU hmenuShared, HOLEMENU holemenuRes, HWND hwndActiveObject) override;
+    STDMETHOD(RemoveMenusSB)(HMENU hmenuShared) override;
+    STDMETHOD(SetStatusTextSB)(LPCOLESTR pszStatusText) override;
+    STDMETHOD(EnableModelessSB)(BOOL fEnable) override;
+    STDMETHOD(TranslateAcceleratorSB)(MSG *pmsg, WORD wID) override;
+    STDMETHOD(BrowseObject)(LPCITEMIDLIST pidl, UINT wFlags) override;
+    STDMETHOD(GetViewStateStream)(DWORD grfMode, IStream **ppStrm) override;
+    STDMETHOD(GetControlWindow)(UINT id, HWND *lphwnd) override;
+    STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret) override;
+    STDMETHOD(QueryActiveShellView)(IShellView **ppshv) override;
+    STDMETHOD(OnViewWindowActive)(IShellView *ppshv) override;
+    STDMETHOD(SetToolbarItems)(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) override;
 
     // *** IDropTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT STDMETHODCALLTYPE DragLeave();
-    virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHOD(DragLeave)() override;
+    STDMETHOD(Drop)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IShellBowserService methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetPropertyBag(long flags, REFIID riid, void **ppvObject);
+    STDMETHOD(GetPropertyBag)(long flags, REFIID riid, void **ppvObject) override;
 
     // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(
-        REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
-        DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
+    STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    STDMETHOD(GetIDsOfNames)(
+        REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
+    STDMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
+        DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     // *** IBrowserService methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetParentSite(IOleInPlaceSite **ppipsite);
-    virtual HRESULT STDMETHODCALLTYPE SetTitle(IShellView *psv, LPCWSTR pszName);
-    virtual HRESULT STDMETHODCALLTYPE GetTitle(IShellView *psv, LPWSTR pszName, DWORD cchName);
-    virtual HRESULT STDMETHODCALLTYPE GetOleObject(IOleObject **ppobjv);
-    virtual HRESULT STDMETHODCALLTYPE GetTravelLog(ITravelLog **pptl);
-    virtual HRESULT STDMETHODCALLTYPE ShowControlWindow(UINT id, BOOL fShow);
-    virtual HRESULT STDMETHODCALLTYPE IsControlWindowShown(UINT id, BOOL *pfShown);
-    virtual HRESULT STDMETHODCALLTYPE IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut);
-    virtual HRESULT STDMETHODCALLTYPE DisplayParseError(HRESULT hres, LPCWSTR pwszPath);
-    virtual HRESULT STDMETHODCALLTYPE NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF);
-    virtual HRESULT STDMETHODCALLTYPE SetNavigateState(BNSTATE bnstate);
-    virtual HRESULT STDMETHODCALLTYPE GetNavigateState(BNSTATE *pbnstate);
-    virtual HRESULT STDMETHODCALLTYPE NotifyRedirect(IShellView *psv, LPCITEMIDLIST pidl, BOOL *pfDidBrowse);
-    virtual HRESULT STDMETHODCALLTYPE UpdateWindowList();
-    virtual HRESULT STDMETHODCALLTYPE UpdateBackForwardState();
-    virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags, DWORD dwFlagMask);
-    virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
-    virtual HRESULT STDMETHODCALLTYPE CanNavigateNow( void);
-    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPITEMIDLIST *ppidl);
-    virtual HRESULT STDMETHODCALLTYPE SetReferrer(LPCITEMIDLIST pidl);
-    virtual DWORD STDMETHODCALLTYPE GetBrowserIndex();
-    virtual HRESULT STDMETHODCALLTYPE GetBrowserByIndex(DWORD dwID, IUnknown **ppunk);
-    virtual HRESULT STDMETHODCALLTYPE GetHistoryObject(IOleObject **ppole, IStream **pstm, IBindCtx **ppbc);
-    virtual HRESULT STDMETHODCALLTYPE SetHistoryObject(IOleObject *pole, BOOL fIsLocalAnchor);
-    virtual HRESULT STDMETHODCALLTYPE CacheOLEServer(IOleObject *pole);
-    virtual HRESULT STDMETHODCALLTYPE GetSetCodePage(VARIANT *pvarIn, VARIANT *pvarOut);
-    virtual HRESULT STDMETHODCALLTYPE OnHttpEquiv(IShellView *psv, BOOL fDone, VARIANT *pvarargIn, VARIANT *pvarargOut);
-    virtual HRESULT STDMETHODCALLTYPE GetPalette(HPALETTE *hpal);
-    virtual HRESULT STDMETHODCALLTYPE RegisterWindow(BOOL fForceRegister, int swc);
+    STDMETHOD(GetParentSite)(IOleInPlaceSite **ppipsite) override;
+    STDMETHOD(SetTitle)(IShellView *psv, LPCWSTR pszName) override;
+    STDMETHOD(GetTitle)(IShellView *psv, LPWSTR pszName, DWORD cchName) override;
+    STDMETHOD(GetOleObject)(IOleObject **ppobjv) override;
+    STDMETHOD(GetTravelLog)(ITravelLog **pptl) override;
+    STDMETHOD(ShowControlWindow)(UINT id, BOOL fShow) override;
+    STDMETHOD(IsControlWindowShown)(UINT id, BOOL *pfShown) override;
+    STDMETHOD(IEGetDisplayName)(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags) override;
+    STDMETHOD(IEParseDisplayName)(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut) override;
+    STDMETHOD(DisplayParseError)(HRESULT hres, LPCWSTR pwszPath) override;
+    STDMETHOD(NavigateToPidl)(LPCITEMIDLIST pidl, DWORD grfHLNF) override;
+    STDMETHOD(SetNavigateState)(BNSTATE bnstate) override;
+    STDMETHOD(GetNavigateState)(BNSTATE *pbnstate) override;
+    STDMETHOD(NotifyRedirect)(IShellView *psv, LPCITEMIDLIST pidl, BOOL *pfDidBrowse) override;
+    STDMETHOD(UpdateWindowList)() override;
+    STDMETHOD(UpdateBackForwardState)() override;
+    STDMETHOD(SetFlags)(DWORD dwFlags, DWORD dwFlagMask) override;
+    STDMETHOD(GetFlags)(DWORD *pdwFlags) override;
+    STDMETHOD(CanNavigateNow)( void) override;
+    STDMETHOD(GetPidl)(LPITEMIDLIST *ppidl) override;
+    STDMETHOD(SetReferrer)(LPCITEMIDLIST pidl) override;
+    STDMETHOD_(DWORD, GetBrowserIndex)() override;
+    STDMETHOD(GetBrowserByIndex)(DWORD dwID, IUnknown **ppunk) override;
+    STDMETHOD(GetHistoryObject)(IOleObject **ppole, IStream **pstm, IBindCtx **ppbc) override;
+    STDMETHOD(SetHistoryObject)(IOleObject *pole, BOOL fIsLocalAnchor) override;
+    STDMETHOD(CacheOLEServer)(IOleObject *pole) override;
+    STDMETHOD(GetSetCodePage)(VARIANT *pvarIn, VARIANT *pvarOut) override;
+    STDMETHOD(OnHttpEquiv)(IShellView *psv, BOOL fDone, VARIANT *pvarargIn, VARIANT *pvarargOut) override;
+    STDMETHOD(GetPalette)(HPALETTE *hpal) override;
+    STDMETHOD(RegisterWindow)(BOOL fForceRegister, int swc) override;
 
     // *** IBrowserService2 methods ***
-    virtual LRESULT STDMETHODCALLTYPE WndProcBS(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    virtual HRESULT STDMETHODCALLTYPE SetAsDefFolderSettings();
-    virtual HRESULT STDMETHODCALLTYPE GetViewRect(RECT *prc);
-    virtual HRESULT STDMETHODCALLTYPE OnSize(WPARAM wParam);
-    virtual HRESULT STDMETHODCALLTYPE OnCreate(struct tagCREATESTRUCTW *pcs);
-    virtual LRESULT STDMETHODCALLTYPE OnCommand(WPARAM wParam, LPARAM lParam);
-    virtual HRESULT STDMETHODCALLTYPE OnDestroy();
-    virtual LRESULT STDMETHODCALLTYPE OnNotify(struct tagNMHDR *pnm);
-    virtual HRESULT STDMETHODCALLTYPE OnSetFocus();
-    virtual HRESULT STDMETHODCALLTYPE OnFrameWindowActivateBS(BOOL fActive);
-    virtual HRESULT STDMETHODCALLTYPE ReleaseShellView();
-    virtual HRESULT STDMETHODCALLTYPE ActivatePendingView();
-    virtual HRESULT STDMETHODCALLTYPE CreateViewWindow(IShellView *psvNew, IShellView *psvOld, LPRECT prcView, HWND *phwnd);
-    virtual HRESULT STDMETHODCALLTYPE CreateBrowserPropSheetExt(REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE GetViewWindow(HWND *phwndView);
-    virtual HRESULT STDMETHODCALLTYPE GetBaseBrowserData(LPCBASEBROWSERDATA *pbbd);
-    virtual LPBASEBROWSERDATA STDMETHODCALLTYPE PutBaseBrowserData( void);
-    virtual HRESULT STDMETHODCALLTYPE InitializeTravelLog(ITravelLog *ptl, DWORD dw);
-    virtual HRESULT STDMETHODCALLTYPE SetTopBrowser();
-    virtual HRESULT STDMETHODCALLTYPE Offline(int iCmd);
-    virtual HRESULT STDMETHODCALLTYPE AllowViewResize(BOOL f);
-    virtual HRESULT STDMETHODCALLTYPE SetActivateState(UINT u);
-    virtual HRESULT STDMETHODCALLTYPE UpdateSecureLockIcon(int eSecureLock);
-    virtual HRESULT STDMETHODCALLTYPE InitializeDownloadManager();
-    virtual HRESULT STDMETHODCALLTYPE InitializeTransitionSite();
-    virtual HRESULT STDMETHODCALLTYPE _Initialize(HWND hwnd, IUnknown *pauto);
-    virtual HRESULT STDMETHODCALLTYPE _CancelPendingNavigationAsync( void);
-    virtual HRESULT STDMETHODCALLTYPE _CancelPendingView();
-    virtual HRESULT STDMETHODCALLTYPE _MaySaveChanges();
-    virtual HRESULT STDMETHODCALLTYPE _PauseOrResumeView(BOOL fPaused);
-    virtual HRESULT STDMETHODCALLTYPE _DisableModeless();
-    virtual HRESULT STDMETHODCALLTYPE _NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF, DWORD dwFlags);
-    virtual HRESULT STDMETHODCALLTYPE _TryShell2Rename(IShellView *psv, LPCITEMIDLIST pidlNew);
-    virtual HRESULT STDMETHODCALLTYPE _SwitchActivationNow();
-    virtual HRESULT STDMETHODCALLTYPE _ExecChildren(IUnknown *punkBar, BOOL fBroadcast, const GUID *pguidCmdGroup,
-        DWORD nCmdID, DWORD nCmdexecopt, VARIANTARG *pvarargIn, VARIANTARG *pvarargOut);
-    virtual HRESULT STDMETHODCALLTYPE _SendChildren(
-        HWND hwndBar, BOOL fBroadcast, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    virtual HRESULT STDMETHODCALLTYPE GetFolderSetData(struct tagFolderSetData *pfsd);
-    virtual HRESULT STDMETHODCALLTYPE _OnFocusChange(UINT itb);
-    virtual HRESULT STDMETHODCALLTYPE v_ShowHideChildWindows(BOOL fChildOnly);
-    virtual UINT STDMETHODCALLTYPE _get_itbLastFocus();
-    virtual HRESULT STDMETHODCALLTYPE _put_itbLastFocus(UINT itbLastFocus);
-    virtual HRESULT STDMETHODCALLTYPE _UIActivateView(UINT uState);
-    virtual HRESULT STDMETHODCALLTYPE _GetViewBorderRect(RECT *prc);
-    virtual HRESULT STDMETHODCALLTYPE _UpdateViewRectSize();
-    virtual HRESULT STDMETHODCALLTYPE _ResizeNextBorder(UINT itb);
-    virtual HRESULT STDMETHODCALLTYPE _ResizeView();
-    virtual HRESULT STDMETHODCALLTYPE _GetEffectiveClientArea(LPRECT lprectBorder, HMONITOR hmon);
-    virtual IStream *STDMETHODCALLTYPE v_GetViewStream(LPCITEMIDLIST pidl, DWORD grfMode, LPCWSTR pwszName);
-    virtual LRESULT STDMETHODCALLTYPE ForwardViewMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-    virtual HRESULT STDMETHODCALLTYPE SetAcceleratorMenu(HACCEL hacc);
-    virtual int STDMETHODCALLTYPE _GetToolbarCount();
-    virtual LPTOOLBARITEM STDMETHODCALLTYPE _GetToolbarItem(int itb);
-    virtual HRESULT STDMETHODCALLTYPE _SaveToolbars(IStream *pstm);
-    virtual HRESULT STDMETHODCALLTYPE _LoadToolbars(IStream *pstm);
-    virtual HRESULT STDMETHODCALLTYPE _CloseAndReleaseToolbars(BOOL fClose);
-    virtual HRESULT STDMETHODCALLTYPE v_MayGetNextToolbarFocus(LPMSG lpMsg, UINT itbNext,
-        int citb, LPTOOLBARITEM *pptbi, HWND *phwnd);
-    virtual HRESULT STDMETHODCALLTYPE _ResizeNextBorderHelper(UINT itb, BOOL bUseHmonitor);
-    virtual UINT STDMETHODCALLTYPE _FindTBar(IUnknown *punkSrc);
-    virtual HRESULT STDMETHODCALLTYPE _SetFocus(LPTOOLBARITEM ptbi, HWND hwnd, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE v_MayTranslateAccelerator(MSG *pmsg);
-    virtual HRESULT STDMETHODCALLTYPE _GetBorderDWHelper(IUnknown *punkSrc, LPRECT lprectBorder, BOOL bUseHmonitor);
-    virtual HRESULT STDMETHODCALLTYPE v_CheckZoneCrossing(LPCITEMIDLIST pidl);
+    STDMETHOD_(LRESULT, WndProcBS)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD(SetAsDefFolderSettings)() override;
+    STDMETHOD(GetViewRect)(RECT *prc) override;
+    STDMETHOD(OnSize)(WPARAM wParam) override;
+    STDMETHOD(OnCreate)(struct tagCREATESTRUCTW *pcs) override;
+    STDMETHOD_(LRESULT, OnCommand)(WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD(OnDestroy)() override;
+    STDMETHOD_(LRESULT, OnNotify)(struct tagNMHDR *pnm) override;
+    STDMETHOD(OnSetFocus)() override;
+    STDMETHOD(OnFrameWindowActivateBS)(BOOL fActive) override;
+    STDMETHOD(ReleaseShellView)() override;
+    STDMETHOD(ActivatePendingView)() override;
+    STDMETHOD(CreateViewWindow)(IShellView *psvNew, IShellView *psvOld, LPRECT prcView, HWND *phwnd) override;
+    STDMETHOD(CreateBrowserPropSheetExt)(REFIID riid, void **ppv) override;
+    STDMETHOD(GetViewWindow)(HWND *phwndView) override;
+    STDMETHOD(GetBaseBrowserData)(LPCBASEBROWSERDATA *pbbd) override;
+    STDMETHOD_(LPBASEBROWSERDATA, PutBaseBrowserData)(void) override;
+    STDMETHOD(InitializeTravelLog)(ITravelLog *ptl, DWORD dw) override;
+    STDMETHOD(SetTopBrowser)() override;
+    STDMETHOD(Offline)(int iCmd) override;
+    STDMETHOD(AllowViewResize)(BOOL f) override;
+    STDMETHOD(SetActivateState)(UINT u) override;
+    STDMETHOD(UpdateSecureLockIcon)(int eSecureLock) override;
+    STDMETHOD(InitializeDownloadManager)() override;
+    STDMETHOD(InitializeTransitionSite)() override;
+    STDMETHOD(_Initialize)(HWND hwnd, IUnknown *pauto) override;
+    STDMETHOD(_CancelPendingNavigationAsync)( void) override;
+    STDMETHOD(_CancelPendingView)() override;
+    STDMETHOD(_MaySaveChanges)() override;
+    STDMETHOD(_PauseOrResumeView)(BOOL fPaused) override;
+    STDMETHOD(_DisableModeless)() override;
+    STDMETHOD(_NavigateToPidl)(LPCITEMIDLIST pidl, DWORD grfHLNF, DWORD dwFlags) override;
+    STDMETHOD(_TryShell2Rename)(IShellView *psv, LPCITEMIDLIST pidlNew) override;
+    STDMETHOD(_SwitchActivationNow)() override;
+    STDMETHOD(_ExecChildren)(IUnknown *punkBar, BOOL fBroadcast, const GUID *pguidCmdGroup,
+        DWORD nCmdID, DWORD nCmdexecopt, VARIANTARG *pvarargIn, VARIANTARG *pvarargOut) override;
+    STDMETHOD(_SendChildren)(
+        HWND hwndBar, BOOL fBroadcast, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD(GetFolderSetData)(struct tagFolderSetData *pfsd) override;
+    STDMETHOD(_OnFocusChange)(UINT itb) override;
+    STDMETHOD(v_ShowHideChildWindows)(BOOL fChildOnly) override;
+    STDMETHOD_(UINT, _get_itbLastFocus)() override;
+    STDMETHOD(_put_itbLastFocus)(UINT itbLastFocus) override;
+    STDMETHOD(_UIActivateView)(UINT uState) override;
+    STDMETHOD(_GetViewBorderRect)(RECT *prc) override;
+    STDMETHOD(_UpdateViewRectSize)() override;
+    STDMETHOD(_ResizeNextBorder)(UINT itb) override;
+    STDMETHOD(_ResizeView)() override;
+    STDMETHOD(_GetEffectiveClientArea)(LPRECT lprectBorder, HMONITOR hmon) override;
+    STDMETHOD_(IStream *, v_GetViewStream)(LPCITEMIDLIST pidl, DWORD grfMode, LPCWSTR pwszName) override;
+    STDMETHOD_(LRESULT, ForwardViewMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHOD(SetAcceleratorMenu)(HACCEL hacc) override;
+    STDMETHOD_(int, _GetToolbarCount)() override;
+    STDMETHOD_(LPTOOLBARITEM, _GetToolbarItem)(int itb) override;
+    STDMETHOD(_SaveToolbars)(IStream *pstm) override;
+    STDMETHOD(_LoadToolbars)(IStream *pstm) override;
+    STDMETHOD(_CloseAndReleaseToolbars)(BOOL fClose) override;
+    STDMETHOD(v_MayGetNextToolbarFocus)(LPMSG lpMsg, UINT itbNext,
+        int citb, LPTOOLBARITEM *pptbi, HWND *phwnd) override;
+    STDMETHOD(_ResizeNextBorderHelper)(UINT itb, BOOL bUseHmonitor) override;
+    STDMETHOD_(UINT, _FindTBar)(IUnknown *punkSrc) override;
+    STDMETHOD(_SetFocus)(LPTOOLBARITEM ptbi, HWND hwnd, LPMSG lpMsg) override;
+    STDMETHOD(v_MayTranslateAccelerator)(MSG *pmsg) override;
+    STDMETHOD(_GetBorderDWHelper)(IUnknown *punkSrc, LPRECT lprectBorder, BOOL bUseHmonitor) override;
+    STDMETHOD(v_CheckZoneCrossing)(LPCITEMIDLIST pidl) override;
 
     // *** IWebBrowser methods ***
-    virtual HRESULT STDMETHODCALLTYPE GoBack();
-    virtual HRESULT STDMETHODCALLTYPE GoForward();
-    virtual HRESULT STDMETHODCALLTYPE GoHome();
-    virtual HRESULT STDMETHODCALLTYPE GoSearch();
-    virtual HRESULT STDMETHODCALLTYPE Navigate(BSTR URL, VARIANT *Flags, VARIANT *TargetFrameName,
-        VARIANT *PostData, VARIANT *Headers);
-    virtual HRESULT STDMETHODCALLTYPE Refresh();
-    virtual HRESULT STDMETHODCALLTYPE Refresh2(VARIANT *Level);
-    virtual HRESULT STDMETHODCALLTYPE Stop();
-    virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppDisp);
-    virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **ppDisp);
-    virtual HRESULT STDMETHODCALLTYPE get_Container(IDispatch **ppDisp);
-    virtual HRESULT STDMETHODCALLTYPE get_Document(IDispatch **ppDisp);
-    virtual HRESULT STDMETHODCALLTYPE get_TopLevelContainer(VARIANT_BOOL *pBool);
-    virtual HRESULT STDMETHODCALLTYPE get_Type(BSTR *Type);
-    virtual HRESULT STDMETHODCALLTYPE get_Left(long *pl);
-    virtual HRESULT STDMETHODCALLTYPE put_Left(long Left);
-    virtual HRESULT STDMETHODCALLTYPE get_Top(long *pl);
-    virtual HRESULT STDMETHODCALLTYPE put_Top(long Top);
-    virtual HRESULT STDMETHODCALLTYPE get_Width(long *pl);
-    virtual HRESULT STDMETHODCALLTYPE put_Width(long Width);
-    virtual HRESULT STDMETHODCALLTYPE get_Height(long *pl);
-    virtual HRESULT STDMETHODCALLTYPE put_Height(long Height);
-    virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR *LocationName);
-    virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR *LocationURL);
-    virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL *pBool);
+    STDMETHOD(GoBack)() override;
+    STDMETHOD(GoForward)() override;
+    STDMETHOD(GoHome)() override;
+    STDMETHOD(GoSearch)() override;
+    STDMETHOD(Navigate)(BSTR URL, VARIANT *Flags, VARIANT *TargetFrameName,
+        VARIANT *PostData, VARIANT *Headers) override;
+    STDMETHOD(Refresh)() override;
+    STDMETHOD(Refresh2)(VARIANT *Level) override;
+    STDMETHOD(Stop)() override;
+    STDMETHOD(get_Application)(IDispatch **ppDisp) override;
+    STDMETHOD(get_Parent)(IDispatch **ppDisp) override;
+    STDMETHOD(get_Container)(IDispatch **ppDisp) override;
+    STDMETHOD(get_Document)(IDispatch **ppDisp) override;
+    STDMETHOD(get_TopLevelContainer)(VARIANT_BOOL *pBool) override;
+    STDMETHOD(get_Type)(BSTR *Type) override;
+    STDMETHOD(get_Left)(long *pl) override;
+    STDMETHOD(put_Left)(long Left) override;
+    STDMETHOD(get_Top)(long *pl) override;
+    STDMETHOD(put_Top)(long Top) override;
+    STDMETHOD(get_Width)(long *pl) override;
+    STDMETHOD(put_Width)(long Width) override;
+    STDMETHOD(get_Height)(long *pl) override;
+    STDMETHOD(put_Height)(long Height) override;
+    STDMETHOD(get_LocationName)(BSTR *LocationName) override;
+    STDMETHOD(get_LocationURL)(BSTR *LocationURL) override;
+    STDMETHOD(get_Busy)(VARIANT_BOOL *pBool) override;
 
     // *** IWebBrowserApp methods ***
-    virtual HRESULT STDMETHODCALLTYPE Quit();
-    virtual HRESULT STDMETHODCALLTYPE ClientToWindow(int *pcx, int *pcy);
-    virtual HRESULT STDMETHODCALLTYPE PutProperty(BSTR Property, VARIANT vtValue);
-    virtual HRESULT STDMETHODCALLTYPE GetProperty(BSTR Property, VARIANT *pvtValue);
-    virtual HRESULT STDMETHODCALLTYPE get_Name(BSTR *Name);
-    virtual HRESULT STDMETHODCALLTYPE get_HWND(SHANDLE_PTR *pHWND);
-    virtual HRESULT STDMETHODCALLTYPE get_FullName(BSTR *FullName);
-    virtual HRESULT STDMETHODCALLTYPE get_Path(BSTR *Path);
-    virtual HRESULT STDMETHODCALLTYPE get_Visible(VARIANT_BOOL *pBool);
-    virtual HRESULT STDMETHODCALLTYPE put_Visible(VARIANT_BOOL Value);
-    virtual HRESULT STDMETHODCALLTYPE get_StatusBar(VARIANT_BOOL *pBool);
-    virtual HRESULT STDMETHODCALLTYPE put_StatusBar(VARIANT_BOOL Value);
-    virtual HRESULT STDMETHODCALLTYPE get_StatusText(BSTR *StatusText);
-    virtual HRESULT STDMETHODCALLTYPE put_StatusText(BSTR StatusText);
-    virtual HRESULT STDMETHODCALLTYPE get_ToolBar(int *Value);
-    virtual HRESULT STDMETHODCALLTYPE put_ToolBar(int Value);
-    virtual HRESULT STDMETHODCALLTYPE get_MenuBar(VARIANT_BOOL *Value);
-    virtual HRESULT STDMETHODCALLTYPE put_MenuBar(VARIANT_BOOL Value);
-    virtual HRESULT STDMETHODCALLTYPE get_FullScreen(VARIANT_BOOL *pbFullScreen);
-    virtual HRESULT STDMETHODCALLTYPE put_FullScreen(VARIANT_BOOL bFullScreen);
+    STDMETHOD(Quit)() override;
+    STDMETHOD(ClientToWindow)(int *pcx, int *pcy) override;
+    STDMETHOD(PutProperty)(BSTR Property, VARIANT vtValue) override;
+    STDMETHOD(GetProperty)(BSTR Property, VARIANT *pvtValue) override;
+    STDMETHOD(get_Name)(BSTR *Name) override;
+    STDMETHOD(get_HWND)(SHANDLE_PTR *pHWND) override;
+    STDMETHOD(get_FullName)(BSTR *FullName) override;
+    STDMETHOD(get_Path)(BSTR *Path) override;
+    STDMETHOD(get_Visible)(VARIANT_BOOL *pBool) override;
+    STDMETHOD(put_Visible)(VARIANT_BOOL Value) override;
+    STDMETHOD(get_StatusBar)(VARIANT_BOOL *pBool) override;
+    STDMETHOD(put_StatusBar)(VARIANT_BOOL Value) override;
+    STDMETHOD(get_StatusText)(BSTR *StatusText) override;
+    STDMETHOD(put_StatusText)(BSTR StatusText) override;
+    STDMETHOD(get_ToolBar)(int *Value) override;
+    STDMETHOD(put_ToolBar)(int Value) override;
+    STDMETHOD(get_MenuBar)(VARIANT_BOOL *Value) override;
+    STDMETHOD(put_MenuBar)(VARIANT_BOOL Value) override;
+    STDMETHOD(get_FullScreen)(VARIANT_BOOL *pbFullScreen) override;
+    STDMETHOD(put_FullScreen)(VARIANT_BOOL bFullScreen) override;
 
     // *** IWebBrowser2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE Navigate2(VARIANT *URL, VARIANT *Flags, VARIANT *TargetFrameName,
-        VARIANT *PostData, VARIANT *Headers);
-    virtual HRESULT STDMETHODCALLTYPE QueryStatusWB(OLECMDID cmdID, OLECMDF *pcmdf);
-    virtual HRESULT STDMETHODCALLTYPE ExecWB(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt,
-        VARIANT *pvaIn, VARIANT *pvaOut);
-    virtual HRESULT STDMETHODCALLTYPE ShowBrowserBar(VARIANT *pvaClsid, VARIANT *pvarShow, VARIANT *pvarSize);
-    virtual HRESULT STDMETHODCALLTYPE get_ReadyState(READYSTATE *plReadyState);
-    virtual HRESULT STDMETHODCALLTYPE get_Offline(VARIANT_BOOL *pbOffline);
-    virtual HRESULT STDMETHODCALLTYPE put_Offline(VARIANT_BOOL bOffline);
-    virtual HRESULT STDMETHODCALLTYPE get_Silent(VARIANT_BOOL *pbSilent);
-    virtual HRESULT STDMETHODCALLTYPE put_Silent(VARIANT_BOOL bSilent);
-    virtual HRESULT STDMETHODCALLTYPE get_RegisterAsBrowser(VARIANT_BOOL *pbRegister);
-    virtual HRESULT STDMETHODCALLTYPE put_RegisterAsBrowser(VARIANT_BOOL bRegister);
-    virtual HRESULT STDMETHODCALLTYPE get_RegisterAsDropTarget(VARIANT_BOOL *pbRegister);
-    virtual HRESULT STDMETHODCALLTYPE put_RegisterAsDropTarget(VARIANT_BOOL bRegister);
-    virtual HRESULT STDMETHODCALLTYPE get_TheaterMode(VARIANT_BOOL *pbRegister);
-    virtual HRESULT STDMETHODCALLTYPE put_TheaterMode(VARIANT_BOOL bRegister);
-    virtual HRESULT STDMETHODCALLTYPE get_AddressBar(VARIANT_BOOL *Value);
-    virtual HRESULT STDMETHODCALLTYPE put_AddressBar(VARIANT_BOOL Value);
-    virtual HRESULT STDMETHODCALLTYPE get_Resizable(VARIANT_BOOL *Value);
-    virtual HRESULT STDMETHODCALLTYPE put_Resizable(VARIANT_BOOL Value);
+    STDMETHOD(Navigate2)(VARIANT *URL, VARIANT *Flags, VARIANT *TargetFrameName,
+        VARIANT *PostData, VARIANT *Headers) override;
+    STDMETHOD(QueryStatusWB)(OLECMDID cmdID, OLECMDF *pcmdf) override;
+    STDMETHOD(ExecWB)(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt,
+        VARIANT *pvaIn, VARIANT *pvaOut) override;
+    STDMETHOD(ShowBrowserBar)(VARIANT *pvaClsid, VARIANT *pvarShow, VARIANT *pvarSize) override;
+    STDMETHOD(get_ReadyState)(READYSTATE *plReadyState) override;
+    STDMETHOD(get_Offline)(VARIANT_BOOL *pbOffline) override;
+    STDMETHOD(put_Offline)(VARIANT_BOOL bOffline) override;
+    STDMETHOD(get_Silent)(VARIANT_BOOL *pbSilent) override;
+    STDMETHOD(put_Silent)(VARIANT_BOOL bSilent) override;
+    STDMETHOD(get_RegisterAsBrowser)(VARIANT_BOOL *pbRegister) override;
+    STDMETHOD(put_RegisterAsBrowser)(VARIANT_BOOL bRegister) override;
+    STDMETHOD(get_RegisterAsDropTarget)(VARIANT_BOOL *pbRegister) override;
+    STDMETHOD(put_RegisterAsDropTarget)(VARIANT_BOOL bRegister) override;
+    STDMETHOD(get_TheaterMode)(VARIANT_BOOL *pbRegister) override;
+    STDMETHOD(put_TheaterMode)(VARIANT_BOOL bRegister) override;
+    STDMETHOD(get_AddressBar)(VARIANT_BOOL *Value) override;
+    STDMETHOD(put_AddressBar)(VARIANT_BOOL Value) override;
+    STDMETHOD(get_Resizable)(VARIANT_BOOL *Value) override;
+    STDMETHOD(put_Resizable)(VARIANT_BOOL Value) override;
 
     // *** ITravelLogClient methods ***
-    virtual HRESULT STDMETHODCALLTYPE FindWindowByIndex(DWORD dwID, IUnknown **ppunk);
-    virtual HRESULT STDMETHODCALLTYPE GetWindowData(IStream *pStream, LPWINDOWDATA pWinData);
-    virtual HRESULT STDMETHODCALLTYPE LoadHistoryPosition(LPWSTR pszUrlLocation, DWORD dwPosition);
+    STDMETHOD(FindWindowByIndex)(DWORD dwID, IUnknown **ppunk) override;
+    STDMETHOD(GetWindowData)(IStream *pStream, LPWINDOWDATA pWinData) override;
+    STDMETHOD(LoadHistoryPosition)(LPWSTR pszUrlLocation, DWORD dwPosition) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistHistory methods ***
-    virtual HRESULT STDMETHODCALLTYPE LoadHistory(IStream *pStream, IBindCtx *pbc);
-    virtual HRESULT STDMETHODCALLTYPE SaveHistory(IStream *pStream);
-    virtual HRESULT STDMETHODCALLTYPE SetPositionCookie(DWORD dwPositioncookie);
-    virtual HRESULT STDMETHODCALLTYPE GetPositionCookie(DWORD *pdwPositioncookie);
+    STDMETHOD(LoadHistory)(IStream *pStream, IBindCtx *pbc) override;
+    STDMETHOD(SaveHistory)(IStream *pStream) override;
+    STDMETHOD(SetPositionCookie)(DWORD dwPositioncookie) override;
+    STDMETHOD(GetPositionCookie)(DWORD *pdwPositioncookie) override;
 
     // message handlers
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

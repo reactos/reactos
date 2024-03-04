@@ -44,17 +44,17 @@ public:
     ~CACLMulti();
 
     // *** IEnumString methods ***
-    virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
-    virtual HRESULT STDMETHODCALLTYPE Reset();
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppenum);
+    STDMETHOD(Next)(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
+    STDMETHOD(Skip)(ULONG celt) override;
+    STDMETHOD(Reset)() override;
+    STDMETHOD(Clone)(IEnumString **ppenum) override;
 
     // *** IACList methods ***
-    virtual HRESULT STDMETHODCALLTYPE Expand(LPCOLESTR pszExpand);
+    STDMETHOD(Expand)(LPCOLESTR pszExpand) override;
 
     // *** IObjMgr methods ***
-    virtual HRESULT STDMETHODCALLTYPE Append(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE Remove(IUnknown *punk);
+    STDMETHOD(Append)(IUnknown *punk) override;
+    STDMETHOD(Remove)(IUnknown *punk) override;
 
 private:
     void release_obj(struct ACLMultiSublist *obj);

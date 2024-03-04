@@ -55,20 +55,20 @@ public:
     ~CProgressDialog();
 
     // IProgressDialog
-    virtual HRESULT WINAPI StartProgressDialog(HWND hwndParent, IUnknown *punkEnableModeless, DWORD dwFlags, LPCVOID reserved);
-    virtual HRESULT WINAPI StopProgressDialog();
-    virtual HRESULT WINAPI SetTitle(LPCWSTR pwzTitle);
-    virtual HRESULT WINAPI SetAnimation(HINSTANCE hInstance, UINT uiResourceId);
-    virtual BOOL    WINAPI HasUserCancelled();
-    virtual HRESULT WINAPI SetProgress64(ULONGLONG ullCompleted, ULONGLONG ullTotal);
-    virtual HRESULT WINAPI SetProgress(DWORD dwCompleted, DWORD dwTotal);
-    virtual HRESULT WINAPI SetLine(DWORD dwLineNum, LPCWSTR pwzLine, BOOL bPath, LPCVOID reserved);
-    virtual HRESULT WINAPI SetCancelMsg(LPCWSTR pwzMsg, LPCVOID reserved);
-    virtual HRESULT WINAPI Timer(DWORD dwTimerAction, LPCVOID reserved);
+    STDMETHOD(StartProgressDialog)(HWND hwndParent, IUnknown *punkEnableModeless, DWORD dwFlags, LPCVOID reserved) override;
+    STDMETHOD(StopProgressDialog)() override;
+    STDMETHOD(SetTitle)(LPCWSTR pwzTitle) override;
+    STDMETHOD(SetAnimation)(HINSTANCE hInstance, UINT uiResourceId) override;
+    STDMETHOD_(BOOL, HasUserCancelled)() override;
+    STDMETHOD(SetProgress64)(ULONGLONG ullCompleted, ULONGLONG ullTotal) override;
+    STDMETHOD(SetProgress)(DWORD dwCompleted, DWORD dwTotal) override;
+    STDMETHOD(SetLine)(DWORD dwLineNum, LPCWSTR pwzLine, BOOL bPath, LPCVOID reserved) override;
+    STDMETHOD(SetCancelMsg)(LPCWSTR pwzMsg, LPCVOID reserved) override;
+    STDMETHOD(Timer)(DWORD dwTimerAction, LPCVOID reserved) override;
 
-    //////// IOleWindow
-    virtual HRESULT WINAPI GetWindow(HWND* phwnd);
-    virtual HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode);
+    // IOleWindow
+    STDMETHOD(GetWindow)(HWND* phwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_PROGRESSDIALOG)
 DECLARE_NOT_AGGREGATABLE(CProgressDialog)
