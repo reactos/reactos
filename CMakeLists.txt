@@ -292,6 +292,13 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     # This will set I18N_DEFS for later use
     set_i18n_language(${I18N_LANG})
 
+    # For MSVC builds, this puts all debug symbols file in the same directory.
+    if(MSVC)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
+    else() #if(SEPARATE_DBG)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/symbols")
+    endif()
+
     # Compiler specific definitions and macros
     if(MSVC)
         include(sdk/cmake/msvc.cmake)
@@ -337,20 +344,13 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     add_subdirectory(sdk/include/asm)
 
     if(ARCH MATCHES "64$")
-        include(sdk/cmake/baseaddress64.cmake)  
+        include(sdk/cmake/baseaddress64.cmake)
     elseif(NO_ROSSYM)
         include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)
         include(sdk/cmake/baseaddress_msvc.cmake)
     else()
         include(sdk/cmake/baseaddress.cmake)
-    endif()
-
-    # For MSVC builds, this puts all debug symbols file in the same directory.
-    if(MSVC)
-        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
-    elseif(SEPARATE_DBG)
-        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/symbols")
     endif()
 
     #begin with boot so reactos_cab target is defined before all other modules
