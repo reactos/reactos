@@ -378,8 +378,7 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     CComPtr<IDataObject>                pObj;
     LPCITEMIDLIST                       pLast;
     HRESULT                             hr;
-    DWORD                               dwEffect;
-    DWORD                               dwEffect2;
+    DWORD                               dwEffect, dwEffect2;
 
     if (!pnmtv->itemNew.lParam)
         return;
@@ -403,8 +402,8 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, reinterpret_cast<void**>(&pObj));
     if (!SUCCEEDED(hr))
         return;
+
     DoDragDrop(pObj, this, dwEffect, &dwEffect2);
-    return;
 }
 
 // *** ATL event handlers ***
