@@ -381,20 +381,31 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     DWORD                               dwEffect;
     DWORD                               dwEffect2;
 
-    dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
     if (!pnmtv->itemNew.lParam)
         return;
+
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
     hr = SHBindToParent(pNodeInfo->absolutePidl, IID_PPV_ARG(IShellFolder, &pSrcFolder), &pLast);
     if (!SUCCEEDED(hr))
         return;
+
+    SFGAOF attrs = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK;
+    pSrcFolder->GetAttributesOf(1, &pLast, &attrs);
+
+    dwEffect = 0;
+    if (attrs & SFGAO_CANCOPY)
+        dwEffect |= DROPEFFECT_COPY;
+    if (attrs & SFGAO_CANMOVE)
+        dwEffect |= DROPEFFECT_MOVE;
+    if (attrs & SFGAO_CANLINK)
+        dwEffect |= DROPEFFECT_LINK;
+
     hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, reinterpret_cast<void**>(&pObj));
     if (!SUCCEEDED(hr))
         return;
     DoDragDrop(pObj, this, dwEffect, &dwEffect2);
     return;
 }
-
 
 // *** ATL event handlers ***
 LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
