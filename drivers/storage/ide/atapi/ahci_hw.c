@@ -322,6 +322,8 @@ AtaAhciFsmResetPort(
     _In_ PATAPORT_PORT_DATA PortData,
     _In_ BOOLEAN DoComReset)
 {
+    PortData->InterruptFlags |= PORT_INT_FLAG_IGNORE_LINK_IRQ;
+
     /*
      * Something bad happened to the port device.
      * First check to see if the HBA has been hot-removed.
@@ -332,7 +334,7 @@ AtaAhciFsmResetPort(
         goto Fail;
     }
 
-    if (++PortData->Worker.ResetRetryCount > PORT_MAX_RESET_RETRY_COUNT)
+    if (++PortData->Worker.PortResetRetryCount > PORT_MAX_RESET_RETRY_COUNT)
     {
         ERR("PORT %lu: Too many reset attempts\n", PortData->PortNumber);
         goto Fail;
@@ -788,7 +790,7 @@ AtaAhciHandlePmpCheckSignature(
 
     TRACE("PORT %lu: Received signature %08lx\n", PortData->PortNumber, Signature);
 
-    if (Signature == AHCI_PXSIG_PMP)
+    if ((Signature & AHCI_PXSIG_MASK) == (AHCI_PXSIG_PMP & AHCI_PXSIG_MASK))
     {
         INFO("PORT %lu: Discovered a Port Multiplier\n", PortData->PortNumber);
 
@@ -996,7 +998,7 @@ AtaAhciHandlePmpWaitForPhyReadyResult(
         }
         else
         {
-            AtaFsmCompletePortEnumEvent(PortData, PortData->Worker.PmpActivePorts);
+            AtaFsmSetLocalState(&PortData->Worker, AHCI_STATE_ENUM_PMP_DONE);
         }
     }
     else
@@ -1024,8 +1026,55 @@ AtaAhciHandlePmpClearDeviceErrorsResult(
     }
     else
     {
+        AtaFsmSetLocalState(&PortData->Worker, AHCI_STATE_ENUM_PMP_DONE);
+    }
+}
+
+static
+VOID
+AtaAhciHandlePmpEnumDone(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    /* Enable use of FIS-based switching once the port multiplier has enumerated */
+    if (PortData->PortFlags & PORT_FLAG_HAS_FBS)
+    {
+        AtaAhciStopCommandListProcess(PortData);
+
+        PortData->Worker.TimeOut = AHCI_DELAY_CR_START_STOP;
+        AtaFsmSetLocalState(&PortData->Worker, AHCI_STATE_ENUM_PMP_STOP_CMD_ENGINE_WAIT);
+    }
+    else
+    {
         AtaFsmCompletePortEnumEvent(PortData, PortData->Worker.PmpActivePorts);
     }
+}
+
+static
+VOID
+AtaAhciHandlePmpForStopCommandListProcess(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    /* Do a quick check first (100 us) */
+    if (AtaAhciPollRegister(PortData->Ahci.IoBase, PxCmdStatus, AHCI_PXCMD_CR, 0, 10))
+    {
+        AtaAhciFbsControl(PortData, TRUE);
+        AtaAhciStartCommandListProcess(PortData);
+        AtaFsmCompletePortEnumEvent(PortData, PortData->Worker.PmpActivePorts);
+        return;
+    }
+
+    /* Retry after the time interval */
+    if (--PortData->Worker.TimeOut != 0)
+    {
+        AtaFsmRequestTimer(&PortData->Worker);
+        return;
+    }
+
+    WARN("PORT %lu: Failed to stop the command list DMA engine %08lx\n",
+         PortData->PortNumber,
+         AHCI_PORT_READ(PortData->Ahci.IoBase, PxCmdStatus));
+
+    AtaAhciFsmResetPort(PortData, TRUE);
 }
 
 VOID
@@ -1105,6 +1154,12 @@ AtaAhciRunStateMachine(
             break;
         case AHCI_STATE_ENUM_PMP_CLEAR_ERRORS_RESULT:
             AtaAhciHandlePmpClearDeviceErrorsResult(PortData);
+            break;
+        case AHCI_STATE_ENUM_PMP_DONE:
+            AtaAhciHandlePmpEnumDone(PortData);
+            break;
+        case AHCI_STATE_ENUM_PMP_STOP_CMD_ENGINE_WAIT:
+            AtaAhciHandlePmpForStopCommandListProcess(PortData);
             break;
 
         default:
@@ -1241,12 +1296,58 @@ AtaAhciDowngradeInterfaceSpeed(
 }
 
 VOID
-AtaAhciHandlePortChange(
+AtaAhciHandlePortStateChange(
     _In_ PATAPORT_PORT_DATA PortData,
     _In_ ULONG InterruptStatus)
 {
+    BOOLEAN DoNotify = FALSE;
+    ULONG SataStatus;
 
+    if (InterruptStatus & AHCI_PXIRQ_DMPS)
+    {
+        ULONG CmdStatus = AHCI_PORT_READ(PortData->Ahci.IoBase, PxCmdStatus);
 
+        if (CmdStatus & AHCI_PXCMD_MPSP)
+        {
+            WARN("PORT %lu: Mechanical presence switch has changed\n", PortData->PortNumber);
+            DoNotify = TRUE;
+            goto Exit;
+        }
+    }
+
+    if (PortData->InterruptFlags & PORT_INT_FLAG_IGNORE_LINK_IRQ)
+        goto Exit;
+
+    SataStatus = AHCI_PORT_READ(PortData->Ahci.IoBase, PxSataStatus) & AHCI_PXSSTS_DET_MASK;
+    if (SataStatus == AHCI_PXSSTS_DET_PHY_OK)
+    {
+        if (PortData->Worker.TargetBitmap == 0)
+        {
+            WARN("PORT %lu: Device hot plug detected %lx\n", PortData->PortNumber, SataStatus);
+            DoNotify = TRUE;
+        }
+        else
+        {
+            INFO("PORT %lu: PHY interrupt %lx\n", PortData->PortNumber, SataStatus);
+        }
+    }
+    else
+    {
+        if (PortData->Worker.TargetBitmap != 0)
+        {
+            WARN("PORT %lu: Device removal detected %lx\n", PortData->PortNumber, SataStatus);
+            DoNotify = TRUE;
+        }
+        else
+        {
+            INFO("PORT %lu: PHY interrupt %lx\n", PortData->PortNumber, SataStatus);
+        }
+    }
+
+Exit:
+    /* Schedule a port reset */
+    if (DoNotify)
+        AtaPortRecoveryFromError(PortData, ACTION_DEVICE_ERROR, NULL);
 }
 
 VOID
@@ -1333,7 +1434,7 @@ AtaAhciHandleFatalError(
     Request->Output.Status = (TaskFileData & AHCI_PXTFD_STATUS_MASK);
     Request->Output.Error = (TaskFileData & AHCI_PXTFD_ERROR_MASK) >> AHCI_PXTFD_ERROR_SHIFT;
 
-    /* Save the current task file for the "ATA LBA field" (SAT-5 11.7) */
+    /* Save the current task file for the "ATA LBA field" (SAT-6 11.7) */
     if (!IS_ATAPI(Request->Device) || (Request->Flags & REQUEST_FLAG_SAVE_TASK_FILE))
     {
         AtaAhciSaveTaskFile(PortData, Request, TRUE);
@@ -1391,6 +1492,38 @@ AtaAhciPortInit(
     return TRUE;
 }
 
+static
+CODE_SEG("PAGE")
+VOID
+AtaAhciHbaChangeOsOwnership(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt)
+{
+    ULONG i, Control;
+
+    PAGED_CODE();
+
+    Control = AHCI_HBA_READ(ChanExt->IoBase, HbaBiosHandoffControl);
+    if (Control & AHCI_BOHC_OS_SEMAPHORE)
+        return;
+
+    INFO("HBA ownership change\n");
+
+    AHCI_HBA_WRITE(ChanExt->IoBase, HbaBiosHandoffControl, Control | AHCI_BOHC_OS_SEMAPHORE);
+
+    /* Wait up to 2 seconds */
+    for (i = 0; i < 200000; ++i)
+    {
+        Control = AHCI_HBA_READ(ChanExt->IoBase, HbaBiosHandoffControl);
+
+        if (!(Control & (AHCI_BOHC_BIOS_BUSY | AHCI_BOHC_BIOS_SEMAPHORE)))
+            return;
+
+        KeStallExecutionProcessor(10);
+    }
+
+    WARN("Unable to acquire the OS semaphore\n");
+}
+
 CODE_SEG("PAGE")
 NTSTATUS
 AtaAhciInitHba(
@@ -1412,7 +1545,8 @@ AtaAhciInitHba(
     {
         ChanExt->AhciCapabilitiesEx = AHCI_HBA_READ(ChanExt->IoBase, HbaCapabilitiesEx);
 
-        /* if (ChanExt->AhciCapabilitiesEx & AHCI_CAP2_BOH) */ // todo
+        if (ChanExt->AhciCapabilitiesEx & AHCI_CAP2_BOH)
+            AtaAhciHbaChangeOsOwnership(ChanExt);
     }
 
     ChanExt->AhciCapabilities = AHCI_HBA_READ(ChanExt->IoBase, HbaCapabilities);

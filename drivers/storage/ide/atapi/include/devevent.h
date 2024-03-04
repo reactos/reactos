@@ -19,9 +19,9 @@ typedef enum _ATA_PORT_ACTION
     ACTION_ENUM_PORT            = (1 << 1),
     ACTION_ENUM_DEVICE_EXT      = (1 << 2),
     ACTION_ENUM_DEVICE_INT      = (1 << 3),
-    ACTION_DEVICE_POWER         = (1 << 4),
-    ACTION_DEVICE_TIMING        = (1 << 5),
-    ACTION_DEVICE_CONFIG        = (1 << 6),
+    ACTION_DEVICE_TIMING        = (1 << 4),
+    ACTION_DEVICE_CONFIG        = (1 << 5),
+    ACTION_DEVICE_POWER         = (1 << 6),
 } ATA_PORT_ACTION;
 
 typedef enum _ATA_DEVICE_STATUS
@@ -72,12 +72,17 @@ typedef enum _ATA_AHCI_STATE
     AHCI_STATE_ENUM_PMP_PHY_READY_WAIT,
     AHCI_STATE_ENUM_PMP_PHY_READY_WAIT_RESULT,
     AHCI_STATE_ENUM_PMP_CLEAR_ERRORS_RESULT,
+    AHCI_STATE_ENUM_PMP_DONE,
+    AHCI_STATE_ENUM_PMP_STOP_CMD_ENGINE_WAIT,
 } ATA_AHCI_STATE;
 
 typedef enum _ATA_PATA_STATE
 {
     PATA_STATE_PORT_ENUM,
     PATA_STATE_RESET,
+    PATA_STATE_RESET_SELECT_NEXT_DEVICE,
+    PATA_STATE_RESET_WAIT_FOR_REGISTER_ACCESS,
+    PATA_STATE_RESET_WAIT_FOR_BSY,
 } ATA_PATA_STATE;
 
 typedef enum _ATA_IDENTIFY_STATE
@@ -106,6 +111,7 @@ typedef enum _ATA_CONFIG_STATE
     CFG_STATE_SET_MULTIPLE,
     CFG_STATE_SET_MULTIPLE_RESULT,
     CFG_STATE_LOCK_SECURITY,
+    CFG_STATE_LOCK_PARAMETERS,
     CFG_STATE_ENABLE_MSN,
     CFG_STATE_ENABLE_MSN_RESULT,
     CFG_STATE_UPDATE_IDENTIFY,
@@ -170,6 +176,7 @@ typedef struct _ATA_WORKER_CONTEXT
         ULONG CurrentTaskFile;
         ULONG CurrentPmpPort;
         ULONG IdentifyAttempt;
+        ULONG CurrentTargetId;
     };
 #if DBG
     ULONG StateLoopCount;
@@ -179,11 +186,16 @@ typedef struct _ATA_WORKER_CONTEXT
     ULONG TimeOut;
     volatile LONG TargetBitmap;
     ULONG PmpDetectRetryCount;
-    ULONG ResetRetryCount;
+    ULONG PortResetRetryCount;
+    ULONG TargetResetRetryCount;
     ULONG BadTargetBitmap;
     ULONG PmpPortCount;
     ULONG PmpProductId;
-    ULONG PmpActivePorts;
+    union
+    {
+        ULONG PmpActivePorts;
+        ULONG PreResetTargetBitmap;
+    };
     PATA_DEVICE_REQUEST FailedRequest;
     PATA_DEVICE_REQUEST OldRequest;
     PATAPORT_DEVICE_EXTENSION EnumDevExt;

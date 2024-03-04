@@ -197,7 +197,8 @@ AtaPortHandleIdIdentifyTargetDevice(
         {
             ULONG Signature = AHCI_PORT_READ(GET_PORTDATA(Context)->Ahci.IoBase, PxSignature);
 
-            StartFromAtapi = (Signature == AHCI_PXSIG_ATAPI);
+            StartFromAtapi =
+                ((Signature & AHCI_PXSIG_MASK) == (AHCI_PXSIG_ATAPI & AHCI_PXSIG_MASK));
         }
         else
         {
@@ -301,25 +302,36 @@ AtaPortHandleIdIdentifyTargetDeviceResult(
         return;
     }
 
+    DevExt->Device.DeviceFlags &= ~(DEVICE_IS_ATAPI |
+                                    DEVICE_HAS_CDB_INTERRUPT |
+                                    DEVICE_NEED_DMA_DIRECTION |
+                                    DEVICE_IS_NEC_CDR260);
+
     if (DeviceClass == DEV_ATAPI)
     {
         DevExt->Device.DeviceFlags |= DEVICE_IS_ATAPI;
 
         DevExt->Device.CdbSize = AtaDevCdbSizeInWords(&DevExt->IdentifyPacketData);
+        TRACE("Device has CDB size of %u bytes\n", DevExt->Device.CdbSize * 2);
 
         if (AtaDevHasCdbInterrupt(&DevExt->IdentifyPacketData))
+        {
+            TRACE("Device has CDB interrupt\n");
             DevExt->Device.DeviceFlags |= DEVICE_HAS_CDB_INTERRUPT;
+        }
 
         if (AtaDevIsDmaDirectionRequired(&DevExt->IdentifyPacketData))
+        {
+            TRACE("Device needs DMA DIR\n");
             DevExt->Device.DeviceFlags |= DEVICE_NEED_DMA_DIRECTION;
-        else
-            DevExt->Device.DeviceFlags &= ~DEVICE_NEED_DMA_DIRECTION;
+        }
 
         /* The NEC CDR-260 string is not byteswapped */
         if (DevExt->IdentifyPacketData.ModelNumber[0] == 'N' &&
             DevExt->IdentifyPacketData.ModelNumber[1] == 'E' &&
             DevExt->IdentifyPacketData.ModelNumber[2] == 'C')
         {
+            TRACE("Device is NEC CDR-260 drive\n");
             DevExt->Device.DeviceFlags |= DEVICE_IS_NEC_CDR260;
         }
 
@@ -327,11 +339,6 @@ AtaPortHandleIdIdentifyTargetDeviceResult(
         AtaFsmSetLocalState(Context, PORT_STATE_ID_INQUIRY_RESULT);
         return;
     }
-
-    DevExt->Device.DeviceFlags &= ~(DEVICE_IS_ATAPI |
-                                    DEVICE_HAS_CDB_INTERRUPT |
-                                    DEVICE_NEED_DMA_DIRECTION |
-                                    DEVICE_IS_NEC_CDR260);
 
     AtaFsmCompleteDeviceEnumEvent(Context, DevExt, DEV_STATUS_NEW_DEVICE);
 }

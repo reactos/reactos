@@ -12,21 +12,8 @@
 /* FUNCTIONS ******************************************************************/
 
 static
-VOID
-AtaPataResetChannel(
-    _In_ PATAPORT_PORT_DATA PortData)
-{
-    PortData->Pata.LastTargetId = 0xFF;
-
-    ATA_WRITE(PortData->Pata.Registers.Control, IDE_DC_RESET_CONTROLLER | IDE_DC_ALWAYS);
-    KeStallExecutionProcessor(20);
-    ATA_WRITE(PortData->Pata.Registers.Control, IDE_DC_REENABLE_CONTROLLER | IDE_DC_ALWAYS);
-    KeStallExecutionProcessor(20);
-}
-
-static
 BOOLEAN
-AtaPataDevicePresent(
+AtaPataIsDevicePresent(
     _In_ PATAPORT_PORT_DATA PortData,
     _In_ ULONG TargetId)
 {
@@ -37,7 +24,7 @@ AtaPataDevicePresent(
 
     /* Do a quick check first */
     IdeStatus = ATA_READ(PortData->Pata.Registers.Status);
-    TRACE("Device status %02x\n", IdeStatus);
+    INFO("PORT %p: Device %u status %02x\n", PortData->Pata.Registers.Data, TargetId, IdeStatus);
     if (IdeStatus == 0xFF || IdeStatus == 0x7F)
         return FALSE;
 
@@ -58,24 +45,87 @@ AtaPataDevicePresent(
 
 static
 VOID
-AtaPataHandleReset(
+AtaPataSoftwareReset(
     _In_ PATAPORT_PORT_DATA PortData)
+{
+    ATA_WRITE(PortData->Pata.Registers.Control, IDE_DC_RESET_CONTROLLER | IDE_DC_ALWAYS);
+    KeStallExecutionProcessor(20);
+    ATA_WRITE(PortData->Pata.Registers.Control, IDE_DC_REENABLE_CONTROLLER | IDE_DC_ALWAYS);
+    KeStallExecutionProcessor(20);
+}
+
+static
+VOID
+AtaPataDrainDeviceBuffer(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    PATA_DEVICE_REQUEST Request = PortData->Slots[PATA_CHANNEL_SLOT];
+    UCHAR IdeStatus;
+    ULONG i;
+
+    if (Request && (Request->Flags & REQUEST_FLAG_DMA))
+        return;
+
+    /* Try to clear the DRQ indication */
+    for (i = 0; i < ATA_MAX_TRANSFER_LENGTH / sizeof(USHORT); ++i)
+    {
+        IdeStatus = ATA_READ(PortData->Pata.Registers.Status);
+        if (!(IdeStatus & IDE_STATUS_DRQ))
+            break;
+
+        READ_PORT_USHORT((PUSHORT)PortData->Pata.Registers.Data);
+    }
+
+    if (i > 0)
+        INFO("Total drained %lu bytes\n", i * sizeof(USHORT));
+}
+
+static
+ULONG
+AtaPataGetTargetBitmap(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ BOOLEAN Reset)
+
 {
     ULONG i, TargetBitmap = 0, MaxTargetId = PortData->ChanExt->MaxTargetId;
 
-    // TODO: implement
-    ASSERT(0);
-
     for (i = 0; i < MaxTargetId; ++i)
     {
-        if (!AtaPataDevicePresent(PortData, i))
+        if (PortData->Worker.BadTargetBitmap & (1 << i))
             continue;
+
+        if (!AtaPataIsDevicePresent(PortData, i))
+            continue;
+
+        if (Reset)
+            AtaPataDrainDeviceBuffer(PortData);
 
         TargetBitmap |= 1 << i;
     }
 
-    AtaPataResetChannel(PortData);
-    AtaFsmCompletePortEnumEvent(PortData, TargetBitmap);
+    return TargetBitmap;
+}
+
+static
+VOID
+AtaPataResetChannel(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+#if defined(_M_IX86)
+    if (PortData->PortFlags & PORT_FLAG_CBUS_IDE)
+    {
+        /* Reset the secondary IDE channel if present */
+        if (PortData->Worker.PreResetTargetBitmap & ((1 << 2) | (1 << 3)))
+        {
+            ATA_SELECT_BANK(1);
+            AtaPataSoftwareReset(PortData);
+        }
+
+        ATA_SELECT_BANK(0);
+    }
+#endif
+
+    AtaPataSoftwareReset(PortData);
 }
 
 static
@@ -83,37 +133,119 @@ VOID
 AtaPataHandlePortEnum(
     _In_ PATAPORT_PORT_DATA PortData)
 {
-    ULONG i, TargetBitmap = 0, MaxTargetId = PortData->ChanExt->MaxTargetId;
-    UCHAR IdeStatus;
+    AtaFsmCompletePortEnumEvent(PortData, AtaPataGetTargetBitmap(PortData, FALSE));
+}
 
-    for (i = 0; i < MaxTargetId; ++i)
+static
+VOID
+AtaPataHandleReset(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    PortData->Worker.PreResetTargetBitmap = AtaPataGetTargetBitmap(PortData, TRUE);
+
+    WARN("PORT %p: Resetting IDE channel, targets 0x%lx\n",
+         PortData->Pata.Registers.Data,
+         PortData->Worker.PreResetTargetBitmap);
+
+    AtaPataResetChannel(PortData);
+    AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_RESET_SELECT_NEXT_DEVICE);
+}
+
+static
+VOID
+AtaPataHandleResetSelectNextDevice(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    /* Select next device */
+    if (!_BitScanForward(&PortData->Worker.CurrentTargetId, PortData->Worker.PreResetTargetBitmap))
     {
-        if (PortData->Worker.BadTargetBitmap & (1 << i))
-            continue;
-
-        if (!AtaPataDevicePresent(PortData, i))
-            continue;
-
-        /* Wait for busy to clear */
-        ATA_WAIT_ON_BUSY(&PortData->Pata.Registers, &IdeStatus, ATA_TIME_BUSY_ENUM);
-        if (IdeStatus & IDE_STATUS_BUSY)
-        {
-            /*
-             * This status indicates that the previous command hasn't been completed
-             * and the device is left in an unexpected state.
-             * A device reset is required to recover.
-             */
-            WARN("Device is busy %02x\n", IdeStatus);
-
-            ASSERT(0); // todo implement
-            AtaFsmResetPort(PortData, i);
-            return;
-        }
-
-        TargetBitmap |= 1 << i;
+        AtaFsmCompletePortEnumEvent(PortData, AtaPataGetTargetBitmap(PortData, FALSE));
+        return;
     }
 
-    AtaFsmCompletePortEnumEvent(PortData, TargetBitmap);
+    TRACE("PORT %p: Selected target %lu\n",
+         PortData->Pata.Registers.Data,
+         PortData->Worker.CurrentTargetId);
+
+    /* The reset will cause the master device to be selected */
+    if ((PortData->Worker.CurrentTargetId & 1) != 0)
+    {
+        PortData->Worker.TimeOut = ATA_TIME_RESET_SELECT / PORT_TIMER_TICK_MS;
+        AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_RESET_WAIT_FOR_REGISTER_ACCESS);
+    }
+    else
+    {
+        PortData->Worker.TimeOut = ATA_TIME_BUSY_RESET / PORT_TIMER_TICK_MS;
+        AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_RESET_WAIT_FOR_BSY);
+    }
+}
+
+static
+VOID
+AtaPataHandleResetWaitForRegisterAccess(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    /* Select the device again */
+    ATA_SELECT_DEVICE(PortData,
+                      PortData->Worker.CurrentTargetId,
+                      IDE_DRIVE_SELECT | ((PortData->Worker.CurrentTargetId & 1) << 4));
+
+    /* Check whether the selection was successful */
+    ATA_WRITE(PortData->Pata.Registers.ByteCountLow, 0xAA);
+    ATA_WRITE(PortData->Pata.Registers.ByteCountLow, 0x55);
+    ATA_WRITE(PortData->Pata.Registers.ByteCountLow, 0xAA);
+    if (ATA_READ(PortData->Pata.Registers.ByteCountLow) == 0xAA)
+    {
+        PortData->Worker.TimeOut = ATA_TIME_BUSY_RESET / PORT_TIMER_TICK_MS;
+        AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_RESET_WAIT_FOR_BSY);
+        return;
+    }
+
+    /* Retry after the time interval */
+    if (--PortData->Worker.TimeOut != 0)
+    {
+        AtaFsmRequestTimer(&PortData->Worker);
+        return;
+    }
+
+    ERR("PORT %p: Selection timeout at target %u\n",
+        PortData->Pata.Registers.Data,
+        PortData->Worker.CurrentTargetId);
+    AtaFsmResetPort(PortData, PortData->Worker.CurrentTargetId);
+}
+
+static
+VOID
+AtaPataHandleResetWaitForBusy(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    UCHAR IdeStatus;
+
+    /* Now wait for busy to clear */
+    IdeStatus = ATA_READ(PortData->Pata.Registers.Status);
+    if (!(IdeStatus & IDE_STATUS_BUSY) || (IdeStatus == 0xFF))
+    {
+        INFO("PORT %p: Target %u online with status %02x\n",
+            PortData->Pata.Registers.Data,
+            PortData->Worker.CurrentTargetId,
+            IdeStatus);
+        PortData->Worker.PreResetTargetBitmap &= ~(1 << PortData->Worker.CurrentTargetId);
+        AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_RESET_SELECT_NEXT_DEVICE);
+        return;
+    }
+
+    /* Retry after the time interval */
+    if (--PortData->Worker.TimeOut != 0)
+    {
+        AtaFsmRequestTimer(&PortData->Worker);
+        return;
+    }
+
+    ERR("PORT %p: Failed to reset the device at target %u, status %02x\n",
+        PortData->Pata.Registers.Data,
+        PortData->Worker.CurrentTargetId,
+        IdeStatus);
+    AtaFsmResetPort(PortData, PortData->Worker.CurrentTargetId);
 }
 
 VOID
@@ -127,6 +259,15 @@ AtaPataRunStateMachine(
             break;
         case PATA_STATE_RESET:
             AtaPataHandleReset(PortData);
+            break;
+        case PATA_STATE_RESET_SELECT_NEXT_DEVICE:
+            AtaPataHandleResetSelectNextDevice(PortData);
+            break;
+        case PATA_STATE_RESET_WAIT_FOR_REGISTER_ACCESS:
+            AtaPataHandleResetWaitForRegisterAccess(PortData);
+            break;
+        case PATA_STATE_RESET_WAIT_FOR_BSY:
+            AtaPataHandleResetWaitForBusy(PortData);
             break;
 
         default:

@@ -228,8 +228,8 @@ AtaTimDumpTimingInfo(
          "SWDMA cycle time %ld\n"
          "MWDMA cycle time %ld\n"
          "UDMA cycle time  %ld\n"
-         "Current modes    0x%08lX\n"
          "Supported modes  0x%08lX\n"
+         "Active modes     0x%08lX\n"
          "Selected modes   0x%08lX\n"
          "IOREADY          %u\n",
         DevExt->Device.AtaScsiAddress.PathId,
@@ -239,8 +239,8 @@ AtaTimDumpTimingInfo(
         (LONG)DevExt->SingleWordDmaCycleTime,
         (LONG)DevExt->MultiWordDmaCycleTime,
         (LONG)DevExt->UltraDmaCycleTime,
-        DevExt->TransferModeCurrentBitmap,
         DevExt->TransferModeSupportedBitmap,
+        DevExt->TransferModeCurrentBitmap,
         DevExt->TransferModeSelectedBitmap,
         DevExt->IdentifyDeviceData.Capabilities.IordySupported);
 }

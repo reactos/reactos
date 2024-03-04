@@ -66,7 +66,7 @@ AtaPataCompleteCommand(
     {
         if (!IS_ATAPI(Request->Device) || (Request->Flags & REQUEST_FLAG_SAVE_TASK_FILE))
         {
-            /* Save the current task file for the "ATA LBA field" (SAT-5 11.7) */
+            /* Save the current task file for the "ATA LBA field" (SAT-6 11.7) */
             AtaPataSaveTaskFile(PortData, Request);
         }
         else
@@ -203,25 +203,6 @@ AtaPataSendCdb(
         ATA_WRITE_BLOCK_16((PUSHORT)PortData->Pata.Registers.Data,
                            (PUSHORT)Request->Cdb,
                            Request->Device->CdbSize);
-    }
-
-    /*
-     * In polled mode (interrupts disabled)
-     * the NEC CDR-260 drive clears BSY before updating the interrupt reason register.
-     * As a workaround, we will wait for the phase change.
-     */
-    if ((Request->Flags & REQUEST_FLAG_POLL) &&
-        (Request->Device->DeviceFlags & DEVICE_IS_NEC_CDR260))
-    {
-        ULONG i;
-
-        for (i = 0; i < ATA_TIME_PHASE_CHANGE; ++i)
-        {
-            KeStallExecutionProcessor(10);
-
-            if (ATA_READ(PortData->Pata.Registers.InterruptReason) != ATAPI_INT_REASON_COD)
-                break;
-        }
     }
 }
 

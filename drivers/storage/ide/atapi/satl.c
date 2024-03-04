@@ -1526,6 +1526,27 @@ AtaReqScsiTestUnitReady(
 
 static
 UCHAR
+AtaReqScsiStartStopUnit(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PATA_DEVICE_REQUEST Request,
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    PCDB Cdb = (PCDB)Srb->Cdb;
+
+    if (Cdb->START_STOP.LoadEject)
+    {
+        /* Prepare a non-data command */
+        Request->TaskFile.Command = IDE_COMMAND_MEDIA_EJECT;
+
+        return SRB_STATUS_PENDING;
+    }
+
+    /* Adding more handling will conflict with the power manager, assume success */
+    return SRB_STATUS_SUCCESS;
+}
+
+static
+UCHAR
 AtaReqScsiRequestSense(
     _In_ PATAPORT_DEVICE_EXTENSION DevExt,
     _In_ PATA_DEVICE_REQUEST Request,
@@ -1689,11 +1710,11 @@ ATA_COMPLETION_ACTION
 AtaReqCompleteAtaPassThrough(
     _In_ PATA_DEVICE_REQUEST Request)
 {
-    PATA_PASSTHROUGH12 Cdb = (PATA_PASSTHROUGH12)(Request->Srb)->Cdb;
+    PCDB Cdb = (PCDB)Request->Srb->Cdb;
 
     // todo check has taskfile
 
-    if ((Cdb->CkCond == 1) || (Request->SrbStatus != SRB_STATUS_SUCCESS))
+    if ((Cdb->ATA_PASSTHROUGH16.CkCond == 1) || (Request->SrbStatus != SRB_STATUS_SUCCESS))
     {
         UCHAR SK, ASK, ASCQ;
 
@@ -1725,24 +1746,20 @@ AtaReqScsiAtaPassThrough(
     _In_ PSCSI_REQUEST_BLOCK Srb)
 {
     PATA_TASKFILE TaskFile = &Request->TaskFile;
-    union _ATA_PASSTHROUGH
-    {
-        PATA_PASSTHROUGH12 Cdb12;
-        PATA_PASSTHROUGH16 Cdb16;
-    } PassThrough;
+    PCDB Cdb;
 
     Request->Flags = REQUEST_FLAG_SET_DEVICE_REGISTER |
                      REQUEST_FLAG_SAVE_TASK_FILE |
                      REQUEST_FLAG_PASSTHROUGH |
                      (Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION);
 
-    PassThrough.Cdb12 = (PATA_PASSTHROUGH12)Srb->Cdb;
-    switch (PassThrough.Cdb12->Protocol)
+    Cdb = (PCDB)Srb->Cdb;
+    switch (Cdb->ATA_PASSTHROUGH16.Protocol)
     {
         case ATA_PASSTHROUGH_PROTOCOL_NON_DATA:
         {
             /* Check for data transfer */
-            if (PassThrough.Cdb12->TLength != 0)
+            if (Cdb->ATA_PASSTHROUGH16.TLength != 0)
                 return AtaReqTerminateInvalidField(Srb);
 
             break;
@@ -1751,7 +1768,7 @@ AtaReqScsiAtaPassThrough(
         case ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_IN:
         {
             /* Check for write operation */
-            if (!PassThrough.Cdb12->TDir)
+            if (!Cdb->ATA_PASSTHROUGH16.TDir)
                 return AtaReqTerminateInvalidField(Srb);
 
             break;
@@ -1760,7 +1777,7 @@ AtaReqScsiAtaPassThrough(
         case ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_OUT:
         {
             /* Check for read operation */
-            if (PassThrough.Cdb12->TDir)
+            if (Cdb->ATA_PASSTHROUGH16.TDir)
                 return AtaReqTerminateInvalidField(Srb);
 
             break;
@@ -1783,7 +1800,7 @@ AtaReqScsiAtaPassThrough(
                 return AtaReqTerminateInvalidField(Srb);
 
             /*
-             * Don't set the REQUEST_FLAG_LBA48 flag.
+             * Do not set the REQUEST_FLAG_LBA48 flag.
              * We can get here even when the command is SCSIOP_ATA_PASSTHROUGH12.
              */
             Request->Flags |= REQUEST_FLAG_NCQ | REQUEST_DMA_FLAGS;
@@ -1798,36 +1815,36 @@ AtaReqScsiAtaPassThrough(
      * NOTE: We ignore the T_LENGTH field in the CDB
      * and use the DataTransferLength field instead.
      */
-    if ((PassThrough.Cdb12->TLength == 0) && (Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION))
+    if ((Cdb->ATA_PASSTHROUGH16.TLength == 0) && (Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION))
         return AtaReqTerminateInvalidField(Srb);
 
     if (Srb->Cdb[0] == SCSIOP_ATA_PASSTHROUGH12)
     {
-        TaskFile->Feature = PassThrough.Cdb12->Features;
-        TaskFile->SectorCount = PassThrough.Cdb12->Count;
-        TaskFile->LowLba = PassThrough.Cdb12->LowLba;
-        TaskFile->MidLba = PassThrough.Cdb12->MidLba;
-        TaskFile->HighLba = PassThrough.Cdb12->HighLba;
-        TaskFile->DriveSelect = PassThrough.Cdb12->Device;
-        TaskFile->Command = PassThrough.Cdb12->Command;
+        TaskFile->Feature     = Cdb->ATA_PASSTHROUGH12.Features;
+        TaskFile->SectorCount = Cdb->ATA_PASSTHROUGH12.SectorCount;
+        TaskFile->LowLba      = Cdb->ATA_PASSTHROUGH12.LbaLow;
+        TaskFile->MidLba      = Cdb->ATA_PASSTHROUGH12.LbaMid;
+        TaskFile->HighLba     = Cdb->ATA_PASSTHROUGH12.LbaHigh;
+        TaskFile->DriveSelect = Cdb->ATA_PASSTHROUGH12.Device;
+        TaskFile->Command     = Cdb->ATA_PASSTHROUGH12.Command;
     }
     else
     {
-        TaskFile->Feature = PassThrough.Cdb16->Features;
-        TaskFile->SectorCount = PassThrough.Cdb16->Count;
-        TaskFile->LowLba = PassThrough.Cdb16->LowLba;
-        TaskFile->MidLba = PassThrough.Cdb16->MidLba;
-        TaskFile->HighLba = PassThrough.Cdb16->HighLba;
-        TaskFile->DriveSelect = PassThrough.Cdb16->Device;
-        TaskFile->Command = PassThrough.Cdb16->Command;
+        TaskFile->Feature     = Cdb->ATA_PASSTHROUGH16.Features7_0;
+        TaskFile->SectorCount = Cdb->ATA_PASSTHROUGH16.SectorCount7_0;
+        TaskFile->LowLba      = Cdb->ATA_PASSTHROUGH16.LbaLow7_0;
+        TaskFile->MidLba      = Cdb->ATA_PASSTHROUGH16.LbaMid7_0;
+        TaskFile->HighLba     = Cdb->ATA_PASSTHROUGH16.LbaHigh7_0;
+        TaskFile->DriveSelect = Cdb->ATA_PASSTHROUGH16.Device;
+        TaskFile->Command     = Cdb->ATA_PASSTHROUGH16.Command;
 
-        if (PassThrough.Cdb16->Extend)
+        if (Cdb->ATA_PASSTHROUGH16.Extend)
         {
-            TaskFile->FeatureEx = PassThrough.Cdb16->FeaturesEx;
-            TaskFile->SectorCountEx = PassThrough.Cdb16->CountEx;
-            TaskFile->LowLbaEx = PassThrough.Cdb16->LowLbaEx;
-            TaskFile->MidLbaEx = PassThrough.Cdb16->MidLbaEx;
-            TaskFile->HighLbaEx = PassThrough.Cdb16->HighLbaEx;
+            TaskFile->FeatureEx     = Cdb->ATA_PASSTHROUGH16.Features15_8;
+            TaskFile->SectorCountEx = Cdb->ATA_PASSTHROUGH16.SectorCount15_8;
+            TaskFile->LowLbaEx      = Cdb->ATA_PASSTHROUGH16.LbaLow15_8;
+            TaskFile->MidLbaEx      = Cdb->ATA_PASSTHROUGH16.LbaMid15_8;
+            TaskFile->HighLbaEx     = Cdb->ATA_PASSTHROUGH16.LbaHigh15_8;
 
             Request->Flags |= REQUEST_FLAG_LBA48;
         }
@@ -1838,9 +1855,7 @@ AtaReqScsiAtaPassThrough(
 
     /* We can set the unique queue tag only after having the slot allocation done */
     if (Request->Flags & REQUEST_FLAG_NCQ)
-    {
         TaskFile->SectorCount &= ~0xF8;
-    }
 
     /* Set the master/slave bit to the correct value */
     TaskFile->DriveSelect &= ~IDE_DRIVE_SELECT_SLAVE;
@@ -1876,6 +1891,9 @@ AtaReqExecuteScsiAta(
 
         case SCSIOP_TEST_UNIT_READY:
             return AtaReqScsiTestUnitReady(DevExt, Request, Srb);
+
+        case SCSIOP_START_STOP_UNIT:
+            return AtaReqScsiStartStopUnit(DevExt, Request, Srb);
 
         case SCSIOP_REQUEST_SENSE:
             return AtaReqScsiRequestSense(DevExt, Request, Srb);

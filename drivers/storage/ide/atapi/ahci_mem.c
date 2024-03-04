@@ -133,12 +133,12 @@ AtaAhciPortAllocateMemory(
         ASSERT((ULONG)(PortData->Ahci.ReceivedFisPhys >> 32) == 0);
     }
 
-    INFO("Command List PA %llx VA %p\n",
-         PortData->Ahci.CommandListPhys, PortData->Ahci.CommandList);
-    INFO("Received FIS PA %llx VA %p\n",
-         PortData->Ahci.ReceivedFisPhys, PortData->Ahci.ReceivedFis);
-    INFO("Local buffer PA %llx VA %p\n",
-         PortData->Ahci.LocalSgList.Elements[0].Address.QuadPart, PortInfo->LocalBuffer);
+    //TRACE("Command List PA %llx VA %p\n",
+    //      PortData->Ahci.CommandListPhys, PortData->Ahci.CommandList);
+    //TRACE("Received FIS PA %llx VA %p\n",
+    //      PortData->Ahci.ReceivedFisPhys, PortData->Ahci.ReceivedFis);
+    //TRACE("Local buffer PA %llx VA %p\n",
+    //      PortData->Ahci.LocalSgList.Elements[0].Address.QuadPart, PortInfo->LocalBuffer);
     INFO("Allocated %lu PRD pages\n", ChanExt->MapRegisterCount);
 
     CommandTableLength = FIELD_OFFSET(AHCI_COMMAND_TABLE, PrdTable[ChanExt->MapRegisterCount]);

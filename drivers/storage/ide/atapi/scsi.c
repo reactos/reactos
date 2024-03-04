@@ -69,6 +69,44 @@ AtaSrbStatusToNtStatus(
 
 static
 VOID
+AtaDeviceCheckPowerState(
+    _In_ PATAPORT_IO_CONTEXT Device)
+{
+    PATAPORT_DEVICE_EXTENSION DevExt;
+    NTSTATUS Status;
+    POWER_STATE PowerState;
+
+   /*
+    * The device might have been powered down as a part of an idle detection logic,
+    * so we have to power up the device again.
+    */
+    if (!(Device->QueueFlags & QUEUE_FLAG_FROZEN_POWER))
+        return;
+
+    DevExt = CONTAINING_RECORD(Device, ATAPORT_DEVICE_EXTENSION, Device);
+    if (DevExt->Common.DevicePowerState == PowerDeviceD0)
+        return;
+
+    if (DevExt->Common.SystemPowerState != PowerSystemWorking)
+        return;
+
+    INFO("Powering up idle device\n");
+
+    PowerState.DeviceState = PowerDeviceD0;
+    Status = PoRequestPowerIrp(DevExt->Common.Self,
+                               IRP_MN_SET_POWER,
+                               PowerState,
+                               NULL,
+                               NULL,
+                               NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to power up device '%s' %lx\n", DevExt->FriendlyName, Status);
+    }
+}
+
+static
+VOID
 AtaDeviceQueueEmptyEvent(
     _In_ PATAPORT_IO_CONTEXT Device)
 {
@@ -1132,6 +1170,8 @@ AtaReqDeviceQueueAddSrb(
 
     AtaReqDeviceQueueInsertSrb(Device, Srb, Irp);
 
+    AtaDeviceCheckPowerState(Device);
+
     /*
      * If the device queue is full or frozen,
      * the requests may take a long period of time to process,
@@ -1346,6 +1386,9 @@ AtaReqThawQueue(
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     KeAcquireSpinLockAtDpcLevel(&Device->QueueLock);
+
+    if (Device->FreeRequestsBitmap != Device->MaxRequestsBitmap)
+        AtaDeviceCheckPowerState(Device);
 
     PortData = Device->PortData;
     KeAcquireSpinLockAtDpcLevel(&PortData->QueueLock);

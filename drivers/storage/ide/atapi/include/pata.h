@@ -213,6 +213,9 @@ ATA_WAIT_FOR_IDLE(
         *IdeStatus = ATA_READ(Registers->Status);
         if (!(*IdeStatus & (IDE_STATUS_DRQ | IDE_STATUS_BUSY)))
             return TRUE;
+
+        if (*IdeStatus == 0xFF)
+            break;
     }
 
     return FALSE;

@@ -25,12 +25,11 @@ AtaPdoStartDevice(
         AtaPdoWmiRegistration(DevExt, TRUE);
 
         /* Use the standard power policy for mass storage devices */
-#if 0 // TODO
         DevExt->Device.PowerIdleCounter = PoRegisterDeviceForIdleDetection(DevExt->Common.Self,
                                                                            (ULONG)-1,
                                                                            (ULONG)-1,
                                                                            PowerDeviceD3);
-#endif
+
         /* Update the type of device connected to the SATA port */
         if (IS_AHCI(&DevExt->Device))
         {
@@ -61,7 +60,6 @@ AtaPdoStartDevice(
     }
 
     AtaReqThawQueue(DevExt, QUEUE_FLAG_FROZEN_PNP);
-
     return STATUS_SUCCESS;
 }
 
@@ -164,7 +162,7 @@ AtaPdoQueryPnpDeviceState(
 
 NTSTATUS
 NTAPI
-AtaPdoCompletion(
+AtaPdoCompletionRoutine(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
     _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
@@ -213,7 +211,7 @@ AtaPdoRepeatRequest(
         SubStack->Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
 
     IoSetCompletionRoutine(SubIrp,
-                           AtaPdoCompletion,
+                           AtaPdoCompletionRoutine,
                            &Event,
                            TRUE,
                            TRUE,
@@ -580,7 +578,7 @@ AtaPdoQueryId(
         {
             ATA_SCSI_ADDRESS AtaScsiAddress;
 
-            /* Use the 'Path.Target.Lun' format as a fallback */
+            /* 'Path.Larget.Lun' */
             CharCount = sizeof("FF.FF.FF");
 
             Buffer = ExAllocatePoolUninitialized(PagedPool,
@@ -882,11 +880,11 @@ AtaPdoCreateDevice(
     RtlZeroMemory(DevExt, sizeof(*DevExt));
     DevExt->Common.Self = Pdo;
     DevExt->Common.Flags = ChanExt->Common.Flags & ~DO_IS_FDO;
+    DevExt->Common.DevicePowerState = PowerDeviceD0;
+    DevExt->Common.SystemPowerState = PowerSystemWorking;
     DevExt->Device.ChanExt = ChanExt;
     DevExt->Device.SectorSize = ATA_MIN_SECTOR_SIZE;
     DevExt->TransferModeAllowedMask = MAXULONG;
-    DevExt->Common.DevicePowerState = PowerDeviceD0;
-    DevExt->Common.SystemPowerState = PowerSystemWorking;
 
     if (IS_AHCI_EXT(ChanExt))
     {

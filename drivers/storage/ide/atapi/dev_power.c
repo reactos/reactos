@@ -66,13 +66,14 @@ AtaDeviceGetFlushCacheCommand(
 
     if (!IS_ATAPI(&DevExt->Device))
     {
-        if (AtaDevHasFlushCache(&DevExt->IdentifyDeviceData))
-            Command = IDE_COMMAND_FLUSH_CACHE;
-
         if ((DevExt->Device.DeviceFlags & DEVICE_LBA48) &&
             AtaDevHasFlushCacheExt(&DevExt->IdentifyDeviceData))
         {
             Command = IDE_COMMAND_FLUSH_CACHE_EXT;
+        }
+        else if (AtaDevHasFlushCache(&DevExt->IdentifyDeviceData))
+        {
+            Command = IDE_COMMAND_FLUSH_CACHE;
         }
     }
 
@@ -119,6 +120,7 @@ AtaDeviceHandleSetStandbyMode(
 
     Request->Flags = 0;
     Request->TimeOut = 20;
+
     Request->TaskFile.Command = IDE_COMMAND_STANDBY_IMMEDIATE;
     AtaFsmIssueCommand(Context);
     AtaFsmSetLocalState(Context, PWR_STATE_COMPLETE_IRP);

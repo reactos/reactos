@@ -373,7 +373,7 @@ AtaAhciPortHandleInterrupt(
     /* Handle various errors and link change events */
     if (InterruptStatus & AHCI_PXIRQ_PORT_STATUS)
     {
-        AtaAhciHandlePortChange(PortData, InterruptStatus);
+        AtaAhciHandlePortStateChange(PortData, InterruptStatus);
     }
 
     if (InterruptStatus & AHCI_PXIRQ_FATAL_ERROR)

@@ -882,7 +882,7 @@ AtaPciIdeDmaInit(
     return;
 
 FallbackToPio:
-    INFO("DMA is not supported\n");
+    INFO("No DMA support\n");
     ChanExt->Flags |= CHANNEL_PIO_ONLY;
 }
 

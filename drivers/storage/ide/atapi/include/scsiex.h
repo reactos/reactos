@@ -84,116 +84,11 @@ typedef struct _MODE_CONTROL_EXTENSION_PAGE
 
 C_ASSERT(sizeof(MODE_CONTROL_EXTENSION_PAGE) == 32);
 
-typedef struct _ATA_PASSTHROUGH12
-{
-    UCHAR OperationCode;
-    UCHAR Reserved1:1;
-    UCHAR Protocol:4;
-    UCHAR MultipleCount:3;
-    UCHAR TLength:2;
-    UCHAR ByteBlock:1;
-    UCHAR TDir:1;
-    UCHAR TType:1;
-    UCHAR CkCond:1;
-    UCHAR Offline:2;
-    UCHAR Features;
-    UCHAR Count;
-    UCHAR LowLba;  // 0-7
-    UCHAR MidLba;  // 8-15
-    UCHAR HighLba; // 16-23
-    UCHAR Device;
-    UCHAR Command;
-    UCHAR Reserved2;
-    UCHAR Control;
-} ATA_PASSTHROUGH12, *PATA_PASSTHROUGH12;
-
-C_ASSERT(sizeof(ATA_PASSTHROUGH12) == 12);
-
-typedef struct _ATA_PASSTHROUGH16
-{
-    UCHAR OperationCode;
-    UCHAR Extend:1;
-    UCHAR Protocol:4;
-    UCHAR MultipleCount:3;
-    UCHAR TLength:2;
-    UCHAR ByteBlock:1;
-    UCHAR TDir:1;
-    UCHAR TType:1;
-    UCHAR CkCond:1;
-    UCHAR Offline:2;
-    UCHAR FeaturesEx;
-    UCHAR Features;
-    UCHAR CountEx;
-    UCHAR Count;
-    UCHAR LowLbaEx;  // 24-31
-    UCHAR LowLba;    // 0-7
-    UCHAR MidLbaEx;  // 32-39
-    UCHAR MidLba;    // 8-15
-    UCHAR HighLbaEx; // 40-47
-    UCHAR HighLba;   // 16-23
-    UCHAR Device;
-    UCHAR Command;
-    UCHAR Control;
-} ATA_PASSTHROUGH16, *PATA_PASSTHROUGH16;
-
-C_ASSERT(sizeof(ATA_PASSTHROUGH16) == 16);
-
-typedef struct _ATA_PASSTHROUGH32
-{
-    UCHAR OperationCode;
-    UCHAR Control;
-    UCHAR Reserved[4];
-    UCHAR AdditionalCDBLength;
-    UCHAR ServiceAction[2];
-    UCHAR Extend:1;
-    UCHAR Protocol:4;
-    UCHAR MultipleCount:3;
-    UCHAR TLength:2;
-    UCHAR ByteBlock:1;
-    UCHAR TDir:1;
-    UCHAR TType:1;
-    UCHAR CkCond:1;
-    UCHAR Offline:2;
-    UCHAR Reserved1;
-    UCHAR Reserved2;
-    UCHAR HighLbaEx; // 40-47
-    UCHAR MidLbaEx;  // 32-39
-    UCHAR LowLbaEx;  // 24-31
-    UCHAR HighLba;   // 16-23
-    UCHAR LbaMid;    // 8-15
-    UCHAR LowLba;    // 0-7
-    UCHAR FeaturesEx;
-    UCHAR Features;
-    UCHAR CountEx;
-    UCHAR Count;
-    UCHAR Device;
-    UCHAR Command;
-    UCHAR Reserved3;
-    UCHAR Icc;
-    UCHAR Auxiliary[4];
-} ATA_PASSTHROUGH32, *PATA_PASSTHROUGH32;
-
-C_ASSERT(sizeof(ATA_PASSTHROUGH32) == 31);
-
 #include <poppack.h>
 
-#define ATA_PASSTHROUGH_PROTOCOL_HARDWARE_RESET      0x0
-#define ATA_PASSTHROUGH_PROTOCOL_SOFTWARE_RESET      0x1
-#define ATA_PASSTHROUGH_PROTOCOL_NON_DATA            0x3
-#define ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_IN         0x4
-#define ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_OUT        0x5
-#define ATA_PASSTHROUGH_PROTOCOL_DMA                 0x6
-#define ATA_PASSTHROUGH_PROTOCOL_DEVICE_DIAG         0x8
-#define ATA_PASSTHROUGH_PROTOCOL_DEVICE_RESET        0x9
-#define ATA_PASSTHROUGH_PROTOCOL_UDMA_DATA_IN        0xA
-#define ATA_PASSTHROUGH_PROTOCOL_UDMA_DATA_OUT       0xB
-#define ATA_PASSTHROUGH_PROTOCOL_NCQ                 0xC
-#define ATA_PASSTHROUGH_PROTOCOL_RETURN_RESPONSE     0xF
-
-#define SCSI_SENSEQ_ATA_PASS_THROUGH_INFORMATION_AVAILABLE  0x1D
 #define SCSI_ADSENSE_ADDRESS_MARK_NOT_FOUND_FOR_DATA_FIELD  0x13
 
-/* SAT-5 */
+/* SAT-6 */
 C_ASSERT(sizeof(MODE_INFO_EXCEPTIONS) == 12);
 C_ASSERT(sizeof(MODE_CONTROL_PAGE) == 12);
 C_ASSERT(sizeof(MODE_READ_WRITE_RECOVERY_PAGE) == 12);

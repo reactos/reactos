@@ -85,6 +85,8 @@ AtaFsmRemoveDevices(
 {
     ATA_SCSI_ADDRESS AtaScsiAddress;
 
+    INFO("PORT %lu: Remove targets 0x%lx\n", PortData->PortNumber, TargetBitmap);
+
     AtaScsiAddress.AsULONG = 0;
     AtaScsiAddress.PathId = PortData->PortNumber;
     while (TRUE)
@@ -107,6 +109,15 @@ AtaFsmCompletePortEnumEvent(
 {
     ULONG TargetDiff, TargetsToRemove;
 
+    PortData->InterruptFlags &= ~PORT_INT_FLAG_IGNORE_LINK_IRQ;
+
+    TargetBitmap &= ~PortData->Worker.BadTargetBitmap;
+
+    INFO("PORT %lu: Port enumeration results 0x%lx --> 0x%lx\n",
+         PortData->PortNumber,
+         PortData->Worker.TargetBitmap,
+         TargetBitmap);
+
     TargetDiff = TargetBitmap ^ PortData->Worker.TargetBitmap;
     TargetsToRemove = TargetDiff & PortData->Worker.TargetBitmap;
 
@@ -118,12 +129,14 @@ AtaFsmCompletePortEnumEvent(
         AtaAhciEnableInterrupts(PortData);
     }
 
-    // TODO check pmp change
-
     if (TargetsToRemove != 0)
         AtaFsmRemoveDevices(PortData, TargetsToRemove);
 
-    if (TargetDiff != 0)
+    /*
+     * Request a QBR for *new* devices only. We check removed devices before exiting.
+     * This will avoid the situation where QBR is requested for PDO-less removed targets.
+     */
+    if ((PortData->Worker.TargetBitmap & TargetDiff) != 0)
         PortData->Worker.Flags |= WORKER_FLAG_NEED_RESCAN;
 
     if (TargetBitmap == 0)
@@ -134,6 +147,8 @@ AtaFsmCompletePortEnumEvent(
     AtaFsmSetState(&PortData->Worker, PORT_STATE_PULL_EVENT);
 
     _InterlockedExchange(&PortData->Worker.TargetBitmap, TargetBitmap);
+
+    PortData->Worker.TargetResetRetryCount = 0;
 
     /* Complete the action and defer the PortData->Worker.EnumerationEvent */
     AtaFsmClearPortAction(&PortData->Worker, ACTION_ENUM_PORT);
@@ -150,11 +165,6 @@ AtaFsmCompleteDeviceEnumEvent(
     if ((Status != DEV_STATUS_SAME_DEVICE) && !(DevExt->Device.DeviceFlags & DEVICE_UNINITIALIZED))
     {
         DevExt->Worker.Flags |= DEV_WORKER_FLAG_REMOVED;
-
-        if (!(DevExt->Worker.EventsPending & ACTION_ENUM_DEVICE_EXT))
-        {
-            Context->Flags |= WORKER_FLAG_NEED_RESCAN;
-        }
     }
 
     _InterlockedExchange(&DevExt->Worker.EnumStatus, Status);
@@ -166,6 +176,8 @@ AtaFsmCompleteDeviceEnumEvent(
 
         KeSetEvent(&DevExt->Worker.EnumerationEvent, 0, FALSE);
     }
+
+    Context->TargetResetRetryCount = 0;
 
     AtaFsmSetState(Context, PORT_STATE_PULL_EVENT);
 }
@@ -187,6 +199,8 @@ AtaFsmCompleteDeviceConfigEvent(
     {
         KeSetEvent(&DevExt->Worker.ConfigureEvent, 0, FALSE);
     }
+
+    Context->TargetResetRetryCount = 0;
 
     AtaFsmSetState(Context, PORT_STATE_PULL_EVENT);
 }
@@ -210,16 +224,23 @@ AtaFsmResetPort(
 
     INFO("PORT %lu: Call reset\n", PortData->PortNumber);
 
-    if (++PortData->Worker.ResetRetryCount > PORT_MAX_RESET_RETRY_COUNT)
+    if (++PortData->Worker.PortResetRetryCount > PORT_MAX_RESET_RETRY_COUNT)
     {
-        ERR("PORT %lu: Too many reset attempts\n", PortData->PortNumber);
+        ERR("PORT %lu: Too many port reset attempts, giving up\n", PortData->PortNumber);
         AtaFsmCompletePortEnumEvent(PortData, 0);
         return;
     }
 
-    if (TargetId != (ULONG)-1)
+    if ((TargetId != (ULONG)-1) &&
+        (++PortData->Worker.TargetResetRetryCount > TARGET_MAX_RESET_RETRY_COUNT))
     {
-        // TODO
+        ERR("PORT %lu: Too many reset attempts for the target %lu, giving up\n",
+            PortData->PortNumber,
+            TargetId);
+
+        /* Ignore bad or incompatible devices, so we do not access them at all */
+        PortData->Worker.BadTargetBitmap |= 1 << TargetId;
+        PortData->Worker.TargetResetRetryCount = 0;
     }
 
     /*
@@ -266,6 +287,26 @@ AtaFsmResetPort(
 
 static
 VOID
+AtaFsmHandleEventDevicePower(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    PATAPORT_DEVICE_EXTENSION DevExt;
+
+    DevExt = AtaFsmFindDeviceForAction(PortData, ACTION_DEVICE_POWER);
+    PortData->Worker.DevExt = DevExt;
+    if (!DevExt)
+    {
+        AtaFsmSetState(&PortData->Worker, PORT_STATE_PULL_EVENT);
+    }
+    else
+    {
+        AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_POWER);
+        AtaFsmSetLocalState(&PortData->Worker, PWR_STATE_ENTER);
+    }
+}
+
+static
+VOID
 AtaFsmHandleEventEnumPort(
     _In_ PATAPORT_PORT_DATA PortData)
 {
@@ -284,6 +325,56 @@ AtaFsmHandleEventEnumPort(
         AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_PATA);
         AtaFsmSetLocalState(&PortData->Worker, PATA_STATE_PORT_ENUM);
     }
+}
+
+static
+BOOLEAN
+AtaFsmCheckDevicePowerState(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt)
+{
+    NTSTATUS Status;
+    POWER_STATE PowerState;
+
+    if (DevExt->Common.DevicePowerState == PowerDeviceD0)
+        return TRUE;
+
+    if (PortData->Worker.EventsPending & ACTION_DEVICE_POWER)
+    {
+        AtaFsmHandleEventDevicePower(PortData);
+        return FALSE;
+    }
+
+    INFO("Powering up idle device\n");
+
+    PowerState.DeviceState = PowerDeviceD0;
+    Status = PoRequestPowerIrp(DevExt->Common.Self,
+                               IRP_MN_SET_POWER,
+                               PowerState,
+                               NULL,
+                               NULL,
+                               NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to power up device '%s' %lx\n", DevExt->FriendlyName, Status);
+
+        /*
+         * If the power on device has failed, the next command can still work.
+         * The media access will result in a transition from the PM1:Idle/PM2:Standby state
+         * to the PM0:Active state by the ATA spec.
+         */
+        return TRUE;
+    }
+
+    if (PortData->Worker.EventsPending & ACTION_DEVICE_POWER)
+    {
+        AtaFsmHandleEventDevicePower(PortData);
+        return FALSE;
+    }
+
+    /* Wait for a D-IRP */
+    AtaFsmRequestTimer(&PortData->Worker);
+    return FALSE;
 }
 
 static
@@ -312,10 +403,13 @@ AtaFsmHandleEventEnumDevice(
 
     if (DevExt)
     {
-        PortData->Worker.IdentifyAttempt = 0;
+        if (AtaFsmCheckDevicePowerState(PortData, DevExt))
+        {
+            PortData->Worker.IdentifyAttempt = 0;
 
-        AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_ID);
-        AtaFsmSetLocalState(&PortData->Worker, PORT_STATE_ID_IDENTIFY);
+            AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_ID);
+            AtaFsmSetLocalState(&PortData->Worker, PORT_STATE_ID_IDENTIFY);
+        }
     }
     else
     {
@@ -357,8 +451,11 @@ AtaFsmHandleEventDeviceConfig(
     }
     else
     {
-        AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_CONFIG);
-        AtaFsmSetLocalState(&PortData->Worker, CFG_STATE_ENTER);
+        if (AtaFsmCheckDevicePowerState(PortData, DevExt))
+        {
+            AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_CONFIG);
+            AtaFsmSetLocalState(&PortData->Worker, CFG_STATE_ENTER);
+        }
     }
 }
 
@@ -378,32 +475,13 @@ AtaFsmHandleEventDeviceTiming(
 
 static
 VOID
-AtaFsmHandleEventDevicePower(
-    _In_ PATAPORT_PORT_DATA PortData)
-{
-    PATAPORT_DEVICE_EXTENSION DevExt;
-
-    DevExt = AtaFsmFindDeviceForAction(PortData, ACTION_DEVICE_POWER);
-    PortData->Worker.DevExt = DevExt;
-    if (!DevExt)
-    {
-        AtaFsmSetState(&PortData->Worker, PORT_STATE_PULL_EVENT);
-    }
-    else
-    {
-        AtaFsmSetState(&PortData->Worker, PORT_STATE_PROCESS_POWER);
-        AtaFsmSetLocalState(&PortData->Worker, PWR_STATE_ENTER);
-    }
-}
-
-static
-VOID
 AtaPortHandleEnterStateMachine(
     _In_ PATAPORT_PORT_DATA PortData)
 {
     ATA_SCSI_ADDRESS AtaScsiAddress;
 
-    PortData->Worker.ResetRetryCount = 0;
+    PortData->Worker.PortResetRetryCount = 0;
+    PortData->Worker.TargetResetRetryCount = 0;
     PortData->Worker.BadTargetBitmap = 0;
 #if DBG
     PortData->Worker.StateLoopCount = 0;
@@ -472,7 +550,7 @@ AtaPortHandlePullEvent(
 {
     KIRQL OldIrql;
     ATA_SCSI_ADDRESS AtaScsiAddress;
-    BOOLEAN NeedRescan;
+    BOOLEAN NeedRescan = FALSE;
     ULONG i, EventIndex;
 
     if (PortData->Worker.EventsPending == 0)
@@ -495,6 +573,8 @@ AtaPortHandlePullEvent(
                 continue;
 
             KeAcquireSpinLockAtDpcLevel(&PortData->ChanExt->PdoListLock);
+            if (!DevExt->RemovalPending)
+                NeedRescan = TRUE;
             DevExt->RemovalPending = TRUE;
             KeReleaseSpinLockFromDpcLevel(&PortData->ChanExt->PdoListLock);
 
@@ -509,7 +589,7 @@ AtaPortHandlePullEvent(
         if (PortData->Worker.Flags & WORKER_FLAG_DEFER_ENUM_PORT_COMPLETE)
         {
             /* We defer this event to avoid a costly BusRelations request */
-            PortData->Worker.Flags &= ~WORKER_FLAG_NEED_RESCAN;
+            NeedRescan = FALSE;
 
             KeSetEvent(&PortData->Worker.EnumerationEvent, 0, FALSE);
         }
@@ -557,7 +637,7 @@ AtaPortHandlePullEvent(
     }
 
     /* Resume port I/O */
-    PortData->InterruptFlags &= ~(PORT_INT_FLAG_IS_DPC_ACTIVE | PORT_INT_FLAG_IGNORE_LINK_IRQ);
+    PortData->InterruptFlags &= ~PORT_INT_FLAG_IS_DPC_ACTIVE;
     PortData->InterruptFlags |= PORT_INT_FLAG_IS_IO_ACTIVE;
 
     /* Requeue saved commands */
@@ -576,8 +656,6 @@ AtaPortHandlePullEvent(
         Request->InternalState = REQUEST_STATE_REQUEUE;
         AtaReqStartCompletionDpc(Request);
     }
-
-    NeedRescan = !!(PortData->Worker.Flags & WORKER_FLAG_NEED_RESCAN);
 
     /* All device events handled */
     PortData->Worker.Flags = WORKER_FLAG_DISABLE_FSM;
@@ -792,7 +870,7 @@ AtaPortCompleteInternalRequest(
         (Request->SrbStatus == SRB_STATUS_BUS_RESET))
     {
         ERR("Internal request failed %u\n", Request->SrbStatus);
-        AtaFsmResetPort(PortData, (ULONG)-1);
+        AtaFsmResetPort(PortData, Request->Device->AtaScsiAddress.TargetId);
     }
 
     PortData->Worker.Flags &= ~WORKER_FLAG_DISABLE_FSM;
@@ -940,7 +1018,9 @@ AtaPortTimeout(
 
     if (IS_AHCI_EXT(PortData->ChanExt))
     {
-
+#if DBG
+        AhciDumpPortRegisters(PortData->Ahci.IoBase);
+#endif
     }
     else
     {

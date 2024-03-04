@@ -231,6 +231,23 @@ AtaDeviceLockSecurityModeFeatureCommands(
         Request->TaskFile.Command = IDE_COMMAND_SECURITY_FREEZE_LOCK;
         AtaFsmIssueCommand(Context);
     }
+    AtaFsmSetLocalState(Context, CFG_STATE_LOCK_PARAMETERS);
+}
+
+static
+VOID
+AtaDeviceLockDeviceParameters(
+    _In_ PATA_WORKER_CONTEXT Context,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PATA_DEVICE_REQUEST Request)
+{
+    Request->Flags = 0;
+    Request->TimeOut = 3;
+
+    RtlZeroMemory(&Request->TaskFile, sizeof(Request->TaskFile));
+    Request->TaskFile.Command = IDE_COMMAND_SET_FEATURE;
+    Request->TaskFile.Feature = IDE_FEATURE_DISABLE_REVERT_TO_POWER_ON;
+    AtaFsmIssueCommand(Context);
     AtaFsmSetLocalState(Context, CFG_STATE_ENABLE_MSN);
 }
 
@@ -333,6 +350,9 @@ AtaDeviceConfigRunStateMachine(
             break;
         case CFG_STATE_LOCK_SECURITY:
             AtaDeviceLockSecurityModeFeatureCommands(Context, DevExt, Request);
+            break;
+        case CFG_STATE_LOCK_PARAMETERS:
+            AtaDeviceLockDeviceParameters(Context, DevExt, Request);
             break;
         case CFG_STATE_ENABLE_MSN:
             AtaDeviceEnableMsnFeature(Context, DevExt, Request);

@@ -61,7 +61,7 @@ AtaAcpiEvaluateObject(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     IoSetCompletionRoutine(Irp,
-                           AtaPdoCompletion,
+                           AtaPdoCompletionRoutine,
                            &Event,
                            TRUE,
                            TRUE,

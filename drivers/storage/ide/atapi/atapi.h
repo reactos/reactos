@@ -23,7 +23,7 @@
 #include <ntddscsi.h>
 #include <ntdddisk.h>
 
-#include <pseh/pseh2.h>
+#include <sptilib.h>
 #include <section_attribs.h>
 #include <debug/driverdbg.h>
 #include <reactos/drivers/ntddata.h>
@@ -244,8 +244,10 @@ typedef struct _ATAPORT_IO_CONTEXT
     (((Device)->DeviceFlags & DEVICE_IS_ATAPI) != 0)
 
 /**
+ * @brief
  * The maximum length of identifier strings for ATA devices excluding the terminating NULL.
  *
+ * @sa
  * See MSDN note:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
  *
@@ -451,6 +453,7 @@ typedef struct _ATAPORT_CHANNEL_EXTENSION
     PKINTERRUPT InterruptObject;
     SLIST_HEADER CompletionQueueList;
     ULONG MaximumTransferLength;
+    ULONG MaximumPhysicalPages;
     ULONG AhciCapabilities;
     ULONG AhciCapabilitiesEx;
     ULONG MapRegisterCount;
@@ -722,7 +725,7 @@ AtaAhciSaveTaskFile(
     _In_ BOOLEAN ProcessErrorStatus);
 
 VOID
-AtaAhciHandlePortChange(
+AtaAhciHandlePortStateChange(
     _In_ PATAPORT_PORT_DATA PortData,
     _In_ ULONG InterruptStatus);
 
@@ -959,7 +962,7 @@ DRIVER_DISPATCH_RAISED AtaDispatchDeviceControl;
 
 /* pdo.c **********************************************************************/
 
-IO_COMPLETION_ROUTINE AtaPdoCompletion;
+IO_COMPLETION_ROUTINE AtaPdoCompletionRoutine;
 
 _Dispatch_type_(IRP_MJ_PNP)
 CODE_SEG("PAGE")

@@ -11,11 +11,11 @@
 
 /* GLOBALS ********************************************************************/
 
-#define AtaVerifyInBuffer(Stack, Struct) \
-    ((Stack)->Parameters.DeviceIoControl.InputBufferLength >= sizeof(Struct))
+#define AtaVerifyInBuffer(IoStack, Length) \
+    ((IoStack)->Parameters.DeviceIoControl.InputBufferLength >= (Length))
 
-#define AtaVerifyOutBuffer(Stack, Struct) \
-    ((Stack)->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(Struct))
+#define AtaVerifyOutBuffer(IoStack, Length) \
+    ((IoStack)->Parameters.DeviceIoControl.OutputBufferLength >= (Length))
 
 /* FUNCTIONS ******************************************************************/
 
@@ -28,23 +28,24 @@ AtaCheckPropertyQuery(
     _Out_ NTSTATUS* Status)
 {
     PSTORAGE_PROPERTY_QUERY PropertyQuery = Irp->AssociatedIrp.SystemBuffer;
+    PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader;
     PIO_STACK_LOCATION IoStack;
 
     PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (!AtaVerifyInBuffer(IoStack, sizeof(*PropertyQuery)))
+    {
+        *Status = STATUS_INVALID_PARAMETER;
+        return FALSE;
+    }
 
     /* Check the type of a property query */
     if (PropertyQuery->QueryType != PropertyStandardQuery &&
         PropertyQuery->QueryType != PropertyExistsQuery)
     {
         *Status = STATUS_NOT_SUPPORTED;
-        return FALSE;
-    }
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    if (!AtaVerifyOutBuffer(IoStack, STORAGE_DESCRIPTOR_HEADER))
-    {
-        *Status = STATUS_INFO_LENGTH_MISMATCH;
         return FALSE;
     }
 
@@ -55,11 +56,16 @@ AtaCheckPropertyQuery(
         return FALSE;
     }
 
-    /* Caller can determine required size based upon DescriptorHeader */
-    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < DescriptorSize)
+    if (!AtaVerifyOutBuffer(IoStack, sizeof(*DescriptorHeader)))
     {
-        PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)PropertyQuery;
+        *Status = STATUS_INFO_LENGTH_MISMATCH;
+        return FALSE;
+    }
 
+    /* Caller can determine required size based upon DescriptorHeader */
+    if (!AtaVerifyOutBuffer(IoStack, DescriptorSize))
+    {
+        DescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)PropertyQuery;
         DescriptorHeader->Version = DescriptorSize;
         DescriptorHeader->Size = DescriptorSize;
 
@@ -81,7 +87,6 @@ AtaPdoQueryStorageDeviceProperty(
 {
     PINQUIRYDATA InquiryData = &DevExt->InquiryData;
     PSTORAGE_DEVICE_DESCRIPTOR DeviceDescriptor;
-    PUCHAR Buffer;
     NTSTATUS Status;
     ULONG DescriptorSize, RawPropertiesLength, Length1, Length2, Length3;
 
@@ -105,7 +110,7 @@ AtaPdoQueryStorageDeviceProperty(
     DeviceDescriptor->DeviceType = InquiryData->DeviceType;
     DeviceDescriptor->DeviceTypeModifier = InquiryData->DeviceTypeModifier;
     DeviceDescriptor->RemovableMedia = InquiryData->RemovableMedia;
-    DeviceDescriptor->CommandQueueing = FALSE; /* Disable request tagging */
+    DeviceDescriptor->CommandQueueing = FALSE; // Disable request tagging
     DeviceDescriptor->BusType = IS_AHCI(&DevExt->Device) ? BusTypeSata : BusTypeAta;
 
     /* Property 1: The vendor ID. We return a NULL string here */
@@ -114,24 +119,21 @@ AtaPdoQueryStorageDeviceProperty(
     /* Property 2: The product ID */
     DeviceDescriptor->ProductIdOffset =
         FIELD_OFFSET(STORAGE_DEVICE_DESCRIPTOR, RawDeviceProperties);
-
-    Buffer = (PUCHAR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset);
-
-    RtlCopyMemory(Buffer, DevExt->FriendlyName, Length1);
-
-    Buffer += Length1;
+    RtlCopyMemory((PUCHAR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset),
+                  DevExt->FriendlyName,
+                  Length1);
 
     /* Property 3: The product revision */
     DeviceDescriptor->ProductRevisionOffset = DeviceDescriptor->ProductIdOffset + Length1;
-
-    RtlCopyMemory(Buffer, DevExt->RevisionNumber, Length2);
-
-    Buffer += Length2;
+    RtlCopyMemory((PUCHAR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductRevisionOffset),
+                  DevExt->RevisionNumber,
+                  Length2);
 
     /* Property 4: The serial number */
     DeviceDescriptor->SerialNumberOffset = DeviceDescriptor->ProductRevisionOffset + Length2;
-
-    RtlCopyMemory(Buffer, DevExt->SerialNumber, Length3);
+    RtlCopyMemory((PUCHAR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->SerialNumberOffset),
+                  DevExt->SerialNumber,
+                  Length3);
 
     Irp->IoStatus.Information = DescriptorSize;
     return STATUS_SUCCESS;
@@ -197,7 +199,7 @@ AtaPdoQueryStorageDeviceSeekPenaltyProperty(
     else if (AtaDevIsSsd(&DevExt->IdentifyDeviceData))
         IncursSeekPenalty = FALSE;
     else
-        return STATUS_UNSUCCESSFUL; /* Undetermined */
+        return STATUS_UNSUCCESSFUL; // Undetermined
 
     PenaltyDescriptor = Irp->AssociatedIrp.SystemBuffer;
     PenaltyDescriptor->Version = sizeof(*PenaltyDescriptor);
@@ -250,7 +252,7 @@ AtaPdoHandleStorageQueryProperty(
 
     PAGED_CODE();
 
-    if (!AtaVerifyInBuffer(IoStack, STORAGE_PROPERTY_QUERY))
+    if (!AtaVerifyInBuffer(IoStack, sizeof(*PropertyQuery)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -298,7 +300,7 @@ AtaPdoHandleGetScsiAddress(
 
     PAGED_CODE();
 
-    if (!AtaVerifyOutBuffer(IoStack, SCSI_ADDRESS))
+    if (!AtaVerifyOutBuffer(IoStack, sizeof(*ScsiAddress)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -351,9 +353,8 @@ AtaPdoSendHbaControl(
                                        &IoStatusBlock);
     if (!Irp)
     {
-        ExFreePoolWithTag(Srb, ATAPORT_TAG);
-
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
     }
 
     Srb->OriginalRequest = Irp;
@@ -382,8 +383,8 @@ AtaPdoSendHbaControl(
         Status = IoStatusBlock.Status;
     }
 
+Cleanup:
     ExFreePoolWithTag(Srb, ATAPORT_TAG);
-
     return Status;
 }
 
@@ -399,6 +400,7 @@ AtaPdoHandleStorageManageDataSetAttributes(
     PAGED_CODE();
 
     // TODO: Implement
+    ERR("Not implwmwnted\n");
     return Irp->IoStatus.Status;
 }
 
@@ -417,7 +419,7 @@ AtaPdoHandleScsiMiniport(
 
     PAGED_CODE();
 
-    if (!AtaVerifyInBuffer(IoStack, SRB_IO_CONTROL))
+    if (!AtaVerifyInBuffer(IoStack, sizeof(*SrbControl)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -426,7 +428,7 @@ AtaPdoHandleScsiMiniport(
     SrbControl = Irp->AssociatedIrp.SystemBuffer;
     if (SrbControl->HeaderLength != sizeof(*SrbControl))
     {
-        ERR("Unknown structure size %u\n", SrbControl->HeaderLength);
+        ERR("Unknown structure size %lu\n", SrbControl->HeaderLength);
         return STATUS_REVISION_MISMATCH;
     }
 
@@ -446,185 +448,11 @@ AtaPdoHandleScsiMiniport(
     }
 
     if (RtlEqualMemory(SrbControl->Signature, "SCSIDISK", sizeof("SCSIDISK") - 1))
-    {
         Status = AtaPdoSendHbaControl(DevExt, SrbControl, BufferSize);
-    }
     else
-    {
         Status = STATUS_INVALID_PARAMETER;
-    }
 
     return Status;
-}
-
-static
-CODE_SEG("PAGE")
-VOID
-AtaDestroySynchronousUserBufferIrp(
-    _In_opt_ __drv_freesMem(Mem) PIRP Irp,
-    _In_opt_ __drv_freesMem(Mem) PSCSI_REQUEST_BLOCK Srb)
-{
-    PAGED_CODE();
-
-    if (Srb)
-        ExFreePoolWithTag(Srb, ATAPORT_TAG);
-
-    if (Irp)
-    {
-        if (Irp->MdlAddress)
-        {
-            MmUnlockPages(Irp->MdlAddress);
-            IoFreeMdl(Irp->MdlAddress);
-        }
-        Irp->MdlAddress = NULL;
-        IoFreeIrp(Irp);
-    }
-}
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-AtaCreateSynchronousUserBufferIrp(
-    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
-    _In_ PVOID DataBuffer,
-    _In_ ULONG Length,
-    _In_ KPROCESSOR_MODE AccessMode,
-    _In_ BOOLEAN IsBufferReadAccess,
-    _In_ PKEVENT Event,
-    _In_ PIO_STATUS_BLOCK IoStatusBlock,
-    _Out_ PIRP* NewIrp,
-    _Out_ PSCSI_REQUEST_BLOCK* NewSrb)
-{
-    PSCSI_REQUEST_BLOCK Srb = NULL;
-    PIRP Irp = NULL;
-    PIO_STACK_LOCATION IoStack;
-
-    PAGED_CODE();
-
-    KeInitializeEvent(Event, NotificationEvent, FALSE);
-
-    Srb = ExAllocatePoolZero(NonPagedPool, sizeof(*Srb), ATAPORT_TAG);
-    if (!Srb)
-        goto Failure;
-
-    Irp = IoAllocateIrp(DevExt->Common.Self->StackSize, 0);
-    if (!Irp)
-        goto Failure;
-
-    if (DataBuffer)
-    {
-        if (!IoAllocateMdl(DataBuffer, Length, FALSE, FALSE, Irp))
-            goto Failure;
-        ASSERT(Irp->MdlAddress);
-
-        /* Lock the user buffer because PASSTHROUGH commands come from user mode */
-        _SEH2_TRY
-        {
-            MmProbeAndLockPages(Irp->MdlAddress,
-                                AccessMode,
-                                IsBufferReadAccess ? IoReadAccess : IoWriteAccess);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            _SEH2_YIELD(goto Failure);
-        }
-        _SEH2_END;
-    }
-
-    *NewIrp = Irp;
-    *NewSrb = Srb;
-
-    Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-    Srb->Length = sizeof(*Srb);
-    Srb->OriginalRequest = Irp;
-    Srb->DataBuffer = DataBuffer;
-    Srb->DataTransferLength = Length;
-
-    Srb->TargetId = DevExt->Device.AtaScsiAddress.TargetId;
-    Srb->Lun = DevExt->Device.AtaScsiAddress.Lun;
-    Srb->PathId = DevExt->Device.AtaScsiAddress.PathId;
-
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->UserIosb = IoStatusBlock;
-
-    IoStack = IoGetNextIrpStackLocation(Irp);
-    IoStack->MinorFunction = IRP_MN_SCSI_CLASS;
-    IoStack->MajorFunction = IRP_MJ_SCSI;
-    IoStack->Parameters.Scsi.Srb = Srb;
-
-    IoSetCompletionRoutine(Irp,
-                           AtaPdoCompletion,
-                           Event,
-                           TRUE,
-                           TRUE,
-                           TRUE);
-
-    return STATUS_SUCCESS;
-
-Failure:
-    ERR("Failed to create IRP\n");
-    AtaDestroySynchronousUserBufferIrp(Irp, Srb);
-
-    return STATUS_INSUFFICIENT_RESOURCES;
-}
-
-static
-CODE_SEG("PAGE")
-VOID
-AtaTranslateAtaPassthroughToCdb(
-    _Out_ ATA_PASSTHROUGH16* __restrict Cdb,
-    _In_ UCHAR* __restrict TaskFile,
-    _In_ USHORT AtaFlags)
-{
-    PAGED_CODE();
-
-    Cdb->OperationCode = SCSIOP_ATA_PASSTHROUGH16;
-
-    Cdb->Features = TaskFile[8 + 0];
-    Cdb->Count    = TaskFile[8 + 1];
-    Cdb->LowLba   = TaskFile[8 + 2];
-    Cdb->MidLba   = TaskFile[8 + 3];
-    Cdb->HighLba  = TaskFile[8 + 4];
-    Cdb->Device   = TaskFile[8 + 5];
-    Cdb->Command  = TaskFile[8 + 6];
-
-    if (AtaFlags & ATA_FLAGS_48BIT_COMMAND)
-    {
-        Cdb->FeaturesEx = TaskFile[0];
-        Cdb->CountEx    = TaskFile[1];
-        Cdb->LowLbaEx   = TaskFile[2];
-        Cdb->MidLbaEx   = TaskFile[3];
-        Cdb->HighLbaEx  = TaskFile[4];
-
-        Cdb->Extend = 1;
-    }
-
-    Cdb->CkCond = 1;
-
-    if (AtaFlags & ATA_FLAGS_DATA_IN)
-        Cdb->TDir = 1;
-
-    if (AtaFlags & (ATA_FLAGS_DATA_IN | ATA_FLAGS_DATA_OUT))
-        Cdb->TLength = 3;
-
-    if (AtaFlags & ATA_FLAGS_USE_DMA)
-    {
-        Cdb->Protocol = ATA_PASSTHROUGH_PROTOCOL_DMA;
-    }
-    else
-    {
-        if (AtaFlags & (ATA_FLAGS_DATA_IN | ATA_FLAGS_DATA_OUT))
-        {
-            if (AtaFlags & ATA_FLAGS_DATA_IN)
-                Cdb->Protocol = ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_IN;
-            else
-                Cdb->Protocol = ATA_PASSTHROUGH_PROTOCOL_PIO_DATA_OUT;
-        }
-        else
-        {
-            Cdb->Protocol = ATA_PASSTHROUGH_PROTOCOL_NON_DATA;
-        }
-    }
 }
 
 static
@@ -633,218 +461,18 @@ CODE_SEG("PAGE")
 NTSTATUS
 AtaPdoHandleAtaPassthrough(
     _In_ PATAPORT_DEVICE_EXTENSION DevExt,
-    _Inout_ PIRP Irp,
-    _In_ PIO_STACK_LOCATION IoStack,
-    _In_ BOOLEAN IsDirect)
+    _Inout_ PIRP Irp)
 {
-    PATA_PASS_THROUGH_EX Apt = Irp->AssociatedIrp.SystemBuffer;
-    union
-    {
-        PVOID Buffer;
-        ULONG_PTR BufferOffset;
-    } Data;
-    ULONG StructSize;
-    BOOLEAN IsNativeSize;
-    PUCHAR TaskFile;
-    NTSTATUS Status;
-    PVOID Buffer;
-    PSCSI_REQUEST_BLOCK Srb;
-    PDESCRIPTOR_SENSE_DATA SenseData;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIRP NewIrp;
+    ULONG MaximumTransferLength;
 
     PAGED_CODE();
 
-#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-    if (IoIs32bitProcess(Irp))
-    {
-        StructSize = sizeof(ATA_PASS_THROUGH_EX32);
-        TaskFile = (PVOID)((ULONG_PTR)Apt + FIELD_OFFSET(ATA_PASS_THROUGH_EX32, PreviousTaskFile));
-        IsNativeSize = FALSE;
-    }
-    else
-#endif
-    {
-        StructSize = sizeof(ATA_PASS_THROUGH_EX);
-        TaskFile = (PVOID)((ULONG_PTR)Apt + FIELD_OFFSET(ATA_PASS_THROUGH_EX, PreviousTaskFile));
-        IsNativeSize = TRUE;
-    }
+    MaximumTransferLength = DevExt->Device.ChanExt->MaximumTransferLength;
 
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < StructSize)
-    {
-        ERR("Buffer too small\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    if (Apt->Length != StructSize)
-    {
-        ERR("Unknown structure size %lu\n", StructSize);
-        return STATUS_REVISION_MISMATCH;
-    }
-
-    /* Retrieve the data buffer or the data buffer offset */
-    Data.Buffer = NULL;
-    RtlCopyMemory(&Data.Buffer,
-                  (PVOID)((ULONG_PTR)Apt + FIELD_OFFSET(ATA_PASS_THROUGH_EX, DataBufferOffset)),
-                  IsNativeSize ? sizeof(PVOID) : sizeof(ULONG32));
-
-    if ((Apt->AtaFlags & (ATA_FLAGS_DATA_IN | ATA_FLAGS_DATA_OUT)) &&
-        (Apt->DataTransferLength == 0))
-    {
-        ERR("Buffer too small\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    // TODO More checks
-
-    if (Apt->DataTransferLength & DevExt->Common.Self->AlignmentRequirement)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if (Apt->TimeOutValue == 0)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >
-        IoStack->Parameters.DeviceIoControl.InputBufferLength)
-    {
-        RtlZeroMemory((PVOID)((ULONG_PTR)Apt + IoStack->Parameters.DeviceIoControl.InputBufferLength),
-                      IoStack->Parameters.DeviceIoControl.OutputBufferLength -
-                      IoStack->Parameters.DeviceIoControl.InputBufferLength);
-    }
-
-    TRACE("APT: Prev %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-          Apt->PreviousTaskFile[0],
-          Apt->PreviousTaskFile[1],
-          Apt->PreviousTaskFile[2],
-          Apt->PreviousTaskFile[3],
-          Apt->PreviousTaskFile[4],
-          Apt->PreviousTaskFile[5],
-          Apt->PreviousTaskFile[6]);
-    TRACE("APT: Cur %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-          Apt->CurrentTaskFile[0],
-          Apt->CurrentTaskFile[1],
-          Apt->CurrentTaskFile[2],
-          Apt->CurrentTaskFile[3],
-          Apt->CurrentTaskFile[4],
-          Apt->CurrentTaskFile[5],
-          Apt->CurrentTaskFile[6]);
-
-    Srb = ExAllocatePoolZero(NonPagedPool, sizeof(*Srb), ATAPORT_TAG);
-    if (!Srb)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    if (Apt->DataTransferLength)
-    {
-        if (IsDirect)
-            Buffer = Data.Buffer;
-        else
-            Buffer = (PVOID)((ULONG_PTR)Apt + Data.BufferOffset);
-    }
-    else
-    {
-        Buffer = NULL;
-    }
-
-    Status = AtaCreateSynchronousUserBufferIrp(DevExt,
-                                               Buffer,
-                                               Apt->DataTransferLength,
-                                               IsDirect ? Irp->RequestorMode : KernelMode,
-                                               !!(Apt->AtaFlags & ATA_FLAGS_DATA_OUT),
-                                               &Event,
-                                               &IoStatusBlock,
-                                               &NewIrp,
-                                               &Srb);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    SenseData = ExAllocatePoolZero(NonPagedPool,
-                                   FIELD_OFFSET(DESCRIPTOR_SENSE_DATA, DescriptorBuffer) +
-                                   sizeof(SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN),
-                                   ATAPORT_TAG);
-    if (!SenseData)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Cleanup;
-    }
-
-    Srb->SenseInfoBuffer = SenseData;
-    Srb->SenseInfoBufferLength = FIELD_OFFSET(DESCRIPTOR_SENSE_DATA, DescriptorBuffer) +
-                                 sizeof(SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN);
-
-    Srb->TimeOutValue = Apt->TimeOutValue;
-    Srb->CdbLength = sizeof(ATA_PASSTHROUGH16);
-
-    AtaTranslateAtaPassthroughToCdb((PATA_PASSTHROUGH16)Srb->Cdb, TaskFile, Apt->AtaFlags);
-
-    Srb->SrbFlags = SRB_FLAGS_NO_QUEUE_FREEZE;
-    if (Apt->AtaFlags & ATA_FLAGS_DATA_IN)
-        Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
-    if (Apt->AtaFlags & ATA_FLAGS_DATA_OUT)
-        Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
-
-    Status = IoCallDriver(DevExt->Common.Self, NewIrp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    if (Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID)
-    {
-        if ((Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION) &&
-            (SenseData->SenseKey == SCSI_SENSE_RECOVERED_ERROR) &&
-            (SenseData->AdditionalSenseCode == SCSI_ADSENSE_NO_SENSE) &&
-            (SenseData->AdditionalSenseCodeQualifier ==
-             SCSI_SENSEQ_ATA_PASS_THROUGH_INFORMATION_AVAILABLE))
-        {
-            Status = STATUS_SUCCESS;
-        }
-
-        if (SenseData->ErrorCode == SCSI_SENSE_ERRORCODE_DESCRIPTOR_CURRENT)
-        {
-            PSCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN Descriptor;
-
-            Descriptor = (PSCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN)&SenseData->DescriptorBuffer[0];
-
-            if (Descriptor->Header.DescriptorType == SCSI_SENSE_DESCRIPTOR_TYPE_ATA_STATUS_RETURN)
-            {
-                TaskFile[8 + 0] = Descriptor->Error;
-                TaskFile[8 + 1] = Descriptor->SectorCount7_0;
-                TaskFile[8 + 2] = Descriptor->LbaLow7_0;
-                TaskFile[8 + 3] = Descriptor->LbaMid7_0;
-                TaskFile[8 + 4] = Descriptor->LbaHigh7_0;
-                TaskFile[8 + 5] = Descriptor->Device;
-                TaskFile[8 + 6] = Descriptor->Status;
-
-                if (Descriptor->Extend)
-                {
-                    TaskFile[1] = Descriptor->SectorCount15_8;
-                    TaskFile[2] = Descriptor->LbaLow15_8;
-                    TaskFile[3] = Descriptor->LbaMid15_8;
-                    TaskFile[4] = Descriptor->LbaHigh15_8;
-                }
-            }
-        }
-    }
-
-    Apt->DataTransferLength = Srb->DataTransferLength;
-
-    if (!IsDirect && (Srb->SrbFlags & SRB_FLAGS_DATA_IN) && (Data.BufferOffset != 0))
-        Irp->IoStatus.Information = Data.BufferOffset + Apt->DataTransferLength;
-    else
-        Irp->IoStatus.Information = Apt->Length;
-
-Cleanup:
-    if (SenseData)
-        ExFreePoolWithTag(SenseData, ATAPORT_TAG);
-
-    AtaDestroySynchronousUserBufferIrp(NewIrp, Srb);
-
-    return Status;
+    return SptiHandleAtaPassthru(DevExt->Common.Self,
+                                 Irp,
+                                 MaximumTransferLength,
+                                 BYTES_TO_PAGES(MaximumTransferLength)); // TODO: Fix calculation
 }
 
 static
@@ -854,145 +482,22 @@ NTSTATUS
 AtaPdoHandleScsiPassthrough(
     _In_ PATAPORT_DEVICE_EXTENSION DevExt,
     _Inout_ PIRP Irp,
-    _In_ PIO_STACK_LOCATION IoStack,
-    _In_ BOOLEAN IsDirect)
+    _In_ PIO_STACK_LOCATION IoStack)
 {
-    PSCSI_PASS_THROUGH Spt = Irp->AssociatedIrp.SystemBuffer;
-    union
-    {
-        PVOID Buffer;
-        ULONG_PTR BufferOffset;
-    } Data;
-    ULONG StructSize;
-    PULONG SenseInfoOff;
-    BOOLEAN IsNativeSize;
-    PVOID Cdb;
-    NTSTATUS Status;
-    PVOID Buffer;
-    PSCSI_REQUEST_BLOCK Srb;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIRP NewIrp;
+    ULONG MaximumTransferLength;
 
     PAGED_CODE();
 
-#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-    if (IoIs32bitProcess(Irp))
-    {
-        StructSize = sizeof(SCSI_PASS_THROUGH32);
-        SenseInfoOff = (PULONG)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH32, SenseInfoOffset));
-        Cdb = (PVOID)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH32, Cdb));
-        IsNativeSize = FALSE;
-    }
-    else
-#endif
-    {
-        StructSize = sizeof(SCSI_PASS_THROUGH);
-        SenseInfoOff = (PULONG)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH, SenseInfoOffset));
-        Cdb = (PVOID)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH, Cdb));
-        IsNativeSize = TRUE;
-    }
+    /* Skip requests that bypassed the class driver. See also cdrom!RequestHandleScsiPassThrough */
+    if ((IoStack->MinorFunction == 0) && DevExt->DeviceClaimed)
+        return STATUS_INVALID_DEVICE_REQUEST;
 
-    TRACE("SPT: CDB %02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-          Spt->Cdb[0],
-          Spt->Cdb[1],
-          Spt->Cdb[2],
-          Spt->Cdb[3],
-          Spt->Cdb[4],
-          Spt->Cdb[5],
-          Spt->Cdb[6]);
+    MaximumTransferLength = DevExt->Device.ChanExt->MaximumTransferLength;
 
-    /* Retrieve the data buffer or the data buffer offset */
-    Data.Buffer = NULL;
-    RtlCopyMemory(&Data.Buffer,
-                  (PVOID)((ULONG_PTR)Spt + FIELD_OFFSET(SCSI_PASS_THROUGH, DataBufferOffset)),
-                  IsNativeSize ? sizeof(PVOID) : sizeof(ULONG32));
-
-    if (Spt->DataTransferLength)
-    {
-        if (IsDirect)
-            Buffer = Data.Buffer;
-        else
-            Buffer = (PVOID)((ULONG_PTR)Spt + Data.BufferOffset);
-    }
-    else
-    {
-        Buffer = NULL;
-    }
-
-    // TODO More checks
-    (StructSize);
-
-    Status = AtaCreateSynchronousUserBufferIrp(DevExt,
-                                               Buffer,
-                                               Spt->DataTransferLength,
-                                               IsDirect ? Irp->RequestorMode : KernelMode,
-                                               !!(Spt->DataIn == SCSI_IOCTL_DATA_OUT),
-                                               &Event,
-                                               &IoStatusBlock,
-                                               &NewIrp,
-                                               &Srb);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    if (*SenseInfoOff != 0)
-    {
-        Srb->SenseInfoBuffer = (PVOID)((ULONG_PTR)Spt + *SenseInfoOff);
-        Srb->SenseInfoBufferLength = Spt->SenseInfoLength;
-    }
-
-    Srb->TimeOutValue = Spt->TimeOutValue;
-    Srb->CdbLength = Spt->CdbLength;
-
-    RtlCopyMemory(Srb->Cdb, Cdb, Srb->CdbLength);
-
-    Srb->SrbFlags = SRB_FLAGS_NO_QUEUE_FREEZE;
-    if (Spt->DataTransferLength != 0)
-    {
-        switch (Spt->DataIn)
-        {
-            case SCSI_IOCTL_DATA_IN:
-                Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
-                break;
-            case SCSI_IOCTL_DATA_OUT:
-                Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
-                break;
-            default: // SCSI_IOCTL_DATA_UNSPECIFIED
-                Srb->SrbFlags |= SRB_FLAGS_UNSPECIFIED_DIRECTION;
-                break;
-        }
-    }
-
-    Status = IoCallDriver(DevExt->Common.Self, NewIrp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    if (Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID)
-        Spt->SenseInfoLength = Srb->SenseInfoBufferLength;
-    else
-        Spt->SenseInfoLength = 0;
-
-    Spt->ScsiStatus = Srb->ScsiStatus;
-    Spt->DataTransferLength = Srb->DataTransferLength;
-
-    if (!IsDirect && (Srb->SrbFlags & SRB_FLAGS_DATA_IN) && (Data.BufferOffset != 0))
-    {
-        Irp->IoStatus.Information = Data.BufferOffset + Spt->DataTransferLength;
-    }
-    else
-    {
-        if (Spt->SenseInfoLength != 0)
-            Irp->IoStatus.Information = *SenseInfoOff + Spt->SenseInfoLength;
-        else
-            Irp->IoStatus.Information = Spt->Length;
-    }
-
-    AtaDestroySynchronousUserBufferIrp(NewIrp, Srb);
-
-    return Status;
+    return SptiHandleScsiPassthru(DevExt->Common.Self,
+                                  Irp,
+                                  MaximumTransferLength,
+                                  BYTES_TO_PAGES(MaximumTransferLength)); // TODO: Fix calculation
 }
 
 static
@@ -1003,7 +508,6 @@ AtaPdoDeviceControl(
 {
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
-    ULONG Ioctl;
     BOOLEAN ForwardToFdo = FALSE;
 
     Status = IoAcquireRemoveLock(&DevExt->Common.RemoveLock, Irp);
@@ -1017,8 +521,7 @@ AtaPdoDeviceControl(
     }
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Ioctl = IoStack->Parameters.DeviceIoControl.IoControlCode;
-    switch (Ioctl)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
             Status = AtaPdoHandleStorageQueryProperty(DevExt, Irp, IoStack, &ForwardToFdo);
@@ -1038,18 +541,12 @@ AtaPdoDeviceControl(
 
         case IOCTL_ATA_PASS_THROUGH:
         case IOCTL_ATA_PASS_THROUGH_DIRECT:
-            Status = AtaPdoHandleAtaPassthrough(DevExt,
-                                                Irp,
-                                                IoStack,
-                                                Ioctl == IOCTL_ATA_PASS_THROUGH_DIRECT);
+            Status = AtaPdoHandleAtaPassthrough(DevExt, Irp);
             break;
 
         case IOCTL_SCSI_PASS_THROUGH:
         case IOCTL_SCSI_PASS_THROUGH_DIRECT:
-            Status = AtaPdoHandleScsiPassthrough(DevExt,
-                                                 Irp,
-                                                 IoStack,
-                                                 Ioctl == IOCTL_SCSI_PASS_THROUGH_DIRECT);
+            Status = AtaPdoHandleScsiPassthrough(DevExt, Irp, IoStack);
             break;
 
         case IOCTL_SCSI_GET_CAPABILITIES:
@@ -1112,7 +609,7 @@ AtaFdoQueryStorageAdapterProperty(
     AdapterDescriptor->AlignmentMask = ChanExt->Common.Self->AlignmentRequirement;
     AdapterDescriptor->AdapterUsesPio = !!(ChanExt->Flags && CHANNEL_PIO_ONLY);
     AdapterDescriptor->AdapterScansDown = FALSE;
-    AdapterDescriptor->CommandQueueing = FALSE; /* Disable request tagging */
+    AdapterDescriptor->CommandQueueing = FALSE; // Disable request tagging
     AdapterDescriptor->AcceleratedTransfer = FALSE;
     AdapterDescriptor->BusType = IS_AHCI_EXT(ChanExt) ? BusTypeSata : BusTypeAta;
     AdapterDescriptor->BusMajorVersion = 1;
@@ -1135,12 +632,12 @@ AtaFdoHandleStorageQueryProperty(
     _In_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IoStack)
 {
-    NTSTATUS Status;
     PSTORAGE_PROPERTY_QUERY PropertyQuery;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
-    if (!AtaVerifyInBuffer(IoStack, STORAGE_PROPERTY_QUERY))
+    if (!AtaVerifyInBuffer(IoStack, sizeof(*PropertyQuery)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -1174,7 +671,7 @@ AtaFdoHandleGetScsiCapabilities(
 
     PAGED_CODE();
 
-    if (!AtaVerifyOutBuffer(IoStack, IO_SCSI_CAPABILITIES))
+    if (!AtaVerifyOutBuffer(IoStack, sizeof(*Capabilities)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -1227,7 +724,7 @@ AtaFdoHandleGetScsiInquiryData(
     TotalSize = sizeof(*ScsiAdapterBusInfo) + EntrySize * PdoCount;
     TRACE("Total size %lu\n", TotalSize);
 
-    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < TotalSize)
+    if (!AtaVerifyOutBuffer(IoStack, TotalSize))
         return STATUS_BUFFER_TOO_SMALL;
 
     Irp->IoStatus.Information = TotalSize;
@@ -1324,8 +821,7 @@ NTSTATUS
 AtaFdoHandleScsiPassthrough(
     _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
     _In_ PIRP Irp,
-    _In_ PIO_STACK_LOCATION IoStack,
-    _In_ BOOLEAN IsDirect)
+    _In_ PIO_STACK_LOCATION IoStack)
 {
     PSCSI_PASS_THROUGH Spt;
     PATAPORT_DEVICE_EXTENSION DevExt;
@@ -1333,8 +829,7 @@ AtaFdoHandleScsiPassthrough(
 
     PAGED_CODE();
 
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength <
-        RTL_SIZEOF_THROUGH_FIELD(SCSI_PASS_THROUGH, Lun))
+    if (!AtaVerifyInBuffer(IoStack, RTL_SIZEOF_THROUGH_FIELD(SCSI_PASS_THROUGH, Lun)))
     {
         ERR("Buffer too small\n");
         return STATUS_BUFFER_TOO_SMALL;
@@ -1348,7 +843,7 @@ AtaFdoHandleScsiPassthrough(
     if (!DevExt)
         return STATUS_NO_SUCH_DEVICE;
 
-    Status = AtaPdoHandleScsiPassthrough(DevExt, Irp, IoStack, IsDirect);
+    Status = AtaPdoHandleScsiPassthrough(DevExt, Irp, IoStack);
 
     IoReleaseRemoveLock(&DevExt->Common.RemoveLock, Irp);
 
@@ -1363,7 +858,6 @@ AtaFdoDeviceControl(
 {
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
-    ULONG Ioctl;
 
     Status = IoAcquireRemoveLock(&ChanExt->Common.RemoveLock, Irp);
     if (!NT_SUCCESS(Status))
@@ -1376,8 +870,7 @@ AtaFdoDeviceControl(
     }
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    Ioctl = IoStack->Parameters.DeviceIoControl.IoControlCode;
-    switch (Ioctl)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
             Status = AtaFdoHandleStorageQueryProperty(ChanExt, Irp, IoStack);
@@ -1397,10 +890,7 @@ AtaFdoDeviceControl(
 
         case IOCTL_SCSI_PASS_THROUGH:
         case IOCTL_SCSI_PASS_THROUGH_DIRECT:
-            Status = AtaFdoHandleScsiPassthrough(ChanExt,
-                                                 Irp,
-                                                 IoStack,
-                                                 Ioctl == IOCTL_SCSI_PASS_THROUGH_DIRECT);
+            Status = AtaFdoHandleScsiPassthrough(ChanExt, Irp, IoStack);
             break;
 
         case IOCTL_SCSI_RESCAN_BUS:
