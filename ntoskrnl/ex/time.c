@@ -471,7 +471,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     }
 
     // Initialize all fields of TimeZoneInformation to zeroes
-    memset(TimeZoneInformation, 0, sizeof(TimeZoneInformation));
+    memset(&TimeZoneInformation, 0, sizeof(TimeZoneInformation));
 
     /* Check if we were called from user-mode */
     if (PreviousMode != KernelMode)
