@@ -42,7 +42,7 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP Initialize(IShellView* psv)
+    virtual STDMETHODIMP Initialize(IShellView* psv)
     {
         m_View = psv;
         return S_OK;
