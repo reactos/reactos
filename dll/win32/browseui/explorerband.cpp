@@ -389,7 +389,7 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     SFGAOF attrs = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK;
     pSrcFolder->GetAttributesOf(1, &pLast, &attrs);
 
-    DWORD dwEffect = 0, dwEffect2;
+    DWORD dwEffect = 0;
     if (attrs & SFGAO_CANCOPY)
         dwEffect |= DROPEFFECT_COPY;
     if (attrs & SFGAO_CANMOVE)
@@ -402,7 +402,7 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     if (!SUCCEEDED(hr))
         return;
 
-    DoDragDrop(pObj, this, dwEffect, &dwEffect2);
+    DoDragDrop(pObj, this, dwEffect, &dwEffect);
 }
 
 // *** ATL event handlers ***
