@@ -25,6 +25,7 @@ list(APPEND SOURCE
     GetSystemMetrics.c
     GetUserObjectInformation.c
     GetWindowPlacement.c
+    GW_ENABLEDPOPUP.c
     InitializeLpkHooks.c
     KbdLayout.c
     keybd_event.c

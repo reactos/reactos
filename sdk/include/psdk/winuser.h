@@ -764,6 +764,7 @@ extern "C" {
 #define GW_HWNDFIRST 0
 #define GW_HWNDLAST 1
 #define GW_OWNER 4
+#define GW_ENABLEDPOPUP 6
 #define SW_HIDE 0
 #define SW_NORMAL 1
 #define SW_SHOWNORMAL 1
