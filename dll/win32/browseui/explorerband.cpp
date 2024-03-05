@@ -374,16 +374,14 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
 
 void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
 {
-    CComPtr<IShellFolder>               pSrcFolder;
-    CComPtr<IDataObject>                pObj;
-    LPCITEMIDLIST                       pLast;
-    HRESULT                             hr;
-    DWORD                               dwEffect, dwEffect2;
-
     if (!pnmtv->itemNew.lParam)
         return;
 
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
+
+    HRESULT hr;
+    CComPtr<IShellFolder> pSrcFolder;
+    LPCITEMIDLIST pLast;
     hr = SHBindToParent(pNodeInfo->absolutePidl, IID_PPV_ARG(IShellFolder, &pSrcFolder), &pLast);
     if (!SUCCEEDED(hr))
         return;
@@ -391,7 +389,7 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     SFGAOF attrs = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK;
     pSrcFolder->GetAttributesOf(1, &pLast, &attrs);
 
-    dwEffect = 0;
+    DWORD dwEffect = 0, dwEffect2;
     if (attrs & SFGAO_CANCOPY)
         dwEffect |= DROPEFFECT_COPY;
     if (attrs & SFGAO_CANMOVE)
@@ -399,7 +397,8 @@ void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
     if (attrs & SFGAO_CANLINK)
         dwEffect |= DROPEFFECT_LINK;
 
-    hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, reinterpret_cast<void**>(&pObj));
+    CComPtr<IDataObject> pObj;
+    hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, (LPVOID*)&pObj);
     if (!SUCCEEDED(hr))
         return;
 
