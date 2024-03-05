@@ -2455,6 +2455,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     RtlCopyUnicodeString(&RawDllName, DllName);
 
     /* Find the extension, if present */
+    /* NOTE: Access violation is expected here in some cases (Buffer[-1]) */
     p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
     GotExtension = FALSE;
     while (p >= DllName->Buffer)
