@@ -374,27 +374,36 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
 
 void CExplorerBand::OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick)
 {
-    CComPtr<IShellFolder>               pSrcFolder;
-    CComPtr<IDataObject>                pObj;
-    LPCITEMIDLIST                       pLast;
-    HRESULT                             hr;
-    DWORD                               dwEffect;
-    DWORD                               dwEffect2;
-
-    dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
     if (!pnmtv->itemNew.lParam)
         return;
+
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
+
+    HRESULT hr;
+    CComPtr<IShellFolder> pSrcFolder;
+    LPCITEMIDLIST pLast;
     hr = SHBindToParent(pNodeInfo->absolutePidl, IID_PPV_ARG(IShellFolder, &pSrcFolder), &pLast);
     if (!SUCCEEDED(hr))
         return;
-    hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, reinterpret_cast<void**>(&pObj));
+
+    SFGAOF attrs = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK;
+    pSrcFolder->GetAttributesOf(1, &pLast, &attrs);
+
+    DWORD dwEffect = 0;
+    if (attrs & SFGAO_CANCOPY)
+        dwEffect |= DROPEFFECT_COPY;
+    if (attrs & SFGAO_CANMOVE)
+        dwEffect |= DROPEFFECT_MOVE;
+    if (attrs & SFGAO_CANLINK)
+        dwEffect |= DROPEFFECT_LINK;
+
+    CComPtr<IDataObject> pObj;
+    hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, (LPVOID*)&pObj);
     if (!SUCCEEDED(hr))
         return;
-    DoDragDrop(pObj, this, dwEffect, &dwEffect2);
-    return;
-}
 
+    DoDragDrop(pObj, this, dwEffect, &dwEffect);
+}
 
 // *** ATL event handlers ***
 LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
