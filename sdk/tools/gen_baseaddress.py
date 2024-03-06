@@ -102,15 +102,7 @@ PRIORITIES = (
 )
 
 EXCLUDE = (
-    'bmfd.dll',
-    'bootvid.dll',
-    'framebuf.dll',
-    'ftfd.dll',
-    'genincdata.dll',
-    'hal.dll',
-    'halaacpi.dll',
-    'halacpi.dll',
-    'halapic.dll',
+    # dll/keyboard/
     'kbda1.dll',
     'kbda2.dll',
     'kbda3.dll',
@@ -121,7 +113,7 @@ EXCLUDE = (
     'kbdazel.dll',
     'kbdbe.dll',
     'kbdbga.dll',
-    'kbdbgm.dll',
+    'kbdbgm.dll', # Renamed to kbdbu. Kept for v0.4.14- backward-support.
     'kbdbgt.dll',
     'kbdblr.dll',
     'kbdbr.dll',
@@ -134,7 +126,7 @@ EXCLUDE = (
     'kbdda.dll',
     'kbddv.dll',
     'kbdeo.dll',
-    'kbdes.dll',
+    'kbdes.dll', # Renamed to kbdsp. Kept for v0.4.14- backward-support.
     'kbdest.dll',
     'kbdfc.dll',
     'kbdfi.dll',
@@ -144,7 +136,7 @@ EXCLUDE = (
     'kbdgneo.dll',
     'kbdgr.dll',
     'kbdgr1.dll',
-    'kbdgrist.dll',
+    'kbdgrist.dll', # Renamed to kbdgr1. Kept for v0.4.14- backward-support.
     'kbdhe.dll',
     'kbdheb.dll',
     'kbdhu.dll',
@@ -156,10 +148,10 @@ EXCLUDE = (
     'kbdinmal.dll',
     'kbdir.dll',
     'kbdit.dll',
-    'kbdja.dll',
+    'kbdja.dll', # Renamed to kbdjpn. Kept for v0.4.14- backward-support.
     'kbdjpn.dll',
     'kbdkaz.dll',
-    'kbdko.dll',
+    'kbdko.dll', # Renamed to kbdkor. Kept for v0.4.14- backward-support.
     'kbdkor.dll',
     'kbdla.dll',
     'kbdlt1.dll',
@@ -176,8 +168,8 @@ EXCLUDE = (
     'kbdru1.dll',
     'kbdsf.dll',
     'kbdsg.dll',
-    'kbdsk.dll',
-    'kbdsk1.dll',
+    'kbdsk.dll', # Renamed to kbdsl. Kept for v0.4.14- backward-support.
+    'kbdsk1.dll', # Renamed to kbdsl1. Kept for v0.4.14- backward-support.
     'kbdsl.dll',
     'kbdsl1.dll',
     'kbdsp.dll',
@@ -201,20 +193,48 @@ EXCLUDE = (
     'kbdvntc.dll',
     'kbdycc.dll',
     'kbdycl.dll',
+    # drivers/
+    'bootvid.dll',
     'kdcom.dll',
     'kdvbox.dll',
-    'vgaddi.dll',
-    'dllexport_test_dll1.dll',
-    'dllexport_test_dll2.dll',
+    # hal/
+    'hal.dll',
+    'halaacpi.dll',
+    'halacpi.dll',
+    'halapic.dll',
+    'halmacpi.dll',
+    'halmp.dll',
+    'halpc98.dll',
+    'halxbox.dll',
+    # modules/rosapps/applications/
+    'notifyhook.dll', # Sub-part of explorer_old target.
+    # modules/rosapps/lib/
+    'vfd.dll',
+    # modules/rostests/
+    'MyEventProvider.dll', # MyEventProvider_dll target.
+    'custom.dll', # msi_custom target.
+    'dllexport_test_dll1.dll', # Moreover, this module hardcodes its baseaddress.
+    'dllexport_test_dll2.dll', # Moreover, this module hardcodes its baseaddress.
     'dllimport_test.dll',
+    'load_notifications.dll',
     'localspl_apitest.dll',
-    'MyEventProvider.dll',
+    'msvcrt_crt_dll_startup.dll',
     'redirtest1.dll',
     'redirtest2.dll',
-    'win32u_2k3sp2.dll',
-    'win32u_vista.dll',
-    'win32u_xpsp2.dll',
+    'selfreg.dll', # msi_selfreg target.
+    'shlwapi_resource_dll.dll',
     'testvdd.dll',
+    # 'win32u.dll' # Future-proof: Is currently a test file, but will eventually move to "Win7+ core".
+    'win32u_2k3sp2.dll',
+    'win32u_vista.dll', # Future-proof: Not built yet.
+    'win32u_xpsp2.dll',
+    # sdk/
+    'genincdata.dll',
+    # win32ss/
+    'bmfd.dll',
+    'framebuf.dll',
+    'ftfd.dll',
+    'vgaddi.dll',
 )
 
 IMAGE_NT_OPTIONAL_HDR32_MAGIC = 0x10b
