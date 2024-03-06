@@ -554,8 +554,12 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Make loader block available for the whole kernel */
     IopLoaderBlock = LoaderBlock;
 
+    KeSetAffinityProcess(&PsInitialSystemProcess->Pcb, 1);
+
     /* Load boot start drivers */
     IopInitializeBootDrivers();
+
+    KeSetAffinityProcess(&PsInitialSystemProcess->Pcb, KeActiveProcessors);
 
     /* Call back drivers that asked for */
     IopReinitializeBootDrivers();
