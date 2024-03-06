@@ -137,8 +137,16 @@ KiIdleLoop(VOID)
             /* Enable interrupts */
             _enable();
 
+#ifdef CONFIG_SMP
+            /* Do the swap at SYNCH_LEVEL */
+            KfRaiseIrql(SYNCH_LEVEL);
+#endif
+
             // Do we need this?
             KiSetThreadSwapBusy(Prcb->IdleThread);
+
+            /* Acquire the PRCB lock */
+            KiAcquirePrcbLock(Prcb);
 
             /* Capture current thread data */
             OldThread = Prcb->CurrentThread;
@@ -148,13 +156,11 @@ KiIdleLoop(VOID)
             Prcb->NextThread = NULL;
             Prcb->CurrentThread = NewThread;
 
+            /* Release the PRCB lock */
+            KiReleasePrcbLock(Prcb);
+
             /* The thread is now running */
             NewThread->State = Running;
-
-#ifdef CONFIG_SMP
-            /* Do the swap at SYNCH_LEVEL */
-            KfRaiseIrql(SYNCH_LEVEL);
-#endif
 
             /* Clear idle summary bit */
             InterlockedBitTestAndResetAffinity(&KiIdleSummary, Prcb->Number);
