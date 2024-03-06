@@ -640,18 +640,8 @@ WSPCloseSocket(IN SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    /* Create the Wait Event */
-    Status = NtCreateEvent(&SockEvent,
-                           EVENT_ALL_ACCESS,
-                           NULL,
-                           SynchronizationEvent,
-                           FALSE);
-
-    if(!NT_SUCCESS(Status))
-    {
-        ERR("NtCreateEvent failed: 0x%08x\n", Status);
-        return SOCKET_ERROR;
-    }
+    /* Allow APC to be processed */
+    SleepEx(0, TRUE);
 
     if (Socket->HelperEvents & WSH_NOTIFY_CLOSE)
     {
@@ -663,9 +653,8 @@ WSPCloseSocket(IN SOCKET Handle,
 
         if (Status)
         {
-            if (lpErrno) *lpErrno = Status;
             ERR("WSHNotify failed. Error 0x%#x\n", Status);
-            NtClose(SockEvent);
+            if (lpErrno) *lpErrno = Status;
             return SOCKET_ERROR;
         }
     }
@@ -674,8 +663,19 @@ WSPCloseSocket(IN SOCKET Handle,
     if (Socket->SharedData->State == SocketClosed)
     {
         WARN("Socket is closing.\n");
-        NtClose(SockEvent);
         if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+    /* Create the Wait Event */
+    Status = NtCreateEvent(&SockEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtCreateEvent failed: 0x%08x\n", Status);
         return SOCKET_ERROR;
     }
 
@@ -1363,14 +1363,8 @@ WSPSelect(IN int nfds,
                     TRACE("Event %x on handle %x\n",
                         Events,
                         Handle);
-                    if( Socket->SharedData->NonBlocking != 0 )
-                    {
-                        if (writefds)
-                            FD_SET(Handle, writefds);
-
-                        /* Allow APC to be processed */
-                        SleepEx(0, TRUE);
-                    }
+                    if( writefds && Socket->SharedData->NonBlocking != 0 )
+                        FD_SET(Handle, writefds);
                     break;
                 case AFD_EVENT_OOB_RECEIVE:
                     TRACE("Event %x on handle %x\n",
@@ -1385,14 +1379,8 @@ WSPSelect(IN int nfds,
                     TRACE("Event %x on handle %x\n",
                         Events,
                         Handle);
-                    if( Socket->SharedData->NonBlocking != 0 )
-                    {
-                        if (exceptfds)
-                            FD_SET(Handle, exceptfds);
-
-                        /* Allow APC to be processed */
-                        SleepEx(0, TRUE);
-                    }
+                    if( exceptfds && Socket->SharedData->NonBlocking != 0 )
+                        FD_SET(Handle, exceptfds);
                     break;
             }
         }
@@ -1400,6 +1388,9 @@ WSPSelect(IN int nfds,
 
     HeapFree( GlobalHeap, 0, PollBuffer );
     NtClose( SockEvent );
+
+    /* Allow APC to be processed */
+    SleepEx(0, TRUE);
 
     if( lpErrno )
     {
@@ -3490,12 +3481,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     }
 
     NtClose(SockEvent);
-    if (Overlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!Overlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, InfoData);
@@ -3619,12 +3605,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     TRACE("Status %lx\n", Status);
 
     NtClose(SockEvent);
-    if (Overlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!Overlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, InfoData);

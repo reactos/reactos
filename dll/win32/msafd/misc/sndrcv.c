@@ -122,12 +122,17 @@ WSPGetOverlappedResult(
     }
     Ret = GetOverlappedResult((HANDLE)Handle, lpOverlapped, lpdwBytes, fWait);
 
+    /* Allow APC to be processed */
+    SleepEx(0, TRUE);
+
     if (Ret)
     {
         *lpdwFlags = 0;
 
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
+        /* Re-enable Async Event */
+        SockReenableAsyncSelectEvent(Socket, FD_OOB);
+        SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+        SockReenableAsyncSelectEvent(Socket, FD_READ);
     }
 
     return Ret;
@@ -353,15 +358,8 @@ WSPRecv(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NumberOfBytesRead = (DWORD)IOSB->Information;
-
     NtClose(SockEvent);
-    if (lpOverlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!lpOverlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, RecvInfo);
@@ -372,6 +370,8 @@ WSPRecv(SOCKET Handle,
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
+
+    NumberOfBytesRead = (DWORD)IOSB->Information;
 
     /* Return the Flags */
     if (ReceiveFlags)
@@ -601,15 +601,8 @@ WSPRecvFrom(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NumberOfBytesRead = (DWORD)IOSB->Information;
-
     NtClose(SockEvent);
-    if (lpOverlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!lpOverlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, RecvInfo);
@@ -620,6 +613,8 @@ WSPRecvFrom(SOCKET Handle,
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
+
+    NumberOfBytesRead = (DWORD)IOSB->Information;
 
     /* Return the Flags */
     if (ReceiveFlags)
@@ -807,15 +802,8 @@ WSPSend(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NumberOfBytesSent = (DWORD)IOSB->Information;
-
     NtClose(SockEvent);
-    if (lpOverlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!lpOverlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, SendInfo);
@@ -826,6 +814,8 @@ WSPSend(SOCKET Handle,
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
+
+    NumberOfBytesSent = (DWORD)IOSB->Information;
 
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
@@ -1029,15 +1019,8 @@ WSPSendTo(SOCKET Handle,
         Status = IOSB->Status;
     }
 
-    NumberOfBytesSent = (DWORD)IOSB->Information;
-
     NtClose(SockEvent);
-    if (lpOverlapped && Status != STATUS_PENDING)
-    {
-        /* Allow APC to be processed */
-        SleepEx(0, TRUE);
-    }
-    else if (!lpOverlapped)
+    if (!APCFunction)
     {
         /* When using APC, this will be freed by the APC function */
         HeapFree(GlobalHeap, 0, SendInfo);
@@ -1049,6 +1032,8 @@ WSPSendTo(SOCKET Handle,
         TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
+
+    NumberOfBytesSent = (DWORD)IOSB->Information;
 
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
