@@ -3,7 +3,8 @@ spec2def(mydocs.dll mydocs.spec)
 add_definitions(
     -D_WINE)
 
-file(GLOB_RECURSE mydocs_rc_deps res/*.*)
+set(ICONS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../win32/shell32/res/icons)
+file(GLOB_RECURSE mydocs_rc_deps res/*.* ${ICONS_DIR}/235.ico ${ICONS_DIR}/236.ico)
 add_rc_deps(mydocs.rc ${mydocs_rc_deps})
 
 list(APPEND SOURCE
