@@ -130,7 +130,8 @@ HvpWriteLog(
      * Now calculate the bitmap and buffer sizes to hold up our
      * contents in a buffer.
      */
-    BitmapSize = ROUND_UP(sizeof(ULONG) + RegistryHive->DirtyVector.SizeOfBitMap / 8, HSECTOR_SIZE);
+    BitmapSize = ROUND_UP(sizeof(ULONG) + RegistryHive->DirtyVector.SizeOfBitMap, HSECTOR_SIZE);
+    ASSERT(BitmapSize == HV_LOG_GET_DIRTY_BITMAP_SIZE(RegistryHive->BaseBlock->Length));
     BufferSize = HV_LOG_HEADER_SIZE + BitmapSize;
 
     /* Now allocate the base header block buffer */
@@ -162,11 +163,14 @@ HvpWriteLog(
     Ptr += sizeof(HV_LOG_DIRTY_SIGNATURE);
 
     /*
-     * FIXME: In ReactOS a vector contains one bit per block
-     * whereas in Windows each bit within a vector is per
-     * sector. Furthermore, the dirty blocks within a respective
-     * hive has to be marked as such in an appropriate function
-     * for this purpose (probably HvMarkDirty or similar).
+     * The dirty bitmap in the log file uses one bit per 512 bytes,
+     * but the log file always contains a full 4096 bytes (HBLOCK_SIZE)
+     * of data, which matches our in-memory block tracking. So to indicate a
+     * dirty block, we set 8 bits at once (HV_LOG_DIRTY_BLOCK).
+     *
+     * FIXME: The dirty blocks within a respective hive have to be
+     * marked as such in an appropriate function for this purpose
+     * (probably HvMarkDirty or similar).
      *
      * For the moment being, mark the relevant dirty blocks
      * here.
@@ -177,17 +181,13 @@ HvpWriteLog(
         /* Check if the block is clean or we're past the last block */
         LastIndex = BlockIndex;
         BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
-        if (BlockIndex == ~HV_CLEAN_BLOCK || BlockIndex < LastIndex)
+        if (BlockIndex == 0xFFFFFFFF || BlockIndex < LastIndex)
         {
             break;
         }
 
         /*
          * Mark this block as dirty and go to the next one.
-         *
-         * FIXME: We should rather use RtlSetBits but that crashes
-         * the system with a bugckeck. So for now mark blocks manually
-         * by hand.
          */
         Ptr[BlockIndex] = HV_LOG_DIRTY_BLOCK;
         BlockIndex++;
@@ -212,7 +212,7 @@ HvpWriteLog(
         /* Check if the block is clean or we're past the last block */
         LastIndex = BlockIndex;
         BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
-        if (BlockIndex == ~HV_CLEAN_BLOCK || BlockIndex < LastIndex)
+        if (BlockIndex == 0xFFFFFFFF || BlockIndex < LastIndex)
         {
             break;
         }
