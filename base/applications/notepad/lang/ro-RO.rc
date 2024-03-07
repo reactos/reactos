@@ -165,7 +165,7 @@ BEGIN
 Utilizaţi alt editor pentru acest fişier."
     STRING_NOTEXT "Nu ați scris nimic.\n\
 Scrieți ceva apoi încercați din nou."
-    STRING_DOESNOTEXIST "Fișierul „%s”\n\nu există.\n\n\
+    STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n\
 Doriți să creați un nou fișier?"
     STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
 Salvați modificările aduse?"
