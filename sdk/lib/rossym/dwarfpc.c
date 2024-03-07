@@ -11,7 +11,6 @@
  * The encoding may be small, but it sure isn't simple!
  */
 
-#define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"

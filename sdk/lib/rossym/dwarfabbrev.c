@@ -6,7 +6,6 @@
  * explicit reference counting if this turns out not to be acceptable.
  */
 
-#define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"

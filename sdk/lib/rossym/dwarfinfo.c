@@ -2,7 +2,6 @@
  * Dwarf info parse and search.
  */
 
-#define NTOSAPI
 #include <ntifs.h>
 #include <ndk/ntndk.h>
 #include <reactos/rossym.h>
