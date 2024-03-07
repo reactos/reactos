@@ -35,12 +35,12 @@ BEGIN
     BEGIN
         MENUITEM "No&u\tCtrl+N", CMD_NEW
         MENUITEM "Fereastră &nouă\tCtrl+Shift+N", CMD_NEW_WINDOW
-        MENUITEM "&Deschidere...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
         MENUITEM "&Salvare\tCtrl+S", CMD_SAVE
-        MENUITEM "S&alvare ca...", CMD_SAVE_AS
+        MENUITEM "S&alvare ca…", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Iniţiali&zare pagină...", CMD_PAGE_SETUP
-        MENUITEM "I&mprimare...\tCtrl+P", CMD_PRINT
+        MENUITEM "Iniţiali&zare pagină…", CMD_PAGE_SETUP
+        MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Ieşire", CMD_EXIT
     END
@@ -53,10 +53,10 @@ BEGIN
         MENUITEM "Li&pire\tCtrl+V", CMD_PASTE
         MENUITEM "Şt&ergere\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Cău&tare...\tCtrl+F", CMD_SEARCH
+        MENUITEM "Cău&tare…\tCtrl+F", CMD_SEARCH
         MENUITEM "&Următorul găsit\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Î&nlocui&re...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Salt &la...\tCtrl+G", CMD_GOTO
+        MENUITEM "Î&nlocui&re…\tCtrl+H", CMD_REPLACE
+        MENUITEM "Salt &la…\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Selectare totală\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Dată/&Oră\tF5", CMD_TIME_DATE
@@ -64,7 +64,7 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Încadrare cuvânt", CMD_WRAP
-        MENUITEM "&Font...", CMD_FONT
+        MENUITEM "&Font…", CMD_FONT
     END
     POPUP "&Vizualizare"
     BEGIN
@@ -109,10 +109,10 @@ BEGIN
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Su&bsol:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Ajutor...", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "&Ajutor…", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "Revocare", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "&Imprimantă...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "&Imprimantă…", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -144,7 +144,7 @@ CAPTION "Se imprimă"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Începe sarcina imprimării...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "Începe sarcina imprimării…", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Numele fișierului)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Pagină %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Revocare", IDCANCEL, 50, 75, 60, 20
@@ -161,7 +161,7 @@ BEGIN
     STRING_UNTITLED "Fără titlu"
     STRING_ALL_FILES "Orice fișier (*.*)"
     STRING_TEXT_FILES_TXT "Fișiere text (*.txt)"
-    STRING_TOOLARGE "Fișierul „%s” este prea lung pentru Notepad...\n\
+    STRING_TOOLARGE "Fișierul „%s” este prea lung pentru Notepad…\n\
 Utilizaţi alt editor pentru acest fişier."
     STRING_NOTEXT "Nu ați scris nimic.\n\
 Scrieți ceva apoi încercați din nou."
@@ -185,8 +185,8 @@ Salvați modificările aduse?"
     STRING_PRINTERROR "Fișierul „%s” nu a putut fi imprimat.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
     STRING_DEFAULTFONT "Lucida Console"
     STRING_LINE_NUMBER_OUT_OF_RANGE "Linia specificată este în afara intervalului."
-    STRING_NOWPRINTING "În curs de imprimare..."
-    STRING_PRINTCANCELING "Sarcina de imprimare este în curs de anulare..."
+    STRING_NOWPRINTING "În curs de imprimare…"
+    STRING_PRINTCANCELING "Sarcina de imprimare este în curs de anulare…"
     STRING_PRINTCOMPLETE "Imprimarea a fost realizată cu succes."
     STRING_PRINTCANCELED "Imprimarea a fost anulată."
     STRING_PRINTFAILED "Imprimare eșuată."
