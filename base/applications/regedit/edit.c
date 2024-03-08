@@ -1670,8 +1670,6 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
         type = REG_SZ;
         valueDataLen = 0;
-        stringValueData = NULL;
-        binValueData = NULL;
     }
 
     if (lRet != ERROR_SUCCESS)
@@ -1937,6 +1935,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
             if (lRet != ERROR_SUCCESS)
             {
                 HeapFree(GetProcessHeap(), 0, binValueData);
+                binValueData = NULL;
                 error(hwnd, IDS_BAD_VALUE, valueName);
                 goto done;
             }
@@ -1954,8 +1953,12 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
             if (lRet == ERROR_SUCCESS)
                 result = TRUE;
         }
-        if(binValueData != NULL)
+
+        if (binValueData)
+        {
             HeapFree(GetProcessHeap(), 0, binValueData);
+            binValueData = NULL;
+        }
     }
     else
     {
@@ -1964,16 +1967,22 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
 
 done:
     if (resourceValueData)
+    {
         HeapFree(GetProcessHeap(), 0, resourceValueData);
-    resourceValueData = NULL;
+        resourceValueData = NULL;
+    }
 
     if (stringValueData)
+    {
         HeapFree(GetProcessHeap(), 0, stringValueData);
-    stringValueData = NULL;
+        stringValueData = NULL;
+    }
 
     if (requirementsValueData)
+    {
         HeapFree(GetProcessHeap(), 0, requirementsValueData);
-    requirementsValueData = NULL;
+        requirementsValueData = NULL;
+    }
 
     return result;
 }
