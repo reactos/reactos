@@ -124,6 +124,7 @@ FindBitmapResource(
             /* Break out */
             break;
         }
+        NextEntry = NextEntry->Flink;
     }
 
     /* Check if we found it */
