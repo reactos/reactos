@@ -132,10 +132,10 @@ RtlInterlockedPushListSList(
             NewSListHead.Header16.Init = 1;
 
             /* Atomically exchange the SlistHead with the new one */
-            exchanged = _InterlockedCompareExchange128((PULONG64)SListHead,
+            exchanged = _InterlockedCompareExchange128((PLONG64)SListHead,
                                                        NewSListHead.Region,
                                                        NewSListHead.Alignment,
-                                                       (PULONG64)&OldSListHead);
+                                                       (PLONG64)&OldSListHead);
         } while (!exchanged);
 
         return FirstEntry;
