@@ -11,6 +11,7 @@ struct TEST_ENTRY
     INT lineno;
     UINT cCreated;
     UINT cDestroyed;
+    BOOL bHadActivated;
     BOOL bIsChild;
     BOOL bHasOwner;
     DWORD style;
@@ -35,222 +36,224 @@ struct TEST_ENTRY
 static const TEST_ENTRY s_entries1[] =
 {
     // TYPE_0
-    { __LINE__, 0, 0, TYPE_0, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_0, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_0, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_0, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_0, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_0, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_0, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, FALSE, TYPE_0, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, FALSE, TYPE_0, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, FALSE, TYPE_0, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, FALSE, TYPE_0, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_0, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_0, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_0, STYLE_2, EXSTYLE_3 },
 
     // TYPE_1
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_1, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
 
     // TYPE_2
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 1, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 1, 2, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
-    { __LINE__, 0, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
-    { __LINE__, 0, 1, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 1, 1, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 1, 2, TRUE, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_0, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_1, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_2, STYLE_2, EXSTYLE_3 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0, 0, FALSE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_0 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_1 },
+    { __LINE__, 0, 0, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_2 },
+    { __LINE__, 0, 1, TRUE, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
 };
 
 static HHOOK s_hShellHook = NULL;
 static UINT s_cCreated = 0;
 static UINT s_cDestroyed = 0;
+static UINT s_cActivated = 0;
 static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
 static HWND s_hwndParent = NULL;
 static HWND s_hwndTarget = NULL;
+static HWND s_hwndMain = NULL;
 
 static HWND
 DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle, BOOL bFullscreen = FALSE)
@@ -282,7 +285,7 @@ static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
     else
         style &= ~WS_CHILD;
 
-    s_cCreated = s_cDestroyed = 0;
+    s_cCreated = s_cDestroyed = s_cActivated = 0;
     s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
 }
 
@@ -304,6 +307,10 @@ static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
     ok(s_cDestroyed == pEntry->cDestroyed,
        "Line %d: cDestroyed expected %u but was %u\n",
        pEntry->lineno, pEntry->cDestroyed, s_cDestroyed);
+
+    ok(!!s_cActivated == pEntry->bHadActivated,
+       "Line %d: !!s_cActivated expected %u but was %u\n",
+       pEntry->lineno, pEntry->bHadActivated, !!s_cActivated);
 }
 
 static
@@ -318,12 +325,17 @@ ShellProc(
 
     switch (nCode)
     {
-    case HSHELL_WINDOWCREATED:
-        s_cCreated++;
-        break;
-    case HSHELL_WINDOWDESTROYED:
-        s_cDestroyed++;
-        break;
+        case HSHELL_WINDOWCREATED:
+            s_cCreated++;
+            break;
+
+        case HSHELL_WINDOWDESTROYED:
+            s_cDestroyed++;
+            break;
+
+        case HSHELL_WINDOWACTIVATED:
+            s_cActivated++;
+            break;
     }
 
     return CallNextHookEx(s_hShellHook, nCode, wParam, lParam);
@@ -334,12 +346,14 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #define ID_TESTSTART 1000
 #define ID_TESTEND 2000
-#define ID_END 3000
     switch (uMsg)
     {
         case WM_INITDIALOG:
             ok_int(s_cCreated, 0);
             ok_int(s_cDestroyed, 0);
+            ok_int(s_cActivated, 0);
+            ShowWindow(hwnd, SW_SHOWNORMAL);
+            ok_int(s_cActivated, 1);
             PostMessageW(hwnd, WM_COMMAND, ID_TESTSTART, 0);
             return TRUE;
 
@@ -357,21 +371,23 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         UINT_PTR i = (UINT_PTR)wParam - ID_TESTSTART;
 
-                        DoTestEntryPart1(&s_entries1[i]);
-
                         if (i < _countof(s_entries1))
+                        {
+                            DoTestEntryPart1(&s_entries1[i]);
                             PostMessageW(hwnd, WM_COMMAND, ID_TESTEND + i, 0);
+                        }
                         else
+                        {
                             DestroyWindow(hwnd);
+                        }
                     }
-                    if (ID_TESTEND <= LOWORD(wParam) && LOWORD(wParam) < ID_END)
+                    else if (ID_TESTEND <= LOWORD(wParam))
                     {
                         UINT_PTR i = (UINT_PTR)wParam - ID_TESTEND;
 
-                        DoTestEntryPart2(&s_entries1[i]);
-
                         if (i < _countof(s_entries1))
                         {
+                            DoTestEntryPart2(&s_entries1[i]);
                             PostMessageW(hwnd, WM_COMMAND, ID_TESTSTART + i + 1, 0);
                         }
                     }
@@ -380,8 +396,6 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
-            ok_int(s_cCreated, 0);
-            ok_int(s_cDestroyed, 1);
             PostQuitMessage(0);
             break;
     }
@@ -423,22 +437,23 @@ START_TEST(ShellHook)
         return;
     }
 
-    HWND hwndMain = CreateDialogW(GetModuleHandleW(NULL), L"ShellHook", NULL, DialogProc);
+    s_hwndMain = CreateDialogW(GetModuleHandleW(NULL), L"ShellHook", NULL, DialogProc);
     if (!s_hShellHook)
     {
-        skip("!hwndMain\n");
+        skip("!s_hwndMain\n");
         UnhookWindowsHookEx(s_hShellHook);
         return;
     }
 
-    ShowWindow(hwndMain, SW_SHOWNORMAL);
-    UpdateWindow(hwndMain);
+    ShowWindow(s_hwndMain, SW_SHOWNOACTIVATE);
+    UpdateWindow(s_hwndMain);
 
     MSG msg;
     while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (IsDialogMessageW(hwndMain, &msg))
+        if (IsDialogMessageW(s_hwndMain, &msg))
             continue;
+
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
