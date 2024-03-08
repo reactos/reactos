@@ -14,7 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
  */
 
 /// @unimplemented
-CInputContextOwner::CInputContextOwner(LPVOID fnCallback, LPVOID pCallbackPV)
+CInputContextOwner::CInputContextOwner(FN_IC_OWNER_CALLBACK fnCallback, LPVOID pCallbackPV)
 {
     m_dwCookie = -1;
     m_fnCallback = fnCallback;
@@ -117,7 +117,8 @@ STDMETHODIMP_(ULONG) CInputContextOwner::Release()
 }
 
 /// @unimplemented
-STDMETHODIMP CInputContextOwner::GetACPFromPoint(
+STDMETHODIMP
+CInputContextOwner::GetACPFromPoint(
     const POINT *ptScreen,
     DWORD       dwFlags,
     LONG        *pacp)
@@ -126,7 +127,8 @@ STDMETHODIMP CInputContextOwner::GetACPFromPoint(
 }
 
 /// @unimplemented
-STDMETHODIMP CInputContextOwner::GetTextExt(
+STDMETHODIMP
+CInputContextOwner::GetTextExt(
     LONG acpStart,
     LONG acpEnd,
     RECT *prc,
@@ -135,22 +137,22 @@ STDMETHODIMP CInputContextOwner::GetTextExt(
     return E_NOTIMPL;
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CInputContextOwner::GetScreenExt(RECT *prc)
 {
-    return E_NOTIMPL;
+    return m_fnCallback(2, &prc, m_pCallbackPV);
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CInputContextOwner::GetStatus(TF_STATUS *pdcs)
 {
-    return E_NOTIMPL;
+    return m_fnCallback(6, &pdcs, m_pCallbackPV);
 }
 
 /// @unimplemented
 STDMETHODIMP CInputContextOwner::GetWnd(HWND *phwnd)
 {
-    return E_NOTIMPL;
+    return m_fnCallback(7, &phwnd, m_pCallbackPV);
 }
 
 /// @unimplemented
@@ -159,19 +161,27 @@ STDMETHODIMP CInputContextOwner::GetAttribute(REFGUID rguidAttribute, VARIANT *p
     return E_NOTIMPL;
 }
 
-/// @unimplemented
+struct MOUSE_SINK_ARGS
+{
+    ITfRangeACP *range;
+    ITfMouseSink *pSink;
+    DWORD *pdwCookie;
+};
+
+/// @implemented
 STDMETHODIMP CInputContextOwner::AdviseMouseSink(
     ITfRangeACP *range,
     ITfMouseSink *pSink,
     DWORD *pdwCookie)
 {
-    return E_NOTIMPL;
+    MOUSE_SINK_ARGS args = { range, pSink, pdwCookie };
+    return m_fnCallback(9, &args, m_pCallbackPV);
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP CInputContextOwner::UnadviseMouseSink(DWORD dwCookie)
 {
-    return E_NOTIMPL;
+    return m_fnCallback(10, &dwCookie, m_pCallbackPV);
 }
 
 /***********************************************************************

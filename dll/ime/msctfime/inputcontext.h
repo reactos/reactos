@@ -14,6 +14,9 @@ class CInputContextOwnerCallBack;
 class CInputContextOwner;
 class CicInputContext;
 
+
+typedef HRESULT (CALLBACK *FN_IC_OWNER_CALLBACK)(UINT uType, LPVOID args, LPVOID param);
+
 /***********************************************************************
  *      CInputContextOwner
  */
@@ -25,11 +28,11 @@ protected:
     LONG m_cRefs;
     IUnknown *m_pContext;
     DWORD m_dwCookie;
-    LPVOID m_fnCallback;
+    FN_IC_OWNER_CALLBACK m_fnCallback;
     LPVOID m_pCallbackPV;
 
 public:
-    CInputContextOwner(LPVOID fnCallback, LPVOID pCallbackPV);
+    CInputContextOwner(FN_IC_OWNER_CALLBACK fnCallback, LPVOID pCallbackPV);
     virtual ~CInputContextOwner();
 
     HRESULT _Advise(IUnknown *pContext);
