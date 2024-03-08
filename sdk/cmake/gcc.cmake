@@ -50,6 +50,10 @@ add_compile_options(-mlong-double-64)
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # FIXME: check compiler version
+    add_compile_options(-Wno-nonnull-compare)
+    add_compile_options(-Wno-unused-but-set-variable)
+    add_compile_options(-Wno-unused-function)
 
     if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
         add_compile_options("$<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-class-conversion>")
