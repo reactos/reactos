@@ -109,8 +109,9 @@ FindBitmapResource(
 
     /* Loop the driver list */
     ListHead = &LoaderBlock->LoadOrderListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
     {
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,
