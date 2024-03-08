@@ -22,6 +22,7 @@ CInputContextOwner::CInputContextOwner(LPVOID fnCallback, LPVOID pCallbackPV)
     m_pCallbackPV = pCallbackPV;
 }
 
+/// @implemented
 CInputContextOwner::~CInputContextOwner()
 {
 }

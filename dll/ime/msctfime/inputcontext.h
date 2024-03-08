@@ -12,6 +12,7 @@
 
 class CInputContextOwnerCallBack;
 class CInputContextOwner;
+class CicInputContext;
 
 /***********************************************************************
  *      CInputContextOwner
