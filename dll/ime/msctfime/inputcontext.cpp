@@ -326,7 +326,12 @@ CicInputContext::DestroyInputContext()
         m_pCompEventSink1 = NULL;
     }
 
-    //FIXME: m_pInputContextOwner
+    if (m_pInputContextOwner)
+    {
+        m_pInputContextOwner->_Unadvise();
+        m_pInputContextOwner->Release();
+        m_pInputContextOwner = NULL;
+    }
 
     if (m_pDocumentMgr)
         m_pDocumentMgr->Pop(1);
