@@ -394,6 +394,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
         COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}>
         COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-lib=${_libname}.a -t ${_libname}
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_PRIVATE_DIR}/${_libname}.a ${CMAKE_CURRENT_BINARY_DIR}/${_libname}.a
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
@@ -416,6 +417,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
         COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}_delayed>
         COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-delaylib=${_libname}_delayed.a -t ${_libname}_delayed
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_delayed.a
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
