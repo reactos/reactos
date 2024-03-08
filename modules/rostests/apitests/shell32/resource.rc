@@ -16,3 +16,10 @@ FONT 9, "Tahoma"
     CONTROL "edt1", edt1, "EDIT", ES_AUTOHSCROLL | ES_MULTILINE | WS_BORDER | WS_TABSTOP, 19, 18, 80, 14
     LTEXT "stc1", stc1, 24, 49, 72, 21
 }
+
+ShellHook DIALOG 0, 0, 200, 84
+CAPTION "ReactOS ShellHook test dialog"
+STYLE DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "Tahoma"
+{
+}
