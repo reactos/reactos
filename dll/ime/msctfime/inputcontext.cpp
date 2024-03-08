@@ -9,6 +9,185 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+/***********************************************************************
+ * CInputContextOwner
+ */
+
+/// @unimplemented
+CInputContextOwner::CInputContextOwner(FN_IC_OWNER_CALLBACK fnCallback, LPVOID pCallbackPV)
+{
+    m_dwCookie = -1;
+    m_fnCallback = fnCallback;
+    m_cRefs = 1;
+    m_pCallbackPV = pCallbackPV;
+}
+
+/// @implemented
+CInputContextOwner::~CInputContextOwner()
+{
+}
+
+/// @implemented
+HRESULT CInputContextOwner::_Advise(IUnknown *pContext)
+{
+    ITfSource *pSource = NULL;
+
+    m_pContext = NULL;
+
+    HRESULT hr = E_FAIL;
+    if (SUCCEEDED(m_pContext->QueryInterface(IID_ITfSource, (LPVOID*)&pSource)) &&
+        SUCCEEDED(pSource->AdviseSink(IID_ITfContextOwner,
+                                      static_cast<ITfContextOwner*>(this), &m_dwCookie)))
+    {
+        m_pContext = pContext;
+        m_pContext->AddRef();
+        hr = S_OK;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+/// @implemented
+HRESULT CInputContextOwner::_Unadvise()
+{
+    ITfSource *pSource = NULL;
+
+    HRESULT hr = E_FAIL;
+    if (m_pContext)
+    {
+        if (SUCCEEDED(m_pContext->QueryInterface(IID_ITfSource, (LPVOID*)&pSource)) &&
+            SUCCEEDED(pSource->UnadviseSink(m_dwCookie)))
+        {
+            hr = S_OK;
+        }
+    }
+
+    if (m_pContext)
+    {
+        m_pContext->Release();
+        m_pContext = NULL;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    *ppvObj = NULL;
+
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfContextOwner))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+
+    if (IsEqualIID(riid, IID_ITfMouseTrackerACP))
+    {
+        *ppvObj = static_cast<ITfMouseTrackerACP*>(this);
+        AddRef();
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+/// @implemented
+STDMETHODIMP_(ULONG) CInputContextOwner::AddRef()
+{
+    return ++m_cRefs;
+}
+
+/// @implemented
+STDMETHODIMP_(ULONG) CInputContextOwner::Release()
+{
+    if (--m_cRefs == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/// @unimplemented
+STDMETHODIMP
+CInputContextOwner::GetACPFromPoint(
+    const POINT *ptScreen,
+    DWORD       dwFlags,
+    LONG        *pacp)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP
+CInputContextOwner::GetTextExt(
+    LONG acpStart,
+    LONG acpEnd,
+    RECT *prc,
+    BOOL *pfClipped)
+{
+    return E_NOTIMPL;
+}
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::GetScreenExt(RECT *prc)
+{
+    return m_fnCallback(2, &prc, m_pCallbackPV);
+}
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::GetStatus(TF_STATUS *pdcs)
+{
+    return m_fnCallback(6, &pdcs, m_pCallbackPV);
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetWnd(HWND *phwnd)
+{
+    return m_fnCallback(7, &phwnd, m_pCallbackPV);
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetAttribute(REFGUID rguidAttribute, VARIANT *pvarValue)
+{
+    return E_NOTIMPL;
+}
+
+struct MOUSE_SINK_ARGS
+{
+    ITfRangeACP *range;
+    ITfMouseSink *pSink;
+    DWORD *pdwCookie;
+};
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::AdviseMouseSink(
+    ITfRangeACP *range,
+    ITfMouseSink *pSink,
+    DWORD *pdwCookie)
+{
+    MOUSE_SINK_ARGS args = { range, pSink, pdwCookie };
+    return m_fnCallback(9, &args, m_pCallbackPV);
+}
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::UnadviseMouseSink(DWORD dwCookie)
+{
+    return m_fnCallback(10, &dwCookie, m_pCallbackPV);
+}
+
+/***********************************************************************
+ * CicInputContext
+ */
+
 /// @unimplemented
 CicInputContext::CicInputContext(
     _In_ TfClientId cliendId,
@@ -157,7 +336,12 @@ CicInputContext::DestroyInputContext()
         m_pCompEventSink1 = NULL;
     }
 
-    //FIXME: m_pInputContextOwner
+    if (m_pInputContextOwner)
+    {
+        m_pInputContextOwner->_Unadvise();
+        m_pInputContextOwner->Release();
+        m_pInputContextOwner = NULL;
+    }
 
     if (m_pDocumentMgr)
         m_pDocumentMgr->Pop(1);
