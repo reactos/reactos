@@ -438,10 +438,13 @@ typedef struct threadmbcinfostruct *pthreadmbcinfo;
 
 struct __lc_time_data;
 
+#ifndef DEFINED_localeinfo_struct
 typedef struct localeinfo_struct {
     pthreadlocinfo locinfo;
     pthreadmbcinfo mbcinfo;
 }_locale_tstruct,*_locale_t;
+#define DEFINED_localeinfo_struct 1
+#endif
 
 #ifdef __cplusplus
 }
