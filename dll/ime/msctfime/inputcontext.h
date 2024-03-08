@@ -14,6 +14,55 @@ class CInputContextOwnerCallBack;
 class CInputContextOwner;
 
 /***********************************************************************
+ *      CInputContextOwner
+ */
+class CInputContextOwner
+    : public ITfContextOwner
+    , public ITfMouseTrackerACP
+{
+protected:
+    LONG m_cRefs;
+    IUnknown *m_pContext;
+    DWORD m_dwCookie;
+    LPVOID m_fnCallback;
+    LPVOID m_pCallbackPV;
+
+public:
+    CInputContextOwner(LPVOID fnCallback, LPVOID pCallbackPV);
+    virtual ~CInputContextOwner();
+
+    HRESULT _Advise(IUnknown *pContext);
+    HRESULT _Unadvise();
+
+    // IUnknown methods
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppvObj) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    // ITfContextOwner methods
+    STDMETHODIMP GetACPFromPoint(
+        const POINT *ptScreen,
+        DWORD       dwFlags,
+        LONG        *pacp) override;
+    STDMETHODIMP GetTextExt(
+        LONG acpStart,
+        LONG acpEnd,
+        RECT *prc,
+        BOOL *pfClipped) override;
+    STDMETHODIMP GetScreenExt(RECT *prc) override;
+    STDMETHODIMP GetStatus(TF_STATUS *pdcs) override;
+    STDMETHODIMP GetWnd(HWND *phwnd) override;
+    STDMETHODIMP GetAttribute(REFGUID rguidAttribute, VARIANT *pvarValue) override;
+
+    // ITfMouseTrackerACP methods
+    STDMETHODIMP AdviseMouseSink(
+        ITfRangeACP *range,
+        ITfMouseSink *pSink,
+        DWORD *pdwCookie) override;
+    STDMETHODIMP UnadviseMouseSink(DWORD dwCookie) override;
+};
+
+/***********************************************************************
  *      CicInputContext
  *
  * The msctfime.ime's input context.

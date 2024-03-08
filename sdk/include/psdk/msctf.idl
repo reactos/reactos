@@ -952,6 +952,38 @@ interface ITfTextEditSink : IUnknown
 
 [
     object,
+    uuid(AA80E80C-2021-11D2-93E0-0060B067B86E),
+    pointer_default(unique)
+]
+interface ITfContextOwner : IUnknown
+{
+    HRESULT GetACPFromPoint(
+        [in]  const POINT *ptScreen,
+        [in]  DWORD       dwFlags,
+        [out] LONG        *pacp);
+
+    HRESULT GetTextExt(
+        [in]  LONG acpStart,
+        [in]  LONG acpEnd,
+        [out] RECT *prc,
+        [out] BOOL *pfClipped);
+
+    HRESULT GetScreenExt(
+        [out] RECT *prc);
+
+    HRESULT GetStatus(
+        [out] TF_STATUS *pdcs);
+
+    HRESULT GetWnd(
+        [out] HWND *phwnd);
+
+    HRESULT GetAttribute(
+        [in]  REFGUID rguidAttribute,
+        [out] VARIANT *pvarValue);
+}
+
+[
+    object,
     uuid(5F20AA40-B57A-4F34-96AB-3576F377CC79),
     pointer_default(unique)
 ]

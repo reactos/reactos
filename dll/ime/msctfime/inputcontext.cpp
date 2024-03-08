@@ -9,6 +9,174 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+/***********************************************************************
+ * CInputContextOwner
+ */
+
+/// @unimplemented
+CInputContextOwner::CInputContextOwner(LPVOID fnCallback, LPVOID pCallbackPV)
+{
+    m_dwCookie = -1;
+    m_fnCallback = fnCallback;
+    m_cRefs = 1;
+    m_pCallbackPV = pCallbackPV;
+}
+
+CInputContextOwner::~CInputContextOwner()
+{
+}
+
+/// @implemented
+HRESULT CInputContextOwner::_Advise(IUnknown *pContext)
+{
+    ITfSource *pSource = NULL;
+
+    m_pContext = NULL;
+
+    HRESULT hr = E_FAIL;
+    if (SUCCEEDED(m_pContext->QueryInterface(IID_ITfSource, (LPVOID*)&pSource)) &&
+        SUCCEEDED(pSource->AdviseSink(IID_ITfContextOwner,
+                                      static_cast<ITfContextOwner*>(this), &m_dwCookie)))
+    {
+        m_pContext = pContext;
+        m_pContext->AddRef();
+        hr = S_OK;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+/// @implemented
+HRESULT CInputContextOwner::_Unadvise()
+{
+    ITfSource *pSource = NULL;
+
+    HRESULT hr = E_FAIL;
+    if (m_pContext)
+    {
+        if (SUCCEEDED(m_pContext->QueryInterface(IID_ITfSource, (LPVOID*)&pSource)) &&
+            SUCCEEDED(pSource->UnadviseSink(m_dwCookie)))
+        {
+            hr = S_OK;
+        }
+    }
+
+    if (m_pContext)
+    {
+        m_pContext->Release();
+        m_pContext = NULL;
+    }
+
+    if (pSource)
+        pSource->Release();
+
+    return hr;
+}
+
+/// @implemented
+STDMETHODIMP CInputContextOwner::QueryInterface(REFIID riid, LPVOID* ppvObj)
+{
+    *ppvObj = NULL;
+
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfContextOwner))
+    {
+        *ppvObj = this;
+        AddRef();
+        return S_OK;
+    }
+
+    if (IsEqualIID(riid, IID_ITfMouseTrackerACP))
+    {
+        *ppvObj = static_cast<ITfMouseTrackerACP*>(this);
+        AddRef();
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+/// @implemented
+STDMETHODIMP_(ULONG) CInputContextOwner::AddRef()
+{
+    return ++m_cRefs;
+}
+
+/// @implemented
+STDMETHODIMP_(ULONG) CInputContextOwner::Release()
+{
+    if (--m_cRefs == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_cRefs;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetACPFromPoint(
+    const POINT *ptScreen,
+    DWORD       dwFlags,
+    LONG        *pacp)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetTextExt(
+    LONG acpStart,
+    LONG acpEnd,
+    RECT *prc,
+    BOOL *pfClipped)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetScreenExt(RECT *prc)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetStatus(TF_STATUS *pdcs)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetWnd(HWND *phwnd)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::GetAttribute(REFGUID rguidAttribute, VARIANT *pvarValue)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::AdviseMouseSink(
+    ITfRangeACP *range,
+    ITfMouseSink *pSink,
+    DWORD *pdwCookie)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+STDMETHODIMP CInputContextOwner::UnadviseMouseSink(DWORD dwCookie)
+{
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ * CicInputContext
+ */
+
 /// @unimplemented
 CicInputContext::CicInputContext(
     _In_ TfClientId cliendId,
