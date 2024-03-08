@@ -55,6 +55,15 @@ extern "C" {
   __declspec(noreturn) void __cdecl exit(_In_ int _Code);
   _CRTIMP __declspec(noreturn) void __cdecl _exit(_In_ int _Code);
 
+#if !defined __NO_ISOCEXT /* extern stub in static libmingwex.a */
+  /* C99 function name */
+  void __cdecl _Exit(int) __MINGW_ATTRIB_NORETURN;
+#ifndef __CRT__NO_INLINE
+  __CRT_INLINE __MINGW_ATTRIB_NORETURN void  __cdecl _Exit(int status)
+  {  _exit(status); }
+#endif /* !__CRT__NO_INLINE */
+#endif /* Not  __NO_ISOCEXT */
+
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("abort")
 #undef abort
