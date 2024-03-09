@@ -1696,8 +1696,8 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
 
 #ifndef __REACTOS__
            lphc->wState |= CBF_CAPTURE;
-#endif
            SetCapture( hWnd );
+#endif
            CBDropDown( lphc );
        }
        if( bButton ) CBRepaintButton( lphc );
@@ -1728,6 +1728,17 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
        ReleaseCapture();
        SetCapture(lphc->hWndLBox);
    }
+#ifdef __REACTOS__
+   else
+   {
+       /* if not CBF_CAPTURE */
+       if (lphc->wState & CBF_DROPPED)
+       {
+           lphc->wState |= CBF_CAPTURE;
+           SetCapture(lphc->self);
+       }
+   }
+#endif
 
    if( lphc->wState & CBF_BUTTONDOWN )
    {
@@ -2041,10 +2052,6 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
     case WM_MOUSEMOVE:
         if ( lphc->wState & CBF_CAPTURE )
             COMBO_MouseMove( lphc, wParam, lParam );
-#ifdef __REACTOS__
-        if ( lphc->wState & CBF_DROPPED )
-             lphc->wState |= CBF_CAPTURE;
-#endif
         return  TRUE;
 
     case WM_MOUSEWHEEL:
