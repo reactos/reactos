@@ -77,6 +77,21 @@ ConvertToBiosExtValue(UCHAR KeyIn)
             return KEY_RIGHT;
         case SCAN_LEFT:
             return KEY_LEFT;
+        case SCAN_HOME:
+            return KEY_HOME;
+        case SCAN_END:
+            return KEY_END;
+
+        // case SCAN_INSERT:
+        //     break;
+
+        case SCAN_DELETE:
+            return KEY_DELETE;
+
+        // case SCAN_PAGE_UP:
+        // case SCAN_PAGE_DOWN:
+        //     break;
+
         case SCAN_F1:
             return KEY_F1;
         case SCAN_F2:
@@ -99,8 +114,6 @@ ConvertToBiosExtValue(UCHAR KeyIn)
             return KEY_F10;
         case SCAN_ESC:
             return KEY_ESC;
-        case SCAN_DELETE:
-            return KEY_DELETE;
     }
     return 0;
 }
