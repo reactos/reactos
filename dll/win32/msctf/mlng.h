@@ -34,9 +34,26 @@ public:
     void Init(INT cxIcon, INT cyIcon);
     INT AddIcon(HICON hIcon);
     HICON ExtractIcon(INT iIcon);
-    void GetIconSize(int *pcx, int *pcy);
+    void GetIconSize(INT *pcx, INT *pcy);
     INT GetImageCount();
     void RemoveAll(BOOL bNoLock);
 };
+
+INT InatAddIcon(_In_ HICON hIcon);
+HICON InatCreateIcon(_In_ LANGID LangID);
+
+HICON
+InatCreateIconBySize(
+    _In_ LANGID LangID,
+    _In_ INT nWidth,
+    _In_ INT nHeight,
+    _In_ const LOGFONTW *plf);
+
+BOOL InatGetIconSize(_Out_ INT *pcx, _Out_ INT *pcy);
+INT InatGetImageCount(VOID);
+VOID InatRemoveAll(VOID);
+
+HKL GetHKLSubstitute(_In_ HKL hKL);
+HICON GetIconFromFile(_In_ INT cx, _In_ INT cy, _In_ LPCWSTR pszFileName, _In_ INT iIcon);
 
 VOID UninitINAT(VOID);

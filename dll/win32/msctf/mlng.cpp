@@ -5,21 +5,13 @@
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <stdlib.h>
-
 #define WIN32_NO_STATUS
-#define COBJMACROS
-#define INITGUID
-#define _EXTYPES_H
 
 #include <windows.h>
+#include <shellapi.h>
 #include <imm.h>
 #include <imm32_undoc.h>
-#include <cguid.h>
-#include <tchar.h>
 #include <msctf.h>
-#include <ctffunc.h>
-#include <shlwapi.h>
 #include <strsafe.h>
 
 #include <cicreg.h>
@@ -42,7 +34,9 @@ CStaticIconList g_IconList;
  * The helper funtions
  */
 
-static VOID GetLocaleInfoString(HKL hKL, LPWSTR pszDesc, UINT cchDesc)
+/// @unimplemented
+static VOID
+GetLocaleInfoString(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
     if (!::GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, pszDesc, cchDesc))
         *pszDesc = UNICODE_NULL;
@@ -53,69 +47,63 @@ static VOID GetLocaleInfoString(HKL hKL, LPWSTR pszDesc, UINT cchDesc)
 }
 
 /// @unimplemented
-static HKL GetSubstitute(HKL hKL)
+HKL GetHKLSubstitute(_In_ HKL hKL)
 {
     return hKL;
 }
 
 /// @implemented
-static UINT
+static VOID
 GetHKLDesctription(
-    HKL hKL,
-    LPWSTR pszDesc,
-    UINT cchDesc,
-    LPWSTR pszFileName,
-    UINT cchFileName)
+    _In_ HKL hKL,
+    _Out_ LPWSTR pszDesc,
+    _In_ UINT cchDesc,
+    _Out_ LPWSTR pszImeFileName,
+    _In_ UINT cchImeFileName)
 {
-    if (IS_IME_HKL(hKL))
+    pszDesc[0] = pszImeFileName[0] = UNICODE_NULL;
+
+    if (!IS_IME_HKL(hKL))
     {
         GetLocaleInfoString(hKL, pszDesc, cchDesc);
-        *pszFileName = 0;
-        return lstrlenW(pszDesc);
+        return;
     }
 
-    hKL = GetSubstitute(hKL);
+    hKL = GetHKLSubstitute(hKL);
 
     WCHAR szSubKey[MAX_PATH];
     StringCchPrintfW(szSubKey, _countof(szSubKey),
                      L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%08lX",
-                     hKL);
+                     HandleToUlong(hKL));
 
     HKEY hKey;
     LSTATUS error = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, KEY_READ, &hKey);
-    INT cch = 0;
     if (error == ERROR_SUCCESS)
     {
         DWORD cbDesc = cchDesc * sizeof(WCHAR);
-        error = ::RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (LPBYTE)pszDesc, &cbDesc);
-        pszDesc[cbDesc / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        error = ::RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL,
+                                   (LPBYTE)pszDesc, &cbDesc);
+        pszDesc[cbDesc / sizeof(WCHAR) - 1] = UNICODE_NULL; // Avoid buffer overrun
         ::RegCloseKey(hKey);
-
-        cch = lstrlenW(pszDesc);
     }
 
-    if (!cch)
+    if (pszDesc[0] == UNICODE_NULL && !::ImmGetDescriptionW(hKL, pszDesc, cchDesc))
     {
-        if (!::ImmGetDescriptionW(hKL, pszDesc, cchDesc))
-        {
-            *pszDesc = UNICODE_NULL;
-            GetLocaleInfoString(hKL, pszDesc, cchDesc);
-            *pszFileName = UNICODE_NULL;
-            return lstrlenW(pszDesc);
-        }
+        *pszDesc = UNICODE_NULL;
+        GetLocaleInfoString(hKL, pszDesc, cchDesc);
     }
-
-    if (!::ImmGetIMEFileNameW(hKL, pszFileName, cchFileName))
-        *pszFileName = UNICODE_NULL;
-
-    return lstrlenW(pszDesc);
+    else if (!::ImmGetIMEFileNameW(hKL, pszImeFileName, cchImeFileName))
+    {
+        *pszImeFileName = UNICODE_NULL;
+    }
 }
 
-HICON GetIconFromFile(INT cx, INT cy, LPCWSTR pszFileName, INT iIcon)
+/// @implemented
+HICON GetIconFromFile(_In_ INT cx, _In_ INT cy, _In_ LPCWSTR pszFileName, _In_ INT iIcon)
 {
     HICON hIcon;
 
-    if (cx <= GetSystemMetrics(SM_CXSMICON) )
+    if (cx <= GetSystemMetrics(SM_CXSMICON))
         ::ExtractIconExW(pszFileName, iIcon, NULL, &hIcon, 1);
     else
         ::ExtractIconExW(pszFileName, iIcon, &hIcon, NULL, 1);
@@ -123,21 +111,23 @@ HICON GetIconFromFile(INT cx, INT cy, LPCWSTR pszFileName, INT iIcon)
     return hIcon;
 }
 
+/// @implemented
 static BOOL EnsureIconImageList(VOID)
 {
     if (!CStaticIconList::s_cx)
-        g_IconList.Init(GetSystemMetrics(SM_CYSMICON), GetSystemMetrics(SM_CXSMICON));
+        g_IconList.Init(::GetSystemMetrics(SM_CYSMICON), ::GetSystemMetrics(SM_CXSMICON));
 
     return TRUE;
 }
 
+/// @implemented
 static INT GetPhysicalFontHeight(LOGFONTW *plf)
 {
     HDC hDC = ::GetDC(NULL);
     HFONT hFont = ::CreateFontIndirectW(plf);
     HGDIOBJ hFontOld = ::SelectObject(hDC, hFont);
-    TEXTMETRIC tm;
-    ::GetTextMetrics(hDC, &tm);
+    TEXTMETRICW tm;
+    ::GetTextMetricsW(hDC, &tm);
     INT ret = tm.tmExternalLeading + tm.tmHeight;
     ::SelectObject(hDC, hFontOld);
     ::DeleteObject(hFont);
@@ -149,53 +139,53 @@ static INT GetPhysicalFontHeight(LOGFONTW *plf)
  * Inat helper functions
  */
 
-static INT InatAddIcon(HICON hIcon)
+/// @implemented
+INT InatAddIcon(_In_ HICON hIcon)
 {
     if (!EnsureIconImageList())
         return -1;
     return g_IconList.AddIcon(hIcon);
 }
 
-static HICON
+/// @implemented
+HICON
 InatCreateIconBySize(
     _In_ LANGID LangID,
     _In_ INT nWidth,
     _In_ INT nHeight,
-    _In_ const LOGFONT *plf)
+    _In_ const LOGFONTW *plf)
 {
     WCHAR szText[64];
     BOOL ret = ::GetLocaleInfoW(LangID, LOCALE_NOUSEROVERRIDE | LOCALE_SABBREVLANGNAME,
                                 szText, _countof(szText));
     if (!ret)
-    {
         szText[0] = szText[1] = L'?';
-    }
-    szText[2] = 0;
 
-    HFONT hFont = ::CreateFontIndirect(plf);
+    szText[2] = UNICODE_NULL;
+    CharUpperW(szText);
+
+    HFONT hFont = ::CreateFontIndirectW(plf);
     if (!hFont)
         return NULL;
 
     HDC hDC = ::GetDC(NULL);
     HDC hMemDC = ::CreateCompatibleDC(hDC);
     HBITMAP hbmColor = ::CreateCompatibleBitmap(hDC, nWidth, nHeight);
-    ::ReleaseDC(NULL, hDC);
-
     HBITMAP hbmMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    ::ReleaseDC(NULL, hDC);
 
     HICON hIcon = NULL;
     HGDIOBJ hbmOld = ::SelectObject(hMemDC, hbmColor);
     HGDIOBJ hFontOld = ::SelectObject(hMemDC, hFont);
     if (hMemDC && hbmColor && hbmMask)
     {
-
         ::SetBkColor(hMemDC, ::GetSysColor(COLOR_HIGHLIGHT));
         ::SetTextColor(hMemDC, ::GetSysColor(COLOR_HIGHLIGHTTEXT));
 
         RECT rc = { 0, 0, nWidth, nHeight };
         ::ExtTextOutW(hMemDC, 0, 0, ETO_OPAQUE, &rc, L"", 0, NULL);
 
-        ::DrawText(hMemDC, szText, 2, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+        ::DrawTextW(hMemDC, szText, 2, &rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
         ::SelectObject(hMemDC, hbmMask);
 
         ::PatBlt(hMemDC, 0, 0, nWidth, nHeight, BLACKNESS);
@@ -213,12 +203,13 @@ InatCreateIconBySize(
     return hIcon;
 }
 
-static HICON InatCreateIcon(LANGID LangID)
+/// @implemented
+HICON InatCreateIcon(_In_ LANGID LangID)
 {
     INT cxSmIcon = ::GetSystemMetrics(SM_CXSMICON), cySmIcon = ::GetSystemMetrics(SM_CYSMICON);
 
-    LOGFONT lf;
-    if (!SystemParametersInfoA(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &lf, 0))
+    LOGFONTW lf;
+    if (!SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(LOGFONTW), &lf, 0))
         return NULL;
 
     if (cySmIcon < GetPhysicalFontHeight(&lf))
@@ -230,27 +221,43 @@ static HICON InatCreateIcon(LANGID LangID)
     return InatCreateIconBySize(LangID, cxSmIcon, cySmIcon, &lf);
 }
 
-static inline BOOL InatGetIconSize(INT *pcx, INT *pcy)
+/// @implemented
+BOOL InatGetIconSize(_Out_ INT *pcx, _Out_ INT *pcy)
 {
     g_IconList.GetIconSize(pcx, pcy);
     return TRUE;
 }
 
-static inline INT InatGetImageCount(VOID)
+/// @implemented
+INT InatGetImageCount(VOID)
 {
     return g_IconList.GetImageCount();
 }
 
-static inline VOID InatRemoveAll(VOID)
+/// @implemented
+VOID InatRemoveAll(VOID)
 {
     if (CStaticIconList::s_cx)
         g_IconList.RemoveAll(FALSE);
+}
+
+/// @implemented
+VOID UninitINAT(VOID)
+{
+    g_IconList.RemoveAll(TRUE);
+
+    if (g_pMlngInfo)
+    {
+        delete g_pMlngInfo;
+        g_pMlngInfo = NULL;
+    }
 }
 
 /***********************************************************************
  * MLNGINFO
  */
 
+/// @implemented
 void MLNGINFO::InitDesc()
 {
     if (m_bInitDesc)
@@ -264,22 +271,20 @@ void MLNGINFO::InitDesc()
 
     ::EnterCriticalSection(&g_cs);
 
-    if (g_pMlngInfo)
+    for (size_t iKL = 0; iKL < g_pMlngInfo->size(); ++iKL)
     {
-        for (size_t iKL = 0; iKL < g_pMlngInfo->size(); ++iKL)
+        auto& info = (*g_pMlngInfo)[iKL];
+        if (info.m_hKL == m_hKL)
         {
-            auto& info = (*g_pMlngInfo)[iKL];
-            if (info.m_hKL == m_hKL)
-            {
-                info.m_bInitDesc = TRUE;
-                break;
-            }
+            info.m_bInitDesc = TRUE;
+            break;
         }
     }
 
     ::LeaveCriticalSection(&g_cs);
 }
 
+/// @implemented
 void MLNGINFO::InitIcon()
 {
     if (m_bInitIcon)
@@ -292,7 +297,7 @@ void MLNGINFO::InitIcon()
 
     INT cxIcon, cyIcon;
     InatGetIconSize(&cxIcon, &cyIcon);
-    if (lstrlenW(szFileName) > 0)
+    if (szFileName[0])
     {
         HICON hIcon = GetIconFromFile(cxIcon, cyIcon, szFileName, 0);
         if (!hIcon)
@@ -306,25 +311,23 @@ void MLNGINFO::InitIcon()
 
     ::EnterCriticalSection(&g_cs);
 
-    if (g_pMlngInfo)
+    for (size_t iItem = 0; iItem < g_pMlngInfo->size(); ++iItem)
     {
-        for (size_t iItem = 0; iItem < g_pMlngInfo->size(); ++iItem)
+        auto& item = (*g_pMlngInfo)[iItem];
+        if (item.m_hKL == m_hKL)
         {
-            auto& item = (*g_pMlngInfo)[iItem];
-            if (item.m_hKL == m_hKL)
-            {
-                item.m_bInitDesc = TRUE;
-                item.m_bInitIcon = TRUE;
-                item.m_iIconIndex = m_iIconIndex;
-                item.SetDesc(szDesc);
-                break;
-            }
+            item.m_bInitDesc = TRUE;
+            item.m_bInitIcon = TRUE;
+            item.m_iIconIndex = m_iIconIndex;
+            item.SetDesc(szDesc);
+            break;
         }
     }
 
     ::LeaveCriticalSection(&g_cs);
 }
 
+/// @implemented
 LPCWSTR MLNGINFO::GetDesc()
 {
     if (!m_bInitDesc)
@@ -332,15 +335,18 @@ LPCWSTR MLNGINFO::GetDesc()
     return m_szDesc;
 }
 
+/// @implemented
 void MLNGINFO::SetDesc(LPCWSTR pszDesc)
 {
     StringCchCopyW(m_szDesc, _countof(m_szDesc), pszDesc);
 }
 
+/// @implemented
 INT MLNGINFO::GetIconIndex()
 {
     if (!m_bInitIcon)
         InitIcon();
+
     return m_iIconIndex;
 }
 
@@ -348,6 +354,7 @@ INT MLNGINFO::GetIconIndex()
  * CStaticIconList
  */
 
+/// @implemented
 void CStaticIconList::Init(INT cxIcon, INT cyIcon)
 {
     ::EnterCriticalSection(&g_cs);
@@ -356,9 +363,11 @@ void CStaticIconList::Init(INT cxIcon, INT cyIcon)
     ::LeaveCriticalSection(&g_cs);
 }
 
+/// @implemented
 INT CStaticIconList::AddIcon(HICON hIcon)
 {
     ::EnterCriticalSection(&g_cs);
+
     INT iItem = -1;
     HICON hCopyIcon = ::CopyIcon(hIcon);
     if (hCopyIcon)
@@ -366,10 +375,12 @@ INT CStaticIconList::AddIcon(HICON hIcon)
         if (g_IconList.Add(hIcon))
             iItem = INT(g_IconList.size() - 1);
     }
+
     ::LeaveCriticalSection(&g_cs);
     return iItem;
 }
 
+/// @implemented
 HICON CStaticIconList::ExtractIcon(INT iIcon)
 {
     HICON hCopyIcon = NULL;
@@ -380,7 +391,8 @@ HICON CStaticIconList::ExtractIcon(INT iIcon)
     return hCopyIcon;
 }
 
-void CStaticIconList::GetIconSize(int *pcx, int *pcy)
+/// @implemented
+void CStaticIconList::GetIconSize(INT *pcx, INT *pcy)
 {
     ::EnterCriticalSection(&g_cs);
     *pcx = s_cx;
@@ -388,6 +400,7 @@ void CStaticIconList::GetIconSize(int *pcx, int *pcy)
     ::LeaveCriticalSection(&g_cs);
 }
 
+/// @implemented
 INT CStaticIconList::GetImageCount()
 {
     ::EnterCriticalSection(&g_cs);
@@ -396,6 +409,7 @@ INT CStaticIconList::GetImageCount()
     return cItems;
 }
 
+/// @implemented
 void CStaticIconList::RemoveAll(BOOL bNoLock)
 {
     if (!bNoLock)
@@ -403,7 +417,7 @@ void CStaticIconList::RemoveAll(BOOL bNoLock)
 
     for (size_t iItem = 0; iItem < g_IconList.size(); ++iItem)
     {
-        DestroyIcon(g_IconList[iItem]);
+        ::DestroyIcon(g_IconList[iItem]);
     }
 
     clear();
@@ -412,14 +426,15 @@ void CStaticIconList::RemoveAll(BOOL bNoLock)
        ::LeaveCriticalSection(&g_cs);
 }
 
+/// @implemented
 static BOOL CheckMlngInfo(VOID)
 {
     if (!g_pMlngInfo)
-        return TRUE;
+        return TRUE; // Needs creation
 
     INT cKLs = ::GetKeyboardLayoutList(0, NULL);
     if (cKLs != TF_MlngInfoCount())
-        return TRUE;
+        return TRUE; // Needs refresh
 
     if (!cKLs)
         return FALSE;
@@ -430,12 +445,12 @@ static BOOL CheckMlngInfo(VOID)
 
     ::GetKeyboardLayoutList(cKLs, phKLs);
 
-    BOOL ret = TRUE;
+    BOOL ret = FALSE;
     for (INT iKL = 0; iKL < cKLs; ++iKL)
     {
         if ((*g_pMlngInfo)[iKL].m_hKL != phKLs[iKL])
         {
-            ret = FALSE;
+            ret = TRUE; // Needs refresh
             break;
         }
     }
@@ -444,6 +459,7 @@ static BOOL CheckMlngInfo(VOID)
     return ret;
 }
 
+/// @implemented
 static VOID DestroyMlngInfo(VOID)
 {
     if (!g_pMlngInfo)
@@ -453,6 +469,7 @@ static VOID DestroyMlngInfo(VOID)
     g_pMlngInfo = NULL;
 }
 
+/// @implemented
 static VOID CreateMlngInfo(VOID)
 {
     if (!g_pMlngInfo)
@@ -471,6 +488,7 @@ static VOID CreateMlngInfo(VOID)
         return;
 
     ::GetKeyboardLayoutList(cKLs, phKLs);
+
     for (INT iKL = 0; iKL < cKLs; ++iKL)
     {
         MLNGINFO& info = (*g_pMlngInfo)[iKL];
@@ -484,6 +502,8 @@ static VOID CreateMlngInfo(VOID)
 
 /***********************************************************************
  *              TF_InitMlngInfo (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C VOID WINAPI TF_InitMlngInfo(VOID)
 {
@@ -502,10 +522,13 @@ EXTERN_C VOID WINAPI TF_InitMlngInfo(VOID)
 
 /***********************************************************************
  *              TF_MlngInfoCount (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C INT WINAPI TF_MlngInfoCount(VOID)
 {
     TRACE("()\n");
+
     if (!g_pMlngInfo)
         return 0;
 
@@ -514,6 +537,8 @@ EXTERN_C INT WINAPI TF_MlngInfoCount(VOID)
 
 /***********************************************************************
  *              TF_InatExtractIcon (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C HICON WINAPI TF_InatExtractIcon(_In_ INT iKL)
 {
@@ -523,6 +548,8 @@ EXTERN_C HICON WINAPI TF_InatExtractIcon(_In_ INT iKL)
 
 /***********************************************************************
  *              TF_GetMlngIconIndex (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL)
 {
@@ -542,6 +569,8 @@ EXTERN_C INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL)
 
 /***********************************************************************
  *              TF_GetMlngHKL (MSCTF.@)
+ *
+ * @implemented
  */
 EXTERN_C BOOL WINAPI
 TF_GetMlngHKL(
@@ -564,7 +593,7 @@ TF_GetMlngHKL(
             *phKL = info.m_hKL;
 
         if (pszDesc)
-            lstrcpynW(pszDesc, info.GetDesc(), cchDesc);
+            StringCchCopyW(pszDesc, cchDesc, info.GetDesc());
 
         ret = TRUE;
     }
@@ -572,16 +601,4 @@ TF_GetMlngHKL(
     ::LeaveCriticalSection(&g_cs);
 
     return ret;
-}
-
-/***********************************************************************/
-
-VOID UninitINAT(VOID)
-{
-    g_IconList.RemoveAll(TRUE);
-    if (g_pMlngInfo)
-    {
-        delete g_pMlngInfo;
-        g_pMlngInfo = NULL;
-    }
 }
