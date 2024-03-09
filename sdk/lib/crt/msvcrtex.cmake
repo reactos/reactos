@@ -9,7 +9,8 @@ list(APPEND MSVCRTEX_SOURCE
     misc/isblank.c
     misc/iswblank.c
     misc/ofmt_stub.c
-    stdio/acrt_iob_func.c)
+    stdio/acrt_iob_func.c
+    stdlib/rand_s.c)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang performs some optimizations requiring those funtions
