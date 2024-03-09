@@ -552,12 +552,24 @@ else()
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})
 endif()
 
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libwinpthread.a OUTPUT_VARIABLE LIBWINPTHREAD_LOCATION)
+if(LIBWINPTHREAD_LOCATION MATCHES "mingw32")
+    add_library(libwinpthread STATIC IMPORTED)
+    string(STRIP ${LIBWINPTHREAD_LOCATION} LIBWINPTHREAD_LOCATION)
+    message(STATUS "Using libwinpthread from ${LIBWINPTHREAD_LOCATION}")
+    set_target_properties(libwinpthread PROPERTIES IMPORTED_LOCATION ${LIBWINPTHREAD_LOCATION})
+    # libwinpthread needs kernel32 imports, a CRT and msvcrtex
+    target_link_libraries(libwinpthread INTERFACE libkernel32 libmsvcrt msvcrtex)
+else()
+    add_library(libwinpthread INTERFACE)
+endif()
+
 add_library(libgcc STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
-# libgcc needs kernel32 imports, a CRT and msvcrtex
-target_link_libraries(libgcc INTERFACE libkernel32 libmsvcrt msvcrtex)
+# libgcc needs kernel32 imports, winpthread, a CRT and msvcrtex
+target_link_libraries(libgcc INTERFACE libwinpthread libkernel32 libmsvcrt msvcrtex)
 
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
