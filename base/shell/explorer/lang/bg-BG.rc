@@ -144,7 +144,7 @@ BEGIN
     LTEXT            "За да премахнете записи на наскоро използвани документи, програми и интернет сайтове, щракнете върху Изчисти.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Изчисти", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Разширени настройки на Старт менюто:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Добре", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Изход", IDCANCEL, 176, 220, 50, 14
 END

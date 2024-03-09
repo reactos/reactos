@@ -54,41 +54,41 @@ private:
     HRESULT RefreshAddress();
 public:
     // *** IShellService methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
+    STDMETHOD(SetOwner)(IUnknown *) override;
 
     // *** IAddressBand methods ***
-    virtual HRESULT STDMETHODCALLTYPE FileSysChange(long param8, long paramC);
-    virtual HRESULT STDMETHODCALLTYPE Refresh(long param8);
+    STDMETHOD(FileSysChange)(long param8, long paramC) override;
+    STDMETHOD(Refresh)(long param8) override;
 
     // *** IAddressEditBox methods ***
-    virtual HRESULT STDMETHODCALLTYPE Init(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18);
-    virtual HRESULT STDMETHODCALLTYPE SetCurrentDir(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE ParseNow(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE Execute(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE Save(long paramC);
+    STDMETHOD(Init)(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18) override;
+    STDMETHOD(SetCurrentDir)(long paramC) override;
+    STDMETHOD(ParseNow)(long paramC) override;
+    STDMETHOD(Execute)(long paramC) override;
+    STDMETHOD(Save)(long paramC) override;
 
     // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    STDMETHOD(OnWinEvent)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
+    STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
+    STDMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // message handlers
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

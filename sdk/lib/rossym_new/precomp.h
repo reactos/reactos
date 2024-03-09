@@ -1,4 +1,4 @@
-#define NTOSAPI
+
 #include <ntifs.h>
 #include <ntimage.h>
 #include <ndk/psfuncs.h>

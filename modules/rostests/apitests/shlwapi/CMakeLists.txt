@@ -12,6 +12,7 @@ list(APPEND SOURCE
     PathUnExpandEnvStrings.c
     PathUnExpandEnvStringsForUser.c
     SHAreIconsEqual.c
+    SHGetRestriction.c
     SHLoadIndirectString.c
     SHLoadRegUIString.c
     SHPropertyBag.cpp

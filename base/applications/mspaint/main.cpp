@@ -743,6 +743,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
     EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
     EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(CanPaste()));
+    EnableMenuItem(menu, IDM_CROPSELECTION, ENABLED_IF(trueSelection));
 
     //
     // View menu
@@ -1050,6 +1051,17 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
             CloseClipboard();
             break;
+        case IDM_CROPSELECTION:
+        {
+            HBITMAP hbmSelection = selectionModel.GetSelectionContents();
+            if (hbmSelection)
+            {
+                imageModel.PushImageForUndo(hbmSelection);
+                selectionModel.HideSelection();
+                imageModel.NotifyImageChanged();
+            }
+            break;
+        }
         case IDM_EDITDELETESELECTION:
         {
             if (textShown)

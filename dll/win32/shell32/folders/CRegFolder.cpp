@@ -123,6 +123,16 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
+HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
+{
+    WCHAR xriid[40];
+
+    if (!StringFromGUID2(*riid, xriid, _countof(xriid) - 1))
+        return E_FAIL;
+
+    return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
+}
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -145,14 +155,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     if (!riid)
         return E_FAIL;
 
-    /* my computer and other shell extensions */
-    WCHAR xriid[50];
-
-    swprintf(xriid, L"CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             riid->Data1, riid->Data2, riid->Data3,
-             riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-             riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
+    /* Choose a correct icon for Recycle Bin (full or empty) */
     const WCHAR* iconname = NULL;
     if (_ILIsBitBucket(pidl))
     {
@@ -179,23 +182,37 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
         }
     }
 
-    if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
+    /* Prepare registry path for loading icons of My Computer and other shell extensions */
+    WCHAR KeyName[MAX_PATH];
+
+    hr = FormatGUIDKey(KeyName, _countof(KeyName),
+                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s",
+                       riid);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    /* Load icon for the current user */
+    BOOL ret = HCU_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    if (!ret)
     {
+        /* Failed, load default system-wide icon */
+        hr = FormatGUIDKey(KeyName, _countof(KeyName), L"CLSID\\%s", riid);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        ret = HCR_GetIconW(KeyName, wTemp, iconname, _countof(wTemp), &icon_idx);
+    }
+
+    if (ret)
+    {
+        /* Success, set loaded icon */
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else
     {
-        // FIXME: Delete these hacks and make HCR_GetIconW and registry working
-        if (IsEqualGUID(*riid, CLSID_MyComputer))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-        else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-        else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-        else if (IsEqualGUID(*riid, CLSID_Internet))
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_WEB_BROWSER);
-        else
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
+        /* Everything has failed, set blank paper icon */
+        WARN("Failed to load an icon for the item, setting blank icon\n");
+        initIcon->SetNormalIcon(swShell32Name, IDI_SHELL_DOCUMENT - 1);
     }
 
     return initIcon->QueryInterface(iid, ppvOut);
@@ -301,25 +318,25 @@ class CRegFolder :
         HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName);
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes);
-        virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
-        virtual HRESULT WINAPI BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
-        virtual HRESULT WINAPI CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
-        virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-        virtual HRESULT WINAPI GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-        virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
+        STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override;
+        STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;
+        STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(BindToStorage)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override;
+        STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(GetAttributesOf)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override;
+        STDMETHOD(GetUIObjectOf)(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override;
+        STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override;
+        STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override;
 
         /* ShellFolder2 */
-        virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
-        virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
-        virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
-        virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
-        virtual HRESULT WINAPI GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
-        virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-        virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
+        STDMETHOD(GetDefaultSearchGUID)(GUID *pguid) override;
+        STDMETHOD(EnumSearches)(IEnumExtraSearch **ppenum) override;
+        STDMETHOD(GetDefaultColumn)(DWORD dwRes, ULONG *pSort, ULONG *pDisplay) override;
+        STDMETHOD(GetDefaultColumnState)(UINT iColumn, DWORD *pcsFlags) override;
+        STDMETHOD(GetDetailsEx)(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override;
+        STDMETHOD(GetDetailsOf)(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
+        STDMETHOD(MapColumnToSCID)(UINT column, SHCOLUMNID *pscid) override;
 
         DECLARE_NOT_AGGREGATABLE(CRegFolder)
 

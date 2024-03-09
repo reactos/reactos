@@ -4,7 +4,7 @@
  * PURPOSE:     Polish resource file
  * TRANSLATORS: Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
  *              Copyright 2018 Kamil Smoliński <blackdragondev85@gmail.com>
- *              Copyright 2021 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ *              Copyright 2021-2024 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -814,11 +814,11 @@ BEGIN
     IDS_COPYERRORSAME "Nie można skopiować  '%s': Nazwy plików źródłowego i docelowego są takie same."
     IDS_MOVEERRORSUBFOLDER "Nie można przenieść  '%s': Folder docelowy jest podfolderem folderu źródłowego."
     IDS_COPYERRORSUBFOLDER "Nie można skopiować  '%s': Folder docelowy jest podfolderem folderu źródłowego."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "Nie można przenieść '%s': %s"
+    IDS_COPYERROR "Nie można skopiować '%s': %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "Nie można utworzyć pliku %1"
+    IDS_CREATEFILE_CAPTION "Błąd podczas tworzenia pliku"
     IDS_CREATEFOLDER_DENIED "Nie można utworzyć folderu '%1'"
     IDS_CREATEFOLDER_CAPTION "Nie można utworzyć folderu"
     IDS_DELETEITEM_CAPTION "Potwierdź usunięcie pliku"
@@ -863,9 +863,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Normalne okno"
+    IDS_SHORTCUT_RUN_MIN "Zminimalizowane"
+    IDS_SHORTCUT_RUN_MAX "Zmaksymalizowane"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Start\\Programy"
@@ -898,7 +898,7 @@ BEGIN
     IDS_NETWORKPLACE "Moje miejsca sieciowe"
 
     IDS_NEWFOLDER "Nowy folder"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Nowy %s"
 
     IDS_DRIVE_FIXED "Dysk lokalny"
     IDS_DRIVE_CDROM "Stacja dysków CD"
@@ -1021,6 +1021,10 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Pokaż Panel sterowania w oknie Mój komputer"
     IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Wyświetl polecenie Ulubione"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Wyświetl polecenie Wyloguj"
+    IDS_ADVANCED_DISPLAY_RUN "Wyświetl polecenie Uruchom"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Wyświetl polecenie Narzędzia administracyjne"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Zaawansowane"
     IDS_NEWEXT_ADVANCED_RIGHT "&Zaawansowane >>"

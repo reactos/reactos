@@ -1009,6 +1009,10 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "マイ コンピュータでコントロール パネルを表示する"
     IDS_ADVANCED_SHOW_COMP_COLOR "暗号化または圧縮されたNTFSファイルを色付きで表示する"
     IDS_ADVANCED_SHOW_INFO_TIP "フォルダとデスクトップの項目にポップアップ式の説明を表示する"
+    IDS_ADVANCED_DISPLAY_FAVORITES "「お気に入り」を表示"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "「ログオフ」を表示"
+    IDS_ADVANCED_DISPLAY_RUN "「ファイル名を指定して実行」を表示"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "「管理者ツール」を表示"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 高度な設定(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高度な設定(&V) >>"

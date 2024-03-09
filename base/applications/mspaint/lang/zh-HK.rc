@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "剪下(&T)\tCtrl+X", IDM_EDITCUT
         MENUITEM "複製(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼上(&P)\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "刪除選中區域(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "反轉選擇(&I)", IDM_EDITINVERTSELECTION
         MENUITEM "全選(&A)\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "剪下(&T)\tCtrl+X", IDM_EDITCUT
         MENUITEM "複製(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼上(&P)\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "刪除選中區域(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "全選(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

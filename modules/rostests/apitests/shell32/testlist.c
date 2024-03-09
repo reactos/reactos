@@ -38,6 +38,7 @@ extern void func_ShellState(void);
 extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
+extern void func_SHRestricted(void);
 
 const struct test winetest_testlist[] =
 {
@@ -76,5 +77,7 @@ const struct test winetest_testlist[] =
     { "SHGetAttributesFromDataObject", func_SHGetAttributesFromDataObject },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
+    { "SHRestricted", func_SHRestricted },
+
     { 0, 0 }
 };

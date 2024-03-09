@@ -33,3 +33,12 @@ HalpSetupProcessorsTable(
     CurrentPrcb = KeGetCurrentPrcb();
     HalpProcessorIdentity[NTProcessorNumber].ProcessorPrcb = CurrentPrcb;
 }
+
+VOID
+FASTCALL
+HalpBroadcastClockIpi(
+    _In_ UCHAR Vector)
+{
+    /* Send a clock IPI to all processors */
+    HalpBroadcastIpiSpecifyVector(Vector, FALSE);
+}

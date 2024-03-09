@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selekzioa &alderantzikatu", IDM_EDITINVERTSELECTION
         MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "E&baki\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopiatu\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Itsasti\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Selekzioa &ezabatu\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

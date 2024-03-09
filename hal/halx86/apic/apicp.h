@@ -43,6 +43,7 @@
     #define APIC_GENERIC_VECTOR  0xC1 // IRQL 27
     #define APIC_CLOCK_VECTOR    0xD1 // IRQL 28
     #define APIC_SYNCH_VECTOR    0xD1 // IRQL 28
+    #define CLOCK_IPI_VECTOR     0xD2 // IRQL 28
     #define APIC_IPI_VECTOR      0xE1 // IRQL 29
     #define APIC_ERROR_VECTOR    0xE3
     #define POWERFAIL_VECTOR     0xEF // IRQL 30
@@ -297,7 +298,7 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
     struct
     {
         UINT64 Vector:8;
-        UINT64 DeliveryMode:3;
+        UINT64 MessageType:3;
         UINT64 DestinationMode:1;
         UINT64 DeliveryStatus:1;
         UINT64 Polarity:1;

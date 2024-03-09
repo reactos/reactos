@@ -42,8 +42,8 @@ public:
     HRESULT Initialize();
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // Message handlers
     LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

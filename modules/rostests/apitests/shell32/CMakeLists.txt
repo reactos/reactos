@@ -28,6 +28,7 @@ list(APPEND SOURCE
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
+    SHRestricted.cpp
     She.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp

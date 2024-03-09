@@ -1009,6 +1009,10 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Tampilkan Panel Kontrol pada Komputer Saya"
     IDS_ADVANCED_SHOW_COMP_COLOR "Tampilkan file NTFS terenkripsi atau dikompresi dalam warna"
     IDS_ADVANCED_SHOW_INFO_TIP "Tampilkan deskrisi popup untuk butir folder dan desktop"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_DISPLAY_RUN "Display Run"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Tin&gkat lanjut"
     IDS_NEWEXT_ADVANCED_RIGHT "Tin&gkat lanjut >>"

@@ -259,8 +259,66 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
     return S_FALSE;
 }
 
+static WCHAR GetAccessKeyFromText(WCHAR chAccess, LPCWSTR pszText)
+{
+    for (const WCHAR *pch = pszText; *pch != UNICODE_NULL; ++pch)
+    {
+        if (*pch == L'&' && pch[1] == L'&')
+        {
+            /* Skip the first '&', the second is skipped by the for-loop */
+            ++pch;
+            continue;
+        }
+        if (*pch == L'&')
+        {
+            ++pch;
+            chAccess = *pch;
+            break;
+        }
+    }
+
+    ::CharUpperBuffW(&chAccess, 1);
+    return chAccess;
+}
+
+static WCHAR GetAddressBarAccessKey(WCHAR chAccess)
+{
+    static WCHAR s_chCache = 0;
+    static LANGID s_ThreadLocale = 0;
+    if (s_chCache && s_ThreadLocale == ::GetThreadLocale())
+        return s_chCache;
+
+    WCHAR szText[80];
+    if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_ADDRESSBANDLABEL,
+                     szText, _countof(szText)))
+    {
+        return chAccess;
+    }
+
+    s_chCache = GetAccessKeyFromText(chAccess, szText);
+    s_ThreadLocale = ::GetThreadLocale();
+    return s_chCache;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
+    // Enable Address bar access key (Alt+D)
+    switch (lpMsg->message)
+    {
+        case WM_SYSKEYDOWN:
+        case WM_SYSCHAR:
+        {
+            WCHAR chAccess = GetAddressBarAccessKey(L'D');
+            if (lpMsg->wParam == chAccess)
+            {
+                ::PostMessageW(fEditControl, EM_SETSEL, 0, -1);
+                ::SetFocus(fEditControl);
+                return S_FALSE;
+            }
+            break;
+        }
+    }
+
     if (lpMsg->hwnd == fEditControl)
     {
         switch (lpMsg->message)

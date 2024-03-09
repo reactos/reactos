@@ -44,6 +44,8 @@ BEGIN
         MENUITEM "&Вирізати\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Копіювати\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Вс&тавити\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Ви&далити виділення\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Обернути виділення", IDM_EDITINVERTSELECTION
         MENUITEM "Виді&лити все\tCtrl+A", IDM_EDITSELECTALL
@@ -108,6 +110,8 @@ BEGIN
         MENUITEM "&Вирізати\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Копіювати\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Вс&тавити\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Ви&далити виділення\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Виді&лити все\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

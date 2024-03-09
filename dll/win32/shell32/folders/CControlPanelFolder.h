@@ -41,34 +41,34 @@ class CControlPanelFolder :
         ~CControlPanelFolder();
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
-        virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
-        virtual HRESULT WINAPI BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
-        virtual HRESULT WINAPI CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
-        virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-        virtual HRESULT WINAPI GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-        virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
+        STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
+        STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;
+        STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(BindToStorage)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override;
+        STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override;
+        STDMETHOD(GetAttributesOf)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override;
+        STDMETHOD(GetUIObjectOf)(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override;
+        STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override;
+        STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override;
 
         /* ShellFolder2 */
-        virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
-        virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
-        virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
-        virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
-        virtual HRESULT WINAPI GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
-        virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-        virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
+        STDMETHOD(GetDefaultSearchGUID)(GUID *pguid) override;
+        STDMETHOD(EnumSearches)(IEnumExtraSearch **ppenum) override;
+        STDMETHOD(GetDefaultColumn)(DWORD dwRes, ULONG *pSort, ULONG *pDisplay) override;
+        STDMETHOD(GetDefaultColumnState)(UINT iColumn, DWORD *pcsFlags) override;
+        STDMETHOD(GetDetailsEx)(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override;
+        STDMETHOD(GetDetailsOf)(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
+        STDMETHOD(MapColumnToSCID)(UINT column, SHCOLUMNID *pscid) override;
 
         // IPersist
-        virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
+        STDMETHOD(GetClassID)(CLSID *lpClassId) override;
 
         // IPersistFolder
-        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
+        STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidl) override;
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
+        STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override;
 
         DECLARE_REGISTRY_RESOURCEID(IDR_CONTROLPANEL)
         DECLARE_NOT_AGGREGATABLE(CControlPanelFolder)
@@ -98,12 +98,12 @@ public:
     HRESULT WINAPI Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
 
     // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+    STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpcmi) override;
+    STDMETHOD(GetCommandString)(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;
 
     // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
     BEGIN_COM_MAP(CCPLItemMenu)
     COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
@@ -118,9 +118,9 @@ class COpenControlPanel :
 {
     public:
         // IOpenControlPanel
-        virtual HRESULT WINAPI Open(LPCWSTR pszName, LPCWSTR pszPage, IUnknown *punkSite);
-        virtual HRESULT WINAPI GetPath(LPCWSTR pszName, LPWSTR pszPath, UINT cchPath);
-        virtual HRESULT WINAPI GetCurrentView(CPVIEW *pView);
+        STDMETHOD(Open)(LPCWSTR pszName, LPCWSTR pszPage, IUnknown *punkSite) override;
+        STDMETHOD(GetPath)(LPCWSTR pszName, LPWSTR pszPath, UINT cchPath) override;
+        STDMETHOD(GetCurrentView)(CPVIEW *pView) override;
 
         static HRESULT WINAPI UpdateRegistry(BOOL bRegister) { return S_OK; } // CControlPanelFolder does it for us
         DECLARE_NOT_AGGREGATABLE(COpenControlPanel)

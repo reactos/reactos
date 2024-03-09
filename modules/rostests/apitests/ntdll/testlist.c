@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_LdrEnumResources(void);
+extern void func_LdrLoadDll(void);
 extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
 extern void func_NtAccessCheck(void);
@@ -106,6 +107,7 @@ extern void func_UserModeException(void);
 const struct test winetest_testlist[] =
 {
     { "LdrEnumResources",               func_LdrEnumResources },
+    { "LdrLoadDll",                     func_LdrLoadDll },
     { "load_notifications",             func_load_notifications },
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },
     { "NtAccessCheck",                  func_NtAccessCheck },

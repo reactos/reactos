@@ -40,6 +40,14 @@ HalpSetupProcessorsTable(
     NOTHING;
 }
 
+VOID
+FASTCALL
+HalpBroadcastClockIpi(
+    _In_ UCHAR Vector)
+{
+    NOTHING;
+}
+
 #ifdef _M_AMD64
 
 VOID

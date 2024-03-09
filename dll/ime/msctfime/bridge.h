@@ -28,6 +28,8 @@ protected:
     static BOOL CALLBACK EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam);
     static BOOL CALLBACK EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam);
 
+    LRESULT EscHanjaMode(TLS *pTLS, HIMC hIMC, LPVOID lpData);
+
 public:
     CicBridge();
     virtual ~CicBridge();
@@ -89,7 +91,7 @@ public:
 
     HRESULT Notify(
         TLS *pTLS,
-        ITfThreadMgr *pThreadMgr,
+        ITfThreadMgr_P *pThreadMgr,
         HIMC hIMC,
         DWORD dwAction,
         DWORD dwIndex,
@@ -132,4 +134,18 @@ public:
         LPVOID lpData);
 
     static BOOL IsOwnDim(ITfDocumentMgr *pDocMgr);
+
+    BOOL
+    DoOpenCandidateHanja(
+        ITfThreadMgr_P *pThreadMgr,
+        CicIMCLock& imcLock,
+        CicInputContext *pCicIC);
+
+    HRESULT
+    OnSetConversionSentenceMode(
+        ITfThreadMgr_P *pThreadMgr,
+        CicIMCLock& imcLock,
+        CicInputContext *pCicIC,
+        DWORD dwValue,
+        LANGID LangID);
 };

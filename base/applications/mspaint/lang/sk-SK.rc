@@ -42,6 +42,8 @@ BEGIN
         MENUITEM "&Vystrihnúť\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopírovať\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Prilepiť\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Vy&mazať výber\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Invertovať výber", IDM_EDITINVERTSELECTION
         MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
@@ -106,6 +108,8 @@ BEGIN
         MENUITEM "&Vystrihnúť\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopírovať\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Prilepiť\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Vy&mazať výber\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "&Taglia\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
         MENUITEM "I&ncolla\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Cance&lla area selezionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "&Inverte selezione", IDM_EDITINVERTSELECTION
         MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "&Taglia\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
         MENUITEM "I&ncolla\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Cance&lla area selezionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

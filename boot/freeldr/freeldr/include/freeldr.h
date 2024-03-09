@@ -31,7 +31,6 @@
 
 /* Public headers */
 #ifdef __REACTOS__
-#define NTOSAPI
 #include <ntddk.h>
 #include <ntifs.h>
 #include <ioaccess.h>

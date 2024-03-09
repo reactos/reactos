@@ -52,7 +52,7 @@ BEGIN
     PUSHBUTTON "Con&firmă", IDOK, 110, 59, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 174, 59, 60, 14
     LTEXT "Sp&ecificați perioada de menținere apăsată a unui buton pentru a-l imobiliza.", -1, 37, 5, 200, 27
-    ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228

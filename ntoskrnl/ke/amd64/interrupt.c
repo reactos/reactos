@@ -84,8 +84,14 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     PKINTERRUPT ConnectedInterrupt;
     KIRQL OldIrql;
 
-    ASSERT(Interrupt->Vector >= PRIMARY_VECTOR_BASE);
-    ASSERT(Interrupt->Vector <= MAXIMUM_IDTVECTOR);
+    /* Validate the vector */
+    if ((Interrupt->Vector < PRIMARY_VECTOR_BASE) ||
+        (Interrupt->Vector > MAXIMUM_IDTVECTOR))
+    {
+        DPRINT1("Invalid interrupt vector: %lu\n", Interrupt->Vector);
+        return FALSE;
+    }
+
     ASSERT(Interrupt->Number < KeNumberProcessors);
     ASSERT(Interrupt->Irql <= HIGH_LEVEL);
     ASSERT(Interrupt->SynchronizeIrql >= Interrupt->Irql);

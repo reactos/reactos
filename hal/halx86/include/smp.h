@@ -42,6 +42,11 @@ HalpSetupProcessorsTable(
 VOID
 HalpPrintApicTables(VOID);
 
+VOID
+FASTCALL
+HalpBroadcastClockIpi(
+    _In_ UCHAR Vector);
+
 /* APIC specific functions inside apic/apicsmp.c */
 
 VOID

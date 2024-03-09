@@ -21,6 +21,8 @@
 
 #include "precomp.h"
 
+#define I_CHECKED   2
+
 // TODO: Windows Explorer appears to be calling NewLinkHere / ConfigStartMenu directly for both items.
 VOID OnAddStartMenuItems(HWND hDlg)
 {
@@ -49,25 +51,120 @@ VOID OnAdvancedStartMenuItems()
     }
 }
 
-VOID OnClearRecentItems()
+static BOOL RecentHasShortcut(HWND hwnd)
 {
-   WCHAR szPath[MAX_PATH], szFile[MAX_PATH];
-   WIN32_FIND_DATAW info;
-   HANDLE hPath;
+    WCHAR szPath[MAX_PATH];
+    if (FAILED(SHGetFolderPathW(hwnd, CSIDL_RECENT | CSIDL_FLAG_CREATE, NULL, 0, szPath)))
+        return FALSE;
 
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
+    // Find shortcut files in Recent
+    WIN32_FIND_DATAW find;
+    PathAppendW(szPath, L"*.lnk");
+    HANDLE hFind = FindFirstFileW(szPath, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    FindClose(hFind);
+    return TRUE;
+}
+
+static VOID OnClearRecentItems(HWND hwnd)
+{
+    SHAddToRecentDocs(SHARD_PIDL, NULL);
+    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+}
+
+struct CUSTOMIZE_ENTRY;
+typedef DWORD (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
+typedef BOOL (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, DWORD dwValue);
+
+struct CUSTOMIZE_ENTRY
+{
+    LPARAM id;
+    LPCWSTR name;
+    FN_CUSTOMIZE_READ fnRead;
+    FN_CUSTOMIZE_WRITE fnWrite;
+};
+
+static DWORD CALLBACK CustomizeRead0(const CUSTOMIZE_ENTRY *entry)
+{
+    return GetAdvancedBool(entry->name, FALSE);
+}
+
+static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+{
+    return SetAdvancedDword(entry->name, dwValue);
+}
+
+static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
+{
+    // FIXME: Make "StartMenuAdminTools" effective
+    //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
+
+    { IDS_ADVANCED_DISPLAY_FAVORITES,  L"StartMenuFavorites",  CustomizeRead0, CustomizeWrite0 },
+    { IDS_ADVANCED_DISPLAY_LOG_OFF,    L"StartMenuLogoff",     CustomizeRead0, CustomizeWrite0 },
+
+    // FIXME: SHRestricted is buggy!
+    //{ IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeRead2, CustomizeWrite2 },
+};
+
+static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
+{
+    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
+    Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
+
+    WCHAR szText[MAX_PATH];
+    LoadStringW(GetModuleHandleW(L"shell32.dll"), entry->id, szText, _countof(szText));
+    Insert.item.pszText = szText;
+    Insert.item.lParam = entry->id;
+    Insert.item.stateMask = TVIS_STATEIMAGEMASK;
+    if (entry->fnRead(entry))
+        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
+    TreeView_InsertItem(hTreeView, &Insert);
+}
+
+static void CustomizeClassic_OnInitDialog(HWND hwnd)
+{
+    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+
+    HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
+
+    DWORD_PTR style = GetWindowLongPtrW(hTreeView, GWL_STYLE);
+    SetWindowLongPtrW(hTreeView, GWL_STYLE, style | TVS_CHECKBOXES);
+
+    for (auto& entry : s_CustomizeEntries)
     {
-        StringCchPrintfW(szFile, _countof(szFile), L"%s\\*.*", szPath);
-        hPath = FindFirstFileW(szFile, &info);
-        do
-        {
-            StringCchPrintfW(szFile, _countof(szFile), L"%s\\%s", szPath, info.cFileName);
-            DeleteFileW(szFile);
-        }
-        while (FindNextFileW(hPath, &info));
-        FindClose(hPath);
-        /* FIXME: Disable the button*/
+        AddCustomizeItem(hTreeView, &entry);
     }
+}
+
+static BOOL CustomizeClassic_OnOK(HWND hwnd)
+{
+    HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
+
+    for (HTREEITEM hItem = TreeView_GetFirstVisible(hTreeView);
+         hItem != NULL;
+         hItem = TreeView_GetNextVisible(hTreeView, hItem))
+    {
+        TV_ITEM item = { TVIF_PARAM | TVIF_STATE };
+        item.hItem = hItem;
+        item.stateMask = TVIS_STATEIMAGEMASK;
+        TreeView_GetItem(hTreeView, &item);
+
+        BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
+        for (auto& entry : s_CustomizeEntries)
+        {
+            if (item.lParam == entry.id)
+            {
+                entry.fnWrite(&entry, bChecked);
+                break;
+            }
+        }
+    }
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"TraySettings",
+                        SMTO_ABORTIFHUNG, 200, NULL);
+    return TRUE;
 }
 
 INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -75,7 +172,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     switch (Message)
     {
         case WM_INITDIALOG:
-            /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
+            CustomizeClassic_OnInitDialog(hwnd);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -90,10 +187,13 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     OnAdvancedStartMenuItems();
                     break;
                 case IDC_CLASSICSTART_CLEAR:
-                    OnClearRecentItems();
+                    OnClearRecentItems(hwnd);
                     break;
                 case IDOK:
-                    EndDialog(hwnd, IDOK);
+                    if (CustomizeClassic_OnOK(hwnd))
+                    {
+                        EndDialog(hwnd, IDOK);
+                    }
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);

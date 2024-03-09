@@ -2,7 +2,6 @@
  * Dwarf data format parsing routines.
  */
 
-#define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"

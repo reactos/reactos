@@ -679,15 +679,111 @@ CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd,
 }
 
 /// @unimplemented
+BOOL
+CicBridge::DoOpenCandidateHanja(
+    ITfThreadMgr_P *pThreadMgr,
+    CicIMCLock& imcLock,
+    CicInputContext *pCicIC)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+HRESULT
+CicBridge::OnSetConversionSentenceMode(
+    ITfThreadMgr_P *pThreadMgr,
+    CicIMCLock& imcLock,
+    CicInputContext *pCicIC,
+    DWORD dwValue,
+    LANGID LangID)
+{
+    return E_NOTIMPL;
+}
+
+/// @implemented
 HRESULT CicBridge::Notify(
     TLS *pTLS,
-    ITfThreadMgr *pThreadMgr,
+    ITfThreadMgr_P *pThreadMgr,
     HIMC hIMC,
     DWORD dwAction,
     DWORD dwIndex,
     DWORD_PTR dwValue)
 {
-    return E_NOTIMPL; // FIXME
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_OUTOFMEMORY;
+
+    CicProfile *pProfile = pTLS->m_pProfile;
+    if (!pProfile)
+        return E_OUTOFMEMORY;
+
+    LANGID LangID;
+    pProfile->GetLangId(&LangID);
+
+    switch (dwAction)
+    {
+        case NI_OPENCANDIDATE:
+            if (PRIMARYLANGID(LangID) == LANG_KOREAN)
+            {
+                if (DoOpenCandidateHanja(pThreadMgr, imcLock, pCicIC))
+                    return S_OK;
+                return E_FAIL;
+            }
+            return E_NOTIMPL;
+
+        case NI_COMPOSITIONSTR:
+            switch (dwIndex)
+            {
+                case CPS_COMPLETE:
+                    pCicIC->EscbCompComplete(imcLock);
+                    break;
+
+                case CPS_CONVERT:
+                case CPS_REVERT:
+                    return E_NOTIMPL;
+
+                case CPS_CANCEL:
+                    pCicIC->EscbCompCancel(imcLock);
+                    break;
+
+                default:
+                    return E_FAIL;
+            }
+            return S_OK;
+
+        case NI_CONTEXTUPDATED:
+            switch (dwValue)
+            {
+                case IMC_SETCONVERSIONMODE:
+                case IMC_SETSENTENCEMODE:
+                    return OnSetConversionSentenceMode(pThreadMgr, imcLock, pCicIC, dwValue, LangID);
+
+                case IMC_SETOPENSTATUS:
+                    return OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
+
+                case IMC_SETCANDIDATEPOS:
+                    return pCicIC->OnSetCandidatePos(pTLS, imcLock);
+
+                case IMC_SETCOMPOSITIONFONT:
+                case IMC_SETCOMPOSITIONWINDOW:
+                    return E_NOTIMPL;
+
+                default:
+                    return E_FAIL;
+            }
+            break;
+
+        default:
+            return E_NOTIMPL;
+    }
 }
 
 /// @unimplemented
@@ -719,7 +815,7 @@ CicBridge::ToAsciiEx(
     return E_NOTIMPL; // FIXME
 }
 
-/// @unimplemented
+/// @implemented
 BOOL
 CicBridge::SetCompositionString(
     TLS *pTLS,
@@ -731,14 +827,80 @@ CicBridge::SetCompositionString(
     LPCVOID lpRead,
     DWORD dwReadLen)
 {
-    return FALSE; // FIXME
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return FALSE;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return FALSE;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    auto pProfile = pTLS->m_pProfile;
+    if (!pCicIC || !pProfile)
+        return FALSE;
+
+    UINT uCodePage;
+    pProfile->GetCodePageA(&uCodePage);
+
+    LANGID LangID;
+    if (dwIndex != SCS_SETSTR ||
+        !lpComp || *(WORD*)lpComp ||
+        !dwCompLen ||
+        FAILED(pProfile->GetLangId(&LangID)) ||
+        PRIMARYLANGID(LangID) != LANG_KOREAN)
+    {
+        return pCicIC->SetCompositionString(imcLock, pThreadMgr, dwIndex,
+                                            lpComp, dwCompLen, lpRead, dwReadLen,
+                                            uCodePage);
+    }
+
+    if (imcLock.get().fdwConversion & IME_CMODE_NATIVE)
+    {
+        ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /// @unimplemented
 LRESULT
+CicBridge::EscHanjaMode(TLS *pTLS, HIMC hIMC, LPVOID lpData)
+{
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return TRUE;
+
+    if (pCicIC->m_bCandidateOpen)
+        return TRUE;
+
+    pCicIC->m_dwUnknown6_5[4] |= 0x1;
+
+    //FIXME
+
+    pCicIC->m_dwUnknown6_5[4] &= ~0x1;
+
+    return TRUE;
+}
+
+/// @implemented
+LRESULT
 CicBridge::EscapeKorean(TLS *pTLS, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 {
-    return 0; // FIXME
+    if (uSubFunc == IME_ESC_QUERY_SUPPORT)
+        return *(DWORD*)lpData == IME_ESC_HANJA_MODE;
+    if (uSubFunc == IME_ESC_HANJA_MODE)
+        return EscHanjaMode(pTLS, hIMC, lpData);
+    return 0;
 }
 
 /// @implemented

@@ -376,7 +376,7 @@ HalpAllocateSystemInterrupt(
 
     /* Setup a redirection entry */
     ReDirReg.Vector = Vector;
-    ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
+    ReDirReg.MessageType = APIC_MT_LowestPriority;
     ReDirReg.DestinationMode = APIC_DM_Logical;
     ReDirReg.DeliveryStatus = 0;
     ReDirReg.Polarity = 0;
@@ -475,7 +475,7 @@ ApicInitializeIOApic(VOID)
 
     /* Setup a redirection entry */
     ReDirReg.Vector = APIC_FREE_VECTOR;
-    ReDirReg.DeliveryMode = APIC_MT_Fixed;
+    ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.DeliveryStatus = 0;
     ReDirReg.Polarity = 0;
@@ -500,7 +500,7 @@ ApicInitializeIOApic(VOID)
 
     /* Enable the timer interrupt (but keep it masked) */
     ReDirReg.Vector = APIC_CLOCK_VECTOR;
-    ReDirReg.DeliveryMode = APIC_MT_Fixed;
+    ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 1;
@@ -528,10 +528,12 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     HalpVectorToIndex[APC_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[DISPATCH_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_CLOCK_VECTOR] = 8;
+    HalpVectorToIndex[CLOCK_IPI_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
 
     /* Set interrupt handlers in the IDT */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
+    KeRegisterInterruptHandler(CLOCK_IPI_VECTOR, HalpClockIpi);
 #ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
     KeRegisterInterruptHandler(DISPATCH_VECTOR, HalpDispatchInterrupt);
@@ -694,7 +696,7 @@ HalEnableSystemInterrupt(
     if (ReDirReg.Vector != Vector)
     {
         ReDirReg.Vector = Vector;
-        ReDirReg.DeliveryMode = APIC_MT_LowestPriority;
+        ReDirReg.MessageType = APIC_MT_LowestPriority;
         ReDirReg.DestinationMode = APIC_DM_Logical;
         ReDirReg.Destination = 0;
     }

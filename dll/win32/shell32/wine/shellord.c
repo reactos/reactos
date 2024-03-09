@@ -631,6 +631,8 @@ SignalFileOpen (PCIDLIST_ABSOLUTE pidl)
     return FALSE;
 }
 
+#ifndef __REACTOS__
+
 /*************************************************************************
  * SHADD_get_policy - helper function for SHAddToRecentDocs
  *
@@ -672,6 +674,7 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
     return ret;
 }
 
+#endif // __REACTOS__
 
 /*************************************************************************
  * SHADD_compare_mru - helper function for SHAddToRecentDocs
@@ -813,7 +816,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     INT ret;
     WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[80];
     WCHAR szPath[MAX_PATH];
-    DWORD cbBuffer, data[64], datalen, type;
+    DWORD cbBuffer;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
     HKEY hExplorerKey;
@@ -829,25 +832,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     TRACE("%04x %p\n", uFlags, pv);
 
     /* check policy */
-    ret = SHADD_get_policy("NoRecentDocsHistory", &type, data, &datalen);
-    if (ret > 0 && ret != ERROR_FILE_NOT_FOUND)
-    {
-        ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-    }
-    else if (ret == ERROR_SUCCESS)
-    {
-        if (!(type == REG_DWORD || (type == REG_BINARY && datalen == 4)))
-        {
-            ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
-                type, datalen);
-            return;
-        }
-
-        TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
-        /* now test the actual policy value */
-        if (data[0] != 0)
-            return;
-    }
+    ret = SHRestricted(REST_NORECENTDOCSHISTORY);
+    TRACE("policy value for NoRecentDocsHistory = %08x\n", ret);
+    if (ret != 0)
+        return;
 
     /* store to szTargetPath */
     szTargetPath[0] = 0;

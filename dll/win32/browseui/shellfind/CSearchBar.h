@@ -43,40 +43,40 @@ public:
     virtual ~CSearchBar();
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(const RECT *prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
+    STDMETHOD(CloseDW)(DWORD dwReserved) override;
+    STDMETHOD(ResizeBorderDW)(const RECT *prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) override;
+    STDMETHOD(ShowDW)(BOOL fShow) override;
 
     // *** IDeskBand methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);
+    STDMETHOD(GetBandInfo)(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
     // *** IInputObject methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
+    STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
+    STDMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     enum { IDD = IDD_SEARCH_DLG };
 

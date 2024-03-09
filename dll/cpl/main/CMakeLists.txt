@@ -7,7 +7,8 @@ list(APPEND SOURCE
     mouse.c
     main.h)
 
-file(GLOB main_rc_deps resources/*.*)
+set(ICONS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../win32/shell32/res/icons)
+file(GLOB main_rc_deps resources/*.* ${ICONS_DIR}/38.ico ${ICONS_DIR}/39.ico)
 add_rc_deps(main.rc ${main_rc_deps})
 
 add_library(main MODULE

@@ -16,7 +16,7 @@ BEGIN
     LTEXT "Se pueden asignar las propiedades de IP automáticamente si su red soporta esta capacidad. Si no, debe contactar a su administrador de red para obtener los ajustes necesarios.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Obtener dirección IP automáticamente", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Usar la siguiente dirección IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 110, 12
+    CONTROL "&Usar la siguiente dirección IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 110, 12 //FIXME: accelerator collision &U
     LTEXT "Dirección IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 140, 75 - 2, 85, 12
     LTEXT "Máscara de subred:", -1, 14, 90, 135, 8
@@ -25,7 +25,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 140, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Obtener dirección del servidor DNS automáticamente", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Usar las siguientes direcciones DNS:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 130, 12
+    CONTROL "&Usar las siguientes direcciones DNS:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 130, 12 //FIXME: accelerator collision &U
     LTEXT "Servidor DNS preferido:", -1, 14, 161, 160, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 140, 161 - 2, 85, 12
     LTEXT "Servidor DNS alternativo:", -1, 14, 176, 160, 8

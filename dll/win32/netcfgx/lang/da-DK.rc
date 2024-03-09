@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Du kan få din IP opsætning indstillet automatisk, hvis dit Netværkskort understøtter denne mulighed. Ellers, er du nød til at spørge din 'Netværks Administrator' omkring din IP opsætning.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Tildel Automatisk en IP Adresse", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "&Brug følge IP Adresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "&Brug følge IP Adresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12 //FIXME: accelerator collision &B
     LTEXT "IP Adresse:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "Subnet maske:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Tildel automatisk en DNS server adresse", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
-    CONTROL "&Brug følgende DNS Server Adresse:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
+    CONTROL "&Brug følgende DNS Server Adresse:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12 //FIXME: accelerator collision &B
     LTEXT "Fortrukket DNS server:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Alternativ DNS server:", -1, 14, 176, 135, 8
