@@ -736,9 +736,41 @@ CicBridge::SetCompositionString(
 
 /// @unimplemented
 LRESULT
+CicBridge::EscHanjaMode(TLS *pTLS, HIMC hIMC, LPVOID lpData)
+{
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return TRUE;
+
+    if (pCicIC->m_bCandidateOpen)
+        return TRUE;
+
+    pCicIC->m_dwUnknown6_5[4] |= 0x1;
+
+    //FIXME
+
+    pCicIC->m_dwUnknown6_5[4] &= ~0x1;
+
+    return TRUE;
+}
+
+/// @implemented
+LRESULT
 CicBridge::EscapeKorean(TLS *pTLS, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 {
-    return 0; // FIXME
+    if (uSubFunc == IME_ESC_QUERY_SUPPORT)
+        return *(DWORD*)lpData == IME_ESC_HANJA_MODE;
+    if (uSubFunc == IME_ESC_HANJA_MODE)
+        return EscHanjaMode(pTLS, hIMC, lpData);
+    return 0;
 }
 
 /// @implemented
