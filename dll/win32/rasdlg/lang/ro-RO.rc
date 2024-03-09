@@ -18,8 +18,8 @@ BEGIN
     CONTROL "", 1012, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000848D, 7, 38, 217, 144
     PUSHBUTTON "M&utare în sus", 1017, 230, 40, 18, 16, BS_ICON
     PUSHBUTTON "&Mutare în jos", 1015, 230, 61, 18, 16, BS_ICON
-    PUSHBUTTON "&Adăugare...", 1013, 7, 187, 70, 14
-    PUSHBUTTON "E&ditare...", 1016, 81, 187, 70, 14
+    PUSHBUTTON "&Adăugare…", 1013, 7, 187, 70, 14
+    PUSHBUTTON "E&ditare…", 1016, 81, 187, 70, 14
     PUSHBUTTON "Şt&ergere", 1014, 154, 187, 70, 14
     AUTOCHECKBOX "Se î&cearcă următorul număr, în caz de nereuşită", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Se mută în capul listei numărul cu care s-a reuşit", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
@@ -37,7 +37,7 @@ BEGIN
     CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
     AUTOCHECKBOX "&Nu se mai întreabă până la următorul Log on", 1022, 8, 125, 235, 10
     PUSHBUTTON "&Setări", 1026, 7, 149, 60, 14
-    DEFPUSHBUTTON "&Conectare...", 1024, 117, 149, 60, 14
+    DEFPUSHBUTTON "&Conectare…", 1024, 117, 149, 60, 14
     PUSHBUTTON "Revocare", 1025, 183, 149, 60, 14
 END
 
@@ -188,7 +188,7 @@ END
 
 113 DIALOGEX 21, 46, 225, 65
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Conectare %1..."
+CAPTION "Conectare %1…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1417, 7, 7, 20, 20
@@ -401,7 +401,7 @@ BEGIN
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 8, 20, 188, 58
     GROUPBOX "", -1, 8, 81, 188, 30
     LTEXT "", 1250, 12, 90, 177, 17
-    DEFPUSHBUTTON "&Adăugare...", 1252, 205, 20, 60, 14
+    DEFPUSHBUTTON "&Adăugare…", 1252, 205, 20, 60, 14
     PUSHBUTTON "Revocare", 2, 205, 38, 60, 14
 END
 
@@ -497,7 +497,7 @@ BEGIN
     AUTORADIOBUTTON "&Interogare în timpul apelării când serverul o propune", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
     AUTORADIOBUTTON "Întotdeauna apelare in&versă la numerele de mai jos:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
     CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
-    PUSHBUTTON "E&ditare...", 1039, 96, 190, 60, 14
+    PUSHBUTTON "E&ditare…", 1039, 96, 190, 60, 14
     PUSHBUTTON "Şt&ergere", 1038, 159, 190, 60, 14
 END
 
@@ -549,7 +549,7 @@ BEGIN
     PUSHBUTTON "În &sus", 1132, 210, 18, 16, 14, BS_ICON
     PUSHBUTTON "În j&os", 1131, 210, 36, 16, 14, BS_ICON
     AUTOCHECKBOX "Toate &dispozitivele apelează aceleaşi numere", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Co&nfigurare...", 1130, 144, 66, 60, 14
+    PUSHBUTTON "Co&nfigurare…", 1130, 144, 66, 60, 14
     GROUPBOX "Tip eşantion", 1125, 8, 84, 215, 100, WS_GROUP
     LTEXT "Cod &zonal:", 1133, 17, 102, 52, 8
     COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
@@ -568,7 +568,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "C&onfigurare...", 1130, 164, 38, 60, 14
+    PUSHBUTTON "C&onfigurare…", 1130, 164, 38, 60, 14
     GROUPBOX "Text model", 1125, 8, 55, 217, 100, WS_GROUP
     LTEXT "Cod &zonal:", 1133, 17, 72, 48, 8
     COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
@@ -635,13 +635,13 @@ BEGIN
     AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în ReactOS (şi domeniu, dacă există)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Se s&olicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 15, 114, 134, 20
-    PUSHBUTTON "&Setări...", 1180, 151, 115, 60, 14
+    PUSHBUTTON "&Setări…", 1180, 151, 115, 60, 14
     GROUPBOX "Log on şi script interactive", 1177, 8, 146, 215, 62, WS_GROUP
     AUTOCHECKBOX "A&fişare fereastră terminal", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "E&xecutare script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
     COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Editare...", 1182, 87, 187, 60, 14
-    PUSHBUTTON "&Răsfoire...", 1181, 151, 187, 60, 14
+    PUSHBUTTON "&Editare…", 1182, 87, 187, 60, 14
+    PUSHBUTTON "&Răsfoire…", 1181, 151, 187, 60, 14
 END
 
 163 DIALOGEX 0, 0, 317, 143
@@ -663,7 +663,7 @@ BEGIN
     PUSHBUTTON "&Setări", 1419, 160, 35, 60, 14
     LTEXT "C&onexiunea utilizează următoarele elemente:", 1684, 8, 64, 219, 10
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
-    PUSHBUTTON "&Instalare...", 1252, 7, 133, 67, 14
+    PUSHBUTTON "&Instalare…", 1252, 7, 133, 67, 14
     PUSHBUTTON "De&zinstalare", 1254, 80, 133, 67, 14
     PUSHBUTTON "&Proprietăţi", 1253, 153, 133, 67, 14
     GROUPBOX "Descriere", 1585, 9, 158, 213, 43
@@ -701,7 +701,7 @@ BEGIN
     AUTOCHECKBOX "&Formare din nou dacă linia a căzut", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Dispozitive multiple", 1288, 7, 156, 213, 32
     COMBOBOX 1551, 16, 169, 128, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Configurare...", 1293, 150, 168, 60, 14
+    PUSHBUTTON "&Configurare…", 1293, 150, 168, 60, 14
     PUSHBUTTON "&X.25", 1295, 7, 194, 50, 14
     PUSHBUTTON "Conexiune prin „tunel” &virtual", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
 END
@@ -727,7 +727,7 @@ BEGIN
     AUTORADIOBUTTON "Agendă telefonică &personală", 1324, 14, 34, 216, 10
     AUTORADIOBUTTON "Această agendă telefonică a&lternativă:", 1323, 14, 46, 217, 10
     COMBOBOX 1321, 26, 61, 201, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "&Răsfoire...", 1322, 167, 81, 60, 14
+    PUSHBUTTON "&Răsfoire…", 1322, 167, 81, 60, 14
 END
 
 170 DIALOGEX 6, 18, 235, 135
@@ -739,7 +739,7 @@ BEGIN
     AUTORADIOBUTTON "Agendă telefonică &sistem", 1325, 14, 22, 217, 10, WS_GROUP
     AUTORADIOBUTTON "Această agendă telefonică a&lternativă:", 1323, 14, 36, 216, 10
     COMBOBOX 1321, 26, 51, 203, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "&Răsfoire...", 1322, 169, 69, 60, 14
+    PUSHBUTTON "&Răsfoire…", 1322, 169, 69, 60, 14
 END
 
 171 DIALOGEX 6, 18, 317, 144
@@ -760,8 +760,8 @@ BEGIN
     AUTOCHECKBOX "Afişare &fereastră terminal", 1462, 15, 31, 162, 10
     AUTOCHECKBOX "E&xecutare script:", 1463, 15, 45, 78, 10
     COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Editare...", 1335, 180, 77, 60, 14
-    PUSHBUTTON "&Răsfoire...", 1465, 244, 77, 60, 14
+    PUSHBUTTON "&Editare…", 1335, 180, 77, 60, 14
+    PUSHBUTTON "&Răsfoire…", 1465, 244, 77, 60, 14
 END
 
 173 DIALOGEX 6, 18, 230, 215
@@ -779,8 +779,8 @@ BEGIN
     AUTORADIOBUTTON "&Conexiune cu apelare la cerere", 1347, 16, 78, 135, 10, WS_GROUP
     AUTORADIOBUTTON "Conexiune de &durată", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
     EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Apelare in&versă...", 1345, 150, 125, 70, 14, WS_GROUP
-    PUSHBUTTON "Linii &multiple...", 1346, 74, 125, 70, 14
+    PUSHBUTTON "Apelare in&versă…", 1345, 150, 125, 70, 14, WS_GROUP
+    PUSHBUTTON "Linii &multiple…", 1346, 74, 125, 70, 14
 END
 
 174 DIALOGEX 0, 0, 215, 226
@@ -788,7 +788,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Distribuitor"
 FONT 8, "MS Shell Dlg"
 BEGIN
- CTEXT "NYI...need spec from KCrocker", -1, 57, 86, 106, 28
+ CTEXT "NYI…need spec from KCrocker", -1, 57, 86, 106, 28
 END
 
 175 DIALOGEX 6, 18, 317, 143
@@ -816,7 +816,7 @@ BEGIN
     LTEXT "Introduceţi numărul de telefon al serverului sau distribuitorului pentru linii comutate la care faceţi apel. Dacă nu se ajunge la numărul principal se formează automat numere alternative de telefon, dacă acestea există.", 1360, 7, 4, 305, 42
     LTEXT "&Număr de telefon sau adresă:", 1361, 7, 50, 275, 8, NOT WS_GROUP
     EDITTEXT 1358, 7, 62, 304, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alternative...", 1359, 250, 80, 60, 14
+    PUSHBUTTON "Alternative…", 1359, 250, 80, 60, 14
 END
 
 181 DIALOGEX 6, 18, 230, 215
@@ -832,7 +832,7 @@ BEGIN
     AUTOCHECKBOX "Se solici&tă criptarea puternică a datelor", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Se &utilizează autorizare pe două căi", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Anulare salvare parolă", 1369, 59, 117, 80, 14, WS_GROUP
-    PUSHBUTTON "Co&mplex...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "Co&mplex…", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
     AUTOCHECKBOX "&Detectare partajare fişiere şi la imprimare, înaintea apelării", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
@@ -849,7 +849,7 @@ BEGIN
     AUTOCHECKBOX "Se solici&tă criptarea puternică a datelor", 1364, 48, 79, 152, 10
     AUTOCHECKBOX "&Utilizare nume utilizator şi parolă curente ", 1366, 31, 91, 165, 10
     PUSHBUTTON "&Anulare salvare parolă", 1369, 6, 114, 100, 14, WS_GROUP
-    PUSHBUTTON "Co&mplex...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "Co&mplex…", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
     AUTOCHECKBOX "&Detectare partajare fişiere şi la imprimare, înaintea apelării", 1365, 7, 134, 218, 10, NOT WS_VISIBLE | WS_DISABLED
 END
 
@@ -968,7 +968,7 @@ BEGIN
     AUTORADIOBUTTON "&Fără apelare inversă", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Întotdeauna apelare in&versă la numerele de mai jos:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
     CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
-    PUSHBUTTON "E&ditare...", 1504, 131, 213, 60, 14
+    PUSHBUTTON "E&ditare…", 1504, 131, 213, 60, 14
     PUSHBUTTON "Şt&ergere", 1505, 194, 213, 60, 14
     CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
     DEFPUSHBUTTON "OK", 1, 132, 242, 60, 14
@@ -992,7 +992,7 @@ BEGIN
     COMBOBOX 1292, 143, 94, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "Dispozitive multiple", 1288, 7, 116, 215, 35
     COMBOBOX 1551, 16, 130, 128, 41, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Configurare...", 1293, 150, 129, 65, 14
+    PUSHBUTTON "&Configurare…", 1293, 150, 129, 65, 14
     PUSHBUTTON "Apelare in&versă", 1302, 8, 195, 60, 14
     PUSHBUTTON "&X.25", 1295, 73, 195, 50, 14
 END
@@ -1179,7 +1179,7 @@ BEGIN
     PUSHBUTTON "În s&us", 1132, 208, 18, 16, 14, BS_ICON
     PUSHBUTTON "&În jos", 1131, 208, 36, 16, 14, BS_ICON
     AUTOCHECKBOX "&Toate dispozitivele apelează aceleaşi numere", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Configurare...", 1130, 140, 66, 60, 14
+    PUSHBUTTON "&Configurare…", 1130, 140, 66, 60, 14
     GROUPBOX "Tip eşantion", 1125, 7, 87, 213, 56, WS_GROUP
     LTEXT "&Număr de telefon:", 1135, 19, 102, 191, 8
     EDITTEXT 1123, 17, 112, 138, 14, ES_AUTOHSCROLL
@@ -1192,7 +1192,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "&Configurare...", 1130, 160, 38, 60, 14
+    PUSHBUTTON "&Configurare…", 1130, 160, 38, 60, 14
     LTEXT "&Număr de telefon:", 1135, 8, 72, 194, 8
     EDITTEXT 1123, 8, 83, 148, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Alternative", 1129, 160, 83, 60, 14
@@ -1245,8 +1245,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Conexiunea Internet din computer s-a particularizat, pentru a permite executarea corespunzătoare în reţeaua proprie a următoarelor programe:", -1, 7, 7, 218, 28
     CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Adăugare...", 1538, 7, 197, 67, 14
-    PUSHBUTTON "E&ditare...", 1559, 80, 197, 67, 14
+    PUSHBUTTON "&Adăugare…", 1538, 7, 197, 67, 14
+    PUSHBUTTON "E&ditare…", 1559, 80, 197, 67, 14
     PUSHBUTTON "Şt&ergere", 1568, 153, 197, 67, 14
 END
 
@@ -1258,8 +1258,8 @@ BEGIN
     LTEXT "&Selectaţi servicii care se execută în reţeaua proprie şi pe care utilizatorii Internet au posibilitatea să le acceseze.", -1, 7, 5, 216, 22
     LTEXT "Servicii:", -1, 7, 27, 143, 8
     CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Adăugare...", 1561, 7, 197, 67, 14
-    PUSHBUTTON "E&ditare...", 1563, 80, 197, 67, 14
+    PUSHBUTTON "&Adăugare…", 1561, 7, 197, 67, 14
+    PUSHBUTTON "E&ditare…", 1563, 80, 197, 67, 14
     PUSHBUTTON "Şt&ergere", 1562, 153, 197, 67, 14
 END
 
@@ -1308,8 +1308,8 @@ BEGIN
     AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în ReactOS (şi domeniu, dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "S&e solicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 26, 111, 182, 18
-    PUSHBUTTON "&Setări...", 1180, 151, 134, 60, 14
-    PUSHBUTTON "Setări I&PSec...", 1598, 126, 163, 85, 14
+    PUSHBUTTON "&Setări…", 1180, 151, 134, 60, 14
+    PUSHBUTTON "Setări I&PSec…", 1598, 126, 163, 85, 14
 END
 
 570 DIALOGEX 0, 0, 265, 126
@@ -1339,7 +1339,7 @@ BEGIN
     GROUPBOX "Opţiuni fişier jurnal:", -1, 7, 64, 215, 91
     LTEXT "&Nume:", -1, 14, 78, 199, 8
     EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
-    PUSHBUTTON "&Răsfoire...", 1639, 153, 108, 60, 14
+    PUSHBUTTON "&Răsfoire…", 1639, 153, 108, 60, 14
     LTEXT "&Dimensiune limită:", -1, 14, 133, 67, 8
     EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "KO", -1, 140, 133, 25, 8
@@ -1517,7 +1517,7 @@ BEGIN
     LTEXT "&Selectare dispozitiv:", 1597, 8, 5, 213, 8
     COMBOBOX 1437, 7, 17, 217, 166, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Configurare...", 1130, 160, 34, 60, 14
+    PUSHBUTTON "&Configurare…", 1130, 160, 34, 60, 14
 END
 
 1448 DIALOGEX 10, 20, 265, 71
@@ -1527,9 +1527,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Selectaţi o conexiune la reţea:", 1456, 7, 7, 251, 10
     COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    DEFPUSHBUTTON "&Conectare...", 1449, 7, 50, 60, 14
+    DEFPUSHBUTTON "&Conectare…", 1449, 7, 50, 60, 14
     PUSHBUTTON "Revocare", 1455, 70, 50, 60, 14
-    PUSHBUTTON "&Nou...", 1459, 134, 50, 60, 14
+    PUSHBUTTON "&Nou…", 1459, 134, 50, 60, 14
     PUSHBUTTON "Propr&ietăţi", 1460, 198, 50, 60, 14
 END
 
@@ -1739,7 +1739,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Componente de reţea:", -1, 7, 7, 217, 9
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
-    PUSHBUTTON "I&nstalare...", 7037, 9, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "I&nstalare…", 7037, 9, 110, 67, 14, WS_GROUP
     PUSHBUTTON "&Dezinstalare", 7038, 80, 110, 67, 14, WS_GROUP
     PUSHBUTTON "&Proprietăţi", 7039, 153, 110, 67, 14, WS_GROUP
     GROUPBOX "Descriere", -1, 7, 138, 213, 69
@@ -1753,7 +1753,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Utilizatori cărora le este permis să se conecteze:", -1, 7, 5, 213, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Nou...", 7044, 7, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Nou…", 7044, 7, 107, 67, 14, WS_GROUP
     PUSHBUTTON "Şt&ergere", 7045, 80, 107, 67, 14, WS_GROUP
     PUSHBUTTON "&Proprietăţi", 7046, 153, 107, 67, 14, WS_GROUP
     AUTOCHECKBOX "&Se solicită tuturor utilizatorilor să-şi securizeze parolele şi datele.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
@@ -1768,7 +1768,7 @@ BEGIN
     LTEXT "Selectaţi caseta de selectare de lângă fiecare utilizator căruia i se permite o conexiune la acest computer. Reţineţi că şi alţi factori pot afecta abilitatea utilizatorului la conectare, cum ar fi un cont utilizator dezactivat.", -1, 10, 1, 275, 27
     LTEXT "&Utilizatori cărora le este permis să se conecteze:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
-    PUSHBUTTON "&Adăugare...", 7044, 10, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Adăugare…", 7044, 10, 122, 65, 14, WS_GROUP
     PUSHBUTTON "&Eliminare", 7045, 79, 122, 65, 14, WS_GROUP
     PUSHBUTTON "Propr&ietăţi", 7046, 147, 122, 65, 14, WS_GROUP
 END
@@ -1790,7 +1790,7 @@ BEGIN
     LTEXT "Selectaţi caseta de selectare de lângă fiecare tip de software de lucru în reţea ce trebuie activat pentru legături dinspre exterior.", -1, 10, 1, 288, 20
     LTEXT "&Software pentru lucrul în reţea:", -1, 10, 24, 274, 8
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
-    PUSHBUTTON "&Instalare...", 7037, 108, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Instalare…", 7037, 108, 71, 60, 14, WS_GROUP
     PUSHBUTTON "De&zinstalare", 7038, 172, 71, 60, 14, WS_GROUP
     PUSHBUTTON "&Proprietăţi", 7039, 236, 71, 60, 14, WS_GROUP
     LTEXT "<descriere protocol>", 7040, 21, 105, 273, 38
@@ -1830,7 +1830,7 @@ CAPTION "Lucru în reţea pe linie comutată"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 19901, 10, 10, 18, 20
-    LTEXT "Se aşteaptă pornirea serviciilor...", 19902, 34, 16, 120, 8
+    LTEXT "Se aşteaptă pornirea serviciilor…", 19902, 34, 16, 120, 8
 END
 
 STRINGTABLE
@@ -1865,7 +1865,7 @@ BEGIN
     215 "Fişiere de comandă rapidă pentru apelare (*.rnk)\0"
     216 "*.rnk\0"
     217 "Creare comandă rapidă pentru apelare\0"
-    218 "Legarea la %1 nu a reuşit.  Reconectare în aşteptare...\0"
+    218 "Legarea la %1 nu a reuşit.  Reconectare în aşteptare…\0"
     219 "Imposibil de regăsit informaţiile de încadrare.\0"
     220 "Imposibil de regăsit informaţiile port-ului.\0"
     221 "Imposibil de regăsit informaţiile proiecţiei.\0"
@@ -1875,7 +1875,7 @@ BEGIN
     225 "Dispozitiv:\0"
     226 "Reţea:\0"
     227 "(neconectat)\0"
-    228 "&Conectare...\0"
+    228 "&Conectare…\0"
     229 "S&uspendare\0"
     230 "Conexiune pe linie comutată\0"
     231 "Configuraţie modem stabilită la valori implicite\0"
@@ -2034,40 +2034,40 @@ BEGIN
     418 "Fără\0"
     419 "SLIP: Conexiune Unix\0"
     420 "S-au conectat toate dispozitivele.\0"
-    421 "Se primeşte rezultatul înregistrării...\0"
-    422 "Se trimit informaţiile de apelare inversă...\0"
-    423 "Trimitere parolă nouă...\0"
-    424 "Se calculează viteza legăturii...\0"
-    425 "Se verifică starea autorizării...\0"
-    426 "Înregistrare computer în reţea...\0"
-    427 "Reîncercare autorizare...\0"
-    428 "Se verifică numele utilizatorului şi parola...\0"
+    421 "Se primeşte rezultatul înregistrării…\0"
+    422 "Se trimit informaţiile de apelare inversă…\0"
+    423 "Trimitere parolă nouă…\0"
+    424 "Se calculează viteza legăturii…\0"
+    425 "Se verifică starea autorizării…\0"
+    426 "Înregistrare computer în reţea…\0"
+    427 "Reîncercare autorizare…\0"
+    428 "Se verifică numele utilizatorului şi parola…\0"
     429 "Autorizat.\0"
-    430 "Conectare prin %1...\0"
-    431 "Se formează numărul...\0"
-    432 "Se conectează modemurile...\0"
-    433 "Conectare pe cablu...\0"
-    434 "Se formează numărul %1...\0"
-    435 "Conectare pe X.25 la %1...\0"
-    436 "Postconectare prin %1...\0"
-    437 "Preconectare prin %1...\0"
+    430 "Conectare prin %1…\0"
+    431 "Se formează numărul…\0"
+    432 "Se conectează modemurile…\0"
+    433 "Conectare pe cablu…\0"
+    434 "Se formează numărul %1…\0"
+    435 "Conectare pe X.25 la %1…\0"
+    436 "Postconectare prin %1…\0"
+    437 "Preconectare prin %1…\0"
     438 "Conectat.\0"
     439 "S-a conectat dispozitivul.\0"
     440 "Deconectat.\0"
     441 "S-a conectat prin modem.\0"
     442 "S-a conectat prin cablu.\0"
-    443 "Deschidere port...\0"
+    443 "Deschidere port…\0"
     444 "S-a conectat prin X.25.\0"
     445 "S-a deschis port-ul.\0"
     446 "Post-conectare terminată.\0"
     447 "Pre-conectare terminată.\0"
-    448 "Pregătire pentru apelare inversă...\0"
-    449 "Se verifică conexiunile protocolului de reţea...\0"
-    450 "Se verifică numele utilizatorului şi parola...\0"
+    448 "Pregătire pentru apelare inversă…\0"
+    449 "Se verifică conexiunile protocolului de reţea…\0"
+    450 "Se verifică numele utilizatorului şi parola…\0"
     451 "Conectat, legare linii adiţionale\0"
     452 "Stare necunoscută.\0"
-    453 "Aşteptare apelare inversă...\0"
-    454 "Se aşteaptă reiniţializarea modemului...\0"
+    453 "Aşteptare apelare inversă…\0"
+    454 "Se aşteaptă reiniţializarea modemului…\0"
     455 "Vreţi ca modificarea numărului de telefon să fie permanentă?\0"
     456 "scp\0"
     457 "*.scp\0"
@@ -2134,7 +2134,7 @@ BEGIN
     518 "Se utilizează criptarea datelor cu MPPE-128\0"
     519 "Selecţia de criptare actuală necesită autorizare MS-CHAP sau EAP.\0"
     520 "Mesaj de autorizare particularizată\0"
-    521 "Conectare la %1...\0"
+    521 "Conectare la %1…\0"
     522 "Nume conexiune\0"
     523 "Automată\0"
     524 "PPTP VPN\0"
@@ -2219,8 +2219,8 @@ BEGIN
     1573 "Selectaţi opţiunile de transport şi securitate pentru această conexiune.\0"
     1574 "Protocoalele selectate includ PAP, SPAP şi/sau CHAP.  Dacă se trece peste unul din ele, nu se va face criptarea datelor. Păstraţi aceste setări?\0"
     1575 "Pentru a vă conecta la '%1', mai întâi trebuie să fiţi conectat la '%2'. Vă conectaţi la '%2' acum?\0"
-    1576 "Conectare pe cablu paralel...\0"
-    1577 "Conectare pe infraroşu...\0"
+    1576 "Conectare pe cablu paralel…\0"
+    1577 "Conectare pe infraroşu…\0"
     1578 "S-a conectat cablul paralel.\0"
     1579 "S-a conectat în infraroşu.\0"
     1580 "Această conexiune a fost configurată să utilizeze o putere de criptare a datelor care nu este acceptată de software-ul instalat. Proprietăţile de securitate ale acestei conexiuni au fost restabilite la puterea de criptare disponibilă.\0"
@@ -2345,37 +2345,37 @@ BEGIN
     7373 "Atribuire &număr în reţea specificat:\0"
     7374 "A&tribuire a numerelor de reţea în mod succesiv de la:\0"
     7375 "Utilizator nou\0"
-    7376 "Conexiune de dispozitiv\0"
-    7377 "Ce dispozitiv doriți să-l utilzați pentru efectuarea acestei conexiuni?\0"
-    7378 "Nu sunt prezente dispozitive instalate capabile de a accepta conexiuni directe.\0"
-    7379 "Avertisment pentru conexiune nouă de intrare\0"
-    7380 "Deoarece acest server aparține sau deține un domeniu, este necesară utilizarea consolei Redirecționare și acces în rețea pentru a configura acestă mașină să recepționeze conexiuni de intrare. Anulați modificările și comutați în acea consolă?\n\0"
-    7381 "Alocă numărul de rețea în mod automat\0"
-    7382 "Alocă numerele de rețea în mod automat\0"
-    7383 "Conexiunile de intrare nu pot emite numerele de rețea 00000000 sau FFFFFFFF. Fie modificați numerele de rețea alocate sau utilizați alocarea automată de numere de rețea.\0"
+    7376 "Dispozitiv de conectare\0"
+    7377 "Ce dispozitiv utilizaţi pentru a efectua această conexiune?\0"
+    7378 "Nu este instalat curent nici un dispozitiv capabil de a accepta conexiuni directe.\0"
+    7379 "Avertisment la conexiune nouă dinspre exterior\0"
+    7380 "Deoarece acest server Windows 2000 aparţine la sau controlează un domeniu, este necesar să utilizaţi consola sistemului de Distribuire şi acces la distanţă pentru a configura calculatorul să primească conexiuni dinspre exterior. Revocaţi modificările şi comutaţi pe această consolă?\n\0"
+    7381 "Atri&buire automată a numărului în reţea\0"
+    7382 "&Atribuire automată a numerelor de reţea\0"
+    7383 "Este imposibil pentru Conexiuni dinspre exterior să publice numerele de reţea ipx 00000000 sau FFFFFFFF. Sau modificaţi numerele de reţea atribuite sau utilizaţi atribuirea automată a numerelor de reţea.\0"
     7384 "la\0"
-    7385 "Portul de conexiune (%s)\0"
-    7386 "Conexiunile de rețea nu pot reprezenta unele opțiuni specializate ale conexiunilor de intrare care au fost stabilite utilizând Managerul utilizatorului local sau consola Politici de acces în rețea. Pentru a completa sau corecta informații ale conexiunilor de intrare, va trebui să utilizați acele console.\0"
-    7387 "Opțiunea de retroapelare a utilizatorului necesită introducerea unui număr valid de retroapelare.\0"
-    7388 "ReactOS trebuie să se repornească pentru a completa această acțiune. Permiteți această repornire acum?\0"
-    7389 "Dispozitivul ales nu are disponibile opțiuni de configurare.\0"
-    7390 "Domeniu nevalid\0"
-    7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare. Pentru a dezactiva aceasta, e necesară oprirea serviciului Server. Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare. Doriți scoaterea unei console sistem care va permite oprirea serviciului Server?\r\n\nÎn Managerea calculatorului, apăsați pe Instrumente de sistem, apoi apăsați pe Servicii. În panoul din dreapta, clic dreapta pe Server, apoi alegeți oprirea lui.\0"
-    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator. Acest expert îl va activa. Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
+    7385 "Port comunicaţii (%s)\0"
+    7386 "Conexiuni în reţea nu afişează unele opţiuni specializate pentru conexiunile ataşate care au fost stabilite utilizând consolele Manager pentru utilizator local sau Politică de acces la distanţă. Pentru informaţii complete şi corecte pentru conexiunile dinspre exterior, este necesar să utilizaţi aceste console.\0"
+    7387 "Modul selectat de apelare inversă a utilizatorului vă solicită să introduceţi un număr corect pentru apelare inversă.\0"
+    7388 "Pentru a finaliza operaţia este necesar să reporniţi ReactOS. Reporniţi acum?\0"
+    7389 "Dispozitivul selectat curent nu are opţiuni de configurare disponibile.\0"
+    7390 "Interval incorect\0"
+    7391 "Aţi cerut ca '%1' să fie dezactivat pentru Conexiuni dinspre exterior.  Pentru dezactivare, trebuie să opriţi serviciul 'Server'.  Odată oprit, orice directoare sau imprimante partajate pe acest computer nu vor mai fi disponibile pentru nici un alt computer.  Afişaţi o consolă sistem care să vă permită să opriţi serviciul 'Server'?\r\n\nSub Gestionare computer faceţi clic pe Instrumente sistem, apoi clic pe Servicii. În panoul din dreapta, faceţi clic cu butonul din dreapta al mausului pe Server şi faceţi clic pe oprire.\0"
+    7392 "Acest port serial nu este activat pentru a fi utilizat la o conexiune directă cu alt computer. Va fi activat după finalizarea acestui expert. Apoi configuraţi viteza portului şi alte proprietăţi, făcând clic cu butonul drept al mausului pe pictograma pentru această conexiune şi selectând Proprietăţi.\n\0"
     7393 "Conexiuni de intrare\0"
-    7394 "Fondul de adrese IP introdus este nevalid.\0"
-    7395 "Masca furnizată nu este validă.\0"
-    7396 "Valoarea de început a fondului de adrese TCP/IP nu este validă. Trebuie să se încadreze între 1.0.0.0 și 224.0.0.0 și trebuie să excludă forma 127.x.x.x.\0"
-    7397 "Fondul de adrese TCP/IP introdus este nevalid, deoarece adresa este mai bine definită decât masca.\0"
-    7398 "Adresa de început trebuie să fie mai mică decât adresa de sfârșit.\0"
-    7399 "Serviciul de redirecționare și acces în rețea este în procesul de oprire. Până nu se oprește (de tot), opțiunea Conexiuni de intrare nu va fi disponibilă. Așteptați câteva momente, apoi încercați din nou.\0"
+    7394 "Rezervorul de adrese IP pe care l-aţi introdus este incorect.\0"
+    7395 "Masca furnizată este incorectă.\0"
+    7396 "Adresa de început introdusă pentru rezervorul TCP/IP este incorectă.  Ea trebuie să fie între 1.0.0.0 şi 224.0.0.0 şi nu trebuie să fie de forma 127.x.x.x.\0"
+    7397 "Rezervorul TCP/IP introdus este incorect, deoarece adresa este mai tipică decât masca.\0"
+    7398 "Adresa de început trebuie să fie mai mică decât adresa de sfârşit.\0"
+    7399 "Serviciul Distribuire şi acces la distanţă se află în procesul de oprire. Până când se opreşte, opţiunea de Conexiuni dinspre exterior nu este disponibilă. Aşteptaţi câteva momente şi reîncercaţi.\0"
     7400 "%s (%s)\0"
-    7401 "%s (%d canale)\0"
-    7402 "Conexiuni de intrare VPN (PPTP)\0"
-    7403 "Conexiuni de intrare VPN (L2TP)\0"
+    7401 "%s (canale %d)\0"
+    7402 "VPN (PPTP) pentru conexiune dinspre exterior\0"
+    7403 "VPN (L2TP) pentru conexiune dinspre exterior\0"
     7404 "Securitate IP (IKE)\0"
     7405 "127.0.0.1\0"
-    7406 "Nu dețineți suficiente drepturi pentru a stabili conexiuni de intrare\0"
-    29900 "Serviciul managerului conexiunilor de acces în rețea nu a putut fi încărcat.\0"
-    29901 "Fișierul MPRAPI.DLL din directorul system32 nu poate fi deschis.\0"
+    7406 "Nu aveţi suficiente privilegii pentru a iniţializa Conexiuni dinspre exterior\0"
+    29900 "Imposibil de încărcat serviciul Manager conexiune de acces la distanţă.\0"
+    29901 "Imposibil de încărcat fişierul MPRAPI.DLL din directorul system32.\0"
 END
