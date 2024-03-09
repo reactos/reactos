@@ -450,6 +450,18 @@ HRESULT CicInputContext::EscbCompComplete(CicIMCLock& imcLock)
 }
 
 /// @unimplemented
+HRESULT CicInputContext::EscbCompCancel(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::OnSetCandidatePos(TLS *pTLS, CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
 HRESULT CicInputContext::DelayedReconvertFuncCall(CicIMCLock& imcLock)
 {
     return E_NOTIMPL;

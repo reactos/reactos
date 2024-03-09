@@ -89,7 +89,7 @@ public:
 
     HRESULT Notify(
         TLS *pTLS,
-        ITfThreadMgr *pThreadMgr,
+        ITfThreadMgr_P *pThreadMgr,
         HIMC hIMC,
         DWORD dwAction,
         DWORD dwIndex,
@@ -132,4 +132,18 @@ public:
         LPVOID lpData);
 
     static BOOL IsOwnDim(ITfDocumentMgr *pDocMgr);
+
+    BOOL
+    DoOpenCandidateHanja(
+        ITfThreadMgr_P *pThreadMgr,
+        CicIMCLock& imcLock,
+        CicInputContext *pCicIC);
+
+    HRESULT
+    OnSetConversionSentenceMode(
+        ITfThreadMgr_P *pThreadMgr,
+        CicIMCLock& imcLock,
+        CicInputContext *pCicIC,
+        DWORD dwValue,
+        LANGID LangID);
 };

@@ -144,6 +144,7 @@ public:
     HRESULT SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage);
     HRESULT EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag);
     HRESULT EscbCompComplete(CicIMCLock& imcLock);
+    HRESULT EscbCompCancel(CicIMCLock& imcLock);
     HRESULT SetupReconvertString(
         CicIMCLock& imcLock,
         ITfThreadMgr_P *pThreadMgr,
@@ -159,4 +160,6 @@ public:
     HRESULT EndReconvertString(CicIMCLock& imcLock);
     HRESULT DelayedReconvertFuncCall(CicIMCLock& imcLock);
     void ClearPrevCandidatePos();
+
+    HRESULT OnSetCandidatePos(TLS *pTLS, CicIMCLock& imcLock);
 };

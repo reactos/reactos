@@ -679,15 +679,114 @@ CicBridge::SetActiveContextAlways(TLS *pTLS, HIMC hIMC, BOOL fActive, HWND hWnd,
 }
 
 /// @unimplemented
+BOOL
+CicBridge::DoOpenCandidateHanja(
+    ITfThreadMgr_P *pThreadMgr,
+    CicIMCLock& imcLock,
+    CicInputContext *pCicIC)
+{
+    return FALSE;
+}
+
+/// @unimplemented
+HRESULT
+CicBridge::OnSetConversionSentenceMode(
+    ITfThreadMgr_P *pThreadMgr,
+    CicIMCLock& imcLock,
+    CicInputContext *pCicIC,
+    DWORD dwValue,
+    LANGID LangID)
+{
+    return E_NOTIMPL;
+}
+
+/// @implemented
 HRESULT CicBridge::Notify(
     TLS *pTLS,
-    ITfThreadMgr *pThreadMgr,
+    ITfThreadMgr_P *pThreadMgr,
     HIMC hIMC,
     DWORD dwAction,
     DWORD dwIndex,
     DWORD_PTR dwValue)
 {
-    return E_NOTIMPL; // FIXME
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return imcLock.m_hr;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return imeContext.m_hr;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    if (!pCicIC)
+        return E_OUTOFMEMORY;
+
+    CicProfile *pProfile = pTLS->m_pProfile;
+    if (!pProfile)
+        return E_OUTOFMEMORY;
+
+    LANGID LangID;
+    pProfile->GetLangId(&LangID);
+
+    switch (dwAction)
+    {
+        case 0x10:
+            if (PRIMARYLANGID(LangID) == LANG_KOREAN)
+            {
+                if (DoOpenCandidateHanja(pThreadMgr, imcLock, pCicIC))
+                    return S_OK;
+                return E_FAIL;
+            }
+            return E_NOTIMPL;
+
+        case 0x15:
+            switch (dwIndex)
+            {
+                case 0:
+                    return E_FAIL;
+
+                case 1:
+                    pCicIC->EscbCompComplete(imcLock);
+                    break;
+
+                case 2:
+                case 3:
+                    return E_NOTIMPL;
+
+                case 4:
+                    pCicIC->EscbCompCancel(imcLock);
+                    break;
+
+                default:
+                    return E_FAIL;
+            }
+            return S_OK;
+
+        case IMN_CHANGECANDIDATE:
+            switch (dwValue)
+            {
+                case IMC_SETCONVERSIONMODE:
+                case IMC_SETSENTENCEMODE:
+                    return OnSetConversionSentenceMode(pThreadMgr, imcLock, pCicIC, dwValue, LangID);
+
+                case IMC_SETOPENSTATUS:
+                    return OnSetOpenStatus(pTLS, pThreadMgr, imcLock, pCicIC);
+
+                case IMC_SETCANDIDATEPOS:
+                    return pCicIC->OnSetCandidatePos(pTLS, imcLock);
+
+                case IMC_SETCOMPOSITIONFONT:
+                case IMC_SETCOMPOSITIONWINDOW:
+                    return E_NOTIMPL;
+
+                default:
+                    return E_FAIL;
+            }
+            break;
+
+        default:
+            return E_NOTIMPL;
+    }
 }
 
 /// @unimplemented
