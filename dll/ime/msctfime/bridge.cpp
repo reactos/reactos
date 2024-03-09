@@ -730,7 +730,7 @@ HRESULT CicBridge::Notify(
 
     switch (dwAction)
     {
-        case 0x10:
+        case NI_OPENCANDIDATE:
             if (PRIMARYLANGID(LangID) == LANG_KOREAN)
             {
                 if (DoOpenCandidateHanja(pThreadMgr, imcLock, pCicIC))
@@ -739,21 +739,18 @@ HRESULT CicBridge::Notify(
             }
             return E_NOTIMPL;
 
-        case 0x15:
+        case NI_COMPOSITIONSTR:
             switch (dwIndex)
             {
-                case 0:
-                    return E_FAIL;
-
-                case 1:
+                case CPS_COMPLETE:
                     pCicIC->EscbCompComplete(imcLock);
                     break;
 
-                case 2:
-                case 3:
+                case CPS_CONVERT:
+                case CPS_REVERT:
                     return E_NOTIMPL;
 
-                case 4:
+                case CPS_CANCEL:
                     pCicIC->EscbCompCancel(imcLock);
                     break;
 
@@ -762,7 +759,7 @@ HRESULT CicBridge::Notify(
             }
             return S_OK;
 
-        case IMN_CHANGECANDIDATE:
+        case NI_CONTEXTUPDATED:
             switch (dwValue)
             {
                 case IMC_SETCONVERSIONMODE:
