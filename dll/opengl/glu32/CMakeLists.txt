@@ -116,7 +116,7 @@ add_library(glu32 MODULE
     ${PCH_SKIP_SOURCE}
     glu32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
-target_link_libraries(glu32 cpprt)
+target_link_libraries(glu32 cppstl)
 
 set_module_type(glu32 win32dll)
 

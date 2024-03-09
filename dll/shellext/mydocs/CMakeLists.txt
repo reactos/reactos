@@ -18,7 +18,7 @@ add_library(mydocs MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/mydocs.def)
 
 set_module_type(mydocs win32dll UNICODE)
-target_link_libraries(mydocs uuid wine cpprt atl_classes)
+target_link_libraries(mydocs uuid wine cppstl atl_classes)
 add_delay_importlibs(mydocs ole32 oleaut32)
 add_importlibs(mydocs advapi32 shell32 user32 comctl32 shlwapi msvcrt kernel32 ntdll)
 add_pch(mydocs precomp.hpp SOURCE)

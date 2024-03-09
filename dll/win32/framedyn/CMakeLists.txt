@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/framedyn.def)
 
 add_library(framedyn MODULE ${SOURCE})
-target_link_libraries(framedyn cpprt)
+target_link_libraries(framedyn cppstl)
 set_target_cpp_properties(framedyn WITH_EXCEPTIONS)
 set_module_type(framedyn win32dll UNICODE)
 add_importlibs(framedyn oleaut32 msvcrt kernel32 ntdll)

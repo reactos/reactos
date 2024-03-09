@@ -21,7 +21,7 @@ add_library(stobject MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
 set_module_type(stobject win32dll UNICODE)
-target_link_libraries(stobject uuid wine cpprt atl_classes)
+target_link_libraries(stobject uuid wine cppstl atl_classes)
 
 add_importlibs(stobject
     setupapi

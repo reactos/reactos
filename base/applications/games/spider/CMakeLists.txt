@@ -6,7 +6,7 @@ list(APPEND SOURCE
 
 add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/spider.ico)
 add_executable(spider ${SOURCE} rsrc.rc)
-target_link_libraries(spider cardlib)
+target_link_libraries(spider cardlib cppstl)
 target_include_directories(spider PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 add_pch(spider spider.h SOURCE)
 set_module_type(spider win32gui UNICODE)

@@ -19,7 +19,7 @@ add_library(ntobjshex MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
 
 set_module_type(ntobjshex win32dll UNICODE)
-target_link_libraries(ntobjshex uuid wine cpprt atl_classes)
+target_link_libraries(ntobjshex uuid wine cppstl atl_classes)
 
 add_importlibs(ntobjshex
     advapi32

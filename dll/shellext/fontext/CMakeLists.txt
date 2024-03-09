@@ -25,7 +25,7 @@ add_library(fontext MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
 set_module_type(fontext win32dll UNICODE)
-target_link_libraries(fontext uuid wine cpprt atl_classes)
+target_link_libraries(fontext uuid wine cppstl atl_classes)
 add_delay_importlibs(fontext ole32 oleaut32 shlwapi gdi32)
 add_importlibs(fontext shell32 advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(fontext precomp.h SOURCE)

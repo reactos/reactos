@@ -29,7 +29,7 @@ add_library(netshell MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
 set_module_type(netshell win32dll UNICODE)
-target_link_libraries(netshell uuid wine cpprt atl_classes)
+target_link_libraries(netshell uuid wine cppstl atl_classes)
 add_delay_importlibs(netshell ole32 oleaut32 shlwapi shell32)
 add_importlibs(netshell version iphlpapi gdi32 user32 advapi32 setupapi ws2_32 comctl32 msvcrt kernel32 ntdll)
 add_pch(netshell precomp.h "${PCH_SKIP_SOURCE}")

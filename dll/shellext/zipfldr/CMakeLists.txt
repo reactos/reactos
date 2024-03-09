@@ -35,7 +35,7 @@ add_library(zipfldr MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/zipfldr.def)
 
 set_module_type(zipfldr win32dll UNICODE)
-target_link_libraries(zipfldr minizip zlib uuid cpprt atl_classes)
+target_link_libraries(zipfldr minizip zlib uuid cppstl atl_classes)
 set_target_cpp_properties(zipfldr WITH_EXCEPTIONS)
 add_importlibs(zipfldr oleaut32 ole32 shlwapi comctl32 shell32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(zipfldr precomp.h SOURCE)

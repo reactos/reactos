@@ -17,7 +17,7 @@ target_link_libraries(rshell
     shelldesktop
     uuid
     wine
-    cpprt
+    cppstl
     atl_classes)
 
 add_importlibs(rshell

@@ -27,7 +27,7 @@ add_library(devmgr MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
 
 set_module_type(devmgr win32dll UNICODE)
-target_link_libraries(devmgr uuid wine cpprt atl_classes)
+target_link_libraries(devmgr uuid wine cppstl atl_classes)
 set_target_cpp_properties(devmgr WITH_EXCEPTIONS WITH_RTTI)
 add_importlibs(devmgr setupapi advapi32 shell32 newdev user32 gdi32 comctl32 version msvcrt kernel32 ole32 oleaut32 uxtheme ntdll)
 add_pch(devmgr precomp.h SOURCE)
