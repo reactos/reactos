@@ -21,6 +21,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    mlng.cpp
     utils.cpp)
 
 add_library(msctf MODULE
@@ -32,6 +33,6 @@ add_library(msctf MODULE
 set_module_type(msctf win32dll UNICODE)
 target_link_libraries(msctf uuid wine cicero)
 add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
-add_delay_importlibs(msctf ole32 oleaut32)
+add_delay_importlibs(msctf shell32 ole32 oleaut32 imm32 gdi32)
 add_pch(msctf precomp.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)

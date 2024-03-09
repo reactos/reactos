@@ -23,9 +23,12 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
+#include <cicarray.h>
 #include <cicreg.h>
 #include <cicmutex.h>
 #include <cicfmap.h>
+
+#include "mlng.h"
 
 #include <wine/debug.h>
 
@@ -617,6 +620,9 @@ VOID ProcessDetach(HINSTANCE hinstDLL) // FIXME: Call me from DllMain
             TFUninitLib();
         //FIXME
     }
+
+    UninitINAT();
+
     //FIXME
 
     //TF_UninitThreadSystem();
