@@ -28,6 +28,8 @@ protected:
     static BOOL CALLBACK EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam);
     static BOOL CALLBACK EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam);
 
+    LRESULT EscHanjaMode(TLS *pTLS, HIMC hIMC, LPVOID lpData);
+
 public:
     CicBridge();
     virtual ~CicBridge();
