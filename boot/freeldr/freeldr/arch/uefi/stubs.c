@@ -7,8 +7,6 @@
 
 #include <uefildr.h>
 
-#include <debug.h>
-
 #ifndef _M_ARM
 /* TODO: Handle this with custom Disk / partition setup */
 UCHAR

@@ -28,7 +28,7 @@ EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 /* FUNCTIONS ******************************************************************/
 
 EFI_STATUS
-UefiInitalizeVideo(VOID)
+UefiInitializeVideo(VOID)
 {
     EFI_STATUS Status;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;

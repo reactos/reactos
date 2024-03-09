@@ -7,24 +7,17 @@
 
 #include <machine.h>
 
-EFI_STATUS
-UefiMachInit(_In_ EFI_HANDLE ImageHandle,
-             _In_ EFI_SYSTEM_TABLE *SystemTable);
-
 VOID
 UefiConsPutChar(int Ch);
 
 BOOLEAN
 UefiConsKbHit(VOID);
 
-VOID
-UefiConsSetCursor(UINT32 Col, UINT32 Row);
-
 int
 UefiConsGetCh(void);
 
 EFI_STATUS
-UefiInitalizeVideo(VOID);
+UefiInitializeVideo(VOID);
 
 VOID
 UefiVideoClearScreen(UCHAR Attr);
@@ -46,10 +39,6 @@ UefiVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 
 VOID
 UefiVideoHideShowTextCursor(BOOLEAN Show);
-
-VOID
-UefiVideoOutputChar(UCHAR Char, unsigned X,
-                    unsigned Y, ULONG FgColor, ULONG BgColor);
 
 VOID
 UefiVideoPutChar(int Ch, UCHAR Attr,
