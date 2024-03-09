@@ -28,6 +28,9 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
  * This is the common code for harddisk for both the PC and the XBOX.
  */
 
+#define FIRST_BIOS_DISK 0x80
+#define FIRST_PARTITION 1
+
 typedef struct tagDISKCONTEXT
 {
     UCHAR DriveNumber;
@@ -248,7 +251,7 @@ static const DEVVTBL DiskVtbl =
 PCHAR
 GetHarddiskIdentifier(UCHAR DriveNumber)
 {
-    return PcDiskIdentifier[DriveNumber - 0x80];
+    return PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
 }
 
 static VOID
@@ -262,7 +265,7 @@ GetHarddiskInformation(UCHAR DriveNumber)
     BOOLEAN ValidPartitionTable;
     CHAR ArcName[MAX_PATH];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
-    PCHAR Identifier = PcDiskIdentifier[DriveNumber - 0x80];
+    PCHAR Identifier = PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
 
     /* Detect disk partition type */
     DiskDetectPartitionType(DriveNumber);
@@ -272,7 +275,7 @@ GetHarddiskInformation(UCHAR DriveNumber)
     {
         ERR("Reading MBR failed\n");
         /* We failed, use a default identifier */
-        sprintf(Identifier, "BIOSDISK%d", DriveNumber - 0x80 + 1);
+        sprintf(Identifier, "BIOSDISK%d", DriveNumber - FIRST_BIOS_DISK + 1);
         return;
     }
 
@@ -294,20 +297,20 @@ GetHarddiskInformation(UCHAR DriveNumber)
     ValidPartitionTable = (Mbr->MasterBootRecordMagic == 0xAA55);
 
     /* Fill out the ARC disk block */
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)", DriveNumber - 0x80);
+    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)", DriveNumber - FIRST_BIOS_DISK);
     AddReactOSArcDiskInfo(ArcName, Signature, Checksum, ValidPartitionTable);
 
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);
+    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - FIRST_BIOS_DISK);
     FsRegisterDevice(ArcName, &DiskVtbl);
 
     /* Add partitions */
-    i = 1;
+    i = FIRST_PARTITION;
     DiskReportError(FALSE);
     while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
     {
         if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
         {
-            sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", DriveNumber - 0x80, i);
+            sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", DriveNumber - FIRST_BIOS_DISK, i);
             FsRegisterDevice(ArcName, &DiskVtbl);
         }
         i++;
@@ -350,7 +353,7 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
     /* Count the number of visible harddisk drives */
     DiskReportError(FALSE);
     DiskCount = 0;
-    DriveNumber = 0x80;
+    DriveNumber = FIRST_BIOS_DISK;
 
     ASSERT(DiskReadBufferSize > 0);
 
@@ -432,7 +435,7 @@ DiskGetBootPath(BOOLEAN IsPxe)
         // RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(%u)", 0);
         RtlStringCbCopyA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(0)");
     }
-    else if (FrldrBootDrive < 0x80)
+    else if (FrldrBootDrive < FIRST_BIOS_DISK)
     {
         /* This is a floppy */
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
@@ -442,7 +445,7 @@ DiskGetBootPath(BOOLEAN IsPxe)
     {
         /* Boot Partition 0xFF is the magic value that indicates booting from CD-ROM (see isoboot.S) */
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
-                           "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - 0x80);
+                           "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - FIRST_BIOS_DISK);
     }
     else
     {
@@ -460,7 +463,7 @@ DiskGetBootPath(BOOLEAN IsPxe)
 
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)rdisk(%u)partition(%lu)",
-                           FrldrBootDrive - 0x80, FrldrBootPartition);
+                           FrldrBootDrive - FIRST_BIOS_DISK, FrldrBootPartition);
     }
 
     return TRUE;
@@ -479,7 +482,7 @@ PcInitializeBootDevices(VOID)
     DiskGetBootPath(PxeInit());
 
     /* Add it, if it's a floppy or cdrom */
-    if ((FrldrBootDrive >= 0x80 && !BootDriveReported) ||
+    if ((FrldrBootDrive >= FIRST_BIOS_DISK && !BootDriveReported) ||
         DiskIsDriveRemovable(FrldrBootDrive))
     {
         /* TODO: Check if it's really a CDROM drive */
