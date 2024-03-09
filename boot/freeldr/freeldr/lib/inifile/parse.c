@@ -22,10 +22,10 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
-LIST_ENTRY        IniFileSectionListHead;
-BOOLEAN            IniFileSectionInitialized = FALSE;
-ULONG                    IniFileSectionCount = 0;
-ULONG                    IniFileSettingCount = 0;
+LIST_ENTRY IniFileSectionListHead = {&IniFileSectionListHead, &IniFileSectionListHead};
+BOOLEAN IniFileSectionInitialized = FALSE;
+ULONG   IniFileSectionCount = 0;
+ULONG   IniFileSettingCount = 0;
 
 
 BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
@@ -122,9 +122,9 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
             // First check to make sure we're inside a [section]
             if (CurrentSection == NULL)
             {
-                printf("Error: freeldr.ini:%lu: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
-                printf("Press any key to continue...\n");
-                MachConsGetCh();
+                ERR("Error: freeldr.ini:%lu: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
+
+                // Skip it
                 CurrentLineNumber++;
                 continue;
             }

@@ -24,14 +24,18 @@ DBG_DEFAULT_CHANNEL(INIFILE);
 
 BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
-    PINI_SECTION    Section;
+    PLIST_ENTRY Entry;
+    PINI_SECTION Section;
 
     TRACE("IniOpenSection() SectionName = %s\n", SectionName);
 
-    // Loop through each section and find the one they want
-    Section = CONTAINING_RECORD(IniFileSectionListHead.Flink, INI_SECTION, ListEntry);
-    while (&Section->ListEntry != &IniFileSectionListHead)
+    // Loop through each section and find the one we want
+    for (Entry = IniFileSectionListHead.Flink;
+         Entry != &IniFileSectionListHead;
+         Entry = Entry->Flink)
     {
+        Section = CONTAINING_RECORD(Entry, INI_SECTION, ListEntry);
+
         // Compare against the section name
         if (_stricmp(SectionName, Section->SectionName) == 0)
         {
@@ -41,9 +45,6 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
             TRACE("IniOpenSection() Found it! SectionId = 0x%x\n", SectionId);
             return TRUE;
         }
-
-        // Get the next section in the list
-        Section = CONTAINING_RECORD(Section->ListEntry.Flink, INI_SECTION, ListEntry);
     }
 
     TRACE("IniOpenSection() Section not found.\n");
@@ -53,7 +54,7 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 
 ULONG IniGetNumSectionItems(ULONG_PTR SectionId)
 {
-    PINI_SECTION    Section = (PINI_SECTION)SectionId;
+    PINI_SECTION Section = (PINI_SECTION)SectionId;
 
     TRACE("IniGetNumSectionItems() SectionId = 0x%x\n", SectionId);
     TRACE("IniGetNumSectionItems() Item count = %d\n", Section->SectionItemCount);
@@ -63,14 +64,18 @@ ULONG IniGetNumSectionItems(ULONG_PTR SectionId)
 
 PINI_SECTION_ITEM IniGetSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber)
 {
-    PINI_SECTION        Section = (PINI_SECTION)SectionId;
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION Section = (PINI_SECTION)SectionId;
+    PLIST_ENTRY Entry;
+    PINI_SECTION_ITEM SectionItem;
 
-    // Loop through each section item and find the one they want
-    SectionItem = CONTAINING_RECORD(Section->SectionItemList.Flink, INI_SECTION_ITEM, ListEntry);
-    while (&SectionItem->ListEntry != &Section->SectionItemList)
+    // Loop through each section item and find the one we want
+    for (Entry = Section->SectionItemList.Flink;
+         Entry != &Section->SectionItemList;
+         Entry = Entry->Flink)
     {
-        // Check to see if this is the setting they want
+        SectionItem = CONTAINING_RECORD(Entry, INI_SECTION_ITEM, ListEntry);
+
+        // Check to see if this is the setting we want
         if (SettingNumber == 0)
         {
             return SectionItem;
@@ -78,16 +83,13 @@ PINI_SECTION_ITEM IniGetSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber
 
         // Nope, keep going
         SettingNumber--;
-
-        // Get the next section item in the list
-        SectionItem = CONTAINING_RECORD(SectionItem->ListEntry.Flink, INI_SECTION_ITEM, ListEntry);
     }
     return NULL;
 }
 
 ULONG IniGetSectionSettingNameSize(ULONG_PTR SectionId, ULONG SettingIndex)
 {
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION_ITEM SectionItem;
 
     // Retrieve requested setting
     SectionItem = IniGetSettingByNumber(SectionId, SettingIndex);
@@ -100,7 +102,7 @@ ULONG IniGetSectionSettingNameSize(ULONG_PTR SectionId, ULONG SettingIndex)
 
 ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
 {
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION_ITEM SectionItem;
 
     // Retrieve requested setting
     SectionItem = IniGetSettingByNumber(SectionId, SettingIndex);
@@ -146,16 +148,20 @@ BOOLEAN IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR S
 
 BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize)
 {
-    PINI_SECTION        Section = (PINI_SECTION)SectionId;
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION Section = (PINI_SECTION)SectionId;
+    PLIST_ENTRY Entry;
+    PINI_SECTION_ITEM SectionItem;
 
     TRACE("IniReadSettingByName() SectionId = 0x%x\n", SectionId);
 
-    // Loop through each section item and find the one they want
-    SectionItem = CONTAINING_RECORD(Section->SectionItemList.Flink, INI_SECTION_ITEM, ListEntry);
-    while (&SectionItem->ListEntry != &Section->SectionItemList)
+    // Loop through each section item and find the one we want
+    for (Entry = Section->SectionItemList.Flink;
+         Entry != &Section->SectionItemList;
+         Entry = Entry->Flink)
     {
-        // Check to see if this is the setting they want
+        SectionItem = CONTAINING_RECORD(Entry, INI_SECTION_ITEM, ListEntry);
+
+        // Check to see if this is the setting we want
         if (_stricmp(SettingName, SectionItem->ItemName) == 0)
         {
             TRACE("IniReadSettingByName() Setting \'%s\' found.\n", SettingName);
@@ -166,9 +172,6 @@ BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffe
 
             return TRUE;
         }
-
-        // Get the next section item in the list
-        SectionItem = CONTAINING_RECORD(SectionItem->ListEntry.Flink, INI_SECTION_ITEM, ListEntry);
     }
 
     WARN("IniReadSettingByName() Setting \'%s\' not found.\n", SettingName);
@@ -178,7 +181,7 @@ BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffe
 
 BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
-    PINI_SECTION    Section;
+    PINI_SECTION Section;
 
     // Allocate a new section structure
     Section = FrLdrTempAlloc(sizeof(INI_SECTION), TAG_INI_SECTION);
@@ -251,8 +254,8 @@ VOID IniCleanup(VOID)
 
 BOOLEAN IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue)
 {
-    PINI_SECTION        Section = (PINI_SECTION)SectionId;
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION Section = (PINI_SECTION)SectionId;
+    PINI_SECTION_ITEM SectionItem;
 
     // Allocate a new item structure
     SectionItem = FrLdrTempAlloc(sizeof(INI_SECTION_ITEM), TAG_INI_SECTION_ITEM);
@@ -292,26 +295,27 @@ BOOLEAN IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCST
 
 BOOLEAN IniModifySettingValue(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue)
 {
-    PINI_SECTION        Section = (PINI_SECTION)SectionId;
-    PINI_SECTION_ITEM    SectionItem;
+    PINI_SECTION Section = (PINI_SECTION)SectionId;
+    PLIST_ENTRY Entry;
+    PINI_SECTION_ITEM SectionItem;
     PCHAR NewItemValue;
 
     // Loop through each section item and find the one we want
-    SectionItem = CONTAINING_RECORD(Section->SectionItemList.Flink, INI_SECTION_ITEM, ListEntry);
-    while (&SectionItem->ListEntry != &Section->SectionItemList)
+    for (Entry = Section->SectionItemList.Flink;
+         Entry != &Section->SectionItemList;
+         Entry = Entry->Flink)
     {
+        SectionItem = CONTAINING_RECORD(Entry, INI_SECTION_ITEM, ListEntry);
+
         // Check to see if this is the setting we want
         if (_stricmp(SectionItem->ItemName, SettingName) == 0)
         {
             break;
         }
-
         // Nope, keep going
-        // Get the next section item in the list
-        SectionItem = CONTAINING_RECORD(SectionItem->ListEntry.Flink, INI_SECTION_ITEM, ListEntry);
     }
     // If the section item does not exist, create it
-    if (&SectionItem->ListEntry == &Section->SectionItemList)
+    if (Entry == &Section->SectionItemList)
     {
         return IniAddSettingValueToSection(SectionId, SettingName, SettingValue);
     }
