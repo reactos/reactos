@@ -141,6 +141,10 @@ public:
     HRESULT CreateInputContext(_Inout_ ITfThreadMgr *pThreadMgr, _Inout_ CicIMCLock& imcLock);
     HRESULT DestroyInputContext();
 
+    BOOL SetCompositionString(CicIMCLock& imcLock, ITfThreadMgr_P *pThreadMgr, DWORD dwIndex,
+                              LPCVOID lpComp, DWORD dwCompLen, LPCVOID lpRead, DWORD dwReadLen,
+                              UINT uCodePage);
+
     HRESULT SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage);
     HRESULT EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag);
     HRESULT EscbCompComplete(CicIMCLock& imcLock);

@@ -504,3 +504,17 @@ HRESULT CicInputContext::EndReconvertString(CicIMCLock& imcLock)
 {
     return E_NOTIMPL;
 }
+
+/// @unimplemented
+BOOL CicInputContext::SetCompositionString(
+    CicIMCLock& imcLock,
+    ITfThreadMgr_P *pThreadMgr,
+    DWORD dwIndex,
+    LPCVOID lpComp,
+    DWORD dwCompLen,
+    LPCVOID lpRead,
+    DWORD dwReadLen,
+    UINT uCodePage)
+{
+    return FALSE;
+}

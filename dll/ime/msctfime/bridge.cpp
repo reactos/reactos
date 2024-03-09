@@ -815,7 +815,7 @@ CicBridge::ToAsciiEx(
     return E_NOTIMPL; // FIXME
 }
 
-/// @unimplemented
+/// @implemented
 BOOL
 CicBridge::SetCompositionString(
     TLS *pTLS,
@@ -827,7 +827,41 @@ CicBridge::SetCompositionString(
     LPCVOID lpRead,
     DWORD dwReadLen)
 {
-    return FALSE; // FIXME
+    CicIMCLock imcLock(hIMC);
+    if (FAILED(imcLock.m_hr))
+        return FALSE;
+
+    CicIMCCLock<CTFIMECONTEXT> imeContext(imcLock.get().hCtfImeContext);
+    if (FAILED(imeContext.m_hr))
+        return FALSE;
+
+    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    auto pProfile = pTLS->m_pProfile;
+    if (!pCicIC || !pProfile)
+        return FALSE;
+
+    UINT uCodePage;
+    pProfile->GetCodePageA(&uCodePage);
+
+    LANGID LangID;
+    if (dwIndex != SCS_SETSTR ||
+        !lpComp || *(WORD*)lpComp ||
+        !dwCompLen ||
+        FAILED(pProfile->GetLangId(&LangID)) ||
+        PRIMARYLANGID(LangID) != LANG_KOREAN)
+    {
+        return pCicIC->SetCompositionString(imcLock, pThreadMgr, dwIndex,
+                                            lpComp, dwCompLen, lpRead, dwReadLen,
+                                            uCodePage);
+    }
+
+    if (imcLock.get().fdwConversion & IME_CMODE_NATIVE)
+    {
+        ::ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /// @unimplemented
