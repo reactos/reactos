@@ -47,6 +47,7 @@ lfind==_lfind
 lsearch==_lsearch
 lseek==_lseek
 ltoa==_ltoa
+mbrtowc==_mbrtowc
 memccpy==_memccpy
 memicmp==_memicmp
 mkdir==_mkdir
@@ -62,7 +63,7 @@ rmdir==_rmdir
 rmtmp==_rmtmp
 searchenv==_searchenv
 setmode==_setmode
-snprintf=_snprintf
+snprintf==_snprintf
 sopen==_sopen
 spawnl==_spawnl
 spawnle==_spawnle
@@ -93,6 +94,7 @@ umask==_umask
 ungetch==_ungetch
 unlink==_unlink
 utime==_utime
+wcrtomb==_wcrtomb
 wcsdup==_wcsdup
 wcsicmp==_wcsicmp
 wcsicoll==_wcsicoll
@@ -104,7 +106,6 @@ wcsset==_wcsset
 wcsupr==_wcsupr
 wpopen==_wpopen
 write==_write
-; non-ANSI functions declared in math.h
 j0==_j0
 j1==_j1
 jn==_jn
@@ -115,7 +116,6 @@ chgsign==_chgsign
 scalb==_scalb
 finite==_finite
 fpclass==_fpclass
-; C99 functions
 cabs==_cabs
 hypot==_hypot
 logb==_logb
