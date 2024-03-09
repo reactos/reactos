@@ -532,7 +532,7 @@ EXTERN_C INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL)
 
     ::EnterCriticalSection(&g_cs);
 
-    if (g_pMlngInfo && iKL < (INT)g_pMlngInfo->size())
+    if (iKL < (INT)g_pMlngInfo->size())
         iIcon = (*g_pMlngInfo)[iKL].GetIconIndex();
 
     ::LeaveCriticalSection(&g_cs);
@@ -555,7 +555,8 @@ TF_GetMlngHKL(
     BOOL ret = FALSE;
 
     ::EnterCriticalSection(&g_cs);
-    if (g_pMlngInfo && iKL < (INT)g_pMlngInfo->size())
+
+    if (iKL < (INT)g_pMlngInfo->size())
     {
         MLNGINFO& info = (*g_pMlngInfo)[iKL];
 
@@ -567,6 +568,7 @@ TF_GetMlngHKL(
 
         ret = TRUE;
     }
+
     ::LeaveCriticalSection(&g_cs);
 
     return ret;
