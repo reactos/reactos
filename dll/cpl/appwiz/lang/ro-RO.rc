@@ -32,7 +32,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Creare comandă rapidă"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Acest asistent vă va ajuta \în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+    LTEXT "Acest expert vă ajută să creaţi comenzi rapide către fişiere, programe şi foldere locale sau din reţea, precum şi către adrese Internet.", -1, 120, 15, 200, 30
     LTEXT "&Tastaţi amplasarea elementului ales:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Răsfoire…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
