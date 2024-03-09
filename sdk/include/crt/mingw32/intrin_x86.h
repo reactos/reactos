@@ -1640,7 +1640,8 @@ __INTRIN_INLINE unsigned long __cdecl _outpd(unsigned short Port, unsigned long 
 
 
 /*** System information ***/
-
+//#define _CPUID_H_INCLUDED
+#ifndef __cplusplus
 __INTRIN_INLINE void __cpuid(int CPUInfo[4], int InfoType)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
@@ -1650,6 +1651,7 @@ __INTRIN_INLINE void __cpuidex(int CPUInfo[4], int InfoType, int ECXValue)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType), "c" (ECXValue));
 }
+#endif
 
 #if !HAS_BUILTIN(__rdtsc)
 __INTRIN_INLINE unsigned long long __rdtsc(void)

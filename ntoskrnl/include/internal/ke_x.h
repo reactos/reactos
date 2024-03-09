@@ -1691,6 +1691,7 @@ KiReleaseNmiListLock(IN KIRQL OldIrql)
     KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
 }
 
+#ifndef __cplusplus
 #if defined(_M_IX86) || defined(_M_AMD64)
 FORCEINLINE
 VOID
@@ -1711,6 +1712,7 @@ KiCpuIdEx(
     __cpuidex((INT*)CpuInfo->AsUINT32, Function, SubFunction);
 }
 #endif /* _M_IX86 || _M_AMD64 */
+#endif
 
 #ifdef __cplusplus
 } // extern "C"

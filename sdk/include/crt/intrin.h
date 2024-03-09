@@ -88,8 +88,10 @@ _Check_return_ unsigned char __cdecl _rotr8(_In_ unsigned char _Value, _In_ unsi
 
 #if defined(_M_IX86) || defined(_M_X64)
 
+#ifndef __cplusplus // HACK!
 void __cpuid(int[4], int);
 void __cpuidex(int[4], int, int);
+#endif
 __int64 __emul(int, int);
 unsigned __int64 __emulu(unsigned int, unsigned int);
 unsigned int __getcallerseflags(void);
