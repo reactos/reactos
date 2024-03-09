@@ -141,9 +141,14 @@ public:
     HRESULT CreateInputContext(_Inout_ ITfThreadMgr *pThreadMgr, _Inout_ CicIMCLock& imcLock);
     HRESULT DestroyInputContext();
 
+    BOOL SetCompositionString(CicIMCLock& imcLock, ITfThreadMgr_P *pThreadMgr, DWORD dwIndex,
+                              LPCVOID lpComp, DWORD dwCompLen, LPCVOID lpRead, DWORD dwReadLen,
+                              UINT uCodePage);
+
     HRESULT SetupDocFeedString(CicIMCLock& imcLock, UINT uCodePage);
     HRESULT EscbClearDocFeedBuffer(CicIMCLock& imcLock, BOOL bFlag);
     HRESULT EscbCompComplete(CicIMCLock& imcLock);
+    HRESULT EscbCompCancel(CicIMCLock& imcLock);
     HRESULT SetupReconvertString(
         CicIMCLock& imcLock,
         ITfThreadMgr_P *pThreadMgr,
@@ -159,4 +164,6 @@ public:
     HRESULT EndReconvertString(CicIMCLock& imcLock);
     HRESULT DelayedReconvertFuncCall(CicIMCLock& imcLock);
     void ClearPrevCandidatePos();
+
+    HRESULT OnSetCandidatePos(TLS *pTLS, CicIMCLock& imcLock);
 };

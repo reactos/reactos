@@ -450,6 +450,18 @@ HRESULT CicInputContext::EscbCompComplete(CicIMCLock& imcLock)
 }
 
 /// @unimplemented
+HRESULT CicInputContext::EscbCompCancel(CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
+HRESULT CicInputContext::OnSetCandidatePos(TLS *pTLS, CicIMCLock& imcLock)
+{
+    return E_NOTIMPL;
+}
+
+/// @unimplemented
 HRESULT CicInputContext::DelayedReconvertFuncCall(CicIMCLock& imcLock)
 {
     return E_NOTIMPL;
@@ -491,4 +503,18 @@ void CicInputContext::ClearPrevCandidatePos()
 HRESULT CicInputContext::EndReconvertString(CicIMCLock& imcLock)
 {
     return E_NOTIMPL;
+}
+
+/// @unimplemented
+BOOL CicInputContext::SetCompositionString(
+    CicIMCLock& imcLock,
+    ITfThreadMgr_P *pThreadMgr,
+    DWORD dwIndex,
+    LPCVOID lpComp,
+    DWORD dwCompLen,
+    LPCVOID lpRead,
+    DWORD dwReadLen,
+    UINT uCodePage)
+{
+    return FALSE;
 }
