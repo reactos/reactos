@@ -77,7 +77,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Sal&vare a aceastei parole (nerecomandat)", IDC_SAVEPASSWORD,
+ CHECKBOX "Sal&vare a acestei parole (nerecomandat)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Revocare", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
@@ -85,12 +85,12 @@ FONT 8, "MS Shell Dlg"
 
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Avertisment de securitate"
+CAPTION "Alertă de securitate"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Există o problemă cu certificatul acestui sit.", -1, 40, 6, 200, 20
+ LTEXT "Emiţătorul certificatului acestui sit este necunoscut sau nu prezintă încredere.", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
- LTEXT "Doriți totuși să continuați?", -1, 40, 46, 200, 20
+ LTEXT "Continuaţi?", -1, 40, 46, 200, 20
  PUSHBUTTON "Da", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Nu", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }
