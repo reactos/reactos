@@ -8,6 +8,7 @@ extern void func_imcc(void);
 extern void func_ImmEnumInputContext(void);
 extern void func_ImmGetImeInfoEx(void);
 extern void func_ImmIsUIMessage(void);
+extern void func_KLID(void);
 extern void func_JapanImeConvTestA(void);
 extern void func_JapanImeConvTestW(void);
 
@@ -19,6 +20,7 @@ const struct test winetest_testlist[] =
     { "ImmEnumInputContext", func_ImmEnumInputContext },
     { "ImmGetImeInfoEx", func_ImmGetImeInfoEx },
     { "ImmIsUIMessage", func_ImmIsUIMessage },
+    { "KLID", func_KLID },
     { "JapanImeConvTestA", func_JapanImeConvTestA },
     { "JapanImeConvTestW", func_JapanImeConvTestW },
     { 0, 0 }
