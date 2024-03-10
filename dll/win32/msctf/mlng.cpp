@@ -46,10 +46,49 @@ GetLocaleInfoString(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 #endif
 }
 
-/// @unimplemented
+/// @implemented
 HKL GetHKLSubstitute(_In_ HKL hKL)
 {
-    return hKL;
+    if (IS_IME_HKL(hKL))
+        return hKL;
+
+    DWORD dwLayoutId;
+    if (HIWORD(hKL) == LOWORD(hKL))
+        dwLayoutId = LOWORD(hKL);
+    else if (IS_SPECIAL_HKL(hKL))
+        dwLayoutId = SPECIALIDFROMHKL(hKL);
+    else
+        dwLayoutId = HandleToUlong(hKL);
+
+    CicRegKey regKey;
+    DWORD ret = dwLayoutId;
+    LSTATUS error = regKey.Open(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes");
+    if (error == ERROR_SUCCESS)
+    {
+        WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+        DWORD dwIndex, dwValue;
+        for (dwIndex = 0; ; ++dwIndex)
+        {
+            error = regKey.EnumValue(dwIndex, szName, _countof(szName));
+            szName[_countof(szName) - 1] = UNICODE_NULL; // Avoid buffer overrun
+            if (error != ERROR_SUCCESS)
+                break;
+
+            error = regKey.QuerySz(szName, szValue, _countof(szValue));
+            szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+            if (error != ERROR_SUCCESS)
+                break;
+
+            dwValue = wcstoul(szValue, NULL, 16);
+            if ((dwLayoutId & 0x0FFFFFFF) == dwValue)
+            {
+                ret = wcstoul(szName, NULL, 16);
+                break;
+            }
+        }
+    }
+
+    return (HKL)UlongToHandle(ret);
 }
 
 /// @implemented
