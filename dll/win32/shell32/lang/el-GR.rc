@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Έκδοση"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Έκδοση αρχείου: ", 14000, 10, 10, 60, 10
+    LTEXT "Έκδοση αρχείου:", 14000, 10, 10, 60, 10
     EDITTEXT 14001, 80, 10, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Περιγραφή: ", 14002, 10, 20, 60, 10
+    LTEXT "Περιγραφή:", 14002, 10, 20, 60, 10
     EDITTEXT 14003, 80, 20, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Πνευματικά δικαιώματα: ", 14004, 10, 30, 70, 10
+    LTEXT "Πνευματικά δικαιώματα:", 14004, 10, 30, 70, 10
     EDITTEXT 14005, 80, 30, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Άλλες πληροφορίες: ", 14006, 10, 45, 220, 90
-    LTEXT "Όνομα στοιχείου: ", 14007, 20, 55, 60, 10
-    LTEXT "Τιμή: ", 14008, 130, 55, 45, 10
+    GROUPBOX "Άλλες πληροφορίες", 14006, 10, 45, 220, 90
+    LTEXT "Όνομα στοιχείου:", 14007, 20, 55, 60, 10
+    LTEXT "Τιμή:", 14008, 130, 55, 45, 10
     LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END

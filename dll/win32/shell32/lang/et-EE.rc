@@ -290,15 +290,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versioon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Faili versioon: ", 14000, 10, 10, 55, 10
+    LTEXT "Faili versioon:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Kirjeldus: ", 14002, 10, 27, 45, 10
+    LTEXT "Kirjeldus:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Autoriõigus: ", 14004, 10, 46, 66, 10
+    LTEXT "Autoriõigus:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Teiste versioonide informatsioon: ", 14006, 6, 70, 222, 115
-    LTEXT "Üksikasja nimi: ", 14007, 13, 82, 50, 10
-    LTEXT "Väärtus: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Teiste versioonide informatsioon", 14006, 6, 70, 222, 115
+    LTEXT "Üksikasja nimi:", 14007, 13, 82, 50, 10
+    LTEXT "Väärtus:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
