@@ -113,11 +113,9 @@
 #include <arch/pc/machpc.h>
 #endif
 #include <arch/i386/i386.h>
-#include <internal/i386/intrin_i.h>
 #elif defined(_M_AMD64)
 #include <arch/pc/machpc.h>
 #include <arch/amd64/amd64.h>
-#include <internal/amd64/intrin_i.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)

@@ -10,6 +10,7 @@
 
 #include <freeldr.h>
 #include <ndk/asm.h>
+#include <internal/i386/intrin_i.h>
 #include "../../winldr.h"
 
 #include <debug.h>
