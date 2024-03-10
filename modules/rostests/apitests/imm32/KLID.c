@@ -52,7 +52,7 @@ static DWORD SpecialKLIDFromHKL(HKL hKL)
     hkeyLayouts = OpenKeyboardLayouts();
     ok(hkeyLayouts != NULL, "hkeyLayouts was NULL\n");
 
-    dwSpecialId = SPECIALIDFROMHKL(hKL)];
+    dwSpecialId = SPECIALIDFROMHKL(hKL);
 
     /* Search from "Keyboard Layouts" registry key */
     for (DWORD dwIndex = 0; dwIndex < 1000; ++dwIndex)
