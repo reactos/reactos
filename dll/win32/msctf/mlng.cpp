@@ -210,6 +210,7 @@ GetHKLDesctription(
     if (error == ERROR_SUCCESS)
     {
         SHLoadRegUIStringW(hKey, L"Layout Display Name", pszDesc, cchDesc);
+        pszDesc[cchDesc - 1] = UNICODE_NULL; // Avoid buffer overrun
         ::RegCloseKey(hKey);
     }
 
