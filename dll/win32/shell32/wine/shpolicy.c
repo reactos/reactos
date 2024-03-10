@@ -78,7 +78,7 @@ SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid)
     if (*phGlobalCounter)
         return *phGlobalCounter;
     hGlobalCounter = SHGlobalCounterCreate(rguid);
-    if (SHInterlockedCompareExchange(phGlobalCounter, hGlobalCounter, NULL))
+    if (InterlockedCompareExchangePointer(phGlobalCounter, hGlobalCounter, NULL))
         CloseHandle(hGlobalCounter);
     return *phGlobalCounter;
 }
