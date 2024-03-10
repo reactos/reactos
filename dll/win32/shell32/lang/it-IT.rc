@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Taglia", IDM_CUT
-        MENUITEM "&Copia", IDM_COPY
+        MENUITEM "&Copia", IDM_COPY //FIXME: accelerator collision &C
         MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "&Crea Collegamento", IDM_CREATELINK //FIXME: accelerator collision &C

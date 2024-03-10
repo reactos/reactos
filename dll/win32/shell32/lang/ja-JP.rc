@@ -46,7 +46,7 @@ MENU_003 MENU
 BEGIN
     MENUITEM "元に戻す(&U)\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "切り取り&T)\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "切り取り(&T)\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "コピー(&C)\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "貼り付け(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "ショートカットを貼り付け(&S)", FCIDM_SHVIEW_INSERTLINK
@@ -66,13 +66,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "切り取り(&U)", IDM_CUT
         MENUITEM "コピー(&C)", IDM_COPY
-        MENUITEM "貼り付け(&P)", IDM_INSERT
+        MENUITEM "貼り付け(&P)", IDM_INSERT //FIXME: accelerator collision &P
         MENUITEM SEPARATOR
         MENUITEM "ショートカットの作成(&L)", IDM_CREATELINK
         MENUITEM "削除(&D)", IDM_DELETE
         MENUITEM "名前の変更(&R)", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "プロパティ(&P)", IDM_PROPERTIES
+        MENUITEM "プロパティ(&P)", IDM_PROPERTIES //FIXME: accelerator collision &P
     END
 END
 
