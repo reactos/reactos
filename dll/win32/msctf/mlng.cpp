@@ -170,7 +170,7 @@ HKL GetHKLSubstitute(_In_ HKL hKL)
                 break;
 
             dwValue = wcstoul(szValue, NULL, 16);
-            if (dwKLID == dwValue)
+            if ((dwKLID & ~SPECIAL_MASK) == dwValue)
             {
                 ret = wcstoul(szName, NULL, 16);
                 break;
