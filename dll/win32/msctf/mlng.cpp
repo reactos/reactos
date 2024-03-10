@@ -372,9 +372,9 @@ void MLNGINFO::InitDesc()
     if (m_bInitDesc)
         return;
 
-    WCHAR szDesc[MAX_PATH], szFileName[MAX_PATH];
+    WCHAR szDesc[MAX_PATH], szImeFileName[MAX_PATH];
     GetHKLDesctription(m_hKL, szDesc, (UINT)_countof(szDesc),
-                       szFileName, (UINT)_countof(szFileName));
+                       szImeFileName, (UINT)_countof(szImeFileName));
     SetDesc(szDesc);
     m_bInitDesc = TRUE;
 
@@ -401,16 +401,18 @@ void MLNGINFO::InitIcon()
     if (m_bInitIcon)
         return;
 
-    WCHAR szDesc[MAX_PATH], szFileName[MAX_PATH];
-    GetHKLDesctription(m_hKL, szDesc, _countof(szDesc), szFileName, _countof(szFileName));
+    WCHAR szDesc[MAX_PATH], szImeFileName[MAX_PATH];
+    GetHKLDesctription(m_hKL, szDesc, (UINT)_countof(szDesc),
+                       szImeFileName, (UINT)_countof(szImeFileName));
     SetDesc(szDesc);
     m_bInitDesc = TRUE;
 
     INT cxIcon, cyIcon;
     InatGetIconSize(&cxIcon, &cyIcon);
-    if (szFileName[0])
+
+    if (szImeFileName[0])
     {
-        HICON hIcon = GetIconFromFile(cxIcon, cyIcon, szFileName, 0);
+        HICON hIcon = GetIconFromFile(cxIcon, cyIcon, szImeFileName, 0);
         if (!hIcon)
             hIcon = InatCreateIcon(LOWORD(m_hKL));
         if (hIcon)
