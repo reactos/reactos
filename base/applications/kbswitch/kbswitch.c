@@ -11,6 +11,7 @@
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
 #include <imm.h>
+#include <imm32_undoc.h>
 
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
@@ -25,13 +26,6 @@
  * It might not work correctly on Vista+ because keyboard layout change notification
  * won't be generated in Vista+.
  */
-
-#define IME_MASK        (0xE0000000UL)
-#define SPECIAL_MASK    (0xF0000000UL)
-
-#define IS_IME_HKL(hKL)             ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
-#define IS_SPECIAL_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define SPECIALIDFROMHKL(hKL)       ((WORD)(HIWORD(hKL) & 0x0FFF))
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 

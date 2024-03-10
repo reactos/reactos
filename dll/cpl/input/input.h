@@ -16,6 +16,7 @@
 #include <setupapi.h>
 #include <strsafe.h>
 #include <cpl.h>
+#include <imm32_undoc.h>
 
 #include "resource.h"
 
@@ -82,17 +83,6 @@ DWORDfromString(const WCHAR *pszString)
 
     return wcstoul(pszString, &pszEnd, 16);
 }
-
-#define IME_MASK        (0xE0000000UL)
-#define SUBST_MASK      (0xD0000000UL)
-#define SPECIAL_MASK    (0xF0000000UL)
-
-#define IS_IME_HKL(hKL)             ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
-#define IS_SPECIAL_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define SPECIALIDFROMHKL(hKL)       ((WORD)(HIWORD(hKL) & 0x0FFF))
-
-#define IS_IME_KLID(dwKLID)         ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
-#define IS_SUBST_KLID(dwKLID)       ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
 VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
 
