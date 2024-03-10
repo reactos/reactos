@@ -71,6 +71,7 @@ FrLdrHeapCreate(
     PHEAP_BLOCK Block;
     SIZE_T Remaining;
     USHORT PreviousSize;
+
     TRACE("HeapCreate(MemoryType=%ld)\n", MemoryType);
 
     /* Allocate some memory for the heap */
@@ -78,7 +79,7 @@ FrLdrHeapCreate(
     Heap = MmAllocateMemoryWithType(MaximumSize, MemoryType);
     if (!Heap)
     {
-        ERR("HEAP: Failed to allocate heap of size 0x%lx, Type\n",
+        ERR("HEAP: Failed to allocate heap of size 0x%lx, Type %lu\n",
             MaximumSize, MemoryType);
         return NULL;
     }
@@ -445,6 +446,7 @@ FrLdrHeapFreeEx(
 #if DBG && !defined(_M_ARM)
     ULONGLONG Time = __rdtsc();
 #endif
+
     TRACE("HeapFree(%p, %p)\n", HeapHandle, Pointer);
     ASSERT(Tag != 'dnE#');
 
