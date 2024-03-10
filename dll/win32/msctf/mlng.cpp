@@ -97,8 +97,10 @@ BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
         dwLayoutId = GetSpecialLayoutId(hKL);
     else if (IS_IME_HKL(hKL))
         dwLayoutId = HandleToUlong(hKL);
-    else
+    else if (LOWORD(hKL) == HIWORD(hKL))
         dwLayoutId = LOWORD(hKL);
+    else
+        dwLayoutId = HandleToUlong(hKL);
 
     WCHAR szSubKey[MAX_PATH];
     StringCchPrintfW(szSubKey, _countof(szSubKey),
