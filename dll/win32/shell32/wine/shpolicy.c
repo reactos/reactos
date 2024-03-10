@@ -26,11 +26,6 @@
  * would handle the many new policies introduced since then.
  * You could easily write one with the information in
  * this file...
- *
- * Up to date as of SHELL32 v6.00 (Win2k3)
- * References:
- * https://www.geoffchappell.com/studies/windows/shell/shell32/api/util/restrictions.htm
- * https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-restrictions
  */
 
 #include <stdarg.h>
@@ -71,8 +66,20 @@ HANDLE g_hRestGlobalCounter = NULL;
 LONG g_nRestCountValue = -1;
 DWORD g_RestValues[_countof(s_PolicyTable)] = { 0 };
 
+/****************************************************************************
+ *                  SHELL_GetCachedGlobalCounter
+ *
+ * Retrieves a global counter with using cache in thread-safe manner.
+ * If there is a cache of global counter, the function returns it.
+ * If there is no cache, then the function creates a global counter.
+ *
+ * @param[in,out] phGlobalCounter  The pointer to the handle of global counter.
+ * @param[in]  rguid  The GUID of global counter.
+ * @return  The handle of global counter.
+ * @implemented
+ */
 static HANDLE
-SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid)
+SHELL_GetCachedGlobalCounter(_Inout_ HANDLE *phGlobalCounter, _In_ REFGUID rguid)
 {
     HANDLE hGlobalCounter;
     if (*phGlobalCounter)
@@ -83,11 +90,28 @@ SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid)
     return *phGlobalCounter;
 }
 
+/****************************************************************************
+ *                  SHELL_GetRestrictionsCounter
+ *
+ * Retrieves a global counter of GUID_Restrictions, with using cache in
+ * thread-safe manner. Variable g_hRestGlobalCounter is used for cache.
+ *
+ * @return  The handle of global counter.
+ * @see SHELL_GetCachedGlobalCounter
+ * @implemented
+ */
 static HANDLE SHELL_GetRestrictionsCounter(VOID)
 {
     return SHELL_GetCachedGlobalCounter(&g_hRestGlobalCounter, &GUID_Restrictions);
 }
 
+/****************************************************************************
+ *                  SHELL_QueryRestrictionsChanged
+ *
+ * @return  The value of the global counter of GUID_Restrictions.
+ * @see SHELL_GetRestrictionsCounter
+ * @implemented
+ */
 static BOOL SHELL_QueryRestrictionsChanged(VOID)
 {
     LONG Value = SHGlobalCounterGetValue(SHELL_GetRestrictionsCounter());
