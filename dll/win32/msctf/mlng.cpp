@@ -377,22 +377,6 @@ void MLNGINFO::InitDesc()
                        szImeFileName, (UINT)_countof(szImeFileName));
     SetDesc(szDesc);
     m_bInitDesc = TRUE;
-
-    ::EnterCriticalSection(&g_cs);
-
-    assert(g_pMlngInfo);
-
-    for (size_t iKL = 0; iKL < g_pMlngInfo->size(); ++iKL)
-    {
-        auto& info = (*g_pMlngInfo)[iKL];
-        if (info.m_hKL == m_hKL)
-        {
-            info.m_bInitDesc = TRUE;
-            break;
-        }
-    }
-
-    ::LeaveCriticalSection(&g_cs);
 }
 
 /// @implemented
@@ -422,24 +406,7 @@ void MLNGINFO::InitIcon()
         }
     }
 
-    ::EnterCriticalSection(&g_cs);
-
-    assert(g_pMlngInfo);
-
-    for (size_t iItem = 0; iItem < g_pMlngInfo->size(); ++iItem)
-    {
-        auto& item = (*g_pMlngInfo)[iItem];
-        if (item.m_hKL == m_hKL)
-        {
-            item.m_bInitDesc = TRUE;
-            item.m_bInitIcon = TRUE;
-            item.m_iIconIndex = m_iIconIndex;
-            item.SetDesc(szDesc);
-            break;
-        }
-    }
-
-    ::LeaveCriticalSection(&g_cs);
+    m_bInitIcon = TRUE;
 }
 
 /// @implemented
@@ -447,6 +414,7 @@ LPCWSTR MLNGINFO::GetDesc()
 {
     if (!m_bInitDesc)
         InitDesc();
+
     return m_szDesc;
 }
 
