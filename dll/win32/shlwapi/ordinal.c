@@ -2665,6 +2665,7 @@ HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExSt
   return hWnd;
 }
 
+#ifndef __REACTOS__ /* The followings are defined in <shlwapi_undoc.h> */
 typedef struct tagPOLICYDATA
 {
   DWORD policy;        /* flags value passed to SHRestricted */
@@ -2679,6 +2680,7 @@ static const WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\',
                                       's','o','f','t','\\','W','i','n','d','o','w','s','\\',
                                       'C','u','r','r','e','n','t','V','e','r','s','i','o','n',
                                       '\\','P','o','l','i','c','i','e','s',0};
+#endif /* ndef __REACTOS__ */
 
 /*************************************************************************
  * @                          [SHLWAPI.271]
@@ -2695,6 +2697,25 @@ static const WCHAR strRegistryPolicyW[] = {'S','o','f','t','w','a','r','e','\\',
  */
 DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpValue)
 {
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+    DWORD dwSize, dwValue = 0;
+
+    TRACE("(%s, %s, %s)\n", debugstr_w(lpSubKey), debugstr_w(lpSubName), debugstr_w(lpValue));
+
+    if (!lpSubKey)
+        lpSubKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
+
+    PathCombineW(szPath, lpSubKey, lpSubName);
+
+    dwSize = sizeof(dwValue);
+    if (SHGetValueW(HKEY_LOCAL_MACHINE, szPath, lpValue, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+        return dwValue;
+
+    dwSize = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER, szPath, lpValue, NULL, &dwValue, &dwSize);
+    return dwValue;
+#else
 	DWORD retval, datsize = sizeof(retval);
 	HKEY hKey;
 
@@ -2710,6 +2731,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
         SHGetValueW(hKey, lpSubName, lpValue, NULL, &retval, &datsize);
 	RegCloseKey(hKey);
 	return retval;
+#endif
 }
 
 /*************************************************************************
@@ -2732,18 +2754,33 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
  *  different POLICYDATA structure and implements a similar algorithm adapted to
  *  that structure.
  */
+#ifdef __REACTOS__
+DWORD WINAPI
+SHRestrictionLookup(
+    _In_ DWORD policy,
+    _In_ LPCWSTR initial,
+    _In_ const POLICYDATA *polTable,
+    _Inout_ LPDWORD polArr)
+#else
 DWORD WINAPI SHRestrictionLookup(
 	DWORD policy,
 	LPCWSTR initial,
 	LPPOLICYDATA polTable,
 	LPDWORD polArr)
+#endif
 {
 	TRACE("(0x%08x %s %p %p)\n", policy, debugstr_w(initial), polTable, polArr);
 
+#ifndef __REACTOS__
 	if (!polTable || !polArr)
 	  return 0;
+#endif
 
+#ifndef __REACTOS__
+	for (;polTable->appstr; polTable++, polArr++)
+#else
 	for (;polTable->policy; polTable++, polArr++)
+#endif
 	{
 	  if (policy == polTable->policy)
 	  {
