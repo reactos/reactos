@@ -46,7 +46,7 @@ static HKEY OpenKeyboardLayouts(void)
     return hKey;
 }
 
-static DWORD SpecialKLIDFromHKL(HKL hKL)
+static DWORD KLIDFromSpecialHKL(HKL hKL)
 {
     WCHAR szName[16], szLayoutId[16];
     HKEY hkeyLayouts, hkeyKLID;
@@ -104,7 +104,7 @@ static DWORD KLIDFromHKL(HKL hKL)
             return HIWORD(hKL);
 
         case HKL_TYPE_SPECIAL:
-            return SpecialKLIDFromHKL(hKL);
+            return KLIDFromSpecialHKL(hKL);
 
         case HKL_TYPE_IME:
             return HandleToUlong(hKL);
