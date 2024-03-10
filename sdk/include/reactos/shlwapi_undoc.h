@@ -25,7 +25,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-#define SHELL_NO_POLICY 0xFFFFFFFF
+#define SHELL_NO_POLICY ((DWORD)-1)
 
 typedef struct tagPOLICYDATA
 {
