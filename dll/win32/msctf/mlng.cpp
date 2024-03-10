@@ -90,17 +90,57 @@ DWORD GetSpecialKLID(_In_ HKL hKL)
 }
 
 /// @implemented
-BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
+DWORD GetHKLSubstitute(_In_ HKL hKL)
 {
+    if (IS_IME_HKL(hKL))
+        return HandleToUlong(hKL);
+
     DWORD dwKLID;
-    if (IS_SPECIAL_HKL(hKL))
-        dwKLID = GetSpecialKLID(hKL);
-    else if (IS_IME_HKL(hKL))
-        dwKLID = HandleToUlong(hKL);
-    else if (LOWORD(hKL) == HIWORD(hKL))
+    if (HIWORD(hKL) == LOWORD(hKL))
         dwKLID = LOWORD(hKL);
+    else if (IS_SPECIAL_HKL(hKL))
+        dwKLID = GetSpecialKLID(hKL);
     else
         dwKLID = HandleToUlong(hKL);
+
+    if (dwKLID == 0)
+        return HandleToUlong(hKL);
+
+    CicRegKey regKey;
+    LSTATUS error = regKey.Open(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes");
+    if (error == ERROR_SUCCESS)
+    {
+        WCHAR szName[MAX_PATH], szValue[MAX_PATH];
+        DWORD dwIndex, dwValue;
+        for (dwIndex = 0; ; ++dwIndex)
+        {
+            error = regKey.EnumValue(dwIndex, szName, _countof(szName));
+            szName[_countof(szName) - 1] = UNICODE_NULL; // Avoid buffer overrun
+            if (error != ERROR_SUCCESS)
+                break;
+
+            error = regKey.QuerySz(szName, szValue, _countof(szValue));
+            szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+            if (error != ERROR_SUCCESS)
+                break;
+
+            dwValue = wcstoul(szValue, NULL, 16);
+            if ((dwKLID & ~SPECIAL_MASK) == dwValue)
+            {
+                dwKLID = wcstoul(szName, NULL, 16);
+                break;
+            }
+        }
+    }
+
+    return dwKLID;
+}
+
+/// @implemented
+static BOOL
+GetKbdLayoutNameFromReg(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
+{
+    const DWORD dwKLID = GetHKLSubstitute(hKL);
 
     WCHAR szSubKey[MAX_PATH];
     StringCchPrintfW(szSubKey, _countof(szSubKey),
@@ -124,65 +164,22 @@ BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 }
 
 /// @implemented
-static VOID
+static BOOL
 GetHKLName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
     if (::GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, pszDesc, cchDesc))
-        return;
+        return TRUE;
 
     *pszDesc = UNICODE_NULL;
 
-    if (LOWORD(hKL) != HIWORD(hKL))
-        GetKbdLayoutName(hKL, pszDesc, cchDesc);
+    if (LOWORD(hKL) == HIWORD(hKL))
+        return FALSE;
+
+    return GetKbdLayoutNameFromReg(hKL, pszDesc, cchDesc);
 }
 
 /// @implemented
-HKL GetHKLSubstitute(_In_ HKL hKL)
-{
-    if (IS_IME_HKL(hKL))
-        return hKL;
-
-    DWORD dwKLID;
-    if (HIWORD(hKL) == LOWORD(hKL))
-        dwKLID = LOWORD(hKL);
-    else if (IS_SPECIAL_HKL(hKL))
-        dwKLID = GetSpecialKLID(hKL);
-    else
-        dwKLID = HandleToUlong(hKL);
-
-    CicRegKey regKey;
-    DWORD ret = dwKLID;
-    LSTATUS error = regKey.Open(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes");
-    if (error == ERROR_SUCCESS)
-    {
-        WCHAR szName[MAX_PATH], szValue[MAX_PATH];
-        DWORD dwIndex, dwValue;
-        for (dwIndex = 0; ; ++dwIndex)
-        {
-            error = regKey.EnumValue(dwIndex, szName, _countof(szName));
-            szName[_countof(szName) - 1] = UNICODE_NULL; // Avoid buffer overrun
-            if (error != ERROR_SUCCESS)
-                break;
-
-            error = regKey.QuerySz(szName, szValue, _countof(szValue));
-            szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
-            if (error != ERROR_SUCCESS)
-                break;
-
-            dwValue = wcstoul(szValue, NULL, 16);
-            if ((dwKLID & ~SPECIAL_MASK) == dwValue)
-            {
-                ret = wcstoul(szName, NULL, 16);
-                break;
-            }
-        }
-    }
-
-    return (HKL)UlongToHandle(ret);
-}
-
-/// @implemented
-static VOID
+static BOOL
 GetHKLDesctription(
     _In_ HKL hKL,
     _Out_ LPWSTR pszDesc,
@@ -193,36 +190,21 @@ GetHKLDesctription(
     pszDesc[0] = pszImeFileName[0] = UNICODE_NULL;
 
     if (!IS_IME_HKL(hKL))
-    {
-        GetHKLName(hKL, pszDesc, cchDesc);
-        return;
-    }
+        return GetHKLName(hKL, pszDesc, cchDesc);
 
-    hKL = GetHKLSubstitute(hKL);
+    if (GetKbdLayoutNameFromReg(hKL, pszDesc, cchDesc))
+        return TRUE;
 
-    WCHAR szSubKey[MAX_PATH];
-    StringCchPrintfW(szSubKey, _countof(szSubKey),
-                     L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%08lX",
-                     HandleToUlong(hKL));
-
-    HKEY hKey;
-    LSTATUS error = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, KEY_READ, &hKey);
-    if (error == ERROR_SUCCESS)
-    {
-        SHLoadRegUIStringW(hKey, L"Layout Display Name", pszDesc, cchDesc);
-        pszDesc[cchDesc - 1] = UNICODE_NULL; // Avoid buffer overrun
-        ::RegCloseKey(hKey);
-    }
-
-    if (pszDesc[0] == UNICODE_NULL && !::ImmGetDescriptionW(hKL, pszDesc, cchDesc))
+    if (!::ImmGetDescriptionW(hKL, pszDesc, cchDesc))
     {
         *pszDesc = UNICODE_NULL;
-        GetHKLName(hKL, pszDesc, cchDesc);
+        return GetHKLName(hKL, pszDesc, cchDesc);
     }
-    else if (!::ImmGetIMEFileNameW(hKL, pszImeFileName, cchImeFileName))
-    {
+
+    if (!::ImmGetIMEFileNameW(hKL, pszImeFileName, cchImeFileName))
         *pszImeFileName = UNICODE_NULL;
-    }
+
+    return TRUE;
 }
 
 /// @implemented

@@ -53,7 +53,7 @@ BOOL InatGetIconSize(_Out_ INT *pcx, _Out_ INT *pcy);
 INT InatGetImageCount(VOID);
 VOID InatRemoveAll(VOID);
 
-HKL GetHKLSubstitute(_In_ HKL hKL);
+DWORD GetHKLSubstitute(_In_ HKL hKL);
 HICON GetIconFromFile(_In_ INT cx, _In_ INT cy, _In_ LPCWSTR pszFileName, _In_ INT iIcon);
 
 VOID UninitINAT(VOID);
