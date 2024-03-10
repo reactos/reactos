@@ -18,6 +18,7 @@
  */
 
 #ifndef _M_ARM
+
 #include <freeldr.h>
 
 #include <debug.h>
@@ -439,6 +440,7 @@ DiskGetPartitionEntry(
 }
 
 #ifndef _M_AMD64
+
 NTSTATUS
 NTAPI
 IopReadBootRecord(
@@ -508,7 +510,7 @@ IoReadPartitionTable(
     if (SectorSize < sizeof(MASTER_BOOT_RECORD))
         return STATUS_NOT_SUPPORTED;
 
-    MasterBootRecord = ExAllocatePool(NonPagedPool, SectorSize);
+    MasterBootRecord = ExAllocatePoolWithTag(NonPagedPool, SectorSize, TAG_FLDR_MBR);
     if (!MasterBootRecord)
         return STATUS_NO_MEMORY;
 
@@ -516,14 +518,14 @@ IoReadPartitionTable(
     Status = IopReadBootRecord(DeviceObject, 0, SectorSize, MasterBootRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(MasterBootRecord);
+        ExFreePoolWithTag(MasterBootRecord, TAG_FLDR_MBR);
         return Status;
     }
 
     /* Check validity of boot record */
     if (MasterBootRecord->MasterBootRecordMagic != 0xaa55)
     {
-        ExFreePool(MasterBootRecord);
+        ExFreePoolWithTag(MasterBootRecord, TAG_FLDR_MBR);
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -543,17 +545,17 @@ IoReadPartitionTable(
 
     if (NbPartitions == 0)
     {
-        ExFreePool(MasterBootRecord);
+        ExFreePoolWithTag(MasterBootRecord, TAG_FLDR_MBR);
         return STATUS_NOT_SUPPORTED;
     }
 
     /* Allocation space to store partitions */
     Size = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION, PartitionEntry) +
            NbPartitions * sizeof(PARTITION_INFORMATION);
-    Partitions = ExAllocatePool(NonPagedPool, Size);
+    Partitions = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_FLDR_PART);
     if (!Partitions)
     {
-        ExFreePool(MasterBootRecord);
+        ExFreePoolWithTag(MasterBootRecord, TAG_FLDR_MBR);
         return STATUS_NO_MEMORY;
     }
 
@@ -580,10 +582,13 @@ IoReadPartitionTable(
 
     Partitions->PartitionCount = NbPartitions;
     Partitions->Signature = MasterBootRecord->Signature;
-    ExFreePool(MasterBootRecord);
+
+    ExFreePoolWithTag(MasterBootRecord, TAG_FLDR_MBR);
 
     *PartitionBuffer = Partitions;
     return STATUS_SUCCESS;
 }
-#endif // _M_AMD64
-#endif
+
+#endif // !_M_AMD64
+
+#endif // !_M_ARM
