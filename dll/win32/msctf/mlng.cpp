@@ -123,7 +123,7 @@ BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 
 /// @implemented
 static VOID
-GetLocaleInfoString(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
+GetHKLName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
     if (::GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, pszDesc, cchDesc))
         return;
@@ -192,7 +192,7 @@ GetHKLDesctription(
 
     if (!IS_IME_HKL(hKL))
     {
-        GetLocaleInfoString(hKL, pszDesc, cchDesc);
+        GetHKLName(hKL, pszDesc, cchDesc);
         return;
     }
 
@@ -214,7 +214,7 @@ GetHKLDesctription(
     if (pszDesc[0] == UNICODE_NULL && !::ImmGetDescriptionW(hKL, pszDesc, cchDesc))
     {
         *pszDesc = UNICODE_NULL;
-        GetLocaleInfoString(hKL, pszDesc, cchDesc);
+        GetHKLName(hKL, pszDesc, cchDesc);
     }
     else if (!::ImmGetIMEFileNameW(hKL, pszImeFileName, cchImeFileName))
     {
