@@ -394,16 +394,17 @@ void MLNGINFO::InitIcon()
     INT cxIcon, cyIcon;
     InatGetIconSize(&cxIcon, &cyIcon);
 
+    HICON hIcon = NULL;
     if (szImeFileName[0])
+        hIcon = GetIconFromFile(cxIcon, cyIcon, szImeFileName, 0);
+
+    if (!hIcon)
+        hIcon = InatCreateIcon(LOWORD(m_hKL));
+
+    if (hIcon)
     {
-        HICON hIcon = GetIconFromFile(cxIcon, cyIcon, szImeFileName, 0);
-        if (!hIcon)
-            hIcon = InatCreateIcon(LOWORD(m_hKL));
-        if (hIcon)
-        {
-            m_iIconIndex = InatAddIcon(hIcon);
-            ::DestroyIcon(hIcon);
-        }
+        m_iIconIndex = InatAddIcon(hIcon);
+        ::DestroyIcon(hIcon);
     }
 
     m_bInitIcon = TRUE;
