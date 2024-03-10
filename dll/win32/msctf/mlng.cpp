@@ -11,8 +11,12 @@
 #include <shellapi.h>
 #include <imm.h>
 #include <imm32_undoc.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <shlwapi_undoc.h>
 #include <msctf.h>
 #include <strsafe.h>
+#include <assert.h>
 
 #include <cicreg.h>
 #include <cicarray.h>
@@ -34,16 +38,99 @@ CStaticIconList g_IconList;
  * The helper funtions
  */
 
-/// @unimplemented
+/// @implemented
+DWORD GetSpecialLayoutId(_In_ HKL hKL)
+{
+    static HKL s_hCacheKL = NULL;
+    static DWORD s_dwCacheLayoutId = 0;
+
+    assert(IS_SPECIAL_HKL(hKL));
+
+    if (s_hCacheKL == hKL && s_dwCacheLayoutId != 0)
+        return s_dwCacheLayoutId;
+
+    s_dwCacheLayoutId = 0;
+
+    CicRegKey regKey1;
+    LSTATUS error = regKey1.Open(HKEY_LOCAL_MACHINE,
+                                 L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts");
+    if (error != ERROR_SUCCESS)
+        return 0;
+
+    WCHAR szName[16], szLayoutId[16];
+    const DWORD dwSpecialId = SPECIALIDFROMHKL(hKL);
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        error = ::RegEnumKeyW(regKey1, dwIndex, szName, _countof(szName));
+        szName[_countof(szName) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        if (error != ERROR_SUCCESS)
+            break;
+
+        CicRegKey regKey2;
+        error = regKey2.Open(regKey1, szName);
+        if (error != ERROR_SUCCESS)
+            break;
+
+        error = regKey2.QuerySz(L"Layout Id", szLayoutId, _countof(szLayoutId));
+        szLayoutId[_countof(szLayoutId) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        if (error == ERROR_SUCCESS)
+            continue;
+
+        DWORD dwLayoutId = wcstoul(szLayoutId, NULL, 16);
+        if (dwLayoutId == dwSpecialId)
+        {
+            s_hCacheKL = hKL;
+            s_dwCacheLayoutId = wcstoul(szName, NULL, 16);
+            break;
+        }
+    }
+
+    return s_dwCacheLayoutId;
+}
+
+/// @implemented
+BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
+{
+    DWORD dwLayoutId;
+    if (IS_SPECIAL_HKL(hKL))
+        dwLayoutId = GetSpecialLayoutId(hKL);
+    else if (IS_IME_HKL(hKL))
+        dwLayoutId = HandleToUlong(hKL);
+    else
+        dwLayoutId = LOWORD(hKL);
+
+    WCHAR szSubKey[MAX_PATH];
+    StringCchPrintfW(szSubKey, _countof(szSubKey),
+                     L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%08lX",
+                     dwLayoutId);
+
+    CicRegKey regKey;
+    LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE, szSubKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    if (SHLoadRegUIStringW(regKey, L"Layout Display Name", pszDesc, cchDesc) == S_OK)
+    {
+        pszDesc[cchDesc - 1] = UNICODE_NULL; // Avoid buffer overrun
+        return TRUE;
+    }
+
+    error = regKey.QuerySz(L"Layout Text", pszDesc, cchDesc);
+    pszDesc[cchDesc - 1] = UNICODE_NULL; // Avoid buffer overrun
+    return (error == ERROR_SUCCESS);
+}
+
+/// @implemented
 static VOID
 GetLocaleInfoString(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
-    if (!::GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, pszDesc, cchDesc))
-        *pszDesc = UNICODE_NULL;
-#if 0
+    if (::GetLocaleInfoW(LOWORD(hKL), LOCALE_SLANGUAGE, pszDesc, cchDesc))
+        return;
+
+    *pszDesc = UNICODE_NULL;
+
     if (HIWORD(hKL) != LOWORD(hKL))
         GetKbdLayoutName(hKL, pszDesc, cchDesc);
-#endif
 }
 
 /// @implemented
@@ -56,9 +143,9 @@ HKL GetHKLSubstitute(_In_ HKL hKL)
     if (HIWORD(hKL) == LOWORD(hKL))
         dwLayoutId = LOWORD(hKL);
     else if (IS_SPECIAL_HKL(hKL))
-        dwLayoutId = SPECIALIDFROMHKL(hKL);
+        dwLayoutId = GetSpecialLayoutId(hKL);
     else
-        dwLayoutId = HandleToUlong(hKL);
+        dwLayoutId = LOWORD(hKL);
 
     CicRegKey regKey;
     DWORD ret = dwLayoutId;
@@ -80,7 +167,7 @@ HKL GetHKLSubstitute(_In_ HKL hKL)
                 break;
 
             dwValue = wcstoul(szValue, NULL, 16);
-            if ((dwLayoutId & 0x0FFFFFFF) == dwValue)
+            if (dwLayoutId == dwValue)
             {
                 ret = wcstoul(szName, NULL, 16);
                 break;
@@ -119,10 +206,7 @@ GetHKLDesctription(
     LSTATUS error = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, KEY_READ, &hKey);
     if (error == ERROR_SUCCESS)
     {
-        DWORD cbDesc = cchDesc * sizeof(WCHAR);
-        error = ::RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL,
-                                   (LPBYTE)pszDesc, &cbDesc);
-        pszDesc[cbDesc / sizeof(WCHAR) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        SHLoadRegUIStringW(hKey, L"Layout Display Name", pszDesc, cchDesc);
         ::RegCloseKey(hKey);
     }
 
@@ -310,6 +394,8 @@ void MLNGINFO::InitDesc()
 
     ::EnterCriticalSection(&g_cs);
 
+    assert(g_pMlngInfo);
+
     for (size_t iKL = 0; iKL < g_pMlngInfo->size(); ++iKL)
     {
         auto& info = (*g_pMlngInfo)[iKL];
@@ -349,6 +435,8 @@ void MLNGINFO::InitIcon()
     }
 
     ::EnterCriticalSection(&g_cs);
+
+    assert(g_pMlngInfo);
 
     for (size_t iItem = 0; iItem < g_pMlngInfo->size(); ++iItem)
     {
@@ -484,6 +572,8 @@ static BOOL CheckMlngInfo(VOID)
 
     ::GetKeyboardLayoutList(cKLs, phKLs);
 
+    assert(g_pMlngInfo);
+
     BOOL ret = FALSE;
     for (INT iKL = 0; iKL < cKLs; ++iKL)
     {
@@ -598,6 +688,8 @@ EXTERN_C INT WINAPI TF_GetMlngIconIndex(_In_ INT iKL)
 
     ::EnterCriticalSection(&g_cs);
 
+    assert(g_pMlngInfo);
+
     if (iKL < (INT)g_pMlngInfo->size())
         iIcon = (*g_pMlngInfo)[iKL].GetIconIndex();
 
@@ -623,6 +715,8 @@ TF_GetMlngHKL(
     BOOL ret = FALSE;
 
     ::EnterCriticalSection(&g_cs);
+
+    assert(g_pMlngInfo);
 
     if (iKL < (INT)g_pMlngInfo->size())
     {
