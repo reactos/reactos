@@ -34,23 +34,23 @@ INT CStaticIconList::s_cx = 0;
 INT CStaticIconList::s_cy = 0;
 CStaticIconList g_IconList;
 
-// Cache for GetSpecialLayoutId
+// Cache for GetSpecialKLID
 static HKL s_hCacheKL = NULL;
-static DWORD s_dwCacheLayoutId = 0;
+static DWORD s_dwCacheKLID = 0;
 
 /***********************************************************************
  * The helper funtions
  */
 
 /// @implemented
-DWORD GetSpecialLayoutId(_In_ HKL hKL)
+DWORD GetSpecialKLID(_In_ HKL hKL)
 {
     assert(IS_SPECIAL_HKL(hKL));
 
-    if (s_hCacheKL == hKL && s_dwCacheLayoutId != 0)
-        return s_dwCacheLayoutId;
+    if (s_hCacheKL == hKL && s_dwCacheKLID != 0)
+        return s_dwCacheKLID;
 
-    s_dwCacheLayoutId = 0;
+    s_dwCacheKLID = 0;
 
     CicRegKey regKey1;
     LSTATUS error = regKey1.Open(HKEY_LOCAL_MACHINE,
@@ -81,31 +81,31 @@ DWORD GetSpecialLayoutId(_In_ HKL hKL)
         if (dwLayoutId == dwSpecialId)
         {
             s_hCacheKL = hKL;
-            s_dwCacheLayoutId = wcstoul(szName, NULL, 16);
+            s_dwCacheKLID = wcstoul(szName, NULL, 16);
             break;
         }
     }
 
-    return s_dwCacheLayoutId;
+    return s_dwCacheKLID;
 }
 
 /// @implemented
 BOOL GetKbdLayoutName(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 {
-    DWORD dwLayoutId;
+    DWORD dwKLID;
     if (IS_SPECIAL_HKL(hKL))
-        dwLayoutId = GetSpecialLayoutId(hKL);
+        dwKLID = GetSpecialKLID(hKL);
     else if (IS_IME_HKL(hKL))
-        dwLayoutId = HandleToUlong(hKL);
+        dwKLID = HandleToUlong(hKL);
     else if (LOWORD(hKL) == HIWORD(hKL))
-        dwLayoutId = LOWORD(hKL);
+        dwKLID = LOWORD(hKL);
     else
-        dwLayoutId = HandleToUlong(hKL);
+        dwKLID = HandleToUlong(hKL);
 
     WCHAR szSubKey[MAX_PATH];
     StringCchPrintfW(szSubKey, _countof(szSubKey),
                      L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%08lX",
-                     dwLayoutId);
+                     dwKLID);
 
     CicRegKey regKey;
     LSTATUS error = regKey.Open(HKEY_LOCAL_MACHINE, szSubKey);
@@ -142,16 +142,16 @@ HKL GetHKLSubstitute(_In_ HKL hKL)
     if (IS_IME_HKL(hKL))
         return hKL;
 
-    DWORD dwLayoutId;
+    DWORD dwKLID;
     if (HIWORD(hKL) == LOWORD(hKL))
-        dwLayoutId = LOWORD(hKL);
+        dwKLID = LOWORD(hKL);
     else if (IS_SPECIAL_HKL(hKL))
-        dwLayoutId = GetSpecialLayoutId(hKL);
+        dwKLID = GetSpecialKLID(hKL);
     else
-        dwLayoutId = LOWORD(hKL);
+        dwKLID = HandleToUlong(hKL);
 
     CicRegKey regKey;
-    DWORD ret = dwLayoutId;
+    DWORD ret = dwKLID;
     LSTATUS error = regKey.Open(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes");
     if (error == ERROR_SUCCESS)
     {
@@ -170,7 +170,7 @@ HKL GetHKLSubstitute(_In_ HKL hKL)
                 break;
 
             dwValue = wcstoul(szValue, NULL, 16);
-            if (dwLayoutId == dwValue)
+            if (dwKLID == dwValue)
             {
                 ret = wcstoul(szName, NULL, 16);
                 break;
