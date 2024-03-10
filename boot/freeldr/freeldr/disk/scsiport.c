@@ -1065,16 +1065,20 @@ SpiGetPciConfigData(
                 SlotNumber.u.AsULONG,
                 &PciConfig,
                 0,
-                sizeof(ULONG));
+                RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, DeviceID));
 
-            /* If result of HalGetBusData is 0, then the bus is wrong */
-            if (DataSize == 0)
+            /* If result size is too small, then the bus is wrong or something failed */
+            if (DataSize < RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, VendorID))
                 return FALSE;
 
             /* If result is PCI_INVALID_VENDORID, then this device has no more
                "Functions" */
             if (PciConfig.VendorID == PCI_INVALID_VENDORID)
                 break;
+
+            /* If result size does not match, then something failed */
+            if (DataSize != RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, DeviceID))
+                return FALSE;
 
             sprintf(VendorIdString, "%04hx", PciConfig.VendorID);
             sprintf(DeviceIdString, "%04hx", PciConfig.DeviceID);
