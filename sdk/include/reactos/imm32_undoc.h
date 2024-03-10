@@ -13,7 +13,16 @@ extern "C" {
 
 #include <immdev.h>
 
-#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+#define IME_MASK        (0xE0000000UL)
+#define SUBST_MASK      (0xD0000000UL)
+#define SPECIAL_MASK    (0xF0000000UL)
+
+#define IS_IME_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
+#define IS_SPECIAL_HKL(hKL)     ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
+#define SPECIALIDFROMHKL(hKL)   ((WORD)(HIWORD(hKL) & 0x0FFF))
+
+#define IS_IME_KLID(dwKLID)     ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
+#define IS_SUBST_KLID(dwKLID)   ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
 typedef struct tagIMEINFOEX
 {
