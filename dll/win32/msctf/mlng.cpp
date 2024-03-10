@@ -34,6 +34,10 @@ INT CStaticIconList::s_cx = 0;
 INT CStaticIconList::s_cy = 0;
 CStaticIconList g_IconList;
 
+// Cache for GetSpecialLayoutId
+static HKL s_hCacheKL = NULL;
+static DWORD s_dwCacheLayoutId = 0;
+
 /***********************************************************************
  * The helper funtions
  */
@@ -41,9 +45,6 @@ CStaticIconList g_IconList;
 /// @implemented
 DWORD GetSpecialLayoutId(_In_ HKL hKL)
 {
-    static HKL s_hCacheKL = NULL;
-    static DWORD s_dwCacheLayoutId = 0;
-
     assert(IS_SPECIAL_HKL(hKL));
 
     if (s_hCacheKL == hKL && s_dwCacheLayoutId != 0)
@@ -129,7 +130,7 @@ GetLocaleInfoString(_In_ HKL hKL, _Out_ LPWSTR pszDesc, _In_ UINT cchDesc)
 
     *pszDesc = UNICODE_NULL;
 
-    if (HIWORD(hKL) != LOWORD(hKL))
+    if (LOWORD(hKL) != HIWORD(hKL))
         GetKbdLayoutName(hKL, pszDesc, cchDesc);
 }
 
