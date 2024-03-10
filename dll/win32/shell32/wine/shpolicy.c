@@ -123,6 +123,7 @@ DWORD WINAPI SHRestricted (RESTRICTIONS rest)
 {
     TRACE("(0x%08lX)\n", rest);
 
+    /* If restrictions from registry have changed, reset all cached values to SHELL_NO_POLICY */
     if (SHELL_QueryRestrictionsChanged())
         FillMemory(&g_RestValues, sizeof(g_RestValues), 0xFF);
 
