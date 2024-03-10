@@ -69,13 +69,13 @@ DWORD g_RestValues[_countof(s_PolicyTable)] = { 0 };
 /****************************************************************************
  *                  SHELL_GetCachedGlobalCounter
  *
- * Retrieves a global counter with using cache in thread-safe manner.
- * If there is a cache of global counter, the function returns it.
- * If there is no cache, then the function creates a global counter.
+ * Retrieves the global counter using cache in a thread-safe manner.
+ * If a cache of global counter exists, the function returns it.
+ * If there is no cache, the function creates a global counter.
  *
- * @param[in,out] phGlobalCounter  The pointer to the handle of global counter.
- * @param[in]  rguid  The GUID of global counter.
- * @return  The handle of global counter.
+ * @param[in,out]  phGlobalCounter  The pointer to the handle of global counter.
+ * @param[in]      rguid            The GUID of global counter.
+ * @return  The handle of the global counter.
  * @implemented
  */
 static HANDLE
@@ -93,10 +93,10 @@ SHELL_GetCachedGlobalCounter(_Inout_ HANDLE *phGlobalCounter, _In_ REFGUID rguid
 /****************************************************************************
  *                  SHELL_GetRestrictionsCounter
  *
- * Retrieves a global counter of GUID_Restrictions, with using cache in
- * thread-safe manner. Variable g_hRestGlobalCounter is used for cache.
+ * Retrieves the global counter for GUID_Restrictions using caching in a
+ * thread-safe manner. The variable g_hRestGlobalCounter is used for caching.
  *
- * @return  The handle of global counter.
+ * @return  The handle of the global counter.
  * @see SHELL_GetCachedGlobalCounter
  * @implemented
  */
@@ -108,7 +108,7 @@ static HANDLE SHELL_GetRestrictionsCounter(VOID)
 /****************************************************************************
  *                  SHELL_QueryRestrictionsChanged
  *
- * @return  The value of the global counter of GUID_Restrictions.
+ * @return  The value of the global counter for GUID_Restrictions.
  * @see SHELL_GetRestrictionsCounter
  * @implemented
  */
