@@ -21,7 +21,7 @@ typedef enum tagHKL_TYPE
 
 static HKL_TYPE GetHKLType(HKL hKL)
 {
-    /* 0xEXXXYYYY: An IME HKL. YYY is a language */
+    /* 0xEXXXYYYY: An IME HKL. XXX is an IME keyboard. YYY is a language */
     if (IS_IME_HKL(hKL))
         return HKL_TYPE_IME;
 
