@@ -239,7 +239,7 @@ private:
 
     HRESULT AddStartMenuItems(IShellMenu *pShellMenu, INT csidl, DWORD dwFlags)
     {
-        LPITEMIDLIST pidlMenu;
+        CComHeapPtr<ITEMIDLIST> pidlMenu;
         CComPtr<IShellFolder> psfDesktop;
         CComPtr<IShellFolder> pShellFolder;
         HRESULT hr;
