@@ -1378,7 +1378,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         L"StartMenuAdminTools", FALSE, TRUE);
 
     BOOL bMustHideAdminTools = IsPidlPrograms(m_idList) && StartMenuAdminTools;
-    TRACE("StartMenuAdminTools : %d\n", StartMenuAdminTools );
+    TRACE("StartMenuAdminTools: %d\n", StartMenuAdminTools );
     TRACE("bMustHideAdminTools: %d\n", bMustHideAdminTools);
 
     WCHAR szAdminTools[MAX_PATH];
