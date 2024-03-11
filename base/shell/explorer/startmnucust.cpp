@@ -112,11 +112,14 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
     // FIXME: Make "StartMenuAdminTools" effective
     //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
 
-    { IDS_ADVANCED_DISPLAY_FAVORITES,   L"StartMenuFavorites",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_LOG_OFF,     L"StartMenuLogoff",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_RUN,         L"NoRun",               CustomizeReadRun,      CustomizeWriteRest     },
-    { IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_MY_PICTURES,  L"CascadeMyPictures",   CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_DISPLAY_FAVORITES,      L"StartMenuFavorites",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_DISPLAY_LOG_OFF,        L"StartMenuLogoff",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_DISPLAY_RUN,            L"NoRun",               CustomizeReadRun,      CustomizeWriteRest     },
+    { IDS_ADVANCED_EXPAND_MY_DOCUMENTS,    L"CascadeMyDocuments",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_EXPAND_MY_PICTURES,     L"CascadeMyPictures",   CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_EXPAND_CONTROL_PANEL,   L"CascadeControlPanel", CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_EXPAND_PRINTERS,        L"CascadePrinters",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", CustomizeReadAdvanced, CustomizeWriteAdvanced },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
