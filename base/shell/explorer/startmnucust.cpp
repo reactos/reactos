@@ -137,10 +137,8 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    if (GetAdvancedBool(entry->name, entry->dwDefaultValue))
-        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
-    else
-        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_UNCHECKED);
+    BOOL bChecked = GetAdvancedBool(entry->name, entry->dwDefaultValue);
+    Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
