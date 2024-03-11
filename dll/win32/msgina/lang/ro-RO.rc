@@ -16,7 +16,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
-    LTEXT "", IDC_STATUS_Mesaj, 7, 59, 261, 12, SS_WORDELLIPSIS
+    LTEXT "", IDC_LOCKED_MESSAGE, 7, 59, 261, 12, SS_WORDELLIPSIS
 END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     GROUPBOX "Informaţii de Log on", IDC_STATIC, 7, 50, 261, 52
-    LTEXT "<Mesaj>", IDC_SECURITY_Mesaj, 15, 62, 245, 18
+    LTEXT "<Mesaj>", IDC_LOCKED_MESSAGE, 15, 62, 245, 18
     LTEXT "<Dată Log on:>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Ce vreți să faceți?", IDC_STATIC, 10, 108, 255, 8
     PUSHBUTTON "&Blocare computer", IDC_SECURITY_LOCK, 7, 124, 80, 14
@@ -74,7 +74,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
     LTEXT "Acest computer este activ şi a fost blocat.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Mesaj>", IDC_LOCKED_Mesaj, 37, 75, 231, 26
+    LTEXT "<Mesaj>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
     LTEXT "Apăsaţi Ctrl-Alt-Del pentru a debloca acest computer.", IDC_STATIC, 36, 106, 232, 8
 END
 
@@ -86,7 +86,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
     LTEXT "Acest computer este activ şi a fost blocat.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Mesaj>", IDC_UNLOCK_Mesaj, 36, 75, 232, 26
+    LTEXT "<Mesaj>", IDC_LOCKED_MESSAGE, 36, 75, 232, 26
     LTEXT "Nume utilizator:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Parolă:", IDC_STATIC, 36, 125, 42, 8
