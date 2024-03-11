@@ -169,7 +169,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         item.stateMask = TVIS_STATEIMAGEMASK;
         TreeView_GetItem(hTreeView, &item);
 
-        BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
+        BOOL bChecked = !!(item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
         for (auto& entry : s_CustomizeEntries)
         {
             if (SHRestricted(entry.Policy1) || SHRestricted(entry.Policy2))
