@@ -179,8 +179,17 @@ private:
         }
     }
 
-    HMENU CreateRecentMenu(BOOL bExpandMyDocuments, BOOL bExpandMyPictures) const
+    BOOL GetAdvancedValue(LPCWSTR pszName, BOOL bDefault) const
     {
+        return SHRegGetBoolUSValueW(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+            pszName, FALSE, bDefault);
+    }
+
+    HMENU CreateRecentMenu() const
+    {
+        BOOL bExpandMyDocuments = GetAdvancedValue(L"CascadeMyDocuments", FALSE);
+        BOOL bExpandMyPictures = GetAdvancedValue(L"CascadeMyPictures", FALSE);
         HMENU hMenu = ::CreateMenu();
         InsertRecentItem(hMenu, IDM_MYDOCUMENTS, CSIDL_MYDOCUMENTS, bExpandMyDocuments);
         InsertRecentItem(hMenu, IDM_MYPICTURES, CSIDL_MYPICTURES, bExpandMyPictures);
@@ -224,9 +233,7 @@ private:
             {
                 if (csidl == CSIDL_RECENT)
                 {
-                    BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
-                    BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
-                    HMENU hMenu = CreateRecentMenu(bExpandMyDocuments, bExpandMyPictures);
+                    HMENU hMenu = CreateRecentMenu();
                     if (hMenu == NULL)
                         ERR("CreateRecentMenu failed\n");
 

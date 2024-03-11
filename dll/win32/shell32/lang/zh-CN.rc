@@ -1024,6 +1024,8 @@ BEGIN
     IDS_ADVANCED_SHOW_INFO_TIP "显示文件夹和桌面项目的弹出描述"
     IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
     IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
 

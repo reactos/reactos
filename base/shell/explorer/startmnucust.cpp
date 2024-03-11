@@ -86,12 +86,12 @@ struct CUSTOMIZE_ENTRY
     FN_CUSTOMIZE_WRITE fnWrite;
 };
 
-static DWORD CALLBACK CustomizeRead0(const CUSTOMIZE_ENTRY *entry)
+static DWORD CALLBACK CustomizeReadAdvanced(const CUSTOMIZE_ENTRY *entry)
 {
     return GetAdvancedBool(entry->name, FALSE);
 }
 
-static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+static BOOL CALLBACK CustomizeWriteAdvanced(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
 {
     return SetAdvancedDword(entry->name, dwValue);
 }
@@ -112,9 +112,11 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
     // FIXME: Make "StartMenuAdminTools" effective
     //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
 
-    { IDS_ADVANCED_DISPLAY_FAVORITES,  L"StartMenuFavorites",  CustomizeRead0, CustomizeWrite0 },
-    { IDS_ADVANCED_DISPLAY_LOG_OFF,    L"StartMenuLogoff",     CustomizeRead0, CustomizeWrite0 },
-    { IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeReadRun, CustomizeWriteRest },
+    { IDS_ADVANCED_DISPLAY_FAVORITES,   L"StartMenuFavorites",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_DISPLAY_LOG_OFF,     L"StartMenuLogoff",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_DISPLAY_RUN,         L"NoRun",               CustomizeReadRun,      CustomizeWriteRest     },
+    { IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    { IDS_ADVANCED_EXPAND_MY_PICTURES,  L"CascadeMyPictures",   CustomizeReadAdvanced, CustomizeWriteAdvanced },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)

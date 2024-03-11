@@ -1023,6 +1023,8 @@ BEGIN
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
     IDS_ADVANCED_DISPLAY_FAVORITES "Wyświetl polecenie Ulubione"
     IDS_ADVANCED_DISPLAY_LOG_OFF "Wyświetl polecenie Wyloguj"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
     IDS_ADVANCED_DISPLAY_RUN "Wyświetl polecenie Uruchom"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Wyświetl polecenie Narzędzia administracyjne"
 
