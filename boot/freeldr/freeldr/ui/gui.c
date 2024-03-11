@@ -51,11 +51,17 @@ VOID GuiUpdateDateTime(VOID)
 {
 }
 
-VOID GuiSaveScreen(PUCHAR Buffer)
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PUCHAR
+GuiSaveScreen(VOID)
 {
+    return NULL;
 }
 
-VOID GuiRestoreScreen(PUCHAR Buffer)
+VOID
+GuiRestoreScreen(
+    _In_opt_ __drv_freesMem(Mem) PUCHAR Buffer)
 {
 }
 
