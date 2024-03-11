@@ -196,12 +196,30 @@ private:
 
     HMENU CreateRecentMenu() const
     {
-        BOOL bExpandMyDocuments = GetAdvancedValue(L"CascadeMyDocuments", FALSE);
-        BOOL bExpandMyPictures = GetAdvancedValue(L"CascadeMyPictures", FALSE);
         HMENU hMenu = ::CreateMenu();
-        AddOrSetMenuItem(hMenu, IDM_MYDOCUMENTS, CSIDL_MYDOCUMENTS, bExpandMyDocuments);
-        AddOrSetMenuItem(hMenu, IDM_MYPICTURES, CSIDL_MYPICTURES, bExpandMyPictures);
-        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        BOOL bAdded = FALSE;
+
+        // My Documents
+        if (!SHRestricted(REST_NOSMMYDOCS) &&
+            GetAdvancedValue(L"Start_ShowMyDocs", TRUE))
+        {
+            BOOL bExpand = GetAdvancedValue(L"CascadeMyDocuments", FALSE);
+            AddOrSetMenuItem(hMenu, IDM_MYDOCUMENTS, CSIDL_MYDOCUMENTS, bExpand);
+            bAdded = TRUE;
+        }
+
+        // My Pictures
+        if (!SHRestricted(REST_NOSMMYPICS) &&
+            GetAdvancedValue(L"Start_ShowMyPics", TRUE))
+        {
+            BOOL bExpand = GetAdvancedValue(L"CascadeMyPictures", FALSE);
+            AddOrSetMenuItem(hMenu, IDM_MYPICTURES, CSIDL_MYPICTURES, bExpand);
+            bAdded = TRUE;
+        }
+
+        if (bAdded)
+            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+
         return hMenu;
     }
 

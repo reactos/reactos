@@ -163,15 +163,6 @@ BOOL SetAdvancedDword(IN LPCWSTR pszValueName, IN DWORD dwValue)
     return SetRegDword(REGKEY_ADVANCED, pszValueName, dwValue);
 }
 
-BOOL SetRestriction(IN LPCWSTR pszKey, IN LPCWSTR pszValueName, IN DWORD dwValue)
-{
-    WCHAR szSubKey[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
-    PathAppendW(szSubKey, pszKey);
-    SHSetValueW(HKEY_CURRENT_USER, szSubKey, pszValueName, REG_DWORD, &dwValue, sizeof(dwValue));
-    SHSettingsChanged(NULL, NULL);
-    return TRUE;
-}
-
 BOOL
 GetVersionInfoString(IN LPCWSTR szFileName,
                      IN LPCWSTR szVersionInfo,

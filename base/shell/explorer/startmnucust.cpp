@@ -84,11 +84,18 @@ struct CUSTOMIZE_ENTRY
     LPCWSTR name;
     FN_CUSTOMIZE_READ fnRead;
     FN_CUSTOMIZE_WRITE fnWrite;
+    RESTRICTIONS Policy1;
+    RESTRICTIONS Policy2;
 };
 
-static DWORD CALLBACK CustomizeReadAdvanced(const CUSTOMIZE_ENTRY *entry)
+static DWORD CALLBACK CustomizeReadAdvanced0(const CUSTOMIZE_ENTRY *entry)
 {
     return GetAdvancedBool(entry->name, FALSE);
+}
+
+static DWORD CALLBACK CustomizeReadAdvanced1(const CUSTOMIZE_ENTRY *entry)
+{
+    return GetAdvancedBool(entry->name, TRUE);
 }
 
 static BOOL CALLBACK CustomizeWriteAdvanced(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
@@ -96,34 +103,75 @@ static BOOL CALLBACK CustomizeWriteAdvanced(const CUSTOMIZE_ENTRY *entry, DWORD 
     return SetAdvancedDword(entry->name, dwValue);
 }
 
-static DWORD CALLBACK CustomizeReadRun(const CUSTOMIZE_ENTRY *entry)
-{
-    return !SHRestricted(REST_NORUN);
-}
-
-static BOOL CALLBACK CustomizeWriteRest(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
-{
-    SetRestriction(L"Explorer", entry->name, !dwValue);
-    return TRUE;
-}
-
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
     // FIXME: Make "StartMenuAdminTools" effective
     //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
-
-    { IDS_ADVANCED_DISPLAY_FAVORITES,      L"StartMenuFavorites",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_LOG_OFF,        L"StartMenuLogoff",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_RUN,            L"NoRun",               CustomizeReadRun,      CustomizeWriteRest     },
-    { IDS_ADVANCED_EXPAND_MY_DOCUMENTS,    L"CascadeMyDocuments",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_MY_PICTURES,     L"CascadeMyPictures",   CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_CONTROL_PANEL,   L"CascadeControlPanel", CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_PRINTERS,        L"CascadePrinters",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    {
+        IDS_ADVANCED_DISPLAY_FAVORITES,
+        L"StartMenuFavorites",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOFAVORITESMENU
+    },
+    {
+        IDS_ADVANCED_DISPLAY_LOG_OFF,
+        L"StartMenuLogoff",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_STARTMENULOGOFF
+    },
+    {
+        IDS_ADVANCED_DISPLAY_RUN,
+        L"StartMenuRun",
+        CustomizeReadAdvanced1,
+        CustomizeWriteAdvanced,
+        REST_NORUN
+    },
+    {
+        IDS_ADVANCED_EXPAND_MY_DOCUMENTS,
+        L"CascadeMyDocuments",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOSMMYDOCS
+    },
+    {
+        IDS_ADVANCED_EXPAND_MY_PICTURES,
+        L"CascadeMyPictures",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOSMMYPICS
+    },
+    {
+        IDS_ADVANCED_EXPAND_CONTROL_PANEL,
+        L"CascadeControlPanel",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOSETFOLDERS,
+        REST_NOCONTROLPANEL,
+    },
+    {
+        IDS_ADVANCED_EXPAND_PRINTERS,
+        L"CascadePrinters",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOSETFOLDERS
+    },
+    {
+        IDS_ADVANCED_EXPAND_NET_CONNECTIONS,
+        L"CascadeNetworkConnections",
+        CustomizeReadAdvanced0,
+        CustomizeWriteAdvanced,
+        REST_NOSETFOLDERS,
+        REST_NONETWORKCONNECTIONS
+    },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
 {
+    if (SHRestricted(entry->Policy1) || SHRestricted(entry->Policy2))
+        return; // Restricted. Don't show
+
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
 
