@@ -203,7 +203,7 @@ public:
 
         /* Run */
         if (SHRestricted(REST_NORUN) ||
-            !GetAdvancedBool(L"Start_ShowRun", TRUE))
+            !GetAdvancedBool(L"StartMenuRun", TRUE))
         {
             DeleteMenu(hMenu, IDM_RUN, MF_BYCOMMAND);
         }
