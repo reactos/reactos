@@ -1023,6 +1023,8 @@ BEGIN
     IDS_ADVANCED_SHOW_INFO_TIP "Отображать описание для папок и элементов рабочего стола"
     IDS_ADVANCED_DISPLAY_FAVORITES "Отображать папку ""Избранное"""
     IDS_ADVANCED_DISPLAY_LOG_OFF "Отображать команду ""Завершение сеанса"""
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
     IDS_ADVANCED_DISPLAY_RUN "Отображать команду ""Выполнить"""
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Отображать меню ""Администрирование"""
 

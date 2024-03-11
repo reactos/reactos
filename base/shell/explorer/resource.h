@@ -109,6 +109,8 @@
 /* These values must be synchronized with shell32 */
 #define IDS_ADVANCED_DISPLAY_FAVORITES              30466
 #define IDS_ADVANCED_DISPLAY_LOG_OFF                30467
+#define IDS_ADVANCED_EXPAND_MY_DOCUMENTS            30469
+#define IDS_ADVANCED_EXPAND_MY_PICTURES             30472
 #define IDS_ADVANCED_DISPLAY_RUN                    30474
 #define IDS_ADVANCED_DISPLAY_ADMINTOOLS             30476
 
