@@ -167,7 +167,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
 {
     HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
 
-    for (HTREEITEM hItem = TreeView_GetFirstVisible(hTreeView);
+    for (HTREEITEM hItem = TreeView_GetRoot(hTreeView);
          hItem != NULL;
          hItem = TreeView_GetNextVisible(hTreeView, hItem))
     {
