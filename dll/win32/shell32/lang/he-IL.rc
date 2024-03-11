@@ -888,7 +888,7 @@ BEGIN
     IDS_MYPICTURES "התמונות שלי"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "מסמכים"
-    IDS_ADMINTOOLS "תפריט ההתחלה\\תכניות\\כלי ניהול" // "תפריט ההתחלה\\תכניות\\כלי ניהול"
+    IDS_ADMINTOOLS "תפריט ההתחלה\\תכניות\\כלי ניהול"
     IDS_COMMON_MUSIC "מסמכים\\המוזיקה שלי"
     IDS_COMMON_PICTURES "מסמכים\\התמונות שלי"
     IDS_COMMON_VIDEO "מסמכים\\הוידאו שלי"
