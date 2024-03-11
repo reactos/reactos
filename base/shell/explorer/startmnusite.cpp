@@ -146,46 +146,45 @@ public:
 
         /* Settings */
         hSettingsMenu = FindSubMenu(hMenu, IDM_SETTINGS, FALSE);
-        if (hSettingsMenu)
+
+        /* Control Panel */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            SHRestricted(REST_NOCONTROLPANEL) ||
+            !GetAdvancedBool(L"Start_ShowControlPanel", TRUE))
         {
-            /* Control Panel */
-            if (SHRestricted(REST_NOSETFOLDERS) ||
-                SHRestricted(REST_NOCONTROLPANEL) ||
-                !GetAdvancedBool(L"Start_ShowControlPanel", TRUE))
-            {
-                DeleteMenu(hSettingsMenu, IDM_CONTROLPANEL, MF_BYCOMMAND);
+            DeleteMenu(hSettingsMenu, IDM_CONTROLPANEL, MF_BYCOMMAND);
 
-                /* Delete the separator below it */
-                DeleteMenu(hSettingsMenu, 0, MF_BYPOSITION);
-            }
+            /* Delete the separator below it */
+            DeleteMenu(hSettingsMenu, 0, MF_BYPOSITION);
+        }
 
-            /* Network Connections */
-            if (SHRestricted(REST_NOSETFOLDERS) ||
-                SHRestricted(REST_NONETWORKCONNECTIONS) ||
-                !GetAdvancedBool(L"Start_ShowNetConn", TRUE))
-            {
-                DeleteMenu(hSettingsMenu, IDM_NETWORKCONNECTIONS, MF_BYCOMMAND);
-            }
+        /* Network Connections */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            SHRestricted(REST_NONETWORKCONNECTIONS) ||
+            !GetAdvancedBool(L"Start_ShowNetConn", TRUE))
+        {
+            DeleteMenu(hSettingsMenu, IDM_NETWORKCONNECTIONS, MF_BYCOMMAND);
+        }
 
-            /* Printers and Faxes */
-            if (SHRestricted(REST_NOSETFOLDERS) ||
-                !GetAdvancedBool(L"Start_ShowPrinters", TRUE))
-            {
-                DeleteMenu(hSettingsMenu, IDM_PRINTERSANDFAXES, MF_BYCOMMAND);
-            }
+        /* Printers and Faxes */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            !GetAdvancedBool(L"Start_ShowPrinters", TRUE))
+        {
+            DeleteMenu(hSettingsMenu, IDM_PRINTERSANDFAXES, MF_BYCOMMAND);
+        }
 
-            /* Security */
-            if (SHRestricted(REST_NOSETFOLDERS) ||
-                GetSystemMetrics(SM_REMOTECONTROL) == 0 ||
-                SHRestricted(REST_NOSECURITY))
-            {
-                DeleteMenu(hSettingsMenu, IDM_SECURITY, MF_BYCOMMAND);
-            }
+        /* Security */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            GetSystemMetrics(SM_REMOTECONTROL) == 0 ||
+            SHRestricted(REST_NOSECURITY))
+        {
+            DeleteMenu(hSettingsMenu, IDM_SECURITY, MF_BYCOMMAND);
+        }
 
-            if (GetMenuItemCount(hSettingsMenu) == 0)
-            {
-                DeleteMenu(hMenu, IDM_SETTINGS, MF_BYCOMMAND);
-            }
+        /* Delete Settings menu if it was empty */
+        if (GetMenuItemCount(hSettingsMenu) == 0)
+        {
+            DeleteMenu(hMenu, IDM_SETTINGS, MF_BYCOMMAND);
         }
 
         /* Search */
@@ -199,7 +198,7 @@ public:
         if (SHRestricted(REST_NOSMHELP) ||
             !GetAdvancedBool(L"Start_ShowHelp", TRUE))
         {
-            /* FIXME */
+            DeleteMenu(hMenu, IDM_HELPANDSUPPORT, MF_BYCOMMAND);
         }
 
         /* Run */
