@@ -101,9 +101,9 @@ static DWORD CALLBACK CustomizeReadRun(const CUSTOMIZE_ENTRY *entry)
     return !SHRestricted(REST_NORUN);
 }
 
-static BOOL CALLBACK CustomizeWriteRun(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+static BOOL CALLBACK CustomizeWriteRest(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
 {
-    SetRestriction(L"Explorer", L"NoRun", !dwValue);
+    SetRestriction(L"Explorer", entry->name, !dwValue);
     return TRUE;
 }
 
@@ -114,7 +114,7 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 
     { IDS_ADVANCED_DISPLAY_FAVORITES,  L"StartMenuFavorites",  CustomizeRead0, CustomizeWrite0 },
     { IDS_ADVANCED_DISPLAY_LOG_OFF,    L"StartMenuLogoff",     CustomizeRead0, CustomizeWrite0 },
-    { IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeReadRun, CustomizeWriteRun },
+    { IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeReadRun, CustomizeWriteRest },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
