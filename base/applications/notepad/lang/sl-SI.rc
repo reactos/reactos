@@ -173,7 +173,7 @@ operacijo.\nČe ga želite sprostiti, končajte enega ali več programov in posk
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Vrstica %d, stolpec %d"
-    STRING_PRINTERROR "Tiskanje strani '%s' ni mogoče.\n\nPrepričajte se da je tiskalnik prižgan in pravilno nastavljen."
+    STRING_PRINTERROR "Tiskanje strani '%s' ni mogoče.\n\nPrepričajte se, da je tiskalnik prižgan in pravilno nastavljen."
     STRING_DEFAULTFONT "Lucida Console"
     STRING_LINE_NUMBER_OUT_OF_RANGE "Dana številka vrstice je izven obsega."
     STRING_NOWPRINTING "Tiskanje strani..."
