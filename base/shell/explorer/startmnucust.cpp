@@ -96,6 +96,17 @@ static BOOL CALLBACK CustomizeWrite0(const CUSTOMIZE_ENTRY *entry, DWORD dwValue
     return SetAdvancedDword(entry->name, dwValue);
 }
 
+static DWORD CALLBACK CustomizeReadRun(const CUSTOMIZE_ENTRY *entry)
+{
+    return !SHRestricted(REST_NORUN);
+}
+
+static BOOL CALLBACK CustomizeWriteRest(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+{
+    SetRestriction(L"Explorer", entry->name, !dwValue);
+    return TRUE;
+}
+
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
     // FIXME: Make "StartMenuAdminTools" effective
@@ -103,9 +114,7 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 
     { IDS_ADVANCED_DISPLAY_FAVORITES,  L"StartMenuFavorites",  CustomizeRead0, CustomizeWrite0 },
     { IDS_ADVANCED_DISPLAY_LOG_OFF,    L"StartMenuLogoff",     CustomizeRead0, CustomizeWrite0 },
-
-    // FIXME: SHRestricted is buggy!
-    //{ IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeRead2, CustomizeWrite2 },
+    { IDS_ADVANCED_DISPLAY_RUN,        L"NoRun",               CustomizeReadRun, CustomizeWriteRest },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)

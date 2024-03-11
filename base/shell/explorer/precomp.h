@@ -110,6 +110,7 @@ BOOL GetRegValue(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN BOOL bDefault
 BOOL SetRegDword(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN DWORD dwValue);
 BOOL GetAdvancedBool(IN LPCWSTR pszValueName, IN BOOL bDefaultValue);
 BOOL SetAdvancedDword(IN LPCWSTR pszValueName, IN DWORD dwValue);
+BOOL SetRestriction(IN LPCWSTR pszKey, IN LPCWSTR pszValueName, IN DWORD dwValue);
 
 /*
  *  rshell.c

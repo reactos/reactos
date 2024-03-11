@@ -216,9 +216,7 @@ public:
         /* Run */
         if (SHRestricted(REST_NORUN))
         {
-            DeleteMenu(hMenu,
-                       IDM_RUN,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_RUN, MF_BYCOMMAND);
         }
 
         /* Synchronize */
