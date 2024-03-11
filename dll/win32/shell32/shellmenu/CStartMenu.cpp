@@ -248,7 +248,7 @@ private:
     HRESULT OnGetSubMenu(LPSMDATA psmd, REFIID iid, void ** pv)
     {
         HRESULT hr;
-        IShellMenu *pShellMenu; // FIXME: Use CComPtr
+        CComPtr<IShellMenu> pShellMenu;
 
         hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &pShellMenu));
         if (FAILED_UNEXPECTEDLY(hr))
@@ -338,7 +338,9 @@ private:
         if (FAILED(hr))
             return hr;
 
-        return pShellMenu->QueryInterface(iid, pv);
+        hr = pShellMenu->QueryInterface(iid, pv);
+        pShellMenu.Detach();
+        return hr;
     }
 
     HRESULT OnGetContextMenu(LPSMDATA psmd, REFIID iid, void ** pv)
