@@ -34,9 +34,6 @@ typedef struct REGSHELLSTATE
 static const LPCWSTR s_pszExplorerKey =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
 
-extern "C"
-BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCVOID inpRegKey);
-
 /////////////////////////////////////////////////////////////////////////////
 // Shell settings
 
