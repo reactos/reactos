@@ -1011,8 +1011,8 @@ BEGIN
     IDS_ADVANCED_SHOW_INFO_TIP "フォルダとデスクトップの項目にポップアップ式の説明を表示する"
     IDS_ADVANCED_DISPLAY_FAVORITES "「お気に入り」を表示"
     IDS_ADVANCED_DISPLAY_LOG_OFF "「ログオフ」を表示"
-    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
-    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "「マイ ドキュメント」を展開"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "「マイ ピクチャ」を展開"
     IDS_ADVANCED_DISPLAY_RUN "「ファイル名を指定して実行」を表示"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "「管理者ツール」を表示"
 
