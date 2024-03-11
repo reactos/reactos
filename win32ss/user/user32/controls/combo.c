@@ -1694,10 +1694,8 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
        {
 	   /* drop down the listbox and start tracking */
 
-#ifndef __REACTOS__
            lphc->wState |= CBF_CAPTURE;
            SetCapture( hWnd );
-#endif
            CBDropDown( lphc );
        }
        if( bButton ) CBRepaintButton( lphc );
@@ -1728,17 +1726,6 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
        ReleaseCapture();
        SetCapture(lphc->hWndLBox);
    }
-#ifdef __REACTOS__
-   else
-   {
-       /* if not CBF_CAPTURE */
-       if (lphc->wState & CBF_DROPPED)
-       {
-           lphc->wState |= CBF_CAPTURE;
-           SetCapture(lphc->self);
-       }
-   }
-#endif
 
    if( lphc->wState & CBF_BUTTONDOWN )
    {
@@ -1756,7 +1743,9 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
 static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
 {
    POINT  pt;
+#ifndef __REACTOS__  // CORE-18769
    RECT   lbRect;
+#endif
 
    pt.x = (short)LOWORD(lParam);
    pt.y = (short)HIWORD(lParam);
@@ -1774,6 +1763,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
      }
    }
 
+#ifndef __REACTOS__  // CORE-18769
    GetClientRect( lphc->hWndLBox, &lbRect );
    MapWindowPoints( lphc->self, lphc->hWndLBox, &pt, 1 );
    if( PtInRect(&lbRect, pt) )
@@ -1785,6 +1775,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
        /* hand over pointer tracking */
        SendMessageW(lphc->hWndLBox, WM_LBUTTONDOWN, wParam, lParam);
    }
+#endif
 }
 
 static LRESULT COMBO_GetComboBoxInfo(const HEADCOMBO *lphc, COMBOBOXINFO *pcbi)
