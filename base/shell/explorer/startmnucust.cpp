@@ -83,8 +83,8 @@ struct CUSTOMIZE_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
-    DWORD dwDefaultValue;
-    RESTRICTIONS Policy1, Policy2;
+    BOOL bDefaultValue;
+    RESTRICTIONS policy1, policy2;
 };
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
@@ -126,7 +126,7 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
 {
-    if (SHRestricted(entry->Policy1) || SHRestricted(entry->Policy2))
+    if (SHRestricted(entry->policy1) || SHRestricted(entry->policy2))
         return; // Restricted. Don't show
 
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
@@ -137,7 +137,7 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    BOOL bChecked = GetAdvancedBool(entry->name, entry->dwDefaultValue);
+    BOOL bChecked = GetAdvancedBool(entry->name, entry->bDefaultValue);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
     TreeView_InsertItem(hTreeView, &Insert);
 }
@@ -173,7 +173,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         BOOL bChecked = !!(item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
         for (auto& entry : s_CustomizeEntries)
         {
-            if (SHRestricted(entry.Policy1) || SHRestricted(entry.Policy2))
+            if (SHRestricted(entry.policy1) || SHRestricted(entry.policy2))
                 continue;
 
             if (item.lParam == entry.id)
