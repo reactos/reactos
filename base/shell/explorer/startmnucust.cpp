@@ -21,6 +21,7 @@
 
 #include "precomp.h"
 
+#define I_UNCHECKED 1
 #define I_CHECKED   2
 
 // TODO: Windows Explorer appears to be calling NewLinkHere / ConfigStartMenu directly for both items.
@@ -82,48 +83,55 @@ struct CUSTOMIZE_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
-    FN_CUSTOMIZE_READ fnRead;
-    FN_CUSTOMIZE_WRITE fnWrite;
+    BOOL bDefaultValue;
+    RESTRICTIONS policy1, policy2;
 };
-
-static DWORD CALLBACK CustomizeReadAdvanced(const CUSTOMIZE_ENTRY *entry)
-{
-    return GetAdvancedBool(entry->name, FALSE);
-}
-
-static BOOL CALLBACK CustomizeWriteAdvanced(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
-{
-    return SetAdvancedDword(entry->name, dwValue);
-}
-
-static DWORD CALLBACK CustomizeReadRun(const CUSTOMIZE_ENTRY *entry)
-{
-    return !SHRestricted(REST_NORUN);
-}
-
-static BOOL CALLBACK CustomizeWriteRest(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
-{
-    SetRestriction(L"Explorer", entry->name, !dwValue);
-    return TRUE;
-}
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    // FIXME: Make "StartMenuAdminTools" effective
-    //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
-
-    { IDS_ADVANCED_DISPLAY_FAVORITES,      L"StartMenuFavorites",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_LOG_OFF,        L"StartMenuLogoff",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_DISPLAY_RUN,            L"NoRun",               CustomizeReadRun,      CustomizeWriteRest     },
-    { IDS_ADVANCED_EXPAND_MY_DOCUMENTS,    L"CascadeMyDocuments",  CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_MY_PICTURES,     L"CascadeMyPictures",   CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_CONTROL_PANEL,   L"CascadeControlPanel", CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_PRINTERS,        L"CascadePrinters",     CustomizeReadAdvanced, CustomizeWriteAdvanced },
-    { IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", CustomizeReadAdvanced, CustomizeWriteAdvanced },
+    // FIXME: Make "StartMenuAdminTools" effective for IDS_ADVANCED_DISPLAY_ADMINTOOLS
+    {
+        IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
+        REST_NOFAVORITESMENU
+    },
+    {
+        IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
+        REST_STARTMENULOGOFF
+    },
+    {
+        IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
+        REST_NORUN
+    },
+    {
+        IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
+        REST_NOSMMYDOCS
+    },
+    {
+        IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
+        REST_NOSMMYPICS
+    },
+    {
+        IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
+        REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
+    },
+    {
+        IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
+        REST_NOSETFOLDERS
+    },
+    {
+        IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
+        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS
+    },
 };
 
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
 {
+    if (SHRestricted(entry->policy1) || SHRestricted(entry->policy2))
+    {
+        TRACE("%p: Restricted\n", entry->id);
+        return; // Restricted. Don't show
+    }
+
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
 
@@ -132,8 +140,9 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    if (entry->fnRead(entry))
-        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
+    BOOL bChecked = GetAdvancedBool(entry->name, entry->bDefaultValue);
+    Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
+    TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
@@ -165,12 +174,16 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         item.stateMask = TVIS_STATEIMAGEMASK;
         TreeView_GetItem(hTreeView, &item);
 
-        BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
+        BOOL bChecked = !!(item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
         for (auto& entry : s_CustomizeEntries)
         {
+            if (SHRestricted(entry.policy1) || SHRestricted(entry.policy2))
+                continue;
+
             if (item.lParam == entry.id)
             {
-                entry.fnWrite(&entry, bChecked);
+                TRACE("%p: %d\n", item.lParam, bChecked);
+                SetAdvancedDword(entry.name, bChecked);
                 break;
             }
         }
