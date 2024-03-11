@@ -82,88 +82,44 @@ struct CUSTOMIZE_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
-    FN_CUSTOMIZE_READ fnRead;
-    FN_CUSTOMIZE_WRITE fnWrite;
-    RESTRICTIONS Policy1;
-    RESTRICTIONS Policy2;
+    DWORD dwDefaultValue;
+    RESTRICTIONS Policy1, Policy2;
 };
-
-static DWORD CALLBACK CustomizeReadAdvanced0(const CUSTOMIZE_ENTRY *entry)
-{
-    return GetAdvancedBool(entry->name, FALSE);
-}
-
-static DWORD CALLBACK CustomizeReadAdvanced1(const CUSTOMIZE_ENTRY *entry)
-{
-    return GetAdvancedBool(entry->name, TRUE);
-}
-
-static BOOL CALLBACK CustomizeWriteAdvanced(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
-{
-    return SetAdvancedDword(entry->name, dwValue);
-}
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    // FIXME: Make "StartMenuAdminTools" effective
-    //{ IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", CustomizeRead1, CustomizeWrite1 }, // FIXME
+    // FIXME: Make "StartMenuAdminTools" effective for IDS_ADVANCED_DISPLAY_ADMINTOOLS
     {
-        IDS_ADVANCED_DISPLAY_FAVORITES,
-        L"StartMenuFavorites",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
         REST_NOFAVORITESMENU
     },
     {
-        IDS_ADVANCED_DISPLAY_LOG_OFF,
-        L"StartMenuLogoff",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
         REST_STARTMENULOGOFF
     },
     {
-        IDS_ADVANCED_DISPLAY_RUN,
-        L"StartMenuRun",
-        CustomizeReadAdvanced1,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
         REST_NORUN
     },
     {
-        IDS_ADVANCED_EXPAND_MY_DOCUMENTS,
-        L"CascadeMyDocuments",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
         REST_NOSMMYDOCS
     },
     {
-        IDS_ADVANCED_EXPAND_MY_PICTURES,
-        L"CascadeMyPictures",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
         REST_NOSMMYPICS
     },
     {
-        IDS_ADVANCED_EXPAND_CONTROL_PANEL,
-        L"CascadeControlPanel",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
-        REST_NOSETFOLDERS,
-        REST_NOCONTROLPANEL,
+        IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
+        REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
     },
     {
-        IDS_ADVANCED_EXPAND_PRINTERS,
-        L"CascadePrinters",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
+        IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
         REST_NOSETFOLDERS
     },
     {
-        IDS_ADVANCED_EXPAND_NET_CONNECTIONS,
-        L"CascadeNetworkConnections",
-        CustomizeReadAdvanced0,
-        CustomizeWriteAdvanced,
-        REST_NOSETFOLDERS,
-        REST_NONETWORKCONNECTIONS
+        IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
+        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS
     },
 };
 
@@ -180,7 +136,7 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    if (entry->fnRead(entry))
+    if (GetAdvancedBool(entry->name, entry->dwDefaultValue))
         Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
     TreeView_InsertItem(hTreeView, &Insert);
 }
@@ -216,10 +172,13 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         BOOL bChecked = (item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
         for (auto& entry : s_CustomizeEntries)
         {
+            if (SHRestricted(entry.Policy1) || SHRestricted(entry.Policy2))
+                continue;
+
             if (item.lParam == entry.id)
             {
                 TRACE("%p: %d\n", item.lParam, bChecked);
-                entry.fnWrite(&entry, bChecked);
+                SetAdvancedDword(entry.name, bChecked);
                 break;
             }
         }
