@@ -59,11 +59,15 @@ VOID GuiRestoreScreen(PUCHAR Buffer)
 {
 }
 
-VOID GuiMessageBox(PCSTR MessageText)
+VOID
+GuiMessageBox(
+    _In_ PCSTR MessageText)
 {
 }
 
-VOID GuiMessageBoxCritical(PCSTR MessageText)
+VOID
+GuiMessageBoxCritical(
+    _In_ PCSTR MessageText)
 {
 }
 

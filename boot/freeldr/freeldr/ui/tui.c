@@ -629,7 +629,9 @@ VOID TuiRestoreScreen(PUCHAR Buffer)
     VideoCopyOffScreenBufferToVRAM();
 }
 
-VOID TuiMessageBox(PCSTR MessageText)
+VOID
+TuiMessageBox(
+    _In_ PCSTR MessageText)
 {
     PVOID    ScreenBuffer;
 
@@ -646,7 +648,9 @@ VOID TuiMessageBox(PCSTR MessageText)
     FrLdrTempFree(ScreenBuffer, TAG_TUI_SCREENBUFFER);
 }
 
-VOID TuiMessageBoxCritical(PCSTR MessageText)
+VOID
+TuiMessageBoxCritical(
+    _In_ PCSTR MessageText)
 {
     int        width = 8;
     unsigned int    height = 1;

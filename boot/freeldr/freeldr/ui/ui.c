@@ -293,22 +293,24 @@ VOID UiUpdateDateTime(VOID)
     UiVtbl.UpdateDateTime();
 }
 
-VOID UiInfoBox(PCSTR MessageText)
+VOID
+UiInfoBox(
+    _In_ PCSTR MessageText)
 {
-    SIZE_T        TextLength;
-    ULONG        BoxWidth;
-    ULONG        BoxHeight;
-    ULONG        LineBreakCount;
-    SIZE_T        Index;
-    SIZE_T        LastIndex;
-    ULONG        Left;
-    ULONG        Top;
-    ULONG        Right;
-    ULONG        Bottom;
+    SIZE_T TextLength;
+    ULONG  BoxWidth;
+    ULONG  BoxHeight;
+    ULONG  LineBreakCount;
+    SIZE_T Index;
+    SIZE_T LastIndex;
+    ULONG  Left;
+    ULONG  Top;
+    ULONG  Right;
+    ULONG  Bottom;
 
     TextLength = strlen(MessageText);
 
-    // Count the new lines and the box width
+    /* Count the new lines and the box width */
     LineBreakCount = 0;
     BoxWidth = 0;
     LastIndex = 0;
@@ -328,17 +330,17 @@ VOID UiInfoBox(PCSTR MessageText)
         }
     }
 
-    // Calc the box width & height
+    /* Calc the box width & height */
     BoxWidth += 6;
     BoxHeight = LineBreakCount + 4;
 
-    // Calc the box coordinates
+    /* Calc the box coordinates */
     Left = (UiScreenWidth / 2) - (BoxWidth / 2);
-    Top =(UiScreenHeight / 2) - (BoxHeight / 2);
-    Right = (UiScreenWidth / 2) + (BoxWidth / 2);
+    Top  = (UiScreenHeight / 2) - (BoxHeight / 2);
+    Right  = (UiScreenWidth / 2) + (BoxWidth / 2);
     Bottom = (UiScreenHeight / 2) + (BoxHeight / 2);
 
-    // Draw the box
+    /* Draw the box */
     UiDrawBox(Left,
               Top,
               Right,
@@ -347,17 +349,18 @@ VOID UiInfoBox(PCSTR MessageText)
               HORZ,
               TRUE,
               TRUE,
-              ATTR(UiMenuFgColor, UiMenuBgColor)
-              );
+              ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    // Draw the text
+    /* Draw the text */
     UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID UiMessageBox(PCSTR Format, ...)
+VOID
+UiMessageBox(
+    _In_ PCSTR Format, ...)
 {
-    CHAR Buffer[256];
     va_list ap;
+    CHAR Buffer[256];
 
     va_start(ap, Format);
     vsnprintf(Buffer, sizeof(Buffer) - sizeof(CHAR), Format, ap);
@@ -365,7 +368,9 @@ VOID UiMessageBox(PCSTR Format, ...)
     va_end(ap);
 }
 
-VOID UiMessageBoxCritical(PCSTR MessageText)
+VOID
+UiMessageBoxCritical(
+    _In_ PCSTR MessageText)
 {
     UiVtbl.MessageBoxCritical(MessageText);
 }
@@ -631,3 +636,4 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
 
+/* EOF */
