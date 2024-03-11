@@ -127,7 +127,10 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
 {
     if (SHRestricted(entry->policy1) || SHRestricted(entry->policy2))
+    {
+        TRACE("%p: Restricted\n", entry->id);
         return; // Restricted. Don't show
+    }
 
     TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
     Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
