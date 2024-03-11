@@ -89,7 +89,9 @@ struct CUSTOMIZE_ENTRY
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
-    // FIXME: Make "StartMenuAdminTools" effective for IDS_ADVANCED_DISPLAY_ADMINTOOLS
+    {
+        IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", TRUE,
+    },
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
         REST_NOFAVORITESMENU
