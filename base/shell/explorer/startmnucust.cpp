@@ -218,6 +218,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         {
             if (item.lParam == entry.id)
             {
+                TRACE("%p: %d\n", item.lParam, bChecked);
                 entry.fnWrite(&entry, bChecked);
                 break;
             }
