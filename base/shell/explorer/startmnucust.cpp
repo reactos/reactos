@@ -21,6 +21,7 @@
 
 #include "precomp.h"
 
+#define I_UNCHECKED 1
 #define I_CHECKED   2
 
 // TODO: Windows Explorer appears to be calling NewLinkHere / ConfigStartMenu directly for both items.
@@ -138,6 +139,8 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
     if (GetAdvancedBool(entry->name, entry->dwDefaultValue))
         Insert.item.state = INDEXTOSTATEIMAGEMASK(I_CHECKED);
+    else
+        Insert.item.state = INDEXTOSTATEIMAGEMASK(I_UNCHECKED);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
