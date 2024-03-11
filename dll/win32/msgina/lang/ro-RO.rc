@@ -260,7 +260,7 @@ BEGIN
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Închide sesiunea curentă permițând altor utilizatori Log on în sistem."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Se încheie sesiunea şi se închide Windows astfel înc\xE2t oprirea alimentării cu curent să se facă în siguranţă."
-    IDS_SHUTDOWN_RESTART_DESC "Se închide  sesiunea, se închide Windows, apoi se porneşte din nou ReactOS."
+    IDS_SHUTDOWN_RESTART_DESC "Se închide sesiunea, se închide Windows, apoi se porneşte din nou ReactOS."
     IDS_SHUTDOWN_SLEEP_DESC "Se induce sistemul în starea de veghe."
     IDS_SHUTDOWN_HIBERNATE_DESC "Se Salvează sesiunea curentă și se oprește calculatorul."
 END
