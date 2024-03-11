@@ -237,26 +237,33 @@ private:
         AddOrSetMenuItem(hMenu, IDM_PRINTERSANDFAXES, CSIDL_PRINTERS, bExpand, FALSE, FALSE);
     }
 
-    HRESULT AddStartMenuItems(IShellMenu *pShellMenu, INT csidl, DWORD dwFlags)
+    HRESULT AddStartMenuItems(IShellMenu *pShellMenu, INT csidl, DWORD dwFlags, IShellFolder *psf = NULL)
     {
-        CComHeapPtr<ITEMIDLIST> pidlMenu;
+        CComHeapPtr<ITEMIDLIST> pidlFolder;
         CComPtr<IShellFolder> psfDesktop;
         CComPtr<IShellFolder> pShellFolder;
         HRESULT hr;
 
-        hr = SHGetFolderLocation(NULL, csidl, 0, 0, &pidlMenu);
+        hr = SHGetFolderLocation(NULL, csidl, 0, 0, &pidlFolder);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        hr = SHGetDesktopFolder(&psfDesktop);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+        if (psf)
+        {
+            pShellFolder = psf;
+        }
+        else
+        {
+            hr = SHGetDesktopFolder(&psfDesktop);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
-        hr = psfDesktop->BindToObject(pidlMenu, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
 
-        hr = pShellMenu->SetShellFolder(pShellFolder, NULL, NULL, dwFlags);
+        hr = pShellMenu->SetShellFolder(pShellFolder, pidlFolder, NULL, dwFlags);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -281,8 +288,7 @@ private:
         {
             case IDM_PROGRAMS:
             {
-                if (m_psfPrograms)
-                    hr = pShellMenu->SetShellFolder(m_psfPrograms, NULL, NULL, SMSET_TOP);
+                hr = AddStartMenuItems(pShellMenu, CSIDL_PROGRAMS, SMSET_TOP, m_psfPrograms);
                 break;
             }
             case IDM_FAVORITES:
