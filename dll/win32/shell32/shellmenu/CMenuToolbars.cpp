@@ -1377,7 +1377,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
         L"StartMenuAdminTools", FALSE, TRUE);
 
-    BOOL bMustHideAdminTools = IsPidlPrograms(m_idList) && StartMenuAdminTools;
+    BOOL bMustHideAdminTools = IsPidlPrograms(m_idList) && !StartMenuAdminTools;
     TRACE("StartMenuAdminTools: %d\n", StartMenuAdminTools);
     TRACE("bMustHideAdminTools: %d\n", bMustHideAdminTools);
 
