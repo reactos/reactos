@@ -139,6 +139,7 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
     BOOL bChecked = GetAdvancedBool(entry->name, entry->bDefaultValue);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
+    TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
