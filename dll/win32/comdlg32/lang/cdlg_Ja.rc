@@ -131,9 +131,9 @@ STRINGTABLE /* Color names */
 
 STRINGTABLE
 {
-    IDS_FONT_SIZE   "フォントサイズを %1!d! ポイントから %2!d! ポイントの間で選択してください。"
+    IDS_FONT_SIZE   "フォントサイズを %1!d! ～ %2!d! ポイントの範囲内で選択してください。"
     IDS_SAVE_BUTTON "保存(&S)"
-    IDS_SAVE_IN     "保存場所(&I):"
+    IDS_SAVE_IN     "保存する場所(&I):"
     IDS_SAVE        "保存"
     IDS_SAVE_AS     "名前を付けて保存"
     IDS_OPEN_FILE   "ファイルを開く"
@@ -408,7 +408,7 @@ BEGIN
     GROUPBOX        "用紙",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "サイズ(&Z):",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Source:",       stc3,  16,128,  36, 8
+    LTEXT           "ソース(&S):",    stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "方向",    grp1, 180, 92, 100,56, WS_GROUP
@@ -465,7 +465,7 @@ FONT 9, "MS UI Gothic"
     LTEXT	"ファイルの種類(&T):", IDC_FILETYPESTATIC , 5, 130, 62, 16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE, 70, 128, 150, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"読み込み専用で開く(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL	"読み込み専用で開く(&R)", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 70, 148, 150, 10
 
     DEFPUSHBUTTON	"開く(&O)",		 IDOK,222,110,54,14
     PUSHBUTTON		"キャンセル",		 IDCANCEL,222,128,54,14
@@ -491,7 +491,7 @@ FONT 9, "MS UI Gothic"
     LTEXT "ファイルの種類(&T):", IDC_FILETYPESTATIC, 65, 200, 63, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 130, 198, 170, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL "読み込み専用で開く(&R)", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 131, 218, 150, 10
+    CONTROL "読み込み専用で開く(&R)", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 218, 150, 10
 
     DEFPUSHBUTTON "開く(&O)", IDOK, 310, 180, 54, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 310, 198, 54, 14
