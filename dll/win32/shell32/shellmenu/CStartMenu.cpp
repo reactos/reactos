@@ -371,7 +371,7 @@ private:
 
         TRACE("csidl: 0x%X\n", csidl);
 
-#if 1 // FIXME: These CSIDLs wrongly opens My Computer.
+#if 1 // FIXME: These CSIDLs wrongly opens My Computer. CORE-19477
         if (csidl == CSIDL_CONTROLS || csidl == CSIDL_NETWORK || csidl == CSIDL_PRINTERS)
             return FALSE;
 #endif
