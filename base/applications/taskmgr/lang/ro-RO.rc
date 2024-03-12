@@ -122,7 +122,7 @@ BEGIN
         MENUITEM "&Restabilire", ID_RESTORE
         MENUITEM "Înc&hidere activitate", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "Mereu &deasupra", ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Aducere în prim plan", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,11 +130,11 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Opri&re proces", ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Oprire &arbore de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Î&nchidere proces", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Închidere ar&bore procese", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Depanare", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Sta&bilire prioritate"
+        POPUP "Stabilire &prioritate"
         BEGIN
             MENUITEM "Prioritate de timp &real", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "Prioritate în&altă", ID_PROCESS_PAGE_SETPRIORITY_HIGH
