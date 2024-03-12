@@ -1493,7 +1493,6 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     PLIST_ENTRY NextEntry;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section, LastSection, InitSection;
-    BOOLEAN InitFound;
     DBG_UNREFERENCED_LOCAL_VARIABLE(InitSection);
 
     /* So we don't free our own code yet */
@@ -1543,20 +1542,13 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         InitStart = 0;
         while (SectionCount > 0)
         {
-            /* Assume failure */
-            InitFound = FALSE;
-
             /* Is this the INIT section or a discardable section? */
             if ((strncmp((PCCH)Section->Name, "INIT", 5) == 0) ||
                 ((Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)))
             {
                 /* Remember this */
-                InitFound = TRUE;
                 InitSection = Section;
-            }
 
-            if (InitFound)
-            {
                 /* Pick the biggest size -- either raw or virtual */
                 Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
 
