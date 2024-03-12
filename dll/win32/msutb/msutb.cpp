@@ -1336,6 +1336,7 @@ public:
     void AddUIObjs();
     void RemoveUIObjs();
 
+    CTipbarItem *GetItem(REFCLSID rclsid);
     void GetTextSize(BSTR bstr, LPSIZE pSize);
     void LocateItems();
     void MyMoveWnd(LONG xDelta, LONG yDelta);
@@ -1461,7 +1462,7 @@ class CTipbarWnd
     DWORD m_dwSinkCookie;
     CModalMenu *m_pModalMenu;
     CTipbarThread *m_pThread;
-    CicArray<GUID*> m_TipbarGUIDArray;
+    CLangBarItemList m_LangBarItemList;
     DWORD m_dwUnknown20;
     CUIFWndFrame *m_pWndFrame;
     CTipbarGripper *m_pTipbarGripper;
@@ -4617,7 +4618,7 @@ BOOL CTipbarWnd::CheckExcludeCaptionButtonMode(LPRECT prc1, LPCRECT prc2)
 
 void CTipbarWnd::ClearLBItemList()
 {
-    m_TipbarGUIDArray.clear();
+    m_LangBarItemList.Clear();
     if (m_pFocusThread)
         OnThreadItemChange(m_pFocusThread->m_dwThreadId);
 }
@@ -5540,9 +5541,20 @@ STDMETHODIMP_(void) CTipbarWnd::OnTimer(WPARAM wParam)
             break;
         default:
         {
-            if ((10000 <= wParam) && (wParam <= 10049))
+            if (10000 <= wParam && wParam < 10050)
             {
-                // FIXME: CLangBarItemList
+                auto *pItem = m_LangBarItemList.GetItemStateFromTimerId(wParam);
+                if (pItem)
+                {
+                    auto& clsid = pItem->m_clsid;
+                    m_LangBarItemList.SetDemoteLevel(pItem->m_clsid, 2);
+                    if (m_pFocusThread)
+                    {
+                        auto *pThreadItem = m_pFocusThread->GetItem(clsid);
+                        if (pThreadItem)
+                            pThreadItem->AddRemoveMeToUI(FALSE);
+                    }
+                }
             }
             break;
         }
@@ -5881,6 +5893,17 @@ void CTipbarThread::RemoveUIObjs()
         }
     }
     RemoveAllSeparators();
+}
+
+CTipbarItem *CTipbarThread::GetItem(REFCLSID rclsid)
+{
+    for (size_t iItem = 0; iItem < m_UIObjects.size(); ++iItem)
+    {
+        auto *pItem = m_UIObjects[iItem];
+        if (IsEqualGUID(pItem->m_ItemInfo.guidItem, rclsid))
+            return pItem;
+    }
+    return NULL;
 }
 
 void CTipbarThread::GetTextSize(BSTR bstr, LPSIZE pSize)
