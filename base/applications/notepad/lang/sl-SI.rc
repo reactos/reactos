@@ -25,15 +25,15 @@ BEGIN
     POPUP "&Datoteka"
     BEGIN
         MENUITEM "&Nova\tCtrl+N", CMD_NEW
-        MENUITEM "Novo O&kno\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Novo &okno\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Odpri\tCtrl+O", CMD_OPEN
         MENUITEM "&Shrani\tCtrl+S", CMD_SAVE
-        MENUITEM "Sh&rani kot ...", CMD_SAVE_AS
+        MENUITEM "Shr&ani kot ...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Pr&iprava strani ...", CMD_PAGE_SETUP
-        MENUITEM "Na&tisni...\tCtrl+P", CMD_PRINT
+        MENUITEM "P&riprava strani ...", CMD_PAGE_SETUP
+        MENUITEM "Na&tisni ...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "Iz&hod", CMD_EXIT
+        MENUITEM "I&zhod", CMD_EXIT
     END
     POPUP "&Urejanje"
     BEGIN
@@ -46,16 +46,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "P&oišči ...", CMD_SEARCH
         MENUITEM "Na&daljuj iskanje\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Zamenjaj...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Zamenjaj ...\tCtrl+H", CMD_REPLACE
         MENUITEM "Pojdi na...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Izberi &vse", CMD_SELECT_ALL
-        MENUITEM "Čas/Dat&um\tF5", CMD_TIME_DATE
+        MENUITEM "Dat&um/čas\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
         MENUITEM "Pr&elom vrstice", CMD_WRAP
-        MENUITEM "&Pisava...", CMD_FONT
+        MENUITEM "&Pisava ...", CMD_FONT
     END
     POPUP "&Pogled"
     BEGIN
@@ -75,16 +75,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
 CAPTION "Priprava strani"
 BEGIN
-    GROUPBOX "Pregled", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Predogled", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Papir", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Velikost:", stc2, 16, 22, 36, 8
+    LTEXT "Veli&kost:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Pladenj:", stc3, 16, 42, 36, 8
+    LTEXT "&Vir:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientacija", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    GROUPBOX "Usmerjenost", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Portret", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "&Ležeče", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
     GROUPBOX "Robovi", grp4, 80, 66, 152, 56, BS_GROUPBOX
@@ -163,7 +163,7 @@ Ali želite shraniti spremembe?"
     STRING_NOTFOUND "Datoteke '%s' ni mogoče najti."
     STRING_OUT_OF_MEMORY "Na voljo ni dovolj pomnilnika, da bi bilo mogoče dokončati to \
 operacijo.\nČe ga želite sprostiti, končajte enega ali več programov in poskusite znova."
-    STRING_CANNOTFIND "Ni rezultatov za %s"
+    STRING_CANNOTFIND "Ni rezultatov za '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
