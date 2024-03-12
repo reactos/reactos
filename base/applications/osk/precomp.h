@@ -15,6 +15,8 @@
 
 #include <windows.h>
 #include <debug.h>
+#include <uxtheme.h>
+#include <vsstyle.h>
 #include "commctrl.h"
 #include "strsafe.h"
 
@@ -123,6 +125,8 @@ extern OSK_GLOBALS Globals;
 
 #define OSK_CLASS L"OSKMainWindow"
 #define DEFAULT_FONTSIZE 15
+#define ICON_WIDTH 16
+#define ICON_HEIGHT 16
 
 /* OSK_SetKeys reasons */
 enum SetKeys_Reason
