@@ -5900,7 +5900,7 @@ CTipbarItem *CTipbarThread::GetItem(REFCLSID rclsid)
     for (size_t iItem = 0; iItem < m_UIObjects.size(); ++iItem)
     {
         auto *pItem = m_UIObjects[iItem];
-        if (IsEqualGUID(pItem->m_ItemInfo.guidItem, rclsid))
+        if (pItem && IsEqualCLSID(pItem->m_ItemInfo.guidItem, rclsid))
             return pItem;
     }
     return NULL;
