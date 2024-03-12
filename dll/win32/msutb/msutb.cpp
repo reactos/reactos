@@ -11,6 +11,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(msutb);
 
 //#define ENABLE_DESKBAND
 
+typedef struct LANGBARITEMSTATE
+{
+    CLSID m_clsid;
+    DWORD m_dwDemoteLevel;
+    UINT_PTR m_nTimerID;
+    UINT m_uTimeOut;
+    BOOL m_bStartedIntentionally;
+    BOOL m_bDisableDemoting;
+
+    BOOL IsShown()
+    {
+        return m_dwDemoteLevel < 2;
+    }
+} LANGBARITEMSTATE, *PLANGBARITEMSTATE;
+
 HINSTANCE g_hInst = NULL;
 UINT g_wmTaskbarCreated = 0;
 UINT g_uACP = CP_ACP;
@@ -1058,6 +1073,27 @@ public:
     STDMETHOD_(void, OnLButtonUp)(LONG x, LONG y) override;
     STDMETHOD_(void, OnRButtonUp)(LONG x, LONG y) override;
     STDMETHOD_(BOOL, OnSetCursor)(UINT uMsg, LONG x, LONG y) override;
+};
+
+/***********************************************************************/
+
+class CLangBarItemList : public CicArray<LANGBARITEMSTATE>
+{
+public:
+    BOOL IsStartedIntentionally(REFCLSID rclsid);
+
+    LANGBARITEMSTATE *AddItem(REFCLSID rclsid);
+    void Clear();
+    BOOL SetDemoteLevel(REFCLSID rclsid, DWORD dwDemoteLevel);
+
+    LANGBARITEMSTATE *FindItem(REFCLSID rclsid);
+    LANGBARITEMSTATE *GetItemStateFromTimerId(UINT_PTR nTimerID);
+
+    void Load();
+    void SaveItem(CicRegKey *pRegKey, const LANGBARITEMSTATE *pState);
+
+    void StartDemotingTimer(REFCLSID rclsid, BOOL bIntentional);
+    UINT_PTR FindDemotingTimerId();
 };
 
 /***********************************************************************/
@@ -3891,6 +3927,229 @@ STDMETHODIMP_(BOOL) CTipbarGripper::OnSetCursor(UINT uMsg, LONG x, LONG y)
         return FALSE;
 
     return CUIFGripper::OnSetCursor(uMsg, x, y);
+}
+
+/***********************************************************************
+ * CLangBarItemList
+ */
+
+BOOL CLangBarItemList::IsStartedIntentionally(REFCLSID rclsid)
+{
+    auto *pItem = FindItem(rclsid);
+    if (!pItem)
+        return FALSE;
+    return pItem->m_bStartedIntentionally;
+}
+
+LANGBARITEMSTATE *CLangBarItemList::AddItem(REFCLSID rclsid)
+{
+    auto *pItem = FindItem(rclsid);
+    if (pItem)
+        return pItem;
+
+    pItem = Append(1);
+    if (!pItem)
+        return NULL;
+
+    ZeroMemory(pItem, sizeof(*pItem));
+    pItem->m_clsid = rclsid;
+    pItem->m_dwDemoteLevel = 0;
+    return pItem;
+}
+
+void CLangBarItemList::Clear()
+{
+    clear();
+
+    CicRegKey regKey;
+    LSTATUS error;
+    error = regKey.Open(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\LangBar", KEY_ALL_ACCESS);
+    if (error == ERROR_SUCCESS)
+        regKey.RecurseDeleteKey(L"ItemState");
+}
+
+BOOL CLangBarItemList::SetDemoteLevel(REFCLSID rclsid, DWORD dwDemoteLevel)
+{
+    auto *pItem = AddItem(rclsid);
+    if (!pItem)
+        return TRUE;
+
+    pItem->m_dwDemoteLevel = dwDemoteLevel;
+    if (!pItem->IsShown())
+    {
+        if (pItem->m_nTimerID)
+        {
+            if (g_pTipbarWnd)
+                g_pTipbarWnd->KillTimer(pItem->m_nTimerID);
+            pItem->m_nTimerID = 0;
+            pItem->m_uTimeOut = 0;
+        }
+        pItem->m_bDisableDemoting = FALSE;
+    }
+
+    SaveItem(0, pItem);
+    return TRUE;
+}
+
+LANGBARITEMSTATE *CLangBarItemList::FindItem(REFCLSID rclsid)
+{
+    for (size_t iItem = 0; iItem < size(); ++iItem)
+    {
+        auto& item = (*this)[iItem];
+        if (IsEqualCLSID(item.m_clsid, rclsid))
+            return &item;
+    }
+    return NULL;
+}
+
+LANGBARITEMSTATE *CLangBarItemList::GetItemStateFromTimerId(UINT_PTR nTimerID)
+{
+    for (size_t iItem = 0; iItem < size(); ++iItem)
+    {
+        auto& item = (*this)[iItem];
+        if (item.m_nTimerID == nTimerID)
+            return &item;
+    }
+    return NULL;
+}
+
+void CLangBarItemList::Load()
+{
+    CicRegKey regKey;
+    LSTATUS error;
+    error = regKey.Open(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\LangBar\\ItemState");
+    if (error != ERROR_SUCCESS)
+        return;
+
+    WCHAR szKeyName[MAX_PATH];
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        error = ::RegEnumKeyW(regKey, dwIndex, szKeyName, _countof(szKeyName));
+        if (error != ERROR_SUCCESS)
+            break;
+
+        CLSID clsid;
+        if (::CLSIDFromString(szKeyName, &clsid) != S_OK)
+            continue;
+
+        CicRegKey regKey2;
+        error = regKey2.Open(regKey, szKeyName);
+        if (error != ERROR_SUCCESS)
+            continue;
+
+        auto *pItem = AddItem(clsid);
+        if (!pItem)
+            continue;
+
+        DWORD Data = 0;
+        regKey2.QueryDword(L"DemoteLevel", &Data);
+        pItem->m_dwDemoteLevel = Data;
+        regKey2.QueryDword(L"DisableDemoting", &Data);
+        pItem->m_bDisableDemoting = !!Data;
+    }
+}
+
+void CLangBarItemList::SaveItem(CicRegKey *pRegKey, const LANGBARITEMSTATE *pState)
+{
+    LSTATUS error;
+    CicRegKey regKey;
+
+    if (!pRegKey)
+    {
+        error = regKey.Create(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\CTF\\LangBar\\ItemState");
+        if (error != ERROR_SUCCESS)
+            return;
+
+        pRegKey = &regKey;
+    }
+
+    WCHAR szSubKey[MAX_PATH];
+    ::StringFromGUID2(pState->m_clsid, szSubKey, _countof(szSubKey));
+
+    if (pState->m_dwDemoteLevel || pState->m_bDisableDemoting)
+    {
+        CicRegKey regKey2;
+        error = regKey2.Create(*pRegKey, szSubKey);
+        if (error == ERROR_SUCCESS)
+        {
+            DWORD dwDemoteLevel = pState->m_dwDemoteLevel;
+            if (dwDemoteLevel)
+                regKey2.SetDword(L"DemoteLevel", dwDemoteLevel);
+            else
+                regKey2.DeleteValue(L"DemoteLevel");
+
+            regKey2.SetDword(L"DisableDemoting", pState->m_bDisableDemoting);
+        }
+    }
+    else
+    {
+        pRegKey->RecurseDeleteKey(szSubKey);
+    }
+}
+
+void CLangBarItemList::StartDemotingTimer(REFCLSID rclsid, BOOL bIntentional)
+{
+    if (!g_bIntelliSense)
+        return;
+
+    auto *pItem = AddItem(rclsid);
+    if (!pItem || pItem->m_bDisableDemoting)
+        return;
+
+    if (pItem->m_nTimerID)
+    {
+        if (!bIntentional)
+            return;
+
+        if (g_pTipbarWnd)
+            g_pTipbarWnd->KillTimer(pItem->m_nTimerID);
+
+        pItem->m_nTimerID = 0;
+    }
+
+    pItem->m_bStartedIntentionally |= bIntentional;
+
+    UINT uTimeOut = (bIntentional ? g_uTimeOutIntentional : g_uTimeOutNonIntentional);
+    pItem->m_uTimeOut += uTimeOut;
+
+    if (pItem->m_uTimeOut < g_uTimeOutMax)
+    {
+        UINT_PTR uDemotingTimerId = FindDemotingTimerId();
+        pItem->m_nTimerID = uDemotingTimerId;
+        if (uDemotingTimerId)
+        {
+            if (g_pTipbarWnd)
+                g_pTipbarWnd->SetTimer(uDemotingTimerId, uTimeOut);
+        }
+    }
+    else
+    {
+        pItem->m_bDisableDemoting = TRUE;
+    }
+}
+
+UINT_PTR CLangBarItemList::FindDemotingTimerId()
+{
+    UINT_PTR nTimerID = 10000;
+
+    if (empty())
+        return nTimerID;
+
+    for (;;)
+    {
+        size_t iItem = 0;
+
+        while ((*this)[iItem].m_nTimerID != nTimerID)
+        {
+            ++iItem;
+            if (iItem >= size())
+                return nTimerID;
+        }
+
+        ++nTimerID;
+        if (nTimerID >= 10050)
+            return 0;
+    }
 }
 
 /***********************************************************************
