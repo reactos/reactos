@@ -116,6 +116,7 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
         {
             wcscpy(&key[6], pwszCLSID);
             AddClassKeyToArray(key, hKeys, &cKeys);
+            CoTaskMemFree(pwszCLSID);
         }
     }
     AddClassKeyToArray(L"Folder", hKeys, &cKeys);
