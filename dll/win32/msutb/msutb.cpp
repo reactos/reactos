@@ -1504,6 +1504,7 @@ class CTipbarWnd
     friend class CTipbarThread;
     friend class CTipbarItem;
     friend class CLBarInatItem;
+    friend class CMainIconItem;
     friend VOID WINAPI ClosePopupTipbar(VOID);
     friend BOOL GetTipbarInternal(HWND hWnd, DWORD dwFlags, CDeskBand *pDeskBand);
     friend LONG MyWaitForInputIdle(DWORD dwThreadId, DWORD dwMilliseconds);
@@ -2823,7 +2824,7 @@ CUTBContextMenu::CUTBContextMenu(CTipbarWnd *pTipbarWnd)
     m_pTipbarWnd = pTipbarWnd;
 }
 
-/// @unimplemented
+/// @implemented
 BOOL CUTBContextMenu::Init()
 {
     m_pTipbarThread = m_pTipbarWnd->m_pFocusThread;
@@ -3158,17 +3159,19 @@ STDMETHODIMP_(BOOL) CButtonIconItem::OnDelayMsg(UINT uMsg)
  * CMainIconItem
  */
 
+/// @implemented
 CMainIconItem::CMainIconItem(CTrayIconWnd *pWnd)
     : CButtonIconItem(pWnd, 1)
 {
 }
 
+/// @implemented
 BOOL CMainIconItem::Init(HWND hWnd)
 {
     return CTrayIconItem::_Init(hWnd, WM_USER, 0, GUID_LBI_TRAYMAIN);
 }
 
-/// @unimplemented
+/// @implemented
 STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
 {
     if (!CButtonIconItem::OnDelayMsg(uMsg))
@@ -3176,14 +3179,12 @@ STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
 
     if (uMsg == WM_LBUTTONDBLCLK)
     {
-        //FIXME
-        //if (g_pTipbarWnd->m_dwUnknown20)
-        //    g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
+        if (g_pTipbarWnd->m_dwUnknown20)
+            g_pTipbarWnd->m_pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
     }
     else if (uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN)
     {
-        //FIXME
-        //g_pTipbarWnd->ShowContextMenu(m_ptCursor, &m_rcClient, uMsg == WM_RBUTTONDOWN);
+        g_pTipbarWnd->ShowContextMenu(m_ptCursor, &m_rcMenu, uMsg == WM_RBUTTONDOWN);
     }
     return TRUE;
 }
@@ -3292,16 +3293,15 @@ HWND CTrayIconWnd::GetNotifyWnd()
     return m_hNotifyWnd;
 }
 
-/// @unimplemented
+/// @implemented
 BOOL CTrayIconWnd::OnIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    //FIXME
-    //if (g_pTipbarWnd)
-    //    g_pTipbarWnd->AttachFocusThread();
+    if (g_pTipbarWnd)
+        g_pTipbarWnd->AttachFocusThread();
 
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
     {
-        auto pItem = m_Items[iItem];
+        auto *pItem = m_Items[iItem];
         if (pItem)
         {
             if (uMsg == pItem->m_uCallbackMessage)
