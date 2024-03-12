@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "P&oišči ...", CMD_SEARCH
         MENUITEM "Na&daljuj iskanje\tF3", CMD_SEARCH_NEXT
         MENUITEM "Zamenjaj ...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Pojdi na...\tCtrl+G", CMD_GOTO
+        MENUITEM "Pojdi na ...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Izberi &vse", CMD_SELECT_ALL
         MENUITEM "Dat&um/čas\tF5", CMD_TIME_DATE
@@ -135,7 +135,7 @@ CAPTION "Trenutno se tiska"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Tiskanje se začenja...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "Tiskanje se začenja ...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Stran %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Prekliči", IDCANCEL, 50, 75, 60, 20
@@ -176,8 +176,8 @@ operacijo.\nČe ga želite sprostiti, končajte enega ali več programov in posk
     STRING_PRINTERROR "Tiskanje strani '%s' ni mogoče.\n\nPrepričajte se, da je tiskalnik prižgan in pravilno nastavljen."
     STRING_DEFAULTFONT "Lucida Console"
     STRING_LINE_NUMBER_OUT_OF_RANGE "Dana številka vrstice je izven obsega."
-    STRING_NOWPRINTING "Tiskanje strani..."
-    STRING_PRINTCANCELING "Tiskanje se prekinja..." /* Slovene doesn't have a proper way to say print job so just say printing is stopping */
+    STRING_NOWPRINTING "Tiskanje strani ..."
+    STRING_PRINTCANCELING "Tiskanje se prekinja ..." /* Slovene doesn't have a proper way to say print job so just say printing is stopping */
     STRING_PRINTCOMPLETE "Tiskanje uspešno."
     STRING_PRINTCANCELED "Tiskanje prekinjeno."
     STRING_PRINTFAILED "Napaka pri tiskanju."
