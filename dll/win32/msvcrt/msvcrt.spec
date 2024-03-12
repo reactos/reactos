@@ -1518,7 +1518,7 @@
 @ stub -version=0x600+ vswprintf_s
 @ cdecl vwprintf(wstr ptr)
 @ stub -version=0x600+ vwprintf_s
-@ stub -version=0x600+ wcrtomb
+@ cdecl -version=0x600+ wcrtomb(ptr long ptr)
 @ stub -version=0x600+ wcrtomb_s
 @ cdecl wcscat(wstr wstr)
 @ cdecl -version=0x600+ wcscat_s(wstr long wstr)
