@@ -388,14 +388,12 @@ static void TEST_End(void)
 
 static void test_properties()
 {
-    WCHAR Buffer[MAX_PATH * 4];
-
     HRESULT hrCoInit = CoInitialize(NULL);
 
+    WCHAR Buffer[MAX_PATH * 4];
     GetModuleFileNameW(NULL, Buffer, _countof(Buffer));
-    SHELLEXECUTEINFOW info = { sizeof(info) };
 
-    info.cbSize = sizeof(SHELLEXECUTEINFOW);
+    SHELLEXECUTEINFOW info = { sizeof(info) };
     info.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_FLAG_NO_UI;
     info.lpVerb = L"properties";
     info.lpFile = Buffer;
