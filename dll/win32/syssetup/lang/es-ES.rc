@@ -262,6 +262,6 @@ BEGIN
     IDS_PRODUCTSERVERNAME "ReactOS como Servidor"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS como Sobremesa"
     IDS_PRODUCTSERVERINFO "El sistema se mostrará como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
-    IDS_PRODUCTWORKSTATIONINFO "El sistema será reconocido como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "El sistema se mostrará como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
     IDS_DEFAULT "(Por defecto)"
 END
