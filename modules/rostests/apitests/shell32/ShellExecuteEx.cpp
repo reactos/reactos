@@ -48,7 +48,7 @@ CreateAppPath(LPCWSTR pszName, LPCWSTR pszValue)
     DWORD cbValue = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
     error = RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
     if (error != ERROR_SUCCESS)
-        trace("Could not set value of the test key. Status: %lu\n", error);
+        trace("Could not set value of the test key (%lu)\n", error);
 
     RegCloseKey(hKey);
 
@@ -190,18 +190,18 @@ static void TEST_DoTestEntries(void)
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"");
     TEST_DoTestEntry(__LINE__, TEST_FAILED, L"This is an invalid path.");
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_bat_file, NULL);
-    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_test_exe, s_sys_test_exe_cmdline); //s
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_test_exe, s_sys_test_exe_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_txt_file, NULL);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_bat_file, NULL);
-    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_notepad, s_win_notepad_cmdline); //
-    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_test_exe, s_win_test_exe_cmdline); //
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_notepad, s_win_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_test_exe, s_win_test_exe_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_txt_file, NULL);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"notepad", s_sys_notepad_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"notepad.exe", s_sys_notepad_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"notepad.exe\"", s_sys_notepad_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"notepad\"", s_sys_notepad_cmdline);
-    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"test program.exe", s_sys_test_exe_cmdline); //
-    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"test program.exe\"", s_sys_test_exe_cmdline); //
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"test program.exe", s_sys_test_exe_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"test program.exe\"", s_sys_test_exe_cmdline);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, s_win_dir);
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, s_sys_dir);
     TEST_DoTestEntry(__LINE__, TEST_FAILED, L"shell:ThisIsAnInvalidName");
@@ -377,7 +377,7 @@ static BOOL TEST_Start(void)
     FindExecutableW(s_sys_txt_file, NULL, szPath);
     if (lstrcmpiW(PathFindFileNameW(szPath), L"notepad.exe") != 0)
     {
-        trace("Please associate .txt with notepad.exe before tests\n");
+        skip("Please associate .txt with notepad.exe before tests\n");
         return FALSE;
     }
 
