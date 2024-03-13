@@ -298,9 +298,6 @@ Escape:
             }
         }
     }
-
-    free(List1->m_phWnds);
-    free(List2->m_phWnds);
 }
 
 static WINDOW_LIST s_List1, s_List2;
@@ -404,6 +401,8 @@ static void TEST_End(void)
     Sleep(500);
     TEST_GetWindowList(&s_List2);
     TEST_CloseNewWindows(&s_List1, &s_List2);
+    free(s_List1.m_phWnds);
+    free(s_List2.m_phWnds);
 
     DeleteFileW(s_win_test_exe);
     DeleteFileW(s_sys_test_exe);
