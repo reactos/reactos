@@ -313,8 +313,6 @@ static BOOL TEST_Start(void)
     if (s_bWow64)
         skip("Wow64: Command Line check is skipped\n");
 
-    TEST_GetWindowList(&s_List1);
-
     // getCommandLineFromProcess needs this
     enableTokenPrivilege(SE_DEBUG_NAME);
 
@@ -395,6 +393,8 @@ static BOOL TEST_Start(void)
                      L"\"%s\" ", s_win_test_exe);
     StringCchPrintfW(s_sys_test_exe_cmdline, _countof(s_sys_test_exe_cmdline),
                      L"\"%s\" ", s_sys_test_exe);
+
+    TEST_GetWindowList(&s_List1);
 
     return TRUE;
 }
