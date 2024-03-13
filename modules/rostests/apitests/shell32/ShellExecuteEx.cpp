@@ -32,76 +32,6 @@ static BOOL s_bWow64;
 
 #define REG_APPPATHS L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\"
 
-static BOOL
-CreateAppPath(LPCWSTR pszName, LPCWSTR pszValue)
-{
-    WCHAR szSubKey[MAX_PATH];
-    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
-
-    LSTATUS error;
-    HKEY hKey;
-    error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, NULL, 0, KEY_WRITE, NULL,
-                            &hKey, NULL);
-    if (error != ERROR_SUCCESS)
-        trace("Could not create test key (%lu)\n", error);
-
-    DWORD cbValue = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
-    error = RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
-    if (error != ERROR_SUCCESS)
-        trace("Could not set value of the test key (%lu)\n", error);
-
-    RegCloseKey(hKey);
-
-    return error == ERROR_SUCCESS;
-}
-
-static VOID
-DeleteAppPath(LPCWSTR pszName)
-{
-    WCHAR szSubKey[MAX_PATH];
-    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
-
-    LSTATUS error = RegDeleteKeyW(HKEY_LOCAL_MACHINE, szSubKey);
-    if (error != ERROR_SUCCESS)
-        trace("Could not remove the test key (%lu)\n", error);
-}
-
-static BOOL
-enableTokenPrivilege(LPCWSTR pszPrivilege)
-{
-    HANDLE hToken;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-        return FALSE;
-
-    TOKEN_PRIVILEGES tkp = { 0 };
-    if (!LookupPrivilegeValueW(NULL, pszPrivilege, &tkp.Privileges[0].Luid))
-        return FALSE;
-
-    tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    return AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, NULL);
-}
-
-static LPWSTR
-getCommandLineFromProcess(HANDLE hProcess)
-{
-    PEB peb;
-    PROCESS_BASIC_INFORMATION info;
-    RTL_USER_PROCESS_PARAMETERS Params;
-
-    NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
-    ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
-    ReadProcessMemory(hProcess, peb.ProcessParameters, &Params, sizeof(Params), NULL);
-
-    LPWSTR cmdline = Params.CommandLine.Buffer;
-    SIZE_T cchCmdLine = Params.CommandLine.Length;
-    LPWSTR pszBuffer = (LPWSTR)calloc(cchCmdLine + 1, sizeof(WCHAR));
-    ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
-    pszBuffer[cchCmdLine] = UNICODE_NULL;
-
-    return pszBuffer; // needs free()
-}
-
 typedef enum TEST_RESULT
 {
     TEST_FAILED,
@@ -117,72 +47,8 @@ typedef struct TEST_ENTRY
     LPCWSTR cmdline;
 } TEST_ENTRY, *PTEST_ENTRY;
 
-static void TEST_DoTestEntry0(const TEST_ENTRY *pEntry)
-{
-    SHELLEXECUTEINFOW info = { sizeof(info) };
-    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_FLAG_NO_UI;
-    info.hwnd = NULL;
-    info.lpVerb = NULL;
-    info.lpFile = pEntry->lpFile;
-    info.nShow = SW_SHOWNORMAL;
-
-    BOOL ret = ShellExecuteExW(&info);
-
-    TEST_RESULT result;
-    if (ret && info.hProcess)
-        result = TEST_SUCCESS_WITH_PROCESS;
-    else if (ret && !info.hProcess)
-        result = TEST_SUCCESS_NO_PROCESS;
-    else
-        result = TEST_FAILED;
-
-    ok(pEntry->result == result,
-       "Line %d: result: %d vs %d\n", pEntry->line, pEntry->result, result);
-
-    if (pEntry->result == TEST_SUCCESS_WITH_PROCESS && pEntry->cmdline && !s_bWow64)
-    {
-        LPWSTR cmdline = getCommandLineFromProcess(info.hProcess);
-        if (!cmdline)
-        {
-            skip("!cmdline\n");
-        }
-        else
-        {
-            ok(lstrcmpiW(pEntry->cmdline, cmdline) == 0,
-               "Line %d: cmdline: '%ls' vs '%ls'\n", pEntry->line,
-               pEntry->cmdline, cmdline);
-        }
-
-        TerminateProcess(info.hProcess, 0xDEADFACE);
-        free(cmdline);
-    }
-
-    CloseHandle(info.hProcess);
-}
-
 static void
-TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline = NULL)
-{
-    TEST_ENTRY entry = { line, result, lpFile, cmdline };
-    TEST_DoTestEntry0(&entry);
-}
-
-static void TEST_AppPath(void)
-{
-    if (CreateAppPath(L"app_path_test.bat", s_win_test_exe))
-    {
-        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat");
-        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat.exe");
-        DeleteAppPath(L"app_path_test.bat");
-    }
-
-    if (CreateAppPath(L"app_path_test.bat.exe", s_sys_test_exe))
-    {
-        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat");
-        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat.exe");
-        DeleteAppPath(L"app_path_test.bat.exe");
-    }
-}
+TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline = NULL);
 
 static void TEST_DoTestEntries(void)
 {
@@ -239,6 +105,92 @@ static void TEST_DoTestEntries(void)
     TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:StartUp");
 }
 
+static LPWSTR
+getCommandLineFromProcess(HANDLE hProcess)
+{
+    PEB peb;
+    PROCESS_BASIC_INFORMATION info;
+    RTL_USER_PROCESS_PARAMETERS Params;
+
+    NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
+    ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    ReadProcessMemory(hProcess, peb.ProcessParameters, &Params, sizeof(Params), NULL);
+
+    LPWSTR cmdline = Params.CommandLine.Buffer;
+    SIZE_T cchCmdLine = Params.CommandLine.Length;
+    LPWSTR pszBuffer = (LPWSTR)calloc(cchCmdLine + 1, sizeof(WCHAR));
+    ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
+    pszBuffer[cchCmdLine] = UNICODE_NULL;
+
+    return pszBuffer; // needs free()
+}
+
+static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
+{
+    SHELLEXECUTEINFOW info = { sizeof(info) };
+    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_FLAG_NO_UI;
+    info.hwnd = NULL;
+    info.lpVerb = NULL;
+    info.lpFile = pEntry->lpFile;
+    info.nShow = SW_SHOWNORMAL;
+
+    BOOL ret = ShellExecuteExW(&info);
+
+    TEST_RESULT result;
+    if (ret && info.hProcess)
+        result = TEST_SUCCESS_WITH_PROCESS;
+    else if (ret && !info.hProcess)
+        result = TEST_SUCCESS_NO_PROCESS;
+    else
+        result = TEST_FAILED;
+
+    ok(pEntry->result == result,
+       "Line %d: result: %d vs %d\n", pEntry->line, pEntry->result, result);
+
+    if (pEntry->result == TEST_SUCCESS_WITH_PROCESS && pEntry->cmdline && !s_bWow64)
+    {
+        LPWSTR cmdline = getCommandLineFromProcess(info.hProcess);
+        if (!cmdline)
+        {
+            skip("!cmdline\n");
+        }
+        else
+        {
+            ok(lstrcmpiW(pEntry->cmdline, cmdline) == 0,
+               "Line %d: cmdline: '%ls' vs '%ls'\n", pEntry->line,
+               pEntry->cmdline, cmdline);
+        }
+
+        TerminateProcess(info.hProcess, 0xDEADFACE);
+        free(cmdline);
+    }
+
+    CloseHandle(info.hProcess);
+}
+
+static void
+TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline)
+{
+    TEST_ENTRY entry = { line, result, lpFile, cmdline };
+    TEST_DoTestEntryStruct(&entry);
+}
+
+static BOOL
+enableTokenPrivilege(LPCWSTR pszPrivilege)
+{
+    HANDLE hToken;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    TOKEN_PRIVILEGES tkp = { 0 };
+    if (!LookupPrivilegeValueW(NULL, pszPrivilege, &tkp.Privileges[0].Luid))
+        return FALSE;
+
+    tkp.PrivilegeCount = 1;
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    return AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, NULL);
+}
+
 typedef struct WINDOW_LIST
 {
     SIZE_T m_chWnds;
@@ -260,7 +212,7 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static void TEST_GetWindowList(PWINDOW_LIST pList)
+static inline void TEST_GetWindowList(PWINDOW_LIST pList)
 {
     EnumWindows(EnumWindowsProc, (LPARAM)pList);
 }
@@ -475,6 +427,57 @@ static void test_sei_lpIDList()
     ShellExecInfo.lpIDList = lpitemidlist;
     BOOL ret = ShellExecuteExW(&ShellExecInfo);
     ok_int(ret, TRUE);
+}
+
+static BOOL
+CreateAppPath(LPCWSTR pszName, LPCWSTR pszValue)
+{
+    WCHAR szSubKey[MAX_PATH];
+    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
+
+    LSTATUS error;
+    HKEY hKey;
+    error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+                            &hKey, NULL);
+    if (error != ERROR_SUCCESS)
+        trace("Could not create test key (%lu)\n", error);
+
+    DWORD cbValue = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
+    if (error != ERROR_SUCCESS)
+        trace("Could not set value of the test key (%lu)\n", error);
+
+    RegCloseKey(hKey);
+
+    return error == ERROR_SUCCESS;
+}
+
+static VOID
+DeleteAppPath(LPCWSTR pszName)
+{
+    WCHAR szSubKey[MAX_PATH];
+    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
+
+    LSTATUS error = RegDeleteKeyW(HKEY_LOCAL_MACHINE, szSubKey);
+    if (error != ERROR_SUCCESS)
+        trace("Could not remove the test key (%lu)\n", error);
+}
+
+static void TEST_AppPath(void)
+{
+    if (CreateAppPath(L"app_path_test.bat", s_win_test_exe))
+    {
+        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat");
+        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat.exe");
+        DeleteAppPath(L"app_path_test.bat");
+    }
+
+    if (CreateAppPath(L"app_path_test.bat.exe", s_sys_test_exe))
+    {
+        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat");
+        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat.exe");
+        DeleteAppPath(L"app_path_test.bat.exe");
+    }
 }
 
 START_TEST(ShellExecuteEx)
