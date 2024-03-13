@@ -111,15 +111,37 @@ getCommandLineFromProcess(HANDLE hProcess)
     PEB peb;
     PROCESS_BASIC_INFORMATION info;
     RTL_USER_PROCESS_PARAMETERS Params;
+    LONG status;
+    BOOL ret;
 
-    NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
-    ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
+    if (status != 0)
+        trace("status: 0x%08lX\n", status);
+
+    ret = ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
     ReadProcessMemory(hProcess, peb.ProcessParameters, &Params, sizeof(Params), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
 
     LPWSTR cmdline = Params.CommandLine.Buffer;
-    SIZE_T cchCmdLine = Params.CommandLine.Length;
+    if (!cmdline)
+        trace("!cmdline\n");
+
+    SIZE_T cchCmdLine = Params.CommandLine.Length / sizeof(WCHAR);
+    if (!cchCmdLine)
+        trace("!cchCmdLine\n");
+
     LPWSTR pszBuffer = (LPWSTR)calloc(cchCmdLine + 1, sizeof(WCHAR));
-    ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
+    if (!pszBuffer)
+        trace("!pszBuffer\n");
+
+    ret = ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
     pszBuffer[cchCmdLine] = UNICODE_NULL;
 
     return pszBuffer; // needs free()
