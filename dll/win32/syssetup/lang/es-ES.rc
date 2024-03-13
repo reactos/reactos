@@ -14,7 +14,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al asistente de la segunda fase de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Bienvenido a la segunda fase de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Este asistente configurará ReactOS en su equipo.\n\nEl asistente necesita que aporte información sobre usted y su equipo para poder configurarlo de forma correcta.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
 END
