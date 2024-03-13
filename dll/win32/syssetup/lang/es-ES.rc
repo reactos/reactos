@@ -121,7 +121,7 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registrando componentes", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Instalando elementos del menu de inicio", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Instalando elementos del menú de inicio", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Guardando la configuración", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "Eliminando archivos temporales", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
