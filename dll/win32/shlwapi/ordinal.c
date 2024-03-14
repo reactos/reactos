@@ -2440,13 +2440,49 @@ HRESULT WINAPI QISearch(
  *  id   [I] Index of child Window to set the Font
  *
  * RETURNS
+#ifdef __REACTOS__
+ *  VOID
+#else
  *  Success: S_OK
+#endif
  *
  */
+#ifdef __REACTOS__
+VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
+#else
 HRESULT WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
+#endif
 {
+#ifdef __REACTOS__
+    HFONT hFont, hFont2;
+    LOGFONTW lf1, lf2;
+    HWND hwndItem;
+
+    TRACE("(%p, %d)\n", hWnd, id);
+
+    hFont = (HFONT)SendMessageW(hWnd, WM_GETFONT, 0, 0);
+    GetObjectW(hFont, sizeof(lf1), &lf1);
+    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf2), &lf2, 0);
+
+    if (lf1.lfCharSet != lf2.lfCharSet)
+    {
+        hFont2 = GetPropW(hWnd, L"PropDlgFont");
+        if (!hFont2)
+        {
+            lf2.lfHeight = lf1.lfHeight;
+            hFont2 = CreateFontIndirectW(&lf2);
+            if (!hFont2)
+                hFont2 = hFont;
+            if (hFont != hFont2)
+                SetPropW(hWnd, L"PropDlgFont", hFont2);
+        }
+        hwndItem = GetDlgItem(hWnd, id);
+        SendMessageW(hwndItem, WM_SETFONT, (WPARAM)hFont2, 0);
+    }
+#else
     FIXME("(%p, %d) stub\n", hWnd, id);
     return S_OK;
+#endif
 }
 
 /*************************************************************************
