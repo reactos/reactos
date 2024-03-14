@@ -130,7 +130,7 @@ getCommandLineFromProcess(HANDLE hProcess)
     if (!cmdline)
         trace("!cmdline\n");
 
-    SIZE_T cchCmdLine = Params.CommandLine.Length / sizeof(WCHAR);
+    SIZE_T cchCmdLine = Params.CommandLine.Length;
     if (!cchCmdLine)
         trace("!cchCmdLine\n");
 
