@@ -2455,29 +2455,29 @@ HRESULT WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
 {
 #ifdef __REACTOS__
     HFONT hFont, hFont2;
-    LOGFONTW lf1, lf2;
+    LOGFONTA lf1, lf2;
     HWND hwndItem;
 
     TRACE("(%p, %d)\n", hWnd, id);
 
-    hFont = (HFONT)SendMessageW(hWnd, WM_GETFONT, 0, 0);
-    GetObjectW(hFont, sizeof(lf1), &lf1);
-    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf2), &lf2, 0);
+    hFont = (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
+    GetObjectA(hFont, sizeof(lf1), &lf1);
+    SystemParametersInfoA(SPI_GETICONTITLELOGFONT, sizeof(lf2), &lf2, 0);
 
     if (lf1.lfCharSet != lf2.lfCharSet)
     {
-        hFont2 = GetPropW(hWnd, L"PropDlgFont");
+        hFont2 = GetPropA(hWnd, "PropDlgFont");
         if (!hFont2)
         {
             lf2.lfHeight = lf1.lfHeight;
-            hFont2 = CreateFontIndirectW(&lf2);
+            hFont2 = CreateFontIndirectA(&lf2);
             if (!hFont2)
                 hFont2 = hFont;
             if (hFont != hFont2)
-                SetPropW(hWnd, L"PropDlgFont", hFont2);
+                SetPropA(hWnd, "PropDlgFont", hFont2);
         }
         hwndItem = GetDlgItem(hWnd, id);
-        SendMessageW(hwndItem, WM_SETFONT, (WPARAM)hFont2, 0);
+        SendMessageA(hwndItem, WM_SETFONT, (WPARAM)hFont2, 0);
     }
 #else
     FIXME("(%p, %d) stub\n", hWnd, id);
