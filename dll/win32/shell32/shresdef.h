@@ -595,6 +595,10 @@
 #define IDI_SHELL_UPDATE            47
 #define IDI_SHELL_LOCKED            48
 #define IDI_SHELL_DISCONN           49
+#define IDI_SHELL_NONE_50           50
+#define IDI_SHELL_NONE_51           51
+#define IDI_SHELL_NONE_52           52
+#define IDI_SHELL_NONE_53           53
 #define IDI_SHELL_NOT_CONNECTED_HDD 54
 #define IDI_SHELL_MULTIPLE_FILES   133
 #define IDI_SHELL_OPEN_WITH        134
