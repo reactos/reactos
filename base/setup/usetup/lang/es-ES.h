@@ -210,7 +210,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         6,
         11,
-        "ReactOS est\240 en fase Alpha, lo que significa que a\243n no es",
+        "ReactOS est\240 en fase alfa, lo que significa que a\243n no es",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
