@@ -22,7 +22,7 @@ CAPTION "Detener un dispositivo de hardware"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Para confirmar la detención de los dispositivos, pulse Aceptar para continuar.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Seleccione los dispositivos a detener y luego pulse Aceptar para continuar.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "ReactOS intentará detener los siguientes dispositivos. Tras su detención, puede extraerlos con seguridad.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_CONFIRM_STOP_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 8, 45, 240, 78
     DEFPUSHBUTTON "Aceptar", IDOK, 144, 127, 50, 14
