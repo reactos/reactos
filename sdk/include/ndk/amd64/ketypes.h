@@ -46,7 +46,7 @@ Author:
 #define KF_AMDK6MTRR                    0x00008000 // Win 5.0-6.1
 #define KF_XSAVEOPT                     0x00008000 // From KF_XSAVEOPT_BIT
 #define KF_XMMI64                       0x00010000 // SSE2
-#define KF_BRANCH                       0x00020000 // From ksamd64.inc, Win 6.1-6.2 
+#define KF_BRANCH                       0x00020000 // From ksamd64.inc, Win 6.1-6.2
 #define KF_00040000                     0x00040000 // Unclear
 #define KF_SSE3                         0x00080000 // Win 6.0+
 #define KF_CMPXCHG16B                   0x00100000 // Win 6.0-6.2
@@ -621,7 +621,6 @@ typedef struct _REQUEST_MAILBOX
 //
 // Processor Region Control Block
 //
-#pragma pack(push,4)
 typedef struct _KPRCB
 {
     ULONG MxCsr;
@@ -965,7 +964,6 @@ typedef struct _KIPCR
     ULONG ContextSwitches;
 
 } KIPCR, *PKIPCR;
-#pragma pack(pop)
 
 //
 // TSS Definition
