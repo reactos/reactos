@@ -2454,31 +2454,37 @@ HRESULT WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
 #endif
 {
 #ifdef __REACTOS__
-    HFONT hFont, hFont2;
-    LOGFONTA lf1, lf2;
+    HFONT hOldFont, hNewFont;
+    LOGFONTW lfOldFont, lfNewFont;
     HWND hwndItem;
 
     TRACE("(%p, %d)\n", hWnd, id);
 
-    hFont = (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
-    GetObjectA(hFont, sizeof(lf1), &lf1);
-    SystemParametersInfoA(SPI_GETICONTITLELOGFONT, sizeof(lf2), &lf2, 0);
+    hOldFont = (HFONT)SendMessageW(hWnd, WM_GETFONT, 0, 0);
+    GetObjectW(hOldFont, sizeof(lfOldFont), &lfOldFont);
+    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lfNewFont), &lfNewFont, 0);
 
-    if (lf1.lfCharSet != lf2.lfCharSet)
+    if (lfOldFont.lfCharSet == lfNewFont.lfCharSet)
+        return;
+
+    hNewFont = GetPropW(hWnd, L"PropDlgFont");
+    if (!hNewFont)
     {
-        hFont2 = GetPropA(hWnd, "PropDlgFont");
-        if (!hFont2)
-        {
-            lf2.lfHeight = lf1.lfHeight;
-            hFont2 = CreateFontIndirectA(&lf2);
-            if (!hFont2)
-                hFont2 = hFont;
-            if (hFont != hFont2)
-                SetPropA(hWnd, "PropDlgFont", hFont2);
-        }
-        hwndItem = GetDlgItem(hWnd, id);
-        SendMessageA(hwndItem, WM_SETFONT, (WPARAM)hFont2, 0);
+        /* Create the icon-title font of the same height */
+        lfNewFont.lfHeight = lfOldFont.lfHeight;
+        hNewFont = CreateFontIndirectW(&lfNewFont);
+
+        /* If creating the font is failed, then keep the old font */
+        if (!hNewFont)
+            hNewFont = hOldFont;
+
+        /* Set "PropDlgFont" property if the font is changed */
+        if (hOldFont != hNewFont)
+            SetPropW(hWnd, L"PropDlgFont", hNewFont);
     }
+
+    hwndItem = GetDlgItem(hWnd, id);
+    SendMessageW(hwndItem, WM_SETFONT, (WPARAM)hNewFont, 0);
 #else
     FIXME("(%p, %d) stub\n", hWnd, id);
     return S_OK;
