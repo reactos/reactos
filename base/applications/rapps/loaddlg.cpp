@@ -989,12 +989,12 @@ CDownloadManager::ThreadFunc(LPVOID param)
                 L".exe", L".com", L".bat", L".reg", L".msi"
             };
             LPCWSTR pszDotExt = PathFindExtensionW(Path);
-            BOOL bOpenParentFolder = FALSE;
+            BOOL bOpenParentFolder = TRUE;
             for (auto dotext : s_CanOpenDotExtsCurrently)
             {
                 if (lstrcmpiW(dotext, pszDotExt) == 0)
                 {
-                    bOpenParentFolder = TRUE;
+                    bOpenParentFolder = FALSE;
                     break;
                 }
             }
