@@ -133,7 +133,7 @@ getCommandLineFromProcess(HANDLE hProcess)
     if (!cbCmdLine)
         trace("!cbCmdLine\n");
 
-    LPWSTR pszBuffer = (LPWSTR)calloc(cbCmdLine + sizeof(WCHAR), sizeof(WCHAR));
+    LPWSTR pszBuffer = (LPWSTR)calloc(cbCmdLine + sizeof(WCHAR), 1);
     if (!pszBuffer)
         trace("!pszBuffer\n");
 
