@@ -81,13 +81,6 @@ LoadStatusString(DownloadStatus StatusParam)
     return szString;
 }
 
-#define PATH_CHAR_CLASS_LETTER      0x00000001
-#define PATH_CHAR_CLASS_DOT         0x00000004
-#define PATH_CHAR_CLASS_SEMICOLON   0x00000020
-#define PATH_CHAR_CLASS_COMMA       0x00000040
-#define PATH_CHAR_CLASS_SPACE       0x00000080
-#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
-
 #define FILENAME_VALID_CHAR ( \
     PATH_CHAR_CLASS_LETTER      | \
     PATH_CHAR_CLASS_DOT         | \
@@ -103,13 +96,10 @@ UrlUnescapeAndFileNameCensorship(CStringW& str)
     DWORD cchPath = _countof(szPath);
     UrlUnescapeW(const_cast<LPWSTR>((LPCWSTR)str), szPath, &cchPath, 0);
 
-    for (auto& ch : szPath)
+    for (PWCHAR pch = szPath; *pch; ++pch)
     {
-        if (ch == 0)
-            break;
-
-        if (!PathIsValidCharW(ch, FILENAME_VALID_CHAR))
-            ch = L'_';
+        if (PathIsValidCharW(*pch, FILENAME_VALID_CHAR))
+            *pch = L'_';
     }
 
     str = szPath;
