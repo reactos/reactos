@@ -130,19 +130,19 @@ getCommandLineFromProcess(HANDLE hProcess)
     if (!cmdline)
         trace("!cmdline\n");
 
-    SIZE_T cchCmdLine = Params.CommandLine.Length;
-    if (!cchCmdLine)
-        trace("!cchCmdLine\n");
+    SIZE_T cbCmdLine = Params.CommandLine.Length;
+    if (!cbCmdLine)
+        trace("!cbCmdLine\n");
 
-    LPWSTR pszBuffer = (LPWSTR)calloc(cchCmdLine + 1, sizeof(WCHAR));
+    LPWSTR pszBuffer = (LPWSTR)calloc(cbCmdLine + sizeof(WCHAR), sizeof(WCHAR));
     if (!pszBuffer)
         trace("!pszBuffer\n");
 
-    ret = ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
+    ret = ReadProcessMemory(hProcess, cmdline, pszBuffer, cbCmdLine, NULL);
     if (!ret)
         trace("ReadProcessMemory failed (%ld)\n", GetLastError());
 
-    pszBuffer[cchCmdLine] = UNICODE_NULL;
+    pszBuffer[cbCmdLine / sizeof(WCHAR)] = UNICODE_NULL;
 
     return pszBuffer; // needs free()
 }
