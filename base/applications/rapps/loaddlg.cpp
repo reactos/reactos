@@ -982,11 +982,16 @@ CDownloadManager::ThreadFunc(LPVOID param)
         // run it
         if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
+            BOOL bZip = (lstrcmpiW(PathFindExtensionW(Path), L".zip") == 0);
+            CPath OpenPath = Path;
+            if (bZip)
+                OpenPath.RemoveFileSpec();
+
             SHELLEXECUTEINFOW shExInfo = {0};
             shExInfo.cbSize = sizeof(shExInfo);
             shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
             shExInfo.lpVerb = L"open";
-            shExInfo.lpFile = Path;
+            shExInfo.lpFile = OpenPath;
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
 
