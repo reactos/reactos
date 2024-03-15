@@ -985,7 +985,7 @@ CDownloadManager::ThreadFunc(LPVOID param)
             BOOL bZip = (lstrcmpiW(PathFindExtensionW(Path), L".zip") == 0);
             CPath OpenPath = Path;
             if (bZip)
-                OpenPath.RemoveFileSpec();
+                OpenPath.RemoveFileSpec(); // FIXME: Use "explore" verb if possible
 
             SHELLEXECUTEINFOW shExInfo = {0};
             shExInfo.cbSize = sizeof(shExInfo);
