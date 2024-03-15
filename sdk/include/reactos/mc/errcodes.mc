@@ -23,7 +23,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 LanguageNames=(English=0x409:MSG00409
                Russian=0x419:MSG00419
                Polish=0x415:MSG00415
-               Romanian=0x418:MSG00418)
+               Romanian=0x418:MSG00418
+               Japanese=0x411:MSG00411)
 
 MessageId=0
 Severity=Success
@@ -40,6 +41,9 @@ Operacja ukończona pomyślnie.
 .
 Language=Romanian
 Operația a fost finalizată cu succes.
+.
+Language=Japanese
+操作は正常に完了しました。
 .
 
 MessageId=1
@@ -58,6 +62,9 @@ Niepoprawna funkcja.
 Language=Romanian
 Funcție eronată.
 .
+Language=Japanese
+関数が正しくありません。
+.
 
 MessageId=2
 Severity=Success
@@ -74,6 +81,9 @@ Nie można odnaleźć określonego pliku.
 .
 Language=Romanian
 Fișierul specificat nu poate fi găsit.
+.
+Language=Japanese
+指定されたファイルが見つかりません。
 .
 
 MessageId=3
@@ -92,6 +102,9 @@ System nie może odnaleźć określonej ścieżki.
 Language=Romanian
 Calea specificată nu a fost găsită.
 .
+Language=Japanese
+指定されたパスが見つかりません。
+.
 
 MessageId=4
 Severity=Success
@@ -108,6 +121,9 @@ System nie może otworzyć tego pliku.
 .
 Language=Romanian
 Fișierul nu poate fi deschis.
+.
+Language=Japanese
+システムがファイルを開けません。
 .
 
 MessageId=5
@@ -126,6 +142,9 @@ Odmowa dostępu.
 Language=Romanian
 Acces respins.
 .
+Language=Japanese
+アクセスが拒否されました。
+.
 
 MessageId=6
 Severity=Success
@@ -142,6 +161,9 @@ Nieprawidłowe dojście.
 .
 Language=Romanian
 Identificator de gestiune eronat.
+.
+Language=Japanese
+ハンドルが無効です。
 .
 
 MessageId=7
@@ -160,6 +182,9 @@ Bloki kontroli magazynu zostały zniszczone.
 Language=Romanian
 Blocurile de control al stocării au fost deteriorate.
 .
+Language=Japanese
+ストレージ制御ブロックが破壊されました。
+.
 
 MessageId=8
 Severity=Success
@@ -176,6 +201,9 @@ W magazynie brak miejsca dla wykonania tego polecenia.
 .
 Language=Romanian
 Spațiul de stocare disponibil este insuficient pentru procesarea acestei comanzi.
+.
+Language=Japanese
+このコマンドを処理するのに十分なメモリ リソースがありません。
 .
 
 MessageId=9
@@ -194,6 +222,9 @@ Adres bloku kontroli magazynu jest nieprawidłowy.
 Language=Romanian
 Adresa blocului de control al stocării nu este validă.
 .
+Language=Japanese
+ストレージ コントロール ブロック アドレスが無効です。
+.
 
 MessageId=10
 Severity=Success
@@ -210,6 +241,9 @@ Language=Polish
 .
 Language=Romanian
 Mediul current nu corespunde.
+.
+Language=Japanese
+環境が不正です。
 .
 
 MessageId=11
@@ -228,6 +262,9 @@ Próbowano załadować program w niepoprawnym formacie.
 Language=Romanian
 Program cu format necorespunzător.
 .
+Language=Japanese
+不正なフォーマットでプログラムをロードしようとしました。
+.
 
 MessageId=12
 Severity=Success
@@ -244,6 +281,9 @@ Nieprawidłowy kod dostępu.
 .
 Language=Romanian
 Codul de acces nu este valid.
+.
+Language=Japanese
+アクセス コードが無効です。
 .
 
 MessageId=13
@@ -262,6 +302,9 @@ Nieprawidłowe dane.
 Language=Romanian
 Date nevalide.
 .
+Language=Japanese
+データが無効です。
+.
 
 MessageId=14
 Severity=Success
@@ -278,6 +321,9 @@ W magazynie brak miejsca dla wykonania tej operacji.
 .
 Language=Romanian
 Spațiul de stocare disponibil este insuficient pentru completarea acestei operații.
+.
+Language=Japanese
+この操作を完了するのに十分なメモリ リソースがありません。
 .
 
 MessageId=15
@@ -296,6 +342,9 @@ Nie można odnaleźć dysku.
 Language=Romanian
 Unitatea de stocare specificată a fost găsită.
 .
+Language=Japanese
+指定されたドライブが見つかりません。
+.
 
 MessageId=16
 Severity=Success
@@ -312,6 +361,9 @@ Nie można usunąć katalogu.
 .
 Language=Romanian
 Directorul nu poate fi eliminat.
+.
+Language=Japanese
+ディレクトリを削除できません。
 .
 
 MessageId=17
@@ -330,6 +382,9 @@ Nie można przenieść pliku na inny dysk.
 Language=Romanian
 Fișierul nu poate fi mutat pe o altă unitate de stocare.
 .
+Language=Japanese
+システムはファイルを別のディスク ドライブに移動できません。
+.
 
 MessageId=18
 Severity=Success
@@ -346,6 +401,9 @@ Brak dalszych plików.
 .
 Language=Romanian
 Fișierul nu poate fi mutat pe o altă unitate de stocare.
+.
+Language=Japanese
+ファイルがありません。
 .
 
 MessageId=19
@@ -364,6 +422,9 @@ Nośnik jest zabezpieczony przed zapisem.
 Language=Romanian
 Mediul de stocare este protejat la scriere.
 .
+Language=Japanese
+メディアが書き込み保護されています。
+.
 
 MessageId=20
 Severity=Success
@@ -380,6 +441,9 @@ Nie można odnaleźć urządzenia.
 .
 Language=Romanian
 Dispozitivul specificat a fost găsit.
+.
+Language=Japanese
+指定されたデバイスが見つかりません。
 .
 
 MessageId=21
@@ -398,6 +462,9 @@ Urządzenie nie jest gotowe.
 Language=Romanian
 Dispozitivul nu este disponibil.
 .
+Language=Japanese
+デバイスの準備ができていません。
+.
 
 MessageId=22
 Severity=Success
@@ -414,6 +481,9 @@ Urządzenie nie rozpoznaje polecenia.
 .
 Language=Romanian
 Dispozitivul nu recunoaște comanda.
+.
+Language=Japanese
+デバイスがコマンドを認識しません。
 .
 
 MessageId=23
@@ -432,6 +502,9 @@ Błąd danych (CRC).
 Language=Romanian
 Eroare de date (sumă de control necorespunzătoare).
 .
+Language=Japanese
+データエラー (巡回冗長検査) です。
+.
 
 MessageId=24
 Severity=Success
@@ -448,6 +521,9 @@ Program wydał polecenie, ale długość polecenia jest niepoprawna.
 .
 Language=Romanian
 Comanda emisă de program are o lungime necorespunzătoare.
+.
+Language=Japanese
+プログラムがコマンドを発行しましたが、コマンド長が正しくありません。
 .
 
 MessageId=25
@@ -466,6 +542,9 @@ Nie można odnaleźć na dysku określonego obszaru lub ścieżki.
 Language=Romanian
 Unitatea de stocare nu poate localiza o anumită zonă sau pistă de pe disc.
 .
+Language=Japanese
+ドライブがディスク上の特定の領域またはトラックを検索できません。
+.
 
 MessageId=26
 Severity=Success
@@ -482,6 +561,9 @@ Nie można uzyskać dostępu do określonego dysku lub dyskietki.
 .
 Language=Romanian
 Discul dur sau flexibil specificat nu poate fi accesat.
+.
+Language=Japanese
+指定されたディスクまたはディスケットにアクセスできません。
 .
 
 MessageId=27
@@ -500,6 +582,9 @@ Nie można odnaleźć na dysku żądanego sektora.
 Language=Romanian
 Unitatea de stocare nu poate găsi sectorul solicitat.
 .
+Language=Japanese
+ドライブが要求されたセクタを見つけることができません。
+.
 
 MessageId=28
 Severity=Success
@@ -516,6 +601,9 @@ Brak papieru w drukarce.
 .
 Language=Romanian
 Imprimanta nu mai are hârtie.
+.
+Language=Japanese
+プリンタの用紙がありません。
 .
 
 MessageId=29
@@ -534,6 +622,9 @@ System nie może zapisywać do określonego urządzenia.
 Language=Romanian
 Imprimanta nu mai are hârtie.
 .
+Language=Japanese
+システムは指定されたデバイスに書き込めません。
+.
 
 MessageId=30
 Severity=Success
@@ -550,6 +641,9 @@ System nie może czytać z określonego urządzenia.
 .
 Language=Romanian
 Eșec la citirea de pe dispozitivul specificat.
+.
+Language=Japanese
+指定されたデバイスから読み取ることができません。
 .
 
 MessageId=31
@@ -568,6 +662,9 @@ Urządzenie dołączone do komputera nie działa.
 Language=Romanian
 Dispozitivul atașat nu funcționează.
 .
+Language=Japanese
+システムに接続されたデバイスが機能していません。
+.
 
 MessageId=32
 Severity=Success
@@ -584,6 +681,9 @@ Proces nie może uzyskać dostępu do pliku, ponieważ jest on używany przez in
 .
 Language=Romanian
 Fișierul nu poate fi accesat în acest proces deoarece este utilizat într-un alt proces.
+.
+Language=Japanese
+他のプロセスによって使用されているため、プロセスはファイルにアクセスできません。
 .
 
 MessageId=33
@@ -602,6 +702,9 @@ Proces nie może uzyskać dostępu do pliku, ponieważ inny proces zablokował j
 Language=Romanian
 Fișierul nu poate fi accesat în acest proces deoarece o porțiune a sa a fost blocată într-un alt proces.
 .
+Language=Japanese
+他のプロセスがファイルの一部をロックしたため、プロセスがファイルにアクセスできません。
+.
 
 MessageId=34
 Severity=Success
@@ -618,6 +721,9 @@ W stacji umieszczono niewłaściwą dyskietkę. Włóż dysk %2 (numer seryjny w
 .
 Language=Romanian
 Discul flexibil din unitate nu este necorespunzător. Introduceți %2 (Număr Serial de Volum: %3) în unitatea %1.
+.
+Language=Japanese
+誤ったディスケットがドライブに入っています。ドライブ %1 に %2 (ボリューム シリアル番号: %3)  を挿入してください。
 .
 
 MessageId=36
@@ -636,6 +742,9 @@ Za dużo plików otwartych do udostępniania.
 Language=Romanian
 Numărul de fișiere deschise pentru partajare este prea mare.
 .
+Language=Japanese
+共有で開いているファイルが多すぎます。
+.
 
 MessageId=38
 Severity=Success
@@ -652,6 +761,9 @@ Osiągnięto koniec pliku.
 .
 Language=Romanian
 Sfârșitul fișierului a fost atins.
+.
+Language=Japanese
+ファイルの最後に到達しました。
 .
 
 MessageId=39
@@ -670,6 +782,9 @@ Dysk jest zapełniony.
 Language=Romanian
 Discul este plin.
 .
+Language=Japanese
+ディスクがいっぱいです。
+.
 
 MessageId=50
 Severity=Success
@@ -686,6 +801,9 @@ Language=Polish
 .
 Language=Romanian
 Solicitarea nu este acceptată.
+.
+Language=Japanese
+そのリクエストはサポートされていません。
 .
 
 MessageId=51
@@ -704,6 +822,9 @@ System ReactOS nie może odnaleźć ścieżki sieciowej. Sprawdź, czy ścieżka
 Language=Romanian
 Calea în rețea nu a fost găsită. Asigurați-vă că este corectă și că destinația în rețea este disponibilă fizic. Dacă veți întâmpina această problemă în continuare, contactați administratorul de rețea.
 .
+Language=Japanese
+ReactOSでネットワークパスが見つかりません。ネットワークパスが正しく、宛先コンピュータがビジー状態または電源オフになっていないことを確認します。それでもReactOSがネットワークパスを見つけられない場合は、ネットワーク管理者に連絡してください。
+.
 
 MessageId=52
 Severity=Success
@@ -720,6 +841,9 @@ Połączenie nie zostało nawiązane, ponieważ w sieci istnieje duplikat nazwy.
 .
 Language=Romanian
 Nu poate fi realizată o conexiune deoarece un nume duplicat există deja în rețea. Puteți schimba numele calculatorului din Proprietăți pentru Sistem (în Panoul de Control) înainte de a reîncerca.
+.
+Language=Japanese
+ネットワーク上に重複した名前が存在するため、接続できませんでした。ドメインに参加している場合は、コントロールパネルの[システム]でコンピュータ名を変更し、再試行してください。ワークグループに参加している場合は、別のワークグループ名を選択してください。
 .
 
 MessageId=53
@@ -738,6 +862,9 @@ Nie można odnaleźć ścieżki sieciowej.
 Language=Romanian
 Calea în rețea a fost găsită.
 .
+Language=Japanese
+ネットワークパスが見つかりませんでした。
+.
 
 MessageId=54
 Severity=Success
@@ -754,6 +881,9 @@ Sieć jest zajęta.
 .
 Language=Romanian
 Rețeaua este ocupată.
+.
+Language=Japanese
+ネットワークがビジーです。
 .
 
 MessageId=55
@@ -772,6 +902,9 @@ Określone zasoby sieciowe lub urządzenie są już niedostępne.
 Language=Romanian
 Dispozitivul specificat sau resursa în rețea nu mai este disponibilă.
 .
+Language=Japanese
+指定されたネットワークリソースまたはデバイスは使用できなくなりました。
+.
 
 MessageId=56
 Severity=Success
@@ -788,6 +921,9 @@ Osiągnięto limit poleceń systemu BIOS dla sieci.
 .
 Language=Romanian
 Limita pentru comanda BIOS de rețea a fost atinsă.
+.
+Language=Japanese
+ネットワーク BIOS コマンドの上限に達しました。
 .
 
 MessageId=57
@@ -806,6 +942,9 @@ Wystąpił błąd sprzętowy karty sieciowej.
 Language=Romanian
 Dispozitivul de rețea a raportat o eroare.
 .
+Language=Japanese
+ネットワーク アダプタのハードウェア エラーが発生しました。
+.
 
 MessageId=58
 Severity=Success
@@ -822,6 +961,9 @@ Określony serwer nie może wykonać żądanej operacji.
 .
 Language=Romanian
 Serverul specificat nu poate îndeplini operația solicitată.
+.
+Language=Japanese
+指定されたサーバーは要求された操作を実行できません。
 .
 
 MessageId=59
@@ -840,6 +982,9 @@ Wystąpił nieoczekiwany błąd sieciowy.
 Language=Romanian
 Eroare neașteptată de rețea.
 .
+Language=Japanese
+予期しないネットワーク エラーが発生しました。
+.
 
 MessageId=60
 Severity=Success
@@ -856,6 +1001,9 @@ Zdalna karta sieciowa jest niezgodna.
 .
 Language=Romanian
 Adaptor de rețea necompatibil.
+.
+Language=Japanese
+リモート アダプタに互換性がありません。
 .
 
 MessageId=61
@@ -874,6 +1022,9 @@ Kolejka wydruku jest zapełniona.
 Language=Romanian
 Lista comenzilor de imprimare este plină.
 .
+Language=Japanese
+プリンタキューがいっぱいです。
+.
 
 MessageId=62
 Severity=Success
@@ -890,6 +1041,9 @@ Na serwerze nie ma miejsca na przechowywanie pliku oczekującego na wydruk.
 .
 Language=Romanian
 Serviciul de imprimare nu mai dispune de spațiu pentru fișierele în așteptare.
+.
+Language=Japanese
+印刷待機中のファイルを保存する領域がサーバーにありません。
 .
 
 MessageId=63
@@ -908,6 +1062,9 @@ Plik oczekujący na wydruk został usunięty.
 Language=Romanian
 Fișierul dvs. în așteptarea imprimării a fost eliminat.
 .
+Language=Japanese
+印刷待機中のファイルが削除されました。
+.
 
 MessageId=64
 Severity=Success
@@ -924,6 +1081,9 @@ Określona nazwa sieciowa już jest niedostępna.
 .
 Language=Romanian
 Numele de rețea specificat nu mai este disponibil.
+.
+Language=Japanese
+指定されたネットワーク名は使用できなくなりました。
 .
 
 MessageId=65
@@ -942,6 +1102,9 @@ Odmowa dostępu do sieci.
 Language=Romanian
 Accesul la rețea este respins.
 .
+Language=Japanese
+ネットワークアクセスが拒否されました。
+.
 
 MessageId=66
 Severity=Success
@@ -958,6 +1121,9 @@ Typ zasobu sieciowego jest niepoprawny.
 .
 Language=Romanian
 Tipul resursei de rețea nu este corespunzător.
+.
+Language=Japanese
+ネットワークリソースのタイプが正しくありません。
 .
 
 MessageId=67
@@ -976,6 +1142,9 @@ Nie można odnaleźć nazwy sieciowej.
 Language=Romanian
 Numele de rețea nu este găsit.
 .
+Language=Japanese
+ネットワーク名が見つかりません。
+.
 
 MessageId=68
 Severity=Success
@@ -992,6 +1161,9 @@ Przekroczono ograniczenie nazwy dla karty sieci lokalnej komputera.
 .
 Language=Romanian
 Limita pentru numele plăcii adaptorului de rețea al calculatorului local a fost depășită.
+.
+Language=Japanese
+ローカル コンピュータのネットワーク アダプタ カードの名前の制限を超えました。
 .
 
 MessageId=69
@@ -1010,6 +1182,9 @@ Przekroczono limit sesji systemu BIOS dla sieci.
 Language=Romanian
 Limita pentru sesiunea BIOS de rețea a fost depășită.
 .
+Language=Japanese
+ネットワークBIOSセッションの制限を超えました。
+.
 
 MessageId=70
 Severity=Success
@@ -1026,6 +1201,9 @@ Zdalny serwer przerwał pracę lub jest w trakcie procesu uruchamiania.
 .
 Language=Romanian
 Serverul accesat la distanță fie este în pauză fie este în curs de repornire.
+.
+Language=Japanese
+リモートサーバーが一時停止されたか、起動中です。
 .
 
 MessageId=71
@@ -1044,6 +1222,9 @@ Do tego komputera zdalnego nie można obecnie uzyskać więcej połączeń, poni
 Language=Romanian
 Calculatorul accesat la distanță nu acceptă mai multe conexiuni deoarece limita în acest sens a fost deja atinsă.
 .
+Language=Japanese
+このコンピュータが受け入れられるだけの接続がすでにあるため、現時点ではこのリモートコンピュータにこれ以上接続できません。
+.
 
 MessageId=72
 Severity=Success
@@ -1060,6 +1241,9 @@ Określona drukarka lub urządzenie przerwały pracę.
 .
 Language=Romanian
 Dispozitivul de disc sau imprimanta specificată este în pauză.
+.
+Language=Japanese
+指定されたプリンタまたはディスクデバイスが一時停止しました。
 .
 
 MessageId=80
@@ -1078,6 +1262,9 @@ Plik istnieje.
 Language=Romanian
 Fișierul există.
 .
+Language=Japanese
+ファイルが存在します。
+.
 
 MessageId=82
 Severity=Success
@@ -1094,6 +1281,9 @@ Nie można utworzyć katalogu lub pliku.
 .
 Language=Romanian
 Fișierul sau directorul dat nu poate fi creat.
+.
+Language=Japanese
+ディレクトリまたはファイルを作成できません。
 .
 
 MessageId=83
@@ -1112,6 +1302,9 @@ Błąd przerwania INT 24.
 Language=Romanian
 Eroare la INT 24.
 .
+Language=Japanese
+INT 24で失敗しました。
+.
 
 MessageId=84
 Severity=Success
@@ -1128,6 +1321,9 @@ Pamięć do przetworzenia tego żądania jest niedostępna.
 .
 Language=Romanian
 Necesarul de spațiu pentru această solicitare nu este disponibil.
+.
+Language=Japanese
+この要求を処理するストレージがありません。
 .
 
 MessageId=85
@@ -1146,6 +1342,9 @@ Nazwa lokalnego urządzenia jest już w użyciu.
 Language=Romanian
 Acest nume de dispozitiv local este deja în uz.
 .
+Language=Japanese
+ローカルデバイス名はすでに使用中です。
+.
 
 MessageId=86
 Severity=Success
@@ -1162,6 +1361,9 @@ Określone hasło sieciowe jest niepoprawne.
 .
 Language=Romanian
 Parola specificată de rețea nu este corectă.
+.
+Language=Japanese
+指定されたネットワークパスワードが正しくありません。
 .
 
 MessageId=87
@@ -1180,6 +1382,9 @@ Parametr jest niepoprawny.
 Language=Romanian
 Parametru necorespunzător.
 .
+Language=Japanese
+パラメータが不正です。
+.
 
 MessageId=88
 Severity=Success
@@ -1196,6 +1401,9 @@ Wystąpił błąd zapisu w sieci.
 .
 Language=Romanian
 Eroare de scriere în rețea.
+.
+Language=Japanese
+ネットワークで書き込みエラーが発生しました。
 .
 
 MessageId=89
@@ -1214,6 +1422,9 @@ System nie może teraz uruchomić innego procesu.
 Language=Romanian
 La moment în sistem nu pot fi lansate noi procese.
 .
+Language=Japanese
+システムは現時点で別のプロセスを開始できません。
+.
 
 MessageId=100
 Severity=Success
@@ -1230,6 +1441,9 @@ Nie można utworzyć innego semafora systemowego.
 .
 Language=Romanian
 Un semafor nou de sistem nu poate fi creat.
+.
+Language=Japanese
+別のシステム セマフォを作成できません。
 .
 
 MessageId=101
@@ -1248,6 +1462,9 @@ Semafor wyłączny jest własnością innego procesu.
 Language=Romanian
 Semaforul exclusiv aparține unui alt proces.
 .
+Language=Japanese
+排他セマフォが他のプロセスによって所有されています。
+.
 
 MessageId=102
 Severity=Success
@@ -1264,6 +1481,9 @@ Semafor jest ustawiony i nie można go zamknąć.
 .
 Language=Romanian
 Semaforul este activ și nu poate fi închis.
+.
+Language=Japanese
+セマフォが設定されていて閉じることができない
 .
 
 MessageId=103
@@ -1282,6 +1502,9 @@ Nie można ponownie zamknąć semafora.
 Language=Romanian
 Semaforul nu poate fi reactivat.
 .
+Language=Japanese
+セマフォを再び設定できません。
+.
 
 MessageId=104
 Severity=Success
@@ -1298,6 +1521,9 @@ Nie można żądać semaforów wyłącznych w czasie przerwania.
 .
 Language=Romanian
 Cererea de acces exclusiv la semafoare nu este permisă în timpul unei întreruperi.
+.
+Language=Japanese
+割り込み時に排他セマフォを要求できません。
 .
 
 MessageId=105
@@ -1316,6 +1542,9 @@ Poprzednia przynależność tego semafora skończyła się.
 Language=Romanian
 Apartenența acestui semafor la procesul său a luat sfârșit.
 .
+Language=Japanese
+このセマフォの以前の所有権は終了しました。
+.
 
 MessageId=106
 Severity=Success
@@ -1332,6 +1561,9 @@ Włóż dyskietkę do stacji dysków %1.
 .
 Language=Romanian
 Introduceți discul flexibil pentru unitatea %1.
+.
+Language=Japanese
+ドライブ %1 用のディスケットを挿入してください。
 .
 
 MessageId=107
@@ -1350,6 +1582,9 @@ Program przestał działać, ponieważ nie włożono innej dyskietki.
 Language=Romanian
 Programul a fost oprit deoarece nu a fost introdus un disc flexibil alternativ.
 .
+Language=Japanese
+代替ディスケットが挿入されていないため、プログラムが停止しました。
+.
 
 MessageId=108
 Severity=Success
@@ -1366,6 +1601,9 @@ Dysk jest w użyciu lub zablokowany przez inny proces.
 .
 Language=Romanian
 Discul este în uz sau este blocat de un alt proces.
+.
+Language=Japanese
+ディスクが使用中か、他のプロセスによってロックされています。
 .
 
 MessageId=109
@@ -1384,6 +1622,9 @@ Potok został zakończony.
 Language=Romanian
 Canalul a fost închis.
 .
+Language=Japanese
+パイプが終了しました。
+.
 
 MessageId=110
 Severity=Success
@@ -1400,6 +1641,9 @@ System nie może otworzyć określonego urządzenia lub pliku.
 .
 Language=Romanian
 Dispozitivul sau fișierul specificat nu poate fi deschis.
+.
+Language=Japanese
+システムは指定されたデバイスまたはファイルを開けません。
 .
 
 MessageId=111
@@ -1418,6 +1662,9 @@ Nazwa pliku jest za długa.
 Language=Romanian
 Numele de fișier este prea lung.
 .
+Language=Japanese
+ファイル名が長すぎます。
+.
 
 MessageId=112
 Severity=Success
@@ -1434,6 +1681,9 @@ Za mało miejsca na dysku.
 .
 Language=Romanian
 Nu mai este spațiu suficient pe disc.
+.
+Language=Japanese
+ディスクに十分な空き容量がありません。
 .
 
 MessageId=113
@@ -1452,6 +1702,9 @@ Brak dostępnych wewnętrznych identyfikatorów plików.
 Language=Romanian
 Nu mai sunt disponibili identificatori interni de fișier.
 .
+Language=Japanese
+使用可能な内部ファイル識別子がありません。
+.
 
 MessageId=114
 Severity=Success
@@ -1468,6 +1721,9 @@ Wewnętrzny identyfikator pliku docelowego jest niepoprawny.
 .
 Language=Romanian
 Identificatorul intern de fișier țintă este necorespunzător.
+.
+Language=Japanese
+対象の内部ファイル識別子が不正です。
 .
 
 MessageId=117
@@ -1486,6 +1742,9 @@ Wywołanie IOCTL wykonane przez program aplikacji jest niepoprawne.
 Language=Romanian
 Apelul IOCTL efectuat de programul aplicație nu este corespunzător.
 .
+Language=Japanese
+アプリケーション プログラムが行った IOCTL コールが正しくありません。
+.
 
 MessageId=118
 Severity=Success
@@ -1502,6 +1761,9 @@ Wartość parametru przełącznika sprawdź-przy-zapisie jest niepoprawna.
 .
 Language=Romanian
 Valoarea parametrului de verificare la scriere nu este corespunzătoare.
+.
+Language=Japanese
+ベリファイ オン ライトのスイッチパラメータ値が正しくありません。
 .
 
 MessageId=119
@@ -1520,6 +1782,9 @@ System nie obsługuje żądanego polecenia.
 Language=Romanian
 Comanda solicitată nu este acceptată.
 .
+Language=Japanese
+システムは要求されたコマンドをサポートしていません。
+.
 
 MessageId=120
 Severity=Success
@@ -1536,6 +1801,9 @@ Ta funkcja nie jest obsługiwana w tym systemie.
 .
 Language=Romanian
 Această funcție nu este acceptată în acest sistem.
+.
+Language=Japanese
+この機能はこのシステムではサポートされていません。
 .
 
 MessageId=121
@@ -1554,6 +1822,9 @@ Przekroczono limit czasu semafora.
 Language=Romanian
 Perioada de valabilitate a semaforului a expirat.
 .
+Language=Japanese
+セマフォのタイムアウト期間が切れました。
+.
 
 MessageId=122
 Severity=Success
@@ -1570,6 +1841,9 @@ Obszar danych przekazany do wywołania systemowego jest za mały.
 .
 Language=Romanian
 Zona de date pasată unui apelul de sistem este prea mică.
+.
+Language=Japanese
+システムコールに渡されたデータ領域が小さすぎます。
 .
 
 MessageId=123
@@ -1588,6 +1862,9 @@ Nazwa pliku, nazwa katalogu lub składnia etykiety woluminu jest niepoprawna.
 Language=Romanian
 Zona de date pasată unui apelul de sistem este prea mică.
 .
+Language=Japanese
+ファイル名、ディレクトリ名、またはボリューム ラベルの構文が正しくありません。
+.
 
 MessageId=124
 Severity=Success
@@ -1604,6 +1881,9 @@ Poziom wywołania systemowego jest niepoprawny.
 .
 Language=Romanian
 Nivelul apelului de sistem nu este corespunzător.
+.
+Language=Japanese
+システム コール レベルが正しくありません。
 .
 
 MessageId=125
@@ -1622,6 +1902,9 @@ Dysk nie ma etykiety woluminu.
 Language=Romanian
 Discul nu are etichetă de volum.
 .
+Language=Japanese
+ディスクにボリューム ラベルがありません。
+.
 
 MessageId=126
 Severity=Success
@@ -1638,6 +1921,9 @@ Nie można odnaleźć określonego modułu.
 .
 Language=Romanian
 Modulul specificat nu a fost găsit.
+.
+Language=Japanese
+指定されたモジュールが見つかりません。
 .
 
 MessageId=127
@@ -1656,6 +1942,9 @@ Nie można odnaleźć określonej procedury.
 Language=Romanian
 Procedura specificată nu a fost găsită.
 .
+Language=Japanese
+指定されたプロシージャが見つかりません。
+.
 
 MessageId=128
 Severity=Success
@@ -1672,6 +1961,9 @@ Nie ma procesów podrzędnych, na które trzeba by czekać.
 .
 Language=Romanian
 Nu a mai rămas de așteptat nici un sub-proces.
+.
+Language=Japanese
+待機する子プロセスがありません。
 .
 
 MessageId=129
@@ -1690,6 +1982,9 @@ Nie można uruchomić %1 w trybie Win32.
 Language=Romanian
 Aplicația «%1» nu poate fi lansată în mod Win32.
 .
+Language=Japanese
+%1 アプリケーションは Win32 モードで実行できません。
+.
 
 MessageId=130
 Severity=Success
@@ -1706,6 +2001,9 @@ Próbowano użyć dojścia do pliku do otwarcia partycji dysku dla operacji inne
 .
 Language=Romanian
 Încercare de a utiliza pentru o partiție de disc un identificator de gestiune de fișiere pentru operații în afara celor de acces brut de In/Ex.
+.
+Language=Japanese
+開いているディスク パーティションへのファイル ハンドルを生のディスク I/O 以外の操作に使用しようとしました。
 .
 
 MessageId=131
@@ -1724,6 +2022,9 @@ Wykonano próbę przesunięcia wskaźnika pliku przed początek pliku.
 Language=Romanian
 Încercare de a plasa un indicator de fișier către o valoare negativă.
 .
+Language=Japanese
+ファイルポインタをファイルの先頭より前に移動しようとしました。
+.
 
 MessageId=132
 Severity=Success
@@ -1740,6 +2041,9 @@ Wskaźnik plików nie może być ustawiony na określonym urządzeniu lub pliku.
 .
 Language=Romanian
 Indicatorul de fișier nu poate fi plasat pe fișierul sau dispozitivul specificat.
+.
+Language=Japanese
+指定されたデバイスまたはファイルにファイルポインタを設定できません。
 .
 
 MessageId=133
@@ -1758,6 +2062,9 @@ Polecenia JOIN lub SUBST nie mogą być użyte na dysku zawierającym poprzednio
 Language=Romanian
 O comandă JOIN sau SUBST nu poate fi lansată pentru o unitate de stocare care deja conține asocieri de alte unități de stocare.
 .
+Language=Japanese
+JOIN または SUBST コマンドは、以前に結合されたドライブを含むドライブには使用できません。
+.
 
 MessageId=134
 Severity=Success
@@ -1774,6 +2081,9 @@ Wykonano próbę użycia polecenia JOIN lub SUBST dla dysku, który został już
 .
 Language=Romanian
 Încercare de a lansa comanda JOIN sau SUBST pentru o unitate de stocare care deja a fost asociată.
+.
+Language=Japanese
+すでに結合されているドライブでJOINまたはSUBSTコマンドを使用しようとしました。
 .
 
 MessageId=135
@@ -1792,6 +2102,9 @@ Wykonano próbę użycia polecenia JOIN lub SUBST na dysku, który uległ już p
 Language=Romanian
 Încercare de a lansa comanda JOIN sau SUBST pentru o unitate de stocare care a fost deja substituită.
 .
+Language=Japanese
+既に置換されているドライブで JOIN コマンドまたは SUBST コマンドを使用しようとしました。
+.
 
 MessageId=136
 Severity=Success
@@ -1808,6 +2121,9 @@ System próbował usunąć stan JOIN dysku, który nie jest sprzęgnięty (JOIN)
 .
 Language=Romanian
 Încercare de a elimina o unitate de stocare care nu este rezultat al unei asocieri.
+.
+Language=Japanese
+参加していないドライブの JOIN を削除しようとしました。
 .
 
 MessageId=137
@@ -1826,6 +2142,9 @@ System próbował usunąć podstawienie dysku, który nie uległ podstawieniu.
 Language=Romanian
 Încercare de a elimina o unitate de stocare care nu este un rezultat al unei substituții.
 .
+Language=Japanese
+システムは、置換されていないドライブの置換を削除しようとしました。
+.
 
 MessageId=138
 Severity=Success
@@ -1842,6 +2161,9 @@ System próbował sprzęgnąć dysk z katalogiem na dysku sprzęgniętym.
 .
 Language=Romanian
 Încercare de a asocia o unitate de stocare într-un director al unei unități de stocare asociate.
+.
+Language=Japanese
+システムは、結合されたドライブ上のディレクトリにドライブを結合しようとしました。
 .
 
 MessageId=139
@@ -1860,6 +2182,9 @@ System próbował dokonać podstawienia dysku przez katalog na dysku poddanym po
 Language=Romanian
 Încercare de substituție a unei unități de stocare într-un director al unei unități de stocare substituite.
 .
+Language=Japanese
+システムは、置換されたドライブ上のディレクトリにドライブを置換しようとしました。
+.
 
 MessageId=140
 Severity=Success
@@ -1876,6 +2201,9 @@ System próbował sprzęgnąć dysk z katalogiem na dysku poddanym podstawieniu.
 .
 Language=Romanian
 Încercare de asociere a unei unități de stocare la un director dintr-o unitate de stocare substituită.
+.
+Language=Japanese
+システムは、置換されたドライブ上のディレクトリにドライブを結合しようとしました。
 .
 
 MessageId=141
@@ -1894,6 +2222,9 @@ System próbował dokonać podstawienia dysku przez katalog na dysku sprzęgnię
 Language=Romanian
 Încercare de substituție a unei unități de stocare la un director dintr-o unitate de stocare asociată.
 .
+Language=Japanese
+システムは、結合されたドライブ上のディレクトリにドライブをサブストしようとしました。
+.
 
 MessageId=142
 Severity=Success
@@ -1910,6 +2241,9 @@ System nie może teraz wykonać polecenia JOIN ani SUBST.
 .
 Language=Romanian
 Deocamdată nu pot fi efectuate operații de asociere sau substituție.
+.
+Language=Japanese
+システムは現在 JOIN または SUBST を実行できません。
 .
 
 MessageId=143
@@ -1928,6 +2262,9 @@ System nie może sprzęgnąć lub dokonać podstawienia dysku (JOIN lub SUBST) p
 Language=Romanian
 O unitate de stocare la sau pentru un director de pe aceiași unitate de stocare nu poate fi asociată sau substituită.
 .
+Language=Japanese
+システムは、同じドライブ上のディレクトリに、または同じドライブ上のディレクトリを結合または置換できません。
+.
 
 MessageId=144
 Severity=Success
@@ -1944,6 +2281,9 @@ Katalog nie jest podkatalogiem katalogu głównego.
 .
 Language=Romanian
 Directorul nu este subdirector al directorului rădăcină.
+.
+Language=Japanese
+ディレクトリはルート ディレクトリのサブディレクトリではありません。
 .
 
 MessageId=145
@@ -1962,6 +2302,9 @@ Katalog nie jest pusty.
 Language=Romanian
 Directorul nu este gol.
 .
+Language=Japanese
+ディレクトリが空ではありません。
+.
 
 MessageId=146
 Severity=Success
@@ -1978,6 +2321,9 @@ Określona ścieżka jest używana w podstawieniu.
 .
 Language=Romanian
 Calea specificată este deja utilizată într-o substituție.
+.
+Language=Japanese
+指定されたパスが置換で使用されています。
 .
 
 MessageId=147
@@ -1996,6 +2342,9 @@ Za mało zasobów do przetworzenia tego polecenia.
 Language=Romanian
 Nu există suficiente resurse disponibile pentru a executa această comandă.
 .
+Language=Japanese
+このコマンドを処理するのに十分なリソースがありません。
+.
 
 MessageId=148
 Severity=Success
@@ -2012,6 +2361,9 @@ Nie można teraz użyć określonej ścieżki.
 .
 Language=Romanian
 Calea specificată nu poate fi utilizată deocamdată.
+.
+Language=Japanese
+指定されたパスは現在使用できません。
 .
 
 MessageId=149
@@ -2030,6 +2382,9 @@ Wykonano próbę sprzęgnięcia (JOIN) lub podstawienia (SUBST) dysku, dla któr
 Language=Romanian
 Încercare de a asocia sau substitui o unitate de stocare care conține un director substituit.
 .
+Language=Japanese
+ドライブ上のディレクトリが以前の置換の対象であるドライブに参加または置換しようとしました。
+.
 
 MessageId=150
 Severity=Success
@@ -2046,6 +2401,9 @@ Language=Polish
 .
 Language=Romanian
 În fișierul CONFIG.SYS nu sunt specificate informații de trasare pentru sistem, sau trasarea este dezactivată.
+.
+Language=Japanese
+システム トレース情報がCONFIG.SYSファイルで指定されていないか、トレースが許可されていません。
 .
 
 MessageId=151
@@ -2064,6 +2422,9 @@ Liczba określonych zdarzeń semafora dla DosMuxSemWait jest niepoprawna.
 Language=Romanian
 Numărul evenimentelor de semafor specificate pentru DosMuxSemWait nu este corespunzător.
 .
+Language=Japanese
+DosMuxSemWaitの指定されたセマフォ イベント数が正しくありません。
+.
 
 MessageId=152
 Severity=Success
@@ -2080,6 +2441,9 @@ Nie wykonano funkcji DosMuxSemWait; za dużo semaforów jest już ustawionych.
 .
 Language=Romanian
 DosMuxSemWait nu a fost lansat; deja sunt prea multe semafoare active.
+.
+Language=Japanese
+DosMuxSemWaitが実行されませんでした。すでに設定されているセマフォが多すぎます。
 .
 
 MessageId=153
@@ -2098,6 +2462,9 @@ Lista DosMuxSemWait jest niepoprawna.
 Language=Romanian
 Lista DosMuxSemWait nu este corespunzătoare.
 .
+Language=Japanese
+DosMuxSemWaitリストが正しくありません。
+.
 
 MessageId=154
 Severity=Success
@@ -2114,6 +2481,9 @@ Wprowadzona etykieta woluminu przekracza limit znaków etykiety docelowego syste
 .
 Language=Romanian
 Lungimea pentru eticheta de volum depășește limita corespunzătoare etichetei pentru sistemul de fișiere destinație.
+.
+Language=Japanese
+入力したボリュームラベルがターゲットファイルシステムのラベル文字数制限を超えています。
 .
 
 MessageId=155
@@ -2132,6 +2502,9 @@ Nie można utworzyć innego wątku.
 Language=Romanian
 Un alt fir de execuție nu poate fi creat.
 .
+Language=Japanese
+別のスレッドを作成できません。
+.
 
 MessageId=156
 Severity=Success
@@ -2148,6 +2521,9 @@ Proces odbiorczy odrzucił sygnał.
 .
 Language=Romanian
 Procesul recipient a refuzat semnalul.
+.
+Language=Japanese
+受け側のプロセスがシグナルを拒否しました。
 .
 
 MessageId=157
@@ -2166,6 +2542,9 @@ Segment jest już zarzucony i nie można go zablokować.
 Language=Romanian
 Segmentul deja a fost înlăturat și nu poate fi blocat.
 .
+Language=Japanese
+セグメントはすでに破棄されており、ロックできません。
+.
 
 MessageId=158
 Severity=Success
@@ -2182,6 +2561,9 @@ Segment jest już odblokowany.
 .
 Language=Romanian
 Segmentul deja este deblocat.
+.
+Language=Japanese
+セグメントはすでにアンロックされています。
 .
 
 MessageId=159
@@ -2200,6 +2582,9 @@ Adres identyfikatora wątku jest niepoprawny.
 Language=Romanian
 Adresa pentru ID de fir de execuție nu este corespunzător.
 .
+Language=Japanese
+スレッド ID のアドレスが正しくありません。
+.
 
 MessageId=160
 Severity=Success
@@ -2216,6 +2601,9 @@ Co najmniej jeden argument jest niepoprawny.
 .
 Language=Romanian
 Șirul de argumente pasat către DosExecPgm nu este corespunzător.
+.
+Language=Japanese
+1つ以上の引数が正しくありません。
 .
 
 MessageId=161
@@ -2234,6 +2622,9 @@ Określona ścieżka jest nieprawidłowa.
 Language=Romanian
 Calea specificată nu este validă.
 .
+Language=Japanese
+指定されたパスが無効です。
+.
 
 MessageId=162
 Severity=Success
@@ -2250,6 +2641,9 @@ Sygnał jest już w stanie oczekiwania.
 .
 Language=Romanian
 Semnalul deja este în așteptare.
+.
+Language=Japanese
+信号が既に保留されています。
 .
 
 MessageId=164
@@ -2268,6 +2662,9 @@ W systemie nie można utworzyć dalszych wątków.
 Language=Romanian
 Mai multe fire de execuție nu pot fi create.
 .
+Language=Japanese
+システム内にスレッドを作成できません。
+.
 
 MessageId=167
 Severity=Success
@@ -2284,6 +2681,9 @@ Nie można zablokować regionu pliku.
 .
 Language=Romanian
 O parte din fișier nu a putut fi blocată.
+.
+Language=Japanese
+ファイルの領域をロックできません。
 .
 
 MessageId=170
@@ -2302,6 +2702,9 @@ Language=Polish
 Language=Romanian
 Resursa solicitată este deja în uz.
 .
+Language=Japanese
+要求されたリソースは使用中です。
+.
 
 MessageId=173
 Severity=Success
@@ -2318,6 +2721,9 @@ Language=Polish
 .
 Language=Romanian
 Pentru zona de anulare furnizată există o cerere de blocare neadresată.
+.
+Language=Japanese
+供給されたキャンセル領域に対するロック要求が未処理です。
 .
 
 MessageId=174
@@ -2336,6 +2742,9 @@ System plików nie obsługuje zmian częściowych dotyczących typu blokady.
 Language=Romanian
 Sistemul de fișiere nu permite blocări pentru modificări atomice.
 .
+Language=Japanese
+ファイルシステムはロックタイプのアトミックな変更に対応していません。
+.
 
 MessageId=180
 Severity=Success
@@ -2352,6 +2761,9 @@ System wykrył niepoprawny numer segmentu.
 .
 Language=Romanian
 Un număr de segment a fost identificat ca fiind necorespunzător.
+.
+Language=Japanese
+正常でないセグメント番号が検出されました。
 .
 
 MessageId=182
@@ -2370,6 +2782,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 «%1» nu poate fi executat.
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=183
 Severity=Success
@@ -2386,6 +2801,9 @@ Nie można utworzyć pliku, który już istnieje.
 .
 Language=Romanian
 Nu poate fi creat un fișier când acesta deja există.
+.
+Language=Japanese
+ファイルが既に存在する場合はファイルを作成できません。
 .
 
 MessageId=186
@@ -2404,6 +2822,9 @@ Przekazana flaga jest niepoprawna.
 Language=Romanian
 Fanionul furnizat nu este corespunzător.
 .
+Language=Japanese
+渡されたフラグが正しくありません。
+.
 
 MessageId=187
 Severity=Success
@@ -2420,6 +2841,9 @@ Nie odnaleziono określonej nazwy semafora systemowego.
 .
 Language=Romanian
 Numele de semafor specificat nu a fost găsit.
+.
+Language=Japanese
+指定されたシステム セマフォ名が見つかりません。
 .
 
 MessageId=188
@@ -2438,6 +2862,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=189
 Severity=Success
@@ -2454,6 +2881,9 @@ System operacyjny nie może uruchomić %1.
 .
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
+.
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
 .
 
 MessageId=190
@@ -2472,6 +2902,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=191
 Severity=Success
@@ -2488,6 +2921,9 @@ Nie można uruchomić %1 w trybie Win32.
 .
 Language=Romanian
 «%1» nu poate fi lansată în mod Win32.
+.
+Language=Japanese
+Win32 モードで %1 を実行できません。
 .
 
 MessageId=192
@@ -2506,6 +2942,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=193
 Severity=Success
@@ -2522,6 +2961,9 @@ Language=Polish
 .
 Language=Romanian
 «%1» nu este o aplicație Win32.
+.
+Language=Japanese
+%1 は有効な Win32 アプリケーションではありません。
 .
 
 MessageId=194
@@ -2540,6 +2982,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=195
 Severity=Success
@@ -2556,6 +3001,9 @@ System operacyjny nie może uruchomić %1.
 .
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
+.
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
 .
 
 MessageId=196
@@ -2574,6 +3022,9 @@ System operacyjny nie może uruchomić tej aplikacji programu.
 Language=Romanian
 Aplicația program nu poate fi lansată.
 .
+Language=Japanese
+オペレーティング システムはこのアプリケーション プログラムを実行できません。
+.
 
 MessageId=197
 Severity=Success
@@ -2590,6 +3041,9 @@ System operacyjny nie jest obecnie skonfigurowany do uruchomienia tej aplikacji.
 .
 Language=Romanian
 Sistemul de operare nu este deocamdată configurat pentru a putea lansa această aplicație.
+.
+Language=Japanese
+オペレーティング システムは現在、このアプリケーションを実行するように構成されていません。
 .
 
 MessageId=198
@@ -2608,6 +3062,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=199
 Severity=Success
@@ -2624,6 +3081,9 @@ System operacyjny nie może uruchomić tej aplikacji programu.
 .
 Language=Romanian
 Aplicația program nu poate fi lansată.
+.
+Language=Japanese
+オペレーティング システムはこのアプリケーション プログラムを実行できません。
 .
 
 MessageId=200
@@ -2642,6 +3102,9 @@ Segment kodu nie może być większy niż lub równy 64 KB.
 Language=Romanian
 Lungimea codului de segment nu poate fi egală cu sau depăși 64 Кo.
 .
+Language=Japanese
+コードセグメントが 64K 以上ではありません。
+.
 
 MessageId=201
 Severity=Success
@@ -2658,6 +3121,9 @@ System operacyjny nie może uruchomić %1.
 .
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
+.
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
 .
 
 MessageId=202
@@ -2676,6 +3142,9 @@ System operacyjny nie może uruchomić %1.
 Language=Romanian
 Sistemul de operare nu poate lansa «%1».
 .
+Language=Japanese
+オペレーティング システムは %1 を実行できません。
+.
 
 MessageId=203
 Severity=Success
@@ -2692,6 +3161,9 @@ System nie mógł znaleźć opcji środowiska, która została wprowadzona.
 .
 Language=Romanian
 Opțiunea de mediu introdusă nu a fost găsită.
+.
+Language=Japanese
+入力された環境オプションが見つかりません。
 .
 
 MessageId=205
@@ -2710,6 +3182,9 @@ Language=Polish
 Language=Romanian
 Nici un proces din subarborele de comandă nu are un identificator de gestiune pentru semnale.
 .
+Language=Japanese
+コマンドのサブツリーにシグナル ハンドラを持つプロセスがありません。
+.
 
 MessageId=206
 Severity=Success
@@ -2726,6 +3201,9 @@ Nazwa pliku lub jej rozszerzenie są za długie.
 .
 Language=Romanian
 Lungimea numelui de fișier sau a extensiei sale este prea mare.
+.
+Language=Japanese
+ファイル名または拡張子が長すぎます。
 .
 
 MessageId=207
@@ -2744,6 +3222,9 @@ Stos ring 2 jest w użyciu.
 Language=Romanian
 Stiva pentru inelul 2 este în uz.
 .
+Language=Japanese
+リング2スタックが使用中です。
+.
 
 MessageId=208
 Severity=Success
@@ -2760,6 +3241,9 @@ Znaki globalne w nazwach plików, * lub ?, są niepoprawnie wprowadzone lub okre
 .
 Language=Romanian
 Fie are loc o utilizare greșită a caracterelor-mască «*» sau «?», fie sunt utilizate prea multe astfel de caractere.
+.
+Language=Japanese
+グローバル ファイル名で文字 * または ? が間違って入力されたか、グローバル ファイル名文字が多すぎます。
 .
 
 MessageId=209
@@ -2778,6 +3262,9 @@ Ogłaszany sygnał jest nieprawidłowy.
 Language=Romanian
 Semnalul postat nu este corespunzător.
 .
+Language=Japanese
+書き込まれた信号が正しくありません。
+.
 
 MessageId=210
 Severity=Success
@@ -2794,6 +3281,9 @@ Nie można ustawić programu obsługi sygnałów.
 .
 Language=Romanian
 Identificatorul de gestiune de semnale nu poate fi activat.
+.
+Language=Japanese
+シグナル ハンドラを設定できません。
 .
 
 MessageId=212
@@ -2812,6 +3302,9 @@ Segment jest zablokowany i nie można przydzielić go ponownie.
 Language=Romanian
 Segmentul este blocat și nu poate fi realocat.
 .
+Language=Japanese
+セグメントがロックされており、再割り当てできません。
+.
 
 MessageId=214
 Severity=Success
@@ -2828,6 +3321,9 @@ Do tego programu lub modułu dołączono za dużo modułów dołączanych dynami
 .
 Language=Romanian
 Către acest program sau modul dinamic au fost atașate prea multe module dinamice.
+.
+Language=Japanese
+このプログラムまたは動的リンク モジュールにアタッチされている動的リンク モジュールが多すぎます。
 .
 
 MessageId=215
@@ -2846,6 +3342,9 @@ Nie można zagnieżdżać wywołań funkcji LoadModule.
 Language=Romanian
 LoadModule nu poate conține apeluri imbricate.
 .
+Language=Japanese
+LoadModule への呼び出しをネストできません。
+.
 
 MessageId=216
 Severity=Success
@@ -2862,6 +3361,9 @@ Plik obrazu %1 jest prawidłowy, ale jest przeznaczony na komputer innego typu n
 .
 Language=Romanian
 Fișierul imagine «%1» este valid, însă nu pentru tipul mașinii de calcul curente.
+.
+Language=Japanese
+このバージョンの %1 は、実行している ReactOS のバージョンと互換性がありません。コンピュータのシステム情報を確認してから、ソフトウェア発行元に連絡してください。
 .
 
 MessageId=217
@@ -2880,6 +3382,9 @@ Plik obrazu %1 jest podpisany, nie można go zmodyfikować.
 Language=Romanian
 Fișierul imagine «%1» este semnat electronic, nu poate fi modificat.
 .
+Language=Japanese
+イメージファイル %1 は署名されています。
+.
 
 MessageId=218
 Severity=Success
@@ -2896,6 +3401,9 @@ Plik obrazu %1 ma silny podpis, nie można go zmodyfikować.
 .
 Language=Romanian
 Fișierul imagine «%1» este semnat electronic puternic, nu poate fi modificat.
+.
+Language=Japanese
+イメージ ファイル %1 は強く署名されています。
 .
 
 MessageId=230
@@ -2914,6 +3422,9 @@ Stan potoku jest nieprawidłowy.
 Language=Romanian
 Starea canalului nu este validă.
 .
+Language=Japanese
+パイプの状態が無効です。
+.
 
 MessageId=231
 Severity=Success
@@ -2930,6 +3441,9 @@ Wszystkie wystąpienia potoku są zajęte.
 .
 Language=Romanian
 Toate instanțele canalului sunt ocupate.
+.
+Language=Japanese
+すべてのパイプインスタンスがビジーです。
 .
 
 MessageId=232
@@ -2948,6 +3462,9 @@ Trwa zamykanie potoku.
 Language=Romanian
 Canalul este închis.
 .
+Language=Japanese
+パイプが閉じられています。
+.
 
 MessageId=233
 Severity=Success
@@ -2964,6 +3481,9 @@ Na drugim końcu potoku nie ma żadnego procesu.
 .
 Language=Romanian
 La celălalt capăt al canalului nu se află nici un proces.
+.
+Language=Japanese
+パイプのもう一方の端にプロセスがありません。
 .
 
 MessageId=234
@@ -2982,6 +3502,9 @@ Dostępnych jest więcej danych.
 Language=Romanian
 Sunt disponibile mai multe date.
 .
+Language=Japanese
+より多くのデータが利用可能です。
+.
 
 MessageId=240
 Severity=Success
@@ -2998,6 +3521,9 @@ Sesja została anulowana.
 .
 Language=Romanian
 Sesiunea a fost anulată.
+.
+Language=Japanese
+セッションがキャンセルされました。
 .
 
 MessageId=254
@@ -3016,6 +3542,9 @@ Określona nazwa atrybutu rozszerzonego jest nieprawidłowa.
 Language=Romanian
 Numele atributului extins care a fost specificat nu este corespunzător.
 .
+Language=Japanese
+指定された拡張属性名が無効です。
+.
 
 MessageId=255
 Severity=Success
@@ -3032,6 +3561,9 @@ Atrybuty rozszerzone są niezgodne.
 .
 Language=Romanian
 Atributele extinse nu sunt consistente.
+.
+Language=Japanese
+拡張属性に矛盾があります。
 .
 
 MessageId=258
@@ -3050,6 +3582,9 @@ Upłynął limit czasu operacji oczekiwania.
 Language=Romanian
 Operația de așteptare a expirat.
 .
+Language=Japanese
+待機操作はタイムアウトしました。
+.
 
 MessageId=259
 Severity=Success
@@ -3066,6 +3601,9 @@ Brak dalszych danych.
 .
 Language=Romanian
 Nu sunt disponibile mai multe date.
+.
+Language=Japanese
+使用可能なデータはありません。
 .
 
 MessageId=266
@@ -3084,6 +3622,9 @@ Nie można używać funkcji kopiowania.
 Language=Romanian
 Funcțiile de copiere nu pot fi utilizate.
 .
+Language=Japanese
+コピー関数は使用できません。
+.
 
 MessageId=267
 Severity=Success
@@ -3100,6 +3641,9 @@ Nazwa katalogu jest nieprawidłowa.
 .
 Language=Romanian
 Numele directorului nu este corespunzător.
+.
+Language=Japanese
+ディレクトリ名が無効です。
 .
 
 MessageId=275
@@ -3118,6 +3662,9 @@ Atrybuty rozszerzone nie zmieściły się w buforze.
 Language=Romanian
 Atributul extins nu a încăput în memorie.
 .
+Language=Japanese
+拡張属性がバッファに収まりませんでした。
+.
 
 MessageId=276
 Severity=Success
@@ -3134,6 +3681,9 @@ Plik atrybutów rozszerzonych w zainstalowanym systemie plików jest uszkodzony.
 .
 Language=Romanian
 Fișierul cu tabela de atribute extinse de pe sistemul de fișiere montat este deteriorat.
+.
+Language=Japanese
+マウントされたファイルシステムの拡張属性ファイルが壊れています。
 .
 
 MessageId=277
@@ -3152,6 +3702,9 @@ Tabela atrybutów rozszerzonych jest zapełniona.
 Language=Romanian
 Fișierul cu tabela de atribute extinse este plin.
 .
+Language=Japanese
+拡張属性テーブルファイルがいっぱいです。
+.
 
 MessageId=278
 Severity=Success
@@ -3168,6 +3721,9 @@ Określone dojście atrybutu rozszerzonego jest nieprawidłowe.
 .
 Language=Romanian
 Identificatorul de gestiune al atributului extins nu este valid.
+.
+Language=Japanese
+指定された拡張属性ハンドルが無効です。
 .
 
 MessageId=282
@@ -3186,6 +3742,9 @@ Zainstalowany system plików nie obsługuje atrybutów rozszerzonych.
 Language=Romanian
 Sistemul de fișiere atașat nu permite atribute extinse.
 .
+Language=Japanese
+マウントされたファイルシステムは拡張属性をサポートしていません。
+.
 
 MessageId=288
 Severity=Success
@@ -3202,6 +3761,9 @@ Próbowano zwolnić mutex nie będący własnością wywołującego.
 .
 Language=Romanian
 Tentativă de cedare a unui mutex în afara posesiei curente.
+.
+Language=Japanese
+呼び出し元が所有していないミューテックスを解放しようとしました。
 .
 
 MessageId=298
@@ -3220,6 +3782,9 @@ Wykonano za dużo przesłań do semafora.
 Language=Romanian
 Număr de plasamente peste limită adresate unui semafor.
 .
+Language=Japanese
+セマフォへのポストが多すぎます。
+.
 
 MessageId=299
 Severity=Success
@@ -3236,6 +3801,9 @@ Ukończono tylko część żądania ReadProcessMemory lub WriteProcessMemory.
 .
 Language=Romanian
 Cererea ReadProcessMemory sau WriteProcessMemory a fost îndeplinită doar parțial.
+.
+Language=Japanese
+ReadProcessMemoryまたはWriteProcessMemory要求の一部のみが完了しました。
 .
 
 MessageId=300
@@ -3254,6 +3822,9 @@ Odmowa żądania operacji oplock.
 Language=Romanian
 Cererea pentru blocare oportună (oplock) a fost respintă.
 .
+Language=Japanese
+オプロック要求が拒否されました。
+.
 
 MessageId=301
 Severity=Success
@@ -3270,6 +3841,9 @@ System odebrał nieprawidłowe potwierdzenie zablokowania operacji.
 .
 Language=Romanian
 Confirmarea primită pentru blocarea oportună (oplock) nu este validă.
+.
+Language=Japanese
+無効なオプロック承認がシステムによって受信されました。
 .
 
 MessageId=302
@@ -3288,6 +3862,9 @@ Wolumin jest zbyt pofragmentowany, aby ukończyć tę operację.
 Language=Romanian
 Volumul este prea fragmentat pentru a îndeplini această operație.
 .
+Language=Japanese
+ボリュームが断片化されているため、この操作を完了できません。
+.
 
 MessageId=303
 Severity=Success
@@ -3304,6 +3881,9 @@ Nie można otworzyć pliku, ponieważ trwa proces jego usuwania.
 .
 Language=Romanian
 Fișierul nu poate fi deschis deoarece este în curs de ștergere.
+.
+Language=Japanese
+ファイルは削除中なので開けません。
 .
 
 MessageId=317
@@ -3322,6 +3902,9 @@ System nie może znaleźć komunikatu dla numeru komunikatu 0x%1 w pliku komunik
 Language=Romanian
 Textul pentru mesajul cu numărul 0x%1 din fișierul de mesaja pentru %2 nu a putut fi găsit.
 .
+Language=Japanese
+%2 のメッセージ ファイルにメッセージ番号 0x%1 のメッセージ テキストが見つかりません。
+.
 
 MessageId=318
 Severity=Success
@@ -3338,6 +3921,9 @@ Nie można odnaleźć określonego zakresu.
 .
 Language=Romanian
 Domeniul de acțiune specificat nu a fost găsit.
+.
+Language=Japanese
+指定されたスコープが見つかりません。
 .
 
 MessageId=487
@@ -3356,6 +3942,9 @@ Próbowano uzyskać dostęp do nieprawidłowego adresu.
 Language=Romanian
 Tentativă de acces a unei adrese nevalide.
 .
+Language=Japanese
+無効なアドレスへのアクセスを試みました。
+.
 
 MessageId=534
 Severity=Success
@@ -3372,6 +3961,9 @@ Wynik arytmetyczny przekroczył 32 bity.
 .
 Language=Romanian
 Rezultatul aritmetic depășește 32 de biți.
+.
+Language=Japanese
+演算結果が32ビットを超えた。
 .
 
 MessageId=535
@@ -3390,6 +3982,9 @@ Na drugim końcu potoku jest proces.
 Language=Romanian
 La celălalt capăt al conectorului (pipe) deja există un proces.
 .
+Language=Japanese
+パイプの反対側にプロセスがある。
+.
 
 MessageId=536
 Severity=Success
@@ -3406,6 +4001,9 @@ Oczekiwanie na otwarcie przez proces drugiego końca potoku.
 .
 Language=Romanian
 Un proces este așteptat la capătul complementar al conectorului (pipe).
+.
+Language=Japanese
+パイプのもう一方の端を開くプロセスを待機している。
 .
 
 MessageId=537
@@ -3424,6 +4022,10 @@ Wystąpił błąd w podsystemie ACPI.
 Language=Romanian
 În subsistemul ACPI a apărut o eroare.
 .
+Language=Japanese
+ACPIサブシステムでエラーが発生しました。
+.
+
 
 MessageId=538
 Severity=Success
@@ -3440,6 +4042,9 @@ Wystąpił błąd w podsystemie ABIOS.
 .
 Language=Romanian
 În subsistemul ABIOS a apărut o eroare.
+.
+Language=Japanese
+ABIOSサブシステムでエラーが発生しました。
 .
 
 MessageId=539
@@ -3458,6 +4063,9 @@ Wystąpiło ostrzeżenie w podsystemie WX86.
 Language=Romanian
 Există un avertisment referitor la subsistemul WX86.
 .
+Language=Japanese
+WX86サブシステムで警告が発生しました。
+.
 
 MessageId=540
 Severity=Success
@@ -3474,6 +4082,9 @@ Wystąpił błąd w podsystemie WX86.
 .
 Language=Romanian
 În subsistemul WX86 a apărut o eroare.
+.
+Language=Japanese
+WX86サブシステムでエラーが発生しました。
 .
 
 MessageId=541
@@ -3492,6 +4103,9 @@ Podjęto próbę anulowania lub ustawienia czasomierza ze związaną procedurą 
 Language=Romanian
 A avut loc o încercare de a institui sau destitui un cronometru cu un APC asociat, însă firul de execuție nu este cel care a creat cronometrul cu APC asociat.
 .
+Language=Japanese
+関連する APC を持つタイマーをキャンセルまたは設定しようとしましたが、対象のスレッドは、関連する APC ルーチンを持つタイマーを最初に設定したスレッドではありません。
+.
 
 MessageId=542
 Severity=Success
@@ -3508,6 +4122,9 @@ Kod wyjątku operacji unwind.
 .
 Language=Romanian
 Eșec la deducția codului de eroare.
+.
+Language=Japanese
+巻き戻し例外コードです。
 .
 
 MessageId=543
@@ -3526,6 +4143,9 @@ Podczas operacji unwind napotkano nieprawidłowy lub niewyrównany stos.
 Language=Romanian
 Stivă nealiniată sau nevalidă în operația de deducție a unui cod de eroare.
 .
+Language=Japanese
+巻き戻し操作中に無効なスタックまたはアラインされていないスタックに遭遇しました。
+.
 
 MessageId=544
 Severity=Success
@@ -3542,6 +4162,9 @@ Podczas operacji unwind napotkano nieprawidłowy obiekt docelowy operacji.
 .
 Language=Romanian
 Destinație nevalidă în operația de deducție a unui cod de eroare.
+.
+Language=Japanese
+巻き戻し操作中に無効な巻き戻しターゲットに遭遇しました。
 .
 
 MessageId=545
@@ -3560,6 +4183,9 @@ Określono nieprawidłowe atrybuty obiektu dla NtCreatePort albo nieprawidłowe 
 Language=Romanian
 Atribute nevalide de obiect sau de port specificate către NtCreatePort sau respectiv NtConnectPort.
 .
+Language=Japanese
+NtCreatePort に指定されたオブジェクト属性が無効、または NtConnectPort に指定されたポート属性が無効です。
+.
 
 MessageId=546
 Severity=Success
@@ -3576,6 +4202,9 @@ Długość komunikatu przekazanego dla NtRequestPort lub NtRequestWaitReplyPort 
 .
 Language=Romanian
 Lungimea mesajului specificat în NtRequestPort sau NtRequestWaitReplyPort depășește limita maximă permisă de port.
+.
+Language=Japanese
+NtRequestPortまたはNtRequestWaitReplyPortに渡されたメッセージの長さが、ポートで許容される最大メッセージより長いです。
 .
 
 MessageId=547
@@ -3594,6 +4223,9 @@ Podjęto próbę obniżenia ograniczeń zasobów poniżej aktualnego wykorzystan
 Language=Romanian
 A avut loc o încercare de a scădea limita cotei sub cea utilizată.
 .
+Language=Japanese
+クォータ制限を現在の使用量より低くしようとしました。
+.
 
 MessageId=548
 Severity=Success
@@ -3610,6 +4242,9 @@ Podjęto próbę dołączenia do urządzenia, które było już dołączone do i
 .
 Language=Romanian
 A avut loc o încercare de a atașa un dispozitiv deja atașat de un alt dispozitiv.
+.
+Language=Japanese
+すでに別のデバイスにアタッチされているデバイスにアタッチしようとしました。
 .
 
 MessageId=549
@@ -3628,6 +4263,9 @@ Podjęto próbę wykonania instrukcji pod niewyrównanym adresem, a system hosta
 Language=Romanian
 A avut loc o încercare de a executa o instrucțiune de la o adresă nealiniată dar sistemul gazdă nu permite referințe la instrucțiuni nealiniate.
 .
+Language=Japanese
+非整列アドレスで命令を実行しようとしましたが、ホスト システムは非整列命令参照をサポートしていません。
+.
 
 MessageId=550
 Severity=Success
@@ -3644,6 +4282,9 @@ Nie rozpoczęto profilowania.
 .
 Language=Romanian
 Profilarea nu este pornită.
+.
+Language=Japanese
+プロファイリングが開始されていません。
 .
 
 MessageId=551
@@ -3662,6 +4303,9 @@ Nie zatrzymano profilowania.
 Language=Romanian
 Profiling not stopped.
 .
+Language=Japanese
+プロファイリングが停止していません。
+.
 
 MessageId=552
 Severity=Success
@@ -3678,6 +4322,9 @@ Przekazane ACL nie zawierało wymaganego minimum informacji.
 .
 Language=Romanian
 The passed ACL did not contain the minimum required information.
+.
+Language=Japanese
+渡されたACLに必要最低限の情報が含まれていません。
 .
 
 MessageId=553
@@ -3696,6 +4343,9 @@ Liczba aktywnych obiektów profilowania jest maksymalna i nie można uruchomić 
 Language=Romanian
 The number of active profiling objects is at the maximum and no more may be started.
 .
+Language=Japanese
+アクティブなプロファイリング オブジェクトの数が最大です。
+.
 
 MessageId=554
 Severity=Success
@@ -3712,6 +4362,9 @@ Wskazuje, że kontynuowanie operacji nie jest możliwe bez zablokowania jej dla 
 .
 Language=Romanian
 Used to indicate that an operation cannot continue without blocking for I/O.
+.
+Language=Japanese
+操作がI/Oのためにブロックされずに継続できないことを示すために使用されます。
 .
 
 MessageId=555
@@ -3730,6 +4383,9 @@ Wskazuje, że wątek próbował sam się zakończyć w domyślny sposób (tzw. N
 Language=Romanian
 Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
 .
+Language=Japanese
+スレッドがデフォルトで終了しようとし (NULLでNtTerminateThreadを呼び出し) 、それが現在のプロセスの最後のスレッドであったことを示します。
+.
 
 MessageId=556
 Severity=Success
@@ -3746,6 +4402,10 @@ Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filt
 .
 Language=Romanian
 If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+.
+Language=Japanese
+標準のFsRtlフィルタで定義されていないMMエラーが返された場合、フィルタで保証されている以下のエラーの1つに変換されます。
+この場合、情報は失われますが、フィルタは例外を正しく処理します。
 .
 
 MessageId=557
@@ -3764,6 +4424,10 @@ Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filt
 Language=Romanian
 If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
+Language=Japanese
+標準のFsRtlフィルタで定義されていないMMエラーが返された場合、フィルタで保証されている以下のエラーのいずれかに変換されます。
+この場合、情報は失われますが、フィルタは例外を正しく処理します。
+.
 
 MessageId=558
 Severity=Success
@@ -3780,6 +4444,10 @@ Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filt
 .
 Language=Romanian
 If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+.
+Language=Japanese
+標準のFsRtlフィルタで定義されていないMMエラーが返された場合、フィルタで保証されている以下のエラーのいずれかに変換されます。
+この場合、情報は失われますが、フィルタは例外を正しく処理します。
 .
 
 MessageId=559
@@ -3798,6 +4466,9 @@ Podczas operacji unwind napotkano wadliwie sformułowaną tabelę funkcji.
 Language=Romanian
 A malformed function table was encountered during an unwind operation.
 .
+Language=Japanese
+巻き戻し操作中に不正なファンクション テーブルが発生しました。
+.
 
 MessageId=560
 Severity=Success
@@ -3814,6 +4485,10 @@ Wskazuje, że podjęto próbę przypisania zabezpieczenia dla pliku lub katalogu
 .
 Language=Romanian
 Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
+.
+Language=Japanese
+ファイルシステムのファイルまたはディレクトリに保護を割り当てようとしたときに、セキュリティ記述子のSIDの1つをファイルシステムに格納できるGUIDに変換できなかったことを示します。
+このため、保護の試みが失敗し、ファイル作成の試みが失敗することがあります。
 .
 
 MessageId=561
@@ -3832,6 +4507,9 @@ Wskazuje, że podjęto próbę powiększenia LDT przez ustawienie rozmiaru, albo
 Language=Romanian
 Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
 .
+Language=Japanese
+LDTのサイズを設定してLDTを大きくしようとした、またはサイズがセレクタの偶数でなかったことを示します。
+.
 
 MessageId=563
 Severity=Success
@@ -3848,6 +4526,9 @@ Wskazuje, że początkowa wartość dla informacji LDT nie była całkowitą wie
 .
 Language=Romanian
 Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
+.
+Language=Japanese
+LDT情報の開始値がセレクタ サイズの整数倍でなかったことを示す。
 .
 
 MessageId=564
@@ -3866,6 +4547,9 @@ Wskazuje, że użytkownik podał nieprawidłowy deskryptor próbując ustawić d
 Language=Romanian
 Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
 .
+Language=Japanese
+LDTディスクリプタを設定しようとしたときに、ユーザーが無効なディスクリプタを提供したことを示します。
+.
 
 MessageId=565
 Severity=Success
@@ -3882,6 +4566,9 @@ Wskazuje, że proces ma zbyt wiele wątków, aby wykonać żądaną akcję. Na p
 .
 Language=Romanian
 Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
+.
+Language=Japanese
+プロセスに要求されたアクションを実行するスレッドが多すぎることを示します。例えば、プライマリ トークンの割り当ては、プロセスのスレッド数が0または1の場合にのみ実行できます。
 .
 
 MessageId=566
@@ -3900,6 +4587,9 @@ Podjęto próbę operowania na wątku w pewnym procesie, ale określony wątek n
 Language=Romanian
 An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
 .
+Language=Japanese
+特定のプロセス内のスレッドを操作しようとしましたが、指定されたスレッドは指定されたプロセス内にありません。
+.
 
 MessageId=567
 Severity=Success
@@ -3916,6 +4606,9 @@ Przekroczono ograniczenie rozmiaru pliku stronicowania.
 .
 Language=Romanian
 Page file quota was exceeded.
+.
+Language=Japanese
+ページファイルのクォータを超過しました。
 .
 
 MessageId=568
@@ -3934,6 +4627,9 @@ Uruchomienie tej usługi Netlogon nie było możliwe, ponieważ inna usługa Net
 Language=Romanian
 The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
 .
+Language=Japanese
+ドメインで実行されている別のNetlogonサービスが指定されたロールと競合するため、Netlogonサービスを開始できません。
+.
 
 MessageId=569
 Severity=Success
@@ -3950,6 +4646,9 @@ Baza danych SAM na serwerze Windows jest znacząco rozsynchronizowana z kopią z
 .
 Language=Romanian
 The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
+.
+Language=Japanese
+ReactOS Server上のSAMデータベースがドメイン コントローラー上のコピーと同期していません。完全な同期が必要です。
 .
 
 MessageId=570
@@ -3968,6 +4667,9 @@ Wykonanie funkcji API o nazwie NtCreateFile nie powiodło się. Ten błąd nie p
 Language=Romanian
 The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
 .
+Language=Japanese
+NtCreateFile APIが失敗しました。このエラーはReactOS Lan Manager Redirectorが内部のエラーマップルーチンで使用するプレースホルダーです。
+.
 
 MessageId=571
 Severity=Success
@@ -3984,6 +4686,9 @@ Nie udało się zmienić uprawnień We/Wy dla tego procesu.
 .
 Language=Romanian
 The I/O permissions for the process could not be changed.
+.
+Language=Japanese
+プロセスのI/O権限を変更できませんでした。
 .
 
 MessageId=572
@@ -4002,6 +4707,9 @@ Aplikacja została zakończona w wyniku naciśnięcia klawiszy CTRL+C.
 Language=Romanian
 The application terminated as a result of a CTRL+C.
 .
+Language=Japanese
+CTRL+Cの結果としてアプリケーションが終了しました。
+.
 
 MessageId=573
 Severity=Success
@@ -4018,6 +4726,9 @@ Wymagany plik systemowy %hs jest zły albo brak go.
 .
 Language=Romanian
 The required system file %hs is bad or missing.
+.
+Language=Japanese
+必要なシステム ファイル %hs が壊れているか見つかりません。
 .
 
 MessageId=574
@@ -4036,6 +4747,9 @@ W aplikacji wystąpił wyjątek %s (0x%08lx) na pozycji 0x%08lx.
 Language=Romanian
 The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
 .
+Language=Japanese
+例外 %s (0x)  が発生しました。
+.
 
 MessageId=575
 Severity=Success
@@ -4052,6 +4766,9 @@ Aplikacja nie została właściwie uruchomiona (0x%lx). Kliknij przycisk OK, aby
 .
 Language=Romanian
 The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
+.
+Language=Japanese
+アプリケーションを正しく起動できませんでした (0x%lx) 。OK]をクリックしてアプリケーションを閉じます。
 .
 
 MessageId=576
@@ -4070,6 +4787,9 @@ Utworzenie pliku stronicowania %hs nie powiodło się (%lx). Żądanym rozmiarem
 Language=Romanian
 The creation of the paging file %hs failed (%lx). The requested size was %ld.
 .
+Language=Japanese
+ページング ファイル %hs の作成に失敗しました (%lx) 。要求されたサイズは %ld です。
+.
 
 MessageId=578
 Severity=Success
@@ -4086,6 +4806,9 @@ W konfiguracji systemu nie określono pliku stronicowania.
 .
 Language=Romanian
 No paging file was specified in the system configuration.
+.
+Language=Japanese
+システム構成でページング ファイルが指定されていません。
 .
 
 MessageId=579
@@ -4104,6 +4827,9 @@ Aplikacja trybu rzeczywistego wydała instrukcję zmiennoprzecinkową, tymczasem
 Language=Romanian
 A real-mode application issued a floating-point instruction and floating-point hardware is not present.
 .
+Language=Japanese
+ リアルモードアプリケーションが浮動小数点命令を発行しましたが、浮動小数点ハードウェアが存在しませんでした。
+.
 
 MessageId=580
 Severity=Success
@@ -4120,6 +4846,9 @@ Wykonano operację synchronizacji pary zdarzeń używając właściwego dla wąt
 .
 Language=Romanian
 An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
+.
+Language=Japanese
+イベント ペア同期操作がスレッド固有のクライアント/サーバー イベント ペア オブジェクトを使用して実行されましたが、イベント ペア オブジェクトがスレッドに関連付けられていませんでした。
 .
 
 MessageId=581
@@ -4138,6 +4867,9 @@ Serwer Windows ma niepoprawną konfigurację.
 Language=Romanian
 A Windows Server has an incorrect configuration.
 .
+Language=Japanese
+ReactOSサーバーの構成が正しくありません。
+.
 
 MessageId=582
 Severity=Success
@@ -4154,6 +4886,9 @@ Napotkano niedozwolony znak. W przypadku wielobajtowego zestawu znaków dotyczy 
 .
 Language=Romanian
 An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
+.
+Language=Japanese
+不正な文字が見つかりました。マルチバイト文字セットには、後続のトレールバイトがないリードバイトが含まれます。Unicode文字セットの場合、これには0xFFFFと0xFFFEが含まれます。
 .
 
 MessageId=583
@@ -4172,6 +4907,9 @@ Ten znak Unicode nie jest zdefiniowany w zestawie znaków Unicode zainstalowanym
 Language=Romanian
 The Unicode character is not defined in the Unicode character set installed on the system.
 .
+Language=Japanese
+そのUnicode文字はシステムにインストールされているUnicode文字セットに定義されていません。
+.
 
 MessageId=584
 Severity=Success
@@ -4188,6 +4926,9 @@ Nie można utworzyć pliku stronicowania na dyskietce.
 .
 Language=Romanian
 The paging file cannot be created on a floppy diskette.
+.
+Language=Japanese
+ページング ファイルをフロッピー ディスク上に作成できません。
 .
 
 MessageId=585
@@ -4206,6 +4947,9 @@ System BIOS nie połączył przerwania systemowego z urządzeniem lub magistral�
 Language=Romanian
 The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
 .
+Language=Japanese
+システムBIOSが、デバイスが接続されているデバイスまたはバスへのシステム割り込みの接続に失敗しました。
+.
 
 MessageId=586
 Severity=Success
@@ -4222,6 +4966,9 @@ Ta operacja jest dozwolona tylko dla podstawowego kontrolera domeny.
 .
 Language=Romanian
 This operation is only allowed for the Primary Domain Controller of the domain.
+.
+Language=Japanese
+この操作はドメインのプライマリドメイン コントローラーにのみ許可されています。
 .
 
 MessageId=587
@@ -4240,6 +4987,9 @@ Podjęto próbę uzyskania zmienionego obiektu w taki sposób, że zostałaby pr
 Language=Romanian
 An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
 .
+Language=Japanese
+変異体の最大カウントを超える変異体を取得しようとしました。
+.
 
 MessageId=588
 Severity=Success
@@ -4256,6 +5006,9 @@ Uzyskano dostęp do woluminu, dla którego wymagany jest jeszcze nie załadowany
 .
 Language=Romanian
 A volume has been accessed for which a file system driver is required that has not yet been loaded.
+.
+Language=Japanese
+まだロードされていないファイル システム ドライバが必要なボリュームにアクセスされました。
 .
 
 MessageId=589
@@ -4274,6 +5027,9 @@ Nie jest możliwe załadowanie przez Rejestr gałęzi (pliku): %hs lub jego dzie
 Language=Romanian
 The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
 .
+Language=Japanese
+レジストリはハイブ (ファイル): %hs またはそのログまたは代替ファイルをロードできません。
+.
 
 MessageId=590
 Severity=Success
@@ -4290,6 +5046,9 @@ Niespodziewanie nie powiodło się przetwarzanie żądania procesu API DebugActi
 .
 Language=Romanian
 An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
+.
+Language=Japanese
+DebugActiveProcess API要求の処理中に予期しない失敗が発生しました。プロセスを終了する場合は [OK] を、エラーを無視する場合は [キャンセル] を選択してください。
 .
 
 MessageId=591
@@ -4308,6 +5067,9 @@ Proces systemowy %hs zakończył się niespodziewanie ze stanem 0x%08x (0x%08x 0
 Language=Romanian
 The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
 .
+Language=Japanese
+%hs システム プロセスがステータス 0x で予期せず終了しました。
+.
 
 MessageId=592
 Severity=Success
@@ -4324,6 +5086,9 @@ Obsługa danych otrzymanych przez klienta TDI podczas wskazywania nie jest możl
 .
 Language=Romanian
 The TDI client could not handle the data received during an indication.
+.
+Language=Japanese
+ TDI クライアントが指示中に受信したデータを処理できませんでした。
 .
 
 MessageId=593
@@ -4342,6 +5107,9 @@ NTVDM napotkał poważny błąd.
 Language=Romanian
 NTVDM encountered a hard error.
 .
+Language=Japanese
+NTVDMでハードエラーが発生しました。
+.
 
 MessageId=594
 Severity=Success
@@ -4358,6 +5126,9 @@ Sterownik %hs nie zdołał zakończyć anulowanego żądania We/Wy w przypisanym
 .
 Language=Romanian
 The driver %hs failed to complete a cancelled I/O request in the allotted time.
+.
+Language=Japanese
+ドライバ %hs が割り当てられた時間内にキャンセルされた I/O 要求を完了できませんでした。
 .
 
 MessageId=595
@@ -4376,6 +5147,9 @@ Próbowano odpowiedzieć na komunikat LPC, ale wątek określony przez identyfik
 Language=Romanian
 An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
 .
+Language=Japanese
+LPC メッセージに返信しようとしましたが、メッセージ内のクライアント ID で指定されたスレッドはそのメッセージを待機していませんでした。
+.
 
 MessageId=596
 Severity=Success
@@ -4392,6 +5166,10 @@ System ReactOS nie mógł zapisać wszystkich danych dla pliku %hs. Dane został
 .
 Language=Romanian
 ReactOS was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
+.
+Language=Japanese
+ReactOS はファイル %hs のすべてのデータを保存できませんでした。
+このエラーは、コンピュータのハードウェアまたはネットワーク接続の障害によって発生した可能性があります。このファイルを別の場所に保存してください。
 .
 
 MessageId=597
@@ -4410,6 +5188,9 @@ Parametry przekazane do serwera we wspólnym oknie pamięci klient/serwer były 
 Language=Romanian
 The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
 .
+Language=Japanese
+クライアント/サーバー共有メモリ ウィンドウでサーバーに渡されたパラメータが無効です。共有メモリ ウィンドウにデータが多すぎる可能性があります。
+.
 
 MessageId=598
 Severity=Success
@@ -4426,6 +5207,9 @@ Ten strumień nie jest mały.
 .
 Language=Romanian
 The stream is not a tiny stream.
+.
+Language=Japanese
+ストリームがタイニー ストリームではありません。
 .
 
 MessageId=599
@@ -4444,6 +5228,9 @@ To żądanie musi być obsługiwane przez kod przepełnienia stosu.
 Language=Romanian
 The request must be handled by the stack overflow code.
 .
+Language=Japanese
+リクエストはスタック オーバーフロー コードで処理する必要があります。
+.
 
 MessageId=600
 Severity=Success
@@ -4460,6 +5247,9 @@ Wewnętrzne kody stanu OFS wskazują, jak jest obsługiwana operacja alokacji. P
 .
 Language=Romanian
 Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
+.
+Language=Japanese
+割り当て操作がどのように処理されるかを示す内部 OFS ステータスコード。含むオノードが移動された後に再試行されるか、エクステントストリームがラージストリームに変換されます。
 .
 
 MessageId=601
@@ -4478,6 +5268,9 @@ Próba znalezienia obiektu dała w efekcie obiekt na tym woluminie, mający odpo
 Language=Romanian
 The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
 .
+Language=Japanese
+オブジェクトを検索しようとしたところ、ボリューム上にIDが一致するオブジェクトが見つかりましたが、操作に使用したハンドルの範囲外でした。
+.
 
 MessageId=602
 Severity=Success
@@ -4494,6 +5287,9 @@ Należy powiększyć tablicę typu "bucket array", a następnie spróbować pono
 .
 Language=Romanian
 The bucket array must be grown. Retry transaction after doing so.
+.
+Language=Japanese
+バケット配列を成長させる必要があります。そうしてからトランザクションを再試行してください。
 .
 
 MessageId=603
@@ -4512,6 +5308,9 @@ Bufor kierujący użytkownika/jądra został przepełniony.
 Language=Romanian
 The user/kernel marshalling buffer has overflowed.
 .
+Language=Japanese
+ユーザー/カーネルのマーシャリング バッファがオーバーフローしました。
+.
 
 MessageId=604
 Severity=Success
@@ -4528,6 +5327,9 @@ Podana struktura wariantu zawiera nieprawidłowe dane.
 .
 Language=Romanian
 The supplied variant structure contains invalid data.
+.
+Language=Japanese
+指定されたバリアント構造体に無効なデータが含まれています。
 .
 
 MessageId=605
@@ -4546,6 +5348,9 @@ Określony bufor zawiera źle sformułowane dane.
 Language=Romanian
 The specified buffer contains ill-formed data.
 .
+Language=Japanese
+指定されたバッファに不正なデータが含まれています。
+.
 
 MessageId=606
 Severity=Success
@@ -4562,6 +5367,9 @@ Próba wygenerowania inspekcji zabezpieczeń nie powiodła się.
 .
 Language=Romanian
 An attempt to generate a security audit failed.
+.
+Language=Japanese
+セキュリティ監査の生成に失敗しました。
 .
 
 MessageId=607
@@ -4580,6 +5388,9 @@ Rozdzielczość czasomierza nie została wcześniej ustawiona przez bieżący pr
 Language=Romanian
 The timer resolution was not previously set by the current process.
 .
+Language=Japanese
+タイマー分解能が現在のプロセスによって以前に設定されていません。
+.
 
 MessageId=608
 Severity=Success
@@ -4596,6 +5407,9 @@ Nie podano informacji dotyczących konta niezbędnych do zalogowania.
 .
 Language=Romanian
 There is insufficient account information to log you on.
+.
+Language=Japanese
+ログオンするためのアカウント情報が不足しています。
 .
 
 MessageId=609
@@ -4614,6 +5428,9 @@ Biblioteka dołączana dynamicznie %hs nie jest napisana poprawnie. Wskaźnik st
 Language=Romanian
 The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
 .
+Language=Japanese
+動的リンク ライブラリ %hs が正しく記述されていません。エントリポイントは WINAPI または STDCALL として宣言する必要があります。DLL ロードに失敗するには「はい」を選択してください。実行を続行するには「いいえ」を選択します。いいえを選択すると、アプリケーションが正しく動作しないことがあります。
+.
 
 MessageId=610
 Severity=Success
@@ -4630,6 +5447,10 @@ Usługa %hs nie jest napisana poprawnie. Wskaźnik stosu pozostawiono w niespój
 .
 Language=Romanian
 The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
+.
+Language=Japanese
+%hs サービスが正しく書き込まれていません。
+コールバック エントリポイントは WINAPI または STDCALL として宣言する必要があります。OKを選択すると、サービスは動作を継続します。ただし、サービス プロセスが正しく動作しない可能性があります。
 .
 
 MessageId=611
@@ -4648,6 +5469,9 @@ Istnieje konflikt adresów IP z innym systemem w sieci.
 Language=Romanian
 There is an IP address conflict with another system on the network
 .
+Language=Japanese
+ネットワーク上の他のシステムとIPアドレスが競合しています。
+.
 
 MessageId=612
 Severity=Success
@@ -4664,6 +5488,9 @@ Istnieje konflikt adresów IP z innym systemem w sieci.
 .
 Language=Romanian
 There is an IP address conflict with another system on the network
+.
+Language=Japanese
+ネットワーク上の他のシステムとIPアドレスが競合しています。
 .
 
 MessageId=613
@@ -4682,6 +5509,9 @@ System osiągnął maksymalny rozmiar dozwolony dla części systemowej rejestru
 Language=Romanian
 The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
 .
+Language=Japanese
+ システムはレジストリのシステム部分で許容される最大サイズに達しました。追加のストレージ要求は無視されます。
+.
 
 MessageId=614
 Severity=Success
@@ -4698,6 +5528,9 @@ Nie można wykonać usługi wywołania zwrotnego, gdy żadne wywołanie zwrotne 
 .
 Language=Romanian
 A callback return system service cannot be executed when no callback is active.
+.
+Language=Japanese
+コールバックがアクティブでない場合、コールバック リターン システム サービスは実行できません。
 .
 
 MessageId=615
@@ -4716,6 +5549,10 @@ Podane hasło jest zbyt krótkie, co jest niezgodne z zasadami wykorzystywania t
 Language=Romanian
 The password provided is too short to meet the policy of your user account. Please choose a longer password.
 .
+Language=Japanese
+指定されたパスワードが短すぎて、ユーザー アカウントのポリシーに適合しません。
+長いパスワードを選択してください。
+.
 
 MessageId=616
 Severity=Success
@@ -4732,6 +5569,11 @@ Zasady wykorzystywania tego konta użytkownika nie pozwalają na zbyt częste zm
 .
 Language=Romanian
 The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
+.
+Language=Japanese
+ユーザー アカウントのポリシーでは、パスワードを頻繁に変更することは許可されていません。
+これは、ユーザーが使い慣れた、しかし発見される可能性のあるパスワードに変更することを防ぐために行われます。
+パスワードが漏洩したと思われる場合は、すぐに管理者に連絡して新しいパスワードを割り当ててください。
 .
 
 MessageId=617
@@ -4750,6 +5592,11 @@ Próbowano zmienić hasło na takie, które było już używane w przeszłości.
 Language=Romanian
 You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
 .
+Language=Japanese
+パスワードを過去に使用したものに変更しようとしました。
+ユーザー アカウントのポリシーでは許可されていません。
+過去に使用したことのないパスワードを選択してください。
+.
 
 MessageId=618
 Severity=Success
@@ -4766,6 +5613,9 @@ Określony format kompresji nie jest obsługiwany.
 .
 Language=Romanian
 The specified compression format is unsupported.
+.
+Language=Japanese
+指定された圧縮形式はサポートされていません。
 .
 
 MessageId=619
@@ -4784,6 +5634,9 @@ Określona konfiguracja profilu sprzętu jest nieprawidłowa.
 Language=Romanian
 The specified hardware profile configuration is invalid.
 .
+Language=Japanese
+指定されたハードウェア プロファイル構成が無効です。
+.
 
 MessageId=620
 Severity=Success
@@ -4800,6 +5653,9 @@ Określona ścieżka Rejestru urządzenia typu „Plug and Play” jest nieprawi
 .
 Language=Romanian
 The specified Plug and Play registry device path is invalid.
+.
+Language=Japanese
+指定された プラグ＆プレイ レジストリ デバイス パスが無効です。
 .
 
 MessageId=621
@@ -4818,6 +5674,9 @@ Określona lista zasobów jest wewnętrznie niezgodna ze swoim deskryptorem.
 Language=Romanian
 The specified quota list is internally inconsistent with its descriptor.
 .
+Language=Japanese
+指定されたクォータ リストは、その記述子と内部的に矛盾しています。
+.
 
 MessageId=622
 Severity=Success
@@ -4834,6 +5693,9 @@ Okres tymczasowego użytkowania tej instalacji systemu Windows wygasł. System z
 .
 Language=Romanian
 The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
+.
+Language=Japanese
+このReactOSインストールの評価期間が終了しました。このシステムは1時間後にシャットダウンされます。ReactOSのこのインストールへのアクセスを回復するには、この製品のライセンス配布を使用してこのインストールをアップグレードしてください。
 .
 
 MessageId=623
@@ -4852,6 +5714,9 @@ Biblioteka systemowa DLL %hs została zrelokowana w pamięci. Aplikacja nie będ
 Language=Romanian
 The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for ReactOS system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
 .
+Language=Japanese
+システム DLL %hs がメモリ内に再配置されました。アプリは適切に動作しないかもしれません。再配置は、DLL %hs が ReactOS システム DLL 用に予約されているアドレス範囲を占有していたために発生しました。DLL を提供しているベンダーに連絡して、新しい DLL を入手してください。
+.
 
 MessageId=624
 Severity=Success
@@ -4868,6 +5733,9 @@ Zainicjowanie aplikacji nie udało się, gdyż stacja jest właśnie zamykana.
 .
 Language=Romanian
 The application failed to initialize because the window station is shutting down.
+.
+Language=Japanese
+ウィンドウ ステーションがシャットダウンされたため、アプリケーションの初期化に失敗しました。
 .
 
 MessageId=625
@@ -4886,6 +5754,9 @@ Proces sprawdzania poprawności musi być kontynuowany do następnego kroku.
 Language=Romanian
 The validation process needs to continue on to the next step.
 .
+Language=Japanese
+検証プロセスを次のステップに続行する必要があります。
+.
 
 MessageId=626
 Severity=Success
@@ -4902,6 +5773,9 @@ Nie ma więcej odpowiedników dla bieżącego wyliczania indeksu.
 .
 Language=Romanian
 There are no more matches for the current index enumeration.
+.
+Language=Japanese
+現在のインデックス列挙に一致するものはありません。
 .
 
 MessageId=627
@@ -4920,6 +5794,9 @@ Z powodu konfliktu nie można dodać zakresu do listy zakresów.
 Language=Romanian
 The range could not be added to the range list because of a conflict.
 .
+Language=Japanese
+範囲が競合しているため、範囲を範囲リストに追加できませんでした。
+.
 
 MessageId=628
 Severity=Success
@@ -4936,6 +5813,9 @@ Proces serwera działa z innym identyfikatorem SID niż wymaga to klient.
 .
 Language=Romanian
 The server process is running under a SID different than that required by client.
+.
+Language=Japanese
+サーバー プロセスがクライアントが要求するSIDと異なるSIDで実行されています。
 .
 
 MessageId=629
@@ -4954,6 +5834,9 @@ Nie można włączyć grupy oznaczonej do użycia tylko dla odmowy.
 Language=Romanian
 A group marked use for deny only cannot be enabled.
 .
+Language=Japanese
+拒否にのみ使用するようにマークされたグループを有効にできません。
+.
 
 MessageId=630
 Severity=Success
@@ -4970,6 +5853,9 @@ Wiele błędów zmiennoprzecinkowych.
 .
 Language=Romanian
 Multiple floating point faults.
+.
+Language=Japanese
+複数の浮動小数点フォールトです。
 .
 
 MessageId=631
@@ -4988,6 +5874,9 @@ Wiele pułapek zmiennoprzecinkowych.
 Language=Romanian
 Multiple floating point traps.
 .
+Language=Japanese
+複数の浮動小数点トラップ複数の浮動小数点トラップです。
+.
 
 MessageId=632
 Severity=Success
@@ -5004,6 +5893,9 @@ Language=Polish
 .
 Language=Romanian
 The requested interface is not supported.
+.
+Language=Japanese
+要求されたインタフェースはサポートされていません。
 .
 
 MessageId=633
@@ -5022,6 +5914,9 @@ Sterownik %hs nie obsługuje trybu stanu wstrzymania. Aby system mógł się zna
 Language=Romanian
 The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
 .
+Language=Japanese
+ドライバ %hs はスタンバイ モードをサポートしていません。このドライバを更新すると、システムがスタンバイ モードになることがあります。
+.
 
 MessageId=634
 Severity=Success
@@ -5038,6 +5933,9 @@ Plik systemowy %1 był uszkodzony i został zastąpiony.
 .
 Language=Romanian
 The system file %1 has become corrupt and has been replaced.
+.
+Language=Japanese
+システム ファイル %1 が破損したので置換しました。
 .
 
 MessageId=635
@@ -5056,6 +5954,9 @@ System ma za mało pamięci wirtualnej. System ReactOS zwiększa rozmiar pliku s
 Language=Romanian
 Your system is low on virtual memory. ReactOS is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
 .
+Language=Japanese
+システムの仮想メモリが不足しています。このプロセスの間、一部のアプリケーションのメモリ要求が拒否されることがあります。詳細については、ヘルプを参照してください。
+.
 
 MessageId=636
 Severity=Success
@@ -5072,6 +5973,9 @@ Urządzenie zostało usunięte, a więc wyliczanie musi zostać uruchomione pono
 .
 Language=Romanian
 A device was removed so enumeration must be restarted.
+.
+Language=Japanese
+デバイスが削除されたため、列挙を再開する必要があります。
 .
 
 MessageId=637
@@ -5090,6 +5994,11 @@ Obraz systemu %s nie jest poprawnie podpisany. Plik został zastąpiony plikiem 
 Language=Romanian
 The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
 .
+Language=Japanese
+システム イメージ %s は正しく署名されていません。
+ファイルは署名されたファイルに置き換えられました。
+システムはシャットダウンされました。
+.
 
 MessageId=638
 Severity=Success
@@ -5106,6 +6015,9 @@ Urządzenie nie zostanie uruchomione bez ponownego rozruchu komputera.
 .
 Language=Romanian
 Device will not start without a reboot.
+.
+Language=Japanese
+再起動しないとデバイスが起動しない
 .
 
 MessageId=639
@@ -5124,6 +6036,9 @@ Za mało energii, aby zakończyć żądaną operację
 Language=Romanian
 There is not enough power to complete the requested operation.
 .
+Language=Japanese
+要求された操作を完了するのに十分な電力がありません。
+.
 
 MessageId=641
 Severity=Success
@@ -5140,6 +6055,9 @@ Trwa proces zamykania systemu.
 .
 Language=Romanian
 The system is in the process of shutting down.
+.
+Language=Japanese
+システムがシャットダウン中です。
 .
 
 MessageId=642
@@ -5158,6 +6076,9 @@ Podjęto próbę usunięcia portu DebugPort, ale żaden port nie był już skoja
 Language=Romanian
 An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
 .
+Language=Japanese
+プロセスのDebugPortを削除しようとしましたが、ポートがまだプロセスに関連付けられていませんでした。
+.
 
 MessageId=643
 Severity=Success
@@ -5174,6 +6095,9 @@ Ta wersja systemu ReactOS jest niezgodna z wersją zachowania lasu katalogów, d
 .
 Language=Romanian
 This version of ReactOS is not compatible with the behavior version of directory forest, domain or domain controller.
+.
+Language=Japanese
+このバージョンのReactOSは、ディレクトリ フォレスト、ドメイン、またはドメイン コントローラの動作バージョンと互換性がありません。
 .
 
 MessageId=644
@@ -5192,6 +6116,9 @@ Na liście zakresów nie można znaleźć określonego zakresu.
 Language=Romanian
 The specified range could not be found in the range list.
 .
+Language=Japanese
+指定された範囲が範囲リストに見つかりませんでした。
+.
 
 MessageId=646
 Severity=Success
@@ -5208,6 +6135,9 @@ Sterownik nie został załadowany, ponieważ system jest uruchamiany w trybie aw
 .
 Language=Romanian
 The driver was not loaded because the system is booting into safe mode.
+.
+Language=Japanese
+システムがセーフ モードで起動しているため、ドライバがロードされませんでした。
 .
 
 MessageId=647
@@ -5226,6 +6156,9 @@ Sterownik nie został załadowany, ponieważ nie powiodło się wywołanie jego 
 Language=Romanian
 The driver was not loaded because it failed it's initialization call.
 .
+Language=Japanese
+ドライバの初期化コールに失敗したため、ドライバがロードされませんでした。
+.
 
 MessageId=648
 Severity=Success
@@ -5242,6 +6175,9 @@ Language=Polish
 .
 Language=Romanian
 The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
+.
+Language=Japanese
+「%hs」は、電源の投入またはデバイス構成の読み取り中にエラーが発生しました。<CR><LF>ハードウェアの故障または接続不良が原因である可能性があります。
 .
 
 MessageId=649
@@ -5260,6 +6196,9 @@ Operacja tworzenia nie powiodła się, ponieważ dana nazwa zawierała przynajmn
 Language=Romanian
 The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
 .
+Language=Japanese
+名前に、指定されたデバッグ対象のボリュームに解決するマウント ポイントが少なくとも 1 つ含まれていたため、作成操作に失敗しました。
+.
 
 MessageId=650
 Severity=Success
@@ -5276,6 +6215,9 @@ Parametr obiektu urządzenia określa urządzenie, które albo nie jest prawidł
 .
 Language=Romanian
 The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
+.
+Language=Japanese
+デバイス オブジェクト パラメータが有効なデバイス オブジェクトでないか、ファイル名で指定されたボリュームにアタッチされていません。
 .
 
 MessageId=651
@@ -5294,6 +6236,9 @@ Wystąpił błąd sprawdzania komputera. Dodatkowe informacje można znaleźć w
 Language=Romanian
 A Machine Check Error has occurred. Please check the system eventlog for additional information.
 .
+Language=Japanese
+マシン チェック エラーが発生しました。追加情報については、システムのイベントログを確認してください。
+.
 
 MessageId=652
 Severity=Success
@@ -5310,6 +6255,9 @@ Wystąpił błąd [%2] podczas przetwarzania bazy danych sterowników.
 .
 Language=Romanian
 There was error [%2] processing the driver database.
+.
+Language=Japanese
+ドライバ データベースを処理するエラー [%2] が発生しました。
 .
 
 MessageId=653
@@ -5328,6 +6276,9 @@ Przekroczono limit rozmiaru gałęzi systemu.
 Language=Romanian
 System hive size has exceeded its limit.
 .
+Language=Japanese
+システム ハイブのサイズが制限を超えました。
+.
 
 MessageId=654
 Severity=Success
@@ -5344,6 +6295,9 @@ Nie można załadować sterownika, ponieważ jego poprzednia wersja nadal znajdu
 .
 Language=Romanian
 The driver could not be loaded because a previous version of the driver is still in memory.
+.
+Language=Japanese
+以前のバージョンのドライバがメモリ内に残っているため、ドライバをロードできませんでした。
 .
 
 MessageId=655
@@ -5362,6 +6316,9 @@ Zaczekaj, aż usługa kopii woluminu w tle przygotuje wolumin %hs do hibernacji.
 Language=Romanian
 Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
 .
+Language=Japanese
+ボリューム シャドウ コピー サービスがボリューム %hs をハイバネーション用に準備するまでお待ちください。
+.
 
 MessageId=656
 Severity=Success
@@ -5378,6 +6335,9 @@ System nie może wykonać hibernacji (kod błędu: %hs). Hibernacja będzie wył
 .
 Language=Romanian
 The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
+.
+Language=Japanese
+システムの休止に失敗しました (エラー コードは %hs) 。システムが再起動されるまで休止は無効になります。
 .
 
 MessageId=657
@@ -5396,6 +6356,9 @@ Sterownik ekranu %hs przestał normalnie pracować. Zapisz pracę i dokonaj pono
 Language=Romanian
 The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
 .
+Language=Japanese
+ディスプレイドライバ%hsが正常に動作しなくなりました。作業を保存してシステムを再起動し、ディスプレイ機能を完全に回復してください。次にマシンを再起動するとダイアログが表示され、ReactOSにこの障害を報告することができます。
+.
 
 MessageId=665
 Severity=Success
@@ -5412,6 +6375,9 @@ Nie można ukończyć żądanej operacji z powodu ograniczenia systemu plików.
 .
 Language=Romanian
 The requested operation could not be completed due to a file system limitation.
+.
+Language=Japanese
+ファイル システムの制限により、要求された操作を完了できませんでした。
 .
 
 MessageId=668
@@ -5430,6 +6396,9 @@ Wystąpił błąd potwierdzenia.
 Language=Romanian
 An assertion failure has occurred.
 .
+Language=Japanese
+アサーションに失敗しました。
+.
 
 MessageId=669
 Severity=Success
@@ -5446,6 +6415,9 @@ Weryfikator aplikacji napotkał błąd w bieżącym procesie.
 .
 Language=Romanian
 Application verifier has found an error in the current process.
+.
+Language=Japanese
+ACPIサブシステムでエラーが発生しました。
 .
 
 MessageId=670
@@ -5464,6 +6436,9 @@ Błąd potwierdzenia WOW.
 Language=Romanian
 WOW Assertion Error.
 .
+Language=Japanese
+WOWアサーション エラーです。
+.
 
 MessageId=671
 Severity=Success
@@ -5480,6 +6455,10 @@ Brak urządzenia w tabeli MPS systemu BIOS. Urządzenie nie zostanie użyte. Sko
 .
 Language=Romanian
 A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
+.
+Language=Japanese
+システム BIOS MPS テーブルにデバイスがありません。
+システムBIOSのアップデートについては、システムベンダにお問い合わせください。
 .
 
 MessageId=672
@@ -5498,6 +6477,9 @@ Translator nie może zinterpretować zasobów.
 Language=Romanian
 A translator failed to translate resources.
 .
+Language=Japanese
+トランスレータがリソースの翻訳に失敗しました。
+.
 
 MessageId=673
 Severity=Success
@@ -5514,6 +6496,9 @@ Translator IRQ nie może zinterpretować zasobów.
 .
 Language=Romanian
 A IRQ translator failed to translate resources.
+.
+Language=Japanese
+IRQ トランスレータがリソースの変換に失敗しました。
 .
 
 MessageId=674
@@ -5532,6 +6517,9 @@ Sterownik %2 zwrócił nieprawidłowy identyfikator urządzenia podrzędnego (%3
 Language=Romanian
 Driver %2 returned invalid ID for a child device (%3).
 .
+Language=Japanese
+ドライバ %2 は子デバイス (%3)  に対して無効な ID を返しました。
+.
 
 MessageId=675
 Severity=Success
@@ -5548,6 +6536,9 @@ Przerwanie uaktywniło debuger systemu.
 .
 Language=Romanian
 The system debugger was awakened by an interrupt.
+.
+Language=Japanese
+割り込みによってシステム デバッガが起動されました。
 .
 
 MessageId=676
@@ -5566,6 +6557,9 @@ Dojścia do obiektów zostały automatycznie zamknięte w wyniku żądanej opera
 Language=Romanian
 Handles to objects have been automatically closed as a result of the requested operation.
 .
+Language=Japanese
+要求された操作の結果、オブジェクトへのハンドルが自動的に閉じられました。
+.
 
 MessageId=677
 Severity=Success
@@ -5582,6 +6576,9 @@ Określona lista kontroli dostępu (ACL) zawiera więcej informacji niż oczekiw
 .
 Language=Romanian
 The specified access control list (ACL) contained more information than was expected.
+.
+Language=Japanese
+指定されたアクセス制御リスト (ACL) に予想以上の情報が含まれていました。
 .
 
 MessageId=678
@@ -5600,6 +6597,10 @@ Ten stan poziomu ostrzeżenia wskazuje, że dla danego poddrzewa Rejestru istnie
 Language=Romanian
 This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
 .
+Language=Japanese
+この警告レベルのステータスは、レジストリ サブツリーに対してトランザクション状態がすでに存在するが、トランザクション コミットが以前に中止されたことを示します。
+コミットは完了していませんが、ロールバックもされていません (そのため、必要であればまだコミットできます) 。
+.
 
 MessageId=679
 Severity=Success
@@ -5616,6 +6617,9 @@ Nośnik mógł się zmienić.
 .
 Language=Romanian
 The media may have changed.
+.
+Language=Japanese
+メディアが変更された可能性があります。
 .
 
 MessageId=680
@@ -5634,6 +6638,9 @@ Podczas tłumaczenia globalnego identyfikatora (GUID) na identyfikator zabezpiec
 Language=Romanian
 During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
 .
+Language=Japanese
+グローバル識別子 (GUID)  から ReactOS セキュリティ ID (SID)  への変換中に、管理上定義された GUID 接頭辞が見つかりませんでした。システムのセキュリティを損なわない代替接頭辞が使用されました。代替接頭辞が使用されました。
+.
 
 MessageId=681
 Severity=Success
@@ -5650,6 +6657,9 @@ Operacja tworzenia została zatrzymana po napotkaniu łącza symbolicznego.
 .
 Language=Romanian
 The create operation stopped after reaching a symbolic link.
+.
+Language=Japanese
+作成操作がシンボリック リンクに達した後に停止しました。
 .
 
 MessageId=682
@@ -5668,6 +6678,9 @@ Wykonano długi skok.
 Language=Romanian
 A long jump has been executed.
 .
+Language=Japanese
+ロング ジャンプが実行されました。
+.
 
 MessageId=683
 Severity=Success
@@ -5684,6 +6697,9 @@ Operacja zapytania Plug and Play zakończyła się niepomyślnie.
 .
 Language=Romanian
 The Plug and Play query operation was not successful.
+.
+Language=Japanese
+プラグ アンド プレイのクエリ操作は成功しませんでした。
 .
 
 MessageId=684
@@ -5702,6 +6718,9 @@ Przeprowadzono konsolidację ramek.
 Language=Romanian
 A frame consolidation has been executed.
 .
+Language=Japanese
+フレーム連結が実行されました。
+.
 
 MessageId=685
 Severity=Success
@@ -5718,6 +6737,9 @@ Gałąź rejestru (plik): %hs była uszkodzona i została odzyskana. Niektóre d
 .
 Language=Romanian
 Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
+.
+Language=Japanese
+レジストリ ハイブ (ファイル): %hs が破損していたため回復しました。一部のデータが失われた可能性があります。
 .
 
 MessageId=686
@@ -5736,6 +6758,9 @@ Aplikacja próbuje uruchomić kod wykonywalny z modułu %hs. Może to być niebe
 Language=Romanian
 The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
+Language=Japanese
+アプリケーションは、モジュール %hs から実行可能コードを実行しようとしています。これは安全でない可能性があります。代替のモジュール %hs を使用できます。アプリケーションは安全なモジュール %hs を使用しますか?
+.
 
 MessageId=687
 Severity=Success
@@ -5752,6 +6777,9 @@ Aplikacja ładuje kod wykonywalny z modułu %hs. Jest to bezpieczne, ale może b
 .
 Language=Romanian
 The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
+.
+Language=Japanese
+アプリケーションは、モジュール %hs から実行可能コードをロードしています。これは安全ですが、オペレーティング システムの以前のリリースと互換性がない可能性があります。代替のモジュール %hs を使用できます。アプリケーションは安全なモジュール %hs を使用しますか?
 .
 
 MessageId=688
@@ -5770,6 +6798,9 @@ Debuger nie obsłużył wyjątku.
 Language=Romanian
 Debugger did not handle the exception.
 .
+Language=Japanese
+デバッガが例外を処理しませんでした。
+.
 
 MessageId=689
 Severity=Success
@@ -5786,6 +6817,9 @@ Debuger udzieli odpowiedź później.
 .
 Language=Romanian
 Debugger will reply later.
+.
+Language=Japanese
+デバッガは後で応答します。
 .
 
 MessageId=690
@@ -5804,6 +6838,9 @@ Debuger nie może udostępnić uchwytu.
 Language=Romanian
 Debugger can not provide handle.
 .
+Language=Japanese
+デバッガはハンドルを提供できません。
+.
 
 MessageId=691
 Severity=Success
@@ -5820,6 +6857,9 @@ Debuger przerwał wątek.
 .
 Language=Romanian
 Debugger terminated thread.
+.
+Language=Japanese
+デバッガがスレッドを終了しました。
 .
 
 MessageId=692
@@ -5838,6 +6878,9 @@ Debuger przerwał proces.
 Language=Romanian
 Debugger terminated process.
 .
+Language=Japanese
+デバッガがプロセスを終了しました。
+.
 
 MessageId=693
 Severity=Success
@@ -5854,6 +6897,9 @@ Debuger przejął kontrolę C.
 .
 Language=Romanian
 Debugger got control C.
+.
+Language=Japanese
+デバッガがコントロールCを取得しました。
 .
 
 MessageId=694
@@ -5872,6 +6918,9 @@ Debuger wydrukował wyjątek dla kontroli C.
 Language=Romanian
 Debugger printed exception on control C.
 .
+Language=Japanese
+デバッガがコントロール C に例外を出力しました。
+.
 
 MessageId=695
 Severity=Success
@@ -5888,6 +6937,9 @@ Debuger otrzymał wyjątek RIP.
 .
 Language=Romanian
 Debugger received RIP exception.
+.
+Language=Japanese
+デバッガが RIP 例外を受信しました。
 .
 
 MessageId=696
@@ -5906,6 +6958,9 @@ Debuger otrzymał kombinację control break.
 Language=Romanian
 Debugger received control break.
 .
+Language=Japanese
+デバッガが制御ブレークを受信しました。
+.
 
 MessageId=697
 Severity=Success
@@ -5922,6 +6977,9 @@ Wyjątek komunikacji polecenia debugera.
 .
 Language=Romanian
 Debugger command communication exception.
+.
+Language=Japanese
+デバッガコマンド通信例外です。
 .
 
 MessageId=698
@@ -5940,6 +6998,9 @@ Podjęto próbę utworzenia obiektu, podczas gdy taka nazwa obiektu już istnia�
 Language=Romanian
 An attempt was made to create an object and the object name already existed.
 .
+Language=Japanese
+オブジェクトを作成しようとしましたが、オブジェクト名が既に存在しました。
+.
 
 MessageId=699
 Severity=Success
@@ -5956,6 +7017,9 @@ Nastąpiło zamknięcie wątku, gdy wątek ten został zawieszony. Wątek zosta�
 .
 Language=Romanian
 A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
+.
+Language=Japanese
+スレッドのサスペンド中にスレッドの終了が発生しました。スレッドは再開され、終了が続行されました。
 .
 
 MessageId=700
@@ -5974,6 +7038,9 @@ Zamapowanie obrazu pod adresem określonym w pliku obrazu nie było możliwe. Na
 Language=Romanian
 An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
 .
+Language=Japanese
+イメージ ファイルで指定されたアドレスにイメージ ファイルをマッピングできませんでした。このイメージに対してローカル フィックスアップを実行する必要があります。
+.
 
 MessageId=701
 Severity=Success
@@ -5990,6 +7057,9 @@ Ten stan poziomu informacji wskazuje, że określony stan transakcji poddrzewa R
 .
 Language=Romanian
 This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
+.
+Language=Japanese
+この情報レベルのステータスは、指定されたレジストリのサブツリーのトランザクション状態がまだ存在せず、作成する必要があることを示します。
 .
 
 MessageId=702
@@ -6008,6 +7078,9 @@ Wirtualna maszyna DOS ładuje, zwalnia lub przenosi obraz segmentu programu MS-D
 Language=Romanian
 A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
 .
+Language=Japanese
+仮想DOSマシン (VDM) がMS-DOSまたはWin16プログラムセグメントイメージをロード、アンロード、または移動しています。デバッガがこれらの16ビットセグメント内のシンボルとブレークポイントをロード、アンロード、または追跡できるように例外が発生します。
+.
 
 MessageId=703
 Severity=Success
@@ -6024,6 +7097,9 @@ Proces nie może przełączyć się do bieżącego katalogu startowego %hs. Wybi
 .
 Language=Romanian
 The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
+.
+Language=Japanese
+プロセスが起動時のカレント ディレクトリ %hs に切り替えられません。[OK] を選択してカレント ディレクトリを %hs に設定するか、[キャンセル] を選択して終了します。
 .
 
 MessageId=704
@@ -6042,6 +7118,9 @@ Aby wykonać żądanie odczytu, odporny na błędy system plików NT pomyślnie 
 Language=Romanian
 To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
 .
+Language=Japanese
+読み取り要求を満たすために、NTフォールト トレラント ファイル システムは要求されたデータを冗長コピーから正常に読み取りました。これは、ファイル システムでフォールト トレラント ボリュームのメンバに障害が発生したが、デバイスの障害領域を再割り当てできなかったためです。
+.
 
 MessageId=705
 Severity=Success
@@ -6058,6 +7137,9 @@ Aby wykonać żądanie zapisu odporny na błędy system plików NT pomyślnie za
 .
 Language=Romanian
 To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
+.
+Language=Japanese
+書き込み要求を満たすために、NTフォールト トレラント ファイル システムは情報の冗長コピーを正常に書き込みました。これは、ファイル システムでフォールト トレラント ボリュームのメンバに障害が発生したが、デバイスの障害領域を再割り当てできなかったためです。
 .
 
 MessageId=706
@@ -6076,6 +7158,9 @@ Plik obrazu %hs jest prawidłowy, ale jest dla innego typu komuptera niż bież�
 Language=Romanian
 The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
 .
+Language=Japanese
+イメージ ファイル %hs は有効ですが、現在のマシン以外のマシン タイプ用です。続行するにはOKを、DLLのロードに失敗するにはキャンセルを選択してください。
+.
 
 MessageId=707
 Severity=Success
@@ -6092,6 +7177,9 @@ Transport sieciowy zwrócił do klienta częściowe dane. Pozostałe dane zostan
 .
 Language=Romanian
 The network transport returned partial data to its client. The remaining data will be sent later.
+.
+Language=Japanese
+ネットワーク トランスポートがクライアントに部分的なデータを返しました。残りのデータは後で送信されます。
 .
 
 MessageId=708
@@ -6110,6 +7198,9 @@ Transport sieciowy zwrócił do klienta dane oznaczone przez zdalny system jako 
 Language=Romanian
 The network transport returned data to its client that was marked as expedited by the remote system.
 .
+Language=Japanese
+ネットワークトランスポートは、リモートシステムによって迅速化としてマークされたデータをクライアントに返しました。
+.
 
 MessageId=709
 Severity=Success
@@ -6126,6 +7217,9 @@ Transport sieciowy zwrócił do klienta częściowe dane, oznaczone przez zdalny
 .
 Language=Romanian
 The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
+.
+Language=Japanese
+ネットワーク トランスポートはクライアントに部分的なデータを返しました。残りのデータは後で送信されます。
 .
 
 MessageId=710
@@ -6144,6 +7238,9 @@ Wskazywanie TDI zostało ukończone pomyślnie.
 Language=Romanian
 The TDI indication has completed successfully.
 .
+Language=Japanese
+TDI指示が正常に完了しました。
+.
 
 MessageId=711
 Severity=Success
@@ -6160,6 +7257,9 @@ Wskazywanie TDI przeszło w stan oczekiwania.
 .
 Language=Romanian
 The TDI indication has entered the pending state.
+.
+Language=Japanese
+TDI指示が保留状態に入りました。
 .
 
 MessageId=712
@@ -6178,6 +7278,9 @@ Sprawdzanie systemu plików na %wZ
 Language=Romanian
 Checking file system on %wZ.
 .
+Language=Japanese
+%wZ でファイル システムをチェックしています。
+.
 
 MessageId=714
 Severity=Success
@@ -6194,6 +7297,9 @@ Do określonego klucza Rejestru odwołuje się dojście uprzednio zdefiniowane.
 .
 Language=Romanian
 The specified registry key is referenced by a predefined handle.
+.
+Language=Japanese
+指定されたレジストリ キーは定義済みのハンドルによって参照されます。
 .
 
 MessageId=715
@@ -6212,6 +7318,9 @@ Zabezpieczenie zablokowanej strony zmieniono na "Brak dostępu" i strona został
 Language=Romanian
 The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
 .
+Language=Japanese
+ロックされたページのページ保護が「アクセスなし」に変更され、メモリからもプロセスからもロックが解除されました。
+.
 
 MessageId=717
 Severity=Success
@@ -6228,6 +7337,9 @@ Jedna ze stron przewidzianych do zablokowania była już zablokowana.
 .
 Language=Romanian
 One of the pages to lock was already locked.
+.
+Language=Japanese
+ロックするページの1つが既にロックされています。
 .
 
 MessageId=720
@@ -6246,6 +7358,9 @@ Plik obrazu %hs jest prawidłowy, ale jest dla innego typu komputera niż bież�
 Language=Romanian
 The image file %hs is valid, but is for a machine type other than the current machine.
 .
+Language=Japanese
+イメージ ファイル %hs は有効ですが、現在のマシン以外のマシン タイプ用です。
+.
 
 MessageId=721
 Severity=Success
@@ -6262,6 +7377,9 @@ Wykonano przekazanie wykonywania i żaden wątek nie był dostępny do uruchomie
 .
 Language=Romanian
 A yield execution was performed and no thread was available to run.
+.
+Language=Japanese
+降伏実行が実行され、実行可能なスレッドがありませんでした。
 .
 
 MessageId=722
@@ -6280,6 +7398,9 @@ Zignorowano wznawialną flagę czasomierza API.
 Language=Romanian
 The resumable flag to a timer API was ignored.
 .
+Language=Japanese
+タイマーAPIへの再開可能フラグが無視されました。
+.
 
 MessageId=723
 Severity=Success
@@ -6296,6 +7417,9 @@ Arbiter wstrzymał rozstrzyganie o przynależności zasobów do obiektów nadrz�
 .
 Language=Romanian
 The arbiter has deferred arbitration of these resources to its parent.
+.
+Language=Japanese
+アービタはこれらのリソースのアービトレーションを親に延期しました。
 .
 
 MessageId=724
@@ -6314,6 +7438,9 @@ Urządzenie \"%hs"\ wykryło w gnieździe kartę CardBus, ale oprogramowanie fir
 Language=Romanian
 The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
 .
+Language=Japanese
+「%hs」の設定エラーのため、挿入されたCardBusデバイスが起動できません。
+.
 
 MessageId=725
 Severity=Success
@@ -6330,6 +7457,9 @@ Jednostki CPU w tym systemie wieloprocesorowym mają różne poziomy wersji. Aby
 .
 Language=Romanian
 The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
+.
+Language=Japanese
+このマルチ プロセッサ システムのCPUは、すべて同じリビジョン レベルではありません。すべてのプロセッサを使用するために、オペレーティング システムはシステム内で最も性能の低いプロセッサの機能に制限しています。このシステムで問題が発生した場合は、CPUメーカーに問い合わせて、このプロセッサの組み合わせがサポートされているかどうかを確認してください。
 .
 
 MessageId=726
@@ -6348,6 +7478,9 @@ System został wprowadzony w stan hibernacji.
 Language=Romanian
 The system was put into hibernation.
 .
+Language=Japanese
+システムは休止状態になりました。
+.
 
 MessageId=727
 Severity=Success
@@ -6364,6 +7497,9 @@ System wyszedł ze stanu hibernacji.
 .
 Language=Romanian
 The system was resumed from hibernation.
+.
+Language=Japanese
+システムは休止状態から再開されました。
 .
 
 MessageId=728
@@ -6382,6 +7518,9 @@ System ReactOS wykrył, że oprogramowanie układowe systemu (BIOS) zostało zak
 Language=Romanian
 ReactOS has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
 .
+Language=Japanese
+ReactOS はシステムのファームウェア (BIOS)  が更新されたことを検出しました [以前のファームウェアの日付 = %2、現在のファームウェアの日付 %3]。
+.
 
 MessageId=729
 Severity=Success
@@ -6398,6 +7537,9 @@ W sterowniku urządzenia powstają przecieki zablokowanych stron We/Wy, które p
 .
 Language=Romanian
 A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
+.
+Language=Japanese
+デバイス ドライバがロックされた I/O ページをリークしてシステムの低下を引き起こしています。システムは自動的に追跡コードを有効にして、犯人を捕まえようとしています。
 .
 
 MessageId=730
@@ -6416,6 +7558,9 @@ System został obudzony.
 Language=Romanian
 The system has awoken
 .
+Language=Japanese
+システムが起動しました。
+.
 
 MessageId=741
 Severity=Success
@@ -6432,6 +7577,9 @@ Menedżer obiektów powinien przeprowadzić ponowną analizę składni, poniewa�
 .
 Language=Romanian
 A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+.
+Language=Japanese
+ファイル名がシンボリック リンクであったため、オブジェクト マネージャで再解析を実行する必要があります。
 .
 
 MessageId=742
@@ -6450,6 +7598,9 @@ Zakończono operację otwierania/tworzenia podczas trwania "oplock break".
 Language=Romanian
 An open/create operation completed while an oplock break is underway.
 .
+Language=Japanese
+オプロック解除中にオープン/クリエイト操作が完了しました。
+.
 
 MessageId=743
 Severity=Success
@@ -6466,6 +7617,9 @@ Nowy wolumin został zainstalowany przez system plików.
 .
 Language=Romanian
 A new volume has been mounted by a file system.
+.
+Language=Japanese
+新しいボリュームがファイルシステムによってマウントされました。
 .
 
 MessageId=744
@@ -6484,6 +7638,9 @@ Ten stan poziomu sukcesu wskazuje, że dla danego poddrzewa Rejestru istnieje ju
 Language=Romanian
 This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
 .
+Language=Japanese
+この成功レベルのステータスは、レジストリ サブツリーに対してトランザクション状態がすでに存在するが、トランザクション コミットが以前に中止されたことを示します。
+.
 
 MessageId=745
 Severity=Success
@@ -6500,6 +7657,9 @@ Wskazuje, że żądanie potwierdzenia zmiany zostało zakończone z powodu zamkn
 .
 Language=Romanian
 This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
+.
+Language=Japanese
+これは、通知変更要求を行ったハンドルを閉じることにより、通知変更要求が完了したことを示します。
 .
 
 MessageId=746
@@ -6518,6 +7678,9 @@ Podjęto próbę podłączenia do zdalnego serwera %hs przez transport podstawow
 Language=Romanian
 An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
 .
+Language=Japanese
+プライマリ トランスポートでリモート サーバ %hs に接続しようとしましたが、接続に失敗しました。
+.
 
 MessageId=747
 Severity=Success
@@ -6534,6 +7697,9 @@ Błąd strony był błędem przejścia.
 .
 Language=Romanian
 Page fault was a transition fault.
+.
+Language=Japanese
+ページフォルトはトランジションフォルトでした。
 .
 
 MessageId=748
@@ -6552,6 +7718,9 @@ Błąd strony był błędem typu wymagane zero.
 Language=Romanian
 Page fault was a demand zero fault.
 .
+Language=Japanese
+ページフォルトはデマンドゼロのフォールトでした。
+.
 
 MessageId=749
 Severity=Success
@@ -6568,6 +7737,9 @@ Błąd strony był błędem typu wymagane zero.
 .
 Language=Romanian
 Page fault was a demand zero fault.
+.
+Language=Japanese
+ページフォルトはデマンドゼロのフォールトでした。
 .
 
 MessageId=750
@@ -6586,6 +7758,9 @@ Błąd strony był błędem typu wymagane zero.
 Language=Romanian
 Page fault was a demand zero fault.
 .
+Language=Japanese
+ページフォルトはデマンドゼロのフォールトでした。
+.
 
 MessageId=751
 Severity=Success
@@ -6602,6 +7777,9 @@ Błąd strony został naprawiony przez odczyt z zapasowego urządzenia magazynuj
 .
 Language=Romanian
 Page fault was satisfied by reading from a secondary storage device.
+.
+Language=Japanese
+ページフォルトはセカンダリストレージデバイスからの読み取りによって満たされました。
 .
 
 MessageId=752
@@ -6620,6 +7798,9 @@ Buforowana strona została zablokowana podczas operacji.
 Language=Romanian
 Cached page was locked during operation.
 .
+Language=Japanese
+操作中にキャッシュされたページがロックされました。
+.
 
 MessageId=753
 Severity=Success
@@ -6636,6 +7817,9 @@ W pliku stronicowania istnieje zrzut awaryjny.
 .
 Language=Romanian
 Crash dump exists in paging file.
+.
+Language=Japanese
+ページング ファイルにクラッシュ ダンプが存在します。
 .
 
 MessageId=754
@@ -6654,6 +7838,9 @@ Określony bufor zawiera same zera.
 Language=Romanian
 Specified buffer contains all zeros.
 .
+Language=Japanese
+指定されたバッファにすべてのゼロが含まれています。
+.
 
 MessageId=755
 Severity=Success
@@ -6670,6 +7857,9 @@ Menedżer obiektów powinien przeprowadzić ponowną analizę składni, poniewa�
 .
 Language=Romanian
 A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+.
+Language=Japanese
+ファイル名がシンボリック リンクであったため、オブジェクト マネージャで再解析を実行する必要があります。
 .
 
 MessageId=756
@@ -6688,6 +7878,9 @@ Urządzenie pomyślnie wykonało operację zatrzymania zapytania i wymagania dot
 Language=Romanian
 The device has succeeded a query-stop and its resource requirements have changed.
 .
+Language=Japanese
+デバイスがクエリ停止に成功し、リソース要件が変更されました。
+.
 
 MessageId=757
 Severity=Success
@@ -6704,6 +7897,9 @@ Translator zinterpretował zasoby w przestrzeni globalnej i nie należy wykonywa
 .
 Language=Romanian
 The translator has translated these resources into the global space and no further translations should be performed.
+.
+Language=Japanese
+トランスレータはこれらのリソースをグローバル空間に変換しました。
 .
 
 MessageId=758
@@ -6722,6 +7918,9 @@ Kończony proces nie ma wątków do zakończenia.
 Language=Romanian
 A process being terminated has no threads to terminate.
 .
+Language=Japanese
+終了するプロセスには終了するスレッドがありません。
+.
 
 MessageId=759
 Severity=Success
@@ -6738,6 +7937,9 @@ Określony proces nie jest częścią zadania.
 .
 Language=Romanian
 The specified process is not part of a job.
+.
+Language=Japanese
+指定されたプロセスはジョブの一部ではありません。
 .
 
 MessageId=760
@@ -6756,6 +7958,9 @@ Określony proces jest częścią zadania.
 Language=Romanian
 The specified process is part of a job.
 .
+Language=Japanese
+指定されたプロセスはジョブの一部です。
+.
 
 MessageId=761
 Severity=Success
@@ -6772,6 +7977,9 @@ System jest teraz gotowy do hibernacji.
 .
 Language=Romanian
 The system is now ready for hibernation.
+.
+Language=Japanese
+システムは休止状態への準備が整いました。
 .
 
 MessageId=762
@@ -6790,6 +7998,9 @@ System plików lub sterownik filtru systemu plików ukończył pomyślnie operac
 Language=Romanian
 A file system or file system filter driver has successfully completed an FsFilter operation.
 .
+Language=Japanese
+ファイル システムまたはファイル システム フィルタ ドライバーが FsFilter 操作を正常に完了しました。
+.
 
 MessageId=763
 Severity=Success
@@ -6806,6 +8017,9 @@ Określony wektor przerwania był już połączony.
 .
 Language=Romanian
 The specified interrupt vector was already connected.
+.
+Language=Japanese
+指定された割り込みベクタはすでに接続されています。
 .
 
 MessageId=764
@@ -6824,6 +8038,9 @@ Określony wektor przerwania jest wciąż połączony.
 Language=Romanian
 The specified interrupt vector is still connected.
 .
+Language=Japanese
+指定された割り込みベクタはまだ接続されています。
+.
 
 MessageId=765
 Severity=Success
@@ -6840,6 +8057,9 @@ Operacja jest zablokowana i czeka na operację oplock.
 .
 Language=Romanian
 An operation is blocked waiting for an oplock.
+.
+Language=Japanese
+操作がブロックされました。
 .
 
 MessageId=766
@@ -6858,6 +8078,9 @@ Debuger obsłużył wyjątek
 Language=Romanian
 Debugger handled exception.
 .
+Language=Japanese
+デバッガが例外を処理しました。
+.
 
 MessageId=767
 Severity=Success
@@ -6874,6 +8097,9 @@ Debuger kontynuuje pracę
 .
 Language=Romanian
 Debugger continued
+.
+Language=Japanese
+デバッガ継続。
 .
 
 MessageId=768
@@ -6892,6 +8118,9 @@ Wystąpił wyjątek w wywołaniu zwrotnym trybu użytkownika, a ramka wywołania
 Language=Romanian
 An exception occurred in a user mode callback and the kernel callback frame should be removed.
 .
+Language=Japanese
+ユーザー モード コールバックで例外が発生したため、カーネル コールバック フレームを削除する必要があります。
+.
 
 MessageId=769
 Severity=Success
@@ -6908,6 +8137,9 @@ Kompresja jest wyłączona dla tego woluminu.
 .
 Language=Romanian
 Compression is disabled for this volume.
+.
+Language=Japanese
+このボリュームでは圧縮が無効になっています。
 .
 
 MessageId=770
@@ -6926,6 +8158,9 @@ Dostawca danych nie może pobierać zestawu wyników wstecz.
 Language=Romanian
 The data provider cannot fetch backwards through a result set.
 .
+Language=Japanese
+データ プロバイダーは結果セットを後方にフェッチできません。
+.
 
 MessageId=771
 Severity=Success
@@ -6942,6 +8177,9 @@ Dostawca danych nie może przewijać zestawu wyników wstecz.
 .
 Language=Romanian
 The data provider cannot scroll backwards through a result set.
+.
+Language=Japanese
+データ プロバイダーは結果セットを逆方向にスクロールできません。
 .
 
 MessageId=772
@@ -6960,6 +8198,9 @@ Dostawca danych wymaga zwolnienia poprzednio pobranych danych przed żądaniem k
 Language=Romanian
 The data provider requires that previously fetched data is released before asking for more data.
 .
+Language=Japanese
+データ プロバイダーは、さらにデータを要求する前に、以前にフェッチされたデータを解放する必要があります。
+.
 
 MessageId=773
 Severity=Success
@@ -6976,6 +8217,9 @@ Dostawca danych nie może zinterpretować zestawu flag dla wiązania kolumn w me
 .
 Language=Romanian
 The data provider was not able to interpret the flags set for a column binding in an accessor.
+.
+Language=Japanese
+データ プロバイダーが、アクセサ内の列バインディングに設定されたフラグを解釈できませんでした。
 .
 
 MessageId=774
@@ -6994,6 +8238,9 @@ Wystąpił co najmniej jeden błąd podczas przetwarzania żądania.
 Language=Romanian
 One or more errors occurred while processing the request.
 .
+Language=Japanese
+要求の処理中に1つ以上のエラーが発生しました。
+.
 
 MessageId=775
 Severity=Success
@@ -7010,6 +8257,9 @@ Bieżąca implementacja nie może wykonać żądania.
 .
 Language=Romanian
 The implementation is not capable of performing the request.
+.
+Language=Japanese
+実装が要求を実行できません。
 .
 
 MessageId=776
@@ -7028,6 +8278,9 @@ Klient składnika zażądał nieprawidłowej operacji podającej stan wystąpien
 Language=Romanian
 The client of a component requested an operation which is not valid given the state of the component instance.
 .
+Language=Japanese
+コンポーネントのクライアントが、コンポーネント インスタンスの状態を考慮して有効でない操作を要求しました。
+.
 
 MessageId=777
 Severity=Success
@@ -7044,6 +8297,9 @@ Nie można przeanalizować numeru wersji.
 .
 Language=Romanian
 A version number could not be parsed.
+.
+Language=Japanese
+バージョン番号を解析できませんでした。
 .
 
 MessageId=778
@@ -7062,6 +8318,9 @@ Pozycja początkowa iteratora jest nieprawidłowa.
 Language=Romanian
 The iterator's start position is invalid.
 .
+Language=Japanese
+イテレータの開始位置が無効です。
+.
 
 MessageId=994
 Severity=Success
@@ -7078,6 +8337,9 @@ Dostęp do atrybutu rozszerzonego został zabroniony.
 .
 Language=Romanian
 Access to the extended attribute was denied.
+.
+Language=Japanese
+拡張属性へのアクセスが拒否されました。
 .
 
 MessageId=995
@@ -7096,6 +8358,9 @@ Operacja We/Wy została przerwana z powodu zakończenia wątku lub żądania apl
 Language=Romanian
 The I/O operation has been aborted because of either a thread exit or an application request.
 .
+Language=Japanese
+スレッド終了またはアプリケーション要求によりI/O操作が中断されました。
+.
 
 MessageId=996
 Severity=Success
@@ -7112,6 +8377,9 @@ Pokrywające się zdarzenie We/Wy nie jest w stanie sygnalizacji.
 .
 Language=Romanian
 Overlapped I/O event is not in a signaled state.
+.
+Language=Japanese
+オーバーラップしたI/Oイベントがシグナルされた状態にありません。
 .
 
 MessageId=997
@@ -7130,6 +8398,9 @@ Pokrywająca się operacja We/Wy jest w toku.
 Language=Romanian
 Overlapped I/O operation is in progress.
 .
+Language=Japanese
+オーバーラップI/Oオペレーションが進行中です。
+.
 
 MessageId=998
 Severity=Success
@@ -7146,6 +8417,9 @@ Nieprawidłowy dostęp do lokalizacji w pamięci.
 .
 Language=Romanian
 Invalid access to memory location.
+.
+Language=Japanese
+メモリー ロケーションへのアクセスが無効です。
 .
 
 MessageId=999
@@ -7164,6 +8438,9 @@ Błąd wykonania operacji inpage.
 Language=Romanian
 Error performing inpage operation.
 .
+Language=Japanese
+ページ内操作の実行エラーです。
+.
 
 MessageId=1001
 Severity=Success
@@ -7180,6 +8457,9 @@ Zbyt głęboka rekursja, stos przepełniony.
 .
 Language=Romanian
 Recursion too deep; the stack overflowed.
+.
+Language=Japanese
+再帰が深すぎます。スタックがオーバーフローしました。
 .
 
 MessageId=1002
@@ -7198,6 +8478,9 @@ Okno nie może operować na wysłanym komunikacie.
 Language=Romanian
 The window cannot act on the sent message.
 .
+Language=Japanese
+ウィンドウは送信されたメッセージを処理できません。
+.
 
 MessageId=1003
 Severity=Success
@@ -7214,6 +8497,9 @@ Nie można ukończyć wykonywania tej funkcji.
 .
 Language=Romanian
 Cannot complete this function.
+.
+Language=Japanese
+この関数を完了できません。
 .
 
 MessageId=1004
@@ -7232,6 +8518,9 @@ Nieprawidłowe flagi.
 Language=Romanian
 Invalid flags.
 .
+Language=Japanese
+無効なフラグです。
+.
 
 MessageId=1005
 Severity=Success
@@ -7248,6 +8537,10 @@ Wolumin nie zawiera rozpoznawanego systemu plików. Sprawdź, czy załadowano ws
 .
 Language=Romanian
 The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
+.
+Language=Japanese
+ボリュームに認識されるファイル システムが含まれていません。
+必要なファイル システム ドライバがすべてロードされていること、およびボリュームが壊れていないことを確認してください。
 .
 
 MessageId=1006
@@ -7266,6 +8559,9 @@ Wolumin pliku został zewnętrznie zmieniony w taki sposób, że otwarty plik ni
 Language=Romanian
 The volume for a file has been externally altered so that the opened file is no longer valid.
 .
+Language=Japanese
+ファイルのボリュームが外部から変更されたため、オープンされたファイルが無効になりました。
+.
 
 MessageId=1007
 Severity=Success
@@ -7282,6 +8578,9 @@ Nie można wykonać żądanej operacji w trybie pełnoekranowym.
 .
 Language=Romanian
 The requested operation cannot be performed in full-screen mode.
+.
+Language=Japanese
+要求された操作はフルスクリーンモードでは実行できません。
 .
 
 MessageId=1008
@@ -7300,6 +8599,9 @@ Wykonano próbę odwołania się do tokena, który nie istnieje.
 Language=Romanian
 An attempt was made to reference a token that does not exist.
 .
+Language=Japanese
+存在しないトークンを参照しようとしました。
+.
 
 MessageId=1009
 Severity=Success
@@ -7316,6 +8618,9 @@ Baza danych rejestru konfiguracji jest uszkodzona.
 .
 Language=Romanian
 The configuration registry database is corrupt.
+.
+Language=Japanese
+構成レジストリ データベースが壊れています。
 .
 
 MessageId=1010
@@ -7334,6 +8639,9 @@ Klucz rejestru konfiguracji jest nieprawidłowy.
 Language=Romanian
 The configuration registry key is invalid.
 .
+Language=Japanese
+構成レジストリ キーが無効です。
+.
 
 MessageId=1011
 Severity=Success
@@ -7350,6 +8658,9 @@ Nie można otworzyć klucza rejestru konfiguracji.
 .
 Language=Romanian
 The configuration registry key could not be opened.
+.
+Language=Japanese
+構成レジストリ キーを開けませんでした。
 .
 
 MessageId=1012
@@ -7368,6 +8679,9 @@ Nie można odczytać klucza rejestru konfiguracji.
 Language=Romanian
 The configuration registry key could not be read.
 .
+Language=Japanese
+構成レジストリ キーを読み取れませんでした。
+.
 
 MessageId=1013
 Severity=Success
@@ -7384,6 +8698,9 @@ Nie można zapisać klucza rejestru konfiguracji.
 .
 Language=Romanian
 The configuration registry key could not be written.
+.
+Language=Japanese
+構成レジストリ キーを書き込めませんでした。
 .
 
 MessageId=1014
@@ -7402,6 +8719,9 @@ Jeden z plików w bazie danych rejestru musiał zostać odzyskany za pomocą dzi
 Language=Romanian
 One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
 .
+Language=Japanese
+レジストリ データベースのファイルの 1 つは、ログまたは代替コピーを使用して回復する必要がありました。回復に成功しました。
+.
 
 MessageId=1015
 Severity=Success
@@ -7418,6 +8738,9 @@ Rejestr jest uszkodzony. Uszkodzona jest struktura jednego z plików zawierając
 .
 Language=Romanian
 The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
+.
+Language=Japanese
+レジストリが壊れています。レジストリ データを含むファイルの構造が壊れているか、ファイルのシステム キャッシュ メモリ イメージが壊れているか、代替コピーまたはログが存在しないか壊れているため、ファイルを回復できませんでした。
 .
 
 MessageId=1016
@@ -7436,6 +8759,9 @@ Operacja We/Wy zainicjowana przez rejestr nie powiodła się w sposób nieodwrac
 Language=Romanian
 An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
 .
+Language=Japanese
+レジストリによって開始されたI/O操作が回復不能に失敗しました。レジストリが、レジストリのシステムイメージを含むファイルの1つを読み込めなかったか、書き込めなかったか、フラッシュできなかった。
+.
 
 MessageId=1017
 Severity=Success
@@ -7452,6 +8778,9 @@ System próbował załadować lub przywrócić plik do Rejestru, ale określony 
 .
 Language=Romanian
 The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
+.
+Language=Japanese
+レジストリにファイルをロードまたは復元しようとしましたが、指定されたファイルはレジストリファイル形式ではありません。
 .
 
 MessageId=1018
@@ -7470,6 +8799,9 @@ Wykonano próbę niedozwolonej operacji na kluczu Rejestru, który został oznac
 Language=Romanian
 Illegal operation attempted on a registry key that has been marked for deletion.
 .
+Language=Japanese
+削除マークが付けられたレジストリ キーに対して不正な操作を試みました。
+.
 
 MessageId=1019
 Severity=Success
@@ -7486,6 +8818,9 @@ System nie mógł przydzielić wymaganego miejsca w dzienniku Rejestru.
 .
 Language=Romanian
 System could not allocate the required space in a registry log.
+.
+Language=Japanese
+レジストリ ログに必要な領域を割り当てられませんでした。
 .
 
 MessageId=1020
@@ -7504,6 +8839,9 @@ W Rejestrze kluczy, który ma już podklucze lub wartości, nie można utworzyć
 Language=Romanian
 Cannot create a symbolic link in a registry key that already has subkeys or values.
 .
+Language=Japanese
+すでにサブキーまたは値を持つレジストリ キーにシンボリック リンクを作成できません。
+.
 
 MessageId=1021
 Severity=Success
@@ -7520,6 +8858,9 @@ Dla usuwalnego klucza nadrzędnego nie można utworzyć trwałego podklucza.
 .
 Language=Romanian
 Cannot create a stable subkey under a volatile parent key.
+.
+Language=Japanese
+揮発性の親キーの下に安定したサブキーを作成できません。
 .
 
 MessageId=1022
@@ -7538,6 +8879,9 @@ Language=Polish
 Language=Romanian
 A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
 .
+Language=Japanese
+通知変更要求が完了しましたが、呼び出し元のバッファに情報が返されていません。呼び出し元は変更点を見つけるためにファイルを列挙する必要があります。
+.
 
 MessageId=1051
 Severity=Success
@@ -7554,6 +8898,9 @@ Sygnał kontrolny Stop został wysłany do usługi, od której są zależne inne
 .
 Language=Romanian
 A stop control has been sent to a service that other running services are dependent on.
+.
+Language=Japanese
+他の実行中のサービスが依存しているサービスに停止制御が送信されました。
 .
 
 MessageId=1052
@@ -7572,6 +8919,9 @@ Language=Polish
 Language=Romanian
 The requested control is not valid for this service.
 .
+Language=Japanese
+要求されたコントロールは、このサービスに対して有効ではありません。
+.
 
 MessageId=1053
 Severity=Success
@@ -7588,6 +8938,9 @@ Usługa nie odpowiada na sygnał uruchomienia lub sygnał sterujący w oczekiwan
 .
 Language=Romanian
 The service did not respond to the start or control request in a timely fashion.
+.
+Language=Japanese
+サービスがタイムリーに開始または制御要求に応答しませんでした。
 .
 
 MessageId=1054
@@ -7606,6 +8959,9 @@ Nie można utworzyć wątku dla tej usługi.
 Language=Romanian
 A thread could not be created for the service.
 .
+Language=Japanese
+サービスにスレッドを作成できませんでした。
+.
 
 MessageId=1055
 Severity=Success
@@ -7622,6 +8978,9 @@ Baza danych usługi jest zablokowana.
 .
 Language=Romanian
 The service database is locked.
+.
+Language=Japanese
+サービスデータベースがロックされました。
 .
 
 MessageId=1056
@@ -7640,6 +8999,9 @@ Jedno wystąpienie usługi już działa.
 Language=Romanian
 An instance of the service is already running.
 .
+Language=Japanese
+サービスのインスタンスがすでに実行されています。
+.
 
 MessageId=1057
 Severity=Success
@@ -7656,6 +9018,9 @@ Nazwa konta jest nieprawidłowa lub nie istnieje albo hasło dla podanej nazwy k
 .
 Language=Romanian
 The account name is invalid or does not exist, or the password is invalid for the account name specified.
+.
+Language=Japanese
+アカウント名が無効か存在しないか、指定されたアカウント名のパスワードが無効です。
 .
 
 MessageId=1058
@@ -7674,6 +9039,9 @@ Nie można uruchomić określonej usługi, ponieważ jest ona wyłączona lub po
 Language=Romanian
 The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
 .
+Language=Japanese
+サービスが無効になっているか、有効なデバイスが関連付けられていないため、サービスを開始できません。
+.
 
 MessageId=1059
 Severity=Success
@@ -7690,6 +9058,9 @@ Określono cykliczną zależność usługi.
 .
 Language=Romanian
 Circular service dependency was specified.
+.
+Language=Japanese
+円形のサービス依存関係が指定されました。
 .
 
 MessageId=1060
@@ -7708,6 +9079,9 @@ Określona usługa nie istnieje jako usługa zainstalowana.
 Language=Romanian
 The specified service does not exist as an installed service.
 .
+Language=Japanese
+指定されたサービスがインストールされたサービスとして存在しません。
+.
 
 MessageId=1061
 Severity=Success
@@ -7724,6 +9098,9 @@ Usługa nie może teraz zaakceptować komunikatów sterujących.
 .
 Language=Romanian
 The service cannot accept control messages at this time.
+.
+Language=Japanese
+サービスは現在、制御メッセージを受け付けることができません。
 .
 
 MessageId=1062
@@ -7742,6 +9119,9 @@ Usługa nie została uruchomiona.
 Language=Romanian
 The service has not been started.
 .
+Language=Japanese
+サービスが開始されていません。
+.
 
 MessageId=1063
 Severity=Success
@@ -7758,6 +9138,9 @@ Proces usługi nie mógł połączyć się z kontrolerem usługi.
 .
 Language=Romanian
 The service process could not connect to the service controller.
+.
+Language=Japanese
+サービスプロセスがサービスコントローラに接続できませんでした。
 .
 
 MessageId=1064
@@ -7776,6 +9159,9 @@ W usłudze wystąpił wyjątek podczas obsługi żądania kontroli.
 Language=Romanian
 An exception occurred in the service when handling the control request.
 .
+Language=Japanese
+制御要求の処理中にサービスで例外が発生しました。
+.
 
 MessageId=1065
 Severity=Success
@@ -7792,6 +9178,9 @@ Określona baza danych nie istnieje.
 .
 Language=Romanian
 The database specified does not exist.
+.
+Language=Japanese
+指定されたデータベースが存在しません。
 .
 
 MessageId=1066
@@ -7810,6 +9199,9 @@ Usługa zwróciła kod błędu specyficzny dla tej usługi.
 Language=Romanian
 The service has returned a service-specific error code.
 .
+Language=Japanese
+サービス固有のエラーコードが返されました。
+.
 
 MessageId=1067
 Severity=Success
@@ -7826,6 +9218,9 @@ Proces zakończył się nieoczekiwanie.
 .
 Language=Romanian
 The process terminated unexpectedly.
+.
+Language=Japanese
+プロセスが予期せず終了しました。
 .
 
 MessageId=1068
@@ -7844,6 +9239,9 @@ Uruchomienie usługi zależności lub grupy nie powiodło się.
 Language=Romanian
 The dependency service or group failed to start.
 .
+Language=Japanese
+依存サービスまたはグループが開始できませんでした。
+.
 
 MessageId=1069
 Severity=Success
@@ -7860,6 +9258,9 @@ Usługa nie została uruchomiona z powodu nieudanego logowania.
 .
 Language=Romanian
 The service did not start due to a logon failure.
+.
+Language=Japanese
+ログオンの失敗によりサービスが開始されませんでした。
 .
 
 MessageId=1070
@@ -7878,6 +9279,9 @@ Po uruchomieniu usługa uległa zawieszeniu w stanie startowym.
 Language=Romanian
 After starting, the service hung in a start-pending state.
 .
+Language=Japanese
+開始後、サービスが開始待ち状態でハングしました。
+.
 
 MessageId=1071
 Severity=Success
@@ -7894,6 +9298,9 @@ Określona blokada bazy danych usługi jest nieprawidłowa.
 .
 Language=Romanian
 The specified service database lock is invalid.
+.
+Language=Japanese
+指定されたサービス データベース ロックが無効です。
 .
 
 MessageId=1072
@@ -7912,6 +9319,9 @@ Określona usługa została oznaczona do usunięcia.
 Language=Romanian
 The specified service has been marked for deletion.
 .
+Language=Japanese
+指定されたサービスは削除マークが付けられました。
+.
 
 MessageId=1073
 Severity=Success
@@ -7928,6 +9338,9 @@ Określona usługa już istnieje.
 .
 Language=Romanian
 The specified service already exists.
+.
+Language=Japanese
+指定されたサービスは既に存在します。
 .
 
 MessageId=1074
@@ -7946,6 +9359,9 @@ System działa obecnie w ostatniej znanej dobrej konfiguracji.
 Language=Romanian
 The system is currently running with the last-known-good configuration.
 .
+Language=Japanese
+システムは現在、最終既知の構成で動作しています。
+.
 
 MessageId=1075
 Severity=Success
@@ -7962,6 +9378,9 @@ Usługa zależności nie istnieje lub została oznaczona do usunięcia.
 .
 Language=Romanian
 The dependency service does not exist or has been marked for deletion.
+.
+Language=Japanese
+依存サービスが存在しないか、削除マークが付けられています。
 .
 
 MessageId=1076
@@ -7980,6 +9399,9 @@ Bieżące uruchomienie zostało już zaakceptowane do użycia jako ostatni znany
 Language=Romanian
 The current boot has already been accepted for use as the last-known-good control set.
 .
+Language=Japanese
+現在のブートは、Last-Known-Goodコントロールセットとして使用するために既に受け入れられました。
+.
 
 MessageId=1077
 Severity=Success
@@ -7996,6 +9418,9 @@ Od czasu ostatniego uruchomienia komputera nie podejmowano prób uruchomienia us
 .
 Language=Romanian
 No attempts to start the service have been made since the last boot.
+.
+Language=Japanese
+最後のブート以降、サービスの開始を試みていません。
 .
 
 MessageId=1078
@@ -8014,6 +9439,9 @@ Nazwa jest już w użyciu jako nazwa usługi lub wyświetlana nazwa usługi.
 Language=Romanian
 The name is already in use as either a service name or a service display name.
 .
+Language=Japanese
+サービス名またはサービス表示名として既に使用されています。
+.
 
 MessageId=1079
 Severity=Success
@@ -8030,6 +9458,9 @@ Konto podane dla tej usługi różni się od konta podanego dla innych usług dz
 .
 Language=Romanian
 The account specified for this service is different from the account specified for other services running in the same process.
+.
+Language=Japanese
+このサービスに指定されたアカウントが、同じプロセスで実行されている他のサービスに指定されたアカウントと異なります。
 .
 
 MessageId=1080
@@ -8048,6 +9479,9 @@ Akcje przypisane do błędów można ustawić tylko dla usług Win32, a nie dla 
 Language=Romanian
 Failure actions can only be set for Win32 services, not for drivers.
 .
+Language=Japanese
+失敗アクションはWin32サービスに対してのみ設定でき、ドライバに対しては設定できません。
+.
 
 MessageId=1081
 Severity=Success
@@ -8064,6 +9498,10 @@ Ta usługa działa w tym samym procesie, co Menedżer sterowania usługami. Z te
 .
 Language=Romanian
 This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
+.
+Language=Japanese
+このサービスはサービスコントロールマネージャと同じプロセスで実行されます。
+そのため、このサービスのプロセスが予期せず終了した場合、サービスコントロールマネージャはアクションを実行できません。
 .
 
 MessageId=1082
@@ -8082,6 +9520,9 @@ Language=Polish
 Language=Romanian
 No recovery program has been configured for this service.
 .
+Language=Japanese
+このサービスに回復プログラムが設定されていません。
+.
 
 MessageId=1083
 Severity=Success
@@ -8098,6 +9539,9 @@ Program wykonywalny, w którym ta usługa (zgodnie z jej konfiguracją) ma być 
 .
 Language=Romanian
 The executable program that this service is configured to run in does not implement the service.
+.
+Language=Japanese
+このサービスが実行されるように構成されている実行可能プログラムは、サービスを実装していません。
 .
 
 MessageId=1084
@@ -8116,6 +9560,9 @@ Tej usługi nie można uruchomić w trybie awaryjnym
 Language=Romanian
 This service cannot be started in Safe Mode.
 .
+Language=Japanese
+このサービスはセーフ モードで起動できません。
+.
 
 MessageId=1100
 Severity=Success
@@ -8132,6 +9579,9 @@ Osiągnięto fizyczny koniec taśmy.
 .
 Language=Romanian
 The physical end of the tape has been reached.
+.
+Language=Japanese
+テープの物理的な終端に達しました。
 .
 
 MessageId=1101
@@ -8150,6 +9600,9 @@ Osiągnięto znacznik pliku na taśmie.
 Language=Romanian
 A tape access reached a filemark.
 .
+Language=Japanese
+テープ アクセスがファイルマークに到達しました。
+.
 
 MessageId=1102
 Severity=Success
@@ -8166,6 +9619,9 @@ Napotkano początek taśmy lub partycji.
 .
 Language=Romanian
 The beginning of the tape or a partition was encountered.
+.
+Language=Japanese
+テープの先頭またはパーティションに遭遇しました。
 .
 
 MessageId=1103
@@ -8184,6 +9640,9 @@ Osiągnięto koniec zestawu plików na taśmie.
 Language=Romanian
 A tape access reached the end of a set of files.
 .
+Language=Japanese
+テープ アクセスがファイル セットの最後に到達しました。
+.
 
 MessageId=1104
 Severity=Success
@@ -8200,6 +9659,9 @@ Na taśmie brak dalszych danych.
 .
 Language=Romanian
 No more data is on the tape.
+.
+Language=Japanese
+テープにデータがありません。
 .
 
 MessageId=1105
@@ -8218,6 +9680,9 @@ Nie można podzielić taśmy na partycje.
 Language=Romanian
 Tape could not be partitioned.
 .
+Language=Japanese
+テープをパーティション分割できませんでした。
+.
 
 MessageId=1106
 Severity=Success
@@ -8234,6 +9699,9 @@ W trakcie uzyskiwania dostępu do nowej taśmy w partycji o wielu woluminach, bi
 .
 Language=Romanian
 When accessing a new tape of a multivolume partition, the current block size is incorrect.
+.
+Language=Japanese
+マルチボリューム パーティションの新しいテープにアクセスすると、現在のブロック サイズが正しくありません。
 .
 
 MessageId=1107
@@ -8252,6 +9720,9 @@ Podczas ładowania taśmy nie odnaleziono informacji o jej partycjach.
 Language=Romanian
 Tape partition information could not be found when loading a tape.
 .
+Language=Japanese
+テープの読み込み時にテープ パーティション情報が見つかりませんでした。
+.
 
 MessageId=1108
 Severity=Success
@@ -8268,6 +9739,9 @@ Nie można zablokować mechanizmu wysuwu nośnika.
 .
 Language=Romanian
 Unable to lock the media eject mechanism.
+.
+Language=Japanese
+メディア取り出し機構をロックできません。
 .
 
 MessageId=1109
@@ -8286,6 +9760,9 @@ Nie można usunąć nośnika z pamięci.
 Language=Romanian
 Unable to unload the media.
 .
+Language=Japanese
+メディアをアンロードできません。
+.
 
 MessageId=1110
 Severity=Success
@@ -8302,6 +9779,9 @@ Nośnik w stacji mógł się zmienić.
 .
 Language=Romanian
 The media in the drive may have changed.
+.
+Language=Japanese
+ドライブ内のメディアが変更された可能性があります。
 .
 
 MessageId=1111
@@ -8320,6 +9800,9 @@ Magistrala We/Wy została zresetowana.
 Language=Romanian
 The I/O bus was reset.
 .
+Language=Japanese
+I/O バスがリセットされました。
+.
 
 MessageId=1112
 Severity=Success
@@ -8336,6 +9819,9 @@ Brak nośnika w stacji.
 .
 Language=Romanian
 No media in drive.
+.
+Language=Japanese
+ドライブにメディアがありません。
 .
 
 MessageId=1113
@@ -8354,6 +9840,9 @@ Brak mapowania dla tego znaku Unicode w docelowej wielobajtowej stronie kodowej.
 Language=Romanian
 No mapping for the Unicode character exists in the target multi-byte code page.
 .
+Language=Japanese
+ターゲットのマルチバイト コード ページにUnicode文字のマッピングがありません。
+.
 
 MessageId=1114
 Severity=Success
@@ -8370,6 +9859,9 @@ Procedura inicjowania biblioteki dołączanej dynamicznie (DLL) nie powiodła si
 .
 Language=Romanian
 A dynamic link library (DLL) initialization routine failed.
+.
+Language=Japanese
+動的リンク ライブラリ (DLL) の初期化ルーチンが失敗しました。
 .
 
 MessageId=1115
@@ -8388,6 +9880,9 @@ Trwa proces zamykania systemu.
 Language=Romanian
 A system shutdown is in progress.
 .
+Language=Japanese
+システムのシャットダウンが進行中です。
+.
 
 MessageId=1116
 Severity=Success
@@ -8404,6 +9899,9 @@ Nie można przerwać procesu zamykania systemu, ponieważ taki proces nie jest w
 .
 Language=Romanian
 Unable to abort the system shutdown because no shutdown was in progress.
+.
+Language=Japanese
+シャットダウンが進行中でないため、システムのシャットダウンを中止できません。
 .
 
 MessageId=1117
@@ -8422,6 +9920,9 @@ Nie można wykonać żądania z powodu błędu urządzenia We/Wy.
 Language=Romanian
 The request could not be performed because of an I/O device error.
 .
+Language=Japanese
+要求はI/Oデバイスエラーのため実行できませんでした。
+.
 
 MessageId=1118
 Severity=Success
@@ -8438,6 +9939,9 @@ Language=Polish
 .
 Language=Romanian
 No serial device was successfully initialized. The serial driver will unload.
+.
+Language=Japanese
+シリアル デバイスが正常に初期化されませんでした。シリアル ドライバはアンロードします。
 .
 
 MessageId=1119
@@ -8456,6 +9960,9 @@ Nie można otworzyć urządzenia, które współużytkowało przerwanie (IRQ) z 
 Language=Romanian
 Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
 .
+Language=Japanese
+他のデバイスと割り込み要求 (IRQ)  を共有しているデバイスを開くことができません。そのIRQを使用する少なくとも1つの他のデバイスがすでにオープンされています。
+.
 
 MessageId=1120
 Severity=Success
@@ -8472,6 +9979,10 @@ Operacja szeregowego We/Wy została zakończona przez inny zapis do portu szereg
 .
 Language=Romanian
 A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
+.
+Language=Japanese
+シリアルI/O操作がシリアルポートへの別の書き込みによって完了しました。
+ (IOCTL_SERIAL_XOFF_COUNTERが0になりました。)
 .
 
 MessageId=1121
@@ -8490,6 +10001,9 @@ Operacja szeregowego We/Wy została zakończona z powodu przekroczenia limitu cz
 Language=Romanian
 A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
 .
+Language=Japanese
+タイムアウト期間が切れたため、シリアルI/Oオペレーションが完了しました (IOCTL_SERIAL_XOFF_COUNTERが0になりませんでした)。
+.
 
 MessageId=1122
 Severity=Success
@@ -8506,6 +10020,9 @@ Na dyskietce nie znaleziono znacznika adresu identyfikatora.
 .
 Language=Romanian
 No ID address mark was found on the floppy disk.
+.
+Language=Japanese
+フロッピーディスクにIDアドレスマークが見つかりませんでした。
 .
 
 MessageId=1123
@@ -8524,6 +10041,9 @@ Niedopasowanie między polem identyfikatora sektora dyskietki i adresem ścieżk
 Language=Romanian
 Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
 .
+Language=Japanese
+フロッピーディスクのセクタIDフィールドとフロッピーディスクコントローラのトラックアドレスが一致しません。
+.
 
 MessageId=1124
 Severity=Success
@@ -8540,6 +10060,9 @@ Kontroler stacji dyskietek zgłosił błąd, który nie został rozpoznany przez
 .
 Language=Romanian
 The floppy disk controller reported an error that is not recognized by the floppy disk driver.
+.
+Language=Japanese
+フロッピーディスクコントローラから、フロッピーディスクドライバが認識できないエラーが報告されました。
 .
 
 MessageId=1125
@@ -8558,6 +10081,9 @@ Kontroler stacji dyskietek zwrócił w swych rejestrach niezgodne wyniki.
 Language=Romanian
 The floppy disk controller returned inconsistent results in its registers.
 .
+Language=Japanese
+フロッピーディスクコントローラがレジスタに矛盾した結果を返しました。
+.
 
 MessageId=1126
 Severity=Success
@@ -8574,6 +10100,9 @@ Podczas uzyskiwania dostępu do dysku twardego operacja rekalibracji nie powiod�
 .
 Language=Romanian
 While accessing the hard disk, a recalibrate operation failed, even after retries.
+.
+Language=Japanese
+ハードディスクにアクセス中に、再試行しても再キャリブレーションに失敗しました。
 .
 
 MessageId=1127
@@ -8592,6 +10121,9 @@ Podczas uzyskiwania dostępu do dysku twardego operacja dyskowa nie powiodła si
 Language=Romanian
 While accessing the hard disk, a disk operation failed even after retries.
 .
+Language=Japanese
+ハードディスクにアクセス中、再試行してもディスク操作に失敗しました。
+.
 
 MessageId=1128
 Severity=Success
@@ -8608,6 +10140,9 @@ Podczas uzyskiwania dostępu do dysku twardego, niezbędna była operacja reseto
 .
 Language=Romanian
 While accessing the hard disk, a disk controller reset was needed, but even that failed.
+.
+Language=Japanese
+ハードディスクへのアクセス中にディスクコントローラのリセットが必要でしたが、それにも失敗しました。
 .
 
 MessageId=1129
@@ -8626,6 +10161,9 @@ Napotkano fizyczny koniec taśmy.
 Language=Romanian
 Physical end of tape encountered.
 .
+Language=Japanese
+テープの物理的な終端に遭遇しました。
+.
 
 MessageId=1130
 Severity=Success
@@ -8642,6 +10180,9 @@ Za mało pamięci serwera do przetworzenia tego polecenia.
 .
 Language=Romanian
 Not enough server storage is available to process this command.
+.
+Language=Japanese
+このコマンドを処理するのに十分なサーバー メモリ リソースがありません。
 .
 
 MessageId=1131
@@ -8660,6 +10201,9 @@ Wykryto możliwość wystąpienia stanu zakleszczenia (deadlock).
 Language=Romanian
 A potential deadlock condition has been detected.
 .
+Language=Japanese
+デッドロックの可能性が検出されました。
+.
 
 MessageId=1132
 Severity=Success
@@ -8676,6 +10220,9 @@ Adres bazowy określonego offsetu pliku nie ma odpowiedniego wyrównania.
 .
 Language=Romanian
 The base address or the file offset specified does not have the proper alignment.
+.
+Language=Japanese
+指定されたベースアドレスまたはファイルオフセットに適切なアライメントがありません。
 .
 
 MessageId=1140
@@ -8694,6 +10241,9 @@ Próba zmiany stanu zasilania systemu została zablokowana przez inną aplikacj�
 Language=Romanian
 An attempt to change the system power state was vetoed by another application or driver.
 .
+Language=Japanese
+システムの電源状態を変更しようとしましたが、他のアプリケーションまたはドライバによって拒否されました。
+.
 
 MessageId=1141
 Severity=Success
@@ -8710,6 +10260,9 @@ Próba zmiany stanu zasilania systemu przez systemowy BIOS nie powiodła się.
 .
 Language=Romanian
 The system BIOS failed an attempt to change the system power state.
+.
+Language=Japanese
+システム BIOS がシステム電源状態の変更の試みに失敗しました。
 .
 
 MessageId=1142
@@ -8728,6 +10281,9 @@ Podjęto próbę utworzenia większej liczby łączy na pliku niż obsługuje sy
 Language=Romanian
 An attempt was made to create more links on a file than the file system supports.
 .
+Language=Japanese
+ファイル システムでサポートされているよりも多くのリンクをファイルに作成しようとしました。
+.
 
 MessageId=1150
 Severity=Success
@@ -8744,6 +10300,9 @@ Określony program wymaga nowszej wersji systemu ReactOS.
 .
 Language=Romanian
 The specified program requires a newer version of ReactOS.
+.
+Language=Japanese
+指定されたプログラムには新しいバージョンの ReactOS が必要です。
 .
 
 MessageId=1151
@@ -8762,6 +10321,9 @@ Określony program nie jest programem środowiska Windows ani MS-DOS.
 Language=Romanian
 The specified program is not a Windows or MS-DOS program.
 .
+Language=Japanese
+指定されたプログラムは ReactOS または MS-DOS プログラムではありません。
+.
 
 MessageId=1152
 Severity=Success
@@ -8778,6 +10340,9 @@ Nie można uruchomić więcej niż jednego wystąpienia określonego programu.
 .
 Language=Romanian
 Cannot start more than one instance of the specified program.
+.
+Language=Japanese
+指定されたプログラムの複数のインスタンスを起動できません。
 .
 
 MessageId=1153
@@ -8796,6 +10361,9 @@ Określony program został napisany dla starszej wersji systemu ReactOS.
 Language=Romanian
 The specified program was written for an earlier version of ReactOS.
 .
+Language=Japanese
+指定されたプログラムは以前のバージョンの ReactOS 用に作成されました。
+.
 
 MessageId=1154
 Severity=Success
@@ -8812,6 +10380,9 @@ Jeden z plików bibliotek potrzebnych do uruchomienia tej aplikacji jest uszkodz
 .
 Language=Romanian
 One of the library files needed to run this application is damaged.
+.
+Language=Japanese
+このアプリケーションを実行するために必要なライブラリ ファイルの 1 つが壊れています。
 .
 
 MessageId=1155
@@ -8830,6 +10401,9 @@ Z określonym plikiem nie skojarzono dla tej operacji żadnej aplikacji.
 Language=Romanian
 No application is associated with the specified file for this operation.
 .
+Language=Japanese
+この操作で指定されたファイルに関連付けられたアプリケーションはありません。
+.
 
 MessageId=1156
 Severity=Success
@@ -8846,6 +10420,9 @@ W trakcie wysyłania polecenia do aplikacji wystąpił błąd.
 .
 Language=Romanian
 An error occurred in sending the command to the application.
+.
+Language=Japanese
+アプリケーションへのコマンド送信でエラーが発生しました。
 .
 
 MessageId=1157
@@ -8864,6 +10441,9 @@ Nie można odnaleźć jednego z plików bibliotek potrzebnych do uruchomienia te
 Language=Romanian
 One of the library files needed to run this application cannot be found.
 .
+Language=Japanese
+このアプリケーションの実行に必要なライブラリ ファイルが見つかりません。
+.
 
 MessageId=1158
 Severity=Success
@@ -8880,6 +10460,9 @@ Bieżący proces wykorzystał wszystkie dozwolone przez system dojścia do obiek
 .
 Language=Romanian
 The current process has used all of its system allowance of handles for Window Manager objects.
+.
+Language=Japanese
+現在のプロセスがウィンドウ マネージャ オブジェクトのハンドルのシステム許容量をすべて使用しました。
 .
 
 MessageId=1159
@@ -8898,6 +10481,9 @@ Komunikat może być użyty tylko przy operacjach synchronicznych.
 Language=Romanian
 The message can be used only with synchronous operations.
 .
+Language=Japanese
+メッセージは同期操作でのみ使用できます。
+.
 
 MessageId=1160
 Severity=Success
@@ -8914,6 +10500,9 @@ Wskazany element źródłowy nie ma nośnika.
 .
 Language=Romanian
 The indicated source element has no media.
+.
+Language=Japanese
+指定されたソース要素にメディアがありません。
 .
 
 MessageId=1161
@@ -8932,6 +10521,9 @@ Wskazany element docelowy już ma nośnik.
 Language=Romanian
 The indicated destination element already contains media.
 .
+Language=Japanese
+指定された宛先エレメントは既にメディアを含んでいます。
+.
 
 MessageId=1162
 Severity=Success
@@ -8948,6 +10540,9 @@ Wskazany element nie istnieje.
 .
 Language=Romanian
 The indicated element does not exist.
+.
+Language=Japanese
+指定された要素は存在しません。
 .
 
 MessageId=1163
@@ -8966,6 +10561,9 @@ Wskazany element stanowi część magazynu, którego nie ma.
 Language=Romanian
 The indicated element is part of a magazine that is not present.
 .
+Language=Japanese
+指定された要素は存在しないマガジンの一部です。
+.
 
 MessageId=1164
 Severity=Success
@@ -8982,6 +10580,9 @@ Wskazane urządzenie wymaga ponownego zainicjowania wskutek błędów sprzętowy
 .
 Language=Romanian
 The indicated device requires reinitialization due to hardware errors.
+.
+Language=Japanese
+指定されたデバイスは、ハードウェア エラーにより再初期化が必要です。
 .
 
 MessageId=1165
@@ -9000,6 +10601,9 @@ Urządzenie sygnalizuje, że przed dalszymi operacjami jest wymagane czyszczenie
 Language=Romanian
 The device has indicated that cleaning is required before further operations are attempted.
 .
+Language=Japanese
+デバイスは、さらなる操作を試みる前にクリーニングが必要であることを示しました。
+.
 
 MessageId=1166
 Severity=Success
@@ -9016,6 +10620,9 @@ Urządzenie sygnalizuje, że jest otwarte.
 .
 Language=Romanian
 The device has indicated that its door is open.
+.
+Language=Japanese
+デバイスのドアが開いていることが確認されました。
 .
 
 MessageId=1167
@@ -9034,6 +10641,9 @@ Urządzenie nie jest podłączone.
 Language=Romanian
 The device is not connected.
 .
+Language=Japanese
+デバイスが接続されていません。
+.
 
 MessageId=1168
 Severity=Success
@@ -9050,6 +10660,9 @@ Nie można odnaleźć elementu.
 .
 Language=Romanian
 Element not found.
+.
+Language=Japanese
+エレメントが見つかりません。
 .
 
 MessageId=1169
@@ -9068,6 +10681,9 @@ W indeksie nie znaleziono pozycji odpowiadającej podanemu kluczowi.
 Language=Romanian
 There was no match for the specified key in the index.
 .
+Language=Japanese
+インデックスに指定されたキーに一致するものがありませんでした。
+.
 
 MessageId=1170
 Severity=Success
@@ -9084,6 +10700,9 @@ Określony zestaw właściwości nie istnieje na tym obiekcie.
 .
 Language=Romanian
 The property set specified does not exist on the object.
+.
+Language=Japanese
+指定されたプロパティ セットがオブジェクトに存在しません。
 .
 
 MessageId=1171
@@ -9102,6 +10721,9 @@ Punkt przekazany do instrukcji GetMouseMovePoints nie znajduje się w buforze.
 Language=Romanian
 The point passed to GetMouseMovePointsEx is not in the buffer.
 .
+Language=Japanese
+GetMouseMovePointsに渡されたポイントがバッファにありません。
+.
 
 MessageId=1172
 Severity=Success
@@ -9118,6 +10740,9 @@ Usługa śledzenia (stacja robocza) nie jest uruchomiona.
 .
 Language=Romanian
 The tracking (workstation) service is not running.
+.
+Language=Japanese
+トラッキング (ワークステーション) サービスが実行されていません。
 .
 
 MessageId=1173
@@ -9136,6 +10761,9 @@ Nie można znaleźć identyfikatora woluminu.
 Language=Romanian
 The Volume ID could not be found.
 .
+Language=Japanese
+ボリュームIDが見つかりません。
+.
 
 MessageId=1175
 Severity=Success
@@ -9152,6 +10780,9 @@ Nie można usunąć pliku, który ma być zastąpiony.
 .
 Language=Romanian
 Unable to remove the file to be replaced.
+.
+Language=Japanese
+置換するファイルを削除できません。
 .
 
 MessageId=1176
@@ -9170,6 +10801,9 @@ Nie można przenieść pliku zastępującego do pliku, który ma być zamieniony
 Language=Romanian
 Unable to move the replacement file to the file to be replaced. The file to be replaced has retained its original name.
 .
+Language=Japanese
+置換ファイルを置換対象ファイルに移動できません。置換するファイルは元の名前を保持しています。
+.
 
 MessageId=1177
 Severity=Success
@@ -9186,6 +10820,9 @@ Nie można przenieść pliku zastępującego do pliku, który ma być zamieniony
 .
 Language=Romanian
 Unable to move the replacement file to the file to be replaced. The file to be replaced has been renamed using the backup name.
+.
+Language=Japanese
+置換するファイルを置換するファイルに移動できません。置換対象のファイルはバックアップ名を使用して名前が変更されています。
 .
 
 MessageId=1178
@@ -9204,6 +10841,9 @@ Dziennik zmian woluminu jest usuwany.
 Language=Romanian
 The volume change journal is being deleted.
 .
+Language=Japanese
+ボリューム変更ジャーナルが削除されました。
+.
 
 MessageId=1179
 Severity=Success
@@ -9220,6 +10860,9 @@ Dziennik zmiany woluminu nie jest aktywny.
 .
 Language=Romanian
 The volume change journal is not active.
+.
+Language=Japanese
+ボリューム変更ジャーナルがアクティブではありません。
 .
 
 MessageId=1180
@@ -9238,6 +10881,9 @@ Plik został znaleziony, ale może to nie być właściwy plik.
 Language=Romanian
 A file was found, but it may not be the correct file.
 .
+Language=Japanese
+ファイルが見つかりましたが、正しいファイルではないかもしれません。
+.
 
 MessageId=1181
 Severity=Success
@@ -9254,6 +10900,9 @@ Wpis dziennika został usunięty z dziennika.
 .
 Language=Romanian
 The journal entry has been deleted from the journal.
+.
+Language=Japanese
+ジャーナル エントリがジャーナルから削除されました。
 .
 
 MessageId=1200
@@ -9272,6 +10921,9 @@ Określona nazwa urządzenia jest nieprawidłowa.
 Language=Romanian
 The specified device name is invalid.
 .
+Language=Japanese
+指定されたデバイス名が無効です。
+.
 
 MessageId=1201
 Severity=Success
@@ -9288,6 +10940,9 @@ Urządzenie nie jest obecnie podłączone, ale istnieje jako zapamiętane połą
 .
 Language=Romanian
 The device is not currently connected but it is a remembered connection.
+.
+Language=Japanese
+デバイスは現在接続されていませんが、記憶された接続です。
 .
 
 MessageId=1202
@@ -9306,6 +10961,9 @@ Nazwa urządzenia lokalnego pamięta połączenie z innym zasobem sieciowym.
 Language=Romanian
 The local device name has a remembered connection to another network resource.
 .
+Language=Japanese
+ローカルデバイス名は別のネットワークリソースへの接続を記憶しています。
+.
 
 MessageId=1203
 Severity=Success
@@ -9322,6 +10980,9 @@ Language=Polish
 .
 Language=Romanian
 The network path was either typed incorrectly, does not exist, or the network provider is not currently available. Please try retyping the path or contact your network administrator.
+.
+Language=Japanese
+ネットワーク パスの入力が間違っているか、存在しないか、ネットワーク プロバイダが現在利用できません。パスを再入力するか、ネットワーク管理者にお問い合わせください。
 .
 
 MessageId=1204
@@ -9340,6 +11001,9 @@ Określona nazwa dostawcy sieciowego jest nieprawidłowa.
 Language=Romanian
 The specified network provider name is invalid.
 .
+Language=Japanese
+指定されたネットワーク プロバイダ名が無効です。
+.
 
 MessageId=1205
 Severity=Success
@@ -9356,6 +11020,9 @@ Nie można otworzyć profilu połączenia sieciowego.
 .
 Language=Romanian
 Unable to open the network connection profile.
+.
+Language=Japanese
+ネットワーク接続プロファイルを開くことができません。
 .
 
 MessageId=1206
@@ -9374,6 +11041,9 @@ Profil połączenia sieciowego jest uszkodzony.
 Language=Romanian
 The network connection profile is corrupted.
 .
+Language=Japanese
+ネットワーク接続プロファイルが壊れています。
+.
 
 MessageId=1207
 Severity=Success
@@ -9390,6 +11060,9 @@ Nie można wyliczać obiektu nie będącego kontenerem.
 .
 Language=Romanian
 Cannot enumerate a noncontainer.
+.
+Language=Japanese
+コンテナ以外を列挙できません。
 .
 
 MessageId=1208
@@ -9408,6 +11081,9 @@ Wystąpił błąd rozszerzony.
 Language=Romanian
 An extended error has occurred.
 .
+Language=Japanese
+拡張エラーが発生しました。
+.
 
 MessageId=1209
 Severity=Success
@@ -9424,6 +11100,9 @@ Format określonej nazwy grupy jest nieprawidłowy.
 .
 Language=Romanian
 The format of the specified group name is invalid.
+.
+Language=Japanese
+指定されたグループ名の形式が無効です。
 .
 
 MessageId=1210
@@ -9442,6 +11121,9 @@ Format określonej nazwy komputera jest nieprawidłowy.
 Language=Romanian
 The format of the specified computer name is invalid.
 .
+Language=Japanese
+指定されたコンピュータ名の書式が無効です。
+.
 
 MessageId=1211
 Severity=Success
@@ -9458,6 +11140,9 @@ Format określonej nazwy zdarzenia jest nieprawidłowy.
 .
 Language=Romanian
 The format of the specified event name is invalid.
+.
+Language=Japanese
+指定されたイベント名の書式が無効です。
 .
 
 MessageId=1212
@@ -9476,6 +11161,9 @@ Format określonej nazwy domeny jest nieprawidłowy.
 Language=Romanian
 The format of the specified domain name is invalid.
 .
+Language=Japanese
+指定されたドメイン名の書式が無効です。
+.
 
 MessageId=1213
 Severity=Success
@@ -9492,6 +11180,9 @@ Format określonej nazwy usługi jest nieprawidłowy.
 .
 Language=Romanian
 The format of the specified service name is invalid.
+.
+Language=Japanese
+指定されたサービス名の書式が無効です。
 .
 
 MessageId=1214
@@ -9510,6 +11201,9 @@ Format określonej nazwy sieci jest nieprawidłowy.
 Language=Romanian
 The format of the specified network name is invalid.
 .
+Language=Japanese
+指定されたネットワーク名の書式が無効です。
+.
 
 MessageId=1215
 Severity=Success
@@ -9526,6 +11220,9 @@ Format określonej nazwy udziału jest nieprawidłowy.
 .
 Language=Romanian
 The format of the specified share name is invalid.
+.
+Language=Japanese
+指定された共有名の書式が無効です。
 .
 
 MessageId=1216
@@ -9544,6 +11241,9 @@ Format określonego hasła jest nieprawidłowy.
 Language=Romanian
 The format of the specified password is invalid.
 .
+Language=Japanese
+指定されたパスワードの書式が無効です。
+.
 
 MessageId=1217
 Severity=Success
@@ -9560,6 +11260,9 @@ Format określonej nazwy komunikatu jest nieprawidłowy.
 .
 Language=Romanian
 The format of the specified message name is invalid.
+.
+Language=Japanese
+指定されたメッセージ名の書式が無効です。
 .
 
 MessageId=1218
@@ -9578,6 +11281,9 @@ Format określonego miejsca docelowego komunikatu jest nieprawidłowy.
 Language=Romanian
 The format of the specified message destination is invalid.
 .
+Language=Japanese
+指定されたメッセージ宛先の書式が無効です。
+.
 
 MessageId=1219
 Severity=Success
@@ -9594,6 +11300,9 @@ Wielokrotne połączenia z serwerem lub udostępnionym zasobem przez tego samego
 .
 Language=Romanian
 Multiple connections to a server or shared resource by the same user, using more than one user name, are not allowed. Disconnect all previous connections to the server or shared resource and try again.
+.
+Language=Japanese
+同一ユーザーによる、複数のユーザー名を使用したサーバーまたは共有リソースへの複数接続は許可されていません。サーバーまたは共有リソースへの以前の接続をすべて切断して再試行してください。
 .
 
 MessageId=1220
@@ -9612,6 +11321,9 @@ Podjęto próbę ustanowienia sesji z serwerem sieci, ale jest już ustanowionyc
 Language=Romanian
 An attempt was made to establish a session to a network server, but there are already too many sessions established to that server.
 .
+Language=Japanese
+ネットワーク サーバーへのセッションを確立しようとしましたが、そのサーバーへのセッションがすでに多すぎます。
+.
 
 MessageId=1221
 Severity=Success
@@ -9628,6 +11340,9 @@ Nazwa domeny lub grupy roboczej jest już używana przez inny komputer w sieci.
 .
 Language=Romanian
 The workgroup or domain name is already in use by another computer on the network.
+.
+Language=Japanese
+ワークグループ名またはドメイン名は、ネットワーク上の別のコンピュータによってすでに使用されています。
 .
 
 MessageId=1222
@@ -9646,6 +11361,9 @@ Brak sieci lub nie została ona uruchomiona.
 Language=Romanian
 The network is not present or not started.
 .
+Language=Japanese
+ネットワークが存在しないか、開始されていません。
+.
 
 MessageId=1223
 Severity=Success
@@ -9662,6 +11380,9 @@ Operacja została anulowana przez użytkownika.
 .
 Language=Romanian
 The operation was canceled by the user.
+.
+Language=Japanese
+ユーザーによって操作がキャンセルされました。
 .
 
 MessageId=1224
@@ -9680,6 +11401,9 @@ Nie można wykonać żądanej operacji na pliku z otwartą sekcją mapowania uż
 Language=Romanian
 The requested operation cannot be performed on a file with a user-mapped section open.
 .
+Language=Japanese
+要求された操作は、ユーザ マップされたセクションが開いているファイルでは実行できません。
+.
 
 MessageId=1225
 Severity=Success
@@ -9696,6 +11420,9 @@ Komputer zdalny odrzucił połączenie sieciowe.
 .
 Language=Romanian
 The remote system refused the network connection.
+.
+Language=Japanese
+リモート コンピューターがネットワーク接続を拒否しました。
 .
 
 MessageId=1226
@@ -9714,6 +11441,9 @@ Połączenie sieciowe zostało bezpiecznie zamknięte.
 Language=Romanian
 The network connection was gracefully closed.
 .
+Language=Japanese
+ネットワーク接続が強制終了されました。
+.
 
 MessageId=1227
 Severity=Success
@@ -9730,6 +11460,9 @@ Z punktem końcowym transportu sieciowego jest już skojarzony adres.
 .
 Language=Romanian
 The network transport endpoint already has an address associated with it.
+.
+Language=Japanese
+ネットワーク トランスポート エンドポイントには、すでにアドレスが関連付けられています。
 .
 
 MessageId=1228
@@ -9748,6 +11481,9 @@ Adres nie został jeszcze skojarzony z punktem końcowym sieci.
 Language=Romanian
 An address has not yet been associated with the network endpoint.
 .
+Language=Japanese
+ネットワークエンドポイントにアドレスがまだ関連付けられていません。
+.
 
 MessageId=1229
 Severity=Success
@@ -9764,6 +11500,9 @@ Próbowano wykonać operację na nieistniejącym połączeniu sieciowym.
 .
 Language=Romanian
 An operation was attempted on a nonexistent network connection.
+.
+Language=Japanese
+存在しないネットワーク接続に対して操作を試みました。
 .
 
 MessageId=1230
@@ -9782,6 +11521,9 @@ Na aktywnym połączeniu sieciowym próbowano wykonać nieprawidłową operację
 Language=Romanian
 An invalid operation was attempted on an active network connection.
 .
+Language=Japanese
+有効なネットワーク接続に対して無効な操作を試行しました。
+.
 
 MessageId=1231
 Severity=Success
@@ -9798,6 +11540,9 @@ Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania prob
 .
 Language=Romanian
 The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
+.
+Language=Japanese
+ネットワークの場所にアクセスできません。ネットワークのトラブルシューティングについては、ReactOSヘルプを参照してください。
 .
 
 MessageId=1232
@@ -9816,6 +11561,9 @@ Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania prob
 Language=Romanian
 The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
 .
+Language=Japanese
+ネットワークの場所にアクセスできません。ネットワークのトラブルシューティングについては、ReactOSヘルプを参照してください。
+.
 
 MessageId=1233
 Severity=Success
@@ -9832,6 +11580,9 @@ Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania prob
 .
 Language=Romanian
 The network location cannot be reached. For information about network troubleshooting, see ReactOS Help.
+.
+Language=Japanese
+ネットワークの場所にアクセスできません。ネットワークのトラブルシューティングについては、ReactOSヘルプを参照してください。
 .
 
 MessageId=1234
@@ -9850,6 +11601,9 @@ W docelowym punkcie końcowym sieci systemu zdalnego nie działa żadna usługa.
 Language=Romanian
 No service is operating at the destination network endpoint on the remote system.
 .
+Language=Japanese
+リモート システムの宛先ネットワーク エンドポイントで動作しているサービスはありません。
+.
 
 MessageId=1235
 Severity=Success
@@ -9866,6 +11620,9 @@ Language=Polish
 .
 Language=Romanian
 The request was aborted.
+.
+Language=Japanese
+要求は中止されました。
 .
 
 MessageId=1236
@@ -9884,6 +11641,9 @@ Połączenie sieciowe zostało przerwane przez system lokalny.
 Language=Romanian
 The network connection was aborted by the local system.
 .
+Language=Japanese
+ネットワーク接続がローカルシステムによって中止されました。
+.
 
 MessageId=1237
 Severity=Success
@@ -9900,6 +11660,9 @@ Operacja nie zakończyła się pomyślnie. Należy ponowić próbę.
 .
 Language=Romanian
 The operation could not be completed. A retry should be performed.
+.
+Language=Japanese
+操作を完了できませんでした。再試行が必要です。
 .
 
 MessageId=1238
@@ -9918,6 +11681,9 @@ Nie można ustanowić połączenia z serwerem z powodu wyczerpania limitu jednoc
 Language=Romanian
 A connection to the server could not be made because the limit on the number of concurrent connections for this account has been reached.
 .
+Language=Japanese
+このアカウントの同時接続数の制限に達したため、サーバーに接続できませんでした。
+.
 
 MessageId=1239
 Severity=Success
@@ -9934,6 +11700,9 @@ Próbowano zalogować się w porze dnia niedozwolonej dla tego konta.
 .
 Language=Romanian
 Attempting to log in during an unauthorized time of day for this account.
+.
+Language=Japanese
+このアカウントで許可されていない時間帯にログインを試みています。
 .
 
 MessageId=1240
@@ -9952,6 +11721,9 @@ Konto nie ma uprawnień do logowania z tej stacji.
 Language=Romanian
 The account is not authorized to log in from this station.
 .
+Language=Japanese
+このアカウントは、このステーションからログインする権限がありません。
+.
 
 MessageId=1241
 Severity=Success
@@ -9968,6 +11740,9 @@ Adresu sieciowego nie można użyć do żądanej operacji.
 .
 Language=Romanian
 The network address could not be used for the operation requested.
+.
+Language=Japanese
+ネットワークアドレスは要求された操作に使用できませんでした。
 .
 
 MessageId=1242
@@ -9986,6 +11761,9 @@ Usługa jest już zarejestrowana.
 Language=Romanian
 The service is already registered.
 .
+Language=Japanese
+サービスはすでに登録されています。
+.
 
 MessageId=1243
 Severity=Success
@@ -10002,6 +11780,9 @@ Określona usługa nie istnieje.
 .
 Language=Romanian
 The specified service does not exist.
+.
+Language=Japanese
+指定されたサービスは存在しません。
 .
 
 MessageId=1244
@@ -10020,6 +11801,9 @@ Language=Polish
 Language=Romanian
 The operation being requested was not performed because the user has not been authenticated.
 .
+Language=Japanese
+ユーザーが認証されていないため、要求された操作は実行されませんでした。
+.
 
 MessageId=1245
 Severity=Success
@@ -10036,6 +11820,9 @@ Language=Polish
 .
 Language=Romanian
 The operation being requested was not performed because the user has not logged on to the network. The specified service does not exist.
+.
+Language=Japanese
+ユーザーがネットワークにログオンしていないため、要求された操作は実行されませんでした。指定されたサービスは存在しません。
 .
 
 MessageId=1246
@@ -10054,6 +11841,9 @@ Kontynuuj wykonywaną pracę.
 Language=Romanian
 Continue with work in progress.
 .
+Language=Japanese
+進行中の作業を続行してください。
+.
 
 MessageId=1247
 Severity=Success
@@ -10070,6 +11860,9 @@ Wykonano próbę wykonania operacji inicjalizacji po tym, gdy inicjalizacja zost
 .
 Language=Romanian
 An attempt was made to perform an initialization operation when initialization has already been completed.
+.
+Language=Japanese
+初期化がすでに完了しているときに初期化操作を実行しようとしました。
 .
 
 MessageId=1248
@@ -10088,6 +11881,9 @@ Brak dalszych urządzeń lokalnych.
 Language=Romanian
 No more local devices.
 .
+Language=Japanese
+ローカル デバイスがありません。
+.
 
 MessageId=1249
 Severity=Success
@@ -10104,6 +11900,9 @@ Podana lokacja nie istnieje.
 .
 Language=Romanian
 The specified site does not exist.
+.
+Language=Japanese
+指定されたサイトは存在しません。
 .
 
 MessageId=1250
@@ -10122,6 +11921,9 @@ Kontroler domeny o podanej nazwie już istnieje.
 Language=Romanian
 A domain controller with the specified name already exists.
 .
+Language=Japanese
+指定された名前のドメイン コントローラーはすでに存在します。
+.
 
 MessageId=1251
 Severity=Success
@@ -10138,6 +11940,9 @@ Ta operacja jest obsługiwana tylko wtedy, gdy jest nawiązane połączenie z se
 .
 Language=Romanian
 This operation is supported only when you are connected to the server.
+.
+Language=Japanese
+この操作はサーバーに接続しているときのみサポートされます。
 .
 
 MessageId=1252
@@ -10156,6 +11961,9 @@ Zasady grupowe powinny wywołać rozszerzenie, nawet jeśli nie ma zmian.
 Language=Romanian
 The group policy framework should call the extension even if there are no changes.
 .
+Language=Japanese
+グループ ポリシー フレームワークは、変更がなくても拡張機能を呼び出す必要があります。
+.
 
 MessageId=1253
 Severity=Success
@@ -10172,6 +11980,9 @@ Nie ma prawidłowego profilu dla podanego użytkownika.
 .
 Language=Romanian
 The specified user does not have a valid profile.
+.
+Language=Japanese
+指定されたユーザーに有効なプロファイルがありません。
 .
 
 MessageId=1254
@@ -10190,6 +12001,9 @@ Ta operacja nie jest obsługiwana na komputerze z uruchomionym systemem Windows 
 Language=Romanian
 This operation is not supported on a computer running Windows Server 2003 for Small Business Server.
 .
+Language=Japanese
+この操作は、ReactOS Server を実行しているコンピュータではサポートされていません。
+.
 
 MessageId=1255
 Severity=Success
@@ -10206,6 +12020,9 @@ Trwa zamykanie serwera.
 .
 Language=Romanian
 The server machine is shutting down.
+.
+Language=Japanese
+サーバー マシンがシャットダウンしています。
 .
 
 MessageId=1256
@@ -10224,6 +12041,9 @@ System zdalny jest niedostępny. Aby uzyskać informacje dotyczące rozwiązywan
 Language=Romanian
 The remote system is not available. For information about network troubleshooting, see ReactOS Help.
 .
+Language=Japanese
+リモート システムが使用できません。ネットワークのトラブルシューティングについては、ReactOSヘルプを参照してください。
+.
 
 MessageId=1257
 Severity=Success
@@ -10240,6 +12060,9 @@ Podany identyfikator zabezpieczeń nie pochodzi z domeny konta.
 .
 Language=Romanian
 The security identifier provided is not from an account domain.
+.
+Language=Japanese
+指定されたセキュリティ識別子はアカウント ドメインのものではありません。
 .
 
 MessageId=1258
@@ -10258,6 +12081,9 @@ Podany identyfikator zabezpieczeń nie ma składnika określającego domenę.
 Language=Romanian
 The security identifier provided does not have a domain component.
 .
+Language=Japanese
+指定されたセキュリティ識別子にドメイン コンポーネントがありません。
+.
 
 MessageId=1259
 Severity=Success
@@ -10274,6 +12100,9 @@ Okno dialogowe pomocy aplikacji zostało anulowane i uniemożliwia to uruchomien
 .
 Language=Romanian
 AppHelp dialog canceled thus preventing the application from starting.
+.
+Language=Japanese
+AppHelpダイアログがキャンセルされ、アプリケーションが起動できません。
 .
 
 MessageId=1260
@@ -10292,6 +12121,9 @@ Ten program jest blokowany przez zasady grupy. Aby uzyskać więcej informacji, 
 Language=Romanian
 ReactOS cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
 .
+Language=Japanese
+このプログラムはグループ ポリシーでブロックされています。詳細については、システム管理者にお問い合わせください。
+.
 
 MessageId=1261
 Severity=Success
@@ -10308,6 +12140,9 @@ Program próbuje użyć nieprawidłowej wartości rejestru. Zwykle przyczyną je
 .
 Language=Romanian
 A program attempt to use an invalid register value. Normally caused by an uninitialized register. This error is Itanium specific.
+.
+Language=Japanese
+プログラムが無効なレジスタ値を使用しようとしました。通常、初期化されていないレジスタが原因です。このエラーはItanium固有のものです。
 .
 
 MessageId=1262
@@ -10326,6 +12161,9 @@ Udział jest aktualnie w trybie offline lub nie istnieje.
 Language=Romanian
 The share is currently offline or does not exist.
 .
+Language=Japanese
+共有が現在オフラインであるか、存在しません。
+.
 
 MessageId=1263
 Severity=Success
@@ -10342,6 +12180,9 @@ Protokół Kerberos napotkał błąd, sprawdzając poprawność certyfikatu KDC 
 .
 Language=Romanian
 The kerberos protocol encountered an error while validating the KDC certificate during smartcard logon.
+.
+Language=Japanese
+スマートカードログオン中にKDC証明書を検証しているときに、Kerberosプロトコルでエラーが発生しました。システム イベント ログに詳細な情報があります。
 .
 
 MessageId=1264
@@ -10360,6 +12201,9 @@ Protokół Kerberos napotkał błąd podczas próby użycia podsystemu karty int
 Language=Romanian
 The kerberos protocol encountered an error while attempting to utilize the smartcard subsystem.
 .
+Language=Japanese
+スマートカードサブシステムを使用しようとしたときにKerberosプロトコルでエラーが発生しました。
+.
 
 MessageId=1265
 Severity=Success
@@ -10376,6 +12220,9 @@ System wykrył możliwe zagrożenie bezpieczeństwa. Upewnij się, że możesz s
 .
 Language=Romanian
 The system detected a possible attempt to compromise security. Please ensure that you can contact the server that authenticated you.
+.
+Language=Japanese
+システムは認証要求を処理するドメイン コントローラーに接続できません。後で再試行してください。
 .
 
 MessageId=1266
@@ -10394,6 +12241,9 @@ Certyfikat karty inteligentnej użyty do uwierzytelnienia został odwołany. Sko
 Language=Romanian
 The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
 .
+Language=Japanese
+認証に使用したスマートカード証明書が失効しました。システム管理者に連絡してください。イベントログに追加情報があるかもしれません。
+.
 
 MessageId=1267
 Severity=Success
@@ -10410,6 +12260,9 @@ Podczas przetwarzania certyfikatu karty inteligentnej używanej do uwierzytelnia
 .
 Language=Romanian
 An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
+.
+Language=Japanese
+認証に使用されたスマートカード証明書の処理中に、信頼されていない認証局が検出されました。システム管理者に連絡してください。
 .
 
 MessageId=1268
@@ -10428,6 +12281,9 @@ Ustalenie stanu odwołania certyfikatu karty inteligentnej używanego do uwierzy
 Language=Romanian
 The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
 .
+Language=Japanese
+認証に使用されているスマートカード証明書の失効ステータスを確認できませんでした。システム管理者にお問い合わせください。
+.
 
 MessageId=1269
 Severity=Success
@@ -10444,6 +12300,9 @@ Certyfikat karty inteligentnej używany do uwierzytelniania nie był zaufany. Sk
 .
 Language=Romanian
 The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
+.
+Language=Japanese
+認証に使用されたスマートカード証明書が信頼されていません。システム管理者に連絡してください。
 .
 
 MessageId=1270
@@ -10462,6 +12321,9 @@ Certyfikat karty inteligentnej używany do uwierzytelniania wygasł. Skontaktuj 
 Language=Romanian
 The smartcard certificate used for authentication has expired. Please contact your system administrator.
 .
+Language=Japanese
+認証に使用したスマートカード証明書の有効期限が切れています。システム管理者に連絡してください。
+.
 
 MessageId=1271
 Severity=Success
@@ -10478,6 +12340,9 @@ Komputer jest zablokowany i nie można go zamknąć bez opcji wymuszenia.
 .
 Language=Romanian
 The machine is locked and cannot be shut down without the force option.
+.
+Language=Japanese
+マシンがロックされているため、強制オプションを使用しないとシャットダウンできません。
 .
 
 MessageId=1273
@@ -10496,6 +12361,9 @@ Określone przez aplikację wywołanie zwrotne dało po wywołaniu nieprawidłow
 Language=Romanian
 An application-defined callback gave invalid data when called.
 .
+Language=Japanese
+アプリケーション定義のコールバックが呼び出されたときに無効なデータを与えました。
+.
 
 MessageId=1274
 Severity=Success
@@ -10512,6 +12380,9 @@ Ogólna struktura zasad grupy powinna wywołać rozszerzenie podczas synchronicz
 .
 Language=Romanian
 The group policy framework should call the extension in the synchronous foreground policy refresh.
+.
+Language=Japanese
+グループ ポリシー フレームワークは、同期フォアグラウンド ポリシー更新で拡張機能を呼び出す必要があります。
 .
 
 MessageId=1275
@@ -10530,6 +12401,9 @@ Nastąpiło zablokowanie ładowania sterownika
 Language=Romanian
 This driver has been blocked from loading.
 .
+Language=Japanese
+このドライバのロードがブロックされました。
+.
 
 MessageId=1276
 Severity=Success
@@ -10546,6 +12420,9 @@ Biblioteka dołączana dynamicznie DLL odwoływała się do modułu, który nie 
 .
 Language=Romanian
 A dynamic link library (DLL) referenced a module that was neither a DLL nor the process's executable image.
+.
+Language=Japanese
+動的リンク ライブラリ (DLL) が、DLLでもプロセスの実行イメージでもないモジュールを参照しました。
 .
 
 MessageId=1277
@@ -10564,6 +12441,9 @@ System ReactOS nie może otworzyć tego programu, ponieważ został on wyłączo
 Language=Romanian
 ReactOS cannot open this program since it has been disabled.
 .
+Language=Japanese
+ReactOSが無効になっているため、このプログラムを開くことができません。
+.
 
 MessageId=1278
 Severity=Success
@@ -10580,6 +12460,9 @@ System ReactOS nie może otworzyć tego programu, ponieważ system wymuszania li
 .
 Language=Romanian
 ReactOS cannot open this program because the license enforcement system has been tampered with or become corrupted.
+.
+Language=Japanese
+ライセンス実施システムが改ざんされたか破損しているため、ReactOS でこのプログラムを開くことができません。
 .
 
 MessageId=1279
@@ -10598,6 +12481,9 @@ Odzyskanie transakcji nie powiodło się.
 Language=Romanian
 A transaction recovery failed.
 .
+Language=Japanese
+トランザクションのリカバリに失敗しました。
+.
 
 MessageId=1280
 Severity=Success
@@ -10614,6 +12500,9 @@ Bieżący wątek został już przekonwertowany do włókna.
 .
 Language=Romanian
 The current thread has already been converted to a fiber.
+.
+Language=Japanese
+現在のスレッドはすでにファイバーに変換されています。
 .
 
 MessageId=1281
@@ -10632,6 +12521,9 @@ Bieżący wątek został już przekonwertowany z włókna.
 Language=Romanian
 The current thread has already been converted from a fiber.
 .
+Language=Japanese
+現在のスレッドはファイバーから変換済みです。
+.
 
 MessageId=1282
 Severity=Success
@@ -10648,6 +12540,9 @@ System wykrył w tej aplikacji przekroczenie buforu opartego na stosie. Przekroc
 .
 Language=Romanian
 The system detected an overrun of a stack-based buffer in this application. This overrun could potentially allow a malicious user to gain control of this application.
+.
+Language=Japanese
+このアプリケーションでスタックベースのバッファのオーバーランが検出されました。このオーバーランにより、悪意のあるユーザーがこのアプリケーションを制御できる可能性があります。
 .
 
 MessageId=1283
@@ -10666,6 +12561,9 @@ Ilość danych w jednym z parametrów jest większa niż ilość, którą może 
 Language=Romanian
 Data present in one of the parameters is more than the function can operate on.
 .
+Language=Japanese
+パラメータの1つに存在するデータは、関数が操作できる範囲を超えています。
+.
 
 MessageId=1284
 Severity=Success
@@ -10682,6 +12580,9 @@ Próba wykonania operacji na obiekcie debugowania nie powiodła się, ponieważ 
 .
 Language=Romanian
 An attempt to do an operation on a debug object failed because the object is in the process of being deleted.
+.
+Language=Japanese
+オブジェクトが削除中であるため、デバッグ オブジェクトに対する操作に失敗しました。
 .
 
 MessageId=1285
@@ -10700,6 +12601,9 @@ Próba załadowania z opóźnieniem biblioteki .dll lub uzyskania adresu funkcji
 Language=Romanian
 An attempt to delay-load a .dll or get a function address in a delay-loaded .dll failed.
 .
+Language=Japanese
+.dllの遅延ロードまたは遅延ロードされた.dll内の関数アドレスの取得に失敗しました。
+.
 
 MessageId=1286
 Severity=Success
@@ -10716,6 +12620,9 @@ Language=Polish
 .
 Language=Romanian
 %1 is a 16-bit application. You do not have permissions to execute 16-bit applications. Check your permissions with your system administrator.
+.
+Language=Japanese
+%1 は 16 ビット アプリケーションです。16 ビット アプリケーションを実行する権限がありません。システム管理者に権限を確認してください。
 .
 
 MessageId=1287
@@ -10734,6 +12641,9 @@ Za mało informacji do zidentyfikowania przyczyny błędu.
 Language=Romanian
 Insufficient information exists to identify the cause of failure.
 .
+Language=Japanese
+障害の原因を特定するための情報が不足しています。
+.
 
 MessageId=1288
 Severity=Success
@@ -10750,6 +12660,9 @@ An invalid budget or period parameter was specified.
 .
 Language=Romanian
 An invalid budget or period parameter was specified.
+.
+Language=Japanese
+C ランタイム関数に渡されたパラメーターが正しくありません。
 .
 
 MessageId=1289
@@ -10768,6 +12681,9 @@ An attempt was made to join a thread to a reserve whose affinity did not interse
 Language=Romanian
 An attempt was made to join a thread to a reserve whose affinity did not intersect the reserve affinity or an attempt was made to associate a process with a reserve whose affinity did not intersect the reserve affinity.
 .
+Language=Japanese
+操作がファイルの有効なデータ長を超えて発生しました。
+.
 
 MessageId=1290
 Severity=Success
@@ -10784,6 +12700,9 @@ An attempt was made to join a thread to a reserve which was already joined to an
 .
 Language=Romanian
 An attempt was made to join a thread to a reserve which was already joined to another reserve.
+.
+Language=Japanese
+同じプロセス内の1つ以上のサービスのSIDタイプの設定が互換性がないため、サービスの開始に失敗しました。サービスSIDタイプが制限されたサービスは、制限されたSIDタイプを持つ他のサービスと同じプロセスでのみ共存できます。このサービスのサービスSIDタイプが構成されたばかりの場合は、このサービスを開始するためにホスト プロセスを再起動する必要があります。
 .
 
 MessageId=1291
@@ -10802,6 +12721,9 @@ An attempt was made to disjoin a thread from a reserve, but the thread was not j
 Language=Romanian
 An attempt was made to disjoin a thread from a reserve, but the thread was not joined to the reserve.
 .
+Language=Japanese
+このサービスをホストしているプロセスは、このサービスを開始するために再起動する必要があります。
+.
 
 MessageId=1292
 Severity=Success
@@ -10818,6 +12740,9 @@ An attempt was made to disjoin a thread from a reserve whose process is associat
 .
 Language=Romanian
 An attempt was made to disjoin a thread from a reserve whose process is associated with a reserve.
+.
+Language=Japanese
+操作が実装で定義された制限を超えようとした。
 .
 
 MessageId=1293
@@ -10836,6 +12761,9 @@ An attempt was made to associate a process with a reserve that was already assoc
 Language=Romanian
 An attempt was made to associate a process with a reserve that was already associated with a reserve.
 .
+Language=Japanese
+ターゲット プロセス、またはターゲット スレッドの含むプロセスのどちらかが保護されたプロセスです。
+.
 
 MessageId=1294
 Severity=Success
@@ -10852,6 +12780,9 @@ An attempt was made to disassociate a process from a reserve, but the process di
 .
 Language=Romanian
 An attempt was made to disassociate a process from a reserve, but the process did not have an associated reserve.
+.
+Language=Japanese
+サービス通知クライアントがマシン内のサービスの現在の状態から遅れすぎています。
 .
 
 MessageId=1295
@@ -10870,6 +12801,10 @@ An attempt was made to associate a process with a reserve, but the process conta
 Language=Romanian
 An attempt was made to associate a process with a reserve, but the process contained thread joined to a reserve.
 .
+Language=Japanese
+ストレージクォータを超えているため、要求されたファイル操作に失敗しました。
+ディスクスペースを確保するには、ファイルを別の場所に移動するか、不要なファイルを削除してください。詳細については、システム管理者にお問い合わせください。
+.
 
 MessageId=1296
 Severity=Success
@@ -10886,6 +12821,9 @@ An attempt was made to set the affinity of a thread or a process, but the thread
 .
 Language=Romanian
 An attempt was made to set the affinity of a thread or a process, but the thread or process was joined or associated with a reserve.
+.
+Language=Japanese
+ストレージ ポリシーでその種類のファイルがブロックされているため、要求されたファイル操作に失敗しました。詳細については、システム管理者にお問い合わせください。
 .
 
 MessageId=1297
@@ -10904,6 +12842,9 @@ Operacja usiłowała przekroczyć ograniczenie zdefiniowane w implementacji.
 Language=Romanian
 An operation attempted to exceed an implementation-defined limit.
 .
+Language=Japanese
+サービス ReactOS 管理コンソール (MMC) スナップイン (services.msc) およびローカルセキュリティ設定MMCスナップイン (secpol.msc) を使用して、サービス構成とアカウント構成を表示できます。
+.
 
 MessageId=1298
 Severity=Success
@@ -10920,6 +12861,9 @@ The requested object is for internal DS operations only.
 .
 Language=Romanian
 The requested object is for internal DS operations only.
+.
+Language=Japanese
+この操作に関与しているスレッドが応答していないようです。
 .
 
 MessageId=1300
@@ -10938,6 +12882,9 @@ Nie wszystkie wywoływane uprawnienia lub grupy są przypisane komputerowi wywo�
 Language=Romanian
 Not all privileges referenced are assigned to the caller.
 .
+Language=Japanese
+参照されたすべての特権またはグループが呼び出し元に割り当てられていません。
+.
 
 MessageId=1301
 Severity=Success
@@ -10954,6 +12901,9 @@ Nie wykonano pewnych mapowań między nazwami kont i identyfikatorami zabezpiecz
 .
 Language=Romanian
 Some mapping between account names and security IDs was not done.
+.
+Language=Japanese
+アカウント名とセキュリティIDのマッピングが行われていません。
 .
 
 MessageId=1302
@@ -10972,6 +12922,9 @@ Dla tego konta nie ustawiono żadnych szczególnych ograniczeń przydziałów za
 Language=Romanian
 No system quota limits are specifically set for this account.
 .
+Language=Japanese
+システムのクォータ制限がこのアカウントに設定されていません。
+.
 
 MessageId=1303
 Severity=Success
@@ -10988,6 +12941,9 @@ Brak klucza szyfrowania. Został zwrócony dobrze znany klucz szyfrowania.
 .
 Language=Romanian
 No encryption key is available. A well-known encryption key was returned.
+.
+Language=Japanese
+暗号化キーがありません。既知の暗号化キーが返されました。
 .
 
 MessageId=1304
@@ -11006,6 +12962,9 @@ Hasło jest zbyt złożone, aby mogło być przekształcone na hasło programu L
 Language=Romanian
 The password is too complex to be converted to a LAN Manager password. The LAN Manager password returned is a NULL string.
 .
+Language=Japanese
+パスワードが複雑すぎて LAN マネージャ パスワードに変換できません。返されたLAN マネージャ パスワードはNULL文字列です。
+.
 
 MessageId=1305
 Severity=Success
@@ -11022,6 +12981,9 @@ Poziom wydania jest nieznany.
 .
 Language=Romanian
 The revision level is unknown.
+.
+Language=Japanese
+リビジョン レベルが不明です。
 .
 
 MessageId=1306
@@ -11040,6 +13002,9 @@ Wskazuje, że dwa poziomy wydania są niezgodne.
 Language=Romanian
 Indicates two revision levels are incompatible.
 .
+Language=Japanese
+2つのリビジョン レベルに互換性がないことを示します。
+.
 
 MessageId=1307
 Severity=Success
@@ -11056,6 +13021,9 @@ Ten identyfikator zabezpieczeń nie może być przypisany jako właściciel tego
 .
 Language=Romanian
 This security ID may not be assigned as the owner of this object.
+.
+Language=Japanese
+このセキュリティ ID は、このオブジェクトの所有者として割り当てられていない可能性があります。
 .
 
 MessageId=1308
@@ -11074,6 +13042,9 @@ Ten identyfikator zabezpieczeń nie może być przypisany jako grupa podstawowa 
 Language=Romanian
 This security ID may not be assigned as the primary group of an object.
 .
+Language=Japanese
+このセキュリティ ID は、オブジェクトのプライマリ グループとして割り当てられていません。
+.
 
 MessageId=1309
 Severity=Success
@@ -11090,6 +13061,9 @@ Na tokenie personifikacji podjął próbę działania wątek, który obecnie nie
 .
 Language=Romanian
 An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
+.
+Language=Japanese
+現在クライアントになりすましていないスレッドが、なりすましトークンを操作しようとしました。
 .
 
 MessageId=1310
@@ -11108,6 +13082,9 @@ Grupa nie może być wyłączona.
 Language=Romanian
 The group may not be disabled.
 .
+Language=Japanese
+グループが無効になっていない可能性があります。
+.
 
 MessageId=1311
 Severity=Success
@@ -11124,6 +13101,9 @@ Nie ma obecnie serwerów logowania dostępnych do obsługi żądania logowania.
 .
 Language=Romanian
 There are currently no logon servers available to service the logon request.
+.
+Language=Japanese
+ドメインが利用可能でないため、このクレデンシャルでサインインできません。デバイスが組織のネットワークに接続されていることを確認して、再試行してください。以前に別の資格情報でこのデバイスにサインインした場合は、その資格情報でサインインできます。
 .
 
 MessageId=1312
@@ -11142,6 +13122,9 @@ Określona sesja logowania nie istnieje. Być może została już zakończona.
 Language=Romanian
 A specified logon session does not exist. It may already have been terminated.
 .
+Language=Japanese
+指定されたログオンセッションが存在しません。すでに終了されている可能性があります。
+.
 
 MessageId=1313
 Severity=Success
@@ -11158,6 +13141,9 @@ Określone uprawnienie nie istnieje.
 .
 Language=Romanian
 A specified privilege does not exist.
+.
+Language=Japanese
+指定された権限が存在しません。
 .
 
 MessageId=1314
@@ -11176,6 +13162,9 @@ Klient nie ma wymaganych uprawnień.
 Language=Romanian
 A required privilege is not held by the client.
 .
+Language=Japanese
+必要な権限がクライアントにありません。
+.
 
 MessageId=1315
 Severity=Success
@@ -11192,6 +13181,9 @@ Podana nazwa nie jest właściwie sformułowaną nazwą konta.
 .
 Language=Romanian
 The name provided is not a properly formed account name.
+.
+Language=Japanese
+指定された名前はアカウント名ではありません。
 .
 
 MessageId=1316
@@ -11210,6 +13202,9 @@ Określone konto już istnieje.
 Language=Romanian
 The specified user already exists.
 .
+Language=Japanese
+指定されたアカウントはすでに存在します。
+.
 
 MessageId=1317
 Severity=Success
@@ -11226,6 +13221,9 @@ Określone konto nie istnieje.
 .
 Language=Romanian
 The specified user does not exist.
+.
+Language=Japanese
+指定されたアカウントは存在しません。
 .
 
 MessageId=1318
@@ -11244,6 +13242,9 @@ Określona grupa już istnieje.
 Language=Romanian
 The specified group already exists.
 .
+Language=Japanese
+指定されたグループは既に存在します。
+.
 
 MessageId=1319
 Severity=Success
@@ -11260,6 +13261,9 @@ Określona grupa nie istnieje.
 .
 Language=Romanian
 The specified group does not exist.
+.
+Language=Japanese
+指定されたグループは存在しません。
 .
 
 MessageId=1320
@@ -11278,6 +13282,9 @@ Określone konto użytkownika jest już członkiem określonej grupy albo okreś
 Language=Romanian
 Either the specified user account is already a member of the specified group, or the specified group cannot be deleted because it contains a member.
 .
+Language=Japanese
+指定されたユーザ アカウントがすでに指定されたグループのメンバであるか、指定されたグループにメンバが含まれているため削除できません。
+.
 
 MessageId=1321
 Severity=Success
@@ -11294,6 +13301,9 @@ Określone konto użytkownika nie jest członkiem określonego konta grupowego.
 .
 Language=Romanian
 The specified user account is not a member of the specified group account.
+.
+Language=Japanese
+指定されたユーザー アカウントは、指定されたグループ アカウントのメンバーではありません。
 .
 
 MessageId=1322
@@ -11312,6 +13322,9 @@ Ostatnie pozostałe konto administracyjne nie może zostać wyłączone ani usun
 Language=Romanian
 The last remaining administration account cannot be disabled or deleted.
 .
+Language=Japanese
+管理者アカウントが無効になるか、削除されるか、またはログオンできなくなる可能性があるため、この操作は許可されません。
+.
 
 MessageId=1323
 Severity=Success
@@ -11328,6 +13341,9 @@ Nie można zaktualizować hasła. Wartość podana jako bieżące hasło jest ni
 .
 Language=Romanian
 Unable to update the password. The value provided as the current password is incorrect.
+.
+Language=Japanese
+パスワードを更新できません。現在のパスワードとして提供された値が正しくありません。
 .
 
 MessageId=1324
@@ -11346,6 +13362,9 @@ Nie można zaktualizować hasła. Wartość podana jako nowe hasło zawiera wart
 Language=Romanian
 Unable to update the password. The value provided for the new password contains values that are not allowed in passwords.
 .
+Language=Japanese
+パスワードを更新できません。新しいパスワードに指定された値には、パスワードで使用できない値が含まれています。
+.
 
 MessageId=1325
 Severity=Success
@@ -11362,6 +13381,9 @@ Nie można zaktualizować hasła. Podana wartość nowego hasła nie spełnia wy
 .
 Language=Romanian
 Unable to update the password. The value provided for the new password does not meet the length, complexity, or history requirement of the domain.
+.
+Language=Japanese
+パスワードを更新できません。新しいパスワードに指定された値は、ドメインの長さ、複雑さ、または履歴の要件を満たしていません。
 .
 
 MessageId=1326
@@ -11380,6 +13402,9 @@ Błąd logowania: nieznana nazwa użytkownika lub nieprawidłowe hasło.
 Language=Romanian
 Logon failure: unknown user name or bad password.
 .
+Language=Japanese
+ログオン失敗: ユーザー名またはパスワードが正しくありません。
+.
 
 MessageId=1327
 Severity=Success
@@ -11396,6 +13421,9 @@ Błąd logowania: Ograniczenie konta użytkownika. Do możliwych przyczyn należ
 .
 Language=Romanian
 Logon failure: user account restriction. Possible reasons are blank passwords not allowed, logon hour restrictions, or a policy restriction has been enforced.
+.
+Language=Japanese
+ログオン失敗: アカウント制限により、このユーザーがサインインできません。空白のパスワードが許可されていない、サインイン時間が制限されている、またはポリシーによる制限が適用されているのかもしれません。
 .
 
 MessageId=1328
@@ -11414,6 +13442,9 @@ Błąd logowania: przekroczenie ograniczenia czasu logowania.
 Language=Romanian
 Logon failure: account logon time restriction violation.
 .
+Language=Japanese
+ログオン失敗: アカウントに時間制限があるため、今すぐサインインできません。
+.
 
 MessageId=1329
 Severity=Success
@@ -11430,6 +13461,9 @@ Błąd logowania: użytkownik nie ma zezwolenia na logowanie się w tym komputer
 .
 Language=Romanian
 Logon failure: user not allowed to log on to this computer.
+.
+Language=Japanese
+ログオン失敗: このユーザはこのコンピュータにサインインできません。
 .
 
 MessageId=1330
@@ -11448,6 +13482,9 @@ Błąd logowania: określone hasło konta wygasło.
 Language=Romanian
 Logon failure: the specified account password has expired.
 .
+Language=Japanese
+ログオン: このアカウントのパスワードの有効期限が切れています。
+.
 
 MessageId=1331
 Severity=Success
@@ -11464,6 +13501,9 @@ Błąd logowania: konto jest obecnie wyłączone.
 .
 Language=Romanian
 Logon failure: account currently disabled.
+.
+Language=Japanese
+ログオン失敗: このアカウントは現在無効になっているため、このユーザはサインインできません。
 .
 
 MessageId=1332
@@ -11482,6 +13522,9 @@ Nie zostało wykonane mapowanie między nazwami kont a identyfikatorami zabezpie
 Language=Romanian
 No mapping between account names and security IDs was done.
 .
+Language=Japanese
+アカウント名とセキュリティIDの間のマッピングが行われませんでした。
+.
 
 MessageId=1333
 Severity=Success
@@ -11498,6 +13541,9 @@ Wystąpiło za dużo równoczesnych żądań identyfikatorów użytkowników lok
 .
 Language=Romanian
 Too many local user identifiers (LUIDs) were requested at one time.
+.
+Language=Japanese
+一度に要求されたローカル ユーザー識別子 (LUID)  の数が多すぎます。
 .
 
 MessageId=1334
@@ -11516,6 +13562,9 @@ Brak dostępnych identyfikatorów użytkowników lokalnych (LUID).
 Language=Romanian
 No more local user identifiers (LUIDs) are available.
 .
+Language=Japanese
+利用可能なローカル ユーザー識別子 (LUID)  がなくなりました。
+.
 
 MessageId=1335
 Severity=Success
@@ -11532,6 +13581,9 @@ Podrzędna część identyfikatora zabezpieczeń jest nieprawidłowa dla tego sz
 .
 Language=Romanian
 The subauthority part of a security ID is invalid for this particular use.
+.
+Language=Japanese
+セキュリティ ID のサブ権限部分は、この特定の用途では無効です。
 .
 
 MessageId=1336
@@ -11550,6 +13602,9 @@ Struktura listy kontroli dostępu (ACL) jest nieprawidłowa.
 Language=Romanian
 The access control list (ACL) structure is invalid.
 .
+Language=Japanese
+アクセス制御リスト (ACL)  構造が無効です。
+.
 
 MessageId=1337
 Severity=Success
@@ -11566,6 +13621,9 @@ Struktura identyfikatora zabezpieczenia jest nieprawidłowa.
 .
 Language=Romanian
 The security ID structure is invalid.
+.
+Language=Japanese
+セキュリティ ID 構造体が無効です。
 .
 
 MessageId=1338
@@ -11584,6 +13642,9 @@ Struktura deskryptora zabezpieczeń jest nieprawidłowa.
 Language=Romanian
 The security descriptor structure is invalid.
 .
+Language=Japanese
+セキュリティ記述子構造が無効です。
+.
 
 MessageId=1340
 Severity=Success
@@ -11600,6 +13661,9 @@ Nie można zbudować dziedziczonej listy kontroli dostępu (ACL) lub wpisu kontr
 .
 Language=Romanian
 The inherited access control list (ACL) or access control entry (ACE) could not be built.
+.
+Language=Japanese
+継承されたアクセス制御リスト (ACL)  またはアクセス制御エントリ (ACE)  を構築できませんでした。
 .
 
 MessageId=1341
@@ -11618,6 +13682,9 @@ Serwer jest obecnie wyłączony.
 Language=Romanian
 The server is currently disabled.
 .
+Language=Japanese
+サーバーは現在無効です。
+.
 
 MessageId=1342
 Severity=Success
@@ -11634,6 +13701,9 @@ Serwer jest obecnie włączony.
 .
 Language=Romanian
 The server is currently enabled.
+.
+Language=Japanese
+サーバーは現在有効です。
 .
 
 MessageId=1343
@@ -11652,6 +13722,9 @@ Podana wartość była nieprawidłowa dla urzędu identyfikatora.
 Language=Romanian
 The value provided was an invalid value for an identifier authority.
 .
+Language=Japanese
+指定された値は、識別子の権限に対して無効な値です。
+.
 
 MessageId=1344
 Severity=Success
@@ -11668,6 +13741,9 @@ Za mało pamięci do aktualizacji informacji o zabezpieczeniach.
 .
 Language=Romanian
 No more memory is available for security information updates.
+.
+Language=Japanese
+セキュリティ情報の更新に使用できるメモリがありません。
 .
 
 MessageId=1345
@@ -11686,6 +13762,9 @@ Określone atrybuty są nieprawidłowe lub niezgodne z atrybutami całości grup
 Language=Romanian
 The specified attributes are invalid, or incompatible with the attributes for the group as a whole.
 .
+Language=Japanese
+指定された属性が無効、またはグループ全体の属性と互換性がありません。
+.
 
 MessageId=1346
 Severity=Success
@@ -11702,6 +13781,9 @@ Nie został podany poziom personifikacji albo podany poziom jest nieprawidłowy.
 .
 Language=Romanian
 Either a required impersonation level was not provided, or the provided impersonation level is invalid.
+.
+Language=Japanese
+必要な偽装レベルが指定されていないか、指定された偽装レベルが無効です。
 .
 
 MessageId=1347
@@ -11720,6 +13802,9 @@ Nie można otworzyć tokenu o anonimowym poziomie zabezpieczenia.
 Language=Romanian
 Cannot open an anonymous level security token.
 .
+Language=Japanese
+匿名レベルのセキュリティ トークンを開けません。
+.
 
 MessageId=1348
 Severity=Success
@@ -11736,6 +13821,9 @@ Language=Polish
 .
 Language=Romanian
 The validation information class requested was invalid.
+.
+Language=Japanese
+要求された検証情報クラスが無効です。
 .
 
 MessageId=1349
@@ -11754,6 +13842,9 @@ Typ tokena jest nieodpowiedni dla podjętej próby jego użycia.
 Language=Romanian
 The type of the token is inappropriate for its attempted use.
 .
+Language=Japanese
+トークンの型が使用目的に対して不適切です。
+.
 
 MessageId=1350
 Severity=Success
@@ -11770,6 +13861,9 @@ Nie można wykonać operacji zabezpieczenia na obiekcie, z którym nie ma skojar
 .
 Language=Romanian
 Unable to perform a security operation on an object that has no associated security.
+.
+Language=Japanese
+セキュリティに関連付けられていないオブジェクトに対してセキュリティ操作を実行できません。
 .
 
 MessageId=1351
@@ -11788,6 +13882,9 @@ Nie można odczytać informacji o konfiguracji z kontrolera domeny, ponieważ ur
 Language=Romanian
 Configuration information could not be read from the domain controller, either because the machine is unavailable, or access has been denied.
 .
+Language=Japanese
+マシンが使用できないか、アクセスが拒否されたため、ドメイン コントローラから構成情報を読み取れませんでした。
+.
 
 MessageId=1352
 Severity=Success
@@ -11804,6 +13901,9 @@ Menedżer kont zabezpieczeń (SAM) lub lokalny serwer urzędu zabezpieczeń (LSA
 .
 Language=Romanian
 The security account manager (SAM) or local security authority (LSA) server was in the wrong state to perform the security operation.
+.
+Language=Japanese
+セキュリティ アカウント マネージャ (SAM)  またはローカル セキュリティ権限 (LSA)  サーバーが、セキュリティ操作を実行するのに不適切な状態でした。
 .
 
 MessageId=1353
@@ -11822,6 +13922,9 @@ Domena była w niewłaściwym stanie do wykonania operacji zabezpieczania.
 Language=Romanian
 The domain was in the wrong state to perform the security operation.
 .
+Language=Japanese
+ドメインがセキュリティ操作を実行するために間違った状態にありました。
+.
 
 MessageId=1354
 Severity=Success
@@ -11838,6 +13941,9 @@ Ta operacja jest dozwolona tylko dla podstawowego kontrolera domeny.
 .
 Language=Romanian
 This operation is only allowed for the Primary Domain Controller of the domain.
+.
+Language=Japanese
+この操作はドメインのプライマリドメイン コントローラーにのみ許可されています。
 .
 
 MessageId=1355
@@ -11856,6 +13962,9 @@ Określona domena nie istnieje lub nie można się z nią skontaktować.
 Language=Romanian
 The specified domain either does not exist or could not be contacted.
 .
+Language=Japanese
+指定されたドメインが存在しないか、連絡できませんでした。
+.
 
 MessageId=1356
 Severity=Success
@@ -11872,6 +13981,9 @@ Określona domena już istnieje.
 .
 Language=Romanian
 The specified domain already exists.
+.
+Language=Japanese
+指定されたドメインはすでに存在します。
 .
 
 MessageId=1357
@@ -11890,6 +14002,9 @@ Podjęto próbę przekroczenia limitu liczby domen na serwer.
 Language=Romanian
 An attempt was made to exceed the limit on the number of domains per server.
 .
+Language=Japanese
+サーバーあたりのドメイン数の制限を超えようとしました。
+.
 
 MessageId=1358
 Severity=Success
@@ -11906,6 +14021,9 @@ Nie można wykonać żądanej operacji, ponieważ wystąpiła katastrofalna awar
 .
 Language=Romanian
 Unable to complete the requested operation because of either a catastrophic media failure or a data structure corruption on the disk.
+.
+Language=Japanese
+メディアの致命的な障害またはディスク上のデータ構造の破損のため、要求された操作を完了できません。
 .
 
 MessageId=1359
@@ -11924,6 +14042,9 @@ Wystąpił błąd wewnętrzny.
 Language=Romanian
 An internal error occurred.
 .
+Language=Japanese
+内部エラーが発生しました。
+.
 
 MessageId=1360
 Severity=Success
@@ -11940,6 +14061,9 @@ Rodzajowe typy dostępu były zawarte w masce dostępu, która powinna być już
 .
 Language=Romanian
 Generic access types were contained in an access mask which should already be mapped to nongeneric types.
+.
+Language=Japanese
+汎用アクセス タイプが、汎用タイプ以外のタイプにマップされているはずのアクセス マスクに含まれていました。
 .
 
 MessageId=1361
@@ -11958,6 +14082,9 @@ Deskryptor zabezpieczeń nie ma prawidłowego formatu (bezwzględnego lub autore
 Language=Romanian
 A security descriptor is not in the right format (absolute or self-relative).
 .
+Language=Japanese
+セキュリティ記述子の形式が正しくありません (絶対形式または自己相対形式) 。
+.
 
 MessageId=1362
 Severity=Success
@@ -11974,6 +14101,9 @@ Language=Polish
 .
 Language=Romanian
 The requested action is restricted for use by logon processes only. The calling process has not registered as a logon process.
+.
+Language=Japanese
+要求されたアクションはログオンプロセスによってのみ使用できるように制限されています。呼び出し元のプロセスはログオンプロセスとして登録されていません。
 .
 
 MessageId=1363
@@ -11992,6 +14122,9 @@ Nie można uruchomić nowej sesji logowania z identyfikatorem, który jest już 
 Language=Romanian
 Cannot start a new logon session with an ID that is already in use.
 .
+Language=Japanese
+すでに使用されているIDで新しいログオンセッションを開始できません。
+.
 
 MessageId=1364
 Severity=Success
@@ -12008,6 +14141,9 @@ Określony pakiet uwierzytelniania jest nieznany.
 .
 Language=Romanian
 A specified authentication package is unknown.
+.
+Language=Japanese
+指定された認証パッケージが不明です。
 .
 
 MessageId=1365
@@ -12026,6 +14162,9 @@ Sesja logowania jest w stanie niezgodnym z żądaną operacją.
 Language=Romanian
 The logon session is not in a state that is consistent with the requested operation.
 .
+Language=Japanese
+ログオン セッションの状態が要求された操作と一致しません。
+.
 
 MessageId=1366
 Severity=Success
@@ -12042,6 +14181,9 @@ Identyfikator sesji logowania jest już w użyciu.
 .
 Language=Romanian
 The logon session ID is already in use.
+.
+Language=Japanese
+ログオンセッションIDがすでに使用されています。
 .
 
 MessageId=1367
@@ -12060,6 +14202,9 @@ Language=Polish
 Language=Romanian
 A logon request contained an invalid logon type value.
 .
+Language=Japanese
+ログオン要求に無効なログオン タイプ値が含まれていました。
+.
 
 MessageId=1368
 Severity=Success
@@ -12076,6 +14221,9 @@ Dopóki dane są odczytywane z nazwanego potoku, nie można przeprowadzić perso
 .
 Language=Romanian
 Unable to impersonate using a named pipe until data has been read from that pipe.
+.
+Language=Japanese
+名前付きパイプからデータが読み込まれるまで、名前付きパイプを使用したなりすましができません。
 .
 
 MessageId=1369
@@ -12094,6 +14242,9 @@ Stan transakcji poddrzewa rejestru jest niezgodny z żądaną operacją.
 Language=Romanian
 The transaction state of a registry subtree is incompatible with the requested operation.
 .
+Language=Japanese
+レジストリ サブツリーのトランザクション状態が要求された操作と互換性がありません。
+.
 
 MessageId=1370
 Severity=Success
@@ -12110,6 +14261,9 @@ Wystąpiło uszkodzenie wewnętrznej bazy danych zabezpieczeń.
 .
 Language=Romanian
 An internal security database corruption has been encountered.
+.
+Language=Japanese
+内部セキュリティ データベースの破損が発生しました。
 .
 
 MessageId=1371
@@ -12128,6 +14282,9 @@ Nie można wykonać tej operacji na kontach wbudowanych.
 Language=Romanian
 Cannot perform this operation on built-in accounts.
 .
+Language=Japanese
+組み込みアカウントでこの操作を実行できません。
+.
 
 MessageId=1372
 Severity=Success
@@ -12144,6 +14301,9 @@ Nie można wykonać tej operacji na tej wbudowanej grupie specjalnej.
 .
 Language=Romanian
 Cannot perform this operation on this built-in special group.
+.
+Language=Japanese
+この組み込みの特別グループに対してこの操作は実行できません。
 .
 
 MessageId=1373
@@ -12162,6 +14322,9 @@ Nie można wykonać tej operacji na tym wbudowanym użytkowniku specjalnym.
 Language=Romanian
 Cannot perform this operation on this built-in special user.
 .
+Language=Japanese
+この組み込みの特別ユーザーに対してこの操作は実行できません。
+.
 
 MessageId=1374
 Severity=Success
@@ -12178,6 +14341,9 @@ Nie można usunąć użytkownika z grupy, ponieważ grupa jest obecnie podstawow
 .
 Language=Romanian
 The user cannot be removed from a group because the group is currently the user's primary group.
+.
+Language=Japanese
+グループが現在ユーザのプライマリ グループであるため、ユーザをグループから削除できません。
 .
 
 MessageId=1375
@@ -12196,6 +14362,9 @@ Token jest już w użyciu jako token podstawowy.
 Language=Romanian
 The token is already in use as a primary token.
 .
+Language=Japanese
+トークンはすでにプライマリ トークンとして使用されています。
+.
 
 MessageId=1376
 Severity=Success
@@ -12212,6 +14381,9 @@ Określona grupa lokalna nie istnieje.
 .
 Language=Romanian
 The specified local group does not exist.
+.
+Language=Japanese
+指定されたローカル グループが存在しません。
 .
 
 MessageId=1377
@@ -12230,6 +14402,9 @@ Określona nazwa konta nie jest członkiem grupy.
 Language=Romanian
 The specified account name is not a member of the local group.
 .
+Language=Japanese
+指定されたアカウント名はグループのメンバーではありません。
+.
 
 MessageId=1378
 Severity=Success
@@ -12246,6 +14421,9 @@ Określona nazwa konta jest już członkiem grupy.
 .
 Language=Romanian
 The specified account name is already a member of the local group.
+.
+Language=Japanese
+指定されたアカウント名はすでにグループのメンバーです。
 .
 
 MessageId=1379
@@ -12264,6 +14442,9 @@ Określona grupa lokalna już istnieje.
 Language=Romanian
 The specified local group already exists.
 .
+Language=Japanese
+指定されたローカル グループは既に存在します。
+.
 
 MessageId=1380
 Severity=Success
@@ -12280,6 +14461,9 @@ Błąd logowania: użytkownikowi nie przyznano żądanego typu logowania na tym 
 .
 Language=Romanian
 Logon failure: the user has not been granted the requested logon type at this computer.
+.
+Language=Japanese
+ログオン失敗: ユーザーはこのコンピューターで要求されたログオン タイプを許可されていません。
 .
 
 MessageId=1381
@@ -12298,6 +14482,9 @@ Przekroczono maksymalną liczbę haseł, które mogą być przechowywane w pojed
 Language=Romanian
 The maximum number of secrets that may be stored in a single system has been exceeded.
 .
+Language=Japanese
+1つのシステムに保存できる秘密の最大数を超えました。
+.
 
 MessageId=1382
 Severity=Success
@@ -12314,6 +14501,9 @@ Długość hasła przekracza maksymalną dopuszczalną wartość.
 .
 Language=Romanian
 The length of a secret exceeds the maximum length allowed.
+.
+Language=Japanese
+秘密の長さが許容される最大長を超えました。
 .
 
 MessageId=1383
@@ -12332,6 +14522,9 @@ Baza danych urzędu zabezpieczeń lokalnych zawiera wewnętrzną niezgodność.
 Language=Romanian
 The local security authority database contains an internal inconsistency.
 .
+Language=Japanese
+ローカルのセキュリティ権限データベースに内部不整合があります。
+.
 
 MessageId=1384
 Severity=Success
@@ -12348,6 +14541,9 @@ Podczas próby logowania kontekst zabezpieczeń użytkownika zakumulował za du�
 .
 Language=Romanian
 During a logon attempt, the user's security context accumulated too many security IDs.
+.
+Language=Japanese
+ログオン試行中、ユーザーのセキュリティ コンテキストにセキュリティIDが蓄積されすぎました。
 .
 
 MessageId=1385
@@ -12366,6 +14562,9 @@ Błąd logowania: użytkownikowi nie przyznano żądanego typu logowania na tym 
 Language=Romanian
 Logon failure: the user has not been granted the requested logon type at this computer.
 .
+Language=Japanese
+ログオン失敗: ユーザーはこのコンピュータで要求されたログオン タイプを許可されていません。
+.
 
 MessageId=1386
 Severity=Success
@@ -12382,6 +14581,9 @@ Do zmiany hasła użytkownika konieczne jest hasło zaszyfrowane krzyżowo.
 .
 Language=Romanian
 A cross-encrypted password is necessary to change a user password.
+.
+Language=Japanese
+ユーザーパスワードを変更するには、暗号化されたパスワードが必要です。
 .
 
 MessageId=1387
@@ -12400,6 +14602,9 @@ Nie można dodać nowego członka grupy do grupy lokalnej ani usunąć go z niej
 Language=Romanian
 A new member could not be added to or removed from the local group because the member does not exist.
 .
+Language=Japanese
+メンバが存在しないため、メンバをローカル グループに追加またはローカル グループから削除できませんでした。
+.
 
 MessageId=1388
 Severity=Success
@@ -12416,6 +14621,9 @@ Nie można dodać nowego członka grupy do grupy lokalnej, ponieważ ten człone
 .
 Language=Romanian
 A new member could not be added to a local group because the member has the wrong account type.
+.
+Language=Japanese
+メンバのアカウント タイプが正しくないため、新しいメンバをローカル グループに追加できませんでした。
 .
 
 MessageId=1389
@@ -12434,6 +14642,9 @@ Określono za dużo identyfikatorów zabezpieczeń.
 Language=Romanian
 Too many security IDs have been specified.
 .
+Language=Japanese
+セキュリティIDが多すぎます。
+.
 
 MessageId=1390
 Severity=Success
@@ -12450,6 +14661,9 @@ Do zmiany tego hasła użytkownika konieczne jest hasło zaszyfrowane krzyżowo.
 .
 Language=Romanian
 A cross-encrypted password is necessary to change this user password.
+.
+Language=Japanese
+このユーザーパスワードを変更するには、暗号化されたパスワードが必要です。
 .
 
 MessageId=1391
@@ -12468,6 +14682,9 @@ Wskazuje, że ACL nie zawiera składników dziedzicznych.
 Language=Romanian
 Indicates an ACL contains no inheritable components.
 .
+Language=Japanese
+ACLに継承可能なコンポーネントがないことを示します。
+.
 
 MessageId=1392
 Severity=Success
@@ -12484,6 +14701,9 @@ Plik lub katalog jest uszkodzony i nieczytelny.
 .
 Language=Romanian
 The file or directory is corrupted and unreadable.
+.
+Language=Japanese
+ファイルまたはディレクトリが壊れて読み取り不可能です。
 .
 
 MessageId=1393
@@ -12502,6 +14722,9 @@ Struktura dysku jest uszkodzona i nieczytelna.
 Language=Romanian
 The disk structure is corrupted and unreadable.
 .
+Language=Japanese
+ディスク構造が壊れて読み取りできません。
+.
 
 MessageId=1394
 Severity=Success
@@ -12518,6 +14741,9 @@ Brak klucza sesji użytkownika dla określonej sesji logowania.
 .
 Language=Romanian
 There is no user session key for the specified logon session.
+.
+Language=Japanese
+指定されたログオン セッションのユーザー セッション キーがありません。
 .
 
 MessageId=1395
@@ -12536,6 +14762,9 @@ Usługa, do której próbujesz uzyskać dostęp, ma licencję tylko na określon
 Language=Romanian
 The service being accessed is licensed for a particular number of connections. No more connections can be made to the service at this time because there are already as many connections as the service can accept.
 .
+Language=Japanese
+アクセスされているサービスは、特定の接続数に対してライセンスされています。サービスが受け入れることができる接続数がすでにあるため、現時点ではこれ以上の接続を行うことはできません。
+.
 
 MessageId=1396
 Severity=Success
@@ -12552,6 +14781,9 @@ Błąd logowania: niepoprawna nazwa docelowego konta.
 .
 Language=Romanian
 Logon Failure: The target account name is incorrect.
+.
+Language=Japanese
+ログオン失敗: アクセス先のアカウント名が正しくありません。
 .
 
 MessageId=1397
@@ -12570,6 +14802,9 @@ Wzajemne uwierzytelnienie nie powiodło się. Hasło serwera w kontrolerze domen
 Language=Romanian
 Mutual Authentication failed. The server's password is out of date at the domain controller.
 .
+Language=Japanese
+相互認証に失敗しました。ドメイン コントローラーでサーバーのパスワードが無効です。
+.
 
 MessageId=1398
 Severity=Success
@@ -12586,6 +14821,9 @@ Występuje różnica czasu i/lub daty między klientem i serwerem.
 .
 Language=Romanian
 There is a time and/or date difference between the client and server.
+.
+Language=Japanese
+クライアントとサーバーの間で時差があります。
 .
 
 MessageId=1399
@@ -12604,6 +14842,9 @@ Tej operacji nie można wykonać na bieżącej domenie.
 Language=Romanian
 This operation cannot be performed on the current domain.
 .
+Language=Japanese
+この操作は現在のドメインでは実行できません。
+.
 
 MessageId=1400
 Severity=Success
@@ -12620,6 +14861,9 @@ Nieprawidłowe dojście okna.
 .
 Language=Romanian
 Invalid window handle.
+.
+Language=Japanese
+無効なウィンドウハンドルです。
 .
 
 MessageId=1401
@@ -12638,6 +14882,9 @@ Nieprawidłowe dojście menu.
 Language=Romanian
 Invalid menu handle.
 .
+Language=Japanese
+無効なメニューハンドルです。
+.
 
 MessageId=1402
 Severity=Success
@@ -12654,6 +14901,9 @@ Nieprawidłowe dojście kursora.
 .
 Language=Romanian
 Invalid cursor handle.
+.
+Language=Japanese
+無効なカーソルハンドルです。
 .
 
 MessageId=1403
@@ -12672,6 +14922,9 @@ Nieprawidłowe dojście tabeli przyspieszacza.
 Language=Romanian
 Invalid accelerator table handle.
 .
+Language=Japanese
+無効なアクセラレータテーブルハンドルです。
+.
 
 MessageId=1404
 Severity=Success
@@ -12688,6 +14941,9 @@ Nieprawidłowe dojście haka.
 .
 Language=Romanian
 Invalid hook handle.
+.
+Language=Japanese
+無効なフックハンドルです。
 .
 
 MessageId=1405
@@ -12706,6 +14962,9 @@ Nieprawidłowe dojście do struktury wielooknowej.
 Language=Romanian
 Invalid handle to a multiple-window position structure.
 .
+Language=Japanese
+複数ウィンドウ位置構造体のハンドルが無効です。
+.
 
 MessageId=1406
 Severity=Success
@@ -12722,6 +14981,9 @@ Nie można utworzyć okna podrzędnego najwyższego poziomu.
 .
 Language=Romanian
 Cannot create a top-level child window.
+.
+Language=Japanese
+トップレベルの子ウィンドウを作成できません。
 .
 
 MessageId=1407
@@ -12740,6 +15002,9 @@ Nie można odnaleźć klasy okna.
 Language=Romanian
 Cannot find window class.
 .
+Language=Japanese
+ウィンドウ クラスが見つかりません。
+.
 
 MessageId=1408
 Severity=Success
@@ -12756,6 +15021,9 @@ Nieprawidłowe okno, należy ono do innego wątku.
 .
 Language=Romanian
 Invalid window; it belongs to other thread.
+.
+Language=Japanese
+無効なウィンドウです。
 .
 
 MessageId=1409
@@ -12774,6 +15042,9 @@ Klawisz dostępu jest już zarejestrowany.
 Language=Romanian
 Hot key is already registered.
 .
+Language=Japanese
+ホットキーは既に登録されています。
+.
 
 MessageId=1410
 Severity=Success
@@ -12790,6 +15061,9 @@ Klasa już istnieje.
 .
 Language=Romanian
 Class already exists.
+.
+Language=Japanese
+クラスはすでに存在します。
 .
 
 MessageId=1411
@@ -12808,6 +15082,9 @@ Klasa nie istnieje.
 Language=Romanian
 Class does not exist.
 .
+Language=Japanese
+クラスが存在しません。
+.
 
 MessageId=1412
 Severity=Success
@@ -12824,6 +15101,9 @@ Klasa ma wciąż otwarte okna.
 .
 Language=Romanian
 Class still has open windows.
+.
+Language=Japanese
+クラスはまだウィンドウを開いています。
 .
 
 MessageId=1413
@@ -12842,6 +15122,9 @@ Nieprawidłowy indeks.
 Language=Romanian
 Invalid index.
 .
+Language=Japanese
+無効なインデックスです。
+.
 
 MessageId=1414
 Severity=Success
@@ -12858,6 +15141,9 @@ Nieprawidłowe dojście ikony.
 .
 Language=Romanian
 Invalid icon handle.
+.
+Language=Japanese
+無効なアイコンハンドルです。
 .
 
 MessageId=1415
@@ -12876,6 +15162,9 @@ Używane są słowa prywatnego okna DIALOG.
 Language=Romanian
 Using private DIALOG window words.
 .
+Language=Japanese
+プライベート DIALOG ウィンドウの単語を使用しています。
+.
 
 MessageId=1416
 Severity=Success
@@ -12892,6 +15181,9 @@ Nie znaleziono identyfikatora pola listy.
 .
 Language=Romanian
 The list box identifier was not found.
+.
+Language=Japanese
+リスト ボックスの識別子が見つかりませんでした。
 .
 
 MessageId=1417
@@ -12910,6 +15202,9 @@ Nie znaleziono symboli wieloznacznych.
 Language=Romanian
 No wildcards were found.
 .
+Language=Japanese
+ワイルド カードが見つかりませんでした。
+.
 
 MessageId=1418
 Severity=Success
@@ -12926,6 +15221,9 @@ Wątek nie ma otwartego Schowka.
 .
 Language=Romanian
 Thread does not have a clipboard open.
+.
+Language=Japanese
+スレッドがクリップボードを開いていません。
 .
 
 MessageId=1419
@@ -12944,6 +15242,9 @@ Klawisz dostępu nie jest zarejestrowany.
 Language=Romanian
 Hot key is not registered.
 .
+Language=Japanese
+ホットキーが登録されていません。
+.
 
 MessageId=1420
 Severity=Success
@@ -12960,6 +15261,9 @@ Okno nie jest prawidłowym oknem dialogowym.
 .
 Language=Romanian
 The window is not a valid dialog window.
+.
+Language=Japanese
+ウィンドウは有効なダイアログウィンドウではありません。
 .
 
 MessageId=1421
@@ -12978,6 +15282,9 @@ Nie można odnaleźć identyfikatora formantu.
 Language=Romanian
 Control ID not found.
 .
+Language=Japanese
+コントロールIDが見つかりません。
+.
 
 MessageId=1422
 Severity=Success
@@ -12994,6 +15301,9 @@ Nieprawidłowy komunikat dla pola kombi, ponieważ nie ma ono formantu edycyjneg
 .
 Language=Romanian
 Invalid message for a combo box because it does not have an edit control.
+.
+Language=Japanese
+コンボボックスに編集コントロールがないので無効なメッセージです。
 .
 
 MessageId=1423
@@ -13012,6 +15322,9 @@ Okno nie jest polem kombi.
 Language=Romanian
 The window is not a combo box.
 .
+Language=Japanese
+ウィンドウはコンボボックスではありません。
+.
 
 MessageId=1424
 Severity=Success
@@ -13028,6 +15341,9 @@ Wysokość musi być mniejsza niż 256.
 .
 Language=Romanian
 Height must be less than 256.
+.
+Language=Japanese
+高さが256未満である必要があります。
 .
 
 MessageId=1425
@@ -13046,6 +15362,9 @@ Nieprawidłowe dojście kontekstu urządzenia (DC).
 Language=Romanian
 Invalid device context (DC) handle.
 .
+Language=Japanese
+無効なデバイスコンテキスト (DC) ハンドル
+.
 
 MessageId=1426
 Severity=Success
@@ -13062,6 +15381,9 @@ Nieprawidłowy typ procedury haka.
 .
 Language=Romanian
 Invalid hook procedure type.
+.
+Language=Japanese
+無効なフック プロシージャ タイプです。
 .
 
 MessageId=1427
@@ -13080,6 +15402,9 @@ Nieprawidłowa procedura haka.
 Language=Romanian
 Invalid hook procedure.
 .
+Language=Japanese
+無効なフック プロシージャです。
+.
 
 MessageId=1428
 Severity=Success
@@ -13096,6 +15421,9 @@ Nie można ustawić haka nielokalnego bez dojścia modułu.
 .
 Language=Romanian
 Cannot set nonlocal hook without a module handle.
+.
+Language=Japanese
+モジュールハンドルを持たない非ローカルフックを設定できません。
 .
 
 MessageId=1429
@@ -13114,6 +15442,9 @@ Ta procedura haka może być ustawiona tylko globalnie.
 Language=Romanian
 This hook procedure can only be set globally.
 .
+Language=Japanese
+このフック プロシージャはグローバルにしか設定できません。
+.
 
 MessageId=1430
 Severity=Success
@@ -13130,6 +15461,9 @@ Procedura haka dziennika jest już zainstalowana.
 .
 Language=Romanian
 The journal hook procedure is already installed.
+.
+Language=Japanese
+ジャーナル フック プロシージャは既にインストールされています。
 .
 
 MessageId=1431
@@ -13148,6 +15482,9 @@ Procedura haka nie jest zainstalowana.
 Language=Romanian
 The hook procedure is not installed.
 .
+Language=Japanese
+フック プロシージャがインストールされていません。
+.
 
 MessageId=1432
 Severity=Success
@@ -13164,6 +15501,9 @@ Nieprawidłowy komunikat dla pola listy z pojedynczym wyborem.
 .
 Language=Romanian
 Invalid message for single-selection list box.
+.
+Language=Japanese
+単一選択リスト ボックスのメッセージが無効です。
 .
 
 MessageId=1433
@@ -13182,6 +15522,9 @@ Polecenie LB_SETCOUNT przesłane do pola listy non-lazy.
 Language=Romanian
 LB_SETCOUNT sent to non-lazy list box.
 .
+Language=Japanese
+非レイジーリストボックスに LB_SETCOUNT を送信しました。
+.
 
 MessageId=1434
 Severity=Success
@@ -13198,6 +15541,9 @@ To pole listy nie obsługuje tabulatorów.
 .
 Language=Romanian
 This list box does not support tab stops.
+.
+Language=Japanese
+このリストボックスはタブストップをサポートしていません。
 .
 
 MessageId=1435
@@ -13216,6 +15562,9 @@ Nie można zniszczyć obiektu utworzonego przez inny wątek.
 Language=Romanian
 Cannot destroy object created by another thread.
 .
+Language=Japanese
+他のスレッドによって作成されたオブジェクトを破棄できません。
+.
 
 MessageId=1436
 Severity=Success
@@ -13232,6 +15581,9 @@ Okna podrzędne nie mogą mieć menu.
 .
 Language=Romanian
 Child windows cannot have menus.
+.
+Language=Japanese
+子ウィンドウはメニューを持つことができません。
 .
 
 MessageId=1437
@@ -13250,6 +15602,9 @@ Okno nie ma menu systemowego.
 Language=Romanian
 The window does not have a system menu.
 .
+Language=Japanese
+ウィンドウにシステム メニューがありません。
+.
 
 MessageId=1438
 Severity=Success
@@ -13266,6 +15621,9 @@ Nieprawidłowy styl okna komunikatu.
 .
 Language=Romanian
 Invalid message box style.
+.
+Language=Japanese
+メッセージ ボックスのスタイルが無効です。
 .
 
 MessageId=1439
@@ -13284,6 +15642,9 @@ Nieprawidłowy parametr systemowy (SPI_*).
 Language=Romanian
 Invalid system-wide (SPI_*) parameter.
 .
+Language=Japanese
+無効なシステム全体 (SPI_*) パラメータ
+.
 
 MessageId=1440
 Severity=Success
@@ -13300,6 +15661,9 @@ Ekran jest już zablokowany.
 .
 Language=Romanian
 Screen already locked.
+.
+Language=Japanese
+画面が既にロックされています。
 .
 
 MessageId=1441
@@ -13318,6 +15682,9 @@ Wszystkie dojścia okien w strukturze o wielu pozycjach okien muszą mieć to sa
 Language=Romanian
 All handles to windows in a multiple-window position structure must have the same parent.
 .
+Language=Japanese
+複数ウィンドウの位置構造内のウィンドウへのすべてのハンドルは、同じ親を持つ必要があります。
+.
 
 MessageId=1442
 Severity=Success
@@ -13334,6 +15701,9 @@ Okno nie jest oknem podrzędnym.
 .
 Language=Romanian
 The window is not a child window.
+.
+Language=Japanese
+ウィンドウは子ウィンドウではありません。
 .
 
 MessageId=1443
@@ -13352,6 +15722,9 @@ Nieprawidłowe polecenie GW_* .
 Language=Romanian
 Invalid GW_* command.
 .
+Language=Japanese
+無効なGW_*コマンドです。
+.
 
 MessageId=1444
 Severity=Success
@@ -13368,6 +15741,9 @@ Nieprawidłowy identyfikator wątku.
 .
 Language=Romanian
 Invalid thread identifier.
+.
+Language=Japanese
+無効なスレッド識別子です。
 .
 
 MessageId=1445
@@ -13386,6 +15762,9 @@ Nie można przetworzyć komunikatu z okna, które nie jest oknem interfejsu doku
 Language=Romanian
 Cannot process a message from a window that is not a multiple document interface (MDI) window.
 .
+Language=Japanese
+MDI (複数文書インターフェイス)  ウィンドウではないウィンドウからのメッセージを処理できません。
+.
 
 MessageId=1446
 Severity=Success
@@ -13402,6 +15781,9 @@ Menu podręczne jest już aktywne.
 .
 Language=Romanian
 Popup menu already active.
+.
+Language=Japanese
+ポップアップメニューはすでにアクティブです。
 .
 
 MessageId=1447
@@ -13420,6 +15802,9 @@ Okno nie ma pasków przewijania.
 Language=Romanian
 The window does not have scroll bars.
 .
+Language=Japanese
+ウィンドウにスクロール バーがありません。
+.
 
 MessageId=1448
 Severity=Success
@@ -13436,6 +15821,9 @@ Zakres paska przewijania nie może być większy niż wartość MAXLONG.
 .
 Language=Romanian
 Scroll bar range cannot be greater than MAXLONG.
+.
+Language=Japanese
+スクロールバーの範囲をMAXLONGより大きくできません。
 .
 
 MessageId=1449
@@ -13454,6 +15842,9 @@ Nie można wyświetić ani usunąć okna określoną metodą.
 Language=Romanian
 Cannot show or remove the window in the way specified.
 .
+Language=Japanese
+指定された方法でウィンドウを表示または削除できません。
+.
 
 MessageId=1450
 Severity=Success
@@ -13470,6 +15861,9 @@ Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 .
 Language=Romanian
 Insufficient system resources exist to complete the requested service.
+.
+Language=Japanese
+要求されたサービスを完了するためのシステム リソースが不足しています。
 .
 
 MessageId=1451
@@ -13488,6 +15882,9 @@ Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 Language=Romanian
 Insufficient system resources exist to complete the requested service.
 .
+Language=Japanese
+要求されたサービスを完了するにはシステム リソースが不足しています。
+.
 
 MessageId=1452
 Severity=Success
@@ -13504,6 +15901,9 @@ Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 .
 Language=Romanian
 Insufficient system resources exist to complete the requested service.
+.
+Language=Japanese
+要求されたサービスを完了するにはシステム リソースが不足しています。
 .
 
 MessageId=1453
@@ -13522,6 +15922,9 @@ Przydział jest niewystarczający do ukończenia żądanej usługi.
 Language=Romanian
 Insufficient quota to complete the requested service.
 .
+Language=Japanese
+要求されたサービスを完了するためのクォータが不足しています。
+.
 
 MessageId=1454
 Severity=Success
@@ -13538,6 +15941,9 @@ Przydział jest niewystarczający do ukończenia żądanej usługi.
 .
 Language=Romanian
 Insufficient quota to complete the requested service.
+.
+Language=Japanese
+要求されたサービスを完了するためのクォータが不足しています。
 .
 
 MessageId=1455
@@ -13556,6 +15962,9 @@ Plik stronicowania jest za mały do ukończenia tej operacji.
 Language=Romanian
 The paging file is too small for this operation to complete.
 .
+Language=Japanese
+ページング ファイルが小さすぎるため、この操作を完了できません。
+.
 
 MessageId=1456
 Severity=Success
@@ -13572,6 +15981,9 @@ Nie odnaleziono elementu menu.
 .
 Language=Romanian
 A menu item was not found.
+.
+Language=Japanese
+メニュー項目が見つかりませんでした。
 .
 
 MessageId=1457
@@ -13590,6 +16002,9 @@ Nieprawidłowe dojście układu klawiatury.
 Language=Romanian
 Invalid keyboard layout handle.
 .
+Language=Japanese
+無効なキーボードレイアウトハンドルです。
+.
 
 MessageId=1458
 Severity=Success
@@ -13606,6 +16021,9 @@ Niedozwolony typ haka.
 .
 Language=Romanian
 Hook type not allowed.
+.
+Language=Japanese
+フックタイプが許可されていません。
 .
 
 MessageId=1459
@@ -13624,6 +16042,9 @@ Ta operacja wymaga interakcyjnej stacji z systemem Windows.
 Language=Romanian
 This operation requires an interactive window station.
 .
+Language=Japanese
+この操作には対話型ウィンドウ ステーションが必要です。
+.
 
 MessageId=1460
 Severity=Success
@@ -13640,6 +16061,9 @@ Operacja została zwrócona, ponieważ przekroczono limit czasu.
 .
 Language=Romanian
 This operation returned because the timeout period expired.
+.
+Language=Japanese
+タイムアウト時間が過ぎたため、この操作は返されました。
 .
 
 MessageId=1461
@@ -13658,6 +16082,9 @@ Nieprawidłowe dojście do monitora.
 Language=Romanian
 Invalid monitor handle.
 .
+Language=Japanese
+無効なモニタハンドルです。
+.
 
 MessageId=1500
 Severity=Success
@@ -13674,6 +16101,9 @@ Plik dziennika zdarzeń jest uszkodzony.
 .
 Language=Romanian
 The event log file is corrupted.
+.
+Language=Japanese
+イベント ログ ファイルが壊れています。
 .
 
 MessageId=1501
@@ -13692,6 +16122,9 @@ Nie można uruchomić usługi rejestrowania zdarzeń, ponieważ nie można otwor
 Language=Romanian
 No event log file could be opened, so the event logging service did not start.
 .
+Language=Japanese
+イベント ログ ファイルを開くことができませんでした。
+.
 
 MessageId=1502
 Severity=Success
@@ -13708,6 +16141,9 @@ Plik dziennika zdarzeń jest zapełniony.
 .
 Language=Romanian
 The event log file is full.
+.
+Language=Japanese
+イベント ログ ファイルがいっぱいです。
 .
 
 MessageId=1503
@@ -13726,6 +16162,9 @@ Plik dziennika zdarzeń zmienił się między operacjami odczytu.
 Language=Romanian
 The event log file has changed between read operations.
 .
+Language=Japanese
+イベント ログ ファイルが読み取り操作の間に変更されました。
+.
 
 MessageId=1601
 Severity=Success
@@ -13742,6 +16181,9 @@ Nie można uzyskać dostępu do usługi Instalator ReactOS. Może mieć to miejs
 .
 Language=Romanian
 The ReactOS Installer service could not be accessed. This can occur if you are running ReactOS in safe mode, or if the ReactOS Installer is not correctly installed. Contact your support personnel for assistance.
+.
+Language=Japanese
+ReactOS Installer サービスにアクセスできませんでした。ReactOS Installerが正しくインストールされていない場合に発生する可能性があります。サポート担当者にお問い合わせください。
 .
 
 MessageId=1602
@@ -13760,6 +16202,9 @@ Użytkownik anulował instalację.
 Language=Romanian
 User cancelled installation.
 .
+Language=Japanese
+ユーザーがインストールをキャンセルしました。
+.
 
 MessageId=1603
 Severity=Success
@@ -13776,6 +16221,9 @@ Błąd krytyczny podczas instalacji.
 .
 Language=Romanian
 Fatal error during installation.
+.
+Language=Japanese
+インストール中に致命的なエラーが発生しました。
 .
 
 MessageId=1604
@@ -13794,6 +16242,9 @@ Instalacja wstrzymana, nieukończona.
 Language=Romanian
 Installation suspended, incomplete.
 .
+Language=Japanese
+インストールが中断されました。
+.
 
 MessageId=1605
 Severity=Success
@@ -13810,6 +16261,9 @@ Akcja ta jest prawidłowa tylko w odniesieniu do produktów, które są obecnie 
 .
 Language=Romanian
 This action is only valid for products that are currently installed.
+.
+Language=Japanese
+この操作は、現在インストールされている製品に対してのみ有効です。
 .
 
 MessageId=1606
@@ -13828,6 +16282,9 @@ Niezarejestrowany identyfikator cechy.
 Language=Romanian
 Feature ID not registered.
 .
+Language=Japanese
+フィーチャーIDが登録されていません。
+.
 
 MessageId=1607
 Severity=Success
@@ -13844,6 +16301,9 @@ Niezarejestrowany identyfikator składnika.
 .
 Language=Romanian
 Component ID not registered.
+.
+Language=Japanese
+コンポーネントIDが登録されていません。
 .
 
 MessageId=1608
@@ -13862,6 +16322,9 @@ Nieznana właściwość.
 Language=Romanian
 Unknown property.
 .
+Language=Japanese
+不明なプロパティ
+.
 
 MessageId=1609
 Severity=Success
@@ -13878,6 +16341,9 @@ Nieprawidłowy stan dojścia.
 .
 Language=Romanian
 Handle is in an invalid state.
+.
+Language=Japanese
+ハンドルの状態が無効です。
 .
 
 MessageId=1610
@@ -13896,6 +16362,9 @@ Dane konfiguracyjne tego produktu są uszkodzone. Skontaktuj się z działem Pom
 Language=Romanian
 The configuration data for this product is corrupt. Contact your support personnel.
 .
+Language=Japanese
+この製品の設定データが壊れています。サポート担当者に連絡してください。
+.
 
 MessageId=1611
 Severity=Success
@@ -13912,6 +16381,9 @@ Brak kwalifikatora składnika.
 .
 Language=Romanian
 Component qualifier not present.
+.
+Language=Japanese
+コンポーネント修飾子が存在しません。
 .
 
 MessageId=1612
@@ -13930,6 +16402,9 @@ Language=Polish
 Language=Romanian
 The installation source for this product is not available. Verify that the source exists and that you can access it.
 .
+Language=Japanese
+この製品のインストール ソースがありません。ソースが存在し、アクセスできることを確認してください。
+.
 
 MessageId=1613
 Severity=Success
@@ -13946,6 +16421,9 @@ Usługa Instalator ReactOS nie może zainstalować tego pakietu instalacyjnego. 
 .
 Language=Romanian
 This installation package cannot be installed by the ReactOS Installer service. You must install a ReactOS service pack that contains a newer version of the ReactOS Installer service.
+.
+Language=Japanese
+このインストール パッケージは ReactOS Installer サービスではインストールできません。新しいバージョンのReactOS Installerサービスが含まれているReactOSサービスパックをインストールする必要があります。
 .
 
 MessageId=1614
@@ -13964,6 +16442,9 @@ Produkt jest odinstalowany.
 Language=Romanian
 Product is uninstalled.
 .
+Language=Japanese
+製品がアンインストールされました。
+.
 
 MessageId=1615
 Severity=Success
@@ -13980,6 +16461,9 @@ Nieprawidłowa lub nieobsługiwana składnia zapytania SQL.
 .
 Language=Romanian
 SQL query syntax invalid or unsupported.
+.
+Language=Japanese
+SQL クエリの構文が無効、またはサポートされていません。
 .
 
 MessageId=1616
@@ -13998,6 +16482,9 @@ Pole rekordu nie istnieje.
 Language=Romanian
 Record field does not exist.
 .
+Language=Japanese
+レコード フィールドが存在しません。
+.
 
 MessageId=1617
 Severity=Success
@@ -14014,6 +16501,9 @@ Urządzenie zostało usunięte.
 .
 Language=Romanian
 The device has been removed.
+.
+Language=Japanese
+デバイスが削除されました。
 .
 
 MessageId=1618
@@ -14032,6 +16522,9 @@ Trwa inna instalacja. Ukończ ją, zanim zaczniesz kontynuować bieżącą.
 Language=Romanian
 Another installation is already in progress. Complete that installation before proceeding with this install.
 .
+Language=Japanese
+別のインストールがすでに進行中です。このインストールを続行する前に、そのインストールを完了してください。
+.
 
 MessageId=1619
 Severity=Success
@@ -14048,6 +16541,9 @@ Nie można otworzyć tego pakietu instalacyjnego. Sprawdź, czy ten pakiet istni
 .
 Language=Romanian
 This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
+.
+Language=Japanese
+このインストール パッケージを開けませんでした。パッケージが存在し、アクセスできることを確認するか、アプリケーション ベンダーに問い合わせて、このパッケージが有効な ReactOS Installer パッケージであることを確認してください。
 .
 
 MessageId=1620
@@ -14066,6 +16562,9 @@ Nie można otworzyć tego pakietu instalacyjnego. Skontaktuj się z dostawcą ap
 Language=Romanian
 This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
 .
+Language=Japanese
+このインストール パッケージを開けませんでした。アプリケーション ベンダーに連絡して、これが有効な ReactOS Installer パッケージであることを確認してください。
+.
 
 MessageId=1621
 Severity=Success
@@ -14082,6 +16581,9 @@ Podczas uruchamiania interfejsu użytkownika usługi Instalator ReactOS wystąpi
 .
 Language=Romanian
 There was an error starting the ReactOS Installer service user interface. Contact your support personnel.
+.
+Language=Japanese
+ReactOS Installerサービスのユーザーインターフェイスの起動にエラーが発生しました。サポート担当者にお問い合わせください。
 .
 
 MessageId=1622
@@ -14100,6 +16602,9 @@ Błąd podczas otwierania pliku dziennika instalacji. Sprawdź, czy istnieje okr
 Language=Romanian
 Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
 .
+Language=Japanese
+インストール ログ ファイルを開くときにエラーが発生しました。指定されたログファイルの場所が存在し、書き込めることを確認してください。
+.
 
 MessageId=1623
 Severity=Success
@@ -14116,6 +16621,9 @@ Język stosowany w tym pakiecie instalacyjnym nie jest obsługiwany przez system
 .
 Language=Romanian
 The language of this installation package is not supported by your system.
+.
+Language=Japanese
+このインストール パッケージの言語は、システムでサポートされていません。
 .
 
 MessageId=1624
@@ -14134,6 +16642,9 @@ Błąd podczas przeprowadzania transformacji. Sprawdź, czy podane ścieżki tra
 Language=Romanian
 Error applying transforms. Verify that the specified transform paths are valid.
 .
+Language=Japanese
+トランスフォームの適用でエラーが発生しました。指定された変換パスが有効であることを確認してください。
+.
 
 MessageId=1625
 Severity=Success
@@ -14150,6 +16661,9 @@ Ta instalacja jest zabroniona przez zasady systemowe. Skontaktuj się z administ
 .
 Language=Romanian
 This installation is forbidden by system policy. Contact your system administrator.
+.
+Language=Japanese
+このインストールはシステム ポリシーで禁止されています。システム管理者にお問い合わせください。
 .
 
 MessageId=1626
@@ -14168,6 +16682,9 @@ Nie można wykonać funkcji.
 Language=Romanian
 Function could not be executed.
 .
+Language=Japanese
+関数を実行できませんでした。
+.
 
 MessageId=1627
 Severity=Success
@@ -14184,6 +16701,9 @@ Niepowodzenie funkcji podczas jej wykonywania.
 .
 Language=Romanian
 Function failed during execution.
+.
+Language=Japanese
+関数の実行に失敗しました。
 .
 
 MessageId=1628
@@ -14202,6 +16722,9 @@ Podano nieprawidłową lub nieznaną tabelę.
 Language=Romanian
 Invalid or unknown table specified.
 .
+Language=Japanese
+指定されたテーブルが無効または不明です。
+.
 
 MessageId=1629
 Severity=Success
@@ -14218,6 +16741,9 @@ Dostarczono dane nieprawidłowego typu.
 .
 Language=Romanian
 Data supplied is of wrong type.
+.
+Language=Japanese
+指定されたデータの型が間違っています。
 .
 
 MessageId=1630
@@ -14236,6 +16762,9 @@ Dane tego typu nie są obsługiwane.
 Language=Romanian
 Data of this type is not supported.
 .
+Language=Japanese
+この型のデータはサポートされていません。
+.
 
 MessageId=1631
 Severity=Success
@@ -14252,6 +16781,9 @@ Nie można uruchomić usługi Instalator ReactOS. Skontaktuj się z działem Pom
 .
 Language=Romanian
 The ReactOS Installer service failed to start. Contact your support personnel.
+.
+Language=Japanese
+ReactOS Installer サービスの起動に失敗しました。サポート担当者にお問い合わせください。
 .
 
 MessageId=1632
@@ -14270,6 +16802,9 @@ Folder Temp znajduje się na dysku, który jest albo zapełniony, albo niedostę
 Language=Romanian
 The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
 .
+Language=Japanese
+Temp フォルダがドライブにあるか、アクセスできません。ドライブの空き容量を確保するか、Tempフォルダの書き込み権限があることを確認してください。
+.
 
 MessageId=1633
 Severity=Success
@@ -14286,6 +16821,9 @@ Ten pakiet instalacyjny nie jest obsługiwany przez ten typ procesora. Skontaktu
 .
 Language=Romanian
 This installation package is not supported by this processor type. Contact your product vendor.
+.
+Language=Japanese
+このインストールパッケージは、このプロセッサタイプではサポートされていません。製品ベンダーにお問い合わせください。
 .
 
 MessageId=1634
@@ -14304,6 +16842,9 @@ Składnik nieużywany w tym komputerze.
 Language=Romanian
 Component not used on this computer.
 .
+Language=Japanese
+このコンピュータではコンポーネントが使用されていません。
+.
 
 MessageId=1635
 Severity=Success
@@ -14320,6 +16861,9 @@ Nie można otworzyć tego pakietu aktualizacji. Sprawdź, czy ten pakiet istniej
 .
 Language=Romanian
 This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
+.
+Language=Japanese
+この更新パッケージを開けませんでした。更新パッケージが存在し、アクセスできることを確認するか、アプリケーション ベンダーに連絡して、この更新パッケージが有効な ReactOS Installer 更新パッケージであることを確認してください。
 .
 
 MessageId=1636
@@ -14338,6 +16882,9 @@ Nie można otworzyć tego pakietu aktualizacji. Skontaktuj się z dostawcą apli
 Language=Romanian
 This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
+Language=Japanese
+この更新パッケージを開けませんでした。アプリケーション ベンダーに連絡して、これが有効な ReactOS Installer 更新パッケージであることを確認してください。
+.
 
 MessageId=1637
 Severity=Success
@@ -14354,6 +16901,9 @@ Usługa Instalator ReactOS nie może przetworzyć tego pakietu aktualizacji. Mus
 .
 Language=Romanian
 This patch package cannot be processed by the ReactOS Installer service. You must install a ReactOS service pack that contains a newer version of the ReactOS Installer service.
+.
+Language=Japanese
+この更新パッケージは ReactOS Installer サービスで処理できません。新しいバージョンの ReactOS Installer サービスが含まれている ReactOS サービス パックをインストールする必要があります。
 .
 
 MessageId=1638
@@ -14372,6 +16922,9 @@ Inna wersja tego produktu jest już zainstalowana na tym komputerze. Nie można 
 Language=Romanian
 Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
 .
+Language=Japanese
+この製品の別のバージョンがすでにインストールされています。このバージョンのインストールを続行できません。この製品の既存のバージョンを設定または削除するには、コントロールパネルの[プログラムの追加と削除]を使用します。
+.
 
 MessageId=1639
 Severity=Success
@@ -14388,6 +16941,9 @@ Nieprawidłowy argument wiersza polecenia. Szczegółowe informacje na temat wie
 .
 Language=Romanian
 Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
+.
+Language=Japanese
+コマンド ライン引数が無効です。コマンド ライン ヘルプの詳細については、ReactOS Installer SDK を参照してください。
 .
 
 MessageId=1640
@@ -14406,6 +16962,9 @@ Tylko administratorzy są uprawnieni do dodawania, usuwania lub konfigurowania o
 Language=Romanian
 Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
 .
+Language=Japanese
+管理者だけがターミナルサービスのリモートセッション中にサーバーソフトウェアを追加、削除、または構成する権限を持っています。サーバーにソフトウェアをインストールまたは設定する場合は、ネットワーク管理者に連絡してください。
+.
 
 MessageId=1641
 Severity=Success
@@ -14422,6 +16981,9 @@ Language=Polish
 .
 Language=Romanian
 The requested operation completed successfully. The system will be restarted so the changes can take effect.
+.
+Language=Japanese
+要求された操作は正常に完了しました。変更を有効にするためにシステムが再起動されます。
 .
 
 MessageId=1642
@@ -14440,6 +17002,9 @@ Uaktualnienia nie można zainstalować przez usługę Instalator ReactOS, poniew
 Language=Romanian
 The upgrade patch cannot be installed by the ReactOS Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
 .
+Language=Japanese
+アップグレード対象のプログラムが存在しないか、アップグレードによって異なるバージョンのプログラムが更新される可能性があるため、ReactOS Installerサービスによってアップグレードをインストールできません。アップグレードするプログラムがコンピュータに存在すること、および正しいアップグレードがあることを確認してください。
+.
 
 MessageId=1643
 Severity=Success
@@ -14456,6 +17021,9 @@ Zasady ograniczeń oprogramowania nie zezwalają na dany pakiet aktualizacji.
 .
 Language=Romanian
 The patch package is not permitted by software restriction policy.
+.
+Language=Japanese
+アップデート パッケージは、ソフトウェア制限ポリシーで許可されていません。
 .
 
 MessageId=1644
@@ -14474,6 +17042,9 @@ Zasady ograniczeń oprogramowania nie zezwalają na jedno lub kilka z dostosowa�
 Language=Romanian
 One or more customizations are not permitted by software restriction policy.
 .
+Language=Japanese
+1つまたは複数のカスタマイズがソフトウェア制限ポリシーで許可されていません。
+.
 
 MessageId=1645
 Severity=Success
@@ -14490,6 +17061,9 @@ Instalator ReactOS nie zezwala na instalację przy użyciu podłączania pulpitu
 .
 Language=Romanian
 The ReactOS Installer does not permit installation from a Remote Desktop Connection.
+.
+Language=Japanese
+ReactOS インストーラは、リモート デスクトップ接続からのインストールを許可しません。
 .
 
 MessageId=1700
@@ -14508,6 +17082,9 @@ Powiązanie ciągu jest nieprawidłowe.
 Language=Romanian
 The string binding is invalid.
 .
+Language=Japanese
+文字列バインディングが無効です。
+.
 
 MessageId=1701
 Severity=Success
@@ -14524,6 +17101,9 @@ Dojście powiązania nie jest poprawnego typu.
 .
 Language=Romanian
 The binding handle is not the correct type.
+.
+Language=Japanese
+バインディング ハンドルの型が正しくありません。
 .
 
 MessageId=1702
@@ -14542,6 +17122,9 @@ Dojście powiązania jest nieprawidłowe.
 Language=Romanian
 The binding handle is invalid.
 .
+Language=Japanese
+バインディング ハンドルが無効です。
+.
 
 MessageId=1703
 Severity=Success
@@ -14558,6 +17141,9 @@ Sekwencja protokołu RPC nie jest obsługiwana.
 .
 Language=Romanian
 The RPC protocol sequence is not supported.
+.
+Language=Japanese
+RPCプロトコル シーケンスがサポートされていません。
 .
 
 MessageId=1704
@@ -14576,6 +17162,9 @@ Sekwencja protokołu RPC jest nieprawidłowa.
 Language=Romanian
 The RPC protocol sequence is invalid.
 .
+Language=Japanese
+RPCプロトコルシーケンスが無効です。
+.
 
 MessageId=1705
 Severity=Success
@@ -14592,6 +17181,9 @@ Uniwersalny, unikatowy identyfikator ciągu (UUID) jest nieprawidłowy.
 .
 Language=Romanian
 The string universal unique identifier (UUID) is invalid.
+.
+Language=Japanese
+汎用一意識別子 (UUID)  文字列が無効です。
 .
 
 MessageId=1706
@@ -14610,6 +17202,9 @@ Format punktu końcowego jest nieprawidłowy.
 Language=Romanian
 The endpoint format is invalid.
 .
+Language=Japanese
+エンドポイントの形式が無効です。
+.
 
 MessageId=1707
 Severity=Success
@@ -14626,6 +17221,9 @@ Adres sieciowy jest nieprawidłowy.
 .
 Language=Romanian
 The network address is invalid.
+.
+Language=Japanese
+ネットワークアドレスが無効です。
 .
 
 MessageId=1708
@@ -14644,6 +17242,9 @@ Nie odnaleziono punktu końcowego.
 Language=Romanian
 No endpoint was found.
 .
+Language=Japanese
+エンドポイントが見つかりません。
+.
 
 MessageId=1709
 Severity=Success
@@ -14660,6 +17261,9 @@ Wartość limitu czasu jest nieprawidłowa.
 .
 Language=Romanian
 The timeout value is invalid.
+.
+Language=Japanese
+タイムアウト値が無効です。
 .
 
 MessageId=1710
@@ -14678,6 +17282,9 @@ Uniwersalny, unikatowy identyfikator obiektu (UUID) nie został znaleziony.
 Language=Romanian
 The object universal unique identifier (UUID) was not found.
 .
+Language=Japanese
+オブジェクトの汎用一意識別子 (UUID) が見つかりませんでした。
+.
 
 MessageId=1711
 Severity=Success
@@ -14694,6 +17301,9 @@ Uniwersalny, unikatowy identyfikator obiektu (UUID) został już zarejestrowany.
 .
 Language=Romanian
 The object universal unique identifier (UUID) has already been registered.
+.
+Language=Japanese
+オブジェクト汎用一意識別子 (UUID) は既に登録されています。
 .
 
 MessageId=1712
@@ -14712,6 +17322,9 @@ Uniwersalny, unikatowy identyfikator typu (UUID) został już zarejestrowany.
 Language=Romanian
 The type universal unique identifier (UUID) has already been registered.
 .
+Language=Japanese
+型の汎用一意識別子 (UUID) はすでに登録されています。
+.
 
 MessageId=1713
 Severity=Success
@@ -14728,6 +17341,9 @@ Serwer RPC już nasłuchuje.
 .
 Language=Romanian
 The RPC server is already listening.
+.
+Language=Japanese
+RPCサーバーはすでにリッスン中です。
 .
 
 MessageId=1714
@@ -14746,6 +17362,9 @@ Language=Polish
 Language=Romanian
 No protocol sequences have been registered.
 .
+Language=Japanese
+プロトコルシーケンスが登録されていません。
+.
 
 MessageId=1715
 Severity=Success
@@ -14762,6 +17381,9 @@ Serwer RPC nie nasłuchuje.
 .
 Language=Romanian
 The RPC server is not listening.
+.
+Language=Japanese
+RPCサーバーはリッスンしていません。
 .
 
 MessageId=1716
@@ -14780,6 +17402,9 @@ Typ menedżera jest nieznany.
 Language=Romanian
 The manager type is unknown.
 .
+Language=Japanese
+マネージャタイプが不明です。
+.
 
 MessageId=1717
 Severity=Success
@@ -14796,6 +17421,9 @@ Interfejs jest nieznany.
 .
 Language=Romanian
 The interface is unknown.
+.
+Language=Japanese
+インターフェースが不明です。
 .
 
 MessageId=1718
@@ -14814,6 +17442,9 @@ Nie ma powiązań.
 Language=Romanian
 There are no bindings.
 .
+Language=Japanese
+バインディングがありません。
+.
 
 MessageId=1719
 Severity=Success
@@ -14830,6 +17461,9 @@ Nie ma sekwencji protokołów.
 .
 Language=Romanian
 There are no protocol sequences.
+.
+Language=Japanese
+プロトコルシーケンスがありません。
 .
 
 MessageId=1720
@@ -14848,6 +17482,9 @@ Nie można utworzyć punktu końcowego.
 Language=Romanian
 The endpoint cannot be created.
 .
+Language=Japanese
+エンドポイントを作成できません。
+.
 
 MessageId=1721
 Severity=Success
@@ -14864,6 +17501,9 @@ Za mało dostępnych zasobów do ukończenia tej operacji.
 .
 Language=Romanian
 Not enough resources are available to complete this operation.
+.
+Language=Japanese
+この操作を完了するのに十分なリソースがありません。
 .
 
 MessageId=1722
@@ -14882,6 +17522,9 @@ Serwer RPC jest niedostępny.
 Language=Romanian
 The RPC server is unavailable.
 .
+Language=Japanese
+RPC サーバーが使用できません。
+.
 
 MessageId=1723
 Severity=Success
@@ -14898,6 +17541,9 @@ Serwer RPC jest zbyt zajęty, aby ukończyć tę operację.
 .
 Language=Romanian
 The RPC server is too busy to complete this operation.
+.
+Language=Japanese
+RPC サーバーがビジー状態でこの操作を完了できません。
 .
 
 MessageId=1724
@@ -14916,6 +17562,9 @@ Opcje sieciowe są nieprawidłowe.
 Language=Romanian
 The network options are invalid.
 .
+Language=Japanese
+ネットワーク オプションが無効です。
+.
 
 MessageId=1725
 Severity=Success
@@ -14932,6 +17581,9 @@ W tym wątku nie ma aktywnego żadnego zdalnego wywołania procedury.
 .
 Language=Romanian
 There are no remote procedure calls active on this thread.
+.
+Language=Japanese
+このスレッドでアクティブなリモート プロシージャ コールはありません。
 .
 
 MessageId=1726
@@ -14950,6 +17602,9 @@ Zdalne wywołanie procedury nie powiodło się.
 Language=Romanian
 The remote procedure call failed.
 .
+Language=Japanese
+リモート プロシージャ呼び出しに失敗しました。
+.
 
 MessageId=1727
 Severity=Success
@@ -14966,6 +17621,9 @@ Zdalne wywołanie procedury nie powiodło się i nie zostało wykonane.
 .
 Language=Romanian
 The remote procedure call failed and did not execute.
+.
+Language=Japanese
+リモート プロシージャ呼び出しに失敗しました。
 .
 
 MessageId=1728
@@ -14984,6 +17642,9 @@ Wystąpił błąd protokołu zdalnego wywołania procedury (RPC).
 Language=Romanian
 A remote procedure call (RPC) protocol error occurred.
 .
+Language=Japanese
+リモート プロシージャ コール (RPC)  プロトコル エラーが発生しました。
+.
 
 MessageId=1730
 Severity=Success
@@ -15000,6 +17661,9 @@ Składnia transferu nie jest obsługiwana przez serwer RPC.
 .
 Language=Romanian
 The transfer syntax is not supported by the RPC server.
+.
+Language=Japanese
+転送構文は RPC サーバーによってサポートされていません。
 .
 
 MessageId=1732
@@ -15018,6 +17682,9 @@ Typ uniwersalnego, unikatowego identyfikatora (UUID) nie jest obsługiwany.
 Language=Romanian
 The universal unique identifier (UUID) type is not supported.
 .
+Language=Japanese
+ユニバーサル一意識別子 (UUID) タイプはサポートされていません。
+.
 
 MessageId=1733
 Severity=Success
@@ -15034,6 +17701,9 @@ Tag jest nieprawidłowy.
 .
 Language=Romanian
 The tag is invalid.
+.
+Language=Japanese
+タグが無効です。
 .
 
 MessageId=1734
@@ -15052,6 +17722,9 @@ Granice tablicy są nieprawidłowe.
 Language=Romanian
 The array bounds are invalid.
 .
+Language=Japanese
+配列の境界が無効です。
+.
 
 MessageId=1735
 Severity=Success
@@ -15068,6 +17741,9 @@ Powiązanie nie zawiera nazwy wpisu.
 .
 Language=Romanian
 The binding does not contain an entry name.
+.
+Language=Japanese
+バインディングにエントリ名がありません。
 .
 
 MessageId=1736
@@ -15086,6 +17762,9 @@ Składnia nazwy jest nieprawidłowa.
 Language=Romanian
 The name syntax is invalid.
 .
+Language=Japanese
+名前の構文が無効です。
+.
 
 MessageId=1737
 Severity=Success
@@ -15102,6 +17781,9 @@ Składnia nazwy nie jest obsługiwana.
 .
 Language=Romanian
 The name syntax is not supported.
+.
+Language=Japanese
+名前の構文はサポートされていません。
 .
 
 MessageId=1739
@@ -15120,6 +17802,9 @@ Brak dostępnych adresów sieciowych do utworzenia uniwersalnego unikatowego ide
 Language=Romanian
 No network address is available to use to construct a universal unique identifier (UUID).
 .
+Language=Japanese
+汎用一意識別子 (UUID) を構築するために使用できるネットワーク アドレスがありません。
+.
 
 MessageId=1740
 Severity=Success
@@ -15136,6 +17821,9 @@ Punkt końcowy jest duplikatem.
 .
 Language=Romanian
 The endpoint is a duplicate.
+.
+Language=Japanese
+エンドポイントが重複しています。
 .
 
 MessageId=1741
@@ -15154,6 +17842,9 @@ Typ uwierzytelniania jest nieznany.
 Language=Romanian
 The authentication type is unknown.
 .
+Language=Japanese
+認証タイプが不明です。
+.
 
 MessageId=1742
 Severity=Success
@@ -15170,6 +17861,9 @@ Maksymalna liczba wywołań jest za mała.
 .
 Language=Romanian
 The maximum number of calls is too small.
+.
+Language=Japanese
+最大コール数が少なすぎます。
 .
 
 MessageId=1743
@@ -15188,6 +17882,9 @@ Ciąg jest za długi.
 Language=Romanian
 The string is too long.
 .
+Language=Japanese
+文字列が長すぎます。
+.
 
 MessageId=1744
 Severity=Success
@@ -15204,6 +17901,9 @@ Nie odnaleziono sekwencji protokołu RPC.
 .
 Language=Romanian
 The RPC protocol sequence was not found.
+.
+Language=Japanese
+RPC プロトコル シーケンスが見つかりません。
 .
 
 MessageId=1745
@@ -15222,6 +17922,9 @@ Numer procedury jest spoza zakresu.
 Language=Romanian
 The procedure number is out of range.
 .
+Language=Japanese
+プロシージャ番号が範囲外です。
+.
 
 MessageId=1746
 Severity=Success
@@ -15238,6 +17941,9 @@ Powiązanie nie zawiera żadnych informacji o uwierzytelnianiu.
 .
 Language=Romanian
 The binding does not contain any authentication information.
+.
+Language=Japanese
+バインディングに認証情報が含まれていません。
 .
 
 MessageId=1747
@@ -15256,6 +17962,9 @@ Usługa uwierzytelniania jest nieznana.
 Language=Romanian
 The authentication service is unknown.
 .
+Language=Japanese
+認証サービスが不明です。
+.
 
 MessageId=1748
 Severity=Success
@@ -15272,6 +17981,9 @@ Poziom uwierzytelniania jest nieznany.
 .
 Language=Romanian
 The authentication level is unknown.
+.
+Language=Japanese
+認証レベルが不明です。
 .
 
 MessageId=1749
@@ -15290,6 +18002,9 @@ Kontekst zabezpieczeń jest nieprawidłowy.
 Language=Romanian
 The security context is invalid.
 .
+Language=Japanese
+セキュリティコンテキストが無効です。
+.
 
 MessageId=1750
 Severity=Success
@@ -15306,6 +18021,9 @@ Usługa autoryzowania jest nieznana.
 .
 Language=Romanian
 The authorization service is unknown.
+.
+Language=Japanese
+認証サービスが不明です。
 .
 
 MessageId=1751
@@ -15324,6 +18042,9 @@ Wpis jest nieprawidłowy.
 Language=Romanian
 The entry is invalid.
 .
+Language=Japanese
+エントリが無効です。
+.
 
 MessageId=1752
 Severity=Success
@@ -15340,6 +18061,9 @@ Punkt końcowy serwera nie może wykonać operacji.
 .
 Language=Romanian
 The server endpoint cannot perform the operation.
+.
+Language=Japanese
+サーバーエンドポイントは操作を実行できません。
 .
 
 MessageId=1753
@@ -15358,6 +18082,9 @@ Nie ma więcej dostępnych punktów końcowych z programu mapowania punktów ko�
 Language=Romanian
 There are no more endpoints available from the endpoint mapper.
 .
+Language=Japanese
+エンドポイントマッパーから利用可能なエンドポイントはありません。
+.
 
 MessageId=1754
 Severity=Success
@@ -15374,6 +18101,9 @@ Language=Polish
 .
 Language=Romanian
 No interfaces have been exported.
+.
+Language=Japanese
+インターフェイスがエクスポートされていません。
 .
 
 MessageId=1755
@@ -15392,6 +18122,9 @@ Nazwa wpisu jest niekompletna.
 Language=Romanian
 The entry name is incomplete.
 .
+Language=Japanese
+エントリ名が不完全です。
+.
 
 MessageId=1756
 Severity=Success
@@ -15408,6 +18141,9 @@ Opcja wersji jest nieprawidłowa.
 .
 Language=Romanian
 The version option is invalid.
+.
+Language=Japanese
+バージョン オプションが無効です。
 .
 
 MessageId=1757
@@ -15426,6 +18162,9 @@ Nie ma więcej członków grupy.
 Language=Romanian
 There are no more members.
 .
+Language=Japanese
+メンバがありません。
+.
 
 MessageId=1758
 Severity=Success
@@ -15442,6 +18181,9 @@ Nie ma nic, na czym można by wykonać cofnięcie eksportowania.
 .
 Language=Romanian
 There is nothing to unexport.
+.
+Language=Japanese
+エクスポートするものがありません。
 .
 
 MessageId=1759
@@ -15460,6 +18202,9 @@ Nie odnaleziono interfejsu.
 Language=Romanian
 The interface was not found.
 .
+Language=Japanese
+インターフェイスが見つかりませんでした。
+.
 
 MessageId=1760
 Severity=Success
@@ -15476,6 +18221,9 @@ Wpis już istnieje.
 .
 Language=Romanian
 The entry already exists.
+.
+Language=Japanese
+エントリはすでに存在します。
 .
 
 MessageId=1761
@@ -15494,6 +18242,9 @@ Nie można odnaleźć wpisu.
 Language=Romanian
 The entry is not found.
 .
+Language=Japanese
+エントリが見つかりません。
+.
 
 MessageId=1762
 Severity=Success
@@ -15510,6 +18261,9 @@ Usługa nazw jest niedostępna.
 .
 Language=Romanian
 The name service is unavailable.
+.
+Language=Japanese
+ネーム サービスは使用できません。
 .
 
 MessageId=1763
@@ -15528,6 +18282,9 @@ Rodzina adresów sieciowych jest nieprawidłowa.
 Language=Romanian
 The network address family is invalid.
 .
+Language=Japanese
+ネットワーク アドレス ファミリが無効です。
+.
 
 MessageId=1764
 Severity=Success
@@ -15544,6 +18301,9 @@ Language=Polish
 .
 Language=Romanian
 The requested operation is not supported.
+.
+Language=Japanese
+要求された操作はサポートされていません。
 .
 
 MessageId=1765
@@ -15562,6 +18322,9 @@ Nie jest dostępny kontekst zabezpieczeń umożliwiający personifikację.
 Language=Romanian
 No security context is available to allow impersonation.
 .
+Language=Japanese
+なりすましを許可するセキュリティ コンテキストがありません。
+.
 
 MessageId=1766
 Severity=Success
@@ -15578,6 +18341,9 @@ Wystąpił błąd wewnętrzny w zdalnym wywołaniu procedury (RPC).
 .
 Language=Romanian
 An internal error occurred in a remote procedure call (RPC).
+.
+Language=Japanese
+リモートプロシージャコール (RPC) で内部エラーが発生しました。
 .
 
 MessageId=1767
@@ -15596,6 +18362,9 @@ Serwer RPC próbował wykonać dzielenie liczby całkowitej przez zero.
 Language=Romanian
 The RPC server attempted an integer division by zero.
 .
+Language=Japanese
+RPC サーバーがゼロによる整数除算を試みました。
+.
 
 MessageId=1768
 Severity=Success
@@ -15612,6 +18381,9 @@ Wystąpił błąd adresowania na serwerze RPC.
 .
 Language=Romanian
 An addressing error occurred in the RPC server.
+.
+Language=Japanese
+RPC サーバーでアドレス指定エラーが発生しました。
 .
 
 MessageId=1769
@@ -15630,6 +18402,9 @@ Operacja zmiennoprzecinkowa serwera RPC spowodowała dzielenie przez zero.
 Language=Romanian
 A floating-point operation at the RPC server caused a division by zero.
 .
+Language=Japanese
+RPC サーバーで浮動小数点演算によりゼロによる除算が発生しました。
+.
 
 MessageId=1770
 Severity=Success
@@ -15646,6 +18421,9 @@ Na serwerze RPC wystąpił niedomiar zmiennoprzecinkowy.
 .
 Language=Romanian
 A floating-point underflow occurred at the RPC server.
+.
+Language=Japanese
+RPCサーバーで浮動小数点アンダーフローが発生しました。
 .
 
 MessageId=1771
@@ -15664,6 +18442,9 @@ Na serwerze RPC wystąpił nadmiar zmiennoprzecinkowy.
 Language=Romanian
 A floating-point overflow occurred at the RPC server.
 .
+Language=Japanese
+RPCサーバーで浮動小数点のオーバーフローが発生しました。
+.
 
 MessageId=1772
 Severity=Success
@@ -15680,6 +18461,9 @@ Lista serwerów RPC dostępnych do powiązania autodojść została wyczerpana.
 .
 Language=Romanian
 The list of RPC servers available for the binding of auto handles has been exhausted.
+.
+Language=Japanese
+オートハンドルのバインディングに使用できるRPCサーバーのリストを使い果たしました。
 .
 
 MessageId=1773
@@ -15698,6 +18482,9 @@ Nie można otworzyć pliku tabeli translacji znaków.
 Language=Romanian
 Unable to open the character translation table file.
 .
+Language=Japanese
+文字変換テーブル ファイルを開くことができません。
+.
 
 MessageId=1774
 Severity=Success
@@ -15714,6 +18501,9 @@ Plik zawierający tabelę translacji znaków ma mniej niż 512 bajtów.
 .
 Language=Romanian
 The file containing the character translation table has fewer than 512 bytes.
+.
+Language=Japanese
+文字変換テーブルを含むファイルのバイト数が 512 バイト未満です。
 .
 
 MessageId=1775
@@ -15732,6 +18522,9 @@ Dojście z zerowym kontekstem (null context handle) zostało przekazane od klien
 Language=Romanian
 A null context handle was passed from the client to the host during a remote procedure call.
 .
+Language=Japanese
+リモート プロシージャ呼び出し中にクライアントからホストに NULL コンテキスト ハンドルが渡されました。
+.
 
 MessageId=1777
 Severity=Success
@@ -15748,6 +18541,9 @@ Dojście kontekstu zmieniło się podczas zdalnego wywołania procedury.
 .
 Language=Romanian
 The context handle changed during a remote procedure call.
+.
+Language=Japanese
+リモート プロシージャ呼び出し中にコンテキスト ハンドルが変更されました。
 .
 
 MessageId=1778
@@ -15766,6 +18562,9 @@ Dojścia powiązania przekazane do zdalnego wywołania procedury nie pasują do 
 Language=Romanian
 The binding handles passed to a remote procedure call do not match.
 .
+Language=Japanese
+リモート プロシージャ呼び出しに渡されたバインディング ハンドルが一致しません。
+.
 
 MessageId=1779
 Severity=Success
@@ -15782,6 +18581,9 @@ Procedura wejścia nie może uzyskać dojścia do zdalnego wywołania procedury.
 .
 Language=Romanian
 The stub is unable to get the remote procedure call handle.
+.
+Language=Japanese
+スタブがリモート プロシージャ コール ハンドルを取得できません。
 .
 
 MessageId=1780
@@ -15800,6 +18602,9 @@ Do procedury wejścia został przekazany wskaźnik odwołania zerowego.
 Language=Romanian
 A null reference pointer was passed to the stub.
 .
+Language=Japanese
+NULL 参照ポインタがスタブに渡されました。
+.
 
 MessageId=1781
 Severity=Success
@@ -15816,6 +18621,9 @@ Wartość wyliczenia jest spoza zakresu.
 .
 Language=Romanian
 The enumeration value is out of range.
+.
+Language=Japanese
+列挙値が範囲外です。
 .
 
 MessageId=1782
@@ -15834,6 +18642,9 @@ Liczba bajtów jest za mała.
 Language=Romanian
 The byte count is too small.
 .
+Language=Japanese
+バイト数が少なすぎます。
+.
 
 MessageId=1783
 Severity=Success
@@ -15850,6 +18661,9 @@ Procedura wejścia odebrała złe dane.
 .
 Language=Romanian
 The stub received bad data.
+.
+Language=Japanese
+スタブが不正なデータを受信しました。
 .
 
 MessageId=1784
@@ -15868,6 +18682,9 @@ Podany bufor użytkownika jest nieodpowiedni dla żądanej operacji.
 Language=Romanian
 The supplied user buffer is not valid for the requested operation.
 .
+Language=Japanese
+指定されたユーザー バッファは要求された操作に対して有効ではありません。
+.
 
 MessageId=1785
 Severity=Success
@@ -15884,6 +18701,9 @@ Nie rozpoznany nośnik dysku. Może być nie sformatowany.
 .
 Language=Romanian
 The disk media is not recognized. It may not be formatted.
+.
+Language=Japanese
+ディスク メディアが認識されません。フォーマットされていない可能性があります。
 .
 
 MessageId=1786
@@ -15902,6 +18722,9 @@ Stacja robocza nie ma hasła zaufania.
 Language=Romanian
 The workstation does not have a trust secret.
 .
+Language=Japanese
+ワークステーションにトラストシークレットがありません。
+.
 
 MessageId=1787
 Severity=Success
@@ -15918,6 +18741,9 @@ Baza danych zabezpieczeń na serwerze nie ma konta komputera dla relacji zaufani
 .
 Language=Romanian
 The security database on the server does not have a computer account for this workstation trust relationship.
+.
+Language=Japanese
+サーバーのセキュリティ データベースに、このワークステーションの信頼関係のコンピュータ アカウントがありません。
 .
 
 MessageId=1788
@@ -15936,6 +18762,9 @@ Relacje zaufania między domeną podstawową a domeną zaufaną nie powiodły si
 Language=Romanian
 The trust relationship between the primary domain and the trusted domain failed.
 .
+Language=Japanese
+プライマリ ドメインと信頼されたドメイン間の信頼関係に失敗しました。
+.
 
 MessageId=1789
 Severity=Success
@@ -15952,6 +18781,9 @@ Relacje zaufania między tą stacją roboczą a domeną podstawową nie powiodł
 .
 Language=Romanian
 The trust relationship between this workstation and the primary domain failed.
+.
+Language=Japanese
+このワークステーションとプライマリドメインの信頼関係に失敗しました。
 .
 
 MessageId=1790
@@ -15970,6 +18802,9 @@ Logowanie w sieci nie powiodło się.
 Language=Romanian
 The network logon failed.
 .
+Language=Japanese
+ネットワーク ログオンに失敗しました。
+.
 
 MessageId=1791
 Severity=Success
@@ -15986,6 +18821,9 @@ Zdalne wywołanie procedury jest już w toku dla tego wątku.
 .
 Language=Romanian
 A remote procedure call is already in progress for this thread.
+.
+Language=Japanese
+このスレッドでは、リモート プロシージャ呼び出しがすでに進行中です。
 .
 
 MessageId=1792
@@ -16004,6 +18842,9 @@ Podjęto próbę zalogowania, ale sieciowa usługa logowania nie została urucho
 Language=Romanian
 An attempt was made to logon, but the network logon service was not started.
 .
+Language=Japanese
+ログオンしようとしましたが、ネットワーク ログオン サービスが開始されていません。
+.
 
 MessageId=1793
 Severity=Success
@@ -16020,6 +18861,9 @@ Konto użytkownika wygasło.
 .
 Language=Romanian
 The user's account has expired.
+.
+Language=Japanese
+ユーザーアカウントの有効期限が切れました。
 .
 
 MessageId=1794
@@ -16038,6 +18882,9 @@ Readresator jest w użyciu i nie można usunąć go z pamięci.
 Language=Romanian
 The redirector is in use and cannot be unloaded.
 .
+Language=Japanese
+リダイレクタが使用中で、アンロードできません。
+.
 
 MessageId=1795
 Severity=Success
@@ -16054,6 +18901,9 @@ Określony sterownik drukarki jest już zainstalowany.
 .
 Language=Romanian
 The specified printer driver is already installed.
+.
+Language=Japanese
+指定されたプリンタ ドライバはすでにインストールされています。
 .
 
 MessageId=1796
@@ -16072,6 +18922,9 @@ Określony port jest nieznany.
 Language=Romanian
 The specified port is unknown.
 .
+Language=Japanese
+指定されたポートが不明です。
+.
 
 MessageId=1797
 Severity=Success
@@ -16088,6 +18941,9 @@ Sterownik drukarki jest nieznany.
 .
 Language=Romanian
 The printer driver is unknown.
+.
+Language=Japanese
+プリンタドライバが不明です。
 .
 
 MessageId=1798
@@ -16106,6 +18962,9 @@ Procesor wydruku jest nieznany.
 Language=Romanian
 The print processor is unknown.
 .
+Language=Japanese
+プリント プロセッサが不明です。
+.
 
 MessageId=1799
 Severity=Success
@@ -16122,6 +18981,9 @@ Określony plik separatora jest nieprawidłowy.
 .
 Language=Romanian
 The specified separator file is invalid.
+.
+Language=Japanese
+指定されたセパレータファイルが無効です。
 .
 
 MessageId=1800
@@ -16140,6 +19002,9 @@ Określony priorytet jest nieprawidłowy.
 Language=Romanian
 The specified priority is invalid.
 .
+Language=Japanese
+指定された優先順位が無効です。
+.
 
 MessageId=1801
 Severity=Success
@@ -16156,6 +19021,9 @@ Nazwa drukarki jest nieprawidłowa.
 .
 Language=Romanian
 The printer name is invalid.
+.
+Language=Japanese
+プリンタ名が無効です。
 .
 
 MessageId=1802
@@ -16174,6 +19042,9 @@ Drukarka już istnieje.
 Language=Romanian
 The printer already exists.
 .
+Language=Japanese
+プリンタは既に存在します。
+.
 
 MessageId=1803
 Severity=Success
@@ -16190,6 +19061,9 @@ Polecenie drukarki jest nieprawidłowe.
 .
 Language=Romanian
 The printer command is invalid.
+.
+Language=Japanese
+プリンタコマンドが無効です。
 .
 
 MessageId=1804
@@ -16208,6 +19082,9 @@ Określony typ danych jest nieprawidłowy.
 Language=Romanian
 The specified datatype is invalid.
 .
+Language=Japanese
+指定されたデータ型が無効です。
+.
 
 MessageId=1805
 Severity=Success
@@ -16224,6 +19101,9 @@ Określone środowisko jest nieprawidłowe.
 .
 Language=Romanian
 The environment specified is invalid.
+.
+Language=Japanese
+指定された環境が無効です。
 .
 
 MessageId=1806
@@ -16242,6 +19122,9 @@ Nie ma więcej powiązań.
 Language=Romanian
 There are no more bindings.
 .
+Language=Japanese
+バインディングがありません。
+.
 
 MessageId=1807
 Severity=Success
@@ -16258,6 +19141,9 @@ Użyte konto jest międzydomenowym kontem zaufania. Aby uzyskać dostęp do tego
 .
 Language=Romanian
 The account used is an interdomain trust account. Use your global user account or local user account to access this server.
+.
+Language=Japanese
+使用されたアカウントはドメイン間信頼アカウントです。このサーバーにアクセスするには、グローバルユーザーアカウントまたはローカルユーザーアカウントを使用してください。
 .
 
 MessageId=1808
@@ -16276,6 +19162,9 @@ Użyte konto jest kontem komputera. Aby uzyskać dostęp do tego serwera, użyj 
 Language=Romanian
 The account used is a computer account. Use your global user account or local user account to access this server.
 .
+Language=Japanese
+使用されたアカウントはコンピュータアカウントです。このサーバにアクセスするには、グローバルユーザアカウントまたはローカルユーザアカウントを使用してください。
+.
 
 MessageId=1809
 Severity=Success
@@ -16292,6 +19181,9 @@ Użyte konto jest kontem zaufania serwera. Aby uzyskać dostęp do tego serwera,
 .
 Language=Romanian
 The account used is a server trust account. Use your global user account or local user account to access this server.
+.
+Language=Japanese
+使用されたアカウントはサーバーの信頼アカウントです。このサーバーにアクセスするには、グローバルユーザーアカウントまたはローカルユーザーアカウントを使用してください。
 .
 
 MessageId=1810
@@ -16310,6 +19202,9 @@ Nazwa lub identyfikator zabezpieczeń (SID) określonej domeny jest niezgodny z 
 Language=Romanian
 The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
 .
+Language=Japanese
+指定されたドメインの名前またはセキュリティ ID (SID)  が、そのドメインの信頼情報と一致しません。
+.
 
 MessageId=1811
 Severity=Success
@@ -16326,6 +19221,9 @@ Serwer jest w użyciu i nie można usunąć go z pamięci.
 .
 Language=Romanian
 The server is in use and cannot be unloaded.
+.
+Language=Japanese
+サーバーが使用中で、アンロードできません。
 .
 
 MessageId=1812
@@ -16344,6 +19242,9 @@ Określony plik obrazu nie zawierał sekcji zasobów.
 Language=Romanian
 The specified image file did not contain a resource section.
 .
+Language=Japanese
+指定されたイメージ ファイルにリソース セクションが含まれていません。
+.
 
 MessageId=1813
 Severity=Success
@@ -16360,6 +19261,9 @@ Nie można znaleźć określonego typu zasobu w pliku obrazu.
 .
 Language=Romanian
 The specified resource type cannot be found in the image file.
+.
+Language=Japanese
+指定されたリソース タイプがイメージ ファイルに見つかりません。
 .
 
 MessageId=1814
@@ -16378,6 +19282,9 @@ Nie można znaleźć określonej nazwy zasobu w pliku obrazu.
 Language=Romanian
 The specified resource name cannot be found in the image file.
 .
+Language=Japanese
+指定されたリソース名がイメージファイルで見つかりません。
+.
 
 MessageId=1815
 Severity=Success
@@ -16394,6 +19301,9 @@ Nie można odnaleźć identyfikatora języka zasobu w pliku obrazu.
 .
 Language=Romanian
 The specified resource language ID cannot be found in the image file.
+.
+Language=Japanese
+指定されたリソース言語IDがイメージファイルに見つかりません。
 .
 
 MessageId=1816
@@ -16412,6 +19322,9 @@ Za mały przydział do przetworzenia tego polecenia.
 Language=Romanian
 Not enough quota is available to process this command.
 .
+Language=Japanese
+このコマンドを処理するのに十分なクォータがありません。
+.
 
 MessageId=1817
 Severity=Success
@@ -16428,6 +19341,9 @@ Language=Polish
 .
 Language=Romanian
 No interfaces have been registered.
+.
+Language=Japanese
+インターフェイスが登録されていません。
 .
 
 MessageId=1818
@@ -16446,6 +19362,9 @@ Zdalne wywołanie procedury zostało anulowane.
 Language=Romanian
 The remote procedure call was cancelled.
 .
+Language=Japanese
+リモート プロシージャ コールがキャンセルされました。
+.
 
 MessageId=1819
 Severity=Success
@@ -16462,6 +19381,9 @@ Dojście powiązania nie zawiera wszystkich wymaganych informacji.
 .
 Language=Romanian
 The binding handle does not contain all required information.
+.
+Language=Japanese
+バインディング ハンドルに必要な情報がすべて含まれていません。
 .
 
 MessageId=1820
@@ -16480,6 +19402,9 @@ Podczas zdalnego wywoływania procedury wystąpił błąd komunikacji.
 Language=Romanian
 A communications failure occurred during a remote procedure call.
 .
+Language=Japanese
+リモート プロシージャ呼び出し中に通信エラーが発生しました。
+.
 
 MessageId=1821
 Severity=Success
@@ -16496,6 +19421,9 @@ Language=Polish
 .
 Language=Romanian
 The requested authentication level is not supported.
+.
+Language=Japanese
+要求された認証レベルはサポートされていません。
 .
 
 MessageId=1822
@@ -16514,6 +19442,9 @@ Nie zarejestrowano nazwy głównej.
 Language=Romanian
 No principal name registered.
 .
+Language=Japanese
+プリンシパル名が登録されていません。
+.
 
 MessageId=1823
 Severity=Success
@@ -16530,6 +19461,9 @@ Określony błąd nie jest prawidłowym kodem błędu protokołu zdalnego wywoł
 .
 Language=Romanian
 The error specified is not a valid Windows RPC error code.
+.
+Language=Japanese
+指定されたエラーは有効な ReactOS RPC エラーコードではありません。
 .
 
 MessageId=1824
@@ -16548,6 +19482,9 @@ Przydzielono identyfikator UUID, który jest prawidłowy tylko na tym komputerze
 Language=Romanian
 A UUID that is valid only on this computer has been allocated.
 .
+Language=Japanese
+このコンピュータでのみ有効なUUIDが割り当てられました。
+.
 
 MessageId=1825
 Severity=Success
@@ -16564,6 +19501,9 @@ Wystąpił błąd specyficzny dla pakietu zabezpieczeń.
 .
 Language=Romanian
 A security package specific error occurred.
+.
+Language=Japanese
+セキュリティパッケージ固有のエラーが発生しました。
 .
 
 MessageId=1826
@@ -16582,6 +19522,9 @@ Wątek nie został anulowany.
 Language=Romanian
 Thread is not canceled.
 .
+Language=Japanese
+スレッドがキャンセルされていません。
+.
 
 MessageId=1827
 Severity=Success
@@ -16598,6 +19541,9 @@ Nieprawidłowa operacja na dojściu kodowania/dekodowania.
 .
 Language=Romanian
 Invalid operation on the encoding/decoding handle.
+.
+Language=Japanese
+エンコード/デコード ハンドルに対する操作が無効です。
 .
 
 MessageId=1828
@@ -16616,6 +19562,9 @@ Niezgodna wersja pakietu szeregującego.
 Language=Romanian
 Incompatible version of the serializing package.
 .
+Language=Japanese
+シリアル化パッケージの互換性のないバージョンです。
+.
 
 MessageId=1829
 Severity=Success
@@ -16632,6 +19581,9 @@ Niezgodna wersja procedury wejścia RPC.
 .
 Language=Romanian
 Incompatible version of the RPC stub.
+.
+Language=Japanese
+RPC スタブの互換性のないバージョンです。
 .
 
 MessageId=1830
@@ -16650,6 +19602,9 @@ Obiekt potoku RPC jest nieprawidłowy lub uszkodzony.
 Language=Romanian
 The RPC pipe object is invalid or corrupted.
 .
+Language=Japanese
+RPCパイプ オブジェクトが無効または壊れています。
+.
 
 MessageId=1831
 Severity=Success
@@ -16666,6 +19621,9 @@ Ta operacja nie jest prawidłowa dla danego obiektu potoku RPC.
 .
 Language=Romanian
 An invalid operation was attempted on an RPC pipe object.
+.
+Language=Japanese
+RPCパイプオブジェクトに対して無効な操作が試みられました。
 .
 
 MessageId=1832
@@ -16684,6 +19642,9 @@ Ta wersja potoku RPC nie jest obsługiwana.
 Language=Romanian
 Unsupported RPC pipe version.
 .
+Language=Japanese
+サポートされていないRPCパイプのバージョンです。
+.
 
 MessageId=1898
 Severity=Success
@@ -16700,6 +19661,9 @@ Nie odnaleziono członka grupy.
 .
 Language=Romanian
 The group member was not found.
+.
+Language=Japanese
+グループ メンバが見つかりません。
 .
 
 MessageId=1899
@@ -16718,6 +19682,9 @@ Nie można utworzyć bazy danych mapowania punktu końcowego.
 Language=Romanian
 The endpoint mapper database entry could not be created.
 .
+Language=Japanese
+エンドポイントマッパーのデータベースエントリを作成できませんでした。
+.
 
 MessageId=1900
 Severity=Success
@@ -16734,6 +19701,9 @@ Uniwersalny, unikatowy identyfikator obiektu (UUID) jest zerowym identyfikatorem
 .
 Language=Romanian
 The object universal unique identifier (UUID) is the nil UUID.
+.
+Language=Japanese
+オブジェクトの一意識別子 (UUID)  が nil UUID です。
 .
 
 MessageId=1901
@@ -16752,6 +19722,9 @@ Określony czas jest nieprawidłowy.
 Language=Romanian
 The specified time is invalid.
 .
+Language=Japanese
+指定された時間は無効です。
+.
 
 MessageId=1902
 Severity=Success
@@ -16768,6 +19741,9 @@ Określona nazwa formularza jest nieprawidłowa.
 .
 Language=Romanian
 The specified form name is invalid.
+.
+Language=Japanese
+指定されたフォーム名が無効です。
 .
 
 MessageId=1903
@@ -16786,6 +19762,9 @@ Określony rozmiar formularza jest nieprawidłowy
 Language=Romanian
 The specified form size is invalid.
 .
+Language=Japanese
+指定されたフォームのサイズが無効です。
+.
 
 MessageId=1904
 Severity=Success
@@ -16802,6 +19781,9 @@ Określone dojście drukarki jest już obsługiwane.
 .
 Language=Romanian
 The specified printer handle is already being waited on
+.
+Language=Japanese
+指定されたプリンタ ハンドルは既に待ち受け中です。
 .
 
 MessageId=1905
@@ -16820,6 +19802,9 @@ Określona drukarka została usunięta.
 Language=Romanian
 The specified printer has been deleted.
 .
+Language=Japanese
+指定されたプリンタは削除されました。
+.
 
 MessageId=1906
 Severity=Success
@@ -16836,6 +19821,9 @@ Stan drukarki jest nieprawidłowy.
 .
 Language=Romanian
 The state of the printer is invalid.
+.
+Language=Japanese
+プリンタの状態が無効です。
 .
 
 MessageId=1907
@@ -16854,6 +19842,9 @@ Hasło użytkownika musi zostać zmienione przed pierwszym zalogowaniem.
 Language=Romanian
 The user's password must be changed before logging on the first time.
 .
+Language=Japanese
+サインインする前にユーザのパスワードを変更する必要があります。
+.
 
 MessageId=1908
 Severity=Success
@@ -16870,6 +19861,9 @@ Nie można odnaleźć kontrolera tej domeny.
 .
 Language=Romanian
 Could not find the domain controller for this domain.
+.
+Language=Japanese
+このドメインのドメイン コントローラーが見つかりませんでした。
 .
 
 MessageId=1909
@@ -16888,6 +19882,9 @@ Wywoływane konto jest obecnie zablokowane i nie można logować się za jego po
 Language=Romanian
 The referenced account is currently locked out and may not be used to log on.
 .
+Language=Japanese
+参照されているアカウントは現在ロックアウトされているため、ログオンできません。
+.
 
 MessageId=1910
 Severity=Success
@@ -16904,6 +19901,9 @@ Określony eksporter obiektu nie został odnaleziony.
 .
 Language=Romanian
 The object exporter specified was not found.
+.
+Language=Japanese
+指定されたオブジェクト エクスポーターが見つかりませんでした。
 .
 
 MessageId=1911
@@ -16922,6 +19922,9 @@ Określony obiekt nie został odnaleziony.
 Language=Romanian
 The object specified was not found.
 .
+Language=Japanese
+指定されたオブジェクトが見つかりません。
+.
 
 MessageId=1912
 Severity=Success
@@ -16938,6 +19941,9 @@ Określony zestaw programu rozpoznawania nazw obiektów nie został odnaleziony.
 .
 Language=Romanian
 The object resolver set specified was not found.
+.
+Language=Japanese
+指定されたオブジェクト リゾルバ セットが見つかりません。
 .
 
 MessageId=1913
@@ -16956,6 +19962,9 @@ Pewne dane pozostają w buforze żądania, oczekując na wysłanie.
 Language=Romanian
 Some data remains to be sent in the request buffer.
 .
+Language=Japanese
+要求バッファに送信するデータが残っています。
+.
 
 MessageId=1914
 Severity=Success
@@ -16972,6 +19981,9 @@ Nieprawidłowe dojście do asynchronicznego zdalnego wywołania procedury.
 .
 Language=Romanian
 Invalid asynchronous remote procedure call handle.
+.
+Language=Japanese
+無効な非同期リモート プロシージャ コール ハンドルです。
 .
 
 MessageId=1915
@@ -16990,6 +20002,9 @@ Nieprawidłowe dojście do asynchronicznego zdalnego wywołania procedury (RPC) 
 Language=Romanian
 Invalid asynchronous RPC call handle for this operation.
 .
+Language=Japanese
+この操作の無効な非同期RPCコールハンドルです。
+.
 
 MessageId=1916
 Severity=Success
@@ -17006,6 +20021,9 @@ Obiekt potoku RPC został już zamknięty.
 .
 Language=Romanian
 The RPC pipe object has already been closed.
+.
+Language=Japanese
+RPC パイプ オブジェクトは既に閉じられています。
 .
 
 MessageId=1917
@@ -17024,6 +20042,9 @@ Wywołanie RPC zostało ukończone przed przetworzeniem wszystkich potoków.
 Language=Romanian
 The RPC call completed before all pipes were processed.
 .
+Language=Japanese
+すべてのパイプが処理される前にRPCコールが完了しました。
+.
 
 MessageId=1918
 Severity=Success
@@ -17040,6 +20061,9 @@ Nie ma więcej dostępnych danych z potoku RPC.
 .
 Language=Romanian
 No more data is available from the RPC pipe.
+.
+Language=Japanese
+RPCパイプから利用可能なデータはありません。
 .
 
 MessageId=1919
@@ -17058,6 +20082,9 @@ Language=Polish
 Language=Romanian
 No site name is available for this machine.
 .
+Language=Japanese
+このマシンで使用可能なサイト名がありません。
+.
 
 MessageId=1920
 Severity=Success
@@ -17074,6 +20101,9 @@ System nie może uzyskać dostępu do pliku.
 .
 Language=Romanian
 The file cannot be accessed by the system.
+.
+Language=Japanese
+ファイルはシステムからアクセスできません。
 .
 
 MessageId=1921
@@ -17092,6 +20122,9 @@ System nie może rozpoznać nazwy pliku.
 Language=Romanian
 The name of the file cannot be resolved by the system.
 .
+Language=Japanese
+ファイル名はシステムで解決できません。
+.
 
 MessageId=1922
 Severity=Success
@@ -17108,6 +20141,9 @@ Wpis nie jest oczekiwanego typu.
 .
 Language=Romanian
 The entry is not of the expected type.
+.
+Language=Japanese
+エントリが予期されたタイプではありません。
 .
 
 MessageId=1923
@@ -17126,6 +20162,9 @@ Nie można wyeksportować niektórych identyfikatorów UUID obiektu do podanego 
 Language=Romanian
 Not all object UUIDs could be exported to the specified entry.
 .
+Language=Japanese
+すべてのオブジェクト UUID を指定されたエントリにエクスポートできませんでした。
+.
 
 MessageId=1924
 Severity=Success
@@ -17142,6 +20181,9 @@ Nie można wyeksportować interfejsu do podanego wpisu.
 .
 Language=Romanian
 Interface could not be exported to the specified entry.
+.
+Language=Japanese
+指定されたエントリにインターフェイスをエクスポートできませんでした。
 .
 
 MessageId=1925
@@ -17160,6 +20202,9 @@ Nie można dodać podanego wpisu profilu.
 Language=Romanian
 The specified profile entry could not be added.
 .
+Language=Japanese
+指定されたプロファイル エントリを追加できませんでした。
+.
 
 MessageId=1926
 Severity=Success
@@ -17176,6 +20221,9 @@ Nie można dodać podanego elementu profilu.
 .
 Language=Romanian
 The specified profile element could not be added.
+.
+Language=Japanese
+指定されたプロファイル要素を追加できませんでした。
 .
 
 MessageId=1927
@@ -17194,6 +20242,9 @@ Nie można usunąć podanego elementu profilu.
 Language=Romanian
 The specified profile element could not be removed.
 .
+Language=Japanese
+指定されたプロファイル要素を削除できませんでした。
+.
 
 MessageId=1928
 Severity=Success
@@ -17210,6 +20261,9 @@ Nie można dodać elementu grupy.
 .
 Language=Romanian
 The group element could not be added.
+.
+Language=Japanese
+グループ要素を追加できませんでした。
 .
 
 MessageId=1929
@@ -17228,6 +20282,9 @@ Nie można usunąć elementu grupy.
 Language=Romanian
 The group element could not be removed.
 .
+Language=Japanese
+グループ要素を削除できませんでした。
+.
 
 MessageId=1930
 Severity=Success
@@ -17244,6 +20301,9 @@ Sterownik drukarki jest niezgodny z włączonymi na danym komputerze zasadami, k
 .
 Language=Romanian
 The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
+.
+Language=Japanese
+プリンタ ドライバは、NT 4.0 ドライバをブロックするコンピュータで有効になっているポリシーと互換性がありません。
 .
 
 MessageId=1931
@@ -17262,6 +20322,9 @@ Kontekst wygasł i nie może być już dłużej używany.
 Language=Romanian
 The context has expired and can no longer be used.
 .
+Language=Japanese
+コンテキストの有効期限が切れたため、使用できなくなりました。
+.
 
 MessageId=1932
 Severity=Success
@@ -17278,6 +20341,9 @@ Delegowany przydział tworzenia zaufania bieżącego użytkownika został przekr
 .
 Language=Romanian
 The current user's delegated trust creation quota has been exceeded.
+.
+Language=Japanese
+現在のユーザーの委任トラスト作成クォータを超えています。
 .
 
 MessageId=1933
@@ -17296,6 +20362,9 @@ Całkowity delegowany przydział tworzenia zaufania został przekroczony.
 Language=Romanian
 The total delegated trust creation quota has been exceeded.
 .
+Language=Japanese
+委任されたトラストの作成クォータの合計を超えました。
+.
 
 MessageId=1934
 Severity=Success
@@ -17312,6 +20381,9 @@ Delegowany przydział usuwania zaufania bieżącego użytkownika został przekro
 .
 Language=Romanian
 The current user's delegated trust deletion quota has been exceeded.
+.
+Language=Japanese
+現在のユーザの委任されたトラストの削除クオータを超えています。
 .
 
 MessageId=2000
@@ -17330,6 +20402,9 @@ Format piksela jest nieprawidłowy.
 Language=Romanian
 The pixel format is invalid.
 .
+Language=Japanese
+ピクセル形式が無効です。
+.
 
 MessageId=2001
 Severity=Success
@@ -17346,6 +20421,9 @@ Określony sterownik jest nieprawidłowy.
 .
 Language=Romanian
 The specified driver is invalid.
+.
+Language=Japanese
+指定されたドライバが無効です。
 .
 
 MessageId=2002
@@ -17364,6 +20442,9 @@ Styl okna lub atrybut klasy jest nieodpowiedni dla tej operacji.
 Language=Romanian
 The window style or class attribute is invalid for this operation.
 .
+Language=Japanese
+ウィンドウのスタイルまたはクラス属性が無効です。
+.
 
 MessageId=2003
 Severity=Success
@@ -17380,6 +20461,9 @@ Language=Polish
 .
 Language=Romanian
 The requested metafile operation is not supported.
+.
+Language=Japanese
+要求されたメタファイル操作はサポートされていません。
 .
 
 MessageId=2004
@@ -17398,6 +20482,9 @@ Language=Polish
 Language=Romanian
 The requested transformation operation is not supported.
 .
+Language=Japanese
+要求された変換操作はサポートされていません。
+.
 
 MessageId=2005
 Severity=Success
@@ -17414,6 +20501,9 @@ Language=Polish
 .
 Language=Romanian
 The requested clipping operation is not supported.
+.
+Language=Japanese
+要求されたクリッピング操作はサポートされていません。
 .
 
 MessageId=2010
@@ -17432,6 +20522,9 @@ Podany moduł zarządzania kolorami jest nieprawidłowy.
 Language=Romanian
 The specified color management module is invalid.
 .
+Language=Japanese
+指定されたカラー マネージメント モジュールが無効です。
+.
 
 MessageId=2011
 Severity=Success
@@ -17448,6 +20541,9 @@ Podany profil kolorów jest nieprawidłowy.
 .
 Language=Romanian
 The specified color profile is invalid.
+.
+Language=Japanese
+指定されたカラープロファイルが無効です。
 .
 
 MessageId=2012
@@ -17466,6 +20562,9 @@ Nie znaleziono podanej etykiety.
 Language=Romanian
 The specified tag was not found.
 .
+Language=Japanese
+指定されたタグが見つかりません。
+.
 
 MessageId=2013
 Severity=Success
@@ -17482,6 +20581,9 @@ Brakuje wymaganej etykiety.
 .
 Language=Romanian
 A required tag is not present.
+.
+Language=Japanese
+必須タグが存在しません。
 .
 
 MessageId=2014
@@ -17500,6 +20602,9 @@ Podana etykieta już istnieje.
 Language=Romanian
 The specified tag is already present.
 .
+Language=Japanese
+指定されたタグは既に存在します。
+.
 
 MessageId=2015
 Severity=Success
@@ -17516,6 +20621,9 @@ Podany profil kolorów nie jest skojarzony z żadnym urządzeniem.
 .
 Language=Romanian
 The specified color profile is not associated with any device.
+.
+Language=Japanese
+指定されたカラープロファイルが指定されたデバイスに関連付けられていません。
 .
 
 MessageId=2016
@@ -17534,6 +20642,9 @@ Nie znaleziono podanego profilu kolorów.
 Language=Romanian
 The specified color profile was not found.
 .
+Language=Japanese
+指定されたカラープロファイルが見つかりません。
+.
 
 MessageId=2017
 Severity=Success
@@ -17550,6 +20661,9 @@ Podana przestrzeń kolorów jest nieprawidłowa.
 .
 Language=Romanian
 The specified color space is invalid.
+.
+Language=Japanese
+指定された色空間が無効です。
 .
 
 MessageId=2018
@@ -17568,6 +20682,9 @@ Zarządzanie kolorami obrazu nie jest włączone.
 Language=Romanian
 Image Color Management is not enabled.
 .
+Language=Japanese
+イメージ カラー マネージメントが有効になっていません。
+.
 
 MessageId=2019
 Severity=Success
@@ -17584,6 +20701,9 @@ Podczas usuwania transformacji koloru wystąpił błąd.
 .
 Language=Romanian
 There was an error while deleting the color transform.
+.
+Language=Japanese
+色変換の削除中にエラーが発生しました。
 .
 
 MessageId=2020
@@ -17602,6 +20722,9 @@ Podana transformacja kolorów jest nieprawidłowa.
 Language=Romanian
 The specified color transform is invalid.
 .
+Language=Japanese
+指定された色変換が無効です。
+.
 
 MessageId=2021
 Severity=Success
@@ -17618,6 +20741,9 @@ Podana transformacja nie jest zgodna z przestrzenią kolorów mapy bitowej.
 .
 Language=Romanian
 The specified transform does not match the bitmap's color space.
+.
+Language=Japanese
+指定されたトランスフォームはビットマップの色空間と一致しません。
 .
 
 MessageId=2022
@@ -17636,6 +20762,9 @@ Podany indeks nazwanych kolorów nie występuje w profilu.
 Language=Romanian
 The specified named color index is not present in the profile.
 .
+Language=Japanese
+指定されたカラーインデックスがプロファイルに存在しません。
+.
 
 MessageId=2108
 Severity=Success
@@ -17652,6 +20781,9 @@ Połączenie sieciowe zostało nawiązane, ale użytkownik był wezwany do podan
 .
 Language=Romanian
 The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
+.
+Language=Japanese
+ネットワーク接続に成功しましたが、最初に指定されたパスワード以外のパスワードを入力する必要がありました。
 .
 
 MessageId=2109
@@ -17670,6 +20802,9 @@ Ustanowienie połączenia przy użyciu poświadczeń domyślnych powiodło się.
 Language=Romanian
 The network connection was made successfully using default credentials.
 .
+Language=Japanese
+既定の認証情報を使用してネットワーク接続に成功しました。
+.
 
 MessageId=2202
 Severity=Success
@@ -17686,6 +20821,9 @@ Określona nazwa użytkownika jest nieprawidłowa.
 .
 Language=Romanian
 The specified username is invalid.
+.
+Language=Japanese
+指定されたユーザー名が無効です。
 .
 
 MessageId=2250
@@ -17704,6 +20842,9 @@ To połączenie sieciowe nie istnieje.
 Language=Romanian
 This network connection does not exist.
 .
+Language=Japanese
+このネットワーク接続は存在しません。
+.
 
 MessageId=2401
 Severity=Success
@@ -17720,6 +20861,9 @@ To połączenie sieciowe ma otwarte pliki lub aktywne żądania.
 .
 Language=Romanian
 This network connection has files open or requests pending.
+.
+Language=Japanese
+このネットワーク接続には、開いているファイルまたは保留中の要求があります。
 .
 
 MessageId=2402
@@ -17738,6 +20882,9 @@ Nadal istnieją aktywne połączenia.
 Language=Romanian
 Active connections still exist.
 .
+Language=Japanese
+アクティブな接続がまだ存在します。
+.
 
 MessageId=2404
 Severity=Success
@@ -17754,6 +20901,9 @@ Urządzenie jest używane przez aktywny proces i nie można go odłączyć.
 .
 Language=Romanian
 The device is in use by an active process and cannot be disconnected.
+.
+Language=Japanese
+デバイスはアクティブなプロセスによって使用中であり、切断できません。
 .
 
 MessageId=3000
@@ -17772,6 +20922,9 @@ Określony monitor wydruku jest nieznany.
 Language=Romanian
 The specified print monitor is unknown.
 .
+Language=Japanese
+指定されたプリントモニタが不明です。
+.
 
 MessageId=3001
 Severity=Success
@@ -17788,6 +20941,9 @@ Określony sterownik drukarki jest obecnie w użyciu.
 .
 Language=Romanian
 The specified printer driver is currently in use.
+.
+Language=Japanese
+指定されたプリンタドライバは現在使用中です。
 .
 
 MessageId=3002
@@ -17806,6 +20962,9 @@ Nie znaleziono pliku buforowania.
 Language=Romanian
 The spool file was not found.
 .
+Language=Japanese
+スプールファイルが見つかりません。
+.
 
 MessageId=3003
 Severity=Success
@@ -17822,6 +20981,9 @@ Wywołanie StartDocPrinter nie zostało wysłane.
 .
 Language=Romanian
 A StartDocPrinter call was not issued.
+.
+Language=Japanese
+StartDocPrinterコールが発行されませんでした。
 .
 
 MessageId=3004
@@ -17840,6 +21002,9 @@ Wywołanie AddJob nie zostało wysłane.
 Language=Romanian
 An AddJob call was not issued.
 .
+Language=Japanese
+AddJob呼び出しが発行されませんでした。
+.
 
 MessageId=3005
 Severity=Success
@@ -17856,6 +21021,9 @@ Określony procesor wydruku jest już zainstalowany.
 .
 Language=Romanian
 The specified print processor has already been installed.
+.
+Language=Japanese
+指定されたプリント プロセッサはすでにインストールされています。
 .
 
 MessageId=3006
@@ -17874,6 +21042,9 @@ Określony monitor wydruku jest już zainstalowany.
 Language=Romanian
 The specified print monitor has already been installed.
 .
+Language=Japanese
+指定されたプリントモニターはすでにインストールされています。
+.
 
 MessageId=3007
 Severity=Success
@@ -17890,6 +21061,9 @@ Określony monitor wydruku nie ma wymaganych funkcji.
 .
 Language=Romanian
 The specified print monitor does not have the required functions.
+.
+Language=Japanese
+指定されたプリントモニターに必要な機能がありません。
 .
 
 MessageId=3008
@@ -17908,6 +21082,9 @@ Określony monitor wydruku jest już w użyciu.
 Language=Romanian
 The specified print monitor is currently in use.
 .
+Language=Japanese
+指定された印刷モニターは現在使用中です。
+.
 
 MessageId=3009
 Severity=Success
@@ -17924,6 +21101,9 @@ Language=Polish
 .
 Language=Romanian
 The requested operation is not allowed when there are jobs queued to the printer.
+.
+Language=Japanese
+プリンタにキューイングされているジョブがある場合、要求された操作は許可されません。
 .
 
 MessageId=3010
@@ -17942,6 +21122,9 @@ Language=Polish
 Language=Romanian
 The requested operation is successful. Changes will not be effective until the system is rebooted.
 .
+Language=Japanese
+要求された操作は成功しました。要求された操作は成功しました。
+.
 
 MessageId=3011
 Severity=Success
@@ -17958,6 +21141,9 @@ Language=Polish
 .
 Language=Romanian
 The requested operation is successful. Changes will not be effective until the service is restarted.
+.
+Language=Japanese
+要求された操作は成功しました。サービスが再起動されるまで変更は有効になりません。
 .
 
 MessageId=3012
@@ -17976,6 +21162,9 @@ Nie znaleziono żadnych drukarek.
 Language=Romanian
 No printers were found.
 .
+Language=Japanese
+プリンタが見つかりませんでした。
+.
 
 MessageId=3013
 Severity=Success
@@ -17992,6 +21181,9 @@ Sterownik drukarki jest znany jako zawodny.
 .
 Language=Romanian
 The printer driver is known to be unreliable.
+.
+Language=Japanese
+プリンタドライバが信頼できないことが判明しました。
 .
 
 MessageId=3014
@@ -18010,6 +21202,9 @@ Sterownik drukarki jest znany jako szkodliwy dla systemu.
 Language=Romanian
 The printer driver is known to harm the system.
 .
+Language=Japanese
+プリンタドライバがシステムに悪影響を与えることが判明しました。
+.
 
 MessageId=3100
 Severity=Success
@@ -18026,6 +21221,9 @@ Kod XML zawiera odwołanie do niezdefiniowanej encji.
 .
 Language=Romanian
 The XML contains an entity reference to an undefined entity.
+.
+Language=Japanese
+ネットワークソフトウェアエラーが発生したため、操作に失敗しました。
 .
 
 MessageId=3101
@@ -18044,6 +21242,9 @@ Kod XML zawiera nieprawidłowe odwołanie do encji.
 Language=Romanian
 The XML contains a malformed entity reference.
 .
+Language=Japanese
+オプション %1 で制御されるリソースが不足しました。
+.
 
 MessageId=3102
 Severity=Success
@@ -18060,6 +21261,10 @@ Kod XML zawiera znak, który nie jest dozwolony w języku w XML.
 .
 Language=Romanian
 The XML contains a character which is not permitted in XML.
+.
+Language=Japanese
+サービスがネットワーク制御ブロック (NCB)  のセグメントで長期ロックを取得できませんでした。
+エラーコードはデータです。
 .
 
 MessageId=3200
@@ -18078,6 +21283,9 @@ Manifest zawiera zduplikowaną definicję dla zewnętrznej procedury wejścia ob
 Language=Romanian
 The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
 .
+Language=Japanese
+マニフェストは、(%1:%2,%3)における外部プロキシ スタブ %1 に重複する定義が含まれています。
+.
 
 MessageId=3201
 Severity=Success
@@ -18094,6 +21302,9 @@ Manifest zawiera już odwołanie do %4 - drugie odwołanie odnaleziono w (%1:%2,
 .
 Language=Romanian
 The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
+.
+Language=Japanese
+マニフェストはすでに %4 への参照を含んでいます。2 番目の参照は (%1:%2,%3) で見つかりました。
 .
 
 MessageId=3202
@@ -18112,6 +21323,9 @@ Nieprawidłowe odwołanie do zestawu w (%1:%2,%3).
 Language=Romanian
 The assembly reference at (%1:%2,%3) is invalid.
 .
+Language=Japanese
+(%1:%2,%3) におけるアセンブリ参照は無効です。
+.
 
 MessageId=3203
 Severity=Success
@@ -18128,6 +21342,9 @@ Nieprawidłowa definicja zestawu w (%1:%2,%3).
 .
 Language=Romanian
 The assembly definition at (%1:%2,%3) is invalid.
+.
+Language=Japanese
+(%1:%2,%3) におけるアセンブリ定義は無効です。
 .
 
 MessageId=3204
@@ -18146,6 +21363,9 @@ Manifest zawiera już klasę okna %4, drugą deklarację odnaleziono w (%1:%2,%3
 Language=Romanian
 The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
 .
+Language=Japanese
+マニフェストはすでにウィンドウ クラス %4 を含んでいます。2 番目の宣言は (%1:%2,%3) で見つかりました。
+.
 
 MessageId=3205
 Severity=Success
@@ -18162,6 +21382,9 @@ Manifest już zadeklarował identyfikator progId %4, drugą deklarację odnalezi
 .
 Language=Romanian
 The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
+.
+Language=Japanese
+マニフェストはすでに progId %4 を宣言しています。2 番目の定義は (%1:%2,%3) で見つかりました。
 .
 
 MessageId=3206
@@ -18180,6 +21403,9 @@ W manifeście może występować tylko jeden tag noInherit, drugi tag odnalezion
 Language=Romanian
 Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
+Language=Japanese
+マニフェスト内部に noInherit タグが一つだけなければなりません。2 番目のタグが (%1:%2,%3) で見つかりました。
+.
 
 MessageId=3207
 Severity=Success
@@ -18196,6 +21422,9 @@ W manifeście może występować tylko jeden tag noInheritable, drugi tag odnale
 .
 Language=Romanian
 Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
+.
+Language=Japanese
+マニフェストには、noInheritable タグが 1 つだけ存在する可能性があります。2 番目のタグが (%1:%2,%3) で見つかりました。
 .
 
 MessageId=3208
@@ -18214,6 +21443,9 @@ Manifest zawiera zduplikowaną deklarację klasy COM %4 w (%1:%2,%3)
 Language=Romanian
 The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
 .
+Language=Japanese
+マニフェスト内部の (%1:%2,%3) において COM クラス %4 の重複宣言が含まれていました。
+.
 
 MessageId=3209
 Severity=Success
@@ -18230,6 +21462,9 @@ Manifest już zadeklarował plik %4, drugą definicję odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
+.
+Language=Japanese
+マニフェストでファイル %4 が既に宣言されていますが、(%1:%2,%3) に 2 番目の定義が見つかりました。
 .
 
 MessageId=3210
@@ -18248,6 +21483,9 @@ CLR surrogate %1 was already defined, second definition at (%1:%2,%3) is invalid
 Language=Romanian
 CLR surrogate %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
+Language=Japanese
+CLR サロゲート %1 は既に定義されています。(%1:%2,%3) での 2 番目の定義は無効です。
+.
 
 MessageId=3211
 Severity=Success
@@ -18264,6 +21502,9 @@ Type library %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
 Language=Romanian
 Type library %1 was already defined, second definition at (%1:%2,%3) is invalid.
+.
+Language=Japanese
+型ライブラリ %1 は既に定義されています。(%1:%2,%3) での 2 番目の定義は無効です。
 .
 
 MessageId=3212
@@ -18282,6 +21523,9 @@ Proxy stub definition %1 was already defined, second definition at (%1:%2,%3) is
 Language=Romanian
 Proxy stub definition %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
+Language=Japanese
+プロキシ・スタブ定義 %1 は既に定義されているので、(%1:%2,%3) での 2 番目の定義は無効です。
+.
 
 MessageId=3213
 Severity=Success
@@ -18298,6 +21542,9 @@ Category friendly name %4 was already used, second definition was found at (%1:%
 .
 Language=Romanian
 Category friendly name %4 was already used, second definition was found at (%1:%2,%3) is invalid.
+.
+Language=Japanese
+カテゴリ・フレンドリー名 %4 は既に使用されています。(%1:%2,%3) に 2 番目の定義が見つかりましたが、無効です。
 .
 
 MessageId=3214
@@ -18316,6 +21563,9 @@ Only one top-level assemblyIdentity tag may be present in a manifest. A second t
 Language=Romanian
 Only one top-level assemblyIdentity tag may be present in a manifest. A second tag with identity %4 was found at (%1:%2,%3)
 .
+Language=Japanese
+マニフェストには、トップレベルの assemblyIdentity タグを 1 つだけ含めることができます。ID %4 を持つ 2 番目のタグが (%1:%2,%3) に見つかりました。
+.
 
 MessageId=3215
 Severity=Success
@@ -18332,6 +21582,9 @@ The root element for a manifest found at (%1:%2,%3) was not expected or was of t
 .
 Language=Romanian
 The root element for a manifest found at (%1:%2,%3) was not expected or was of the wrong version.
+.
+Language=Japanese
+(%1:%2,%3) で見つかったマニフェストのルート要素が予期されていないか、間違ったバージョンでした。
 .
 
 MessageId=3216
@@ -18350,6 +21603,9 @@ The element found at (%1:%2,%3) was not expected according to the manifest schem
 Language=Romanian
 The element found at (%1:%2,%3) was not expected according to the manifest schema.
 .
+Language=Japanese
+(%1:%2,%3) で見つかった要素は、マニフェスト スキーマに従って予期されていませんでした。
+.
 
 MessageId=3217
 Severity=Success
@@ -18366,6 +21622,9 @@ The element found at (%1:%2,%3) was missing the required attribute '%4'. See the
 .
 Language=Romanian
 The element found at (%1:%2,%3) was missing the required attribute '%4'. See the manifest schema for more information
+.
+Language=Japanese
+(%1:%2,%3) で見つかった要素には必須属性 '%4' がありませんでした。詳細は、マニフェスト スキーマを参照してください。
 .
 
 MessageId=3218
@@ -18384,6 +21643,9 @@ The attribute value %4 at (%1:%2,%3) was invalid according to the schema.
 Language=Romanian
 The attribute value %4 at (%1:%2,%3) was invalid according to the schema.
 .
+Language=Japanese
+(%1:%2,%3) の属性値 %4 はスキーマに従って無効でした。
+.
 
 MessageId=3219
 Severity=Success
@@ -18400,6 +21662,9 @@ PCDATA or CDATA found at (%1:%2,%3) in the source document was not expected in t
 .
 Language=Romanian
 PCDATA or CDATA found at (%1:%2,%3) in the source document was not expected in the parent element %4.
+.
+Language=Japanese
+ソース ドキュメント内の (%1:%2,%3) で見つかった PCDATA または CDATA は、親要素 %4 では予期されませんでした。
 .
 
 MessageId=3220
@@ -18418,6 +21683,9 @@ The string table entry with culture %4, name %5, and value '%6' at (%1:%2,%3) du
 Language=Romanian
 The string table entry with culture %4, name %5, and value '%6' at (%1:%2,%3) duplicated a previous entry.
 .
+Language=Japanese
+(%1:%2,%3) のカルチャ %4、名前 %5、値 '%6' を持つ文字列テーブル・エントリが前のエントリと重複しています。
+.
 
 MessageId=4000
 Severity=Success
@@ -18434,6 +21702,9 @@ WINS napotkał na błąd podczas przetwarzania polecenia.
 .
 Language=Romanian
 WINS encountered an error while processing the command.
+.
+Language=Japanese
+コマンドの処理中に WINS でエラーが発生しました。
 .
 
 MessageId=4001
@@ -18452,6 +21723,9 @@ Lokalny WINS nie może być usunięty.
 Language=Romanian
 The local WINS cannot be deleted.
 .
+Language=Japanese
+ローカル WINS を削除できません。
+.
 
 MessageId=4002
 Severity=Success
@@ -18468,6 +21742,9 @@ Importowanie z pliku nie powiodło się.
 .
 Language=Romanian
 The importation from the file failed.
+.
+Language=Japanese
+ファイルからのインポートに失敗しました。
 .
 
 MessageId=4003
@@ -18486,6 +21763,9 @@ Wykonanie kopii zapasowej nie powiodło się. Czy wcześniej wykonywano pełną 
 Language=Romanian
 The backup failed. Was a full backup done before?
 .
+Language=Japanese
+バックアップに失敗しました。前に完全バックアップが行われましたか。
+.
 
 MessageId=4004
 Severity=Success
@@ -18502,6 +21782,9 @@ Wykonanie kopii zapasowej nie powiodło się. Sprawdź katalog, do którego jest
 .
 Language=Romanian
 The backup failed. Check the directory to which you are backing the database.
+.
+Language=Japanese
+バックアップに失敗しました。データベースのバックアップ先ディレクトリを確認してください。
 .
 
 MessageId=4005
@@ -18520,6 +21803,9 @@ Nazwa nie istnieje w bazie danych WINS.
 Language=Romanian
 The name does not exist in the WINS database.
 .
+Language=Japanese
+名前が WINS データベースに存在しません。
+.
 
 MessageId=4006
 Severity=Success
@@ -18536,6 +21822,9 @@ Replikowanie z nie skonfigurowanym partnerem jest niedozwolone.
 .
 Language=Romanian
 Replication with a nonconfigured partner is not allowed.
+.
+Language=Japanese
+構成されていないパートナーとのレプリケーションは許可されていません。
 .
 
 MessageId=4100
@@ -18554,6 +21843,9 @@ Klient DHCP otrzymał adres IP, który jest już używany w sieci. Lokalny inter
 Language=Romanian
 The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
 .
+Language=Japanese
+DHCPクライアントが、ネットワーク上ですでに使用されているIPアドレスを取得しました。DHCPクライアントが新しいアドレスを取得できるようになるまで、ローカル インタフェースは無効になります。
+.
 
 MessageId=4200
 Severity=Success
@@ -18570,6 +21862,9 @@ Przekazany identyfikator GUID nie został uznany przez dostawcę danych WMI za p
 .
 Language=Romanian
 The GUID passed was not recognized as valid by a WMI data provider.
+.
+Language=Japanese
+渡された GUID が WMI データプロバイダによって有効であると認識されませんでした。
 .
 
 MessageId=4201
@@ -18588,6 +21883,9 @@ Przekazana nazwa wystąpienia nie została uznana przez dostawcę danych WMI za 
 Language=Romanian
 The instance name passed was not recognized as valid by a WMI data provider.
 .
+Language=Japanese
+渡されたインスタンス名は、WMI データ プロバイダによって有効であると認識されませんでした。
+.
 
 MessageId=4202
 Severity=Success
@@ -18604,6 +21902,9 @@ Przekazany identyfikator elementu danych nie został uznany przez dostawcę dany
 .
 Language=Romanian
 The data item ID passed was not recognized as valid by a WMI data provider.
+.
+Language=Japanese
+渡されたデータ項目 ID は、WMI データ プロバイダーによって有効であると認識されませんでした。
 .
 
 MessageId=4203
@@ -18622,6 +21923,9 @@ Nie można ukończyć żądania WMI; należy je powtórzyć.
 Language=Romanian
 The WMI request could not be completed and should be retried.
 .
+Language=Japanese
+WMI 要求を完了できませんでした。
+.
 
 MessageId=4204
 Severity=Success
@@ -18638,6 +21942,9 @@ Nie można zlokalizować dostawcy danych WMI.
 .
 Language=Romanian
 The WMI data provider could not be located.
+.
+Language=Japanese
+WMI データ プロバイダーが見つかりません。
 .
 
 MessageId=4205
@@ -18656,6 +21963,9 @@ Dostawca danych WMI odwołuje się do zestawu wystąpień, który nie został za
 Language=Romanian
 The WMI data provider references an instance set that has not been registered.
 .
+Language=Japanese
+WMI データ プロバイダーは、登録されていないインスタンス セットを参照しています。
+.
 
 MessageId=4206
 Severity=Success
@@ -18672,6 +21982,9 @@ Blok danych WMI lub powiadamianie o zdarzeniach WMI jest już włączone.
 .
 Language=Romanian
 The WMI data block or event notification has already been enabled.
+.
+Language=Japanese
+WMI データ ブロックまたはイベント通知はすでに有効になっています。
 .
 
 MessageId=4207
@@ -18690,6 +22003,9 @@ Blok danych WMI nie jest już dostępny.
 Language=Romanian
 The WMI data block is no longer available.
 .
+Language=Japanese
+WMI データ ブロックは使用できなくなりました。
+.
 
 MessageId=4208
 Severity=Success
@@ -18706,6 +22022,9 @@ Usługa danych WMI nie jest dostępna.
 .
 Language=Romanian
 The WMI data service is not available.
+.
+Language=Japanese
+WMI データ サービスは使用できません。
 .
 
 MessageId=4209
@@ -18724,6 +22043,9 @@ Dostawca danych WMI nie może spełnić żądania.
 Language=Romanian
 The WMI data provider failed to carry out the request.
 .
+Language=Japanese
+WMI データ プロバイダーが要求を実行できませんでした。
+.
 
 MessageId=4210
 Severity=Success
@@ -18740,6 +22062,9 @@ Informacje WMI MOF są nieprawidłowe.
 .
 Language=Romanian
 The WMI MOF information is not valid.
+.
+Language=Japanese
+WMI MOF 情報が無効です。
 .
 
 MessageId=4211
@@ -18758,6 +22083,9 @@ Informacje rejestracyjne WMI są nieprawidłowe.
 Language=Romanian
 The WMI registration information is not valid.
 .
+Language=Japanese
+WMI 登録情報が無効です。
+.
 
 MessageId=4212
 Severity=Success
@@ -18774,6 +22102,9 @@ Blok danych WMI lub powiadamianie o zdarzeniach WMI jest już wyłączone.
 .
 Language=Romanian
 The WMI data block or event notification has already been disabled.
+.
+Language=Japanese
+WMI データ ブロックまたはイベント通知はすでに無効になっています。
 .
 
 MessageId=4213
@@ -18792,6 +22123,9 @@ Element danych WMI lub blok danych są tylko do odczytu.
 Language=Romanian
 The WMI data item or data block is read-only.
 .
+Language=Japanese
+WMI データ項目またはデータ ブロックは読み取り専用です。
+.
 
 MessageId=4214
 Severity=Success
@@ -18808,6 +22142,9 @@ Nie można zmienić elementu danych WMI lub bloku danych.
 .
 Language=Romanian
 The WMI data item or data block could not be changed.
+.
+Language=Japanese
+WMI データ項目またはデータ ブロックを変更できませんでした。
 .
 
 MessageId=4300
@@ -18826,6 +22163,9 @@ Identyfikator nośnika nie reprezentuje prawidłowej oczyszczarki.
 Language=Romanian
 The media identifier does not represent a valid medium.
 .
+Language=Japanese
+メディア識別子が有効なメディアを表していません。
+.
 
 MessageId=4301
 Severity=Success
@@ -18842,6 +22182,9 @@ Identyfikator biblioteki nie reprezentuje prawidłowej biblioteki.
 .
 Language=Romanian
 The library identifier does not represent a valid library.
+.
+Language=Japanese
+ライブラリ識別子が有効なライブラリを表していません。
 .
 
 MessageId=4302
@@ -18860,6 +22203,9 @@ Identyfikator zestawu nośników nie reprezentuje prawidłowej puli nośników.
 Language=Romanian
 The media pool identifier does not represent a valid media pool.
 .
+Language=Japanese
+メディアプール識別子が有効なメディアプールを表していません。
+.
 
 MessageId=4303
 Severity=Success
@@ -18876,6 +22222,9 @@ Stacja i nośnik nie są zgodne lub znajdują się w innych bibliotekach.
 .
 Language=Romanian
 The drive and medium are not compatible or exist in different libraries.
+.
+Language=Japanese
+ドライブとメディアに互換性がないか、異なるライブラリに存在します。
 .
 
 MessageId=4304
@@ -18894,6 +22243,9 @@ Nośnik znajduje się obecnie w bibliotece będącej w trybie offline. Aby ta op
 Language=Romanian
 The medium currently exists in an offline library and must be online to perform this operation.
 .
+Language=Japanese
+メディアは現在オフラインのライブラリに存在するため、この操作を実行するにはオンラインにする必要があります。
+.
 
 MessageId=4305
 Severity=Success
@@ -18910,6 +22262,9 @@ Nie można wykonać operacji na bibliotece będącej w trybie offline.
 .
 Language=Romanian
 The operation cannot be performed on an offline library.
+.
+Language=Japanese
+この操作はオフラインのライブラリでは実行できません。
 .
 
 MessageId=4306
@@ -18928,6 +22283,9 @@ Biblioteka, stacja dysków lub pula nośników są puste.
 Language=Romanian
 The library, drive, or media pool is empty.
 .
+Language=Japanese
+ライブラリ、ドライブ、またはメディアプールが空です。
+.
 
 MessageId=4307
 Severity=Success
@@ -18944,6 +22302,9 @@ Biblioteka, stacja dysków lub pula nośników muszą być puste, aby można by�
 .
 Language=Romanian
 The library, drive, or media pool must be empty to perform this operation.
+.
+Language=Japanese
+この操作を実行するには、ライブラリ、ドライブ、またはメディア プールが空である必要があります。
 .
 
 MessageId=4308
@@ -18962,6 +22323,9 @@ Language=Polish
 Language=Romanian
 No media is currently available in this media pool or library.
 .
+Language=Japanese
+このメディアプールまたはライブラリで現在使用可能なメディアはありません。
+.
 
 MessageId=4309
 Severity=Success
@@ -18978,6 +22342,9 @@ Zasób wymagany dla tej operacji jest wyłączony.
 .
 Language=Romanian
 A resource required for this operation is disabled.
+.
+Language=Japanese
+この操作に必要なリソースが無効です。
 .
 
 MessageId=4310
@@ -18996,6 +22363,9 @@ Identyfikator nośnika nie reprezentuje prawidłowego nośnika czyszczącego.
 Language=Romanian
 The media identifier does not represent a valid cleaner.
 .
+Language=Japanese
+メディア識別子が有効なクリーナーを表していません。
+.
 
 MessageId=4311
 Severity=Success
@@ -19012,6 +22382,9 @@ Nie można oczyścić stacji lub nie obsługuje ona funkcji czyszczenia.
 .
 Language=Romanian
 The drive cannot be cleaned or does not support cleaning.
+.
+Language=Japanese
+ドライブをクリーニングできないか、クリーニングをサポートしていません。
 .
 
 MessageId=4312
@@ -19030,6 +22403,9 @@ Identyfikator obiektu nie reprezentuje prawidłowego obiektu.
 Language=Romanian
 The object identifier does not represent a valid object.
 .
+Language=Japanese
+オブジェクト識別子が有効なオブジェクトを表していません。
+.
 
 MessageId=4313
 Severity=Success
@@ -19046,6 +22422,9 @@ Nie można odczytać z bazy danych lub do niej zapisać.
 .
 Language=Romanian
 Unable to read from or write to the database.
+.
+Language=Japanese
+データベースからの読み取りまたはデータベースへの書き込みができません。
 .
 
 MessageId=4314
@@ -19064,6 +22443,9 @@ Baza danych jest zapełniona.
 Language=Romanian
 The database is full.
 .
+Language=Japanese
+データベースがいっぱいです。
+.
 
 MessageId=4315
 Severity=Success
@@ -19080,6 +22462,9 @@ Nośnik nie jest zgodny z urządzeniem lub pulą nośników.
 .
 Language=Romanian
 The medium is not compatible with the device or media pool.
+.
+Language=Japanese
+メディアがデバイスまたはメディア プールと互換性がありません。
 .
 
 MessageId=4316
@@ -19098,6 +22483,9 @@ Wymagany dla tej operacji zasób nie istnieje.
 Language=Romanian
 The resource required for this operation does not exist.
 .
+Language=Japanese
+この操作に必要なリソースが存在しません。
+.
 
 MessageId=4317
 Severity=Success
@@ -19114,6 +22502,9 @@ Identyfikator operacji jest nieprawidłowy.
 .
 Language=Romanian
 The operation identifier is not valid.
+.
+Language=Japanese
+操作識別子が無効です。
 .
 
 MessageId=4318
@@ -19132,6 +22523,9 @@ Nośnik nie jest zainstalowany lub nie jest gotowy do użycia.
 Language=Romanian
 The media is not mounted or ready for use.
 .
+Language=Japanese
+メディアがマウントされていないか、使用可能な状態になっていません。
+.
 
 MessageId=4319
 Severity=Success
@@ -19148,6 +22542,9 @@ Urządzenie nie jest gotowe do użycia.
 .
 Language=Romanian
 The device is not ready for use.
+.
+Language=Japanese
+デバイスは使用できません。
 .
 
 MessageId=4320
@@ -19166,6 +22563,9 @@ Operator lub administrator odrzucił żądanie.
 Language=Romanian
 The operator or administrator has refused the request.
 .
+Language=Japanese
+オペレータまたは管理者が要求を拒否しました。
+.
 
 MessageId=4321
 Severity=Success
@@ -19182,6 +22582,9 @@ Identyfikator stacji nie reprezentuje prawidłowej stacji.
 .
 Language=Romanian
 The drive identifier does not represent a valid drive.
+.
+Language=Japanese
+ドライブ識別子が有効なドライブを表していません。
 .
 
 MessageId=4322
@@ -19200,6 +22603,9 @@ Biblioteka jest zapełniona. Nie ma żadnego wolnego gniazda do użycia.
 Language=Romanian
 Library is full. No slot is available for use.
 .
+Language=Japanese
+ライブラリがいっぱいです。使用可能なスロットがありません。
+.
 
 MessageId=4323
 Severity=Success
@@ -19216,6 +22622,9 @@ Transport nie może uzyskać dostępu do nośnika.
 .
 Language=Romanian
 The transport cannot access the medium.
+.
+Language=Japanese
+トランスポートがメディアにアクセスできません。
 .
 
 MessageId=4324
@@ -19234,6 +22643,9 @@ Nie można włożyć nośnika do stacji.
 Language=Romanian
 Unable to load the medium into the drive.
 .
+Language=Japanese
+ドライブに媒体をロードできません。
+.
 
 MessageId=4325
 Severity=Success
@@ -19250,6 +22662,9 @@ Nie można pobrać danych o stanie stacji.
 .
 Language=Romanian
 Unable to retrieve status about the drive.
+.
+Language=Japanese
+ドライブのステータスを取得できません。
 .
 
 MessageId=4326
@@ -19268,6 +22683,9 @@ Nie można pobrać danych o stanie gniazda.
 Language=Romanian
 Unable to retrieve status about the slot.
 .
+Language=Japanese
+ドライブのステータスを取得できません: スロットのステータスを取得できません。
+.
 
 MessageId=4327
 Severity=Success
@@ -19284,6 +22702,9 @@ Nie można pobrać danych o stanie transportu.
 .
 Language=Romanian
 Unable to retrieve status about the transport.
+.
+Language=Japanese
+スロットのステータスを取得できません: トランスポートのステータスを取得できません。
 .
 
 MessageId=4328
@@ -19302,6 +22723,9 @@ Nie można użyć transportu, ponieważ jest już używany.
 Language=Romanian
 Cannot use the transport because it is already in use.
 .
+Language=Japanese
+トランスポートは既に使用されているため使用できません。
+.
 
 MessageId=4329
 Severity=Success
@@ -19318,6 +22742,9 @@ Nie można otworzyć lub zamknąć portu wsuwania/wysuwania.
 .
 Language=Romanian
 Unable to open or close the inject/eject port.
+.
+Language=Japanese
+インジェクト/イジェクトポートを開閉できません。
 .
 
 MessageId=4330
@@ -19336,6 +22763,9 @@ Nie można wsunąć nośnika, ponieważ jest w stacji.
 Language=Romanian
 Unable to eject the media because it is in a drive.
 .
+Language=Japanese
+ドライブ内にあるためメディアをイジェクトできない。
+.
 
 MessageId=4331
 Severity=Success
@@ -19352,6 +22782,9 @@ Gniazdo oczyszczarki jest już zarezerwowane.
 .
 Language=Romanian
 A cleaner slot is already reserved.
+.
+Language=Japanese
+クリーナー スロットが既に予約されています。
 .
 
 MessageId=4332
@@ -19370,6 +22803,9 @@ Gniazdo oczyszczarki nie jest zarezerwowane.
 Language=Romanian
 A cleaner slot is not reserved.
 .
+Language=Japanese
+クリーナー スロットが予約されていません。
+.
 
 MessageId=4333
 Severity=Success
@@ -19386,6 +22822,9 @@ Kaseta czyszcząca wykonała maksymalną liczbę operacji czyszczenia.
 .
 Language=Romanian
 The cleaner cartridge has performed the maximum number of drive cleanings.
+.
+Language=Japanese
+クリーナー カートリッジが最大数のドライブ クリーニングを実行しました。
 .
 
 MessageId=4334
@@ -19404,6 +22843,9 @@ Nieoczekiwany identyfikator nośnika.
 Language=Romanian
 Unexpected on-medium identifier.
 .
+Language=Japanese
+予期しないオンメディア識別子。
+.
 
 MessageId=4335
 Severity=Success
@@ -19420,6 +22862,9 @@ Nie można usunąć ostatniego pozostałego elementu z tej grupy lub nie można 
 .
 Language=Romanian
 The last remaining item in this group or resource cannot be deleted.
+.
+Language=Japanese
+このグループまたはリソースの最後に残っているアイテムは削除できません。
 .
 
 MessageId=4336
@@ -19438,6 +22883,9 @@ Dostarczony komunikat przekracza maksymalny rozmiar dozwolony dla tego parametru
 Language=Romanian
 The message provided exceeds the maximum size allowed for this parameter.
 .
+Language=Japanese
+指定されたメッセージは、このパラメータで許可される最大サイズを超えます。
+.
 
 MessageId=4337
 Severity=Success
@@ -19454,6 +22902,9 @@ Wolumin zawiera pliki systemowe lub pliki stronicowania.
 .
 Language=Romanian
 The volume contains system or paging files.
+.
+Language=Japanese
+ボリュームにシステム ファイルまたはページング ファイルが含まれています。
 .
 
 MessageId=4338
@@ -19472,6 +22923,9 @@ Nie można usunąć tego typu nośnika z tej biblioteki, ponieważ co najmniej j
 Language=Romanian
 The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
 .
+Language=Japanese
+ライブラリ内の少なくとも1つのドライブがこのメディア タイプをサポートできると報告しているため、このメディア タイプをこのライブラリから削除できません。
+.
 
 MessageId=4339
 Severity=Success
@@ -19488,6 +22942,9 @@ Nośnik pracujący w trybie offline nie może być zainstalowany w tym systemie,
 .
 Language=Romanian
 This offline media cannot be mounted on this system since no enabled drives are present which can be used.
+.
+Language=Japanese
+このオフライン メディアは、使用可能なドライブが存在しないため、このシステムにマウントできません。
 .
 
 MessageId=4340
@@ -19506,6 +22963,9 @@ Kaseta czyszcząca znajduje się w bibliotece taśm.
 Language=Romanian
 A cleaner cartridge is present in the tape library.
 .
+Language=Japanese
+テープ ライブラリにクリーナー カートリッジがあります。
+.
 
 MessageId=4350
 Severity=Success
@@ -19522,6 +22982,9 @@ The remote storage service was not able to recall the file.
 .
 Language=Romanian
 The remote storage service was not able to recall the file.
+.
+Language=Japanese
+このファイルは現在このコンピュータでは使用できません。
 .
 
 MessageId=4351
@@ -19540,6 +23003,9 @@ Usługa Magazyn zdalny teraz nie działa.
 Language=Romanian
 The remote storage service is not operational at this time.
 .
+Language=Japanese
+リモート ストレージ サービスは現在動作していません。
+.
 
 MessageId=4352
 Severity=Success
@@ -19556,6 +23022,9 @@ Usługa Magazyn zdalny napotkała błąd nośnika.
 .
 Language=Romanian
 The remote storage service encountered a media error.
+.
+Language=Japanese
+リモート ストレージ サービスでメディア エラーが発生しました。
 .
 
 MessageId=4390
@@ -19574,6 +23043,9 @@ Plik lub katalog nie jest punktem ponownej analizy.
 Language=Romanian
 The file or directory is not a reparse point.
 .
+Language=Japanese
+ファイルまたはディレクトリはリパース ポイントではありません。
+.
 
 MessageId=4391
 Severity=Success
@@ -19590,6 +23062,9 @@ Nie można ustawić atrybutu punktu ponownej analizy, ponieważ wchodzi w konfli
 .
 Language=Romanian
 The reparse point attribute cannot be set because it conflicts with an existing attribute.
+.
+Language=Japanese
+リパース ポイント属性は既存の属性と競合するため設定できません。
 .
 
 MessageId=4392
@@ -19608,6 +23083,9 @@ Dane występujące w buforze punktu ponownej analizy są nieprawidłowe.
 Language=Romanian
 The data present in the reparse point buffer is invalid.
 .
+Language=Japanese
+リパース ポイント バッファに存在するデータが無効です。
+.
 
 MessageId=4393
 Severity=Success
@@ -19624,6 +23102,9 @@ Etykieta występująca w buforze punktu ponownej analizy jest nieprawidłowa.
 .
 Language=Romanian
 The tag present in the reparse point buffer is invalid.
+.
+Language=Japanese
+リパース ポイントバッファに存在するタグは無効です。
 .
 
 MessageId=4394
@@ -19642,6 +23123,9 @@ Istnieje niezgodność między etykietą podaną w żądaniu, a etykietą wystę
 Language=Romanian
 There is a mismatch between the tag specified in the request and the tag present in the reparse point.
 .
+Language=Japanese
+要求で指定されたタグとリパース ポイントに存在するタグの間に不一致があります。
+.
 
 MessageId=4500
 Severity=Success
@@ -19658,6 +23142,9 @@ Wolumin ten nie może być woluminem typu SIS (Single Instance Storage).
 .
 Language=Romanian
 Single Instance Storage is not available on this volume.
+.
+Language=Japanese
+シングル インスタンス ストレージはこのボリュームでは使用できません。
 .
 
 MessageId=5001
@@ -19676,6 +23163,9 @@ The cluster resource cannot be moved to another group because other resources ar
 Language=Romanian
 The cluster resource cannot be moved to another group because other resources are dependent on it.
 .
+Language=Japanese
+他のリソースがそのリソースに依存しているため、クラスタ リソースを他のグループに移動することはできません。
+.
 
 MessageId=5002
 Severity=Success
@@ -19692,6 +23182,9 @@ Nie można znaleźć zależności zasobów klastra.
 .
 Language=Romanian
 The cluster resource dependency cannot be found.
+.
+Language=Japanese
+クラスタ リソースの依存関係が見つかりません。
 .
 
 MessageId=5003
@@ -19710,6 +23203,9 @@ Nie można uczynić zasobu klastra zależnym od podanego zasobu, ponieważ jest 
 Language=Romanian
 The cluster resource cannot be made dependent on the specified resource because it is already dependent.
 .
+Language=Japanese
+クラスタ リソースはすでに依存関係にあるため、指定されたリソースに依存させることはできません。
+.
 
 MessageId=5004
 Severity=Success
@@ -19726,6 +23222,9 @@ Zasób klastra nie jest w trybie online.
 .
 Language=Romanian
 The cluster resource is not online.
+.
+Language=Japanese
+クラスタ リソースがオンラインではありません。
 .
 
 MessageId=5005
@@ -19744,6 +23243,9 @@ Węzeł klastra nie jest dostępny dla tej operacji.
 Language=Romanian
 A cluster node is not available for this operation.
 .
+Language=Japanese
+クラスタ ノードがこの操作で使用できません。
+.
 
 MessageId=5006
 Severity=Success
@@ -19760,6 +23262,9 @@ Zasób klastra nie jest dostępny.
 .
 Language=Romanian
 The cluster resource is not available.
+.
+Language=Japanese
+クラスタ リソースが使用できません。
 .
 
 MessageId=5007
@@ -19778,6 +23283,9 @@ Nie można znaleźć zasobu klastra.
 Language=Romanian
 The cluster resource could not be found.
 .
+Language=Japanese
+クラスタ リソースが見つかりませんでした。
+.
 
 MessageId=5008
 Severity=Success
@@ -19794,6 +23302,9 @@ Trwa zamykanie klastra.
 .
 Language=Romanian
 The cluster is being shut down.
+.
+Language=Japanese
+クラスタがシャットダウンされました。
 .
 
 MessageId=5009
@@ -19812,6 +23323,9 @@ Węzła klastra nie można wykluczyć z klastra, chyba że węzeł nie działa.
 Language=Romanian
 A cluster node cannot be evicted from the cluster unless the node is down.
 .
+Language=Japanese
+ノードがダウンしているか最後のノードでない限り、クラスタ ノードをクラスタから退去させることはできません。
+.
 
 MessageId=5010
 Severity=Success
@@ -19828,6 +23342,9 @@ Obiekt już istnieje.
 .
 Language=Romanian
 The object already exists.
+.
+Language=Japanese
+オブジェクトはすでに存在します。
 .
 
 MessageId=5011
@@ -19846,6 +23363,9 @@ Obiekt już występuje na liście.
 Language=Romanian
 The object is already in the list.
 .
+Language=Japanese
+オブジェクトはすでにリストにあります。
+.
 
 MessageId=5012
 Severity=Success
@@ -19862,6 +23382,9 @@ Grupa klastrów nie jest dostępna dla żadnych nowych żądań.
 .
 Language=Romanian
 The cluster group is not available for any new requests.
+.
+Language=Japanese
+クラスタ グループは新しい要求に対して使用できません。
 .
 
 MessageId=5013
@@ -19880,6 +23403,9 @@ Nie można znaleźć grupy klastrów.
 Language=Romanian
 The cluster group could not be found.
 .
+Language=Japanese
+クラスタ グループが見つかりません。
+.
 
 MessageId=5014
 Severity=Success
@@ -19896,6 +23422,9 @@ Nie można ukończyć operacji, ponieważ grupa klastrów nie pracuje w trybie o
 .
 Language=Romanian
 The operation could not be completed because the cluster group is not online.
+.
+Language=Japanese
+クラスタ グループがオンラインではないため、操作を完了できませんでした。
 .
 
 MessageId=5015
@@ -19914,6 +23443,9 @@ Określony węzeł klastra nie jest właścicielem zasobu.
 Language=Romanian
 The cluster node is not the owner of the resource.
 .
+Language=Japanese
+指定されたクラスタ ノードはリソースの所有者ではありません。
+.
 
 MessageId=5016
 Severity=Success
@@ -19930,6 +23462,9 @@ Określony węzeł klastra nie jest właścicielem zasobu.
 .
 Language=Romanian
 The cluster node is not the owner of the group.
+.
+Language=Japanese
+指定されたクラスタ ノードはグループの所有者ではありません。
 .
 
 MessageId=5017
@@ -19948,6 +23483,9 @@ Nie można utworzyć zasobu klastra za pomocą podanego monitora zasobów.
 Language=Romanian
 The cluster resource could not be created in the specified resource monitor.
 .
+Language=Japanese
+指定されたリソース モニタにクラスタ リソースを作成できませんでした。
+.
 
 MessageId=5018
 Severity=Success
@@ -19964,6 +23502,9 @@ Nie można przełączyć zasobu klastra do trybu online za pomocą monitora zaso
 .
 Language=Romanian
 The cluster resource could not be brought online by the resource monitor.
+.
+Language=Japanese
+クラスタ リソースをリソース モニタでオンラインにできませんでした。
 .
 
 MessageId=5019
@@ -19982,6 +23523,9 @@ Nie można ukończyć operacji, ponieważ zasób klastra jest w trybie online.
 Language=Romanian
 The operation could not be completed because the cluster resource is online.
 .
+Language=Japanese
+クラスタ リソースがオンラインであるため、操作を完了できませんでした。
+.
 
 MessageId=5020
 Severity=Success
@@ -19998,6 +23542,9 @@ Nie można usunąć zasobu klastra ani przełączyć go do trybu offline, poniew
 .
 Language=Romanian
 The cluster resource could not be deleted or brought offline because it is the quorum resource.
+.
+Language=Japanese
+クラスタ リソースがクォーラム リソースであるため、削除またはオフラインにできませんでした。
 .
 
 MessageId=5021
@@ -20016,6 +23563,9 @@ Klaster nie może uczynić podanego zasobu zasobem kworum, ponieważ nie ma on m
 Language=Romanian
 The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
 .
+Language=Japanese
+クラスタが指定されたリソースをクォーラム リソースにできませんでした。
+.
 
 MessageId=5022
 Severity=Success
@@ -20032,6 +23582,9 @@ Trwa zamykanie oprogramowania klastra.
 .
 Language=Romanian
 The cluster software is shutting down.
+.
+Language=Japanese
+クラスタ ソフトウェアをシャットダウンしています。
 .
 
 MessageId=5023
@@ -20050,6 +23603,9 @@ Grupa lub zasób nie jest w odpowiednim stanie, aby można było wykonać żąda
 Language=Romanian
 The group or resource is not in the correct state to perform the requested operation.
 .
+Language=Japanese
+グループまたはリソースが要求された操作を実行するのに適切な状態ではありません。
+.
 
 MessageId=5024
 Severity=Success
@@ -20066,6 +23622,9 @@ Właściwości zostały zapisane, lecz niektóre zmiany zostaną wprowadzone dop
 .
 Language=Romanian
 The properties were stored but not all changes will take effect until the next time the resource is brought online.
+.
+Language=Japanese
+プロパティは保存されましたが、リソースが次回オンラインになるまですべての変更が反映されません。
 .
 
 MessageId=5025
@@ -20084,6 +23643,9 @@ Klaster nie może uczynić podanego zasobu zasobem kworum, ponieważ nie należy
 Language=Romanian
 The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
 .
+Language=Japanese
+指定されたリソースが共有ストレージ クラスに属していないため、クラスタをクォーラム リソースにできませんでした。
+.
 
 MessageId=5026
 Severity=Success
@@ -20100,6 +23662,9 @@ Nie można usunąć zasobu klastra, ponieważ jest to zasób główny.
 .
 Language=Romanian
 The cluster resource could not be deleted since it is a core resource.
+.
+Language=Japanese
+クラスタ リソースはコア リソースであるため削除できませんでした。
 .
 
 MessageId=5027
@@ -20118,6 +23683,9 @@ Nie udało się przełączyć zasobu kworum do trybu online.
 Language=Romanian
 The quorum resource failed to come online.
 .
+Language=Japanese
+クォーラム リソースのオンライン化に失敗しました。
+.
 
 MessageId=5028
 Severity=Success
@@ -20134,6 +23702,9 @@ Nie można utworzyć lub pomyślnie zainstalować dziennika kworum.
 .
 Language=Romanian
 The quorum log could not be created or mounted successfully.
+.
+Language=Japanese
+クォーラム ログを正常に作成またはマウントできませんでした。
 .
 
 MessageId=5029
@@ -20152,6 +23723,9 @@ Dziennik klastrów jest uszkodzony.
 Language=Romanian
 The cluster log is corrupt.
 .
+Language=Japanese
+クラスタ ログが壊れています。
+.
 
 MessageId=5030
 Severity=Success
@@ -20168,6 +23742,9 @@ Nie można zapisać rekordu do dziennika klastrów, ponieważ wielkość rekordu
 .
 Language=Romanian
 The record could not be written to the cluster log since it exceeds the maximum size.
+.
+Language=Japanese
+レコードが最大サイズを超えるため、クラスタ ログに書き込めませんでした。
 .
 
 MessageId=5031
@@ -20186,6 +23763,9 @@ Dziennik klastrów przekracza maksymalny rozmiar.
 Language=Romanian
 The cluster log exceeds its maximum size.
 .
+Language=Japanese
+クラスタ ログが最大サイズを超えました。
+.
 
 MessageId=5032
 Severity=Success
@@ -20202,6 +23782,9 @@ W dzienniku klastrów nie znaleziono żadnego rekordu punktu kontrolnego.
 .
 Language=Romanian
 No checkpoint record was found in the cluster log.
+.
+Language=Japanese
+クラスタ ログにチェックポイント レコードが見つかりませんでした。
 .
 
 MessageId=5033
@@ -20220,6 +23803,9 @@ Nie jest dostępna minimalna ilość miejsca wymagana do rejestrowania w dzienni
 Language=Romanian
 The minimum required disk space needed for logging is not available.
 .
+Language=Japanese
+ロギングに必要な最小限のディスク領域がありません。
+.
 
 MessageId=5034
 Severity=Success
@@ -20236,6 +23822,9 @@ Węzeł klastra nie może przejąć kontroli nad zasobem kworum, ponieważ zasó
 .
 Language=Romanian
 The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
+.
+Language=Japanese
+クラスタ ノードがクォーラム リソースの制御に失敗しました。
 .
 
 MessageId=5035
@@ -20254,6 +23843,9 @@ Sieć klastrów nie jest dostępna dla tej operacji.
 Language=Romanian
 A cluster network is not available for this operation.
 .
+Language=Japanese
+クラスタ ネットワークがこの操作で使用できません。
+.
 
 MessageId=5036
 Severity=Success
@@ -20270,6 +23862,9 @@ Węzeł klastra nie jest dostępny dla tej operacji.
 .
 Language=Romanian
 A cluster node is not available for this operation.
+.
+Language=Japanese
+この操作ではクラスタ ノードを使用できません。
 .
 
 MessageId=5037
@@ -20288,6 +23883,9 @@ Aby można było wykonać tę operację, muszą być uruchomione wszystkie węz�
 Language=Romanian
 All cluster nodes must be running to perform this operation.
 .
+Language=Japanese
+この操作を実行するには、すべてのクラスタ ノードが実行中である必要があります。
+.
 
 MessageId=5038
 Severity=Success
@@ -20304,6 +23902,9 @@ Błąd zasobu klastra.
 .
 Language=Romanian
 A cluster resource failed.
+.
+Language=Japanese
+クラスタ リソースが失敗しました。
 .
 
 MessageId=5039
@@ -20322,6 +23923,9 @@ Węzeł klastra jest nieprawidłowy.
 Language=Romanian
 The cluster node is not valid.
 .
+Language=Japanese
+クラスタ ノードが無効です。
+.
 
 MessageId=5040
 Severity=Success
@@ -20338,6 +23942,9 @@ Węzeł klastra już istnieje.
 .
 Language=Romanian
 The cluster node already exists.
+.
+Language=Japanese
+クラスタノードはすでに存在します。
 .
 
 MessageId=5041
@@ -20356,6 +23963,9 @@ Trwa proces przyłączania węzła do klastra.
 Language=Romanian
 A node is in the process of joining the cluster.
 .
+Language=Japanese
+ノードがクラスタに参加中です。
+.
 
 MessageId=5042
 Severity=Success
@@ -20372,6 +23982,9 @@ Nie znaleziono węzła klastra.
 .
 Language=Romanian
 The cluster node was not found.
+.
+Language=Japanese
+クラスタ ノードが見つかりませんでした。
 .
 
 MessageId=5043
@@ -20390,6 +24003,9 @@ Nie znaleziono informacji o lokalnym węźle klastra.
 Language=Romanian
 The cluster local node information was not found.
 .
+Language=Japanese
+クラスタのローカル ノード情報が見つかりませんでした。
+.
 
 MessageId=5044
 Severity=Success
@@ -20406,6 +24022,9 @@ Sieć klastrów już istnieje.
 .
 Language=Romanian
 The cluster network already exists.
+.
+Language=Japanese
+クラスタ ネットワークは既に存在します。
 .
 
 MessageId=5045
@@ -20424,6 +24043,9 @@ Nie znaleziono sieci klastrów.
 Language=Romanian
 The cluster network was not found.
 .
+Language=Japanese
+クラスタ ネットワークが見つかりませんでした。
+.
 
 MessageId=5046
 Severity=Success
@@ -20440,6 +24062,9 @@ Interfejs sieci klastrów już istnieje.
 .
 Language=Romanian
 The cluster network interface already exists.
+.
+Language=Japanese
+クラスタ ネットワーク インタフェースは既に存在します。
 .
 
 MessageId=5047
@@ -20458,6 +24083,9 @@ Nie znaleziono interfejsu sieci klastrów.
 Language=Romanian
 The cluster network interface was not found.
 .
+Language=Japanese
+クラスタ ネットワーク インタフェースが見つかりませんでした。
+.
 
 MessageId=5048
 Severity=Success
@@ -20474,6 +24102,9 @@ Language=Polish
 .
 Language=Romanian
 The cluster request is not valid for this object.
+.
+Language=Japanese
+クラスタ要求はこのオブジェクトに対して有効ではありません。
 .
 
 MessageId=5049
@@ -20492,6 +24123,9 @@ Dostawca sieci klastrów jest nieprawidłowy.
 Language=Romanian
 The cluster network provider is not valid.
 .
+Language=Japanese
+クラスタ ネットワーク プロバイダが無効です。
+.
 
 MessageId=5050
 Severity=Success
@@ -20508,6 +24142,9 @@ Węzeł klastra nie działa.
 .
 Language=Romanian
 The cluster node is down.
+.
+Language=Japanese
+クラスタ ノードがダウンしています。
 .
 
 MessageId=5051
@@ -20526,6 +24163,9 @@ Węzeł klastra jest nieosiągalny.
 Language=Romanian
 The cluster node is not reachable.
 .
+Language=Japanese
+クラスタ ノードにアクセスできません。
+.
 
 MessageId=5052
 Severity=Success
@@ -20542,6 +24182,9 @@ Węzeł klastra nie należy do klastra.
 .
 Language=Romanian
 The cluster node is not a member of the cluster.
+.
+Language=Japanese
+クラスタノードはクラスタのメンバではありません。
 .
 
 MessageId=5053
@@ -20560,6 +24203,9 @@ Operacja dołączania klastra nie jest realizowana.
 Language=Romanian
 A cluster join operation is not in progress.
 .
+Language=Japanese
+クラスタ参加操作が進行中ではありません。
+.
 
 MessageId=5054
 Severity=Success
@@ -20576,6 +24222,9 @@ Sieć klastrów jest nieprawidłowa.
 .
 Language=Romanian
 The cluster network is not valid.
+.
+Language=Japanese
+クラスタ ネットワークが無効です。
 .
 
 MessageId=5056
@@ -20594,6 +24243,9 @@ Węzeł klastra działa.
 Language=Romanian
 The cluster node is up.
 .
+Language=Japanese
+クラスタ ノードがアップしました。
+.
 
 MessageId=5057
 Severity=Success
@@ -20610,6 +24262,9 @@ Adres IP klastra jest już używany.
 .
 Language=Romanian
 The cluster IP address is already in use.
+.
+Language=Japanese
+クラスタIPアドレスはすでに使用されています。
 .
 
 MessageId=5058
@@ -20628,6 +24283,9 @@ Węzeł klastra nie jest wstrzymany.
 Language=Romanian
 The cluster node is not paused.
 .
+Language=Japanese
+クラスタノードは一時停止していません。
+.
 
 MessageId=5059
 Severity=Success
@@ -20644,6 +24302,9 @@ Nie jest dostępny żaden kontekst zabezpieczenia klastra.
 .
 Language=Romanian
 No cluster security context is available.
+.
+Language=Japanese
+クラスタ セキュリティ コンテキストがありません。
 .
 
 MessageId=5060
@@ -20662,6 +24323,9 @@ Sieć klastrów nie jest skonfigurowana tak, aby zapewniała wewnętrzną komuni
 Language=Romanian
 The cluster network is not configured for internal cluster communication.
 .
+Language=Japanese
+クラスタ ネットワークがクラスタ内部通信用に構成されていません。
+.
 
 MessageId=5061
 Severity=Success
@@ -20678,6 +24342,9 @@ Węzeł klastra już działa.
 .
 Language=Romanian
 The cluster node is already up.
+.
+Language=Japanese
+クラスタ ノードがすでに起動しています。
 .
 
 MessageId=5062
@@ -20696,6 +24363,9 @@ Węzeł klastra już nie działa.
 Language=Romanian
 The cluster node is already down.
 .
+Language=Japanese
+クラスタ ノードはすでにダウンしています。
+.
 
 MessageId=5063
 Severity=Success
@@ -20712,6 +24382,9 @@ Sieć klastrów już jest w trybie online.
 .
 Language=Romanian
 The cluster network is already online.
+.
+Language=Japanese
+クラスタ ネットワークはすでにオンラインです。
 .
 
 MessageId=5064
@@ -20730,6 +24403,9 @@ Sieć klastrów już jest w trybie offline.
 Language=Romanian
 The cluster network is already offline.
 .
+Language=Japanese
+クラスタ ネットワークはすでにオフラインです。
+.
 
 MessageId=5065
 Severity=Success
@@ -20746,6 +24422,9 @@ Węzeł klastra już należy do klastra.
 .
 Language=Romanian
 The cluster node is already a member of the cluster.
+.
+Language=Japanese
+クラスタノードはすでにクラスタのメンバです。
 .
 
 MessageId=5066
@@ -20764,6 +24443,9 @@ Sieć klastrów jest jedyną siecią skonfigurowaną tak, aby zapewniała wewnę
 Language=Romanian
 The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
 .
+Language=Japanese
+クラスタ ネットワークは、2つ以上のアクティブなクラスタ ノード間のクラスタ内部通信用に構成されたものだけです。内部通信機能はネットワークから削除できません。
+.
 
 MessageId=5067
 Severity=Success
@@ -20780,6 +24462,9 @@ Co najmniej jeden z zasobów klastra świadczy usługi klientom poprzez sieć. N
 .
 Language=Romanian
 One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
+.
+Language=Japanese
+1つ以上のクラスタ リソースがクライアントにサービスを提供するためにネットワークに依存しています。クライアント アクセス ケイパビリティをネットワークから削除できません。
 .
 
 MessageId=5068
@@ -20798,6 +24483,9 @@ Tej operacji nie można wykonać na zasobie klastra, ponieważ jest to zasób kw
 Language=Romanian
 This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
 .
+Language=Japanese
+この操作はクォーラム リソースを含むクラスタ グループでは現在実行できません。
+.
 
 MessageId=5069
 Severity=Success
@@ -20814,6 +24502,9 @@ Zasób klastra kworum nie może mieć żadnych zależności.
 .
 Language=Romanian
 The cluster quorum resource is not allowed to have any dependencies.
+.
+Language=Japanese
+クラスタ クォーラム リソースは依存関係を持つことを許可されていません。
 .
 
 MessageId=5070
@@ -20832,6 +24523,9 @@ Węzeł klastra jest wstrzymany.
 Language=Romanian
 The cluster node is paused.
 .
+Language=Japanese
+クラスタ ノードが一時停止しています。
+.
 
 MessageId=5071
 Severity=Success
@@ -20848,6 +24542,10 @@ Nie można przełączyć zasobu klastra do trybu online. Węzeł-właściciel ni
 .
 Language=Romanian
 The cluster resource cannot be brought online. The owner node cannot run this resource.
+.
+Language=Japanese
+クラスタ リソースをオンラインにできません。
+所有ノードはこのリソースを実行できません。
 .
 
 MessageId=5072
@@ -20866,6 +24564,9 @@ Węzeł klastra nie jest gotowy wykonać żądaną operację.
 Language=Romanian
 The cluster node is not ready to perform the requested operation.
 .
+Language=Japanese
+クラスタ ノードが要求された操作を実行する準備ができていません。
+.
 
 MessageId=5073
 Severity=Success
@@ -20882,6 +24583,9 @@ Węzeł klastra jest zamykany.
 .
 Language=Romanian
 The cluster node is shutting down.
+.
+Language=Japanese
+クラスタ ノードをシャットダウンしています。
 .
 
 MessageId=5074
@@ -20900,6 +24604,9 @@ Operacja łączenia klastra została przerwana.
 Language=Romanian
 The cluster join operation was aborted.
 .
+Language=Japanese
+クラスタ参加操作が中断されました。
+.
 
 MessageId=5075
 Severity=Success
@@ -20916,6 +24623,9 @@ Operacja przyłączenia do klastra nie powiodła się z powodu niezgodności wer
 .
 Language=Romanian
 The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
+.
+Language=Japanese
+参加ノードとクラスタ内の他のノードのオペレーティング システムのバージョンに互換性がないため、ノードのクラスタ参加に失敗しました。
 .
 
 MessageId=5076
@@ -20934,6 +24644,9 @@ Nie można utworzyć tego zasobu, ponieważ klaster osiągnął limit liczby zas
 Language=Romanian
 This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
 .
+Language=Japanese
+クラスタが監視できるリソース数の上限に達したため、このリソースを作成できません。
+.
 
 MessageId=5077
 Severity=Success
@@ -20950,6 +24663,9 @@ Konfiguracja systemu zmieniła się podczas wykonywania operacji łączenia lub 
 .
 Language=Romanian
 The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
+.
+Language=Japanese
+クラスタ参加またはフォーム操作中にシステム構成が変更されました。参加またはフォーム操作は中止されました。
 .
 
 MessageId=5078
@@ -20968,6 +24684,9 @@ Nie znaleziono podanego typu zasobu.
 Language=Romanian
 The specified resource type was not found.
 .
+Language=Japanese
+指定されたリソース タイプが見つかりませんでした。
+.
 
 MessageId=5079
 Severity=Success
@@ -20984,6 +24703,9 @@ Podany węzeł nie obsługuje zasobów tego typu. Może być to spowodowane niez
 .
 Language=Romanian
 The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
+.
+Language=Japanese
+指定されたノードはこのタイプのリソースをサポートしていません。これは、バージョンの不一致、またはこのノードにリソースDLLがないことが原因です。
 .
 
 MessageId=5080
@@ -21002,6 +24724,9 @@ Podana nazwa zasobu nie jest obsługiwana przez tę bibliotekę DLL. Może to by
 Language=Romanian
 The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
 .
+Language=Japanese
+指定されたリソース名は、このリソースDLLではサポートされていません。これは、リソースDLLに提供された名前が間違っている (または変更された) ことが原因である可能性があります。
+.
 
 MessageId=5081
 Severity=Success
@@ -21018,6 +24743,9 @@ Na serwerze RPC nie można zarejestrować żadnego pakietu uwierzytelnień.
 .
 Language=Romanian
 No authentication package could be registered with the RPC server.
+.
+Language=Japanese
+認証パッケージを RPC サーバーに登録できませんでした。
 .
 
 MessageId=5082
@@ -21036,6 +24764,9 @@ Nie można przełączyć grupy do trybu online, ponieważ właściciel grupy nie
 Language=Romanian
 You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
 .
+Language=Japanese
+グループの所有者がグループの優先リストにないため、グループをオンラインにできません。グループの所有者ノードを変更するには、グループを移動してください。
+.
 
 MessageId=5083
 Severity=Success
@@ -21052,6 +24783,9 @@ Operacja łączenia nie powiodła się, ponieważ numer sekwencyjny bazy danych 
 .
 Language=Romanian
 The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
+.
+Language=Japanese
+クラスタ データベースのシーケンス番号が変更されたか、ロッカー ノードと互換性がないため、参加操作に失敗しました。これは、参加中にクラスタ データベースが変更された場合に、参加操作中に発生する可能性があります。
 .
 
 MessageId=5084
@@ -21070,6 +24804,9 @@ Monitorów zasobów nie pozwoli na wykonanie błędnej operacji, gdy zasób jest
 Language=Romanian
 The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
 .
+Language=Japanese
+リソースが現在の状態の間、リソース モニタはフェイル操作の実行を許可しません。リソースがペンディング状態の場合に発生する可能性があります。
+.
 
 MessageId=5085
 Severity=Success
@@ -21086,6 +24823,9 @@ Kod nieblokujący odebrał żądanie zarezerwowania tej blokady w celu przeprowa
 .
 Language=Romanian
 A non locker code got a request to reserve the lock for making global updates.
+.
+Language=Japanese
+非ロッカー コードがグローバル更新のためのロック予約要求を受け取りました。
 .
 
 MessageId=5086
@@ -21104,6 +24844,9 @@ Usługa klastrowania nie może zlokalizować dysku kworum.
 Language=Romanian
 The quorum disk could not be located by the cluster service.
 .
+Language=Japanese
+クラスタサービスによってクォーラムディスクを検出できませんでした。
+.
 
 MessageId=5087
 Severity=Success
@@ -21120,6 +24863,9 @@ Kopia zapasowa bazy danych klastra prawdopodobnie jest uszkodzona.
 .
 Language=Romanian
 The backup up cluster database is possibly corrupt.
+.
+Language=Japanese
+バックアップされたクラスタ データベースが破損している可能性があります。
 .
 
 MessageId=5088
@@ -21138,6 +24884,9 @@ W tym węźle klastra już występuje system DFS.
 Language=Romanian
 A DFS root already exists in this cluster node.
 .
+Language=Japanese
+DFSルートがこのクラスタノードにすでに存在します。
+.
 
 MessageId=5089
 Severity=Success
@@ -21154,6 +24903,9 @@ Nie można zmodyfikować właściwości zasobu, ponieważ nowa właściwość wc
 .
 Language=Romanian
 An attempt to modify a resource property failed because it conflicts with another existing property.
+.
+Language=Japanese
+リソース プロパティを変更しようとしましたが、既存のプロパティと競合したため変更できませんでした。
 .
 
 MessageId=5890
@@ -21172,6 +24924,9 @@ Próbowano wykonać operację, która jest niezgodna z bieżącym stanem członk
 Language=Romanian
 An operation was attempted that is incompatible with the current membership state of the node.
 .
+Language=Japanese
+ノードの現在のメンバシップ状態と互換性のない操作を試みました。
+.
 
 MessageId=5891
 Severity=Success
@@ -21188,6 +24943,9 @@ Zasób kworum nie zawiera dziennika kworum.
 .
 Language=Romanian
 The quorum resource does not contain the quorum log.
+.
+Language=Japanese
+クォーラムリソースにクォーラム ログが含まれていません。
 .
 
 MessageId=5892
@@ -21206,6 +24964,9 @@ Aparat członkostwa zażądał zamknięcia usługi klastrowania na tym węźle.
 Language=Romanian
 The membership engine requested shutdown of the cluster service on this node.
 .
+Language=Japanese
+メンバーシップ エンジンがこのノードのクラスタ サービスのシャットダウンを要求しました。
+.
 
 MessageId=5893
 Severity=Success
@@ -21222,6 +24983,9 @@ Operacja dołączania nie powiodła się, ponieważ identyfikator wystąpienia k
 .
 Language=Romanian
 The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
+.
+Language=Japanese
+参加ノードのクラスタ インスタンスIDがスポンサー ノードのクラスタ インスタンスIDと一致しないため、参加操作は失敗しました。
 .
 
 MessageId=5894
@@ -21240,6 +25004,9 @@ A matching network for the specified IP address could not be found. Please also 
 Language=Romanian
 A matching network for the specified IP address could not be found. Please also specify a subnet mask and a cluster network.
 .
+Language=Japanese
+指定されたIPアドレスに一致するクラスタ ネットワークが見つかりませんでした。
+.
 
 MessageId=5895
 Severity=Success
@@ -21256,6 +25023,9 @@ Rzeczywisty typ danych właściwości nie odpowiada oczekiwanemu typowi danych w
 .
 Language=Romanian
 The actual data type of the property did not match the expected data type of the property.
+.
+Language=Japanese
+プロパティの実際のデータ型がプロパティの予想されるデータ型と一致しませんでした。
 .
 
 MessageId=5896
@@ -21274,6 +25044,9 @@ The cluster node was evicted from the cluster successfully, but the node was not
 Language=Romanian
 The cluster node was evicted from the cluster successfully, but the node was not cleaned up. Extended status information explaining why the node was not cleaned up is available.
 .
+Language=Japanese
+クラスタ ノードは正常にクラスタから削除されましたが、ノードはクリーンアップされませんでした。どのクリーンアップ手順が失敗し、どのように回復するかを確認するには、イベントビューアを使用してFailover Clusteringアプリケーションのイベントログを参照してください。
+.
 
 MessageId=5897
 Severity=Success
@@ -21290,6 +25063,9 @@ Dwie lub więcej wartości parametrów, określonych dla właściwości zasobu, 
 .
 Language=Romanian
 Two or more parameter values specified for a resource's properties are in conflict.
+.
+Language=Japanese
+リソースのプロパティに指定された2つ以上のパラメータ値が競合しています。
 .
 
 MessageId=5898
@@ -21308,6 +25084,9 @@ Ten komputer nie może być członkiem klastra.
 Language=Romanian
 This computer cannot be made a member of a cluster.
 .
+Language=Japanese
+このコンピュータをクラスタのメンバにできません。
+.
 
 MessageId=5899
 Severity=Success
@@ -21324,6 +25103,9 @@ Ten komputer nie może być członkiem klastra, ponieważ nie ma na nim zainstal
 .
 Language=Romanian
 This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
+.
+Language=Japanese
+このコンピュータには正しいバージョンのReactOSがインストールされていないため、クラスタのメンバにできません。
 .
 
 MessageId=5900
@@ -21342,6 +25124,9 @@ Nie można utworzyć klastra o określonej nazwie, ponieważ ta nazwa klastra je
 Language=Romanian
 A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
 .
+Language=Japanese
+指定したクラスタ名がすでに使用されているため、指定したクラスタ名でクラスタを作成できません。別のクラスタ名を指定してください。
+.
 
 MessageId=5901
 Severity=Success
@@ -21358,6 +25143,9 @@ Akcja konfiguracji klastra została już wykonana.
 .
 Language=Romanian
 The cluster configuration action has already been committed.
+.
+Language=Japanese
+クラスタ構成アクションはすでにコミットされています。
 .
 
 MessageId=5902
@@ -21376,6 +25164,9 @@ Nie można wycofać akcji konfiguracji klastra.
 Language=Romanian
 The cluster configuration action could not be rolled back.
 .
+Language=Japanese
+クラスタ構成アクションをロールバックできませんでした。
+.
 
 MessageId=5903
 Severity=Success
@@ -21392,6 +25183,9 @@ Litera dysku przypisana do dysku systemowego w jednym z węzłów jest w konflik
 .
 Language=Romanian
 The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
+.
+Language=Japanese
+あるノードのシステム ディスクに割り当てられたドライブ文字と、別のノードのディスクに割り当てられたドライブ文字が競合しました。
 .
 
 MessageId=5904
@@ -21410,6 +25204,9 @@ Jeden lub kilka węzłów w klastrze korzysta z wersji systemu Windows, która n
 Language=Romanian
 One or more nodes in the cluster are running a version of Windows that does not support this operation.
 .
+Language=Japanese
+クラスタ内の1つまたは複数のノードで、この操作をサポートしないバージョンのReactOSが実行されています。
+.
 
 MessageId=5905
 Severity=Success
@@ -21426,6 +25223,9 @@ Nazwa odpowiedniego konta komputera nie pasuje do nazwy sieciowej tego zasobu.
 .
 Language=Romanian
 The name of the corresponding computer account doesn't match the Network Name for this resource.
+.
+Language=Japanese
+対応するコンピュータのアカウント名がこのリソースのネットワーク名に一致しません。
 .
 
 MessageId=5906
@@ -21444,6 +25244,9 @@ Nie są dostępne żadne karty sieciowe.
 Language=Romanian
 No network adapters are available.
 .
+Language=Japanese
+使用可能なネットワーク アダプタがありません。
+.
 
 MessageId=5907
 Severity=Success
@@ -21460,6 +25263,9 @@ Węzeł klastra uległ awarii.
 .
 Language=Romanian
 The cluster node has been poisoned.
+.
+Language=Japanese
+クラスタ ノードがポイズンされました。
 .
 
 MessageId=6000
@@ -21478,6 +25284,9 @@ Nie można zaszyfrować podanego pliku.
 Language=Romanian
 The specified file could not be encrypted.
 .
+Language=Japanese
+指定されたファイルを暗号化できませんでした。
+.
 
 MessageId=6001
 Severity=Success
@@ -21494,6 +25303,9 @@ Nie można odszyfrować podanego pliku.
 .
 Language=Romanian
 The specified file could not be decrypted.
+.
+Language=Japanese
+指定されたファイルは復号化できませんでした。
 .
 
 MessageId=6002
@@ -21512,6 +25324,9 @@ Określony plik jest zaszyfrowany i użytkownik nie ma możliwości odszyfrowani
 Language=Romanian
 The specified file is encrypted and the user does not have the ability to decrypt it.
 .
+Language=Japanese
+指定されたファイルは暗号化されており、ユーザーには復号化する権限がありません。
+.
 
 MessageId=6003
 Severity=Success
@@ -21528,6 +25343,9 @@ Brak skonfigurowanych prawidłowych zasad odzyskiwania szyfrowania dla tego syst
 .
 Language=Romanian
 There is no valid encryption recovery policy configured for this system.
+.
+Language=Japanese
+このシステムに有効な暗号化回復ポリシーが構成されていません。
 .
 
 MessageId=6004
@@ -21546,6 +25364,9 @@ Wymagany sterownik szyfrowania nie jest załadowany w systemie.
 Language=Romanian
 The required encryption driver is not loaded for this system.
 .
+Language=Japanese
+必要な暗号化ドライバがこのシステムにロードされていません。
+.
 
 MessageId=6005
 Severity=Success
@@ -21562,6 +25383,9 @@ Plik został zaszyfrowany za pomocą sterownika szyfrowania innego niż obecnie 
 .
 Language=Romanian
 The file was encrypted with a different encryption driver than is currently loaded.
+.
+Language=Japanese
+ファイルは現在ロードされている暗号化ドライバとは異なる暗号化ドライバで暗号化されました。
 .
 
 MessageId=6006
@@ -21580,6 +25404,9 @@ Brak zdefiniowanych kluczy EFS dla użytkownika.
 Language=Romanian
 There are no EFS keys defined for the user.
 .
+Language=Japanese
+ユーザーに定義されたEFSキーがありません。
+.
 
 MessageId=6007
 Severity=Success
@@ -21596,6 +25423,9 @@ Określony plik nie jest zaszyfrowany.
 .
 Language=Romanian
 The specified file is not encrypted.
+.
+Language=Japanese
+指定されたファイルは暗号化されていません。
 .
 
 MessageId=6008
@@ -21614,6 +25444,9 @@ Określony plik nie występuje w zdefiniowanym formacie eksportu EFS.
 Language=Romanian
 The specified file is not in the defined EFS export format.
 .
+Language=Japanese
+指定されたファイルは定義されたEFSエクスポート形式ではありません。
+.
 
 MessageId=6009
 Severity=Success
@@ -21630,6 +25463,9 @@ Podany plik jest tylko do odczytu.
 .
 Language=Romanian
 The specified file is read-only.
+.
+Language=Japanese
+指定されたファイルは読み取り専用です。
 .
 
 MessageId=6010
@@ -21648,6 +25484,9 @@ Katalog został wyłączony z szyfrowania.
 Language=Romanian
 The directory has been disabled for encryption.
 .
+Language=Japanese
+ディレクトリは暗号化が無効になっています。
+.
 
 MessageId=6011
 Severity=Success
@@ -21664,6 +25503,9 @@ Serwer nie jest zaufany dla zdalnej operacji szyfrowania.
 .
 Language=Romanian
 The server is not trusted for remote encryption operation.
+.
+Language=Japanese
+サーバーはリモート暗号化操作に対して信頼されていません。
 .
 
 MessageId=6012
@@ -21682,6 +25524,9 @@ Zasady odzyskiwania skonfigurowane dla tego systemu zawierają nieprawidłowy ce
 Language=Romanian
 Recovery policy configured for this system contains invalid recovery certificate.
 .
+Language=Japanese
+このシステムに設定されている回復ポリシーに無効な回復証明書が含まれています。
+.
 
 MessageId=6013
 Severity=Success
@@ -21698,6 +25543,9 @@ Algorytm szyfrowania użyty dla pliku źródłowego wymaga większego buforu klu
 .
 Language=Romanian
 The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
+.
+Language=Japanese
+ソース ファイルで使用される暗号化アルゴリズムには、宛先ファイルで使用されるものより大きなキー バッファが必要です。
 .
 
 MessageId=6014
@@ -21716,6 +25564,9 @@ Dana partycja dysku nie obsługuje szyfrowania plików.
 Language=Romanian
 The disk partition does not support file encryption.
 .
+Language=Japanese
+ディスク パーティションはファイル暗号化をサポートしていません。
+.
 
 MessageId=6015
 Severity=Success
@@ -21732,6 +25583,9 @@ Dla tego komputera szyfrowanie plików jest wyłączone.
 .
 Language=Romanian
 This machine is disabled for file encryption.
+.
+Language=Japanese
+このマシンではファイル暗号化は無効です。
 .
 
 MessageId=6016
@@ -21750,6 +25604,9 @@ Do odszyfrowania tego pliku zaszyfrowanego potrzebny jest nowszy system.
 Language=Romanian
 A newer system is required to decrypt this encrypted file.
 .
+Language=Japanese
+この暗号化されたファイルを復号化するには、新しいシステムが必要です。
+.
 
 MessageId=6118
 Severity=Success
@@ -21766,6 +25623,9 @@ Lista serwerów dla tej grupy roboczej jest obecnie niedostępna.
 .
 Language=Romanian
 The list of servers for this workgroup is not currently available.
+.
+Language=Japanese
+このワークグループのサーバーのリストは現在利用できません。
 .
 
 MessageId=6200
@@ -21784,6 +25644,9 @@ Usługa harmonogramu zadań musi być skonfiguorawana do uruchomienia w systemie
 Language=Romanian
 The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
 .
+Language=Japanese
+タスクスケジューラサービスを正しく機能させるには、システムアカウントで実行するように構成する必要があります。個々のタスクは他のアカウントで実行するように構成できます。
+.
 
 MessageId=7001
 Severity=Success
@@ -21800,6 +25663,9 @@ Podana nazwa sesji jest nieprawidłowa.
 .
 Language=Romanian
 The specified session name is invalid.
+.
+Language=Japanese
+指定されたセッション名が無効です。
 .
 
 MessageId=7002
@@ -21818,6 +25684,9 @@ Podany sterownik protokołu jest nieprawidłowy.
 Language=Romanian
 The specified protocol driver is invalid.
 .
+Language=Japanese
+指定されたプロトコルドライバーが無効です。
+.
 
 MessageId=7003
 Severity=Success
@@ -21834,6 +25703,9 @@ Podany sterownik protokołu nie został znaleziony w ścieżce systemu.
 .
 Language=Romanian
 The specified protocol driver was not found in the system path.
+.
+Language=Japanese
+指定されたプロトコルドライバーがシステムパスに見つかりません。
 .
 
 MessageId=7004
@@ -21852,6 +25724,9 @@ Podany sterownik połączenia terminali nie został znaleziony w ścieżce syste
 Language=Romanian
 The specified terminal connection driver was not found in the system path.
 .
+Language=Japanese
+指定されたターミナル接続ドライバがシステムパスで見つかりません。
+.
 
 MessageId=7005
 Severity=Success
@@ -21868,6 +25743,9 @@ Dla tej sesji nie można utworzyć klucza Rejestru obejmującego rejestrowanie w
 .
 Language=Romanian
 A registry key for event logging could not be created for this session.
+.
+Language=Japanese
+イベントログ用のレジストリキーがこのセッションに作成できませんでした。
 .
 
 MessageId=7006
@@ -21886,6 +25764,9 @@ Usługa o tej samej nazwie już istnieje w systemie.
 Language=Romanian
 A service with the same name already exists on the system.
 .
+Language=Japanese
+同じ名前のサービスがすでにシステムに存在します。
+.
 
 MessageId=7007
 Severity=Success
@@ -21902,6 +25783,9 @@ Operacja zamykania czeka na wykonanie (w tej sesji).
 .
 Language=Romanian
 A close operation is pending on the session.
+.
+Language=Japanese
+セッションでクローズ操作が保留されています。
 .
 
 MessageId=7008
@@ -21920,6 +25804,9 @@ Brak dostępnych wolnych buforów wyjściowych.
 Language=Romanian
 There are no free output buffers available.
 .
+Language=Japanese
+空き出力バッファがありません。
+.
 
 MessageId=7009
 Severity=Success
@@ -21936,6 +25823,9 @@ Nie znaleziono pliku MODEM.INF.
 .
 Language=Romanian
 The MODEM.INF file was not found.
+.
+Language=Japanese
+MODEM.INFファイルが見つかりませんでした。
 .
 
 MessageId=7010
@@ -21954,6 +25844,9 @@ Nazwa modemu nie została znaleziona w pliku MODEM.INF.
 Language=Romanian
 The modem name was not found in MODEM.INF.
 .
+Language=Japanese
+モデム名が MODEM.INF に見つかりませんでした。
+.
 
 MessageId=7011
 Severity=Success
@@ -21970,6 +25863,9 @@ Modem nie akceptuje wysłanego do niego polecenia. Upewnij się, czy nazwa skonf
 .
 Language=Romanian
 The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
+.
+Language=Japanese
+モデムが送信されたコマンドを受け付けませんでした。設定されているモデム名が接続されているモデムと一致しているか確認してください。
 .
 
 MessageId=7012
@@ -21988,6 +25884,9 @@ Modem nie odpowiada na wysłane do niego polecenie. Upewnij się, czy modem jest
 Language=Romanian
 The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
 .
+Language=Japanese
+モデムが送信されたコマンドに応答しませんでした。モデムが正しくケーブル接続され、電源が入っていることを確認してください。
+.
 
 MessageId=7013
 Severity=Success
@@ -22004,6 +25903,9 @@ Nie można wykryć nośnej lub nośna została utracona z powodu rozłączenia.
 .
 Language=Romanian
 Carrier detect has failed or carrier has been dropped due to disconnect.
+.
+Language=Japanese
+キャリア検出に失敗したか、キャリアが切断されました。
 .
 
 MessageId=7014
@@ -22022,6 +25924,9 @@ W wymaganym czasie nie wykryto sygnału wybierania. Sprawdź, czy kabel telefoni
 Language=Romanian
 Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
 .
+Language=Japanese
+必要な時間内にダイヤルトーンが検出されませんでした。電話ケーブルが正しく接続され、機能していることを確認してください。
+.
 
 MessageId=7015
 Severity=Success
@@ -22038,6 +25943,9 @@ Podczas oddzwaniania, w lokacji zdalnej wykryto sygnał zajętości.
 .
 Language=Romanian
 Busy signal detected at remote site on callback.
+.
+Language=Japanese
+コールバック時にリモート サイトでビジー信号が検出されました。
 .
 
 MessageId=7016
@@ -22056,6 +25964,9 @@ Podczas oddzwaniania, w lokacji zdalnej wykryto głos.
 Language=Romanian
 Voice detected at remote site on callback.
 .
+Language=Japanese
+コールバック時にリモート サイトで音声を検出しました。
+.
 
 MessageId=7017
 Severity=Success
@@ -22072,6 +25983,9 @@ Błąd sterownika transportu.
 .
 Language=Romanian
 Transport driver error
+.
+Language=Japanese
+トランスポート ドライバ エラーです。
 .
 
 MessageId=7022
@@ -22090,6 +26004,9 @@ Nie można odnaleźć określonej sesji.
 Language=Romanian
 The specified session cannot be found.
 .
+Language=Japanese
+指定されたセッションが見つかりません。
+.
 
 MessageId=7023
 Severity=Success
@@ -22106,6 +26023,9 @@ Określona nazwa sesji jest już używana.
 .
 Language=Romanian
 The specified session name is already in use.
+.
+Language=Japanese
+指定されたセッション名はすでに使用されています。
 .
 
 MessageId=7024
@@ -22124,6 +26044,9 @@ Nie można ukończyć żądanej operacji, ponieważ połączenie Terminala jest 
 Language=Romanian
 The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
 .
+Language=Japanese
+Remote Desktop Servicesがビジー状態のため、実行しようとしているタスクを完了できません。数分後に再試行してください。他のユーザーはログオンできるはずです。
+.
 
 MessageId=7025
 Severity=Success
@@ -22140,6 +26063,9 @@ Podjęto próbę połączenia z sesją, której tryb wideo nie jest obsługiwany
 .
 Language=Romanian
 An attempt has been made to connect to a session whose video mode is not supported by the current client.
+.
+Language=Japanese
+ビデオモードが現在のクライアントでサポートされていないセッションに接続しようとしました。
 .
 
 MessageId=7035
@@ -22158,6 +26084,9 @@ Aplikacja próbowała włączyć tryb graficzny DOS. Tryb graficzny DOS nie jest
 Language=Romanian
 The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
 .
+Language=Japanese
+アプリケーションが DOS グラフィック モードを有効にしようとしました。DOS グラフィック モードはサポートされていません。
+.
 
 MessageId=7037
 Severity=Success
@@ -22174,6 +26103,9 @@ Twoje uprawnienie do logowania interakcyjnego zostało wyłączone. Skontaktuj s
 .
 Language=Romanian
 Your interactive logon privilege has been disabled. Please contact your administrator.
+.
+Language=Japanese
+対話ログオン権限が無効になりました。管理者に連絡してください。
 .
 
 MessageId=7038
@@ -22192,6 +26124,9 @@ Language=Polish
 Language=Romanian
 The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
 .
+Language=Japanese
+要求された操作はシステム コンソールでのみ実行できます。これは多くの場合、コンソールへの直接アクセスを必要とするドライバまたはシステムDLLが原因です。
+.
 
 MessageId=7040
 Severity=Success
@@ -22208,6 +26143,9 @@ Klient nie odpowiada na komunikat połączenia wysłany przez serwer.
 .
 Language=Romanian
 The client failed to respond to the server connect message.
+.
+Language=Japanese
+クライアントはサーバーの接続メッセージに応答できませんでした。
 .
 
 MessageId=7041
@@ -22226,6 +26164,9 @@ Odłączanie sesji konsoli nie jest obsługiwane.
 Language=Romanian
 Disconnecting the console session is not supported.
 .
+Language=Japanese
+コンソールセッションの切断はサポートされていません。
+.
 
 MessageId=7042
 Severity=Success
@@ -22242,6 +26183,9 @@ Ponowne podłączanie odłączonej sesji do konsoli nie jest obsługiwane.
 .
 Language=Romanian
 Reconnecting a disconnected session to the console is not supported.
+.
+Language=Japanese
+切断されたセッションをコンソールに再接続することはサポートされていません。
 .
 
 MessageId=7044
@@ -22260,6 +26204,9 @@ Language=Polish
 Language=Romanian
 The request to control another session remotely was denied.
 .
+Language=Japanese
+別のセッションをリモートで制御する要求が拒否されました。
+.
 
 MessageId=7045
 Severity=Success
@@ -22276,6 +26223,9 @@ Odmowa dostępu do żądanej sesji.
 .
 Language=Romanian
 The requested session access is denied.
+.
+Language=Japanese
+要求されたセッションへのアクセスが拒否されました。
 .
 
 MessageId=7049
@@ -22294,6 +26244,9 @@ Podany sterownik połączenia terminali jest nieprawidłowy.
 Language=Romanian
 The specified terminal connection driver is invalid.
 .
+Language=Japanese
+指定されたターミナル接続ドライバが無効です。
+.
 
 MessageId=7050
 Severity=Success
@@ -22310,6 +26263,10 @@ Language=Polish
 .
 Language=Romanian
 The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
+.
+Language=Japanese
+要求されたセッションをリモート制御できません。
+セッションが切断されているか、現在ログオンしているユーザーがいない可能性があります。
 .
 
 MessageId=7051
@@ -22328,6 +26285,9 @@ Language=Polish
 Language=Romanian
 The requested session is not configured to allow remote control.
 .
+Language=Japanese
+要求されたセッションはリモート コントロールを許可するように構成されていません。
+.
 
 MessageId=7052
 Severity=Success
@@ -22344,6 +26304,9 @@ Language=Polish
 .
 Language=Romanian
 Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
+.
+Language=Japanese
+このターミナル サーバーへの接続要求は拒否されました。ターミナル サーバーのクライアントライセンス番号は、現在別のユーザーによって使用されています。システム管理者に連絡して、固有のライセンス番号を取得してください。
 .
 
 MessageId=7053
@@ -22362,6 +26325,10 @@ Language=Polish
 Language=Romanian
 Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
 .
+Language=Japanese
+このターミナル サーバーへの接続要求は拒否されました。ターミナル サーバー クライアントのライセンス番号が、ターミナル サーバー クライアントのこのコピーに入力されていません。
+システム管理者に連絡してください。
+.
 
 MessageId=7054
 Severity=Success
@@ -22378,6 +26345,9 @@ System osiągnął ograniczony licencją limit logowania. Spróbuj ponownie pó�
 .
 Language=Romanian
 The system has reached its licensed logon limit. Please try again later.
+.
+Language=Japanese
+このコンピューターへの接続数には制限があり、現在すべての接続が使用中です。後で接続するか、システム管理者に連絡してください。
 .
 
 MessageId=7055
@@ -22396,6 +26366,9 @@ Klient, którego używasz, nie ma licencji na używanie systemu. Żądanie zalog
 Language=Romanian
 The client you are using is not licensed to use this system. Your logon request is denied.
 .
+Language=Japanese
+使用しているクライアントは、このシステムを使用するライセンスがありません。ログオン要求は拒否されました。
+.
 
 MessageId=7056
 Severity=Success
@@ -22412,6 +26385,9 @@ Licencja na używanie systemu wygasła. Żądanie zalogowania zostało odrzucone
 .
 Language=Romanian
 The system license has expired. Your logon request is denied.
+.
+Language=Japanese
+システムのライセンスの有効期限が切れています。ログオン要求は拒否されました。
 .
 
 MessageId=7057
@@ -22430,6 +26406,9 @@ Nie można przerwać zdalnego sterowania, ponieważ określona sesja nie jest st
 Language=Romanian
 Remote control could not be terminated because the specified session is not currently being remotely controlled.
 .
+Language=Japanese
+指定されたセッションは現在リモート制御されていないため、リモート制御を終了できませんでした。
+.
 
 MessageId=7058
 Severity=Success
@@ -22446,6 +26425,9 @@ Zdalne sterowanie konsolą zostało przerwane z powodu zmiany trybu wyświetlani
 .
 Language=Romanian
 The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
+.
+Language=Japanese
+コンソールの表示モードが変更されたため、リモート コントロールを終了しました。リモート コントロールセッションでの表示モードの変更はサポートされていません。
 .
 
 MessageId=7059
@@ -22464,6 +26446,9 @@ Aktywacja została zresetowana maksymalną liczbę razy na tę instalację. Czas
 Language=Romanian
 Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
 .
+Language=Japanese
+アクティベーションが、このインストールの最大回数までリセットされています。アクティベーション タイマーはクリアされません。
+.
 
 MessageId=7060
 Severity=Success
@@ -22480,6 +26465,9 @@ Logowania zdalne są w tej chwili wyłączone.
 .
 Language=Romanian
 Remote logins are currently disabled.
+.
+Language=Japanese
+リモートログインは現在無効になっています。
 .
 
 MessageId=7061
@@ -22498,6 +26486,9 @@ Nie masz odpowiedniego poziomu szyfrowania, aby uzyskać dostęp do tej sesji.
 Language=Romanian
 You do not have the proper encryption level to access this Session.
 .
+Language=Japanese
+このセッションにアクセスするための適切な暗号化レベルがありません。
+.
 
 MessageId=7062
 Severity=Success
@@ -22514,6 +26505,9 @@ Użytkownik %s\\%s jest aktualnie zalogowany na tym komputerze. Tylko bieżący 
 .
 Language=Romanian
 The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
+.
+Language=Japanese
+現在、ユーザ %s\\\\%s がこのコンピュータにログオンしています。現在のユーザまたは管理者のみがこのコンピュータにログオンできます。
 .
 
 MessageId=7063
@@ -22532,6 +26526,9 @@ Użytkownik %s\\%s jest już zalogowany do konsoli tego komputera. Nie masz upra
 Language=Romanian
 The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
 .
+Language=Japanese
+ユーザ %s\\\\%s は、このコンピュータのコンソールに既にログオンしています。現時点ではログインする権限がありません。この問題を解決するには、%sに連絡してログオフさせてください。
+.
 
 MessageId=7064
 Severity=Success
@@ -22548,6 +26545,9 @@ Nie możesz się zalogować z powodu ograniczeń konta.
 .
 Language=Romanian
 Unable to log you on because of an account restriction.
+.
+Language=Japanese
+アカウント制限のためログオンできません。
 .
 
 MessageId=7065
@@ -22566,6 +26566,9 @@ Składnik protokołu RDP %2 wykrył błąd w strumieniu protokołu i rozłączy�
 Language=Romanian
 The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
 .
+Language=Japanese
+RDP プロトコル コンポーネント %2 がプロトコル ストリームでエラーを検出したので、クライアントを切断しました。
+.
 
 MessageId=7066
 Severity=Success
@@ -22582,6 +26585,9 @@ Usługa klienta mapowania dysków została połączona prze użyciu połączenia
 .
 Language=Romanian
 The Client Drive Mapping Service Has Connected on Terminal Connection.
+.
+Language=Japanese
+クライアント ドライブ マッピング サービスがターミナル接続に接続されました。
 .
 
 MessageId=7067
@@ -22600,6 +26606,9 @@ Usługa klienta mapowania dysków została rozłączona prze użyciu połączeni
 Language=Romanian
 The Client Drive Mapping Service Has Disconnected on Terminal Connection.
 .
+Language=Japanese
+クライアント ドライブ マッピング サービスがターミナル接続で切断されました。
+.
 
 MessageId=8001
 Severity=Success
@@ -22616,6 +26625,9 @@ Interfejs API usługi replikacji plików został niepoprawnie wywołany.
 .
 Language=Romanian
 The file replication service API was called incorrectly.
+.
+Language=Japanese
+ファイル レプリケーション サービス API の呼び出しに誤りがありました。
 .
 
 MessageId=8002
@@ -22634,6 +26646,9 @@ Nie można uruchomić usługi replikacji plików.
 Language=Romanian
 The file replication service cannot be started.
 .
+Language=Japanese
+ファイル レプリケーション サービスを開始できません。
+.
 
 MessageId=8003
 Severity=Success
@@ -22650,6 +26665,9 @@ Nie można zatrzymać usługi replikacji plików.
 .
 Language=Romanian
 The file replication service cannot be stopped.
+.
+Language=Japanese
+ファイル レプリケーション サービスを停止できません。
 .
 
 MessageId=8004
@@ -22668,6 +26686,9 @@ Interfejs API usługi replikacji plików przerwał żądanie. Więcej informacji
 Language=Romanian
 The file replication service API terminated the request. The event log may have more information.
 .
+Language=Japanese
+ファイル レプリケーション サービス API が要求を終了しました。イベントログに詳細情報が記載されている場合があります。
+.
 
 MessageId=8005
 Severity=Success
@@ -22684,6 +26705,9 @@ Usługa replikacji plików przerwała żądanie. Więcej informacji można znale
 .
 Language=Romanian
 The file replication service terminated the request. The event log may have more information.
+.
+Language=Japanese
+ファイル レプリケーション サービスが要求を終了しました。イベント ログに詳細情報が記載されている場合があります。
 .
 
 MessageId=8006
@@ -22702,6 +26726,9 @@ Nie można skontaktować się z usługą replikacji plików. Więcej informacji 
 Language=Romanian
 The file replication service cannot be contacted. The event log may have more information.
 .
+Language=Japanese
+ファイル レプリケーション サービスにアクセスできません。イベントログに詳細が記録されている可能性があります。
+.
 
 MessageId=8007
 Severity=Success
@@ -22718,6 +26745,9 @@ Usługa replikacji plików nie może spełnić żądania, ponieważ użytkownik 
 .
 Language=Romanian
 The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
+.
+Language=Japanese
+ユーザーに十分な権限がないため、ファイル レプリケーション サービスは要求を満たすことができません。イベント ログに詳細情報が記載されている場合があります。
 .
 
 MessageId=8008
@@ -22736,6 +26766,9 @@ Usługa replikacji plików nie może spełnić żądania, ponieważ uwierzytelni
 Language=Romanian
 The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
 .
+Language=Japanese
+認証されたRPCが使用できないため、ファイル レプリケーション サービスは要求を満たすことができません。イベント ログに詳細情報が記載されている場合があります。
+.
 
 MessageId=8009
 Severity=Success
@@ -22752,6 +26785,9 @@ Usługa replikacji plików nie może spełnić żądania, ponieważ użytkownik 
 .
 Language=Romanian
 The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
+.
+Language=Japanese
+ユーザーにドメイン コントローラー上で十分な権限がないため、ファイル レプリケーション サービスは要求を満たすことができません。イベントログに詳細情報が記載されている場合があります。
 .
 
 MessageId=8010
@@ -22770,6 +26806,9 @@ Usługa replikacji plików nie może spełnić żądania, ponieważ uwierzytelni
 Language=Romanian
 The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
 .
+Language=Japanese
+認証されたRPCがドメイン コントローラーで使用できないため、ファイルレプリケーションサービスは要求を満たすことができません。イベント ログに詳細情報が記載されている場合があります。
+.
 
 MessageId=8011
 Severity=Success
@@ -22786,6 +26825,9 @@ Usługa replikacji plików nie może skomunikować się z usługą replikacji w 
 .
 Language=Romanian
 The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
+.
+Language=Japanese
+ファイルレプリケーションサービスは、ドメインコントローラのファイルレプリケーションサービスと通信できません。イベントログに詳細情報が記載されている可能性があります。
 .
 
 MessageId=8012
@@ -22804,6 +26846,9 @@ Usługa replikacji plików w kontrolerze domeny nie może skomunikować się z u
 Language=Romanian
 The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
 .
+Language=Japanese
+ドメインコントローラのファイルレプリケーションサービスは、このコンピュータのファイルレプリケーションサービスと通信できません。イベントログに詳細が記載されている場合があります。
+.
 
 MessageId=8013
 Severity=Success
@@ -22820,6 +26865,9 @@ Usługa replikacji plików nie może wypełnić woluminu systemowego, ponieważ 
 .
 Language=Romanian
 The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
+.
+Language=Japanese
+内部エラーが発生したため、ファイルレプリケーションサービスがシステムボリュームを作成できません。イベントログに詳細情報が記載されている場合があります。
 .
 
 MessageId=8014
@@ -22838,6 +26886,9 @@ Usługa replikacji plików nie może wypełnić woluminu systemowego, ponieważ 
 Language=Romanian
 The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
 .
+Language=Japanese
+ファイル レプリケーション サービスがシステム ボリュームに入力できません。
+.
 
 MessageId=8015
 Severity=Success
@@ -22854,6 +26905,9 @@ Usługa replikacji plików nie może przetworzyć żądania. Wolumin systemowy j
 .
 Language=Romanian
 The file replication service cannot process the request. The system volume is busy with a previous request.
+.
+Language=Japanese
+ファイル レプリケーション サービスは要求を処理できません。システム ボリュームは前の要求でビジー状態です。
 .
 
 MessageId=8016
@@ -22872,6 +26926,9 @@ Usługa replikacji plików nie może zatrzymać replikacji woluminu systemowego,
 Language=Romanian
 The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
 .
+Language=Japanese
+内部エラーが発生したため、ファイル レプリケーション サービスはシステム ボリュームのレプリケーションを停止できません。イベント ログに詳細情報が記載されている場合があります。
+.
 
 MessageId=8017
 Severity=Success
@@ -22888,6 +26945,9 @@ Usługa replikacji plików wykryła nieprawidłowy parametr.
 .
 Language=Romanian
 The file replication service detected an invalid parameter.
+.
+Language=Japanese
+ファイル レプリケーション サービスが無効なパラメータを検出しました。
 .
 
 MessageId=8200
@@ -22906,6 +26966,9 @@ Podczas instalowania usługi katalogowej wystąpił błąd. Więcej informacji m
 Language=Romanian
 An error occurred while installing the directory service. For more information, see the event log.
 .
+Language=Japanese
+ディレクトリサービスのインストール中にエラーが発生しました。詳細については、イベントログを参照してください。
+.
 
 MessageId=8201
 Severity=Success
@@ -22922,6 +26985,9 @@ Usługa katalogowa oceniła lokalnie członkostwo w grupach.
 .
 Language=Romanian
 The directory service evaluated group memberships locally.
+.
+Language=Japanese
+ディレクトリ サービスがローカルでグループ メンバーシップを評価しました。
 .
 
 MessageId=8202
@@ -22940,6 +27006,9 @@ Określony atrybut lub wartość usługi katalogowej nie istnieje.
 Language=Romanian
 The specified directory service attribute or value does not exist.
 .
+Language=Japanese
+指定されたディレクトリ サービス属性または値が存在しません。
+.
 
 MessageId=8203
 Severity=Success
@@ -22956,6 +27025,9 @@ Składnia atrybutu podana dla usługi katalogowej jest nieprawidłowa.
 .
 Language=Romanian
 The attribute syntax specified to the directory service is invalid.
+.
+Language=Japanese
+ディレクトリ サービスに指定された属性構文が無効です。
 .
 
 MessageId=8204
@@ -22974,6 +27046,9 @@ Typ atrybutu podany dla usługi katalogowej nie jest zdefiniowany.
 Language=Romanian
 The attribute type specified to the directory service is not defined.
 .
+Language=Japanese
+ディレクトリ サービスに指定された属性タイプが定義されていません。
+.
 
 MessageId=8205
 Severity=Success
@@ -22990,6 +27065,9 @@ Określony atrybut lub wartość usługi katalogowej już istnieje.
 .
 Language=Romanian
 The specified directory service attribute or value already exists.
+.
+Language=Japanese
+指定されたディレクトリ サービスの属性または値は既に存在します。
 .
 
 MessageId=8206
@@ -23008,6 +27086,9 @@ Usługa katalogowa jest zajęta.
 Language=Romanian
 The directory service is busy.
 .
+Language=Japanese
+ディレクトリ サービスがビジーです。
+.
 
 MessageId=8207
 Severity=Success
@@ -23024,6 +27105,9 @@ Usługa katalogowa jest niedostępna.
 .
 Language=Romanian
 The directory service is unavailable.
+.
+Language=Japanese
+ディレクトリサービスは利用できません。
 .
 
 MessageId=8208
@@ -23042,6 +27126,9 @@ Usługa katalogowa nie może przydzielić identyfikatora względnego.
 Language=Romanian
 The directory service was unable to allocate a relative identifier.
 .
+Language=Japanese
+ディレクトリ サービスが相対識別子を割り当てられませんでした。
+.
 
 MessageId=8209
 Severity=Success
@@ -23058,6 +27145,9 @@ Usługa katalogowa wyczerpała pulę identyfikatorów względnych.
 .
 Language=Romanian
 The directory service has exhausted the pool of relative identifiers.
+.
+Language=Japanese
+ディレクトリ サービスは相対識別子のプールを使い果たしました。
 .
 
 MessageId=8210
@@ -23076,6 +27166,9 @@ Nie można wykonać żądanej operacji, ponieważ usługa katalogowa nie jest us
 Language=Romanian
 The requested operation could not be performed because the directory service is not the master for that type of operation.
 .
+Language=Japanese
+ディレクトリ サービスがそのタイプの操作のマスターではないため、要求された操作を実行できませんでした。
+.
 
 MessageId=8211
 Severity=Success
@@ -23092,6 +27185,9 @@ Usługa katalogowa nie może zainicjować podsystemu przydzielającego identyfik
 .
 Language=Romanian
 The directory service was unable to initialize the subsystem that allocates relative identifiers.
+.
+Language=Japanese
+ディレクトリ サービスは相対識別子を割り当てるサブシステムを初期化できませんでした。
 .
 
 MessageId=8212
@@ -23110,6 +27206,9 @@ Language=Polish
 Language=Romanian
 The requested operation did not satisfy one or more constraints associated with the class of the object.
 .
+Language=Japanese
+要求された操作は、オブジェクトのクラスに関連付けられた1つ以上の制約を満たしていません。
+.
 
 MessageId=8213
 Severity=Success
@@ -23126,6 +27225,9 @@ Usługa katalogowa może przeprowadzić żądaną operację tylko na obiekcie ty
 .
 Language=Romanian
 The directory service can perform the requested operation only on a leaf object.
+.
+Language=Japanese
+ディレクトリ サービスは要求された操作をリーフ オブジェクトに対してのみ実行できます。
 .
 
 MessageId=8214
@@ -23144,6 +27246,9 @@ Usługa katalogowa nie może przeprowadzić żądanej operacji na atrybucie RDN 
 Language=Romanian
 The directory service cannot perform the requested operation on the RDN attribute of an object.
 .
+Language=Japanese
+ディレクトリ サービスはオブジェクトのRDN属性に対して要求された操作を実行できません。
+.
 
 MessageId=8215
 Severity=Success
@@ -23160,6 +27265,9 @@ Usługa katalogowa wykryła próbę modyfikacji klasy obiektu.
 .
 Language=Romanian
 The directory service detected an attempt to modify the object class of an object.
+.
+Language=Japanese
+ディレクトリ サービスがオブジェクトのオブジェクト クラスを変更しようとする試みを検出しました。
 .
 
 MessageId=8216
@@ -23178,6 +27286,9 @@ Nie można wykonać żądanej operacji przeniesienia poza domenę.
 Language=Romanian
 The requested cross-domain move operation could not be performed.
 .
+Language=Japanese
+要求されたクロスドメイン移動操作を実行できませんでした。
+.
 
 MessageId=8217
 Severity=Success
@@ -23194,6 +27305,9 @@ Nie można skontaktować się z serwerem wykazu globalnego.
 .
 Language=Romanian
 Unable to contact the global catalog server.
+.
+Language=Japanese
+グローバルカタログサーバーに接続できません。
 .
 
 MessageId=8218
@@ -23212,6 +27326,9 @@ Obiekt zasad jest udostępniany i może być tylko modyfikowany na poziomie gł�
 Language=Romanian
 The policy object is shared and can only be modified at the root.
 .
+Language=Japanese
+ポリシー オブジェクトは共有され、ルートでのみ変更できます。
+.
 
 MessageId=8219
 Severity=Success
@@ -23228,6 +27345,9 @@ Obiekt zasad nie istnieje.
 .
 Language=Romanian
 The policy object does not exist.
+.
+Language=Japanese
+ポリシー オブジェクトが存在しません。
 .
 
 MessageId=8220
@@ -23246,6 +27366,9 @@ Language=Polish
 Language=Romanian
 The requested policy information is only in the directory service.
 .
+Language=Japanese
+要求されたポリシー情報はディレクトリ サービスにしかありません。
+.
 
 MessageId=8221
 Severity=Success
@@ -23262,6 +27385,9 @@ Proces promocji kontrolera domeny jest obecnie aktywny.
 .
 Language=Romanian
 A domain controller promotion is currently active.
+.
+Language=Japanese
+ドメインコントローラのプロモーションが現在アクティブです。
 .
 
 MessageId=8222
@@ -23280,6 +27406,9 @@ Proces promocji kontrolera domeny nie jest obecnie aktywny.
 Language=Romanian
 A domain controller promotion is not currently active
 .
+Language=Japanese
+ドメイン コントローラーのプロモーションは現在アクティブではありません。
+.
 
 MessageId=8224
 Severity=Success
@@ -23296,6 +27425,9 @@ Wystąpił błąd operacji.
 .
 Language=Romanian
 An operations error occurred.
+.
+Language=Japanese
+操作エラーが発生しました。
 .
 
 MessageId=8225
@@ -23314,6 +27446,9 @@ Wystąpił błąd protokołu.
 Language=Romanian
 A protocol error occurred.
 .
+Language=Japanese
+プロトコルエラーが発生しました。
+.
 
 MessageId=8226
 Severity=Success
@@ -23330,6 +27465,9 @@ Limit czasu dla tego żądania został przekroczony.
 .
 Language=Romanian
 The time limit for this request was exceeded.
+.
+Language=Japanese
+この要求の制限時間を超えました。
 .
 
 MessageId=8227
@@ -23348,6 +27486,9 @@ Limit rozmiaru dla tego żądania został przekroczony.
 Language=Romanian
 The size limit for this request was exceeded.
 .
+Language=Japanese
+このリクエストのサイズ制限を超えました。
+.
 
 MessageId=8228
 Severity=Success
@@ -23364,6 +27505,9 @@ Limit administracyjny dla tego żądania został przekroczony.
 .
 Language=Romanian
 The administrative limit for this request was exceeded.
+.
+Language=Japanese
+この要求の管理者リミットを超えました。
 .
 
 MessageId=8229
@@ -23382,6 +27526,10 @@ Wynik porównania: fałsz.
 Language=Romanian
 The compare response was false.
 .
+Language=Japanese
+比較応答が偽です 
+ 。
+.
 
 MessageId=8230
 Severity=Success
@@ -23398,6 +27546,9 @@ Wynik porównania: prawda.
 .
 Language=Romanian
 The compare response was true.
+.
+Language=Japanese
+比較応答はtrueでした。
 .
 
 MessageId=8231
@@ -23416,6 +27567,9 @@ Language=Polish
 Language=Romanian
 The requested authentication method is not supported by the server.
 .
+Language=Japanese
+要求された認証方法はサーバーによってサポートされていません。
+.
 
 MessageId=8232
 Severity=Success
@@ -23432,6 +27586,9 @@ Dla tego serwera jest wymagana bardziej bezpieczna metoda uwierzytelniania.
 .
 Language=Romanian
 A more secure authentication method is required for this server.
+.
+Language=Japanese
+このサーバーにはより安全な認証方法が必要です。
 .
 
 MessageId=8233
@@ -23450,6 +27607,9 @@ Nieodpowiednie uwierzytelnienia.
 Language=Romanian
 Inappropriate authentication.
 .
+Language=Japanese
+不適切な認証です。
+.
 
 MessageId=8234
 Severity=Success
@@ -23466,6 +27626,9 @@ Mechanizm uwierzytelniania jest nieznany.
 .
 Language=Romanian
 The authentication mechanism is unknown.
+.
+Language=Japanese
+認証メカニズムが不明です。
 .
 
 MessageId=8235
@@ -23484,6 +27647,9 @@ Odniesienie zostało zwrócone z serwera.
 Language=Romanian
 A referral was returned from the server.
 .
+Language=Japanese
+認証メカニズムが不明です: サーバーから照会が返されました。
+.
 
 MessageId=8236
 Severity=Success
@@ -23500,6 +27666,9 @@ Serwer nie obsługuje żądanego rozszerzenia krytycznego.
 .
 Language=Romanian
 The server does not support the requested critical extension.
+.
+Language=Japanese
+サーバーは要求された重要な拡張をサポートしていません。
 .
 
 MessageId=8237
@@ -23518,6 +27687,9 @@ To żądanie wymaga bezpiecznego połączenia.
 Language=Romanian
 This request requires a secure connection.
 .
+Language=Japanese
+この要求には安全な接続が必要です。
+.
 
 MessageId=8238
 Severity=Success
@@ -23534,6 +27706,9 @@ Nieodpowiednie dopasowanie.
 .
 Language=Romanian
 Inappropriate matching.
+.
+Language=Japanese
+不適切なマッチングです。
 .
 
 MessageId=8239
@@ -23552,6 +27727,9 @@ Wystąpiło naruszenie więzów.
 Language=Romanian
 A constraint violation occurred.
 .
+Language=Japanese
+制約違反が発生しました: 制約違反が発生しました。
+.
 
 MessageId=8240
 Severity=Success
@@ -23568,6 +27746,9 @@ Nie ma takiego obiektu na serwerze.
 .
 Language=Romanian
 There is no such object on the server.
+.
+Language=Japanese
+サーバー上にそのようなオブジェクトはありません。
 .
 
 MessageId=8241
@@ -23586,6 +27767,9 @@ Problem z aliasem.
 Language=Romanian
 There is an alias problem.
 .
+Language=Japanese
+エイリアスに問題があります。
+.
 
 MessageId=8242
 Severity=Success
@@ -23602,6 +27786,9 @@ Użyto niepoprawnej składni nazwy domeny.
 .
 Language=Romanian
 An invalid dn syntax has been specified.
+.
+Language=Japanese
+無効な dn 構文が指定されました。
 .
 
 MessageId=8243
@@ -23620,6 +27807,9 @@ Obiekt jest obiektem typu liść.
 Language=Romanian
 The object is a leaf object.
 .
+Language=Japanese
+オブジェクトがリーフ オブジェクトです。
+.
 
 MessageId=8244
 Severity=Success
@@ -23636,6 +27826,9 @@ Występuje problem z usunięciem odwołania do aliasu.
 .
 Language=Romanian
 There is an alias dereferencing problem.
+.
+Language=Japanese
+エイリアスの再参照に問題があります。
 .
 
 MessageId=8245
@@ -23654,6 +27847,9 @@ Serwer odmawia przetwarzania żądania.
 Language=Romanian
 The server is unwilling to process the request.
 .
+Language=Japanese
+サーバーはリクエストを処理する気がありません。
+.
 
 MessageId=8246
 Severity=Success
@@ -23670,6 +27866,9 @@ Została wykryta pętla.
 .
 Language=Romanian
 A loop has been detected.
+.
+Language=Japanese
+ループが検出されました。
 .
 
 MessageId=8247
@@ -23688,6 +27887,9 @@ Naruszenie zasad nazewnictwa.
 Language=Romanian
 There is a naming violation.
 .
+Language=Japanese
+ネーミング違反があります。
+.
 
 MessageId=8248
 Severity=Success
@@ -23704,6 +27906,9 @@ Zestaw wynikowy jest zbyt duży.
 .
 Language=Romanian
 The result set is too large.
+.
+Language=Japanese
+結果セットが大きすぎます。
 .
 
 MessageId=8249
@@ -23722,6 +27927,9 @@ Operacja wpływa na wielu agentów DSA.
 Language=Romanian
 The operation affects multiple DSAs
 .
+Language=Japanese
+操作が複数のDSAに影響します。
+.
 
 MessageId=8250
 Severity=Success
@@ -23738,6 +27946,9 @@ Serwer nie działa.
 .
 Language=Romanian
 The server is not operational.
+.
+Language=Japanese
+サーバーが稼動していません。
 .
 
 MessageId=8251
@@ -23756,6 +27967,9 @@ Wstąpił błąd lokalny.
 Language=Romanian
 A local error has occurred.
 .
+Language=Japanese
+ローカルエラーが発生しました。
+.
 
 MessageId=8252
 Severity=Success
@@ -23772,6 +27986,9 @@ Wystąpił błąd kodowania.
 .
 Language=Romanian
 An encoding error has occurred.
+.
+Language=Japanese
+エンコード エラーが発生しました。
 .
 
 MessageId=8253
@@ -23790,6 +28007,9 @@ Wystąpił błąd dekodowania.
 Language=Romanian
 A decoding error has occurred.
 .
+Language=Japanese
+デコードエラーが発生しました。
+.
 
 MessageId=8254
 Severity=Success
@@ -23806,6 +28026,9 @@ Nieznany filtr wyszukiwania.
 .
 Language=Romanian
 The search filter cannot be recognized.
+.
+Language=Japanese
+検索フィルタを認識できません。
 .
 
 MessageId=8255
@@ -23824,6 +28047,9 @@ Co najmniej jeden z parametrów jest niedozwolony.
 Language=Romanian
 One or more parameters are illegal.
 .
+Language=Japanese
+1つ以上のパラメータが不正です。
+.
 
 MessageId=8256
 Severity=Success
@@ -23840,6 +28066,9 @@ Podana metoda nie jest obsługiwana.
 .
 Language=Romanian
 The specified method is not supported.
+.
+Language=Japanese
+指定されたメソッドはサポートされていません。
 .
 
 MessageId=8257
@@ -23858,6 +28087,9 @@ Nie zwrócono żadnych wyników.
 Language=Romanian
 No results were returned.
 .
+Language=Japanese
+結果が返されませんでした。
+.
 
 MessageId=8258
 Severity=Success
@@ -23874,6 +28106,9 @@ Podany formant nie jest obsługiwany przez serwer.
 .
 Language=Romanian
 The specified control is not supported by the server.
+.
+Language=Japanese
+指定されたコントロールはサーバーによってサポートされていません。
 .
 
 MessageId=8259
@@ -23892,6 +28127,9 @@ Klient wykrył pętlę odniesień.
 Language=Romanian
 A referral loop was detected by the client.
 .
+Language=Japanese
+クライアントによって参照ループが検出されました。
+.
 
 MessageId=8260
 Severity=Success
@@ -23908,6 +28146,9 @@ Ustalony wstępnie limit odniesień został przekroczony.
 .
 Language=Romanian
 The preset referral limit was exceeded.
+.
+Language=Japanese
+プリセットの参照制限を超えました。
 .
 
 MessageId=8261
@@ -23926,6 +28167,9 @@ Wyszukiwanie wymaga elementu sterującego SORT.
 Language=Romanian
 The search requires a SORT control.
 .
+Language=Japanese
+検索にはSORTコントロールが必要です。
+.
 
 MessageId=8262
 Severity=Success
@@ -23942,6 +28186,9 @@ Wyniki wyszukiwania przekraczają określony zakres przesunięcia.
 .
 Language=Romanian
 The search results exceed the offset range specified.
+.
+Language=Japanese
+検索結果が指定されたオフセット範囲を超えています。
 .
 
 MessageId=8301
@@ -23960,6 +28207,9 @@ Obiekt główny musi być na początku kontekstu nazewnictwa. Rodzicem obiektu g
 Language=Romanian
 The root object must be the head of a naming context. The root object cannot have an instantiated parent.
 .
+Language=Japanese
+ルート オブジェクトはネーミング コンテキストの先頭でなければなりません。ルート オブジェクトはインスタンス化された親を持つことはできません。
+.
 
 MessageId=8302
 Severity=Success
@@ -23976,6 +28226,9 @@ Nie można wykonać operacji dodania repliki. Kontekst nazewnictwa musi mieć mo
 .
 Language=Romanian
 The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
+.
+Language=Japanese
+レプリカの追加操作は実行できません。レプリカを作成するには、ネーム コンテキストが書き込み可能である必要があります。
 .
 
 MessageId=8303
@@ -23994,6 +28247,9 @@ Wystąpiło odwołanie do atrybutu, który nie jest zdefiniowany w schemacie.
 Language=Romanian
 A reference to an attribute that is not defined in the schema occurred.
 .
+Language=Japanese
+スキーマで定義されていない属性への参照が発生しました。
+.
 
 MessageId=8304
 Severity=Success
@@ -24010,6 +28266,9 @@ Został przekroczony maksymalny rozmiar obiektu.
 .
 Language=Romanian
 The maximum size of an object has been exceeded.
+.
+Language=Japanese
+オブジェクトの最大サイズを超えました。
 .
 
 MessageId=8305
@@ -24028,6 +28287,9 @@ Została podjęta próba dodania do katalogu obiektu o już istniejącej nazwie.
 Language=Romanian
 An attempt was made to add an object to the directory with a name that is already in use.
 .
+Language=Japanese
+既に使用されている名前のオブジェクトをディレクトリに追加しようとしました。
+.
 
 MessageId=8306
 Severity=Success
@@ -24044,6 +28306,9 @@ Została podjęta próba dodania obiektu klasy, która w schemacie nie ma zdefin
 .
 Language=Romanian
 An attempt was made to add an object of a class that does not have an RDN defined in the schema.
+.
+Language=Japanese
+スキーマにRDNが定義されていないクラスのオブジェクトを追加しようとしました。
 .
 
 MessageId=8307
@@ -24062,6 +28327,9 @@ Została podjęta próba dodania obiektu za pomocą nazwy RDN, która nie jest n
 Language=Romanian
 An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
 .
+Language=Japanese
+スキーマで定義されている RDN ではない RDN を使用してオブジェクトを追加しようとしました。
+.
 
 MessageId=8308
 Severity=Success
@@ -24078,6 +28346,9 @@ Nie znaleziono w obiektach żadnych z wymaganych atrybutów.
 .
 Language=Romanian
 None of the requested attributes were found on the objects.
+.
+Language=Japanese
+要求された属性がオブジェクトに見つかりませんでした。
 .
 
 MessageId=8309
@@ -24096,6 +28367,9 @@ Bufor użytkownika jest za mały.
 Language=Romanian
 The user buffer is too small.
 .
+Language=Japanese
+ユーザー バッファが小さすぎます。
+.
 
 MessageId=8310
 Severity=Success
@@ -24112,6 +28386,9 @@ Atrybut podany w operacji nie występuje w obiekcie.
 .
 Language=Romanian
 The attribute specified in the operation is not present on the object.
+.
+Language=Japanese
+操作で指定された属性がオブジェクトに存在しません。
 .
 
 MessageId=8311
@@ -24130,6 +28407,9 @@ Niedozwolona operacja modyfikowania. Niektóre aspekty modyfikacji nie są dozwo
 Language=Romanian
 Illegal modify operation. Some aspect of the modification is not permitted.
 .
+Language=Japanese
+不正な変更操作です。改造の様相は許されません。
+.
 
 MessageId=8312
 Severity=Success
@@ -24146,6 +28426,9 @@ Podany obiekt jest zbyt duży.
 .
 Language=Romanian
 The specified object is too large.
+.
+Language=Japanese
+指定されたオブジェクトが大きすぎます。
 .
 
 MessageId=8313
@@ -24164,6 +28447,9 @@ Podany typ wystąpienia jest nieprawidłowy.
 Language=Romanian
 The specified instance type is not valid.
 .
+Language=Japanese
+指定されたインスタンス タイプが無効です。
+.
 
 MessageId=8314
 Severity=Success
@@ -24180,6 +28466,9 @@ Operacja musi być dokonana na głównym serwerze DSA.
 .
 Language=Romanian
 The operation must be performed at a master DSA.
+.
+Language=Japanese
+操作はマスターDSAで実行する必要があります。
 .
 
 MessageId=8315
@@ -24198,6 +28487,9 @@ Musi być podany atrybut klasy obiektu.
 Language=Romanian
 The object class attribute must be specified.
 .
+Language=Japanese
+オブジェクト クラス属性を指定する必要があります。
+.
 
 MessageId=8316
 Severity=Success
@@ -24214,6 +28506,9 @@ Brak wymaganego atrybutu.
 .
 Language=Romanian
 A required attribute is missing.
+.
+Language=Japanese
+必須属性がありません。
 .
 
 MessageId=8317
@@ -24232,6 +28527,9 @@ Nastąpiła próba modyfikacji obiektu w celu dołączenia atrybutu, który nie 
 Language=Romanian
 An attempt was made to modify an object to include an attribute that is not legal for its class
 .
+Language=Japanese
+オブジェクトを変更して、そのクラスで有効でない属性を含めようとしました。
+.
 
 MessageId=8318
 Severity=Success
@@ -24248,6 +28546,9 @@ Podany atrybut już występuje w obiekcie.
 .
 Language=Romanian
 The specified attribute is already present on the object.
+.
+Language=Japanese
+指定された属性はオブジェクトに既に存在します。
 .
 
 MessageId=8320
@@ -24266,6 +28567,9 @@ Podany atrybut jest nieobecny lub nie ma nadanej wartości.
 Language=Romanian
 The specified attribute is not present, or has no values.
 .
+Language=Japanese
+指定された属性が存在しないか、値がありません。
+.
 
 MessageId=8321
 Severity=Success
@@ -24282,6 +28586,9 @@ Dla atrybutu, który może mieć tylko jedną wartość, zostały podane wielokr
 .
 Language=Romanian
 Multiple values were specified for an attribute that can have only one value.
+.
+Language=Japanese
+値が 1 つしかない属性に複数の値が指定されました。
 .
 
 MessageId=8322
@@ -24300,6 +28607,9 @@ Wartość atrybutu nie mieści się w przedziale dozwolonych wartości.
 Language=Romanian
 A value for the attribute was not in the acceptable range of values.
 .
+Language=Japanese
+属性の値が許容される値の範囲にありませんでした。
+.
 
 MessageId=8323
 Severity=Success
@@ -24316,6 +28626,9 @@ Podana wartość już istnieje.
 .
 Language=Romanian
 The specified value already exists.
+.
+Language=Japanese
+指定された値は既に存在します。
 .
 
 MessageId=8324
@@ -24334,6 +28647,9 @@ Nie można usunąć atrybutu, ponieważ nie występuje on w obiekcie.
 Language=Romanian
 The attribute cannot be removed because it is not present on the object.
 .
+Language=Japanese
+属性がオブジェクトに存在しないため削除できません。
+.
 
 MessageId=8325
 Severity=Success
@@ -24350,6 +28666,9 @@ Nie można usunąć wartości atrybutu, ponieważ nie występuje ona w obiekcie.
 .
 Language=Romanian
 The attribute value cannot be removed because it is not present on the object.
+.
+Language=Japanese
+属性値がオブジェクトに存在しないため、削除できません。
 .
 
 MessageId=8326
@@ -24368,6 +28687,9 @@ Podany obiekt główny nie może być odniesieniem podrzędnym.
 Language=Romanian
 The specified root object cannot be a subref.
 .
+Language=Japanese
+指定されたルート オブジェクトをサブ参照にすることはできません。
+.
 
 MessageId=8327
 Severity=Success
@@ -24384,6 +28706,9 @@ Tworzenie łańcucha nie jest dozwolone.
 .
 Language=Romanian
 Chaining is not permitted.
+.
+Language=Japanese
+チェーンは許可されていません。
 .
 
 MessageId=8328
@@ -24402,6 +28727,9 @@ Ocena łańcuchowa nie jest dozwolona.
 Language=Romanian
 Chained evaluation is not permitted.
 .
+Language=Japanese
+連鎖評価は許可されていません。
+.
 
 MessageId=8329
 Severity=Success
@@ -24418,6 +28746,9 @@ Operacja nie może być wykonana, ponieważ usunięto albo wystąpienie rodzica 
 .
 Language=Romanian
 The operation could not be performed because the object's parent is either uninstantiated or deleted.
+.
+Language=Japanese
+オブジェクトの親がインスタンス化されていないか削除されているため、操作を実行できませんでした。
 .
 
 MessageId=8330
@@ -24436,6 +28767,9 @@ Posiadanie rodzica, który jest aliasem jest niedozwolone. Aliasy są obiektami 
 Language=Romanian
 Having a parent that is an alias is not permitted. Aliases are leaf objects.
 .
+Language=Japanese
+エイリアスを親に持つことは許可されていません。エイリアスはリーフ オブジェクトです。
+.
 
 MessageId=8331
 Severity=Success
@@ -24452,6 +28786,9 @@ Obiekt i rodzic muszą być tego samego typu - muszą być albo obiektami głów
 .
 Language=Romanian
 The object and parent must be of the same type, either both masters or both replicas.
+.
+Language=Japanese
+オブジェクトと親は、両方のマスタまたは両方のレプリカで同じ型でなければなりません。
 .
 
 MessageId=8332
@@ -24470,6 +28807,9 @@ Operacja nie może być wykonana, ponieważ istnieje obiekt podrzędny. Ta opera
 Language=Romanian
 The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
 .
+Language=Japanese
+子オブジェクトが存在するため、操作を実行できません。この操作はリーフ オブジェクトに対してのみ実行できます。
+.
 
 MessageId=8333
 Severity=Success
@@ -24486,6 +28826,9 @@ Nie znaleziono obiektu katalogu.
 .
 Language=Romanian
 Directory object not found.
+.
+Language=Japanese
+ディレクトリ オブジェクトが見つかりません。
 .
 
 MessageId=8334
@@ -24504,6 +28847,9 @@ Brakuje obiektu, dla którego utworzono alias.
 Language=Romanian
 The aliased object is missing.
 .
+Language=Japanese
+エイリアスされたオブジェクトがありません。
+.
 
 MessageId=8335
 Severity=Success
@@ -24520,6 +28866,9 @@ Nazwa obiektu ma złą składnię.
 .
 Language=Romanian
 The object name has bad syntax.
+.
+Language=Japanese
+オブジェクト名の構文が正しくありません。
 .
 
 MessageId=8336
@@ -24538,6 +28887,9 @@ Odwoływanie się aliasu do innego aliasu jest niedozwolone.
 Language=Romanian
 It is not permitted for an alias to refer to another alias.
 .
+Language=Japanese
+エイリアスが別のエイリアスを参照することは許可されていません。
+.
 
 MessageId=8337
 Severity=Success
@@ -24554,6 +28906,9 @@ Nie można usunąć odwołania do aliasu.
 .
 Language=Romanian
 The alias cannot be dereferenced.
+.
+Language=Japanese
+エイリアスを参照解除できません。
 .
 
 MessageId=8338
@@ -24572,6 +28927,9 @@ Operacja wykracza poza zakres.
 Language=Romanian
 The operation is out of scope.
 .
+Language=Japanese
+操作が範囲外です。
+.
 
 MessageId=8339
 Severity=Success
@@ -24588,6 +28946,9 @@ Nie można kontynuować operacji, ponieważ trwa proces usuwania danego obiektu.
 .
 Language=Romanian
 The operation cannot continue because the object is in the process of being removed.
+.
+Language=Japanese
+オブジェクトが削除中なので操作を続行できません。
 .
 
 MessageId=8340
@@ -24606,6 +28967,9 @@ Nie można usunąć obiektu DSA.
 Language=Romanian
 The DSA object cannot be deleted.
 .
+Language=Japanese
+DSA オブジェクトを削除できません。
+.
 
 MessageId=8341
 Severity=Success
@@ -24622,6 +28986,9 @@ Wystąpił błąd usługi katalogowej.
 .
 Language=Romanian
 A directory service error has occurred.
+.
+Language=Japanese
+ディレクトリサービスエラーが発生しました。
 .
 
 MessageId=8342
@@ -24640,6 +29007,9 @@ Operacja może być dokonana jedynie na wewnętrznym głównym obiekcie DSA.
 Language=Romanian
 The operation can only be performed on an internal master DSA object.
 .
+Language=Japanese
+この操作は内部マスターDSAオブジェクトに対してのみ実行できます。
+.
 
 MessageId=8343
 Severity=Success
@@ -24656,6 +29026,9 @@ Obiekt musi być klasy DSA.
 .
 Language=Romanian
 The object must be of class DSA.
+.
+Language=Japanese
+オブジェクトはDSAクラスでなければなりません。
 .
 
 MessageId=8344
@@ -24674,6 +29047,9 @@ Niewystarczające prawa dostępu, aby wykonać tę operację.
 Language=Romanian
 Insufficient access rights to perform the operation.
 .
+Language=Japanese
+操作を実行するためのアクセス権が不足しています。
+.
 
 MessageId=8345
 Severity=Success
@@ -24690,6 +29066,9 @@ Nie można dodać obiektu, ponieważ rodzic nie występuje na liście możliwych
 .
 Language=Romanian
 The object cannot be added because the parent is not on the list of possible superiors.
+.
+Language=Japanese
+親が可能な上位のリストにないため、オブジェクトを追加できません。
 .
 
 MessageId=8346
@@ -24708,6 +29087,9 @@ Dostęp do atrybutu nie jest dozwolony, ponieważ atrybut jest posiadany przez M
 Language=Romanian
 Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
 .
+Language=Japanese
+属性がセキュリティ アカウント マネージャ (SAM) によって所有されているため、属性へのアクセスが許可されていません。
+.
 
 MessageId=8347
 Severity=Success
@@ -24724,6 +29106,9 @@ Nazwa składa się ze zbyt wielu części.
 .
 Language=Romanian
 The name has too many parts.
+.
+Language=Japanese
+名前の部分が多すぎます。
 .
 
 MessageId=8348
@@ -24742,6 +29127,9 @@ Nazwa jest zbyt długa.
 Language=Romanian
 The name is too long.
 .
+Language=Japanese
+名前が長すぎます。
+.
 
 MessageId=8349
 Severity=Success
@@ -24758,6 +29146,9 @@ Wartość nazwy jest zbyt długa.
 .
 Language=Romanian
 The name value is too long.
+.
+Language=Japanese
+名前の値が長すぎます。
 .
 
 MessageId=8350
@@ -24776,6 +29167,9 @@ Usługa katalogowa napotkała błąd podczas analizy nazwy.
 Language=Romanian
 The directory service encountered an error parsing a name.
 .
+Language=Japanese
+ディレクトリ サービスで名前の解析エラーが発生しました。
+.
 
 MessageId=8351
 Severity=Success
@@ -24792,6 +29186,9 @@ Usługa katalogowa nie może uzyskać typu atrybutu dla nazwy.
 .
 Language=Romanian
 The directory service cannot get the attribute type for a name.
+.
+Language=Japanese
+ディレクトリ サービスは名前の属性タイプを取得できません。
 .
 
 MessageId=8352
@@ -24810,6 +29207,9 @@ Nazwa nie określa obiektu; nazwa określa fantom.
 Language=Romanian
 The name does not identify an object; the name identifies a phantom.
 .
+Language=Japanese
+名前がオブジェクトを識別していません。
+.
 
 MessageId=8353
 Severity=Success
@@ -24826,6 +29226,9 @@ Deskryptor zabezpieczenia jest za krótki.
 .
 Language=Romanian
 The security descriptor is too short.
+.
+Language=Japanese
+セキュリティ記述子が短すぎます。
 .
 
 MessageId=8354
@@ -24844,6 +29247,9 @@ Deskryptor zabezpieczenia jest nieprawidłowy.
 Language=Romanian
 The security descriptor is invalid.
 .
+Language=Japanese
+セキュリティ記述子が無効です。
+.
 
 MessageId=8355
 Severity=Success
@@ -24860,6 +29266,9 @@ Nie można utworzyć nazwy dla usuniętego obiektu.
 .
 Language=Romanian
 Failed to create name for deleted object.
+.
+Language=Japanese
+削除されたオブジェクトの名前の作成に失敗しました。
 .
 
 MessageId=8356
@@ -24878,6 +29287,9 @@ Musi istnieć rodzic nowego odwołania podrzędnego.
 Language=Romanian
 The parent of a new subref must exist.
 .
+Language=Japanese
+新しいサブ参照の親が存在する必要があります。
+.
 
 MessageId=8357
 Severity=Success
@@ -24894,6 +29306,9 @@ Obiekt musi być kontekstem nazewnictwa.
 .
 Language=Romanian
 The object must be a naming context.
+.
+Language=Japanese
+オブジェクトはネーミング コンテキストでなければなりません。
 .
 
 MessageId=8358
@@ -24912,6 +29327,9 @@ Nie jest dozwolone dodawanie atrybutu, który jest w posiadaniu systemu.
 Language=Romanian
 It is not permitted to add an attribute which is owned by the system.
 .
+Language=Japanese
+システムが所有する属性を追加することは許可されていません。
+.
 
 MessageId=8359
 Severity=Success
@@ -24928,6 +29346,9 @@ Klasa obiektu musi być strukturalna; nie możesz utworzyć wystąpienia klasy a
 .
 Language=Romanian
 The class of the object must be structural; you cannot instantiate an abstract class.
+.
+Language=Japanese
+オブジェクトのクラスは構造的でなければなりません。
 .
 
 MessageId=8360
@@ -24946,6 +29367,9 @@ Nie znaleziono obiekt schematu.
 Language=Romanian
 The schema object could not be found.
 .
+Language=Japanese
+スキーマ オブジェクトが見つかりません。
+.
 
 MessageId=8361
 Severity=Success
@@ -24962,6 +29386,9 @@ Już istnieje obiekt lokalny o tym identyfikatorze GUID (aktywny lub nieaktywny)
 .
 Language=Romanian
 A local object with this GUID (dead or alive) already exists.
+.
+Language=Japanese
+スキーマ オブジェクトが見つかりません: このGUID (デッドまたはアライブ) を持つローカル オブジェクトがすでに存在します。
 .
 
 MessageId=8362
@@ -24980,6 +29407,9 @@ Operacja nie może być wykonana na odsyłaczu wstecznym.
 Language=Romanian
 The operation cannot be performed on a back link.
 .
+Language=Japanese
+バック リンクに対して操作を実行できません。
+.
 
 MessageId=8363
 Severity=Success
@@ -24996,6 +29426,9 @@ Nie znaleziono odwołania do podanego kontekstu nazewnictwa.
 .
 Language=Romanian
 The cross reference for the specified naming context could not be found.
+.
+Language=Japanese
+指定されたネーミング コンテキストの相互参照が見つかりません。
 .
 
 MessageId=8364
@@ -25014,6 +29447,9 @@ Operacja nie może być wykonana ponieważ usługa katalogowa jest zamykana.
 Language=Romanian
 The operation could not be performed because the directory service is shutting down.
 .
+Language=Japanese
+ディレクトリ サービスがシャットダウンしているため、操作を実行できませんでした。
+.
 
 MessageId=8365
 Severity=Success
@@ -25030,6 +29466,9 @@ Language=Polish
 .
 Language=Romanian
 The directory service request is invalid.
+.
+Language=Japanese
+ディレクトリ サービス要求が無効です。
 .
 
 MessageId=8366
@@ -25048,6 +29487,9 @@ Nie można odczytać atrybutu właściciela roli.
 Language=Romanian
 The role owner attribute could not be read.
 .
+Language=Japanese
+ロール所有者属性を読み取れませんでした。
+.
 
 MessageId=8367
 Severity=Success
@@ -25064,6 +29506,9 @@ Language=Polish
 .
 Language=Romanian
 The requested FSMO operation failed. The current FSMO holder could not be reached.
+.
+Language=Japanese
+要求されたFSMO操作は失敗しました。現在のFSMO保持者に連絡できませんでした。
 .
 
 MessageId=8368
@@ -25082,6 +29527,9 @@ Modyfikowanie nazwy domen poza kontekstem nazewnictwa jest niedozwolone.
 Language=Romanian
 Modification of a DN across a naming context is not permitted.
 .
+Language=Japanese
+ネーミング コンテキスト全体でDNの変更は許可されていません。
+.
 
 MessageId=8369
 Severity=Success
@@ -25098,6 +29546,9 @@ Atrybut nie może być modyfikowany, ponieważ jest w posiadaniu systemu.
 .
 Language=Romanian
 The attribute cannot be modified because it is owned by the system.
+.
+Language=Japanese
+属性はシステムによって所有されているため変更できません。
 .
 
 MessageId=8370
@@ -25116,6 +29567,9 @@ Tylko replikator może wykonać tę funkcję.
 Language=Romanian
 Only the replicator can perform this function.
 .
+Language=Japanese
+レプリケータのみがこの機能を実行できます。
+.
 
 MessageId=8371
 Severity=Success
@@ -25132,6 +29586,9 @@ Podana klasa nie jest zdefiniowana.
 .
 Language=Romanian
 The specified class is not defined.
+.
+Language=Japanese
+指定されたクラスは定義されていません。
 .
 
 MessageId=8372
@@ -25150,6 +29607,9 @@ Podana klasa nie jest podklasą.
 Language=Romanian
 The specified class is not a subclass.
 .
+Language=Japanese
+指定されたクラスはサブクラスではありません。
+.
 
 MessageId=8373
 Severity=Success
@@ -25166,6 +29626,9 @@ Nazwa odwołania jest nieprawidłowa.
 .
 Language=Romanian
 The name reference is invalid.
+.
+Language=Japanese
+名前の参照が無効です。
 .
 
 MessageId=8374
@@ -25184,6 +29647,9 @@ Odwołanie już istnieje.
 Language=Romanian
 A cross reference already exists.
 .
+Language=Japanese
+相互参照は既に存在します。
+.
 
 MessageId=8375
 Severity=Success
@@ -25200,6 +29666,9 @@ Usuwanie głównego odwołania jest niedozwolone.
 .
 Language=Romanian
 It is not permitted to delete a master cross reference.
+.
+Language=Japanese
+マスター相互参照の削除は許可されていません。
 .
 
 MessageId=8376
@@ -25218,6 +29687,9 @@ Powiadomienia poddrzewa są dostarczane tylko do węzłów NC.
 Language=Romanian
 Subtree notifications are only supported on NC heads.
 .
+Language=Japanese
+サブツリー通知はNCヘッドでのみサポートされます。
+.
 
 MessageId=8377
 Severity=Success
@@ -25234,6 +29706,9 @@ Filtr powiadamiania jest zbyt skomplikowany.
 .
 Language=Romanian
 Notification filter is too complex.
+.
+Language=Japanese
+通知フィルタが複雑すぎます。
 .
 
 MessageId=8378
@@ -25252,6 +29727,9 @@ Nie można zaktualizować schematu: zduplikowana nazwa RDN.
 Language=Romanian
 Schema update failed: duplicate RDN.
 .
+Language=Japanese
+スキーマの更新に失敗しました: RDNが重複しています。
+.
 
 MessageId=8379
 Severity=Success
@@ -25268,6 +29746,9 @@ Nie można zaktualizować schematu: zduplikowany identyfikator OID.
 .
 Language=Romanian
 Schema update failed: duplicate OID
+.
+Language=Japanese
+スキーマの更新に失敗しました: OID が重複しています。
 .
 
 MessageId=8380
@@ -25286,6 +29767,9 @@ Nie można zaktualizować schematu: zduplikowany identyfikator MAPI.
 Language=Romanian
 Schema update failed: duplicate MAPI identifier.
 .
+Language=Japanese
+スキーマの更新に失敗しました: MAPI 識別子が重複しています。
+.
 
 MessageId=8381
 Severity=Success
@@ -25302,6 +29786,9 @@ Nie można zaktualizować schematu: zduplikowany identyfikator schematu GUID.
 .
 Language=Romanian
 Schema update failed: duplicate schema-id GUID.
+.
+Language=Japanese
+スキーマの更新に失敗しました: スキーマ ID GUID が重複しています。
 .
 
 MessageId=8382
@@ -25320,6 +29807,9 @@ Nie można zaktualizować schematu: zduplikowana wyświetlana nazwa LDAP.
 Language=Romanian
 Schema update failed: duplicate LDAP display name.
 .
+Language=Japanese
+スキーマの更新に失敗しました: LDAP 表示名が重複しています。
+.
 
 MessageId=8383
 Severity=Success
@@ -25336,6 +29826,9 @@ Nie można zaktualizować schematu: zakres niższy mniejszy niż zakres górny.
 .
 Language=Romanian
 Schema update failed: range-lower less than range upper
+.
+Language=Japanese
+スキーマの更新に失敗しました: range-lower が range upper よりも小さいです。
 .
 
 MessageId=8384
@@ -25354,6 +29847,9 @@ Nie można zaktualizować schematu: niezgodność składni.
 Language=Romanian
 Schema update failed: syntax mismatch
 .
+Language=Japanese
+スキーマの更新に失敗しました: 構文の不一致です。
+.
 
 MessageId=8385
 Severity=Success
@@ -25370,6 +29866,9 @@ Nie można zaktualizować schematu: atrybut jest używany w aspekcie „musi zaw
 .
 Language=Romanian
 Schema deletion failed: attribute is used in must-contain
+.
+Language=Japanese
+スキーマの削除に失敗しました: 属性が must-contain で使用されています。
 .
 
 MessageId=8386
@@ -25388,6 +29887,9 @@ Nie można zaktualizować schematu: atrybut jest używany w aspekcie „może za
 Language=Romanian
 Schema deletion failed: attribute is used in may-contain
 .
+Language=Japanese
+スキーマの削除に失敗しました: 属性が may-contain で使用されています。
+.
 
 MessageId=8387
 Severity=Success
@@ -25404,6 +29906,9 @@ Nie można zaktualizować schematu: nie istnieje atrybut w aspekcie „może zaw
 .
 Language=Romanian
 Schema update failed: attribute in may-contain does not exist
+.
+Language=Japanese
+スキーマの更新に失敗しました: may-contain 内に属性が存在しません。
 .
 
 MessageId=8388
@@ -25422,6 +29927,9 @@ Nie można zaktualizować schematu: nie istnieje atrybut w aspekcie „musi zawi
 Language=Romanian
 Schema update failed: attribute in must-contain does not exist
 .
+Language=Japanese
+スキーマ更新に失敗しました: must-contain 内の属性が存在しません。
+.
 
 MessageId=8389
 Severity=Success
@@ -25438,6 +29946,9 @@ Nie można zaktualizować schematu: klasa z listy klas pomocniczych nie istnieje
 .
 Language=Romanian
 Schema update failed: class in aux-class list does not exist or is not an auxiliary class
+.
+Language=Japanese
+スキーマの更新に失敗しました: aux-class リスト内のクラスが存在しないか、補助クラスではありません。
 .
 
 MessageId=8390
@@ -25456,6 +29967,9 @@ Nie można zaktualizować schematu: klasa z listy klas zwierzchnich nie istnieje
 Language=Romanian
 Schema update failed: class in poss-superiors does not exist
 .
+Language=Japanese
+スキーマの更新に失敗しました: poss-superiors 内のクラスが存在しません。
+.
 
 MessageId=8391
 Severity=Success
@@ -25472,6 +29986,9 @@ Nie można zaktualizować schematu: klasa z listy podklas nie istnieje lub nie s
 .
 Language=Romanian
 Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
+.
+Language=Japanese
+スキーマの更新に失敗しました: subclassof リスト内のクラスが存在しないか、階層ルールを満たしていません。
 .
 
 MessageId=8392
@@ -25490,6 +30007,9 @@ Nie można zaktualizować schematu: nieprawidłowa składnia Rdn-Att-Id.
 Language=Romanian
 Schema update failed: Rdn-Att-Id has wrong syntax
 .
+Language=Japanese
+スキーマの更新に失敗しました: Rdn-Att-Idの構文が間違っています。
+.
 
 MessageId=8393
 Severity=Success
@@ -25506,6 +30026,9 @@ Nie można usunąć schematu: klasa jest używana jako klasa pomocnicza.
 .
 Language=Romanian
 Schema deletion failed: class is used as auxiliary class
+.
+Language=Japanese
+スキーマの削除に失敗しました: クラスが補助クラスとして使用されています。
 .
 
 MessageId=8394
@@ -25524,6 +30047,9 @@ Nie można usunąć schematu: klasa jest używana jako podklasa.
 Language=Romanian
 Schema deletion failed: class is used as sub class
 .
+Language=Japanese
+スキーマの削除に失敗しました: クラスがサブクラスとして使用されています。
+.
 
 MessageId=8395
 Severity=Success
@@ -25540,6 +30066,9 @@ Nie można usunąć schematu: klasa jest używana jako zwierzchnia.
 .
 Language=Romanian
 Schema deletion failed: class is used as poss superior
+.
+Language=Japanese
+スキーマの削除に失敗しました。
 .
 
 MessageId=8396
@@ -25558,6 +30087,9 @@ Nie można zaktualizować schematu: błąd w przetwarzaniu pamięci podręcznej 
 Language=Romanian
 Schema update failed in recalculating validation cache.
 .
+Language=Japanese
+検証キャッシュの再計算でスキーマの更新に失敗しました。
+.
 
 MessageId=8397
 Severity=Success
@@ -25574,6 +30106,9 @@ Usuwanie drzewa nie zostało zakończone.
 .
 Language=Romanian
 The tree deletion is not finished.
+.
+Language=Japanese
+ツリーの削除が完了していません。ツリーの削除を続行するには、再度要求する必要があります。
 .
 
 MessageId=8398
@@ -25592,6 +30127,9 @@ Nie można wykonać żądanej operacji usuwania.
 Language=Romanian
 The requested delete operation could not be performed.
 .
+Language=Japanese
+要求された削除操作を実行できませんでした。
+.
 
 MessageId=8399
 Severity=Success
@@ -25608,6 +30146,9 @@ Nie można odczytać identyfikatora klasy rządzącej dla rekordu schematu.
 .
 Language=Romanian
 Cannot read the governs class identifier for the schema record.
+.
+Language=Japanese
+スキーマ レコードのガバメント クラス識別子を読み取ることができません。
 .
 
 MessageId=8400
@@ -25626,6 +30167,9 @@ Schemat atrybutu ma złą składnię.
 Language=Romanian
 The attribute schema has bad syntax.
 .
+Language=Japanese
+属性スキーマの構文が正しくありません。
+.
 
 MessageId=8401
 Severity=Success
@@ -25642,6 +30186,9 @@ Nie można umieścić atrybutu w pamięci podręcznej.
 .
 Language=Romanian
 The attribute could not be cached.
+.
+Language=Japanese
+属性をキャッシュできませんでした。
 .
 
 MessageId=8402
@@ -25660,6 +30207,9 @@ Nie można umieścić klasy w pamięci podręcznej.
 Language=Romanian
 The class could not be cached.
 .
+Language=Japanese
+クラスをキャッシュできませんでした。
+.
 
 MessageId=8403
 Severity=Success
@@ -25676,6 +30226,9 @@ Nie można usunąć atrybutu z pamięci podręcznej.
 .
 Language=Romanian
 The attribute could not be removed from the cache.
+.
+Language=Japanese
+属性をキャッシュから削除できませんでした。
 .
 
 MessageId=8404
@@ -25694,6 +30247,9 @@ Nie można usunąć klasy z pamięci podręcznej.
 Language=Romanian
 The class could not be removed from the cache.
 .
+Language=Japanese
+クラスをキャッシュから削除できませんでした。
+.
 
 MessageId=8405
 Severity=Success
@@ -25710,6 +30266,9 @@ Nie można odczytać atrybutu nazwy wyróżniającej.
 .
 Language=Romanian
 The distinguished name attribute could not be read.
+.
+Language=Japanese
+識別名属性を読み取れませんでした。
 .
 
 MessageId=8406
@@ -25728,6 +30287,9 @@ Nie skonfigurowano nadrzędnego odwołania usługi katalogowej. Z tego powodu us
 Language=Romanian
 No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
 .
+Language=Japanese
+ディレクトリ サービスに上位参照が構成されていません。したがって、ディレクトリサービスはこのフォレスト外のオブジェクトへの参照を発行できません。
+.
 
 MessageId=8407
 Severity=Success
@@ -25744,6 +30306,9 @@ Nie można pobrać atrybutu typu wystąpienia.
 .
 Language=Romanian
 The instance type attribute could not be retrieved.
+.
+Language=Japanese
+インスタンス タイプ属性を取得できませんでした。
 .
 
 MessageId=8408
@@ -25762,6 +30327,9 @@ Wystąpił błąd wewnętrzny.
 Language=Romanian
 An internal error has occurred.
 .
+Language=Japanese
+内部エラーが発生しました。
+.
 
 MessageId=8409
 Severity=Success
@@ -25778,6 +30346,9 @@ Wystąpił błąd bazy danych.
 .
 Language=Romanian
 A database error has occurred.
+.
+Language=Japanese
+データベースエラーが発生しました。
 .
 
 MessageId=8410
@@ -25796,6 +30367,9 @@ Brakuje atrybutu GOVERNSID.
 Language=Romanian
 The attribute GOVERNSID is missing.
 .
+Language=Japanese
+属性GOVERNSIDが見つかりません。
+.
 
 MessageId=8411
 Severity=Success
@@ -25812,6 +30386,9 @@ Brakuje oczekiwanego atrybutu.
 .
 Language=Romanian
 An expected attribute is missing.
+.
+Language=Japanese
+指定された属性が見つかりません。
 .
 
 MessageId=8412
@@ -25830,6 +30407,9 @@ W podanym kontekście nazewnictwa brakuje odwołania.
 Language=Romanian
 The specified naming context is missing a cross reference.
 .
+Language=Japanese
+指定された名前コンテキストに相互参照がありません。
+.
 
 MessageId=8413
 Severity=Success
@@ -25846,6 +30426,9 @@ Podczas sprawdzania zabezpieczeń wystąpił błąd.
 .
 Language=Romanian
 A security checking error has occurred.
+.
+Language=Japanese
+セキュリティ チェック エラーが発生しました。
 .
 
 MessageId=8414
@@ -25864,6 +30447,9 @@ Schemat nie został załadowany.
 Language=Romanian
 The schema is not loaded.
 .
+Language=Japanese
+スキーマがロードされていません。
+.
 
 MessageId=8415
 Severity=Success
@@ -25880,6 +30466,9 @@ Nie można przydzielić pamięci dla schematu. Sprawdź, czy w komputerze nie br
 .
 Language=Romanian
 Schema allocation failed. Please check if the machine is running low on memory.
+.
+Language=Japanese
+スキーマの割り当てに失敗しました。マシンのメモリが不足していないか確認してください。
 .
 
 MessageId=8416
@@ -25898,6 +30487,9 @@ Nie można uzyskać wymaganej składni schematu atrybutów.
 Language=Romanian
 Failed to obtain the required syntax for the attribute schema.
 .
+Language=Japanese
+スキーマの割り当てに失敗しました: 属性スキーマに必要な構文の取得に失敗しました。
+.
 
 MessageId=8417
 Severity=Success
@@ -25914,6 +30506,9 @@ Nie można zweryfikować wykazu globalnego. Wykaz globalny nie jest dostępny lu
 .
 Language=Romanian
 The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
+.
+Language=Japanese
+グローバル カタログの検証に失敗しました。グローバル カタログが使用できないか、操作をサポートしていません。ディレクトリの一部は現在使用できません。
 .
 
 MessageId=8418
@@ -25932,6 +30527,9 @@ Nie można wykonać replikacji, ponieważ występuje niezgodność schematów po
 Language=Romanian
 The replication operation failed because of a schema mismatch between the servers involved.
 .
+Language=Japanese
+関係するサーバ間でスキーマが一致しなかったため、レプリケーション操作に失敗しました。
+.
 
 MessageId=8419
 Severity=Success
@@ -25948,6 +30546,9 @@ Nie można znaleźć obiektu DSA.
 .
 Language=Romanian
 The DSA object could not be found.
+.
+Language=Japanese
+DSA オブジェクトが見つかりませんでした。
 .
 
 MessageId=8420
@@ -25966,6 +30567,9 @@ Nie można znaleźć kontekstu nazewnictwa.
 Language=Romanian
 The naming context could not be found.
 .
+Language=Japanese
+ネーミング コンテキストが見つかりません。
+.
 
 MessageId=8421
 Severity=Success
@@ -25982,6 +30586,9 @@ Nie można znaleźć kontekstu nazewnictwa w pamięci podręcznej.
 .
 Language=Romanian
 The naming context could not be found in the cache.
+.
+Language=Japanese
+ネーミング コンテキストがキャッシュに見つかりませんでした。
 .
 
 MessageId=8422
@@ -26000,6 +30607,9 @@ Nie można pobrać obiektu podrzędnego.
 Language=Romanian
 The child object could not be retrieved.
 .
+Language=Japanese
+子オブジェクトを取得できませんでした。
+.
 
 MessageId=8423
 Severity=Success
@@ -26016,6 +30626,9 @@ Modyfikacja nie została dozwolona z powodów bezpieczeństwa.
 .
 Language=Romanian
 The modification was not permitted for security reasons.
+.
+Language=Japanese
+セキュリティ上の理由で変更が許可されませんでした。
 .
 
 MessageId=8424
@@ -26034,6 +30647,9 @@ Operacja nie może zamienić ukrytego rekordu.
 Language=Romanian
 The operation cannot replace the hidden record.
 .
+Language=Japanese
+操作は非表示レコードを置換できません。
+.
 
 MessageId=8425
 Severity=Success
@@ -26050,6 +30666,9 @@ Plik hierarchii jest nieprawidłowy.
 .
 Language=Romanian
 The hierarchy file is invalid.
+.
+Language=Japanese
+階層ファイルが無効です。
 .
 
 MessageId=8426
@@ -26068,6 +30687,9 @@ Nie można utworzyć tablicy hierarchii.
 Language=Romanian
 The attempt to build the hierarchy table failed.
 .
+Language=Japanese
+階層テーブルの構築に失敗しました。
+.
 
 MessageId=8427
 Severity=Success
@@ -26084,6 +30706,9 @@ W Rejestrze brakuje parametru konfiguracji katalogu.
 .
 Language=Romanian
 The directory configuration parameter is missing from the registry.
+.
+Language=Japanese
+ディレクトリ構成パラメータがレジストリにありません。
 .
 
 MessageId=8428
@@ -26102,6 +30727,9 @@ Nie można policzyć indeksów książki adresowej.
 Language=Romanian
 The attempt to count the address book indices failed.
 .
+Language=Japanese
+アドレス帳インデックスのカウントに失敗しました。
+.
 
 MessageId=8429
 Severity=Success
@@ -26118,6 +30746,9 @@ Nie można przydzielić pamięci dla tabeli hierarchii.
 .
 Language=Romanian
 The allocation of the hierarchy table failed.
+.
+Language=Japanese
+階層テーブルの割り当てに失敗しました。
 .
 
 MessageId=8430
@@ -26136,6 +30767,9 @@ Usługa katalogowa napotkała błąd wewnętrzny.
 Language=Romanian
 The directory service encountered an internal failure.
 .
+Language=Japanese
+ディレクトリ サービスで内部障害が発生しました。
+.
 
 MessageId=8431
 Severity=Success
@@ -26152,6 +30786,9 @@ Usługa katalogowa napotkała nieznany błąd.
 .
 Language=Romanian
 The directory service encountered an unknown failure.
+.
+Language=Japanese
+ディレクトリ サービスで不明な障害が発生しました。
 .
 
 MessageId=8432
@@ -26170,6 +30807,9 @@ Obiekt główny wymaga klasy „top”.
 Language=Romanian
 A root object requires a class of 'top'.
 .
+Language=Japanese
+ルート オブジェクトがtopのクラスを必要とします。
+.
 
 MessageId=8433
 Severity=Success
@@ -26186,6 +30826,9 @@ Serwer katalogu jest zamykany i nie może przejąć w posiadanie nowych zmiennyc
 .
 Language=Romanian
 This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
+.
+Language=Japanese
+このディレクトリサーバーはシャットダウン中で、新しいフローティングシングルマスター操作ロールの所有権を取得できません。
 .
 
 MessageId=8434
@@ -26204,6 +30847,9 @@ Usłudze katalogowej brakuje koniecznych informacji o konfiguracji - nie można 
 Language=Romanian
 The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
 .
+Language=Japanese
+ディレクトリサービスに必須の構成情報がなく、フローティング シングルマスター操作ロールの所有権を決定できません。
+.
 
 MessageId=8435
 Severity=Success
@@ -26220,6 +30866,9 @@ Usługa katalogowa nie może przetransferować do innych serwerów praw własno�
 .
 Language=Romanian
 The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
+.
+Language=Japanese
+ディレクトリサービスは、1つ以上のフローティングシングルマスターオペレーションロールの所有権を他のサーバーに転送できませんでした。
 .
 
 MessageId=8436
@@ -26238,6 +30887,9 @@ Operacja replikacji nie powiodła się.
 Language=Romanian
 The replication operation failed.
 .
+Language=Japanese
+レプリケーション操作に失敗しました。
+.
 
 MessageId=8437
 Severity=Success
@@ -26254,6 +30906,9 @@ Podano nieprawidłowy parametr dla tej operacji replikacji.
 .
 Language=Romanian
 An invalid parameter was specified for this replication operation.
+.
+Language=Japanese
+このレプリケーション操作に無効なパラメータが指定されました。
 .
 
 MessageId=8438
@@ -26272,6 +30927,9 @@ Usługa katalogowa jest zbyt zajęta, aby dokończyć teraz operację replikacji
 Language=Romanian
 The directory service is too busy to complete the replication operation at this time.
 .
+Language=Japanese
+ディレクトリ サービスがビジー状態で、レプリケーション操作を完了できません。
+.
 
 MessageId=8439
 Severity=Success
@@ -26288,6 +30946,9 @@ Nazwa wyróżniająca, podana dla tej operacji replikacji, jest nieprawidłowa.
 .
 Language=Romanian
 The distinguished name specified for this replication operation is invalid.
+.
+Language=Japanese
+このレプリケーション操作に指定された識別名は無効です。
 .
 
 MessageId=8440
@@ -26306,6 +30967,9 @@ Kontekst nazewnictwa, podany dla tej operacji replikacji, jest nieprawidłowy.
 Language=Romanian
 The naming context specified for this replication operation is invalid.
 .
+Language=Japanese
+このレプリケーション操作に指定された名前コンテキストが無効です。
+.
 
 MessageId=8441
 Severity=Success
@@ -26322,6 +30986,9 @@ Nazwa wyróżniająca, podana dla tej operacji replikacji, już istnieje.
 .
 Language=Romanian
 The distinguished name specified for this replication operation already exists.
+.
+Language=Japanese
+このレプリケーション操作に指定された識別名はすでに存在します。
 .
 
 MessageId=8442
@@ -26340,6 +31007,9 @@ System replikacji napotkał błąd wewnętrzny.
 Language=Romanian
 The replication system encountered an internal error.
 .
+Language=Japanese
+レプリケーション システムで内部エラーが発生しました。
+.
 
 MessageId=8443
 Severity=Success
@@ -26356,6 +31026,9 @@ Podczas operacji replikacji wykryto niespójność bazy danych.
 .
 Language=Romanian
 The replication operation encountered a database inconsistency.
+.
+Language=Japanese
+レプリケーション操作でデータベースの不整合が発生しました。
 .
 
 MessageId=8444
@@ -26374,6 +31047,9 @@ Nie można skontaktować się z serwerem podanym dla tej operacji replikacji.
 Language=Romanian
 The server specified for this replication operation could not be contacted.
 .
+Language=Japanese
+このレプリケーション操作で指定されたサーバーにアクセスできませんでした。
+.
 
 MessageId=8445
 Severity=Success
@@ -26390,6 +31066,9 @@ Operacja replikacji napotkała obiekt z nieprawidłowym typem wystąpienia.
 .
 Language=Romanian
 The replication operation encountered an object with an invalid instance type.
+.
+Language=Japanese
+レプリケーション操作で無効なインスタンス型を持つオブジェクトに遭遇しました。
 .
 
 MessageId=8446
@@ -26408,6 +31087,9 @@ Nie można przydzielić pamięci dla operacji replikacji.
 Language=Romanian
 The replication operation failed to allocate memory.
 .
+Language=Japanese
+レプリケーション操作はメモリの割り当てに失敗しました。
+.
 
 MessageId=8447
 Severity=Success
@@ -26424,6 +31106,9 @@ Operacja replikacji napotkała błąd systemu poczty.
 .
 Language=Romanian
 The replication operation encountered an error with the mail system.
+.
+Language=Japanese
+レプリケーション操作でメール システムでエラーが発生しました。
 .
 
 MessageId=8448
@@ -26442,6 +31127,9 @@ Informacja dla serwera docelowego o odniesieniu replikacji już istnieje.
 Language=Romanian
 The replication reference information for the target server already exists.
 .
+Language=Japanese
+ターゲット サーバのレプリケーション参照情報はすでに存在します。
+.
 
 MessageId=8449
 Severity=Success
@@ -26458,6 +31146,9 @@ Informacja dla serwera docelowego o odniesieniu replikacji nie istnieje.
 .
 Language=Romanian
 The replication reference information for the target server does not exist.
+.
+Language=Japanese
+対象サーバーのレプリケーション参照情報が存在しません。
 .
 
 MessageId=8450
@@ -26476,6 +31167,9 @@ Kontekst nazewnictwa nie może być usunięty, ponieważ jest replikowany do inn
 Language=Romanian
 The naming context cannot be removed because it is replicated to another server.
 .
+Language=Japanese
+ネーミング コンテキストは別のサーバにレプリケートされているため削除できません。
+.
 
 MessageId=8451
 Severity=Success
@@ -26492,6 +31186,9 @@ Operacja replikacji napotkała błąd bazy danych.
 .
 Language=Romanian
 The replication operation encountered a database error.
+.
+Language=Japanese
+レプリケーション操作でデータベース エラーが発生しました。
 .
 
 MessageId=8452
@@ -26510,6 +31207,9 @@ Kontekst nazewnictwa jest właśnie usuwany lub nie jest replikowany z podanego 
 Language=Romanian
 The naming context is in the process of being removed or is not replicated from the specified server.
 .
+Language=Japanese
+ネーミング コンテキストが削除処理中です。
+.
 
 MessageId=8453
 Severity=Success
@@ -26526,6 +31226,9 @@ Odmówiono dostępu dla replikacji.
 .
 Language=Romanian
 Replication access was denied.
+.
+Language=Japanese
+レプリケーション アクセスが拒否されました。
 .
 
 MessageId=8454
@@ -26544,6 +31247,9 @@ Language=Polish
 Language=Romanian
 The requested operation is not supported by this version of the directory service.
 .
+Language=Japanese
+要求された操作は、このバージョンのディレクトリ サービスではサポートされていません。
+.
 
 MessageId=8455
 Severity=Success
@@ -26560,6 +31266,9 @@ Zdalne wywołanie procedury replikacji zostało anulowane.
 .
 Language=Romanian
 The replication remote procedure call was cancelled.
+.
+Language=Japanese
+レプリケーション リモート プロシージャ呼び出しがキャンセルされました。
 .
 
 MessageId=8456
@@ -26578,6 +31287,9 @@ Serwer źródłowy obecnie odrzuca żądania replikacji.
 Language=Romanian
 The source server is currently rejecting replication requests.
 .
+Language=Japanese
+ソース サーバーは現在レプリケーション要求を拒否しています。
+.
 
 MessageId=8457
 Severity=Success
@@ -26594,6 +31306,9 @@ Serwer docelowy obecnie odrzuca żądania replikacji.
 .
 Language=Romanian
 The destination server is currently rejecting replication requests.
+.
+Language=Japanese
+コピー先サーバーは現在レプリケーション要求を拒否しています。
 .
 
 MessageId=8458
@@ -26612,6 +31327,9 @@ Nie można wykonać operacji replikacji z powodu konfliktu nazw obiektów.
 Language=Romanian
 The replication operation failed due to a collision of object names.
 .
+Language=Japanese
+オブジェクト名の衝突によりレプリケーション操作に失敗しました。
+.
 
 MessageId=8459
 Severity=Success
@@ -26628,6 +31346,9 @@ Language=Polish
 .
 Language=Romanian
 The replication source has been reinstalled.
+.
+Language=Japanese
+レプリケーション ソースが再インストールされました。
 .
 
 MessageId=8460
@@ -26646,6 +31367,9 @@ Nie można wykonać operacji replikacji, ponieważ brakuje obiektu nadrzędnego.
 Language=Romanian
 The replication operation failed because a required parent object is missing.
 .
+Language=Japanese
+必要な親オブジェクトが見つからないため、レプリケーション操作に失敗しました。
+.
 
 MessageId=8461
 Severity=Success
@@ -26662,6 +31386,9 @@ Operacja replikacji została udaremniona.
 .
 Language=Romanian
 The replication operation was preempted.
+.
+Language=Japanese
+レプリケーション操作が先取りされました。
 .
 
 MessageId=8462
@@ -26680,6 +31407,9 @@ Próba synchronizacji replikacji została zaniechana z powodu braku aktualizacji
 Language=Romanian
 The replication synchronization attempt was abandoned because of a lack of updates.
 .
+Language=Japanese
+更新がないため、レプリケーションの同期化を中止しました。
+.
 
 MessageId=8463
 Severity=Success
@@ -26696,6 +31426,9 @@ Operacja replikacji została przerwana, ponieważ system jest zamykany.
 .
 Language=Romanian
 The replication operation was terminated because the system is shutting down.
+.
+Language=Japanese
+システムがシャットダウンしているため、レプリケーション操作を終了しました。
 .
 
 MessageId=8464
@@ -26714,6 +31447,9 @@ Próba synchronizacji nie powiodła się, ponieważ docelowy kontroler domeny oc
 Language=Romanian
 Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
 .
+Language=Japanese
+宛先DCがソースからの新しい部分属性の同期を待機中のため、同期に失敗しました。この状態は、最近のスキーマ変更によって部分属性セットが変更された場合は正常です。宛先の部分属性セットはソースの部分属性セットのサブセットではありません。
+.
 
 MessageId=8465
 Severity=Success
@@ -26730,6 +31466,9 @@ Próba synchronizacji replikacji nie powiodła się, ponieważ główna replika 
 .
 Language=Romanian
 The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
+.
+Language=Japanese
+マスター レプリカが部分レプリカから同期しようとしたため、レプリケーションの同期に失敗しました。
 .
 
 MessageId=8466
@@ -26748,6 +31487,9 @@ Skontaktowano się z serwerem podanym dla tej operacji replikacji, ale serwer te
 Language=Romanian
 The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
 .
+Language=Japanese
+このレプリケーション操作に指定されたサーバーに連絡しましたが、そのサーバーが操作を完了するために必要な追加のサーバーに連絡できませんでした。
+.
 
 MessageId=8467
 Severity=Success
@@ -26764,6 +31506,9 @@ Wersja schematu usługi katalogowej lasu źródłowego jest niezgodna z wersją 
 .
 Language=Romanian
 The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
+.
+Language=Japanese
+ソース フォレストのディレクトリ サービス スキーマのバージョンは、このコンピュータのディレクトリ サービスのバージョンと互換性がありません。
 .
 
 MessageId=8468
@@ -26782,6 +31527,9 @@ Nie można zaktualizować schematu: atrybut z tym samym identyfikatorem łącza 
 Language=Romanian
 Schema update failed: An attribute with the same link identifier already exists.
 .
+Language=Japanese
+スキーマの更新に失敗しました。
+.
 
 MessageId=8469
 Severity=Success
@@ -26798,6 +31546,9 @@ Tłumaczenie nazw: ogólny błąd przetwarzania.
 .
 Language=Romanian
 Name translation: Generic processing error.
+.
+Language=Japanese
+名前変換: 汎用処理エラーです。
 .
 
 MessageId=8470
@@ -26816,6 +31567,9 @@ Tłumaczenie nazw: nie można znaleźć nazwy lub brak wystarczających uprawnie
 Language=Romanian
 Name translation: Could not find the name or insufficient right to see name.
 .
+Language=Japanese
+名前変換: 名前が見つかりません。
+.
 
 MessageId=8471
 Severity=Success
@@ -26832,6 +31586,9 @@ Tłumaczenie nazw: nazwa wejściowa mapowana na więcej niż jedną nazwę wynik
 .
 Language=Romanian
 Name translation: Input name mapped to more than one output name.
+.
+Language=Japanese
+名前変換: 入力名が複数の出力名にマップされました。
 .
 
 MessageId=8472
@@ -26850,6 +31607,9 @@ Tłumaczenie nazw: znaleziono nazwę wejściową, lecz nie znaleziono skojarzone
 Language=Romanian
 Name translation: Input name found, but not the associated output format.
 .
+Language=Japanese
+名前変換: 入力名は見つかりましたが、関連する出力形式は見つかりませんでした。
+.
 
 MessageId=8473
 Severity=Success
@@ -26866,6 +31626,9 @@ Tłumaczenie nazw: nie można w pełni rozpoznać - znaleziono tylko domenę.
 .
 Language=Romanian
 Name translation: Unable to resolve completely, only the domain was found.
+.
+Language=Japanese
+名前変換: 完全に解決できません。ドメインのみが見つかりました。
 .
 
 MessageId=8474
@@ -26884,6 +31647,9 @@ Tłumaczenie nazw: nie można przeprowadzić czysto syntaktycznego odwzorowania 
 Language=Romanian
 Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
 .
+Language=Japanese
+名前変換：クライアント側で純粋な構文マッピングを行うことができません。
+.
 
 MessageId=8475
 Severity=Success
@@ -26900,6 +31666,9 @@ Modyfikowanie złożonego atrybutu jest niedozwolone.
 .
 Language=Romanian
 Modification of a constructed attribute is not allowed.
+.
+Language=Japanese
+構築された属性の変更は許可されていません。
 .
 
 MessageId=8476
@@ -26918,6 +31687,9 @@ Podany ciąg OM-Obiekt-Klasa jest niepoprawny dla atrybutu o podanej składni.
 Language=Romanian
 The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
 .
+Language=Japanese
+指定された構文の属性に対して、指定された OM-Object-Class が不正です。
+.
 
 MessageId=8477
 Severity=Success
@@ -26934,6 +31706,9 @@ Language=Polish
 .
 Language=Romanian
 The replication request has been posted; waiting for reply.
+.
+Language=Japanese
+レプリケーション要求が投稿されました。
 .
 
 MessageId=8478
@@ -26952,6 +31727,9 @@ Language=Polish
 Language=Romanian
 The requested operation requires a directory service, and none was available.
 .
+Language=Japanese
+要求された操作にはディレクトリ サービスが必要です。
+.
 
 MessageId=8479
 Severity=Success
@@ -26968,6 +31746,9 @@ Wyświetlana nazwa LDAP danej klasy lub atrybutu zawiera znaki inne niż ASCII.
 .
 Language=Romanian
 The LDAP display name of the class or attribute contains non-ASCII characters.
+.
+Language=Japanese
+クラスまたは属性のLDAP表示名にASCII以外の文字が含まれています。
 .
 
 MessageId=8480
@@ -26986,6 +31767,9 @@ Language=Polish
 Language=Romanian
 The requested search operation is only supported for base searches.
 .
+Language=Japanese
+要求された検索操作はベース検索でのみサポートされています。
+.
 
 MessageId=8481
 Severity=Success
@@ -27002,6 +31786,9 @@ Operacja wyszukiwania nie może pobrać atrybutów z bazy danych.
 .
 Language=Romanian
 The search failed to retrieve attributes from the database.
+.
+Language=Japanese
+データベースからの属性の取得に失敗しました。
 .
 
 MessageId=8482
@@ -27020,6 +31807,9 @@ Operacja zaktualizowania schematu próbowała dodać atrybut odsyłacza wsteczne
 Language=Romanian
 The schema update operation tried to add a backward link attribute that has no corresponding forward link.
 .
+Language=Japanese
+スキーマ更新操作は、対応する前方リンクがない後方リンク属性を追加しようとしました。
+.
 
 MessageId=8483
 Severity=Success
@@ -27036,6 +31826,9 @@ Language=Polish
 .
 Language=Romanian
 Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
+.
+Language=Japanese
+オブジェクトのエポック番号でドメイン間移動の送信元と送信先が一致しません。移動元または移動先のどちらかがオブジェクトの最新バージョンを持っていません。
 .
 
 MessageId=8484
@@ -27054,6 +31847,9 @@ Language=Polish
 Language=Romanian
 Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
 .
+Language=Japanese
+クロスドメイン移動の移動元と移動先でオブジェクトの現在の名前が一致しません。移動元または移動先のどちらかがオブジェクトの最新バージョンを持っていません。
+.
 
 MessageId=8485
 Severity=Success
@@ -27070,6 +31866,9 @@ Language=Polish
 .
 Language=Romanian
 Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
+.
+Language=Japanese
+クロスドメイン移動操作の移動元と移動先が同じです。呼び出し元では、クロスドメイン移動操作の代わりにローカル移動操作を使用してください。
 .
 
 MessageId=8486
@@ -27088,6 +31887,9 @@ Language=Polish
 Language=Romanian
 Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
 .
+Language=Japanese
+クロスドメイン移動の移動元と移動先がフォレスト内の名前コンテキストで一致していません。移動元または移動先のいずれかがパーティション コンテナの最新バージョンを持っていません。
+.
 
 MessageId=8487
 Severity=Success
@@ -27104,6 +31906,9 @@ Miejsce docelowe operacji przenoszenia poza domenę nie jest autorytatywne dla d
 .
 Language=Romanian
 Destination of a cross domain move is not authoritative for the destination naming context.
+.
+Language=Japanese
+クロスドメイン移動の移動先が、移動先のネーム コンテキストに対して権限を持っていません。
 .
 
 MessageId=8488
@@ -27122,6 +31927,9 @@ Language=Polish
 Language=Romanian
 Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
 .
+Language=Japanese
+クロスドメイン移動の移動元と移動先が、移動先のネーミング コンテキストで一致していません。
+.
 
 MessageId=8489
 Severity=Success
@@ -27138,6 +31946,9 @@ Obiekt przenoszony poza domenę jest zaznaczony do usunięcia przez serwer docel
 .
 Language=Romanian
 Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
+.
+Language=Japanese
+ドメインをまたいで移動されるオブジェクトは、移動先のサーバーですでに削除されていることがわかっています。移動元サーバに移動元オブジェクトの最新バージョンがありません。
 .
 
 MessageId=8490
@@ -27156,6 +31967,9 @@ Inna operacja, która wymaga wyłącznego dostępu do PSMO PDC jest już wykonyw
 Language=Romanian
 Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
 .
+Language=Japanese
+PDC FSMOへの排他アクセスを必要とする別の操作がすでに進行中です。
+.
 
 MessageId=8491
 Severity=Success
@@ -27172,6 +31986,9 @@ Operacja przenoszenia poza domenę nie powiodła się, ponieważ istnieją już 
 .
 Language=Romanian
 A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
+.
+Language=Japanese
+移動元ドメインと移動先ドメインにそれぞれ1つずつ、移動されたオブジェクトの2つのバージョンが存在するようなクロスドメインの移動操作に失敗しました。システムを一貫性のある状態に復元するには、移動先のオブジェクトを削除する必要があります。
 .
 
 MessageId=8492
@@ -27190,6 +32007,9 @@ Nie można przenieść tego obiektu poza granice domeny, ponieważ przenoszenie 
 Language=Romanian
 This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
 .
+Language=Japanese
+このクラスのドメイン間の移動が禁止されているか、オブジェクトに特別な特性 (信頼アカウントや制限付きRIDなど) があるため、このオブジェクトをドメイン境界を越えて移動できません。
+.
 
 MessageId=8493
 Severity=Success
@@ -27206,6 +32026,9 @@ Nie można przenieść obiektów wraz z członkostwem poza granice domeny, ponie
 .
 Language=Romanian
 Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
+.
+Language=Japanese
+一度移動するとアカウント グループのメンバシップ条件に違反するため、ドメイン境界を越えてメンバシップを持つオブジェクトを移動できません。オブジェクトをアカウント グループのメンバシップから削除して再試行してください。
 .
 
 MessageId=8494
@@ -27224,6 +32047,9 @@ Początek kontekstu nazewnictwa musi być bezpośrednim potomkiem innego począt
 Language=Romanian
 A naming context head must be the immediate child of another naming context head, not of an interior node.
 .
+Language=Japanese
+名前付けコンテキスト ヘッドは、内部ノードではなく別の名前付けコンテキスト ヘッドの直接の子でなければなりません。
+.
 
 MessageId=8495
 Severity=Success
@@ -27240,6 +32066,9 @@ Katalog nie może sprawdzać poprawności nazwy z proponowanego kontekstu nazewn
 .
 Language=Romanian
 The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
+.
+Language=Japanese
+ディレクトリが提案されたネーミング コンテキストの上のネーミング コンテキストのレプリカを保持していないため、提案されたネーミング コンテキスト名を検証できません。グローバルカタログサーバーとして構成されているサーバーによってドメインネーミングマスターの役割が保持され、そのサーバーがレプリケーションパートナーと最新であることを確認してください。 (ReactOS 2000ドメイン ネーミング マスターにのみ適用されます) 。
 .
 
 MessageId=8496
@@ -27258,6 +32087,9 @@ Domena docelowa musi być w trybie macierzystym.
 Language=Romanian
 Destination domain must be in native mode.
 .
+Language=Japanese
+宛先ドメインがネイティブモードである必要があります。
+.
 
 MessageId=8497
 Severity=Success
@@ -27274,6 +32106,9 @@ Nie można wykonać operacji, ponieważ serwer nie ma kontenera infrastruktury w
 .
 Language=Romanian
 The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
+.
+Language=Japanese
+サーバーが対象のドメインにインフラストラクチャ コンテナを持っていないため、操作を実行できません。
 .
 
 MessageId=8498
@@ -27292,6 +32127,9 @@ Przenoszenie niepustych grup kont poza granice domeny nie jest dozwolone.
 Language=Romanian
 Cross-domain move of non-empty account groups is not allowed.
 .
+Language=Japanese
+空でないアカウントグループのクロスドメイン移動は許可されていません。
+.
 
 MessageId=8499
 Severity=Success
@@ -27308,6 +32146,9 @@ Przenoszenie niepustych grup zasobów poza granice domeny nie jest dozwolone.
 .
 Language=Romanian
 Cross-domain move of non-empty resource groups is not allowed.
+.
+Language=Japanese
+空でないリソースグループのクロスドメイン移動は許可されていません。
 .
 
 MessageId=8500
@@ -27326,6 +32167,9 @@ Flagi wyszukiwania dla atrybutów są nieprawidłowe. Bit ANR jest ważny tylko 
 Language=Romanian
 The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
 .
+Language=Japanese
+属性の検索フラグが無効です。ANRビットはUnicodeまたはTeletex文字列の属性でのみ有効です。
+.
 
 MessageId=8501
 Severity=Success
@@ -27342,6 +32186,9 @@ Usuwanie drzewa poczynając od obiektu-potomka będącego węzłem NC nie jest d
 .
 Language=Romanian
 Tree deletions starting at an object which has an NC head as a descendant are not allowed.
+.
+Language=Japanese
+NCヘッドを子孫に持つオブジェクトからツリーを削除することはできません。
 .
 
 MessageId=8502
@@ -27360,6 +32207,9 @@ Usługa katalogowa, przygotowując operację drzewa, nie mogła zablokować drze
 Language=Romanian
 The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
 .
+Language=Japanese
+ツリーが使用中であるため、ディレクトリ サービスがツリーの削除に備えてツリーをロックできませんでした。
+.
 
 MessageId=8503
 Severity=Success
@@ -27376,6 +32226,9 @@ Usłudze katalogowej nie udało się zidentyfikować listy obiektów do usunięc
 .
 Language=Romanian
 The directory service failed to identify the list of objects to delete while attempting a tree deletion.
+.
+Language=Japanese
+ツリーの削除を試みているときに、ディレクトリ サービスが削除するオブジェクトのリストを識別できませんでした。
 .
 
 MessageId=8504
@@ -27398,6 +32251,11 @@ Language=Romanian
 Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
 .
+Language=Japanese
+セキュリティ アカウント マネージャの初期化は次のエラーにより失敗しました: %1
+エラー ステータス: 0x%2
+このシステムをシャットダウンし、ディレクトリ サービス リストア モードに再起動してください。詳細についてはイベント ログを確認してください。
+.
 
 MessageId=8505
 Severity=Success
@@ -27414,6 +32272,9 @@ Tylko administrator może modyfikować listę członków grupy administrującej.
 .
 Language=Romanian
 Only an administrator can modify the membership list of an administrative group.
+.
+Language=Japanese
+管理グループのメンバーシップ リストを変更できるのは管理者のみです。
 .
 
 MessageId=8506
@@ -27432,6 +32293,9 @@ Nie można zmienić identyfikatora grupy podstawowej konta kontrolera domeny.
 Language=Romanian
 Cannot change the primary group ID of a domain controller account.
 .
+Language=Japanese
+ドメイン コントローラ アカウントのプライマリグループIDを変更できません。
+.
 
 MessageId=8507
 Severity=Success
@@ -27448,6 +32312,9 @@ Została podjęta próba zmodyfikowania schematu podstawowego.
 .
 Language=Romanian
 An attempt is made to modify the base schema.
+.
+Language=Japanese
+ベース スキーマを変更しようとしました。
 .
 
 MessageId=8508
@@ -27466,6 +32333,9 @@ Nie jest dozwolone: dodawanie do istniejącej klasy nowego obowiązkowego atrybu
 Language=Romanian
 Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
 .
+Language=Japanese
+既存のクラスに新しい必須属性を追加すること、既存のクラスから必須属性を削除すること、または特別なクラスTopにバックリンク属性ではないオプション属性を追加すること (直接、または補助クラスを追加または削除するなど継承によって) は許可されていません。
+.
 
 MessageId=8509
 Severity=Success
@@ -27482,6 +32352,9 @@ Nie można zaktualizować schematu w bieżącym kontrolerze domeny, ponieważ ko
 .
 Language=Romanian
 Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
+.
+Language=Japanese
+DC がスキーマ FSMO ロール所有者ではないため、この DC でのスキーマ更新は許可されません。
 .
 
 MessageId=8510
@@ -27500,6 +32373,9 @@ Obiektu tej klasy nie można utworzyć w kontenerze schematów. W kontenerze sch
 Language=Romanian
 An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
 .
+Language=Japanese
+このクラスのオブジェクトはスキーマ コンテナの下に作成できません。スキーマ コンテナの下に作成できるのは、属性スキーマ オブジェクトとクラス スキーマ オブジェクトのみです。
+.
 
 MessageId=8511
 Severity=Success
@@ -27516,6 +32392,9 @@ Instalacja repliki/obiektu potomnego nie mogła pobrać atrybutu wersji obiektu 
 .
 Language=Romanian
 The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
+.
+Language=Japanese
+レプリカ/チャイルド インストールで、ソース DC のスキーマ コンテナの objectVersion 属性の取得に失敗しました。スキーマ コンテナに属性がないか、提供された資格情報に読み取り権限がありません。
 .
 
 MessageId=8512
@@ -27534,6 +32413,9 @@ Instalacja repliki/obiektu potomnego nie mogła odczytać atrybutu wersji obiekt
 Language=Romanian
 The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
 .
+Language=Japanese
+レプリカ/チャイルドのインストールで、system32 ディレクトリのファイル schema.ini の SCHEMA セクションにある objectVersion 属性の読み取りに失敗しました。
+.
 
 MessageId=8513
 Severity=Success
@@ -27550,6 +32432,9 @@ Określony typ grupy jest nieprawidłowy.
 .
 Language=Romanian
 The specified group type is invalid.
+.
+Language=Japanese
+指定されたグループ タイプが無効です。
 .
 
 MessageId=8514
@@ -27568,6 +32453,9 @@ Nie można zagnieździć grup globalnych w domenie mieszanej, jeżeli zabezpiecz
 Language=Romanian
 Cannot nest global groups in a mixed domain if the group is security-enabled.
 .
+Language=Japanese
+グループがセキュリティ有効の場合、混合ドメインにグローバル グループをネストできません。
+.
 
 MessageId=8515
 Severity=Success
@@ -27584,6 +32472,9 @@ Nie można zagnieździć grup lokalnych w domenie mieszanej, jeżeli zabezpiecze
 .
 Language=Romanian
 Cannot nest local groups in a mixed domain if the group is security-enabled.
+.
+Language=Japanese
+グループがセキュリティ対応の場合、混合ドメインにローカルグループをネストできません。
 .
 
 MessageId=8516
@@ -27602,6 +32493,9 @@ Grupa lokalna nie może być członkiem grupy globalnej.
 Language=Romanian
 A global group cannot have a local group as a member.
 .
+Language=Japanese
+グローバルグループにローカルグループをメンバとして含めることはできません。
+.
 
 MessageId=8517
 Severity=Success
@@ -27618,6 +32512,9 @@ Grupa uniwersalna nie może być członkiem grupy globalnej.
 .
 Language=Romanian
 A global group cannot have a universal group as a member.
+.
+Language=Japanese
+グローバル グループにユニバーサル グループをメンバに持つことはできません。
 .
 
 MessageId=8518
@@ -27636,6 +32533,9 @@ Grupa globalna nie może być członkiem grupy uniwersalnej.
 Language=Romanian
 A universal group cannot have a local group as a member.
 .
+Language=Japanese
+ユニバーサル グループにローカル グループをメンバに持つことはできません。
+.
 
 MessageId=8519
 Severity=Success
@@ -27652,6 +32552,9 @@ Członek grupy globalnej nie może pochodzić z innej domeny.
 .
 Language=Romanian
 A global group cannot have a cross-domain member.
+.
+Language=Japanese
+グローバルグループにクロスドメインのメンバを持つことはできません。
 .
 
 MessageId=8520
@@ -27670,6 +32573,9 @@ Członkiem grupy globalnej nie może być grupa lokalna z innej domeny.
 Language=Romanian
 A local group cannot have another cross-domain local group as a member.
 .
+Language=Japanese
+ローカルグループにクロスドメインのローカルグループをメンバとして持つことはできません。
+.
 
 MessageId=8521
 Severity=Success
@@ -27686,6 +32592,9 @@ Grupa z członkami głównymi nie może zostać zmieniona w grupę z wyłączony
 .
 Language=Romanian
 A group with primary members cannot change to a security-disabled group.
+.
+Language=Japanese
+プライマリ メンバを持つグループをセキュリティ無効グループに変更できません。
 .
 
 MessageId=8522
@@ -27704,6 +32613,9 @@ Podczas ładowania schematu z pamięci podręcznej nie udało się przekształci
 Language=Romanian
 The schema cache load failed to convert the string default SD on a class-schema object.
 .
+Language=Japanese
+グループがセキュリティ無効グループに変更されました。
+.
 
 MessageId=8523
 Severity=Success
@@ -27720,6 +32632,9 @@ Tylko serwery DSA skonfigurowane jako serwery wykazu globalnego mogą pełnić r
 .
 Language=Romanian
 Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
+.
+Language=Japanese
+グローバルカタログサーバーとして構成されたDSAのみがドメインネーミングマスターFSMOロールを保持できます。 (ReactOS 2000サーバーにのみ適用されます) 。
 .
 
 MessageId=8524
@@ -27738,6 +32653,9 @@ Operacja DSA nie może być kontynuowana wskutek błędu wyszukiwania DNS.
 Language=Romanian
 The DSA operation is unable to proceed because of a DNS lookup failure.
 .
+Language=Japanese
+DNS検索に失敗したため、DSA操作を続行できません。
+.
 
 MessageId=8525
 Severity=Success
@@ -27754,6 +32672,9 @@ Podczas przetwarzania zmian nazwy hosta DNS dla danego obiektu, wartości głów
 .
 Language=Romanian
 While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
+.
+Language=Japanese
+オブジェクトのDNSホスト名の変更処理中に、サービス プリンシパル名の値を同期できませんでした。
 .
 
 MessageId=8526
@@ -27772,6 +32693,9 @@ Nie można odczytać atrybutu deskryptora zabezpieczeń.
 Language=Romanian
 The Security Descriptor attribute could not be read.
 .
+Language=Japanese
+セキュリティ記述子属性を読み取れませんでした。
+.
 
 MessageId=8527
 Severity=Success
@@ -27788,6 +32712,9 @@ Language=Polish
 .
 Language=Romanian
 The object requested was not found, but an object with that key was found.
+.
+Language=Japanese
+要求されたオブジェクトは見つかりませんでしたが、そのキーを持つオブジェクトが見つかりました。
 .
 
 MessageId=8528
@@ -27806,6 +32733,9 @@ Składnia dodawanego atrybutu łącza jest niepoprawna. Odsyłacze do przodu mog
 Language=Romanian
 The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
 .
+Language=Japanese
+追加されるリンク属性の構文が正しくありません。フォワード リンクの構文は2.5.5.1、2.5.5.7、および2.5.5.14のみ、バックリンクの構文は2.5.5.1のみです。
+.
 
 MessageId=8529
 Severity=Success
@@ -27822,6 +32752,9 @@ Menedżer kont zabezpieczeń musi uzyskać hasło rozruchowe.
 .
 Language=Romanian
 Security Account Manager needs to get the boot password.
+.
+Language=Japanese
+セキュリティ アカウント マネージャでブート パスワードを取得する必要があります。
 .
 
 MessageId=8530
@@ -27840,6 +32773,9 @@ Menedżer kont zabezpieczeń musi uzyskać klucz rozruchowy z dyskietki.
 Language=Romanian
 Security Account Manager needs to get the boot key from floppy disk.
 .
+Language=Japanese
+セキュリティ アカウント マネージャは、フロッピー ディスクからブート キーを取得する必要があります。
+.
 
 MessageId=8531
 Severity=Success
@@ -27856,6 +32792,9 @@ Nie można uruchomić usługi katalogowej.
 .
 Language=Romanian
 Directory Service cannot start.
+.
+Language=Japanese
+ディレクトリサービスを開始できません。
 .
 
 MessageId=8532
@@ -27874,6 +32813,9 @@ Nie można uruchomić usług katalogowych.
 Language=Romanian
 Directory Services could not start.
 .
+Language=Japanese
+ディレクトリサービスを開始できませんでした。
+.
 
 MessageId=8533
 Severity=Success
@@ -27890,6 +32832,9 @@ Połączenie między klientem i serwerem wymaga zabezpieczeń zapewniających co
 .
 Language=Romanian
 The connection between client and server requires packet privacy or better.
+.
+Language=Japanese
+クライアントとサーバー間の接続には、パケット プライバシー以上が必要です。
 .
 
 MessageId=8534
@@ -27908,6 +32853,9 @@ Domena źródłowa nie może występować w tym samym lesie co docelowa.
 Language=Romanian
 The source domain may not be in the same forest as destination.
 .
+Language=Japanese
+送信元ドメインが宛先と同じフォレストにない可能性があります。
+.
 
 MessageId=8535
 Severity=Success
@@ -27924,6 +32872,9 @@ Domena docelowa musi występować w lesie.
 .
 Language=Romanian
 The destination domain must be in the forest.
+.
+Language=Japanese
+宛先ドメインがフォレスト内にある必要があります。
 .
 
 MessageId=8536
@@ -27942,6 +32893,9 @@ Operacja wymaga włączenia inspekcji domeny docelowej.
 Language=Romanian
 The operation requires that destination domain auditing be enabled.
 .
+Language=Japanese
+この操作では、宛先ドメインの監査が有効になっている必要があります。
+.
 
 MessageId=8537
 Severity=Success
@@ -27958,6 +32912,9 @@ Operacja nie może zlokalizować kontrolera domeny dla domeny źródłowej.
 .
 Language=Romanian
 The operation couldn't locate a DC for the source domain.
+.
+Language=Japanese
+この操作はソースドメインのDCを見つけられませんでした。
 .
 
 MessageId=8538
@@ -27976,6 +32933,9 @@ Obiekt źródłowy musi być grupą lub użytkownikiem.
 Language=Romanian
 The source object must be a group or user.
 .
+Language=Japanese
+ソース オブジェクトはグループまたはユーザーでなければなりません。
+.
 
 MessageId=8539
 Severity=Success
@@ -27993,6 +32953,9 @@ Identyfikator SID obiektu źródłowego już istnieje w lesie docelowym.
 Language=Romanian
 The source object's SID already exists in destination forest.
 .
+Language=Japanese
+送信元オブジェクトのSIDが宛先フォレストに既に存在します。
+.
 
 MessageId=8540
 Severity=Success
@@ -28009,6 +32972,9 @@ Obiekty źródłowy i docelowy muszą być tego samego typu.
 .
 Language=Romanian
 The source and destination object must be of the same type.
+.
+Language=Japanese
+送信元オブジェクトと宛先オブジェクトは同じタイプでなければなりません。
 .
 
 MessageId=8541
@@ -28031,6 +32997,11 @@ Language=Romanian
 Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
 .
+Language=Japanese
+セキュリティ アカウント マネージャの初期化は次のエラーにより失敗しました: %1
+エラー ステータス: 0x%2
+OKをクリックしてシステムをシャットダウンし、セーフモードで再起動します。詳細情報については、イベント ログを確認してください。
+.
 
 MessageId=8542
 Severity=Success
@@ -28047,6 +33018,9 @@ Informacje o schemacie nie mogły być zawarte w żądaniu replikacji.
 .
 Language=Romanian
 Schema information could not be included in the replication request.
+.
+Language=Japanese
+スキーマ情報をレプリケーション要求に含めることができませんでした。
 .
 
 MessageId=8543
@@ -28065,6 +33039,9 @@ Nie można ukończyć operacji replikacji z powodu niezgodności schematów.
 Language=Romanian
 The replication operation could not be completed due to a schema incompatibility.
 .
+Language=Japanese
+スキーマの互換性がないため、レプリケーション操作を完了できませんでした。
+.
 
 MessageId=8544
 Severity=Success
@@ -28081,6 +33058,9 @@ Nie można ukończyć operacji replikacji z powodu poprzedniej niezgodności sch
 .
 Language=Romanian
 The replication operation could not be completed due to a previous schema incompatibility.
+.
+Language=Japanese
+以前のスキーマの互換性がないため、レプリケーション操作を完了できませんでした。
 .
 
 MessageId=8545
@@ -28099,6 +33079,9 @@ Nie można dokonać aktualizacji replikacji, ponieważ miejsce źródłowe lub d
 Language=Romanian
 The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
 .
+Language=Japanese
+送信元または送信先のいずれかが最近のクロスドメイン移動操作に関する情報をまだ受信していないため、レプリケーション更新を適用できませんでした。
+.
 
 MessageId=8546
 Severity=Success
@@ -28115,6 +33098,9 @@ Language=Polish
 .
 Language=Romanian
 The requested domain could not be deleted because there exist domain controllers that still host this domain.
+.
+Language=Japanese
+まだこのドメインをホストしているドメイン コントローラーが存在するため、要求されたドメインを削除できませんでした。
 .
 
 MessageId=8547
@@ -28133,6 +33119,9 @@ Language=Polish
 Language=Romanian
 The requested operation can be performed only on a global catalog server.
 .
+Language=Japanese
+要求された操作はグローバル カタログ サーバーでのみ実行できます。
+.
 
 MessageId=8548
 Severity=Success
@@ -28149,6 +33138,9 @@ Grupa lokalna może być tylko członkiem innej grupy lokalnej w tej samej domen
 .
 Language=Romanian
 A local group can only be a member of other local groups in the same domain.
+.
+Language=Japanese
+ローカルグループは同じドメイン内の他のローカルグループのメンバにしかなれません。
 .
 
 MessageId=8549
@@ -28167,6 +33159,9 @@ Konta lub grupy kont obcych zasad zabezpieczeń nie mogą być członkami grup u
 Language=Romanian
 Foreign security principals cannot be members of universal groups.
 .
+Language=Japanese
+外部セキュリティプリンシパルをユニバーサルグループのメンバにすることはできません。
+.
 
 MessageId=8550
 Severity=Success
@@ -28183,6 +33178,9 @@ Atrybut nie może być replikowany do GC z powodów bezpieczeństwa.
 .
 Language=Romanian
 The attribute is not allowed to be replicated to the GC because of security reasons.
+.
+Language=Japanese
+属性は、セキュリティ上の理由から GC 2011 に複製することはできません。
 .
 
 MessageId=8551
@@ -28201,6 +33199,9 @@ Nie można przejąć punktu kontrolnego PDC, ponieważ obecnie jest przetwarzany
 Language=Romanian
 The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
 .
+Language=Japanese
+現在処理中の変更が多すぎるため、PDCとのチェックポイントを取ることができませんでした。
+.
 
 MessageId=8552
 Severity=Success
@@ -28217,6 +33218,9 @@ Operacja wymaga włączenia inspekcji domeny źródłowej.
 .
 Language=Romanian
 The operation requires that source domain auditing be enabled.
+.
+Language=Japanese
+この操作では、ソース ドメインの監査が有効になっている必要があります。
 .
 
 MessageId=8553
@@ -28235,6 +33239,9 @@ Obiekty główne zabezpieczeń mogą być tworzone jedynie wewnątrz kontekstów
 Language=Romanian
 Security principal objects can only be created inside domain naming contexts.
 .
+Language=Japanese
+セキュリティプリンシパルオブジェクトはドメイン命名コンテキスト内でのみ作成できます。
+.
 
 MessageId=8554
 Severity=Success
@@ -28251,6 +33258,9 @@ Nie można utworzyć głównej nazwy usługi (SPN), ponieważ podana nazwa hosta
 .
 Language=Romanian
 A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
+.
+Language=Japanese
+指定されたホスト名が必要な形式でないため、サービスプリンシパル名 (SPN) を構築できませんでした。
 .
 
 MessageId=8555
@@ -28269,6 +33279,9 @@ Został przekazany filtr, który używa złożonych atrybutów.
 Language=Romanian
 A Filter was passed that uses constructed attributes.
 .
+Language=Japanese
+構築された属性を使用するフィルタが渡されました。
+.
 
 MessageId=8556
 Severity=Success
@@ -28285,6 +33298,9 @@ Wartość atrybutu unicodePwd musi być ujęta w cudzysłów.
 .
 Language=Romanian
 The unicodePwd attribute value must be enclosed in double quotes.
+.
+Language=Japanese
+unicodePwd 属性値は二重引用符で囲む必要があります。
 .
 
 MessageId=8557
@@ -28303,6 +33319,9 @@ Nie można dołączyć komputera do domeny. Została przekroczona maksymalna lic
 Language=Romanian
 Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
 .
+Language=Japanese
+コンピュータをドメインに参加できませんでした。このドメインで作成できるコンピュータアカウントの最大数を超えています。システム管理者に連絡して、この上限をリセットするか、上限を増やしてください。
+.
 
 MessageId=8558
 Severity=Success
@@ -28319,6 +33338,9 @@ Aby zapewnić bezpieczeństwo, operacja musi być przeprowadzona na docelowym ko
 .
 Language=Romanian
 For security reasons, the operation must be run on the destination DC.
+.
+Language=Japanese
+セキュリティ上の理由から、この操作は宛先DCで実行する必要があります。
 .
 
 MessageId=8559
@@ -28337,6 +33359,9 @@ Aby zapewnić bezpieczeństwo, źródłowy kontroler domeny musi pochodzić z do
 Language=Romanian
 For security reasons, the source DC must be NT4SP4 or greater.
 .
+Language=Japanese
+セキュリティ上の理由から、ソースDCはNT4SP4以上でなければなりません。
+.
 
 MessageId=8560
 Severity=Success
@@ -28353,6 +33378,9 @@ Nie można usunąć kluczowych obiektów usługi katalogowej podczas operacji us
 .
 Language=Romanian
 Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
+.
+Language=Japanese
+ツリーの削除操作中に、重要なディレクトリ サービス システム オブジェクトを削除できません。ツリーの削除が部分的に実行された可能性があります。
 .
 
 MessageId=8561
@@ -28375,6 +33403,11 @@ Language=Romanian
 Directory Services could not start because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
+Language=Japanese
+次のエラーが発生したため、ディレクトリ サービスを開始できませんでした: %1
+エラー ステータス: 0x%2
+[OK] をクリックしてシステムをシャットダウンしてください。回復コンソールを使用してシステムをさらに診断できます。
+.
 
 MessageId=8562
 Severity=Success
@@ -28396,6 +33429,11 @@ Language=Romanian
 Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
+Language=Japanese
+セキュリティ アカウント マネージャの初期化が次のエラーにより失敗しました: %1
+エラー ステータス: 0x%2
+[OK] をクリックしてシステムをシャットダウンしてください。回復コンソールを使用してシステムをさらに診断できます。
+.
 
 MessageId=8563
 Severity=Success
@@ -28412,6 +33450,9 @@ Wersja zainstalowanego systemu operacyjnego jest niezgodna z bieżącym poziomem
 .
 Language=Romanian
 The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
+.
+Language=Japanese
+オペレーティング システムのバージョンは現在の AD DS フォレスト機能ルと互換性がありません。
 .
 
 MessageId=8564
@@ -28430,6 +33471,9 @@ Wersja zainstalowanego systemu operacyjnego jest niezgodna z bieżącym poziomem
 Language=Romanian
 The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
 .
+Language=Japanese
+インストールされているオペレーティングシステムのバージョンは、現在のドメイン機能レベルと互換性がありません。このサーバーがこのドメインのドメイン コントローラーになる前に、新しいバージョンのオペレーティングシステムにアップグレードする必要があります。
+.
 
 MessageId=8565
 Severity=Success
@@ -28446,6 +33490,9 @@ Wersja systemu operacyjnego zainstalowana na tym serwerze nie obsługuje już bi
 .
 Language=Romanian
 This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
+.
+Language=Japanese
+このサーバーにインストールされているオペレーティングシステムのバージョンは、現在のAD DSフォレスト機能レベルまたはAD LDS構成セット機能レベルをサポートしなくなりました。このサーバーがこのフォレストまたは構成セットでAD DSドメイン コントローラーまたはAD LDSインスタンスになるには、AD DSフォレスト機能レベルまたはAD LDS構成セット機能レベルを上げる必要があります。
 .
 
 MessageId=8566
@@ -28464,6 +33511,9 @@ Wersja systemu operacyjnego zainstalowana na tym serwerze nie obsługuje już bi
 Language=Romanian
 This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
 .
+Language=Japanese
+このサーバーにインストールされているオペレーティング システムのバージョンは、現在のドメイン機能レベルをサポートしていません。このサーバーがこのドメインのドメイン コントローラーになる前に、ドメイン機能レベルを上げる必要があります。
+.
 
 MessageId=8567
 Severity=Success
@@ -28480,6 +33530,9 @@ Wersja zainstalowanego systemu operacyjnego na tym serwerze jest niezgodna z poz
 .
 Language=Romanian
 The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
+.
+Language=Japanese
+このサーバーにインストールされているオペレーティング システムのバージョンは、ドメインまたはフォレストの機能レベルと互換性がありません。
 .
 
 MessageId=8568
@@ -28498,6 +33551,9 @@ Poziomu funkcjonalności domeny (lub lasu) nie można zwiększyć do żądanej w
 Language=Romanian
 The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
 .
+Language=Japanese
+ドメイン (またはフォレスト) の機能レベルは、ドメイン (またはフォレスト) 内に互換性のない下位の機能レベルにある1つまたは複数のドメイン コントローラーが存在するため、要求された値まで上げることができません。
+.
 
 MessageId=8569
 Severity=Success
@@ -28514,6 +33570,9 @@ Poziomu funkcjonalności lasu nie można zwiększyć do żądanej wartości, pon
 .
 Language=Romanian
 The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
+.
+Language=Japanese
+1つ以上のドメインが混合ドメインモードのままであるため、フォレスト機能レベルを要求された値まで上げることができません。フォレスト機能レベルを上げるには、フォレスト内のすべてのドメインがネイティブ モードである必要があります。
 .
 
 MessageId=8570
@@ -28532,6 +33591,9 @@ Language=Polish
 Language=Romanian
 The sort order requested is not supported.
 .
+Language=Japanese
+要求されたソート順序はサポートされていません。
+.
 
 MessageId=8571
 Severity=Success
@@ -28548,6 +33610,9 @@ Language=Polish
 .
 Language=Romanian
 The requested name already exists as a unique identifier.
+.
+Language=Japanese
+要求された名前は一意識別子として既に存在します。
 .
 
 MessageId=8572
@@ -28566,6 +33631,9 @@ Konto komputera zostało utworzone przed systemem NT4. Konto musi być utworzone
 Language=Romanian
 The machine account was created pre-NT4. The account needs to be recreated.
 .
+Language=Japanese
+マシン アカウントがNT4以前に作成されました。アカウントを再作成する必要があります。
+.
 
 MessageId=8573
 Severity=Success
@@ -28582,6 +33650,9 @@ Baza danych działa bez magazynu wersji.
 .
 Language=Romanian
 The database is out of version store.
+.
+Language=Japanese
+データベースがバージョンストアから外れています。
 .
 
 MessageId=8574
@@ -28600,6 +33671,9 @@ Nie można kontynuować operacji, ponieważ użyto wielu konfliktowych elementó
 Language=Romanian
 Unable to continue operation because multiple conflicting controls were used.
 .
+Language=Japanese
+複数の競合するコントロールが使用されたため、操作を続行できません。
+.
 
 MessageId=8575
 Severity=Success
@@ -28616,6 +33690,9 @@ Nie można odnaleźć prawidłowej domeny odniesienia deskryptora zabezpieczeń 
 .
 Language=Romanian
 Unable to find a valid security descriptor reference domain for this partition.
+.
+Language=Japanese
+このパーティションの有効なセキュリティ記述子参照ドメインが見つかりません。
 .
 
 MessageId=8576
@@ -28634,6 +33711,9 @@ Nie można zaktualizować schematu: identyfikator łącza jest zarezerwowany.
 Language=Romanian
 Schema update failed: The link identifier is reserved.
 .
+Language=Japanese
+スキーマの更新に失敗しました: リンク識別子は予約されています。
+.
 
 MessageId=8577
 Severity=Success
@@ -28650,6 +33730,9 @@ Nie można zaktualizować schematu: brak dostępnych identyfikatorów łącza.
 .
 Language=Romanian
 Schema update failed: There are no link identifiers available.
+.
+Language=Japanese
+スキーマの更新に失敗しました。
 .
 
 MessageId=8578
@@ -28668,6 +33751,9 @@ Grupa uniwersalna nie może być członkiem grupy kont.
 Language=Romanian
 An account group cannot have a universal group as a member.
 .
+Language=Japanese
+アカウント グループにユニバーサル グループをメンバとして含めることはできません。
+.
 
 MessageId=8579
 Severity=Success
@@ -28684,6 +33770,9 @@ Operacje zmiany nazwy i przenoszenia dla początków kontekstu nazewnictwa i obi
 .
 Language=Romanian
 Rename or move operations on naming context heads or read-only objects are not allowed.
+.
+Language=Japanese
+名前付けコンテキスト ヘッドまたは読み取り専用オブジェクトに対する名前の変更または移動操作は許可されていません。
 .
 
 MessageId=8580
@@ -28702,6 +33791,9 @@ Operacje przenoszenia obiektów w kontekście nazewnictwa schematu są niedozwol
 Language=Romanian
 Move operations on objects in the schema naming context are not allowed.
 .
+Language=Japanese
+スキーマ名前コンテキスト内のオブジェクトに対する移動操作は許可されていません。
+.
 
 MessageId=8581
 Severity=Success
@@ -28718,6 +33810,9 @@ Dla obiektu ustawiono flagę systemową, która nie pozwala na przeniesienie obi
 .
 Language=Romanian
 A system flag has been set on the object and does not allow the object to be moved or renamed.
+.
+Language=Japanese
+システム フラグがオブジェクトに設定されているため、オブジェクトの移動または名前の変更ができません。
 .
 
 MessageId=8582
@@ -28736,6 +33831,9 @@ Dla tego obiektu nie jest dozwolona zmiana jego kontenera nadrzędnego. Przenosz
 Language=Romanian
 This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
 .
+Language=Japanese
+このオブジェクトは祖父母コンテナを変更できません。このオブジェクトでは移動は禁止されていませんが、兄弟コンテナに制限されています。
+.
 
 MessageId=8583
 Severity=Success
@@ -28752,6 +33850,9 @@ Nie można w pełni rozpoznać; generowane jest odwołanie do innego lasu.
 .
 Language=Romanian
 Unable to resolve completely, a referral to another forest is generated.
+.
+Language=Japanese
+完全に解決できないため、別のフォレストへの参照が生成されます。
 .
 
 MessageId=8584
@@ -28770,6 +33871,9 @@ Language=Polish
 Language=Romanian
 The requested action is not supported on standard server.
 .
+Language=Japanese
+要求されたアクションは標準サーバーでサポートされていません。
+.
 
 MessageId=8585
 Severity=Success
@@ -28786,6 +33890,9 @@ Nie można uzyskać dostępu do partycji usługi katalogowej znajdującej się n
 .
 Language=Romanian
 Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
+.
+Language=Japanese
+リモートサーバーにあるディレクトリサービスのパーティションにアクセスできませんでした。問題のパーティションに対して少なくとも1つのサーバーが実行されていることを確認してください。
 .
 
 MessageId=8586
@@ -28804,6 +33911,9 @@ Katalog nie może sprawdzić poprawności proponowanej nazwy kontekstu nazewnict
 Language=Romanian
 The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
 .
+Language=Japanese
+ディレクトリがレプリカを保持していないため、提案されたネーミング コンテキスト (またはパーティション) 名を検証できません。親ネーミング コンテキストがDNSに正しく登録されており、このネーミング コンテキストの少なくとも1つのレプリカがドメイン ネーミング マスターによって到達可能であることを確認してください。
+.
 
 MessageId=8587
 Severity=Success
@@ -28820,6 +33930,9 @@ Przekroczono limit wątków dla tego żądania.
 .
 Language=Romanian
 The thread limit for this request was exceeded.
+.
+Language=Japanese
+この要求のスレッド制限を超えました。
 .
 
 MessageId=8588
@@ -28838,6 +33951,9 @@ Serwer wykazu globalnego nie znajduje się w najbliższej witrynie.
 Language=Romanian
 The Global catalog server is not in the closet site.
 .
+Language=Japanese
+グローバル カタログ サーバーが最も近いサイトにありません。
+.
 
 MessageId=8589
 Severity=Success
@@ -28854,6 +33970,9 @@ Usługa katalogowa nie może uzyskać głównej nazwy usługi (SPN) używanej z 
 .
 Language=Romanian
 The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
+.
+Language=Japanese
+ローカル DS データベース内の対応するサーバー オブジェクトに serverReference 属性がないため、DS はターゲット サーバーを相互に認証するためのサービス プリンシパル名 (SPN)  を導き出すことができません。
 .
 
 MessageId=8590
@@ -28872,6 +33991,9 @@ Nie można przełączyć usługi katalogowej do trybu jednego użytkownika.
 Language=Romanian
 The Directory Service failed to enter single user mode.
 .
+Language=Japanese
+ディレクトリ サービスがシングル ユーザー モードに移行できませんでした。
+.
 
 MessageId=8591
 Severity=Success
@@ -28888,6 +34010,9 @@ Usługa katalogowa nie może zanalizować skryptu z powodu błędu składniowego
 .
 Language=Romanian
 The Directory Service cannot parse the script because of a syntax error.
+.
+Language=Japanese
+構文エラーにより、ディレクトリ サービスはスクリプトを解析できません。
 .
 
 MessageId=8592
@@ -28906,6 +34031,9 @@ Usługa katalogowa nie może przetworzyć skryptu z powodu błędu.
 Language=Romanian
 The Directory Service cannot process the script because of an error.
 .
+Language=Japanese
+ディレクトリ サービスはエラーによりスクリプトを処理できません。
+.
 
 MessageId=8593
 Severity=Success
@@ -28922,6 +34050,9 @@ Usługa katalogowa nie może wykonać żądanej operacji, ponieważ serwery, kt�
 .
 Language=Romanian
 The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
+.
+Language=Japanese
+関係するサーバーのレプリケーション エポックが異なるため、ディレクトリ サービスは要求された操作を実行できません (これは通常、進行中のドメイン名の変更に関連しています) 。
 .
 
 MessageId=8594
@@ -28940,6 +34071,9 @@ Powiązanie usługi katalogowej musi być ponownie negocjowane z powodu zmiany i
 Language=Romanian
 The directory service binding must be renegotiated due to a change in the server extensions information.
 .
+Language=Japanese
+サーバー拡張情報の変更により、ディレクトリサービスのバインディングを再交渉する必要があります。
+.
 
 MessageId=8595
 Severity=Success
@@ -28956,6 +34090,9 @@ Operacja niedozwolona dla wyłączonego odwołania krzyżowego.
 .
 Language=Romanian
 Operation not allowed on a disabled cross ref.
+.
+Language=Japanese
+無効化されたCross Refに対する操作は許可されていません。
 .
 
 MessageId=8596
@@ -28974,6 +34111,9 @@ Nie można zaktualizować schematu: brak dostępnych wartości dla identyfikator
 Language=Romanian
 Schema update failed: No values for msDS-IntId are available.
 .
+Language=Japanese
+スキーマの更新に失敗しました。
+.
 
 MessageId=8597
 Severity=Success
@@ -28990,6 +34130,9 @@ Nie można zaktualizować schematu: zduplikowany identyfikator msDS-INtId. Ponó
 .
 Language=Romanian
 Schema update failed: Duplicate msDS-IntId. Retry the operation.
+.
+Language=Japanese
+スキーマの更新に失敗しました: msDS-INtId が重複しています。操作を再試行してください。
 .
 
 MessageId=8598
@@ -29008,6 +34151,9 @@ Usunięcie schematu nie powiodło się: atrybut jest używany w parametrze rDNAt
 Language=Romanian
 Schema deletion failed: attribute is used in rDNAttID.
 .
+Language=Japanese
+スキーマの削除に失敗しました: 属性がrDNAで使用されています。
+.
 
 MessageId=8599
 Severity=Success
@@ -29024,6 +34170,9 @@ Usługa katalogowa nie może autoryzować żądania.
 .
 Language=Romanian
 The directory service failed to authorize the request.
+.
+Language=Japanese
+ディレクトリ サービスは要求の認証に失敗しました。
 .
 
 MessageId=8600
@@ -29042,6 +34191,9 @@ Usługa katalogowa nie może przetworzyć skryptu, ponieważ jest on nieprawidł
 Language=Romanian
 The Directory Service cannot process the script because it is invalid.
 .
+Language=Japanese
+スクリプトが無効なため、ディレクトリ サービスで処理できません。
+.
 
 MessageId=8601
 Severity=Success
@@ -29058,6 +34210,9 @@ Operacja zdalnego utworzenia odwołania krzyżowego nie powiodła się dla opera
 .
 Language=Romanian
 The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
+.
+Language=Japanese
+ドメインネーミングマスターFSMOでリモートの相互参照の作成操作に失敗しました。操作のエラーは拡張データにあります。
 .
 
 MessageId=8602
@@ -29076,6 +34231,9 @@ Odsyłacz jest używany lokalnie z tą samą nazwą.
 Language=Romanian
 A cross reference is in use locally with the same name.
 .
+Language=Japanese
+ローカルで同じ名前の相互参照が使用されています。
+.
 
 MessageId=8603
 Severity=Success
@@ -29092,6 +34250,9 @@ Usługa katalogowa nie może uzyskać głównej nazwy usługi (SPN) używanej z 
 .
 Language=Romanian
 The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
+.
+Language=Japanese
+サーバーのドメインがフォレストから削除されたため、DSがターゲットサーバーを相互認証するためのサービスプリンシパル名 (SPN) を導出できません。
 .
 
 MessageId=8604
@@ -29110,6 +34271,9 @@ Zapisywalne klastry węzłów nie pozwalają na obniżenie poziomu tego kontrole
 Language=Romanian
 Writeable NCs prevent this DC from demoting.
 .
+Language=Japanese
+書き込み可能なNCにより、このDCは降格できません。
+.
 
 MessageId=8605
 Severity=Success
@@ -29126,6 +34290,9 @@ Language=Polish
 .
 Language=Romanian
 The requested object has a non-unique identifier and cannot be retrieved.
+.
+Language=Japanese
+要求されたオブジェクトに一意でない識別子があり、取得できません。
 .
 
 MessageId=8606
@@ -29144,6 +34311,9 @@ Nadano atrybuty, które nie wystarczają do utworzenia obiektu. Ten obiekt może
 Language=Romanian
 Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
 .
+Language=Japanese
+オブジェクトを作成するための属性が不足しています。このオブジェクトは削除され、すでにガベージ コレクトされている可能性があるため、存在しない可能性があります。
+.
 
 MessageId=8607
 Severity=Success
@@ -29160,6 +34330,9 @@ Nie można konwertować grupy z powodu ograniczeń atrybutów w żądanym typie 
 .
 Language=Romanian
 The group cannot be converted due to attribute restrictions on the requested group type.
+.
+Language=Japanese
+要求されたグループ タイプの属性制限のため、グループを変換できません。
 .
 
 MessageId=8608
@@ -29178,6 +34351,9 @@ Przeniesienie poza domenę niepustych grup podstawowych aplikacji jest niedozwol
 Language=Romanian
 Cross-domain move of non-empty basic application groups is not allowed.
 .
+Language=Japanese
+空でない基本アプリケーション グループのクロスドメイン移動は許可されていません。
+.
 
 MessageId=8609
 Severity=Success
@@ -29194,6 +34370,9 @@ Przeniesienie poza domenę niepustych grup podstawowych aplikacji opartych na za
 .
 Language=Romanian
 Cross-domain move on non-empty query based application groups is not allowed.
+.
+Language=Japanese
+空でないクエリベースのアプリケーショングループのクロスドメイン移動は許可されていません。
 .
 
 MessageId=8610
@@ -29212,6 +34391,9 @@ Nie można zweryfikować własności roli FSMO, ponieważ jej partycja katalogu 
 Language=Romanian
 The role owner could not be verified because replication of its partition has not occurred recently.
 .
+Language=Japanese
+ディレクトリ パーティションが少なくとも1つのレプリケーション パートナーと正常にレプリケートされていないため、FSMOロールの所有権を検証できませんでした。
+.
 
 MessageId=8611
 Severity=Success
@@ -29228,6 +34410,9 @@ Kontener docelowy przekierowania dobrze znanych obiektów nie może już być ko
 .
 Language=Romanian
 The target container for a redirection of a well-known object container cannot already be a special container.
+.
+Language=Japanese
+既知のオブジェクト コンテナのリダイレクトのターゲット コンテナは、すでに特殊コンテナであることはできません。
 .
 
 MessageId=8612
@@ -29246,6 +34431,9 @@ Usługa katalogowa nie może wykonać żądanej operacji, ponieważ trwa operacj
 Language=Romanian
 The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
 .
+Language=Japanese
+ドメイン名の変更操作が進行中のため、ディレクトリ サービスは要求された操作を実行できません。
+.
 
 MessageId=8613
 Severity=Success
@@ -29262,6 +34450,9 @@ Usługa katalogowa wykryła partycję podrzędną poniżej żądanej nazwy party
 .
 Language=Romanian
 The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
+.
+Language=Japanese
+ディレクトリ サービスは要求されたパーティション名の下に子パーティションを検出しました。パーティション階層はトップダウン方式で作成する必要があります。
 .
 
 MessageId=8614
@@ -29280,6 +34471,9 @@ Usługa katalogowa nie może replikować z tym serwerem, ponieważ czas, który 
 Language=Romanian
 The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
 .
+Language=Japanese
+このサーバーとの最後のレプリケーションからの時間が墓碑銘の有効期間を超えているため、ディレクトリ サービスはこのサーバーとレプリケーションできません。
+.
 
 MessageId=8615
 Severity=Success
@@ -29296,6 +34490,9 @@ Language=Polish
 .
 Language=Romanian
 The requested operation is not allowed on an object under the system container.
+.
+Language=Japanese
+要求された操作は、システム コンテナ配下のオブジェクトでは許可されていません。
 .
 
 MessageId=8616
@@ -29314,6 +34511,9 @@ Kolejka odbiorcza sieci serwerów LDAP wypełniła się, ponieważ klient nie pr
 Language=Romanian
 The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
+Language=Japanese
+クライアントが要求の結果を十分に速く処理できないため、LDAPサーバーのネットワーク送信キューがいっぱいになりました。クライアントが追いつくまで、これ以上のリクエストは処理されません。クライアントが追いつかない場合、クライアントは切断されます。
+.
 
 MessageId=8617
 Severity=Success
@@ -29330,6 +34530,9 @@ Zaplanowana replikacja nie została przeprowadzona, ponieważ system był zbyt z
 .
 Language=Romanian
 The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
+.
+Language=Japanese
+システムがビジー状態でスケジュール ウィンドウ内に要求を実行できなかったため、スケジュールされたレプリケーションが実行されませんでした。レプリケーション キューが過負荷です。パートナーの数を減らすか、スケジュールされたレプリケーションの頻度を減らしてください。
 .
 
 MessageId=9001
@@ -29348,6 +34551,9 @@ DNS server unable to interpret format.
 Language=Romanian
 DNS server unable to interpret format.
 .
+Language=Japanese
+DNSサーバーがフォーマットを解釈できません。
+.
 
 MessageId=9002
 Severity=Success
@@ -29364,6 +34570,9 @@ DNS server failure.
 .
 Language=Romanian
 DNS server failure.
+.
+Language=Japanese
+DNSサーバーの失敗です。
 .
 
 MessageId=9003
@@ -29382,6 +34591,9 @@ DNS name does not exist.
 Language=Romanian
 DNS name does not exist.
 .
+Language=Japanese
+DNS名が存在しません。
+.
 
 MessageId=9004
 Severity=Success
@@ -29398,6 +34610,9 @@ DNS request not supported by name server.
 .
 Language=Romanian
 DNS request not supported by name server.
+.
+Language=Japanese
+DNS リクエストがネームサーバーによってサポートされていません。
 .
 
 MessageId=9005
@@ -29416,6 +34631,9 @@ DNS operation refused.
 Language=Romanian
 DNS operation refused.
 .
+Language=Japanese
+DNS 操作が拒否されました。
+.
 
 MessageId=9006
 Severity=Success
@@ -29432,6 +34650,9 @@ DNS name that ought not exist, does exist.
 .
 Language=Romanian
 DNS name that ought not exist, does exist.
+.
+Language=Japanese
+存在しないはずのDNS名が存在する。
 .
 
 MessageId=9007
@@ -29450,6 +34671,9 @@ DNS RR set that ought not exist, does exist.
 Language=Romanian
 DNS RR set that ought not exist, does exist.
 .
+Language=Japanese
+存在しないはずのDNS RRセットが存在します。
+.
 
 MessageId=9008
 Severity=Success
@@ -29466,6 +34690,9 @@ DNS RR set that ought to exist, does not exist.
 .
 Language=Romanian
 DNS RR set that ought to exist, does not exist.
+.
+Language=Japanese
+存在しないはずのDNS RRセットが存在しない。
 .
 
 MessageId=9009
@@ -29484,6 +34711,9 @@ DNS server not authoritative for zone.
 Language=Romanian
 DNS server not authoritative for zone.
 .
+Language=Japanese
+DNSサーバーがゾーンの権威ではありません。
+.
 
 MessageId=9010
 Severity=Success
@@ -29500,6 +34730,9 @@ DNS name in update or prereq is not in zone.
 .
 Language=Romanian
 DNS name in update or prereq is not in zone.
+.
+Language=Japanese
+更新または prereq の DNS 名がゾーンにありません。
 .
 
 MessageId=9016
@@ -29518,6 +34751,9 @@ DNS signature failed to verify.
 Language=Romanian
 DNS signature failed to verify.
 .
+Language=Japanese
+DNS署名の検証に失敗しました。
+.
 
 MessageId=9017
 Severity=Success
@@ -29534,6 +34770,9 @@ DNS bad key.
 .
 Language=Romanian
 DNS bad key.
+.
+Language=Japanese
+DNSキーが不正です。
 .
 
 MessageId=9018
@@ -29552,6 +34791,9 @@ DNS signature validity expired.
 Language=Romanian
 DNS signature validity expired.
 .
+Language=Japanese
+DNS署名の有効期限が切れました。
+.
 
 MessageId=9501
 Severity=Success
@@ -29568,6 +34810,9 @@ No records found for given DNS query.
 .
 Language=Romanian
 No records found for given DNS query.
+.
+Language=Japanese
+指定されたDNSクエリのレコードが見つかりません。
 .
 
 MessageId=9502
@@ -29586,6 +34831,9 @@ Bad DNS packet.
 Language=Romanian
 Bad DNS packet.
 .
+Language=Japanese
+不正なDNSパケットです。
+.
 
 MessageId=9503
 Severity=Success
@@ -29602,6 +34850,9 @@ No DNS packet.
 .
 Language=Romanian
 No DNS packet.
+.
+Language=Japanese
+DNS パケットがありません。
 .
 
 MessageId=9504
@@ -29620,6 +34871,9 @@ DNS error, check rcode.
 Language=Romanian
 DNS error, check rcode.
 .
+Language=Japanese
+DNSエラー、rcodeをチェックしてください。
+.
 
 MessageId=9505
 Severity=Success
@@ -29636,6 +34890,9 @@ Unsecured DNS packet.
 .
 Language=Romanian
 Unsecured DNS packet.
+.
+Language=Japanese
+安全でないDNSパケットです。
 .
 
 MessageId=9551
@@ -29654,6 +34911,9 @@ Invalid DNS type.
 Language=Romanian
 Invalid DNS type.
 .
+Language=Japanese
+無効なDNSタイプです。
+.
 
 MessageId=9552
 Severity=Success
@@ -29670,6 +34930,9 @@ Invalid IP address.
 .
 Language=Romanian
 Invalid IP address.
+.
+Language=Japanese
+無効なIPアドレスです。
 .
 
 MessageId=9553
@@ -29688,6 +34951,9 @@ Invalid property.
 Language=Romanian
 Invalid property.
 .
+Language=Japanese
+無効なプロパティです。
+.
 
 MessageId=9554
 Severity=Success
@@ -29704,6 +34970,9 @@ Try DNS operation again later.
 .
 Language=Romanian
 Try DNS operation again later.
+.
+Language=Japanese
+DNS操作を後で再試行してください。
 .
 
 MessageId=9555
@@ -29722,6 +34991,9 @@ Record for given name and type is not unique.
 Language=Romanian
 Record for given name and type is not unique.
 .
+Language=Japanese
+指定された名前と型のレコードは一意ではありません。
+.
 
 MessageId=9556
 Severity=Success
@@ -29738,6 +35010,9 @@ DNS name does not comply with RFC specifications.
 .
 Language=Romanian
 DNS name does not comply with RFC specifications.
+.
+Language=Japanese
+DNS 名が RFC 仕様に準拠していません。
 .
 
 MessageId=9557
@@ -29756,6 +35031,9 @@ DNS name is a fully-qualified DNS name.
 Language=Romanian
 DNS name is a fully-qualified DNS name.
 .
+Language=Japanese
+DNS名は完全修飾DNS名です。
+.
 
 MessageId=9558
 Severity=Success
@@ -29772,6 +35050,9 @@ DNS name is dotted (multi-label).
 .
 Language=Romanian
 DNS name is dotted (multi-label).
+.
+Language=Japanese
+DNS名がドット (マルチラベル) です。
 .
 
 MessageId=9559
@@ -29790,6 +35071,10 @@ DNS name is a single-part name.
 Language=Romanian
 DNS name is a single-part name.
 .
+Language=Japanese
+DNS名がシングルパート名 
+ です。
+.
 
 MessageId=9560
 Severity=Success
@@ -29806,6 +35091,9 @@ DSN name contains an invalid character.
 .
 Language=Romanian
 DSN name contains an invalid character.
+.
+Language=Japanese
+DNS名に無効な文字が含まれています。
 .
 
 MessageId=9561
@@ -29824,6 +35112,9 @@ DNS name is entirely numeric.
 Language=Romanian
 DNS name is entirely numeric.
 .
+Language=Japanese
+DNS名がすべて数字です。
+.
 
 MessageId=9562
 Severity=Success
@@ -29840,6 +35131,9 @@ The operation requested is not permitted on a DNS root server.
 .
 Language=Romanian
 The operation requested is not permitted on a DNS root server.
+.
+Language=Japanese
+要求された操作はDNSルート サーバーで許可されていません。
 .
 
 MessageId=9563
@@ -29858,6 +35152,9 @@ The record could not be created because this part of the DNS namespace has been 
 Language=Romanian
 The record could not be created because this part of the DNS namespace has been delegated to another server.
 .
+Language=Japanese
+DNSネームスペースのこの部分が別のサーバーに委譲されているため、レコードを作成できませんでした。
+.
 
 MessageId=9564
 Severity=Success
@@ -29874,6 +35171,9 @@ The DNS server could not find a set of root hints.
 .
 Language=Romanian
 The DNS server could not find a set of root hints.
+.
+Language=Japanese
+DNSサーバーがルートヒントのセットを見つけられませんでした。
 .
 
 MessageId=9565
@@ -29892,6 +35192,9 @@ The DNS server found root hints but they were not consistent across all adapters
 Language=Romanian
 The DNS server found root hints but they were not consistent across all adapters.
 .
+Language=Japanese
+DNSサーバーがルートヒントを見つけましたが、すべてのアダプターで一貫していませんでした。
+.
 
 MessageId=9601
 Severity=Success
@@ -29908,6 +35211,9 @@ DNS zone does not exist.
 .
 Language=Romanian
 DNS zone does not exist.
+.
+Language=Japanese
+DNSゾーンが存在しません。
 .
 
 MessageId=9602
@@ -29926,6 +35232,9 @@ DNS zone information not available.
 Language=Romanian
 DNS zone information not available.
 .
+Language=Japanese
+DNSゾーン情報が利用できません。
+.
 
 MessageId=9603
 Severity=Success
@@ -29942,6 +35251,9 @@ Invalid operation for DNS zone.
 .
 Language=Romanian
 Invalid operation for DNS zone.
+.
+Language=Japanese
+DNSゾーンの操作が無効です。
 .
 
 MessageId=9604
@@ -29960,6 +35272,9 @@ Invalid DNS zone configuration.
 Language=Romanian
 Invalid DNS zone configuration.
 .
+Language=Japanese
+無効なDNSゾーン構成です。
+.
 
 MessageId=9605
 Severity=Success
@@ -29976,6 +35291,9 @@ DNS zone has no start of authority (SOA) record.
 .
 Language=Romanian
 DNS zone has no start of authority (SOA) record.
+.
+Language=Japanese
+DNSゾーンにSOAレコードがありません。
 .
 
 MessageId=9606
@@ -29994,6 +35312,9 @@ DNS zone has no name server (NS) record.
 Language=Romanian
 DNS zone has no name server (NS) record.
 .
+Language=Japanese
+DNSゾーンにネームサーバー (NS) レコードがありません。
+.
 
 MessageId=9607
 Severity=Success
@@ -30010,6 +35331,9 @@ DNS zone is locked.
 .
 Language=Romanian
 DNS zone is locked.
+.
+Language=Japanese
+DNSゾーンがロックされています。
 .
 
 MessageId=9608
@@ -30028,6 +35352,9 @@ DNS zone creation failed.
 Language=Romanian
 DNS zone creation failed.
 .
+Language=Japanese
+DNSゾーンの作成に失敗しました。
+.
 
 MessageId=9609
 Severity=Success
@@ -30044,6 +35371,9 @@ DNS zone already exists.
 .
 Language=Romanian
 DNS zone already exists.
+.
+Language=Japanese
+DNSゾーンはすでに存在します。
 .
 
 MessageId=9610
@@ -30062,6 +35392,9 @@ DNS automatic zone already exists.
 Language=Romanian
 DNS automatic zone already exists.
 .
+Language=Japanese
+DNS自動ゾーンはすでに存在します。
+.
 
 MessageId=9611
 Severity=Success
@@ -30078,6 +35411,9 @@ Invalid DNS zone type.
 .
 Language=Romanian
 Invalid DNS zone type.
+.
+Language=Japanese
+無効なDNSゾーンタイプです。
 .
 
 MessageId=9612
@@ -30096,6 +35432,9 @@ Secondary DNS zone requires master IP address.
 Language=Romanian
 Secondary DNS zone requires master IP address.
 .
+Language=Japanese
+セカンダリDNSゾーンにはマスターIPアドレスが必要です。
+.
 
 MessageId=9613
 Severity=Success
@@ -30112,6 +35451,9 @@ DNS zone not secondary.
 .
 Language=Romanian
 DNS zone not secondary.
+.
+Language=Japanese
+DNSゾーンはセカンダリではありません。
 .
 
 MessageId=9614
@@ -30130,6 +35472,9 @@ Need secondary IP address.
 Language=Romanian
 Need secondary IP address.
 .
+Language=Japanese
+セカンダリIPアドレスが必要です。
+.
 
 MessageId=9615
 Severity=Success
@@ -30146,6 +35491,9 @@ WINS initialization failed.
 .
 Language=Romanian
 WINS initialization failed.
+.
+Language=Japanese
+WINSの初期化に失敗しました。
 .
 
 MessageId=9616
@@ -30164,6 +35512,9 @@ Need WINS servers.
 Language=Romanian
 Need WINS servers.
 .
+Language=Japanese
+WINSサーバーが必要です。
+.
 
 MessageId=9617
 Severity=Success
@@ -30180,6 +35531,9 @@ NBTSTAT initialization call failed.
 .
 Language=Romanian
 NBTSTAT initialization call failed.
+.
+Language=Japanese
+NBTSTAT初期化コールに失敗しました。
 .
 
 MessageId=9618
@@ -30198,6 +35552,9 @@ Invalid delete of start of authority (SOA)
 Language=Romanian
 Invalid delete of start of authority (SOA)
 .
+Language=Japanese
+権限の開始 (SOA) の無効な削除です。
+.
 
 MessageId=9619
 Severity=Success
@@ -30214,6 +35571,9 @@ A conditional forwarding zone already exists for that name.
 .
 Language=Romanian
 A conditional forwarding zone already exists for that name.
+.
+Language=Japanese
+その名前に対して条件付き転送ゾーンがすでに存在します。
 .
 
 MessageId=9620
@@ -30232,6 +35592,9 @@ This zone must be configured with one or more master DNS server IP addresses.
 Language=Romanian
 This zone must be configured with one or more master DNS server IP addresses.
 .
+Language=Japanese
+このゾーンは1つ以上のマスターDNSサーバーIPアドレスで構成されている必要があります。
+.
 
 MessageId=9621
 Severity=Success
@@ -30248,6 +35611,9 @@ The operation cannot be performed because this zone is shutdown.
 .
 Language=Romanian
 The operation cannot be performed because this zone is shutdown.
+.
+Language=Japanese
+このゾーンはシャットダウンされているため、操作は実行できません。
 .
 
 MessageId=9651
@@ -30266,6 +35632,9 @@ Primary DNS zone requires datafile.
 Language=Romanian
 Primary DNS zone requires datafile.
 .
+Language=Japanese
+プライマリDNSゾーンにはデータファイルが必要です。
+.
 
 MessageId=9652
 Severity=Success
@@ -30282,6 +35651,9 @@ Invalid datafile name for DNS zone.
 .
 Language=Romanian
 Invalid datafile name for DNS zone.
+.
+Language=Japanese
+DNSゾーンのデータファイル名が無効です。
 .
 
 MessageId=9653
@@ -30300,6 +35672,9 @@ Failed to open datafile for DNS zone.
 Language=Romanian
 Failed to open datafile for DNS zone.
 .
+Language=Japanese
+DNSゾーンのデータファイルを開けませんでした。
+.
 
 MessageId=9654
 Severity=Success
@@ -30316,6 +35691,9 @@ Failed to write datafile for DNS zone.
 .
 Language=Romanian
 Failed to write datafile for DNS zone.
+.
+Language=Japanese
+DNSゾーンのデータファイルの書き込みに失敗しました。
 .
 
 MessageId=9655
@@ -30334,6 +35712,9 @@ Failure while reading datafile for DNS zone.
 Language=Romanian
 Failure while reading datafile for DNS zone.
 .
+Language=Japanese
+DNSゾーンのデータファイルの読み込みに失敗しました
+.
 
 MessageId=9701
 Severity=Success
@@ -30350,6 +35731,9 @@ DNS record does not exist.
 .
 Language=Romanian
 DNS record does not exist.
+.
+Language=Japanese
+DNSレコードが存在しません。
 .
 
 MessageId=9702
@@ -30368,6 +35752,9 @@ DNS record format error.
 Language=Romanian
 DNS record format error.
 .
+Language=Japanese
+DNSレコードのフォーマットエラーです。
+.
 
 MessageId=9703
 Severity=Success
@@ -30384,6 +35771,9 @@ Node creation failure in DNS.
 .
 Language=Romanian
 Node creation failure in DNS.
+.
+Language=Japanese
+DNSのノード作成に失敗しました。
 .
 
 MessageId=9704
@@ -30402,6 +35792,9 @@ Unknown DNS record type.
 Language=Romanian
 Unknown DNS record type.
 .
+Language=Japanese
+不明な DNS レコード タイプです。
+.
 
 MessageId=9705
 Severity=Success
@@ -30418,6 +35811,9 @@ DNS record timed out.
 .
 Language=Romanian
 DNS record timed out.
+.
+Language=Japanese
+DNSレコードがタイムアウトしました。
 .
 
 MessageId=9706
@@ -30436,6 +35832,9 @@ Name not in DNS zone.
 Language=Romanian
 Name not in DNS zone.
 .
+Language=Japanese
+DNSゾーンに名前がありません。
+.
 
 MessageId=9707
 Severity=Success
@@ -30452,6 +35851,9 @@ CNAME loop detected.
 .
 Language=Romanian
 CNAME loop detected.
+.
+Language=Japanese
+CNAMEループが検出されました。
 .
 
 MessageId=9708
@@ -30470,6 +35872,9 @@ Node is a CNAME DNS record.
 Language=Romanian
 Node is a CNAME DNS record.
 .
+Language=Japanese
+ノードはCNAME DNSレコードです。
+.
 
 MessageId=9709
 Severity=Success
@@ -30486,6 +35891,9 @@ A CNAME record already exists for given name.
 .
 Language=Romanian
 A CNAME record already exists for given name.
+.
+Language=Japanese
+指定された名前のCNAMEレコードは既に存在します。
 .
 
 MessageId=9710
@@ -30504,6 +35912,9 @@ Record only at DNS zone root.
 Language=Romanian
 Record only at DNS zone root.
 .
+Language=Japanese
+レコードはDNSゾーンルートにのみ存在します。
+.
 
 MessageId=9711
 Severity=Success
@@ -30520,6 +35931,9 @@ DNS record already exists.
 .
 Language=Romanian
 DNS record already exists.
+.
+Language=Japanese
+DNSレコードはすでに存在します。
 .
 
 MessageId=9712
@@ -30538,6 +35952,9 @@ Secondary DNS zone data error.
 Language=Romanian
 Secondary DNS zone data error.
 .
+Language=Japanese
+セカンダリDNSゾーンのデータ エラーです。
+.
 
 MessageId=9713
 Severity=Success
@@ -30554,6 +35971,9 @@ Could not create DNS cache data.
 .
 Language=Romanian
 Could not create DNS cache data.
+.
+Language=Japanese
+DNSキャッシュデータを作成できませんでした。
 .
 
 MessageId=9714
@@ -30572,6 +35992,9 @@ DNS name does not exist.
 Language=Romanian
 DNS name does not exist.
 .
+Language=Japanese
+DNS名が存在しません。
+.
 
 MessageId=9715
 Severity=Success
@@ -30588,6 +36011,9 @@ Could not create pointer (PTR) record.
 .
 Language=Romanian
 Could not create pointer (PTR) record.
+.
+Language=Japanese
+ポインタ (PTR) レコードを作成できませんでした。
 .
 
 MessageId=9716
@@ -30606,6 +36032,9 @@ DNS domain was undeleted.
 Language=Romanian
 DNS domain was undeleted.
 .
+Language=Japanese
+DNSドメインが削除されました。
+.
 
 MessageId=9717
 Severity=Success
@@ -30622,6 +36051,9 @@ The directory service is unavailable.
 .
 Language=Romanian
 The directory service is unavailable.
+.
+Language=Japanese
+ディレクトリ サービスは使用できません。
 .
 
 MessageId=9718
@@ -30640,6 +36072,9 @@ DNS zone already exists in the directory service.
 Language=Romanian
 DNS zone already exists in the directory service.
 .
+Language=Japanese
+DNSゾーンはすでにディレクトリサービスに存在します。
+.
 
 MessageId=9719
 Severity=Success
@@ -30656,6 +36091,9 @@ DNS server not creating or reading the boot file for the directory service integ
 .
 Language=Romanian
 DNS server not creating or reading the boot file for the directory service integrated DNS zone.
+.
+Language=Japanese
+DNSサーバーがディレクトリサービス統合DNSゾーンのブートファイルを作成または読み込んでいません。
 .
 
 MessageId=9751
@@ -30674,6 +36112,9 @@ DNS AXFR (zone transfer) complete.
 Language=Romanian
 DNS AXFR (zone transfer) complete.
 .
+Language=Japanese
+DNS AXFR (ゾーン転送) が完了しました。
+.
 
 MessageId=9752
 Severity=Success
@@ -30690,6 +36131,9 @@ DNS zone transfer failed.
 .
 Language=Romanian
 DNS zone transfer failed.
+.
+Language=Japanese
+DNS AXFR (ゾーン転送)  が完了しました: DNSゾーン転送に失敗しました。
 .
 
 MessageId=9753
@@ -30708,6 +36152,9 @@ Added local WINS server.
 Language=Romanian
 Added local WINS server.
 .
+Language=Japanese
+ローカルWINSサーバーを追加しました。
+.
 
 MessageId=9801
 Severity=Success
@@ -30724,6 +36171,9 @@ Secure update call needs to continue update request.
 .
 Language=Romanian
 Secure update call needs to continue update request.
+.
+Language=Japanese
+Secure Updateコールは更新要求を続行する必要があります。
 .
 
 MessageId=9851
@@ -30742,6 +36192,9 @@ TCP/IP network protocol not installed.
 Language=Romanian
 TCP/IP network protocol not installed.
 .
+Language=Japanese
+TCP/IPネットワークプロトコルがインストールされていません。
+.
 
 MessageId=9852
 Severity=Success
@@ -30758,6 +36211,9 @@ No DNS servers configured for local system.
 .
 Language=Romanian
 No DNS servers configured for local system.
+.
+Language=Japanese
+ローカル システムに構成された DNS サーバーがありません。
 .
 
 MessageId=9901
@@ -30776,6 +36232,9 @@ The specified directory partition does not exist.
 Language=Romanian
 The specified directory partition does not exist.
 .
+Language=Japanese
+指定されたディレクトリ パーティションが存在しません。
+.
 
 MessageId=9902
 Severity=Success
@@ -30792,6 +36251,9 @@ The specified directory partition already exists.
 .
 Language=Romanian
 The specified directory partition already exists.
+.
+Language=Japanese
+指定されたディレクトリ パーティションはすでに存在します。
 .
 
 MessageId=9903
@@ -30810,6 +36272,9 @@ The DNS server is not enlisted in the specified directory partition.
 Language=Romanian
 The DNS server is not enlisted in the specified directory partition.
 .
+Language=Japanese
+この DNS サーバーは指定されたディレクトリ パーティションに登録されていません。
+.
 
 MessageId=9904
 Severity=Success
@@ -30826,6 +36291,9 @@ The DNS server is already enlisted in the specified directory partition.
 .
 Language=Romanian
 The DNS server is already enlisted in the specified directory partition.
+.
+Language=Japanese
+このDNSサーバーは、指定されたディレクトリ パーティションにすでに登録されています。
 .
 
 MessageId=9905
@@ -30844,6 +36312,9 @@ The directory partition is not available at this time. Please wait a few minutes
 Language=Romanian
 The directory partition is not available at this time. Please wait a few minutes and try again.
 .
+Language=Japanese
+ディレクトリ パーティションは現在使用できません。数分待ってから再試行してください。
+.
 
 MessageId=9906
 Severity=Success
@@ -30860,6 +36331,9 @@ The application directory partition operation failed. The domain controller hold
 .
 Language=Romanian
 The application directory partition operation failed. The domain controller holding the domain naming master role is down or unable to service the request or is not running Windows Server 2003.
+.
+Language=Japanese
+ドメインネーミングマスターFSMOロールに到達できなかったため、操作は失敗しました。ドメイン ネーミング マスター FSMO ロールを保持するドメイン コントローラーがダウンしているか、要求を処理できないか、ReactOS Server 2003 以降が実行されていません。
 .
 
 MessageId=10004
@@ -30878,6 +36352,9 @@ A blocking operation was interrupted by a call to WSACancelBlockingCall.
 Language=Romanian
 A blocking operation was interrupted by a call to WSACancelBlockingCall.
 .
+Language=Japanese
+WSACancelBlockingCall の呼び出しによってブロック操作が中断されました。
+.
 
 MessageId=10009
 Severity=Success
@@ -30894,6 +36371,9 @@ The file handle supplied is not valid.
 .
 Language=Romanian
 The file handle supplied is not valid.
+.
+Language=Japanese
+指定されたファイルハンドルが無効です。
 .
 
 MessageId=10013
@@ -30912,6 +36392,9 @@ An attempt was made to access a socket in a way forbidden by its access permissi
 Language=Romanian
 An attempt was made to access a socket in a way forbidden by its access permissions.
 .
+Language=Japanese
+アクセス許可で禁止されている方法でソケットにアクセスしようとしました。
+.
 
 MessageId=10014
 Severity=Success
@@ -30928,6 +36411,9 @@ The system detected an invalid pointer address in attempting to use a pointer ar
 .
 Language=Romanian
 The system detected an invalid pointer address in attempting to use a pointer argument in a call.
+.
+Language=Japanese
+呼び出しでポインタ引数を使用しようとして、システムが無効なポインタアドレスを検出しました。
 .
 
 MessageId=10022
@@ -30946,6 +36432,9 @@ An invalid argument was supplied.
 Language=Romanian
 An invalid argument was supplied.
 .
+Language=Japanese
+無効な引数が指定されました。
+.
 
 MessageId=10024
 Severity=Success
@@ -30962,6 +36451,9 @@ Too many open sockets.
 .
 Language=Romanian
 Too many open sockets.
+.
+Language=Japanese
+オープンしているソケットが多すぎます。
 .
 
 MessageId=10035
@@ -30980,6 +36472,9 @@ A non-blocking socket operation could not be completed immediately.
 Language=Romanian
 A non-blocking socket operation could not be completed immediately.
 .
+Language=Japanese
+ノンブロッキングソケット操作を直ちに完了できませんでした。
+.
 
 MessageId=10036
 Severity=Success
@@ -30996,6 +36491,9 @@ A blocking operation is currently executing.
 .
 Language=Romanian
 A blocking operation is currently executing.
+.
+Language=Japanese
+ブロック操作は現在実行中です。
 .
 
 MessageId=10037
@@ -31014,6 +36512,9 @@ An operation was attempted on a non-blocking socket that already had an operatio
 Language=Romanian
 An operation was attempted on a non-blocking socket that already had an operation in progress.
 .
+Language=Japanese
+既に実行中の操作があるノンブロッキングソケットで操作を試みました。
+.
 
 MessageId=10038
 Severity=Success
@@ -31030,6 +36531,9 @@ An operation was attempted on something that is not a socket.
 .
 Language=Romanian
 An operation was attempted on something that is not a socket.
+.
+Language=Japanese
+ソケットではない何かに対して操作を試みました。
 .
 
 MessageId=10039
@@ -31048,6 +36552,9 @@ A required address was omitted from an operation on a socket.
 Language=Romanian
 A required address was omitted from an operation on a socket.
 .
+Language=Japanese
+ソケットに対する操作で必要なアドレスが省略されました。
+.
 
 MessageId=10040
 Severity=Success
@@ -31064,6 +36571,9 @@ A message sent on a datagram socket was larger than the internal message buffer 
 .
 Language=Romanian
 A message sent on a datagram socket was larger than the internal message buffer or some other network limit, or the buffer used to receive a datagram into was smaller than the datagram itself.
+.
+Language=Japanese
+データグラムソケットで送信されたメッセージが内部メッセージ バッファまたは他のネットワーク制限よりも大きかったか、データグラムを受信するために使用されたバッファがデータグラム自体よりも小さかったです。
 .
 
 MessageId=10041
@@ -31082,6 +36592,9 @@ A protocol was specified in the socket function call that does not support the s
 Language=Romanian
 A protocol was specified in the socket function call that does not support the semantics of the socket type requested.
 .
+Language=Japanese
+要求されたソケットタイプのセマンティクスをサポートしていないプロトコルがソケット関数呼び出しに指定されました。
+.
 
 MessageId=10042
 Severity=Success
@@ -31098,6 +36611,9 @@ An unknown, invalid, or unsupported option or level was specified in a getsockop
 .
 Language=Romanian
 An unknown, invalid, or unsupported option or level was specified in a getsockopt or setsockopt call.
+.
+Language=Japanese
+getsockoptまたはsetsockopt呼び出しで未知の、無効な、またはサポートされていないオプションまたはレベルが指定されました。
 .
 
 MessageId=10043
@@ -31116,6 +36632,9 @@ The requested protocol has not been configured into the system, or no implementa
 Language=Romanian
 The requested protocol has not been configured into the system, or no implementation for it exists.
 .
+Language=Japanese
+要求されたプロトコルがシステムに設定されていないか、そのプロトコルの実装が存在しません。
+.
 
 MessageId=10044
 Severity=Success
@@ -31132,6 +36651,9 @@ The support for the specified socket type does not exist in this address family.
 .
 Language=Romanian
 The support for the specified socket type does not exist in this address family.
+.
+Language=Japanese
+指定されたソケットタイプのサポートがこのアドレスファミリに存在しない。
 .
 
 MessageId=10045
@@ -31150,6 +36672,9 @@ The attempted operation is not supported for the type of object referenced.
 Language=Romanian
 The attempted operation is not supported for the type of object referenced.
 .
+Language=Japanese
+試行された操作は参照されたオブジェクトのタイプではサポートされていません。
+.
 
 MessageId=10046
 Severity=Success
@@ -31166,6 +36691,9 @@ The protocol family has not been configured into the system or no implementation
 .
 Language=Romanian
 The protocol family has not been configured into the system or no implementation for it exists.
+.
+Language=Japanese
+プロトコルファミリがシステムに設定されていないか、その実装が存在しません。
 .
 
 MessageId=10047
@@ -31184,6 +36712,9 @@ An address incompatible with the requested protocol was used.
 Language=Romanian
 An address incompatible with the requested protocol was used.
 .
+Language=Japanese
+要求されたプロトコルと互換性のないアドレスが使用されました。
+.
 
 MessageId=10048
 Severity=Success
@@ -31200,6 +36731,9 @@ Only one usage of each socket address (protocol/network address/port) is normall
 .
 Language=Romanian
 Only one usage of each socket address (protocol/network address/port) is normally permitted.
+.
+Language=Japanese
+各ソケットアドレス (プロトコル/ネットワークアドレス/ポート) の使用は通常1回のみ許可されます。
 .
 
 MessageId=10049
@@ -31218,6 +36752,9 @@ The requested address is not valid in its context.
 Language=Romanian
 The requested address is not valid in its context.
 .
+Language=Japanese
+要求されたアドレスはそのコンテキストでは無効です。
+.
 
 MessageId=10050
 Severity=Success
@@ -31234,6 +36771,9 @@ A socket operation encountered a dead network.
 .
 Language=Romanian
 A socket operation encountered a dead network.
+.
+Language=Japanese
+要求されたアドレスが無効です: ソケット操作がデッドネットワークに遭遇しました。
 .
 
 MessageId=10051
@@ -31252,6 +36792,9 @@ A socket operation was attempted to an unreachable network.
 Language=Romanian
 A socket operation was attempted to an unreachable network.
 .
+Language=Japanese
+到達不能なネットワークに対してソケット操作を試みました。
+.
 
 MessageId=10052
 Severity=Success
@@ -31268,6 +36811,9 @@ The connection has been broken due to keep-alive activity detecting a failure wh
 .
 Language=Romanian
 The connection has been broken due to keep-alive activity detecting a failure while the operation was in progress.
+.
+Language=Japanese
+操作の進行中にキープアライブアクティビティが障害を検出したため、接続が切断されました。
 .
 
 MessageId=10053
@@ -31286,6 +36832,9 @@ An established connection was aborted by the software in your host machine.
 Language=Romanian
 An established connection was aborted by the software in your host machine.
 .
+Language=Japanese
+確立された接続がホスト マシンのソフトウェアによって中断されました。
+.
 
 MessageId=10054
 Severity=Success
@@ -31302,6 +36851,9 @@ An existing connection was forcibly closed by the remote host.
 .
 Language=Romanian
 An existing connection was forcibly closed by the remote host.
+.
+Language=Japanese
+既存の接続が強制的に閉じられました: 既存の接続がリモートホストによって強制的に閉じられました。
 .
 
 MessageId=10055
@@ -31320,6 +36872,9 @@ An operation on a socket could not be performed because the system lacked suffic
 Language=Romanian
 An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full.
 .
+Language=Japanese
+既存の接続がリモートホストによって強制的に閉じられました: システムに十分なバッファ領域がないか、キューが満杯であるため、ソケットに対する操作を実行できませんでした。
+.
 
 MessageId=10056
 Severity=Success
@@ -31336,6 +36891,9 @@ A connect request was made on an already connected socket.
 .
 Language=Romanian
 A connect request was made on an already connected socket.
+.
+Language=Japanese
+既に接続されているソケットに対して接続要求を行いました。
 .
 
 MessageId=10057
@@ -31354,6 +36912,9 @@ A request to send or receive data was disallowed because the socket is not conne
 Language=Romanian
 A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied.
 .
+Language=Japanese
+ソケットが接続されておらず、 (sendto 呼び出しでデータグラムソケットに送信する場合)  アドレスが指定されなかったため、データの送受信要求を拒否しました。
+.
 
 MessageId=10058
 Severity=Success
@@ -31370,6 +36931,9 @@ A request to send or receive data was disallowed because the socket had already 
 .
 Language=Romanian
 A request to send or receive data was disallowed because the socket had already been shut down in that direction with a previous shutdown call.
+.
+Language=Japanese
+以前のシャットダウン呼び出しでその方向のソケットが既にシャットダウンされていたため、データの送受信要求が許可されませんでした。
 .
 
 MessageId=10059
@@ -31388,6 +36952,9 @@ Too many references to some kernel object.
 Language=Romanian
 Too many references to some kernel object.
 .
+Language=Japanese
+カーネルオブジェクトへの参照が多すぎます。
+.
 
 MessageId=10060
 Severity=Success
@@ -31404,6 +36971,9 @@ A connection attempt failed because the connected party did not properly respond
 .
 Language=Romanian
 A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+.
+Language=Japanese
+接続された相手が一定時間経っても適切に応答しないか、接続に失敗したため、または接続ホストが応答しなかったため、接続に失敗しました。
 .
 
 MessageId=10061
@@ -31422,6 +36992,9 @@ No connection could be made because the target machine actively refused it.
 Language=Romanian
 No connection could be made because the target machine actively refused it.
 .
+Language=Japanese
+ターゲットマシンがアクティブに拒否したため、接続できませんでした。
+.
 
 MessageId=10062
 Severity=Success
@@ -31438,6 +37011,9 @@ Cannot translate name.
 .
 Language=Romanian
 Cannot translate name.
+.
+Language=Japanese
+名前を変換できません。
 .
 
 MessageId=10063
@@ -31456,6 +37032,9 @@ Name component or name was too long.
 Language=Romanian
 Name component or name was too long.
 .
+Language=Japanese
+名前のコンポーネントまたは名前が長すぎます。
+.
 
 MessageId=10064
 Severity=Success
@@ -31472,6 +37051,9 @@ A socket operation failed because the destination host was down.
 .
 Language=Romanian
 A socket operation failed because the destination host was down.
+.
+Language=Japanese
+宛先ホストがダウンしていたため、ソケット操作に失敗しました。
 .
 
 MessageId=10065
@@ -31490,6 +37072,9 @@ A socket operation was attempted to an unreachable host.
 Language=Romanian
 A socket operation was attempted to an unreachable host.
 .
+Language=Japanese
+ソケット操作に失敗しました: 到達不能なホストに対してソケット操作を試行しました。
+.
 
 MessageId=10066
 Severity=Success
@@ -31506,6 +37091,9 @@ Cannot remove a directory that is not empty.
 .
 Language=Romanian
 Cannot remove a directory that is not empty.
+.
+Language=Japanese
+空ではないディレクトリを削除できません。
 .
 
 MessageId=10067
@@ -31524,6 +37112,9 @@ A Windows Sockets implementation may have a limit on the number of applications 
 Language=Romanian
 A Windows Sockets implementation may have a limit on the number of applications that may use it simultaneously.
 .
+Language=Japanese
+ReactOS ソケットの実装では、同時に使用できるアプリケーションの数に制限がある場合があります。
+.
 
 MessageId=10068
 Severity=Success
@@ -31540,6 +37131,9 @@ Ran out of quota.
 .
 Language=Romanian
 Ran out of quota.
+.
+Language=Japanese
+クォータを使い果たしました。
 .
 
 MessageId=10069
@@ -31558,6 +37152,9 @@ Ran out of disk quota.
 Language=Romanian
 Ran out of disk quota.
 .
+Language=Japanese
+ディスククォータを使い果たしました。
+.
 
 MessageId=10070
 Severity=Success
@@ -31574,6 +37171,9 @@ File handle reference is no longer available.
 .
 Language=Romanian
 File handle reference is no longer available.
+.
+Language=Japanese
+ファイル ハンドル参照が使用できなくなりました。
 .
 
 MessageId=10071
@@ -31592,6 +37192,9 @@ Item is not available locally.
 Language=Romanian
 Item is not available locally.
 .
+Language=Japanese
+アイテムはローカルでは使用できません。
+.
 
 MessageId=10091
 Severity=Success
@@ -31608,6 +37211,9 @@ WSAStartup cannot function at this time because the underlying system it uses to
 .
 Language=Romanian
 WSAStartup cannot function at this time because the underlying system it uses to provide network services is currently unavailable.
+.
+Language=Japanese
+WSAStartup がネットワーク サービスを提供するために使用する基礎となるシステムが現在使用できないため、WSAStartup は現在機能できません。
 .
 
 MessageId=10092
@@ -31626,6 +37232,9 @@ The Windows Sockets version requested is not supported.
 Language=Romanian
 The Windows Sockets version requested is not supported.
 .
+Language=Japanese
+要求された ReactOS ソケットのバージョンはサポートされていません。
+.
 
 MessageId=10093
 Severity=Success
@@ -31642,6 +37251,9 @@ Either the application has not called WSAStartup, or WSAStartup failed.
 .
 Language=Romanian
 Either the application has not called WSAStartup, or WSAStartup failed.
+.
+Language=Japanese
+アプリケーションがWSAStartupを呼び出していないか、WSAStartupが失敗しました。
 .
 
 MessageId=10101
@@ -31660,6 +37272,9 @@ Returned by WSARecv or WSARecvFrom to indicate the remote party has initiated a 
 Language=Romanian
 Returned by WSARecv or WSARecvFrom to indicate the remote party has initiated a graceful shutdown sequence.
 .
+Language=Japanese
+WSARecvまたはWSARecvFromがリモート パーティがグレースフル シャットダウン シーケンスを開始したことを示すために返します。
+.
 
 MessageId=10102
 Severity=Success
@@ -31676,6 +37291,9 @@ No more results can be returned by WSALookupServiceNext.
 .
 Language=Romanian
 No more results can be returned by WSALookupServiceNext.
+.
+Language=Japanese
+WSALookupServiceNext によって返される結果はありません。
 .
 
 MessageId=10103
@@ -31694,6 +37312,9 @@ A call to WSALookupServiceEnd was made while this call was still processing. The
 Language=Romanian
 A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
 .
+Language=Japanese
+この呼び出しの処理中に WSALookupServiceEnd への呼び出しが行われました。この呼び出しはキャンセルされました。
+.
 
 MessageId=10104
 Severity=Success
@@ -31710,6 +37331,9 @@ The procedure call table is invalid.
 .
 Language=Romanian
 The procedure call table is invalid.
+.
+Language=Japanese
+プロシージャ呼び出しテーブルが無効です。
 .
 
 MessageId=10105
@@ -31728,6 +37352,9 @@ The requested service provider is invalid.
 Language=Romanian
 The requested service provider is invalid.
 .
+Language=Japanese
+要求されたサービス プロバイダが無効です。
+.
 
 MessageId=10106
 Severity=Success
@@ -31744,6 +37371,9 @@ The requested service provider could not be loaded or initialized.
 .
 Language=Romanian
 The requested service provider could not be loaded or initialized.
+.
+Language=Japanese
+要求されたサービス プロバイダをロードまたは初期化できませんでした。
 .
 
 MessageId=10107
@@ -31762,6 +37392,9 @@ A system call that should never fail has failed.
 Language=Romanian
 A system call that should never fail has failed.
 .
+Language=Japanese
+システムコールに失敗しました。
+.
 
 MessageId=10108
 Severity=Success
@@ -31778,6 +37411,9 @@ No such service is known. The service cannot be found in the specified name spac
 .
 Language=Romanian
 No such service is known. The service cannot be found in the specified name space.
+.
+Language=Japanese
+そのようなサービスはありません。指定された名前空間にサービスが見つかりません。
 .
 
 MessageId=10109
@@ -31796,6 +37432,9 @@ The specified class was not found.
 Language=Romanian
 The specified class was not found.
 .
+Language=Japanese
+指定されたクラスが見つかりません。
+.
 
 MessageId=10110
 Severity=Success
@@ -31812,6 +37451,9 @@ No more results can be returned by WSALookupServiceNext.
 .
 Language=Romanian
 No more results can be returned by WSALookupServiceNext.
+.
+Language=Japanese
+WSALookupServiceNext によって返される結果はありません。
 .
 
 MessageId=10111
@@ -31830,6 +37472,9 @@ A call to WSALookupServiceEnd was made while this call was still processing. The
 Language=Romanian
 A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
 .
+Language=Japanese
+この呼び出しの処理中に WSALookupServiceEnd への呼び出しが行われました。この呼び出しはキャンセルされました。
+.
 
 MessageId=10112
 Severity=Success
@@ -31846,6 +37491,9 @@ A database query failed because it was actively refused.
 .
 Language=Romanian
 A database query failed because it was actively refused.
+.
+Language=Japanese
+アクティブに拒否されたため、データベース照会に失敗しました。
 .
 
 MessageId=11001
@@ -31864,6 +37512,9 @@ No such host is known.
 Language=Romanian
 No such host is known.
 .
+Language=Japanese
+そのようなホストは存在しません。
+.
 
 MessageId=11002
 Severity=Success
@@ -31880,6 +37531,9 @@ This is usually a temporary error during hostname resolution and means that the 
 .
 Language=Romanian
 This is usually a temporary error during hostname resolution and means that the local server did not receive a response from an authoritative server.
+.
+Language=Japanese
+これは通常、ホスト名解決中の一時的なエラーで、ローカルサーバーが権威サーバーからの応答を受信しなかったことを意味します。
 .
 
 MessageId=11003
@@ -31898,6 +37552,9 @@ A non-recoverable error occurred during a database lookup.
 Language=Romanian
 A non-recoverable error occurred during a database lookup.
 .
+Language=Japanese
+データベースの検索中に回復不能なエラーが発生しました。
+.
 
 MessageId=11004
 Severity=Success
@@ -31914,6 +37571,9 @@ The requested name is valid, but no data of the requested type was found.
 .
 Language=Romanian
 The requested name is valid, but no data of the requested type was found.
+.
+Language=Japanese
+要求された名前は有効ですが、要求された型のデータが見つかりませんでした。
 .
 
 MessageId=11005
@@ -31932,6 +37592,9 @@ At least one reserve has arrived.
 Language=Romanian
 At least one reserve has arrived.
 .
+Language=Japanese
+少なくとも1つのリザーブが到着しました。
+.
 
 MessageId=11006
 Severity=Success
@@ -31948,6 +37611,9 @@ At least one path has arrived.
 .
 Language=Romanian
 At least one path has arrived.
+.
+Language=Japanese
+少なくとも1つのパスが到着しました。
 .
 
 MessageId=11007
@@ -31966,6 +37632,9 @@ There are no senders.
 Language=Romanian
 There are no senders.
 .
+Language=Japanese
+送信者がありません。
+.
 
 MessageId=11008
 Severity=Success
@@ -31982,6 +37651,9 @@ There are no receivers.
 .
 Language=Romanian
 There are no receivers.
+.
+Language=Japanese
+受信者がありません。
 .
 
 MessageId=11009
@@ -32000,6 +37672,9 @@ Reserve has been confirmed.
 Language=Romanian
 Reserve has been confirmed.
 .
+Language=Japanese
+リザーブが確認されました。
+.
 
 MessageId=11010
 Severity=Success
@@ -32016,6 +37691,9 @@ Error due to lack of resources.
 .
 Language=Romanian
 Error due to lack of resources.
+.
+Language=Japanese
+リソース不足によるエラーです。
 .
 
 MessageId=11011
@@ -32034,6 +37712,9 @@ Rejected for administrative reasons - bad credentials.
 Language=Romanian
 Rejected for administrative reasons - bad credentials.
 .
+Language=Japanese
+管理上の理由で拒否されました - 不正な資格情報です。
+.
 
 MessageId=11012
 Severity=Success
@@ -32050,6 +37731,9 @@ Unknown or conflicting style.
 .
 Language=Romanian
 Unknown or conflicting style.
+.
+Language=Japanese
+不明なスタイルまたは競合するスタイルです。
 .
 
 MessageId=11013
@@ -32068,6 +37752,9 @@ Problem with some part of the filterspec or providerspecific buffer in general.
 Language=Romanian
 Problem with some part of the filterspec or providerspecific buffer in general.
 .
+Language=Japanese
+フィルタスペックまたはプロバイダ固有のバッファの一部に問題があります。
+.
 
 MessageId=11014
 Severity=Success
@@ -32084,6 +37771,9 @@ Problem with some part of the flowspec.
 .
 Language=Romanian
 Problem with some part of the flowspec.
+.
+Language=Japanese
+flowpecの一部に問題があります。
 .
 
 MessageId=11015
@@ -32102,6 +37792,9 @@ General QOS error.
 Language=Romanian
 General QOS error.
 .
+Language=Japanese
+一般的なQOSエラーです。
+.
 
 MessageId=11016
 Severity=Success
@@ -32118,6 +37811,9 @@ An invalid or unrecognized service type was found in the flowspec.
 .
 Language=Romanian
 An invalid or unrecognized service type was found in the flowspec.
+.
+Language=Japanese
+フロー仕様で無効または認識できないサービスタイプが見つかりました。
 .
 
 MessageId=11017
@@ -32136,6 +37832,9 @@ An invalid or inconsistent flowspec was found in the QOS structure.
 Language=Romanian
 An invalid or inconsistent flowspec was found in the QOS structure.
 .
+Language=Japanese
+QOS構造に無効な、または一貫性のないフロー仕様が見つかりました。
+.
 
 MessageId=11018
 Severity=Success
@@ -32152,6 +37851,9 @@ Invalid QOS provider-specific buffer.
 .
 Language=Romanian
 Invalid QOS provider-specific buffer.
+.
+Language=Japanese
+無効なQOSプロバイダ固有バッファです。
 .
 
 MessageId=11019
@@ -32170,6 +37872,9 @@ An invalid QOS filter style was used.
 Language=Romanian
 An invalid QOS filter style was used.
 .
+Language=Japanese
+無効なQOSフィルタ スタイルが使用されました。
+.
 
 MessageId=11020
 Severity=Success
@@ -32186,6 +37891,9 @@ An invalid QOS filter type was used.
 .
 Language=Romanian
 An invalid QOS filter type was used.
+.
+Language=Japanese
+無効なQOSフィルタ タイプが使用されました。
 .
 
 MessageId=11021
@@ -32204,6 +37912,9 @@ An incorrect number of QOS FILTERSPECs were specified in the FLOWDESCRIPTOR.
 Language=Romanian
 An incorrect number of QOS FILTERSPECs were specified in the FLOWDESCRIPTOR.
 .
+Language=Japanese
+FLOWDESCRIPTORに不正な数のQOS FILTERSPECが指定されました。
+.
 
 MessageId=11022
 Severity=Success
@@ -32220,6 +37931,9 @@ An object with an invalid ObjectLength field was specified in the QOS provider-s
 .
 Language=Romanian
 An object with an invalid ObjectLength field was specified in the QOS provider-specific buffer.
+.
+Language=Japanese
+無効なObjectLengthフィールドを持つオブジェクトがQOSプロバイダ固有バッファに指定されました。
 .
 
 MessageId=11023
@@ -32238,6 +37952,9 @@ An incorrect number of flow descriptors was specified in the QOS structure.
 Language=Romanian
 An incorrect number of flow descriptors was specified in the QOS structure.
 .
+Language=Japanese
+QOS構造体に不正な数のフロー記述子が指定されました。
+.
 
 MessageId=11024
 Severity=Success
@@ -32254,6 +37971,9 @@ An unrecognized object was found in the QOS provider-specific buffer.
 .
 Language=Romanian
 An unrecognized object was found in the QOS provider-specific buffer.
+.
+Language=Japanese
+QOSプロバイダ固有バッファで認識できないオブジェクトが見つかりました。
 .
 
 MessageId=11025
@@ -32272,6 +37992,9 @@ An invalid policy object was found in the QOS provider-specific buffer.
 Language=Romanian
 An invalid policy object was found in the QOS provider-specific buffer.
 .
+Language=Japanese
+QOSプロバイダ固有のバッファで無効なポリシーオブジェクトが見つかりました。
+.
 
 MessageId=11026
 Severity=Success
@@ -32288,6 +38011,9 @@ An invalid QOS flow descriptor was found in the flow descriptor list.
 .
 Language=Romanian
 An invalid QOS flow descriptor was found in the flow descriptor list.
+.
+Language=Japanese
+フロー記述子リストで無効なQOSフロー記述子が見つかりました。
 .
 
 MessageId=11027
@@ -32306,6 +38032,9 @@ An invalid or inconsistent flowspec was found in the QOS provider-specific buffe
 Language=Romanian
 An invalid or inconsistent flowspec was found in the QOS provider-specific buffer.
 .
+Language=Japanese
+QOSプロバイダ固有のバッファに無効な、または一貫性のないフロー仕様が見つかりました。
+.
 
 MessageId=11028
 Severity=Success
@@ -32322,6 +38051,9 @@ An invalid FILTERSPEC was found in the QOS provider-specific buffer.
 .
 Language=Romanian
 An invalid FILTERSPEC was found in the QOS provider-specific buffer.
+.
+Language=Japanese
+QOSプロバイダ固有のバッファで無効なFILTERSPECが見つかりました。
 .
 
 MessageId=11029
@@ -32340,6 +38072,9 @@ An invalid shape discard mode object was found in the QOS provider-specific buff
 Language=Romanian
 An invalid shape discard mode object was found in the QOS provider-specific buffer.
 .
+Language=Japanese
+無効な形状破棄モードオブジェクトがQOSプロバイダ固有のバッファで見つかりました。
+.
 
 MessageId=11030
 Severity=Success
@@ -32356,6 +38091,9 @@ An invalid shaping rate object was found in the QOS provider-specific buffer.
 .
 Language=Romanian
 An invalid shaping rate object was found in the QOS provider-specific buffer.
+.
+Language=Japanese
+無効なシェーピングレートオブジェクトがQOSプロバイダ固有のバッファで見つかりました。
 .
 
 MessageId=11031
@@ -32374,6 +38112,9 @@ A reserved policy element was found in the QOS provider-specific buffer.
 Language=Romanian
 A reserved policy element was found in the QOS provider-specific buffer.
 .
+Language=Japanese
+QOSプロバイダ固有のバッファで予約されたポリシー要素が見つかりました。
+.
 
 MessageId=12000
 Severity=Success
@@ -32390,6 +38131,9 @@ The IO was completed by a filter.
 .
 Language=Romanian
 The IO was completed by a filter.
+.
+Language=Japanese
+IOはフィルターによって完成されました。
 .
 
 MessageId=12001
@@ -32408,6 +38152,9 @@ The buffer is too small to contain the entry. No information has been written to
 Language=Romanian
 The buffer is too small to contain the entry. No information has been written to the buffer.
 .
+Language=Japanese
+バッファが小さすぎてエントリを格納できません。バッファに情報が書き込まれませんでした。
+.
 
 MessageId=12002
 Severity=Success
@@ -32424,6 +38171,9 @@ A handler was not defined by the filter for this operation.
 .
 Language=Romanian
 A handler was not defined by the filter for this operation.
+.
+Language=Japanese
+この操作に対するハンドラがフィルターによって定義されていません。
 .
 
 MessageId=12003
@@ -32442,6 +38192,9 @@ A context is already defined for this object.
 Language=Romanian
 A context is already defined for this object.
 .
+Language=Japanese
+このオブジェクトにはすでにコンテキストが定義済みです。
+.
 
 MessageId=12004
 Severity=Success
@@ -32458,6 +38211,9 @@ Asynchronous requests are not valid for this operation.
 .
 Language=Romanian
 Asynchronous requests are not valid for this operation.
+.
+Language=Japanese
+この操作では、非同期リクエストは無効です。
 .
 
 MessageId=12005
@@ -32476,6 +38232,9 @@ Disallow the Fast IO path for this operation.
 Language=Romanian
 Disallow the Fast IO path for this operation.
 .
+Language=Japanese
+この操作の Fast IO パスを許可しません。
+.
 
 MessageId=12006
 Severity=Success
@@ -32492,6 +38251,9 @@ An invalid name request was made. The name requested cannot be retrieved at this
 .
 Language=Romanian
 An invalid name request was made. The name requested cannot be retrieved at this time.
+.
+Language=Japanese
+無効な名前要求が行われました。要求された名前は現在取得できません。
 .
 
 MessageId=12007
@@ -32510,6 +38272,9 @@ Posting this operation to a worker thread for further processing is not safe at 
 Language=Romanian
 Posting this operation to a worker thread for further processing is not safe at this time because it could lead to a system deadlock.
 .
+Language=Japanese
+さらなる処理のためにこの操作をワーカースレッドにポストすることは、システムのデッドロックにつながる可能性があるため、現時点では安全ではありません。
+.
 
 MessageId=12008
 Severity=Success
@@ -32526,6 +38291,9 @@ The Filter Manager was not initialized when a filter tried to register. Make sur
 .
 Language=Romanian
 The Filter Manager was not initialized when a filter tried to register. Make sure that the Filter Manager is getting loaded as a driver.
+.
+Language=Japanese
+フィルターが登録しようとしたときに、フィルターマネージャーが初期化されませんでした。フィルタマネージャがドライバとしてロードされていることを確認してください。
 .
 
 MessageId=12009
@@ -32544,6 +38312,9 @@ The filter is not ready for attachment to volumes because it has not finished in
 Language=Romanian
 The filter is not ready for attachment to volumes because it has not finished initializing (FltStartFiltering has not been called).
 .
+Language=Japanese
+フィルタの初期化が完了していない（FltStartFilteringが呼び出されていない）ため、フィルタをボリュームにアタッチする準備ができていません。
+.
 
 MessageId=12010
 Severity=Success
@@ -32560,6 +38331,9 @@ The filter must cleanup any operation specific context at this time because it i
 .
 Language=Romanian
 The filter must cleanup any operation specific context at this time because it is being removed from the system before the operation is completed by the lower drivers.
+.
+Language=Japanese
+フィルターは、下位ドライバーによって操作が完了する前にシステムから削除されるため、この時点で操作固有のコンテキストをクリーンアップしなければなりません。
 .
 
 MessageId=12011
@@ -32578,6 +38352,9 @@ The Filter Manager had an internal error from which it cannot recover, therefore
 Language=Romanian
 The Filter Manager had an internal error from which it cannot recover, therefore the operation has been failed. This is usually the result of a filter returning an invalid value from a pre-operation callback.
 .
+Language=Japanese
+フィルター マネージャーに回復できない内部エラーが発生したため、操作が失敗しました。これは通常、フィルタが操作前のコールバックから無効な値を返した結果です。
+.
 
 MessageId=12012
 Severity=Success
@@ -32594,6 +38371,9 @@ The object specified for this action is in the process of being deleted, therefo
 .
 Language=Romanian
 The object specified for this action is in the process of being deleted, therefore the action requested cannot be completed at this time.
+.
+Language=Japanese
+このアクションに指定されたオブジェクトは削除処理中であるため、要求されたアクションは現時点では完了できません。
 .
 
 MessageId=12013
@@ -32612,6 +38392,9 @@ Non-paged pool must be used for this type of context.
 Language=Romanian
 Non-paged pool must be used for this type of context.
 .
+Language=Japanese
+このタイプのコンテキストには、ページングされていないプールを使用しなければなりません。
+.
 
 MessageId=12014
 Severity=Success
@@ -32628,6 +38411,9 @@ A duplicate handler definition has been provided for an operation.
 .
 Language=Romanian
 A duplicate handler definition has been provided for an operation.
+.
+Language=Japanese
+ある操作に対して重複したハンドラ定義が提供されました。
 .
 
 MessageId=12015
@@ -32646,6 +38432,9 @@ The callback data queue has been disabled.
 Language=Romanian
 The callback data queue has been disabled.
 .
+Language=Japanese
+コールバック・データ・キューが無効になりました。
+.
 
 MessageId=12016
 Severity=Success
@@ -32662,6 +38451,9 @@ Do not attach the filter to the volume at this time.
 .
 Language=Romanian
 Do not attach the filter to the volume at this time.
+.
+Language=Japanese
+この時点では、フィルターをボリュームに取り付けないでください。
 .
 
 MessageId=12017
@@ -32680,6 +38472,9 @@ Do not detach the filter from the volume at this time.
 Language=Romanian
 Do not detach the filter from the volume at this time.
 .
+Language=Japanese
+この時、フィルターをボリュームから取り外さないでください。
+.
 
 MessageId=12018
 Severity=Success
@@ -32696,6 +38491,9 @@ An instance already exists at this altitude on the volume specified.
 .
 Language=Romanian
 An instance already exists at this altitude on the volume specified.
+.
+Language=Japanese
+指定されたボリュームに、この高度ですでにインスタンスが存在します。
 .
 
 MessageId=12019
@@ -32714,6 +38512,9 @@ An instance already exists with this name on the volume specified.
 Language=Romanian
 An instance already exists with this name on the volume specified.
 .
+Language=Japanese
+指定されたボリュームに、この名前のインスタンスがすでに存在しています。
+.
 
 MessageId=12020
 Severity=Success
@@ -32730,6 +38531,9 @@ The system could not find the filter specified.
 .
 Language=Romanian
 The system could not find the filter specified.
+.
+Language=Japanese
+指定されたフィルターが見つかりませんでした。
 .
 
 MessageId=12021
@@ -32748,6 +38552,9 @@ The system could not find the volume specified.
 Language=Romanian
 The system could not find the volume specified.
 .
+Language=Japanese
+指定されたボリュームが見つかりません。
+.
 
 MessageId=12022
 Severity=Success
@@ -32764,6 +38571,9 @@ The system could not find the instance specified.
 .
 Language=Romanian
 The system could not find the instance specified.
+.
+Language=Japanese
+指定されたインスタンスが見つかりませんでした。
 .
 
 MessageId=12023
@@ -32782,6 +38592,9 @@ No registered context allocation definition was found for the given request.
 Language=Romanian
 No registered context allocation definition was found for the given request.
 .
+Language=Japanese
+指定されたリクエストに対して、登録されているコンテキスト割り当て定義が見つかりませんでした。
+.
 
 MessageId=12024
 Severity=Success
@@ -32798,6 +38611,9 @@ An invalid parameter was specified during context registration.
 .
 Language=Romanian
 An invalid parameter was specified during context registration.
+.
+Language=Japanese
+コンテキスト登録時に無効なパラメータが指定されました。
 .
 
 MessageId=12025
@@ -32816,6 +38632,9 @@ The name requested was not found in Filter Manager's name cache and could not be
 Language=Romanian
 The name requested was not found in Filter Manager's name cache and could not be retrieved from the file system.
 .
+Language=Japanese
+要求された名前はフィルターマネージャーの名前キャッシュに見つからず、ファイルシステムから取得できませんでした。
+.
 
 MessageId=12026
 Severity=Success
@@ -32832,6 +38651,9 @@ The requested device object does not exist for the given volume.
 .
 Language=Romanian
 The requested device object does not exist for the given volume.
+.
+Language=Japanese
+要求されたデバイス・オブジェクトは、指定されたボリュームに存在しません。
 .
 
 MessageId=12027
@@ -32850,6 +38672,9 @@ The specified volume is already mounted.
 Language=Romanian
 The specified volume is already mounted.
 .
+Language=Japanese
+指定されたボリュームはすでにマウントされています。
+.
 
 MessageId=12028
 Severity=Success
@@ -32866,6 +38691,9 @@ No waiter is present for the filter's reply to this message.
 .
 Language=Romanian
 No waiter is present for the filter's reply to this message.
+.
+Language=Japanese
+このメッセージに対するフィルターの返答にはウェイターは存在しません。
 .
 
 MessageId=13000
@@ -32884,6 +38712,9 @@ The specified quick mode policy already exists.
 Language=Romanian
 The specified quick mode policy already exists.
 .
+Language=Japanese
+指定されたクイック モード ポリシーは既に存在します。
+.
 
 MessageId=13001
 Severity=Success
@@ -32900,6 +38731,9 @@ The specified quick mode policy was not found.
 .
 Language=Romanian
 The specified quick mode policy was not found.
+.
+Language=Japanese
+指定されたクイック モード ポリシーが見つかりません。
 .
 
 MessageId=13002
@@ -32918,6 +38752,9 @@ The specified quick mode policy is being used.
 Language=Romanian
 The specified quick mode policy is being used.
 .
+Language=Japanese
+指定されたクイック モード ポリシーが使用されています。
+.
 
 MessageId=13003
 Severity=Success
@@ -32934,6 +38771,9 @@ The specified main mode policy already exists.
 .
 Language=Romanian
 The specified main mode policy already exists.
+.
+Language=Japanese
+指定されたメイン モード ポリシーは既に存在します。
 .
 
 MessageId=13004
@@ -32952,6 +38792,9 @@ The specified main mode policy was not found.
 Language=Romanian
 The specified main mode policy was not found.
 .
+Language=Japanese
+指定されたメイン モード ポリシーが見つかりません。
+.
 
 MessageId=13005
 Severity=Success
@@ -32968,6 +38811,9 @@ The specified main mode policy is being used.
 .
 Language=Romanian
 The specified main mode policy is being used.
+.
+Language=Japanese
+指定されたメインモード ポリシーが使用されています。
 .
 
 MessageId=13006
@@ -32986,6 +38832,9 @@ The specified main mode filter already exists.
 Language=Romanian
 The specified main mode filter already exists.
 .
+Language=Japanese
+指定されたメインモード フィルタは既に存在します。
+.
 
 MessageId=13007
 Severity=Success
@@ -33002,6 +38851,9 @@ The specified main mode filter was not found.
 .
 Language=Romanian
 The specified main mode filter was not found.
+.
+Language=Japanese
+指定されたメイン モード フィルタが見つかりません。
 .
 
 MessageId=13008
@@ -33020,6 +38872,9 @@ The specified transport mode filter already exists.
 Language=Romanian
 The specified transport mode filter already exists.
 .
+Language=Japanese
+指定されたトランスポートモード フィルタは既に存在します。
+.
 
 MessageId=13009
 Severity=Success
@@ -33036,6 +38891,9 @@ The specified transport mode filter does not exist.
 .
 Language=Romanian
 The specified transport mode filter does not exist.
+.
+Language=Japanese
+指定されたトランスポートモード フィルタは存在しません。
 .
 
 MessageId=13010
@@ -33054,6 +38912,9 @@ The specified main mode authentication list exists.
 Language=Romanian
 The specified main mode authentication list exists.
 .
+Language=Japanese
+指定されたメインモード認証リストが存在します。
+.
 
 MessageId=13011
 Severity=Success
@@ -33070,6 +38931,9 @@ The specified main mode authentication list was not found.
 .
 Language=Romanian
 The specified main mode authentication list was not found.
+.
+Language=Japanese
+指定されたメインモード認証リストが見つかりません。
 .
 
 MessageId=13012
@@ -33088,6 +38952,9 @@ The specified quick mode policy is being used.
 Language=Romanian
 The specified quick mode policy is being used.
 .
+Language=Japanese
+指定されたメインモード認証リストが使用されています。
+.
 
 MessageId=13013
 Severity=Success
@@ -33104,6 +38971,9 @@ The specified main mode policy was not found.
 .
 Language=Romanian
 The specified main mode policy was not found.
+.
+Language=Japanese
+指定されたデフォルトのメインモード ポリシーが見つかりません。
 .
 
 MessageId=13014
@@ -33122,6 +38992,9 @@ The specified quick mode policy was not found.
 Language=Romanian
 The specified quick mode policy was not found.
 .
+Language=Japanese
+指定されたデフォルトのメインモード認証リストが見つかりません。
+.
 
 MessageId=13015
 Severity=Success
@@ -33138,6 +39011,9 @@ The manifest file contains one or more syntax errors.
 .
 Language=Romanian
 The manifest file contains one or more syntax errors.
+.
+Language=Japanese
+指定されたデフォルトのクイック モード ポリシーが見つかりません。
 .
 
 MessageId=13016
@@ -33156,6 +39032,9 @@ The application attempted to activate a disabled activation context.
 Language=Romanian
 The application attempted to activate a disabled activation context.
 .
+Language=Japanese
+指定されたトンネル モード フィルタが存在します。
+.
 
 MessageId=13017
 Severity=Success
@@ -33172,6 +39051,9 @@ The requested lookup key was not found in any active activation context.
 .
 Language=Romanian
 The requested lookup key was not found in any active activation context.
+.
+Language=Japanese
+指定されたトンネルモード フィルタが見つかりません。
 .
 
 MessageId=13018
@@ -33190,6 +39072,9 @@ The Main Mode filter is pending deletion.
 Language=Romanian
 The Main Mode filter is pending deletion.
 .
+Language=Japanese
+メインモード フィルタは削除待ちです。
+.
 
 MessageId=13019
 Severity=Success
@@ -33206,6 +39091,9 @@ The transport filter is pending deletion.
 .
 Language=Romanian
 The transport filter is pending deletion.
+.
+Language=Japanese
+トランスポートフィルタは削除待ちです。
 .
 
 MessageId=13020
@@ -33224,6 +39112,9 @@ The tunnel filter is pending deletion.
 Language=Romanian
 The tunnel filter is pending deletion.
 .
+Language=Japanese
+トンネルフィルタが削除待ちです。
+.
 
 MessageId=13021
 Severity=Success
@@ -33240,6 +39131,9 @@ The Main Mode policy is pending deletion.
 .
 Language=Romanian
 The Main Mode policy is pending deletion.
+.
+Language=Japanese
+メインモード ポリシーが削除待ちです。
 .
 
 MessageId=13022
@@ -33258,6 +39152,9 @@ The Main Mode authentication bundle is pending deletion.
 Language=Romanian
 The Main Mode authentication bundle is pending deletion.
 .
+Language=Japanese
+メインモード認証バンドルが削除待ちです。
+.
 
 MessageId=13023
 Severity=Success
@@ -33274,6 +39171,9 @@ The Quick Mode policy is pending deletion.
 .
 Language=Romanian
 The Quick Mode policy is pending deletion.
+.
+Language=Japanese
+クイック モード ポリシーが削除待ちです。
 .
 
 MessageId=13024
@@ -33292,6 +39192,9 @@ The Main Mode policy was successfully added, but some of the requested offers ar
 Language=Romanian
 The Main Mode policy was successfully added, but some of the requested offers are not supported.
 .
+Language=Japanese
+メイン モード ポリシーが正常に追加されましたが、要求されたオファーの一部がサポートされていません。
+.
 
 MessageId=13025
 Severity=Success
@@ -33308,6 +39211,9 @@ The Quick Mode policy was successfully added, but some of the requested offers a
 .
 Language=Romanian
 The Quick Mode policy was successfully added, but some of the requested offers are not supported.
+.
+Language=Japanese
+クイック モード ポリシーが正常に追加されましたが、要求されたオファーの一部がサポートされていません。
 .
 
 MessageId=13801
@@ -33326,6 +39232,9 @@ IKE authentication credentials are unacceptable.
 Language=Romanian
 IKE authentication credentials are unacceptable.
 .
+Language=Japanese
+IKE認証資格情報が受け入れられません。
+.
 
 MessageId=13802
 Severity=Success
@@ -33342,6 +39251,9 @@ IKE security attributes are unacceptable.
 .
 Language=Romanian
 IKE security attributes are unacceptable.
+.
+Language=Japanese
+IKEセキュリティ属性が受け入れられません。
 .
 
 MessageId=13803
@@ -33360,6 +39272,9 @@ IKE Negotiation in progress.
 Language=Romanian
 IKE Negotiation in progress.
 .
+Language=Japanese
+IKE ネゴシエーションが進行中です。
+.
 
 MessageId=13804
 Severity=Success
@@ -33376,6 +39291,9 @@ General processing error.
 .
 Language=Romanian
 General processing error.
+.
+Language=Japanese
+一般処理エラーです。
 .
 
 MessageId=13805
@@ -33394,6 +39312,9 @@ Negotiation timed out.
 Language=Romanian
 Negotiation timed out.
 .
+Language=Japanese
+ネゴシエーションがタイムアウトしました
+.
 
 MessageId=13806
 Severity=Success
@@ -33410,6 +39331,9 @@ IKE failed to find valid machine certificate.
 .
 Language=Romanian
 IKE failed to find valid machine certificate.
+.
+Language=Japanese
+IKEが有効なマシン証明書を見つけられませんでした。
 .
 
 MessageId=13807
@@ -33428,6 +39352,9 @@ IKE SA deleted by peer before establishment completed.
 Language=Romanian
 IKE SA deleted by peer before establishment completed.
 .
+Language=Japanese
+確立完了前にピアによってIKE SAが削除されました。
+.
 
 MessageId=13808
 Severity=Success
@@ -33444,6 +39371,9 @@ IKE SA deleted before establishment completed.
 .
 Language=Romanian
 IKE SA deleted before establishment completed.
+.
+Language=Japanese
+確立完了前にIKE SAが削除されました。
 .
 
 MessageId=13809
@@ -33462,6 +39392,9 @@ Negotiation request sat in Queue too long.
 Language=Romanian
 Negotiation request sat in Queue too long.
 .
+Language=Japanese
+ネゴシエーション要求がキューに長すぎます。
+.
 
 MessageId=13810
 Severity=Success
@@ -33478,6 +39411,9 @@ Negotiation request sat in Queue too long.
 .
 Language=Romanian
 Negotiation request sat in Queue too long.
+.
+Language=Japanese
+ネゴシエーションリクエストがキューに長すぎます。
 .
 
 MessageId=13811
@@ -33496,6 +39432,9 @@ Negotiation request sat in Queue too long.
 Language=Romanian
 Negotiation request sat in Queue too long.
 .
+Language=Japanese
+キューに入れられた交渉要求が長すぎます。
+.
 
 MessageId=13812
 Severity=Success
@@ -33512,6 +39451,9 @@ Negotiation request sat in Queue too long.
 .
 Language=Romanian
 Negotiation request sat in Queue too long.
+.
+Language=Japanese
+キューに入れられた交渉要求が長すぎます。
 .
 
 MessageId=13813
@@ -33530,6 +39472,9 @@ No response from peer.
 Language=Romanian
 No response from peer.
 .
+Language=Japanese
+相手からの応答がありません。
+.
 
 MessageId=13814
 Severity=Success
@@ -33546,6 +39491,9 @@ Negotiation took too long.
 .
 Language=Romanian
 Negotiation took too long.
+.
+Language=Japanese
+ネゴシエーションに時間がかかりすぎました。
 .
 
 MessageId=13815
@@ -33564,6 +39512,9 @@ Negotiation took too long.
 Language=Romanian
 Negotiation took too long.
 .
+Language=Japanese
+ネゴシエーションに時間がかかりすぎました。
+.
 
 MessageId=13816
 Severity=Success
@@ -33580,6 +39531,9 @@ Unknown error occurred.
 .
 Language=Romanian
 Unknown error occurred.
+.
+Language=Japanese
+不明なエラーが発生しました。
 .
 
 MessageId=13817
@@ -33598,6 +39552,9 @@ Certificate Revocation Check failed.
 Language=Romanian
 Certificate Revocation Check failed.
 .
+Language=Japanese
+証明書の失効チェックに失敗しました。
+.
 
 MessageId=13818
 Severity=Success
@@ -33614,6 +39571,9 @@ Invalid certificate key usage.
 .
 Language=Romanian
 Invalid certificate key usage.
+.
+Language=Japanese
+無効な証明書キーの使用です。
 .
 
 MessageId=13819
@@ -33632,6 +39592,9 @@ Invalid certificate type.
 Language=Romanian
 Invalid certificate type.
 .
+Language=Japanese
+証明書のタイプが無効です。
+.
 
 MessageId=13820
 Severity=Success
@@ -33648,6 +39611,9 @@ No private key associated with machine certificate.
 .
 Language=Romanian
 No private key associated with machine certificate.
+.
+Language=Japanese
+使用されているマシン証明書に秘密鍵がないため、IKEネゴシエーションに失敗しました。IPsec証明書には秘密鍵が必要です。プライベートキーを持つ証明書への置き換えについては、ネットワークセキュリティ管理者にお問い合わせください。
 .
 
 MessageId=13822
@@ -33666,6 +39632,9 @@ Failure in Diffie-Hellman computation.
 Language=Romanian
 Failure in Diffie-Hellman computation.
 .
+Language=Japanese
+Diffie-Hellmanの計算に失敗しました。
+.
 
 MessageId=13824
 Severity=Success
@@ -33682,6 +39651,9 @@ Invalid header.
 .
 Language=Romanian
 Invalid header.
+.
+Language=Japanese
+無効なヘッダーです。
 .
 
 MessageId=13825
@@ -33700,6 +39672,9 @@ No policy configured.
 Language=Romanian
 No policy configured.
 .
+Language=Japanese
+ポリシーが設定されていません。
+.
 
 MessageId=13826
 Severity=Success
@@ -33716,6 +39691,9 @@ Failed to verify signature.
 .
 Language=Romanian
 Failed to verify signature.
+.
+Language=Japanese
+署名の検証に失敗しました。
 .
 
 MessageId=13827
@@ -33734,6 +39712,9 @@ Failed to authenticate using Kerberos.
 Language=Romanian
 Failed to authenticate using Kerberos.
 .
+Language=Japanese
+Kerberosを使用した認証に失敗しました。
+.
 
 MessageId=13828
 Severity=Success
@@ -33750,6 +39731,9 @@ Peer's certificate did not have a public key.
 .
 Language=Romanian
 Peer's certificate did not have a public key.
+.
+Language=Japanese
+Peerの証明書に公開鍵がありませんでした。
 .
 
 MessageId=13829
@@ -33768,6 +39752,9 @@ Error processing error payload.
 Language=Romanian
 Error processing error payload.
 .
+Language=Japanese
+エラーペイロードの処理エラーです。
+.
 
 MessageId=13830
 Severity=Success
@@ -33784,6 +39771,9 @@ Error processing SA payload.
 .
 Language=Romanian
 Error processing SA payload.
+.
+Language=Japanese
+SAペイロードの処理エラーです。
 .
 
 MessageId=13831
@@ -33802,6 +39792,9 @@ Error processing Proposal payload.
 Language=Romanian
 Error processing Proposal payload.
 .
+Language=Japanese
+Proposalペイロードの処理エラーです。
+.
 
 MessageId=13832
 Severity=Success
@@ -33818,6 +39811,9 @@ Error processing Transform payload.
 .
 Language=Romanian
 Error processing Transform payload.
+.
+Language=Japanese
+Transformペイロードの処理エラーです。
 .
 
 MessageId=13833
@@ -33836,6 +39832,9 @@ Error processing KE payload.
 Language=Romanian
 Error processing KE payload.
 .
+Language=Japanese
+KE ペイロードの処理エラーです。
+.
 
 MessageId=13834
 Severity=Success
@@ -33852,6 +39851,9 @@ Error processing ID payload.
 .
 Language=Romanian
 Error processing ID payload.
+.
+Language=Japanese
+IDペイロードの処理エラーです。
 .
 
 MessageId=13835
@@ -33870,6 +39872,9 @@ Error processing Cert payload.
 Language=Romanian
 Error processing Cert payload.
 .
+Language=Japanese
+Cert ペイロードの処理エラーです。
+.
 
 MessageId=13836
 Severity=Success
@@ -33886,6 +39891,9 @@ Error processing Certificate Request payload.
 .
 Language=Romanian
 Error processing Certificate Request payload.
+.
+Language=Japanese
+証明書要求ペイロードの処理エラーです。
 .
 
 MessageId=13837
@@ -33904,6 +39912,9 @@ Error processing Hash payload.
 Language=Romanian
 Error processing Hash payload.
 .
+Language=Japanese
+ハッシュペイロードの処理エラーです。
+.
 
 MessageId=13838
 Severity=Success
@@ -33920,6 +39931,9 @@ Error processing Signature payload.
 .
 Language=Romanian
 Error processing Signature payload.
+.
+Language=Japanese
+署名ペイロードの処理エラーです。
 .
 
 MessageId=13839
@@ -33938,6 +39952,9 @@ Error processing Nonce payload.
 Language=Romanian
 Error processing Nonce payload.
 .
+Language=Japanese
+Nonceペイロードの処理エラーです。
+.
 
 MessageId=13840
 Severity=Success
@@ -33954,6 +39971,9 @@ Error processing Notify payload.
 .
 Language=Romanian
 Error processing Notify payload.
+.
+Language=Japanese
+通知ペイロードの処理エラーです。
 .
 
 MessageId=13841
@@ -33972,6 +39992,9 @@ Error processing Delete Payload.
 Language=Romanian
 Error processing Delete Payload.
 .
+Language=Japanese
+削除ペイロードの処理エラーです。
+.
 
 MessageId=13842
 Severity=Success
@@ -33988,6 +40011,9 @@ Error processing VendorId payload.
 .
 Language=Romanian
 Error processing VendorId payload.
+.
+Language=Japanese
+VendorId ペイロードの処理エラーです。
 .
 
 MessageId=13843
@@ -34006,6 +40032,9 @@ Invalid payload received.
 Language=Romanian
 Invalid payload received.
 .
+Language=Japanese
+無効なペイロードを受信しました。
+.
 
 MessageId=13844
 Severity=Success
@@ -34022,6 +40051,9 @@ Soft SA loaded.
 .
 Language=Romanian
 Soft SA loaded.
+.
+Language=Japanese
+ソフトSAをロードしました。
 .
 
 MessageId=13845
@@ -34040,6 +40072,9 @@ Soft SA torn down.
 Language=Romanian
 Soft SA torn down.
 .
+Language=Japanese
+ソフト SA を破棄しました。
+.
 
 MessageId=13846
 Severity=Success
@@ -34056,6 +40091,9 @@ Invalid cookie received.
 .
 Language=Romanian
 Invalid cookie received.
+.
+Language=Japanese
+無効なクッキーを受信しました。
 .
 
 MessageId=13847
@@ -34074,6 +40112,9 @@ Peer failed to send valid machine certificate.
 Language=Romanian
 Peer failed to send valid machine certificate.
 .
+Language=Japanese
+ピアが有効なマシン証明書を送信できませんでした。
+.
 
 MessageId=13848
 Severity=Success
@@ -34090,6 +40131,9 @@ Certification Revocation check of peer's certificate failed.
 .
 Language=Romanian
 Certification Revocation check of peer's certificate failed.
+.
+Language=Japanese
+ピア証明書の証明書失効チェックに失敗しました。
 .
 
 MessageId=13849
@@ -34108,6 +40152,9 @@ New policy invalidated SAs formed with old policy.
 Language=Romanian
 New policy invalidated SAs formed with old policy.
 .
+Language=Japanese
+新しいポリシーは古いポリシーで形成されたSAを無効にしました。
+.
 
 MessageId=13850
 Severity=Success
@@ -34124,6 +40171,9 @@ There is no available Main Mode IKE policy.
 .
 Language=Romanian
 There is no available Main Mode IKE policy.
+.
+Language=Japanese
+利用可能なメインモードIKEポリシーがありません。
 .
 
 MessageId=13851
@@ -34142,6 +40192,9 @@ Failed to enabled TCB privilege.
 Language=Romanian
 Failed to enabled TCB privilege.
 .
+Language=Japanese
+TCB特権の有効化に失敗しました。
+.
 
 MessageId=13852
 Severity=Success
@@ -34158,6 +40211,9 @@ Failed to load SECURITY.DLL.
 .
 Language=Romanian
 Failed to load SECURITY.DLL.
+.
+Language=Japanese
+SECURITY.DLLのロードに失敗しました。
 .
 
 MessageId=13853
@@ -34176,6 +40232,9 @@ Failed to obtain security function table dispatch address from SSPI.
 Language=Romanian
 Failed to obtain security function table dispatch address from SSPI.
 .
+Language=Japanese
+SSPI からセキュリティ関数テーブルのディスパッチアドレスを取得できませんでした。
+.
 
 MessageId=13854
 Severity=Success
@@ -34192,6 +40251,9 @@ Failed to query Kerberos package to obtain max token size.
 .
 Language=Romanian
 Failed to query Kerberos package to obtain max token size.
+.
+Language=Japanese
+トークンの最大サイズを取得するための Kerberos パッケージへのクエリに失敗しました。
 .
 
 MessageId=13855
@@ -34210,6 +40272,9 @@ Failed to obtain Kerberos server credentials for ISAKMP/ERROR_IPSEC_IKE service.
 Language=Romanian
 Failed to obtain Kerberos server credentials for ISAKMP/ERROR_IPSEC_IKE service. Kerberos authentication will not function. The most likely reason for this is lack of domain membership. This is normal if your computer is a member of a workgroup.
 .
+Language=Japanese
+ISAKMP/ERROR_IPSEC_IKEサービスのKerberosサーバー認証情報の取得に失敗しました。Kerberos認証は機能しません。最も考えられる原因は、ドメインメンバーシップがないことです。コンピュータがワークグループのメンバーであれば、これは正常です。
+.
 
 MessageId=13856
 Severity=Success
@@ -34226,6 +40291,9 @@ Failed to determine SSPI principal name for ISAKMP/ERROR_IPSEC_IKE service (Quer
 .
 Language=Romanian
 Failed to determine SSPI principal name for ISAKMP/ERROR_IPSEC_IKE service (QueryCredentialsAttributes).
+.
+Language=Japanese
+ISAKMP/ERROR_IPSEC_IKEサービス (QueryCredentialsAttributes) のSSPIプリンシパル名の決定に失敗しました。
 .
 
 MessageId=13857
@@ -34244,6 +40312,9 @@ Failed to obtain new SPI for the inbound SA from IPSec driver. The most common c
 Language=Romanian
 Failed to obtain new SPI for the inbound SA from IPSec driver. The most common cause for this is that the driver does not have the correct filter. Check your policy to verify the filters.
 .
+Language=Japanese
+IPsec ドライバから受信 SA の新しい SPI を取得できませんでした。この最も一般的な原因は、ドライバが正しいフィルタを持っていないことです。フィルタを確認するためにポリシーをチェックしてください。
+.
 
 MessageId=13858
 Severity=Success
@@ -34260,6 +40331,9 @@ Given filter is invalid.
 .
 Language=Romanian
 Given filter is invalid.
+.
+Language=Japanese
+指定されたフィルタは無効です。
 .
 
 MessageId=13859
@@ -34278,6 +40352,9 @@ Memory allocation failed.
 Language=Romanian
 Memory allocation failed.
 .
+Language=Japanese
+メモリの割り当てに失敗しました。
+.
 
 MessageId=13860
 Severity=Success
@@ -34294,6 +40371,9 @@ Failed to add Security Association to IPSec Driver. The most common cause for th
 .
 Language=Romanian
 Failed to add Security Association to IPSec Driver. The most common cause for this is if the IKE negotiation took too long to complete. If the problem persists, reduce the load on the faulting machine.
+.
+Language=Japanese
+IPsec Driver へのセキュリティアソシエーションの追加に失敗しました。この問題の最も一般的な原因は、IKEネゴシエーションの完了に時間がかかりすぎた場合です。問題が解決しない場合は、障害が発生しているマシンの負荷を下げてください。
 .
 
 MessageId=13861
@@ -34312,6 +40392,9 @@ Invalid policy.
 Language=Romanian
 Invalid policy.
 .
+Language=Japanese
+無効なポリシーです。
+.
 
 MessageId=13862
 Severity=Success
@@ -34328,6 +40411,9 @@ Invalid DOI.
 .
 Language=Romanian
 Invalid DOI.
+.
+Language=Japanese
+無効なDOIです。
 .
 
 MessageId=13863
@@ -34346,6 +40432,9 @@ Invalid situation.
 Language=Romanian
 Invalid situation.
 .
+Language=Japanese
+無効な状況です。
+.
 
 MessageId=13864
 Severity=Success
@@ -34362,6 +40451,9 @@ Diffie-Hellman failure.
 .
 Language=Romanian
 Diffie-Hellman failure.
+.
+Language=Japanese
+Diffie-Hellmanの失敗です。
 .
 
 MessageId=13865
@@ -34380,6 +40472,9 @@ Invalid Diffie-Hellman group.
 Language=Romanian
 Invalid Diffie-Hellman group.
 .
+Language=Japanese
+無効なDiffie-Hellmanグループです。
+.
 
 MessageId=13866
 Severity=Success
@@ -34396,6 +40491,9 @@ Error encrypting payload.
 .
 Language=Romanian
 Error encrypting payload.
+.
+Language=Japanese
+ペイロードの暗号化エラーです。
 .
 
 MessageId=13867
@@ -34414,6 +40512,9 @@ Error decrypting payload.
 Language=Romanian
 Error decrypting payload.
 .
+Language=Japanese
+ペイロードの復号化エラーです。
+.
 
 MessageId=13868
 Severity=Success
@@ -34430,6 +40531,9 @@ Policy match error.
 .
 Language=Romanian
 Policy match error.
+.
+Language=Japanese
+ポリシー一致エラーです。
 .
 
 MessageId=13869
@@ -34448,6 +40552,9 @@ Unsupported ID.
 Language=Romanian
 Unsupported ID.
 .
+Language=Japanese
+サポートされていないID。
+.
 
 MessageId=13870
 Severity=Success
@@ -34464,6 +40571,9 @@ Hash verification failed.
 .
 Language=Romanian
 Hash verification failed.
+.
+Language=Japanese
+ハッシュ検証に失敗しました。
 .
 
 MessageId=13871
@@ -34482,6 +40592,9 @@ Invalid hash algorithm.
 Language=Romanian
 Invalid hash algorithm.
 .
+Language=Japanese
+無効なハッシュアルゴリズムです。
+.
 
 MessageId=13872
 Severity=Success
@@ -34498,6 +40611,9 @@ Invalid hash size.
 .
 Language=Romanian
 Invalid hash size.
+.
+Language=Japanese
+無効なハッシュサイズです。
 .
 
 MessageId=13873
@@ -34516,6 +40632,9 @@ Invalid encryption algorithm.
 Language=Romanian
 Invalid encryption algorithm.
 .
+Language=Japanese
+無効な暗号化アルゴリズムです。
+.
 
 MessageId=13874
 Severity=Success
@@ -34532,6 +40651,9 @@ Invalid authentication algorithm.
 .
 Language=Romanian
 Invalid authentication algorithm.
+.
+Language=Japanese
+無効な認証アルゴリズムです。
 .
 
 MessageId=13875
@@ -34550,6 +40672,9 @@ Invalid certificate signature.
 Language=Romanian
 Invalid certificate signature.
 .
+Language=Japanese
+無効な証明書署名です。
+.
 
 MessageId=13876
 Severity=Success
@@ -34566,6 +40691,9 @@ Load failed.
 .
 Language=Romanian
 Load failed.
+.
+Language=Japanese
+ロードに失敗しました。
 .
 
 MessageId=13877
@@ -34584,6 +40712,9 @@ Deleted via RPC call.
 Language=Romanian
 Deleted via RPC call.
 .
+Language=Japanese
+RPCコールで削除されました。
+.
 
 MessageId=13878
 Severity=Success
@@ -34600,6 +40731,9 @@ Temporary state created to perform reinit. This is not a real failure.
 .
 Language=Romanian
 Temporary state created to perform reinit. This is not a real failure.
+.
+Language=Japanese
+再初期化を実行するために一時的な状態が作成されました。これは本当の失敗ではありません。
 .
 
 MessageId=13879
@@ -34618,6 +40752,9 @@ The lifetime value received in the Responder Lifetime Notify is below the Window
 Language=Romanian
 The lifetime value received in the Responder Lifetime Notify is below the Windows 2000 configured minimum value. Please fix the policy on the peer machine.
 .
+Language=Japanese
+レスポンダライフタイム通知で受信したライフタイム値が、ReactOS 2000で設定されている最小値を下回っています。対向マシンのポリシーを修正してください。
+.
 
 MessageId=13881
 Severity=Success
@@ -34634,6 +40771,9 @@ Key length in certificate is too small for configured security requirements.
 .
 Language=Romanian
 Key length in certificate is too small for configured security requirements.
+.
+Language=Japanese
+証明書の鍵の長さが、構成されたセキュリティ要件に対して小さすぎます。
 .
 
 MessageId=13882
@@ -34652,6 +40792,9 @@ Max number of established MM SAs to peer exceeded.
 Language=Romanian
 Max number of established MM SAs to peer exceeded.
 .
+Language=Japanese
+ピアに対して確立されたMM SAの最大数を超えました。
+.
 
 MessageId=13883
 Severity=Success
@@ -34668,6 +40811,9 @@ IKE received a policy that disables negotiation.
 .
 Language=Romanian
 IKE received a policy that disables negotiation.
+.
+Language=Japanese
+IKEはネゴシエーションを無効にするポリシーを受信しました。
 .
 
 MessageId=13884
@@ -34686,6 +40832,9 @@ ERROR_IPSEC_IKE_NEG_STATUS_END
 Language=Romanian
 ERROR_IPSEC_IKE_NEG_STATUS_END
 .
+Language=Japanese
+メインモードのクイックモードの上限に達しました。新しいメインモードが開始されます。
+.
 
 MessageId=14000
 Severity=Success
@@ -34702,6 +40851,9 @@ The requested section was not present in the activation context.
 .
 Language=Romanian
 The requested section was not present in the activation context.
+.
+Language=Japanese
+アクティブ化コンテキストに要求されたセクションがありません。
 .
 
 MessageId=14001
@@ -34720,6 +40872,9 @@ This application has failed to start because the application configuration is in
 Language=Romanian
 This application has failed to start because the application configuration is incorrect. Reinstalling the application may fix this problem.
 .
+Language=Japanese
+サイドバイサイド構成が正しくないため、アプリケーションの起動に失敗しました。詳細については、アプリケーションのイベントログを参照するか、コマンドラインのsxstrace.exeツールを使用してください。
+.
 
 MessageId=14002
 Severity=Success
@@ -34736,6 +40891,9 @@ The application binding data format is invalid.
 .
 Language=Romanian
 The application binding data format is invalid.
+.
+Language=Japanese
+アプリケーション バインディング データ形式が無効です。
 .
 
 MessageId=14003
@@ -34754,6 +40912,9 @@ The referenced assembly is not installed on your system.
 Language=Romanian
 The referenced assembly is not installed on your system.
 .
+Language=Japanese
+参照されたアセンブリがシステムにインストールされていません。
+.
 
 MessageId=14004
 Severity=Success
@@ -34770,6 +40931,9 @@ The manifest file does not begin with the required tag and format information.
 .
 Language=Romanian
 The manifest file does not begin with the required tag and format information.
+.
+Language=Japanese
+マニフェスト ファイルが必要なタグおよびフォーマット情報で始まっていません。
 .
 
 MessageId=14005
@@ -34788,6 +40952,9 @@ The manifest file contains one or more syntax errors.
 Language=Romanian
 The manifest file contains one or more syntax errors.
 .
+Language=Japanese
+マニフェスト ファイルに 1 つ以上の構文エラーがあります。
+.
 
 MessageId=14006
 Severity=Success
@@ -34804,6 +40971,9 @@ The application attempted to activate a disabled activation context.
 .
 Language=Romanian
 The application attempted to activate a disabled activation context.
+.
+Language=Japanese
+アプリケーションが無効なアクティブ化コンテキストをアクティブ化しようとしました。
 .
 
 MessageId=14007
@@ -34822,6 +40992,9 @@ The requested lookup key was not found in any active activation context.
 Language=Romanian
 The requested lookup key was not found in any active activation context.
 .
+Language=Japanese
+要求された検索キーがアクティブなアクティブ化コンテキストに見つかりませんでした。
+.
 
 MessageId=14008
 Severity=Success
@@ -34838,6 +41011,9 @@ A component version required by the application conflicts with another component
 .
 Language=Romanian
 A component version required by the application conflicts with another component version already active.
+.
+Language=Japanese
+アプリケーションで必要なコンポーネントのバージョンが、すでにアクティブな別のコンポーネントのバージョンと競合しています。
 .
 
 MessageId=14009
@@ -34856,6 +41032,9 @@ The type requested activation context section does not match the query API used.
 Language=Romanian
 The type requested activation context section does not match the query API used.
 .
+Language=Japanese
+要求されたアクティベーション コンテキスト セクションのタイプが、使用されたクエリ API と一致しません。
+.
 
 MessageId=14010
 Severity=Success
@@ -34872,6 +41051,9 @@ Lack of system resources has required isolated activation to be disabled for the
 .
 Language=Romanian
 Lack of system resources has required isolated activation to be disabled for the current thread of execution.
+.
+Language=Japanese
+システム リソースの不足により、現在の実行スレッドで隔離されたアクティブ化を無効にする必要があります。
 .
 
 MessageId=14011
@@ -34890,6 +41072,9 @@ An attempt to set the process default activation context failed because the proc
 Language=Romanian
 An attempt to set the process default activation context failed because the process default activation context was already set.
 .
+Language=Japanese
+プロセスの既定のアクティブ化コンテキストがすでに設定されていたため、プロセスの既定のアクティブ化コンテキストを設定しようとしましたが失敗しました。
+.
 
 MessageId=14012
 Severity=Success
@@ -34906,6 +41091,9 @@ The encoding group identifier specified is not recognized.
 .
 Language=Romanian
 The encoding group identifier specified is not recognized.
+.
+Language=Japanese
+指定されたエンコード グループ識別子が認識されません。
 .
 
 MessageId=14013
@@ -34924,6 +41112,9 @@ The encoding requested is not recognized.
 Language=Romanian
 The encoding requested is not recognized.
 .
+Language=Japanese
+要求されたエンコーディングが認識されません。
+.
 
 MessageId=14014
 Severity=Success
@@ -34940,6 +41131,9 @@ The manifest contains a reference to an invalid URI.
 .
 Language=Romanian
 The manifest contains a reference to an invalid URI.
+.
+Language=Japanese
+マニフェストに無効な URI への参照が含まれています。
 .
 
 MessageId=14015
@@ -34958,6 +41152,9 @@ The application manifest contains a reference to a dependent assembly which is n
 Language=Romanian
 The application manifest contains a reference to a dependent assembly which is not installed.
 .
+Language=Japanese
+アプリケーション マニフェストに、インストールされていない依存アセンブリへの参照が含まれています。
+.
 
 MessageId=14016
 Severity=Success
@@ -34974,6 +41171,9 @@ The manifest for an assembly used by the application has a reference to a depend
 .
 Language=Romanian
 The manifest for an assembly used by the application has a reference to a dependent assembly which is not installed.
+.
+Language=Japanese
+アプリケーションが使用するアセンブリのマニフェストに、インストールされていない依存アセンブリへの参照があります。
 .
 
 MessageId=14017
@@ -34992,6 +41192,9 @@ The manifest contains an attribute for the assembly identity which is not valid.
 Language=Romanian
 The manifest contains an attribute for the assembly identity which is not valid.
 .
+Language=Japanese
+マニフェストに有効でないアセンブリ ID の属性が含まれています。
+.
 
 MessageId=14018
 Severity=Success
@@ -35008,6 +41211,9 @@ The manifest is missing the required default namespace specification on the asse
 .
 Language=Romanian
 The manifest is missing the required default namespace specification on the assembly element.
+.
+Language=Japanese
+マニフェストに、アセンブリ要素に必要なデフォルト名前空間指定がありません。
 .
 
 MessageId=14019
@@ -35026,6 +41232,9 @@ The manifest has a default namespace specified on the assembly element but its v
 Language=Romanian
 The manifest has a default namespace specified on the assembly element but its value is not \"urn:schemas-microsoft-com:asm.v1\".
 .
+Language=Japanese
+マニフェストにはアセンブリ要素で指定された既定のネームスペースがありますが、その値は \"urn:schemas-microsoft-com:asm.v1\" ではありません。
+.
 
 MessageId=14020
 Severity=Success
@@ -35042,6 +41251,9 @@ The private manifest probe has crossed the reparse-point-associated path.
 .
 Language=Romanian
 The private manifest probe has crossed the reparse-point-associated path.
+.
+Language=Japanese
+プローブされたプライベート マニフェストがサポートされていないリパース ポイントを持つパスを横切りました。
 .
 
 MessageId=14021
@@ -35060,6 +41272,9 @@ Two or more components referenced directly or indirectly by the application mani
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have files by the same name.
 .
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される 2 つ以上のコンポーネントに、同じ名前のファイルがあります。
+.
 
 MessageId=14022
 Severity=Success
@@ -35076,6 +41291,9 @@ Two or more components referenced directly or indirectly by the application mani
 .
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have window classes with the same name.
+.
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントに、同じ名前のウィンドウ クラスがあります。
 .
 
 MessageId=14023
@@ -35094,6 +41312,9 @@ Two or more components referenced directly or indirectly by the application mani
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have the same COM server CLSIDs.
 .
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントに、同じCOMサーバーCLSIDがあります。
+.
 
 MessageId=14024
 Severity=Success
@@ -35110,6 +41331,9 @@ Two or more components referenced directly or indirectly by the application mani
 .
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have proxies for the same COM interface IIDs.
+.
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントが、同じCOMインターフェイスIIDのプロキシを持っています。
 .
 
 MessageId=14025
@@ -35128,6 +41352,9 @@ Two or more components referenced directly or indirectly by the application mani
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have the same COM type library TLBIDs.
 .
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントが同じCOMタイプライブラリTLBIDsを持っています。
+.
 
 MessageId=14026
 Severity=Success
@@ -35144,6 +41371,9 @@ Two or more components referenced directly or indirectly by the application mani
 .
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest have the same COM ProgIDs.
+.
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントが同じ COM ProgIDs を持っています。
 .
 
 MessageId=14027
@@ -35162,6 +41392,9 @@ Two or more components referenced directly or indirectly by the application mani
 Language=Romanian
 Two or more components referenced directly or indirectly by the application manifest are different versions of the same component which is not permitted.
 .
+Language=Japanese
+アプリケーション マニフェストによって直接または間接的に参照される2つ以上のコンポーネントは、許可されていない同じコンポーネントの異なるバージョンです。
+.
 
 MessageId=14028
 Severity=Success
@@ -35178,6 +41411,9 @@ A component's file does not match the verification information present in the co
 .
 Language=Romanian
 A component's file does not match the verification information present in the component manifest.
+.
+Language=Japanese
+コンポーネントのファイルがコンポーネント マニフェストに存在する検証情報と一致しません。
 .
 
 MessageId=14029
@@ -35196,6 +41432,9 @@ The policy manifest contains one or more syntax errors.
 Language=Romanian
 The policy manifest contains one or more syntax errors.
 .
+Language=Japanese
+ポリシー マニフェストに1つ以上の構文エラーがあります。
+.
 
 MessageId=14030
 Severity=Success
@@ -35212,6 +41451,9 @@ Manifest Parse Error : A string literal was expected, but no opening quote chara
 .
 Language=Romanian
 Manifest Parse Error : A string literal was expected, but no opening quote character was found.
+.
+Language=Japanese
+マニフェスト解析エラー: 文字列リテラルが期待されましたが、開始引用符が見つかりませんでした。
 .
 
 MessageId=14031
@@ -35230,6 +41472,9 @@ Manifest Parse Error : Incorrect syntax was used in a comment.
 Language=Romanian
 Manifest Parse Error : Incorrect syntax was used in a comment.
 .
+Language=Japanese
+マニフェスト解析エラー : コメントに不正な構文が使用されました。
+.
 
 MessageId=14032
 Severity=Success
@@ -35246,6 +41491,9 @@ Manifest Parse Error : A name was started with an invalid character.
 .
 Language=Romanian
 Manifest Parse Error : A name was started with an invalid character.
+.
+Language=Japanese
+マニフェスト解析エラー: 名前が無効な文字で始まっています。
 .
 
 MessageId=14033
@@ -35264,6 +41512,9 @@ Manifest Parse Error : A name contained an invalid character.
 Language=Romanian
 Manifest Parse Error : A name contained an invalid character.
 .
+Language=Japanese
+マニフェスト解析エラー: 名前に無効な文字が含まれています。
+.
 
 MessageId=14034
 Severity=Success
@@ -35280,6 +41531,9 @@ Manifest Parse Error : A string literal contained an invalid character.
 .
 Language=Romanian
 Manifest Parse Error : A string literal contained an invalid character.
+.
+Language=Japanese
+マニフェスト解析エラー: 文字列リテラルに無効な文字が含まれていました。
 .
 
 MessageId=14035
@@ -35298,6 +41552,9 @@ Manifest Parse Error : Invalid syntax for an XML declaration.
 Language=Romanian
 Manifest Parse Error : Invalid syntax for an XML declaration.
 .
+Language=Japanese
+マニフェスト解析エラー : xml 宣言の構文が無効です。
+.
 
 MessageId=14036
 Severity=Success
@@ -35314,6 +41571,9 @@ Manifest Parse Error : An invalid character was found in text content.
 .
 Language=Romanian
 Manifest Parse Error : An invalid character was found in text content.
+.
+Language=Japanese
+マニフェスト解析エラー: テキスト内容に無効な文字が見つかりました。
 .
 
 MessageId=14037
@@ -35332,6 +41592,9 @@ Manifest Parse Error : Required white space was missing.
 Language=Romanian
 Manifest Parse Error : Required white space was missing.
 .
+Language=Japanese
+マニフェスト解析エラー: 必要な空白文字が見つかりませんでした。
+.
 
 MessageId=14038
 Severity=Success
@@ -35348,6 +41611,9 @@ Manifest Parse Error : The character '>' was expected.
 .
 Language=Romanian
 Manifest Parse Error : The character '>' was expected.
+.
+Language=Japanese
+マニフェスト解析エラーです: 文字が期待されました。
 .
 
 MessageId=14039
@@ -35366,6 +41632,9 @@ Manifest Parse Error : A semi colon character was expected.
 Language=Romanian
 Manifest Parse Error : A semi colon character was expected.
 .
+Language=Japanese
+マニフェスト解析エラーです: セミコロン文字が予期されました。
+.
 
 MessageId=14040
 Severity=Success
@@ -35382,6 +41651,9 @@ Manifest Parse Error : Unbalanced parentheses.
 .
 Language=Romanian
 Manifest Parse Error : Unbalanced parentheses.
+.
+Language=Japanese
+マニフェスト解析エラー: カッコのバランスが取れていません。
 .
 
 MessageId=14041
@@ -35400,6 +41672,9 @@ Manifest Parse Error : Internal error.
 Language=Romanian
 Manifest Parse Error : Internal error.
 .
+Language=Japanese
+マニフェスト解析エラー : 内部エラーです。
+.
 
 MessageId=14042
 Severity=Success
@@ -35416,6 +41691,9 @@ Manifest Parse Error : White space is not allowed at this location.
 .
 Language=Romanian
 Manifest Parse Error : White space is not allowed at this location.
+.
+Language=Japanese
+マニフェスト解析エラー: この場所では空白文字は使用できません。
 .
 
 MessageId=14043
@@ -35434,6 +41712,9 @@ Manifest Parse Error : End of file reached in invalid state for current encoding
 Language=Romanian
 Manifest Parse Error : End of file reached in invalid state for current encoding.
 .
+Language=Japanese
+マニフェスト解析エラー : 現在のエンコーディングでは無効な状態でファイルの最後に到達しました。
+.
 
 MessageId=14044
 Severity=Success
@@ -35450,6 +41731,9 @@ Manifest Parse Error : Missing parenthesis.
 .
 Language=Romanian
 Manifest Parse Error : Missing parenthesis.
+.
+Language=Japanese
+マニフェスト解析エラー : カッコがありません。
 .
 
 MessageId=14045
@@ -35468,6 +41752,9 @@ Manifest Parse Error : A single or double closing quote character (\' or \") is 
 Language=Romanian
 Manifest Parse Error : A single or double closing quote character (\' or \") is missing.
 .
+Language=Japanese
+マニフェスト 解析エラー : カッコがありません。
+.
 
 MessageId=14046
 Severity=Success
@@ -35484,6 +41771,9 @@ Manifest Parse Error : Multiple colons are not allowed in a name.
 .
 Language=Romanian
 Manifest Parse Error : Multiple colons are not allowed in a name.
+.
+Language=Japanese
+マニフェスト解析エラー : 名前に複数のコロンは使用できません。
 .
 
 MessageId=14047
@@ -35502,6 +41792,9 @@ Manifest Parse Error : Invalid character for decimal digit.
 Language=Romanian
 Manifest Parse Error : Invalid character for decimal digit.
 .
+Language=Japanese
+マニフェスト解析エラー : 小数桁に無効な文字があります。
+.
 
 MessageId=14048
 Severity=Success
@@ -35518,6 +41811,9 @@ Manifest Parse Error : Invalid character for hexadecimal digit.
 .
 Language=Romanian
 Manifest Parse Error : Invalid character for hexadecimal digit.
+.
+Language=Japanese
+マニフェスト解析エラー : 16進数に無効な文字があります。
 .
 
 MessageId=14049
@@ -35536,6 +41832,9 @@ Manifest Parse Error : Invalid Unicode character value for this platform.
 Language=Romanian
 Manifest Parse Error : Invalid Unicode character value for this platform.
 .
+Language=Japanese
+マニフェスト解析エラー : このプラットフォームのユニコード文字値が無効です。
+.
 
 MessageId=14050
 Severity=Success
@@ -35552,6 +41851,9 @@ Manifest Parse Error : Expecting white space or '?'.
 .
 Language=Romanian
 Manifest Parse Error : Expecting white space or '?'.
+.
+Language=Japanese
+マニフェスト解析エラー: 空白または？を予期しています。
 .
 
 MessageId=14051
@@ -35570,6 +41872,9 @@ Manifest Parse Error : End tag was not expected at this location.
 Language=Romanian
 Manifest Parse Error : End tag was not expected at this location.
 .
+Language=Japanese
+マニフェスト解析エラー: 終了タグはこの場所では期待されませんでした。
+.
 
 MessageId=14052
 Severity=Success
@@ -35586,6 +41891,9 @@ Manifest Parse Error : The following tags were not closed: %1.
 .
 Language=Romanian
 Manifest Parse Error : The following tags were not closed: %1.
+.
+Language=Japanese
+マニフェスト 解析エラー: 次のタグが閉じられていません: %1
 .
 
 MessageId=14053
@@ -35604,6 +41912,9 @@ Manifest Parse Error : Duplicate attribute.
 Language=Romanian
 Manifest Parse Error : Duplicate attribute.
 .
+Language=Japanese
+マニフェスト解析エラー: 属性が重複しています。
+.
 
 MessageId=14054
 Severity=Success
@@ -35620,6 +41931,9 @@ Manifest Parse Error : Only one top level element is allowed in an XML document.
 .
 Language=Romanian
 Manifest Parse Error : Only one top level element is allowed in an XML document.
+.
+Language=Japanese
+マニフェスト解析エラー: XML ドキュメントで許可されるトップレベル要素は 1 つだけです。
 .
 
 MessageId=14055
@@ -35638,6 +41952,9 @@ Manifest Parse Error : Invalid at the top level of the document.
 Language=Romanian
 Manifest Parse Error : Invalid at the top level of the document.
 .
+Language=Japanese
+マニフェスト解析エラー : ドキュメントのトップ レベルが無効です。
+.
 
 MessageId=14056
 Severity=Success
@@ -35654,6 +41971,9 @@ Manifest Parse Error : Invalid XML declaration.
 .
 Language=Romanian
 Manifest Parse Error : Invalid XML declaration.
+.
+Language=Japanese
+マニフェスト解析エラー : 無効な xml 宣言です。
 .
 
 MessageId=14057
@@ -35672,6 +41992,9 @@ Manifest Parse Error : XML document must have a top level element.
 Language=Romanian
 Manifest Parse Error : XML document must have a top level element.
 .
+Language=Japanese
+マニフェスト解析エラー: XML ドキュメントにはトップレベル要素が必要です。
+.
 
 MessageId=14058
 Severity=Success
@@ -35688,6 +42011,9 @@ Manifest Parse Error : Unexpected end of file.
 .
 Language=Romanian
 Manifest Parse Error : Unexpected end of file.
+.
+Language=Japanese
+マニフェスト解析エラー : 予期しないファイルの終了です。
 .
 
 MessageId=14059
@@ -35706,6 +42032,9 @@ Manifest Parse Error : Parameter entities cannot be used inside markup declarati
 Language=Romanian
 Manifest Parse Error : Parameter entities cannot be used inside markup declarations in an internal subset.
 .
+Language=Japanese
+マニフェスト解析エラー: パラメータ エンティティは内部サブセットのマークアップ宣言内では使用できません。
+.
 
 MessageId=14060
 Severity=Success
@@ -35722,6 +42051,9 @@ Manifest Parse Error : Element was not closed.
 .
 Language=Romanian
 Manifest Parse Error : Element was not closed.
+.
+Language=Japanese
+マニフェスト解析エラー: 要素が閉じられていません。
 .
 
 MessageId=14061
@@ -35740,6 +42072,9 @@ Manifest Parse Error : End element was missing the character '>'.
 Language=Romanian
 Manifest Parse Error : End element was missing the character '>'.
 .
+Language=Japanese
+マニフェスト解析エラー: End要素に文字がありません。
+.
 
 MessageId=14062
 Severity=Success
@@ -35756,6 +42091,9 @@ Manifest Parse Error : A string literal was not closed.
 .
 Language=Romanian
 Manifest Parse Error : A string literal was not closed.
+.
+Language=Japanese
+マニフェスト解析エラー: 文字列リテラルが閉じられていません。
 .
 
 MessageId=14063
@@ -35774,6 +42112,9 @@ Manifest Parse Error : A comment was not closed.
 Language=Romanian
 Manifest Parse Error : A comment was not closed.
 .
+Language=Japanese
+マニフェスト解析エラー: コメントが閉じられていません。
+.
 
 MessageId=14064
 Severity=Success
@@ -35790,6 +42131,9 @@ Manifest Parse Error : A declaration was not closed.
 .
 Language=Romanian
 Manifest Parse Error : A declaration was not closed.
+.
+Language=Japanese
+マニフェスト 解析エラー: 宣言が閉じられていません。
 .
 
 MessageId=14065
@@ -35808,6 +42152,9 @@ Manifest Parse Error : A CDATA section was not closed.
 Language=Romanian
 Manifest Parse Error : A CDATA section was not closed.
 .
+Language=Japanese
+マニフェスト解析エラー: CDATA セクションが閉じられていません。
+.
 
 MessageId=14066
 Severity=Success
@@ -35824,6 +42171,9 @@ Manifest Parse Error : The namespace prefix is not allowed to start with the res
 .
 Language=Romanian
 Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string \"xml\".
+.
+Language=Japanese
+マニフェスト解析エラー: 名前空間接頭辞を予約文字列で開始することはできません。
 .
 
 MessageId=14067
@@ -35842,6 +42192,9 @@ Manifest Parse Error : System does not support the specified encoding.
 Language=Romanian
 Manifest Parse Error : System does not support the specified encoding.
 .
+Language=Japanese
+マニフェスト解析エラー : システムが指定されたエンコードをサポートしていません。
+.
 
 MessageId=14068
 Severity=Success
@@ -35858,6 +42211,9 @@ Manifest Parse Error : Switch from current encoding to specified encoding not su
 .
 Language=Romanian
 Manifest Parse Error : Switch from current encoding to specified encoding not supported.
+.
+Language=Japanese
+マニフェスト解析エラー : 現在のエンコーディングから指定されたエンコーディングへの切り替えがサポートされていません。
 .
 
 MessageId=14069
@@ -35876,6 +42232,9 @@ Manifest Parse Error : The name 'xml' is reserved and must be lower case.
 Language=Romanian
 Manifest Parse Error : The name 'xml' is reserved and must be lower case.
 .
+Language=Japanese
+マニフェスト解析エラーです: 名前'xml'は予約されているため、小文字にする必要があります。
+.
 
 MessageId=14070
 Severity=Success
@@ -35892,6 +42251,9 @@ Manifest Parse Error : The standalone attribute must have the value 'yes' or 'no
 .
 Language=Romanian
 Manifest Parse Error : The standalone attribute must have the value 'yes' or 'no'.
+.
+Language=Japanese
+マニフェスト解析エラー : スタンドアロン属性は、値 'yes'または 'no'が必要です。
 .
 
 MessageId=14071
@@ -35910,6 +42272,9 @@ Manifest Parse Error : The standalone attribute cannot be used in external entit
 Language=Romanian
 Manifest Parse Error : The standalone attribute cannot be used in external entities.
 .
+Language=Japanese
+マニフェスト解析エラー : スタンドアロン属性は外部エンティティでは使用できません。
+.
 
 MessageId=14072
 Severity=Success
@@ -35926,6 +42291,9 @@ Manifest Parse Error : Invalid version number.
 .
 Language=Romanian
 Manifest Parse Error : Invalid version number.
+.
+Language=Japanese
+マニフェスト解析エラー : 無効なバージョン番号です。
 .
 
 MessageId=14073
@@ -35944,6 +42312,9 @@ Manifest Parse Error : Missing equals sign between attribute and attribute value
 Language=Romanian
 Manifest Parse Error : Missing equals sign between attribute and attribute value.
 .
+Language=Japanese
+マニフェスト解析エラー: 属性と属性値の間に等号がありません。
+.
 
 MessageId=14074
 Severity=Success
@@ -35960,6 +42331,9 @@ Assembly Protection Error: Unable to recover the specified assembly.
 .
 Language=Romanian
 Assembly Protection Error: Unable to recover the specified assembly.
+.
+Language=Japanese
+アセンブリ保護エラー : 指定されたアセンブリを回復できません。
 .
 
 MessageId=14075
@@ -35978,6 +42352,9 @@ Assembly Protection Error: The public key for an assembly was too short to be al
 Language=Romanian
 Assembly Protection Error: The public key for an assembly was too short to be allowed.
 .
+Language=Japanese
+アセンブリ保護エラー : アセンブリの公開キーが短すぎて許可されませんでした。
+.
 
 MessageId=14076
 Severity=Success
@@ -35994,6 +42371,9 @@ Assembly Protection Error: The catalog for an assembly is not valid, or does not
 .
 Language=Romanian
 Assembly Protection Error: The catalog for an assembly is not valid, or does not match the assembly's manifest.
+.
+Language=Japanese
+アセンブリ保護エラー: アセンブリのカタログが有効でないか、アセンブリのマニフェストと一致しません。
 .
 
 MessageId=14077
@@ -36012,6 +42392,9 @@ An HRESULT could not be translated to a corresponding Win32 error code.
 Language=Romanian
 An HRESULT could not be translated to a corresponding Win32 error code.
 .
+Language=Japanese
+HRESULT を対応する Win32 エラー コードに変換できませんでした。
+.
 
 MessageId=14078
 Severity=Success
@@ -36028,6 +42411,9 @@ Assembly Protection Error: The catalog for an assembly is missing.
 .
 Language=Romanian
 Assembly Protection Error: The catalog for an assembly is missing.
+.
+Language=Japanese
+アセンブリ保護エラー: アセンブリのカタログがありません。
 .
 
 MessageId=14079
@@ -36046,6 +42432,9 @@ The supplied assembly identity is missing one or more attributes which must be p
 Language=Romanian
 The supplied assembly identity is missing one or more attributes which must be present in this context.
 .
+Language=Japanese
+指定されたアセンブリ ID に、このコンテキストに存在する必要がある属性が 1 つ以上ありません。
+.
 
 MessageId=14080
 Severity=Success
@@ -36062,6 +42451,9 @@ The supplied assembly identity has one or more attribute names that contain char
 .
 Language=Romanian
 The supplied assembly identity has one or more attribute names that contain characters not permitted in XML names.
+.
+Language=Japanese
+指定されたアセンブリ ID には、XML 名で許可されていない文字を含む属性名が 1 つ以上あります。
 .
 
 MessageId=14081
@@ -36080,6 +42472,9 @@ The referenced assembly could not be found.
 Language=Romanian
 The referenced assembly could not be found.
 .
+Language=Japanese
+参照されたアセンブリが見つかりません。
+.
 
 MessageId=14082
 Severity=Success
@@ -36096,6 +42491,9 @@ The activation context activation stack for the running thread of execution is c
 .
 Language=Romanian
 The activation context activation stack for the running thread of execution is corrupt.
+.
+Language=Japanese
+実行スレッドのアクティブ化コンテキストのアクティブ化スタックが壊れています。
 .
 
 MessageId=14083
@@ -36114,6 +42512,9 @@ The application isolation metadata for this process or thread has become corrupt
 Language=Romanian
 The application isolation metadata for this process or thread has become corrupt.
 .
+Language=Japanese
+このプロセスまたはスレッドのアプリケーション分離メタデータが破損しています。
+.
 
 MessageId=14084
 Severity=Success
@@ -36130,6 +42531,9 @@ The activation context being deactivated is not the most recently activated one.
 .
 Language=Romanian
 The activation context being deactivated is not the most recently activated one.
+.
+Language=Japanese
+アクティブ化解除されるアクティブ化コンテキストは、最近アクティブ化されたものではありません。
 .
 
 MessageId=14085
@@ -36148,6 +42552,9 @@ The activation context being deactivated is not active for the current thread of
 Language=Romanian
 The activation context being deactivated is not active for the current thread of execution.
 .
+Language=Japanese
+アクティブ化解除されたアクティブ化コンテキストは、現在の実行スレッドに対してアクティブではありません。
+.
 
 MessageId=14086
 Severity=Success
@@ -36164,6 +42571,9 @@ The activation context being deactivated has already been deactivated.
 .
 Language=Romanian
 The activation context being deactivated has already been deactivated.
+.
+Language=Japanese
+アクティブ化解除されるアクティブ化コンテキストは既にアクティブ化解除されています。
 .
 
 MessageId=14087
@@ -36182,6 +42592,9 @@ A component used by the isolation facility has requested to terminate the proces
 Language=Romanian
 A component used by the isolation facility has requested to terminate the process.
 .
+Language=Japanese
+分離機能で使用されているコンポーネントがプロセスの終了を要求しました。
+.
 
 MessageId=14088
 Severity=Success
@@ -36198,6 +42611,9 @@ A kernel mode component is releasing a reference on an activation context.
 .
 Language=Romanian
 A kernel mode component is releasing a reference on an activation context.
+.
+Language=Japanese
+カーネルモードのコンポーネントがアクティブ化コンテキストの参照を解放しています。
 .
 
 MessageId=14089
@@ -36216,6 +42632,9 @@ The activation context of system default assembly could not be generated.
 Language=Romanian
 The activation context of system default assembly could not be generated.
 .
+Language=Japanese
+システム デフォルト アセンブリのアクティブ化コンテキストを生成できませんでした。
+.
 
 MessageId=14090
 Severity=Success
@@ -36232,6 +42651,9 @@ The value of an attribute in an identity is not within the legal range.
 .
 Language=Romanian
 The value of an attribute in an identity is not within the legal range.
+.
+Language=Japanese
+ID の属性の値が正当な範囲内にありません。
 .
 
 MessageId=14091
@@ -36250,6 +42672,9 @@ The name of an attribute in an identity is not within the legal range.
 Language=Romanian
 The name of an attribute in an identity is not within the legal range.
 .
+Language=Japanese
+ID の属性名が有効な範囲内にありません。
+.
 
 MessageId=14092
 Severity=Success
@@ -36266,6 +42691,9 @@ An identity contains two definitions for the same attribute.
 .
 Language=Romanian
 An identity contains two definitions for the same attribute.
+.
+Language=Japanese
+ID に同じ属性の定義が 2 つ含まれています。
 .
 
 MessageId=14093
@@ -36284,6 +42712,9 @@ The identity string is malformed. This may be due to a trailing comma, more than
 Language=Romanian
 The identity string is malformed. This may be due to a trailing comma, more than two unnamed attributes, missing attribute name or missing attribute value.
 .
+Language=Japanese
+ID 文字列が不正です。これは、末尾のカンマ、2つ以上の名前のない属性、属性名の欠落、または属性値の欠落が原因です。
+.
 
 MessageId=15000
 Severity=Success
@@ -36300,6 +42731,9 @@ The specified channel path is invalid. See extended error info for more details.
 .
 Language=Romanian
 The specified channel path is invalid. See extended error info for more details.
+.
+Language=Japanese
+指定されたチャンネル・パスが無効です。詳細は拡張エラー情報を参照してください。
 .
 
 MessageId=15001
@@ -36318,6 +42752,9 @@ The specified query is invalid. See extended error info for more details.
 Language=Romanian
 The specified query is invalid. See extended error info for more details.
 .
+Language=Japanese
+指定されたクエリが無効です。詳細は拡張エラー情報を参照してください。
+.
 
 MessageId=15002
 Severity=Success
@@ -36334,6 +42771,9 @@ The publisher did indicate they have a manifest/resource but a manifest/resource
 .
 Language=Romanian
 The publisher did indicate they have a manifest/resource but a manifest/resource could not be found.
+.
+Language=Japanese
+パブリッシャはマニフェスト／リソースがあることを示したが、マニフェスト／リソースは見つかりませんでした。
 .
 
 MessageId=15003
@@ -36352,6 +42792,9 @@ The publisher does not have a manifest and is performing an operation which requ
 Language=Romanian
 The publisher does not have a manifest and is performing an operation which requires they have a manifest.
 .
+Language=Japanese
+パブリッシャはマニフェストを持っておらず、マニフェストを持っていることを要求する操作を行っています。
+.
 
 MessageId=15004
 Severity=Success
@@ -36368,6 +42811,9 @@ There is no registered template for specified event id.
 .
 Language=Romanian
 There is no registered template for specified event id.
+.
+Language=Japanese
+指定されたイベントIDに対応するテンプレートが登録されていません。
 .
 
 MessageId=15005
@@ -36386,6 +42832,9 @@ The specified event was declared in the manifest to go a different channel than 
 Language=Romanian
 The specified event was declared in the manifest to go a different channel than the one this publisher handle is bound to.
 .
+Language=Japanese
+パブリッシャによって発生されたイベント データは、パブリッシャのマニフェスト内のイベント テンプレート定義と互換性がありません。
+.
 
 MessageId=15006
 Severity=Success
@@ -36402,6 +42851,9 @@ The type of a specified substitution value does not match the type expected from
 .
 Language=Romanian
 The type of a specified substitution value does not match the type expected from the template definition.
+.
+Language=Japanese
+指定された置換値の型が、テンプレート定義から期待される型と一致しません。
 .
 
 MessageId=15007
@@ -36420,6 +42872,9 @@ The number of specified substitution values does not match the number expected f
 Language=Romanian
 The number of specified substitution values does not match the number expected from the template definition.
 .
+Language=Japanese
+指定された置換値の数が、テンプレート定義から予想される数と一致しません。
+.
 
 MessageId=15008
 Severity=Success
@@ -36436,6 +42891,9 @@ The specified channel could not be found. Check channel configuration.
 .
 Language=Romanian
 The specified channel could not be found. Check channel configuration.
+.
+Language=Japanese
+指定されたチャネルが見つからない。チャンネル構成を確認してください。
 .
 
 MessageId=15009
@@ -36454,6 +42912,9 @@ The specified xml text was not well-formed. See Extended Error for more details.
 Language=Romanian
 The specified xml text was not well-formed. See Extended Error for more details.
 .
+Language=Japanese
+指定されたxmlテキストは整形式ではありませんでした。詳細は拡張エラーを参照してください。
+.
 
 MessageId=15010
 Severity=Success
@@ -36470,6 +42931,9 @@ The specified channel path selects more than one instance of a channel. The oper
 .
 Language=Romanian
 The specified channel path selects more than one instance of a channel. The operation requires that only one channel be selected. It may be necessary to scope channel path to version / publicKeyToken to select only one instance.
+.
+Language=Japanese
+指定されたチャネルパスが、複数のチャネルのインスタンスを選択する。この操作では、1 つのチャネルのみが選択される必要があります。1つのインスタンスのみを選択するために、チャネルパスを version / publicKeyToken にスコープする必要があるかもしれません。
 .
 
 MessageId=0x000E
@@ -36488,6 +42952,9 @@ Out of memory
 Language=Romanian
 Out of memory
 .
+Language=Japanese
+この操作を完了するのに十分なメモリ リソースがありません。
+.
 
 MessageId=0x0057
 Severity=Warning
@@ -36504,6 +42971,9 @@ One or more arguments are invalid
 .
 Language=Romanian
 One or more arguments are invalid
+.
+Language=Japanese
+パラメータが不正です。
 .
 
 MessageId=0x0006
@@ -36522,6 +42992,9 @@ Invalid handle
 Language=Romanian
 Invalid handle
 .
+Language=Japanese
+ハンドルが無効です。
+.
 
 MessageId=0x0005
 Severity=Warning
@@ -36538,6 +43011,9 @@ WIN32 access denied error
 .
 Language=Romanian
 WIN32 access denied error
+.
+Language=Japanese
+WIN32のアクセス拒否エラーです。
 .
 
 
@@ -36557,6 +43033,9 @@ Invalid OLEVERB structure
 Language=Romanian
 Invalid OLEVERB structure
 .
+Language=Japanese
+無効な OLEVERB 構造体です。
+.
 
 MessageId=0x0001
 Severity=Warning
@@ -36573,6 +43052,10 @@ Invalid advise flags
 .
 Language=Romanian
 Invalid advise flags
+.
+Language=Japanese
+無効なアドバイス フラグです。
+
 .
 
 MessageId=0x0002
@@ -36591,6 +43074,9 @@ Can't enumerate any more, because the associated data is missing
 Language=Romanian
 Can't enumerate any more, because the associated data is missing
 .
+Language=Japanese
+関連データがないため、これ以上列挙できません。
+.
 
 MessageId=0x0003
 Severity=Warning
@@ -36607,6 +43093,9 @@ This implementation doesn't take advises
 .
 Language=Romanian
 This implementation doesn't take advises
+.
+Language=Japanese
+この実装はアドバイスを受けません。
 .
 
 MessageId=0x0004
@@ -36625,6 +43114,10 @@ There is no connection for this connection ID
 Language=Romanian
 There is no connection for this connection ID
 .
+Language=Japanese
+この接続IDには接続がありません。
+
+.
 
 MessageId=0x0005
 Severity=Warning
@@ -36641,6 +43134,9 @@ Need to run the object to perform this operation
 .
 Language=Romanian
 Need to run the object to perform this operation
+.
+Language=Japanese
+この操作を実行するには、オブジェクトを実行する必要があります。
 .
 
 MessageId=0x0006
@@ -36659,6 +43155,9 @@ There is no cache to operate on
 Language=Romanian
 There is no cache to operate on
 .
+Language=Japanese
+操作するキャッシュがありません。
+.
 
 MessageId=0x0007
 Severity=Warning
@@ -36675,6 +43174,9 @@ Uninitialized object
 .
 Language=Romanian
 Uninitialized object
+.
+Language=Japanese
+初期化されていないオブジェクトです。
 .
 
 MessageId=0x0008
@@ -36693,6 +43195,10 @@ Linked object's source class has changed
 Language=Romanian
 Linked object's source class has changed
 .
+Language=Japanese
+リンクされたオブジェクトのソース クラスが変更されました。
+
+.
 
 MessageId=0x0009
 Severity=Warning
@@ -36709,6 +43215,9 @@ Not able to get the moniker of the object
 .
 Language=Romanian
 Not able to get the moniker of the object
+.
+Language=Japanese
+オブジェクトのモニカを取得できません。
 .
 
 MessageId=0x000A
@@ -36727,6 +43236,9 @@ Not able to bind to the source
 Language=Romanian
 Not able to bind to the source
 .
+Language=Japanese
+ソースにバインドできません。
+.
 
 MessageId=0x000B
 Severity=Warning
@@ -36743,6 +43255,9 @@ Object is static; operation not allowed
 .
 Language=Romanian
 Object is static; operation not allowed
+.
+Language=Japanese
+オブジェクトは静的です。操作できません。
 .
 
 MessageId=0x000C
@@ -36761,6 +43276,9 @@ User canceled out of save dialog
 Language=Romanian
 User canceled out of save dialog
 .
+Language=Japanese
+ユーザーが保存ダイアログからキャンセルしました。
+.
 
 MessageId=0x000D
 Severity=Warning
@@ -36777,6 +43295,9 @@ Invalid rectangle
 .
 Language=Romanian
 Invalid rectangle
+.
+Language=Japanese
+無効な長方形です。
 .
 
 MessageId=0x000E
@@ -36795,6 +43316,9 @@ compobj.dll is too old for the ole2.dll initialized
 Language=Romanian
 compobj.dll is too old for the ole2.dll initialized
 .
+Language=Japanese
+compobj.dll は ole2.dll が初期化されるには古すぎます。
+.
 
 MessageId=0x000F
 Severity=Warning
@@ -36811,6 +43335,9 @@ Invalid window handle
 .
 Language=Romanian
 Invalid window handle
+.
+Language=Japanese
+無効なウィンドウハンドルです。
 .
 
 MessageId=0x0010
@@ -36829,6 +43356,9 @@ Object is not in any of the inplace active states
 Language=Romanian
 Object is not in any of the inplace active states
 .
+Language=Japanese
+オブジェクトがいずれのインプレース アクティブ状態でもありません。
+.
 
 MessageId=0x0011
 Severity=Warning
@@ -36845,6 +43375,9 @@ Not able to convert object
 .
 Language=Romanian
 Not able to convert object
+.
+Language=Japanese
+オブジェクトを変換できません。
 .
 
 MessageId=0x0012
@@ -36863,6 +43396,9 @@ Not able to perform the operation because object is not given storage yet
 Language=Romanian
 Not able to perform the operation because object is not given storage yet
 .
+Language=Japanese
+オブジェクトにまだストレージが与えられていないため、操作を実行できません。
+.
 
 MessageId=0x0064
 Severity=Warning
@@ -36879,6 +43415,9 @@ Invalid FORMATETC structure
 .
 Language=Romanian
 Invalid FORMATETC structure
+.
+Language=Japanese
+無効な FORMATETC 構造体です。
 .
 
 MessageId=0x0065
@@ -36897,6 +43436,9 @@ Invalid DVTARGETDEVICE structure
 Language=Romanian
 Invalid DVTARGETDEVICE structure
 .
+Language=Japanese
+無効な DVTARGETDEVICE 構造体です。
+.
 
 MessageId=0x0066
 Severity=Warning
@@ -36913,6 +43455,9 @@ Invalid STDGMEDIUM structure
 .
 Language=Romanian
 Invalid STDGMEDIUM structure
+.
+Language=Japanese
+無効な STDGMEDIUM 構造体です。
 .
 
 MessageId=0x0067
@@ -36931,6 +43476,9 @@ Invalid STATDATA structure
 Language=Romanian
 Invalid STATDATA structure
 .
+Language=Japanese
+無効な STATDATA 構造体です。
+.
 
 MessageId=0x0068
 Severity=Warning
@@ -36947,6 +43495,9 @@ Invalid lindex
 .
 Language=Romanian
 Invalid lindex
+.
+Language=Japanese
+無効な lindex です。
 .
 
 MessageId=0x0069
@@ -36965,6 +43516,9 @@ Invalid tymed
 Language=Romanian
 Invalid tymed
 .
+Language=Japanese
+無効な tymed です。
+.
 
 MessageId=0x006A
 Severity=Warning
@@ -36981,6 +43535,9 @@ Invalid clipboard format
 .
 Language=Romanian
 Invalid clipboard format
+.
+Language=Japanese
+無効なクリップボード形式です。
 .
 
 MessageId=0x006B
@@ -36999,6 +43556,9 @@ Invalid aspect(s)
 Language=Romanian
 Invalid aspect(s)
 .
+Language=Japanese
+無効なアスペクトです。
+.
 
 MessageId=0x006C
 Severity=Warning
@@ -37015,6 +43575,9 @@ tdSize parameter of the DVTARGETDEVICE structure is invalid
 .
 Language=Romanian
 tdSize parameter of the DVTARGETDEVICE structure is invalid
+.
+Language=Japanese
+DVTARGETDEVICE 構造体の tdSize パラメータが無効です。
 .
 
 MessageId=0x006D
@@ -37033,6 +43596,9 @@ Object doesn't support IViewObject interface
 Language=Romanian
 Object doesn't support IViewObject interface
 .
+Language=Japanese
+オブジェクトがIViewObjectインターフェイスをサポートしていません。
+.
 
 MessageId=0x0100
 Severity=Warning
@@ -37049,6 +43615,9 @@ Trying to revoke a drop target that has not been registered
 .
 Language=Romanian
 Trying to revoke a drop target that has not been registered
+.
+Language=Japanese
+登録されていないドロップ目標を取り消そうとしています。
 .
 
 MessageId=0x0101
@@ -37067,6 +43636,9 @@ This window has already been registered as a drop target
 Language=Romanian
 This window has already been registered as a drop target
 .
+Language=Japanese
+このウィンドウはすでにドロップターゲットとして登録されています。
+.
 
 MessageId=0x0102
 Severity=Warning
@@ -37083,6 +43655,9 @@ Invalid window handle
 .
 Language=Romanian
 Invalid window handle
+.
+Language=Japanese
+無効なウィンドウ ハンドルです。
 .
 
 MessageId=0x0110
@@ -37101,6 +43676,9 @@ Class does not support aggregation (or class object is remote)
 Language=Romanian
 Class does not support aggregation (or class object is remote)
 .
+Language=Japanese
+クラスが集約をサポートしていません (またはクラス・オブジェクトがリモートです)。
+.
 
 MessageId=0x0111
 Severity=Warning
@@ -37118,6 +43696,9 @@ ClassFactory cannot supply requested class
 Language=Romanian
 ClassFactory cannot supply requested class
 .
+Language=Japanese
+ClassFactory が要求されたクラスを提供できません。
+.
 
 MessageId=0x0112
 Severity=Warning
@@ -37134,4 +43715,7 @@ Class is not licensed for use
 .
 Language=Romanian
 Class is not licensed for use
+.
+Language=Japanese
+クラスの使用が許可されていません。
 .
