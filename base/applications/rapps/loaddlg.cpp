@@ -97,7 +97,7 @@ LoadStatusString(DownloadStatus StatusParam)
     PATH_CHAR_CLASS_OTHER_VALID)
 
 VOID
-UrlUnescapeAndPathNameCensorship(CStringW& str)
+UrlUnescapeAndFileNameCensorship(CStringW& str)
 {
     WCHAR szPath[MAX_PATH];
     DWORD cchPath = _countof(szPath);
@@ -747,7 +747,7 @@ CDownloadManager::ThreadFunc(LPVOID param)
             case DLTYPE_APPLICATION:
             {
                 CStringW str = p + 1; // use the filename retrieved from URL
-                UrlUnescapeAndPathNameCensorship(str);
+                UrlUnescapeAndFileNameCensorship(str);
                 Path += str;
                 break;
             }
