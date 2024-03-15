@@ -3,6 +3,7 @@
  * LICENSE:     BSD Zero Clause License (https://spdx.org/licenses/0BSD)
  * PURPOSE:     Helper pragma implementation for pseh library (amd64)
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou
+ *              Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 #include <gcc-plugin.h>
@@ -16,6 +17,13 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+#include <cstdio>
+
+#if 0 // To enable tracing
+#define trace(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define trace(...)
+#endif
 
 #define is_alpha(c) (((c)>64 && (c)<91) || ((c)>96 && (c)<123))
 
@@ -31,6 +39,14 @@ int
 VISIBLE
 plugin_is_GPL_compatible = 1;
 
+constexpr size_t k_header_statement_max_size = 20000;
+
+struct seh_handler
+{
+    bool is_except;
+    unsigned int line;
+};
+
 struct seh_function
 {
     bool unwind;
@@ -38,6 +54,7 @@ struct seh_function
     tree asm_header_text;
     tree asm_header;
     size_t count;
+    std::vector<seh_handler> handlers;
 
     seh_function(struct function* fun)
         : unwind(false)
@@ -45,9 +62,13 @@ struct seh_function
         , count(0)
     {
         /* Reserve space for our header statement */
-        char buf[256];
+#if 0 // FIXME: crashes on older GCC
+        asm_header_text = build_string(k_header_statement_max_size, "");
+#else
+        char buf[k_header_statement_max_size];
         memset(buf, 0, sizeof(buf));
         asm_header_text = build_string(sizeof(buf), buf);
+#endif
         asm_header = build_stmt(fun->function_start_locus, ASM_EXPR, asm_header_text, NULL_TREE, NULL_TREE, NULL_TREE, NULL_TREE);
         ASM_VOLATILE_P(asm_header) = 1;
         add_stmt(asm_header);
@@ -74,8 +95,9 @@ static
 void
 handle_seh_pragma(cpp_reader* UNUSED parser)
 {
-    tree x, arg;
+    tree x, arg, line;
     std::stringstream label_decl;
+    bool is_except;
 
     if (!cfun)
     {
@@ -84,27 +106,40 @@ handle_seh_pragma(cpp_reader* UNUSED parser)
     }
 
     if ((pragma_lex(&x) != CPP_OPEN_PAREN) ||
-        (pragma_lex(&arg) != CPP_NAME) ||
+        (pragma_lex(&arg) != CPP_NAME) || // except or finally
+        (pragma_lex(&x) != CPP_COMMA) ||
+        (pragma_lex(&line) != CPP_NUMBER) || // Line number
         (pragma_lex(&x) != CPP_CLOSE_PAREN) ||
-        (pragma_lex(&x) != CPP_EOF))
+        (pragma_lex(&x) != CPP_EOF)
+        )
     {
-        error("%<#pragma REACTOS seh%> needs one parameter%>");
+        error("%<#pragma REACTOS seh%> needs two parameters%>");
         return;
     }
+
+    trace(stderr, "Pragma: %s, %u\n", IDENTIFIER_POINTER(arg), TREE_INT_CST_LOW(line));
 
     const char* op = IDENTIFIER_POINTER(arg);
 
     seh_function* seh_fun = get_seh_function();
-    if (strcmp(op, "except") == 0)
+    if (strcmp(op, "__seh$$except") == 0)
+    {
+        is_except = true;
         seh_fun->except = true;
-    else if (strcmp(op, "finally") == 0)
+    }
+    else if (strcmp(op, "__seh$$finally") == 0)
+    {
+        is_except = false;
         seh_fun->unwind = true;
+    }
     else
     {
         error("Wrong argument for %<#pragma REACTOS seh%>. Expected \"except\" or \"finally\"");
         return;
     }
     seh_fun->count++;
+
+    seh_fun->handlers.push_back({is_except, (unsigned int)TREE_INT_CST_LOW(line)});
 
     /* Make sure we use a frame pointer. REACTOS' PSEH depends on this */
     cfun->machine->accesses_prev_frame = 1;
@@ -142,11 +177,24 @@ finish_seh_function(void* event_data, void* UNUSED user_data)
     asm_str << "\n";
     asm_str << "\t.seh_handlerdata\n";
     asm_str << "\t.long " << seh_fun->count << "\n";
-    asm_str << "\t.seh_code";
+
+    for (auto& handler : seh_fun->handlers)
+    {
+        asm_str << "\n\t.rva " << "__seh2$$begin_try__" << handler.line; /* Begin of tried code */
+        asm_str << "\n\t.rva " << "__seh2$$end_try__" << handler.line; /* End of tried code */
+        asm_str << "\n\t.rva " << "__seh2$$filter__" << handler.line; /* Filter function */
+        if (handler.is_except)
+            asm_str << "\n\t.rva " << "__seh2$$begin_except__" << handler.line; /* Called on except */
+        else
+            asm_str << "\n\t.long 0"; /* No unwind handler */
+    }
+    asm_str << "\n\t.seh_code\n";
 
     strncpy(const_cast<char*>(TREE_STRING_POINTER(seh_fun->asm_header_text)),
             asm_str.str().c_str(),
             TREE_STRING_LENGTH(seh_fun->asm_header_text));
+
+    trace(stderr, "ASM: %s\n", asm_str.str().c_str());
 
     delete seh_fun;
 }

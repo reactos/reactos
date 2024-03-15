@@ -6,15 +6,19 @@ __asm__(
     ".p2align 4, 0x90\n"
     ".seh_proc __seh2_global_filter_func\n"
     "__seh2_global_filter_func:\n"
+    /* r8 is rbp - frame-offset. Calculate the negative frame-offset */
+    "\tsub %rbp, %rax\n"
     "\tpush %rbp\n"
     "\t.seh_pushreg %rbp\n"
     "\tsub $32, %rsp\n"
     "\t.seh_stackalloc 32\n"
     "\t.seh_endprologue\n"
+    /* rdx is the original stack pointer, fix it up to be the frame pointer */
+    "\tsub %rax, %rdx\n"
     /* Restore frame pointer. */
     "\tmov %rdx, %rbp\n"
     /* Actually execute the filter funclet */
-    "\tjmp *%rax\n"
+    "\tjmp *%r8\n"
     "__seh2_global_filter_func_exit:\n"
     "\t.p2align 4\n"
     "\tadd $32, %rsp\n"
@@ -22,8 +26,36 @@ __asm__(
     "\tret\n"
     "\t.seh_endproc");
 
+#define STRINGIFY(a) #a
+#define EMIT_PRAGMA_(params) \
+    _Pragma( STRINGIFY(params) )
+#define EMIT_PRAGMA(type,line) \
+    EMIT_PRAGMA_(REACTOS seh(type,line))
+
+#define _SEH3$_EMIT_DEFS_AND_PRAGMA__(Line, Type)                                   \
+    /* Emit assembler constants with line number to be individual */                \
+    __asm__ __volatile__ goto ("\n"                                                 \
+        "\t__seh2$$begin_try__" #Line "=%l0\n" /* Begin of tried code */            \
+        "\t__seh2$$end_try__" #Line "=%l1 + 1\n" /* End of tried code */            \
+        "\t__seh2$$filter__" #Line "=%l2\n" /* Filter function */                   \
+        "\t__seh2$$begin_except__" #Line "=%l3\n" /* Called on except */            \
+            : /* No output */                                                       \
+            : /* No input */                                                        \
+            : /* No clobber */                                                      \
+            : __seh2$$begin_try__,                                                  \
+              __seh2$$end_try__,                                                    \
+              __seh2$$filter__,                                                     \
+              __seh2$$begin_except__);                                              \
+    /* Call our home-made pragma */                                                 \
+    EMIT_PRAGMA(Type,Line)
+
+#define _SEH3$_EMIT_DEFS_AND_PRAGMA_(Line, Type) _SEH3$_EMIT_DEFS_AND_PRAGMA__(Line, Type)
+#define _SEH3$_EMIT_DEFS_AND_PRAGMA(Type) _SEH3$_EMIT_DEFS_AND_PRAGMA_(__LINE__, Type)
+
 #define _SEH2_TRY                                                                   \
 {                                                                                   \
+    __label__ __seh2$$filter__;                                                     \
+    __label__ __seh2$$begin_except__;                                               \
     __label__ __seh2$$begin_try__;                                                  \
     __label__ __seh2$$end_try__;                                                    \
     /*                                                                              \
@@ -40,41 +72,25 @@ __seh2$$begin_try__:                                                            
 #define _SEH2_EXCEPT(...)                                                                       \
 __seh2$$leave_scope__: __MINGW_ATTRIB_UNUSED;                                                   \
     }                                                                                           \
-__seh2$$end_try__:                                                                              \
+__seh2$$end_try__:(void)0;                                                                      \
     /* Call our home-made pragma */                                                             \
-    _Pragma("REACTOS seh(except)")                                                              \
+    _SEH3$_EMIT_DEFS_AND_PRAGMA(__seh$$except);                                                 \
     if (0)                                                                                      \
     {                                                                                           \
         __label__ __seh2$$leave_scope__;                                                        \
-        __label__ __seh2$$filter__;                                                             \
-        __label__ __seh2$$begin_except__;                                                       \
-        LONG __MINGW_ATTRIB_UNUSED __seh2$$exception_code__ = 0;                                \
+        LONG __MINGW_ATTRIB_UNUSED __seh2$$exception_code__;                                    \
         /* Add our handlers to the list */                                                      \
-        __asm__ __volatile__ goto ("\n"                                                         \
-            "\t.seh_handlerdata\n"                                                              \
-            "\t.rva %l0\n" /* Begin of tried code */                                            \
-            "\t.rva %l1 + 1\n" /* End of tried code */                                          \
-            "\t.rva %l2\n" /* Filter function */                                                \
-            "\t.rva %l3\n" /* Called on except */                                               \
-            "\t.seh_code\n"                                                                     \
-                : /* No output */                                                               \
-                : /* No input */                                                                \
-                : /* No clobber */                                                              \
-                : __seh2$$begin_try__,                                                          \
-                    __seh2$$end_try__,                                                          \
-                    __seh2$$filter__,                                                           \
-                    __seh2$$begin_except__);                                                    \
         if (0)                                                                                  \
         {                                                                                       \
             /* Jump to the global filter. Tell it where the filter funclet lies */              \
             __label__ __seh2$$filter_funclet__;                                                 \
             __seh2$$filter__:                                                                   \
             __asm__ __volatile__ goto(                                                          \
-                "\tleaq %l0(%%rip), %%rax\n"                                                    \
+                "\tleaq %l1(%%rip), %%r8\n"                                                     \
                 "\tjmp __seh2_global_filter_func\n"                                             \
                 : /* No output */                                                               \
-                : /* No input */                                                                \
-                : "%rax"                                                                        \
+                : "a"(__builtin_frame_address(0))                                               \
+                : "%r8"                                                                         \
                 : __seh2$$filter_funclet__);                                                    \
             /* Actually declare our filter funclet */                                           \
             struct _EXCEPTION_POINTERS* __seh2$$exception_ptr__;                                \
@@ -105,38 +121,28 @@ __seh2$$end_try__:                                                              
 __seh2$$leave_scope__: __MINGW_ATTRIB_UNUSED;                                               \
     }                                                                                       \
 __seh2$$end_try__:                                                                          \
+__seh2$$begin_except__: __MINGW_ATTRIB_UNUSED;                                              \
     /* Call our home-made pragma */                                                         \
-    _Pragma("REACTOS seh(finally)")                                                         \
+    _SEH3$_EMIT_DEFS_AND_PRAGMA(__seh$$finally);                                            \
     if (1)                                                                                  \
     {                                                                                       \
         __label__ __seh2$$finally__;                                                        \
         __label__ __seh2$$begin_finally__;                                                  \
         __label__ __seh2$$leave_scope__;                                                    \
+        __asm__ __volatile__ goto("" : : : : __seh2$$finally__);                            \
         int __seh2$$abnormal_termination__;                                                 \
-        /* Add our handlers to the list */                                                  \
-        __asm__ __volatile__ goto ("\n"                                                     \
-            "\t.seh_handlerdata\n"                                                          \
-            "\t.rva %l0\n" /* Begin of tried code */                                        \
-            "\t.rva %l1 + 1\n" /* End of tried code */                                      \
-            "\t.rva %l2\n" /* Filter function */                                            \
-            "\t.long 0\n" /* Nothing for unwind code */                                     \
-            "\t.seh_code\n"                                                                 \
-                : /* No output */                                                           \
-                : /* No input */                                                            \
-                : /* No clobber */                                                          \
-                : __seh2$$begin_try__,                                                      \
-                    __seh2$$end_try__,                                                      \
-                    __seh2$$finally__);                                                     \
         if (0)                                                                              \
         {                                                                                   \
             /* Jump to the global trampoline. Tell it where the unwind code really lies */  \
-            __seh2$$finally__:                                                              \
+            __seh2$$filter__: __MINGW_ATTRIB_UNUSED;                                        \
+            __seh2$$finally__: __MINGW_ATTRIB_UNUSED;                                       \
             __asm__ __volatile__ goto(                                                      \
-                "\tleaq %l0(%%rip), %%rax\n"                                                \
+                "\t\n"                                                                      \
+                "\tleaq %l1(%%rip), %%r8\n"                                                 \
                 "\tjmp __seh2_global_filter_func\n"                                         \
                 : /* No output */                                                           \
-                : /* No input */                                                            \
-                : /* No clobber */                                                          \
+                : "a"(__builtin_frame_address(0))                                           \
+                : "%r8"                                                                     \
                 : __seh2$$begin_finally__);                                                 \
         }                                                                                   \
                                                                                             \
