@@ -111,16 +111,37 @@ getCommandLineFromProcess(HANDLE hProcess)
     PEB peb;
     PROCESS_BASIC_INFORMATION info;
     RTL_USER_PROCESS_PARAMETERS Params;
+    NTSTATUS Status;
+    BOOL ret;
 
-    NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
-    ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    ret = ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
     ReadProcessMemory(hProcess, peb.ProcessParameters, &Params, sizeof(Params), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
 
     LPWSTR cmdline = Params.CommandLine.Buffer;
-    SIZE_T cchCmdLine = Params.CommandLine.Length;
-    LPWSTR pszBuffer = (LPWSTR)calloc(cchCmdLine + 1, sizeof(WCHAR));
-    ReadProcessMemory(hProcess, cmdline, pszBuffer, cchCmdLine, NULL);
-    pszBuffer[cchCmdLine] = UNICODE_NULL;
+    if (!cmdline)
+        trace("!cmdline\n");
+
+    SIZE_T cbCmdLine = Params.CommandLine.Length;
+    if (!cbCmdLine)
+        trace("!cbCmdLine\n");
+
+    LPWSTR pszBuffer = (LPWSTR)calloc(cbCmdLine + sizeof(WCHAR), 1);
+    if (!pszBuffer)
+        trace("!pszBuffer\n");
+
+    ret = ReadProcessMemory(hProcess, cmdline, pszBuffer, cbCmdLine, NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
+    pszBuffer[cbCmdLine / sizeof(WCHAR)] = UNICODE_NULL;
 
     return pszBuffer; // needs free()
 }
@@ -366,14 +387,12 @@ static void TEST_End(void)
 
 static void test_properties()
 {
-    WCHAR Buffer[MAX_PATH * 4];
-
     HRESULT hrCoInit = CoInitialize(NULL);
 
+    WCHAR Buffer[MAX_PATH * 4];
     GetModuleFileNameW(NULL, Buffer, _countof(Buffer));
-    SHELLEXECUTEINFOW info = { sizeof(info) };
 
-    info.cbSize = sizeof(SHELLEXECUTEINFOW);
+    SHELLEXECUTEINFOW info = { sizeof(info) };
     info.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_FLAG_NO_UI;
     info.lpVerb = L"properties";
     info.lpFile = Buffer;
