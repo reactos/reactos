@@ -983,7 +983,7 @@ CDownloadManager::ThreadFunc(LPVOID param)
         if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
             // FIXME: Unable to open ZIP/7Z/RAR files by ShellExecute.
-            //        Sorry but I use a workaround.
+            //        Sorry but I use a workaround by opening parent folder.
             static const LPCWSTR s_CanOpenDotExtsCurrently[] =
             {
                 L".exe", L".com", L".bat", L".reg", L".msi"
