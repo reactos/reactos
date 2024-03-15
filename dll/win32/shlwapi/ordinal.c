@@ -2440,13 +2440,55 @@ HRESULT WINAPI QISearch(
  *  id   [I] Index of child Window to set the Font
  *
  * RETURNS
+#ifdef __REACTOS__
+ *  VOID
+#else
  *  Success: S_OK
+#endif
  *
  */
+#ifdef __REACTOS__
+VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
+#else
 HRESULT WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
+#endif
 {
+#ifdef __REACTOS__
+    HFONT hOldFont, hNewFont;
+    LOGFONTW lfOldFont, lfNewFont;
+    HWND hwndItem;
+
+    TRACE("(%p, %d)\n", hWnd, id);
+
+    hOldFont = (HFONT)SendMessageW(hWnd, WM_GETFONT, 0, 0);
+    GetObjectW(hOldFont, sizeof(lfOldFont), &lfOldFont);
+    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lfNewFont), &lfNewFont, 0);
+
+    if (lfOldFont.lfCharSet == lfNewFont.lfCharSet)
+        return;
+
+    hNewFont = GetPropW(hWnd, L"PropDlgFont");
+    if (!hNewFont)
+    {
+        /* Create the icon-title font of the same height */
+        lfNewFont.lfHeight = lfOldFont.lfHeight;
+        hNewFont = CreateFontIndirectW(&lfNewFont);
+
+        /* If creating the font is failed, then keep the old font */
+        if (!hNewFont)
+            hNewFont = hOldFont;
+
+        /* Set "PropDlgFont" property if the font is changed */
+        if (hOldFont != hNewFont)
+            SetPropW(hWnd, L"PropDlgFont", hNewFont);
+    }
+
+    hwndItem = GetDlgItem(hWnd, id);
+    SendMessageW(hwndItem, WM_SETFONT, (WPARAM)hNewFont, 0);
+#else
     FIXME("(%p, %d) stub\n", hWnd, id);
     return S_OK;
+#endif
 }
 
 /*************************************************************************
