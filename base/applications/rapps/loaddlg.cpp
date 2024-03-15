@@ -982,9 +982,25 @@ CDownloadManager::ThreadFunc(LPVOID param)
         // run it
         if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
-            BOOL bZip = (lstrcmpiW(PathFindExtensionW(Path), L".zip") == 0);
+            // FIXME: Unable to open ZIP/7Z/RAR files by ShellExecute.
+            //        Sorry but I use a workaround.
+            static const LPCWSTR s_CanOpenDotExtsCurrently[] =
+            {
+                L".exe", L".com", L".bat", L".reg", L".msi"
+            };
+            LPCWSTR pszDotExt = PathFindExtensionW(Path);
+            BOOL bOpenParentFolder = FALSE;
+            for (auto dotext : s_CanOpenDotExtsCurrently)
+            {
+                if (lstrcmpiW(dotext, pszDotExt) == 0)
+                {
+                    bOpenParentFolder = TRUE;
+                    break;
+                }
+            }
+
             CPath OpenPath = Path;
-            if (bZip)
+            if (bOpenParentFolder)
                 OpenPath.RemoveFileSpec(); // FIXME: Use "explore" verb if possible
 
             SHELLEXECUTEINFOW shExInfo = {0};
