@@ -111,12 +111,11 @@ getCommandLineFromProcess(HANDLE hProcess)
     PEB peb;
     PROCESS_BASIC_INFORMATION info;
     RTL_USER_PROCESS_PARAMETERS Params;
-    LONG status;
+    NTSTATUS Status;
     BOOL ret;
 
-    status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
-    if (status != 0)
-        trace("status: 0x%08lX\n", status);
+    Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 
     ret = ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
     if (!ret)
