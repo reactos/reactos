@@ -1003,12 +1003,10 @@ CDownloadManager::ThreadFunc(LPVOID param)
             if (bOpenParentFolder)
                 OpenPath.RemoveFileSpec(); // FIXME: Use "explore" verb if possible
 
-            SHELLEXECUTEINFOW shExInfo = {0};
-            shExInfo.cbSize = sizeof(shExInfo);
+            SHELLEXECUTEINFOW shExInfo = { sizeof(shExInfo) };
             shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
             shExInfo.lpVerb = L"open";
             shExInfo.lpFile = OpenPath;
-            shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
 
             /* FIXME: Do we want to log installer status? */
