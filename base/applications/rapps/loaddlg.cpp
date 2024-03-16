@@ -98,7 +98,7 @@ UrlUnescapeAndMakeFileNameValid(CStringW& str)
 
     for (PWCHAR pch = szPath; *pch; ++pch)
     {
-        if (PathIsValidCharW(*pch, FILENAME_VALID_CHAR))
+        if (!PathIsValidCharW(*pch, FILENAME_VALID_CHAR))
             *pch = L'_';
     }
 
