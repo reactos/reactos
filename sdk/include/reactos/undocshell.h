@@ -23,7 +23,6 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 #define DBIMF_NOGRIPPER         0x0800
 #define DBIMF_ALWAYSGRIPPER     0x1000
@@ -628,7 +627,6 @@ RealShellExecuteA(
     _In_ INT nCmdShow,
     _Out_opt_ PHANDLE lphProcess);
 
-EXTERN_C
 HINSTANCE WINAPI
 RealShellExecuteW(
     _In_opt_ HWND hwnd,
@@ -656,7 +654,6 @@ RealShellExecuteExA(
     _Out_opt_ PHANDLE lphProcess,
     _In_ DWORD dwFlags);
 
-EXTERN_C
 HINSTANCE WINAPI
 RealShellExecuteExW(
     _In_opt_ HWND hwnd,
@@ -856,7 +853,7 @@ DWORD WINAPI WinList_Init(void);
 
 IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR);
 
-EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
+HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
 LONG WINAPI SHRegQueryValueExA(
     HKEY hkey,
@@ -878,7 +875,6 @@ LONG WINAPI SHRegQueryValueExW(
     #define SHRegQueryValueEx SHRegQueryValueExA
 #endif
 
-EXTERN_C
 HRESULT WINAPI
 CopyStreamUI(
     _In_ IStream *pSrc,
