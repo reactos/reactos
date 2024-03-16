@@ -32,7 +32,7 @@ except ImportError:
 
 
 ALL_EXTENSIONS = (
-    '.dll', '.acm', '.ax', '.cpl', '.drv', '.ocx'
+    '.dll', '.acm', '.ax', '.cpl', '.drv', '.ocx', '.ime'
 )
 
 PRIORITIES = (
