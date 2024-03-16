@@ -694,3 +694,11 @@
 // For Wine DX
     SVC_(GdiDdDDICreateDCFromMemory, 1)
     SVC_(GdiDdDDIDestroyDCFromMemory, 1)
+// ReactOS WDDM
+    SVC_(GdiDdDDICreateAllocation, 1)
+    SVC_(GdiDdDDICheckMonitorPowerState, 1)
+    SVC_(GdiDdDDICheckOcclusion, 1)
+    SVC_(GdiDdDDICloseAdapter, 1)
+    SVC_(GdiDdDDICreateContext, 1)
+    SVC_(GdiDdDDICreateDevice, 1)
+    SVC_(GdiDdDDICreateOverlay, 1)
