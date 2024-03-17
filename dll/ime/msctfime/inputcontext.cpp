@@ -80,23 +80,13 @@ HRESULT CInputContextOwner::_Unadvise()
 /// @implemented
 STDMETHODIMP CInputContextOwner::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    *ppvObj = NULL;
-
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfContextOwner))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-
-    if (IsEqualIID(riid, IID_ITfMouseTrackerACP))
-    {
-        *ppvObj = static_cast<ITfMouseTrackerACP*>(this);
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
+        QITABENT(CInputContextOwner, ITfContextOwner),
+        QITABENT(CInputContextOwner, ITfMouseTrackerACP),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
@@ -202,22 +192,13 @@ CicInputContext::CicInputContext(
 /// @implemented
 STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    *ppvObj = NULL;
-
-    if (IsEqualIID(riid, IID_ITfContextOwnerCompositionSink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = static_cast<ITfContextOwnerCompositionSink*>(this);
-        AddRef();
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCleanupContextSink))
-    {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
+        QITABENT(CicInputContext, ITfCleanupContextSink),
+        QITABENT(CicInputContext, ITfContextOwnerCompositionSink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented

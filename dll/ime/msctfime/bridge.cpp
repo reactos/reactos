@@ -26,15 +26,12 @@ CicBridge::CicBridge()
 /// @implemented
 STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    *ppvObj = NULL;
-
-    if (!IsEqualIID(riid, IID_ITfSysHookSink))
-        return E_NOINTERFACE;
-
-    *ppvObj = this;
-    AddRef();
-
-    return S_OK;
+    static const QITAB c_tab[] =
+    {
+        QITABENT(CicBridge, ITfSysHookSink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented

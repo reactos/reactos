@@ -26,15 +26,12 @@ CCompartmentEventSink::~CCompartmentEventSink()
 /// @implemented
 STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfCompartmentEventSink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-
-    *ppvObj = NULL;
-    return E_NOINTERFACE;
+        QITABENT(CCompartmentEventSink, ITfCompartmentEventSink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
@@ -152,19 +149,13 @@ CTextEventSink::~CTextEventSink()
 /// @implemented
 STDMETHODIMP CTextEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextEditSink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_ITfTextLayoutSink))
-    {
-        *ppvObj = static_cast<ITfTextLayoutSink*>(this);
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        QITABENT(CTextEventSink, ITfTextEditSink),
+        QITABENT(CTextEventSink, ITfTextLayoutSink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
@@ -294,14 +285,12 @@ CThreadMgrEventSink::CThreadMgrEventSink(
 /// @implemented
 STDMETHODIMP CThreadMgrEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfThreadMgrEventSink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    *ppvObj = NULL;
-    return E_NOINTERFACE;
+        QITABENT(CThreadMgrEventSink, ITfThreadMgrEventSink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
@@ -440,14 +429,12 @@ CActiveLanguageProfileNotifySink::~CActiveLanguageProfileNotifySink()
 /// @implemented
 STDMETHODIMP CActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfActiveLanguageProfileNotifySink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    *ppvObj = NULL;
-    return E_NOINTERFACE;
+        QITABENT(CActiveLanguageProfileNotifySink, ITfActiveLanguageProfileNotifySink),
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
