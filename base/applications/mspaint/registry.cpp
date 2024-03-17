@@ -66,6 +66,7 @@ void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::Wallpa
         desktop.SetStringValue(L"OriginalWallpaper", szFileName);
     }
 
+    // Set desktop wallpaper
     SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
