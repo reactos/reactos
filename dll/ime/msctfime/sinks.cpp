@@ -28,7 +28,7 @@ STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfCompartmentEventSink, OFFSETOFCLASS(ITfCompartmentEventSink, CCompartmentEventSink) },
+        QITABENT(CCompartmentEventSink, ITfCompartmentEventSink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
@@ -151,8 +151,8 @@ STDMETHODIMP CTextEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfTextEditSink, OFFSETOFCLASS(ITfTextEditSink, CTextEventSink) },
-        { &IID_ITfTextLayoutSink, OFFSETOFCLASS(ITfTextLayoutSink, CTextEventSink) },
+        QITABENT(CTextEventSink, ITfTextEditSink),
+        QITABENT(CTextEventSink, ITfTextLayoutSink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
@@ -287,7 +287,7 @@ STDMETHODIMP CThreadMgrEventSink::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfThreadMgrEventSink, OFFSETOFCLASS(ITfThreadMgrEventSink, CThreadMgrEventSink) },
+        QITABENT(CThreadMgrEventSink, ITfThreadMgrEventSink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
@@ -431,7 +431,7 @@ STDMETHODIMP CActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, LPVOI
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfActiveLanguageProfileNotifySink, OFFSETOFCLASS(ITfActiveLanguageProfileNotifySink, CActiveLanguageProfileNotifySink) },
+        QITABENT(CActiveLanguageProfileNotifySink, ITfActiveLanguageProfileNotifySink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);

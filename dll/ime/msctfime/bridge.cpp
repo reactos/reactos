@@ -28,7 +28,7 @@ STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfSysHookSink, OFFSETOFCLASS(ITfSysHookSink, CicBridge) },
+        QITABENT(CicBridge, ITfSysHookSink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
