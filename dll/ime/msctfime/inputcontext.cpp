@@ -194,8 +194,8 @@ STDMETHODIMP CicInputContext::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfCleanupContextSink, OFFSETOFCLASS(ITfCleanupContextSink, CicInputContext) },
-        { &IID_ITfContextOwnerCompositionSink, OFFSETOFCLASS(ITfContextOwnerCompositionSink, CicInputContext) },
+        QITABENT(CicInputContext, ITfCleanupContextSink),
+        QITABENT(CicInputContext, ITfContextOwnerCompositionSink),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);

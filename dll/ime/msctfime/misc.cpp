@@ -454,7 +454,7 @@ CFunctionProviderBase::QueryInterface(
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfFunctionProvider, OFFSETOFCLASS(ITfFunctionProvider, CFunctionProviderBase) },
+        QITABENT(CFunctionProviderBase, ITfFunctionProvider),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
@@ -535,7 +535,7 @@ STDMETHODIMP CFnDocFeed::QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_IAImmFnDocFeed, OFFSETOFCLASS(IAImmFnDocFeed, CFnDocFeed) },
+        QITABENT(CFnDocFeed, IAImmFnDocFeed),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
