@@ -45,7 +45,7 @@ void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::Wallpa
     if (FAILED(StringCchCatW(szWallpaper, _countof(szWallpaper), TEXT("\\Wallpaper1.bmp"))))
         return;
 
-    // Save BMP to szWallpaper
+    // Save the converted wallpaper BMP
     CImageDx img;
     HBITMAP hbmLocked = imageModel.LockBitmap();
     img.Attach(hbmLocked);
