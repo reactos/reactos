@@ -1889,7 +1889,7 @@ STDMETHODIMP CCicLibMenu::QueryInterface(REFIID riid, LPVOID *ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfMenu, OFFSETOFCLASS(ITfMenu, CCicLibMenu) },
+        QITABENT(CCicLibMenu, ITfMenu),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
@@ -2192,8 +2192,8 @@ STDMETHODIMP CTipbarAccessible::QueryInterface(
 {
     static const QITAB c_tab[] =
     {
-        { &IID_IDispatch, OFFSETOFCLASS(IDispatch, CTipbarAccessible) },
-        { &IID_IAccessible, OFFSETOFCLASS(IDispatch, CTipbarAccessible) },
+        QITABENT(CTipbarAccessible, IDispatch),
+        QITABENT(CTipbarAccessible, IAccessible),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObject);
@@ -3666,9 +3666,9 @@ STDMETHODIMP CLBarItemButtonBase::QueryInterface(REFIID riid, void **ppvObject)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfLangBarItem, OFFSETOFCLASS(ITfLangBarItem, CLBarItemButtonBase) },
-        { &IID_ITfLangBarItemButton, OFFSETOFCLASS(ITfLangBarItemButton, CLBarItemButtonBase) },
-        { &IID_ITfSource, OFFSETOFCLASS(ITfSource, CLBarItemButtonBase) },
+        QITABENT(CLBarItemButtonBase, ITfLangBarItem),
+        QITABENT(CLBarItemButtonBase, ITfLangBarItemButton),
+        QITABENT(CLBarItemButtonBase, ITfSource),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObject);
@@ -5136,8 +5136,8 @@ STDMETHODIMP CTipbarWnd::QueryInterface(REFIID riid, void **ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfLangBarEventSink, OFFSETOFCLASS(ITfLangBarEventSink, CTipbarWnd) },
-        { &IID_ITfLangBarEventSink_P, OFFSETOFCLASS(ITfLangBarEventSink_P, CTipbarWnd) },
+        QITABENT(CTipbarWnd, ITfLangBarEventSink),
+        QITABENT(CTipbarWnd, ITfLangBarEventSink_P),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
