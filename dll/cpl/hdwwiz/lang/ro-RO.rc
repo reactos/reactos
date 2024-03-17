@@ -48,7 +48,7 @@ CAPTION "Expert adăugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Selectaţi din lista de mai jos un dispozitiv hardware instalat, apoi faceţi clic pe Următorul pentru a verifica proprietăţile sau pentru a depana posibilele probleme.", -1, 21, 8, 275, 22
-    LTEXT "Pentru a adăuga hardware care nu este afişat în listă, faceţi clic pe "Adăugare dispozitiv hardware nou."", -1, 21, 32, 275, 24
+    LTEXT "Pentru a adăuga hardware care nu este afişat în listă, faceţi clic pe ""Adăugare dispozitiv hardware nou.""", -1, 21, 32, 275, 24
     LTEXT "Hardware i&nstalat:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
