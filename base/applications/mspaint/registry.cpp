@@ -41,9 +41,11 @@ void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::Wallpa
     // Build the local path to the converted cached BMP wallpaper
     HRESULT hr;
     WCHAR szWallpaper[MAX_PATH];
-    if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper)))
+    hr = SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper);
+    if (FAILED(hr))
         return;
-    if (FAILED(StringCchCatW(szWallpaper, _countof(szWallpaper), TEXT("\\Wallpaper1.bmp"))))
+    hr = StringCchCatW(szWallpaper, _countof(szWallpaper), TEXT("\\Wallpaper1.bmp"));
+    if (FAILED(hr))
         return;
 
     // Save the converted wallpaper BMP
