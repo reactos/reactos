@@ -159,7 +159,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Nu se efectuează această verificare la pornire", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "În computer există un fişier sau un folder denumit "%s" care împiedică funcţionarea corectă a unor aplicaţii. Problema se va soluţiona dacă el este redenumit "%s". Îl redenumiţi acum?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "În computer există un fişier sau un folder denumit ""%s"" care împiedică funcţionarea corectă a unor aplicaţii. Problema se va soluţiona dacă el este redenumit ""%s"". Îl redenumiţi acum?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
