@@ -642,20 +642,6 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 void CMainWindow::ProcessFileMenu(HMENU hPopupMenu)
 {
-    LPCWSTR dotext = PathFindExtensionW(g_szFileName);
-    BOOL isBMP = FALSE;
-    if (_wcsicmp(dotext, L".bmp") == 0 ||
-        _wcsicmp(dotext, L".dib") == 0 ||
-        _wcsicmp(dotext, L".rle") == 0)
-    {
-        isBMP = TRUE;
-    }
-
-    UINT uWallpaperEnabled = ENABLED_IF(g_isAFile && isBMP && g_fileSize > 0);
-    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERPLANE,     uWallpaperEnabled);
-    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERCENTERED,  uWallpaperEnabled);
-    ::EnableMenuItem(hPopupMenu, IDM_FILEASWALLPAPERSTRETCHED, uWallpaperEnabled);
-
     for (INT iItem = 0; iItem < MAX_RECENT_FILES; ++iItem)
         RemoveMenu(hPopupMenu, IDM_FILE1 + iItem, MF_BYCOMMAND);
 
