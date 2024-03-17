@@ -38,14 +38,14 @@ static void ReadString(CRegKey &key, LPCWSTR lpName, CStringW &strValue, LPCWSTR
 
 void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
-    // Build the wallpaper path
+    // Build the BMP wallpaper path
     WCHAR szWallpaper[MAX_PATH];
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper)))
         return;
     if (FAILED(StringCchCatW(szWallpaper, _countof(szWallpaper), TEXT("\\Wallpaper1.bmp"))))
         return;
 
-    // Save to szWallpaper
+    // Save BMP to szWallpaper
     CImageDx img;
     HBITMAP hbmLocked = imageModel.LockBitmap();
     img.Attach(hbmLocked);
