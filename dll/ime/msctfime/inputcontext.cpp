@@ -82,8 +82,8 @@ STDMETHODIMP CInputContextOwner::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
     {
-        { &IID_ITfContextOwner, OFFSETOFCLASS(ITfContextOwner, CInputContextOwner) },
-        { &IID_ITfMouseTrackerACP, OFFSETOFCLASS(ITfMouseTrackerACP, CInputContextOwner) },
+        QITABENT(CInputContextOwner, ITfContextOwner),
+        QITABENT(CInputContextOwner, ITfMouseTrackerACP),
         { NULL }
     };
     return ::QISearch(this, c_tab, riid, ppvObj);
