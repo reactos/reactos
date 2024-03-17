@@ -113,7 +113,7 @@ CAPTION "Expert adăugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Terminarea Expertului adăugare hardware", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Expertul adăugare hardware şi-a terminat cu succes execuţia.:", -1, 114, 32, 193, 19
+    LTEXT "Expertul adăugare hardware şi-a terminat cu succes execuţia.", -1, 114, 32, 193, 19
     LTEXT "Pentru a închide expertul, faceţi clic pe Terminare.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
