@@ -1256,29 +1256,48 @@ HINSTANCE WINAPI FindExecutableA(LPCSTR lpFile, LPCSTR lpDirectory, LPSTR lpResu
  */
 HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpResult)
 {
-    UINT_PTR retval = SE_ERR_NOASSOC;
-    WCHAR old_dir[1024];
-    WCHAR res[MAX_PATH];
+    UINT_PTR retval = 42;
+    WCHAR old_dir[1024], res[MAX_PATH];
+    DWORD cch = _countof(res);
+    LPCWSTR dirs[2];
 
     TRACE("File %s, Dir %s\n", debugstr_w(lpFile), debugstr_w(lpDirectory));
 
-    lpResult[0] = '\0'; /* Start off with an empty return string */
-    if (lpFile == NULL)
-        return (HINSTANCE)SE_ERR_FNF;
+    *lpResult = UNICODE_NULL;
 
-    if (lpDirectory)
-    {
-        GetCurrentDirectoryW(ARRAY_SIZE(old_dir), old_dir);
+    dirs[0] = lpDirectory;
+
+    GetCurrentDirectoryW(_countof(old_dir), old_dir);
+
+    if (lpDirectory && *lpDirectory)
         SetCurrentDirectoryW(lpDirectory);
+    else
+        dirs[0] = old_dir;
+
+    dirs[1] = NULL;
+
+    if (!GetShortPathNameW(lpFile, res, _countof(res)))
+        lstrcpynW(res, lpFile, _countof(res));
+
+    if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS))
+    {
+        if (PathIsExeW(res) ||
+            SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, res, NULL, res, &cch)))
+        {
+            StrCpyNW(lpResult, res, MAX_PATH);
+        }
+        else
+        {
+            retval = SE_ERR_NOASSOC;
+        }
+    }
+    else
+    {
+        retval = SE_ERR_FNF;
     }
 
-    retval = SHELL_FindExecutable(lpDirectory, lpFile, L"open", res, MAX_PATH, NULL, NULL, NULL, NULL);
-    if (retval > 32)
-        strcpyW(lpResult, res);
-
     TRACE("returning %s\n", debugstr_w(lpResult));
-    if (lpDirectory)
-        SetCurrentDirectoryW(old_dir);
+    SetCurrentDirectoryW(old_dir);
     return (HINSTANCE)retval;
 }
 
