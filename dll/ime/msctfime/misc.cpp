@@ -452,13 +452,12 @@ CFunctionProviderBase::QueryInterface(
     _In_ REFIID riid,
     _Out_ LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfFunctionProvider))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_ITfFunctionProvider, OFFSETOFCLASS(ITfFunctionProvider, CFunctionProviderBase) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
@@ -534,13 +533,12 @@ CFnDocFeed::~CFnDocFeed()
 /// @implemented
 STDMETHODIMP CFnDocFeed::QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IAImmFnDocFeed))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_IAImmFnDocFeed, OFFSETOFCLASS(IAImmFnDocFeed, CFnDocFeed) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 /// @implemented
