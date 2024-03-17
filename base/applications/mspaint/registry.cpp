@@ -38,16 +38,35 @@ static void ReadString(CRegKey &key, LPCWSTR lpName, CStringW &strValue, LPCWSTR
 
 void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
+    // Build the wallpaper path
+    WCHAR szWallpaper[MAX_PATH];
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper)))
+        return;
+    if (FAILED(StringCchCatW(szWallpaper, _countof(szWallpaper), TEXT("\\Wallpaper1.bmp"))))
+        return;
+
+    // Save to szWallpaper
+    CImageDx img;
+    HBITMAP hbmLocked = imageModel.LockBitmap();
+    img.Attach(hbmLocked);
+    HRESULT hr = img.SaveDx(szWallpaper);
+    imageModel.UnlockBitmap(hbmLocked);
+    img.Detach();
+    if (FAILED(hr))
+        return;
+
+    // Write to registry
     CRegKey desktop;
     if (desktop.Open(HKEY_CURRENT_USER, L"Control Panel\\Desktop") == ERROR_SUCCESS)
     {
         desktop.SetStringValue(L"Wallpaper", szFileName);
-
         desktop.SetStringValue(L"WallpaperStyle", (style == RegistrySettings::STRETCHED) ? L"2" : L"0");
         desktop.SetStringValue(L"TileWallpaper", (style == RegistrySettings::TILED) ? L"1" : L"0");
+        desktop.SetStringValue(L"ConvertedWallpaper", szWallpaper);
+        desktop.SetStringValue(L"OriginalWallpaper", szFileName);
     }
 
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
 void RegistrySettings::LoadPresets(INT nCmdShow)
