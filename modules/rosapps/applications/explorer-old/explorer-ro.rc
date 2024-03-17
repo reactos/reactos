@@ -282,7 +282,7 @@ BEGIN
     IDS_NETWORK "Rețea"
     IDS_CONNECTIONS "Conexuni în rețea"
     IDS_DRIVES "Unități"
-    IDS_SEARCH_COMPUTER "computer…"
+    IDS_SEARCH_COMPUTER "Căutare computer…"
     IDS_SETTINGS_MENU "Meniu configurare"
     IDS_CONTROL_PANEL "Panoul de control"
     IDS_PRINTERS "Imprimante"
