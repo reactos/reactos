@@ -55,7 +55,7 @@ void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::Wallpa
     if (FAILED(hr))
         return;
 
-    // Write to registry
+    // Write the wallpaper settings to the registry
     CRegKey desktop;
     if (desktop.Open(HKEY_CURRENT_USER, L"Control Panel\\Desktop") == ERROR_SUCCESS)
     {
