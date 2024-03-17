@@ -38,8 +38,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* Default IQueryAssociations::Init() flags */
+#ifdef __REACTOS__
+#define SHLWAPI_DEF_ASSOCF (ASSOCF_INIT_BYEXENAME | ASSOCF_INIT_DEFAULTTOSTAR | \
+                            ASSOCF_INIT_DEFAULTTOFOLDER | ASSOCF_INIT_NOREMAPCLSID)
+#else
 #define SHLWAPI_DEF_ASSOCF (ASSOCF_INIT_BYEXENAME|ASSOCF_INIT_DEFAULTTOSTAR| \
                             ASSOCF_INIT_DEFAULTTOFOLDER)
+#endif
 
 /*************************************************************************
  * SHLWAPI_ParamAToW
