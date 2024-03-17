@@ -39,6 +39,7 @@ static void ReadString(CRegKey &key, LPCWSTR lpName, CStringW &strValue, LPCWSTR
 void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
     // Build the local path to the converted cached BMP wallpaper
+    HRESULT hr;
     WCHAR szWallpaper[MAX_PATH];
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper)))
         return;
