@@ -1887,13 +1887,12 @@ CCicLibMenu::~CCicLibMenu()
 
 STDMETHODIMP CCicLibMenu::QueryInterface(REFIID riid, LPVOID *ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfMenu))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_ITfMenu, OFFSETOFCLASS(ITfMenu, CCicLibMenu) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 STDMETHODIMP_(ULONG) CCicLibMenu::AddRef()
@@ -2191,15 +2190,13 @@ STDMETHODIMP CTipbarAccessible::QueryInterface(
     REFIID riid,
     void **ppvObject)
 {
-    if (IsEqualIID(riid, IID_IUnknown) ||
-        IsEqualIID(riid, IID_IDispatch) ||
-        IsEqualIID(riid, IID_IAccessible))
+    static const QITAB c_tab[] =
     {
-        *ppvObject = this;
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_IDispatch, OFFSETOFCLASS(IDispatch, CTipbarAccessible) },
+        { &IID_IAccessible, OFFSETOFCLASS(IDispatch, CTipbarAccessible) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObject);
 }
 
 STDMETHODIMP_(ULONG) CTipbarAccessible::AddRef()
@@ -3667,25 +3664,14 @@ CLBarItemButtonBase::~CLBarItemButtonBase()
 
 STDMETHODIMP CLBarItemButtonBase::QueryInterface(REFIID riid, void **ppvObject)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfLangBarItem))
+    static const QITAB c_tab[] =
     {
-        *ppvObject = static_cast<ITfLangBarItem*>(this);
-        AddRef();
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_ITfLangBarItemButton))
-    {
-        *ppvObject = static_cast<ITfLangBarItemButton*>(this);
-        AddRef();
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_ITfSource))
-    {
-        *ppvObject = static_cast<ITfSource*>(this);
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_ITfLangBarItem, OFFSETOFCLASS(ITfLangBarItem, CLBarItemButtonBase) },
+        { &IID_ITfLangBarItemButton, OFFSETOFCLASS(ITfLangBarItemButton, CLBarItemButtonBase) },
+        { &IID_ITfSource, OFFSETOFCLASS(ITfSource, CLBarItemButtonBase) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObject);
 }
 
 STDMETHODIMP_(ULONG) CLBarItemButtonBase::AddRef()
@@ -5148,19 +5134,13 @@ void CTipbarWnd::TerminateAllThreads(BOOL bFlag)
 
 STDMETHODIMP CTipbarWnd::QueryInterface(REFIID riid, void **ppvObj)
 {
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfLangBarEventSink))
+    static const QITAB c_tab[] =
     {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_ITfLangBarEventSink_P))
-    {
-        *ppvObj = static_cast<ITfLangBarEventSink_P*>(this);
-        AddRef();
-        return S_OK;
-    }
-    return E_NOINTERFACE;
+        { &IID_ITfLangBarEventSink, OFFSETOFCLASS(ITfLangBarEventSink, CTipbarWnd) },
+        { &IID_ITfLangBarEventSink_P, OFFSETOFCLASS(ITfLangBarEventSink_P, CTipbarWnd) },
+        { NULL }
+    };
+    return ::QISearch(this, c_tab, riid, ppvObj);
 }
 
 STDMETHODIMP_(ULONG) CTipbarWnd::AddRef()
