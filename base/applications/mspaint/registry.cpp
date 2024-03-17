@@ -50,8 +50,8 @@ void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::Wallpa
     HBITMAP hbmLocked = imageModel.LockBitmap();
     img.Attach(hbmLocked);
     HRESULT hr = img.SaveDx(szWallpaper);
-    imageModel.UnlockBitmap(hbmLocked);
     img.Detach();
+    imageModel.UnlockBitmap(hbmLocked);
     if (FAILED(hr))
         return;
 
