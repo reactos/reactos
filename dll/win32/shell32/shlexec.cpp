@@ -1265,15 +1265,17 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
 
     *lpResult = UNICODE_NULL;
 
-    dirs[0] = lpDirectory;
-
     GetCurrentDirectoryW(_countof(old_dir), old_dir);
 
     if (lpDirectory && *lpDirectory)
+    {
         SetCurrentDirectoryW(lpDirectory);
+        dirs[0] = lpDirectory;
+    }
     else
+    {
         dirs[0] = old_dir;
-
+    }
     dirs[1] = NULL;
 
     if (!GetShortPathNameW(lpFile, res, _countof(res)))
@@ -1281,8 +1283,9 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
 
     if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS))
     {
+        // NOTE: The last parameter of this AssocQueryStringW call is "strange" in Windows.
         if (PathIsExeW(res) ||
-            SUCCEEDED(AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, res, NULL, res, &cch)))
+            SUCCEEDED(AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, res, NULL, res, &cch)))
         {
             StrCpyNW(lpResult, res, MAX_PATH);
         }
@@ -2569,7 +2572,7 @@ HRESULT WINAPI ShellExecCmdLine(
     if (dwSeclFlags & SECL_RUNAS)
     {
         dwSize = 0;
-        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
+        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
         if (SUCCEEDED(hr) && dwSize != 0)
         {
             pszVerb = L"runas";
