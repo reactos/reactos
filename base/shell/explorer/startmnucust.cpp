@@ -227,37 +227,30 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
         case WM_INITDIALOG:
             CustomizeClassic_OnInitDialog(hwnd);
             return TRUE;
-
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_CLASSICSTART_ADD:
                     OnAddStartMenuItems(hwnd);
                     break;
-
                 case IDC_CLASSICSTART_REMOVE:
                     OnRemoveStartmenuItems(hwnd);
                     break;
-
                 case IDC_CLASSICSTART_ADVANCED:
                     OnAdvancedStartMenuItems();
                     break;
-
                 case IDC_CLASSICSTART_CLEAR:
                     OnClearRecentItems(hwnd);
                     break;
-
                 case IDOK:
                     if (CustomizeClassic_OnOK(hwnd))
                         EndDialog(hwnd, IDOK);
                     break;
-
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
-
         default:
             break;
     }
