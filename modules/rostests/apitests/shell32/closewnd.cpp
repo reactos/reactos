@@ -32,8 +32,8 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 void GetWindowList(PWINDOW_LIST pList)
 {
-    pList->m_chWnds = 0;
     pList->m_phWnds = NULL;
+    pList->m_chWnds = 0;
     EnumWindows(EnumWindowsProc, (LPARAM)pList);
 }
 
@@ -48,10 +48,10 @@ HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
             if (hWnd == List1->m_phWnds[i1])
             {
                 bFoundInList1 = TRUE;
-                goto Escape;
+                break;
             }
         }
-Escape:
+
         if (!bFoundInList1 && IsWindow(hWnd))
             return hWnd;
     }
