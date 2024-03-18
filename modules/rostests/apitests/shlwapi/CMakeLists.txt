@@ -5,6 +5,7 @@ add_subdirectory(shlwapi_resource_dll)
 include_directories($<TARGET_FILE_DIR:shlwapi_resource_dll>)
 
 list(APPEND SOURCE
+    AssocQueryString.c
     PathFindOnPath.c
     PathIsUNC.c
     PathIsUNCServer.c
