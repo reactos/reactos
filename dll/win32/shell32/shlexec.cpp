@@ -2650,3 +2650,197 @@ HRESULT WINAPI ShellExecCmdLine(
 
     return HRESULT_FROM_WIN32(dwError);
 }
+
+/*************************************************************************
+ *                RealShellExecuteExA (SHELL32.266)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteExA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCSTR lpOperation,
+    _In_opt_ LPCSTR lpFile,
+    _In_opt_ LPCSTR lpParameters,
+    _In_opt_ LPCSTR lpDirectory,
+    _In_opt_ LPSTR lpReturn,
+    _In_opt_ LPCSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess,
+    _In_ DWORD dwFlags)
+{
+    SHELLEXECUTEINFOA ExecInfo;
+
+    TRACE("(%p, %s, %s, %s, %s, %p, %s, %p, %u, %p, %lu)\n",
+          hwnd, debugstr_a(lpOperation), debugstr_a(lpFile), debugstr_a(lpParameters),
+          debugstr_a(lpDirectory), lpReserved, debugstr_a(lpTitle),
+          lpReserved, nCmdShow, lphProcess, dwFlags);
+
+    ZeroMemory(&ExecInfo, sizeof(ExecInfo));
+    ExecInfo.cbSize = sizeof(ExecInfo);
+    ExecInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
+    ExecInfo.hwnd = hwnd;
+    ExecInfo.lpVerb = lpOperation;
+    ExecInfo.lpFile = lpFile;
+    ExecInfo.lpParameters = lpParameters;
+    ExecInfo.lpDirectory = lpDirectory;
+    ExecInfo.nShow = (WORD)nCmdShow;
+
+    if (lpReserved)
+    {
+        ExecInfo.fMask |= SEE_MASK_USE_RESERVED;
+        ExecInfo.hInstApp = (HINSTANCE)lpReserved;
+    }
+
+    if (lpTitle)
+    {
+        ExecInfo.fMask |= SEE_MASK_HASTITLE;
+        ExecInfo.lpClass = lpTitle;
+    }
+
+    if (dwFlags & 1)
+        ExecInfo.fMask |= SEE_MASK_FLAG_SEPVDM;
+
+    if (dwFlags & 2)
+        ExecInfo.fMask |= SEE_MASK_NO_CONSOLE;
+
+    if (lphProcess == NULL)
+    {
+        ShellExecuteExA(&ExecInfo);
+    }
+    else
+    {
+        ExecInfo.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        ShellExecuteExA(&ExecInfo);
+        *lphProcess = ExecInfo.hProcess;
+    }
+
+    return ExecInfo.hInstApp;
+}
+
+/*************************************************************************
+ *                RealShellExecuteExW (SHELL32.267)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteExW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCWSTR lpOperation,
+    _In_opt_ LPCWSTR lpFile,
+    _In_opt_ LPCWSTR lpParameters,
+    _In_opt_ LPCWSTR lpDirectory,
+    _In_opt_ LPWSTR lpReturn,
+    _In_opt_ LPCWSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess,
+    _In_ DWORD dwFlags)
+{
+    SHELLEXECUTEINFOW ExecInfo;
+
+    TRACE("(%p, %s, %s, %s, %s, %p, %s, %p, %u, %p, %lu)\n",
+          hwnd, debugstr_w(lpOperation), debugstr_w(lpFile), debugstr_w(lpParameters),
+          debugstr_w(lpDirectory), lpReserved, debugstr_w(lpTitle),
+          lpReserved, nCmdShow, lphProcess, dwFlags);
+
+    ZeroMemory(&ExecInfo, sizeof(ExecInfo));
+    ExecInfo.cbSize = sizeof(ExecInfo);
+    ExecInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
+    ExecInfo.hwnd = hwnd;
+    ExecInfo.lpVerb = lpOperation;
+    ExecInfo.lpFile = lpFile;
+    ExecInfo.lpParameters = lpParameters;
+    ExecInfo.lpDirectory = lpDirectory;
+    ExecInfo.nShow = (WORD)nCmdShow;
+
+    if (lpReserved)
+    {
+        ExecInfo.fMask |= SEE_MASK_USE_RESERVED;
+        ExecInfo.hInstApp = (HINSTANCE)lpReserved;
+    }
+
+    if (lpTitle)
+    {
+        ExecInfo.fMask |= SEE_MASK_HASTITLE;
+        ExecInfo.lpClass = lpTitle;
+    }
+
+    if (dwFlags & 1)
+        ExecInfo.fMask |= SEE_MASK_FLAG_SEPVDM;
+
+    if (dwFlags & 2)
+        ExecInfo.fMask |= SEE_MASK_NO_CONSOLE;
+
+    if (lphProcess == NULL)
+    {
+        ShellExecuteExW(&ExecInfo);
+    }
+    else
+    {
+        ExecInfo.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        ShellExecuteExW(&ExecInfo);
+        *lphProcess = ExecInfo.hProcess;
+    }
+
+    return ExecInfo.hInstApp;
+}
+
+/*************************************************************************
+ *                RealShellExecuteA (SHELL32.265)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCSTR lpOperation,
+    _In_opt_ LPCSTR lpFile,
+    _In_opt_ LPCSTR lpParameters,
+    _In_opt_ LPCSTR lpDirectory,
+    _In_opt_ LPSTR lpReturn,
+    _In_opt_ LPCSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess)
+{
+    return RealShellExecuteExA(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nCmdShow,
+                               lphProcess,
+                               0);
+}
+
+/*************************************************************************
+ *                RealShellExecuteW (SHELL32.268)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCWSTR lpOperation,
+    _In_opt_ LPCWSTR lpFile,
+    _In_opt_ LPCWSTR lpParameters,
+    _In_opt_ LPCWSTR lpDirectory,
+    _In_opt_ LPWSTR lpReturn,
+    _In_opt_ LPCWSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess)
+{
+    return RealShellExecuteExW(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nCmdShow,
+                               lphProcess,
+                               0);
+}
