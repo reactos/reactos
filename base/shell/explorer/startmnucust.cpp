@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-// TreeView checkbox state index (Use with INDEXTOSTATEIMAGEMASK macro)
+// TreeView checkbox state indexes (Use with INDEXTOSTATEIMAGEMASK macro)
 #define I_UNCHECKED 1
 #define I_CHECKED   2
 
