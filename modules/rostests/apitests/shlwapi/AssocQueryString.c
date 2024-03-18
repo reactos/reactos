@@ -30,6 +30,8 @@ static FN_AssocQueryStringA s_fnAssocQueryStringA = NULL;
 static FN_AssocQueryStringW s_fnAssocQueryStringW = NULL;
 static CHAR  s_szTextFileA[MAX_PATH] =  "";
 static WCHAR s_szTextFileW[MAX_PATH] = L"";
+#define NON_EXISTENT_FILENAME_A  "C:\\ThisIsNotExistentFile.txt"
+#define NON_EXISTENT_FILENAME_W L"C:\\ThisIsNotExistentFile.txt"
 
 static void TEST_Start(void)
 {
@@ -53,42 +55,109 @@ static void TEST_End(void)
 static void TEST_AssocQueryStringA(void)
 {
     CHAR szPath[MAX_PATH], szAnswer[MAX_PATH];
+    CHAR szDebug1[MAX_PATH], szDebug2[MAX_PATH];
     HRESULT hr;
     DWORD cch;
 
-    ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
-
-    lstrcpynA(szPath, s_szTextFileA, _countof(szPath));
+    /* ".txt" */
+    lstrcpynA(szPath, ".txt", _countof(szPath));
     cch = _countof(szPath);
     hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
-
     if (IsWindowsVistaOrGreater())
     {
+        ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
         ok_long(hr, S_OK);
-        ok(lstrcmpiA(szPath, szAnswer) == 0, "%s vs %s\n", wine_dbgstr_a(szPath), wine_dbgstr_a(szAnswer));
         ok_int(cch, lstrlenA(szAnswer) + 1);
     }
     else
     {
+        lstrcpynA(szAnswer, ".txt", _countof(szAnswer));
         ok_long(hr, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
-        ok(lstrcmpiA(szPath, s_szTextFileA) == 0, "%s vs %s\n", wine_dbgstr_a(szPath), wine_dbgstr_a(s_szTextFileA));
         ok_int(cch, _countof(szPath));
     }
+    lstrcpynA(szDebug1, wine_dbgstr_a(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_a(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiA(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
+
+    /* s_szTextFileA */
+    lstrcpynA(szPath, s_szTextFileA, _countof(szPath));
+    cch = _countof(szPath);
+    hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    if (IsWindowsVistaOrGreater())
+    {
+        ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
+        ok_long(hr, S_OK);
+        ok_int(cch, lstrlenA(szAnswer) + 1);
+    }
+    else
+    {
+        lstrcpynA(szAnswer, s_szTextFileA, _countof(szAnswer));
+        ok_long(hr, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
+        ok_int(cch, _countof(szPath));
+    }
+    lstrcpynA(szDebug1, wine_dbgstr_a(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_a(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiA(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
+
+    /* NON_EXISTENT_FILENAME_A */
+    lstrcpynA(szPath, NON_EXISTENT_FILENAME_A, _countof(szPath));
+    cch = _countof(szPath);
+    hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    if (IsWindowsVistaOrGreater())
+    {
+        ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
+        ok_long(hr, S_OK);
+        ok_int(cch, lstrlenA(szAnswer) + 1);
+    }
+    else
+    {
+        lstrcpynA(szAnswer, NON_EXISTENT_FILENAME_A, _countof(szAnswer));
+        ok_long(hr, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
+        ok_int(cch, _countof(szPath));
+    }
+    lstrcpynA(szDebug1, wine_dbgstr_a(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_a(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiA(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
 }
 
 static void TEST_AssocQueryStringW(void)
 {
     WCHAR szPath[MAX_PATH], szAnswer[MAX_PATH];
+    CHAR szDebug1[MAX_PATH], szDebug2[MAX_PATH];
     HRESULT hr;
     DWORD cch;
 
+    /* ".txt" */
+    lstrcpynW(szPath, L".txt", _countof(szPath));
+    cch = _countof(szPath);
+    hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    ok_long(hr, S_OK);
     ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
+    lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_w(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiW(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
+    ok_int(cch, lstrlenW(szAnswer) + 1);
 
+    /* s_szTextFileW */
     lstrcpynW(szPath, s_szTextFileW, _countof(szPath));
     cch = _countof(szPath);
     hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     ok_long(hr, S_OK);
-    ok(lstrcmpiW(szPath, szAnswer) == 0, "%s vs %s\n", wine_dbgstr_w(szPath), wine_dbgstr_w(szAnswer));
+    ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
+    lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_w(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiW(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
+    ok_int(cch, lstrlenW(szAnswer) + 1);
+
+    /* NON_EXISTENT_FILENAME_W */
+    lstrcpynW(szPath, NON_EXISTENT_FILENAME_W, _countof(szPath));
+    cch = _countof(szPath);
+    hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    ok_long(hr, S_OK);
+    ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
+    lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
+    lstrcpynA(szDebug2, wine_dbgstr_w(szAnswer), _countof(szDebug2));
+    ok(lstrcmpiW(szPath, szAnswer) == 0, "%s vs %s\n", szDebug1, szDebug2);
     ok_int(cch, lstrlenW(szAnswer) + 1);
 }
 
