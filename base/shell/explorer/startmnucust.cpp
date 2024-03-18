@@ -1,26 +1,15 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *                  2015 Robert Naumann <gonzomdx@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     "Customize Start Menu" dialog
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2015 Robert Naumann <gonzomdx@gmail.com>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 
+// TreeView checkbox state index (Use with INDEXTOSTATEIMAGEMASK macro)
 #define I_UNCHECKED 1
 #define I_CHECKED   2
 
@@ -170,17 +159,17 @@ static VOID AddCustomItem(HWND hTreeView, const CUSTOM_ENTRY *entry)
         return; // Restricted. Don't show
     }
 
-    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
-    Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
-
     WCHAR szText[MAX_PATH];
     LoadStringW(GetModuleHandleW(L"shell32.dll"), entry->id, szText, _countof(szText));
+
+    BOOL bChecked = entry->fnGetValue(entry);
+    TRACE("%p: %d\n", entry->id, bChecked);
+
+    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST, { TVIF_TEXT | TVIF_STATE | TVIF_PARAM } };
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    BOOL bChecked = entry->fnGetValue(entry);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
-    TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
@@ -207,8 +196,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
          hItem != NULL;
          hItem = TreeView_GetNextVisible(hTreeView, hItem))
     {
-        TV_ITEM item = { TVIF_PARAM | TVIF_STATE };
-        item.hItem = hItem;
+        TV_ITEM item = { TVIF_PARAM | TVIF_STATE, hItem };
         item.stateMask = TVIS_STATEIMAGEMASK;
         TreeView_GetItem(hTreeView, &item);
 
@@ -239,36 +227,42 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
         case WM_INITDIALOG:
             CustomizeClassic_OnInitDialog(hwnd);
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_CLASSICSTART_ADD:
                     OnAddStartMenuItems(hwnd);
                     break;
+
                 case IDC_CLASSICSTART_REMOVE:
                     OnRemoveStartmenuItems(hwnd);
                     break;
+
                 case IDC_CLASSICSTART_ADVANCED:
                     OnAdvancedStartMenuItems();
                     break;
+
                 case IDC_CLASSICSTART_CLEAR:
                     OnClearRecentItems(hwnd);
                     break;
+
                 case IDOK:
                     if (CustomizeClassic_OnOK(hwnd))
-                    {
                         EndDialog(hwnd, IDOK);
-                    }
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
+
         default:
-            return FALSE;
+            break;
     }
-    return TRUE;
+
+    return FALSE;
 }
 
 VOID ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)
