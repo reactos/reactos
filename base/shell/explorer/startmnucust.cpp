@@ -118,27 +118,27 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NOFAVORITESMENU
+        REST_NOFAVORITESMENU,
     },
     {
         IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_STARTMENULOGOFF
+        REST_STARTMENULOGOFF,
     },
     {
         IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NORUN
+        REST_NORUN,
     },
     {
         IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NOSMMYDOCS
+        REST_NOSMMYDOCS,
     },
     {
         IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NOSMMYPICS
+        REST_NOSMMYPICS,
     },
     {
         IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
@@ -148,12 +148,12 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
     {
         IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NOSETFOLDERS
+        REST_NOSETFOLDERS,
     },
     {
         IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
         CustomizeAdvancedRead, CustomizeAdvancedWrite,
-        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS
+        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS,
     },
     {
         IDS_ADVANCED_SMALL_START_MENU, NULL, FALSE,
