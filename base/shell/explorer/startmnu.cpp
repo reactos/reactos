@@ -97,9 +97,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 
-    UpdateStartMenu(pMp,
-                    hbmBanner,
-                    bSmallIcons);
+    UpdateStartMenu(pMp, hbmBanner, bSmallIcons);
 
     *ppMenuBand = pMb.Detach();
 
