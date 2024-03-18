@@ -34,7 +34,7 @@ void GetWindowList(PWINDOW_LIST pList)
     EnumWindows(EnumWindowsProc, (LPARAM)pList);
 }
 
-void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
+HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
     for (SIZE_T i2 = 0; i2 < List2->m_chWnds; ++i2)
     {
@@ -49,22 +49,38 @@ void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
             }
         }
 Escape:
-        if (!bFoundInList1)
+        if (!bFoundInList1 && IsWindow(hWnd))
+            return hWnd;
+    }
+    return NULL;
+}
+
+void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
+{
+    INT cDiff = List2->m_chWnds - List1->m_chWnds;
+    if (cDiff <= 0)
+        cDiff = 32;
+
+    cDiff *= 2;
+    for (INT j = 0; j < cDiff; ++j)
+    {
+        HWND hWnd = FindNewWindow(List1, List2);
+        if (!hWnd)
+            break;
+
+        for (INT i = 0; i < 8; ++i)
         {
-            for (INT i = 0; i < 5; ++i)
-            {
-                if (!IsWindow(hWnd))
-                    break;
+            if (!IsWindow(hWnd))
+                break;
 
-                SwitchToThisWindow(hWnd, TRUE);
+            SwitchToThisWindow(hWnd, TRUE);
 
-                // Alt+F4
-                keybd_event(VK_MENU, 0x38, 0, 0);
-                keybd_event(VK_F4, 0x3E, 0, 0);
-                keybd_event(VK_F4, 0x3E, KEYEVENTF_KEYUP, 0);
-                keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
-                Sleep(100);
-            }
+            // Alt+F4
+            keybd_event(VK_MENU, 0x38, 0, 0);
+            keybd_event(VK_F4, 0x3E, 0, 0);
+            keybd_event(VK_F4, 0x3E, KEYEVENTF_KEYUP, 0);
+            keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
+            Sleep(100);
         }
     }
 }

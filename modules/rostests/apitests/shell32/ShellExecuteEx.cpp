@@ -150,7 +150,8 @@ getCommandLineFromProcess(HANDLE hProcess)
 static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
 {
     SHELLEXECUTEINFOW info = { sizeof(info) };
-    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_FLAG_NO_UI;
+    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE |
+                 SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
     info.hwnd = NULL;
     info.lpVerb = NULL;
     info.lpFile = pEntry->lpFile;
