@@ -76,35 +76,36 @@ static VOID OnClearRecentItems(HWND hwnd)
 }
 
 struct CUSTOMIZE_ENTRY;
-typedef BOOL (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
-typedef VOID (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, BOOL bValue);
+
+typedef BOOL (CALLBACK *FN_GET_VALUE)(const CUSTOMIZE_ENTRY *entry);
+typedef VOID (CALLBACK *FN_SET_VALUE)(const CUSTOMIZE_ENTRY *entry, BOOL bValue);
 
 struct CUSTOMIZE_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
     BOOL bDefaultValue;
-    FN_CUSTOMIZE_READ fnRead;
-    FN_CUSTOMIZE_WRITE fnWrite;
+    FN_GET_VALUE fnGetValue;
+    FN_SET_VALUE fnSetValue;
     RESTRICTIONS policy1, policy2;
 };
 
-static BOOL CALLBACK CustomizeAdvancedRead(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK GetAdvanced(const CUSTOMIZE_ENTRY *entry)
 {
     return GetAdvancedBool(entry->name, entry->bDefaultValue);
 }
 
-static VOID CALLBACK CustomizeAdvancedWrite(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
+static VOID CALLBACK SetAdvanced(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
 {
     SetAdvancedDword(entry->name, bValue);
 }
 
-static BOOL CALLBACK CustomizeSmallIconsRead(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK GetSmallStartMenu(const CUSTOMIZE_ENTRY *entry)
 {
     return g_TaskbarSettings.sr.SmallStartMenu;
 }
 
-static VOID CALLBACK CustomizeSmallIconsWrite(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
+static VOID CALLBACK SetSmallStartMenu(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
 {
     g_TaskbarSettings.sr.SmallStartMenu = bValue;
 }
@@ -113,51 +114,51 @@ static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
     {
         IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", TRUE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
     },
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOFAVORITESMENU,
     },
     {
         IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_STARTMENULOGOFF,
     },
     {
         IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NORUN,
     },
     {
         IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOSMMYDOCS,
     },
     {
         IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOSMMYPICS,
     },
     {
         IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
     },
     {
         IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOSETFOLDERS,
     },
     {
         IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
-        CustomizeAdvancedRead, CustomizeAdvancedWrite,
+        GetAdvanced, SetAdvanced,
         REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS,
     },
     {
         IDS_ADVANCED_SMALL_START_MENU, NULL, FALSE,
-        CustomizeSmallIconsRead, CustomizeSmallIconsWrite,
+        GetSmallStartMenu, SetSmallStartMenu,
     },
 };
 
@@ -177,7 +178,7 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    BOOL bChecked = entry->fnRead(entry);
+    BOOL bChecked = entry->fnGetValue(entry);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
     TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
@@ -220,7 +221,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
             if (item.lParam == entry.id)
             {
                 TRACE("%p: %d\n", item.lParam, bChecked);
-                entry.fnWrite(&entry, bChecked);
+                entry.fnSetValue(&entry, bChecked);
                 break;
             }
         }
