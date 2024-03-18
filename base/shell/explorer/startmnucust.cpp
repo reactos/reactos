@@ -76,8 +76,8 @@ static VOID OnClearRecentItems(HWND hwnd)
 }
 
 struct CUSTOMIZE_ENTRY;
-typedef DWORD (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
-typedef BOOL (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, DWORD dwValue);
+typedef BOOL (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
+typedef VOID (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, BOOL bValue);
 
 struct CUSTOMIZE_ENTRY
 {
@@ -89,25 +89,24 @@ struct CUSTOMIZE_ENTRY
     RESTRICTIONS policy1, policy2;
 };
 
-static DWORD CALLBACK CustomizeAdvancedRead(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK CustomizeAdvancedRead(const CUSTOMIZE_ENTRY *entry)
 {
     return GetAdvancedBool(entry->name, entry->bDefaultValue);
 }
 
-static BOOL CALLBACK CustomizeAdvancedWrite(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+static VOID CALLBACK CustomizeAdvancedWrite(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
 {
-    return SetAdvancedDword(entry->name, dwValue);
+    SetAdvancedDword(entry->name, bValue);
 }
 
-static DWORD CALLBACK CustomizeSmallIconsRead(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK CustomizeSmallIconsRead(const CUSTOMIZE_ENTRY *entry)
 {
     return g_TaskbarSettings.sr.SmallStartMenu;
 }
 
-static BOOL CALLBACK CustomizeSmallIconsWrite(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+static VOID CALLBACK CustomizeSmallIconsWrite(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
 {
-    g_TaskbarSettings.sr.SmallStartMenu = dwValue;
-    return TRUE;
+    g_TaskbarSettings.sr.SmallStartMenu = bValue;
 }
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
