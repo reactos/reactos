@@ -41,8 +41,11 @@ HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
     for (SIZE_T i2 = 0; i2 < List2->m_chWnds; ++i2)
     {
-        BOOL bFoundInList1 = FALSE;
         HWND hWnd = List2->m_phWnds[i2];
+        if (!IsWindowEnabled(hWnd) || !IsWindowVisible(hWnd))
+            continue;
+
+        BOOL bFoundInList1 = FALSE;
         for (SIZE_T i1 = 0; i1 < List1->m_chWnds; ++i1)
         {
             if (hWnd == List1->m_phWnds[i1])
@@ -52,26 +55,24 @@ HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
             }
         }
 
-        if (!bFoundInList1 && IsWindow(hWnd))
+        if (!bFoundInList1)
             return hWnd;
     }
     return NULL;
 }
 
+#define TRIALS_COUNT 8
+
 void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
     INT cDiff = List2->m_chWnds - List1->m_chWnds;
-    if (cDiff <= 0)
-        cDiff = 32;
-
-    cDiff *= 2;
     for (INT j = 0; j < cDiff; ++j)
     {
         HWND hWnd = FindNewWindow(List1, List2);
         if (!hWnd)
             break;
 
-        for (INT i = 0; i < 8; ++i)
+        for (INT i = 0; i < TRIALS_COUNT; ++i)
         {
             if (!IsWindow(hWnd))
                 break;
