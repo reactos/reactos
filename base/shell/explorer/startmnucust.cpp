@@ -75,94 +75,94 @@ static VOID OnClearRecentItems(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
 }
 
-struct CUSTOMIZE_ENTRY;
+struct CUSTOM_ENTRY;
 
-typedef BOOL (CALLBACK *FN_GET_VALUE)(const CUSTOMIZE_ENTRY *entry);
-typedef VOID (CALLBACK *FN_SET_VALUE)(const CUSTOMIZE_ENTRY *entry, BOOL bValue);
+typedef BOOL (CALLBACK *FN_CUSTOM_GET)(const CUSTOM_ENTRY *entry);
+typedef VOID (CALLBACK *FN_CUSTOM_SET)(const CUSTOM_ENTRY *entry, BOOL bValue);
 
-struct CUSTOMIZE_ENTRY
+struct CUSTOM_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
     BOOL bDefaultValue;
-    FN_GET_VALUE fnGetValue;
-    FN_SET_VALUE fnSetValue;
+    FN_CUSTOM_GET fnGetValue;
+    FN_CUSTOM_SET fnSetValue;
     RESTRICTIONS policy1, policy2;
 };
 
-static BOOL CALLBACK GetAdvanced(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK CustomGetAdvanced(const CUSTOM_ENTRY *entry)
 {
     return GetAdvancedBool(entry->name, entry->bDefaultValue);
 }
 
-static VOID CALLBACK SetAdvanced(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
+static VOID CALLBACK CustomSetAdvanced(const CUSTOM_ENTRY *entry, BOOL bValue)
 {
     SetAdvancedDword(entry->name, bValue);
 }
 
-static BOOL CALLBACK GetSmallStartMenu(const CUSTOMIZE_ENTRY *entry)
+static BOOL CALLBACK CustomGetSmallStartMenu(const CUSTOM_ENTRY *entry)
 {
     return g_TaskbarSettings.sr.SmallStartMenu;
 }
 
-static VOID CALLBACK SetSmallStartMenu(const CUSTOMIZE_ENTRY *entry, BOOL bValue)
+static VOID CALLBACK CustomSetSmallStartMenu(const CUSTOM_ENTRY *entry, BOOL bValue)
 {
     g_TaskbarSettings.sr.SmallStartMenu = bValue;
 }
 
-static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
+static const CUSTOM_ENTRY s_CustomEntries[] =
 {
     {
         IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", TRUE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
     },
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOFAVORITESMENU,
     },
     {
         IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_STARTMENULOGOFF,
     },
     {
         IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NORUN,
     },
     {
         IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSMMYDOCS,
     },
     {
         IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSMMYPICS,
     },
     {
         IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
     },
     {
         IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSETFOLDERS,
     },
     {
         IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
-        GetAdvanced, SetAdvanced,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS,
     },
     {
         IDS_ADVANCED_SMALL_START_MENU, NULL, FALSE,
-        GetSmallStartMenu, SetSmallStartMenu,
+        CustomGetSmallStartMenu, CustomSetSmallStartMenu,
     },
 };
 
-static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
+static VOID AddCustomItem(HWND hTreeView, const CUSTOM_ENTRY *entry)
 {
     if (SHRestricted(entry->policy1) || SHRestricted(entry->policy2))
     {
@@ -193,9 +193,9 @@ static void CustomizeClassic_OnInitDialog(HWND hwnd)
     DWORD_PTR style = GetWindowLongPtrW(hTreeView, GWL_STYLE);
     SetWindowLongPtrW(hTreeView, GWL_STYLE, style | TVS_CHECKBOXES);
 
-    for (auto& entry : s_CustomizeEntries)
+    for (auto& entry : s_CustomEntries)
     {
-        AddCustomizeItem(hTreeView, &entry);
+        AddCustomItem(hTreeView, &entry);
     }
 }
 
@@ -213,7 +213,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
         TreeView_GetItem(hTreeView, &item);
 
         BOOL bChecked = !!(item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
-        for (auto& entry : s_CustomizeEntries)
+        for (auto& entry : s_CustomEntries)
         {
             if (SHRestricted(entry.policy1) || SHRestricted(entry.policy2))
                 continue;
