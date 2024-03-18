@@ -12,6 +12,7 @@ void FreeWindowList(PWINDOW_LIST pList)
 {
     free(pList->m_phWnds);
     pList->m_phWnds = NULL;
+    pList->m_chWnds = 0;
 }
 
 static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
@@ -31,6 +32,8 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 void GetWindowList(PWINDOW_LIST pList)
 {
+    pList->m_chWnds = 0;
+    pList->m_phWnds = NULL;
     EnumWindows(EnumWindowsProc, (LPARAM)pList);
 }
 
