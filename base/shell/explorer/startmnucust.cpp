@@ -84,45 +84,81 @@ struct CUSTOMIZE_ENTRY
     LPARAM id;
     LPCWSTR name;
     BOOL bDefaultValue;
+    FN_CUSTOMIZE_READ fnRead;
+    FN_CUSTOMIZE_WRITE fnWrite;
     RESTRICTIONS policy1, policy2;
 };
+
+static DWORD CALLBACK CustomizeAdvancedRead(const CUSTOMIZE_ENTRY *entry)
+{
+    return GetAdvancedBool(entry->name, entry->bDefaultValue);
+}
+
+static BOOL CALLBACK CustomizeAdvancedWrite(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+{
+    return SetAdvancedDword(entry->name, dwValue);
+}
+
+static DWORD CALLBACK CustomizeSmallIconsRead(const CUSTOMIZE_ENTRY *entry)
+{
+    return g_TaskbarSettings.sr.SmallStartMenu;
+}
+
+static BOOL CALLBACK CustomizeSmallIconsWrite(const CUSTOMIZE_ENTRY *entry, DWORD dwValue)
+{
+    g_TaskbarSettings.sr.SmallStartMenu = dwValue;
+    return TRUE;
+}
 
 static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
 {
     {
         IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", TRUE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
     },
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOFAVORITESMENU
     },
     {
         IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_STARTMENULOGOFF
     },
     {
         IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NORUN
     },
     {
         IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOSMMYDOCS
     },
     {
         IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOSMMYPICS
     },
     {
         IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
     },
     {
         IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOSETFOLDERS
     },
     {
         IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
+        CustomizeAdvancedRead, CustomizeAdvancedWrite,
         REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS
+    },
+    {
+        IDS_ADVANCED_SMALL_START_MENU, NULL, FALSE,
+        CustomizeSmallIconsRead, CustomizeSmallIconsWrite,
     },
 };
 
@@ -142,7 +178,7 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    BOOL bChecked = GetAdvancedBool(entry->name, entry->bDefaultValue);
+    BOOL bChecked = entry->fnRead(entry);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
     TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
@@ -185,7 +221,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
             if (item.lParam == entry.id)
             {
                 TRACE("%p: %d\n", item.lParam, bChecked);
-                SetAdvancedDword(entry.name, bChecked);
+                entry.fnWrite(&entry, bChecked);
                 break;
             }
         }

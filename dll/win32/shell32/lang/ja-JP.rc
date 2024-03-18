@@ -1018,6 +1018,7 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "「マイ ネットワーク」を展開"
     IDS_ADVANCED_DISPLAY_RUN "「ファイル名を指定して実行」を表示"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "「管理者ツール」を表示"
+    IDS_ADVANCED_SMALL_START_MENU "小さいアイコンでスタートメニューを表示"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 高度な設定(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高度な設定(&V) >>"
