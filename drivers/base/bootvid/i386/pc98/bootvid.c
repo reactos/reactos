@@ -248,7 +248,6 @@ SetPaletteEntryRGB(
 }
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count)
@@ -264,7 +263,6 @@ InitPaletteWithTable(
 }
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,
@@ -292,7 +290,6 @@ DisplayCharacter(
 }
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
@@ -325,7 +322,6 @@ PrepareForSetPixel(VOID)
 }
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll)
 {

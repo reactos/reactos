@@ -16,7 +16,6 @@
 #define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count);
@@ -31,19 +30,16 @@ SetPixel(
     _In_ UCHAR Color);
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
     _In_ BOOLEAN Restore);
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll);
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,

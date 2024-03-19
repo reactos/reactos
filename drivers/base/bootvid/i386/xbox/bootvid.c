@@ -239,7 +239,6 @@ VidResetDisplay(
 }
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count)
@@ -274,7 +273,6 @@ SetPixel(
 }
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
@@ -320,7 +318,6 @@ PreserveRow(
 }
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll)
 {
@@ -349,7 +346,6 @@ DoScroll(
 }
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,

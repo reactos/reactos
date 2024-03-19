@@ -54,7 +54,6 @@ static BOOLEAN ClearRow = FALSE;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID
-NTAPI
 BitBlt(
     _In_ ULONG Left,
     _In_ ULONG Top,
@@ -117,7 +116,6 @@ BitBlt(
 }
 
 static VOID
-NTAPI
 RleBitBlt(
     _In_ ULONG Left,
     _In_ ULONG Top,
@@ -312,9 +310,6 @@ RleBitBlt(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @implemented
- */
 ULONG
 NTAPI
 VidSetTextColor(
@@ -375,9 +370,6 @@ VidSetScrollRegion(
     VidpCurrentY = Top;
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidDisplayString(

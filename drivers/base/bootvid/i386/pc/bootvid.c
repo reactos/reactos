@@ -11,7 +11,6 @@
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static BOOLEAN
-NTAPI
 VgaInterpretCmdStream(
     _In_ PUSHORT CmdStream)
 {
@@ -177,7 +176,6 @@ VgaInterpretCmdStream(
 }
 
 static BOOLEAN
-NTAPI
 VgaIsPresent(VOID)
 {
     UCHAR OrgGCAddr, OrgReadMap, OrgBitMask;
@@ -362,9 +360,6 @@ VgaIsPresent(VOID)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-/*
- * @implemented
- */
 BOOLEAN
 NTAPI
 VidInitialize(
@@ -469,9 +464,6 @@ VidInitialize(
     return TRUE;
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidResetDisplay(
