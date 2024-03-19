@@ -7,6 +7,7 @@
  */
 
 #include "shelltest.h"
+#include "closewnd.h"
 #include <pstypes.h>
 #include <psfuncs.h>
 #include <stdlib.h>
@@ -149,7 +150,8 @@ getCommandLineFromProcess(HANDLE hProcess)
 static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
 {
     SHELLEXECUTEINFOW info = { sizeof(info) };
-    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_FLAG_NO_UI;
+    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE |
+                 SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
     info.hwnd = NULL;
     info.lpVerb = NULL;
     info.lpFile = pEntry->lpFile;
@@ -210,67 +212,6 @@ enableTokenPrivilege(LPCWSTR pszPrivilege)
     tkp.PrivilegeCount = 1;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
     return AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, NULL);
-}
-
-typedef struct WINDOW_LIST
-{
-    SIZE_T m_chWnds;
-    HWND *m_phWnds;
-} WINDOW_LIST, *PWINDOW_LIST;
-
-static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hwnd))
-        return TRUE;
-
-    PWINDOW_LIST pList = (PWINDOW_LIST)lParam;
-    SIZE_T cb = (pList->m_chWnds + 1) * sizeof(HWND);
-    HWND *phWnds = (HWND *)realloc(pList->m_phWnds, cb);
-    if (!phWnds)
-        return FALSE;
-    phWnds[pList->m_chWnds++] = hwnd;
-    pList->m_phWnds = phWnds;
-    return TRUE;
-}
-
-static inline void TEST_GetWindowList(PWINDOW_LIST pList)
-{
-    EnumWindows(EnumWindowsProc, (LPARAM)pList);
-}
-
-static void TEST_CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
-{
-    for (SIZE_T i2 = 0; i2 < List2->m_chWnds; ++i2)
-    {
-        BOOL bFoundInList1 = FALSE;
-        HWND hWnd = List2->m_phWnds[i2];
-        for (SIZE_T i1 = 0; i1 < List1->m_chWnds; ++i1)
-        {
-            if (hWnd == List1->m_phWnds[i1])
-            {
-                bFoundInList1 = TRUE;
-                goto Escape;
-            }
-        }
-Escape:
-        if (!bFoundInList1)
-        {
-            for (INT i = 0; i < 5; ++i)
-            {
-                if (!IsWindow(hWnd))
-                    break;
-
-                SwitchToThisWindow(hWnd, TRUE);
-
-                // Alt+F4
-                keybd_event(VK_MENU, 0x38, 0, 0);
-                keybd_event(VK_F4, 0x3E, 0, 0);
-                keybd_event(VK_F4, 0x3E, KEYEVENTF_KEYUP, 0);
-                keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
-                Sleep(100);
-            }
-        }
-    }
 }
 
 static WINDOW_LIST s_List1, s_List2;
@@ -364,7 +305,7 @@ static BOOL TEST_Start(void)
     StringCchPrintfW(s_sys_test_exe_cmdline, _countof(s_sys_test_exe_cmdline),
                      L"\"%s\" ", s_sys_test_exe);
 
-    TEST_GetWindowList(&s_List1);
+    GetWindowList(&s_List1);
 
     return TRUE;
 }
@@ -372,10 +313,10 @@ static BOOL TEST_Start(void)
 static void TEST_End(void)
 {
     Sleep(500);
-    TEST_GetWindowList(&s_List2);
-    TEST_CloseNewWindows(&s_List1, &s_List2);
-    free(s_List1.m_phWnds);
-    free(s_List2.m_phWnds);
+    GetWindowList(&s_List2);
+    CloseNewWindows(&s_List1, &s_List2);
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
 
     DeleteFileW(s_win_test_exe);
     DeleteFileW(s_sys_test_exe);

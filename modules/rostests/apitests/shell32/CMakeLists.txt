@@ -2,6 +2,7 @@
 spec2def(shell32_apitest.exe shell32_apitest.spec)
 
 list(APPEND SOURCE
+    closewnd.cpp
     AddCommas.cpp
     CFSFolder.cpp
     CheckEscapes.cpp
@@ -22,6 +23,7 @@ list(APPEND SOURCE
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
     PathResolve.cpp
+    RealShellExecuteEx.cpp
     SHAppBarMessage.cpp
     SHChangeNotify.cpp
     SHCreateDataObject.cpp
