@@ -205,7 +205,6 @@ typedef struct _TW_STUCKRECTS2
             DWORD AlwaysOnTop : 1;
             DWORD SmallIcons : 1;
             DWORD HideClock : 1;
-            DWORD SmallStartMenu : 1;
         };
     };
     DWORD Position;

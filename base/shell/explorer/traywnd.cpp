@@ -2554,7 +2554,7 @@ ChangePos:
         RegLoadSettings();
 
         /* Create and initialize the start menu */
-        BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallStartMenu;
+        BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallIcons;
         HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
         m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
 
@@ -2665,7 +2665,7 @@ ChangePos:
             HideStartMenu();
             m_StartMenuBand.Release();
 
-            BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallStartMenu;
+            BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallIcons;
             HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
             m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
         }

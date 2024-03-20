@@ -91,12 +91,12 @@ static VOID CALLBACK CustomSetAdvanced(const CUSTOM_ENTRY *entry, BOOL bValue)
 
 static BOOL CALLBACK CustomGetSmallStartMenu(const CUSTOM_ENTRY *entry)
 {
-    return g_TaskbarSettings.sr.SmallStartMenu;
+    return g_TaskbarSettings.sr.SmallIcons;
 }
 
 static VOID CALLBACK CustomSetSmallStartMenu(const CUSTOM_ENTRY *entry, BOOL bValue)
 {
-    g_TaskbarSettings.sr.SmallStartMenu = bValue;
+    g_TaskbarSettings.sr.SmallIcons = bValue;
 }
 
 static const CUSTOM_ENTRY s_CustomEntries[] =
