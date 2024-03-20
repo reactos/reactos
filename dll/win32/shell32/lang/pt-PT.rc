@@ -602,7 +602,7 @@ BEGIN
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
     LTEXT "Tamanho da unidade de alocação", -1, 7, 64, 170, 9
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Nome do volume ", -1, 7, 93, 170, 9
+    LTEXT "Nome do volume", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
     GROUPBOX "Opções", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "Formatação &Rápida", 28674, 16, 135, 155, 10
