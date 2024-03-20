@@ -482,7 +482,7 @@ BEGIN
     LTEXT "這個資料夾已包含名為「%2」的檔案。", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "這個資料夾已包含名為「%2」的唯讀檔案。", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "這個資料夾已包含名為「%2」的系統檔案。", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "您是否想要取代已存在的檔案？", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "您是否想要取代已存在的檔案", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "（不明日期和大小）", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "換成這個嗎？", -1, 44, 75, 228, 10, SS_NOPREFIX
