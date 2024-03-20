@@ -341,17 +341,19 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
         HANDLE hFindFile;
         WIN32_FIND_DATAW w32fd;
         BOOL done = TRUE;
+#ifdef __REACTOS__
         int fname_len;
 
-#ifdef __REACTOS__
         if (flags & ADN_DEL_IF_EMPTY)
-        {
             goto deleteinitialdirectory;
-        }
+#else
+        int fname_len = lstrlenW(fname);
 #endif
 
         /* Generate a path with wildcard suitable for iterating */
+#ifdef __REACTOS__
         fname_len = lstrlenW(fname);
+#endif
         if (fname_len && fname[fname_len-1] != '\\') fname[fname_len++] = '\\';
         lstrcpyW(fname + fname_len, asterisk);
 
@@ -381,7 +383,9 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
         {
 #ifdef __REACTOS__
 deleteinitialdirectory:
+#endif
             TRACE("%s: directory\n", debugstr_w(fname));
+#ifdef __REACTOS__
             SetFileAttributesW(fname, FILE_ATTRIBUTE_NORMAL);
             if (RemoveDirectoryW(fname))
 #else
@@ -454,7 +458,7 @@ HRESULT WINAPI DelNodeW(LPCWSTR pszFileOrDirName, DWORD dwFlags)
     HRESULT ret = E_FAIL;
     
     TRACE("(%s, %d)\n", debugstr_w(pszFileOrDirName), dwFlags);
-
+    
 #ifdef __REACTOS__
     if (dwFlags & ~ADN_DEL_IF_EMPTY)
         FIXME("Flags %#x ignored!\n", dwFlags & ~ADN_DEL_IF_EMPTY);
