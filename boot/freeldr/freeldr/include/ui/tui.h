@@ -101,10 +101,27 @@ TuiDrawCenteredText(
 
 VOID    TuiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    TuiUpdateDateTime(VOID);                                // Updates the date and time
-VOID    TuiSaveScreen(PUCHAR Buffer);                            // Saves the screen so that it can be restored later
-VOID    TuiRestoreScreen(PUCHAR Buffer);                        // Restores the screen from a previous save
-VOID    TuiMessageBox(PCSTR MessageText);                        // Displays a message box on the screen with an ok button
-VOID    TuiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
+
+/* Saves the screen so that it can be restored later */
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PUCHAR
+TuiSaveScreen(VOID);
+
+/* Restores the screen from a previous save */
+VOID
+TuiRestoreScreen(
+    _In_opt_ __drv_freesMem(Mem) PUCHAR Buffer);
+
+/* Displays a message box on the screen with an ok button */
+VOID
+TuiMessageBox(
+    _In_ PCSTR MessageText);
+
+/* Displays a message box on the screen with an ok button using no system resources */
+VOID
+TuiMessageBoxCritical(
+    _In_ PCSTR MessageText);
 
 BOOLEAN    TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 UCHAR    TuiTextToColor(PCSTR ColorText);                        // Converts the text color into it's equivalent color value

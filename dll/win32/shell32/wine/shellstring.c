@@ -25,12 +25,12 @@
 #include <winbase.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <undocshell.h>
+#include <shlwapi_undoc.h>
 #include <wine/unicode.h>
 #include <wine/debug.h>
 
 #include "shell32_main.h"
-#include "undocshell.h"
-#include "shlwapi_undoc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

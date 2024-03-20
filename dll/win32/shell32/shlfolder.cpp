@@ -26,7 +26,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-
 /***************************************************************************
  *  GetNextElement (internal function)
  *
@@ -423,8 +422,6 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
     else
         return E_FAIL;
 }
-
-
 
 static
 DWORD WINAPI

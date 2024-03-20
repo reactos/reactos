@@ -39,10 +39,16 @@ class CAppDB
 
     static DWORD
     RemoveInstalledAppFromRegistry(const CAppInfo *Info);
+
     static CInstalledApplicationInfo *
     CreateInstalledAppByRegistryKey(LPCWSTR Name);
     static CInstalledApplicationInfo *
     CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam);
     static HKEY
     EnumInstalledRootKey(UINT Index, REGSAM &RegSam);
+
+    size_t GetAvailableCount() const
+    {
+        return m_Available.GetCount();
+    }
 };

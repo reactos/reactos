@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
@@ -111,9 +111,6 @@ MMixerGetWaveInfoByIndexAndType(
     return MM_STATUS_INVALID_PARAMETER;
 }
 
-
-
-
 VOID
 MMixerInitializeDataFormat(
     IN PKSDATAFORMAT_WAVEFORMATEX DataFormat,
@@ -136,7 +133,6 @@ MMixerInitializeDataFormat(
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
 }
-
 
 MIXER_STATUS
 MMixerGetAudioPinDataRanges(
@@ -307,7 +303,6 @@ MMixerCheckFormat(
                 /* check if pin supports the sample rate in 16-Bit Mono */
                 Result |= TestRange[Index].Bit16Mono;
 
-
                 if (DataRangeAudio->MaximumChannels > 1)
                 {
                     /* check if pin supports the sample rate in 16-Bit Stereo */
@@ -316,7 +311,6 @@ MMixerCheckFormat(
             }
         }
     }
-
 
     if (bInput)
         WaveInfo->u.InCaps.dwFormats = Result;

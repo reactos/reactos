@@ -142,7 +142,7 @@ fmodf		PROC	FRAME
 		jmp	@fail
 
 @fail:
-		lea	rcx, [@fmodfz]		; fname
+		lea	rcx, @fmodfz		; fname
 		mov	edx, FPCODEFMOD		; opcode
 ;		mov	r8d, [rsp]		; value
 		mov	r9d, DOMAIN		; type

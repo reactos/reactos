@@ -14,13 +14,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HMODULE ghImm32Inst = NULL; // Win: ghInst
-PSERVERINFO gpsi = NULL; // Win: gpsi
-SHAREDINFO gSharedInfo = { NULL }; // Win: gSharedInfo
-BYTE gfImmInitialized = FALSE; // Win: gfInitialized
+HMODULE ghImm32Inst = NULL; /* The IMM32 instance */
+PSERVERINFO gpsi = NULL;
+SHAREDINFO gSharedInfo = { NULL };
+BYTE gfImmInitialized = FALSE; /* Is IMM32 initialized? */
 ULONG_PTR gHighestUserAddress = 0;
 
-// Win: ImmInitializeGlobals
 static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
@@ -68,49 +67,45 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData, dwType;
-    HKEY hLayoutKey;
-    LONG error;
+    HKEY hKey;
+    LSTATUS error;
     WCHAR szLayout[MAX_PATH];
+    LPCWSTR pszSubKey;
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
-    ZeroMemory(pImeInfoEx, sizeof(IMEINFOEX));
-
-    if (IS_IME_HKL(hKL) || !IS_CICERO_MODE() || IS_16BIT_MODE())
+    /* Choose a key */
+    if (IS_IME_HKL(hKL) || !IS_CICERO_MODE() || IS_16BIT_MODE()) /* Non-Cicero? */
     {
         StringCchPrintfW(szLayout, _countof(szLayout), L"%s\\%08lX",
                          REGKEY_KEYBOARD_LAYOUTS, HandleToUlong(hKL));
-
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szLayout, 0, KEY_READ, &hLayoutKey);
-        if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+        pszSubKey = szLayout;
     }
-    else
+    else /* Cicero */
     {
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGKEY_IMM, 0, KEY_READ, &hLayoutKey);
-        if (IS_ERROR_UNEXPECTEDLY(error))
-            return FALSE;
+        pszSubKey = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM";
     }
 
-    cbData = sizeof(pImeInfoEx->wszImeFile);
-    error = RegQueryValueExW(hLayoutKey, L"Ime File", NULL, &dwType,
-                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
-
-    RegCloseKey(hLayoutKey);
-
-    pImeInfoEx->fLoadFlag = 0;
-
+    /* Open the key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszSubKey, 0, KEY_READ, &hKey);
     if (IS_ERROR_UNEXPECTEDLY(error))
         return FALSE;
 
-    if (dwType != REG_SZ)
-    {
-        ERR("\n");
-        return FALSE;
-    }
+    /* Load "IME File" value */
+    cbData = sizeof(pImeInfoEx->wszImeFile);
+    error = RegQueryValueExW(hKey, L"IME File", NULL, &dwType,
+                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
+
+    /* Avoid buffer overrun */
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = UNICODE_NULL;
+
+    RegCloseKey(hKey);
+
+    if (error != ERROR_SUCCESS || dwType != REG_SZ)
+        return FALSE; /* Failed */
 
     pImeInfoEx->hkl = hKL;
+    pImeInfoEx->fLoadFlag = 0;
     return Imm32LoadImeVerInfo(pImeInfoEx);
 }
 
@@ -184,7 +179,6 @@ Retry:
     return TRUE;
 }
 
-// Win: SelectInputContext
 VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
@@ -489,12 +483,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
         SendMessageW(hwndDefIME, WM_IME_SELECT, TRUE, (LPARAM)hKL);
 
     return TRUE;
-}
-
-/* Win: Internal_CtfImeSetActiveContextAlways */
-static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
-{
-    TRACE("We have to do something\n");
 }
 
 /***********************************************************************
@@ -846,7 +834,6 @@ Fail:
     return FALSE;
 }
 
-// Win: InternalImmLockIMC
 LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
@@ -858,7 +845,7 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     PIMEDPI pImeDpi = NULL;
 
     pClientImc = ImmLockClientImc(hIMC);
-    if (IS_NULL_UNEXPECTEDLY(pClientImc))
+    if (!pClientImc)
         return NULL;
 
     RtlEnterCriticalSection(&pClientImc->cs);
@@ -958,7 +945,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
         return NULL;
 
     pIMC = ValidateHandle(hImc, TYPE_INPUTCONTEXT);
-    if (IS_NULL_UNEXPECTEDLY(pIMC) || !Imm32CheckImcProcess(pIMC))
+    if (!pIMC || !Imm32CheckImcProcess(pIMC))
         return NULL;
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
@@ -1104,45 +1091,6 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 }
 
 /***********************************************************************
- *              ImmCreateSoftKeyboard(IMM32.@)
- */
-HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
-{
-    FIXME("(%d, %d, %d, %d): stub\n", uType, hOwner, x, y);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/***********************************************************************
- *              ImmDestroySoftKeyboard(IMM32.@)
- */
-BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
-{
-    TRACE("(%p)\n", hSoftWnd);
-    return DestroyWindow(hSoftWnd);
-}
-
-/***********************************************************************
- *              ImmShowSoftKeyboard(IMM32.@)
- */
-BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
-{
-    TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
-    if (hSoftWnd)
-        return ShowWindow(hSoftWnd, nCmdShow);
-    return FALSE;
-}
-
-/***********************************************************************
-*		ImmDisableTextFrameService(IMM32.@)
-*/
-BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)
-{
-    FIXME("Stub\n");
-    return FALSE;
-}
-
-/***********************************************************************
  *              ImmEnumInputContext(IMM32.@)
  */
 BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)
@@ -1236,7 +1184,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     hKL = GetKeyboardLayout(0);
     if (IS_CICERO_MODE() && !IS_16BIT_MODE())
     {
-        Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
+        CtfImeSetActiveContextAlways(hIMC, fActive, hWnd, hKL);
         hKL = GetKeyboardLayout(0);
     }
 
@@ -1294,6 +1242,29 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     if (IS_NULL_UNEXPECTEDLY(hIMC))
         return FALSE;
     return ImmSetActiveContext(hwnd, hIMC, fFlag);
+}
+
+/***********************************************************************
+ *              GetKeyboardLayoutCP (IMM32.@)
+ */
+UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId)
+{
+    WCHAR szText[8];
+    static LANGID s_wKeyboardLangIdCache = 0;
+    static UINT s_uKeyboardLayoutCPCache = 0;
+
+    TRACE("(%u)\n", wLangId);
+
+    if (wLangId == s_wKeyboardLangIdCache)
+        return s_uKeyboardLayoutCPCache;
+
+    if (!GetLocaleInfoW(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
+        return 0;
+
+    s_wKeyboardLangIdCache = wLangId;
+    szText[_countof(szText) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    s_uKeyboardLayoutCPCache = wcstol(szText, NULL, 10);
+    return s_uKeyboardLayoutCPCache;
 }
 
 #ifndef NDEBUG

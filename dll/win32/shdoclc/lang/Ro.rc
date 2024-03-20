@@ -2,6 +2,7 @@
  * Copyright 2005-2006 Jacek Caban
  * Copyright 2009 Michael Stefaniuc
  *           2011 Ștefan Fulea
+ * Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,10 +39,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Înap&oi",                            IDM_GOBACKWARD
         MENUITEM "În&ainte",                           IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Păstrare imagi&ne de fundal în…",    IDM_SAVEBACKGROUND
+        MENUITEM "Salvează imagi&nea de fundal ca…",   IDM_SAVEBACKGROUND
         MENUITEM "Stabilește ca f&undal",              IDM_SETWALLPAPER
         MENUITEM "&Copiază fundalul",                  IDM_COPYBACKGROUND
-        MENUITEM "Definire ca element pe &birou…",     IDM_SETDESKTOPITEM
+        MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "S&electează tot",                    IDM_SELECTALL
         MENUITEM "&Lipește",                           IDM_PASTE
@@ -62,16 +63,16 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Deschide &adresa",                   IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",        IDM_FOLLOWLINKN
-        MENUITEM "Păstrare destinație în…",            IDM_SAVETARGET
+        MENUITEM "Salvează destinația ca…",            IDM_SAVETARGET
         MENUITEM "I&mprimă destinația",                IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Afișea&ză imaginea",                 IDM_SHOWPICTURE
-        MENUITEM "Păstrare imagine în…",               IDM_SAVEPICTURE
+        MENUITEM "Salvează imaginea ca…",              IDM_SAVEPICTURE
         MENUITEM "Transmitere imagine prin &email…",   IDM_MP_EMAILPICTURE
         MENUITEM "Imp&rimă imaginea…",                 IDM_MP_PRINTPICTURE
-        MENUITEM "Desc&hide „Imagini”",                IDM_MP_MYPICS
+        MENUITEM "&Mergi la Imaginile mele",           IDM_MP_MYPICS
         MENUITEM "Stabilește ca &fundal",              IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe &birou…",     IDM_SETDESKTOPITEM
+        MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                         IDM_CUT
         MENUITEM "&Copiază",                           IDM_COPY
@@ -123,7 +124,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Deschide &adresa",             IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",  IDM_FOLLOWLINKN
-        MENUITEM "Păst&rare destinație în…",     IDM_SAVETARGET
+        MENUITEM "Sal&vează destinația ca…",     IDM_SAVETARGET
         MENUITEM "I&mprimă destinația",          IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                   IDM_CUT
@@ -145,13 +146,13 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Deschide &adresa",                 IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",      IDM_FOLLOWLINKN
-        MENUITEM "Păstrare destinație în…",          IDM_SAVETARGET
+        MENUITEM "Salvează destinația ca…",          IDM_SAVETARGET
         MENUITEM "I&mprimă destinația",              IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Afișea&ză imaginea",               IDM_SHOWPICTURE
-        MENUITEM "Păstrare imagine în…",             IDM_SAVEPICTURE
+        MENUITEM "Salvează imaginea ca…",            IDM_SAVEPICTURE
         MENUITEM "Stabilește ca &fundal",            IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe &birou…",   IDM_SETDESKTOPITEM
+        MENUITEM "Definire ca element pe des&ktop…", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                       IDM_CUT
         MENUITEM "&Copiază",                         IDM_COPY
@@ -169,13 +170,13 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Deschide &adresa",                 IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",      IDM_FOLLOWLINKN
-        MENUITEM "Păstrare destinație în…",          IDM_SAVETARGET
+        MENUITEM "Salvează destinația ca…",          IDM_SAVETARGET
         MENUITEM "I&mprimă destinația",              IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Afișea&ză imaginea",               IDM_SHOWPICTURE
-        MENUITEM "Păstrare imagine în…",             IDM_SAVEPICTURE
+        MENUITEM "Salvează imaginea ca…",            IDM_SAVEPICTURE
         MENUITEM "Definește ca &fundal",             IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe &birou…",   IDM_SETDESKTOPITEM
+        MENUITEM "Definire ca element pe des&ktop…", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Decupează",                       IDM_CUT
         MENUITEM "&Copiază",                         IDM_COPY
@@ -205,7 +206,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Elimină dreptunghiurile de format", IDM_DUMPLAYOUTRECTS
         MENUITEM "Monitor de memorie",                IDM_MEMORYMONITOR
         MENUITEM "Măsurători de performanță",         IDM_PERFORMANCEMETERS
-        MENUITEM "Păstrează HTML",                    IDM_SAVEHTML
+        MENUITEM "Salvează fișierul HTML",            IDM_SAVEHTML
         MENUITEM SEPARATOR
         MENUITEM "Răsfoiește vizualizarea",           IDM_BROWSEMODE
         MENUITEM "Editează vizualizarea",             IDM_EDITMODE

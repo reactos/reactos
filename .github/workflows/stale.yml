@@ -14,11 +14,10 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
 
     steps:
-    - uses: actions/stale@v5
+    - uses: actions/stale@v9
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         days-before-stale: 120

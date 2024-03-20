@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 static
@@ -85,7 +82,6 @@ typedef struct
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
 
 #define STREAM_DATA_OFFSET   (0)
-
 
 NTSTATUS
 NTAPI
@@ -247,7 +243,6 @@ CIrpQueue::AddMapping(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
-
 
     // now get a system address for the user buffers
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;

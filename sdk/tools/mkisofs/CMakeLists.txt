@@ -107,10 +107,12 @@ else()
     # Silence compilers checking for invalid formatting sequences.
     target_compile_options(libschily PRIVATE "-Wno-format")
 
-    # mkisofs uses K&R-style function definitions to support very old compilers.
-    # This causes warnings with modern compilers.
-    target_compile_options(libmdigest PRIVATE "-Wno-deprecated-non-prototype")
-    target_compile_options(libschily PRIVATE "-Wno-deprecated-non-prototype")
-    target_compile_options(libsiconv PRIVATE "-Wno-deprecated-non-prototype")
-    target_compile_options(mkisofs PRIVATE "-Wno-deprecated-non-prototype")
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+        # mkisofs uses K&R-style function definitions to support very old compilers.
+        # This causes warnings with modern compilers.
+        target_compile_options(libmdigest PRIVATE "-Wno-deprecated-non-prototype")
+        target_compile_options(libschily PRIVATE "-Wno-deprecated-non-prototype")
+        target_compile_options(libsiconv PRIVATE "-Wno-deprecated-non-prototype")
+        target_compile_options(mkisofs PRIVATE "-Wno-deprecated-non-prototype")
+    endif()
 endif()

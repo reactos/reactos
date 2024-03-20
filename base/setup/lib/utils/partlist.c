@@ -552,7 +552,7 @@ IsSuperFloppy(
     }
 
     /* The partition lengths should agree */
-    PartitionLengthEstimate = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    PartitionLengthEstimate = GetDiskSizeInBytes(DiskEntry);
     if (PartitionInfo->PartitionLength.QuadPart != PartitionLengthEstimate)
     {
         DPRINT1("PartitionLength = %I64u is different from PartitionLengthEstimate = %I64u\n",
@@ -676,26 +676,46 @@ CreateInsertBlankRegion(
 static
 BOOLEAN
 InitializePartitionEntry(
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate)
+    _Inout_ PPARTENTRY PartEntry,
+    _In_opt_ ULONGLONG SizeBytes)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+    ULONGLONG SectorCount;
 
-    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+    DPRINT1("Current entry sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
 
-    /* Fail if we try to initialize this partition entry with more sectors than what it actually contains */
+    /* The entry must not be already partitioned and not be void */
+    ASSERT(!PartEntry->IsPartitioned);
+    ASSERT(PartEntry->SectorCount.QuadPart);
+
+    /* Convert the size in bytes to sector count. SizeBytes being
+     * zero means the caller wants to use all the empty space. */
+    if ((SizeBytes == 0) || (SizeBytes == GetPartEntrySizeInBytes(PartEntry)))
+    {
+        /* Use all of the unpartitioned disk space */
+        SectorCount = PartEntry->SectorCount.QuadPart;
+    }
+    else
+    {
+        SectorCount = SizeBytes / DiskEntry->BytesPerSector;
+        if (SectorCount == 0)
+        {
+            /* SizeBytes was certainly less than the minimal size, so fail */
+            DPRINT1("Partition size %I64u too small\n", SizeBytes);
+            return FALSE;
+        }
+    }
+    DPRINT1("    New sector count: %I64u\n", SectorCount);
+
+    /* Fail if we request more sectors than what the entry actually contains */
     if (SectorCount > PartEntry->SectorCount.QuadPart)
         return FALSE;
 
-    /* Fail if the partition is already in use */
-    ASSERT(!PartEntry->IsPartitioned);
-
-    if ((AutoCreate != FALSE) ||
+    if ((SectorCount == 0) ||
         (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
                    PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
     {
-        PartEntry->AutoCreate = AutoCreate;
+        /* Reuse the whole current entry */
     }
     else
     {
@@ -703,7 +723,8 @@ InitializePartitionEntry(
         ULONGLONG SectorCount2;
         PPARTENTRY NewPartEntry;
 
-        /* Create a partition entry that represents the remaining space after the partition to be initialized */
+        /* Create a partition entry that represents the remaining space
+         * after the partition to be initialized */
 
         StartSector = AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment);
         SectorCount2 = PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - StartSector;
@@ -735,7 +756,6 @@ InitializePartitionEntry(
 
     PartEntry->FormatState = Unformatted;
     PartEntry->FileSystem[0] = L'\0';
-    // PartEntry->AutoCreate = AutoCreate;
     PartEntry->BootIndicator = FALSE;
 
     DPRINT1("First Sector : %I64u\n", PartEntry->StartSector.QuadPart);
@@ -1882,7 +1902,7 @@ CreatePartitionList(VOID)
                                       &ReturnSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtQuerySystemInformation() failed, Status 0x%08lx", Status);
+        DPRINT1("NtQuerySystemInformation() failed, Status 0x%08lx\n", Status);
         RtlFreeHeap(ProcessHeap, 0, List);
         return NULL;
     }
@@ -2390,37 +2410,24 @@ GetPrevPartition(
     return NULL;
 }
 
-// static
-FORCEINLINE
+static inline
 BOOLEAN
 IsEmptyLayoutEntry(
-    IN PPARTITION_INFORMATION PartitionInfo)
+    _In_ PPARTITION_INFORMATION PartitionInfo)
 {
-    if (PartitionInfo->StartingOffset.QuadPart == 0 &&
-        PartitionInfo->PartitionLength.QuadPart == 0)
-    {
-        return TRUE;
-    }
-
-    return FALSE;
+    return (PartitionInfo->StartingOffset.QuadPart == 0 &&
+            PartitionInfo->PartitionLength.QuadPart == 0);
 }
 
-// static
-FORCEINLINE
+static inline
 BOOLEAN
 IsSamePrimaryLayoutEntry(
-    IN PPARTITION_INFORMATION PartitionInfo,
-    IN PDISKENTRY DiskEntry,
-    IN PPARTENTRY PartEntry)
+    _In_ PPARTITION_INFORMATION PartitionInfo,
+    _In_ PPARTENTRY PartEntry)
 {
-    if (PartitionInfo->StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector &&
-        PartitionInfo->PartitionLength.QuadPart == PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector)
+    return ((PartitionInfo->StartingOffset.QuadPart == GetPartEntryOffsetInBytes(PartEntry)) &&
+            (PartitionInfo->PartitionLength.QuadPart == GetPartEntrySizeInBytes(PartEntry)));
 //        PartitionInfo->PartitionType == PartEntry->PartitionType
-    {
-        return TRUE;
-    }
-
-    return FALSE;
 }
 
 static
@@ -2578,12 +2585,12 @@ UpdateDiskLayout(
 
             PartEntry->OnDiskPartitionNumber = (!IsContainerPartition(PartEntry->PartitionType) ? PartitionNumber : 0);
 
-            if (!IsSamePrimaryLayoutEntry(PartitionInfo, DiskEntry, PartEntry))
+            if (!IsSamePrimaryLayoutEntry(PartitionInfo, PartEntry))
             {
                 DPRINT1("Updating primary partition entry %lu\n", Index);
 
-                PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
-                PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+                PartitionInfo->StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
+                PartitionInfo->PartitionLength.QuadPart = GetPartEntrySizeInBytes(PartEntry);
                 PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
                 PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
                 PartitionInfo->PartitionType = PartEntry->PartitionType;
@@ -2624,8 +2631,8 @@ UpdateDiskLayout(
 
             DPRINT1("Updating logical partition entry %lu\n", Index);
 
-            PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
-            PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+            PartitionInfo->StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
+            PartitionInfo->PartitionLength.QuadPart = GetPartEntrySizeInBytes(PartEntry);
             PartitionInfo->HiddenSectors = DiskEntry->SectorAlignment;
             PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
             PartitionInfo->PartitionType = PartEntry->PartitionType;
@@ -2782,16 +2789,91 @@ GetNextUnpartitionedEntry(
     return NULL;
 }
 
+ERROR_NUMBER
+PartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry)
+{
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
+
+    /* Fail if the partition is already in use */
+    if (PartEntry->IsPartitioned)
+        return ERROR_NEW_PARTITION;
+
+    /*
+     * For primary partitions
+     */
+    if (!PartEntry->LogicalPartition)
+    {
+        /* Only one primary partition is allowed on super-floppy */
+        if (IsSuperFloppy(DiskEntry))
+            return ERROR_PARTITION_TABLE_FULL;
+
+        /* Fail if there are already 4 primary partitions in the list */
+        if (GetPrimaryPartitionCount(DiskEntry) >= 4)
+            return ERROR_PARTITION_TABLE_FULL;
+    }
+    /*
+     * For logical partitions
+     */
+    else
+    {
+        // TODO: Check that we are inside an extended partition!!
+        // Then the following check will be useless.
+
+        /* Only one (primary) partition is allowed on super-floppy */
+        if (IsSuperFloppy(DiskEntry))
+            return ERROR_PARTITION_TABLE_FULL;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+ERROR_NUMBER
+ExtendedPartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry)
+{
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
+
+    /* Fail if the partition is already in use */
+    if (PartEntry->IsPartitioned)
+        return ERROR_NEW_PARTITION;
+
+    /* Only one primary partition is allowed on super-floppy */
+    if (IsSuperFloppy(DiskEntry))
+        return ERROR_PARTITION_TABLE_FULL;
+
+    /* Fail if there are already 4 primary partitions in the list */
+    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
+        return ERROR_PARTITION_TABLE_FULL;
+
+    /* Fail if there is another extended partition in the list */
+    if (DiskEntry->ExtendedPartition != NULL)
+        return ERROR_ONLY_ONE_EXTENDED;
+
+    return ERROR_SUCCESS;
+}
+
 BOOLEAN
-CreatePrimaryPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate)
+CreatePartition(
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_opt_ ULONGLONG SizeBytes)
 {
     ERROR_NUMBER Error;
 
-    DPRINT1("CreatePrimaryPartition(%I64u)\n", SectorCount);
+    DPRINT1("CreatePartition(%I64u bytes)\n", SizeBytes);
 
     if (List == NULL || PartEntry == NULL ||
         PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
@@ -2799,18 +2881,16 @@ CreatePrimaryPartition(
         return FALSE;
     }
 
-    Error = PrimaryPartitionCreationChecks(PartEntry);
+    Error = PartitionCreationChecks(PartEntry);
     if (Error != NOT_AN_ERROR)
     {
-        DPRINT1("PrimaryPartitionCreationChecks() failed with error %lu\n", Error);
+        DPRINT1("PartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
     /* Initialize the partition entry, inserting a new blank region if needed */
-    if (!InitializePartitionEntry(PartEntry, SectorCount, AutoCreate))
+    if (!InitializePartitionEntry(PartEntry, SizeBytes))
         return FALSE;
-
-    ASSERT(PartEntry->LogicalPartition == FALSE);
 
     UpdateDiskLayout(PartEntry->DiskEntry);
     AssignDriveLetters(List);
@@ -2821,7 +2901,7 @@ CreatePrimaryPartition(
 static
 VOID
 AddLogicalDiskSpace(
-    IN PDISKENTRY DiskEntry)
+    _In_ PDISKENTRY DiskEntry)
 {
     ULONGLONG StartSector;
     ULONGLONG SectorCount;
@@ -2848,13 +2928,13 @@ AddLogicalDiskSpace(
 
 BOOLEAN
 CreateExtendedPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount)
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_opt_ ULONGLONG SizeBytes)
 {
     ERROR_NUMBER Error;
 
-    DPRINT1("CreateExtendedPartition(%I64u)\n", SectorCount);
+    DPRINT1("CreateExtendedPartition(%I64u bytes)\n", SizeBytes);
 
     if (List == NULL || PartEntry == NULL ||
         PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
@@ -2870,7 +2950,7 @@ CreateExtendedPartition(
     }
 
     /* Initialize the partition entry, inserting a new blank region if needed */
-    if (!InitializePartitionEntry(PartEntry, SectorCount, FALSE))
+    if (!InitializePartitionEntry(PartEntry, SizeBytes))
         return FALSE;
 
     ASSERT(PartEntry->LogicalPartition == FALSE);
@@ -2893,42 +2973,6 @@ CreateExtendedPartition(
     PartEntry->DiskEntry->ExtendedPartition = PartEntry;
 
     AddLogicalDiskSpace(PartEntry->DiskEntry);
-
-    UpdateDiskLayout(PartEntry->DiskEntry);
-    AssignDriveLetters(List);
-
-    return TRUE;
-}
-
-BOOLEAN
-CreateLogicalPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate)
-{
-    ERROR_NUMBER Error;
-
-    DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
-
-    if (List == NULL || PartEntry == NULL ||
-        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
-    {
-        return FALSE;
-    }
-
-    Error = LogicalPartitionCreationChecks(PartEntry);
-    if (Error != NOT_AN_ERROR)
-    {
-        DPRINT1("LogicalPartitionCreationChecks() failed with error %lu\n", Error);
-        return FALSE;
-    }
-
-    /* Initialize the partition entry, inserting a new blank region if needed */
-    if (!InitializePartitionEntry(PartEntry, SectorCount, AutoCreate))
-        return FALSE;
-
-    ASSERT(PartEntry->LogicalPartition == TRUE);
 
     UpdateDiskLayout(PartEntry->DiskEntry);
     AssignDriveLetters(List);
@@ -3895,7 +3939,7 @@ SetMountedDeviceValues(
                 /* Assign a "\DosDevices\#:" mount point to this partition */
                 if (PartEntry->DriveLetter)
                 {
-                    StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
+                    StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
                     if (!SetMountedDeviceValue(PartEntry->DriveLetter,
                                                DiskEntry->LayoutBuffer->Signature,
                                                StartingOffset))
@@ -3918,7 +3962,7 @@ SetMountedDeviceValues(
                 /* Assign a "\DosDevices\#:" mount point to this partition */
                 if (PartEntry->DriveLetter)
                 {
-                    StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
+                    StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
                     if (!SetMountedDeviceValue(PartEntry->DriveLetter,
                                                DiskEntry->LayoutBuffer->Signature,
                                                StartingOffset))
@@ -3948,87 +3992,6 @@ SetMBRPartitionType(
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartitionType;
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RecognizedPartition = IsRecognizedPartition(PartitionType);
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
-}
-
-ERROR_NUMBER
-PrimaryPartitionCreationChecks(
-    IN PPARTENTRY PartEntry)
-{
-    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return ERROR_WARN_PARTITION;
-    }
-
-    /* Fail if the partition is already in use */
-    if (PartEntry->IsPartitioned)
-        return ERROR_NEW_PARTITION;
-
-    /* Only one primary partition is allowed on super-floppy */
-    if (IsSuperFloppy(DiskEntry))
-        return ERROR_PARTITION_TABLE_FULL;
-
-    /* Fail if there are already 4 primary partitions in the list */
-    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
-        return ERROR_PARTITION_TABLE_FULL;
-
-    return ERROR_SUCCESS;
-}
-
-ERROR_NUMBER
-ExtendedPartitionCreationChecks(
-    IN PPARTENTRY PartEntry)
-{
-    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return ERROR_WARN_PARTITION;
-    }
-
-    /* Fail if the partition is already in use */
-    if (PartEntry->IsPartitioned)
-        return ERROR_NEW_PARTITION;
-
-    /* Only one primary partition is allowed on super-floppy */
-    if (IsSuperFloppy(DiskEntry))
-        return ERROR_PARTITION_TABLE_FULL;
-
-    /* Fail if there are already 4 primary partitions in the list */
-    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
-        return ERROR_PARTITION_TABLE_FULL;
-
-    /* Fail if there is another extended partition in the list */
-    if (DiskEntry->ExtendedPartition != NULL)
-        return ERROR_ONLY_ONE_EXTENDED;
-
-    return ERROR_SUCCESS;
-}
-
-ERROR_NUMBER
-LogicalPartitionCreationChecks(
-    IN PPARTENTRY PartEntry)
-{
-    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return ERROR_WARN_PARTITION;
-    }
-
-    /* Fail if the partition is already in use */
-    if (PartEntry->IsPartitioned)
-        return ERROR_NEW_PARTITION;
-
-    /* Only one primary partition is allowed on super-floppy */
-    if (IsSuperFloppy(DiskEntry))
-        return ERROR_PARTITION_TABLE_FULL;
-
-    return ERROR_SUCCESS;
 }
 
 BOOLEAN

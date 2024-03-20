@@ -154,16 +154,15 @@ BEGIN
     STRING_TEXT_FILES_TXT "Tekst filer (*.txt)"
     STRING_TOOLARGE "Filen '%s' er for stor for notisblokk.\n\
 Vennligst bruk en annen editor."
-    STRING_NOTEXT "Du utfører innskrivet tekst. \
+    STRING_NOTEXT "Du utfører innskrivet tekst.\
 \nVennligst skriv noe og pr?jen"
     STRING_DOESNOTEXIST "Filen '%s'\n eksistere ikke\n\n\
 Vil du opprette en ny fil?"
     STRING_NOTSAVED "Filen '%s'\nhar ikke blitt lagret\n\n\
 Vil du lagre endringen?"
     STRING_NOTFOUND "'%s' ble ikke funnet."
-    STRING_OUT_OF_MEMORY "Ikke nok minne for å åpne \
-oppgaven.\nAvslutt en eller mere applikasjoner for øke mengden  av\nledig \
-minne."
+    STRING_OUT_OF_MEMORY "Ikke nok minne for å åpne oppgaven.\n\
+Avslutt en eller mere applikasjoner for øke mengden av\nledig minne."
     STRING_CANNOTFIND "Kan ikke finne '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

@@ -46,23 +46,23 @@ RegQueryValue(
 
 VOID
 NTAPI
-RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData);
+RegWriteSZ(HKEY hkey, PCWSTR pwszValue, PWSTR pwszData);
 
 VOID
 NTAPI
-RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData);
+RegWriteDWORD(HKEY hkey, PCWSTR pwszValue, DWORD dwData);
 
 BOOL
 NTAPI
-RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData);
+RegReadDWORD(HKEY hkey, PCWSTR pwszValue, PDWORD pdwData);
 
 DWORD
 NTAPI
-RegGetSectionDWORD(LPCWSTR pszSection, LPWSTR pszValue, DWORD dwDefault);
+RegGetSectionDWORD(LPCWSTR pszSection, PCWSTR pszValue, DWORD dwDefault);
 
-VOID FASTCALL
-SetLastNtError(
-  NTSTATUS Status);
+VOID
+FASTCALL
+SetLastNtError(_In_ NTSTATUS Status);
 
 typedef struct _GDI_POOL *PGDI_POOL;
 

@@ -619,11 +619,11 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
         CMP_ASSERT_KCB_LOCK(Kcb);
 
         /* Check if we should do a direct delete */
-        if (((CmpHoldLazyFlush) &&
+        if ((CmpHoldLazyFlush &&
              !(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND) &&
              !(Kcb->Flags & KEY_SYM_LINK)) ||
             (Kcb->ExtFlags & CM_KCB_NO_DELAY_CLOSE) ||
-            (Kcb->Delete))
+             Kcb->Delete)
         {
             /* Clean up the KCB*/
             CmpCleanUpKcbCacheWithLock(Kcb, LockHeldExclusively);
@@ -683,7 +683,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     NodeName = *KeyName;
 
     /* Remove leading slash */
-    while ((NodeName.Length) && (*NodeName.Buffer == OBJ_NAME_PATH_SEPARATOR))
+    while (NodeName.Length && (*NodeName.Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Move the buffer by one */
         NodeName.Buffer++;
@@ -764,7 +764,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         else
         {
             /* Check if we're not creating a fake one, but it used to be fake */
-            if ((Kcb->ExtFlags & CM_KCB_KEY_NON_EXIST) && !(IsFake))
+            if ((Kcb->ExtFlags & CM_KCB_KEY_NON_EXIST) && !IsFake)
             {
                 /* Set the hive and cell */
                 Kcb->KeyHive = Hive;
@@ -801,7 +801,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         {
             /* Reference the parent */
             if (((Parent->TotalLevels + 1) < 512) &&
-                (CmpReferenceKeyControlBlock(Parent)))
+                CmpReferenceKeyControlBlock(Parent))
             {
                 /* Link it */
                 Kcb->ParentKcb = Parent;
@@ -863,14 +863,14 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     }
 
     /* Check if this is a KCB inside a frozen hive */
-    if ((Kcb) && (((PCMHIVE)Hive)->Frozen) && (!(Kcb->Flags & KEY_SYM_LINK)))
+    if (Kcb && ((PCMHIVE)Hive)->Frozen && !(Kcb->Flags & KEY_SYM_LINK))
     {
         /* Don't add these to the delay close */
         Kcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
     }
 
     /* Sanity check */
-    ASSERT((!Kcb) || (Kcb->Delete == FALSE));
+    ASSERT(!Kcb || !Kcb->Delete);
 
     /* Check if we had locked the hashes */
     if (!HashLock)
@@ -950,7 +950,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
         /* Sanity checks for deleted and fake keys */
         if ((!MyKcb->KeyCell && !MyKcb->Delete) ||
             !MyKcb->KeyHive ||
-            MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST)
+            (MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST))
         {
             /* Failure */
             CmpFree(KeyName, 0);
@@ -1109,7 +1109,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (InterlockedCompareExchangePointer((VOID*)&KeyBody->KeyControlBlock->
+        if (InterlockedCompareExchangePointer((PVOID*)&KeyBody->KeyControlBlock->
                                               KeyBodyArray[i],
                                               NULL,
                                               KeyBody) == KeyBody)

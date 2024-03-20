@@ -33,6 +33,8 @@ CNewMenu::CNewMenu() :
     m_idCmdFirst(0),
     m_idCmdFolder(-1),
     m_idCmdLink(-1),
+    m_bCustomIconFolder(FALSE),
+    m_bCustomIconLink(FALSE),
     m_hIconFolder(NULL),
     m_hIconLink(NULL)
 {
@@ -42,6 +44,10 @@ CNewMenu::~CNewMenu()
 {
     UnloadAllItems();
 
+    if (m_bCustomIconFolder && m_hIconFolder)
+        DestroyIcon(m_hIconFolder);
+    if (m_bCustomIconLink && m_hIconLink)
+        DestroyIcon(m_hIconLink);
     if (m_pidlFolder)
         ILFree(m_pidlFolder);
 }
@@ -768,10 +774,32 @@ HRESULT WINAPI
 CNewMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
+    const INT cx = GetSystemMetrics(SM_CXSMICON), cy = GetSystemMetrics(SM_CYSMICON);
+    WCHAR wszIconPath[MAX_PATH];
+    int icon_idx;
+
     m_pidlFolder = ILClone(pidlFolder);
 
     /* Load folder and shortcut icons */
-    m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
-    m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
+    if (HLM_GetIconW(IDI_SHELL_FOLDER - 1, wszIconPath, _countof(wszIconPath), &icon_idx))
+    {
+        ::ExtractIconExW(wszIconPath, icon_idx, &m_hIconFolder, NULL, 1);
+        m_bCustomIconFolder = TRUE;
+    }
+    else
+    {
+        m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, cx, cy, LR_SHARED);
+    }
+
+    if (HLM_GetIconW(IDI_SHELL_SHORTCUT - 1, wszIconPath, _countof(wszIconPath), &icon_idx))
+    {
+        ::ExtractIconExW(wszIconPath, icon_idx, &m_hIconLink, NULL, 1);
+        m_bCustomIconLink = TRUE;
+    }
+    else
+    {
+        m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, cx, cy, LR_SHARED);
+    }
+
     return S_OK;
 }

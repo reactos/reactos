@@ -75,8 +75,10 @@ Author:
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                     ((KPCR *)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
-#undef  KeGetPcr
+//#undef  KeGetPcr
 #define KeGetPcr()              ((KPCR *)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
+#else
+#define KeGetPcr()              PCR
 #endif
 
 //
@@ -259,6 +261,11 @@ typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
 #define SYNCH_LEVEL             (IPI_LEVEL - 2)
 #endif
 #endif
+
+//
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE             0x3000
 
 //
 // Number of pool lookaside lists per pool in the PRCB

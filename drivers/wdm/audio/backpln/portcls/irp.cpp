@@ -11,10 +11,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 typedef struct
@@ -22,7 +19,6 @@ typedef struct
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
 }QUERY_POWER_CONTEXT, *PQUERY_POWER_CONTEXT;
-
 
 NTSTATUS
 NTAPI
@@ -34,7 +30,6 @@ PortClsCreate(
 
     return KsDispatchIrp(DeviceObject, Irp);
 }
-
 
 NTSTATUS
 NTAPI
@@ -52,7 +47,6 @@ PortClsPnp(
 
     DeviceExt = (PPCLASS_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
 
     DPRINT("PortClsPnp called %u\n", IoStack->MinorFunction);
 
@@ -202,7 +196,6 @@ PwrCompletionFunction(
     // free context
     FreeItem(PwrContext, TAG_PORTCLASS);
 }
-
 
 NTSTATUS
 NTAPI
@@ -460,7 +453,6 @@ PcDispatchIrp(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 PcCompleteIrp(
@@ -511,8 +503,6 @@ CompletionRoutine(
   if (_InvokeOnError) _IrpSp->Control |= SL_INVOKE_ON_ERROR; \
   if (_InvokeOnCancel) _IrpSp->Control |= SL_INVOKE_ON_CANCEL; \
 }
-
-
 
 NTSTATUS
 NTAPI

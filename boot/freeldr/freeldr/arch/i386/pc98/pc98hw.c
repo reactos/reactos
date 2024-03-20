@@ -1180,7 +1180,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 }
 
 PCONFIGURATION_COMPONENT_DATA
-Pc98HwDetect(VOID)
+Pc98HwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;

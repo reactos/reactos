@@ -213,7 +213,7 @@ INT CommandActivate (LPTSTR param)
     {
         if (arg != NULL)
             freep(arg);
-        ConErrResPuts(STRING_WINDOW_ERROR1);
+        ConErrResPuts(STRING_WINDOW_ERROR);
         return 1;
     }
     if (arg != NULL)

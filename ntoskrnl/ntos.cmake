@@ -48,7 +48,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmalloc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmapi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmcheck.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmconfig.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmcontrl.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmdata.c
@@ -309,7 +308,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/trap.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/usercall_asm.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/zeropage.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/i386/stack.S)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/i386/prefetch.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/i386/kdx86.c
@@ -333,6 +332,10 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psldt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmmain.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmexec.c)
+    if(BUILD_MP)
+        list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/mproc.c)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/boot.S
@@ -348,6 +351,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/except.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/interrupt.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/ipi.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/irql.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/kiinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/krnlinit.c
@@ -357,7 +361,12 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/procsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/amd64/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/stubs.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/traphandler.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall.c)
+    if(BUILD_MP)
+        list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/mproc.c)
+    endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ex/arm/ioport.s

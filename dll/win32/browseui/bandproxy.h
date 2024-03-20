@@ -33,12 +33,12 @@ public:
     HRESULT FindBrowserWindow(IUnknown **browser);
 
     // *** IBandProxy methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *paramC);
-    virtual HRESULT STDMETHODCALLTYPE CreateNewWindow(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE GetBrowserWindow(IUnknown **paramC);
-    virtual HRESULT STDMETHODCALLTYPE IsConnected();
-    virtual HRESULT STDMETHODCALLTYPE NavigateToPIDL(LPCITEMIDLIST pidl);
-    virtual HRESULT STDMETHODCALLTYPE NavigateToURL(long paramC, long param10);
+    STDMETHOD(SetSite)(IUnknown *paramC) override;
+    STDMETHOD(CreateNewWindow)(long paramC) override;
+    STDMETHOD(GetBrowserWindow)(IUnknown **paramC) override;
+    STDMETHOD(IsConnected)() override;
+    STDMETHOD(NavigateToPIDL)(LPCITEMIDLIST pidl) override;
+    STDMETHOD(NavigateToURL)(long paramC, long param10) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_BANDPROXY)
     DECLARE_NOT_AGGREGATABLE(CBandProxy)

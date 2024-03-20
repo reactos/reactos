@@ -805,7 +805,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
         goto Quit;
 
     /* Make sure the name is aligned properly */
-    if ((ValueNameCopy.Length & (sizeof(WCHAR) - 1)))
+    if (ValueNameCopy.Length & (sizeof(WCHAR) - 1))
     {
         /* It isn't, so we'll fail */
         Status = STATUS_INVALID_PARAMETER;
@@ -813,7 +813,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     }
 
     /* Ignore any null characters at the end */
-    while ((ValueNameCopy.Length) &&
+    while (ValueNameCopy.Length &&
            !(ValueNameCopy.Buffer[ValueNameCopy.Length / sizeof(WCHAR) - 1]))
     {
         /* Skip it */
@@ -947,9 +947,9 @@ NtSetValueKey(IN HANDLE KeyHandle,
         KeyHandle, &ValueNameCopy, TitleIndex, Type, DataSize);
 
     /* Make sure the name is aligned, not too long, and the data under 4GB */
-    if ( (ValueNameCopy.Length > 32767) ||
-         ((ValueNameCopy.Length & (sizeof(WCHAR) - 1))) ||
-         (DataSize > 0x80000000))
+    if ((ValueNameCopy.Length > 32767) ||
+        (ValueNameCopy.Length & (sizeof(WCHAR) - 1)) ||
+        (DataSize > 0x80000000))
     {
         /* Fail */
         Status = STATUS_INVALID_PARAMETER;
@@ -957,7 +957,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     }
 
     /* Ignore any null characters at the end */
-    while ((ValueNameCopy.Length) &&
+    while (ValueNameCopy.Length &&
            !(ValueNameCopy.Buffer[ValueNameCopy.Length / sizeof(WCHAR) - 1]))
     {
         /* Skip it */
@@ -1039,7 +1039,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
         goto Quit;
 
     /* Make sure the name is aligned properly */
-    if ((ValueNameCopy.Length & (sizeof(WCHAR) - 1)))
+    if (ValueNameCopy.Length & (sizeof(WCHAR) - 1))
     {
         /* It isn't, so we'll fail */
         Status = STATUS_INVALID_PARAMETER;

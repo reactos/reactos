@@ -590,9 +590,6 @@ static VOID
 SetScreenSaver(HWND hwndDlg, PDATA pData)
 {
     HKEY regKey;
-    BOOL DeleteMode = FALSE;
-
-    DBG_UNREFERENCED_LOCAL_VARIABLE(DeleteMode);
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
                      _T("Control Panel\\Desktop"),
@@ -622,7 +619,6 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         {
             /* Windows deletes the value if no screensaver is set */
             RegDeleteValue(regKey, _T("SCRNSAVE.EXE"));
-            DeleteMode = TRUE;
 
             SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, 0, SPIF_UPDATEINIFILE);
         }

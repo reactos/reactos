@@ -21,7 +21,7 @@
  *  - Acquire locks only on MP systems.
  *  - Be safe at HIGH_LEVEL (no paged access).
  *  - Preserve flags.
- *  - Disable interrups.
+ *  - Disable interrupts.
  */
 
 /*VOID

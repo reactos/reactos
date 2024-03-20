@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
@@ -48,7 +54,7 @@ BEGIN
 
     //Keyboard-Mouse related strings
     IDS_KEYS_STICKY "TasteLipicioase"
-    IDS_KEYS_MOUSE "TasteȘoricel"
+    IDS_KEYS_MOUSE "TasteMouse"
     IDS_KEYS_FILTER "FiltruTaste"
 END
 

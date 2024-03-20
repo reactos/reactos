@@ -154,8 +154,8 @@ BEGIN
     STRING_TEXT_FILES_TXT "Textfiler (*.txt)"
     STRING_TOOLARGE "Filen '%s' är för stor för Anteckningar.\n\
 Använd en annan editor."
-    STRING_NOTEXT "Du skrev inte in någon text. \
-\nSkriv något och försök sedan igen."
+    STRING_NOTEXT "Du skrev inte in någon text.\n\
+Skriv något och försök sedan igen."
     STRING_DOESNOTEXIST "Filen '%s'\nexisterar inte.\n\n\
 Vill du skapa en ny fil?"
     STRING_NOTSAVED "Filen '%s'\nhar ändrats.\n\n\

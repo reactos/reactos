@@ -10,6 +10,14 @@
 #define HAL_BUILD_TYPE ((DBG ? PRCB_BUILD_DEBUG : 0) | PRCB_BUILD_UNIPROCESSOR)
 #endif
 
+/* Don't include this in freeloader */
+#ifndef _BLDR_
+extern KIRQL HalpIrqlSynchLevel;
+
+#undef SYNCH_LEVEL
+#define SYNCH_LEVEL HalpIrqlSynchLevel
+#endif
+
 typedef struct _HAL_BIOS_FRAME
 {
     ULONG SegSs;
@@ -52,6 +60,12 @@ VOID
 #define IDT_READ_ONLY           0x04
 #define IDT_INTERNAL            0x11
 #define IDT_DEVICE              0x21
+
+#ifdef _M_AMD64
+#define HALP_LOW_STUB_SIZE_IN_PAGES 5
+#else
+#define HALP_LOW_STUB_SIZE_IN_PAGES 3
+#endif
 
 /* Conversion functions */
 #define BCD_INT(bcd)            \
@@ -221,6 +235,7 @@ extern BOOLEAN HalpProfilingStopped;
 /* timer.c */
 CODE_SEG("INIT") VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
+VOID __cdecl HalpClockIpi(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
 typedef struct _HALP_ROLLOVER
@@ -498,6 +513,12 @@ KeUpdateSystemTime(
     IN ULONG Increment,
     IN KIRQL OldIrql
 );
+
+VOID
+NTAPI
+KeUpdateRunTime(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ KIRQL Irql);
 
 CODE_SEG("INIT")
 VOID

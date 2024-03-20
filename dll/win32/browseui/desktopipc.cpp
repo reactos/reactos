@@ -353,7 +353,7 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 
     /* Handle /e parameter */
      UINT wFlags = 0;
-     if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_E))
+     if (parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_E)
         wFlags |= SBSP_EXPLOREMODE;
 
     /* Handle /select parameter */

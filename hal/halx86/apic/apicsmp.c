@@ -1,17 +1,22 @@
 /*
  * PROJECT:     ReactOS HAL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * FILE:        hal/halx86/apic/apicsmp.c
  * PURPOSE:     SMP specific APIC code
- * PROGRAMMERS: Copyright 2021 Timo Kreuzer (timo.kreuzer@reactos.org)
+ * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2023 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
 #include "apicp.h"
+#include <smp.h>
+
 #define NDEBUG
 #include <debug.h>
+
+
+extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
 
 /* INTERNAL FUNCTIONS *********************************************************/
 
@@ -36,7 +41,7 @@
             local APIC(s) specified in Destination field. Vector specifies
             the startup address.
         APIC_MT_ExtInt - Delivers an external interrupt to the target local
-            APIC specified in Destination field. 
+            APIC specified in Destination field.
 
     \param TriggerMode - The trigger mode of the interrupt. Can be:
         APIC_TGM_Edge - The interrupt is edge triggered.
@@ -46,7 +51,7 @@
         APIC_DSH_Destination
         APIC_DSH_Self
         APIC_DSH_AllIncludingSelf
-        APIC_DSH_AllExclusingSelf
+        APIC_DSH_AllExcludingSelf
 
     \see "AMD64 Architecture Programmer's Manual Volume 2 System Programming"
         Chapter 16 "Advanced Programmable Interrupt Controller (APIC)"
@@ -62,7 +67,18 @@ ApicRequestGlobalInterrupt(
     _In_ APIC_TGM TriggerMode,
     _In_ APIC_DSH DestinationShortHand)
 {
+    ULONG Flags;
     APIC_INTERRUPT_COMMAND_REGISTER Icr;
+
+    /* Disable interrupts so that we can change IRR without being interrupted */
+    Flags = __readeflags();
+    _disable();
+
+    /* Wait for the APIC to be idle */
+    do
+    {
+        Icr.Long0 = ApicRead(APIC_ICR0);
+    } while (Icr.DeliveryStatus);
 
     /* Setup the command register */
     Icr.LongLong = 0;
@@ -79,18 +95,207 @@ ApicRequestGlobalInterrupt(
     /* Write the low dword last to send the interrupt */
     ApicWrite(APIC_ICR1, Icr.Long1);
     ApicWrite(APIC_ICR0, Icr.Long0);
+
+    /* Finally, restore the original interrupt state */
+    if (Flags & EFLAGS_INTERRUPT_MASK)
+    {
+        _enable();
+    }
 }
 
 
 /* SMP SUPPORT FUNCTIONS ******************************************************/
 
-// Should be called by SMP version of HalRequestIpi
 VOID
-NTAPI
-HalpRequestIpi(KAFFINITY TargetProcessors)
+ApicStartApplicationProcessor(
+    _In_ ULONG NTProcessorNumber,
+    _In_ PHYSICAL_ADDRESS StartupLoc)
 {
-    UNIMPLEMENTED;
-    __debugbreak();
+    ASSERT(StartupLoc.HighPart == 0);
+    ASSERT((StartupLoc.QuadPart & 0xFFF) == 0);
+    ASSERT((StartupLoc.QuadPart & 0xFFF00FFF) == 0);
+
+    /* Init IPI */
+    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, 0,
+        APIC_MT_INIT, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* De-Assert Init IPI */
+    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, 0,
+        APIC_MT_INIT, APIC_TGM_Level, APIC_DSH_Destination);
+
+    /* Stall execution for a bit to give APIC time: MPS Spec - B.4 */
+    KeStallExecutionProcessor(200);
+
+    /* Startup IPI */
+    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
+        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
 }
 
-// APIC specific SMP code here
+/* HAL IPI FUNCTIONS **********************************************************/
+
+/*!
+ *  \brief Broadcasts an IPI with a specified vector to all processors.
+ *
+ *  \param Vector - Specifies the interrupt vector to be delivered.
+ *  \param IncludeSelf - Specifies whether to include the current processor.
+ */
+VOID
+NTAPI
+HalpBroadcastIpiSpecifyVector(
+    _In_ UCHAR Vector,
+    _In_ BOOLEAN IncludeSelf)
+{
+    APIC_DSH DestinationShortHand = IncludeSelf ?
+        APIC_DSH_AllIncludingSelf : APIC_DSH_AllExcludingSelf;
+
+    /* Request the interrupt targeted at all processors */
+    ApicRequestGlobalInterrupt(0, // Ignored
+                               Vector,
+                               APIC_MT_Fixed,
+                               APIC_TGM_Edge,
+                               DestinationShortHand);
+}
+
+/*!
+ *  \brief Requests an IPI with a specified vector on the specified processors.
+ *
+ *  \param TargetSet - Specifies the set of processors to send the IPI to.
+ *  \param Vector - Specifies the interrupt vector to be delivered.
+ *
+ *  \remarks This function is exported on Windows 10.
+ */
+VOID
+NTAPI
+HalRequestIpiSpecifyVector(
+    _In_ KAFFINITY TargetSet,
+    _In_ UCHAR Vector)
+{
+    KAFFINITY ActiveProcessors = HalpActiveProcessors;
+    KAFFINITY RemainingSet, SetMember;
+    ULONG ProcessorIndex;
+    ULONG LApicId;
+
+    /* Sanitize the target set */
+    TargetSet &= ActiveProcessors;
+
+    /* Check if all processors are requested */
+    if (TargetSet == ActiveProcessors)
+    {
+        /* Send an IPI to all processors, including this processor */
+        HalpBroadcastIpiSpecifyVector(Vector, TRUE);
+        return;
+    }
+
+    /* Check if all processors except the current one are requested */
+    if (TargetSet == (ActiveProcessors & ~KeGetCurrentPrcb()->SetMember))
+    {
+        /* Send an IPI to all processors, excluding this processor */
+        HalpBroadcastIpiSpecifyVector(Vector, FALSE);
+        return;
+    }
+
+    /* Loop while we have more processors */
+    RemainingSet = TargetSet;
+    while (RemainingSet != 0)
+    {
+        NT_VERIFY(BitScanForwardAffinity(&ProcessorIndex, RemainingSet) != 0);
+        ASSERT(ProcessorIndex < KeNumberProcessors);
+        SetMember = AFFINITY_MASK(ProcessorIndex);
+        RemainingSet &= ~SetMember;
+
+        /* Send the interrupt to the target processor */
+        LApicId = HalpProcessorIdentity[ProcessorIndex].LapicId;
+        ApicRequestGlobalInterrupt(LApicId,
+                                   Vector,
+                                   APIC_MT_Fixed,
+                                   APIC_TGM_Edge,
+                                   APIC_DSH_Destination);
+    }
+}
+
+/*!
+ *  \brief Requests an IPI interrupt on the specified processors.
+ *
+ *  \param TargetSet - Specifies the set of processors to send the IPI to.
+ */
+VOID
+NTAPI
+HalpRequestIpi(
+    _In_ KAFFINITY TargetSet)
+{
+    /* Request the IPI vector */
+    HalRequestIpiSpecifyVector(TargetSet, APIC_IPI_VECTOR);
+}
+
+#ifdef _M_AMD64
+
+/*!
+ *  \brief Requests a software interrupt on the specified processors.
+ *
+ *  \param TargetSet - Specifies the set of processors to send the IPI to.
+ *  \param Irql - Specifies the IRQL of the software interrupt.
+ */
+VOID
+NTAPI
+HalpSendSoftwareInterrupt(
+    _In_ KAFFINITY TargetSet,
+    _In_ KIRQL Irql)
+{
+    UCHAR Vector;
+
+    /* Get the vector for the requested IRQL */
+    if (Irql == APC_LEVEL)
+    {
+        Vector = APC_VECTOR;
+    }
+    else if (Irql == DISPATCH_LEVEL)
+    {
+        Vector = DISPATCH_VECTOR;
+    }
+    else
+    {
+        ASSERT(FALSE);
+        return;
+    }
+
+    /* Request the IPI with the specified vector */
+    HalRequestIpiSpecifyVector(TargetSet, Vector);
+}
+
+/*!
+ *  \brief Requests an NMI interrupt on the specified processors.
+ *
+ *  \param TargetSet - Specifies the set of processors to send the IPI to.
+ */
+VOID
+NTAPI
+HalpSendNMI(
+    _In_ KAFFINITY TargetSet)
+{
+    KAFFINITY RemainingSet, SetMember;
+    ULONG ProcessorIndex;
+    ULONG LApicId;
+
+    /* Make sure we do not send an NMI to ourselves */
+    ASSERT((TargetSet & KeGetCurrentPrcb()->SetMember) == 0);
+
+    /* Loop while we have more processors */
+    RemainingSet = TargetSet;
+    while (RemainingSet != 0)
+    {
+        NT_VERIFY(BitScanForwardAffinity(&ProcessorIndex, RemainingSet) != 0);
+        ASSERT(ProcessorIndex < KeNumberProcessors);
+        SetMember = AFFINITY_MASK(ProcessorIndex);
+        RemainingSet &= ~SetMember;
+
+        /* Send and NMI to the target processor */
+        LApicId = HalpProcessorIdentity[ProcessorIndex].LapicId;
+        ApicRequestGlobalInterrupt(LApicId,
+                                   0,
+                                   APIC_MT_NMI,
+                                   APIC_TGM_Edge,
+                                   APIC_DSH_Destination);
+    }
+}
+
+#endif // _M_AMD64

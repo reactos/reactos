@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Bu aygıt için sürücüler kurulu değil."
     IDS_DEV_HARDWARE_DISABLED "Bu aygıtın BIOS'u, aygıta kaynak vermediği için bu aygıt devre dışı."
     IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıt tarafından kullanımda olan ve paylaşılamayan bir Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayarı değiştirmeli ya da çakışmaya neden olan sürücüyü kaldırmalısınız."
-    IDS_DEV_FAILED_ADD "%1 düzgün çalışmadığı için bu aygıt düzgün çalışmıyor."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum dosyalarının üzerinde bulunduğu sürücüye ya da ağ konumuna erişemediği için, bu aygıt için sürücüleri kuramıyor."
     IDS_DEV_TRANSLATION_FAILED "Bu aygıt, sürücüsüne yanıt vermiyor."
     IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıt için ayarları belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı yapmak için ""Kaynaklar"" sekmesini kullanınız."

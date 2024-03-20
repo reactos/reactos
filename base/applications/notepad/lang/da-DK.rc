@@ -152,9 +152,9 @@ BEGIN
     STRING_UNTITLED "Ikke-navngivet"
     STRING_ALL_FILES "Alle filer (*.*)"
     STRING_TEXT_FILES_TXT "Tekst filer (*.txt)"
-    STRING_TOOLARGE "Filen '%s' er for stor til Notesblok. \
+    STRING_TOOLARGE "Filen '%s' er for stor til Notesblok.\
 \nBrug en anden editor til at redigere filen."
-    STRING_NOTEXT "Du har ikke skrevet noget tekst. \
+    STRING_NOTEXT "Du har ikke skrevet noget tekst.\
 \nSkriv noget tekst, og prøv så igen"
     STRING_DOESNOTEXIST "Filen '%s'\neksistere ikke\n\n\
 Ønkser du at oprette en ny fil?"

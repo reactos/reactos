@@ -87,7 +87,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
 HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
 {
     BITMAP bm;
-    if (!GetObject(hbm, sizeof(bm), &bm))
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
         return NULL;
 
     if (cx == 0 || cy == 0)
@@ -96,19 +96,19 @@ HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
         cy = bm.bmHeight;
     }
 
-    HBITMAP hbmNew = CreateBitmap(cx, cy, 1, 1, NULL);
+    HBITMAP hbmNew = ::CreateBitmap(cx, cy, 1, 1, NULL);
     if (!hbmNew)
         return NULL;
 
-    HDC hdc1 = CreateCompatibleDC(NULL);
-    HDC hdc2 = CreateCompatibleDC(NULL);
-    HGDIOBJ hbm1Old = SelectObject(hdc1, hbm);
-    HGDIOBJ hbm2Old = SelectObject(hdc2, hbmNew);
-    StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-    SelectObject(hdc1, hbm1Old);
-    SelectObject(hdc2, hbm2Old);
-    DeleteDC(hdc1);
-    DeleteDC(hdc2);
+    HDC hdc1 = ::CreateCompatibleDC(NULL);
+    HDC hdc2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = ::SelectObject(hdc1, hbm);
+    HGDIOBJ hbm2Old = ::SelectObject(hdc2, hbmNew);
+    ::StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+    ::SelectObject(hdc1, hbm1Old);
+    ::SelectObject(hdc2, hbm2Old);
+    ::DeleteDC(hdc1);
+    ::DeleteDC(hdc2);
     return hbmNew;
 }
 
@@ -120,7 +120,7 @@ HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight)
         minimalHeight = 1;
 
     BITMAP bm;
-    if (!GetObject(hbm, sizeof(bm), &bm))
+    if (!GetObjectW(hbm, sizeof(bm), &bm))
         hbm = NULL;
 
     if (hbm && minimalWidth <= bm.bmWidth && minimalHeight <= bm.bmHeight)
@@ -136,7 +136,7 @@ int
 GetDIBWidth(HBITMAP hBitmap)
 {
     BITMAP bm;
-    GetObject(hBitmap, sizeof(BITMAP), &bm);
+    ::GetObjectW(hBitmap, sizeof(BITMAP), &bm);
     return bm.bmWidth;
 }
 
@@ -144,7 +144,7 @@ int
 GetDIBHeight(HBITMAP hBitmap)
 {
     BITMAP bm;
-    GetObject(hBitmap, sizeof(BITMAP), &bm);
+    ::GetObjectW(hBitmap, sizeof(BITMAP), &bm);
     return bm.bmHeight;
 }
 
@@ -211,8 +211,8 @@ void SetFileInfo(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isAFile)
     }
 
     // set title
-    CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(g_szFileName));
+    CStringW strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileNameW(g_szFileName));
     mainWindow.SetWindowText(strTitle);
 
     // update file info and recent
@@ -228,7 +228,10 @@ HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
     COLORREF white = RGB(255, 255, 255);
     HBITMAP hBitmap = CreateColorDIB(registrySettings.BMPWidth, registrySettings.BMPHeight, white);
     if (hBitmap == NULL)
+    {
+        ShowOutOfMemory();
         return NULL;
+    }
 
     HDC hScreenDC = ::GetDC(NULL);
     g_xDpi = (float)::GetDeviceCaps(hScreenDC, LOGPIXELSX);
@@ -255,7 +258,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     CWaitCursor waitCursor;
 
     // find the file
-    WIN32_FIND_DATA find;
+    WIN32_FIND_DATAW find;
     HANDLE hFind = ::FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE) // does not exist
     {
@@ -355,7 +358,7 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
     const double eTan = tan(abs(nDegree) * M_PI / 180);
 
     BITMAP bm;
-    GetObjectW(hbm, sizeof(bm), &bm);
+    ::GetObjectW(hbm, sizeof(bm), &bm);
     INT cx = bm.bmWidth, cy = bm.bmHeight, dx = 0, dy = 0;
     if (bVertical)
         dy = INT(cx * eTan);
@@ -381,9 +384,9 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
         {
             INT delta = INT(x * eTan);
             if (nDegree > 0)
-                BitBlt(hDC2, x, (dy - delta), 1, cy, hDC1, x, 0, SRCCOPY);
+                ::BitBlt(hDC2, x, (dy - delta), 1, cy, hDC1, x, 0, SRCCOPY);
             else
-                BitBlt(hDC2, x, delta, 1, cy, hDC1, x, 0, SRCCOPY);
+                ::BitBlt(hDC2, x, delta, 1, cy, hDC1, x, 0, SRCCOPY);
         }
     }
     else
@@ -392,15 +395,48 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
         {
             INT delta = INT(y * eTan);
             if (nDegree > 0)
-                BitBlt(hDC2, (dx - delta), y, cx, 1, hDC1, 0, y, SRCCOPY);
+                ::BitBlt(hDC2, (dx - delta), y, cx, 1, hDC1, 0, y, SRCCOPY);
             else
-                BitBlt(hDC2, delta, y, cx, 1, hDC1, 0, y, SRCCOPY);
+                ::BitBlt(hDC2, delta, y, cx, 1, hDC1, 0, y, SRCCOPY);
         }
     }
 
     SelectObject(hDC2, hbm2Old);
     DeleteDC(hDC2);
     return hbmNew;
+}
+
+HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial)
+{
+    CRect rc = rcPartial;
+    HBITMAP hbmPart = CreateDIBWithProperties(rc.Width(), rc.Height());
+    if (!hbmPart)
+        return NULL;
+
+    HDC hDC1 = ::CreateCompatibleDC(NULL);
+    HDC hDC2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = ::SelectObject(hDC1, hbmWhole);
+    HGDIOBJ hbm2Old = ::SelectObject(hDC2, hbmPart);
+    ::BitBlt(hDC2, 0, 0, rc.Width(), rc.Height(), hDC1, rc.left, rc.top, SRCCOPY);
+    ::SelectObject(hDC1, hbm1Old);
+    ::SelectObject(hDC2, hbm2Old);
+    ::DeleteDC(hDC1);
+    ::DeleteDC(hDC2);
+    return hbmPart;
+}
+
+void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart)
+{
+    CRect rc = rcPartial;
+    HDC hDC1 = ::CreateCompatibleDC(NULL);
+    HDC hDC2 = ::CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = ::SelectObject(hDC1, hbmWhole);
+    HGDIOBJ hbm2Old = ::SelectObject(hDC2, hbmPart);
+    ::BitBlt(hDC1, rc.left, rc.top, rc.Width(), rc.Height(), hDC2, 0, 0, SRCCOPY);
+    ::SelectObject(hDC1, hbm1Old);
+    ::SelectObject(hDC2, hbm2Old);
+    ::DeleteDC(hDC1);
+    ::DeleteDC(hDC2);
 }
 
 struct BITMAPINFODX : BITMAPINFO
@@ -413,7 +449,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
     CWaitCursor waitCursor;
 
     BITMAP bm;
-    if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
+    if (!GetObjectW(hBitmap, sizeof(BITMAP), &bm))
         return NULL;
 
     BITMAPINFODX bmi;
@@ -597,7 +633,7 @@ HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
     CWaitCursor waitCursor;
 
     BITMAP bm;
-    if (!::GetObject(hbm, sizeof(bm), &bm))
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
         return NULL;
 
     BITMAPINFOEX bmi;

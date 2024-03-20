@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2014 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -23,6 +24,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fișier ...\n\
 Tastați ATTRIB fără argumente pentru afișarea atributelor pentru\n\
 toate fișierele.\n"
     STRING_CONSOLE_ERROR "Eroare necunoscută: %d\n"
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "Fișierul nu a fost găsit - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Formatul argumentului este eronat - %s\n"
 END

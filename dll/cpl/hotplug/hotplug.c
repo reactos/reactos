@@ -1,29 +1,15 @@
 /*
-* PROJECT:     Safely Remove Hardware Applet
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/cpl/hotplug/hotplug.c
-* PURPOSE:     applet initialization
-* PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
-*/
+ * PROJECT:     Safely Remove Hardware Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Applet initialization
+ * COPYRIGHT:   Copyright 2013 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2020 Eric Kohl <eric.kohl@reactos.org>
+ */
 
 #include "hotplug.h"
 
-#include <initguid.h>
-#include <devguid.h>
-
 #define NDEBUG
 #include <debug.h>
-
-
-typedef struct _HOTPLUG_DATA
-{
-    HICON hIcon;
-    HICON hIconSm;
-    SP_CLASSIMAGELIST_DATA ImageListData;
-    HMENU hPopupMenu;
-    DWORD dwFlags;
-} HOTPLUG_DATA, *PHOTPLUG_DATA;
-
 
 // globals
 HINSTANCE hApplet = 0;
@@ -67,7 +53,6 @@ done:
     return dwFlags;
 }
 
-
 static
 DWORD
 SetHotPlugFlags(
@@ -102,217 +87,23 @@ done:
     return dwError;
 }
 
-
-static
-HTREEITEM
-InsertDeviceTreeItem(
-    _In_ HWND hwndDeviceTree,
-    _In_ HTREEITEM hParent,
-    _In_ DWORD DevInst,
-    _In_ PHOTPLUG_DATA pHotplugData)
-{
-    WCHAR szDisplayName[40];
-    WCHAR szGuidString[MAX_GUID_STRING_LEN];
-    TVINSERTSTRUCTW tvItem;
-    GUID ClassGuid;
-    INT nClassImage;
-    DWORD dwSize;
-    CONFIGRET cr;
-
-    /* Get the device description */
-    dwSize = sizeof(szDisplayName);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_DEVICEDESC,
-                                          NULL,
-                                          szDisplayName,
-                                          &dwSize,
-                                          0);
-    if (cr != CR_SUCCESS)
-        wcscpy(szDisplayName, L"Unknown Device");
-
-    /* Get the class GUID */
-    dwSize = sizeof(szGuidString);
-    cr = CM_Get_DevNode_Registry_Property(DevInst,
-                                          CM_DRP_CLASSGUID,
-                                          NULL,
-                                          szGuidString,
-                                          &dwSize,
-                                          0);
-    if (cr == CR_SUCCESS)
-    {
-        pSetupGuidFromString(szGuidString, &ClassGuid);
-    }
-    else
-    {
-        memcpy(&ClassGuid, &GUID_DEVCLASS_UNKNOWN, sizeof(GUID));
-    }
-
-    /* Get the image for the class this device is in */
-    SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
-                              &ClassGuid,
-                              &nClassImage);
-
-    /* Add it to the device tree */
-    ZeroMemory(&tvItem, sizeof(tvItem));
-    tvItem.hParent = hParent;
-    tvItem.hInsertAfter = TVI_LAST;
-
-    tvItem.item.mask = TVIF_STATE | TVIF_TEXT /*| TVIF_PARAM*/ | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-    tvItem.item.state = TVIS_EXPANDED;
-    tvItem.item.stateMask = TVIS_EXPANDED;
-    tvItem.item.pszText = szDisplayName;
-    tvItem.item.iImage = nClassImage;
-    tvItem.item.iSelectedImage = nClassImage;
-    tvItem.item.lParam = (LPARAM)NULL;
-
-    return TreeView_InsertItem(hwndDeviceTree, &tvItem);
-}
-
-
 static
 VOID
-RecursiveInsertSubDevices(
-    _In_ HWND hwndDeviceTree,
-    _In_ HTREEITEM hParentItem,
-    _In_ DWORD ParentDevInst,
-    _In_ PHOTPLUG_DATA pHotplugData)
+UpdateDialog(
+    _In_ HWND hwndDlg)
 {
-    HTREEITEM hTreeItem;
-    DEVINST ChildDevInst;
-    CONFIGRET cr;
+    HWND hwndDeviceTree;
+    BOOL bHasItem;
 
-    DPRINT("RecursiveInsertSubDevices()\n");
+    hwndDeviceTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
 
-    cr = CM_Get_Child(&ChildDevInst, ParentDevInst, 0);
-    if (cr != CR_SUCCESS)
-    {
-        DPRINT("No child! %lu\n", cr);
-        return;
-    }
+    bHasItem = (TreeView_GetCount(hwndDeviceTree) != 0);
+    if (bHasItem)
+        TreeView_SelectItem(hwndDeviceTree, TreeView_GetFirstVisible(hwndDeviceTree));
 
-    hTreeItem = InsertDeviceTreeItem(hwndDeviceTree,
-                                     hParentItem,
-                                     ChildDevInst,
-                                     pHotplugData);
-    if (hTreeItem != NULL)
-    {
-        RecursiveInsertSubDevices(hwndDeviceTree,
-                                  hTreeItem,
-                                  ChildDevInst,
-                                  pHotplugData);
-    }
-
-    for (;;)
-    {
-        cr = CM_Get_Sibling(&ChildDevInst, ChildDevInst, 0);
-        if (cr != CR_SUCCESS)
-        {
-            DPRINT("No sibling! %lu\n", cr);
-            return;
-        }
-
-        hTreeItem = InsertDeviceTreeItem(hwndDeviceTree,
-                                         hParentItem,
-                                         ChildDevInst,
-                                         pHotplugData);
-        if (hTreeItem != NULL)
-        {
-            RecursiveInsertSubDevices(hwndDeviceTree,
-                                      hTreeItem,
-                                      ChildDevInst,
-                                      pHotplugData);
-        }
-    }
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_PROPERTIES), bHasItem);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bHasItem);
 }
-
-
-static
-VOID
-EnumHotpluggedDevices(
-    HWND hwndDeviceTree,
-    PHOTPLUG_DATA pHotplugData)
-{
-    SP_DEVINFO_DATA did = { 0 };
-    HDEVINFO hdev;
-    int idev;
-    DWORD dwCapabilities, dwSize;
-    ULONG ulStatus, ulProblem;
-    HTREEITEM hTreeItem;
-    CONFIGRET cr;
-
-    DPRINT1("EnumHotpluggedDevices()\n");
-
-    TreeView_DeleteAllItems(hwndDeviceTree);
-
-    hdev = SetupDiGetClassDevs(NULL, NULL, 0, DIGCF_ALLCLASSES | DIGCF_PRESENT);
-    if (hdev == INVALID_HANDLE_VALUE)
-        return;
-
-    did.cbSize = sizeof(did);
-
-    /* Enumerate all the attached devices */
-    for (idev = 0; SetupDiEnumDeviceInfo(hdev, idev, &did); idev++)
-    {
-        ulStatus = 0;
-        ulProblem = 0;
-
-        cr = CM_Get_DevNode_Status(&ulStatus,
-                                   &ulProblem,
-                                   did.DevInst,
-                                   0);
-        if (cr != CR_SUCCESS)
-            continue;
-
-        dwCapabilities = 0,
-        dwSize = sizeof(dwCapabilities);
-        cr = CM_Get_DevNode_Registry_Property(did.DevInst,
-                                              CM_DRP_CAPABILITIES,
-                                              NULL,
-                                              &dwCapabilities,
-                                              &dwSize,
-                                              0);
-        if (cr != CR_SUCCESS)
-            continue;
-
-        /* Add devices that require safe removal to the device tree */
-        if ( (dwCapabilities & CM_DEVCAP_REMOVABLE) &&
-            !(dwCapabilities & CM_DEVCAP_DOCKDEVICE) &&
-            !(dwCapabilities & CM_DEVCAP_SURPRISEREMOVALOK) &&
-            ((dwCapabilities & CM_DEVCAP_EJECTSUPPORTED) || (ulStatus & DN_DISABLEABLE)) &&
-            ulProblem == 0)
-        {
-            hTreeItem = InsertDeviceTreeItem(hwndDeviceTree,
-                                             TVI_ROOT,
-                                             did.DevInst,
-                                             pHotplugData);
-
-            if ((hTreeItem != NULL) && (pHotplugData->dwFlags & HOTPLUG_DISPLAY_DEVICE_COMPONENTS))
-            {
-                RecursiveInsertSubDevices(hwndDeviceTree,
-                                          hTreeItem,
-                                          did.DevInst,
-                                          pHotplugData);
-            }
-        }
-    }
-
-    SetupDiDestroyDeviceInfoList(hdev);
-}
-
-
-static
-VOID
-UpdateButtons(
-    HWND hwndDlg)
-{
-    BOOL bEnabled;
-
-    bEnabled = (TreeView_GetCount(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE)) != 0);
-
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_PROPERTIES), bEnabled);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bEnabled);
-}
-
 
 static
 VOID
@@ -343,6 +134,68 @@ ShowContextMenu(
                    NULL);
 }
 
+static
+DEVINST
+GetSelectedDeviceInst(
+    _In_ PHOTPLUG_DATA pHotplugData)
+{
+    HTREEITEM hTreeItem;
+    TVITEMW item;
+
+    hTreeItem = TreeView_GetSelection(pHotplugData->hwndDeviceTree);
+    if (hTreeItem == NULL)
+        return 0;
+
+    ZeroMemory(&item, sizeof(item));
+    item.mask = TVIF_PARAM;
+    item.hItem = hTreeItem;
+
+    TreeView_GetItem(pHotplugData->hwndDeviceTree, &item);
+
+    return item.lParam;
+}
+
+static
+VOID
+ShowDeviceProperties(
+    _In_ HWND hwndParent,
+    _In_ DEVINST DevInst)
+{
+    ULONG ulSize;
+    CONFIGRET cr;
+    LPWSTR pszDevId;
+
+    cr = CM_Get_Device_ID_Size(&ulSize, DevInst, 0);
+    if (cr != CR_SUCCESS || ulSize == 0)
+        return;
+
+    /* Take the terminating NULL into account */
+    ulSize++;
+
+    pszDevId = HeapAlloc(GetProcessHeap(), 0, ulSize * sizeof(WCHAR));
+    if (pszDevId == NULL)
+        return;
+
+    cr = CM_Get_Device_IDW(DevInst, pszDevId, ulSize, 0);
+    if (cr == CR_SUCCESS)
+    {
+        typedef int (WINAPI *PFDEVICEPROPERTIESW)(HWND, LPCWSTR, LPCWSTR, BOOL);
+        HMODULE hDevMgrDll;
+        PFDEVICEPROPERTIESW pDevicePropertiesW;
+
+        hDevMgrDll = LoadLibraryW(L"devmgr.dll");
+        if (hDevMgrDll != NULL)
+        {
+            pDevicePropertiesW = (PFDEVICEPROPERTIESW)GetProcAddress(hDevMgrDll, "DevicePropertiesW");
+            if (pDevicePropertiesW != NULL)
+                pDevicePropertiesW(hwndParent, NULL, pszDevId, FALSE);
+
+            FreeLibrary(hDevMgrDll);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, pszDevId);
+}
 
 INT_PTR
 CALLBACK
@@ -393,19 +246,18 @@ SafeRemovalDlgProc(
                 SetupDiGetClassImageList(&pHotplugData->ImageListData);
 
                 pHotplugData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_DEVICE_TREE));
-
+                pHotplugData->hwndDeviceTree = GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE);
                 pHotplugData->dwFlags = GetHotPlugFlags();
 
                 if (pHotplugData->dwFlags & HOTPLUG_DISPLAY_DEVICE_COMPONENTS)
                     Button_SetCheck(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DISPLAY_COMPONENTS), BST_CHECKED);
 
-                TreeView_SetImageList(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
+                TreeView_SetImageList(pHotplugData->hwndDeviceTree,
                                       pHotplugData->ImageListData.ImageList,
                                       TVSIL_NORMAL);
 
-                EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
-                                      pHotplugData);
-                UpdateButtons(hwndDlg);
+                EnumHotpluggedDevices(pHotplugData);
+                UpdateDialog(hwndDlg);
             }
             return TRUE;
 
@@ -429,11 +281,31 @@ SafeRemovalDlgProc(
 
                             SetHotPlugFlags(pHotplugData->dwFlags);
 
-                            EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
-                                                  pHotplugData);
+                            EnumHotpluggedDevices(pHotplugData);
+                            UpdateDialog(hwndDlg);
                         }
                     }
                     break;
+
+                case IDC_SAFE_REMOVE_PROPERTIES:
+                case IDM_PROPERTIES:
+                    ShowDeviceProperties(hwndDlg, GetSelectedDeviceInst(pHotplugData));
+                    break;
+
+                case IDC_SAFE_REMOVE_STOP:
+                case IDM_STOP:
+                {
+                    if (pHotplugData != NULL)
+                    {
+                        DialogBoxParamW(hApplet,
+                                        MAKEINTRESOURCEW(IDD_CONFIRM_STOP_HARDWARE_DIALOG),
+                                        hwndDlg,
+                                        ConfirmRemovalDlgProc,
+                                        (LPARAM)pHotplugData);
+                    }
+
+                    break;
+                }
             }
             break;
 
@@ -453,9 +325,8 @@ SafeRemovalDlgProc(
 
                 if (pHotplugData != NULL)
                 {
-                    EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
-                                          pHotplugData);
-                    UpdateButtons(hwndDlg);
+                    EnumHotpluggedDevices(pHotplugData);
+                    UpdateDialog(hwndDlg);
                 }
             }
             break;
@@ -490,14 +361,10 @@ SafeRemovalDlgProc(
                 SetupDiDestroyClassImageList(&pHotplugData->ImageListData);
 
                 if (pHotplugData->hIconSm)
-                {
                     DestroyIcon(pHotplugData->hIconSm);
-                }
 
                 if (pHotplugData->hIcon)
-                {
                     DestroyIcon(pHotplugData->hIcon);
-                }
 
                 HeapFree(GetProcessHeap(), 0, pHotplugData);
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
@@ -507,7 +374,6 @@ SafeRemovalDlgProc(
 
     return FALSE;
 }
-
 
 LONG
 APIENTRY
@@ -527,7 +393,6 @@ InitApplet(
     // TODO
     return TRUE;
 }
-
 
 LONG
 CALLBACK
@@ -576,7 +441,6 @@ CPlApplet(
     }
     return FALSE;
 }
-
 
 INT
 WINAPI

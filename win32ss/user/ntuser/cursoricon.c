@@ -324,7 +324,7 @@ IntDestroyCurIconObject(
 
     /* We just mark the handle as being destroyed.
      * Deleting all the stuff will be deferred to the actual struct free. */
-    UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    UserDeleteObject(UserHMGetHandle(CurIcon), TYPE_CURSOR);
     return TRUE;
 }
 
@@ -650,7 +650,6 @@ NtUserGetCursorInfo(
     NTSTATUS Status = STATUS_SUCCESS;
     PCURICON_OBJECT CurIcon;
     BOOL Ret = FALSE;
-    DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserGetCursorInfo\n");
     UserEnterShared();
@@ -660,7 +659,7 @@ NtUserGetCursorInfo(
 
     SafeCi.cbSize = sizeof(CURSORINFO);
     SafeCi.flags = ((CurIcon && CurInfo->ShowingCursor >= 0) ? CURSOR_SHOWING : 0);
-    SafeCi.hCursor = (CurIcon ? CurIcon->head.h : NULL);
+    SafeCi.hCursor = (CurIcon ? UserHMGetHandle(CurIcon) : NULL);
 
     SafeCi.ptScreenPos = gpsi->ptCursor;
 
@@ -687,12 +686,9 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);
+    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 BOOL
@@ -977,7 +973,7 @@ NtUserFindExistingCursorIcon(
         }
     }
     if (CurIcon)
-        Ret = CurIcon->head.h;
+        Ret = UserHMGetHandle(CurIcon);
     UserLeave();
 
 done:
@@ -999,18 +995,18 @@ NtUserGetClipCursor(
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
-    DECLARE_RETURN(BOOL);
+    BOOL Ret = FALSE;
 
     TRACE("Enter NtUserGetClipCursor\n");
     UserEnterShared();
 
     if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
     {
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
     if (!lpRect)
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
 
     CurInfo = IntGetSysCursorInfo();
     if (CurInfo->bClipped)
@@ -1029,15 +1025,15 @@ NtUserGetClipCursor(
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        RETURN(FALSE);
+        goto Exit; // Return FALSE
     }
 
-    RETURN(TRUE);
+    Ret = TRUE;
 
-CLEANUP:
-    TRACE("Leave NtUserGetClipCursor, ret=%i\n",_ret_);
+Exit:
+    TRACE("Leave NtUserGetClipCursor, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+    return Ret;
 }
 
 
@@ -2149,7 +2145,7 @@ NtUserGetCursorFrameInfo(
         return NULL;
     }
 
-    ret = CurIcon->head.h;
+    ret = UserHMGetHandle(CurIcon);
 
     if (CurIcon->CURSORF_flags & CURSORF_ACON)
     {
@@ -2162,7 +2158,7 @@ NtUserGetCursorFrameInfo(
         }
         jiffies = AniCurIcon->ajifRate[istep];
         steps = AniCurIcon->cicur;
-        ret = AniCurIcon->aspcur[AniCurIcon->aicur[istep]]->head.h;
+        ret = UserHMGetHandle(AniCurIcon->aspcur[AniCurIcon->aicur[istep]]);
     }
 
     _SEH2_TRY

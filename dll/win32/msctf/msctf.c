@@ -697,6 +697,7 @@ HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
     return E_NOTIMPL;
 }
 
+#ifndef __REACTOS__ /* See mlng.cpp */
 /***********************************************************************
  *              TF_InitMlngInfo (MSCTF.@)
  */
@@ -705,3 +706,4 @@ HRESULT WINAPI TF_InitMlngInfo(void)
     FIXME("stub\n");
     return S_OK;
 }
+#endif

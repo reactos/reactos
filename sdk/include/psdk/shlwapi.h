@@ -2090,6 +2090,9 @@ QISearch(
 #define OFFSETOFCLASS(base, derived) \
     ((DWORD)(DWORD_PTR)(static_cast<base*>((derived*)8))-8)
 
+#define QITABENTMULTI(Cthis, Ifoo, Iimpl) { &IID_##Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
+#define QITABENT(Cthis, Ifoo) QITABENTMULTI(Cthis, Ifoo, Ifoo)
+
 #include <poppack.h>
 
 #ifdef __cplusplus

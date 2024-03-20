@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -49,7 +49,7 @@ BEGIN
             MENUITEM "&Favorite\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
             MENUITEM "Ist&oric\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "&Dosare", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&Foldere", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
@@ -65,8 +65,8 @@ BEGIN
     END
     POPUP "Fa&vorite", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Adăugare la „Favorite”…", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Organizare „Favorite”…", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Adăugare la Favorite…", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizare Favorite…", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(gol)", IDM_FAVORITES_EMPTY
     END
@@ -76,7 +76,7 @@ BEGIN
         MENUITEM "&Debranșare unitate de rețea…", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "Sincroni&zare…", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Opțiuni de dosar…", IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&Opțiuni de folder…", IDM_TOOLS_FOLDEROPTIONS
     END
     POPUP "Aj&utor", FCIDM_MENU_HELP
     BEGIN
@@ -88,7 +88,7 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
     POPUP "Bare de i&nstrumente", -1, MFT_STRING, MFS_ENABLED, 0
     BEGIN
-        MENUITEM "&Birou", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
         MENUITEM "&Lansări rapide", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
         MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Bară &nouă…", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
@@ -110,7 +110,7 @@ BEGIN
             MENUITEM "&Pictograme mari", IDM_LARGE_ICONS
             MENUITEM "Pi&ctograme mici", IDM_SMALL_ICONS
         END
-        MENUITEM "&Deschide dosarul", IDM_OPEN_FOLDER
+        MENUITEM "&Deschide folderul", IDM_OPEN_FOLDER
         MENUITEM "&Afișează textul", IDM_SHOW_TEXT
     END
 END
@@ -153,12 +153,12 @@ BEGIN
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "&Uită-te în:", -1, 10, 75, 500, 10
-    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
+    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY, 10, 85, 200, 200
 
     DEFPUSHBUTTON "&Căutare", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Oprește", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Caută fișierele și dosarele ascunse",
+    AUTOCHECKBOX "Caută fișierele și folderele ascunse",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -239,14 +239,14 @@ STRINGTABLE
 BEGIN
     9281 "Navigare la pagina precedentă."
     9282 "Navigare la pagina următoare."
-    9283 "Permite modificarea preferințelor."
+    9283 "Permite modificarea setărilor."
     9285 "Navigare la pagina inițială."
 END
 
 STRINGTABLE
 BEGIN
-    9362 "Deschide dosarul „Favorite”."
-    9363 "Adaugă pagina curentă în lista „Favorite”."
+    9362 "Deschide folderul Favorite."
+    9363 "Adaugă pagina curentă în lista Favorite."
 END
 
 STRINGTABLE
@@ -266,12 +266,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9552 "Afișează sau ascunde panoul „Explorare”."
-    9553 "Afișează panoul „Căutare”."
-    9554 "Afișează panoul „Favorite”."
-    9555 "Afișează panoul „Istoric”."
-    9557 "Afișează panoul „Dosare”."
-    9559 "Afișează panoul „Media”."
+    9552 "Afișează sau ascunde panoul Explorare."
+    9553 "Afișează panoul Căutare."
+    9554 "Afișează panoul Favorite."
+    9555 "Afișează panoul Istoric."
+    9557 "Afișează panoul Foldere."
+    9559 "Afișează panoul Media."
 END
 
 STRINGTABLE
@@ -301,7 +301,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "Dosare"
+    IDS_FOLDERSLABEL "Foldere"
 END
 
 STRINGTABLE
@@ -319,30 +319,30 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Înapoi la %s"
     IDS_FORWARD "Înainte la %s"
-    IDS_FOLDER_OPTIONS "Opțiuni de dosar"
+    IDS_FOLDER_OPTIONS "Opțiuni de folder"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Dosare|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de dosar||"
+    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Foldere|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de folder||"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Alegeți un dosar"
+    IDS_BROWSEFORNEWTOOLAR "Alegeți un folder"
     IDS_TOOLBAR_ERR_TITLE "Bară de instrumente"
-    IDS_TOOLBAR_ERR_TEXT "Eșec la crearea barei de instrumente."
+    IDS_TOOLBAR_ERR_TEXT "Nu s-a putut crea bara de instrumente."
 END
 
 STRINGTABLE
 BEGIN
     IDS_SEARCH_RESULTS "Rezultatele căutării"
-    IDS_SEARCHINVALID "'%1' nu este un dosar valid."
+    IDS_SEARCHINVALID "'%1' nu este un folder valid."
     IDS_SEARCH_FOLDER "Căutare %s"
     IDS_SEARCH_FILES_FOUND "%u fișiere găsite"
-    IDS_SEARCH_OPEN_FOLDER "Deschide dosarul &conținător"
+    IDS_SEARCH_OPEN_FOLDER "Deschide folderul &conținător"
     IDS_COL_NAME "Nume"
-    IDS_COL_LOCATION "În dosar"
+    IDS_COL_LOCATION "În folder"
     IDS_COL_RELEVANCE "Relevanță"
 END
 

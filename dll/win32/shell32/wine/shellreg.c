@@ -29,8 +29,9 @@
 #include <winbase.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-
 #include <wine/debug.h>
+
+#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

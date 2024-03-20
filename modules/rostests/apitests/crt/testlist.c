@@ -3,6 +3,8 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func__mbsncmp(void);
+extern void func__mbsstr(void);
 #if defined(TEST_MSVCRT)
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
@@ -60,6 +62,8 @@ const struct test winetest_testlist[] =
     { "strlen", func_strlen },
     { "strtoul", func_strtoul },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT)
+    { "_mbsncmp", func__mbsncmp },
+    { "_mbsstr", func__mbsstr },
     { "system", func_system },
 #endif
 #if defined(TEST_MSVCRT)

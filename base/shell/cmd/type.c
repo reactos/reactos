@@ -267,7 +267,7 @@ INT cmd_type(LPTSTR param)
             }
 
             // error_invalid_switch(argv[i] + 1);
-            ConErrResPrintf(STRING_TYPE_ERROR1, argv[i] + 1);
+            ConErrResPrintf(STRING_TYPE_ERROR, argv[i] + 1);
             nErrorLevel = 1;
             goto Quit;
         }

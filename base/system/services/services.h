@@ -73,6 +73,7 @@ typedef struct _SERVICE
     DWORD dwTag;
 
     DWORD dwServiceBits;
+    DWORD dwServiceTag;
 
     ULONG Flags;
 

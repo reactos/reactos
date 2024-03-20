@@ -51,14 +51,14 @@ class CFSDropTarget :
         HRESULT Initialize(LPWSTR PathTarget);
 
         // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+        STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+        STDMETHOD(DragLeave)() override;
+        STDMETHOD(Drop)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
 
         // IObjectWithSite
-        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+        STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+        STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
         DECLARE_NOT_AGGREGATABLE(CFSDropTarget)
 

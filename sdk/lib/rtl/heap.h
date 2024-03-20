@@ -339,6 +339,7 @@ BOOLEAN NTAPI
 RtlpValidateHeapHeaders(PHEAP Heap, BOOLEAN Recalculate);
 
 /* heapdbg.c */
+NTSYSAPI
 HANDLE NTAPI
 RtlDebugCreateHeap(ULONG Flags,
                    PVOID Addr,

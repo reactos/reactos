@@ -43,6 +43,74 @@ CHAR MmReadWrite[32] =
 
 /* FUNCTIONS ******************************************************************/
 
+extern MM_AVL_TABLE MiRosKernelVadRoot;
+
+#if DBG
+
+static
+VOID
+MiDbgAssertIsLockedForRead(_In_ PMM_AVL_TABLE Table)
+{
+    if (Table == &MmSectionBasedRoot)
+    {
+        /* Need to hold MmSectionBasedMutex */
+        ASSERT(MmSectionBasedMutex.Owner == KeGetCurrentThread());
+    }
+    else if (Table == &MiRosKernelVadRoot)
+    {
+        /* Need to hold either the system working-set lock or
+           the idle process' AddressCreationLock */
+        ASSERT(PsGetCurrentThread()->OwnsSystemWorkingSetExclusive ||
+               PsGetCurrentThread()->OwnsSystemWorkingSetShared ||
+               (PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread()));
+    }
+    else
+    {
+        /* Need to hold either the process working-set lock or
+           the current process' AddressCreationLock */
+        PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
+        ASSERT(MI_WS_OWNER(Process) ||
+               (Process->AddressCreationLock.Owner == KeGetCurrentThread()));
+    }
+}
+
+static
+VOID
+MiDbgAssertIsLockedForWrite(_In_ PMM_AVL_TABLE Table)
+{
+    if (Table == &MmSectionBasedRoot)
+    {
+        /* Need to hold MmSectionBasedMutex */
+        ASSERT(MmSectionBasedMutex.Owner == KeGetCurrentThread());
+    }
+    else if (Table == &MiRosKernelVadRoot)
+    {
+        /* Need to hold both the system working-set lock exclusive and
+           the idle process' AddressCreationLock */
+        ASSERT(PsGetCurrentThread()->OwnsSystemWorkingSetExclusive);
+        ASSERT(PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread());
+    }
+    else
+    {
+        /* Need to hold both the process working-set lock exclusive and
+           the current process' AddressCreationLock */
+        PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
+        ASSERT(Process == PsGetCurrentProcess());
+        ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+        ASSERT(Process->AddressCreationLock.Owner == KeGetCurrentThread());
+    }
+}
+
+#define ASSERT_LOCKED_FOR_READ(Table) MiDbgAssertIsLockedForRead(Table)
+#define ASSERT_LOCKED_FOR_WRITE(Table) MiDbgAssertIsLockedForWrite(Table)
+
+#else // DBG
+
+#define ASSERT_LOCKED_FOR_READ(Table)
+#define ASSERT_LOCKED_FOR_WRITE(Table)
+
+#endif // DBG
+
 PMMVAD
 NTAPI
 MiLocateAddress(IN PVOID VirtualAddress)
@@ -51,6 +119,8 @@ MiLocateAddress(IN PVOID VirtualAddress)
     ULONG_PTR Vpn;
     PMM_AVL_TABLE Table = &PsGetCurrentProcess()->VadRoot;
     TABLE_SEARCH_RESULT SearchResult;
+
+    ASSERT_LOCKED_FOR_READ(Table);
 
     /* Start with the the hint */
     FoundVad = (PMMVAD)Table->NodeHint;
@@ -69,6 +139,8 @@ MiLocateAddress(IN PVOID VirtualAddress)
     /* We found it, update the hint */
     ASSERT(FoundVad != NULL);
     ASSERT((Vpn >= FoundVad->StartingVpn) && (Vpn <= FoundVad->EndingVpn));
+
+    /* We allow this (atomic) update without exclusive lock, because it's a hint only */
     Table->NodeHint = FoundVad;
     return FoundVad;
 }
@@ -81,6 +153,8 @@ MiCheckForConflictingNode(IN ULONG_PTR StartVpn,
                           OUT PMMADDRESS_NODE *NodeOrParent)
 {
     PMMADDRESS_NODE ParentNode, CurrentNode;
+
+    ASSERT_LOCKED_FOR_READ(Table);
 
     /* If the tree is empty, there is no conflict */
     if (Table->NumberGenericTableElements == 0) return TableEmptyTree;
@@ -131,6 +205,8 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
              IN TABLE_SEARCH_RESULT Result)
 {
     PMMVAD_LONG Vad;
+
+    ASSERT_LOCKED_FOR_WRITE(Table);
 
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
@@ -185,6 +261,8 @@ MiInsertVad(IN PMMVAD Vad,
 {
     TABLE_SEARCH_RESULT Result;
     PMMADDRESS_NODE Parent = NULL;
+
+    ASSERT_LOCKED_FOR_WRITE(VadRoot);
 
     /* Validate the VAD and set it as the current hint */
     ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
@@ -348,6 +426,8 @@ MiInsertBasedSection(IN PSECTION Section)
     PMMADDRESS_NODE Parent = NULL;
     ASSERT(Section->Address.EndingVpn >= Section->Address.StartingVpn);
 
+    ASSERT_LOCKED_FOR_WRITE(&MmSectionBasedRoot);
+
     /* Find the parent VAD and where this child should be inserted */
     Result = RtlpFindAvlTableNodeOrParent(&MmSectionBasedRoot, (PVOID)Section->Address.StartingVpn, &Parent);
     ASSERT(Result != TableFoundNode);
@@ -361,6 +441,8 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
     PMMVAD_LONG Vad;
+
+    ASSERT_LOCKED_FOR_WRITE(Table);
 
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
@@ -509,6 +591,8 @@ MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
     ULONG_PTR PageCount, AlignmentVpn, LowVpn, HighestVpn;
     ASSERT(Length != 0);
 
+    ASSERT_LOCKED_FOR_READ(Table);
+
     /* Calculate page numbers for the length, alignment, and starting address */
     PageCount = BYTES_TO_PAGES(Length);
     AlignmentVpn = Alignment >> PAGE_SHIFT;
@@ -604,6 +688,8 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     PMMADDRESS_NODE Node, OldNode = NULL, Child;
     ULONG_PTR LowVpn, HighVpn, AlignmentVpn;
     PFN_NUMBER PageCount;
+
+    ASSERT_LOCKED_FOR_READ(Table);
 
     /* Sanity checks */
     ASSERT(BoundaryAddress);
@@ -718,6 +804,8 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
 {
     PMMADDRESS_NODE Node, LowestNode;
     ULONG_PTR LowVpn, BestVpn;
+
+    ASSERT_LOCKED_FOR_READ(Table);
 
     /* Sanity checks */
     ASSERT(Table == &MmSectionBasedRoot);

@@ -23,30 +23,29 @@ public:
     virtual ~CActiveDesktop();
 
     /*** IActiveDesktop methods ***/
-    virtual HRESULT WINAPI ApplyChanges(DWORD dwFlags);
-    virtual HRESULT WINAPI GetWallpaper(PWSTR pwszWallpaper, UINT cchWallpaper, DWORD dwFlags);
-    virtual HRESULT WINAPI SetWallpaper(PCWSTR pwszWallpaper, DWORD dwReserved);
-    virtual HRESULT WINAPI GetWallpaperOptions(LPWALLPAPEROPT pwpo, DWORD dwReserved);
-    virtual HRESULT WINAPI SetWallpaperOptions(LPCWALLPAPEROPT pwpo, DWORD dwReserved);
-    virtual HRESULT WINAPI GetPattern(PWSTR pwszPattern, UINT cchPattern, DWORD dwReserved);
-    virtual HRESULT WINAPI SetPattern(PCWSTR pwszPattern, DWORD dwReserved);
-    virtual HRESULT WINAPI GetDesktopItemOptions(LPCOMPONENTSOPT pco, DWORD dwReserved);
-    virtual HRESULT WINAPI SetDesktopItemOptions(LPCCOMPONENTSOPT pco, DWORD dwReserved);
-    virtual HRESULT WINAPI AddDesktopItem(LPCCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI AddDesktopItemWithUI(HWND hwnd, LPCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI ModifyDesktopItem(LPCCOMPONENT pcomp, DWORD dwFlags);
-    virtual HRESULT WINAPI RemoveDesktopItem(LPCCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI GetDesktopItemCount(int *pcItems, DWORD dwReserved);
-    virtual HRESULT WINAPI GetDesktopItem(int nComponent, LPCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI GetDesktopItemByID(ULONG_PTR dwID, LPCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI GenerateDesktopItemHtml(PCWSTR pwszFileName, LPCOMPONENT pcomp, DWORD dwReserved);
-    virtual HRESULT WINAPI AddUrl(HWND hwnd, PCWSTR pszSource, LPCOMPONENT pcomp, DWORD dwFlags);
-    virtual HRESULT WINAPI GetDesktopItemBySource(PCWSTR pwszSource, LPCOMPONENT pcomp, DWORD dwReserved);
+    STDMETHOD(ApplyChanges)(DWORD dwFlags) override;
+    STDMETHOD(GetWallpaper)(PWSTR pwszWallpaper, UINT cchWallpaper, DWORD dwFlags) override;
+    STDMETHOD(SetWallpaper)(PCWSTR pwszWallpaper, DWORD dwReserved) override;
+    STDMETHOD(GetWallpaperOptions)(LPWALLPAPEROPT pwpo, DWORD dwReserved) override;
+    STDMETHOD(SetWallpaperOptions)(LPCWALLPAPEROPT pwpo, DWORD dwReserved) override;
+    STDMETHOD(GetPattern)(PWSTR pwszPattern, UINT cchPattern, DWORD dwReserved) override;
+    STDMETHOD(SetPattern)(PCWSTR pwszPattern, DWORD dwReserved) override;
+    STDMETHOD(GetDesktopItemOptions)(LPCOMPONENTSOPT pco, DWORD dwReserved) override;
+    STDMETHOD(SetDesktopItemOptions)(LPCCOMPONENTSOPT pco, DWORD dwReserved) override;
+    STDMETHOD(AddDesktopItem)(LPCCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(AddDesktopItemWithUI)(HWND hwnd, LPCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(ModifyDesktopItem)(LPCCOMPONENT pcomp, DWORD dwFlags) override;
+    STDMETHOD(RemoveDesktopItem)(LPCCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(GetDesktopItemCount)(int *pcItems, DWORD dwReserved) override;
+    STDMETHOD(GetDesktopItem)(int nComponent, LPCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(GetDesktopItemByID)(ULONG_PTR dwID, LPCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(GenerateDesktopItemHtml)(PCWSTR pwszFileName, LPCOMPONENT pcomp, DWORD dwReserved) override;
+    STDMETHOD(AddUrl)(HWND hwnd, PCWSTR pszSource, LPCOMPONENT pcomp, DWORD dwFlags) override;
+    STDMETHOD(GetDesktopItemBySource)(PCWSTR pwszSource, LPCOMPONENT pcomp, DWORD dwReserved) override;
 
     /*** IPropertyBag methods ***/
-    virtual HRESULT STDMETHODCALLTYPE Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *pErrorLog);
-    virtual HRESULT STDMETHODCALLTYPE Write(LPCOLESTR pszPropName, VARIANT *pVar);
-
+    STDMETHOD(Read)(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *pErrorLog) override;
+    STDMETHOD(Write)(LPCOLESTR pszPropName, VARIANT *pVar) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_ACTIVEDESKTOP)
 DECLARE_NOT_AGGREGATABLE(CActiveDesktop)

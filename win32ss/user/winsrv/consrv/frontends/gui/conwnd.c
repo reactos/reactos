@@ -642,6 +642,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     GuiData->hWindow = hWnd;
     GuiData->hSysMenu = GetSystemMenu(hWnd, FALSE);
+    GuiData->IsWindowActive = FALSE;
 
     /* Initialize the fonts */
     if (!InitFonts(GuiData,
@@ -724,6 +725,8 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
     WORD ActivationState = LOWORD(wParam);
 
     DPRINT("WM_ACTIVATE - ActivationState = %d\n", ActivationState);
+
+    GuiData->IsWindowActive = (ActivationState != WA_INACTIVE);
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
@@ -1324,8 +1327,11 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
     if (GetType(Buff) == TEXTMODE_BUFFER)
     {
         /* Repaint the caret */
-        InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-        Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
+        if (GuiData->IsWindowActive || Buff->CursorBlinkOn)
+        {
+            InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
+        }
 
         if ((GuiData->OldCursor.x != Buff->CursorPosition.X) ||
             (GuiData->OldCursor.y != Buff->CursorPosition.Y))

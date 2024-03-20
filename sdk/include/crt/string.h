@@ -622,7 +622,7 @@ extern "C" {
     _In_z_ const wchar_t *_Str);
 
   _CRTIMP
-  _CRT_INSECURE_DEPRECATE(wcsat_s)
+  _CRT_INSECURE_DEPRECATE(wcscat_s)
   wchar_t*
   __cdecl
   wcscat(
@@ -948,7 +948,7 @@ extern "C" {
   _CRTIMP
   errno_t
   __cdecl
-  wcsat_s(
+  wcscat_s(
     wchar_t *Dest,
     size_t SizeInWords,
     const wchar_t *_Source);

@@ -223,10 +223,10 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
 
 static
 NTSTATUS
-NtfsGetSteamInformation(PNTFS_FCB Fcb,
-                        PDEVICE_EXTENSION DeviceExt,
-                        PFILE_STREAM_INFORMATION StreamInfo,
-                        PULONG BufferLength)
+NtfsGetStreamInformation(PNTFS_FCB Fcb,
+                         PDEVICE_EXTENSION DeviceExt,
+                         PFILE_STREAM_INFORMATION StreamInfo,
+                         PULONG BufferLength)
 {
     ULONG CurrentSize;
     FIND_ATTR_CONTXT Context;
@@ -492,10 +492,10 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
             break;
 
         case FileStreamInformation:
-            Status = NtfsGetSteamInformation(Fcb,
-                                             DeviceObject->DeviceExtension,
-                                             SystemBuffer,
-                                             &BufferLength);
+            Status = NtfsGetStreamInformation(Fcb,
+                                              DeviceObject->DeviceExtension,
+                                              SystemBuffer,
+                                              &BufferLength);
             break;
 
         case FileAlternateNameInformation:

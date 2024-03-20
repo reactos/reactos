@@ -50,6 +50,11 @@ extern "C" {
 #define MM_HAL_VA_END           0xFFFFFFFFFFFFFFFFULL
 
 //
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE 0x8000
+
+//
 // Structure for CPUID info
 //
 typedef union _CPU_INFO

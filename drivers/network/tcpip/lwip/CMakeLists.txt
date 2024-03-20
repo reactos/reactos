@@ -43,15 +43,14 @@ list(APPEND SOURCE
     src/core/snmp/msg_in.c
     src/core/snmp/msg_out.c)
 
-add_library(lwip ${SOURCE})
+add_library(lwipcore ${SOURCE})
 
-target_include_directories(lwip
-    PUBLIC src/include
+target_include_directories(lwipcore
+    PRIVATE ${LWIP_INCLUDE_DIRS}
     PUBLIC src/include/ipv4)
 
-add_dependencies(lwip bugcodes xdk)
-add_pch(lwip precomp.h SOURCE)
+add_dependencies(lwipcore bugcodes xdk)
 
 if(NOT MSVC)
-    target_compile_options(lwip PRIVATE -fno-builtin-malloc -fno-builtin-free)
+    target_compile_options(lwipcore PRIVATE -fno-builtin-malloc -fno-builtin-free)
 endif()

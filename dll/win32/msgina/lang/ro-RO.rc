@@ -223,7 +223,7 @@ BEGIN
     IDS_PRESSCTRLALTDELETE "Pentru autentificare, apăsați «Ctrl»+«Alt»+«Del»."
     IDS_ASKFORUSER "Nume utilizator: "
     IDS_ASKFORPASSWORD "Parola: "
-    IDS_FORCELOGOFF "Această acțiune va deautentifica utilizatorului curent cu posibile pierderi ale datelor nepăstrate. Continuați?"
+    IDS_FORCELOGOFF "Această acțiune va deautentifica utilizatorului curent cu posibile pierderi ale datelor nesalvate. Continuați?"
     IDS_LOCKMSG "Doar %s sau un Administrator poate debloca acest calculator."
     IDS_LOGONMSG "Sunteți autentificat ca %s."
     IDS_LOGONDATE "Data autentificării: %s %s"
@@ -244,9 +244,9 @@ BEGIN
     IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
     IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
     IDS_EMERGENCYLOGOFFTITLE "Deautentificare din ReactOS"
-    IDS_EMERGENCYLOGOFF "Apăsați Confirmă pentru a vă deautentifica imediat. Toate datele nepăstrate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYLOGOFF "Apăsați Confirmă pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
-    IDS_EMERGENCYRESTART "Apăsați Confirmă pentru a vă reporni calculatorul imediat. Toate datele nepăstrate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYRESTART "Apăsați Confirmă pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
 END
 
 /* Shutdown Dialog Strings */
@@ -262,5 +262,5 @@ BEGIN
     IDS_SHUTDOWN_SHUTDOWN_DESC "Închide atât sesiunea curentă cât și sistemul de operare pentru a puta opri în siguranță alimentarea electrică."
     IDS_SHUTDOWN_RESTART_DESC "Închide sesiunea curentă și repornește sistemul."
     IDS_SHUTDOWN_SLEEP_DESC "Induce sistemul în starea de veghe."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Păstrează sesiunea curentă și oprește calculatorul."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Salvează sesiunea curentă și oprește calculatorul."
 END

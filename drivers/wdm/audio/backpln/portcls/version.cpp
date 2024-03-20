@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortClsVersion : public CUnknownImpl<IPortClsVersion>
@@ -29,8 +26,6 @@ public:
 
     }
 };
-
-
 
 //---------------------------------------------------------------
 // IPortClsVersion interface functions

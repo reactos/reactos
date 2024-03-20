@@ -4297,7 +4297,7 @@ RtlSecureZeroMemory(_Out_writes_bytes_all_(Length) PVOID Buffer,
 }
 
 #if defined(_M_IX86)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)__readfsdword(0x18);
 }
@@ -4306,17 +4306,17 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return (PVOID)(ULONG_PTR)__readfsdword(0x10);
 }
 #elif defined (_M_AMD64)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
-  #ifdef NONAMELESSUNION
+#ifdef NONAMELESSUNION
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, DUMMYUNIONNAME.FiberData));
-  #else
+#else
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
-  #endif
+#endif
 }
 #elif defined (_M_ARM)
 #define CP15_PMSELR      15, 0,  9, 12, 5
@@ -4324,20 +4324,20 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
 #define CP15_TPIDRURW    15, 0, 13,  0, 2
 #define CP15_TPIDRURO    15, 0, 13,  0, 3
 #define CP15_TPIDRPRW    15, 0, 13,  0, 4
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW);
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
-  #ifdef NONAMELESSUNION
-    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->DUMMYUNIONNAME.FiberData;
-  #else
-    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
-  #endif
+#ifdef NONAMELESSUNION
+    return ((PNT_TIB)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->DUMMYUNIONNAME.FiberData;
+#else
+    return ((PNT_TIB)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
+#endif
 }
 #elif defined (_M_ARM64)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     //UNIMPLEMENTED;
     return 0;
@@ -4358,11 +4358,11 @@ FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
             : "r7");
     return result;
 }
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)_read_teb_dword(0x18);
 }
-FORCEINLINE PVOID GetCurrentFiber(void)
+FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
     return _read_teb_dword(0x10);
 }
@@ -4370,7 +4370,7 @@ FORCEINLINE PVOID GetCurrentFiber(void)
 #error Unknown architecture
 #endif
 
-FORCEINLINE PVOID GetFiberData(void)
+FORCEINLINE PVOID GetFiberData(VOID)
 {
     return *((PVOID *)GetCurrentFiber());
 }
@@ -4397,7 +4397,7 @@ FORCEINLINE PVOID GetFiberData(void)
 #if defined(_MSC_VER)
 FORCEINLINE
 VOID
-MemoryBarrier (VOID)
+MemoryBarrier(VOID)
 {
     LONG Barrier;
     __asm { xchg Barrier, eax }

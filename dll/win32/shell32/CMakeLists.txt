@@ -73,8 +73,7 @@ list(APPEND SOURCE
     COpenWithMenu.cpp
     CNewMenu.cpp
     CSendToMenu.cpp
-    CCopyToMenu.cpp
-    CMoveToMenu.cpp
+    CCopyMoveToMenu.cpp
     CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp

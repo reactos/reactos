@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CDmaChannelInit : public CUnknownImpl<IDmaChannelInit>
@@ -73,8 +70,6 @@ protected:
 
     friend IO_ALLOCATION_ACTION NTAPI AdapterControl(IN PDEVICE_OBJECT  DeviceObject, IN PIRP  Irp, IN PVOID  MapRegisterBase, IN PVOID  Context);
 };
-
-
 
 //---------------------------------------------------------------
 // IUnknown methods
@@ -235,7 +230,6 @@ CDmaChannelInit::PhysicalAddress(
     return Result;
 }
 
-
 #endif
 
 VOID
@@ -256,7 +250,6 @@ CDmaChannelInit::BufferSize()
     PC_ASSERT(m_BufferSize);
     return m_BufferSize;
 }
-
 
 PVOID
 NTAPI

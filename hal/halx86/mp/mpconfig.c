@@ -291,7 +291,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
 
    if (Table->LocalAPICAddress != APIC_DEFAULT_BASE)
      {
-       DPRINT1("APIC base address is at 0x%X. I cannot handle non-standard adresses\n",
+       DPRINT1("APIC base address is at 0x%X. I cannot handle non-standard addresses\n",
 	       Table->LocalAPICAddress);
        ASSERT(FALSE);
        return FALSE;

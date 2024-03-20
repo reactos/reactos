@@ -6,13 +6,13 @@ CAPTION "Общи"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Уредба:", IDC_STATIC, 4, 116, 100, 9
+    LTEXT "Операционна система:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Версия:", IDC_ROSVERSION, 10, 137, 131, 9
     LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
     LTEXT "System Uptime:", IDC_STATIC, 4, 161, 100, 9
     LTEXT "", IDC_UPTIME, 10, 173, 116, 9
-    LTEXT "Машина:", IDC_STATIC, 124, 116, 100, 9
+    LTEXT "Компютър:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -20,7 +20,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
     CONTROL "Посетете <A HREF=""https://reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
-    PUSHBUTTON "&Разрешителното", IDC_LICENCE, 170, 198, 78, 15
+    PUSHBUTTON "&Лицензна информация", IDC_LICENCE, 150, 198, 98, 15
 END
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
@@ -28,10 +28,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оборудване"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Управител на устройствата", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX "Диспечер на устройствата", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "Управителят на устройствата извежда списък на всички устройства в компютъра ви. Чрез него можете да укажете свойствата на всяко от тях.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON "Управител на &устройствата...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 15
+    LTEXT "Диспечерът на устройствата извежда списък на всички устройства в компютъра ви. Чрез него можете да укажете свойствата на всяко от тях.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON "Диспечер на &устройствата...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 15
     GROUPBOX "Съветник по оборудването", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Съветникът по оборудването ще ви помогне да подкарате, махнете, извадите, изхмъкнете и настроите оборудването си.", IDC_STATIC, 42, 90, 204, 24
@@ -57,14 +57,14 @@ BEGIN
     GROUPBOX "Пускане и възстановяване", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Изборите за пускане и възстановяване казват на компютъра ви как да се пусне и какво да прави, в случай на грешка, която да го накара да спре.", IDC_STATIC, 16, 144, 210, 27
     PUSHBUTTON "Настройки", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Системни настройки", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Променливи на средата", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Докладване на грешки", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройки на уредбата"
+CAPTION "Настройки на системата"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Сведения за версията", IDC_STATIC, 6, 3, 210, 73
@@ -213,7 +213,7 @@ BEGIN
     LTEXT "За да обработите ръчно файла с пусковите настройки, натиснете „Обработка”.", IDC_STATIC, 14, 87, 187, 16
     PUSHBUTTON "&Обработка", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Отказ (повреда) на системата", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "В&писване на събития в дневника на уредбата", IDC_STRRECWRITEEVENT, 14, 124, 220, 10
+    AUTOCHECKBOX "В&писване на събития в дневника на системата", IDC_STRRECWRITEEVENT, 14, 124, 220, 10
     AUTOCHECKBOX "Из&пращане на административно предупреждение", IDC_STRRECSENDALERT, 14, 138, 220, 10
     AUTOCHECKBOX "Самопре&запускане", IDC_STRRECRESTART, 14, 152, 220, 10
     GROUPBOX "Записване на данни за чистене на недъзи", IDC_STATIC, 12, 167, 227, 76
@@ -315,7 +315,7 @@ BEGIN
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
-CAPTION "Разрешително"
+CAPTION "Лицензно споразумение"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
@@ -325,12 +325,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Уредба"
+    IDS_CPLSYSTEMNAME "Система"
     IDS_CPLSYSTEMDESCRIPTION "Можете да видите сведения за компютъра ви и за различни настройки"
-    IDS_MEGABYTE "МБ памет"
-    IDS_GIGABYTE "ГБ памет"
-    IDS_TERABYTE "ТБ памет"
-    IDS_PETABYTE "ПБ памет"
+    IDS_MEGABYTE "МБ"
+    IDS_GIGABYTE "ГБ"
+    IDS_TERABYTE "ТБ"
+    IDS_PETABYTE "ПБ"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
     IDS_UPTIME_FORMAT "%lu Days, %02lu:%02lu:%02lu"
@@ -348,12 +348,12 @@ BEGIN
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
     IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
+    IDS_USERPROFILE_CONFIRM_DELETE "Сигурен ли сте че искате да изтриете този профил: %s?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
     IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
-    IDS_MESSAGEBOXTITLE "Приложение за таблото за управление на уредбата"
+    IDS_MESSAGEBOXTITLE "Приложение за таблото за управление на системата"
     IDS_WARNINITIALSIZE "Въведете числена стойност за началния размер на страниращия файл."
     IDS_WARNMAXIMUMSIZE "Въведете числена стойност за върховия размер на страниращия файл."
     IDS_WARNINITIALRANGE "The initial paging file size must be between 2 MB and %lu MB on the selected drive."

@@ -842,6 +842,34 @@ SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTI
     }
 }
 
+static
+PSETTINGS_ENTRY
+FindBestElement(
+    _In_ PDISPLAY_DEVICE_ENTRY pDevice)
+{
+    PSETTINGS_ENTRY Request = &pDevice->InitialSettings, BestEntry = NULL, Current;
+    LONG Distance, NearestDistance = MAXLONG;
+
+    /* Find the best entry in the list */
+    for (Current = pDevice->Settings; Current; Current = Current->Flink)
+    {
+        Distance = 0x100000 * labs(Current->dmBitsPerPel       - Request->dmBitsPerPel      ) +
+                      0x100 * labs(Current->dmPelsWidth        - Request->dmPelsWidth       ) +
+                      0x100 * labs(Current->dmPelsHeight       - Request->dmPelsHeight      ) +
+                              labs(Current->dmDisplayFrequency - Request->dmDisplayFrequency);
+        if (Distance == 0)
+            return Current;
+
+        if (Distance < NearestDistance)
+        {
+            BestEntry = Current;
+            NearestDistance = Distance;
+        }
+    }
+
+    return BestEntry;
+}
+
 static VOID
 ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
 {
@@ -866,10 +894,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
     else
     {
-        pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
-        pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
-        pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
-        pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
+        pData->CurrentDisplayDevice->CurrentSettings = FindBestElement(pData->CurrentDisplayDevice);
         UpdateDisplay(hwndDlg, pData, TRUE);
     }
 }
@@ -921,16 +946,16 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                     DEVMODE devmode;
                     ZeroMemory(&devmode, sizeof(devmode));
                     devmode.dmSize = (WORD)sizeof(devmode);
-                    if (EnumDisplaySettingsExW(pData->CurrentDisplayDevice->DeviceName, ENUM_CURRENT_SETTINGS, &devmode, 0))
+                    if (EnumDisplaySettingsExW(pData->CurrentDisplayDevice->DeviceName,
+                                               ENUM_CURRENT_SETTINGS, &devmode, 0))
                     {
-                        pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = devmode.dmPelsWidth;
-                        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = devmode.dmPelsHeight;
-                        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = devmode.dmBitsPerPel;
-                        pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency = devmode.dmDisplayFrequency;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
-                        pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
+                        PSETTINGS_ENTRY pInitialSettings = &pData->CurrentDisplayDevice->InitialSettings;
+                        pInitialSettings->dmPelsWidth = devmode.dmPelsWidth;
+                        pInitialSettings->dmPelsHeight = devmode.dmPelsHeight;
+                        pInitialSettings->dmBitsPerPel = devmode.dmBitsPerPel;
+                        pInitialSettings->dmDisplayFrequency = devmode.dmDisplayFrequency;
+                        pData->CurrentDisplayDevice->CurrentSettings =
+                            FindBestElement(pData->CurrentDisplayDevice);
                         UpdateDisplay(hwndDlg, pData, TRUE);
                     }
                 }

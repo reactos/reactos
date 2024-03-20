@@ -7,436 +7,342 @@
  */
 
 #include "shelltest.h"
-#include <shlwapi.h>
+#include "closewnd.h"
+#include <pstypes.h>
+#include <psfuncs.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include "shell32_apitest_sub.h"
+#include <strsafe.h>
+#include <versionhelpers.h>
 
-#define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
+static WCHAR s_win_dir[MAX_PATH];
+static WCHAR s_sys_dir[MAX_PATH];
+static WCHAR s_win_notepad[MAX_PATH];
+static WCHAR s_sys_notepad[MAX_PATH];
+static WCHAR s_win_test_exe[MAX_PATH];
+static WCHAR s_sys_test_exe[MAX_PATH];
+static WCHAR s_win_bat_file[MAX_PATH];
+static WCHAR s_sys_bat_file[MAX_PATH];
+static WCHAR s_win_txt_file[MAX_PATH];
+static WCHAR s_sys_txt_file[MAX_PATH];
+static WCHAR s_win_notepad_cmdline[MAX_PATH];
+static WCHAR s_sys_notepad_cmdline[MAX_PATH];
+static WCHAR s_win_test_exe_cmdline[MAX_PATH];
+static WCHAR s_sys_test_exe_cmdline[MAX_PATH];
+static BOOL s_bWow64;
 
-static
-BOOL
-CreateAppPathRegKey(const WCHAR* Name)
+#define REG_APPPATHS L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\"
+
+typedef enum TEST_RESULT
 {
-    HKEY RegistryKey;
-    LONG Result;
-    WCHAR Buffer[1024];
-    WCHAR KeyValue[1024];
-    DWORD Length = sizeof(KeyValue);
-    DWORD Disposition;
-
-    wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
-    wcscat(Buffer, L"IEXPLORE.EXE");
-    Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_READ, &RegistryKey);
-    if (Result != ERROR_SUCCESS) trace("Could not open iexplore.exe key. Status: %lu\n", Result);
-    if (Result) goto end;
-    Result = RegQueryValueExW(RegistryKey, NULL, NULL, NULL, (LPBYTE)KeyValue, &Length);
-    if (Result != ERROR_SUCCESS) trace("Could not read iexplore.exe key. Status: %lu\n", Result);
-    if (Result) goto end;
-    RegCloseKey(RegistryKey);
-
-    wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
-    wcscat(Buffer, Name);
-    Result = RegCreateKeyExW(HKEY_LOCAL_MACHINE, Buffer, 0, NULL,
-        0, KEY_WRITE, NULL, &RegistryKey, &Disposition);
-    if (Result != ERROR_SUCCESS) trace("Could not create test key. Status: %lu\n", Result);
-    if (Result) goto end;
-    Result = RegSetValueW(RegistryKey, NULL, REG_SZ, KeyValue, 0);
-    if (Result != ERROR_SUCCESS) trace("Could not set value of the test key. Status: %lu\n", Result);
-    if (Result) goto end;
-    RegCloseKey(RegistryKey);
-end:
-    if (RegistryKey) RegCloseKey(RegistryKey);
-    return Result == ERROR_SUCCESS;
-}
-
-static
-VOID
-DeleteAppPathRegKey(const WCHAR* Name)
-{
-    LONG Result;
-    WCHAR Buffer[1024];
-    wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
-    wcscat(Buffer, Name);
-    Result = RegDeleteKeyW(HKEY_LOCAL_MACHINE, Buffer);
-    if (Result != ERROR_SUCCESS) trace("Could not remove the test key. Status: %lu\n", Result);
-}
-
-static
-VOID
-TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
-{
-    SHELLEXECUTEINFOW ShellExecInfo;
-    BOOL Result;
-
-    ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
-    ShellExecInfo.cbSize = sizeof(ShellExecInfo);
-    ShellExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
-    ShellExecInfo.hwnd = NULL;
-    ShellExecInfo.nShow = SW_SHOWNORMAL;
-    ShellExecInfo.lpFile = Name;
-    ShellExecInfo.lpDirectory = NULL;
-
-    Result = ShellExecuteExW(&ShellExecInfo);
-    ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %lu\n", wine_dbgstr_w(Name), GetLastError());
-    if (ShellExecInfo.hProcess)
-    {
-        Result = TerminateProcess(ShellExecInfo.hProcess, 0);
-        if (!Result) trace("Terminate process failed. Error: %lu\n", GetLastError());
-        WaitForSingleObject(ShellExecInfo.hProcess, INFINITE);
-        CloseHandle(ShellExecInfo.hProcess);
-    }
-}
-
-static void DoAppPathTest(void)
-{
-    ok_ShellExecuteEx(L"iexplore", TRUE);
-    ok_ShellExecuteEx(L"iexplore.exe", TRUE);
-
-    if (CreateAppPathRegKey(L"iexplore.bat"))
-    {
-        ok_ShellExecuteEx(L"iexplore.bat", TRUE);
-        ok_ShellExecuteEx(L"iexplore.bat.exe", FALSE);
-        DeleteAppPathRegKey(L"iexplore.bat");
-    }
-
-    if (CreateAppPathRegKey(L"iexplore.bat.exe"))
-    {
-        ok_ShellExecuteEx(L"iexplore.bat", FALSE);
-        ok_ShellExecuteEx(L"iexplore.bat.exe", TRUE);
-        DeleteAppPathRegKey(L"iexplore.bat.exe");
-    }
-}
+    TEST_FAILED,
+    TEST_SUCCESS_NO_PROCESS,
+    TEST_SUCCESS_WITH_PROCESS,
+} TEST_RESULT;
 
 typedef struct TEST_ENTRY
 {
-    INT lineno;
-    BOOL ret;
-    BOOL bProcessHandle;
-    LPCSTR file;
-    LPCSTR params;
-    LPCSTR curdir;
-} TEST_ENTRY;
+    INT line;
+    TEST_RESULT result;
+    LPCWSTR lpFile;
+    LPCWSTR cmdline;
+} TEST_ENTRY, *PTEST_ENTRY;
 
-static char s_sub_program[MAX_PATH];
-static char s_win_test_exe[MAX_PATH];
-static char s_sys_test_exe[MAX_PATH];
-static char s_win_bat_file[MAX_PATH];
-static char s_sys_bat_file[MAX_PATH];
-static char s_win_txt_file[MAX_PATH];
-static char s_sys_txt_file[MAX_PATH];
+static void
+TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline = NULL);
 
-#define DONT_CARE 0x0BADF00D
-
-static const TEST_ENTRY s_entries_1[] =
+static void TEST_DoTestEntries(void)
 {
-    { __LINE__, TRUE, TRUE, "test program" },
-    { __LINE__, TRUE, TRUE, "test program.bat" },
-    { __LINE__, TRUE, TRUE, "test program.exe" },
-    { __LINE__, FALSE, FALSE, "  test program" },
-    { __LINE__, FALSE, FALSE, "  test program.bat" },
-    { __LINE__, FALSE, FALSE, "  test program.exe" },
-    { __LINE__, FALSE, FALSE, "test program  " },
-    { __LINE__, TRUE, TRUE, "test program.bat  " },
-    { __LINE__, TRUE, TRUE, "test program.exe  " },
-    { __LINE__, TRUE, TRUE, "test program", "TEST" },
-    { __LINE__, TRUE, TRUE, "test program.bat", "TEST" },
-    { __LINE__, TRUE, TRUE, "test program.exe", "TEST" },
-    { __LINE__, FALSE, FALSE, ".\\test program.bat" },
-    { __LINE__, FALSE, FALSE, ".\\test program.exe" },
-    { __LINE__, TRUE, TRUE, "\"test program\"" },
-    { __LINE__, TRUE, TRUE, "\"test program.bat\"" },
-    { __LINE__, TRUE, TRUE, "\"test program.exe\"" },
-    { __LINE__, FALSE, FALSE, "\"test program\" TEST" },
-    { __LINE__, FALSE, FALSE, "\"test program.bat\" TEST" },
-    { __LINE__, FALSE, FALSE, "\"test program.exe\" TEST" },
-    { __LINE__, FALSE, FALSE, "  \"test program\"" },
-    { __LINE__, FALSE, FALSE, "  \"test program.bat\"" },
-    { __LINE__, FALSE, FALSE, "  \"test program.exe\"" },
-    { __LINE__, FALSE, FALSE, "\"test program\"  " },
-    { __LINE__, FALSE, FALSE, "\"test program.bat\"  " },
-    { __LINE__, FALSE, FALSE, "\"test program.exe\"  " },
-    { __LINE__, FALSE, FALSE, "\".\\test program.bat\"" },
-    { __LINE__, FALSE, FALSE, "\".\\test program.exe\"" },
-    { __LINE__, TRUE, TRUE, s_win_test_exe },
-    { __LINE__, TRUE, TRUE, s_sys_test_exe },
-    { __LINE__, TRUE, TRUE, s_win_bat_file },
-    { __LINE__, TRUE, TRUE, s_sys_bat_file },
-    { __LINE__, TRUE, TRUE, s_win_bat_file, "TEST" },
-    { __LINE__, TRUE, TRUE, s_sys_bat_file, "TEST" },
-    { __LINE__, FALSE, FALSE, "invalid program" },
-    { __LINE__, FALSE, FALSE, "invalid program.bat" },
-    { __LINE__, FALSE, FALSE, "invalid program.exe" },
-    { __LINE__, TRUE, TRUE, "test_file.txt" },
-    { __LINE__, TRUE, TRUE, "test_file.txt", "parameters parameters" },
-    { __LINE__, TRUE, TRUE, "test_file.txt", "parameters parameters", "." },
-    { __LINE__, TRUE, TRUE, "shell32_apitest_sub.exe" },
-    { __LINE__, TRUE, TRUE, ".\\shell32_apitest_sub.exe" },
-    { __LINE__, TRUE, TRUE, "\"shell32_apitest_sub.exe\"" },
-    { __LINE__, TRUE, TRUE, "\".\\shell32_apitest_sub.exe\"" },
-    { __LINE__, TRUE, DONT_CARE, "https://google.com" },
-    { __LINE__, TRUE, FALSE, "::{450d8fba-ad25-11d0-98a8-0800361b1103}" },
-    { __LINE__, TRUE, FALSE, "shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}" },
-    { __LINE__, TRUE, FALSE, "shell:sendto" },
-};
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, NULL);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"");
+    TEST_DoTestEntry(__LINE__, TEST_FAILED, L"This is an invalid path.");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_bat_file, NULL);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_test_exe, s_sys_test_exe_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_sys_txt_file, NULL);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_bat_file, NULL);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_notepad, s_win_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_test_exe, s_win_test_exe_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, s_win_txt_file, NULL);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"notepad", s_sys_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"notepad.exe", s_sys_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"notepad.exe\"", s_sys_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"notepad\"", s_sys_notepad_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"test program.exe", s_sys_test_exe_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"\"test program.exe\"", s_sys_test_exe_cmdline);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, s_win_dir);
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, s_sys_dir);
+    TEST_DoTestEntry(__LINE__, TEST_FAILED, L"shell:ThisIsAnInvalidName");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"); // My Computer
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}"); // My Computer (with shell:)
 
-static const TEST_ENTRY s_entries_2[] =
-{
-    { __LINE__, TRUE, TRUE, "test program" },
-    { __LINE__, TRUE, TRUE, "test program", "TEST" },
-    { __LINE__, TRUE, TRUE, "\"test program\"" },
-    { __LINE__, TRUE, TRUE, s_win_test_exe },
-    { __LINE__, TRUE, TRUE, s_sys_test_exe },
-    { __LINE__, FALSE, FALSE, s_win_bat_file },
-    { __LINE__, FALSE, FALSE, s_sys_bat_file },
-    { __LINE__, FALSE, FALSE, s_win_bat_file, "TEST" },
-    { __LINE__, FALSE, FALSE, s_sys_bat_file, "TEST" },
-};
-
-typedef struct OPENWNDS
-{
-    UINT count;
-    HWND *phwnd;
-} OPENWNDS;
-
-static OPENWNDS s_wi0 = { 0 }, s_wi1 = { 0 };
-
-static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    OPENWNDS *info = (OPENWNDS *)lParam;
-    info->phwnd = (HWND *)realloc(info->phwnd, (info->count + 1) * sizeof(HWND));
-    if (!info->phwnd)
-        return FALSE;
-    info->phwnd[info->count] = hwnd;
-    ++(info->count);
-    return TRUE;
-}
-
-static void CleanupNewlyCreatedWindows(void)
-{
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
-    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
+    if (!IsWindowsVistaOrGreater())
     {
-        BOOL bFound = FALSE;
-        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
-        {
-            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
-            {
-                bFound = TRUE;
-                break;
-            }
-        }
-        if (!bFound)
-            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
+        WCHAR szCurDir[MAX_PATH];
+        GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+        SetCurrentDirectoryW(s_sys_dir);
+        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}"); // Control Panel (without path)
+        SetCurrentDirectoryW(szCurDir);
     }
-    free(s_wi1.phwnd);
-    ZeroMemory(&s_wi1, sizeof(s_wi1));
+
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"); // Control Panel (with path)
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"); // Control Panel (with path and shell:)
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:AppData");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Common Desktop");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Common Programs");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Common Start Menu");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Common StartUp");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:ControlPanelFolder");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Desktop");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Favorites");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Fonts");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Local AppData");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:My Pictures");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Personal");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Programs");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Recent");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:RecycleBinFolder");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:SendTo");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:Start Menu");
+    TEST_DoTestEntry(__LINE__, TEST_SUCCESS_NO_PROCESS, L"shell:StartUp");
 }
 
-static VOID DoTestEntry(const TEST_ENTRY *pEntry)
+static LPWSTR
+getCommandLineFromProcess(HANDLE hProcess)
 {
-    SHELLEXECUTEINFOA info = { sizeof(info) };
-    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
-    info.nShow = SW_SHOWNORMAL;
-    info.lpFile = pEntry->file;
-    info.lpParameters = pEntry->params;
-    info.lpDirectory = pEntry->curdir;
-    BOOL ret = ShellExecuteExA(&info);
-    ok(ret == pEntry->ret, "Line %u: ret expected %d, got %d\n",
-       pEntry->lineno, pEntry->ret, ret);
-    if (!pEntry->ret)
-        return;
+    PEB peb;
+    PROCESS_BASIC_INFORMATION info;
+    RTL_USER_PROCESS_PARAMETERS Params;
+    NTSTATUS Status;
+    BOOL ret;
 
-    if ((UINT)pEntry->bProcessHandle != DONT_CARE)
+    Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &info, sizeof(info), NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    ret = ReadProcessMemory(hProcess, info.PebBaseAddress, &peb, sizeof(peb), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
+    ReadProcessMemory(hProcess, peb.ProcessParameters, &Params, sizeof(Params), NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
+    LPWSTR cmdline = Params.CommandLine.Buffer;
+    if (!cmdline)
+        trace("!cmdline\n");
+
+    SIZE_T cbCmdLine = Params.CommandLine.Length;
+    if (!cbCmdLine)
+        trace("!cbCmdLine\n");
+
+    LPWSTR pszBuffer = (LPWSTR)calloc(cbCmdLine + sizeof(WCHAR), 1);
+    if (!pszBuffer)
+        trace("!pszBuffer\n");
+
+    ret = ReadProcessMemory(hProcess, cmdline, pszBuffer, cbCmdLine, NULL);
+    if (!ret)
+        trace("ReadProcessMemory failed (%ld)\n", GetLastError());
+
+    pszBuffer[cbCmdLine / sizeof(WCHAR)] = UNICODE_NULL;
+
+    return pszBuffer; // needs free()
+}
+
+static void TEST_DoTestEntryStruct(const TEST_ENTRY *pEntry)
+{
+    SHELLEXECUTEINFOW info = { sizeof(info) };
+    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_WAITFORINPUTIDLE |
+                 SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
+    info.hwnd = NULL;
+    info.lpVerb = NULL;
+    info.lpFile = pEntry->lpFile;
+    info.nShow = SW_SHOWNORMAL;
+
+    BOOL ret = ShellExecuteExW(&info);
+
+    TEST_RESULT result;
+    if (ret && info.hProcess)
+        result = TEST_SUCCESS_WITH_PROCESS;
+    else if (ret && !info.hProcess)
+        result = TEST_SUCCESS_NO_PROCESS;
+    else
+        result = TEST_FAILED;
+
+    ok(pEntry->result == result,
+       "Line %d: result: %d vs %d\n", pEntry->line, pEntry->result, result);
+
+    if (pEntry->result == TEST_SUCCESS_WITH_PROCESS && pEntry->cmdline && !s_bWow64)
     {
-        if (pEntry->bProcessHandle)
+        LPWSTR cmdline = getCommandLineFromProcess(info.hProcess);
+        if (!cmdline)
         {
-            ok(!!info.hProcess, "Line %u: hProcess expected non-NULL\n", pEntry->lineno);
+            skip("!cmdline\n");
         }
         else
         {
-            ok(!info.hProcess, "Line %u: hProcess expected NULL\n", pEntry->lineno);
-            return;
+            ok(lstrcmpiW(pEntry->cmdline, cmdline) == 0,
+               "Line %d: cmdline: '%ls' vs '%ls'\n", pEntry->line,
+               pEntry->cmdline, cmdline);
         }
+
+        TerminateProcess(info.hProcess, 0xDEADFACE);
+        free(cmdline);
     }
 
-    WaitForInputIdle(info.hProcess, INFINITE);
-
-    CleanupNewlyCreatedWindows();
-
-    if (WaitForSingleObject(info.hProcess, 10 * 1000) == WAIT_TIMEOUT)
-    {
-        TerminateProcess(info.hProcess, 11);
-        ok(0, "Process %s did not quit!\n", pEntry->file);
-    }
     CloseHandle(info.hProcess);
 }
 
-static BOOL
-GetSubProgramPath(void)
+static void
+TEST_DoTestEntry(INT line, TEST_RESULT result, LPCWSTR lpFile, LPCWSTR cmdline)
 {
-    GetModuleFileNameA(NULL, s_sub_program, _countof(s_sub_program));
-    PathRemoveFileSpecA(s_sub_program);
-    PathAppendA(s_sub_program, "shell32_apitest_sub.exe");
-
-    if (!PathFileExistsA(s_sub_program))
-    {
-        PathRemoveFileSpecA(s_sub_program);
-        PathAppendA(s_sub_program, "testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsA(s_sub_program))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
+    TEST_ENTRY entry = { line, result, lpFile, cmdline };
+    TEST_DoTestEntryStruct(&entry);
 }
 
-static void DoTestEntries(void)
+static BOOL
+enableTokenPrivilege(LPCWSTR pszPrivilege)
 {
-    if (!GetSubProgramPath())
-    {
-        skip("shell32_apitest_sub.exe is not found\n");
-        return;
-    }
+    HANDLE hToken;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    TOKEN_PRIVILEGES tkp = { 0 };
+    if (!LookupPrivilegeValueW(NULL, pszPrivilege, &tkp.Privileges[0].Luid))
+        return FALSE;
+
+    tkp.PrivilegeCount = 1;
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    return AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, NULL);
+}
+
+static WINDOW_LIST s_List1, s_List2;
+
+static BOOL TEST_Start(void)
+{
+    // Check Wow64
+    s_bWow64 = FALSE;
+    IsWow64Process(GetCurrentProcess(), &s_bWow64);
+    if (s_bWow64)
+        skip("Wow64: Command Line check is skipped\n");
+
+    // getCommandLineFromProcess needs this
+    enableTokenPrivilege(SE_DEBUG_NAME);
+
+    // s_win_dir
+    GetWindowsDirectoryW(s_win_dir, _countof(s_win_dir));
+
+    // s_sys_dir
+    GetSystemDirectoryW(s_sys_dir, _countof(s_sys_dir));
+
+    // s_win_notepad
+    GetWindowsDirectoryW(s_win_notepad, _countof(s_win_notepad));
+    PathAppendW(s_win_notepad, L"notepad.exe");
+
+    // s_sys_notepad
+    GetSystemDirectoryW(s_sys_notepad, _countof(s_sys_notepad));
+    PathAppendW(s_sys_notepad, L"notepad.exe");
 
     // s_win_test_exe
-    GetWindowsDirectoryA(s_win_test_exe, _countof(s_win_test_exe));
-    PathAppendA(s_win_test_exe, "test program.exe");
-    BOOL ret = CopyFileA(s_sub_program, s_win_test_exe, FALSE);
+    GetWindowsDirectoryW(s_win_test_exe, _countof(s_win_test_exe));
+    PathAppendW(s_win_test_exe, L"test program.exe");
+    BOOL ret = CopyFileW(s_win_notepad, s_win_test_exe, FALSE);
     if (!ret)
     {
         skip("Please retry with admin rights\n");
-        return;
-    }
-
-    // record open windows
-    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
-    {
-        skip("EnumWindows failed\n");
-        DeleteFileA(s_win_test_exe);
-        free(s_wi0.phwnd);
-        return;
+        return FALSE;
     }
 
     // s_sys_test_exe
-    GetSystemDirectoryA(s_sys_test_exe, _countof(s_sys_test_exe));
-    PathAppendA(s_sys_test_exe, "test program.exe");
-    ok_int(CopyFileA(s_sub_program, s_sys_test_exe, FALSE), TRUE);
+    GetSystemDirectoryW(s_sys_test_exe, _countof(s_sys_test_exe));
+    PathAppendW(s_sys_test_exe, L"test program.exe");
+    ok_int(CopyFileW(s_win_notepad, s_sys_test_exe, FALSE), TRUE);
 
     // s_win_bat_file
-    GetWindowsDirectoryA(s_win_bat_file, _countof(s_win_bat_file));
-    PathAppendA(s_win_bat_file, "test program.bat");
-    FILE *fp = fopen(s_win_bat_file, "wb");
+    GetWindowsDirectoryW(s_win_bat_file, _countof(s_win_bat_file));
+    PathAppendW(s_win_bat_file, L"test program.bat");
+    FILE *fp = _wfopen(s_win_bat_file, L"wb");
     fprintf(fp, "exit /b 3");
     fclose(fp);
-    ok_int(PathFileExistsA(s_win_bat_file), TRUE);
+    ok_int(PathFileExistsW(s_win_bat_file), TRUE);
 
     // s_sys_bat_file
-    GetSystemDirectoryA(s_sys_bat_file, _countof(s_sys_bat_file));
-    PathAppendA(s_sys_bat_file, "test program.bat");
-    fp = fopen(s_sys_bat_file, "wb");
+    GetSystemDirectoryW(s_sys_bat_file, _countof(s_sys_bat_file));
+    PathAppendW(s_sys_bat_file, L"test program.bat");
+    fp = _wfopen(s_sys_bat_file, L"wb");
     fprintf(fp, "exit /b 4");
     fclose(fp);
-    ok_int(PathFileExistsA(s_sys_bat_file), TRUE);
+    ok_int(PathFileExistsW(s_sys_bat_file), TRUE);
 
     // s_win_txt_file
-    GetWindowsDirectoryA(s_win_txt_file, _countof(s_win_txt_file));
-    PathAppendA(s_win_txt_file, "test_file.txt");
-    fp = fopen(s_win_txt_file, "wb");
+    GetWindowsDirectoryW(s_win_txt_file, _countof(s_win_txt_file));
+    PathAppendW(s_win_txt_file, L"test_file.txt");
+    fp = _wfopen(s_win_txt_file, L"wb");
     fclose(fp);
-    ok_int(PathFileExistsA(s_win_txt_file), TRUE);
+    ok_int(PathFileExistsW(s_win_txt_file), TRUE);
 
     // s_sys_txt_file
-    GetSystemDirectoryA(s_sys_txt_file, _countof(s_sys_txt_file));
-    PathAppendA(s_sys_txt_file, "test_file.txt");
-    fp = fopen(s_sys_txt_file, "wb");
+    GetSystemDirectoryW(s_sys_txt_file, _countof(s_sys_txt_file));
+    PathAppendW(s_sys_txt_file, L"test_file.txt");
+    fp = _wfopen(s_sys_txt_file, L"wb");
     fclose(fp);
-    ok_int(PathFileExistsA(s_sys_txt_file), TRUE);
+    ok_int(PathFileExistsW(s_sys_txt_file), TRUE);
 
-    for (UINT iTest = 0; iTest < _countof(s_entries_1); ++iTest)
+    // Check .txt settings
+    WCHAR szPath[MAX_PATH];
+    FindExecutableW(s_sys_txt_file, NULL, szPath);
+    if (lstrcmpiW(PathFindFileNameW(szPath), L"notepad.exe") != 0)
     {
-        DoTestEntry(&s_entries_1[iTest]);
+        skip("Please associate .txt with notepad.exe before tests\n");
+        return FALSE;
     }
 
-    DeleteFileA(s_win_bat_file);
-    DeleteFileA(s_sys_bat_file);
+    // command lines
+    StringCchPrintfW(s_win_notepad_cmdline, _countof(s_win_notepad_cmdline),
+                     L"\"%s\" ", s_win_notepad);
+    StringCchPrintfW(s_sys_notepad_cmdline, _countof(s_sys_notepad_cmdline),
+                     L"\"%s\" ", s_sys_notepad);
+    StringCchPrintfW(s_win_test_exe_cmdline, _countof(s_win_test_exe_cmdline),
+                     L"\"%s\" ", s_win_test_exe);
+    StringCchPrintfW(s_sys_test_exe_cmdline, _countof(s_sys_test_exe_cmdline),
+                     L"\"%s\" ", s_sys_test_exe);
 
-    for (UINT iTest = 0; iTest < _countof(s_entries_2); ++iTest)
-    {
-        DoTestEntry(&s_entries_2[iTest]);
-    }
+    GetWindowList(&s_List1);
 
-    DeleteFileA(s_win_test_exe);
-    DeleteFileA(s_sys_test_exe);
-    DeleteFileA(s_win_txt_file);
-    DeleteFileA(s_sys_txt_file);
-
-    free(s_wi0.phwnd);
-}
-
-WCHAR* ExeName = NULL;
-
-BOOL CALLBACK EnumProc(_In_ HWND hwnd, _In_ LPARAM lParam)
-{
-    DWORD pid = 0;
-    GetWindowThreadProcessId(hwnd, &pid);
-    if (pid == GetCurrentProcessId() &&
-        IsWindowVisible(hwnd))
-    {
-        WCHAR Buffer[512] = {0};
-
-        GetWindowTextW(hwnd, Buffer, _countof(Buffer) - 1);
-        if (Buffer[0] && StrStrIW(Buffer, ExeName))
-        {
-            HWND* pHwnd = (HWND*)lParam;
-            *pHwnd = hwnd;
-            return FALSE;
-        }
-    }
     return TRUE;
 }
 
-BOOL WaitAndCloseWindow()
+static void TEST_End(void)
 {
-    HWND hWnd = NULL;
-    for (int n = 0; n < 100; ++n)
-    {
-        Sleep(50);
+    Sleep(500);
+    GetWindowList(&s_List2);
+    CloseNewWindows(&s_List1, &s_List2);
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
 
-        EnumWindows(EnumProc, (LPARAM)&hWnd);
-
-        if (hWnd)
-        {
-            SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-            return TRUE;
-            break;
-        }
-    }
-    return FALSE;
+    DeleteFileW(s_win_test_exe);
+    DeleteFileW(s_sys_test_exe);
+    DeleteFileW(s_win_txt_file);
+    DeleteFileW(s_sys_txt_file);
+    DeleteFileW(s_win_bat_file);
+    DeleteFileW(s_sys_bat_file);
 }
 
 static void test_properties()
 {
+    HRESULT hrCoInit = CoInitialize(NULL);
+
     WCHAR Buffer[MAX_PATH * 4];
-
-    CoInitialize(NULL);
-
     GetModuleFileNameW(NULL, Buffer, _countof(Buffer));
-    SHELLEXECUTEINFOW info = { 0 };
 
-    info.cbSize = sizeof(SHELLEXECUTEINFOW);
+    SHELLEXECUTEINFOW info = { sizeof(info) };
     info.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_FLAG_NO_UI;
     info.lpVerb = L"properties";
     info.lpFile = Buffer;
-    info.lpParameters = L"";
     info.nShow = SW_SHOW;
 
     BOOL bRet = ShellExecuteExW(&info);
     ok(bRet, "Failed! (GetLastError(): %d)\n", (int)GetLastError());
     ok_ptr(info.hInstApp, (HINSTANCE)42);
 
-    ExeName = PathFindFileNameW(Buffer);
     WCHAR* Extension = PathFindExtensionW(Buffer);
     if (Extension)
     {
@@ -444,80 +350,110 @@ static void test_properties()
         *Extension = UNICODE_NULL;
     }
 
-    if (bRet)
-    {
-        ok(WaitAndCloseWindow(), "Could not find properties window!\n");
-    }
-
     // Now retry it with the extension cut off
     bRet = ShellExecuteExW(&info);
     ok(bRet, "Failed! (GetLastError(): %d)\n", (int)GetLastError());
     ok_ptr(info.hInstApp, (HINSTANCE)42);
 
-    if (bRet)
-    {
-        ok(WaitAndCloseWindow(), "Could not find properties window!\n");
-    }
-
-    info.lpFile = L"complete garbage, cannot run this!";
-
     // Now retry it with complete garabage
+    info.lpFile = L"complete garbage, cannot run this!";
     bRet = ShellExecuteExW(&info);
-    ok(bRet == 0, "Succeeded!\n");
+    ok_int(bRet, 0);
     ok_ptr(info.hInstApp, (HINSTANCE)2);
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
 }
 
 static void test_sei_lpIDList()
 {
+    if (IsWindowsVistaOrGreater())
+    {
+        skip("Vista+\n");
+        return;
+    }
+
     /* This tests ShellExecuteEx with lpIDList for explorer C:\ */
 
     /* ITEMIDLIST for CLSID of 'My Computer' followed by PIDL for 'C:\' */
     BYTE lpitemidlist[30] = { 0x14, 0, 0x1f, 0, 0xe0, 0x4f, 0xd0, 0x20, 0xea,
     0x3a, 0x69, 0x10, 0xa2, 0xd8, 0x08, 0, 0x2b, 0x30, 0x30, 0x9d, // My Computer
     0x8, 0, 0x23, 0x43, 0x3a, 0x5c, 0x5c, 0, 0, 0,}; // C:\\ + NUL-NUL ending
-    BYTE *lpBytes;
-    lpBytes = lpitemidlist;
 
-    SHELLEXECUTEINFOW ShellExecInfo;
-    BOOL Result;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    HWND hWnd;
-
-    ZeroMemory( &si, sizeof(si) );
-    si.cb = sizeof(si);
-    ZeroMemory( &pi, sizeof(pi) );
-
-    ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
-    ShellExecInfo.cbSize = sizeof(ShellExecInfo);
+    SHELLEXECUTEINFOW ShellExecInfo = { sizeof(ShellExecInfo) };
     ShellExecInfo.fMask = SEE_MASK_IDLIST;
     ShellExecInfo.hwnd = NULL;
     ShellExecInfo.nShow = SW_SHOWNORMAL;
-    ShellExecInfo.lpFile = NULL;
-    ShellExecInfo.lpDirectory = NULL;
-    ShellExecInfo.lpIDList = lpBytes;
+    ShellExecInfo.lpIDList = lpitemidlist;
+    BOOL ret = ShellExecuteExW(&ShellExecInfo);
+    ok_int(ret, TRUE);
+}
 
-    Result = ShellExecuteExW(&ShellExecInfo);
-    ok(Result == TRUE, "ShellExecuteEx lpIDList 'C:\\' failed\n");
-    trace("sei_lpIDList returned: %s\n", Result ? "SUCCESS" : "FAILURE");
-    if (Result)
+static BOOL
+CreateAppPath(LPCWSTR pszName, LPCWSTR pszValue)
+{
+    WCHAR szSubKey[MAX_PATH];
+    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
+
+    LSTATUS error;
+    HKEY hKey;
+    error = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+                            &hKey, NULL);
+    if (error != ERROR_SUCCESS)
+        trace("Could not create test key (%lu)\n", error);
+
+    DWORD cbValue = (lstrlenW(pszValue) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pszValue, cbValue);
+    if (error != ERROR_SUCCESS)
+        trace("Could not set value of the test key (%lu)\n", error);
+
+    RegCloseKey(hKey);
+
+    return error == ERROR_SUCCESS;
+}
+
+static VOID
+DeleteAppPath(LPCWSTR pszName)
+{
+    WCHAR szSubKey[MAX_PATH];
+    StringCchPrintfW(szSubKey, _countof(szSubKey), L"%s\\%s", REG_APPPATHS, pszName);
+
+    LSTATUS error = RegDeleteKeyW(HKEY_LOCAL_MACHINE, szSubKey);
+    if (error != ERROR_SUCCESS)
+        trace("Could not remove the test key (%lu)\n", error);
+}
+
+static void TEST_AppPath(void)
+{
+    if (CreateAppPath(L"app_path_test.bat", s_win_test_exe))
     {
-        Sleep(700);
-        // Terminate Window
-        hWnd = FindWindowW(L"CabinetWClass", L"Local Disk (C:)");
-        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat");
+        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat.exe");
+        DeleteAppPath(L"app_path_test.bat");
+    }
+
+    if (CreateAppPath(L"app_path_test.bat.exe", s_sys_test_exe))
+    {
+        TEST_DoTestEntry(__LINE__, TEST_FAILED, L"app_path_test.bat");
+        TEST_DoTestEntry(__LINE__, TEST_SUCCESS_WITH_PROCESS, L"app_path_test.bat.exe");
+        DeleteAppPath(L"app_path_test.bat.exe");
     }
 }
 
 START_TEST(ShellExecuteEx)
 {
-    DoAppPathTest();
-    DoTestEntries();
+#ifdef _WIN64
+    skip("Win64 is not supported yet\n");
+    return;
+#endif
+
+    if (!TEST_Start())
+        return;
+
+    TEST_AppPath();
+    TEST_DoTestEntries();
     test_properties();
-
-    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
-    Sleep(100);
-
     test_sei_lpIDList();
 
+    TEST_End();
 }

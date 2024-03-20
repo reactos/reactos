@@ -14,7 +14,7 @@
 
 /* GLOBALS ********************************************************************/
 
-LONG HalpActiveProcessors;
+KAFFINITY HalpActiveProcessors;
 KAFFINITY HalpDefaultInterruptAffinity;
 BOOLEAN HalpProcessorIdentified;
 BOOLEAN HalpTestCleanSupported;

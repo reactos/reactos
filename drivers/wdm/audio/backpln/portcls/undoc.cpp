@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 NTSTATUS
@@ -98,7 +95,6 @@ PcHandlePropertyWithTable(
     // store device descriptor
     KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
 
-
     // then try KsPropertyHandler
     return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
@@ -180,7 +176,6 @@ PropertyItemDispatch(
      PropertyRequest->MinorTarget = Descriptor->UnknownStream;
      PropertyRequest->Irp = Irp;
      PropertyRequest->Verb = Property->Flags;
-
 
     // check if this is filter / pin property request
     if (!(Property->Flags & KSPROPERTY_TYPE_TOPOLOGY))
@@ -323,8 +318,6 @@ PcAddToPropertyTable(
 ASSERT(PropertyItem->Set);
 	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
    // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
-
-
 
     //DPRINT1("FilterPropertySetCount %lu\n", SubDeviceDescriptor->FilterPropertySetCount);
     // first step check if the property set is present already
@@ -516,9 +509,6 @@ PcCaptureFormat(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
-
-
 VOID
 DumpAutomationTable(
     IN PPCAUTOMATION_TABLE AutomationTable,
@@ -631,7 +621,6 @@ DumpAutomationTable(
     DPRINT("=====================================================================\n");
 }
 
-
 VOID
 DumpFilterDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
@@ -648,7 +637,6 @@ DumpFilterDescriptor(
 
     // dump filter description table
     DumpAutomationTable((PPCAUTOMATION_TABLE)FilterDescription->AutomationTable, L"Filter", L"");
-
 
     if (FilterDescription->PinCount)
     {
@@ -677,7 +665,6 @@ DumpFilterDescriptor(
             DPRINT1("DRIVER BUG: pin size smaller than minimum size\n");
         }
     }
-
 
     if (FilterDescription->Nodes)
     {
@@ -1002,4 +989,3 @@ PcValidateConnectRequest(
 {
     return KsValidateConnectRequest(Irp, Factory->PinDescriptorCount, Factory->KsPinDescriptor, Connect);
 }
-

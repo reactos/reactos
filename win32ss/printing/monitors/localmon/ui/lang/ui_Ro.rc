@@ -1,7 +1,11 @@
 /*
- * Copyright 2007 Detlef Riekenberg
- * Copyright 2008 Michael Stefaniuc
- *           2011 Fulea Ștefan
+ * PROJECT:     ReactOS Local Monitor
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2007 Detlef Riekenberg
+ *              Copyright 2008 Michael Stefaniuc
+ *              Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,7 +31,7 @@ STRINGTABLE
 {
     IDS_LOCALPORT "Port local"
     IDS_INVALIDNAME "„%s” nu este un nume valid de port"
-    IDS_PORTEXISTS "Portul %s existsă deja"
+    IDS_PORTEXISTS "Portul %s există deja"
     IDS_NOTHINGTOCONFIG "Acest port nu are opțiuni de configurat"
 }
 

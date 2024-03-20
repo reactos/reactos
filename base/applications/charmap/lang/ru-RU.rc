@@ -54,5 +54,5 @@ BEGIN
     IDS_ABOUT "&О программе..."
     IDS_TITLE "Таблица символов"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "Все"
 END

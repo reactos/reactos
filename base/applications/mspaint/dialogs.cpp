@@ -5,15 +5,10 @@
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
-
 #include "dialogs.h"
 
 #include <winnls.h>
-
-/* GLOBALS **********************************************************/
 
 CMirrorRotateDialog mirrorRotateDialog;
 CAttributesDialog attributesDialog;
@@ -113,22 +108,21 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
     if (g_isAFile)
     {
-        TCHAR date[100];
-        TCHAR temp[100];
-        GetDateFormat(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, date, _countof(date));
-        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, temp, _countof(temp));
-        _tcscat(date, _T(" "));
-        _tcscat(date, temp);
-        CString strSize;
+        WCHAR date[100], temp[100];
+        GetDateFormatW(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, date, _countof(date));
+        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &g_fileTime, NULL, temp, _countof(temp));
+        StringCchCatW(date, _countof(date), L" ");
+        StringCchCatW(date, _countof(date), temp);
+        CStringW strSize;
         strSize.Format(IDS_FILESIZE, g_fileSize);
         SetDlgItemText(IDD_ATTRIBUTESTEXT6, date);
         SetDlgItemText(IDD_ATTRIBUTESTEXT7, strSize);
     }
 
-    CString strUnit;
+    CStringW strUnit;
     GetDlgItemText(IDD_ATTRIBUTESTEXT8, strUnit);
 
-    CString strRes;
+    CStringW strRes;
     if (strUnit == L"dpi")
         strRes.Format(IDS_PRINTRES, ROUND(g_xDpi), ROUND(g_yDpi));
     else
@@ -173,10 +167,10 @@ LRESULT CAttributesDialog::OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndC
     if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1) != BST_CHECKED)
         return 0;
 
-    CString strNum;
-    strNum.Format(_T("%.3lf"), newWidth / g_xDpi);
+    CStringW strNum;
+    strNum.Format(L"%.3lf", newWidth / g_xDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
-    strNum.Format(_T("%.3lf"), newHeight / g_yDpi);
+    strNum.Format(L"%.3lf", newHeight / g_yDpi);
     SetDlgItemText(IDD_ATTRIBUTESEDIT2, strNum);
     return 0;
 }
@@ -186,10 +180,10 @@ LRESULT CAttributesDialog::OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndC
     if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2) != BST_CHECKED)
         return 0;
 
-    CString strNum;
-    strNum.Format(_T("%.3lf"), newWidth / PpcmFromDpi(g_xDpi));
+    CStringW strNum;
+    strNum.Format(L"%.3lf", newWidth / PpcmFromDpi(g_xDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT1, strNum);
-    strNum.Format(_T("%.3lf"), newHeight / PpcmFromDpi(g_yDpi));
+    strNum.Format(L"%.3lf", newHeight / PpcmFromDpi(g_yDpi));
     SetDlgItemText(IDD_ATTRIBUTESEDIT2, strNum);
     return 0;
 }
@@ -208,21 +202,21 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 {
     if (Edit_GetModify(hWndCtl))
     {
-        TCHAR tempS[100];
+        WCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (_tcstod(tempS, NULL) * g_xDpi));
+            newWidth = max(1, (int)(wcstod(tempS, NULL) * g_xDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int) (_tcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
+            newWidth = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, _tstoi(tempS));
+            newWidth = max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
     }
@@ -233,21 +227,21 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 {
     if (Edit_GetModify(hWndCtl))
     {
-        TCHAR tempS[100];
+        WCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (_tcstod(tempS, NULL) * g_yDpi));
+            newHeight = max(1, (int)(wcstod(tempS, NULL) * g_yDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int) (_tcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
+            newHeight = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, _tstoi(tempS));
+            newHeight = max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
     }
@@ -273,9 +267,7 @@ LRESULT CStretchSkewDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CStretchSkewDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    CString strrcIntNumbers;
-    CString strrcPercentage;
-    CString strrcAngle;
+    CStringW strrcIntNumbers, strrcPercentage, strrcAngle;
     BOOL tr1, tr2, tr3, tr4;
 
     strrcIntNumbers.LoadString(g_hinstExe, IDS_INTNUMBERS);
@@ -305,11 +297,11 @@ LRESULT CStretchSkewDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 }
 
 static INT CALLBACK
-EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM lParam)
+EnumFontFamProc(ENUMLOGFONTW *lpelf, NEWTEXTMETRICW *lpntm, INT FontType, LPARAM lParam)
 {
-    CSimpleArray<CString>& arrFontNames = *reinterpret_cast<CSimpleArray<CString>*>(lParam);
-    LPTSTR name = lpelf->elfLogFont.lfFaceName;
-    if (name[0] == TEXT('@')) // Vertical fonts
+    CSimpleArray<CStringW>& arrFontNames = *reinterpret_cast<CSimpleArray<CStringW>*>(lParam);
+    LPWSTR name = lpelf->elfLogFont.lfFaceName;
+    if (name[0] == L'@') // Vertical fonts
         return TRUE;
 
     for (INT i = 0; i < arrFontNames.GetSize(); ++i)
@@ -331,24 +323,24 @@ CFontsDialog::CFontsDialog()
 void CFontsDialog::InitFontNames()
 {
     // List the fonts
-    CSimpleArray<CString> arrFontNames;
+    CSimpleArray<CStringW> arrFontNames;
     HDC hDC = CreateCompatibleDC(NULL);
     if (hDC)
     {
-        EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc,
-                         reinterpret_cast<LPARAM>(&arrFontNames));
-        DeleteDC(hDC);
+        EnumFontFamiliesW(hDC, NULL, (FONTENUMPROCW)EnumFontFamProc,
+                          reinterpret_cast<LPARAM>(&arrFontNames));
+        ::DeleteDC(hDC);
     }
 
     // Actually add them to the combobox
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
-    SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
+    ::SendMessageW(hwndNames, CB_RESETCONTENT, 0, 0);
     for (INT i = 0; i < arrFontNames.GetSize(); ++i)
     {
         ComboBox_AddString(hwndNames, arrFontNames[i]);
     }
 
-    ::SetWindowText(hwndNames, registrySettings.strFontName);
+    ::SetWindowTextW(hwndNames, registrySettings.strFontName);
 }
 
 void CFontsDialog::InitFontSizes()
@@ -361,10 +353,10 @@ void CFontsDialog::InitFontSizes()
     HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
     ComboBox_ResetContent(hwndSizes);
 
-    TCHAR szText[16];
+    WCHAR szText[16];
     for (UINT i = 0; i < _countof(s_sizes); ++i)
     {
-        wsprintf(szText, TEXT("%d"), s_sizes[i]);
+        StringCchPrintfW(szText, _countof(szText), L"%d", s_sizes[i]);
         INT iItem = ComboBox_AddString(hwndSizes, szText);
         if (s_sizes[i] == (INT)registrySettings.PointSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
@@ -372,27 +364,27 @@ void CFontsDialog::InitFontSizes()
 
     if (ComboBox_GetCurSel(hwndSizes) == CB_ERR)
     {
-        wsprintf(szText, TEXT("%d"), (INT)registrySettings.PointSize);
-        ::SetWindowText(hwndSizes, szText);
+        StringCchPrintfW(szText, _countof(szText), L"%d", (INT)registrySettings.PointSize);
+        ::SetWindowTextW(hwndSizes, szText);
     }
 }
 
 void CFontsDialog::InitToolbar()
 {
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
-    SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
-    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
+    ::SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    ::SendMessageW(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
+    ::SendMessageW(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
     
     TBADDBITMAP AddBitmap;
     AddBitmap.hInst = g_hinstExe;
     AddBitmap.nID = IDB_FONTSTOOLBAR;
-    SendMessage(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
+    ::SendMessageW(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
 
-    HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
+    HIMAGELIST himl = ImageList_LoadImage(g_hinstExe, MAKEINTRESOURCEW(IDB_FONTSTOOLBAR),
                                           16, 8, RGB(255, 0, 255), IMAGE_BITMAP,
                                           LR_CREATEDIBSECTION);
-    SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    ::SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
     TBBUTTON buttons[] =
     {
@@ -401,11 +393,11 @@ void CFontsDialog::InitToolbar()
         { 2, IDM_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK },
         { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK }, // TODO:
     };
-    SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
+    ::SendMessageW(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
 
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_BOLD, registrySettings.Bold);
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_ITALIC, registrySettings.Italic);
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_UNDERLINE, registrySettings.Underline);
+    ::SendMessageW(hwndToolbar, TB_CHECKBUTTON, IDM_BOLD, registrySettings.Bold);
+    ::SendMessageW(hwndToolbar, TB_CHECKBUTTON, IDM_ITALIC, registrySettings.Italic);
+    ::SendMessageW(hwndToolbar, TB_CHECKBUTTON, IDM_UNDERLINE, registrySettings.Underline);
 }
 
 LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -441,7 +433,7 @@ void CFontsDialog::OnFontName(UINT codeNotify)
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
     INT iItem = CB_ERR;
     UINT cch;
-    TCHAR szText[LF_FACESIZE];
+    WCHAR szText[LF_FACESIZE];
 
     switch (codeNotify)
     {
@@ -449,9 +441,7 @@ void CFontsDialog::OnFontName(UINT codeNotify)
             iItem = ComboBox_GetCurSel(hwndNames);
             cch = ComboBox_GetLBTextLen(hwndNames, iItem);
             if (iItem != CB_ERR && 0 < cch && cch < _countof(szText))
-            {
                 ComboBox_GetLBText(hwndNames, iItem, szText);
-            }
             break;
 
         case CBN_EDITCHANGE:
@@ -482,13 +472,13 @@ void CFontsDialog::OnFontSize(UINT codeNotify)
             if (iItem != CB_ERR && 0 < cch && cch < _countof(szText))
             {
                 ComboBox_GetLBText(hwndSizes, iItem, szText);
-                PointSize = _ttoi(szText);
+                PointSize = _wtoi(szText);
             }
             break;
 
         case CBN_EDITCHANGE:
-            ::GetWindowText(hwndSizes, szText, _countof(szText));
-            PointSize = _ttoi(szText);
+            ::GetWindowTextW(hwndSizes, szText, _countof(szText));
+            PointSize = _wtoi(szText);
             break;
     }
 
@@ -504,7 +494,7 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     UINT id = LOWORD(wParam);
     UINT codeNotify = HIWORD(wParam);
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
-    BOOL bChecked = (BOOL)::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
+    BOOL bChecked = (BOOL)::SendMessageW(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
 
     switch (id)
     {
@@ -548,14 +538,14 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     NMHDR *pnmhdr = reinterpret_cast<NMHDR *>(lParam);
     if (pnmhdr->code == TTN_NEEDTEXT)
     {
-        LPTOOLTIPTEXT pToolTip = reinterpret_cast<LPTOOLTIPTEXT>(lParam);
+        LPTOOLTIPTEXTW pToolTip = reinterpret_cast<LPTOOLTIPTEXTW>(lParam);
         pToolTip->hinst = g_hinstExe;
         switch (pnmhdr->idFrom)
         {
-            case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD); break;
-            case IDM_ITALIC:    pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC); break;
-            case IDM_UNDERLINE: pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE); break;
-            case IDM_VERTICAL:  pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL); break;
+            case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCEW(IDS_BOLD); break;
+            case IDM_ITALIC:    pToolTip->lpszText = MAKEINTRESOURCEW(IDS_ITALIC); break;
+            case IDM_UNDERLINE: pToolTip->lpszText = MAKEINTRESOURCEW(IDS_UNDERLINE); break;
+            case IDM_VERTICAL:  pToolTip->lpszText = MAKEINTRESOURCEW(IDS_VERTICAL); break;
 
             default:
                 break;
@@ -604,29 +594,29 @@ LRESULT CFontsDialog::OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         if (pDrawItem->itemID == (UINT)-1)
             return TRUE;
 
-        SetBkMode(pDrawItem->hDC, TRANSPARENT);
+        ::SetBkMode(pDrawItem->hDC, TRANSPARENT);
 
         HWND hwndItem = pDrawItem->hwndItem;
         RECT rcItem = pDrawItem->rcItem;
         if (pDrawItem->itemState & ODS_SELECTED)
         {
-            FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_HIGHLIGHT));
-            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            ::FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_HIGHLIGHT));
+            ::SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
         }
         else
         {
-            FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_WINDOW));
-            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_WINDOWTEXT));
+            ::FillRect(pDrawItem->hDC, &rcItem, GetSysColorBrush(COLOR_WINDOW));
+            ::SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_WINDOWTEXT));
         }
 
-        TCHAR szText[LF_FACESIZE];
+        WCHAR szText[LF_FACESIZE];
         if ((UINT)ComboBox_GetLBTextLen(hwndItem, pDrawItem->itemID) < _countof(szText))
         {
             szText[0] = 0;
             ComboBox_GetLBText(hwndItem, pDrawItem->itemID, szText);
 
             rcItem.left += 24;
-            DrawText(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            ::DrawTextW(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
         if (pDrawItem->itemState & ODS_FOCUS)

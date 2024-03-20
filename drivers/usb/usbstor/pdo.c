@@ -437,37 +437,60 @@ USBSTOR_PdoHandleQueryInstanceId(
 {
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    WCHAR Buffer[100];
-    ULONG Length;
+    PUSB_STRING_DESCRIPTOR Descriptor;
+    ULONG CharCount;
     LPWSTR InstanceId;
+    NTSTATUS Status;
 
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
+    FDODeviceExtension = PDODeviceExtension->LowerDeviceObject->DeviceExtension;
 
-    // format instance id
-    if (FDODeviceExtension->SerialNumber)
+    Descriptor = FDODeviceExtension->SerialNumber;
+    if (Descriptor && (Descriptor->bLength >= sizeof(USB_COMMON_DESCRIPTOR) + sizeof(WCHAR)))
     {
-        // using serial number from device
-        swprintf(Buffer, L"%s&%c", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
+        /* Format the serial number descriptor only if supported by the device */
+        CharCount = (Descriptor->bLength - sizeof(USB_COMMON_DESCRIPTOR)) / sizeof(WCHAR) +
+                    (sizeof("&") - 1) +
+                    (sizeof("F") - 1) + // LUN: 1 char (MAX_LUN)
+                    sizeof(ANSI_NULL);
     }
     else
     {
-        // use instance count and LUN
-        swprintf(Buffer, L"%04lu&%c", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
+        /* Use the instance count and LUN as a fallback */
+        CharCount = (sizeof("99999999") - 1) + // Instance Count: 8 chars
+                    (sizeof("&") - 1) +
+                    (sizeof("F") - 1) + // LUN: 1 char (MAX_LUN)
+                    sizeof(ANSI_NULL);
     }
 
-    Length = wcslen(Buffer) + 1;
-
-    InstanceId = ExAllocatePoolWithTag(PagedPool, Length * sizeof(WCHAR), USB_STOR_TAG);
+    InstanceId = ExAllocatePoolUninitialized(PagedPool, CharCount * sizeof(WCHAR), USB_STOR_TAG);
     if (!InstanceId)
     {
         Irp->IoStatus.Information = 0;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    wcscpy(InstanceId, Buffer);
+    if (Descriptor && (Descriptor->bLength >= sizeof(USB_COMMON_DESCRIPTOR) + sizeof(WCHAR)))
+    {	
+        Status = RtlStringCchPrintfW(InstanceId,
+                                     CharCount,
+                                     L"%s&%x",
+                                     Descriptor->bString,
+                                     PDODeviceExtension->LUN);
+    }
+    else
+    {
+        Status = RtlStringCchPrintfW(InstanceId,
+                                     CharCount,
+                                     L"%04lu&%x",
+                                     FDODeviceExtension->InstanceCount,
+                                     PDODeviceExtension->LUN);
+    }
 
-    DPRINT("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
+    /* This should not happen */
+    ASSERT(NT_SUCCESS(Status));
+
+    DPRINT("USBSTOR_PdoHandleQueryInstanceId '%S'\n", InstanceId);
 
     Irp->IoStatus.Information = (ULONG_PTR)InstanceId;
     return STATUS_SUCCESS;

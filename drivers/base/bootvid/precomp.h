@@ -61,18 +61,18 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 
 #define RGB(r, g, b)    ((RGBQUAD)(((UCHAR)(b) | ((USHORT)((UCHAR)(g))<<8)) | (((ULONG)(UCHAR)(r))<<16)))
 
-#define GetRValue(quad)    ((UCHAR)(((quad)>>16) & 0xFF))
-#define GetGValue(quad)    ((UCHAR)(((quad)>>8) & 0xFF))
-#define GetBValue(quad)    ((UCHAR)((quad) & 0xFF))
+#define GetRValue(quad)     ((UCHAR)(((quad)>>16) & 0xFF))
+#define GetGValue(quad)     ((UCHAR)(((quad)>>8) & 0xFF))
+#define GetBValue(quad)     ((UCHAR)((quad) & 0xFF))
 
-#define InitializePalette()    InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
+#define InitializePalette() InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
 
 #ifdef CHAR_GEN_UPSIDE_DOWN
-# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
-# define FONT_PTR_DELTA (-1)
+# define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1)
+# define FONT_PTR_DELTA     (-1)
 #else
-# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT];
-# define FONT_PTR_DELTA (1)
+# define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT])
+# define FONT_PTR_DELTA     (1)
 #endif
 
 #endif /* _BOOTVID_PCH_ */

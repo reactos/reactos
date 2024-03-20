@@ -596,16 +596,6 @@ CmpCompareNewValueDataAgainstKCBCache(
 );
 
 //
-// Registry Validation Functions
-//
-ULONG
-NTAPI
-CmCheckRegistry(
-    IN PCMHIVE Hive,
-    IN ULONG Flags
-);
-
-//
 // Hive List Routines
 //
 BOOLEAN
@@ -757,16 +747,17 @@ CmpQueryKeyName(
 NTSTATUS
 NTAPI
 CmpInitializeHive(
-    OUT PCMHIVE *CmHive,
-    IN ULONG OperationType,
-    IN ULONG HiveFlags,
-    IN ULONG FileType,
-    IN PVOID HiveData OPTIONAL,
-    IN HANDLE Primary,
-    IN HANDLE Log,
-    IN HANDLE External,
-    IN PCUNICODE_STRING FileName OPTIONAL,
-    IN ULONG CheckFlags
+    _Out_ PCMHIVE *CmHive,
+    _In_ ULONG OperationType,
+    _In_ ULONG HiveFlags,
+    _In_ ULONG FileType,
+    _In_opt_ PVOID HiveData,
+    _In_ HANDLE Primary,
+    _In_ HANDLE Log,
+    _In_ HANDLE External,
+    _In_ HANDLE Alternate,
+    _In_opt_ PCUNICODE_STRING FileName,
+    _In_ ULONG CheckFlags
 );
 
 NTSTATUS
@@ -1236,10 +1227,10 @@ CmpFileWrite(
 BOOLEAN
 NTAPI
 CmpFileSetSize(
-    IN PHHIVE RegistryHive,
-    IN ULONG FileType,
-    IN ULONG FileSize,
-    IN ULONG OldFileSize
+    _In_ PHHIVE RegistryHive,
+    _In_ ULONG FileType,
+    _In_ ULONG FileSize,
+    _In_ ULONG OldFileSize
 );
 
 BOOLEAN
@@ -1473,6 +1464,7 @@ extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;
+extern BOOLEAN HvShutdownComplete;
 
 //
 // Inlined functions

@@ -1,8 +1,13 @@
 /*
- * Copyright 2004 Krzysztof Foltman
- * Copyright 2010 Claudia Cotună
- *                Michael Stefaniuc
- *           2011 Ștefan Fulea
+ * PROJECT:     ReactOS Wordpad
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2004 Krzysztof Foltman
+ *              Copyright 2010 Claudia Cotună
+ *              Copyright 2010 Michael Stefaniuc
+ *              Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,8 +32,8 @@ BEGIN
     BEGIN
         MENUITEM "&Nou…\tCtrl+N",            ID_FILE_NEW
         MENUITEM "&Deschidere…\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "&Pătrează\tCtrl+S",        ID_FILE_SAVE
-        MENUITEM "Păst&rare în…",            ID_FILE_SAVEAS
+        MENUITEM "S&alvează\tCtrl+S",        ID_FILE_SAVE
+        MENUITEM "Salvea&ză ca…",            ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "I&mprimare…\tCtrl+P",      ID_PRINT
         MENUITEM "Pre&vizionare imprimare…", ID_PREVIEW
@@ -178,13 +183,13 @@ END
 STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Document"
-    STRING_PROMPT_SAVE_CHANGES,  "Păstrați modificările la „%s”?"
+    STRING_PROMPT_SAVE_CHANGES,  "Salvați modificările la „%s”?"
     STRING_SEARCH_FINISHED,      "Căutarea în document a fost finalizată."
     STRING_LOAD_RICHED_FAILED,   "Biblioteca RichEdit nu a putut fi încărcată."
     STRING_SAVE_LOSEFORMATTING,  "Ați ales să salvați în formatul de text simplu, care va pierde formatarea. Sigur doriți să continuați?"
     STRING_INVALID_NUMBER,       "Formatul de număr nu este valid."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Documentele de depozitare OLE nu sunt suportate."
-    STRING_WRITE_FAILED,              "Fișierul nu a putut fi păstrat."
+    STRING_WRITE_FAILED,              "Fișierul nu a putut fi salvat."
     STRING_WRITE_ACCESS_DENIED,       "Nu aveți permisiunea să salvați fișierul."
     STRING_OPEN_FAILED,               "Fișierul nu a putut fi deschis."
     STRING_OPEN_ACCESS_DENIED,        "Nu aveți permisiunea de a deschide fișierul."

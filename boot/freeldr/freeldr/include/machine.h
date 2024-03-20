@@ -74,7 +74,7 @@ typedef struct tagMACHVTBL
 
     // NOTE: Not in the machine.c ...
     BOOLEAN (*InitializeBootDevices)(VOID);
-    PCONFIGURATION_COMPONENT_DATA (*HwDetect)(VOID);
+    PCONFIGURATION_COMPONENT_DATA (*HwDetect)(_In_opt_ PCSTR Options);
     VOID (*HwIdle)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
@@ -133,8 +133,11 @@ VOID MachInit(const char *CmdLine);
 #define MachInitializeBootDevices() \
     MachVtbl.InitializeBootDevices()
 
-#define MachHwDetect()  MachVtbl.HwDetect()
-#define MachHwIdle()    MachVtbl.HwIdle()
+#define MachHwDetect(Options) \
+    MachVtbl.HwDetect(Options)
+
+#define MachHwIdle() \
+    MachVtbl.HwIdle()
 
 /* ARC FUNCTIONS **************************************************************/
 

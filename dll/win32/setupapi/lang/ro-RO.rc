@@ -1,10 +1,16 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS SetupAPI DLL
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Copiere fișiere"
+CAPTION "Copiere fișiere..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -20,9 +26,9 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Fișiere necesare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Introduceți discul de instalare al producătorului apoi\nverificați că mai jos e selectată unitatea corectă", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Introduceți discul de instalare al producătorului apoi\nverificați că discul corect e selectat mai jos", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Fișierele producătorului vor fi copiate din:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Copiază fișierele producătorului din:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "A&nulează", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -31,15 +37,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "Este necesar fișierul «%1» din %2"
-    IDS_UNKNOWN      "Nespecificat"
-    IDS_COPYFROM     "Copie fișiere din:"
-    IDS_INFO         "Tastați calea unde sunt amplasate fișierele, apoi confirmați."
+    IDS_PROMPTDISK   "Este necesar fișierul «%1» pe %2"
+    IDS_UNKNOWN      "Necunoscut"
+    IDS_COPYFROM     "Copiază fișiere din:"
+    IDS_INFO         "Tastați calea unde sunt situate fișierele, apoi dați clic pe Confirmă."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Este necesară repornirea calculatorului pentru a finaliza instalarea. Continuați?"
+    IDS_QUERY_REBOOT_TEXT "Este necesară repornirea calculatorului dvs. pentru a finaliza instalarea. Continuați?"
     IDS_QUERY_REBOOT_CAPTION "Repornire"
     IDS_INF_FILE "Informație de instalare"
 END

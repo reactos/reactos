@@ -25,10 +25,9 @@ list(APPEND SOURCE
     toolbox.cpp
     toolsettings.cpp
     toolsmodel.cpp
-    winproc.cpp
     precomp.h)
 
-file(GLOB mspaint_rc_deps icons/*.*)
+file(GLOB mspaint_rc_deps img/*.*)
 add_rc_deps(rsrc.rc ${mspaint_rc_deps})
 add_executable(mspaint ${SOURCE} rsrc.rc)
 set_module_type(mspaint win32gui UNICODE)

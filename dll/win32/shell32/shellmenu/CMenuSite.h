@@ -59,49 +59,48 @@ public:
     END_COM_MAP()
 
     // IBandSite
-    virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown * punk);
-    virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD* pdwBandID);
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
-    virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv);
+    STDMETHOD(AddBand)(IUnknown * punk) override;
+    STDMETHOD(EnumBands)(UINT uBand, DWORD* pdwBandID) override;
+    STDMETHOD(QueryBand)(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName) override;
+    STDMETHOD(GetBandObject)(DWORD dwBandID, REFIID riid, VOID **ppv) override;
 
     // IDeskBarClient
-    virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSize(DWORD dwWhich, LPRECT prc);
-    virtual HRESULT STDMETHODCALLTYPE UIActivateDBC(DWORD dwState);
+    STDMETHOD(SetDeskBarSite)(IUnknown *punkSite) override;
+    STDMETHOD(GetSize)(DWORD dwWhich, LPRECT prc) override;
+    STDMETHOD(UIActivateDBC)(DWORD dwState) override;
 
     // IOleWindow
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
+    STDMETHOD(GetWindow)(HWND *phwnd) override;
 
     // IOleCommandTarget
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // IInputObject
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // IInputObjectSite
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    STDMETHOD(OnFocusChangeIS)(IUnknown *punkObj, BOOL fSetFocus) override;
 
     // IWinEventHandler
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
+    STDMETHOD(OnWinEvent)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
 
     // IServiceProvider
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
-
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // Using custom message map instead
     virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD mapId = 0);
 
-    // UNIMPLEMENTED
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
-    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
-    virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
-    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
-    virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE SetModeDBC(DWORD dwMode);
+    // IDeskBarClient
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
+    STDMETHOD(GetBandSiteInfo)(BANDSITEINFO *pbsinfo) override;
+    STDMETHOD(RemoveBand)(DWORD dwBandID) override;
+    STDMETHOD(SetBandSiteInfo)(const BANDSITEINFO *pbsinfo) override;
+    STDMETHOD(SetBandState)(DWORD dwBandID, DWORD dwMask, DWORD dwState) override;
+    STDMETHOD(SetModeDBC)(DWORD dwMode) override;
 
 private:
     IUnknown * ToIUnknown() { return static_cast<IDeskBarClient*>(this); }

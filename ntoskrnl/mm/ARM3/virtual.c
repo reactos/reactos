@@ -2213,6 +2213,9 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     PETHREAD Thread = PsGetCurrentThread();
     TABLE_SEARCH_RESULT Result;
 
+    /* We must be attached */
+    ASSERT(Process == PsGetCurrentProcess());
+
     /* Calculate base address for the VAD */
     StartingAddress = (ULONG_PTR)PAGE_ALIGN((*BaseAddress));
     EndingAddress = (((ULONG_PTR)*BaseAddress + *NumberOfBytesToProtect - 1) | (PAGE_SIZE - 1));
@@ -2225,18 +2228,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
-    {
-        /* Evil hack */
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
-    }
-
     /* Lock the address space and make sure the process isn't already dead */
     AddressSpace = MmGetCurrentAddressSpace();
     MmLockAddressSpace(AddressSpace);
@@ -2245,6 +2236,19 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         DPRINT1("Process is dying\n");
         Status = STATUS_PROCESS_IS_TERMINATING;
         goto FailPath;
+    }
+
+    /* Check for ROS specific memory area */
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
+    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    {
+        /* Evil hack */
+        MmUnlockAddressSpace(AddressSpace);
+        return MiRosProtectVirtualMemory(Process,
+                                         BaseAddress,
+                                         NumberOfBytesToProtect,
+                                         NewAccessProtection,
+                                         OldAccessProtection);
     }
 
     /* Get the VAD for this address range, and make sure it exists */

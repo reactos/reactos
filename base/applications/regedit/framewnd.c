@@ -138,7 +138,7 @@ static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
     WCHAR str[100];
 
-    wcscpy(str, L"");
+    str[0] = UNICODE_NULL;
     if (nFlags & MF_POPUP)
     {
         if (hSysMenu != GetMenu(hWnd))
@@ -814,6 +814,7 @@ BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
     WCHAR szBuffer[512];
     HGLOBAL hGlobal;
     LPWSTR s;
+    SIZE_T cbGlobal;
 
     if (!OpenClipboard(hWnd))
         goto done;
@@ -825,12 +826,13 @@ BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
     if (!GetKeyName(szBuffer, ARRAY_SIZE(szBuffer), hRootKey, keyName))
         goto done;
 
-    hGlobal = GlobalAlloc(GMEM_MOVEABLE, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+    cbGlobal = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
+    hGlobal = GlobalAlloc(GMEM_MOVEABLE, cbGlobal);
     if (!hGlobal)
         goto done;
 
     s = GlobalLock(hGlobal);
-    wcscpy(s, szBuffer);
+    StringCbCopyW(s, cbGlobal, szBuffer);
     GlobalUnlock(hGlobal);
 
     SetClipboardData(CF_UNICODETEXT, hGlobal);

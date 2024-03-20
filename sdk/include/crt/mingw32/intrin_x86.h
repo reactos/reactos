@@ -833,7 +833,7 @@ __INTRIN_INLINE void __movsd(unsigned long * Destination, const unsigned long * 
 {
 	__asm__ __volatile__
 	(
-		"rep; movsd" :
+		"rep; movsl" :
 		[Destination] "=D" (Destination), [Source] "=S" (Source), [Count] "=c" (Count) :
 		"[Destination]" (Destination), "[Source]" (Source), "[Count]" (Count)
 	);

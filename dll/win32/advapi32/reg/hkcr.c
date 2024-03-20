@@ -214,6 +214,30 @@ GetPreferredHKCRKey(
     return ErrorCode;
 }
 
+static
+LONG
+GetSubkeyInfoHelper(
+    _In_ HKEY hKey,
+    _Out_opt_ LPDWORD lpSubKeys,
+    _Out_opt_ LPDWORD lpMaxSubKeyLen)
+{
+    LONG err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
+                                NULL, NULL, NULL, NULL, NULL, NULL);
+    if (err != ERROR_ACCESS_DENIED)
+        return err;
+
+    /* Windows RegEdit only uses KEY_ENUMERATE_SUB_KEYS when enumerating but
+     * KEY_QUERY_VALUE is required to get the info in EnumHKCRKey.
+     */
+    if (RegOpenKeyExW(hKey, NULL, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        err = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, lpSubKeys, lpMaxSubKeyLen,
+                               NULL, NULL, NULL, NULL, NULL, NULL);
+        RegCloseKey(hKey);
+    }
+    return err;
+}
+
 /* HKCR version of RegCreateKeyExW. */
 LONG
 WINAPI
@@ -654,19 +678,7 @@ EnumHKCRKey(
     }
 
     /* Get some info on the HKCU side */
-    ErrorCode = RegQueryInfoKeyW(
-        PreferredKey,
-        NULL,
-        NULL,
-        NULL,
-        &NumPreferredSubKeys,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
+    ErrorCode = GetSubkeyInfoHelper(PreferredKey, &NumPreferredSubKeys, NULL);
     if (ErrorCode != ERROR_SUCCESS)
         goto Exit;
 
@@ -692,19 +704,7 @@ EnumHKCRKey(
     dwIndex -= NumPreferredSubKeys;
 
     /* Get some info */
-    ErrorCode = RegQueryInfoKeyW(
-        FallbackKey,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        &MaxFallbackSubKeyLen,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
+    ErrorCode = GetSubkeyInfoHelper(FallbackKey, NULL, &MaxFallbackSubKeyLen);
     if (ErrorCode != ERROR_SUCCESS)
     {
         ERR("Could not query info of key %p (Err: %d)\n", FallbackKey, ErrorCode);
@@ -1013,4 +1013,69 @@ Exit:
         RtlFreeHeap(RtlGetProcessHeap(), 0, FallbackValueName);
 
     return ErrorCode;
+}
+
+/* HKCR version of RegQueryInfoKeyW */
+LONG
+WINAPI
+QueryInfoHKCRKey(
+    _In_ HKEY hKey,
+    _Out_writes_to_opt_(*lpcchClass, *lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpcSubKeys,
+    _Out_opt_ LPDWORD lpcbMaxSubKeyLen,
+    _Out_opt_ LPDWORD lpcbMaxClassLen,
+    _Out_opt_ LPDWORD lpcValues,
+    _Out_opt_ LPDWORD lpcbMaxValueNameLen,
+    _Out_opt_ LPDWORD lpcbMaxValueLen,
+    _Out_opt_ LPDWORD lpcbSecurityDescriptor,
+    _Out_opt_ PFILETIME lpftLastWriteTime)
+{
+    HKEY PreferredKey, FallbackKey;
+    LONG retval, err;
+    DWORD OtherSubKeys = 0, OtherMaxSub = 0, OtherMaxClass = 0;
+    DWORD OtherValues = 0, OtherMaxName = 0, OtherMaxVal = 0;
+
+    ASSERT(IsHKCRKey(hKey));
+
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
+
+    retval = GetFallbackHKCRKey(hKey, &FallbackKey, FALSE);
+    if (retval == ERROR_SUCCESS)
+    {
+        retval = RegQueryInfoKeyW(FallbackKey, lpClass, lpcchClass, lpReserved,
+                                  &OtherSubKeys, &OtherMaxSub, &OtherMaxClass,
+                                  &OtherValues, &OtherMaxName, &OtherMaxVal,
+                                  lpcbSecurityDescriptor, lpftLastWriteTime);
+        if (FallbackKey != hKey)
+            RegCloseKey(FallbackKey);
+    }
+
+    err = GetPreferredHKCRKey(hKey, &PreferredKey);
+    if (err == ERROR_SUCCESS)
+    {
+        err = RegQueryInfoKeyW(PreferredKey, lpClass, lpcchClass, lpReserved,
+                               lpcSubKeys, lpcbMaxSubKeyLen, lpcbMaxClassLen,
+                               lpcValues, lpcbMaxValueNameLen, lpcbMaxValueLen,
+                               lpcbSecurityDescriptor, lpftLastWriteTime);
+        if (PreferredKey != hKey)
+            RegCloseKey(PreferredKey);
+    }
+
+    if (lpcSubKeys)
+        *lpcSubKeys = (err ? 0 : *lpcSubKeys) + OtherSubKeys;
+    if (lpcValues)
+        *lpcValues = (err ? 0 : *lpcValues) + OtherValues;
+    if (lpcbMaxSubKeyLen)
+        *lpcbMaxSubKeyLen = max((err ? 0 : *lpcbMaxSubKeyLen), OtherMaxSub);
+    if (lpcbMaxClassLen)
+        *lpcbMaxClassLen = max((err ? 0 : *lpcbMaxClassLen), OtherMaxClass);
+    if (lpcbMaxValueNameLen)
+        *lpcbMaxValueNameLen = max((err ? 0 : *lpcbMaxValueNameLen), OtherMaxName);
+    if (lpcbMaxValueLen)
+        *lpcbMaxValueLen = max((err ? 0 : *lpcbMaxValueLen), OtherMaxVal);
+
+    return (err == ERROR_SUCCESS) ? ERROR_SUCCESS : retval;
 }

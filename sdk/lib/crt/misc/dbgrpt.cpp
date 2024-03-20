@@ -133,7 +133,7 @@ HMODULE _CrtGetUser32()
         }
     }
 
-    return _CrtUser32Handle != INVALID_HANDLE_VALUE ? _CrtUser32Handle : NULL;
+    return (_CrtUser32Handle != INVALID_HANDLE_VALUE ? _CrtUser32Handle : NULL);
 }
 
 static tMessageBoxW _CrtGetMessageBox()
@@ -149,7 +149,7 @@ static tMessageBoxW _CrtGetMessageBox()
         _InterlockedCompareExchangePointer((PVOID*)&_CrtMessageBoxW, (PVOID)proc, NULL);
     }
 
-    return _CrtMessageBoxW != INVALID_HANDLE_VALUE ? _CrtMessageBoxW : NULL;
+    return (_CrtMessageBoxW != INVALID_HANDLE_VALUE ? _CrtMessageBoxW : NULL);
 }
 
 
@@ -158,7 +158,7 @@ static int _CrtDbgReportWindow(int reportType, const char_t *filename, int linen
 {
     typedef dbgrpt_char_traits<char_t> traits;
 
-    wchar_t szCompleteMessage[(DBGRPT_MAX_BUFFER_SIZE+1)*2] = {0};
+    wchar_t szCompleteMessage[DBGRPT_MAX_BUFFER_SIZE] = {0};
     wchar_t LineBuffer[20] = {0};
 
     if (filename && !filename[0])
@@ -170,7 +170,8 @@ static int _CrtDbgReportWindow(int reportType, const char_t *filename, int linen
     if (linenumber)
         _itow(linenumber, LineBuffer, 10);
 
-    _snwprintf(szCompleteMessage, DBGRPT_MAX_BUFFER_SIZE * 2,
+    _snwprintf(szCompleteMessage,
+               _countof(szCompleteMessage) - 1,
                traits::szAssertionMessage,
                _CrtModeMessages[reportType],
                moduleName ? L"\nModule: " : L"", moduleName ? moduleName : traits::szEmptyString,
@@ -185,7 +186,7 @@ static int _CrtDbgReportWindow(int reportType, const char_t *filename, int linen
 
     tMessageBoxW messageBox = _CrtGetMessageBox();
     if (!messageBox)
-        return IsDebuggerPresent() ? IDRETRY : IDABORT;
+        return (IsDebuggerPresent() ? IDRETRY : IDABORT);
 
     // TODO: If we are not interacive, add MB_SERVICE_NOTIFICATION
     return messageBox(NULL, szCompleteMessage, L"ReactOS C++ Runtime Library",
@@ -309,10 +310,17 @@ static int _CrtHandleDbgReport(int reportType, const char_t* szCompleteMessage, 
 
 
 EXTERN_C
-int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...)
+int __cdecl
+_VCrtDbgReportA(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    va_list arglist)
 {
-    char szFormatted[DBGRPT_MAX_BUFFER_SIZE+1] = {0};           // The user provided message
-    char szCompleteMessage[(DBGRPT_MAX_BUFFER_SIZE+1)*2] = {0}; // The output for debug / file
+    char szFormatted[DBGRPT_MAX_BUFFER_SIZE] = {0};       // The user provided message
+    char szCompleteMessage[DBGRPT_MAX_BUFFER_SIZE] = {0}; // The output for debug / file
 
     // Check for recursive _CrtDbgReport calls, and validate reportType
     if (!_CrtEnterDbgReport(reportType, filename, linenumber))
@@ -320,16 +328,19 @@ int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, 
 
     if (filename)
     {
-        _snprintf(szCompleteMessage, DBGRPT_MAX_BUFFER_SIZE, "%s(%d) : ", filename, linenumber);
+        _snprintf(szCompleteMessage,
+                  _countof(szCompleteMessage) - 1,
+                  "%s(%d) : ",
+                  filename,
+                  linenumber);
     }
 
     if (format)
     {
-        va_list arglist;
-        va_start(arglist, format);
-        int len = _vsnprintf(szFormatted, DBGRPT_MAX_BUFFER_SIZE - 2 - sizeof(DBGRPT_ASSERT_PREFIX_MESSAGE), format, arglist);
-        va_end(arglist);
-
+        int len = _vsnprintf(szFormatted,
+                             _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
+                             format,
+                             arglist);
         if (len < 0)
         {
             strcpy(szFormatted, DBGRPT_STRING_TOO_LONG);
@@ -361,10 +372,17 @@ int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, 
 }
 
 EXTERN_C
-int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...)
+int __cdecl
+_VCrtDbgReportW(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    va_list arglist)
 {
-    wchar_t szFormatted[DBGRPT_MAX_BUFFER_SIZE+1] = {0};           // The user provided message
-    wchar_t szCompleteMessage[(DBGRPT_MAX_BUFFER_SIZE+1)*2] = {0}; // The output for debug / file
+    wchar_t szFormatted[DBGRPT_MAX_BUFFER_SIZE] = {0};       // The user provided message
+    wchar_t szCompleteMessage[DBGRPT_MAX_BUFFER_SIZE] = {0}; // The output for debug / file
 
     // Check for recursive _CrtDbgReportW calls, and validate reportType
     if (!_CrtEnterDbgReport(reportType, filename, linenumber))
@@ -372,16 +390,19 @@ int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumb
 
     if (filename)
     {
-        _snwprintf(szCompleteMessage, DBGRPT_MAX_BUFFER_SIZE, L"%s(%d) : ", filename, linenumber);
+        _snwprintf(szCompleteMessage,
+                   _countof(szCompleteMessage) - 1,
+                   L"%s(%d) : ",
+                   filename,
+                   linenumber);
     }
 
     if (format)
     {
-        va_list arglist;
-        va_start(arglist, format);
-        int len = _vsnwprintf(szFormatted, DBGRPT_MAX_BUFFER_SIZE - 2 - sizeof(DBGRPT_ASSERT_PREFIX_MESSAGE), format, arglist);
-        va_end(arglist);
-
+        int len = _vsnwprintf(szFormatted,
+                              _countof(szFormatted) - 2 - _countof(DBGRPT_ASSERT_PREFIX_MESSAGE),
+                              format,
+                              arglist);
         if (len < 0)
         {
             wcscpy(szFormatted, _CRT_WIDE(DBGRPT_STRING_TOO_LONG));
@@ -412,5 +433,68 @@ int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumb
     return nResult;
 }
 
+EXTERN_C
+int __cdecl
+_CrtDbgReportV(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    va_list arglist)
+{
+    return _VCrtDbgReportA(reportType, filename, linenumber, moduleName, format, arglist);
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReportWV(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    va_list arglist)
+{
+    return _VCrtDbgReportW(reportType, filename, linenumber, moduleName, format, arglist);
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReport(
+    int reportType,
+    const char *filename,
+    int linenumber,
+    const char *moduleName,
+    const char *format,
+    ...)
+{
+    va_list arglist;
+    int result;
+
+    va_start(arglist, format);
+    result = _VCrtDbgReportA(reportType, filename, linenumber, moduleName, format, arglist);
+    va_end(arglist);
+    return result;
+}
+
+EXTERN_C
+int __cdecl
+_CrtDbgReportW(
+    int reportType,
+    const wchar_t *filename,
+    int linenumber,
+    const wchar_t *moduleName,
+    const wchar_t *format,
+    ...)
+{
+    va_list arglist;
+    int result;
+
+    va_start(arglist, format);
+    result = _VCrtDbgReportW(reportType, filename, linenumber, moduleName, format, arglist);
+    va_end(arglist);
+    return result;
+}
 
 //#endif // _DEBUG

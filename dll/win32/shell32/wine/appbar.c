@@ -36,11 +36,12 @@
 #include <winuser.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-
-#include "undocshell.h"
+#include <undocshell.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+
+#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 

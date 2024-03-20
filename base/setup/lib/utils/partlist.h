@@ -70,9 +70,6 @@ typedef struct _PARTENTRY
     /* Partition is new, table does not exist on disk yet */
     BOOLEAN New;
 
-    /* Partition was created automatically */
-    BOOLEAN AutoCreate;
-
     /* Partition must be checked */
     BOOLEAN NeedsCheck;
 
@@ -227,6 +224,16 @@ RoundingDivide(
    IN ULONGLONG Divisor);
 
 
+#define GetPartEntryOffsetInBytes(PartEntry) \
+    ((PartEntry)->StartSector.QuadPart * (PartEntry)->DiskEntry->BytesPerSector)
+
+#define GetPartEntrySizeInBytes(PartEntry) \
+    ((PartEntry)->SectorCount.QuadPart * (PartEntry)->DiskEntry->BytesPerSector)
+
+#define GetDiskSizeInBytes(DiskEntry) \
+    ((DiskEntry)->SectorCount.QuadPart * (DiskEntry)->BytesPerSector)
+
+
 BOOLEAN
 IsSuperFloppy(
     IN PDISKENTRY DiskEntry);
@@ -294,25 +301,25 @@ GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
 
+ERROR_NUMBER
+PartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
+
+ERROR_NUMBER
+ExtendedPartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
+
 BOOLEAN
-CreatePrimaryPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate);
+CreatePartition(
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_opt_ ULONGLONG SizeBytes);
 
 BOOLEAN
 CreateExtendedPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount);
-
-BOOLEAN
-CreateLogicalPartition(
-    IN PPARTLIST List,
-    IN OUT PPARTENTRY PartEntry,
-    IN ULONGLONG SectorCount,
-    IN BOOLEAN AutoCreate);
+    _In_ PPARTLIST List,
+    _Inout_ PPARTENTRY PartEntry,
+    _In_opt_ ULONGLONG SizeBytes);
 
 NTSTATUS
 DismountVolume(
@@ -359,18 +366,6 @@ VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
-
-ERROR_NUMBER
-PrimaryPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
-
-ERROR_NUMBER
-ExtendedPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
-
-ERROR_NUMBER
-LogicalPartitionCreationChecks(
-    IN PPARTENTRY PartEntry);
 
 BOOLEAN
 GetNextUnformattedPartition(

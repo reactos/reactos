@@ -9,7 +9,7 @@
 
 #include <user32.h>
 #include <strsafe.h>
-#include <ddk/immdev.h>
+#include <immdev.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 

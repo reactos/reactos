@@ -1,33 +1,31 @@
 /*
  * PROJECT:     Network Connections Shell Folder
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/netshell/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for netshell
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Yaroslav Kibysh
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "Підключення через:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&Налаштувати", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Відмічені компоненти використовуються цим підключенням:", -1, 9, 59, 217, 8
-    PUSHBUTTON "Вст&ановити", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "В&идалити", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Властивості", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Опис", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Опис компонентів...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "Вивести значок підключення на панель завдань", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "Сповіщати мене, якщо це підключення обмежене чи відсутнє", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Налаштувати", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "Відмічені компоненти використовуються цим підключенням:", -1, 9, 39, 217, 8
+    PUSHBUTTON "Вст&ановити", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "В&идалити", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Властивості", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "Опис", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "Вивести значок підключення на панель завдань", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Сповіщати мене, якщо це підключення обмежене чи відсутнє", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"

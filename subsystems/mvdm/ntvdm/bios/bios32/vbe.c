@@ -646,7 +646,7 @@ VOID WINAPI VbeService(LPWORD Stack)
 
                 default:
                 {
-                    DPRINT("VESA INT 0x10, AL = 0x05, Unknown subfunction: %02X", getBH());
+                    DPRINT1("VESA INT 0x10, AL = 0x05, Unknown subfunction: 0x%02X\n", getBH());
                 }
             }
 

@@ -1596,16 +1596,21 @@ interface IDropTargetHelper : IUnknown
 ]
 interface IContextMenu : IUnknown
 {
-cpp_quote("#define CMF_NORMAL        0x00000000")
-cpp_quote("#define CMF_DEFAULTONLY   0x00000001")
-cpp_quote("#define CMF_VERBSONLY     0x00000002")
-cpp_quote("#define CMF_EXPLORE       0x00000004")
-cpp_quote("#define CMF_NOVERBS       0x00000008")
-cpp_quote("#define CMF_CANRENAME     0x00000010")
-cpp_quote("#define CMF_NODEFAULT     0x00000020")
-cpp_quote("#define CMF_INCLUDESTATIC 0x00000040")
-cpp_quote("#define CMF_EXTENDEDVERBS 0x00000100")
-cpp_quote("#define CMF_RESERVED      0xffff0000")
+cpp_quote("#define CMF_NORMAL            0x00000000")
+cpp_quote("#define CMF_DEFAULTONLY       0x00000001")
+cpp_quote("#define CMF_VERBSONLY         0x00000002")
+cpp_quote("#define CMF_EXPLORE           0x00000004")
+cpp_quote("#define CMF_NOVERBS           0x00000008")
+cpp_quote("#define CMF_CANRENAME         0x00000010")
+cpp_quote("#define CMF_NODEFAULT         0x00000020")
+cpp_quote("#define CMF_INCLUDESTATIC     0x00000040")
+cpp_quote("#define CMF_EXTENDEDVERBS     0x00000100")
+cpp_quote("#define CMF_DISABLEDVERBS     0x00000200")
+cpp_quote("#define CMF_ASYNCVERBSTATE    0x00000400")
+cpp_quote("#define CMF_OPTIMIZEFORINVOKE 0x00000800")
+cpp_quote("#define CMF_SYNCCASCADEMENU   0x00001000")
+cpp_quote("#define CMF_DONOTPICKDEFAULT  0x00002000")
+cpp_quote("#define CMF_RESERVED          0xffff0000")
 
 cpp_quote("#define GCS_VERBA         0x00000000")
 cpp_quote("#define GCS_HELPTEXTA     0x00000001")
@@ -2354,6 +2359,37 @@ interface IExplorerCommandProvider : IUnknown
                     [in] REFIID riid,
                     [out, iid_is(riid)] void **ppv);
 };
+
+
+/*****************************************************************************
+ * IOpenControlPanel interface (Vista+)
+ */
+[
+    object,
+    uuid(D11AD862-66DE-4DF4-BF6C-1F5621996AF1),
+    pointer_default(unique)
+]
+interface IOpenControlPanel : IUnknown
+{
+    typedef [v1_enum] enum CPVIEW
+    {
+        CPVIEW_CLASSIC = 0,
+        CPVIEW_CATEGORY = 1,
+        CPVIEW_ALLITEMS = CPVIEW_CLASSIC,
+        CPVIEW_HOME = CPVIEW_CATEGORY
+    } CPVIEW;
+
+    HRESULT Open(
+                    [in, optional] LPCWSTR pszName,
+                    [in, optional] LPCWSTR pszPage,
+                    [in, optional] IUnknown *punkSite);
+    HRESULT GetPath(
+                    [in, optional] LPCWSTR pszName,
+                    [out, string, size_is(cchPath)] LPWSTR pszPath,
+                    [in] UINT cchPath);
+    HRESULT GetCurrentView(
+                    [out] CPVIEW *pView);
+}
 
 #endif // __REACTOS__
 

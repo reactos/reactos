@@ -1,4 +1,10 @@
-/* 2011.11.27 - Fulea Ștefan: minor changes */
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -36,13 +42,13 @@ CAPTION "Timp Internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Permite sincronizarea automată cu un server de oră:",
+    AUTOCHECKBOX "&Permite sincronizarea automată cu un server de oră de pe internet:",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON "A&ctualizează", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "Sincronizarea este funcțională doar când calculatorul este conectat la Internet.", -1, 12, 114, 225, 25
+    LTEXT "Sincronizarea poate fi făcută doar atunci când calculatorul este conectat la internet.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
@@ -55,7 +61,7 @@ BEGIN
     IDS_INETTIMESUCSYNC "Ora a fost sincronizată cu succes %s pe %s la %s"
     IDS_INETTIMENEXTSYNC "Următoarea sincronizare: %s la %s"
     IDS_INETTIMESYNCING "Așteptați sincronizarea cu %s"
-    IDS_INETTIMEERROR "A survenit o eroare la sincronizarea cu %s"
+    IDS_INETTIMEERROR "A apărut o eroare la sincronizarea cu %s"
     IDS_INETTIMESUCFILL "Scrie numele serverului NTP pentru a sincroniza timpul"
     IDS_INETTIMEWELCOME "Selectați un server NTP din lista de sus sau scrie numele serverului NTP pentru a sincroniza timpul calculatorului"
 END

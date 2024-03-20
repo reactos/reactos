@@ -538,8 +538,16 @@ PrepareCopyInfFile(
         }
 
         /* Add specific files depending of computer type */
-        if (!ProcessComputerFiles(InfFile, pSetupData->ComputerList, &AdditionalSectionName))
+        {
+        PGENERIC_LIST_ENTRY Entry;
+        Entry = GetCurrentListEntry(pSetupData->ComputerList);
+        ASSERT(Entry);
+        pSetupData->ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id;
+        ASSERT(pSetupData->ComputerType);
+
+        if (!ProcessComputerFiles(InfFile, pSetupData->ComputerType, &AdditionalSectionName))
             return FALSE;
+        }
 
         if (AdditionalSectionName &&
             !AddSectionToCopyQueue(pSetupData, InfFile,
@@ -655,7 +663,7 @@ PrepareCopyInfFile(
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
             {
                 INF_FreeData(DirKeyValue);
-                DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+                DPRINT1("Creating directory '%S' failed: Status = 0x%08lx\n", PathBuffer, Status);
                 pSetupData->LastErrorNumber = ERROR_CREATE_DIR;
                 if (pSetupData->ErrorRoutine)
                     pSetupData->ErrorRoutine(pSetupData, PathBuffer);

@@ -531,7 +531,6 @@ DefWndScreenshot(PWND pWnd)
 /*
    Win32k counterpart of User DefWindowProc
  */
-/* Win: xxxRealDefWindowProc */
 LRESULT FASTCALL
 IntDefWindowProc(
    PWND Wnd,
@@ -614,7 +613,7 @@ IntDefWindowProc(
 
       case WM_SYSCOMMAND:
       {
-         TRACE("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
+         TRACE("hwnd %p WM_SYSCOMMAND %lx %lx\n", UserHMGetHandle(Wnd), wParam, lParam );
          lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
@@ -945,24 +944,6 @@ IntDefWindowProc(
                    }
                    wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
                    co_IntSendMessage( Active, WM_SYSCOMMAND, wParamTmp, wParam );
-                }
-                else if (wParam == VK_SHIFT) // Alt+Shift
-                {
-                    RTL_ATOM ClassAtom = 0;
-                    UNICODE_STRING ustrClass, ustrWindow;
-                    HWND hwndSwitch;
-
-                    RtlInitUnicodeString(&ustrClass, L"kbswitcher");
-                    RtlInitUnicodeString(&ustrWindow, L"");
-
-                    IntGetAtomFromStringOrAtom(&ustrClass, &ClassAtom);
-
-                    hwndSwitch = IntFindWindow(UserGetDesktopWindow(), NULL, ClassAtom, &ustrWindow);
-                    if (hwndSwitch)
-                    {
-#define ID_NEXTLAYOUT 10003
-                        UserPostMessage(hwndSwitch, WM_COMMAND, ID_NEXTLAYOUT, (LPARAM)UserHMGetHandle(Wnd));
-                    }
                 }
             }
             else if( wParam == VK_F10 )
@@ -1304,7 +1285,7 @@ IntDefWindowProc(
                   _SEH2_END;
                }
                if (!lResult)
-                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Wnd->head.h, lParam ? (LPARAM)&rt : 0);
+                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)UserHMGetHandle(Wnd), lParam ? (LPARAM)&rt : 0);
            }
             break;
          }

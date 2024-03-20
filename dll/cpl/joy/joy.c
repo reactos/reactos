@@ -270,6 +270,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDOK:
+                case IDCANCEL:
                     DestroyIcon(s_hIcon);
                     DestroyIcon(s_hIconSm);
                     EndDialog(hwndDlg,LOWORD(wParam));

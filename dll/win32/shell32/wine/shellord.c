@@ -47,6 +47,7 @@ WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
 #ifdef __REACTOS__
 #include <comctl32_undoc.h>
+#include <shlwapi_undoc.h>
 #else
 /* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
 /*        !!! it is in both here and comctl32undoc.c      !!! */
@@ -630,6 +631,8 @@ SignalFileOpen (PCIDLIST_ABSOLUTE pidl)
     return FALSE;
 }
 
+#ifndef __REACTOS__
+
 /*************************************************************************
  * SHADD_get_policy - helper function for SHAddToRecentDocs
  *
@@ -671,6 +674,7 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
     return ret;
 }
 
+#endif // __REACTOS__
 
 /*************************************************************************
  * SHADD_compare_mru - helper function for SHAddToRecentDocs
@@ -812,7 +816,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     INT ret;
     WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[80];
     WCHAR szPath[MAX_PATH];
-    DWORD cbBuffer, data[64], datalen, type;
+    DWORD cbBuffer;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
     HKEY hExplorerKey;
@@ -828,25 +832,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     TRACE("%04x %p\n", uFlags, pv);
 
     /* check policy */
-    ret = SHADD_get_policy("NoRecentDocsHistory", &type, data, &datalen);
-    if (ret > 0 && ret != ERROR_FILE_NOT_FOUND)
-    {
-        ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-    }
-    else if (ret == ERROR_SUCCESS)
-    {
-        if (!(type == REG_DWORD || (type == REG_BINARY && datalen == 4)))
-        {
-            ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
-                type, datalen);
-            return;
-        }
-
-        TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
-        /* now test the actual policy value */
-        if (data[0] != 0)
-            return;
-    }
+    ret = SHRestricted(REST_NORECENTDOCSHISTORY);
+    TRACE("policy value for NoRecentDocsHistory = %08x\n", ret);
+    if (ret != 0)
+        return;
 
     /* store to szTargetPath */
     szTargetPath[0] = 0;
@@ -1918,19 +1907,63 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 /*************************************************************************
  *      PathIsTemporaryA    [SHELL32.713]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryA.php */
+BOOL WINAPI PathIsTemporaryA(_In_ LPCSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szWide[MAX_PATH];
+
+    TRACE("(%s)\n", debugstr_a(Str));
+
+    SHAnsiToUnicode(Str, szWide, _countof(szWide));
+    return PathIsTemporaryW(szWide);
+#else
     FIXME("(%s)stub\n", debugstr_a(Str));
     return FALSE;
+#endif
 }
 
 /*************************************************************************
  *      PathIsTemporaryW    [SHELL32.714]
  */
+#ifdef __REACTOS__
+/** @see https://undoc.airesoft.co.uk/shell32.dll/PathIsTemporaryW.php */
+BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str)
+#else
 BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
+#endif
 {
+#ifdef __REACTOS__
+    WCHAR szLongPath[MAX_PATH], szTempPath[MAX_PATH];
+    DWORD attrs;
+    LPCWSTR pszTarget = Str;
+
+    TRACE("(%s)\n", debugstr_w(Str));
+
+    attrs = GetFileAttributesW(Str);
+    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_TEMPORARY))
+        return TRUE;
+
+    if (!GetTempPathW(_countof(szTempPath), szTempPath) ||
+        !GetLongPathNameW(szTempPath, szTempPath, _countof(szTempPath)))
+    {
+        return FALSE;
+    }
+
+    if (GetLongPathNameW(Str, szLongPath, _countof(szLongPath)))
+        pszTarget = szLongPath;
+
+    return (PathIsEqualOrSubFolder(szTempPath, pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_INTERNET_CACHE), pszTarget) ||
+            PathIsEqualOrSubFolder(UlongToPtr(CSIDL_CDBURN_AREA), pszTarget));
+#else
     FIXME("(%s)stub\n", debugstr_w(Str));
     return FALSE;
+#endif
 }
 
 typedef struct _PSXA
@@ -2348,9 +2381,15 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
+#ifdef __REACTOS__
+    if (SHELL_OsIsUnicode())
+        return SHStartNetConnectionDialogW(hwnd, (LPCWSTR)pszRemoteName, dwType);
+    return SHStartNetConnectionDialogA(hwnd, pszRemoteName, dwType);
+#else
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
+#endif
 }
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)

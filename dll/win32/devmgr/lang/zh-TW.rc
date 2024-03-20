@@ -82,7 +82,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "這個裝置的驅動程式尚未安裝。"
     IDS_DEV_HARDWARE_DISABLED "這個裝置已停用，因為該裝置的 BIOS 沒有給它任何資源。"
     IDS_DEV_CANT_SHARE_IRQ "這個裝置正在使用另一個裝置使用中的插斷請求（IRQ）資源。\n您必須更改衝突的設定，或刪除造成衝突的真實模式驅動程式。"
-    IDS_DEV_FAILED_ADD "這個裝置未正常工作，因為 %1 工作不正常。"
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS 無法安裝這個裝置的驅動程式，因為它不能訪問已安裝檔案的驅動器或網路上的位置。"
     IDS_DEV_TRANSLATION_FAILED "這個裝置沒有對其驅動程式回應。"
     IDS_DEV_NO_SOFTCONFIG "ReactOS 無法判定這個裝置的設定值。請參考隨這個裝置附送的檔案，使用資源索引標籤來進行設定。"

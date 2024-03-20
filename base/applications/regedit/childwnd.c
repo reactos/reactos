@@ -177,7 +177,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
                         RegCloseKey(hOtherKey);
 
                         bFound = TRUE;
-                        wcscpy(szLastFound, szBuffer);
+                        StringCbCopyW(szLastFound, sizeof(szLastFound), szBuffer);
                         pszKeyPath = szLastFound;
                     }
                 }
@@ -258,10 +258,11 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
         if (fullPath)
         {
             /* set (correct) the address bar text */
-            if (keyPath[0] != L'\0')
-                swprintf(fullPath, L"%s%s%s", rootName, keyPath[0]==L'\\'?L"":L"\\", keyPath);
+            if (keyPath[0] != UNICODE_NULL)
+                StringCbPrintfW(fullPath, cbFullPath, L"%s%s%s", rootName,
+                                ((keyPath[0] == L'\\') ? L"" : L"\\"), keyPath);
             else
-                fullPath = wcscpy(fullPath, rootName);
+                StringCbCopyW(fullPath, cbFullPath, rootName);
 
             SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
             SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
@@ -271,8 +272,8 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
             EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
-                _wcsicmp(rootName, L"HKEY_USERS") != 0)
+            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") == 0 ||
+                _wcsicmp(rootName, L"HKEY_USERS") == 0)
             {
                 /*
                  * enable the unload menu item if at the root, otherwise

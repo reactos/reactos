@@ -672,7 +672,7 @@ typedef struct _MM_AVL_TABLE
 } MM_AVL_TABLE, *PMM_AVL_TABLE;
 
 //
-// Virtual Adress List used in VADs
+// Virtual Address List used in VADs
 //
 typedef struct _MMADDRESS_LIST
 {

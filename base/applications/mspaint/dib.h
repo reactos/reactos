@@ -44,3 +44,5 @@ float PpcmFromDpi(float dpi);
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap);
 HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);
 HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
+HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial);
+void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart);

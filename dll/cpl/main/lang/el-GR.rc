@@ -43,7 +43,7 @@ BEGIN
     PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
     PUSHBUTTON "Ά&κυρο", IDCANCEL, 175, 75, 50, 15
     LTEXT "&Επιλέξτε πόσο πρέπει να κρατήσετε πατημένο το κουμπί του ποντικιού μέχρι να κλειδωθεί", -1, 60, 15, 170, 30
-    ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228

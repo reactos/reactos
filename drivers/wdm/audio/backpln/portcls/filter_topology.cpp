@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortFilterTopology : public CUnknownImpl<IPortFilterTopology>
@@ -28,7 +25,6 @@ protected:
     SUBDEVICE_DESCRIPTOR * m_Descriptor;
     ISubdevice * m_SubDevice;
 };
-
 
 NTSTATUS
 NTAPI
@@ -69,7 +65,6 @@ CPortFilterTopology::NewIrpTarget(
 
     return STATUS_NOT_SUPPORTED;
 }
-
 
 NTSTATUS
 NTAPI
@@ -231,7 +226,6 @@ CPortFilterTopology::Init(
     ISubdevice * ISubDevice;
     SUBDEVICE_DESCRIPTOR * Descriptor;
     NTSTATUS Status;
-
 
     // get our private interface
     Status = Port->QueryInterface(IID_ISubdevice, (PVOID*)&ISubDevice);

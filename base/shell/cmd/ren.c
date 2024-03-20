@@ -314,7 +314,7 @@ INT cmd_rename (LPTSTR param)
             else
             {
                 if (!(dwFlags & REN_ERROR))
-                    ConErrResPrintf(STRING_REN_ERROR1, GetLastError());
+                    ConErrResPrintf(STRING_REN_ERROR, GetLastError());
             }
         }
     }

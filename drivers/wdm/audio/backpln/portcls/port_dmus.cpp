@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortDMus : public CUnknownImpl<IPortDMus, ISubdevice>
@@ -78,7 +75,6 @@ KSPROPERTY_SET PortDMusPropertySet[] =
         NULL
     }
 };
-
 
 //---------------------------------------------------------------
 // IUnknown interface functions
@@ -302,7 +298,6 @@ CPortDMus::Init(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortDMus::NewRegistryKey(
@@ -393,7 +388,6 @@ CPortDMus::NewIrpTarget(
         return STATUS_SUCCESS;
     }
 
-
     Status = NewPortFilterDMus(&Filter);
     if (!NT_SUCCESS(Status))
     {
@@ -462,7 +456,6 @@ CPortDMus::PowerChangeNotify(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortDMus::PinCount(
@@ -485,8 +478,6 @@ CPortDMus::PinCount(
     return STATUS_UNSUCCESSFUL;
 }
 
-
-
 NTSTATUS
 NewPortDMus(
     OUT PPORT* OutPort)
@@ -507,8 +498,6 @@ NewPortDMus(
     return Status;
 
 }
-
-
 
 VOID
 GetDMusMiniport(

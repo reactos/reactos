@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 const GUID KSNODETYPE_SUM = {0xDA441A60L, 0xC556, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
@@ -35,7 +35,6 @@ const GUID KSEVENTSETID_AudioControlChange      = {0xE85E9698L, 0xFA2F, 0x11D1, 
 const GUID KSDATAFORMAT_TYPE_MUSIC = {0xE725D360L, 0x62CC, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSDATAFORMAT_SUBTYPE_MIDI = {0x1D262760L, 0xE957, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSDATAFORMAT_SPECIFIER_NONE = {0x0F6417D6L, 0xC318, 0x11D0, {0xA4, 0x3F, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
-
 
 MIXER_STATUS
 MMixerVerifyContext(
@@ -125,7 +124,6 @@ MMixerFreeMixerInfo(
     MixerContext->Free((PVOID)MixerInfo);
 }
 
-
 LPMIXER_DATA
 MMixerGetMixerDataByDeviceHandle(
     IN PMIXER_CONTEXT MixerContext,
@@ -155,7 +153,6 @@ MMixerGetMixerDataByDeviceHandle(
     }
     return NULL;
 }
-
 
 LPMIXER_INFO
 MMixerGetMixerInfoByIndex(

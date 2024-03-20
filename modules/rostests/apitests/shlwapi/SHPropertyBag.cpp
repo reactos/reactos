@@ -158,7 +158,7 @@ static void SHPropertyBag_ReadTest(void)
     HRESULT hr;
     CDummyPropertyBag dummy;
     BOOL bValue = 0xDEADFACE;
-    SHORT sValue = 0xDEAD;
+    SHORT sValue = 0xDEADu;
     LONG lValue = 0xDEADDEAD;
     DWORD dwValue = 0xFEEDF00D;
     BSTR bstr = NULL;

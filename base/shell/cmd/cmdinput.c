@@ -218,8 +218,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         curx = orgx;
                         cury = orgy;
                         //bContinue=TRUE;
-                        break;
                     }
+                    break;
 
                 case _T('D'):
                     /* delete current history entry */
@@ -232,8 +232,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         ConOutPrintf (_T("%s"), str);
                         GetCursorXY (&curx, &cury);
                         //bContinue=TRUE;
-                        break;
                     }
+                    break;
 #endif /*FEATURE_HISTORY*/
 
                 case _T('M'):
@@ -251,8 +251,16 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         str[charcount] = _T('\0');
                         ConOutChar (_T('\n'));
                         bReturn = TRUE;
-                        break;
                     }
+                    break;
+
+                case _T('H'): /* ^H does the same as VK_BACK */
+                    if (dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+                    {
+                        bCharInput = FALSE;
+                        goto DoBackSpace;
+                    }
+                    break;
             }
         }
 
@@ -261,6 +269,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
         switch (ir.Event.KeyEvent.wVirtualKeyCode)
         {
             case VK_BACK:
+            DoBackSpace:
                 /* <BACKSPACE> - delete character to left of cursor */
                 if (current > 0 && charcount > 0)
                 {

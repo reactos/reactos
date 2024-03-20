@@ -254,10 +254,10 @@ static void UpdateNumberIntl(void)
 {
     /* Get current user defaults */
     if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, calc.sDecimal, SIZEOF(calc.sDecimal)))
-        _tcscpy(calc.sDecimal, _T("."));
+        StringCbCopy(calc.sDecimal, sizeof(calc.sDecimal), _T("."));
 
     if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, calc.sThousand, SIZEOF(calc.sThousand)))
-        _tcscpy(calc.sThousand, _T(","));
+        StringCbCopy(calc.sThousand, sizeof(calc.sThousand), _T(","));
 
     /* get the string lengths */
     calc.sDecimal_len = _tcslen(calc.sDecimal);
@@ -342,7 +342,7 @@ static void save_config(void)
     switch (osvi.dwPlatformId) {
     case VER_PLATFORM_WIN32s:
     case VER_PLATFORM_WIN32_WINDOWS:
-        _stprintf(buf, _T("%lu"), calc.layout);
+        StringCbPrintf(buf, sizeof(buf), _T("%lu"), calc.layout);
         WriteProfileString(_T("SciCalc"), _T("layout"), buf);
         WriteProfileString(_T("SciCalc"), _T("UseSep"), (calc.usesep==TRUE) ? _T("1") : _T("0"));
         break;
@@ -496,16 +496,16 @@ static void update_lcd_display(HWND hwnd)
     TCHAR tmp[MAX_CALC_SIZE * 2 + 2];
 
     if (calc.buffer[0] == _T('\0'))
-        _tcscpy(tmp, _T("0"));
+        StringCbCopy(tmp, sizeof(tmp), _T("0"));
     else
-        _tcscpy(tmp, calc.buffer);
+        StringCbCopy(tmp, sizeof(tmp), calc.buffer);
 
     /* Add final '.' in decimal mode (if it's missing), but
      * only if it's a result: no append if it prints "ERROR".
      */
     if (calc.base == IDC_RADIO_DEC && !calc.is_nan) {
         if (_tcschr(tmp, _T('.')) == NULL)
-            _tcscat(tmp, _T("."));
+            StringCbCat(tmp, sizeof(tmp), _T("."));
     }
     /* if separator mode is on, let's add an additional space */
     if (calc.usesep && !calc.sci_in && !calc.sci_out && !calc.is_nan) {
@@ -573,13 +573,14 @@ static void update_parent_display(HWND hWnd)
     if (!n)
         str[0] = _T('\0');
     else
-        _stprintf(str,_T("(=%d"), n);
+        StringCbPrintf(str, sizeof(str), _T("(=%d"), n);
     SetDlgItemText(hWnd, IDC_TEXT_PARENT, str);
 }
 
 static void build_operand(HWND hwnd, DWORD idc)
 {
     unsigned int i = 0, n;
+    size_t cbPtr;
 
     if (idc == IDC_BUTTON_DOT) {
         /* if dot is the first char, it's added automatically */
@@ -617,12 +618,14 @@ static void build_operand(HWND hwnd, DWORD idc)
             if (idc != IDC_STATIC)
                 calc.esp = (calc.esp * 10 + (key2code[i].key-'0')) % LOCAL_EXP_SIZE;
             if (calc.ptr == calc.buffer)
-                _stprintf(calc.ptr, _T("0.e%+d"), calc.esp);
+                StringCbPrintf(calc.ptr, sizeof(calc.buffer), _T("0.e%+d"), calc.esp);
             else {
                 /* adds the dot at the end if the number has no decimal part */
                 if (!_tcschr(calc.buffer, _T('.')))
                     *calc.ptr++ = _T('.');
-                _stprintf(calc.ptr, _T("e%+d"), calc.esp);
+
+                cbPtr = sizeof(calc.buffer) - ((BYTE*)calc.ptr - (BYTE*)calc.buffer);
+                StringCbPrintf(calc.ptr, cbPtr, _T("e%+d"), calc.esp);
             }
             update_lcd_display(hwnd);
             return;
@@ -637,7 +640,11 @@ static void build_operand(HWND hwnd, DWORD idc)
             return;
         break;
     }
-    calc.ptr += _stprintf(calc.ptr, _T("%C"), key2code[i].key);
+
+    cbPtr = sizeof(calc.buffer) - ((BYTE*)calc.ptr - (BYTE*)calc.buffer);
+    StringCbPrintfEx(calc.ptr, cbPtr, &calc.ptr, NULL, STRSAFE_FILL_ON_FAILURE,
+                     _T("%C"), key2code[i].key);
+
     update_lcd_display(hwnd);
 }
 
@@ -850,11 +857,11 @@ static void update_memory_flag(HWND hWnd, BOOL mem_flag)
     SetDlgItemText(hWnd, IDC_TEXT_MEMORY, mem_flag ? _T("M") : _T(""));
 }
 
-static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
+static void update_n_stats_items(HWND hWnd, TCHAR *buffer, size_t cbBuffer)
 {
     unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0);
 
-    _stprintf(buffer, _T("n=%u"), n);
+    StringCbPrintf(buffer, cbBuffer, _T("n=%u"), n);
     SetDlgItemText(hWnd, IDC_TEXT_NITEMS, buffer);
 }
 
@@ -905,7 +912,7 @@ static char *ReadConversion(const char *formula)
     str[len+1] = ')';
     str[len+2] = '\0';
 
-    _tcscpy(calc.source, (*calc.buffer == _T('\0')) ? _T("0") : calc.buffer);
+    StringCbCopy(calc.source, sizeof(calc.source), (*calc.buffer == _T('\0')) ? _T("0") : calc.buffer);
 
     /* clear display content before proceeding */
     calc.ptr = calc.buffer;
@@ -942,13 +949,13 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             if (n == LB_ERR)
                 return TRUE;
             SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_DELETESTRING, (WPARAM)n, 0);
-            update_n_stats_items(hWnd, buffer);
+            update_n_stats_items(hWnd, buffer, sizeof(buffer));
             delete_stat_item(n);
             return TRUE;
         case IDC_BUTTON_CAD:
             SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_RESETCONTENT, 0, 0);
             clean_stat_list();
-            update_n_stats_items(hWnd, buffer);
+            update_n_stats_items(hWnd, buffer, sizeof(buffer));
             return TRUE;
         }
         break;
@@ -964,7 +971,7 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                            buffer, SIZEOF(buffer),
                            ((statistic_t *)lp)->base);
         SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_ADDSTRING, 0, (LPARAM)buffer);
-        update_n_stats_items(hWnd, buffer);
+        update_n_stats_items(hWnd, buffer, sizeof(buffer));
         return TRUE;
     }
     return FALSE;
@@ -986,11 +993,13 @@ static void CopyMemToClipboard(void *ptr)
     if(OpenClipboard(NULL)) {
         HGLOBAL  clipbuffer;
         TCHAR   *buffer;
+        size_t cbBuffer;
 
         EmptyClipboard();
-        clipbuffer = GlobalAlloc(GMEM_DDESHARE, (_tcslen(ptr)+1)*sizeof(TCHAR));
+        cbBuffer = (_tcslen(ptr) + 1) * sizeof(TCHAR);
+        clipbuffer = GlobalAlloc(GMEM_DDESHARE, cbBuffer);
         buffer = (TCHAR *)GlobalLock(clipbuffer);
-        _tcscpy(buffer, ptr);
+        StringCbCopy(buffer, cbBuffer, ptr);
         GlobalUnlock(clipbuffer);
 #ifdef UNICODE
         SetClipboardData(CF_UNICODETEXT,clipbuffer);
@@ -1056,9 +1065,8 @@ static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
         }
     } else
     if (ch == '$') {
-        calc.ptr =
-        _tcscpy(calc.buffer, calc.source) +
-        _tcslen(calc.source);
+        StringCbCopyEx(calc.buffer, sizeof(calc.buffer), calc.source, &calc.ptr, NULL,
+                       STRSAFE_FILL_ON_FAILURE);
     } else {
         for (x=0; x<SIZEOF(key2code); x++) {
             if (!(key2code[x].mask & BITMASK_IS_ASCII) ||

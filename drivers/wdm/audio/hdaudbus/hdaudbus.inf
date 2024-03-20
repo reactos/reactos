@@ -77,9 +77,9 @@ UNKNOWNFG = "Nieznane urządzenie na High Definition Audio Bus"
 HDAudioBUS = "Wewnętrzna magistrala High Definition Audio"
 
 [Strings.0418]
-DiskId1 = "Modúl-pilot ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
+DiskId1 = "Driver ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
 HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
-HDAudBus.SVCDESC = "Modúl-pilot ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
+HDAudBus.SVCDESC = "Driver ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
 AUDIOFG = "Dispozitiv audio pe magistrala audio de înaltă definiție"
 MODEMFG = "Dispozitiv modem pe magistrala audio de înaltă definiție"
 UNKNOWNFG = "Dispozitiv nespecificat pe magistrala audio de înaltă definiție"

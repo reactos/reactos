@@ -16,6 +16,7 @@
 #include <setupapi.h>
 #include <strsafe.h>
 #include <cpl.h>
+#include <imm32_undoc.h>
 
 #include "resource.h"
 
@@ -28,6 +29,7 @@ typedef struct
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
+extern BOOL g_bRebootNeeded;
 
 // Character Count of a layout ID like "00000409"
 #define CCH_LAYOUT_ID    8
@@ -40,6 +42,7 @@ extern HINSTANCE hApplet;
 /* settings_page.c */
 INT_PTR CALLBACK
 SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable);
 
 /* advanced_settings_page.c */
 INT_PTR CALLBACK
@@ -80,17 +83,6 @@ DWORDfromString(const WCHAR *pszString)
 
     return wcstoul(pszString, &pszEnd, 16);
 }
-
-#define IME_MASK        (0xE0000000UL)
-#define SUBST_MASK      (0xD0000000UL)
-#define SPECIAL_MASK    (0xF0000000UL)
-
-#define IS_IME_HKL(hKL)             ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
-#define IS_SPECIAL_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define SPECIALIDFROMHKL(hKL)       ((WORD)(HIWORD(hKL) & 0x0FFF))
-
-#define IS_IME_KLID(dwKLID)         ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
-#define IS_SUBST_KLID(dwKLID)       ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
 VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName);
 

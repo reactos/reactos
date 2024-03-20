@@ -1323,6 +1323,18 @@ int CALLBACK PidlListSort(void* item1, void* item2, LPARAM lParam)
     return (int)(short)LOWORD(hr);
 }
 
+static BOOL IsPidlPrograms(LPCITEMIDLIST pidlTarget)
+{
+    WCHAR szTarget[MAX_PATH], szPath[MAX_PATH];
+    if (!SHGetPathFromIDListW(pidlTarget, szTarget))
+        return FALSE;
+    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_COMMON_PROGRAMS, FALSE);
+    if (lstrcmpiW(szTarget, szPath) == 0)
+        return TRUE;
+    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PROGRAMS, FALSE);
+    return (lstrcmpiW(szTarget, szPath) == 0);
+}
+
 HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 {
     HRESULT hr;
@@ -1361,17 +1373,26 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 
     DPA_Sort(dpaSort, PidlListSort, (LPARAM) m_shellFolder.p);
 
+    BOOL StartMenuAdminTools = SHRegGetBoolUSValueW(
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+        L"StartMenuAdminTools", FALSE, TRUE);
+
+    BOOL bMustHideAdminTools = IsPidlPrograms(m_idList) && !StartMenuAdminTools;
+    TRACE("StartMenuAdminTools: %d\n", StartMenuAdminTools);
+    TRACE("bMustHideAdminTools: %d\n", bMustHideAdminTools);
+
+    WCHAR szAdminTools[MAX_PATH];
+    if (bMustHideAdminTools)
+    {
+        LoadStringW(GetModuleHandleW(L"shell32.dll"), IDS_ADMINISTRATIVETOOLS,
+                    szAdminTools, _countof(szAdminTools));
+    }
+
     for (int i = 0; i<DPA_GetPtrCount(dpaSort);)
     {
-        PWSTR MenuString;
-
-        INT index = 0;
-        INT indexOpen = 0;
-
-        STRRET sr = { STRRET_CSTR, { 0 } };
-
         item = (LPITEMIDLIST)DPA_GetPtr(dpaSort, i);
 
+        STRRET sr = { STRRET_CSTR };
         hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
         if (FAILED_UNEXPECTEDLY(hr))
         {
@@ -1379,9 +1400,18 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
             return hr;
         }
 
+        PWSTR MenuString;
         StrRetToStr(&sr, NULL, &MenuString);
 
-        index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
+        if (bMustHideAdminTools && lstrcmpiW(MenuString, szAdminTools) == 0)
+        {
+            ++i;
+            CoTaskMemFree(MenuString);
+            continue;
+        }
+
+        INT indexOpen = 0;
+        INT index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
 
         LPCITEMIDLIST itemc = item;
 

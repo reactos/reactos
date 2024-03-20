@@ -11,10 +11,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CResourceList : public CUnknownImpl<IResourceList>
@@ -220,7 +217,6 @@ CResourceList::AddEntry(
     /* Sanity check */
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-
     /* Is there still room for another entry */
     if (m_NumberOfEntries >= m_MaxEntries)
     {
@@ -292,7 +288,6 @@ CResourceList::UntranslatedList()
 
     return m_UntranslatedResourceList;
 }
-
 
 PORTCLASSAPI
 NTSTATUS

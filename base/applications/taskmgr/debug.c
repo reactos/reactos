@@ -30,7 +30,7 @@ void ProcessPage_OnDebug(void)
     LoadStringW(hInst, IDS_MSG_WARNINGDEBUG, szTemp, _countof(szTemp));
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTempA, _countof(szTempA));
 
-    if (MessageBoxW(hMainWnd, szTemp, szTempA, MB_YESNO | MB_ICONWARNING) != IDYES)
+    if (!ConfirmMessageBox(hMainWnd, szTemp, szTempA, MB_YESNO | MB_ICONWARNING))
     {
         GetLastErrorText(strErrorText, _countof(strErrorText));
         LoadStringW(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, _countof(szTemp));

@@ -144,7 +144,7 @@ BEGIN
     LTEXT            "Son erişilen belgelerin, programların ve Genel Ağ sitelerinin kayıtlarını silmek için Sil'e tıklayınız.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "S&il", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Ge&lişmiş Başlat Menüsü Ayarları:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "&Başlat Menüsü Ayarları", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "&Başlat Menüsü Ayarları", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Tamam", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "İptal", IDCANCEL, 176, 220, 50, 14
 END

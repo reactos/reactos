@@ -349,6 +349,9 @@ TOOLTIPS_Refresh (const TOOLTIPS_INFO *infoPtr, HDC hdc)
     }
 
     /* draw text */
+#ifdef __REACTOS__
+    uFlags |= DT_EXPANDTABS;
+#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
 
     /* Custom draw - Call PostPaint after drawing */
@@ -414,6 +417,7 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         buffer[0] = '\0';
     }
 
+#ifndef __REACTOS_
     /* no text available - try calling parent instead as per native */
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (buffer[0] == 0x00) {
@@ -428,6 +432,7 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
             Str_GetPtrAtoW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
         }
     }
+#endif
 }
 
 static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *toolPtr, WCHAR *buffer)
@@ -470,6 +475,7 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         buffer[0] = '\0';
     }
 
+#ifndef __REACTOS__
     /* no text available - try calling parent instead as per native */
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (buffer[0] == 0x00) {
@@ -484,6 +490,7 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
             Str_GetPtrW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
         }
     }
+#endif
 
 }
 
@@ -562,6 +569,9 @@ TOOLTIPS_CalcTipSize (const TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
         title.cx += (rcTitle.right - rcTitle.left);
     }
     hOldFont = SelectObject (hdc, infoPtr->hFont);
+#ifdef __REACTOS__
+    uFlags |= DT_EXPANDTABS;
+#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
     SelectObject (hdc, hOldFont);
     ReleaseDC (infoPtr->hwndSelf, hdc);

@@ -15,6 +15,7 @@
 #include <htmlhelp.h>
 #endif
 #include <limits.h>
+#include <strsafe.h>
 
 /* RESOURCES */
 #include "resource.h"

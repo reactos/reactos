@@ -124,7 +124,6 @@ pci.sys      = 1,,,,,,x,4,,,,1,4
 scsiport.sys = 1,,,,,,,4,,,,1,4
 storport.sys = 1,,,,,,,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
-vfatfs.sys   = 1,,,,,,,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
 pciide.sys   = 1,,,,,,,4,,,,1,4
@@ -217,7 +216,7 @@ Cabinet=reactos.cab
 DefaultPath = \ReactOS
 SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
-OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 
 [NLS]
 AnsiCodepage     = c_1252.nls
@@ -230,7 +229,7 @@ DefaultLanguage  = 00000409
 pci_up = "Standard PC Uniprocessor"
 ;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
-;acpi_mp = "ACPI PC Multiprocessor"
+acpi_mp = "ACPI PC Multiprocessor"
 apic_up = "Standard APIC PC Uniprocessor"
 aacpi_up = "ACPI APIC PC Uniprocessor"
 xbox = "Original Xbox (x86 based)"
@@ -245,7 +244,7 @@ x64_mp = "Standard x64 Multiprocessor"
 pci_up = "PC UP"
 ;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
-;acpi_mp = "ACPI MP"
+acpi_mp = "ACPI MP"
 apic_up = "APIC UP"
 aacpi_up = "AAPIC UP"
 xbox = "Xbox"
@@ -267,9 +266,9 @@ hal.dll      = 1,,,,,,,2,,,,1,2
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
-;[Files.acpi_mp]
-;ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
-;halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
+[Files.acpi_mp]
+ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+halmacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.apic_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
@@ -282,6 +281,7 @@ halaacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+vfatfs.sys   = 1,,,,,,,4,,,,1,4
 
 [Files.pc98_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2

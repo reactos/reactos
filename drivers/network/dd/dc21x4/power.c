@@ -146,7 +146,7 @@ DcPowerUp(
     /* Re-initialize the chip to leave D3 state */
     if (Adapter->PrevPowerState == NdisDeviceStateD3)
     {
-        NT_VERIFY(DcSetupAdapter(Adapter) == TRUE);
+        NT_VERIFY(DcSetupAdapter(Adapter) == NDIS_STATUS_SUCCESS);
     }
     else
     {

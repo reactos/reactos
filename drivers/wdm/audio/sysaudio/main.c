@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_SYSAUDIO 'AsyS'
+
 const GUID KSCATEGORY_SYSAUDIO                 = {0xA7C7A5B1L, 0x5AF3, 0x11D1, {0x9C, 0xED, 0x00, 0xA0, 0x24, 0xBF, 0x04, 0x07}};
 const GUID KSCATEGORY_AUDIO_DEVICE             = {0xFBF6F530L, 0x07B9, 0x11D2, {0xA7, 0x1E, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
 const GUID KSCATEGORY_PREFERRED_WAVEOUT_DEVICE = {0xD6C5066EL, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
@@ -25,21 +27,15 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
-    if (!Item)
-        return Item;
-
-    RtlZeroMemory(Item, NumberOfBytes);
-    return Item;
+    return ExAllocatePoolZero(PoolType, NumberOfBytes, TAG_SYSAUDIO);
 }
 
 VOID
 FreeItem(
     IN PVOID Item)
 {
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, TAG_SYSAUDIO);
 }
-
 
 VOID
 NTAPI
@@ -87,7 +83,6 @@ SysAudio_Shutdown(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 NTAPI
@@ -221,7 +216,6 @@ SysAudio_AddDevice(
 
      /* register shutdown notification */
      IoRegisterShutdownNotification(DeviceObject);
-
 
     /* Done */
     return STATUS_SUCCESS;

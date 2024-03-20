@@ -588,7 +588,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
             TimerHand = Prcb->TimerHand;
             Prcb->TimerRequest = 0;
 
-            /* Expire timers with interrups enabled */
+            /* Expire timers with interrupts enabled */
             _enable();
             KiTimerExpiration(NULL, NULL, (PVOID)TimerHand, NULL);
             _disable();

@@ -44,7 +44,7 @@ static WORD awMonths[2][13] =
 
 
 static VOID
-PrintDateString (VOID)
+PromptDateString(VOID)
 {
     switch (nDateFormat)
     {
@@ -203,8 +203,9 @@ INT cmd_date(LPTSTR param)
             nDateString = i;
     }
 
+    // TODO: Should prepend a "Current date is: " prompt, as done with TIME.
     if (nDateString == -1)
-        ConOutPrintf(_T("%s"), GetDateString());
+        ConOutPrintf(_T("%s\n"), GetDateString());
 
     if (!bPrompt)
     {
@@ -216,7 +217,7 @@ INT cmd_date(LPTSTR param)
     {
         if (nDateString == -1)
         {
-            PrintDateString();
+            PromptDateString();
             ConInString(szDate, ARRAYSIZE(szDate));
 
             TRACE("\'%s\'\n", debugstr_aw(szDate));

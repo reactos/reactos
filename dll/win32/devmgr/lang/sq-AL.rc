@@ -78,7 +78,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Komanduesit për këtë pajisje nuk janë instaluar."
     IDS_DEV_HARDWARE_DISABLED "Kjo pajisje është me aftësi të kufizuara, sepse BIOS për pajisjen nuk jep asnjë burimeve."
     IDS_DEV_CANT_SHARE_IRQ "Kjo pajisje po përdorur një kërkesë interrupt (IRQ) e burimeve që është në përdorim nga një tjetër pajisje dhe nuk mund të ndahet.\nJu duhet të ndryshoni vendosjen konfliktuale ose hiqni menyren-reale e komanduesit që shkakton konfliktin."
-    IDS_DEV_FAILED_ADD "Kjo pajisje nuk punon si duhet për shkak %1 nuk është duke punuar si duhet."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "ReactOS nuk mund të instaloni komanduesin për këtë pajisje, sepse ajo nuk mund të hyje ne driverin apo vendin e rrjetit që ka dokumentat e instalimit në të."
     IDS_DEV_TRANSLATION_FAILED "Kjo pajisje nuk i përgjigjer komanduesit të saj."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nuk mund të përcaktojë parametrat për këtë pajisje. Konsultoni dokumentacionin që erdhi me këtë pajisje dhe të përdorin tabelen e Burimeve për të vendosur konfigurimin."

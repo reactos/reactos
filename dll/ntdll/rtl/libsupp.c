@@ -330,7 +330,6 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 }
 #endif
 
-#ifdef _AMD64_
 VOID
 NTAPI
 RtlpGetStackLimits(
@@ -339,9 +338,7 @@ RtlpGetStackLimits(
 {
     *LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
     *HighLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
-    return;
 }
-#endif
 
 BOOLEAN
 NTAPI

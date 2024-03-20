@@ -31,20 +31,20 @@ class CNetConnectionPropertyUi:
         ~CNetConnectionPropertyUi();
 
         // INetConnectionPropertyUi2
-        virtual HRESULT WINAPI AddPages(HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-        virtual HRESULT WINAPI GetIcon(DWORD dwSize, HICON *phIcon);
+        STDMETHOD(AddPages)(HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
+        STDMETHOD(GetIcon)(DWORD dwSize, HICON *phIcon) override;
 
         // INetLanConnectionUiInfo
-        virtual HRESULT WINAPI GetDeviceGuid(GUID *pGuid);
+        STDMETHOD(GetDeviceGuid)(GUID *pGuid) override;
 
         // INetConnectionConnectUi
-        virtual HRESULT WINAPI SetConnection(INetConnection* pCon);
-        virtual HRESULT WINAPI Connect(HWND hwndParent, DWORD dwFlags);
-        virtual HRESULT WINAPI Disconnect(HWND hwndParent, DWORD dwFlags);
+        STDMETHOD(SetConnection)(INetConnection* pCon) override;
+        STDMETHOD(Connect)(HWND hwndParent, DWORD dwFlags) override;
+        STDMETHOD(Disconnect)(HWND hwndParent, DWORD dwFlags) override;
 
     private:
         BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
-        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
+        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type, PSP_CLASSIMAGELIST_DATA pCILD);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
         BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID);

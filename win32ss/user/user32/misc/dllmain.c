@@ -203,30 +203,14 @@ UnloadAppInitDlls(VOID)
     }
 }
 
-PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
+#define DEFINE_USER32_CALLBACK(id, value, fn) fn,
+
+PVOID apfnDispatch[USER32_CALLBACK_COUNT] =
 {
-    User32CallWindowProcFromKernel,
-    User32CallSendAsyncProcForKernel,
-    User32LoadSysMenuTemplateForKernel,
-    User32SetupDefaultCursors,
-    User32CallHookProcFromKernel,
-    User32CallEventProcFromKernel,
-    User32CallLoadMenuFromKernel,
-    User32CallClientThreadSetupFromKernel,
-    User32CallClientLoadLibraryFromKernel,
-    User32CallGetCharsetInfo,
-    User32CallCopyImageFromKernel,
-    User32CallSetWndIconsFromKernel,
-    User32DeliverUserAPC,
-    User32CallDDEPostFromKernel,
-    User32CallDDEGetFromKernel,
-    User32CallOBMFromKernel,
-    User32CallLPKFromKernel,
-    User32CallUMPDFromKernel,
-    User32CallImmProcessKeyFromKernel,
-    User32CallImmLoadLayoutFromKernel,
+#include "u32cb.h"
 };
 
+#undef DEFINE_USER32_CALLBACK
 
 VOID
 WINAPI

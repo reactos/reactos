@@ -157,11 +157,11 @@ Please use a different editor."
     STRING_NOTEXT "Դուք տեքստ չեք ներմուծել \
 \nPlease type something and try again"
     STRING_DOESNOTEXIST "Ֆայլը '%s'\n գոյութնուն չունի\n\n\
-Do you want to create a new file ?"
+Do you want to create a new file?"
     STRING_NOTSAVED "Ֆայլը '%s'\n ենթարկվել է փոփոխման\n\n\
-Would you like to save the changes ?"
-    STRING_NOTFOUND "'%s' չի  գտնվել."
-    STRING_OUT_OF_MEMORY "Կա հիծողությոն անբավարարվախույուն. \
+Would you like to save the changes?"
+    STRING_NOTFOUND "'%s' չի գտնվել."
+    STRING_OUT_OF_MEMORY "Կա հիծողությոն անբավարարվախույուն.\
 \nՓակեք մի կամ մի քանի ծրագիր."
     STRING_CANNOTFIND "Չի գտնվել '%s'"
     STRING_ANSI "ANSI"

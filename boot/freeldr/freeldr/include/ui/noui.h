@@ -47,8 +47,14 @@ NoUiDrawCenteredText(
 
 VOID NoUiDrawStatusText(PCSTR StatusText);
 VOID NoUiUpdateDateTime(VOID);
-VOID NoUiMessageBox(PCSTR MessageText);
-VOID NoUiMessageBoxCritical(PCSTR MessageText);
+
+VOID
+NoUiMessageBox(
+    _In_ PCSTR MessageText);
+
+VOID
+NoUiMessageBoxCritical(
+    _In_ PCSTR MessageText);
 
 /* Loading Progress-Bar Functions ********************************************/
 

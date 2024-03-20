@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enNZLayouts[] =
 {
-    { L"1409", L"00000409" },
-    { NULL, NULL }
+    { 0x1409, 0x00000409 },
+    { 0, 0 }
 };

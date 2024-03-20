@@ -24,7 +24,7 @@
 #include <precomp.h>
 #include <process.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL (shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*
 CDrivesFolder should create a CRegFolder to represent the virtual items that exist only in
@@ -511,15 +511,48 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
         DriveType = DRIVE_FIXED;
 
     WCHAR wTemp[MAX_PATH];
-    int icon_idx;
+    int icon_idx, reg_idx;
     UINT flags = 0;
-    if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
-        (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
+
+    switch (DriveType)
+    {
+        case DRIVE_FIXED:
+        case DRIVE_UNKNOWN:
+            reg_idx = IDI_SHELL_DRIVE;
+            break;
+        case DRIVE_CDROM:
+            reg_idx = IDI_SHELL_CDROM;
+            break;
+        case DRIVE_REMOTE:
+            reg_idx = IDI_SHELL_NETDRIVE;
+            break;
+        case DRIVE_REMOVABLE:
+            if (!IsDriveFloppyA(pszDrive))
+                reg_idx = IDI_SHELL_REMOVEABLE;
+            else
+                reg_idx = IDI_SHELL_3_14_FLOPPY;
+            break;
+        case DRIVE_RAMDISK:
+            reg_idx = IDI_SHELL_RAMDISK;
+            break;
+        case DRIVE_NO_ROOT_DIR:
+        default:
+            reg_idx = IDI_SHELL_DOCUMENT;
+            break;
+    }
+
+    hr = getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
+                                 &icon_idx, &flags);
+    if (SUCCEEDED(hr))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
-    else if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
-                                               &icon_idx, &flags)))
+    else if (HLM_GetIconW(reg_idx - 1, wTemp, _countof(wTemp), &icon_idx))
+    {
+        initIcon->SetNormalIcon(wTemp, icon_idx);
+    }
+    else if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
+             (HCR_GetIconW(L"Drive", wTemp, NULL, _countof(wTemp), &icon_idx)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
@@ -599,7 +632,7 @@ CDrivesFolder::CDrivesFolder()
 
 CDrivesFolder::~CDrivesFolder()
 {
-    TRACE ("-- destroying IShellFolder(%p)\n", this);
+    TRACE("-- destroying IShellFolder(%p)\n", this);
     SHFree(pidlRoot);
 }
 
@@ -680,13 +713,13 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
             else if (_ILIsSpecialFolder(pidlTemp))
                 m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
             else
-                ERR("Got an unknown pidl here!\n");
+                ERR("Got unknown pidl\n");
         }
     }
 
     *ppidl = pidlTemp;
 
-    TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
+    TRACE("(%p)->(-- ret=0x%08x)\n", this, hr);
 
     return hr;
 }
@@ -867,7 +900,7 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
             SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
             hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
-    TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
+    TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
 }
 
@@ -876,8 +909,8 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 */
 HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
-    TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
-           this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
+    TRACE("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
+          this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
     if (cidl && !apidl)
         return E_INVALIDARG;
@@ -911,7 +944,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
 
-    TRACE ("-- result=0x%08x\n", *rgfInOut);
+    TRACE("-- result=0x%08x\n", *rgfInOut);
     return S_OK;
 }
 
@@ -951,8 +984,8 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
-        hr = IDataObject_Constructor (hwndOwner,
-                                      pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
+        hr = IDataObject_Constructor(hwndOwner,
+                                     pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
     }
     else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
@@ -977,7 +1010,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
         hr = E_OUTOFMEMORY;
 
     *ppvOut = pObj;
-    TRACE ("(%p)->hr=0x%08x\n", this, hr);
+    TRACE("(%p)->hr=0x%08x\n", this, hr);
     return hr;
 }
 
@@ -989,7 +1022,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     LPWSTR pszPath;
     HRESULT hr = S_OK;
 
-    TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
+    TRACE("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump (pidl);
 
     if (!strRet)
@@ -1029,9 +1062,9 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
             DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
 
             GetVolumeInformationW(wszDrive, pszPath,
-                                    MAX_PATH - 7,
-                                    &dwVolumeSerialNumber,
-                                    &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+                                  MAX_PATH - 7,
+                                  &dwVolumeSerialNumber,
+                                  &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
             pszPath[MAX_PATH-1] = L'\0';
 
             if (!wcslen(pszPath))
@@ -1062,10 +1095,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
                 }
             }
         }
-        wcscat (pszPath, L" (");
+        wcscat(pszPath, L" (");
         wszDrive[2] = L'\0';
-        wcscat (pszPath, wszDrive);
-        wcscat (pszPath, L")");
+        wcscat(pszPath, wszDrive);
+        wcscat(pszPath, L")");
     }
 
     if (SUCCEEDED(hr))
@@ -1111,19 +1144,19 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,
 
 HRESULT WINAPI CDrivesFolder::GetDefaultSearchGUID(GUID * pguid)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CDrivesFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CDrivesFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    TRACE ("(%p)\n", this);
+    TRACE("(%p)\n", this);
 
     if (pSort)
         *pSort = 0;
@@ -1134,7 +1167,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG
 
 HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFlags)
 {
-    TRACE ("(%p)\n", this);
+    TRACE("(%p)\n", this);
 
     if (!pcsFlags || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
@@ -1144,7 +1177,7 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFla
 
 HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID * pscid, VARIANT * pv)
 {
-    FIXME ("(%p)\n", this);
+    FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
@@ -1152,7 +1185,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
 {
     HRESULT hr;
 
-    TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
+    TRACE("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
 
     if (!psd || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
@@ -1232,7 +1265,7 @@ HRESULT WINAPI CDrivesFolder::MapColumnToSCID(UINT column, SHCOLUMNID * pscid)
  */
 HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
 {
-    TRACE ("(%p)\n", this);
+    TRACE("(%p)\n", this);
 
     if (!lpClassId)
         return E_POINTER;

@@ -1222,7 +1222,7 @@ PeekConsoleInputW(IN HANDLE hConsoleInput,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
-                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
+                              CONSOLE_READ_NOREMOVE | CONSOLE_READ_NOWAIT,
                               TRUE);
 }
 
@@ -1242,7 +1242,7 @@ PeekConsoleInputA(IN HANDLE hConsoleInput,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
-                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
+                              CONSOLE_READ_NOREMOVE | CONSOLE_READ_NOWAIT,
                               FALSE);
 }
 

@@ -29,17 +29,17 @@ STRINGTABLE
   IDS_CERT_DATE_INVALID "Data din certificat nu este validă."
   IDS_CERT_CN_INVALID   "Numele din certificat nu corespunde cu cel al sitului."
   IDS_CERT_ERRORS       "Există cel puțin o problemă nespecificată de securitate cu acest certificat."
-  IDS_CERT_SUBJECT      "Subject"
-  IDS_CERT_ISSUER       "Issuer"
-  IDS_CERT_EFFECTIVE    "Effective Date"
-  IDS_CERT_EXPIRATION   "Expiration Date"
-  IDS_CERT_PROTOCOL     "Security Protocol"
-  IDS_CERT_SIGNATURE    "Signature Type"
-  IDS_CERT_ENCRYPTION   "Encryption Type"
-  IDS_CERT_PRIVACY      "Privacy Strength"
-  IDS_CERT_HIGH         "High"
-  IDS_CERT_LOW          "Low"
-  IDS_CERT_BITS         "bits"
+  IDS_CERT_SUBJECT      "Subiect"
+  IDS_CERT_ISSUER       "Emitent"
+  IDS_CERT_EFFECTIVE    "Data efectivă"
+  IDS_CERT_EXPIRATION   "Data expirării"
+  IDS_CERT_PROTOCOL     "Protocolul de securitate"
+  IDS_CERT_SIGNATURE    "Tipul semnăturii"
+  IDS_CERT_ENCRYPTION   "Tipul de criptare"
+  IDS_CERT_PRIVACY      "Puterea de confidențialitate"
+  IDS_CERT_HIGH         "Înaltă"
+  IDS_CERT_LOW          "Joasă"
+  IDS_CERT_BITS         "octeți"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
@@ -76,7 +76,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Păstreată această parolă (nerecomandat)", IDC_SAVEPASSWORD,
+ CHECKBOX "Sal&vează această parolă (nerecomandat)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Con&firmă", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "A&nulează", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP

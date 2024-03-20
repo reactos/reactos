@@ -3,6 +3,7 @@ spec2def(hotplug.dll hotplug.spec)
 
 list(APPEND SOURCE
     hotplug.c
+    eject.c
     enum.c)
 
 file(GLOB hotplug_rc_deps resources/*.*)

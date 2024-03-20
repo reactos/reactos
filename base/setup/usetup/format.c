@@ -103,7 +103,7 @@ DoFormat(
                                           10,
                                           24,
                                           TRUE,
-                                          MUIGetString(STRING_FORMATTINGDISK));
+                                          MUIGetString(STRING_FORMATTINGPART));
 
     ProgressSetStepCount(FormatProgressBar, 100);
 

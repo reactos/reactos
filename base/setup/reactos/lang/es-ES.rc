@@ -48,11 +48,11 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Equipo:", IDC_STATIC, 20, 15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 150, 80
+    COMBOBOX IDC_COMPUTER, 100, 15, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Pantalla:", IDC_STATIC, 20, 35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 150, 80
+    COMBOBOX IDC_DISPLAY, 100, 35, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Teclado:", IDC_STATIC, 20, 55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 150, 80
+    COMBOBOX IDC_KEYBOARD, 100, 55, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Presione Siguiente para configurar la instalación de dispositivos.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -142,10 +142,10 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completando el Asistente de Instalación de ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "La primera parte de la instalación de ReactOS se ha completado satisfactoriamente.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Cuando presione Finalizar, su equipo se reiniciará.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Si tiene CDs en alguna unidad, retírelos. Luego, reinicie el equipo haciendo clic en Finalizar.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "La primera parte de la instalación de ReactOS se ha completado satisfactoriamente.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Cuando presione Finalizar, su equipo se reiniciará.", IDC_STATIC, 115, 80, 195, 17
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Si tiene CDs en alguna unidad, retírelos. Luego, reinicie el equipo haciendo clic en Finalizar.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

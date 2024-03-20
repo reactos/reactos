@@ -8,6 +8,8 @@
 #define COM_NO_WINDOWS_H
 #define WIN32_NO_STATUS
 
+#define OEMRESOURCE
+
 #include <apitest.h>
 #include <wingdi.h>
 #include <winuser.h>

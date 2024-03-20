@@ -7,7 +7,7 @@
  */
 
 #include <windef.h>
-#include <winuser.h>
+#include <winuser.rh>
 #include <dlgs.h>
 
 #include "notepad_res.h"

@@ -70,56 +70,56 @@ public:
     HRESULT ReserveBorderSpace();
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IInputObjectSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    STDMETHOD(OnFocusChangeIS)(IUnknown *punkObj, BOOL fSetFocus) override;
 
     // *** IOleCommandTarget specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds,
+        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID,
+        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IInputObject methods ***
     // forward the methods to the contained active bar
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IDeskBar methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetClient(IUnknown *punkClient);
-    virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown **ppunkClient);
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(LPRECT prc);
+    STDMETHOD(SetClient)(IUnknown *punkClient) override;
+    STDMETHOD(GetClient)(IUnknown **ppunkClient) override;
+    STDMETHOD(OnPosRectChangeDB)(LPRECT prc) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
+    STDMETHOD(ShowDW)(BOOL fShow) override;
+    STDMETHOD(CloseDW)(DWORD dwReserved) override;
+    STDMETHOD(ResizeBorderDW)(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStream methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
     // *** IPersistStreamInit methods ***
-    virtual HRESULT STDMETHODCALLTYPE InitNew();
+    STDMETHOD(InitNew)() override;
 
     // *** IPersistPropertyBag methods ***
-    virtual HRESULT STDMETHODCALLTYPE Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog);
-    virtual HRESULT STDMETHODCALLTYPE Save(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties);
+    STDMETHOD(Load)(IPropertyBag *pPropBag, IErrorLog *pErrorLog) override;
+    STDMETHOD(Save)(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties) override;
 
     // message handlers
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

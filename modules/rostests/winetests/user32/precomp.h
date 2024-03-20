@@ -8,6 +8,8 @@
 
 #define STRICT
 #define WINE_NOWINSOCK
+#define OEMRESOURCE
+
 #include <windows.h>
 
 #define WINE_NO_INLINE_RECT

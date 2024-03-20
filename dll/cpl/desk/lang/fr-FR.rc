@@ -162,7 +162,7 @@ BEGIN
     GROUPBOX "Icônes du Bureau", IDC_STATIC, 6, 4, 212, 40
     CONTROL "&Mes documents", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "&Favoris réseau", IDC_ICONS_MYNET, "button",
+    CONTROL "Mon &réseau", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
     CONTROL "P&oste de travail", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12

@@ -154,7 +154,7 @@ VOID CBandSiteBase::_BuildBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi
             prbi->fStyle |= RBBS_GRIPPERALWAYS;
     }
 
-    if (Band->bHiddenTitle  || (m_dwStyle & BSIS_NOCAPTION))
+    if (Band->bHiddenTitle || (m_dwStyle & BSIS_NOCAPTION))
     {
         prbi->fMask |= RBBIM_STYLE;
         prbi->fStyle |= RBBS_HIDETITLE;
@@ -680,9 +680,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandSiteInfo(const BANDSITEINFO *pbs
     if (!pbsinfo)
         return E_INVALIDARG;
 
-    if ((pbsinfo->dwMask & BSIM_STATE))
+    if (pbsinfo->dwMask & BSIM_STATE)
         m_dwState = pbsinfo->dwState;
-    if ((pbsinfo->dwMask & BSIM_STYLE))
+    if (pbsinfo->dwMask & BSIM_STYLE)
         m_dwStyle = pbsinfo->dwStyle;
 
     _UpdateAllBands();
@@ -694,9 +694,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
     if (!pbsinfo)
         return E_INVALIDARG;
 
-    if ((pbsinfo->dwMask & BSIM_STATE))
+    if (pbsinfo->dwMask & BSIM_STATE)
         pbsinfo->dwState = m_dwState;
-    if ((pbsinfo->dwMask & BSIM_STYLE))
+    if (pbsinfo->dwMask & BSIM_STYLE)
         pbsinfo->dwStyle = m_dwStyle;
 
     return S_OK;

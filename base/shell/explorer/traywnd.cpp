@@ -2554,8 +2554,9 @@ ChangePos:
         RegLoadSettings();
 
         /* Create and initialize the start menu */
+        BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallStartMenu;
         HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
-        m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, 0);
+        m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
 
         /* Create the task band */
         hRet = CTaskBand_CreateInstance(this, m_StartButton.m_hWnd, IID_PPV_ARG(IDeskBand, &m_TaskBand));
@@ -2656,6 +2657,17 @@ ChangePos:
             UpdateFonts();
             AlignControls(NULL);
             CheckTrayWndPosition();
+        }
+
+        if (m_StartMenuPopup && lstrcmpiW((LPCWSTR)lParam, L"TraySettings") == 0)
+        {
+            /* Re-create the start menu */
+            HideStartMenu();
+            m_StartMenuBand.Release();
+
+            BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallStartMenu;
+            HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
+            m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
         }
 
         return 0;

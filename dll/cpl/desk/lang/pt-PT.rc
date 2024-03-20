@@ -3,14 +3,14 @@
  * Traduzido por: Jose Carlos Jesus 05-08-2019 zecarlos1957@hotmail.com
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
 CAPTION "Temas"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Um tema é um plano de fundo, além de um conjunto de sons, ícones e outros elementos para ajudá-lo a personalizar seu computador com um clique.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Um tema é um plano de fundo, além de um conjunto de sons, ícones e outros elementos para ajudá-lo a personalizar o seu computador com um clique.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Guardar &como...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
@@ -234,7 +234,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Padrão"
-    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+    IDS_CLEARTYPEEFFECT "FreeType suavizado"
 END
 
 STRINGTABLE
@@ -298,7 +298,7 @@ BEGIN
     IDS_ELEMENT_6 "Itens seleccionados"
     IDS_ELEMENT_7 "Janela"
     IDS_ELEMENT_8 "Barra de deslocamento"
-    IDS_ELEMENT_9 "Objetos 3D"
+    IDS_ELEMENT_9 "Objectos 3D"
     IDS_ELEMENT_10 "Título da paleta"
     IDS_ELEMENT_11 "Barra de título"
     IDS_ELEMENT_12 "Caixa de mensagem"

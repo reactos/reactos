@@ -11,7 +11,7 @@ HKCR
             DefaultIcon = s '%MODULE%'
             ShellFolder
             {
-                val Attributes = d '0x00000020'
+                val Attributes = d '0x20000000'
             }
             val LocalizedString = s '@%MODULE%,-10000'
         }

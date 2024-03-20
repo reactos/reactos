@@ -39,16 +39,16 @@ public:
     HRESULT get_shellfolder(IBindCtx *pbc, REFIID riid, void **ppvOut);
 
     // IShellItem
-    virtual HRESULT WINAPI BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut);
-    virtual HRESULT WINAPI GetParent(IShellItem **ppsi);
-    virtual HRESULT WINAPI GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName);
-    virtual HRESULT WINAPI GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs);
-    virtual HRESULT WINAPI Compare(IShellItem *oth, SICHINTF hint, int *piOrder);
+    STDMETHOD(BindToHandler)(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut) override;
+    STDMETHOD(GetParent)(IShellItem **ppsi) override;
+    STDMETHOD(GetDisplayName)(SIGDN sigdnName, LPWSTR *ppszName) override;
+    STDMETHOD(GetAttributes)(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs) override;
+    STDMETHOD(Compare)(IShellItem *oth, SICHINTF hint, int *piOrder) override;
 
     // IPersistIDList
-    virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
-    virtual HRESULT WINAPI SetIDList(PCIDLIST_ABSOLUTE pidl);
-    virtual HRESULT WINAPI GetIDList(PIDLIST_ABSOLUTE *ppidl);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
+    STDMETHOD(SetIDList)(PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(GetIDList)(PIDLIST_ABSOLUTE *ppidl) override;
 
 DECLARE_NO_REGISTRY()
 DECLARE_NOT_AGGREGATABLE(CShellItem)

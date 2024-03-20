@@ -11,6 +11,8 @@
 #include <cstdlib>
 
 #define WIN32_NO_STATUS
+#define OEMRESOURCE // For OBM_MNARROW
+
 #include <windef.h>
 #include <winbase.h>
 #include <windowsx.h>

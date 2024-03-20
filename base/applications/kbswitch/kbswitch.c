@@ -11,6 +11,7 @@
 #include <shlobj.h>
 #include <shlwapi_undoc.h>
 #include <imm.h>
+#include <imm32_undoc.h>
 
 /*
  * This program kbswitch is a mimic of Win2k's internat.exe.
@@ -25,13 +26,6 @@
  * It might not work correctly on Vista+ because keyboard layout change notification
  * won't be generated in Vista+.
  */
-
-#define IME_MASK        (0xE0000000UL)
-#define SPECIAL_MASK    (0xF0000000UL)
-
-#define IS_IME_HKL(hKL)             ((((ULONG_PTR)(hKL)) & 0xF0000000) == IME_MASK)
-#define IS_SPECIAL_HKL(hKL)         ((((ULONG_PTR)(hKL)) & 0xF0000000) == SPECIAL_MASK)
-#define SPECIALIDFROMHKL(hKL)       ((WORD)(HIWORD(hKL) & 0x0FFF))
 
 #define WM_NOTIFYICONMSG (WM_USER + 248)
 
@@ -145,16 +139,9 @@ static VOID UpdateLayoutList(HKL hKL OPTIONAL)
 
     if (!hKL)
     {
-        if (0 <= (g_nCurrentLayoutNum - 1) && (g_nCurrentLayoutNum - 1) < g_cKLs)
-        {
-            hKL = g_ahKLs[g_nCurrentLayoutNum - 1];
-        }
-        else
-        {
-            HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
-            DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
-            hKL = GetKeyboardLayout(dwTID);
-        }
+        HWND hwndTarget = (g_hwndLastActive ? g_hwndLastActive : GetForegroundWindow());
+        DWORD dwTID = GetWindowThreadProcessId(hwndTarget, NULL);
+        hKL = GetKeyboardLayout(dwTID);
     }
 
     g_cKLs = GetKeyboardLayoutList(ARRAYSIZE(g_ahKLs), g_ahKLs);
@@ -737,6 +724,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case WM_RBUTTONUP:
                 case WM_LBUTTONUP:
                 {
+                    UpdateLayoutList(NULL);
+
                     GetCursorPos(&pt);
                     SetForegroundWindow(hwnd);
 

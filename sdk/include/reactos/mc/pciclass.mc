@@ -695,7 +695,7 @@ Language=Polish
 Kontroler myszy PCI
 .
 Language=Romanian
-Dispozitiv de control de șoricel PCI
+Dispozitiv de control de mouse PCI
 .
 
 MessageId=2307

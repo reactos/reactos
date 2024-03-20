@@ -281,7 +281,6 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     return (DHPDEV) PDev;
 }
 
-
 //    DrvCompletePDEV
 //  DESCRIPTION
 //    Called after initialization of PDEV is complete.  Supplies
@@ -293,7 +292,6 @@ DrvCompletePDEV(IN DHPDEV PDev,
 {
     ((PPDEV) PDev)->GDIDevHandle = Dev; // Handle to the DC
 }
-
 
 BOOL APIENTRY
 DrvAssertMode(IN DHPDEV DPev,
@@ -324,7 +322,7 @@ DrvAssertMode(IN DHPDEV DPev,
     else
     {
         /* Go back to last known mode */
-        DPRINT( "ppdev: %x, KMDriver: %x", ppdev, ppdev->KMDriver );
+        DPRINT("ppdev: %p, KMDriver: %p\n", ppdev, ppdev->KMDriver);
         if (EngDeviceIoControl(ppdev->KMDriver, IOCTL_VIDEO_RESET_DEVICE, NULL, 0, NULL, 0, &returnedDataLength))
         {
             /* Failed to go back to mode */
@@ -334,7 +332,6 @@ DrvAssertMode(IN DHPDEV DPev,
     }
     return TRUE;
 }
-
 
 VOID APIENTRY
 DrvDisablePDEV(IN DHPDEV PDev)
@@ -351,7 +348,6 @@ DrvDisablePDEV(IN DHPDEV PDev)
     DPRINT("Freeing PDEV\n");
     EngFreeMem(PDev);
 }
-
 
 VOID APIENTRY
 DrvDisableSurface(IN DHPDEV PDev)
@@ -388,7 +384,6 @@ DrvDisableSurface(IN DHPDEV PDev)
     EngDeleteSurface((HSURF) ppdev->SurfHandle);
     /* EngFreeMem(pdsurf); */ /* free the surface */
 }
-
 
 static VOID
 InitSavedBits(IN PPDEV ppdev)
@@ -428,7 +423,6 @@ InitSavedBits(IN PPDEV ppdev)
 
     ppdev->BitsSaved = FALSE;
 }
-
 
 HSURF APIENTRY
 DrvEnableSurface(IN DHPDEV PDev)
@@ -515,7 +509,6 @@ error_clean:
 error_done:
     return NULL;
 }
-
 
 ULONG APIENTRY
 DrvGetModes(IN HANDLE Driver,

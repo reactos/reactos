@@ -36,7 +36,7 @@ CCHAR KeNumberProcessors = 0;
 
 /* NUMA Node Support */
 KNODE KiNode0;
-PKNODE KeNodeBlock[1];
+PKNODE KeNodeBlock[1] = { &KiNode0 };
 UCHAR KeNumberNodes = 1;
 UCHAR KeProcessNodeSeed;
 

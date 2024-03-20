@@ -154,14 +154,14 @@ BEGIN
     STRING_TEXT_FILES_TXT "Textové soubory (*.txt)"
     STRING_TOOLARGE "Soubor '%s' je pro notepad příliš velký.\n\
 Použijte jiný editor, prosím."
-    STRING_NOTEXT "Nebyl zadán žádný text. \
+    STRING_NOTEXT "Nebyl zadán žádný text.\
 \nVložte nějaký text a zkuste to znovu."
     STRING_DOESNOTEXIST "Soubor '%s'\nneexistuje.\n\n\
-Chcete ho vytvořit ?"
+Chcete ho vytvořit?"
     STRING_NOTSAVED "Soubor '%s'\nbyl změněn.\n\n\
-Chcete uložit změny ?"
+Chcete uložit změny?"
     STRING_NOTFOUND "'%s' nebyl nalezen."
-    STRING_OUT_OF_MEMORY "Není dost paměti na dokončení této úlohy. \
+    STRING_OUT_OF_MEMORY "Není dost paměti na dokončení této úlohy.\
 \nUzavřete jednu či více aplikací, abyste získali více\nvolné \
 paměti."
     STRING_CANNOTFIND "Nelze nalézt '%s'"

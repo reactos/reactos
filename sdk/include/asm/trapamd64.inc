@@ -166,22 +166,15 @@ MACRO(ExitTrap, Flags)
     LOCAL IntsEnabled
     LOCAL NoUserApc
     LOCAL IrqlPassive
+    LOCAL irql_ok
 
 #if DBG
         /* Check previous irql */
         mov rax, cr8
         cmp [rbp + KTRAP_FRAME_PreviousIrql], al
-#ifdef _USE_ML
-        je .irql_ok
-#else
-        je 1f
-#endif
-        int 3
-#ifdef _USE_ML
-    .irql_ok:
-#else
-    1:
-#endif
+        je irql_ok
+        int HEX(2c)
+    irql_ok:
 #endif
 
     if (Flags AND TF_SEGMENTS)

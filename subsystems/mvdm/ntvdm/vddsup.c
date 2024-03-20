@@ -341,7 +341,7 @@ static BOOL LoadInstallableVDD(VOID)
     VDDValueName = VDDList;
     while (*VDDList)
     {
-        DPRINT1("Loading VDD '%S'...", VDDList);
+        DPRINT1("Loading VDD '%S'... ", VDDList);
         hVDD = LoadLibraryW(VDDList);
         if (hVDD == NULL)
         {
@@ -501,7 +501,6 @@ VOID VDDResumeUserHook(VOID)
         if (UserHook->Uresume_Handler) UserHook->Uresume_Handler();
     }
 }
-
 
 
 VOID VDDSupInitialize(VOID)

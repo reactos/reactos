@@ -92,6 +92,11 @@ Author:
 //#endif
 
 //
+// Double fault stack size
+//
+#define DOUBLE_FAULT_STACK_SIZE 0x2000
+
+//
 // CPU Vendors
 //
 typedef enum

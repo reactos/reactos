@@ -73,7 +73,11 @@ XboxGetSerialPort(ULONG Index, PULONG Irq)
 
 extern
 VOID
-DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetSerialPort, ULONG Count);
+DetectSerialPorts(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey,
+    _In_ GET_SERIAL_PORT MachGetSerialPort,
+    _In_ ULONG Count);
 
 VOID
 XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
@@ -201,7 +205,10 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
 static
 VOID
-DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+DetectIsaBios(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Out_ ULONG *BusNumber)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCONFIGURATION_COMPONENT_DATA BusKey;
@@ -240,7 +247,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
-    DetectSerialPorts(BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
+    DetectSerialPorts(Options, BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
     DetectDisplayController(BusKey);
 
     /* FIXME: Detect more ISA devices */
@@ -263,7 +270,8 @@ XboxGetFloppyCount(VOID)
 }
 
 PCONFIGURATION_COMPONENT_DATA
-XboxHwDetect(VOID)
+XboxHwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;
@@ -278,7 +286,7 @@ XboxHwDetect(VOID)
 
     /* TODO: Build actual xbox's hardware configuration tree */
     DetectPciBios(SystemKey, &BusNumber);
-    DetectIsaBios(SystemKey, &BusNumber);
+    DetectIsaBios(Options, SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
     return SystemKey;

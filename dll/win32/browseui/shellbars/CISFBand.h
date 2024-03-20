@@ -41,137 +41,137 @@ public:
 // Personal Methods
     HRESULT CreateSimpleToolbar(HWND hWndParent);
 
-// IObjectWithSite
-
-    virtual STDMETHODIMP GetSite(
-        IN  REFIID riid,
-        OUT void   **ppvSite
-    );
-
-    virtual STDMETHODIMP SetSite(
-        IN IUnknown *pUnkSite
-    );
-
-// IDeskBand
-
-    virtual STDMETHODIMP GetWindow(
-        OUT HWND *phwnd
-    );
-
-    virtual STDMETHODIMP ContextSensitiveHelp(
-        IN BOOL fEnterMode
-    );
-
-    virtual STDMETHODIMP ShowDW(
-        IN BOOL bShow
-    );
-
-    virtual STDMETHODIMP CloseDW(
-        IN DWORD dwReserved
-    );
-
-    virtual STDMETHODIMP ResizeBorderDW(
-        LPCRECT prcBorder,
-        IUnknown *punkToolbarSite,
-        BOOL fReserved
-    );
-
-    virtual STDMETHODIMP GetBandInfo(
-        IN DWORD dwBandID,
-        IN DWORD dwViewMode,
-        IN OUT DESKBANDINFO *pdbi
-    );
-
-// IPersistStream
-
-    virtual STDMETHODIMP GetClassID(
-        OUT CLSID *pClassID
-    );
-
-    virtual STDMETHODIMP GetSizeMax(
-        OUT ULARGE_INTEGER *pcbSize
-    );
-
-    virtual STDMETHODIMP IsDirty();
-
-    virtual STDMETHODIMP Load(
-        IN IStream *pStm
-    );
-
-    virtual STDMETHODIMP Save(
-        IN IStream *pStm,
-        IN BOOL    fClearDirty
-    );
-
-// IWinEventHandler
-
-    virtual STDMETHODIMP ContainsWindow(
+    STDMETHOD(ContainsWindow)(
         IN HWND hWnd
     );
 
-    virtual STDMETHODIMP OnWinEvent(
+// IObjectWithSite
+
+    STDMETHOD(GetSite)(
+        IN  REFIID riid,
+        OUT void   **ppvSite
+    ) override;
+
+    STDMETHOD(SetSite)(
+        IN IUnknown *pUnkSite
+    ) override;
+
+// IDeskBand
+
+    STDMETHOD(GetWindow)(
+        OUT HWND *phwnd
+    ) override;
+
+    STDMETHOD(ContextSensitiveHelp)(
+        IN BOOL fEnterMode
+    ) override;
+
+    STDMETHOD(ShowDW)(
+        IN BOOL bShow
+    ) override;
+
+    STDMETHOD(CloseDW)(
+        IN DWORD dwReserved
+    ) override;
+
+    STDMETHOD(ResizeBorderDW)(
+        LPCRECT prcBorder,
+        IUnknown *punkToolbarSite,
+        BOOL fReserved
+    ) override;
+
+    STDMETHOD(GetBandInfo)(
+        IN DWORD dwBandID,
+        IN DWORD dwViewMode,
+        IN OUT DESKBANDINFO *pdbi
+    ) override;
+
+// IPersistStream
+
+    STDMETHOD(GetClassID)(
+        OUT CLSID *pClassID
+    ) override;
+
+    STDMETHOD(GetSizeMax)(
+        OUT ULARGE_INTEGER *pcbSize
+    ) override;
+
+    STDMETHOD(IsDirty)() override;
+
+    STDMETHOD(Load)(
+        IN IStream *pStm
+    ) override;
+
+    STDMETHOD(Save)(
+        IN IStream *pStm,
+        IN BOOL    fClearDirty
+    ) override;
+
+// IWinEventHandler
+
+    STDMETHOD(OnWinEvent)(
         HWND hWnd,
         UINT uMsg,
         WPARAM wParam,
         LPARAM lParam,
         LRESULT *theResult
-    );
+    ) override;
 
-    virtual STDMETHODIMP IsWindowOwner(
+    STDMETHOD(IsWindowOwner)(
         HWND hWnd
-    );
+    ) override;
 
 // IOleCommandTarget
 
-    virtual STDMETHODIMP Exec(
+    STDMETHOD(Exec)(
         IN const GUID *pguidCmdGroup,
         IN DWORD nCmdID,
         IN DWORD nCmdexecopt,
         IN VARIANT *pvaIn,
         IN OUT VARIANT *pvaOut
-    );
+    ) override;
 
-    virtual STDMETHODIMP QueryStatus(
+    STDMETHOD(QueryStatus)(
         IN const GUID *pguidCmdGroup,
         IN ULONG cCmds,
         IN OUT OLECMD prgCmds[],
         IN OUT OLECMDTEXT *pCmdText
-    );
+    ) override;
 
 // IShellFolderBand
-    virtual STDMETHODIMP GetBandInfoSFB(
+    STDMETHOD(GetBandInfoSFB)(
         PBANDINFOSFB pbi
-    );
+    ) override;
 
-    virtual STDMETHODIMP InitializeSFB(
+    STDMETHOD(InitializeSFB)(
         IShellFolder      *psf,
         PCIDLIST_ABSOLUTE pidl
-    );
+    ) override;
 
-    virtual STDMETHODIMP SetBandInfoSFB(
+    STDMETHOD(SetBandInfoSFB)(
         PBANDINFOSFB pbi
-    );
+    ) override;
 
 // IContextMenu
-    virtual STDMETHODIMP GetCommandString(
+    STDMETHOD(GetCommandString)(
         UINT_PTR idCmd,
         UINT uFlags,
         UINT *pwReserved,
         LPSTR pszName,
         UINT cchMax
-    );
+    ) override;
 
-    virtual STDMETHODIMP InvokeCommand(
+    STDMETHOD(InvokeCommand)(
         LPCMINVOKECOMMANDINFO pici
-    );
+    ) override;
 
-    virtual STDMETHODIMP QueryContextMenu(
+    STDMETHOD(QueryContextMenu)(
         HMENU hmenu,
         UINT indexMenu,
         UINT idCmdFirst,
         UINT idCmdLast,
         UINT uFlags
-    );
+    ) override;
 
 //*****************************************************************************************************
 

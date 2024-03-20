@@ -2,13 +2,15 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Core source file for SMP management
- * COPYRIGHT:   Copyright 2021 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2021 Victor Perevertkin <victor.perevertkin@reactos.org>
+ *              Copyright 2021-2023 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
 #include <smp.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -30,4 +32,13 @@ HalpSetupProcessorsTable(
      */
     CurrentPrcb = KeGetCurrentPrcb();
     HalpProcessorIdentity[NTProcessorNumber].ProcessorPrcb = CurrentPrcb;
+}
+
+VOID
+FASTCALL
+HalpBroadcastClockIpi(
+    _In_ UCHAR Vector)
+{
+    /* Send a clock IPI to all processors */
+    HalpBroadcastIpiSpecifyVector(Vector, FALSE);
 }

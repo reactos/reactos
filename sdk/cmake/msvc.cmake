@@ -22,8 +22,9 @@ endif()
 # helper macros. Note also that GCC builds use string pooling by default.
 add_compile_options(/GF)
 
-# Enable function level linking and comdat folding
-add_compile_options(/Gy)
+# Enable function level linking and comdat folding (only C/C++, not ASM!)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Gy>)
+add_compile_options($<$<COMPILE_LANGUAGE:C>:/Gy>)
 add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")

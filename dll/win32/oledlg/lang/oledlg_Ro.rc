@@ -3,6 +3,7 @@
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
  *           2011 Ștefan Fulea
+ * Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@ STRINGTABLE
   IDS_RESULTOBJDESC	"Inserați un nou obiect %s în document"
   IDS_RESULTFILEOBJDESC	"Inserați conținutul fișierului ca pe un obiect în document, astfel încât să îl puteți activa utilizând programul care l-a creat."
   IDS_BROWSE            "Navigare"
-  IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Controlul OLE nu a putut fi înregistrat."
+  IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Controlul OLE nu s-a putut înregistra."
   IDS_NOTOLEMODCAPTION  "Adaugă un control"
   IDS_VERBMENU_OBJECT   "&Obiect"
   IDS_VERBMENU_OBJECT_WITH_NAME "&Obiect %1"

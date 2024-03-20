@@ -460,7 +460,7 @@ FATGetNextDirEntry(
     /* Make sure filename is NULL terminate and calculate length */
     DirContext->LongNameU.Buffer[DirContext->LongNameU.MaximumLength / sizeof(WCHAR) - 1]
         = UNICODE_NULL;
-    DirContext->LongNameU.Length = wcslen(DirContext->LongNameU.Buffer) * sizeof(WCHAR);
+    DirContext->LongNameU.Length = (USHORT)(wcslen(DirContext->LongNameU.Buffer) * sizeof(WCHAR));
 
     /* Init short name */
     vfat8Dot3ToString(&DirContext->DirEntry.Fat, &DirContext->ShortNameU);

@@ -852,6 +852,14 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     AddVersionString(hwndDlg, L"OriginalFilename");
     AddVersionString(hwndDlg, L"FileVersion");
     AddVersionString(hwndDlg, L"ProductVersion");
+    AddVersionString(hwndDlg, L"Comments");
+    AddVersionString(hwndDlg, L"LegalTrademarks");
+
+    if (pInfo && (pInfo->dwFileFlags & VS_FF_PRIVATEBUILD))
+        AddVersionString(hwndDlg, L"PrivateBuild");
+
+    if (pInfo && (pInfo->dwFileFlags & VS_FF_SPECIALBUILD))
+        AddVersionString(hwndDlg, L"SpecialBuild");
 
     /* Attach file version to dialog window */
     SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)this);
@@ -957,8 +965,11 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (pwszData == NULL)
                     break;
 
-                TRACE("hDlgCtrl %x string %s\n", hDlgCtrl, debugstr_w(pwszData));
-                SetDlgItemTextW(hwndDlg, 14010, pwszData);
+                CString str(pwszData);
+                str.Trim();
+
+                TRACE("hDlgCtrl %x string %s\n", hDlgCtrl, debugstr_w(str));
+                SetDlgItemTextW(hwndDlg, 14010, str);
 
                 return TRUE;
             }
@@ -1074,6 +1085,7 @@ void CFileDefExt::UpdateFolderIcon(HWND hwndDlg)
     // create the icon
     if (m_szFolderIconPath[0] == 0 && m_nFolderIconIndex == 0)
     {
+        // Windows ignores shell customization here and uses the default icon
         m_hFolderIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER));
     }
     else

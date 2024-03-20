@@ -296,27 +296,54 @@ vector<TOKEN_DEF> g_TokenList =
 // FIXME: use context?
 unsigned int g_label_number = 0;
 
-vector<string> g_identifiers;
+bool g_processing_jmp = false;
+
+enum class IDTYPE
+{
+    Memory,
+    Register,
+    Label,
+    Constant,
+    Macro,
+    Instruction,
+    String,
+    Unknown
+};
+
+struct IDENTIFIER
+{
+    string Name;
+    IDTYPE Type;
+};
+
+vector<IDENTIFIER> g_identifiers;
+
+static
+void
+add_identifier(Token& tok, IDTYPE type)
+{
+    g_identifiers.push_back(IDENTIFIER{ tok.str(), type });
+    //fprintf(stderr, "Added id: '%s'\n", tok.str().c_str());
+}
 
 void
 add_mem_id(Token& tok)
 {
-    g_identifiers.push_back(tok.str());
-    //fprintf(stderr, "Added mem id: '%s'\n", tok.str().c_str());
+    add_identifier(tok, IDTYPE::Memory);
 }
 
 bool
 is_mem_id(Token& tok)
 {
-    for (auto id : g_identifiers)
+    for (IDENTIFIER& identifier : g_identifiers)
     {
-        if (id == tok.str())
+        if (identifier.Name == tok.str())
         {
-            return true;
+            return identifier.Type == IDTYPE::Memory;
         }
     }
 
-    return false;
+    return true;
 }
 
 bool
@@ -587,10 +614,13 @@ size_t translate_instruction_param(TokenList& tokens, size_t index, const vector
             case TOKEN_TYPE::Operator:
                 if (tok.str() == ",")
                     return index;
+                return translate_token(tokens, index, macro_params);
 
             case TOKEN_TYPE::Identifier:
                 index = translate_token(tokens, index, macro_params);
-                if (is_mem_id(tok))
+                if (is_mem_id(tok) &&
+                    !is_string_in_list(macro_params, tok.str()) &&
+                    !g_processing_jmp)
                 {
                     printf("[rip]");
                 }
@@ -604,8 +634,36 @@ size_t translate_instruction_param(TokenList& tokens, size_t index, const vector
     return index;
 }
 
+static
+bool
+is_jmp_or_call(const Token& tok)
+{
+    const char* inst_list[] = {
+        "jmp", "call", "ja", "jae", "jb", "jbe", "jc", "jcxz", "je", "jecxz", "jg", "jge",
+        "jl", "jle", "jna", "jnae", "jnb", "jnbe", "jnc", "jne", "jng", "jnge", "jnl", "jnle",
+        "jno", "jnp", "jns", "jnz", "jo", "jp", "jpe", "jpo", "jrcxz", "js", "jz", "loop", "loope",
+        "loopne", "loopnz", "loopz"
+    };
+
+    for (const char* inst : inst_list)
+    {
+        if (iequals(tok.str(), inst))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 size_t translate_instruction(TokenList& tokens, size_t index, const vector<string>& macro_params)
 {
+    // Check for jump/call instructions
+    if (is_jmp_or_call(tokens[index]))
+    {
+        g_processing_jmp = true;
+    }
+
     // Translate the instruction itself
     index = translate_token(tokens, index, macro_params);
 
@@ -624,6 +682,7 @@ size_t translate_instruction(TokenList& tokens, size_t index, const vector<strin
         {
             case TOKEN_TYPE::Comment:
             case TOKEN_TYPE::NewLine:
+                g_processing_jmp = false;
                 return index;
 
             case TOKEN_TYPE::WhiteSpace:
@@ -637,6 +696,7 @@ size_t translate_instruction(TokenList& tokens, size_t index, const vector<strin
         }
     }
 
+    g_processing_jmp = false;
     return index;
 }
 
@@ -891,6 +951,7 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
         {
             printf("%s:", tok.str().c_str());
         }
+        add_identifier(tok, IDTYPE::Label);
         return index + 2;
     }
 
@@ -912,6 +973,7 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
         case TOKEN_TYPE::KW_EQU:
             //printf("%s%s", tok.str().c_str(), tok1.str().c_str());
             printf("#define %s ", tok.str().c_str());
+            add_identifier(tok, IDTYPE::Constant);
             return translate_expression(tokens, index + 3, macro_params);
 
         case TOKEN_TYPE::KW_TEXTEQU:
@@ -921,6 +983,7 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
             string textdef = tok4.str();
             printf("#define %s %s", tok.str().c_str(), textdef.substr(1, textdef.size() - 2).c_str());
+            add_identifier(tok, IDTYPE::Constant);
             return index + 5;
         }
 
@@ -940,6 +1003,7 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 #endif
                 index += 2;
             }
+            add_identifier(tok, IDTYPE::Label);
             break;
         }
 

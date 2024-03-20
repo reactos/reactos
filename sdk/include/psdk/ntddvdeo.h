@@ -20,11 +20,80 @@
  *
  */
 
-#pragma once
+#ifndef _NTDDVDEO_
 #define _NTDDVDEO_
 
+#pragma once
+
+/*
+ * Display output interfaces
+ * {96304d9f-54b5-11d1-8b0f-00a0c9068ff3}
+ */
+// DEFINE_GUID(GUID_DISPLAY_OUTPUT_INTERFACE_STANDARD, \/
+//   0x96304d9f, 0x54b5, 0x11d1, 0x8b, 0x0f, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3);
+
+/*
+ * Display adapter device interface
+ * {5b45201d-f2f2-4f3b-85bb-30ff1f953599}
+ */
 DEFINE_GUID(GUID_DEVINTERFACE_DISPLAY_ADAPTER, \
   0x5b45201d, 0xf2f2, 0x4f3b, 0x85, 0xbb, 0x30, 0xff, 0x1f, 0x95, 0x35, 0x99);
+
+/*
+ * Obsolete device interface class GUID names
+ * (use of above GUID_DEVINTERFACE_* names is recommended)
+ */
+#define GUID_DISPLAY_ADAPTER_INTERFACE  GUID_DEVINTERFACE_DISPLAY_ADAPTER
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+/*
+ * Monitor device interface
+ * {e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
+ */
+DEFINE_GUID(GUID_DEVINTERFACE_MONITOR, \
+  0xe6f07b5f, 0xee97, 0x4a90, 0xb0, 0x76, 0x33, 0xf5, 0x7b, 0xf4, 0xea, 0xa7);
+
+/*
+ * Interface used by anyone listening for arrival of the display device
+ * {1ca05180-a699-450a-9a0c-de4fbe3ddd89}
+ */
+DEFINE_GUID(GUID_DISPLAY_DEVICE_ARRIVAL, \
+  0x1ca05180, 0xa699, 0x450a, 0x9a, 0x0c, 0xde, 0x4f, 0xbe, 0x3d, 0xdd, 0x89);
+
+/*
+ * Interface used by anyone listening for arrival of display children
+ * {1ad9e4f0-f88d-4360-bab9-4c2d55e564cd}
+ */
+DEFINE_GUID(GUID_DEVINTERFACE_VIDEO_OUTPUT_ARRIVAL, \
+  0x1ad9e4f0, 0xf88d, 0x4360, 0xba, 0xb9, 0x4c, 0x2d, 0x55, 0xe5, 0x64, 0xcd);
+
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+#ifdef DEFINE_DEVPROPKEY
+
+/*
+ * Property on a display class device's DevNode indicating
+ * that it is a indirect display.
+ */
+DEFINE_DEVPROPKEY(DEVPKEY_IndirectDisplay, \
+  0xc50a3f10, 0xaa5c, 0x4247, 0xb8, 0x30, 0xd6, 0xa6, 0xf8, 0xea, 0xa3, 0x10, 0x01);
+
+struct INDIRECT_DISPLAY_INFO
+{
+    LUID DisplayAdapterLuid;
+    ULONG Flags;
+    ULONG NumMonitors;
+    ULONG DisplayAdapterTargetBase;
+};
+
+/* This indirect display device created an IddCx adapter */
+#define INDIRECT_DISPLAY_INFO_FLAGS_CREATED_IDDCX_ADAPTER 0x01
+
+#endif // DEFINE_DEVPROPKEY
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+
 
 #ifndef GUID_DEFS_ONLY
 
@@ -570,4 +639,6 @@ typedef struct _DISPLAY_BRIGHTNESS {
 }
 #endif
 
-#endif /* GUID_DEFS_ONLY */
+#endif /* !GUID_DEFS_ONLY */
+
+#endif /* _NTDDVDEO_ */

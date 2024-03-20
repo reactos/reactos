@@ -1,11 +1,17 @@
-/* Russian translation by Dmitry Chapyshev, 2007-06-10 */
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <lentind@yandex.ru>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     STRING_HELP "Использование: %s том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\
-  том:           Указывает букву диска (с последующим двоеточием),\n\
+  [том:]         Указывает букву диска (с последующим двоеточием),\n\
                  точку подключения или имя тома.\n\
   -FS:система    Указывает тип файловой системы (%s).\n\
   -V:метка       Метка тома.\n\

@@ -31,8 +31,8 @@ public:
     ~CGlobalFolderSettings();
 
     // *** IGlobalFolderSettings methods ***
-    virtual HRESULT STDMETHODCALLTYPE Get(DEFFOLDERSETTINGS *paramC, int param10);
-    virtual HRESULT STDMETHODCALLTYPE Set(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14);
+    STDMETHOD(Get)(DEFFOLDERSETTINGS *paramC, int param10) override;
+    STDMETHOD(Set)(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_GLOBALFOLDERSETTINGS)
     DECLARE_NOT_AGGREGATABLE(CGlobalFolderSettings)

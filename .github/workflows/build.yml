@@ -26,7 +26,7 @@ jobs:
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
@@ -46,16 +46,16 @@ jobs:
         sudo ./llvm.sh $LLVM_VERSION
         echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: src
     - name: Set up cache for ccache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ccache
-        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         restore-keys: |
-          ccache-${{matrix.compiler}}-${{matrix.arch}}-
+          ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-
     - name: Set ccache settings
       run: |
         echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
@@ -74,7 +74,7 @@ jobs:
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -129,17 +129,17 @@ jobs:
         arch: amd64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: src
     - name: Configure
-      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DDLL_EXPORT_VERSION=${{matrix.dllver}}
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DDLL_EXPORT_VERSION=${{matrix.dllver}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
@@ -147,7 +147,7 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
@@ -183,7 +183,7 @@ jobs:
         arch: amd64_arm64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: src
     - name: Configure
@@ -204,7 +204,7 @@ jobs:
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
     - name: Upload compiled binaries
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -227,7 +227,7 @@ jobs:
           !**/*.tlb
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -268,7 +268,7 @@ jobs:
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: src
     - name: Configure
@@ -278,7 +278,7 @@ jobs:
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
@@ -286,34 +286,33 @@ jobs:
           build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
 
-# Disable MSBuild for the moment being until a proper fix is provided -- see CORE-18911
-#  build-msbuild-i386:
-#    name: MSBuild (i386)
-#    runs-on: windows-2019
-#    steps:
-#    - name: Install Flex and Bison
-#      run: |
-#        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
-#        7z x flexbison.7z -O${{github.workspace}}\bin
-#        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-#        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-#        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-#    - name: Add CL to PATH
-#      uses: ilammy/msvc-dev-cmd@v1
-#      with:
-#        arch: amd64_x86
-#    - uses: actions/checkout@v3
-#      with:
-#        path: src
-#    - name: Configure
-#      run: |
-#        mkdir build
-#        cd build
-#        cmake -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
-#    - name: Build
-#      run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd
+  build-msbuild-i386:
+    name: MSBuild (i386)
+    runs-on: windows-2019
+    steps:
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+    - uses: actions/checkout@v4
+      with:
+        path: src
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+    - name: Build
+      run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd

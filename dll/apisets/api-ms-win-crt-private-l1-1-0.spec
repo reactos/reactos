@@ -1173,7 +1173,7 @@
 @ stub _o_wmemmove_s
 @ stdcall _purecall() msvcrt._purecall
 @ stdcall -arch=i386 _seh_longjmp_unwind() msvcrt._seh_longjmp_unwind
-@ stub _seh_longjmp_unwind4
+@ stdcall -version=0x600+ -arch=i386 _seh_longjmp_unwind4() msvcrt._seh_longjmp_unwind4
 @ stub _set_purecall_handler
 @ stub _set_se_translator
 @ stdcall -arch=i386 _setjmp3() msvcrt._setjmp3

@@ -8,8 +8,9 @@
  *       19/1-2006   Magnus Olsen
  */
 
-
 #include <win32k.h>
+
+// #define NDEBUG
 #include <debug.h>
 
 /************************************************************************/
@@ -21,14 +22,14 @@ NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
                            PDD_CANCREATEVPORTDATA puCanCreateVPortData)
 {
     PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = (PGD_DVPCANCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCanCreateVideoPort].pfn;
-    
+
     if (pfnDvpCanCreateVideoPort == NULL)
     {
-		DPRINT1("Warning: no pfnDvpCanCreateVideoPort");
+        DPRINT1("Warning: no pfnDvpCanCreateVideoPort\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpCanCreateVideoPort");
+    DPRINT("Calling dxg.sys pfnDvpCanCreateVideoPort\n");
     return pfnDvpCanCreateVideoPort(hDirectDraw, puCanCreateVPortData);
 }
 
@@ -41,14 +42,14 @@ NtGdiDvpColorControl(HANDLE hVideoPort,
                      PDD_VPORTCOLORDATA puVPortColorData)
 {
     PGD_DVPCOLORCONTROL pfnDvpColorControl = (PGD_DVPCOLORCONTROL)gpDxFuncs[DXG_INDEX_DxDvpColorControl].pfn;
-    
+
     if (pfnDvpColorControl == NULL)
     {
-		DPRINT1("Warning: no pfnDvpColorControl");
+        DPRINT1("Warning: no pfnDvpColorControl\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpColorControl");
+    DPRINT("Calling dxg.sys pfnDvpColorControl\n");
     return pfnDvpColorControl(hVideoPort, puVPortColorData);
 }
 
@@ -61,14 +62,14 @@ NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
                         PDD_CREATEVPORTDATA puCreateVPortData)
 {
     PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = (PGD_DVPCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCreateVideoPort].pfn;
-    
+
     if (pfnDvpCreateVideoPort == NULL)
     {
-		DPRINT1("Warning: no pfnDvpCreateVideoPort");
+        DPRINT1("Warning: no pfnDvpCreateVideoPort\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpCreateVideoPort");
+    DPRINT("Calling dxg.sys pfnDvpCreateVideoPort\n");
     return pfnDvpCreateVideoPort(hDirectDraw, puCreateVPortData);
 }
 
@@ -80,15 +81,16 @@ APIENTRY
 NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
                          PDD_DESTROYVPORTDATA puDestroyVPortData)
 {
-    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort  = (PGD_DVPDESTROYVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpDestroyVideoPort].pfn;
-    
+    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort =
+        (PGD_DVPDESTROYVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpDestroyVideoPort].pfn;
+
     if (pfnDvpDestroyVideoPort == NULL)
     {
-		DPRINT1("Warning: no pfnDvpDestroyVideoPort");
+        DPRINT1("Warning: no pfnDvpDestroyVideoPort\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpDestroyVideoPort");
+    DPRINT("Calling dxg.sys pfnDvpDestroyVideoPort\n");
     return pfnDvpDestroyVideoPort(hVideoPort, puDestroyVPortData);
 }
 
@@ -102,18 +104,18 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceTarget,
                       PDD_FLIPVPORTDATA puFlipVPortData)
 {
-    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort  = (PGD_DVPFLIPVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpFlipVideoPort].pfn;
+    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort =
+        (PGD_DVPFLIPVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpFlipVideoPort].pfn;
 
     if (pfnDvpFlipVideoPort == NULL)
     {
-		DPRINT1("Warning: no pfnDvpFlipVideoPort");
+        DPRINT1("Warning: no pfnDvpFlipVideoPort\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpFlipVideoPort");
+    DPRINT("Calling dxg.sys pfnDvpFlipVideoPort\n");
     return pfnDvpFlipVideoPort(hVideoPort, hDDSurfaceCurrent, hDDSurfaceTarget, puFlipVPortData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortBandwidth                                        */
@@ -127,14 +129,13 @@ NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoPortBandwidth == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortBandwidth");
+        DPRINT1("Warning: no pfnDvpGetVideoPortBandwidth\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortBandwidth");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortBandwidth\n");
     return pfnDvpGetVideoPortBandwidth(hVideoPort, puGetVPortBandwidthData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortFlipStatus                                       */
@@ -148,14 +149,13 @@ NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
 
     if (pfnDvpGetVideoPortFlipStatus == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortFlipStatus");
+        DPRINT1("Warning: no pfnDvpGetVideoPortFlipStatus\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortFlipStatus");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortFlipStatus\n");
     return pfnDvpGetVideoPortFlipStatus(hDirectDraw, puGetVPortFlipStatusData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortInputFormats                                     */
@@ -169,14 +169,13 @@ NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoPortInputFormats == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortInputFormats");
+        DPRINT1("Warning: no pfnDvpGetVideoPortInputFormats\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortInputFormats");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortInputFormats\n");
     return pfnDvpGetVideoPortInputFormats(hVideoPort, puGetVPortInputFormatData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortLine                                             */
@@ -190,14 +189,13 @@ NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoPortLine == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortLine");
+        DPRINT1("Warning: no pfnDvpGetVideoPortLine\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortLine");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortLine\n");
     return pfnDvpGetVideoPortLine(hVideoPort, puGetVPortLineData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortOutputFormats                                    */
@@ -211,15 +209,13 @@ NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoPortOutputFormats == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortOutputFormats");
+        DPRINT1("Warning: no pfnDvpGetVideoPortOutputFormats\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortOutputFormats");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortOutputFormats\n");
     return pfnDvpGetVideoPortOutputFormats(hVideoPort, puGetVPortOutputFormatData);
- 
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortConnectInfo                                      */
@@ -233,14 +229,13 @@ NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
 
     if (pfnDvpGetVideoPortConnectInfo == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortConnectInfo");
+        DPRINT1("Warning: no pfnDvpGetVideoPortConnectInfo\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortConnectInfo");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortConnectInfo\n");
     return pfnDvpGetVideoPortConnectInfo(hDirectDraw, puGetVPortConnectData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoSignalStatus                                         */
@@ -254,15 +249,13 @@ NtGdiDvpGetVideoSignalStatus(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoSignalStatus == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoSignalStatus");
+        DPRINT1("Warning: no pfnDvpGetVideoSignalStatus\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoSignalStatus");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoSignalStatus\n");
     return pfnDvpGetVideoSignalStatus(hVideoPort, puGetVPortSignalData);
-
 }
-
 
 /************************************************************************/
 /* NtGdiDvpUpdateVideoPort                                              */
@@ -278,15 +271,13 @@ NtGdiDvpUpdateVideoPort(HANDLE hVideoPort,
 
     if (pfnDvpUpdateVideoPort == NULL)
     {
-		DPRINT1("Warning: no pfnDvpUpdateVideoPort");
+        DPRINT1("Warning: no pfnDvpUpdateVideoPort\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpUpdateVideoPort");
+    DPRINT("Calling dxg.sys pfnDvpUpdateVideoPort\n");
     return pfnDvpUpdateVideoPort(hVideoPort, phSurfaceVideo, phSurfaceVbi, puUpdateVPortData);
-
 }
-
 
 /************************************************************************/
 /* NtGdiDvpWaitForVideoPortSync                                         */
@@ -300,14 +291,13 @@ NtGdiDvpWaitForVideoPortSync(HANDLE hVideoPort,
 
     if (pfnDvpWaitForVideoPortSync == NULL)
     {
-		DPRINT1("Warning: no pfnDvpWaitForVideoPortSync");
+        DPRINT1("Warning: no pfnDvpWaitForVideoPortSync\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpWaitForVideoPortSync");
+    DPRINT("Calling dxg.sys pfnDvpWaitForVideoPortSync\n");
     return pfnDvpWaitForVideoPortSync(hVideoPort, puWaitForVPortSyncData);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpAcquireNotification                                          */
@@ -322,14 +312,13 @@ NtGdiDvpAcquireNotification(HANDLE hVideoPort,
 
     if (pfnDvpAcquireNotification == NULL)
     {
-		DPRINT1("Warning: no pfnDvpAcquireNotification");
+        DPRINT1("Warning: no pfnDvpAcquireNotification\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpAcquireNotification");
+    DPRINT("Calling dxg.sys pfnDvpAcquireNotification\n");
     return pfnDvpAcquireNotification(hVideoPort, hEvent, pNotify);
 }
-
 
 /************************************************************************/
 /* NtGdiDvpReleaseNotification                                          */
@@ -343,15 +332,13 @@ NtGdiDvpReleaseNotification(HANDLE hVideoPort,
 
     if (pfnDvpReleaseNotification == NULL)
     {
-		DPRINT1("Warning: no pfnDvpReleaseNotification");
+        DPRINT1("Warning: no pfnDvpReleaseNotification\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpReleaseNotification");
+    DPRINT("Calling dxg.sys pfnDvpReleaseNotification\n");
     return pfnDvpReleaseNotification(hVideoPort, hEvent);
-
 }
-
 
 /************************************************************************/
 /* NtGdiDvpGetVideoPortField                                            */
@@ -365,11 +352,10 @@ NtGdiDvpGetVideoPortField(HANDLE hVideoPort,
 
     if (pfnDvpGetVideoPortField == NULL)
     {
-		DPRINT1("Warning: no pfnDvpGetVideoPortField");
+        DPRINT1("Warning: no pfnDvpGetVideoPortField\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling dxg.sys pfnDvpGetVideoPortField");
+    DPRINT("Calling dxg.sys pfnDvpGetVideoPortField\n");
     return pfnDvpGetVideoPortField(hVideoPort, puGetVPortFieldData);
-
 }

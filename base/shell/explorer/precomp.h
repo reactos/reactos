@@ -17,6 +17,7 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+#define OEMRESOURCE
 
 #include <windef.h>
 #include <winbase.h>
@@ -105,10 +106,10 @@ FormatMenuString(IN HMENU hMenu,
                  IN UINT uFlags,
                  ...);
 
-BOOL
-GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCWSTR lpSubKey,
-                       IN LPCWSTR lpValue);
+BOOL GetRegValue(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN BOOL bDefaultValue);
+BOOL SetRegDword(IN LPCWSTR pszSubKey, IN LPCWSTR pszValueName, IN DWORD dwValue);
+BOOL GetAdvancedBool(IN LPCWSTR pszValueName, IN BOOL bDefaultValue);
+BOOL SetAdvancedDword(IN LPCWSTR pszValueName, IN DWORD dwValue);
 
 /*
  *  rshell.c
@@ -183,6 +184,14 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  * settings.c
  */
 
+enum TrayIconsMode
+{
+    TIM_Default,
+    TIM_NeverCompact,
+    TIM_AlwaysCompact,
+    TIM_Max = TIM_AlwaysCompact
+};
+
 typedef struct _TW_STUCKRECTS2
 {
     DWORD cbSize;
@@ -196,6 +205,7 @@ typedef struct _TW_STUCKRECTS2
             DWORD AlwaysOnTop : 1;
             DWORD SmallIcons : 1;
             DWORD HideClock : 1;
+            DWORD SmallStartMenu : 1;
         };
     };
     DWORD Position;
@@ -211,12 +221,24 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
-    BOOL bCompactTrayIcons;
+    TrayIconsMode eCompactTrayIcons;
     BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();
     BOOL Save();
+    inline BOOL UseCompactTrayIcons()
+    {
+        switch (eCompactTrayIcons)
+        {
+            case TIM_NeverCompact:
+                return FALSE;
+            case TIM_AlwaysCompact:
+                return TRUE;
+            default:
+                return bSmallIcons;
+        }
+    }
 };
 
 extern TaskbarSettings g_TaskbarSettings;

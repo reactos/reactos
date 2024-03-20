@@ -75,7 +75,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Az eszközhöz nincsenek illesztőprogramok telepítve."
     IDS_DEV_HARDWARE_DISABLED "Az eszköz le van tiltva, mivel a BIOS-a nem adott neki erőforrást."
     IDS_DEV_CANT_SHARE_IRQ "Ez az eszköz egy olyan megszakítást (IRQ) igényel, amit egy másik eszköz használ és nem osztható meg.\nMódosítsa az ütköző beállításokat vagy távolítsa el az ütközést okozó valós módú illesztőprogramot."
-    IDS_DEV_FAILED_ADD "Ez az eszköz nem tud megfelelően működni, mivel a(z) %1 sem működik megfelelően."
+    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelepíteni az eszköz illesztőprogramjait, mivel a telepítő fájlokat tartalmazó meghajtó vagy hálózati hely nem elérhető."
     IDS_DEV_TRANSLATION_FAILED "Ez az eszköz nem válaszol a illesztőprogramjának."
     IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja meghatározni a beállításokat ehhez az eszközhöz. Olvassa át a hozzá kapott dokumentációt és az erőforrások fülön végezze el a beállításokat."

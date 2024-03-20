@@ -666,6 +666,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFil
         iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
         iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
         ASSERT(iLargeImage == iSmallImage);
+        DBG_UNREFERENCED_LOCAL_VARIABLE(iLargeImage);
     }
 
     // Do not add excluded entries
@@ -1041,6 +1042,7 @@ EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     INT iLargeImage = ImageList_AddIcon(himlLarge, pEntry->hIconLarge);
     INT iSmallImage = ImageList_AddIcon(himlSmall, pEntry->hIconSmall);
     ASSERT(iLargeImage == iSmallImage);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(iLargeImage);
 
     INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
     if (iItem != -1)
@@ -1612,6 +1614,12 @@ FileTypesDlg_OnDelete(HWND hwndDlg)
     if (MessageBoxW(hwndDlg, strRemoveExt, strTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
     {
         FileTypesDlg_RemoveExt(hwndDlg);
+
+        // Select first item (Win2k3 does it)
+        LV_ITEMW item = { LVIF_STATE };
+        item.stateMask = item.state = LVIS_FOCUSED | LVIS_SELECTED;
+        item.iItem = 0;
+        ListView_SetItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW), &item);
     }
 }
 
@@ -1716,8 +1724,11 @@ FolderOptionsFileTypesDlg(
                 case IDC_FILETYPES_ADVANCED:
                     edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     edittype.pEntry = FileTypesDlg_GetEntry(edittype.hwndLV);
-                    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
-                                    hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    if (edittype.pEntry)
+                    {
+                        DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
+                                        hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    }
                     break;
             }
             break;
@@ -1739,8 +1750,11 @@ FolderOptionsFileTypesDlg(
                 case NM_DBLCLK:
                     edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     edittype.pEntry = FileTypesDlg_GetEntry(edittype.hwndLV);
-                    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
-                                    hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    if (edittype.pEntry)
+                    {
+                        DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
+                                        hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    }
                     break;
 
                 case LVN_DELETEALLITEMS:

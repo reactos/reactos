@@ -28,9 +28,9 @@ public:
     DWORD UnitSetting;
     WINDOWPLACEMENT WindowPlacement;
 
-    CString strFiles[MAX_RECENT_FILES];
+    CStringW strFiles[MAX_RECENT_FILES];
 
-    CString strFontName;
+    CStringW strFontName;
     DWORD PointSize;
     DWORD Bold;
     DWORD Italic;
@@ -61,9 +61,9 @@ public:
         STRETCHED
     };
 
-    static void SetWallpaper(LPCTSTR szFileName, WallpaperStyle style);
+    static void SetWallpaper(LPCWSTR szFileName, WallpaperStyle style);
 
     void Load(INT nCmdShow);
     void Store();
-    void SetMostRecentFile(LPCTSTR szPathName);
+    void SetMostRecentFile(LPCWSTR szPathName);
 };

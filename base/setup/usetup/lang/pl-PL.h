@@ -980,7 +980,7 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Naci\230nij P, by utworzy\206 partycj\251 podstawow\245.",
+        "\x07  Naci\230nij C, by utworzy\206 partycj\251 podstawow\245/logiczn\245.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -994,13 +994,6 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Naci\230nij L, by utworzy\206 partycj\251 logiczn\245.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Naci\230nij D, by usun\245\206 istniej\245c\245 partycj\251.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1268,7 +1261,7 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Instalator sformatuje teraz partycj\251. Naci\230nij ENTER, aby kontynuowa\206.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1955,13 +1948,6 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nie mo\276na usun\245\206 nieprzydzielonego miejsca, gdzie nie ma \276adnej partycji!\n"
-        "\n"
-        "  * Naci\230nij dowolny klawisz, aby kontynuowa\206.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego %S na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"
@@ -2237,25 +2223,27 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz\251 czeka\206..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  ENTER = Instalacja   P = Partycja podstawowa   E = Rozszerzona   F3 = Wyj\230cie"},
+     "  ENTER = Instalacja   C = Partycja podstawowa   E = Rozszerzona   F3 = Wyj\230cie"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalacja   L = Utworzenie partycji logicznej   F3 = Wyj\230cie"},
+     "   ENTER = Instalacja   C = Utworzenie partycji logicznej   F3 = Wyj\230cie"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Usuni\251cie partycji   F3 = Wyj\230cie"},
     {STRING_DELETEPARTITION,
      "   D = Usuni\251cie partycji   F3 = Wyj\230cie"},
     {STRING_PARTITIONSIZE,
      "Rozmiar nowej partycji:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Wybrane: utworzenie nowej partycji podstawowej na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Wybrane: utworzenie nowej partycji rozszerzonej na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Wybrane: utworzenie nowej partycji logicznej na"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Prosz\251 wprowadzi\206 rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
      "   ENTER = Utworzenie partycji   ESC = Anulowanie   F3 = Wyj\230cie"},
+    {STRING_NEWPARTITION,
+    "Instalator utworzy\210 now\245 partycj\251"},
     {STRING_PARTFORMAT,
     "Nast\251puj\245ca partycja zostanie sformatowana."},
     {STRING_NONFORMATTEDPART,
@@ -2306,30 +2294,28 @@ MUI_STRING plPLStrings[] =
     "Najcz\251stsz\245 tego przyczyn\245 jest u\276ycie klawiatury USB.\r\n"},
     {STRING_CONSOLEFAIL3,
     "Nie s\245 obecnie w pe\210ni obs\210ugiwane.\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Instalator formatuje tw\242j dysk"},
+    {STRING_FORMATTINGPART,
+    "Instalator formatuje partycj\251..."},
     {STRING_CHECKINGDISK,
-    "Instalator sprawdza tw\242j dysk"},
+    "Instalator sprawdza dysk..."},
     {STRING_FORMATDISK1,
     " Formatuj partycj\251 w systemie plik\242w %S (szybkie formatowanie) "},
     {STRING_FORMATDISK2,
     " Formatuj partycj\251 w systemie plik\242w %S "},
     {STRING_KEEPFORMAT,
     " Zachowaj obecny system plik\242w (bez zmian) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "na: %s."},
     {STRING_PARTTYPE,
     "Typ 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Dysk twardy %lu (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu [%s]"
     "%I64u %s Dysk twardy %lu (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Instalator utworzy\210 now\245 partycj\251"},
     {STRING_UNPSPACE,
     "Miejsce poza partycjami"},
     {STRING_MAXSIZE,

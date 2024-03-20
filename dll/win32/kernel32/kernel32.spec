@@ -24,7 +24,7 @@
 @ stdcall BackupRead(ptr ptr long ptr long long ptr)
 @ stdcall BackupSeek(ptr long long ptr ptr ptr)
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
-@ stdcall BaseCheckAppcompatCache(long long long ptr)
+@ stdcall BaseCheckAppcompatCache(wstr ptr wstr ptr)
 @ stdcall BaseCheckRunApp(long ptr long long long long long long long long)
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()
@@ -711,7 +711,7 @@
 @ stdcall -version=0x600+ InitOnceBeginInitialize(ptr long ptr ptr)
 @ stdcall -version=0x600+ InitOnceComplete(ptr long ptr)
 @ stdcall -version=0x600+ InitOnceExecuteOnce(ptr ptr ptr ptr)
-@ stdcall -version=0x600+ InitOnceInitialize(ptr) NTDLL.RtlRunOnceInitialize
+@ stdcall -version=0x600+ InitOnceInitialize(ptr) ntdll.RtlRunOnceInitialize
 @ stdcall -version=0x600+ InitializeConditionVariable(ptr) ntdll.RtlInitializeConditionVariable
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)

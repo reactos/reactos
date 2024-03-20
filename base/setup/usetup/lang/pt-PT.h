@@ -984,8 +984,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Para criar uma  parti\207\306o prim\240ria, pressione P.",
-//        "\x07  Para criar uma parti\207\306o no espa\207o n\306o particionado, pressione C.",
+        "\x07  Para criar uma parti\207\306o prim\240ria/l\242gica, pressione C.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -999,13 +998,6 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Para criar uma parti\207\3060 l\242gica, pressione L.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Para excluir a parti\207\306o seleccionada, pressione D.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1135,7 +1127,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Continuar   ESC = Cancelar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1273,7 +1265,7 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "O instalador ir\240 formatar a parti\207\306o. Para continuar, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1440,7 +1432,7 @@ static MUI_ENTRY ptPTBootLoaderSelectPageEntries[] =
     {
         6,
         8,
-        "Please select where Setup should install the bootloader:",
+        "Por favor seleccione a unidade onde instalar o gestor de arranque:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1981,13 +1973,6 @@ MUI_ERROR ptPTErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Pode excluir um espa\207o n\306o particionado!\n"
-        "\n"
-        "  * Pressione qualquer tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Erro ao instalar o c\242digo de inicializa\207\306o %S na parti\207\306o do sistema.",
         "ENTER=Reiniciar"
@@ -2029,17 +2014,17 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "O ficheiro cab n\306o cont\202m um ficheiro inf v\240lido.\n",
+        "O arquivo cab n\306o cont\202m um ficheiro inf v\240lido.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_MISSING,
-        "N\306o foi poss\241vel encontrar o ficheiro cab.\n",
+        "N\306o foi poss\241vel encontrar o arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "O ficheiro cab n\306o cont\202m um script de instala\207\306o.\n",
+        "O arquivo cab n\306o cont\202m um script de instala\207\306o.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -2263,26 +2248,28 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER=Instalar  P=Criar Part. Prim\240ria E=Criar Part. Estendida  F3=Sair"},
+    "   ENTER = Instalar  Criar parti\207\306o C = Prim\240ria  E = Estendida  F3 = Sair"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Instalar   L = Criar Parti\207\306o L\242gica   F3 = Sair"},
+    "   ENTER = Instalar  C = Criar parti\207\306o L\242gica  F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
-    "   ENTER=Instalar  D=Apagar parti\207\306o  F3 = Sair"},
+    "   ENTER = Instalar  D = Apagar parti\207\306o  F3 = Sair"},
     {STRING_DELETEPARTITION,
-     "   D = Apagar Parti\207\306o   F3 = Sair"},
+     "   D = Apagar parti\207\306o   F3 = Sair"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova parti\207\306o:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Seleccionou criar uma parti\207\306o prim\240ria"},
 //    "Voc\210 solicitou a cria\207\306o de uma nova parti\207\306o em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Seleccionou criar uma parti\207\306o estendida"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Seleccionou criar uma parti\207\306o l\242gica"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Por favor, insira o tamanho da nova parti\207\306o em megabytes (MB)."},
     {STRING_CREATEPARTITION,
     "   ENTER=Criar parti\207\306o  ESC=Cancelar  F3=Sair"},
+    {STRING_NEWPARTITION,
+    "O instalador criou uma nova parti\207\306o em"},
     {STRING_PARTFORMAT,
     "Esta parti\207\306o ser\240 formatada logo em seguida."},
     {STRING_NONFORMATTEDPART,
@@ -2300,15 +2287,15 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER=Reiniciar"},
     {STRING_DELETING,
-     "   A apagar arquivo: %S"},
+     "   A apagar o ficheiro: %S"},
     {STRING_MOVING,
-     "   A mover arquivo: %S to: %S"},
+     "   A mover o ficheiro: %S para: %S"},
     {STRING_RENAMING,
-     "   A renomear arquivo: %S to: %S"},
+     "   A renomear o ficheiro: %S para: %S"},
     {STRING_COPYING,
-    "   A Copiar arquivo: %S"},
+    "   A Copiar o ficheiro: %S"},
     {STRING_SETUPCOPYINGFILES,
-    "O instalador est\240 a copiar os arquivos..."},
+    "O instalador est\240 a copiar os ficheiros..."},
     {STRING_REGHIVEUPDATE,
     "  A actualizar a estrutura do registo..."},
     {STRING_IMPORTFILE,
@@ -2333,30 +2320,28 @@ MUI_STRING ptPTStrings[] =
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Os teclados USB ainda n\306o s\306o completamente suportados\r\n"},
-    {STRING_FORMATTINGDISK,
-    "O instalador est\240 a formatar o disco"},
+    {STRING_FORMATTINGPART,
+    "O instalador est\240 a formatar a parti\207\306o..."},
     {STRING_CHECKINGDISK,
-    "O instalador est\240 a verificar o disco"},
+    "O instalador est\240 a verificar o disco..."},
     {STRING_FORMATDISK1,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S (R\240pido) "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S (R\240pido) "},
     {STRING_FORMATDISK2,
-    " Formatar a parti\207\306o utilizando o sistema de arquivos %S "},
+    " Formatar a parti\207\306o utilizando o sistema de ficheiros %S "},
     {STRING_KEEPFORMAT,
-    " Manter o sistema de arquivos actual (sem altera\207\344es) "},
-    {STRING_HDINFOPARTCREATE_1,
+    " Manter o sistema de ficheiros actual (sem altera\207\344es) "},
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "em %s."},
     {STRING_PARTTYPE,
     "Tipo 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu [%s]"
     "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "O instalador criou uma nova parti\207\306o em"},
     {STRING_UNPSPACE,
     "Espa\207o n\306o particionado"},
     {STRING_MAXSIZE,

@@ -24,7 +24,230 @@ LANGID PsInstallUILanguageId = LANGIDFROMLCID(0x00000409);
 LCID PsDefaultThreadLocaleId = 0x00000409;
 LANGID PsDefaultUILanguageId = LANGIDFROMLCID(0x00000409);
 
+/* DEFINES *******************************************************************/
+
+#define BOGUS_LOCALE_ID 0xFFFF0000
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+/**
+ * @brief
+ * Validates the registry data of a NLS locale.
+ *
+ * @param[in] LocaleData
+ * A pointer to partial information that contains
+ * the NLS locale data.
+ *
+ * @return
+ * Returns TRUE if the following conditions are met,
+ * otherwise FALSE is returned.
+ */
+static
+__inline
+BOOLEAN
+ExpValidateNlsLocaleData(
+    _In_ PKEY_VALUE_PARTIAL_INFORMATION LocaleData)
+{
+    PWCHAR Data;
+
+    /* Is this a null-terminated string type? */
+    if (LocaleData->Type != REG_SZ)
+    {
+        return FALSE;
+    }
+
+    /* Does it have a consistent length? */
+    if (LocaleData->DataLength < sizeof(WCHAR))
+    {
+        return FALSE;
+    }
+
+    /* Is the locale set and null-terminated? */
+    Data = (PWSTR)LocaleData->Data;
+    if (Data[0] != L'1' || Data[1] != UNICODE_NULL)
+    {
+        return FALSE;
+    }
+
+    /* All of the conditions above are met */
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Validates a NLS locale. Whether a locale is valid
+ * or not depends on the following conditions:
+ *
+ * - The locale must exist in the Locale key, otherwise
+ *   in the Alternate Sorts key;
+ *
+ * - The locale must exist in the Language Groups key, and
+ *   the queried value must be readable;
+ *
+ * - The locale registry data must be of REG_SIZE type,
+ *   has a consistent length and the locale belongs to
+ *   a supported language group that is set.
+ *
+ * @param[in] LocaleId
+ * A locale identifier that corresponds to a specific
+ * locale to be validated.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully
+ * validated the locale and it is valid. STATUS_OBJECT_NAME_NOT_FOUND
+ * is returned if the following locale does not exist on the system.
+ * A failure NTSTATUS code is returned otherwise.
+ */
+static
+NTSTATUS
+ExpValidateNlsLocaleId(
+    _In_ LCID LocaleId)
+{
+    NTSTATUS Status;
+    HANDLE NlsLocaleKey = NULL, AltSortKey = NULL, LangGroupKey = NULL;
+    OBJECT_ATTRIBUTES NlsLocalKeyAttrs, AltSortKeyAttrs, LangGroupKeyAttrs;
+    PKEY_VALUE_PARTIAL_INFORMATION BufferKey;
+    WCHAR ValueBuffer[20], LocaleIdBuffer[20];
+    ULONG ReturnedLength;
+    UNICODE_STRING LocaleIdString;
+    static UNICODE_STRING NlsLocaleKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
+    static UNICODE_STRING AltSortKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
+    static UNICODE_STRING LangGroupPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language Groups");
+
+    /* Initialize the registry path attributes */
+    InitializeObjectAttributes(&NlsLocalKeyAttrs,
+                               &NlsLocaleKeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    InitializeObjectAttributes(&AltSortKeyAttrs,
+                               &AltSortKeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    InitializeObjectAttributes(&LangGroupKeyAttrs,
+                               &LangGroupPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    /* Copy the locale ID into a buffer */
+    swprintf(LocaleIdBuffer,
+             L"%08lx",
+             (ULONG)LocaleId);
+
+    /* And build the LCID string */
+    RtlInitUnicodeString(&LocaleIdString, LocaleIdBuffer);
+
+    /* Open the NLS locale key */
+    Status = ZwOpenKey(&NlsLocaleKey,
+                       KEY_QUERY_VALUE,
+                       &NlsLocalKeyAttrs);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ (Status 0x%lx)\n", NlsLocaleKeyPath, Status);
+        return Status;
+    }
+
+    /* Open the NLS alternate sort locales key */
+    Status = ZwOpenKey(&AltSortKey,
+                       KEY_QUERY_VALUE,
+                       &AltSortKeyAttrs);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ (Status 0x%lx)\n", AltSortKeyPath, Status);
+        goto Quit;
+    }
+
+    /* Open the NLS language groups key */
+    Status = ZwOpenKey(&LangGroupKey,
+                       KEY_QUERY_VALUE,
+                       &LangGroupKeyAttrs);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ (Status 0x%lx)\n", LangGroupPath, Status);
+        goto Quit;
+    }
+
+    /* Check if the captured locale ID exists in the list of other locales */
+    BufferKey = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
+    Status = ZwQueryValueKey(NlsLocaleKey,
+                             &LocaleIdString,
+                             KeyValuePartialInformation,
+                             BufferKey,
+                             sizeof(ValueBuffer),
+                             &ReturnedLength);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, retry by looking at the alternate sorts locales */
+        Status = ZwQueryValueKey(AltSortKey,
+                                 &LocaleIdString,
+                                 KeyValuePartialInformation,
+                                 BufferKey,
+                                 sizeof(ValueBuffer),
+                                 &ReturnedLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to query value from Alternate Sorts key (Status 0x%lx)\n", Status);
+            goto Quit;
+        }
+    }
+
+    /* Ensure the queried locale is of the right key type with a sane length */
+    if (BufferKey->Type != REG_SZ ||
+        BufferKey->DataLength < sizeof(WCHAR))
+    {
+        DPRINT1("The queried locale is of bad value type or length (Type %lu, DataLength %lu)\n",
+                BufferKey->Type, BufferKey->DataLength);
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quit;
+    }
+
+    /* We got what we need, now query the locale from the language groups */
+    RtlInitUnicodeString(&LocaleIdString, (PWSTR)BufferKey->Data);
+    Status = ZwQueryValueKey(LangGroupKey,
+                             &LocaleIdString,
+                             KeyValuePartialInformation,
+                             BufferKey,
+                             sizeof(ValueBuffer),
+                             &ReturnedLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to query value from Language Groups key (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
+    /*
+     * We have queried the locale with its data. However we are not finished here yet,
+     * because the locale data could be malformed or the locale itself was not set
+     * so ensure all of these conditions are met.
+     */
+    if (!ExpValidateNlsLocaleData(BufferKey))
+    {
+        DPRINT1("The locale data is not valid!\n");
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+Quit:
+    if (LangGroupKey != NULL)
+    {
+        ZwClose(LangGroupKey);
+    }
+
+    if (AltSortKey != NULL)
+    {
+        ZwClose(AltSortKey);
+    }
+
+    if (NlsLocaleKey != NULL)
+    {
+        ZwClose(NlsLocaleKey);
+    }
+
+    return Status;
+}
 
 NTSTATUS
 NTAPI
@@ -114,6 +337,12 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
     NTSTATUS Status;
     PAGED_CODE();
 
+    /* Check that the passed language ID is not bogus */
+    if (LanguageId & BOGUS_LOCALE_ID)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Setup the key name */
     RtlInitUnicodeString(&ValueName, MuiName);
 
@@ -128,26 +357,31 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
                                UserHandle,
                                NULL);
 
-    /* Open the key */
-    Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE, &ObjectAttributes);
+    /* Validate the language ID */
+    Status = ExpValidateNlsLocaleId(MAKELCID(LanguageId, SORT_DEFAULT));
     if (NT_SUCCESS(Status))
     {
-        /* Setup the value name */
-        ValueLength = swprintf(ValueBuffer,
-                               L"%04lX",
-                               (ULONG)LanguageId);
+        /* Open the key */
+        Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE, &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Setup the value name */
+            ValueLength = swprintf(ValueBuffer,
+                                   L"%04lX",
+                                   (ULONG)LanguageId);
 
-        /* Set the length for the call and set the value */
-        ValueLength = (ValueLength + 1) * sizeof(WCHAR);
-        Status = ZwSetValueKey(KeyHandle,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               ValueBuffer,
-                               ValueLength);
+            /* Set the length for the call and set the value */
+            ValueLength = (ValueLength + 1) * sizeof(WCHAR);
+            Status = ZwSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   ValueBuffer,
+                                   ValueLength);
 
-        /* Close the handle for this key */
-        ZwClose(KeyHandle);
+            /* Close the handle for this key */
+            ZwClose(KeyHandle);
+        }
     }
 
     /* Close the user key and return status */
@@ -207,14 +441,20 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     UNICODE_STRING LocaleString;
-    HANDLE KeyHandle;
+    HANDLE KeyHandle = NULL;
     ULONG ValueLength;
     WCHAR ValueBuffer[20];
-    HANDLE UserKey;
+    HANDLE UserKey = NULL;
     NTSTATUS Status;
     UCHAR KeyValueBuffer[256];
     PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
     PAGED_CODE();
+
+    /* Check that the passed locale ID is not bogus */
+    if (DefaultLocaleId & BOGUS_LOCALE_ID)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Check if we have a profile */
     if (UserProfile)
@@ -234,7 +474,6 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
                              L"\\Registry\\Machine\\System\\CurrentControlSet"
                              L"\\Control\\Nls\\Language");
         RtlInitUnicodeString(&ValueName, L"Default");
-        UserKey = NULL;
     }
 
     /* Initialize the object attributes */
@@ -251,7 +490,6 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
         Status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            KeyHandle = NULL;
             goto Cleanup;
         }
 
@@ -293,36 +531,41 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     }
     else
     {
-        /* Otherwise, open the key */
-        Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE, &ObjectAttributes);
+        /* We have a locale, validate it */
+        Status = ExpValidateNlsLocaleId(DefaultLocaleId);
         if (NT_SUCCESS(Status))
         {
-            /* Check if we had a profile */
-            if (UserProfile)
+            /* Open the key now */
+            Status = ZwOpenKey(&KeyHandle, KEY_SET_VALUE, &ObjectAttributes);
+            if (NT_SUCCESS(Status))
             {
-                /* Fill in the buffer */
-                ValueLength = swprintf(ValueBuffer,
-                                       L"%08lx",
-                                       (ULONG)DefaultLocaleId);
-            }
-            else
-            {
-                /* Fill in the buffer */
-                ValueLength = swprintf(ValueBuffer,
-                                       L"%04lx",
-                                       (ULONG)DefaultLocaleId & 0xFFFF);
-            }
+                /* Check if we had a profile */
+                if (UserProfile)
+                {
+                    /* Fill in the buffer */
+                    ValueLength = swprintf(ValueBuffer,
+                                           L"%08lx",
+                                           (ULONG)DefaultLocaleId);
+                }
+                else
+                {
+                    /* Fill in the buffer */
+                    ValueLength = swprintf(ValueBuffer,
+                                           L"%04lx",
+                                           (ULONG)DefaultLocaleId & 0xFFFF);
+                }
 
-            /* Set the length for the registry call */
-            ValueLength = (ValueLength + 1) * sizeof(WCHAR);
+                /* Set the length for the registry call */
+                ValueLength = (ValueLength + 1) * sizeof(WCHAR);
 
-            /* Now write the actual value */
-            Status = ZwSetValueKey(KeyHandle,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   ValueBuffer,
-                                   ValueLength);
+                /* Now write the actual value */
+                Status = ZwSetValueKey(KeyHandle,
+                                       &ValueName,
+                                       0,
+                                       REG_SZ,
+                                       ValueBuffer,
+                                       ValueLength);
+            }
         }
     }
 

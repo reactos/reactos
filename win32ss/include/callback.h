@@ -1,27 +1,22 @@
-#ifndef __INCLUDE_USER32_CALLBACK_H
-#define __INCLUDE_USER32_CALLBACK_H
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Defining kernel-to-user32 callbacks
+ * COPYRIGHT:   Copyright 2018 James Tabor <james.tabor@reactos.org>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
 
-#define USER32_CALLBACK_WINDOWPROC            (0)
-#define USER32_CALLBACK_SENDASYNCPROC         (1)
-#define USER32_CALLBACK_LOADSYSMENUTEMPLATE   (2)
-#define USER32_CALLBACK_LOADDEFAULTCURSORS    (3)
-#define USER32_CALLBACK_HOOKPROC              (4)
-#define USER32_CALLBACK_EVENTPROC             (5)
-#define USER32_CALLBACK_LOADMENU              (6)
-#define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
-#define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
-#define USER32_CALLBACK_GETCHARSETINFO        (9)
-#define USER32_CALLBACK_COPYIMAGE             (10)
-#define USER32_CALLBACK_SETWNDICONS           (11)
-#define USER32_CALLBACK_DELIVERUSERAPC        (12)
-#define USER32_CALLBACK_DDEPOST               (13)
-#define USER32_CALLBACK_DDEGET                (14)
-#define USER32_CALLBACK_SETOBM                (15)
-#define USER32_CALLBACK_LPK                   (16)
-#define USER32_CALLBACK_UMPD                  (17)
-#define USER32_CALLBACK_IMMPROCESSKEY         (18)
-#define USER32_CALLBACK_IMMLOADLAYOUT         (19)
-#define USER32_CALLBACK_MAXIMUM               USER32_CALLBACK_IMMLOADLAYOUT
+#pragma once
+
+#define DEFINE_USER32_CALLBACK(id, value, fn) id,
+
+typedef enum _USER32_CALLBACK
+{
+#include "u32cb.h"
+    USER32_CALLBACK_COUNT
+} USER32_CALLBACK;
+
+#undef DEFINE_USER32_CALLBACK
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -230,5 +225,3 @@ NTSTATUS WINAPI
 User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength);
-
-#endif /* __INCLUDE_USER32_CALLBACK_H */

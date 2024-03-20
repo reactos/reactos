@@ -374,12 +374,17 @@ CreateFontWindow(IN PMAIN_WND_INFO MainWndInfo, IN PFONT_OPEN_INFO OpenInfo)
 
         if( InitFont(Info) )
         {
-            PWSTR pszWindowTitle;
+            PWSTR pch, pszWindowTitle;
 
             if(OpenInfo->pszFileName)
-                pszWindowTitle = wcsrchr(OpenInfo->pszFileName, '\\') + 1;
+            {
+                pch = wcsrchr(OpenInfo->pszFileName, '\\');
+                pszWindowTitle = (pch ? (pch + 1) : OpenInfo->pszFileName);
+            }
             else
+            {
                 LoadAndFormatString(IDS_DOCNAME, &pszWindowTitle, ++MainWndInfo->uDocumentCounter);
+            }
 
             hFontWnd = CreateMDIWindowW( szFontWndClass,
                                          pszWindowTitle,

@@ -98,7 +98,7 @@ UefiGetBootPartitionEntry(
     {
         TRACE("Boot PartitionNumber is 0\n");
         /* The OffsetToBoot is equal to the RootIdentifier */
-        PartitionNum = 1;
+        PartitionNum = FIRST_PARTITION;
     }
 
     *BootPartition = PartitionNum;
@@ -395,7 +395,7 @@ UefiSetupBlockDevices(VOID)
     PcBiosDiskCount = 0;
     UefiBootRootIdentifier = 0;
 
-    /* 1) Setup a list of boothandles by using the LocateHandle protocol */
+    /* 1) Setup a list of boot handles by using the LocateHandle protocol */
     Status = GlobalSystemTable->BootServices->LocateHandle(ByProtocol, &bioGuid, NULL, &handle_size, handles);
     handles = MmAllocateMemoryWithType(handle_size, LoaderFirmwareTemporary);
     Status = GlobalSystemTable->BootServices->LocateHandle(ByProtocol, &bioGuid, NULL, &handle_size, handles);

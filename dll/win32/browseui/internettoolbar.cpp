@@ -29,10 +29,10 @@ toolbar, and address band for an explorer window
 
 interface IAugmentedShellFolder : public IShellFolder
 {
-    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST, LPGUID) = 0;
-    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG, LPGUID, IShellFolder **) = 0;
-    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG, PULONG) = 0;
+    STDMETHOD(AddNameSpace)(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) PURE;
+    STDMETHOD(GetNameSpaceID)(LPCITEMIDLIST, LPGUID) PURE;
+    STDMETHOD(QueryNameSpace)(ULONG, LPGUID, IShellFolder **) PURE;
+    STDMETHOD(EnumNameSpace)(ULONG, PULONG) PURE;
 };
 
 #endif
@@ -150,25 +150,25 @@ public:
 private:
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetBorderDW(IUnknown* punkObj, LPRECT prcBorder);
-    virtual HRESULT STDMETHODCALLTYPE RequestBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
-    virtual HRESULT STDMETHODCALLTYPE SetBorderSpaceDW(IUnknown* punkObj, LPCBORDERWIDTHS pbw);
+    STDMETHOD(GetBorderDW)(IUnknown* punkObj, LPRECT prcBorder) override;
+    STDMETHOD(RequestBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
+    STDMETHOD(SetBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
 
     // *** IInputObjectSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    STDMETHOD(OnFocusChangeIS)(IUnknown *punkObj, BOOL fSetFocus) override;
 
     // *** IOleCommandTarget specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
-        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds,
+        OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID,
+        DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
 BEGIN_COM_MAP(CDockSite)
     COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
@@ -250,11 +250,11 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
         bandInfo.fStyle |= RBBS_BREAK;
     if (fDeskBandInfo.dwModeFlags & DBIMF_TOPALIGN)
         bandInfo.fStyle |= RBBS_TOPALIGN;
-    if (fFlags & ITF_NOGRIPPER || fToolbar->pSettings->fLocked)
+    if ((fFlags & ITF_NOGRIPPER) || fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_NOGRIPPER;
     if (fFlags & ITF_NOTITLE)
         bandInfo.fStyle |= RBBS_HIDETITLE;
-    if (fFlags & ITF_GRIPPERALWAYS && !fToolbar->pSettings->fLocked)
+    if ((fFlags & ITF_GRIPPERALWAYS) && !fToolbar->pSettings->fLocked)
         bandInfo.fStyle |= RBBS_GRIPPERALWAYS;
     if (fFlags & ITF_FIXEDSIZE)
         bandInfo.fStyle |= RBBS_FIXEDSIZE;
@@ -711,9 +711,9 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
-    if (locked != pSettings->fLocked)
+    if (locked != !!pSettings->fLocked)
     {
-        pSettings->fLocked = locked;
+        pSettings->fLocked = (BOOL)locked;
         pSettings->Save();
         RefreshLockedToolbarState();
     }
@@ -736,9 +736,9 @@ void CInternetToolbar::RefreshLockedToolbarState()
         if (dockSite != NULL)
         {
             rebarBandInfo.fStyle &= ~(RBBS_NOGRIPPER | RBBS_GRIPPERALWAYS);
-            if (dockSite->fFlags & CDockSite::ITF_NOGRIPPER || pSettings->fLocked)
+            if ((dockSite->fFlags & CDockSite::ITF_NOGRIPPER) || pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_NOGRIPPER;
-            if (dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS && !pSettings->fLocked)
+            if ((dockSite->fFlags & CDockSite::ITF_GRIPPERALWAYS) && !pSettings->fLocked)
                 rebarBandInfo.fStyle |= RBBS_GRIPPERALWAYS;
             SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
         }
@@ -1684,6 +1684,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SendMessage(fMainReBar, RB_HITTEST, 0, (LPARAM)&hitTestInfo);
     if (hitTestInfo.iBand == -1)
         return 0;
+
+    pSettings->Load();
     rebarBandInfo.cbSize = sizeof(rebarBandInfo);
     rebarBandInfo.fMask = RBBIM_ID;
     SendMessage(fMainReBar, RB_GETBANDINFOW, hitTestInfo.iBand, (LPARAM)&rebarBandInfo);

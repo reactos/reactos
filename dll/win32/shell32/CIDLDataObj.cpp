@@ -28,10 +28,10 @@ public:
     HRESULT WINAPI Initialize(UINT cfmt, const FORMATETC afmt[]);
 
     // *****************
-    virtual HRESULT WINAPI Next(ULONG celt, FORMATETC *rgelt, ULONG *pceltFethed);
-    virtual HRESULT WINAPI Skip(ULONG celt);
-    virtual HRESULT WINAPI Reset();
-    virtual HRESULT WINAPI Clone(LPENUMFORMATETC* ppenum);
+    STDMETHOD(Next)(ULONG celt, FORMATETC *rgelt, ULONG *pceltFethed) override;
+    STDMETHOD(Skip)(ULONG celt) override;
+    STDMETHOD(Reset)() override;
+    STDMETHOD(Clone)(LPENUMFORMATETC* ppenum) override;
 
 BEGIN_COM_MAP(IEnumFORMATETCImpl)
     COM_INTERFACE_ENTRY_IID(IID_IEnumFORMATETC, IEnumFORMATETC)
@@ -146,22 +146,22 @@ public:
     HRESULT WINAPI Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx, BOOL bAddAdditionalFormats);
 
     // *** IDataObject methods ***
-    virtual HRESULT WINAPI GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium);
-    virtual HRESULT WINAPI GetDataHere(LPFORMATETC pformatetc, STGMEDIUM *pmedium);
-    virtual HRESULT WINAPI QueryGetData(LPFORMATETC pformatetc);
-    virtual HRESULT WINAPI GetCanonicalFormatEtc(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut);
-    virtual HRESULT WINAPI SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease);
-    virtual HRESULT WINAPI EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc);
-    virtual HRESULT WINAPI DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
-    virtual HRESULT WINAPI DUnadvise(DWORD dwConnection);
-    virtual HRESULT WINAPI EnumDAdvise(IEnumSTATDATA **ppenumAdvise);
+    STDMETHOD(GetData)(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium) override;
+    STDMETHOD(GetDataHere)(LPFORMATETC pformatetc, STGMEDIUM *pmedium) override;
+    STDMETHOD(QueryGetData)(LPFORMATETC pformatetc) override;
+    STDMETHOD(GetCanonicalFormatEtc)(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut) override;
+    STDMETHOD(SetData)(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease) override;
+    STDMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc) override;
+    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
+    STDMETHOD(DUnadvise)(DWORD dwConnection) override;
+    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
 
     // *** IAsyncOperation methods ***
-    virtual HRESULT WINAPI SetAsyncMode(BOOL fDoOpAsync);
-    virtual HRESULT WINAPI GetAsyncMode(BOOL *pfIsOpAsync);
-    virtual HRESULT WINAPI StartOperation(IBindCtx *pbcReserved);
-    virtual HRESULT WINAPI InOperation(BOOL *pfInAsyncOp);
-    virtual HRESULT WINAPI EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects);
+    STDMETHOD(SetAsyncMode)(BOOL fDoOpAsync) override;
+    STDMETHOD(GetAsyncMode)(BOOL *pfIsOpAsync) override;
+    STDMETHOD(StartOperation)(IBindCtx *pbcReserved) override;
+    STDMETHOD(InOperation)(BOOL *pfInAsyncOp) override;
+    STDMETHOD(EndOperation)(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects) override;
 
 BEGIN_COM_MAP(CIDLDataObj)
     COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)

@@ -19,6 +19,14 @@
 
 #include <freeldr.h>
 
+typedef struct _SMALL_RECT
+{
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+} SMALL_RECT, *PSMALL_RECT;
+
 PVOID TextVideoBuffer = NULL;
 
 /* GENERIC TUI UTILS *********************************************************/
@@ -606,67 +614,76 @@ VOID TuiUpdateDateTime(VOID)
                 Buffer, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 }
 
-VOID TuiSaveScreen(PUCHAR Buffer)
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PUCHAR
+TuiSaveScreen(VOID)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i;
+    PUCHAR Buffer;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG i;
 
+    /* Allocate the buffer */
+    Buffer = FrLdrTempAlloc(UiScreenWidth * UiScreenHeight * 2,
+                            TAG_TUI_SCREENBUFFER);
+    if (!Buffer)
+        return NULL;
+
+    /* Loop through each cell and copy it */
     for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
     {
         Buffer[i] = ScreenMemory[i];
     }
+
+    return Buffer;
 }
 
-VOID TuiRestoreScreen(PUCHAR Buffer)
+VOID
+TuiRestoreScreen(
+    _In_opt_ __drv_freesMem(Mem) PUCHAR Buffer)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG i;
 
+    if (!Buffer)
+        return;
+
+    /* Loop through each cell and copy it */
     for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
     {
         ScreenMemory[i] = Buffer[i];
     }
+
+    /* Free the buffer */
+    FrLdrTempFree(Buffer, TAG_TUI_SCREENBUFFER);
+
+    VideoCopyOffScreenBufferToVRAM();
 }
 
-VOID TuiMessageBox(PCSTR MessageText)
+static VOID
+TuiDrawMsgBoxCommon(
+    _In_ PCSTR MessageText,
+    _Out_ PSMALL_RECT MsgBoxRect)
 {
-    PVOID    ScreenBuffer;
+    INT width = 8;
+    ULONG height = 1;
+    INT curline = 0;
+    INT k;
+    size_t i, j;
+    INT x1, x2, y1, y2;
+    CHAR temp[260];
 
-    // Save the screen contents
-    ScreenBuffer = FrLdrTempAlloc(UiScreenWidth * UiScreenHeight * 2,
-                                  TAG_TUI_SCREENBUFFER);
-    TuiSaveScreen(ScreenBuffer);
-
-    // Display the message box
-    TuiMessageBoxCritical(MessageText);
-
-    // Restore the screen contents
-    TuiRestoreScreen(ScreenBuffer);
-    FrLdrTempFree(ScreenBuffer, TAG_TUI_SCREENBUFFER);
-}
-
-VOID TuiMessageBoxCritical(PCSTR MessageText)
-{
-    int        width = 8;
-    unsigned int    height = 1;
-    int        curline = 0;
-    int        k;
-    size_t        i , j;
-    int        x1, x2, y1, y2;
-    char    temp[260];
-    char    key;
-
-    // Find the height
-    for (i=0; i<strlen(MessageText); i++)
+    /* Find the height */
+    for (i = 0; i < strlen(MessageText); i++)
     {
         if (MessageText[i] == '\n')
             height++;
     }
 
-    // Find the width
-    for (i=0,j=0,k=0; i<height; i++)
+    /* Find the width */
+    for (i = j = k = 0; i < height; i++)
     {
-        while ((MessageText[j] != '\n') && (MessageText[j] != 0))
+        while ((MessageText[j] != '\n') && (MessageText[j] != ANSI_NULL))
         {
             j++;
             k++;
@@ -679,34 +696,71 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
         j++;
     }
 
-    // Calculate box area
+    /* Calculate box area */
     x1 = (UiScreenWidth - (width+2))/2;
     x2 = x1 + width + 3;
     y1 = ((UiScreenHeight - height - 2)/2) + 1;
     y2 = y1 + height + 4;
 
-    // Draw the box
-    TuiDrawBox(x1, y1, x2, y2, D_VERT, D_HORZ, TRUE, TRUE, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
+    MsgBoxRect->Left = x1; MsgBoxRect->Right  = x2;
+    MsgBoxRect->Top  = y1; MsgBoxRect->Bottom = y2;
 
-    // Draw the text
-    for (i=0,j=0; i<strlen(MessageText)+1; i++)
+
+    /* Draw the box */
+    TuiDrawBox(x1, y1, x2, y2, D_VERT, D_HORZ, TRUE, TRUE,
+               ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
+
+    /* Draw the text */
+    for (i = j = 0; i < strlen(MessageText) + 1; i++)
     {
-        if ((MessageText[i] == '\n') || (MessageText[i] == 0))
+        if ((MessageText[i] == '\n') || (MessageText[i] == ANSI_NULL))
         {
             temp[j] = 0;
             j = 0;
-            UiDrawText(x1+2, y1+1+curline, temp, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
+            UiDrawText(x1 + 2, y1 + 1 + curline, temp,
+                       ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
             curline++;
         }
         else
+        {
             temp[j++] = MessageText[i];
+        }
     }
+}
 
-    // Draw OK button
-    strcpy(temp, "   OK   ");
-    UiDrawText(x1+((x2-x1)/2)-3, y2-2, temp, ATTR(COLOR_BLACK, COLOR_GRAY));
+VOID
+TuiMessageBox(
+    _In_ PCSTR MessageText)
+{
+    PVOID ScreenBuffer;
 
-    // Draw status text
+    /* Save the screen contents */
+    ScreenBuffer = TuiSaveScreen();
+
+    /* Display the message box */
+    TuiMessageBoxCritical(MessageText);
+
+    /* Restore the screen contents */
+    TuiRestoreScreen(ScreenBuffer);
+}
+
+VOID
+TuiMessageBoxCritical(
+    _In_ PCSTR MessageText)
+{
+    SMALL_RECT BoxRect;
+    CHAR key;
+
+    /* Draw the common parts of the message box */
+    TuiDrawMsgBoxCommon(MessageText, &BoxRect);
+
+    /* Draw centered OK button */
+    UiDrawText((BoxRect.Left + BoxRect.Right) / 2 - 3,
+               BoxRect.Bottom - 2,
+               "   OK   ",
+               ATTR(COLOR_BLACK, COLOR_GRAY));
+
+    /* Draw status text */
     UiDrawStatusText("Press ENTER to continue");
 
     VideoCopyOffScreenBufferToVRAM();
@@ -970,80 +1024,29 @@ VOID TuiFadeOut(VOID)
 
 BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
-    INT        width = 8;
-    ULONG    height = 1;
-    INT        curline = 0;
-    INT        k;
-    size_t    i , j;
-    INT        x1, x2, y1, y2;
-    CHAR    temp[260];
     CHAR    key;
-    BOOLEAN    Extended;
-    INT        EditBoxLine;
-    ULONG    EditBoxStartX, EditBoxEndX;
-    INT        EditBoxCursorX;
-    ULONG    EditBoxTextLength, EditBoxTextPosition;
-    INT        EditBoxTextDisplayIndex;
-    BOOLEAN    ReturnCode;
-    PVOID    ScreenBuffer;
+    BOOLEAN Extended;
+    INT     EditBoxLine;
+    ULONG   EditBoxStartX, EditBoxEndX;
+    INT     EditBoxCursorX;
+    ULONG   EditBoxTextLength, EditBoxTextPosition;
+    INT     EditBoxTextDisplayIndex;
+    BOOLEAN ReturnCode;
+    SMALL_RECT BoxRect;
+    PVOID ScreenBuffer;
 
-    // Save the screen contents
-    ScreenBuffer = FrLdrTempAlloc(UiScreenWidth * UiScreenHeight * 2,
-                                  TAG_TUI_SCREENBUFFER);
-    TuiSaveScreen(ScreenBuffer);
+    /* Save the screen contents */
+    ScreenBuffer = TuiSaveScreen();
 
-    // Find the height
-    for (i=0; i<strlen(MessageText); i++)
-    {
-        if (MessageText[i] == '\n')
-            height++;
-    }
-
-    // Find the width
-    for (i=0,j=0,k=0; i<height; i++)
-    {
-        while ((MessageText[j] != '\n') && (MessageText[j] != 0))
-        {
-            j++;
-            k++;
-        }
-
-        if (k > width)
-            width = k;
-
-        k = 0;
-        j++;
-    }
-
-    // Calculate box area
-    x1 = (UiScreenWidth - (width+2))/2;
-    x2 = x1 + width + 3;
-    y1 = ((UiScreenHeight - height - 2)/2) + 1;
-    y2 = y1 + height + 4;
-
-    // Draw the box
-    TuiDrawBox(x1, y1, x2, y2, D_VERT, D_HORZ, TRUE, TRUE, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
-
-    // Draw the text
-    for (i=0,j=0; i<strlen(MessageText)+1; i++)
-    {
-        if ((MessageText[i] == '\n') || (MessageText[i] == 0))
-        {
-            temp[j] = 0;
-            j = 0;
-            UiDrawText(x1+2, y1+1+curline, temp, ATTR(UiMessageBoxFgColor, UiMessageBoxBgColor));
-            curline++;
-        }
-        else
-            temp[j++] = MessageText[i];
-    }
+    /* Draw the common parts of the message box */
+    TuiDrawMsgBoxCommon(MessageText, &BoxRect);
 
     EditBoxTextLength = (ULONG)strlen(EditTextBuffer);
     EditBoxTextLength = min(EditBoxTextLength, Length - 1);
     EditBoxTextPosition = 0;
-    EditBoxLine = y2 - 2;
-    EditBoxStartX = x1 + 3;
-    EditBoxEndX = x2 - 3;
+    EditBoxLine = BoxRect.Bottom - 2;
+    EditBoxStartX = BoxRect.Left + 3;
+    EditBoxEndX = BoxRect.Right - 3;
 
     // Draw the edit box background and the text
     UiFillArea(EditBoxStartX, EditBoxLine, EditBoxEndX, EditBoxLine, ' ', ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
@@ -1194,9 +1197,8 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
     // Hide the cursor again
     MachVideoHideShowTextCursor(FALSE);
 
-    // Restore the screen contents
+    /* Restore the screen contents */
     TuiRestoreScreen(ScreenBuffer);
-    FrLdrTempFree(ScreenBuffer, TAG_TUI_SCREENBUFFER);
 
     return ReturnCode;
 }

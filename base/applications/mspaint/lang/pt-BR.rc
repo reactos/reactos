@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-pt-BR.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-pt-BR.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "&Recortar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "C&olar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Limpar seleção\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
         MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "&Recortar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "C&olar\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Limpar seleção\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

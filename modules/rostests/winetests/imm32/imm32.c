@@ -61,11 +61,13 @@ typedef struct
     } u;
 } TEST_INPUT;
 
+#ifndef __REACTOS__
 typedef struct _tagTRANSMSG {
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
 } TRANSMSG, *LPTRANSMSG;
+#endif
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 

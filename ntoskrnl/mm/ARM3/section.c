@@ -1142,7 +1142,7 @@ MiMapViewInSystemSpace(
                              SectionOffset->QuadPart);
     ASSERT(NT_SUCCESS(Status));
 
-    /* Return the base adress of the mapping and success */
+    /* Return the base address of the mapping and success */
     *MappedBase = Base;
     return STATUS_SUCCESS;
 }

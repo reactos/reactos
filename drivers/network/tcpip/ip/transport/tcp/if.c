@@ -6,6 +6,7 @@
 #include "lwip/ip.h"
 #include "lwip/api.h"
 #include "lwip/tcpip.h"
+#include <ipifcons.h>
 
 err_t
 TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
@@ -80,7 +81,6 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
 VOID
 TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF)
 {
-#if 0
     ULONG OperationalStatus;
 
     GetInterfaceConnectionStatus(IF, &OperationalStatus);
@@ -89,7 +89,6 @@ TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF)
         netif_set_link_up(IF->TCPContext);
     else
         netif_set_link_down(IF->TCPContext);
-#endif
 }
 
 err_t

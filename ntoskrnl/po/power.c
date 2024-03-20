@@ -410,7 +410,7 @@ PoInitSystem(IN ULONG BootPhase)
                                                 (PVOID)&GUID_DEVICE_SYS_BUTTON,
                                                 IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                                 PopAddRemoveSysCapsCallback,
-                                                NULL,
+                                                (PVOID)(ULONG_PTR)PolicyDeviceSystemButton,
                                                 &NotificationEntry);
         if (!NT_SUCCESS(Status))
             return FALSE;
@@ -421,8 +421,20 @@ PoInitSystem(IN ULONG BootPhase)
                                                 (PVOID)&GUID_DEVICE_LID,
                                                 IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
                                                 PopAddRemoveSysCapsCallback,
-                                                NULL,
+                                                (PVOID)(ULONG_PTR)PolicyDeviceSystemButton,
                                                 &NotificationEntry);
+        if (!NT_SUCCESS(Status))
+            return FALSE;
+
+        /* Register battery notification */
+        Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                                PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                                (PVOID)&GUID_DEVICE_BATTERY,
+                                                IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
+                                                PopAddRemoveSysCapsCallback,
+                                                (PVOID)(ULONG_PTR)PolicyDeviceBattery,
+                                                &NotificationEntry);
+
         return NT_SUCCESS(Status);
     }
 
@@ -824,7 +836,10 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
                 /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
                 RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
                 BatteryState->EstimatedTime = MAXULONG;
+                BatteryState->BatteryPresent = PopCapabilities.SystemBatteriesPresent;
 //                BatteryState->AcOnLine = TRUE;
+//                BatteryState->MaxCapacity = ;
+//                BatteryState->RemainingCapacity = ;
 
                 Status = STATUS_SUCCESS;
             }

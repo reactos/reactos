@@ -991,7 +991,7 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur P pour cr\202er une partition primaire.",
+        "\x07  Appuyer sur C pour cr\202er une partition primaire/logique.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1005,13 +1005,6 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Appuyer sur L pour cr\202er une partition logique.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1293,7 +1286,7 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup va formater la partition. Appuyer sur ENTR\220E pour continuer.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1973,13 +1966,6 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Vous ne pouvez supprimer de l'espace disque non partitionn\202!\n"
-        "\n"
-        "  * Appuyer sur une touche pour continuer.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Echec de l'installation du code de d\202marrage %S sur la partition syst\212me.",
         "ENTR\220E = Red\202marrer l'ordinateur"
@@ -2255,25 +2241,27 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTR\220E = Installer   P/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
+     "   ENTR\220E = Installer   C/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTR\220E = Installer   L = Cr\202er partition Logique   F3 = Quitter"},
+     "   ENTR\220E = Installer   C = Cr\202er partition Logique   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTR\220E = Installer   D = Supprimer partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,
      "   D = Supprimer partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Vous avez choisi de cr\202er une partition primaire sur"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Vous avez choisi de cr\202er une partition \202tendue sur"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Vous avez choisi de cr\202er une partition logique sur"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Veuillez entrer la taille de la nouvelle partition en m\202gaoctets."},
     {STRING_CREATEPARTITION,
      "   ENTR\220E = Cr\202er partition   \220CHAP = Annuler   F3 = Quitter"},
+    {STRING_NEWPARTITION,
+    "Setup a cr\202\202 une nouvelle partition sur"},
     {STRING_PARTFORMAT,
     "Cette partition sera ensuite format\202e."},
     {STRING_NONFORMATTEDPART,
@@ -2324,30 +2312,28 @@ MUI_STRING frFRStrings[] =
     "La cause probable est l'utilisation d'un clavier USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Les claviers USB ne sont pas compl\212tement support\202s actuellement\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup formate votre disque"},
+    {STRING_FORMATTINGPART,
+    "Setup formate la partition..."},
     {STRING_CHECKINGDISK,
-    "Setup v\202rifie votre disque"},
+    "Setup v\202rifie le disque..."},
     {STRING_FORMATDISK1,
     " Formater la partition comme syst\212me de fichiers %S (formatage rapide) "},
     {STRING_FORMATDISK2,
     " Formater la partition comme syst\212me de fichiers %S "},
     {STRING_KEEPFORMAT,
     " Garder le syst\212me de fichiers courant (pas de changements) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "sur le %s."},
     {STRING_PARTTYPE,
     "Type 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup a cr\202\202 une nouvelle partition sur"},
     {STRING_UNPSPACE,
     "Espace non partitionn\202"},
     {STRING_MAXSIZE,

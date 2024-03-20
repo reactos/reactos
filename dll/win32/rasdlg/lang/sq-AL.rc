@@ -1,5 +1,5 @@
 /* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  23-01-2014
+ * DATE OF TRANSLATION: 23-01-2014
 */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
@@ -43,7 +43,7 @@ CAPTION "Gabimet bundling Linje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Një ose më shumë linja të tjera nuk e lidhën. ", 1033, 37, 8, 216, 20
+    LTEXT "Një ose më shumë linja të tjera nuk e lidhën.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
     AUTOCHECKBOX "&Mos u përpjek me linja të dështuara në të ardhmen", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Prano", 1, 135, 242, 60, 14
@@ -141,7 +141,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "ThirreMbrapa "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ju keni 'Vendoset nga telefonuesi'  privilegjet e thirre mbrapa në server. Shtypni OK dhe serveri do t'ju thirrë mbrapa në numrin e mëposhtëm. Shtypni Anulo për të kaluar së thirruri mbrapa.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Ju keni 'Vendoset nga telefonuesi' privilegjet e thirre mbrapa në server. Shtypni OK dhe serveri do t'ju thirrë mbrapa në numrin e mëposhtëm. Shtypni Anulo për të kaluar së thirruri mbrapa.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "&Enter your modem's phone number:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
@@ -707,7 +707,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Magjistari Lidhjes T're"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Shkruaj numrin e telefonit poshtë. ", -1, 7, 4, 306, 14
+    LTEXT "Shkruaj numrin e telefonit poshtë.", -1, 7, 4, 306, 14
     LTEXT "&Numri telefonit:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
     LTEXT "Ju mund të kenë nevojë për të përfshirë një ""1"" ose kodin e zonës, ose të dyja. Nëse ju nuk jeni të sigurt që ju duhen numra shtesë, thirrni numrin e telefonit në telefonin tuaj. Nëse ju dëgjoni një tingull modemi, numri i thirrur është e saktë.", -1, 20, 50, 291, 53
@@ -1851,9 +1851,9 @@ BEGIN
     204 "Hiq pajisjes e zgjedhura nga lista?\0"
     205 "Fshi %1 nga libri i numrave?\0"
     206 "Shkëput nga %1?\0"
-    207 "Një dokument me emrin %1 tashmë ekziston.  Mbi-shkruaje atë?\0"
+    207 "Një dokument me emrin %1 tashmë ekziston. Mbi-shkruaje atë?\0"
     208 "Gabime sintakse u gjendën në skripte. A doni të shihni shënimet e gabimit?\0"
-    209 "'%1' është i lidhur tani.  \0"
+    209 "'%1' është i lidhur tani.\0"
     210 "kliko-djathtas Monitorimin e Formuesit të Rrjetit në tabelën e punëve për ta mbyllur ose kontrolluar statusin e lidhjes suaj.\0"
     212 "Lidhja me sukses.\0"
     213 "Metoda vërtetimi e parazgjedhur duhet të niset duke shtypur Cilësime.\0"
@@ -1861,7 +1861,7 @@ BEGIN
     215 "Thirr ikona dokumenteve (*.rnk)\0"
     216 "*.rnk\0"
     217 "Krijo ikona thirrjes\0"
-    218 "Lidhja me %1 dështoi.  Rilidhja në pritje...\0"
+    218 "Lidhja me %1 dështoi. Rilidhja në pritje...\0"
     219 "Nuk mund të marrim informacion inkuadrim.\0"
     220 "Nuk mund të marrë informacione të portit.\0"
     221 "Nuk mund të marrë informacione në projektim.\0"
@@ -1879,7 +1879,7 @@ BEGIN
     233 "Router në distancë\0"
     234 "Modemi ose pajisje\0"
     235 "Ju lutem shkruani një emër përdoruesi për llogarinë e ndër-faqes në router'in e largët.\0"
-    236 "Një hyrje me emrin %1 tashmë ekziston.  Zgjidhni një emër tjetër.\0"
+    236 "Një hyrje me emrin %1 tashmë ekziston. Zgjidhni një emër tjetër.\0"
     237 "Ju mund të dëshironi të lejoni dërgimin e fjalëkalimin tuaj pa kryptim.\0"
     238 "Kryptimi Fjalëkalimit\0"
     239 "Magjistar është i gatshëm për të krijuar lidhjen tuaj.\0"
@@ -1888,7 +1888,7 @@ BEGIN
     242 "Më Thirr Mbrapa Tel\0"
     243 "Modifiko Alternativat e Numrave Telefonik\0"
     244 "Me që kjo lidhje është aktualisht aktive, disa konfigurime nuk do të hyjë në fuqi deri në herën tjetër që ju thirrni atë.\0"
-    245 "Nuk ka lidhje në dispozicion për të gjithë përdoruesit.  Ju duhet të futeni para se të thirrni.\0"
+    245 "Nuk ka lidhje në dispozicion për të gjithë përdoruesit. Ju duhet të futeni para se të thirrni.\0"
     246 "Libri Telefonit është bosh.\n\nShtypni OK për të shtuar një shënim.\0"
     247 "Për shkak të kufizimeve të import/eksportit, të dhënat e kryptimit nuk janë në dispozicion në këtë version të ReactOS.\0"
     248 "Ju lutem fusni një X.25 adresë në ekranin tjetër.\0"
@@ -1951,13 +1951,13 @@ BEGIN
     305 "Nuk ka LiberKontakti alternativ që është zgjedhur.\0"
     306 "Ajo pajisje nuk mund të konfigurohet dinamike.\0"
     307 "Hyrja nuk mund të fshihet sepse është e lidhur.\0"
-    308 "Nuk ka hyrje të zgjedhur.  Shtypni butonin e Ri për të krijuar një hyrje.\0"
+    308 "Nuk ka hyrje të zgjedhur. Shtypni butonin e Ri për të krijuar një hyrje.\0"
     309 "Një adresë IP jo-zero duhet furnizuar kur 'specifiko një adresë IP' është zgjedhur.\0"
     310 "Një X.25 Adresë kërkohet kur një X.25 rrjet thirrës apo X.25 pajisje është zgjedhur.\0"
     311 "(asnjë)\0"
     312 "'%1' është tashmë në listë.\0"
     313 "Siguro fjalëkalimin tim dhe të dhënat e mia\0"
-    314 "Protokolli %1 nuk mund të përzgjidhet sepse nuk është instaluar ose është i gjymtuar Akses në Distancë.  Për ndryshim, në Panelin e Kontrollit fillo Rrjetin, zgjidhni faqen Shebimëve, Cilësimet Aksesit në Distancë, dhe shtypni butonin Rrjeti.\0"
+    314 "Protokolli %1 nuk mund të përzgjidhet sepse nuk është instaluar ose është i gjymtuar Akses në Distancë. Për ndryshim, në Panelin e Kontrollit fillo Rrjetin, zgjidhni faqen Shebimëve, Cilësimet Aksesit në Distancë, dhe shtypni butonin Rrjeti.\0"
     315 "Nuk mund te ruaj fjalëkalimin.\0"
     316 "Nuk mund të shfaq data.\0"
     317 "Nuk mund të marrë informacion thirrje-automa.\0"
@@ -1971,9 +1971,9 @@ BEGIN
     325 "Nuk mund të vëzhgojë script.log me notepad.exe\0"
     326 "Nuk mund të modifikojë switch.inf me notepad.exe\0"
     327 "Nuk mund të ngarkojë informacionet TAPI.\0"
-    328 "Nuk mund të ngarkojë informacionet  X.25.\0"
+    328 "Nuk mund të ngarkojë informacionet X.25.\0"
     329 "Nuk mund të krijojë një LibërKontaktesh të ri.\0"
-    330 "Nuk mund të  mundësojë akses shpërndarës.\0"
+    330 "Nuk mund të mundësojë akses shpërndarës.\0"
     331 "Nuk mund të lidhet me hyrjen e LibritKontakteve.\0"
     332 "Nuk mund të marrë dërgo/merr buffer.\0"
     333 "Nuk mund të marrë status informacioni për një port.\0"
@@ -2101,7 +2101,7 @@ BEGIN
     489 "kurr\0"
     490 "Ju mund të bëni lidhje e re në dispozicion për çdo përdorues ose vetëm për veten tuaj.\0"
     491 "Disponueshmëria Lidhjes\0"
-    492 "Hedh cilësimet e shumta të linjës  për hyrjen?\0"
+    492 "Hedh cilësimet e shumta të linjës për hyrjen?\0"
     493 "Pajisja pa-disponueshëm\0"
     494 "Preferencat Hyrëse\0"
     495 "Preferencat Formo-numrin\0"
@@ -2140,12 +2140,12 @@ BEGIN
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
     529 "Lidhja Private Virtuale\0"
     530 "Përdorni çdo formë të vërtetimit të kërkuar përfshirë tekst të qartë. Mos kriptoni të dhëna të.\0"
-    531 "Përdorni çdo formë të vërtetimi që kërkon fjalëkalimet për të koduara.  Mos kriptoni të dhëna të.\0"
+    531 "Përdorni çdo formë të vërtetimi që kërkon fjalëkalimet për të koduara. Mos kriptoni të dhëna të.\0"
     532 "Ju lutem shkruani një emër për hyrjen.\0"
     533 "Krypto fjalëkalimin dhe të dhënat.\0"
     534 "Ju lutem shkruani një numër porti ndërmjet 1 dhe 65535.\0"
     535 "Specifikoni vërtetimin doganore e të dhënave kryptume me butonin Konfiguro.\0"
-    536 "Përdorni çdo formë vërtetimi që kërkon fjalëkalimet e kriptuara.  Mos kriptoni të dhëna.\0"
+    536 "Përdorni çdo formë vërtetimi që kërkon fjalëkalimet e kriptuara. Mos kriptoni të dhëna.\0"
     537 "Kripto fjalëkalimin dhe të dhënat.\0"
     538 "Specifikoni vertetimin parapërgjedhës dhe të dhënat e kriptimit me butonin Konfiguro.\0"
     539 "Numrin e portit është përdorur tashmë nga një tjetër hyrje.\nJu lutemi shkruani një numër unik portit.\0"
@@ -2292,37 +2292,37 @@ BEGIN
     7321 "Ju duhet të shkruani një emër Hyrës për përdoruesin e ri ose shtypni anuloj.\0"
     7322 "Fjalëkalimi që dhatë është shumë e shkurtër.\0"
     7323 "Fjalëkalimet e futura nuk janë të njëjta. Ju lutem ri-shkruani ato.\0"
-    7324 "Një gabim i brendshëm ka ndodhur.  \0"
+    7324 "Një gabim i brendshëm ka ndodhur.\0"
     7325 "Listo\0"
-    7326 "Një gabim ka ndodhur gjatë përpjekjes për të kryer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.  \0"
-    7327 "Ju duhet privelegje të pamjaftueshme për të shtuar një përdorues që bazën e të dhënave të sistemit lokal.  \0"
+    7326 "Një gabim ka ndodhur gjatë përpjekjes për të kryer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.\0"
+    7327 "Ju duhet privelegje të pamjaftueshme për të shtuar një përdorues që bazën e të dhënave të sistemit lokal.\0"
     7328 "Përdoruesin që ju jeni duke u përpjekur për të krijuar tashmë ekziston në bazën e të dhënave lokale e përdoruesit.\0"
     7329 "Shfrytëzuesi nuk është shtuar në bazën e të dhënave lokale përdoruesit, sepse fjalëkalimi që dhatë është refuzuar.\0"
     7330 "Në pamundësi për të rifreskuar bazën e të dhënave të përdoruesit të sistemit për shkak të një gabimi të brendshëm.\0"
     7331 "Një gabim i brendshëm ka ndodhur: Baza e të dhënave lokale të përdoruesve është e korruptuar.\0"
     7332 "Në pamundësi për të ngarkuar burime të nevojshme për të shfaqur tab'in e përdoruesit.\0"
-    7333 "Ndodhi një gabim i brendshëm gjatë përpjekjes për të rikthyer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.  \0"
+    7333 "Ndodhi një gabim i brendshëm gjatë përpjekjes për të rikthyer ndryshimet që keni bërë në bazën e të dhënave lokale e përdoruesit.\0"
     7334 "Pajisja trajtimit së Bazës e të dhënave është i korruptuar.\0"
     7335 "Në pamundësi për të ngarkuar burimet e nevojshme për të shfaqur tab'in e përgjithshëm.\0"
-    7336 "Një gabim ka ndodhur gjatë përpjekjes për të kryer disa nga ndryshimet tek pajisjet/VPN të bëra.  \0"
+    7336 "Një gabim ka ndodhur gjatë përpjekjes për të kryer disa nga ndryshimet tek pajisjet/VPN të bëra.\0"
     7337 "Ndodhi një gabim i brendshëm.\0"
     7338 "Një gabim i brendshëm ndodhi: Baza e të dhënave Komponenti rrjeteve trajtuar është i korruptuar.\0"
-    7339 "Një gabim i brendshëm ka ndodhur.  \0"
+    7339 "Një gabim i brendshëm ka ndodhur.\0"
     7340 "Një gabim ka ndodhur gjatë përpjekjes për të kryer ndryshimet që keni bërë për të komponentëve të rrjetit.\0"
     7341 "Një gabim i brendshëm ka ndodhur.\0"
-    7342 "Në pamundësi për të kryer ndryshimet që keni bërë për të TCP/IP protokollit të sistemit.  \0"
-    7343 "Në pamundësi për të ruajtur ndryshimet që keni bërë për të protokollit IPX me sistemin.  \0"
+    7342 "Në pamundësi për të kryer ndryshimet që keni bërë për të TCP/IP protokollit të sistemit.\0"
+    7343 "Në pamundësi për të ruajtur ndryshimet që keni bërë për të protokollit IPX me sistemin.\0"
     7344 "Në pamundësi për të shfaqur TCP/IP cilësimet.\0"
     7345 "Në pamundësi për të shfaqur vetitë IPX.\0"
-    7346 "Në pamundësi për të ngarkuar TCP/IP cilësimet nga sistemi.  \0"
-    7347 "Në pamundësi për të ngarkuar cilësimet IPX nga sistemi.  \0"
+    7346 "Në pamundësi për të ngarkuar TCP/IP cilësimet nga sistemi.\0"
+    7347 "Në pamundësi për të ngarkuar cilësimet IPX nga sistemi.\0"
     7348 "Lidhjet në hyrje të varet nga Routime dhe Shërbimin Aksesit Largët i cili nuk ishte në gjendje për të filluar. Për më shumë informacion, shikoni shënimet e ngjarjes të sistemit.\0"
     7349 "Në pamundësi për të lejuar modifikimin e komponentëve të rrjetit në këtë kohë, sepse ata janë duke u modifikuar diku tjetër.\0"
-    7350 "Përdorues të ri që dhatë nuk është shtuar në bazën e të dhënave lokale të përdoruesve, sepse emri ose fjalëkalimi futur shkel politikën e sistemit (kjo ishte shumë e madhe, shumë e vogël, apo keq-formuar).  \0"
-    7351 "Sistemi nuk është në gjendje të fshi përdoruesit e kërkuar.  \0"
+    7350 "Përdorues të ri që dhatë nuk është shtuar në bazën e të dhënave lokale të përdoruesve, sepse emri ose fjalëkalimi futur shkel politikën e sistemit (kjo ishte shumë e madhe, shumë e vogël, apo keq-formuar).\0"
+    7351 "Sistemi nuk është në gjendje të fshi përdoruesit e kërkuar.\0"
     7352 "Në pamundësi për të hequr komponentin e zgjedhur të rrjetit për shkak se ajo është në përdorim.\0"
     7353 "Paralajmërim Lidhjet Hyrëse\0"
-    7354 "Çdo përdoruesit që ju fshini do të hiqet përgjithmonë nga sistemi edhe nëse anulo është shtypur. Jeni te sigurte qe doni ta hiqni përherë %s? \0"
+    7354 "Çdo përdoruesit që ju fshini do të hiqet përgjithmonë nga sistemi edhe nëse anulo është shtypur. Jeni te sigurte qe doni ta hiqni përherë %s?\0"
     7355 "Ju jeni gati për të kaluar në një sistem menaxhimi konsol. Kjo lidhje e cilësuar do të mbyllet dhe çdo ndryshim që mund të keni bërë do të angazhohen në sistemin. A jeni dakord për të vazhduar?\0"
     7356 "Vlera juaj Maskës Rrjetit ka ndryshuar. Një zero bit në një maskë mund të ndiqet vetëm nga zero copa të tjera. Për shembull, një vlerë Rrjeti maskë, e shprehur në simbol dhjetore me pika, e 255.255.0.0, është i vlefshëm, por nuk është 255.0.255.0.\n\0"
     7357 "Lejet Përdoruesi\0"
