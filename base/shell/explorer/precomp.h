@@ -203,7 +203,7 @@ typedef struct _TW_STUCKRECTS2
         {
             DWORD AutoHide : 1;
             DWORD AlwaysOnTop : 1;
-            DWORD SmallIcons : 1;
+            DWORD SmSmallIcons : 1; // Start menu Small Icons
             DWORD HideClock : 1;
         };
     };
@@ -326,16 +326,9 @@ DECLARE_INTERFACE_(ITrayBandSite, IUnknown)
 HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBand, OUT ITrayBandSite** pBandSite);
 
 /*
- * startmnu.cpp
+ * startctxmnu.cpp
  */
-
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
-
-IMenuPopup*
-CreateStartMenu(IN ITrayWindow *Tray,
-                OUT IMenuBand **ppMenuBand,
-                IN HBITMAP hbmBanner OPTIONAL,
-                IN BOOL bSmallIcons);
 
 /*
  * startmnucust.cpp
@@ -346,7 +339,6 @@ ShowCustomizeClassic(HINSTANCE, HWND);
 /*
 * startmnusite.cpp
 */
-
 HRESULT
 CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 

@@ -2531,6 +2531,84 @@ ChangePos:
         return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
+    HRESULT CreateStartMenu(BOOL bSmallIcons)
+    {
+        CComPtr<IUnknown> pSite;
+        HRESULT hr = CStartMenuSite_CreateInstance(this, IID_PPV_ARG(IUnknown, &pSite));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        CComPtr<IMenuPopup> pMenuPopup;
+        hr = _CStartMenu_CreateInstance(IID_PPV_ARG(IMenuPopup, &pMenuPopup));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        // Set the menu site so we can handle messages
+        hr = IUnknown_SetSite(pMenuPopup, pSite);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        // Initialize the menu object
+        CComPtr<IInitializeObject> pInit;
+        hr = pMenuPopup->QueryInterface(IID_PPV_ARG(IInitializeObject, &pInit));
+        if (SUCCEEDED(hr))
+            hr = pInit->Initialize();
+        else
+            hr = S_OK;
+
+        // Everything is initialized now. Let's get the IMenuBand interface
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        CComPtr<IUnknown> pClient;
+        hr = pMenuPopup->GetClient(&pClient);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        CComPtr<IBandSite> pBandSite;
+        hr = pClient->QueryInterface(IID_PPV_ARG(IBandSite, &pBandSite));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        // Finally we have the IBandSite interface, there's only one
+        // band in it that apparently provides the IMenuBand interface
+        DWORD dwBandId = 0;
+        hr = pBandSite->EnumBands(0, &dwBandId);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        CComPtr<IMenuBand> pMenuBand;
+        hr = pBandSite->GetBandObject(dwBandId, IID_PPV_ARG(IMenuBand, &pMenuBand));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        m_StartMenuPopup = pMenuPopup.Detach();
+        m_StartMenuBand = pMenuBand.Detach();
+
+        UpdateStartMenu(bSmallIcons, FALSE);
+        return hr;
+    }
+
+    HRESULT UpdateStartMenu(BOOL bSmallIcons, BOOL bRefresh)
+    {
+        CComPtr<IBanneredBar> pBar;
+        HRESULT hr = m_StartMenuPopup->QueryInterface(IID_PPV_ARG(IBanneredBar, &pBar));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        // Update the bitmap and icon size
+        HBITMAP hBitmap = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
+        pBar->SetBitmap(hBitmap);
+        pBar->SetIconSize(bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
+
+        if (bRefresh)
+        {
+            FIXME("Refresh the Start menu by communicating with SHELL32\n");
+        }
+
+        return hr;
+    }
+
     /**********************************************************
      *    ##### message handling #####
      */
@@ -2554,9 +2632,7 @@ ChangePos:
         RegLoadSettings();
 
         /* Create and initialize the start menu */
-        BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallIcons;
-        HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
-        m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
+        CreateStartMenu(g_TaskbarSettings.sr.SmSmallIcons);
 
         /* Create the task band */
         hRet = CTaskBand_CreateInstance(this, m_StartButton.m_hWnd, IID_PPV_ARG(IDeskBand, &m_TaskBand));
@@ -2661,13 +2737,17 @@ ChangePos:
 
         if (m_StartMenuPopup && lstrcmpiW((LPCWSTR)lParam, L"TraySettings") == 0)
         {
-            /* Re-create the start menu */
             HideStartMenu();
-            m_StartMenuBand.Release();
 
-            BOOL bSmallStartMenu = g_TaskbarSettings.sr.SmallIcons;
-            HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
-            m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, bSmallStartMenu);
+#if 1 // FIXME: Please re-use the start menu
+            /* Re-create the start menu */
+            m_StartMenuBand.Release();
+            CreateStartMenu(g_TaskbarSettings.sr.SmSmallIcons);
+            FIXME("Use UpdateStartMenu\n");
+#else
+            // Update the start menu
+            UpdateStartMenu(g_TaskbarSettings.sr.SmSmallIcons, TRUE);
+#endif
         }
 
         return 0;
