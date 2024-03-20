@@ -341,7 +341,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "टूल्ज़"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "एरर जाँच ", -1, 5, 5, 230, 60
+    GROUPBOX "एरर जाँच", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "यह विकल्प\nएरर के लिए वॉल्यूम की जांच करेगा।", -1, 40, 25, 160, 20
     PUSHBUTTON "अब जांचें...", 14000, 130, 45, 90, 15, WS_TABSTOP

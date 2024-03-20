@@ -738,7 +738,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
     LTEXT "Bu kısayolun başvurduğu '%s' ögesi değiştirildi veya taşındı, bu nedenle bu kısayol artık düzgün çalışmayacak.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Ada, türe, boyuta ve tarihe göre en yakın eşleşme: ", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Ada, türe, boyuta ve tarihe göre en yakın eşleşme:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "Bu kısayolu bu hedefi gösterecek şekilde düzeltmek mi, yoksa sadece silmek mi istiyorsunuz?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Düzelt", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Sil", IDYES, 120, 120, 60, 15

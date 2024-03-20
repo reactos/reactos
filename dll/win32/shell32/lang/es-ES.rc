@@ -390,7 +390,7 @@ CAPTION "Propiedades de la Papelera"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-    GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
+    GROUPBOX "Configuración para la unidad seleccionada", -1, 10, 72, 220, 70
     RADIOBUTTON "Tamaño &personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
@@ -406,7 +406,7 @@ BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 18
     LTEXT "Archivo:    ", 14001, 44, 30, 188, 10
-    GROUPBOX "&Programas ", -1, 7, 42, 249, 187
+    GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programas", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Siempre use el programa para abrir este tipo de archivos", 14003, 16, 193, 232, 10
     PUSHBUTTON "&Examinar...", 14004, 188, 207, 60, 14
@@ -423,11 +423,11 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Examinar carpetas ", -1, 7, 60, 279, 40, WS_TABSTOP
+    GROUPBOX "Examinar carpetas", -1, 7, 60, 279, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Abrir cada carpeta en ventanas di&ferentes", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 64
+    GROUPBOX "Hacer clic en los elementos tal y como se indica", -1, 7, 110, 279, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
@@ -533,7 +533,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Seleccione un tipo de contenido y elija una acción para que ReactOS la realice automáticamente cuando ese tipo se use en este dispositivo:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Acciones ", -1, 7, 45, 212, 146
+    GROUPBOX "Acciones", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Seleccionar la &acción que desea ejecutar:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Preguntarme siempre que elija una acción", 1006, 14, 177, 202, 10
@@ -613,7 +613,7 @@ BEGIN
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Etiqueta del volumen", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "&Opciones de formato ", 4610, 7, 121, 170, 49
+    GROUPBOX "&Opciones de formato", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "Formato &rápido", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Habilitar compresión", 28675, 16, 152, 155, 10
 END
@@ -624,7 +624,7 @@ CAPTION "Comprobación de disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
-    GROUPBOX "Opciones de comprobación de disco ", -1, 7, 6, 225, 50
+    GROUPBOX "Opciones de comprobación de disco", -1, 7, 6, 225, 50
     PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Reparar &automáticamente errores en el sistema de archivos", 14000, 12, 15, 200, 10
     AUTOCHECKBOX "&Examinar e intentar recuperar los sectores defectuosos", 14001, 12, 30, 200, 10

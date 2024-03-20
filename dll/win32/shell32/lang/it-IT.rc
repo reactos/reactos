@@ -413,7 +413,7 @@ BEGIN
     GROUPBOX "Attività", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic'", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
