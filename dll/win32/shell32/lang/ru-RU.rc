@@ -1030,7 +1030,7 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Раскрывать ""Сетевые подключения"""
     IDS_ADVANCED_DISPLAY_RUN "Отображать команду ""Выполнить"""
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Отображать меню ""Администрирование"""
-    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+    IDS_ADVANCED_SMALL_START_MENU "Мелкие значки в главном меню"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< До&полнительно"
     IDS_NEWEXT_ADVANCED_RIGHT "До&полнительно >>"
