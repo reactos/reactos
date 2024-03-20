@@ -2,6 +2,7 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Act as installer and uninstaller for applications distributed in archives
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "defines.h"
@@ -203,6 +204,7 @@ GetGenerateString(LPCWSTR Name, CStringW &Output, LPCWSTR Default = L"")
 static void
 WriteArpEntry(LPCWSTR Name, LPCWSTR Value, UINT Type = REG_SZ)
 {
+    // Write a "Add/Remove programs" value if we have a valid uninstaller key
     if (g_pInfo->ArpKey)
     {
         UINT err = g_pInfo->ArpKey->SetStringValue(Name, Value, Type);
@@ -246,7 +248,7 @@ GetLocalizedSMFolderName(LPCWSTR WinVal, LPCWSTR RosInf, LPCWSTR RosVal, CString
 {
     CRegKey key;
     if (key.Open(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion", KEY_READ) == ERROR_SUCCESS &&
-        GetString(key, WinVal, Output) && !Output.IsEmpty())
+        GetRegString(key, WinVal, Output) && !Output.IsEmpty())
     {
         return TRUE;
     }
@@ -257,13 +259,13 @@ GetLocalizedSMFolderName(LPCWSTR WinVal, LPCWSTR RosInf, LPCWSTR RosVal, CString
     if (GetLocaleInfoW(GetUserDefaultLCID(), lctype, (LPWSTR) &lang, sizeof(lang) / sizeof(WCHAR)))
     {
         section.Format(L"Strings.%.4x", lang);
-        if (ReadSectionValue(path, section, RosVal, Output) > 0)
+        if (ReadIniValue(path, section, RosVal, Output) > 0)
             return TRUE;
         section.Format(L"Strings.%.2x", PRIMARYLANGID(lang));
-        if (ReadSectionValue(path, section, RosVal, Output) > 0)
+        if (ReadIniValue(path, section, RosVal, Output) > 0)
             return TRUE;
     }
-    return ReadSectionValue(path, L"Strings", RosVal, Output) > 0;
+    return ReadIniValue(path, L"Strings", RosVal, Output) > 0;
 }
 
 static BOOL
@@ -455,7 +457,7 @@ ExtractAndInstallThread(LPVOID Parameter)
         return ErrorBox(Info.Error);
 
     GetGenerateString(DB_GENINST_DIR, tmp);
-    if (tmp.Find('%') == 0 && Expand(tmp))
+    if (tmp.Find('%') == 0 && ExpandEnvStrings(tmp))
         installdir = tmp;
     else if (tmp.Compare(None))
         installdir = BuildPath(installdir, tmp.IsEmpty() ? AppName : tmp.GetString());
@@ -690,7 +692,7 @@ UninstallThread(LPVOID Parameter)
     SendMessage(Info.hDlg, IM_STARTPROGRESS, 0, 0);
     
 
-    if (!GetString(*Info.ArpKey, L"InstallLocation", installdir) || installdir.IsEmpty())
+    if (!GetRegString(*Info.ArpKey, L"InstallLocation", installdir) || installdir.IsEmpty())
         return ErrorBox(ERROR_INVALID_NAME);
 
     for (UINT stage = 0; stage < UINSTALLSTAGECOUNT; ++stage)

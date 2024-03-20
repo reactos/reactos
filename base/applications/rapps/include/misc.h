@@ -81,10 +81,10 @@ SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 HRESULT
 RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam = 0);
 LPCWSTR
-GetString(CRegKey &Key, LPCWSTR Name, CStringW &Value);
+GetRegString(CRegKey &Key, LPCWSTR Name, CStringW &Value);
 
 bool
-Expand(CStringW &Str);
+ExpandEnvStrings(CStringW &Str);
 
 template <class T> static CStringW
 BuildPath(const T &Base, LPCWSTR Append)

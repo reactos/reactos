@@ -26,15 +26,15 @@ struct CSectionNames
 static CSectionNames g_Names;
 
 HRESULT
-ReadSectionValue(LPCWSTR File, LPCWSTR Section, LPCWSTR Name, CStringW &Output)
+ReadIniValue(LPCWSTR File, LPCWSTR Section, LPCWSTR Name, CStringW &Output)
 {
-    for (DWORD len = 256, r;; len *= 2)
+    for (DWORD len = 256, ret;; len *= 2)
     {
-        r = GetPrivateProfileString(Section, Name, L"\n", Output.GetBuffer(len), len, File);
-        if (r + 1 != len)
+        ret = GetPrivateProfileString(Section, Name, L"\n", Output.GetBuffer(len), len, File);
+        if (ret + 1 != len)
         {
-            Output.ReleaseBuffer(r);
-            return r && Output[0] != L'\n' ? r : HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            Output.ReleaseBuffer(ret);
+            return ret && Output[0] != L'\n' ? ret : HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
         }
     }
 }
@@ -190,32 +190,32 @@ CConfigParser::GetSectionString(LPCWSTR Section, LPCWSTR Name, CStringW &Result)
     GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE, FullLoc, _countof(FullLoc));
 
     SecBuf.Format(L"%s.%s.%s", Section, FullLoc, CurrentArchitecture);
-    if ((r = ReadSectionValue(szConfigPath, SecBuf, Name, Result)) > 0)
+    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
         return r;
 
     if (*NeutralLoc)
     {
         SecBuf.Format(L"%s.%s.%s", Section, NeutralLoc, CurrentArchitecture);
-        if ((r = ReadSectionValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
             return r;
     }
 
     SecBuf.Format(L"%s.%s", Section, CurrentArchitecture);
-    if ((r = ReadSectionValue(szConfigPath, SecBuf, Name, Result)) > 0)
+    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
         return r;
 
     SecBuf.Format(L"%s.%s", Section, FullLoc);
-    if ((r = ReadSectionValue(szConfigPath, SecBuf, Name, Result)) > 0)
+    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
         return r;
 
     if (*NeutralLoc)
     {
         SecBuf.Format(L"%s.%s", Section, NeutralLoc);
-        if ((r = ReadSectionValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
             return r;
     }
 
-    if ((r = ReadSectionValue(szConfigPath, Section, Name, Result)) > 0)
+    if ((r = ReadIniValue(szConfigPath, Section, Name, Result)) > 0)
         return r;
     return 0;
 }

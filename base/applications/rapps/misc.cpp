@@ -366,7 +366,7 @@ RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam)
 }
 
 LPCWSTR
-GetString(CRegKey &Key, LPCWSTR Name, CStringW &Value)
+GetRegString(CRegKey &Key, LPCWSTR Name, CStringW &Value)
 {
     for (;;)
     {
@@ -388,7 +388,7 @@ GetString(CRegKey &Key, LPCWSTR Name, CStringW &Value)
 }
 
 bool
-Expand(CStringW &Str)
+ExpandEnvStrings(CStringW &Str)
 {
     CStringW buf;
     DWORD cch = ExpandEnvironmentStringsW(Str, NULL, 0);

@@ -25,4 +25,4 @@ class CConfigParser
 };
 
 HRESULT
-ReadSectionValue(LPCWSTR File, LPCWSTR Section, LPCWSTR Name, CStringW &Output);
+ReadIniValue(LPCWSTR File, LPCWSTR Section, LPCWSTR Name, CStringW &Output);

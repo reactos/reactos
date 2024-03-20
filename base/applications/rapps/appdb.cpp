@@ -144,7 +144,7 @@ CAppDB::UpdateAvailable()
 static inline HKEY
 GetRootKeyInfo(UINT Index, REGSAM &RegSam)
 {
-    ATLASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
+    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
     if (Index < _countof(g_RootKeyEnum))
     {
         RegSam = g_RegSamEnum[Index];
@@ -171,10 +171,10 @@ CAppDB::CreateInstalledAppByRegistryKey(LPCWSTR KeyName, HKEY hKeyParent, UINT K
     CRegKey hSubKey;
     if (hSubKey.Open(hKeyParent, KeyName, KEY_READ) == ERROR_SUCCESS)
     {
-        DWORD dw, size;
+        DWORD value, size;
 
         size = sizeof(DWORD);
-        if (!RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&dw, &size) && dw == 1)
+        if (!RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&value, &size) && value == 1)
         {
             // Ignore system components
             return NULL;
@@ -208,7 +208,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
         {
             continue;
         }
-        for (LONG Index = 0;; ++Index)
+        for (DWORD Index = 0;; ++Index)
         {
             WCHAR szKeyName[MAX_PATH];
             DWORD dwSize = _countof(szKeyName);
@@ -330,7 +330,7 @@ CAppDB::RemoveInstalledAppFromRegistry(const CAppInfo *Info)
         return ERROR_OPEN_FAILED;
 
     CRegKey Uninstall;
-    UINT err = Uninstall.Open(hRoot, UNINSTALL_SUBKEY, KEY_READ | KEY_WRITE | wowsam);
+    LSTATUS err = Uninstall.Open(hRoot, UNINSTALL_SUBKEY, KEY_READ | KEY_WRITE | wowsam);
     if (!err)
     {
         err = Uninstall.RecurseDeleteKey(Name);
