@@ -50,9 +50,9 @@ list(APPEND HAL_PC98_SOURCE
     legacy/halpnpdd.c
     legacy/halpcat.c)
 
-add_asm_files(lib_hal_pc98_asm ${HAL_PC98_ASM_SOURCE})
-add_library(lib_hal_pc98 OBJECT ${HAL_PC98_SOURCE} ${lib_hal_pc98_asm})
-add_dependencies(lib_hal_pc98 bugcodes xdk asm)
-#add_pch(lib_hal_pc98 pc98/halpc98.h)
-
-target_compile_definitions(lib_hal_pc98 PRIVATE SARCH_PC98)
+#add_asm_files(lib_hal_pc98_asm ${HAL_PC98_ASM_SOURCE})
+#add_library(lib_hal_pc98 OBJECT ${HAL_PC98_SOURCE} ${lib_hal_pc98_asm})
+#add_dependencies(lib_hal_pc98 bugcodes xdk asm)
+##add_pch(lib_hal_pc98 pc98/halpc98.h)
+#
+#target_compile_definitions(lib_hal_pc98 PRIVATE SARCH_PC98)

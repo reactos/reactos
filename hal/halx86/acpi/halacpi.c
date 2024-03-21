@@ -41,9 +41,13 @@ ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 
 
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
+#if CONFIG_HALMACPI
+PWCHAR HalHardwareIdString = L"acpi_mp";
+PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
+#else
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
-
+#endif
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PDESCRIPTION_HEADER
