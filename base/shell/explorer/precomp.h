@@ -331,6 +331,20 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 /*
+ * startmnu.cpp
+ */
+IMenuPopup*
+CreateStartMenu(IN ITrayWindow *Tray,
+                OUT IMenuBand **ppMenuBand,
+                IN HBITMAP hbmBanner OPTIONAL,
+                IN BOOL bSmallIcons);
+HRESULT
+UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
+                IN HBITMAP hbmBanner  OPTIONAL,
+                IN BOOL bSmallIcons,
+                IN BOOL bRefresh);
+
+/*
  * startmnucust.cpp
  */
 VOID
