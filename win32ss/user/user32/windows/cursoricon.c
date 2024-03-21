@@ -1140,11 +1140,6 @@ BITMAP_LoadImageW(
         ResSize = SizeofResource(hinst, hrsrc);
     }
 
-    if (pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
-        pbmi->bmiHeader.biBitCount == 32 &&
-        pbmi->bmiHeader.biSizeImage + pbmi->bmiHeader.biSize + 12 != ResSize)
-        WARN("Possibly bad resource size provided\n");
-
     /* Fix up values */
     if(DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &bpp, &compr) == -1)
         goto end;
@@ -1174,14 +1169,13 @@ BITMAP_LoadImageW(
     /* Test if this is a GCC windres.exe compiled 32 bpp bitmap using
      * BI_BITFIELDS and if so, then a mistake causes it not to include
      * the bytes for the bitfields. So, we have to substract out the
-     * size of the bitfields previously included from bitmap_info_size.
-     * If this is ever fixed, then this code needs to be removed. */
+     * size of the bitfields previously included from bitmap_info_size.*/
     if (compr == BI_BITFIELDS && bpp == 32 &&
         pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize)
     {
         /* GCC pointer to the image data has 12 less bytes than MSVC */
         pvBits = (char*)pvBits - 12;
-        ERR("GCC Resource Compiled 32-bpp with error\n");
+        WARN("GCC Resource Compiled 32-bpp with error\n");
     }
 
     /* Fix it up, if needed */
