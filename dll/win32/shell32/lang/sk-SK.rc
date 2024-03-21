@@ -287,7 +287,7 @@ BEGIN
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Popis:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Autorské práva:", 14004, 10, 46, 66, 10 //Copyright
+    LTEXT "Autorské práva:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Iné informácie o verzii", 14006, 6, 70, 222, 115
     LTEXT "Názov položky:", 14007, 13, 82, 50, 10
