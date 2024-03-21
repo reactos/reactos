@@ -1175,7 +1175,7 @@ BITMAP_LoadImageW(
     {
         /* GCC pointer to the image data has 12 less bytes than MSVC */
         pvBits = (char*)pvBits - 12;
-        WARN("GCC Resource Compiled 32-bpp with error\n");
+        WARN("Found GCC Resource Compiled 16-bpp or 32-bpp error\n");
     }
 
     /* Fix it up, if needed */
