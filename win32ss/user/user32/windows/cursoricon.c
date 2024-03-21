@@ -1170,7 +1170,7 @@ BITMAP_LoadImageW(
      * BI_BITFIELDS and if so, then a mistake causes it not to include
      * the bytes for the bitfields. So, we have to substract out the
      * size of the bitfields previously included from bitmap_info_size.*/
-    if (compr == BI_BITFIELDS && bpp == 32 &&
+    if (compr == BI_BITFIELDS && (bpp == 16 || bpp == 32) &&
         pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize)
     {
         /* GCC pointer to the image data has 12 less bytes than MSVC */
