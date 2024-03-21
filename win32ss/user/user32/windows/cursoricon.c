@@ -1166,7 +1166,7 @@ BITMAP_LoadImageW(
     TRACE("Size Image %d, Size Header %d, ResSize %d\n",
         pbmiCopy->bmiHeader.biSizeImage, pbmiCopy->bmiHeader.biSize, ResSize);
 
-    /* Test if this is a GCC windres.exe compiled 32 bpp bitmap using
+    /* Test if this is a GCC windres.exe compiled 16 or 32 bpp bitmap using
      * BI_BITFIELDS and if so, then a mistake causes it not to include
      * the bytes for the bitfields. So, we have to substract out the
      * size of the bitfields previously included from bitmap_info_size.*/
