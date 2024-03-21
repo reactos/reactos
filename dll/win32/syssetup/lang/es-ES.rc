@@ -188,7 +188,7 @@ BEGIN
     IDS_LOCALETITLE "Opciones regionales"
     IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
     IDS_LOCALETEXT "Los formatos y estándares están configurados como %s, y tu región está localizada en %s."
-    IDS_LAYOUTTEXT "Tu distribución de entrada de teclado es: La distribución %s "
+    IDS_LAYOUTTEXT "Tu distribución de entrada de teclado es: %s "
     IDS_DATETIMETITLE "Fecha y hora"
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
     IDS_PROCESSTITLE "Finalizando la instalación"
