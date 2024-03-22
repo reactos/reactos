@@ -394,7 +394,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     SetWatermark(const CStringW &Text);
 
-    void
+    VOID
     CheckAll();
     PVOID
     GetFocusedItemData();

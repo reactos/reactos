@@ -232,21 +232,23 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
     {
+        // Full mode: refresh the whole application database
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             db.RemoveCached();
-
         db.UpdateAvailable();
     }
 
+    // Update the list of installed applications
     db.UpdateInstalled();
 
-    if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
+    // RAPPS is launched without options or APPWIZ mode is requested
+    if (argc == 1 || bAppwizMode)
     {
         // Check whether the RAPPS MainWindow is already launched in another process
         HANDLE hMutex;
 
         hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
-        if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        if (!hMutex || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
             /* If already started, find its window */
             HWND hWindow = FindWindowW(szWindowClass, NULL);
@@ -294,7 +296,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     }
     else
     {
-        // unrecognized/invalid options
+        // Unrecognized/invalid options
         ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
         PrintHelpCommand();
         return FALSE;

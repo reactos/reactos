@@ -1501,8 +1501,8 @@ CApplicationView::ProcessWindowMessage(
                         break;
                 }
             }
+            break;
         }
-        break;
 
         case WM_SYSCOLORCHANGE:
         {
@@ -1511,8 +1511,8 @@ CApplicationView::ProcessWindowMessage(
             m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_ComboBox->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+            break;
         }
-        break;
 
         case WM_SIZE:
         {
@@ -1523,8 +1523,8 @@ CApplicationView::ProcessWindowMessage(
         case WM_COMMAND:
         {
             OnCommand(wParam, lParam);
+            break;
         }
-        break;
     }
     return FALSE;
 }
@@ -1624,14 +1624,14 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     m_Toolbar->AutoSize();
 
     /* Automatically hide captions */
-    DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
+    DWORD dToolbarThreshold = m_Toolbar->GetMaxButtonsWidth();
     DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width - m_ComboBox->m_Width - TOOLBAR_PADDING * 2);
 
-    if (dSearchbarMargin > dToolbarTreshold)
+    if (dSearchbarMargin > dToolbarThreshold)
     {
         m_Toolbar->ShowButtonCaption();
     }
-    else if (dSearchbarMargin < dToolbarTreshold)
+    else if (dSearchbarMargin < dToolbarThreshold)
     {
         m_Toolbar->HideButtonCaption();
     }
@@ -1865,7 +1865,7 @@ CApplicationView::SetWatermark(const CStringW &Text)
     m_ListView->SetWatermark(Text);
 }
 
-void
+VOID
 CApplicationView::CheckAll()
 {
     m_ListView->CheckAll();
