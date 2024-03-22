@@ -155,17 +155,13 @@ CMainToolbar::Create(HWND hwndParent)
 }
 
 VOID
-CMainToolbar::HideButtonCaption()
+CMainToolbar::ShowButtonCaption(BOOL bShow)
 {
     DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
-}
-
-VOID
-CMainToolbar::ShowButtonCaption()
-{
-    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    if (bShow)
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    else
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
 }
 
 DWORD
@@ -1629,11 +1625,11 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (dSearchbarMargin > dToolbarThreshold)
     {
-        m_Toolbar->ShowButtonCaption();
+        m_Toolbar->ShowButtonCaption(TRUE);
     }
     else if (dSearchbarMargin < dToolbarThreshold)
     {
-        m_Toolbar->HideButtonCaption();
+        m_Toolbar->ShowButtonCaption(FALSE);
     }
 
     RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
