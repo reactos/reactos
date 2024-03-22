@@ -153,8 +153,7 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
 }
 
 /* Return the size of the bitmap info structure including color table and
- * the bytes required for 3 DWORDS if this is a BI_BITFIELDS(3) bmp.
- */
+ * the bytes required for 3 DWORDS if this is a BI_BITFIELDS bmp. */
 static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
     unsigned int colors, size, masks = 0;
@@ -177,7 +176,7 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
          * 'max' selection using biSize below will exclude v4 & v5's. */
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
-        /* Test if compression BI_BITFIELDS and bpp either 16 or 32.
+        /* Test for BI_BITFIELDS format and either 16 or 32 bpp.
          * If so, account for the 3 DWORD masks (RGB Order).
          * BITMAPCOREHEADER tested above has no 16 or 32 bpp types.
          * See table "All of the possible pixel formats in a DIB"
@@ -185,7 +184,9 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
         if (info->bmiHeader.biSize >= sizeof(BITMAPV4HEADER) &&
             info->bmiHeader.biCompression == BI_BITFIELDS &&
             (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
-                size += 3 * sizeof(DWORD);  // BI_BITFIELDS
+        {
+            size += 3 * sizeof(DWORD);  // BI_BITFIELDS
+        }
         return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
     }
 }
@@ -1166,10 +1167,10 @@ BITMAP_LoadImageW(
     TRACE("Size Image %d, Size Header %d, ResSize %d\n",
         pbmiCopy->bmiHeader.biSizeImage, pbmiCopy->bmiHeader.biSize, ResSize);
 
-    /* Test if this is a GCC windres.exe compiled 16 or 32 bpp bitmap using
-     * BI_BITFIELDS and if so, then a mistake causes it not to include
+    /* HACK: If this is a binutils' windres.exe compiled 16 or 32 bpp bitmap
+     * using BI_BITFIELDS, then a bug causes it to fail to include
      * the bytes for the bitfields. So, we have to substract out the
-     * size of the bitfields previously included from bitmap_info_size.*/
+     * size of the bitfields previously included from bitmap_info_size. */
     if (compr == BI_BITFIELDS && (bpp == 16 || bpp == 32) &&
         pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize)
     {
