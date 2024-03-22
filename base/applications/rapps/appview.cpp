@@ -1809,7 +1809,8 @@ CApplicationView::Create(HWND hwndParent)
 {
     RECT r = {0, 0, 0, 0};
 
-    HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
+    // Pick the "Programs" submenu for building our context menu.
+    HMENU menu = GetSubMenu(m_MainWindow->GetMenu(), 1);
 
     return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, menu);
 }

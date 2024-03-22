@@ -67,7 +67,6 @@
 /* Menus */
 #define IDR_MAINMENU             500
 #define IDR_LINKMENU             501
-#define IDR_APPLICATIONMENU      502
 
 /* Menu items */
 #define ID_EXIT                  550
