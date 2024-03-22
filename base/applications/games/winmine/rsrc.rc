@@ -51,6 +51,9 @@ IDI_MINES BITMAP "rc/mines.bmp"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_AR_AR
+    #include "lang/ar-AR.rc"
+#endif
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
