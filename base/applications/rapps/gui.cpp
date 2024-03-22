@@ -82,7 +82,11 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) :
+    m_ClientPanel(NULL),
+    m_Db(db),
+    bAppwizMode(bAppwiz),
+    SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -431,8 +435,8 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                 }
                 break;
             }
+            break;
         }
-        break;
 
         case WM_SIZE:
             OnSize(hwnd, wParam, lParam);
@@ -456,8 +460,8 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             /* Forward WM_SYSCOLORCHANGE to common controls */
             m_ApplicationView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+            break;
         }
-        break;
 
         case WM_TIMER:
             if (wParam == SEARCH_TIMER_ID)
