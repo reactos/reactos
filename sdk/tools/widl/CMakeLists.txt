@@ -35,7 +35,9 @@ list(APPEND SOURCE
     ../port/getopt1.c
     ../port/mkstemps.c)
 
-add_definitions(-DINT16=SHORT)
+# typelib_struct.h uses INT16.
+set_source_files_properties(typelib.c write_msft.c write_sltg.c PROPERTIES COMPILE_DEFINITIONS "INT16=SHORT")
+
 add_host_tool(widl ${SOURCE})
 target_link_libraries(widl PRIVATE host_includes wpphost)
 
