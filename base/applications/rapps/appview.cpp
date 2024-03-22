@@ -193,10 +193,8 @@ CMainToolbar::Create(HWND hwndParent)
 
     AddButtons(_countof(Buttons), Buttons);
 
-    /* Remember ideal width to use as a max width of buttons */
-    SIZE size;
-    GetIdealSize(FALSE, &size);
-    m_dButtonsWidthMax = size.cx;
+    /* Remember the ideal width to use as a max width of buttons */
+    UpdateMaxButtonsWidth();
 
     return m_hWnd;
 }
@@ -209,6 +207,14 @@ CMainToolbar::ShowButtonCaption(bool bShow)
         SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
     else
         SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
+}
+
+void
+CMainToolbar::UpdateMaxButtonsWidth()
+{
+    SIZE size;
+    GetIdealSize(FALSE, &size);
+    m_dButtonsWidthMax = size.cx;
 }
 
 DWORD
@@ -1553,8 +1559,12 @@ CApplicationView::ProcessWindowMessage(
 
                 index = m_Toolbar->GetButtonInfo(ID_RESETDB, &info);
                 if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                /* Update the ideal width to use as a max width of buttons */
+                m_Toolbar->UpdateMaxButtonsWidth();
             }
 
+            /* Resize the toolbar */
             m_Toolbar->AutoSize();
 
             RECT rTop;
@@ -1793,7 +1803,7 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam == SIZE_MINIMIZED)
         return;
 
-    /* Size tool bar */
+    /* Resize the toolbar */
     m_Toolbar->AutoSize();
 
     /* Automatically hide captions */

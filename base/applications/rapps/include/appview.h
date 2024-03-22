@@ -297,6 +297,9 @@ class CMainToolbar : public CUiWindow<CToolbar<>>
     void
     ShowButtonCaption(bool bShow);
 
+    void
+    UpdateMaxButtonsWidth();
+
     DWORD
     GetMaxButtonsWidth() const;
 };
