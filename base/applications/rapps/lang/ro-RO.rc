@@ -45,22 +45,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalare\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modificare", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Eliminare din registru", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătare\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Setări"

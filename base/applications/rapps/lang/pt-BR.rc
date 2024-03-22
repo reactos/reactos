@@ -17,7 +17,7 @@ BEGIN
     END
     POPUP "&Programas"
     BEGIN
-        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
@@ -40,22 +40,6 @@ BEGIN
     BEGIN
         MENUITEM "A&brir endereço no navegador", ID_OPEN_LINK
         MENUITEM "&Copiar endereço", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modificar", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "R&emover do Registro", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Atualiza&r\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

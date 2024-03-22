@@ -43,22 +43,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modificar", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "R&emover do Registo", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Actualiza&r\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Configurações"

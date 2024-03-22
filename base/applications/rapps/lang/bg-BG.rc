@@ -43,22 +43,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Промяна", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "Пр&емахване от регистъра", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "О&пресняване\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 254, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки"
