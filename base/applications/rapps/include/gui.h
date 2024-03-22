@@ -52,12 +52,13 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     CUiWindow<CStatusBar> *m_StatusBar = NULL;
 
     CApplicationView *m_ApplicationView = NULL;
+    friend class CApplicationView;
 
     CAppDB *m_Db;
     CAtlList<CAppInfo *> m_Selected;
 
     BOOL bUpdating = FALSE;
-    BOOL bAppwizMode;
+    BOOL m_bAppwizMode;
     HTREEITEM hRootItemInstalled;
 
     CStringW szSearchPattern;

@@ -82,7 +82,7 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), m_bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -99,6 +99,10 @@ CMainWindow::InitCategoriesList()
     hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
+
+    // Do not show any other categories in APPWIZ-mode.
+    if (m_bAppwizMode)
+        goto Finish;
 
     m_TreeView->AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
 
@@ -120,10 +124,12 @@ CMainWindow::InitCategoriesList()
     m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_THEMES, IDI_CAT_THEMES);
     m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
+Finish:
     m_TreeView->SetImageList();
     m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
-    m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
-    m_TreeView->SelectItem(bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
+    if (!m_bAppwizMode)
+        m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
+    m_TreeView->SelectItem(m_bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
 }
 
 BOOL
@@ -337,6 +343,22 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
 
             switch (data->code)
             {
+                case TVN_ITEMEXPANDING:
+                {
+                    if (data->hwndFrom == m_TreeView->m_hWnd)
+                    {
+                        // APPWIZ-mode: forbid item collapse.
+                        // FIXME: Prevent collapse (COMCTL32 is buggy)
+                        // https://bugs.winehq.org/show_bug.cgi?id=53727
+                        if (m_bAppwizMode && (((LPNMTREEVIEW)lParam)->action & TVE_TOGGLE) == TVE_COLLAPSE)
+                        {
+                            theResult = TRUE;
+                            return TRUE; // Handled
+                        }
+                    }
+                    break;
+                }
+
                 case TVN_SELCHANGED:
                 {
                     if (data->hwndFrom == m_TreeView->m_hWnd)
@@ -612,6 +634,13 @@ CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
 VOID
 CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL bCheckAvailable)
 {
+    // Only installed applications should be enumerated in APPWIZ-mode.
+    if (m_bAppwizMode && !IsInstalledEnum(EnumType))
+    {
+        ATLASSERT(FALSE && "Should not be called in APPWIZ-mode");
+        return;
+    }
+
     bUpdating = TRUE;
 
     if (HCURSOR hCursor = LoadCursor(NULL, IDC_APPSTARTING))
@@ -650,6 +679,9 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     }
     else if (IsAvailableEnum(EnumType))
     {
+        // We shouldn't get there in APPWIZ-mode.
+        ATLASSERT(!m_bAppwizMode);
+
         if (bReload)
             m_Db->UpdateAvailable();
 

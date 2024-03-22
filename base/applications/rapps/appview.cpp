@@ -16,6 +16,50 @@ using namespace Gdiplus;
 HICON g_hDefaultPackageIcon = NULL;
 static int g_DefaultPackageIconILIdx = I_IMAGENONE;
 
+// **** Menu helpers ****
+
+BOOL
+DeleteMenuEx(
+    _In_ HMENU hMenu,
+    _In_ UINT  uPosition,
+    _In_ UINT  uFlags)
+{
+    INT pos;
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_FTYPE, 0 };
+    bool bIsValidItem1, bIsValidItem2;
+    bool bIsSep1, bIsSep2;
+
+    if (uFlags & MF_BYPOSITION)
+        pos = (INT)uPosition;
+    else
+        pos = ::GetMenuPosFromID(hMenu, uPosition);
+    if (pos < 0)
+        return FALSE;
+
+    bIsValidItem1 = ((pos > 0) && ::GetMenuItemInfoW(hMenu, pos - 1, TRUE, &mii));
+    bIsSep1 = bIsValidItem1 && !!(mii.fType & MFT_SEPARATOR);
+
+    bIsValidItem2 = ::GetMenuItemInfoW(hMenu, pos + 1, TRUE, &mii);
+    bIsSep2 = bIsValidItem2 && !!(mii.fType & MFT_SEPARATOR);
+
+    if (bIsSep1 && !bIsSep2 && !bIsValidItem2)
+        pos = pos - 1; // Delete separator only if pos+1 has no item
+    else if (!bIsSep1 && bIsSep2 && !bIsValidItem1)
+        pos = pos + 1; // Delete separator only if pos-1 has no item
+    else if (bIsSep1 && bIsSep2)
+        pos = pos + 1;
+    else
+        pos = -1;
+
+    // Delete one of the separators if necessary
+    if (pos != -1)
+        ::DeleteMenu(hMenu, pos, MF_BYPOSITION);
+
+    // Finally, delete the menu item itself.
+    return ::DeleteMenu(hMenu, uPosition, uFlags);
+}
+// **** Menu helpers ****
+
 // **** CMainToolbar ****
 
 VOID
@@ -1480,6 +1524,37 @@ CApplicationView::ProcessWindowMessage(
             bSuccess &= CreateListView();
             bSuccess &= CreateAppInfoDisplay();
 
+            /* APPWIZ-mode: Remove the unneeded menu items and toolbar buttons */
+            if (m_MainWindow->m_bAppwizMode)
+            {
+                HMENU hMenu;
+
+                /* Delete the "Settings" item in the "File" sub-menu */
+                hMenu = ::GetSubMenu(m_MainWindow->GetMenu(), 0);
+                DeleteMenuEx(hMenu, ID_SETTINGS, MF_BYCOMMAND);
+
+                /* Remove the menu items: ID_INSTALL, ID_RESETDB */
+                hMenu = GetMenu();
+                DeleteMenuEx(hMenu, ID_INSTALL, MF_BYCOMMAND);
+                DeleteMenuEx(hMenu, ID_RESETDB, MF_BYCOMMAND);
+
+                /* Remove the toolbar buttons:
+                 * ID_INSTALL, ID_CHECK_ALL, ID_RESETDB
+                 * We only keep:
+                 * ID_UNINSTALL, ID_MODIFY, ID_REFRESH */
+                TBBUTTONINFO info = { sizeof(info), 0 };
+                int index;
+
+                index = m_Toolbar->GetButtonInfo(ID_INSTALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_CHECK_ALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_RESETDB, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+            }
+
             m_Toolbar->AutoSize();
 
             RECT rTop;
@@ -1927,26 +2002,35 @@ CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     switch (AppType)
     {
         case AppViewTypeInstalledApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
+        {
             EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, FALSE);
             break;
+        }
 
         case AppViewTypeAvailableApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
+        {
+            // We shouldn't get there in APPWIZ-mode.
+            ATLASSERT(!m_MainWindow->m_bAppwizMode);
+
             EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, TRUE);
             break;
+        }
     }
     return TRUE;
 }
