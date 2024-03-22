@@ -250,12 +250,9 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
         if (!hMutex || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
-            /* If already started, find its window */
+            /* If already started, find its window and activate it */
             HWND hWindow = FindWindowW(szWindowClass, NULL);
-
-            /* Activate window */
-            ShowWindow(hWindow, SW_SHOWNORMAL);
-            SetForegroundWindow(hWindow);
+            SwitchToThisWindow(hWindow, TRUE);
             if (bAppwizMode)
                 PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
             return FALSE;
