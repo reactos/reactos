@@ -291,9 +291,7 @@ class CMainToolbar : public CUiWindow<CToolbar<>>
     Create(HWND hwndParent);
 
     VOID
-    HideButtonCaption();
-    VOID
-    ShowButtonCaption();
+    ShowButtonCaption(BOOL bShow);
 
     DWORD
     GetMaxButtonsWidth() const;
