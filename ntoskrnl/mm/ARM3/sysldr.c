@@ -1492,9 +1492,10 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     ULONG_PTR DllBase, InitStart, InitEnd, ImageEnd, InitCode;
     PLIST_ENTRY NextEntry;
     PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_SECTION_HEADER Section, LastSection, InitSection;
-    BOOLEAN InitFound;
-    DBG_UNREFERENCED_LOCAL_VARIABLE(InitSection);
+    PIMAGE_SECTION_HEADER Section, LastSection;
+#if DBG
+    PIMAGE_SECTION_HEADER InitSection;
+#endif
 
     /* So we don't free our own code yet */
     InitCode = (ULONG_PTR)&MiFindInitializationCode;
@@ -1543,20 +1544,15 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         InitStart = 0;
         while (SectionCount > 0)
         {
-            /* Assume failure */
-            InitFound = FALSE;
-
             /* Is this the INIT section or a discardable section? */
             if ((strncmp((PCCH)Section->Name, "INIT", 5) == 0) ||
                 ((Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)))
             {
+#if DBG
                 /* Remember this */
-                InitFound = TRUE;
                 InitSection = Section;
-            }
+#endif
 
-            if (InitFound)
-            {
                 /* Pick the biggest size -- either raw or virtual */
                 Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
 
@@ -1637,12 +1633,14 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     {
                         /* This isn't us -- go ahead and free it */
                         ASSERT(MI_IS_PHYSICAL_ADDRESS((PVOID)InitStart) == FALSE);
+#if DBG // '#if' is related to 'InitSection' variable.
                         DPRINT("Freeing init code: %p-%p ('%wZ' @%p : '%s')\n",
                                (PVOID)InitStart,
                                (PVOID)InitEnd,
                                &LdrEntry->BaseDllName,
                                LdrEntry->DllBase,
                                InitSection->Name);
+#endif
                         MiFreeInitializationCode((PVOID)InitStart, (PVOID)InitEnd);
                     }
                 }
