@@ -1,13 +1,10 @@
 /*
- * PROJECT:    WineMine
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/calc/lang/ar-AR.rc
- * PURPOSE:    Arabic Language File for WineMine
- * TRANSLATOR: Mahmoud Ahmed
- * ADDED:      3/22/2024
- * LAST UPDATED: 3/22/2024
+ * PROJECT:     ReactOS WineMine
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Arabic resource file
+ * TRANSLATOR:  Copyright 2024 Mahmoud Ahmed <your@email.com>
  */
- 
+
 LANGUAGE LANG_ARABIC, SUBLANG_DEFAULT
 
 STRINGTABLE
