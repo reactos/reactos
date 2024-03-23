@@ -2,7 +2,6 @@
  * IQueryAssociations object and helper functions
  *
  * Copyright 2002 Jon Griffiths
- * Copyright 2024 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
