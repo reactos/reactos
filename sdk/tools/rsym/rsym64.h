@@ -105,9 +105,10 @@ typedef union _UNWIND_CODE
 
 enum
 {
+    UNW_FLAG_NHANDLER  = 0x00,
     UNW_FLAG_EHANDLER  = 0x01,
     UNW_FLAG_UHANDLER  = 0x02,
-    UNW_FLAG_CHAININFO = 0x03,
+    UNW_FLAG_CHAININFO = 0x04
 };
 
 typedef struct _UNWIND_INFO

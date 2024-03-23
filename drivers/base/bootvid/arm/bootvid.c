@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver for ARM devices
+ * LICENSE:     BSD - See COPYING.ARM in root directory
+ * PURPOSE:     Main file
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group <ros.arm@reactos.org>
+ */
+
 #include "precomp.h"
 
 #define NDEBUG
@@ -9,7 +16,6 @@ PHYSICAL_ADDRESS VgaPhysical;
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,
@@ -55,7 +61,6 @@ DisplayCharacter(
 }
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll)
 {
@@ -103,7 +108,6 @@ DoScroll(
 }
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
@@ -140,7 +144,6 @@ PreserveRow(
 }
 
 VOID
-NTAPI
 VidpInitializeDisplay(VOID)
 {
     //
@@ -166,7 +169,6 @@ VidpInitializeDisplay(VOID)
 }
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count)
@@ -176,9 +178,6 @@ InitPaletteWithTable(
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-/*
- * @implemented
- */
 BOOLEAN
 NTAPI
 VidInitialize(
@@ -212,9 +211,6 @@ VidInitialize(
     return TRUE;
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidResetDisplay(
@@ -238,9 +234,6 @@ VidResetDisplay(
     VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidCleanUp(VOID)
@@ -249,9 +242,6 @@ VidCleanUp(VOID)
     while (TRUE);
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidScreenToBufferBlt(
@@ -266,9 +256,6 @@ VidScreenToBufferBlt(
     while (TRUE);
 }
 
-/*
- * @implemented
- */
 VOID
 NTAPI
 VidSolidColorFill(
