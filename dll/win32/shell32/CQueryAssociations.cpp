@@ -616,6 +616,8 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
         /* check for default verb */
         hr = this->GetValue(hkeyShell, NULL, (void**)&extra_from_reg, NULL);
         if (FAILED(hr))
+            hr = this->GetValue(hkeyShell, L"open", (void**)&extra_from_reg, NULL);
+        if (FAILED(hr))
         {
             /* no default verb, try first subkey */
             DWORD max_subkey_len;
@@ -653,8 +655,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     ret = RegOpenKeyExW(hkeyShell, extra, 0, KEY_READ, &hkeyVerb);
     HeapFree(GetProcessHeap(), 0, extra_from_reg);
     RegCloseKey(hkeyShell);
-    if (ret)
-        ret = RegOpenKeyExW(hkeyShell, L"open", 0, KEY_READ, &hkeyVerb);
     if (ret)
     {
         ERR("0x%lX\n", ret);
