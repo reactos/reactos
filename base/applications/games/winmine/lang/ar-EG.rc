@@ -1,11 +1,11 @@
 /*
  * PROJECT:     ReactOS WineMine
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Egyptian-Arabic resource file
+ * PURPOSE:     Arabic (Egypt) resource file
  * TRANSLATOR:  Copyright 2024 Mahmoud Ahmed <your@email.com>
  */
  
-LANGUAGE LANG_ARABIC, SUBLANG_DEFAULT
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_EGYPT
 
 STRINGTABLE
 BEGIN
