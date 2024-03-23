@@ -54,6 +54,9 @@ IDI_MINES BITMAP "rc/mines.bmp"
 #ifdef LANGUAGE_AR_SA
     #include "lang/ar-SA.rc"
 #endif
+#ifdef LANGUAGE_AR_EG
+    #include "lang/ar-EG.rc"
+#endif
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
