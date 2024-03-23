@@ -2242,7 +2242,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            if (CmpEnumerateOpenSubKeys(Kcb, FALSE, FALSE, FALSE) != 0)
+            if (CmpEnumerateOpenSubKeys(Kcb, FALSE, TRUE, FALSE) != 0)
             {
                 /* There are open subkeys but we don't force hive unloading, fail */
                 Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
@@ -2251,7 +2251,6 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
         else
         {
-            DPRINT1("CmUnloadKey: Force unloading is HALF-IMPLEMENTED, expect dangling KCBs problems!\n");
             if (CmpEnumerateOpenSubKeys(Kcb, TRUE, TRUE, TRUE) != 0)
             {
                 /* There are open subkeys that we cannot force to unload, fail */
