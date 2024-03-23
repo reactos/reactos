@@ -1,5 +1,5 @@
 ;// Romanian translation by 2011-2019 Ștefan Fulea (stefan.fulea@mail.com)
-;// Romanian translation by 2023 Andrei Miloiu (miloiuandrei@gmail.com)
+;// Romanian translation by 2023-2024 Andrei Miloiu (miloiuandrei@gmail.com)
 ;// Russian translation by Kudratov Olimjon (olim98@bk.ru)
 ;// Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
 ;// Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
@@ -177,8 +177,9 @@ parole, limitări de autentificare, și informații de domeniu.
 Sunt necesare două condiții pentru ca opțiunile utilizate cu
 NET ACCOUNTS să aibă efect.
 
-- Cerințele de autentificare și parolele au sens doar când conturile
-  sunt instituite (cu Gestionarul de Utilizatori sau comanda NET USER).
+- Cerințele de parolă și de conectare sunt efective numai dacă au fost
+  configurate conturi de utilizator (cu Managerul de Utilizatori sau comanda
+  NET USER).
 
 - Este necesar ca serviciul Net Logon să fie activ în toate servele din
   domeniul de autentificare. Serviciul Net Logon este lansat automat la
