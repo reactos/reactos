@@ -2,6 +2,7 @@
  * IQueryAssociations object and helper functions
  *
  * Copyright 2002 Jon Griffiths
+ * Copyright 2024 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -96,6 +97,11 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
     {
         WCHAR *progId;
         HRESULT hr;
+        LPCWSTR pchDotExt;
+
+        pchDotExt = PathFindExtensionW(pszAssoc);
+        if (pchDotExt && *pchDotExt)
+            pszAssoc = pchDotExt;
 
         LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
                             pszAssoc,
@@ -216,7 +222,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         case ASSOCSTR_EXECUTABLE:
         {
             hr = this->GetExecutable(pszExtra, path, MAX_PATH, &len);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
             {
                 return hr;
             }
@@ -536,20 +542,24 @@ HRESULT CQueryAssociations::GetValue(HKEY hkey, const WCHAR *name, void **data, 
     ret = RegQueryValueExW(hkey, name, 0, NULL, NULL, &size);
     if (ret != ERROR_SUCCESS)
     {
+        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
     if (!size)
     {
+        ERR("!size\n");
         return E_FAIL;
     }
     *data = HeapAlloc(GetProcessHeap(), 0, size);
     if (!*data)
     {
+        ERR("E_OUTOFMEMORY\n");
         return E_OUTOFMEMORY;
     }
     ret = RegQueryValueExW(hkey, name, 0, NULL, (LPBYTE)*data, &size);
     if (ret != ERROR_SUCCESS)
     {
+        ERR("0x%lX\n", ret);
         HeapFree(GetProcessHeap(), 0, *data);
         return HRESULT_FROM_WIN32(ret);
     }
@@ -597,6 +607,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
 
     if (ret)
     {
+        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
 
@@ -612,6 +623,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
             ret = RegQueryInfoKeyW(hkeyShell, NULL, NULL, NULL, NULL, &max_subkey_len, NULL, NULL, NULL, NULL, NULL, NULL);
             if (ret)
             {
+                ERR("0x%lX\n", ret);
                 RegCloseKey(hkeyShell);
                 return HRESULT_FROM_WIN32(ret);
             }
@@ -620,6 +632,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
             extra_from_reg = static_cast<WCHAR*>(HeapAlloc(GetProcessHeap(), 0, max_subkey_len * sizeof(WCHAR)));
             if (!extra_from_reg)
             {
+                ERR("E_OUTOFMEMORY\n");
                 RegCloseKey(hkeyShell);
                 return E_OUTOFMEMORY;
             }
@@ -627,6 +640,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
             ret = RegEnumKeyExW(hkeyShell, 0, extra_from_reg, &max_subkey_len, NULL, NULL, NULL, NULL);
             if (ret)
             {
+                ERR("0x%lX\n", ret);
                 HeapFree(GetProcessHeap(), 0, extra_from_reg);
                 RegCloseKey(hkeyShell);
                 return HRESULT_FROM_WIN32(ret);
@@ -640,7 +654,10 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     HeapFree(GetProcessHeap(), 0, extra_from_reg);
     RegCloseKey(hkeyShell);
     if (ret)
+        ret = RegOpenKeyExW(hkeyShell, L"open", 0, KEY_READ, &hkeyVerb);
+    if (ret)
     {
+        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
     /* open command subkey */
@@ -648,6 +665,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     RegCloseKey(hkeyVerb);
     if (ret)
     {
+        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
     hr = this->GetValue(hkeyCommand, NULL, (void**)command, NULL);
@@ -662,7 +680,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
     WCHAR *pszEnd;
 
     HRESULT hr = this->GetCommand(pszExtra, &pszCommand);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         return hr;
     }
@@ -765,7 +783,7 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
     }
     else
     {
-        len = datalen;
+        *outlen = len = datalen;
     }
 
     if (len)
