@@ -353,7 +353,7 @@ RtlpInsertFreeBlockHelper(PHEAP Heap,
     Heap->FreeHints[HintIndex] = &FreeEntry->FreeList;
 }
 
-VOID NTAPI
+LONG NTAPI
 RtlpInsertFreeBlock(PHEAP Heap,
                     PHEAP_FREE_ENTRY FreeEntry,
                     SIZE_T BlockSize)
@@ -361,6 +361,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     USHORT Size, PreviousSize;
     UCHAR SegmentOffset, Flags;
     PHEAP_SEGMENT Segment;
+    LONG FreeSize;
 
     DPRINT("RtlpInsertFreeBlock(%p %p %x)\n", Heap, FreeEntry, BlockSize);
 
@@ -368,6 +369,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     Heap->TotalFreeSize += BlockSize;
 
     /* Remember certain values */
+    FreeSize = FreeEntry->Size;
     Flags = FreeEntry->Flags;
     PreviousSize = FreeEntry->PreviousSize;
     SegmentOffset = FreeEntry->SegmentOffset;
@@ -406,15 +408,21 @@ RtlpInsertFreeBlock(PHEAP Heap,
         BlockSize -= Size;
 
         /* Go to the next entry */
+        FreeSize = FreeEntry->Size;
         FreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + Size);
 
         /* Check if that's all */
-        if ((PHEAP_ENTRY)FreeEntry >= Segment->LastValidEntry) return;
+        if ((PHEAP_ENTRY)FreeEntry >= Segment->LastValidEntry)
+        {
+            return FreeSize;
+        }
     }
 
     /* Update previous size if needed */
     if (!(Flags & HEAP_ENTRY_LAST_ENTRY))
         FreeEntry->PreviousSize = PreviousSize;
+
+    return FreeSize;
 }
 
 static
@@ -425,6 +433,9 @@ RtlpRemoveFreeBlock(PHEAP Heap,
 {
     SIZE_T Result, RealSize;
     ULONG HintIndex;
+
+    if (FreeEntry->Size == 0)
+        return;
 
     /* Remove the free block */
     if (FreeEntry->Size > Heap->DeCommitFreeBlockThreshold)
@@ -1060,17 +1071,21 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
         {
             /* Ensure we put our guard entry at the end of the last committed page */
             PHEAP_ENTRY GuardEntry = &Segment->Entry + (SegmentCommit >> HEAP_ENTRY_SHIFT) - 1;
+            SIZE_T PreviousSize;
+            LONG FreeSize;
 
             ASSERT(GuardEntry > &Segment->Entry);
             GuardEntry->Size = 1;
             GuardEntry->Flags = HEAP_ENTRY_BUSY | HEAP_ENTRY_LAST_ENTRY;
             GuardEntry->SegmentOffset = SegmentIndex;
-            GuardEntry->PreviousSize = GuardEntry - Segment->FirstEntry;
+            PreviousSize = GuardEntry - Segment->FirstEntry;
 
-            /* Chack what is left behind us */
-            switch (GuardEntry->PreviousSize)
+            /* Check what is left behind us */
+            switch (PreviousSize)
             {
                 case 1:
+                    GuardEntry->PreviousSize = PreviousSize;
+
                     /* There is not enough space for a free entry. Double the guard entry */
                     GuardEntry--;
                     GuardEntry->Size = 1;
@@ -1089,6 +1104,9 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
                     FreeEntry->SegmentOffset = SegmentIndex;
                     FreeEntry->Size = GuardEntry->PreviousSize;
                     FreeEntry->Flags = 0;
+
+                    FreeSize = RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)FreeEntry, PreviousSize);
+                    GuardEntry->PreviousSize = FreeSize;
                     break;
             }
         }
@@ -1100,11 +1118,11 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
             FreeEntry->SegmentOffset = SegmentIndex;
             FreeEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
             FreeEntry->Size = (SegmentCommit >> HEAP_ENTRY_SHIFT) - Segment->Entry.Size;
-        }
 
-        /* Register the Free Heap Entry */
-        if (FreeEntry)
+
+            /* Register the Free Heap Entry */
             RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)FreeEntry, FreeEntry->Size);
+        }
     }
 
     /* Register the UnCommitted Range of the Heap Segment */
@@ -1163,7 +1181,8 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
         !(CurrentEntry->Flags & HEAP_ENTRY_BUSY) &&
         (*FreeSize + CurrentEntry->Size) <= HEAP_MAX_BLOCK_SIZE)
     {
-        ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
+        if (CurrentEntry->Size)
+            ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
 
         /* Remove it if asked for */
         if (Remove)
