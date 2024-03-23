@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -18,13 +18,13 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Deschidere…", CMD_OPEN
-        MENUITEM "S&alvează ca…", CMD_SAVE_AS
+        MENUITEM "S&alvare ca…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Șt&erge\tDel", CMD_DELETE
+        MENUITEM "Șt&ergere\tDel", CMD_DELETE
     END
     POPUP "&Afișare"
     BEGIN
@@ -42,8 +42,8 @@ STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Inspector de Clipboard"
     STRING_CLIPFILE  "Element de Clipboard"
-    STRING_DELETE_MSG "Elimină conținutul din Clipboard?"
-    STRING_DELETE_TITLE "Curăță Clipboard"
+    STRING_DELETE_MSG "Eliminare conținut din Clipboard?"
+    STRING_DELETE_TITLE "Curățare Clipboard"
     STRING_FORMAT_NT "Fișiere clipboard pentru ReactOS (*.clp)"
     STRING_FORMAT_GEN "Fișiere clipboard (*.clp)"
 END
