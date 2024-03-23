@@ -1892,6 +1892,39 @@ CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &T
     m_AppsInfo->AppendTabOrderWindow(Direction, TabOrderList);
 }
 
+VOID
+CApplicationView::GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT NameLen)
+{
+    Item.mask = LVIF_TEXT|LVIF_STATE;
+    Item.iItem = -1, Item.iSubItem = 0;
+    Item.stateMask = LVIS_FOCUSED|LVIS_SELECTED;
+    Item.pszText = Name, Item.cchTextMax = NameLen;
+
+    HWND hList = m_ListView ? m_ListView->m_hWnd : NULL;
+    if (hList)
+    {
+        Item.iItem = ListView_GetNextItem(hList, -1, LVNI_FOCUSED);
+        ListView_GetItem(hList, &Item);
+    }
+}
+
+VOID
+CApplicationView::RestoreListSelection(const LVITEMW &Item)
+{
+    int index = Item.iItem;
+    if (index != -1) // Was there a selected item?
+    {
+        LVFINDINFOW fi;
+        fi.flags = LVFI_STRING;
+        fi.psz = Item.pszText;
+        index = ListView_FindItem(m_ListView->m_hWnd, -1, &fi);
+    }
+    if (index != -1) // Is it still in the list?
+    {
+        ListView_SetItemState(m_ListView->m_hWnd, index, Item.state, Item.stateMask);
+    }
+}
+
 // this function is called when a item of listview get focus.
 // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
 VOID
