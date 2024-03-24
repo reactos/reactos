@@ -266,7 +266,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
-LSTATUS AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
 {
     if (*cKeys >= 16)
         return ERROR_MORE_DATA;
@@ -290,7 +290,8 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
     PCUITEMID_CHILD pidl = apidl[0];
     if (_ILIsValue(pidl))
     {
-        WCHAR buf[MAX_PATH], *name;
+        WCHAR buf[MAX_PATH];
+        PWSTR name;
         FileStructW* pFileData = _ILGetFileStructW(pidl);
         if (pFileData)
         {
@@ -298,7 +299,8 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
         }
         else
         {
-            _ILSimpleGetTextW(pidl, name = buf, _countof(buf));
+            _ILSimpleGetTextW(pidl, buf, _countof(buf));
+            name = buf;
         }
         LPCWSTR extension = PathFindExtension(name);
 
@@ -312,7 +314,7 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
                 // Only add the extension key if the ProgId is not valid
                 AddClassKeyToArray(extension, array, cKeys);
 
-                // Open With becomes the default when there are no verbs in the above keys
+                // "Open With" becomes the default when there are no verbs in the above keys
                 if (cidl == 1)
                     AddClassKeyToArray(L"Unknown", array, cKeys);
             }
