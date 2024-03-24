@@ -666,7 +666,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
     WCHAR *pszEnd;
 
     HRESULT hr = this->GetCommand(pszExtra, &pszCommand);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr))
     {
         return hr;
     }
