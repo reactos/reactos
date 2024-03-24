@@ -1257,7 +1257,7 @@ HINSTANCE WINAPI FindExecutableA(LPCSTR lpFile, LPCSTR lpDirectory, LPSTR lpResu
 HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpResult)
 {
     UINT_PTR retval;
-    WCHAR old_dir[1024], res[MAX_PATH];
+    WCHAR old_dir[MAX_PATH], res[MAX_PATH];
     DWORD cch = _countof(res);
     LPCWSTR dirs[2];
 
