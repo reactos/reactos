@@ -61,17 +61,17 @@ Examples:
 
 */
 
-static LONG StrToNum(LPCWSTR in)
+static LONG StrToNum(PCWSTR in)
 {
-    WCHAR *end;
+    PWCHAR end;
     LONG v = wcstol(in, &end, 0);
-    return end > in ? v : 0;
+    return (end > in) ? v : 0;
 }
 
 static int ErrMsg(int Error)
 {
     WCHAR buf[400];
-    for (UINT e = Error, cch;;)
+    for (UINT e = Error, cch; ;)
     {
         lstrcpynW(buf, L"?", _countof(buf));
         cch = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, e, 0, buf, _countof(buf), NULL);
@@ -85,12 +85,13 @@ static int ErrMsg(int Error)
     return Error;
 }
 
-template<class T> static bool CLSIDPrefix(T &String, CLSID &Clsid)
+template<class T>
+static bool CLSIDPrefix(T& String, CLSID& Clsid)
 {
     WCHAR buf[38 + 1];
     if (String[0] == '{')
     {
-        lstrcpynW(buf, String, 38 + 1);
+        lstrcpynW(buf, String, _countof(buf));
         if (SUCCEEDED(CLSIDFromString(buf, &Clsid)))
         {
             String = String + 38;
@@ -100,16 +101,17 @@ template<class T> static bool CLSIDPrefix(T &String, CLSID &Clsid)
     return false;
 }
 
-static HRESULT GetUIObjectOfAbsolute(LPCITEMIDLIST pidl, REFIID riid, void**ppv)
+static HRESULT GetUIObjectOfAbsolute(LPCITEMIDLIST pidl, REFIID riid, void** ppv)
 {
     CComPtr<IShellFolder> shellFolder;
     PCUITEMID_CHILD child;
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shellFolder), &child);
-    if (SUCCEEDED(hr)) hr = shellFolder->GetUIObjectOf(NULL, 1, &child, riid, NULL, ppv);
+    if (SUCCEEDED(hr))
+        hr = shellFolder->GetUIObjectOf(NULL, 1, &child, riid, NULL, ppv);
     return hr;
 }
 
-static HRESULT CreateShellItemFromParse(LPCWSTR Path, IShellItem**ppSI)
+static HRESULT CreateShellItemFromParse(PCWSTR Path, IShellItem** ppSI)
 {
     PIDLIST_ABSOLUTE pidl = NULL;
     HRESULT hr = SHParseDisplayName(Path, NULL, &pidl, 0, NULL);
@@ -121,10 +123,10 @@ static HRESULT CreateShellItemFromParse(LPCWSTR Path, IShellItem**ppSI)
     return hr;
 }
 
-static void GetAssocClass(LPCWSTR Path, LPCITEMIDLIST pidl, HKEY &hKey)
+static void GetAssocClass(LPCWSTR Path, LPCITEMIDLIST pidl, HKEY& hKey)
 {
     hKey = NULL;
-    IQueryAssociations *pQA;
+    IQueryAssociations* pQA;
     if (SUCCEEDED(GetUIObjectOfAbsolute(pidl, IID_PPV_ARG(IQueryAssociations, &pQA))))
     {
         pQA->GetKey(0, ASSOCKEY_CLASS, NULL, &hKey); // Not implemented in ROS
@@ -133,7 +135,8 @@ static void GetAssocClass(LPCWSTR Path, LPCITEMIDLIST pidl, HKEY &hKey)
     if (!hKey)
     {
         DWORD cb;
-        WCHAR buf[MAX_PATH], *ext = PathFindExtensionW(Path);
+        WCHAR buf[MAX_PATH];
+        PWSTR ext = PathFindExtensionW(Path);
         SHFILEINFOW info;
         info.dwAttributes = 0;
         SHGetFileInfoW((LPWSTR)pidl, 0, &info, sizeof(info), SHGFI_PIDL | SHGFI_ATTRIBUTES);
@@ -169,31 +172,38 @@ static void DumpBytes(const void *Data, SIZE_T cb)
     wprintf(L"\n");
 }
 
-static HRESULT GetCommandString(IContextMenu &CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
+static HRESULT GetCommandString(IContextMenu& CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
 {
+    if (cchMax < 1) return E_INVALIDARG;
     *buf = UNICODE_NULL;
+
+    // First try to retrieve the UNICODE string directly
     HRESULT hr = CM.GetCommandString(Id, Type | GCS_UNICODE, 0, (char*)buf, cchMax);
     if (FAILED(hr))
     {
+        // It failed, try to retrieve an ANSI string instead then convert it to UNICODE
         STRRET sr;
         sr.uType = STRRET_CSTR;
-        if (SUCCEEDED(hr = CM.GetCommandString(Id, Type & ~GCS_UNICODE, 0, sr.cStr, 260)))
+        hr = CM.GetCommandString(Id, Type & ~GCS_UNICODE, 0, sr.cStr, _countof(sr.cStr));
+        if (SUCCEEDED(hr))
             hr = StrRetToBufW(&sr, NULL, buf, cchMax);
     }
     return hr;
 }
 
-static void DumpMenu(HMENU hMenu, UINT IdOffset, IContextMenu*pCM, BOOL FakeInit, UINT Indent)
+static void DumpMenu(HMENU hMenu, UINT IdOffset, IContextMenu* pCM, BOOL FakeInit, UINT Indent)
 {
     bool recurse = Indent != UINT(-1);
     WCHAR buf[MAX_PATH];
     MENUITEMINFOW mii;
     mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem);
+
     for (UINT i = 0, defid = GetMenuDefaultItem(hMenu, FALSE, 0); ; ++i)
     {
         mii.fMask = MIIM_STRING;
-        *(mii.dwTypeData = buf) = UNICODE_NULL;
+        mii.dwTypeData = buf;
         mii.cch = _countof(buf);
+        *buf = UNICODE_NULL;
         if (!GetMenuItemInfo(hMenu, i, TRUE, &mii))
             lstrcpynW(buf, L"?", _countof(buf)); // Tolerate string failure
         mii.fMask = MIIM_ID | MIIM_SUBMENU | MIIM_FTYPE;
@@ -202,6 +212,7 @@ static void DumpMenu(HMENU hMenu, UINT IdOffset, IContextMenu*pCM, BOOL FakeInit
         mii.cch = 0;
         if (!GetMenuItemInfo(hMenu, i, TRUE, &mii))
             break;
+
         BOOL sep = mii.fType & MFT_SEPARATOR;
         wprintf(L"%-4d", (sep || mii.wID == UINT(-1)) ? mii.wID : (mii.wID - IdOffset));
         for (UINT j = 0; j < Indent && recurse; ++j)
@@ -222,10 +233,11 @@ static void DumpMenu(HMENU hMenu, UINT IdOffset, IContextMenu*pCM, BOOL FakeInit
     }
 }
 
-static int SHGFI(LPCWSTR Path)
+static int SHGFI(PCWSTR Path)
 {
     PIDLIST_ABSOLUTE pidl = NULL;
     UINT flags = 0, ret = 0;
+
     if (*Path == L'$')
     {
         HRESULT hr = SHParseDisplayName(++Path, NULL, &pidl, 0, NULL);
@@ -249,12 +261,14 @@ static int SHGFI(LPCWSTR Path)
     wprintf(L"Display: %s\n", info.szDisplayName);
     wprintf(L"Attributes: 0x%x\n", info.dwAttributes);
     wprintf(L"Type: %s\n", info.szTypeName);
+
     if (!SHGetFileInfoW(Path, 0, &info, sizeof(info), flags | SHGFI_ICONLOCATION))
     {
         info.szDisplayName[0] = UNICODE_NULL;
         info.iIcon = -1;
     }
     wprintf(L"Icon: %s,%d\n", info.szDisplayName, info.iIcon);
+
     if (!SHGetFileInfoW(Path, 0, &info, sizeof(info), flags | SHGFI_SYSICONINDEX))
     {
         info.iIcon = -1;
@@ -269,13 +283,13 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
     UINT qtype = StrToNum(argv[2]);
     ASSOCF iflags = StrToNum(argv[3]);
     ASSOCF qflags = StrToNum(argv[4]);
-    LPCWSTR extra = argc > 6 && *argv[6] ? argv[6] : NULL;
+    PCWSTR extra = (argc > 6 && *argv[6]) ? argv[6] : NULL;
     WCHAR buf[MAX_PATH * 2];
-    DWORD maxSize = argc > 7 && *argv[7] ? StrToNum(argv[7]) : sizeof(buf);
+    DWORD maxSize = (argc > 7 && *argv[7]) ? StrToNum(argv[7]) : sizeof(buf);
 
     HRESULT hr;
     CComPtr<IQueryAssociations> qa;
-    WCHAR *path = argv[0];
+    PWSTR path = argv[0];
     if (*path)
     {
         CLSID clsid, *pclsid = NULL;
@@ -311,11 +325,11 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
         if (!wcsicmp(argv[2], L"DEFAULTICON"))
             qtype = ASSOCSTR_DEFAULTICON;
 
-        if (maxSize == sizeof(buf))
-            maxSize = size = _countof(buf);
-
         buf[0] = UNICODE_NULL;
-        if (SUCCEEDED(hr = qa->GetString(qflags, (ASSOCSTR)qtype, extra, buf, &size)) ||
+        size /= sizeof(buf[0]); // Convert to number of characters
+        hr = qa->GetString(qflags, (ASSOCSTR)qtype, extra, buf, &size);
+        size *= sizeof(buf[0]); // Convert back to bytes
+        if (SUCCEEDED(hr) ||
             hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER))
         {
             wprintf(L"0x%.8X: %s\n", hr, buf);
@@ -333,7 +347,8 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
         if (!wcsicmp(argv[2], L"VALUE"))
             qtype = ASSOCDATA_VALUE;
 
-        if (SUCCEEDED(hr = qa->GetData(qflags, (ASSOCDATA)qtype, extra, buf, &size)))
+        hr = qa->GetData(qflags, (ASSOCDATA)qtype, extra, buf, &size);
+        if (SUCCEEDED(hr))
         {
             wprintf(L"0x%.8X: %u byte(s) ", hr, size);
             DumpBytes(buf, min(size, maxSize));
@@ -346,8 +361,9 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
     }
     else if (!wcsicmp(argv[1], L"key"))
     {
-        HKEY hKey = 0;
-        if (SUCCEEDED(hr = qa->GetKey(qflags, (ASSOCKEY)qtype, extra, &hKey)))
+        HKEY hKey = NULL;
+        hr = qa->GetKey(qflags, (ASSOCKEY)qtype, extra, &hKey);
+        if (SUCCEEDED(hr))
         {
             wprintf(L"0x%.8X: hKey %p\n", hr, hKey);
             RegQueryValueExW(hKey, L"shlextdbg", 0, NULL, NULL, NULL); // Filter by this in Process Monitor
@@ -562,9 +578,8 @@ static void Wait()
         break;
     case Wait_Infinite:
         _putws(nag);
-        while (true) {
+        while (true)
             Sleep(1000);
-        }
         break;
     case Wait_OpenWindows:
         _putws(nag);
@@ -699,12 +714,14 @@ int wmain(int argc, WCHAR **argv)
                 else
                 {
                     CComPtr<IShellItem> si;
-                    if (SUCCEEDED(hr = CreateShellItemFromParse(arg, &si)))
+                    hr = CreateShellItemFromParse(arg, &si);
+                    if (SUCCEEDED(hr))
                         hr = si->BindToHandler(NULL, BHID_SFUIObject, IID_PPV_ARG(IContextMenu, &cm));
                 }
                 if (SUCCEEDED(hr))
                 {
-                    UINT first = 10, last = 9000, cmf = 0, nosub = 0, fakeinit = 0;
+                    UINT first = 10, last = 9000;
+                    UINT cmf = 0, nosub = 0, fakeinit = 0;
                     while (++n < argc)
                     {
                         if (argv[n][0] != '-' && argv[n][0] != '/')
@@ -739,7 +756,8 @@ int wmain(int argc, WCHAR **argv)
                             wprintf(L"WARN: Ignoring switch %s\n", argv[n]);
                     }
                     HMENU hMenu = CreatePopupMenu();
-                    if (SUCCEEDED(hr = cm->QueryContextMenu(hMenu, 0, first, last, cmf)))
+                    hr = cm->QueryContextMenu(hMenu, 0, first, last, cmf);
+                    if (SUCCEEDED(hr))
                     {
                         DumpMenu(hMenu, first, cm, fakeinit, nosub ? -1 : 0);
                     }
