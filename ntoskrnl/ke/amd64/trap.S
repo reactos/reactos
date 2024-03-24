@@ -891,7 +891,6 @@ no_user_apc_pending:
     xor r10, r10
 
     /* return to user mode */
-    .byte HEX(48) // REX prefix to return to long mode
     sysretq
 
 .ENDP
