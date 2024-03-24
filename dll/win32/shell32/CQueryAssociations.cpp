@@ -649,7 +649,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     RegCloseKey(hkeyShell);
     if (ret)
     {
-        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
     /* open command subkey */
