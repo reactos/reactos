@@ -624,7 +624,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
             extra_from_reg = static_cast<WCHAR*>(HeapAlloc(GetProcessHeap(), 0, max_subkey_len * sizeof(WCHAR)));
             if (!extra_from_reg)
             {
-                ERR("E_OUTOFMEMORY\n");
                 RegCloseKey(hkeyShell);
                 return E_OUTOFMEMORY;
             }
