@@ -511,7 +511,7 @@ BEGIN
     PUSHBUTTON "Revocare", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Log Off din ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
     CTEXT "Comutare utilizatori", IDC_SWITCH_USER_STATIC, 11, 70, 82, 11
-    CTEXT "Deautentifică", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+    CTEXT "&Log Off", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -1062,6 +1062,6 @@ BEGIN
     /* For IDD_LOG_OFF_FANCY */
     IDS_LOG_OFF_DESC "Vă închide programele și vă încheie sesiunea ReactOS."
     IDS_SWITCH_USER_DESC "Permite altui utilizator să fie logat, în timp ce programele dumneavoastră rămân deschise.\r\n\r\n(Puteți de asemenea, să schimbați utilizatorii apăsând tasta cu sigla Windows + L.)"
-    IDS_LOG_OFF_TITLE "Deautentifică"
+    IDS_LOG_OFF_TITLE "&Log Off"
     IDS_SWITCH_USER_TITLE "Schimbă utilizatorul"
 END
