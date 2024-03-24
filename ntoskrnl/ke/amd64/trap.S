@@ -848,12 +848,7 @@ GLOBAL_LABEL KiSystemCall64Again
 
 GLOBAL_LABEL KiSystemServiceExit
 
-#if DBG
-    test dword ptr [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], HEX(200)
-    jnz IntsEnabled
-    int 3
-IntsEnabled:
-#endif
+    ASSERT_TRAP_FRAME_INTS_ENABLED rsp + MAX_SYSCALL_PARAM_SIZE
 
     /* Check for pending user APC */
     mov rcx, gs:qword ptr [PcCurrentThread]
