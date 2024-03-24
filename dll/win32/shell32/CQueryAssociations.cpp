@@ -221,7 +221,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         case ASSOCSTR_EXECUTABLE:
         {
             hr = this->GetExecutable(pszExtra, path, MAX_PATH, &len);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
             {
                 return hr;
             }
@@ -666,7 +666,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
     WCHAR *pszEnd;
 
     HRESULT hr = this->GetCommand(pszExtra, &pszCommand);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         return hr;
     }
