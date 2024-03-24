@@ -616,7 +616,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
             ret = RegQueryInfoKeyW(hkeyShell, NULL, NULL, NULL, NULL, &max_subkey_len, NULL, NULL, NULL, NULL, NULL, NULL);
             if (ret)
             {
-                ERR("0x%lX\n", ret);
                 RegCloseKey(hkeyShell);
                 return HRESULT_FROM_WIN32(ret);
             }
