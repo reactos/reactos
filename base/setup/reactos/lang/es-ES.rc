@@ -15,7 +15,7 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenido al Asistente de Instalación de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "¡Aún no puede instalar ReactOS directamente desde el CD! Por favor, reinicie su equipo desde el CD para instalar ReactOS.", IDC_STATIC, 115, 40, 200, 100
+    LTEXT "¡Aún no puede instalar ReactOS desde el ejecutable del CD! Por favor, arranque su equipo desde el CD para instalar ReactOS.", IDC_STATIC, 115, 40, 200, 100
     LTEXT "Pulse Finalizar para salir del instalador.", IDC_STATIC, 115, 169, 195, 17
 END
 

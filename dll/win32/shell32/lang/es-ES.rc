@@ -4,7 +4,7 @@
  * PURPOSE:     Spanish resource file
  * TRANSLATORS: Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
- *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ *              Copyright 2020-2024 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -898,7 +898,7 @@ BEGIN
     IDS_NETWORKPLACE "Mis sitios de red"
 
     IDS_NEWFOLDER "Nueva carpeta"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Nuevo %s"
 
     IDS_DRIVE_FIXED "Disco local"
     IDS_DRIVE_CDROM "Unidad de CD"
@@ -915,7 +915,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< A&trás"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "N&uevo" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nueva &carpeta"
     FCIDM_SHVIEW_NEWLINK "Nuevo &acceso directo"
     IDS_FOLDER_OPTIONS "Opciones de carpeta"
@@ -1049,7 +1049,7 @@ BEGIN
     IDS_NO_ICONS "El archivo '%s' no contiene íconos.\n\nEscoja un ícono de la lista o seleccione otro archivo."
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
     IDS_LINK_INVALID "El elemento '%s' al que se refiere este acceso directo se ha movido o cambiado, por lo que no funcionará."
-    IDS_COPYTOMENU "Copar a la &carpeta..."
+    IDS_COPYTOMENU "Copiar a la &carpeta..."
     IDS_COPYTOTITLE "Selecciona el lugar al que quieres copiar '%s'. Luego pulsa en el botón Copiar."
     IDS_COPYITEMS "Copiar archivos"
     IDS_COPYBUTTON "Copiar"
