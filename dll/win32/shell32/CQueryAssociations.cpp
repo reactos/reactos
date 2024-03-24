@@ -652,7 +652,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     RegCloseKey(hkeyVerb);
     if (ret)
     {
-        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
     hr = this->GetValue(hkeyCommand, NULL, (void**)command, NULL);
