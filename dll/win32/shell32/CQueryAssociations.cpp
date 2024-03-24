@@ -599,7 +599,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
 
     if (ret)
     {
-        ERR("0x%lX\n", ret);
         return HRESULT_FROM_WIN32(ret);
     }
 
