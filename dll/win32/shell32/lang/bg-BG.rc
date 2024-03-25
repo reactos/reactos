@@ -164,7 +164,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Напишете името на приложение, папка, документ или интернет източник и РеактОС ще го отвори.", 12289, 36, 11, 185, 18
-    LTEXT "&Отваряне:", 12305, 7, 39, 40, 10
+    LTEXT "&Отваряне:", 12305, 7, 39, 40, 10 //FIXME: x position 7 + width 40 == 47, and that is too far to the right for x-pos 46 of IDC_RUNDLG_EDITPATH
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 46, 37, 174, 100
     DEFPUSHBUTTON "Добре", IDOK, 62, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "Отказ", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
@@ -235,7 +235,7 @@ BEGIN
     LTEXT "Създадено:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Принадлежности", 14020, 8, 152, 46, 10
+    LTEXT "Принадлежности", 14020, 8, 152, 46, 10 //FIXME: This word is too long for 46 width, and it lacks a ':' in the end.
     AUTOCHECKBOX "&Само за четене", 14021, 58, 151, 68, 10 //FIXME: accelerator collision &C
     AUTOCHECKBOX "&Скрит", 14022, 126, 151, 55, 10 //FIXME: accelerator collision &C
     AUTOCHECKBOX "&Сбит", 14023, 181, 151, 59, 10 //FIXME: accelerator collision &C
@@ -257,7 +257,7 @@ BEGIN
     PUSHBUTTON "C&hange...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Местоположение:", 14008, 8, 75, 61, 10
+    LTEXT "Местоположение:", 14008, 8, 75, 61, 10 //FIXME: That monster-word with its 61 width is so huge that it overflows its neighbor controls!
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Размер:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
@@ -271,9 +271,9 @@ BEGIN
     LTEXT "Използван:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 173, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Принадлежности", 14020, 8, 189, 60, 10
-    AUTOCHECKBOX "Само за &четене", 14021, 61, 188, 67, 10
-    AUTOCHECKBOX "С&крит", 14022, 129, 188, 50, 10
+    LTEXT "Принадлежности", 14020, 8, 189, 60, 10 //FIXME: That monster-word with its 60 width is so huge that it overflows its neighbor controls! And it lacks a ':' at the end.
+    AUTOCHECKBOX "Само за &четене", 14021, 61, 188, 67, 10 //FIXME: define an accelerator, that is unused!
+    AUTOCHECKBOX "С&крит", 14022, 129, 188, 50, 10 //FIXME: define an accelerator, that is unused!
     AUTOCHECKBOX "&Сбит", 14023, 181, 188, 49, 10
     PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
