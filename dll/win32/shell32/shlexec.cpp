@@ -1279,7 +1279,7 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
     dirs[1] = NULL;
 
     if (!GetShortPathNameW(lpFile, res, _countof(res)))
-        lstrcpynW(res, lpFile, _countof(res));
+        StringCchCopyW(res, _countof(res), lpFile);
 
     if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS))
     {
