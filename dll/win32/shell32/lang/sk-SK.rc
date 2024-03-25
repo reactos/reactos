@@ -252,7 +252,7 @@ BEGIN
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Typ súboru:", 14004, 8, 35, 50, 10
     CONTROL "Súbor", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "Otvoriť programom:", 14006, 8, 53, 50, 10
+    LTEXT "Otvoriť programom:", 14006, 8, 53, 50, 10 //FIXME: The word is too long. There is no space left. I do recommend to shorten the string, e.g. to just "Programom". The control to the right should not be shrinked. It contains dynamic content.
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
