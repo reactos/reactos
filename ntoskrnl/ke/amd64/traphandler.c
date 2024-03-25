@@ -101,7 +101,7 @@ KiSystemCallHandler(
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
     PKTHREAD Thread;
     PULONG64 KernelParams, UserParams;
-    ULONG ServiceNumber, Offset, Count;
+    ULONG ServiceNumber, TableIndex, Count;
     ULONG64 UserRsp;
 
     /* Get a pointer to the trap frame */
@@ -139,11 +139,11 @@ KiSystemCallHandler(
 
     /* Get the system call number from the trap frame and decode it */
     ServiceNumber = (ULONG)TrapFrame->Rax;
-    Offset = (ServiceNumber >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK;
+    TableIndex = (ServiceNumber >> TABLE_OFFSET_BITS) & ((1 << TABLE_NUMBER_BITS) - 1);
     ServiceNumber &= SERVICE_NUMBER_MASK;
 
     /* Check for win32k system calls */
-    if (Offset & SERVICE_TABLE_TEST)
+    if (TableIndex == WIN32K_SERVICE_INDEX)
     {
         ULONG GdiBatchCount;
 
@@ -166,25 +166,29 @@ KiSystemCallHandler(
     }
 
     /* Get descriptor table */
-    DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
+    DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
 
     /* Validate the system call number */
     if (ServiceNumber >= DescriptorTable->Limit)
     {
-        /* Check if this is a GUI call */
-        if (!(Offset & SERVICE_TABLE_TEST))
+        /* Check if this is a GUI call and this is not a GUI thread yet */
+        if ((TableIndex == WIN32K_SERVICE_INDEX) &&
+            (Thread->ServiceTable == KeServiceDescriptorTable))
         {
-            /* Fail the call */
-            TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
-            return (PVOID)NtSyscallFailure;
+            /* Convert this thread to a GUI thread.
+               It is invalid to change the stack in the middle of a C function,
+               therefore we return KiConvertToGuiThread to the system call entry
+               point, which then calls the asm function KiConvertToGuiThread,
+               which allocates a new stack, switches to it, calls
+               PsConvertToGuiThread and resumes in the middle of
+               KiSystemCallEntry64 to restart the system call handling.
+               If converting fails, the system call returns a failure code. */
+            return (PVOID)KiConvertToGuiThread;
         }
 
-        /* Convert us to a GUI thread
-           To be entirely correct. we return KiConvertToGuiThread,
-           which allocates a new stack, switches to it, calls
-           PsConvertToGuiThread and resumes in the middle of
-           KiSystemCallEntry64 to restart the system call handling. */
-        return (PVOID)KiConvertToGuiThread;
+        /* Fail the call */
+        TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
+        return (PVOID)NtSyscallFailure;
     }
 
     /* Get stack bytes and calculate argument count */
