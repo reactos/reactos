@@ -196,7 +196,7 @@ jobs:
       run: cmake --build build --target dll/cpl/all
     - name: Build rosapps
       if: ${{ matrix.arch == 'arm' }}
-      run: cmake --build build --target modules/rosapps/all
+      run: if (Test-Path -LiteralPath build/modules/rosapps -PathType Container) { cmake --build build --target modules/rosapps/all } else { 'Skipped' }
     - name: Build subsystems
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target subsystems/all
