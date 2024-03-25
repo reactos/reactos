@@ -478,8 +478,17 @@ IsaPdoQueryResources(
 
     PAGED_CODE();
 
-    if (PdoExt->Common.Signature == IsaPnpLogicalDevice &&
-        !(PdoExt->IsaPnpDevice->Flags & ISAPNP_HAS_RESOURCES))
+    if (PdoExt->Common.Signature == IsaPnpReadDataPort)
+    {
+        ResourceList = IsaPnpCreateReadPortDOResources(PdoExt);
+        if (!ResourceList)
+            return STATUS_NO_MEMORY;
+
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+        return STATUS_SUCCESS;
+    }
+
+    if (!(PdoExt->IsaPnpDevice->Flags & ISAPNP_HAS_RESOURCES))
     {
         Irp->IoStatus.Information = 0;
         return STATUS_SUCCESS;
@@ -512,6 +521,16 @@ IsaPdoQueryResourceRequirements(
     UNREFERENCED_PARAMETER(IrpSp);
 
     PAGED_CODE();
+
+    if (PdoExt->Common.Signature == IsaPnpReadDataPort)
+    {
+        RequirementsList = IsaPnpCreateReadPortDORequirements(PdoExt, PdoExt->SelectedPort);
+        if (!RequirementsList)
+            return STATUS_NO_MEMORY;
+
+        Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
+        return STATUS_SUCCESS;
+    }
 
     if (!PdoExt->RequirementsList)
         return Irp->IoStatus.Status;
@@ -593,19 +612,9 @@ IsaPdoStartReadPort(
 
         ASSERT(SelectedPort != 0);
 
-        if (PdoExt->RequirementsList)
-        {
-            ExFreePoolWithTag(PdoExt->RequirementsList, TAG_ISAPNP);
-            PdoExt->RequirementsList = NULL;
-        }
-
         /* Discard the Read Ports at conflicting locations */
-        Status = IsaPnpCreateReadPortDORequirements(PdoExt, SelectedPort);
-        if (!NT_SUCCESS(Status))
-            return Status;
-
+        PdoExt->SelectedPort = SelectedPort;
         PdoExt->Flags |= ISAPNP_READ_PORT_NEED_REBALANCE;
-
         IoInvalidateDeviceState(PdoExt->Common.Self);
 
         return STATUS_SUCCESS;
@@ -838,8 +847,8 @@ IsaPnpRemoveLogicalDeviceDO(
     if (LogDev->FriendlyName)
         ExFreePoolWithTag(LogDev->FriendlyName, TAG_ISAPNP);
 
-    if (LogDev->Alternatives)
-        ExFreePoolWithTag(LogDev->Alternatives, TAG_ISAPNP);
+    if (LogDev->Descriptors)
+        ExFreePoolWithTag(LogDev->Descriptors, TAG_ISAPNP);
 
     Entry = LogDev->CompatibleIdList.Flink;
     while (Entry != &LogDev->CompatibleIdList)
@@ -974,18 +983,16 @@ IsaPdoPnp(
             break;
 
         case IRP_MN_SURPRISE_REMOVAL:
-            if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaPdoRemoveDevice(PdoExt, FALSE);
-            else
-                Status = IsaReadPortRemoveDevice(PdoExt, FALSE);
-            break;
-
         case IRP_MN_REMOVE_DEVICE:
+        {
+            BOOLEAN FinalRemove = (IrpSp->MinorFunction == IRP_MN_REMOVE_DEVICE);
+
             if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaPdoRemoveDevice(PdoExt, TRUE);
+                Status = IsaPdoRemoveDevice(PdoExt, FinalRemove);
             else
-                Status = IsaReadPortRemoveDevice(PdoExt, TRUE);
+                Status = IsaReadPortRemoveDevice(PdoExt, FinalRemove);
             break;
+        }
 
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
             Status = IsaPdoQueryPnpDeviceState(PdoExt, Irp);
