@@ -817,6 +817,15 @@ PUBLIC KiSystemCallEntry64
     stmxcsr [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_MxCsr]
     ldmxcsr gs:[PcMxCsr]
 
+    /* Get the current thread and the trap frame */
+    mov rax, gs:[PcCurrentThread]
+    mov rcx, [rax + ThTrapFrame]
+
+    /* Save the old trap frame */
+    lea rdx, [rsp + MAX_SYSCALL_PARAM_SIZE]
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_TrapFrame], rcx
+    mov [rax + ThTrapFrame], rdx
+
 #if DBG
     /* Check IRQL */
     mov rax, cr8
@@ -1077,12 +1086,6 @@ AlreadyLargeStack:
 
     /* Disable interrupts for return */
     cli
-
-    // FIXME: should just do the trap frame switch in KiSystemCallHandler64
-    /* Restore old trap frame */
-    mov rcx, gs:[PcCurrentThread]
-    mov rdx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_TrapFrame]
-    mov [rcx + KTHREAD_TrapFrame], rdx
 
     // Restore register parameters
     mov rcx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
