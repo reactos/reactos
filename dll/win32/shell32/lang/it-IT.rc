@@ -227,7 +227,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Dimensione sul disco:", 140101, 8, 88, 55, 10
+    LTEXT "Dimensione sul disco:", 140101, 8, 88, 55, 10 //FIXME: text too long. No space to the right to enlarge. I do recommend to shrink the text to just "Sul disco:". 2nd-best solution would be making it multi-row. You can spy on fr-FR on how to do that.
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contenente:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Dimensione sul disco:", 140112, 8, 107, 55, 10
+    LTEXT "Dimensione sul disco:", 140112, 8, 107, 55, 10 //FIXME: text too long. No space to the right to enlarge. I do recommend to shrink the text to just "Sul disco:". 2nd-best solution would be making it multi-row. You can spy on fr-FR on how to do that.
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creato:", 14014, 8, 131, 45, 10
