@@ -220,16 +220,38 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
     return E_PROP_ID_UNSUPPORTED;
 }
 
-#ifndef __REACTOS__
 /***********************************************************************
  *      GetThemeTransitionDuration                          (UXTHEME.@)
  */
 HRESULT WINAPI GetThemeTransitionDuration(HTHEME hTheme, int iPartId, int iStateIdFrom,
                                           int iStateIdTo, int iPropId, DWORD *pdwDuration)
 {
-    FIXME("(%p, %u, %u, %u, %u, %p) stub\n", hTheme, iPartId, iStateIdFrom, iStateIdTo,
-          iPropId, pdwDuration);
+    INTLIST intlist;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("(%p, %d, %d, %d, %d, %p)\n", hTheme, iPartId, iStateIdFrom, iStateIdTo, iPropId,
+          pdwDuration);
+
+    if (!pdwDuration || iStateIdFrom < 1 || iStateIdTo < 1)
+        return E_INVALIDARG;
+
+    hr = GetThemeIntList(hTheme, iPartId, 0, iPropId, &intlist);
+    if (FAILED(hr))
+    {
+        if (hr == E_PROP_ID_UNSUPPORTED)
+            *pdwDuration = 0;
+
+        return hr;
+    }
+
+    if (intlist.iValueCount < 1 || iStateIdFrom > intlist.iValues[0]
+        || iStateIdTo > intlist.iValues[0]
+        || intlist.iValueCount != 1 + intlist.iValues[0] * intlist.iValues[0])
+    {
+        *pdwDuration = 0;
+        return E_INVALIDARG;
+    }
+
+    *pdwDuration = intlist.iValues[1 + intlist.iValues[0] * (iStateIdFrom - 1) + (iStateIdTo - 1)];
+    return S_OK;
 }
-#endif
