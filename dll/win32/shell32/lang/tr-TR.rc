@@ -77,8 +77,8 @@ BEGIN
         MENUITEM "K&opyala", IDM_COPY
         MENUITEM "&Yapıştır", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Kı&sayol oluştur", IDM_CREATELINK
-        MENUITEM "Si&l", IDM_DELETE
+        MENUITEM "Kı&sayol oluştur", IDM_CREATELINK //FIXME: The accelerator IDM_CREATELINK is currently offsync in master compared to IDS_CREATELINK! Older releases used &o here but that is currently blocked by IDM_COPY
+        MENUITEM "Si&l", IDM_DELETE //FIXME: This accelerator is a poor choice, because l is a narrow character. Older releases used &S here. But that is currently blocked by IDM_CREATELINK
         MENUITEM "Y&eniden adlandır", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Ö&zellikler", IDM_PROPERTIES
