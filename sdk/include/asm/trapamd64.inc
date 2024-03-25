@@ -115,12 +115,12 @@ MACRO(EnterTrap, Flags)
     mov [rbp + KTRAP_FRAME_R11], r11
 
     /* Save volatile xmm registers */
-    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
-    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
-    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
-    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
-    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
-    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
+    movaps [rbp + KTRAP_FRAME_Xmm0], xmm0
+    movaps [rbp + KTRAP_FRAME_Xmm1], xmm1
+    movaps [rbp + KTRAP_FRAME_Xmm2], xmm2
+    movaps [rbp + KTRAP_FRAME_Xmm3], xmm3
+    movaps [rbp + KTRAP_FRAME_Xmm4], xmm4
+    movaps [rbp + KTRAP_FRAME_Xmm5], xmm5
 
     if (Flags AND TF_SEGMENTS)
         /* Save segment selectors */
@@ -235,12 +235,12 @@ kernel_mode_return:
     mov r11, [rbp + KTRAP_FRAME_R11]
 
     /* Restore xmm registers */
-    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
-    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
-    movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
-    movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
-    movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
-    movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
+    movaps xmm0, [rbp + KTRAP_FRAME_Xmm0]
+    movaps xmm1, [rbp + KTRAP_FRAME_Xmm1]
+    movaps xmm2, [rbp + KTRAP_FRAME_Xmm2]
+    movaps xmm3, [rbp + KTRAP_FRAME_Xmm3]
+    movaps xmm4, [rbp + KTRAP_FRAME_Xmm4]
+    movaps xmm5, [rbp + KTRAP_FRAME_Xmm5]
 
     /* Restore MCXSR */
     ldmxcsr [rbp + KTRAP_FRAME_MxCsr]
