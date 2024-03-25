@@ -272,8 +272,8 @@ BEGIN
     EDITTEXT 14019, 58, 163, 173, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Принадлежности", 14020, 8, 189, 60, 10 //FIXME: That monster-word with its 60 width is so huge that it overflows its neighbor controls! And it lacks a ':' at the end.
-    AUTOCHECKBOX "Само за &четене", 14021, 61, 188, 67, 10 //FIXME: define an accelerator, that is unused!
-    AUTOCHECKBOX "С&крит", 14022, 129, 188, 50, 10 //FIXME: define an accelerator, that is unused!
+    AUTOCHECKBOX "Само за &четене", 14021, 61, 188, 67, 10
+    AUTOCHECKBOX "С&крит", 14022, 129, 188, 50, 10
     AUTOCHECKBOX "&Сбит", 14023, 181, 188, 49, 10
     PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
