@@ -883,21 +883,6 @@ KiContinue(
     IN PKTRAP_FRAME TrapFrame
 );
 
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame,
-    IN NTSTATUS Status
-);
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit2(
-    IN PKTRAP_FRAME TrapFrame
-);
-
 #ifndef _M_AMD64
 VOID
 FASTCALL
