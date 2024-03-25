@@ -108,7 +108,7 @@ UrlUnescapeAndMakeFileNameValid(CStringW& str)
 
 struct DownloadInfo
 {
-    DownloadInfo()
+    DownloadInfo() :  DLType(DLTYPE_APPLICATION), IType(INSTALLER_UNKNOWN), SizeInBytes(0)
     {
     }
     DownloadInfo(const CAppInfo &AppInfo) : DLType(DLTYPE_APPLICATION)

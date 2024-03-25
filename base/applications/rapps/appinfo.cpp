@@ -379,7 +379,7 @@ CAvailableApplicationInfo::GetInstallerType() const
 }
 
 BOOL
-CAvailableApplicationInfo::UninstallApplication(UINT Flags)
+CAvailableApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
 {
     ATLASSERT(FALSE && "Should not be called");
     return FALSE;
@@ -586,11 +586,8 @@ CInstalledApplicationInfo::GetInstallerType() const
 }
 
 BOOL
-CInstalledApplicationInfo::UninstallApplication(UINT Flags)
+CInstalledApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
 {
-    extern BOOL
-    UninstallGenerated(CInstalledApplicationInfo &AppInfo, UINT Flags);
-
     if (GetInstallerType() == INSTALLER_GENERATE)
     {
         return UninstallGenerated(*this, Flags);

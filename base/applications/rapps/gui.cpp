@@ -290,7 +290,7 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     if (!InstalledApp)
         return FALSE;
 
-    return InstalledApp->UninstallApplication(bModify ? UCF_MODIFY : 0);
+    return InstalledApp->UninstallApplication(bModify ? UCF_MODIFY : UCF_NONE);
 }
 
 VOID

@@ -191,7 +191,7 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 
     if (pInfo)
     {
-        retval = pInfo->UninstallApplication(silent ? UCF_SILENT : 0);
+        retval = pInfo->UninstallApplication(silent ? UCF_SILENT : UCF_NONE);
     }
     delete pDelete;
     return retval;
@@ -200,9 +200,6 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 static BOOL
 HandleGenerateInstallerCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 {
-    extern BOOL
-    ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive);
-
     if (argcLeft != 2)
         return FALSE;
 

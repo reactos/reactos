@@ -65,6 +65,7 @@ IsInstalledEnum(INT x)
 
 enum UninstallCommandFlags
 {
+    UCF_NONE =   0x00,
     UCF_MODIFY = 0x01,
     UCF_SILENT = 0x02,
 };
@@ -87,6 +88,7 @@ enum InstallerType
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
 
 class CAppRichEdit;
+class CConfigParser;
 
 class CAppInfo
 {
@@ -119,12 +121,12 @@ class CAppInfo
     virtual InstallerType
     GetInstallerType() const { return INSTALLER_UNKNOWN; }
     virtual BOOL
-    UninstallApplication(UINT Flags) = 0;
+    UninstallApplication(UninstallCommandFlags Flags) = 0;
 };
 
 class CAvailableApplicationInfo : public CAppInfo
 {
-    class CConfigParser *m_Parser;
+    CConfigParser *m_Parser;
     CSimpleArray<CStringW> m_szScrnshotLocation;
     bool m_ScrnshotRetrieved;
     CStringW m_szUrlDownload;
@@ -150,7 +152,7 @@ class CAvailableApplicationInfo : public CAppInfo
         const CPathW &BasePath);
     ~CAvailableApplicationInfo();
 
-    class CConfigParser *
+    CConfigParser *
     GetConfigParser() const { return m_Parser; }
 
     virtual BOOL
@@ -170,7 +172,7 @@ class CAvailableApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerType() const override;
     virtual BOOL
-    UninstallApplication(UINT Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags) override;
 };
 
 class CInstalledApplicationInfo : public CAppInfo
@@ -216,5 +218,10 @@ class CInstalledApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerType() const override;
     virtual BOOL
-    UninstallApplication(UINT Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags) override;
 };
+
+BOOL
+UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Flags);
+BOOL
+ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive);

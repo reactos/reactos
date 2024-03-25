@@ -151,7 +151,7 @@ static struct CommonInfo
     CRegKey *ArpKey, Entries;
 
     CommonInfo(LPCWSTR DisplayName, BOOL IsSilent = FALSE)
-    : AppName(DisplayName), hDlg(NULL), Error(0), Count(0), Silent(IsSilent)
+    : AppName(DisplayName), hDlg(NULL), Error(0), Count(0), Silent(IsSilent), ArpKey(NULL)
     {
     }
     inline HWND GetGuiOwner() const { return Silent ? NULL : hDlg; }
@@ -297,26 +297,24 @@ CreateShortcut(const CStringW &Target)
         return FALSE;
     }
 
-    IShellLinkW *pSL;
-    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLinkW, (void**)&pSL);
+    CComPtr<IShellLinkW> link;
+    hr = link.CoCreateInstance(CLSID_ShellLink, IID_IShellLinkW);
     if (SUCCEEDED(hr))
     {
-        if (SUCCEEDED(hr = pSL->SetPath(Target)))
+        if (SUCCEEDED(hr = link->SetPath(Target)))
         {
             if (SUCCEEDED(GetCustomIconPath(Info, tmp)))
             {
                 LPWSTR p = tmp.GetBuffer();
                 int idx = PathParseIconLocation(p);
-                pSL->SetIconLocation(p, idx);
+                link->SetIconLocation(p, idx);
             }
-            IPersistFile *pPF;
-            if (SUCCEEDED(hr = pSL->QueryInterface(IID_IPersistFile, (void**)&pPF)))
+            CComPtr<IPersistFile> persist;
+            if (SUCCEEDED(hr = link->QueryInterface(IID_IPersistFile, (void**)&persist)))
             {
-                hr = pPF->Save(path, FALSE);
-                pPF->Release();
+                hr = persist->Save(path, FALSE);
             }
         }
-        pSL->Release();
     }
     if (SUCCEEDED(hr))
     {
@@ -805,7 +803,7 @@ UninstallThread(LPVOID Parameter)
 }
 
 BOOL
-UninstallGenerated(CInstalledApplicationInfo &AppInfo, UINT Flags)
+UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Flags)
 {
     UninstallInfo Info(AppInfo, Flags & UCF_SILENT);
     g_pInfo = &Info;

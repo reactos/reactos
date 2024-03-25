@@ -164,7 +164,9 @@ FNFDINOTIFY(fnNotify)
 
             if (!NotifyFileExtractCallback(szCabFileName, pfdin->cb, pfdin->attribs,
                                            pND->Callback, pND->CallerCookie))
+            {
                 break; // Skip file
+            }
 
             if (szCabFileName.Find('\\') >= 0)
             {

@@ -370,7 +370,8 @@ GetRegString(CRegKey &Key, LPCWSTR Name, CStringW &Value)
 {
     for (;;)
     {
-        ULONG cb = 0, cch, err = Key.QueryValue(Name, NULL, NULL, &cb);
+        ULONG cb = 0, cch;
+        ULONG err = Key.QueryValue(Name, NULL, NULL, &cb);
         if (err)
             break;
         cch = cb / sizeof(WCHAR);
@@ -436,11 +437,12 @@ CreateDirectoryTree(LPCWSTR Dir)
 CStringW
 SplitFileAndDirectory(LPCWSTR FullPath, CStringW *pDir)
 {
-    CStringW dir = FullPath, file;
-    int win = dir.ReverseFind(L'\\'), nix = dir.ReverseFind(L'/'), sep = max(win, nix);
-    file = dir.Mid(sep + 1);
+    CPathW dir = FullPath;
+    //int win = dir.ReverseFind(L'\\'), nix = dir.ReverseFind(L'/'), sep = max(win, nix);
+    int sep = dir.FindFileName();
+    CStringW file = dir.m_strPath.Mid(sep);
     if (pDir)
-        *pDir = sep == -1 ? L"" : dir.Left(sep);
+        *pDir = sep == -1 ? L"" : dir.m_strPath.Left(sep - 1);
     return file;
 }
 
