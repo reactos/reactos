@@ -1287,7 +1287,7 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
         if (PathIsExeW(res) ||
             SUCCEEDED(AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, res, NULL, res, &cch)))
         {
-            StrCpyNW(lpResult, res, MAX_PATH);
+            StringCchCopyW(lpResult, MAX_PATH, res);
             retval = 42;
         }
         else
