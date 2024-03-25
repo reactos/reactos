@@ -62,6 +62,9 @@ set_subsystem(ntdll console)
 ################# END  HACK #################
 
 target_link_libraries(ntdll csrlib rtl rtl_um rtl_vista ntdllsys libcntpr uuid ${PSEH_LIB})
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    target_link_libraries(ntdll cryptlib)
+endif()
 
 if (STACK_PROTECTOR)
     target_sources(ntdll PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
