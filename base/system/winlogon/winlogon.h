@@ -361,11 +361,25 @@ AllowAccessOnSession(
     _In_ PWLSESSION Session);
 
 /* setup.c */
-DWORD
+typedef enum _SETUP_TYPE
+{
+    SetupType_None = 0,
+    SetupType_Full,
+    SetupType_OOBE,
+    SetupType_Reserved,
+    SetupType_Upgrade
+} SETUP_TYPE, *PSETUP_TYPE;
+
+extern SETUP_TYPE g_setupType;
+
+#define IsNonOOBESetup(setupType) \
+    (((setupType) == SetupType_Full) || ((setupType) == SetupType_Upgrade))
+
+SETUP_TYPE
 GetSetupType(VOID);
 
-BOOL
-RunSetup(VOID);
+VOID
+CheckForSetup(VOID);
 
 /* shutdown.h */
 DWORD
