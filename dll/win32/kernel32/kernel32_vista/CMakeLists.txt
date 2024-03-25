@@ -10,6 +10,7 @@ list(APPEND SOURCE
     GetFileInformationByHandleEx.c
     GetTickCount64.c
     InitOnce.c
+    SetFileInformationByHandle.c
     sync.c
     vista.c)
 
