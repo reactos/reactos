@@ -236,9 +236,9 @@ BEGIN
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Принадлежности", 14020, 8, 152, 46, 10 //FIXME: This word is too long for 46 width, and it lacks a ':' in the end.
-    AUTOCHECKBOX "&Само за четене", 14021, 58, 151, 68, 10 //FIXME: accelerator collision &C
-    AUTOCHECKBOX "&Скрит", 14022, 126, 151, 55, 10 //FIXME: accelerator collision &C
-    AUTOCHECKBOX "&Сбит", 14023, 181, 151, 59, 10 //FIXME: accelerator collision &C
+    AUTOCHECKBOX "Само за &четене", 14021, 58, 151, 68, 10
+    AUTOCHECKBOX "С&крит", 14022, 126, 151, 55, 10
+    AUTOCHECKBOX "&Сбит", 14023, 181, 151, 59, 10
     PUSHBUTTON "A&dvanced...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
