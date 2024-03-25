@@ -474,6 +474,12 @@ KiSetTrapContext(
     _In_ PCONTEXT Context,
     _In_ KPROCESSOR_MODE RequestorMode);
 
+// Exits to user mode, only restores the trap frame, zeroes the non-volatile registers
+DECLSPEC_NORETURN
+VOID
+KiUserCallbackExit(
+    _In_ PKTRAP_FRAME TrapFrame);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
