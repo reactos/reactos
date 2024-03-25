@@ -799,7 +799,7 @@ BEGIN
     IDS_CUT "&Decupare"
     IDS_RESTORE "&Restabilește"
     IDS_FORMATDRIVE "F&ormatare…"
-    IDS_RENAME "Rede&numește"
+    IDS_RENAME "Redenu&mire"
     IDS_PASTE "&Lipire"
     IDS_EJECT "S&coate"
     IDS_DISCONNECT "Deconectea&ză"
