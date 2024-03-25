@@ -235,7 +235,7 @@ BEGIN
     LTEXT "Created:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Χαρακτηριστικά:", 14020, 8, 152, 46, 10
+    LTEXT "Χαρακτηριστικά:", 14020, 8, 152, 46, 10 //FIXME: This word is too long for 46 width! And the control cannot be enlarged as that would overflow its neighbor then!"
     AUTOCHECKBOX "&Read-only", 14021, 58, 151, 68, 10
     AUTOCHECKBOX "&Hidden", 14022, 126, 151, 55, 10
     AUTOCHECKBOX "&Archive", 14023, 181, 151, 59, 10
@@ -271,7 +271,7 @@ BEGIN
     LTEXT "Προσπελάστηκε:", 14018, 8, 163, 65, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 70, 10
+    LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 70, 10 //FIXME: This word is too long! And no, the 70 width is no solution, because x-pos8 + width70 ==78, and that already interferes with the autocheckbox at xpos 58!
     AUTOCHECKBOX "&Μόνο για ανάγνωση", 14021, 58, 188, 75, 10
     AUTOCHECKBOX "&Κρυφό", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Archive", 14023, 181, 188, 45, 10
