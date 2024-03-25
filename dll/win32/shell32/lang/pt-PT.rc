@@ -122,7 +122,7 @@ BEGIN
     DEFPUSHBUTTON "&Sim", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Sim para &todos", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Não", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -164,7 +164,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, e o ReactOS abrí-lo-á.", 12289, 36, 11, 185, 18
-    LTEXT "Abrir:", 12305, 7, 39, 24, 10 //FIXME: Add an accelerator here!
+    LTEXT "&Abrir:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
@@ -183,19 +183,19 @@ BEGIN
     EDITTEXT IDC_SHORTCUT_TYPE_EDIT, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Localização de destino:", IDC_SHORTCUT_LOCATION, 8, 50, 68, 15
     EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 55, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Destino:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
+    LTEXT "&Destino:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
     EDITTEXT IDC_SHORTCUT_TARGET_TEXT, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "&Iniciar em:", IDC_SHORTCUT_START_IN, 8, 98, 68, 10
     EDITTEXT IDC_SHORTCUT_START_IN_EDIT, 79, 96, 150, 14, ES_AUTOHSCROLL
     LTEXT "&Tecla de atalho:", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
-    LTEXT "Executar:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
+    LTEXT "Executa&r:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
     COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "C&omentário:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Localizar destino...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "&Alterar Icone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "Troc&ar Icone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "A&vançadas...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
 END
 
@@ -209,8 +209,8 @@ BEGIN
     CHECKBOX "Executar com diferentes credenciais", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Esta opção permite executar este atalho como outro utilizador, ou com a sua conta, enquanto protege o computador e dados, contra actividade de programas não autorizados.", -1, 50, 60, 175, 40
     CHECKBOX "Executar num espaço de memória separada", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "&OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "&Abortar", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Abortar", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -254,7 +254,7 @@ BEGIN
     CONTROL "Ficheiro", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Abre com::", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Alterar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Alterar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP //FIXME: accelerator collision &A. This one is most likely wrong.
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Localização:", 14008, 8, 75, 45, 10
@@ -274,7 +274,7 @@ BEGIN
     LTEXT "Atributos:", 14020, 8, 189, 45, 10
     AUTOCHECKBOX "&Só de leitura", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 188, 50, 10
-    AUTOCHECKBOX "&Arquivo", 14023, 181, 188, 49, 10
+    AUTOCHECKBOX "&Arquivo", 14023, 181, 188, 49, 10 //FIXME: accelerator collision &A. This one is most likely correct.
     PUSHBUTTON "A&vançadas...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
@@ -468,7 +468,7 @@ BEGIN
     DEFPUSHBUTTON "&Sim", IDYES, 20, 122, 60, 14
     PUSHBUTTON "Sim para &todos", 12807, 85, 122, 60, 14
     PUSHBUTTON "&Não", IDNO, 150, 122, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 215, 122, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
     LTEXT "Esta pasta já contém um ficheiro com o nome '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "Esta pasta já contém um ficheiro sómente de leitura com o nome '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
@@ -514,7 +514,7 @@ BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Pretende encerrar o computador?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Encerrar", IDOK, 47, 38, 47, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 99, 38, 47, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -556,8 +556,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Executar sempre a acção seleccionada.", 1004, 32, 171, 190, 10
-    DEFPUSHBUTTON "&OK", IDOK, 96, 185, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 185, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 160, 185, 60, 14
 END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
@@ -570,8 +570,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Executar sempre a acção seleccionada", 1004, 32, 143, 190, 8
-    DEFPUSHBUTTON "&OK", IDOK, 94, 160, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 159, 160, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 159, 160, 60, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
@@ -583,8 +583,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Manter a sessão, deixando o computador a correr em baixa energia. O computador arranca quando tocar numa tecla ou mover o rato.", 8225, 39, 40, 167, 37
-    DEFPUSHBUTTON "&OK", 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 75, 82, 60, 14
+    DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
+    PUSHBUTTON "Cancelar", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "&Ajuda", IDHELP, 144, 82, 60, 14
 END
 
@@ -595,16 +595,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Iniciar", IDOK, 53, 198, 60, 14
     PUSHBUTTON "&Fechar", IDCANCEL, 118, 198, 60, 14
-    LTEXT "Capacidade:", -1, 7, 6, 169, 9
+    LTEXT "Capacidade:", -1, 7, 6, 169, 9 //FIXME: needs an accelerator. In the past that was "Ca&pacidade:" and was most likely correct, but the &P is currently blocked by "&Permitir Compressão". Check Windows!
     COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Sistema de ficheiros", -1, 7, 35, 170, 9
+    LTEXT "&Sistema de ficheiros", -1, 7, 35, 170, 9
     COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-    LTEXT "Tamanho da unidade de alocação", -1, 7, 64, 170, 9
+    LTEXT "&Tamanho da unidade de alocação", -1, 7, 64, 170, 9
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Nome do volume", -1, 7, 93, 170, 9
+    LTEXT "&Nome do volume", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "Opções", 4610, 7, 121, 170, 49
+    GROUPBOX "&Opções", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "Formatação &Rápida", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Permitir Compressão", 28675, 16, 152, 155, 10
 END
@@ -617,7 +617,7 @@ BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
     GROUPBOX "Opções verificação do disco", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Corrigir erros do sistema de ficheiros automaticamente", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "Corrigir erros do sistema de ficheiros automaticamente", 14000, 12, 15, 155, 10 //FIXME: needs an accel
     AUTOCHECKBOX "&Procurar e tentar recuperar sectores danificados", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
@@ -633,8 +633,8 @@ BEGIN
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Seleccione um icone na lista abaixo:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "&OK", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 135, 179, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -656,13 +656,13 @@ CAPTION "Criar nova extensão"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Extensão de ficheiro:", -1, 10, 10, 85, 14
+    LTEXT "&Extensão de ficheiro:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< &Avançado", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "Tipo de ficheiro associado:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< A&vançado", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "Tipo de ficheiro &associado:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "&OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 190, 55, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
@@ -673,7 +673,7 @@ BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
     PUSHBUTTON "Alterar &Icone...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "Acções:", -1, 5, 37, 70, 10
+    LTEXT "&Acções:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Novo...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
     PUSHBUTTON "&Editar...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
@@ -682,8 +682,8 @@ BEGIN
     AUTOCHECKBOX "Abrir após o download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
     AUTOCHECKBOX "&Mostrar sempre a extensão", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
     AUTOCHECKBOX "&Procurar na mesma janela", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
-    DEFPUSHBUTTON "&OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 170, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
@@ -697,8 +697,8 @@ BEGIN
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Procurar...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&Utilizar DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
-    DEFPUSHBUTTON "&OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 40, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
