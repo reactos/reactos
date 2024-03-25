@@ -11,8 +11,8 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Büyük Simgeler", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Küçük Simgeler", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Büyük simgeler", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Küçük simgeler", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Ayrıntılar", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -31,8 +31,8 @@ BEGIN
     BEGIN
         POPUP "&Görünüm", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Büyük Simgeler", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Küçük Simgeler", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Büyük simgeler", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Küçük simgeler", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Ayrıntılar", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -77,9 +77,9 @@ BEGIN
         MENUITEM "K&opyala", IDM_COPY
         MENUITEM "&Yapıştır", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Kı&sayol Oluştur", IDM_CREATELINK
+        MENUITEM "Kı&sayol oluştur", IDM_CREATELINK
         MENUITEM "Si&l", IDM_DELETE
-        MENUITEM "Y&eniden Adlandır", IDM_RENAME
+        MENUITEM "Y&eniden adlandır", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Ö&zellikler", IDM_PROPERTIES
     END
