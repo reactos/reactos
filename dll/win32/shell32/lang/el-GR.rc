@@ -264,11 +264,11 @@ BEGIN
     LTEXT "Size on disk:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Δημιουργήθηκε:", 14014, 8, 131, 65, 10
+    LTEXT "Δημιουργήθηκε:", 14014, 8, 131, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Τροποποιήθηκε:", 14016, 8, 147, 65, 10
+    LTEXT "Τροποποιήθηκε:", 14016, 8, 147, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Προσπελάστηκε:", 14018, 8, 163, 65, 10
+    LTEXT "Προσπελάστηκε:", 14018, 8, 163, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 70, 10 //FIXME: This word is too long! And no, the 70 width is no solution, because x-pos8 + width70 ==78, and that already interferes with the autocheckbox at xpos 58!
