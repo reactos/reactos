@@ -227,7 +227,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Größe:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Größe auf Datenträger:", 140101, 8, 83, 55, 20
+    LTEXT "Größe auf Datenträger:", 140101, 8, 83, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Inhalt:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Größe:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Größe auf Datenträger:", 140112, 8, 102, 55, 20
+    LTEXT "Größe auf Datenträger:", 140112, 8, 102, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Erstellt:", 14014, 8, 131, 45, 10
