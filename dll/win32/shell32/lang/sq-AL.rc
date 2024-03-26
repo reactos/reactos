@@ -258,7 +258,7 @@ BEGIN
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tipi i dokumentit:", 14004, 8, 35, 50, 10 //FIXME: Text truncation. And no place on the right to enlarge the control. Recommendation: Use just "Tipi" or "Lloji" here. It is obvious for the user what this is, because he clicked on a file beforehand and chose to view the properties to open this dialog. And the OS dynamically adds the type then even on the right hand side. Avoid enlarging the control!
-    CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
+    CONTROL "Dokumenti", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Hap me:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Ndrysho...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
