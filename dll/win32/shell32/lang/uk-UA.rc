@@ -223,7 +223,7 @@ BEGIN
     LTEXT "Тип файлу:", 14004, 8, 40, 55, 10
     CONTROL "Папка", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Розташування:", 14008, 8, 56, 55, 10
+    LTEXT "Розташування:", 14008, 8, 56, 55, 10 //FIXME: Text truncation. The xpos8 + width 55 already reaches into the neighbor controls position 58. PLEASE SPEND SOME TIME INTO THINKING HOW TO SHORTEN THAT STRING, instead of moving any controls, or making it multi-row. What about using "шлях:" here? Keep it mind that this string does exist 3 times: in IDD_SHORTCUT_PROPERTIES, IDD_FOLDER_PROPERTIES and IDD_FILE_PROPERTIES.
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Розмір:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -257,7 +257,7 @@ BEGIN
     PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Розташування:", 14008, 8, 75, 50, 10
+    LTEXT "Розташування:", 14008, 8, 75, 50, 10 //FIXME: Text truncation. The xpos8 + width 55 already reaches into the neighbor controls position 58. PLEASE SPEND SOME TIME INTO THINKING HOW TO SHORTEN THAT STRING, instead of moving any controls, or making it multi-row. What about using "шлях:" here? Keep it mind that this string does exist 3 times: in IDD_SHORTCUT_PROPERTIES, IDD_FOLDER_PROPERTIES and IDD_FILE_PROPERTIES.
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Розмір:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
