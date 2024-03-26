@@ -1055,7 +1055,7 @@ BEGIN
     IDS_MOVETOMENU "Mu&tă în folderul..."
     IDS_MOVETOTITLE "Selectați locul în care vreți să mutați „%s”. Apoi, apăsați butonul Mută."
     IDS_MOVEITEMS "Mută elementele"
-    IDS_MOVEBUTTON "Mută"
+    IDS_MOVEBUTTON "Mutare"
 
     IDS_SYSTEMFOLDER "Folder de sistem"
 
