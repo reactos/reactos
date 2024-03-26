@@ -442,7 +442,7 @@ ExtractAndInstallThread(LPVOID Parameter)
     if (!*GetGenerateString(DB_GENINST_FILES, files, L"*.exe|*.*"))
         return ErrorBox(ERROR_BAD_FORMAT);
 
-    GetCommonString(DB_FOR, tmp);
+    GetCommonString(DB_SCOPE, tmp);
     if (tmp.CompareNoCase(L"User") == 0)
         Info.PerUser = TRUE;
     else if (tmp.CompareNoCase(L"Machine") == 0)
