@@ -517,6 +517,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
     // Remember whether we'll have to be verbose
     // This is the only supported flag!
     //
+    ASSERT((Flags & 0xFFFFFFFE) == 0);
     Verbose = BooleanFlagOn(Flags, 1);
 
     //
