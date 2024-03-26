@@ -236,7 +236,7 @@ BEGIN
     EDITTEXT 14009, 73, 56, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 73, 72, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Rozmiar na dysku:", 140101, 8, 88, 60, 10
+    LTEXT "Rozmiar na dysku:", 140101, 8, 88, 60, 10 //FIXME: shrink that string, e.g. to "Na dysku:". No place to the right. Making it multi-row, like in fr-FR is only 2nd-best solution.
     EDITTEXT 14012, 73, 88, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Zawiera:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 73, 104, 155, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -251,7 +251,7 @@ BEGIN
     PUSHBUTTON "Zaawa&nsowane...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 225
+IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 225 //FIXME: remove that ancient workaround and shrink that dialogs height. Best is to sync it back to the dimensions used in en-US. Otherwise it doesn't fit small monitor resolutions. Check all the dialogs controls then!
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -261,7 +261,7 @@ BEGIN
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Typ pliku:", 14004, 8, 35, 50, 10
     CONTROL "Plik", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "Otwierany za pomocą:", 14006, 8, 48, 40, 16
+    LTEXT "Otwierany za pomocą:", 14006, 8, 48, 40, 16 //FIXME: That string doesn't fit. And enlarging the control would be foolish, as there is dynamic content on the right side of it. Just shrink the text, e.g. to just "Programy".
     ICON "", 14025, 88, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Zmień...", 14024, 178, 50, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 48, 115, 16, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -270,7 +270,7 @@ BEGIN
     EDITTEXT 14009, 73, 75, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Rozmiar:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 73, 91, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Rozmiar na dysku:", 140112, 8, 107, 60, 10
+    LTEXT "Rozmiar na dysku:", 140112, 8, 107, 60, 10 //FIXME: shrink that string, e.g. to "Na dysku:". No place to the right. Making it multi-row, like in fr-FR is only 2nd-best solution.
     EDITTEXT 14012, 73, 107, 155, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Utworzony:", 14014, 8, 131, 45, 10
@@ -292,15 +292,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Wersja"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Wersja pliku: ", 14000, 10, 10, 55, 10
+    LTEXT "Wersja pliku:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Opis: ", 14002, 10, 27, 45, 10
+    LTEXT "Opis:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Prawa autorskie: ", 14004, 10, 46, 66, 10
+    LTEXT "Prawa autorskie:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Pozostałe informacje o wersji: ", 14006, 6, 70, 222, 115
-    LTEXT "Nazwa elementu: ", 14007, 13, 82, 58, 10
-    LTEXT "Wartość: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Pozostałe informacje o wersji", 14006, 6, 70, 222, 115
+    LTEXT "Nazwa elementu:", 14007, 13, 82, 58, 10
+    LTEXT "Wartość:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END

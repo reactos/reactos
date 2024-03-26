@@ -51,7 +51,7 @@ BEGIN
     MENUITEM "Coll&er\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Créer un &lien", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Co&pier vers le &dossier...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Co&pier vers le dossier...", FCIDM_SHVIEW_COPYTO
     MENUITEM "&Déplacer vers le dossier...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
     MENUITEM "&Tout sélectionner\tCtrl+A", FCIDM_SHVIEW_SELECTALL
@@ -227,7 +227,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Taille :", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Taille sur le disque :", 140101, 8, 83, 55, 20
+    LTEXT "Taille sur le disque :", 140101, 8, 83, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contient :", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Taille :", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Taille sur le disque :", 140112, 8, 102, 55, 20
+    LTEXT "Taille sur le disque :", 140112, 8, 102, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Créé :", 14014, 8, 131, 45, 10
@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Version du fichier : ", 14000, 10, 10, 55, 10
+    LTEXT "Version du fichier :", 14000, 10, 10, 55, 10 //FIXME: Text truncation in Y-coordinate with the "Description" below. I do recommend to just use "Version :" here. The way the user reached that dlg (context menu and properties) makes it obvious what this is about.
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Description : ", 14002, 10, 27, 45, 10
+    LTEXT "Description :", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright : ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright :", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Autres informations de version : ", 14006, 6, 70, 222, 115
-    LTEXT "Nom de l'élément : ", 14007, 13, 82, 94, 10
-    LTEXT "Valeur : ", 14008, 112, 82, 94, 10
+    GROUPBOX "Autres informations de version", 14006, 6, 70, 222, 115
+    LTEXT "Nom de l'élément :", 14007, 13, 82, 94, 10
+    LTEXT "Valeur :", 14008, 112, 82, 94, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -323,7 +323,7 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
     CTEXT "Lecteur %c", 14009, 95, 162, 50, 10
-    PUSHBUTTON "Nettoyage de &disque", 14010, 160, 159, 70, 15, WS_TABSTOP
+    PUSHBUTTON "Nettoyage de &disque", 14010, 148, 159, 82, 15, WS_TABSTOP
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Compresser le lecteur pour gagner de l'espace disque", 14011, 8, 190, 222, 10, WS_DISABLED
     CHECKBOX "Autoriser l'indexation de ce disque pour la recherche rapide", 14012, 8, 204, 222, 10, WS_DISABLED

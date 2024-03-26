@@ -624,7 +624,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             UINT cKeys = 0;
             if (cidl > 0)
             {
-                AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+                AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
             }
 
             DEFCONTEXTMENU dcm;

@@ -164,7 +164,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "Напишете името на приложение, папка, документ или интернет източник и РеактОС ще го отвори.", 12289, 36, 11, 185, 18
-    LTEXT "&Отваряне:", 12305, 7, 39, 40, 10
+    LTEXT "&Отваряне:", 12305, 7, 39, 40, 10 //FIXME: x position 7 + width 40 == 47, and that is too far to the right for x-pos 46 of IDC_RUNDLG_EDITPATH
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 46, 37, 174, 100
     DEFPUSHBUTTON "Добре", IDOK, 62, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "Отказ", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
@@ -235,9 +235,9 @@ BEGIN
     LTEXT "Създадено:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Принадлежности", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Само за четене", 14021, 58, 151, 68, 10
-    AUTOCHECKBOX "&Скрит", 14022, 126, 151, 55, 10
+    LTEXT "Принадлежности", 14020, 8, 152, 46, 10 //FIXME: This word is too long for 46 width, and it lacks a ':' in the end.
+    AUTOCHECKBOX "Само за &четене", 14021, 58, 151, 68, 10
+    AUTOCHECKBOX "С&крит", 14022, 126, 151, 55, 10
     AUTOCHECKBOX "&Сбит", 14023, 181, 151, 59, 10
     PUSHBUTTON "A&dvanced...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
@@ -257,7 +257,7 @@ BEGIN
     PUSHBUTTON "C&hange...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Местоположение:", 14008, 8, 75, 61, 10
+    LTEXT "Местоположение:", 14008, 8, 75, 61, 10 //FIXME: That monster-word with its 61 width is so huge that it overflows its neighbor controls!
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Размер:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
@@ -271,7 +271,7 @@ BEGIN
     LTEXT "Използван:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 173, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Принадлежности", 14020, 8, 189, 60, 10
+    LTEXT "Принадлежности", 14020, 8, 189, 60, 10 //FIXME: That monster-word with its 60 width is so huge that it overflows its neighbor controls! And it lacks a ':' at the end.
     AUTOCHECKBOX "Само за &четене", 14021, 61, 188, 67, 10
     AUTOCHECKBOX "С&крит", 14022, 129, 188, 50, 10
     AUTOCHECKBOX "&Сбит", 14023, 181, 188, 49, 10
@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Издание"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Издание на файла: ", 14000, 10, 10, 67, 10
+    LTEXT "Издание на файла:", 14000, 10, 10, 67, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Описание: ", 14002, 10, 27, 45, 10
+    LTEXT "Описание:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Възпроизводствено право: ", 14004, 10, 46, 68, 16
+    LTEXT "Възпроизводствено право:", 14004, 10, 46, 68, 16
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Други сведения за изданието", 14006, 6, 70, 222, 115
-    LTEXT "Име на предмета: ", 14007, 13, 82, 90, 10
-    LTEXT "Стойност: ", 14008, 112, 82, 45, 10
+    LTEXT "Име на предмета:", 14007, 13, 82, 90, 10
+    LTEXT "Стойност:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -322,11 +322,11 @@ BEGIN
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
-    CTEXT "Устройство %c", 14009, 95, 162, 50, 10
-    PUSHBUTTON "Почистване на &диска", 14010, 160, 159, 70, 15, WS_TABSTOP
+    CTEXT "Диск %c", 14009, 95, 162, 50, 10
+    PUSHBUTTON "Почистване на &диска", 14010, 148, 159, 82, 15, WS_TABSTOP
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Уплътняване на устройството за спестяване на място", 14011, 8, 190, 222, 10, WS_DISABLED
-    CHECKBOX "Индексиращата услуга да индексира диска за по- бързо търсене", 14012, 8, 204, 222, 10, WS_DISABLED
+    CHECKBOX "Индексиране на твърдия диск за по-бързо търсене", 14012, 8, 204, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220

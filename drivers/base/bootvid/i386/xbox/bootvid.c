@@ -2,16 +2,15 @@
  * PROJECT:     ReactOS Boot Video Driver for Original Xbox
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Main file
- * COPYRIGHT:   Copyright 2004 Gé van Geldorp (gvg@reactos.org)
- *              Copyright 2005 Filip Navara (navaraf@reactos.org)
- *              Copyright 2020 Stanislav Motylkov (x86corez@gmail.com)
+ * COPYRIGHT:   Copyright 2004 Gé van Geldorp <gvg@reactos.org>
+ *              Copyright 2005 Filip Navara <navaraf@reactos.org>
+ *              Copyright 2020 Stanislav Motylkov <x86corez@gmail.com>
  */
 
 #include "precomp.h"
+#include <drivers/xbox/xgpu.h>
 
 #include <debug.h>
-
-#include <drivers/xbox/xgpu.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -240,7 +239,6 @@ VidResetDisplay(
 }
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count)
@@ -275,7 +273,6 @@ SetPixel(
 }
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
@@ -321,7 +318,6 @@ PreserveRow(
 }
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll)
 {
@@ -350,7 +346,6 @@ DoScroll(
 }
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,

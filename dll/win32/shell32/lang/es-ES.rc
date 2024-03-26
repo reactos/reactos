@@ -4,7 +4,7 @@
  * PURPOSE:     Spanish resource file
  * TRANSLATORS: Copyright 2014-2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
- *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
+ *              Copyright 2020-2024 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -236,7 +236,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamaño:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tamaño en disco:", 140101, 8, 88, 55, 10
+    LTEXT "Tamaño en disco:", 140101, 8, 88, 55, 10 //FIXME: text too long. No space to the right. I do recommend to shorten text to just "En disco:". Making it multirow (like in fr-FR) is only the 2nd-best solution.
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contiene:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -270,7 +270,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamaño:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Tamaño en disco:", 140112, 8, 107, 55, 10
+    LTEXT "Tamaño en disco:", 140112, 8, 107, 55, 10 //FIXME: text too long. No space to the right. I do recommend to shorten text to just "En disco:". Making it multirow (like in fr-FR) is only the 2nd-best solution.
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creado:", 14014, 8, 131, 45, 10
@@ -292,15 +292,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versión"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versión del archivo: ", 14000, 10, 10, 62, 14
+    LTEXT "Versión del archivo:", 14000, 10, 10, 62, 14
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Descripción: ", 14002, 10, 27, 45, 10
+    LTEXT "Descripción:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Autoría: ", 14004, 10, 46, 66, 10
+    LTEXT "Autoría:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Información adicional de versión: ", 14006, 6, 70, 222, 115
+    GROUPBOX "Información adicional de versión", 14006, 6, 70, 222, 115
     LTEXT "Nombre del elemento:", 14007, 13, 82, 65, 10
-    LTEXT "Valor: ", 14008, 112, 82, 45, 10
+    LTEXT "Valor:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -343,15 +343,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Herramientas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Comprobación de errores ", -1, 5, 5, 230, 60
+    GROUPBOX "Comprobación de errores", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Esta opción comprobará los errores en la unidad.", -1, 40, 25, 160, 20
     PUSHBUTTON "Comprobar ahora...", 14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX "Desfragmentación ", -1, 5, 65, 230, 60
+    GROUPBOX "Desfragmentación", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Esta opción desfragmentará los archivos en esta unidad.", -1, 40, 85, 160, 20
     PUSHBUTTON "Desfragmentar ahora...", 14001, 130, 105, 90, 15, WS_TABSTOP
-    GROUPBOX "Copia de seguridad ", -1, 5, 130, 230, 60
+    GROUPBOX "Copia de seguridad", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Esta opción realizará una copia de seguridad de los archivos almacenados en la unidad.", -1, 40, 150, 160, 20
     PUSHBUTTON "Realizar copia de seguridad ahora...", 14002, 90, 170, 130, 15, WS_TABSTOP
@@ -390,7 +390,7 @@ CAPTION "Propiedades de la Papelera"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-    GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
+    GROUPBOX "Configuración para la unidad seleccionada", -1, 10, 72, 220, 70
     RADIOBUTTON "Tamaño &personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
@@ -404,9 +404,9 @@ CAPTION "Abrir con"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 18
+    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
     LTEXT "Archivo:    ", 14001, 44, 30, 188, 10
-    GROUPBOX "&Programas ", -1, 7, 42, 249, 187
+    GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programas", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Siempre use el programa para abrir este tipo de archivos", 14003, 16, 193, 232, 10
     PUSHBUTTON "&Examinar...", 14004, 188, 207, 60, 14
@@ -423,11 +423,11 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Examinar carpetas ", -1, 7, 60, 279, 40, WS_TABSTOP
+    GROUPBOX "Examinar carpetas", -1, 7, 60, 279, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Abrir cada carpeta en ventanas di&ferentes", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 64
+    GROUPBOX "Hacer clic en los elementos tal y como se indica", -1, 7, 110, 279, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
@@ -533,7 +533,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Seleccione un tipo de contenido y elija una acción para que ReactOS la realice automáticamente cuando ese tipo se use en este dispositivo:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Acciones ", -1, 7, 45, 212, 146
+    GROUPBOX "Acciones", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Seleccionar la &acción que desea ejecutar:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Preguntarme siempre que elija una acción", 1006, 14, 177, 202, 10
@@ -613,7 +613,7 @@ BEGIN
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Etiqueta del volumen", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "&Opciones de formato ", 4610, 7, 121, 170, 49
+    GROUPBOX "&Opciones de formato", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "Formato &rápido", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Habilitar compresión", 28675, 16, 152, 155, 10
 END
@@ -624,7 +624,7 @@ CAPTION "Comprobación de disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
-    GROUPBOX "Opciones de comprobación de disco ", -1, 7, 6, 225, 50
+    GROUPBOX "Opciones de comprobación de disco", -1, 7, 6, 225, 50
     PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Reparar &automáticamente errores en el sistema de archivos", 14000, 12, 15, 200, 10
     AUTOCHECKBOX "&Examinar e intentar recuperar los sectores defectuosos", 14001, 12, 30, 200, 10
@@ -898,7 +898,7 @@ BEGIN
     IDS_NETWORKPLACE "Mis sitios de red"
 
     IDS_NEWFOLDER "Nueva carpeta"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Nuevo %s"
 
     IDS_DRIVE_FIXED "Disco local"
     IDS_DRIVE_CDROM "Unidad de CD"
@@ -915,7 +915,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< A&trás"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "N&uevo" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Nueva &carpeta"
     FCIDM_SHVIEW_NEWLINK "Nuevo &acceso directo"
     IDS_FOLDER_OPTIONS "Opciones de carpeta"
@@ -1049,7 +1049,7 @@ BEGIN
     IDS_NO_ICONS "El archivo '%s' no contiene íconos.\n\nEscoja un ícono de la lista o seleccione otro archivo."
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
     IDS_LINK_INVALID "El elemento '%s' al que se refiere este acceso directo se ha movido o cambiado, por lo que no funcionará."
-    IDS_COPYTOMENU "Copar a la &carpeta..."
+    IDS_COPYTOMENU "Copiar a la &carpeta..."
     IDS_COPYTOTITLE "Selecciona el lugar al que quieres copiar '%s'. Luego pulsa en el botón Copiar."
     IDS_COPYITEMS "Copiar archivos"
     IDS_COPYBUTTON "Copiar"

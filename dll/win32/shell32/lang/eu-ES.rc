@@ -290,15 +290,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Bertsioa"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Fitxategi-bertsioa: ", 14000, 10, 10, 62, 14
+    LTEXT "Fitxategi-bertsioa:", 14000, 10, 10, 62, 14
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Azalpena: ", 14002, 10, 27, 45, 10
+    LTEXT "Azalpena:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Egile: ", 14004, 10, 46, 66, 10
+    LTEXT "Egile:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Bertsioari buruzko bestelako informazioa: ", 14006, 6, 70, 222, 115
+    GROUPBOX "Bertsioari buruzko bestelako informazioa", 14006, 6, 70, 222, 115
     LTEXT "Elementuaren izena:", 14007, 13, 82, 65, 10
-    LTEXT "Balioa: ", 14008, 112, 82, 45, 10
+    LTEXT "Balioa:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -388,7 +388,7 @@ CAPTION "Zakarrontzi propietateak"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-    GROUPBOX "Konfiguratu unitateak independenteki ", -1, 10, 72, 220, 70
+    GROUPBOX "Konfiguratu unitateak independenteki", -1, 10, 72, 220, 70
     RADIOBUTTON "Hautatu &tamaina:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Gehienezko tamaina (MB):", -1, 20, 105, 70, 10
@@ -404,7 +404,7 @@ BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Aukeratu zein programarekin ireki nahi duzun fitxategi hau:", -1, 44, 12, 211, 18
     LTEXT "Fitxategia:    ", 14001, 44, 30, 188, 10
-    GROUPBOX "&Programak ", -1, 7, 42, 249, 187
+    GROUPBOX "&Programak", -1, 7, 42, 249, 187
     CONTROL "Programak", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Erabili beti hautatutako programa mota honetako fitxategiak irekitzeko", 14003, 16, 193, 232, 10
     PUSHBUTTON "&Arakatu...", 14004, 188, 207, 60, 14
@@ -531,7 +531,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ha&utatu eduki-mota bat, eta aukeratu ReactOS-ek automatikoki egiteko ekintza bat, mota hori gailu honetan erabiltzean denean:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Ekintzak ", -1, 7, 45, 212, 146
+    GROUPBOX "Ekintzak", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "&Hautatu ekintza bat egiteko:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Abisatu ekintza bat aukeratu behar denean", 1006, 14, 177, 202, 10
@@ -622,7 +622,7 @@ CAPTION "Aztertu diskoa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Hasi", IDOK, 63, 95, 60, 14
-    GROUPBOX "Aztertu disko-aukerak ", -1, 7, 6, 225, 50
+    GROUPBOX "Aztertu disko-aukerak", -1, 7, 6, 225, 50
     PUSHBUTTON "Utzi", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "&Konpondu automatikoki fitxategi-sistemaren erroreak", 14000, 12, 15, 200, 10
     AUTOCHECKBOX "&Bilatu eta saiatu berreskuratzen sektore txarrak", 14001, 12, 30, 200, 10

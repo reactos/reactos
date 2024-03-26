@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver for ARM devices
+ * LICENSE:     BSD - See COPYING.ARM in root directory
+ * PURPOSE:     PrimeCell Color LCD Controller (PL110) definitions
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group <ros.arm@reactos.org>
+ */
 
 #pragma once
 
@@ -40,7 +46,6 @@ VidpBuildColor(
 }
 
 VOID
-NTAPI
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count);
@@ -62,19 +67,16 @@ SetPixel(
 }
 
 VOID
-NTAPI
 PreserveRow(
     _In_ ULONG CurrentTop,
     _In_ ULONG TopDelta,
     _In_ BOOLEAN Restore);
 
 VOID
-NTAPI
 DoScroll(
     _In_ ULONG Scroll);
 
 VOID
-NTAPI
 DisplayCharacter(
     _In_ CHAR Character,
     _In_ ULONG Left,

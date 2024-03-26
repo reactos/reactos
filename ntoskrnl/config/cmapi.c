@@ -2242,7 +2242,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            if (CmpEnumerateOpenSubKeys(Kcb, FALSE, FALSE) != 0)
+            if (CmpEnumerateOpenSubKeys(Kcb, FALSE, TRUE, FALSE) != 0)
             {
                 /* There are open subkeys but we don't force hive unloading, fail */
                 Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
@@ -2251,8 +2251,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
         else
         {
-            DPRINT1("CmUnloadKey: Force unloading is HALF-IMPLEMENTED, expect dangling KCBs problems!\n");
-            if (CmpEnumerateOpenSubKeys(Kcb, TRUE, TRUE) != 0)
+            if (CmpEnumerateOpenSubKeys(Kcb, TRUE, TRUE, TRUE) != 0)
             {
                 /* There are open subkeys that we cannot force to unload, fail */
                 Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
@@ -2340,9 +2339,10 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 ULONG
 NTAPI
 CmpEnumerateOpenSubKeys(
-    IN PCM_KEY_CONTROL_BLOCK RootKcb,
-    IN BOOLEAN RemoveEmptyCacheEntries,
-    IN BOOLEAN DereferenceOpenedEntries)
+    _In_ PCM_KEY_CONTROL_BLOCK RootKcb,
+    _In_ BOOLEAN LockHeldExclusively,
+    _In_ BOOLEAN RemoveEmptyCacheEntries,
+    _In_ BOOLEAN DereferenceOpenedEntries)
 {
     PCM_KEY_HASH Entry;
     PCM_KEY_CONTROL_BLOCK CachedKcb;
@@ -2430,11 +2430,20 @@ CmpEnumerateOpenSubKeys(
                     }
                     else if ((CachedKcb->RefCount == 0) && RemoveEmptyCacheEntries)
                     {
+                        /* Lock the cached KCB of subkey before removing it from cache entries */
+                        if (!LockHeldExclusively)
+                            CmpAcquireKcbLockExclusive(CachedKcb);
+
                         /* Remove the current key from the delayed close list */
                         CmpRemoveFromDelayedClose(CachedKcb);
 
                         /* Remove the current cache entry */
-                        CmpCleanUpKcbCacheWithLock(CachedKcb, TRUE);
+                        // Lock is either held by ourselves or registry is locked exclusively
+                        CmpCleanUpKcbCacheWithLock(CachedKcb, LockHeldExclusively);
+
+                        /* Unlock the cached KCB if it was done by ourselves */
+                        if (!LockHeldExclusively)
+                            CmpReleaseKcbLock(CachedKcb);
 
                         /* Restart, because the hash list has changed */
                         Entry = CmpCacheTable[i].Entry;

@@ -572,6 +572,10 @@ struct CCoInit
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+static inline BOOL ILIsSingle(LPCITEMIDLIST pidl)
+{
+    return pidl == ILFindLastID(pidl);
+}
 
 static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
 {
