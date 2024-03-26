@@ -1144,7 +1144,6 @@ CmpCreateRegistryRoot(VOID)
                             &CmpRegistryRootHandle);
     if (!NT_SUCCESS(Status))
     {
-        ObDereferenceObject(RootKey);
         return FALSE;
     }
 
