@@ -66,13 +66,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Cu&t", IDM_CUT
         MENUITEM "&Copy", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Paste", IDM_INSERT //FIXME: accel is missing, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
         MENUITEM "Create &Link", IDM_CREATELINK
         MENUITEM "&Delete", IDM_DELETE
-        MENUITEM "&Rename", IDM_RENAME
+        MENUITEM "&Rename", IDM_RENAME //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_PROPERTIES
+        MENUITEM "&Properties", IDM_PROPERTIES  //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
     END
 END
 
@@ -220,7 +220,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Type of file:", 14004, 8, 40, 55, 10
+    LTEXT "Type of file:", 14004, 8, 40, 55, 10 //FIXME: Reminder to myself when overhauling that dlg: In this line we will just keep "Type:" (nothing after it) and in the next line we do keep the type in the CONTROL name. Is shown! Harmonize all the left-column 55 width IDD_FOLDER_PROPERTIES (which is too large) with the all 45 width in IDD_FILE_PROPERTIES. The 170 width in right-column is non-negotiable! Increase both dlgs heights to restore vertical arrangement of the Attributes like on 2k3sp2. Make all the Attributes 70 wide each. That will also unbreak the "Advanced"-buttons.
     CONTROL "Folder", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Location:", 14008, 8, 56, 55, 10
@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "File version: ", 14000, 10, 10, 55, 10
+    LTEXT "File version:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Description: ", 14002, 10, 27, 45, 10
+    LTEXT "Description:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Other version information: ", 14006, 6, 70, 222, 115
-    LTEXT "Item name: ", 14007, 13, 82, 50, 10
-    LTEXT "Value: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Other version information", 14006, 6, 70, 222, 115
+    LTEXT "Item name:", 14007, 13, 82, 50, 10
+    LTEXT "Value:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -787,12 +787,12 @@ BEGIN
     IDS_CREATELINK "Create &Link"
     IDS_COPY "&Copy"
     IDS_DELETE "Delete"
-    IDS_PROPERTIES "Properties"
-    IDS_CUT "C&ut"
+    IDS_PROPERTIES "Properties" //FIXME: 3rd: must be changed to &R for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_PROPERTIES. This will free &P for 4th step for &Paste
+    IDS_CUT "C&ut" //FIXME: 1st: This must be changed FIRST to &T for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). It must match IDM_CUT and is already offsync.
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename"
-    IDS_PASTE "Paste"
+    IDS_RENAME "Rename" //FIXME: 2nd: This must be changed to &M for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_RENAME. This will free &R for P&roperties.
+    IDS_PASTE "Paste" //FIXME: 4th: must be changed to &P for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_INSERT.
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"

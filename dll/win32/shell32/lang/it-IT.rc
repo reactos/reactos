@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Taglia", IDM_CUT
-        MENUITEM "&Copia", IDM_COPY
+        MENUITEM "&Copia", IDM_COPY //FIXME: accelerator collision &C
         MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "&Crea Collegamento", IDM_CREATELINK //FIXME: accelerator collision &C
@@ -188,13 +188,13 @@ BEGIN
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "&Eseguito in:", IDC_SHORTCUT_START_IN, 8, 98, 68, 10
     EDITTEXT IDC_SHORTCUT_START_IN_EDIT, 79, 96, 150, 14, ES_AUTOHSCROLL
-    LTEXT "&Tasto per il collegamento:", IDC_SHORTCUT_KEY, 8, 117, 68, 10
+    LTEXT "&Tasto per il collegamento:", IDC_SHORTCUT_KEY, 8, 117, 68, 10 //FIXME: accelerator collision &T
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "E&secuzione:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
     COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "C&ommento:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Trova...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Trova...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT //FIXME: accelerator collision &T
     PUSHBUTTON "&Cambia icona...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "A&vanzate...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
 END
@@ -227,7 +227,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Dimensione sul disco:", 140101, 8, 88, 55, 10
+    LTEXT "Dimensione sul disco:", 140101, 8, 88, 55, 10 //FIXME: text too long. No space to the right to enlarge. I do recommend to shrink the text to just "Sul disco:". 2nd-best solution would be making it multi-row. You can spy on fr-FR on how to do that.
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contenente:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Dimensione:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Dimensione sul disco:", 140112, 8, 107, 55, 10
+    LTEXT "Dimensione sul disco:", 140112, 8, 107, 55, 10 //FIXME: text too long. No space to the right to enlarge. I do recommend to shrink the text to just "Sul disco:". 2nd-best solution would be making it multi-row. You can spy on fr-FR on how to do that.
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creato:", 14014, 8, 131, 45, 10
@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versione"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versione: ", 14000, 10, 10, 55, 10
+    LTEXT "Versione:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Descrizione: ", 14002, 10, 27, 45, 10
+    LTEXT "Descrizione:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Altre informazioni sulla versione: ", 14006, 6, 70, 222, 115
-    LTEXT "Nome dell'elemento: ", 14007, 13, 82, 50, 10
-    LTEXT "Valore: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Altre informazioni sulla versione", 14006, 6, 70, 222, 115
+    LTEXT "Nome dell'elemento:", 14007, 13, 82, 50, 10
+    LTEXT "Valore:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -413,7 +413,7 @@ BEGIN
     GROUPBOX "Attività", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic' ", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic'", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP

@@ -290,15 +290,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "वर्ज़न"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "फ़ाइल वर्ज़न: ", 14000, 10, 10, 55, 10
+    LTEXT "फ़ाइल वर्ज़न:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "विवरण: ", 14002, 10, 27, 45, 10
+    LTEXT "विवरण:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "कॉपीराइट: ", 14004, 10, 46, 66, 10
+    LTEXT "कॉपीराइट:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "अन्य वर्ज़न की जानकारी: ", 14006, 6, 70, 222, 115
-    LTEXT "वस्तु का नाम: ", 14007, 13, 82, 50, 10
-    LTEXT "मूल्य: ", 14008, 112, 82, 45, 10
+    GROUPBOX "अन्य वर्ज़न की जानकारी", 14006, 6, 70, 222, 115
+    LTEXT "वस्तु का नाम:", 14007, 13, 82, 50, 10
+    LTEXT "मूल्य:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -341,7 +341,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "टूल्ज़"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "एरर जाँच ", -1, 5, 5, 230, 60
+    GROUPBOX "एरर जाँच", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "यह विकल्प\nएरर के लिए वॉल्यूम की जांच करेगा।", -1, 40, 25, 160, 20
     PUSHBUTTON "अब जांचें...", 14000, 130, 45, 90, 15, WS_TABSTOP

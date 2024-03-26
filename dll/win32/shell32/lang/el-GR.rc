@@ -235,7 +235,7 @@ BEGIN
     LTEXT "Created:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Χαρακτηριστικά:", 14020, 8, 152, 46, 10
+    LTEXT "Χαρακτηριστικά:", 14020, 8, 152, 46, 10 //FIXME: This word is too long for 46 width! And the control cannot be enlarged as that would overflow its neighbor then!"
     AUTOCHECKBOX "&Read-only", 14021, 58, 151, 68, 10
     AUTOCHECKBOX "&Hidden", 14022, 126, 151, 55, 10
     AUTOCHECKBOX "&Archive", 14023, 181, 151, 59, 10
@@ -264,14 +264,14 @@ BEGIN
     LTEXT "Size on disk:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Δημιουργήθηκε:", 14014, 8, 131, 65, 10
+    LTEXT "Δημιουργήθηκε:", 14014, 8, 131, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Τροποποιήθηκε:", 14016, 8, 147, 65, 10
+    LTEXT "Τροποποιήθηκε:", 14016, 8, 147, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Προσπελάστηκε:", 14018, 8, 163, 65, 10
+    LTEXT "Προσπελάστηκε:", 14018, 8, 163, 65, 10 //FIXME: pos8 + 65 width == 73 and that does overflow the neighbor control to the right at pos58. I do recommend to activate the word-shrink-ray here!
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 70, 10
+    LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 70, 10 //FIXME: This word is too long! And no, the 70 width is no solution, because x-pos8 + width70 ==78, and that already interferes with the autocheckbox at xpos 58!
     AUTOCHECKBOX "&Μόνο για ανάγνωση", 14021, 58, 188, 75, 10
     AUTOCHECKBOX "&Κρυφό", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Archive", 14023, 181, 188, 45, 10
@@ -283,15 +283,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Έκδοση"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Έκδοση αρχείου: ", 14000, 10, 10, 60, 10
+    LTEXT "Έκδοση αρχείου:", 14000, 10, 10, 60, 10
     EDITTEXT 14001, 80, 10, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Περιγραφή: ", 14002, 10, 20, 60, 10
+    LTEXT "Περιγραφή:", 14002, 10, 20, 60, 10
     EDITTEXT 14003, 80, 20, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Πνευματικά δικαιώματα: ", 14004, 10, 30, 70, 10
+    LTEXT "Πνευματικά δικαιώματα:", 14004, 10, 30, 70, 10
     EDITTEXT 14005, 80, 30, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Άλλες πληροφορίες: ", 14006, 10, 45, 220, 90
-    LTEXT "Όνομα στοιχείου: ", 14007, 20, 55, 60, 10
-    LTEXT "Τιμή: ", 14008, 130, 55, 45, 10
+    GROUPBOX "Άλλες πληροφορίες", 14006, 10, 45, 220, 90
+    LTEXT "Όνομα στοιχείου:", 14007, 20, 55, 60, 10
+    LTEXT "Τιμή:", 14008, 130, 55, 45, 10
     LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END

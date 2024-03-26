@@ -298,7 +298,7 @@ BEGIN
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "著作權：", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "其他版本資訊：", 14006, 6, 70, 222, 115
+    GROUPBOX "其他版本資訊", 14006, 6, 70, 222, 115
     LTEXT "項目名稱：", 14007, 13, 82, 50, 10
     LTEXT "值：", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
@@ -482,7 +482,7 @@ BEGIN
     LTEXT "這個資料夾已包含名為「%2」的檔案。", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "這個資料夾已包含名為「%2」的唯讀檔案。", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "這個資料夾已包含名為「%2」的系統檔案。", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "您是否想要取代已存在的檔案？", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "您是否想要取代已存在的檔案", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "（不明日期和大小）", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "換成這個嗎？", -1, 44, 75, 228, 10, SS_NOPREFIX
