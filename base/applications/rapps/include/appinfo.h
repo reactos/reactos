@@ -73,7 +73,6 @@ enum UninstallCommandFlags
 enum InstallerType
 {
     INSTALLER_UNKNOWN,
-    INSTALLER_GENERIC,
     INSTALLER_GENERATE, // .zip file automatically converted to installer by rapps
 };
 

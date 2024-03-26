@@ -375,7 +375,7 @@ CAvailableApplicationInfo::GetInstallerType() const
     if (str.CompareNoCase(DB_GENINSTSECTION) == 0)
         return INSTALLER_GENERATE;
     else
-        return INSTALLER_GENERIC;
+        return INSTALLER_UNKNOWN;
 }
 
 BOOL
