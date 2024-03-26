@@ -259,7 +259,7 @@ BEGIN
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "סוג קובץ:", 14004, 8, 35, 50, 10
     CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "נפתח באמצעות:", 14006, 8, 53, 50, 10
+    LTEXT "נפתח באמצעות:", 14006, 8, 53, 50, 10 //FIXME: text "נפתח באמצעות:" is too long and overflows the controls dimensions. There is no more place to the right side. Shortening the string is the best solution! English text was "Opens with:", but you don't have to translate it word-for-word. Something like "Program:" might be totally fine here as well!
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "שי&נוי...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
