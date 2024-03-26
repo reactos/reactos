@@ -66,13 +66,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Cu&t", IDM_CUT
         MENUITEM "&Copy", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Paste", IDM_INSERT //FIXME: accel is missing, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
         MENUITEM "Create &Link", IDM_CREATELINK
         MENUITEM "&Delete", IDM_DELETE
-        MENUITEM "&Rename", IDM_RENAME
+        MENUITEM "&Rename", IDM_RENAME //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_PROPERTIES
+        MENUITEM "&Properties", IDM_PROPERTIES  //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
     END
 END
 
@@ -787,12 +787,12 @@ BEGIN
     IDS_CREATELINK "Create &Link"
     IDS_COPY "&Copy"
     IDS_DELETE "Delete"
-    IDS_PROPERTIES "Properties"
-    IDS_CUT "C&ut"
+    IDS_PROPERTIES "Properties" //FIXME: 3rd: must be changed to &R for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_PROPERTIES. This will free &P for 4th step for &Paste
+    IDS_CUT "C&ut" //FIXME: 1st: This must be changed FIRST to &T for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). It must match IDM_CUT and is already offsync.
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename"
-    IDS_PASTE "Paste"
+    IDS_RENAME "Rename" //FIXME: 2nd: This must be changed to &M for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_RENAME. This will free &R for P&roperties.
+    IDS_PASTE "Paste" //FIXME: 4th: must be changed to &P for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_INSERT.
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
