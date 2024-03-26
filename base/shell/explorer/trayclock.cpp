@@ -52,6 +52,7 @@ class CTrayClockWnd :
 {
     HFONT hFont;
     COLORREF textColor;
+    MARGINS contentMargins;
     RECT rcText;
     SYSTEMTIME LocalTime;
     CTooltips m_tooltip;
@@ -155,6 +156,7 @@ public:
 CTrayClockWnd::CTrayClockWnd() :
         hFont(NULL),
         textColor(0),
+        contentMargins({ TRAY_CLOCK_WND_SPACING_X, TRAY_CLOCK_WND_SPACING_Y, TRAY_CLOCK_WND_SPACING_X, TRAY_CLOCK_WND_SPACING_Y }),
         dwFlags(0),
         LineSpacing(0),
         VisibleLines(0)
@@ -182,6 +184,13 @@ LRESULT CTrayClockWnd::OnThemeChanged()
         hFont = CreateFontIndirectW(&clockFont);
 
         GetThemeColor(clockTheme, CLP_TIME, 0, TMT_TEXTCOLOR, &textColor);
+        if (GetThemeMargins(clockTheme, NULL, CLP_TIME, 0, TMT_CONTENTMARGINS, NULL, &contentMargins) != S_OK)
+        {
+            contentMargins.cxLeftWidth = TRAY_CLOCK_WND_SPACING_X;
+            contentMargins.cyTopHeight = TRAY_CLOCK_WND_SPACING_Y;
+            contentMargins.cxRightWidth = TRAY_CLOCK_WND_SPACING_X;
+            contentMargins.cyBottomHeight = TRAY_CLOCK_WND_SPACING_Y;
+        }
 
         if (this->hFont != NULL)
             DeleteObject(this->hFont);
@@ -304,8 +313,10 @@ WORD CTrayClockWnd::GetMinimumSize(IN BOOL Horizontal, IN OUT PSIZE pSize)
         }
     }
 
-    szMax.cx += 2 * TRAY_CLOCK_WND_SPACING_X;
-    szMax.cy += 2 * TRAY_CLOCK_WND_SPACING_Y;
+    if (Horizontal)
+        szMax.cx += contentMargins.cxLeftWidth + contentMargins.cxRightWidth;
+    else
+        szMax.cy += contentMargins.cyTopHeight + contentMargins.cyBottomHeight;
 
     *pSize = szMax;
 
@@ -534,6 +545,8 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
         hPrevFont = (HFONT) SelectObject(hDC, hFont);
 
+        rcClient.left -= contentMargins.cxLeftWidth;
+        rcClient.right -= contentMargins.cxLeftWidth;
         rcClient.top = (rcClient.bottom - CurrentSize.cy) / 2;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
