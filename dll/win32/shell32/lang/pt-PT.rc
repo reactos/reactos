@@ -283,7 +283,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versão"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versão do ficheiro:", 14000, 10, 10, 55, 10
+    LTEXT "Versão do ficheiro:", 14000, 10, 10, 55, 10 //FIXME: text truncation, suggestion: using just "Versão:", maybe in companion with writing "Versão do ficheiro" into the caption, if you think it is not obvious enough already! (Take into consideration how the user reaches that dialog! it is obvious that this is about the files version!
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Descrição:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
