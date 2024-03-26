@@ -220,14 +220,14 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Tipo de arquivo:", 14004, 8, 40, 55, 10
+    LTEXT "Tipo de arquivo:", 14004, 8, 40, 55, 10 //FIXME: text truncation. Space to the right is reserved and filled dynamically. Recommendation: just shrink the text to "Tipo:". The process of how the user reaches that dialog makes it totally obvious that this is about a file.
     CONTROL "Pasta", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Local:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamanho:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tamanho em disco:", 140101, 8, 88, 55, 10
+    LTEXT "Tamanho em disco:", 140101, 8, 88, 55, 10 //FIXME: text truncation. Recommendation to shrink that to "Em disco:". Multi-row is only 2nd-best solution. The control above with the "Tamanho:" makes it totally obvious to the user what is going on here.
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contém:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -250,8 +250,8 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Tipo de arquivo:", 14004, 8, 35, 50, 10
-    CONTROL "Arquivo", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
+    LTEXT "Tipo de arquivo:", 14004, 8, 35, 50, 10 //FIXME: text truncation. Space to the right is reserved and filled dynamically. Recommendation: just shrink the text to "Tipo:". The process of how the user reaches that dialog makes it totally obvious that this is about a file.
+    CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Abre com:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Modificar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamanho:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Tamanho em disco:", 140112, 8, 107, 55, 10
+    LTEXT "Tamanho em disco:", 140112, 8, 107, 55, 10 //FIXME: text truncation. Recommendation to shrink that to "Em disco:". Multi-row is only 2nd-best solution. The control above with the "Tamanho:" makes it totally obvious to the user what is going on here.
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Criado:", 14014, 8, 131, 45, 10
@@ -283,7 +283,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Versão"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versão do arquivo:", 14000, 10, 10, 55, 10
+    LTEXT "Versão do arquivo:", 14000, 10, 10, 55, 10 //FIXME: text truncation. Recommendation: Just write "Versão:" here. The process of how the user reaches that dlg makes it totally obvious what this is about!
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Descrição:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
