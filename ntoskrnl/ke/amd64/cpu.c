@@ -614,6 +614,42 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 
 VOID
 NTAPI
+KiSaveProcessorState(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Save all context */
+    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_ALL;
+    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Prcb->ProcessorState.ContextFrame);
+
+    /* Save control registers */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+}
+
+VOID
+NTAPI
+KiRestoreProcessorState(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Restore all context */
+    KeContextToTrapFrame(&Prcb->ProcessorState.ContextFrame,
+                         ExceptionFrame,
+                         TrapFrame,
+                         CONTEXT_ALL,
+                         TrapFrame->PreviousMode);
+
+    /* Restore control registers */
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+}
+
+
+VOID
+NTAPI
 KeFlushEntireTb(IN BOOLEAN Invalid,
                 IN BOOLEAN AllProcessors)
 {
