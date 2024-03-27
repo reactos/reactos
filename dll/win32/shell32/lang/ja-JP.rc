@@ -49,11 +49,11 @@ BEGIN
     MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "フォルダにコピー(&F)...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "フォルダに移動(&V)...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "すべて選択(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "選択を反転(&I)", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -62,7 +62,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "切り取り(&U)", IDM_CUT
+        MENUITEM "切り取り(&T)", IDM_CUT
         MENUITEM "コピー(&C)", IDM_COPY
         MENUITEM SEPARATOR
         MENUITEM "ショートカットの作成(&L)", IDM_CREATELINK
@@ -78,10 +78,10 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "ここに移動(&M)", IDM_MOVEHERE
+        MENUITEM "ここにショートカットを作成(&S)", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "キャンセル", 0
     END
 END
 
@@ -133,7 +133,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
@@ -162,11 +162,11 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "実行するプログラム名、または開くフォルダや文書名、インターネット リソース名を入力してください。", 12289, 36, 11, 182, 18
-    LTEXT "名前(&O):", 12305, 7, 39, 30, 10
+    LTEXT "名前(&O):", 12305, 7, 39, 27, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
-    DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
-    PUSHBUTTON "キャンセル", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-    PUSHBUTTON "参照(&B)...", 12288, 170, 63, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "キャンセル", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "参照(&B)...", 12288, 170, 70, 50, 14, WS_TABSTOP
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -227,16 +227,16 @@ BEGIN
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "物理サイズ:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "収容サイズ:", 14026, 8, 104, 55, 10
+    LTEXT "内容:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "作成日時:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "属性:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "読み取り専用(&R)", 14021, 56, 152, 70, 10
-    AUTOCHECKBOX "隠しファイル(&H)", 14022, 56, 166, 70, 10
-    AUTOCHECKBOX "アーカイブ(&A)", 14023, 56, 180, 70, 10
+    AUTOCHECKBOX "読み取り専用(&R)", 14021, 68, 152, 70, 10
+    AUTOCHECKBOX "隠しファイル(&H)", 14022, 68, 166, 70, 10
+    AUTOCHECKBOX "アーカイブ(&A)", 14023, 68, 180, 70, 10
     PUSHBUTTON "詳細設定(&D)...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -281,20 +281,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "バージョン"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "ファイルバージョン: ", 14000, 10, 10, 55, 10
+    LTEXT "ファイルバージョン:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "説明: ", 14002, 10, 27, 45, 10
+    LTEXT "説明:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "著作権: ", 14004, 10, 46, 66, 10
+    LTEXT "著作権:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "その他のバージョン情報: ", 14006, 6, 70, 222, 115
-    LTEXT "項目名: ", 14007, 13, 82, 50, 10
-    LTEXT "値: ", 14008, 112, 82, 45, 10
+    GROUPBOX "その他のバージョン情報", 14006, 6, 70, 222, 115
+    LTEXT "項目名:", 14007, 13, 82, 50, 10
+    LTEXT "値:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
@@ -319,15 +319,11 @@ BEGIN
     LTEXT "容量:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "ドライブ %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "ディスクのクリーンアップ", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "ドライブを圧縮してディスク領域を確保する", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "このディスクにインデックスを付けてファイル検索を速くする", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "ドライブ %c", 14009, 95, 162, 50, 10
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "ツール"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
@@ -336,17 +332,9 @@ BEGIN
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "このオプションはボリュームエラーをチェックします。", -1, 40, 25, 160, 20
     PUSHBUTTON "すぐにチェック...", 14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX "最適化", -1, 5, 65, 230, 60
-    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "このオプションはこのボリュームのファイルを最適化します。", -1, 40, 85, 160, 20
-    PUSHBUTTON "すぐに最適化...", 14001, 130, 105, 90, 15, WS_TABSTOP
-    GROUPBOX "バックアップ", -1, 5, 130, 230, 60
-    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "このオプションはこのボリュームのファイルをバックアップします。", -1, 40, 150, 160, 20
-    PUSHBUTTON "すぐにバックアップ...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "ハードウェア"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
@@ -397,32 +385,10 @@ BEGIN
     LTEXT "ファイル:    ", 14001, 44, 25, 188, 20
     GROUPBOX "プログラムの一覧(&P)", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "この種類のファイルを開くときは、常に選択したプログラムを使用する(&A)", 14003, 20, 193, 225, 10
-    PUSHBUTTON "参照(&B)...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "この種類のファイルを開くときは、常に選択したプログラムを使用する(&A)", 14003, 16, 193, 232, 10
+    PUSHBUTTON "参照(&B)...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "全般"
-FONT 9, "MS UI Gothic", 0, 0, 0x0
-BEGIN
-    GROUPBOX "タスク", -1, 7, 10, 249, 45
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 210, 10
-    GROUPBOX "フォルダの参照", -1, 7, 60, 249, 45, WS_TABSTOP
-    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "同じウィンドウでフォルダを開く(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "フォルダごとに異なるウィンドウで開く(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "項目のクリック方法", -1, 7, 110, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "シングルクリックで項目を開く(ポイントで選択) (&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ブラウザに合わせてアイコンタイトルに下線を引く(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
-    AUTORADIOBUTTON "ポイントしたときのみアイコンタイトルに下線を引く(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    AUTORADIOBUTTON "ダブルクリックで項目を開く(シングルクリックで選択)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
-    PUSHBUTTON "デフォルトに戻す(&R)", 14011, 180, 180, 75, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -616,7 +582,7 @@ BEGIN
     PUSHBUTTON "参照...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "以下のリストからアイコンを選択:", -1, 7, 36, 185, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 135, 179, 50, 14
 END
@@ -710,7 +676,7 @@ BEGIN
     IDS_FILEOOP_DELETING "削除中..."
     IDS_FILEOOP_FROM_TO "%1 から %2 へ"
     IDS_FILEOOP_FROM "%1 から"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_PREFLIGHT "準備中"
 
     /* message box strings */
     IDS_RESTART_TITLE "再起動"
@@ -719,12 +685,12 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "シャットダウンしますか?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_ERROR "「ファイルの実行」ダイアログを表示できませんでした (内部エラー)"
+    IDS_RUNDLG_BROWSE_ERROR "「閲覧」ダイアログを表示できませんでした (内部エラー)"
     IDS_RUNDLG_BROWSE_CAPTION "参照"
-    IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル Files (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "スタート メニュー\\プログラム"
     IDS_PERSONAL "My Documents"
     IDS_FAVORITES "Favorites"
@@ -761,7 +727,7 @@ BEGIN
     IDS_DRIVE_NETWORK "ネットワーク ディスク"
     IDS_DRIVE_FLOPPY "3.5フロッピー"
     IDS_DRIVE_REMOVABLE "リムーバブル ディスク"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_FS_UNKNOWN "未知の形式"
 
     /* Open With */
     IDS_OPEN_WITH "プログラムから開く"
@@ -779,8 +745,8 @@ BEGIN
     IDS_RECYCLEBIN_DISKSPACE "利用できる領域"
     IDS_EMPTY_BITBUCKET "ごみ箱を空にする"
     IDS_PICK_ICON_TITLE "アイコンの選択"
-    IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0すべてのファイル (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
     IDS_DIRECTORY "フォルダ"
     IDS_BAT_FILE "ReactOS バッチ ファイル"
@@ -801,7 +767,7 @@ BEGIN
     IDS_PIF_FILE "NT VDM プログラム情報ファイル"
     IDS_SCR_FILE "スクリーンセーバー"
     IDS_SYS_FILE "システム ファイル"
-    IDS_VXD_FILE "仮想 デバイス ドライバ"
+    IDS_VXD_FILE "仮想デバイス ドライバ"
     IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "開く"
@@ -857,5 +823,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "マイ コンピュータでコントロール パネルを表示する"
     IDS_ADVANCED_SHOW_COMP_COLOR "暗号化または圧縮されたNTFSファイルを色付きで表示する"
     IDS_ADVANCED_SHOW_INFO_TIP "フォルダとデスクトップの項目にポップアップ式の説明を表示する"
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_FILE_NOT_FOUND "ファイル '%s' は見つかりませんでした。"
 END
