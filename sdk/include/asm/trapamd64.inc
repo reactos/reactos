@@ -37,6 +37,19 @@ IrqlIsPassive:
 #endif
 ENDM
 
+// Checks for user APCs and delivers them if necessary.
+// Clobbers all volatile registers except rax.
+MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
+    LOCAL NoUserApcPending
+
+    /* Check for pending user APC */
+    cmp byte ptr [ThreadReg + ThApcState + AsUserApcPending], 0
+    jz NoUserApcPending
+    lea rcx, [TrapFrame]
+    call KiInitiateUserApc
+NoUserApcPending:
+ENDM
+
 APIC_EOI = HEX(0FFFFFFFFFFFE00B0)
 
 TF_VOLATILES            = HEX(01)
@@ -195,7 +208,6 @@ ENDM
  */
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
-    LOCAL NoUserApc
 
     ASSERT_TRAP_FRAME_IRQL_VALID rbp
 
@@ -217,12 +229,8 @@ MACRO(ExitTrap, Flags)
     jz kernel_mode_return
 
     if (Flags AND TF_CHECKUSERAPC)
-        /* Load current thread into r10 */
         mov r10, gs:[PcCurrentThread]
-        cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
-        je NoUserApc
-        call KiInitiateUserApc
-    NoUserApc:
+        HANDLE_USER_APCS r10, rbp
     endif
 
     ASSERT_TRAP_FRAME_INTS_ENABLED rbp

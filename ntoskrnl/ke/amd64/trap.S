@@ -841,12 +841,9 @@ GLOBAL_LABEL KiSystemServiceExit
 
     ASSERT_TRAP_FRAME_INTS_ENABLED rsp + MAX_SYSCALL_PARAM_SIZE
 
-    /* Check for pending user APC */
-    mov rcx, gs:qword ptr [PcCurrentThread]
-    cmp byte ptr [rcx + ThApcState + AsUserApcPending], 0
-    jz no_user_apc_pending
-    call KiInitiateUserApc
-no_user_apc_pending:
+    /* Check for pending user APCs */
+    mov rcx, gs:[PcCurrentThread]
+    HANDLE_USER_APCS rcx, rsp + MAX_SYSCALL_PARAM_SIZE
 
     /* Disable interrupts for return */
     cli
@@ -1135,11 +1132,22 @@ PUBLIC KiSetTrapContext
  */
 EXTERN KiDeliverApc:PROC
 
+/*
+ * VOID
+ * KiInitiateUserApc(
+ *     _In_ PKTRAP_FRAME TrapFrame@<rcx>);
+ *
+ * This function is called to deliver user mode APCs.
+ * It clobbers all non-volatile registers, except rax.
+ */
 PUBLIC KiInitiateUserApc
 .PROC KiInitiateUserApc
 
     /* Generate a KEXCEPTION_FRAME on the stack */
     GENERATE_EXCEPTION_FRAME
+
+    /* Save rax to not clobber the return for the system call handler */
+    mov [rsp + ExP1Home], rax
 
     /* Raise IRQL to APC_LEVEL */
     mov rax, APC_LEVEL
@@ -1147,6 +1155,9 @@ PUBLIC KiInitiateUserApc
 
     /* Get the current thread */
     mov rbp, gs:[PcCurrentThread]
+
+    /* Save the trap frame in rsi */
+    mov rsi, rcx
 
 deliver_apcs:
 
@@ -1156,7 +1167,7 @@ deliver_apcs:
     /* Call the C function */
     mov ecx, 1
     mov rdx, rsp
-    mov r8, [rbp + ThTrapFrame]
+    mov r8, rsi
     call KiDeliverApc
 
     /* Disable interrupts again */
@@ -1171,6 +1182,7 @@ deliver_apcs:
     mov cr8, rax
 
     /* Restore the registers from the KEXCEPTION_FRAME */
+    mov rax, [rsp + ExP1Home]
     RESTORE_EXCEPTION_STATE
 
     /* Return */
