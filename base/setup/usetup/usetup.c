@@ -59,6 +59,7 @@ static PPARTENTRY InstallPartition = NULL;
  * operation on them).
  */
 static PPARTENTRY SystemPartition = NULL;
+static BOOLEAN IsSysPartNew = FALSE;
 
 
 /* OTHER Stuff *****/
@@ -2425,6 +2426,12 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         if (SystemPartition != InstallPartition)
             SystemPartition->NeedsCheck = TRUE;
 
+        /* Remember for later whether the system partition is new: we don't want
+         * to recognize any existing known boot loader and back up the old VBR
+         * in that case */
+        if (SystemPartition->New /**/&& (SystemPartition->FormatState == Unformatted)/**/)
+            IsSysPartNew = TRUE;
+
         /*
          * In case we just repair an existing installation, or make
          * an unattended setup without formatting, just go to the
@@ -3777,8 +3784,12 @@ Retry:
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
-            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
-                                                &USetupData.DestinationArcPath);
+            // FIXME: So far USETUP only supports the 1st floppy.
+            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            Status = InstallBootcodeToRemovable(&USetupData, &FloppyDrive,
+                                                &USetupData.SourceRootPath,
+                                                &USetupData.DestinationArcPath,
+                                                L"FAT");
             if (!NT_SUCCESS(Status))
             {
                 if (Status == STATUS_DEVICE_NOT_READY)
@@ -3802,51 +3813,34 @@ static BOOLEAN
 BootLoaderHardDiskPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
-    WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
-    if (USetupData.MBRInstallType == 2)
+    /* Copy FreeLoader to the disk and save the boot entries */
+    Status = InstallBootManagerAndBootEntries(&USetupData, &USetupData.SourceRootPath,
+                                              &USetupData.SystemRootPath,
+                                              SystemPartition, // FIXME: HACK
+                                              &USetupData.DestinationArcPath,
+                                              ((USetupData.MBRInstallType == 2)
+                                                  ? 1 /* Install MBR and VBR */
+                                                  : 0 /* Install VBR only */)
+                                              | ((!IsSysPartNew) << 4));
+    // if (!NT_SUCCESS(Status))
+    if (Status != STATUS_SUCCESS)
     {
-        /* Step 1: Write the VBR */
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemPartition->FileSystem);
-        if (!NT_SUCCESS(Status))
+        if (Status == ERROR_WRITE_BOOT)
         {
             MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
                             SystemPartition->FileSystem);
-            return FALSE;
         }
-
-        /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
-        if (!IsSuperFloppy(SystemPartition->DiskEntry))
+        else if (Status == ERROR_INSTALL_BOOTCODE)
         {
-            RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-                                L"\\Device\\Harddisk%d\\Partition0",
-                                SystemPartition->DiskEntry->DiskNumber);
-            Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
-                                              &USetupData.SourceRootPath,
-                                              DestinationDevicePathBuffer);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("InstallMbrBootCodeToDisk() failed: Status 0x%lx\n", Status);
-                MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
-                return FALSE;
-            }
+            MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
         }
-    }
-    else
-    {
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemPartition->FileSystem);
-        if (!NT_SUCCESS(Status))
+        else
         {
-            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                            SystemPartition->FileSystem);
-            return FALSE;
+            /* Usual NTSTATUS code */
+            DPRINT1("InstallBootManagerAndBootEntries() failed: Status %lx\n", Status);
         }
+        return FALSE;
     }
 
     return TRUE;

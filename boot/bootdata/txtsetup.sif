@@ -217,6 +217,8 @@ DefaultPath = \ReactOS
 SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
 OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
+LoadIdentifier = "ReactOS"
+BootItems = bootitems.inf
 
 [NLS]
 AnsiCodepage     = c_1252.nls

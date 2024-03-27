@@ -3786,10 +3786,10 @@ WritePartitions(
 
     //
     // NOTE: Originally (see r40437), we used to install here also a new MBR
-    // for this disk (by calling InstallMbrBootCodeToDisk), only if:
+    // for this disk (by calling InstallMBRToDisk), only if:
     // DiskEntry->NewDisk == TRUE and DiskEntry->HwDiskNumber == 0.
     // Then after that, both DiskEntry->NewDisk and DiskEntry->NoMbr were set
-    // to FALSE. In the other place (in usetup.c) where InstallMbrBootCodeToDisk
+    // to FALSE. In the other place (in usetup.c) where InstallMBRToDisk
     // was called too, the installation test was modified by checking whether
     // DiskEntry->NoMbr was TRUE (instead of NewDisk).
     //

@@ -1,10 +1,22 @@
 
 add_subdirectory(packages)
 
-# Common hives
-
+# Setup files
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)
 
+# Default boot entries INF file
+get_defines(_defines)
+if(_WINKD_)
+    list(APPEND _defines -D_WINKD_)
+endif()
+if(KDBG)
+    list(APPEND _defines -DKDBG)
+endif()
+add_custom_target(bootitems_inf DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bootitems.inf)
+preprocess_file(${CMAKE_CURRENT_SOURCE_DIR}/bootitems.inf.in ${CMAKE_CURRENT_BINARY_DIR}/bootitems.inf ${_defines})
+add_cd_file(TARGET bootitems_inf FILE ${CMAKE_CURRENT_BINARY_DIR}/bootitems.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
+
+# Common hives
 add_custom_target(converted_caroots_inf DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf
                    COMMAND native-utf16le "${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf" "${CMAKE_CURRENT_BINARY_DIR}/caroots.inf"

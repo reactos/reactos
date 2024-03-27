@@ -71,37 +71,34 @@ FormatFileSystem(
 #define NTFS_BOOTSECTOR_SIZE   (16 * SECTORSIZE)
 
 typedef NTSTATUS
-(/*NTAPI*/ *PFS_INSTALL_BOOTCODE)(
-    IN PCWSTR SrcPath,          // Bootsector source file (on the installation medium)
-    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
-    IN HANDLE RootPartition);   // Partition holding the (old) bootsector data information
+(*PFS_INSTALL_BOOTCODE)(
+    _Inout_ PBOOTCODE BootCode, // Source bootsector
+    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
+    _In_ HANDLE RootPartition); // Partition holding the (old) bootsector information
 
 NTSTATUS
 InstallFatBootCode(
-    IN PCWSTR SrcPath,
-    IN HANDLE DstPath,
-    IN HANDLE RootPartition);
-
-#define InstallFat12BootCode    InstallFatBootCode
-#define InstallFat16BootCode    InstallFatBootCode
+    _Inout_ PBOOTCODE BootCode,
+    _In_ HANDLE DstPath,
+    _In_ HANDLE RootPartition);
 
 NTSTATUS
 InstallFat32BootCode(
-    IN PCWSTR SrcPath,
-    IN HANDLE DstPath,
-    IN HANDLE RootPartition);
+    _Inout_ PBOOTCODE BootCode,
+    _In_ HANDLE DstPath,
+    _In_ HANDLE RootPartition);
 
 NTSTATUS
 InstallBtrfsBootCode(
-    IN PCWSTR SrcPath,
-    IN HANDLE DstPath,
-    IN HANDLE RootPartition);
+    _Inout_ PBOOTCODE BootCode,
+    _In_ HANDLE DstPath,
+    _In_ HANDLE RootPartition);
 
 NTSTATUS
 InstallNtfsBootCode(
-    IN PCWSTR SrcPath,
-    IN HANDLE DstPath,
-    IN HANDLE RootPartition);
+    _Inout_ PBOOTCODE BootCode,
+    _In_ HANDLE DstPath,
+    _In_ HANDLE RootPartition);
 
 
 //

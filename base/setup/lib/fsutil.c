@@ -159,7 +159,7 @@ typedef struct _FILE_SYSTEM
 static FILE_SYSTEM RegisteredFileSystems[] =
 {
     /* NOTE: The FAT formatter will automatically
-     * determine whether to use FAT12/16 or FAT32. */
+     * determine whether to use FAT12/16 or FAT32 */
     { L"FAT"  , VfatFormat, VfatChkdsk },
     { L"FAT32", VfatFormat, VfatChkdsk },
 #if 0
@@ -404,43 +404,32 @@ FormatFileSystem(
 
 NTSTATUS
 InstallFatBootCode(
-    IN PCWSTR SrcPath,          // FAT12/16 bootsector source file (on the installation medium)
-    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
-    IN HANDLE RootPartition)    // Partition holding the (old) FAT12/16 information
+    _Inout_ PBOOTCODE BootCode, // FAT12/16 source bootsector
+    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
+    _In_ HANDLE RootPartition)  // Partition holding the (old) FAT12/16 information
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER FileOffset;
-    BOOTCODE OrigBootSector = {0};
-    BOOTCODE NewBootSector  = {0};
+    BOOTCODE OrgBootCode = {0};
+
+    /* Check the source bootsector size (1 sector) */
+    if (BootCode->Length != FAT_BOOTSECTOR_SIZE)
+        return STATUS_INVALID_BUFFER_SIZE;
 
     /* Allocate and read the current original partition bootsector */
-    Status = ReadBootCodeByHandle(&OrigBootSector,
-                                  RootPartition,
-                                  FAT_BOOTSECTOR_SIZE);
+    Status = ReadBootCodeByHandle(&OrgBootCode, RootPartition, FAT_BOOTSECTOR_SIZE);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    /* Allocate and read the new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-    Status = ReadBootCodeFromFile(&NewBootSector,
-                                  &Name,
-                                  FAT_BOOTSECTOR_SIZE);
-    if (!NT_SUCCESS(Status))
-    {
-        FreeBootCode(&OrigBootSector);
-        return Status;
-    }
 
     /* Adjust the bootsector (copy a part of the FAT12/16 BPB) */
-    RtlCopyMemory(&((PFAT_BOOTSECTOR)NewBootSector.BootCode)->OemName,
-                  &((PFAT_BOOTSECTOR)OrigBootSector.BootCode)->OemName,
+    RtlCopyMemory(&((PFAT_BOOTSECTOR)BootCode->BootCode)->OemName,
+                  &((PFAT_BOOTSECTOR)OrgBootCode.BootCode)->OemName,
                   FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
                   FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
 
     /* Free the original bootsector */
-    FreeBootCode(&OrigBootSector);
+    FreeBootCode(&OrgBootCode);
 
     /* Write the new bootsector to DstPath */
     FileOffset.QuadPart = 0ULL;
@@ -449,52 +438,40 @@ InstallFatBootCode(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         NewBootSector.BootCode,
-                         NewBootSector.Length,
+                         BootCode->BootCode,
+                         BootCode->Length,
                          &FileOffset,
                          NULL);
-
-    /* Free the new bootsector */
-    FreeBootCode(&NewBootSector);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
 
     return Status;
 }
 
 NTSTATUS
 InstallFat32BootCode(
-    IN PCWSTR SrcPath,          // FAT32 bootsector source file (on the installation medium)
-    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
-    IN HANDLE RootPartition)    // Partition holding the (old) FAT32 information
+    _Inout_ PBOOTCODE BootCode, // FAT32 source bootsector
+    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
+    _In_ HANDLE RootPartition)  // Partition holding the (old) FAT32 information
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER FileOffset;
     USHORT BackupBootSector = 0;
-    BOOTCODE OrigBootSector = {0};
-    BOOTCODE NewBootSector  = {0};
+    BOOTCODE OrgBootCode = {0};
 
-    /* Allocate and read the current original partition bootsector */
-    Status = ReadBootCodeByHandle(&OrigBootSector,
-                                  RootPartition,
-                                  FAT32_BOOTSECTOR_SIZE);
+    /* Check the source bootsector size (2 sectors) */
+    if (BootCode->Length != 2 * FAT32_BOOTSECTOR_SIZE)
+        return STATUS_INVALID_BUFFER_SIZE;
+
+    /* Allocate and read the current original partition bootsector (only the first sector) */
+    Status = ReadBootCodeByHandle(&OrgBootCode, RootPartition, FAT32_BOOTSECTOR_SIZE);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    /* Allocate and read the new bootsector (2 sectors) from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-    Status = ReadBootCodeFromFile(&NewBootSector,
-                                  &Name,
-                                  2 * FAT32_BOOTSECTOR_SIZE);
-    if (!NT_SUCCESS(Status))
-    {
-        FreeBootCode(&OrigBootSector);
-        return Status;
-    }
 
     /* Adjust the bootsector (copy a part of the FAT32 BPB) */
-    RtlCopyMemory(&((PFAT32_BOOTSECTOR)NewBootSector.BootCode)->OemName,
-                  &((PFAT32_BOOTSECTOR)OrigBootSector.BootCode)->OemName,
+    RtlCopyMemory(&((PFAT32_BOOTSECTOR)BootCode->BootCode)->OemName,
+                  &((PFAT32_BOOTSECTOR)OrgBootCode.BootCode)->OemName,
                   FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
                   FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
@@ -505,16 +482,16 @@ InstallFat32BootCode(
     if (DstPath != RootPartition)
     {
         /* Copy to a file: Disable the backup bootsector */
-        ((PFAT32_BOOTSECTOR)NewBootSector.BootCode)->BackupBootSector = 0;
+        ((PFAT32_BOOTSECTOR)BootCode->BootCode)->BackupBootSector = 0;
     }
     else
     {
         /* Copy to a disk: Get the location of the backup bootsector */
-        BackupBootSector = ((PFAT32_BOOTSECTOR)OrigBootSector.BootCode)->BackupBootSector;
+        BackupBootSector = ((PFAT32_BOOTSECTOR)OrgBootCode.BootCode)->BackupBootSector;
     }
 
     /* Free the original bootsector */
-    FreeBootCode(&OrigBootSector);
+    FreeBootCode(&OrgBootCode);
 
     /* Write the first sector of the new bootcode to DstPath sector 0 */
     FileOffset.QuadPart = 0ULL;
@@ -523,14 +500,13 @@ InstallFat32BootCode(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         NewBootSector.BootCode,
+                         BootCode->BootCode,
                          FAT32_BOOTSECTOR_SIZE,
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        FreeBootCode(&NewBootSector);
         return Status;
     }
 
@@ -545,14 +521,13 @@ InstallFat32BootCode(
                                  NULL,
                                  NULL,
                                  &IoStatusBlock,
-                                 NewBootSector.BootCode,
+                                 BootCode->BootCode,
                                  FAT32_BOOTSECTOR_SIZE,
                                  &FileOffset,
                                  NULL);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-                FreeBootCode(&NewBootSector);
                 return Status;
             }
         }
@@ -566,7 +541,7 @@ InstallFat32BootCode(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         ((PUCHAR)NewBootSector.BootCode + FAT32_BOOTSECTOR_SIZE),
+                         ((PUCHAR)BootCode->BootCode + FAT32_BOOTSECTOR_SIZE),
                          FAT32_BOOTSECTOR_SIZE,
                          &FileOffset,
                          NULL);
@@ -575,33 +550,24 @@ InstallFat32BootCode(
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
     }
 
-    /* Free the new bootsector */
-    FreeBootCode(&NewBootSector);
-
     return Status;
 }
 
 NTSTATUS
 InstallBtrfsBootCode(
-    IN PCWSTR SrcPath,          // BTRFS bootsector source file (on the installation medium)
-    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
-    IN HANDLE RootPartition)    // Partition holding the (old) BTRFS information
+    _Inout_ PBOOTCODE BootCode, // BTRFS source bootsector
+    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
+    _In_ HANDLE RootPartition)  // Partition holding the (old) BTRFS information
 {
     NTSTATUS Status;
     NTSTATUS LockStatus;
-    UNICODE_STRING Name;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER FileOffset;
     PARTITION_INFORMATION_EX PartInfo;
-    BOOTCODE NewBootSector = {0};
 
-    /* Allocate and read the new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-    Status = ReadBootCodeFromFile(&NewBootSector,
-                                  &Name,
-                                  BTRFS_BOOTSECTOR_SIZE);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    /* Check the source bootsector size (3 sectors) */
+    if (BootCode->Length != BTRFS_BOOTSECTOR_SIZE)
+        return STATUS_INVALID_BUFFER_SIZE;
 
     /*
      * The BTRFS driver requires the volume to be locked in order to modify
@@ -645,7 +611,7 @@ InstallBtrfsBootCode(
     }
 
     /* Write new bootsector to RootPath */
-    ((PBTRFS_BOOTSECTOR)NewBootSector.BootCode)->PartitionStartLBA =
+    ((PBTRFS_BOOTSECTOR)BootCode->BootCode)->PartitionStartLBA =
         PartInfo.StartingOffset.QuadPart / SECTORSIZE;
 
     /* Write sector 0 */
@@ -655,8 +621,8 @@ InstallBtrfsBootCode(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         NewBootSector.BootCode,
-                         NewBootSector.Length,
+                         BootCode->BootCode,
+                         BootCode->Length,
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
@@ -682,47 +648,36 @@ Quit:
         DPRINT1("Failed to unlock BTRFS volume (Status 0x%lx)\n", LockStatus);
     }
 
-    /* Free the new bootsector */
-    FreeBootCode(&NewBootSector);
-
     return Status;
 }
 
 NTSTATUS
 InstallNtfsBootCode(
-    IN PCWSTR SrcPath,          // NTFS bootsector source file (on the installation medium)
-    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
-    IN HANDLE RootPartition)    // Partition holding the (old) NTFS information
+    _Inout_ PBOOTCODE BootCode, // NTFS source bootsector
+    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
+    _In_ HANDLE RootPartition)  // Partition holding the (old) NTFS information
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER FileOffset;
-    BOOTCODE OrigBootSector = {0};
-    BOOTCODE NewBootSector  = {0};
+    BOOTCODE OrgBootCode = {0};
+
+    /* Check the source bootsector size (16 sectors) */
+    if (BootCode->Length != NTFS_BOOTSECTOR_SIZE)
+        return STATUS_INVALID_BUFFER_SIZE;
 
     /* Allocate and read the current original partition bootsector */
-    Status = ReadBootCodeByHandle(&OrigBootSector, RootPartition, NTFS_BOOTSECTOR_SIZE);
+    Status = ReadBootCodeByHandle(&OrgBootCode, RootPartition, NTFS_BOOTSECTOR_SIZE);
     if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("InstallNtfsBootCode: Status %lx\n", Status);
         return Status;
-    }
-
-    /* Allocate and read the new bootsector (16 sectors) from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-    Status = ReadBootCodeFromFile(&NewBootSector, &Name, NTFS_BOOTSECTOR_SIZE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("InstallNtfsBootCode: Status %lx\n", Status);
-        FreeBootCode(&OrigBootSector);
-        return Status;
-    }
 
     /* Adjust the bootsector (copy a part of the NTFS BPB) */
-    RtlCopyMemory(&((PNTFS_BOOTSECTOR)NewBootSector.BootCode)->OEMID,
-                  &((PNTFS_BOOTSECTOR)OrigBootSector.BootCode)->OEMID,
+    RtlCopyMemory(&((PNTFS_BOOTSECTOR)BootCode->BootCode)->OEMID,
+                  &((PNTFS_BOOTSECTOR)OrgBootCode.BootCode)->OEMID,
                   FIELD_OFFSET(NTFS_BOOTSECTOR, BootStrap) - FIELD_OFFSET(NTFS_BOOTSECTOR, OEMID));
+
+    /* Free the original bootsector */
+    FreeBootCode(&OrgBootCode);
 
     /* Write sector 0 */
     FileOffset.QuadPart = 0ULL;
@@ -731,19 +686,12 @@ InstallNtfsBootCode(
                          NULL,
                          NULL,
                          &IoStatusBlock,
-                         NewBootSector.BootCode,
-                         NewBootSector.Length,
+                         BootCode->BootCode,
+                         BootCode->Length,
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
-    {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        goto Quit;
-    }
-
-Quit:
-    /* Free the new bootsector */
-    FreeBootCode(&NewBootSector);
 
     return Status;
 }

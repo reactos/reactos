@@ -1,0 +1,47 @@
+[Version]
+Signature = "$Windows NT$"
+;Signature = "$ReactOS$"
+
+[BootLoaderOptions]
+#if DBG
+#ifndef _WINKD_
+CurrentBootEntryUnattend = ReactOS_KdSerial
+#else
+CurrentBootEntryUnattend = ReactOS_Debug
+#endif // !_WINKD_
+CurrentBootEntry = ReactOS_Debug
+BootTimeout = 10
+#else  // DBG
+CurrentBootEntryUnattend = ReactOS
+CurrentBootEntry = ReactOS
+BootTimeout = 0
+#endif
+
+[BootEntries] ;; LoadIdentifiers
+;
+; List of boot entries to install.
+; <EntryKey> = <FriendlyName>,<BootFilePath>,<OsLoadPath>,<OsLoadOptions>
+; BootFilePath, OsLoadPath and OsLoadOptions are optional.
+;
+
+ReactOS = "ReactOS",,,"/FASTDETECT"
+
+#if DBG
+ReactOS_Debug = "ReactOS (Debug)",,,"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS"
+#ifdef _WINKD_
+#if !defined(_ARM_) && !defined(_ARM64_)
+ReactOS_VBoxDebug = "ReactOS (VBox Debug)",,,"/DEBUG /DEBUGPORT=VBOX /SOS"
+#endif
+#else // !_WINKD_
+ReactOS_KdSerial  = "ReactOS (RosDbg)",,,"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL"
+ReactOS_Screen  = "ReactOS (Screen)",,,"/DEBUG /DEBUGPORT=SCREEN /SOS"
+ReactOS_LogFile = "ReactOS (Log file)",,,"/DEBUG /DEBUGPORT=FILE /SOS"
+#endif // _WINKD_
+
+ReactOS_Ram = "ReactOS (RAM Disk)",,"ramdisk(0)\ReactOS","/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256"
+ReactOS_EMS = "ReactOS (Emergency Management Services)",,,"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200"
+#endif // DBG
+
+ArchLinux = "Btw. I use Arch ;)",/boot/grub,/boot/vmlinuz,"initrd=/initrd.gz,root=/dev/sdb1"
+
+; EOF

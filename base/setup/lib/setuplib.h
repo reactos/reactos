@@ -42,7 +42,7 @@ extern HANDLE ProcessHeap;
 #include "utils/regutil.h"
 #include "bootcode.h"
 #include "fsutil.h"
-#include "bootsup.h"
+// #include "bootsup.h" // FIXME! FIXME!
 #include "registry.h"
 #include "mui.h"
 #include "settings.h"
