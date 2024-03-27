@@ -805,7 +805,9 @@ IntVideoPortDispatchDeviceControl(
 
         case IOCTL_VIDEO_IS_VGA_DEVICE:
             WARN_(VIDEOPRT, "- IOCTL_VIDEO_IS_VGA_DEVICE is UNIMPLEMENTED!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            *((PBOOLEAN)Irp->AssociatedIrp.SystemBuffer) = IntIsVgaSaveDriver(DeviceObject);
+            Irp->IoStatus.Information = sizeof(BOOLEAN);
+            Status = STATUS_SUCCESS;
             break;
 
         case IOCTL_VIDEO_USE_DEVICE_IN_SESSION:

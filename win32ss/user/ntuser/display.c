@@ -171,17 +171,8 @@ InitVideo(VOID)
     /* Check if we had any success */
     if (!gpPrimaryGraphicsDevice)
     {
-        /* Check if there is a VGA device we skipped */
-        if (gpVgaGraphicsDevice)
-        {
-            /* There is, use the VGA device */
-            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
-        }
-        else
-        {
-            ERR("No usable display driver was found.\n");
-            return STATUS_UNSUCCESSFUL;
-        }
+        ERR("No usable display driver was found.\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
     InitSysParams();

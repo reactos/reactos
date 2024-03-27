@@ -994,6 +994,12 @@ VideoPortVerifyAccessRanges(
 
     ExFreePoolWithTag(ResourceList, TAG_VIDEO_PORT);
 
+    if (ConflictDetected && IntIsVgaSaveDriver(DeviceExtension->FunctionalDeviceObject))
+    {
+        /* Ignore conflicts if it is the VgaSave driver */
+        return NO_ERROR;
+    }
+
     if (!NT_SUCCESS(Status) || ConflictDetected)
         return ERROR_INVALID_PARAMETER;
     else

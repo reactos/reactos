@@ -570,6 +570,40 @@ Failure:
     return Status;
 }
 
+/* We implement RtlSuffixUnicodeString, which doesn't exist... */
+static
+BOOLEAN
+VideoSuffixUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInsensitive)
+{
+    PWCHAR Str;
+
+    if (String1->Length > String2->Length)
+        return FALSE;
+
+    Str = String2->Buffer + (String2->Length - String1->Length) / sizeof(WCHAR);
+    if (CaseInsensitive)
+        return _wcsnicmp(String1->Buffer, Str, String1->Length / sizeof(WCHAR)) == 0;
+    else
+        return memcmp(String1->Buffer, Str, String1->Length) == 0;
+}
+
+BOOLEAN
+IntIsVgaSaveDriver(
+    PDEVICE_OBJECT DeviceObject)
+{
+    const UNICODE_STRING VgaSaveDriverName = RTL_CONSTANT_STRING(L"VgaSave");
+    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DriverExtension = IoGetDriverObjectExtension(DeviceExtension->DriverObject, DeviceExtension->DriverObject);
+
+    return VideoSuffixUnicodeString(&VgaSaveDriverName, &DriverExtension->RegistryPath, TRUE);
+}
+
 VOID
 FASTCALL
 IntAttachToCSRSS(

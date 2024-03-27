@@ -98,6 +98,30 @@ EngpHasVgaDriver(
     return (_wcsnicmp(awcServiceName, L"VGA", 3) == 0);
 }
 
+static
+BOOLEAN
+EngpIsVgaDevice(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    BOOLEAN IsVgaDevice;
+    ULONG ulReturn;
+    NTSTATUS Status;
+
+    Status = (NTSTATUS)EngDeviceIoControl((HANDLE)pGraphicsDevice->DeviceObject,
+                                          IOCTL_VIDEO_IS_VGA_DEVICE,
+                                          NULL, 0,
+                                          &IsVgaDevice, sizeof(IsVgaDevice),
+                                          &ulReturn);
+    if (Status != ERROR_SUCCESS)
+    {
+        ERR("EngDeviceIoControl(0x%p, IOCTL_VIDEO_IS_VGA_DEVICE) failed, Status 0x%lx\n",
+            pGraphicsDevice->DeviceObject, Status);
+        return FALSE;
+    }
+    TRACE("'%S' is%s VGA device\n", pGraphicsDevice->szNtDeviceName, IsVgaDevice ? "" : " NOT");
+    return IsVgaDevice;
+}
+
 /*
  * Add a device to gpGraphicsDeviceFirst/gpGraphicsDeviceLast list (if not already present).
  */
@@ -170,16 +194,24 @@ EngpUnlinkGraphicsDevice(
     }
 }
 
+/* Goal of this function is to:
+ * - detect new graphic devices (from registry) and initialize them
+ * - set DISPLAY_DEVICE_VGA_COMPATIBLE flag on compatible devices
+ * - set gpVgaGraphicsDevice
+ * - handle gbBaseVideo global flag
+ * - set DISPLAY_DEVICE_PRIMARY_DEVICE on at least one device
+ * - set gpPrimaryGraphicsDevice
+ * - link primary device and VGA device (if available) using pVgaDevice field
+ */
 NTSTATUS
 EngpUpdateGraphicsDeviceList(VOID)
 {
-    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    ULONG iDevNum, ulMaxObjectNumber = 0;
     WCHAR awcDeviceName[20], awcWinDeviceName[20];
     UNICODE_STRING ustrDeviceName;
     WCHAR awcBuffer[256];
     NTSTATUS Status;
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    BOOLEAN bFoundNewDevice = FALSE;
+    PGRAPHICS_DEVICE pGraphicsDevice, pNewPrimaryGraphicsDevice = NULL;
     ULONG cbValue;
     HKEY hkey;
 
@@ -191,15 +223,6 @@ EngpUpdateGraphicsDeviceList(VOID)
         return Status;
     }
 
-    /* Read the name of the VGA adapter */
-    cbValue = sizeof(awcDeviceName);
-    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
-    if (NT_SUCCESS(Status))
-    {
-        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
-        ERR("VGA adapter = %lu\n", iVGACompatible);
-    }
-
     /* Get the maximum number of adapters */
     if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
     {
@@ -208,7 +231,7 @@ EngpUpdateGraphicsDeviceList(VOID)
 
     TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
 
-    /* Loop through all adapters */
+    /* Loop through all adapters, to detect new ones */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
     {
         /* Create the adapter's key name */
@@ -237,43 +260,29 @@ EngpUpdateGraphicsDeviceList(VOID)
         /* Initialize the driver for this device */
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
         if (!pGraphicsDevice) continue;
-
-        /* Check if this is a VGA compatible adapter */
-        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
-        {
-            /* Save this as the VGA adapter */
-            if (!gpVgaGraphicsDevice)
-            {
-                gpVgaGraphicsDevice = pGraphicsDevice;
-                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
-            }
-        }
-        bFoundNewDevice = TRUE;
-
-        /* Set the first one as primary device */
-        if (!gpPrimaryGraphicsDevice || EngpHasVgaDriver(gpPrimaryGraphicsDevice))
-        {
-            gpPrimaryGraphicsDevice = pGraphicsDevice;
-            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
-        }
     }
 
     /* Close the device map registry key */
     ZwClose(hkey);
 
-    /* Can we link VGA device to primary device? */
-    if (gpPrimaryGraphicsDevice &&
-        gpVgaGraphicsDevice &&
-        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
-        !gpPrimaryGraphicsDevice->pVgaDevice)
+    /* Choose a VGA device */
+    /* Try a device with DISPLAY_DEVICE_VGA_COMPATIBLE flag. If not found,
+     * fall back to current VGA device */
+    for (pGraphicsDevice = gpGraphicsDeviceFirst;
+         pGraphicsDevice;
+         pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
     {
-        /* Yes. Remove VGA device from global list, and attach it to primary device */
-        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
-        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
-        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
+        if (pGraphicsDevice == gpVgaGraphicsDevice)
+            continue;
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE && EngpIsVgaDevice(pGraphicsDevice))
+        {
+            gpVgaGraphicsDevice = pGraphicsDevice;
+            break;
+        }
     }
 
-    if (bFoundNewDevice && gbBaseVideo)
+    /* Handle gbBaseVideo */
+    if (gbBaseVideo)
     {
         PGRAPHICS_DEVICE pToDelete;
 
@@ -304,6 +313,42 @@ EngpUpdateGraphicsDeviceList(VOID)
         }
 
         /* Unlock list */
+        EngReleaseSemaphore(ghsemGraphicsDeviceList);
+    }
+
+    /* Choose a primary device (if none already exists) */
+    if (!gpPrimaryGraphicsDevice)
+    {
+        for (pGraphicsDevice = gpGraphicsDeviceFirst;
+             pGraphicsDevice;
+             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
+        {
+            if (EngpHasVgaDriver(pGraphicsDevice))
+            {
+                pNewPrimaryGraphicsDevice = pGraphicsDevice;
+                break;
+            }
+        }
+        if (!pNewPrimaryGraphicsDevice)
+            pNewPrimaryGraphicsDevice = gpGraphicsDeviceFirst;
+        if (pNewPrimaryGraphicsDevice)
+        {
+            pNewPrimaryGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
+            gpPrimaryGraphicsDevice = pNewPrimaryGraphicsDevice;
+        }
+    }
+
+    /* Can we link VGA device to primary device? */
+    if (gpPrimaryGraphicsDevice &&
+        gpVgaGraphicsDevice &&
+        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
+        !gpPrimaryGraphicsDevice->pVgaDevice)
+    {
+        /* Yes. Remove VGA device from global list, and attach it to primary device */
+        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
+        EngAcquireSemaphore(ghsemGraphicsDeviceList);
+        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
+        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
         EngReleaseSemaphore(ghsemGraphicsDeviceList);
     }
 
