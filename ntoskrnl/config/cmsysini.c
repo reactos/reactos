@@ -1109,7 +1109,11 @@ CmpCreateRegistryRoot(VOID)
     /* Sanity check, and get the key cell */
     ASSERT((&CmiVolatileHive->Hive)->ReleaseCellRoutine == NULL);
     KeyCell = (PCM_KEY_NODE)HvGetCell(&CmiVolatileHive->Hive, RootIndex);
-    if (!KeyCell) return FALSE;
+    if (!KeyCell)
+    {
+        ObDereferenceObject(RootKey);
+        return FALSE;
+    }
 
     /* Create the KCB */
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY");
