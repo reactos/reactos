@@ -36,23 +36,12 @@ CFolderOptions::~CFolderOptions()
  * FolderOptions IShellPropSheetExt interface
  */
 
-INT_PTR CALLBACK FolderOptionsGeneralDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK FolderOptionsViewDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK FolderOptionsFileTypesDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 HRESULT STDMETHODCALLTYPE CFolderOptions::AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
-
-    if (hPage == NULL)
-    {
-        ERR("Failed to create property sheet page FolderOptionsGeneral\n");
-        return E_FAIL;
-    }
-    if (!pfnAddPage(hPage, lParam))
-        return E_FAIL;
-
-    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
+    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
     if (hPage == NULL)
     {
         ERR("Failed to create property sheet page FolderOptionsView\n");

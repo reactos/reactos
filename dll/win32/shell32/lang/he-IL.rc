@@ -32,7 +32,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "סידור אוטומטי", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "רענון", FCIDM_SHVIEW_REFRESH
+        MENUITEM "רענן", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "הדבק", FCIDM_SHVIEW_INSERT
         MENUITEM "הדבק כקיצור דרך", FCIDM_SHVIEW_INSERTLINK
@@ -46,14 +46,14 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "ה&דבק\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "העתק לתיקיה...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "העבר לתיקיה...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "בחר ה&כל\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "ה&פוך בחירה", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -79,9 +79,9 @@ BEGIN
     BEGIN
         MENUITEM "&Copy here", IDM_COPYHERE
         MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "צור &קיצורי דרך כאן", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "ביטול", 0
     END
 END
 
@@ -133,7 +133,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "זכויות יוצרים 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "זכויות יוצרים 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " צוות ReactOS\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
@@ -157,13 +157,13 @@ END
 
 IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "הפעלה"
+CAPTION "הפעל"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "הקלד שם של תוכנית, תיקיה, מסמך או משאב אינטרנט  ו- ReactOS יפתח אותם עבורך.", 12289, 36, 11, 182, 18
-    LTEXT "&פתח את:", 12305, 7, 39, 24, 10
-    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
+    LTEXT "הקלד את שם התוכנית, תקיה, מסמך, משאב אינטרנטי.", 12289, 36, 11, 182, 18
+    LTEXT "&Open:", 12305, 7, 39, 24, 10
+    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "אישור", IDOK, 36, 70, 59, 14, WS_TABSTOP
     PUSHBUTTON "ביטול", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
     PUSHBUTTON "&עיון...", 12288, 160, 70, 59, 14, WS_TABSTOP
@@ -203,9 +203,9 @@ CAPTION "מאפיינים מורחבים"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
-    CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
-    LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
+    LTEXT "בחר את התכונות המתקדמות עבור קיצור דרך זה.", -1, 5, 30, 210, 10
+    CHECKBOX "הפעלה בתור משתמש אחר", 14000, 25, 50, 150, 10
+    LTEXT "אפשרות זו מאפשרת לך להפעיל את הקיצור הדרך בתור משתמש אחר או להמשיך בתור משתמש נוכחי ולהגן על מחשבך והמידע שלך מפעילות תכנית לא מורשת.", -1, 50, 60, 175, 40
     CHECKBOX "הרץ בטווח זיכרון מופרד", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "אישור", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "ביטול", 2, 120, 124, 50, 15, WS_VISIBLE
@@ -250,7 +250,7 @@ BEGIN
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "סוג קובץ:", 14004, 8, 35, 50, 10
     CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "נפתח באמצעות:", 14006, 8, 53, 50, 10
+    LTEXT "Opens with:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "שי&נוי...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -281,25 +281,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "גרסה"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "גרסת קובץ: ", 14000, 10, 10, 55, 10
+    LTEXT "גרסת קובץ:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "תיאור: ", 14002, 10, 27, 45, 10
+    LTEXT "תיאור:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "זכויות יוצרים: ", 14004, 10, 46, 66, 10
+    LTEXT "זכויות יוצרים:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "מידע נוסף: ", 14006, 6, 70, 222, 115
-    LTEXT "שם פריט: ", 14007, 13, 82, 50, 10
-    LTEXT "ערך: ", 14008, 112, 82, 45, 10
+    GROUPBOX "מידע נוסף", 14006, 6, 70, 222, 115
+    LTEXT "שם פריט:", 14007, 13, 82, 50, 10
+    LTEXT "ערך:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "כללי"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
+    ICON "", 14016, 10, 9, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "סוג:", -1, 8, 38, 95, 10
@@ -319,34 +319,22 @@ BEGIN
     LTEXT "קיבולת:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "כונן %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "ניקוי הדיסק", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "דחוס כונן זה כדי לחסוך בשטח דיסק", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "אפשר סידור תוכן באינדקס עבור קבצים בכונן זה בנוסף למאפייני קובץ", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "כונן %c", 14009, 95, 162, 50, 10
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "כלים"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "בדיקת שגיאות", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
+    LTEXT "אפשרות זו תבדוק אם ישנן שגיאות בכונן.", -1, 40, 25, 160, 20
     PUSHBUTTON "בדוק כעת...", 14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX "איחוי", -1, 5, 65, 230, 60
-    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-    PUSHBUTTON "אחה כעת...", 14001, 130, 105, 90, 15, WS_TABSTOP
-    GROUPBOX "גיבוי", -1, 5, 130, 230, 60
-    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-    PUSHBUTTON "גבה כעת...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "חומרה"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -358,7 +346,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "הפעל כ-"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+    LTEXT "באיזה חשבון משתמש ברצונך להשתמש כדי להפעיל תוכנית זו?", -1, 10, 20, 220, 20
     CHECKBOX "המשתמש הנוכחי %s", 14000, 10, 45, 150, 10
     LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
@@ -383,46 +371,24 @@ BEGIN
     RADIOBUTTON "&גודל מותאם אישית:", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "גודל &מרבי(MB):", -1, 20, 105, 70, 10
-    RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "אל תעביר קבצים לסל המחזור. הסר קבצים מיידית מתי בעת מחיקה.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "ה&צג תיבת דו-שיח לאישור מחיקה", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "פתיחה באמצעות"
+CAPTION "פתח באמצעות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
     LTEXT "קובץ:    ", 14001, 44, 25, 188, 20
     GROUPBOX "תוכניות:", -1, 7, 42, 249, 187
-    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&עיון...", 14004, 198, 207, 50, 14
+    CONTROL "תוכניות", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&עיון...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "אישור", IDOK, 150, 236, 50, 14
     PUSHBUTTON "ביטול", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "כללי"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    GROUPBOX "משימות", -1, 7, 10, 249, 45
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "Show common tasks in &folders", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Use ReactOS class&ic folders", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
-    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "Open each folder in the sa&me window", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Open each folder in its own &window", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Single-click to open an item (point to select)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Underline icon titles consistent with my &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "Underline icon titles only when I &point at them", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
-    AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -435,7 +401,7 @@ BEGIN
     LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
     PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-    LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+    LTEXT "אפשרויות מתקדמות:", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "Restore &Defaults", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
@@ -445,28 +411,28 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "File Types"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+    LTEXT "סוגי קבצים רשומים:", -1, 7, 10, 70, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&New", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Delete", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Details for '%s' extension", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
+    PUSHBUTTON "&מחק", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "פרטים עבורת סיומת '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
     LTEXT "Opens with:", -1, 12, 140, 40, 10
     //ICON
     LTEXT "Appname", IDC_FILETYPES_APPNAME, 100, 140, 40, 10
-    PUSHBUTTON "&Change...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&שינוי...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "Ad&vanced", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&מתקדם", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "וידוי החלפת קובץ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
-    PUSHBUTTON "Yes to &All", 12807, 85, 122, 60, 14
+    DEFPUSHBUTTON "&כן", IDYES, 20, 122, 60, 14
+    PUSHBUTTON "כן לכולם", 12807, 85, 122, 60, 14
     PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 215, 122, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
     LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
@@ -485,20 +451,20 @@ CAPTION "Log Off ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Are you sure you want to log off?", -1, 49, 15, 131, 8
-    DEFPUSHBUTTON "&Log Off", IDOK, 49, 38, 43, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 99, 38, 43, 14
+    LTEXT "האם אתה בטוח שברצונך להתנתק?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "התנתק", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Disconnect ReactOS"
+CAPTION "ניתוק ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Are you sure you want to disconnect?", -1, 49, 15, 131, 8
-    DEFPUSHBUTTON "&Disconnect", IDOK, 47, 38, 47, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 99, 38, 47, 14
+    LTEXT "האם ברצונך לנתק?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&נתק", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -508,7 +474,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Actions", -1, 7, 45, 212, 146
+    GROUPBOX "פעולות", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
@@ -517,7 +483,7 @@ END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "תוכן מעורב"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
@@ -525,12 +491,12 @@ BEGIN
     LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 160, 186, 60, 14
 END
 
 IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "תוכן מעורב"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
@@ -541,7 +507,7 @@ BEGIN
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 160, 185, 60, 14
 END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
@@ -555,12 +521,12 @@ BEGIN
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 159, 160, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 159, 160, 60, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Shut Down ReactOS"
+CAPTION "כיבוי ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -568,29 +534,29 @@ BEGIN
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "אתחול"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
     PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-    LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
+    LTEXT "&קיבולת:", -1, 7, 6, 169, 9
     COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&File system", -1, 7, 35, 170, 9
     COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-    LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+    LTEXT "&גודל יחידת הקצאה", -1, 7, 64, 170, 9
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Volume &label", -1, 7, 93, 170, 9
+    LTEXT "&תווית כונן", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-    AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-    AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
+    GROUPBOX "אפשרויות אתחול", 4610, 7, 121, 170, 49
+    AUTOCHECKBOX "&אתחול מהיר", 28674, 16, 135, 155, 10
+    AUTOCHECKBOX "אפשר דחיסת קבצים", 28675, 16, 152, 155, 10
 END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
@@ -598,32 +564,32 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Check Disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    DEFPUSHBUTTON "התחל", IDOK, 63, 95, 60, 14
     GROUPBOX "Check disk options", -1, 7, 6, 179, 40
-    PUSHBUTTON "Cancel", IDCANCEL, 128, 95, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
 IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "שינוי סמל"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
-    PUSHBUTTON "Browse...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    PUSHBUTTON "עיון...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 135, 179, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "אזהרה"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
@@ -631,22 +597,22 @@ BEGIN
 another application. Modifying this file might damage your\n\
 system or make it less functional.\n\n\
 Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    DEFPUSHBUTTON "כן", IDYES, 125, 55, 50, 14
     PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "יצירת סיומת חדשה"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&סיומת קובץ:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    PUSHBUTTON "<< &מתקדם", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
     LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 190, 55, 60, 14
 END
 
 STRINGTABLE
@@ -658,16 +624,16 @@ BEGIN
     IDS_SHV_COLUMN_MODIFIED "שונה"
     IDS_SHV_COLUMN_ATTRIBUTES "תכונות"
     IDS_SHV_COLUMN_DISK_CAPACITY "גודל"
-    IDS_SHV_COLUMN_DISK_AVAILABLE "Size available"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "גודל פנוי"
     IDS_SHV_COLUMN_OWNER "בעלים"
     IDS_SHV_COLUMN_GROUP "קבוצות"
     IDS_SHV_COLUMN_FILENAME "שם קובץ"
     IDS_SHV_COLUMN_CATEGORY "קטגוריה"
-    IDS_SHV_COLUMN_DELFROM "Original location"
+    IDS_SHV_COLUMN_DELFROM "מיקום מקורי"
     IDS_SHV_COLUMN_DELDATE "תאריך מחיקה"
     IDS_SHV_COLUMN_FONTTYPE "סוג גופן"
     IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_COLUMN_NETLOCATION "Network Location"
+    IDS_SHV_COLUMN_NETLOCATION "מיקום רשת"
     IDS_SHV_COLUMN_DOCUMENTS "מסמכים"
     IDS_SHV_COLUMN_STATUS "מצב"
     IDS_SHV_COLUMN_COMMENTS "הערות"
@@ -706,13 +672,13 @@ BEGIN
     IDS_FORMATDRIVE "אתחול..."
     IDS_RENAME "שנה שם"
     IDS_PASTE "הכנס"
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
+    IDS_EJECT "הוצא"
+    IDS_DISCONNECT "נתק"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"
-    IDS_DELETEITEM_CAPTION "Confirm File Deletion"
-    IDS_DELETEFOLDER_CAPTION "Confirm Folder Deletion"
+    IDS_DELETEITEM_CAPTION "וידוי מחיקת קובץ"
+    IDS_DELETEFOLDER_CAPTION "וידוי מחיקת תיקיה"
     IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
     IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
@@ -721,12 +687,12 @@ BEGIN
     IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
     IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
     IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-    IDS_OVERWRITEFILE_CAPTION "Confirm File Overwrite"
+    IDS_OVERWRITEFILE_CAPTION "וידוי שכתוב קובץ"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_COPYING "מעתיק..."
+    IDS_FILEOOP_MOVING "מעביר..."
+    IDS_FILEOOP_DELETING "מוחק..."
     IDS_FILEOOP_FROM_TO "From %1 to %2"
     IDS_FILEOOP_FROM "From %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
@@ -740,10 +706,10 @@ BEGIN
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
     IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_CAPTION "עיון"
     IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Start Menu\\Programs"
     IDS_PERSONAL "המסמכים שלי"
     IDS_FAVORITES "מועדפים"
@@ -773,31 +739,31 @@ BEGIN
     IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
     IDS_NETWORKPLACE "מיקומי הרשת שלי"
 
-    IDS_NEWFOLDER "תיקייה חדשה"
+    IDS_NEWFOLDER "תיקיה חדשה"
 
     IDS_DRIVE_FIXED "כונן מקומי"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "כונן CD"
     IDS_DRIVE_NETWORK "כונן רשת"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_DRIVE_REMOVABLE "כונן נשלף"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
-    IDS_OPEN_WITH "פתיחה באמצעות"
-    IDS_OPEN_WITH_CHOOSE "Choose Program..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH "פתח באמצעות"
+    IDS_OPEN_WITH_CHOOSE "בחירת תכנית..."
+    IDS_OPEN_WITH_RECOMMENDED "תכניות מומלצות:"
+    IDS_OPEN_WITH_OTHER "תכניות אחרות:"
 
-    IDS_SHELL_ABOUT_AUTHORS "&Authors"
+    IDS_SHELL_ABOUT_AUTHORS "&יוצרים"
     IDS_SHELL_ABOUT_BACK "< &Back"
     FCIDM_SHVIEW_NEW "New"
-    FCIDM_SHVIEW_NEWFOLDER "New &Folder"
+    FCIDM_SHVIEW_NEWFOLDER "תיקיה חדשה"
     FCIDM_SHVIEW_NEWLINK "New &Link"
     IDS_FOLDER_OPTIONS "Folder Options"
-    IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
-    IDS_RECYCLEBIN_DISKSPACE "Space Available"
+    IDS_RECYCLEBIN_LOCATION "מיקום סל מחזור"
+    IDS_RECYCLEBIN_DISKSPACE "שטח פנוי"
     IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
-    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_PICK_ICON_TITLE "בחר סמל"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
@@ -808,69 +774,69 @@ BEGIN
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     /* Friendly File Type Names */
-    IDS_DIRECTORY "Folder"
+    IDS_DIRECTORY "תיקיה"
     IDS_BAT_FILE "ReactOS Batch File"
     IDS_CMD_FILE "ReactOS Command Script"
-    IDS_COM_FILE "DOS Application"
-    IDS_CPL_FILE "Control Panel Item"
-    IDS_CUR_FILE "Cursor"
+    IDS_COM_FILE "תכנית DOS"
+    IDS_CPL_FILE "פריט לוח בקרה"
+    IDS_CUR_FILE "סמן"
     IDS_DB__FILE "Database File"
-    IDS_DLL_FILE "Application Extension"
-    IDS_DRV_FILE "Device Driver"
+    IDS_DLL_FILE "הרחבת יישום"
+    IDS_DRV_FILE "מנהל התקן"
     IDS_EFI_FILE "Extensible Firmware Interface Executable"
-    IDS_EXE_FILE "Application"
+    IDS_EXE_FILE "יישום"
     IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
+    IDS_OCX_FILE "בקר ActiveX"
     IDS_TLB_FILE "Type Library"
     IDS_FON_FILE "Font file"
     IDS_TTF_FILE "TrueType Font file"
     IDS_OTF_FILE "OpenType Font file"
     IDS_HLP_FILE "Help File"
-    IDS_ICO_FILE "Icon"
-    IDS_INI_FILE "Configuration Settings"
+    IDS_ICO_FILE "סמל"
+    IDS_INI_FILE "קובץ הגדרות תצורה"
     IDS_LNK_FILE "Shortcut"
     IDS_NT__FILE "NT DOS32 Configuration File"
     IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
-    IDS_SYS_FILE "System File"
-    IDS_VXD_FILE "Virtual Device Driver"
+    IDS_SCR_FILE "שומר מסך"
+    IDS_SYS_FILE "קובץ מערכת"
+    IDS_VXD_FILE "מנהל התקן וירטואלי"
     IDS_ANY_FILE "%s-file"
 
-    IDS_OPEN_VERB "Open"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_OPEN_VERB "פתח"
+    IDS_EXPLORE_VERB "סייר"
     IDS_RUNAS_VERB "Run as..."
     IDS_EDIT_VERB "Edit"
-    IDS_FIND_VERB "Find"
-    IDS_PRINT_VERB "Print"
+    IDS_FIND_VERB "מצא"
+    IDS_PRINT_VERB "הדפס"
 
-    IDS_FILE_FOLDER "%u Files, %u Folders"
-    IDS_PRINTERS "Printers"
+    IDS_FILE_FOLDER "%u קבצים, %u תיקיות"
+    IDS_PRINTERS "מדפסות"
     IDS_FONTS "Fonts"
-    IDS_INSTALLNEWFONT "Install New Font..."
+    IDS_INSTALLNEWFONT "התקנת גופן חדש..."
 
-    IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
+    IDS_DEFAULT_CLUSTER_SIZE "גודל ברירת מחדל להקצאה"
     IDS_COPY_OF "Copy of"
 
     IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
 
-    IDS_FILE_DETAILS "Details for '%s' extension"
+    IDS_FILE_DETAILS "פרטים עבורת סיומת '%s'"
     IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
     IDS_FILE_TYPES "File Types"
-    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_COLUMN_EXTENSION "סיומות"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "%s File"
 
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "בתים"
+    IDS_UNKNOWN_APP "יישום לא ידוע"
+    IDS_EXE_DESCRIPTION "תיאור:"
 
-    IDS_MENU_EMPTY "(Empty)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_MENU_EMPTY "(ריק)"
+    IDS_OBJECTS "%d פריטים"
+    IDS_OBJECTS_SELECTED "%d פריטים נבחרו"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_FOLDER "קבצים ותיקיות"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
     IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
@@ -878,9 +844,9 @@ BEGIN
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
     IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDDEN "קבצים ותיקיות מוסתרים"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "אל תציג קבצים ותיקיות מוסתרים"
+    IDS_ADVANCED_SHOW_HIDDEN "הצג קבצים ותיקיות מוסתרים"
     IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
     IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
     IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
@@ -890,12 +856,12 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
     IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
+    IDS_NEWEXT_ADVANCED_LEFT "<< &מתקדם"
+    IDS_NEWEXT_ADVANCED_RIGHT "&מתקדם >>"
     IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_SPECIFY_EXT "עליך לציין סיומת."
+    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to unassociate %s with %s and create a new File Type for it?"
+    IDS_NEWEXT_EXT_IN_USE "סיומת בשימוש"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
     IDS_FILE_NOT_FOUND "The file '%s' was not found."

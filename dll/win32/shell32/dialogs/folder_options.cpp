@@ -761,161 +761,6 @@ Advanced_SortAll(VOID)
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
-static VOID
-UpdateGeneralIcons(HWND hDlg)
-{
-    HWND hwndTaskIcon, hwndFolderIcon, hwndClickIcon;
-    HICON hTaskIcon = NULL, hFolderIcon = NULL, hClickIcon = NULL;
-    LPTSTR lpTaskIconName = NULL, lpFolderIconName = NULL, lpClickIconName = NULL;
-
-    // show task setting icon
-    if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_COMMONTASKS) == BST_CHECKED)
-        lpTaskIconName = MAKEINTRESOURCE(IDI_SHELL_SHOW_COMMON_TASKS);
-    else if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_CLASSICFOLDERS) == BST_CHECKED)
-        lpTaskIconName = MAKEINTRESOURCE(IDI_SHELL_CLASSIC_FOLDERS);
-
-    if (lpTaskIconName)
-    {
-        hTaskIcon = (HICON)LoadImage(shell32_hInstance,
-                                     lpTaskIconName,
-                                     IMAGE_ICON,
-                                     0,
-                                     0,
-                                     LR_DEFAULTCOLOR);
-        if (hTaskIcon)
-        {
-            hwndTaskIcon = GetDlgItem(hDlg,
-                                    IDC_FOLDER_OPTIONS_TASKICON);
-            if (hwndTaskIcon)
-            {
-                SendMessage(hwndTaskIcon,
-                            STM_SETIMAGE,
-                            IMAGE_ICON,
-                            (LPARAM)hTaskIcon);
-            }
-        }
-    }
-
-    // show Folder setting icons
-    if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW) == BST_CHECKED)
-        lpFolderIconName = MAKEINTRESOURCE(IDI_SHELL_OPEN_IN_SOME_WINDOW);
-    else if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_OWNWINDOW) == BST_CHECKED)
-        lpFolderIconName = MAKEINTRESOURCE(IDI_SHELL_OPEN_IN_NEW_WINDOW);
-
-    if (lpFolderIconName)
-    {
-        hFolderIcon = (HICON)LoadImage(shell32_hInstance,
-                                       lpFolderIconName,
-                                       IMAGE_ICON,
-                                       0,
-                                       0,
-                                       LR_DEFAULTCOLOR);
-        if (hFolderIcon)
-        {
-            hwndFolderIcon = GetDlgItem(hDlg,
-                                    IDC_FOLDER_OPTIONS_FOLDERICON);
-            if (hwndFolderIcon)
-            {
-                SendMessage(hwndFolderIcon,
-                            STM_SETIMAGE,
-                            IMAGE_ICON,
-                            (LPARAM)hFolderIcon);
-            }
-        }
-    }
-
-    // Show click setting icon
-    if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_SINGLECLICK) == BST_CHECKED)
-        lpClickIconName = MAKEINTRESOURCE(IDI_SHELL_SINGLE_CLICK_TO_OPEN);
-    else if(IsDlgButtonChecked(hDlg, IDC_FOLDER_OPTIONS_DOUBLECLICK) == BST_CHECKED)
-        lpClickIconName = MAKEINTRESOURCE(IDI_SHELL_DOUBLE_CLICK_TO_OPEN);
-
-    if (lpClickIconName)
-    {
-        hClickIcon = (HICON)LoadImage(shell32_hInstance,
-                                      lpClickIconName,
-                                      IMAGE_ICON,
-                                      0,
-                                      0,
-                                      LR_DEFAULTCOLOR);
-        if (hClickIcon)
-        {
-            hwndClickIcon = GetDlgItem(hDlg,
-                                    IDC_FOLDER_OPTIONS_CLICKICON);
-            if (hwndClickIcon)
-            {
-                SendMessage(hwndClickIcon,
-                            STM_SETIMAGE,
-                            IMAGE_ICON,
-                            (LPARAM)hClickIcon);
-            }
-        }
-    }
-
-    // Clean up
-    if(hTaskIcon)
-        DeleteObject(hTaskIcon);
-    if(hFolderIcon)
-        DeleteObject(hFolderIcon);
-    if(hClickIcon)
-        DeleteObject(hClickIcon);
-}
-
-INT_PTR
-CALLBACK
-FolderOptionsGeneralDlg(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
-{
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-            // FIXME
-            break;
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDC_FOLDER_OPTIONS_COMMONTASKS:
-                case IDC_FOLDER_OPTIONS_CLASSICFOLDERS:
-                case IDC_FOLDER_OPTIONS_SAMEWINDOW:
-                case IDC_FOLDER_OPTIONS_OWNWINDOW:
-                case IDC_FOLDER_OPTIONS_SINGLECLICK:
-                case IDC_FOLDER_OPTIONS_DOUBLECLICK:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                    {
-                        UpdateGeneralIcons(hwndDlg);
-
-                        /* Enable the 'Apply' button */
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
-                    break;
-            }
-            break;
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    break;
-            }
-            break;
-        }
-        case WM_DESTROY:
-            break;
-        default:
-            return FALSE;
-    }
-    return FALSE;
-}
-
 static BOOL
 ViewDlg_OnInitDialog(HWND hwndDlg)
 {
@@ -2039,14 +1884,10 @@ VOID
 ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
 {
     PROPSHEETHEADERW pinfo;
-    HPROPSHEETPAGE hppages[3];
+    HPROPSHEETPAGE hppages[2];
     HPROPSHEETPAGE hpage;
     UINT num_pages = 0;
     WCHAR szOptions[100];
-
-    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
-    if (hpage)
-        hppages[num_pages++] = hpage;
 
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
     if (hpage)

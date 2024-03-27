@@ -1,10 +1,10 @@
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+// COPYRIGHT: Kudratov Olimjon <olim98@bk.ru>
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -23,7 +23,7 @@ BEGIN
     BEGIN
         POPUP "&Вид", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -81,7 +81,7 @@ BEGIN
     BEGIN
         MENUITEM "&Copy here", IDM_COPYHERE
         MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "Создать &ярлыки здесь", IDM_LINKHERE
         MENUITEM SEPARATOR
         MENUITEM "Cancel", 0
     END
@@ -135,7 +135,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Команда ReactOS\0", IDC_STATIC, 105, 75, 65, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
@@ -163,9 +163,9 @@ CAPTION "Выполнить"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Введите имя программы, папки, документа или ресурс Интернета, и ReactOS откроет их.", 12289, 36, 11, 182, 18
-    LTEXT "&Открыть:", 12305, 7, 39, 34, 10
-    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 43, 37, 177, 100
+    LTEXT "Введите имя программы, папки, документа или ресурс Интернета.", 12289, 36, 11, 182, 18
+    LTEXT "&Открыть:", 12305, 2, 39, 34, 10
+    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14, WS_TABSTOP
     PUSHBUTTON "Отмена", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
     PUSHBUTTON "Об&зор...", 12288, 160, 70, 59, 14, WS_TABSTOP
@@ -195,7 +195,7 @@ BEGIN
     LTEXT "&Комментарий:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Найти объект...", 14020, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "См&енить значок...", 14021, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "Сменить &значок...", 14021, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "&Дополнительно...", 14022, 159, 172, 70, 14, ES_LEFT
 END
 
@@ -283,25 +283,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Версия"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Версия файла: ", 14000, 10, 10, 55, 10
+    LTEXT "Версия файла:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Описание: ", 14002, 10, 27, 45, 10
+    LTEXT "Описание:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Авторские права: ", 14004, 10, 46, 66, 10
+    LTEXT "Авторские права:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Дополнительные сведения: ", 14006, 6, 70, 222, 115
-    LTEXT "Имя элемента: ", 14007, 13, 82, 63, 10
-    LTEXT "Значение: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Дополнительные сведения", 14006, 6, 70, 222, 115
+    LTEXT "Имя элемента:", 14007, 13, 82, 63, 10
+    LTEXT "Значение:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
+    ICON "", 14016, 10, 9, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Тип:", -1, 8, 38, 95, 10
@@ -321,15 +321,11 @@ BEGIN
     LTEXT "Емкость:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "Диск %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "Очистка &диска", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "&Сжимать для экономии места", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "Диск %c", 14009, 95, 162, 50, 10
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Сервис"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -338,17 +334,9 @@ BEGIN
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Проверка тома на наличие ошибок.", -1, 40, 25, 160, 20
     PUSHBUTTON "Выполнить &проверку...", 14000, 110, 45, 120, 15, WS_TABSTOP
-    GROUPBOX "Дефрагментация диска", -1, 5, 65, 230, 60
-    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Дефрагментация файлов, хранящихся на этом томе.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 110, 105, 120, 15, WS_TABSTOP
-    GROUPBOX "Архивация", -1, 5, 130, 230, 60
-    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "Архивация файлов, хранящихся на этом томе.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оборудование"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -399,32 +387,10 @@ BEGIN
     LTEXT "Файл:    ", 14001, 44, 25, 188, 20
     GROUPBOX "Программы", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Использовать ее для всех файлов такого типа", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&Обзор...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&Использовать ее для всех файлов такого типа", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&Обзор...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Общие"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    GROUPBOX "Задачи", -1, 7, 10, 249, 45
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 145, 10
-    GROUPBOX "Обзор папок", -1, 7, 60, 249, 45, WS_TABSTOP
-    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "&Открывать папки в одном и том же окне", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 165, 10
-    GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 185, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчеркив&ать подписи значков", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 175, 10
-    AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 180, 10
-    PUSHBUTTON "&Восстановить умолчания", 14011, 145, 180, 95, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -618,7 +584,7 @@ BEGIN
     PUSHBUTTON "Обзор...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Выберите значок из списка ниже:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 135, 179, 50, 14
 END
@@ -693,7 +659,7 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Версия %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Большие значки"
+    IDS_VIEW_LARGE "&Крупные значки"
     IDS_VIEW_SMALL "&Мелкие значки"
     IDS_VIEW_LIST "&Список"
     IDS_VIEW_DETAILS "&Таблица"
@@ -745,7 +711,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Обзор"
     IDS_RUNDLG_BROWSE_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Главное меню\\Программы"
     IDS_PERSONAL "Мои документы"
     IDS_FAVORITES "Избранное"
@@ -831,7 +797,7 @@ BEGIN
     IDS_ICO_FILE "Значок"
     IDS_INI_FILE "Файл конфигурации"
     IDS_LNK_FILE "Ярлык"
-    IDS_NT__FILE "NT DOS32 Configuration File"
+    IDS_NT__FILE "Файл конфигурации NT DOS32"
     IDS_PIF_FILE "Информация о приложении NT VDM"
     IDS_SCR_FILE "Заставка"
     IDS_SYS_FILE "Системный файл"
@@ -895,10 +861,10 @@ BEGIN
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
     IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
+    IDS_NEWEXT_SPECIFY_EXT "Необходимо задать расширение."
+    IDS_NEWEXT_ALREADY_ASSOC "Расширение '%s' уже сопоставлено файлам типа '%s'. Удалить сопоставление '%s' с '%s' и создать для него новый тип файла?"
     IDS_NEWEXT_EXT_IN_USE "Extension is in use"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
+    IDS_REMOVE_EXT "Если вы удалите регистрацию расширения имени файлов, то вы не сможете открывать соответствующие файлы двойным щелчком.\n\nВы действительно хотите удалить это расширение?"
     IDS_FILE_NOT_FOUND "Файл '%s' не найден."
 END

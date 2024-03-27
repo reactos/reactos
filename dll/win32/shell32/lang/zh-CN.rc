@@ -1,12 +1,7 @@
-/*
- * PROJECT:     ReactOS Shell32
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shell32/lang/zh-CN.rc
- * PURPOSE:     Chinese (Simplified) Language Resources
- * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
-                2011 Elton Chung aka MfldElton <elton328@gmail.com>
-                2017 Luo Yufan <njlyf2011@hotmail.com>
- */
+// LICENSE:   GPL - See COPYING in the top level directory
+// COPYRIGHT: 2008 zhangbing <e_zb@21cn.com ezb@mail.gywb.cn>
+//            2011 Elton Chung (MfldElton) <elton328@gmail.com>
+//            2017 Luke Luo <njlyf2011@hotmail.com>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -20,7 +15,7 @@ BEGIN
     POPUP "排列图标(&I)", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "自动排列(&D)", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "自动排列(&A)", FCIDM_SHVIEW_AUTOARRANGE
     END
 END
 
@@ -40,7 +35,7 @@ BEGIN
         POPUP "排列图标(&I)", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "自动排列(&D)", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "自动排列(&A)", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "刷新", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -72,7 +67,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "剪切(&U)", IDM_CUT
+        MENUITEM "剪切(&T)", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
         MENUITEM SEPARATOR
         MENUITEM "创建快捷方式(&L)", IDM_CREATELINK
@@ -87,11 +82,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "复制到此处(&C)", IDM_COPYHERE
+        MENUITEM "移动到此处(&M)", IDM_MOVEHERE
+        MENUITEM "在此创建快捷方式(&S)", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "取消", 0
     END
 END
 
@@ -143,7 +138,7 @@ BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
-    LTEXT "版权所有 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "版权所有 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS 团队\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
@@ -151,7 +146,7 @@ BEGIN
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-    LTEXT "已安装的物理内存：", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "已安装的物理内存:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "确定", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
@@ -161,7 +156,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "宋体"
 BEGIN
-    LTEXT "为你带来 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "带给您 ReactOS 的是:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -171,9 +166,9 @@ CAPTION "运行"
 FONT 9, "宋体"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "输入程序，目录，文件或者 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
+    LTEXT "输入程序、目录、文件或 Internet 资源名称。", 12289, 36, 11, 182, 18
     LTEXT "打开(&O):", 12305, 7, 39, 32, 10
-    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 42, 37, 178, 100
+    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "确定", IDOK, 62, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
     PUSHBUTTON "浏览(&B)...", 12288, 170, 70, 50, 14, WS_TABSTOP
@@ -187,9 +182,9 @@ BEGIN
     ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
     EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "目标类型：", 14004, 8, 38, 68, 10
+    LTEXT "目标类型:", 14004, 8, 38, 68, 10
     EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "目标位置：", 14006, 8, 55, 68, 10
+    LTEXT "目标位置:", 14006, 8, 55, 68, 10
     EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "目标(&T):", 14008, 8, 71, 68, 10
     EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
@@ -215,7 +210,7 @@ BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "为这个快捷方式选择您想要的高级属性。", -1, 5, 30, 210, 10
     CHECKBOX "以其他用户身份运行", 14000, 25, 50, 150, 10
-    LTEXT "此选项允许您以另一用户身份运行此快捷方式，或继续以您自己的身份运行以保护您的计算机和数据不受未授权程序的破坏。", -1, 50, 60, 175, 40
+    LTEXT "此选项允许您以其他用户身份运行此快捷方式，或者在保护计算机和数据免受未经授权的程序活动的同时继续自行运行。", -1, 50, 60, 175, 40
     CHECKBOX "在单独的内存空间中运行", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
@@ -228,22 +223,22 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "文件类型：", 14004, 8, 40, 55, 10
+    LTEXT "文件类型:", 14004, 8, 40, 55, 10
     CONTROL "文件夹", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "地点:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "大小:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "在磁盘上的大小：", 140101, 8, 88, 55, 10
+    LTEXT "占用空间:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "包含：", 14026, 8, 104, 55, 10
+    LTEXT "包含:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "创建：", 14014, 8, 128, 55, 10
+    LTEXT "创建:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "属性：", 14020, 8, 152, 46, 10
+    LTEXT "属性:", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "只读(&R)", 14021, 58, 151, 70, 10
     AUTOCHECKBOX "隐藏(&H)", 14022, 126, 151, 70, 10
     AUTOCHECKBOX "存档(&A)", 14023, 181, 151, 70, 10
@@ -258,7 +253,7 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "文件类型：", 14004, 8, 35, 50, 10
+    LTEXT "文件类型:", 14004, 8, 35, 50, 10
     CONTROL "文件", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "打开方式:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
@@ -269,21 +264,21 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "大小:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "在磁盘上的大小：", 140112, 8, 107, 55, 10
+    LTEXT "占用空间:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "创建：", 14014, 8, 131, 45, 10
+    LTEXT "创建:", 14014, 8, 131, 45, 10
     EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "修订日期：", 14016, 8, 147, 45, 10
+    LTEXT "修改日期:", 14016, 8, 147, 45, 10
     EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "访问：", 14018, 8, 163, 45, 10
+    LTEXT "访问:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "属性：", 14020, 8, 189, 45, 10
+    LTEXT "属性:", 14020, 8, 189, 45, 10
     AUTOCHECKBOX "只读(&R)", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "隐藏(&H)", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "存档(&A)", 14023, 181, 188, 49, 10
-    PUSHBUTTON "高级...(&A)", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "高级...(&D)", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -291,34 +286,34 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "版本"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "文件版本: ", 14000, 10, 10, 55, 10
+    LTEXT "文件版本:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "描述: ", 14002, 10, 27, 45, 10
+    LTEXT "描述:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "版权: ", 14004, 10, 46, 66, 10
+    LTEXT "版权:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "其他版本信息: ", 14006, 6, 70, 222, 115
-    LTEXT "项目名称: ", 14007, 13, 82, 50, 10
-    LTEXT "值: ", 14008, 112, 82, 45, 10
+    GROUPBOX "其他版本信息", 14006, 6, 70, 222, 115
+    LTEXT "项目名称:", 14007, 13, 82, 50, 10
+    LTEXT "值:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
-IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
+    ICON "", 14016, 10, 9, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "类型：", -1, 8, 38, 95, 10
+    LTEXT "类型:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "文件系统：", -1, 8, 51, 95, 10
+    LTEXT "文件系统:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "已用空间：", -1, 25, 69, 80, 10
+    LTEXT "已用空间:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
@@ -326,18 +321,14 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "容量：", -1, 25, 103, 80, 10
+    LTEXT "容量:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "磁盘 %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "磁盘清理(&D)", 14010, 160, 154, 70, 15, WS_TABSTOP
-    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "压缩磁盘以节约磁盘空间", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "允许索引服务编制该磁盘的索引以便快速搜索文件", 14012, 8, 205, 222, 10, WS_DISABLED
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
+    CTEXT "磁盘 %c", 14009, 95, 162, 50, 10
 END
 
-IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "工具"
 FONT 9, "宋体", 0, 0, 0x0
@@ -346,17 +337,9 @@ BEGIN
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "该选项将检查卷\n中的错误。", -1, 40, 25, 160, 20
     PUSHBUTTON "开始检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX "碎片整理", -1, 5, 65, 230, 60
-    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "该选项将整理卷中的文件。", -1, 40, 85, 160, 20
-    PUSHBUTTON "开始整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
-    GROUPBOX "备份", -1, 5, 130, 230, 60
-    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "该选项将备份卷中的文件。", -1, 40, 150, 160, 20
-    PUSHBUTTON "开始备份...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
-IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "硬件"
 FONT 9, "宋体", 0, 0, 0x0
@@ -373,10 +356,10 @@ BEGIN
     LTEXT "保护我的计算机和数据不受未授权程序的活动影响", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "这个选项可以保护您的计算机或个人数据不受病毒损害，但是选择这项可能会引起程序工作不正确。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "下列用户:", 14002, 10, 100, 90, 10
-    LTEXT "用户名：", -1, 20, 118, 54, 10
+    LTEXT "用户名:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
-    LTEXT "密码：", -1, 20, 143, 53, 10
+    LTEXT "密码:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
     PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
     PUSHBUTTON "确定", 14007, 57, 170, 60, 14, WS_TABSTOP
@@ -404,35 +387,13 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "选择您想要用来打开此文件的程序:", -1, 44, 12, 211, 10
-    LTEXT "文件:    ", 14001, 44, 25, 188, 20
+    LTEXT "文件:   ", 14001, 44, 25, 188, 20
     GROUPBOX "程序(&P)", -1, 7, 42, 249, 187
     CONTROL "程序", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "始终使用选择的程序打开这种文件(&A)", 14003, 20, 193, 225, 10
-    PUSHBUTTON "浏览...(&B)", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "始终使用选择的程序打开这种文件(&A)", 14003, 16, 193, 232, 10
+    PUSHBUTTON "浏览...(&B)", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "确定", IDOK, 150, 236, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "常规"
-FONT 9, "宋体", 0, 0, 0x0
-BEGIN
-    GROUPBOX "任务", -1, 7, 10, 249, 45
-    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "在文件夹中显示常见任务(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "使用 ReactOS 传统风格的文件夹(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "浏览文件夹", -1, 7, 60, 249, 45, WS_TABSTOP
-    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "在同一窗口中打开每个文件夹(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "在不同窗口中打开不同的文件夹(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "打开项目的方式", -1, 7, 110, 249, 60
-    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "通过单击打开项目(指向时选定)(&s)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "根据浏览器设置给图标标题加下划线(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "仅当指向图标标题时加下划线(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
-    AUTORADIOBUTTON "双击要打开的项目(单击时选定)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    PUSHBUTTON "还原为默认值(&R)", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -445,7 +406,7 @@ BEGIN
     LTEXT "您可以应用您正在使用此文件夹的\n所有文件夹的视图(如详细信息或平铺)。", -1, 60, 20, 180, 20
     PUSHBUTTON "应用到所有文件夹(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重置所有文件夹(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
-    LTEXT "高级设置：", -1, 7, 80, 100, 10
+    LTEXT "高级设置:", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "还原默认值(&D)", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
@@ -459,10 +420,10 @@ BEGIN
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "新建(&N)", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "删除(&D)", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "'%S' 扩展的详细信息", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
+    GROUPBOX "'%s' 扩展的详细信息", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
     LTEXT "打开方式:", -1, 12, 140, 40, 10
     //ICON
-    LTEXT "应用程序名称", IDC_FILETYPES_APPNAME, 100, 140, 40, 10
+    LTEXT "程序名称", IDC_FILETYPES_APPNAME, 100, 140, 40, 10
     PUSHBUTTON "更改...(&C)", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
     PUSHBUTTON "高级(&V)", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
@@ -478,13 +439,13 @@ BEGIN
     PUSHBUTTON "否(&N)", IDNO, 150, 122, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "此文件夹已包含名为 '%2' 的文件。", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "此文件夹已包含一个名为 '%2' 的只读文件。", 12292, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "此文件夹已包含一个名为 '%2' 的系统文件。", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "此文件夹已包含名为'%2'的文件。", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "此文件夹已包含一个名为'%2'的只读文件。", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "此文件夹已包含一个名为'%2'的系统文件。", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "你想要替换现有文件吗", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(未知的日期和大小)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-    LTEXT "用这个吗？", -1, 44, 75, 228, 10, SS_NOPREFIX
+    LTEXT "用这个吗?", -1, 44, 75, 228, 10, SS_NOPREFIX
     LTEXT "(未知的日期和大小)", 12303, 79, 91, 198, 20, SS_NOPREFIX
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
@@ -516,7 +477,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "自动播放"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "&选择一个内容类型，然后选择操作电脑来自动执行在此设备中使用该类型的时候(&S):", 1000, 7, 7, 215, 20
+    LTEXT "选择一个内容类型，然后选择操作电脑来自动执行在此设备中使用该类型的时候(&S):", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "行动", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "选择要执行的操作(&P):", 1005, 14, 54, 202, 10, WS_GROUP
@@ -527,12 +488,12 @@ END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "混合的内容"
+CAPTION "混合内容"
 FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "此磁盘或设备包含多个类型的内容。", 1001, 32, 7, 191, 20
-    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 31, 188, 8
+    LTEXT "您想要 ReactOS 做什么?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "确定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -540,14 +501,14 @@ END
 
 IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "混合的内容"
+CAPTION "混合内容"
 FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "每次您插入盘或连接的设备与此类型的文件，ReactOS 可以执行相同的操作：", 1001, 30, 7, 193, 20
+    LTEXT "每次您插入盘或连接的设备与此类型的文件，ReactOS 可以执行相同的操作:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
+    LTEXT "您想要 ReactOS 做什么?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "始终执行选择的操作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "确定", IDOK, 96, 185, 60, 14
@@ -561,7 +522,7 @@ FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "每次您连接此设备，ReactOS 可以执行相同的操作。", 1001, 32, 7, 190, 22
-    LTEXT "你想要 ReactOS 做什么？(&W)", 1002, 32, 31, 190, 8
+    LTEXT "您想要 ReactOS 做什么?(&W)", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "总是执行选定的操作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "确定", IDOK, 94, 160, 60, 14
@@ -574,7 +535,7 @@ CAPTION "关闭 ReactOS"
 FONT 9, "宋体"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "你想让计算机做什么？", -1, 39, 7, 167, 10
+    LTEXT "您想让计算机做什么?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
@@ -612,7 +573,7 @@ BEGIN
     GROUPBOX "请检查磁盘选项", -1, 7, 6, 179, 40
     PUSHBUTTON "取消", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "自动修复文件系统错误", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "扫描并试图恢复坏扇区(&S)", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "扫描并试图恢复坏扇区(&S)", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -626,7 +587,7 @@ BEGIN
     PUSHBUTTON "浏览...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "从以下列表选择一个图标:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "确定", IDOK, 81, 179, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 135, 179, 50, 14
 END
@@ -637,24 +598,24 @@ CAPTION "警告"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能变弱。\n\n\
-你确定你想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
+    LTEXT "操作系统或其他应用程序可能会使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能不正常。\n\n\
+你确定您想要打开此文件?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "新建扩展名"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "文件扩展名(&F):", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< 高级(&V)", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "相关的文件类型(&A):", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "取消", IDCANCEL, 190, 55, 60, 14
 END
 
 STRINGTABLE
@@ -696,7 +657,7 @@ BEGIN
     IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
     /* About shell dialog version string */
-    IDS_ABOUT_VERSION_STRING "版本 %S (%S)"
+    IDS_ABOUT_VERSION_STRING "版本 %S(%S)"
 
     /* context menus */
     IDS_VIEW_LARGE "大图标(&G)"
@@ -717,20 +678,20 @@ BEGIN
     IDS_EJECT "弹出"
     IDS_DISCONNECT "断开"
 
-    IDS_CREATEFOLDER_DENIED "无法创建文件夹 '%1'"
+    IDS_CREATEFOLDER_DENIED "无法创建文件夹'%1'"
     IDS_CREATEFOLDER_CAPTION "无法创建文件夹"
     IDS_DELETEITEM_CAPTION "确认文件删除"
     IDS_DELETEFOLDER_CAPTION "确认文件夹删除"
-    IDS_DELETEITEM_TEXT "确实要删除 '%1'?"
-    IDS_DELETEMULTIPLE_TEXT "确实要删除这 '%1' 项?"
+    IDS_DELETEITEM_TEXT "确实要删除'%1'?"
+    IDS_DELETEMULTIPLE_TEXT "确实要删除这'%1'项?"
     IDS_DELETESELECTED_TEXT "确实要删除所选的项目吗?"
-    IDS_TRASHITEM_TEXT "你确定你想要移动 '%1' 到回收站？"
-    IDS_TRASHFOLDER_TEXT "确定你想要将 '%1' 和它的所有内容发送到回收站吗?"
-    IDS_TRASHMULTIPLE_TEXT "确实要将这 '%1' 项发送到回收站吗?"
-    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要彻底删除它吗？"
-    IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为 '%1' 的文件。\n\n你想要替换它吗？"
+    IDS_TRASHITEM_TEXT "您确定想移动'%1'到回收站?"
+    IDS_TRASHFOLDER_TEXT "您确定想要将'%1'和它的所有内容发送到回收站吗?"
+    IDS_TRASHMULTIPLE_TEXT "确实要将这'%1'项发送到回收站吗?"
+    IDS_CANTTRASH_TEXT "项目'%1'不能发送到回收站。您想要彻底删除它吗?"
+    IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为'%1'的文件。\n\n您想要替换它吗?"
     IDS_OVERWRITEFILE_CAPTION "确认文件覆盖"
-    IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为 '%1' 文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗？"
+    IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为'%1'文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗?"
 
     IDS_FILEOOP_COPYING "正在复制..."
     IDS_FILEOOP_MOVING "正在移动..."
@@ -746,12 +707,12 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "是否关闭系统?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
-    IDS_RUNDLG_BROWSE_ERROR "无法显示浏览对话框 (内部错误)"
+    IDS_RUNDLG_ERROR "无法显示运行文件对话框(内部错误)"
+    IDS_RUNDLG_BROWSE_ERROR "无法显示浏览对话框(内部错误)"
     IDS_RUNDLG_BROWSE_CAPTION "浏览"
     IDS_RUNDLG_BROWSE_FILTER "可执行文件 (*.exe)\0*.exe\0所有文件 (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     /* ATTENTION: If there is no special situation, please DO NOT change
     English folder names into Chinese, or it may cause problems in the system. */
     IDS_PROGRAMS "「开始」菜单\\程序"
@@ -795,8 +756,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH "打开方式"
     IDS_OPEN_WITH_CHOOSE "选择程序"
-    IDS_OPEN_WITH_RECOMMENDED "推荐的程序："
-    IDS_OPEN_WITH_OTHER "其他程序："
+    IDS_OPEN_WITH_RECOMMENDED "推荐的程序:"
+    IDS_OPEN_WITH_OTHER "其他程序:"
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 返回(&B)"
@@ -811,11 +772,11 @@ BEGIN
     IDS_PICK_ICON_FILTER "图标文件 (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "可执行文件 (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "无法锁定卷 (错误代码: %lu)."
-    IDS_CANTDISMOUNTVOLUME "无法卸载卷 (错误代码: %lu)."
-    IDS_CANTEJECTMEDIA "无法弹出媒体 (错误代码: %lu)."
-    IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
-    IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
+    IDS_CANTLOCKVOLUME "无法锁定卷(错误代码:%lu)."
+    IDS_CANTDISMOUNTVOLUME "无法卸载卷(错误代码:%lu)."
+    IDS_CANTEJECTMEDIA "无法弹出媒体(错误代码:%lu)."
+    IDS_CANTSHOWPROPERTIES "无法显示属性(错误代码:%lu)."
+    IDS_CANTDISCONNECT "无法断开连接(错误代码:%lu)."
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
@@ -824,14 +785,14 @@ BEGIN
     IDS_COM_FILE "DOS 应用程序"
     IDS_CPL_FILE "控制面板项"
     IDS_CUR_FILE "光标"
-    IDS_DB__FILE "Database File"
+    IDS_DB__FILE "数据库文件"
     IDS_DLL_FILE "应用程序扩展"
     IDS_DRV_FILE "设备驱动程序"
-    IDS_EFI_FILE "Extensible Firmware Interface Executable"
+    IDS_EFI_FILE "可扩展固件接口(EFI) 可执行文件"
     IDS_EXE_FILE "应用程序"
-    IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
-    IDS_TLB_FILE "Type Library"
+    IDS_NLS_FILE "国家语言支持文件"
+    IDS_OCX_FILE "ActiveX 控件"
+    IDS_TLB_FILE "类型库"
     IDS_FON_FILE "字体文件"
     IDS_TTF_FILE "TrueType 字体文件"
     IDS_OTF_FILE "OpenType 字体文件"
@@ -839,12 +800,12 @@ BEGIN
     IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
-    IDS_NT__FILE "NT DOS32 Configuration File"
+    IDS_NT__FILE "NT DOS32 配置文件"
     IDS_PIF_FILE "NT VDM 程序信息文件"
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-文件"
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"
@@ -863,8 +824,8 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "没有为 ReactOS 配置关联的程序以打开这种类型的文件。"
 
-    IDS_FILE_DETAILS "'%S' 扩展名的详细信息"
-    IDS_FILE_DETAILSADV "文件扩展名为 '%s' 的类型 '%s'。若要更改会影响所有的 '%s' 文件的设置，请单击高级。"
+    IDS_FILE_DETAILS "'%s'扩展名的详细信息"
+    IDS_FILE_DETAILSADV "文件扩展名为'%s'的类型'%s'。若要更改会影响所有的'%s'文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
     IDS_COLUMN_EXTENSION "扩展名"
 
@@ -874,7 +835,7 @@ BEGIN
 
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
-    IDS_EXE_DESCRIPTION "描述："
+    IDS_EXE_DESCRIPTION "描述:"
 
     IDS_MENU_EMPTY "(空)"
     IDS_OBJECTS "%d 个对象"
@@ -882,9 +843,9 @@ BEGIN
 
     IDS_ADVANCED_FOLDER "文件和文件夹"
     IDS_ADVANCED_NET_CRAWLER "自动搜索网络文件夹和打印机"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "在文件夹提示中显示文件大小信息"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "在文件夹提示中显示大小信息"
     IDS_ADVANCED_FRIENDLY_TREE "在资源管理器文件夹列表中显示简单文件夹查看"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "显示系统文件夹的内容"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "显示系统文件夹内容"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "在地址栏中显示完整路径"
     IDS_ADVANCED_SHOW_FULL_PATH "在标题栏中显示完整路径"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "不缓存缩略图"
@@ -892,21 +853,21 @@ BEGIN
     IDS_ADVANCED_DONT_SHOW_HIDDEN "不显示隐藏的文件和文件夹"
     IDS_ADVANCED_SHOW_HIDDEN "显示隐藏的文件和文件夹"
     IDS_ADVANCED_HIDE_FILE_EXT "隐藏已知文件类型的扩展名"
-    IDS_ADVANCED_SUPER_HIDDEN "隐藏受保护的操作系统文件 (推荐)"
+    IDS_ADVANCED_SUPER_HIDDEN "隐藏受保护的操作系统文件(推荐)"
     IDS_ADVANCED_DESKTOP_PROCESS "在单独的进程中打开文件夹窗口"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每个文件夹的视图设置"
     IDS_ADVANCED_PERSIST_BROWSERS "在登录时还原上一个文件夹窗口"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
     IDS_ADVANCED_SHOW_COMP_COLOR "用彩色显示加密或压缩的 NTFS 文件"
-    IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
+    IDS_ADVANCED_SHOW_INFO_TIP "显示文件夹和桌面项目的弹出描述"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< 高级(&V)"
+    IDS_NEWEXT_ADVANCED_RIGHT "高级(&V) >>"
+    IDS_NEWEXT_NEW "<新建>"
+    IDS_NEWEXT_SPECIFY_EXT "您必须指定一个扩展名。"
+    IDS_NEWEXT_ALREADY_ASSOC "扩展名 %s 已经与文件类型 %s 关联。 是否要将 %s 与 %s 取消关联并为其创建新的文件类型?"
+    IDS_NEWEXT_EXT_IN_USE "扩展名正在被使用"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_REMOVE_EXT "如果删除已注册的文件扩展名，则无法通过双击其图标来打开具有此扩展名的文件。\n\n您确定要删除此扩展名吗?"
+    IDS_FILE_NOT_FOUND "无法找到文件'%s'。"
 END
