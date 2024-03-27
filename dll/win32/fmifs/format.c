@@ -51,7 +51,6 @@ FormatEx(
     BOOLEAN BackwardCompatible = FALSE; // Default to latest FS versions.
     MEDIA_TYPE MediaType;
     WCHAR VolumeName[MAX_PATH];
-    //CURDIR CurDir;
 
 //
 // TODO: Convert filesystem Format into ULIB format string.
@@ -65,20 +64,16 @@ FormatEx(
         return;
     }
 
-#if 1
-    DPRINT1("Warning: use GetVolumeNameForVolumeMountPointW() instead!\n");
-    swprintf(VolumeName, L"\\??\\%c:", towupper(DriveRoot[0]));
-    RtlCreateUnicodeString(&usDriveRoot, VolumeName);
-    /* Code disabled as long as our storage stack doesn't understand IOCTL_MOUNTDEV_QUERY_DEVICE_NAME */
-#else
     if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, RTL_NUMBER_OF(VolumeName)) ||
-        !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
+        !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, NULL))
     {
         /* Report an error */
         Callback(DONE, 0, &Success);
         return;
     }
-#endif
+
+    /* Trim the trailing backslash since we will work with a device object */
+    usDriveRoot.Length -= sizeof(WCHAR);
 
     RtlInitUnicodeString(&usLabel, Label);
 
