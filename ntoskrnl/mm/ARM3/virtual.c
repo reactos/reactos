@@ -19,6 +19,38 @@
 #define MI_POOL_COPY_BYTES    512
 #define MI_MAX_TRANSFER_SIZE  64 * 1024
 
+#if _MI_PAGING_LEVELS == 2
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    return *RefCount;
+}
+#else
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde;
+    PMMPFN Pfn;
+
+    /* Make sure we're locked */
+    ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
+           (PsGetCurrentThread()->OwnsProcessWorkingSetShared));
+
+    PointerPde = MiAddressToPde(Address);
+    ASSERT(PointerPde->u.Hard.Valid);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+#endif
+
 NTSTATUS NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
@@ -666,6 +698,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             TempPte = *PointerPte;
             if (TempPte.u.Long)
             {
+                MiDecrementPageTableReferences((PVOID)Va);
                 /* Check if the PTE is actually mapped in */
                 if (MI_IS_MAPPED_PTE(&TempPte))
                 {
@@ -710,7 +743,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                     /* The PTE was never mapped, just nuke it here */
                     MI_ERASE_PTE(PointerPte);
                 }
-
+#if 0
                 if (MiDecrementPageTableReferences((PVOID)Va) == 0)
                 {
                     ASSERT(PointerPde->u.Long != 0);
@@ -725,13 +758,30 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                     PointerPte++;
                     break;
                 }
+#endif
             }
 
             /* Update the address and PTE for it */
             Va += PAGE_SIZE;
             PointerPte++;
             PrototypePte++;
-        } while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
+
+            /* Making sure the PDE is still valid */
+            ASSERT(PointerPde->u.Hard.Valid == 1);
+        }
+        while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
+
+        /* The PDE should still be valid at this point */
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+
+        /* Check remaining PTE count (go back 1 page due to above loop) */
+        if (MiQueryPageTableReferences((PVOID)(Va - PAGE_SIZE)) == 0)
+        {
+            ASSERT(PointerPde->u.Long != 0);
+
+            /* Delete the PDE proper */
+            MiDeletePde(PointerPde, CurrentProcess);
+        }
 
         /* Release the lock */
         MiReleasePfnLock(OldIrql);
