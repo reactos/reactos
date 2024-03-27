@@ -255,6 +255,13 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // FIXME: Extension->AcpiTableSize;
     }
 
+    Extension->BootViaWinload = 1;
+
+    InitializeListHead(&Extension->BootApplicationPersistentData);
+    List_PaToVa(&Extension->BootApplicationPersistentData);
+
+    Extension->LoaderPerformanceData = PaToVa(&WinLdrSystemBlock->LoaderPerformanceData);
+
 #ifdef _M_IX86
     /* Set headless block pointer */
     if (WinLdrTerminalConnected)
@@ -999,6 +1006,10 @@ LoadAndBootWindows(
     {
         OperatingSystemVersion = _WIN32_WINNT_NT4;
     }
+    else if (_stricmp(ArgValue, "WindowsVista") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_VISTA;
+    }
     else
     {
         ERR("Unknown 'BootType' value '%s', aborting!\n", ArgValue);
@@ -1245,7 +1256,7 @@ LoadAndBootWindowsCommon(
     WinLdrSetupMemoryLayout(LoaderBlock);
 
     /* Set processor context */
-    WinLdrSetProcessorContext();
+    WinLdrSetProcessorContext(OperatingSystemVersion);
 
     /* Save final value of LoaderPagesSpanned */
     LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;

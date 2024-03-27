@@ -69,6 +69,7 @@ OSLoadingMethods[] =
 #endif
     {"Windows"     , EditCustomBootNTOS , LoadAndBootWindows},
     {"Windows2003" , EditCustomBootNTOS , LoadAndBootWindows},
+    {"WindowsVista", EditCustomBootNTOS , LoadAndBootWindows},
 };
 
 /* FUNCTIONS ******************************************************************/

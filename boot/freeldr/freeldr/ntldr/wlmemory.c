@@ -185,7 +185,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
     ULONG LastPageType;
     //PKTSS Tss;
-    //BOOLEAN Status;
+    BOOLEAN Status;
 
     /* Cleanup heap */
     FrLdrHeapCleanupAll();
@@ -229,15 +229,14 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     MemoryMapSizeInPages = (NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM) + MM_PAGE_SIZE - 1) / MM_PAGE_SIZE;
 
     TRACE("Got memory map with %d entries\n", NoEntries);
-#if 0
-    // Always contiguously map low 1Mb of memory
-    Status = MempSetupPaging(0, 0x100, FALSE);
+
+    // Always map first page of memory
+    Status = MempSetupPaging(0, 1, FALSE);
     if (!Status)
     {
-        ERR("Error during MempSetupPaging of low 1Mb\n");
+        ERR("Error during MempSetupPaging of first page\n");
         return FALSE;
     }
-#endif
 
     /* Before creating the map, we need to map pages to kernel mode */
     LastPageIndex = 1;
