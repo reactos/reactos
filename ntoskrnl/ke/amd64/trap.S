@@ -416,7 +416,7 @@ FUNC KiPageFault
     /* Save page fault address */
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
-    
+
     /* If interrupts are off, do not enable them */
     test dword ptr [rbp + KTRAP_FRAME_EFlags], EFLAGS_IF_MASK
     jz IntsDisabled
@@ -1150,20 +1150,26 @@ PUBLIC KiInitiateUserApc
     mov rax, APC_LEVEL
     mov cr8, rax
 
+    /* Get the current thread */
+    mov rbp, gs:[PcCurrentThread]
+
+deliver_apcs:
+
     /* Enable interrupts */
     sti
-
-    /* Get the current trap frame */
-    mov rax, gs:[PcCurrentThread]
-    mov r8, [rax + KTHREAD_TrapFrame]
 
     /* Call the C function */
     mov ecx, 1
     mov rdx, rsp
+    mov r8, [rbp + ThTrapFrame]
     call KiDeliverApc
 
     /* Disable interrupts again */
     cli
+
+    /* Check if there are more APCs to deliver */
+    cmp byte ptr [rbp + ThApcState + AsUserApcPending], 0
+    jne deliver_apcs
 
     /* Go back to PASSIVE_LEVEL */
     mov rax, PASSIVE_LEVEL

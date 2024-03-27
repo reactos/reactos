@@ -342,6 +342,9 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
         return FALSE;
     }
 
+    /* Init security cookie */
+    PeLdrInitSecurityCookie(*DriverDTE);
+
     // Modify any flags, if needed
     (*DriverDTE)->Flags |= Flags;
 
@@ -537,8 +540,11 @@ LoadModule(
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
         MmFreeMemory(BaseAddress);
-        BaseAddress = NULL;
+        return NULL;
     }
+
+    /* Init security cookie */
+    PeLdrInitSecurityCookie(*Dte);
 
     return BaseAddress;
 }
