@@ -3286,7 +3286,9 @@ static void FASTCALL MENU_HideSubPopups(PWND pWndOwner, PMENU Menu,
           MENU_HideSubPopups(pWndOwner, Item->spSubMenu, FALSE, wFlags);
           MENU_SelectItem(pWndOwner, Item->spSubMenu, NO_SELECTED_ITEM, SendMenuSelect, NULL);
           TRACE("M_HSP top p hm %p  pWndOwner IDMenu %p\n",top_popup_hmenu,pWndOwner->IDMenu);
-          co_UserDestroyWindow(pWnd);
+
+          if (pWnd)
+             co_UserDestroyWindow(pWnd);
 
           /* Native returns handle to destroyed window */
           if (!(wFlags & TPM_NONOTIFY))
