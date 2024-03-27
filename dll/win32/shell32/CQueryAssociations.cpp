@@ -98,9 +98,12 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
         HRESULT hr;
         LPCWSTR pchDotExt;
 
-        pchDotExt = PathFindExtensionW(pszAssoc);
-        if (pchDotExt && *pchDotExt)
-            pszAssoc = pchDotExt;
+        if (StrChrW(pszAssoc, L'\\'))
+        {
+            pchDotExt = PathFindExtensionW(pszAssoc);
+            if (pchDotExt && *pchDotExt)
+                pszAssoc = pchDotExt;
+        }
 
         LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
                             pszAssoc,
