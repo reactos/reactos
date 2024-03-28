@@ -1147,7 +1147,7 @@ CmGetSystemControlValues(
 NTSTATUS
 NTAPI
 CmpSaveBootControlSet(
-    IN USHORT ControlSet
+    _In_ USHORT ControlSet
 );
 
 //

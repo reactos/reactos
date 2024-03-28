@@ -10,6 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
+#include <ndk/cmfuncs.h> // For NtInitializeRegistry()
 
 #define NDEBUG
 #include <debug.h>
@@ -20,7 +21,6 @@ LSTATUS WINAPI RegDeleteTreeW(_In_ HKEY, _In_opt_ LPCWSTR);
 /* GLOBALS *******************************************************************/
 
 static BOOL bBootAccepted = FALSE;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -106,7 +106,6 @@ ScmGetControlSetValues(
     return dwError;
 }
 
-
 static
 DWORD
 ScmSetLastKnownGoodControlSet(
@@ -136,18 +135,24 @@ ScmSetLastKnownGoodControlSet(
     return dwError;
 }
 
-
 static
-DWORD
-ScmGetSetupInProgress(VOID)
+BOOL
+ScmIsSetupInProgress(VOID)
 {
-    DWORD dwError;
+    /* Cached value so as not to call the registry every time */
+    static DWORD dwSetupInProgress = (DWORD)-1;
+
     HKEY hKey;
+    DWORD dwError;
     DWORD dwType;
     DWORD dwSize;
-    DWORD dwSetupInProgress = (DWORD)-1;
 
-    DPRINT("ScmGetSetupInProgress()\n");
+    /* Return the cached value if applicable */
+    if (dwSetupInProgress != (DWORD)-1)
+        return (BOOL)dwSetupInProgress;
+
+    /* Assume no Setup is in progress */
+    dwSetupInProgress = FALSE;
 
     /* Open key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -155,23 +160,25 @@ ScmGetSetupInProgress(VOID)
                             0,
                             KEY_QUERY_VALUE,
                             &hKey);
-    if (dwError == ERROR_SUCCESS)
-    {
-        /* Read key */
-        dwSize = sizeof(DWORD);
-        RegQueryValueExW(hKey,
-                         L"SystemSetupInProgress",
-                         NULL,
-                         &dwType,
-                         (LPBYTE)&dwSetupInProgress,
-                         &dwSize);
-        RegCloseKey(hKey);
-    }
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
 
-    DPRINT("SetupInProgress: %lu\n", dwSetupInProgress);
-    return dwSetupInProgress;
+    /* Read value */
+    dwSize = sizeof(dwSetupInProgress);
+    dwError = RegQueryValueExW(hKey,
+                               L"SystemSetupInProgress",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)&dwSetupInProgress,
+                               &dwSize);
+    RegCloseKey(hKey);
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
+
+    /* Normalize the value and return it */
+    dwSetupInProgress = !!dwSetupInProgress;
+    return (BOOL)dwSetupInProgress;
 }
-
 
 static
 DWORD
@@ -226,15 +233,14 @@ ScmCopyControlSet(
     RegFlushKey(hDestinationControlSetKey);
 
 done:
-    if (hDestinationControlSetKey != NULL)
+    if (hDestinationControlSetKey)
         RegCloseKey(hDestinationControlSetKey);
 
-    if (hSourceControlSetKey != NULL)
+    if (hSourceControlSetKey)
         RegCloseKey(hSourceControlSetKey);
 
     return dwError;
 }
-
 
 static
 DWORD
@@ -247,11 +253,12 @@ ScmDeleteControlSet(
 
     DPRINT("ScmDeleteControSet(%lu)\n", dwControlSet);
 
+__debugbreak();
     /* Create the control set name */
     swprintf(szControlSetName, L"SYSTEM\\ControlSet%03lu", dwControlSet);
     DPRINT("Control set: %S\n", szControlSetName);
 
-    /* Open the system key */
+    /* Open the control set key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             szControlSetName,
                             0,
@@ -261,15 +268,25 @@ ScmDeleteControlSet(
         return dwError;
 
     /* Delete the control set */
-    dwError = RegDeleteTreeW(hControlSetKey,
-                             NULL);
+#if 0
+    dwError = RegDeleteTreeW(hControlSetKey, L"");
+#else
+    dwError = RegDeleteTreeW(hControlSetKey, NULL);   // Delete the values and subkeys.
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(hControlSetKey, L""); // And delete the key itself.
+#endif
 
-    /* Open the system key */
+    /* Close the control set key */
     RegCloseKey(hControlSetKey);
+
+#if 0
+    /* Finally delete the key */
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(HKEY_LOCAL_MACHINE, szControlSetName);
+#endif
 
     return dwError;
 }
-
 
 DWORD
 ScmCreateLastKnownGoodControlSet(VOID)
@@ -278,7 +295,11 @@ ScmCreateLastKnownGoodControlSet(VOID)
     DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
     DWORD dwNewControlSet;
     DWORD dwError;
+    NTSTATUS Status;
 
+    ASSERT(!bBootAccepted);
+
+__debugbreak();
     /* Get the control set values */
     dwError = ScmGetControlSetValues(&dwCurrentControlSet,
                                      &dwDefaultControlSet,
@@ -288,7 +309,7 @@ ScmCreateLastKnownGoodControlSet(VOID)
         return dwError;
 
     /* First boot after setup? */
-    if ((ScmGetSetupInProgress() == 0) &&
+    if (!ScmIsSetupInProgress() &&
         (dwCurrentControlSet == dwLastKnownGoodControlSet))
     {
         DPRINT("First boot after setup\n");
@@ -300,10 +321,12 @@ ScmCreateLastKnownGoodControlSet(VOID)
                 (dwNewControlSet != dwDefaultControlSet) &&
                 (dwNewControlSet != dwFailedControlSet) &&
                 (dwNewControlSet != dwLastKnownGoodControlSet))
+            {
                 break;
+            }
         }
 
-        /* Fail if we did not find an unused control set!*/
+        /* Fail if we did not find an unused control set */
         if (dwNewControlSet >= 1000)
         {
             DPRINT1("Too many control sets\n");
@@ -311,26 +334,33 @@ ScmCreateLastKnownGoodControlSet(VOID)
         }
 
         /* Copy the current control set */
-        dwError = ScmCopyControlSet(dwCurrentControlSet,
-                                    dwNewControlSet);
+        dwError = ScmCopyControlSet(dwCurrentControlSet, dwNewControlSet);
         if (dwError != ERROR_SUCCESS)
             return dwError;
 
         /* Set the new 'LastKnownGood' control set */
         dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
-        if (dwError == ERROR_SUCCESS)
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+
+        /* Tell the kernel that the CurrentControlSet is good */
+        Status = NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED + dwNewControlSet);
+        if (!NT_SUCCESS(Status))
         {
-            /*
-             * Accept the boot here in order to prevent the creation of
-             * another control set when a user is going to get logged on
-             */
-            bBootAccepted = TRUE;
+            DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
+            return RtlNtStatusToDosError(Status);
         }
+
+        /*
+         * Accept the boot here in order to prevent the creation of
+         * another control set when a user is going to get logged on.
+         */
+        bBootAccepted = TRUE;
+        dwError = ERROR_SUCCESS;
     }
 
     return dwError;
 }
-
 
 DWORD
 ScmAcceptBoot(VOID)
@@ -339,8 +369,11 @@ ScmAcceptBoot(VOID)
     DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
     DWORD dwNewControlSet;
     DWORD dwError;
+    NTSTATUS Status;
 
     DPRINT("ScmAcceptBoot()\n");
+
+__debugbreak();
 
     if (bBootAccepted)
     {
@@ -363,10 +396,12 @@ ScmAcceptBoot(VOID)
             (dwNewControlSet != dwDefaultControlSet) &&
             (dwNewControlSet != dwFailedControlSet) &&
             (dwNewControlSet != dwLastKnownGoodControlSet))
+        {
             break;
+        }
     }
 
-    /* Fail if we did not find an unused control set!*/
+    /* Fail if we did not find an unused control set */
     if (dwNewControlSet >= 1000)
     {
         DPRINT1("Too many control sets\n");
@@ -374,12 +409,11 @@ ScmAcceptBoot(VOID)
     }
 
     /* Copy the current control set */
-    dwError = ScmCopyControlSet(dwCurrentControlSet,
-                                dwNewControlSet);
+    dwError = ScmCopyControlSet(dwCurrentControlSet, dwNewControlSet);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    /* Delete the current last known good contol set, if it is not used anywhere else */
+    /* Delete the current last known good control set, if it is not used anywhere else */
     if ((dwLastKnownGoodControlSet != dwCurrentControlSet) &&
         (dwLastKnownGoodControlSet != dwDefaultControlSet) &&
         (dwLastKnownGoodControlSet != dwFailedControlSet))
@@ -392,16 +426,22 @@ ScmAcceptBoot(VOID)
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    bBootAccepted = TRUE;
+    /* Tell the kernel that the CurrentControlSet is good */
+    Status = NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED + dwNewControlSet);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
 
+    bBootAccepted = TRUE;
     return ERROR_SUCCESS;
 }
 
-
 DWORD
-ScmRunLastKnownGood(VOID)
+ScmRestoreLastKnownGood(VOID)
 {
-    DPRINT("ScmRunLastKnownGood()\n");
+    DPRINT("ScmRestoreLastKnownGood()\n");
 
     if (bBootAccepted)
     {
@@ -409,8 +449,7 @@ ScmRunLastKnownGood(VOID)
         return ERROR_BOOT_ALREADY_ACCEPTED;
     }
 
-    /* FIXME */
-
+    // FIXME: Restore the LKG and reboot.
     return ERROR_SUCCESS;
 }
 
