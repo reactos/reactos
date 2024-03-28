@@ -291,9 +291,10 @@ class CMainToolbar : public CUiWindow<CToolbar<>>
     Create(HWND hwndParent);
 
     VOID
-    HideButtonCaption();
+    ShowButtonCaption(BOOL bShow);
+
     VOID
-    ShowButtonCaption();
+    UpdateMaxButtonsWidth();
 
     DWORD
     GetMaxButtonsWidth() const;
@@ -394,7 +395,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     SetWatermark(const CStringW &Text);
 
-    void
+    VOID
     CheckAll();
     PVOID
     GetFocusedItemData();
