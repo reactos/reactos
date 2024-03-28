@@ -1,5 +1,6 @@
 
 #include <asm.inc>
+#include <ksamd64.inc>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pcbios.h>
 
@@ -37,6 +38,18 @@ ContinueAddress:
     .quad FrldrStartup
 
 FrldrStartup:
+
+    /* Set up CR0 for SSE */
+    mov rax, cr0
+    and eax, not CR0_EM // Clear coprocessor emulation CR0.EM CR0.EM (bit 2)
+    or rax, CR0_MP // Set coprocessor monitoring CR0.MP (bit 1)
+    mov cr0, rax
+
+    /* Set up CR4 for SSE */
+    mov rax, cr4
+    or eax, CR4_FXSR // Enable fx save/restore CR4.OSFXSR (bit 9)
+    or eax, CR4_XMMEXCPT // Enable XMMI exceptions CR4.OSXMMEXCPT (bit 10)
+    mov cr4, rax
 
     /* Store BootDrive and BootPartition */
     mov al, byte ptr [BSS_BootDrive]
