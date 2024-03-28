@@ -16,7 +16,7 @@ URL: https://github.com/rdesktop/rdesktop
 Title: TreeList
 Path: base/setup/reactos/treelist.c
 Path: base/setup/reactos/treelist.h
-Used Version: ???
+Used Version: ??? (Imported on 2018.11.06.)
 License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://github.com/sebkirche/treelist
 
@@ -281,3 +281,9 @@ Path: sdk/tools/mkisofs/schilytools
 Used Version: schily-2017-09-07
 License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
 URL: https://sourceforge.net/projects/schilytools/
+
+Title: AMD LibM for Windows
+Path: sdk/lib/crt/math/libm_sse2
+Used Version: ??? (Imported on 2022.12.01.)
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/amd/win-libm
