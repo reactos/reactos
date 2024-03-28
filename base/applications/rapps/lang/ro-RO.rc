@@ -270,3 +270,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
     IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END

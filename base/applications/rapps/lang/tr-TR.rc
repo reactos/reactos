@@ -270,3 +270,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "%1 paketi bulunmadı.\n"
     IDS_CMD_PACKAGE_INFO "%1 paketi hakkındaki bilgi:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END
