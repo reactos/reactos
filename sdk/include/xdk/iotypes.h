@@ -253,6 +253,7 @@ $if (_WDMDDK_)
 #define DO_BUS_ENUMERATED_DEVICE          0x00001000
 #define DO_POWER_PAGABLE                  0x00002000
 #define DO_POWER_INRUSH                   0x00004000
+#define DO_POWER_NOOP                     0x00008000
 
 /* DEVICE_OBJECT.Characteristics */
 #define FILE_REMOVABLE_MEDIA              0x00000001

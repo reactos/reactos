@@ -4629,25 +4629,3 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     /* Return status */
     return Status;
 }
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtCancelDeviceWakeupRequest(IN HANDLE DeviceHandle)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtRequestDeviceWakeup(IN HANDLE DeviceHandle)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
