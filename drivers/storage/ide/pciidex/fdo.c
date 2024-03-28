@@ -19,6 +19,8 @@ PciIdeXFdoParseResources(
     _In_ PCM_RESOURCE_LIST ResourcesTranslated)
 {
     PCM_PARTIAL_RESOURCE_DESCRIPTOR BusMasterDescriptor = NULL;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR AbarDescriptor = NULL;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptDescriptor = NULL;
     PVOID IoBase;
     ULONG i;
 
@@ -34,6 +36,13 @@ PciIdeXFdoParseResources(
         Descriptor = &ResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[i];
         switch (Descriptor->Type)
         {
+            case CmResourceTypeInterrupt:
+            {
+                if (!InterruptDescriptor)
+                    InterruptDescriptor = Descriptor;
+                break;
+            }
+
             case CmResourceTypePort:
             case CmResourceTypeMemory:
             {
@@ -50,11 +59,46 @@ PciIdeXFdoParseResources(
                     default:
                         break;
                 }
+
+                /* AHCI Base Address (BAR5) */
+                if ((i == 5) && (FdoExtension->Flags & FDO_AHCI))
+                {
+                    if (Descriptor->Type == CmResourceTypeMemory)
+                        AbarDescriptor = Descriptor;
+                }
             }
 
             default:
                 break;
         }
+    }
+
+    if (FdoExtension->Flags & FDO_AHCI)
+    {
+        if (!AbarDescriptor || !InterruptDescriptor)
+            return STATUS_DEVICE_CONFIGURATION_ERROR;
+
+        DPRINT("ABAR 0x%I64x 0x%lx\n",
+               AbarDescriptor->u.Port.Start.QuadPart, AbarDescriptor->u.Port.Length);
+
+        FdoExtension->Abar = MmMapIoSpace(AbarDescriptor->u.Memory.Start,
+                                          AbarDescriptor->u.Port.Length,
+                                          MmNonCached);
+        if (!FdoExtension->Abar)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        FdoExtension->IoLength = AbarDescriptor->u.Port.Length;
+        FdoExtension->Flags |= FDO_IO_BASE_MAPPED;
+
+        FdoExtension->InterruptVector = InterruptDescriptor->u.Interrupt.Vector;
+        FdoExtension->InterruptLevel = InterruptDescriptor->u.Interrupt.Level;
+        FdoExtension->InterruptMode =
+            (InterruptDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
+        FdoExtension->InterruptShared =
+            (InterruptDescriptor->ShareDisposition == CmResourceShareShared);
+        FdoExtension->InterruptAffinity = InterruptDescriptor->u.Interrupt.Affinity;
+
+        return STATUS_SUCCESS;
     }
 
     if (!BusMasterDescriptor)
@@ -71,7 +115,8 @@ PciIdeXFdoParseResources(
         if (!IoBase)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        FdoExtension->IoBaseMapped = TRUE;
+        FdoExtension->IoLength = 16;
+        FdoExtension->Flags |= FDO_IO_BASE_MAPPED;
     }
     FdoExtension->BusMasterPortBase = IoBase;
 
@@ -128,10 +173,10 @@ PciIdeXFdoFreeResources(
 {
     PAGED_CODE();
 
-    if (FdoExtension->IoBaseMapped)
+    if (FdoExtension->Flags & FDO_IO_BASE_MAPPED)
     {
-        MmUnmapIoSpace(FdoExtension->BusMasterPortBase, 16);
-        FdoExtension->IoBaseMapped = FALSE;
+        MmUnmapIoSpace(FdoExtension->BusMasterPortBase, FdoExtension->IoLength);
+        FdoExtension->Flags &= ~FDO_IO_BASE_MAPPED;
     }
 }
 
@@ -165,7 +210,7 @@ PciIdeXFdoRemoveDevice(
 
     ExAcquireFastMutex(&FdoExtension->DeviceSyncMutex);
 
-    for (i = 0; i < MAX_IDE_CHANNEL; ++i)
+    for (i = 0; i < FdoExtension->MaxDevices; ++i)
     {
         PdoExtension = FdoExtension->Channels[i];
 
@@ -285,7 +330,7 @@ PciIdeXFdoQueryBusRelations(
 
     DeviceRelations = ExAllocatePoolWithTag(PagedPool,
                                             FIELD_OFFSET(DEVICE_RELATIONS,
-                                                         Objects[MAX_IDE_CHANNEL]),
+                                                         Objects[FdoExtension->MaxDevices]),
                                             TAG_PCIIDEX);
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -294,7 +339,7 @@ PciIdeXFdoQueryBusRelations(
 
     ExAcquireFastMutex(&FdoExtension->DeviceSyncMutex);
 
-    for (i = 0; i < MAX_IDE_CHANNEL; ++i)
+    for (i = 0; i < FdoExtension->MaxDevices; ++i)
     {
         PdoExtension = FdoExtension->Channels[i];
 
@@ -397,7 +442,7 @@ PciIdeXFdoQueryInterface(
         ResourceType = (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData;
 
         /* In native mode the IDE controller does not use any legacy interrupt resources */
-        if (FdoExtension->InNativeMode ||
+        if ((FdoExtension->Flags & FDO_IN_NATIVE_MODE) ||
             ResourceType != CmResourceTypeInterrupt ||
             IoStack->Parameters.QueryInterface.Size < sizeof(TRANSLATOR_INTERFACE))
         {

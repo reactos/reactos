@@ -1,0 +1,8 @@
+; PCI AHCI Driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","Group",0x00000000,"System Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","ImagePath",0x00020000,"system32\drivers\pciahci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\pciahci","Tag",0x00010001,0x00000010

@@ -16,6 +16,8 @@
 #include <wdmguid.h>
 #include <ide.h>
 
+#include <reactos/drivers/ntddata.h>
+
 #define TAG_PCIIDEX    'XedI'
 
 #define IS_FDO(p)    (((PCOMMON_DEVICE_EXTENSION)(p))->IsFDO)
@@ -43,8 +45,6 @@
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE            0x04
 #define PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE_CAPABLE    0x08
 #define PCIIDE_PROGIF_DMA_CAPABLE                              0x80
-
-#define BM_SECONDARY_CHANNEL_OFFSET      8
 
 typedef struct _PDO_DEVICE_EXTENSION    PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
@@ -75,18 +75,35 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Ldo;
 
     ULONG ControllerNumber;
-    BOOLEAN InNativeMode;
-    BOOLEAN IoBaseMapped;
+    ULONG Flags;
+#define FDO_IN_NATIVE_MODE     0x00000001
+#define FDO_AHCI               0x00000002
+#define FDO_DMA_CAPABLE        0x00000004
+#define FDO_IO_BASE_MAPPED     0x00000008
+
     BOOLEAN MiniportStarted;
 
     FAST_MUTEX DeviceSyncMutex;
     _Guarded_by_(DeviceSyncMutex)
-    PPDO_DEVICE_EXTENSION Channels[MAX_IDE_CHANNEL];
+    PPDO_DEVICE_EXTENSION Channels[MAX_AHCI_DEVICES];
 
     USHORT VendorId;
     USHORT DeviceId;
     PDRIVER_OBJECT DriverObject;
-    PUCHAR BusMasterPortBase;
+    union
+    {
+        PUCHAR BusMasterPortBase;
+        PVOID Abar;
+    };
+    ULONG IoLength;
+    ULONG MaxDevices;
+
+    PKINTERRUPT InterruptObject;
+    KINTERRUPT_MODE InterruptMode;
+    KAFFINITY InterruptAffinity;
+    ULONG InterruptVector;
+    KIRQL InterruptLevel;
+    BOOLEAN InterruptShared;
 
     KSPIN_LOCK BusDataLock;
     BUS_INTERFACE_STANDARD BusInterface;
@@ -103,7 +120,17 @@ typedef struct _PDO_DEVICE_EXTENSION
     ULONG Channel;
     PFDO_DEVICE_EXTENSION ParentController;
     BOOLEAN ReportedMissing;
+
     PUCHAR IoBase;
+    ULONG Flags;
+#define PDO_PIO_ONLY              0x00000001
+#define PDO_DRIVE0_DMA_CAPABLE    0x00000002
+#define PDO_DRIVE1_DMA_CAPABLE    0x00000004
+
+    PVOID PrdTable;
+    ULONG PrdTablePhysicalAddress;
+    ULONG MapRegisterCount;
+    PDMA_ADAPTER AdapterObject;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 CODE_SEG("PAGE")
