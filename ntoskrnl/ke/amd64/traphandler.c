@@ -116,10 +116,6 @@ KiSystemCallHandler(
     /* Set previous mode */
     Thread->PreviousMode = TrapFrame->PreviousMode = UserMode;
 
-    /* Save the old trap frame and set the new */
-    TrapFrame->TrapFrame = (ULONG64)Thread->TrapFrame;
-    Thread->TrapFrame = TrapFrame;
-
     /* We don't have an exception frame yet */
     TrapFrame->ExceptionFrame = 0;
 
