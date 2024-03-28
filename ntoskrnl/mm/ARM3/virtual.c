@@ -723,6 +723,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 
                     /* Use this to detect address gaps */
                     PointerPte++;
+
+                    PrototypePte++;
                     break;
                 }
             }
