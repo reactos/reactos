@@ -67,6 +67,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, (void**)(ppType)
 #endif
 
+inline HRESULT HResultFromWin32(DWORD hr)
+{
+     // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
+    return HRESULT_FROM_WIN32(hr);
+}
+
 #if 1
 
 inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
