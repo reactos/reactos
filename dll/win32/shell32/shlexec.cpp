@@ -1281,7 +1281,7 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
     if (!GetShortPathNameW(lpFile, res, _countof(res)))
         StringCchCopyW(res, _countof(res), lpFile);
 
-    if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS))
+    if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS | PRF_FIRSTDIRDEF))
     {
         // NOTE: The last parameter of this AssocQueryStringW call is "strange" in Windows.
         if (PathIsExeW(res) ||
