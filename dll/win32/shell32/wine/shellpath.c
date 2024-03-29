@@ -223,10 +223,6 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             PWCHAR pch;
             for (pch = pchTemp; *pch != UNICODE_NULL; ++pch)
             {
-#define PATH_CHAR_CLASS_DOT         0x00000004
-#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
-#define PATH_CHAR_CLASS_COLON       0x00000010
-#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
 #define VALID_SHORT_PATH_CHAR_CLASSES ( \
     PATH_CHAR_CLASS_DOT | \
     PATH_CHAR_CLASS_BACKSLASH | \
@@ -616,8 +612,6 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
     }
     else
     {
-        assert(!PathIsRelativeW(lpszPath)); /* Assuming absolute path... */
-
         iDrive = ((lpszPath[0] - L'A') & 0x1F);
         PathBuildRootW(szRoot, iDrive);
 
