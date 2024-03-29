@@ -612,8 +612,6 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
     }
     else
     {
-        assert(!PathIsRelativeW(lpszPath)); /* Assuming absolute path... */
-
         iDrive = ((lpszPath[0] - L'A') & 0x1F);
         PathBuildRootW(szRoot, iDrive);
 
