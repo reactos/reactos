@@ -116,22 +116,40 @@ MMixerInitializeDataFormat(
     IN PKSDATAFORMAT_WAVEFORMATEX DataFormat,
     LPWAVEFORMATEX WaveFormatEx)
 {
-
     DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
     DataFormat->WaveFormatEx.nChannels = WaveFormatEx->nChannels;
     DataFormat->WaveFormatEx.nSamplesPerSec = WaveFormatEx->nSamplesPerSec;
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->WaveFormatEx.cbSize = WaveFormatEx->cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + WaveFormatEx->cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
+
+    /* Write additional fields for Extensible audio format */
+    if (WaveFormatEx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        PWAVEFORMATEXTENSIBLE WaveFormatExt = (PWAVEFORMATEXTENSIBLE)&DataFormat->WaveFormatEx;
+        WaveFormatExt->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        WaveFormatExt->Samples.wValidBitsPerSample = WaveFormatEx->wBitsPerSample;
+        if (WaveFormatEx->nChannels == 0)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT;
+        else if (WaveFormatEx->nChannels == 1)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_MONO;
+        else if (WaveFormatEx->nChannels == 2)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+        else if (WaveFormatEx->nChannels == 4)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_QUAD;
+        else if (WaveFormatEx->nChannels == 5)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_5POINT1;
+        else if (WaveFormatEx->nChannels == 7)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_7POINT1;
+    }
 }
 
 MIXER_STATUS
@@ -232,7 +250,7 @@ MMixerOpenWavePin(
         return MM_STATUS_INVALID_PARAMETER;
 
     /* allocate pin connect */
-    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX));
+    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX) + WaveFormatEx->cbSize);
     if (!PinConnect)
     {
         /* no memory */
@@ -452,12 +470,6 @@ MMixerOpenWave(
 
     /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
-
-    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
-    {
-        /* not implemented */
-        return MM_STATUS_NOT_IMPLEMENTED;
-    }
 
     /* find destination wave */
     Status = MMixerGetWaveInfoByIndexAndType(MixerList, DeviceIndex, bWaveIn, &WaveInfo);
