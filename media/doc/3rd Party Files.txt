@@ -281,3 +281,9 @@ Path: sdk/tools/mkisofs/schilytools
 Used Version: schily-2017-09-07
 License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
 URL: https://sourceforge.net/projects/schilytools/
+
+Title: AMD LibM for Windows
+Path: sdk/lib/crt/math/libm_sse2
+Used Version: git commit 6121d02
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/amd/win-libm
