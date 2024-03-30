@@ -21,6 +21,12 @@
 
 @ stdcall InitializeCriticalSectionEx(ptr long long)
 
+@ stdcall GetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall GetFirmwareEnvironmentVariableExW(wstr wstr ptr long long)
+@ stdcall GetFirmwareType(ptr)
+@ stdcall SetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall SetFirmwareEnvironmentVariableExW(str str ptr long long)
+
 @ stdcall ApplicationRecoveryFinished(long)
 @ stdcall ApplicationRecoveryInProgress(ptr)
 @ stdcall CreateSymbolicLinkA(str str long)
