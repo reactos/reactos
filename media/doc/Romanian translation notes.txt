@@ -5,13 +5,13 @@ Copyright 2023-2024 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
- 1. Sunt folosite diacriticele corecte ale limbii române.
- 2. Se va face o traducere corectă din punct de vedere literar și gramatical și conform MSDN.
- 3. În relația utilizator - calculator este folosit modul infinitiv lung.
- 4. În relația calculator - utilizator este adoptată o atitudine formal-politicoasă.
- 5. Este evitată politețea excesivă prin omiterea expresiilor de politețe explicite.
- 6. Este recomandată o formulare independentă de gen (gramatical) dacă nu se cununoaște genul substantivului.
- 7. Toți acceleratorii vor respecta normele MSDN, încercându-se evitarea schimbării lor. Se vor păstra aceeași ca în XP/2003 (și mai noi).
+ 1. They use only the correct Romanian language diacritics.
+ 2. They will make a correct translation both grammatically and literally and according to MSDN.
+ 3. For the user-computer talking they use the long infinitive.
+ 4. For the computer-user talking they use a formally polite talking.
+ 5. They avoid the excessive politeness.
+ 6. It is recommended to use a neutral expression if we do not know the noun gender.
+ 7. All the accelerators will follow the MSDN's rules, by trying to avoid changing them. We will keep the same XP/2003 (and newer) accelerators.
 
 [1] https://web.archive.org/web/20170307094948/http://i18n.ro/Ghidul_traduc%C4%83torului_de_software
 [2] https://msdn.microsoft.com/en-us/library/ms971323.aspx#atg_keyboardshortcuts_selecting_access_keys
