@@ -1047,7 +1047,7 @@ BEGIN
     IDS_EDITING_ACTION "Editare acţiune pentru tipul:"
     IDS_NO_ICONS "Fișierul '%s' nu conţine pictograme.\n\nAlegeţi o pictogramă din listă sau specificaţi un alt fişier."
     IDS_FILE_NOT_FOUND "Fișierul '%s' nu a fost găsit."
-    IDS_LINK_INVALID Elementul '%s' la care se referă această comandă rapidă s-a modificat sau s-a mutat, astfel încât această comandă rapidă nu va mai funcţiona corespunzător.\n\nŞtergeţi această comandă rapidă?"
+    IDS_LINK_INVALID "Elementul '%s' la care se referă această comandă rapidă s-a modificat sau s-a mutat, astfel încât această comandă rapidă nu va mai funcţiona corespunzător.\n\nŞtergeţi această comandă rapidă?"
     IDS_COPYTOMENU "Copiere în &folderul…"
     IDS_COPYTOTITLE "Selectaţi locul unde se va copia '%s'. Apoi faceţi clic pe butonul Copiere."
     IDS_COPYITEMS "Copiere elemente"
