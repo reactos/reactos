@@ -3642,7 +3642,7 @@ HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UIN
             if (i == 0)
             {
                 x += pGoffset[orig_index].du * dir;
-                y += pGoffset[orig_index].dv;
+                y -= pGoffset[orig_index].dv;
             }
             else
             {
