@@ -1029,7 +1029,7 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Se extind Conexiuni de rețea"
     IDS_ADVANCED_DISPLAY_RUN "Se afișează Executare"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Se afișează Instrumente de administrare"
-    IDS_ADVANCED_SMALL_START_MENU ""Se afișează Pictograme mici în Meniul Start"
+    IDS_ADVANCED_SMALL_START_MENU "Se afișează Pictograme mici în Meniul Start"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Complex"
     IDS_NEWEXT_ADVANCED_RIGHT "&Complex >>"
