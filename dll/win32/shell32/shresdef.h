@@ -245,6 +245,7 @@
 
 #define IDS_OPENFILELOCATION     341
 #define IDS_SENDTO_MENU          343
+#define IDS_COPYASPATHMENU       30328
 
 #define IDS_MOVEERRORTITLE       344
 #define IDS_COPYERRORTITLE       345
@@ -909,3 +910,4 @@
 #define IDR_SENDTOMENU          158
 #define IDR_COPYTOMENU          159
 #define IDR_MOVETOMENU          160
+#define IDR_COPYASPATHMENU      161

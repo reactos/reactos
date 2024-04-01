@@ -805,6 +805,7 @@ BEGIN
     IDS_DISCONNECT "Deconectea&ză"
     IDS_OPENFILELOCATION "&Deschide locația fișierului"
     IDS_SENDTO_MENU "T&rimitere la"
+    IDS_COPYASPATHMENU "Copy &as path"
 
     IDS_MOVEERRORTITLE "Nu s-a putut muta fișierul sau folderul"
     IDS_COPYERRORTITLE "Nu s-a putut copia fișierul sau folderul"
