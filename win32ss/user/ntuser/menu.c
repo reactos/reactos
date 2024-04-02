@@ -4049,6 +4049,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     HWND capture_win;
     PMENU pmMouse;
     BOOL enterIdleSent = FALSE;
+    BOOL firstClick = TRUE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (pti != pwnd->head.pti)
@@ -4160,6 +4161,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             /* Find a menu for this mouse event */
             pmMouse = MENU_PtMenu( mt.TopMenu, mt.Pt );
 
+            PWND pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
+
             switch(msg.message)
             {
                 /* no WM_NC... messages in captured state */
@@ -4176,10 +4179,15 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                 case WM_LBUTTONDOWN:
                     /* If the message belongs to the menu, removes it from the queue */
                     /* Else, end menu tracking */
-                    fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
+
+                    /* Don't remove WM_LBUTTONDBLCLK to allow the closing of a window or program */
+                    if (msg.message == WM_LBUTTONDBLCLK && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
+                        fRemove = FALSE;
+                    else
+                        fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
+
                     fInsideMenuLoop = fRemove;
-                    if ( msg.message == WM_LBUTTONDBLCLK ||
-                         msg.message == WM_RBUTTONDBLCLK ) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                    if (msg.message == WM_RBUTTONDBLCLK) fInsideMenuLoop = FALSE; // Must exit or loop forever!
                     break;
 
                 case WM_RBUTTONUP:
@@ -4191,10 +4199,20 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     {
                         executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
 
-                    /* End the loop if executedMenuId is an item ID */
-                    /* or if the job was done (executedMenuId = 0). */
-                        fRemove = (executedMenuId != -1);
-                        fInsideMenuLoop = !fRemove;
+                        /* Exit system menu if system icon is clicked a second time */
+                        if (!firstClick && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
+                        {
+                            fRemove = TRUE;
+                            fInsideMenuLoop = FALSE;
+                        }
+                        else
+                        {
+                            /* End the loop if executedMenuId is an item ID */
+                            /* or if the job was done (executedMenuId = 0). */
+                            fRemove = (executedMenuId != -1);
+                            fInsideMenuLoop = !fRemove;
+                            firstClick = FALSE;
+                        }
                     }
                     /* No menu was selected by the mouse */
                     /* if the function was called by TrackPopupMenu, continue
