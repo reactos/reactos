@@ -8,7 +8,7 @@
 
 #define MAX_RECORD 30
 
-static DWORD s_record_count = 0;
+static LONG s_record_count = 0;
 static DWORD s_record[MAX_RECORD + 1] = { 0 };
 static BOOL s_terminate_all = FALSE;
 
@@ -24,9 +24,9 @@ static const SIZE_T s_expected_count = _countof(s_expected);
 
 static void AddValueToRecord(DWORD dwValue)
 {
-    s_record[s_record_count] = dwValue;
-    if (s_record_count < MAX_RECORD)
-        s_record_count++;
+    LONG next = InterlockedIncrement(&s_record_count) - 1;
+    if (next < MAX_RECORD)
+        s_record[next] = dwValue;
 }
 
 static VOID CheckRecord(void)
