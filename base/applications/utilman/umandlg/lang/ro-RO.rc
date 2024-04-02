@@ -5,7 +5,7 @@
  * TRANSLATORS: Copyright 2019 George Bișoc <george.bisoc@reactos.org>
  *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
- 
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 284, 183
