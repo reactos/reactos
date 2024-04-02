@@ -145,8 +145,41 @@ static void TestForWaitForSingleObjectEx(void)
     JustDoIt(ThreadFunc2);
 }
 
+static DWORD WINAPI ThreadFunc3(LPVOID arg)
+{
+    return 0;
+}
+
+static void TestMultipleUserAPCs(void)
+{
+    HANDLE hThread;
+    DWORD dwThreadId;
+
+    s_record_count = 0;
+
+    hThread = CreateThread(NULL, 0, ThreadFunc3, NULL, CREATE_SUSPENDED, &dwThreadId);
+    ok(hThread != NULL, "hThread was NULL\n");
+
+    ok_long(QueueUserAPC(DoUserAPC1, hThread, 1), 1);
+    ok_long(QueueUserAPC(DoUserAPC2, hThread, 2), 1);
+    ok_long(QueueUserAPC(DoUserAPC3, hThread, 3), 1);
+
+    ok_long(s_record_count, 0);
+
+    ResumeThread(hThread);
+
+    ok_long(WaitForSingleObject(hThread, 5 * 1000), WAIT_OBJECT_0);
+    ok_int(CloseHandle(hThread), TRUE);
+
+    ok_long(s_record_count, 3);
+    ok_long(s_record[0], 4);
+    ok_long(s_record[1], 5);
+    ok_long(s_record[2], 6);
+}
+
 START_TEST(QueueUserAPC)
 {
     TestForSleepEx();
     TestForWaitForSingleObjectEx();
+    TestMultipleUserAPCs();
 }
