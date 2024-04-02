@@ -27,7 +27,7 @@ BEGIN
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    RTEXT           "Rotația:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    RTEXT           "Rotație:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
     COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST |
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
@@ -40,11 +40,11 @@ BEGIN
                     WS_TABSTOP,24,208,160,10
     CONTROL         "Activa&re filtrarea texturilor",IDC_CHECK_FILTERING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
-    CONTROL         "Activează umbrire omogenă",IDC_CHECK_SHADING,"Button",
+    CONTROL         "Activare umbrire netedă",IDC_CHECK_SHADING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
     PUSHBUTTON      "Revocare",IDCANCEL,120,260,52,16
-    PUSHBUTTON      "&Despre…",IDC_BUTTON_ABOUT,179,260,52,16
+    PUSHBUTTON      "&Despre",IDC_BUTTON_ABOUT,179,260,52,16
 END
 
 // String Tables
