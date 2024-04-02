@@ -1184,8 +1184,6 @@ PUBLIC KiInitiateUserApc
     /* Save the trap frame in rsi */
     mov rsi, rcx
 
-deliver_apcs:
-
     /* Enable interrupts */
     sti
 
@@ -1197,10 +1195,6 @@ deliver_apcs:
 
     /* Disable interrupts again */
     cli
-
-    /* Check if there are more APCs to deliver */
-    cmp byte ptr [rbp + ThApcState + AsUserApcPending], 0
-    jne deliver_apcs
 
     /* Go back to PASSIVE_LEVEL */
     mov rax, PASSIVE_LEVEL
