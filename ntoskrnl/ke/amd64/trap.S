@@ -852,8 +852,34 @@ GLOBAL_LABEL KiSystemServiceExit
 
     /* Check for pending user APCs */
     mov rcx, gs:[PcCurrentThread]
-    HANDLE_USER_APCS rcx, rsp + MAX_SYSCALL_PARAM_SIZE
+    cmp byte ptr [rcx + ThApcState + AsUserApcPending], 0
+    jz NoUserApcPending
 
+    /* Save missing regs in the trap frame */
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp], rbp
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9], rbp
+    mov rax, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rsp]
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R8], rax
+    mov rax, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], rax
+    mov rax, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags]
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R11], rax
+    xor rax, rax
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx], rax
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R10], rax
+    pxor xmm0, xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm0], xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm1], xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm2], xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm3], xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm4], xmm0
+    movdqa [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Xmm5], xmm0
+
+    lea rcx, [rsp + MAX_SYSCALL_PARAM_SIZE]
+    call KiInitiateUserApc
+
+NoUserApcPending:
     /* Disable interrupts for return */
     cli
 
@@ -1148,9 +1174,6 @@ PUBLIC KiInitiateUserApc
     /* Generate a KEXCEPTION_FRAME on the stack */
     GENERATE_EXCEPTION_FRAME
 
-    /* Save rax to not clobber the return for the system call handler */
-    mov [rsp + ExP1Home], rax
-
     /* Raise IRQL to APC_LEVEL */
     mov rax, APC_LEVEL
     mov cr8, rax
@@ -1184,7 +1207,6 @@ deliver_apcs:
     mov cr8, rax
 
     /* Restore the registers from the KEXCEPTION_FRAME */
-    mov rax, [rsp + ExP1Home]
     RESTORE_EXCEPTION_STATE
 
     /* Return */
