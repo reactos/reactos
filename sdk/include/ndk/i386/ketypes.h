@@ -782,6 +782,10 @@ typedef struct _KPRCB
     ULONG CoreProcessorSet;
 #endif
 #ifdef __REACTOS__
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    ULONGLONG StartCycles;
+    ULONGLONG CycleTime;
+#endif
 #if  (NTDDI_VERSION < NTDDI_WIN10)
     // On Win 10+ the FeatureBits field is extended to 64 bits
     ULONG FeatureBitsHigh;
