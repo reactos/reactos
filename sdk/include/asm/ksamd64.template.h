@@ -547,7 +547,7 @@ OFFSET(PbPollSlot, KPRCB, PollSlot), // not Win 10
 OFFSET(PbParentNode, KPRCB, ParentNode),
 OFFSET(PbMultiThreadProcessorSet, KPRCB, MultiThreadProcessorSet),
 OFFSET(PbMultiThreadSetMaster, KPRCB, MultiThreadSetMaster), // not Win 10
-//OFFSET(PbStartCycles, KPRCB, StartCycles),
+OFFSET(PbStartCycles, KPRCB, StartCycles),
 OFFSET(PbPageColor, KPRCB, PageColor),
 OFFSET(PbNodeColor, KPRCB, NodeColor),
 OFFSET(PbNodeShiftedColor, KPRCB,NodeShiftedColor),
