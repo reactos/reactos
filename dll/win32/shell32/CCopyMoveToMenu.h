@@ -110,7 +110,7 @@ public:
     LPCSTR GetVerb() const override { return "moveto"; }
 };
 
-class CCopyAsPathMenu 
+class CCopyAsPathMenu
     : public CComCoClass<CCopyAsPathMenu, &CLSID_CopyAsPathMenu>
     , public CComObjectRootEx<CComMultiThreadModelNoCS>
     , public IDropTarget
@@ -125,19 +125,19 @@ public:
     END_COM_MAP()
 
     // IDropTarget
-    STDMETHODIMP DragEnter(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect) override
+    STDMETHODIMP DragEnter(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect)
     {
         *pdwEffect &= DROPEFFECT_COPY;
         return S_OK;
     }
-    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect) override
+    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect)
     {
         *pdwEffect &= DROPEFFECT_COPY;
         return S_OK;
     }
-    STDMETHODIMP DragLeave() override
+    STDMETHODIMP DragLeave()
     {
         return S_OK;
     }
-    STDMETHODIMP Drop(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect) override;
+    STDMETHODIMP Drop(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect);
 };
