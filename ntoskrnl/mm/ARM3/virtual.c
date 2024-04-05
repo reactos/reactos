@@ -1902,10 +1902,9 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
 
     /* Find the memory area the specified address belongs to */
     MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
-    ASSERT(MemoryArea != NULL);
 
     /* Determine information dependent on the memory area type */
-    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    if (MemoryArea && MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
         Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
         if (!NT_SUCCESS(Status))
@@ -4914,8 +4913,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // Make sure this is an ARM3 section
     //
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    ASSERT(MemoryArea != NULL);
-    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    if (MemoryArea && MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
     {
         DPRINT1("Illegal commit of non-ARM3 section!\n");
         Status = STATUS_ALREADY_COMMITTED;
