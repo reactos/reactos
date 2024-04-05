@@ -1009,7 +1009,7 @@ HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
     lvc.fmt = sd.fmt;
     lvc.cx = sd.cxChar * chavewidth; // FIXME: DPI?
     lvc.iSubItem = FoldCol; // Used by MapFolderColumnToListColumn & MapListColumnToFolderColumn
-    if ((int) ListCol == -1)
+    if ((int)ListCol == -1)
     {
         assert(Insert); // You can insert at the end but you can't change something that is not there
         if (Insert)
