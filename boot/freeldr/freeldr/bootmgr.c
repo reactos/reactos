@@ -58,21 +58,47 @@ OSLoadingMethods[] =
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
-    {"Drive"       , EditCustomBootDisk      , LoadAndBootDevice},
-    {"Partition"   , EditCustomBootPartition , LoadAndBootDevice},
-    {"BootSector"  , EditCustomBootSectorFile, LoadAndBootDevice},
-    {"Linux"       , EditCustomBootLinux, LoadAndBootLinux  },
+    {"BootSector", EditCustomBootSector, LoadAndBootSector},
+    {"Linux"     , EditCustomBootLinux , LoadAndBootLinux },
 #endif
 #endif
 #ifdef _M_IX86
-    {"WindowsNT40" , EditCustomBootNTOS , LoadAndBootWindows},
+    {"WindowsNT40" , EditCustomBootNTOS, LoadAndBootWindows},
 #endif
-    {"Windows"     , EditCustomBootNTOS , LoadAndBootWindows},
-    {"Windows2003" , EditCustomBootNTOS , LoadAndBootWindows},
-    {"WindowsVista", EditCustomBootNTOS , LoadAndBootWindows},
+    {"Windows"     , EditCustomBootNTOS, LoadAndBootWindows},
+    {"Windows2003" , EditCustomBootNTOS, LoadAndBootWindows},
+    {"WindowsVista", EditCustomBootNTOS, LoadAndBootWindows},
 };
 
 /* FUNCTIONS ******************************************************************/
+
+#ifdef HAS_DEPRECATED_OPTIONS
+/**
+ * @brief   Helper for dealing with DEPRECATED features.
+ **/
+VOID
+WarnDeprecated(
+    _In_ PCSTR MsgFmt,
+    ...)
+{
+    va_list ap;
+    CHAR msgString[300];
+
+    va_start(ap, MsgFmt);
+    RtlStringCbVPrintfA(msgString, sizeof(msgString),
+                        MsgFmt, ap);
+    va_end(ap);
+
+    UiMessageBox(
+        "                           WARNING!\n"
+        "\n"
+        "%s\n"
+        "\n"
+        "Should you need assistance, please contact ReactOS developers\n"
+        "on the official ReactOS Mattermost server <chat.reactos.org>.",
+        msgString);
+}
+#endif // HAS_DEPRECATED_OPTIONS
 
 static const OS_LOADING_METHOD*
 GetOSLoadingMethod(
@@ -90,11 +116,43 @@ GetOSLoadingMethod(
     IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
     ASSERT(*BootType);
 
+////
+#ifdef HAS_DEPRECATED_OPTIONS
+    if ((_stricmp(BootType, "Drive") == 0) ||
+        (_stricmp(BootType, "Partition") == 0))
+    {
+        /* Display the deprecation warning message */
+        WarnDeprecated(
+            "The '%s' configuration you are booting into is no longer\n"
+            "supported and will be removed in future FreeLoader versions.\n"
+            "\n"
+            "Please edit FREELDR.INI to replace all occurrences of\n"
+            "\n"
+            "             %*s        to:\n"
+            "    BootType=%s      ------>     BootType=BootSector",
+            BootType,
+            strlen(BootType), "", // Indentation
+            BootType);
+
+        /* Type fixup */
+        strcpy(BootType, "BootSector");
+        if (!IniModifySettingValue(SectionId, "BootType", BootType))
+        {
+            ERR("Could not fixup the BootType entry for OS '%s', ignoring.\n",
+                ((PINI_SECTION)SectionId)->SectionName);
+        }
+    }
+#endif // HAS_DEPRECATED_OPTIONS
+////
+
     /* Find the suitable OS loading method */
     for (i = 0; ; ++i)
     {
         if (i >= RTL_NUMBER_OF(OSLoadingMethods))
+        {
+            UiMessageBox("Unknown boot entry type '%s'", BootType);
             return NULL;
+        }
         if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
             return &OSLoadingMethods[i];
     }

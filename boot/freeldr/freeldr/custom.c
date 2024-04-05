@@ -24,27 +24,27 @@
 /* GLOBALS ********************************************************************/
 
 #if defined(_M_IX86) || defined(_M_AMD64)
-const PCSTR BootSectorFilePrompt =
+static const PCSTR BootSectorFilePrompt =
     "Enter the boot sector file path.\n"
+    "Leave blank for booting a disk or partition.\n"
     "\n"
     "Examples:\n"
     "\\BOOTSECT.DOS\n"
     "/boot/bootsect.dos";
-const PCSTR LinuxKernelPrompt =
+static const PCSTR LinuxKernelPrompt =
     "Enter the Linux kernel image path.\n"
     "\n"
     "Examples:\n"
     "/vmlinuz\n"
     "/boot/vmlinuz-2.4.18";
-const PCSTR LinuxInitrdPrompt =
+static const PCSTR LinuxInitrdPrompt =
     "Enter the initrd image path.\n"
+    "Leave blank for no initial ramdisk.\n"
     "\n"
     "Examples:\n"
     "/initrd.gz\n"
-    "/boot/root.img.gz\n"
-    "\n"
-    "Leave blank for no initial ram disk.";
-const PCSTR LinuxCommandLinePrompt =
+    "/boot/root.img.gz";
+static const PCSTR LinuxCommandLinePrompt =
     "Enter the Linux kernel command line.\n"
     "\n"
     "Examples:\n"
@@ -53,7 +53,7 @@ const PCSTR LinuxCommandLinePrompt =
     "root=/dev/sdb1 init=/sbin/init";
 #endif /* _M_IX86 || _M_AMD64 */
 
-const PCSTR BootDrivePrompt =
+static const PCSTR BootDrivePrompt =
     "Enter the boot drive.\n"
     "\n"
     "Examples:\n"
@@ -66,25 +66,30 @@ const PCSTR BootDrivePrompt =
     "0 - first floppy drive\n"
     "0x80 - first hard drive\n"
     "0x81 - second hard drive";
-const PCSTR BootPartitionPrompt =
-    "Enter the boot partition.\n"
-    "\n"
-    "Enter 0 for the active (bootable) partition.";
+static const PCSTR BootPartitionPrompt =
+    "Enter the boot partition.\n";
+    // "\n"
+    // "Enter 0 for the active (bootable) partition.";
+    /* NOTE: "Active"/bootable partition is a per-platform concept,
+     * and may not really exist. In addition, partition(0) in ARC
+     * means the whole disk (in non-partitioned access).
+     * Commit f2854a864 (r17736) and CORE-156 are thus inaccurate
+     * in this regard. */
 
-const PCSTR ARCPathPrompt =
+static const PCSTR ARCPathPrompt =
     "Enter the boot ARC path.\n"
     "\n"
     "Examples:\n"
     "multi(0)disk(0)rdisk(0)partition(1)\n"
     "multi(0)disk(0)fdisk(0)";
 
-const PCSTR ReactOSSystemPathPrompt =
+static const PCSTR ReactOSSystemPathPrompt =
     "Enter the path to your ReactOS system directory.\n"
     "\n"
     "Examples:\n"
     "\\REACTOS\n"
     "\\ROS";
-const PCSTR ReactOSOptionsPrompt =
+static const PCSTR ReactOSOptionsPrompt =
     "Enter the load options you want passed to the kernel.\n"
     "\n"
     "Examples:\n"
@@ -92,7 +97,7 @@ const PCSTR ReactOSOptionsPrompt =
     "/FASTDETECT /SOS /NOGUIBOOT\n"
     "/BASEVIDEO /MAXMEM=64\n"
     "/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
-const PCSTR ReactOSSetupOptionsPrompt =
+static const PCSTR ReactOSSetupOptionsPrompt =
     "Enter additional load options you want passed to the ReactOS Setup.\n"
     "These options will supplement those obtained from the TXTSETUP.SIF\n"
     "file, unless you also specify the /SIFOPTIONSOVERRIDE option switch.\n"
@@ -100,7 +105,7 @@ const PCSTR ReactOSSetupOptionsPrompt =
     "Example:\n"
     "/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /NOGUIBOOT";
 
-const PCSTR CustomBootPrompt =
+static const PCSTR CustomBootPrompt =
     "Press ENTER to boot your custom boot setup.";
 
 /* FUNCTIONS ******************************************************************/
@@ -111,9 +116,7 @@ VOID OptionMenuCustomBoot(VOID)
 {
     PCSTR CustomBootMenuList[] = {
 #if defined(_M_IX86) || defined(_M_AMD64)
-        "Disk",
-        "Partition",
-        "Boot Sector File",
+        "Boot Sector (Disk/Partition/File)",
         "Linux",
 #endif
         "ReactOS",
@@ -140,22 +143,16 @@ VOID OptionMenuCustomBoot(VOID)
     switch (SelectedMenuItem)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
-        case 0: // Disk
-            EditCustomBootDisk(&OperatingSystem);
+        case 0: // Boot Sector (Disk/Partition/File)
+            EditCustomBootSector(&OperatingSystem);
             break;
-        case 1: // Partition
-            EditCustomBootPartition(&OperatingSystem);
-            break;
-        case 2: // Boot Sector File
-            EditCustomBootSectorFile(&OperatingSystem);
-            break;
-        case 3: // Linux
+        case 1: // Linux
             EditCustomBootLinux(&OperatingSystem);
             break;
-        case 4: // ReactOS
+        case 2: // ReactOS
             EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
-        case 5: // ReactOS Setup
+        case 3: // ReactOS Setup
             EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
 #else
@@ -181,103 +178,8 @@ VOID OptionMenuCustomBoot(VOID)
 #if defined(_M_IX86) || defined(_M_AMD64)
 
 VOID
-EditCustomBootDisk(
-    IN OUT OperatingSystemItem* OperatingSystem)
-{
-    TIMEINFO* TimeInfo;
-    ULONG_PTR SectionId = OperatingSystem->SectionId;
-    CHAR SectionName[100];
-    /* This construct is a trick for saving some stack space */
-    union
-    {
-        struct
-        {
-            CHAR Guard1;
-            CHAR Drive[20];
-            CHAR Guard2;
-        };
-        CHAR ArcPath[200];
-    } BootStrings;
-
-    RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
-
-    if (SectionId != 0)
-    {
-        /* Load the settings */
-
-        /* Check whether we have a "BootPath" value (takes precedence over "BootDrive") */
-        *BootStrings.ArcPath = ANSI_NULL;
-        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
-        if (!*BootStrings.ArcPath)
-        {
-            /* We don't, retrieve the boot drive value instead */
-            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
-        }
-    }
-
-    if (!*BootStrings.ArcPath)
-    {
-        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
-            return;
-    }
-    if (!*BootStrings.Drive)
-    {
-        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
-            return;
-    }
-
-    /* Modify the settings values and return if we were in edit mode */
-    if (SectionId != 0)
-    {
-        /* Modify the BootPath if we have one */
-        if (*BootStrings.ArcPath)
-        {
-            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
-        }
-        else if (*BootStrings.Drive)
-        {
-            /* Otherwise, modify the BootDrive */
-            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
-        }
-        return;
-    }
-
-    /* Generate a unique section name */
-    TimeInfo = ArcGetTime();
-    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
-                       "CustomBootDisk%u%u%u%u%u%u",
-                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
-                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
-
-    /* Add the section */
-    if (!IniAddSection(SectionName, &SectionId))
-        return;
-
-    /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", "Drive"))
-        return;
-
-    /* Add the BootPath if we have one */
-    if (*BootStrings.ArcPath)
-    {
-        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
-            return;
-    }
-    else if (*BootStrings.Drive)
-    {
-        /* Otherwise, add the BootDrive */
-        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
-            return;
-    }
-
-    OperatingSystem->SectionId = SectionId;
-    OperatingSystem->LoadIdentifier = NULL;
-}
-
-VOID
-EditCustomBootPartition(
-    IN OUT OperatingSystemItem* OperatingSystem)
+EditCustomBootSector(
+    _Inout_ OperatingSystemItem* OperatingSystem)
 {
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
@@ -294,9 +196,11 @@ EditCustomBootPartition(
         };
         CHAR ArcPath[200];
     } BootStrings;
+    CHAR BootSectorFile[200];
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(&BootStrings, sizeof(BootStrings));
+    RtlZeroMemory(BootSectorFile, sizeof(BootSectorFile));
 
     if (SectionId != 0)
     {
@@ -314,6 +218,9 @@ EditCustomBootPartition(
             IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
             IniReadSettingByName(SectionId, "BootPartition", BootStrings.Partition, sizeof(BootStrings.Partition));
         }
+
+        /* Always load the file name; it will only be handled later if a partition has been specified */
+        IniReadSettingByName(SectionId, "BootSectorFile", BootSectorFile, sizeof(BootSectorFile));
     }
 
     if (!*BootStrings.ArcPath)
@@ -333,122 +240,15 @@ EditCustomBootPartition(
             return;
     }
 
-    /* Modify the settings values and return if we were in edit mode */
-    if (SectionId != 0)
+    /* Edit the file name only if a partition has been specified */
+    if ((!*BootStrings.ArcPath && atoi(BootStrings.Partition) != 0) ||
+        (*BootStrings.ArcPath && !strstr(BootStrings.ArcPath, ")partition()") &&
+                                 !strstr(BootStrings.ArcPath, ")partition(0)")))
     {
-        /* Modify the BootPath if we have one */
-        if (*BootStrings.ArcPath)
-        {
-            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
-        }
-        else if (*BootStrings.Drive)
-        {
-            /* Otherwise, modify the BootDrive and BootPartition */
-            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
-            IniModifySettingValue(SectionId, "BootPartition", BootStrings.Partition);
-        }
-        return;
-    }
-
-    /* Generate a unique section name */
-    TimeInfo = ArcGetTime();
-    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
-                       "CustomBootPartition%u%u%u%u%u%u",
-                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
-                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
-
-    /* Add the section */
-    if (!IniAddSection(SectionName, &SectionId))
-        return;
-
-    /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", "Partition"))
-        return;
-
-    /* Add the BootPath if we have one */
-    if (*BootStrings.ArcPath)
-    {
-        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
-            return;
-    }
-    else if (*BootStrings.Drive)
-    {
-        /* Otherwise, add the BootDrive and BootPartition */
-        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
-            return;
-
-        if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootStrings.Partition))
+        if (!UiEditBox(BootSectorFilePrompt, BootSectorFile, sizeof(BootSectorFile)))
             return;
     }
 
-    OperatingSystem->SectionId = SectionId;
-    OperatingSystem->LoadIdentifier = NULL;
-}
-
-VOID
-EditCustomBootSectorFile(
-    IN OUT OperatingSystemItem* OperatingSystem)
-{
-    TIMEINFO* TimeInfo;
-    ULONG_PTR SectionId = OperatingSystem->SectionId;
-    CHAR SectionName[100];
-    /* This construct is a trick for saving some stack space */
-    union
-    {
-        struct
-        {
-            CHAR Guard1;
-            CHAR Drive[20];
-            CHAR Partition[20];
-            CHAR Guard2;
-        };
-        CHAR ArcPath[200];
-    } BootStrings;
-    CHAR BootSectorFileString[200];
-
-    RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
-    RtlZeroMemory(BootSectorFileString, sizeof(BootSectorFileString));
-
-    if (SectionId != 0)
-    {
-        /* Load the settings */
-
-        /*
-         * Check whether we have a "BootPath" value (takes precedence
-         * over both "BootDrive" and "BootPartition").
-         */
-        *BootStrings.ArcPath = ANSI_NULL;
-        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
-        if (!*BootStrings.ArcPath)
-        {
-            /* We don't, retrieve the boot drive and partition values instead */
-            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
-            IniReadSettingByName(SectionId, "BootPartition", BootStrings.Partition, sizeof(BootStrings.Partition));
-        }
-
-        IniReadSettingByName(SectionId, "BootSectorFile", BootSectorFileString, sizeof(BootSectorFileString));
-    }
-
-    if (!*BootStrings.ArcPath)
-    {
-        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
-            return;
-
-        if (*BootStrings.Drive)
-        {
-            if (!UiEditBox(BootPartitionPrompt, BootStrings.Partition, sizeof(BootStrings.Partition)))
-                return;
-        }
-    }
-    if (!*BootStrings.Drive)
-    {
-        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
-            return;
-    }
-
-    if (!UiEditBox(BootSectorFilePrompt, BootSectorFileString, sizeof(BootSectorFileString)))
-        return;
 
     /* Modify the settings values and return if we were in edit mode */
     if (SectionId != 0)
@@ -467,22 +267,23 @@ EditCustomBootSectorFile(
         else
         {
             /*
-             * Otherwise, zero out all values: BootSectorFile will be
-             * relative to the default system partition.
+             * Otherwise, reset all values: BootSectorFile
+             * will be relative to the default system partition.
              */
             IniModifySettingValue(SectionId, "BootPath", "");
             IniModifySettingValue(SectionId, "BootDrive", "");
             IniModifySettingValue(SectionId, "BootPartition", "");
         }
 
-        IniModifySettingValue(SectionId, "BootSectorFile", BootSectorFileString);
+        /* Always write back the file name */
+        IniModifySettingValue(SectionId, "BootSectorFile", BootSectorFile);
         return;
     }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
     RtlStringCbPrintfA(SectionName, sizeof(SectionName),
-                       "CustomBootSectorFile%u%u%u%u%u%u",
+                       "CustomBootSector%u%u%u%u%u%u",
                        TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
                        TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
@@ -510,9 +311,12 @@ EditCustomBootSectorFile(
             return;
     }
 
-    /* Add the BootSectorFile */
-    if (!IniAddSettingValueToSection(SectionId, "BootSectorFile", BootSectorFileString))
-        return;
+    /* Add the BootSectorFile if any */
+    if (*BootSectorFile)
+    {
+        if (!IniAddSettingValueToSection(SectionId, "BootSectorFile", BootSectorFile))
+            return;
+    }
 
     OperatingSystem->SectionId = SectionId;
     OperatingSystem->LoadIdentifier = NULL;
@@ -612,8 +416,8 @@ EditCustomBootLinux(
         else
         {
             /*
-             * Otherwise, zero out all values: BootSectorFile will be
-             * relative to the default system partition.
+             * Otherwise, reset all values: the files will
+             * be relative to the default system partition.
              */
             IniModifySettingValue(SectionId, "BootPath", "");
             IniModifySettingValue(SectionId, "BootDrive", "");
