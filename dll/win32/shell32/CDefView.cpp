@@ -169,6 +169,20 @@ static UINT ReallyGetMenuItemID(HMENU hmenu, int i)
     return UINT_MAX;
 }
 
+static UINT CalculateCharWidth(HWND hwnd)
+{
+    UINT ret = 0;
+    HDC hDC = GetDC(hwnd);
+    if (hDC)
+    {
+        HGDIOBJ hOrg = SelectObject(hDC, (HGDIOBJ)SendMessage(hwnd, WM_GETFONT, 0, 0));
+        ret = GdiGetCharDimensions(hDC, NULL, NULL);
+        SelectObject(hDC, hOrg);
+        ReleaseDC(hwnd, hDC);
+    }
+    return ret;
+}
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -985,11 +999,15 @@ HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
     if (FAILED(hr))
         return hr;
 
+    UINT chavewidth = CalculateCharWidth(m_ListView.m_hWnd);
+    if (!chavewidth)
+        chavewidth = 6; // 6 is a reasonable default fallback
+
     LVCOLUMN lvc;
     lvc.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM;
     lvc.pszText = buf;
     lvc.fmt = sd.fmt;
-    lvc.cx = sd.cxChar * 8; // FIXME: Font size? DPI?
+    lvc.cx = sd.cxChar * chavewidth; // FIXME: DPI?
     lvc.iSubItem = FoldCol; // Used by MapFolderColumnToListColumn & MapListColumnToFolderColumn
     if ((int) ListCol == -1)
     {
