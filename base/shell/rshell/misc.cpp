@@ -274,3 +274,11 @@ LPVOID *ppv)
 
     return ShellObjectCreatorInit<CRShellClassFactory>(rclsid, riid, ppv);
 }
+
+VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async)
+{
+    char buf[MAX_PATH];
+    wsprintfA(buf, "rundll32.exe shell32.dll,Options_RunDLL %u", Page);
+    WinExec(buf, SW_SHOW);
+}
+
