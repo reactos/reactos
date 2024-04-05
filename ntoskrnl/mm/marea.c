@@ -56,49 +56,14 @@ BOOLEAN MiRosKernelVadRootInitialized;
 
 /* FUNCTIONS *****************************************************************/
 
-PMEMORY_AREA NTAPI
+PMEMORY_AREA
+NTAPI
 MmLocateMemoryAreaByAddress(
     PMMSUPPORT AddressSpace,
-    PVOID Address_)
+    PVOID Address)
 {
-    ULONG_PTR StartVpn = (ULONG_PTR)Address_ / PAGE_SIZE;
-    PEPROCESS Process;
-    PMM_AVL_TABLE Table;
-    PMMADDRESS_NODE Node;
-    PMEMORY_AREA MemoryArea;
-    TABLE_SEARCH_RESULT Result;
-    PMMVAD_LONG Vad;
-
-    Process = MmGetAddressSpaceOwner(AddressSpace);
-    Table = (Process != NULL) ? &Process->VadRoot : &MiRosKernelVadRoot;
-
-    Result = MiCheckForConflictingNode(StartVpn, StartVpn, Table, &Node);
-    if (Result != TableFoundNode)
-    {
-        return NULL;
-    }
-
-    Vad = (PMMVAD_LONG)Node;
-    if (Vad->u.VadFlags.Spare == 0)
-    {
-        /* Check if this is VM VAD */
-        if (Vad->ControlArea == NULL)
-        {
-            /* We store the reactos MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
-        }
-        else
-        {
-            /* This is a section VAD. Store the MAREA here for now */
-            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
-        }
-    }
-    else
-    {
-        MemoryArea = (PMEMORY_AREA)Node;
-    }
-
-    return MemoryArea;
+    /* Do it the simple way */
+    return MmLocateMemoryAreaByRegion(AddressSpace, Address, 1);
 }
 
 PMEMORY_AREA
