@@ -778,6 +778,7 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
     ASSERT(Vad->u2.VadFlags2.ExtendableFile == FALSE);
     ASSERT(ControlArea);
     ASSERT(ControlArea->FilePointer == NULL);
+    ASSERT(!MI_IS_MEMORY_AREA_VAD(Vad));
 
     /* Delete the actual virtual memory pages */
     MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
@@ -1564,7 +1565,7 @@ MiGetFileObjectForVad(
     PFILE_OBJECT FileObject;
 
     /* Check if this is a RosMm memory area */
-    if (Vad->u.VadFlags.Spare != 0)
+    if (MI_IS_MEMORY_AREA_VAD(Vad))
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
 
