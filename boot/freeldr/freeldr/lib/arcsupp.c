@@ -23,9 +23,10 @@ GetNextArgumentValue(
 
     for (i = (LastIndex ? *LastIndex : 0); i < Argc; ++i)
     {
-        if (strlen(Argv[i]) >= ArgNameLen + 1 /* Count the '=' sign */ &&
-            _strnicmp(Argv[i], ArgumentName, ArgNameLen) == 0 &&
-            Argv[i][ArgNameLen] == '=')
+        if (Argv[i] /* NULL pointer is a valid entry in Argv: skip it */ &&
+            (strlen(Argv[i]) >= ArgNameLen + 1 /* Count the '=' sign */) &&
+            (_strnicmp(Argv[i], ArgumentName, ArgNameLen) == 0) &&
+            (Argv[i][ArgNameLen] == '='))
         {
             /* Found it, return the value */
             if (LastIndex) *LastIndex = i;
