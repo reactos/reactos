@@ -546,7 +546,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     PSUBSECTION Subsection;
 
     /* Get out if this is a fake VAD, RosMm will free the marea pages */
-    if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
+    if ((Vad) && MI_IS_MEMORY_AREA_VAD(Vad)) return;
 
     /* Get the current process */
     CurrentProcess = PsGetCurrentProcess();

@@ -1297,7 +1297,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
 
         /* Check for old-style memory areas */
-        if (Vad->u.VadFlags.Spare == 1)
+        if (MI_IS_MEMORY_AREA_VAD(Vad))
         {
             /* Let RosMm handle this */
             MiRosCleanupMemoryArea(Process, Vad);
