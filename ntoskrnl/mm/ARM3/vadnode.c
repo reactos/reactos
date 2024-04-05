@@ -213,7 +213,7 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
 
     /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
     Vad = (PMMVAD_LONG)NewNode;
-    if (Vad->u.VadFlags.Spare == 0)
+    if (!MI_IS_MEMORY_AREA_VAD(Vad))
     {
         NTSTATUS Status;
         PMEMORY_AREA MemoryArea;
@@ -460,7 +460,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
 
     /* Free the node from ReactOS view as well */
     Vad = (PMMVAD_LONG)Node;
-    if ((Table != &MmSectionBasedRoot) && (Vad->u.VadFlags.Spare == 0))
+    if ((Table != &MmSectionBasedRoot) && !MI_IS_MEMORY_AREA_VAD(Vad))
     {
         PMEMORY_AREA MemoryArea;
         PEPROCESS Process;

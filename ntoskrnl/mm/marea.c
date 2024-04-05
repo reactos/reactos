@@ -92,7 +92,7 @@ MmLocateMemoryAreaByRegion(
     }
 
     Vad = (PMMVAD_LONG)Node;
-    if (Vad->u.VadFlags.Spare == 0)
+    if (!MI_IS_MEMORY_AREA_VAD(Vad))
     {
         /* Check if this is VM VAD */
         if (Vad->ControlArea == NULL)
@@ -157,7 +157,6 @@ MmInsertMemoryArea(
 {
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-    marea->VadNode.u.VadFlags.Spare = 1;
     marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(Protect);
 
     /* Build a lame VAD if this is a user-space allocation */
@@ -334,9 +333,10 @@ MmFreeMemoryArea(
 #endif
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAddressSpace) */
-            ASSERT(MemoryArea->VadNode.u.VadFlags.Spare != 0);
-            if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
+            ASSERT(MI_IS_MEMORY_AREA_VAD(&MemoryArea->VadNode));
+            if (MI_IS_MEMORY_AREA_VAD((PMMVAD)MemoryArea->Vad))
             {
+                ASSERT((PMMVAD)MemoryArea->Vad == &MemoryArea->VadNode);
                 MiLockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
                 MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
                 MiUnlockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
@@ -439,6 +439,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     MemoryArea->Flags = AllocationFlags;
     MemoryArea->Magic = 'erAM';
     MemoryArea->DeleteInProgress = FALSE;
+    MI_SET_MEMORY_AREA_VAD(&MemoryArea->VadNode);
 
     if (*BaseAddress == 0)
     {
