@@ -5230,7 +5230,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     IN PSIZE_T URegionSize,
                     IN ULONG FreeType)
 {
-    PMEMORY_AREA MemoryArea;
     SIZE_T PRegionSize;
     PVOID PBaseAddress;
     LONG_PTR AlreadyDecommitted, CommitReduction = 0;
@@ -5392,15 +5391,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     ASSERT(Vad->u.VadFlags.NoChange == 0);
 
     //
-    // Finally, make sure there is a ReactOS Mm MEMORY_AREA for this allocation
-    // and that is is an ARM3 memory area, and not a section view, as we currently
-    // don't support freeing those though this interface.
-    //
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
-    ASSERT(MemoryArea);
-    ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
-
-    //
     //  Now we can try the operation. First check if this is a RELEASE or a DECOMMIT
     //
     if (FreeType & MEM_RELEASE)
@@ -5490,11 +5480,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For ReactOS: shrink the corresponding memory area
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->StartingVpn = (EndingAddress + 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.StartingVpn = Vad->StartingVpn;
 
                     //
                     // After analyzing the VAD, set it to NULL so that we don't
@@ -5524,11 +5510,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For ReactOS: shrink the corresponding memory area
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
                 }
                 else
                 {
@@ -5582,12 +5564,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
                     //
                     // Adjust the end of the original VAD (first chunk).
-                    // For ReactOS: shrink the corresponding memory area
                     //
-                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
 
                     //
                     // Now the addresses for both VADs are consistent,
