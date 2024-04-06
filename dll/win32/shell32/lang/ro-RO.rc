@@ -534,7 +534,7 @@ BEGIN
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Acţiuni", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "S&e selectează o acţiune de efectuat:", 1005, 14, 54, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+    CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "Se întreabă &de fiecare dată pentru alegerea unei acţiuni", 1006, 14, 177, 202, 10
     PUSHBUTTON "Resta&bilire valori implicite", 1008, 108, 197, 110, 14, WS_DISABLED
 END
