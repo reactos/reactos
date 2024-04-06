@@ -2330,9 +2330,9 @@ MiMakeProtectionMask(
 VOID
 NTAPI
 MiDeleteVirtualAddresses(
-    IN ULONG_PTR Va,
-    IN ULONG_PTR EndingAddress,
-    IN PMMVAD Vad
+    _In_ ULONG_PTR Va,
+    _In_ ULONG_PTR EndingAddress,
+    _In_opt_ PMMVAD Vad
 );
 
 VOID
