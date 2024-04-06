@@ -2180,6 +2180,12 @@ MiIsPfnInUse(
 
 PMMVAD
 NTAPI
+MiLocateVad(
+    _In_ PMM_AVL_TABLE Table,
+    _In_ PVOID VirtualAddress);
+
+PMMVAD
+NTAPI
 MiLocateAddress(
     IN PVOID VirtualAddress
 );
