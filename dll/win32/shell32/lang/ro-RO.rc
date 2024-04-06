@@ -923,7 +923,7 @@ BEGIN
     IDS_EMPTY_BITBUCKET "Golire Coş de reciclare"
     IDS_PICK_ICON_TITLE "Alegere pictogramă"
     IDS_PICK_ICON_FILTER "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Orice fișier (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "Programe (*.exe)\0*.exe\0Toate fișierele (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Programe (*.exe)\0*.exe\0Toate fișier (*.*)\0*.*\0"
 
     IDS_CANTLOCKVOLUME "Imposibil de blocat volumul (Cod de eroare: %lu)."
     IDS_CANTDISMOUNTVOLUME "Imposibil de demontat volumul (Cod de eroare: %lu)."
