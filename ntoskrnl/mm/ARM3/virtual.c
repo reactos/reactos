@@ -527,9 +527,10 @@ MiDeletePte(IN PMMPTE PointerPte,
 
 VOID
 NTAPI
-MiDeleteVirtualAddresses(IN ULONG_PTR Va,
-                         IN ULONG_PTR EndingAddress,
-                         IN PMMVAD Vad)
+MiDeleteVirtualAddresses(
+    _In_ ULONG_PTR Va,
+    _In_ ULONG_PTR EndingAddress,
+    _In_opt_ PMMVAD Vad)
 {
     PMMPTE PointerPte, PrototypePte, LastPrototypePte;
     PMMPDE PointerPde;
@@ -545,8 +546,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     BOOLEAN AddressGap = FALSE;
     PSUBSECTION Subsection;
 
-    /* Get out if this is a fake VAD, RosMm will free the marea pages */
-    if ((Vad) && MI_IS_MEMORY_AREA_VAD(Vad)) return;
+    /* We should never get RosMm memory areas here */
+    ASSERT((Vad == NULL) || !MI_IS_MEMORY_AREA_VAD(Vad));
 
     /* Get the current process */
     CurrentProcess = PsGetCurrentProcess();
