@@ -805,7 +805,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
                      IN PVOID BaseAddress,
                      IN ULONG Flags)
 {
-    PMEMORY_AREA MemoryArea;
     BOOLEAN Attached = FALSE;
     KAPC_STATE ApcState;
     PMMVAD Vad;
@@ -819,11 +818,22 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* Check if we need to lock the address space */
     if (!Flags) MmLockAddressSpace(&Process->Vm);
 
-    /* Check for Mm Region */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    /* Find the VAD for the address and make sure it's a section VAD */
+    Vad = MiLocateVad(&Process->VadRoot, BaseAddress);
+    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
+    {
+        /* Couldn't find it, or invalid VAD, fail */
+        DPRINT1("No VAD or invalid VAD\n");
+        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+        Status = STATUS_NOT_MAPPED_VIEW;
+        goto Quickie;
+    }
+
+    /* Check for RosMm memory area */
+    if (MI_IS_MEMORY_AREA_VAD(Vad))
     {
         /* Call Mm API */
+        ASSERT(MI_IS_ROSMM_VAD(Vad));
         NTSTATUS Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         return Status;
@@ -844,17 +854,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
         DPRINT1("Process died!\n");
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         Status = STATUS_PROCESS_IS_TERMINATING;
-        goto Quickie;
-    }
-
-    /* Find the VAD for the address and make sure it's a section VAD */
-    Vad = MiLocateAddress(BaseAddress);
-    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
-    {
-        /* Couldn't find it, or invalid VAD, fail */
-        DPRINT1("No VAD or invalid VAD\n");
-        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
-        Status = STATUS_NOT_MAPPED_VIEW;
         goto Quickie;
     }
 
