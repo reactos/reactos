@@ -5,15 +5,12 @@ Copyright 2023-2024 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
- 1. They use only the correct Romanian language diacritics.
- 2. They will make a correct translation both grammatically and literally and according to MSDN.
- 3. For the user-computer talking they use the long infinitive.
- 4. For the computer-user talking they use a formally polite talking.
- 5. They avoid the excessive politeness.
- 6. It is recommended to use a neutral expression if we do not know the noun gender.
- 7. All the accelerators will follow the MSDN's rules, by trying to avoid changing them. We will keep the same XP/2003 (and newer) accelerators.
+ 1. We use only the correct Romanian language diacritics.
+ 2. We will make a correct translation both grammatically and literally.
+ 3. All the accelerators and the translation will follow the MSDN's rules, by trying to avoid changing them. We will keep the same XP/2003 (and newer) accelerators.
+ 4. The only changes accepted from the MS translations are the typos.
 
-[1] https://web.archive.org/web/20170307094948/http://i18n.ro/Ghidul_traduc%C4%83torului_de_software
-[2] https://msdn.microsoft.com/en-us/library/ms971323.aspx#atg_keyboardshortcuts_selecting_access_keys
-[3] https://web.archive.org/web/20160711131041/http://www.i18n.ro/Gre%C8%99eli_frecvente
-[4] http://groups.google.com/group/diacritice
+References:
+https://archive.org/details/WinXPLanguagePacks
+
+Other references will be in the future the other language packs.
