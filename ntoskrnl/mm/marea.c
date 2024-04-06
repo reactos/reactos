@@ -94,17 +94,8 @@ MmLocateMemoryAreaByRegion(
     Vad = (PMMVAD_LONG)Node;
     if (!MI_IS_MEMORY_AREA_VAD(Vad))
     {
-        /* Check if this is VM VAD */
-        if (Vad->ControlArea == NULL)
-        {
-            /* We store the reactos MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
-        }
-        else
-        {
-            /* This is a section VAD. Store the MAREA here for now */
-            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
-        }
+        /* This is an ARM³ VAD, we don't return it. */
+        return NULL;
     }
     else
     {
@@ -332,15 +323,13 @@ MmFreeMemoryArea(
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
 #endif
 
-            /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAddressSpace) */
+            /* We do not have fake ARM³ memory areas anymore. */
             ASSERT(MI_IS_MEMORY_AREA_VAD(&MemoryArea->VadNode));
-            if (MI_IS_MEMORY_AREA_VAD((PMMVAD)MemoryArea->Vad))
-            {
-                ASSERT((PMMVAD)MemoryArea->Vad == &MemoryArea->VadNode);
-                MiLockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
-                MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
-                MiUnlockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
-            }
+            ASSERT(MI_IS_MEMORY_AREA_VAD((PMMVAD)MemoryArea->Vad));
+            ASSERT((PMMVAD)MemoryArea->Vad == &MemoryArea->VadNode);
+            MiLockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
+            MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
+            MiUnlockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
 
             MemoryArea->Vad = NULL;
         }
