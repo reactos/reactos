@@ -113,11 +113,10 @@ MiDbgAssertIsLockedForWrite(_In_ PMM_AVL_TABLE Table)
 
 PMMVAD
 NTAPI
-MiLocateAddress(IN PVOID VirtualAddress)
+MiLocateVad(_In_ PMM_AVL_TABLE Table, _In_ PVOID VirtualAddress)
 {
     PMMVAD FoundVad;
     ULONG_PTR Vpn;
-    PMM_AVL_TABLE Table = &PsGetCurrentProcess()->VadRoot;
     TABLE_SEARCH_RESULT SearchResult;
 
     ASSERT_LOCKED_FOR_READ(Table);
@@ -143,6 +142,14 @@ MiLocateAddress(IN PVOID VirtualAddress)
     /* We allow this (atomic) update without exclusive lock, because it's a hint only */
     Table->NodeHint = FoundVad;
     return FoundVad;
+}
+
+PMMVAD
+NTAPI
+MiLocateAddress(_In_ PVOID VirtualAddress)
+{
+    PMM_AVL_TABLE Table = &PsGetCurrentProcess()->VadRoot;
+    return MiLocateVad(Table, VirtualAddress);
 }
 
 TABLE_SEARCH_RESULT
