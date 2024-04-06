@@ -902,7 +902,7 @@ BEGIN
     IDS_DRIVE_FIXED "Disc local"
     IDS_DRIVE_CDROM "Unitate CD"
     IDS_DRIVE_NETWORK "Unitate de reţea"
-    IDS_DRIVE_FLOPPY "Dischetă de 3,25 inci"
+    IDS_DRIVE_FLOPPY "Dischetă de 3,5"
     IDS_DRIVE_REMOVABLE "Disc amovibil"
     IDS_FS_UNKNOWN "Nespecificat"
 
