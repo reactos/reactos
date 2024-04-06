@@ -4104,8 +4104,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         }
 
         /* Check there is enough space to map the section at that point. */
-        if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
-                                       PAGE_ROUND_UP(ImageSize)) != NULL)
+        if (!MmIsAddressRangeFree(AddressSpace, (PVOID)ImageBase, PAGE_ROUND_UP(ImageSize)))
         {
             /* Fail if the user requested a fixed base address. */
             if ((*BaseAddress) != NULL)

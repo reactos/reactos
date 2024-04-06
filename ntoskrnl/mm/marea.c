@@ -115,6 +115,28 @@ MmLocateMemoryAreaByRegion(
     return MemoryArea;
 }
 
+BOOLEAN
+NTAPI
+MmIsAddressRangeFree(
+    PMMSUPPORT AddressSpace,
+    PVOID Address,
+    ULONG_PTR Length)
+{
+    ULONG_PTR StartVpn = (ULONG_PTR)Address / PAGE_SIZE;
+    ULONG_PTR EndVpn = ((ULONG_PTR)Address + Length - 1) / PAGE_SIZE;
+    PEPROCESS Process;
+    PMM_AVL_TABLE Table;
+    PMMADDRESS_NODE Node;
+    TABLE_SEARCH_RESULT Result;
+
+    Process = MmGetAddressSpaceOwner(AddressSpace);
+    Table = (Process != NULL) ? &Process->VadRoot : &MiRosKernelVadRoot;
+
+    Result = MiCheckForConflictingNode(StartVpn, EndVpn, Table, &Node);
+
+    return (Result != TableFoundNode);
+}
+
 VOID
 NTAPI
 MiInsertVad(IN PMMVAD Vad,
@@ -460,9 +482,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
         /* No need to check ARM3 owned memory areas, the range MUST be free */
         if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
         {
-            if (MmLocateMemoryAreaByRegion(AddressSpace,
-                                           *BaseAddress,
-                                           tmpLength) != NULL)
+            if (!MmIsAddressRangeFree(AddressSpace, *BaseAddress, tmpLength))
             {
                 DPRINT("Memory area already occupied\n");
                 if (!(Type & MEMORY_AREA_STATIC)) ExFreePoolWithTag(MemoryArea, TAG_MAREA);

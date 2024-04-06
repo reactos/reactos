@@ -618,6 +618,13 @@ MmLocateMemoryAreaByRegion(
     SIZE_T Length
 );
 
+BOOLEAN
+NTAPI
+MmIsAddressRangeFree(
+    PMMSUPPORT AddressSpace,
+    PVOID Address,
+    ULONG_PTR Length);
+
 PVOID
 NTAPI
 MmFindGap(
