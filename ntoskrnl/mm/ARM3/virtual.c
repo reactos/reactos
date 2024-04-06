@@ -2154,46 +2154,6 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 
 NTSTATUS
 NTAPI
-MiRosProtectVirtualMemory(IN PEPROCESS Process,
-                          IN OUT PVOID *BaseAddress,
-                          IN OUT PSIZE_T NumberOfBytesToProtect,
-                          IN ULONG NewAccessProtection,
-                          OUT PULONG OldAccessProtection OPTIONAL)
-{
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
-    ULONG OldAccessProtection_;
-    NTSTATUS Status;
-
-    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
-    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
-
-    AddressSpace = &Process->Vm;
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
-
-    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-    Status = MmProtectSectionView(AddressSpace,
-                                  MemoryArea,
-                                  *BaseAddress,
-                                  *NumberOfBytesToProtect,
-                                  NewAccessProtection,
-                                  OldAccessProtection);
-
-    MmUnlockAddressSpace(AddressSpace);
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
                        IN OUT PSIZE_T NumberOfBytesToProtect,
@@ -2253,13 +2213,18 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     /* Check if this is a ROSMM VAD */
     if (MI_IS_ROSMM_VAD(Vad))
     {
-        /* Not very awesome hack */
+        /* Not too shabby hack */
+        ASSERT(((PMEMORY_AREA)Vad)->Type == MEMORY_AREA_SECTION_VIEW);
+        *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
+        *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+        Status = MmProtectSectionView(AddressSpace,
+                                      (PMEMORY_AREA)Vad,
+                                      *BaseAddress,
+                                      *NumberOfBytesToProtect,
+                                      NewAccessProtection,
+                                      OldAccessProtection);
         MmUnlockAddressSpace(AddressSpace);
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
+        return Status;
     }
 
     /* Make sure the address is within this VAD's boundaries */
