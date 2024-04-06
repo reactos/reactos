@@ -264,6 +264,8 @@ typedef struct _MEMORY_AREA
 
 #define MI_SET_MEMORY_AREA_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 1; } while (0)
 #define MI_IS_MEMORY_AREA_VAD(Vad) (((Vad)->u.VadFlags.Spare & 1) != 0)
+#define MI_SET_ROSMM_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 2; } while (0)
+#define MI_IS_ROSMM_VAD(Vad) (((Vad)->u.VadFlags.Spare & 2) != 0)
 
 typedef struct _MM_RMAP_ENTRY
 {

@@ -1690,6 +1690,9 @@ MiGetFileObjectForSectionAddress(
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
 
+        /* We do not expect ARM³ memory areas here, those are kernel only */
+        ASSERT(MI_IS_ROSMM_VAD(Vad));
+
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
@@ -1764,6 +1767,9 @@ MiGetFileObjectForVad(
     if (MI_IS_MEMORY_AREA_VAD(Vad))
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
+
+        /* We do not expect ARM³ memory areas here, those are kernel only */
+        ASSERT(MI_IS_ROSMM_VAD(Vad));
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
