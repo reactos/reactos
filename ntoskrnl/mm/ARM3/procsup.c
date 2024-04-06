@@ -1331,14 +1331,6 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
             MiUnlockProcessWorkingSetUnsafe(Process, Thread);
         }
 
-         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
-        if (Vad->u.VadFlags.Spare == 1)
-        {
-            /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */
-            Vad->u.VadFlags.Spare = 2;
-            continue;
-        }
-
         /* Free the VAD memory */
         ExFreePool(Vad);
 
