@@ -211,54 +211,10 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
              IN PMMADDRESS_NODE Parent,
              IN TABLE_SEARCH_RESULT Result)
 {
-    PMMVAD_LONG Vad;
-
     ASSERT_LOCKED_FOR_WRITE(Table);
 
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
-
-    /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
-    Vad = (PMMVAD_LONG)NewNode;
-    if (!MI_IS_MEMORY_AREA_VAD(Vad))
-    {
-        NTSTATUS Status;
-        PMEMORY_AREA MemoryArea;
-        SIZE_T Size;
-        PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
-        PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
-
-        Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
-
-        if (AllocatedBase == NULL)
-        {
-            AllocatedBase = (PVOID)(ULONG_PTR)1;
-            Size -= 1;
-        }
-
-        Status = MmCreateMemoryArea(&Process->Vm,
-                                    MEMORY_AREA_OWNED_BY_ARM3,
-                                    &AllocatedBase,
-                                    Size,
-                                    PAGE_READWRITE,
-                                    &MemoryArea,
-                                    0,
-                                    PAGE_SIZE);
-        ASSERT(NT_SUCCESS(Status));
-
-        /* Check if this is VM VAD */
-        if (Vad->ControlArea == NULL)
-        {
-            /* We store the reactos MEMORY_AREA here */
-            Vad->FirstPrototypePte = (PMMPTE)MemoryArea;
-        }
-        else
-        {
-            /* This is a section VAD. Store the MAREA here for now */
-            ASSERT(Vad->u4.Banked == (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL);
-            Vad->u4.Banked = (PVOID)MemoryArea;
-        }
-    }
 }
 
 VOID
@@ -447,8 +403,6 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
-    PMMVAD_LONG Vad;
-
     ASSERT_LOCKED_FOR_WRITE(Table);
 
     /* Call the AVL code */
@@ -463,55 +417,6 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         /* Get a new hint, unless we're empty now, in which case nothing */
         if (!Table->NumberGenericTableElements) Table->NodeHint = NULL;
         else Table->NodeHint = Table->BalancedRoot.RightChild;
-    }
-
-    /* Free the node from ReactOS view as well */
-    Vad = (PMMVAD_LONG)Node;
-    if ((Table != &MmSectionBasedRoot) && !MI_IS_MEMORY_AREA_VAD(Vad))
-    {
-        PMEMORY_AREA MemoryArea;
-        PEPROCESS Process;
-
-        /* Check if this is VM VAD */
-        if (Vad->ControlArea == NULL)
-        {
-            /* We store the ReactOS MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
-        }
-        else
-        {
-            /* This is a section VAD. We store the ReactOS MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
-        }
-
-        /* Make sure one actually still exists */
-        if (MemoryArea)
-        {
-            /* Make sure we have not already freed it */
-            ASSERT(MemoryArea != (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL);
-
-            /* Get the process */
-            Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
-
-            /* We only create fake memory-areas for ARM3 VADs */
-            ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
-            ASSERT(MemoryArea->Vad == NULL);
-
-            /* Free it */
-            MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
-
-            /* Check if this is VM VAD */
-            if (Vad->ControlArea == NULL)
-            {
-                /* Delete the pointer to it */
-                Vad->FirstPrototypePte = (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL;
-            }
-            else
-            {
-                /* Delete the pointer to it */
-                Vad->u4.Banked = (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL;
-            }
-        }
     }
 }
 
