@@ -859,7 +859,7 @@ BEGIN
     IDS_RUNDLG_ERROR "Imposibil de mutat acest folder (eroare internă)."
     IDS_RUNDLG_BROWSE_ERROR "Imposibil de mutat acest fișier (eroare internă)"
     IDS_RUNDLG_BROWSE_CAPTION "Specificare fișiere"
-    IDS_RUNDLG_BROWSE_FILTER "Programe#*.exe\0*.exe\0Toate fişierele (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Toate fişier (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
     IDS_SHORTCUT_RUN_NORMAL "Fereastră normală"
