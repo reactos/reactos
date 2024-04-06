@@ -440,6 +440,10 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     MemoryArea->Magic = 'erAM';
     MemoryArea->DeleteInProgress = FALSE;
     MI_SET_MEMORY_AREA_VAD(&MemoryArea->VadNode);
+    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    {
+        MI_SET_ROSMM_VAD(&MemoryArea->VadNode);
+    }
 
     if (*BaseAddress == 0)
     {
