@@ -166,7 +166,6 @@ MmInsertMemoryArea(
             MiLockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
             MiInsertVad(&marea->VadNode, &Process->VadRoot);
             MiUnlockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
-            marea->Vad = &marea->VadNode;
         }
     }
     else
@@ -184,7 +183,6 @@ MmInsertMemoryArea(
         MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
         MiInsertVad(&marea->VadNode, &MiRosKernelVadRoot);
         MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
-        marea->Vad = NULL;
     }
 }
 
@@ -324,13 +322,9 @@ MmFreeMemoryArea(
 
             /* We do not have fake ARM³ memory areas anymore. */
             ASSERT(MI_IS_MEMORY_AREA_VAD(&MemoryArea->VadNode));
-            ASSERT(MI_IS_MEMORY_AREA_VAD((PMMVAD)MemoryArea->Vad));
-            ASSERT((PMMVAD)MemoryArea->Vad == &MemoryArea->VadNode);
             MiLockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
             MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &Process->VadRoot);
             MiUnlockProcessWorkingSet(PsGetCurrentProcess(), PsGetCurrentThread());
-
-            MemoryArea->Vad = NULL;
         }
         else
         {

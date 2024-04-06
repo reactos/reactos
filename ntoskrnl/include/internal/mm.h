@@ -252,7 +252,6 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG Magic;
-    PVOID Vad;
 
     struct
     {
