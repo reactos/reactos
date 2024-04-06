@@ -797,6 +797,7 @@ BEGIN
     IDS_DISCONNECT "Desligar"
     IDS_OPENFILELOCATION "Abrir localização do f&icheiro"
     IDS_SENDTO_MENU "&Enviar para"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"
     IDS_COPYERRORTITLE "Erro ao copiar pasta ou ficheiro"

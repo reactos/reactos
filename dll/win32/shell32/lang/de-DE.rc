@@ -798,6 +798,7 @@ BEGIN
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Date&ipfad öffnen"
     IDS_SENDTO_MENU "S&enden an"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
     IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"

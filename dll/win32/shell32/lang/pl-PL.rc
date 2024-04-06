@@ -806,6 +806,7 @@ BEGIN
     IDS_DISCONNECT "Odłącz"
     IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
     IDS_SENDTO_MENU "Wyślij d&o"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Błąd przenoszenia pliku lub folderu"
     IDS_COPYERRORTITLE "Błąd kopiowania pliku lub folderu"

@@ -794,6 +794,7 @@ BEGIN
     IDS_DISCONNECT "Putuskan"
     IDS_OPENFILELOCATION "&Buka lokasi berkas"
     IDS_SENDTO_MENU "Kiri&m Ke"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Kesalahan memindahkan Berkas atau Folder"
     IDS_COPYERRORTITLE "Kesalahan menyalin Berkas atau Folder"

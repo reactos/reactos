@@ -794,6 +794,7 @@ BEGIN
     IDS_DISCONNECT "接続の切断"
     IDS_OPENFILELOCATION "ファイルの場所を開く(&I)"
     IDS_SENDTO_MENU "送る(&N)"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "ファイルまたはフォルダの移動のエラー"
     IDS_COPYERRORTITLE "ファイルまたはフォルダのコピーのエラー"
