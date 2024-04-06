@@ -2200,7 +2200,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN ULONG NewAccessProtection,
                        OUT PULONG OldAccessProtection OPTIONAL)
 {
-    PMEMORY_AREA MemoryArea;
     PMMVAD Vad;
     PMMSUPPORT AddressSpace;
     ULONG_PTR StartingAddress, EndingAddress;
@@ -2239,19 +2238,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         goto FailPath;
     }
 
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
-    {
-        /* Evil hack */
-        MmUnlockAddressSpace(AddressSpace);
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
-    }
-
     /* Get the VAD for this address range, and make sure it exists */
     Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
                                        EndingAddress >> PAGE_SHIFT,
@@ -2262,6 +2248,18 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         DPRINT("Could not find a VAD for this allocation\n");
         Status = STATUS_CONFLICTING_ADDRESSES;
         goto FailPath;
+    }
+
+    /* Check if this is a ROSMM VAD */
+    if (MI_IS_ROSMM_VAD(Vad))
+    {
+        /* Not very awesome hack */
+        MmUnlockAddressSpace(AddressSpace);
+        return MiRosProtectVirtualMemory(Process,
+                                         BaseAddress,
+                                         NumberOfBytesToProtect,
+                                         NewAccessProtection,
+                                         OldAccessProtection);
     }
 
     /* Make sure the address is within this VAD's boundaries */
