@@ -2071,6 +2071,13 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     NTSTATUS Status;
     ULONG_PTR MaxLength;
 
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+
+    if (MemoryArea->DeleteInProgress)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
     MaxLength = MA_GetEndingAddress(MemoryArea) - (ULONG_PTR)BaseAddress;
     if (Length > MaxLength)
         Length = (ULONG)MaxLength;
@@ -2086,7 +2093,8 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
-    *OldProtect = Region->Protect;
+    if (OldProtect != NULL)
+        *OldProtect = Region->Protect;
     Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
                            &MemoryArea->SectionData.RegionListHead,
                            BaseAddress, Length, Region->Type, Protect,
