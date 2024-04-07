@@ -806,6 +806,7 @@ BEGIN
     IDS_DISCONNECT "Desconectar"
     IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
     IDS_SENDTO_MENU "E&nviar a"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"
     IDS_COPYERRORTITLE "Error copiando Archivo o Carpeta"

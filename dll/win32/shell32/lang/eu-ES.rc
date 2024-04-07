@@ -804,6 +804,7 @@ BEGIN
     IDS_DISCONNECT "Deskonektatu"
     IDS_OPENFILELOCATION "Ireki &fitxategi kokalekua"
     IDS_SENDTO_MENU "&Bidali hona"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Errore bat gertatu da fitxategia edo karpeta lekuz aldatzean"
     IDS_COPYERRORTITLE "Errore bat gertatu da fitxategia edo karpeta kopiatzean"

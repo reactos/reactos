@@ -54,6 +54,8 @@ extern char** __initenv;     /* pointer to initial environment block */
 extern wchar_t** _wenviron;  /* pointer to environment block */
 extern wchar_t** __winitenv; /* pointer to initial environment block */
 
+extern BOOL msvcrt_init_heap(void);
+
 /* LIBRARY ENTRY POINT ********************************************************/
 
 BOOL
@@ -77,6 +79,9 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* create tls stuff */
         if (!msvcrt_init_tls())
           return FALSE;
+
+        if (!msvcrt_init_heap())
+            return FALSE;
 
         if (BlockEnvToEnvironA() < 0)
             return FALSE;

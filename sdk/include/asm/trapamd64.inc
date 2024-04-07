@@ -1,3 +1,54 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     ASM macros for x64 trap handling
+ * COPYRIGHT:   Copyright 2011-2024 Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
+
+MACRO(ASSERT_TRAP_FRAME_INTS_ENABLED, Register)
+#if DBG
+    LOCAL IntsAreEnabled
+    test dword ptr [Register + KTRAP_FRAME_EFlags], HEX(200)
+    jnz IntsAreEnabled
+    int HEX(2C)
+IntsAreEnabled:
+#endif
+ENDM
+
+MACRO(ASSERT_TRAP_FRAME_IRQL_VALID, Register)
+#if DBG
+    LOCAL IrqlIsValid
+    mov rax, cr8
+    cmp byte ptr [Register + KTRAP_FRAME_PreviousIrql], al
+    je IrqlIsValid
+    int HEX(2C)
+IrqlIsValid:
+#endif
+ENDM
+
+MACRO(ASSERT_IRQL_PASSIVE)
+#if DBG
+    LOCAL IrqlIsPassive
+    mov rax, cr8
+    test rax, rax
+    jz IrqlIsPassive
+    int HEX(2C)
+IrqlIsPassive:
+#endif
+ENDM
+
+// Checks for user APCs and delivers them if necessary.
+// Clobbers all volatile registers except rax.
+MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
+    LOCAL NoUserApcPending
+
+    /* Check for pending user APC */
+    cmp byte ptr [ThreadReg + ThApcState + AsUserApcPending], 0
+    jz NoUserApcPending
+    lea rcx, [TrapFrame]
+    call KiInitiateUserApc
+NoUserApcPending:
+ENDM
 
 APIC_EOI = HEX(0FFFFFFFFFFFE00B0)
 
@@ -122,13 +173,7 @@ MACRO(EnterTrap, Flags)
     /* Load kernel MXCSR */
     ldmxcsr gs:[PcMxCsr]
 
-#if DBG
-    /* Check IRQL */
-    mov rax, cr8
-    test rax, rax
-    jz kernel_mode_entry
-    int HEX(2c)
-#endif
+    ASSERT_IRQL_PASSIVE
 
 kernel_mode_entry:
 
@@ -163,19 +208,8 @@ ENDM
  */
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
-    LOCAL IntsEnabled
-    LOCAL NoUserApc
-    LOCAL IrqlPassive
-    LOCAL irql_ok
 
-#if DBG
-        /* Check previous irql */
-        mov rax, cr8
-        cmp [rbp + KTRAP_FRAME_PreviousIrql], al
-        je irql_ok
-        int HEX(2c)
-    irql_ok:
-#endif
+    ASSERT_TRAP_FRAME_IRQL_VALID rbp
 
     if (Flags AND TF_SEGMENTS)
         /* Restore segment selectors */
@@ -195,29 +229,12 @@ MACRO(ExitTrap, Flags)
     jz kernel_mode_return
 
     if (Flags AND TF_CHECKUSERAPC)
-        /* Load current thread into r10 */
         mov r10, gs:[PcCurrentThread]
-        cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
-        je NoUserApc
-        call KiInitiateUserApc
-    NoUserApc:
+        HANDLE_USER_APCS r10, rbp
     endif
 
-#if DBG
-    /*Make sure interrupts are enabled */
-    test dword ptr [rbp + KTRAP_FRAME_EFlags], HEX(200)
-    jnz IntsEnabled
-    int HEX(2c)
-IntsEnabled:
-
-    /* Make sure we are at passive level */
-    mov rax, cr8
-    test rax, rax
-    jz IrqlPassive
-    int HEX(2C)
-
-IrqlPassive:
-#endif
+    ASSERT_TRAP_FRAME_INTS_ENABLED rbp
+    ASSERT_IRQL_PASSIVE
 
     cli
 

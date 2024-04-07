@@ -206,8 +206,8 @@ URL: http://www.gnu.org/software/adns/, http://adns.jgaa.com
 Title: CardLib
 Path: sdk/lib/3rdparty/cardlib
 Used Version: 2005-07-14
-License:
-URL: http://www.catch22.net/tuts/cardlib
+License: "Public Domain"
+URL: https://www.catch22.net/tuts/cards/cardlib/
 
 Title: lwIP - A Lightweight TCP/IP stack
 Path: drivers/network/tcpip/lwip
@@ -281,3 +281,9 @@ Path: sdk/tools/mkisofs/schilytools
 Used Version: schily-2017-09-07
 License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
 URL: https://sourceforge.net/projects/schilytools/
+
+Title: AMD LibM for Windows
+Path: sdk/lib/crt/math/libm_sse2
+Used Version: git commit 6121d02
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/amd/win-libm

@@ -805,6 +805,7 @@ BEGIN
     IDS_DISCONNECT "断开"
     IDS_OPENFILELOCATION "打开文件位置(&I)"
     IDS_SENDTO_MENU "发送到(&N)"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "无法移动文件或文件夹"
     IDS_COPYERRORTITLE "无法复制文件或文件夹"

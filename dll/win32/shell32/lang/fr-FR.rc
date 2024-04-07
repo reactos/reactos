@@ -797,6 +797,7 @@ BEGIN
     IDS_DISCONNECT "Déconnecter"
     IDS_OPENFILELOCATION "Ouvrir l'empla&cement du fichier"
     IDS_SENDTO_MENU "Envo&yer vers"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Erreur lors du déplacement du fichier ou du dossier"
     IDS_COPYERRORTITLE "Erreur lors de la copie du fichier ou du dossier"

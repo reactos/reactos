@@ -796,6 +796,7 @@ BEGIN
     IDS_DISCONNECT "Leválasztás"
     IDS_OPENFILELOCATION "Tartalmazó &mappa megnyitása"
     IDS_SENDTO_MENU "&Küldés"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Nem sikerült áthelyezni a fájlt/mappát"
     IDS_COPYERRORTITLE "Nem sikerült másolni a fájlt/mappát"

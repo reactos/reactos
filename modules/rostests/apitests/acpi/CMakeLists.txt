@@ -2,6 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/drivers/bus/acpi/acpica/include)
 
 list(APPEND SOURCE
+    Bus_PDO_EvalMethod.c
     Bus_PDO_QueryResourceRequirements.c
     testlist.c)
 

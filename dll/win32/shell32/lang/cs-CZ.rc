@@ -805,6 +805,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_SENDTO_MENU "Se&nd To"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
