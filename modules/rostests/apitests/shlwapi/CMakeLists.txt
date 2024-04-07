@@ -17,6 +17,7 @@ list(APPEND SOURCE
     SHLoadIndirectString.c
     SHLoadRegUIString.c
     SHPropertyBag.cpp
+    StrDup.c
     StrFormatByteSizeW.c
     testdata.rc
     testlist.c)
