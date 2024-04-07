@@ -72,7 +72,7 @@ HRESULT SH_GetApidlFromDataObject(IDataObject *pDataObject, PIDLIST_ABSOLUTE* pp
 
 static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
-    return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+    return sprintf(str, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
             guid.Data1, guid.Data2, guid.Data3,
             guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
             guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
@@ -81,10 +81,10 @@ static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 {
     static const WCHAR fmtW[] =
-     { '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',
-     '%','0','2','x','%','0','2','x','-',
-     '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
-     '%','0','2','x','%','0','2','x','}',0 };
+     { '{','%','0','8','l','X','-','%','0','4','X','-','%','0','4','X','-',
+     '%','0','2','X','%','0','2','X','-',
+     '%','0','2','X','%','0','2','X','%','0','2','X','%','0','2','X',
+     '%','0','2','X','%','0','2','X','}',0 };
     return swprintf(str, fmtW,
             guid.Data1, guid.Data2, guid.Data3,
             guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
