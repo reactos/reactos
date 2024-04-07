@@ -1071,10 +1071,8 @@ LPSTR WINAPI StrDupA(LPCSTR lpszStr)
 #ifdef __REACTOS__
   if (!lpszStr)
     return NULL;
-  iLen = strlen(lpszStr) + 1;
-#else
-  iLen = lpszStr ? strlen(lpszStr) + 1 : 1;
 #endif
+  iLen = lpszStr ? strlen(lpszStr) + 1 : 1;
   lpszRet = LocalAlloc(LMEM_FIXED, iLen);
 
   if (lpszRet)
@@ -1102,10 +1100,8 @@ LPWSTR WINAPI StrDupW(LPCWSTR lpszStr)
 #ifdef __REACTOS__
   if (!lpszStr)
     return NULL;
-  iLen = (strlenW(lpszStr) + 1) * sizeof(WCHAR);
-#else
-  iLen = (lpszStr ? strlenW(lpszStr) + 1 : 1) * sizeof(WCHAR);
 #endif
+  iLen = (lpszStr ? strlenW(lpszStr) + 1 : 1) * sizeof(WCHAR);
   lpszRet = LocalAlloc(LMEM_FIXED, iLen);
 
   if (lpszRet)
