@@ -834,7 +834,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     {
         /* Call Mm API */
         ASSERT(MI_IS_ROSMM_VAD(Vad));
-        NTSTATUS Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
+        NTSTATUS Status = MiRosUnmapViewOfSection(Process, (PMEMORY_AREA)Vad, BaseAddress, Process->ProcessExiting);
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         return Status;
     }

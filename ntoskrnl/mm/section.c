@@ -3599,12 +3599,13 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 /* This functions must be called with a locked address space */
 NTSTATUS
 NTAPI
-MiRosUnmapViewOfSection(IN PEPROCESS Process,
-                        IN PVOID BaseAddress,
-                        IN BOOLEAN SkipDebuggerNotify)
+MiRosUnmapViewOfSection(
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
     PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
 
@@ -3612,11 +3613,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
            Process, BaseAddress);
 
     ASSERT(Process);
+    ASSERT(MemoryArea);
 
     AddressSpace = &Process->Vm;
 
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                 BaseAddress);
     if (MemoryArea == NULL ||
 #ifdef NEWCC
             ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) && (MemoryArea->Type != MEMORY_AREA_CACHE)) ||

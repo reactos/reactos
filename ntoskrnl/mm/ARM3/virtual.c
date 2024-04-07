@@ -4459,7 +4459,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                         IN ULONG Protect)
 {
     PEPROCESS Process;
-    PMEMORY_AREA MemoryArea;
     PMMVAD Vad = NULL, FoundVad;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
@@ -4875,8 +4874,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     // Make sure this is an ARM3 section
     //
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    if (MemoryArea && MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    if (MI_IS_ROSMM_VAD(FoundVad))
     {
         DPRINT1("Illegal commit of non-ARM3 section!\n");
         Status = STATUS_ALREADY_COMMITTED;
