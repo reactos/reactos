@@ -2004,7 +2004,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ErrorControl",0x00010001,0x000
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Group",0x00000000,"Time"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\w32time.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","Type",0x00010000,"NTP"
