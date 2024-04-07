@@ -1675,7 +1675,6 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PMEMORY_AREA MemoryArea;
     SIZE_T ResultLength;
 
     /* Check for illegal addresses in user-space, or the shared memory area */
@@ -1901,17 +1900,15 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         MemoryInfo.Type = MEM_MAPPED;
     }
 
-    /* Find the memory area the specified address belongs to */
-    MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
-
-    /* Determine information dependent on the memory area type */
-    if (MemoryArea && MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    /* Check if this is a RosMM VAD */
+    if (MI_IS_ROSMM_VAD(Vad))
     {
-        Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
+        ASSERT(((PMEMORY_AREA)Vad)->Type == MEMORY_AREA_SECTION_VIEW);
+        Status = MmQuerySectionView((PMEMORY_AREA)Vad, BaseAddress, &MemoryInfo, &ResultLength);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p\n",
-                    MemoryArea, MA_GetStartingAddress(MemoryArea), MA_GetEndingAddress(MemoryArea), BaseAddress);
+                    Vad, Vad->StartingVpn, Vad->EndingVpn, BaseAddress);
             ASSERT(NT_SUCCESS(Status));
         }
     }
