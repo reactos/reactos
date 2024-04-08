@@ -1844,15 +1844,13 @@ static const CSIDL_DATA CSIDL_Data[] =
 
 INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
 {
-    SIZE_T iItem;
+    UINT csidl;
 
-    for (iItem = 0; iItem < _countof(CSIDL_Data); ++iItem)
+    for (csidl = 0; csidl < _countof(CSIDL_Data); ++csidl)
     {
-        const CSIDL_DATA *pData = &CSIDL_Data[iItem];
-        if (!pData->szValueName || lstrcmpiW(pszName, pData->szValueName) != 0)
-            continue;
-
-        return iItem; /* CSIDL */
+        const CSIDL_DATA *pData = &CSIDL_Data[csidl];
+        if (pData->szValueName && lstrcmpiW(pszName, pData->szValueName) != 0)
+            return csidl;
     }
 
     return -1;
