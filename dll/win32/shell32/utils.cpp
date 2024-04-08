@@ -264,7 +264,7 @@ SHGetNameAndFlagsW(
 
     HRESULT hrCoInit = SHCoInitializeAnyApartment();
 
-    IShellFolder *psfFolder;
+    CComPtr<IShellFolder> psfFolder;
     LPCITEMIDLIST ppidlLast;
     HRESULT hr = SHBindToIDListParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
     if (SUCCEEDED(hr))
@@ -277,8 +277,6 @@ SHGetNameAndFlagsW(
             if (pdwAttributes)
                 *pdwAttributes = SHGetAttributes(psfFolder, ppidlLast, *pdwAttributes);
         }
-
-        psfFolder->Release();
     }
 
     if (SUCCEEDED(hrCoInit))
@@ -291,12 +289,11 @@ EXTERN_C HWND
 BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx)
 {
     HWND hWnd = NULL;
-    IUnknown *punk;
+
+    CComPtr<IUnknown> punk;
     if (pBindCtx && SUCCEEDED(pBindCtx->GetObjectParam((LPWSTR)L"UI During Binding", &punk)))
-    {
         IUnknown_GetWindow(punk, &hWnd);
-        punk->Release();
-    }
+
     return hWnd;
 }
 
