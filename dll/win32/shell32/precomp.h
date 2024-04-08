@@ -166,7 +166,7 @@ HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *
 BOOL Shell_FailForceReturn(_In_ HRESULT hr);
 
 EXTERN_C INT
-Shell_ParseSpecialFolder(_Inout_ LPWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
+Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
 
 HRESULT
 Shell_DisplayNameOf(

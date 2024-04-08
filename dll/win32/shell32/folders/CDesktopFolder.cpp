@@ -61,7 +61,7 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
     }
     else
     {
-        csidl = Shell_ParseSpecialFolder((LPWSTR)ParsedURL.pszSuffix, &pch, &cch);
+        csidl = Shell_ParseSpecialFolder(ParsedURL.pszSuffix, &pch, &cch);
         if (csidl == -1)
         {
             ERR("\n");

@@ -1856,7 +1856,7 @@ INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
     return -1;
 }
 
-INT Shell_ParseSpecialFolder(LPWSTR pszStart, LPWSTR *ppch, INT *pcch)
+INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch)
 {
     LPWSTR pszPath, pchBackslash;
     WCHAR szPath[MAX_PATH];
