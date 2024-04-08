@@ -1858,13 +1858,13 @@ INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
 
 INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch)
 {
-    LPWSTR pszPath, pchBackslash;
+    LPCWSTR pszPath, pchBackslash;
     WCHAR szPath[MAX_PATH];
 
     pchBackslash = StrChrW(pszStart, L'\\');
     if (pchBackslash)
     {
-        *ppch = pchBackslash + 1;
+        *ppch = (LPWSTR)(pchBackslash + 1);
         *pcch = (pchBackslash - pszStart) + 1;
         StrCpyNW(szPath, pszStart, max(*pcch, _countof(szPath)));
         pszPath = szPath;
