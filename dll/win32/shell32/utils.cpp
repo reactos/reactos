@@ -138,10 +138,10 @@ SHBindToObjectEx(
     }
 
     HRESULT hr;
-    if (pidl && pidl->mkid.cb)
-        hr = pShellFolder->BindToObject(pidl, pBindCtx, riid, ppvObj);
-    else
+    if (_ILIsDesktop(pidl))
         hr = pShellFolder->QueryInterface(riid, ppvObj);
+    else
+        hr = pShellFolder->BindToObject(pidl, pBindCtx, riid, ppvObj);
 
     if (psfDesktop)
         psfDesktop->Release();
