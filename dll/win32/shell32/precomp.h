@@ -202,7 +202,6 @@ SHGetNameAndFlagsW(
     _In_ UINT cchBuf,
     _Inout_opt_ DWORD *pdwAttributes);
 
-LPITEMIDLIST ILCloneParent(_In_ LPCITEMIDLIST pidl);
 EXTERN_C HWND BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx);
 
 EXTERN_C HRESULT

@@ -31,17 +31,6 @@ OpenEffectiveToken(
     return ret;
 }
 
-LPITEMIDLIST ILCloneParent(_In_ LPCITEMIDLIST pidl)
-{
-    if (!pidl)
-        return NULL;
-
-    LPITEMIDLIST pidlClone = ILClone(pidl);
-    if (pidlClone)
-        ILRemoveLastID(pidlClone);
-    return pidlClone;
-}
-
 HRESULT
 Shell_TranslateIDListAlias(
     _In_ LPCITEMIDLIST pidl,
