@@ -78,7 +78,7 @@ HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *
     IUnknown *punk;
     IFileSystemBindData *pBindData;
 
-    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam((LPWSTR)L"File System Bind Data", &punk)))
+    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam((LPWSTR)STR_FILE_SYS_BIND_DATA, &punk)))
         return S_FALSE;
 
     if (FAILED(punk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pBindData))))

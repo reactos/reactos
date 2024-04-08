@@ -112,7 +112,7 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
 
     // FIXME: SHWindowsPolicy
     if (SUCCEEDED(hr) && (attrs & SFGAO_STREAM) &&
-        !BindCtx_ContainsObject(pbc, L"Parse Shell Protocol To File Objects"))
+        !BindCtx_ContainsObject(pbc, STR_PARSE_SHELL_PROTOCOL_TO_FILE_OBJECTS))
     {
         ILFree(*ppidl);
         *ppidl = NULL;
@@ -168,7 +168,7 @@ BOOL CDesktopFolder::_TryUrlJunctions(
 
         case URL_SCHEME_HTTP:
         case URL_SCHEME_HTTPS:
-            if (!BindCtx_ContainsObject(pBindCtx, L"Parse Prefer Folder Browsing"))
+            if (!BindCtx_ContainsObject(pBindCtx, STR_PARSE_PREFER_FOLDER_BROWSING))
                 break;
             *ppShellFolder = &m_HttpUrlStub;
             break;
@@ -199,7 +199,7 @@ BOOL CDesktopFolder::_GetParentForParsing(
     LPITEMIDLIST *ppidlParent)
 {
     WCHAR wch = *pszPath;
-    if (pszPath[1] == ':' && ((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')))
+    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) && (pszPath[1] == ':'))
         *ppidlParent = _ILCreateMyComputer();
     else if (PathIsUNCW(pszPath))
         *ppidlParent = _ILCreateNetwork();
@@ -542,7 +542,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
 
         if (SUCCEEDED(hr))
         {
-            if (BindCtx_ContainsObject(pbc, L"Parse Translate Aliases"))
+            if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
             {
                 LPITEMIDLIST pidlAlias;
                 if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
@@ -558,7 +558,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     if (Shell_FailForceReturn(hr))
         return hr;
 
-    if (BindCtx_ContainsObject(pbc, L"Don't Parse Relative"))
+    if (BindCtx_ContainsObject(pbc, STR_DONT_PARSE_RELATIVE))
         return E_INVALIDARG;
 
     if (SHIsFileSysBindCtx(pbc, NULL) == S_OK)
