@@ -219,39 +219,6 @@ HRESULT SHCoInitializeAnyApartment(VOID)
 }
 
 HRESULT
-SHBindToFolderIDListParent(
-    _In_opt_ IShellFolder *psfRoot,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppv,
-    _Out_opt_ LPCITEMIDLIST *ppidlLast)
-{
-    HRESULT hr = E_OUTOFMEMORY;
-
-    LPITEMIDLIST pidlClone = ILCloneParent(pidl);
-    if (pidlClone)
-    {
-        hr = SHBindToObjectEx(psfRoot, pidlClone, NULL, riid, ppv);
-        ILFree(pidlClone);
-    }
-
-    if (ppidlLast)
-        *ppidlLast = ILFindLastID(pidl);
-
-    return hr;
-}
-
-HRESULT
-SHBindToIDListParent(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppv,
-    _Out_opt_ LPCITEMIDLIST *ppidlLast)
-{
-    return SHBindToFolderIDListParent(NULL, pidl, riid, ppv, ppidlLast);
-}
-
-HRESULT
 SHGetNameAndFlagsW(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwFlags,
@@ -266,7 +233,7 @@ SHGetNameAndFlagsW(
 
     CComPtr<IShellFolder> psfFolder;
     LPCITEMIDLIST ppidlLast;
-    HRESULT hr = SHBindToIDListParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
     if (SUCCEEDED(hr))
     {
         if (pszText)
