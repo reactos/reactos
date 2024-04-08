@@ -217,7 +217,7 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
     return dwAttributes;
 }
 
-HRESULT SHCoInitialize(VOID)
+HRESULT SHCoInitializeAnyApartment(VOID)
 {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (FAILED(hr))
@@ -269,7 +269,7 @@ SHGetNameAndFlagsW(
     if (pszText)
         *pszText = UNICODE_NULL;
 
-    HRESULT hrCoInit = SHCoInitialize();
+    HRESULT hrCoInit = SHCoInitializeAnyApartment();
 
     IShellFolder *psfFolder;
     LPCITEMIDLIST ppidlLast;

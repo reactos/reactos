@@ -192,7 +192,7 @@ SHBindToObjectEx(
 
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
-HRESULT SHCoInitialize(VOID);
+HRESULT SHCoInitializeAnyApartment(VOID);
 
 HRESULT
 SHGetNameAndFlagsW(
