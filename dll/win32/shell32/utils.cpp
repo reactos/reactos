@@ -54,10 +54,9 @@ Shell_TranslateIDListAlias(
 
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
 {
-    IUnknown *punk;
+    CComPtr<IUnknown> punk;
     if (!pBindCtx || FAILED(pBindCtx->GetObjectParam(const_cast<LPWSTR>(pszName), &punk)))
         return FALSE;
-    punk->Release();
     return TRUE;
 }
 
@@ -75,8 +74,8 @@ BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid)
 
 HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW **ppFindData)
 {
-    IUnknown *punk;
-    IFileSystemBindData *pBindData;
+    CComPtr<IUnknown> punk;
+    CComPtr<IFileSystemBindData> pBindData;
 
     if (!pBindCtx || FAILED(pBindCtx->GetObjectParam((LPWSTR)STR_FILE_SYS_BIND_DATA, &punk)))
         return S_FALSE;
@@ -93,9 +92,6 @@ HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *
         else
             hr = E_OUTOFMEMORY;
     }
-
-    pBindData->Release();
-    punk->Release();
 
     return hr;
 }
@@ -124,7 +120,7 @@ SHBindToObjectEx(
     _In_ REFIID riid,
     _Out_ void **ppvObj)
 {
-    IShellFolder *psfDesktop = NULL;
+    CComPtr<IShellFolder> psfDesktop;
 
     *ppvObj = NULL;
 
@@ -142,9 +138,6 @@ SHBindToObjectEx(
         hr = pShellFolder->QueryInterface(riid, ppvObj);
     else
         hr = pShellFolder->BindToObject(pidl, pBindCtx, riid, ppvObj);
-
-    if (psfDesktop)
-        psfDesktop->Release();
 
     if (SUCCEEDED(hr) && !*ppvObj)
         hr = E_FAIL;
