@@ -180,7 +180,7 @@ ini.\nTutup satu atau lebih aplikasi untuk meningkatkan jumlah\nmemori bebas."
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Teks Dokumen"
     STRING_NOTEPAD_AUTHORS "Hak Cipta 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
