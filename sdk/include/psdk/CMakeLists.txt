@@ -149,12 +149,42 @@ list(APPEND SOURCE
     ctfutb.idl
     xmllite.idl)
 
+list(APPEND D3D
+    d3dcommon.idl
+    dcommon.idl
+    d3d10.idl
+    dxgi.idl
+    dxgiformat.idl
+    dxgicommon.idl
+    dxgitype.idl
+    dxgi1_2.idl
+    dxgi1_3.idl
+    dxgi1_4.idl
+    dxgi1_5.idl
+    dxgi1_6.idl
+    dxva2api.idl
+    d3d10sdklayers.idl
+    d3d10_1.idl
+    d3d11_1.idl
+    d3d11_2.idl
+    d3d11_3.idl
+    d3d11_4.idl
+    d3d11.idl
+    d3d11sdklayers.idl
+    d3d12.idl
+    d3dx10core.idl
+    d3dx11core.idl
+    dwrite.idl
+    dwrite_1.idl
+    dwrite_2.idl
+    dwrite_3.idl)
+
+add_idl_headers(d3d_idl_headers ${D3D})
+
 add_idl_headers(psdk ${SOURCE})
 add_dependencies(psdk xdk)
 add_typelib(stdole2.idl)
 add_custom_target(stdole2 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb)
-
-add_idl_headers(d3d_idl_headers d3dcommon.idl)
 
 add_iid_library(adsiid iads.idl transact.idl)
 add_iid_library(wuguid wuapi.idl)

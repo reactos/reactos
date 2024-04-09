@@ -1,0 +1,74 @@
+/*
+ * Copyright 2015 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "dxgi.idl";
+import "d3dcommon.idl";
+
+[
+    object,
+    local,
+    pointer_default(unique)
+]
+interface ID3DX10DataLoader
+{
+    HRESULT Load();
+    HRESULT Decompress([out] void **data, [in] SIZE_T *bytes);
+    HRESULT Destroy();
+}
+
+[
+    object,
+    local,
+    pointer_default(unique)
+]
+interface ID3DX10DataProcessor
+{
+    HRESULT Process([in] void *data, [in] SIZE_T bytes);
+    HRESULT CreateDeviceObject([out] void **dataobject);
+    HRESULT Destroy();
+}
+
+
+[
+    object,
+    local,
+    pointer_default(unique),
+    uuid(c93fecfa-6967-478a-abbc-402d90621fcb)
+]
+interface ID3DX10ThreadPump : IUnknown
+{
+    HRESULT AddWorkItem([in] ID3DX10DataLoader *loader, [in] ID3DX10DataProcessor *processor,
+                        [in] HRESULT *result, [out] void **object);
+    UINT GetWorkItemCount();
+
+    HRESULT WaitForAllItems();
+    HRESULT ProcessDeviceWorkItems([in] UINT count);
+
+    HRESULT PurgeAllItems();
+    HRESULT GetQueueStatus([in] UINT *queue, [in] UINT *processqueue, [in] UINT *devicequeue);
+}
+
+cpp_quote("HRESULT WINAPI D3DX10UnsetAllDeviceObjects(ID3D10Device *device);")
+cpp_quote("HRESULT WINAPI D3DX10CreateDevice(IDXGIAdapter *adapter, D3D10_DRIVER_TYPE driver_type,")
+cpp_quote("        HMODULE swrast, unsigned int flags, ID3D10Device **device);")
+cpp_quote("HRESULT WINAPI D3DX10CreateDeviceAndSwapChain(IDXGIAdapter *adapter, D3D10_DRIVER_TYPE driver_type,")
+cpp_quote("        HMODULE swrast, unsigned int flags, DXGI_SWAP_CHAIN_DESC *desc, IDXGISwapChain **swapchain,")
+cpp_quote("        ID3D10Device **device);")
+cpp_quote("HRESULT WINAPI D3DX10GetFeatureLevel1(ID3D10Device *device, ID3D10Device1 **device1);")

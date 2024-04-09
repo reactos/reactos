@@ -242,7 +242,7 @@ const unsigned int D3D_SPEC_DATE_YEAR                                           
 cpp_quote("#endif")
 
 const unsigned int D3D10_APPEND_ALIGNED_ELEMENT                                         = 0xffffffff;
-const unsigned int _FACD3D10                                                            = 0x87;
+const unsigned int _FACD3D10                                                            = 0x879;
 const unsigned int _FACD3D10DEBUG                                                       = _FACD3D10 + 1;
 const unsigned int D3D10_FILTER_TYPE_MASK                                               = 0x3;
 const unsigned int D3D10_SDK_VERSION                                                    = 29;
@@ -892,6 +892,35 @@ typedef enum D3D10_COLOR_WRITE_ENABLE {
     D3D10_COLOR_WRITE_ENABLE_ALL   = (D3D10_COLOR_WRITE_ENABLE_RED  | D3D10_COLOR_WRITE_ENABLE_GREEN |
                                       D3D10_COLOR_WRITE_ENABLE_BLUE | D3D10_COLOR_WRITE_ENABLE_ALPHA)
 } D3D10_COLOR_WRITE_ENABLE;
+
+typedef enum D3D10_FORMAT_SUPPORT
+{
+    D3D10_FORMAT_SUPPORT_BUFFER                   = 0x00000001,
+    D3D10_FORMAT_SUPPORT_IA_VERTEX_BUFFER         = 0x00000002,
+    D3D10_FORMAT_SUPPORT_IA_INDEX_BUFFER          = 0x00000004,
+    D3D10_FORMAT_SUPPORT_SO_BUFFER                = 0x00000008,
+    D3D10_FORMAT_SUPPORT_TEXTURE1D                = 0x00000010,
+    D3D10_FORMAT_SUPPORT_TEXTURE2D                = 0x00000020,
+    D3D10_FORMAT_SUPPORT_TEXTURE3D                = 0x00000040,
+    D3D10_FORMAT_SUPPORT_TEXTURECUBE              = 0x00000080,
+    D3D10_FORMAT_SUPPORT_SHADER_LOAD              = 0x00000100,
+    D3D10_FORMAT_SUPPORT_SHADER_SAMPLE            = 0x00000200,
+    D3D10_FORMAT_SUPPORT_SHADER_SAMPLE_COMPARISON = 0x00000400,
+    D3D10_FORMAT_SUPPORT_SHADER_SAMPLE_MONO_TEXT  = 0x00000800,
+    D3D10_FORMAT_SUPPORT_MIP                      = 0x00001000,
+    D3D10_FORMAT_SUPPORT_MIP_AUTOGEN              = 0x00002000,
+    D3D10_FORMAT_SUPPORT_RENDER_TARGET            = 0x00004000,
+    D3D10_FORMAT_SUPPORT_BLENDABLE                = 0x00008000,
+    D3D10_FORMAT_SUPPORT_DEPTH_STENCIL            = 0x00010000,
+    D3D10_FORMAT_SUPPORT_CPU_LOCKABLE             = 0x00020000,
+    D3D10_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE      = 0x00040000,
+    D3D10_FORMAT_SUPPORT_DISPLAY                  = 0x00080000,
+    D3D10_FORMAT_SUPPORT_CAST_WITHIN_BIT_LAYOUT   = 0x00100000,
+    D3D10_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET = 0x00200000,
+    D3D10_FORMAT_SUPPORT_MULTISAMPLE_LOAD         = 0x00400000,
+    D3D10_FORMAT_SUPPORT_SHADER_GATHER            = 0x00800000,
+    D3D10_FORMAT_SUPPORT_BACK_BUFFER_CAST         = 0x01000000,
+} D3D10_FORMAT_SUPPORT;
 
 typedef enum D3D10_TEXTURECUBE_FACE {
     D3D10_TEXTURECUBE_FACE_POSITIVE_X,
@@ -1595,7 +1624,7 @@ interface ID3D10Multithread : IUnknown
 }
 
 cpp_quote("#ifndef D3D10_IGNORE_SDK_LAYERS")
-cpp_quote("/* FIXME: # include <d3d10sdklayers.h> */")
+cpp_quote("#include \"d3d10sdklayers.h\"")
 cpp_quote("#endif")
 cpp_quote("#include \"d3d10misc.h\"")
 cpp_quote("#include \"d3d10shader.h\"")

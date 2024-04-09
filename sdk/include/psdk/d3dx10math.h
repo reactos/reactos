@@ -1,9 +1,5 @@
 /*
- * DirectX 10 GUID definitions
- *
- * Copyright 2000 Alexandre Julliard
- * Copyright 2000 Francois Gouget
- * Copyright 2003 Raphael Junqueira
+ * Copyright (C) 2016 Alistair Leslie-Hughes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,22 +16,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "objbase.h"
-#include "olectl.h"
-#include "initguid.h"
-
-#include "dxgi1_6.h"
-#include "d3d10_1.h"
-#include "d3d11_4.h"
-#include "d3d12.h"
 #include "d3dx10.h"
-#include "d3d10_1shader.h"
-#include "d3d11shader.h"
 
+/* This guard is the same as D3DX9 to prevent double-inclusion */
+#ifndef __D3DX9MATH_H__
+#define __D3DX9MATH_H__
+
+#include <math.h>
+
+typedef enum _D3DX_CPU_OPTIMIZATION
+{
+    D3DX_NOT_OPTIMIZED,
+    D3DX_3DNOW_OPTIMIZED,
+    D3DX_SSE2_OPTIMIZED,
+    D3DX_SSE_OPTIMIZED
+} D3DX_CPU_OPTIMIZATION;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+D3DX_CPU_OPTIMIZATION WINAPI D3DXCpuOptimizations(BOOL enable);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __D3DX9MATH_H__ */

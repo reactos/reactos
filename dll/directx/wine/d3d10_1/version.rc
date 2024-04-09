@@ -1,9 +1,5 @@
 /*
- * DirectX 10 GUID definitions
- *
- * Copyright 2000 Alexandre Julliard
- * Copyright 2000 Francois Gouget
- * Copyright 2003 Raphael Junqueira
+ * Copyright 2014 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,22 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WINE_FILEDESCRIPTION_STR "Wine Direct3D"
+#define WINE_FILENAME_STR "d3d10_1.dll"
+#define WINE_FILEVERSION 6,2,9200,16492
+#define WINE_FILEVERSION_STR "6.2.9200.16492"
+#define WINE_PRODUCTVERSION 6,2,9200,16492
+#define WINE_PRODUCTVERSION_STR "6.2.9200.16492"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "objbase.h"
-#include "olectl.h"
-#include "initguid.h"
-
-#include "dxgi1_6.h"
-#include "d3d10_1.h"
-#include "d3d11_4.h"
-#include "d3d12.h"
-#include "d3dx10.h"
-#include "d3d10_1shader.h"
-#include "d3d11shader.h"
-
+#include "wine/wine_common_ver.rc"
