@@ -1408,7 +1408,7 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     HRESULT hr;
     LPWSTR pszNameDup;
     IShellFolder *psfDesktop;
-    IBindCtx *pBindCtx;
+    IBindCtx *pBindCtx = NULL;
 
     TRACE("(%s, %p, %p, 0x%X, %p)\n", pszName, pbc, ppidl, sfgaoIn, psfgaoOut);
 
@@ -1429,18 +1429,19 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
         return hr;
     }
 
-    if (pbc)
-        pBindCtx = pbc;
-    else
+    if (!pbc)
+    {
         hr = BindCtx_RegisterObjectParam(NULL, STR_PARSE_TRANSLATE_ALIASES, NULL, &pBindCtx);
+        pbc = pBindCtx;
+    }
 
     if (SUCCEEDED(hr))
     {
         ULONG sfgao = sfgaoIn, cchEaten;
-        HWND hwndUI = BindCtx_GetUIWindow(pBindCtx);
+        HWND hwndUI = BindCtx_GetUIWindow(pbc);
         hr = psfDesktop->lpVtbl->ParseDisplayName(psfDesktop,
                                                   hwndUI,
-                                                  pBindCtx,
+                                                  pbc,
                                                   pszNameDup,
                                                   &cchEaten,
                                                   ppidl,
@@ -1454,7 +1455,7 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     if (psfDesktop)
         psfDesktop->lpVtbl->Release(psfDesktop);
 
-    if (pBindCtx && (pbc != pBindCtx))
+    if (pBindCtx)
         pBindCtx->lpVtbl->Release(pBindCtx);
 
     return hr;
