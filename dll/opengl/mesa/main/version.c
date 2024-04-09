@@ -56,9 +56,9 @@ override_version(struct gl_context *ctx, GLuint *major, GLuint *minor)
 static void
 compute_version(struct gl_context *ctx)
 {
-    /* report openGL 1.1 */
-    ctx->VersionMajor = 1;
-    ctx->VersionMinor = 1;
+    /* report openGL 2.0 */
+    ctx->VersionMajor = 2;
+    ctx->VersionMinor = 0;
 
     override_version(ctx, &ctx->VersionMajor, &ctx->VersionMinor);
 
