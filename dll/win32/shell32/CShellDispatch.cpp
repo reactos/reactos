@@ -4,6 +4,7 @@
  * PURPOSE:     IShellDispatch implementation
  * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  *              Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2023 Whindmar Saksit (whindsaks@proton.me)
  */
 
 #include "precomp.h"
