@@ -313,7 +313,7 @@ const GLubyte *gl_GetString( GLcontext *ctx, GLenum name )
 {
    static char renderer[1000];
    static char *vendor = "Brian Paul & ReactOS Developers";
-   static char *version = "1.1.0";
+   static char *version = "1.1";
    static char *extensions = "GL_EXT_paletted_texture GL_EXT_bgra GL_WIN_swap_hint";
 
    if (INSIDE_BEGIN_END(ctx)) {
