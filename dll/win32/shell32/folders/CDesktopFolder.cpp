@@ -133,21 +133,32 @@ STDMETHODIMP
 CFileUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
                                PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    return E_NOTIMPL;
+    WCHAR szPath[MAX_PATH];
+    DWORD cchPath = _countof(szPath);
+    HRESULT hr = PathCreateFromUrlW(lpszDisplayName, szPath, &cchPath, 0);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellFolder> psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, &attrs);
 }
 
 STDMETHODIMP
 CIDListUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
                                  PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    return E_NOTIMPL;
+    return E_NOTIMPL; // FIXME
 }
 
 STDMETHODIMP
 CHttpUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
                                PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    return E_NOTIMPL;
+    return E_NOTIMPL; // FIXME
 }
 
 BOOL CDesktopFolder::_TryUrlJunctions(
@@ -518,6 +529,12 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     {
         *ppidl = _ILCreateMyComputer();
         return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    }
+
+    if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
+    {
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                             pdwAttributes);
     }
 
     HRESULT hr = E_INVALIDARG;
