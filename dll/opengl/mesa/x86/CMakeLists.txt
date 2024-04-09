@@ -28,7 +28,7 @@ list(APPEND ASM_SOURCE
 add_asm_files(mesa_x86_asm ${ASM_SOURCE})
 add_library(mesa_x86 ${SOURCE} ${mesa_x86_asm})
 add_dependencies(mesa_x86 xdk)
-
+target_link_libraries(mesa_x86 ${PSEH_LIB})
 if(NOT MSVC)
-    add_compile_flags("-Wno-format")
+    target_link_options(mesa_x86 PRIVATE "-Wno-format")
 endif()

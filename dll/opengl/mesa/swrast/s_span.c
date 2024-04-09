@@ -1065,6 +1065,9 @@ _swrast_read_rgba_span( struct gl_context *ctx, struct gl_renderbuffer *rb,
                         GLvoid *rgba)
 {
    struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
+#if __REACTOS__
+   UNREFERENCED_PARAMETER(srb);
+#endif
    GLenum dstType = GL_FLOAT;
    const GLint bufWidth = (GLint) rb->Width;
    const GLint bufHeight = (GLint) rb->Height;
