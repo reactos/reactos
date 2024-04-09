@@ -1849,7 +1849,7 @@ INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
     for (csidl = 0; csidl < _countof(CSIDL_Data); ++csidl)
     {
         const CSIDL_DATA *pData = &CSIDL_Data[csidl];
-        if (pData->szValueName && lstrcmpiW(pszName, pData->szValueName) != 0)
+        if (pData->szValueName && lstrcmpiW(pszName, pData->szValueName) == 0)
             return csidl;
     }
 
