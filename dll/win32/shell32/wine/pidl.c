@@ -1432,7 +1432,7 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     if (pbc)
         pBindCtx = pbc;
     else
-        hr = BindCtx_RegisterObjectParam(NULL, L"Parse Translate Aliases", NULL, &pBindCtx);
+        hr = BindCtx_RegisterObjectParam(NULL, STR_PARSE_TRANSLATE_ALIASES, NULL, &pBindCtx);
 
     if (SUCCEEDED(hr))
     {
@@ -1454,7 +1454,7 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     if (psfDesktop)
         psfDesktop->lpVtbl->Release(psfDesktop);
 
-    if (pBindCtx)
+    if (pBindCtx && (pbc != pBindCtx))
         pBindCtx->lpVtbl->Release(pBindCtx);
 
     return hr;
