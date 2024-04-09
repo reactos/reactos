@@ -25,8 +25,15 @@ set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 11) # CORE-19509
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+
+# CORE-19509: C++11 support or not
+if(NOT ("cxx_std_11" IN_LIST CMAKE_CXX_COMPILE_FEATURES))
+    add_definitions(-Doverride=)
+    add_definitions(-Dconstexpr=)
+    add_definitions(-Dnoexcept=)
+endif()
 
 # check that the ARCH (target architecture) variable is defined
 if(NOT ARCH)
