@@ -38,25 +38,21 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
     DWORD attrs = (pdwAttributes ? *pdwAttributes : 0) | SFGAO_STREAM;
     if (ParsedURL.pszSuffix[0] == L':' && ParsedURL.pszSuffix[1] == L':')
     {
-        IShellFolder *psfDesktop = NULL;
+        CComPtr<IShellFolder> psfDesktop;
         hr = SHGetDesktopFolder(&psfDesktop);
         if (SUCCEEDED(hr))
         {
-            IBindCtx *pBindCtx = NULL;
+            CComPtr<IBindCtx> pBindCtx;
             hr = ::CreateBindCtx(0, &pBindCtx);
             if (SUCCEEDED(hr))
             {
                 BIND_OPTS BindOps = { sizeof(BindOps) };
                 BindOps.grfMode = STGM_CREATE;
                 pBindCtx->SetBindOptions(&BindOps);
-
                 hr = psfDesktop->ParseDisplayName(hwndOwner, pBindCtx,
                                                   (LPWSTR)ParsedURL.pszSuffix,
                                                   pchEaten, ppidl, &attrs);
-                pBindCtx->Release();
             }
-
-            psfDesktop->Release();
         }
     }
     else
@@ -68,44 +64,37 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
             return hr;
         }
 
-        LPITEMIDLIST pidlLocation = NULL;
+        CComHeapPtr<ITEMIDLIST> pidlLocation;
         hr = SHGetFolderLocation(hwndOwner, (csidl | CSIDL_FLAG_CREATE), NULL, 0, &pidlLocation);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         if (pch && *pch)
         {
-            IShellFolder *psfFolder;
+            CComPtr<IShellFolder> psfFolder;
             hr = SHBindToObject(NULL, pidlLocation, IID_PPV_ARG(IShellFolder, &psfFolder));
             if (SUCCEEDED(hr))
             {
-                LPITEMIDLIST pidlNew;
+                CComHeapPtr<ITEMIDLIST> pidlNew;
                 hr = psfFolder->ParseDisplayName(hwndOwner, pbc, pch, pchEaten, &pidlNew, &attrs);
                 if (SUCCEEDED(hr))
                 {
                     hr = SHILCombine(pidlLocation, pidlNew, ppidl);
-                    ILFree(pidlNew);
                     if (pchEaten)
                         *pchEaten += cch;
                 }
-                psfFolder->Release();
             }
-            ILFree(pidlLocation);
         }
         else
         {
             if (attrs)
                 hr = SHGetNameAndFlagsW(pidlLocation, 0, NULL, 0, &attrs);
 
-            if (FAILED_UNEXPECTEDLY(hr))
-            {
-                ILFree(pidlLocation);
-            }
-            else
+            if (SUCCEEDED(hr))
             {
                 if (pchEaten)
                     *pchEaten = cch;
-                *ppidl = pidlLocation;
+                *ppidl = pidlLocation.Detach();
             }
         }
     }
@@ -538,8 +527,8 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     }
 
     HRESULT hr = E_INVALIDARG;
-    LPITEMIDLIST pidlParent = NULL;
-    IShellFolder *pParentFolder = NULL;
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    CComPtr<IShellFolder> pParentFolder;
     if (_GetParentForParsing(lpszDisplayName, pbc, &pParentFolder, &pidlParent))
     {
         if (pchEaten)
@@ -553,10 +542,6 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
                                     pchEaten,
                                     ppidl,
                                     pdwAttributes);
-        ILFree(pidlParent);
-
-        pParentFolder->Release();
-
         if (SUCCEEDED(hr))
         {
             if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
