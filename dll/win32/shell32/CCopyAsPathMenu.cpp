@@ -3,11 +3,22 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Copy as Path Menu implementation
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2024 Thamatip Chitpong <thamatip.chitpong@reactos.org>
  */
 
 #include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+#define IDC_COPYASPATH 0
+
+CCopyAsPathMenu::CCopyAsPathMenu()
+{
+}
+
+CCopyAsPathMenu::~CCopyAsPathMenu()
+{
+}
 
 static DWORD
 SetClipboard(UINT cf, const void* data, SIZE_T size)
@@ -59,8 +70,8 @@ AppendToPathList(CStringW &paths, LPCWSTR path, DWORD index)
         paths += L'\"';
 }
 
-STDMETHODIMP
-CCopyAsPathMenu::Drop(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *pdwEffect)
+HRESULT
+CCopyAsPathMenu::DoCopyAsPath(IDataObject *pdto)
 {
     CStringW paths;
     DWORD i, count;
@@ -144,9 +155,57 @@ CCopyAsPathMenu::Drop(IDataObject *pdto, DWORD grfKeyState, POINTL ptl, DWORD *p
         hr = HRESULT_FROM_WIN32(err);
     }
 
-    if (SUCCEEDED(hr))
-        *pdwEffect &= DROPEFFECT_COPY;
-    else
-        *pdwEffect &= DROPEFFECT_NONE;
     return hr;
+}
+
+STDMETHODIMP
+CCopyAsPathMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+{
+    MENUITEMINFOW mii;
+
+    TRACE("CCopyAsPathMenu::QueryContextMenu(%p %p %u %u %u %u)\n", this,
+          hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    if ((uFlags & CMF_NOVERBS) || !(uFlags & CMF_EXTENDEDVERBS))
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
+
+    // Insert "Copy as path"
+    CStringW strText(MAKEINTRESOURCEW(IDS_COPYASPATHMENU));
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_ID | MIIM_TYPE;
+    mii.fType = MFT_STRING;
+    mii.wID = idCmdFirst + IDC_COPYASPATH;
+    mii.dwTypeData = strText.GetBuffer();
+    if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, mii.wID - idCmdFirst + 1);
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
+}
+
+STDMETHODIMP
+CCopyAsPathMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+{
+    TRACE("CCopyAsPathMenu::InvokeCommand(%p %p)\n", this, lpcmi);
+
+    if (IS_INTRESOURCE(lpcmi->lpVerb) && LOWORD(lpcmi->lpVerb) == IDC_COPYASPATH)
+        return DoCopyAsPath(m_pDataObject);
+
+    return E_FAIL;
+}
+
+STDMETHODIMP
+CCopyAsPathMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+{
+    FIXME("CCopyAsPathMenu::GetCommandString(%p %lu %u %p %p %u)\n", this,
+          idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CCopyAsPathMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+{
+    m_pDataObject = pdtobj;
+    return S_OK;
 }
