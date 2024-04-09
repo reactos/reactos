@@ -12,15 +12,12 @@ HKCR
     }
     NoRemove AllFilesystemObjects
     {
-        NoRemove shell
+        NoRemove shellex
         {
-            ForceRemove copyaspath
+            NoRemove ContextMenuHandlers
             {
-                val MUIVerb = s '@%MODULE%,-30328'
-                val Extended = s ''
-                DropTarget
+                ForceRemove CopyAsPathMenu = s '{F3D06E7C-1E45-4A26-847E-F9FCDEE59BE0}'
                 {
-                    val CLSID = s '{F3D06E7C-1E45-4A26-847E-F9FCDEE59BE0}'
                 }
             }
         }
