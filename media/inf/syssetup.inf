@@ -52,6 +52,7 @@ AddReg=Classes
 11,,amstream.dll,1
 11,,avifil32.dll,1
 11,,browseui.dll,1
+11,,cabview.dll,1
 11,,comcat.dll,1
 11,,cryptdlg.dll,1
 11,,cryptnet.dll,1

@@ -1,5 +1,6 @@
 
 add_subdirectory(acppage)
+add_subdirectory(cabview)
 add_subdirectory(cryptext)
 add_subdirectory(deskadp)
 add_subdirectory(deskmon)
