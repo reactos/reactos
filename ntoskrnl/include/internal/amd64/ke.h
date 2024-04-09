@@ -206,8 +206,8 @@ KeGetTrapFrameFrameRegister(PKTRAP_FRAME TrapFrame)
 // Macro to get trap and exception frame from a thread stack
 //
 #define KeGetTrapFrame(Thread) \
-    (PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
-                   sizeof(KTRAP_FRAME))
+    ((PKTRAP_FRAME)((ULONG_PTR)((Thread)->InitialStack) - \
+                   sizeof(KTRAP_FRAME)))
 
 //
 // Macro to get context switches from the PRCB
