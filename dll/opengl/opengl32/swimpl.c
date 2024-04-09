@@ -8,393 +8,479 @@
 #include "opengl32.h"
 
 /* MESA includes */
-#include <context.h>
-#include <matrix.h>
+#include <main/context.h>
+#include <main/framebuffer.h>
+#include <main/renderbuffer.h>
+#include <main/shared.h>
+#include <main/viewport.h>
+#include <swrast/s_context.h>
+#include <swrast/s_renderbuffer.h>
+#include <swrast_setup/swrast_setup.h>
+#include <tnl/t_pipeline.h>
+#include <tnl/tnl.h>
+#include <drivers/common/driverfuncs.h>
+#include <drivers/common/meta.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
 #define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
-#define WIDTH_BYTES_ALIGN16(cx, bpp) ((((cx) * (bpp) + 15) & ~15) >> 3)
 
-/* Flags for our pixel formats */
-#define SB_FLAGS            (PFD_DRAW_TO_BITMAP | PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT)
-#define SB_FLAGS_WINDOW     (PFD_DRAW_TO_BITMAP | PFD_SUPPORT_GDI | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT)
-#define SB_FLAGS_PALETTE    (PFD_DRAW_TO_BITMAP | PFD_SUPPORT_GDI | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT | PFD_NEED_PALETTE)
-#define DB_FLAGS            (PFD_DOUBLEBUFFER   | PFD_SWAP_COPY   | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT)
-#define DB_FLAGS_PALETTE    (PFD_DOUBLEBUFFER   | PFD_SWAP_COPY   | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT | PFD_NEED_PALETTE)
-
-
-struct pixel_format
+static const struct
 {
-    DWORD dwFlags;
-    BYTE iPixelType;
-    BYTE cColorBits;
-    BYTE cRedBits; BYTE cRedShift;
-    BYTE cGreenBits; BYTE cGreenShift;
-    BYTE cBlueBits; BYTE cBlueShift;
-    BYTE cAlphaBits; BYTE cAlphaShift;
-    BYTE cAccumBits;
-    BYTE cAccumRedBits; BYTE cAccumGreenBits; BYTE cAccumBlueBits; BYTE cAccumAlphaBits;
-    BYTE cDepthBits;
+    gl_format mesa;
+    BYTE color_bits;
+    BYTE red_bits, red_shift; DWORD red_mask;
+    BYTE green_bits, green_shift; DWORD green_mask;
+    BYTE blue_bits, blue_shift; DWORD blue_mask;
+    BYTE alpha_bits, alpha_shift; DWORD alpha_mask;
+    BYTE accum_bits;
+    BYTE depth_bits;
+    BYTE stencil_bits;
+    DWORD bmp_compression;
+} pixel_formats[] =
+{
+    { MESA_FORMAT_ARGB8888,     32,  8, 8,  0x00FF0000, 8, 16, 0x0000FF00, 8, 24, 0x000000FF, 8, 0,  0xFF000000, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_ARGB8888,     32,  8, 8,  0x00FF0000, 8, 16, 0x0000FF00, 8, 24, 0x000000FF, 8, 0,  0xFF000000, 16, 16, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGBA8888_REV, 32,  8, 8,  0x000000FF, 8, 16, 0x0000FF00, 8, 24, 0x00FF0000, 8, 0,  0xFF000000, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGBA8888_REV, 32,  8, 8,  0x000000FF, 8, 16, 0x0000FF00, 8, 24, 0x00FF0000, 8, 0,  0xFF000000, 16, 16, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGBA8888,     32,  8, 0,  0xFF000000, 8, 8,  0x00FF0000, 8, 16, 0x0000FF00, 8, 24, 0x000000FF, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGBA8888,     32,  8, 0,  0xFF000000, 8, 8,  0x00FF0000, 8, 16, 0x0000FF00, 8, 24, 0x000000FF, 16, 16, 8, BI_BITFIELDS },
+    { MESA_FORMAT_ARGB8888_REV, 32,  8, 16, 0x0000FF00, 8, 8,  0x00FF0000, 8, 0,  0xFF000000, 8, 24, 0x000000FF, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_ARGB8888_REV, 32,  8, 16, 0x0000FF00, 8, 8,  0x00FF0000, 8, 0,  0xFF000000, 8, 24, 0x000000FF, 16, 16, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGB888,       24,  8, 0,  0x00000000, 8, 8,  0x00000000, 8, 16, 0x00000000, 0, 0,  0x00000000, 16, 32, 8, BI_RGB },
+    { MESA_FORMAT_RGB888,       24,  8, 0,  0x00000000, 8, 8,  0x00000000, 8, 16, 0x00000000, 0, 0,  0x00000000, 16, 16, 8, BI_RGB },
+    // { MESA_FORMAT_BGR888,       24,  8, 16, 8, 8,  8, 0,  0, 0,   16, 32, 8 },
+    // { MESA_FORMAT_BGR888,       24,  8, 16, 8, 8,  8, 0,  0, 0,   16, 16, 8 },
+    { MESA_FORMAT_RGB565,       16,  5, 0,  0x0000F800, 6, 5,  0x000007E0, 5, 11, 0x0000001F, 0, 0,  0x00000000, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGB565,       16,  5, 0,  0x0000F800, 6, 5,  0x000007E0, 5, 11, 0x0000001F, 0, 0,  0x00000000, 16, 16, 8, BI_BITFIELDS },
 };
 
-static const struct pixel_format pixel_formats_32[] =
+#define SW_BACK_RENDERBUFFER_CLASS  0x8911
+#define SW_FRONT_RENDERBUFFER_CLASS 0x8910
+struct sw_front_renderbuffer
 {
-    /* 32bpp */
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 24bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 16 bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 8bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 4bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  16},
+    struct swrast_renderbuffer swrast;
+    
+    HDC hdcmem;
+    GLuint x, y, w, h;
+    HBITMAP hbmp;
+    BOOL write;
 };
 
-static const struct pixel_format pixel_formats_24[] =
-{
-    /* 24bpp */
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 32bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 16 bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 8bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 4bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  16},
-};
-
-static const struct pixel_format pixel_formats_16[] =
-{
-    /* 16 bpp - 565 */
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  16},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  32},
-    {DB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 11, 6, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 16, 5, 11, 6, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 16, 5, 11, 6, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 11, 6, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 11, 6, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 24bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 32bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 8bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 4bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  16},
-};
-
-static const struct pixel_format pixel_formats_8[] =
-{
-    /* 8bpp */
-    {SB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  16},
-    {DB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  32},
-    {DB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  16},
-    {DB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  32},
-    {DB_FLAGS_PALETTE, PFD_TYPE_RGBA,       8,  3, 0,  3, 3, 2, 6, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS_WINDOW,  PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  16},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  32},
-    {DB_FLAGS,         PFD_TYPE_COLORINDEX, 8,  3, 0,  3, 3, 2, 6, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 24bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       24, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 24, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 32bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 0, 0, 64, 16, 16, 16, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       32, 8, 16, 8, 8, 8, 0, 8, 0, 64, 16, 16, 16, 16, 16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 32, 8, 16, 8, 8, 8, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 16 bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 0, 0, 32, 11, 11, 10, 0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       16, 5, 10, 5, 5, 5, 0, 8, 0, 32, 8,  8,  8,  8,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 16, 5, 10, 5, 5, 5, 0, 0, 0, 0,  0,  0,  0,  0,  16},
-    /* 4bpp */
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 0, 0, 16, 5,  6,  5,  0,  16},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  32},
-    {SB_FLAGS,         PFD_TYPE_RGBA,       4,  1, 0,  1, 1, 1, 2, 8, 0, 16, 4,  4,  4,  4,  16},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  32},
-    {SB_FLAGS,         PFD_TYPE_COLORINDEX, 4,  1, 0,  1, 1, 1, 2, 0, 0, 0,  0,  0,  0,  0,  16},
-};
-
+#define SW_FB_DOUBLEBUFFERED    0x1
+#define SW_FB_DIRTY_SIZE        0x2
 struct sw_framebuffer
 {
-    GLvisual *gl_visual;        /* Describes the buffers */
-    GLframebuffer *gl_buffer;   /* Depth, stencil, accum, etc buffers */
-
-    const struct pixel_format* pixel_format;
-    HDC Hdc;
-
-    /* Current width/height */
-    GLuint width; GLuint height;
-
-    /* BackBuffer, if any */
-    BYTE* BackBuffer;
+    HDC hdc;
+    INT sw_format;
+    UINT format_index;
+    DWORD flags;
+    /* The mesa objects */
+    struct gl_config *gl_visual;		/* Describes the buffers */
+    struct gl_framebuffer *gl_buffer;	/* The mesa representation of frame buffer */
+    struct sw_front_renderbuffer frontbuffer;
+    struct swrast_renderbuffer backbuffer;
+    /* The bitmapi info we will use for rendering to display */
+    BITMAPINFO bmi;
 };
 
 struct sw_context
 {
-    GLcontext *gl_ctx;          /* The core GL/Mesa context */
-
+    struct gl_context mesa;		/* Base class - this must be first */
     /* This is to keep track of the size of the front buffer */
     HHOOK hook;
-
-    /* Our frame buffer*/
-    struct sw_framebuffer* fb;
-
-    /* State variables */
-    union
-    {
-        struct
-        {
-            BYTE ClearColor;
-            BYTE CurrentColor;
-        } u8;
-        struct
-        {
-            USHORT ClearColor;
-            USHORT CurrentColor;
-        } u16;
-        struct
-        {
-            ULONG ClearColor;
-            ULONG CurrentColor;
-        } u24;
-        struct
-        {
-            ULONG ClearColor;
-            ULONG CurrentColor;
-        } u32;
-    };
-    GLenum Mode;
+    /* Framebuffer currently owning the context */
+    struct sw_framebuffer framebuffer;
 };
 
-/* WGL <-> mesa glue */
-static const struct pixel_format* get_format(INT pf_index, INT* pf_count)
+/* mesa opengl32 "driver" specific */
+static const GLubyte *
+sw_get_string( struct gl_context *ctx, GLenum name )
 {
-    HDC hdc;
-    INT bpp, nb_format;
-    const struct pixel_format* ret;
-
-    hdc = GetDC(NULL);
-    bpp = GetDeviceCaps(hdc, BITSPIXEL);
-    ReleaseDC(NULL, hdc);
-
-    switch (bpp)
+    (void) ctx;
+    if(name == GL_RENDERER)
     {
-#define HANDLE_BPP(__x__)                               \
-    case __x__:                                         \
-        nb_format = ARRAYSIZE(pixel_formats_##__x__);   \
-        if ((pf_index > nb_format) || (pf_index <= 0))  \
-            ret = NULL;                                 \
-        else                                            \
-            ret = &pixel_formats_##__x__[pf_index - 1]; \
-    break
-
-    HANDLE_BPP(32);
-    HANDLE_BPP(24);
-    HANDLE_BPP(16);
-    HANDLE_BPP(8);
-#undef HANDLE_BPP
-    default:
-        FIXME("Unhandled bit depth %u, defaulting to 32bpp\n", bpp);
-        nb_format = ARRAYSIZE(pixel_formats_32);
-        if ((pf_index > nb_format) || (pf_index == 0))
-            ret = NULL;
-        else
-            ret = &pixel_formats_32[pf_index - 1];
+        static const GLubyte renderer[] = { 'R','e','a','c','t','O','S',' ',
+            'S','o','f','t','w','a','r','e',' ',
+            'I','m','p','l','e','m','e','n','t','a','t','i','o','n',0 };
+        return renderer;
     }
+    /* Don't claim to support the fancy extensions that mesa supports, they will be slow anyway */
+    if(name == GL_EXTENSIONS)
+    {
+        static const GLubyte extensions[] = { 0 };
+        return extensions;
+    }
+    return NULL;
+}
 
-    if (pf_count)
-        *pf_count = nb_format;
+static void
+sw_update_state( struct gl_context *ctx, GLuint new_state )
+{
+   /* easy - just propagate */
+   _swrast_InvalidateState( ctx, new_state );
+   _swsetup_InvalidateState( ctx, new_state );
+   _tnl_InvalidateState( ctx, new_state );
+   _vbo_InvalidateState( ctx, new_state );
+}
 
-    return ret;
+/* Renderbuffer routines */
+static GLboolean
+sw_bb_renderbuffer_storage(struct gl_context* ctx, struct gl_renderbuffer *rb,
+                          GLenum internalFormat,
+                          GLuint width, GLuint height)
+{
+    struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
+    struct sw_framebuffer* fb = CONTAINING_RECORD(srb, struct sw_framebuffer, backbuffer);
+    UINT widthBytes = WIDTH_BYTES_ALIGN32(width, pixel_formats[fb->format_index].color_bits); 
+    srb->Base.Format = pixel_formats[fb->format_index].mesa;
+
+    if(srb->Buffer)
+        srb->Buffer = HeapReAlloc(GetProcessHeap(), 0, srb->Buffer, widthBytes*height);
+    else
+        srb->Buffer = HeapAlloc(GetProcessHeap(), 0, widthBytes*height);
+    if(!srb->Buffer)
+    {
+        srb->Base.Format = MESA_FORMAT_NONE;
+        return GL_FALSE;
+    }
+    srb->Base.Width = width;
+    srb->Base.Height = height;
+    srb->RowStride = widthBytes;
+    return GL_TRUE;
+}
+
+static void
+sw_bb_renderbuffer_delete(struct gl_renderbuffer *rb)
+{
+   struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
+
+    if (srb->Buffer)
+    {
+        HeapFree(GetProcessHeap(), 0, srb->Buffer);
+        srb->Buffer = NULL;
+    }
+}
+
+static void
+sw_fb_renderbuffer_delete(struct gl_renderbuffer *rb)
+{
+    struct sw_front_renderbuffer* srb = (struct sw_front_renderbuffer*)rb;
+
+    if (srb->hbmp)
+    {
+        srb->hbmp = SelectObject(srb->hdcmem, srb->hbmp);
+        DeleteDC(srb->hdcmem);
+        DeleteObject(srb->hbmp);
+        srb->hdcmem = NULL;
+        srb->hbmp = NULL;
+        srb->swrast.Buffer = NULL;
+    }
+}
+
+static GLboolean
+sw_fb_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
+                           GLenum internalFormat,
+                           GLuint width, GLuint height)
+{
+    struct sw_front_renderbuffer* srb = (struct sw_front_renderbuffer*)rb;
+    struct sw_framebuffer* fb = CONTAINING_RECORD(srb, struct sw_framebuffer, frontbuffer);
+    HDC hdc = IntGetCurrentDC();
+    
+    /* Don't bother if the size doesn't change */
+    if(rb->Width == width && rb->Height == height)
+        return GL_TRUE;
+
+    /* Delete every objects which could have been used before */
+    sw_fb_renderbuffer_delete(&srb->swrast.Base);
+    
+    /* So the app wants to use the frontbuffer, allocate a DIB for it */
+    srb->hbmp = CreateDIBSection(
+        hdc,
+        &fb->bmi,
+        DIB_RGB_COLORS,
+        (void**)&srb->swrast.Buffer,
+        NULL, 0);
+    if(!srb->hbmp)
+    {
+        ERR("Failed to create the DIB section for the front buffer, %lu.\n", GetLastError());
+        return GL_FALSE;
+    }
+    /* Create the DC and attach the DIB section to it */
+    srb->hdcmem = CreateCompatibleDC(hdc);
+    assert(srb->hdcmem != NULL);
+    srb->hbmp = SelectObject(srb->hdcmem, srb->hbmp);
+    assert(srb->hbmp != NULL);
+    /* Set formats, width and height */
+    srb->swrast.Base.Format = pixel_formats[fb->format_index].mesa;
+    srb->swrast.Base.Width = width;
+    srb->swrast.Base.Height = height;
+    return GL_TRUE;
+}
+
+static
+void
+sw_init_renderbuffers(struct sw_framebuffer *fb)
+{
+    _mesa_init_renderbuffer(&fb->frontbuffer.swrast.Base, 0);
+    fb->frontbuffer.swrast.Base.ClassID = SW_FRONT_RENDERBUFFER_CLASS;
+    fb->frontbuffer.swrast.Base.AllocStorage = sw_fb_renderbuffer_storage;
+    fb->frontbuffer.swrast.Base.Delete = sw_fb_renderbuffer_delete;
+    fb->frontbuffer.swrast.Base.InternalFormat = GL_RGBA;
+    fb->frontbuffer.swrast.Base._BaseFormat = GL_RGBA;
+    _mesa_remove_renderbuffer(fb->gl_buffer, BUFFER_FRONT_LEFT);
+    _mesa_add_renderbuffer(fb->gl_buffer, BUFFER_FRONT_LEFT, &fb->frontbuffer.swrast.Base);
+    
+    if(fb->flags & SW_FB_DOUBLEBUFFERED)
+    {
+        _mesa_init_renderbuffer(&fb->backbuffer.Base, 0);
+        fb->backbuffer.Base.ClassID = SW_BACK_RENDERBUFFER_CLASS;
+        fb->backbuffer.Base.AllocStorage = sw_bb_renderbuffer_storage;
+        fb->backbuffer.Base.Delete = sw_bb_renderbuffer_delete;
+        fb->backbuffer.Base.InternalFormat = GL_RGBA;
+        fb->backbuffer.Base._BaseFormat = GL_RGBA;
+        _mesa_remove_renderbuffer(fb->gl_buffer, BUFFER_BACK_LEFT);
+        _mesa_add_renderbuffer(fb->gl_buffer, BUFFER_BACK_LEFT, &fb->backbuffer.Base);
+    }
+    
+    
+}
+
+static void
+sw_MapRenderbuffer(struct gl_context *ctx,
+                   struct gl_renderbuffer *rb,
+                   GLuint x, GLuint y, GLuint w, GLuint h,
+                   GLbitfield mode,
+                   GLubyte **mapOut, GLint *rowStrideOut)
+{
+    if(rb->ClassID == SW_FRONT_RENDERBUFFER_CLASS)
+    {
+        /* This is our front buffer */
+        struct sw_front_renderbuffer* srb = (struct sw_front_renderbuffer*)rb;
+        struct sw_framebuffer* fb = CONTAINING_RECORD(srb, struct sw_framebuffer, frontbuffer);
+        /* Set the stride */
+        *rowStrideOut = WIDTH_BYTES_ALIGN32(rb->Width, pixel_formats[fb->format_index].color_bits);
+        /* Remember where we "mapped" */
+        srb->x = x; srb->y = y; srb->w = w; srb->h = h;
+        /* Remember if we should write it later */
+        srb->write = !!(mode & GL_MAP_WRITE_BIT);
+        /* Get the bits, if needed */
+        if(mode & GL_MAP_READ_BIT)
+        {
+            BitBlt(srb->hdcmem, srb->x, srb->y, srb->w, srb->h,
+                IntGetCurrentDC(), srb->x, srb->y, SRCCOPY);
+        }
+        /* And return it */
+        *mapOut = (BYTE*)srb->swrast.Buffer + *rowStrideOut*y + x*pixel_formats[fb->format_index].color_bits/8;
+        return;
+    }
+    
+    if(rb->ClassID == SW_BACK_RENDERBUFFER_CLASS)
+    {
+        /* This is our front buffer */
+        struct swrast_renderbuffer* srb = (struct swrast_renderbuffer*)rb;
+        const GLuint bpp = _mesa_get_format_bytes(rb->Format);
+        /* Set the stride */
+        *rowStrideOut = srb->RowStride;
+        *mapOut = (BYTE*)srb->Buffer + srb->RowStride*y + x*bpp;
+        return;
+    }
+    
+    /* Let mesa rasterizer take care of this */
+    _swrast_map_soft_renderbuffer(ctx, rb, x, y, w, h, mode,
+                                  mapOut, rowStrideOut);
+}
+
+static void
+sw_UnmapRenderbuffer(struct gl_context *ctx, struct gl_renderbuffer *rb)
+{
+   if (rb->ClassID== SW_FRONT_RENDERBUFFER_CLASS)
+    {
+        /* This is our front buffer */
+        struct sw_front_renderbuffer* srb = (struct sw_front_renderbuffer*)rb;
+        if(srb->write)
+        {
+            /* Copy the bits to our display */
+            BitBlt(IntGetCurrentDC(),
+                srb->x, srb->y, srb->w, srb->h,
+                srb->hdcmem, srb->x, srb->y, SRCCOPY);
+            srb->write = FALSE;
+        }
+        return;
+    }
+    
+    if(rb->ClassID == SW_BACK_RENDERBUFFER_CLASS)
+        return; /* nothing to do */
+    
+    /* Let mesa rasterizer take care of this */
+    _swrast_unmap_soft_renderbuffer(ctx, rb);
+}
+
+/* WGL <-> mesa glue */
+static UINT index_from_format(struct wgl_dc_data* dc_data, INT format, BOOL* doubleBuffered)
+{
+    UINT index;
+    INT nb_win_compat = 0, start_win_compat = 0;
+    HDC hdc;
+    INT bpp;
+    
+    *doubleBuffered = FALSE;
+    
+    if(!(dc_data->flags & WGL_DC_OBJ_DC))
+        return format - 1; /* OBJ_MEMDC, not double buffered */
+    
+    hdc = GetDC(dc_data->owner.hwnd);
+
+    /* Find the window compatible formats */
+    bpp = GetDeviceCaps(hdc, BITSPIXEL);
+    for(index = 0; index<sizeof(pixel_formats)/sizeof(pixel_formats[0]); index++)
+    {
+        if(pixel_formats[index].color_bits == bpp)
+        {
+            if(!start_win_compat)
+                start_win_compat = index+1;
+            nb_win_compat++;
+        }
+    }
+    ReleaseDC(dc_data->owner.hwnd, hdc);
+    
+    /* Double buffered format */
+    if(format < (start_win_compat + nb_win_compat))
+    {
+        if(format >= start_win_compat)
+            *doubleBuffered = TRUE;
+        return format-1;
+    }
+    /* Shift */
+    return format - nb_win_compat - 1;
 }
 
 INT sw_DescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR* descr)
 {
-    INT ret;
-    const struct pixel_format *pixel_format;
+    UINT index;
+    INT nb_win_compat = 0, start_win_compat = 0;
+    INT ret = sizeof(pixel_formats)/sizeof(pixel_formats[0]);
+    
+    if (GetObjectType(hdc) == OBJ_DC)
+    {
+        /* Find the window compatible formats */
+        INT bpp = GetDeviceCaps(hdc, BITSPIXEL);
+        for (index = 0; index < sizeof(pixel_formats)/sizeof(pixel_formats[0]); index++)
+        {
+            if (pixel_formats[index].color_bits == bpp)
+            {
+                if (!start_win_compat)
+                    start_win_compat = index+1;
+                nb_win_compat++;
+            }
+        }
+        /* Add the double buffered formats */
+        ret += nb_win_compat;
+    }
 
-    TRACE("Describing format %i.\n", format);
-
-    pixel_format = get_format(format, &ret);
+    index = (UINT)format - 1;
     if(!descr)
         return ret;
     if((format > ret) || (size != sizeof(*descr)))
         return 0;
 
-    /* Fill the structure */
+    /* Set flags */
+    descr->dwFlags = PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_BITMAP | PFD_GENERIC_FORMAT;
+    /* See if this is a format compatible with the window */
+    if(format >= start_win_compat && format < (start_win_compat + nb_win_compat*2) )
+    {
+        /* It is */
+        descr->dwFlags |= PFD_DRAW_TO_WINDOW;
+        /* See if this should be double buffered */
+        if(format < (start_win_compat + nb_win_compat))
+        {
+            /* No GDI, no bitmap */
+            descr->dwFlags &= ~(PFD_SUPPORT_GDI | PFD_DRAW_TO_BITMAP);
+            descr->dwFlags |= PFD_DOUBLEBUFFER;
+        }
+    }
+    /* Normalize the index */
+    if(format >= start_win_compat + nb_win_compat)
+        index -= nb_win_compat;
+    
+    /* Fill the rest of the structure */
     descr->nSize            = sizeof(*descr);
     descr->nVersion         = 1;
-    descr->dwFlags          = pixel_format->dwFlags;
-    descr->iPixelType       = pixel_format->iPixelType;
-    descr->cColorBits       = pixel_format->cColorBits;
-    descr->cRedBits         = pixel_format->cRedBits;
-    descr->cRedShift        = pixel_format->cRedShift;
-    descr->cGreenBits       = pixel_format->cGreenBits;
-    descr->cGreenShift      = pixel_format->cGreenShift;
-    descr->cBlueBits        = pixel_format->cBlueBits;
-    descr->cBlueShift       = pixel_format->cBlueShift;
-    descr->cAlphaBits       = pixel_format->cAlphaBits;
-    descr->cAlphaShift      = pixel_format->cAlphaShift;
-    descr->cAccumBits       = pixel_format->cAccumBits;
-    descr->cAccumRedBits    = pixel_format->cAccumRedBits;
-    descr->cAccumGreenBits  = pixel_format->cAccumGreenBits;
-    descr->cAccumBlueBits   = pixel_format->cAccumBlueBits;
-    descr->cAccumAlphaBits  = pixel_format->cAccumAlphaBits;
-    descr->cDepthBits       = pixel_format->cDepthBits;
-    descr->cStencilBits     = STENCIL_BITS;
+    descr->iPixelType       = PFD_TYPE_RGBA;
+    descr->cColorBits       = pixel_formats[index].color_bits;
+    descr->cRedBits         = pixel_formats[index].red_bits;
+    descr->cRedShift        = pixel_formats[index].red_shift;
+    descr->cGreenBits       = pixel_formats[index].green_bits;
+    descr->cGreenShift      = pixel_formats[index].green_shift;
+    descr->cBlueBits        = pixel_formats[index].blue_bits;
+    descr->cBlueShift       = pixel_formats[index].blue_shift;
+    descr->cAlphaBits       = pixel_formats[index].alpha_bits;
+    descr->cAlphaShift      = pixel_formats[index].alpha_shift;
+    descr->cAccumBits       = pixel_formats[index].accum_bits;
+    descr->cAccumRedBits    = pixel_formats[index].accum_bits / 4;
+    descr->cAccumGreenBits  = pixel_formats[index].accum_bits / 4;
+    descr->cAccumBlueBits   = pixel_formats[index].accum_bits / 4;
+    descr->cAccumAlphaBits  = pixel_formats[index].accum_bits / 4;
+    descr->cDepthBits       = pixel_formats[index].depth_bits;
+    descr->cStencilBits     = pixel_formats[index].stencil_bits;
     descr->cAuxBuffers      = 0;
     descr->iLayerType       = PFD_MAIN_PLANE;
-    descr->bReserved        = 0;
-    descr->dwLayerMask      = 0;
-    descr->dwVisibleMask    = 0;
-    descr->dwDamageMask     = 0;
-
     return ret;
 }
 
 BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
 {
     struct sw_framebuffer* fb;
-    const struct pixel_format *pixel_format;
+    BOOL doubleBuffered;
+    
+    assert(dc_data->sw_data == NULL);
 
     /* So, someone is crazy enough to ask for sw implementation. Announce it. */
-    TRACE("OpenGL software implementation START for hdc %p, format %i!\n", hdc, format);
-
-    pixel_format = get_format(format, NULL);
-    if (!pixel_format)
-        return FALSE;
-
+    TRACE("OpenGL software implementation START!\n");
+    
     /* allocate our structure */
-    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*fb));
+    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct sw_framebuffer, bmi.bmiColors[3]));
     if(!fb)
     {
         ERR("HeapAlloc FAILED!\n");
         return FALSE;
     }
-    /* Set the format */
-    fb->pixel_format = pixel_format;
-
-    fb->gl_visual = gl_create_visual(
-            pixel_format->iPixelType == PFD_TYPE_RGBA,
-            pixel_format->cAlphaBits != 0,
-            (pixel_format->dwFlags & PFD_DOUBLEBUFFER) != 0,
-            pixel_format->cDepthBits,
-            STENCIL_BITS,
-            max(max(max(pixel_format->cAccumRedBits, pixel_format->cAccumGreenBits), pixel_format->cAccumBlueBits), pixel_format->cAccumAlphaBits),
-            pixel_format->iPixelType == PFD_TYPE_COLORINDEX ? pixel_format->cColorBits : 0,
-            ((1ul << pixel_format->cRedBits) - 1),
-            ((1ul << pixel_format->cGreenBits) - 1),
-            ((1ul << pixel_format->cBlueBits) - 1),
-            pixel_format->cAlphaBits != 0 ? ((1ul << pixel_format->cAlphaBits) - 1) : 255.0f,
-            pixel_format->cRedBits,
-            pixel_format->cGreenBits,
-            pixel_format->cBlueBits,
-            pixel_format->cAlphaBits);
-
+    /* Get the format index */
+    fb->format_index = index_from_format(dc_data, format, &doubleBuffered);
+    TRACE("Using format %u - double buffered: %x.\n", fb->format_index, doubleBuffered);
+    fb->flags = doubleBuffered ? SW_FB_DOUBLEBUFFERED : 0;
+    /* Set the bitmap info describing the framebuffer */
+    fb->bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    fb->bmi.bmiHeader.biPlanes = 1;
+    fb->bmi.bmiHeader.biBitCount = pixel_formats[fb->format_index].color_bits;
+    fb->bmi.bmiHeader.biCompression = pixel_formats[fb->format_index].bmp_compression;
+    fb->bmi.bmiHeader.biSizeImage = 0;
+    fb->bmi.bmiHeader.biXPelsPerMeter = 0;
+    fb->bmi.bmiHeader.biYPelsPerMeter = 0;
+    fb->bmi.bmiHeader.biClrUsed = 0;
+    fb->bmi.bmiHeader.biClrImportant = 0;
+    *((DWORD*)&fb->bmi.bmiColors[0]) = pixel_formats[fb->format_index].red_mask;
+    *((DWORD*)&fb->bmi.bmiColors[1]) = pixel_formats[fb->format_index].green_mask;
+    *((DWORD*)&fb->bmi.bmiColors[2]) = pixel_formats[fb->format_index].blue_mask;
+    /* Save the HDC */
+    fb->hdc = hdc;
+    
+    /* Allocate the visual structure describing the format */
+    fb->gl_visual = _mesa_create_visual(
+        !!(fb->flags & SW_FB_DOUBLEBUFFERED),
+        GL_FALSE, /* No stereoscopic support */
+        pixel_formats[fb->format_index].red_bits,
+        pixel_formats[fb->format_index].green_bits,
+        pixel_formats[fb->format_index].blue_bits,
+        pixel_formats[fb->format_index].alpha_bits,
+        pixel_formats[fb->format_index].depth_bits,
+        pixel_formats[fb->format_index].stencil_bits,
+        pixel_formats[fb->format_index].accum_bits,
+        pixel_formats[fb->format_index].accum_bits,
+        pixel_formats[fb->format_index].accum_bits,
+        pixel_formats[fb->format_index].alpha_bits ? 
+            pixel_formats[fb->format_index].accum_bits : 0);
+    
     if(!fb->gl_visual)
     {
         ERR("Failed to allocate a GL visual.\n");
@@ -403,16 +489,25 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
     }
 
     /* Allocate the framebuffer structure */
-    fb->gl_buffer = gl_create_framebuffer(fb->gl_visual);
+    fb->gl_buffer = _mesa_create_framebuffer(fb->gl_visual);
     if (!fb->gl_buffer) {
         ERR("Failed to allocate the mesa framebuffer structure.\n");
-        gl_destroy_visual( fb->gl_visual );
+        _mesa_destroy_visual( fb->gl_visual );
         HeapFree(GetProcessHeap(), 0, fb);
         return FALSE;
     }
-
-    /* Save our DC */
-    fb->Hdc = hdc;
+    
+    /* Add the depth/stencil/accum buffers */
+    _swrast_add_soft_renderbuffers(fb->gl_buffer,
+                             GL_FALSE, /* color */
+                             fb->gl_visual->haveDepthBuffer,
+                             fb->gl_visual->haveStencilBuffer,
+                             fb->gl_visual->haveAccumBuffer,
+                             GL_FALSE, /* alpha */
+                             GL_FALSE /* aux */ );
+    
+    /* Initialize our render buffers */
+    sw_init_renderbuffers(fb);
 
     /* Everything went fine */
     dc_data->sw_data = fb;
@@ -423,25 +518,59 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
 {
     struct sw_context* sw_ctx;
     struct sw_framebuffer* fb = dc_data->sw_data;
+    struct dd_function_table mesa_drv_functions;
+    TNLcontext *tnl;
 
-    sw_ctx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*sw_ctx));
+    /* We use the mesa memory routines for this function */
+    sw_ctx = CALLOC_STRUCT(sw_context);
     if(!sw_ctx)
         return NULL;
-
+    
+    /* Set mesa default functions */
+    _mesa_init_driver_functions(&mesa_drv_functions);
+    /* Override */
+    mesa_drv_functions.GetString = sw_get_string;
+    mesa_drv_functions.UpdateState = sw_update_state;
+    mesa_drv_functions.GetBufferSize = NULL;
+    
     /* Initialize the context */
-    sw_ctx->gl_ctx = gl_create_context(fb->gl_visual, NULL, sw_ctx);
-    if(!sw_ctx->gl_ctx)
+    if(!_mesa_initialize_context(&sw_ctx->mesa,
+                                 fb->gl_visual,
+                                 NULL,
+                                 &mesa_drv_functions,
+                                 (void *) sw_ctx))
     {
         ERR("Failed to initialize the mesa context.\n");
-        HeapFree(GetProcessHeap(), 0, sw_ctx);
+        free(sw_ctx);
         return NULL;
     }
-
-    sw_ctx->fb = fb;
-
-    /* Choose relevant default */
-    sw_ctx->Mode = fb->gl_visual->DBflag ? GL_BACK : GL_FRONT;
-
+    
+    /* Initialize the "meta driver" */
+    _mesa_meta_init(&sw_ctx->mesa);
+    
+    /* Initialize helpers */
+    if(!_swrast_CreateContext(&sw_ctx->mesa) ||
+       !_vbo_CreateContext(&sw_ctx->mesa) ||
+       !_tnl_CreateContext(&sw_ctx->mesa) ||
+       !_swsetup_CreateContext(&sw_ctx->mesa))
+    {
+        ERR("Failed initializing helpers.\n");
+        _mesa_free_context_data(&sw_ctx->mesa);
+        free(sw_ctx);
+        return NULL;
+    }
+    
+    /* Wake up! */
+    _swsetup_Wakeup(&sw_ctx->mesa);
+    
+    /* Use TnL defaults */
+    tnl = TNL_CONTEXT(&sw_ctx->mesa);
+    tnl->Driver.RunPipeline = _tnl_run_pipeline;
+    
+    /* To map the display into user memory */
+    sw_ctx->mesa.Driver.MapRenderbuffer = sw_MapRenderbuffer;
+    sw_ctx->mesa.Driver.UnmapRenderbuffer = sw_UnmapRenderbuffer;
+    
     return (DHGLRC)sw_ctx;
 }
 
@@ -453,10 +582,16 @@ BOOL sw_DeleteContext(DHGLRC dhglrc)
     const GLDISPATCHTABLE* table_save = IntGetCurrentDispatchTable();
 
     /* Destroy everything */
-    gl_destroy_context(sw_ctx->gl_ctx);
+    _mesa_meta_free( &sw_ctx->mesa );
 
-    HeapFree(GetProcessHeap(), 0, sw_ctx);
+    _swsetup_DestroyContext( &sw_ctx->mesa );
+    _tnl_DestroyContext( &sw_ctx->mesa );
+    _vbo_DestroyContext( &sw_ctx->mesa );
+    _swrast_DestroyContext( &sw_ctx->mesa );
 
+    _mesa_free_context_data( &sw_ctx->mesa );
+    free( sw_ctx );
+    
     /* Restore this */
     IntSetCurrentDispatchTable(table_save);
     IntSetCurrentICDPrivate(icd_save);
@@ -464,33 +599,9 @@ BOOL sw_DeleteContext(DHGLRC dhglrc)
     return TRUE;
 }
 
-extern void APIENTRY _mesa_ColorTableEXT(GLenum, GLenum, GLsizei, GLenum, GLenum, const void*);
-extern void APIENTRY _mesa_ColorSubTableEXT(GLenum, GLsizei, GLsizei, GLenum, GLenum, const void*);
-extern void APIENTRY _mesa_GetColorTableEXT(GLenum, GLenum, GLenum, void*);
-extern void APIENTRY _mesa_GetColorTableParameterivEXT(GLenum, GLenum, GLfloat*);
-extern void APIENTRY _mesa_GetColorTableParameterfvEXT(GLenum, GLenum, GLint*);
-
-static void APIENTRY _swimpl_AddSwapHintRectWIN(GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    UNIMPLEMENTED;
-}
-
 PROC sw_GetProcAddress(LPCSTR name)
 {
-    /* GL_EXT_paletted_texture */
-    if (strcmp(name, "glColorTableEXT") == 0)
-        return (PROC)_mesa_ColorTableEXT;
-    if (strcmp(name, "glColorSubTableEXT") == 0)
-        return (PROC)_mesa_ColorSubTableEXT;
-    if (strcmp(name, "glColorGetTableEXT") == 0)
-        return (PROC)_mesa_GetColorTableEXT;
-    if (strcmp(name, "glGetColorTableParameterivEXT") == 0)
-        return (PROC)_mesa_GetColorTableParameterivEXT;
-    if (strcmp(name, "glGetColorTableParameterfvEXT") == 0)
-        return (PROC)_mesa_GetColorTableParameterfvEXT;
-    if (strcmp(name, "glAddSwapHintRectWIN") == 0)
-        return (PROC)_swimpl_AddSwapHintRectWIN;
-
+    /* We don't support any extensions */
     WARN("Asking for proc address %s, returning NULL.\n", name);
     return NULL;
 }
@@ -503,20 +614,18 @@ BOOL sw_CopyContext(DHGLRC dhglrcSrc, DHGLRC dhglrcDst, UINT mask)
 
 BOOL sw_ShareLists(DHGLRC dhglrcSrc, DHGLRC dhglrcDst)
 {
-#if 0
     struct sw_context* sw_ctx_src = (struct sw_context*)dhglrcSrc;
     struct sw_context* sw_ctx_dst = (struct sw_context*)dhglrcDst;
 
     /* See if it was already shared */
-    if(sw_ctx_dst->gl_ctx->Shared->RefCount > 1)
+    if(sw_ctx_dst->mesa.Shared->RefCount > 1)
         return FALSE;
-
+    
     /* Unreference the old, share the new */
-    gl_reference_shared_state(sw_ctx_dst->gl_ctx,
-        &sw_ctx_dst->gl_ctx->Shared,
-        sw_ctx_src->gl_ctx->Shared);
-#endif
-    FIXME("Unimplemented!\n");
+    _mesa_reference_shared_state(&sw_ctx_dst->mesa,
+        &sw_ctx_dst->mesa.Shared,
+        sw_ctx_src->mesa.Shared);
+    
     return TRUE;
 }
 
@@ -529,6 +638,7 @@ sw_call_window_proc(
 {
     struct wgl_dc_data* dc_data = IntGetCurrentDcData();
     struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    struct sw_framebuffer* fb;
     PCWPSTRUCT pParams = (PCWPSTRUCT)lParam;
 
     if((!dc_data) || (!ctx))
@@ -539,6 +649,8 @@ sw_call_window_proc(
 
     if((nCode < 0) || (dc_data->owner.hwnd != pParams->hwnd) || (dc_data->sw_data == NULL))
         return CallNextHookEx(ctx->hook, nCode, wParam, lParam);
+    
+    fb = dc_data->sw_data;
 
     if (pParams->message == WM_WINDOWPOSCHANGED)
     {
@@ -564,8 +676,11 @@ sw_call_window_proc(
             /* Do not reallocate for minimized windows */
             if(width <= 0 || height <= 0)
                 goto end;
+            /* Update framebuffer size */
+            fb->bmi.bmiHeader.biWidth = width;
+            fb->bmi.bmiHeader.biHeight = height;
             /* Propagate to mesa */
-            gl_ResizeBuffersMESA(ctx->gl_ctx);
+            _mesa_resize_framebuffer(&ctx->mesa, fb->gl_buffer, width, height);
         }
     }
 
@@ -573,826 +688,15 @@ end:
     return CallNextHookEx(ctx->hook, nCode, wParam, lParam);
 }
 
-static const char* renderer_string(void)
-{
-    return "ReactOS SW Implementation";
-}
-
-static inline void PUT_PIXEL_8(BYTE* Buffer, BYTE Value)
-{
-    *Buffer = Value;
-}
-static inline void PUT_PIXEL_16(USHORT* Buffer, USHORT Value)
-{
-    *Buffer = Value;
-}
-static inline void PUT_PIXEL_24(ULONG* Buffer, ULONG Value)
-{
-    *Buffer &= 0xFF000000ul;
-    *Buffer |= Value & 0x00FFFFFF;
-}
-static inline void PUT_PIXEL_32(ULONG* Buffer, ULONG Value)
-{
-    *Buffer = Value;
-}
-
-static inline BYTE GET_PIXEL_8(BYTE* Buffer)
-{
-    return *Buffer;
-}
-
-static inline USHORT GET_PIXEL_16(USHORT* Buffer)
-{
-    return *Buffer;
-}
-
-static inline ULONG GET_PIXEL_24(ULONG* Buffer)
-{
-    return *Buffer & 0x00FFFFFF;
-}
-
-static inline ULONG GET_PIXEL_32(ULONG* Buffer)
-{
-    return *Buffer;
-}
-
-static inline BYTE PACK_COLOR_8(GLubyte r, GLubyte g, GLubyte b)
-{
-    return (r & 0x7) | ((g & 0x7) << 3) | ((b & 0x3) << 6);
-}
-
-static inline USHORT PACK_COLOR_16(GLubyte r, GLubyte g, GLubyte b)
-{
-    return ((r & 0x1F) << 11) | ((g & 0x3F) << 5) | (b & 0x1F);
-}
-
-static inline ULONG PACK_COLOR_24(GLubyte r, GLubyte g, GLubyte b)
-{
-    return (r << 16) | (g << 8) | (b);
-}
-
-static inline ULONG PACK_COLOR_32(GLubyte r, GLubyte g, GLubyte b)
-{
-    return (r << 16) | (g << 8) | (b);
-}
-
-static inline COLORREF PACK_COLORREF_8(GLubyte r, GLubyte g, GLubyte b)
-{
-    return RGB(r << 5, g << 5, b << 6);
-}
-
-static inline COLORREF PACK_COLORREF_16(GLubyte r, GLubyte g, GLubyte b)
-{
-    return RGB(r << 3, g << 2, b << 3);
-}
-
-static inline COLORREF PACK_COLORREF_24(GLubyte r, GLubyte g, GLubyte b)
-{
-    return RGB(r, g, b);
-}
-
-static inline COLORREF PACK_COLORREF_32(GLubyte r, GLubyte g, GLubyte b)
-{
-    return RGB(r, g, b);
-}
-
-static inline void UNPACK_COLOR_8(BYTE Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = Color & 0x7;
-    *g = (Color >> 3) & 0x7;
-    *b = (Color >> 6) & 0x3;
-}
-
-static inline void UNPACK_COLOR_16(USHORT Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = (Color >> 11) & 0x1F;
-    *g = (Color >> 5) & 0x3F;
-    *b = Color & 0x1F;
-}
-
-static inline void UNPACK_COLOR_24(ULONG Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = (Color >> 16) & 0xFF;
-    *g = (Color >> 8) & 0xFF;
-    *b = Color & 0xFF;
-}
-
-static inline void UNPACK_COLOR_32(ULONG Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = (Color >> 16) & 0xFF;
-    *g = (Color >> 8) & 0xFF;
-    *b = Color & 0xFF;
-}
-
-static inline void UNPACK_COLORREF_8(COLORREF Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = GetRValue(Color) >> 5;
-    *g = GetGValue(Color) >> 5;
-    *b = GetBValue(Color) >> 6;
-}
-
-static inline void UNPACK_COLORREF_16(COLORREF Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = GetRValue(Color) >> 3;
-    *g = GetGValue(Color) >> 2;
-    *b = GetBValue(Color) >> 3;
-}
-
-static inline void UNPACK_COLORREF_24(COLORREF Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = GetRValue(Color);
-    *g = GetGValue(Color);
-    *b = GetBValue(Color);
-}
-
-static inline void UNPACK_COLORREF_32(COLORREF Color, GLubyte* r, GLubyte* g, GLubyte* b)
-{
-    *r = GetRValue(Color);
-    *g = GetGValue(Color);
-    *b = GetBValue(Color);
-}
-
-#define MAKE_COLORREF(__bpp, __type)                                                            \
-static inline COLORREF MAKE_COLORREF_##__bpp(const struct pixel_format *format, __type Color)   \
-{                                                                                               \
-    GLubyte r,g,b;                                                                              \
-                                                                                                \
-    if (format->iPixelType == PFD_TYPE_COLORINDEX)                                              \
-        return PALETTEINDEX(Color);                                                             \
-                                                                                                \
-    UNPACK_COLOR_##__bpp(Color, &r, &g, &b);                                                    \
-                                                                                                \
-    return PACK_COLORREF_##__bpp(r, g, b);                                                      \
-}
-MAKE_COLORREF(8, BYTE)
-MAKE_COLORREF(16, USHORT)
-MAKE_COLORREF(24, ULONG)
-MAKE_COLORREF(32, ULONG)
-#undef MAKE_COLORREF
-
-/*
-* Set the color index used to clear the color buffer.
-*/
-#define CLEAR_INDEX(__bpp, __type)                              \
-static void clear_index_##__bpp(GLcontext* ctx, GLuint index)   \
-{                                                               \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                 \
-                                                                \
-    sw_ctx->u##__bpp.ClearColor = (__type)index;                \
-}
-CLEAR_INDEX(8, BYTE)
-CLEAR_INDEX(16, USHORT)
-CLEAR_INDEX(24, ULONG)
-CLEAR_INDEX(32, ULONG)
-#undef CLEAR_INDEX
-
-/*
-* Set the color used to clear the color buffer.
-*/
-#define CLEAR_COLOR(__bpp)                                                                 \
-static void clear_color_##__bpp( GLcontext* ctx, GLubyte r, GLubyte g, GLubyte b, GLubyte a )   \
-{                                                                                               \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                                 \
-                                                                                                \
-    sw_ctx->u##__bpp.ClearColor = PACK_COLOR_##__bpp(r, g, b);                                  \
-                                                                                                \
-    TRACE("Set Clear color %u, %u, %u.\n", r, g, b);                                            \
-}
-CLEAR_COLOR(8)
-CLEAR_COLOR(16)
-CLEAR_COLOR(24)
-CLEAR_COLOR(32)
-#undef CLEAR_COLOR
-
-/*
- * Clear the specified region of the color buffer using the clear color
- * or index as specified by one of the two functions above.
- */
-static void clear_frontbuffer(
-    struct sw_context* sw_ctx,
-    struct sw_framebuffer* fb,
-    GLint x,
-    GLint y,
-    GLint width,
-    GLint height,
-    COLORREF ClearColor)
-{
-    HBRUSH Brush;
-    BOOL ret;
-
-    TRACE("Clearing front buffer (%u, %u, %u, %u), color 0x%08x.\n", x, y, width, height, ClearColor);
-
-    Brush = CreateSolidBrush(ClearColor);
-    Brush = SelectObject(fb->Hdc, Brush);
-
-    ret = PatBlt(fb->Hdc, x, fb->height - (y + height), width, height, PATCOPY);
-    if (!ret)
-    {
-        ERR("PatBlt failed. last Error %d.\n", GetLastError());
-    }
-
-    Brush = SelectObject(fb->Hdc, Brush);
-    DeleteObject(Brush);
-}
-
-#define CLEAR(__bpp, __type, __pixel_size)                                                          \
-static void clear_##__bpp(GLcontext* ctx, GLboolean all,GLint x, GLint y, GLint width, GLint height)\
-{                                                                                                   \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                                     \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                                         \
-    BYTE* ScanLine;                                                                                 \
-                                                                                                    \
-    if (all)                                                                                        \
-    {                                                                                               \
-        x = y = 0;                                                                                  \
-        width = fb->width;                                                                          \
-        height = fb->height;                                                                        \
-    }                                                                                               \
-                                                                                                    \
-    if (sw_ctx->Mode == GL_FRONT)                                                                   \
-    {                                                                                               \
-        clear_frontbuffer(sw_ctx, fb, x, y, width, height,                                          \
-                MAKE_COLORREF_##__bpp(fb->pixel_format, sw_ctx->u##__bpp.ClearColor));              \
-        return;                                                                                     \
-    }                                                                                               \
-                                                                                                    \
-    ScanLine = fb->BackBuffer + y * WIDTH_BYTES_ALIGN32(fb->width, __bpp);                          \
-    while (height--)                                                                                \
-    {                                                                                               \
-        BYTE* Buffer = ScanLine + x * __pixel_size;                                                 \
-        UINT n = width;                                                                             \
-                                                                                                    \
-        while (n--)                                                                                 \
-        {                                                                                           \
-            PUT_PIXEL_##__bpp((__type*)Buffer, sw_ctx->u##__bpp.ClearColor);                        \
-            Buffer += __pixel_size;                                                                 \
-        }                                                                                           \
-                                                                                                    \
-        ScanLine += WIDTH_BYTES_ALIGN32(fb->width, __bpp);                                          \
-    }                                                                                               \
-}
-CLEAR(8, BYTE, 1)
-CLEAR(16, USHORT, 2)
-CLEAR(24, ULONG, 3)
-CLEAR(32, ULONG, 4)
-#undef CLEAR
-
-/* Set the current color index. */
-#define SET_INDEX(__bpp)                                        \
-static void set_index_##__bpp(GLcontext* ctx, GLuint index)     \
-{                                                               \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                 \
-                                                                \
-    sw_ctx->u##__bpp.CurrentColor = index;                      \
-}
-SET_INDEX(8)
-SET_INDEX(16)
-SET_INDEX(24)
-SET_INDEX(32)
-#undef SET_INDEX
-
-/* Set the current RGBA color. */
-#define SET_COLOR(__bpp)                                                                    \
-static void set_color_##__bpp( GLcontext* ctx, GLubyte r, GLubyte g, GLubyte b, GLubyte a ) \
-{                                                                                           \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                             \
-                                                                                            \
-    sw_ctx->u##__bpp.CurrentColor = PACK_COLOR_##__bpp(r, g, b);                            \
-}
-SET_COLOR(8)
-SET_COLOR(16)
-SET_COLOR(24)
-SET_COLOR(32)
-#undef SET_COLOR
-
-/*
- * Selects either the front or back color buffer for reading and writing.
- * mode is either GL_FRONT or GL_BACK.
- */
-static GLboolean set_buffer( GLcontext* ctx, GLenum mode )
-{
-    struct sw_context* sw_ctx = ctx->DriverCtx;
-    struct sw_framebuffer* fb = sw_ctx->fb;
-
-    if (!fb->gl_visual->DBflag)
-        return GL_FALSE;
-
-    if ((mode != GL_FRONT) && (mode != GL_BACK))
-        return GL_FALSE;
-
-    sw_ctx->Mode = mode;
-    return GL_TRUE;
-}
-
-/* Return characteristics of the output buffer. */
-static void buffer_size(GLcontext* ctx, GLuint *width, GLuint *height)
-{
-    struct sw_context* sw_ctx = ctx->DriverCtx;
-    struct sw_framebuffer* fb = sw_ctx->fb;
-    HWND Window = WindowFromDC(fb->Hdc);
-
-    if (Window)
-    {
-        RECT client_rect;
-        GetClientRect(Window, &client_rect);
-        *width = client_rect.right - client_rect.left;
-        *height = client_rect.bottom - client_rect.top;
-    }
-    else
-    {
-        /* We are drawing to a bitmap */
-        BITMAP bm;
-        HBITMAP Hbm;
-
-        Hbm = GetCurrentObject(fb->Hdc, OBJ_BITMAP);
-
-        if (!GetObjectW(Hbm, sizeof(bm), &bm))
-            return;
-
-        TRACE("Framebuffer size : %i, %i\n", bm.bmWidth, bm.bmHeight);
-
-        *width = bm.bmWidth;
-        *height = bm.bmHeight;
-    }
-
-    if ((*width != fb->width) || (*height != fb->height))
-    {
-        const struct pixel_format* pixel_format = fb->pixel_format;
-
-        if (pixel_format->dwFlags & PFD_DOUBLEBUFFER)
-        {
-            /* Allocate a new backbuffer */
-            size_t BufferSize = *height * WIDTH_BYTES_ALIGN32(*width, pixel_format->cColorBits);
-            if (!fb->BackBuffer)
-            {
-                fb->BackBuffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
-            }
-            else
-            {
-                fb->BackBuffer = HeapReAlloc(GetProcessHeap(), 0, fb->BackBuffer, BufferSize);
-            }
-            if (!fb->BackBuffer)
-            {
-                ERR("Failed allocating back buffer !.\n");
-                return;
-            }
-        }
-
-        fb->width = *width;
-        fb->height = *height;
-    }
-}
-
-/* Write a horizontal span of color pixels with a boolean mask. */
-#define WRITE_COLOR_SPAN_FRONTBUFFER(__bpp)                                     \
-static void write_color_span_frontbuffer_##__bpp(struct sw_framebuffer* fb,     \
-        GLuint n, GLint x, GLint y,                                             \
-        const GLubyte red[], const GLubyte green[],                             \
-        const GLubyte blue[], const GLubyte mask[] )                            \
-{                                                                               \
-    TRACE("Writing color span at %u, %u (%u)\n", x, y, n);                      \
-                                                                                \
-    if (mask)                                                                   \
-    {                                                                           \
-        while (n--)                                                             \
-        {                                                                       \
-            if (mask[n])                                                        \
-            {                                                                   \
-                SetPixel(fb->Hdc, x + n, fb->height - y,                        \
-                        PACK_COLORREF_##__bpp(red[n], green[n], blue[n]));      \
-            }                                                                   \
-        }                                                                       \
-    }                                                                           \
-    else                                                                        \
-    {                                                                           \
-        while (n--)                                                             \
-        {                                                                       \
-            SetPixel(fb->Hdc, x + n, fb->height - y,                            \
-                    PACK_COLORREF_##__bpp(red[n], green[n], blue[n]));          \
-        }                                                                       \
-    }                                                                           \
-}
-WRITE_COLOR_SPAN_FRONTBUFFER(8)
-WRITE_COLOR_SPAN_FRONTBUFFER(16)
-WRITE_COLOR_SPAN_FRONTBUFFER(24)
-WRITE_COLOR_SPAN_FRONTBUFFER(32)
-#undef WRITE_COLOR_SPAN_FRONTBUFFER
-
-#define WRITE_COLOR_SPAN(__bpp, __type, __pixel_size)                               \
-static void write_color_span_##__bpp(GLcontext* ctx,                                \
-                                     GLuint n, GLint x, GLint y,                    \
-                                     const GLubyte red[], const GLubyte green[],    \
-                                     const GLubyte blue[], const GLubyte alpha[],   \
-                                     const GLubyte mask[] )                         \
-{                                                                                   \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                     \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                         \
-    BYTE* Buffer;                                                                   \
-                                                                                    \
-    if (sw_ctx->Mode == GL_FRONT)                                                   \
-    {                                                                               \
-        write_color_span_frontbuffer_##__bpp(fb, n, x, y, red, green, blue, mask);  \
-        return;                                                                     \
-    }                                                                               \
-                                                                                    \
-    Buffer = fb->BackBuffer + y * WIDTH_BYTES_ALIGN32(fb->width, __bpp)             \
-            + (x + n) * __pixel_size;                                               \
-    if (mask)                                                                       \
-    {                                                                               \
-        while (n--)                                                                 \
-        {                                                                           \
-            Buffer -= __pixel_size;                                                 \
-            if (mask[n])                                                            \
-            {                                                                       \
-                PUT_PIXEL_##__bpp((__type*)Buffer,                                  \
-                        PACK_COLOR_##__bpp(red[n], green[n], blue[n]));             \
-            }                                                                       \
-        }                                                                           \
-    }                                                                               \
-    else                                                                            \
-    {                                                                               \
-        while (n--)                                                                 \
-        {                                                                           \
-            Buffer -= __pixel_size;                                                 \
-            PUT_PIXEL_##__bpp((__type*)Buffer,                                      \
-                    PACK_COLOR_##__bpp(red[n], green[n], blue[n]));                 \
-        }                                                                           \
-    }                                                                               \
-}
-WRITE_COLOR_SPAN(8, BYTE, 1)
-WRITE_COLOR_SPAN(16, USHORT, 2)
-WRITE_COLOR_SPAN(24, ULONG, 3)
-WRITE_COLOR_SPAN(32, ULONG, 4)
-#undef WRITE_COLOR_SPAN
-
-static void write_monocolor_span_frontbuffer(struct sw_framebuffer* fb, GLuint n, GLint x, GLint y,
-        const GLubyte mask[], COLORREF Color)
-{
-    TRACE("Writing monocolor span at %u %u (%u), Color 0x%08x\n", x, y, n, Color);
-
-    if (mask)
-    {
-        while (n--)
-        {
-            if (mask[n])
-                SetPixel(fb->Hdc, x + n, y, Color);
-        }
-    }
-    else
-    {
-        HBRUSH Brush = CreateSolidBrush(Color);
-        Brush = SelectObject(fb->Hdc, Brush);
-
-        PatBlt(fb->Hdc, x, fb->height - y, n, 1, PATCOPY);
-
-        Brush = SelectObject(fb->Hdc, Brush);
-        DeleteObject(Brush);
-    }
-}
-
-#define WRITE_MONOCOLOR_SPAN(__bpp, __type, __pixel_size)                                           \
-static void write_monocolor_span_##__bpp(GLcontext* ctx,                                            \
-                                 GLuint n, GLint x, GLint y,                                        \
-                                 const GLubyte mask[])                                              \
-{                                                                                                   \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                                     \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                                         \
-    BYTE* Buffer;                                                                                   \
-                                                                                                    \
-    if (sw_ctx->Mode == GL_FRONT)                                                                   \
-    {                                                                                               \
-        write_monocolor_span_frontbuffer(fb, n, x, y, mask,                                         \
-                MAKE_COLORREF_##__bpp(fb->pixel_format, sw_ctx->u##__bpp.CurrentColor));            \
-        return;                                                                                     \
-    }                                                                                               \
-                                                                                                    \
-    Buffer = fb->BackBuffer + y * WIDTH_BYTES_ALIGN32(fb->width, __bpp) + (x + n) * __pixel_size;   \
-    if (mask)                                                                                       \
-    {                                                                                               \
-        while (n--)                                                                                 \
-        {                                                                                           \
-            Buffer -= __pixel_size;                                                                 \
-            if (mask[n])                                                                            \
-                PUT_PIXEL_##__bpp((__type*)Buffer, sw_ctx->u##__bpp.CurrentColor);                  \
-        }                                                                                           \
-    }                                                                                               \
-    else                                                                                            \
-    {                                                                                               \
-        while(n--)                                                                                  \
-        {                                                                                           \
-            Buffer -= __pixel_size;                                                                 \
-            PUT_PIXEL_##__bpp((__type*)Buffer, sw_ctx->u##__bpp.CurrentColor);                      \
-        }                                                                                           \
-    }                                                                                               \
-}
-WRITE_MONOCOLOR_SPAN(8, BYTE, 1)
-WRITE_MONOCOLOR_SPAN(16, USHORT, 2)
-WRITE_MONOCOLOR_SPAN(24, ULONG, 3)
-WRITE_MONOCOLOR_SPAN(32, ULONG, 4)
-#undef WRITE_MONOCOLOR_SPAN
-
-/* Write an array of pixels with a boolean mask. */
-#define WRITE_COLOR_PIXELS(__bpp, __type, __pixel_size)                                             \
-static void write_color_pixels_##__bpp(GLcontext* ctx,                                              \
-                               GLuint n, const GLint x[], const GLint y[],                          \
-                               const GLubyte r[], const GLubyte g[],                                \
-                               const GLubyte b[], const GLubyte a[],                                \
-                               const GLubyte mask[])                                                \
-{                                                                                                   \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                                     \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                                         \
-                                                                                                    \
-    TRACE("Writing color pixels\n");                                                                \
-                                                                                                    \
-    if (sw_ctx->Mode == GL_FRONT)                                                                   \
-    {                                                                                               \
-        while (n--)                                                                                 \
-        {                                                                                           \
-            if (mask[n])                                                                            \
-            {                                                                                       \
-                TRACE("Setting pixel %u, %u to 0x%08x.\n", x[n], fb->height - y[n],                 \
-                        PACK_COLORREF_##__bpp(r[n], g[n], b[n]));                                   \
-                SetPixel(fb->Hdc, x[n], fb->height - y[n],                                          \
-                        PACK_COLORREF_##__bpp(r[n], g[n], b[n]));                                   \
-            }                                                                                       \
-        }                                                                                           \
-                                                                                                    \
-        return;                                                                                     \
-    }                                                                                               \
-                                                                                                    \
-    while (n--)                                                                                     \
-    {                                                                                               \
-        if (mask[n])                                                                                \
-        {                                                                                           \
-            BYTE* Buffer = fb->BackBuffer + y[n] * WIDTH_BYTES_ALIGN32(fb->width, __bpp)            \
-                            + x[n] * __pixel_size;                                                  \
-            PUT_PIXEL_##__bpp((__type*)Buffer, PACK_COLOR_##__bpp(r[n], g[n], b[n]));               \
-        }                                                                                           \
-    }                                                                                               \
-}
-WRITE_COLOR_PIXELS(8, BYTE, 1)
-WRITE_COLOR_PIXELS(16, USHORT, 2)
-WRITE_COLOR_PIXELS(24, ULONG, 3)
-WRITE_COLOR_PIXELS(32, ULONG, 4)
-#undef WRITE_COLOR_PIXELS
-
-static void write_monocolor_pixels_frontbuffer(
-        struct sw_framebuffer* fb, GLuint n,
-        const GLint x[], const GLint y[],
-        const GLubyte mask[], COLORREF Color)
-{
-    TRACE("Writing monocolor pixels to front buffer.\n");
-
-    while (n--)
-    {
-        if (mask[n])
-        {
-            SetPixel(fb->Hdc, x[n], fb->height - y[n], Color);
-        }
-    }
-}
-
-/*
-* Write an array of pixels with a boolean mask.  The current color
-* is used for all pixels.
-*/
-#define WRITE_MONOCOLOR_PIXELS(__bpp, __type, __pixel_size)                                 \
-static void write_monocolor_pixels_##__bpp(GLcontext* ctx, GLuint n,                        \
-                                   const GLint x[], const GLint y[],                        \
-                                   const GLubyte mask[] )                                   \
-{                                                                                           \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                             \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                                 \
-                                                                                            \
-    if (sw_ctx->Mode == GL_FRONT)                                                           \
-    {                                                                                       \
-        write_monocolor_pixels_frontbuffer(fb, n, x, y, mask,                               \
-                MAKE_COLORREF_##__bpp(fb->pixel_format, sw_ctx->u##__bpp.CurrentColor));    \
-                                                                                            \
-        return;                                                                             \
-    }                                                                                       \
-                                                                                            \
-    while (n--)                                                                             \
-    {                                                                                       \
-        if (mask[n])                                                                        \
-        {                                                                                   \
-            BYTE* Buffer = fb->BackBuffer + y[n] * WIDTH_BYTES_ALIGN32(fb->width, 32)       \
-                    + x[n] * __pixel_size;                                                  \
-            PUT_PIXEL_##__bpp((__type*)Buffer, sw_ctx->u##__bpp.CurrentColor);              \
-        }                                                                                   \
-    }                                                                                       \
-}
-WRITE_MONOCOLOR_PIXELS(8, BYTE, 1)
-WRITE_MONOCOLOR_PIXELS(16, USHORT, 2)
-WRITE_MONOCOLOR_PIXELS(24, ULONG, 3)
-WRITE_MONOCOLOR_PIXELS(32, ULONG, 4)
-#undef WRITE_MONOCOLOR_PIXELS
-
-/* Write a horizontal span of color pixels with a boolean mask. */
-static void write_index_span( GLcontext* ctx,
-                             GLuint n, GLint x, GLint y,
-                             const GLuint index[],
-                             const GLubyte mask[] )
-{
-    ERR("Not implemented yet !\n");
-}
-
-/* Write an array of pixels with a boolean mask. */
-static void write_index_pixels( GLcontext* ctx,
-                               GLuint n, const GLint x[], const GLint y[],
-                               const GLuint index[], const GLubyte mask[] )
-{
-    ERR("Not implemented yet !\n");
-}
-
-/* Read a horizontal span of color-index pixels. */
-static void read_index_span( GLcontext* ctx, GLuint n, GLint x, GLint y, GLuint index[])
-{
-    ERR("Not implemented yet !\n");
-}
-
-/* Read a horizontal span of color pixels. */
-#define READ_COLOR_SPAN(__bpp, __type, __pixel_size)                            \
-static void read_color_span_##__bpp(GLcontext* ctx,                             \
-                            GLuint n, GLint x, GLint y,                         \
-                            GLubyte red[], GLubyte green[],                     \
-                            GLubyte blue[], GLubyte alpha[] )                   \
-{                                                                               \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                 \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                     \
-    BYTE* Buffer;                                                               \
-                                                                                \
-    if (sw_ctx->Mode == GL_FRONT)                                               \
-    {                                                                           \
-        COLORREF Color;                                                         \
-        while (n--)                                                             \
-        {                                                                       \
-            Color = GetPixel(fb->Hdc, x + n, fb->height - y);                   \
-            UNPACK_COLORREF_##__bpp(Color, &red[n], &green[n], &blue[n]);       \
-            alpha[n] = 0;                                                       \
-        }                                                                       \
-                                                                                \
-        return;                                                                 \
-    }                                                                           \
-                                                                                \
-    Buffer = fb->BackBuffer + y * WIDTH_BYTES_ALIGN32(fb->width, __bpp)         \
-            + (x + n) * __pixel_size;                                           \
-    while (n--)                                                                 \
-    {                                                                           \
-        Buffer -= __pixel_size;                                                 \
-        UNPACK_COLOR_##__bpp(GET_PIXEL_##__bpp((__type*)Buffer),                \
-                &red[n], &green[n], &blue[n]);                                  \
-        alpha[n] = 0;                                                           \
-    }                                                                           \
-}
-READ_COLOR_SPAN(8, BYTE, 1)
-READ_COLOR_SPAN(16, USHORT, 2)
-READ_COLOR_SPAN(24, ULONG, 3)
-READ_COLOR_SPAN(32, ULONG, 4)
-#undef READ_COLOR_SPAN
-
-/* Read an array of color index pixels. */
-static void read_index_pixels(GLcontext* ctx,
-                              GLuint n, const GLint x[], const GLint y[],
-                              GLuint index[], const GLubyte mask[])
-{
-
-    ERR("Not implemented yet !\n");
-}
-
-/* Read an array of color pixels. */
-#define READ_COLOR_PIXELS(__bpp, __type, __pixel_size)                                      \
-static void read_color_pixels_##__bpp(GLcontext* ctx,                                       \
-                              GLuint n, const GLint x[], const GLint y[],                   \
-                              GLubyte red[], GLubyte green[],                               \
-                              GLubyte blue[], GLubyte alpha[],                              \
-                              const GLubyte mask[] )                                        \
-{                                                                                           \
-    struct sw_context* sw_ctx = ctx->DriverCtx;                                             \
-    struct sw_framebuffer* fb = sw_ctx->fb;                                                 \
-                                                                                            \
-    if (sw_ctx->Mode == GL_FRONT)                                                           \
-    {                                                                                       \
-        COLORREF Color;                                                                     \
-        while (n--)                                                                         \
-        {                                                                                   \
-            if (mask[n])                                                                    \
-            {                                                                               \
-                Color = GetPixel(fb->Hdc, x[n], fb->height - y[n]);                         \
-                UNPACK_COLORREF_##__bpp(Color, &red[n], &green[n], &blue[n]);               \
-                alpha[n] = 0;                                                               \
-            }                                                                               \
-        }                                                                                   \
-                                                                                            \
-        return;                                                                             \
-    }                                                                                       \
-                                                                                            \
-    while (n--)                                                                             \
-    {                                                                                       \
-        if (mask[n])                                                                        \
-        {                                                                                   \
-            BYTE *Buffer = fb->BackBuffer + y[n] * WIDTH_BYTES_ALIGN32(fb->width, __bpp)    \
-                    + x[n] * __pixel_size;                                                  \
-            UNPACK_COLOR_##__bpp(GET_PIXEL_##__bpp((__type*)Buffer),                        \
-                    &red[n], &green[n], &blue[n]);                                          \
-            alpha[n] = 0;                                                                   \
-        }                                                                                   \
-    }                                                                                       \
-}
-READ_COLOR_PIXELS(8, BYTE, 1)
-READ_COLOR_PIXELS(16, USHORT, 2)
-READ_COLOR_PIXELS(24, ULONG, 3)
-READ_COLOR_PIXELS(32, ULONG, 4)
-#undef READ_COLOR_PIXELS
-
-static void setup_DD_pointers( GLcontext* ctx )
-{
-    struct sw_context* sw_ctx = ctx->DriverCtx;
-
-    ctx->Driver.RendererString = renderer_string;
-    ctx->Driver.UpdateState = setup_DD_pointers;
-
-    switch (sw_ctx->fb->pixel_format->cColorBits)
-    {
-#define HANDLE_BPP(__bpp)                                                   \
-    case __bpp:                                                             \
-        ctx->Driver.ClearIndex = clear_index_##__bpp;                       \
-        ctx->Driver.ClearColor = clear_color_##__bpp;                       \
-        ctx->Driver.Clear = clear_##__bpp;                                  \
-        ctx->Driver.Index = set_index_##__bpp;                              \
-        ctx->Driver.Color = set_color_##__bpp;                              \
-        ctx->Driver.WriteColorSpan       = write_color_span_##__bpp;        \
-        ctx->Driver.WriteMonocolorSpan   = write_monocolor_span_##__bpp;    \
-        ctx->Driver.WriteMonoindexSpan   = write_monocolor_span_##__bpp;    \
-        ctx->Driver.WriteColorPixels     = write_color_pixels_##__bpp;      \
-        ctx->Driver.WriteMonocolorPixels = write_monocolor_pixels_##__bpp;  \
-        ctx->Driver.WriteMonoindexPixels = write_monocolor_pixels_##__bpp;  \
-        ctx->Driver.ReadColorSpan = read_color_span_##__bpp;                \
-        ctx->Driver.ReadColorPixels = read_color_pixels_##__bpp;            \
-        break
-HANDLE_BPP(8);
-HANDLE_BPP(16);
-HANDLE_BPP(24);
-HANDLE_BPP(32);
-#undef HANDLE_BPP
-    default:
-        ERR("Unhandled bit depth %u, defaulting to 32bpp.\n", sw_ctx->fb->pixel_format->cColorBits);
-        ctx->Driver.ClearIndex = clear_index_32;
-        ctx->Driver.ClearColor = clear_color_32;
-        ctx->Driver.Clear = clear_32;
-        ctx->Driver.Index = set_index_32;
-        ctx->Driver.Color = set_color_32;
-        ctx->Driver.WriteColorSpan       = write_color_span_32;
-        ctx->Driver.WriteMonocolorSpan   = write_monocolor_span_32;
-        ctx->Driver.WriteMonoindexSpan   = write_monocolor_span_32;
-        ctx->Driver.WriteColorPixels     = write_color_pixels_32;
-        ctx->Driver.WriteMonocolorPixels = write_monocolor_pixels_32;
-        ctx->Driver.WriteMonoindexPixels = write_monocolor_pixels_32;
-        ctx->Driver.ReadColorSpan = read_color_span_32;
-        ctx->Driver.ReadColorPixels = read_color_pixels_32;
-        break;
-    }
-
-    ctx->Driver.SetBuffer = set_buffer;
-    ctx->Driver.GetBufferSize = buffer_size;
-
-    /* Pixel/span writing functions: */
-    ctx->Driver.WriteIndexSpan       = write_index_span;
-    ctx->Driver.WriteIndexPixels     = write_index_pixels;
-
-    /* Pixel/span reading functions: */
-    ctx->Driver.ReadIndexSpan = read_index_span;
-    ctx->Driver.ReadIndexPixels = read_index_pixels;
-}
-
-/* Declare API table */
-#define USE_GL_FUNC(name, proto_args, call_args, offset, stack) extern void WINAPI _mesa_##name proto_args ;
-#define USE_GL_FUNC_RET(name, ret_type, proto_args, call_args, offset, stack) extern ret_type WINAPI _mesa_##name proto_args ;
-#include "glfuncs.h"
-
-static GLCLTPROCTABLE sw_api_table =
-{
-    OPENGL_VERSION_110_ENTRIES,
-    {
-#define USE_GL_FUNC(name, proto_args, call_args, offset, stack) _mesa_##name,
-#include "glfuncs.h"
-    }
-};
-
-/* Glue code */
-GLcontext* gl_get_thread_context(void)
-{
-    struct sw_context* sw_ctx = (struct sw_context*)IntGetCurrentDHGLRC();
-    return sw_ctx->gl_ctx;
-}
-
-
 BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
 {
     struct sw_context* sw_ctx = (struct sw_context*)dhglrc;
     struct sw_framebuffer* fb = dc_data->sw_data;
     UINT width, height;
-
+    
+    /* Update state */
+    sw_update_state(&sw_ctx->mesa, 0);
+    
     /* Get framebuffer size */
     if(dc_data->flags & WGL_DC_OBJ_DC)
     {
@@ -1408,13 +712,11 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
             ERR("GetClientRect failed!\n");
             return FALSE;
         }
-
         /* This is a physical DC. Setup the hook */
         sw_ctx->hook = SetWindowsHookEx(WH_CALLWNDPROC,
                             sw_call_window_proc,
                             NULL,
                             GetCurrentThreadId());
-
         /* Calculate width & height */
         width  = client_rect.right  - client_rect.left;
         height = client_rect.bottom - client_rect.top;
@@ -1424,8 +726,8 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
         BITMAP bm;
         HBITMAP hbmp;
         HDC hdc = dc_data->owner.hdc;
-
-        if(fb->gl_visual->DBflag)
+        
+        if(fb->flags & SW_FB_DOUBLEBUFFERED)
         {
             ERR("Memory DC called with a double buffered format.\n");
             return FALSE;
@@ -1448,28 +750,29 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
 
     if(!width) width = 1;
     if(!height) height = 1;
-
+    
+    fb->bmi.bmiHeader.biWidth = width;
+    fb->bmi.bmiHeader.biHeight = height;
+    
     /* Also make the mesa context current to mesa */
-    gl_make_current(sw_ctx->gl_ctx, fb->gl_buffer);
-
-    /* Setup our functions */
-    setup_DD_pointers(sw_ctx->gl_ctx);
-
-    /* Set the viewport if this is the first time we initialize this context */
-    if(sw_ctx->gl_ctx->Viewport.X == 0 &&
-       sw_ctx->gl_ctx->Viewport.Y == 0 &&
-       sw_ctx->gl_ctx->Viewport.Width == 0 &&
-       sw_ctx->gl_ctx->Viewport.Height == 0)
+    if(!_mesa_make_current(&sw_ctx->mesa, fb->gl_buffer, fb->gl_buffer))
     {
-        gl_Viewport(sw_ctx->gl_ctx, 0, 0, width, height);
+        ERR("_mesa_make_current filaed!\n");
+        return FALSE;
+    }
+    
+    /* Set the viewport if this is the first time we initialize this context */
+    if(sw_ctx->mesa.Viewport.X == 0 && 
+       sw_ctx->mesa.Viewport.Y == 0 &&
+       sw_ctx->mesa.Viewport.Width == 0 &&
+       sw_ctx->mesa.Viewport.Height == 0)
+    {
+        _mesa_set_viewport(&sw_ctx->mesa, 0, 0, width, height);
     }
 
     /* update the framebuffer size */
-    gl_ResizeBuffersMESA(sw_ctx->gl_ctx);
-
-    /* Use our API table */
-    IntSetCurrentDispatchTable(&sw_api_table.glDispatchTable);
-
+    _mesa_resize_framebuffer(&sw_ctx->mesa, fb->gl_buffer, width, height);
+   
    /* We're good */
    return TRUE;
 }
@@ -1479,8 +782,8 @@ void sw_ReleaseContext(DHGLRC dhglrc)
     struct sw_context* sw_ctx = (struct sw_context*)dhglrc;
 
     /* Forward to mesa */
-    gl_make_current(NULL, NULL);
-
+    _mesa_make_current(NULL, NULL, NULL);
+    
     /* Unhook */
     if(sw_ctx->hook)
     {
@@ -1492,36 +795,26 @@ void sw_ReleaseContext(DHGLRC dhglrc)
 BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
 {
     struct sw_framebuffer* fb = dc_data->sw_data;
-    char Buffer[sizeof(BITMAPINFOHEADER) + 3 * sizeof(DWORD)];
-    BITMAPINFO *bmi = (BITMAPINFO*)Buffer;
-    BYTE Bpp = fb->pixel_format->cColorBits;
-
-    if (!fb->gl_visual->DBflag)
+    struct sw_context* sw_ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    
+    /* Notify mesa */
+    if(sw_ctx)
+        _mesa_notifySwapBuffers(&sw_ctx->mesa);
+    
+    if(!(fb->flags & SW_FB_DOUBLEBUFFERED))
         return TRUE;
 
-    if (!fb->BackBuffer)
-        return FALSE;
-
-    bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-    bmi->bmiHeader.biBitCount = Bpp;
-    bmi->bmiHeader.biClrImportant = 0;
-    bmi->bmiHeader.biClrUsed = 0;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biSizeImage = WIDTH_BYTES_ALIGN32(fb->width, Bpp) * fb->height;
-    bmi->bmiHeader.biXPelsPerMeter = 0;
-    bmi->bmiHeader.biYPelsPerMeter = 0;
-    bmi->bmiHeader.biHeight = fb->height;
-    bmi->bmiHeader.biWidth = fb->width;
-    bmi->bmiHeader.biCompression = Bpp == 16 ? BI_BITFIELDS : BI_RGB;
-
-    if (Bpp == 16)
-    {
-        DWORD* BitMasks = (DWORD*)(&bmi->bmiColors[0]);
-        BitMasks[0] = 0x0000F800;
-        BitMasks[1] = 0x000007E0;
-        BitMasks[2] = 0x0000001F;
-    }
-
-    return SetDIBitsToDevice(fb->Hdc, 0, 0, fb->width, fb->height, 0, 0, 0, fb->height, fb->BackBuffer, bmi,
-            fb->pixel_format->iPixelType == PFD_TYPE_COLORINDEX ? DIB_PAL_COLORS : DIB_RGB_COLORS) != 0;
+    /* Upload to the display */
+    return (SetDIBitsToDevice(hdc,
+        0,
+        0,
+        fb->bmi.bmiHeader.biWidth,
+        fb->bmi.bmiHeader.biHeight,
+        0,
+        0,
+        0,
+        fb->bmi.bmiHeader.biHeight,
+        fb->backbuffer.Buffer,
+        &fb->bmi,
+        DIB_RGB_COLORS) != 0);
 }
