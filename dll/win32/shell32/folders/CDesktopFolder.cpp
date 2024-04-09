@@ -144,7 +144,7 @@ CFileUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNam
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, &attrs);
+    return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, pdwAttributes);
 }
 
 STDMETHODIMP
