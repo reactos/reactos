@@ -257,6 +257,21 @@ HRESULT CCopyMoveToMenu::DoAction(LPCMINVOKECOMMANDINFO lpici)
     return hr;
 }
 
+static BOOL
+GetPreviousMenuItemInfo(HMENU hMenu, UINT iItem, LPMENUITEMINFOW lpmii)
+{
+    BOOL bSuccess = FALSE;
+
+    while (iItem > 0)
+    {
+        bSuccess = GetMenuItemInfoW(hMenu, --iItem, TRUE, lpmii);
+        if (bSuccess || (!bSuccess && GetLastError() != ERROR_MENU_ITEM_NOT_FOUND))
+            break;
+    }
+
+    return bSuccess;
+}
+
 STDMETHODIMP
 CCopyToMenu::QueryContextMenu(HMENU hMenu,
                               UINT indexMenu,
@@ -279,7 +294,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE;
-    if (GetMenuItemInfoW(hMenu, indexMenu - 1, TRUE, &mii) &&
+    if (GetPreviousMenuItemInfo(hMenu, indexMenu, &mii) &&
         mii.fType != MFT_SEPARATOR)
     {
         ZeroMemory(&mii, sizeof(mii));
@@ -338,7 +353,7 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
     mii.fMask = MIIM_TYPE;
     mii.dwTypeData = szBuff;
     mii.cch = _countof(szBuff);
-    if (GetMenuItemInfoW(hMenu, indexMenu - 1, TRUE, &mii) &&
+    if (GetPreviousMenuItemInfo(hMenu, indexMenu, &mii) &&
         mii.fType != MFT_SEPARATOR &&
         !(mii.fType == MFT_STRING && CStringW(szBuff) == strCopyTo))
     {
