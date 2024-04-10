@@ -24,6 +24,223 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+STDMETHODIMP
+CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
+                                PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+{
+    LPWSTR pch;
+    INT cch, csidl;
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
+
+    ::ParseURLW(lpszDisplayName, &ParsedURL);
+
+    DWORD attrs = (pdwAttributes ? *pdwAttributes : 0) | SFGAO_STREAM;
+    if (ParsedURL.pszSuffix[0] == L':' && ParsedURL.pszSuffix[1] == L':')
+    {
+        CComPtr<IShellFolder> psfDesktop;
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (SUCCEEDED(hr))
+        {
+            CComPtr<IBindCtx> pBindCtx;
+            hr = ::CreateBindCtx(0, &pBindCtx);
+            if (SUCCEEDED(hr))
+            {
+                BIND_OPTS BindOps = { sizeof(BindOps) };
+                BindOps.grfMode = STGM_CREATE;
+                pBindCtx->SetBindOptions(&BindOps);
+                hr = psfDesktop->ParseDisplayName(hwndOwner, pBindCtx,
+                                                  (LPWSTR)ParsedURL.pszSuffix,
+                                                  pchEaten, ppidl, &attrs);
+            }
+        }
+    }
+    else
+    {
+        csidl = Shell_ParseSpecialFolder(ParsedURL.pszSuffix, &pch, &cch);
+        if (csidl == -1)
+        {
+            ERR("\n");
+            return hr;
+        }
+
+        CComHeapPtr<ITEMIDLIST> pidlLocation;
+        hr = SHGetFolderLocation(hwndOwner, (csidl | CSIDL_FLAG_CREATE), NULL, 0, &pidlLocation);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (pch && *pch)
+        {
+            CComPtr<IShellFolder> psfFolder;
+            hr = SHBindToObject(NULL, pidlLocation, IID_PPV_ARG(IShellFolder, &psfFolder));
+            if (SUCCEEDED(hr))
+            {
+                CComHeapPtr<ITEMIDLIST> pidlNew;
+                hr = psfFolder->ParseDisplayName(hwndOwner, pbc, pch, pchEaten, &pidlNew, &attrs);
+                if (SUCCEEDED(hr))
+                {
+                    hr = SHILCombine(pidlLocation, pidlNew, ppidl);
+                    if (pchEaten)
+                        *pchEaten += cch;
+                }
+            }
+        }
+        else
+        {
+            if (attrs)
+                hr = SHGetNameAndFlagsW(pidlLocation, 0, NULL, 0, &attrs);
+
+            if (SUCCEEDED(hr))
+            {
+                if (pchEaten)
+                    *pchEaten = cch;
+                *ppidl = pidlLocation.Detach();
+            }
+        }
+    }
+
+    // FIXME: SHWindowsPolicy
+    if (SUCCEEDED(hr) && (attrs & SFGAO_STREAM) &&
+        !BindCtx_ContainsObject(pbc, STR_PARSE_SHELL_PROTOCOL_TO_FILE_OBJECTS))
+    {
+        ILFree(*ppidl);
+        *ppidl = NULL;
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (pdwAttributes)
+        *pdwAttributes = attrs;
+
+    // FIXME: SHWindowsPolicy
+    if (FAILED(hr) && !Shell_FailForceReturn(hr))
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    return hr;
+}
+
+STDMETHODIMP
+CFileUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
+                               PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+{
+    WCHAR szPath[MAX_PATH];
+    DWORD cchPath = _countof(szPath);
+    HRESULT hr = PathCreateFromUrlW(lpszDisplayName, szPath, &cchPath, 0);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellFolder> psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, pdwAttributes);
+}
+
+STDMETHODIMP
+CIDListUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
+                                 PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+{
+    return E_NOTIMPL; // FIXME
+}
+
+STDMETHODIMP
+CHttpUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
+                               PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+{
+    return E_NOTIMPL; // FIXME
+}
+
+BOOL CDesktopFolder::_TryUrlJunctions(
+    LPCWSTR pcszURL,
+    IBindCtx *pBindCtx,
+    IShellFolder **ppShellFolder,
+    LPITEMIDLIST *ppidl)
+{
+    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
+    ::ParseURLW(pcszURL, &ParsedURL);
+
+    *ppShellFolder = NULL;
+    switch (ParsedURL.nScheme)
+    {
+        case URL_SCHEME_FILE:
+            *ppShellFolder = &m_FileUrlStub;
+            break;
+
+        case URL_SCHEME_HTTP:
+        case URL_SCHEME_HTTPS:
+            if (!BindCtx_ContainsObject(pBindCtx, STR_PARSE_PREFER_FOLDER_BROWSING))
+                break;
+            *ppShellFolder = &m_HttpUrlStub;
+            break;
+
+        case URL_SCHEME_SHELL:
+            *ppShellFolder = &m_ShellUrlStub;
+            break;
+
+        case URL_SCHEME_MSSHELLROOTED:
+            *ppShellFolder = NULL; // FIXME
+            break;
+
+        case URL_SCHEME_MSSHELLIDLIST:
+            *ppShellFolder = &m_IDListUrlStub;
+            break;
+
+        default:
+            break;
+    }
+
+    return !!*ppShellFolder;
+}
+
+BOOL CDesktopFolder::_GetParentForParsing(
+    LPCWSTR pszPath,
+    IBindCtx *pbc,
+    IShellFolder **ppParentFolder,
+    LPITEMIDLIST *ppidlParent)
+{
+    WCHAR wch = *pszPath;
+    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) && (pszPath[1] == ':'))
+        *ppidlParent = _ILCreateMyComputer();
+    else if (PathIsUNCW(pszPath))
+        *ppidlParent = _ILCreateNetwork();
+    else if (UrlIsW(pszPath, URLIS_URL) && !SHSkipJunctionBinding(pbc, NULL))
+        _TryUrlJunctions(pszPath, pbc, ppParentFolder, ppidlParent);
+
+    if (!*ppParentFolder && *ppidlParent)
+        SHBindToObject(NULL, *ppidlParent, IID_PPV_ARG(IShellFolder, ppParentFolder));
+
+    return *ppParentFolder != NULL;
+}
+
+HRESULT CDesktopFolder::_ChildParseDisplayName(
+    IShellFolder *pParentFolder,
+    LPCITEMIDLIST pidlParent,
+    HWND hwndOwner,
+    IBindCtx *pBindCtx,
+    LPWSTR lpszDisplayName,
+    DWORD *pchEaten,
+    LPITEMIDLIST *ppidl,
+    DWORD *pdwAttributes)
+{
+    LPITEMIDLIST pidlChild;
+    HRESULT hr = pParentFolder->ParseDisplayName(hwndOwner, pBindCtx, lpszDisplayName,
+                                                 pchEaten, &pidlChild, pdwAttributes);
+    if (FAILED(hr))
+        return hr;
+
+    if (pidlParent)
+    {
+        *ppidl = ILCombine(pidlParent, pidlChild);
+        ILFree(pidlChild);
+    }
+    else
+    {
+        *ppidl = pidlChild;
+    }
+
+    return (*ppidl ? S_OK : E_OUTOFMEMORY);
+}
+
 /*
 CDesktopFolder should create two file system folders internally, one representing the
 user's desktop folder, and the other representing the common desktop folder. It should
@@ -285,11 +502,6 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
-    LPCWSTR szNext = NULL;
-    LPITEMIDLIST pidlTemp = NULL;
-    PARSEDURLW urldata;
-    HRESULT hr = S_OK;
-
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
            this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
            pchEaten, ppidl, pdwAttributes);
@@ -302,78 +514,98 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     if (!lpszDisplayName)
         return E_INVALIDARG;
 
-    if (pchEaten)
-        *pchEaten = 0;        /* strange but like the original */
-
-    urldata.cbSize = sizeof(urldata);
+    if (!*lpszDisplayName)
+    {
+        *ppidl = _ILCreateMyComputer();
+        return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    }
 
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
-        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-    }
-    else if (PathGetDriveNumberW (lpszDisplayName) >= 0)
-    {
-        /* it's a filesystem path with a drive. Let MyComputer/UnixDosFolder parse it */
-        pidlTemp = _ILCreateMyComputer ();
-        szNext = lpszDisplayName;
-    }
-    else if (PathIsUNCW(lpszDisplayName))
-    {
-        pidlTemp = _ILCreateNetwork();
-        szNext = lpszDisplayName;
-    }
-    else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
-    {
-        *ppidl = pidlTemp;
-        return S_OK;
-    }
-    else if (SUCCEEDED(ParseURLW(lpszDisplayName, &urldata)))
-    {
-        if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
-        {
-            TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
-            pidlTemp = _ILCreateGuidFromStrW(urldata.pszSuffix + 2);
-        }
-        else
-            return IEParseDisplayNameWithBCW(CP_ACP, lpszDisplayName, pbc, ppidl);
-    }
-    else
-    {
-        if (*lpszDisplayName)
-        {
-            /* it's a filesystem path on the desktop. Let a FSFolder parse it */
-            hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-            if (SUCCEEDED(hr))
-                return hr;
-
-            return m_SharedDesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-        }
-        else
-            pidlTemp = _ILCreateMyComputer();
-
-        szNext = NULL;
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                             pdwAttributes);
     }
 
-    if (SUCCEEDED(hr) && pidlTemp)
+    HRESULT hr = E_INVALIDARG;
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    CComPtr<IShellFolder> pParentFolder;
+    if (_GetParentForParsing(lpszDisplayName, pbc, &pParentFolder, &pidlParent))
     {
-        if (szNext && *szNext)
+        if (pchEaten)
+            *pchEaten = 0;
+
+        hr = _ChildParseDisplayName(pParentFolder,
+                                    pidlParent,
+                                    hwndOwner,
+                                    pbc,
+                                    lpszDisplayName,
+                                    pchEaten,
+                                    ppidl,
+                                    pdwAttributes);
+        if (SUCCEEDED(hr))
         {
-            hr = SHELL32_ParseNextElement(this, hwndOwner, pbc,
-                                          &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
-        }
-        else
-        {
-            if (pdwAttributes && *pdwAttributes)
+            if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
             {
-                GetAttributesOf(1, &pidlTemp, pdwAttributes);
+                LPITEMIDLIST pidlAlias;
+                if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
+                {
+                    ILFree(*ppidl);
+                    *ppidl = pidlAlias;
+                }
             }
+            return hr;
         }
     }
 
-    if (SUCCEEDED(hr))
-        *ppidl = pidlTemp;
-    else
-        *ppidl = NULL;
+    if (Shell_FailForceReturn(hr))
+        return hr;
+
+    if (BindCtx_ContainsObject(pbc, STR_DONT_PARSE_RELATIVE))
+        return E_INVALIDARG;
+
+    if (SHIsFileSysBindCtx(pbc, NULL) == S_OK)
+        return hr;
+
+    BIND_OPTS BindOps = { sizeof(BindOps) };
+    BOOL bCreate = FALSE;
+    if (pbc && SUCCEEDED(pbc->GetBindOptions(&BindOps)) && (BindOps.grfMode & STGM_CREATE))
+    {
+        BindOps.grfMode &= ~STGM_CREATE;
+        bCreate = TRUE;
+        pbc->SetBindOptions(&BindOps);
+    }
+
+    if (m_DesktopFSFolder)
+    {
+        hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                 pbc,
+                                                 lpszDisplayName,
+                                                 pchEaten,
+                                                 ppidl,
+                                                 pdwAttributes);
+    }
+
+    if (FAILED(hr) && m_SharedDesktopFSFolder)
+    {
+        hr = m_SharedDesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                       pbc,
+                                                       lpszDisplayName,
+                                                       pchEaten,
+                                                       ppidl,
+                                                       pdwAttributes);
+    }
+
+    if (FAILED(hr) && bCreate && m_DesktopFSFolder)
+    {
+        BindOps.grfMode |= STGM_CREATE;
+        pbc->SetBindOptions(&BindOps);
+        hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                 pbc,
+                                                 lpszDisplayName,
+                                                 pchEaten,
+                                                 ppidl,
+                                                 pdwAttributes);
+    }
 
     TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
 

@@ -31,6 +31,316 @@ OpenEffectiveToken(
     return ret;
 }
 
+HRESULT
+Shell_TranslateIDListAlias(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ HANDLE hToken,
+    _Out_ LPITEMIDLIST *ppidlAlias,
+    _In_ DWORD dwFlags)
+{
+    return E_FAIL; //FIXME
+}
+
+BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
+{
+    CComPtr<IUnknown> punk;
+    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam(const_cast<LPWSTR>(pszName), &punk)))
+        return FALSE;
+    return TRUE;
+}
+
+BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid)
+{
+    if (!pbc)
+        return FALSE;
+
+    BIND_OPTS BindOps = { sizeof(BindOps) };
+    if (SUCCEEDED(pbc->GetBindOptions(&BindOps)) && BindOps.grfFlags == OLECONTF_LINKS)
+        return TRUE;
+
+    return pclsid && SHSkipJunction(pbc, pclsid);
+}
+
+HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW **ppFindData)
+{
+    CComPtr<IUnknown> punk;
+    CComPtr<IFileSystemBindData> pBindData;
+
+    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam((LPWSTR)STR_FILE_SYS_BIND_DATA, &punk)))
+        return S_FALSE;
+
+    if (FAILED(punk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pBindData))))
+        return S_FALSE;
+
+    HRESULT hr = S_OK;
+    if (ppFindData)
+    {
+        *ppFindData = (WIN32_FIND_DATAW*)LocalAlloc(LPTR, sizeof(WIN32_FIND_DATAW));
+        if (*ppFindData)
+            pBindData->GetFindData(*ppFindData);
+        else
+            hr = E_OUTOFMEMORY;
+    }
+
+    return hr;
+}
+
+BOOL Shell_FailForceReturn(_In_ HRESULT hr)
+{
+    DWORD code = HRESULT_CODE(hr);
+
+    switch (code)
+    {
+        case ERROR_BAD_NETPATH:
+        case ERROR_BAD_NET_NAME:
+        case ERROR_CANCELLED:
+            return TRUE;
+
+        default:
+            return (ERROR_FILE_NOT_FOUND <= code && code <= ERROR_PATH_NOT_FOUND);
+    }
+}
+
+HRESULT
+SHBindToObjectEx(
+    _In_opt_ IShellFolder *pShellFolder,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ IBindCtx *pBindCtx,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj)
+{
+    CComPtr<IShellFolder> psfDesktop;
+
+    *ppvObj = NULL;
+
+    if (!pShellFolder)
+    {
+        SHGetDesktopFolder(&psfDesktop);
+        if (!psfDesktop)
+            return E_FAIL;
+
+        pShellFolder = psfDesktop;
+    }
+
+    HRESULT hr;
+    if (_ILIsDesktop(pidl))
+        hr = pShellFolder->QueryInterface(riid, ppvObj);
+    else
+        hr = pShellFolder->BindToObject(pidl, pBindCtx, riid, ppvObj);
+
+    if (SUCCEEDED(hr) && !*ppvObj)
+        hr = E_FAIL;
+
+    return hr;
+}
+
+HRESULT SHBindToObject(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj)
+{
+    return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
+}
+
+HRESULT
+Shell_DisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszBuf,
+    _In_ UINT cchBuf)
+{
+    *pszBuf = UNICODE_NULL;
+    STRRET sr;
+    HRESULT hr = psf->GetDisplayNameOf(pidl, dwFlags, &sr);
+    if (FAILED(hr))
+        return hr;
+    return StrRetToBufW(&sr, pidl, pszBuf, cchBuf);
+}
+
+DWORD
+SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes)
+{
+    LPCITEMIDLIST pidlLast;
+
+    if (psf)
+    {
+        psf->AddRef();
+        pidlLast = pidl;
+    }
+    else
+    {
+        SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
+    }
+
+    if (!psf)
+        return 0;
+
+    DWORD oldAttrs = dwAttributes;
+    if (FAILED(psf->GetAttributesOf(1, &pidlLast, &dwAttributes)))
+        dwAttributes = 0;
+    else
+        dwAttributes &= oldAttrs;
+
+    if ((dwAttributes & SFGAO_FOLDER) &&
+        (dwAttributes & SFGAO_STREAM) &&
+        !(dwAttributes & SFGAO_STORAGEANCESTOR) &&
+        (oldAttrs & SFGAO_STORAGEANCESTOR) &&
+        (SHGetObjectCompatFlags(psf, NULL) & 0x200))
+    {
+        dwAttributes &= ~(SFGAO_STREAM | SFGAO_STORAGEANCESTOR);
+        dwAttributes |= SFGAO_STORAGEANCESTOR;
+    }
+
+    if (psf)
+        psf->Release();
+
+    return dwAttributes;
+}
+
+HRESULT SHCoInitializeAnyApartment(VOID)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (FAILED(hr))
+        hr = CoInitializeEx(NULL, COINIT_DISABLE_OLE1DDE);
+    return hr;
+}
+
+HRESULT
+SHGetNameAndFlagsW(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPWSTR pszText,
+    _In_ UINT cchBuf,
+    _Inout_opt_ DWORD *pdwAttributes)
+{
+    if (pszText)
+        *pszText = UNICODE_NULL;
+
+    HRESULT hrCoInit = SHCoInitializeAnyApartment();
+
+    CComPtr<IShellFolder> psfFolder;
+    LPCITEMIDLIST ppidlLast;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
+    if (SUCCEEDED(hr))
+    {
+        if (pszText)
+            hr = Shell_DisplayNameOf(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
+
+        if (SUCCEEDED(hr))
+        {
+            if (pdwAttributes)
+                *pdwAttributes = SHGetAttributes(psfFolder, ppidlLast, *pdwAttributes);
+        }
+    }
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
+    return hr;
+}
+
+EXTERN_C HWND
+BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx)
+{
+    HWND hWnd = NULL;
+
+    CComPtr<IUnknown> punk;
+    if (pBindCtx && SUCCEEDED(pBindCtx->GetObjectParam((LPWSTR)L"UI During Binding", &punk)))
+        IUnknown_GetWindow(punk, &hWnd);
+
+    return hWnd;
+}
+
+class CDummyOleWindow : public IOleWindow
+{
+protected:
+    LONG m_cRefs;
+    HWND m_hWnd;
+
+public:
+    CDummyOleWindow() : m_cRefs(1), m_hWnd(NULL) { }
+    virtual ~CDummyOleWindow() { }
+
+    // IUnknown methods
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override
+    {
+        static const QITAB c_tab[] =
+        {
+            QITABENT(CDummyOleWindow, IOleWindow),
+            { NULL }
+        };
+        return ::QISearch(this, c_tab, riid, ppvObj);
+    }
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
+        return ++m_cRefs;
+    }
+    STDMETHODIMP_(ULONG) Release() override
+    {
+        if (--m_cRefs == 0)
+        {
+            delete this;
+            return 0;
+        }
+        return m_cRefs;
+    }
+
+    // IOleWindow methods
+    STDMETHODIMP GetWindow(HWND *phWnd) override
+    {
+        *phWnd = m_hWnd;
+        if (!m_hWnd)
+            return E_NOTIMPL;
+        return S_OK;
+    }
+    STDMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) override
+    {
+        return E_NOTIMPL;
+    }
+};
+
+EXTERN_C HRESULT
+BindCtx_RegisterObjectParam(
+    _In_ IBindCtx *pBindCtx,
+    _In_ LPOLESTR pszKey,
+    _In_opt_ IUnknown *punk,
+    _Out_ LPBC *ppbc)
+{
+    HRESULT hr = S_OK;
+    CDummyOleWindow *pUnknown = NULL;
+
+    *ppbc = pBindCtx;
+
+    if (pBindCtx)
+    {
+        pBindCtx->AddRef();
+    }
+    else
+    {
+        hr = CreateBindCtx(0, ppbc);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    if (!punk)
+        punk = pUnknown = new CDummyOleWindow();
+
+    hr = (*ppbc)->RegisterObjectParam(pszKey, punk);
+
+    if (pUnknown)
+        pUnknown->Release();
+
+    if (FAILED(hr))
+    {
+        (*ppbc)->Release();
+        *ppbc = NULL;
+    }
+
+    return hr;
+}
+
 /*************************************************************************
  *                SHSetFolderPathA (SHELL32.231)
  *
