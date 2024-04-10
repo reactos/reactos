@@ -254,8 +254,8 @@ FONT 8, "MS Shell Dlg"
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "Ok",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "Annulla",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Applica", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Aiuto" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Applica", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP //FIXME: accelerator collision &A
+    PUSHBUTTON      "&Aiuto" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP //FIXME: accelerator collision &A
     GROUPBOX        "Effetti",grp1,6,92,84,36,WS_GROUP
     CHECKBOX	    "&Barrato", chx1, 10,102,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX 	    "S&ottolineato", chx2, 10,114,78,10, BS_AUTOCHECKBOX
@@ -351,7 +351,7 @@ FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "Ok",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "Annulla", IDCANCEL, 230,164, 50,14, WS_GROUP
-    PUSHBUTTON      "&Aiuto",  pshHelp,  50, 161, 50,14, WS_GROUP
+    PUSHBUTTON      "&Aiuto",  pshHelp,  50, 161, 50,14, WS_GROUP //FIXME: accelerator collision &A
 
     GROUPBOX        "Stampante",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Stampa su fi&le", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
@@ -380,7 +380,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&da:",         stc2,  52,124,  20,8
-    RTEXT           "&a:",           stc3,  99,124,  20,8
+    RTEXT           "&a:",           stc3,  99,124,  20,8 //FIXME: accelerator collision &A
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -467,9 +467,9 @@ FONT 8, "MS Shell Dlg"
 
     CONTROL	"Apri in &sola lettura",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
-    DEFPUSHBUTTON	"&Apri",		 IDOK,222,110,54,14
+    DEFPUSHBUTTON	"&Apri",		 IDOK,222,110,54,14 //FIXME: acclerator collision &A
     PUSHBUTTON		"Annulla",		 IDCANCEL,222,128,54,14
-    PUSHBUTTON		"&Aiuto",		 pshHelp,222,145,54,14
+    PUSHBUTTON		"&Aiuto",		 pshHelp,222,145,54,14 //FIXME: accelerator collision &A
 }
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
