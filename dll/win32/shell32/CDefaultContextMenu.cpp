@@ -493,7 +493,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     UINT uFlags)
 {
     UINT ntver = RosGetProcessEffectiveVersion();
-    MENUITEMINFOW mii;
+    MENUITEMINFOW mii = { 0 };
     UINT idResource;
     WCHAR wszVerb[40];
     UINT fState;
