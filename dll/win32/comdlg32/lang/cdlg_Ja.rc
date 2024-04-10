@@ -34,7 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "パスが見つかりません"
     IDS_FILENOTEXISTING     "ファイルが見つかりません"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "フォルダ以外のオブジェクトを選択しています"
 }
 
 STRINGTABLE
@@ -131,14 +131,14 @@ STRINGTABLE /* Color names */
 
 STRINGTABLE
 {
-    IDS_FONT_SIZE   "フォントサイズを %1!d! ポイントから %2!d! ポイントの間で選択してください。"
+    IDS_FONT_SIZE   "フォントサイズを %1!d! ～ %2!d! ポイントの範囲内で選択してください。"
     IDS_SAVE_BUTTON "保存(&S)"
     IDS_SAVE_IN     "保存する場所(&I):"
     IDS_SAVE        "保存"
     IDS_SAVE_AS     "名前を付けて保存"
     IDS_OPEN_FILE   "ファイルを開く"
-    IDS_SELECT_FOLDER "Select Folder"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_SELECT_FOLDER "フォルダの選択"
+    IDS_FONT_SIZE_INPUT "フォント サイズは数字でなければいけません。"
 }
 
 /*
@@ -162,7 +162,7 @@ FONT 9, "MS UI Gothic"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "開く", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "キャンセル", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ヘルプ(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "読み取り専用(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -184,7 +184,7 @@ FONT 9, "MS UI Gothic"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "名前を付けて保存", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "キャンセル", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ヘルプ(&H)", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "読み取り専用(&R)", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -238,34 +238,34 @@ FONT 9, "MS UI Gothic"
 }
 
 
-CHOOSE_FONT DIALOG  13, 54, 274, 147
+CHOOSE_FONT DIALOG  13, 54, 274, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "フォントの指定"
 FONT 9, "MS UI Gothic"
 {
     LTEXT           "フォント名(&F):",stc1 ,6,3,90,9
-    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "スタイル(&Y):",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "サイズ(&S):",stc3,179,3,32,9
-    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "キャンセル",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "適用(&A)", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "ヘルプ(&H)" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "文字飾り",grp1,6,72,84,36,WS_GROUP
-    CHECKBOX	    "取り消し線(&K)", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "下線(&U)", chx2, 10,94,78,10, BS_AUTOCHECKBOX
-    LTEXT           "配色(&C):", stc4 ,6,114,80,9
-    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    PUSHBUTTON      "ヘルプ" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "文字飾り",grp1,6,92,84,36,WS_GROUP
+    CHECKBOX	    "取り消し線(&K)", chx1, 10,102,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "下線(&U)", chx2, 10,114,78,10, BS_AUTOCHECKBOX
+    LTEXT           "配色(&C):", stc4 ,6,134,80,9
+    COMBOBOX        cmb4,6,144,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "サンプル",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "文字セット(&I):",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+    GROUPBOX        "サンプル",grp2,98,92,120,36,WS_GROUP
+    CTEXT           "",stc5,103,101,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "文字セット(&I):",stc7 ,98,134,40,9
+    COMBOBOX        cmb5,98,144,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -319,7 +319,7 @@ FONT 9, "MS UI Gothic"
 
  DEFPUSHBUTTON "次を検索(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "キャンセル", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ヘルプ(&H)", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -339,7 +339,7 @@ FONT 9, "MS UI Gothic"
  PUSHBUTTON "置換して次に(&R)", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "すべてを置換(&A)", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "キャンセル", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ヘルプ(&H)", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ヘルプ", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -351,7 +351,7 @@ FONT 9, "MS UI Gothic"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "キャンセル", IDCANCEL, 230,164, 50,14, WS_GROUP
-    PUSHBUTTON      "ヘルプ(&H)",  pshHelp,  50, 161, 50,14, WS_GROUP
+    PUSHBUTTON      "ヘルプ",  pshHelp,  50, 161, 50,14, WS_GROUP
 
     GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "ファイルへ出力(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
@@ -369,7 +369,7 @@ FONT 9, "MS UI Gothic"
 
     GROUPBOX        "印刷部数",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "部数(&C):",stc5,168,105,68,8
-    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "部単位で印刷(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
@@ -390,7 +390,6 @@ FONT 9, "MS UI Gothic"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,176,156,50,14,WS_GROUP
     PUSHBUTTON      "キャンセル",IDCANCEL,230,156,50,14
-/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
     GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "プロパティ(&P)",    psh2, 212, 17,  60,14, WS_GROUP
@@ -408,7 +407,7 @@ BEGIN
     GROUPBOX        "用紙",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "サイズ(&Z):",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Source:",       stc3,  16,128,  36, 8
+    LTEXT           "&Source:",    stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "方向",    grp1, 180, 92, 100,56, WS_GROUP
@@ -465,11 +464,11 @@ FONT 9, "MS UI Gothic"
     LTEXT	"ファイルの種類(&T):",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"読み取り専用ファイルとして開く(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL	"読み込み専用で開く(&R)",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
     DEFPUSHBUTTON	"開く(&O)",		 IDOK,222,110,54,14
     PUSHBUTTON		"キャンセル",		 IDCANCEL,222,128,54,14
-    PUSHBUTTON		"ヘルプ(&H)",		 pshHelp,222,145,54,14
+    PUSHBUTTON		"ヘルプ",		 pshHelp,222,145,54,14
 }
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
@@ -492,5 +491,5 @@ FONT 9, "MS UI Gothic"
                     BS_CHECKBOX | BS_PUSHLIKE, 342, 240, 8, 14
 
     PUSHBUTTON      "キャンセル", IDCANCEL, 395, 240, 40, 14, WS_CLIPSIBLINGS
-    PUSHBUTTON      "ヘルプ(&H)",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
+    PUSHBUTTON      "ヘルプ",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
 }
