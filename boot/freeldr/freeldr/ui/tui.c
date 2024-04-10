@@ -359,52 +359,50 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
 VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
     PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG  Idx;
+    ULONG  i;
+    BOOLEAN RightShadow = (Right < (UiScreenWidth - 1));
+    BOOLEAN DoubleRightShadow = ((Right + 1) < (UiScreenWidth - 1));
+    BOOLEAN BottomShadow = (Bottom < (UiScreenHeight - 1));
+    BOOLEAN DoubleWidth = (UiScreenHeight < 34);
+
+    /* Cap the right and bottom borders */
+    Right = min(Right, UiScreenWidth - 1);
+    Bottom = min(Bottom, UiScreenHeight - 1);
 
     /* Shade the bottom of the area */
-    if (Bottom < (UiScreenHeight - 1))
+    if (BottomShadow)
     {
-        if (UiScreenHeight < 34)
-            Idx = Left + 2;
-        else
-            Idx = Left + 1;
-
-        for (; Idx <= Right; ++Idx)
+        i = Left + (DoubleWidth ? 2 : 1);
+        for (; i <= Right; ++i)
         {
-            ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+(Idx*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
+            ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+(i*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
 
     /* Shade the right of the area */
-    if (Right < (UiScreenWidth - 1))
+    if (RightShadow)
     {
-        for (Idx=Top+1; Idx<=Bottom; Idx++)
+        for (i = Top + 1; i <= Bottom; ++i)
         {
-            ScreenMemory[((Idx*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
+            ScreenMemory[((i*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
-    if (UiScreenHeight < 34)
+    if (DoubleWidth && DoubleRightShadow)
     {
-        if ((Right + 1) < (UiScreenWidth - 1))
+        for (i = Top + 1; i <= Bottom; ++i)
         {
-            for (Idx=Top+1; Idx<=Bottom; Idx++)
-            {
-                ScreenMemory[((Idx*2)*UiScreenWidth)+((Right+2)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
-            }
+            ScreenMemory[((i*2)*UiScreenWidth)+((Right+2)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
 
     /* Shade the bottom right corner */
-    if ((Right < (UiScreenWidth - 1)) && (Bottom < (UiScreenHeight - 1)))
+    if (RightShadow && BottomShadow)
     {
         ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
     }
-    if (UiScreenHeight < 34)
+    if (DoubleWidth && DoubleRightShadow && BottomShadow)
     {
-        if (((Right + 1) < (UiScreenWidth - 1)) && (Bottom < (UiScreenHeight - 1)))
-        {
-            ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+2)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
-        }
+        ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+2)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
     }
 }
 
@@ -603,7 +601,7 @@ VOID TuiUpdateDateTime(VOID)
 
     /* Build the time string in format: "h:mm:ss tt" */
     RtlStringCbPrintfA(Buffer, sizeof(Buffer),
-                       "    %d:%02d:%02d %s",
+                       "  %d:%02d:%02d %s",
                        TimeInfo->Hour,
                        TimeInfo->Minute,
                        TimeInfo->Second,
@@ -666,7 +664,7 @@ TuiDrawMsgBoxCommon(
     _Out_ PSMALL_RECT MsgBoxRect)
 {
     INT width = 8;
-    ULONG height = 1;
+    INT height = 1;
     INT curline = 0;
     INT k;
     size_t i, j;
@@ -696,11 +694,26 @@ TuiDrawMsgBoxCommon(
         j++;
     }
 
-    /* Calculate box area */
-    x1 = (UiScreenWidth - (width+2))/2;
-    x2 = x1 + width + 3;
-    y1 = ((UiScreenHeight - height - 2)/2) + 1;
-    y2 = y1 + height + 4;
+    /* Account for the message box margins & bottom button/edit box */
+    width  += 4; // Border & space on left and right.
+    height += 5; // Border on top and bottom, plus 3 lines for button/edit box.
+
+    /* Calculate the centered box area, also ensuring that the top-left
+     * corner is always visible if the borders are partly off-screen */
+    x1 = (UiScreenWidth - min(width, UiScreenWidth)) / 2;
+    if (UiCenterMenu && (height <= UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT - 1))
+    {
+        /* Exclude the header and the status bar */
+        // y1 = (UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT - 1 - height) / 2
+        //      + TUI_TITLE_BOX_CHAR_HEIGHT;
+        y1 = (UiScreenHeight + TUI_TITLE_BOX_CHAR_HEIGHT - 1 - height) / 2;
+    }
+    else
+    {
+        y1 = (UiScreenHeight - min(height, UiScreenHeight)) / 2;
+    }
+    x2 = x1 + width - 1;
+    y2 = y1 + height - 1;
 
     MsgBoxRect->Left = x1; MsgBoxRect->Right  = x2;
     MsgBoxRect->Top  = y1; MsgBoxRect->Bottom = y2;
