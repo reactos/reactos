@@ -1,7 +1,7 @@
 /*
  * Resources for Common Dialogs
  *
- * Copyrights: 2006 Fatih Aşıcı, 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+// COPYRIGHT: 2006 Fatih Aşıcı, 2013-2016 Erdem Ersoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,17 +22,17 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FILENOTFOUND        "Kütük bulunamadı."
-    IDS_VERIFYFILE          "Lütfen doğru kütük adı verilmiş olduğunu doğrulayınız."
-    IDS_CREATEFILE          "Kütük yok.\n\
-Kütük oluşturmak ister misiniz?"
-    IDS_OVERWRITEFILE       "Kütük önceden var.\n\
+    IDS_FILENOTFOUND        "Dosya bulunamadı."
+    IDS_VERIFYFILE          "Lütfen doğru dosya adı yazdığınızdan emin olun."
+    IDS_CREATEFILE          "Dosya yok.\n\
+Dosya oluşturmak ister misiniz?"
+    IDS_OVERWRITEFILE       "Dosya zaten var.\n\
 Onu değiştirmek ister misiniz?"
     IDS_INVALID_FILENAME_TITLE "Yolda geçersiz damga ya da damgalar var."
-    IDS_INVALID_FILENAME    "Bir kütük adı aşağıdaki damgaların rastgele birini içeremez:\n\
+    IDS_INVALID_FILENAME    "Bir dosya adı aşağıdaki damgaların rastgele birini içeremez:\n\
                           / : < > |"
-    IDS_PATHNOTEXISTING     "Kütük yolu yok."
-    IDS_FILENOTEXISTING     "Kütük yok."
+    IDS_PATHNOTEXISTING     "Dosya yolu yok."
+    IDS_FILENOTEXISTING     "Dosya yok."
     IDS_INVALID_FOLDERNAME  "Seçim dizin olmayan bir nesne içeriyor."
 }
 
@@ -42,7 +42,7 @@ STRINGTABLE
     IDS_NEWFOLDER        "Yeni Dizin Oluştur"
     IDS_LISTVIEW         "Dizelge"
     IDS_REPORTVIEW       "Ayrıntılar"
-    IDS_TODESKTOP        "Masaüstünü Araştır"
+    IDS_TODESKTOP        "Masaüstünü İncele"
 }
 
 STRINGTABLE
@@ -58,13 +58,13 @@ Lütfen kıyıları yeniden giriniz."
     PD32_NR_OF_COPIES_EMPTY               """Kopya Sayısı"" alanı boş olamaz."
     PD32_TOO_LARGE_COPIES                 "Bu denli çok sayıda kopya yazıcınız eliyle desteklenmiyor.\n\
 Lütfen 1 ile %d arasında bir değer giriniz."
-    PD32_PRINT_ERROR                      "Bir yazıcı yanlışlığı oluştu."
-    PD32_NO_DEFAULT_PRINTER               "Ön tanımlı yazıcı tanımlanmadı."
+    PD32_PRINT_ERROR                      "Bir yazıcı hatası oluştu."
+    PD32_NO_DEFAULT_PRINTER               "Varsayılan yazıcı tanımlanmadı."
     PD32_CANT_FIND_PRINTER                "Yazıcı bulunamıyor."
     PD32_OUT_OF_MEMORY                    "Bellek dolu."
-    PD32_GENERIC_ERROR                    "Bir yanlışlık oluştu."
+    PD32_GENERIC_ERROR                    "Bir hata oluştu."
     PD32_DRIVER_UNKNOWN                   "Bilinmeyen yazıcı sürücüsü."
-    PD32_NO_DEVICES                       "Sayfa ayarlamak veyâ bir belge yazdırmak gibi yazıcıyla ilgili görevleri yapabilmenizden önce bir yazıcı kurmanız gerekir. Lütfen bir yazıcı kurunuz ve yeniden deneyiniz."
+    PD32_NO_DEVICES                       "Sayfa ayarlamak veya bir belge yazdırmak gibi yazıcıyla ilgili görevleri yapabilmenizden önce bir yazıcı kurmanız gerekir. Lütfen bir yazıcı kurunuz ve yeniden deneyiniz."
 
     PD32_DEFAULT_PRINTER                  "Ön tanımlı yazıcı; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Kuyrukta %d belge var."
@@ -74,13 +74,13 @@ Lütfen 1 ile %d arasında bir değer giriniz."
 
     PD32_PRINTER_STATUS_READY             "Anık"
     PD32_PRINTER_STATUS_PAUSED            "Durakladı; "
-    PD32_PRINTER_STATUS_ERROR             "Yanlışlık; "
+    PD32_PRINTER_STATUS_ERROR             "Hata; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Silme bekleniyor; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Kâğıt sıkıştı; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Kâğıt yok; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "Elle kâğıt koyma; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Kâğıt sorunu; "
-    PD32_PRINTER_STATUS_OFFLINE           "Yazıcı çevrim dışı; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Kağıt sıkıştı; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Kağıt yok; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Elle kağıt koyma; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Kağıt sorunu; "
+    PD32_PRINTER_STATUS_OFFLINE           "Yazıcı çevrimdışı; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "G/Ç Etkin; "
     PD32_PRINTER_STATUS_BUSY              "Dolu; "
     PD32_PRINTER_STATUS_PRINTING          "Yazdırıyor; "
@@ -105,25 +105,25 @@ STRINGTABLE /* Font styles */
     IDS_FONT_REGULAR       "Ölçünlü"
     IDS_FONT_BOLD          "Kalın"
     IDS_FONT_ITALIC        "Eğik"
-    IDS_FONT_BOLD_ITALIC   "Kalın ve Eğik"
+    IDS_FONT_BOLD_ITALIC   "Kalın Eğik"
 }
 
 STRINGTABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Kara"
-    IDS_COLOR_MAROON    "Vişne Çürüğü"
+    IDS_COLOR_MAROON    "Bordo"
     IDS_COLOR_GREEN     "Yeşil"
     IDS_COLOR_OLIVE     "Zeytinyağı"
-    IDS_COLOR_NAVY      "Deniz Mâvisi"
+    IDS_COLOR_NAVY      "Deniz Mavisi"
     IDS_COLOR_PURPLE    "Mor"
     IDS_COLOR_TEAL      "Çamurcun"
-    IDS_COLOR_GRAY      "Kül Rengi"
+    IDS_COLOR_GRAY      "Gri"
     IDS_COLOR_SILVER    "Gümüş"
     IDS_COLOR_RED       "Al"
-    IDS_COLOR_LIME      "Misket Limonu"
+    IDS_COLOR_LIME      "Limon Yeşili"
     IDS_COLOR_YELLOW    "Sarı"
-    IDS_COLOR_BLUE      "Mâvi"
-    IDS_COLOR_FUCHSIA   "Küpe Çiçeği"
+    IDS_COLOR_BLUE      "Mavi"
+    IDS_COLOR_FUCHSIA   "Fuşya"
     IDS_COLOR_AQUA      "Turkuaz"
     IDS_COLOR_WHITE     "Ak"
 }
@@ -135,9 +135,9 @@ STRINGTABLE
     IDS_SAVE_IN     "S&aklama Yeri:"
     IDS_SAVE        "Sakla"
     IDS_SAVE_AS     "Ayrı Sakla"
-    IDS_OPEN_FILE   "Kütük Aç"
+    IDS_OPEN_FILE   "Dosya Aç"
     IDS_SELECT_FOLDER "Dizin Seç"
-    IDS_FONT_SIZE_INPUT "Yazı tipi büyüklüğü bir sayı olmalıdır."
+    IDS_FONT_SIZE_INPUT "Yazı tipi boyutu bir sayı olmalıdır."
 }
 
 /*
@@ -149,7 +149,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Aç"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Kütük Adı:", stc3, 6, 6, 76, 9
+ LTEXT "D&osya Adı:", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "&Dizinler:", -1, 110, 6, 92, 9
@@ -161,8 +161,8 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Aç", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Yardım", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Y&alnızca Okunur", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Yardım", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "S&alt Okunur", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -171,7 +171,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ayrı Sakla"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Kütük Adı:", stc3, 6, 6, 76, 9
+ LTEXT "D&osya Adı:", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "&Dizinler:", -1, 110, 6, 92, 9
@@ -183,8 +183,8 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Ayrı Sakla", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Yardım", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Y&alnızca Okunur", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Yardım", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "S&alt Okunur", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -217,7 +217,7 @@ CAPTION "Yazıcı Ayarla"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Yazıcı", grp1, 6, 6, 180, 72, BS_GROUPBOX
- RADIOBUTTON "&Ön Tanımlı Yazıcı", rad1, 16, 16, 150, 12
+ RADIOBUTTON "&Varsayılan Yazıcı", rad1, 16, 16, 150, 12
  LTEXT "[Yok]", stc1, 35, 30, 120, 9
  RADIOBUTTON "&Belirli Yazıcı", rad2, 16, 44, 150, 12
  COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -226,10 +226,10 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Ayarla", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Yön", grp2, 6, 82, 100, 50, BS_GROUPBOX
  RADIOBUTTON "&Portre", rad3, 50, 95, 50, 12
- RADIOBUTTON "&Kır Resmi", rad4, 50, 110, 50, 12
+ RADIOBUTTON "&Manzara", rad4, 50, 110, 50, 12
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
- GROUPBOX "Kâğıt", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ GROUPBOX "Kağıt", grp3, 116, 82, 178, 50, BS_GROUPBOX
  LTEXT "B&oyutlar", stc2, 126, 95, 35, 9
  LTEXT "Ka&ynak", stc3, 126, 110, 35, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -237,34 +237,34 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-CHOOSE_FONT DIALOG  13, 54, 274, 147
+CHOOSE_FONT DIALOG  13, 54, 274, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yazı Tipi"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT           "Ya&zı Tipi:",stc1 ,6,3,90,9
-    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "Yaz&ı Tipi Biçemi:",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    LTEXT           "Yaz&ı Tipi:",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Büyüklük:",stc3,179,3,32,9
-    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "Tamam",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "İptal",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Uygula", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Yardım" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "Etkiler",grp1,6,72,84,36,WS_GROUP
-    CHECKBOX	    "&Üstü Çizili", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&Altı Çizili", chx2, 10,94,78,10, BS_AUTOCHECKBOX
-    LTEXT           "&Renk:", stc4 ,6,114,80,9
-    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    PUSHBUTTON      "Yardım" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Etkiler",grp1,6,92,84,36,WS_GROUP
+    CHECKBOX	    "&Üstü Çizili", chx1, 10,102,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Altı Çizili", chx2, 10,114,78,10, BS_AUTOCHECKBOX
+    LTEXT           "&Renk:", stc4 ,6,134,80,9
+    COMBOBOX        cmb4,6,144,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Örnek",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "B&etik:",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+    GROUPBOX        "Örnek",grp2,98,92,120,36,WS_GROUP
+    CTEXT           "",stc5,103,101,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "M&etin:",stc7 ,98,134,40,9
+    COMBOBOX        cmb5,98,144,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -275,13 +275,13 @@ CAPTION "Renk"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Ana Renkler:",   stc1, 4,    4,  140, 10
- LTEXT "&Husûsî Renkler:",  stc2, 4,   106, 140, 10
+ LTEXT "&Özel Renkler:",  stc2, 4,   106, 140, 10
  LTEXT "Renk | D&üz",  stc3, 150, 151,  48, 10
  LTEXT   "A&l:", IDC_COLOR_RL /*1094*/,247,126,27,10
  EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "Y&eşil:", IDC_COLOR_GL /*1095*/,247,140,27,10
  EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Mâvi:", IDC_COLOR_BL /*1096*/,247,154,27,10
+ LTEXT   "&Mavi:", IDC_COLOR_BL /*1096*/,247,154,27,10
  EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Renk:" , IDC_COLOR_HL /*1091*/,200,126,24,10
  EDITTEXT IDC_COLOR_EDIT_H, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -296,9 +296,9 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "Tamam",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Yardım", pshHelp,100,166, 44, 14
- PUSHBUTTON "H&usûsî Renklere Ekle",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Hu&sûsî Renkleri Belirle >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Yardım", pshHelp,100,166, 44, 14
+ PUSHBUTTON "Ö&zel Renklere Ekle",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Özel Re&nkleri Belirle >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Renk | Düz", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
@@ -310,15 +310,15 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Şunu Bul:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Ya&lnızca Tüm Dizgiyi Karşılaştır", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Büyük-Küçük Harfliği Karşılaştır", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Ya&lnızca Tüm Kelimeyi Eşleştir", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Büyük-Küçük Harfleri Eşleştir", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Yön", grp1, 147, 21, 58, 38
  CONTROL "Y&ukarı", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
  CONTROL "&Aşağı", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
  DEFPUSHBUTTON "Sonrakini Bul", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "İptal", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Yardım", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Yardım", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -331,14 +331,14 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "Ş&ununla Değiştir:", -1, 4, 26, 52, 8
  EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Y&alnızca Tüm Dizgiyi Karşılaştır", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Büyük-Küçük Harfliği Karşılaştır", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Y&alnızca Tüm Kelimeyi Eşleştir", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Büyük-Küçük Harfleri Eşleştir", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "Sonrakini Bul", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Değiştir", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Tümünü Değiştir", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Yardım", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Yardım", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -350,11 +350,11 @@ FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "Tamam",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "İptal", IDCANCEL, 230,164, 50,14, WS_GROUP
-    PUSHBUTTON      "&Yardım",  pshHelp,  50, 161, 50,14, WS_GROUP
+    PUSHBUTTON      "Yardım",  pshHelp,  50, 161, 50,14, WS_GROUP
 
     GROUPBOX        "Yazıcı",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "&Kütüğe Yaz", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "&Husûsiyetler",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Özellikler",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Ad:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Durum:",        stc8,  16, 36,  47,10, SS_NOPREFIX
@@ -368,7 +368,7 @@ FONT 8, "MS Shell Dlg"
 
     GROUPBOX        "Kopyalar",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "K&opya Sayısı:",stc5,168,105,68,8
-    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "Ha&rmanla",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
@@ -389,10 +389,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,176,156,50,14,WS_GROUP
     PUSHBUTTON      "İptal",IDCANCEL,230,156,50,14
-/*    PUSHBUTTON      "A&ğ...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Yazıcı",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Husûsiyetler",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Özellikler",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Ad:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Durum:",        stc8,  16, 36,  47,10, SS_NOPREFIX
@@ -404,7 +403,7 @@ BEGIN
     LTEXT           "Açıklama:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Kâğıt",          grp2,   8, 92, 164,56, WS_GROUP
+    GROUPBOX        "Kağıt",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "B&oyutlar:",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Ka&ynak:",       stc3,  16,128,  36, 8
@@ -413,7 +412,7 @@ BEGIN
     GROUPBOX        "Yön",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
     CONTROL         "&Portre",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Kır Resmi",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "&Manzara",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -424,14 +423,14 @@ BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
   CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
-  GROUPBOX "Kâğıt", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  GROUPBOX "Kağıt", grp2, 8, 96, 224, 56, BS_GROUPBOX
   LTEXT "B&üyüklük:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   LTEXT "Ka&ynak:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Yön", grp1, 8, 156, 64, 56, BS_GROUPBOX
   AUTORADIOBUTTON "&Portre", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Kır Resmi", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Manzara", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "So&l:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
@@ -457,44 +456,44 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"&Kütük Adı:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    LTEXT	"&Dosya Adı:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
     CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
 
-    LTEXT	"K&ütük Türü:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    LTEXT	"D&osya Türü:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"Y&alnızca Okunur Olarak Aç",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL	"S&alt Okunur Olarak Aç",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
     DEFPUSHBUTTON	"Aç",		 IDOK,222,110,54,14
     PUSHBUTTON		"İptal",		 IDCANCEL,222,128,54,14
-    PUSHBUTTON		"&Yardım",		 pshHelp,222,145,54,14
+    PUSHBUTTON		"Yardım",		 pshHelp,222,145,54,14
 }
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Open"
+CAPTION "Aç"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Look &in:", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
+    LTEXT "&Bak:", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
     COMBOBOX IDC_LOOKIN, 64, 3, 150, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "" , IDC_TOOLBARSTATIC, 209, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
-    CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 55, 208
+    CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 56, 192
     LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
     LTEXT "File &name:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
     EDITTEXT IDC_FILENAME, 123, 180, 180, 12, ES_AUTOHSCROLL
     CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 123, 180, 180, 150
 
-    LTEXT "Files of &type:", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
+    LTEXT "D&osya Türü:", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 123, 198, 180, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL "Open as &read-only", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
 
-    DEFPUSHBUTTON "&Open", IDOK, 310, 180, 54, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 310, 198, 54, 14
-    PUSHBUTTON "&Help", pshHelp, 310, 215, 54, 14
+    DEFPUSHBUTTON "&Aç", IDOK, 310, 180, 54, 14
+    PUSHBUTTON "İptal", IDCANCEL, 310, 198, 54, 14
+    PUSHBUTTON "Help", pshHelp, 310, 215, 54, 14
 }
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
@@ -517,5 +516,5 @@ FONT 8, "MS Shell Dlg"
                     BS_CHECKBOX | BS_PUSHLIKE, 342, 240, 8, 14
 
     PUSHBUTTON      "İptal", IDCANCEL, 395, 240, 40, 14, WS_CLIPSIBLINGS
-    PUSHBUTTON      "&Yardım",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
+    PUSHBUTTON      "Yardım",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
 }
