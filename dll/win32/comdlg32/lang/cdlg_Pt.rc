@@ -159,8 +159,8 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Abrir", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Ajuda", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
-    CHECKBOX "&Apenas de leitura", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Ajuda", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP //FIXME: accelerator collision &A, I guess this should be &j
+    CHECKBOX "&Apenas de leitura", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP  //FIXME: accelerator collision &A
 }
 
 SAVE_FILE DIALOG 36, 24, 275, 134
@@ -179,7 +179,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "Con&troladores:", stc4, 110, 104, 92, 9
     COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Guardar Como", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Ajuda", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
     CHECKBOX "Apenas de &leitura", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
@@ -196,7 +196,7 @@ FONT 8, "MS Shell Dlg"
     RADIOBUTTON "S&elecção", rad2, 16, 60, 60, 12
     RADIOBUTTON "&Páginas", rad3, 16, 75, 60, 12
     DEFPUSHBUTTON "&Imprimir", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Con&figurar", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
     LTEXT "De:", stc3, 60, 80, 30, 9
     LTEXT "Até:", stc4, 120, 80, 30, 9
@@ -217,7 +217,7 @@ FONT 8, "MS Shell Dlg"
     RADIOBUTTON "Impressora &específica", rad2, 16, 44, 150, 12
     COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "&OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Con&figurar", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
     GROUPBOX "Orientação", grp2, 6, 82, 100, 50, BS_GROUPBOX
     RADIOBUTTON "&Retrato", rad3, 50, 95, 50, 12
@@ -246,7 +246,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb3, 179, 13, 32, 76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                            WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "&OK", IDOK, 218, 6, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "&Cancelar", IDCANCEL, 218, 23, 50, 14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Cancelar", IDCANCEL, 218, 23, 50, 14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Aplicar", psh3, 218, 40, 50, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "A&juda" , pshHelp, 218, 57, 50, 14, WS_GROUP | WS_TABSTOP
     GROUPBOX        "Efeitos", grp1, 6, 92, 84, 36, WS_GROUP
@@ -269,7 +269,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "Cores &básicas:", stc1, 4,    4,  140, 10
     LTEXT "&Cores do utilizador:",  stc2, 4,   106, 140, 10
-    LTEXT "Colorido|sólid&o", stc3, 150, 151,  48, 10
+    LTEXT "Colorido|sólid&o", stc3, 150, 151,  48, 10 //FIXME: accelerator collision &O
     LTEXT "Ver&melho:", IDC_COLOR_RL /*1094*/, 247, 126, 27, 10
     EDITTEXT IDC_COLOR_EDIT_R, 275, 124, 21, 12, WS_BORDER | WS_GROUP | WS_TABSTOP
     LTEXT "&Verde:", IDC_COLOR_GL /*1095*/, 247, 140, 27, 10
@@ -287,8 +287,8 @@ FONT 8, "MS Shell Dlg"
     CONTROL "", IDC_COLOR_GRAPH, "STATIC", WS_BORDER | SS_SIMPLE | WS_TABSTOP | WS_GROUP, 152, 4, 118, 116
     CONTROL "", IDC_COLOR_LUMBAR, "STATIC", SS_SIMPLE | WS_TABSTOP | WS_GROUP, 278, 4, 8, 116
     CONTROL "", IDC_COLOR_RESULT, "STATIC", SS_SIMPLE | WS_TABSTOP | WS_GROUP, 152, 124, 40, 26
-    DEFPUSHBUTTON "&OK", IDOK, 4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&OK", IDOK, 4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP //FIXME:accelerator collision &O
+    PUSHBUTTON "Cancelar", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "A&juda", pshHelp, 100, 166, 44, 14
     PUSHBUTTON "&Adicionar cor personalizada", IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Definir cores personalizadas >>", IDC_COLOR_DEFINE /*1025*/, 4, 149, 142, 14, WS_GROUP | WS_TABSTOP
@@ -300,16 +300,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Procurar"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "&Procurar:", -1, 4, 8, 52, 8
+    LTEXT "&Procurar:", -1, 4, 8, 52, 8 //FIXME: accelerator collision &P
     EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     CHECKBOX "Palavra &inteira", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     CHECKBOX "&Maiúsculas/minúsculas", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "Direcção", grp1, 147, 21, 58, 38
-    CONTROL "&Acima", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+    CONTROL "&Acima", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12 //FIXME: accelerator collision &A
     CONTROL "A&baixo", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
-    DEFPUSHBUTTON "&Procurar", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    DEFPUSHBUTTON "&Procurar", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON //FIXME: accelerator collision &P
     PUSHBUTTON "Cancelar", IDCANCEL, 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Ajuda", pshHelp, 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Ajuda", pshHelp, 212, 42, 60, 14, WS_GROUP | WS_TABSTOP //FIXME: accelerator collision &A
 }
 
 REPLACEDLGORD DIALOG 36, 24, 276, 94
@@ -317,13 +317,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Substituir"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "&Procurar:", -1, 4, 8, 52, 8
+    LTEXT "&Procurar:", -1, 4, 8, 52, 8 //FIXME: accelerator collision &P
     EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     LTEXT "Substituir po&r:", -1, 4, 26, 52, 8
     EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     CHECKBOX "Palavra &inteira", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     CHECKBOX "&Maiúsculas/minúsculas", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    DEFPUSHBUTTON "&Procurar", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    DEFPUSHBUTTON "&Procurar", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON //FIXME: accelerator collision &P
     PUSHBUTTON "&Substituir", psh1, 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Substituir &tudo", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
@@ -337,7 +337,7 @@ FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON "OK", IDOK, 176, 164, 50, 14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON "Cancelar", IDCANCEL, 230, 164, 50, 14, WS_GROUP
-    PUSHBUTTON "&Ajuda", pshHelp, 50, 161, 50,14, WS_GROUP
+    PUSHBUTTON "&Ajuda", pshHelp, 50, 161, 50,14, WS_GROUP //FIXME: accelerator collision &A. Should this be &j?
     GROUPBOX "Impressora", grp4, 8, 4, 272, 84, WS_GROUP
     CONTROL "Para &ficheiro", chx1, "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 185, 36, 90, 16
     PUSHBUTTON "&Propriedades", psh2, 212, 17, 60,14, WS_GROUP
@@ -354,7 +354,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX "Cópias", grp2, 160, 92, 120, 64, WS_GROUP
     LTEXT "Número de &cópias:", stc5, 168, 105, 68, 8
     ICON "", ico3, 210, 131, 76, 24, WS_GROUP
-    CONTROL "&Agrupar", chx2, "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 168, 118, 100, 12
+    CONTROL "&Agrupar", chx2, "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 168, 118, 100, 12 //FIXME: accelerator collision &A
     EDITTEXT edt3, 240, 103, 32, 12, WS_GROUP | ES_NUMBER
     GROUPBOX "Faixa de impressão", grp1, 8, 92, 144, 64, WS_GROUP
     CONTROL "&Todos", rad1,"Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 16, 106, 64, 12
@@ -363,7 +363,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT edt1, 73, 122,  26, 12, WS_GROUP | ES_NUMBER
     EDITTEXT edt2, 120, 122,  26, 12, WS_GROUP | ES_NUMBER
     RTEXT "&de:", stc2, 52, 124, 20, 8
-    RTEXT "&até", stc3, 99, 124, 20, 8
+    RTEXT "&até", stc3, 99, 124, 20, 8 //FIXME: accelerator collision &A
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -375,7 +375,7 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 230, 156, 50, 14
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
     GROUPBOX "Impressora", grp4, 8, 4, 272, 84, WS_GROUP
-    PUSHBUTTON "&Propriedades", psh2, 212, 17, 60, 14, WS_GROUP
+    PUSHBUTTON "&Propriedades", psh2, 212, 17, 60, 14, WS_GROUP //FIXME: accelerator collision &P
     LTEXT "&Nome:", stc6, 16, 20, 36, 8
     COMBOBOX cmb1, 52, 18, 152, 152, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT "Status:", stc8, 16, 36, 47, 10, SS_NOPREFIX
@@ -394,7 +394,7 @@ BEGIN
     GROUPBOX "Orientação", grp1, 180, 92, 100, 56, WS_GROUP
     ICON "", ico1, 195, 112, 18, 20, WS_GROUP
     CONTROL "&Retrato", rad1,"Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 224, 106, 52, 12
-    CONTROL "&Paisagem", rad2,"Button", BS_AUTORADIOBUTTON, 224, 126, 52, 12
+    CONTROL "&Paisagem", rad2,"Button", BS_AUTORADIOBUTTON, 224, 126, 52, 12 //FIXME: accelerator collision &P
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -432,7 +432,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS
 CAPTION "Abrir"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "&Examinar:", IDC_LOOKINSTATIC, 4, 6, 43, 8, SS_NOTIFY
+    LTEXT "Ver &em:", IDC_LOOKINSTATIC, 4, 6, 43, 8, SS_NOTIFY
     COMBOBOX IDC_LOOKIN, 49, 3, 132, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX IDC_SHELLSTATIC, 4, 20, 272, 85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
@@ -441,10 +441,10 @@ FONT 8, "MS Shell Dlg"
     CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63, 110, 150, 150
     LTEXT "Ficheiros do &tipo:", IDC_FILETYPESTATIC, 5, 130, 56, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 63, 128, 150, 53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Abrir como &apenas-leitura", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 63, 148, 150, 10
-    DEFPUSHBUTTON "&Abrir", IDOK, 222, 110, 54, 14
+    CONTROL "Abrir como &apenas-leitura", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 63, 148, 150, 10 //FIXME: accelerator collision &A
+    DEFPUSHBUTTON "&Abrir", IDOK, 222, 110, 54, 14 //FIXME: accelerator collision &A
     PUSHBUTTON "Cancelar", IDCANCEL, 222, 128, 54, 14
-    PUSHBUTTON "&Ajuda", pshHelp, 222, 145, 54, 14
+    PUSHBUTTON "&Ajuda", pshHelp, 222, 145, 54, 14 //FIXME: accelerator collision &A, I do guess this one should have &j
 }
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
@@ -478,10 +478,10 @@ FONT 8, "MS Shell Dlg"
     LTEXT "Ficheiros do &tipo:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
     COMBOBOX IDC_FILETYPE, 226, 256, 100, 60,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
                                                WS_CLIPSIBLINGS | CBS_HASSTRINGS | CBS_DROPDOWNLIST
-    DEFPUSHBUTTON "&Abrir",  IDOK,     350, 240, 40, 14, WS_GROUP | WS_CLIPSIBLINGS
+    DEFPUSHBUTTON "&Abrir",  IDOK,     350, 240, 40, 14, WS_GROUP | WS_CLIPSIBLINGS //FIXME: accelerator collision &A
     /* drop-down menu for open button */
     CONTROL "6", psh1, "Button", WS_CHILD | WS_CLIPSIBLINGS | WS_GROUP | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE, 342, 240, 8, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 395, 240, 40, 14, WS_CLIPSIBLINGS
-    PUSHBUTTON "&Ajuda",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
+    PUSHBUTTON "&Ajuda",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS //FIXME: accelerator collision &A, I do guess this one should have &j
 }
 

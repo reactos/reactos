@@ -2,7 +2,7 @@
  * PROJECT:     Comdlg32 Hindi Translation
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Hindi translation of Comdlg32
- * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
  */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
