@@ -1,10 +1,15 @@
 
-list(APPEND LIBCNTPR_STDLIB_SOURCE
+list(APPEND COMMON_STDLIB_SOURCE
     stdlib/qsort.c
 )
 
+list(APPEND LIBCNTPR_STDLIB_SOURCE
+    ${COMMON_STDLIB_SOURCE}
+    stdlib/rand_nt.c
+)
+
 list(APPEND CRT_STDLIB_SOURCE
-    ${LIBCNTPR_STDLIB_SOURCE}
+    ${COMMON_STDLIB_SOURCE}
     stdlib/_exit.c
     stdlib/_set_abort_behavior.c
     stdlib/abort.c
@@ -22,6 +27,7 @@ list(APPEND CRT_STDLIB_SOURCE
     stdlib/mbstowcs.c
     stdlib/obsol.c
     stdlib/putenv.c
+    stdlib/rand.c
     stdlib/rot.c
     stdlib/senv.c
     stdlib/swab.c
