@@ -16,45 +16,45 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "&Fișier"
+    POPUP "&Fişier"
     BEGIN
         MENUITEM "&Nou", ID_FILE_NEW
         MENUITEM "&Deschidere…", ID_FILE_OPEN
-        MENUITEM "S&alvează", ID_FILE_SAVE, GRAYED
-        MENUITEM "Sal&vează ca…", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Re&constituire…", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Pr&oprietăți…", ID_FILE_PROPERTIES
+        MENUITEM "&Salvare", ID_FILE_SAVE, GRAYED
+        MENUITEM "S&alvare ca…", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Revenire la ultima versiune salvată…", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Proprietăţi", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", ID_FILE_EXIT
+        MENUITEM "&Ieşire", ID_FILE_EXIT
     END
-    POPUP "&Editare"
+    POPUP "E&ditare"
     BEGIN
-        MENUITEM "&Copiază", ID_EDIT_COPY
-        MENUITEM "&Lipește inserție", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Lipește mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "&Copiere", ID_EDIT_COPY
+        MENUITEM "Inserare &lipire", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Lipire c&ompoziţie", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I&nserare fișier…", ID_EDIT_INSERTFILE
-        MENUITEM "&Mixare cu fișier…", ID_EDIT_MIXFILE
+        MENUITEM "&Inserare fişier…", ID_EDIT_INSERTFILE
+        MENUITEM "&Mixaj cu fişier…", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Șterge în&ainte de poziția curentă",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Șterge d&upă poziția curentă",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "Ştergere &înainte de poziţia curentă",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Ştergere &după poziţia curentă",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Proprietăți audio…", ID_EDIT_AUDIOPROPS
+        MENUITEM "Proprietăţi a&udio", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Efe&cte"
+    POPUP "&Efecte"
     BEGIN
-        MENUITEM "&Crește volum (cu 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Descrește volum", ID_EFFECTS_DECVOL
+        MENUITEM "&Mărire volum (cu 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "Micşorare &volum", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "C&rește viteză (cu 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "D&escrește viteză", ID_EFFECTS_DECSPD
+        MENUITEM "Mărire vite&ză (cu 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "Mi&cşorare viteză", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Adaugă ecou", ID_EFFECTS_ECHO
-        MENUITEM "In&versează", ID_EFFECTS_REVERSE
+        MENUITEM "&Adăugare ecou", ID_EFFECTS_ECHO
+        MENUITEM "&Inversare", ID_EFFECTS_REVERSE
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Despre…", ID_ABOUT
+        MENUITEM "&Despre", ID_ABOUT
     END
 END
 
@@ -68,7 +68,7 @@ STRINGTABLE
 BEGIN
     IDS_STRPOS "Poziție: %.2f s"
     IDS_STRDUR "Lungime: %.2f s"
-    IDS_STRBUF "Memorie: %.2f kb"
+    IDS_STRBUF "Tampon: %.2f ko"
     IDS_STRFMT "%.1f kHz %u biți"
     IDS_STRMONO "mono"
     IDS_STRSTEREO "stereo"
