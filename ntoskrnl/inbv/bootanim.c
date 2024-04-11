@@ -507,7 +507,7 @@ NTAPI
 DisplayBootBitmap(
     _In_ BOOLEAN TextMode)
 {
-    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
+    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[RTL_NUMBER_OF(RotBarBuffer)];
@@ -546,25 +546,13 @@ DisplayBootBitmap(
         /* Check the type of the OS: workstation or server */
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
-            /* Workstation; set colors */
-            InbvSetTextColor(BV_COLOR_WHITE);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_DARK_GRAY);
-            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
-
-            /* Get resources */
+            /* Workstation: Get header */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
-            Footer = InbvGetResourceAddress(IDB_WKSTA_FOOTER);
         }
         else
         {
-            /* Server; set colors */
-            InbvSetTextColor(BV_COLOR_LIGHT_CYAN);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
-            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
-
-            /* Get resources */
+            /* Server: Get header */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
-            Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
         }
 
         /* Set the scrolling region */
@@ -572,19 +560,14 @@ DisplayBootBitmap(
                             VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
 
         /* Make sure we have resources */
-        if (Header && Footer)
+        if (Header)
         {
-            /* BitBlt them on the screen */
-            BitBltAligned(Footer,
-                          TRUE,
-                          AL_HORIZONTAL_CENTER,
-                          AL_VERTICAL_BOTTOM,
-                          0, 0, 0, 59);
+            /* BitBlt the header on the screen */
             BitBltAligned(Header,
                           FALSE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_TOP,
-                          0, 0, 0, 0);
+                          0, 12, 0, 0);
         }
 
         /* Restore the kernel resource section protection to be read-only */
