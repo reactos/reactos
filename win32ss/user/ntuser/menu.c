@@ -4050,6 +4050,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     PMENU pmMouse;
     BOOL enterIdleSent = FALSE;
     BOOL firstClick = TRUE;
+    PWND pWnd;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (pti != pwnd->head.pti)
@@ -4161,8 +4162,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             /* Find a menu for this mouse event */
             pmMouse = MENU_PtMenu( mt.TopMenu, mt.Pt );
 
-            PWND pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
-
             switch(msg.message)
             {
                 /* no WM_NC... messages in captured state */
@@ -4180,6 +4179,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* If the message belongs to the menu, removes it from the queue */
                     /* Else, end menu tracking */
 
+                    pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
                     /* Don't remove WM_LBUTTONDBLCLK to allow the closing of a window or program */
                     if (msg.message == WM_LBUTTONDBLCLK && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
                         fRemove = FALSE;
@@ -4187,7 +4187,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         fRemove = MENU_ButtonDown(&mt, pmMouse, wFlags);
 
                     fInsideMenuLoop = fRemove;
-                    if (msg.message == WM_RBUTTONDBLCLK) fInsideMenuLoop = FALSE; // Must exit or loop forever!
+                    if (msg.message == WM_RBUTTONDBLCLK)
+                        fInsideMenuLoop = FALSE; // Must exit or loop forever
                     break;
 
                 case WM_RBUTTONUP:
@@ -4199,6 +4200,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     {
                         executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
 
+                        pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
                         /* Exit system menu if system icon is clicked a second time */
                         if (!firstClick && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
                         {
