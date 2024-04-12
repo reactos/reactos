@@ -1894,6 +1894,9 @@ BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
     WCHAR szWide[38 + 1];
     UNICODE_STRING guid_str = { 0, sizeof(szWide), szWide };
 
+    if (*str != '{')
+        return FALSE;
+
     lstrcpynA(szAnsi, str, _countof(szAnsi)); /* Truncated copy */
     RtlInitAnsiString(&ansi_str, szAnsi);
     RtlAnsiStringToUnicodeString(&guid_str, &ansi_str, FALSE);
@@ -1908,6 +1911,9 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 {
     UNICODE_STRING guid_str;
     WCHAR szBuff[38 + 1];
+
+    if (*str != L'{')
+        return FALSE;
 
     lstrcpynW(szBuff, str, _countof(szBuff)); /* Truncated copy */
     RtlInitUnicodeString(&guid_str, szBuff);
