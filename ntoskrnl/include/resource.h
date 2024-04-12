@@ -23,14 +23,12 @@
 #define IDB_LOGO_DEFAULT    5
 
 #define IDB_WKSTA_HEADER    6
-#define IDB_WKSTA_FOOTER    7
 
 #define IDB_BAR_WKSTA       8
 #define IDB_BAR_HOME        9
 
 #define IDB_SERVER_LOGO     13
 #define IDB_SERVER_HEADER   14
-#define IDB_SERVER_FOOTER   15
 
 /* Workstation editions Overlays */
 #define IDB_TEXT_PROF       10  // Professional
