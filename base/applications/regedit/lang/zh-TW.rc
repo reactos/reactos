@@ -1,7 +1,5 @@
-/*
- * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
- */
+// COPYRIGHT: 2016 Henry Tang Ih <henrytang2@hotmail.com>
+//            2018 Luke Luo <njlyf2011@hotmail.com>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -295,7 +293,6 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄。"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線。"
     ID_REGISTRY_PRINT "列印所有或部分登錄。"
-/*    ID_HELP_HELPTOPICS "開啟登錄編輯程式幫助。" */
     ID_HELP_ABOUT "顯示程式資訊、版本號和著作權。"
 END
 
@@ -318,10 +315,10 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "錯誤"
     IDS_WARNING "警告"
-    IDS_BAD_KEY "不能查詢項 '%s'"
-    IDS_BAD_VALUE "不能查詢值 '%s'"
-    IDS_UNSUPPORTED_TYPE "不能編輯這類型的項 (%ld)"
-    IDS_TOO_BIG_VALUE "數值過大 (%ld)"
+    IDS_BAD_KEY "不能查詢項'%s'"
+    IDS_BAD_VALUE "不能查詢值'%s'"
+    IDS_UNSUPPORTED_TYPE "不能編輯這類型的項(%ld)"
+    IDS_TOO_BIG_VALUE "數值過大(%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包含空字元串。\n註冊表編輯器將刪除找到得空字元串。"
     IDS_QUERY_DELETE_KEY_ONE "確實要刪除這個項嗎?"
     IDS_QUERY_DELETE_KEY_MORE "確實要刪除這些項嗎?"
@@ -344,7 +341,7 @@ BEGIN
     IDS_BINARY_EMPTY "(長度為零的二進位值)"
     IDS_DEFAULT_VALUE_NAME "(默認)"
     IDS_VALUE_NOT_SET "(數值未設定)"
-    IDS_UNKNOWN_TYPE "未知類型: (0x%lx)"
+    IDS_UNKNOWN_TYPE "未知類型:(0x%lx)"
     IDS_MY_COMPUTER "我的電腦"
     IDS_IMPORT_REG_FILE "載入 Hive 控制檔"
     IDS_EXPORT_REG_FILE "卸載 Hive 控制檔"
@@ -398,10 +395,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此 '%s' 中的資訊的來源，並不將其添加到登錄。\n\n是否確實要繼續?"
-    IDS_IMPORT_OK "'%s' 中包含的值和項已成功添加到登錄。"
-    IDS_IMPORT_ERROR "無法將 '%s' 匯入： 開啟該檔案時出錯。可能有磁碟或檔案系統錯誤或檔案可能不存在。"
-    IDS_EXPORT_ERROR "無法匯出 '%s' ： 創建或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
+    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此'%s'中的資訊的來源，並不將其添加到登錄。\n\n是否確實要繼續?"
+    IDS_IMPORT_OK "'%s'中包含的值和項已成功添加到登錄。"
+    IDS_IMPORT_ERROR "無法將'%s'匯入:開啟該檔案時出錯。可能有磁碟或檔案系統錯誤或檔案可能不存在。"
+    IDS_EXPORT_ERROR "無法匯出'%s':創建或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
 END
 
 STRINGTABLE
@@ -433,7 +430,7 @@ BEGIN
     IDS_INTERRUPT_LEVEL_SENSITIVE "級別敏感"
     IDS_MEMORY_READ_ONLY "只讀"
     IDS_MEMORY_WRITE_ONLY "只寫"
-    IDS_MEMORY_READ_WRITE "只讀 / 只寫"
+    IDS_MEMORY_READ_WRITE "只讀/只寫"
 END
 
 STRINGTABLE
@@ -537,12 +534,3 @@ BEGIN
     DEFPUSHBUTTON "取消(&C)", IDCANCEL, 93, 29, 45, 14
     LTEXT "正在搜索登錄...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "開啟登錄編輯程式說明。"
- *    ID_HELP_ABOUT "顯示程式資訊、版本號碼和著作權。"
- *END
- */
