@@ -80,7 +80,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "&File" //FIXME: accelerator collision &F
     BEGIN
         MENUITEM "&Import Registry File...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Export Registry File...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -128,7 +128,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorites"
+    POPUP "&Favorites" //FIXME: accelerator collision &F
     BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED

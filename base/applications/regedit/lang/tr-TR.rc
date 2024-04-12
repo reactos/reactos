@@ -82,7 +82,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Dosya"
+    POPUP "&Dosya" //FIXME: accelerator collision &D. If you decide to change this then please keep it in sync with the "&Dosya" in IDC_REGEDIT MENU
     BEGIN
         MENUITEM "&Al...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ver...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -97,7 +97,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
-    POPUP "&Düzen"
+    POPUP "&Düzen" //FIXME: accelerator collision &D
     BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -159,7 +159,7 @@ BEGIN
         BEGIN
             MENUITEM "&Anahtar", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&ize Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Değeri", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Çoklu Dize Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
@@ -199,8 +199,8 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "&Kes", ID_HEXEDIT_CUT
-        MENUITEM "&Kopyala", ID_HEXEDIT_COPY
+        MENUITEM "&Kes", ID_HEXEDIT_CUT //FIXME: accelerator collision &K
+        MENUITEM "&Kopyala", ID_HEXEDIT_COPY //FIXME: accelerator collision &K
         MENUITEM "&Yapıştır", ID_HEXEDIT_PASTE
         MENUITEM "&Sil", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR

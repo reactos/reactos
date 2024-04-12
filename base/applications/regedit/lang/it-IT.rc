@@ -565,7 +565,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Aggiungendo informazioni si possono involontariamente modificare o eliminare i valori e causare il giusto funzionamente dei componenti.\n Se non si considera attendibile la fonte di queste informazioni in '%s', non aggiungere al Registro di sistema.\n\n Si desidera continuare? "
+    IDS_IMPORT_PROMPT "Aggiungendo informazioni si possono involontariamente modificare o eliminare i valori e causare il giusto funzionamente dei componenti.\nSe non si considera attendibile la fonte di queste informazioni in '%s', non aggiungere al Registro di sistema.\n\nSi desidera continuare?"
     IDS_IMPORT_OK "Le chiavi e i valori contenuti in '%s' sono stati correttamente aggiunti al Registro di sistema."
     IDS_IMPORT_ERROR "Impossibile importare '%s': Errore durante l'apertura del file. Ci può essere un disco, file cdanneggiati o il file non esiste."
     IDS_EXPORT_ERROR "Impossibile esportare '%s': Errore durante la creazione o la scrittura del file. Ci può essere un disco o un file di sistema danneggiato."

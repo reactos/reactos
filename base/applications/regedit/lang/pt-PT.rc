@@ -145,11 +145,11 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Modificar", ID_EDIT_MODIFY
+        MENUITEM "&Modificar", ID_EDIT_MODIFY //FIXME: accelerator collision &M
         MENUITEM "Modificar dados binários", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Excluir\tDel", ID_EDIT_DELETE
-        MENUITEM "&Mudar o nome", ID_EDIT_RENAME
+        MENUITEM "&Mudar o nome", ID_EDIT_RENAME //FIXME: accelerator collision &M
     END
     POPUP ""
     BEGIN
@@ -179,10 +179,10 @@ BEGIN
         END
         MENUITEM "&Localizar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Eliminar", ID_TREE_DELETE
+        MENUITEM "&Eliminar", ID_TREE_DELETE //FIXME: accelerator collision &E
         MENUITEM "&Mudar o nome", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM "&Exportar", ID_TREE_EXPORT //FIXME: accelerator collision &E
         MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar chave 'Nome'", ID_EDIT_COPYKEYNAME
@@ -198,8 +198,8 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "C&ortar", ID_HEXEDIT_CUT
-        MENUITEM "&Copiar", ID_HEXEDIT_COPY
-        MENUITEM "&Colar", ID_HEXEDIT_PASTE
+        MENUITEM "&Copiar", ID_HEXEDIT_COPY //FIXME: accelerator collision &C
+        MENUITEM "&Colar", ID_HEXEDIT_PASTE  //FIXME: accelerator collision &C
         MENUITEM "&Excluir", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
