@@ -17,6 +17,7 @@ list(APPEND SOURCE
     ExtractIconEx.cpp
     FindExecutable.cpp
     GetDisplayNameOf.cpp
+    GUIDFromString.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
