@@ -30,7 +30,7 @@ STRINGTABLE
     IDS_INCORRECTPASSWORDTITLE  "Log on nu a reuşit:"
     IDS_INCORRECTPASSWORD       "ReactOS nu vă acceptă Log on.\nAsiguraţi-vă că numele de utilizator şi\nparola sunt corecte."
     IDS_CAPSLOCKONTITLE "Tasta Caps Lock activă:"
-    IDS_CAPSLOCKON      "Dacă aveţi tasta Caps Lock activată există posibilitatea să\nintroduceţi parola incorect.\n\nDezactivaţi tasta Caps Lock\n \înainte de a introduce parola."
+    IDS_CAPSLOCKON      "Dacă aveţi tasta Caps Lock activată există posibilitatea să\nintroduceţi parola incorect.\n\nDezactivaţi tasta Caps Lock\nînainte de a introduce parola."
 }
 
 IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
