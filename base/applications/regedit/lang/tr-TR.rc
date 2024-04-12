@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013-2015 Erdem Ersoy */
+// COPYRIGHT: 2013-2015 Erdem Ersoy
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -51,11 +51,11 @@ BEGIN
         BEGIN
             MENUITEM "&Dizin", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izgi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&ize Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&32 Bitlik Değer", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "D&WORD Değeri", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Çoklu Dizeli Değer", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Genişletilebilir Dize Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&İzinler...", ID_EDIT_PERMISSIONS
@@ -105,11 +105,11 @@ BEGIN
         BEGIN
             MENUITEM "&Dizin", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izgi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&ize Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&32 Bitlik Değer", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "D&WORD Değeri", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Çoklu Dize Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Genişletilebilir Dize Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -119,11 +119,11 @@ BEGIN
         BEGIN
             MENUITEM "&Dizin", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izgi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&ize Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&32 Bitlik Değer", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "D&WORD Değeri", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Çoklu Dize Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Genişletilebilir Dize Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Bul...", ID_EDIT_FIND
         MENUITEM SEPARATOR
