@@ -31,7 +31,7 @@ Ali jo želite ustvariti?"
 Ali jo želite zamenjati?"
     IDS_INVALID_FILENAME_TITLE "Neveljavni znaki v poti"
     IDS_INVALID_FILENAME    "Ime datoteke ne sme vsebovati naslednjih znakov:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Pot ne obstaja"
     IDS_FILENOTEXISTING     "Datoteka ne obstaja"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

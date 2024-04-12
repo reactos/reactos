@@ -31,7 +31,8 @@ STRINGTABLE
     IDS_CREATEFILE          "O ficheiro não existe.\nGostaria de o criar?"
     IDS_OVERWRITEFILE       "O ficheiro já existe.\nGostaria de o substituir?"
     IDS_INVALID_FILENAME_TITLE "Caracter(es) inválidos na localização"
-    IDS_INVALID_FILENAME    "Um nome de ficheiro não pode conter quaisquer dos seguintes caracteres:\n / : < > |"
+    IDS_INVALID_FILENAME    "Um nome de ficheiro não pode conter quaisquer dos seguintes caracteres:\n\
+/ : < > |"
     IDS_PATHNOTEXISTING     "A localização não existe"
     IDS_FILENOTEXISTING     "O ficheiro não existe"
     IDS_INVALID_FOLDERNAME  "A sua selecção não contém nenhuma pasta"

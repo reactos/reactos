@@ -30,7 +30,7 @@ Dosya oluşturmak ister misiniz?"
 Onu değiştirmek ister misiniz?"
     IDS_INVALID_FILENAME_TITLE "Yolda geçersiz işaret ya da işaretler var."
     IDS_INVALID_FILENAME    "Bir dosya adı aşağıdaki işaretlerin rastgele birini içeremez:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Dosya yolu yok."
     IDS_FILENOTEXISTING     "Dosya yok."
     IDS_INVALID_FOLDERNAME  "Seçim dizin olmayan bir nesne içeriyor."

@@ -37,7 +37,7 @@ STRINGTABLE
 ¿Desea reemplazarlo?"
     IDS_INVALID_FILENAME_TITLE "Caracter(es) inválidos en la ruta"
     IDS_INVALID_FILENAME    "Un nombre de archivo no puede contener ninguno de los siguientes caracteres:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "La ruta no existe"
     IDS_FILENOTEXISTING     "El archivo no existe"
     IDS_INVALID_FOLDERNAME  "La selección contiene algún elemento que no es una carpeta"

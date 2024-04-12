@@ -32,7 +32,7 @@ Czy chcesz go utworzyć?"
 Czy chcesz go zastąpić?"
     IDS_INVALID_FILENAME_TITLE "Błędny(e) znak(i) w nazwie"
     IDS_INVALID_FILENAME    "Nazwa pliku nie może zawierać znaków:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Katalog nie istnieje"
     IDS_FILENOTEXISTING     "Plik nie istnieje"
     IDS_INVALID_FOLDERNAME  "Wybór nie zawiera folderu"

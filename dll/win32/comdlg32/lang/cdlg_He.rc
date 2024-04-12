@@ -31,7 +31,7 @@ STRINGTABLE
 האם ברצונך להחליף אותו?"
     IDS_INVALID_FILENAME_TITLE "תווים שגויים בנתיב"
     IDS_INVALID_FILENAME    "שם קובץ לא יכול להכיל אף אחד מהתווים הבאים:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "הנתיב אינו קיים"
     IDS_FILENOTEXISTING     "הקובץ אינו קיים"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

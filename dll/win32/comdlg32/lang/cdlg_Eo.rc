@@ -31,7 +31,7 @@ STRINGTABLE
 Ĉu vi volas superskribi ĝin?"
     IDS_INVALID_FILENAME_TITLE "Nekorekta(j) tipo(j) en vojo"
     IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Vojo estas neekzistanta"
     IDS_FILENOTEXISTING     "Dosiero estas neekzistanta"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

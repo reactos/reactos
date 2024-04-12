@@ -31,7 +31,7 @@ Wilt u het bestand aanmaken?"
 Wilt u het vervangen?"
     IDS_INVALID_FILENAME_TITLE "De naam van het pad bevat ongeldige tekens"
     IDS_INVALID_FILENAME    "De volgende tekens mogen niet in de bestandsnaam voorkomen:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Het pad bestaat niet"
     IDS_FILENOTEXISTING     "Kan het bestand niet vinden"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

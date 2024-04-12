@@ -17,7 +17,7 @@ STRINGTABLE
 क्या आप इसे बदलना चाहते हैं?"
     IDS_INVALID_FILENAME_TITLE "पथ में अमान्य कैरेक्टर"
     IDS_INVALID_FILENAME    "फ़ाइलनेम में निम्न में से कोई भी कैरेक्टर नहीं हो सकता है:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "पथ मौजूद नहीं है"
     IDS_FILENOTEXISTING     "फ़ाइल मौजूद नहीं है"
     IDS_INVALID_FOLDERNAME  "चयन में एक गैर-फ़ोल्डर ऑब्जेक्ट है"

@@ -31,7 +31,7 @@ STRINGTABLE
 Искате ли да го замените?"
     IDS_INVALID_FILENAME_TITLE "Невалидни знаци в пътя"
     IDS_INVALID_FILENAME    "Името на файла не може да съдържа следните символи:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Пътят не съществува"
     IDS_FILENOTEXISTING     "Файлът не съществува"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
