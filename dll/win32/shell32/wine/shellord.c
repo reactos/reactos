@@ -1890,18 +1890,11 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 {
     ANSI_STRING ansi_str;
-    CHAR szAnsi[38 + 1];
-    WCHAR szWide[38 + 1];
+    WCHAR szWide[40];
     UNICODE_STRING guid_str = { 0, sizeof(szWide), szWide };
-
-    if (*str != '{')
-        return FALSE;
-
-    lstrcpynA(szAnsi, str, _countof(szAnsi)); /* Truncated copy */
-    RtlInitAnsiString(&ansi_str, szAnsi);
-    RtlAnsiStringToUnicodeString(&guid_str, &ansi_str, FALSE);
-
-    return !RtlGUIDFromString(&guid_str, guid);
+    RtlInitAnsiString(&ansi_str, str);
+    return !RtlAnsiStringToUnicodeString(&guid_str, &ansi_str, FALSE) &&
+           !RtlGUIDFromString(&guid_str, guid);
 }
 
 /*************************************************************************
@@ -1910,14 +1903,7 @@ BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 {
     UNICODE_STRING guid_str;
-    WCHAR szBuff[38 + 1];
-
-    if (*str != L'{')
-        return FALSE;
-
-    lstrcpynW(szBuff, str, _countof(szBuff)); /* Truncated copy */
-    RtlInitUnicodeString(&guid_str, szBuff);
-
+    RtlInitUnicodeString(&guid_str, str);
     return !RtlGUIDFromString(&guid_str, guid);
 }
 
