@@ -1,4 +1,4 @@
-/* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
+// COPYRIGHT: zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -323,10 +323,10 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "错误"
     IDS_WARNING "警告"
-    IDS_BAD_KEY "不能查询键 '%s'"
-    IDS_BAD_VALUE "不能查询值 '%s'"
-    IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键 (%ld)"
-    IDS_TOO_BIG_VALUE "数值过大 (%ld)"
+    IDS_BAD_KEY "不能查询键'%s'"
+    IDS_BAD_VALUE "不能查询值'%s'"
+    IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键(%ld)"
+    IDS_TOO_BIG_VALUE "数值过大(%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\n注册表编辑器将删除找到得空字符串。"
     IDS_QUERY_DELETE_KEY_ONE "确实要删除这个键吗?"
     IDS_QUERY_DELETE_KEY_MORE "确实要删除这些键吗?"
@@ -349,7 +349,7 @@ BEGIN
     IDS_BINARY_EMPTY "(零长度的二进位值)"
     IDS_DEFAULT_VALUE_NAME "(默认)"
     IDS_VALUE_NOT_SET "(值未设置)"
-    IDS_UNKNOWN_TYPE "未知类型: (0x%lx)"
+    IDS_UNKNOWN_TYPE "未知类型:(0x%lx)"
     IDS_MY_COMPUTER "我的计算机"
     IDS_IMPORT_REG_FILE "导入注册表文件"
     IDS_EXPORT_REG_FILE "导出注册表文件"
@@ -404,10 +404,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任 '%s' 中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续?"
-    IDS_IMPORT_OK "'%s' 中包含的键和值已经被成功添加到注册表中。"
-    IDS_IMPORT_ERROR "无法导入 '%s' ： 打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
-    IDS_EXPORT_ERROR "无法导出 '%s' ： 创建或写入文件时出错。可能磁盘或文件系统有错误。"
+    IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任'%s'中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续?"
+    IDS_IMPORT_OK "'%s'中包含的键和值已经被成功添加到注册表中。"
+    IDS_IMPORT_ERROR "无法导入'%s':打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
+    IDS_EXPORT_ERROR "无法导出'%s':创建或写入文件时出错。可能磁盘或文件系统有错误。"
 END
 
 STRINGTABLE
@@ -458,9 +458,9 @@ BEGIN
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
     IDS_BUS_PROCESSORINTERNAL "处理器内部"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_INTERNALPOWERBUS "内部电源总线"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
-    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_PNPBUS "即插即用总线"
     IDS_BUS_UNKNOWNTYPE "未知的接口类型"
 END
 
