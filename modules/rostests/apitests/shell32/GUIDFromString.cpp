@@ -8,6 +8,7 @@
 #include <shelltest.h>
 #include <initguid.h>
 #include <undocshell.h>
+#include <versionhelpers.h>
 
 DEFINE_GUID(invalid_guid, 0xDEADDEAD, 0xDEAD, 0xDEAD, 0xED, 0xED, 0xED, 0xED,
             0xED, 0xED, 0xED, 0xED);
@@ -20,6 +21,24 @@ DEFINE_GUID(invalid_guid, 0xDEADDEAD, 0xDEAD, 0xDEAD, 0xED, 0xED, 0xED, 0xED,
 static void TEST_GUIDFromStringA(void)
 {
     GUID guid;
+    BOOL ret;
+
+    guid = invalid_guid;
+    _SEH2_TRY
+    {
+        ret = GUIDFromStringA(NULL, &guid);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = 0xDEADBEEF;
+    }
+    _SEH2_END;
+
+    if (IsWindowsVistaOrGreater())
+        ok_int(ret, FALSE);
+    else
+        ok_int(ret, 0xDEADBEEF);
+    ok_int(memcmp(&guid, &invalid_guid, sizeof(guid)) == 0, TRUE);
 
     guid = invalid_guid;
     ok_int(GUIDFromStringA("", &guid), FALSE);
@@ -49,6 +68,24 @@ static void TEST_GUIDFromStringA(void)
 static void TEST_GUIDFromStringW(void)
 {
     GUID guid;
+    BOOL ret;
+
+    guid = invalid_guid;
+    _SEH2_TRY
+    {
+        ret = GUIDFromStringW(NULL, &guid);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = 0xDEADBEEF;
+    }
+    _SEH2_END;
+
+    if (IsWindowsVistaOrGreater())
+        ok_int(ret, 0xDEADBEEF);
+    else
+        ok_int(ret, FALSE);
+    ok_int(memcmp(&guid, &invalid_guid, sizeof(guid)) == 0, TRUE);
 
     guid = invalid_guid;
     ok_int(GUIDFromStringW(L"", &guid), FALSE);
