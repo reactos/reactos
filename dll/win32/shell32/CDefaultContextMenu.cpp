@@ -499,6 +499,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     UINT fState;
     UINT cIds = 0, indexFirst = *pIndexMenu;
 
+    mii = {0};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
