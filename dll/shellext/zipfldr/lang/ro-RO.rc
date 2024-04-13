@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Selectați o destinație"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Selectaţi un folder unde vor fi extrase fişierele.",IDC_STATIC,86,12,154,8
+    LTEXT           "Selectați un folder de destinație",IDC_STATIC,86,12,154,8
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "&Răsfoire...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "&Parolă:",IDC_PASSWORD,189,66,54,14
