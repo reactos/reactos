@@ -101,7 +101,7 @@ BEGIN
     GROUPBOX "Opțiuni", -1, 6, 30, 240, 65
     AUTOCHECKBOX "Afişa&re pictograme pe bara de activităţi", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "&Solicitare parolă când computerul iese din starea de veghe", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Umbrire afişare când se alimentează de la baterii.", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Umbrire afişare când se alimentează de la baterii", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Butoane alimentare", -1, 6, 101, 240, 110
     LTEXT "&La închiderea computerului portabil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
