@@ -485,7 +485,6 @@ retry:
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     VacbLruListEntry);
-        current_entry = current_entry->Flink;
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
@@ -522,6 +521,9 @@ retry:
             KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 #endif
         }
+
+        /* Only keep iterating though the loop while the lock is held */
+        current_entry = current_entry->Flink;
 
         /* Dereference the VACB */
         Refs = CcRosVacbDecRefCount(current);
