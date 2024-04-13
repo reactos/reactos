@@ -11,6 +11,8 @@
 #include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
 
+ULONG g_WinVersion;
+
 /*
  * cmp functions can either return 1/-1 or the actual difference between the
  * first two differing characters.
@@ -20,7 +22,7 @@
 #ifdef TEST_CRTDLL
 #define RETURN_DIFF 0
 #else
-#define RETURN_DIFF (GetVersion() >= 0x0600)
+#define RETURN_DIFF (g_WinVersion >= _WIN32_WINNT_VISTA)
 #endif
 
 #define DIFF_RETURN(sign, absolute) (sign (RETURN_DIFF ? absolute : 1))
@@ -28,6 +30,9 @@
 START_TEST(_mbsncmp)
 {
     int ret;
+
+    ULONG Version = GetVersion();
+    g_WinVersion = (Version & 0xFF) << 8 | (Version & 0xFF00) >> 8;
 
     /* Zero length always returns true */
     ret = _mbsncmp(NULL, NULL, 0);
