@@ -396,9 +396,10 @@ HRESULT CDesktopFolder::_ParseDisplayNameByParent(
     CComHeapPtr<ITEMIDLIST> pidlParent;
     BOOL bPath = FALSE;
     WCHAR wch = *lpszDisplayName;
-    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) && (lpszDisplayName[1] == L':'))
+    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) &&
+        (lpszDisplayName[1] == L':'))
     {
-        // "C:"
+        // "C:..."
         bPath = TRUE;
         pidlParent.Attach(_ILCreateMyComputer());
     }
@@ -450,7 +451,8 @@ HRESULT CDesktopFolder::_ParseDisplayNameByParent(
                 return hr;
 
             // Parse by desktop folder
-            return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, pdwAttributes);
+            return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl,
+                                                pdwAttributes);
         }
         case URL_SCHEME_HTTP:  // "http:..."
         case URL_SCHEME_HTTPS: // "https:..."
@@ -529,11 +531,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
                                              pdwAttributes);
     }
 
-    HRESULT hr = _ParseDisplayNameByParent(hwndOwner,
-                                           pbc,
-                                           lpszDisplayName,
-                                           pchEaten,
-                                           ppidl,
+    HRESULT hr = _ParseDisplayNameByParent(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
                                            pdwAttributes);
     if (SUCCEEDED(hr))
     {
