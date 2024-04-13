@@ -140,16 +140,14 @@ STDMETHODIMP
 CIDListUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
                                  PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    return E_NOTIMPL; // FIXME
 }
 
 STDMETHODIMP
 CHttpUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
                                PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    return E_NOTIMPL; // FIXME
 }
 
 BOOL CDesktopFolder::_TryUrlJunctions(
@@ -165,31 +163,25 @@ BOOL CDesktopFolder::_TryUrlJunctions(
     switch (ParsedURL.nScheme)
     {
         case URL_SCHEME_FILE:
-            // file:...
             *ppShellFolder = &m_FileUrlStub;
             break;
 
         case URL_SCHEME_HTTP:
         case URL_SCHEME_HTTPS:
-            // http://... or https://...
             if (!BindCtx_ContainsObject(pBindCtx, STR_PARSE_PREFER_FOLDER_BROWSING))
                 break;
             *ppShellFolder = &m_HttpUrlStub;
             break;
 
         case URL_SCHEME_SHELL:
-            // shell:...
             *ppShellFolder = &m_ShellUrlStub;
             break;
 
         case URL_SCHEME_MSSHELLROOTED:
-            // ms-shell-rooted:...
-            FIXME("\n");
-            *ppShellFolder = NULL;
+            *ppShellFolder = NULL; // FIXME
             break;
 
         case URL_SCHEME_MSSHELLIDLIST:
-            // ms-shell-idlist:...
             *ppShellFolder = &m_IDListUrlStub;
             break;
 
