@@ -33,6 +33,14 @@ class CFSFolder :
         HRESULT _CreateExtensionUIObject(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
         HRESULT _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
         HRESULT _GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
+
+        HRESULT _ParseSimple(
+            _In_ LPOLESTR lpszDisplayName,
+            _Out_ WIN32_FIND_DATAW *pFind,
+            _Out_ LPITEMIDLIST *ppidl);
+        BOOL _GetFindDataFromName(_In_ LPCWSTR pszName, _Out_ WIN32_FIND_DATAW *pFind);
+        HRESULT _CreateIDListFromName(LPCWSTR pszName, DWORD attrs, IBindCtx *pbc, LPITEMIDLIST *ppidl);
+
     public:
         CFSFolder();
         ~CFSFolder();

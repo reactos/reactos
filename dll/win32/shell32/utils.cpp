@@ -9,6 +9,68 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath)
+{
+    if (pszPath[0] != L'.')
+        return FALSE;
+    return !pszPath[1] || (pszPath[1] == L'.' && !pszPath[2]);
+}
+
+#define PATH_VALID_ELEMENT ( \
+    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
+    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
+)
+
+BOOL PathIsValidElement(_In_ LPCWSTR pszPath)
+{
+    if (!*pszPath || PathIsDotOrDotDotW(pszPath))
+        return FALSE;
+
+    for (LPCWSTR pch = pszPath; *pch; ++pch)
+    {
+        if (!PathIsValidCharW(*pch, PATH_VALID_ELEMENT))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL PathIsDosDevice(_In_ LPCWSTR pszName)
+{
+    WCHAR szPath[MAX_PATH];
+    StringCchCopyW(szPath, _countof(szPath), pszName);
+    PathRemoveExtensionW(szPath);
+
+    if (lstrcmpiW(szPath, L"NUL") == 0 || lstrcmpiW(szPath, L"PRN") == 0 ||
+        lstrcmpiW(szPath, L"CON") == 0 || lstrcmpiW(szPath, L"AUX") == 0)
+    {
+        return TRUE;
+    }
+
+    if (_wcsnicmp(szPath, L"LPT", 3) == 0 || _wcsnicmp(szPath, L"COM", 3) == 0)
+    {
+        if ((L'0' <= szPath[3] && szPath[3] <= L'9') && szPath[4] == UNICODE_NULL)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
+{
+    LPITEMIDLIST pidlOld = *ppidl;
+    if (!pidlOld)
+    {
+        *ppidl = pidl;
+        return S_OK;
+    }
+
+    HRESULT hr = SHILCombine(*ppidl, pidl, ppidl);
+    ILFree(pidlOld);
+    ILFree(pidl);
+    return hr;
+}
+
 static BOOL
 OpenEffectiveToken(
     _In_ DWORD DesiredAccess,
@@ -49,6 +111,19 @@ BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
     return TRUE;
 }
 
+DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault)
+{
+    if (!pbc)
+        return dwDefault;
+
+    BIND_OPTS BindOpts = { sizeof(BindOpts) };
+    HRESULT hr = pbc->GetBindOptions(&BindOpts);
+    if (FAILED(hr))
+        return dwDefault;
+
+    return BindOpts.grfMode;
+}
+
 BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid)
 {
     if (!pbc)
@@ -61,7 +136,7 @@ BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid)
     return pclsid && SHSkipJunction(pbc, pclsid);
 }
 
-HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW **ppFindData)
+HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *pFindData)
 {
     CComPtr<IUnknown> punk;
     CComPtr<IFileSystemBindData> pBindData;
@@ -72,17 +147,10 @@ HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *
     if (FAILED(punk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pBindData))))
         return S_FALSE;
 
-    HRESULT hr = S_OK;
-    if (ppFindData)
-    {
-        *ppFindData = (WIN32_FIND_DATAW*)LocalAlloc(LPTR, sizeof(WIN32_FIND_DATAW));
-        if (*ppFindData)
-            pBindData->GetFindData(*ppFindData);
-        else
-            hr = E_OUTOFMEMORY;
-    }
+    if (pFindData)
+        pBindData->GetFindData(pFindData);
 
-    return hr;
+    return S_OK;
 }
 
 BOOL Shell_FailForceReturn(_In_ HRESULT hr)
