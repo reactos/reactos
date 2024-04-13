@@ -20,6 +20,7 @@
 /*
  * The x86 Linux Boot Protocol is explained at:
  * https://www.kernel.org/doc/Documentation/x86/boot.txt
+ * https://www.linux.it/~rubini/docs/boot/boot.html
  */
 
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -84,20 +85,28 @@ RemoveQuotes(
 
 ARC_STATUS
 LoadAndBootLinux(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[])
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCHAR Envp[])
 {
     ARC_STATUS Status;
     PCSTR Description;
     PCSTR ArgValue;
     PCSTR BootPath;
-    UCHAR DriveNumber = 0;
-    ULONG PartitionNumber = 0;
     ULONG LinuxKernel = 0;
     ULONG LinuxInitrdFile = 0;
     FILEINFORMATION FileInfo;
     CHAR ArcPath[MAX_PATH];
+
+#if DBG
+    /* Ensure the boot type is the one expected */
+    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue || _stricmp(ArgValue, "Linux") != 0)
+    {
+        ERR("Unexpected boot type '%s', aborting\n", ArgValue ? ArgValue : "n/a");
+        return EINVAL;
+    }
+#endif
 
     Description = GetArgumentValue(Argc, Argv, "LoadIdentifier");
     if (Description && *Description)
@@ -125,10 +134,10 @@ LoadAndBootLinux(
         ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
         if (ArgValue && *ArgValue)
         {
-            DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+            UCHAR DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
             /* Retrieve the boot partition (not optional and cannot be zero) */
-            PartitionNumber = 0;
+            ULONG PartitionNumber = 0;
             ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
             if (ArgValue && *ArgValue)
                 PartitionNumber = atoi(ArgValue);
@@ -149,17 +158,6 @@ LoadAndBootLinux(
         {
             /* Fall back to using the system partition as default path */
             BootPath = GetArgumentValue(Argc, Argv, "SystemPartition");
-        }
-    }
-
-    /* If we haven't retrieved the BIOS drive and partition numbers above, do it now */
-    if (PartitionNumber == 0)
-    {
-        /* Retrieve the BIOS drive and partition numbers */
-        if (!DissectArcPath(BootPath, NULL, &DriveNumber, &PartitionNumber))
-        {
-            /* This is not a fatal failure, but just an inconvenience: display a message */
-            TRACE("DissectArcPath(%s) failed to retrieve BIOS drive and partition numbers.\n", BootPath);
         }
     }
 
@@ -240,9 +238,22 @@ LoadAndBootLinux(
             goto LinuxBootFailed;
     }
 
-    // If the default root device is set to FLOPPY (0000h), change to /dev/fd0 (0200h)
-    if (LinuxBootSector->RootDevice == 0x0000)
-        LinuxBootSector->RootDevice = 0x0200;
+    /*
+     * If the default root device is set to FLOPPY (0000h), change to /dev/fd0 (0200h).
+     * For a list of majors, see
+     * https://github.com/torvalds/linux/blob/master/include/uapi/linux/major.h
+     * For some examples of (decoded) root devices values, see
+     * https://github.com/torvalds/linux/blob/cc89c63e2/include/linux/root_dev.h
+     *
+     * NOTE: The RootDevice field is deprecated since commits
+     * https://github.com/torvalds/linux/commit/079f85e62
+     * https://github.com/torvalds/linux/commit/7448e8e5d
+     */
+#define NODEV           0
+#define FLOPPY_MAJOR    2
+#define makedev(maj, min)   (((maj) << 8) | (min))
+    if (LinuxBootSector->RootDevice == NODEV)
+        LinuxBootSector->RootDevice = makedev(FLOPPY_MAJOR, 0);
 
     if (LinuxSetupSector->Version >= 0x0202)
     {
@@ -271,8 +282,7 @@ LoadAndBootLinux(
     BootLinuxKernel(LinuxKernelSize, LinuxKernelLoadAddress,
                     (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
                         ? (PVOID)LINUX_KERNEL_LOAD_ADDRESS /* == 0x100000 */
-                        : (PVOID)0x10000,
-                    DriveNumber, PartitionNumber);
+                        : (PVOID)0x10000);
     /* Must not return! */
     return ESUCCESS;
 
