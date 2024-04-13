@@ -429,7 +429,7 @@ HRESULT CDesktopFolder::_ParseDisplayNameByParent(
     if (!UrlIsW(lpszDisplayName, URLIS_URL) || SHSkipJunctionBinding(pbc, NULL))
         return E_INVALIDARG;
 
-    // lpszDisplayName is a URL
+    // Now lpszDisplayName is a URL
     PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
     ::ParseURLW(lpszDisplayName, &ParsedURL);
 
