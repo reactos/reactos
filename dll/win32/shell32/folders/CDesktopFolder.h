@@ -23,73 +23,6 @@
 #ifndef _CDESKTOPFOLDER_H_
 #define _CDESKTOPFOLDER_H_
 
-class CStubFolderBase : public IShellFolder
-{
-public:
-    CStubFolderBase() { }
-
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override { return E_NOTIMPL; }
-    STDMETHODIMP_(ULONG) AddRef()  override { return 3; }
-    STDMETHODIMP_(ULONG) Release() override { return 2; }
-
-    // IShellFolder methods
-    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-                                  DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
-                               REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override
-    { return E_NOTIMPL; }
-    STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName,
-                           DWORD dwFlags, PITEMID_CHILD *pPidlOut) override
-    { return E_NOTIMPL; }
-};
-
-class CShellUrlStub : public CStubFolderBase
-{
-public:
-    STDMETHODIMP
-    ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                     PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
-};
-
-class CFileUrlStub : public CStubFolderBase
-{
-public:
-    STDMETHODIMP
-    ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                     PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
-};
-
-class CIDListUrlStub : public CStubFolderBase
-{
-public:
-    STDMETHODIMP
-    ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                     PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
-};
-
-class CHttpUrlStub : public CStubFolderBase
-{
-public:
-    STDMETHODIMP
-    ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                     PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
-};
-
 class CDesktopFolder :
     public CComCoClass<CDesktopFolder, &CLSID_ShellDesktop>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -104,35 +37,35 @@ class CDesktopFolder :
         CComPtr<IShellFolder2> m_SharedDesktopFSFolder;
         CComPtr<IShellFolder2> m_regFolder;
 
-        // Stub URL objects
-        CShellUrlStub   m_ShellUrlStub;
-        CFileUrlStub    m_FileUrlStub;
-        CIDListUrlStub  m_IDListUrlStub;
-        CHttpUrlStub    m_HttpUrlStub;
-
         LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
 
         HRESULT _GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf);
 
-        BOOL _TryUrlJunctions(
-            LPCWSTR pcszURL,
-            IBindCtx *pBindCtx,
-            IShellFolder **ppShellFolder,
-            LPITEMIDLIST *ppidl);
-        BOOL _GetParentForParsing(
-            LPCWSTR pszPath,
-            IBindCtx *pbc,
-            IShellFolder **ppParentFolder,
-            LPITEMIDLIST *ppidlParent);
-        HRESULT _ChildParseDisplayName(
-            IShellFolder *pParentFolder,
-            LPCITEMIDLIST pidlParent,
+        HRESULT _ParseDisplayNameByParent(
             HWND hwndOwner,
-            IBindCtx *pBindCtx,
-            LPWSTR lpszDisplayName,
+            LPBC pbc,
+            LPOLESTR pszPath,
             DWORD *pchEaten,
-            LPITEMIDLIST *ppidl,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        ShellUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        HttpUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
             DWORD *pdwAttributes);
 
     public:

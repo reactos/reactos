@@ -25,8 +25,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 STDMETHODIMP
-CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                                PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+CDesktopFolder::ShellUrlParseDisplayName(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
 {
     LPWSTR pch;
     INT cch, csidl;
@@ -36,7 +41,7 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
     ::ParseURLW(lpszDisplayName, &ParsedURL);
 
     DWORD attrs = (pdwAttributes ? *pdwAttributes : 0) | SFGAO_STREAM;
-    if (ParsedURL.pszSuffix[0] == L':' && ParsedURL.pszSuffix[1] == L':')
+    if (ParsedURL.pszSuffix[0] == L':' && ParsedURL.pszSuffix[1] == L':') // It begins from "::"
     {
         CComPtr<IShellFolder> psfDesktop;
         hr = SHGetDesktopFolder(&psfDesktop);
@@ -119,126 +124,16 @@ CShellUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayNa
 }
 
 STDMETHODIMP
-CFileUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                               PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
-{
-    WCHAR szPath[MAX_PATH];
-    DWORD cchPath = _countof(szPath);
-    HRESULT hr = PathCreateFromUrlW(lpszDisplayName, szPath, &cchPath, 0);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComPtr<IShellFolder> psfDesktop;
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl, pdwAttributes);
-}
-
-STDMETHODIMP
-CIDListUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                                 PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
-{
-    return E_NOTIMPL; // FIXME
-}
-
-STDMETHODIMP
-CHttpUrlStub::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
-                               PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
-{
-    return E_NOTIMPL; // FIXME
-}
-
-BOOL CDesktopFolder::_TryUrlJunctions(
-    LPCWSTR pcszURL,
-    IBindCtx *pBindCtx,
-    IShellFolder **ppShellFolder,
-    LPITEMIDLIST *ppidl)
-{
-    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
-    ::ParseURLW(pcszURL, &ParsedURL);
-
-    *ppShellFolder = NULL;
-    switch (ParsedURL.nScheme)
-    {
-        case URL_SCHEME_FILE:
-            *ppShellFolder = &m_FileUrlStub;
-            break;
-
-        case URL_SCHEME_HTTP:
-        case URL_SCHEME_HTTPS:
-            if (!BindCtx_ContainsObject(pBindCtx, STR_PARSE_PREFER_FOLDER_BROWSING))
-                break;
-            *ppShellFolder = &m_HttpUrlStub;
-            break;
-
-        case URL_SCHEME_SHELL:
-            *ppShellFolder = &m_ShellUrlStub;
-            break;
-
-        case URL_SCHEME_MSSHELLROOTED:
-            *ppShellFolder = NULL; // FIXME
-            break;
-
-        case URL_SCHEME_MSSHELLIDLIST:
-            *ppShellFolder = &m_IDListUrlStub;
-            break;
-
-        default:
-            break;
-    }
-
-    return !!*ppShellFolder;
-}
-
-BOOL CDesktopFolder::_GetParentForParsing(
-    LPCWSTR pszPath,
-    IBindCtx *pbc,
-    IShellFolder **ppParentFolder,
-    LPITEMIDLIST *ppidlParent)
-{
-    WCHAR wch = *pszPath;
-    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) && (pszPath[1] == ':'))
-        *ppidlParent = _ILCreateMyComputer();
-    else if (PathIsUNCW(pszPath))
-        *ppidlParent = _ILCreateNetwork();
-    else if (UrlIsW(pszPath, URLIS_URL) && !SHSkipJunctionBinding(pbc, NULL))
-        _TryUrlJunctions(pszPath, pbc, ppParentFolder, ppidlParent);
-
-    if (!*ppParentFolder && *ppidlParent)
-        SHBindToObject(NULL, *ppidlParent, IID_PPV_ARG(IShellFolder, ppParentFolder));
-
-    return *ppParentFolder != NULL;
-}
-
-HRESULT CDesktopFolder::_ChildParseDisplayName(
-    IShellFolder *pParentFolder,
-    LPCITEMIDLIST pidlParent,
+CDesktopFolder::HttpUrlParseDisplayName(
     HWND hwndOwner,
-    IBindCtx *pBindCtx,
-    LPWSTR lpszDisplayName,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
     DWORD *pchEaten,
-    LPITEMIDLIST *ppidl,
+    PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
-    LPITEMIDLIST pidlChild;
-    HRESULT hr = pParentFolder->ParseDisplayName(hwndOwner, pBindCtx, lpszDisplayName,
-                                                 pchEaten, &pidlChild, pdwAttributes);
-    if (FAILED(hr))
-        return hr;
-
-    if (pidlParent)
-    {
-        *ppidl = ILCombine(pidlParent, pidlChild);
-        ILFree(pidlChild);
-    }
-    else
-    {
-        *ppidl = pidlChild;
-    }
-
-    return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    FIXME("\n");
+    return E_NOTIMPL; // FIXME
 }
 
 /*
@@ -487,6 +382,116 @@ HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
         return m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
 }
 
+HRESULT CDesktopFolder::_ParseDisplayNameByParent(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
+{
+    if (pchEaten)
+        *pchEaten = 0;
+
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    BOOL bPath = FALSE;
+    WCHAR wch = *lpszDisplayName;
+    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) &&
+        (lpszDisplayName[1] == L':'))
+    {
+        // "C:..."
+        bPath = TRUE;
+        pidlParent.Attach(_ILCreateMyComputer());
+    }
+    else if (PathIsUNCW(lpszDisplayName)) // "\\\\..."
+    {
+        bPath = TRUE;
+        pidlParent.Attach(_ILCreateNetwork());
+    }
+
+    if (bPath)
+    {
+        if (!pidlParent)
+            return E_OUTOFMEMORY;
+
+        CComPtr<IShellFolder> pParentFolder;
+        SHBindToObject(NULL, pidlParent, IID_PPV_ARG(IShellFolder, &pParentFolder));
+
+        CComHeapPtr<ITEMIDLIST> pidlChild;
+        HRESULT hr = pParentFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName,
+                                                     pchEaten, &pidlChild, pdwAttributes);
+        if (FAILED(hr))
+            return hr;
+
+        *ppidl = ILCombine(pidlParent, pidlChild);
+        return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    }
+
+    if (!UrlIsW(lpszDisplayName, URLIS_URL) || SHSkipJunctionBinding(pbc, NULL))
+        return E_INVALIDARG;
+
+    // Now lpszDisplayName is a URL
+    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
+    ::ParseURLW(lpszDisplayName, &ParsedURL);
+
+    switch (ParsedURL.nScheme)
+    {
+        case URL_SCHEME_FILE: // "file:..."
+        {
+            // Convert "file://..." to a normal path
+            WCHAR szPath[MAX_PATH];
+            DWORD cchPath = _countof(szPath);
+            HRESULT hr = PathCreateFromUrlW(lpszDisplayName, szPath, &cchPath, 0);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            CComPtr<IShellFolder> psfDesktop;
+            hr = SHGetDesktopFolder(&psfDesktop);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            // Parse by desktop folder
+            return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl,
+                                                pdwAttributes);
+        }
+        case URL_SCHEME_HTTP:  // "http:..."
+        case URL_SCHEME_HTTPS: // "https:..."
+        {
+            if (!BindCtx_ContainsObject(pbc, STR_PARSE_PREFER_FOLDER_BROWSING))
+                return E_INVALIDARG;
+
+            return HttpUrlParseDisplayName(hwndOwner,
+                                           pbc,
+                                           lpszDisplayName,
+                                           pchEaten,
+                                           ppidl,
+                                           pdwAttributes);
+        }
+        case URL_SCHEME_SHELL: // "shell:..."
+        {
+            return ShellUrlParseDisplayName(hwndOwner,
+                                            pbc,
+                                            lpszDisplayName,
+                                            pchEaten,
+                                            ppidl,
+                                            pdwAttributes);
+        }
+        case URL_SCHEME_MSSHELLROOTED:
+        case URL_SCHEME_MSSHELLIDLIST:
+        {
+            WARN("We don't support 'ms-shell-rooted:' and 'ms-shell-idlist:' schemes\n");
+            break;
+        }
+        default:
+        {
+            TRACE("Scheme: %u\n", ParsedURL.nScheme);
+            break;
+        }
+    }
+
+    return E_INVALIDARG;
+}
+
 /**************************************************************************
  *    CDesktopFolder::ParseDisplayName
  *
@@ -526,35 +531,22 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
                                              pdwAttributes);
     }
 
-    HRESULT hr = E_INVALIDARG;
-    CComHeapPtr<ITEMIDLIST> pidlParent;
-    CComPtr<IShellFolder> pParentFolder;
-    if (_GetParentForParsing(lpszDisplayName, pbc, &pParentFolder, &pidlParent))
+    HRESULT hr = _ParseDisplayNameByParent(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                           pdwAttributes);
+    if (SUCCEEDED(hr))
     {
-        if (pchEaten)
-            *pchEaten = 0;
-
-        hr = _ChildParseDisplayName(pParentFolder,
-                                    pidlParent,
-                                    hwndOwner,
-                                    pbc,
-                                    lpszDisplayName,
-                                    pchEaten,
-                                    ppidl,
-                                    pdwAttributes);
-        if (SUCCEEDED(hr))
+        if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
         {
-            if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
+            CComHeapPtr<ITEMIDLIST> pidlAlias;
+            if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
             {
-                LPITEMIDLIST pidlAlias;
-                if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
-                {
-                    ILFree(*ppidl);
-                    *ppidl = pidlAlias;
-                }
+                ILFree(*ppidl);
+                *ppidl = pidlAlias.Detach();
             }
-            return hr;
         }
+
+        TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
+        return hr;
     }
 
     if (Shell_FailForceReturn(hr))
