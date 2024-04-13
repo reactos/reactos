@@ -671,17 +671,17 @@ HRESULT CFSFolder::_ParseSimple(
     _Out_ LPITEMIDLIST *ppidl)
 {
     HRESULT hr;
-    LPWSTR pch = lpszDisplayName;
+    LPWSTR pchNext = lpszDisplayName;
 
     *ppidl = NULL;
 
     do
     {
-        hr = Shell_NextElement(&pch, pFind->cFileName, _countof(pFind->cFileName), FALSE);
+        hr = Shell_NextElement(&pchNext, pFind->cFileName, _countof(pFind->cFileName), FALSE);
         if (hr != S_OK)
             break;
 
-        if (pch)
+        if (pchNext)
         {
             pFind->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
         }
