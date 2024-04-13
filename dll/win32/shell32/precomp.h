@@ -161,8 +161,9 @@ Shell_TranslateIDListAlias(
     _In_ DWORD dwFlags);
 
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
+DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);
 BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid);
-HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW **ppFindData);
+HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *pFindData);
 BOOL Shell_FailForceReturn(_In_ HRESULT hr);
 
 EXTERN_C INT
@@ -210,5 +211,10 @@ BindCtx_RegisterObjectParam(
     _In_ LPOLESTR pszKey,
     _In_opt_ IUnknown *punk,
     _Out_ LPBC *ppbc);
+
+BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath);
+BOOL PathIsValidElement(_In_ LPCWSTR pszPath);
+BOOL PathIsDosDevice(_In_ LPCWSTR pszName);
+HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl);
 
 #endif /* _PRECOMP_H__ */
