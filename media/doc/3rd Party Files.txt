@@ -248,7 +248,7 @@ URL: http://www.mega-nerd.com/SRC/download.html
 Title: win-iconv
 Path: sdk/lib/3rdparty/libwin-iconv
 Used Version: git commit 8765259
-License:
+License: "Public Domain"
 URL: https://github.com/win-iconv/win-iconv
 
 Title: LibXML
