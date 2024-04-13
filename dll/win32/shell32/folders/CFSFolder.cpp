@@ -4,7 +4,7 @@
  * PURPOSE:     file system folder
  * COPYRIGHT:   Copyright 1997 Marcus Meissner
  *              Copyright 1998, 1999, 2002 Juergen Schmied
- *              Copyright 2019 Katayama Hirofumi MZ
+ *              Copyright 2019-2024 Katayama Hirofumi MZ
  *              Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
@@ -675,31 +675,23 @@ HRESULT CFSFolder::_ParseSimple(
 
     *ppidl = NULL;
 
-    do
+    LPITEMIDLIST pidl;
+    for (hr = S_OK; SUCCEEDED(hr); hr = SHILAppend(pidl, ppidl))
     {
         hr = Shell_NextElement(&pchNext, pFind->cFileName, _countof(pFind->cFileName), FALSE);
         if (hr != S_OK)
             break;
 
         if (pchNext)
-        {
             pFind->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else
-        {
-            lstrcpynW(pFind->cAlternateFileName, pFind->cAlternateFileName,
-                      _countof(pFind->cAlternateFileName));
-        }
 
-        LPITEMIDLIST pidl = _ILCreateFromFindDataW(pFind);
+        pidl = _ILCreateFromFindDataW(pFind);
         if (!pidl)
         {
             hr = E_OUTOFMEMORY;
             break;
         }
-
-        hr = SHILAppend(pidl, ppidl);
-    } while (SUCCEEDED(hr));
+    }
 
     if (SUCCEEDED(hr))
         return S_OK;
