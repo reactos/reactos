@@ -174,7 +174,7 @@ BEGIN
     IDS_TIMEOUT14 "După 4 ore"
     IDS_TIMEOUT15 "După 5 ore"
     IDS_TIMEOUT16 "Niciodată"
-    IDS_DEL_SCHEME "Sigur ştergeţi schema de alimentare: ""%s""?"
+    IDS_DEL_SCHEME "Sigur ştergeţi schema de alimentare: '%s'?"
     IDS_DEL_SCHEME_TITLE "Ştergere schemă"
     IDS_DEL_SCHEME_ERROR "Imposibil de șters schema de alimentare"
 END
