@@ -37,10 +37,8 @@ BOOL PathIsValidElement(_In_ LPCWSTR pszPath)
 
 BOOL PathIsDosDevice(_In_ LPCWSTR pszName)
 {
-    WCHAR szPath[16];
-    if (FAILED(StringCchCopyW(szPath, _countof(szPath), pszName)))
-        return FALSE;
-
+    WCHAR szPath[MAX_PATH];
+    StringCchCopyW(szPath, _countof(szPath), pszName);
     PathRemoveExtensionW(szPath);
 
     if (lstrcmpiW(szPath, L"NUL") == 0 || lstrcmpiW(szPath, L"PRN") == 0 ||
