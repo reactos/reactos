@@ -494,9 +494,7 @@ retry:
         /* Check if it's mapped and not dirty */
         if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
         {
-            /* The code here presents a difficult to solve locking scenario.
-             * In testing, I (Doug Lyons) have never seen it exercised.
-             * For now we could bypass it with a message as shown below. */
+            /* This code is never executed. It is left for reference only. */
 #if 1
             DPRINT1("MmPageOutPhysicalAddress unexpectedly called\n");
             ASSERT(FALSE);
