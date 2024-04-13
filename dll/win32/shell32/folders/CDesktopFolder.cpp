@@ -546,6 +546,8 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
                 *ppidl = pidlAlias.Detach();
             }
         }
+
+        TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
         return hr;
     }
 
