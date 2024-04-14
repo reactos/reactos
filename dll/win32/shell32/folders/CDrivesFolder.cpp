@@ -719,9 +719,10 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         }
         else
         {
-            hr = SHILClone(pidlTemp, ppidl);
+            *ppidl = pidlTemp.Detach();
             if (pdwAttributes && *pdwAttributes)
                 GetAttributesOf(1, (PCUITEMID_CHILD_ARRAY)ppidl, pdwAttributes);
+            hr = S_OK;
         }
     }
 
