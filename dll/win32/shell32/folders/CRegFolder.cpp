@@ -313,6 +313,8 @@ class CRegFolder :
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
+        BOOL _IsInNameSpace(_In_ LPCITEMIDLIST pidl);
+
     public:
         CRegFolder();
         ~CRegFolder();
@@ -401,46 +403,76 @@ HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttrib
     return S_OK;
 }
 
+BOOL CRegFolder::_IsInNameSpace(_In_ LPCITEMIDLIST pidl)
+{
+    CLSID clsid = *_ILGetGUIDPointer(pidl);
+    if (IsEqualGUID(clsid, CLSID_Printers))
+        return TRUE;
+    if (IsEqualGUID(clsid, CLSID_ConnectionFolder))
+        return TRUE;
+    FIXME("Check registry\n");
+    return TRUE;
+}
+
 HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
 {
-    LPITEMIDLIST pidl;
-
-    if (!lpszDisplayName || !ppidl)
+    if (!ppidl)
         return E_INVALIDARG;
 
-    *ppidl = 0;
+    *ppidl = NULL;
 
-    if (pchEaten)
-        *pchEaten = 0;
+    if (!lpszDisplayName)
+        return E_INVALIDARG;
 
-    UINT cch = wcslen(lpszDisplayName);
-    if (cch < 39 || lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':')
-        return E_FAIL;
-
-    pidl = _ILCreateGuidFromStrW(lpszDisplayName + 2);
-    if (pidl == NULL)
-        return E_FAIL;
-
-    if (cch < 41)
+    if (lpszDisplayName[0] != L':' || lpszDisplayName[1] != L':')
     {
-        *ppidl = pidl;
+        FIXME("What should we do here?\n");
+        return E_FAIL;
+    }
+
+    LPWSTR pch, pchNextOfComma = NULL;
+    for (pch = &lpszDisplayName[2]; *pch && *pch != L'\\'; ++pch)
+    {
+        if (*pch == L',' && !pchNextOfComma)
+            pchNextOfComma = pch + 1;
+    }
+
+    CLSID clsid;
+    if (!GUIDFromStringW(&lpszDisplayName[2], &clsid))
+        return CO_E_CLASSSTRING;
+
+    if (pchNextOfComma)
+    {
+        FIXME("Delegate folder\n");
+        return E_FAIL;
+    }
+
+    CComHeapPtr<ITEMIDLIST> pidlTemp(_ILCreateGuid(PT_GUID, clsid));
+    if (!pidlTemp)
+        return E_OUTOFMEMORY;
+
+    if (!_IsInNameSpace(pidlTemp) && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
+        return E_INVALIDARG;
+
+    *ppidl = pidlTemp.Detach();
+
+    if (!*pch)
+    {
         if (pdwAttributes && *pdwAttributes)
-        {
             GetGuidItemAttributes(*ppidl, pdwAttributes);
-        }
-    }
-    else
-    {
-        HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, &pidl, lpszDisplayName + 41, pchEaten, pdwAttributes);
-        if (SUCCEEDED(hr))
-        {
-            *ppidl = pidl;
-        }
-        return hr;
+
+        return S_OK;
     }
 
-    return S_OK;
+    HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, ppidl, pch + 1, pchEaten,
+                                          pdwAttributes);
+    if (FAILED(hr))
+    {
+        ILFree(*ppidl);
+        *ppidl = NULL;
+    }
+    return hr;
 }
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
