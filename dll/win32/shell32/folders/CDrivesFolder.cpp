@@ -657,19 +657,26 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
 HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         DWORD * pchEaten, PIDLIST_RELATIVE * ppidl, DWORD * pdwAttributes)
 {
+    HRESULT hr = E_INVALIDARG;
+
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
           hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
           pchEaten, ppidl, pdwAttributes);
 
     if (!ppidl)
-        return E_INVALIDARG;
+        return hr;
 
     *ppidl = NULL;
 
     if (!lpszDisplayName)
-        return E_INVALIDARG;
+        return hr;
 
-    HRESULT hr = E_INVALIDARG;
+    /* handle CLSID paths */
+    if (lpszDisplayName[0] == L':' && lpszDisplayName[1] == L':')
+    {
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                             pdwAttributes);
+    }
 
     if (lpszDisplayName[0] &&
         ((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
