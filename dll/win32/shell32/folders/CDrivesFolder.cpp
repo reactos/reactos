@@ -705,14 +705,14 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         {
             CComPtr<IShellFolder> pChildFolder;
             hr = BindToObject(pidlTemp, pbc, IID_PPV_ARG(IShellFolder, &pChildFolder));
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
             ULONG chEaten;
             CComHeapPtr<ITEMIDLIST> pidlChild;
             hr = pChildFolder->ParseDisplayName(hwndOwner, pbc, &lpszDisplayName[3], &chEaten,
                                                 &pidlChild, pdwAttributes);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
             hr = SHILCombine(pidlTemp, pidlChild, ppidl);
