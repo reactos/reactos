@@ -465,7 +465,14 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
         return E_INVALIDARG;
 
     *ppidl = pidl.Detach();
-    return SHELL32_ParseNextElement(this, hwndOwner, pbc, ppidl, pch + 1, pchEaten, pdwAttributes);
+    HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, ppidl, pch + 1, pchEaten,
+                                          pdwAttributes);
+    if (FAILED(hr))
+    {
+        ILFree(*ppidl);
+        *ppidl = NULL;
+    }
+    return hr;
 }
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
