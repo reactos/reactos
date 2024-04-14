@@ -452,19 +452,19 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
     if (!pidlTemp)
         return E_OUTOFMEMORY;
 
+    if (!_IsInNameSpace(pidlTemp) && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
+        return E_INVALIDARG;
+
+    *ppidl = pidlTemp.Detach();
+
     if (!*pch)
     {
-        *ppidl = pidlTemp.Detach();
         if (pdwAttributes && *pdwAttributes)
             GetGuidItemAttributes(*ppidl, pdwAttributes);
 
         return S_OK;
     }
 
-    if (!_IsInNameSpace(pidlTemp) && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
-        return E_INVALIDARG;
-
-    *ppidl = pidlTemp.Detach();
     HRESULT hr = SHELL32_ParseNextElement(this, hwndOwner, pbc, ppidl, pch + 1, pchEaten,
                                           pdwAttributes);
     if (FAILED(hr))
