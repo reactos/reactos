@@ -11,6 +11,7 @@ list(APPEND LIBCNTPR_STDLIB_SOURCE
 list(APPEND CRT_STDLIB_SOURCE
     ${COMMON_STDLIB_SOURCE}
     stdlib/_exit.c
+    stdlib/_invalid_parameter.c
     stdlib/_set_abort_behavior.c
     stdlib/abort.c
     stdlib/atexit.c
