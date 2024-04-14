@@ -684,12 +684,8 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         lpszDisplayName[1] == L':' && lpszDisplayName[2] == L'\\')
     {
         // "C:\..."
-        INT iDrive = ((*lpszDisplayName - 1) & 0x1F);
-        if (iDrive == -1)
-            return E_INVALIDARG;
-
         WCHAR szRoot[MAX_PATH];
-        PathBuildRootW(szRoot, iDrive);
+        PathBuildRootW(szRoot, ((*lpszDisplayName - 1) & 0x1F));
 
         if (SHIsFileSysBindCtx(pbc, NULL) != S_OK && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
         {
