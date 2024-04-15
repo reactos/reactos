@@ -2530,6 +2530,21 @@ MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd)
    return NULL;
 }
 
+VOID FASTCALL
+MsqReleaseModifierKeys(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+    WORD ModifierKeys[] = { VK_LCONTROL, VK_RCONTROL, VK_CONTROL,
+                            VK_LMENU,    VK_RMENU,    VK_MENU,
+                            VK_LSHIFT,   VK_RSHIFT,   VK_SHIFT };
+    UINT i;
+
+    for (i = 0; i < _countof(ModifierKeys); ++i)
+    {
+        if (IS_KEY_DOWN(MessageQueue->afKeyState, ModifierKeys[i]))
+            SET_KEY_DOWN(MessageQueue->afKeyState, ModifierKeys[i], FALSE);
+    }
+}
+
 SHORT
 APIENTRY
 NtUserGetKeyState(INT key)
