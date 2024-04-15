@@ -34,6 +34,12 @@
  */
 // #define REACTOS_FANCY_BOOT
 
+#if SOS_UI == SOS_UI_LEGACY || SOS_UI == SOS_UI_NONE
+#define SOS_HEADER_MARGIN_TOP 0
+#else
+#define SOS_HEADER_MARGIN_TOP 12
+#endif
+
 /*
  * BitBltAligned() alignments
  */
@@ -507,7 +513,13 @@ NTAPI
 DisplayBootBitmap(
     _In_ BOOLEAN TextMode)
 {
-    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL;
+    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL;
+#if SOS_UI != SOS_UI_NONE
+    PVOID Header = NULL;
+#endif
+#if SOS_UI == SOS_UI_LEGACY
+    PVOID Footer = NULL;
+#endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[RTL_NUMBER_OF(RotBarBuffer)];
@@ -543,23 +555,52 @@ DisplayBootBitmap(
          */
         MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
-        /* Check the type of the OS: workstation or server */
-        if (SharedUserData->NtProductType == NtProductWinNt)
-        {
-            /* Workstation: Get header */
-            Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
-        }
-        else
-        {
-            /* Server: Get header */
-            Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
-        }
-
         /* Set the scrolling region */
         InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
                             VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
 
+#if SOS_UI == SOS_UI_NONE
+        InbvResetDisplay();
+#elif SOS_UI == SOS_UI_LEGACY
+        /* Check the type of the OS: workstation or server */
+        if (SharedUserData->NtProductType == NtProductWinNt)
+        {
+            /* Workstation; set colors */
+            InbvSetTextColor(BV_COLOR_WHITE);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_DARK_GRAY);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
+
+            /* Get resources */
+            Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
+            Footer = InbvGetResourceAddress(IDB_WKSTA_FOOTER);
+        }
+        else
+        {
+            /* Server; set colors */
+            InbvSetTextColor(BV_COLOR_LIGHT_CYAN);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
+
+            /* Get resources */
+            Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
+            Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
+        }
+#else SOS_UI == SOS_UI_NEW
+        Header = InbvGetResourceAddress(IDB_HEADER_NEW);
+#endif
         /* Make sure we have resources */
+#if SOS_UI == SOS_UI_LEGACY
+        if (Footer)
+        {
+            /* BitBlt the footer on the screen */
+            BitBltAligned(Footer,
+                          TRUE,
+                          AL_HORIZONTAL_CENTER,
+                          AL_VERTICAL_BOTTOM,
+                          0, 0, 0, 59);
+        }
+#endif
+#if SOS_UI != SOS_UI_NONE
         if (Header)
         {
             /* BitBlt the header on the screen */
@@ -567,9 +608,9 @@ DisplayBootBitmap(
                           FALSE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_TOP,
-                          0, 12, 0, 0);
+                          0, SOS_HEADER_MARGIN_TOP, 0, 0);
         }
-
+#endif
         /* Restore the kernel resource section protection to be read-only */
         MmChangeKernelResourceSectionProtection(MM_READONLY);
     }
