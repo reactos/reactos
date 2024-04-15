@@ -113,8 +113,9 @@ MMixerGetWaveInfoByIndexAndType(
 
 VOID
 MMixerInitializeDataFormat(
-    IN PKSDATAFORMAT_WAVEFORMATEX DataFormat,
-    LPWAVEFORMATEX WaveFormatEx)
+    _Inout_ PKSDATAFORMAT_WAVEFORMATEX DataFormat,
+    _In_ LPWAVEFORMATEX WaveFormatEx,
+    _In_ DWORD cbSize)
 {
     DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
     DataFormat->WaveFormatEx.nChannels = WaveFormatEx->nChannels;
@@ -122,8 +123,8 @@ MMixerInitializeDataFormat(
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = WaveFormatEx->cbSize;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + WaveFormatEx->cbSize;
+    DataFormat->WaveFormatEx.cbSize = cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
@@ -244,13 +245,17 @@ MMixerOpenWavePin(
     LPMIXER_DATA MixerData;
     NTSTATUS Status;
     MIXER_STATUS MixerStatus;
+    DWORD cbSize;
 
     MixerData = MMixerGetDataByDeviceId(MixerList, DeviceId);
     if (!MixerData)
         return MM_STATUS_INVALID_PARAMETER;
 
+    /* Enforce 0 for WAVE_FORMAT_PCM, which ignores extra information size */
+    cbSize = WaveFormatEx->wFormatTag == WAVE_FORMAT_PCM ? 0 : WaveFormatEx->cbSize;
+
     /* allocate pin connect */
-    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX) + WaveFormatEx->cbSize);
+    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX) + cbSize);
     if (!PinConnect)
     {
         /* no memory */
@@ -263,7 +268,7 @@ MMixerOpenWavePin(
     /* get offset to dataformat */
     DataFormat = (PKSDATAFORMAT_WAVEFORMATEX) (PinConnect + 1);
     /* initialize with requested wave format */
-    MMixerInitializeDataFormat(DataFormat, WaveFormatEx);
+    MMixerInitializeDataFormat(DataFormat, WaveFormatEx, cbSize);
 
     if (CreateCallback)
     {
