@@ -38,8 +38,7 @@
 #define IDB_WKSTA_FOOTER    7
 #define IDB_SERVER_HEADER   14
 #define IDB_SERVER_FOOTER   15
-#endif
-#if SOS_UI != SOS_UI_LEGACY && SOS_UI != SOS_UI_NONE
+#elif SOS_UI != SOS_UI_NONE
 #define IDB_HEADER_NEW      14
 #endif
 
