@@ -29,6 +29,7 @@ list(APPEND CRT_STDLIB_SOURCE
     stdlib/obsol.c
     stdlib/putenv.c
     stdlib/rand.c
+    stdlib/rand_s.c
     stdlib/rot.c
     stdlib/senv.c
     stdlib/swab.c
