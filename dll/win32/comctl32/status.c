@@ -95,11 +95,6 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr);
 static LRESULT
 STATUSBAR_NotifyFormat (STATUS_INFO *infoPtr, HWND from, INT cmd);
 
-static inline LPCSTR debugstr_t(LPCWSTR text, BOOL isW)
-{
-  return isW ? debugstr_w(text) : debugstr_a((LPCSTR)text);
-}
-
 static UINT
 STATUSBAR_ComputeHeight(STATUS_INFO *infoPtr)
 {
@@ -713,11 +708,6 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
     BOOL changed = FALSE;
     INT  oldStyle;
 
-    if (style & SBT_OWNERDRAW) {
-         TRACE("part %d, text %p\n",nPart,text);
-    }
-    else TRACE("part %d, text %s\n", nPart, debugstr_t(text, isW));
-
     /* MSDN says: "If the parameter is set to SB_SIMPLEID (255), the status
      * window is assumed to be a simple window */
 
@@ -1039,7 +1029,6 @@ STATUSBAR_WMPaint (STATUS_INFO *infoPtr, HDC hdc)
 {
     PAINTSTRUCT ps;
 
-    TRACE("\n");
     if (hdc) return STATUSBAR_Refresh (infoPtr, hdc);
     hdc = BeginPaint (infoPtr->Self, &ps);
     STATUSBAR_Refresh (infoPtr, hdc);
@@ -1070,7 +1059,6 @@ STATUSBAR_WMSetText (const STATUS_INFO *infoPtr, LPCSTR text)
     STATUSWINDOWPART *part;
     int len;
 
-    TRACE("\n");
     if (infoPtr->numParts == 0)
 	return FALSE;
 
@@ -1098,7 +1086,6 @@ STATUSBAR_WMSize (STATUS_INFO *infoPtr, WORD flags)
     RECT parent_rect;
 
     /* Need to resize width to match parent */
-    TRACE("flags %04x\n", flags);
 
     if (flags != SIZE_RESTORED && flags != SIZE_MAXIMIZED) {
 	WARN("flags MUST be SIZE_RESTORED or SIZE_MAXIMIZED\n");
@@ -1116,6 +1103,10 @@ STATUSBAR_WMSize (STATUS_INFO *infoPtr, WORD flags)
     y = parent_rect.bottom - infoPtr->height;
     MoveWindow (infoPtr->Self, x, y, width, infoPtr->height, TRUE);
     STATUSBAR_SetPartBounds (infoPtr);
+#ifdef __REACTOS__
+    parent_rect = infoPtr->parts[infoPtr->numParts - 1].bound;
+    InvalidateRect(infoPtr->Self, &parent_rect, TRUE);
+#endif
     return TRUE;
 }
 
