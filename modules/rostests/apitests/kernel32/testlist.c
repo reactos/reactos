@@ -39,6 +39,7 @@ extern void func_TerminateProcess(void);
 extern void func_TunnelCache(void);
 extern void func_UEFIFirmware(void);
 extern void func_WideCharToMultiByte(void);
+extern void func_Pipes(void);
 
 const struct test winetest_testlist[] =
 {
@@ -78,5 +79,6 @@ const struct test winetest_testlist[] =
     { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
     { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
+    { "Pipes",                       func_Pipes },
     { 0, 0 }
 };

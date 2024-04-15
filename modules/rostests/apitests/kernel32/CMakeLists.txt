@@ -38,7 +38,8 @@ list(APPEND SOURCE
     TerminateProcess.c
     TunnelCache.c
     UEFIFirmware.c
-    WideCharToMultiByte.c)
+    WideCharToMultiByte.c
+    Pipes.c)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
