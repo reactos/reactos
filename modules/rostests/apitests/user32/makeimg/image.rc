@@ -1,0 +1,4 @@
+#include "resource.h"
+
+IDB_TEST                BITMAP      "test.bmp"
+
