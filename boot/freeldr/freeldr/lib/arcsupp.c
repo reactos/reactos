@@ -1,8 +1,8 @@
 /*
  * PROJECT:     FreeLoader
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic ARC Support Functions
- * COPYRIGHT:   Copyright 2019 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2019-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -11,12 +11,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PCHAR
+PSTR
 GetNextArgumentValue(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN OUT PULONG LastIndex OPTIONAL,
-    IN PCHAR ArgumentName)
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _Inout_opt_ PULONG LastIndex,
+    _In_ PCSTR ArgumentName)
 {
     ULONG i;
     SIZE_T ArgNameLen = strlen(ArgumentName);
@@ -37,11 +37,13 @@ GetNextArgumentValue(
     return NULL;
 }
 
-PCHAR
+PSTR
 GetArgumentValue(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR ArgumentName)
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCSTR ArgumentName)
 {
     return GetNextArgumentValue(Argc, Argv, NULL, ArgumentName);
 }
+
+/* EOF */
