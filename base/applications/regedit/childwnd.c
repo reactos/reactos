@@ -390,6 +390,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
         }
         goto def;
+
     case WM_DESTROY:
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
@@ -399,6 +400,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;
+
     case WM_LBUTTONDOWN:
     {
         INT x = (SHORT)LOWORD(lParam);
@@ -424,7 +426,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_CAPTURECHANGED:
-        if (GetCapture()==hWnd && last_split>=0)
+        if (GetCapture() == hWnd && last_split >= 0)
             draw_splitbar(hWnd, last_split);
         break;
 
