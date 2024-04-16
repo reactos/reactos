@@ -17,9 +17,9 @@
 #pragma once
 
 /* Options for SOS mode UI */
-#define SOS_UI_NONE                  0
-#define SOS_UI_NEW                   1
-#define SOS_UI_LEGACY                2
+#define SOS_UI_NONE         0
+#define SOS_UI_NEW          1
+#define SOS_UI_LEGACY       2
 
 #define IDB_BOOT_SCREEN     1
 #define IDB_HIBERNATE_BAR   2
