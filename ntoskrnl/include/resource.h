@@ -39,7 +39,7 @@
 #define IDB_SERVER_HEADER   14
 #define IDB_SERVER_FOOTER   15
 #elif SOS_UI != SOS_UI_NONE
-#define IDB_HEADER_NEW      14
+#define IDB_HEADER_NEW      6
 #endif
 
 /* Workstation editions Overlays */
