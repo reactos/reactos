@@ -402,10 +402,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_LBUTTONDOWN:
     {
         INT x = (SHORT)LOWORD(lParam);
-        x = ClampSplitBarX(hWnd, x);
-        draw_splitbar(hWnd, x);
-        last_split = x;
-        SetCapture(hWnd);
+        if (x >= g_pChildWnd->nSplitPos - SPLIT_WIDTH / 2 &&
+            x <  g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2 + 1)
+        {
+            x = ClampSplitBarX(hWnd, x);
+            draw_splitbar(hWnd, x);
+            last_split = x;
+            SetCapture(hWnd);
+        }
         break;
     }
 
