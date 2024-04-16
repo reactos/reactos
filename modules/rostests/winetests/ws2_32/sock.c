@@ -4694,6 +4694,7 @@ static void test_gethostbyname(void)
     he = gethostbyname(name);
     ok(he != NULL, "gethostbyname(\"%s\") failed: %d\n", name, WSAGetLastError());
 #ifdef __REACTOS__ /* ROSTESTS-233 */
+    count = 0;
     if (he != NULL)
     {
 #endif
@@ -7008,6 +7009,15 @@ static void test_write_watch(void)
     size = 0x10000;
     base = VirtualAlloc( 0, size, MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE );
     ok( base != NULL, "VirtualAlloc failed %u\n", GetLastError() );
+
+#ifdef __REACTOS__
+    if (!base)
+    {
+        skip("VirtualAlloc(MEM_WRITE_WATCH) is not supported yet on ReactOS\n");
+        skip("Skipping tests due to hang. See ROSTESTS-385\n");
+        return;
+    }
+#endif
 
     memset( base, 0, size );
     count = 64;
@@ -11619,9 +11629,22 @@ START_TEST( sock )
     test_GetAddrInfoW();
     test_GetAddrInfoExW();
     test_getaddrinfo();
+
+#ifdef __REACTOS__
+    if (!winetest_interactive)
+    {
+        skip("WSPAcceptEx(), WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on ReactOS\n");
+        skip("Skipping tests due to hang. See ROSTESTS-385\n");
+    }
+    else
+    {
+#endif
     test_AcceptEx();
     test_ConnectEx();
     test_DisconnectEx();
+#ifdef __REACTOS__
+    }
+#endif
 
     test_sioRoutingInterfaceQuery();
     test_sioAddressListChange();
