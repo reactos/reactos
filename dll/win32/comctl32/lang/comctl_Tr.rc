@@ -1,7 +1,7 @@
 /*
  * Top level resource file for Common Controls
  *
- * Copyrights: 2006 Fatih Aşıcı; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+// COPYRIGHT: 2006 Fatih Aşıcı; 2013-2014 Erdem Ersoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,7 +47,7 @@ STRINGTABLE
     IDS_BUTTON_NO     "&No"
     IDS_BUTTON_RETRY  "&Retry"
     IDS_BUTTON_OK     "OK"
-    IDS_BUTTON_CANCEL "Cancel"
+    IDS_BUTTON_CANCEL "İptal"
     IDS_BUTTON_CLOSE  "&Close"
 }
 
