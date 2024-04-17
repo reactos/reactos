@@ -45,7 +45,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_BUTTON_YES    "&Yes"
+    IDS_BUTTON_YES    "&Sí"
     IDS_BUTTON_NO     "&No"
     IDS_BUTTON_RETRY  "&Retry"
     IDS_BUTTON_OK     "OK"
