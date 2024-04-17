@@ -21,7 +21,11 @@
 
 #include "wine/test.h"
 #include <limits.h>
+#ifndef __REACTOS__
 #include <math.h>
+#else
+#include "math_workarounds.h"
+#endif
 #include "d3d.h"
 
 static BOOL is_ddraw64 = sizeof(DWORD) != sizeof(DWORD *);

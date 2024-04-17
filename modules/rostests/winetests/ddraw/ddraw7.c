@@ -19,13 +19,13 @@
  */
 #define COBJMACROS
 
-#ifdef __REACTOS__
-#define _USE_MATH_DEFINES 1
-#endif
-
 #include "wine/test.h"
 #include <limits.h>
+#ifndef __REACTOS__
 #include <math.h>
+#else
+#include "math_workarounds.h"
+#endif
 #include "d3d.h"
 
 HRESULT WINAPI GetSurfaceFromDC(HDC dc, struct IDirectDrawSurface **surface, HDC *device_dc);

@@ -249,7 +249,6 @@ _Check_return_ __CRT_INLINE float sinhf(_In_ float x) { return (float)sinh((doub
 _Check_return_ __CRT_INLINE float sqrtf(_In_ float x) { return (float)sqrt((double)x); }
 _Check_return_ __CRT_INLINE float tanf(_In_ float x) { return (float)tan((double)x); }
 _Check_return_ __CRT_INLINE float tanhf(_In_ float x) { return (float)tanh((double)x); }
-_Check_return_ __CRT_INLINE float exp2f(_In_ float x) { return (float)expf(x * logf(2)); }
 #endif /* !defined(_CRTBLD) */
 
 _Check_return_ __CRT_INLINE double hypot(_In_ double x, _In_ double y) { return _hypot(x, y); }

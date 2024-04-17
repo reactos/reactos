@@ -20,16 +20,14 @@
 
 #include <math.h>
 
-#ifdef __REACTOS__
-//_Check_return_ __CRT_INLINE float exp2f(_In_ float x) { return (float)exp2((double)x); }
-//_Check_return_ __CRT_INLINE float log2f(_In_ float x) { return (float)log2((double)x); }
-#define _USE_MATH_DEFINES 1
-#endif
-
 #define COBJMACROS
 #include "wine/test.h"
 #include <limits.h>
+#ifndef __REACTOS__
 #include <math.h>
+#else
+#include "math_workarounds.h"
+#endif
 #include "d3d.h"
 
 static BOOL is_ddraw64 = sizeof(DWORD) != sizeof(DWORD *);
