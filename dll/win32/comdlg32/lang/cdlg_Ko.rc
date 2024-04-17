@@ -31,7 +31,7 @@ STRINGTABLE
 덮어쓰겠습니까?"
     IDS_INVALID_FILENAME_TITLE "경로에 올바르지 않은 문자가 있습니다h"
     IDS_INVALID_FILENAME    "파일이름에는 다음 문자만 포함될 수 있습니다:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "경로가 존재하지 않습니다."
     IDS_FILENOTEXISTING     "파일이 존재하지 않습니다"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

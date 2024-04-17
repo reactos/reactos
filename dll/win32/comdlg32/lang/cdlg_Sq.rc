@@ -32,7 +32,7 @@ Doni ta krijoni dokumentin?"
 Doni ta zevendesoni?"
     IDS_INVALID_FILENAME_TITLE "Karatere te pavlere ne rruge"
     IDS_INVALID_FILENAME    "Nje emer dokumentin nuk mund te permbaje kararakteret e meposhtme:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Rruga nuk ekziston"
     IDS_FILENOTEXISTING     "Dokumenti nuk ekziston"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

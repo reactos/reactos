@@ -32,7 +32,7 @@ Kas soovite luua selle faili?"
 Kas soovite asendada selle?"
     IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
     IDS_INVALID_FILENAME    "Failinimi ei tohi sisaldada järgmisi märke:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Koht ei eksisteeri"
     IDS_FILENOTEXISTING     "Fail ei eksisteeri"
     IDS_INVALID_FOLDERNAME  "Valik sisaldab muid objekte kui kausti."

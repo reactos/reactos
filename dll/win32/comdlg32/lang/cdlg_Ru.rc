@@ -31,7 +31,7 @@ STRINGTABLE
 Заменить его?"
     IDS_INVALID_FILENAME_TITLE "Некорректный символ(ы) в записи пути"
     IDS_INVALID_FILENAME    "Имя файла не может содержать следующие символы:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Путь не существует"
     IDS_FILENOTEXISTING     "Файл не существует"
     IDS_INVALID_FOLDERNAME  "Выбор содержит объект не являющийся папкой"

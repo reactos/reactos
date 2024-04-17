@@ -31,7 +31,7 @@ Haluatko luoda sen?"
 Haluatko ylikirjoitaa sen?"
     IDS_INVALID_FILENAME_TITLE "Kansio sisältää epäkelpoja merkkejä"
     IDS_INVALID_FILENAME    "Tiedoston nimi ei voi sisältää näitä merkkejä:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Kansiota ei ole"
     IDS_FILENOTEXISTING     "Tiedostoa ei ole"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

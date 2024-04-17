@@ -31,7 +31,7 @@ Chcete ho vytvořit?"
 Chcete ho přepsat novým?"
     IDS_INVALID_FILENAME_TITLE "Nedovolený(é) znak(y) v cestě k souboru"
     IDS_INVALID_FILENAME    "Název souboru nesmí obsahovat žádný z následujících znaků:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Adresář neexistuje"
     IDS_FILENOTEXISTING     "Soubor neexistuje"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

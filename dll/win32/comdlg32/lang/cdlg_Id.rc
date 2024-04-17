@@ -32,7 +32,7 @@ Ingin buat berkas?"
 Ingin mengganti berkas?"
     IDS_INVALID_FILENAME_TITLE "Karakter pada jalur tidak valid"
     IDS_INVALID_FILENAME    "Nama file tidak boleh berisi salah satu karakter berikut:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Jalur tidak tersedia"
     IDS_FILENOTEXISTING     "Berkas tidak tersedia"
     IDS_INVALID_FOLDERNAME  "Pilihan ini berisi obyek non-folder"

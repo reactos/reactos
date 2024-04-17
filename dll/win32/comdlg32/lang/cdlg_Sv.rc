@@ -31,7 +31,7 @@ Vill du skapa fil?"
 Vill du ersätta den?"
     IDS_INVALID_FILENAME_TITLE "Illegalt tecken i sökväg"
     IDS_INVALID_FILENAME    "Ett filnamn kan inte innehålla någon av följande tecken:\n\
-                                               / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Sökvägen finns inte"
     IDS_FILENOTEXISTING     "Filen finns inte"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

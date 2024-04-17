@@ -31,7 +31,7 @@ Do you want to create file?"
 Do you want to replace it?"
     IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
     IDS_INVALID_FILENAME    "ในชื่อแฟ้มใช้ไมได้ต้วนี้:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "ไม่พบไดเรกทอรี"
     IDS_FILENOTEXISTING     "ไม่พบแฟ้ม"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

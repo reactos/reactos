@@ -31,7 +31,7 @@ STRINGTABLE
 上書きしますか?"
     IDS_INVALID_FILENAME_TITLE "ファイル名に使えない文字"
     IDS_INVALID_FILENAME    "ファイル名には以下の文字は使えません:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "パスが見つかりません"
     IDS_FILENOTEXISTING     "ファイルが見つかりません"
     IDS_INVALID_FOLDERNAME  "フォルダ以外のオブジェクトを選択しています"

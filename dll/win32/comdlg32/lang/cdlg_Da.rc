@@ -31,7 +31,7 @@ Vil du oprette filen?"
 Vil du erstatte den?"
     IDS_INVALID_FILENAME_TITLE "Der er et eller flere Ugyldige tegn i stien"
     IDS_INVALID_FILENAME    "Et filnavn må ikke indeholde følgende tegn:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Stien eksisterer ikke."
     IDS_FILENOTEXISTING     "Filen eksisterer ikke."
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

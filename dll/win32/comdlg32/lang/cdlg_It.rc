@@ -31,7 +31,7 @@ Creare il file"
 Sovrascriverlo?"
     IDS_INVALID_FILENAME_TITLE "Caratteri invalidi nel percorso"
     IDS_INVALID_FILENAME    "Il nome di un file non può contenere i seguenti caratteri:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Il percorso specificato non esiste"
     IDS_FILENOTEXISTING     "Il file non esiste"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

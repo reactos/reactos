@@ -31,7 +31,7 @@ Ar norite sukurti failą?"
 Ar norite jį pakeisti?"
     IDS_INVALID_FILENAME_TITLE "Kelyje yra netinkamų simbolių"
     IDS_INVALID_FILENAME    "Failo vardas negali turėti šių simbolių:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Kelias neegzistuoja"
     IDS_FILENOTEXISTING     "Failas neegzistuoja"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

@@ -35,7 +35,7 @@ STRINGTABLE
 是否替换？"
     IDS_INVALID_FILENAME_TITLE "路径中包含无效字符"
     IDS_INVALID_FILENAME    "文件名中不能包含任何以下字符::\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "路径不存在"
     IDS_FILENOTEXISTING     "文件不存在"
     IDS_INVALID_FOLDERNAME  "所选内容包含一个非文件夹物体"
@@ -537,7 +537,7 @@ STRINGTABLE
 您要取代它嗎？"
     IDS_INVALID_FILENAME_TITLE "檔案名稱含有無效的字元"
     IDS_INVALID_FILENAME    "檔案名稱中不能包含以下任何一個字元：\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "路徑不存在"
     IDS_FILENOTEXISTING     "檔案不存在"
     IDS_INVALID_FOLDERNAME  "已選項目包含非資料夾物件"

@@ -31,7 +31,7 @@ Skal den opprettes?"
 Skal den overskrives?"
     IDS_INVALID_FILENAME_TITLE "Ugyldige tegn i filnavnet"
     IDS_INVALID_FILENAME    "Et filnavn kan ikke inneholder følgende tegn:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Stien finnes ikke"
     IDS_FILENOTEXISTING     "Filen finnes ikke"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
