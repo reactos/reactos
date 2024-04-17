@@ -88,7 +88,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "&Fechar",     IDCANCEL,320,6,70,14
   PUSHBUTTON    "R&estaurar",     IDC_RESET_BTN,320,23,70,14
-  PUSHBUTTON    "&Ajuda",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "Ajuda",      IDC_HELP_BTN,320,40,70,14
   PUSHBUTTON    "A&cima",   IDC_MOVEUP_BTN,320,74,70,14
   PUSHBUTTON    "A&baixo", IDC_MOVEDN_BTN,320,91,70,14
   LTEXT         "Botões &disponíveis:", -1,4,5,120,10
