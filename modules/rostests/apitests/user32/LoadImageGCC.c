@@ -1,15 +1,17 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for LoadImageW using DLL compiled with MSVC
- * PROGRAMMER:  Doug Lyons <douglyons@douglyons.com>
  * COPYRIGHT:   Copyright 2024 Doug Lyons <douglyons@douglyons.com>
- * NOTE:        Works for ReactOS, but not in Windows 2003 Server SP2
+ *
+ * NOTES:
+ * Works on ReactOS, but not on Windows 2003 Server SP2.
  */
 
 #include "precomp.h"
 #include "resource.h"
 #include <stdio.h>
+#include <versionhelpers.h>
 
 WCHAR szWindowClass[] = L"testclass";
 
@@ -225,6 +227,10 @@ START_TEST(LoadImageGCC)
 {
     UINT i;
     WCHAR PathBuffer[MAX_PATH];
+
+    /* Windows 2003 cannot run this test. Testman shows CRASH, so skip it. */
+    if (!IsReactOS())
+        return;
 
     /* Extract Data Files */
     for (i = 0; i < _countof(DataFiles); ++i)

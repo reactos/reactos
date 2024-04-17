@@ -1,3 +1,4 @@
+add_subdirectory(makeimg)
 
 list(APPEND SOURCE
     AttachThreadInput.c
