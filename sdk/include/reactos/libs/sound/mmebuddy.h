@@ -120,7 +120,6 @@ typedef struct _SOUND_OVERLAPPED
     OVERLAPPED Standard;
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
-    BOOL PerformCompletion;
 
     LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
     PVOID CompletionContext;

@@ -26,7 +26,7 @@ Unsupported MME messages:
 * Any not mentioned above
 
 Notes/Bugs:
-* WHDR_BEGINLOOP and WHDR_ENDLOOP are ignored
+* WHDR_BEGINLOOP and WHDR_ENDLOOP are not working for looping multiple wave headers, only for a single header.
 * Not possible to pause/restart playback
 
 
