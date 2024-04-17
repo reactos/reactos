@@ -78,7 +78,7 @@ static struct
 };
 
 /* MessageBox statements are left commented out for debugging purposes */
-static LRESULT CALLBACK 
+static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hBmp;
@@ -90,13 +90,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:
         {
             handle = LoadLibraryExW(L"image.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-            sprintf(buffer, "%p", handle);
-//            MessageBoxA(NULL, buffer, "handle", 0);
             hBmp = (HBITMAP)LoadImage(handle, MAKEINTRESOURCE(130), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-            sprintf(buffer, "%p", hBmp);
-//            MessageBoxA(NULL, buffer, "Bmp", 0);
-            sprintf(buffer, "%ld", GetLastError());
-//            MessageBoxA(NULL, buffer, "LastError", 0);
             break;
         }
 
@@ -154,9 +148,9 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             ok(img[3] == 0, "Byte 3 Bad\n");
 
             GlobalUnlock(hMem);
-            GlobalFree(hMem);              
+            GlobalFree(hMem);
 
-            DeleteDC(hdcMem);			
+            DeleteDC(hdcMem);
 
             EndPaint(hWnd, &ps);
             break;
@@ -213,9 +207,7 @@ InitInstance(HINSTANCE hInstance, int nCmdShow)
                           NULL);
 
    if (!hWnd)
-   {
       return FALSE;
-   }
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);

@@ -5,7 +5,7 @@
 
 WCHAR szWindowClass[] = L"testclass";
 
-static LRESULT CALLBACK 
+static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hBmp;
@@ -59,9 +59,9 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             StretchDIBits(hdc, 0, 0, bitmap.bmWidth * 3, bitmap.bmHeight * 3, 0, 0,
                 bitmap.bmWidth, bitmap.bmHeight,lpBits, &bmi, DIB_RGB_COLORS, SRCCOPY);
             GlobalUnlock(hMem);
-            GlobalFree(hMem);                        
+            GlobalFree(hMem);
 
-            DeleteDC(hdcMem);			
+            DeleteDC(hdcMem);
 
             EndPaint(hWnd, &ps);
             break;
@@ -103,46 +103,42 @@ MyRegisterClass(HINSTANCE hInstance)
 static BOOL
 InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
+    HWND hWnd;
 
-   hWnd = CreateWindowEx(0,
-                         szWindowClass,
-                         L"Bmp test",
-                         WS_OVERLAPPEDWINDOW,
-                         CW_USEDEFAULT,
-                         CW_USEDEFAULT,
-                         300,
-                         120,
-                         NULL,
-                         NULL,
-                         hInstance,
-                         NULL);
+    hWnd = CreateWindowEx(0,
+                          szWindowClass,
+                          L"Bmp test",
+                          WS_OVERLAPPEDWINDOW,
+                          CW_USEDEFAULT,
+                          CW_USEDEFAULT,
+                          300,
+                          120,
+                          NULL,
+                          NULL,
+                          hInstance,
+                          NULL);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!hWnd)
+        return FALSE;
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 int WINAPI
 wWinMain(HINSTANCE hInstance,
-             HINSTANCE hPrevInstance,
-             LPTSTR    lpCmdLine,
-             int       nCmdShow)
+    HINSTANCE hPrevInstance,
+    LPTSTR    lpCmdLine,
+    int       nCmdShow)
 {
     MSG msg;
 
     MyRegisterClass(hInstance);
 
     if (!InitInstance(hInstance, nCmdShow))
-    {
         return FALSE;
-    }
 
     while (GetMessage(&msg, NULL, 0, 0))
     {

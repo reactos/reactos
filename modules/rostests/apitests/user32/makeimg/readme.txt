@@ -1,4 +1,4 @@
-For reference see https://jira.reactos.org/browse/CORE-17005.
+For reference see https://jira.reactos.org/browse/CORE-17005
 
 This should be compiled using MSVC to create the image.dll file for testing.
 Also, it creates an interactive showimg.exe program that can be used to verify this file.
