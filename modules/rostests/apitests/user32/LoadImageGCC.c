@@ -83,7 +83,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hBmp;
     HANDLE handle;
-    CHAR buffer[80];
 
     switch (message)
     {
@@ -109,8 +108,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hdcMem = CreateCompatibleDC(hdc);
             SelectObject(hdcMem, hBmp);
             GetObject(hBmp, sizeof(BITMAP), &bitmap);
-            sprintf(buffer, "H = %ld, W = %ld", bitmap.bmHeight, bitmap.bmWidth);
-//            MessageBoxA(NULL, buffer, "test", 0);
             memset(&bmi, 0, sizeof(bmi));
             bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
             bmi.bmiHeader.biWidth       = bitmap.bmWidth;
@@ -121,26 +118,13 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             bmi.bmiHeader.biSizeImage   = 0;
 
             size = ((bitmap.bmWidth * bmi.bmiHeader.biBitCount + 31) / 32) * 4 * bitmap.bmHeight;
-            sprintf(buffer, "size = %d", size);
-//            MessageBoxA(NULL, buffer, "size", 0);
 
             hMem = GlobalAlloc(GMEM_MOVEABLE, size);
             lpBits = GlobalLock(hMem);
             GetDIBits(hdc, hBmp, 0, bitmap.bmHeight, lpBits, &bmi, DIB_RGB_COLORS);
 
-            /* Get bottom line of bitmap */
-            memcpy(img, lpBits, 8);
-            sprintf(buffer, "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
-              img[0] & 0xff, img[1] & 0xff, img[2] & 0xff, img[3] & 0xff,
-              img[4] & 0xff, img[5] & 0xff, img[6] & 0xff, img[7] & 0xff);
-//            MessageBoxA(NULL, buffer, "chars 1st Line", 0);
-
             /* Get one line above bottom line of bitmap */
             memcpy(img, (VOID *)((INT_PTR)lpBits + 4 * bitmap.bmWidth), 8);
-            sprintf(buffer, "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
-              img[0] & 0xff, img[1] & 0xff, img[2] & 0xff, img[3] & 0xff,
-              img[4] & 0xff, img[5] & 0xff, img[6] & 0xff, img[7] & 0xff);
-//            MessageBoxA(NULL, buffer, "chars 2nd Line", 0);
 
             ok(img[0] == 0, "Byte 0 Bad\n");
             ok(img[1] == 0, "Byte 1 Bad\n");
