@@ -136,7 +136,10 @@ BEGIN
     LTEXT "Simbol &PM:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Notarea formatelor de oră\nh = oră     m = minut     s = secundă     t = am sau pm\n\nh = 12 ore\nH = 24 ore\n\nhh, mm, ss = zero iniţial\nh, m, s = fără zero iniţial", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Notarea formatelor de oră\n\n\
+h = oră     m = minut     s = secundă     t = am sau pm\n\n\
+h = 12 ore   H = 24 ore\n\
+hh, mm, ss = zero iniţial   h, m, s = fără zero iniţial", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
