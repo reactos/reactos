@@ -14119,6 +14119,8 @@ static void test_set_render_state(void)
     DestroyWindow(window);
 }
 
+//This test doesn't work on Windows, it's WINESYNC'ed so just disable it
+#ifndef __REACTOS__
 static void test_map_synchronisation(void)
 {
     LARGE_INTEGER frequency, diff, ts[3];
@@ -14314,6 +14316,7 @@ static void test_map_synchronisation(void)
     ok(!refcount, "Device has %u references left.\n", refcount);
     DestroyWindow(window);
 }
+#endif
 
 static void test_depth_readback(void)
 {
@@ -14875,7 +14878,9 @@ START_TEST(ddraw4)
     test_compute_sphere_visibility();
     test_texture_stages_limits();
     test_set_render_state();
-    test_map_synchronisation();
+#if 0
+    test_map_synchronisation();  /* This doesnt even work on windows */
+#endif
     test_depth_readback();
     test_clear();
     test_enum_surfaces();
