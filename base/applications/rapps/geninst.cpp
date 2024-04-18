@@ -281,12 +281,15 @@ CreateShortcut(const CStringW &Target)
     int cat;
     if (Info.Parser.GetInt(DB_CATEGORY, cat) && cat == ENUM_CAT_GAMES)
     {
+        // Try to find the name of the Games folder in the Start Menu
         if (GetLocalizedSMFolderName(L"SM_GamesName", L"shortcuts.inf", L"Games", tmp))
         {
             path = BuildPath(path, tmp);
         }
     }
 
+    // SHPathPrepareForWrite will prepare the necessary directories.
+    // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
     rel.Replace('/', '\\');
     path = BuildPath(path, rel.GetString());
     UINT SHPPFW = SHPPFW_DIRCREATE | SHPPFW_IGNOREFILENAME;
@@ -339,7 +342,7 @@ InstallFiles(const CStringW &SourceDirBase, const CStringW &Spec,
     CStringW sourcedir, filespec;
     filespec = SplitFileAndDirectory(Spec, &sourcedir); // Split "[OptionalDir\]*.ext"
     sourcedir = BuildPath(SourceDirBase, sourcedir);
-    BOOL failed = FALSE, dots;
+    BOOL success = TRUE;
     WIN32_FIND_DATAW wfd;
     HANDLE hFind = FindFirstFileW(BuildPath(sourcedir, filespec), &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
@@ -359,35 +362,35 @@ InstallFiles(const CStringW &SourceDirBase, const CStringW &Spec,
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             LPWSTR p = wfd.cFileName;
-            dots = (p[0] == '.' && !p[1]) || (p[0] == '.' && p[1] == '.' && !p[2]);
+            BOOL dots = p[0] == '.' && (!p[1] || (p[1] == '.' && !p[2]));
             if (!dots)
             {
                 Info.Error = CreateDirectoryTree(to);
                 if (Info.Error)
                 {
-                    failed = ErrorBox(Info.Error);
+                    success = !ErrorBox(Info.Error);
                 }
                 else
                 {
-                    failed = !AddEntry(UNOP_EMPTYDIR, uninstpath);
+                    success = AddEntry(UNOP_EMPTYDIR, uninstpath);
                 }
 
-                if (!failed)
+                if (success)
                 {
-                    failed = !InstallFiles(from, filespec, to);
+                    success = InstallFiles(from, filespec, to);
                 }
             }
         }
         else
         {
-            failed = !MoveFileEx(from, to, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
-            if (!failed)
+            success = MoveFileEx(from, to, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING);
+            if (success)
             {
                 if (Info.MainApp.IsEmpty())
                 {
                     Info.MainApp = to;
                 }
-                failed = !AddEntry(UNOP_FILE, uninstpath);
+                success = AddEntry(UNOP_FILE, uninstpath);
             }
             else
             {
@@ -396,11 +399,11 @@ InstallFiles(const CStringW &SourceDirBase, const CStringW &Spec,
             SendMessage(g_pInfo->hDlg, IM_PROGRESS, 0, 0);
         }
 
-        if (failed || !FindNextFileW(hFind, &wfd))
+        if (!success || !FindNextFileW(hFind, &wfd))
             break;
     }
     FindClose(hFind);
-    return !failed;
+    return success;
 }
 
 static void
@@ -437,7 +440,6 @@ ExtractAndInstallThread(LPVOID Parameter)
     HRESULT hr;
     CRegKey arpkey;
     Info.ArpKey = &arpkey;
-    Info.Count += 1; // Cleanup
 
     if (!*GetGenerateString(DB_GENINST_FILES, files, L"*.exe|*.*"))
         return ErrorBox(ERROR_BAD_FORMAT);
@@ -465,6 +467,9 @@ ExtractAndInstallThread(LPVOID Parameter)
     if ((Info.Error = ErrorFromHResult(hr)) != 0)
         return ErrorBox(Info.Error);
 
+    // Create the destination directory, and inside it, a temporary directory
+    // where we will extract the archive to before moving the files to their
+    // final location (adding uninstall entries as we go)
     tempdir.Format(L"%s\\~RAM%u.tmp", installdir.GetString(), GetCurrentProcessId());
     Info.Error = CreateDirectoryTree(tempdir.GetString());
     if (Info.Error)
@@ -474,6 +479,7 @@ ExtractAndInstallThread(LPVOID Parameter)
         shortcut.Format(L"%s.lnk", AppName);
     Info.ShortcutFile = shortcut.Compare(None) ? shortcut.GetString() : NULL;
 
+    // Create the uninstall registration key
     LPCWSTR arpkeyname = AppName;
     tmp = BuildPath(REGPATH_UNINSTALL, arpkeyname);
     HKEY hRoot = Info.PerUser ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
@@ -493,6 +499,7 @@ ExtractAndInstallThread(LPVOID Parameter)
 
     if (!Info.Error)
     {
+        // We now know how many files we extracted, change from marquee to normal progress bar.
         SendMessage(Info.hDlg, IM_STARTPROGRESS, 0, 0);
 
         for (int pos = 1; pos > 0 && !Info.Error;)
@@ -507,11 +514,11 @@ ExtractAndInstallThread(LPVOID Parameter)
         {
             AddUninstallOperationsFromDB(DB_GENINST_DELREG, UNOP_REGKEY);
             AddUninstallOperationsFromDB(DB_GENINST_DELREGEMPTY, UNOP_EMPTYREGKEY);
-            AddUninstallOperationsFromDB(DB_GENINST_DELFILE, UNOP_FILE, CStringW(L"\\"));
-            AddUninstallOperationsFromDB(DB_GENINST_DELDIR, UNOP_DIR, CStringW(L"\\"));
-            AddUninstallOperationsFromDB(DB_GENINST_DELDIREMPTY, UNOP_EMPTYDIR, CStringW(L"\\"));
-
+            AddUninstallOperationsFromDB(DB_GENINST_DELFILE, UNOP_FILE, L"\\");
+            AddUninstallOperationsFromDB(DB_GENINST_DELDIR, UNOP_DIR, L"\\");
+            AddUninstallOperationsFromDB(DB_GENINST_DELDIREMPTY, UNOP_EMPTYDIR, L"\\");
             AddEntry(UNOP_EMPTYDIR, L"\\");
+
             WriteArpEntry(L"DisplayName", AppName);
             WriteArpEntry(L"InstallLocation", Info.InstallDir); // Note: This value is used by the uninstaller!
 
@@ -543,7 +550,7 @@ ExtractAndInstallThread(LPVOID Parameter)
                 WriteArpEntry(L"Publisher", tmp);
 
 #if DBG
-            tmp.Format(L"sys64=%d", IsSystem64Bit());
+            tmp.Format(L"sys64=%d rapps%d", IsSystem64Bit(), sizeof(void*) * 8);
             WriteArpEntry(L"_DEBUG", tmp);
 #endif
         }
@@ -556,12 +563,11 @@ ExtractAndInstallThread(LPVOID Parameter)
 
     DeleteDirectoryTree(tempdir.GetString());
     RemoveDirectory(installdir.GetString()); // This is harmless even if we installed something
-    SendMessage(Info.hDlg, IM_PROGRESS, 0, 0); // Cleanup
     return 0;
 }
 
 static DWORD CALLBACK
-UIWorkerThread(LPVOID Parameter)
+WorkerThread(LPVOID Parameter)
 {
     ((LPTHREAD_START_ROUTINE)Parameter)(NULL);
     return SendMessage(g_pInfo->hDlg, IM_END, 0, 0);
@@ -592,7 +598,7 @@ UIDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HICON hIco = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
             SendMessageW(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIco);
             SendMessageW(hDlg, WM_SETTEXT, 0, (LPARAM)g_pInfo->AppName);
-            if (!SHCreateThread(UIWorkerThread, (void*)lParam, CTF_COINIT, NULL))
+            if (!SHCreateThread(WorkerThread, (void*)lParam, CTF_COINIT, NULL))
             {
                 ErrorBox();
                 SendMessageW(hDlg, IM_END, 0, 0);
@@ -686,9 +692,7 @@ UninstallThread(LPVOID Parameter)
 
     RegQueryInfoKey(Info.Entries, NULL, NULL, NULL, NULL, NULL, NULL, &Info.Count, NULL, NULL, NULL, NULL);
     Info.Count *= UINSTALLSTAGECOUNT;
-    Info.Count++; // Uninstall key
     SendMessage(Info.hDlg, IM_STARTPROGRESS, 0, 0);
-    
 
     if (!GetRegString(*Info.ArpKey, L"InstallLocation", installdir) || installdir.IsEmpty())
         return ErrorBox(ERROR_INVALID_NAME);
@@ -797,7 +801,6 @@ UninstallThread(LPVOID Parameter)
         Info.Error = CAppDB::RemoveInstalledAppFromRegistry(&Info.AppInfo);
         if (Info.Error)
             return ErrorBox(Info.Error);
-        SendMessage(Info.hDlg, IM_PROGRESS, 0, 0); // Uninstall key
     }
     return 0;
 }

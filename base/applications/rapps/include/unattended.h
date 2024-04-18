@@ -14,6 +14,7 @@
 const WCHAR UsageString[] = L"RAPPS \
 [/" CMD_KEY_HELP L"] \
 [/" CMD_KEY_INSTALL L" packagename] \
+[/" CMD_KEY_UNINSTALL L" packagename|displayname] \
 [/" CMD_KEY_SETUP L" filename] \
 [/" CMD_KEY_FIND L" string] \
 [/" CMD_KEY_INFO L" packagename]";

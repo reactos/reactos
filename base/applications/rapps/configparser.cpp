@@ -184,38 +184,38 @@ CConfigParser::GetInt(const CStringW &KeyName, INT &iResult)
 UINT
 CConfigParser::GetSectionString(LPCWSTR Section, LPCWSTR Name, CStringW &Result)
 {
-    HRESULT r;
+    HRESULT hr; // Return value; length of ini string or 0 on failure.
     CStringW SecBuf;
     WCHAR FullLoc[5], *NeutralLoc = FullLoc + 2;
     GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE, FullLoc, _countof(FullLoc));
 
     SecBuf.Format(L"%s.%s.%s", Section, FullLoc, CurrentArchitecture);
-    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
-        return r;
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
 
     if (*NeutralLoc)
     {
         SecBuf.Format(L"%s.%s.%s", Section, NeutralLoc, CurrentArchitecture);
-        if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
-            return r;
+        if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+            return hr;
     }
 
     SecBuf.Format(L"%s.%s", Section, CurrentArchitecture);
-    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
-        return r;
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
 
     SecBuf.Format(L"%s.%s", Section, FullLoc);
-    if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
-        return r;
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
 
     if (*NeutralLoc)
     {
         SecBuf.Format(L"%s.%s", Section, NeutralLoc);
-        if ((r = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
-            return r;
+        if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+            return hr;
     }
 
-    if ((r = ReadIniValue(szConfigPath, Section, Name, Result)) > 0)
-        return r;
+    if ((hr = ReadIniValue(szConfigPath, Section, Name, Result)) > 0)
+        return hr;
     return 0;
 }

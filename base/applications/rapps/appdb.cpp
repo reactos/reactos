@@ -169,29 +169,28 @@ CInstalledApplicationInfo *
 CAppDB::CreateInstalledAppByRegistryKey(LPCWSTR KeyName, HKEY hKeyParent, UINT KeyIndex)
 {
     CRegKey hSubKey;
-    if (hSubKey.Open(hKeyParent, KeyName, KEY_READ) == ERROR_SUCCESS)
+    if (hSubKey.Open(hKeyParent, KeyName, KEY_READ) != ERROR_SUCCESS)
+        return NULL;
+    DWORD value, size;
+
+    size = sizeof(DWORD);
+    if (!RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&value, &size) && value == 1)
     {
-        DWORD value, size;
-
-        size = sizeof(DWORD);
-        if (!RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&value, &size) && value == 1)
-        {
-            // Ignore system components
-            return NULL;
-        }
-
-        size = 0;
-        BOOL bIsUpdate = !RegQueryValueExW(hSubKey, L"ParentKeyName", NULL, NULL, NULL, &size);
-
-        AppsCategories cat = bIsUpdate ? ENUM_UPDATES : ENUM_INSTALLED_APPLICATIONS;
-        CInstalledApplicationInfo *pInfo;
-        pInfo = new CInstalledApplicationInfo(hSubKey.Detach(), KeyName, cat, KeyIndex);
-        if (pInfo && pInfo->Valid())
-        {
-            return pInfo;
-        }
-        delete pInfo;
+        // Ignore system components
+        return NULL;
     }
+
+    size = 0;
+    BOOL bIsUpdate = !RegQueryValueExW(hSubKey, L"ParentKeyName", NULL, NULL, NULL, &size);
+
+    AppsCategories cat = bIsUpdate ? ENUM_UPDATES : ENUM_INSTALLED_APPLICATIONS;
+    CInstalledApplicationInfo *pInfo;
+    pInfo = new CInstalledApplicationInfo(hSubKey.Detach(), KeyName, cat, KeyIndex);
+    if (pInfo && pInfo->Valid())
+    {
+        return pInfo;
+    }
+    delete pInfo;
     return NULL;
 }
 
@@ -254,7 +253,7 @@ CAppDB::CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam)
     HKEY hRootKey = User ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
     UINT KeyIndex = User ? (0) : ((WowSam & KEY_WOW64_64KEY) ? 2 : 1);
     CRegKey hKey;
-    if (!hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | WowSam))
+    if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | WowSam) == ERROR_SUCCESS)
     {
         return CreateInstalledAppByRegistryKey(KeyName, hKey, KeyIndex);
     }
@@ -331,7 +330,7 @@ CAppDB::RemoveInstalledAppFromRegistry(const CAppInfo *Info)
 
     CRegKey Uninstall;
     LSTATUS err = Uninstall.Open(hRoot, UNINSTALL_SUBKEY, KEY_READ | KEY_WRITE | wowsam);
-    if (!err)
+    if (err == ERROR_SUCCESS)
     {
         err = Uninstall.RecurseDeleteKey(Name);
     }

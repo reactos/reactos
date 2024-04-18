@@ -65,7 +65,7 @@ IsInstalledEnum(INT x)
 
 enum UninstallCommandFlags
 {
-    UCF_NONE =   0x00,
+    UCF_NONE   = 0x00,
     UCF_MODIFY = 0x01,
     UCF_SILENT = 0x02,
 };

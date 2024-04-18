@@ -19,10 +19,11 @@
 static inline UINT
 ErrorFromHResult(HRESULT hr)
 {
+    // Attempt to extract the original Win32 error code from the HRESULT
     if (HIWORD(hr) == HIWORD(HRESULT_FROM_WIN32(!0)))
         return LOWORD(hr);
     else
-        return hr;
+        return hr >= 0 ? ERROR_SUCCESS : hr;
 }
 
 VOID
