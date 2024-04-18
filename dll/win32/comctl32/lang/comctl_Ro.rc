@@ -46,7 +46,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_BUTTON_YES    "&Yes"
+    IDS_BUTTON_YES    "&Da"
     IDS_BUTTON_NO     "&No"
     IDS_BUTTON_RETRY  "&Retry"
     IDS_BUTTON_OK     "OK"
@@ -69,7 +69,7 @@ END
 
 IDD_WIZARD DIALOG 0, 0, 290, 159
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Asistent"
+CAPTION "Expert"
 FONT 8, "MS Shell Dlg"
 BEGIN
   PUSHBUTTON    "< Înap&oi",     IDC_BACK_BUTTON,56,138,55,14
@@ -89,7 +89,7 @@ CAPTION "Personalizare panou de instrumente"
 FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "Î&nchide",      IDCANCEL,320,6,70,14
-  PUSHBUTTON    "&Reinițiere",   IDC_RESET_BTN,320,23,70,14
+  PUSHBUTTON    "&Resetare",   IDC_RESET_BTN,320,23,70,14
   PUSHBUTTON    "&Manual…",      IDC_HELP_BTN,320,40,70,14
   PUSHBUTTON    "În s&us",       IDC_MOVEUP_BTN,320,74,70,14
   PUSHBUTTON    "În j&os",       IDC_MOVEDN_BTN,320,91,70,14

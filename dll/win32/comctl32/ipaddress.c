@@ -20,16 +20,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * NOTE
- * 
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  */
 
 #include "comctl32.h"
@@ -170,7 +160,15 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
             fgCol = comctl32_color.clrGrayText;
         }
 
+#ifdef __REACTOS__
+        {
+            HBRUSH brush = CreateSolidBrush(bgCol);
+            FillRect(hdc, &rect, brush);
+            DeleteObject(brush);
+        }
+#else
         FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
+#endif
         DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
     }
     
