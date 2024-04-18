@@ -48,7 +48,7 @@ STRINGTABLE
     IDS_BUTTON_NO     "&No"
     IDS_BUTTON_RETRY  "&Retry"
     IDS_BUTTON_OK     "OK"
-    IDS_BUTTON_CANCEL "Cancel"
+    IDS_BUTTON_CANCEL "取消"
     IDS_BUTTON_CLOSE  "&Close"
 }
 
