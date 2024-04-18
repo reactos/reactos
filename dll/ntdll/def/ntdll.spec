@@ -10,9 +10,9 @@
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListEnd()
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListFault()
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListResume()
-@ stdcall -stub -version=0x600+ A_SHAFinal(ptr ptr)
-@ stdcall -stub -version=0x600+ A_SHAInit(ptr)
-@ stdcall -stub -version=0x600+ A_SHAUpdate(ptr ptr long)
+@ stdcall -version=0x600+ A_SHAFinal(ptr ptr)
+@ stdcall -version=0x600+ A_SHAInit(ptr)
+@ stdcall -version=0x600+ A_SHAUpdate(ptr ptr long)
 @ stdcall -stub -version=0x600+ AlpcAdjustCompletionListConcurrencyCount(ptr long)
 @ stdcall -stub -version=0x600+ AlpcFreeCompletionListMessage(ptr ptr)
 @ stdcall -stub -version=0x600+ AlpcGetCompletionListLastMessageInformation(ptr ptr ptr)
@@ -191,12 +191,12 @@
 @ stub -version=0x600+ LdrpResGetMappingSize
 @ stub -version=0x600+ LdrpResGetRCConfig
 @ stub -version=0x600+ LdrpResGetResourceDirectory
-@ stdcall -stub -version=0x600+ MD4Final(ptr)
-@ stdcall -stub -version=0x600+ MD4Init(ptr)
-@ stdcall -stub -version=0x600+ MD4Update(ptr ptr long)
-@ stdcall -stub -version=0x600+ MD5Final(ptr)
-@ stdcall -stub -version=0x600+ MD5Init(ptr)
-@ stdcall -stub -version=0x600+ MD5Update(ptr ptr long)
+@ stdcall -version=0x600+ MD4Final(ptr)
+@ stdcall -version=0x600+ MD4Init(ptr)
+@ stdcall -version=0x600+ MD4Update(ptr ptr long)
+@ stdcall -version=0x600+ MD5Final(ptr)
+@ stdcall -version=0x600+ MD5Init(ptr)
+@ stdcall -version=0x600+ MD5Update(ptr ptr long)
 @ extern NlsAnsiCodePage
 @ extern NlsMbCodePageTag
 @ extern NlsMbOemCodePageTag

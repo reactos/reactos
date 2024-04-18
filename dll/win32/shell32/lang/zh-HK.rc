@@ -803,6 +803,7 @@ BEGIN
     IDS_DISCONNECT "中斷"
     IDS_OPENFILELOCATION "開啟檔案位置(&I)"
     IDS_SENDTO_MENU "傳送到(&N)"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "移動檔案或資料夾發生錯誤"
     IDS_COPYERRORTITLE "複製檔案或資料夾發生錯誤"

@@ -806,6 +806,7 @@ BEGIN
     IDS_DISCONNECT "Bağlantıyı kes"
     IDS_OPENFILELOCATION "&Dosya konumunu aç"
     IDS_SENDTO_MENU "&Gönder"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Dosya veya Dizin Taşıma Hatası"
     IDS_COPYERRORTITLE "Dosya veya Dizin Kopyalama Hatası"

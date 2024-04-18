@@ -31,7 +31,7 @@ El voleu crear?"
 El voleu reemplaçar?"
     IDS_INVALID_FILENAME_TITLE "Hi ha caràcters invàlids en la ruta"
     IDS_INVALID_FILENAME    "Un nom de fitxer no pot contenir cualsevol dels caràcters següents:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "La ruta no existeix"
     IDS_FILENOTEXISTING     "El fitxer no existeix"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"

@@ -322,6 +322,8 @@ IContextMenu_Invoke(
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
 
+DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

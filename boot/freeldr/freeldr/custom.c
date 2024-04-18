@@ -24,21 +24,84 @@
 /* GLOBALS ********************************************************************/
 
 #if defined(_M_IX86) || defined(_M_AMD64)
-
-const CHAR BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExamples:\n\\BOOTSECT.DOS\n/boot/bootsect.dos";
-const CHAR LinuxKernelPrompt[] = "Enter the Linux kernel image path.\n\nExamples:\n/vmlinuz\n/boot/vmlinuz-2.4.18";
-const CHAR LinuxInitrdPrompt[] = "Enter the initrd image path.\n\nExamples:\n/initrd.gz\n/boot/root.img.gz\n\nLeave blank for no initial ram disk.";
-const CHAR LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nExamples:\nroot=/dev/hda1\nroot=/dev/fd0 read-only\nroot=/dev/sdb1 init=/sbin/init";
-
+const PCSTR BootSectorFilePrompt =
+    "Enter the boot sector file path.\n"
+    "\n"
+    "Examples:\n"
+    "\\BOOTSECT.DOS\n"
+    "/boot/bootsect.dos";
+const PCSTR LinuxKernelPrompt =
+    "Enter the Linux kernel image path.\n"
+    "\n"
+    "Examples:\n"
+    "/vmlinuz\n"
+    "/boot/vmlinuz-2.4.18";
+const PCSTR LinuxInitrdPrompt =
+    "Enter the initrd image path.\n"
+    "\n"
+    "Examples:\n"
+    "/initrd.gz\n"
+    "/boot/root.img.gz\n"
+    "\n"
+    "Leave blank for no initial ram disk.";
+const PCSTR LinuxCommandLinePrompt =
+    "Enter the Linux kernel command line.\n"
+    "\n"
+    "Examples:\n"
+    "root=/dev/hda1\n"
+    "root=/dev/fd0 read-only\n"
+    "root=/dev/sdb1 init=/sbin/init";
 #endif /* _M_IX86 || _M_AMD64 */
 
-const CHAR BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
-const CHAR BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
-const CHAR ARCPathPrompt[] = "Enter the boot ARC path.\n\nExamples:\nmulti(0)disk(0)rdisk(0)partition(1)\nmulti(0)disk(0)fdisk(0)";
-const CHAR ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
-const CHAR ReactOSOptionsPrompt[] = "Enter the load options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
-const CHAR ReactOSSetupOptionsPrompt[] = "Enter additional load options you want passed to the ReactOS Setup.\nThese options will supplement those obtained from the TXTSETUP.SIF\nfile, unless you also specify the /SIFOPTIONSOVERRIDE option switch.\n\nExample:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /NOGUIBOOT";
-const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
+const PCSTR BootDrivePrompt =
+    "Enter the boot drive.\n"
+    "\n"
+    "Examples:\n"
+    "fd0 - first floppy drive\n"
+    "hd0 - first hard drive\n"
+    "hd1 - second hard drive\n"
+    "cd0 - first CD-ROM drive.\n"
+    "\n"
+    "BIOS drive numbers may also be used:\n"
+    "0 - first floppy drive\n"
+    "0x80 - first hard drive\n"
+    "0x81 - second hard drive";
+const PCSTR BootPartitionPrompt =
+    "Enter the boot partition.\n"
+    "\n"
+    "Enter 0 for the active (bootable) partition.";
+
+const PCSTR ARCPathPrompt =
+    "Enter the boot ARC path.\n"
+    "\n"
+    "Examples:\n"
+    "multi(0)disk(0)rdisk(0)partition(1)\n"
+    "multi(0)disk(0)fdisk(0)";
+
+const PCSTR ReactOSSystemPathPrompt =
+    "Enter the path to your ReactOS system directory.\n"
+    "\n"
+    "Examples:\n"
+    "\\REACTOS\n"
+    "\\ROS";
+const PCSTR ReactOSOptionsPrompt =
+    "Enter the load options you want passed to the kernel.\n"
+    "\n"
+    "Examples:\n"
+    "/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n"
+    "/FASTDETECT /SOS /NOGUIBOOT\n"
+    "/BASEVIDEO /MAXMEM=64\n"
+    "/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
+const PCSTR ReactOSSetupOptionsPrompt =
+    "Enter additional load options you want passed to the ReactOS Setup.\n"
+    "These options will supplement those obtained from the TXTSETUP.SIF\n"
+    "file, unless you also specify the /SIFOPTIONSOVERRIDE option switch.\n"
+    "\n"
+    "Example:\n"
+    "/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /NOGUIBOOT";
+
+const PCSTR CustomBootPrompt =
+    "Press ENTER to boot your custom boot setup.";
 
 /* FUNCTIONS ******************************************************************/
 

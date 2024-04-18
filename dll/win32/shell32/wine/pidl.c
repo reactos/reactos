@@ -54,6 +54,15 @@ extern BOOL WINAPI Free(LPVOID);
 static LPSTR _ILGetSTextPointer(LPCITEMIDLIST pidl);
 static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl);
 
+EXTERN_C HWND BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx);
+
+EXTERN_C HRESULT
+BindCtx_RegisterObjectParam(
+    _In_ IBindCtx *pBindCtx,
+    _In_ LPOLESTR pszKey,
+    _In_opt_ IUnknown *punk,
+    _Out_ LPBC *ppbc);
+
 /*************************************************************************
  * ILGetDisplayNameExA
  *
@@ -1396,38 +1405,58 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 {
+    HRESULT hr;
+    LPWSTR pszNameDup;
     IShellFolder *psfDesktop;
-    HRESULT         hr=E_FAIL;
-    ULONG           dwAttr=sfgaoIn;
+    IBindCtx *pBindCtx = NULL;
 
-    if(!ppidl)
-        return E_INVALIDARG;
+    TRACE("(%s, %p, %p, 0x%X, %p)\n", pszName, pbc, ppidl, sfgaoIn, psfgaoOut);
 
-    if (!pszName)
-    {
-        *ppidl = NULL;
-        return E_INVALIDARG;
-    }
+    *ppidl = NULL;
 
+    if (psfgaoOut)
+        *psfgaoOut = 0;
+
+    pszNameDup = StrDupW(pszName);
+    if (!pszNameDup)
+        return E_OUTOFMEMORY;
+
+    psfDesktop = NULL;
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(hr))
     {
-        *ppidl = NULL;
+        LocalFree(pszNameDup);
         return hr;
     }
 
-    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
-
-    IShellFolder_Release(psfDesktop);
+    if (!pbc)
+    {
+        hr = BindCtx_RegisterObjectParam(NULL, STR_PARSE_TRANSLATE_ALIASES, NULL, &pBindCtx);
+        pbc = pBindCtx;
+    }
 
     if (SUCCEEDED(hr))
     {
-        if (psfgaoOut) *psfgaoOut = dwAttr;
+        ULONG sfgao = sfgaoIn, cchEaten;
+        HWND hwndUI = BindCtx_GetUIWindow(pbc);
+        hr = psfDesktop->lpVtbl->ParseDisplayName(psfDesktop,
+                                                  hwndUI,
+                                                  pbc,
+                                                  pszNameDup,
+                                                  &cchEaten,
+                                                  ppidl,
+                                                  (psfgaoOut ? &sfgao : NULL));
+        if (SUCCEEDED(hr) && psfgaoOut)
+            *psfgaoOut = (sfgao & sfgaoIn);
     }
-    else
-    {
-        *ppidl = NULL;
-    }
+
+    LocalFree(pszNameDup);
+
+    if (psfDesktop)
+        psfDesktop->lpVtbl->Release(psfDesktop);
+
+    if (pBindCtx)
+        pBindCtx->lpVtbl->Release(pBindCtx);
 
     return hr;
 }

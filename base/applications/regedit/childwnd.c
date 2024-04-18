@@ -2,6 +2,7 @@
  * Regedit child window
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
+ * Copyright (C) 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,6 +39,13 @@ extern LPCWSTR get_root_key_name(HKEY hRootKey)
     return L"UNKNOWN HKEY, PLEASE REPORT";
 }
 
+static INT ClampSplitBarX(HWND hWnd, INT x)
+{
+    RECT rc;
+    GetClientRect(hWnd, &rc);
+    return min(max(x, SPLIT_MIN), rc.right - SPLIT_MIN);
+}
+
 extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(4);
@@ -54,6 +62,9 @@ extern void ResizeWnd(int cx, int cy)
         cy = rs.bottom - rs.top;
     }
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
+
+    g_pChildWnd->nSplitPos = ClampSplitBarX(g_pChildWnd->hWnd, g_pChildWnd->nSplitPos);
+
     cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2;
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
@@ -380,6 +391,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
         }
         goto def;
+
     case WM_DESTROY:
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
@@ -389,15 +401,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;
+
     case WM_LBUTTONDOWN:
     {
-        RECT rt;
-        int x = (short)LOWORD(lParam);
-        GetClientRect(hWnd, &rt);
-        if (x>=g_pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<g_pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
+        INT x = (SHORT)LOWORD(lParam);
+        if (x >= g_pChildWnd->nSplitPos - SPLIT_WIDTH / 2 &&
+            x <  g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2 + 1)
         {
-            last_split = g_pChildWnd->nSplitPos;
-            draw_splitbar(hWnd, last_split);
+            x = ClampSplitBarX(hWnd, x);
+            draw_splitbar(hWnd, x);
+            last_split = x;
             SetCapture(hWnd);
         }
         break;
@@ -407,12 +420,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_RBUTTONDOWN:
         if (GetCapture() == hWnd)
         {
-            finish_splitbar(hWnd, LOWORD(lParam));
+            INT x = (SHORT)LOWORD(lParam);
+            x = ClampSplitBarX(hWnd, x);
+            finish_splitbar(hWnd, x);
         }
         break;
 
     case WM_CAPTURECHANGED:
-        if (GetCapture()==hWnd && last_split>=0)
+        if (GetCapture() == hWnd && last_split >= 0)
             draw_splitbar(hWnd, last_split);
         break;
 
@@ -433,35 +448,13 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_MOUSEMOVE:
         if (GetCapture() == hWnd)
         {
-            HDC hdc;
-            RECT rt;
-            HGDIOBJ OldObj;
-            int x = LOWORD(lParam);
-            if(!SizingPattern)
+            INT x = (SHORT)LOWORD(lParam);
+            x = ClampSplitBarX(hWnd, x);
+            if (last_split != x)
             {
-                const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
-                SizingPattern = CreateBitmap(8, 8, 1, 1, Pattern);
-            }
-            if(!SizingBrush)
-            {
-                SizingBrush = CreatePatternBrush(SizingPattern);
-            }
-
-            GetClientRect(hWnd, &rt);
-            x = (SHORT) min(max(x, SPLIT_MIN), rt.right - SPLIT_MIN);
-            if(last_split != x)
-            {
-                rt.left = last_split-SPLIT_WIDTH/2;
-                rt.right = last_split+SPLIT_WIDTH/2+1;
-                hdc = GetDC(hWnd);
-                OldObj = SelectObject(hdc, SizingBrush);
-                PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
+                draw_splitbar(hWnd, last_split);
                 last_split = x;
-                rt.left = x-SPLIT_WIDTH/2;
-                rt.right = x+SPLIT_WIDTH/2+1;
-                PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
-                SelectObject(hdc, OldObj);
-                ReleaseDC(hWnd, hdc);
+                draw_splitbar(hWnd, last_split);
             }
         }
         break;
@@ -471,9 +464,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
         }
-        break;
-
-    case WM_TIMER:
         break;
 
     case WM_NOTIFY:
@@ -668,7 +658,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             ResizeWnd(LOWORD(lParam), HIWORD(lParam));
         }
-        /* fall through */
+        break;
+
     default:
 def:
         return DefWindowProcW(hWnd, message, wParam, lParam);

@@ -4,6 +4,7 @@
  * Copyright 2004 Jon Griffiths
  * Copyright 2008 Michael Stefaniuc
  *           2011 Ștefan Fulea
+ *           2024 Andrei Miloiu
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,12 +32,12 @@ STRINGTABLE
     IDS_TIME_INTERVAL_MINUTES  " min"
     IDS_TIME_INTERVAL_SECONDS  " sec"
 #ifdef __REACTOS__
-    IDS_KB_FORMAT "%s KB"
-    IDS_MB_FORMAT "%s MB"
-    IDS_GB_FORMAT "%s GB"
-    IDS_TB_FORMAT "%s TB"
-    IDS_PB_FORMAT "%s PB"
-    IDS_EB_FORMAT "%s EB"
+    IDS_KB_FORMAT "%s KO"
+    IDS_MB_FORMAT "%s MO"
+    IDS_GB_FORMAT "%s GO"
+    IDS_TB_FORMAT "%s TO"
+    IDS_PB_FORMAT "%s PO"
+    IDS_EB_FORMAT "%s EO"
 #endif
 }
 
@@ -47,9 +48,9 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "Nu dor&esc recurența acestui mesaj", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Con&firmă", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "A&nulează", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "D&a", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "N&u", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&În viitor, nu se va afişa această casetă de dialog", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Revocare", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Da", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Nu", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }

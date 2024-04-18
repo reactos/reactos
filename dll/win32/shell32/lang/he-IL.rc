@@ -804,6 +804,7 @@ BEGIN
     IDS_DISCONNECT "נתק"
     IDS_OPENFILELOCATION "&פתח מיקום קובץ"
     IDS_SENDTO_MENU "&שלח אל"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"

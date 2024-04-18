@@ -1,7 +1,10 @@
 1 stdcall I_ScGetCurrentGroupStateW(ptr wstr ptr)
-@ stdcall A_SHAFinal(ptr ptr)
-@ stdcall A_SHAInit(ptr)
-@ stdcall A_SHAUpdate(ptr ptr long)
+@ stdcall -version=0x502 A_SHAFinal(ptr ptr)
+@ stdcall -version=0x600+ A_SHAFinal(ptr ptr) ntdll.A_SHAFinal
+@ stdcall -version=0x502 A_SHAInit(ptr)
+@ stdcall -version=0x600+ A_SHAInit(ptr) ntdll.A_SHAInit
+@ stdcall -version=0x502 A_SHAUpdate(ptr ptr long)
+@ stdcall -version=0x600+ A_SHAUpdate(ptr ptr long) ntdll.A_SHAUpdate
 @ stdcall AbortSystemShutdownA(ptr)
 @ stdcall AbortSystemShutdownW(ptr)
 @ stdcall AccessCheck(ptr long long ptr ptr ptr ptr ptr)
@@ -405,12 +408,18 @@
 @ stdcall LsaSetTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaSetTrustedDomainInformation(ptr ptr long ptr)
 @ stdcall LsaStorePrivateData(ptr ptr ptr)
-@ stdcall MD4Final(ptr)
-@ stdcall MD4Init(ptr)
-@ stdcall MD4Update(ptr ptr long)
-@ stdcall MD5Final(ptr)
-@ stdcall MD5Init(ptr)
-@ stdcall MD5Update(ptr ptr long)
+@ stdcall -version=0x502 MD4Final(ptr)
+@ stdcall -version=0x600+ MD4Final(ptr) ntdll.MD4Final
+@ stdcall -version=0x502 MD4Init(ptr)
+@ stdcall -version=0x600+ MD4Init(ptr) ntdll.MD4Init
+@ stdcall -version=0x502 MD4Update(ptr ptr long)
+@ stdcall -version=0x600+ MD4Update(ptr ptr long) ntdll.MD4Update
+@ stdcall -version=0x502 MD5Final(ptr)
+@ stdcall -version=0x600+ MD5Final(ptr) ntdll.MD5Final
+@ stdcall -version=0x502 MD5Init(ptr)
+@ stdcall -version=0x600+ MD5Init(ptr) ntdll.MD5Init
+@ stdcall -version=0x502 MD5Update(ptr ptr long)
+@ stdcall -version=0x600+ MD5Update(ptr ptr long) ntdll.MD5Update
 @ stub MSChapSrvChangePassword2
 @ stub MSChapSrvChangePassword
 @ stdcall MakeAbsoluteSD2(ptr ptr)

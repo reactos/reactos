@@ -1,8 +1,8 @@
 /*
  * PROJECT:     FreeLoader
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic ARC Support Functions
- * COPYRIGHT:   Copyright 2019 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2019-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -10,19 +10,21 @@
 typedef
 ARC_STATUS
 (__cdecl *ARC_ENTRY_POINT)(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCHAR Envp[]);
 
-PCHAR
+PSTR
 GetNextArgumentValue(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN OUT PULONG LastIndex OPTIONAL,
-    IN PCHAR ArgumentName);
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _Inout_opt_ PULONG LastIndex,
+    _In_ PCSTR ArgumentName);
 
-PCHAR
+PSTR
 GetArgumentValue(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR ArgumentName);
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCSTR ArgumentName);
+
+/* EOF */

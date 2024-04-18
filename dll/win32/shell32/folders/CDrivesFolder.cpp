@@ -4,7 +4,7 @@
  *    Copyright 1997                Marcus Meissner
  *    Copyright 1998, 1999, 2002    Juergen Schmied
  *    Copyright 2009                Andrew Hill
- *    Copyright 2017-2019           Katayama Hirofumi MZ
+ *    Copyright 2017-2024           Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -658,66 +658,69 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         DWORD * pchEaten, PIDLIST_RELATIVE * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
-    LPCWSTR szNext = NULL;
-    LPITEMIDLIST pidlTemp = NULL;
-    INT nDriveNumber;
 
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
           hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
           pchEaten, ppidl, pdwAttributes);
 
-    *ppidl = 0;
-    if (pchEaten)
-        *pchEaten = 0;        /* strange but like the original */
+    if (!ppidl)
+        return hr;
+
+    *ppidl = NULL;
+
+    if (!lpszDisplayName)
+        return hr;
 
     /* handle CLSID paths */
-    if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
-        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-
-    nDriveNumber = PathGetDriveNumberW(lpszDisplayName);
-    if (nDriveNumber < 0)
-        return E_INVALIDARG;
-
-    /* check if this drive actually exists */
-    if ((::GetLogicalDrives() & (1 << nDriveNumber)) == 0)
+    if (lpszDisplayName[0] == L':' && lpszDisplayName[1] == L':')
     {
-        return HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE);
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                             pdwAttributes);
     }
 
-    pidlTemp = _ILCreateDrive(lpszDisplayName);
-    if (!pidlTemp)
-        return E_OUTOFMEMORY;
+    if (lpszDisplayName[0] &&
+        ((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
+         (L'a' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'z')) &&
+        lpszDisplayName[1] == L':' && lpszDisplayName[2] == L'\\')
+    {
+        // "C:\..."
+        WCHAR szRoot[8];
+        PathBuildRootW(szRoot, ((*lpszDisplayName - 1) & 0x1F));
 
-    if (lpszDisplayName[2] == L'\\')
-    {
-        szNext = &lpszDisplayName[3];
-    }
-
-    if (szNext && *szNext)
-    {
-        hr = SHELL32_ParseNextElement (this, hwndOwner, pbc, &pidlTemp,
-                                       (LPOLESTR) szNext, pchEaten, pdwAttributes);
-    }
-    else
-    {
-        hr = S_OK;
-        if (pdwAttributes && *pdwAttributes)
+        if (SHIsFileSysBindCtx(pbc, NULL) != S_OK && !(BindCtx_GetMode(pbc, 0) & STGM_CREATE))
         {
-            if (_ILIsDrive(pidlTemp))
-            {
-                *pdwAttributes &= dwDriveAttributes;
+            if (::GetDriveType(szRoot) == DRIVE_NO_ROOT_DIR)
+                return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+        }
 
-                if (_ILGetDriveType(pidlTemp) == DRIVE_CDROM)
-                    *pdwAttributes &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
-            }
-            else if (_ILIsSpecialFolder(pidlTemp))
-                m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
-            else
-                ERR("Got unknown pidl\n");
+        CComHeapPtr<ITEMIDLIST> pidlTemp(_ILCreateDrive(szRoot));
+        if (!pidlTemp)
+            return E_OUTOFMEMORY;
+
+        if (lpszDisplayName[3])
+        {
+            CComPtr<IShellFolder> pChildFolder;
+            hr = BindToObject(pidlTemp, pbc, IID_PPV_ARG(IShellFolder, &pChildFolder));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            ULONG chEaten;
+            CComHeapPtr<ITEMIDLIST> pidlChild;
+            hr = pChildFolder->ParseDisplayName(hwndOwner, pbc, &lpszDisplayName[3], &chEaten,
+                                                &pidlChild, pdwAttributes);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            hr = SHILCombine(pidlTemp, pidlChild, ppidl);
+        }
+        else
+        {
+            *ppidl = pidlTemp.Detach();
+            if (pdwAttributes && *pdwAttributes)
+                GetAttributesOf(1, (PCUITEMID_CHILD_ARRAY)ppidl, pdwAttributes);
+            hr = S_OK;
         }
     }
-
-    *ppidl = pidlTemp;
 
     TRACE("(%p)->(-- ret=0x%08x)\n", this, hr);
 

@@ -506,7 +506,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
     DeviceInfo.DeviceIndex = DeviceId;
-    DeviceInfo.u.WaveFormatEx.cbSize = sizeof(WAVEFORMATEX); //WaveFormat->cbSize;
+    DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
 #ifdef USERMODE_MIXER
     DeviceInfo.u.WaveFormatEx.nChannels = 2;
@@ -546,7 +546,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
     }
 
     /* store details */
-    Instance->WaveFormatEx.cbSize = sizeof(WAVEFORMATEX);
+    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
     Instance->WaveFormatEx.wBitsPerSample = (DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec * 8) / (DeviceInfo.u.WaveFormatEx.nSamplesPerSec * DeviceInfo.u.WaveFormatEx.nChannels);
 
     /* Store sound device handle instance handle */

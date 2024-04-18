@@ -31,7 +31,7 @@ Létrehozza a fájlt?"
 Cseréli a fájlt?"
     IDS_INVALID_FILENAME_TITLE "Érvénytelen karakter(ek) van(nak) az útvonalban"
     IDS_INVALID_FILENAME    "A fájlnév nem tartalmazhatja ezeket a karaktereket:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Útvonal nem létezik"
     IDS_FILENOTEXISTING     "Fájl nem létezik"
     IDS_INVALID_FOLDERNAME  "A kijelölés egy mappától eltérő objektumot tartalmaz"

@@ -55,6 +55,11 @@ typedef struct _TRAYNOTIFYDATAW
 #define TWM_CYCLEFOCUS (WM_USER + 348)
 
 /****************************************************************************
+ * ProgMan messages
+ */
+#define WM_PROGMAN_OPENSHELLSETTINGS (WM_USER + 22) /* wParam specifies the dialog (and tab page) */
+
+/****************************************************************************
  *  IDList Functions
  */
 BOOL WINAPI ILGetDisplayName(
@@ -722,10 +727,12 @@ HRESULT WINAPI SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj);
 HRESULT WINAPI SHLimitInputCombo(HWND hWnd, IShellFolder *psf);
 HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 
+BOOL WINAPI GUIDFromStringA(
+    _In_   PCSTR psz,
+    _Out_  LPGUID pguid);
 BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
-    _Out_  LPGUID pguid
-    );
+    _Out_  LPGUID pguid);
 
 LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
 LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);

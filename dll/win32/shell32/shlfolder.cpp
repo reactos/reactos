@@ -26,45 +26,54 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-/***************************************************************************
- *  GetNextElement (internal function)
- *
- * Gets a part of a string till the first backslash.
- *
- * PARAMETERS
- *  pszNext [IN] string to get the element from
- *  pszOut  [IN] pointer to buffer which receives string
- *  dwOut   [IN] length of pszOut
- *
- *  RETURNS
- *    LPSTR pointer to first, not yet parsed char
- */
-
-LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut)
+HRESULT
+Shell_NextElement(
+    _Inout_ LPWSTR *ppch,
+    _Out_ LPWSTR pszOut,
+    _In_ INT cchOut,
+    _In_ BOOL bValidate)
 {
-    LPCWSTR pszTail = pszNext;
-    DWORD dwCopy;
+    *pszOut = UNICODE_NULL;
 
-    TRACE ("(%s %p 0x%08x)\n", debugstr_w (pszNext), pszOut, dwOut);
+    if (!*ppch)
+        return S_FALSE;
 
-    *pszOut = 0x0000;
+    HRESULT hr;
+    LPWSTR pchNext = wcschr(*ppch, L'\\');
+    if (pchNext)
+    {
+        if (*ppch < pchNext)
+        {
+            /* Get an element */
+            StringCchCopyNW(pszOut, cchOut, *ppch, pchNext - *ppch);
+            ++pchNext;
 
-    if (!pszNext || !*pszNext)
-        return NULL;
+            if (!*pchNext)
+                pchNext = NULL; /* No next */
 
-    while (*pszTail && (*pszTail != (WCHAR) '\\'))
-        pszTail++;
+            hr = S_OK;
+        }
+        else /* Double backslashes found? */
+        {
+            pchNext = NULL;
+            hr = E_INVALIDARG;
+        }
+    }
+    else /* No more next */
+    {
+        StringCchCopyW(pszOut, cchOut, *ppch);
+        hr = S_OK;
+    }
 
-    dwCopy = pszTail - pszNext + 1;
-    lstrcpynW (pszOut, pszNext, (dwOut < dwCopy) ? dwOut : dwCopy);
+    *ppch = pchNext; /* Go next */
 
-    if (*pszTail)
-        pszTail++;
-    else
-        pszTail = NULL;
+    if (hr == S_OK && bValidate && !PathIsValidElement(pszOut))
+    {
+        *pszOut = UNICODE_NULL;
+        hr = E_INVALIDARG;
+    }
 
-    TRACE ("--(%s %s 0x%08x %p)\n", debugstr_w (pszNext), debugstr_w (pszOut), dwOut, pszTail);
-    return pszTail;
+    return hr;
 }
 
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,

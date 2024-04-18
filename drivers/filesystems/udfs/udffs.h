@@ -107,10 +107,8 @@
 // Common include files - should be in the include dir of the MS supplied IFS Kit
 #ifndef _CONSOLE
 extern "C" {
-#pragma pack(push, 8)
 #include "ntifs.h"
 #include "ntifs_ex.h"
-#pragma pack(pop)
 }
 #endif //_CONSOLE
 

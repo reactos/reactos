@@ -252,9 +252,8 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
 
     PCWSTR strNextArg = _FindFirstField(strFieldArray);
 
-    BOOL hasNext = TRUE;
+    BOOL hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
 
-    hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
     while (TRUE)
     {
         // Basic flags-only params first
@@ -318,9 +317,6 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
             // The window should be rooted
 
             TRACE("CmdLine Parser: Found %S flag\n", strField);
-
-            if (!pInfo->pidlPath)
-                return FALSE;
 
             if (!hasNext)
                 return FALSE;
@@ -414,7 +410,6 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
                         TRACE("CmdLine Parser: Parsed target path. dwFlags=%08lx, strPath=%S\n", pInfo->dwFlags, field);
                     }
                 }
-
             }
         }
 

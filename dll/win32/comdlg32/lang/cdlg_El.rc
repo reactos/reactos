@@ -31,7 +31,7 @@ STRINGTABLE
 Θέλετε να το αντικαταστήσετε;"
     IDS_INVALID_FILENAME_TITLE "Μη έγγυρος(οι) χαρακτήρας(ες) στο μονοπάτι"
     IDS_INVALID_FILENAME    "Ένα όνομα αρχείο δε μπορεί να περιέχει κάποιον από τους παρακάτω χαρακτήρες:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Το μονοπάτι δεν υπάρχει"
     IDS_FILENOTEXISTING     "Το αρχείο δεν υπάρχει"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
