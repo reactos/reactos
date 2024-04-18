@@ -174,11 +174,7 @@ STDAPI DllUnregisterServer()
 
 EXTERN_C
 BOOL WINAPI
-RouteTheCall(
-    IN HWND hWndOwner,
-    IN HINSTANCE hInstance,
-    IN PCWSTR lpStringArg,
-    IN INT Show)
+RouteTheCall(IN HWND hWndOwner, IN HINSTANCE hInstance, IN PCWSTR lpStringArg, IN INT Show)
 {
     CStringW path = lpStringArg;
     PathRemoveBlanksW(path.GetBuffer());
