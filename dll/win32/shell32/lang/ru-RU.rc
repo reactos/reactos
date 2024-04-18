@@ -806,7 +806,7 @@ BEGIN
     IDS_DISCONNECT "Отсоединить"
     IDS_OPENFILELOCATION "Открыть &расположение объекта"
     IDS_SENDTO_MENU "Отправит&ь"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Копировать путь"
 
     IDS_MOVEERRORTITLE "Ошибка при перемещении папки или файла"
     IDS_COPYERRORTITLE "Ошибка при копировании папки или файла"
