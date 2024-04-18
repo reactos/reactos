@@ -585,7 +585,7 @@ DisplayBootBitmap(
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
             Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
         }
-#else SOS_UI == SOS_UI_NEW
+#else
         Header = InbvGetResourceAddress(IDB_HEADER_NEW);
 #endif
         /* Make sure we have resources */
