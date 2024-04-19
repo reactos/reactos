@@ -32,6 +32,7 @@ extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
 extern void func_mbstowcs(void);
 extern void func_mbtowc(void);
+extern void func_rand_s(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
 extern void func_strlen(void);
@@ -79,6 +80,7 @@ const struct test winetest_testlist[] =
     { "ceil", func_ceil },
     { "fabs", func_fabs },
     { "floor", func_floor },
+    { "rand_s", func_rand_s },
 #ifdef _M_AMD64 // x86 / arm need fixing
     { "fpcontrol", func_fpcontrol },
 #endif
