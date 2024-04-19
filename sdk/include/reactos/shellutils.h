@@ -227,25 +227,25 @@ public:
 #endif
 
 template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
+ULONG ReleaseCComPtrExpectZeroHelper(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
+    ULONG r = 0;
     if (cptr.p != NULL)
     {
         T *raw = cptr.Detach();
-        int nrc = raw->Release();
-        if (nrc > 0)
+        int nrc = r = raw->Release();
+        while (nrc > 0 && forceRelease)
         {
-            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
-            if (forceRelease)
-            {
-                while (nrc > 0)
-                {
-                    nrc = raw->Release();
-                }
-            }
+            nrc = raw->Release();
         }
     }
+    return r;
 }
+#define ReleaseCComPtrExpectZero(...) \
+    if (ULONG r = ReleaseCComPtrExpectZeroHelper(__VA_ARGS__)) \
+        DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", r); \
+    else \
+        (void)0
 
 template<class T, class R>
 HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
