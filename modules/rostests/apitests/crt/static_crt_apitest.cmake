@@ -13,6 +13,7 @@ list(APPEND SOURCE_STATIC
     fpcontrol.c
     mbstowcs.c
     mbtowc.c
+    rand_s.c
     sprintf.c
     strcpy.c
     strlen.c
