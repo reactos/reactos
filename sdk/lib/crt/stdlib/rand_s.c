@@ -9,12 +9,14 @@
 
 #include <precomp.h>
 
+typedef BOOLEAN (WINAPI *PFN_SystemFunction036)(PVOID, ULONG); // RtlGenRandom
+PFN_SystemFunction036 g_pfnSystemFunction036 = NULL;
+
 /*********************************************************************
  *              rand_s (MSVCRT.@)
  */
 int CDECL rand_s(unsigned int *pval)
 {
-    BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG); // RtlGenRandom
     HINSTANCE hadvapi32;
 
     if (!pval)
@@ -25,32 +27,38 @@ int CDECL rand_s(unsigned int *pval)
     }
 
     *pval = 0;
-    hadvapi32 = LoadLibraryA("advapi32.dll");
-    if (!hadvapi32)
+
+    if (g_pfnSystemFunction036 == NULL)
+    {
+        PFN_SystemFunction036 pSystemFunction036;
+
+        hadvapi32 = LoadLibraryA("advapi32.dll");
+        if (!hadvapi32)
+        {
+            _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
+            *_errno() = EINVAL;
+            return EINVAL;
+        }
+
+        pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
+        if (!pSystemFunction036)
+        {
+            _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
+            *_errno() = EINVAL;
+            FreeLibrary(hadvapi32);
+            return EINVAL;
+        }
+
+        g_pfnSystemFunction036 = pSystemFunction036;
+    }
+
+    if (!g_pfnSystemFunction036(pval, sizeof(*pval)))
     {
         _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
         *_errno() = EINVAL;
         return EINVAL;
     }
 
-    pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
-    if (!pSystemFunction036)
-    {
-        _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
-        *_errno() = EINVAL;
-        FreeLibrary(hadvapi32);
-        return EINVAL;
-    }
-
-    if (!pSystemFunction036(pval, sizeof(*pval)))
-    {
-        _invalid_parameter(NULL,_CRT_WIDE("rand_s"),_CRT_WIDE(__FILE__),__LINE__, 0);
-        *_errno() = EINVAL;
-        FreeLibrary(hadvapi32);
-        return EINVAL;
-    }
-
-    FreeLibrary(hadvapi32);
     return 0;
 }
 
