@@ -1328,8 +1328,6 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    if (textA) //// ReactOS
 	    {
 #else
-	    if(!es->hloc32W) return;
-
             if(es->hloc32A)
             {
                 CHAR *textA = LocalLock(es->hloc32A);
@@ -1382,7 +1380,6 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 		ERR("es->text == 0 ... please report\n");
 		return;
 	}
-
 	if (force || (es->lock_count == 1)) {
 	    if (es->hloc32W) {
 		UINT countA = 0;
