@@ -171,7 +171,6 @@ typedef struct
 #define SWAP_UINT32(x,y) do { UINT temp = (UINT)(x); (x) = (UINT)(y); (y) = temp; } while(0)
 #define ORDER_UINT(x,y) do { if ((UINT)(y) < (UINT)(x)) SWAP_UINT32((x),(y)); } while(0)
 
-static const WCHAR empty_stringW[] = {0};
 static inline BOOL notify_parent(const EDITSTATE *es, INT code)
 {
     HWND hwnd = es->hwndSelf;
@@ -2675,9 +2674,9 @@ static LRESULT EDIT_EM_GetSel(const EDITSTATE *es, PUINT start, PUINT end)
  *	FIXME: handle ES_NUMBER and ES_OEMCONVERT here
  *
  */
-static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replace, BOOL send_update, BOOL honor_limit)
+static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_replace, UINT strl,
+                               BOOL send_update, BOOL honor_limit)
 {
-	UINT strl = strlenW(lpsz_replace);
 	UINT tl = get_text_length(es);
 	UINT utl;
 	UINT s;
@@ -3172,7 +3171,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 
 	EDIT_EM_SetSel(es, es->undo_position, es->undo_position + es->undo_insert_count, FALSE);
 	EDIT_EM_EmptyUndoBuffer(es);
-	EDIT_EM_ReplaceSel(es, TRUE, utext, TRUE, TRUE);
+	EDIT_EM_ReplaceSel(es, TRUE, utext, ulength, TRUE, TRUE);
 	EDIT_EM_SetSel(es, es->undo_position, es->undo_position + es->undo_insert_count, FALSE);
         /* send the notification after the selection start and end are set */
         if (!notify_parent(es, EN_CHANGE)) return TRUE;
@@ -3206,7 +3205,7 @@ static inline BOOL EDIT_IsInsideDialog(EDITSTATE *es)
 static void EDIT_WM_Paste(EDITSTATE *es)
 {
 	HGLOBAL hsrc;
-	LPWSTR src, new_src, ptr;
+	LPWSTR src, ptr;
 	int len;
 
 	/* Protect read-only edit control from modification */
@@ -3216,25 +3215,19 @@ static void EDIT_WM_Paste(EDITSTATE *es)
 	OpenClipboard(es->hwndSelf);
 	if ((hsrc = GetClipboardData(CF_UNICODETEXT))) {
 		src = GlobalLock(hsrc);
-
+                len = strlenW(src);
 		/* Protect single-line edit against pasting new line character */
 		if (!(es->style & ES_MULTILINE) && ((ptr = strchrW(src, '\n')))) {
 			len = ptr - src;
 			if (len && src[len - 1] == '\r')
 				--len;
-			new_src = HeapAlloc(GetProcessHeap(), 0, (len+1) * sizeof(WCHAR));
-			if (new_src != NULL) {
-				lstrcpynW(new_src, src, len+1);
-				EDIT_EM_ReplaceSel(es, TRUE, new_src, TRUE, TRUE);
-				HeapFree(GetProcessHeap(), 0, new_src);
-			}
-		} else
-			EDIT_EM_ReplaceSel(es, TRUE, src, TRUE, TRUE);
+		}
+                EDIT_EM_ReplaceSel(es, TRUE, src, len, TRUE, TRUE);
 		GlobalUnlock(hsrc);
 	}
         else if (es->style & ES_PASSWORD) {
             /* clear selected text in password edit box even with empty clipboard */
-            EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
+            EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
         }
 	CloseClipboard();
 }
@@ -3280,7 +3273,7 @@ static inline void EDIT_WM_Clear(EDITSTATE *es)
 	if(es->style & ES_READONLY)
 	    return;
 
-	EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
+	EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
 }
 
 
@@ -3327,18 +3320,18 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 				EDIT_MoveHome(es, FALSE, FALSE);
 				EDIT_MoveDown_ML(es, FALSE);
 			} else {
-				static const WCHAR cr_lfW[] = {'\r','\n',0};
-				EDIT_EM_ReplaceSel(es, TRUE, cr_lfW, TRUE, TRUE);
+				static const WCHAR cr_lfW[] = {'\r','\n'};
+				EDIT_EM_ReplaceSel(es, TRUE, cr_lfW, 2, TRUE, TRUE);
 			}
 		}
 		break;
 	case '\t':
 		if ((es->style & ES_MULTILINE) && !(es->style & ES_READONLY))
 		{
-			static const WCHAR tabW[] = {'\t',0};
+			static const WCHAR tabW[] = {'\t'};
                         if (EDIT_IsInsideDialog(es))
                             break;
-			EDIT_EM_ReplaceSel(es, TRUE, tabW, TRUE, TRUE);
+			EDIT_EM_ReplaceSel(es, TRUE, tabW, 1, TRUE, TRUE);
 		}
 		break;
 	case VK_BACK:
@@ -3375,12 +3368,8 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 		if( (es->style & ES_NUMBER) && !( c >= '0' && c <= '9') )
 			break;
 			
-		if (!(es->style & ES_READONLY) && (c >= ' ') && (c != 127)) {
-			WCHAR str[2];
- 			str[0] = c;
- 			str[1] = '\0';
- 			EDIT_EM_ReplaceSel(es, TRUE, str, TRUE, TRUE);
- 		}
+		if (!(es->style & ES_READONLY) && (c >= ' ') && (c != 127))
+ 			EDIT_EM_ReplaceSel(es, TRUE, &c, 1, TRUE, TRUE);
 		break;
 	}
     return 1;
@@ -4097,14 +4086,14 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
     if (text) 
     {
 	TRACE("%s\n", debugstr_w(text));
-	EDIT_EM_ReplaceSel(es, FALSE, text, FALSE, FALSE);
+	EDIT_EM_ReplaceSel(es, FALSE, text, strlenW(text), FALSE, FALSE);
 	if(!unicode)
 	    HeapFree(GetProcessHeap(), 0, textW);
     } 
     else 
     {
 	TRACE("<NULL>\n");
-	EDIT_EM_ReplaceSel(es, FALSE, empty_stringW, FALSE, FALSE);
+	EDIT_EM_ReplaceSel(es, FALSE, NULL, 0, FALSE, FALSE);
     }
     es->x_offset = 0;
     es->flags &= ~EF_MODIFIED;
@@ -4518,7 +4507,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
         return;
     }
 
-    lpCompStr = HeapAlloc(GetProcessHeap(),0,buflen + sizeof(WCHAR));
+    lpCompStr = HeapAlloc(GetProcessHeap(),0,buflen);
     if (!lpCompStr)
     {
         ERR("Unable to allocate IME CompositionString\n");
@@ -4527,7 +4516,6 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
 
     if (buflen)
         ImmGetCompositionStringW(hIMC, GCS_COMPSTR, lpCompStr, buflen);
-    lpCompStr[buflen/sizeof(WCHAR)] = 0;
 
     if (CompFlag & GCS_COMPATTR)
     {
@@ -4565,7 +4553,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
     else
         es->selection_end = es->selection_start;
 
-    EDIT_EM_ReplaceSel(es, FALSE, lpCompStr, TRUE, TRUE);
+    EDIT_EM_ReplaceSel(es, FALSE, lpCompStr, buflen / sizeof(WCHAR), TRUE, TRUE);
     es->composition_len = abs(es->composition_start - es->selection_end);
 
     es->selection_start = es->composition_start;
@@ -4587,7 +4575,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
         return;
     }
 
-    lpResultStr = HeapAlloc(GetProcessHeap(),0, buflen+sizeof(WCHAR));
+    lpResultStr = HeapAlloc(GetProcessHeap(),0, buflen);
     if (!lpResultStr)
     {
         ERR("Unable to alloc buffer for IME string\n");
@@ -4595,7 +4583,6 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
     }
 
     ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, lpResultStr, buflen);
-    lpResultStr[buflen/sizeof(WCHAR)] = 0;
 
 #ifndef __REACTOS__
     /* check for change in composition start */
@@ -4604,7 +4591,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
 
     es->selection_start = es->composition_start;
     es->selection_end = es->composition_start + es->composition_len;
-    EDIT_EM_ReplaceSel(es, TRUE, lpResultStr, TRUE, TRUE);
+    EDIT_EM_ReplaceSel(es, TRUE, lpResultStr, buflen / sizeof(WCHAR), TRUE, TRUE);
     es->composition_start = es->selection_end;
     es->composition_len = 0;
 #endif
@@ -4619,11 +4606,11 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 
 #ifdef __REACTOS__
     if (es->selection_start != es->selection_end)
-        EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
+        EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
 #else
     if (es->composition_len == 0 && es->selection_start != es->selection_end)
     {
-        EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
+        EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
         es->composition_start = es->selection_end;
     }
 #endif
@@ -4793,7 +4780,7 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
         EDIT_SetRectNP(es, &clientRect);
 
        if (name && *name) {
-	   EDIT_EM_ReplaceSel(es, FALSE, name, FALSE, FALSE);
+	   EDIT_EM_ReplaceSel(es, FALSE, name, strlenW(name), FALSE, FALSE);
 	   /* if we insert text to the editline, the text scrolls out
             * of the window, as the caret is placed after the insert
             * pos normally; thus we reset es->selection... to 0 and
@@ -4998,7 +4985,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
                     MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
 		}
 
-		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, TRUE, TRUE);
+		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, strlenW(textW), TRUE, TRUE);
 		result = 1;
 
 		if(!unicode)
@@ -5443,7 +5430,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 #else
                 if (es->composition_len > 0)
                 {
-                        EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
+                        EDIT_EM_ReplaceSel(es, TRUE, NULL, 0, TRUE, TRUE);
                         es->selection_end = es->selection_start;
                         es->composition_len= 0;
                 }
