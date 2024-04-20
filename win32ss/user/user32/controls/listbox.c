@@ -128,7 +128,7 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
         items_size + LB_ARRAY_GRANULARITY * 2 < descr->items_size)
     {
         items_size = (items_size + LB_ARRAY_GRANULARITY - 1) & ~(LB_ARRAY_GRANULARITY - 1);
-        items = heap_realloc(descr->items, items_size * sizeof(LB_ITEMDATA));
+        items = HeapReAlloc(GetProcessHeap(), 0, descr->items, items_size * sizeof(LB_ITEMDATA));
         if (!items)
         {
             SEND_NOTIFICATION(descr, LBN_ERRSPACE);
@@ -149,6 +149,11 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
 static ULONG_PTR get_item_data( const LB_DESCR *descr, UINT index )
 {
     return (descr->style & LBS_NODATA) ? 0 : descr->items[index].data;
+}
+
+static WCHAR *get_item_string( const LB_DESCR *descr, UINT index )
+{
+    return HAS_STRINGS(descr) ? descr->items[index].str : NULL;
 }
 
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
@@ -560,11 +565,11 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
 			       INT index, UINT action, BOOL ignoreFocus )
 {
     BOOL selected = FALSE, focused;
-    LB_ITEMDATA *item = NULL;
+    WCHAR *item_str = NULL;
 
     if (index < descr->nb_items)
     {
-        item = &descr->items[index];
+        item_str = get_item_string(descr, index);
         selected = is_item_selected(descr, index);
     }
 
@@ -610,7 +615,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         dis.itemData     = get_item_data(descr, index);
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%s\n",
-              descr->self, index, item ? debugstr_w(item->str) : "", action,
+              descr->self, index, debugstr_w(item_str), action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         SelectClipRgn( hdc, hrgn );
@@ -626,29 +631,29 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
                 DrawFocusRect( hdc, rect );
             return;
         }
-        if (item && item->selected)
+        if (selected)
         {
             oldBk = SetBkColor( hdc, GetSysColor( COLOR_HIGHLIGHT ) );
             oldText = SetTextColor( hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
         }
 
         TRACE("[%p]: painting %d (%s) action=%02x rect=%s\n",
-              descr->self, index, item ? debugstr_w(item->str) : "", action,
+              descr->self, index, debugstr_w(item_str), action,
               wine_dbgstr_rect(rect) );
-        if (!item)
+        if (!item_str)
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                            ETO_OPAQUE | ETO_CLIPPED, rect, NULL, 0, NULL );
         else if (!(descr->style & LBS_USETABSTOPS))
             ExtTextOutW( hdc, rect->left + 1, rect->top,
-                         ETO_OPAQUE | ETO_CLIPPED, rect, item->str,
-                         strlenW(item->str), NULL );
+                         ETO_OPAQUE | ETO_CLIPPED, rect, item_str,
+                         strlenW(item_str), NULL );
         else
 	{
 	    /* Output empty string to paint background in the full width. */
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                          ETO_OPAQUE | ETO_CLIPPED, rect, NULL, 0, NULL );
             TabbedTextOutW( hdc, rect->left + 1 , rect->top,
-                            item->str, strlenW(item->str),
+                            item_str, strlenW(item_str),
                             descr->nb_tabs, descr->tabs, 0);
 	}
         if (selected)
@@ -812,30 +817,31 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
         SetLastError(ERROR_INVALID_INDEX);
         return LB_ERR;
     }
+    WCHAR *str = get_item_string(descr, index);
+
     if (HAS_STRINGS(descr))
     {
         if (!buffer)
         {
-            len = strlenW(descr->items[index].str);
+            len = strlenW(str);
             if( unicode )
                 return len;
-            return WideCharToMultiByte( CP_ACP, 0, descr->items[index].str, len,
-                                        NULL, 0, NULL, NULL );
+            return WideCharToMultiByte( CP_ACP, 0, str, len, NULL, 0, NULL, NULL );
         }
 
-	TRACE("index %d (0x%04x) %s\n", index, index, debugstr_w(descr->items[index].str));
+	    TRACE("index %d (0x%04x) %s\n", index, index, debugstr_w(str));
 
         _SEH2_TRY  /* hide a Delphi bug that passes a read-only buffer */
         {
             if(unicode)
             {
-                strcpyW( buffer, descr->items[index].str );
+                strcpyW(buffer, str);
                 len = strlenW(buffer);
             }
             else
             {
-                len = WideCharToMultiByte(CP_ACP, 0, descr->items[index].str, -1,
-                                          (LPSTR)buffer, 0x7FFFFFFF, NULL, NULL) - 1;
+                len = WideCharToMultiByte(CP_ACP, 0, str, -1, (LPSTR)buffer,
+                                          0x7FFFFFFF, NULL, NULL) - 1;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -883,7 +889,7 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
     {
         index = (min + max) / 2;
         if (HAS_STRINGS(descr))
-            res = LISTBOX_lstrcmpiW( descr->locale, descr->items[index].str, str );
+            res = LISTBOX_lstrcmpiW( descr->locale, get_item_string(descr, index), str );
         else
         {
             COMPAREITEMSTRUCT cis;
@@ -926,7 +932,7 @@ static INT LISTBOX_FindFileStrPos( LB_DESCR *descr, LPCWSTR str )
     while (min != max)
     {
         INT index = (min + max) / 2;
-        LPCWSTR p = descr->items[index].str;
+        LPCWSTR p = get_item_string(descr, index);
         if (*p == '[')  /* drive or directory */
         {
             if (*str != '[') res = -1;
@@ -1676,7 +1682,7 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
 {
     /* save the item data before it gets freed by LB_RESETCONTENT */
     ULONG_PTR item_data = get_item_data(descr, index);
-    LPWSTR item_str = descr->items[index].str;
+    LPWSTR item_str = get_item_string(descr, index);
 
     if (!descr->nb_items)
         SendMessageW( descr->self, LB_RESETCONTENT, 0, 0 );
@@ -1698,8 +1704,7 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
         dis.itemData = item_data;
         SendMessageW( descr->owner, WM_DELETEITEM, id, (LPARAM)&dis );
     }
-    if (HAS_STRINGS(descr))
-        HeapFree( GetProcessHeap(), 0, item_str );
+    HeapFree( GetProcessHeap(), 0, item_str );
 }
 
 
@@ -2817,9 +2822,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             return LB_ERR;
         }
         if (!HAS_STRINGS(descr)) return sizeof(ULONG_PTR);
-        if (unicode) return strlenW( descr->items[wParam].str );
-        return WideCharToMultiByte( CP_ACP, 0, descr->items[wParam].str,
-                                    strlenW(descr->items[wParam].str), NULL, 0, NULL, NULL );
+        if (unicode) return strlenW(get_item_string(descr, wParam));
+        return WideCharToMultiByte( CP_ACP, 0, get_item_string(descr, wParam),
+                                    strlenW(get_item_string(descr, wParam)), NULL, 0, NULL, NULL );
 
     case LB_GETCURSEL:
         if (descr->nb_items == 0)
