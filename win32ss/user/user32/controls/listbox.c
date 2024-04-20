@@ -137,6 +137,12 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
         descr->items_size = items_size;
         descr->items = items;
     }
+
+    if ((descr->style & LBS_NODATA) && items_size > descr->nb_items)
+    {
+        memset(&descr->items[descr->nb_items], 0,
+               (items_size - descr->nb_items) * sizeof(LB_ITEMDATA));
+    }
     return TRUE;
 }
 
@@ -1771,9 +1777,9 @@ static void LISTBOX_ResetContent( LB_DESCR *descr )
 /***********************************************************************
  *           LISTBOX_SetCount
  */
-static LRESULT LISTBOX_SetCount( LB_DESCR *descr, INT count )
+static LRESULT LISTBOX_SetCount( LB_DESCR *descr, UINT count )
 {
-    LRESULT ret;
+    UINT orig_num = descr->nb_items;
 
     if (!(descr->style & LBS_NODATA))
     {
@@ -1781,19 +1787,30 @@ static LRESULT LISTBOX_SetCount( LB_DESCR *descr, INT count )
         return LB_ERR;
     }
 
-    /* FIXME: this is far from optimal... */
-    if (count > descr->nb_items)
+    if (!resize_storage(descr, count))
+        return LB_ERRSPACE;
+    descr->nb_items = count;
+
+    if (count)
     {
-        while (count > descr->nb_items)
-            if ((ret = LISTBOX_InsertString( descr, -1, 0 )) < 0)
-                return ret;
+        LISTBOX_UpdateScroll(descr);
+        if (count < orig_num)
+        {
+            descr->anchor_item = min(descr->anchor_item, count - 1);
+            if (descr->selected_item >= count)
+                descr->selected_item = -1;
+
+            /* If we removed the scrollbar, reset the top of the list */
+            if (count <= descr->page_size && orig_num > descr->page_size)
+                LISTBOX_SetTopItem(descr, 0, TRUE);
+
+            descr->focus_item = min(descr->focus_item, count - 1);
+        }
+
+        /* If it was empty before growing, set focus to the first item */
+        else if (orig_num == 0) LISTBOX_SetCaretIndex(descr, 0, FALSE);
     }
-    else if (count < descr->nb_items)
-    {
-        while (count < descr->nb_items)
-            if ((ret = LISTBOX_RemoveItem( descr, (descr->nb_items - 1) )) < 0)
-                return ret;
-    }
+    else SendMessageW(descr->self, LB_RESETCONTENT, 0, 0);
 
     InvalidateRect( descr->self, NULL, TRUE );
     return LB_OKAY;
