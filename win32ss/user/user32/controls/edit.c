@@ -2970,6 +2970,14 @@ static BOOL is_cjk_charset(HDC dc)
     }
 }
 
+static BOOL is_cjk_font(HDC dc)
+{
+    const DWORD FS_DBCS_MASK = FS_JISJAPAN|FS_CHINESESIMP|FS_WANSUNG|FS_CHINESETRAD|FS_JOHAB;
+    FONTSIGNATURE fs;
+    return (GetTextCharsetInfo(dc, &fs, 0) != DEFAULT_CHARSET &&
+            (fs.fsCsb[0] & FS_DBCS_MASK));
+}
+
 static int get_cjk_fontinfo_margin(int width, int side_bearing)
 {
     int margin;
@@ -3017,7 +3025,8 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
                 struct char_width_info width_info;
 
-                if (is_cjk_charset(dc) && GetCharWidthInfo(dc, &width_info))
+                if ((is_cjk_charset(dc) || is_cjk_font(dc)) &&
+                    GetCharWidthInfo(dc, &width_info))
                 {
                     default_left_margin = get_cjk_fontinfo_margin(width, width_info.min_lsb);
                     default_right_margin = get_cjk_fontinfo_margin(width, width_info.min_rsb);
@@ -3983,21 +3992,29 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
 	notify_parent(es, EN_SETFOCUS);
 }
 
-static DWORD get_cjk_font_margins(HDC hdc, BOOL unicode)
+static DWORD get_font_margins(HDC hdc, const TEXTMETRICW *tm, BOOL unicode)
 {
 	ABC abc[256];
 	SHORT left, right;
 	UINT i;
 
-	left = right = 0;
+	if (!(tm->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
+		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+
 	if (unicode) {
+		if (!is_cjk_charset(hdc) && !is_cjk_font(hdc))
+			return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
 		if (!GetCharABCWidthsW(hdc, 0, 255, abc))
 			return 0;
 	}
-	else {
+	else if (is_cjk_charset(hdc)) {
 		if (!GetCharABCWidthsA(hdc, 0, 255, abc))
 			return 0;
 	}
+	else
+		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+
+	left = right = 0;
 	for (i = 0; i < ARRAY_SIZE(abc); i++) {
 		if (-abc[i].abcA > right) right = -abc[i].abcA;
 		if (-abc[i].abcC > left ) left  = -abc[i].abcC;
@@ -4020,7 +4037,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	HDC dc;
 	HFONT old_font = 0;
 	RECT clientRect;
-	DWORD cjk_margins = MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+	DWORD margins;
 
 	es->font = font;
 	EDIT_InvalidateUniscribeData(es);
@@ -4030,8 +4047,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	GetTextMetricsW(dc, &tm);
 	es->line_height = tm.tmHeight;
 	es->char_width = tm.tmAveCharWidth;
-	if ((tm.tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)) && is_cjk_charset(dc))
-		cjk_margins = get_cjk_font_margins(dc, es->is_unicode);
+	margins = get_font_margins(dc, &tm, es->is_unicode);
 	if (font)
 		SelectObject(dc, old_font);
 	ReleaseDC(es->hwndSelf, dc);
@@ -4039,12 +4055,9 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	/* Reset the format rect and the margins */
 	GetClientRect(es->hwndSelf, &clientRect);
 	EDIT_SetRectNP(es, &clientRect);
-	if (cjk_margins == MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO))
+	if (margins)
 		EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
-				   EC_USEFONTINFO, EC_USEFONTINFO, FALSE);
-	else if (cjk_margins)
-		EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
-				   LOWORD(cjk_margins), HIWORD(cjk_margins), FALSE);
+				   LOWORD(margins), HIWORD(margins), FALSE);
 
 	if (es->style & ES_MULTILINE)
 		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
