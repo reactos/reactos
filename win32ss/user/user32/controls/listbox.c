@@ -146,6 +146,11 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
     return TRUE;
 }
 
+static ULONG_PTR get_item_data( const LB_DESCR *descr, UINT index )
+{
+    return (descr->style & LBS_NODATA) ? 0 : descr->items[index].data;
+}
+
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
@@ -602,7 +607,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         if (focused)
             dis.itemState |= ODS_FOCUS;
         if (!IsWindowEnabled(descr->self)) dis.itemState |= ODS_DISABLED;
-        dis.itemData     = item ? item->data : 0;
+        dis.itemData     = get_item_data(descr, index);
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%s\n",
               descr->self, index, item ? debugstr_w(item->str) : "", action,
@@ -890,7 +895,7 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
             /* note that some application (MetaStock) expects the second item
              * to be in the listbox */
             cis.itemID1    = index;
-            cis.itemData1  = descr->items[index].data;
+            cis.itemData1  = get_item_data(descr, index);
             cis.itemID2    = -1;
             cis.itemData2  = (ULONG_PTR)str;
             cis.dwLocaleId = descr->locale;
@@ -1670,7 +1675,7 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index, LPCWSTR str )
 static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
 {
     /* save the item data before it gets freed by LB_RESETCONTENT */
-    ULONG_PTR item_data = descr->items[index].data;
+    ULONG_PTR item_data = get_item_data(descr, index);
     LPWSTR item_str = descr->items[index].str;
 
     if (!descr->nb_items)
@@ -2787,7 +2792,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             SetLastError(ERROR_INVALID_INDEX);
             return LB_ERR;
         }
-        return (descr->style & LBS_NODATA) ? 0 : descr->items[wParam].data;
+        return get_item_data(descr, wParam);
 
     case LB_SETITEMDATA:
         if (((INT)wParam < 0) || ((INT)wParam >= descr->nb_items))
