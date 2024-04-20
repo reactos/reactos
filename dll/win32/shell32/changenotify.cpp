@@ -9,13 +9,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-typedef struct DWORD_ITEMIDLIST
+struct DWORD_ITEMIDLIST
 {
     USHORT cb;
     DWORD dwItem1;
     DWORD dwItem2;
     USHORT wTerminator;
-} DWORD_ITEMIDLIST, *LPDWORD_ITEMIDLIST;
+};
 
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
