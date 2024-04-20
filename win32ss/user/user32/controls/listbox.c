@@ -120,6 +120,11 @@ static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
 static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect );
 
+static size_t get_sizeof_item( const LB_DESCR *descr )
+{
+    return sizeof(LB_ITEMDATA);
+}
+
 static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
 {
     LB_ITEMDATA *items;
@@ -128,7 +133,7 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
         items_size + LB_ARRAY_GRANULARITY * 2 < descr->items_size)
     {
         items_size = (items_size + LB_ARRAY_GRANULARITY - 1) & ~(LB_ARRAY_GRANULARITY - 1);
-        items = HeapReAlloc(GetProcessHeap(), 0, descr->items, items_size * sizeof(LB_ITEMDATA));
+        items = HeapReAlloc(GetProcessHeap(), 0, descr->items, ((items_size - descr->nb_items) * get_sizeof_item(descr)));
         if (!items)
         {
             SEND_NOTIFICATION(descr, LBN_ERRSPACE);
@@ -141,7 +146,7 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
     if ((descr->style & LBS_NODATA) && items_size > descr->nb_items)
     {
         memset(&descr->items[descr->nb_items], 0,
-               (items_size - descr->nb_items) * sizeof(LB_ITEMDATA));
+               (items_size - descr->nb_items) * get_sizeof_item(descr));
     }
     return TRUE;
 }
@@ -191,24 +196,26 @@ static void set_item_selected_state(LB_DESCR *descr, UINT index, BOOL state)
 
 static void insert_item_data(LB_DESCR *descr, UINT index)
 {
+    size_t size = get_sizeof_item(descr);
     LB_ITEMDATA *item;
 
     if (!descr->items) return;
 
     item = descr->items + index;
     if (index < descr->nb_items)
-        memmove(item + 1, item, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
+        memmove(item + 1, item, (descr->nb_items - index) * size);
 }
 
 static void remove_item_data(LB_DESCR *descr, UINT index)
 {
+    size_t size = get_sizeof_item(descr);
     LB_ITEMDATA *item;
 
     if (!descr->items) return;
 
     item = descr->items + index;
     if (index < descr->nb_items)
-        memmove(item, item + 1, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
+        memmove(item, item + 1, (descr->nb_items - index) * size);
 }
 
 /*********************************************************************
