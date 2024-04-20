@@ -161,6 +161,11 @@ static WCHAR *get_item_string( const LB_DESCR *descr, UINT index )
     return HAS_STRINGS(descr) ? descr->items[index].str : NULL;
 }
 
+static void set_item_string( const LB_DESCR *descr, UINT index, WCHAR *string )
+{
+    if (!(descr->style & LBS_NODATA)) descr->items[index].str = string;
+}
+
 static UINT get_item_height( const LB_DESCR *descr, UINT index )
 {
     return (descr->style & LBS_NODATA) ? 0 : descr->items[index].height;
@@ -184,7 +189,7 @@ static void set_item_selected_state(LB_DESCR *descr, UINT index, BOOL state)
         descr->items[index].selected = state;
 }
 
-static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR data)
+static void insert_item_data(LB_DESCR *descr, UINT index)
 {
     LB_ITEMDATA *item;
 
@@ -193,11 +198,6 @@ static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR 
     item = descr->items + index;
     if (index < descr->nb_items)
         memmove(item + 1, item, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
-
-    item->str      = str;
-    item->data     = HAS_STRINGS(descr) ? 0 : data;
-    item->height   = 0;
-    item->selected = FALSE;
 }
 
 static void remove_item_data(LB_DESCR *descr, UINT index)
@@ -1625,8 +1625,12 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
     else if ((index < 0) || (index > descr->nb_items)) return LB_ERR;
     if (!resize_storage(descr, descr->nb_items + 1)) return LB_ERR;
 
-    insert_item_data(descr, index, str, data);
+    insert_item_data(descr, index);
     descr->nb_items++;
+    set_item_string(descr, index, str);
+    set_item_data(descr, index, HAS_STRINGS(descr) ? 0 : data);
+    set_item_height(descr, index, 0);
+    set_item_selected_state(descr, index, FALSE);
 
     /* Get item height */
 
