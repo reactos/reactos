@@ -9,14 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-struct DWORD_ITEMIDLIST
-{
-    USHORT cb;
-    DWORD dwItem1;
-    DWORD dwItem2;
-    USHORT wTerminator;
-};
-
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
 // This function requests creation of the server window if it doesn't exist yet
@@ -669,7 +661,7 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
     LPWSTR psz1, psz2;
-    DWORD_ITEMIDLIST dwidl;
+    SHChangeDWORDAsIDList dwidl;
     DWORD dwType;
 
 Retry:
@@ -773,7 +765,7 @@ Retry:
             dwidl.cb = offsetof(DWORD_ITEMIDLIST, wTerminator);
             dwidl.dwItem1 = PtrToUlong(dwItem1);
             dwidl.dwItem2 = PtrToUlong(dwItem2);
-            dwidl.wTerminator = 0;
+            dwidl.cbZero = 0;
             pidl1 = (LPITEMIDLIST)&dwidl;
             break;
         }
