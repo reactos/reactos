@@ -208,7 +208,7 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
 /* retrieve the button text; returned buffer must be freed by caller */
 static inline WCHAR *get_button_text( HWND hwnd )
 {
-    INT len = 512;
+    static const INT len = 512;
     WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
     if (buffer) InternalGetWindowText( hwnd, buffer, len + 1 );
     return buffer;
