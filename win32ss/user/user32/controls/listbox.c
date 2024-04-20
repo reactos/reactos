@@ -418,7 +418,7 @@ static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect
     /* Index <= 0 is legal even on empty listboxes */
     if (index && (index >= descr->nb_items))
     {
-        memset(rect, 0, sizeof(*rect));
+        SetRectEmpty(rect);
         SetLastError(ERROR_INVALID_INDEX);
         return LB_ERR;
     }
