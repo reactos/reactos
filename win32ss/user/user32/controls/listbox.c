@@ -1015,8 +1015,7 @@ static INT LISTBOX_FindFileStrPos( LB_DESCR *descr, LPCWSTR str )
  */
 static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exact )
 {
-    INT i;
-    LB_ITEMDATA *item;
+    INT i, index;
 
     if (descr->style & LBS_NODATA)
     {
@@ -1024,41 +1023,38 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
         return LB_ERR;
     }
 
-    if (start >= descr->nb_items) start = -1;
-    item = descr->items + start + 1;
+    start++;
+    if (start >= descr->nb_items) start = 0;
     if (HAS_STRINGS(descr))
     {
         if (!str || ! str[0] ) return LB_ERR;
         if (exact)
         {
-            for (i = start + 1; i < descr->nb_items; i++, item++)
-                if (!LISTBOX_lstrcmpiW( descr->locale, str, item->str )) return i;
-            for (i = 0, item = descr->items; i <= start; i++, item++)
-                if (!LISTBOX_lstrcmpiW( descr->locale, str, item->str )) return i;
+            for (i = 0, index = start; i < descr->nb_items; i++, index++)
+            {
+                if (index == descr->nb_items) index = 0;
+                if (!LISTBOX_lstrcmpiW(descr->locale, str, get_item_string(descr, index)))
+                    return index;
+            }
         }
         else
         {
- /* Special case for drives and directories: ignore prefix */
-#define CHECK_DRIVE(item) \
-    if ((item)->str[0] == '[') \
-    { \
-        if (!strncmpiW( str, (item)->str+1, len )) return i; \
-        if (((item)->str[1] == '-') && !strncmpiW(str, (item)->str+2, len)) \
-        return i; \
-    }
-
+            /* Special case for drives and directories: ignore prefix */
             INT len = strlenW(str);
-            for (i = start + 1; i < descr->nb_items; i++, item++)
+            WCHAR *item_str;
+
+            for (i = 0, index = start; i < descr->nb_items; i++, index++)
             {
-               if (!strncmpiW( str, item->str, len )) return i;
-               CHECK_DRIVE(item);
+                if (index == descr->nb_items) index = 0;
+                item_str = get_item_string(descr, index);
+
+                if (!strncmpiW(str, item_str, len)) return index;
+                if (item_str[0] == '[')
+                {
+                    if (!strncmpiW(str, item_str + 1, len)) return index;
+                    if (item_str[1] == '-' && !strncmpiW(str, item_str + 2, len)) return index;
+                }
             }
-            for (i = 0, item = descr->items; i <= start; i++, item++)
-            {
-               if (!strncmpiW( str, item->str, len )) return i;
-               CHECK_DRIVE(item);
-            }
-#undef CHECK_DRIVE
         }
     }
     else
@@ -1068,10 +1064,11 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
             return LISTBOX_FindStringPos( descr, str, TRUE );
 
         /* Otherwise use a linear search */
-        for (i = start + 1; i < descr->nb_items; i++, item++)
-            if (item->data == (ULONG_PTR)str) return i;
-        for (i = 0, item = descr->items; i <= start; i++, item++)
-            if (item->data == (ULONG_PTR)str) return i;
+        for (i = 0, index = start; i < descr->nb_items; i++, index++)
+        {
+            if (index == descr->nb_items) index = 0;
+            if (get_item_data(descr, index) == (ULONG_PTR)str) return index;
+        }
     }
     return LB_ERR;
 }
