@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include <versionhelpers.h>
 
-WCHAR szWindowClass[] = L"testclass";
-
 BOOL FileExistsW(PCWSTR FileName)
 {
     DWORD Attribute = GetFileAttributesW(FileName);
@@ -77,132 +75,20 @@ static struct
     {L"%SystemRoot%\\bin\\image.dll", IDR_DLL_NORMAL},
 };
 
-/* MessageBox statements are left commented out for debugging purposes */
-static LRESULT CALLBACK
-WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    static HBITMAP hBmp;
-    HANDLE handle;
-
-    switch (message)
-    {
-        case WM_CREATE:
-        {
-            handle = LoadLibraryExW(L"image.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-            hBmp = (HBITMAP)LoadImage(handle, MAKEINTRESOURCE(130), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-            break;
-        }
-
-        case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc, hdcMem;
-            BITMAP bitmap;
-            BITMAPINFO bmi;
-            hdc = BeginPaint(hWnd, &ps);
-            HGLOBAL hMem;
-            LPVOID lpBits;
-            CHAR img[8] = { 0 };
-            UINT size;
-
-            hdcMem = CreateCompatibleDC(hdc);
-            SelectObject(hdcMem, hBmp);
-            GetObject(hBmp, sizeof(BITMAP), &bitmap);
-            memset(&bmi, 0, sizeof(bmi));
-            bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
-            bmi.bmiHeader.biWidth       = bitmap.bmWidth;
-            bmi.bmiHeader.biHeight      = bitmap.bmHeight;
-            bmi.bmiHeader.biPlanes      = bitmap.bmPlanes;
-            bmi.bmiHeader.biBitCount    = bitmap.bmBitsPixel;
-            bmi.bmiHeader.biCompression = BI_RGB;
-            bmi.bmiHeader.biSizeImage   = 0;
-
-            size = ((bitmap.bmWidth * bmi.bmiHeader.biBitCount + 31) / 32) * 4 * bitmap.bmHeight;
-
-            hMem = GlobalAlloc(GMEM_MOVEABLE, size);
-            lpBits = GlobalLock(hMem);
-            GetDIBits(hdc, hBmp, 0, bitmap.bmHeight, lpBits, &bmi, DIB_RGB_COLORS);
-
-            /* Get one line above bottom line of bitmap */
-            memcpy(img, (VOID *)((INT_PTR)lpBits + 4 * bitmap.bmWidth), 8);
-
-            ok(img[0] == 0, "Byte 0 Bad\n");
-            ok(img[1] == 0, "Byte 1 Bad\n");
-            ok(img[2] == 0, "Byte 2 Bad\n");
-            ok(img[3] == 0, "Byte 3 Bad\n");
-
-            GlobalUnlock(hMem);
-            GlobalFree(hMem);
-
-            DeleteDC(hdcMem);
-
-            EndPaint(hWnd, &ps);
-            break;
-        }
-
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
-static ATOM
-MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style         = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc   = WndProc;
-    wcex.cbClsExtra    = 0;
-    wcex.cbWndExtra    = 0;
-    wcex.hInstance     = hInstance;
-    wcex.hIcon         = NULL;
-    wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName  = NULL;
-    wcex.lpszClassName = szWindowClass;
-    wcex.hIconSm       = NULL;
-
-    return RegisterClassExW(&wcex);
-}
-
-
-static BOOL
-InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   HWND hWnd;
-
-   hWnd = CreateWindowExW(0,
-                          szWindowClass,
-                          L"Bmp test",
-                          WS_OVERLAPPEDWINDOW,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          300,
-                          120,
-                          NULL,
-                          NULL,
-                          hInstance,
-                          NULL);
-
-   if (!hWnd)
-      return FALSE;
-
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-
-   return TRUE;
-}
 
 START_TEST(LoadImageGCC)
 {
     UINT i;
     WCHAR PathBuffer[MAX_PATH];
+    static HBITMAP hBmp;
+    HANDLE handle;
+    HDC hdcMem;
+    BITMAP bitmap;
+    BITMAPINFO bmi;
+    HGLOBAL hMem;
+    LPVOID lpBits;
+    CHAR img[8] = { 0 };
+    UINT size;
 
     /* Windows 2003 cannot run this test. Testman shows CRASH, so skip it. */
     if (!IsReactOS())
@@ -220,14 +106,41 @@ START_TEST(LoadImageGCC)
         }
     }
 
-    MyRegisterClass(NULL);
+    handle = LoadLibraryExW(PathBuffer, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    hBmp = (HBITMAP)LoadImage(handle, MAKEINTRESOURCE(130), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (!InitInstance(NULL, SW_NORMAL))  // SW_NORMAL is needed or test does not work
-    {
-        printf("InitInstance Failed. Exiting now\n");
-    }
+    hdcMem = CreateCompatibleDC(NULL);
+    SelectObject(hdcMem, hBmp);
+    GetObject(hBmp, sizeof(BITMAP), &bitmap);
 
-    /* We would normally have a message loop here, but we don't want to wait in this test case */
+    memset(&bmi, 0, sizeof(bmi));
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth       = bitmap.bmWidth;
+    bmi.bmiHeader.biHeight      = bitmap.bmHeight;
+    bmi.bmiHeader.biPlanes      = bitmap.bmPlanes;
+    bmi.bmiHeader.biBitCount    = bitmap.bmBitsPixel;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage   = 0;
+
+    size = ((bitmap.bmWidth * bmi.bmiHeader.biBitCount + 31) / 32) * 4 * bitmap.bmHeight;
+
+    hMem = GlobalAlloc(GMEM_MOVEABLE, size);
+    lpBits = GlobalLock(hMem);
+    GetDIBits(hdcMem, hBmp, 0, bitmap.bmHeight, lpBits, &bmi, DIB_RGB_COLORS);
+
+    /* Get first 8 bytes of second row of bits from bitmap */
+    memcpy(img, (VOID *)((INT_PTR)lpBits + 4 * bitmap.bmWidth), 8);
+
+    ok(img[0] == 0, "Byte 0 Bad\n");
+    ok(img[1] == 0, "Byte 1 Bad\n");
+    ok(img[2] == 0, "Byte 2 Bad\n");
+    ok(img[3] == 0, "Byte 3 Bad\n");
+
+    GlobalUnlock(hMem);
+    GlobalFree(hMem);      
+
+    DeleteDC(hdcMem);	
 
 Cleanup:
     for (i = 0; i < _countof(DataFiles); ++i)
