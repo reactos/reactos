@@ -163,6 +163,12 @@ static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
     return descr->items[index].selected;
 }
 
+static void set_item_selected_state(LB_DESCR *descr, UINT index, BOOL state)
+{
+    if (descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL))
+        descr->items[index].selected = state;
+}
+
 /*********************************************************************
  * listbox class descriptor
  */
@@ -1464,7 +1470,7 @@ static LRESULT LISTBOX_SelectItemRange( LB_DESCR *descr, INT first,
         for (i = first; i <= last; i++)
         {
             if (is_item_selected(descr, i)) continue;
-            descr->items[i].selected = TRUE;
+            set_item_selected_state(descr, i, TRUE);
             LISTBOX_InvalidateItemRect(descr, i);
         }
     }
@@ -1473,7 +1479,7 @@ static LRESULT LISTBOX_SelectItemRange( LB_DESCR *descr, INT first,
         for (i = first; i <= last; i++)
         {
             if (!is_item_selected(descr, i)) continue;
-            descr->items[i].selected = FALSE;
+            set_item_selected_state(descr, i, FALSE);
             LISTBOX_InvalidateItemRect(descr, i);
         }
     }
@@ -1506,8 +1512,8 @@ static LRESULT LISTBOX_SetSelection( LB_DESCR *descr, INT index,
     {
         INT oldsel = descr->selected_item;
         if (index == oldsel) return LB_OKAY;
-        if (oldsel != -1) descr->items[oldsel].selected = FALSE;
-        if (index != -1) descr->items[index].selected = TRUE;
+        if (oldsel != -1) set_item_selected_state(descr, oldsel, FALSE);
+        if (index != -1) set_item_selected_state(descr, index, TRUE);
         descr->selected_item = index;
         if (oldsel != -1) LISTBOX_RepaintItem( descr, oldsel, ODA_SELECT );
         if (index != -1) LISTBOX_RepaintItem( descr, index, ODA_SELECT );
