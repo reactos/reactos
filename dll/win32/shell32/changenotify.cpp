@@ -762,7 +762,7 @@ Retry:
         }
         case SHCNF_DWORD:
         {
-            dwidl.cb = offsetof(DWORD_ITEMIDLIST, wTerminator);
+            dwidl.cb = offsetof(SHChangeDWORDAsIDList, cbZero);
             dwidl.dwItem1 = PtrToUlong(dwItem1);
             dwidl.dwItem2 = PtrToUlong(dwItem2);
             dwidl.cbZero = 0;
