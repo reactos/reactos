@@ -5113,6 +5113,24 @@ static NTSTATUS find_guid(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
     return STATUS_SUCCESS;
 }
 
+static const WCHAR *find_app_settings( ACTIVATION_CONTEXT *actctx, const WCHAR *settings )
+{
+    unsigned int i, j;
+
+    for (i = 0; i < actctx->num_assemblies; i++)
+    {
+        struct assembly *assembly = &actctx->assemblies[i];
+        for (j = 0; j < assembly->entities.num; j++)
+        {
+            struct entity *entity = &assembly->entities.base[j];
+            if (entity->kind == ACTIVATION_CONTEXT_SECTION_APPLICATION_SETTINGS &&
+                !strcmpW( entity->u.settings.name, settings ))
+                return entity->u.settings.value;
+        }
+    }
+    return NULL;
+}
+
 /* initialize the activation context for the current process */
 void actctx_init(PVOID* pOldShimData)
 {
@@ -5949,6 +5967,41 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
         status = find_guid( implicit_actctx, section_kind, guid, flags, data );
 
     return status;
+}
+
+
+/***********************************************************************
+ *		RtlQueryActivationContextApplicationSettings (NTDLL.@)
+ */
+NTSTATUS WINAPI RtlQueryActivationContextApplicationSettings( DWORD flags, HANDLE handle, const WCHAR *ns,
+                                                              const WCHAR *settings, WCHAR *buffer,
+                                                              SIZE_T size, SIZE_T *written )
+{
+    static const WCHAR namespaceW[] = {'h','t','t','p',':','/','/','s','c','h','e','m','a','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','S','M','I','/','2','0',0};
+    ACTIVATION_CONTEXT *actctx = check_actctx( handle );
+    const WCHAR *res;
+
+    if (flags)
+    {
+        WARN( "unknown flags %08x\n", flags );
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (ns && strncmpW( ns, namespaceW, strlenW(namespaceW) ))
+    {
+        WARN( "unknown namespace %S\n", ns );
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!handle) handle = process_actctx;
+    if (!(actctx = check_actctx( handle ))) return STATUS_INVALID_PARAMETER;
+
+    if (!(res = find_app_settings( actctx, settings ))) return STATUS_SXS_KEY_NOT_FOUND;
+
+    if (written) *written = strlenW(res) + 1;
+    if (size < strlenW(res)) return STATUS_BUFFER_TOO_SMALL;
+    strcpyW( buffer, res );
+    return STATUS_SUCCESS;
 }
 
 #ifdef __REACTOS__
