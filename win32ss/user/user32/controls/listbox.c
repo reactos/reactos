@@ -1577,7 +1577,7 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
         mis.CtlType    = ODT_LISTBOX;
         mis.CtlID      = id;
         mis.itemID     = index;
-        mis.itemData   = data;
+        mis.itemData   = str ? (ULONG_PTR)str : data;
         mis.itemHeight = descr->item_height;
         SendMessageW( descr->owner, WM_MEASUREITEM, id, (LPARAM)&mis );
         item->height = mis.itemHeight ? mis.itemHeight : 1;
