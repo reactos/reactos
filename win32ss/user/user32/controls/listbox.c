@@ -2385,8 +2385,7 @@ static LRESULT LISTBOX_HandleKeyDown( LB_DESCR *descr, DWORD key )
         if (descr->style & LBS_MULTICOLUMN)
         {
             bForceSelection = FALSE;
-            if (descr->focus_item + descr->page_size < descr->nb_items)
-                caret = descr->focus_item + descr->page_size;
+            caret = min(descr->focus_item + descr->page_size, descr->nb_items - 1);
             break;
         }
         /* fall through */
