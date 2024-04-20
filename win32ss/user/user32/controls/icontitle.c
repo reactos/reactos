@@ -41,34 +41,6 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
     0                 /* brush */
 };
 
-
-
-#ifndef __REACTOS__
-/***********************************************************************
- *           ICONTITLE_Create
- */
-HWND ICONTITLE_Create( HWND owner )
-{
-    HWND hWnd;
-    HINSTANCE instance = (HINSTANCE)GetWindowLongPtrA( owner, GWLP_HINSTANCE );
-    LONG style = WS_CLIPSIBLINGS;
-
-    if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
-    if( GetWindowLongPtrA( owner, GWL_STYLE ) & WS_CHILD )
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style | WS_CHILD, 0, 0, 1, 1,
-                                GetParent(owner), 0, instance, NULL );
-    else
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style, 0, 0, 1, 1,
-                                owner, 0, instance, NULL );
-    WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
-    SetWindowLongPtrW( hWnd, GWL_STYLE,
-                       GetWindowLongPtrW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
-    return hWnd;
-}
-#endif
-
 /***********************************************************************
  *           ICONTITLE_SetTitlePos
  */
