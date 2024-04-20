@@ -45,6 +45,12 @@
 #define ImmUnlockIMC                IMM_FN(ImmUnlockIMC)
 #endif
 
+#ifdef __REACTOS__
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(edit);
 WINE_DECLARE_DEBUG_CHANNEL(combo);
 WINE_DECLARE_DEBUG_CHANNEL(relay);
@@ -3977,6 +3983,27 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
 	notify_parent(es, EN_SETFOCUS);
 }
 
+static DWORD get_cjk_font_margins(HDC hdc, BOOL unicode)
+{
+	ABC abc[256];
+	SHORT left, right;
+	UINT i;
+
+	left = right = 0;
+	if (unicode) {
+		if (!GetCharABCWidthsW(hdc, 0, 255, abc))
+			return 0;
+	}
+	else {
+		if (!GetCharABCWidthsA(hdc, 0, 255, abc))
+			return 0;
+	}
+	for (i = 0; i < ARRAY_SIZE(abc); i++) {
+		if (-abc[i].abcA > right) right = -abc[i].abcA;
+		if (-abc[i].abcC > left ) left  = -abc[i].abcC;
+	}
+	return MAKELONG(left, right);
+}
 
 /*********************************************************************
  *
@@ -3993,6 +4020,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	HDC dc;
 	HFONT old_font = 0;
 	RECT clientRect;
+	DWORD cjk_margins = MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
 
 	es->font = font;
 	EDIT_InvalidateUniscribeData(es);
@@ -4002,6 +4030,8 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	GetTextMetricsW(dc, &tm);
 	es->line_height = tm.tmHeight;
 	es->char_width = tm.tmAveCharWidth;
+	if ((tm.tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)) && is_cjk_charset(dc))
+		cjk_margins = get_cjk_font_margins(dc, es->is_unicode);
 	if (font)
 		SelectObject(dc, old_font);
 	ReleaseDC(es->hwndSelf, dc);
@@ -4009,8 +4039,12 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	/* Reset the format rect and the margins */
 	GetClientRect(es->hwndSelf, &clientRect);
 	EDIT_SetRectNP(es, &clientRect);
-	EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
-			   EC_USEFONTINFO, EC_USEFONTINFO, FALSE);
+	if (cjk_margins == MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO))
+		EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
+				   EC_USEFONTINFO, EC_USEFONTINFO, FALSE);
+	else if (cjk_margins)
+		EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
+				   LOWORD(cjk_margins), HIWORD(cjk_margins), FALSE);
 
 	if (es->style & ES_MULTILINE)
 		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
