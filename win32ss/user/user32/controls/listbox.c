@@ -65,6 +65,7 @@ typedef struct
     INT         height;         /* Window height */
     LB_ITEMDATA  *items;        /* Array of items */
     INT         nb_items;       /* Number of items */
+    UINT        items_size;     /* Total number of allocated items in the array */
     INT         top_item;       /* Top visible item */
     INT         selected_item;  /* Selected item */
     INT         focus_item;     /* Item that has the focus */
@@ -731,7 +732,7 @@ static LRESULT LISTBOX_InitStorage( LB_DESCR *descr, INT nb_items )
     nb_items += LB_ARRAY_GRANULARITY - 1;
     nb_items -= (nb_items % LB_ARRAY_GRANULARITY);
     if (descr->items) {
-        nb_items += HeapSize( GetProcessHeap(), 0, descr->items ) / sizeof(*item);
+        nb_items += descr->items_size;
 	item = HeapReAlloc( GetProcessHeap(), 0, descr->items,
                               nb_items * sizeof(LB_ITEMDATA));
     }
@@ -745,6 +746,7 @@ static LRESULT LISTBOX_InitStorage( LB_DESCR *descr, INT nb_items )
         SEND_NOTIFICATION( descr, LBN_ERRSPACE );
         return LB_ERRSPACE;
     }
+    descr->items_size = nb_items;
     descr->items = item;
     return LB_OKAY;
 }
@@ -1558,12 +1560,10 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
 
     if (index == -1) index = descr->nb_items;
     else if ((index < 0) || (index > descr->nb_items)) return LB_ERR;
-    if (!descr->items) max_items = 0;
-    else max_items = HeapSize( GetProcessHeap(), 0, descr->items ) / sizeof(*item);
-    if (descr->nb_items == max_items)
+    if (descr->nb_items == descr->items_size)
     {
         /* We need to grow the array */
-        max_items += LB_ARRAY_GRANULARITY;
+        max_items = descr->items_size + LB_ARRAY_GRANULARITY;
 	if (descr->items)
     	    item = HeapReAlloc( GetProcessHeap(), 0, descr->items,
                                   max_items * sizeof(LB_ITEMDATA) );
@@ -1575,6 +1575,7 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
             SEND_NOTIFICATION( descr, LBN_ERRSPACE );
             return LB_ERRSPACE;
         }
+        descr->items_size = max_items;
         descr->items = item;
     }
 
@@ -1734,13 +1735,17 @@ static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
 
     /* Shrink the item array if possible */
 
-    max_items = HeapSize( GetProcessHeap(), 0, descr->items ) / sizeof(LB_ITEMDATA);
+    max_items = descr->items_size;
     if (descr->nb_items < max_items - 2*LB_ARRAY_GRANULARITY)
     {
         max_items -= LB_ARRAY_GRANULARITY;
         item = HeapReAlloc( GetProcessHeap(), 0, descr->items,
                             max_items * sizeof(LB_ITEMDATA) );
-        if (item) descr->items = item;
+        if (item)
+        {
+            descr->items_size = max_items;
+            descr->items = item;
+        }
     }
     /* Repaint the items */
 
@@ -1786,6 +1791,7 @@ static void LISTBOX_ResetContent( LB_DESCR *descr )
     descr->selected_item = -1;
     descr->focus_item    = 0;
     descr->anchor_item   = -1;
+    descr->items_size    = 0;
     descr->items         = NULL;
 }
 
@@ -2545,6 +2551,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->width         = rect.right - rect.left;
     descr->height        = rect.bottom - rect.top;
     descr->items         = NULL;
+    descr->items_size    = 0;
     descr->nb_items      = 0;
     descr->top_item      = 0;
     descr->selected_item = -1;
