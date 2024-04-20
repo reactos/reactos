@@ -935,6 +935,12 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
     INT i;
     LB_ITEMDATA *item;
 
+    if (descr->style & LBS_NODATA)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return LB_ERR;
+    }
+
     if (start >= descr->nb_items) start = -1;
     item = descr->items + start + 1;
     if (HAS_STRINGS(descr))
@@ -2485,7 +2491,7 @@ static LRESULT LISTBOX_HandleChar( LB_DESCR *descr, WCHAR charW )
                                 (LPARAM)descr->self );
         if (caret == -2) return 0;
     }
-    if (caret == -1)
+    if (caret == -1 && !(descr->style & LBS_NODATA))
         caret = LISTBOX_FindString( descr, descr->focus_item, str, FALSE);
     if (caret != -1)
     {
