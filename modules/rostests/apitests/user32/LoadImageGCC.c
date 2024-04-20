@@ -138,9 +138,9 @@ START_TEST(LoadImageGCC)
     ok(img[3] == 0, "Byte 3 Bad\n");
 
     GlobalUnlock(hMem);
-    GlobalFree(hMem);      
+    GlobalFree(hMem);
 
-    DeleteDC(hdcMem);	
+    DeleteDC(hdcMem);
 
 Cleanup:
     for (i = 0; i < _countof(DataFiles); ++i)
