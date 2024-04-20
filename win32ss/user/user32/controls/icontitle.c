@@ -20,6 +20,10 @@
 
 #include <user32.h>
 
+#ifdef __REACTOS__
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
@@ -78,7 +82,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
     INT cx, cy;
     POINT pt;
 
-    int length = GetWindowTextW( owner, str, sizeof(str)/sizeof(WCHAR) );
+    int length = GetWindowTextW( owner, str, ARRAY_SIZE( str ));
 
     while (length && str[length - 1] == ' ') /* remove trailing spaces */
         str[--length] = 0;
@@ -166,7 +170,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     {
 	WCHAR buffer[80];
 
-        INT length = GetWindowTextW( owner, buffer, sizeof(buffer)/sizeof(buffer[0]) );
+        INT length = GetWindowTextW( owner, buffer, ARRAY_SIZE( buffer ));
         SetTextColor( hDC, textColor );
         SetBkMode( hDC, TRANSPARENT );
 

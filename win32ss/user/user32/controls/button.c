@@ -1041,9 +1041,15 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     GetClientRect(hwnd, &client);
     rbox = rtext = client;
-
+    
+#ifdef __REACTOS__
+    //TODO: Let's actually fix this stupid thing at some point
+    checkBoxWidth  = 12 * 96 / 96 + 1;
+    checkBoxHeight = 12 * 96 / 96 + 1;
+#else
     checkBoxWidth  = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
     checkBoxHeight = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
+#endif
 
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     GetCharWidthW( hDC, '0', '0', &text_offset );
