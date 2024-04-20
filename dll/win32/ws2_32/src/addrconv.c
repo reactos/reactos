@@ -492,3 +492,143 @@ WSANtohs(IN SOCKET s,
     return SOCKET_ERROR;
 }
 
+PCSTR
+WSAAPI
+inet_ntop(
+    _In_ INT Family,
+    _In_ const VOID *pAddr,
+    _Out_writes_(StringBufSize) PSTR pStringBuf,
+    _In_ size_t StringBufSize)
+{
+    NTSTATUS Status;
+    ULONG BufSize = StringBufSize;
+
+    switch (Family)
+    {
+        case AF_INET:
+            Status = RtlIpv4AddressToStringExA(pAddr, 0, pStringBuf, &BufSize);
+            break;
+        case AF_INET6:
+            Status = RtlIpv6AddressToStringExA(pAddr, 0, 0, pStringBuf, &BufSize);
+            break;
+        default:
+            SetLastError(WSAEAFNOSUPPORT);
+            return NULL;
+    }
+
+    if (!NT_SUCCESS(Status)) 
+    {
+        SetLastError(WSAEINVAL);
+        return NULL;
+    }
+
+    return pStringBuf;
+}
+
+PCWSTR
+WSAAPI
+InetNtopW(
+    _In_ INT Family,
+    _In_ const VOID *pAddr,
+    _Out_writes_(StringBufSize) PWSTR pStringBuf,
+    _In_ size_t StringBufSize)
+{
+    NTSTATUS Status;
+    ULONG BufSize = StringBufSize;
+
+    switch (Family)
+    {
+        case AF_INET:
+            Status = RtlIpv4AddressToStringExW(pAddr, 0, pStringBuf, &BufSize);
+            break;
+        case AF_INET6:
+            Status = RtlIpv6AddressToStringExW(pAddr, 0, 0, pStringBuf, &BufSize);
+            break;
+        default:
+            SetLastError(WSAEAFNOSUPPORT);
+            return NULL;
+    }
+
+    if (!NT_SUCCESS(Status)) 
+    {
+        SetLastError(WSAEINVAL);
+        return NULL;
+    }
+
+    return pStringBuf;
+}
+
+INT
+WSAAPI
+inet_pton(
+    _In_ INT Family,
+    _In_ PCSTR pszAddrString,
+    _Out_writes_bytes_(sizeof(IN_ADDR6)) PVOID pAddrBuf)
+{
+    NTSTATUS Status;
+    PCSTR ch;
+
+    if (!pszAddrString || !pAddrBuf)
+    {
+        SetLastError(WSAEFAULT);
+        return -1;
+    }
+
+    switch (Family)
+    {
+        case AF_INET:
+            Status = RtlIpv4StringToAddressA(pszAddrString, TRUE, &ch, pAddrBuf);
+            break;
+        case AF_INET6:
+            Status = RtlIpv6StringToAddressA(pszAddrString, &ch, pAddrBuf);
+            break;
+        default:
+            SetLastError(WSAEAFNOSUPPORT);
+            return -1;
+    }
+
+    if (!NT_SUCCESS(Status) || (*ch != 0)) 
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+INT
+WSAAPI
+InetPtonW(
+    _In_ INT Family,
+    _In_ PCWSTR pszAddrString,
+    _Out_writes_bytes_(sizeof(IN_ADDR6)) PVOID pAddrBuf)
+{
+    NTSTATUS Status;
+    PCWSTR ch;
+
+    if (!pszAddrString || !pAddrBuf)
+    {
+        SetLastError(WSAEFAULT);
+        return -1;
+    }
+
+    switch (Family)
+    {
+        case AF_INET:
+            Status = RtlIpv4StringToAddressW(pszAddrString, TRUE, &ch, pAddrBuf);
+            break;
+        case AF_INET6:
+            Status = RtlIpv6StringToAddressW(pszAddrString, &ch, pAddrBuf);
+            break;
+        default:
+            SetLastError(WSAEAFNOSUPPORT);
+            return -1;
+    }
+
+    if (!NT_SUCCESS(Status) || (*ch != 0)) 
+    {
+        SetLastError(WSAEINVAL); /* Only unicode version sets this error */
+        return 0;
+    }
+
+    return 1;
+}
