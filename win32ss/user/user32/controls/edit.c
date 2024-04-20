@@ -2688,7 +2688,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 	UINT bufl;
 
 	TRACE("%s, can_undo %d, send_update %d\n",
-	    debugstr_w(lpsz_replace), can_undo, send_update);
+	    debugstr_wn(lpsz_replace, strl), can_undo, send_update);
 
 	s = es->selection_start;
 	e = es->selection_end;
