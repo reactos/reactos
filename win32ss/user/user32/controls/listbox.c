@@ -2576,6 +2576,8 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
 
     if (descr->style & LBS_OWNERDRAWFIXED)
     {
+        descr->style &= ~LBS_OWNERDRAWVARIABLE;
+
 	if( descr->lphc && (descr->lphc->dwStyle & CBS_DROPDOWN))
 	{
 	    /* WinWord gets VERY unhappy if we send WM_MEASUREITEM from here */
