@@ -25,6 +25,9 @@
 
 #define GetProcessHeap() RtlGetProcessHeap()
 #define GetCurrentProcess() NtCurrentProcess()
+#define FIXME DPRINT1
+#define WARN DPRINT1
+#define TRACE DPRINT
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
@@ -990,7 +993,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.version);
             break;
         default:
-            DPRINT1("Unknown entity kind %u\n", entity->kind);
+            FIXME("Unknown entity kind %d\n", entity->kind);
         }
     }
     RtlFreeHeap( GetProcessHeap(), 0, array->base );
@@ -1032,7 +1035,7 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->actctx->num_assemblies; i++)
         if (is_matching_identity( ai, &acl->actctx->assemblies[i].id ))
         {
-            DPRINT( "reusing existing assembly for %S arch %S version %u.%u.%u.%u\n",
+            TRACE( "reusing existing assembly for %S arch %S version %u.%u.%u.%u\n",
                    ai->name, ai->arch, ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
@@ -1041,7 +1044,7 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->num_dependencies; i++)
         if (is_matching_identity( ai, &acl->dependencies[i] ))
         {
-            DPRINT( "reusing existing dependency for %S arch %S version %u.%u.%u.%u\n",
+            TRACE( "reusing existing dependency for %S arch %S version %u.%u.%u.%u\n",
                    ai->name, ai->arch, ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
@@ -1609,7 +1612,7 @@ static OLEMISC get_olemisc_value(const WCHAR *str, int len)
             min = n+1;
     }
 
-    DPRINT1("unknown flag %S\n", str);
+    WARN("unknown flag %S\n", str);
     return 0;
 }
 
@@ -1764,7 +1767,7 @@ static BOOL parse_nummethods(const xmlstr_t *str, struct entity *entity)
             num = num * 10 + *curr - '0';
         else
         {
-            // DPRINT1("wrong numeric value %wZ\n", &strU);
+            // ERR("wrong numeric value %wZ\n", &strU);
             return FALSE;
         }
     }
@@ -1880,7 +1883,7 @@ static BOOL parse_typelib_flags(const xmlstr_t *value, struct entity *entity)
             *flags |= LIBFLAG_FHASDISKIMAGE;
         else
         {
-            // DPRINT1("unknown flags value %wZ\n", &valueU);
+            // WARN("unknown flags value %wZ\n", &valueU);
             return FALSE;
         }
 
@@ -2755,7 +2758,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     struct assembly *assembly;
     int unicode_tests;
 
-    DPRINT( "parsing manifest loaded from %S base dir %S\n", filename, directory );
+    TRACE( "parsing manifest loaded from %S base dir %S\n", filename, directory );
 
     if (!(assembly = add_assembly(acl->actctx, shared ? ASSEMBLY_SHARED_MANIFEST : ASSEMBLY_MANIFEST)))
         return STATUS_SXS_CANT_GEN_ACTCTX;
@@ -2877,11 +2880,11 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     {
         if (!filename && !get_module_filename( hModule, &nameW, 0 ))
         {
-            DPRINT( "looking for res %s in module %p %s\n", debugstr_w(resname),
+            TRACE( "looking for res %s in module %p %s\n", debugstr_w(resname),
                    hModule, debugstr_w(nameW.Buffer) );
             RtlFreeUnicodeString( &nameW );
         }
-        else DPRINT( "looking for res %s in module %p %s\n", debugstr_w(resname),
+        else TRACE( "looking for res %s in module %p %s\n", debugstr_w(resname),
                     hModule, debugstr_w(filename) );
     }
 #endif
@@ -2998,7 +3001,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
         resptr = resnameBuf;
     }
 
-    DPRINT( "looking for res %S in %S\n", resptr, filename ? filename : L"<NULL>");
+    TRACE( "looking for res %S in %S\n", resptr, filename ? filename : L"<NULL>");
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -3047,7 +3050,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     SIZE_T              count;
     void               *base;
 
-    DPRINT( "loading manifest file %S\n", filename );
+    TRACE( "loading manifest file %S\n", filename );
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -3092,7 +3095,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
     if (!((ULONG_PTR)resname >> 16)) resid = (ULONG_PTR)resname & 0xffff;
 
-    DPRINT( "looking for manifest associated with %S id %lu\n", filename, resid );
+    TRACE( "looking for manifest associated with %S id %lu\n", filename, resid );
 
     if (module) /* use the module filename */
     {
@@ -3209,7 +3212,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             }
         }
     }
-    else DPRINT1("no matching file for %S\n", lookup);
+    else WARN("no matching file for %S\n", lookup);
     RtlFreeHeap( GetProcessHeap(), 0, lookup );
     return ret;
 }
@@ -3299,7 +3302,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     HANDLE file;
     DWORD len;
 
-    DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
+    TRACE( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
             ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
@@ -3550,7 +3553,7 @@ static struct string_index *find_string_index(const struct strsection_header *se
                 break;
             }
             else
-                DPRINT1("hash collision 0x%08x, %wZ, %S\n", hash, name, nameW);
+                WARN("hash collision 0x%08x, %wZ, %S\n", hash, name, nameW);
         }
         iter++;
     }
@@ -3813,7 +3816,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
                 break;
             }
             else
-                DPRINT1("hash collision 0x%08x, %wZ, %S\n", hash, name, nameW);
+                WARN("hash collision 0x%08x, %wZ, %S\n", hash, name, nameW);
         }
         iter++;
     }
@@ -4988,10 +4991,10 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
         status = find_progid_redirection(actctx, section_name, data);
         break;
     case ACTIVATION_CONTEXT_SECTION_GLOBAL_OBJECT_RENAME_TABLE:
-        DPRINT1("Unsupported yet section_kind %x\n", section_kind);
+        FIXME("Unsupported yet section_kind %x\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     default:
-        DPRINT1("Unknown section_kind %x\n", section_kind);
+        WARN("Unknown section_kind %x\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     }
 
@@ -5025,7 +5028,7 @@ static NTSTATUS find_guid(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
         status = find_clr_surrogate(actctx, guid, data);
         break;
     default:
-        DPRINT("Unknown section_kind %x\n", section_kind);
+        WARN("Unknown section_kind %x\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     }
 
@@ -5114,7 +5117,7 @@ RtlCreateActivationContext(IN ULONG Flags,
     HANDLE file = 0;
     struct actctx_loader acl;
 
-    DPRINT("RtlCreateActivationContext %p %08x, Image Base: %p\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0, ((ACTCTXW*)ActivationContextData)->hModule);
+    TRACE("RtlCreateActivationContext %p %08x, Image Base: %p\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0, ((ACTCTXW*)ActivationContextData)->hModule);
 
     if (!pActCtx || pActCtx->cbSize < sizeof(*pActCtx) ||
         (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL))
@@ -5324,7 +5327,7 @@ void WINAPI RtlReleaseActivationContext( HANDLE handle )
  */
 NTSTATUS WINAPI RtlZombifyActivationContext( HANDLE handle )
 {
-    UNIMPLEMENTED;
+    FIXME("%p: stub\n", handle);
 
     if (handle == ACTCTX_FAKE_HANDLE)
         return STATUS_SUCCESS;
@@ -5352,7 +5355,7 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
     RtlAddRefActivationContext( handle );
 
     *cookie = (ULONG_PTR)frame;
-    DPRINT( "%p cookie=%lx\n", handle, *cookie );
+    TRACE( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
 }
 
@@ -5371,7 +5374,7 @@ NTSTATUS WINAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
-    DPRINT( "%x cookie=%lx\n", flags, cookie );
+    TRACE( "%x cookie=%lx\n", flags, cookie );
 
     /* find the right frame */
     top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
@@ -5487,7 +5490,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
 
-    DPRINT("%08x %p %p %u %p %Iu %p\n", flags, handle,
+    TRACE("%08x %p %p %u %p %ld %p\n", flags, handle,
           subinst, class, buffer, bufsize, retlen);
 
     if (retlen) *retlen = 0;
@@ -5722,7 +5725,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
         break;
 
     default:
-        DPRINT( "class %u not implemented\n", class );
+        FIXME( "class %u not implemented\n", class );
         return STATUS_NOT_IMPLEMENTED;
     }
     return STATUS_SUCCESS;
@@ -5839,13 +5842,13 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (extguid)
     {
-        DPRINT1("expected extguid == NULL\n");
+        FIXME("expected extguid == NULL\n");
         return STATUS_INVALID_PARAMETER;
     }
 
     if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
     {
-        DPRINT1("unknown flags %08x\n", flags);
+        FIXME("unknown flags %08x\n", flags);
         return STATUS_INVALID_PARAMETER;
     }
 
