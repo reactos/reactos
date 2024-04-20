@@ -1,7 +1,12 @@
 /**
+ * @file
+ * DNS API
+ */
+
+/**
  * lwip DNS resolver header file.
 
- * Author: Jim Pettinato 
+ * Author: Jim Pettinato
  *   April 2007
 
  * ported from uIP resolv.c Copyright (c) 2002-2003, Adam Dunkels.
@@ -31,12 +36,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __LWIP_DNS_H__
-#define __LWIP_DNS_H__
+#ifndef LWIP_HDR_DNS_H
+#define LWIP_HDR_DNS_H
 
 #include "lwip/opt.h"
 
-#if LWIP_DNS /* don't build if not configured for use in lwipopts.h */
+#if LWIP_DNS
+
+#include "lwip/ip_addr.h"
+#include "lwip/err.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,37 +53,20 @@ extern "C" {
 /** DNS timer period */
 #define DNS_TMR_INTERVAL          1000
 
-/** DNS field TYPE used for "Resource Records" */
-#define DNS_RRTYPE_A              1     /* a host address */
-#define DNS_RRTYPE_NS             2     /* an authoritative name server */
-#define DNS_RRTYPE_MD             3     /* a mail destination (Obsolete - use MX) */
-#define DNS_RRTYPE_MF             4     /* a mail forwarder (Obsolete - use MX) */
-#define DNS_RRTYPE_CNAME          5     /* the canonical name for an alias */
-#define DNS_RRTYPE_SOA            6     /* marks the start of a zone of authority */
-#define DNS_RRTYPE_MB             7     /* a mailbox domain name (EXPERIMENTAL) */
-#define DNS_RRTYPE_MG             8     /* a mail group member (EXPERIMENTAL) */
-#define DNS_RRTYPE_MR             9     /* a mail rename domain name (EXPERIMENTAL) */
-#define DNS_RRTYPE_NULL           10    /* a null RR (EXPERIMENTAL) */
-#define DNS_RRTYPE_WKS            11    /* a well known service description */
-#define DNS_RRTYPE_PTR            12    /* a domain name pointer */
-#define DNS_RRTYPE_HINFO          13    /* host information */
-#define DNS_RRTYPE_MINFO          14    /* mailbox or mail list information */
-#define DNS_RRTYPE_MX             15    /* mail exchange */
-#define DNS_RRTYPE_TXT            16    /* text strings */
-
-/** DNS field CLASS used for "Resource Records" */
-#define DNS_RRCLASS_IN            1     /* the Internet */
-#define DNS_RRCLASS_CS            2     /* the CSNET class (Obsolete - used only for examples in some obsolete RFCs) */
-#define DNS_RRCLASS_CH            3     /* the CHAOS class */
-#define DNS_RRCLASS_HS            4     /* Hesiod [Dyer 87] */
-#define DNS_RRCLASS_FLUSH         0x800 /* Flush bit */
-
-/* The size used for the next line is rather a hack, but it prevents including socket.h in all files
-   that include memp.h, and that would possibly break portability (since socket.h defines some types
-   and constants possibly already define by the OS).
-   Calculation rule:
-   sizeof(struct addrinfo) + sizeof(struct sockaddr_in) + DNS_MAX_NAME_LENGTH + 1 byte zero-termination */
-#define NETDB_ELEM_SIZE           (32 + 16 + DNS_MAX_NAME_LENGTH + 1)
+/* DNS resolve types: */
+#define LWIP_DNS_ADDRTYPE_IPV4      0
+#define LWIP_DNS_ADDRTYPE_IPV6      1
+#define LWIP_DNS_ADDRTYPE_IPV4_IPV6 2 /* try to resolve IPv4 first, try IPv6 if IPv4 fails only */
+#define LWIP_DNS_ADDRTYPE_IPV6_IPV4 3 /* try to resolve IPv6 first, try IPv4 if IPv6 fails only */
+#if LWIP_IPV4 && LWIP_IPV6
+#ifndef LWIP_DNS_ADDRTYPE_DEFAULT
+#define LWIP_DNS_ADDRTYPE_DEFAULT   LWIP_DNS_ADDRTYPE_IPV4_IPV6
+#endif
+#elif LWIP_IPV4
+#define LWIP_DNS_ADDRTYPE_DEFAULT   LWIP_DNS_ADDRTYPE_IPV4
+#else
+#define LWIP_DNS_ADDRTYPE_DEFAULT   LWIP_DNS_ADDRTYPE_IPV6
+#endif
 
 #if DNS_LOCAL_HOSTLIST
 /** struct used for local host-list */
@@ -86,6 +77,7 @@ struct local_hostlist_entry {
   ip_addr_t addr;
   struct local_hostlist_entry *next;
 };
+#define DNS_LOCAL_HOSTLIST_ELEM(name, addr_init) {name, addr_init, NULL}
 #if DNS_LOCAL_HOSTLIST_IS_DYNAMIC
 #ifndef DNS_LOCAL_HOSTLIST_MAX_NAMELEN
 #define DNS_LOCAL_HOSTLIST_MAX_NAMELEN  DNS_MAX_NAME_LENGTH
@@ -94,6 +86,13 @@ struct local_hostlist_entry {
 #endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
 #endif /* DNS_LOCAL_HOSTLIST */
 
+#if LWIP_IPV4
+extern const ip_addr_t dns_mquery_v4group;
+#endif /* LWIP_IPV4 */
+#if LWIP_IPV6
+extern const ip_addr_t dns_mquery_v6group;
+#endif /* LWIP_IPV6 */
+
 /** Callback which is invoked when a hostname is found.
  * A function of this type must be implemented by the application using the DNS resolver.
  * @param name pointer to the name that was looked up.
@@ -101,19 +100,27 @@ struct local_hostlist_entry {
  *        or NULL if the name could not be found (or on any other error).
  * @param callback_arg a user-specified callback argument passed to dns_gethostbyname
 */
-typedef void (*dns_found_callback)(const char *name, ip_addr_t *ipaddr, void *callback_arg);
+typedef void (*dns_found_callback)(const char *name, const ip_addr_t *ipaddr, void *callback_arg);
 
-void           dns_init(void);
-void           dns_tmr(void);
-void           dns_setserver(u8_t numdns, ip_addr_t *dnsserver);
-ip_addr_t      dns_getserver(u8_t numdns);
-err_t          dns_gethostbyname(const char *hostname, ip_addr_t *addr,
-                                 dns_found_callback found, void *callback_arg);
+void             dns_init(void);
+void             dns_tmr(void);
+void             dns_setserver(u8_t numdns, const ip_addr_t *dnsserver);
+const ip_addr_t* dns_getserver(u8_t numdns);
+err_t            dns_gethostbyname(const char *hostname, ip_addr_t *addr,
+                                   dns_found_callback found, void *callback_arg);
+err_t            dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr,
+                                   dns_found_callback found, void *callback_arg,
+                                   u8_t dns_addrtype);
 
-#if DNS_LOCAL_HOSTLIST && DNS_LOCAL_HOSTLIST_IS_DYNAMIC
+
+#if DNS_LOCAL_HOSTLIST
+size_t         dns_local_iterate(dns_found_callback iterator_fn, void *iterator_arg);
+err_t          dns_local_lookup(const char *hostname, ip_addr_t *addr, u8_t dns_addrtype);
+#if DNS_LOCAL_HOSTLIST_IS_DYNAMIC
 int            dns_local_removehost(const char *hostname, const ip_addr_t *addr);
 err_t          dns_local_addhost(const char *hostname, const ip_addr_t *addr);
-#endif /* DNS_LOCAL_HOSTLIST && DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
+#endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
+#endif /* DNS_LOCAL_HOSTLIST */
 
 #ifdef __cplusplus
 }
@@ -121,4 +128,4 @@ err_t          dns_local_addhost(const char *hostname, const ip_addr_t *addr);
 
 #endif /* LWIP_DNS */
 
-#endif /* __LWIP_DNS_H__ */
+#endif /* LWIP_HDR_DNS_H */

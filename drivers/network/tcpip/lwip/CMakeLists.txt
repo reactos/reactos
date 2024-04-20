@@ -1,56 +1,35 @@
+cmake_minimum_required(VERSION 3.10)
 
-list(APPEND SOURCE
-    src/api/api_lib.c
-    src/api/api_msg.c
-    src/api/err.c
-    src/api/netbuf.c
-    src/api/netdb.c
-    src/api/netifapi.c
-    src/api/sockets.c
-    src/api/tcpip.c
-    src/core/def.c
-    src/core/dhcp.c
-    src/core/dns.c
-    src/core/init.c
-    src/core/mem.c
-    src/core/memp.c
-    src/core/netif.c
-    src/core/pbuf.c
-    src/core/raw.c
-    src/core/stats.c
-    src/core/sys.c
-    src/core/tcp_in.c
-    src/core/tcp_out.c
-    src/core/tcp.c
-    src/core/timers.c
-    src/core/udp.c
-    src/core/ipv4/autoip.c
-    src/core/ipv4/icmp.c
-    src/core/ipv4/igmp.c
-    src/core/ipv4/inet_chksum.c
-    src/core/ipv4/inet.c
-    src/core/ipv4/ip.c
-    src/core/ipv4/ip_addr.c
-    src/core/ipv4/ip_frag.c
-    #src/core/ipv6/icmp6.c
-    #src/core/ipv6/inet6.c
-    #src/core/ipv6/ip6_addr.c
-    #src/core/ipv6/ip6.c
-    src/core/snmp/asn1_dec.c
-    src/core/snmp/asn1_enc.c
-    src/core/snmp/mib_structs.c
-    src/core/snmp/mib2.c
-    src/core/snmp/msg_in.c
-    src/core/snmp/msg_out.c)
+set (CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
-add_library(lwipcore ${SOURCE})
+project(lwIP)
 
-target_include_directories(lwipcore
-    PRIVATE ${LWIP_INCLUDE_DIRS}
-    PUBLIC src/include/ipv4)
+# Example lwIP application
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_dependencies(lwipcore bugcodes xdk)
+set (LWIP_DEFINITIONS LWIP_DEBUG=1)
 
-if(NOT MSVC)
-    target_compile_options(lwipcore PRIVATE -fno-builtin-malloc -fno-builtin-free)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  add_subdirectory(${LWIP_DIR}/contrib/ports/win32/example_app)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  add_subdirectory(${LWIP_DIR}/contrib/ports/unix/example_app)
+else()
+  message(WARNING "Host ${CMAKE_SYSTEM_NAME} is not supported to build example_app")
+endif()
+
+# Source package generation
+set(CPACK_SOURCE_GENERATOR "ZIP")
+set(CPACK_SOURCE_PACKAGE_DESCRIPTION_SUMMARY "lwIP lightweight IP stack")
+set(CPACK_PACKAGE_VERSION_MAJOR "${LWIP_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${LWIP_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${LWIP_VERSION_REVISION}")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;${CPACK_SOURCE_IGNORE_FILES};.git")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "lwip-${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}")
+include(CPack)
+
+# Generate docs before creating source package
+include(src/Filelists.cmake)
+add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+if (TARGET lwipdocs)
+  add_dependencies(dist lwipdocs)
 endif()

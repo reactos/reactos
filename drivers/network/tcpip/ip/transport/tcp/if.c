@@ -9,7 +9,7 @@
 #include <ipifcons.h>
 
 err_t
-TCPSendDataCallback(struct netif *netif, struct pbuf *p, ip4_addr_t *dest)
+TCPSendDataCallback(struct netif *netif, struct pbuf *p, const ip4_addr_t *dest)
 {
     NDIS_STATUS NdisStatus;
     PNEIGHBOR_CACHE_ENTRY NCE;
