@@ -423,7 +423,7 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 			old_font = SelectObject(udc, es->font);
 
 		tabdef.cTabStops = es->tabs_count;
-		tabdef.iScale = 0;
+		tabdef.iScale = GdiGetCharDimensions(udc, NULL, NULL);
 		tabdef.pTabStops = es->tabs;
 		tabdef.iTabOrigin = 0;
 
