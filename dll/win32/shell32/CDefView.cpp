@@ -62,7 +62,7 @@ GetContextMenuFlags(IShellBrowser *pSB, SFGAOF sfgao)
         cmf |= CMF_EXTENDEDVERBS;
     if (sfgao & SFGAO_CANRENAME)
         cmf |= CMF_CANRENAME;
-    HWND hwnd = 0;
+    HWND hwnd = NULL;
     if (pSB && SUCCEEDED(pSB->GetControlWindow(FCW_TREE, &hwnd)) && hwnd)
         cmf |= CMF_EXPLORE;
     return cmf;
