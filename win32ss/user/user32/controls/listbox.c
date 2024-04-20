@@ -847,10 +847,11 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
 {
     INT index, min, max, res;
 
-    if (!(descr->style & LBS_SORT)) return -1;  /* Add it at the end */
+    if (!descr->nb_items || !(descr->style & LBS_SORT)) return -1;  /* Add it at the end */
+
     min = 0;
-    max = descr->nb_items;
-    while (min != max)
+    max = descr->nb_items - 1;
+    while (min <= max)
     {
         index = (min + max) / 2;
         if (HAS_STRINGS(descr))
@@ -873,10 +874,10 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
             res = SendMessageW( descr->owner, WM_COMPAREITEM, id, (LPARAM)&cis );
         }
         if (!res) return index;
-        if (res > 0) max = index;
+        if (res > 0) max = index - 1;
         else min = index + 1;
     }
-    return exact ? -1 : max;
+    return exact ? -1 : min;
 }
 
 
