@@ -1209,6 +1209,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
             rect.right += descr->column_width;
             rect.top = 0;
             col_pos = descr->page_size - 1;
+            if (rect.left >= descr->width) break;
         }
         else
         {
