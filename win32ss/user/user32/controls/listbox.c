@@ -301,34 +301,33 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
     if (descr->top_item == index) return LB_OKAY;
     if (scroll)
     {
-        INT diff;
+        INT dx = 0, dy = 0;
         if (descr->style & LBS_MULTICOLUMN)
-            diff = (descr->top_item - index) / descr->page_size * descr->column_width;
+            dx = (descr->top_item - index) / descr->page_size * descr->column_width;
         else if (descr->style & LBS_OWNERDRAWVARIABLE)
         {
             INT i;
-            diff = 0;
             if (index > descr->top_item)
             {
                 for (i = index - 1; i >= descr->top_item; i--)
-                    diff -= descr->items[i].height;
+                    dy -= descr->items[i].height;
             }
             else
             {
                 for (i = index; i < descr->top_item; i++)
-                    diff += descr->items[i].height;
+                    dy += descr->items[i].height;
             }
         }
         else
-            diff = (descr->top_item - index) * descr->item_height;
+            dy = (descr->top_item - index) * descr->item_height;
 
 #ifdef __REACTOS__
         if (descr->style & LBS_MULTICOLUMN)
-            ScrollWindowEx(descr->self, diff, 0, NULL, NULL, 0, NULL,
+            ScrollWindowEx(descr->self, dx, dy, NULL, NULL, 0, NULL,
                            SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN);
         else
 #endif
-        ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
+        ScrollWindowEx( descr->self, dx, dy, NULL, NULL, 0, NULL,
                         SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
     else
