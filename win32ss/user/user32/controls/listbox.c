@@ -525,14 +525,16 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
 static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect, 
 			       INT index, UINT action, BOOL ignoreFocus )
 {
+    BOOL selected = FALSE, focused;
     LB_ITEMDATA *item = NULL;
-    BOOL selected = FALSE;
 
     if (index < descr->nb_items)
     {
         item = &descr->items[index];
         selected = is_item_selected(descr, index);
     }
+
+    focused = !ignoreFocus && descr->focus_item == index && descr->caret_on && descr->in_focus;
 
     if (IS_OWNERDRAW(descr))
     {
@@ -568,9 +570,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         dis.itemState    = 0;
         if (selected)
             dis.itemState |= ODS_SELECTED;
-        if (!ignoreFocus && (descr->focus_item == index) &&
-            (descr->caret_on) &&
-            (descr->in_focus)) dis.itemState |= ODS_FOCUS;
+        if (focused)
+            dis.itemState |= ODS_FOCUS;
         if (!IsWindowEnabled(descr->self)) dis.itemState |= ODS_DISABLED;
         dis.itemData     = item->data;
         dis.rcItem       = *rect;
@@ -621,10 +622,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
             SetBkColor( hdc, oldBk );
             SetTextColor( hdc, oldText );
         }
-        if (!ignoreFocus && (descr->focus_item == index) &&
-            (descr->caret_on) &&
-            (descr->in_focus) &&
-            !(descr->UIState & UISF_HIDEFOCUS)) DrawFocusRect( hdc, rect );
+        if (focused)
++            DrawFocusRect( hdc, rect );
     }
 }
 
