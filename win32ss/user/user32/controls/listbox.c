@@ -818,8 +818,8 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
         _SEH2_END
     } else {
         if (buffer)
-            *((LPDWORD)buffer)=*(LPDWORD)(&descr->items[index].data);
-        len = sizeof(DWORD);
+            *((ULONG_PTR *)buffer) = descr->items[index].data;
+        len = sizeof(ULONG_PTR);
     }
     return len;
 }
@@ -2796,7 +2796,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             SetLastError(ERROR_INVALID_INDEX);
             return LB_ERR;
         }
-        if (!HAS_STRINGS(descr)) return sizeof(DWORD);
+        if (!HAS_STRINGS(descr)) return sizeof(ULONG_PTR);
         if (unicode) return strlenW( descr->items[wParam].str );
         return WideCharToMultiByte( CP_ACP, 0, descr->items[wParam].str,
                                     strlenW(descr->items[wParam].str), NULL, 0, NULL, NULL );
