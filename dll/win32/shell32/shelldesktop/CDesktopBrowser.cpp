@@ -40,6 +40,7 @@ class CDesktopBrowser :
 private:
     HACCEL m_hAccel;
     HWND m_hWndShellView;
+    DWORD m_dwDrives;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
 
@@ -85,6 +86,7 @@ public:
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
@@ -99,6 +101,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
+    MESSAGE_HANDLER(WM_DEVICECHANGE, OnDeviceChange)
     MESSAGE_HANDLER(WM_PROGMAN_OPENSHELLSETTINGS, OnShowOptionsDlg)
 END_MSG_MAP()
 
@@ -114,6 +117,7 @@ CDesktopBrowser::CDesktopBrowser():
     m_hWndShellView(NULL),
     m_hwndChangeNotifyServer(NULL)
 {
+    m_dwDrives = ::GetLogicalDrives();
 }
 
 CDesktopBrowser::~CDesktopBrowser()
@@ -458,6 +462,31 @@ LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARA
             return NULL;
     }
     return (LRESULT)m_hwndChangeNotifyServer;
+}
+
+// Detect SHCNE_DRIVEADD and SHCNE_DRIVEREMOVED
+LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE)
+    {
+        DWORD dwDrives = ::GetLogicalDrives();
+        for (DWORD iDrive = 0; iDrive <= 'Z' - 'A'; ++iDrive)
+        {
+            WCHAR szPath[MAX_PATH];
+            DWORD dwBit = (1 << iDrive);
+            if (!(m_dwDrives & dwBit) & (dwDrives & dwBit))
+            {
+                PathBuildRootW(szPath, iDrive);
+                SHChangeNotify(SHCNE_DRIVEADD, SHCNF_PATHW, szPath, NULL);
+            }
+            else if ((m_dwDrives & dwBit) & !(dwDrives & dwBit))
+            {
+                PathBuildRootW(szPath, iDrive);
+                SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW, szPath, NULL);
+            }
+        }
+        m_dwDrives = dwDrives;
+    }
 }
 
 extern VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async);
