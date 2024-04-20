@@ -26,6 +26,8 @@
 #include <atlcoll.h>
 #endif
 
+#include <dbt.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -474,12 +476,12 @@ LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
         {
             WCHAR szPath[MAX_PATH];
             DWORD dwBit = (1 << iDrive);
-            if (!(m_dwDrives & dwBit) & (dwDrives & dwBit))
+            if (!(m_dwDrives & dwBit) && (dwDrives & dwBit)) // The drive is added
             {
                 PathBuildRootW(szPath, iDrive);
                 SHChangeNotify(SHCNE_DRIVEADD, SHCNF_PATHW, szPath, NULL);
             }
-            else if ((m_dwDrives & dwBit) & !(dwDrives & dwBit))
+            else if ((m_dwDrives & dwBit) && !(dwDrives & dwBit)) // The drive is removed
             {
                 PathBuildRootW(szPath, iDrive);
                 SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW, szPath, NULL);
@@ -487,6 +489,7 @@ LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
         }
         m_dwDrives = dwDrives;
     }
+    return 0;
 }
 
 extern VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async);
