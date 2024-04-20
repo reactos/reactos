@@ -9,7 +9,7 @@
  *                  Jacek Caban for CodeWeavers
  *                  Alexandre Julliard
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
- *                  Samuel SerapiÃ³n
+ *                  Samuel Serapión
  */
 
 /* Based on Wine 3.2-37c98396 */
@@ -527,10 +527,10 @@ typedef struct _ACTIVATION_CONTEXT
     unsigned int num_assemblies;
     unsigned int allocated_assemblies;
     /* section data */
-    DWORD sections;
-    struct strsection_header *wndclass_section;
-    struct strsection_header *dllredirect_section;
-    struct strsection_header *progid_section;
+    DWORD               sections;
+    struct strsection_header  *wndclass_section;
+    struct strsection_header  *dllredirect_section;
+    struct strsection_header  *progid_section;
     struct guidsection_header *tlib_section;
     struct guidsection_header *comserver_section;
     struct guidsection_header *ifaceps_section;
@@ -807,7 +807,7 @@ static inline BOOL xmlstr_cmp_end(const xmlstr_t* xmlstr, const WCHAR *str)
 
 static inline BOOL xml_attr_cmp(const struct xml_attr* attr, const WCHAR *str)
 {
-    return xmlstr_cmp(&attr->name, str);
+    return xmlstr_cmp( &attr->name, str );
 }
 
 static BOOL xml_name_cmp( const struct xml_elem *elem1, const struct xml_elem *elem2 )
@@ -818,7 +818,7 @@ static BOOL xml_name_cmp( const struct xml_elem *elem1, const struct xml_elem *e
             !wcsncmp( elem1->ns.ptr, elem2->ns.ptr, elem1->ns.len ));
 }
 
-static inline BOOL xml_elem_cmp(const struct xml_elem* elem, const WCHAR *str, const WCHAR *namespace)
+static inline BOOL xml_elem_cmp(const struct xml_elem *elem, const WCHAR *str, const WCHAR *namespace)
 {
     if (!xmlstr_cmp( &elem->name, str )) return FALSE;
     if (xmlstr_cmp( &elem->ns, namespace )) return TRUE;
@@ -1227,13 +1227,13 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
     }
 }
 
-static BOOL set_error(xmlbuf_t* xmlbuf)
+static BOOL set_error( xmlbuf_t *xmlbuf )
 {
     xmlbuf->error = TRUE;
     return FALSE;
 }
 
-static BOOL is_xmlns_attr(const struct xml_attr *attr)
+static BOOL is_xmlns_attr( const struct xml_attr *attr )
 {
     const int len = wcslen( xmlnsW );
     if (attr->name.len < len) return FALSE;
@@ -1276,7 +1276,7 @@ static xmlstr_t find_xmlns( xmlbuf_t *xmlbuf, const xmlstr_t *name )
     return empty_xmlstr;
 }
 
-static BOOL next_xml_attr(xmlbuf_t* xmlbuf, struct xml_attr* attr, BOOL* end)
+static BOOL next_xml_attr(xmlbuf_t *xmlbuf, struct xml_attr *attr, BOOL *end)
 {
     const WCHAR* ptr;
     WCHAR quote;
@@ -1505,7 +1505,7 @@ static void parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
     }
 }
 
-static void parse_expect_end_elem(xmlbuf_t *xmlbuf, const struct xml_elem *parent)
+static void parse_expect_end_elem( xmlbuf_t *xmlbuf, const struct xml_elem *parent )
 {
     struct xml_elem elem;
 
@@ -1529,7 +1529,7 @@ static void parse_unknown_elem(xmlbuf_t *xmlbuf, const struct xml_elem *parent)
         parse_unknown_elem(xmlbuf, &elem);
 }
 
-static void parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* actctx,
+static void parse_assembly_identity_elem(xmlbuf_t *xmlbuf, ACTIVATION_CONTEXT *actctx,
                                          struct assembly_identity* ai, const struct xml_elem *parent)
 {
     struct xml_attr attr;
@@ -2768,7 +2768,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
                                                       : ACTIVATION_CONTEXT_PATH_TYPE_NONE;
 
     unicode_tests = IS_TEXT_UNICODE_SIGNATURE | IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    if (RtlIsTextUnicode(buffer, size, &unicode_tests ))
+    if (RtlIsTextUnicode( buffer, size, &unicode_tests ))
     {
         xmlbuf.ptr = buffer;
         xmlbuf.end = xmlbuf.ptr + size / sizeof(WCHAR);
@@ -2815,8 +2815,8 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
 
         xmlbuf.ptr = new_buff;
         xmlbuf.end = xmlbuf.ptr + sizeU / sizeof(WCHAR);
-        status = parse_manifest_buffer(acl, assembly, ai, &xmlbuf);
-        RtlFreeHeap(GetProcessHeap(), 0, new_buff);
+        status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
+        RtlFreeHeap( GetProcessHeap(), 0, new_buff );
     }
     return status;
 }
@@ -2978,7 +2978,6 @@ static NTSTATUS search_manifest_in_module( struct actctx_loader* acl, struct ass
     return status;
 }
 
-
 static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assembly_identity* ai,
                                          LPCWSTR filename, LPCWSTR directory, BOOL shared,
                                          HANDLE file, LPCWSTR resname, ULONG lang )
@@ -3060,7 +3059,6 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     size.QuadPart = 0;
     status = NtCreateSection( &mapping, STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
                               &attr, &size, PAGE_READONLY, SEC_COMMIT, file );
-
     if (status != STATUS_SUCCESS) return status;
 
     offset.QuadPart = 0;
@@ -3843,10 +3841,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, k, total_len = 0, tlib_count = 0, names_len = 0;
     struct guidsection_header *header;
@@ -4083,10 +4078,7 @@ static void get_comserver_datalen(const struct entity_array *entities, const str
     }
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-add_comserver_record(const struct guidsection_header *section, const struct entity_array *entities,
+static NTSTATUS add_comserver_record(const struct guidsection_header *section, const struct entity_array *entities,
     const struct dll_redirect *dll, struct guid_index **index, ULONG *data_offset, ULONG *module_offset,
     ULONG *seed, ULONG rosterindex)
 {
@@ -4269,10 +4261,7 @@ add_comserver_record(const struct guidsection_header *section, const struct enti
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+static NTSTATUS build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, class_count = 0, names_len = 0;
     struct guidsection_header *header;
@@ -4340,10 +4329,7 @@ static inline struct comclassredirect_data *get_comclass_data(ACTIVATION_CONTEXT
     return (struct comclassredirect_data*)((BYTE*)actctx->comserver_section + index->data_offset);
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+static NTSTATUS find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct comclassredirect_data *comclass;
     struct guid_index *index = NULL;
@@ -4400,10 +4386,7 @@ static void get_ifaceps_datalen(const struct entity_array *entities, unsigned in
     }
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-add_ifaceps_record(struct guidsection_header *section, struct entity_array *entities,
+static NTSTATUS add_ifaceps_record(struct guidsection_header *section, struct entity_array *entities,
     struct guid_index **index, ULONG *data_offset, ULONG rosterindex)
 {
     unsigned int i;
@@ -4492,10 +4475,7 @@ add_ifaceps_record(struct guidsection_header *section, struct entity_array *enti
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+static NTSTATUS build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct guidsection_header *header;
@@ -4562,10 +4542,7 @@ static inline struct ifacepsredirect_data *get_ifaceps_data(ACTIVATION_CONTEXT *
     return (struct ifacepsredirect_data*)((BYTE*)actctx->ifaceps_section + index->data_offset);
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+static NTSTATUS find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct ifacepsredirect_data *iface;
     struct guid_index *index = NULL;
@@ -4603,10 +4580,7 @@ find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTC
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct guidsection_header *header;
@@ -4722,10 +4696,7 @@ static inline struct clrsurrogate_data *get_surrogate_data(ACTIVATION_CONTEXT *a
     return (struct clrsurrogate_data*)((BYTE*)actctx->clrsurrogate_section + index->data_offset);
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+static NTSTATUS find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct clrsurrogate_data *surrogate;
     struct guid_index *index = NULL;
@@ -4835,10 +4806,7 @@ static void write_progid_record(struct strsection_header *section, const WCHAR *
     (*index) += 1;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_header *section, const struct entity_array *entities,
+static NTSTATUS add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_header *section, const struct entity_array *entities,
     struct string_index **index, ULONG *data_offset, ULONG *global_offset, ULONG rosterindex)
 {
     unsigned int i, j;
@@ -4875,10 +4843,7 @@ add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_header *section,
     return Status;
 }
 
-_Must_inspect_result_
-static
-NTSTATUS
-build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **section)
+static NTSTATUS build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct strsection_header *header;
@@ -5124,7 +5089,6 @@ void actctx_init(PVOID* pOldShimData)
     }
 }
 
-/* FUNCTIONS ***************************************************************/
 
 /***********************************************************************
  * RtlCreateActivationContext (NTDLL.@)
@@ -5333,7 +5297,7 @@ RtlReleaseActivationContext( HANDLE handle )
 /***********************************************************************
  *		RtlAddRefActivationContext (NTDLL.@)
  */
-VOID NTAPI RtlAddRefActivationContext( HANDLE handle )
+void WINAPI RtlAddRefActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
@@ -5344,7 +5308,7 @@ VOID NTAPI RtlAddRefActivationContext( HANDLE handle )
 /******************************************************************
  *		RtlReleaseActivationContext (NTDLL.@)
  */
-VOID NTAPI RtlReleaseActivationContext( HANDLE handle )
+void WINAPI RtlReleaseActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
@@ -5356,12 +5320,13 @@ VOID NTAPI RtlReleaseActivationContext( HANDLE handle )
 /******************************************************************
  *              RtlZombifyActivationContext (NTDLL.@)
  *
+ * FIXME: function prototype might be wrong
  */
-NTSTATUS NTAPI RtlZombifyActivationContext(PVOID Context)
+NTSTATUS WINAPI RtlZombifyActivationContext( HANDLE handle )
 {
     UNIMPLEMENTED;
 
-    if (Context == ACTCTX_FAKE_HANDLE)
+    if (handle == ACTCTX_FAKE_HANDLE)
         return STATUS_SUCCESS;
 
     return STATUS_NOT_IMPLEMENTED;
@@ -5402,7 +5367,7 @@ NTSTATUS NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_
 /***********************************************************************
  *		RtlDeactivateActivationContext (NTDLL.@)
  */
-NTSTATUS NTAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
+NTSTATUS WINAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
@@ -5472,7 +5437,7 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
 /******************************************************************
  *		RtlFreeThreadActivationContextStack (NTDLL.@)
  */
-VOID NTAPI RtlFreeThreadActivationContextStack(VOID)
+void WINAPI RtlFreeThreadActivationContextStack(void)
 {
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
@@ -5482,7 +5447,7 @@ VOID NTAPI RtlFreeThreadActivationContextStack(VOID)
 /******************************************************************
  *		RtlGetActiveActivationContext (NTDLL.@)
  */
-NTSTATUS NTAPI RtlGetActiveActivationContext( HANDLE *handle )
+NTSTATUS WINAPI RtlGetActiveActivationContext( HANDLE *handle )
 {
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
@@ -5499,7 +5464,7 @@ NTSTATUS NTAPI RtlGetActiveActivationContext( HANDLE *handle )
 /******************************************************************
  *		RtlIsActivationContextActive (NTDLL.@)
  */
-BOOLEAN NTAPI RtlIsActivationContextActive( HANDLE handle )
+BOOLEAN WINAPI RtlIsActivationContextActive( HANDLE handle )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
@@ -5515,9 +5480,9 @@ BOOLEAN NTAPI RtlIsActivationContextActive( HANDLE handle )
  * Get information about an activation context.
  * FIXME: function signature/prototype may be wrong
  */
-NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
-                                                     ULONG class, PVOID buffer,
-                                                     SIZE_T bufsize, SIZE_T *retlen )
+NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
+                                                      ULONG class, PVOID buffer,
+                                                      SIZE_T bufsize, SIZE_T *retlen )
 {
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
@@ -5815,11 +5780,11 @@ RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid,
  * Find information about a string in an activation context.
  * FIXME: function signature/prototype may be wrong
  */
-NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
-                                                      const UNICODE_STRING *section_name, PVOID ptr )
+NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
+                                                       const UNICODE_STRING *section_name, PVOID ptr )
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
     DPRINT("RtlFindActivationContextSectionString(%x %p %x %wZ %p)\n", flags, guid, section_kind, section_name, ptr);
     status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
