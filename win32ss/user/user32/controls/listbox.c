@@ -573,10 +573,10 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         if (focused)
             dis.itemState |= ODS_FOCUS;
         if (!IsWindowEnabled(descr->self)) dis.itemState |= ODS_DISABLED;
-        dis.itemData     = item->data;
+        dis.itemData     = item ? item->data : 0;
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%s\n",
-              descr->self, index, debugstr_w(item->str), action,
+              descr->self, index, item ? debugstr_w(item->str) : "", action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         SelectClipRgn( hdc, hrgn );
