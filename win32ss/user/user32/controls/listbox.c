@@ -1686,19 +1686,12 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index, LPCWSTR str )
  */
 static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
 {
-    /* save the item data before it gets freed by LB_RESETCONTENT */
-    ULONG_PTR item_data = get_item_data(descr, index);
-    LPWSTR item_str = get_item_string(descr, index);
-
-    if (!descr->nb_items)
-        SendMessageW( descr->self, LB_RESETCONTENT, 0, 0 );
-
     /* Note: Win 3.1 only sends DELETEITEM on owner-draw items,
      *       while Win95 sends it for all items with user data.
      *       It's probably better to send it too often than not
      *       often enough, so this is what we do here.
      */
-    if (IS_OWNERDRAW(descr) || item_data)
+    if (IS_OWNERDRAW(descr) || get_item_data(descr, index))
     {
         DELETEITEMSTRUCT dis;
         UINT id = (UINT)GetWindowLongPtrW( descr->self, GWLP_ID );
@@ -1707,10 +1700,10 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
         dis.CtlID    = id;
         dis.itemID   = index;
         dis.hwndItem = descr->self;
-        dis.itemData = item_data;
+        dis.itemData = get_item_data(descr, index);
         SendMessageW( descr->owner, WM_DELETEITEM, id, (LPARAM)&dis );
     }
-    HeapFree( GetProcessHeap(), 0, item_str );
+    HeapFree( GetProcessHeap(), 0, get_item_string(descr, index) );
 }
 
 
@@ -1728,10 +1721,13 @@ static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
     /* We need to invalidate the original rect instead of the updated one. */
     LISTBOX_InvalidateItems( descr, index );
 
+    if (descr->nb_items == 1)
+    {
+        SendMessageW(descr->self, LB_RESETCONTENT, 0, 0);
+        return LB_OKAY;
+    }
     descr->nb_items--;
     LISTBOX_DeleteItem( descr, index );
-
-    if (!descr->nb_items) return LB_OKAY;
 
     /* Remove the item */
 
