@@ -2954,6 +2954,32 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
     es->buffer_limit = limit;
 }
 
+static BOOL is_cjk_charset(HDC dc)
+{
+    switch (GdiGetCodePage(dc)) {
+    case 932: case 936: case 949: case 950: case 1361:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+static int get_cjk_fontinfo_margin(int width, int side_bearing)
+{
+    int margin;
+    if (side_bearing < 0)
+        margin = min(-side_bearing, width/2);
+    else
+        margin = 0;
+    return margin;
+}
+
+struct char_width_info {
+    INT min_lsb, min_rsb, unknown;
+};
+
+/* Undocumented gdi32 export */
+extern BOOL WINAPI GetCharWidthInfo(HDC, struct char_width_info *);
 
 /*********************************************************************
  *
@@ -2983,9 +3009,18 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
-                /* FIXME: figure out the CJK values. */
-                default_left_margin = width / 2;
-                default_right_margin = width / 2;
+                struct char_width_info width_info;
+
+                if (is_cjk_charset(dc) && GetCharWidthInfo(dc, &width_info))
+                {
+                    default_left_margin = get_cjk_fontinfo_margin(width, width_info.min_lsb);
+                    default_right_margin = get_cjk_fontinfo_margin(width, width_info.min_rsb);
+                }
+                else
+                {
+                    default_left_margin = width / 2;
+                    default_right_margin = width / 2;
+                }
 
                 GetClientRect(es->hwndSelf, &rc);
                 rc_width = !IsRectEmpty(&rc) ? rc.right - rc.left : 80;
