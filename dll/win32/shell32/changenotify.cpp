@@ -670,14 +670,14 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
     LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
     LPWSTR psz1, psz2;
     DWORD_ITEMIDLIST dwidl;
-    DWORD dwType, dwValue;
-    INT iDrive1, iDrive2;
+    DWORD dwType;
 
 Retry:
     dwType = (uFlags & SHCNF_TYPE);
     switch (dwType)
     {
         case SHCNF_IDLIST:
+        {
             if (wEventId == SHCNE_FREESPACE)
             {
                 szPath1[0] = szPath2[0] = UNICODE_NULL;
@@ -695,9 +695,10 @@ Retry:
             pidl1 = (LPITEMIDLIST)dwItem1;
             pidl2 = (LPITEMIDLIST)dwItem2;
             break;
-
+        }
         case SHCNF_PATHA:
         case SHCNF_PRINTERA:
+        {
             psz1 = psz2 = NULL;
             szPath1[0] = szPath2[0] = UNICODE_NULL;
             if (dwItem1)
@@ -715,17 +716,18 @@ Retry:
             dwItem1 = psz1;
             dwItem2 = psz2;
             goto Retry;
-
+        }
         case SHCNF_PATHW:
+        {
             if (wEventId == SHCNE_FREESPACE)
             {
-                iDrive1 = iDrive2 = -1;
+                INT iDrive1 = -1, iDrive2 = -1;
                 if (dwItem1)
                     iDrive1 = PathGetDriveNumberW((LPCWSTR)dwItem1);
                 if (dwItem2)
                     iDrive2 = PathGetDriveNumberW((LPCWSTR)dwItem2);
 
-                dwValue = 0;
+                DWORD dwValue = 0;
                 if (iDrive1 >= 0)
                     dwValue |= (1 << iDrive1);
                 if (iDrive2 >= 0)
@@ -745,8 +747,9 @@ Retry:
             if (dwItem2)
                 pidl2 = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
             break;
-
+        }
         case SHCNF_PRINTERW:
+        {
             if (dwItem1)
             {
                 HRESULT hr = Shell_ParsePrinterName((LPCWSTR)dwItem1, &pidl1, NULL);
@@ -764,18 +767,21 @@ Retry:
                 }
             }
             break;
-
+        }
         case SHCNF_DWORD:
+        {
             dwidl.cb = offsetof(DWORD_ITEMIDLIST, wTerminator);
             dwidl.dwItem1 = PtrToUlong(dwItem1);
             dwidl.dwItem2 = PtrToUlong(dwItem2);
             dwidl.wTerminator = 0;
             pidl1 = (LPITEMIDLIST)&dwidl;
             break;
-
+        }
         default:
+        {
             FIXME("Unknown type: 0x%X\n", dwType);
             return;
+        }
     }
 
     if (pidl1 || !wEventId || (wEventId & SHCNE_ASSOCCHANGED))
