@@ -9,6 +9,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
+typedef struct DWORD_ITEMIDLIST
+{
+    USHORT cb;
+    DWORD dwItem1;
+    DWORD dwItem2;
+    USHORT wTerminator;
+} DWORD_ITEMIDLIST, *LPDWORD_ITEMIDLIST;
+
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
 // This function requests creation of the server window if it doesn't exist yet
@@ -644,14 +652,6 @@ SHChangeNotifyTransmit(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDL
 {
     SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, dwTick);
 }
-
-typedef struct DWORD_ITEMIDLIST
-{
-    USHORT cb;
-    DWORD dwItem1;
-    DWORD dwItem2;
-    USHORT wTerminator;
-} DWORD_ITEMIDLIST, *LPDWORD_ITEMIDLIST;
 
 /*************************************************************************
  * SHChangeNotify               [SHELL32.@]
