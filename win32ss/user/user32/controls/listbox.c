@@ -1078,13 +1078,12 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
 static LRESULT LISTBOX_GetSelCount( const LB_DESCR *descr )
 {
     INT i, count;
-    const LB_ITEMDATA *item = descr->items;
 
     if (!(descr->style & LBS_MULTIPLESEL) ||
         (descr->style & LBS_NOSEL))
       return LB_ERR;
-    for (i = count = 0; i < descr->nb_items; i++, item++)
-        if (item->selected) count++;
+    for (i = count = 0; i < descr->nb_items; i++)
+        if (is_item_selected(descr, i)) count++;
     return count;
 }
 
@@ -1095,11 +1094,10 @@ static LRESULT LISTBOX_GetSelCount( const LB_DESCR *descr )
 static LRESULT LISTBOX_GetSelItems( const LB_DESCR *descr, INT max, LPINT array )
 {
     INT i, count;
-    const LB_ITEMDATA *item = descr->items;
 
     if (!(descr->style & LBS_MULTIPLESEL)) return LB_ERR;
-    for (i = count = 0; (i < descr->nb_items) && (count < max); i++, item++)
-        if (item->selected) array[count++] = i;
+    for (i = count = 0; (i < descr->nb_items) && (count < max); i++)
+        if (is_item_selected(descr, i)) array[count++] = i;
     return count;
 }
 
