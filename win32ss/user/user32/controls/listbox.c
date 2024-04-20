@@ -751,7 +751,7 @@ static LRESULT LISTBOX_InitStorage( LB_DESCR *descr, INT nb_items )
 
     if (new_size > descr->items_size && !resize_storage(descr, new_size))
         return LB_ERRSPACE;
-    return LB_OKAY;
+    return descr->items_size;
 }
 
 
