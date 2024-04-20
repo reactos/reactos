@@ -2780,7 +2780,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             SetLastError(ERROR_INVALID_INDEX);
             return LB_ERR;
         }
-        descr->items[wParam].data = lParam;
+        if (!(descr->style & LBS_NODATA)) descr->items[wParam].data = lParam;
         /* undocumented: returns TRUE, not LB_OKAY (0) */
         return TRUE;
 
