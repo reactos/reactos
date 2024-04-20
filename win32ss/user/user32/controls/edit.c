@@ -3206,7 +3206,8 @@ static inline BOOL EDIT_IsInsideDialog(EDITSTATE *es)
 static void EDIT_WM_Paste(EDITSTATE *es)
 {
 	HGLOBAL hsrc;
-	LPWSTR src;
+	LPWSTR src, new_src, ptr;
+	int len;
 
 	/* Protect read-only edit control from modification */
 	if(es->style & ES_READONLY)
@@ -3215,7 +3216,20 @@ static void EDIT_WM_Paste(EDITSTATE *es)
 	OpenClipboard(es->hwndSelf);
 	if ((hsrc = GetClipboardData(CF_UNICODETEXT))) {
 		src = GlobalLock(hsrc);
-		EDIT_EM_ReplaceSel(es, TRUE, src, TRUE, TRUE);
+
+		/* Protect single-line edit against pasting new line character */
+		if (!(es->style & ES_MULTILINE) && ((ptr = strchrW(src, '\n')))) {
+			len = ptr - src;
+			if (len && src[len - 1] == '\r')
+				--len;
+			new_src = HeapAlloc(GetProcessHeap(), 0, (len+1) * sizeof(WCHAR));
+			if (new_src != NULL) {
+				lstrcpynW(new_src, src, len+1);
+				EDIT_EM_ReplaceSel(es, TRUE, new_src, TRUE, TRUE);
+				HeapFree(GetProcessHeap(), 0, new_src);
+			}
+		} else
+			EDIT_EM_ReplaceSel(es, TRUE, src, TRUE, TRUE);
 		GlobalUnlock(hsrc);
 	}
         else if (es->style & ES_PASSWORD) {
