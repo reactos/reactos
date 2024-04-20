@@ -63,7 +63,11 @@ typedef struct
     UINT        style;          /* Window style */
     INT         width;          /* Window width */
     INT         height;         /* Window height */
-    LB_ITEMDATA  *items;        /* Array of items */
+    union
+    {
+        LB_ITEMDATA *items;     /* Array of items */
+        BYTE *nodata_items;     /* For multi-selection LBS_NODATA */
+    } u;
     INT         nb_items;       /* Number of items */
     UINT        items_size;     /* Total number of allocated items in the array */
     INT         top_item;       /* Top visible item */
@@ -120,9 +124,19 @@ static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
 static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect );
 
+/*
+   For listboxes without LBS_NODATA, an array of LB_ITEMDATA is allocated
+   to store the states of each item into descr->u.items.
+
+   For single-selection LBS_NODATA listboxes, no storage is allocated,
+   and thus descr->u.nodata_items will always be NULL.
+
+   For multi-selection LBS_NODATA listboxes, one byte per item is stored
+   for the item's selection state into descr->u.nodata_items.
+*/
 static size_t get_sizeof_item( const LB_DESCR *descr )
 {
-    return sizeof(LB_ITEMDATA);
+    return (descr->style & LBS_NODATA) ? sizeof(BYTE) : sizeof(LB_ITEMDATA);
 }
 
 static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
@@ -133,89 +147,95 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
         items_size + LB_ARRAY_GRANULARITY * 2 < descr->items_size)
     {
         items_size = (items_size + LB_ARRAY_GRANULARITY - 1) & ~(LB_ARRAY_GRANULARITY - 1);
-        items = HeapReAlloc(GetProcessHeap(), 0, descr->items, ((items_size - descr->nb_items) * get_sizeof_item(descr)));
+        items = HeapReAlloc(GetProcessHeap(), 0, descr->u.items, ((items_size - descr->nb_items) * get_sizeof_item(descr)));
         if (!items)
         {
             SEND_NOTIFICATION(descr, LBN_ERRSPACE);
             return FALSE;
         }
         descr->items_size = items_size;
-        descr->items = items;
+        descr->u.items = items;
     }
 
-    if ((descr->style & LBS_NODATA) && items_size > descr->nb_items)
+    if ((descr->style & LBS_NODATA) && descr->u.nodata_items && items_size > descr->nb_items)
     {
-        memset(&descr->items[descr->nb_items], 0,
-               (items_size - descr->nb_items) * get_sizeof_item(descr));
+        memset(descr->u.nodata_items + descr->nb_items, 0,
+                (items_size - descr->nb_items) * get_sizeof_item(descr));
     }
     return TRUE;
 }
 
 static ULONG_PTR get_item_data( const LB_DESCR *descr, UINT index )
 {
-    return (descr->style & LBS_NODATA) ? 0 : descr->items[index].data;
+    return (descr->style & LBS_NODATA) ? 0 : descr->u.items[index].data;
 }
 
 static void set_item_data( LB_DESCR *descr, UINT index, ULONG_PTR data )
 {
-    if (!(descr->style & LBS_NODATA)) descr->items[index].data = data;
+    if (!(descr->style & LBS_NODATA)) descr->u.items[index].data = data;
 }
 
 static WCHAR *get_item_string( const LB_DESCR *descr, UINT index )
 {
-    return HAS_STRINGS(descr) ? descr->items[index].str : NULL;
+    return HAS_STRINGS(descr) ? descr->u.items[index].str : NULL;
 }
 
 static void set_item_string( const LB_DESCR *descr, UINT index, WCHAR *string )
 {
-    if (!(descr->style & LBS_NODATA)) descr->items[index].str = string;
+    if (!(descr->style & LBS_NODATA)) descr->u.items[index].str = string;
 }
 
 static UINT get_item_height( const LB_DESCR *descr, UINT index )
 {
-    return (descr->style & LBS_NODATA) ? 0 : descr->items[index].height;
+    return (descr->style & LBS_NODATA) ? 0 : descr->u.items[index].height;
 }
 
 static void set_item_height( LB_DESCR *descr, UINT index, UINT height )
 {
-    if (!(descr->style & LBS_NODATA)) descr->items[index].height = height;
+    if (!(descr->style & LBS_NODATA)) descr->u.items[index].height = height;
 }
 
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
         return index == descr->selected_item;
-    return descr->items[index].selected;
+    if (descr->style & LBS_NODATA)
+        return descr->u.nodata_items[index];
+    else
+        return descr->u.items[index].selected;
 }
 
 static void set_item_selected_state(LB_DESCR *descr, UINT index, BOOL state)
 {
     if (descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL))
-        descr->items[index].selected = state;
+    {
+        if (descr->style & LBS_NODATA)
+            descr->u.nodata_items[index] = state;
+        else
+            descr->u.items[index].selected = state;
+    }
 }
 
 static void insert_item_data(LB_DESCR *descr, UINT index)
 {
     size_t size = get_sizeof_item(descr);
-    LB_ITEMDATA *item;
+    BYTE *p = descr->u.nodata_items + index * size;
 
-    if (!descr->items) return;
+    if (!descr->u.items) return;
 
-    item = descr->items + index;
     if (index < descr->nb_items)
-        memmove(item + 1, item, (descr->nb_items - index) * size);
+        memmove(p + size, p, (descr->nb_items - index) * size);
 }
 
 static void remove_item_data(LB_DESCR *descr, UINT index)
 {
     size_t size = get_sizeof_item(descr);
-    LB_ITEMDATA *item;
+    BYTE *p = descr->u.nodata_items + index * size;
 
-    if (!descr->items) return;
+    if (!descr->u.items) return;
 
-    item = descr->items + index;
     if (index < descr->nb_items)
-        memmove(item, item + 1, (descr->nb_items - index) * size);
+        memmove(p, p + size, (descr->nb_items - index) * size);
 }
 
 /*********************************************************************
@@ -908,7 +928,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
         _SEH2_END
     } else {
         if (buffer)
-            *((ULONG_PTR *)buffer) = descr->items[index].data;
+            *((ULONG_PTR *)buffer) = descr->u.items[index].data;
         len = sizeof(ULONG_PTR);
     }
     return len;
@@ -1808,14 +1828,14 @@ static void LISTBOX_ResetContent( LB_DESCR *descr )
 
     if (!(descr->style & LBS_NODATA))
         for (i = descr->nb_items - 1; i >= 0; i--) LISTBOX_DeleteItem(descr, i);
-    HeapFree( GetProcessHeap(), 0, descr->items );
+    HeapFree( GetProcessHeap(), 0, descr->u.items );
     descr->nb_items      = 0;
     descr->top_item      = 0;
     descr->selected_item = -1;
     descr->focus_item    = 0;
     descr->anchor_item   = -1;
     descr->items_size    = 0;
-    descr->items         = NULL;
+    descr->u.items       = NULL;
 }
 
 
@@ -2584,7 +2604,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->style         = GetWindowLongPtrW( descr->self, GWL_STYLE );
     descr->width         = rect.right - rect.left;
     descr->height        = rect.bottom - rect.top;
-    descr->items         = NULL;
+    descr->u.items       = NULL;
     descr->items_size    = 0;
     descr->nb_items      = 0;
     descr->top_item      = 0;
