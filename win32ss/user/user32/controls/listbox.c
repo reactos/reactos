@@ -161,6 +161,11 @@ static UINT get_item_height( const LB_DESCR *descr, UINT index )
     return (descr->style & LBS_NODATA) ? 0 : descr->items[index].height;
 }
 
+static void set_item_height( LB_DESCR *descr, UINT index, UINT height )
+{
+    if (!(descr->style & LBS_NODATA)) descr->items[index].height = height;
+}
+
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
@@ -1262,7 +1267,7 @@ static LRESULT LISTBOX_SetItemHeight( LB_DESCR *descr, INT index, INT height, BO
             return LB_ERR;
         }
         TRACE("[%p]: item %d height = %d\n", descr->self, index, height );
-        descr->items[index].height = height;
+        set_item_height(descr, index, height);
         LISTBOX_UpdateScroll( descr );
 	if (repaint)
 	    LISTBOX_InvalidateItems( descr, index );
@@ -1619,7 +1624,7 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
         mis.itemData   = str ? (ULONG_PTR)str : data;
         mis.itemHeight = descr->item_height;
         SendMessageW( descr->owner, WM_MEASUREITEM, id, (LPARAM)&mis );
-        item->height = mis.itemHeight ? mis.itemHeight : 1;
+        set_item_height(descr, index, mis.itemHeight ? mis.itemHeight : 1);
         TRACE("[%p]: measure item %d (%s) = %d\n",
               descr->self, index, str ? debugstr_w(str) : "", get_item_height(descr, index));
     }
