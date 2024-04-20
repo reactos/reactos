@@ -28,30 +28,14 @@
  *  - WM_SETFOCUS: For (manual or automatic) radio buttons, send the parent window BN_CLICKED
  *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
  *  - WM_SYSKEYUP
- *  - BCM_GETIDEALSIZE
- *  - BCM_GETIMAGELIST
- *  - BCM_GETTEXTMARGIN
- *  - BCM_SETIMAGELIST
- *  - BCM_SETTEXTMARGIN
  *  
  *  Notifications
- *  - BCN_HOTITEMCHANGE
  *  - BN_DISABLE
  *  - BN_PUSHED/BN_HILITE
  *  + BN_KILLFOCUS: is it OK?
  *  - BN_PAINT
  *  + BN_SETFOCUS: is it OK?
  *  - BN_UNPUSHED/BN_UNHILITE
- *  - NM_CUSTOMDRAW
- *
- *  Structures/Macros/Definitions
- *  - BUTTON_IMAGELIST
- *  - NMBCHOTITEM
- *  - Button_GetIdealSize
- *  - Button_GetImageList
- *  - Button_GetTextMargin
- *  - Button_SetImageList
- *  - Button_SetTextMargin
  */
 
 #include <user32.h>
