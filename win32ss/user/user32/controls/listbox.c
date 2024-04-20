@@ -193,6 +193,15 @@ static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR 
     item->selected = FALSE;
 }
 
+static void remove_item_data(LB_DESCR *descr, UINT index)
+{
+    LB_ITEMDATA *item;
+
+    item = descr->items + index;
+    if (index < descr->nb_items)
+        memmove(item, item + 1, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
+}
+
 /*********************************************************************
  * listbox class descriptor
  */
@@ -1728,8 +1737,6 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
  */
 static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
 {
-    LB_ITEMDATA *item;
-
     if ((index < 0) || (index >= descr->nb_items)) return LB_ERR;
 
     /* We need to invalidate the original rect instead of the updated one. */
@@ -1742,15 +1749,9 @@ static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
     }
     descr->nb_items--;
     LISTBOX_DeleteItem( descr, index );
+    remove_item_data(descr, index);
 
-    /* Remove the item */
-
-    item = &descr->items[index];
-    if (index < descr->nb_items)
-        RtlMoveMemory( item, item + 1,
-                       (descr->nb_items - index) * sizeof(LB_ITEMDATA) );
     if (descr->anchor_item == descr->nb_items) descr->anchor_item--;
-
     resize_storage(descr, descr->nb_items);
 
     /* Repaint the items */
