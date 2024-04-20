@@ -1042,8 +1042,8 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     GetClientRect(hwnd, &client);
     rbox = rtext = client;
 
-    checkBoxWidth  = 12 * GetDeviceCaps( hDC, LOGPIXELSX ) / 96 + 1;
-    checkBoxHeight = 12 * GetDeviceCaps( hDC, LOGPIXELSY ) / 96 + 1;
+    checkBoxWidth  = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
+    checkBoxHeight = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
 
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     GetCharWidthW( hDC, '0', '0', &text_offset );
